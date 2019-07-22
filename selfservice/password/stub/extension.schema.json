@@ -1,0 +1,41 @@
+{
+  "$id": "https://example.com/person.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Person",
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string",
+      "format": "email",
+      "hive": {
+        "credentials": {
+          "password": {
+            "identifier": true
+          }
+        }
+      }
+    },
+    "names": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "hive": {
+          "credentials": {
+            "password": {
+              "identifier": true
+            }
+          }
+        }
+      }
+    },
+    "age": {
+      "description": "Age in years which must be equal to or greater than zero.",
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "required": [
+    "email"
+  ],
+  "additionalProperties": false
+}

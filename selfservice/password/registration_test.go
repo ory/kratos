@@ -1,0 +1,351 @@
+package password_test
+
+import (
+	"context"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/http/cookiejar"
+	"net/http/httptest"
+	"net/url"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
+
+	"github.com/ory/viper"
+
+	"github.com/ory/x/urlx"
+
+	"github.com/ory/hive-cloud/hive/driver/configuration"
+	"github.com/ory/hive-cloud/hive/identity"
+	"github.com/ory/hive-cloud/hive/internal"
+	"github.com/ory/hive-cloud/hive/selfservice"
+	. "github.com/ory/hive-cloud/hive/selfservice/password"
+	"github.com/ory/hive-cloud/hive/x"
+)
+
+func nrr(id string, exp time.Duration) *selfservice.RegistrationRequest {
+	r := NewBlankRegistrationRequest("request-" + id)
+	r.ExpiresAt = time.Now().Add(exp)
+	r.Methods[CredentialsType].Config.(*RegistrationRequestMethodConfig).Action = "/action"
+	r.Methods[CredentialsType].Config.(*RegistrationRequestMethodConfig).Fields = FormFields{
+		"password": {
+			Name:     "password",
+			Type:     "password",
+			Required: true,
+		},
+		"csrf_token": {
+			Name:     "csrf_token",
+			Type:     "hidden",
+			Required: true,
+			Value:    "csrf-token",
+		},
+	}
+	return r
+}
+
+func TestRegistration(t *testing.T) {
+	for k, tc := range []struct {
+		d       string
+		ar      *selfservice.RegistrationRequest
+		payload string
+		schema  string
+		rid     string
+		assert  func(t *testing.T, r *http.Response)
+	}{
+		{
+			d:       "should show the error ui because the request is malformed",
+			ar:      nrr("0", time.Minute),
+			payload: "14=)=!(%)$/ZP()GHIÖ",
+			rid:     "0",
+			assert: func(t *testing.T, r *http.Response) {
+				assert.Contains(t, r.Request.URL.Path, "error-ts")
+				body, err := ioutil.ReadAll(r.Body)
+				require.NoError(t, err)
+
+				assert.Equal(t, int64(http.StatusBadRequest), gjson.GetBytes(body, "0.code").Int(), "%s", body)
+				assert.Equal(t, "Bad Request", gjson.GetBytes(body, "0.status").String(), "%s", body)
+				assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "invalid URL escape", "%s", body)
+			},
+		},
+		{
+			d:       "should show the error ui because the request id missing",
+			ar:      nrr("0", time.Minute),
+			payload: url.Values{}.Encode(),
+			rid:     "",
+			assert: func(t *testing.T, r *http.Response) {
+				assert.Contains(t, r.Request.URL.Path, "error-ts")
+				body, err := ioutil.ReadAll(r.Body)
+				require.NoError(t, err)
+
+				assert.Equal(t, int64(http.StatusNotFound), gjson.GetBytes(body, "0.code").Int(), "%s", body)
+				assert.Equal(t, "Not Found", gjson.GetBytes(body, "0.status").String(), "%s", body)
+				assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "Unable to find request", "%s", body)
+			},
+		},
+		{
+			d:  "should return an error because the request does not exist",
+			ar: nrr("1", time.Minute),
+			payload: url.Values{
+				"traits[username]": {"registration-identifier-1"},
+				"password":         {"password"},
+			}.Encode(),
+			rid: "does-not-exist",
+			assert: func(t *testing.T, r *http.Response) {
+				assert.Contains(t, r.Request.URL.Path, "error-ts")
+				body, err := ioutil.ReadAll(r.Body)
+				require.NoError(t, err)
+
+				assert.Equal(t, int64(http.StatusNotFound), gjson.GetBytes(body, "0.code").Int(), "%s", body)
+				assert.Equal(t, "Not Found", gjson.GetBytes(body, "0.status").String(), "%s", body)
+				assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "request-does-not-exist", "%s", body)
+			},
+		},
+		{
+			d:  "should return an error because the request is expired",
+			ar: nrr("2", -time.Minute),
+			payload: url.Values{
+				"traits[username]": {"registration-identifier-2"},
+				"password":         {"password"},
+			}.Encode(),
+			rid: "2",
+			assert: func(t *testing.T, r *http.Response) {
+				assert.Contains(t, r.Request.URL.Path, "/signup-ts")
+				body, err := ioutil.ReadAll(r.Body)
+				require.NoError(t, err)
+
+				assert.Equal(t, "request-2", gjson.GetBytes(body, "id").String(), "%s", body)
+				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
+				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.error").String(), "expired", "%s", body)
+			},
+		},
+		{
+			d:  "should return an error because the password failed validation",
+			ar: nrr("4", time.Minute),
+			payload: url.Values{
+				"traits[username]": {"registration-identifier-4"},
+				"password":         {"password"},
+				"traits[foobar]":   {"bar"},
+			}.Encode(),
+			rid: "4",
+			assert: func(t *testing.T, r *http.Response) {
+				assert.Contains(t, r.Request.URL.Path, "signup-ts")
+				body, err := ioutil.ReadAll(r.Body)
+				require.NoError(t, err)
+
+				// Let's ensure that the payload is being propagated properly.
+				assert.Equal(t, "request-4", gjson.GetBytes(body, "id").String(), "%s", body)
+				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
+				for _, f := range []string{"password", "csrf_token", "traits[username]", "traits[foobar]"} {
+					assert.Contains(t, gjson.GetBytes(body, fmt.Sprintf("methods.password.config.fields.%s.name", f)).String(), f, "%s", body)
+				}
+				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.password.error").String(), "data breaches and must no longer be used.", "%s", body)
+			},
+		},
+		{
+			d:   "should return an error because not passing validation",
+			ar:  nrr("5", time.Minute),
+			rid: "5",
+			payload: url.Values{
+				"traits[username]": {"registration-identifier-5"},
+				"password":         {uuid.New().String()},
+			}.Encode(),
+			assert: func(t *testing.T, r *http.Response) {
+				assert.Contains(t, r.Request.URL.Path, "signup-ts")
+				body, err := ioutil.ReadAll(r.Body)
+				require.NoError(t, err)
+
+				// Let's ensure that the payload is being propagated properly.
+				assert.Equal(t, "request-5", gjson.GetBytes(body, "id").String(), "%s", body)
+				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
+				for _, f := range []string{"password", "csrf_token", "traits[username]", "traits[foobar]"} {
+					assert.Equal(t, gjson.GetBytes(body, fmt.Sprintf("methods.password.config.fields.%s.name", f)).String(), f, "%s", body)
+				}
+				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.traits[foobar].error").String(), "foobar is required", "%s", body)
+			},
+		},
+		{
+			d:   "should fail because schema did not specify an identifier",
+			ar:  nrr("6", time.Minute),
+			rid: "6",
+			payload: url.Values{
+				"traits[username]": {"registration-identifier-6"},
+				"password":         {uuid.New().String()},
+				"traits[foobar]":   {"bar"},
+			}.Encode(),
+			schema: "file://./stub/missing-identifier.schema.json",
+			assert: func(t *testing.T, r *http.Response) {
+				assert.Contains(t, r.Request.URL.Path, "error-ts")
+				body, err := ioutil.ReadAll(r.Body)
+				require.NoError(t, err)
+				assert.Equal(t, int64(http.StatusInternalServerError), gjson.GetBytes(body, "0.code").Int(), "%s", body)
+				assert.Equal(t, "Internal Server Error", gjson.GetBytes(body, "0.status").String(), "%s", body)
+				assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "No login identifiers", "%s", body)
+			},
+		},
+		{
+			d:  "should fail because schema does not exist",
+			ar: nrr("7", time.Minute),
+			payload: url.Values{
+				"traits[username]": {"registration-identifier-7"},
+				"password":         {uuid.New().String()},
+				"traits[foobar]":   {"bar"},
+			}.Encode(),
+			rid:    "7",
+			schema: "file://./stub/i-do-not-exist.schema.json",
+			assert: func(t *testing.T, r *http.Response) {
+				assert.Contains(t, r.Request.URL.Path, "error-ts")
+				body, err := ioutil.ReadAll(r.Body)
+				require.NoError(t, err)
+				assert.Equal(t, int64(http.StatusInternalServerError), gjson.GetBytes(body, "0.code").Int(), "%s", body)
+				assert.Equal(t, "Internal Server Error", gjson.GetBytes(body, "0.status").String(), "%s", body)
+				assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "Unable to parse JSON schema", "%s", body)
+			},
+		},
+		{
+			d:   "should pass and set up a session",
+			ar:  nrr("8", time.Minute),
+			rid: "8",
+			payload: url.Values{
+				"traits[username]": {"registration-identifier-8"},
+				"password":         {uuid.New().String()},
+				"traits[foobar]":   {"bar"},
+			}.Encode(),
+			assert: func(t *testing.T, r *http.Response) {
+				body, err := ioutil.ReadAll(r.Body)
+				require.NoError(t, err)
+				assert.Contains(t, r.Request.URL.Path, "return-ts")
+				assert.Equal(t, `["registration-identifier-8"]`, gjson.GetBytes(body, "identity.credentials.password.identifiers").String(), "%s", body)
+			},
+		},
+		{
+			d:   "should return an error because not passing validation and reset previous errors and values",
+			rid: "9",
+			ar: &selfservice.RegistrationRequest{
+				Request: &selfservice.Request{
+					ID:        "request-9",
+					ExpiresAt: time.Now().Add(time.Minute),
+				},
+				Methods: map[identity.CredentialsType]*selfservice.RegistrationRequestMethod{
+					CredentialsType: {
+						Method: CredentialsType,
+						Config: &RegistrationRequestMethodConfig{
+							Action: "/action",
+							Error:  "some error",
+							Fields: map[string]FormField{
+								"traits[foo]": {
+									Name:  "traits[foo]",
+									Value: "bar",
+									Error: "bar",
+									Type:  "text",
+								},
+								"password": {
+									Name: "password",
+								},
+							},
+						},
+					},
+				},
+			},
+			payload: url.Values{
+				"traits[username]": {"registration-identifier-9"},
+				"password":         {uuid.New().String()},
+			}.Encode(),
+			assert: func(t *testing.T, r *http.Response) {
+				assert.Contains(t, r.Request.URL.Path, "signup-ts")
+				body, err := ioutil.ReadAll(r.Body)
+				require.NoError(t, err)
+
+				// Let's ensure that the payload is being propagated properly.
+				assert.Equal(t, "request-9", gjson.GetBytes(body, "id").String(), "%s", body)
+				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
+				for _, f := range []string{"password", "csrf_token", "traits[username]"} {
+					assert.Equal(t, gjson.GetBytes(body, fmt.Sprintf("methods.password.config.fields.%s.name", f)).String(), f, "%s", body)
+				}
+				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.traits[foo].value"))
+				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.traits[foo].error"))
+				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.error"))
+				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.traits[foobar].error").String(), "foobar is required", "%s", body)
+			},
+		},
+	} {
+		t.Run(fmt.Sprintf("case=%d/description=%s", k, tc.d), func(t *testing.T) {
+			conf, reg := internal.NewMemoryRegistry(t)
+			s := NewStrategy(reg, conf).WithTokenGenerator(func(r *http.Request) string {
+				return "nosurf"
+			})
+
+			router := x.NewRouterPublic()
+			s.SetRoutes(router)
+
+			ts := httptest.NewServer(router)
+			defer ts.Close()
+
+			errTs, uiTs, returnTs := newErrTs(t, reg), httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				e, err := reg.RegistrationRequestManager().GetRegistrationRequest(r.Context(), r.URL.Query().Get("request"))
+				require.NoError(t, err)
+				reg.Writer().Write(w, r, e)
+			})), newReturnTs(t, reg)
+			defer errTs.Close()
+			defer uiTs.Close()
+			defer returnTs.Close()
+
+			viper.Set(configuration.ViperKeyURLsError, errTs.URL+"/error-ts")
+			viper.Set(configuration.ViperKeyURLsRegistration, uiTs.URL+"/signup-ts")
+			viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
+			viper.Set(configuration.ViperKeySelfServiceRegistrationAfterConfig+"."+string(CredentialsType), hookConfig(returnTs.URL+"/return-ts"))
+			if tc.schema == "" {
+				tc.schema = "file://./stub/registration.schema.json"
+			}
+			viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, tc.schema)
+
+			tc.ar.RequestURL = ts.URL
+			require.NoError(t, reg.RegistrationRequestManager().CreateRegistrationRequest(context.Background(), tc.ar))
+
+			c := ts.Client()
+			c.Jar, _ = cookiejar.New(&cookiejar.Options{})
+
+			res, err := c.Post(ts.URL+RegistrationPath+"?request=request-"+tc.rid, "application/x-www-form-urlencoded", strings.NewReader(tc.payload))
+			require.NoError(t, err)
+			defer res.Body.Close()
+			require.EqualValues(t, http.StatusOK, res.StatusCode, "Request: %+v\n\t\tResponse: %s", res.Request, res)
+
+			tc.assert(t, res)
+		})
+	}
+
+	t.Run("method=PopulateSignUpMethod", func(t *testing.T) {
+		conf, reg := internal.NewMemoryRegistry(t)
+		s := NewStrategy(reg, conf).WithTokenGenerator(func(r *http.Request) string {
+			return "nosurf"
+		})
+		viper.Set(configuration.ViperKeyURLsSelfPublic, urlx.ParseOrPanic("https://foo/"))
+
+		sr := selfservice.NewRegistrationRequest(time.Minute, &http.Request{URL: urlx.ParseOrPanic("/")})
+		require.NoError(t, s.PopulateRegistrationMethod(&http.Request{}, sr))
+		assert.EqualValues(t, &selfservice.RegistrationRequestMethod{
+			Method: CredentialsType,
+			Config: &RegistrationRequestMethodConfig{
+				Action: "https://foo" + RegistrationPath + "?request=" + sr.ID,
+				Fields: FormFields{
+					"password": {
+						Name:     "password",
+						Type:     "password",
+						Required: true,
+					},
+					"csrf_token": {
+						Name:     "csrf_token",
+						Type:     "hidden",
+						Required: true,
+						Value:    "nosurf",
+					},
+				},
+			},
+		}, sr.Methods[CredentialsType])
+	})
+}
