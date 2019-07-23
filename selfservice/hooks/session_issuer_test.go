@@ -12,10 +12,10 @@ import (
 
 	"github.com/ory/viper"
 
-	"github.com/ory/hive-cloud/hive/driver"
-	"github.com/ory/hive-cloud/hive/driver/configuration"
-	. "github.com/ory/hive-cloud/hive/selfservice/hooks"
-	"github.com/ory/hive-cloud/hive/session"
+	"github.com/ory/hive/driver"
+	"github.com/ory/hive/driver/configuration"
+	. "github.com/ory/hive/selfservice/hooks"
+	"github.com/ory/hive/session"
 )
 
 func TestSessionIssuer(t *testing.T) {

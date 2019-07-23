@@ -10,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/hive-cloud/hive/driver"
+	"github.com/ory/hive/driver"
 )
 
 func newErrTs(t *testing.T, reg driver.Registry) *httptest.Server {

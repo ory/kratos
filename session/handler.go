@@ -6,7 +6,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/ory/herodot"
-	"github.com/ory/hive-cloud/hive/x"
+	"github.com/ory/hive/x"
 )
 
 func NewHandler(

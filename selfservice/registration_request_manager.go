@@ -3,7 +3,7 @@ package selfservice
 import (
 	"context"
 
-	"github.com/ory/hive-cloud/hive/identity"
+	"github.com/ory/hive/identity"
 )
 
 type RegistrationRequestManager interface {

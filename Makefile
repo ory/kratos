@@ -40,7 +40,7 @@ sdk:
 
 .PHONE: mocks
 mocks:
-		mockgen -mock_names Manager=MockLoginExecutorDependencies -package internal -destination internal/hook_login_executor_dependencies.go github.com/ory/hive-cloud/hive/selfservice loginExecutorDependencies
+		mockgen -mock_names Manager=MockLoginExecutorDependencies -package internal -destination internal/hook_login_executor_dependencies.go github.com/ory/hive/selfservice loginExecutorDependencies
 
 .PHONY: install
 install:

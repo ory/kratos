@@ -5,7 +5,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 
-	"github.com/ory/hive-cloud/hive/x"
+	"github.com/ory/hive/x"
 )
 
 type Handler struct {

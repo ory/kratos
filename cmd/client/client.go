@@ -7,7 +7,7 @@ import (
 
 	"github.com/ory/viper"
 
-	"github.com/ory/hive-cloud/hive/sdk/go/hive/client"
+	"github.com/ory/hive/sdk/go/hive/client"
 	"github.com/ory/x/cmdx"
 	"github.com/ory/x/flagx"
 )

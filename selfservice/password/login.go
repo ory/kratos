@@ -16,9 +16,9 @@ import (
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/hive-cloud/hive/schema"
-	"github.com/ory/hive-cloud/hive/selfservice"
-	"github.com/ory/hive-cloud/hive/x"
+	"github.com/ory/hive/schema"
+	"github.com/ory/hive/selfservice"
+	"github.com/ory/hive/x"
 )
 
 const (

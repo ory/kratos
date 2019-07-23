@@ -3,7 +3,7 @@ package driver
 import (
 	"github.com/sirupsen/logrus"
 
-	"github.com/ory/hive-cloud/hive/driver/configuration"
+	"github.com/ory/hive/driver/configuration"
 )
 
 type DefaultDriver struct {

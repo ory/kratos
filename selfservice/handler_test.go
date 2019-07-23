@@ -14,11 +14,11 @@ import (
 
 	"github.com/ory/viper"
 
-	"github.com/ory/hive-cloud/hive/driver"
-	"github.com/ory/hive-cloud/hive/driver/configuration"
-	"github.com/ory/hive-cloud/hive/internal"
-	. "github.com/ory/hive-cloud/hive/selfservice"
-	"github.com/ory/hive-cloud/hive/x"
+	"github.com/ory/hive/driver"
+	"github.com/ory/hive/driver/configuration"
+	"github.com/ory/hive/internal"
+	. "github.com/ory/hive/selfservice"
+	"github.com/ory/hive/x"
 )
 
 func newErrTs(t *testing.T, reg driver.Registry) *httptest.Server {

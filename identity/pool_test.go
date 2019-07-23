@@ -8,16 +8,16 @@ import (
 
 	"github.com/ory/herodot"
 
-	"github.com/ory/hive-cloud/hive/selfservice/password"
+	"github.com/ory/hive/selfservice/password"
 
-	"github.com/ory/hive-cloud/hive/driver"
+	"github.com/ory/hive/driver"
 
 	"github.com/bxcodec/faker"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	. "github.com/ory/hive-cloud/hive/identity"
-	"github.com/ory/hive-cloud/hive/internal"
+	. "github.com/ory/hive/identity"
+	"github.com/ory/hive/internal"
 )
 
 func init() {

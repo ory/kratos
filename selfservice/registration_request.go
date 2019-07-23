@@ -8,7 +8,7 @@ import (
 
 	"github.com/ory/herodot"
 
-	"github.com/ory/hive-cloud/hive/identity"
+	"github.com/ory/hive/identity"
 )
 
 var ErrRegistrationRequestExpired = herodot.ErrBadRequest.

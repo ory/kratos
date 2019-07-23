@@ -15,7 +15,7 @@
 // package main is the entry point for hive.
 package main
 
-import "github.com/ory/hive-cloud/hive/cmd"
+import "github.com/ory/hive/cmd"
 
 func main() {
 	cmd.Execute()

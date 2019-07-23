@@ -14,10 +14,10 @@ import (
 	"github.com/ory/viper"
 
 	"github.com/ory/herodot"
-	"github.com/ory/hive-cloud/hive/driver/configuration"
-	"github.com/ory/hive-cloud/hive/internal"
-	. "github.com/ory/hive-cloud/hive/session"
-	"github.com/ory/hive-cloud/hive/x"
+	"github.com/ory/hive/driver/configuration"
+	"github.com/ory/hive/internal"
+	. "github.com/ory/hive/session"
+	"github.com/ory/hive/x"
 )
 
 func TestHandler(t *testing.T) {

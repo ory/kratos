@@ -13,7 +13,7 @@ import (
 
 	strfmt "github.com/go-openapi/strfmt"
 
-	models "github.com/ory/hive-cloud/hive/sdk/go/hive/models"
+	models "github.com/ory/hive/sdk/go/hive/models"
 )
 
 // UpsertIdentityReader is a Reader for the UpsertIdentity structure.

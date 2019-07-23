@@ -9,8 +9,8 @@ import (
 
 	"github.com/ory/x/logrusx"
 
-	"github.com/ory/hive-cloud/hive/driver"
-	"github.com/ory/hive-cloud/hive/driver/configuration"
+	"github.com/ory/hive/driver"
+	"github.com/ory/hive/driver/configuration"
 )
 
 func resetConfig() {

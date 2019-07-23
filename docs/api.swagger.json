@@ -114,7 +114,7 @@
       "type": "integer",
       "format": "int64",
       "title": "CredentialsType  represents several different credential types, like password credentials, passwordless credentials,",
-      "x-go-package": "github.com/ory/hive-cloud/hive/identity"
+      "x-go-package": "github.com/ory/hive/identity"
     },
     "FieldMetadata": {
       "type": "object",
@@ -131,7 +131,7 @@
           "x-go-name": "Verified"
         }
       },
-      "x-go-package": "github.com/ory/hive-cloud/hive/identity"
+      "x-go-package": "github.com/ory/hive/identity"
     },
     "InstantMessaging": {
       "type": "object",
@@ -155,7 +155,7 @@
           "x-go-name": "Verified"
         }
       },
-      "x-go-package": "github.com/ory/hive-cloud/hive/identity"
+      "x-go-package": "github.com/ory/hive/identity"
     },
     "Location": {
       "description": "Typically, the Location represents the collection of time offsets\nin use in a geographical area, such as CEST and CET for central Europe.",
@@ -197,7 +197,7 @@
           "x-go-name": "MiddleName"
         }
       },
-      "x-go-package": "github.com/ory/hive-cloud/hive/identity"
+      "x-go-package": "github.com/ory/hive/identity"
     },
     "Photo": {
       "type": "object",
@@ -221,7 +221,7 @@
           "x-go-name": "Verified"
         }
       },
-      "x-go-package": "github.com/ory/hive-cloud/hive/identity"
+      "x-go-package": "github.com/ory/hive/identity"
     },
     "RawMessage": {
       "description": "It implements Marshaler and Unmarshaler and can\nbe used to delay JSON decoding or precompute a JSON encoding.",
@@ -386,7 +386,7 @@
         }
       },
       "x-go-name": "Identity",
-      "x-go-package": "github.com/ory/hive-cloud/hive/identity"
+      "x-go-package": "github.com/ory/hive/identity"
     },
     "identityCredentials": {
       "description": "Credentials represents a specific credential type",
@@ -408,7 +408,7 @@
         }
       },
       "x-go-name": "Credentials",
-      "x-go-package": "github.com/ory/hive-cloud/hive/identity"
+      "x-go-package": "github.com/ory/hive/identity"
     },
     "identityEmail": {
       "description": "Email represents an email address",
@@ -439,7 +439,7 @@
         }
       },
       "x-go-name": "Email",
-      "x-go-package": "github.com/ory/hive-cloud/hive/identity"
+      "x-go-package": "github.com/ory/hive/identity"
     },
     "identityPhoneNumber": {
       "description": "PhoneNumber represents an phone number",
@@ -470,7 +470,7 @@
         }
       },
       "x-go-name": "PhoneNumber",
-      "x-go-package": "github.com/ory/hive-cloud/hive/identity"
+      "x-go-package": "github.com/ory/hive/identity"
     },
     "identityPhysicalAddress": {
       "description": "Address is a physical mailing address for this user. Canonical type values\nof \"work\", \"home\", and \"other\".  This attribute is a complex type\nwith the following sub-attributes.",
@@ -543,7 +543,7 @@
         }
       },
       "x-go-name": "Address",
-      "x-go-package": "github.com/ory/hive-cloud/hive/identity"
+      "x-go-package": "github.com/ory/hive/identity"
     }
   },
   "responses": {

@@ -7,7 +7,7 @@ import (
 
 	"github.com/ory/x/pagination"
 
-	"github.com/ory/hive-cloud/hive/x"
+	"github.com/ory/hive/x"
 )
 
 type handlerDependencies interface {

@@ -12,7 +12,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/ory/hive-cloud/hive/driver/configuration"
+	"github.com/ory/hive/driver/configuration"
 
 	"github.com/google/uuid"
 

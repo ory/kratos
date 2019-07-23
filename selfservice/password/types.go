@@ -3,7 +3,7 @@ package password
 import (
 	"net/http"
 
-	"github.com/ory/hive-cloud/hive/identity"
+	"github.com/ory/hive/identity"
 )
 
 const CredentialsType identity.CredentialsType = "password"

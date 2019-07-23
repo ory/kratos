@@ -17,9 +17,9 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/ory/hive-cloud/hive/cmd/daemon"
-	"github.com/ory/hive-cloud/hive/driver"
-	"github.com/ory/hive-cloud/hive/driver/configuration"
+	"github.com/ory/hive/cmd/daemon"
+	"github.com/ory/hive/driver"
+	"github.com/ory/hive/driver/configuration"
 )
 
 // serveAllCmd represents the all command

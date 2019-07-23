@@ -11,7 +11,7 @@ import (
 
 	strfmt "github.com/go-openapi/strfmt"
 
-	"github.com/ory/hive-cloud/hive/sdk/go/hive/client/admin"
+	"github.com/ory/hive/sdk/go/hive/client/admin"
 )
 
 // Default ory hive HTTP client.

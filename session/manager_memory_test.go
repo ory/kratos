@@ -16,8 +16,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/hive-cloud/hive/internal"
-	. "github.com/ory/hive-cloud/hive/session"
+	"github.com/ory/hive/internal"
+	. "github.com/ory/hive/session"
 )
 
 func init() {

@@ -15,8 +15,8 @@ import (
 	"github.com/ory/gojsonschema"
 	"github.com/ory/herodot"
 
-	"github.com/ory/hive-cloud/hive/schema"
-	"github.com/ory/hive-cloud/hive/x"
+	"github.com/ory/hive/schema"
+	"github.com/ory/hive/x"
 )
 
 type RegistrationFormPayload struct {

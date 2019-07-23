@@ -3,7 +3,7 @@ package selfservice
 import (
 	"net/http"
 
-	"github.com/ory/hive-cloud/hive/x"
+	"github.com/ory/hive/x"
 )
 
 type Strategy interface {

@@ -13,9 +13,9 @@ import (
 
 	"github.com/ory/viper"
 
-	"github.com/ory/hive-cloud/hive/driver/configuration"
-	. "github.com/ory/hive-cloud/hive/identity"
-	"github.com/ory/hive-cloud/hive/internal"
+	"github.com/ory/hive/driver/configuration"
+	. "github.com/ory/hive/identity"
+	"github.com/ory/hive/internal"
 )
 
 func TestSchemaValidator(t *testing.T) {

@@ -9,10 +9,10 @@ import (
 
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/hive-cloud/hive/driver/configuration"
-	"github.com/ory/hive-cloud/hive/errorx"
-	"github.com/ory/hive-cloud/hive/session"
-	"github.com/ory/hive-cloud/hive/x"
+	"github.com/ory/hive/driver/configuration"
+	"github.com/ory/hive/errorx"
+	"github.com/ory/hive/session"
+	"github.com/ory/hive/x"
 )
 
 const (

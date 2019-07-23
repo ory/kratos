@@ -10,15 +10,15 @@ import (
 
 	"github.com/ory/herodot"
 
-	"github.com/ory/hive-cloud/hive/selfservice"
+	"github.com/ory/hive/selfservice"
 
 	"github.com/ory/x/dbal"
 
-	"github.com/ory/hive-cloud/hive/driver/configuration"
-	"github.com/ory/hive-cloud/hive/errorx"
-	"github.com/ory/hive-cloud/hive/identity"
-	password2 "github.com/ory/hive-cloud/hive/selfservice/password"
-	"github.com/ory/hive-cloud/hive/session"
+	"github.com/ory/hive/driver/configuration"
+	"github.com/ory/hive/errorx"
+	"github.com/ory/hive/identity"
+	password2 "github.com/ory/hive/selfservice/password"
+	"github.com/ory/hive/session"
 )
 
 type Registry interface {

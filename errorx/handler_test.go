@@ -14,9 +14,9 @@ import (
 
 	"github.com/ory/herodot"
 
-	"github.com/ory/hive-cloud/hive/errorx"
-	"github.com/ory/hive-cloud/hive/internal"
-	"github.com/ory/hive-cloud/hive/x"
+	"github.com/ory/hive/errorx"
+	"github.com/ory/hive/internal"
+	"github.com/ory/hive/x"
 )
 
 func TestHandler(t *testing.T) {

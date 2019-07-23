@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ory/hive-cloud/hive/identity"
-	"github.com/ory/hive-cloud/hive/selfservice"
+	"github.com/ory/hive/identity"
+	"github.com/ory/hive/selfservice"
 )
 
 type RegistrationRequestMethodConfig struct {

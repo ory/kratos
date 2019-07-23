@@ -33,8 +33,7 @@ require (
 	github.com/ory/dockertest v3.3.4+incompatible
 	github.com/ory/go-acc v0.0.0-20181118080137-ddc355013f90
 	github.com/ory/go-convenience v0.1.0
-	github.com/ory/gojsonreference v0.0.0-20190720135523-6b606c2d8ee8 // indirect
-	github.com/ory/gojsonschema v1.1.0
+	github.com/ory/gojsonschema v0.0.0-20190720140244-a64d4f892691
 	github.com/ory/graceful v0.1.1
 	github.com/ory/herodot v0.6.2
 	github.com/ory/viper v1.5.6
@@ -53,6 +52,7 @@ require (
 	github.com/toqueteos/webbrowser v1.1.0 // indirect
 	github.com/urfave/negroni v1.0.0
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
+	github.com/xeipuuv/gojsonschema v1.1.0 // indirect
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/tools v0.0.0-20190711191110-9a621aea19f8

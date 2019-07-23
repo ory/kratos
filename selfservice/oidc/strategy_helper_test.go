@@ -17,8 +17,8 @@ import (
 	"github.com/ory/x/resilience"
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/hive-cloud/hive/driver"
-	"github.com/ory/hive-cloud/hive/x"
+	"github.com/ory/hive/driver"
+	"github.com/ory/hive/x"
 )
 
 func newErrTs(t *testing.T, reg driver.Registry) *httptest.Server {

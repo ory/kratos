@@ -3,8 +3,8 @@ package verify
 import (
 	"sync"
 
-	"github.com/ory/hive-cloud/hive/identity"
-	"github.com/ory/hive-cloud/hive/schema"
+	"github.com/ory/hive/identity"
+	"github.com/ory/hive/schema"
 )
 
 type Extension struct {

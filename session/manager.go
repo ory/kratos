@@ -3,7 +3,7 @@ package session
 import (
 	"net/http"
 
-	"github.com/ory/hive-cloud/hive/identity"
+	"github.com/ory/hive/identity"
 
 	"github.com/ory/herodot"
 )

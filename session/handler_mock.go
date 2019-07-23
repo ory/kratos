@@ -7,7 +7,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/hive-cloud/hive/identity"
+	"github.com/ory/hive/identity"
 )
 
 func MockSetSession(t *testing.T, reg Registry) httprouter.Handle {

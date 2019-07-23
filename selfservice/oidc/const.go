@@ -1,6 +1,6 @@
 package oidc
 
-import "github.com/ory/hive-cloud/hive/identity"
+import "github.com/ory/hive/identity"
 
 const (
 	CredentialsType identity.CredentialsType = "oidc"

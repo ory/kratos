@@ -21,12 +21,12 @@ import (
 
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/hive-cloud/hive/driver/configuration"
-	"github.com/ory/hive-cloud/hive/identity"
-	"github.com/ory/hive-cloud/hive/internal"
-	"github.com/ory/hive-cloud/hive/selfservice"
-	. "github.com/ory/hive-cloud/hive/selfservice/password"
-	"github.com/ory/hive-cloud/hive/x"
+	"github.com/ory/hive/driver/configuration"
+	"github.com/ory/hive/identity"
+	"github.com/ory/hive/internal"
+	"github.com/ory/hive/selfservice"
+	. "github.com/ory/hive/selfservice/password"
+	"github.com/ory/hive/x"
 )
 
 func nrr(id string, exp time.Duration) *selfservice.RegistrationRequest {

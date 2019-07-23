@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/argon2"
 
-	"github.com/ory/hive-cloud/hive/driver/configuration"
+	"github.com/ory/hive/driver/configuration"
 )
 
 var (

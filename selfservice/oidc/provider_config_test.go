@@ -9,9 +9,9 @@ import (
 
 	"github.com/ory/viper"
 
-	"github.com/ory/hive-cloud/hive/driver/configuration"
-	"github.com/ory/hive-cloud/hive/internal"
-	. "github.com/ory/hive-cloud/hive/selfservice/oidc"
+	"github.com/ory/hive/driver/configuration"
+	"github.com/ory/hive/internal"
+	. "github.com/ory/hive/selfservice/oidc"
 )
 
 func TestConfig(t *testing.T) {

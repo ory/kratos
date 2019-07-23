@@ -3,9 +3,9 @@ package selfservice
 import (
 	"net/http"
 
-	"github.com/ory/hive-cloud/hive/driver/configuration"
-	"github.com/ory/hive-cloud/hive/identity"
-	"github.com/ory/hive-cloud/hive/session"
+	"github.com/ory/hive/driver/configuration"
+	"github.com/ory/hive/identity"
+	"github.com/ory/hive/session"
 )
 
 type HookRegistrationPreExecutor interface {

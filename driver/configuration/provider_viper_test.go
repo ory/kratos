@@ -12,7 +12,7 @@ import (
 
 	"github.com/ory/x/viperx"
 
-	"github.com/ory/hive-cloud/hive/schema"
+	"github.com/ory/hive/schema"
 )
 
 func TestViperProvider(t *testing.T) {

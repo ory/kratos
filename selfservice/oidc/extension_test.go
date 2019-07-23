@@ -10,9 +10,9 @@ import (
 
 	"github.com/ory/gojsonschema"
 
-	"github.com/ory/hive-cloud/hive/identity"
-	"github.com/ory/hive-cloud/hive/schema"
-	. "github.com/ory/hive-cloud/hive/selfservice/oidc"
+	"github.com/ory/hive/identity"
+	"github.com/ory/hive/schema"
+	. "github.com/ory/hive/selfservice/oidc"
 )
 
 func TestValidationExtension(t *testing.T) {

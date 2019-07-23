@@ -14,7 +14,7 @@ import (
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/hive-cloud/hive/selfservice"
+	"github.com/ory/hive/selfservice"
 )
 
 func TestRedirector(t *testing.T) {
