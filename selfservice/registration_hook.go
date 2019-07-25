@@ -22,6 +22,7 @@ type HookRegistrationPreExecutionProvider interface {
 
 type registrationExecutorDependencies interface {
 	identity.PoolProvider
+	identity.ValidationProvider
 	HookRegistrationPreExecutionProvider
 }
 
@@ -51,21 +52,23 @@ type PostRegistrationHookProvider interface {
 func (e *RegistrationExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Request, hooks []HookRegistrationPostExecutor, a *RegistrationRequest, i *identity.Identity) error {
 	s := session.NewSession(i, r, e.c)
 
-	if _, err := e.d.IdentityPool().Create(r.Context(), s.Identity); err != nil {
+	// We need to make sure that the identity has a valid schema before passing it down to the identity pool.
+	if err := e.d.IdentityValidator().Validate(s.Identity); err != nil {
+		return err
+	// We're now creating the identity because any of the hooks could trigger a "redirect" or a "session" which
+	// would imply that the identity has to exist already.
+	} else if _, err := e.d.IdentityPool().Create(r.Context(), s.Identity); err != nil {
 		return err
 	}
 
+	// Now we execute the post-registration hooks!
 	for _, executor := range hooks {
 		if err := executor.ExecuteRegistrationPostHook(w, r, a, s); err != nil {
+			// TODO https://github.com/ory/hive/issues/51 #51
 			return err
 		}
 	}
 
-	if _, err := e.d.IdentityPool().Update(r.Context(), s.Identity); err != nil {
-		return err
-	}
-
-	s.ResetModifiedIdentityFlag()
 	return nil
 }
 

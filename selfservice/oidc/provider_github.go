@@ -2,20 +2,17 @@ package oidc
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"net/url"
 
 	"github.com/pkg/errors"
-	"github.com/tidwall/gjson"
-	"github.com/tidwall/sjson"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 
 	"github.com/ory/x/stringslice"
 	"github.com/ory/x/stringsx"
 
+	ghapi "github.com/google/go-github/v27/github"
 	"github.com/ory/herodot"
 )
 
@@ -52,30 +49,6 @@ func (g *ProviderGitHub) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return g.oauth2(), nil
 }
 
-func (g *ProviderGitHub) nr(client *http.Client, path string, out interface{}) error {
-	req, err := http.NewRequest("GET", "https://api.github.com"+path, nil)
-	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
-	}
-	req.Header.Add("Accept", "application/vnd.github.v3+json")
-
-	res, err := client.Do(req)
-	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected status code %d from userinfo endpoint but got %d", http.StatusOK, res.StatusCode))
-	}
-
-	if err := json.NewDecoder(res.Body).Decode(out); err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
-	}
-
-	return nil
-}
-
 func (g *ProviderGitHub) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
 	grantedScopes := stringsx.Splitx(fmt.Sprintf("%s", exchange.Extra("scope")), ",")
 	for _, check := range g.Config().Scope {
@@ -84,40 +57,40 @@ func (g *ProviderGitHub) Claims(ctx context.Context, exchange *oauth2.Token) (*C
 		}
 	}
 
-	client := g.oauth2().Client(ctx, exchange)
+	gh := ghapi.NewClient(g.oauth2().Client(ctx, exchange))
 
-	req, err := http.NewRequest("GET", "https://api.github.com/user", nil)
+	user, _, err := gh.Users.Get(ctx, "")
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
-	req.Header.Add("Accept", "application/vnd.github.v3+json")
 
-	var claims json.RawMessage
-	if err := g.nr(client, "/user", &claims); err != nil {
-		return nil, err
-	}
-
-	subject := fmt.Sprintf("%d", gjson.GetBytes(claims, "id").Int())
-	if len(subject) == 0 {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected the user id to be defined but it is empty"))
+	claims := &Claims{
+		Subject: fmt.Sprintf("%d", user.GetID()),
+		Issuer:  github.Endpoint.TokenURL,
+		Name:      user.GetName(),
+		Website:   user.GetBlog(),
+		Picture:   user.GetAvatarURL(),
+		Profile:   user.GetHTMLURL(),
+		UpdatedAt: user.GetUpdatedAt().Unix(),
 	}
 
 	// GitHub does not provide the user's private emails in the call to `/user`. Therefore, if scope "user:email" is set,
 	// we want to make another request to `/user/emails` and merge that with our claims.
 	if stringslice.Has(grantedScopes, "user:email") {
-		var emails json.RawMessage
-		if err := g.nr(client, "/user/emails", &emails); err != nil {
-			return nil, err
+		emails, _, err := gh.Users.ListEmails(ctx, nil)
+		if err != nil {
+			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 		}
 
-		claims, err = sjson.SetRawBytes(claims, "emails", emails)
-		if len(subject) == 0 {
-			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to set emails claims: %s", err))
+		for k, e := range emails {
+			// If it is the primary email or it's the last email (no primary email set?), set the email.
+			if e.GetPrimary() || k == len(emails) {
+				claims.Email = e.GetEmail()
+				claims.EmailVerified = e.GetVerified()
+				break
+			}
 		}
 	}
 
-	return &Claims{
-		Subject: subject,
-		Traits:  claims,
-	}, nil
+	return claims, nil
 }

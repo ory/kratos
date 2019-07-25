@@ -1,9 +1,7 @@
 package oidc
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"net/url"
 
 	"github.com/pkg/errors"
@@ -98,18 +96,10 @@ func (g *ProviderGenericOIDC) Claims(ctx context.Context, exchange *oauth2.Token
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
 	}
 
-	claims := make(map[string]interface{})
+	var claims Claims
 	if err := token.Claims(&claims); err != nil {
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
 	}
 
-	var b bytes.Buffer
-	if err := json.NewEncoder(&b).Encode(claims); err != nil {
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
-	}
-
-	return &Claims{
-		Subject: token.Subject,
-		Traits:  b.Bytes(),
-	}, nil
+	return &claims, nil
 }

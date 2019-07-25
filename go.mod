@@ -20,6 +20,7 @@ require (
 	github.com/gobuffalo/packr/v2 v2.0.0-rc.15
 	github.com/golang/gddo v0.0.0-20181116215533-9bd4a3295021
 	github.com/golang/mock v1.3.1
+	github.com/google/go-github/v27 v27.0.1
 	github.com/google/uuid v1.1.0
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/handlers v1.4.1 // indirect
@@ -51,8 +52,6 @@ require (
 	github.com/tidwall/sjson v1.0.4
 	github.com/toqueteos/webbrowser v1.1.0 // indirect
 	github.com/urfave/negroni v1.0.0
-	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
-	github.com/xeipuuv/gojsonschema v1.1.0 // indirect
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/tools v0.0.0-20190711191110-9a621aea19f8

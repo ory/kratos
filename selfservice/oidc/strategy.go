@@ -307,22 +307,25 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 	}
 
 	i := identity.NewIdentity(s.c.DefaultIdentityTraitsSchemaURL().String())
+
+	// Validate the claims first (which will also copy the values around based on the schema)
 	if err := s.validator.Validate(
 		stringsx.Coalesce(
 			provider.Config().SchemaURL,
 		),
-		gojsonschema.NewBytesLoader(claims.Traits),
+		gojsonschema.NewGoLoader(claims),
 		NewValidationExtension().WithIdentity(i),
 	); err != nil {
 		s.d.Logger().
 			WithField("provider", provider.Config().ID).
 			WithField("schema_url", provider.Config().SchemaURL).
-			WithField("claims", fmt.Sprintf("%s", claims.Traits)).
+			WithField("claims", fmt.Sprintf("%+v", claims)).
 			Error("Unable to validate claims against provider schema. Your schema should work regardless of these values.")
 		return err
 	}
 
-	if err := s.d.IdentityValidator().Validate(i, NewValidationExtension()); err != nil {
+	// Validate the identity itself
+	if err := s.d.IdentityValidator().Validate(i); err != nil {
 		return err
 	}
 

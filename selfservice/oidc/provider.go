@@ -13,6 +13,7 @@ type Provider interface {
 }
 
 type Claims struct {
+	Issuer              string `json:"iss,omitempty"`
 	Subject             string `json:"sub,omitempty"`
 	Name                string `json:"name,omitempty"`
 	GivenName           string `json:"given_name,omitempty"`
