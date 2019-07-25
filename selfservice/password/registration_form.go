@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-playground/form"
 	"github.com/pkg/errors"
+	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 
 	"github.com/ory/gojsonschema"
@@ -91,6 +92,14 @@ func (d *RegistrationFormDecoder) form(r *http.Request, p *RegistrationFormPaylo
 			if err != nil {
 				return errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse bool: %s", err.Error()))
 			}
+		} else if strings.ToLower(value) == "__object__" && len(gjson.GetBytes(traits, path).Raw) == 0 {
+			if len(gjson.GetBytes(traits, path).Raw) == 0 {
+				traits, err = sjson.SetRawBytes(traits, path, []byte("{}"))
+				if err != nil {
+					return errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse traits: %s", err.Error()))
+				}
+			}
+			continue
 		}
 
 		traits, err = sjson.SetBytes(traits, path, v)

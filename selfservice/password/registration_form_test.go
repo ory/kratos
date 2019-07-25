@@ -58,10 +58,16 @@ func TestRegistrationFormDecoder(t *testing.T) {
 				result:  `{"password":"bar","traits":{}}`,
 			},
 			{
-				d:       "should pass without traits",
-				payload: url.Values{"request": {"bar"}, "password": {"bar"}, "traits[foo.bar]": {"baz"}, "traits[int]": {"1234"}, "traits[float]": {"1234.1234"}, "traits[boolt]": {"true"}, "traits[boolf]": {"false"}},
+				d:       "should pass with traits",
+				payload: url.Values{"traits[nested]": {"__object__"}, "request": {"bar"}, "password": {"bar"}, "traits[foo.bar]": {"baz"}, "traits[int]": {"1234"}, "traits[float]": {"1234.1234"}, "traits[boolt]": {"true"}, "traits[boolf]": {"false"}},
 				code:    http.StatusOK,
-				result:  `{"password":"bar","traits":{"boolt":true,"boolf":false,"int":1234,"foo":{"bar":"baz"},"float":1234.1234}}`,
+				result:  `{"password":"bar","traits":{"nested":{},"boolt":true,"boolf":false,"int":1234,"foo":{"bar":"baz"},"float":1234.1234}}`,
+			},
+			{
+					d:       "should not override existing nested objects",
+				payload: url.Values{"traits[nested.inner]": {"foobar"}, "traits[nested]": {"__object__"}, "request": {"bar"}, "password": {"bar"}, "traits[foo.bar]": {"baz"}, "traits[int]": {"1234"}, "traits[float]": {"1234.1234"}, "traits[boolt]": {"true"}, "traits[boolf]": {"false"}},
+				code:    http.StatusOK,
+				result:  `{"password":"bar","traits":{"nested":{"inner":"foobar"},"boolt":true,"boolf":false,"int":1234,"foo":{"bar":"baz"},"float":1234.1234}}`,
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
@@ -97,7 +103,7 @@ func TestRegistrationFormDecoder(t *testing.T) {
 				result:  `{"password":"bar","traits":{}}`,
 			},
 			{
-				d:       "should pass without traits",
+				d:       "should pass with traits",
 				payload: `{"password":"bar","traits":{"foo":{"bar":"baz"}}}`,
 				code:    http.StatusOK,
 				result:  `{"password":"bar","traits":{"foo":{"bar":"baz"}}}`,

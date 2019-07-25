@@ -20,8 +20,8 @@ func NewHandler(
 	}
 }
 
-func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET("/errors", h.get)
+func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
+	public.GET("/errors", h.get)
 }
 
 func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
