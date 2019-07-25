@@ -1,4 +1,4 @@
-# Contributing to ORY Hydra
+# Contributing to ORY Hive
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -16,22 +16,22 @@
 
 ## Introduction
 
-Please note: We take ORY Hydra's security and our users' trust very seriously. If you believe you have found a
-security issue in ORY Hydra, please responsibly disclose by contacting us at hi@ory.sh.
+Please note: We take ORY Hive's security and our users' trust very seriously. If you believe you have found a
+security issue in ORY Hive, please responsibly disclose by contacting us at hi@ory.sh.
 
 First: if you're unsure or afraid of anything, just ask or submit the issue or pull request anyways. You won't be
 yelled at for giving it your best effort. The worst that can happen is that you'll be politely asked to change
 something. We appreciate any sort of contributions, and don't want a wall of rules to get in the way of that.
 
 That said, if you want to ensure that a pull request is likely to be merged, talk to us! You can find out our thoughts
-and ensure that your contribution won't clash or be obviated by ORY Hydra's normal direction. A great way to do this is via
+and ensure that your contribution won't clash or be obviated by ORY Hive's normal direction. A great way to do this is via
 the [ORY Community](https://community.ory.sh/) or join the [ORY Chat](https://www.ory.sh/chat).
 
 ## Contributing Code
 
 Unless you are fixing a known bug, we **strongly** recommend discussing it with the core team via a GitHub issue or
 [in our chat](https://www.ory.sh/chat) before getting started to ensure your work is consistent with
-ORY Hydra's roadmap and architecture.
+ORY Hive's roadmap and architecture.
 
 All contributions are made via pull request. Note that **all patches from all contributors get reviewed**. After a pull
 request is made other contributors will offer feedback, and if the patch passes review a maintainer will accept it with
@@ -87,7 +87,7 @@ we've got your back.
     behavior that excludes people in socially marginalized groups.
 * Private harassment is also unacceptable. No matter who you are, if you feel you have been or are being harassed or
     made uncomfortable by a community member, please contact one of the channel ops or a member of the ORY
-    Hydra core team immediately.
+    Hive core team immediately.
 * Likewise any spamming, trolling, flaming, baiting or other attention-stealing behaviour is not welcome.
 
 We welcome discussion about creating a welcoming, safe, and productive environment for the community. If you have any questions, feedback, or concerns [please let us know](https://www.ory.sh/chat).
