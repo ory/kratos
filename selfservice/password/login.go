@@ -31,7 +31,7 @@ func (s *Strategy) setLoginRoutes(r *x.RouterPublic) {
 
 func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *selfservice.LoginRequest, err error) {
 	s.d.SelfServiceRequestErrorHandler().HandleLoginError(w, r, CredentialsType, rr, err,
-		&selfservice.RequestErrorHandlerOptions{
+		&selfservice.ErrorHandlerOptions{
 			AdditionalKeys: map[string][]string{
 				csrfTokenName: {s.cg(r)},
 			},
@@ -49,7 +49,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 
 	ar, err := s.d.LoginRequestManager().GetLoginRequest(r.Context(), rid)
 	if err != nil {
-		s.handleLoginError(w, r, NewBlankLoginRequest(rid), err)
+		s.handleLoginError(w, r, nil, err)
 		return
 	}
 
@@ -109,9 +109,9 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *selfservice.LoginReq
 		url.Values{"request": {sr.ID}},
 	)
 
-	sr.Methods[CredentialsType] = &selfservice.LoginRequestMethod{
+	sr.Methods[CredentialsType] = &selfservice.DefaultRequestMethod{
 		Method: CredentialsType,
-		Config: &LoginRequestMethodConfig{
+		Config: &RequestMethodConfig{
 			Action: action.String(),
 			Fields: selfservice.FormFields{
 				"identifier": {

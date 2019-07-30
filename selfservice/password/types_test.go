@@ -7,7 +7,7 @@ import (
 )
 
 func TestRegistrationRequestMethodConfig(t *testing.T) {
-	c := NewRegistrationRequestMethodConfig()
+	c := NewRequestMethodConfig()
 
 	assert.Empty(t, c.Fields["foo"].Error)
 	c.GetFormFields().SetError("foo", "bar")

@@ -230,9 +230,9 @@ func TestStrategy(t *testing.T) {
 			URL:    urlx.ParseOrPanic(redirectTo),
 			Header: map[string][]string{},
 		})
-		r.Methods[CredentialsType] = &selfservice.LoginRequestMethod{
+		r.Methods[CredentialsType] = &selfservice.DefaultRequestMethod{
 			Method: CredentialsType,
-			Config: &RequestMethodConfig{},
+			Config: NewRequestMethodConfig(),
 		}
 		require.NoError(t, reg.LoginRequestManager().CreateLoginRequest(context.Background(), r))
 		return r
@@ -244,9 +244,9 @@ func TestStrategy(t *testing.T) {
 			URL:    urlx.ParseOrPanic(redirectTo),
 			Header: map[string][]string{},
 		})
-		r.Methods[CredentialsType] = &selfservice.RegistrationRequestMethod{
+		r.Methods[CredentialsType] = &selfservice.DefaultRequestMethod{
 			Method: CredentialsType,
-			Config: &RequestMethodConfig{},
+			Config: NewRequestMethodConfig(),
 		}
 		require.NoError(t, reg.RegistrationRequestManager().CreateRegistrationRequest(context.Background(), r))
 		return r
@@ -300,7 +300,9 @@ func TestStrategy(t *testing.T) {
 
 		r := nrr(t, returnTS.URL, time.Minute)
 		res, body := mr(t, "valid", r.ID)
-		aue(t, res, body, "not match format")
+
+		require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.fields.traits\\.subject.error").String(), "not match format 'email'", "%s", body)
 	})
 
 	t.Run("case=register and then login", func(t *testing.T) {

@@ -36,7 +36,7 @@ func (s *Strategy) setRegistrationRoutes(r *x.RouterPublic) {
 
 func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Request, rr *selfservice.RegistrationRequest, err error) {
 	s.d.SelfServiceRequestErrorHandler().HandleRegistrationError(w, r, CredentialsType, rr, err,
-		&selfservice.RequestErrorHandlerOptions{
+		&selfservice.ErrorHandlerOptions{
 			AdditionalKeys: map[string][]string{
 				csrfTokenName: {s.cg(r)},
 			},
@@ -54,7 +54,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 
 	ar, err := s.d.RegistrationRequestManager().GetRegistrationRequest(r.Context(), rid)
 	if err != nil {
-		s.handleRegistrationError(w, r, NewBlankRegistrationRequest(rid), err)
+		s.handleRegistrationError(w, r, nil, err)
 		return
 	}
 
@@ -151,9 +151,9 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *selfservice.R
 		url.Values{"request": {sr.ID}},
 	)
 
-	sr.Methods[CredentialsType] = &selfservice.RegistrationRequestMethod{
+	sr.Methods[CredentialsType] = &selfservice.DefaultRequestMethod{
 		Method: CredentialsType,
-		Config: &RegistrationRequestMethodConfig{
+		Config: &RequestMethodConfig{
 			Action: action.String(),
 			Fields: selfservice.FormFields{
 				"password": {

@@ -30,23 +30,36 @@ import (
 )
 
 func nrr(id string, exp time.Duration) *selfservice.RegistrationRequest {
-	r := NewBlankRegistrationRequest("request-" + id)
-	r.ExpiresAt = time.Now().Add(exp)
-	r.Methods[CredentialsType].Config.(*RegistrationRequestMethodConfig).Action = "/action"
-	r.Methods[CredentialsType].Config.(*RegistrationRequestMethodConfig).Fields = selfservice.FormFields{
-		"password": {
-			Name:     "password",
-			Type:     "password",
-			Required: true,
-		},
-		"csrf_token": {
-			Name:     "csrf_token",
-			Type:     "hidden",
-			Required: true,
-			Value:    "csrf-token",
+	return &selfservice.RegistrationRequest{
+		Request: &selfservice.Request{
+			ID:             "request-" + id,
+			IssuedAt:       time.Now().UTC(),
+			ExpiresAt:      time.Now().UTC().Add(exp),
+			RequestURL:     "",
+			RequestHeaders: http.Header{},
+			Methods: map[identity.CredentialsType]*selfservice.DefaultRequestMethod{
+				CredentialsType: {
+					Method: CredentialsType,
+					Config: &RequestMethodConfig{
+						Action: "/action",
+						Fields: selfservice.FormFields{
+							"password": {
+								Name:     "password",
+								Type:     "password",
+								Required: true,
+							},
+							"csrf_token": {
+								Name:     "csrf_token",
+								Type:     "hidden",
+								Required: true,
+								Value:    "csrf-token",
+							},
+						},
+					},
+				},
+			},
 		},
 	}
-	return r
 }
 
 // fieldNameSet checks if the fields have the right "name" set.
@@ -234,22 +247,22 @@ func TestRegistration(t *testing.T) {
 				Request: &selfservice.Request{
 					ID:        "request-9",
 					ExpiresAt: time.Now().Add(time.Minute),
-				},
-				Methods: map[identity.CredentialsType]*selfservice.RegistrationRequestMethod{
-					CredentialsType: {
-						Method: CredentialsType,
-						Config: &RegistrationRequestMethodConfig{
-							Action: "/action",
-							Error:  "some error",
-							Fields: map[string]selfservice.FormField{
-								"traits.foo": {
-									Name:  "traits.foo",
-									Value: "bar",
-									Error: "bar",
-									Type:  "text",
-								},
-								"password": {
-									Name: "password",
+					Methods: map[identity.CredentialsType]*selfservice.DefaultRequestMethod{
+						CredentialsType: {
+							Method: CredentialsType,
+							Config: &RequestMethodConfig{
+								Action: "/action",
+								Error:  "some error",
+								Fields: map[string]selfservice.FormField{
+									"traits.foo": {
+										Name:  "traits.foo",
+										Value: "bar",
+										Error: "bar",
+										Type:  "text",
+									},
+									"password": {
+										Name: "password",
+									},
 								},
 							},
 						},
@@ -331,9 +344,9 @@ func TestRegistration(t *testing.T) {
 
 		sr := selfservice.NewRegistrationRequest(time.Minute, &http.Request{URL: urlx.ParseOrPanic("/")})
 		require.NoError(t, s.PopulateRegistrationMethod(&http.Request{}, sr))
-		assert.EqualValues(t, &selfservice.RegistrationRequestMethod{
+		assert.EqualValues(t, &selfservice.DefaultRequestMethod{
 			Method: CredentialsType,
-			Config: &RegistrationRequestMethodConfig{
+			Config: &RequestMethodConfig{
 				Action: "https://foo" + RegistrationPath + "?request=" + sr.ID,
 				Fields: selfservice.FormFields{
 					"password": {

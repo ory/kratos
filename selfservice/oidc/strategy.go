@@ -389,7 +389,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *selfservice.LoginReq
 	if err != nil {
 		return err
 	}
-	sr.Methods[CredentialsType] = &selfservice.LoginRequestMethod{
+	sr.Methods[CredentialsType] = &selfservice.DefaultRequestMethod{
 		Method: CredentialsType,
 		Config: config,
 	}
@@ -401,7 +401,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *selfservice.R
 	if err != nil {
 		return err
 	}
-	sr.Methods[CredentialsType] = &selfservice.RegistrationRequestMethod{
+	sr.Methods[CredentialsType] = &selfservice.DefaultRequestMethod{
 		Method: CredentialsType,
 		Config: config,
 	}

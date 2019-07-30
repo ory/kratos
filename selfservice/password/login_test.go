@@ -30,34 +30,47 @@ import (
 )
 
 func nlr(id string, exp time.Duration) *selfservice.LoginRequest {
-	r := NewBlankLoginRequest("request-" + id)
-	r.ExpiresAt = time.Now().Add(exp)
-	r.Methods[CredentialsType].Config.(*LoginRequestMethodConfig).Action = "/action"
-	r.Methods[CredentialsType].Config.(*LoginRequestMethodConfig).Fields = selfservice.FormFields{
-		"identifier": {
-			Name:     "identifier",
-			Type:     "text",
-			Required: true,
-		},
-		"password": {
-			Name:     "password",
-			Type:     "password",
-			Required: true,
-		},
-		"csrf_token": {
-			Name:     "csrf_token",
-			Type:     "hidden",
-			Required: true,
-			Value:    "anti-rf-token",
-		},
-		"request": {
-			Name:     "request",
-			Type:     "hidden",
-			Required: true,
-			Value:    "request-" + id,
+	return &selfservice.LoginRequest{
+		Request: &selfservice.Request{
+			ID:             "request-" + id,
+			IssuedAt:       time.Now().UTC(),
+			ExpiresAt:      time.Now().UTC().Add(exp),
+			RequestURL:     "",
+			RequestHeaders: http.Header{},
+			Methods: map[identity.CredentialsType]*selfservice.DefaultRequestMethod{
+				CredentialsType: {
+					Method: CredentialsType,
+					Config: &RequestMethodConfig{
+						Action: "/action",
+						Fields: selfservice.FormFields{
+							"identifier": {
+								Name:     "identifier",
+								Type:     "text",
+								Required: true,
+							},
+							"password": {
+								Name:     "password",
+								Type:     "password",
+								Required: true,
+							},
+							"csrf_token": {
+								Name:     "csrf_token",
+								Type:     "hidden",
+								Required: true,
+								Value:    "anti-rf-token",
+							},
+							"request": {
+								Name:     "request",
+								Type:     "hidden",
+								Required: true,
+								Value:    "request-" + id,
+							},
+						},
+					},
+				},
+			},
 		},
 	}
-	return r
 }
 
 type loginStrategyDependencies interface {
@@ -289,23 +302,23 @@ func TestLogin(t *testing.T) {
 				Request: &selfservice.Request{
 					ID:        "request-8",
 					ExpiresAt: time.Now().Add(time.Minute),
-				},
-				Methods: map[identity.CredentialsType]*selfservice.LoginRequestMethod{
-					CredentialsType: {
-						Method: CredentialsType,
-						Config: &LoginRequestMethodConfig{
-							Action: "/action",
-							Error:  "some error",
-							Fields: map[string]selfservice.FormField{
-								"identifier": {
-									Value: "baz",
-									Name:  "identifier",
-									Error: "err",
-								},
-								"password": {
-									Value: "bar",
-									Name:  "password",
-									Error: "err",
+					Methods: map[identity.CredentialsType]*selfservice.DefaultRequestMethod{
+						CredentialsType: {
+							Method: CredentialsType,
+							Config: &RequestMethodConfig{
+								Action: "/action",
+								Error:  "some error",
+								Fields: map[string]selfservice.FormField{
+									"identifier": {
+										Value: "baz",
+										Name:  "identifier",
+										Error: "err",
+									},
+									"password": {
+										Value: "bar",
+										Name:  "password",
+										Error: "err",
+									},
 								},
 							},
 						},

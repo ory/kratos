@@ -19,7 +19,7 @@ func TestRequestManagerMemory(t *testing.T) {
 
 		var r LoginRequest
 		require.NoError(t, faker.FakeData(&r))
-		r.Methods = map[identity.CredentialsType]*LoginRequestMethod{
+		r.Methods = map[identity.CredentialsType]*DefaultRequestMethod{
 			password.CredentialsType: {},
 		}
 
@@ -28,12 +28,13 @@ func TestRequestManagerMemory(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, r, *g)
 
-		require.NoError(t, m.UpdateLoginRequest(context.Background(), r.ID, password.CredentialsType, &password.LoginRequestMethodConfig{Action: "foo"}))
+		require.NoError(t, m.UpdateLoginRequest(context.Background(), r.ID, password.CredentialsType, &password.RequestMethodConfig{Action: "foo"}))
 
 		g, err = m.GetLoginRequest(context.Background(), r.ID)
 		require.NoError(t, err)
 		assert.EqualValues(t, r, *g)
-		assert.EqualValues(t, "foo", r.Methods[password.CredentialsType].Config.(*password.LoginRequestMethodConfig).Action)
+		assert.EqualValues(t, password.CredentialsType, r.Active)
+		assert.EqualValues(t, "foo", r.Methods[password.CredentialsType].Config.(*password.RequestMethodConfig).Action)
 	})
 
 	t.Run("suite=sign-up", func(t *testing.T) {
@@ -41,7 +42,7 @@ func TestRequestManagerMemory(t *testing.T) {
 
 		var r RegistrationRequest
 		require.NoError(t, faker.FakeData(&r))
-		r.Methods = map[identity.CredentialsType]*RegistrationRequestMethod{
+		r.Methods = map[identity.CredentialsType]*DefaultRequestMethod{
 			password.CredentialsType: {},
 		}
 
@@ -50,11 +51,12 @@ func TestRequestManagerMemory(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, r, *g)
 
-		require.NoError(t, m.UpdateRegistrationRequest(context.Background(), r.ID, password.CredentialsType, &password.RegistrationRequestMethodConfig{Action: "foo"}))
+		require.NoError(t, m.UpdateRegistrationRequest(context.Background(), r.ID, password.CredentialsType, &password.RequestMethodConfig{Action: "foo"}))
 
 		g, err = m.GetRegistrationRequest(context.Background(), r.ID)
 		require.NoError(t, err)
 		assert.EqualValues(t, r, *g)
-		assert.EqualValues(t, "foo", r.Methods[password.CredentialsType].Config.(*password.RegistrationRequestMethodConfig).Action)
+		assert.EqualValues(t, password.CredentialsType, r.Active)
+		assert.EqualValues(t, "foo", r.Methods[password.CredentialsType].Config.(*password.RequestMethodConfig).Action)
 	})
 }
