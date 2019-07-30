@@ -23,7 +23,7 @@ func TestHandler(t *testing.T) {
 	_, reg := internal.NewMemoryRegistry(t)
 	h := errorx.NewHandler(reg)
 
-	router := x.NewRouterAdmin()
+	router := x.NewRouterPublic()
 	h.RegisterPublicRoutes(router)
 	ts := httptest.NewServer(router)
 	defer ts.Close()

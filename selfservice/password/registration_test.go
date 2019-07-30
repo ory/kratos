@@ -33,7 +33,7 @@ func nrr(id string, exp time.Duration) *selfservice.RegistrationRequest {
 	r := NewBlankRegistrationRequest("request-" + id)
 	r.ExpiresAt = time.Now().Add(exp)
 	r.Methods[CredentialsType].Config.(*RegistrationRequestMethodConfig).Action = "/action"
-	r.Methods[CredentialsType].Config.(*RegistrationRequestMethodConfig).Fields = FormFields{
+	r.Methods[CredentialsType].Config.(*RegistrationRequestMethodConfig).Fields = selfservice.FormFields{
 		"password": {
 			Name:     "password",
 			Type:     "password",
@@ -47,6 +47,14 @@ func nrr(id string, exp time.Duration) *selfservice.RegistrationRequest {
 		},
 	}
 	return r
+}
+
+// fieldNameSet checks if the fields have the right "name" set.
+func fieldNameSet(t *testing.T, body []byte, fields ...string) {
+	for _, f := range fields {
+		fieldid := strings.Replace(f, ".", "\\.", -1) // we need to escape this because otherwise json path will interpret this as a nested object (it is not).
+		assert.Equal(t, gjson.GetBytes(body, fmt.Sprintf("methods.password.config.fields.%s.name", fieldid)).String(), f, "%s", body)
+	}
 }
 
 func TestRegistration(t *testing.T) {
@@ -92,8 +100,8 @@ func TestRegistration(t *testing.T) {
 			d:  "should return an error because the request does not exist",
 			ar: nrr("1", time.Minute),
 			payload: url.Values{
-				"traits[username]": {"registration-identifier-1"},
-				"password":         {"password"},
+				"traits.username": {"registration-identifier-1"},
+				"password":        {"password"},
 			}.Encode(),
 			rid: "does-not-exist",
 			assert: func(t *testing.T, r *http.Response) {
@@ -110,8 +118,8 @@ func TestRegistration(t *testing.T) {
 			d:  "should return an error because the request is expired",
 			ar: nrr("2", -time.Minute),
 			payload: url.Values{
-				"traits[username]": {"registration-identifier-2"},
-				"password":         {"password"},
+				"traits.username": {"registration-identifier-2"},
+				"password":        {"password"},
 			}.Encode(),
 			rid: "2",
 			assert: func(t *testing.T, r *http.Response) {
@@ -128,9 +136,9 @@ func TestRegistration(t *testing.T) {
 			d:  "should return an error because the password failed validation",
 			ar: nrr("4", time.Minute),
 			payload: url.Values{
-				"traits[username]": {"registration-identifier-4"},
-				"password":         {"password"},
-				"traits[foobar]":   {"bar"},
+				"traits.username": {"registration-identifier-4"},
+				"password":        {"password"},
+				"traits.foobar":   {"bar"},
 			}.Encode(),
 			rid: "4",
 			assert: func(t *testing.T, r *http.Response) {
@@ -141,9 +149,7 @@ func TestRegistration(t *testing.T) {
 				// Let's ensure that the payload is being propagated properly.
 				assert.Equal(t, "request-4", gjson.GetBytes(body, "id").String(), "%s", body)
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
-				for _, f := range []string{"password", "csrf_token", "traits[username]", "traits[foobar]"} {
-					assert.Contains(t, gjson.GetBytes(body, fmt.Sprintf("methods.password.config.fields.%s.name", f)).String(), f, "%s", body)
-				}
+				fieldNameSet(t, body, "password", "csrf_token", "traits.username", "traits.foobar")
 				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.password.error").String(), "data breaches and must no longer be used.", "%s", body)
 			},
 		},
@@ -152,8 +158,8 @@ func TestRegistration(t *testing.T) {
 			ar:  nrr("5", time.Minute),
 			rid: "5",
 			payload: url.Values{
-				"traits[username]": {"registration-identifier-5"},
-				"password":         {uuid.New().String()},
+				"traits.username": {"registration-identifier-5"},
+				"password":        {uuid.New().String()},
 			}.Encode(),
 			assert: func(t *testing.T, r *http.Response) {
 				assert.Contains(t, r.Request.URL.Path, "signup-ts")
@@ -163,10 +169,8 @@ func TestRegistration(t *testing.T) {
 				// Let's ensure that the payload is being propagated properly.
 				assert.Equal(t, "request-5", gjson.GetBytes(body, "id").String(), "%s", body)
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
-				for _, f := range []string{"password", "csrf_token", "traits[username]", "traits[foobar]"} {
-					assert.Equal(t, gjson.GetBytes(body, fmt.Sprintf("methods.password.config.fields.%s.name", f)).String(), f, "%s", body)
-				}
-				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.traits[foobar].error").String(), "foobar is required", "%s", body)
+				fieldNameSet(t, body, "password", "csrf_token", "traits.username", "traits.foobar")
+				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.traits\\.foobar.error").String(), "foobar is required", "%s", body)
 			},
 		},
 		{
@@ -174,9 +178,9 @@ func TestRegistration(t *testing.T) {
 			ar:  nrr("6", time.Minute),
 			rid: "6",
 			payload: url.Values{
-				"traits[username]": {"registration-identifier-6"},
-				"password":         {uuid.New().String()},
-				"traits[foobar]":   {"bar"},
+				"traits.username": {"registration-identifier-6"},
+				"password":        {uuid.New().String()},
+				"traits.foobar":   {"bar"},
 			}.Encode(),
 			schema: "file://./stub/missing-identifier.schema.json",
 			assert: func(t *testing.T, r *http.Response) {
@@ -192,9 +196,9 @@ func TestRegistration(t *testing.T) {
 			d:  "should fail because schema does not exist",
 			ar: nrr("7", time.Minute),
 			payload: url.Values{
-				"traits[username]": {"registration-identifier-7"},
-				"password":         {uuid.New().String()},
-				"traits[foobar]":   {"bar"},
+				"traits.username": {"registration-identifier-7"},
+				"password":        {uuid.New().String()},
+				"traits.foobar":   {"bar"},
 			}.Encode(),
 			rid:    "7",
 			schema: "file://./stub/i-do-not-exist.schema.json",
@@ -212,9 +216,9 @@ func TestRegistration(t *testing.T) {
 			ar:  nrr("8", time.Minute),
 			rid: "8",
 			payload: url.Values{
-				"traits[username]": {"registration-identifier-8"},
-				"password":         {uuid.New().String()},
-				"traits[foobar]":   {"bar"},
+				"traits.username": {"registration-identifier-8"},
+				"password":        {uuid.New().String()},
+				"traits.foobar":   {"bar"},
 			}.Encode(),
 			assert: func(t *testing.T, r *http.Response) {
 				body, err := ioutil.ReadAll(r.Body)
@@ -237,9 +241,9 @@ func TestRegistration(t *testing.T) {
 						Config: &RegistrationRequestMethodConfig{
 							Action: "/action",
 							Error:  "some error",
-							Fields: map[string]FormField{
-								"traits[foo]": {
-									Name:  "traits[foo]",
+							Fields: map[string]selfservice.FormField{
+								"traits.foo": {
+									Name:  "traits.foo",
 									Value: "bar",
 									Error: "bar",
 									Type:  "text",
@@ -253,8 +257,8 @@ func TestRegistration(t *testing.T) {
 				},
 			},
 			payload: url.Values{
-				"traits[username]": {"registration-identifier-9"},
-				"password":         {uuid.New().String()},
+				"traits.username": {"registration-identifier-9"},
+				"password":        {uuid.New().String()},
 			}.Encode(),
 			assert: func(t *testing.T, r *http.Response) {
 				assert.Contains(t, r.Request.URL.Path, "signup-ts")
@@ -264,13 +268,12 @@ func TestRegistration(t *testing.T) {
 				// Let's ensure that the payload is being propagated properly.
 				assert.Equal(t, "request-9", gjson.GetBytes(body, "id").String(), "%s", body)
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
-				for _, f := range []string{"password", "csrf_token", "traits[username]"} {
-					assert.Equal(t, gjson.GetBytes(body, fmt.Sprintf("methods.password.config.fields.%s.name", f)).String(), f, "%s", body)
-				}
-				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.traits[foo].value"))
-				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.traits[foo].error"))
+				fieldNameSet(t, body, "password", "csrf_token", "traits.username")
+
+				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.traits\\.foo.value"))
+				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.traits\\.foo.error"))
 				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.error"))
-				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.traits[foobar].error").String(), "foobar is required", "%s", body)
+				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.traits\\.foobar.error").String(), "foobar is required", "%s", body)
 			},
 		},
 	} {
@@ -332,7 +335,7 @@ func TestRegistration(t *testing.T) {
 			Method: CredentialsType,
 			Config: &RegistrationRequestMethodConfig{
 				Action: "https://foo" + RegistrationPath + "?request=" + sr.ID,
-				Fields: FormFields{
+				Fields: selfservice.FormFields{
 					"password": {
 						Name:     "password",
 						Type:     "password",

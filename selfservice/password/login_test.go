@@ -33,7 +33,7 @@ func nlr(id string, exp time.Duration) *selfservice.LoginRequest {
 	r := NewBlankLoginRequest("request-" + id)
 	r.ExpiresAt = time.Now().Add(exp)
 	r.Methods[CredentialsType].Config.(*LoginRequestMethodConfig).Action = "/action"
-	r.Methods[CredentialsType].Config.(*LoginRequestMethodConfig).Fields = FormFields{
+	r.Methods[CredentialsType].Config.(*LoginRequestMethodConfig).Fields = selfservice.FormFields{
 		"identifier": {
 			Name:     "identifier",
 			Type:     "text",
@@ -296,7 +296,7 @@ func TestLogin(t *testing.T) {
 						Config: &LoginRequestMethodConfig{
 							Action: "/action",
 							Error:  "some error",
-							Fields: map[string]FormField{
+							Fields: map[string]selfservice.FormField{
 								"identifier": {
 									Value: "baz",
 									Name:  "identifier",

@@ -13,7 +13,10 @@ import (
 	"github.com/ory/x/stringsx"
 
 	ghapi "github.com/google/go-github/v27/github"
+
 	"github.com/ory/herodot"
+
+	"github.com/ory/hive/selfservice"
 )
 
 type ProviderGitHub struct {
@@ -53,7 +56,7 @@ func (g *ProviderGitHub) Claims(ctx context.Context, exchange *oauth2.Token) (*C
 	grantedScopes := stringsx.Splitx(fmt.Sprintf("%s", exchange.Extra("scope")), ",")
 	for _, check := range g.Config().Scope {
 		if !stringslice.Has(grantedScopes, check) {
-			return nil, errors.WithStack(ErrScopeMissing)
+			return nil, errors.WithStack(selfservice.ErrScopeMissing)
 		}
 	}
 
@@ -65,8 +68,8 @@ func (g *ProviderGitHub) Claims(ctx context.Context, exchange *oauth2.Token) (*C
 	}
 
 	claims := &Claims{
-		Subject: fmt.Sprintf("%d", user.GetID()),
-		Issuer:  github.Endpoint.TokenURL,
+		Subject:   fmt.Sprintf("%d", user.GetID()),
+		Issuer:    github.Endpoint.TokenURL,
 		Name:      user.GetName(),
 		Website:   user.GetBlog(),
 		Picture:   user.GetAvatarURL(),

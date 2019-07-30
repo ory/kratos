@@ -6,17 +6,12 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/ory/herodot"
-
 	"github.com/ory/hive/identity"
 )
 
-var ErrLoginRequestExpired = herodot.ErrBadRequest.
-	WithError("login request expired")
-
 type LoginRequestMethod struct {
 	Method identity.CredentialsType `json:"method"`
-	Config interface{}              `json:"config" faker:"-"`
+	Config RequestMethodConfig      `json:"config" faker:"-"`
 }
 
 type LoginRequest struct {

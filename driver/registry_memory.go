@@ -54,6 +54,7 @@ type RegistryMemory struct {
 	selfserviceLoginExecutor        *selfservice.LoginExecutor
 	selfserviceStrategyHandler      *selfservice.StrategyHandler
 	selfserviceStrategies           []selfservice.Strategy
+	seflserviceRequestErrorHandler  *selfservice.RequestErrorHandler
 
 	writer herodot.Writer
 }
@@ -160,6 +161,13 @@ func (m *RegistryMemory) PostLoginHooks(credentialsType identity.CredentialsType
 		b[k] = v
 	}
 	return b
+}
+
+func (m *RegistryMemory) SelfServiceRequestErrorHandler() *selfservice.RequestErrorHandler {
+	if m.seflserviceRequestErrorHandler == nil {
+		m.seflserviceRequestErrorHandler = selfservice.NewRequestErrorHandler(m, m.c)
+	}
+	return m.seflserviceRequestErrorHandler
 }
 
 func (m *RegistryMemory) AuthHookRegistrationPreExecutors() []selfservice.HookRegistrationPreExecutor {

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strings"
 
 	"github.com/coreos/go-oidc"
@@ -54,6 +53,7 @@ type dependencies interface {
 	selfservice.PostRegistrationHookProvider
 	selfservice.StrategyHandlerProvider
 	selfservice.PostLoginHookProvider
+	selfservice.RequestErrorHandlerProvider
 }
 
 // Strategy implements selfservice.LoginStrategy, selfservice.RegistrationStrategy. It supports both login
@@ -321,7 +321,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 			WithField("schema_url", provider.Config().SchemaURL).
 			WithField("claims", fmt.Sprintf("%+v", claims)).
 			Error("Unable to validate claims against provider schema. Your schema should work regardless of these values.")
-		return err
+		return errors.WithStack(herodot.ErrInternalServerError.WithTrace(err).WithReasonf("%s", err))
 	}
 
 	// Validate the identity itself
@@ -372,7 +372,7 @@ func (s *Strategy) populateMethod(r *http.Request, request string) (*RequestMeth
 		return nil, err
 	}
 
-	var sc RequestMethodConfig
+	sc := NewRequestMethodConfig()
 	for _, provider := range conf.Providers {
 		sc.Providers = append(sc.Providers, RequestMethodConfigProvider{
 			ID:  provider.ID,
@@ -380,7 +380,7 @@ func (s *Strategy) populateMethod(r *http.Request, request string) (*RequestMeth
 		})
 	}
 
-	return &sc, nil
+	return sc, nil
 }
 
 func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *selfservice.LoginRequest) error {
@@ -437,77 +437,14 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid strin
 		return
 	}
 
-	switch et := errors.Cause(err).(type) {
-	case *herodot.DefaultError:
-		switch err.Error() {
-		case ErrIDTokenMissing.Error():
-			fallthrough
-		case ErrScopeMissing.Error():
-			fallthrough
-		case selfservice.ErrLoginRequestExpired.Error():
-			fallthrough
-		case selfservice.ErrRegistrationRequestExpired.Error():
-			var redirectTo *url.URL
-
-			if lr, err := s.d.LoginRequestManager().GetLoginRequest(r.Context(), rid); err == nil {
-				redirectTo = s.c.LoginURL()
-				config := lr.Methods[CredentialsType].Config.(*RequestMethodConfig)
-				config.Error = et.Reason()
-				if err := s.d.LoginRequestManager().UpdateLoginRequest(r.Context(), rid, CredentialsType, config); err != nil {
-					s.d.ErrorManager().ForwardError(w, r, err)
-					return
-				}
-			} else if rr, err := s.d.RegistrationRequestManager().GetRegistrationRequest(r.Context(), rid); err == nil {
-				redirectTo = s.c.RegisterURL()
-				config := rr.Methods[CredentialsType].Config.(*RequestMethodConfig)
-				config.Error = et.Reason()
-				if err := s.d.RegistrationRequestManager().UpdateRegistrationRequest(r.Context(), rid, CredentialsType, config); err != nil {
-					s.d.ErrorManager().ForwardError(w, r, err)
-					return
-				}
-			} else {
-				s.d.ErrorManager().ForwardError(w, r, err)
-				return
-			}
-
-			http.Redirect(w, r, urlx.CopyWithQuery(redirectTo, url.Values{"request": {rid}}).String(), http.StatusFound)
-		default:
-			s.d.ErrorManager().ForwardError(w, r, err)
-			return
-		}
-	case schema.ResultErrors:
-		var redirectTo *url.URL
-		var reason string
-
-		for k, e := range et {
-			herodot.DefaultErrorLogger(s.d.Logger(), err).Warnf("Unable to validate identity data from upstream social sign in provider (%d of %d): %s", k+1, len(et), e.String())
-			reason = fmt.Sprintf("Unable to validate identity data, make sure to accept all permissions: %s\n", e.String())
-		}
-
-		if lr, err := s.d.LoginRequestManager().GetLoginRequest(r.Context(), rid); err == nil {
-			redirectTo = s.c.LoginURL()
-			config := lr.Methods[CredentialsType].Config.(*RequestMethodConfig)
-			config.Error = reason
-			if err := s.d.LoginRequestManager().UpdateLoginRequest(r.Context(), rid, CredentialsType, config); err != nil {
-				s.d.ErrorManager().ForwardError(w, r, err)
-				return
-			}
-		} else if rr, err := s.d.RegistrationRequestManager().GetRegistrationRequest(r.Context(), rid); err == nil {
-			redirectTo = s.c.RegisterURL()
-			config := rr.Methods[CredentialsType].Config.(*RequestMethodConfig)
-			config.Error = reason
-			if err := s.d.RegistrationRequestManager().UpdateRegistrationRequest(r.Context(), rid, CredentialsType, config); err != nil {
-				s.d.ErrorManager().ForwardError(w, r, err)
-				return
-			}
-		} else {
-			s.d.ErrorManager().ForwardError(w, r, err)
-			return
-		}
-
-		http.Redirect(w, r, urlx.CopyWithQuery(redirectTo, url.Values{"request": {rid}}).String(), http.StatusFound)
-
-	default:
-		s.d.ErrorManager().ForwardError(w, r, err)
+	if lr, rerr := s.d.LoginRequestManager().GetLoginRequest(r.Context(), rid); rerr == nil {
+		s.d.SelfServiceRequestErrorHandler().HandleLoginError(w, r, CredentialsType, lr, err, nil)
+		return
+	} else if rr, rerr := s.d.RegistrationRequestManager().GetRegistrationRequest(r.Context(), rid); rerr == nil {
+		s.d.SelfServiceRequestErrorHandler().HandleRegistrationError(w, r, CredentialsType, rr, err, nil)
+		return
 	}
+
+	s.d.ErrorManager().ForwardError(w, r, err)
+	return
 }

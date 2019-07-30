@@ -9,7 +9,7 @@ import (
 type RegistrationRequestManager interface {
 	CreateRegistrationRequest(context.Context, *RegistrationRequest) error
 	GetRegistrationRequest(ctx context.Context, id string) (*RegistrationRequest, error)
-	UpdateRegistrationRequest(context.Context, string, identity.CredentialsType, interface{}) error
+	UpdateRegistrationRequest(context.Context, string, identity.CredentialsType, RequestMethodConfig) error
 }
 
 type RegistrationRequestManagementProvider interface {

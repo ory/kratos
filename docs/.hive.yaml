@@ -21,8 +21,8 @@ urls:
     admin: http://admin.hive.ory.sh
   error_ui: http://test.hive.ory.sh/error
   whitelisted_return_to_domains:
-  - http://return-to-1-test.ory.sh/
-  - http://return-to-2-test.ory.sh/
+    - http://return-to-1-test.ory.sh/
+    - http://return-to-2-test.ory.sh/
 
 identity:
   traits:
@@ -64,17 +64,17 @@ selfservice:
           allow_user_defined_redirect: false
     after:
       password:
-      - run: session
-      - run: redirect
-        config:
-          default_redirect_url: http://test.hive.ory.sh:4000/
-          allow_user_defined_redirect: true
+        - run: session
+        - run: redirect
+          config:
+            default_redirect_url: http://test.hive.ory.sh:4000/
+            allow_user_defined_redirect: true
       oidc:
-      - run: session
-      - run: redirect
-        config:
-          default_redirect_url: http://test.hive.ory.sh:4000/
-          allow_user_defined_redirect: true
+        - run: session
+        - run: redirect
+          config:
+            default_redirect_url: http://test.hive.ory.sh:4000/
+            allow_user_defined_redirect: true
   registration:
     request_lifespan: 98m
     before:
@@ -84,17 +84,17 @@ selfservice:
           allow_user_defined_redirect: false
     after:
       password:
-      - run: session
-      - run: redirect
-        config:
-          default_redirect_url: http://test.hive.ory.sh:4000/
-          allow_user_defined_redirect: true
+        - run: session
+        - run: redirect
+          config:
+            default_redirect_url: http://test.hive.ory.sh:4000/
+            allow_user_defined_redirect: true
       oidc:
-      - run: session
-      - run: redirect
-        config:
-          default_redirect_url: http://test.hive.ory.sh:4000/
-          allow_user_defined_redirect: true
+        - run: session
+        - run: redirect
+          config:
+            default_redirect_url: http://test.hive.ory.sh:4000/
+            allow_user_defined_redirect: true
 
 
 

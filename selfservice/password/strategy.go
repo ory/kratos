@@ -29,6 +29,7 @@ type registrationStrategyDependencies interface {
 	identity.PoolProvider
 	selfservice.LoginExecutionProvider
 	selfservice.PostLoginHookProvider
+	selfservice.RequestErrorHandlerProvider
 }
 
 type Strategy struct {
@@ -36,9 +37,8 @@ type Strategy struct {
 	d   registrationStrategyDependencies
 	dc  *form.Decoder
 	v   *validator.Validate
-	dec *RegistrationFormDecoder
-
-	cg csrfGenerator
+	dec *selfservice.BodyDecoder
+	cg  csrfGenerator
 }
 
 func NewStrategy(
@@ -51,7 +51,7 @@ func NewStrategy(
 		dc:  form.NewDecoder(),
 		v:   validator.New(),
 		cg:  nosurf.Token,
-		dec: NewRegistrationFormDecoder(),
+		dec: selfservice.NewBodyDecoder(),
 	}
 }
 

@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 
-	"github.com/golang/gddo/httputil"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
@@ -25,6 +23,11 @@ const (
 	RegistrationPath = "/auth/browser/registration/methods/password"
 )
 
+type RegistrationFormPayload struct {
+	Password string          `json:"password"`
+	Traits   json.RawMessage `json:"traits"`
+}
+
 func (s *Strategy) setRegistrationRoutes(r *x.RouterPublic) {
 	if _, _, ok := r.Lookup("POST", RegistrationPath); !ok {
 		r.POST(RegistrationPath, s.handleRegistration)
@@ -32,88 +35,14 @@ func (s *Strategy) setRegistrationRoutes(r *x.RouterPublic) {
 }
 
 func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Request, rr *selfservice.RegistrationRequest, err error) {
-	if rr == nil {
-		rr = NewBlankRegistrationRequest("")
-	}
-
-	if httputil.NegotiateContentType(
-		r,
-		[]string{"application/json", "text/html", "text/*", "*/*"},
-		"text/*",
-	) == "application/json" {
-		switch errors.Cause(err).(type) {
-		case schema.ResultErrors:
-			s.d.Writer().WriteErrorCode(w, r, http.StatusBadRequest, err)
-		default:
-			s.d.Writer().WriteError(w, r, err)
-		}
-		return
-	}
-
-	var tc = func() *RegistrationRequestMethodConfig {
-		if method, ok := rr.Methods[CredentialsType]; !ok {
-			panic(fmt.Sprintf(`*selfservice.RegistrationRequest.Methods must have CredentialsType "%s" but did not: %+v`, CredentialsType, rr.Methods))
-		} else if mc, ok := method.Config.(*RegistrationRequestMethodConfig); !ok {
-			panic(fmt.Sprintf(`*selfservice.RegistrationRequest.Methods[%s].Config must be of type "*RegistrationRequestMethodConfig" but got: %T`, CredentialsType, method.Config))
-		} else {
-			return mc
-		}
-	}
-
-	switch et := errors.Cause(err).(type) {
-	case *herodot.DefaultError:
-		if et.Error() == selfservice.ErrRegistrationRequestExpired.Error() {
-			config := tc()
-			config.Reset()
-			config.Error = et.Reason()
-			if err := s.d.RegistrationRequestManager().UpdateRegistrationRequest(r.Context(), rr.ID, CredentialsType, config); err != nil {
-				s.d.ErrorManager().ForwardError(w, r, err)
-				return
-			}
-
-			http.Redirect(w,
-				r,
-				urlx.CopyWithQuery(s.c.RegisterURL(), url.Values{"request": {rr.ID}}).String(),
-				http.StatusFound,
-			)
-			return
-		}
-		s.d.ErrorManager().ForwardError(w, r, err)
-		return
-	case schema.ResultErrors:
-		config := tc()
-		config.Reset()
-		for k := range tidyForm(r.PostForm) {
-			config.Fields.SetValue(k, r.PostForm.Get(k))
-		}
-		config.Fields.SetValue(csrfTokenName, s.cg(r))
-
-		for k, e := range et {
-			herodot.DefaultErrorLogger(s.d.Logger(), err).Warnf("A form error occurred during registration (%d of %d): %s", k+1, len(et), e.String())
-			name := e.Field()
-			if trimmed := strings.TrimPrefix(e.Field(), "traits."); trimmed != e.Field() {
-				// has traits prefix
-				name = fmt.Sprintf("traits[%s]", trimmed)
-			}
-			config.Fields.SetError(
-				name,
-				e.String(),
-			)
-		}
-
-		if err := s.d.RegistrationRequestManager().UpdateRegistrationRequest(r.Context(), rr.ID, CredentialsType, config); err != nil {
-			s.d.ErrorManager().ForwardError(w, r, err)
-			return
-		}
-
-		http.Redirect(w,
-			r,
-			urlx.CopyWithQuery(s.c.RegisterURL(), url.Values{"request": {rr.ID}}).String(),
-			http.StatusFound,
-		)
-	default:
-		s.d.ErrorManager().ForwardError(w, r, err)
-	}
+	s.d.SelfServiceRequestErrorHandler().HandleRegistrationError(w, r, CredentialsType, rr, err,
+		&selfservice.RequestErrorHandlerOptions{
+			AdditionalKeys: map[string][]string{
+				csrfTokenName: {s.cg(r)},
+			},
+			IgnoreValuesForKeys: []string{"password"},
+		},
+	)
 }
 
 func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -129,15 +58,24 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	p, err := s.dec.Decode(r)
-	if err != nil {
+	if err := ar.Valid(); err != nil {
 		s.handleRegistrationError(w, r, ar, err)
 		return
 	}
 
-	if err := ar.Valid(); err != nil {
+	var p RegistrationFormPayload
+	if err := s.dec.Decode(r, &p); err != nil {
 		s.handleRegistrationError(w, r, ar, err)
 		return
+	}
+
+	if len(p.Password) == 0 {
+		s.handleRegistrationError(w, r, ar, errors.WithStack(schema.NewRequiredError("", gojsonschema.NewJsonContext("password", nil))))
+		return
+	}
+
+	if len(p.Traits) == 0 {
+		p.Traits = json.RawMessage("{}")
 	}
 
 	hpw, err := s.d.PasswordHasher().Generate([]byte(p.Password))
@@ -217,7 +155,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *selfservice.R
 		Method: CredentialsType,
 		Config: &RegistrationRequestMethodConfig{
 			Action: action.String(),
-			Fields: FormFields{
+			Fields: selfservice.FormFields{
 				"password": {
 					Name:     "password",
 					Type:     "password",

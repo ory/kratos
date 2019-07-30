@@ -9,14 +9,26 @@ import (
 )
 
 type RegistrationRequestMethodConfig struct {
-	Action string     `json:"action"`
-	Error  string     `json:"error,omitempty"`
-	Fields FormFields `json:"fields"`
+	Action string                 `json:"action"`
+	Error  string                 `json:"error,omitempty"`
+	Fields selfservice.FormFields `json:"fields"`
+}
+
+func NewRegistrationRequestMethodConfig() *RegistrationRequestMethodConfig {
+	return &RegistrationRequestMethodConfig{Fields: selfservice.FormFields{}}
 }
 
 func (r *RegistrationRequestMethodConfig) Reset() {
 	r.Error = ""
 	r.Fields.Reset()
+}
+
+func (r *RegistrationRequestMethodConfig) SetError(err string) {
+	r.Error = err
+}
+
+func (r *RegistrationRequestMethodConfig) GetFormFields() selfservice.FormFields {
+	return r.Fields
 }
 
 func NewBlankRegistrationRequest(id string) *selfservice.RegistrationRequest {
@@ -31,9 +43,7 @@ func NewBlankRegistrationRequest(id string) *selfservice.RegistrationRequest {
 		Methods: map[identity.CredentialsType]*selfservice.RegistrationRequestMethod{
 			CredentialsType: {
 				Method: CredentialsType,
-				Config: &RegistrationRequestMethodConfig{
-					Fields: map[string]FormField{},
-				},
+				Config: NewRegistrationRequestMethodConfig(),
 			},
 		},
 	}

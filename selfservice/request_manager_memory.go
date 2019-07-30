@@ -69,7 +69,7 @@ func (m *RequestManagerMemory) GetRegistrationRequest(ctx context.Context, id st
 	return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("Unable to find request: %s", id))
 }
 
-func (m *RequestManagerMemory) UpdateRegistrationRequest(ctx context.Context, id string, t identity.CredentialsType, c interface{}) error {
+func (m *RequestManagerMemory) UpdateRegistrationRequest(ctx context.Context, id string, t identity.CredentialsType, c RequestMethodConfig) error {
 	r, err := m.GetRegistrationRequest(ctx, id)
 	if err != nil {
 		return err
@@ -84,13 +84,14 @@ func (m *RequestManagerMemory) UpdateRegistrationRequest(ctx context.Context, id
 	}
 
 	me.Config = c
+	r.Active = t
 	r.Methods[t] = me
 	m.sur[id] = *r
 
 	return nil
 }
 
-func (m *RequestManagerMemory) UpdateLoginRequest(ctx context.Context, id string, t identity.CredentialsType, c interface{}) error {
+func (m *RequestManagerMemory) UpdateLoginRequest(ctx context.Context, id string, t identity.CredentialsType, c RequestMethodConfig) error {
 	r, err := m.GetLoginRequest(ctx, id)
 	if err != nil {
 		return err
@@ -105,6 +106,7 @@ func (m *RequestManagerMemory) UpdateLoginRequest(ctx context.Context, id string
 	}
 
 	me.Config = c
+	r.Active = t
 	r.Methods[t] = me
 	m.sir[id] = *r
 

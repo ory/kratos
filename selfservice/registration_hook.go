@@ -55,8 +55,8 @@ func (e *RegistrationExecutor) PostRegistrationHook(w http.ResponseWriter, r *ht
 	// We need to make sure that the identity has a valid schema before passing it down to the identity pool.
 	if err := e.d.IdentityValidator().Validate(s.Identity); err != nil {
 		return err
-	// We're now creating the identity because any of the hooks could trigger a "redirect" or a "session" which
-	// would imply that the identity has to exist already.
+		// We're now creating the identity because any of the hooks could trigger a "redirect" or a "session" which
+		// would imply that the identity has to exist already.
 	} else if _, err := e.d.IdentityPool().Create(r.Context(), s.Identity); err != nil {
 		return err
 	}
@@ -67,6 +67,15 @@ func (e *RegistrationExecutor) PostRegistrationHook(w http.ResponseWriter, r *ht
 			// TODO https://github.com/ory/hive/issues/51 #51
 			return err
 		}
+	}
+
+	// We need to make sure that the identity has a valid schema before passing it down to the identity pool.
+	if err := e.d.IdentityValidator().Validate(s.Identity); err != nil {
+		return err
+		// We're now creating the identity because any of the hooks could trigger a "redirect" or a "session" which
+		// would imply that the identity has to exist already.
+	} else if _, err := e.d.IdentityPool().Update(r.Context(), s.Identity); err != nil {
+		return err
 	}
 
 	return nil

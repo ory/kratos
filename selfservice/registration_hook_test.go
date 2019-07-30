@@ -2,6 +2,7 @@ package selfservice_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -11,6 +12,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/viper"
+
+	"github.com/ory/hive/driver/configuration"
 	"github.com/ory/hive/identity"
 	"github.com/ory/hive/internal"
 	. "github.com/ory/hive/selfservice"
@@ -25,7 +29,7 @@ type registrationPostHookMock struct {
 func (m *registrationPostHookMock) ExecuteRegistrationPostHook(w http.ResponseWriter, r *http.Request, a *RegistrationRequest, s *session.Session) error {
 	if m.modifyIdentity {
 		i := s.Identity
-		i.TraitsSchemaURL = "updated-schema"
+		i.Traits = json.RawMessage(`{"foo":"bar"}"`)
 		s.UpdateIdentity(i)
 	}
 	return m.err
@@ -47,6 +51,10 @@ func (m *registrationExecutorDependenciesMock) IdentityPool() identity.Pool {
 	return nil
 }
 
+func (m *registrationExecutorDependenciesMock) IdentityValidator() *identity.Validator {
+	return nil
+}
+
 func (m *registrationExecutorDependenciesMock) AuthHookRegistrationPreExecutors() []HookRegistrationPreExecutor {
 	hooks := make([]HookRegistrationPreExecutor, len(m.preErr))
 	for k := range hooks {
@@ -58,9 +66,9 @@ func (m *registrationExecutorDependenciesMock) AuthHookRegistrationPreExecutors(
 func TestRegistrationExecutor(t *testing.T) {
 	t.Run("method=PostRegistrationHook", func(t *testing.T) {
 		for k, tc := range []struct {
-			hooks           []HookRegistrationPostExecutor
-			expectSchemaURL string
-			expectErr       error
+			hooks        []HookRegistrationPostExecutor
+			expectTraits string
+			expectErr    error
 		}{
 			{hooks: nil},
 			{hooks: []HookRegistrationPostExecutor{}},
@@ -74,14 +82,17 @@ func TestRegistrationExecutor(t *testing.T) {
 					new(registrationPostHookMock),
 					&registrationPostHookMock{modifyIdentity: true},
 				},
-				expectSchemaURL: "updated-schema",
+				expectTraits: `{"foo":"bar"}"`,
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				conf, reg := internal.NewMemoryRegistry(t)
+				viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://stub/registration.schema.json")
 
 				var i identity.Identity
 				require.NoError(t, faker.FakeData(&i))
+				i.TraitsSchemaURL = ""
+				i.Traits = json.RawMessage("{}")
 
 				e := NewRegistrationExecutor(reg, conf)
 				err := e.PostRegistrationHook(nil, &http.Request{}, tc.hooks, nil, &i)
@@ -91,10 +102,10 @@ func TestRegistrationExecutor(t *testing.T) {
 				}
 
 				require.NoError(t, err)
-				if tc.expectSchemaURL != "" {
+				if tc.expectTraits != "" {
 					got, err := reg.IdentityPool().Get(context.TODO(), i.ID)
 					require.NoError(t, err)
-					assert.EqualValues(t, tc.expectSchemaURL, got.TraitsSchemaURL)
+					assert.EqualValues(t, tc.expectTraits, string(got.Traits))
 				}
 			})
 		}

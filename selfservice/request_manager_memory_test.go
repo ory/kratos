@@ -28,12 +28,12 @@ func TestRequestManagerMemory(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, r, *g)
 
-		require.NoError(t, m.UpdateLoginRequest(context.Background(), r.ID, password.CredentialsType, "foo"))
+		require.NoError(t, m.UpdateLoginRequest(context.Background(), r.ID, password.CredentialsType, &password.LoginRequestMethodConfig{Action: "foo"}))
 
 		g, err = m.GetLoginRequest(context.Background(), r.ID)
 		require.NoError(t, err)
 		assert.EqualValues(t, r, *g)
-		assert.EqualValues(t, "foo", r.Methods[password.CredentialsType].Config)
+		assert.EqualValues(t, "foo", r.Methods[password.CredentialsType].Config.(*password.LoginRequestMethodConfig).Action)
 	})
 
 	t.Run("suite=sign-up", func(t *testing.T) {
@@ -50,11 +50,11 @@ func TestRequestManagerMemory(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, r, *g)
 
-		require.NoError(t, m.UpdateRegistrationRequest(context.Background(), r.ID, password.CredentialsType, "foo"))
+		require.NoError(t, m.UpdateRegistrationRequest(context.Background(), r.ID, password.CredentialsType, &password.RegistrationRequestMethodConfig{Action: "foo"}))
 
 		g, err = m.GetRegistrationRequest(context.Background(), r.ID)
 		require.NoError(t, err)
 		assert.EqualValues(t, r, *g)
-		assert.EqualValues(t, "foo", r.Methods[password.CredentialsType].Config)
+		assert.EqualValues(t, "foo", r.Methods[password.CredentialsType].Config.(*password.RegistrationRequestMethodConfig).Action)
 	})
 }

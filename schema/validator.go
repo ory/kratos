@@ -136,7 +136,7 @@ func (v *Validator) Validate(
 	r, err := schema.
 		Validate(object)
 	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to parse validate JSON object against JSON schema: %s", err))
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to parse validate JSON object against JSON schema: %s", err).WithDetail("schema_url", href))
 	}
 
 	if !r.Valid() {
