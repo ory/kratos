@@ -1,12 +1,11 @@
 package selfservice
 
 type FormField struct {
-	Name     string   `json:"name"`
-	Type     string   `json:"type,omitempty"`
-	Required bool     `json:"required,omitempty"`
-	Value    string   `json:"value,omitempty"`
-	Options  []string `json:"options,omitempty"`
-	Error    string   `json:"error,omitempty"`
+	Name     string `json:"name"`
+	Type     string `json:"type,omitempty"`
+	Required bool   `json:"required,omitempty"`
+	Value    string `json:"value,omitempty"`
+	Error    string `json:"error,omitempty"`
 }
 
 type FormFields map[string]FormField

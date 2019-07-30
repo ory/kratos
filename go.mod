@@ -1,5 +1,7 @@
 module github.com/ory/hive
 
+replace github.com/ory/gojsonschema => ../gojsonschema
+
 require (
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/bxcodec/faker v2.0.1+incompatible
@@ -25,6 +27,7 @@ require (
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/handlers v1.4.1 // indirect
 	github.com/gorilla/sessions v1.1.3
+	github.com/imdario/mergo v0.3.7
 	github.com/jessevdk/go-flags v1.4.0 // indirect
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/justinas/nosurf v0.0.0-20190118163749-6453469bdcc9

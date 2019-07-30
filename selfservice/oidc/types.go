@@ -8,15 +8,14 @@ type CredentialsConfig struct {
 }
 
 type RequestMethodConfigProvider struct {
-	ID  string `json:"id"`
-	URL string `json:"url"`
+	Fields selfservice.FormFields `json:"fields,omitempty"`
 }
 
 type RequestMethodConfig struct {
-	Error     string                        `json:"error,omitempty"`
-	Providers []RequestMethodConfigProvider `json:"providers"`
-	Used      *int                          `json:"used,omitempty"`
-	Fields    selfservice.FormFields        `json:"fields,omitempty"`
+	Action    string                  `json:"action"`
+	Error     string                  `json:"error,omitempty"`
+	Fields    selfservice.FormFields  `json:"fields,omitempty"`
+	Providers []selfservice.FormField `json:"providers"`
 }
 
 func NewRequestMethodConfig() *RequestMethodConfig {

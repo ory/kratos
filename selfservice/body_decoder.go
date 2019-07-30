@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"mime"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -33,14 +34,20 @@ func (d BodyDecoder) json(r *http.Request) (json.RawMessage, error) {
 	return p, nil
 }
 
-func (d *BodyDecoder) form(r *http.Request) (json.RawMessage, error) {
-	if err := r.ParseForm(); err != nil {
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error()))
+func (d *BodyDecoder) DecodeForm(form url.Values, o interface{}) (err error) {
+	payload, err := d.form(form)
+	if err != nil {
+		return err
 	}
 
+	// This must not be a strict decoder
+	return errors.WithStack(json.NewDecoder(bytes.NewBuffer(payload)).Decode(o))
+}
+
+func (d *BodyDecoder) form(form url.Values) (json.RawMessage, error) {
 	payload := []byte("{}")
-	for k := range r.PostForm {
-		v := r.PostFormValue(k)
+	for k := range form {
+		v := form.Get(k)
 
 		var typed interface{} = v
 		var err error
@@ -84,7 +91,10 @@ func (d *BodyDecoder) Decode(r *http.Request, o interface{}) (err error) {
 	if ct == "application/json" {
 		p, err = d.json(r)
 	} else {
-		p, err = d.form(r)
+		if err := r.ParseForm(); err != nil {
+			return errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error()))
+		}
+		p, err = d.form(r.PostForm)
 	}
 
 	if err != nil {

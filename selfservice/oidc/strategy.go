@@ -6,11 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/coreos/go-oidc"
 	"github.com/google/uuid"
+	"github.com/imdario/mergo"
 	"github.com/julienschmidt/httprouter"
+	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/jsonx"
@@ -31,7 +34,7 @@ import (
 
 const (
 	BasePath     = "/methods/oidc"
-	AuthPath     = BasePath + "/auth/:provider/:request"
+	AuthPath     = BasePath + "/auth/:request"
 	CallbackPath = BasePath + "/callback/:provider"
 )
 
@@ -62,12 +65,17 @@ type Strategy struct {
 	c configuration.Provider
 	d dependencies
 
+	dec       *selfservice.BodyDecoder
 	validator *schema.Validator
 }
 
 func (s *Strategy) SetRoutes(r *x.RouterPublic) {
 	if _, _, ok := r.Lookup("GET", CallbackPath); !ok {
 		r.GET(CallbackPath, s.handleCallback)
+	}
+
+	if _, _, ok := r.Lookup("POST", AuthPath); !ok {
+		r.POST(AuthPath, s.handleAuth)
 	}
 
 	if _, _, ok := r.Lookup("GET", AuthPath); !ok {
@@ -83,6 +91,7 @@ func NewStrategy(
 		c:         c,
 		d:         d,
 		validator: schema.NewValidator(),
+		dec:       selfservice.NewBodyDecoder(),
 	}
 }
 
@@ -91,10 +100,21 @@ func (s *Strategy) ID() identity.CredentialsType {
 }
 
 func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	var rid = ps.ByName("request")
+
+	if err := r.ParseForm(); err != nil {
+		s.handleError(w, r, rid, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
+		return
+	}
+
 	var (
-		pid = ps.ByName("provider")
-		rid = ps.ByName("request")
+		pid = r.Form.Get("provider")
 	)
+
+	if pid == "" {
+		s.handleError(w, r, rid, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`The HTTP request did not contain the required "provider" form field`)))
+		return
+	}
 
 	provider, err := s.provider(pid)
 	if err != nil {
@@ -117,6 +137,7 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 	if err := x.SessionPersistValues(w, r, s.d.CookieManager(), sessionName, map[string]interface{}{
 		sessionKeyState:  state,
 		sessionRequestID: rid,
+		sessionFormState: r.PostForm.Encode(),
 	}); err != nil {
 		s.handleError(w, r, rid, err)
 		return
@@ -176,7 +197,6 @@ func (s *Strategy) validateCallback(r *http.Request) (request, error) {
 }
 
 func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-
 	var (
 		code = r.URL.Query().Get("code")
 		pid  = ps.ByName("provider")
@@ -238,14 +258,18 @@ func uid(provider, subject string) string {
 }
 
 func (s *Strategy) authURL(request, provider string) string {
-	return urlx.AppendPaths(
+	u := urlx.AppendPaths(
 		urlx.Copy(s.c.SelfPublicURL()),
 		strings.Replace(
-			strings.Replace(
-				AuthPath, ":request", request, 1,
-			),
-			":provider", provider, 1),
-	).String()
+			AuthPath, ":request", request, 1,
+		),
+	)
+
+	if provider != "" {
+		return urlx.CopyWithQuery(u, url.Values{"provider": {provider}}).String()
+	}
+
+	return u.String()
 }
 
 func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *selfservice.LoginRequest, claims *Claims, provider Provider) error {
@@ -314,7 +338,37 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 			provider.Config().SchemaURL,
 		),
 		gojsonschema.NewGoLoader(claims),
+
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
 		NewValidationExtension().WithIdentity(i),
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+		// TODO THIS HERE SHOULD RETURN THE KEYS AND VALUES FOR PROPAGATION TO FORM
+
 	); err != nil {
 		s.d.Logger().
 			WithField("provider", provider.Config().ID).
@@ -324,6 +378,84 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		// Force a system error because this can not be resolved by the user.
 		return errors.WithStack(herodot.ErrInternalServerError.WithTrace(err).WithReasonf("%s", err))
 	}
+
+	// TODO WRITE TESTS FOR THIS
+	// TODO WRITE TESTS FOR THIS
+	// TODO WRITE TESTS FOR THIS
+	// TODO WRITE TESTS FOR THIS
+	// TODO WRITE TESTS FOR THIS
+	// TODO WRITE TESTS FOR THIS
+	// TODO WRITE TESTS FOR THIS
+	// TODO WRITE TESTS FOR THIS
+	// TODO WRITE TESTS FOR THIS
+	// TODO WRITE TESTS FOR THIS
+	// TODO WRITE TESTS FOR THIS
+	// TODO WRITE TESTS FOR THIS
+	// TODO WRITE TESTS FOR THIS
+	// TODO WRITE TESTS FOR THIS
+	// TODO WRITE TESTS FOR THIS
+	// TODO WRITE TESTS FOR THIS
+	// TODO WRITE TESTS FOR THIS
+	// TODO WRITE TESTS FOR THIS
+	// TODO WRITE TESTS FOR THIS
+	// TODO WRITE TESTS FOR THIS
+	// TODO WRITE TESTS FOR THIS
+
+	// TODO CLEAN THIS UP THIS IS TERRIBLE PLEASE
+	// TODO CLEAN THIS UP THIS IS TERRIBLE PLEASE
+	// TODO CLEAN THIS UP THIS IS TERRIBLE PLEASE
+	// TODO CLEAN THIS UP THIS IS TERRIBLE PLEASE
+	// TODO CLEAN THIS UP THIS IS TERRIBLE PLEASE
+	// TODO CLEAN THIS UP THIS IS TERRIBLE PLEASE
+	// TODO CLEAN THIS UP THIS IS TERRIBLE PLEASE
+	// TODO CLEAN THIS UP THIS IS TERRIBLE PLEASE
+	// TODO CLEAN THIS UP THIS IS TERRIBLE PLEASE
+	// TODO CLEAN THIS UP THIS IS TERRIBLE PLEASE
+	// TODO CLEAN THIS UP THIS IS TERRIBLE PLEASE
+	// TODO CLEAN THIS UP THIS IS TERRIBLE PLEASE
+	// TODO CLEAN THIS UP THIS IS TERRIBLE PLEASE
+	if form := x.SessionGetStringOr(r, s.d.CookieManager(), sessionName, sessionFormState, ""); form != "" {
+		q, err := url.ParseQuery(form)
+		if err != nil {
+			panic(err)
+		}
+
+		r.PostForm = q
+
+		var formTraits struct{ Traits map[string]interface{} `json:"traits"` }
+		if err := s.dec.DecodeForm(q, &formTraits); err != nil {
+			return err
+		}
+
+		var providerTraits map[string]interface{}
+		if err := json.NewDecoder(bytes.NewBuffer(i.Traits)).Decode(&providerTraits); err != nil {
+			panic(err)
+		}
+
+		if err := mergo.Merge(&providerTraits, formTraits.Traits, mergo.WithOverride); err != nil {
+			panic(err)
+		}
+
+		var resultTraits bytes.Buffer
+		if err := json.NewEncoder(&resultTraits).Encode(providerTraits); err != nil {
+			panic(err)
+		}
+
+		i.Traits = json.RawMessage(resultTraits.Bytes())
+	}
+	// TODO CLEAN THIS UP THIS IS TERRIBLE PLEASE
+	// TODO CLEAN THIS UP THIS IS TERRIBLE PLEASE
+	// TODO CLEAN THIS UP THIS IS TERRIBLE PLEASE
+	// TODO CLEAN THIS UP THIS IS TERRIBLE PLEASE
+	// TODO CLEAN THIS UP THIS IS TERRIBLE PLEASE
+	// TODO CLEAN THIS UP THIS IS TERRIBLE PLEASE
+	// TODO CLEAN THIS UP THIS IS TERRIBLE PLEASE
+	// TODO CLEAN THIS UP THIS IS TERRIBLE PLEASE
+	// TODO CLEAN THIS UP THIS IS TERRIBLE PLEASE
+	// TODO CLEAN THIS UP THIS IS TERRIBLE PLEASE
+	// TODO CLEAN THIS UP THIS IS TERRIBLE PLEASE
+	// TODO CLEAN THIS UP THIS IS TERRIBLE PLEASE
+	// TODO CLEAN THIS UP THIS IS TERRIBLE PLEASE
 
 	// Validate the identity itself
 	if err := s.d.IdentityValidator().Validate(i); err != nil {
@@ -374,11 +506,20 @@ func (s *Strategy) populateMethod(r *http.Request, request string) (*RequestMeth
 	}
 
 	sc := NewRequestMethodConfig()
+	sc.Action = s.authURL(request, "")
+
 	for _, provider := range conf.Providers {
-		sc.Providers = append(sc.Providers, RequestMethodConfigProvider{
-			ID:  provider.ID,
-			URL: s.authURL(request, provider.ID),
+		sc.Providers = append(sc.Providers, selfservice.FormField{
+			Name:  "provider",
+			Type:  "submit",
+			Value: provider.ID,
 		})
+	}
+
+	sc.Fields["csrf_token"] = selfservice.FormField{
+		Name:  "csrf_token",
+		Type:  "hidden",
+		Value: nosurf.Token(r),
 	}
 
 	return sc, nil
