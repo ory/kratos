@@ -321,6 +321,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 			WithField("schema_url", provider.Config().SchemaURL).
 			WithField("claims", fmt.Sprintf("%+v", claims)).
 			Error("Unable to validate claims against provider schema. Your schema should work regardless of these values.")
+		// Force a system error because this can not be resolved by the user.
 		return errors.WithStack(herodot.ErrInternalServerError.WithTrace(err).WithReasonf("%s", err))
 	}
 
