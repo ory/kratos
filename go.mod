@@ -1,7 +1,5 @@
 module github.com/ory/hive
 
-replace github.com/ory/gojsonschema => ../gojsonschema
-
 require (
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/bxcodec/faker v2.0.1+incompatible
