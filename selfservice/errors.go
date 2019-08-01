@@ -21,18 +21,18 @@ import (
 
 var (
 	ErrIDTokenMissing = herodot.ErrBadRequest.
-				WithError("authentication failed because id_token is missing").
-				WithReasonf(`Authentication failed because no id_token was returned. Please accept the "openid" permission and try again.`)
+		WithError("authentication failed because id_token is missing").
+		WithReasonf(`Authentication failed because no id_token was returned. Please accept the "openid" permission and try again.`)
 
 	ErrScopeMissing = herodot.ErrBadRequest.
-			WithError("authentication failed because a required scope was not granted").
-			WithReasonf(`Unable to finish because one or more permissions were not granted. Please retry and accept all permissions.`)
+		WithError("authentication failed because a required scope was not granted").
+		WithReasonf(`Unable to finish because one or more permissions were not granted. Please retry and accept all permissions.`)
 
 	ErrLoginRequestExpired = herodot.ErrBadRequest.
-				WithError("login request expired")
+		WithError("login request expired")
 
 	ErrRegistrationRequestExpired = herodot.ErrBadRequest.
-					WithError("registration request expired")
+		WithError("registration request expired")
 )
 
 type (
@@ -56,7 +56,7 @@ type (
 		// csrf_tokens, and so on.
 		IgnoreValuesForKeys []string
 
-		AdditionalKeys url.Values
+		AdditionalKeys map[string]interface{}
 	}
 )
 
@@ -140,8 +140,8 @@ func (s *ErrorHandler) HandleRegistrationError(
 			}
 		}
 
-		for k := range opts.AdditionalKeys {
-			config.GetFormFields().SetValue(k, opts.AdditionalKeys.Get(k))
+		for k, v := range opts.AdditionalKeys {
+			config.GetFormFields().SetValue(k, v)
 		}
 
 		for k, e := range et {
@@ -212,8 +212,8 @@ func (s *ErrorHandler) HandleLoginError(
 			}
 		}
 
-		for k := range opts.AdditionalKeys {
-			config.GetFormFields().SetValue(k, opts.AdditionalKeys.Get(k))
+		for k, v := range opts.AdditionalKeys {
+			config.GetFormFields().SetValue(k, v)
 		}
 
 		for k, e := range et {

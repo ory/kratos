@@ -37,8 +37,8 @@ func (s *Strategy) setRegistrationRoutes(r *x.RouterPublic) {
 func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Request, rr *selfservice.RegistrationRequest, err error) {
 	s.d.SelfServiceRequestErrorHandler().HandleRegistrationError(w, r, CredentialsType, rr, err,
 		&selfservice.ErrorHandlerOptions{
-			AdditionalKeys: map[string][]string{
-				csrfTokenName: {s.cg(r)},
+			AdditionalKeys: map[string]interface{}{
+				csrfTokenName: s.cg(r),
 			},
 			IgnoreValuesForKeys: []string{"password"},
 		},

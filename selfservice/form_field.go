@@ -4,7 +4,7 @@ type FormField struct {
 	Name     string `json:"name"`
 	Type     string `json:"type,omitempty"`
 	Required bool   `json:"required,omitempty"`
-	Value    string `json:"value,omitempty"`
+	Value    interface{} `json:"value,omitempty"`
 	Error    string `json:"error,omitempty"`
 }
 
@@ -18,7 +18,7 @@ func (fs FormFields) Reset() {
 	}
 }
 
-func (fs FormFields) SetValue(name, value string) {
+func (fs FormFields) SetValue(name string, value interface{}) {
 	var field FormField
 	if ff, ok := fs[name]; ok {
 		field = ff
