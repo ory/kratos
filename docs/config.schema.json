@@ -1,0 +1,407 @@
+{
+  "$id": "https://github.com/ory/hive/docs/config.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ORY Hive Configuration",
+  "type": "object",
+  "definitions": {
+    "selfServiceRedirectHook": {
+      "type": "object",
+      "properties": {
+        "run": {
+          "const": "redirect"
+        },
+        "config": {
+          "type": "object",
+          "properties": {
+            "default_redirect_url": {
+              "type": "string",
+              "format": "url"
+            },
+            "allow_user_defined_redirect": {
+              "type": "boolean"
+            }
+          },
+          "additionalItems": false,
+          "required": [
+            "default_redirect_url"
+          ]
+        }
+      },
+      "additionalItems": false,
+      "required": [
+        "run",
+        "config"
+      ]
+    },
+    "selfServiceSessionIssuerHook": {
+      "type": "object",
+      "properties": {
+        "run": {
+          "const": "session"
+        }
+      },
+      "additionalItems": false,
+      "required": [
+        "run"
+      ]
+    },
+    "selfServiceOIDCProvider": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "provider": {
+          "type": "string",
+          "enum": [
+            "github",
+            "generic",
+            "google"
+          ]
+        },
+        "client_id": {
+          "type": "string"
+        },
+        "issuer_url": {
+          "type": "string",
+          "format": "url"
+        },
+        "auth_url": {
+          "type": "string",
+          "format": "url"
+        },
+        "token_url": {
+          "type": "string",
+          "format": "url"
+        },
+        "schema_url": {
+          "type": "string",
+          "format": "url"
+        },
+        "scope": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalItems": false,
+      "required": [
+        "id",
+        "provider",
+        "client_id",
+        "client_secret",
+        "schema_url"
+      ]
+    },
+    "selfServiceAfterHooks": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/selfServiceRedirectHook"
+          },
+          {
+            "$ref": "#/definitions/selfServiceSessionIssuerHook"
+          }
+        ]
+      },
+      "uniqueItems": true
+    },
+    "selfServiceAfter": {
+      "type": "object",
+      "properties": {
+        "password": {
+          "$ref": "#/definitions/selfServiceAfterHooks"
+        },
+        "oidc": {
+          "$ref": "#/definitions/selfServiceAfterHooks"
+        }
+      },
+      "additionalItems": false
+    },
+    "selfServiceBefore": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/selfServiceRedirectHook"
+      },
+      "uniqueItems": true
+    }
+  },
+  "properties": {
+    "selfservice": {
+      "type": "object",
+      "additionalItems": false,
+      "required": [
+        "logout"
+      ],
+      "properties": {
+        "strategies": {
+          "type": "object",
+          "additionalItems": false,
+          "properties": {
+            "password": {
+              "type": "object",
+              "additionalItems": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "oidc": {
+              "type": "object",
+              "additionalItems": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                },
+                "config": {
+                  "type": "object",
+                  "additionalItems": false,
+                  "properties": {
+                    "providers": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/definitions/selfServiceOIDCProvider"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "logout": {
+          "type": "object",
+          "properties": {
+            "redirect_to": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "additionalItems": false,
+          "required": ["redirect_to"]
+        },
+        "login": {
+          "type": "object",
+          "properties": {
+            "request_lifespan": {
+              "type": "string",
+              "pattern": "^[0-9]+(ns|us|ms|s|m|h)$"
+            },
+            "before": {
+              "$ref": "#/definitions/selfServiceBefore"
+            },
+            "after": {
+              "$ref": "#/definitions/selfServiceAfter"
+            }
+          },
+          "additionalItems": false
+        },
+        "registration": {
+          "type": "object",
+          "additionalItems": false,
+          "properties": {
+            "request_lifespan": {
+              "type": "string",
+              "pattern": "^[0-9]+(ns|us|ms|s|m|h)$"
+            },
+            "before": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/selfServiceRedirectHook"
+              },
+              "uniqueItems": true
+            }
+          }
+        }
+      }
+    },
+    "dsn": {
+      "type": "string"
+    },
+    "serve": {
+      "type": "object",
+      "properties": {
+        "admin": {
+          "type": "object",
+          "properties": {
+            "host": {
+              "type": "string"
+            },
+            "port": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 65535
+            }
+          },
+          "additionalProperties": false
+        },
+        "public": {
+          "type": "object",
+          "properties": {
+            "host": {
+              "type": "string"
+            },
+            "port": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 65535
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "urls": {
+      "type": "object",
+      "properties": {
+        "self": {
+          "type": "object",
+          "properties": {
+            "public": {
+              "type": "string",
+              "format": "url"
+            },
+            "admin": {
+              "type": "string",
+              "format": "url"
+            }
+          },
+          "additionalProperties": false
+        },
+        "mfa_ui": {
+          "type": "string",
+          "format": "url"
+        },
+        "login_ui": {
+          "type": "string",
+          "format": "url"
+        },
+        "registration_ui": {
+          "type": "string",
+          "format": "url"
+        },
+        "error_ui": {
+          "type": "string",
+          "format": "url"
+        },
+        "whitelisted_return_to_domains": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "url"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "mfa_ui",
+        "login_ui",
+        "registration_ui",
+        "error_ui"
+      ],
+      "additionalProperties": false
+    },
+    "log": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": [
+            "trace",
+            "debug",
+            "info",
+            "warning",
+            "error",
+            "fatal",
+            "panic"
+          ]
+        },
+        "format": {
+          "type": "string",
+          "enum": [
+            "json",
+            "text"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "identity": {
+      "type": "object",
+      "properties": {
+        "traits": {
+          "type": "object",
+          "properties": {
+            "default_schema_url": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "default_schema_url"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "traits"
+      ],
+      "additionalProperties": false
+    },
+    "secrets": {
+      "type": "object",
+      "properties": {
+        "session": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 16
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "hashers": {
+      "type": "object",
+      "properties": {
+        "argon2": {
+          "type": "object",
+          "properties": {
+            "memory": {
+              "type": "number",
+              "minimum": 16384
+            },
+            "iterations": {
+              "type": "number",
+              "minimum": 1
+            },
+            "parallelism": {
+              "type": "number",
+              "minimum": 1
+            },
+            "salt_length": {
+              "type": "number",
+              "minimum": 16
+            },
+            "key_length": {
+              "type": "number",
+              "minimum": 16
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "dsn",
+    "identity",
+    "selfservice"
+  ],
+  "additionalProperties": false
+}

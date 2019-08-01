@@ -1,0 +1,106 @@
+# serve controls the configuration for the http(s) daemon
+serve:
+  admin:
+    port: 1234
+    host: admin.hive.ory.sh
+  public:
+    port: 1235
+    host: public.hive.ory.sh
+
+dsn: memory
+
+log:
+  level: debug
+
+urls:
+  mfa_ui: http://test.hive.ory.sh/mfa
+  login_ui: http://test.hive.ory.sh/login
+  registration_ui: http://test.hive.ory.sh/register
+  self:
+    public: http://public.hive.ory.sh
+    admin: http://admin.hive.ory.sh
+  error_ui: http://test.hive.ory.sh/error
+  whitelisted_return_to_domains:
+    - http://return-to-1-test.ory.sh/
+    - http://return-to-2-test.ory.sh/
+
+identity:
+  traits:
+    default_schema_url: http://test.hive.ory.sh/default-identity.schema.json
+
+hashers:
+  argon2:
+    memory: 1048576
+    iterations: 2
+    parallelism: 4
+    salt_length: 16
+    key_length: 32
+
+secrets:
+  session:
+    - session-key-7f8a9b77-1
+    - session-key-7f8a9b77-2
+
+selfservice:
+  strategies:
+    password:
+      enabled: true
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: github
+            provider: github
+            client_id: a
+            client_secret: b
+  logout:
+    redirect_to: http://test.hive.ory.sh:4000/
+  login:
+    request_lifespan: 99m
+    before:
+      - run: redirect
+        config:
+          default_redirect_url: http://test.hive.ory.sh:4000/
+          allow_user_defined_redirect: false
+    after:
+      password:
+        - run: session
+        - run: redirect
+          config:
+            default_redirect_url: http://test.hive.ory.sh:4000/
+            allow_user_defined_redirect: true
+      oidc:
+        - run: session
+        - run: redirect
+          config:
+            default_redirect_url: http://test.hive.ory.sh:4000/
+            allow_user_defined_redirect: true
+  registration:
+    request_lifespan: 98m
+    before:
+      - run: redirect
+        config:
+          default_redirect_url: http://test.hive.ory.sh:4000/
+          allow_user_defined_redirect: false
+    after:
+      password:
+        - run: session
+        - run: redirect
+          config:
+            default_redirect_url: http://test.hive.ory.sh:4000/
+            allow_user_defined_redirect: true
+      oidc:
+        - run: session
+        - run: redirect
+          config:
+            default_redirect_url: http://test.hive.ory.sh:4000/
+            allow_user_defined_redirect: true
+
+
+
+#      - run: account_activation
+#        config:
+#          redirect:
+#            pending:
+#            success:
+#            invalidate_after: 10h
