@@ -27,6 +27,17 @@ jobs:
       - image: circleci/golang:1.12
         environment:
           - GO111MODULE=on
+          - TEST_SELFSERVICE_OIDC_HYDRA_ADMIN=http://127.0.0.1:4445/
+          - TEST_SELFSERVICE_OIDC_HYDRA_PUBLIC=http://127.0.0.1:4444/
+          - TEST_SELFSERVICE_OIDC_HYDRA_INTEGRATION_ADDR=127.0.0.1:4499
+      - image: oryd/hydra:v1.0.0
+      environment:
+        - MYSQL_ROOT_PASSWORD=test
+        - DSN=memory
+        - URLS_SELF_ISSUER=http://127.0.0.1:4444/
+        - URLS_LOGIN=http://127.0.0.1:4499/login
+        - URLS_CONSENT=http://127.0.0.1:4499/consent
+      command:
     working_directory: /go/src/github.com/ory/hive
     steps:
       - checkout

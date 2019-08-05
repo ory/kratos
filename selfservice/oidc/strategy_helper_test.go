@@ -3,6 +3,7 @@ package oidc_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -67,7 +68,7 @@ func createClient(t *testing.T, remote string, redir string) {
 	}))
 }
 
-func newHydraIntegration(t *testing.T, remote *string, subject *string, scope *[]string) *httptest.Server {
+func newHydraIntegration(t *testing.T, remote *string, subject *string, scope *[]string, addr string) (*http.Server, string) {
 	router := httprouter.New()
 
 	type p struct {
@@ -122,7 +123,11 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, scope *[
 		do(w, r, href, &b)
 	})
 
-	return httptest.NewServer(router)
+	if addr == "" {
+		server := httptest.NewServer(router)
+		return server.Config, server.URL
+	}
+	return &http.Server{Addr: addr, Handler: router}, fmt.Sprintf("http://%s", addr)
 }
 
 func newReturnTs(t *testing.T, reg driver.Registry) *httptest.Server {

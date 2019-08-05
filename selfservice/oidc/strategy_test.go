@@ -10,6 +10,7 @@ import (
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -60,9 +61,15 @@ func hookConfig(u string) (m []map[string]interface{}) {
 }
 
 func TestStrategy(t *testing.T) {
-	var subject, remoteAdmin string
-	var scope []string
-	hydraIntegrationTS := newHydraIntegration(t, &remoteAdmin, &subject, &scope)
+
+	var (
+		subject      string
+		scope        []string
+		remoteAdmin  = os.Getenv("TEST_SELFSERVICE_OIDC_HYDRA_ADMIN")
+		remotePublic = os.Getenv("TEST_SELFSERVICE_OIDC_HYDRA_PUBLIC")
+	)
+
+	hydraIntegrationTS, hydraIntegrationTSURL := newHydraIntegration(t, &remoteAdmin, &subject, &scope, os.Getenv("TEST_SELFSERVICE_OIDC_HYDRA_INTEGRATION_ADDR"))
 	defer hydraIntegrationTS.Close()
 
 	if testing.Short() {
@@ -72,32 +79,34 @@ func TestStrategy(t *testing.T) {
 	publicPort, err := freeport.GetFreePort()
 	require.NoError(t, err)
 
-	pool, err := dockertest.NewPool("")
-	require.NoError(t, err)
-	hydra, err := pool.RunWithOptions(&dockertest.RunOptions{
-		Repository: "oryd/hydra",
-		Tag:        "v1.0.0",
-		Env: []string{
-			"DSN=memory",
-			fmt.Sprintf("URLS_SELF_ISSUER=http://127.0.0.1:%d/", publicPort),
-			"URLS_LOGIN=" + hydraIntegrationTS.URL + "/login",
-			"URLS_CONSENT=" + hydraIntegrationTS.URL + "/consent",
-		},
-		Cmd:          []string{"serve", "all", "--dangerous-force-http"},
-		ExposedPorts: []string{"4444/tcp", "4445/tcp"},
-		PortBindings: map[docker.Port][]docker.PortBinding{
-			"4444/tcp": {{HostPort: fmt.Sprintf("%d/tcp", publicPort)}},
-		},
-	})
-	require.NoError(t, err)
-	defer hydra.Close()
-	require.NoError(t, hydra.Expire(uint(60*15)))
+	if remotePublic == "" && remoteAdmin == "" {
+		pool, err := dockertest.NewPool("")
+		require.NoError(t, err)
+		hydra, err := pool.RunWithOptions(&dockertest.RunOptions{
+			Repository: "oryd/hydra",
+			Tag:        "v1.0.0",
+			Env: []string{
+				"DSN=memory",
+				fmt.Sprintf("URLS_SELF_ISSUER=http://127.0.0.1:%d/", publicPort),
+				"URLS_LOGIN=" + hydraIntegrationTSURL + "/login",
+				"URLS_CONSENT=" + hydraIntegrationTSURL + "/consent",
+			},
+			Cmd:          []string{"serve", "all", "--dangerous-force-http"},
+			ExposedPorts: []string{"4444/tcp", "4445/tcp"},
+			PortBindings: map[docker.Port][]docker.PortBinding{
+				"4444/tcp": {{HostPort: fmt.Sprintf("%d/tcp", publicPort)}},
+			},
+		})
+		require.NoError(t, err)
+		defer hydra.Close()
+		require.NoError(t, hydra.Expire(uint(60*15)))
 
-	require.NotEmpty(t, hydra.GetPort("4444/tcp"), "%+v", hydra.Container.NetworkSettings.Ports)
-	require.NotEmpty(t, hydra.GetPort("4445/tcp"), "%+v", hydra.Container)
+		require.NotEmpty(t, hydra.GetPort("4444/tcp"), "%+v", hydra.Container.NetworkSettings.Ports)
+		require.NotEmpty(t, hydra.GetPort("4445/tcp"), "%+v", hydra.Container)
 
-	remotePublic := "http://127.0.0.1:" + hydra.GetPort("4444/tcp")
-	remoteAdmin = "http://127.0.0.1:" + hydra.GetPort("4445/tcp")
+		remotePublic = "http://127.0.0.1:" + hydra.GetPort("4444/tcp")
+		remoteAdmin = "http://127.0.0.1:" + hydra.GetPort("4445/tcp")
+	}
 
 	_, reg := internal.NewMemoryRegistry(t)
 	reg.SelfServiceStrategies()[0].(*password.Strategy).WithTokenGenerator(func(r *http.Request) string {
@@ -173,7 +182,7 @@ func TestStrategy(t *testing.T) {
 	t.Logf("Hive Error URL: %s", errTS.URL)
 	t.Logf("Hydra Public URL: %s", remotePublic)
 	t.Logf("Hydra Admin URL: %s", remoteAdmin)
-	t.Logf("Hydra Integration URL: %s", hydraIntegrationTS.URL)
+	t.Logf("Hydra Integration URL: %s", hydraIntegrationTSURL)
 	t.Logf("Return URL: %s", returnTS.URL)
 
 	var newClient = func(t *testing.T) *http.Client {
