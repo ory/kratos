@@ -43,7 +43,16 @@ func (d *BodyDecoder) DecodeForm(form url.Values, o interface{}) (err error) {
 	return errors.WithStack(json.NewDecoder(bytes.NewBuffer(payload)).Decode(o))
 }
 
+func (d *BodyDecoder) ParseOr(in string, fallback interface{}) (typed interface{}) {
+	out, err := d.Parse(in)
+	if err != nil {
+		return fallback
+	}
+	return out
+}
+
 func (d *BodyDecoder) Parse(in string) (typed interface{}, err error) {
+	typed = in
 	if x.IsValidNumber(in) {
 		typed, err = strconv.ParseInt(in, 10, 64)
 		if err != nil {
@@ -66,6 +75,9 @@ func (d *BodyDecoder) form(form url.Values) (json.RawMessage, error) {
 	payload := []byte("{}")
 	for k := range form {
 		v := form.Get(k)
+		if len(form[k]) > 1 {
+			v = form[k][len(form[k])-1]
+		}
 
 		typed, err := d.Parse(v)
 		if err != nil {

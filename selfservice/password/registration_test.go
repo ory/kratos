@@ -142,7 +142,7 @@ func TestRegistration(t *testing.T) {
 
 				assert.Equal(t, "request-2", gjson.GetBytes(body, "id").String(), "%s", body)
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
-				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.error").String(), "expired", "%s", body)
+				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.errors.0.message").String(), "expired", "%s", body)
 			},
 		},
 		{
@@ -252,12 +252,12 @@ func TestRegistration(t *testing.T) {
 							Method: CredentialsType,
 							Config: &RequestMethodConfig{
 								Action: "/action",
-								Error:  "some error",
+								Errors: []selfservice.FormError{{Message: "some error"}},
 								Fields: map[string]selfservice.FormField{
 									"traits.foo": {
 										Name:  "traits.foo",
 										Value: "bar",
-										Error: "bar",
+										Error: &selfservice.FormError{Message: "bar"},
 										Type:  "text",
 									},
 									"password": {

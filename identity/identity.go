@@ -31,8 +31,8 @@ type Identity struct {
 
 	Credentials map[CredentialsType]Credentials `json:"credentials,omitempty" faker:"-"`
 
-	MetadataSchemaURL string          `json:"metadata_schema_url,omitempty" form:"-"`
-	Metadata          json.RawMessage `json:"metadata,omitempty" form:"-" faker:"-"`
+	// MetadataSchemaURL string          `json:"metadata_schema_url,omitempty" form:"-"`
+	// Metadata          json.RawMessage `json:"metadata,omitempty" form:"-" faker:"-"`
 
 	TraitsSchemaURL string          `json:"traits_schema_url,omitempty" form:"-"`
 	Traits          json.RawMessage `json:"traits" form:"traits" faker:"-"`
@@ -87,9 +87,9 @@ type Credentials struct {
 
 func NewIdentity(traitsSchemaURL string) *Identity {
 	return &Identity{
-		ID:              uuid.New().String(),
-		Credentials:     map[CredentialsType]Credentials{},
-		Metadata:        json.RawMessage("{}"),
+		ID:          uuid.New().String(),
+		Credentials: map[CredentialsType]Credentials{},
+		// Metadata:        json.RawMessage("{}"),
 		Traits:          json.RawMessage("{}"),
 		TraitsSchemaURL: traitsSchemaURL,
 	}

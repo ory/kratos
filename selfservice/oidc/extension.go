@@ -1,6 +1,7 @@
 package oidc
 
 import (
+	"encoding/json"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -15,18 +16,18 @@ import (
 var _ identity.ValidationExtender = new(ValidationExtension)
 
 type ValidationExtension struct {
-	l sync.Mutex
-	i *identity.Identity
+	l      sync.Mutex
+	i      *identity.Identity
+	values json.RawMessage
 }
 
 func NewValidationExtension() *ValidationExtension {
-	return &ValidationExtension{}
+	return &ValidationExtension{values: json.RawMessage("{}")}
 }
 
 func (e *ValidationExtension) WithIdentity(i *identity.Identity) identity.ValidationExtender {
-	ve := *e
-	ve.i = i
-	return &ve
+	e.i = i
+	return e
 }
 
 func (e *ValidationExtension) Call(value interface{}, config *schema.Extension, context *gojsonschema.JsonContext) error {
@@ -39,8 +40,19 @@ func (e *ValidationExtension) Call(value interface{}, config *schema.Extension, 
 			if err != nil {
 				return errors.Errorf(`schema: unable to apply mapping from path "%s.hive.path.traits.identity.mappings": %s`, context.String("."), err)
 			}
+
+			if e.values, err = sjson.SetBytes(e.values, t.Path, value); err != nil {
+				return errors.Errorf(`schema: unable to apply mapping from path "%s.hive.path.traits.identity.mappings": %s`, context.String("."), err)
+			}
+
 			e.i.Traits = res
 		}
 	}
 	return nil
+}
+
+func (e *ValidationExtension) Values() json.RawMessage {
+	e.l.Lock()
+	defer e.l.Unlock()
+	return e.values
 }

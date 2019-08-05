@@ -38,7 +38,7 @@ func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Reques
 	s.d.SelfServiceRequestErrorHandler().HandleRegistrationError(w, r, CredentialsType, rr, err,
 		&selfservice.ErrorHandlerOptions{
 			AdditionalKeys: map[string]interface{}{
-				csrfTokenName: s.cg(r),
+				selfservice.CSRFTokenName: s.cg(r),
 			},
 			IgnoreValuesForKeys: []string{"password"},
 		},
@@ -48,7 +48,7 @@ func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Reques
 func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	rid := r.URL.Query().Get("request")
 	if len(rid) == 0 {
-		s.handleRegistrationError(w, r, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request ID is missing.")))
+		s.handleRegistrationError(w, r, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request Code is missing.")))
 		return
 	}
 
@@ -161,8 +161,8 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *selfservice.R
 					Type:     "password",
 					Required: true,
 				},
-				csrfTokenName: {
-					Name:     csrfTokenName,
+				selfservice.CSRFTokenName: {
+					Name:     selfservice.CSRFTokenName,
 					Type:     "hidden",
 					Required: true,
 					Value:    s.cg(r),

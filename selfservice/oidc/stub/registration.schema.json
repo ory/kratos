@@ -7,6 +7,10 @@
     "subject": {
       "format": "email",
       "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 2
     }
   },
   "required": [
