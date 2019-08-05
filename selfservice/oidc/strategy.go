@@ -255,8 +255,6 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		s.handleError(w, r, ar.GetID(), err)
 		return
 	}
-
-	return
 }
 
 func uid(provider, subject string) string {
@@ -500,5 +498,4 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid strin
 	}
 
 	s.d.ErrorManager().ForwardError(w, r, err)
-	return
 }

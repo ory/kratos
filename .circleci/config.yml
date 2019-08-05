@@ -22,7 +22,7 @@ jobs:
           key: go-mod-v1-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
-      - run: GO111MODULE=off gometalinter --disable-all --enable=goimports --enable=vet --vendor ./...
+      - run: make lint
 
   test:
     docker:

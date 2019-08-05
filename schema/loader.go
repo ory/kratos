@@ -13,7 +13,7 @@ import (
 // NewWindowsCompatibleReferenceLoader returns a JSON reference loader using the given source and the local OS file system.
 func NewWindowsCompatibleReferenceLoader(source string) (_ gojsonschema.JSONLoader, err error) {
 	if runtime.GOOS == "windows" && strings.HasPrefix(source, "file://") {
-		source, err = filepath.Abs(strings.TrimLeft(source, "file://"))
+		source, err = filepath.Abs(strings.TrimPrefix(source, "file://"))
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}

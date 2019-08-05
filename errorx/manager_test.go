@@ -42,7 +42,7 @@ func TestManager(t *testing.T) {
 			time.Sleep(time.Millisecond)
 
 			require.NoError(t, m.Clear(time.Nanosecond, false))
-			got, err = m.Read(id)
+			_, err = m.Read(id)
 			require.Error(t, err)
 		})
 	}

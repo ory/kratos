@@ -28,6 +28,7 @@ package main
 // Error responses are sent when an error (e.g. unauthorized, bad request, ...) occurred.
 //
 // swagger:model genericError
+// nolint:deadcode,unused
 type genericError struct {
 	// Name is the error name.
 	//
@@ -55,4 +56,5 @@ type genericError struct {
 // typically 201.
 //
 // swagger:response emptyResponse
+// nolint:deadcode,unused
 type emptyResponse struct{}

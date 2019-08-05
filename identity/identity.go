@@ -18,7 +18,7 @@ type CredentialsType string
 //
 // swagger:model identity
 type Identity struct {
-	l sync.RWMutex
+	l *sync.RWMutex
 
 	// PK: The primary key used for hive-internal processing. It is auto-assigned and immutable.
 	PK uint64 `json:"-" faker:"-" form:"-"`
@@ -92,5 +92,6 @@ func NewIdentity(traitsSchemaURL string) *Identity {
 		// Metadata:        json.RawMessage("{}"),
 		Traits:          json.RawMessage("{}"),
 		TraitsSchemaURL: traitsSchemaURL,
+		l:               new(sync.RWMutex),
 	}
 }
