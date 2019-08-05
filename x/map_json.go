@@ -9,9 +9,9 @@ import (
 )
 
 var (
-	regexMatchInt   = regexp.MustCompile("^[0-9]+$")
-	regexMatchFloat = regexp.MustCompile("^[0-9]+\\.[0-9]+$")
-	regexMatchBool  = regexp.MustCompile("^(?i)false|true|on$")
+	regexMatchInt   = regexp.MustCompile(`^[0-9]+$`)
+	regexMatchFloat = regexp.MustCompile(`^[0-9]+\.[0-9]+$`)
+	regexMatchBool  = regexp.MustCompile(`^(?i)false|true|on$`)
 )
 
 func TypeMap(m map[string]string) (map[string]interface{}, error) {

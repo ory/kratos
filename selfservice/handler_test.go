@@ -49,7 +49,7 @@ func TestLoginHandler(t *testing.T) {
 		defer res.Body.Close()
 		body, err := ioutil.ReadAll(res.Body)
 		require.NoError(t, err)
-		w.Write(body)
+		_, _ = w.Write(body)
 	}))
 	defer loginTS.Close()
 
@@ -103,7 +103,7 @@ func TestRegistrationHandler(t *testing.T) {
 		defer res.Body.Close()
 		body, err := ioutil.ReadAll(res.Body)
 		require.NoError(t, err)
-		w.Write(body)
+		_, _ = w.Write(body)
 	}))
 	defer loginTS.Close()
 

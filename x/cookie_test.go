@@ -57,10 +57,10 @@ func TestSession(t *testing.T) {
 			require.NoError(t, err)
 			assert.EqualValues(t, "", got)
 
-			got, err = SessionGetString(r, s, sid, "int")
+			_, err = SessionGetString(r, s, sid, "int")
 			require.Error(t, err)
 
-			got, err = SessionGetString(r, s, sid, "i-dont-exist")
+			_, err = SessionGetString(r, s, sid, "i-dont-exist")
 			require.Error(t, err)
 
 			w.WriteHeader(http.StatusNoContent)

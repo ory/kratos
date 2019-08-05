@@ -26,9 +26,8 @@ func NewValidationExtension() *ValidationExtension {
 }
 
 func (e *ValidationExtension) WithIdentity(i *identity.Identity) identity.ValidationExtender {
-	ve := *e
-	ve.i = i
-	return &ve
+	e.i = i
+	return e
 }
 
 func (e *ValidationExtension) Call(value interface{}, config *schema.Extension, context *gojsonschema.JsonContext) error {
