@@ -33,7 +33,7 @@ func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *
 	s.d.SelfServiceRequestErrorHandler().HandleLoginError(w, r, CredentialsType, rr, err,
 		&selfservice.ErrorHandlerOptions{
 			AdditionalKeys: map[string]interface{}{
-				csrfTokenName: s.cg(r),
+				selfservice.CSRFTokenName: s.cg(r),
 			},
 			IgnoreValuesForKeys: []string{"password"},
 		},
@@ -43,7 +43,7 @@ func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *
 func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	rid := r.URL.Query().Get("request")
 	if len(rid) == 0 {
-		s.handleLoginError(w, r, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request ID is missing.")))
+		s.handleLoginError(w, r, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request Code is missing.")))
 		return
 	}
 
@@ -124,8 +124,8 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *selfservice.LoginReq
 					Type:     "password",
 					Required: true,
 				},
-				csrfTokenName: {
-					Name:     csrfTokenName,
+				selfservice.CSRFTokenName: {
+					Name:     selfservice.CSRFTokenName,
 					Type:     "hidden",
 					Required: true,
 					Value:    s.cg(r),

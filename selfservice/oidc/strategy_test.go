@@ -9,11 +9,11 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -31,6 +31,7 @@ import (
 	"github.com/ory/hive/internal"
 	"github.com/ory/hive/selfservice"
 	. "github.com/ory/hive/selfservice/oidc"
+	"github.com/ory/hive/selfservice/password"
 	"github.com/ory/hive/x"
 )
 
@@ -98,12 +99,18 @@ func TestStrategy(t *testing.T) {
 	remotePublic := "http://127.0.0.1:" + hydra.GetPort("4444/tcp")
 	remoteAdmin = "http://127.0.0.1:" + hydra.GetPort("4445/tcp")
 
-	conf, reg := internal.NewMemoryRegistry(t)
-	s := NewStrategy(reg, conf)
+	_, reg := internal.NewMemoryRegistry(t)
+	reg.SelfServiceStrategies()[0].(*password.Strategy).WithTokenGenerator(func(r *http.Request) string {
+		return "nosurf"
+	}) // We need to replace the password strategy token generator because it is being used by the error handler...
+
+	s := reg.SelfServiceStrategies()[1].(*Strategy).WithTokenGenerator(func(r *http.Request) string {
+		return "nosurf"
+	})
 
 	router := x.NewRouterPublic()
 	s.SetRoutes(router)
-	ts := httptest.NewServer(nosurf.New(router))
+	ts := httptest.NewServer(router)
 	defer ts.Close()
 
 	returnTS := newReturnTs(t, reg)
@@ -191,15 +198,16 @@ func TestStrategy(t *testing.T) {
 	scope = []string{}
 
 	// make request
-	var mr = func(t *testing.T, provider, request string) (*http.Response, []byte) {
-		res, err := newClient(t).Get(ts.URL + BasePath + "/auth/" + provider + "/" + request)
+	var mr = func(t *testing.T, provider, request string, fv url.Values) (*http.Response, []byte) {
+		fv.Set("provider", provider)
+		res, err := newClient(t).PostForm(ts.URL+BasePath+"/auth/"+request, fv)
 		require.NoError(t, err)
 
 		body, err := ioutil.ReadAll(res.Body)
 		require.NoError(t, res.Body.Close())
 		require.NoError(t, err)
 
-		require.Equal(t, 200, res.StatusCode, "%s", body)
+		require.Equal(t, 200, res.StatusCode, "%s\n\t%s", res.Request.URL.String(), body)
 
 		return res, body
 	}
@@ -215,7 +223,7 @@ func TestStrategy(t *testing.T) {
 	// assert ui error (redirect to login/registration ui endpoint)
 	var aue = func(t *testing.T, res *http.Response, body []byte, reason string) {
 		require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
-		assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.error").String(), reason, "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.errors.0.message").String(), reason, "%s", body)
 	}
 
 	// assert identity (success)
@@ -253,29 +261,29 @@ func TestStrategy(t *testing.T) {
 	}
 
 	t.Run("case=should fail because provider does not exist", func(t *testing.T) {
-		res, body := mr(t, "provider-does-not-exist", "request-does-not-exist")
+		res, body := mr(t, "provider-does-not-exist", "request-does-not-exist", url.Values{})
 		ase(t, res, body, http.StatusNotFound, "is unknown or has not been configured")
 	})
 
 	t.Run("case=should fail because the issuer is mismatching", func(t *testing.T) {
-		res, body := mr(t, "invalid-issuer", "request-does-not-exist")
+		res, body := mr(t, "invalid-issuer", "request-does-not-exist", url.Values{})
 		ase(t, res, body, http.StatusInternalServerError, "issuer did not match the issuer returned by provider")
 	})
 
 	t.Run("case=should fail because request does not exist", func(t *testing.T) {
-		res, body := mr(t, "valid", "request-does-not-exist")
+		res, body := mr(t, "valid", "request-does-not-exist", url.Values{})
 		ase(t, res, body, http.StatusNotFound, "Unable to find request")
 	})
 
 	t.Run("case=should fail because the login request is expired", func(t *testing.T) {
 		r := nlr(t, returnTS.URL, -time.Minute)
-		res, body := mr(t, "valid", r.ID)
+		res, body := mr(t, "valid", r.ID, url.Values{})
 		aue(t, res, body, "login request expired")
 	})
 
 	t.Run("case=should fail because the registration request is expired", func(t *testing.T) {
 		r := nrr(t, returnTS.URL, -time.Minute)
-		res, body := mr(t, "valid", r.ID)
+		res, body := mr(t, "valid", r.ID, url.Values{})
 		aue(t, res, body, "registration request expired")
 	})
 
@@ -284,13 +292,13 @@ func TestStrategy(t *testing.T) {
 		scope = []string{}
 
 		r := nrr(t, returnTS.URL, time.Minute)
-		res, body := mr(t, "valid", r.ID)
+		res, body := mr(t, "valid", r.ID, url.Values{})
 		aue(t, res, body, "no id_token was returned")
 	})
 
 	t.Run("case=should fail login because scope was not provided", func(t *testing.T) {
 		r := nlr(t, returnTS.URL, time.Minute)
-		res, body := mr(t, "valid", r.ID)
+		res, body := mr(t, "valid", r.ID, url.Values{})
 		aue(t, res, body, "no id_token was returned")
 	})
 
@@ -299,7 +307,7 @@ func TestStrategy(t *testing.T) {
 		scope = []string{"openid"}
 
 		r := nrr(t, returnTS.URL, time.Minute)
-		res, body := mr(t, "valid", r.ID)
+		res, body := mr(t, "valid", r.ID, url.Values{})
 
 		require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
 		assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.fields.traits\\.subject.error").String(), "not match format 'email'", "%s", body)
@@ -311,13 +319,13 @@ func TestStrategy(t *testing.T) {
 
 		t.Run("case=should pass registration", func(t *testing.T) {
 			r := nrr(t, returnTS.URL, time.Minute)
-			res, body := mr(t, "valid", r.ID)
+			res, body := mr(t, "valid", r.ID, url.Values{})
 			ai(t, res, body)
 		})
 
 		t.Run("case=should pass login", func(t *testing.T) {
 			r := nlr(t, returnTS.URL, time.Minute)
-			res, body := mr(t, "valid", r.ID)
+			res, body := mr(t, "valid", r.ID, url.Values{})
 			ai(t, res, body)
 		})
 	})
@@ -328,7 +336,7 @@ func TestStrategy(t *testing.T) {
 
 		t.Run("case=should pass login", func(t *testing.T) {
 			r := nlr(t, returnTS.URL, time.Minute)
-			res, body := mr(t, "valid", r.ID)
+			res, body := mr(t, "valid", r.ID, url.Values{})
 			ai(t, res, body)
 		})
 	})
@@ -339,13 +347,30 @@ func TestStrategy(t *testing.T) {
 
 		t.Run("case=should pass registration", func(t *testing.T) {
 			r := nrr(t, returnTS.URL, time.Minute)
-			res, body := mr(t, "valid", r.ID)
+			res, body := mr(t, "valid", r.ID, url.Values{})
 			ai(t, res, body)
 		})
 
 		t.Run("case=should pass second time registration", func(t *testing.T) {
 			r := nlr(t, returnTS.URL, time.Minute)
-			res, body := mr(t, "valid", r.ID)
+			res, body := mr(t, "valid", r.ID, url.Values{})
+			ai(t, res, body)
+		})
+	})
+
+	t.Run("case=register and complete data", func(t *testing.T) {
+		subject = "incomplete-data@ory.sh"
+		scope = []string{"openid"}
+
+		t.Run("case=should fail registration on first attempt", func(t *testing.T) {
+			r := nrr(t, returnTS.URL, time.Minute)
+			res, body := mr(t, "valid", r.ID, url.Values{"traits.name": {"i"}})
+			aue(t, res, body, "String length must be greater than or equal to 2")
+		})
+
+		t.Run("case=should pass registration with valid data", func(t *testing.T) {
+			r := nrr(t, returnTS.URL, time.Minute)
+			res, body := mr(t, "valid", r.ID, url.Values{"traits.name": {"valid-name"}})
 			ai(t, res, body)
 		})
 	})

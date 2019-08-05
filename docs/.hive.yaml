@@ -53,6 +53,7 @@ selfservice:
             provider: github
             client_id: a
             client_secret: b
+            schema_url: http://test.hive.ory.sh/default-identity.schema.json
   logout:
     redirect_to: http://test.hive.ory.sh:4000/
   login:

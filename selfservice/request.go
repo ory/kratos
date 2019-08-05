@@ -14,7 +14,7 @@ import (
 
 type RequestMethodConfig interface {
 	Reset()
-	SetError(err string)
+	AddError(err *FormError)
 	GetFormFields() FormFields
 }
 

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -19,6 +20,7 @@ func TestNewBodyDecoder(t *testing.T) {
 		for k, tc := range []struct {
 			d       string
 			payload url.Values
+			raw     string
 			result  string
 		}{
 			{
@@ -30,14 +32,9 @@ func TestNewBodyDecoder(t *testing.T) {
 				result: `{"request":"bar","traits":{"foo":"bar"}}`,
 			},
 			{
-				d:       "should work with __object__ special key",
-				payload: url.Values{"traits.nested": {"__object__"}, "request": {"bar"}, "password": {"bar"}, "traits.foo.bar": {"baz"}, "traits.int": {"1234"}, "traits.float": {"1234.1234"}, "traits.boolt": {"true"}, "traits.boolf": {"false"}},
-				result:  `{"password":"bar","request":"bar","traits":{"nested":{},"boolt":true,"boolf":false,"int":1234,"foo":{"bar":"baz"},"float":1234.1234}}`,
-			},
-			{
-				d:       "should not override existing object when __object__ is being used",
-				payload: url.Values{"traits.nested.inner": {"foobar"}, "traits.nested": {"__object__"}, "request": {"bar"}, "password": {"bar"}, "traits.foo.bar": {"baz"}, "traits.int": {"1234"}, "traits.float": {"1234.1234"}, "traits.boolt": {"true"}, "traits.boolf": {"false"}},
-				result:  `{"password":"bar","request":"bar","traits":{"nested":{"inner":"foobar"},"boolt":true,"boolf":false,"int":1234,"foo":{"bar":"baz"},"float":1234.1234}}`,
+				d:      "should work with true and false",
+				raw:    "traits.consent.newsletter=false&traits.consent.newsletter=true&traits.consent.tos=false",
+				result: `{"traits":{"consent":{"newsletter":true,"tos":false}}}`,
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%d/description=%s", k, tc.d), func(t *testing.T) {
@@ -48,7 +45,15 @@ func TestNewBodyDecoder(t *testing.T) {
 				}))
 				defer ts.Close()
 
-				res, err := ts.Client().PostForm(ts.URL, tc.payload)
+				var res *http.Response
+				var err error
+
+				if tc.raw != "" {
+					res, err = ts.Client().Post(ts.URL, "application/x-www-form-urlencoded", strings.NewReader(tc.raw))
+				} else {
+					res, err = ts.Client().PostForm(ts.URL, tc.payload)
+				}
+
 				require.NoError(t, err)
 				require.NoError(t, res.Body.Close())
 			})

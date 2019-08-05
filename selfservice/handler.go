@@ -93,7 +93,6 @@ func (h *StrategyHandler) NewLoginRequest(w http.ResponseWriter, r *http.Request
 }
 
 func (h *StrategyHandler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request, redir func(*RegistrationRequest) string) error {
-
 	a := NewRegistrationRequest(h.c.SelfServiceRegistrationRequestLifespan(), r)
 	for _, s := range h.d.SelfServiceStrategies() {
 		if err := s.PopulateRegistrationMethod(r, a); err != nil {

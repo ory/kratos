@@ -1,20 +1,15 @@
 package password
 
 import (
-	"net/http"
-
 	"github.com/ory/hive/identity"
 	"github.com/ory/hive/selfservice"
 )
 
 const (
 	CredentialsType identity.CredentialsType = "password"
-	csrfTokenName                            = "csrf_token"
 )
 
 type (
-	csrfGenerator func(r *http.Request) string
-
 	// CredentialsConfig is the struct that is being used as part of the identity credentials.
 	CredentialsConfig struct {
 		// HashedPassword is a hash-representation of the password.
@@ -26,8 +21,8 @@ type (
 		// Action should be used as the form action URL (<form action="{{ .Action }}" method="post">).
 		Action string `json:"action"`
 
-		// Error contains any form errors.
-		Error string `json:"error,omitempty"`
+		// Errors contains all form errors. These will be duplicates of the individual field errors.
+		Errors []selfservice.FormError `json:"errors,omitempty"`
 
 		// Fields contains the form fields.
 		Fields selfservice.FormFields `json:"fields"`
@@ -45,12 +40,12 @@ func NewRequestMethodConfig() *RequestMethodConfig {
 }
 
 func (r *RequestMethodConfig) Reset() {
-	r.Error = ""
+	r.Errors = nil
 	r.Fields.Reset()
 }
 
-func (r *RequestMethodConfig) SetError(err string) {
-	r.Error = err
+func (r *RequestMethodConfig) AddError(err *selfservice.FormError) {
+	r.Errors = append(r.Errors, *err)
 }
 
 func (r *RequestMethodConfig) GetFormFields() selfservice.FormFields {
