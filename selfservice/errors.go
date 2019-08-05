@@ -21,18 +21,18 @@ import (
 
 var (
 	ErrIDTokenMissing = herodot.ErrBadRequest.
-		WithError("authentication failed because id_token is missing").
-		WithReasonf(`Authentication failed because no id_token was returned. Please accept the "openid" permission and try again.`)
+				WithError("authentication failed because id_token is missing").
+				WithReasonf(`Authentication failed because no id_token was returned. Please accept the "openid" permission and try again.`)
 
 	ErrScopeMissing = herodot.ErrBadRequest.
-		WithError("authentication failed because a required scope was not granted").
-		WithReasonf(`Unable to finish because one or more permissions were not granted. Please retry and accept all permissions.`)
+			WithError("authentication failed because a required scope was not granted").
+			WithReasonf(`Unable to finish because one or more permissions were not granted. Please retry and accept all permissions.`)
 
 	ErrLoginRequestExpired = herodot.ErrBadRequest.
-		WithError("login request expired")
+				WithError("login request expired")
 
 	ErrRegistrationRequestExpired = herodot.ErrBadRequest.
-		WithError("registration request expired")
+					WithError("registration request expired")
 )
 
 type (
@@ -47,8 +47,9 @@ type (
 	RequestErrorHandlerProvider interface{ SelfServiceRequestErrorHandler() *ErrorHandler }
 
 	ErrorHandler struct {
-		d errorHandlerDependencies
-		c configuration.Provider
+		d  errorHandlerDependencies
+		c  configuration.Provider
+		bd *BodyDecoder
 	}
 
 	ErrorHandlerOptions struct {
@@ -68,7 +69,11 @@ func mergeErrorHandlerOptions(opts *ErrorHandlerOptions) *ErrorHandlerOptions {
 }
 
 func NewErrorHandler(d errorHandlerDependencies, c configuration.Provider) *ErrorHandler {
-	return &ErrorHandler{d: d, c: c}
+	return &ErrorHandler{
+		d:  d,
+		c:  c,
+		bd: NewBodyDecoder(),
+	}
 }
 
 func (s *ErrorHandler) json(
@@ -124,11 +129,11 @@ func (s *ErrorHandler) HandleRegistrationError(
 	case *herodot.DefaultError:
 		switch et.Error() {
 		case ErrIDTokenMissing.Error():
-			config.SetError(et.Reason())
+			config.AddError(&FormError{Message: et.Reason()})
 		case ErrScopeMissing.Error():
-			config.SetError(et.Reason())
+			config.AddError(&FormError{Message: et.Reason()})
 		case ErrRegistrationRequestExpired.Error():
-			config.SetError(et.Reason())
+			config.AddError(&FormError{Message: et.Reason()})
 		default:
 			s.d.ErrorManager().ForwardError(w, r, err)
 			return
@@ -136,7 +141,8 @@ func (s *ErrorHandler) HandleRegistrationError(
 	case schema.ResultErrors:
 		for k := range r.PostForm {
 			if !stringslice.Has(opts.IgnoreValuesForKeys, k) {
-				config.GetFormFields().SetValue(k, r.PostForm.Get(k))
+				value := r.PostForm.Get(k)
+				config.GetFormFields().SetValue(k, s.bd.ParseOr(value, value))
 			}
 		}
 
@@ -146,8 +152,10 @@ func (s *ErrorHandler) HandleRegistrationError(
 
 		for k, e := range et {
 			herodot.DefaultErrorLogger(s.d.Logger(), err).Warnf("A form error occurred during registration (%d of %d): %s", k+1, len(et), e.String())
-			name := e.Field()
-			config.GetFormFields().SetError(name, e.String())
+
+			fe := &FormError{Field: e.Field(), Message: e.String()}
+			config.AddError(fe)
+			config.GetFormFields().SetError(e.Field(), fe)
 		}
 	default:
 		s.d.ErrorManager().ForwardError(w, r, err)
@@ -196,11 +204,11 @@ func (s *ErrorHandler) HandleLoginError(
 	case *herodot.DefaultError:
 		switch et.Error() {
 		case ErrIDTokenMissing.Error():
-			config.SetError(et.Reason())
+			config.AddError(&FormError{Message: et.Reason()})
 		case ErrScopeMissing.Error():
-			config.SetError(et.Reason())
+			config.AddError(&FormError{Message: et.Reason()})
 		case ErrLoginRequestExpired.Error():
-			config.SetError(et.Reason())
+			config.AddError(&FormError{Message: et.Reason()})
 		default:
 			s.d.ErrorManager().ForwardError(w, r, err)
 			return
@@ -219,10 +227,13 @@ func (s *ErrorHandler) HandleLoginError(
 		for k, e := range et {
 			switch e.Type() {
 			case "invalid_credentials":
-				config.SetError(e.Description())
+				config.AddError(&FormError{Message: e.Description()})
 			default:
-				herodot.DefaultErrorLogger(s.d.Logger(), err).Warnf("A form error occurred during registration (%d of %d): %s", k+1, len(et), e.String())
-				config.GetFormFields().SetError(e.Field(), e.String())
+				herodot.DefaultErrorLogger(s.d.Logger(), err).Warnf("A form error occurred during login (%d of %d): %s", k+1, len(et), e.String())
+
+				fe := &FormError{Field: e.Field(), Message: e.String()}
+				config.AddError(fe)
+				config.GetFormFields().SetError(e.Field(), fe)
 			}
 		}
 	default:

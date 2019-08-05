@@ -22,14 +22,14 @@ func TestValidationExtension(t *testing.T) {
 	sv := schema.NewValidator()
 	i := identity.NewIdentity(ts.URL + "/registration.schema.json")
 
+	ve := NewValidationExtension()
+	ve.WithIdentity(i)
 	require.NoError(t, sv.Validate(
 		ts.URL+"/extension.schema.json",
 		gojsonschema.NewReferenceLoader("file://stub/extension.data.json"),
-		NewValidationExtension().WithIdentity(i),
+		ve,
 	))
 
-	assert.JSONEq(t, `{
-	"email": "someone@email.org",
-	"names": ["peter","pan"]
-}`, string(i.Traits))
+	assert.JSONEq(t, `{"email": "someone@email.org","names": ["peter","pan"]}`, string(i.Traits))
+	assert.JSONEq(t, `{"email": "someone@email.org","names": ["peter","pan"]}`, string(ve.Values()))
 }

@@ -13,7 +13,7 @@ type RequestMethodConfigProvider struct {
 
 type RequestMethodConfig struct {
 	Action    string                  `json:"action"`
-	Error     string                  `json:"error,omitempty"`
+	Errors    []selfservice.FormError `json:"errors,omitempty"`
 	Fields    selfservice.FormFields  `json:"fields,omitempty"`
 	Providers []selfservice.FormField `json:"providers"`
 }
@@ -29,12 +29,12 @@ type request interface {
 	GetID() string
 }
 
-func (c *RequestMethodConfig) SetError(err string) {
-	c.Error = err
+func (c *RequestMethodConfig) AddError(err *selfservice.FormError) {
+	c.Errors = append(c.Errors, *err)
 }
 
 func (c *RequestMethodConfig) Reset() {
-	c.Error = ""
+	c.Errors = nil
 	c.Fields.Reset()
 }
 

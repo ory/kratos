@@ -38,7 +38,7 @@ type Strategy struct {
 	dc  *form.Decoder
 	v   *validator.Validate
 	dec *selfservice.BodyDecoder
-	cg  csrfGenerator
+	cg  selfservice.CSRFGenerator
 }
 
 func NewStrategy(
@@ -55,7 +55,7 @@ func NewStrategy(
 	}
 }
 
-func (s *Strategy) WithTokenGenerator(g csrfGenerator) *Strategy {
+func (s *Strategy) WithTokenGenerator(g selfservice.CSRFGenerator) *Strategy {
 	s.cg = g
 	return s
 }

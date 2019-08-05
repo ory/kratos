@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -25,7 +26,12 @@ func TestViperProvider(t *testing.T) {
 			logrus.New(),
 		)
 
-		require.NoError(t, viperx.Validate(schema.MustNewWindowsCompatibleReferenceLoader("file://../../docs/config.schema.json")))
+		err := viperx.Validate(schema.MustNewWindowsCompatibleReferenceLoader("file://../../docs/config.schema.json"))
+		if err != nil {
+			viperx.LoggerWithValidationErrorFields(logrus.New(), err).Error(err.Error())
+		}
+
+		require.NoError(t, err, "%+v", errors.Cause(err))
 		p := NewViperProvider(logrus.New())
 
 		t.Run("group=urls", func(t *testing.T) {
@@ -74,11 +80,11 @@ func TestViperProvider(t *testing.T) {
 				enabled bool
 			}{
 				{id: "password", enabled: true, config: "{}"},
-				{id: "oidc", enabled: true, config: `{"providers":[{"client_id":"a","client_secret":"b","id":"github","provider":"github"}]}`},
+				{id: "oidc", enabled: true, config: `{"providers":[{"client_id":"a","client_secret":"b","id":"github","provider":"github","schema_url":"http://test.hive.ory.sh/default-identity.schema.json"}]}`},
 			} {
 				strategy := p.SelfServiceStrategy(tc.id)
 				assert.Equal(t, tc.enabled, strategy.Enabled)
-				assert.EqualValues(t, tc.config, strategy.Config)
+				assert.EqualValues(t, string(tc.config), string(strategy.Config))
 			}
 		})
 

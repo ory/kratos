@@ -179,7 +179,7 @@ func TestLogin(t *testing.T) {
 
 				assert.Equal(t, "request-3", gjson.GetBytes(body, "id").String(), "%s", body)
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
-				assert.Equal(t, `The provided credentials are invalid. Check for spelling mistakes in your password or username, email address, or phone number.`, gjson.GetBytes(body, "methods.password.config.error").String())
+				assert.Equal(t, `The provided credentials are invalid. Check for spelling mistakes in your password or username, email address, or phone number.`, gjson.GetBytes(body, "methods.password.config.errors.0.message").String())
 			},
 		},
 		{
@@ -198,7 +198,7 @@ func TestLogin(t *testing.T) {
 				assert.Equal(t, "request-4", gjson.GetBytes(body, "id").String())
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
 				ensureFieldsExist(t, body)
-				assert.Equal(t, "identifier: identifier is required", gjson.GetBytes(body, "methods.password.config.fields.identifier.error").String())
+				assert.Equal(t, "identifier: identifier is required", gjson.GetBytes(body, "methods.password.config.fields.identifier.error.message").String())
 
 				// The password value should not be returned!
 				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.password.value").String())
@@ -220,7 +220,7 @@ func TestLogin(t *testing.T) {
 				assert.Equal(t, "request-5", gjson.GetBytes(body, "id").String())
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
 				ensureFieldsExist(t, body)
-				assert.Equal(t, "password: password is required", gjson.GetBytes(body, "methods.password.config.fields.password.error").String(), "%s", body)
+				assert.Equal(t, "password: password is required", gjson.GetBytes(body, "methods.password.config.fields.password.error.message").String(), "%s", body)
 
 				assert.Equal(t, "anti-rf-token", gjson.GetBytes(body, "methods.password.config.fields.csrf_token.value").String())
 				assert.Equal(t, "identifier", gjson.GetBytes(body, "methods.password.config.fields.identifier.value").String())
@@ -259,7 +259,7 @@ func TestLogin(t *testing.T) {
 				assert.Equal(t, "request-6", gjson.GetBytes(body, "id").String())
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
 				ensureFieldsExist(t, body)
-				assert.Equal(t, schema.NewInvalidCredentialsError().(schema.ResultErrors)[0].Description(), gjson.GetBytes(body, "methods.password.config.error").String(), "%s", body)
+				assert.Equal(t, schema.NewInvalidCredentialsError().(schema.ResultErrors)[0].Description(), gjson.GetBytes(body, "methods.password.config.errors.0.message").String(), "%s", body)
 
 				// This must not include the password!
 				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.password.value").String())
@@ -307,17 +307,17 @@ func TestLogin(t *testing.T) {
 							Method: CredentialsType,
 							Config: &RequestMethodConfig{
 								Action: "/action",
-								Error:  "some error",
+								Errors: []selfservice.FormError{{Message: "some error"}},
 								Fields: map[string]selfservice.FormField{
 									"identifier": {
 										Value: "baz",
 										Name:  "identifier",
-										Error: "err",
+										Error: &selfservice.FormError{Message: "err"},
 									},
 									"password": {
 										Value: "bar",
 										Name:  "password",
-										Error: "err",
+										Error: &selfservice.FormError{Message: "err"},
 									},
 								},
 							},

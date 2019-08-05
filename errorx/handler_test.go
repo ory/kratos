@@ -36,16 +36,16 @@ func TestHandler(t *testing.T) {
 				herodot.ErrNotFound.WithReason("foobar"),
 			},
 		},
-		{
-			gave: []error{
-				&x.ErrAuthnPasswordCredentialsInvalid,
-			},
-		},
-		{
-			gave: []error{
-				x.ErrAuthnPasswordCredentialsInvalid.WithMessage("whatever"),
-			},
-		},
+		// {
+		// 	gave: []error{
+		// 		&x.ErrAuthnPasswordCredentialsInvalid,
+		// 	},
+		// },
+		// {
+		// 	gave: []error{
+		// 		x.ErrAuthnPasswordCredentialsInvalid.WithMessage("whatever"),
+		// 	},
+		// },
 		{
 			gave: []error{
 				herodot.ErrNotFound.WithReason("foobar"),
