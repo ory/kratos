@@ -11,8 +11,6 @@ jobs:
     working_directory: /go/src/github.com/ory/hive
     steps:
       - checkout
-      - run: curl -L https://git.io/vp6lP | sh -s -- -b ./bin
-      - run: mv ./bin/* $GOPATH/bin
       - restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
