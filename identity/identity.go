@@ -38,9 +38,16 @@ type Identity struct {
 	Traits          json.RawMessage `json:"traits" form:"traits" faker:"-"`
 }
 
+func (i *Identity) lock() *sync.RWMutex {
+	if i.l == nil {
+		i.l = new(sync.RWMutex)
+	}
+	return i.l
+}
+
 func (i *Identity) SetCredentials(t CredentialsType, c Credentials) {
-	i.l.Lock()
-	defer i.l.Unlock()
+	i.lock().Lock()
+	defer i.lock().Unlock()
 	if i.Credentials == nil {
 		i.Credentials = make(map[CredentialsType]Credentials)
 	}
@@ -50,8 +57,8 @@ func (i *Identity) SetCredentials(t CredentialsType, c Credentials) {
 }
 
 func (i *Identity) GetCredentials(t CredentialsType) (*Credentials, bool) {
-	i.l.RLock()
-	defer i.l.RUnlock()
+	i.lock().RLock()
+	defer i.lock().RUnlock()
 
 	if c, ok := i.Credentials[t]; ok {
 		return &c, true
@@ -61,8 +68,8 @@ func (i *Identity) GetCredentials(t CredentialsType) (*Credentials, bool) {
 }
 
 func (i *Identity) WithoutCredentials() *Identity {
-	i.l.Lock()
-	defer i.l.Unlock()
+	i.lock().Lock()
+	defer i.lock().Unlock()
 	i.Credentials = nil
 	return i
 }
