@@ -13,7 +13,7 @@ type Pool interface {
 
 	// Upsert inserts or updates an identity in the pool. If the identity argument does not have a primary key, a new
 	// row will be inserted.
-	Upsert(context.Context, *Identity) (*Identity, error)
+	// Upsert(context.Context, *Identity) (*Identity, error)
 
 	Create(context.Context, *Identity) (*Identity, error)
 
