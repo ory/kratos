@@ -1,5 +1,6 @@
 SHELL=/bin/bash -o pipefail
 
+all:
 ifeq (, $(shell which golangci-lint))
     curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.17.1
 endif
