@@ -35,7 +35,7 @@ func NewRegistrationRequest(exp time.Duration, r *http.Request) *RegistrationReq
 
 func (r *RegistrationRequest) Valid() error {
 	if r.ExpiresAt.Before(time.Now()) {
-		return errors.WithStack(ErrRegistrationRequestExpired.WithReasonf("The registration request expired %.2f minutes ago, please try again", time.Now().Sub(r.ExpiresAt).Minutes()))
+		return errors.WithStack(ErrRegistrationRequestExpired.WithReasonf("The registration request expired %.2f minutes ago, please try again", time.Since(r.ExpiresAt).Minutes()))
 	}
 	return nil
 }
@@ -48,7 +48,7 @@ func NewLoginRequest(exp time.Duration, r *http.Request) *LoginRequest {
 
 func (r *LoginRequest) Valid() error {
 	if r.ExpiresAt.Before(time.Now()) {
-		return errors.WithStack(ErrLoginRequestExpired.WithReasonf("The login request expired %.2f minutes ago, please try again", time.Now().Sub(r.ExpiresAt).Minutes()))
+		return errors.WithStack(ErrLoginRequestExpired.WithReasonf("The login request expired %.2f minutes ago, please try again", time.Since(r.ExpiresAt).Minutes()))
 	}
 	return nil
 }

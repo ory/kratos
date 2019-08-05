@@ -1,5 +1,10 @@
 SHELL=/bin/bash -o pipefail
 
+all:
+ifeq (, $(shell which golangci-lint))
+    curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.17.1
+endif
+
 .PHONY: init
 init:
 		GO111MODULE=off go get -u \
@@ -14,6 +19,10 @@ init:
 			github.com/go-openapi/runtime/client \
 			github.com/go-openapi/strfmt \
 			github.com/golang/mock/...
+
+.PHONY: lint
+lint:
+		golangci-lint run
 
 .PHONY: format
 format:

@@ -112,7 +112,9 @@ func (s *DefaultPasswordValidator) Validate(identifier, password string) error {
 	}
 
 	h := sha1.New()
-	h.Write([]byte(password))
+	if _, err := h.Write([]byte(password)); err != nil {
+		return err
+	}
 	hpw := h.Sum(nil)
 
 	s.RLock()

@@ -1,0 +1,74 @@
+# Golang CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-go/ for more details
+version: 2
+jobs:
+  format:
+    docker:
+      - image: circleci/golang:1.12
+        environment:
+          - GO111MODULE=on
+    working_directory: /go/src/github.com/ory/hive
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
+      - run: go mod download
+      - run: go mod vendor
+      - save_cache:
+          key: go-mod-v1-{{ checksum "go.sum" }}
+          paths:
+            - "/go/pkg/mod"
+      - run: curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.17.1
+      - run: make lint
+
+  test:
+    docker:
+      - image: circleci/golang:1.12
+        environment:
+          - GO111MODULE=on
+          - TEST_SELFSERVICE_OIDC_HYDRA_ADMIN=http://127.0.0.1:4445
+          - TEST_SELFSERVICE_OIDC_HYDRA_PUBLIC=http://127.0.0.1:4444
+          - TEST_SELFSERVICE_OIDC_HYDRA_INTEGRATION_ADDR=127.0.0.1:4499
+      - image: oryd/hydra:v1.0.0
+        environment:
+          - DSN=memory
+          - URLS_SELF_ISSUER=http://127.0.0.1:4444/
+          - URLS_LOGIN=http://127.0.0.1:4499/login
+          - URLS_CONSENT=http://127.0.0.1:4499/consent
+        command: serve all --dangerous-force-http
+    working_directory: /go/src/github.com/ory/hive
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          command: |
+            ./.circleci/release_name.bash
+            echo 'export DOCKER_SHORT_TAG=$CIRCLE_SHA1' >> $BASH_ENV
+            source $BASH_ENV
+      - run: GO111MODULE=off go get github.com/mattn/goveralls github.com/ory/go-acc
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
+      - run: go mod download
+      - save_cache:
+          key: go-mod-v1-{{ checksum "go.sum" }}
+          paths:
+            - "/go/pkg/mod"
+      - run: timeout 15 sh -c 'until nc -z $0 $1; do sleep 1; done' 127.0.0.1 4444
+      - run: go-acc -o coverage.txt ./... -- -failfast -timeout=20m -v
+      - run: test -z "$CIRCLE_PR_NUMBER" && goveralls -service=circle-ci -coverprofile=coverage.txt -repotoken=$COVERALLS_REPO_TOKEN || echo "forks are not allowed to push to coveralls"
+
+workflows:
+  version: 2
+  "test":
+    jobs:
+      - format:
+          filters:
+            tags:
+              only: /.*/
+      - test:
+          filters:
+            tags:
+              only: /.*/

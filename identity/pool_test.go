@@ -68,10 +68,10 @@ func TestPool(t *testing.T) {
 
 			t.Run("case=create", func(t *testing.T) {
 				i := identities[0]
-				g, err := p.Create(ctx, &i)
+				_, err := p.Create(ctx, &i)
 				require.NoError(t, err)
 
-				g, err = p.Get(ctx, identities[0].ID)
+				g, err := p.Get(ctx, identities[0].ID)
 				require.NoError(t, err)
 
 				require.EqualValues(t, g, &i)
@@ -83,10 +83,10 @@ func TestPool(t *testing.T) {
 
 			t.Run("case=upsert", func(t *testing.T) {
 				i := identities[1]
-				g, err := p.Upsert(ctx, &i)
+				_, err := p.Upsert(ctx, &i)
 				require.NoError(t, err)
 
-				g, err = p.Get(ctx, identities[1].ID)
+				g, err := p.Get(ctx, identities[1].ID)
 				require.NoError(t, err)
 
 				require.EqualValues(t, g, &i)
@@ -109,12 +109,11 @@ func TestPool(t *testing.T) {
 			t.Run("case=update", func(t *testing.T) {
 				i := identities[0]
 				i.Traits = json.RawMessage(`["a"]`)
-				g, err := p.Update(ctx, &i)
+				_, err := p.Update(ctx, &i)
 				require.NoError(t, err)
 
-				g, err = p.Get(ctx, identities[0].ID)
+				g, err := p.Get(ctx, identities[0].ID)
 				require.NoError(t, err)
-
 				require.EqualValues(t, g, &i)
 
 				i2 := identities[2]

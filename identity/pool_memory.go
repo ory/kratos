@@ -87,10 +87,10 @@ func (p *PoolMemory) Create(_ context.Context, i *Identity) (*Identity, error) {
 	return i, nil
 }
 
-func (p *PoolMemory) Upsert(_ context.Context, i *Identity) (*Identity, error) {
-	ii, err := p.Update(nil, i)
+func (p *PoolMemory) Upsert(ctx context.Context, i *Identity) (*Identity, error) {
+	ii, err := p.Update(ctx, i)
 	if err != nil && err.Error() == herodot.ErrNotFound.Error() {
-		return p.Create(nil, i)
+		return p.Create(ctx, i)
 	} else if err != nil {
 		return nil, err
 	}
