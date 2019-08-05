@@ -33,7 +33,6 @@ jobs:
           - TEST_SELFSERVICE_OIDC_HYDRA_INTEGRATION_ADDR=127.0.0.1:4499
       - image: oryd/hydra:v1.0.0
         environment:
-          - MYSQL_ROOT_PASSWORD=test
           - DSN=memory
           - URLS_SELF_ISSUER=http://127.0.0.1:4444/
           - URLS_LOGIN=http://127.0.0.1:4499/login

@@ -128,7 +128,9 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, scope *[
 		return server.Config, server.URL
 	}
 	server := &http.Server{Addr: addr, Handler: router}
-	require.NoError(t, server.ListenAndServe())
+	go func() {
+		require.NoError(t, server.ListenAndServe())
+	}()
 	return server, fmt.Sprintf("http://%s", addr)
 }
 

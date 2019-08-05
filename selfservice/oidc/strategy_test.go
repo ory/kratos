@@ -76,10 +76,10 @@ func TestStrategy(t *testing.T) {
 		t.Skip()
 	}
 
-	publicPort, err := freeport.GetFreePort()
-	require.NoError(t, err)
-
 	if remotePublic == "" && remoteAdmin == "" {
+		publicPort, err := freeport.GetFreePort()
+		require.NoError(t, err)
+
 		pool, err := dockertest.NewPool("")
 		require.NoError(t, err)
 		hydra, err := pool.RunWithOptions(&dockertest.RunOptions{
