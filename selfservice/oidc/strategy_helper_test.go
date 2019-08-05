@@ -130,7 +130,8 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, scope *[
 	server := &http.Server{Addr: addr, Handler: router}
 	go func() {
 		err := server.ListenAndServe()
-		if err != nil {
+		if err == http.ErrServerClosed {
+		} else if err != nil {
 			panic(err)
 		}
 	}()
