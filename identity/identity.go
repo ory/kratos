@@ -29,7 +29,7 @@ type Identity struct {
 	// or the email, as this field is immutable.
 	ID string `json:"id" faker:"uuid_hyphenated" form:"id"`
 
-	Credentials map[CredentialsType]Credentials `json:"-" faker:"-"`
+	Credentials map[CredentialsType]Credentials `json:"credentials,omitempty" faker:"-"`
 
 	// MetadataSchemaURL string          `json:"metadata_schema_url,omitempty" form:"-"`
 	// Metadata          json.RawMessage `json:"metadata,omitempty" form:"-" faker:"-"`

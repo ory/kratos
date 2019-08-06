@@ -50,7 +50,6 @@ func TestHandler(t *testing.T) {
 		require.NoError(t, err)
 
 		require.EqualValues(t, expectCode, res.StatusCode)
-		return
 	}
 
 	var send = func(t *testing.T, method, href string, expectCode int, send interface{}) gjson.Result {
@@ -99,6 +98,7 @@ func TestHandler(t *testing.T) {
 		res := send(t, "POST", "/identities", http.StatusCreated, &i)
 		assert.NotEmpty(t, res.Get("id").String(), "%s", res.Raw)
 		assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
+		assert.Empty(t, res.Get("credentials").String(), "%s", res.Raw)
 	})
 
 	t.Run("case=should create an identity with an ID", func(t *testing.T) {
@@ -108,6 +108,7 @@ func TestHandler(t *testing.T) {
 		res := send(t, "POST", "/identities", http.StatusCreated, &i)
 		assert.EqualValues(t, "exists", res.Get("id").String(), "%s", res.Raw)
 		assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
+		assert.Empty(t, res.Get("credentials").String(), "%s", res.Raw)
 		assert.EqualValues(t, viper.GetString(configuration.ViperKeyDefaultIdentityTraitsSchemaURL), res.Get("traits_schema_url").String(), "%s", res.Raw)
 	})
 
@@ -116,6 +117,7 @@ func TestHandler(t *testing.T) {
 		assert.EqualValues(t, "exists", res.Get("id").String(), "%s", res.Raw)
 		assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
 		assert.EqualValues(t, viper.GetString(configuration.ViperKeyDefaultIdentityTraitsSchemaURL), res.Get("traits_schema_url").String(), "%s", res.Raw)
+		assert.Empty(t, res.Get("credentials").String(), "%s", res.Raw)
 	})
 
 	t.Run("case=should update an identity and persist the changes", func(t *testing.T) {
@@ -128,6 +130,12 @@ func TestHandler(t *testing.T) {
 		res = get(t, "/identities/exists", http.StatusOK)
 		assert.EqualValues(t, "exists", res.Get("id").String(), "%s", res.Raw)
 		assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
+	})
+
+	t.Run("case=should list all identities", func(t *testing.T) {
+		res := get(t, "/identities", http.StatusOK)
+		assert.Empty(t, res.Get("0.credentials").String(), "%s", res.Raw)
+		assert.EqualValues(t, "baz", res.Get("0.traits.bar").String(), "%s", res.Raw)
 	})
 
 	t.Run("case=should not be able to update an identity that does not exist yet", func(t *testing.T) {
