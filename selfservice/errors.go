@@ -29,10 +29,12 @@ var (
 			WithReasonf(`Unable to finish because one or more permissions were not granted. Please retry and accept all permissions.`)
 
 	ErrLoginRequestExpired = herodot.ErrBadRequest.
-				WithError("login request expired")
+				WithError("login request expired").
+				WithReasonf(`The login request has expired. Please restart the flow.`)
 
 	ErrRegistrationRequestExpired = herodot.ErrBadRequest.
-					WithError("registration request expired")
+					WithError("registration request expired").
+					WithReasonf(`The registration request has expired. Please restart the flow.`)
 )
 
 type (
@@ -81,7 +83,7 @@ func (s *ErrorHandler) json(
 	r *http.Request,
 	err error,
 ) bool {
-	// TODO improve this https://github.com/ory/hive/issues/44
+	// TODO improve this https://github.com/ory/hive/issues/44 #44 #61
 	if httputil.NegotiateContentType(
 		r,
 		[]string{"application/json", "text/html", "text/*", "*/*"},
@@ -97,6 +99,73 @@ func (s *ErrorHandler) json(
 	}
 
 	return false
+}
+
+func (s *ErrorHandler) handleHerodotError(err *herodot.DefaultError, config RequestMethodConfig) error {
+	switch err.Error() {
+	case ErrIDTokenMissing.Error():
+		config.AddError(&FormError{Message: err.Reason()})
+	case ErrScopeMissing.Error():
+		config.AddError(&FormError{Message: err.Reason()})
+	case ErrRegistrationRequestExpired.Error():
+		config.AddError(&FormError{Message: err.Reason()})
+	case ErrLoginRequestExpired.Error():
+		config.AddError(&FormError{Message: err.Reason()})
+	default:
+		return err
+	}
+
+	return nil
+}
+
+func (s *ErrorHandler) handleValidationError(r *http.Request, err schema.ResultErrors, config RequestMethodConfig, opts *ErrorHandlerOptions) error {
+	for k := range r.PostForm {
+		if !stringslice.Has(opts.IgnoreValuesForKeys, k) {
+			config.GetFormFields().SetValue(k, r.PostForm.Get(k))
+		}
+	}
+
+	for k, v := range opts.AdditionalKeys {
+		config.GetFormFields().SetValue(k, v)
+	}
+
+	for k, e := range err {
+		herodot.DefaultErrorLogger(s.d.Logger(), err).Debugf("A validation error was caught (%d of %d): %s", k+1, len(err), e.String())
+		switch e.Type() {
+		case "invalid_credentials":
+			config.AddError(&FormError{Message: e.Description()})
+		default:
+			fe := &FormError{Field: e.Field(), Message: e.String()}
+			config.AddError(fe)
+			config.GetFormFields().SetError(e.Field(), fe)
+		}
+	}
+
+	return nil
+}
+
+func (s *ErrorHandler) handleError(
+	r *http.Request,
+	ct identity.CredentialsType,
+	methods map[identity.CredentialsType]*DefaultRequestMethod,
+	err error,
+	opts *ErrorHandlerOptions,
+) (*RequestMethodConfig, error) {
+	method, ok := methods[ct]
+	if !ok {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithError(`Expected method "%s" to exist in request. This is a bug in the code and should be reported on GitHub.`))
+	}
+
+	config := method.Config
+	config.Reset()
+	switch e := errors.Cause(err).(type) {
+	case *herodot.DefaultError:
+		return &config, s.handleHerodotError(e, config)
+	case schema.ResultErrors:
+		return &config, s.handleValidationError(r, e, config, opts)
+	}
+
+	return &config, err
 }
 
 func (s *ErrorHandler) HandleRegistrationError(
@@ -116,59 +185,18 @@ func (s *ErrorHandler) HandleRegistrationError(
 		return
 	}
 
-	method, ok := rr.Methods[ct]
-	if !ok {
-		s.d.ErrorManager().ForwardError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithError(`Expected method "%s" to exist in request. This is a bug in the code and should be reported on GitHub.`)))
-		return
-	}
-
-	config := method.Config
-	config.Reset()
-
-	switch et := errors.Cause(err).(type) {
-	case *herodot.DefaultError:
-		switch et.Error() {
-		case ErrIDTokenMissing.Error():
-			config.AddError(&FormError{Message: et.Reason()})
-		case ErrScopeMissing.Error():
-			config.AddError(&FormError{Message: et.Reason()})
-		case ErrRegistrationRequestExpired.Error():
-			config.AddError(&FormError{Message: et.Reason()})
-		default:
-			s.d.ErrorManager().ForwardError(w, r, err)
-			return
-		}
-	case schema.ResultErrors:
-		for k := range r.PostForm {
-			if !stringslice.Has(opts.IgnoreValuesForKeys, k) {
-				value := r.PostForm.Get(k)
-				config.GetFormFields().SetValue(k, s.bd.ParseOr(value, value))
-			}
-		}
-
-		for k, v := range opts.AdditionalKeys {
-			config.GetFormFields().SetValue(k, v)
-		}
-
-		for k, e := range et {
-			herodot.DefaultErrorLogger(s.d.Logger(), err).Warnf("A form error occurred during registration (%d of %d): %s", k+1, len(et), e.String())
-
-			fe := &FormError{Field: e.Field(), Message: e.String()}
-			config.AddError(fe)
-			config.GetFormFields().SetError(e.Field(), fe)
-		}
-	default:
+	config, err := s.handleError(r, ct, rr.Methods, err, opts)
+	if err != nil {
 		s.d.ErrorManager().ForwardError(w, r, err)
 		return
 	}
 
-	if err := s.d.RegistrationRequestManager().UpdateRegistrationRequest(r.Context(), rr.ID, ct, config); err != nil {
+	if err := s.d.RegistrationRequestManager().UpdateRegistrationRequest(r.Context(), rr.ID, ct, *config); err != nil {
 		s.d.ErrorManager().ForwardError(w, r, err)
 		return
 	}
 
-	http.Redirect(w,
-		r,
+	http.Redirect(w, r,
 		urlx.CopyWithQuery(s.c.RegisterURL(), url.Values{"request": {rr.ID}}).String(),
 		http.StatusFound,
 	)
@@ -191,63 +219,18 @@ func (s *ErrorHandler) HandleLoginError(
 		return
 	}
 
-	method, ok := rr.Methods[ct]
-	if !ok {
-		s.d.ErrorManager().ForwardError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithError(`Expected method "%s" to exist in request. This is a bug in the code and should be reported on GitHub.`)))
-		return
-	}
-
-	config := method.Config
-	config.Reset()
-
-	switch et := errors.Cause(err).(type) {
-	case *herodot.DefaultError:
-		switch et.Error() {
-		case ErrIDTokenMissing.Error():
-			config.AddError(&FormError{Message: et.Reason()})
-		case ErrScopeMissing.Error():
-			config.AddError(&FormError{Message: et.Reason()})
-		case ErrLoginRequestExpired.Error():
-			config.AddError(&FormError{Message: et.Reason()})
-		default:
-			s.d.ErrorManager().ForwardError(w, r, err)
-			return
-		}
-	case schema.ResultErrors:
-		for k := range r.PostForm {
-			if !stringslice.Has(opts.IgnoreValuesForKeys, k) {
-				config.GetFormFields().SetValue(k, r.PostForm.Get(k))
-			}
-		}
-
-		for k, v := range opts.AdditionalKeys {
-			config.GetFormFields().SetValue(k, v)
-		}
-
-		for k, e := range et {
-			switch e.Type() {
-			case "invalid_credentials":
-				config.AddError(&FormError{Message: e.Description()})
-			default:
-				herodot.DefaultErrorLogger(s.d.Logger(), err).Warnf("A form error occurred during login (%d of %d): %s", k+1, len(et), e.String())
-
-				fe := &FormError{Field: e.Field(), Message: e.String()}
-				config.AddError(fe)
-				config.GetFormFields().SetError(e.Field(), fe)
-			}
-		}
-	default:
+	config, err := s.handleError(r, ct, rr.Methods, err, opts)
+	if err != nil {
 		s.d.ErrorManager().ForwardError(w, r, err)
 		return
 	}
 
-	if err := s.d.LoginRequestManager().UpdateLoginRequest(r.Context(), rr.ID, ct, config); err != nil {
+	if err := s.d.LoginRequestManager().UpdateLoginRequest(r.Context(), rr.ID, ct, *config); err != nil {
 		s.d.ErrorManager().ForwardError(w, r, err)
 		return
 	}
 
-	http.Redirect(w,
-		r,
+	http.Redirect(w, r,
 		urlx.CopyWithQuery(s.c.LoginURL(), url.Values{"request": {rr.ID}}).String(),
 		http.StatusFound,
 	)
