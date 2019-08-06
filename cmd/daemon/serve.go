@@ -37,8 +37,9 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 	r.ErrorHandler().RegisterPublicRoutes(router)
 
 	n.Use(NewNegroniLoggerMiddleware(l.(*logrus.Logger), "public#"+c.SelfPublicURL().String()))
+	r.WithCSRFHandler(x.NewCSRFHandler(router, r.Writer()))
 	n.UseHandler(
-		r.NoSurf(router),
+		r.CSRFHandler(),
 	)
 	server := graceful.WithDefaults(&http.Server{
 		Addr:    c.PublicListenOn(),
