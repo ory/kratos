@@ -3,13 +3,17 @@ package identity
 import (
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
+	"github.com/pkg/errors"
+
+	"github.com/ory/herodot"
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/urlx"
-	"github.com/pkg/errors"
 
 	"github.com/ory/x/pagination"
 
+	"github.com/ory/hive/schema"
 	"github.com/ory/hive/x"
 )
 
@@ -75,7 +79,19 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		return
 	}
 
-	if err := errors.WithStack(h.r.IdentityValidator().Validate(&i)); err != nil {
+	if i.ID == "" {
+		i.ID = uuid.New().String()
+	}
+
+	if i.TraitsSchemaURL == "" {
+		i.TraitsSchemaURL = h.c.DefaultIdentityTraitsSchemaURL().String()
+	}
+
+	if err := h.r.IdentityValidator().Validate(&i); err != nil {
+		if _, ok := errors.Cause(err).(schema.ResultErrors); ok {
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err)))
+			return
+		}
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
@@ -92,7 +108,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, ps httprouter.P
 			"identities",
 			i.ID,
 		).String(),
-		http.StatusCreated,
+		&i,
 	)
 }
 
@@ -102,6 +118,8 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
+
+	i.ID = ps.ByName("id")
 
 	if err := errors.WithStack(h.r.IdentityValidator().Validate(&i)); err != nil {
 		h.r.Writer().WriteError(w, r, err)

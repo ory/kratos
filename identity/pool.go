@@ -11,10 +11,6 @@ type Pool interface {
 	// FindByCredentialsIdentifier returns an identity by querying for it's credential identifiers.
 	FindByCredentialsIdentifier(ctx context.Context, ct CredentialsType, match string) (*Identity, *Credentials, error)
 
-	// Upsert inserts or updates an identity in the pool. If the identity argument does not have a primary key, a new
-	// row will be inserted.
-	// Upsert(context.Context, *Identity) (*Identity, error)
-
 	Create(context.Context, *Identity) (*Identity, error)
 
 	List(ctx context.Context, limit, offset int) ([]Identity, error)
