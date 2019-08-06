@@ -10,4 +10,5 @@ type Registry interface {
 
 type Configuration interface {
 	SelfAdminURL() *url.URL
+	DefaultIdentityTraitsSchemaURL() *url.URL
 }
