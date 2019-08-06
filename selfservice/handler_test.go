@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/cookiejar"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/google/uuid"
+	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/nosurf"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,6 +21,7 @@ import (
 	"github.com/ory/hive/driver/configuration"
 	"github.com/ory/hive/internal"
 	. "github.com/ory/hive/selfservice"
+	"github.com/ory/hive/session"
 	"github.com/ory/hive/x"
 )
 
@@ -27,6 +31,91 @@ func newErrTs(t *testing.T, reg driver.Registry) *httptest.Server {
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, e)
 	}))
+}
+
+func TestLogoutHandler(t *testing.T) {
+	_, reg := internal.NewMemoryRegistry(t)
+	handler := reg.StrategyHandler()
+
+	router := x.NewRouterPublic()
+	handler.RegisterPublicRoutes(router)
+	reg.WithCSRFHandler(x.NewCSRFHandler(router, reg.Writer()))
+	ts := httptest.NewServer(reg.CSRFHandler())
+	defer ts.Close()
+
+	var sess session.Session
+	sess.SID = uuid.New().String()
+	require.NoError(t, reg.SessionManager().Create(&sess))
+
+	router.GET("/set", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		require.NoError(t, reg.SessionManager().Create(&sess))
+		require.NoError(t, reg.SessionManager().SaveToRequest(&sess, w, r))
+	})
+
+	router.GET("/csrf", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		_, _ = w.Write([]byte(nosurf.Token(r)))
+	})
+
+	redirTS := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer redirTS.Close()
+
+	viper.Set(configuration.ViperKeySelfServiceLogoutRedirectURL, redirTS.URL)
+	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
+
+	var err error
+	client := ts.Client()
+	client.Jar, err = cookiejar.New(&cookiejar.Options{})
+	require.NoError(t, err)
+
+	t.Run("case=set initial session", func(t *testing.T) {
+		res, err := client.Get(ts.URL + "/set")
+		require.NoError(t, err)
+
+		var found bool
+		for _, c := range res.Cookies() {
+			if c.Name == session.DefaultSessionCookieName {
+				found = true
+			}
+		}
+		require.True(t, found)
+	})
+
+	var token string
+	t.Run("case=get csrf token", func(t *testing.T) {
+		res, err := ts.Client().Get(ts.URL + "/csrf")
+		require.NoError(t, err)
+		body, err := ioutil.ReadAll(res.Body)
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
+		token = string(body)
+		require.NotEmpty(t, token)
+	})
+
+	t.Run("case=log out", func(t *testing.T) {
+		res, err := client.Get(ts.URL + BrowserLogoutPath)
+		require.NoError(t, err)
+
+		var found bool
+		for _, c := range res.Cookies() {
+			if c.Name == session.DefaultSessionCookieName {
+				found = true
+			}
+		}
+		require.False(t, found)
+	})
+
+	t.Run("case=csrf token should be reset", func(t *testing.T) {
+		res, err := ts.Client().Get(ts.URL + "/csrf")
+		require.NoError(t, err)
+		body, err := ioutil.ReadAll(res.Body)
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
+		require.NotEmpty(t, body)
+		assert.NotEqual(t, token, string(body))
+	})
+
 }
 
 func TestLoginHandler(t *testing.T) {

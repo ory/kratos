@@ -1,8 +1,6 @@
 package driver
 
 import (
-	"net/http"
-
 	"github.com/go-errors/errors"
 	"github.com/gorilla/sessions"
 	"github.com/justinas/nosurf"
@@ -47,7 +45,8 @@ type Registry interface {
 
 	CookieManager() sessions.Store
 
-	NoSurf(http.Handler) *nosurf.CSRFHandler
+	WithCSRFHandler(c *nosurf.CSRFHandler)
+	CSRFHandler() *nosurf.CSRFHandler
 }
 
 func NewRegistry(c configuration.Provider) (Registry, error) {
