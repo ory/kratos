@@ -4,12 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"net/url"
 
 	"github.com/gorilla/sessions"
 	"github.com/justinas/nosurf"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
 	"github.com/ory/x/logrusx"
@@ -56,6 +54,8 @@ type RegistryMemory struct {
 	selfserviceStrategies           []selfservice.Strategy
 	seflserviceRequestErrorHandler  *selfservice.ErrorHandler
 
+	nosurf *nosurf.CSRFHandler
+
 	writer herodot.Writer
 }
 
@@ -64,12 +64,15 @@ func (m *RegistryMemory) WithLogger(l logrus.FieldLogger) Registry {
 	return m
 }
 
-func (m *RegistryMemory) NoSurf(router http.Handler) *nosurf.CSRFHandler {
-	n := nosurf.New(router)
-	n.SetFailureHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		m.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("CSRF token is missing or invalid.")))
-	}))
-	return n
+func (m *RegistryMemory) WithCSRFHandler(c *nosurf.CSRFHandler) {
+	m.nosurf = c
+}
+
+func (m *RegistryMemory) CSRFHandler() *nosurf.CSRFHandler {
+	if m.nosurf == nil {
+		panic("csrf handler is not set")
+	}
+	return m.nosurf
 }
 
 func (m *RegistryMemory) SelfServiceStrategies() []selfservice.Strategy {

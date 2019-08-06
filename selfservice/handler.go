@@ -35,6 +35,8 @@ type StrategyHandlerDependencies interface {
 	session.ManagementProvider
 	errorx.ManagementProvider
 	x.WriterProvider
+
+	x.CSRFProvider
 }
 
 type StrategyHandler struct {
@@ -140,6 +142,8 @@ func (h *StrategyHandler) fetchLoginRequest(w http.ResponseWriter, r *http.Reque
 }
 
 func (h *StrategyHandler) logout(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	_ = h.d.CSRFHandler().RegenerateToken(w, r)
+
 	if err := h.d.SessionManager().PurgeFromRequest(w, r); err != nil {
 		h.d.ErrorManager().ForwardError(w, r, err)
 		return
