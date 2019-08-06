@@ -73,36 +73,14 @@ func TestPool(t *testing.T) {
 
 				g, err := p.Get(ctx, identities[0].ID)
 				require.NoError(t, err)
-
 				require.EqualValues(t, g, &i)
+
+				g, err = p.Create(ctx, &identities[1])
+				require.NoError(t, err)
+				require.EqualValues(t, g, &identities[1])
 
 				// violates uniqueness
 				_, err = p.Create(ctx, &i)
-				require.EqualError(t, err, herodot.ErrConflict.Error())
-			})
-
-			t.Run("case=upsert", func(t *testing.T) {
-				i := identities[1]
-				_, err := p.Upsert(ctx, &i)
-				require.NoError(t, err)
-
-				g, err := p.Get(ctx, identities[1].ID)
-				require.NoError(t, err)
-
-				require.EqualValues(t, g, &i)
-
-				i2 := identities[1]
-				i2.Traits = json.RawMessage(`[]`)
-				_, err = p.Upsert(ctx, &i2)
-				require.NoError(t, err)
-
-				g, err = p.Get(ctx, identities[1].ID)
-				require.NoError(t, err)
-
-				require.EqualValues(t, g, &i2)
-
-				// violates uniqueness
-				_, err = p.Upsert(ctx, &ii)
 				require.EqualError(t, err, herodot.ErrConflict.Error())
 			})
 
