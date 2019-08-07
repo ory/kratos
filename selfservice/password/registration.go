@@ -16,6 +16,7 @@ import (
 	"github.com/ory/hive/identity"
 	"github.com/ory/hive/schema"
 	"github.com/ory/hive/selfservice"
+	"github.com/ory/hive/session"
 	"github.com/ory/hive/x"
 )
 
@@ -30,7 +31,7 @@ type RegistrationFormPayload struct {
 
 func (s *Strategy) setRegistrationRoutes(r *x.RouterPublic) {
 	if _, _, ok := r.Lookup("POST", RegistrationPath); !ok {
-		r.POST(RegistrationPath, s.handleRegistration)
+		r.POST(RegistrationPath, s.d.SessionHandler().IsNotAuthenticated(s.handleRegistration, session.RedirectOnAuthenticated(s.c)))
 	}
 }
 

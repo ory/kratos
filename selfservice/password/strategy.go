@@ -9,6 +9,7 @@ import (
 	"github.com/ory/hive/errorx"
 	"github.com/ory/hive/identity"
 	"github.com/ory/hive/selfservice"
+	"github.com/ory/hive/session"
 	"github.com/ory/hive/x"
 )
 
@@ -30,6 +31,8 @@ type registrationStrategyDependencies interface {
 	selfservice.LoginExecutionProvider
 	selfservice.PostLoginHookProvider
 	selfservice.RequestErrorHandlerProvider
+
+	session.HandlerProvider
 }
 
 type Strategy struct {

@@ -34,6 +34,8 @@ type Provider interface {
 	SelfPublicURL() *url.URL
 	SelfAdminURL() *url.URL
 
+	DefaultReturnToURL() *url.URL
+
 	LoginURL() *url.URL
 	ErrorURL() *url.URL
 	MultiFactorURL() *url.URL
