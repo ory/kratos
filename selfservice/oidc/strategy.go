@@ -46,6 +46,7 @@ type dependencies interface {
 	identity.PoolProvider
 	x.LoggingProvider
 	session.ManagementProvider
+	session.HandlerProvider
 
 	selfservice.RegistrationExecutionProvider
 	selfservice.LoginExecutionProvider
@@ -76,15 +77,15 @@ func (s *Strategy) WithTokenGenerator(g selfservice.CSRFGenerator) *Strategy {
 
 func (s *Strategy) SetRoutes(r *x.RouterPublic) {
 	if _, _, ok := r.Lookup("GET", CallbackPath); !ok {
-		r.GET(CallbackPath, s.handleCallback)
+		r.GET(CallbackPath, s.d.SessionHandler().IsNotAuthenticated(s.handleCallback, session.RedirectOnAuthenticated(s.c)))
 	}
 
 	if _, _, ok := r.Lookup("POST", AuthPath); !ok {
-		r.POST(AuthPath, s.handleAuth)
+		r.POST(AuthPath, s.d.SessionHandler().IsNotAuthenticated(s.handleAuth, session.RedirectOnAuthenticated(s.c)))
 	}
 
 	if _, _, ok := r.Lookup("GET", AuthPath); !ok {
-		r.GET(AuthPath, s.handleAuth)
+		r.GET(AuthPath, s.d.SessionHandler().IsNotAuthenticated(s.handleAuth, session.RedirectOnAuthenticated(s.c)))
 	}
 }
 

@@ -33,6 +33,7 @@ type StrategyHandlerDependencies interface {
 	RegistrationRequestManagementProvider
 
 	session.ManagementProvider
+	session.HandlerProvider
 	errorx.ManagementProvider
 	x.WriterProvider
 
@@ -53,10 +54,10 @@ func NewStrategyHandler(d StrategyHandlerDependencies, c configuration.Provider)
 }
 
 func (h *StrategyHandler) RegisterPublicRoutes(public *x.RouterPublic) {
-	public.GET(BrowserLoginPath, h.initLoginRequest)
+	public.GET(BrowserLoginPath, h.d.SessionHandler().IsNotAuthenticated(h.initLoginRequest, session.RedirectOnAuthenticated(h.c)))
 	public.GET(BrowserLoginRequestsPath, h.fetchLoginRequest)
 
-	public.GET(BrowserRegistrationPath, h.initRegistrationRequest)
+	public.GET(BrowserRegistrationPath, h.d.SessionHandler().IsNotAuthenticated(h.initRegistrationRequest, session.RedirectOnAuthenticated(h.c)))
 	public.GET(BrowserRegistrationRequestsPath, h.fetchRegistrationRequest)
 
 	public.GET(BrowserLogoutPath, h.logout)
