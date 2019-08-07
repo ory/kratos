@@ -280,6 +280,10 @@
           "type": "string",
           "format": "url"
         },
+        "default_return_to": {
+          "type": "string",
+          "format": "url"
+        },
         "registration_ui": {
           "type": "string",
           "format": "url"

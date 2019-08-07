@@ -32,6 +32,7 @@ const (
 
 	ViperKeySecretsSession = "secrets.session"
 
+	ViperKeyURLsDefaultReturnTo            = "urls.self.default_return_to"
 	ViperKeyURLsSelfPublic                 = "urls.self.public"
 	ViperKeyURLsSelfAdmin                  = "urls.self.admin"
 	ViperKeyURLsLogin                      = "urls.login_ui"
@@ -86,6 +87,7 @@ func BindEnvs() {
 		ViperKeySelfServiceRegistrationAfterConfig,
 		ViperKeySelfServiceLoginAfterConfig,
 		ViperKeySelfServiceLogoutRedirectURL,
+		ViperKeyURLsDefaultReturnTo,
 	); err != nil {
 		panic(err.Error())
 	}
@@ -222,6 +224,10 @@ func (c *ViperProvider) SessionSecrets() [][]byte {
 	}
 
 	return result
+}
+
+func (c *ViperProvider) DefaultReturnToURL() *url.URL {
+	return mustParseURLFromViper(c.l, ViperKeyURLsDefaultReturnTo)
 }
 
 func (c *ViperProvider) SelfPublicURL() *url.URL {

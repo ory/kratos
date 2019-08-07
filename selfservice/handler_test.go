@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/http/cookiejar"
 	"net/http/httptest"
 	"testing"
 
@@ -21,6 +20,8 @@ import (
 	"github.com/ory/hive/driver/configuration"
 	"github.com/ory/hive/internal"
 	. "github.com/ory/hive/selfservice"
+	"github.com/ory/hive/selfservice/oidc"
+	"github.com/ory/hive/selfservice/password"
 	"github.com/ory/hive/session"
 	"github.com/ory/hive/x"
 )
@@ -47,10 +48,7 @@ func TestLogoutHandler(t *testing.T) {
 	sess.SID = uuid.New().String()
 	require.NoError(t, reg.SessionManager().Create(&sess))
 
-	router.GET("/set", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		require.NoError(t, reg.SessionManager().Create(&sess))
-		require.NoError(t, reg.SessionManager().SaveToRequest(&sess, w, r))
-	})
+	router.GET("/set", session.MockSetSession(t, reg))
 
 	router.GET("/csrf", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		_, _ = w.Write([]byte(nosurf.Token(r)))
@@ -64,22 +62,10 @@ func TestLogoutHandler(t *testing.T) {
 	viper.Set(configuration.ViperKeySelfServiceLogoutRedirectURL, redirTS.URL)
 	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
 
-	var err error
-	client := ts.Client()
-	client.Jar, err = cookiejar.New(&cookiejar.Options{})
-	require.NoError(t, err)
+	client := session.MockCookieClient(t)
 
 	t.Run("case=set initial session", func(t *testing.T) {
-		res, err := client.Get(ts.URL + "/set")
-		require.NoError(t, err)
-
-		var found bool
-		for _, c := range res.Cookies() {
-			if c.Name == session.DefaultSessionCookieName {
-				found = true
-			}
-		}
-		require.True(t, found)
+		session.MockHydrateCookieClient(t, client, ts.URL+"/set")
 	})
 
 	var token string
@@ -116,6 +102,42 @@ func TestLogoutHandler(t *testing.T) {
 		assert.NotEqual(t, token, string(body))
 	})
 
+}
+
+func TestEnsureSessionRedirect(t *testing.T) {
+	_, reg := internal.NewMemoryRegistry(t)
+	handler := reg.StrategyHandler()
+
+	router := x.NewRouterPublic()
+	handler.RegisterPublicRoutes(router)
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	redirTS := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("already authenticated"))
+	}))
+	defer redirTS.Close()
+
+	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, redirTS.URL)
+	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
+
+	for k, tc := range [][]string{
+		{"GET", BrowserLoginPath},
+		{"GET", BrowserRegistrationPath},
+
+		{"POST", password.LoginPath},
+		{"POST", password.RegistrationPath},
+
+		// it is ok that these contain the parameters as arw strings as we are only interested in checking if the middleware is working
+		{"POST", oidc.AuthPath},
+		{"GET", oidc.AuthPath},
+		{"GET", oidc.CallbackPath},
+	} {
+		t.Run(fmt.Sprintf("case=%d/method=%s/path=%s", k, tc[0], tc[1]), func(t *testing.T) {
+			body, _ := session.MockMakeAuthenticatedRequest(t, reg, router.Router, x.NewTestHTTPRequest(t, tc[0], ts.URL+tc[1], nil))
+			assert.EqualValues(t, "already authenticated", string(body))
+		})
+	}
 }
 
 func TestLoginHandler(t *testing.T) {

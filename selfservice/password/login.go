@@ -16,6 +16,7 @@ import (
 
 	"github.com/ory/hive/schema"
 	"github.com/ory/hive/selfservice"
+	"github.com/ory/hive/session"
 	"github.com/ory/hive/x"
 )
 
@@ -25,7 +26,7 @@ const (
 
 func (s *Strategy) setLoginRoutes(r *x.RouterPublic) {
 	if _, _, ok := r.Lookup("POST", LoginPath); !ok {
-		r.POST(LoginPath, s.handleLogin)
+		r.POST(LoginPath, s.d.SessionHandler().IsNotAuthenticated(s.handleLogin, session.RedirectOnAuthenticated(s.c)))
 	}
 }
 
