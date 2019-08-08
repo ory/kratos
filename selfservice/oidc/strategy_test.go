@@ -375,6 +375,8 @@ func TestStrategy(t *testing.T) {
 			r := nrr(t, returnTS.URL, time.Minute)
 			res, body := mr(t, "valid", r.ID, url.Values{"traits.name": {"i"}})
 			aue(t, res, body, "String length must be greater than or equal to 2")
+			assert.Equal(t, "traits.name", gjson.GetBytes(body, "methods.oidc.config.fields.traits\\.name.name").String(), "%s", body) // make sure the field is being echoed
+			assert.Equal(t, "i", gjson.GetBytes(body, "methods.oidc.config.fields.traits\\.name.value").String(), "%s", body)          // make sure the field is being echoed
 		})
 
 		t.Run("case=should pass registration with valid data", func(t *testing.T) {
