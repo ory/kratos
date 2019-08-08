@@ -361,6 +361,20 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		return err
 	}
 
+	if r.PostForm == nil {
+		r.PostForm = map[string][]string{}
+	}
+
+	if r.Form == nil {
+		r.Form = map[string][]string{}
+	}
+
+	for k, vv := range toFormValues(traits, "traits") {
+		for _, v := range vv {
+			r.PostForm.Add(k, v)
+			r.Form.Add(k, v)
+		}
+	}
 	i.Traits = traits
 
 	// Validate the identity itself

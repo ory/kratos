@@ -19,11 +19,11 @@ func toMap(j json.RawMessage) map[string]interface{} {
 	p := gjson.ParseBytes(j)
 	if p.IsObject() {
 		for k, v := range p.Map() {
-			dest[k] = flatten([]byte(v.Raw))
+			dest[k] = flatten([]byte(v.Raw), "")
 		}
 	} else if p.IsArray() {
 		for k, v := range p.Array() {
-			dest[fmt.Sprintf("%d", k)] = flatten([]byte(v.Raw))
+			dest[fmt.Sprintf("%d", k)] = flatten([]byte(v.Raw), "")
 		}
 	} else {
 		dest[""] = p.Value()
@@ -51,9 +51,9 @@ func flattenKeys(j json.RawMessage, keys map[string]interface{}, dest map[string
 	}
 }
 
-func flatten(j json.RawMessage) map[string]interface{} {
+func flatten(j json.RawMessage, prefix string) map[string]interface{} {
 	result := make(map[string]interface{})
-	flattenKeys(j, toMap(j), result, "")
+	flattenKeys(j, toMap(j), result, prefix)
 
 	return result
 }
@@ -61,11 +61,15 @@ func flatten(j json.RawMessage) map[string]interface{} {
 // toFormValues converts a json object with nested fields to a url.Values representation, for example:
 //
 // - { "foo": [{ "bar": "baz" }] } -> url.Values{"foo[0].bar": {"baz"}}
-func toFormValues(traits json.RawMessage) url.Values {
+func toFormValues(values json.RawMessage, prefix string) url.Values {
 	result := url.Values{}
 
-	for k := range flatten(traits) {
-		result.Set(k, gjson.GetBytes(traits, k).String())
+	if prefix != "" {
+		prefix = prefix + "."
+	}
+
+	for k := range flatten(values, "") {
+		result.Set(prefix+k, gjson.GetBytes(values, k).String())
 	}
 
 	return result
@@ -85,6 +89,7 @@ func merge(dc *selfservice.BodyDecoder, form string, traits json.RawMessage) (js
 	var decodedForm struct {
 		Traits map[string]interface{} `json:"traits"`
 	}
+
 	if err := dc.DecodeForm(q, &decodedForm); err != nil {
 		return nil, err
 	}

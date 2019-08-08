@@ -14,15 +14,16 @@ import (
 
 func TestToFormValues(t *testing.T) {
 	for k, tc := range []struct {
-		traits json.RawMessage
+		json   json.RawMessage
+		prefix string
 		expect url.Values
 	}{
 		{
-			traits: json.RawMessage(`{ "foo": [{ "bar": "baz" }] }`),
+			json:   json.RawMessage(`{ "foo": [{ "bar": "baz" }] }`),
 			expect: url.Values{"foo.0.bar": {"baz"}},
 		},
 		{
-			traits: json.RawMessage(`{ "foo": [{ "bar": "baz" },{ "bar": "baz" }], "baz": true, "baz1": 1234 }`),
+			json: json.RawMessage(`{ "foo": [{ "bar": "baz" },{ "bar": "baz" }], "baz": true, "baz1": 1234 }`),
 			expect: url.Values{
 				"foo.0.bar": {"baz"},
 				"foo.1.bar": {"baz"},
@@ -31,12 +32,22 @@ func TestToFormValues(t *testing.T) {
 			},
 		},
 		{
-			traits: json.RawMessage(`[{ "bar": "baz" }]`),
+			json:   json.RawMessage(`[{ "bar": "baz" }]`),
 			expect: url.Values{"0.bar": {"baz"}},
+		},
+		{
+			json:   json.RawMessage(`{ "foo": [{ "bar": "baz" },{ "bar": "baz" }], "baz": true, "baz1": 1234 }`),
+			prefix: "traits",
+			expect: url.Values{
+				"traits.foo.0.bar": {"baz"},
+				"traits.foo.1.bar": {"baz"},
+				"traits.baz":       {"true"},
+				"traits.baz1":      {"1234"},
+			},
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			assert.EqualValues(t, tc.expect, toFormValues(tc.traits))
+			assert.EqualValues(t, tc.expect, toFormValues(tc.json, tc.prefix))
 		})
 	}
 }
