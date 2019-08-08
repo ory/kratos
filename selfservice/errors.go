@@ -121,7 +121,7 @@ func (s *ErrorHandler) handleHerodotError(err *herodot.DefaultError, config Requ
 func (s *ErrorHandler) handleValidationError(r *http.Request, err schema.ResultErrors, config RequestMethodConfig, opts *ErrorHandlerOptions) error {
 	for k := range r.PostForm {
 		if !stringslice.Has(opts.IgnoreValuesForKeys, k) {
-			config.GetFormFields().SetValue(k, r.PostForm.Get(k))
+			config.GetFormFields().SetValue(k, s.bd.ParseFormFieldOr(r.PostForm[k], r.PostForm.Get(k)))
 		}
 	}
 
