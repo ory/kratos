@@ -32,7 +32,7 @@ import (
 )
 
 const (
-	BasePath     = "/methods/oidc"
+	BasePath     = "/auth/browser/methods/oidc"
 	AuthPath     = BasePath + "/auth/:request"
 	CallbackPath = BasePath + "/callback/:provider"
 )
