@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/ory/x/flagx"
 	"github.com/ory/x/healthx"
 
 	"github.com/sirupsen/logrus"
@@ -37,7 +38,14 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 	r.ErrorHandler().RegisterPublicRoutes(router)
 
 	n.Use(NewNegroniLoggerMiddleware(l.(*logrus.Logger), "public#"+c.SelfPublicURL().String()))
-	r.WithCSRFHandler(x.NewCSRFHandler(router, r.Writer()))
+	r.WithCSRFHandler(x.NewCSRFHandler(
+		router,
+		r.Writer(),
+		l,
+		c.SelfPublicURL().Path,
+		c.SelfPublicURL().Hostname(),
+		!flagx.MustGetBool(cmd, "dev"),
+	))
 	n.UseHandler(
 		r.CSRFHandler(),
 	)
