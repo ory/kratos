@@ -38,6 +38,14 @@ func TestErrorHandler(t *testing.T) {
 		return config.(*password.RequestMethodConfig).Errors[0].Message
 	}
 
+	var assertFormFields = func(t *testing.T, config RequestMethodConfig) {
+		assert.Equal(t, "bar", config.GetFormFields()["string"].Value)
+		assert.Equal(t, int64(123), config.GetFormFields()["number"].Value)
+		assert.Equal(t, false, config.GetFormFields()["boolf"].Value)
+		assert.Equal(t, true, config.GetFormFields()["boolt"].Value)
+		assert.Equal(t, true, config.GetFormFields()["checkbox"].Value)
+	}
+
 	for k, tc := range []struct {
 		o                 *ErrorHandlerOptions
 		err               error
@@ -85,8 +93,7 @@ func TestErrorHandler(t *testing.T) {
 			err:    errors.WithStack(schema.NewInvalidCredentialsError()),
 			endURL: "http://hive.ory.sh/form?request=5",
 			assertConfig: func(t *testing.T, config RequestMethodConfig) {
-				assert.Equal(t, "bar", config.GetFormFields()["foo"].Value)
-				assert.Equal(t, "bar", config.GetFormFields()["baz"].Value)
+				assertFormFields(t, config)
 				assert.EqualValues(t, `The provided credentials are invalid. Check for spelling mistakes in your password or username, email address, or phone number.`, cem(config))
 			},
 		},
@@ -94,8 +101,7 @@ func TestErrorHandler(t *testing.T) {
 			err:    errors.WithStack(schema.NewRequiredError(nil, gojsonschema.NewJsonContext("field_missing", nil))),
 			endURL: "http://hive.ory.sh/form?request=6",
 			assertConfig: func(t *testing.T, config RequestMethodConfig) {
-				assert.Equal(t, "bar", config.GetFormFields()["foo"].Value)
-				assert.Equal(t, "bar", config.GetFormFields()["baz"].Value)
+				assertFormFields(t, config)
 				assert.Contains(t, config.GetFormFields()["field_missing"].Error.Message, "field_missing is required")
 			},
 		},
@@ -105,8 +111,11 @@ func TestErrorHandler(t *testing.T) {
 			r := &http.Request{
 				Header: map[string][]string{},
 				PostForm: url.Values{
-					"foo": {"bar"},
-					"baz": {"bar"},
+					"string":   {"bar"},
+					"number":   {"123"},
+					"boolf":    {"false"},
+					"boolt":    {"true"},
+					"checkbox": {"false", "true"},
 				},
 				URL: urlx.ParseOrPanic("http://hive.ory.sh/form"),
 			}
