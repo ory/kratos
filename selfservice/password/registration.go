@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	RegistrationPath = "/auth/browser/registration/methods/password"
+	RegistrationPath = "/auth/browser/methods/password/registration"
 )
 
 type RegistrationFormPayload struct {

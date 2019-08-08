@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	LoginPath = "/auth/browser/login/methods/password"
+	LoginPath = "/auth/browser/methods/password/login"
 )
 
 func (s *Strategy) setLoginRoutes(r *x.RouterPublic) {

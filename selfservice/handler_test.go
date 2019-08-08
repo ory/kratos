@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/nosurf"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -40,7 +41,7 @@ func TestLogoutHandler(t *testing.T) {
 
 	router := x.NewRouterPublic()
 	handler.RegisterPublicRoutes(router)
-	reg.WithCSRFHandler(x.NewCSRFHandler(router, reg.Writer()))
+	reg.WithCSRFHandler(x.NewCSRFHandler(router, reg.Writer(), logrus.New(), "/", "", false))
 	ts := httptest.NewServer(reg.CSRFHandler())
 	defer ts.Close()
 
