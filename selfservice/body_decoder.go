@@ -43,26 +43,38 @@ func (d *BodyDecoder) DecodeForm(form url.Values, o interface{}) (err error) {
 	return errors.WithStack(json.NewDecoder(bytes.NewBuffer(payload)).Decode(o))
 }
 
-func (d *BodyDecoder) ParseOr(in string, fallback interface{}) (typed interface{}) {
-	out, err := d.Parse(in)
+func (d *BodyDecoder) ParseFormFieldOr(values []string, fallback interface{}) (typed interface{}) {
+	out, err := d.ParseFormField(values)
 	if err != nil {
 		return fallback
 	}
 	return out
 }
 
-func (d *BodyDecoder) Parse(in string) (typed interface{}, err error) {
-	typed = in
-	if x.IsValidNumber(in) {
-		typed, err = strconv.ParseInt(in, 10, 64)
+func (d *BodyDecoder) ParseFormField(values []string) (typed interface{}, err error) {
+	if len(values) == 0 {
+		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Values must have at least one element but got none."))
+	}
+
+	value := values[0]
+	// This handles the special case of checkboxes:
+	//
+	//  <input type="hidden" name="signup_for_newsletter" value="false" />
+	//  <input type="checkbox" name="signup_for_newsletter" value="true" />
+	if len(values) > 1 {
+		value = values[len(values)-1]
+	}
+	typed = value
+	if x.IsValidNumber(value) {
+		typed, err = strconv.ParseInt(value, 10, 64)
 		if err != nil {
-			typed, err = strconv.ParseFloat(in, 64)
+			typed, err = strconv.ParseFloat(value, 64)
 			if err != nil {
 				return nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse number: %s", err.Error()))
 			}
 		}
-	} else if strings.ToLower(in) == "true" || strings.ToLower(in) == "false" {
-		typed, err = strconv.ParseBool(in)
+	} else if strings.ToLower(value) == "true" || strings.ToLower(value) == "false" {
+		typed, err = strconv.ParseBool(value)
 		if err != nil {
 			return nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse bool: %s", err.Error()))
 		}
@@ -74,12 +86,7 @@ func (d *BodyDecoder) Parse(in string) (typed interface{}, err error) {
 func (d *BodyDecoder) form(form url.Values) (json.RawMessage, error) {
 	payload := []byte("{}")
 	for k := range form {
-		v := form.Get(k)
-		if len(form[k]) > 1 {
-			v = form[k][len(form[k])-1]
-		}
-
-		typed, err := d.Parse(v)
+		typed, err := d.ParseFormField(form[k])
 		if err != nil {
 			return nil, err
 		}
