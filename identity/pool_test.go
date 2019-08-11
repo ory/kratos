@@ -2,9 +2,11 @@ package identity_test
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 
 	"github.com/ory/herodot"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/stretchr/testify/require"
 
@@ -29,7 +31,25 @@ func TestPool(t *testing.T) {
 				require.EqualError(t, err, herodot.ErrNotFound.Error())
 			})
 		})
+
+		t.Run("case=create with default values", func(t *testing.T) {
+			i := NewIdentity("")
+			i.Traits = json.RawMessage(`{}`)
+			_, err := pool.Create(context.Background(), i)
+			require.NoError(t, err)
+
+			got, err := pool.Get(context.Background(), i.ID)
+			require.NoError(t, err)
+
+			// It should set the default
+			assert.Equal(t, "file://./stub/identity.schema.json", got.TraitsSchemaURL)
+			i.TraitsSchemaURL = got.TraitsSchemaURL
+
+
+			assert.EqualValues(t, i, got)
+		})
 	}
+
 	//
 	// var identities []Identity
 	// for k := 0; k < 5; k++ {
