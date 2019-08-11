@@ -105,21 +105,19 @@ func (p *PoolMemory) List(_ context.Context, limit, offset int) ([]Identity, err
 }
 
 func (p *PoolMemory) Update(_ context.Context, i *Identity) (*Identity, error) {
+	i = p.augment(*i)
+	if err := p.Validate(i); err != nil {
+		return nil, err
+	}
+
 	p.RLock()
 	for k, ii := range p.is {
 		if ii.ID == i.ID {
 			p.RUnlock()
-			p.Lock()
-			p.is[k] = Identity{}
-			p.Unlock()
-
-			if p.hasConflict(i) {
-				p.is[k] = ii
-				return nil, errors.WithStack(herodot.ErrConflict.WithReasonf("An identity with the given identifier(s) exists already."))
-			}
 
 			p.Lock()
 			i.PK = ii.PK
+			i.Credentials = ii.Credentials
 			p.is[k] = *i
 			p.Unlock()
 
@@ -130,17 +128,27 @@ func (p *PoolMemory) Update(_ context.Context, i *Identity) (*Identity, error) {
 	return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("Identity with identifier %s does not exist.", i.ID))
 }
 
-func (p *PoolMemory) Get(_ context.Context, id string) (*Identity, error) {
+func (p *PoolMemory) Get(ctx context.Context, id string) (*Identity, error) {
+	i, err := p.GetClassified(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return p.declassify(*i),nil
+}
+
+func (p *PoolMemory) GetClassified(_ context.Context, id string) (*Identity, error) {
 	p.RLock()
 	defer p.RUnlock()
 
 	for _, ii := range p.is {
 		if ii.ID == id {
-			return p.declassify(ii), nil
+			return &ii, nil
 		}
 	}
 
 	return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("Identity with identifier %s does not exist.", id))
+
 }
 
 func (p *PoolMemory) Delete(_ context.Context, id string) error {

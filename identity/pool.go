@@ -25,6 +25,8 @@ type (
 		Delete(context.Context, string) error
 
 		Get(context.Context, string) (*Identity, error)
+
+		GetClassified(_ context.Context, id string) (*Identity, error)
 	}
 
 	PoolProvider interface {
