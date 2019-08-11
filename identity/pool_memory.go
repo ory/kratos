@@ -10,25 +10,24 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/pagination"
+
+	"github.com/ory/hive/driver/configuration"
 )
 
 var _ Pool = new(PoolMemory)
 
 type PoolMemory struct {
+	*abstractPool
 	sync.RWMutex
-	r  Registry
+
 	is []Identity
 }
 
-func NewPoolMemory(r Registry) *PoolMemory {
+func NewPoolMemory(c configuration.Provider, d ValidationProvider) *PoolMemory {
 	return &PoolMemory{
-		is: make([]Identity, 0),
-		r:  r,
+		abstractPool: newAbstractPool(c, d),
+		is:           make([]Identity, 0),
 	}
-}
-
-func (p *PoolMemory) RequestID() string {
-	return "memory"
 }
 
 func (p *PoolMemory) hasConflict(i *Identity) bool {
@@ -64,7 +63,7 @@ func (p *PoolMemory) FindByCredentialsIdentifier(_ context.Context, ct Credentia
 	for _, i := range p.is {
 		for _, c := range i.Credentials {
 			if stringslice.Has(c.Identifiers, match) {
-				return &i, &c, nil
+				return p.declassify(i), &c, nil
 			}
 		}
 	}
@@ -72,6 +71,11 @@ func (p *PoolMemory) FindByCredentialsIdentifier(_ context.Context, ct Credentia
 }
 
 func (p *PoolMemory) Create(_ context.Context, i *Identity) (*Identity, error) {
+	i = p.augment(*i)
+	if err := p.Validate(i); err != nil {
+		return nil, err
+	}
+
 	if p.hasConflict(i) {
 		return nil, errors.WithStack(herodot.ErrConflict.WithReasonf("An identity with the given identifier(s) exists already."))
 	}
@@ -84,7 +88,7 @@ func (p *PoolMemory) Create(_ context.Context, i *Identity) (*Identity, error) {
 	p.is = append(p.is, *i)
 	p.Unlock()
 
-	return i, nil
+	return p.abstractPool.declassify(*i), nil
 }
 
 func (p *PoolMemory) List(_ context.Context, limit, offset int) ([]Identity, error) {
@@ -92,7 +96,12 @@ func (p *PoolMemory) List(_ context.Context, limit, offset int) ([]Identity, err
 	defer p.RUnlock()
 
 	start, end := pagination.Index(limit, offset, len(p.is))
-	return p.is[start:end], nil
+	identities := make([]Identity, limit)
+	for k, i := range p.is[start:end] {
+		identities[k] = *p.declassify(i)
+	}
+
+	return p.abstractPool.declassifyAll(p.is[start:end]), nil
 }
 
 func (p *PoolMemory) Update(_ context.Context, i *Identity) (*Identity, error) {
@@ -114,40 +123,40 @@ func (p *PoolMemory) Update(_ context.Context, i *Identity) (*Identity, error) {
 			p.is[k] = *i
 			p.Unlock()
 
-			return i, nil
+			return p.declassify(*i) , nil
 		}
 	}
 	p.RUnlock()
 	return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("Identity with identifier %s does not exist.", i.ID))
 }
 
-func (p *PoolMemory) Get(_ context.Context, i string) (*Identity, error) {
+func (p *PoolMemory) Get(_ context.Context, id string) (*Identity, error) {
 	p.RLock()
 	defer p.RUnlock()
 
 	for _, ii := range p.is {
-		if ii.ID == i {
-			return &ii, nil
+		if ii.ID == id {
+			return p.declassify(ii), nil
 		}
 	}
 
-	return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("Identity with identifier %s does not exist.", i))
+	return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("Identity with identifier %s does not exist.", id))
 }
 
-func (p *PoolMemory) Delete(_ context.Context, i string) error {
+func (p *PoolMemory) Delete(_ context.Context, id string) error {
 	p.Lock()
 	defer p.Unlock()
 
 	offset := -1
 	for k, ii := range p.is {
-		if ii.ID == i {
+		if ii.ID == id {
 			offset = k
 			break
 		}
 	}
 
 	if offset == -1 {
-		return errors.WithStack(herodot.ErrNotFound.WithReasonf("Identity with identifier %s does not exist.", i))
+		return errors.WithStack(herodot.ErrNotFound.WithReasonf("Identity with identifier %s does not exist.", id))
 	}
 
 	p.is = append(p.is[:offset], p.is[offset+1:]...)
