@@ -238,7 +238,7 @@ func (m *RegistryMemory) Logger() logrus.FieldLogger {
 
 func (m *RegistryMemory) IdentityPool() identity.Pool {
 	if m.ip == nil {
-		m.ip = identity.NewPoolMemory(m)
+		m.ip = identity.NewPoolMemory(m.c, m)
 	}
 	return m.ip
 }

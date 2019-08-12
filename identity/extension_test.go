@@ -1,4 +1,4 @@
-package password_test
+package identity_test
 
 import (
 	"encoding/json"
@@ -12,9 +12,8 @@ import (
 	"github.com/ory/viper"
 
 	"github.com/ory/hive/driver/configuration"
-	"github.com/ory/hive/identity"
+	. "github.com/ory/hive/identity"
 	"github.com/ory/hive/internal"
-	. "github.com/ory/hive/selfservice/password"
 )
 
 func TestValidationExtension(t *testing.T) {
@@ -23,10 +22,9 @@ func TestValidationExtension(t *testing.T) {
 
 	conf := internal.NewConfigurationWithDefaults()
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, ts.URL+"/extension.schema.json")
-	e := NewValidationExtension()
-	v := identity.NewValidator(conf)
+	v := NewValidator(conf)
 
-	i := identity.NewIdentity("")
+	i := NewIdentity("")
 	i.Traits = json.RawMessage(`{
   "email": "foo@bar.com",
   "names": [
@@ -35,9 +33,9 @@ func TestValidationExtension(t *testing.T) {
   ],
   "age": 1
 }`)
-	require.NoError(t, v.Validate(i, e))
+	require.NoError(t, v.Validate(i))
 
-	c, ok := i.GetCredentials(CredentialsType)
+	c, ok := i.GetCredentials(CredentialsTypePassword)
 	require.True(t, ok)
 	assert.ElementsMatch(t, []string{"foo@bar.com", "foobar", "bazbar"}, c.Identifiers)
 }

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/bxcodec/faker"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -53,6 +54,10 @@ func (m *registrationExecutorDependenciesMock) IdentityPool() identity.Pool {
 
 func (m *registrationExecutorDependenciesMock) IdentityValidator() *identity.Validator {
 	return nil
+}
+
+func (m *registrationExecutorDependenciesMock) Logger() logrus.FieldLogger {
+	return logrus.New()
 }
 
 func (m *registrationExecutorDependenciesMock) AuthHookRegistrationPreExecutors() []HookRegistrationPreExecutor {

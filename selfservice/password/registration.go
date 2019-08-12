@@ -36,7 +36,7 @@ func (s *Strategy) setRegistrationRoutes(r *x.RouterPublic) {
 }
 
 func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Request, rr *selfservice.RegistrationRequest, err error) {
-	s.d.SelfServiceRequestErrorHandler().HandleRegistrationError(w, r, CredentialsType, rr, err,
+	s.d.SelfServiceRequestErrorHandler().HandleRegistrationError(w, r, identity.CredentialsTypePassword, rr, err,
 		&selfservice.ErrorHandlerOptions{
 			AdditionalKeys: map[string]interface{}{
 				selfservice.CSRFTokenName: s.cg(r),
@@ -105,7 +105,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 	}
 
 	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r,
-		s.d.PostRegistrationHooks(CredentialsType),
+		s.d.PostRegistrationHooks(identity.CredentialsTypePassword),
 		ar,
 		i,
 	); errors.Cause(err) == selfservice.ErrBreak {
@@ -117,15 +117,14 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 }
 
 func (s *Strategy) validateCredentials(i *identity.Identity, pw string) error {
-	ext := NewValidationExtension()
-	if err := s.d.IdentityValidator().Validate(i, ext); err != nil {
+	if err := s.d.IdentityValidator().Validate(i); err != nil {
 		return err
 	}
 
-	c, ok := i.GetCredentials(CredentialsType)
+	c, ok := i.GetCredentials(identity.CredentialsTypePassword)
 	if !ok {
 		// This should never happen
-		panic(fmt.Sprintf("identity object did not provide the %s CredentialType unexpectedly", CredentialsType))
+		panic(fmt.Sprintf("identity object did not provide the %s CredentialType unexpectedly", identity.CredentialsTypePassword))
 	} else if len(c.Identifiers) == 0 {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("No login identifiers (e.g. email, phone number, username) were set. Contact an administrator, the identity schema is misconfigured."))
 	}
@@ -152,8 +151,8 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *selfservice.R
 		url.Values{"request": {sr.ID}},
 	)
 
-	sr.Methods[CredentialsType] = &selfservice.DefaultRequestMethod{
-		Method: CredentialsType,
+	sr.Methods[identity.CredentialsTypePassword] = &selfservice.DefaultRequestMethod{
+		Method: identity.CredentialsTypePassword,
 		Config: &RequestMethodConfig{
 			Action: action.String(),
 			Fields: selfservice.FormFields{

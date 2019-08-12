@@ -3,23 +3,19 @@ package identity
 import (
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
-	"github.com/ory/herodot"
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/x/pagination"
 
-	"github.com/ory/hive/schema"
 	"github.com/ory/hive/x"
 )
 
 type handlerDependencies interface {
 	PoolProvider
-	ValidationProvider
 	x.WriterProvider
 }
 
@@ -55,10 +51,6 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 		return
 	}
 
-	for k, i := range is {
-		is[k] = *i.WithoutCredentials()
-	}
-
 	h.r.Writer().Write(w, r, is)
 }
 
@@ -69,7 +61,7 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 		return
 	}
 
-	h.r.Writer().Write(w, r, i.WithoutCredentials())
+	h.r.Writer().Write(w, r, i)
 }
 
 func (h *Handler) create(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -79,24 +71,8 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		return
 	}
 
-	if i.ID == "" {
-		i.ID = uuid.New().String()
-	}
-
-	if i.TraitsSchemaURL == "" {
-		i.TraitsSchemaURL = h.c.DefaultIdentityTraitsSchemaURL().String()
-	}
-
-	if err := h.r.IdentityValidator().Validate(&i); err != nil {
-		if _, ok := errors.Cause(err).(schema.ResultErrors); ok {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err)))
-			return
-		}
-		h.r.Writer().WriteError(w, r, err)
-		return
-	}
-
-	_, err := h.r.IdentityPool().Create(r.Context(), (&i).WithoutCredentials())
+	// We do not allow setting credentials using this method
+	created, err := h.r.IdentityPool().Create(r.Context(), i.CopyWithoutCredentials())
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -106,9 +82,9 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		urlx.AppendPaths(
 			h.c.SelfAdminURL(),
 			"identities",
-			i.ID,
+			created.ID,
 		).String(),
-		&i,
+		created,
 	)
 }
 
@@ -120,19 +96,14 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	}
 
 	i.ID = ps.ByName("id")
-
-	if err := errors.WithStack(h.r.IdentityValidator().Validate(&i)); err != nil {
-		h.r.Writer().WriteError(w, r, err)
-		return
-	}
-
-	_, err := h.r.IdentityPool().Update(r.Context(), (&i).WithoutCredentials())
+	// We do not allow setting credentials using this method
+	updated, err := h.r.IdentityPool().Update(r.Context(), (&i).CopyWithoutCredentials())
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
-	h.r.Writer().Write(w, r, &i)
+	h.r.Writer().Write(w, r, updated)
 }
 
 func (h *Handler) delete(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

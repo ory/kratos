@@ -82,7 +82,7 @@ func TestHandler(t *testing.T) {
 		var i identity.Identity
 		i.TraitsSchemaURL = "file://./stub/does-not-exist.schema.json"
 		res := send(t, "POST", "/identities", http.StatusInternalServerError, &i)
-		assert.Contains(t, res.Get("error.reason").String(), "no such file or directory")
+		assert.Contains(t, res.Get("error.reason").String(), "does-not-exist.schema.json")
 	})
 
 	t.Run("case=should fail to create an entity because schema is not validating", func(t *testing.T) {

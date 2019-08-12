@@ -38,8 +38,8 @@ func nlr(id string, exp time.Duration) *selfservice.LoginRequest {
 			RequestURL:     "",
 			RequestHeaders: http.Header{},
 			Methods: map[identity.CredentialsType]*selfservice.DefaultRequestMethod{
-				CredentialsType: {
-					Method: CredentialsType,
+				identity.CredentialsTypePassword: {
+					Method: identity.CredentialsTypePassword,
 					Config: &RequestMethodConfig{
 						Action: "/action",
 						Fields: selfservice.FormFields{
@@ -235,10 +235,11 @@ func TestLogin(t *testing.T) {
 			prep: func(t *testing.T, r loginStrategyDependencies) {
 				p, _ := r.PasswordHasher().Generate([]byte("password"))
 				_, err := r.IdentityPool().Create(context.Background(), &identity.Identity{
-					ID: uuid.New().String(),
+					ID:     uuid.New().String(),
+					Traits: json.RawMessage(`{}`),
 					Credentials: map[identity.CredentialsType]identity.Credentials{
-						CredentialsType: {
-							ID:          CredentialsType,
+						identity.CredentialsTypePassword: {
+							ID:          identity.CredentialsTypePassword,
 							Identifiers: []string{"login-identifier-6"},
 							Options:     json.RawMessage(`{"hashed_password":"` + string(p) + `"}`),
 						},
@@ -271,10 +272,11 @@ func TestLogin(t *testing.T) {
 			prep: func(t *testing.T, r loginStrategyDependencies) {
 				p, _ := r.PasswordHasher().Generate([]byte("password"))
 				_, err := r.IdentityPool().Create(context.Background(), &identity.Identity{
-					ID: uuid.New().String(),
+					ID:     uuid.New().String(),
+					Traits: json.RawMessage(`{"subject":"login-identifier-7"}`),
 					Credentials: map[identity.CredentialsType]identity.Credentials{
-						CredentialsType: {
-							ID:          CredentialsType,
+						identity.CredentialsTypePassword: {
+							ID:          identity.CredentialsTypePassword,
 							Identifiers: []string{"login-identifier-7"},
 							Options:     json.RawMessage(`{"hashed_password":"` + string(p) + `"}`),
 						},
@@ -292,7 +294,7 @@ func TestLogin(t *testing.T) {
 				body, err := ioutil.ReadAll(r.Body)
 				require.NoError(t, err)
 
-				assert.Equal(t, `["login-identifier-7"]`, gjson.GetBytes(body, "identity.credentials.password.identifiers").String(), "%s", body)
+				assert.Equal(t, `login-identifier-7`, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
 			},
 		},
 		{
@@ -303,8 +305,8 @@ func TestLogin(t *testing.T) {
 					ID:        "request-8",
 					ExpiresAt: time.Now().Add(time.Minute),
 					Methods: map[identity.CredentialsType]*selfservice.DefaultRequestMethod{
-						CredentialsType: {
-							Method: CredentialsType,
+						identity.CredentialsTypePassword: {
+							Method: identity.CredentialsTypePassword,
 							Config: &RequestMethodConfig{
 								Action: "/action",
 								Errors: []selfservice.FormError{{Message: "some error"}},
@@ -372,7 +374,8 @@ func TestLogin(t *testing.T) {
 			viper.Set(configuration.ViperKeyURLsError, errTs.URL+"/error-ts")
 			viper.Set(configuration.ViperKeyURLsLogin, uiTs.URL+"/login-ts")
 			viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
-			viper.Set(configuration.ViperKeySelfServiceLoginAfterConfig+"."+string(CredentialsType), hookConfig(returnTs.URL+"/return-ts"))
+			viper.Set(configuration.ViperKeySelfServiceLoginAfterConfig+"."+string(identity.CredentialsTypePassword), hookConfig(returnTs.URL+"/return-ts"))
+			viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/login.schema.json")
 
 			tc.ar.RequestURL = ts.URL
 			require.NoError(t, reg.LoginRequestManager().CreateLoginRequest(context.TODO(), tc.ar))

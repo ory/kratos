@@ -17,8 +17,8 @@ func NewBlankLoginRequest(id string) *selfservice.LoginRequest {
 			RequestURL:     "",
 			RequestHeaders: http.Header{},
 			Methods: map[identity.CredentialsType]*selfservice.DefaultRequestMethod{
-				CredentialsType: {
-					Method: CredentialsType,
+				identity.CredentialsTypePassword: {
+					Method: identity.CredentialsTypePassword,
 					Config: NewRequestMethodConfig(),
 				},
 			},

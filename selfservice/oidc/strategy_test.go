@@ -29,6 +29,7 @@ import (
 	"github.com/phayes/freeport"
 
 	"github.com/ory/hive/driver/configuration"
+	"github.com/ory/hive/identity"
 	"github.com/ory/hive/internal"
 	"github.com/ory/hive/selfservice"
 	. "github.com/ory/hive/selfservice/oidc"
@@ -59,6 +60,8 @@ func hookConfig(u string) (m []map[string]interface{}) {
 
 	return m
 }
+
+const debugRedirects = false
 
 func TestStrategy(t *testing.T) {
 
@@ -167,14 +170,14 @@ func TestStrategy(t *testing.T) {
 	errTS := newErrTs(t, reg)
 	defer errTS.Close()
 
-	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(CredentialsType), cb)
+	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC), cb)
 	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
 	viper.Set(configuration.ViperKeyURLsError, errTS.URL)
 	viper.Set(configuration.ViperKeyURLsLogin, uiTS.URL+"/login")
 	viper.Set(configuration.ViperKeyURLsRegistration, uiTS.URL+"/registration")
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
-	viper.Set(configuration.ViperKeySelfServiceRegistrationAfterConfig+"."+string(CredentialsType), hookConfig(returnTS.URL))
-	viper.Set(configuration.ViperKeySelfServiceLoginAfterConfig+"."+string(CredentialsType), hookConfig(returnTS.URL))
+	viper.Set(configuration.ViperKeySelfServiceRegistrationAfterConfig+"."+string(identity.CredentialsTypeOIDC), hookConfig(returnTS.URL))
+	viper.Set(configuration.ViperKeySelfServiceLoginAfterConfig+"."+string(identity.CredentialsTypeOIDC), hookConfig(returnTS.URL))
 	// viper.Set(configuration.ViperKeySignupDefaultReturnToURL, returnTS.URL)
 	// viper.Set(configuration.ViperKeyAuthnDefaultReturnToURL, returnTS.URL)
 
@@ -191,7 +194,9 @@ func TestStrategy(t *testing.T) {
 		return &http.Client{
 			Jar: jar,
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				t.Logf("Redirect: %s", req.URL.String())
+				if debugRedirects {
+					t.Logf("Redirect: %s", req.URL.String())
+				}
 				if len(via) >= 20 {
 					for k, v := range via {
 						t.Logf("Failed with redirect (%d): %s", k, v.URL.String())
@@ -247,8 +252,8 @@ func TestStrategy(t *testing.T) {
 			URL:    urlx.ParseOrPanic(redirectTo),
 			Header: map[string][]string{},
 		})
-		r.Methods[CredentialsType] = &selfservice.DefaultRequestMethod{
-			Method: CredentialsType,
+		r.Methods[identity.CredentialsTypeOIDC] = &selfservice.DefaultRequestMethod{
+			Method: identity.CredentialsTypeOIDC,
 			Config: NewRequestMethodConfig(),
 		}
 		require.NoError(t, reg.LoginRequestManager().CreateLoginRequest(context.Background(), r))
@@ -261,8 +266,8 @@ func TestStrategy(t *testing.T) {
 			URL:    urlx.ParseOrPanic(redirectTo),
 			Header: map[string][]string{},
 		})
-		r.Methods[CredentialsType] = &selfservice.DefaultRequestMethod{
-			Method: CredentialsType,
+		r.Methods[identity.CredentialsTypeOIDC] = &selfservice.DefaultRequestMethod{
+			Method: identity.CredentialsTypeOIDC,
 			Config: NewRequestMethodConfig(),
 		}
 		require.NoError(t, reg.RegistrationRequestManager().CreateRegistrationRequest(context.Background(), r))
@@ -383,6 +388,34 @@ func TestStrategy(t *testing.T) {
 			r := nrr(t, returnTS.URL, time.Minute)
 			res, body := mr(t, "valid", r.ID, url.Values{"traits.name": {"valid-name"}})
 			ai(t, res, body)
+		})
+	})
+
+	t.Run("case=should fail to register if email is already being used by password credentials", func(t *testing.T) {
+		subject = "email-exist-with-password-strategy@ory.sh"
+		scope = []string{"openid"}
+
+		t.Run("case=create password identity", func(t *testing.T) {
+			i := identity.NewIdentity("")
+			i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+				Identifiers: []string{subject},
+			})
+			i.Traits = json.RawMessage(`{"subject":"` + subject + `"}`)
+
+			_, err := reg.IdentityPool().Create(context.Background(), i)
+			require.NoError(t, err)
+		})
+
+		t.Run("case=should fail registration", func(t *testing.T) {
+			r := nrr(t, returnTS.URL, time.Minute)
+			res, body := mr(t, "valid", r.ID, url.Values{})
+			aue(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already.")
+		})
+
+		t.Run("case=should fail login", func(t *testing.T) {
+			r := nlr(t, returnTS.URL, time.Minute)
+			res, body := mr(t, "valid", r.ID, url.Values{})
+			aue(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already.")
 		})
 	})
 }

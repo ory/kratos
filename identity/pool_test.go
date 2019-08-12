@@ -3,17 +3,12 @@ package identity_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/herodot"
 
-	"github.com/ory/hive/selfservice/password"
-
-	"github.com/ory/hive/driver"
-
-	"github.com/bxcodec/faker"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	. "github.com/ory/hive/identity"
@@ -25,104 +20,168 @@ func init() {
 }
 
 func TestPool(t *testing.T) {
-	conf := internal.NewConfigurationWithDefaults()
-	r := new(driver.RegistryMemory).WithConfig(conf)
-
+	conf, reg := internal.NewMemoryRegistry(t)
 	pools := map[string]Pool{
-		"memory": NewPoolMemory(r),
+		"memory": NewPoolMemory(conf, reg),
 	}
 
-	var identities []Identity
-	for k := 0; k < 5; k++ {
-		var i Identity
-		require.NoError(t, faker.FakeData(&i))
-		i.Credentials = map[CredentialsType]Credentials{
-			password.CredentialsType: {
-				ID:          password.CredentialsType,
-				Identifiers: []string{fmt.Sprintf("id-%d", k)},
-				Options:     json.RawMessage(`{}`),
-			},
-		}
-		identities = append(identities, i)
+	var newid = func(schemaURL string, credentialsID string) *Identity {
+		i := NewIdentity(schemaURL)
+		i.SetCredentials(CredentialsTypePassword, Credentials{
+			ID: CredentialsTypePassword, Identifiers: []string{credentialsID},
+			Options: json.RawMessage(`{}`),
+		})
+		return i
 	}
 
-	ii := Identity{ID: identities[0].ID}
-	ii.Credentials = map[CredentialsType]Credentials{
-		password.CredentialsType: {
-			ID:          password.CredentialsType,
-			Identifiers: []string{fmt.Sprintf("id-1")},
-			Options:     json.RawMessage(`{}`),
-		},
+	var assertEqual = func(t *testing.T, expected, actual *Identity) {
+		assert.Empty(t, actual.Credentials)
+		require.Equal(t, expected.Traits, actual.Traits)
+		require.Equal(t, expected.ID, actual.ID)
 	}
 
-	ctx := context.Background()
-	for name, p := range pools {
-		t.Run("adapter="+name, func(t *testing.T) {
-			t.Run("case=create", func(t *testing.T) {
-				_, err := p.Get(ctx, "does-not-exist")
-				require.Error(t, err)
-
-				_, err = p.Get(ctx, identities[0].ID)
-				require.Error(t, err)
+	for name, pool := range pools {
+		t.Run("dbal="+name, func(t *testing.T) {
+			t.Run("case=get-not-exist", func(t *testing.T) {
+				_, err := pool.Get(context.Background(), "does-not-exist")
+				require.EqualError(t, err, herodot.ErrNotFound.Error())
 			})
+		})
 
-			t.Run("case=create", func(t *testing.T) {
-				i := identities[0]
-				_, err := p.Create(ctx, &i)
-				require.NoError(t, err)
+		t.Run("case=create with default values", func(t *testing.T) {
+			i := newid("", "id-1")
+			i.ID = "id-1"
 
-				g, err := p.Get(ctx, identities[0].ID)
-				require.NoError(t, err)
-				require.EqualValues(t, g, &i)
+			got, err := pool.Create(context.Background(), i)
+			require.NoError(t, err)
+			require.Empty(t, got.Credentials)
 
-				g, err = p.Create(ctx, &identities[1])
-				require.NoError(t, err)
-				require.EqualValues(t, g, &identities[1])
+			got, err = pool.Get(context.Background(), i.ID)
+			require.NoError(t, err)
 
-				// violates uniqueness
-				_, err = p.Create(ctx, &i)
-				require.EqualError(t, err, herodot.ErrConflict.Error())
-			})
+			assert.Equal(t, "file://./stub/identity.schema.json", got.TraitsSchemaURL)
+			assertEqual(t, i, got)
+		})
 
-			t.Run("case=update", func(t *testing.T) {
-				i := identities[0]
-				i.Traits = json.RawMessage(`["a"]`)
-				_, err := p.Update(ctx, &i)
-				require.NoError(t, err)
+		t.Run("case=create and keep set values", func(t *testing.T) {
+			i := newid("file://./stub/identity-2.schema.json", "id-2")
+			i.ID = "id-2"
 
-				g, err := p.Get(ctx, identities[0].ID)
-				require.NoError(t, err)
-				require.EqualValues(t, g, &i)
+			_, err := pool.Create(context.Background(), i)
+			require.NoError(t, err)
 
-				i2 := identities[2]
-				_, err = p.Update(ctx, &i2)
-				require.Error(t, err)
+			got, err := pool.Get(context.Background(), i.ID)
+			require.NoError(t, err)
+			assert.Equal(t, "file://./stub/identity-2.schema.json", got.TraitsSchemaURL)
+			assertEqual(t, i, got)
+		})
 
-				// violates uniqueness
-				_, err = p.Update(ctx, &ii)
-				require.EqualError(t, err, herodot.ErrConflict.Error())
-			})
+		t.Run("case=fail on duplicate credential identifiers", func(t *testing.T) {
+			i := newid("", "id-1")
 
-			t.Run("case=list", func(t *testing.T) {
-				for limit := 1; limit <= 2; limit++ {
-					t.Run(fmt.Sprintf("limit=%d", limit), func(t *testing.T) {
-						is, err := p.List(ctx, limit, 0)
-						require.NoError(t, err)
-						assert.Len(t, is, limit)
-						var prev Identity
-						for _, i := range is {
-							assert.NotEqual(t, prev, i)
-							prev = i
-						}
-					})
-				}
-			})
+			_, err := pool.Create(context.Background(), i)
+			require.Error(t, err)
+		})
 
-			t.Run("case=delete", func(t *testing.T) {
-				require.NoError(t, p.Delete(ctx, identities[0].ID))
-				_, err := p.Get(ctx, identities[0].ID)
-				require.Error(t, err)
-			})
+		t.Run("case=create with default values", func(t *testing.T) {
+			i := newid("", "id-3")
+			i.Traits = json.RawMessage(`{"bar":123}`)
+
+			_, err := pool.Create(context.Background(), i)
+			require.Error(t, err)
+		})
+
+		t.Run("case=update an identity", func(t *testing.T) {
+			got, err := pool.Get(context.Background(), "id-1")
+			require.NoError(t, err)
+
+			got.TraitsSchemaURL = "file://./stub/identity-2.schema.json"
+			got, err = pool.Update(context.Background(), got)
+			require.NoError(t, err)
+			require.Empty(t, got.Credentials)
+
+			got, err = pool.Get(context.Background(), "id-1")
+			require.NoError(t, err)
+			assert.Equal(t, "file://./stub/identity-2.schema.json", got.TraitsSchemaURL)
+		})
+
+		t.Run("case=fail to update because validation fails", func(t *testing.T) {
+			got, err := pool.Get(context.Background(), "id-1")
+			require.NoError(t, err)
+
+			got.Traits = json.RawMessage(`{"bar":123}`)
+			_, err = pool.Update(context.Background(), got)
+			require.Error(t, err)
+		})
+
+		t.Run("case=updating credentials should work", func(t *testing.T) {
+			toUpdate, err := pool.Get(context.Background(), "id-1")
+			require.NoError(t, err)
+
+			toUpdate.Credentials = map[CredentialsType]Credentials{
+				CredentialsTypePassword: {
+					ID: CredentialsTypePassword, Identifiers: []string{"new-id-1", "new-id-2"},
+					Options: json.RawMessage(`{}`),
+				},
+			}
+
+			_, err = pool.Update(context.Background(), toUpdate)
+			require.NoError(t, err)
+
+			got, err := pool.GetClassified(context.Background(), toUpdate.ID)
+			require.NoError(t, err)
+
+			assert.Equal(t, []string{"new-id-1", "new-id-2"}, got.Credentials[CredentialsTypePassword].Identifiers)
+		})
+
+		t.Run("case=should fail to insert identity because credentials from traits exist", func(t *testing.T) {
+			i := newid("file://./stub/identity.schema.json", "should-not-matter")
+			i.Traits = json.RawMessage(`{"email":"id-2"}`)
+			_, err := pool.Create(context.Background(), i)
+			require.Error(t, err)
+
+			i = newid("file://./stub/identity.schema.json", "id-4")
+			_, err = pool.Create(context.Background(), i)
+			require.NoError(t, err)
+
+			i.Traits = json.RawMessage(`{"email":"id-2"}`)
+			_, err = pool.Update(context.Background(), i)
+			require.Error(t, err)
+		})
+
+		t.Run("case=create and update an identity with credentials from traits", func(t *testing.T) {
+			i := newid("file://./stub/identity.schema.json", "id-3")
+			i.Traits = json.RawMessage(`{"email":"email-id-3"}`)
+
+			_, err := pool.Create(context.Background(), i)
+			require.NoError(t, err)
+
+			got, err := pool.GetClassified(context.Background(), i.ID)
+			require.NoError(t, err)
+			assert.Equal(t, []string{"email-id-3"}, got.Credentials[CredentialsTypePassword].Identifiers)
+
+			i.Traits = json.RawMessage(`{"email":"email-id-4"}`)
+			_, err = pool.Update(context.Background(), i)
+			require.NoError(t, err)
+
+			got, err = pool.GetClassified(context.Background(), i.ID)
+			require.NoError(t, err)
+			assert.Equal(t, []string{"email-id-4"}, got.Credentials[CredentialsTypePassword].Identifiers)
+		})
+
+		t.Run("case=list", func(t *testing.T) {
+			is, err := pool.List(context.Background(), 10, 0)
+			require.NoError(t, err)
+			assert.Equal(t, "id-1", is[0].ID)
+			assert.Equal(t, "id-2", is[1].ID)
+		})
+
+		t.Run("case=delete an identity", func(t *testing.T) {
+			err := pool.Delete(context.Background(), "id-1")
+			require.NoError(t, err)
+
+			_, err = pool.GetClassified(context.Background(), "id-1")
+			require.Error(t, err)
 		})
 	}
 }
