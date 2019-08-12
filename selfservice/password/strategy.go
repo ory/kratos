@@ -64,7 +64,7 @@ func (s *Strategy) WithTokenGenerator(g selfservice.CSRFGenerator) *Strategy {
 }
 
 func (s *Strategy) ID() identity.CredentialsType {
-	return CredentialsType
+	return identity.CredentialsTypePassword
 }
 
 func (s *Strategy) SetRoutes(r *x.RouterPublic) {

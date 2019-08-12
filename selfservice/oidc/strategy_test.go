@@ -167,14 +167,14 @@ func TestStrategy(t *testing.T) {
 	errTS := newErrTs(t, reg)
 	defer errTS.Close()
 
-	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(CredentialsType), cb)
+	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC), cb)
 	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
 	viper.Set(configuration.ViperKeyURLsError, errTS.URL)
 	viper.Set(configuration.ViperKeyURLsLogin, uiTS.URL+"/login")
 	viper.Set(configuration.ViperKeyURLsRegistration, uiTS.URL+"/registration")
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
-	viper.Set(configuration.ViperKeySelfServiceRegistrationAfterConfig+"."+string(CredentialsType), hookConfig(returnTS.URL))
-	viper.Set(configuration.ViperKeySelfServiceLoginAfterConfig+"."+string(CredentialsType), hookConfig(returnTS.URL))
+	viper.Set(configuration.ViperKeySelfServiceRegistrationAfterConfig+"."+string(identity.CredentialsTypeOIDC), hookConfig(returnTS.URL))
+	viper.Set(configuration.ViperKeySelfServiceLoginAfterConfig+"."+string(identity.CredentialsTypeOIDC), hookConfig(returnTS.URL))
 	// viper.Set(configuration.ViperKeySignupDefaultReturnToURL, returnTS.URL)
 	// viper.Set(configuration.ViperKeyAuthnDefaultReturnToURL, returnTS.URL)
 
@@ -247,8 +247,8 @@ func TestStrategy(t *testing.T) {
 			URL:    urlx.ParseOrPanic(redirectTo),
 			Header: map[string][]string{},
 		})
-		r.Methods[CredentialsType] = &selfservice.DefaultRequestMethod{
-			Method: CredentialsType,
+		r.Methods[identity.CredentialsTypeOIDC] = &selfservice.DefaultRequestMethod{
+			Method: identity.CredentialsTypeOIDC,
 			Config: NewRequestMethodConfig(),
 		}
 		require.NoError(t, reg.LoginRequestManager().CreateLoginRequest(context.Background(), r))
@@ -261,8 +261,8 @@ func TestStrategy(t *testing.T) {
 			URL:    urlx.ParseOrPanic(redirectTo),
 			Header: map[string][]string{},
 		})
-		r.Methods[CredentialsType] = &selfservice.DefaultRequestMethod{
-			Method: CredentialsType,
+		r.Methods[identity.CredentialsTypeOIDC] = &selfservice.DefaultRequestMethod{
+			Method: identity.CredentialsTypeOIDC,
 			Config: NewRequestMethodConfig(),
 		}
 		require.NoError(t, reg.RegistrationRequestManager().CreateRegistrationRequest(context.Background(), r))

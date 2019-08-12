@@ -14,6 +14,7 @@ import (
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
 
+	"github.com/ory/hive/identity"
 	"github.com/ory/hive/schema"
 	"github.com/ory/hive/selfservice"
 	"github.com/ory/hive/session"
@@ -31,7 +32,7 @@ func (s *Strategy) setLoginRoutes(r *x.RouterPublic) {
 }
 
 func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *selfservice.LoginRequest, err error) {
-	s.d.SelfServiceRequestErrorHandler().HandleLoginError(w, r, CredentialsType, rr, err,
+	s.d.SelfServiceRequestErrorHandler().HandleLoginError(w, r, identity.CredentialsTypePassword, rr, err,
 		&selfservice.ErrorHandlerOptions{
 			AdditionalKeys: map[string]interface{}{
 				selfservice.CSRFTokenName: s.cg(r),
@@ -98,7 +99,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	if err := s.d.LoginExecutor().PostLoginHook(w, r,
-		s.d.PostLoginHooks(CredentialsType), ar, i); err != nil {
+		s.d.PostLoginHooks(identity.CredentialsTypePassword), ar, i); err != nil {
 		s.d.ErrorManager().ForwardError(w, r, err)
 		return
 	}
@@ -110,8 +111,8 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *selfservice.LoginReq
 		url.Values{"request": {sr.ID}},
 	)
 
-	sr.Methods[CredentialsType] = &selfservice.DefaultRequestMethod{
-		Method: CredentialsType,
+	sr.Methods[identity.CredentialsTypePassword] = &selfservice.DefaultRequestMethod{
+		Method: identity.CredentialsTypePassword,
 		Config: &RequestMethodConfig{
 			Action: action.String(),
 			Fields: selfservice.FormFields{

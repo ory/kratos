@@ -62,7 +62,7 @@ func TestRegistration(t *testing.T) {
 		viper.Set(configuration.ViperKeyURLsError, errTs.URL+"/error-ts")
 		viper.Set(configuration.ViperKeyURLsRegistration, uiTs.URL+"/signup-ts")
 		viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
-		viper.Set(configuration.ViperKeySelfServiceRegistrationAfterConfig+"."+string(CredentialsType), hookConfig(returnTs.URL+"/return-ts"))
+		viper.Set(configuration.ViperKeySelfServiceRegistrationAfterConfig+"."+string(identity.CredentialsTypePassword), hookConfig(returnTs.URL+"/return-ts"))
 		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
 
 		var newRegistrationRequest = func(t *testing.T, exp time.Duration) *selfservice.RegistrationRequest {
@@ -70,8 +70,8 @@ func TestRegistration(t *testing.T) {
 				Request: &selfservice.Request{
 					ID: "request-" + uuid.New().String(), IssuedAt: time.Now().UTC(), ExpiresAt: time.Now().UTC().Add(exp), RequestURL: ts.URL,
 					RequestHeaders: http.Header{}, Methods: map[identity.CredentialsType]*selfservice.DefaultRequestMethod{
-						CredentialsType: {
-							Method: CredentialsType, Config: &RequestMethodConfig{
+						identity.CredentialsTypePassword: {
+							Method: identity.CredentialsTypePassword, Config: &RequestMethodConfig{
 								Action: "/action", Fields: selfservice.FormFields{
 									"password":   {Name: "password", Type: "password", Required: true},
 									"csrf_token": {Name: "csrf_token", Type: "hidden", Required: true, Value: "csrf-token"},
@@ -263,9 +263,9 @@ func TestRegistration(t *testing.T) {
 					Request: &selfservice.Request{
 						ID:        "request-9",
 						ExpiresAt: time.Now().Add(time.Minute),
-						Methods: map[identity.CredentialsType]*selfservice.DefaultRequestMethod{
-							CredentialsType: {
-								Method: CredentialsType,
+						Methods: map[identity.identity.CredentialsTypePassword]*selfservice.DefaultRequestMethod{
+							identity.CredentialsTypePassword: {
+								Method: identity.CredentialsTypePassword,
 								Config: &RequestMethodConfig{
 									Action: "/action",
 									Errors: []selfservice.FormError{{Message: "some error"}},
@@ -330,7 +330,7 @@ func TestRegistration(t *testing.T) {
 				viper.Set(configuration.ViperKeyURLsError, errTs.URL+"/error-ts")
 				viper.Set(configuration.ViperKeyURLsRegistration, uiTs.URL+"/signup-ts")
 				viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
-				viper.Set(configuration.ViperKeySelfServiceRegistrationAfterConfig+"."+string(CredentialsType), hookConfig(returnTs.URL+"/return-ts"))
+				viper.Set(configuration.ViperKeySelfServiceRegistrationAfterConfig+"."+string(identity.CredentialsTypePassword), hookConfig(returnTs.URL+"/return-ts"))
 				if tc.schema == "" {
 					tc.schema = "file://./stub/registration.schema.json"
 				}
@@ -362,7 +362,7 @@ func TestRegistration(t *testing.T) {
 		sr := selfservice.NewRegistrationRequest(time.Minute, &http.Request{URL: urlx.ParseOrPanic("/")})
 		require.NoError(t, s.PopulateRegistrationMethod(&http.Request{}, sr))
 		assert.EqualValues(t, &selfservice.DefaultRequestMethod{
-			Method: CredentialsType,
+			Method: identity.CredentialsTypePassword,
 			Config: &RequestMethodConfig{
 				Action: "https://foo" + RegistrationPath + "?request=" + sr.ID,
 				Fields: selfservice.FormFields{
@@ -379,6 +379,6 @@ func TestRegistration(t *testing.T) {
 					},
 				},
 			},
-		}, sr.Methods[CredentialsType])
+		}, sr.Methods[identity.CredentialsTypePassword])
 	})
 }

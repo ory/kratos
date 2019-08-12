@@ -10,12 +10,13 @@ import (
 	"github.com/ory/viper"
 
 	"github.com/ory/hive/driver/configuration"
+	"github.com/ory/hive/identity"
 	"github.com/ory/hive/internal"
 	. "github.com/ory/hive/selfservice/oidc"
 )
 
 func TestConfig(t *testing.T) {
-	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(CredentialsType), json.RawMessage(`{"config":{"providers": [{"provider": "generic"}]}}`))
+	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC), json.RawMessage(`{"config":{"providers": [{"provider": "generic"}]}}`))
 
 	conf, reg := internal.NewMemoryRegistry(t)
 	s := NewStrategy(reg, conf)

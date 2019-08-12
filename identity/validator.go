@@ -31,10 +31,9 @@ type ValidationExtender interface {
 	schema.ValidationExtender
 }
 
-func (v *Validator) Validate(i *Identity, extensions ...ValidationExtender) error {
-	es := make([]schema.ValidationExtender, len(extensions))
-	for k, e := range extensions {
-		es[k] = e.WithIdentity(i)
+func (v *Validator) Validate(i *Identity) error {
+	es := []schema.ValidationExtender{
+		NewValidationExtensionIdentifier().WithIdentity(i),
 	}
 
 	err := v.v.Validate(

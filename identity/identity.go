@@ -7,10 +7,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// CredentialsType  represents several different credential types, like password credentials, passwordless credentials,
-// and so on.
-type CredentialsType string
-
 // Identity represents a hive identity
 //
 // An identity can be a real human, a service, an IoT device - everything that
@@ -30,9 +26,6 @@ type Identity struct {
 	ID string `json:"id" faker:"uuid_hyphenated" form:"id"`
 
 	Credentials map[CredentialsType]Credentials `json:"credentials,omitempty" faker:"-"`
-
-	// MetadataSchemaURL string          `json:"metadata_schema_url,omitempty" form:"-"`
-	// Metadata          json.RawMessage `json:"metadata,omitempty" form:"-" faker:"-"`
 
 	TraitsSchemaURL string          `json:"traits_schema_url,omitempty" form:"-"`
 	Traits          json.RawMessage `json:"traits" form:"traits" faker:"-"`
@@ -74,29 +67,10 @@ func (i *Identity) WithoutCredentials() *Identity {
 	return i
 }
 
-// Credentials represents a specific credential type
-//
-// swagger:model identityCredentials
-type Credentials struct {
-	// PK: The primary key used for hive-internal processing. It is auto-assigned and immutable.
-	PK uint64 `json:"-" faker:"-"`
-
-	// RequestID discriminates between different credential types.
-	ID CredentialsType `json:"id"`
-
-	// Identifiers represents a list of unique identifiers this credential type matches.
-	Identifiers []string `json:"identifiers"`
-
-	// Options contains the concrete credential payload. This might contain the bcrypt-hashed password, or the email
-	// for passwordless authentication.
-	Options json.RawMessage `json:"options"`
-}
-
 func NewIdentity(traitsSchemaURL string) *Identity {
 	return &Identity{
 		ID:          uuid.New().String(),
 		Credentials: map[CredentialsType]Credentials{},
-		// Metadata:        json.RawMessage("{}"),
 		Traits:          json.RawMessage("{}"),
 		TraitsSchemaURL: traitsSchemaURL,
 		l:               new(sync.RWMutex),

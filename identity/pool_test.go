@@ -12,8 +12,6 @@ import (
 
 	. "github.com/ory/hive/identity"
 	"github.com/ory/hive/internal"
-	"github.com/ory/hive/selfservice/oidc"
-	"github.com/ory/hive/selfservice/password"
 )
 
 func init() {
@@ -28,8 +26,8 @@ func TestPool(t *testing.T) {
 
 	var newid = func(schemaURL string, credentialsID string) *Identity {
 		i := NewIdentity(schemaURL)
-		i.SetCredentials(password.CredentialsType, Credentials{
-			ID: password.CredentialsType, Identifiers:
+		i.SetCredentials(CredentialsTypePassword, Credentials{
+			ID: CredentialsTypePassword, Identifiers:
 			[]string{credentialsID},
 			Options: json.RawMessage(`{}`),
 		})
@@ -54,10 +52,11 @@ func TestPool(t *testing.T) {
 			i := newid("", "id-1")
 			i.ID = "id-1"
 
-			_, err := pool.Create(context.Background(), i)
+			got, err := pool.Create(context.Background(), i)
 			require.NoError(t, err)
+			require.Empty(t, got.Credentials)
 
-			got, err := pool.Get(context.Background(), i.ID)
+			got, err = pool.Get(context.Background(), i.ID)
 			require.NoError(t, err)
 
 			assert.Equal(t, "file://./stub/identity.schema.json", got.TraitsSchemaURL)
@@ -97,8 +96,9 @@ func TestPool(t *testing.T) {
 			require.NoError(t, err)
 
 			got.TraitsSchemaURL = "file://./stub/identity-2.schema.json"
-			_, err = pool.Update(context.Background(), got)
+			got, err = pool.Update(context.Background(), got)
 			require.NoError(t, err)
+			require.Empty(t, got.Credentials)
 
 			got, err = pool.Get(context.Background(), "id-1")
 			require.NoError(t, err)
@@ -114,13 +114,13 @@ func TestPool(t *testing.T) {
 			require.Error(t, err)
 		})
 
-		t.Run("case=update credentials should not have an effect", func(t *testing.T) {
+		t.Run("case=updating credentials should work", func(t *testing.T) {
 			toUpdate, err := pool.Get(context.Background(), "id-1")
 			require.NoError(t, err)
 
 			toUpdate.Credentials = map[CredentialsType]Credentials{
-				oidc.CredentialsType: {
-					ID: oidc.CredentialsType, Identifiers:
+				CredentialsTypeOIDC: {
+					ID: CredentialsTypeOIDC, Identifiers:
 					[]string{"id-2"},
 					Options: json.RawMessage(`{}`),
 				},
@@ -132,8 +132,28 @@ func TestPool(t *testing.T) {
 			got, err := pool.GetClassified(context.Background(), toUpdate.ID)
 			require.NoError(t, err)
 
-			assert.Equal(t, []string{"id-1"}, got.Credentials[password.CredentialsType].Identifiers)
-			assert.Empty(t, got.Credentials[oidc.CredentialsType])
+			assert.Equal(t, []string{"id-2"}, got.Credentials[CredentialsTypeOIDC].Identifiers)
+			assert.Empty(t, got.Credentials[CredentialsTypePassword])
+		})
+
+		t.Run("case=create and update an identity with credentials from traits", func(t *testing.T) {
+			i := newid("file://./stub/identity.schema.json", "id-3")
+			i.Traits = json.RawMessage(`{"email":"email-id-3"}`)
+
+			_, err :=  pool.Create(context.Background(), i)
+			require.NoError(t,err)
+
+			got, err := pool.GetClassified(context.Background(), i.ID)
+			require.NoError(t, err)
+			assert.Equal(t, []string{"email-id-3"}, got.Credentials[CredentialsTypePassword].Identifiers)
+
+			i.Traits = json.RawMessage(`{"email":"email-id-4"}`)
+			_, err =  pool.Update(context.Background(), i)
+			require.NoError(t,err)
+
+			got, err = pool.GetClassified(context.Background(), i.ID)
+			require.NoError(t, err)
+			assert.Equal(t, []string{"email-id-4"}, got.Credentials[CredentialsTypePassword].Identifiers)
 		})
 
 		t.Run("case=list", func(t *testing.T) {
@@ -142,6 +162,7 @@ func TestPool(t *testing.T) {
 			assert.Equal(t, "id-1", is[0].ID)
 			assert.Equal(t, "id-2", is[1].ID)
 		})
+
 		t.Run("case=delete an identity", func(t *testing.T) {
 			err := pool.Delete(context.Background(), "id-1")
 			require.NoError(t, err)

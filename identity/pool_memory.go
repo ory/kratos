@@ -117,7 +117,6 @@ func (p *PoolMemory) Update(_ context.Context, i *Identity) (*Identity, error) {
 
 			p.Lock()
 			i.PK = ii.PK
-			i.Credentials = ii.Credentials
 			p.is[k] = *i
 			p.Unlock()
 
