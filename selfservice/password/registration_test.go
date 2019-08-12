@@ -191,7 +191,6 @@ func TestRegistration(t *testing.T) {
 			assert.Equal(t, `registration-identifier-8`, gjson.GetBytes(body, "identity.traits.username").String(), "%s", body)
 		})
 
-
 		t.Run("case=should fail to register the same user again", func(t *testing.T) {
 			viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
 			rr := newRegistrationRequest(t, time.Minute)
@@ -200,8 +199,8 @@ func TestRegistration(t *testing.T) {
 				"password":        {uuid.New().String()},
 				"traits.foobar":   {"bar"},
 			}.Encode(), http.StatusOK)
-			assert.Contains(t, res.Request.URL.Path, "ui-ts")
-			assert.Equal(t, `registration-identifier-8`, gjson.GetBytes(body, "identity.traits.username").String(), "%s", body)
+			assert.Contains(t, res.Request.URL.Path, "signup-ts")
+			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.errors.0.message").String(), "An account with the same identifier (email, phone, username, ...) exists already.", "%s", body)
 		})
 
 		t.Run("case=should return an error because not passing validation and reset previous errors and values", func(t *testing.T) {
