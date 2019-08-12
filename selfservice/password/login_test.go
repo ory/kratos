@@ -235,7 +235,8 @@ func TestLogin(t *testing.T) {
 			prep: func(t *testing.T, r loginStrategyDependencies) {
 				p, _ := r.PasswordHasher().Generate([]byte("password"))
 				_, err := r.IdentityPool().Create(context.Background(), &identity.Identity{
-					ID: uuid.New().String(),
+					ID:     uuid.New().String(),
+					Traits: json.RawMessage(`{}`),
 					Credentials: map[identity.CredentialsType]identity.Credentials{
 						identity.CredentialsTypePassword: {
 							ID:          identity.CredentialsTypePassword,
@@ -271,7 +272,8 @@ func TestLogin(t *testing.T) {
 			prep: func(t *testing.T, r loginStrategyDependencies) {
 				p, _ := r.PasswordHasher().Generate([]byte("password"))
 				_, err := r.IdentityPool().Create(context.Background(), &identity.Identity{
-					ID: uuid.New().String(),
+					ID:     uuid.New().String(),
+					Traits: json.RawMessage(`{"subject":"login-identifier-7"}`),
 					Credentials: map[identity.CredentialsType]identity.Credentials{
 						identity.CredentialsTypePassword: {
 							ID:          identity.CredentialsTypePassword,
@@ -292,7 +294,7 @@ func TestLogin(t *testing.T) {
 				body, err := ioutil.ReadAll(r.Body)
 				require.NoError(t, err)
 
-				assert.Equal(t, `["login-identifier-7"]`, gjson.GetBytes(body, "identity.credentials.password.identifiers").String(), "%s", body)
+				assert.Equal(t, `login-identifier-7`, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
 			},
 		},
 		{
@@ -373,6 +375,7 @@ func TestLogin(t *testing.T) {
 			viper.Set(configuration.ViperKeyURLsLogin, uiTs.URL+"/login-ts")
 			viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
 			viper.Set(configuration.ViperKeySelfServiceLoginAfterConfig+"."+string(identity.CredentialsTypePassword), hookConfig(returnTs.URL+"/return-ts"))
+			viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/login.schema.json")
 
 			tc.ar.RequestURL = ts.URL
 			require.NoError(t, reg.LoginRequestManager().CreateLoginRequest(context.TODO(), tc.ar))

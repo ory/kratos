@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 
 	"github.com/ory/go-convenience/stringslice"
 	"github.com/ory/herodot"
@@ -89,8 +88,6 @@ func (p *PoolMemory) Create(_ context.Context, i *Identity) (*Identity, error) {
 	if err := p.Validate(insert); err != nil {
 		return nil, err
 	}
-
-	logrus.New().Printf("creating identity: %s %+v", insert.ID, insert.Credentials)
 
 	if p.hasConflictingID(insert) {
 		return nil, errors.WithStack(herodot.ErrConflict.WithReasonf("An identity with the given ID exists already."))
