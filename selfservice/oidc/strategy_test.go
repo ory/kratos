@@ -29,6 +29,7 @@ import (
 	"github.com/phayes/freeport"
 
 	"github.com/ory/hive/driver/configuration"
+	"github.com/ory/hive/identity"
 	"github.com/ory/hive/internal"
 	"github.com/ory/hive/selfservice"
 	. "github.com/ory/hive/selfservice/oidc"

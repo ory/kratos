@@ -15,14 +15,14 @@ import (
 var _ ValidationExtender = new(ValidationExtensionIdentifier)
 
 type ValidationExtensionIdentifier struct {
-	l  sync.Mutex
-	v  []string
-	i  *Identity
+	l sync.Mutex
+	v []string
+	i *Identity
 }
 
 func NewValidationExtensionIdentifier() *ValidationExtensionIdentifier {
 	return &ValidationExtensionIdentifier{
-		v:  make([]string, 0),
+		v: make([]string, 0),
 	}
 }
 

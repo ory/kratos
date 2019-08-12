@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/go-convenience/stringslice"
+	"github.com/ory/x/stringsx"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/pagination"
@@ -30,7 +31,7 @@ func NewPoolMemory(c configuration.Provider, d ValidationProvider) *PoolMemory {
 	}
 }
 
-func (p *PoolMemory) hasConflict(i *Identity) bool {
+func (p *PoolMemory) hasConflictingID(i *Identity) bool {
 	p.RLock()
 	defer p.RUnlock()
 
@@ -38,10 +39,21 @@ func (p *PoolMemory) hasConflict(i *Identity) bool {
 		if fromPool.ID == i.ID {
 			return true
 		}
+	}
+	return false
+}
+func (p *PoolMemory) hasConflictingCredentials(i *Identity) bool {
+	p.RLock()
+	defer p.RUnlock()
 
-		for _, fromPoolCredentials := range fromPool.Credentials {
-			for _, cc := range i.Credentials {
-				if cc.ID == fromPoolCredentials.ID {
+	for _, fromPool := range p.is {
+		if fromPool.ID == i.ID {
+			continue
+		}
+
+		for fromPoolID, fromPoolCredentials := range fromPool.Credentials {
+			for id, cc := range i.Credentials {
+				if stringsx.Coalesce(string(cc.ID), string(id)) == stringsx.Coalesce(string(fromPoolCredentials.ID), string(fromPoolID)) {
 					for _, identifier := range cc.Identifiers {
 						if stringslice.Has(fromPoolCredentials.Identifiers, identifier) {
 							return true
@@ -51,7 +63,6 @@ func (p *PoolMemory) hasConflict(i *Identity) bool {
 			}
 		}
 	}
-
 	return false
 }
 
@@ -71,24 +82,28 @@ func (p *PoolMemory) FindByCredentialsIdentifier(_ context.Context, ct Credentia
 }
 
 func (p *PoolMemory) Create(_ context.Context, i *Identity) (*Identity, error) {
-	i = p.augment(*i)
-	if err := p.Validate(i); err != nil {
+	insert := p.augment(*i)
+	if err := p.Validate(insert); err != nil {
 		return nil, err
 	}
 
-	if p.hasConflict(i) {
-		return nil, errors.WithStack(herodot.ErrConflict.WithReasonf("An identity with the given identifier(s) exists already."))
+	if p.hasConflictingID(insert) {
+		return nil, errors.WithStack(herodot.ErrConflict.WithReasonf("An identity with the given ID exists already."))
+	}
+
+	if p.hasConflictingCredentials(insert) {
+		return nil, errors.WithStack(herodot.ErrConflict.WithReasonf("An identity with the given login identifier(s) exists already."))
 	}
 
 	p.RLock()
-	i.PK = uint64(len(p.is) + 1)
+	insert.PK = uint64(len(p.is) + 1)
 	p.RUnlock()
 
 	p.Lock()
-	p.is = append(p.is, *i)
+	p.is = append(p.is, *insert)
 	p.Unlock()
 
-	return p.abstractPool.declassify(*i), nil
+	return p.abstractPool.declassify(*insert), nil
 }
 
 func (p *PoolMemory) List(_ context.Context, limit, offset int) ([]Identity, error) {
@@ -110,6 +125,10 @@ func (p *PoolMemory) Update(_ context.Context, i *Identity) (*Identity, error) {
 		return nil, err
 	}
 
+	if p.hasConflictingCredentials(i) {
+		return nil, errors.WithStack(herodot.ErrConflict.WithReasonf("An identity with the given login identifier(s) exists already."))
+	}
+
 	p.RLock()
 	for k, ii := range p.is {
 		if ii.ID == i.ID {
@@ -120,7 +139,7 @@ func (p *PoolMemory) Update(_ context.Context, i *Identity) (*Identity, error) {
 			p.is[k] = *i
 			p.Unlock()
 
-			return p.declassify(*i) , nil
+			return p.declassify(*i), nil
 		}
 	}
 	p.RUnlock()
@@ -133,7 +152,7 @@ func (p *PoolMemory) Get(ctx context.Context, id string) (*Identity, error) {
 		return nil, err
 	}
 
-	return p.declassify(*i),nil
+	return p.declassify(*i), nil
 }
 
 func (p *PoolMemory) GetClassified(_ context.Context, id string) (*Identity, error) {

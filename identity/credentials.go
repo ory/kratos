@@ -8,7 +8,7 @@ type CredentialsType string
 
 const (
 	CredentialsTypePassword CredentialsType = "password"
-	CredentialsTypeOIDC CredentialsType = "oidc"
+	CredentialsTypeOIDC     CredentialsType = "oidc"
 )
 
 // Credentials represents a specific credential type

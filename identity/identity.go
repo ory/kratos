@@ -69,8 +69,8 @@ func (i *Identity) WithoutCredentials() *Identity {
 
 func NewIdentity(traitsSchemaURL string) *Identity {
 	return &Identity{
-		ID:          uuid.New().String(),
-		Credentials: map[CredentialsType]Credentials{},
+		ID:              uuid.New().String(),
+		Credentials:     map[CredentialsType]Credentials{},
 		Traits:          json.RawMessage("{}"),
 		TraitsSchemaURL: traitsSchemaURL,
 		l:               new(sync.RWMutex),

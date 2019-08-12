@@ -4,8 +4,9 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/ory/herodot"
 	"github.com/pkg/errors"
+
+	"github.com/ory/herodot"
 
 	"github.com/ory/hive/driver/configuration"
 	"github.com/ory/hive/schema"

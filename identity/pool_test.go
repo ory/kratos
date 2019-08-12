@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/ory/herodot"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/ory/herodot"
 
 	"github.com/stretchr/testify/require"
 
@@ -27,8 +28,7 @@ func TestPool(t *testing.T) {
 	var newid = func(schemaURL string, credentialsID string) *Identity {
 		i := NewIdentity(schemaURL)
 		i.SetCredentials(CredentialsTypePassword, Credentials{
-			ID: CredentialsTypePassword, Identifiers:
-			[]string{credentialsID},
+			ID: CredentialsTypePassword, Identifiers: []string{credentialsID},
 			Options: json.RawMessage(`{}`),
 		})
 		return i
@@ -119,9 +119,8 @@ func TestPool(t *testing.T) {
 			require.NoError(t, err)
 
 			toUpdate.Credentials = map[CredentialsType]Credentials{
-				CredentialsTypeOIDC: {
-					ID: CredentialsTypeOIDC, Identifiers:
-					[]string{"id-2"},
+				CredentialsTypePassword: {
+					ID: CredentialsTypePassword, Identifiers: []string{"new-id-1", "new-id-2"},
 					Options: json.RawMessage(`{}`),
 				},
 			}
@@ -132,24 +131,38 @@ func TestPool(t *testing.T) {
 			got, err := pool.GetClassified(context.Background(), toUpdate.ID)
 			require.NoError(t, err)
 
-			assert.Equal(t, []string{"id-2"}, got.Credentials[CredentialsTypeOIDC].Identifiers)
-			assert.Empty(t, got.Credentials[CredentialsTypePassword])
+			assert.Equal(t, []string{"new-id-1", "new-id-2"}, got.Credentials[CredentialsTypePassword].Identifiers)
+		})
+
+		t.Run("case=should fail to insert identity because credentials from traits exist", func(t *testing.T) {
+			i := newid("file://./stub/identity.schema.json", "should-not-matter")
+			i.Traits = json.RawMessage(`{"email":"id-2"}`)
+			_, err := pool.Create(context.Background(), i)
+			require.Error(t, err)
+
+			i = newid("file://./stub/identity.schema.json", "id-4")
+			_, err = pool.Create(context.Background(), i)
+			require.NoError(t, err)
+
+			i.Traits = json.RawMessage(`{"email":"id-2"}`)
+			_, err = pool.Update(context.Background(), i)
+			require.Error(t, err)
 		})
 
 		t.Run("case=create and update an identity with credentials from traits", func(t *testing.T) {
 			i := newid("file://./stub/identity.schema.json", "id-3")
 			i.Traits = json.RawMessage(`{"email":"email-id-3"}`)
 
-			_, err :=  pool.Create(context.Background(), i)
-			require.NoError(t,err)
+			_, err := pool.Create(context.Background(), i)
+			require.NoError(t, err)
 
 			got, err := pool.GetClassified(context.Background(), i.ID)
 			require.NoError(t, err)
 			assert.Equal(t, []string{"email-id-3"}, got.Credentials[CredentialsTypePassword].Identifiers)
 
 			i.Traits = json.RawMessage(`{"email":"email-id-4"}`)
-			_, err =  pool.Update(context.Background(), i)
-			require.NoError(t,err)
+			_, err = pool.Update(context.Background(), i)
+			require.NoError(t, err)
 
 			got, err = pool.GetClassified(context.Background(), i.ID)
 			require.NoError(t, err)
@@ -157,7 +170,7 @@ func TestPool(t *testing.T) {
 		})
 
 		t.Run("case=list", func(t *testing.T) {
-			is, err := pool.List(context.Background(),10,0)
+			is, err := pool.List(context.Background(), 10, 0)
 			require.NoError(t, err)
 			assert.Equal(t, "id-1", is[0].ID)
 			assert.Equal(t, "id-2", is[1].ID)
