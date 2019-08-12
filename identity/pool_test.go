@@ -34,7 +34,7 @@ func TestPool(t *testing.T) {
 		return i
 	}
 
-	var assertequal = func(t *testing.T, expected, actual *Identity) {
+	var assertEqual = func(t *testing.T, expected, actual *Identity) {
 		assert.Empty(t, actual.Credentials)
 		require.Equal(t, expected.Traits, actual.Traits)
 		require.Equal(t, expected.ID, actual.ID)
@@ -60,7 +60,7 @@ func TestPool(t *testing.T) {
 			require.NoError(t, err)
 
 			assert.Equal(t, "file://./stub/identity.schema.json", got.TraitsSchemaURL)
-			assertequal(t, i, got)
+			assertEqual(t, i, got)
 		})
 
 		t.Run("case=create and keep set values", func(t *testing.T) {
@@ -73,7 +73,7 @@ func TestPool(t *testing.T) {
 			got, err := pool.Get(context.Background(), i.ID)
 			require.NoError(t, err)
 			assert.Equal(t, "file://./stub/identity-2.schema.json", got.TraitsSchemaURL)
-			assertequal(t, i, got)
+			assertEqual(t, i, got)
 		})
 
 		t.Run("case=fail on duplicate credential identifiers", func(t *testing.T) {

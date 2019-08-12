@@ -61,3 +61,22 @@ func NewInvalidCredentialsError() error {
 	))
 	return ResultErrors{err}
 }
+
+func NewDuplicateCredentialsError() error {
+	err := &gojsonschema.ResultErrorFields{}
+	context := gojsonschema.NewJsonContext("", nil)
+	err.SetContext(context)
+	err.SetValue("")
+	err.SetType("invalid_credentials")
+
+	err.SetDescription(gojsonschema.FormatErrorDescription(
+		`An account with the same identifier (email, phone, username, ...) exists already.`,
+		gojsonschema.ErrorDetails{
+			"context":  context.String("."),
+			"value":    fmt.Sprintf("%v", ""),
+			"field":    context.String("."),
+			"property": context.String("."),
+		},
+	))
+	return ResultErrors{err}
+}

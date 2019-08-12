@@ -13,6 +13,7 @@ import (
 	"github.com/ory/x/pagination"
 
 	"github.com/ory/hive/driver/configuration"
+	"github.com/ory/hive/schema"
 )
 
 var _ Pool = new(PoolMemory)
@@ -92,7 +93,7 @@ func (p *PoolMemory) Create(_ context.Context, i *Identity) (*Identity, error) {
 	}
 
 	if p.hasConflictingCredentials(insert) {
-		return nil, errors.WithStack(herodot.ErrConflict.WithReasonf("An identity with the given login identifier(s) exists already."))
+		return nil, errors.WithStack(schema.NewDuplicateCredentialsError())
 	}
 
 	p.RLock()
@@ -126,7 +127,7 @@ func (p *PoolMemory) Update(_ context.Context, i *Identity) (*Identity, error) {
 	}
 
 	if p.hasConflictingCredentials(i) {
-		return nil, errors.WithStack(herodot.ErrConflict.WithReasonf("An identity with the given login identifier(s) exists already."))
+		return nil, errors.WithStack(schema.NewDuplicateCredentialsError())
 	}
 
 	p.RLock()

@@ -386,4 +386,25 @@ func TestStrategy(t *testing.T) {
 			ai(t, res, body)
 		})
 	})
+
+	t.Run("case=should fail to register if email is already being used by password credentials", func(t *testing.T) {
+		subject = "email-exist-with-password-strategy@ory.sh"
+		scope = []string{"openid"}
+
+		t.Run("case=create password identity", func(t *testing.T) {
+			i := identity.NewIdentity("")
+			i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+				Identifiers: []string{subject},
+			})
+
+			_, err := reg.IdentityPool().Create(context.Background(), i)
+			require.NoError(t, err)
+		})
+
+		t.Run("case=should fail registration", func(t *testing.T) {
+			r := nrr(t, returnTS.URL, time.Minute)
+			res, body := mr(t, "valid", r.ID, url.Values{})
+			aue(t, res, body, "idk man")
+		})
+	})
 }
