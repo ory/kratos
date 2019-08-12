@@ -126,8 +126,8 @@ func TestErrorHandler(t *testing.T) {
 						Request: &Request{
 							ID: id,
 							Methods: map[identity.CredentialsType]*DefaultRequestMethod{
-								password.CredentialsTypePassword: {
-									Method: password.CredentialsTypePassword,
+								identity.CredentialsTypePassword: {
+									Method: identity.CredentialsTypePassword,
 									Config: &password.RequestMethodConfig{
 										Fields: map[string]FormField{},
 									},
@@ -139,13 +139,13 @@ func TestErrorHandler(t *testing.T) {
 					require.NoError(t, reg.LoginRequestManager().CreateLoginRequest(context.Background(), lr))
 
 					w := httptest.NewRecorder()
-					eh.HandleLoginError(w, r, password.CredentialsTypePassword, lr, tc.err, tc.o)
+					eh.HandleLoginError(w, r, identity.CredentialsTypePassword, lr, tc.err, tc.o)
 					require.Contains(t, w.Header().Get("Location"), tc.endURL, "%+v", w.Header())
 
 					if tc.assertConfig != nil {
 						got, err := reg.LoginRequestManager().GetLoginRequest(context.Background(), id)
 						require.NoError(t, err)
-						tc.assertConfig(t, got.Methods[password.CredentialsTypePassword].Config)
+						tc.assertConfig(t, got.Methods[identity.CredentialsTypePassword].Config)
 					}
 
 					if tc.assertSystemError != nil {
@@ -160,8 +160,8 @@ func TestErrorHandler(t *testing.T) {
 						Request: &Request{
 							ID: id,
 							Methods: map[identity.CredentialsType]*DefaultRequestMethod{
-								password.CredentialsTypePassword: {
-									Method: password.CredentialsTypePassword,
+								identity.CredentialsTypePassword: {
+									Method: identity.CredentialsTypePassword,
 									Config: &password.RequestMethodConfig{
 										Fields: map[string]FormField{},
 									},
@@ -173,13 +173,13 @@ func TestErrorHandler(t *testing.T) {
 					require.NoError(t, reg.RegistrationRequestManager().CreateRegistrationRequest(context.Background(), rr))
 
 					w := httptest.NewRecorder()
-					eh.HandleRegistrationError(w, r, password.CredentialsTypePassword, rr, tc.err, tc.o)
+					eh.HandleRegistrationError(w, r, identity.CredentialsTypePassword, rr, tc.err, tc.o)
 					require.Contains(t, w.Header().Get("Location"), tc.endURL, "%+v", w.Header())
 
 					if tc.assertConfig != nil {
 						got, err := reg.RegistrationRequestManager().GetRegistrationRequest(context.Background(), id)
 						require.NoError(t, err)
-						tc.assertConfig(t, got.Methods[password.CredentialsTypePassword].Config)
+						tc.assertConfig(t, got.Methods[identity.CredentialsTypePassword].Config)
 					}
 
 					if tc.assertSystemError != nil {

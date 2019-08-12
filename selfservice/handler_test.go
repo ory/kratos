@@ -19,6 +19,7 @@ import (
 
 	"github.com/ory/hive/driver"
 	"github.com/ory/hive/driver/configuration"
+	"github.com/ory/hive/identity"
 	"github.com/ory/hive/internal"
 	. "github.com/ory/hive/selfservice"
 	"github.com/ory/hive/selfservice/oidc"
@@ -47,6 +48,7 @@ func TestLogoutHandler(t *testing.T) {
 
 	var sess session.Session
 	sess.SID = uuid.New().String()
+	sess.Identity = new(identity.Identity)
 	require.NoError(t, reg.SessionManager().Create(&sess))
 
 	router.GET("/set", session.MockSetSession(t, reg))

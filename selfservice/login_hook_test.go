@@ -2,6 +2,7 @@ package selfservice_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -11,6 +12,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/viper"
+
+	"github.com/ory/hive/driver/configuration"
 	"github.com/ory/hive/identity"
 	"github.com/ory/hive/internal"
 	. "github.com/ory/hive/selfservice"
@@ -33,7 +37,7 @@ type loginPostHookMock struct {
 func (m *loginPostHookMock) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, a *LoginRequest, s *session.Session) error {
 	if m.modifyIdentity {
 		i := s.Identity
-		i.TraitsSchemaURL = "updated-schema"
+		i.TraitsSchemaURL = "file://./stub/updated.schema.json"
 		s.UpdateIdentity(i)
 	}
 	return m.err
@@ -74,7 +78,7 @@ func TestLoginExecutor(t *testing.T) {
 					new(loginPostHookMock),
 					&loginPostHookMock{modifyIdentity: true},
 				},
-				expectSchemaURL: "updated-schema",
+				expectSchemaURL: "file://./stub/updated.schema.json",
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
@@ -82,6 +86,9 @@ func TestLoginExecutor(t *testing.T) {
 
 				var i identity.Identity
 				require.NoError(t, faker.FakeData(&i))
+				i.TraitsSchemaURL = ""
+				i.Traits = json.RawMessage(`{}`)
+				viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
 				_, err := reg.IdentityPool().Create(context.TODO(), &i)
 				require.NoError(t, err)
 
