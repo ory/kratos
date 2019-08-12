@@ -103,7 +103,7 @@ func NewStrategy(
 }
 
 func (s *Strategy) ID() identity.CredentialsType {
-	return CredentialsType
+	return identity.CredentialsTypeOIDC
 }
 
 func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -278,7 +278,7 @@ func (s *Strategy) authURL(request, provider string) string {
 }
 
 func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *selfservice.LoginRequest, claims *Claims, provider Provider) error {
-	i, c, err := s.d.IdentityPool().FindByCredentialsIdentifier(r.Context(), CredentialsType, uid(provider.Config().ID, claims.Subject))
+	i, c, err := s.d.IdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject))
 	if err != nil {
 		if errors.Cause(err).Error() == herodot.ErrNotFound.Error() {
 			// If no account was found we're "manually" creating a new registration request and redirecting the browser
@@ -311,7 +311,7 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *selfs
 		return errors.WithStack(herodot.ErrInternalServerError.WithReason("The providers do not match").WithDebugf("Expected credential provider to match provider from path but values are not equal: %s != %s", o.Subject, provider.Config().ID))
 	}
 
-	if err = s.d.LoginExecutor().PostLoginHook(w, r, s.d.PostLoginHooks(CredentialsType), a, i); err != nil {
+	if err = s.d.LoginExecutor().PostLoginHook(w, r, s.d.PostLoginHooks(identity.CredentialsTypeOIDC), a, i); err != nil {
 		return err
 	}
 
@@ -319,7 +319,7 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *selfs
 }
 
 func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *selfservice.RegistrationRequest, claims *Claims, provider Provider) error {
-	if _, _, err := s.d.IdentityPool().FindByCredentialsIdentifier(r.Context(), CredentialsType, uid(provider.Config().ID, claims.Subject)); err == nil {
+	if _, _, err := s.d.IdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject)); err == nil {
 		// If the identity already exists, we should perform the login flow instead.
 
 		// That will execute the "pre login" hook which allows to e.g. disallow this request. The login
@@ -396,7 +396,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		Options:     b.Bytes(),
 	})
 
-	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, s.d.PostRegistrationHooks(CredentialsType), a, i); err != nil {
+	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, s.d.PostRegistrationHooks(identity.CredentialsTypeOIDC), a, i); err != nil {
 		return err
 	}
 
@@ -447,8 +447,8 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *selfservice.LoginReq
 	if err != nil {
 		return err
 	}
-	sr.Methods[CredentialsType] = &selfservice.DefaultRequestMethod{
-		Method: CredentialsType,
+	sr.Methods[identity.CredentialsTypeOIDC] = &selfservice.DefaultRequestMethod{
+		Method: identity.CredentialsTypeOIDC,
 		Config: config,
 	}
 	return nil
@@ -459,8 +459,8 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *selfservice.R
 	if err != nil {
 		return err
 	}
-	sr.Methods[CredentialsType] = &selfservice.DefaultRequestMethod{
-		Method: CredentialsType,
+	sr.Methods[identity.CredentialsTypeOIDC] = &selfservice.DefaultRequestMethod{
+		Method: identity.CredentialsTypeOIDC,
 		Config: config,
 	}
 	return nil
@@ -471,7 +471,7 @@ func (s *Strategy) Config() (*ConfigurationCollection, error) {
 
 	if err := jsonx.
 		NewStrictDecoder(
-			bytes.NewBuffer(s.c.SelfServiceStrategy(string(CredentialsType)).Config),
+			bytes.NewBuffer(s.c.SelfServiceStrategy(string(identity.CredentialsTypeOIDC)).Config),
 		).
 		Decode(&c); err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode OpenID Connect Provider configuration: %s", err))
@@ -497,14 +497,14 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid strin
 	}
 
 	if lr, rerr := s.d.LoginRequestManager().GetLoginRequest(r.Context(), rid); rerr == nil {
-		s.d.SelfServiceRequestErrorHandler().HandleLoginError(w, r, CredentialsType, lr, err, &selfservice.ErrorHandlerOptions{
+		s.d.SelfServiceRequestErrorHandler().HandleLoginError(w, r, identity.CredentialsTypeOIDC, lr, err, &selfservice.ErrorHandlerOptions{
 			AdditionalKeys: map[string]interface{}{
 				selfservice.CSRFTokenName: s.cg(r),
 			},
 		})
 		return
 	} else if rr, rerr := s.d.RegistrationRequestManager().GetRegistrationRequest(r.Context(), rid); rerr == nil {
-		s.d.SelfServiceRequestErrorHandler().HandleRegistrationError(w, r, CredentialsType, rr, err, &selfservice.ErrorHandlerOptions{
+		s.d.SelfServiceRequestErrorHandler().HandleRegistrationError(w, r, identity.CredentialsTypeOIDC, rr, err, &selfservice.ErrorHandlerOptions{
 			AdditionalKeys: map[string]interface{}{
 				selfservice.CSRFTokenName: s.cg(r),
 			},

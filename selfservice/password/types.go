@@ -1,12 +1,7 @@
 package password
 
 import (
-	"github.com/ory/hive/identity"
 	"github.com/ory/hive/selfservice"
-)
-
-const (
-	CredentialsType identity.CredentialsType = "password"
 )
 
 type (

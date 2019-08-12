@@ -14,6 +14,7 @@ import (
 
 	"github.com/ory/hive/driver"
 	"github.com/ory/hive/driver/configuration"
+	"github.com/ory/hive/identity"
 	. "github.com/ory/hive/selfservice/hooks"
 	"github.com/ory/hive/session"
 )
@@ -30,7 +31,7 @@ func TestSessionIssuer(t *testing.T) {
 	t.Run("method=sign-in", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		sid := uuid.New().String()
-		require.NoError(t, h.ExecuteLoginPostHook(w, &r, nil, &session.Session{SID: sid}))
+		require.NoError(t, h.ExecuteLoginPostHook(w, &r, nil, &session.Session{SID: sid, Identity: new(identity.Identity)}))
 
 		got, err := reg.SessionManager().Get(sid)
 		require.NoError(t, err)
@@ -40,7 +41,7 @@ func TestSessionIssuer(t *testing.T) {
 	t.Run("method=sign-up", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		sid := uuid.New().String()
-		require.NoError(t, h.ExecuteRegistrationPostHook(w, &r, nil, &session.Session{SID: sid}))
+		require.NoError(t, h.ExecuteRegistrationPostHook(w, &r, nil, &session.Session{SID: sid, Identity: new(identity.Identity)}))
 
 		got, err := reg.SessionManager().Get(sid)
 		require.NoError(t, err)

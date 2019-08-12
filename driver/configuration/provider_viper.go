@@ -284,7 +284,7 @@ func (c *ViperProvider) SelfServiceLogoutRedirectURL() *url.URL {
 func mustParseURLFromViper(l logrus.FieldLogger, key string) *url.URL {
 	u, err := url.ParseRequestURI(viper.GetString(key))
 	if err != nil {
-		l.WithError(err).Fatalf("Configuration value from key %s is not a valid URL: %s", key, viper.GetString(key))
+		l.WithError(err).WithField("stack", fmt.Sprintf("%+v", errors.WithStack(err))).Fatalf("Configuration value from key %s is not a valid URL: %s", key, viper.GetString(key))
 	}
 	return u
 }

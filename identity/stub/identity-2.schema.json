@@ -6,16 +6,6 @@
   "properties": {
     "bar": {
       "type": "string"
-    },
-    "email": {
-      "type": "string",
-      "hive": {
-        "credentials": {
-          "password": {
-            "identifier": true
-          }
-        }
-      }
     }
   }
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/ory/hive/driver/configuration"
 	"github.com/ory/hive/identity"
 	"github.com/ory/hive/session"
+	"github.com/ory/hive/x"
 )
 
 type HookRegistrationPreExecutor interface {
@@ -24,6 +25,7 @@ type registrationExecutorDependencies interface {
 	identity.PoolProvider
 	identity.ValidationProvider
 	HookRegistrationPreExecutionProvider
+	x.LoggingProvider
 }
 
 type RegistrationExecutor struct {
@@ -61,6 +63,10 @@ func (e *RegistrationExecutor) PostRegistrationHook(w http.ResponseWriter, r *ht
 		return err
 	}
 
+	e.d.Logger().
+		WithField("identity_id", i.ID).
+		Debug("A new identity has registered using self-service registration. Running post execution hooks.")
+
 	// Now we execute the post-registration hooks!
 	for _, executor := range hooks {
 		if err := executor.ExecuteRegistrationPostHook(w, r, a, s); err != nil {
@@ -77,6 +83,10 @@ func (e *RegistrationExecutor) PostRegistrationHook(w http.ResponseWriter, r *ht
 	} else if _, err := e.d.IdentityPool().Update(r.Context(), s.Identity); err != nil {
 		return err
 	}
+
+	e.d.Logger().
+		WithField("identity_id", i.ID).
+		Debug("Post registration execution hooks completed successfully.")
 
 	return nil
 }
