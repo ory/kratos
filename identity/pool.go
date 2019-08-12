@@ -57,13 +57,13 @@ func (p *abstractPool) augment(i Identity) *Identity {
 }
 
 func (p *abstractPool) declassify(i Identity) *Identity {
-	return i.WithoutCredentials()
+	return i.CopyWithoutCredentials()
 }
 
 func (p *abstractPool) declassifyAll(i []Identity) []Identity {
 	declassified := make([]Identity, len(i))
 	for k, ii := range i {
-		declassified[k] = *ii.WithoutCredentials()
+		declassified[k] = *ii.CopyWithoutCredentials()
 	}
 	return declassified
 }

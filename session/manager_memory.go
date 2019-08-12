@@ -48,7 +48,9 @@ func (s *ManagerMemory) CreateToRequest(i *identity.Identity, w http.ResponseWri
 }
 
 func (s *ManagerMemory) Create(session *Session) error {
-	s.sessions[session.SID] = *session
+	insert := *session
+	insert.Identity = insert.Identity.CopyWithoutCredentials()
+	s.sessions[session.SID] = insert
 	return nil
 }
 
@@ -83,6 +85,8 @@ func (s *ManagerMemory) FetchFromRequest(r *http.Request) (*Session, error) {
 	} else if err != nil {
 		return nil, err
 	}
+
+	se.Identity = se.Identity.CopyWithoutCredentials()
 
 	return se, nil
 }

@@ -60,11 +60,10 @@ func (i *Identity) GetCredentials(t CredentialsType) (*Credentials, bool) {
 	return nil, false
 }
 
-func (i *Identity) WithoutCredentials() *Identity {
-	i.lock().Lock()
-	defer i.lock().Unlock()
-	i.Credentials = nil
-	return i
+func (i *Identity) CopyWithoutCredentials() *Identity {
+	var ii = *i
+	ii.Credentials = nil
+	return &ii
 }
 
 func NewIdentity(traitsSchemaURL string) *Identity {

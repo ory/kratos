@@ -61,6 +61,8 @@ func hookConfig(u string) (m []map[string]interface{}) {
 	return m
 }
 
+const debugRedirects = false
+
 func TestStrategy(t *testing.T) {
 
 	var (
@@ -192,7 +194,9 @@ func TestStrategy(t *testing.T) {
 		return &http.Client{
 			Jar: jar,
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				t.Logf("Redirect: %s", req.URL.String())
+				if debugRedirects {
+					t.Logf("Redirect: %s", req.URL.String())
+				}
 				if len(via) >= 20 {
 					for k, v := range via {
 						t.Logf("Failed with redirect (%d): %s", k, v.URL.String())
@@ -396,6 +400,7 @@ func TestStrategy(t *testing.T) {
 			i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
 				Identifiers: []string{subject},
 			})
+			i.Traits = json.RawMessage(`{"subject":"` + subject + `"}`)
 
 			_, err := reg.IdentityPool().Create(context.Background(), i)
 			require.NoError(t, err)
@@ -404,7 +409,13 @@ func TestStrategy(t *testing.T) {
 		t.Run("case=should fail registration", func(t *testing.T) {
 			r := nrr(t, returnTS.URL, time.Minute)
 			res, body := mr(t, "valid", r.ID, url.Values{})
-			aue(t, res, body, "idk man")
+			aue(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already.")
+		})
+
+		t.Run("case=should fail login", func(t *testing.T) {
+			r := nlr(t, returnTS.URL, time.Minute)
+			res, body := mr(t, "valid", r.ID, url.Values{})
+			aue(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already.")
 		})
 	})
 }

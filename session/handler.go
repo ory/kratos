@@ -50,7 +50,7 @@ func (h *Handler) fromCookie(w http.ResponseWriter, r *http.Request, ps httprout
 	}
 
 	s.Devices = nil
-	s.Identity = s.Identity.WithoutCredentials()
+	s.Identity = s.Identity.CopyWithoutCredentials()
 
 	h.h.Write(w, r, s)
 }

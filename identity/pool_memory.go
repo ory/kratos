@@ -5,10 +5,9 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 
 	"github.com/ory/go-convenience/stringslice"
-	"github.com/ory/x/stringsx"
-
 	"github.com/ory/herodot"
 	"github.com/ory/x/pagination"
 
@@ -43,6 +42,7 @@ func (p *PoolMemory) hasConflictingID(i *Identity) bool {
 	}
 	return false
 }
+
 func (p *PoolMemory) hasConflictingCredentials(i *Identity) bool {
 	p.RLock()
 	defer p.RUnlock()
@@ -53,8 +53,8 @@ func (p *PoolMemory) hasConflictingCredentials(i *Identity) bool {
 		}
 
 		for fromPoolID, fromPoolCredentials := range fromPool.Credentials {
-			for id, cc := range i.Credentials {
-				if stringsx.Coalesce(string(cc.ID), string(id)) == stringsx.Coalesce(string(fromPoolCredentials.ID), string(fromPoolID)) {
+			for credentialsID, cc := range i.Credentials {
+				if fromPoolID == credentialsID {
 					for _, identifier := range cc.Identifiers {
 						if stringslice.Has(fromPoolCredentials.Identifiers, identifier) {
 							return true
@@ -73,9 +73,11 @@ func (p *PoolMemory) FindByCredentialsIdentifier(_ context.Context, ct Credentia
 	defer p.RUnlock()
 
 	for _, i := range p.is {
-		for _, c := range i.Credentials {
-			if stringslice.Has(c.Identifiers, match) {
-				return p.declassify(i), &c, nil
+		for ctid, c := range i.Credentials {
+			if ct == ctid {
+				if stringslice.Has(c.Identifiers, match) {
+					return p.declassify(i), &c, nil
+				}
 			}
 		}
 	}
@@ -87,6 +89,8 @@ func (p *PoolMemory) Create(_ context.Context, i *Identity) (*Identity, error) {
 	if err := p.Validate(insert); err != nil {
 		return nil, err
 	}
+
+	logrus.New().Printf("creating identity: %s %+v", insert.ID, insert.Credentials)
 
 	if p.hasConflictingID(insert) {
 		return nil, errors.WithStack(herodot.ErrConflict.WithReasonf("An identity with the given ID exists already."))
@@ -121,26 +125,26 @@ func (p *PoolMemory) List(_ context.Context, limit, offset int) ([]Identity, err
 }
 
 func (p *PoolMemory) Update(_ context.Context, i *Identity) (*Identity, error) {
-	i = p.augment(*i)
-	if err := p.Validate(i); err != nil {
+	insert := p.augment(*i)
+	if err := p.Validate(insert); err != nil {
 		return nil, err
 	}
 
-	if p.hasConflictingCredentials(i) {
+	if p.hasConflictingCredentials(insert) {
 		return nil, errors.WithStack(schema.NewDuplicateCredentialsError())
 	}
 
 	p.RLock()
 	for k, ii := range p.is {
-		if ii.ID == i.ID {
+		if ii.ID == insert.ID {
 			p.RUnlock()
 
 			p.Lock()
 			i.PK = ii.PK
-			p.is[k] = *i
+			p.is[k] = *insert
 			p.Unlock()
 
-			return p.declassify(*i), nil
+			return p.declassify(*insert), nil
 		}
 	}
 	p.RUnlock()

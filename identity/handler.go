@@ -72,7 +72,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	}
 
 	// We do not allow setting credentials using this method
-	created, err := h.r.IdentityPool().Create(r.Context(), i.WithoutCredentials())
+	created, err := h.r.IdentityPool().Create(r.Context(), i.CopyWithoutCredentials())
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -97,7 +97,7 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 
 	i.ID = ps.ByName("id")
 	// We do not allow setting credentials using this method
-	updated, err := h.r.IdentityPool().Update(r.Context(), (&i).WithoutCredentials())
+	updated, err := h.r.IdentityPool().Update(r.Context(), (&i).CopyWithoutCredentials())
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
