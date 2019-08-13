@@ -49,7 +49,7 @@ func TestXXMigrations(t *testing.T) {
 			id := fmt.Sprintf("%d-data", step+1)
 			t.Run("poll="+id, func(t *testing.T) {
 				t.Run("service=selfservice.NewRequestManagerSQL", func(t *testing.T) {
-					m := selfservice.NewRequestManagerSQL(db)
+					m := selfservice.NewRequestManagerSQL(db, requestManagerFactories)
 					_, err := m.GetLoginRequest(context.Background(), "1")
 					require.NoError(t, err)
 				})
