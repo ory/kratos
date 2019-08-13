@@ -1,6 +1,8 @@
 package session
 
 import (
+	"context"
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
@@ -12,12 +14,15 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/viper"
+
+	"github.com/ory/hive/driver/configuration"
 	"github.com/ory/hive/identity"
 )
 
 func MockSetSession(t *testing.T, reg Registry) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		_, err := reg.SessionManager().CreateToRequest(&identity.Identity{}, w, r)
+		_, err := reg.SessionManager().CreateToRequest(context.Background(), &identity.Identity{}, w, r)
 		require.NoError(t, err)
 		w.WriteHeader(http.StatusOK)
 	}
@@ -25,7 +30,7 @@ func MockSetSession(t *testing.T, reg Registry) httprouter.Handle {
 
 func MockGetSession(t *testing.T, reg Registry) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		_, err := reg.SessionManager().FetchFromRequest(r)
+		_, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
 		if r.URL.Query().Get("has") == "yes" {
 			require.NoError(t, err)
 		} else {
@@ -76,10 +81,23 @@ func MockHydrateCookieClient(t *testing.T, c *http.Client, u string) {
 func MockSessionCreateHandler(t *testing.T, reg Registry) httprouter.Handle {
 	var sess Session
 	require.NoError(t, faker.FakeData(&sess))
-	require.NoError(t, reg.SessionManager().Create(&sess))
+	sess.Identity = &identity.Identity{
+		ID:              uuid.New().String(),
+		TraitsSchemaURL: "file://./stub/identity.schema.json",
+		Traits:          json.RawMessage(`{}`),
+	}
+
+	if viper.GetString(configuration.ViperKeyDefaultIdentityTraitsSchemaURL) == "" {
+		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
+	}
+
+	_, err := reg.IdentityPool().Create(context.Background(), sess.Identity)
+	require.NoError(t, err)
+
+	require.NoError(t, reg.SessionManager().Create(context.Background(), &sess))
 
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		require.NoError(t, reg.SessionManager().Create(&sess))
-		require.NoError(t, reg.SessionManager().SaveToRequest(&sess, w, r))
+		require.NoError(t, reg.SessionManager().Create(context.Background(), &sess))
+		require.NoError(t, reg.SessionManager().SaveToRequest(context.Background(), &sess, w, r))
 	}
 }

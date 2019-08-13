@@ -16,9 +16,6 @@ import (
 type Identity struct {
 	l *sync.RWMutex
 
-	// PK: The primary key used for hive-internal processing. It is auto-assigned and immutable.
-	PK uint64 `json:"-" faker:"-" form:"-"`
-
 	// ID is a unique identifier chosen by you. It can be a URN (e.g. "arn:aws:iam::123456789012"),
 	// a stringified integer (e.g. "123456789012"), a uuid (e.g. "9f425a8d-7efc-4768-8f23-7647a74fdf13"). It is up to you
 	// to pick a format you'd like. It is discouraged to use a personally identifiable value here, like the username
@@ -27,7 +24,7 @@ type Identity struct {
 
 	Credentials map[CredentialsType]Credentials `json:"credentials,omitempty" faker:"-"`
 
-	TraitsSchemaURL string          `json:"traits_schema_url,omitempty" form:"-"`
+	TraitsSchemaURL string          `json:"traits_schema_url,omitempty" form:"-" faker:"-"`
 	Traits          json.RawMessage `json:"traits" form:"traits" faker:"-"`
 }
 

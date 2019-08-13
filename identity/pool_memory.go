@@ -97,10 +97,6 @@ func (p *PoolMemory) Create(_ context.Context, i *Identity) (*Identity, error) {
 		return nil, errors.WithStack(schema.NewDuplicateCredentialsError())
 	}
 
-	p.RLock()
-	insert.PK = uint64(len(p.is) + 1)
-	p.RUnlock()
-
 	p.Lock()
 	p.is = append(p.is, *insert)
 	p.Unlock()
@@ -137,7 +133,6 @@ func (p *PoolMemory) Update(_ context.Context, i *Identity) (*Identity, error) {
 			p.RUnlock()
 
 			p.Lock()
-			i.PK = ii.PK
 			p.is[k] = *insert
 			p.Unlock()
 

@@ -1,14 +1,18 @@
 package session_test
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
+
+	"github.com/ory/viper"
 
 	"github.com/ory/herodot"
 
@@ -16,6 +20,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/hive/driver/configuration"
+	"github.com/ory/hive/identity"
 	"github.com/ory/hive/internal"
 	. "github.com/ory/hive/session"
 )
@@ -24,24 +30,39 @@ func init() {
 	internal.RegisterFakes()
 }
 
+func fakeIdentity(t *testing.T, reg Registry) *identity.Identity {
+	i := &identity.Identity{
+		ID:              uuid.New().String(),
+		TraitsSchemaURL: "file://./stub/identity.schema.json",
+		Traits:          json.RawMessage(`{}`),
+	}
+
+	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
+
+	_, err := reg.IdentityPool().Create(context.Background(), i)
+	require.NoError(t, err)
+	return i
+}
+
 func TestSessionManager(t *testing.T) {
 	conf, reg := internal.NewMemoryRegistry(t)
 	sm := NewManagerMemory(conf, reg)
 
-	_, err := sm.Get("does-not-exist")
+	_, err := sm.Get(context.Background(), "does-not-exist")
 	require.Error(t, err)
 
 	var gave Session
 	require.NoError(t, faker.FakeData(&gave))
+	gave.Identity = fakeIdentity(t, reg)
 
-	require.NoError(t, sm.Create(&gave))
+	require.NoError(t, sm.Create(context.Background(), &gave))
 
-	got, err := sm.Get(gave.SID)
+	got, err := sm.Get(context.Background(), gave.SID)
 	require.NoError(t, err)
 	assert.EqualValues(t, &gave, got)
 
-	require.NoError(t, sm.Delete(gave.SID))
-	_, err = sm.Get(gave.SID)
+	require.NoError(t, sm.Delete(context.Background(), gave.SID))
+	_, err = sm.Get(context.Background(), gave.SID)
 	require.Error(t, err)
 }
 
@@ -52,24 +73,25 @@ func TestSessionManagerHTTP(t *testing.T) {
 
 	var s Session
 	require.NoError(t, faker.FakeData(&s))
+	s.Identity = fakeIdentity(t, reg)
 
 	router := httprouter.New()
 	router.GET("/set", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		require.NoError(t, sm.Create(&s))
-		require.NoError(t, sm.SaveToRequest(&s, w, r))
+		require.NoError(t, sm.Create(context.Background(), &s))
+		require.NoError(t, sm.SaveToRequest(context.Background(), &s, w, r))
 	})
 
 	router.GET("/set-direct", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		_, err := sm.CreateToRequest(s.Identity, w, r)
+		_, err := sm.CreateToRequest(context.Background(), s.Identity, w, r)
 		require.NoError(t, err)
 	})
 
 	router.GET("/clear", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		require.NoError(t, sm.PurgeFromRequest(w, r))
+		require.NoError(t, sm.PurgeFromRequest(context.Background(), w, r))
 	})
 
 	router.GET("/get", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		s, err := sm.FetchFromRequest(r)
+		s, err := sm.FetchFromRequest(context.Background(), r)
 		if errors.Cause(err) == ErrNoActiveSessionFound {
 			w.WriteHeader(http.StatusUnauthorized)
 			return

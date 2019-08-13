@@ -1,6 +1,7 @@
 package session
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/ory/hive/identity"
@@ -18,24 +19,24 @@ var (
 // Manager handles identity sessions.
 type Manager interface {
 	// Get retrieves a session from the store.
-	Get(sid string) (*Session, error)
+	Get(ctx context.Context, sid string) (*Session, error)
 
 	// Create adds a session to the store.
-	Create(*Session) error
+	Create(ctx context.Context, s *Session) error
 
 	// Delete removes a session from the store
-	Delete(sid string) error
+	Delete(ctx context.Context, sid string) error
 
-	CreateToRequest(*identity.Identity, http.ResponseWriter, *http.Request) (*Session, error)
+	CreateToRequest(context.Context, *identity.Identity, http.ResponseWriter, *http.Request) (*Session, error)
 
 	// SaveToRequest creates an HTTP session using cookies.
-	SaveToRequest(*Session, http.ResponseWriter, *http.Request) error
+	SaveToRequest(context.Context, *Session, http.ResponseWriter, *http.Request) error
 
 	// FetchFromRequest creates an HTTP session using cookies.
-	FetchFromRequest(*http.Request) (*Session, error)
+	FetchFromRequest(context.Context, *http.Request) (*Session, error)
 
 	// PurgeFromRequest removes an HTTP session.
-	PurgeFromRequest(http.ResponseWriter, *http.Request) error
+	PurgeFromRequest(context.Context, http.ResponseWriter, *http.Request) error
 }
 
 type ManagementProvider interface {
