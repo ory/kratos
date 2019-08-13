@@ -1,5 +1,7 @@
 module github.com/ory/hive
 
+replace github.com/ory/x => ../x
+
 require (
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/bxcodec/faker v2.0.1+incompatible
@@ -27,6 +29,7 @@ require (
 	github.com/gorilla/sessions v1.1.3
 	github.com/imdario/mergo v0.3.7
 	github.com/jessevdk/go-flags v1.4.0 // indirect
+	github.com/jmoiron/sqlx v1.2.0
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/justinas/nosurf v0.0.0-20190118163749-6453469bdcc9
 	github.com/leodido/go-urn v1.1.0 // indirect
@@ -43,6 +46,7 @@ require (
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.8.1
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect
+	github.com/rubenv/sql-migrate v0.0.0-20190212093014-1007f53448d7
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v0.0.5
 	github.com/sqs/goreturns v0.0.0-20181028201513-538ac6014518

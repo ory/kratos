@@ -56,3 +56,8 @@ install:
 		packr2 || (GO111MODULE=on go install github.com/gobuffalo/packr/v2/packr2 && packr2)
 		GO111MODULE=on go install .
 		packr2 clean
+
+# Adds sql files to the binary using go-bindata
+.PHONY: sqlbin
+sqlbin:
+		cd driver; go-bindata -o sql_migration_files.go -pkg driver ../contrib/sql/...

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/url"
 	"time"
+
+	"github.com/ory/x/tracing"
 )
 
 type HasherArgon2Config struct {
@@ -59,9 +61,9 @@ type Provider interface {
 
 	HashersArgon2() *HasherArgon2Config
 
-	// This will now be solved using redirect hooks
-	// SignupDefaultReturnToURL() *url.URL
-	// AuthnDefaultReturnToURL() *url.URL
+	TracingServiceName() string
+	TracingProvider() string
+	TracingJaegerConfig() *tracing.JaegerConfig
 }
 
 func MustValidate(p Provider) {
