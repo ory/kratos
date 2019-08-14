@@ -81,7 +81,7 @@ func (m *RegistrySQL) IdentityPool() identity.Pool {
 
 func (m *RegistrySQL) SessionManager() session.Manager {
 	if m.sessionManager == nil {
-		m.sessionManager = session.NewManagerMemory(m.c, m)
+		m.sessionManager = session.NewManagerSQL(m.c, m, m.DB())
 	}
 	return m.sessionManager
 }

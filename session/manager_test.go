@@ -3,14 +3,18 @@ package session_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
+	"sync"
 	"testing"
 
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
+
+	"github.com/ory/x/sqlcon/dockertest"
 
 	"github.com/ory/viper"
 
@@ -45,25 +49,47 @@ func fakeIdentity(t *testing.T, reg Registry) *identity.Identity {
 }
 
 func TestSessionManager(t *testing.T) {
-	conf, reg := internal.NewMemoryRegistry(t)
-	sm := NewManagerMemory(conf, reg)
+	_, reg := internal.NewMemoryRegistry(t)
+	registries := map[string]Registry{
+		"memory": reg,
+	}
 
-	_, err := sm.Get(context.Background(), "does-not-exist")
-	require.Error(t, err)
+	if !testing.Short() {
+		var l sync.Mutex
+		dockertest.Parallel([]func(){
+			func() {
+				db, err := dockertest.ConnectToTestPostgreSQL()
+				require.NoError(t, err)
 
-	var gave Session
-	require.NoError(t, faker.FakeData(&gave))
-	gave.Identity = fakeIdentity(t, reg)
+				_, reg := internal.NewRegistrySQL(t, db)
 
-	require.NoError(t, sm.Create(context.Background(), &gave))
+				l.Lock()
+				registries["postgres"] = reg
+				l.Unlock()
+			},
+		})
+	}
 
-	got, err := sm.Get(context.Background(), gave.SID)
-	require.NoError(t, err)
-	assert.EqualValues(t, &gave, got)
+	for name, sm := range registries {
+		t.Run(fmt.Sprintf("manager=%s", name), func(t *testing.T) {
+			_, err := sm.SessionManager().Get(context.Background(), "does-not-exist")
+			require.Error(t, err)
 
-	require.NoError(t, sm.Delete(context.Background(), gave.SID))
-	_, err = sm.Get(context.Background(), gave.SID)
-	require.Error(t, err)
+			var gave Session
+			require.NoError(t, faker.FakeData(&gave))
+			gave.Identity = fakeIdentity(t, registries[name])
+
+			require.NoError(t, sm.SessionManager().Create(context.Background(), &gave))
+
+			got, err := sm.SessionManager().Get(context.Background(), gave.SID)
+			require.NoError(t, err)
+			assert.EqualValues(t, &gave, got)
+
+			require.NoError(t, sm.SessionManager().Delete(context.Background(), gave.SID))
+			_, err = sm.SessionManager().Get(context.Background(), gave.SID)
+			require.Error(t, err)
+		})
+	}
 }
 
 func TestSessionManagerHTTP(t *testing.T) {

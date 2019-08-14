@@ -20,12 +20,12 @@ type Identity struct {
 	// a stringified integer (e.g. "123456789012"), a uuid (e.g. "9f425a8d-7efc-4768-8f23-7647a74fdf13"). It is up to you
 	// to pick a format you'd like. It is discouraged to use a personally identifiable value here, like the username
 	// or the email, as this field is immutable.
-	ID string `json:"id" faker:"uuid_hyphenated" form:"id"`
+	ID string `json:"id" faker:"uuid_hyphenated" form:"id" db:"id"`
 
-	Credentials map[CredentialsType]Credentials `json:"credentials,omitempty" faker:"-"`
+	Credentials map[CredentialsType]Credentials `json:"credentials,omitempty" faker:"-" db:"-"`
 
-	TraitsSchemaURL string          `json:"traits_schema_url,omitempty" form:"-" faker:"-"`
-	Traits          json.RawMessage `json:"traits" form:"traits" faker:"-"`
+	TraitsSchemaURL string          `json:"traits_schema_url,omitempty" form:"-" faker:"-" db:"traits_schema_url"`
+	Traits          json.RawMessage `json:"traits" form:"traits" faker:"-" db:"traits"`
 }
 
 func (i *Identity) lock() *sync.RWMutex {

@@ -26,8 +26,8 @@ func TestRequestManagerMemory(t *testing.T) {
 		"memory": NewRequestManagerMemory(),
 	}
 
-	var l sync.Mutex
 	if !testing.Short() {
+		var l sync.Mutex
 		dockertest.Parallel([]func(){
 			func() {
 				db, err := dockertest.ConnectToTestPostgreSQL()

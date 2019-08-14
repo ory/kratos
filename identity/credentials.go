@@ -15,9 +15,6 @@ const (
 //
 // swagger:model identityCredentials
 type Credentials struct {
-	// PK: The primary key used for hive-internal processing. It is auto-assigned and immutable.
-	PK uint64 `json:"-" faker:"-"`
-
 	// RequestID discriminates between different credential types.
 	ID CredentialsType `json:"id"`
 
