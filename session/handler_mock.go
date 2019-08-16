@@ -11,6 +11,7 @@ import (
 	"github.com/bxcodec/faker"
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -22,8 +23,12 @@ import (
 
 func MockSetSession(t *testing.T, reg Registry) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		_, err := reg.SessionManager().CreateToRequest(context.Background(), &identity.Identity{}, w, r)
+		i, err := reg.IdentityPool().Create(context.Background(), identity.NewIdentity(""))
 		require.NoError(t, err)
+
+		_, err = reg.SessionManager().CreateToRequest(context.Background(), i, w, r)
+		require.NoError(t, err)
+
 		w.WriteHeader(http.StatusOK)
 	}
 }
@@ -48,10 +53,10 @@ func MockMakeAuthenticatedRequest(t *testing.T, reg Registry, router *httprouter
 	MockHydrateCookieClient(t, client, "http://"+req.URL.Host+set)
 
 	res, err := client.Do(req)
-	require.NoError(t, err)
+	require.NoError(t, errors.WithStack(err))
 
 	body, err := ioutil.ReadAll(res.Body)
-	require.NoError(t, err)
+	require.NoError(t, errors.WithStack(err))
 
 	require.NoError(t, res.Body.Close())
 

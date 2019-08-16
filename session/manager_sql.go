@@ -40,8 +40,8 @@ func NewManagerSQL(c Configuration, r Registry, db *sqlx.DB) *ManagerSQL {
 
 func (s *ManagerSQL) Get(ctx context.Context, sid string) (*Session, error) {
 	var interim sessionSQL
-	columns, _ := sqlxx.NamedInsertArguments(interim, "pk")
-	query := fmt.Sprintf("SELECT %s, i.id FROM %s JOIN identity as i ON (i.pk = identity_pk) WHERE sid=?", columns, sessionSQLTableName)
+	columns, _ := sqlxx.NamedInsertArguments(interim,  "identity_id")
+	query := fmt.Sprintf("SELECT %s, i.id as identity_id FROM %s JOIN identity as i ON (i.pk = identity_pk) WHERE sid=?", columns, sessionSQLTableName)
 	if err := sqlcon.HandleError(s.db.GetContext(ctx, &interim, s.db.Rebind(query), sid)); err != nil {
 		if errors.Cause(err) == sqlcon.ErrNoRows {
 			return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("%s", err))
@@ -90,7 +90,7 @@ func (s *ManagerSQL) Create(ctx context.Context, session *Session) error {
 }
 
 func (s *ManagerSQL) Delete(ctx context.Context, sid string) error {
-	query := fmt.Sprintf("DELETE FROM %s WHERE sid = ?", sid)
+	query := fmt.Sprintf("DELETE FROM %s WHERE sid = ?", sessionSQLTableName)
 	_, err := s.db.ExecContext(ctx, s.db.Rebind(query), sid)
 	return sqlcon.HandleError(err)
 }

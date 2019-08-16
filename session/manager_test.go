@@ -34,6 +34,7 @@ import (
 func init() {
 	internal.RegisterFakes()
 }
+
 func TestMain(m *testing.M) {
 	flag.Parse()
 	runner := dockertest.Register()
@@ -89,7 +90,11 @@ func TestSessionManager(t *testing.T) {
 
 			got, err := sm.SessionManager().Get(context.Background(), gave.SID)
 			require.NoError(t, err)
-			assert.EqualValues(t, &gave, got)
+			assert.Equal(t, gave.Identity.ID, got.Identity.ID)
+			assert.Equal(t, gave.SID, got.SID)
+			assert.EqualValues(t, gave.ExpiresAt.Unix(), got.ExpiresAt.Unix())
+			assert.Equal(t, gave.AuthenticatedAt.Unix(), got.AuthenticatedAt.Unix())
+			assert.Equal(t, gave.IssuedAt.Unix(), got.IssuedAt.Unix())
 
 			require.NoError(t, sm.SessionManager().Delete(context.Background(), gave.SID))
 			_, err = sm.SessionManager().Get(context.Background(), gave.SID)
