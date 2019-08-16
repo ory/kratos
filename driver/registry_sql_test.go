@@ -37,6 +37,7 @@ import (
 	"github.com/ory/hive/selfservice"
 )
 
+// nolint: staticcheck
 func TestMain(m *testing.M) {
 	flag.Parse()
 	runner := dockertest.Register()

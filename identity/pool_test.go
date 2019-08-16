@@ -23,11 +23,11 @@ func init() {
 	internal.RegisterFakes()
 }
 
+// nolint: staticcheck
 func TestMain(m *testing.M) {
 	flag.Parse()
 	runner := dockertest.Register()
 	runner.Exit(m.Run())
-	m.Run()
 }
 
 func TestPool(t *testing.T) {

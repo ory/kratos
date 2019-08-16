@@ -35,6 +35,7 @@ func init() {
 	internal.RegisterFakes()
 }
 
+// nolint: staticcheck
 func TestMain(m *testing.M) {
 	flag.Parse()
 	runner := dockertest.Register()

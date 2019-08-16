@@ -40,7 +40,7 @@ func NewManagerSQL(c Configuration, r Registry, db *sqlx.DB) *ManagerSQL {
 
 func (s *ManagerSQL) Get(ctx context.Context, sid string) (*Session, error) {
 	var interim sessionSQL
-	columns, _ := sqlxx.NamedInsertArguments(interim,  "identity_id")
+	columns, _ := sqlxx.NamedInsertArguments(interim, "identity_id")
 	query := fmt.Sprintf("SELECT %s, i.id as identity_id FROM %s JOIN identity as i ON (i.pk = identity_pk) WHERE sid=?", columns, sessionSQLTableName)
 	if err := sqlcon.HandleError(s.db.GetContext(ctx, &interim, s.db.Rebind(query), sid)); err != nil {
 		if errors.Cause(err) == sqlcon.ErrNoRows {

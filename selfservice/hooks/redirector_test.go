@@ -7,10 +7,11 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/ory/viper"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ory/viper"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"

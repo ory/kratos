@@ -100,7 +100,7 @@ func (m *RegistrySQL) Init() error {
 		options = append(options, sqlcon.WithDistributedTracing(), sqlcon.WithOmitArgsFromTraceSpans())
 	}
 
-	connection, err := sqlcon.NewSQLConnection(m.c.DSN(), m.Logger())
+	connection, err := sqlcon.NewSQLConnection(m.c.DSN(), m.Logger(), options...)
 	if err != nil {
 		return err
 	}
