@@ -24,7 +24,7 @@ type RequestMethod interface {
 
 type DefaultRequestMethod struct {
 	Method identity.CredentialsType `json:"method"`
-	Config RequestMethodConfig      `json:"config" faker:"-"`
+	Config RequestMethodConfig      `json:"config"`
 }
 
 type RegistrationRequest struct{ *Request }

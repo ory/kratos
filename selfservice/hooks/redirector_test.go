@@ -11,9 +11,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/viper"
+
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
 
+	"github.com/ory/hive/driver/configuration"
 	"github.com/ory/hive/selfservice"
 )
 
@@ -43,6 +46,8 @@ func TestRedirector(t *testing.T) {
 		e         string
 		expectErr string
 	}
+
+	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/stub.schema.json")
 
 	var assert = func(t *testing.T, tc testCase, w *httptest.ResponseRecorder, err error) {
 		if tc.expectErr != "" {

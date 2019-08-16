@@ -112,9 +112,9 @@ func telemetry(cmd *cobra.Command, n *negroni.Negroni, d driver.Driver) {
 				selfservice.BrowserRegistrationPath,
 				selfservice.BrowserRegistrationRequestsPath,
 			},
-			BuildVersion: d.BuildInfo().Version,
-			BuildHash:    d.BuildInfo().Hash,
-			BuildTime:    d.BuildInfo().Time,
+			BuildVersion: d.Registry().BuildVersion(),
+			BuildHash:    d.Registry().BuildHash(),
+			BuildTime:    d.Registry().BuildDate(),
 		},
 	)
 	n.Use(m)

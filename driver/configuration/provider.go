@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/url"
 	"time"
+
+	"github.com/ory/x/tracing"
 )
 
 type HasherArgon2Config struct {
@@ -59,25 +61,7 @@ type Provider interface {
 
 	HashersArgon2() *HasherArgon2Config
 
-	// This will now be solved using redirect hooks
-	// SignupDefaultReturnToURL() *url.URL
-	// AuthnDefaultReturnToURL() *url.URL
-}
-
-func MustValidate(p Provider) {
-	_ = p.AdminListenOn()
-	_ = p.PublicListenOn()
-	_ = p.DSN()
-	_ = p.SessionSecrets()
-	_ = p.MultiFactorURL()
-	_ = p.SelfAdminURL()
-	_ = p.SelfPublicURL()
-	_ = p.LoginURL()
-	_ = p.ErrorURL()
-	_ = p.SessionLifespan()
-	_ = p.WhitelistedReturnToDomains()
-	_ = p.SelfServiceLoginRequestLifespan()
-	_ = p.RegisterURL()
-	_ = p.HashersArgon2()
-	_ = p.DefaultIdentityTraitsSchemaURL()
+	TracingServiceName() string
+	TracingProvider() string
+	TracingJaegerConfig() *tracing.JaegerConfig
 }

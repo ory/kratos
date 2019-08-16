@@ -145,7 +145,7 @@ func (h *StrategyHandler) fetchLoginRequest(w http.ResponseWriter, r *http.Reque
 func (h *StrategyHandler) logout(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	_ = h.d.CSRFHandler().RegenerateToken(w, r)
 
-	if err := h.d.SessionManager().PurgeFromRequest(w, r); err != nil {
+	if err := h.d.SessionManager().PurgeFromRequest(r.Context(), w, r); err != nil {
 		h.d.ErrorManager().ForwardError(w, r, err)
 		return
 	}

@@ -301,7 +301,7 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *selfs
 	}
 
 	var o CredentialsConfig
-	if err := json.NewDecoder(bytes.NewBuffer(c.Options)).Decode(&o); err != nil {
+	if err := json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&o); err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error()))
 	}
 
@@ -393,7 +393,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 	i.SetCredentials(s.ID(), identity.Credentials{
 		ID:          s.ID(),
 		Identifiers: []string{uid(provider.Config().ID, claims.Subject)},
-		Options:     b.Bytes(),
+		Config:      b.Bytes(),
 	})
 
 	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, s.d.PostRegistrationHooks(identity.CredentialsTypeOIDC), a, i); err != nil {
@@ -406,7 +406,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 func (s *Strategy) verifyIdentity(i *identity.Identity, c identity.Credentials, token oidc.IDToken, pid string) error {
 	var o CredentialsConfig
 
-	if err := json.NewDecoder(bytes.NewBuffer(c.Options)).Decode(&o); err != nil {
+	if err := json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&o); err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error()))
 	}
 

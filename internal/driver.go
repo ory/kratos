@@ -3,7 +3,10 @@ package internal
 import (
 	"testing"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ory/x/dbal"
 
 	"github.com/ory/viper"
 
@@ -36,4 +39,15 @@ func NewMemoryRegistry(t *testing.T) (*configuration.ViperProvider, *driver.Regi
 	reg, err := driver.NewRegistry(conf)
 	require.NoError(t, err)
 	return conf, reg.WithConfig(conf).(*driver.RegistryMemory)
+}
+
+func NewRegistrySQL(t *testing.T, db *sqlx.DB) (*configuration.ViperProvider, *driver.RegistrySQL) {
+	viper.Set("LOG_LEVEL", "debug")
+	conf := NewConfigurationWithDefaults()
+	driver.SQLPurgeTestDatabase(t, db)
+	registry := driver.NewRegistrySQL().WithConfig(conf).(*driver.RegistrySQL).WithDB(db).(*driver.RegistrySQL)
+	count, err := registry.CreateSchemas(dbal.DriverPostgreSQL)
+	require.NoError(t, err)
+	require.True(t, count > 0, "Applied %d migrations but expected more", count)
+	return conf, registry
 }

@@ -12,17 +12,25 @@ type DefaultDriver struct {
 	r Registry
 }
 
-func NewDefaultDriver(bi *BuildInfo, r Registry, c configuration.Provider, l logrus.FieldLogger) Driver {
-	configuration.MustValidate(c)
-	return NewDefaultDriverWithoutValidation(bi, r, c, l)
-}
+func NewDefaultDriver(l logrus.FieldLogger, version, build, date string) Driver {
+	c := configuration.NewViperProvider(l)
 
-func NewDefaultDriverWithoutValidation(bi *BuildInfo, r Registry, c configuration.Provider, l logrus.FieldLogger) Driver {
-	return &DefaultDriver{
-		r: r.WithConfig(c).WithLogger(l),
-		l: l,
-		c: c,
+	r, err := NewRegistry(c)
+	if err != nil {
+		l.WithError(err).Fatal("Unable to instantiate service registry.")
 	}
+
+	r.
+		WithConfig(c).
+		WithLogger(l).
+		WithBuildInfo(version, build, date)
+
+	// Init forces the driver to initialize and circumvent lazy loading issues.
+	if err = r.Init(); err != nil {
+		l.WithError(err).Fatal("Unable to initialize service registry.")
+	}
+
+	return &DefaultDriver{r: r, c: c}
 }
 
 func (r *DefaultDriver) BuildInfo() *BuildInfo {

@@ -19,11 +19,17 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
+
+	"github.com/ory/hive/cmd/daemon"
+	"github.com/ory/hive/driver"
 )
 
 // serveCmd represents the serve command
 var serveCmd = &cobra.Command{
 	Use: "serve",
+	Run: func(cmd *cobra.Command, args []string) {
+		daemon.ServeAll(driver.NewDefaultDriver(logger, BuildVersion, BuildTime, BuildGitHash))(cmd, args)
+	},
 }
 
 func init() {

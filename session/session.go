@@ -15,7 +15,7 @@ type Session struct {
 	AuthenticatedAt time.Time          `json:"authenticated_at" faker:"time_type"`
 	IssuedAt        time.Time          `json:"issued_at" faker:"time_type"`
 	Identity        *identity.Identity `json:"identity"`
-	Devices         []Device           `json:"devices,omitempty" faker:"-"`
+	// Devices         []Device           `json:"devices,omitempty" faker:"-"`
 
 	modifiedIdentity bool
 }
@@ -26,15 +26,15 @@ func NewSession(i *identity.Identity, r *http.Request, c Configuration) *Session
 		ExpiresAt: time.Now().UTC().Add(c.SessionLifespan()),
 		IssuedAt:  time.Now().UTC(),
 		Identity:  i,
-		Devices: []Device{
-			{
-				// IP: r.RemoteAddr,
-				UserAgent: r.UserAgent(),
-				SeenAt: []time.Time{
-					time.Now().UTC(),
-				},
-			},
-		},
+		// Devices: []Device{
+		// 	{
+		// 		// IP: r.RemoteAddr,
+		// 		UserAgent: r.UserAgent(),
+		// 		SeenAt: []time.Time{
+		// 			time.Now().UTC(),
+		// 		},
+		// 	},
+		// },
 	}
 }
 

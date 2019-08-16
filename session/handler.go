@@ -43,13 +43,13 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 }
 
 func (h *Handler) fromCookie(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	s, err := h.r.SessionManager().FetchFromRequest(r)
+	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		h.h.WriteError(w, r, err)
 		return
 	}
 
-	s.Devices = nil
+	// s.Devices = nil
 	s.Identity = s.Identity.CopyWithoutCredentials()
 
 	h.h.Write(w, r, s)
@@ -61,7 +61,7 @@ func (h *Handler) fromPath(w http.ResponseWriter, r *http.Request, ps httprouter
 
 func (h *Handler) IsNotAuthenticated(wrap httprouter.Handle, onAuthenticated httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		if _, err := h.r.SessionManager().FetchFromRequest(r); err != nil {
+		if _, err := h.r.SessionManager().FetchFromRequest(r.Context(), r); err != nil {
 			if errors.Cause(err) == ErrNoActiveSessionFound {
 				wrap(w, r, ps)
 				return

@@ -1,6 +1,7 @@
 package selfservice_test
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -49,7 +50,7 @@ func TestLogoutHandler(t *testing.T) {
 	var sess session.Session
 	sess.SID = uuid.New().String()
 	sess.Identity = new(identity.Identity)
-	require.NoError(t, reg.SessionManager().Create(&sess))
+	require.NoError(t, reg.SessionManager().Create(context.Background(), &sess))
 
 	router.GET("/set", session.MockSetSession(t, reg))
 
@@ -62,6 +63,7 @@ func TestLogoutHandler(t *testing.T) {
 	}))
 	defer redirTS.Close()
 
+	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
 	viper.Set(configuration.ViperKeySelfServiceLogoutRedirectURL, redirTS.URL)
 	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
 
@@ -123,6 +125,7 @@ func TestEnsureSessionRedirect(t *testing.T) {
 
 	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, redirTS.URL)
 	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
+	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
 
 	for k, tc := range [][]string{
 		{"GET", BrowserLoginPath},
