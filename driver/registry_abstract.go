@@ -50,7 +50,30 @@ type RegistryAbstract struct {
 	selfserviceStrategies           []selfservice.Strategy
 	seflserviceRequestErrorHandler  *selfservice.ErrorHandler
 
+	buildVersion string
+	buildHash    string
+	buildDate    string
+
 	r Registry
+}
+
+func (m *RegistryAbstract) WithBuildInfo(version, hash, date string) Registry {
+	m.buildVersion = version
+	m.buildHash = hash
+	m.buildDate = date
+	return m.r
+}
+
+func (m *RegistryAbstract) BuildVersion() string {
+	return m.buildVersion
+}
+
+func (m *RegistryAbstract) BuildDate() string {
+	return m.buildDate
+}
+
+func (m *RegistryAbstract) BuildHash() string {
+	return m.buildHash
 }
 
 func (m *RegistryAbstract) with(r Registry) *RegistryAbstract {

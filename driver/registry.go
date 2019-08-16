@@ -22,8 +22,15 @@ import (
 type Registry interface {
 	dbal.Driver
 
+	Init() error
+
 	WithConfig(c configuration.Provider) Registry
 	WithLogger(l logrus.FieldLogger) Registry
+
+	BuildVersion() string
+	BuildDate() string
+	BuildHash() string
+	WithBuildInfo(version, hash, date string) Registry
 
 	Logger() logrus.FieldLogger
 	Writer() herodot.Writer

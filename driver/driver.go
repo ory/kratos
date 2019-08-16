@@ -16,5 +16,4 @@ type Driver interface {
 	Logger() logrus.FieldLogger
 	Configuration() configuration.Provider
 	Registry() Registry
-	BuildInfo() *BuildInfo
 }

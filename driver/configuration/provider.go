@@ -65,21 +65,3 @@ type Provider interface {
 	TracingProvider() string
 	TracingJaegerConfig() *tracing.JaegerConfig
 }
-
-func MustValidate(p Provider) {
-	_ = p.AdminListenOn()
-	_ = p.PublicListenOn()
-	_ = p.DSN()
-	_ = p.SessionSecrets()
-	_ = p.MultiFactorURL()
-	_ = p.SelfAdminURL()
-	_ = p.SelfPublicURL()
-	_ = p.LoginURL()
-	_ = p.ErrorURL()
-	_ = p.SessionLifespan()
-	_ = p.WhitelistedReturnToDomains()
-	_ = p.SelfServiceLoginRequestLifespan()
-	_ = p.RegisterURL()
-	_ = p.HashersArgon2()
-	_ = p.DefaultIdentityTraitsSchemaURL()
-}

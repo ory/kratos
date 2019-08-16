@@ -1,6 +1,9 @@
 package driver
 
 import (
+	"fmt"
+	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -13,6 +16,8 @@ import (
 	"github.com/ory/x/dbal"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/urlx"
+
+	"github.com/olekukonko/tablewriter"
 
 	"github.com/ory/hive/identity"
 	"github.com/ory/hive/selfservice"
@@ -149,6 +154,34 @@ func (m *RegistrySQL) CreateSchemas(dbName string) (int, error) {
 
 	m.Logger().Debugf("Applied %d %s SQL migrations", total, dbName)
 	return total, nil
+}
+
+func (m *RegistrySQL) SchemaMigrationPlan(dbName string) (*tablewriter.Table, error) {
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
+	table.SetCenterSeparator("|")
+	table.SetAutoMergeCells(true)
+	table.SetRowLine(true)
+	table.SetColMinWidth(4, 20)
+	table.SetHeader([]string{"Driver", "ID", "#", "Query"})
+
+	migrate.SetTable("hive_migration")
+	plans, _, err := migrate.PlanMigration(m.DB().DB, dbal.Canonicalize(m.DB().DriverName()), Migrations[dbName], migrate.Up, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, plan := range plans {
+		for k, up := range plan.Up {
+			up = strings.Replace(strings.TrimSpace(up), "\n", "", -1)
+			up = strings.Join(strings.Fields(up), " ")
+			if len(up) > 0 {
+				table.Append([]string{m.db.DriverName(), plan.Id + ".sql", fmt.Sprintf("%d", k), up})
+			}
+		}
+	}
+
+	return table, nil
 }
 
 func SQLPurgeTestDatabase(t *testing.T, db *sqlx.DB) {

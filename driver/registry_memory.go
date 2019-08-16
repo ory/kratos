@@ -28,6 +28,10 @@ func NewRegistryMemory() *RegistryMemory {
 	return r
 }
 
+func (m *RegistryMemory) Init() error {
+	return nil
+}
+
 func (m *RegistryMemory) IdentityPool() identity.Pool {
 	if m.identityPool == nil {
 		m.identityPool = identity.NewPoolMemory(m.c, m)
