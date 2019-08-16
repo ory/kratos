@@ -46,8 +46,8 @@ func TestRequestManagerMemory(t *testing.T) {
 	nbr := func() *Request {
 		return &Request{
 			ID:             uuid.New().String(),
-			IssuedAt:       time.Now().UTC(),
-			ExpiresAt:      time.Now().Add(time.Hour).UTC(),
+			IssuedAt:       time.Now().UTC().Round(time.Second),
+			ExpiresAt:      time.Now().Add(time.Hour).UTC().Round(time.Second),
 			RequestURL:     "https://www.ory.sh/request",
 			RequestHeaders: http.Header{"Content-Type": {"application/json"}},
 			Active:         identity.CredentialsTypePassword,
