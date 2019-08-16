@@ -241,7 +241,7 @@ func TestLogin(t *testing.T) {
 						identity.CredentialsTypePassword: {
 							ID:          identity.CredentialsTypePassword,
 							Identifiers: []string{"login-identifier-6"},
-							Options:     json.RawMessage(`{"hashed_password":"` + string(p) + `"}`),
+							Config:      json.RawMessage(`{"hashed_password":"` + string(p) + `"}`),
 						},
 					},
 				})
@@ -278,7 +278,7 @@ func TestLogin(t *testing.T) {
 						identity.CredentialsTypePassword: {
 							ID:          identity.CredentialsTypePassword,
 							Identifiers: []string{"login-identifier-7"},
-							Options:     json.RawMessage(`{"hashed_password":"` + string(p) + `"}`),
+							Config:      json.RawMessage(`{"hashed_password":"` + string(p) + `"}`),
 						},
 					},
 				})

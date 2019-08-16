@@ -10,19 +10,19 @@ CREATE TABLE IF NOT EXISTS identity
     traits_schema_url text         NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS identity_credentials
+CREATE TABLE IF NOT EXISTS identity_credential
 (
     pk          BIGSERIAL PRIMARY KEY,
     identity_pk BIGINT REFERENCES identity (pk) ON DELETE CASCADE,
     method      credentials_type NOT NULL,
-    options     jsonb            NOT NULL DEFAULT '{}'::jsonb
+    config      jsonb            NOT NULL DEFAULT '{}'::jsonb
 );
 
-CREATE TABLE IF NOT EXISTS identity_credentials_identifiers
+CREATE TABLE IF NOT EXISTS identity_credential_identifier
 (
-    pk                      BIGSERIAL PRIMARY KEY,
-    identity_credentials_pk BIGINT REFERENCES identity_credentials (pk) ON DELETE CASCADE,
-    identifier              VARCHAR(255) NOT NULL UNIQUE,
+    pk                     BIGSERIAL PRIMARY KEY,
+    identity_credential_pk BIGINT REFERENCES identity_credential (pk) ON DELETE CASCADE,
+    identifier             VARCHAR(255) NOT NULL UNIQUE,
     CHECK (length(identifier) > 0)
 );
 
@@ -52,7 +52,10 @@ CREATE TABLE IF NOT EXISTS session
 CREATE UNIQUE INDEX name ON self_service_request (id, kind);
 
 -- +migrate Down
-DROP TABLE identity_credentials_pkentifiers;
-DROP TABLE identity_credentials;
+DROP TABLE identity_credential_identifier;
+DROP TABLE identity_credential;
+DROP TABLE session;
 DROP TABLE identity;
 DROP TABLE self_service_request;
+DROP TYPE IF EXISTS credentials_type;
+DROP TYPE IF EXISTS self_service_request_type;

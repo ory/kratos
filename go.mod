@@ -35,14 +35,14 @@ require (
 	github.com/leodido/go-urn v1.1.0 // indirect
 	github.com/mattn/goveralls v0.0.2
 	github.com/meatballhat/negroni-logrus v0.0.0-20170801195057-31067281800f
-	github.com/ory/dockertest v3.3.4+incompatible
+	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/ory/go-acc v0.0.0-20181118080137-ddc355013f90
 	github.com/ory/go-convenience v0.1.0
 	github.com/ory/gojsonschema v0.0.0-20190720140244-a64d4f892691
 	github.com/ory/graceful v0.1.1
 	github.com/ory/herodot v0.6.2
 	github.com/ory/viper v1.5.6
-	github.com/ory/x v0.0.66
+	github.com/ory/x v0.0.67
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.8.1
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect

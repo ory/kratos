@@ -2,16 +2,19 @@
 INSERT INTO identity (id, traits_schema_url)
 VALUES ('data-1', 'foo');
 
-INSERT INTO identity_credentials (identity_id, method)
-VALUES (1, 'password');
+INSERT INTO identity_credential (identity_pk, method, config)
+VALUES (1, 'password', '{"foo":"bar"}');
 
-INSERT INTO identity_credentials_identifiers (identity_credentials_id, identifier)
+INSERT INTO identity_credentials_identifier (identity_credential_pk, identifier)
 VALUES (1, 'data-1@example.org');
 
-INSERT INTO identity_credentials_identifiers (identity_credentials_id, identifier)
+INSERT INTO identity_credentials_identifier (identity_credential_pk, identifier)
 VALUES (1, 'data-1@example.com');
 
 INSERT INTO self_service_request (id, expires_at, issued_at, request_url, request_headers, active, methods, kind)
-VALUES (1, NOW(), NOW(), 'https://www.ory.sh/', '{}', 'password' , '{}', 'login');
+VALUES (1, NOW(), NOW(), 'https://www.ory.sh/', '{}', 'password', '{}', 'login');
+
+INSERT INTO session (sid, expires_at, issued_at, authenticated_at, identity_pk)
+VALUES ('sid-1', NOW(), NOW(), NOW(), 1);
 
 -- +migrate Down

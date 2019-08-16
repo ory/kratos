@@ -22,17 +22,26 @@ package driver
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"testing"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/x/sqlcon/dockertest"
+
 	"github.com/ory/x/dbal"
 	"github.com/ory/x/dbal/migratest"
 
 	"github.com/ory/hive/selfservice"
 )
+
+func TestMain(m *testing.M) {
+	flag.Parse()
+	runner := dockertest.Register()
+	runner.Exit(m.Run())
+}
 
 func TestXXMigrations(t *testing.T) {
 	if testing.Short() {

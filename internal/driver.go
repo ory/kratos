@@ -46,7 +46,8 @@ func NewRegistrySQL(t *testing.T, db *sqlx.DB) (*configuration.ViperProvider, *d
 	conf := NewConfigurationWithDefaults()
 	driver.SQLPurgeTestDatabase(t, db)
 	registry := driver.NewRegistrySQL().WithConfig(conf).(*driver.RegistrySQL).WithDB(db).(*driver.RegistrySQL)
-	_, err := registry.CreateSchemas(dbal.DriverPostgreSQL)
+	count, err := registry.CreateSchemas(dbal.DriverPostgreSQL)
 	require.NoError(t, err)
+	require.True(t, count > 0, "Applied %d migrations but expected more", count)
 	return conf, registry
 }

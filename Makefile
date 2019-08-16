@@ -61,3 +61,11 @@ install:
 .PHONY: sqlbin
 sqlbin:
 		cd driver; go-bindata -o sql_migration_files.go -pkg driver ../contrib/sql/...
+
+
+# Resets the test databases
+.PHONY: resetdb
+resetdb:
+		docker kill hydra_test_database_postgres || true
+		docker rm -f hydra_test_database_postgres || true
+		docker run --rm --name hydra_test_database_postgres -p 3445:5432 -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=hydra -d postgres:9.6

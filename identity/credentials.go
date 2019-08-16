@@ -21,7 +21,7 @@ type Credentials struct {
 	// Identifiers represents a list of unique identifiers this credential type matches.
 	Identifiers []string `json:"identifiers"`
 
-	// Options contains the concrete credential payload. This might contain the bcrypt-hashed password, or the email
+	// Config contains the concrete credential payload. This might contain the bcrypt-hashed password, or the email
 	// for passwordless authentication.
-	Options json.RawMessage `json:"options"`
+	Config json.RawMessage `json:"config"`
 }

@@ -1,7 +1,6 @@
 package driver
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -74,7 +73,7 @@ func (m *RegistrySQL) Ping() error {
 
 func (m *RegistrySQL) IdentityPool() identity.Pool {
 	if m.identityPool == nil {
-		m.identityPool = identity.NewPoolMemory(m.c, m)
+		m.identityPool = identity.NewPoolSQL(m.c, m, m.DB())
 	}
 	return m.identityPool
 }
@@ -140,29 +139,32 @@ func (m *RegistrySQL) LoginRequestManager() selfservice.LoginRequestManager {
 }
 
 func (m *RegistrySQL) CreateSchemas(dbName string) (int, error) {
-	var total int
-
 	m.Logger().Debugf("Applying %s SQL migrations...", dbName)
 
 	migrate.SetTable("hive_migration")
-	n, err := migrate.Exec(m.DB().DB, dbal.Canonicalize(m.DB().DriverName()), Migrations[dbName], migrate.Up)
+	total, err := migrate.Exec(m.DB().DB, dbal.Canonicalize(m.DB().DriverName()), Migrations[dbName], migrate.Up)
 	if err != nil {
-		return 0, errors.Wrapf(err, "Could not migrate sql schema, applied %d Migrations", n)
+		return 0, errors.Wrapf(err, "Could not migrate sql schema, applied %d migrations", total)
 	}
 
 	m.Logger().Debugf("Applied %d %s SQL migrations", total, dbName)
-	return n, nil
+	return total, nil
 }
 
 func SQLPurgeTestDatabase(t *testing.T, db *sqlx.DB) {
-	for _, table := range []string{
-		"identity_credentials_identifiers",
-		"identity_credentials",
-		"identity",
+	for _, query := range []string{
+		"DROP TABLE IF EXISTS hive_migration",
+		"DROP TABLE IF EXISTS self_service_request",
+		"DROP TABLE IF EXISTS identity_credential_identifier",
+		"DROP TABLE IF EXISTS identity_credential",
+		"DROP TABLE IF EXISTS session",
+		"DROP TABLE IF EXISTS identity",
+		"DROP TYPE IF EXISTS credentials_type",
+		"DROP TYPE IF EXISTS self_service_request_type",
 	} {
-		_, err := db.Exec(fmt.Sprintf("DROP TABLE IF EXISTS %s", table))
+		_, err := db.Exec(query)
 		if err != nil {
-			t.Logf("Unable to clean up table %s: %s", table, err)
+			t.Logf("Unable to clean up table %s: %s", query, err)
 		}
 	}
 }

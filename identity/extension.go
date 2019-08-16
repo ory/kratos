@@ -46,7 +46,7 @@ func (e *ValidationExtensionIdentifier) Call(value interface{}, config *schema.E
 			cred = &Credentials{
 				ID:          CredentialsTypePassword,
 				Identifiers: []string{},
-				Options:     json.RawMessage{},
+				Config:      json.RawMessage{},
 			}
 		}
 

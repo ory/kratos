@@ -2,18 +2,19 @@ package identity
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
+
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/sqlxx"
-	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
 
 	"github.com/ory/hive/driver/configuration"
-	"github.com/ory/hive/schema"
 )
 
 var _ Pool = new(PoolSQL)
@@ -25,32 +26,26 @@ type (
 	}
 )
 
-func (i *identitySQL) toIdentity() *Identity {
-	return &Identity{
-		ID:              i.ID,
-		TraitsSchemaURL: i.TraitsSchemaURL,
-		Traits:          i.Traits,
-	}
-}
-
 func NewPoolSQL(c configuration.Provider, d ValidationProvider, db *sqlx.DB) *PoolSQL {
-	return &PoolSQL{abstractPool: newAbstractPool(c, d), db: db,}
+	return &PoolSQL{abstractPool: newAbstractPool(c, d), db: db}
 }
 
 // FindByCredentialsIdentifier returns an identity by querying for it's credential identifiers.
 func (p *PoolSQL) FindByCredentialsIdentifier(ctx context.Context, ct CredentialsType, match string) (*Identity, *Credentials, error) {
 	i, err := p.get(ctx, "WHERE ici.identifier = ? AND ici.method = ?", []interface{}{match, string(ct)})
 	if err != nil {
+		if errors.Cause(err).Error() == herodot.ErrNotFound.Error() {
+			return nil, nil, herodot.ErrNotFound.WithTrace(err).WithReasonf(`No identity matching credentials identifier "%s" could be found.`, match)
+		}
 		return nil, nil, err
 	}
 
 	creds, ok := i.Credentials[ct]
 	if !ok {
 		return nil, nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The SQL adapter failed to return the appropriate credentials_type \"%s\". This is a bug in the code.", ct))
-
 	}
 
-	return p.declassify(i), &creds, nil
+	return p.declassify(*i), &creds, nil
 }
 
 func (p *PoolSQL) Create(ctx context.Context, i *Identity) (*Identity, error) {
@@ -88,7 +83,7 @@ func (p *PoolSQL) List(ctx context.Context, limit, offset int) ([]Identity, erro
 		Traits          json.RawMessage `db:"traits"`
 	}
 
-	query := "SELECT id, traits, traits_schema_url FROM identity LIMIT ? OFFSET ? ORDER BY pk"
+	query := "SELECT id, traits, traits_schema_url FROM identity ORDER BY pk LIMIT ? OFFSET ?"
 	if err := p.db.SelectContext(ctx, &rows, p.db.Rebind(query), limit, offset); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
@@ -105,41 +100,12 @@ func (p *PoolSQL) List(ctx context.Context, limit, offset int) ([]Identity, erro
 	return p.declassifyAll(ids), nil
 }
 
-func (p *PoolSQL) Update(_ context.Context, i *Identity) (*Identity, error) {
-	var rows []struct {
-		ID              string          `db:"id"`
-		TraitsSchemaURL string          `db:"i.traits_schema_url"`
-		Traits          json.RawMessage `db:"i.traits"`
-		Identifier      string          `db:"ici.identifier"`
-		Method          string          `db:"ic.method"`
-		Config          string          `db:"ic.config"`
-	}
+func (p *PoolSQL) UpdateConfidential(ctx context.Context, i *Identity, ct map[CredentialsType]Credentials) (*Identity, error) {
+	return p.update(ctx, i, ct, true)
+}
 
-	query := "SELECT id, traits, traits_schema_url FROM identity "
-
-	insert := p.augment(*i)
-	if err := p.Validate(insert); err != nil {
-		return nil, err
-	}
-
-	if p.hasConflictingCredentials(insert) {
-		return nil, errors.WithStack(schema.NewDuplicateCredentialsError())
-	}
-
-	p.RLock()
-	for k, ii := range p.is {
-		if ii.ID == insert.ID {
-			p.RUnlock()
-
-			p.Lock()
-			p.is[k] = *insert
-			p.Unlock()
-
-			return p.declassify(*insert), nil
-		}
-	}
-	p.RUnlock()
-	return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("Identity with identifier %s does not exist.", i.ID))
+func (p *PoolSQL) Update(ctx context.Context, i *Identity) (*Identity, error) {
+	return p.update(ctx, i, nil, false)
 }
 
 func (p *PoolSQL) Get(ctx context.Context, id string) (*Identity, error) {
@@ -152,7 +118,14 @@ func (p *PoolSQL) Get(ctx context.Context, id string) (*Identity, error) {
 }
 
 func (p *PoolSQL) GetClassified(ctx context.Context, id string) (*Identity, error) {
-	return p.get(ctx, "WHERE i.ID = ?", []interface{}{id})
+	i, err := p.get(ctx, "WHERE i.id = ?", []interface{}{id})
+	if err != nil {
+		if errors.Cause(err).Error() == herodot.ErrNotFound.Error() {
+			return nil, herodot.ErrNotFound.WithTrace(err).WithReasonf(`Identity "%s" could not be found.`, id)
+		}
+		return nil, err
+	}
+	return i, nil
 }
 
 func (p *PoolSQL) Delete(ctx context.Context, id string) error {
@@ -163,28 +136,32 @@ func (p *PoolSQL) Delete(ctx context.Context, id string) error {
 func (p *PoolSQL) insert(ctx context.Context, tx *sqlx.Tx, i *Identity) error {
 	columns, arguments := sqlxx.NamedInsertArguments(i)
 	query := fmt.Sprintf(`INSERT INTO identity (%s) VALUES (%s)`, columns, arguments)
-	if _, err := tx.ExecContext(context.Background(), p.db.Rebind(query), i); err != nil {
+	if _, err := tx.NamedExecContext(context.Background(), p.db.Rebind(query), i); err != nil {
 		return sqlcon.HandleError(err)
 	}
 
+	return p.insertCredentials(ctx, tx, i)
+}
+
+func (p *PoolSQL) insertCredentials(ctx context.Context, tx *sqlx.Tx, i *Identity) error {
 	for method, cred := range i.Credentials {
-		query = `INSERT INTO identity_credentials (method, options, identity_pk) VALUES (
+		query := `INSERT INTO identity_credential (method, config, identity_pk) VALUES (
 	?,
 	?,
 	(SELECT pk FROM identity WHERE id = ?))`
 		if _, err := tx.ExecContext(ctx,
 			p.db.Rebind(query),
 			string(method),
-			string(cred.Options),
+			string(cred.Config),
 			i.ID,
 		); err != nil {
 			return sqlcon.HandleError(err)
 		}
 
 		for _, identifier := range cred.Identifiers {
-			query = `INSERT INTO identity_credentials_identifiers (identifier, identity_credentials_pk) VALUES (
+			query = `INSERT INTO identity_credential_identifier (identifier, identity_credential_pk) VALUES (
 	?,
-	(SELECT ic.pk FROM identity_credentials as ic JOIN identity as i ON (i.pk = ic.identity_pk) WHERE ic.method = ? AND i.id = ?))`
+	(SELECT ic.pk FROM identity_credential as ic JOIN identity as i ON (i.pk = ic.identity_pk) WHERE ic.method = ? AND i.id = ?))`
 			if _, err := tx.ExecContext(ctx,
 				p.db.Rebind(query),
 				identifier,
@@ -195,88 +172,97 @@ func (p *PoolSQL) insert(ctx context.Context, tx *sqlx.Tx, i *Identity) error {
 			}
 		}
 	}
-
 	return nil
 }
 
-func (p *PoolSQL) update(ctx context.Context, tx *sqlx.Tx, i *Identity) error {
-	arguments := sqlxx.NamedUpdateArguments(i, "id")
-	query := fmt.Sprintf(`UPDATE identity SET (%s) WHERE id = :id`, arguments)
+func (p *PoolSQL) update(ctx context.Context, i *Identity, ct map[CredentialsType]Credentials, updateConfidential bool) (*Identity, error) {
+	insert := p.augment(*i)
+	insert.Credentials = ct
 
-	if _, err := tx.ExecContext(context.Background(), p.db.Rebind(query), i); err != nil {
+	if err := p.Validate(insert); err != nil {
+		return nil, err
+	}
+
+	tx, err := p.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := p.runUpdateTx(ctx, tx, i, updateConfidential); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return nil, errors.WithStack(err)
+		}
+		return nil, errors.WithStack(err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return nil, errors.WithStack(err)
+		}
+		return nil, errors.WithStack(err)
+	}
+
+	return p.declassify(*i), nil
+}
+
+func (p *PoolSQL) runUpdateTx(ctx context.Context, tx *sqlx.Tx, i *Identity, updateConfidential bool) error {
+	arguments := sqlxx.NamedUpdateArguments(i, "id")
+	query := fmt.Sprintf(`UPDATE identity SET %s WHERE id=:id`, arguments)
+	if _, err := tx.NamedExecContext(context.Background(), query, i); err != nil {
 		return sqlcon.HandleError(err)
 	}
 
-	for method, cred := range i.Credentials {
-		var ic = &struct {
-			Method  string `db:"method"`
-			Options string `db:"options"`
-		}{Method:string(method), Options: string(cred.Options)}
-
-		query = `UPDATE identity_credentials SET %s	WHERE SELECT pk FROM identity WHERE id = ?))`
-
-		arguments = sqlxx.NamedUpdateArguments(ic)
-
-		query = `INSERT INTO identity_credentials (method, options, identity_pk) VALUES (
-	?,
-	?,
-	(SELECT pk FROM identity WHERE id = ?))`
-		if _, err := tx.ExecContext(ctx,
-			p.db.Rebind(query),
-			string(method),
-			string(cred.Options),
-			i.ID,
-		); err != nil {
-			return sqlcon.HandleError(err)
-		}
-
-		for _, identifier := range cred.Identifiers {
-			query = `INSERT INTO identity_credentials_identifiers (identifier, identity_credentials_pk) VALUES (
-	?,
-	(SELECT ic.pk FROM identity_credentials as ic JOIN identity as i ON (i.pk = ic.identity_pk) WHERE ic.method = ? AND i.id = ?))`
-			if _, err := tx.ExecContext(ctx,
-				p.db.Rebind(query),
-				identifier,
-				string(method),
-				i.ID,
-			); err != nil {
-				return sqlcon.HandleError(err)
-			}
-		}
+	if !updateConfidential {
+		return nil
 	}
 
-	return nil
+	if _, err := tx.ExecContext(ctx, p.db.Rebind(`DELETE FROM identity_credential as ic USING identity as i WHERE i.pk = ic.identity_pk AND i.id = ?`), i.ID); err != nil {
+		return sqlcon.HandleError(err)
+	}
+	return p.insertCredentials(ctx, tx, i)
 }
 
 func (p *PoolSQL) get(ctx context.Context, where string, args []interface{}) (*Identity, error) {
 	var rows []struct {
-		ID              string          `db:"i.id"`
-		TraitsSchemaURL string          `db:"i.traits_schema_url"`
-		Traits          json.RawMessage `db:"i.traits"`
-		Identifier      string          `db:"ici.identifier"`
-		Method          string          `db:"ic.method"`
-		Config          string          `db:"ic.config"`
+		ID              string          `db:"id"`
+		TraitsSchemaURL string          `db:"traits_schema_url"`
+		Traits          json.RawMessage `db:"traits"`
+		Identifier      sql.NullString  `db:"identifier"`
+		Method          sql.NullString  `db:"method"`
+		Config          sql.NullString  `db:"config"`
 	}
 
-	query := fmt.Sprintf("SELECT i.id, i.traits_schema_url, i.traits, ic.config, ic.method, ici.identifier FROM identity as i JOIN identity_credentials_identifiers as ici ON (ici.identity_credentials_pk = ic.pk), identity_credentials as ic ON (ic.identity_pk = i.pk) %s", where)
+	query := fmt.Sprintf(`
+SELECT
+	i.id as id, i.traits_schema_url as traits_schema_url, i.traits as traits, ic.config as config, ic.method as method, ici.identifier as identifier
+FROM identity as i
+LEFT OUTER JOIN identity_credential as ic ON
+	ic.identity_pk = i.pk
+LEFT OUTER JOIN identity_credential_identifier as ici ON
+	ici.identity_credential_pk = ic.pk
+%s`, where)
 	if err := p.db.SelectContext(ctx, &rows, p.db.Rebind(query), args...); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
 	if len(rows) == 0 {
-		return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("No identity matching the credentials identifiers"))
+		return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf(`Identity could not be found.`))
 	}
 
 	credentials := map[CredentialsType]Credentials{}
 	for _, row := range rows {
-		if c, ok := credentials[CredentialsType(row.Method)]; ok {
-			c.Identifiers = append(c.Identifiers, row.Identifier)
-			credentials[CredentialsType(row.Method)] = c
+		if !(row.Method.Valid && row.Identifier.Valid && row.Config.Valid) {
+			continue
+		}
+
+		if c, ok := credentials[CredentialsType(row.Method.String)]; ok {
+			c.Identifiers = append(c.Identifiers, row.Identifier.String)
+			credentials[CredentialsType(row.Method.String)] = c
 		} else {
-			credentials[CredentialsType(row.Method)] = Credentials{
-				ID:          CredentialsType(row.Method),
-				Options:     json.RawMessage(row.Config),
-				Identifiers: []string{row.Identifier},
+			credentials[CredentialsType(row.Method.String)] = Credentials{
+				ID:          CredentialsType(row.Method.String),
+				Config:      json.RawMessage(row.Config.String),
+				Identifiers: []string{row.Identifier.String},
 			}
 		}
 	}

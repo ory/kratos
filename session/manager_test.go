@@ -3,6 +3,7 @@ package session_test
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
@@ -32,6 +33,11 @@ import (
 
 func init() {
 	internal.RegisterFakes()
+}
+func TestMain(m *testing.M) {
+	flag.Parse()
+	runner := dockertest.Register()
+	runner.Exit(m.Run())
 }
 
 func fakeIdentity(t *testing.T, reg Registry) *identity.Identity {

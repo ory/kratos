@@ -96,7 +96,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 	i.SetCredentials(s.ID(), identity.Credentials{
 		ID:          s.ID(),
 		Identifiers: []string{},
-		Options:     json.RawMessage(co),
+		Config:      json.RawMessage(co),
 	})
 
 	if err := s.validateCredentials(i, p.Password); err != nil {
