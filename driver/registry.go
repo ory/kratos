@@ -22,8 +22,15 @@ import (
 type Registry interface {
 	dbal.Driver
 
+	Init() error
+
 	WithConfig(c configuration.Provider) Registry
 	WithLogger(l logrus.FieldLogger) Registry
+
+	BuildVersion() string
+	BuildDate() string
+	BuildHash() string
+	WithBuildInfo(version, hash, date string) Registry
 
 	Logger() logrus.FieldLogger
 	Writer() herodot.Writer
@@ -47,6 +54,17 @@ type Registry interface {
 
 	WithCSRFHandler(c *nosurf.CSRFHandler)
 	CSRFHandler() *nosurf.CSRFHandler
+
+	AuthHookRegistrationPreExecutors() []selfservice.HookRegistrationPreExecutor
+	AuthHookLoginPreExecutors() []selfservice.HookLoginPreExecutor
+	LoginExecutor() *selfservice.LoginExecutor
+	PostLoginHooks(credentialsType identity.CredentialsType) []selfservice.HookLoginPostExecutor
+	RegistrationExecutor() *selfservice.RegistrationExecutor
+	PostRegistrationHooks(credentialsType identity.CredentialsType) []selfservice.HookRegistrationPostExecutor
+	IdentityValidator() *identity.Validator
+	SelfServiceRequestErrorHandler() *selfservice.ErrorHandler
+	LoginRequestManager() selfservice.LoginRequestManager
+	RegistrationRequestManager() selfservice.RegistrationRequestManager
 }
 
 func NewRegistry(c configuration.Provider) (Registry, error) {

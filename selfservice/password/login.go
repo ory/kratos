@@ -87,7 +87,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	var o CredentialsConfig
-	d := json.NewDecoder(bytes.NewBuffer(c.Options))
+	d := json.NewDecoder(bytes.NewBuffer(c.Config))
 	if err := d.Decode(&o); err != nil {
 		s.d.ErrorManager().ForwardError(w, r, herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error()))
 		return
