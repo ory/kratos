@@ -5,6 +5,11 @@ ifeq (, $(shell which golangci-lint))
     curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.17.1
 endif
 
+.PHONY: build
+build:
+		make sqlbin
+		CGO_ENABLED=0 GO111MODULE=on GOOS=linux GOARCH=amd64 go build -o hive .
+
 .PHONY: init
 init:
 		GO111MODULE=off go get -u \
@@ -61,7 +66,6 @@ install:
 .PHONY: sqlbin
 sqlbin:
 		cd driver; go-bindata -o sql_migration_files.go -pkg driver ../contrib/sql/...
-
 
 # Resets the test databases
 .PHONY: resetdb
