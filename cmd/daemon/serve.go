@@ -36,6 +36,7 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 	r.StrategyHandler().RegisterPublicRoutes(router)
 	r.SessionHandler().RegisterPublicRoutes(router)
 	r.ErrorHandler().RegisterPublicRoutes(router)
+	r.HealthHandler().SetRoutes(router.Router, false)
 
 	n.Use(NewNegroniLoggerMiddleware(l.(*logrus.Logger), "public#"+c.SelfPublicURL().String()))
 	r.WithCSRFHandler(x.NewCSRFHandler(
@@ -72,6 +73,7 @@ func serveAdmin(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []
 	router := x.NewRouterAdmin()
 	r.IdentityHandler().RegisterAdminRoutes(router)
 	r.SessionHandler().RegisterAdminRoutes(router)
+	r.HealthHandler().SetRoutes(router.Router, false)
 
 	n.Use(NewNegroniLoggerMiddleware(l.(*logrus.Logger), "admin#"+c.SelfAdminURL().String()))
 	telemetry(cmd, n, d)

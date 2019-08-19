@@ -6,6 +6,8 @@ import (
 	"github.com/justinas/nosurf"
 	"github.com/sirupsen/logrus"
 
+	"github.com/ory/x/healthx"
+
 	"github.com/ory/herodot"
 
 	"github.com/ory/hive/selfservice"
@@ -65,6 +67,8 @@ type Registry interface {
 	SelfServiceRequestErrorHandler() *selfservice.ErrorHandler
 	LoginRequestManager() selfservice.LoginRequestManager
 	RegistrationRequestManager() selfservice.RegistrationRequestManager
+
+	HealthHandler() *healthx.Handler
 }
 
 func NewRegistry(c configuration.Provider) (Registry, error) {
