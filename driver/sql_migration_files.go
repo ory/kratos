@@ -85,7 +85,7 @@ func ContribSqlMigrationsPostgres1Sql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "../contrib/sql/migrations/postgres/1.sql", size: 2288, mode: os.FileMode(0644), modTime: time.Unix(1565954995, 0)}
+	info := bindataFileInfo{name: "../contrib/sql/migrations/postgres/1.sql", size: 2288, mode: os.FileMode(0644), modTime: time.Unix(1565964771, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x97, 0xa1, 0x83, 0x3b, 0x60, 0x7d, 0x18, 0x8f, 0xeb, 0x14, 0xc7, 0xe7, 0x9c, 0x1a, 0x9c, 0x7e, 0x39, 0xa3, 0xd5, 0x8b, 0x5c, 0x47, 0x36, 0x30, 0x26, 0xe0, 0x21, 0xac, 0x12, 0xde, 0x3c, 0xb5}}
 	return a, nil
 }
@@ -105,7 +105,7 @@ func ContribSqlMigrationsTests1_testSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "../contrib/sql/migrations/tests/1_test.sql", size: 758, mode: os.FileMode(0644), modTime: time.Unix(1565957234, 0)}
+	info := bindataFileInfo{name: "../contrib/sql/migrations/tests/1_test.sql", size: 758, mode: os.FileMode(0644), modTime: time.Unix(1565964771, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x19, 0xa2, 0xa9, 0x4b, 0x9f, 0x7a, 0x6b, 0x26, 0x64, 0xcb, 0x9d, 0xe2, 0x41, 0xea, 0x5c, 0xb9, 0x98, 0xb4, 0xdc, 0xed, 0x87, 0x4e, 0xfe, 0x4f, 0xcc, 0x5b, 0xed, 0xe5, 0x3f, 0xd8, 0xff, 0x42}}
 	return a, nil
 }
