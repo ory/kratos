@@ -10,6 +10,8 @@ import (
 	"github.com/justinas/nosurf"
 	"github.com/sirupsen/logrus"
 
+	"github.com/ory/x/healthx"
+
 	"github.com/ory/x/tracing"
 
 	"github.com/ory/x/logrusx"
@@ -28,11 +30,12 @@ import (
 )
 
 type RegistryAbstract struct {
-	l      logrus.FieldLogger
-	c      configuration.Provider
-	nosurf *nosurf.CSRFHandler
-	trc    *tracing.Tracer
-	writer herodot.Writer
+	l              logrus.FieldLogger
+	c              configuration.Provider
+	nosurf         *nosurf.CSRFHandler
+	trc            *tracing.Tracer
+	writer         herodot.Writer
+	healthxHandler *healthx.Handler
 
 	identityHandler   *identity.Handler
 	identityValidator *identity.Validator
@@ -83,6 +86,16 @@ func (m *RegistryAbstract) with(r Registry) *RegistryAbstract {
 func (m *RegistryAbstract) WithLogger(l logrus.FieldLogger) Registry {
 	m.l = l
 	return m.r
+}
+
+func (m *RegistryAbstract) HealthHandler() *healthx.Handler {
+	if m.healthxHandler == nil {
+		m.healthxHandler = healthx.NewHandler(m.Writer(), m.BuildVersion(), healthx.ReadyCheckers{
+			"database": m.r.Ping,
+		})
+	}
+
+	return m.healthxHandler
 }
 
 func (m *RegistryAbstract) WithCSRFHandler(c *nosurf.CSRFHandler) {
