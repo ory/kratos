@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"github.com/ory/x/logrusx"
 	"github.com/sirupsen/logrus"
 
 	"github.com/ory/hive/driver/configuration"
@@ -13,6 +14,10 @@ type DefaultDriver struct {
 }
 
 func NewDefaultDriver(l logrus.FieldLogger, version, build, date string) Driver {
+	if l == nil {
+		l = logrusx.New()
+	}
+
 	c := configuration.NewViperProvider(l)
 
 	r, err := NewRegistry(c)
@@ -38,6 +43,9 @@ func (r *DefaultDriver) BuildInfo() *BuildInfo {
 }
 
 func (r *DefaultDriver) Logger() logrus.FieldLogger {
+	if r.l == nil {
+		r.l = logrusx.New()
+	}
 	return r.l
 }
 
