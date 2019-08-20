@@ -305,7 +305,8 @@
         "mfa_ui",
         "login_ui",
         "registration_ui",
-        "error_ui"
+        "error_ui",
+        "default_return_to"
       ],
       "additionalProperties": false
     },

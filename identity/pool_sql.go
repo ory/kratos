@@ -241,8 +241,11 @@ LEFT OUTER JOIN identity_credential as ic ON
 LEFT OUTER JOIN identity_credential_identifier as ici ON
 	ici.identity_credential_pk = ic.pk
 %s`, where)
-	if err := p.db.SelectContext(ctx, &rows, p.db.Rebind(query), args...); err != nil {
-		return nil, sqlcon.HandleError(err)
+	if err := sqlcon.HandleError(p.db.SelectContext(ctx, &rows, p.db.Rebind(query), args...)); err != nil {
+		if errors.Cause(err) == sqlcon.ErrNoRows {
+			return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf(`Identity could not be found.`))
+		}
+		return nil, err
 	}
 
 	if len(rows) == 0 {
