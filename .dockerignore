@@ -1,0 +1,8 @@
+docs/adopters
+.releaser
+.github
+.circleci
+tmp
+scripts
+.idea
+.git/
