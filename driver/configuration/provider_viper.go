@@ -35,7 +35,7 @@ const (
 
 	ViperKeySecretsSession = "secrets.session"
 
-	ViperKeyURLsDefaultReturnTo            = "urls.self.default_return_to"
+	ViperKeyURLsDefaultReturnTo            = "urls.default_return_to"
 	ViperKeyURLsSelfPublic                 = "urls.self.public"
 	ViperKeyURLsSelfAdmin                  = "urls.self.admin"
 	ViperKeyURLsLogin                      = "urls.login_ui"
