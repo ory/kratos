@@ -4,13 +4,14 @@ import (
 	"net/http"
 	"time"
 
-	negronilogrus "github.com/meatballhat/negroni-logrus"
+	"github.com/ory/x/healthx"
+	"github.com/ory/x/reqlog"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/negroni"
 )
 
-func NewNegroniLoggerMiddleware(l logrus.FieldLogger, name string) *negronilogrus.Middleware {
-	n := negronilogrus.NewMiddlewareFromLogger(l.(*logrus.Logger), name)
+func NewNegroniLoggerMiddleware(l logrus.FieldLogger, name string) *reqlog.Middleware {
+	n := reqlog.NewMiddlewareFromLogger(l.(*logrus.Logger), name).ExcludePaths(healthx.AliveCheckPath, healthx.ReadyCheckPath)
 	n.Before = func(entry *logrus.Entry, req *http.Request, remoteAddr string) *logrus.Entry {
 		return entry.WithFields(logrus.Fields{
 			"name":    name,
