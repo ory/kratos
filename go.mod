@@ -28,17 +28,17 @@ require (
 	github.com/imdario/mergo v0.3.7
 	github.com/jessevdk/go-flags v1.4.0 // indirect
 	github.com/jmoiron/sqlx v1.2.0
+	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/justinas/nosurf v0.0.0-20190118163749-6453469bdcc9
 	github.com/leodido/go-urn v1.1.0 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/mattn/goveralls v0.0.2
-	github.com/meatballhat/negroni-logrus v0.0.0-20170801195057-31067281800f
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/ory/go-acc v0.0.0-20181118080137-ddc355013f90
 	github.com/ory/go-convenience v0.1.0
-	github.com/ory/gojsonschema v0.0.0-20190720140244-a64d4f892691
+	github.com/ory/gojsonschema v1.2.0
 	github.com/ory/graceful v0.1.1
 	github.com/ory/herodot v0.6.2
 	github.com/ory/viper v1.5.6
@@ -63,3 +63,5 @@ require (
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.28.0
 )
+
+go 1.13
