@@ -3,6 +3,7 @@ package selfservice
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -37,7 +38,7 @@ type requestSQL struct {
 	ExpiresAt      time.Time       `db:"expires_at"`
 	RequestURL     string          `db:"request_url"`
 	RequestHeaders json.RawMessage `db:"request_headers"`
-	Active         string          `db:"active"`
+	Active         sql.NullString  `db:"active"`
 	Methods        json.RawMessage `db:"methods"`
 	Kind           string          `db:"kind"`
 }
@@ -60,7 +61,7 @@ func newRequestSQL(r *Request, kind string) (*requestSQL, error) {
 		ExpiresAt:      r.ExpiresAt,
 		RequestURL:     r.RequestURL,
 		RequestHeaders: requestHeaders.Bytes(),
-		Active:         string(r.Active),
+		Active:         sql.NullString{String: string(r.Active), Valid: len(r.Active) > 0},
 		Methods:        methods.Bytes(),
 		Kind:           kind,
 	}, nil
@@ -189,13 +190,19 @@ func (m *RequestManagerSQL) gr(ctx context.Context, id string, kind string) (*Re
 		methods[ct] = &config
 	}
 
+	var active identity.CredentialsType
+	if r.Active.Valid {
+		active = identity.CredentialsType(r.Active.String)
+	}
+
 	return &Request{
 		ID:             r.ID,
 		IssuedAt:       r.IssuedAt.UTC(),
 		ExpiresAt:      r.ExpiresAt.UTC(),
 		RequestURL:     r.RequestURL,
 		RequestHeaders: header,
-		Active:         identity.CredentialsType(r.Active),
+		Active:         active,
 		Methods:        methods,
 	}, nil
 }
+
