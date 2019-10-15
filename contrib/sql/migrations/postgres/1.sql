@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS self_service_request
     issued_at       TIMESTAMP WITH TIME ZONE  NOT NULL DEFAULT NOW(),
     request_url     text                      NOT NULL,
     request_headers jsonb                     NOT NULL DEFAULT '{}'::jsonb,
-    active          credentials_type          NOT NULL,
+    active          credentials_type          NULL,
     methods         jsonb                     NOT NULL DEFAULT '{}'::jsonb,
     kind            self_service_request_type NOT NULL
 );

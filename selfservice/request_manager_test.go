@@ -50,7 +50,8 @@ func TestRequestManagerMemory(t *testing.T) {
 			ExpiresAt:      time.Now().Add(time.Hour).UTC().Round(time.Second),
 			RequestURL:     "https://www.ory.sh/request",
 			RequestHeaders: http.Header{"Content-Type": {"application/json"}},
-			Active:         identity.CredentialsTypePassword,
+			// Disable Active as this value is initially empty (NULL).
+			// Active:         identity.CredentialsTypePassword,
 			Methods: map[identity.CredentialsType]*DefaultRequestMethod{
 				identity.CredentialsTypePassword: {
 					Method: identity.CredentialsTypePassword,
