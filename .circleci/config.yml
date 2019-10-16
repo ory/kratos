@@ -5,7 +5,7 @@ version: 2
 jobs:
   format:
     docker:
-      - image: circleci/golang:1.12
+      - image: circleci/golang:1.13
         environment:
           - GO111MODULE=on
     working_directory: /go/src/github.com/ory/hive
@@ -25,7 +25,7 @@ jobs:
 
   test:
     docker:
-      - image: circleci/golang:1.12
+      - image: circleci/golang:1.13
         environment:
           - GO111MODULE=on
           - TEST_SELFSERVICE_OIDC_HYDRA_ADMIN=http://127.0.0.1:4445

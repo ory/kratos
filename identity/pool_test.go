@@ -220,6 +220,25 @@ func TestPool(t *testing.T) {
 				assert.Equal(t, "id-2", is[1].ID)
 			})
 
+			t.Run("case=find identity by its credentials identifier", func(t *testing.T) {
+				expected := newid("file://./stub/identity.schema.json", "id-5")
+				expected.Traits = json.RawMessage(`{"email": "email-id-5"}`)
+				ct := expected.Credentials[CredentialsTypePassword]
+				ct.Identifiers = []string{"email-id-5"}
+				expected.Credentials[CredentialsTypePassword] = ct
+
+				_, err := pool.Create(context.Background(), expected)
+				require.NoError(t, err)
+
+				actual, creds, err := pool.FindByCredentialsIdentifier(context.Background(), CredentialsTypePassword, "email-id-5")
+				require.NoError(t, err)
+
+				assert.EqualValues(t, ct, *creds)
+
+				expected.Credentials = nil
+				assertEqual(t, expected, actual)
+			})
+
 			t.Run("case=delete an identity", func(t *testing.T) {
 				err := pool.Delete(context.Background(), "id-1")
 				require.NoError(t, err)

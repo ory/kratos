@@ -32,7 +32,7 @@ func NewPoolSQL(c configuration.Provider, d ValidationProvider, db *sqlx.DB) *Po
 
 // FindByCredentialsIdentifier returns an identity by querying for it's credential identifiers.
 func (p *PoolSQL) FindByCredentialsIdentifier(ctx context.Context, ct CredentialsType, match string) (*Identity, *Credentials, error) {
-	i, err := p.get(ctx, "WHERE ici.identifier = ? AND ici.method = ?", []interface{}{match, string(ct)})
+	i, err := p.get(ctx, "WHERE ici.identifier = ? AND ic.method = ?", []interface{}{match, string(ct)})
 	if err != nil {
 		if errors.Cause(err).Error() == herodot.ErrNotFound.Error() {
 			return nil, nil, herodot.ErrNotFound.WithTrace(err).WithReasonf(`No identity matching credentials identifier "%s" could be found.`, match)
