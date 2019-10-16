@@ -12,18 +12,13 @@ build:
 
 .PHONY: init
 init:
-		GO111MODULE=off go get -u \
-			github.com/ory/x/tools/listx \
+		go install \
 			github.com/sqs/goreturns \
+			github.com/ory/x/tools/listx \
 			github.com/ory/go-acc \
 			github.com/golang/mock/mockgen \
 			github.com/go-swagger/go-swagger/cmd/swagger \
-			golang.org/x/tools/cmd/goimports \
-			github.com/go-openapi/errors \
-			github.com/go-openapi/runtime \
-			github.com/go-openapi/runtime/client \
-			github.com/go-openapi/strfmt \
-			github.com/golang/mock/...
+			golang.org/x/tools/cmd/goimports
 
 .PHONY: lint
 lint:
@@ -31,7 +26,7 @@ lint:
 
 .PHONY: format
 format:
-		goreturns -w -local github.com/ory $$(listx .)
+		$$(go env GOPATH)/bin/goreturns -w -local github.com/ory $$($$(go env GOPATH)/bin/listx .)
 
 .PHONY: cover
 cover:

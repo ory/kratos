@@ -246,6 +246,19 @@ func TestPool(t *testing.T) {
 				_, err = pool.GetClassified(context.Background(), "id-1")
 				require.Error(t, err)
 			})
+
+			t.Run("case=create with empty credentials config", func(t *testing.T) {
+				// This test covers a case where the config value of a credentials setting is empty. This causes
+				// issues with postgres' json field.
+				i := newid("", "id-missing-creds-config")
+				i.SetCredentials(CredentialsTypePassword, Credentials{
+					ID: CredentialsTypePassword, Identifiers: []string{"id-missing-creds-config"},
+					Config: json.RawMessage(``),
+				})
+
+				_, err := pool.Create(context.Background(), i)
+				require.NoError(t, err)
+			})
 		})
 	}
 }
