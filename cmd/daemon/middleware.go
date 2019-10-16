@@ -4,10 +4,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ory/x/healthx"
-	"github.com/ory/x/reqlog"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/negroni"
+
+	"github.com/ory/x/healthx"
+	"github.com/ory/x/reqlog"
 )
 
 func NewNegroniLoggerMiddleware(l logrus.FieldLogger, name string) *reqlog.Middleware {

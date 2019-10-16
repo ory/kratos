@@ -9,6 +9,8 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 
+	"github.com/ory/x/stringsx"
+
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/sqlxx"
 
@@ -144,6 +146,7 @@ func (p *PoolSQL) insert(ctx context.Context, tx *sqlx.Tx, i *Identity) error {
 }
 
 func (p *PoolSQL) insertCredentials(ctx context.Context, tx *sqlx.Tx, i *Identity) error {
+
 	for method, cred := range i.Credentials {
 		query := `INSERT INTO identity_credential (method, config, identity_pk) VALUES (
 	?,
@@ -152,7 +155,7 @@ func (p *PoolSQL) insertCredentials(ctx context.Context, tx *sqlx.Tx, i *Identit
 		if _, err := tx.ExecContext(ctx,
 			p.db.Rebind(query),
 			string(method),
-			string(cred.Config),
+			stringsx.Coalesce(string(cred.Config), "{}"),
 			i.ID,
 		); err != nil {
 			return sqlcon.HandleError(err)

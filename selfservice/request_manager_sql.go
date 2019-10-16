@@ -205,4 +205,3 @@ func (m *RequestManagerSQL) gr(ctx context.Context, id string, kind string) (*Re
 		Methods:        methods,
 	}, nil
 }
-
