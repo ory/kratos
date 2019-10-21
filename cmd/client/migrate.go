@@ -3,10 +3,10 @@ package client
 import (
 	"bufio"
 	"fmt"
-	"net/url"
 	"os"
 	"strings"
 
+	"github.com/ory/x/sqlcon"
 	"github.com/spf13/cobra"
 
 	"github.com/ory/viper"
@@ -55,16 +55,8 @@ func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	u, err := url.Parse(d.Configuration().DSN())
-	if err != nil {
-		fmt.Println(cmd.UsageString())
-		fmt.Println("")
-		fmt.Println(err)
-		os.Exit(1)
-		return
-	}
-
-	plan, err := reg.SchemaMigrationPlan(u.Scheme)
+	scheme := sqlcon.GetDriverName(d.Configuration().DSN())
+	plan, err := reg.SchemaMigrationPlan(scheme)
 	cmdx.Must(err, "An error occurred planning migrations: %s", err)
 
 	fmt.Println("The following migration is planned:")
@@ -80,7 +72,7 @@ func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	n, err := reg.CreateSchemas(u.Scheme)
+	n, err := reg.CreateSchemas(scheme)
 	cmdx.Must(err, "An error occurred while connecting to SQL: %s", err)
 	fmt.Printf("Successfully applied %d SQL migrations!\n", n)
 }

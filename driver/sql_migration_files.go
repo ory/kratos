@@ -85,7 +85,7 @@ func ContribSqlMigrationsPostgres1Sql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "../contrib/sql/migrations/postgres/1.sql", size: 2284, mode: os.FileMode(0644), modTime: time.Unix(1571138061, 0)}
+	info := bindataFileInfo{name: "../contrib/sql/migrations/postgres/1.sql", size: 2284, mode: os.FileMode(0644), modTime: time.Unix(1571236390, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xa9, 0xf1, 0xff, 0x23, 0x86, 0xfd, 0x23, 0x68, 0xe8, 0xe3, 0xdc, 0x67, 0xfd, 0x17, 0x6b, 0x3a, 0xcb, 0x40, 0xee, 0x1a, 0x31, 0x7d, 0x8a, 0xe9, 0x86, 0x61, 0xca, 0xf4, 0x56, 0xd0, 0xb8, 0x48}}
 	return a, nil
 }
