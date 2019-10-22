@@ -16,6 +16,8 @@ import (
 	"github.com/ory/x/logrusx"
 
 	"github.com/spf13/cobra"
+
+	"github.com/ory/hive/driver/configuration"
 )
 
 var logger *logrus.Logger
@@ -44,6 +46,8 @@ func init() {
 
 	cobra.OnInitialize(func() {
 		viperx.InitializeConfig("hive", "", nil)
+		configuration.BindEnvs()
+
 		if logger == nil {
 			logger = logrusx.New()
 		}
