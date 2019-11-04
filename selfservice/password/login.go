@@ -76,7 +76,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	if err := ar.Valid(); err != nil {
-		s.d.ErrorManager().ForwardError(w, r, err)
+		s.d.ErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 
@@ -89,7 +89,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 	var o CredentialsConfig
 	d := json.NewDecoder(bytes.NewBuffer(c.Config))
 	if err := d.Decode(&o); err != nil {
-		s.d.ErrorManager().ForwardError(w, r, herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error()))
+		s.d.ErrorManager().ForwardError(r.Context(), w, r, herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error()))
 		return
 	}
 
@@ -100,7 +100,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 
 	if err := s.d.LoginExecutor().PostLoginHook(w, r,
 		s.d.PostLoginHooks(identity.CredentialsTypePassword), ar, i); err != nil {
-		s.d.ErrorManager().ForwardError(w, r, err)
+		s.d.ErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 }

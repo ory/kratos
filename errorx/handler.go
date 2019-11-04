@@ -25,7 +25,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 }
 
 func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	es, err := h.r.ErrorManager().Read(r.URL.Query().Get("error"))
+	es, err := h.r.ErrorManager().Read(r.Context(), r.URL.Query().Get("error"))
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return

@@ -127,7 +127,7 @@ func (h *StrategyHandler) initLoginRequest(w http.ResponseWriter, r *http.Reques
 	if err := h.NewLoginRequest(w, r, func(a *LoginRequest) string {
 		return urlx.CopyWithQuery(h.c.LoginURL(), url.Values{"request": {a.ID}}).String()
 	}); err != nil {
-		h.d.ErrorManager().ForwardError(w, r, err)
+		h.d.ErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 }
@@ -146,7 +146,7 @@ func (h *StrategyHandler) logout(w http.ResponseWriter, r *http.Request, ps http
 	_ = h.d.CSRFHandler().RegenerateToken(w, r)
 
 	if err := h.d.SessionManager().PurgeFromRequest(r.Context(), w, r); err != nil {
-		h.d.ErrorManager().ForwardError(w, r, err)
+		h.d.ErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 
@@ -157,7 +157,7 @@ func (h *StrategyHandler) initRegistrationRequest(w http.ResponseWriter, r *http
 	if err := h.NewRegistrationRequest(w, r, func(a *RegistrationRequest) string {
 		return urlx.CopyWithQuery(h.c.RegisterURL(), url.Values{"request": {a.ID}}).String()
 	}); err != nil {
-		h.d.ErrorManager().ForwardError(w, r, err)
+		h.d.ErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 }

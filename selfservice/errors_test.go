@@ -2,6 +2,7 @@ package selfservice_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -51,7 +52,7 @@ func TestErrorHandler(t *testing.T) {
 		err               error
 		endURL            string
 		assertConfig      func(t *testing.T, config RequestMethodConfig)
-		assertSystemError func(t *testing.T, errs []error)
+		assertSystemError func(t *testing.T, errs []json.RawMessage)
 	}{
 		{
 			err:    errors.WithStack(ErrIDTokenMissing),
@@ -84,9 +85,9 @@ func TestErrorHandler(t *testing.T) {
 		{
 			err:    errors.New("some error"),
 			endURL: "http://hive.ory.sh/error?error=",
-			assertSystemError: func(t *testing.T, errs []error) {
+			assertSystemError: func(t *testing.T, errs []json.RawMessage) {
 				assert.Len(t, errs, 1)
-				assert.EqualError(t, errs[0], "some error")
+				assert.Equal(t, `{"code":500,"message":"some error"}`, string(errs[0]))
 			},
 		},
 		{
@@ -149,7 +150,7 @@ func TestErrorHandler(t *testing.T) {
 					}
 
 					if tc.assertSystemError != nil {
-						errs, err := reg.ErrorManager().Read(urlx.ParseOrPanic(w.Header().Get("Location")).Query().Get("error"))
+						errs, err := reg.ErrorManager().Read(r.Context(), urlx.ParseOrPanic(w.Header().Get("Location")).Query().Get("error"))
 						require.NoError(t, err)
 						tc.assertSystemError(t, errs)
 					}
@@ -183,7 +184,7 @@ func TestErrorHandler(t *testing.T) {
 					}
 
 					if tc.assertSystemError != nil {
-						errs, err := reg.ErrorManager().Read(urlx.ParseOrPanic(w.Header().Get("Location")).Query().Get("error"))
+						errs, err := reg.ErrorManager().Read(r.Context(), urlx.ParseOrPanic(w.Header().Get("Location")).Query().Get("error"))
 						require.NoError(t, err)
 						tc.assertSystemError(t, errs)
 					}

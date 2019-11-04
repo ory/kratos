@@ -31,7 +31,7 @@ import (
 
 func newErrTs(t *testing.T, reg driver.Registry) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		e, err := reg.ErrorManager().Read(r.URL.Query().Get("error"))
+		e, err := reg.ErrorManager().Read(r.Context(), r.URL.Query().Get("error"))
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, e)
 	}))
