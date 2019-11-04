@@ -270,13 +270,6 @@ func (m *RegistryAbstract) SessionHandler() *session.Handler {
 	return m.sessionHandler
 }
 
-func (m *RegistryAbstract) ErrorManager() errorx.Manager {
-	if m.errorManager == nil {
-		m.errorManager = errorx.NewMemoryManager(m.Logger(), m.writer, m.c)
-	}
-	return m.errorManager
-}
-
 func (m *RegistryAbstract) PasswordHasher() password2.Hasher {
 	if m.passwordHasher == nil {
 		m.passwordHasher = password2.NewHasherArgon2(m.c)
@@ -293,7 +286,7 @@ func (m *RegistryAbstract) PasswordValidator() password2.Validator {
 
 func (m *RegistryAbstract) ErrorHandler() *errorx.Handler {
 	if m.errorHandler == nil {
-		m.errorHandler = errorx.NewHandler(m)
+		m.errorHandler = errorx.NewHandler(m.r)
 	}
 	return m.errorHandler
 }

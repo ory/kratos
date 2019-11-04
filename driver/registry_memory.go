@@ -3,6 +3,7 @@ package driver
 import (
 	"github.com/ory/x/dbal"
 
+	"github.com/ory/hive/errorx"
 	"github.com/ory/hive/identity"
 	"github.com/ory/hive/selfservice"
 	"github.com/ory/hive/session"
@@ -63,4 +64,11 @@ func (m *RegistryMemory) LoginRequestManager() selfservice.LoginRequestManager {
 		m.selfserviceRequestManager = selfservice.NewRequestManagerMemory()
 	}
 	return m.selfserviceRequestManager
+}
+
+func (m *RegistryMemory) ErrorManager() errorx.Manager {
+	if m.errorManager == nil {
+		m.errorManager = errorx.NewManagerMemory(m, m.c)
+	}
+	return m.errorManager
 }

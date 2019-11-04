@@ -6,8 +6,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ory/x/sqlcon"
 	"github.com/spf13/cobra"
+
+	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/viper"
 	"github.com/ory/x/cmdx"

@@ -19,6 +19,7 @@ import (
 
 	"github.com/olekukonko/tablewriter"
 
+	"github.com/ory/hive/errorx"
 	"github.com/ory/hive/identity"
 	"github.com/ory/hive/selfservice"
 	"github.com/ory/hive/selfservice/oidc"
@@ -81,6 +82,13 @@ func (m *RegistrySQL) IdentityPool() identity.Pool {
 		m.identityPool = identity.NewPoolSQL(m.c, m, m.DB())
 	}
 	return m.identityPool
+}
+
+func (m *RegistrySQL) ErrorManager() errorx.Manager {
+	if m.errorManager == nil {
+		m.errorManager = errorx.NewManagerSQL(m.DB(), m, m.c)
+	}
+	return m.errorManager
 }
 
 func (m *RegistrySQL) SessionManager() session.Manager {
