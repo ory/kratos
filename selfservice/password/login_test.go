@@ -353,7 +353,6 @@ func TestLogin(t *testing.T) {
 				return "anti-rf-token"
 			})
 
-
 			router := x.NewRouterPublic()
 			s.SetRoutes(router)
 			ts := httptest.NewServer(router)
