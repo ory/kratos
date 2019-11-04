@@ -35,7 +35,7 @@ func MockSetSession(t *testing.T, reg Registry) httprouter.Handle {
 
 func MockGetSession(t *testing.T, reg Registry) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		_, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
+		_, err := reg.SessionManager().FetchFromRequest(r.Context(), w, r)
 		if r.URL.Query().Get("has") == "yes" {
 			require.NoError(t, err)
 		} else {
@@ -73,6 +73,8 @@ func MockHydrateCookieClient(t *testing.T, c *http.Client, u string) {
 	res, err := c.Get(u)
 	require.NoError(t, err)
 	assert.EqualValues(t, http.StatusOK, res.StatusCode)
+
+	t.Logf("Cookies: %+v", res.Cookies())
 
 	var found bool
 	for _, c := range res.Cookies() {
