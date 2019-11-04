@@ -15,8 +15,8 @@ import (
 
 	"github.com/ory/herodot"
 
-	"github.com/ory/hive/errorx"
 	"github.com/ory/hive/internal"
+	"github.com/ory/hive/selfservice/errorx"
 	"github.com/ory/hive/x"
 )
 
