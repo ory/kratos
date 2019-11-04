@@ -67,6 +67,15 @@ func (r *Request) GetID() string {
 	return r.ID
 }
 
+// Declassify returns a copy of the Request where all sensitive information
+// such as request headers is removed.
+func (r *Request) Declassify() *Request {
+	var rr Request
+	rr = *r
+	rr.RequestHeaders = http.Header{}
+	return &rr
+}
+
 func newRequestFromHTTP(exp time.Duration, r *http.Request) *Request {
 	source := urlx.Copy(r.URL)
 	source.Host = r.Host
