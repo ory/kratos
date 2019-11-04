@@ -23,10 +23,10 @@ import (
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/hive/driver/configuration"
-	"github.com/ory/hive/errorx"
 	"github.com/ory/hive/identity"
 	"github.com/ory/hive/schema"
 	"github.com/ory/hive/selfservice"
+	"github.com/ory/hive/selfservice/errorx"
 	"github.com/ory/hive/session"
 	"github.com/ory/hive/x"
 )
