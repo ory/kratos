@@ -9,12 +9,15 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/ory/viper"
+
 	"github.com/ory/x/sqlcon/dockertest"
 
 	"github.com/ory/herodot"
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/hive/driver/configuration"
 	. "github.com/ory/hive/identity"
 	"github.com/ory/hive/internal"
 )
@@ -51,6 +54,8 @@ func TestPool(t *testing.T) {
 			},
 		})
 	}
+
+	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
 
 	var newid = func(schemaURL string, credentialsID string) *Identity {
 		i := NewIdentity(schemaURL)

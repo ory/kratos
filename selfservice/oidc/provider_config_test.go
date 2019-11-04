@@ -16,9 +16,9 @@ import (
 )
 
 func TestConfig(t *testing.T) {
-	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC), json.RawMessage(`{"config":{"providers": [{"provider": "generic"}]}}`))
-
 	conf, reg := internal.NewMemoryRegistry(t)
+
+	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC), json.RawMessage(`{"config":{"providers": [{"provider": "generic"}]}}`))
 	s := NewStrategy(reg, conf)
 
 	collection, err := s.Config()

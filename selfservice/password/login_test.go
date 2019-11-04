@@ -353,9 +353,6 @@ func TestLogin(t *testing.T) {
 				return "anti-rf-token"
 			})
 
-			if tc.prep != nil {
-				tc.prep(t, reg)
-			}
 
 			router := x.NewRouterPublic()
 			s.SetRoutes(router)
@@ -376,6 +373,10 @@ func TestLogin(t *testing.T) {
 			viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
 			viper.Set(configuration.ViperKeySelfServiceLoginAfterConfig+"."+string(identity.CredentialsTypePassword), hookConfig(returnTs.URL+"/return-ts"))
 			viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/login.schema.json")
+
+			if tc.prep != nil {
+				tc.prep(t, reg)
+			}
 
 			tc.ar.RequestURL = ts.URL
 			require.NoError(t, reg.LoginRequestManager().CreateLoginRequest(context.TODO(), tc.ar))

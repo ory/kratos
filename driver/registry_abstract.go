@@ -40,7 +40,6 @@ type RegistryAbstract struct {
 	identityHandler   *identity.Handler
 	identityValidator *identity.Validator
 	sessionHandler    *session.Handler
-	errorManager      errorx.Manager
 	errorHandler      *errorx.Handler
 	passwordHasher    password2.Hasher
 	passwordValidator password2.Validator
