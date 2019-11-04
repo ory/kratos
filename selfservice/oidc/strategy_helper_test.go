@@ -140,7 +140,7 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, scope *[
 
 func newReturnTs(t *testing.T, reg driver.Registry) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
+		sess, err := reg.SessionManager().FetchFromRequest(r.Context(), w, r)
 		require.NoError(t, err)
 		require.Empty(t, sess.Identity.Credentials)
 		reg.Writer().Write(w, r, sess)

@@ -129,7 +129,7 @@ func TestSessionManagerHTTP(t *testing.T) {
 	})
 
 	router.GET("/get", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		s, err := sm.FetchFromRequest(context.Background(), r)
+		s, err := sm.FetchFromRequest(context.Background(), w, r)
 		if errors.Cause(err) == ErrNoActiveSessionFound {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
