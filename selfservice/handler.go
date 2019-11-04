@@ -139,7 +139,7 @@ func (h *StrategyHandler) fetchLoginRequest(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	h.d.Writer().Write(w, r, ar)
+	h.d.Writer().Write(w, r, ar.Declassify())
 }
 
 func (h *StrategyHandler) logout(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -169,5 +169,5 @@ func (h *StrategyHandler) fetchRegistrationRequest(w http.ResponseWriter, r *htt
 		return
 	}
 
-	h.d.Writer().Write(w, r, ar)
+	h.d.Writer().Write(w, r, ar.Declassify())
 }
