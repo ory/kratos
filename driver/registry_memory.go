@@ -3,9 +3,9 @@ package driver
 import (
 	"github.com/ory/x/dbal"
 
-	"github.com/ory/hive/errorx"
 	"github.com/ory/hive/identity"
 	"github.com/ory/hive/selfservice"
+	"github.com/ory/hive/selfservice/errorx"
 	"github.com/ory/hive/session"
 )
 

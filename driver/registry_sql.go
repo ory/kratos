@@ -19,9 +19,9 @@ import (
 
 	"github.com/olekukonko/tablewriter"
 
-	"github.com/ory/hive/errorx"
 	"github.com/ory/hive/identity"
 	"github.com/ory/hive/selfservice"
+	"github.com/ory/hive/selfservice/errorx"
 	"github.com/ory/hive/selfservice/oidc"
 	"github.com/ory/hive/selfservice/password"
 	"github.com/ory/hive/session"
