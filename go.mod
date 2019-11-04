@@ -24,6 +24,7 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/handlers v1.4.1 // indirect
+	github.com/gorilla/securecookie v1.1.1
 	github.com/gorilla/sessions v1.1.3
 	github.com/imdario/mergo v0.3.7
 	github.com/jessevdk/go-flags v1.4.0 // indirect

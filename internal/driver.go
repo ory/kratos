@@ -28,6 +28,7 @@ func resetConfig() {
 }
 
 func NewConfigurationWithDefaults() *configuration.ViperProvider {
+	viper.Reset()
 	resetConfig()
 	return configuration.NewViperProvider(logrusx.New())
 }
