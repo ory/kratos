@@ -20,6 +20,10 @@ import (
 
 type BodyDecoder struct{}
 
+type BodyDecoderOptions struct {
+	AssertTypesForPrefix string
+}
+
 func NewBodyDecoder() *BodyDecoder {
 	return &BodyDecoder{}
 }
@@ -33,8 +37,8 @@ func (d BodyDecoder) json(r *http.Request) (json.RawMessage, error) {
 	return p, nil
 }
 
-func (d *BodyDecoder) DecodeForm(form url.Values, o interface{}) (err error) {
-	payload, err := d.form(form)
+func (d *BodyDecoder) DecodeForm(form url.Values, o interface{}, opts BodyDecoderOptions) (err error) {
+	payload, err := d.form(form, opts)
 	if err != nil {
 		return err
 	}
@@ -83,12 +87,16 @@ func (d *BodyDecoder) ParseFormField(values []string) (typed interface{}, err er
 	return typed, err
 }
 
-func (d *BodyDecoder) form(form url.Values) (json.RawMessage, error) {
+func (d *BodyDecoder) form(form url.Values, opts BodyDecoderOptions) (json.RawMessage, error) {
+	var err error
 	payload := []byte("{}")
 	for k := range form {
-		typed, err := d.ParseFormField(form[k])
-		if err != nil {
-			return nil, err
+		var typed interface{} = form.Get(k)
+
+		if len(opts.AssertTypesForPrefix) == 0 || strings.HasPrefix(k, opts.AssertTypesForPrefix) {
+			if typed, err = d.ParseFormField(form[k]); err != nil {
+				return nil, err
+			}
 		}
 
 		payload, err = sjson.SetBytes(payload, k, typed)
@@ -100,7 +108,7 @@ func (d *BodyDecoder) form(form url.Values) (json.RawMessage, error) {
 	return payload, nil
 }
 
-func (d *BodyDecoder) Decode(r *http.Request, o interface{}) (err error) {
+func (d *BodyDecoder) Decode(r *http.Request, o interface{}, opts BodyDecoderOptions) (err error) {
 	ct, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if err != nil {
 		return errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP request content type: %s", err.Error()))
@@ -113,7 +121,7 @@ func (d *BodyDecoder) Decode(r *http.Request, o interface{}) (err error) {
 		if err := r.ParseForm(); err != nil {
 			return errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error()))
 		}
-		p, err = d.form(r.PostForm)
+		p, err = d.form(r.PostForm, opts)
 	}
 
 	if err != nil {

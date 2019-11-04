@@ -65,7 +65,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 	}
 
 	var p RegistrationFormPayload
-	if err := s.dec.Decode(r, &p); err != nil {
+	if err := s.dec.Decode(r, &p, selfservice.BodyDecoderOptions{AssertTypesForPrefix: "traits."}); err != nil {
 		s.handleRegistrationError(w, r, ar, err)
 		return
 	}

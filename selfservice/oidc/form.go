@@ -90,7 +90,9 @@ func merge(dc *selfservice.BodyDecoder, form string, traits json.RawMessage) (js
 		Traits map[string]interface{} `json:"traits"`
 	}
 
-	if err := dc.DecodeForm(q, &decodedForm); err != nil {
+	if err := dc.DecodeForm(q, &decodedForm, selfservice.BodyDecoderOptions{
+		AssertTypesForPrefix: "traits.",
+	}); err != nil {
 		return nil, err
 	}
 
