@@ -179,7 +179,7 @@ func (s *ErrorHandler) HandleRegistrationError(
 	opts = mergeErrorHandlerOptions(opts)
 
 	if rr == nil {
-		s.d.ErrorManager().ForwardError(w, r, err)
+		s.d.ErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	} else if s.json(w, r, err) {
 		return
@@ -187,12 +187,12 @@ func (s *ErrorHandler) HandleRegistrationError(
 
 	config, err := s.handleError(r, ct, rr.Methods, err, opts)
 	if err != nil {
-		s.d.ErrorManager().ForwardError(w, r, err)
+		s.d.ErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 
 	if err := s.d.RegistrationRequestManager().UpdateRegistrationRequest(r.Context(), rr.ID, ct, *config); err != nil {
-		s.d.ErrorManager().ForwardError(w, r, err)
+		s.d.ErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 
@@ -213,7 +213,7 @@ func (s *ErrorHandler) HandleLoginError(
 	opts = mergeErrorHandlerOptions(opts)
 
 	if rr == nil {
-		s.d.ErrorManager().ForwardError(w, r, err)
+		s.d.ErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	} else if s.json(w, r, err) {
 		return
@@ -221,12 +221,12 @@ func (s *ErrorHandler) HandleLoginError(
 
 	config, err := s.handleError(r, ct, rr.Methods, err, opts)
 	if err != nil {
-		s.d.ErrorManager().ForwardError(w, r, err)
+		s.d.ErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 
 	if err := s.d.LoginRequestManager().UpdateLoginRequest(r.Context(), rr.ID, ct, *config); err != nil {
-		s.d.ErrorManager().ForwardError(w, r, err)
+		s.d.ErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 

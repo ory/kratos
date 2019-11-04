@@ -1,6 +1,7 @@
 package errorx_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -54,12 +55,17 @@ func TestHandler(t *testing.T) {
 		},
 		{
 			gave: []error{
+				herodot.ErrNotFound.WithReason("foobar"),
+			},
+		},
+		{
+			gave: []error{
 				errors.WithStack(herodot.ErrNotFound.WithReason("foobar")),
 			},
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			id, err := reg.ErrorManager().Add(tc.gave...)
+			id, err := reg.ErrorManager().Add(context.Background(), tc.gave...)
 			require.NoError(t, err)
 
 			res, err := ts.Client().Get(ts.URL + "/errors?error=" + id)
@@ -67,7 +73,7 @@ func TestHandler(t *testing.T) {
 			defer res.Body.Close()
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
 
-			body, err := ioutil.ReadAll(res.Body)
+			actual, err := ioutil.ReadAll(res.Body)
 			require.NoError(t, err)
 
 			gg := make([]error, len(tc.gave))
@@ -75,12 +81,12 @@ func TestHandler(t *testing.T) {
 				gg[k] = errors.Cause(g)
 			}
 
-			gave, err := json.Marshal(gg)
+			expected, err := json.Marshal(gg)
 			require.NoError(t, err)
 
-			assert.JSONEq(t, string(gave), string(body))
-			assert.NotEqual(t, "[{}]", string(body))
-			t.Logf("%s", body)
+			assert.JSONEq(t, string(expected), string(actual), "%s != %s", expected, actual)
+			assert.NotEqual(t, "[{}]", string(actual))
+			t.Logf("%s", actual)
 		})
 	}
 }

@@ -492,7 +492,7 @@ func (s *Strategy) provider(id string) (Provider, error) {
 
 func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid string, err error) {
 	if rid == "" {
-		s.d.ErrorManager().ForwardError(w, r, err)
+		s.d.ErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 
@@ -512,5 +512,5 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid strin
 		return
 	}
 
-	s.d.ErrorManager().ForwardError(w, r, err)
+	s.d.ErrorManager().ForwardError(r.Context(), w, r, err)
 }
