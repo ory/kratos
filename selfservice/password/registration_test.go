@@ -241,6 +241,18 @@ func TestRegistration(t *testing.T) {
 			assert.Empty(t, gjson.GetBytes(body, "methods.password.config.error"))
 			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.traits\\.foobar.error").String(), "foobar is required", "%s", body)
 		})
+
+		t.Run("case=should work even if password is just numbers", func(t *testing.T) {
+			viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
+			rr := newRegistrationRequest(t, time.Minute)
+			body, res := makeRequest(t, rr.ID, url.Values{
+				"traits.username": {"registration-identifier-10"},
+				"password":        {"93172388957812344432"},
+				"traits.foobar":   {"bar"},
+			}.Encode(), http.StatusOK)
+			assert.Contains(t, res.Request.URL.Path, "return-ts")
+			assert.Equal(t, `registration-identifier-10`, gjson.GetBytes(body, "identity.traits.username").String(), "%s", body)
+		})
 	})
 
 	t.Run("method=PopulateSignUpMethod", func(t *testing.T) {

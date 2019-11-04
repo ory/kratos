@@ -22,6 +22,7 @@ func TestNewBodyDecoder(t *testing.T) {
 			payload url.Values
 			raw     string
 			result  string
+			opt     BodyDecoderOptions
 		}{
 			{
 				d: "should work with nested keys",
@@ -32,6 +33,15 @@ func TestNewBodyDecoder(t *testing.T) {
 				result: `{"request":"bar","traits":{"foo":"bar"}}`,
 			},
 			{
+				d: "should ignore unless prefix is set",
+				payload: url.Values{
+					"traits.foo": {"12345"},
+					"password":   {"12345"},
+				},
+				opt:    BodyDecoderOptions{AssertTypesForPrefix: "traits."},
+				result: `{"password":"12345","traits":{"foo":12345}}`,
+			},
+			{
 				d:      "should work with true and false",
 				raw:    "traits.consent.newsletter=false&traits.consent.newsletter=true&traits.consent.tos=false",
 				result: `{"traits":{"consent":{"newsletter":true,"tos":false}}}`,
@@ -40,7 +50,7 @@ func TestNewBodyDecoder(t *testing.T) {
 			t.Run(fmt.Sprintf("case=%d/description=%s", k, tc.d), func(t *testing.T) {
 				ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					var result json.RawMessage
-					require.NoError(t, dec.Decode(r, &result))
+					require.NoError(t, dec.Decode(r, &result, tc.opt))
 					require.JSONEq(t, tc.result, string(result), "%s", result)
 				}))
 				defer ts.Close()
@@ -75,7 +85,7 @@ func TestNewBodyDecoder(t *testing.T) {
 			t.Run(fmt.Sprintf("case=%d/description=%s", k, tc.d), func(t *testing.T) {
 				ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					var result json.RawMessage
-					require.NoError(t, dec.Decode(r, &result))
+					require.NoError(t, dec.Decode(r, &result, BodyDecoderOptions{}))
 					require.JSONEq(t, tc.result, string(result), "%s", result)
 				}))
 				defer ts.Close()
