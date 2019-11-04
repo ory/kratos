@@ -18,6 +18,7 @@ func init() {
 type RegistryMemory struct {
 	*RegistryAbstract
 
+	errorManager              errorx.Manager
 	identityPool              identity.Pool
 	sessionManager            session.Manager
 	selfserviceRequestManager selfservice.RequestManager

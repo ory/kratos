@@ -50,6 +50,7 @@ func init() {
 type RegistrySQL struct {
 	*RegistryAbstract
 
+	errorManager              errorx.Manager
 	identityPool              identity.Pool
 	sessionManager            session.Manager
 	selfserviceRequestManager selfservice.RequestManager

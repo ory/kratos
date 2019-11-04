@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/coreos/go-oidc"
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/nosurf"
@@ -403,21 +402,21 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 	return nil
 }
 
-func (s *Strategy) verifyIdentity(i *identity.Identity, c identity.Credentials, token oidc.IDToken, pid string) error {
-	var o CredentialsConfig
-
-	if err := json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&o); err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error()))
-	}
-
-	if o.Subject != token.Subject {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReason("The subjects do not match").WithDebugf("Expected credential subject to match subject from RequestID Token but values are not equal: %s != %s", o.Subject, token.Subject))
-	} else if o.Provider != pid {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReason("The providers do not match").WithDebugf("Expected credential provider to match provider from path but values are not equal: %s != %s", o.Subject, pid))
-	}
-
-	return nil
-}
+// func (s *Strategy) verifyIdentity(i *identity.Identity, c identity.Credentials, token oidc.IDToken, pid string) error {
+// 	var o CredentialsConfig
+//
+// 	if err := json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&o); err != nil {
+// 		return errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error()))
+// 	}
+//
+// 	if o.Subject != token.Subject {
+// 		return errors.WithStack(herodot.ErrInternalServerError.WithReason("The subjects do not match").WithDebugf("Expected credential subject to match subject from RequestID Token but values are not equal: %s != %s", o.Subject, token.Subject))
+// 	} else if o.Provider != pid {
+// 		return errors.WithStack(herodot.ErrInternalServerError.WithReason("The providers do not match").WithDebugf("Expected credential provider to match provider from path but values are not equal: %s != %s", o.Subject, pid))
+// 	}
+//
+// 	return nil
+// }
 
 func (s *Strategy) populateMethod(r *http.Request, request string) (*RequestMethodConfig, error) {
 	conf, err := s.Config()
