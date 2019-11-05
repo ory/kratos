@@ -16,8 +16,6 @@ import (
 	"github.com/ory/x/logrusx"
 
 	"github.com/spf13/cobra"
-
-	"github.com/ory/hive/driver/configuration"
 )
 
 var logger *logrus.Logger
@@ -46,11 +44,7 @@ func init() {
 
 	cobra.OnInitialize(func() {
 		viperx.InitializeConfig("hive", "", nil)
-		configuration.BindEnvs()
-
-		if logger == nil {
-			logger = logrusx.New()
-		}
+		logger = logrusx.New()
 
 		if err := viperx.Validate(gojsonschema.NewBytesLoader(schema)); err != nil {
 			viperx.LoggerWithValidationErrorFields(logger, err).

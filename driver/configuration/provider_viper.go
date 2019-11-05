@@ -64,38 +64,6 @@ const (
 	ViperKeyHasherArgon2ConfigKeyLength   = "hashers.argon2.key_length"
 )
 
-func BindEnvs() {
-	if err := viper.BindEnv(
-		ViperKeyURLsSelfPublic,
-		ViperKeyURLsSelfAdmin,
-		ViperKeyURLsLogin,
-		ViperKeyURLsError,
-		ViperKeyURLsMFA,
-		ViperKeyURLsRegistration,
-		ViperKeyURLsWhitelistedReturnToDomains,
-		ViperKeyDSN,
-		ViperKeySecretsSession,
-		ViperKeySelfServiceLifespanRegistrationRequest,
-		ViperKeySelfServiceLifespanLoginRequest,
-		ViperKeyLifespanSession,
-		ViperKeySelfServiceStrategyConfig,
-		ViperKeyDefaultIdentityTraitsSchemaURL,
-		ViperKeyHasherArgon2ConfigMemory,
-		ViperKeyHasherArgon2ConfigIterations,
-		ViperKeyHasherArgon2ConfigParallelism,
-		ViperKeyHasherArgon2ConfigSaltLength,
-		ViperKeyHasherArgon2ConfigKeyLength,
-		ViperKeySelfServiceLoginBeforeConfig,
-		ViperKeySelfServiceRegistrationBeforeConfig,
-		ViperKeySelfServiceRegistrationAfterConfig,
-		ViperKeySelfServiceLoginAfterConfig,
-		ViperKeySelfServiceLogoutRedirectURL,
-		ViperKeyURLsDefaultReturnTo,
-	); err != nil {
-		panic(err.Error())
-	}
-}
-
 func NewViperProvider(l logrus.FieldLogger) *ViperProvider {
 	return &ViperProvider{
 		l: l,

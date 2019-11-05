@@ -19,7 +19,6 @@ import (
 func TestViperProvider(t *testing.T) {
 	t.Run("suite=loaders", func(t *testing.T) {
 		viper.Reset()
-		BindEnvs()
 		viperx.InitializeConfig(
 			"hive",
 			"./../../docs/",
