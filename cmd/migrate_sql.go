@@ -18,21 +18,21 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/ory/hive/cmd/client"
+	"github.com/ory/kratos/cmd/client"
 )
 
 // migrateSqlCmd represents the sql command
 var migrateSqlCmd = &cobra.Command{
 	Use:   "sql <database-url>",
 	Short: "Create SQL schemas and apply migration plans",
-	Long: `Run this command on a fresh SQL installation and when you upgrade ORY Hive to a new minor version.
+	Long: `Run this command on a fresh SQL installation and when you upgrade ORY Kratos to a new minor version.
 
 It is recommended to run this command close to the SQL instance (e.g. same subnet) instead of over the public internet.
 This decreases risk of failure and decreases time required.
 
 You can read in the database URL using the -e flag, for example:
 	export DSN=...
-	hive migrate sql -e
+	kratos migrate sql -e
 
 ### WARNING ###
 

@@ -7,8 +7,8 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
-	"github.com/ory/hive/driver/configuration"
-	"github.com/ory/hive/x"
+	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/x"
 )
 
 type HandlerProvider interface {

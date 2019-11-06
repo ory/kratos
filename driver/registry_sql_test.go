@@ -34,7 +34,7 @@ import (
 	"github.com/ory/x/dbal"
 	"github.com/ory/x/dbal/migratest"
 
-	"github.com/ory/hive/selfservice"
+	"github.com/ory/kratos/selfservice"
 )
 
 // nolint: staticcheck

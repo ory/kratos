@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/viper"
 
-	"github.com/ory/hive/driver/configuration"
-	"github.com/ory/hive/identity"
-	"github.com/ory/hive/internal"
-	. "github.com/ory/hive/selfservice/oidc"
+	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/internal"
+	. "github.com/ory/kratos/selfservice/oidc"
 )
 
 func TestConfig(t *testing.T) {

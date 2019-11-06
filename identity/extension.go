@@ -9,7 +9,7 @@ import (
 
 	"github.com/ory/gojsonschema"
 
-	"github.com/ory/hive/schema"
+	"github.com/ory/kratos/schema"
 )
 
 var _ ValidationExtender = new(ValidationExtensionIdentifier)

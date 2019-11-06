@@ -5,7 +5,7 @@ import (
 
 	"github.com/gorilla/sessions"
 
-	"github.com/ory/hive/identity"
+	"github.com/ory/kratos/identity"
 )
 
 type Registry interface {

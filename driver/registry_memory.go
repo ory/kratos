@@ -3,10 +3,10 @@ package driver
 import (
 	"github.com/ory/x/dbal"
 
-	"github.com/ory/hive/identity"
-	"github.com/ory/hive/selfservice"
-	"github.com/ory/hive/selfservice/errorx"
-	"github.com/ory/hive/session"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice"
+	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/session"
 )
 
 var _ Registry = new(RegistryMemory)

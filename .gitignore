@@ -2,4 +2,4 @@ cover.out
 .idea/
 tmp/
 .DS_Store
-hive
+./kratos

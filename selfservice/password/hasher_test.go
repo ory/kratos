@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/hive/internal"
-	. "github.com/ory/hive/selfservice/password"
+	"github.com/ory/kratos/internal"
+	. "github.com/ory/kratos/selfservice/password"
 )
 
 func password(t *testing.T, length int) []byte {

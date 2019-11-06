@@ -9,7 +9,7 @@
     },
     "email": {
       "type": "string",
-      "hive": {
+      "kratos": {
         "credentials": {
           "password": {
             "identifier": true

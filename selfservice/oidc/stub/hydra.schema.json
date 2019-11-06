@@ -6,7 +6,7 @@
   "properties": {
     "sub": {
       "type": "string",
-      "hive": {
+      "kratos": {
         "mappings": {
           "identity": {
             "traits": [

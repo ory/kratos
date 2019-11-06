@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/ory/hive/cmd/client"
+	"github.com/ory/kratos/cmd/client"
 
 	"github.com/spf13/cobra"
 )

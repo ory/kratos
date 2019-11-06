@@ -2,10 +2,10 @@
 serve:
   admin:
     port: 1234
-    host: admin.hive.ory.sh
+    host: admin.kratos.ory.sh
   public:
     port: 1235
-    host: public.hive.ory.sh
+    host: public.kratos.ory.sh
 
 dsn: memory
 
@@ -14,20 +14,20 @@ log:
 
 urls:
   default_return_to: http://return-to-3-test.ory.sh/
-  mfa_ui: http://test.hive.ory.sh/mfa
-  login_ui: http://test.hive.ory.sh/login
-  registration_ui: http://test.hive.ory.sh/register
+  mfa_ui: http://test.kratos.ory.sh/mfa
+  login_ui: http://test.kratos.ory.sh/login
+  registration_ui: http://test.kratos.ory.sh/register
   self:
-    public: http://public.hive.ory.sh
-    admin: http://admin.hive.ory.sh
-  error_ui: http://test.hive.ory.sh/error
+    public: http://public.kratos.ory.sh
+    admin: http://admin.kratos.ory.sh
+  error_ui: http://test.kratos.ory.sh/error
   whitelisted_return_to_domains:
     - http://return-to-1-test.ory.sh/
     - http://return-to-2-test.ory.sh/
 
 identity:
   traits:
-    default_schema_url: http://test.hive.ory.sh/default-identity.schema.json
+    default_schema_url: http://test.kratos.ory.sh/default-identity.schema.json
 
 hashers:
   argon2:
@@ -54,48 +54,48 @@ selfservice:
             provider: github
             client_id: a
             client_secret: b
-            schema_url: http://test.hive.ory.sh/default-identity.schema.json
+            schema_url: http://test.kratos.ory.sh/default-identity.schema.json
   logout:
-    redirect_to: http://test.hive.ory.sh:4000/
+    redirect_to: http://test.kratos.ory.sh:4000/
   login:
     request_lifespan: 99m
     before:
       - run: redirect
         config:
-          default_redirect_url: http://test.hive.ory.sh:4000/
+          default_redirect_url: http://test.kratos.ory.sh:4000/
           allow_user_defined_redirect: false
     after:
       password:
         - run: session
         - run: redirect
           config:
-            default_redirect_url: http://test.hive.ory.sh:4000/
+            default_redirect_url: http://test.kratos.ory.sh:4000/
             allow_user_defined_redirect: true
       oidc:
         - run: session
         - run: redirect
           config:
-            default_redirect_url: http://test.hive.ory.sh:4000/
+            default_redirect_url: http://test.kratos.ory.sh:4000/
             allow_user_defined_redirect: true
   registration:
     request_lifespan: 98m
     before:
       - run: redirect
         config:
-          default_redirect_url: http://test.hive.ory.sh:4000/
+          default_redirect_url: http://test.kratos.ory.sh:4000/
           allow_user_defined_redirect: false
     after:
       password:
         - run: session
         - run: redirect
           config:
-            default_redirect_url: http://test.hive.ory.sh:4000/
+            default_redirect_url: http://test.kratos.ory.sh:4000/
             allow_user_defined_redirect: true
       oidc:
         - run: session
         - run: redirect
           config:
-            default_redirect_url: http://test.hive.ory.sh:4000/
+            default_redirect_url: http://test.kratos.ory.sh:4000/
             allow_user_defined_redirect: true
 
 

@@ -8,7 +8,7 @@ endif
 .PHONY: build
 build:
 		make sqlbin
-		CGO_ENABLED=0 GO111MODULE=on GOOS=linux GOARCH=amd64 go build -o hive .
+		CGO_ENABLED=0 GO111MODULE=on GOOS=linux GOARCH=amd64 go build -o kratos .
 
 .PHONY: init
 init:
@@ -22,7 +22,7 @@ init:
 
 .PHONY: lint
 lint:
-		golangci-lint run
+		GO111MODULE=on golangci-lint run
 
 .PHONY: format
 format:
@@ -37,19 +37,19 @@ cover:
 sdk:
 		GO111MODULE=on go mod tidy
 		GO111MODULE=on go mod vendor
-		GO111MODULE=off swagger generate spec -x sdk/go/hive -m -o ./docs/api.swagger.json
+		GO111MODULE=off swagger generate spec -x sdk/go/kratos -m -o ./docs/api.swagger.json
 		GO111MODULE=off swagger validate ./docs/api.swagger.json
 
-		rm -rf ./sdk/go/hive/*
-		GO111MODULE=off swagger generate client -f ./docs/api.swagger.json -t sdk/go/hive -A Ory_Hive
+		rm -rf ./sdk/go/kratos/*
+		GO111MODULE=off swagger generate client -f ./docs/api.swagger.json -t sdk/go/kratos -A Ory_Kratos
 
-		cd sdk/go/hive; goreturns -w -i -local github.com/ory $$(listx .)
+		cd sdk/go/kratos; goreturns -w -i -local github.com/ory $$(listx .)
 
 		rm -rf ./vendor
 
 .PHONE: mocks
 mocks:
-		mockgen -mock_names Manager=MockLoginExecutorDependencies -package internal -destination internal/hook_login_executor_dependencies.go github.com/ory/hive/selfservice loginExecutorDependencies
+		mockgen -mock_names Manager=MockLoginExecutorDependencies -package internal -destination internal/hook_login_executor_dependencies.go github.com/ory/kratos/selfservice loginExecutorDependencies
 
 .PHONY: install
 install:

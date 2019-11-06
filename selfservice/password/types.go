@@ -1,7 +1,7 @@
 package password
 
 import (
-	"github.com/ory/hive/selfservice"
+	"github.com/ory/kratos/selfservice"
 )
 
 type (

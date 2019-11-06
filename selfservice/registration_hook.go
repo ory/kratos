@@ -3,10 +3,10 @@ package selfservice
 import (
 	"net/http"
 
-	"github.com/ory/hive/driver/configuration"
-	"github.com/ory/hive/identity"
-	"github.com/ory/hive/session"
-	"github.com/ory/hive/x"
+	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/x"
 )
 
 type HookRegistrationPreExecutor interface {
@@ -70,7 +70,7 @@ func (e *RegistrationExecutor) PostRegistrationHook(w http.ResponseWriter, r *ht
 	// Now we execute the post-registration hooks!
 	for _, executor := range hooks {
 		if err := executor.ExecuteRegistrationPostHook(w, r, a, s); err != nil {
-			// TODO https://github.com/ory/hive/issues/51 #51
+			// TODO https://github.com/ory/kratos/issues/51 #51
 			return err
 		}
 	}

@@ -13,7 +13,7 @@ import (
 //
 // and so on.
 // swagger:model CredentialsType
-type CredentialsType int64
+type CredentialsType string
 
 // Validate validates this credentials type
 func (m CredentialsType) Validate(formats strfmt.Registry) error {

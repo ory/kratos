@@ -28,13 +28,13 @@ import (
 
 	"github.com/phayes/freeport"
 
-	"github.com/ory/hive/driver/configuration"
-	"github.com/ory/hive/identity"
-	"github.com/ory/hive/internal"
-	"github.com/ory/hive/selfservice"
-	. "github.com/ory/hive/selfservice/oidc"
-	"github.com/ory/hive/selfservice/password"
-	"github.com/ory/hive/x"
+	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/selfservice"
+	. "github.com/ory/kratos/selfservice/oidc"
+	"github.com/ory/kratos/selfservice/password"
+	"github.com/ory/kratos/x"
 )
 
 func hookConfig(u string) (m []map[string]interface{}) {
@@ -181,8 +181,8 @@ func TestStrategy(t *testing.T) {
 	// viper.Set(configuration.ViperKeySignupDefaultReturnToURL, returnTS.URL)
 	// viper.Set(configuration.ViperKeyAuthnDefaultReturnToURL, returnTS.URL)
 
-	t.Logf("Hive Public URL: %s", ts.URL)
-	t.Logf("Hive Error URL: %s", errTS.URL)
+	t.Logf("Kratos Public URL: %s", ts.URL)
+	t.Logf("Kratos Error URL: %s", errTS.URL)
 	t.Logf("Hydra Public URL: %s", remotePublic)
 	t.Logf("Hydra Admin URL: %s", remoteAdmin)
 	t.Logf("Hydra Integration URL: %s", hydraIntegrationTSURL)

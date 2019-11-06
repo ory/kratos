@@ -25,10 +25,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/hive/driver/configuration"
-	"github.com/ory/hive/identity"
-	"github.com/ory/hive/internal"
-	. "github.com/ory/hive/session"
+	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/internal"
+	. "github.com/ory/kratos/session"
 )
 
 func init() {

@@ -1,8 +1,8 @@
 package verify
 
 import (
-	"github.com/ory/hive/identity"
-	"github.com/ory/hive/schema"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/schema"
 )
 
 type Extension struct {

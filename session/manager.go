@@ -7,13 +7,13 @@ import (
 	"github.com/gorilla/securecookie"
 	"github.com/pkg/errors"
 
-	"github.com/ory/hive/identity"
+	"github.com/ory/kratos/identity"
 
 	"github.com/ory/herodot"
 )
 
-// DefaultSessionCookieName returns the default cookie name for the hive session.
-const DefaultSessionCookieName = "hive_session_manager"
+// DefaultSessionCookieName returns the default cookie name for the kratos session.
+const DefaultSessionCookieName = "kratos_session_manager"
 
 var (
 	ErrNoActiveSessionFound = herodot.ErrUnauthorized.WithError("request does not have a valid authentication session").WithReason("No active session was found in this request.")

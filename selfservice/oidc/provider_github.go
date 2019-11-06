@@ -16,7 +16,7 @@ import (
 
 	"github.com/ory/herodot"
 
-	"github.com/ory/hive/selfservice"
+	"github.com/ory/kratos/selfservice"
 )
 
 type ProviderGitHub struct {

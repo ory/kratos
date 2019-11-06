@@ -16,17 +16,17 @@ import (
 
 	"github.com/ory/x/logrusx"
 
-	"github.com/ory/hive/selfservice"
-	"github.com/ory/hive/selfservice/hooks"
-	"github.com/ory/hive/selfservice/oidc"
+	"github.com/ory/kratos/selfservice"
+	"github.com/ory/kratos/selfservice/hooks"
+	"github.com/ory/kratos/selfservice/oidc"
 
 	"github.com/ory/herodot"
 
-	"github.com/ory/hive/driver/configuration"
-	"github.com/ory/hive/identity"
-	"github.com/ory/hive/selfservice/errorx"
-	password2 "github.com/ory/hive/selfservice/password"
-	"github.com/ory/hive/session"
+	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/errorx"
+	password2 "github.com/ory/kratos/selfservice/password"
+	"github.com/ory/kratos/session"
 )
 
 type RegistryAbstract struct {

@@ -14,11 +14,11 @@ import (
 
 	"github.com/ory/x/sqlcon/dockertest"
 
-	"github.com/ory/hive/identity"
-	"github.com/ory/hive/internal"
-	. "github.com/ory/hive/selfservice"
-	"github.com/ory/hive/selfservice/oidc"
-	"github.com/ory/hive/selfservice/password"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/internal"
+	. "github.com/ory/kratos/selfservice"
+	"github.com/ory/kratos/selfservice/oidc"
+	"github.com/ory/kratos/selfservice/password"
 )
 
 func TestRequestManagerMemory(t *testing.T) {

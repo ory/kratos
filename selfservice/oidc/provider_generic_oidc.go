@@ -12,7 +12,7 @@ import (
 
 	gooidc "github.com/coreos/go-oidc"
 
-	"github.com/ory/hive/selfservice"
+	"github.com/ory/kratos/selfservice"
 )
 
 var _ Provider = new(ProviderGenericOIDC)

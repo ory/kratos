@@ -21,13 +21,13 @@ import (
 	"github.com/ory/x/stringsx"
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/hive/driver/configuration"
-	"github.com/ory/hive/identity"
-	"github.com/ory/hive/schema"
-	"github.com/ory/hive/selfservice"
-	"github.com/ory/hive/selfservice/errorx"
-	"github.com/ory/hive/session"
-	"github.com/ory/hive/x"
+	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice"
+	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/x"
 )
 
 const (

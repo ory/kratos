@@ -12,8 +12,8 @@ import (
 
 	"github.com/ory/x/logrusx"
 
-	"github.com/ory/hive/driver"
-	"github.com/ory/hive/driver/configuration"
+	"github.com/ory/kratos/driver"
+	"github.com/ory/kratos/driver/configuration"
 )
 
 func resetConfig() {

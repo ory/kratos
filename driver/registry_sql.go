@@ -19,12 +19,12 @@ import (
 
 	"github.com/olekukonko/tablewriter"
 
-	"github.com/ory/hive/identity"
-	"github.com/ory/hive/selfservice"
-	"github.com/ory/hive/selfservice/errorx"
-	"github.com/ory/hive/selfservice/oidc"
-	"github.com/ory/hive/selfservice/password"
-	"github.com/ory/hive/session"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice"
+	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/selfservice/oidc"
+	"github.com/ory/kratos/selfservice/password"
+	"github.com/ory/kratos/session"
 )
 
 var _ Registry = new(RegistrySQL)
@@ -155,7 +155,7 @@ func (m *RegistrySQL) LoginRequestManager() selfservice.LoginRequestManager {
 func (m *RegistrySQL) CreateSchemas(dbName string) (int, error) {
 	m.Logger().Debugf("Applying %s SQL migrations...", dbName)
 
-	migrate.SetTable("hive_migration")
+	migrate.SetTable("kratos_migration")
 	total, err := migrate.Exec(m.DB().DB, dbal.Canonicalize(m.DB().DriverName()), Migrations[dbName], migrate.Up)
 	if err != nil {
 		return 0, errors.Wrapf(err, "Could not migrate sql schema, applied %d migrations", total)
@@ -174,7 +174,7 @@ func (m *RegistrySQL) SchemaMigrationPlan(dbName string) (*tablewriter.Table, er
 	table.SetColMinWidth(4, 20)
 	table.SetHeader([]string{"Driver", "ID", "#", "Query"})
 
-	migrate.SetTable("hive_migration")
+	migrate.SetTable("kratos_migration")
 	plans, _, err := migrate.PlanMigration(m.DB().DB, dbal.Canonicalize(m.DB().DriverName()), Migrations[dbName], migrate.Up, 0)
 	if err != nil {
 		return nil, err
@@ -195,7 +195,7 @@ func (m *RegistrySQL) SchemaMigrationPlan(dbName string) (*tablewriter.Table, er
 
 func SQLPurgeTestDatabase(t *testing.T, db *sqlx.DB) {
 	for _, query := range []string{
-		"DROP TABLE IF EXISTS hive_migration",
+		"DROP TABLE IF EXISTS kratos_migration",
 		"DROP TABLE IF EXISTS self_service_request",
 		"DROP TABLE IF EXISTS identity_credential_identifier",
 		"DROP TABLE IF EXISTS identity_credential",

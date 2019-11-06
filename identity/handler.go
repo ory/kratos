@@ -11,7 +11,7 @@ import (
 
 	"github.com/ory/x/pagination"
 
-	"github.com/ory/hive/x"
+	"github.com/ory/kratos/x"
 )
 
 type handlerDependencies interface {

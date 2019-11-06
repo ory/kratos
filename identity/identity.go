@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// Identity represents a hive identity
+// Identity represents a kratos identity
 //
 // An identity can be a real human, a service, an IoT device - everything that
 // can be described as an "actor" in a system.

@@ -3,7 +3,7 @@ package selfservice
 import (
 	"net/http"
 
-	"github.com/ory/hive/x"
+	"github.com/ory/kratos/x"
 )
 
 type Strategy interface {

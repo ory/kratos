@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ory/hive/identity"
-	"github.com/ory/hive/selfservice"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice"
 )
 
 func NewBlankLoginRequest(id string) *selfservice.LoginRequest {

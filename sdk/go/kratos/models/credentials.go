@@ -19,28 +19,44 @@ type Credentials struct {
 	// Identifiers represents a list of unique identifiers this credential type matches.
 	Identifiers []string `json:"identifiers"`
 
+	// config
+	Config RawMessage `json:"config,omitempty"`
+
 	// id
 	ID CredentialsType `json:"id,omitempty"`
-
-	// options
-	Options RawMessage `json:"options,omitempty"`
 }
 
 // Validate validates this credentials
 func (m *Credentials) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateID(formats); err != nil {
+	if err := m.validateConfig(formats); err != nil {
 		res = append(res, err)
 	}
 
-	if err := m.validateOptions(formats); err != nil {
+	if err := m.validateID(formats); err != nil {
 		res = append(res, err)
 	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *Credentials) validateConfig(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Config) { // not required
+		return nil
+	}
+
+	if err := m.Config.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("config")
+		}
+		return err
+	}
+
 	return nil
 }
 
@@ -53,22 +69,6 @@ func (m *Credentials) validateID(formats strfmt.Registry) error {
 	if err := m.ID.Validate(formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
 			return ve.ValidateName("id")
-		}
-		return err
-	}
-
-	return nil
-}
-
-func (m *Credentials) validateOptions(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.Options) { // not required
-		return nil
-	}
-
-	if err := m.Options.Validate(formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("options")
 		}
 		return err
 	}

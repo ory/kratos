@@ -12,90 +12,28 @@
   ],
   "swagger": "2.0",
   "info": {
-    "description": "Welcome to the ORY Hive HTTP API documentation!",
-    "title": "Ory Hive",
+    "description": "Welcome to the ORY Kratos HTTP API documentation!",
+    "title": "Ory Kratos",
     "version": "latest"
   },
   "basePath": "/",
   "paths": {
-    "/identities": {
-      "put": {
-        "description": "Use this endpoint to update or insert an identity. If an identity with the given ID exists, the identity\nin the datastore will be overwritten. If such an identity does not exist, the identity will be added to the datastore.\n\nUse this endpoint with caution as it may override an existing identity if the IDs are in conflict.",
-        "consumes": [
-          "application/json"
-        ],
+    "/health/alive": {
+      "get": {
+        "description": "This endpoint returns a 200 status code when the HTTP server is up running.\nThis status does currently not include checks whether the database connection is working.\n\nIf the service supports TLS Edge Termination, this endpoint does not require the\n`X-Forwarded-Proto` header to be set.\n\nBe aware that if you are running multiple nodes of this service, the health status will never\nrefer to the cluster state, only to a single instance.",
         "produces": [
           "application/json"
         ],
-        "schemes": [
-          "http",
-          "https"
-        ],
         "tags": [
-          "admin"
+          "health"
         ],
-        "summary": "Upsert an identity",
-        "operationId": "upsertIdentity",
-        "parameters": [
-          {
-            "name": "Body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/identity"
-            }
-          }
-        ],
+        "summary": "Check alive status",
+        "operationId": "isInstanceAlive",
         "responses": {
           "200": {
-            "description": "identity",
+            "description": "healthStatus",
             "schema": {
-              "$ref": "#/definitions/identity"
-            }
-          },
-          "500": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          }
-        }
-      },
-      "post": {
-        "description": "Use this endpoint to programmatically create an identity. If an identity with the given ID exist already,\nan error (409) will be returned.",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "tags": [
-          "admin"
-        ],
-        "summary": "Create an identity",
-        "operationId": "createIdentity",
-        "parameters": [
-          {
-            "name": "Body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/identity"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "$ref": "#/responses/emptyResponse"
-          },
-          "409": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/healthStatus"
             }
           },
           "500": {
@@ -106,122 +44,62 @@
           }
         }
       }
+    },
+    "/health/ready": {
+      "get": {
+        "description": "This endpoint returns a 200 status code when the HTTP server is up running and the environment dependencies (e.g.\nthe database) are responsive as well.\n\nIf the service supports TLS Edge Termination, this endpoint does not require the\n`X-Forwarded-Proto` header to be set.\n\nBe aware that if you are running multiple nodes of this service, the health status will never\nrefer to the cluster state, only to a single instance.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "health"
+        ],
+        "summary": "Check readiness status",
+        "operationId": "isInstanceReady",
+        "responses": {
+          "200": {
+            "description": "healthStatus",
+            "schema": {
+              "$ref": "#/definitions/healthStatus"
+            }
+          },
+          "503": {
+            "description": "healthNotReadyStatus",
+            "schema": {
+              "$ref": "#/definitions/healthNotReadyStatus"
+            }
+          }
+        }
+      }
+    },
+    "/version": {
+      "get": {
+        "description": "This endpoint returns the service version typically notated using semantic versioning.\n\nIf the service supports TLS Edge Termination, this endpoint does not require the\n`X-Forwarded-Proto` header to be set.\n\nBe aware that if you are running multiple nodes of this service, the health status will never\nrefer to the cluster state, only to a single instance.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "version"
+        ],
+        "summary": "Get service version",
+        "operationId": "getVersion",
+        "responses": {
+          "200": {
+            "description": "version",
+            "schema": {
+              "$ref": "#/definitions/version"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
     "CredentialsType": {
       "description": "and so on.",
-      "type": "integer",
-      "format": "int64",
+      "type": "string",
       "title": "CredentialsType  represents several different credential types, like password credentials, passwordless credentials,",
-      "x-go-package": "github.com/ory/hive/identity"
-    },
-    "FieldMetadata": {
-      "type": "object",
-      "title": "FieldMetadata: Metadata about a field.",
-      "properties": {
-        "primary": {
-          "description": "Primary: True if the field is the primary field; false if the field\nis a secondary\nfield.",
-          "type": "boolean",
-          "x-go-name": "Primary"
-        },
-        "verified": {
-          "description": "Verified: True if the field is verified; false if the field is\nunverified. A\nverified field is typically a name, email address, phone number,\nor\nwebsite that has been confirmed to be owned by the person.",
-          "type": "boolean",
-          "x-go-name": "Verified"
-        }
-      },
-      "x-go-package": "github.com/ory/hive/identity"
-    },
-    "InstantMessaging": {
-      "type": "object",
-      "properties": {
-        "primary": {
-          "description": "Primary: True if the field is the primary field; false if the field\nis a secondary\nfield.",
-          "type": "boolean",
-          "x-go-name": "Primary"
-        },
-        "type": {
-          "type": "string",
-          "x-go-name": "Type"
-        },
-        "value": {
-          "type": "string",
-          "x-go-name": "Value"
-        },
-        "verified": {
-          "description": "Verified: True if the field is verified; false if the field is\nunverified. A\nverified field is typically a name, email address, phone number,\nor\nwebsite that has been confirmed to be owned by the person.",
-          "type": "boolean",
-          "x-go-name": "Verified"
-        }
-      },
-      "x-go-package": "github.com/ory/hive/identity"
-    },
-    "Location": {
-      "description": "Typically, the Location represents the collection of time offsets\nin use in a geographical area, such as CEST and CET for central Europe.",
-      "type": "object",
-      "title": "A Location maps time instants to the zone in use at that time.",
-      "x-go-package": "time"
-    },
-    "Name": {
-      "type": "object",
-      "properties": {
-        "family_name": {
-          "description": "FamilyName: The family name of the User, or last name in most\nWestern languages (e.g., \"Jensen\" given the full name\n\"Ms. Barbara Jane Jensen, III\").",
-          "type": "string",
-          "x-go-name": "FamilyName"
-        },
-        "formatted": {
-          "description": "Formatted: The full name, including all middle names, titles, and\nsuffixes as appropriate, formatted for display (e.g.,\n\"Ms. Barbara Jane Jensen, III\").",
-          "type": "string",
-          "x-go-name": "Formatted"
-        },
-        "given_name": {
-          "description": "GivenName: The given name of the User, or first name in most\nWestern languages (e.g., \"Barbara\" given the full name\n\"Ms. Barbara Jane Jensen, III\").",
-          "type": "string",
-          "x-go-name": "GivenName"
-        },
-        "honorific_prefix": {
-          "description": "HonorificPrefix: The honorific prefix(es) of the User, or title in\nmost Western languages (e.g., \"Ms.\" given the full name\n\"Ms. Barbara Jane Jensen, III\").",
-          "type": "string",
-          "x-go-name": "HonorificPrefix"
-        },
-        "honorific_suffix": {
-          "description": "HonorificSuffix: The honorific suffix(es) of the User, or suffix\nin most Western languages (e.g., \"III\" given the full name\n\"Ms. Barbara Jane Jensen, III\").",
-          "type": "string",
-          "x-go-name": "HonorificSuffix"
-        },
-        "middle_name": {
-          "description": "MiddleName: The middle name(s) of the User (e.g., \"Jane\" given the\nfull name \"Ms. Barbara Jane Jensen, III\").",
-          "type": "string",
-          "x-go-name": "MiddleName"
-        }
-      },
-      "x-go-package": "github.com/ory/hive/identity"
-    },
-    "Photo": {
-      "type": "object",
-      "properties": {
-        "primary": {
-          "description": "Primary: True if the field is the primary field; false if the field\nis a secondary\nfield.",
-          "type": "boolean",
-          "x-go-name": "Primary"
-        },
-        "type": {
-          "type": "string",
-          "x-go-name": "Type"
-        },
-        "value": {
-          "type": "string",
-          "x-go-name": "Value"
-        },
-        "verified": {
-          "description": "Verified: True if the field is verified; false if the field is\nunverified. A\nverified field is typically a name, email address, phone number,\nor\nwebsite that has been confirmed to be owned by the person.",
-          "type": "boolean",
-          "x-go-name": "Verified"
-        }
-      },
-      "x-go-package": "github.com/ory/hive/identity"
+      "x-go-package": "github.com/ory/kratos/identity"
     },
     "RawMessage": {
       "description": "It implements Marshaler and Unmarshaler and can\nbe used to delay JSON decoding or precompute a JSON encoding.",
@@ -232,11 +110,6 @@
         "format": "uint8"
       },
       "x-go-package": "encoding/json"
-    },
-    "emptyResponse": {
-      "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201.",
-      "type": "object",
-      "x-go-package": "github.com/ory/hive-cloud/hive"
     },
     "genericError": {
       "description": "Error responses are sent when an error (e.g. unauthorized, bad request, ...) occurred.",
@@ -269,129 +142,73 @@
           "description": "Hint contains further information on the nature of the error.",
           "type": "string",
           "x-go-name": "Hint",
-          "example": "Object with ID 12345 does not exist"
+          "example": "Object with RequestID 12345 does not exist"
         }
       },
-      "x-go-package": "github.com/ory/hive-cloud/hive"
+      "x-go-package": "github.com/ory/kratos"
+    },
+    "healthNotReadyStatus": {
+      "type": "object",
+      "properties": {
+        "errors": {
+          "description": "Errors contains a list of errors that caused the not ready status.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-go-name": "Errors"
+        }
+      },
+      "x-go-name": "swaggerNotReadyStatus",
+      "x-go-package": "github.com/ory/kratos/vendor/github.com/ory/x/healthx"
+    },
+    "healthStatus": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "description": "Status always contains \"ok\".",
+          "type": "string",
+          "x-go-name": "Status"
+        }
+      },
+      "x-go-name": "swaggerHealthStatus",
+      "x-go-package": "github.com/ory/kratos/vendor/github.com/ory/x/healthx"
     },
     "identity": {
       "description": "An identity can be a real human, a service, an IoT device - everything that\ncan be described as an \"actor\" in a system.",
       "type": "object",
-      "title": "Identity represents a hive identity",
+      "title": "Identity represents a kratos identity",
       "properties": {
-        "addresses": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/identityPhysicalAddress"
-          },
-          "x-go-name": "Addresses"
-        },
-        "birthdate": {
-          "type": "string",
-          "format": "date-time",
-          "x-go-name": "Birthdate"
-        },
         "credentials": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/identityCredentials"
+          },
           "x-go-name": "Credentials"
         },
-        "display_name": {
-          "description": "DisplayName: The name of the user, suitable for display to end-users.  Each\nuser returned MAY include a non-empty displayName value.  The name\nSHOULD be the full name of the User being described, if known\n(e.g., \"Babs Jensen\" or \"Ms. Barbara J Jensen, III\") but MAY be a\nusername or handle, if that is all that is available (e.g.,\n\"bjensen\").  The value provided SHOULD be the primary textual\nlabel by which this User is normally displayed by the service\nprovider when presenting it to end-users.",
-          "type": "string",
-          "x-go-name": "DisplayName"
-        },
-        "emails": {
-          "description": "Emails: Email addresses for the User.  The value SHOULD be specified\naccording to [RFC5321].  Service providers SHOULD canonicalize the\nvalue according to [RFC5321], e.g., \"bjensen@example.com\" instead\nof \"bjensen@EXAMPLE.COM\".  The \"display\" sub-attribute MAY be used\nto return the canonicalized representation of the email value.\nThe \"type\" sub-attribute is used to provide a classification\nmeaningful to the (human) user.  The user interface should\nencourage the use of basic values of \"work\", \"home\", and \"other\"\nand MAY allow additional type values to be used at the discretion\nof SCIM clients.",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/identityEmail"
-          },
-          "x-go-name": "Emails"
-        },
-        "gender": {
-          "type": "string",
-          "x-go-name": "Gender"
-        },
         "id": {
-          "description": "ID: A unique identifier chosen by you. It can be a URN (e.g. \"arn:aws:iam::123456789012\"),\na stringified integer (e.g. \"123456789012\"), a uuid (e.g. \"9f425a8d-7efc-4768-8f23-7647a74fdf13\"). It is up to you\nto pick a format you'd like. It is discouraged to use a personally identifiable value here, like the username\nor the email, as this field is immutable.",
+          "description": "ID is a unique identifier chosen by you. It can be a URN (e.g. \"arn:aws:iam::123456789012\"),\na stringified integer (e.g. \"123456789012\"), a uuid (e.g. \"9f425a8d-7efc-4768-8f23-7647a74fdf13\"). It is up to you\nto pick a format you'd like. It is discouraged to use a personally identifiable value here, like the username\nor the email, as this field is immutable.",
           "type": "string",
           "x-go-name": "ID"
         },
-        "ims": {
-          "description": "IMS: Instant messaging addresses for the user.  No official\ncanonicalization rules exist for all instant messaging addresses,\nbut service providers SHOULD, when appropriate, remove all\nwhitespace and convert the address to lowercase.  The \"type\"\nsub-attribute SHOULD take one of the following values: \"aim\",\n\"gtalk\", \"icq\", \"xmpp\", \"msn\", \"skype\", \"qq\", \"yahoo\", or \"other\"\n(representing currently popular IM services at the time of this\nwriting).  Service providers MAY add further values if new IM\nservices are introduced and MAY specify more detailed\ncanonicalization rules for each possible value.",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/InstantMessaging"
-          },
-          "x-go-name": "IMS"
-        },
-        "locale": {
-          "type": "string",
-          "x-go-name": "Locale"
-        },
-        "metadata": {
+        "traits": {
           "$ref": "#/definitions/RawMessage"
         },
-        "name": {
-          "$ref": "#/definitions/Name"
-        },
-        "nick_name": {
-          "description": "NickName: The casual way to address the user in real life, e.g., \"Bob\" or\n\"Bobby\" instead of \"Robert\".  This attribute SHOULD NOT be used to\nrepresent a User's username (e.g., bjensen or mpepperidge).",
+        "traits_schema_url": {
           "type": "string",
-          "x-go-name": "NickName"
-        },
-        "phone_numbers": {
-          "description": "PhoneNumbers: Phone numbers for the user.  The value SHOULD be specified\naccording to the format defined in [RFC3966], e.g.,\n'tel:+1-201-555-0123'.  Service providers SHOULD canonicalize the\nvalue according to [RFC3966] format, when appropriate.  The\n\"display\" sub-attribute MAY be used to return the canonicalized\nrepresentation of the phone number value.  The sub-attribute\n\"type\" often has typical values of \"work\", \"home\", \"mobile\",\n\"fax\", \"pager\", and \"other\" and MAY allow more types to be defined\nby the SCIM clients.",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/identityPhoneNumber"
-          },
-          "x-go-name": "PhoneNumbers"
-        },
-        "photos": {
-          "description": "Photos: A URI that is a uniform resource locator (as defined in\nSection 1.1.3 of [RFC3986]) that points to a resource location\nrepresenting the user's image.  The resource MUST be a file (e.g.,\na GIF, JPEG, or PNG image file) rather than a web page containing\nan image.  Service providers MAY return the same image in\ndifferent sizes, although it is recognized that no standard for\ndescribing images of various sizes currently exists.  Note that\nthis attribute SHOULD NOT be used to send down arbitrary photos\ntaken by this user; instead, profile photos of the user that are\nsuitable for display when describing the user should be sent.\nInstead of the standard canonical values for type, this attribute\ndefines the following canonical values to represent popular photo\nsizes: \"photo\" and \"thumbnail\".",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/Photo"
-          },
-          "x-go-name": "Photos"
-        },
-        "picture_url": {
-          "type": "string",
-          "x-go-name": "PictureURL"
-        },
-        "preferred_language": {
-          "type": "string",
-          "x-go-name": "PreferredLanguage"
-        },
-        "profile_url": {
-          "description": "ProfileURL: A URI that is a uniform resource locator (as defined in\nSection 1.1.3 of [RFC3986]) and that points to a location\nrepresenting the user's online profile (e.g., a web page).  URIs\nare canonicalized per Section 6.2 of [RFC3986].",
-          "type": "string",
-          "x-go-name": "ProfileURL"
-        },
-        "title": {
-          "description": "Title: The user's title, such as \"Vice President\".",
-          "type": "string",
-          "x-go-name": "Title"
-        },
-        "user_type": {
-          "type": "string",
-          "x-go-name": "UserType"
-        },
-        "website_url": {
-          "type": "string",
-          "x-go-name": "WebsiteURL"
-        },
-        "zone_info": {
-          "$ref": "#/definitions/Location"
+          "x-go-name": "TraitsSchemaURL"
         }
       },
       "x-go-name": "Identity",
-      "x-go-package": "github.com/ory/hive/identity"
+      "x-go-package": "github.com/ory/kratos/identity"
     },
     "identityCredentials": {
       "description": "Credentials represents a specific credential type",
       "type": "object",
       "properties": {
+        "config": {
+          "$ref": "#/definitions/RawMessage"
+        },
         "id": {
           "$ref": "#/definitions/CredentialsType"
         },
@@ -402,148 +219,22 @@
             "type": "string"
           },
           "x-go-name": "Identifiers"
-        },
-        "options": {
-          "$ref": "#/definitions/RawMessage"
         }
       },
       "x-go-name": "Credentials",
-      "x-go-package": "github.com/ory/hive/identity"
+      "x-go-package": "github.com/ory/kratos/identity"
     },
-    "identityEmail": {
-      "description": "Email represents an email address",
+    "version": {
       "type": "object",
       "properties": {
-        "metadata": {
-          "$ref": "#/definitions/RawMessage"
-        },
-        "primary": {
-          "description": "Primary: True if the field is the primary field; false if the field\nis a secondary\nfield.",
-          "type": "boolean",
-          "x-go-name": "Primary"
-        },
-        "type": {
-          "description": "Type: The type of the address. The type can be custom or one of these\npredefined values:\n\n`home`\n`work`\n`other`",
+        "version": {
+          "description": "Version is the service's version.",
           "type": "string",
-          "x-go-name": "Type"
-        },
-        "value": {
-          "description": "Value: The email address.",
-          "type": "string",
-          "x-go-name": "Value"
-        },
-        "verified": {
-          "description": "Verified: True if the field is verified; false if the field is\nunverified. A\nverified field is typically a name, email address, phone number,\nor\nwebsite that has been confirmed to be owned by the person.",
-          "type": "boolean",
-          "x-go-name": "Verified"
+          "x-go-name": "Version"
         }
       },
-      "x-go-name": "Email",
-      "x-go-package": "github.com/ory/hive/identity"
-    },
-    "identityPhoneNumber": {
-      "description": "PhoneNumber represents an phone number",
-      "type": "object",
-      "properties": {
-        "metadata": {
-          "$ref": "#/definitions/RawMessage"
-        },
-        "primary": {
-          "description": "Primary: True if the field is the primary field; false if the field\nis a secondary\nfield.",
-          "type": "boolean",
-          "x-go-name": "Primary"
-        },
-        "type": {
-          "description": "Type: The type of the phone number. The type can be custom or one of\nthese predefined values:\n\n`home`\n`work`\n`mobile`\n`homeFax`\n`workFax`\n`otherFax`\n`pager`\n`workMobile`\n`workPager`\n`main`",
-          "type": "string",
-          "x-go-name": "Type"
-        },
-        "value": {
-          "description": "Value: The phone number.",
-          "type": "string",
-          "x-go-name": "Value"
-        },
-        "verified": {
-          "description": "Verified: True if the field is verified; false if the field is\nunverified. A\nverified field is typically a name, email address, phone number,\nor\nwebsite that has been confirmed to be owned by the person.",
-          "type": "boolean",
-          "x-go-name": "Verified"
-        }
-      },
-      "x-go-name": "PhoneNumber",
-      "x-go-package": "github.com/ory/hive/identity"
-    },
-    "identityPhysicalAddress": {
-      "description": "Address is a physical mailing address for this user. Canonical type values\nof \"work\", \"home\", and \"other\".  This attribute is a complex type\nwith the following sub-attributes.",
-      "type": "object",
-      "properties": {
-        "city": {
-          "description": "City: The city of the address.",
-          "type": "string",
-          "x-go-name": "City"
-        },
-        "country": {
-          "description": "Country: The country of the address.",
-          "type": "string",
-          "x-go-name": "Country"
-        },
-        "countryCode": {
-          "description": "CountryCode: The [ISO 3166-1\nalpha-2](http://www.iso.org/iso/country_codes.htm) country\ncode of the address.",
-          "type": "string",
-          "x-go-name": "CountryCode"
-        },
-        "extendedAddress": {
-          "description": "ExtendedAddress: The extended address of the address; for example,\nthe apartment number.",
-          "type": "string",
-          "x-go-name": "ExtendedAddress"
-        },
-        "formattedType": {
-          "description": "FormattedType: The read-only type of the address translated and\nformatted in the viewer's\naccount locale or the `Accept-Language` HTTP header locale.",
-          "type": "string",
-          "x-go-name": "FormattedType"
-        },
-        "formattedValue": {
-          "description": "FormattedValue: The unstructured value of the address. If this is not\nset by the user it\nwill be automatically constructed from structured values.",
-          "type": "string",
-          "x-go-name": "FormattedValue"
-        },
-        "poBox": {
-          "description": "PoBox: The P.O. box of the address.",
-          "type": "string",
-          "x-go-name": "PoBox"
-        },
-        "postalCode": {
-          "description": "PostalCode: The postal code of the address.",
-          "type": "string",
-          "x-go-name": "PostalCode"
-        },
-        "primary": {
-          "description": "Primary: True if the field is the primary field; false if the field\nis a secondary\nfield.",
-          "type": "boolean",
-          "x-go-name": "Primary"
-        },
-        "region": {
-          "description": "Region: The region of the address; for example, the state or\nprovince.",
-          "type": "string",
-          "x-go-name": "Region"
-        },
-        "streetAddress": {
-          "description": "StreetAddress: The street address.",
-          "type": "string",
-          "x-go-name": "StreetAddress"
-        },
-        "type": {
-          "description": "Type: The type of the address. The type can be custom or one of these\npredefined values:\n\n`home`\n`work`\n`other`",
-          "type": "string",
-          "x-go-name": "Type"
-        },
-        "verified": {
-          "description": "Verified: True if the field is verified; false if the field is\nunverified. A\nverified field is typically a name, email address, phone number,\nor\nwebsite that has been confirmed to be owned by the person.",
-          "type": "boolean",
-          "x-go-name": "Verified"
-        }
-      },
-      "x-go-name": "Address",
-      "x-go-package": "github.com/ory/hive/identity"
+      "x-go-name": "swaggerVersion",
+      "x-go-package": "github.com/ory/kratos/vendor/github.com/ory/x/healthx"
     }
   },
   "responses": {

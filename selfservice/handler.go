@@ -9,10 +9,10 @@ import (
 
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/hive/driver/configuration"
-	"github.com/ory/hive/selfservice/errorx"
-	"github.com/ory/hive/session"
-	"github.com/ory/hive/x"
+	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/x"
 )
 
 const (

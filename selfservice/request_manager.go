@@ -3,7 +3,7 @@ package selfservice
 import (
 	"context"
 
-	"github.com/ory/hive/identity"
+	"github.com/ory/kratos/identity"
 )
 
 type RequestManager interface {

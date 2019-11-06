@@ -1,6 +1,6 @@
 package oidc
 
-import "github.com/ory/hive/selfservice"
+import "github.com/ory/kratos/selfservice"
 
 type CredentialsConfig struct {
 	Subject  string `json:"subject"`

@@ -16,8 +16,8 @@ import (
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/hive/driver/configuration"
-	"github.com/ory/hive/selfservice"
+	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/selfservice"
 )
 
 func TestRedirector(t *testing.T) {

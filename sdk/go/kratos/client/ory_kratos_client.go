@@ -11,10 +11,11 @@ import (
 
 	strfmt "github.com/go-openapi/strfmt"
 
-	"github.com/ory/hive/sdk/go/hive/client/admin"
+	"github.com/ory/kratos/sdk/go/kratos/client/health"
+	"github.com/ory/kratos/sdk/go/kratos/client/version"
 )
 
-// Default ory hive HTTP client.
+// Default ory kratos HTTP client.
 var Default = NewHTTPClient(nil)
 
 const (
@@ -29,14 +30,14 @@ const (
 // DefaultSchemes are the default schemes found in Meta (info) section of spec file
 var DefaultSchemes = []string{"http", "https"}
 
-// NewHTTPClient creates a new ory hive HTTP client.
-func NewHTTPClient(formats strfmt.Registry) *OryHive {
+// NewHTTPClient creates a new ory kratos HTTP client.
+func NewHTTPClient(formats strfmt.Registry) *OryKratos {
 	return NewHTTPClientWithConfig(formats, nil)
 }
 
-// NewHTTPClientWithConfig creates a new ory hive HTTP client,
+// NewHTTPClientWithConfig creates a new ory kratos HTTP client,
 // using a customizable transport config.
-func NewHTTPClientWithConfig(formats strfmt.Registry, cfg *TransportConfig) *OryHive {
+func NewHTTPClientWithConfig(formats strfmt.Registry, cfg *TransportConfig) *OryKratos {
 	// ensure nullable parameters have default
 	if cfg == nil {
 		cfg = DefaultTransportConfig()
@@ -47,17 +48,19 @@ func NewHTTPClientWithConfig(formats strfmt.Registry, cfg *TransportConfig) *Ory
 	return New(transport, formats)
 }
 
-// New creates a new ory hive client
-func New(transport runtime.ClientTransport, formats strfmt.Registry) *OryHive {
+// New creates a new ory kratos client
+func New(transport runtime.ClientTransport, formats strfmt.Registry) *OryKratos {
 	// ensure nullable parameters have default
 	if formats == nil {
 		formats = strfmt.Default
 	}
 
-	cli := new(OryHive)
+	cli := new(OryKratos)
 	cli.Transport = transport
 
-	cli.Admin = admin.New(transport, formats)
+	cli.Health = health.New(transport, formats)
+
+	cli.Version = version.New(transport, formats)
 
 	return cli
 }
@@ -101,17 +104,21 @@ func (cfg *TransportConfig) WithSchemes(schemes []string) *TransportConfig {
 	return cfg
 }
 
-// OryHive is a client for ory hive
-type OryHive struct {
-	Admin *admin.Client
+// OryKratos is a client for ory kratos
+type OryKratos struct {
+	Health *health.Client
+
+	Version *version.Client
 
 	Transport runtime.ClientTransport
 }
 
 // SetTransport changes the transport on the client and all its subresources
-func (c *OryHive) SetTransport(transport runtime.ClientTransport) {
+func (c *OryKratos) SetTransport(transport runtime.ClientTransport) {
 	c.Transport = transport
 
-	c.Admin.SetTransport(transport)
+	c.Health.SetTransport(transport)
+
+	c.Version.SetTransport(transport)
 
 }

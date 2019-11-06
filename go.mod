@@ -1,7 +1,6 @@
-module github.com/ory/hive
+module github.com/ory/kratos
 
 require (
-	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/bxcodec/faker v2.0.1+incompatible
 	github.com/coreos/go-oidc v2.0.0+incompatible
 	github.com/fsnotify/fsnotify v1.4.7
@@ -36,7 +35,7 @@ require (
 	github.com/lib/pq v1.2.0 // indirect
 	github.com/luna-duclos/instrumentedsql v1.1.1 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect
-	github.com/mattn/goveralls v0.0.2
+	github.com/mattn/goveralls v0.0.4
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/ory/go-acc v0.0.0-20181118080137-ddc355013f90
@@ -46,7 +45,7 @@ require (
 	github.com/ory/herodot v0.6.2
 	github.com/ory/viper v1.5.6
 	github.com/ory/x v0.0.80
-	github.com/pelletier/go-toml v1.5.0 // indirect
+	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.8.1
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect
@@ -54,9 +53,9 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/spf13/viper v1.5.0 // indirect
 	github.com/sqs/goreturns v0.0.0-20181028201513-538ac6014518
 	github.com/stretchr/testify v1.4.0
-	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/tidwall/gjson v1.3.2
 	github.com/tidwall/sjson v1.0.4
 	github.com/toqueteos/webbrowser v1.1.0 // indirect
@@ -65,11 +64,12 @@ require (
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
 	golang.org/x/net v0.0.0-20191014212845-da9a3fd4c582 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
-	golang.org/x/sys v0.0.0-20191020152052-9984515f0562 // indirect
-	golang.org/x/tools v0.0.0-20190711191110-9a621aea19f8
+	golang.org/x/sys v0.0.0-20191105231009-c1f44814a5cd // indirect
+	golang.org/x/tools v0.0.0-20191105231337-689d0f08e67a
 	google.golang.org/appengine v1.6.5 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.28.0
+	gopkg.in/yaml.v2 v2.2.5 // indirect
 )
 
 go 1.13

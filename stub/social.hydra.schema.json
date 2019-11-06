@@ -6,7 +6,7 @@
     "sub": {
       "type": "string",
       "format": "email",
-      "hive": {
+      "kratos": {
         "mappings": {
           "identity": [
             "email"
