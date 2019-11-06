@@ -1,13 +1,9 @@
 package client
 
 import (
-	"encoding/json"
-	"os"
 
 	"github.com/spf13/cobra"
 
-	"github.com/ory/kratos/sdk/go/kratos/client/admin"
-	"github.com/ory/kratos/sdk/go/kratos/models"
 	"github.com/ory/x/cmdx"
 )
 
@@ -19,23 +15,23 @@ func NewIdentityClient() *IdentityClient {
 
 func (ic *IdentityClient) Import(cmd *cobra.Command, args []string) {
 	cmdx.MinArgs(cmd, args, 1)
-
-	for _, p := range args {
-		var is []models.Identity
-		f, err := os.Open(p)
-		cmdx.Must(err, "Unable to open file %s: %s", p, err)
-		d := json.NewDecoder(f)
-		d.DisallowUnknownFields()
-		err = d.Decode(&is)
-		cmdx.Must(err, "Unable to decode file %s to JSON: %s", p, err)
-
-		for _, i := range is {
-			_, err := c(cmd, "endpoint").Admin.UpsertIdentity(
-				admin.NewUpsertIdentityParams().WithBody(&i),
-			)
-			cmdx.Must(err, "Unable to import identity: %s", err)
-		}
-	}
+	//
+	// for _, p := range args {
+	// 	var is []models.Identity
+	// 	f, err := os.Open(p)
+	// 	cmdx.Must(err, "Unable to open file %s: %s", p, err)
+	// 	d := json.NewDecoder(f)
+	// 	d.DisallowUnknownFields()
+	// 	err = d.Decode(&is)
+	// 	cmdx.Must(err, "Unable to decode file %s to JSON: %s", p, err)
+	//
+	// 	for _, i := range is {
+	// 		_, err := c(cmd, "endpoint").Admin.UpsertIdentity(
+	// 			admin.NewUpsertIdentityParams().WithBody(&i),
+	// 		)
+	// 		cmdx.Must(err, "Unable to import identity: %s", err)
+	// 	}
+	// }
 }
 
 func (ic *IdentityClient) List(cmd *cobra.Command, args []string) {

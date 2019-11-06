@@ -22,7 +22,7 @@ init:
 
 .PHONY: lint
 lint:
-		golangci-lint run
+		GO111MODULE=on golangci-lint run
 
 .PHONY: format
 format:

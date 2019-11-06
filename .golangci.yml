@@ -1,3 +1,7 @@
 linters:
   disable:
     - ineffassign
+
+run:
+  skip-dirs:
+    - sdk/
