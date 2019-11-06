@@ -55,10 +55,10 @@ jobs:
       - run: GO111MODULE=off go get github.com/mattn/goveralls github.com/ory/go-acc
       - restore_cache:
           keys:
-            - go-mod-v1-{{ checksum "go.sum" }}
+            - go-v1-{{ checksum "go.sum" }}
       - run: go mod download
       - save_cache:
-          key: go-mod-v1-{{ checksum "go.sum" }}
+          key: go-v1-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
       - run: timeout 15 sh -c 'until nc -z $0 $1; do sleep 1; done' 127.0.0.1 4444
