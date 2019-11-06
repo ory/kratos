@@ -1,6 +1,6 @@
-// Ory Hive
+// Ory Kratos
 //
-// Welcome to the ORY Hive HTTP API documentation!
+// Welcome to the ORY Kratos HTTP API documentation!
 //
 //     Schemes: http, https
 //     Host:

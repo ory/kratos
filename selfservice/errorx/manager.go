@@ -14,8 +14,8 @@ import (
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/hive/schema"
-	"github.com/ory/hive/x"
+	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/x"
 )
 
 type (

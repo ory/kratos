@@ -7,15 +7,15 @@ import (
 
 	"github.com/ory/viper"
 
-	"github.com/ory/hive/sdk/go/hive/client"
+	"github.com/ory/kratos/sdk/go/kratos/client"
 	"github.com/ory/x/cmdx"
 	"github.com/ory/x/flagx"
 )
 
-func c(cmd *cobra.Command, key string) *client.OryHive {
+func c(cmd *cobra.Command, key string) *client.OryKratos {
 	e := flagx.MustGetString(cmd, key)
 	if e == "" {
-		e = viper.GetString("hive.urls.admin")
+		e = viper.GetString("kratos.urls.admin")
 	}
 	u, err := url.ParseRequestURI(e)
 	cmdx.Must(err, `Unable to parse endpoint URL "%s": %s`, e, err)

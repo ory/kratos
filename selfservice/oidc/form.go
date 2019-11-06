@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/hive/selfservice"
+	"github.com/ory/kratos/selfservice"
 )
 
 func toMap(j json.RawMessage) map[string]interface{} {

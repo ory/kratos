@@ -9,8 +9,8 @@ import (
 
 	"github.com/ory/gojsonschema"
 
-	"github.com/ory/hive/identity"
-	"github.com/ory/hive/schema"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/schema"
 )
 
 var _ identity.ValidationExtender = new(ValidationExtension)
@@ -38,11 +38,11 @@ func (e *ValidationExtension) Call(value interface{}, config *schema.Extension, 
 		for _, t := range config.Mappings.Identity.Traits {
 			res, err := sjson.SetBytes(e.i.Traits, t.Path, value)
 			if err != nil {
-				return errors.Errorf(`schema: unable to apply mapping from path "%s.hive.path.traits.identity.mappings": %s`, context.String("."), err)
+				return errors.Errorf(`schema: unable to apply mapping from path "%s.kratos.path.traits.identity.mappings": %s`, context.String("."), err)
 			}
 
 			if e.values, err = sjson.SetBytes(e.values, t.Path, value); err != nil {
-				return errors.Errorf(`schema: unable to apply mapping from path "%s.hive.path.traits.identity.mappings": %s`, context.String("."), err)
+				return errors.Errorf(`schema: unable to apply mapping from path "%s.kratos.path.traits.identity.mappings": %s`, context.String("."), err)
 			}
 
 			e.i.Traits = res

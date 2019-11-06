@@ -18,8 +18,8 @@ import (
 	"github.com/ory/x/resilience"
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/hive/driver"
-	"github.com/ory/hive/x"
+	"github.com/ory/kratos/driver"
+	"github.com/ory/kratos/x"
 )
 
 func newErrTs(t *testing.T, reg driver.Registry) *httptest.Server {

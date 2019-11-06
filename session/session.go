@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/ory/hive/identity"
+	"github.com/ory/kratos/identity"
 )
 
 type Session struct {

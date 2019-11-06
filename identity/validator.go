@@ -6,8 +6,8 @@ import (
 	"github.com/ory/gojsonschema"
 	"github.com/ory/x/stringsx"
 
-	"github.com/ory/hive/driver/configuration"
-	"github.com/ory/hive/schema"
+	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/schema"
 )
 
 type Validator struct {

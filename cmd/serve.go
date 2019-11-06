@@ -20,8 +20,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/ory/hive/cmd/daemon"
-	"github.com/ory/hive/driver"
+	"github.com/ory/kratos/cmd/daemon"
+	"github.com/ory/kratos/driver"
 )
 
 // serveCmd represents the serve command

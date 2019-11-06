@@ -6,9 +6,9 @@ import (
 
 	"github.com/ory/herodot"
 
-	"github.com/ory/hive/selfservice"
-	"github.com/ory/hive/session"
-	"github.com/ory/hive/x"
+	"github.com/ory/kratos/selfservice"
+	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/x"
 )
 
 var _ selfservice.HookLoginPostExecutor = new(Redirector)

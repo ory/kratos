@@ -16,7 +16,7 @@ import (
 
 	"github.com/ory/herodot"
 
-	"github.com/ory/hive/driver/configuration"
+	"github.com/ory/kratos/driver/configuration"
 )
 
 var _ Pool = new(PoolSQL)

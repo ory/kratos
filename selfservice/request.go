@@ -9,7 +9,7 @@ import (
 
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/hive/identity"
+	"github.com/ory/kratos/identity"
 )
 
 type RequestMethodConfig interface {

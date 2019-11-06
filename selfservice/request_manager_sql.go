@@ -19,7 +19,7 @@ import (
 
 	"github.com/ory/herodot"
 
-	"github.com/ory/hive/identity"
+	"github.com/ory/kratos/identity"
 )
 
 var _ RegistrationRequestManager = new(RequestManagerSQL)

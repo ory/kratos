@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/ory/hive/sdk/go/hive/client/admin"
-	"github.com/ory/hive/sdk/go/hive/models"
+	"github.com/ory/kratos/sdk/go/kratos/client/admin"
+	"github.com/ory/kratos/sdk/go/kratos/models"
 	"github.com/ory/x/cmdx"
 )
 

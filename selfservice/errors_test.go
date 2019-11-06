@@ -18,21 +18,21 @@ import (
 	"github.com/ory/viper"
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/hive/driver/configuration"
-	"github.com/ory/hive/identity"
-	"github.com/ory/hive/internal"
-	"github.com/ory/hive/schema"
-	. "github.com/ory/hive/selfservice"
-	"github.com/ory/hive/selfservice/password"
+	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/schema"
+	. "github.com/ory/kratos/selfservice"
+	"github.com/ory/kratos/selfservice/password"
 )
 
 func TestErrorHandler(t *testing.T) {
 	conf, reg := internal.NewMemoryRegistry(t)
 	eh := NewErrorHandler(reg, conf)
 
-	viper.Set(configuration.ViperKeyURLsError, "http://hive.ory.sh/error")
-	viper.Set(configuration.ViperKeyURLsLogin, "http://hive.ory.sh/form")
-	viper.Set(configuration.ViperKeyURLsRegistration, "http://hive.ory.sh/form")
+	viper.Set(configuration.ViperKeyURLsError, "http://kratos.ory.sh/error")
+	viper.Set(configuration.ViperKeyURLsLogin, "http://kratos.ory.sh/form")
+	viper.Set(configuration.ViperKeyURLsRegistration, "http://kratos.ory.sh/form")
 
 	// cem = config error message
 	var cem = func(config RequestMethodConfig) string {
@@ -56,35 +56,35 @@ func TestErrorHandler(t *testing.T) {
 	}{
 		{
 			err:    errors.WithStack(ErrIDTokenMissing),
-			endURL: "http://hive.ory.sh/form?request=0",
+			endURL: "http://kratos.ory.sh/form?request=0",
 			assertConfig: func(t *testing.T, config RequestMethodConfig) {
 				assert.EqualValues(t, ErrIDTokenMissing.Reason(), cem(config))
 			},
 		},
 		{
 			err:    errors.WithStack(ErrScopeMissing),
-			endURL: "http://hive.ory.sh/form?request=1",
+			endURL: "http://kratos.ory.sh/form?request=1",
 			assertConfig: func(t *testing.T, config RequestMethodConfig) {
 				assert.EqualValues(t, ErrScopeMissing.Reason(), cem(config))
 			},
 		},
 		{
 			err:    errors.WithStack(ErrLoginRequestExpired),
-			endURL: "http://hive.ory.sh/form?request=2",
+			endURL: "http://kratos.ory.sh/form?request=2",
 			assertConfig: func(t *testing.T, config RequestMethodConfig) {
 				assert.EqualValues(t, ErrLoginRequestExpired.Reason(), cem(config))
 			},
 		},
 		{
 			err:    errors.WithStack(ErrRegistrationRequestExpired),
-			endURL: "http://hive.ory.sh/form?request=3",
+			endURL: "http://kratos.ory.sh/form?request=3",
 			assertConfig: func(t *testing.T, config RequestMethodConfig) {
 				assert.EqualValues(t, ErrRegistrationRequestExpired.Reason(), cem(config))
 			},
 		},
 		{
 			err:    errors.New("some error"),
-			endURL: "http://hive.ory.sh/error?error=",
+			endURL: "http://kratos.ory.sh/error?error=",
 			assertSystemError: func(t *testing.T, errs []json.RawMessage) {
 				assert.Len(t, errs, 1)
 				assert.Equal(t, `{"code":500,"message":"some error"}`, string(errs[0]))
@@ -92,7 +92,7 @@ func TestErrorHandler(t *testing.T) {
 		},
 		{
 			err:    errors.WithStack(schema.NewInvalidCredentialsError()),
-			endURL: "http://hive.ory.sh/form?request=5",
+			endURL: "http://kratos.ory.sh/form?request=5",
 			assertConfig: func(t *testing.T, config RequestMethodConfig) {
 				assertFormFields(t, config)
 				assert.EqualValues(t, `The provided credentials are invalid. Check for spelling mistakes in your password or username, email address, or phone number.`, cem(config))
@@ -100,7 +100,7 @@ func TestErrorHandler(t *testing.T) {
 		},
 		{
 			err:    errors.WithStack(schema.NewRequiredError(nil, gojsonschema.NewJsonContext("field_missing", nil))),
-			endURL: "http://hive.ory.sh/form?request=6",
+			endURL: "http://kratos.ory.sh/form?request=6",
 			assertConfig: func(t *testing.T, config RequestMethodConfig) {
 				assertFormFields(t, config)
 				assert.Contains(t, config.GetFormFields()["field_missing"].Error.Message, "field_missing is required")
@@ -118,7 +118,7 @@ func TestErrorHandler(t *testing.T) {
 					"boolt":    {"true"},
 					"checkbox": {"false", "true"},
 				},
-				URL: urlx.ParseOrPanic("http://hive.ory.sh/form"),
+				URL: urlx.ParseOrPanic("http://kratos.ory.sh/form"),
 			}
 
 			t.Run("case=form", func(t *testing.T) {
@@ -192,7 +192,7 @@ func TestErrorHandler(t *testing.T) {
 			})
 
 			t.Run("case=json", func(t *testing.T) {
-				t.Skip("see https://github.com/ory/hive/issues/61")
+				t.Skip("see https://github.com/ory/kratos/issues/61")
 			})
 		})
 	}

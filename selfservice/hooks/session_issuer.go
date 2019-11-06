@@ -3,8 +3,8 @@ package hooks
 import (
 	"net/http"
 
-	"github.com/ory/hive/selfservice"
-	"github.com/ory/hive/session"
+	"github.com/ory/kratos/selfservice"
+	"github.com/ory/kratos/session"
 )
 
 var _ selfservice.HookLoginPostExecutor = new(SessionIssuer)

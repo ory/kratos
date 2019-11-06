@@ -10,8 +10,8 @@ import (
 	"github.com/ory/herodot"
 	"github.com/ory/x/pagination"
 
-	"github.com/ory/hive/driver/configuration"
-	"github.com/ory/hive/schema"
+	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/schema"
 )
 
 var _ Pool = new(PoolMemory)

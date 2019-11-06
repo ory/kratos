@@ -15,9 +15,9 @@ import (
 
 	"github.com/ory/herodot"
 
-	"github.com/ory/hive/internal"
-	"github.com/ory/hive/selfservice/errorx"
-	"github.com/ory/hive/x"
+	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/x"
 )
 
 func TestHandler(t *testing.T) {

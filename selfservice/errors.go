@@ -12,11 +12,11 @@ import (
 
 	"github.com/ory/x/stringslice"
 
-	"github.com/ory/hive/driver/configuration"
-	"github.com/ory/hive/identity"
-	"github.com/ory/hive/schema"
-	"github.com/ory/hive/selfservice/errorx"
-	"github.com/ory/hive/x"
+	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/x"
 )
 
 var (
@@ -83,7 +83,7 @@ func (s *ErrorHandler) json(
 	r *http.Request,
 	err error,
 ) bool {
-	// TODO improve this https://github.com/ory/hive/issues/44 #44 #61
+	// TODO improve this https://github.com/ory/kratos/issues/44 #44 #61
 	if httputil.NegotiateContentType(
 		r,
 		[]string{"application/json", "text/html", "text/*", "*/*"},

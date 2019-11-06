@@ -5,7 +5,7 @@ import (
 
 	"github.com/ory/x/logrusx"
 
-	"github.com/ory/hive/driver/configuration"
+	"github.com/ory/kratos/driver/configuration"
 )
 
 type DefaultDriver struct {

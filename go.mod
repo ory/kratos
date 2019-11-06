@@ -1,4 +1,4 @@
-module github.com/ory/hive
+module github.com/ory/kratos
 
 require (
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869

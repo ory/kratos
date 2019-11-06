@@ -8,7 +8,7 @@ jobs:
       - image: circleci/golang:1.13
         environment:
           - GO111MODULE=on
-    working_directory: /go/src/github.com/ory/hive
+    working_directory: /go/src/github.com/ory/kratos
     steps:
       - checkout
       - restore_cache:
@@ -44,7 +44,7 @@ jobs:
           - POSTGRES_USER=test
           - POSTGRES_PASSWORD=test
           - POSTGRES_DB=hydra
-    working_directory: /go/src/github.com/ory/hive
+    working_directory: /go/src/github.com/ory/kratos
     steps:
       - checkout
       - setup_remote_docker

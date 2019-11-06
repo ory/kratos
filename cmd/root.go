@@ -24,7 +24,7 @@ var schemas = packr.New("schemas", "../docs")
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use: "hive",
+	Use: "kratos",
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -43,7 +43,7 @@ func init() {
 	}
 
 	cobra.OnInitialize(func() {
-		viperx.InitializeConfig("hive", "", nil)
+		viperx.InitializeConfig("kratos", "", nil)
 		logger = logrusx.New()
 
 		if err := viperx.Validate(gojsonschema.NewBytesLoader(schema)); err != nil {
@@ -56,7 +56,7 @@ func init() {
 			if err := viperx.Validate(gojsonschema.NewBytesLoader(schema)); err != nil {
 				viperx.LoggerWithValidationErrorFields(logger, err).
 					WithError(err).
-					Error("The changed configuration is invalid and could not be loaded. Rolling back to the last working configuration revision. Please address the validation errors before restarting ORY Hive.")
+					Error("The changed configuration is invalid and could not be loaded. Rolling back to the last working configuration revision. Please address the validation errors before restarting ORY Kratos.")
 				return viperx.ErrRollbackConfigurationChanges
 			}
 			return nil
@@ -68,10 +68,10 @@ func init() {
 				logger.
 					WithField("key", key).
 					WithField("reset_to", fmt.Sprintf("%v", viper.Get(key))).
-					Error("A configuration value marked as immutable has changed. Rolling back to the last working configuration revision. To reload the values please restart ORY Hive.")
+					Error("A configuration value marked as immutable has changed. Rolling back to the last working configuration revision. To reload the values please restart ORY Kratos.")
 			},
 		})
 	})
 
-	viperx.RegisterConfigFlag(rootCmd, "hive")
+	viperx.RegisterConfigFlag(rootCmd, "kratos")
 }

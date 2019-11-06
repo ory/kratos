@@ -17,8 +17,8 @@ import (
 
 	"github.com/ory/herodot"
 
-	"github.com/ory/hive/internal"
-	. "github.com/ory/hive/selfservice/errorx"
+	"github.com/ory/kratos/internal"
+	. "github.com/ory/kratos/selfservice/errorx"
 )
 
 // nolint: staticcheck

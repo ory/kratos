@@ -5,7 +5,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 
-	"github.com/ory/hive/x"
+	"github.com/ory/kratos/x"
 )
 
 type Handler struct {

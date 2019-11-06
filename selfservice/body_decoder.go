@@ -15,7 +15,7 @@ import (
 	"github.com/ory/herodot"
 	"github.com/ory/x/jsonx"
 
-	"github.com/ory/hive/x"
+	"github.com/ory/kratos/x"
 )
 
 type BodyDecoder struct{}

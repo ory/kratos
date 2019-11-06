@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// package main is the entry point for hive.
+// package main is the entry point for kratos.
 package main
 
-import "github.com/ory/hive/cmd"
+import "github.com/ory/kratos/cmd"
 
 func main() {
 	cmd.Execute()

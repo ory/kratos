@@ -16,10 +16,10 @@ import (
 	"github.com/ory/graceful"
 	"github.com/ory/x/metricsx"
 
-	"github.com/ory/hive/driver"
-	"github.com/ory/hive/selfservice"
-	"github.com/ory/hive/selfservice/password"
-	"github.com/ory/hive/x"
+	"github.com/ory/kratos/driver"
+	"github.com/ory/kratos/selfservice"
+	"github.com/ory/kratos/selfservice/password"
+	"github.com/ory/kratos/x"
 )
 
 func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []string) {
@@ -96,7 +96,7 @@ func telemetry(cmd *cobra.Command, n *negroni.Negroni, d driver.Driver) {
 		cmd,
 		d.Logger(),
 		&metricsx.Options{
-			Service:       "ory-hive",
+			Service:       "ory-kratos",
 			ClusterID:     metricsx.Hash(d.Configuration().DSN()),
 			IsDevelopment: d.Configuration().DSN() == "memory",
 			WriteKey:      "qQlI6q8Q4WvkzTjKQSor4sHYOikHIvvi",

@@ -13,14 +13,14 @@ import (
 
 	"github.com/ory/x/viperx"
 
-	"github.com/ory/hive/schema"
+	"github.com/ory/kratos/schema"
 )
 
 func TestViperProvider(t *testing.T) {
 	t.Run("suite=loaders", func(t *testing.T) {
 		viper.Reset()
 		viperx.InitializeConfig(
-			"hive",
+			"kratos",
 			"./../../docs/",
 			logrus.New(),
 		)
@@ -34,13 +34,13 @@ func TestViperProvider(t *testing.T) {
 		p := NewViperProvider(logrus.New())
 
 		t.Run("group=urls", func(t *testing.T) {
-			assert.Equal(t, "http://test.hive.ory.sh/login", p.LoginURL().String())
-			assert.Equal(t, "http://test.hive.ory.sh/register", p.RegisterURL().String())
-			assert.Equal(t, "http://test.hive.ory.sh/mfa", p.MultiFactorURL().String())
-			assert.Equal(t, "http://test.hive.ory.sh/error", p.ErrorURL().String())
+			assert.Equal(t, "http://test.kratos.ory.sh/login", p.LoginURL().String())
+			assert.Equal(t, "http://test.kratos.ory.sh/register", p.RegisterURL().String())
+			assert.Equal(t, "http://test.kratos.ory.sh/mfa", p.MultiFactorURL().String())
+			assert.Equal(t, "http://test.kratos.ory.sh/error", p.ErrorURL().String())
 
-			assert.Equal(t, "http://admin.hive.ory.sh", p.SelfAdminURL().String())
-			assert.Equal(t, "http://public.hive.ory.sh", p.SelfPublicURL().String())
+			assert.Equal(t, "http://admin.kratos.ory.sh", p.SelfAdminURL().String())
+			assert.Equal(t, "http://public.kratos.ory.sh", p.SelfPublicURL().String())
 
 			var ds []string
 			for _, v := range p.WhitelistedReturnToDomains() {
@@ -53,12 +53,12 @@ func TestViperProvider(t *testing.T) {
 		})
 
 		t.Run("group=identity", func(t *testing.T) {
-			assert.Equal(t, "http://test.hive.ory.sh/default-identity.schema.json", p.DefaultIdentityTraitsSchemaURL().String())
+			assert.Equal(t, "http://test.kratos.ory.sh/default-identity.schema.json", p.DefaultIdentityTraitsSchemaURL().String())
 		})
 
 		t.Run("group=serve", func(t *testing.T) {
-			assert.Equal(t, "admin.hive.ory.sh:1234", p.AdminListenOn())
-			assert.Equal(t, "public.hive.ory.sh:1235", p.PublicListenOn())
+			assert.Equal(t, "admin.kratos.ory.sh:1234", p.AdminListenOn())
+			assert.Equal(t, "public.kratos.ory.sh:1235", p.PublicListenOn())
 		})
 
 		t.Run("group=dsn", func(t *testing.T) {
@@ -79,7 +79,7 @@ func TestViperProvider(t *testing.T) {
 				enabled bool
 			}{
 				{id: "password", enabled: true, config: "{}"},
-				{id: "oidc", enabled: true, config: `{"providers":[{"client_id":"a","client_secret":"b","id":"github","provider":"github","schema_url":"http://test.hive.ory.sh/default-identity.schema.json"}]}`},
+				{id: "oidc", enabled: true, config: `{"providers":[{"client_id":"a","client_secret":"b","id":"github","provider":"github","schema_url":"http://test.kratos.ory.sh/default-identity.schema.json"}]}`},
 			} {
 				strategy := p.SelfServiceStrategy(tc.id)
 				assert.Equal(t, tc.enabled, strategy.Enabled)
@@ -93,7 +93,7 @@ func TestViperProvider(t *testing.T) {
 			t.Run("hook=before", func(t *testing.T) {
 				hook := p.SelfServiceRegistrationBeforeHooks()[0]
 				assert.EqualValues(t, "redirect", hook.Run)
-				assert.JSONEq(t, `{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.hive.ory.sh:4000/"}`, string(hook.Config))
+				assert.JSONEq(t, `{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`, string(hook.Config))
 			})
 
 			for _, tc := range []struct {
@@ -102,11 +102,11 @@ func TestViperProvider(t *testing.T) {
 			}{
 				{
 					strategy:       "password",
-					redirectConfig: `{"allow_user_defined_redirect":true,"default_redirect_url":"http://test.hive.ory.sh:4000/"}`,
+					redirectConfig: `{"allow_user_defined_redirect":true,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`,
 				},
 				{
 					strategy:       "oidc",
-					redirectConfig: `{"allow_user_defined_redirect":true,"default_redirect_url":"http://test.hive.ory.sh:4000/"}`,
+					redirectConfig: `{"allow_user_defined_redirect":true,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`,
 				},
 			} {
 				t.Run("hook=after/strategy="+tc.strategy, func(t *testing.T) {
@@ -129,7 +129,7 @@ func TestViperProvider(t *testing.T) {
 			t.Run("hook=before", func(t *testing.T) {
 				hook := p.SelfServiceLoginBeforeHooks()[0]
 				assert.EqualValues(t, "redirect", hook.Run)
-				assert.JSONEq(t, `{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.hive.ory.sh:4000/"}`, string(hook.Config))
+				assert.JSONEq(t, `{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`, string(hook.Config))
 			})
 
 			for _, tc := range []struct {
@@ -138,11 +138,11 @@ func TestViperProvider(t *testing.T) {
 			}{
 				{
 					strategy:       "password",
-					redirectConfig: `{"allow_user_defined_redirect":true,"default_redirect_url":"http://test.hive.ory.sh:4000/"}`,
+					redirectConfig: `{"allow_user_defined_redirect":true,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`,
 				},
 				{
 					strategy:       "oidc",
-					redirectConfig: `{"allow_user_defined_redirect":true,"default_redirect_url":"http://test.hive.ory.sh:4000/"}`,
+					redirectConfig: `{"allow_user_defined_redirect":true,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`,
 				},
 			} {
 				t.Run("hook=after/strategy="+tc.strategy, func(t *testing.T) {

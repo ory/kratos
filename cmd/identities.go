@@ -12,7 +12,7 @@ var identitiesCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(identitiesCmd)
 
-	identitiesCmd.PersistentFlags().String("endpoint", "", "Specifies the Ory Hive Admin URL. Defaults to HIVE_URLS_ADMIN")
+	identitiesCmd.PersistentFlags().String("endpoint", "", "Specifies the Ory Kratos Admin URL. Defaults to KRATOS_URLS_ADMIN")
 
 	// Here you will define your flags and configuration settings.
 

@@ -94,7 +94,7 @@ func (v *Validator) hook(h ValidationExtender) func(schema *gojsonschema.SubSche
 			return nil
 		}
 
-		raw, ok := m["hive"]
+		raw, ok := m["kratos"]
 		if !ok {
 			return nil
 		}
