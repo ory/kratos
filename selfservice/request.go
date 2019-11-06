@@ -70,8 +70,7 @@ func (r *Request) GetID() string {
 // Declassify returns a copy of the Request where all sensitive information
 // such as request headers is removed.
 func (r *Request) Declassify() *Request {
-	var rr Request
-	rr = *r
+	rr := *r
 	rr.RequestHeaders = http.Header{}
 	return &rr
 }
