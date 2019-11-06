@@ -15,7 +15,6 @@ jobs:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
       - run: go mod download
-      - run: go mod vendor
       - save_cache:
           key: go-mod-v1-{{ checksum "go.sum" }}
           paths:
