@@ -8,6 +8,8 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/ory/x/decoderx"
+	_ "github.com/ory/x/jsonschemax/fileloader"
+	_ "github.com/ory/x/jsonschemax/httploader"
 	"github.com/pkg/errors"
 	"github.com/tidwall/sjson"
 
@@ -101,14 +103,18 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	if err := decoderx.NewHTTP().Decode(r, &p, decoderx.HTTPFormDecoder(), option, decoderx.HTTPDecoderSetValidatePayloads(false)); err != nil {
+	if err := decoderx.NewHTTP().Decode(r, &p,
+		decoderx.HTTPFormDecoder(),
+		option,
+		decoderx.HTTPDecoderSetValidatePayloads(false),
+	); err != nil {
 		s.handleRegistrationError(w, r, ar, err)
 		return
 	}
 
 	if len(p.Password) == 0 {
 		s.handleRegistrationError(w, r, ar, errors.WithStack(schema.NewRequiredError("", gojsonschema.NewJsonContext("password", nil))))
-		returnd -
+		return
 	}
 
 	if len(p.Traits) == 0 {

@@ -6,7 +6,7 @@ import (
 	"net/url"
 
 	"github.com/golang/gddo/httputil"
-	"github.com/ory/x/decoderx"
+	"github.com/ory/x/jsonschemax"
 	"github.com/pkg/errors"
 	"github.com/santhosh-tekuri/jsonschema/v2"
 
@@ -24,20 +24,24 @@ import (
 
 var (
 	ErrIDTokenMissing = herodot.ErrBadRequest.
-		WithError("authentication failed because id_token is missing").
-		WithReasonf(`Authentication failed because no id_token was returned. Please accept the "openid" permission and try again.`)
+				WithError("authentication failed because id_token is missing").
+				WithReasonf(`Authentication failed because no id_token was returned. Please accept the "openid" permission and try again.`)
 
 	ErrScopeMissing = herodot.ErrBadRequest.
-		WithError("authentication failed because a required scope was not granted").
-		WithReasonf(`Unable to finish because one or more permissions were not granted. Please retry and accept all permissions.`)
+			WithError("authentication failed because a required scope was not granted").
+			WithReasonf(`Unable to finish because one or more permissions were not granted. Please retry and accept all permissions.`)
 
 	ErrLoginRequestExpired = herodot.ErrBadRequest.
-		WithError("login request expired").
-		WithReasonf(`The login request has expired. Please restart the flow.`)
+				WithError("login request expired").
+				WithReasonf(`The login request has expired. Please restart the flow.`)
+
+	ErrProfileRequestExpired = herodot.ErrBadRequest.
+					WithError("profile request expired").
+					WithReasonf(`The profile request has expired. Please restart the flow.`)
 
 	ErrRegistrationRequestExpired = herodot.ErrBadRequest.
-		WithError("registration request expired").
-		WithReasonf(`The registration request has expired. Please restart the flow.`)
+					WithError("registration request expired").
+					WithReasonf(`The registration request has expired. Please restart the flow.`)
 )
 
 type (
@@ -137,9 +141,9 @@ func (s *ErrorHandler) handleValidationError(r *http.Request, err *jsonschema.Va
 	for k, e := range err.Causes {
 		herodot.DefaultErrorLogger(s.d.Logger(), err).
 			Debugf("A validation error was caught (%d of %d): %s", k+1, len(err.Causes), e.Error())
-		fe := &FormError{Field: decoderx.JSONPointerToDotNotation(e.InstancePtr), Message: e.Message}
+		fe := &FormError{Field: jsonschemax.JSONPointerToDotNotation(e.InstancePtr), Message: e.Message}
 		config.AddError(fe)
-		config.GetFormFields().SetError(decoderx.JSONPointerToDotNotation(e.InstancePtr), fe)
+		config.GetFormFields().SetError(jsonschemax.JSONPointerToDotNotation(e.InstancePtr), fe)
 	}
 
 	return nil

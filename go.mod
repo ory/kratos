@@ -44,7 +44,7 @@ require (
 	github.com/ory/graceful v0.1.1
 	github.com/ory/herodot v0.6.2
 	github.com/ory/viper v1.5.6
-	github.com/ory/x v0.0.81
+	github.com/ory/x v0.0.82
 	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.8.1
@@ -71,7 +71,5 @@ require (
 	gopkg.in/go-playground/validator.v9 v9.28.0
 	gopkg.in/yaml.v2 v2.2.5 // indirect
 )
-
-replace github.com/ory/x => ../x
 
 go 1.13
