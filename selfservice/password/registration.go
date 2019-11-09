@@ -7,7 +7,9 @@ import (
 	"net/url"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/ory/x/decoderx"
 	"github.com/pkg/errors"
+	"github.com/tidwall/sjson"
 
 	"github.com/ory/gojsonschema"
 	"github.com/ory/herodot"
@@ -22,6 +24,20 @@ import (
 
 const (
 	RegistrationPath = "/auth/browser/methods/password/registration"
+
+	registrationFormPayloadSchema = `{
+  "$id": "https://schemas.ory.sh/kratos/selfservice/password/registration/config.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["password", "traits"],
+  "properties": {
+    "password": {
+      "type": "string",
+      "minLength": 1
+    },
+    "traits": {}
+  }
+}`
 )
 
 type RegistrationFormPayload struct {
@@ -46,6 +62,20 @@ func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Reques
 	)
 }
 
+func (s *Strategy) decoderRegistration() (decoderx.HTTPDecoderOption, error) {
+	raw, err := sjson.SetBytes([]byte(registrationFormPayloadSchema), "properties.traits.$ref", s.c.DefaultIdentityTraitsSchemaURL().String())
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	o, err := decoderx.HTTPRawJSONSchemaCompiler(raw)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return o, nil
+}
+
 func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	rid := r.URL.Query().Get("request")
 	if len(rid) == 0 {
@@ -65,14 +95,20 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 	}
 
 	var p RegistrationFormPayload
-	if err := s.dec.Decode(r, &p, selfservice.BodyDecoderOptions{AssertTypesForPrefix: "traits."}); err != nil {
+	option, err := s.decoderRegistration()
+	if err != nil {
+		s.handleRegistrationError(w, r, ar, err)
+		return
+	}
+
+	if err := decoderx.NewHTTP().Decode(r, &p, decoderx.HTTPFormDecoder(), option, decoderx.HTTPDecoderSetValidatePayloads(false)); err != nil {
 		s.handleRegistrationError(w, r, ar, err)
 		return
 	}
 
 	if len(p.Password) == 0 {
 		s.handleRegistrationError(w, r, ar, errors.WithStack(schema.NewRequiredError("", gojsonschema.NewJsonContext("password", nil))))
-		return
+		returnd -
 	}
 
 	if len(p.Traits) == 0 {

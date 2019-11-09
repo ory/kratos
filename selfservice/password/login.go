@@ -60,10 +60,8 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 		s.handleLoginError(w, r, ar, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
 		return
 	}
-	if err := s.dc.Decode(&p, r.PostForm); err != nil {
-		s.handleLoginError(w, r, ar, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form payload: %s", err.Error())))
-		return
-	}
+	p.Identifier = r.PostForm.Get("identifier")
+	p.Password = r.PostForm.Get("password")
 
 	if len(p.Identifier) == 0 {
 		s.handleLoginError(w, r, ar, errors.WithStack(schema.NewRequiredError("", gojsonschema.NewJsonContext("identifier", nil))))
