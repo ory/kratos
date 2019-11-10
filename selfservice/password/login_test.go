@@ -104,13 +104,13 @@ func TestLogin(t *testing.T) {
 			rid:     "0",
 			payload: "14=)=!(%)$/ZP()GHIÖ",
 			assert: func(t *testing.T, r *http.Response) {
-				assert.Contains(t, r.Request.URL.Path, "error-ts")
+				assert.Contains(t, r.Request.URL.Path, "login-ts")
 				body, err := ioutil.ReadAll(r.Body)
 				require.NoError(t, err)
 
-				assert.Equal(t, int64(http.StatusBadRequest), gjson.GetBytes(body, "0.code").Int(), "%s", body)
-				assert.Equal(t, "Bad Request", gjson.GetBytes(body, "0.status").String(), "%s", body)
-				assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "invalid URL escape", "%s", body)
+				assert.Equal(t, "request-0", gjson.GetBytes(body, "id").String(), "%s", body)
+				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
+				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.errors.0.message").String(), `invalid URL escape`)
 			},
 		},
 		{

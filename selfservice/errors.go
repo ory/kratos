@@ -1,11 +1,14 @@
 package selfservice
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 
 	"github.com/golang/gddo/httputil"
+	"github.com/ory/x/jsonschemax"
 	"github.com/pkg/errors"
+	"github.com/santhosh-tekuri/jsonschema/v2"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
@@ -31,6 +34,10 @@ var (
 	ErrLoginRequestExpired = herodot.ErrBadRequest.
 				WithError("login request expired").
 				WithReasonf(`The login request has expired. Please restart the flow.`)
+
+	ErrProfileRequestExpired = herodot.ErrBadRequest.
+					WithError("profile request expired").
+					WithReasonf(`The profile request has expired. Please restart the flow.`)
 
 	ErrRegistrationRequestExpired = herodot.ErrBadRequest.
 					WithError("registration request expired").
@@ -103,6 +110,8 @@ func (s *ErrorHandler) json(
 
 func (s *ErrorHandler) handleHerodotError(err *herodot.DefaultError, config RequestMethodConfig) error {
 	switch err.Error() {
+	case herodot.ErrBadRequest.Error():
+		config.AddError(&FormError{Message: err.Reason()})
 	case ErrIDTokenMissing.Error():
 		config.AddError(&FormError{Message: err.Reason()})
 	case ErrScopeMissing.Error():
@@ -118,7 +127,29 @@ func (s *ErrorHandler) handleHerodotError(err *herodot.DefaultError, config Requ
 	return nil
 }
 
-func (s *ErrorHandler) handleValidationError(r *http.Request, err schema.ResultErrors, config RequestMethodConfig, opts *ErrorHandlerOptions) error {
+func (s *ErrorHandler) handleValidationError(r *http.Request, err *jsonschema.ValidationError, config RequestMethodConfig, opts *ErrorHandlerOptions) error {
+	for k := range r.PostForm {
+		if !stringslice.Has(opts.IgnoreValuesForKeys, k) {
+			config.GetFormFields().SetValue(k, s.bd.ParseFormFieldOr(r.PostForm[k], r.PostForm.Get(k)))
+		}
+	}
+
+	for k, v := range opts.AdditionalKeys {
+		config.GetFormFields().SetValue(k, v)
+	}
+
+	for k, e := range err.Causes {
+		herodot.DefaultErrorLogger(s.d.Logger(), err).
+			Debugf("A validation error was caught (%d of %d): %s", k+1, len(err.Causes), e.Error())
+		fe := &FormError{Field: jsonschemax.JSONPointerToDotNotation(e.InstancePtr), Message: e.Message}
+		config.AddError(fe)
+		config.GetFormFields().SetError(jsonschemax.JSONPointerToDotNotation(e.InstancePtr), fe)
+	}
+
+	return nil
+}
+
+func (s *ErrorHandler) handleDeprecatedValidationError(r *http.Request, err schema.ResultErrors, config RequestMethodConfig, opts *ErrorHandlerOptions) error {
 	for k := range r.PostForm {
 		if !stringslice.Has(opts.IgnoreValuesForKeys, k) {
 			config.GetFormFields().SetValue(k, s.bd.ParseFormFieldOr(r.PostForm[k], r.PostForm.Get(k)))
@@ -158,10 +189,13 @@ func (s *ErrorHandler) handleError(
 
 	config := method.Config
 	config.Reset()
+
 	switch e := errors.Cause(err).(type) {
 	case *herodot.DefaultError:
 		return &config, s.handleHerodotError(e, config)
 	case schema.ResultErrors:
+		return &config, s.handleDeprecatedValidationError(r, e, config, opts)
+	case *jsonschema.ValidationError:
 		return &config, s.handleValidationError(r, e, config, opts)
 	}
 
@@ -176,6 +210,11 @@ func (s *ErrorHandler) HandleRegistrationError(
 	err error,
 	opts *ErrorHandlerOptions,
 ) {
+	s.d.Logger().WithError(err).
+		WithField("details", fmt.Sprintf("%+v", err)).
+		WithField("credentials_type", ct).
+		WithField("registration_request", rr).
+		Warn("Encountered registration error.")
 	opts = mergeErrorHandlerOptions(opts)
 
 	if rr == nil {
@@ -210,6 +249,11 @@ func (s *ErrorHandler) HandleLoginError(
 	err error,
 	opts *ErrorHandlerOptions,
 ) {
+	s.d.Logger().WithError(err).
+		WithField("details", fmt.Sprintf("%+v", err)).
+		WithField("credentials_type", ct).
+		WithField("login_request", rr).
+		Warn("Encountered login error.")
 	opts = mergeErrorHandlerOptions(opts)
 
 	if rr == nil {

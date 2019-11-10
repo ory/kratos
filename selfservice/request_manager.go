@@ -11,6 +11,16 @@ type RequestManager interface {
 	LoginRequestManager
 }
 
+type ProfileRequestManager interface {
+	CreateProfileRequest(context.Context, *LoginRequest) error
+	GetProfileRequest(ctx context.Context, id string) (*LoginRequest, error)
+	UpdateProfileRequest(context.Context, string, identity.CredentialsType, RequestMethodConfig) error
+}
+
+type ProfileRequestManagementProvider interface {
+	ProfileRequestManager() ProfileRequestManager
+}
+
 type LoginRequestManager interface {
 	CreateLoginRequest(context.Context, *LoginRequest) error
 	GetLoginRequest(ctx context.Context, id string) (*LoginRequest, error)

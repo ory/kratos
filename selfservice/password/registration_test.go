@@ -100,10 +100,9 @@ func TestRegistration(t *testing.T) {
 		t.Run("case=should show the error ui because the request payload is malformed", func(t *testing.T) {
 			rr := newRegistrationRequest(t, time.Minute)
 			body, res := makeRequest(t, rr.ID, "14=)=!(%)$/ZP()GHIÖ", http.StatusOK)
-			assert.Contains(t, res.Request.URL.Path, "error-ts")
-			assert.Equal(t, int64(http.StatusBadRequest), gjson.GetBytes(body, "0.code").Int(), "%s", body)
-			assert.Equal(t, "Bad Request", gjson.GetBytes(body, "0.status").String(), "%s", body)
-			assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "invalid URL escape", "%s", body)
+			assert.Contains(t, res.Request.URL.Path, "signup-ts")
+			assert.Equal(t, rr.ID, gjson.GetBytes(body, "id").String(), "%s", body)
+			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.errors.0.message").String(), "invalid URL escape", "%s", body)
 		})
 
 		t.Run("case=should show the error ui because the request id is missing", func(t *testing.T) {
@@ -165,7 +164,7 @@ func TestRegistration(t *testing.T) {
 			assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "No login identifiers", "%s", body)
 		})
 
-		t.Run("case=should fail because schema did not specify an identifier", func(t *testing.T) {
+		t.Run("case=should fail because schema does not exist", func(t *testing.T) {
 			viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/i-do-not-exist.schema.json")
 			rr := newRegistrationRequest(t, time.Minute)
 			body, res := makeRequest(t, rr.ID, url.Values{
@@ -176,7 +175,7 @@ func TestRegistration(t *testing.T) {
 			assert.Contains(t, res.Request.URL.Path, "error-ts")
 			assert.Equal(t, int64(http.StatusInternalServerError), gjson.GetBytes(body, "0.code").Int(), "%s", body)
 			assert.Equal(t, "Internal Server Error", gjson.GetBytes(body, "0.status").String(), "%s", body)
-			assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "Unable to parse JSON schema", "%s", body)
+			assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "no such file or directory", "%s", body)
 		})
 
 		t.Run("case=should pass and set up a session", func(t *testing.T) {

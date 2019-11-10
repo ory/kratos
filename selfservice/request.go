@@ -53,6 +53,19 @@ func (r *LoginRequest) Valid() error {
 	return nil
 }
 
+type ProfileRequest struct{ *Request }
+
+func NewProfileRequest(exp time.Duration, r *http.Request) *ProfileRequest {
+	return &ProfileRequest{Request: newRequestFromHTTP(exp, r)}
+}
+
+func (r *ProfileRequest) Valid() error {
+	if r.ExpiresAt.Before(time.Now()) {
+		return errors.WithStack(ErrProfileRequestExpired.WithReasonf("The profile request expired %.2f minutes ago, please try again", time.Since(r.ExpiresAt).Minutes()))
+	}
+	return nil
+}
+
 type Request struct {
 	ID             string                                             `json:"id"`
 	IssuedAt       time.Time                                          `json:"issued_at"`
