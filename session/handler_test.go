@@ -136,3 +136,53 @@ func TestIsNotAuthenticated(t *testing.T) {
 		})
 	}
 }
+
+func TestIsAuthenticated(t *testing.T) {
+	_, reg := internal.NewMemoryRegistry(t)
+	r := x.NewRouterPublic()
+
+	r.GET("/set", MockSessionCreateHandler(t, reg))
+	r.GET("/privileged/with-callback", reg.SessionHandler().IsAuthenticated(send(http.StatusOK), send(http.StatusBadRequest)))
+	r.GET("/privileged/without-callback", reg.SessionHandler().IsAuthenticated(send(http.StatusOK), nil))
+	ts := httptest.NewServer(r)
+	defer ts.Close()
+	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
+
+	sessionClient := MockCookieClient(t)
+	MockHydrateCookieClient(t, sessionClient, ts.URL+"/set")
+
+	for k, tc := range []struct {
+		c    *http.Client
+		call string
+		code int
+	}{
+		{
+			c:    sessionClient,
+			call: "/privileged/with-callback",
+			code: http.StatusOK,
+		},
+		{
+			c:    http.DefaultClient,
+			call: "/privileged/with-callback",
+			code: http.StatusBadRequest,
+		},
+
+		{
+			c:    sessionClient,
+			call: "/privileged/without-callback",
+			code: http.StatusOK,
+		},
+		{
+			c:    http.DefaultClient,
+			call: "/privileged/without-callback",
+			code: http.StatusForbidden,
+		},
+	} {
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			res, err := tc.c.Get(ts.URL + tc.call)
+			require.NoError(t, err)
+
+			assert.EqualValues(t, tc.code, res.StatusCode)
+		})
+	}
+}
