@@ -36,16 +36,13 @@ cover:
 .PHONY: sdk
 sdk:
 		GO111MODULE=on go mod tidy
-		GO111MODULE=on go mod vendor
-		GO111MODULE=off swagger generate spec -x sdk/go/kratos -m -o ./docs/api.swagger.json
-		GO111MODULE=off swagger validate ./docs/api.swagger.json
+		GO111MODULE=on swagger generate spec -x sdk/go/kratos -m -o ./docs/api.swagger.json
+		GO111MODULE=on swagger validate ./docs/api.swagger.json
 
 		rm -rf ./sdk/go/kratos/*
 		GO111MODULE=off swagger generate client -f ./docs/api.swagger.json -t sdk/go/kratos -A Ory_Kratos
 
 		cd sdk/go/kratos; goreturns -w -i -local github.com/ory $$(listx .)
-
-		rm -rf ./vendor
 
 .PHONE: mocks
 mocks:
