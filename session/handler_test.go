@@ -34,10 +34,10 @@ func TestHandler(t *testing.T) {
 		_, reg := internal.NewMemoryRegistry(t)
 		r := x.NewRouterPublic()
 
-		r.GET("/set", MockSessionCreateHandler(t, reg))
+		h, _ := MockSessionCreateHandler(t, reg)
+		r.GET("/set", h)
 
-		h := NewHandler(reg, herodot.NewJSONWriter(nil))
-		h.RegisterPublicRoutes(r)
+		NewHandler(reg, herodot.NewJSONWriter(nil)).RegisterPublicRoutes(r)
 		ts := httptest.NewServer(r)
 		defer ts.Close()
 
@@ -91,7 +91,8 @@ func TestIsNotAuthenticated(t *testing.T) {
 	_, reg := internal.NewMemoryRegistry(t)
 	r := x.NewRouterPublic()
 
-	r.GET("/set", MockSessionCreateHandler(t, reg))
+	h, _ := MockSessionCreateHandler(t, reg)
+	r.GET("/set", h)
 	r.GET("/public/with-callback", reg.SessionHandler().IsNotAuthenticated(send(http.StatusOK), send(http.StatusBadRequest)))
 	r.GET("/public/without-callback", reg.SessionHandler().IsNotAuthenticated(send(http.StatusOK), nil))
 	ts := httptest.NewServer(r)
@@ -141,7 +142,8 @@ func TestIsAuthenticated(t *testing.T) {
 	_, reg := internal.NewMemoryRegistry(t)
 	r := x.NewRouterPublic()
 
-	r.GET("/set", MockSessionCreateHandler(t, reg))
+	h, _ := MockSessionCreateHandler(t, reg)
+	r.GET("/set", h)
 	r.GET("/privileged/with-callback", reg.SessionHandler().IsAuthenticated(send(http.StatusOK), send(http.StatusBadRequest)))
 	r.GET("/privileged/without-callback", reg.SessionHandler().IsAuthenticated(send(http.StatusOK), nil))
 	ts := httptest.NewServer(r)

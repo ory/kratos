@@ -3,9 +3,13 @@ package driver
 import (
 	"github.com/ory/x/dbal"
 
+	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/flow/profile"
+	"github.com/ory/kratos/selfservice/flow/registration"
+
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/selfservice"
 	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/selfservice/persistence"
 	"github.com/ory/kratos/session"
 )
 
@@ -21,7 +25,7 @@ type RegistryMemory struct {
 	errorManager              errorx.Manager
 	identityPool              identity.Pool
 	sessionManager            session.Manager
-	selfserviceRequestManager selfservice.RequestManager
+	selfserviceRequestManager persistence.RequestPersister
 }
 
 func NewRegistryMemory() *RegistryMemory {
@@ -48,23 +52,31 @@ func (m *RegistryMemory) CanHandle(dsn string) bool {
 func (m *RegistryMemory) Ping() error {
 	return nil
 }
+
 func (m *RegistryMemory) SessionManager() session.Manager {
 	if m.sessionManager == nil {
 		m.sessionManager = session.NewManagerMemory(m.c, m)
 	}
 	return m.sessionManager
 }
-func (m *RegistryMemory) RegistrationRequestManager() selfservice.RegistrationRequestManager {
+
+func (m *RegistryMemory) getSelfserviceRequestManager() persistence.RequestPersister {
 	if m.selfserviceRequestManager == nil {
-		m.selfserviceRequestManager = selfservice.NewRequestManagerMemory()
+		m.selfserviceRequestManager = persistence.NewRequestManagerMemory()
 	}
 	return m.selfserviceRequestManager
 }
-func (m *RegistryMemory) LoginRequestManager() selfservice.LoginRequestManager {
-	if m.selfserviceRequestManager == nil {
-		m.selfserviceRequestManager = selfservice.NewRequestManagerMemory()
-	}
-	return m.selfserviceRequestManager
+
+func (m *RegistryMemory) RegistrationRequestPersister() registration.RequestPersister {
+	return m.getSelfserviceRequestManager()
+}
+
+func (m *RegistryMemory) LoginRequestPersister() login.RequestPersister {
+	return m.getSelfserviceRequestManager()
+}
+
+func (m *RegistryMemory) ProfileRequestPersister() profile.RequestPersister {
+	return m.getSelfserviceRequestManager()
 }
 
 func (m *RegistryMemory) ErrorManager() errorx.Manager {

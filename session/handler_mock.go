@@ -85,17 +85,13 @@ func MockHydrateCookieClient(t *testing.T, c *http.Client, u string) {
 	require.True(t, found)
 }
 
-func MockSessionCreateHandler(t *testing.T, reg Registry) httprouter.Handle {
+func MockSessionCreateHandlerWithIdentity(t *testing.T, reg Registry, i *identity.Identity) (httprouter.Handle, *Session) {
 	var sess Session
 	require.NoError(t, faker.FakeData(&sess))
-	sess.Identity = &identity.Identity{
-		ID:              uuid.New().String(),
-		TraitsSchemaURL: "file://./stub/identity.schema.json",
-		Traits:          json.RawMessage(`{}`),
-	}
+	sess.Identity = i
 
 	if viper.GetString(configuration.ViperKeyDefaultIdentityTraitsSchemaURL) == "" {
-		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
+		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/fake-session.schema.json")
 	}
 
 	_, err := reg.IdentityPool().Create(context.Background(), sess.Identity)
@@ -106,5 +102,14 @@ func MockSessionCreateHandler(t *testing.T, reg Registry) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		require.NoError(t, reg.SessionManager().Create(context.Background(), &sess))
 		require.NoError(t, reg.SessionManager().SaveToRequest(context.Background(), &sess, w, r))
-	}
+	}, &sess
+
+}
+
+func MockSessionCreateHandler(t *testing.T, reg Registry) (httprouter.Handle, *Session) {
+	return MockSessionCreateHandlerWithIdentity(t, reg, &identity.Identity{
+		ID:              uuid.New().String(),
+		TraitsSchemaURL: "file://./stub/fake-session.schema.json",
+		Traits:          json.RawMessage(`{"baz":"bar","foo":true,"bar":2.5}`),
+	})
 }

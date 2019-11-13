@@ -1,5 +1,13 @@
 module github.com/ory/kratos
 
+go 1.13
+
+replace github.com/ory/x => ../x
+
+replace github.com/santhosh-tekuri/jsonschema/v2 => ../jsonschema
+
+replace github.com/ory/gojsonschema => ../gojsonschema
+
 require (
 	github.com/bxcodec/faker v2.0.1+incompatible
 	github.com/coreos/go-oidc v2.0.0+incompatible
@@ -11,11 +19,11 @@ require (
 	github.com/go-openapi/strfmt v0.18.0
 	github.com/go-openapi/swag v0.18.0
 	github.com/go-openapi/validate v0.18.0
-	github.com/go-playground/form v3.1.4+incompatible
 	github.com/go-playground/locales v0.12.1 // indirect
 	github.com/go-playground/universal-translator v0.16.0 // indirect
 	github.com/go-swagger/go-swagger v0.19.0
 	github.com/go-swagger/scan-repo-boundary v0.0.0-20180623220736-973b3573c013 // indirect
+	github.com/gobuffalo/httptest v1.0.2
 	github.com/gobuffalo/packr/v2 v2.0.0-rc.15
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
 	github.com/golang/mock v1.3.1
@@ -36,6 +44,7 @@ require (
 	github.com/luna-duclos/instrumentedsql v1.1.1 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/mattn/goveralls v0.0.4
+	github.com/mitchellh/go-homedir v1.1.0
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/ory/go-acc v0.0.0-20181118080137-ddc355013f90
@@ -54,7 +63,7 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/spf13/viper v1.5.0 // indirect
+	github.com/spf13/viper v1.5.0
 	github.com/sqs/goreturns v0.0.0-20181028201513-538ac6014518
 	github.com/stretchr/testify v1.4.0
 	github.com/tidwall/gjson v1.3.2
@@ -71,5 +80,3 @@ require (
 	gopkg.in/go-playground/validator.v9 v9.28.0
 	gopkg.in/yaml.v2 v2.2.5 // indirect
 )
-
-go 1.13

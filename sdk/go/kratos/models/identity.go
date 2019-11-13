@@ -13,27 +13,33 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// Identity Identity represents a kratos identity
+// Identity Identity represents an ORY Kratos identity
 //
 // An identity can be a real human, a service, an IoT device - everything that
 // can be described as an "actor" in a system.
-// swagger:model Identity
+// swagger:model identity
 type Identity struct {
 
-	// credentials
-	Credentials map[string]Credentials `json:"credentials,omitempty"`
+	// Credentials represents all credentials that can be used for authenticating this identity.
+	Credentials map[string]IdentityCredentials `json:"credentials,omitempty"`
 
 	// ID is a unique identifier chosen by you. It can be a URN (e.g. "arn:aws:iam::123456789012"),
 	// a stringified integer (e.g. "123456789012"), a uuid (e.g. "9f425a8d-7efc-4768-8f23-7647a74fdf13"). It is up to you
 	// to pick a format you'd like. It is discouraged to use a personally identifiable value here, like the username
 	// or the email, as this field is immutable.
-	ID string `json:"id,omitempty"`
+	// Required: true
+	ID *string `json:"id"`
 
-	// traits schema URL
+	// Traits represent an identity's traits. The identity is able to create, modify, and delete traits
+	// in a self-service manner. The input will always be validated against the JSON Schema defined
+	// in `traits_schema_url`.
+	// Required: true
+	Traits interface{} `json:"traits"`
+
+	// TraitsSchemaURL is the JSON Schema to be used for validating the identity's traits.
+	//
+	// format: uri
 	TraitsSchemaURL string `json:"traits_schema_url,omitempty"`
-
-	// traits
-	Traits RawMessage `json:"traits,omitempty"`
 }
 
 // Validate validates this identity
@@ -41,6 +47,10 @@ func (m *Identity) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateCredentials(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateID(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -76,16 +86,18 @@ func (m *Identity) validateCredentials(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *Identity) validateTraits(formats strfmt.Registry) error {
+func (m *Identity) validateID(formats strfmt.Registry) error {
 
-	if swag.IsZero(m.Traits) { // not required
-		return nil
+	if err := validate.Required("id", "body", m.ID); err != nil {
+		return err
 	}
 
-	if err := m.Traits.Validate(formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("traits")
-		}
+	return nil
+}
+
+func (m *Identity) validateTraits(formats strfmt.Registry) error {
+
+	if err := validate.Required("traits", "body", m.Traits); err != nil {
 		return err
 	}
 

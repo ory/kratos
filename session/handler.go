@@ -102,8 +102,8 @@ func RedirectOnAuthenticated(c configuration.Provider) httprouter.Handle {
 	}
 }
 
-func RedirectOnUnauthenticated(c configuration.Provider) httprouter.Handle {
+func RedirectOnUnauthenticated(to string) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		http.Redirect(w, r, c.LoginURL().String(), http.StatusFound)
+		http.Redirect(w, r, to, http.StatusFound)
 	}
 }

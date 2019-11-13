@@ -8,16 +8,23 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-type Handler struct {
-	r Registry
-}
+type (
+	handlerDependencies interface {
+		ErrorManager() Manager
+		x.WriterProvider
+	}
+	HandlerProvider interface {
+		SelfServiceErrorHandler() *Handler
+	}
+	Handler struct {
+		r handlerDependencies
+	}
+)
 
 func NewHandler(
-	r Registry,
+	r handlerDependencies,
 ) *Handler {
-	return &Handler{
-		r: r,
-	}
+	return &Handler{r: r}
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {

@@ -41,7 +41,7 @@ func SessionGetString(r *http.Request, s sessions.Store, id string, key interfac
 }
 
 // SessionGetStringOr returns a string for the given id and key or the fallback value if the session is invalid,
-// the key does not exist, or the key value is not a string.rrdqcx
+// the key does not exist, or the key value is not a string.
 func SessionGetStringOr(r *http.Request, s sessions.Store, id, key, fallback string) string {
 	v, err := SessionGetString(r, s, id, key)
 	if err != nil {

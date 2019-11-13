@@ -18,6 +18,133 @@
   },
   "basePath": "/",
   "paths": {
+    "/auth/browser/login": {
+      "get": {
+        "description": "This endpoint initializes a login flow. This endpoint **should not be called from a programatic API**\nbut instead for the, for example, browser. It will redirect the user agent (e.g. browser) to the\nconfigured login UI, appending the login challenge.\n\nIf the user-agent already has a valid authentication session, the server will respond with a 302\ncode redirecting to the config value of `urls.default_return_to`.\n\nFor an in-depth look at ORY Krato's login flow, head over to: https://www.ory.sh/docs/kratos/selfservice/login",
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Initialize a Login Flow",
+        "operationId": "initializeLoginFlow",
+        "responses": {
+          "302": {
+            "$ref": "#/responses/emptyResponse"
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
+    "/auth/browser/registration": {
+      "get": {
+        "description": "This endpoint initializes a registration flow. This endpoint **should not be called from a programatic API**\nbut instead for the, for example, browser. It will redirect the user agent (e.g. browser) to the\nconfigured registration UI, appending the registration challenge.\n\nFor an in-depth look at ORY Krato's registration flow, head over to: https://www.ory.sh/docs/kratos/selfservice/registration",
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Initialize a Registration Flow",
+        "operationId": "initializeRegistrationFlow",
+        "responses": {
+          "302": {
+            "$ref": "#/responses/emptyResponse"
+          },
+          "404": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
+    "/auth/browser/requests/login": {
+      "get": {
+        "description": "This endpoint returns a login request's context with, for example, error details and\nother information.\n\nFor an in-depth look at ORY Krato's login flow, head over to: https://www.ory.sh/docs/kratos/selfservice/login",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Get Login Request",
+        "operationId": "getLoginRequest",
+        "responses": {
+          "200": {
+            "description": "loginRequest",
+            "schema": {
+              "$ref": "#/definitions/loginRequest"
+            }
+          },
+          "302": {
+            "$ref": "#/responses/emptyResponse"
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
+    "/auth/browser/requests/registration": {
+      "get": {
+        "description": "This endpoint returns a registration request's context with, for example, error details and\nother information.\n\nFor an in-depth look at ORY Krato's registration flow, head over to: https://www.ory.sh/docs/kratos/selfservice/registration",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Get Registration Request",
+        "operationId": "getRegistrationRequest",
+        "responses": {
+          "200": {
+            "description": "registrationRequest",
+            "schema": {
+              "$ref": "#/definitions/registrationRequest"
+            }
+          },
+          "404": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
     "/health/alive": {
       "get": {
         "description": "This endpoint returns a 200 status code when the HTTP server is up running.\nThis status does currently not include checks whether the database connection is working.\n\nIf the service supports TLS Edge Termination, this endpoint does not require the\n`X-Forwarded-Proto` header to be set.\n\nBe aware that if you are running multiple nodes of this service, the health status will never\nrefer to the cluster state, only to a single instance.",
@@ -72,6 +199,102 @@
         }
       }
     },
+    "/profiles": {
+      "get": {
+        "description": "This endpoint initializes a profile update flow. This endpoint **should not be called from a programatic API**\nbut instead for the, for example, browser. It will redirect the user agent (e.g. browser) to the\nconfigured login UI, appending the login challenge.\n\nIf the user-agent does not have a valid authentication session, a 302 code will be returned which\nredirects to the initializeLoginFlow endpoint, appending this page as the return_to value.\n\nFor an in-depth look at ORY Krato's profile management flow, head over to: https://www.ory.sh/docs/kratos/selfservice/profile",
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Initialize Profile Management Flow",
+        "operationId": "initializeProfileManagementFlow",
+        "responses": {
+          "302": {
+            "$ref": "#/responses/emptyResponse"
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "This endpoint returns a login request's context with, for example, error details and\nother information.\n\nFor an in-depth look at ORY Krato's profile management flow, head over to: https://www.ory.sh/docs/kratos/selfservice/profile",
+        "consumes": [
+          "application/json",
+          "application/x-www-form-urlencoded"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Complete Profile Management Flow",
+        "operationId": "completeProfileManagementFlow",
+        "responses": {
+          "302": {
+            "$ref": "#/responses/emptyResponse"
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
+    "/profiles/requests": {
+      "get": {
+        "description": "This endpoint returns a profile management request's context with, for example, error details and\nother information.\n\nIt can be used from a Single Page Application or other applications running on a client device.\nThe request must be made with valid authentication cookies or it will fail!\n\nIf you wish to access this endpoint without the valid cookies (e.g. as part of a server)\nplease call this path at the admin port.\n\nFor an in-depth look at ORY Krato's profile management flow, head over to: https://www.ory.sh/docs/kratos/selfservice/profile",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Get Profile Management Request (via cookie)",
+        "operationId": "getProfileManagementRequest",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Request",
+            "description": "Request should be set to the value of the `request` query parameter\nby the profile management UI.",
+            "name": "request",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "profileManagementRequest",
+            "schema": {
+              "$ref": "#/definitions/profileManagementRequest"
+            }
+          },
+          "302": {
+            "$ref": "#/responses/emptyResponse"
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
     "/version": {
       "get": {
         "description": "This endpoint returns the service version typically notated using semantic versioning.\n\nIf the service supports TLS Edge Termination, this endpoint does not require the\n`X-Forwarded-Proto` header to be set.\n\nBe aware that if you are running multiple nodes of this service, the health status will never\nrefer to the cluster state, only to a single instance.",
@@ -95,21 +318,96 @@
     }
   },
   "definitions": {
+    "CSRFSetter": {
+      "type": "object"
+    },
     "CredentialsType": {
       "description": "and so on.",
       "type": "string",
-      "title": "CredentialsType  represents several different credential types, like password credentials, passwordless credentials,",
-      "x-go-package": "github.com/ory/kratos/identity"
+      "title": "CredentialsType  represents several different credential types, like password credentials, passwordless credentials,"
     },
-    "RawMessage": {
-      "description": "It implements Marshaler and Unmarshaler and can\nbe used to delay JSON decoding or precompute a JSON encoding.",
-      "type": "array",
-      "title": "RawMessage is a raw encoded JSON value.",
-      "items": {
-        "type": "integer",
-        "format": "uint8"
-      },
-      "x-go-package": "encoding/json"
+    "Error": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "description": "Code    FormErrorCode `json:\"id,omitempty\"`",
+          "type": "string"
+        }
+      }
+    },
+    "ErrorParser": {
+      "type": "object",
+      "title": "ErrorParser is capable of parsing and processing errors."
+    },
+    "FieldSetter": {
+      "type": "object"
+    },
+    "Resetter": {
+      "type": "object"
+    },
+    "ValueSetter": {
+      "type": "object"
+    },
+    "form": {
+      "description": "HTMLForm represents a HTML Form. The container can work with both HTTP Form and JSON requests",
+      "type": "object",
+      "properties": {
+        "action": {
+          "description": "Action should be used as the form action URL (\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e).",
+          "type": "string"
+        },
+        "errors": {
+          "description": "Errors contains all form errors. These will be duplicates of the individual field errors.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Error"
+          }
+        },
+        "fields": {
+          "$ref": "#/definitions/formFields"
+        },
+        "method": {
+          "description": "Method is the form method (e.g. POST)",
+          "type": "string"
+        }
+      }
+    },
+    "formField": {
+      "description": "Field represents a HTML Form Field",
+      "type": "object",
+      "properties": {
+        "errors": {
+          "description": "Errors contains all validation errors this particular field has caused.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Error"
+          }
+        },
+        "name": {
+          "description": "Name is the equivalent of \u003cinput name=\"{{.Name}}\"\u003e",
+          "type": "string",
+          "x-go-asdffasd": "Asdffsdafsad"
+        },
+        "required": {
+          "description": "Name is the equivalent of \u003cinput required=\"{{.Required}}\"\u003e",
+          "type": "boolean"
+        },
+        "type": {
+          "description": "Name is the equivalent of \u003cinput type=\"{{.Type}}\"\u003e",
+          "type": "string"
+        },
+        "value": {
+          "description": "Name is the equivalent of \u003cinput value=\"{{.Value}}\"\u003e",
+          "type": "object"
+        }
+      }
+    },
+    "formFields": {
+      "description": "Fields contains multiple fields asdfasdf",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/formField"
+      }
     },
     "genericError": {
       "description": "Error responses are sent when an error (e.g. unauthorized, bad request, ...) occurred.",
@@ -122,30 +420,25 @@
         "error": {
           "description": "Name is the error name.",
           "type": "string",
-          "x-go-name": "Name",
           "example": "The requested resource could not be found"
         },
         "error_code": {
           "description": "Code represents the error status code (404, 403, 401, ...).",
           "type": "integer",
           "format": "int64",
-          "x-go-name": "Code",
           "example": 404
         },
         "error_debug": {
           "description": "Debug contains debug information. This is usually not available and has to be enabled.",
           "type": "string",
-          "x-go-name": "Debug",
           "example": "The database adapter was unable to find the element"
         },
         "error_hint": {
           "description": "Hint contains further information on the nature of the error.",
           "type": "string",
-          "x-go-name": "Hint",
           "example": "Object with RequestID 12345 does not exist"
         }
-      },
-      "x-go-package": "github.com/ory/kratos"
+      }
     },
     "healthNotReadyStatus": {
       "type": "object",
@@ -155,59 +448,56 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          },
-          "x-go-name": "Errors"
+          }
         }
-      },
-      "x-go-name": "swaggerNotReadyStatus",
-      "x-go-package": "github.com/ory/kratos/vendor/github.com/ory/x/healthx"
+      }
     },
     "healthStatus": {
       "type": "object",
       "properties": {
         "status": {
           "description": "Status always contains \"ok\".",
-          "type": "string",
-          "x-go-name": "Status"
+          "type": "string"
         }
-      },
-      "x-go-name": "swaggerHealthStatus",
-      "x-go-package": "github.com/ory/kratos/vendor/github.com/ory/x/healthx"
+      }
     },
     "identity": {
       "description": "An identity can be a real human, a service, an IoT device - everything that\ncan be described as an \"actor\" in a system.",
       "type": "object",
-      "title": "Identity represents a kratos identity",
+      "title": "Identity represents an ORY Kratos identity",
+      "required": [
+        "id",
+        "traits"
+      ],
       "properties": {
         "credentials": {
+          "description": "Credentials represents all credentials that can be used for authenticating this identity.",
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/identityCredentials"
-          },
-          "x-go-name": "Credentials"
+          }
         },
         "id": {
           "description": "ID is a unique identifier chosen by you. It can be a URN (e.g. \"arn:aws:iam::123456789012\"),\na stringified integer (e.g. \"123456789012\"), a uuid (e.g. \"9f425a8d-7efc-4768-8f23-7647a74fdf13\"). It is up to you\nto pick a format you'd like. It is discouraged to use a personally identifiable value here, like the username\nor the email, as this field is immutable.",
-          "type": "string",
-          "x-go-name": "ID"
+          "type": "string"
         },
         "traits": {
-          "$ref": "#/definitions/RawMessage"
+          "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `traits_schema_url`.",
+          "type": "object"
         },
         "traits_schema_url": {
-          "type": "string",
-          "x-go-name": "TraitsSchemaURL"
+          "description": "TraitsSchemaURL is the JSON Schema to be used for validating the identity's traits.\n\nformat: uri",
+          "type": "string"
         }
-      },
-      "x-go-name": "Identity",
-      "x-go-package": "github.com/ory/kratos/identity"
+      }
     },
     "identityCredentials": {
       "description": "Credentials represents a specific credential type",
       "type": "object",
       "properties": {
         "config": {
-          "$ref": "#/definitions/RawMessage"
+          "description": "Config contains the concrete credential payload. This might contain the bcrypt-hashed password, or the email\nfor passwordless authentication.\n\ntype: string\nformat: binary",
+          "type": "object"
         },
         "id": {
           "$ref": "#/definitions/CredentialsType"
@@ -217,24 +507,210 @@
           "type": "array",
           "items": {
             "type": "string"
-          },
-          "x-go-name": "Identifiers"
+          }
         }
-      },
-      "x-go-name": "Credentials",
-      "x-go-package": "github.com/ory/kratos/identity"
+      }
+    },
+    "loginRequest": {
+      "type": "object",
+      "properties": {
+        "active": {
+          "$ref": "#/definitions/CredentialsType"
+        },
+        "expires_at": {
+          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,\na new request has to be initiated.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "id": {
+          "description": "ID represents the request's unique ID. When performing the login flow, this\nrepresents the id in the login ui's query parameter: http://login-ui/?request=\u003cid\u003e",
+          "type": "string"
+        },
+        "issued_at": {
+          "description": "IssuedAt is the time (UTC) when the request occurred.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "methods": {
+          "description": "Methods contains context for all enabled login methods. If a login request has been\nprocessed, but for example the password is incorrect, this will contain error messages.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/loginRequestMethod"
+          }
+        },
+        "request_url": {
+          "description": "RequestURL is the initial URL that was requested from ORY Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
+          "type": "string"
+        }
+      }
+    },
+    "loginRequestMethod": {
+      "type": "object",
+      "properties": {
+        "config": {
+          "$ref": "#/definitions/loginRequestMethodConfig"
+        },
+        "method": {
+          "$ref": "#/definitions/CredentialsType"
+        }
+      }
+    },
+    "loginRequestMethodConfig": {
+      "type": "object",
+      "allOf": [
+        {
+          "type": "object"
+        },
+        {
+          "type": "object"
+        },
+        {
+          "type": "object"
+        },
+        {
+          "type": "object"
+        }
+      ]
+    },
+    "oidcStrategyCredentialsConfig": {
+      "type": "object",
+      "properties": {
+        "provider": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        }
+      }
+    },
+    "oidcStrategyRequestMethod": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "description": "Action should be used as the form action URL (\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e).",
+          "type": "string"
+        },
+        "errors": {
+          "description": "Errors contains all form errors. These will be duplicates of the individual field errors.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Error"
+          }
+        },
+        "fields": {
+          "$ref": "#/definitions/formFields"
+        },
+        "method": {
+          "description": "Method is the form method (e.g. POST)",
+          "type": "string"
+        },
+        "providers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/formField"
+          }
+        }
+      }
+    },
+    "profileManagementRequest": {
+      "description": "This request is used when an identity wants to update profile information\n(especially traits) in a selfservice manner.\n\nFor more information head over to: https://www.ory.sh/docs/kratos/selfservice/profile",
+      "type": "object",
+      "title": "Request presents a profile management request",
+      "properties": {
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "form": {
+          "$ref": "#/definitions/form"
+        },
+        "id": {
+          "type": "string"
+        },
+        "identity": {
+          "$ref": "#/definitions/identity"
+        },
+        "issued_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "request_url": {
+          "type": "string"
+        }
+      }
+    },
+    "registrationRequest": {
+      "type": "object",
+      "properties": {
+        "active": {
+          "$ref": "#/definitions/CredentialsType"
+        },
+        "expires_at": {
+          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,\na new request has to be initiated.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "id": {
+          "description": "ID represents the request's unique ID. When performing the registration flow, this\nrepresents the id in the registration ui's query parameter: http://registration-ui/?request=\u003cid\u003e",
+          "type": "string"
+        },
+        "issued_at": {
+          "description": "IssuedAt is the time (UTC) when the request occurred.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "methods": {
+          "description": "Methods contains context for all enabled registration methods. If a registration request has been\nprocessed, but for example the password is incorrect, this will contain error messages.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/registrationRequestMethod"
+          }
+        },
+        "request_url": {
+          "description": "RequestURL is the initial URL that was requested from ORY Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
+          "type": "string"
+        }
+      }
+    },
+    "registrationRequestMethod": {
+      "type": "object",
+      "properties": {
+        "config": {
+          "$ref": "#/definitions/registrationRequestMethodConfig"
+        },
+        "method": {
+          "$ref": "#/definitions/CredentialsType"
+        }
+      }
+    },
+    "registrationRequestMethodConfig": {
+      "type": "object",
+      "allOf": [
+        {
+          "type": "object"
+        },
+        {
+          "type": "object"
+        },
+        {
+          "type": "object"
+        },
+        {
+          "type": "object"
+        },
+        {
+          "type": "object"
+        }
+      ]
     },
     "version": {
       "type": "object",
       "properties": {
         "version": {
           "description": "Version is the service's version.",
-          "type": "string",
-          "x-go-name": "Version"
+          "type": "string"
         }
-      },
-      "x-go-name": "swaggerVersion",
-      "x-go-package": "github.com/ory/kratos/vendor/github.com/ory/x/healthx"
+      }
     }
   },
   "responses": {

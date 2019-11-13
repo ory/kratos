@@ -6,7 +6,7 @@
     "sub": {
       "type": "string",
       "format": "email",
-      "kratos": {
+      "ory.sh/kratos": {
         "mappings": {
           "identity": [
             "email"

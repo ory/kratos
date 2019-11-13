@@ -17,8 +17,10 @@ import (
 	"github.com/ory/x/metricsx"
 
 	"github.com/ory/kratos/driver"
-	"github.com/ory/kratos/selfservice"
-	"github.com/ory/kratos/selfservice/password"
+	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/flow/logout"
+	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/x"
 )
 
@@ -33,9 +35,14 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 	telemetry(cmd, n, d)
 
 	router := x.NewRouterPublic()
-	r.StrategyHandler().RegisterPublicRoutes(router)
+	r.LoginHandler().RegisterPublicRoutes(router)
+	r.RegistrationHandler().RegisterPublicRoutes(router)
+	r.LogoutHandler().RegisterPublicRoutes(router)
+	r.ProfileManagementHandler().RegisterPublicRoutes(router)
+	r.LoginStrategies().RegisterPublicRoutes(router)
+	r.RegistrationStrategies().RegisterPublicRoutes(router)
 	r.SessionHandler().RegisterPublicRoutes(router)
-	r.ErrorHandler().RegisterPublicRoutes(router)
+	r.SelfServiceErrorHandler().RegisterPublicRoutes(router)
 	r.HealthHandler().SetRoutes(router.Router, false)
 
 	n.Use(NewNegroniLoggerMiddleware(l.(*logrus.Logger), "public#"+c.SelfPublicURL().String()))
@@ -108,11 +115,11 @@ func telemetry(cmd *cobra.Command, n *negroni.Negroni, d driver.Driver) {
 				"/auth/methods/oidc/",
 				password.RegistrationPath,
 				password.LoginPath,
-				selfservice.BrowserLoginPath,
-				selfservice.BrowserLoginRequestsPath,
-				selfservice.BrowserLogoutPath,
-				selfservice.BrowserRegistrationPath,
-				selfservice.BrowserRegistrationRequestsPath,
+				login.BrowserLoginPath,
+				login.BrowserLoginRequestsPath,
+				logout.BrowserLogoutPath,
+				registration.BrowserRegistrationPath,
+				registration.BrowserRegistrationRequestsPath,
 			},
 			BuildVersion: d.Registry().BuildVersion(),
 			BuildHash:    d.Registry().BuildHash(),

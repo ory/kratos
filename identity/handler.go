@@ -14,15 +14,19 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-type handlerDependencies interface {
-	PoolProvider
-	x.WriterProvider
-}
-
-type Handler struct {
-	c Configuration
-	r handlerDependencies
-}
+type (
+	handlerDependencies interface {
+		PoolProvider
+		x.WriterProvider
+	}
+	HandlerProvider interface {
+		IdentityHandler() *Handler
+	}
+	Handler struct {
+		c Configuration
+		r handlerDependencies
+	}
+)
 
 func NewHandler(
 	c Configuration,
