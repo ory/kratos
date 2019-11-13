@@ -12,6 +12,7 @@ import (
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/ory/kratos/sdk/go/kratos/client/health"
+	"github.com/ory/kratos/sdk/go/kratos/client/public"
 	"github.com/ory/kratos/sdk/go/kratos/client/version"
 )
 
@@ -59,6 +60,8 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *OryKratos 
 	cli.Transport = transport
 
 	cli.Health = health.New(transport, formats)
+
+	cli.Public = public.New(transport, formats)
 
 	cli.Version = version.New(transport, formats)
 
@@ -108,6 +111,8 @@ func (cfg *TransportConfig) WithSchemes(schemes []string) *TransportConfig {
 type OryKratos struct {
 	Health *health.Client
 
+	Public *public.Client
+
 	Version *version.Client
 
 	Transport runtime.ClientTransport
@@ -118,6 +123,8 @@ func (c *OryKratos) SetTransport(transport runtime.ClientTransport) {
 	c.Transport = transport
 
 	c.Health.SetTransport(transport)
+
+	c.Public.SetTransport(transport)
 
 	c.Version.SetTransport(transport)
 

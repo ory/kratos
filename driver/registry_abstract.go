@@ -16,16 +16,20 @@ import (
 
 	"github.com/ory/x/logrusx"
 
-	"github.com/ory/kratos/selfservice"
-	"github.com/ory/kratos/selfservice/hooks"
-	"github.com/ory/kratos/selfservice/oidc"
+	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/flow/logout"
+	"github.com/ory/kratos/selfservice/flow/profile"
+	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/hook"
+
+	"github.com/ory/kratos/selfservice/strategy/oidc"
 
 	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/errorx"
-	password2 "github.com/ory/kratos/selfservice/password"
+	password2 "github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/session"
 )
 
@@ -45,11 +49,21 @@ type RegistryAbstract struct {
 	passwordValidator password2.Validator
 	sessionsStore     sessions.Store
 
-	selfserviceRegistrationExecutor *selfservice.RegistrationExecutor
-	selfserviceLoginExecutor        *selfservice.LoginExecutor
-	selfserviceStrategyHandler      *selfservice.StrategyHandler
-	selfserviceStrategies           []selfservice.Strategy
-	seflserviceRequestErrorHandler  *selfservice.ErrorHandler
+	selfserviceRegistrationExecutor            *registration.HookExecutor
+	selfserviceRegistrationHandler             *registration.Handler
+	seflserviceRegistrationErrorHandler        *registration.ErrorHandler
+	selfserviceRegistrationRequestErrorHandler *registration.ErrorHandler
+
+	selfserviceLoginExecutor            *login.HookExecutor
+	selfserviceLoginHandler             *login.Handler
+	selfserviceLoginRequestErrorHandler *login.ErrorHandler
+
+	selfserviceProfileManagementHandler          *profile.Handler
+	selfserviceProfileRequestRequestErrorHandler *profile.ErrorHandler
+
+	selfserviceLogoutHandler *logout.Handler
+
+	selfserviceStrategies []selfServiceStrategy
 
 	buildVersion string
 	buildHash    string
@@ -87,6 +101,27 @@ func (m *RegistryAbstract) WithLogger(l logrus.FieldLogger) Registry {
 	return m.r
 }
 
+func (m *RegistryAbstract) ProfileManagementHandler() *profile.Handler {
+	if m.selfserviceProfileManagementHandler == nil {
+		m.selfserviceProfileManagementHandler = profile.NewHandler(m.r, m.c)
+	}
+	return m.selfserviceProfileManagementHandler
+}
+
+func (m *RegistryAbstract) ProfileRequestRequestErrorHandler() *profile.ErrorHandler {
+	if m.selfserviceProfileRequestRequestErrorHandler == nil {
+		m.selfserviceProfileRequestRequestErrorHandler = profile.NewErrorHandler(m.r, m.c)
+	}
+	return m.selfserviceProfileRequestRequestErrorHandler
+}
+
+func (m *RegistryAbstract) LogoutHandler() *logout.Handler {
+	if m.selfserviceLogoutHandler == nil {
+		m.selfserviceLogoutHandler = logout.NewHandler(m.r, m.c)
+	}
+	return m.selfserviceLogoutHandler
+}
+
 func (m *RegistryAbstract) HealthHandler() *healthx.Handler {
 	if m.healthxHandler == nil {
 		m.healthxHandler = healthx.NewHandler(m.Writer(), m.BuildVersion(), healthx.ReadyCheckers{
@@ -108,42 +143,54 @@ func (m *RegistryAbstract) CSRFHandler() *nosurf.CSRFHandler {
 	return m.nosurf
 }
 
-func (m *RegistryAbstract) SelfServiceStrategies() []selfservice.Strategy {
+func (m *RegistryAbstract) selfServiceStrategies() []selfServiceStrategy {
 	if m.selfserviceStrategies == nil {
-		m.selfserviceStrategies = []selfservice.Strategy{
+		m.selfserviceStrategies = []selfServiceStrategy{
 			password2.NewStrategy(m.r, m.c),
 			oidc.NewStrategy(m.r, m.c),
 		}
 	}
+
 	return m.selfserviceStrategies
 }
 
-type postHooks []interface {
-	selfservice.HookLoginPostExecutor
-	selfservice.HookRegistrationPostExecutor
+func (m *RegistryAbstract) RegistrationStrategies() registration.Strategies {
+	strategies := make([]registration.Strategy, len(m.selfServiceStrategies()))
+	for i := range strategies {
+		strategies[i] = m.selfServiceStrategies()[i]
+	}
+	return strategies
+}
+
+func (m *RegistryAbstract) LoginStrategies() login.Strategies {
+	strategies := make([]login.Strategy, len(m.selfServiceStrategies()))
+	for i := range strategies {
+		strategies[i] = m.selfServiceStrategies()[i]
+	}
+	return strategies
 }
 
 func (m *RegistryAbstract) hooksPost(credentialsType identity.CredentialsType, configs []configuration.SelfServiceHook) postHooks {
 	var i postHooks
 
-	for _, hook := range configs {
-		switch hook.Run {
-		case hooks.KeySessionIssuer:
+	for _, h := range configs {
+		switch h.Run {
+		case hook.KeySessionIssuer:
 			i = append(
 				i,
-				hooks.NewSessionIssuer(m.r),
+				hook.NewSessionIssuer(m.r),
 			)
-		case hooks.KeyRedirector:
+		case hook.KeyRedirector:
 			var rc struct {
 				R string `json:"default_redirect_url"`
 				A bool   `json:"allow_user_defined_redirect"`
 			}
 
-			if err := json.NewDecoder(bytes.NewBuffer(hook.Config)).Decode(&rc); err != nil {
+			if err := json.NewDecoder(bytes.NewBuffer(h.Config)).Decode(&rc); err != nil {
 				m.l.WithError(err).
 					WithField("type", credentialsType).
-					WithField("hook", hook.Run).
-					WithField("config", fmt.Sprintf("%s", hook.Config)).
+					WithField("hook", h.Run).
+					WithField("config", fmt.Sprintf("%s", h.Config)).
 					Errorf("The after hook is misconfigured.")
 				continue
 			}
@@ -152,15 +199,15 @@ func (m *RegistryAbstract) hooksPost(credentialsType identity.CredentialsType, c
 			if err != nil {
 				m.l.WithError(err).
 					WithField("type", credentialsType).
-					WithField("hook", hook.Run).
-					WithField("config", fmt.Sprintf("%s", hook.Config)).
+					WithField("hook", h.Run).
+					WithField("config", fmt.Sprintf("%s", h.Config)).
 					Errorf("The after hook is misconfigured.")
 				continue
 			}
 
 			i = append(
 				i,
-				hooks.NewRedirector(
+				hook.NewRedirector(
 					func() *url.URL {
 						return rcr
 					},
@@ -173,7 +220,7 @@ func (m *RegistryAbstract) hooksPost(credentialsType identity.CredentialsType, c
 		default:
 			m.l.
 				WithField("type", credentialsType).
-				WithField("hook", hook.Run).
+				WithField("hook", h.Run).
 				Errorf("A unknown post login hook was requested and can therefore not be used.")
 		}
 	}
@@ -181,58 +228,11 @@ func (m *RegistryAbstract) hooksPost(credentialsType identity.CredentialsType, c
 	return i
 }
 
-func (m *RegistryAbstract) PostRegistrationHooks(credentialsType identity.CredentialsType) []selfservice.HookRegistrationPostExecutor {
-	a := m.hooksPost(credentialsType, m.c.SelfServiceRegistrationAfterHooks(string(credentialsType)))
-	b := make([]selfservice.HookRegistrationPostExecutor, len(a))
-	for k, v := range a {
-		b[k] = v
-	}
-	return b
-}
-
-func (m *RegistryAbstract) PostLoginHooks(credentialsType identity.CredentialsType) []selfservice.HookLoginPostExecutor {
-	a := m.hooksPost(credentialsType, m.c.SelfServiceLoginAfterHooks(string(credentialsType)))
-	b := make([]selfservice.HookLoginPostExecutor, len(a))
-	for k, v := range a {
-		b[k] = v
-	}
-	return b
-}
-
-func (m *RegistryAbstract) SelfServiceRequestErrorHandler() *selfservice.ErrorHandler {
-	if m.seflserviceRequestErrorHandler == nil {
-		m.seflserviceRequestErrorHandler = selfservice.NewErrorHandler(m.r, m.c)
-	}
-	return m.seflserviceRequestErrorHandler
-}
-
-func (m *RegistryAbstract) AuthHookRegistrationPreExecutors() []selfservice.HookRegistrationPreExecutor {
-	return []selfservice.HookRegistrationPreExecutor{}
-}
-
-func (m *RegistryAbstract) AuthHookLoginPreExecutors() []selfservice.HookLoginPreExecutor {
-	return []selfservice.HookLoginPreExecutor{}
-}
-
 func (m *RegistryAbstract) IdentityValidator() *identity.Validator {
 	if m.identityValidator == nil {
 		m.identityValidator = identity.NewValidator(m.c)
 	}
 	return m.identityValidator
-}
-
-func (m *RegistryAbstract) RegistrationExecutor() *selfservice.RegistrationExecutor {
-	if m.selfserviceRegistrationExecutor == nil {
-		m.selfserviceRegistrationExecutor = selfservice.NewRegistrationExecutor(m.r, m.c)
-	}
-	return m.selfserviceRegistrationExecutor
-}
-
-func (m *RegistryAbstract) LoginExecutor() *selfservice.LoginExecutor {
-	if m.selfserviceLoginExecutor == nil {
-		m.selfserviceLoginExecutor = selfservice.NewLoginExecutor(m.r, m.c)
-	}
-	return m.selfserviceLoginExecutor
 }
 
 func (m *RegistryAbstract) WithConfig(c configuration.Provider) Registry {
@@ -283,19 +283,11 @@ func (m *RegistryAbstract) PasswordValidator() password2.Validator {
 	return m.passwordValidator
 }
 
-func (m *RegistryAbstract) ErrorHandler() *errorx.Handler {
+func (m *RegistryAbstract) SelfServiceErrorHandler() *errorx.Handler {
 	if m.errorHandler == nil {
 		m.errorHandler = errorx.NewHandler(m.r)
 	}
 	return m.errorHandler
-}
-
-func (m *RegistryAbstract) StrategyHandler() *selfservice.StrategyHandler {
-	if m.selfserviceStrategyHandler == nil {
-		m.selfserviceStrategyHandler = selfservice.NewStrategyHandler(m.r, m.c)
-	}
-
-	return m.selfserviceStrategyHandler
 }
 
 func (m *RegistryAbstract) CookieManager() sessions.Store {

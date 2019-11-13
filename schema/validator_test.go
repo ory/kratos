@@ -56,7 +56,7 @@ func TestSchemaValidator(t *testing.T) {
 			i:   json.RawMessage(`{ "firstName": "first-name", "lastName": "last-name", "age": -1 }`),
 			err: "must be greater than or equal to 1",
 			// gojsonschema.ResultError{
-			// 	Field: "age", Type: "number_gte", Value: "-1", Message: "Must be greater than or equal to 1/1",
+			// 	FieldName: "age", Type: "number_gte", Value: "-1", Message: "Must be greater than or equal to 1/1",
 			// 	Details: map[string]interface{}{"min": new(big.Rat).SetInt(big.NewInt(1)), "field": "age", "context": "(root).age"},
 			// },
 		},
@@ -64,7 +64,7 @@ func TestSchemaValidator(t *testing.T) {
 			i:   json.RawMessage(`{ "whatever": "first-name", "lastName": "last-name", "age": 1 }`),
 			err: "additional property whatever is not allowed",
 			// gojsonschema.ResultError{
-			// 	Field:   "(root)",
+			// 	FieldName:   "(root)",
 			// 	Type:    "additional_property_not_allowed",
 			// 	Message: "Additional property whatever is not allowed",
 			// 	Value:   "first-name",
@@ -80,7 +80,7 @@ func TestSchemaValidator(t *testing.T) {
 			i:   json.RawMessage(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
 			err: "additional property firstName is not allowed",
 			// gojsonschema.ResultError{
-			// 	Field:   "(root)",
+			// 	FieldName:   "(root)",
 			// 	Type:    "additional_property_not_allowed",
 			// 	Message: "Additional property firstName is not allowed",
 			// 	Value:   "first-name",

@@ -23,5 +23,8 @@ type Credentials struct {
 
 	// Config contains the concrete credential payload. This might contain the bcrypt-hashed password, or the email
 	// for passwordless authentication.
+	//
+	// type: string
+	// format: binary
 	Config json.RawMessage `json:"config"`
 }

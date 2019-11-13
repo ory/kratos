@@ -7,7 +7,7 @@
     "email": {
       "type": "string",
       "format": "email",
-      "kratos": {
+      "ory.sh/kratos": {
         "credentials": {
           "password": {
             "identifier": true
@@ -19,7 +19,7 @@
       "type": "array",
       "items": {
         "type": "string",
-        "kratos": {
+        "ory.sh/kratos": {
           "credentials": {
             "password": {
               "identifier": true

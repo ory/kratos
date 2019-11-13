@@ -1,0 +1,21 @@
+{
+  "$id": "https://example.com/registration.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Person",
+  "type": "object",
+  "properties": {
+    "stringy": {
+      "type": "string"
+    },
+    "numby": {
+      "type": "number"
+    },
+    "booly": {
+      "type": "boolean"
+    },
+    "should_long_string": {
+      "type": "string",
+      "minLength": 25
+    }
+  }
+}

@@ -52,20 +52,20 @@ func NewIsInstanceReadyOK() *IsInstanceReadyOK {
 healthStatus
 */
 type IsInstanceReadyOK struct {
-	Payload *models.SwaggerHealthStatus
+	Payload *models.HealthStatus
 }
 
 func (o *IsInstanceReadyOK) Error() string {
 	return fmt.Sprintf("[GET /health/ready][%d] isInstanceReadyOK  %+v", 200, o.Payload)
 }
 
-func (o *IsInstanceReadyOK) GetPayload() *models.SwaggerHealthStatus {
+func (o *IsInstanceReadyOK) GetPayload() *models.HealthStatus {
 	return o.Payload
 }
 
 func (o *IsInstanceReadyOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.SwaggerHealthStatus)
+	o.Payload = new(models.HealthStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
@@ -85,20 +85,20 @@ func NewIsInstanceReadyServiceUnavailable() *IsInstanceReadyServiceUnavailable {
 healthNotReadyStatus
 */
 type IsInstanceReadyServiceUnavailable struct {
-	Payload *models.SwaggerNotReadyStatus
+	Payload *models.HealthNotReadyStatus
 }
 
 func (o *IsInstanceReadyServiceUnavailable) Error() string {
 	return fmt.Sprintf("[GET /health/ready][%d] isInstanceReadyServiceUnavailable  %+v", 503, o.Payload)
 }
 
-func (o *IsInstanceReadyServiceUnavailable) GetPayload() *models.SwaggerNotReadyStatus {
+func (o *IsInstanceReadyServiceUnavailable) GetPayload() *models.HealthNotReadyStatus {
 	return o.Payload
 }
 
 func (o *IsInstanceReadyServiceUnavailable) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.SwaggerNotReadyStatus)
+	o.Payload = new(models.HealthNotReadyStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

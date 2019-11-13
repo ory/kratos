@@ -46,20 +46,20 @@ func NewGetVersionOK() *GetVersionOK {
 version
 */
 type GetVersionOK struct {
-	Payload *models.SwaggerVersion
+	Payload *models.Version
 }
 
 func (o *GetVersionOK) Error() string {
 	return fmt.Sprintf("[GET /version][%d] getVersionOK  %+v", 200, o.Payload)
 }
 
-func (o *GetVersionOK) GetPayload() *models.SwaggerVersion {
+func (o *GetVersionOK) GetPayload() *models.Version {
 	return o.Payload
 }
 
 func (o *GetVersionOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.SwaggerVersion)
+	o.Payload = new(models.Version)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

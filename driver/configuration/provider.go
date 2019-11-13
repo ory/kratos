@@ -38,11 +38,13 @@ type Provider interface {
 
 	DefaultReturnToURL() *url.URL
 
+	ProfileURL() *url.URL
 	LoginURL() *url.URL
 	ErrorURL() *url.URL
 	MultiFactorURL() *url.URL
 
 	SessionLifespan() time.Duration
+	SelfServiceProfileRequestLifespan() time.Duration
 	SelfServiceLoginRequestLifespan() time.Duration
 	SelfServiceRegistrationRequestLifespan() time.Duration
 

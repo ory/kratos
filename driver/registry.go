@@ -8,16 +8,19 @@ import (
 
 	"github.com/ory/x/healthx"
 
-	"github.com/ory/herodot"
+	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/flow/logout"
+	"github.com/ory/kratos/selfservice/flow/profile"
+	"github.com/ory/kratos/selfservice/flow/registration"
 
-	"github.com/ory/kratos/selfservice"
+	"github.com/ory/kratos/x"
 
 	"github.com/ory/x/dbal"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/errorx"
-	password2 "github.com/ory/kratos/selfservice/password"
+	password2 "github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/session"
 )
 
@@ -34,42 +37,58 @@ type Registry interface {
 	BuildHash() string
 	WithBuildInfo(version, hash, date string) Registry
 
-	Logger() logrus.FieldLogger
-	Writer() herodot.Writer
-
-	ErrorManager() errorx.Manager
-	ErrorHandler() *errorx.Handler
-
-	IdentityHandler() *identity.Handler
-	IdentityPool() identity.Pool
-
-	PasswordHasher() password2.Hasher
-	PasswordValidator() password2.Validator
-
-	SessionHandler() *session.Handler
-	SessionManager() session.Manager
-
-	StrategyHandler() *selfservice.StrategyHandler
-	SelfServiceStrategies() []selfservice.Strategy
-
-	CookieManager() sessions.Store
-
 	WithCSRFHandler(c *nosurf.CSRFHandler)
 	CSRFHandler() *nosurf.CSRFHandler
-
-	AuthHookRegistrationPreExecutors() []selfservice.HookRegistrationPreExecutor
-	AuthHookLoginPreExecutors() []selfservice.HookLoginPreExecutor
-	LoginExecutor() *selfservice.LoginExecutor
-	PostLoginHooks(credentialsType identity.CredentialsType) []selfservice.HookLoginPostExecutor
-	RegistrationExecutor() *selfservice.RegistrationExecutor
-	PostRegistrationHooks(credentialsType identity.CredentialsType) []selfservice.HookRegistrationPostExecutor
-	IdentityValidator() *identity.Validator
-	SelfServiceRequestErrorHandler() *selfservice.ErrorHandler
-	LoginRequestManager() selfservice.LoginRequestManager
-	RegistrationRequestManager() selfservice.RegistrationRequestManager
-
 	HealthHandler() *healthx.Handler
+	CookieManager() sessions.Store
+
+	x.WriterProvider
+	x.LoggingProvider
+
+	errorx.ManagementProvider
+	errorx.HandlerProvider
+
+	identity.HandlerProvider
+	identity.ValidationProvider
+	identity.PoolProvider
+
+	password2.ValidationProvider
+	password2.HashProvider
+
+	session.HandlerProvider
+	session.ManagementProvider
+
+	profile.HandlerProvider
+	profile.ErrorHandlerProvider
+	profile.RequestPersistenceProvider
+
+	login.RequestPersistenceProvider
+	login.ErrorHandlerProvider
+	login.HooksProvider
+	login.HookExecutorProvider
+	login.HandlerProvider
+	login.StrategyProvider
+
+	logout.HandlerProvider
+
+	registration.RequestPersistenceProvider
+	registration.ErrorHandlerProvider
+	registration.HooksProvider
+	registration.HookExecutorProvider
+	registration.HandlerProvider
+	registration.StrategyProvider
 }
+
+type (
+	selfServiceStrategy interface {
+		login.Strategy
+		registration.Strategy
+	}
+	postHooks []interface {
+		login.PostHookExecutor
+		registration.PostHookExecutor
+	}
+)
 
 func NewRegistry(c configuration.Provider) (Registry, error) {
 	driver, err := dbal.GetDriverFor(c.DSN())

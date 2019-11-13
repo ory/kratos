@@ -52,20 +52,20 @@ func NewIsInstanceAliveOK() *IsInstanceAliveOK {
 healthStatus
 */
 type IsInstanceAliveOK struct {
-	Payload *models.SwaggerHealthStatus
+	Payload *models.HealthStatus
 }
 
 func (o *IsInstanceAliveOK) Error() string {
 	return fmt.Sprintf("[GET /health/alive][%d] isInstanceAliveOK  %+v", 200, o.Payload)
 }
 
-func (o *IsInstanceAliveOK) GetPayload() *models.SwaggerHealthStatus {
+func (o *IsInstanceAliveOK) GetPayload() *models.HealthStatus {
 	return o.Payload
 }
 
 func (o *IsInstanceAliveOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.SwaggerHealthStatus)
+	o.Payload = new(models.HealthStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

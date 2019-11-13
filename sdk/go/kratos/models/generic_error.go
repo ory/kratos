@@ -19,25 +19,25 @@ import (
 // swagger:model genericError
 type GenericError struct {
 
-	// Code represents the error status code (404, 403, 401, ...).
-	Code int64 `json:"error_code,omitempty"`
-
-	// Debug contains debug information. This is usually not available and has to be enabled.
-	Debug string `json:"error_debug,omitempty"`
-
-	// Hint contains further information on the nature of the error.
-	Hint string `json:"error_hint,omitempty"`
-
 	// Name is the error name.
 	// Required: true
-	Name *string `json:"error"`
+	Error *string `json:"error"`
+
+	// Code represents the error status code (404, 403, 401, ...).
+	ErrorCode int64 `json:"error_code,omitempty"`
+
+	// Debug contains debug information. This is usually not available and has to be enabled.
+	ErrorDebug string `json:"error_debug,omitempty"`
+
+	// Hint contains further information on the nature of the error.
+	ErrorHint string `json:"error_hint,omitempty"`
 }
 
 // Validate validates this generic error
 func (m *GenericError) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateName(formats); err != nil {
+	if err := m.validateError(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -47,9 +47,9 @@ func (m *GenericError) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *GenericError) validateName(formats strfmt.Registry) error {
+func (m *GenericError) validateError(formats strfmt.Registry) error {
 
-	if err := validate.Required("error", "body", m.Name); err != nil {
+	if err := validate.Required("error", "body", m.Error); err != nil {
 		return err
 	}
 

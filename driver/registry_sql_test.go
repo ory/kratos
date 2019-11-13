@@ -21,20 +21,10 @@
 package driver
 
 import (
-	"context"
 	"flag"
-	"fmt"
 	"testing"
 
-	"github.com/jmoiron/sqlx"
-	"github.com/stretchr/testify/require"
-
 	"github.com/ory/x/sqlcon/dockertest"
-
-	"github.com/ory/x/dbal"
-	"github.com/ory/x/dbal/migratest"
-
-	"github.com/ory/kratos/selfservice"
 )
 
 // nolint: staticcheck
@@ -50,20 +40,23 @@ func TestXXMigrations(t *testing.T) {
 		return
 	}
 
-	migratest.RunPackrMigrationTests(
-		t,
-		migratest.MigrationSchemas{Migrations},
-		migratest.MigrationSchemas{dbal.FindMatchingTestMigrations("../contrib/sql/migrations/tests/", Migrations, AssetNames(), Asset)},
-		SQLPurgeTestDatabase, SQLPurgeTestDatabase,
-		func(t *testing.T, dbName string, db *sqlx.DB, _, step, steps int) {
-			id := fmt.Sprintf("%d-data", step+1)
-			t.Run("poll="+id, func(t *testing.T) {
-				t.Run("service=selfservice.NewRequestManagerSQL", func(t *testing.T) {
-					m := selfservice.NewRequestManagerSQL(db, requestManagerFactories)
-					_, err := m.GetLoginRequest(context.Background(), "1")
-					require.NoError(t, err)
-				})
-			})
-		},
-	)
+	t.Logf("Please implement me")
+	t.Fail()
+
+	// migratest.RunPackrMigrationTests(
+	// 	t,
+	// 	migratest.MigrationSchemas{Migrations},
+	// 	migratest.MigrationSchemas{dbal.FindMatchingTestMigrations("../contrib/sql/migrations/tests/", Migrations, AssetNames(), Asset)},
+	// 	SQLPurgeTestDatabase, SQLPurgeTestDatabase,
+	// 	func(t *testing.T, dbName string, db *sqlx.DB, _, step, steps int) {
+	// 		id := fmt.Sprintf("%d-data", step+1)
+	// 		t.Run("poll="+id, func(t *testing.T) {
+	// 			t.Run("service=selfservice.NewRequestManagerSQL", func(t *testing.T) {
+	// 				m := selfservice.NewRequestManagerSQL(db, requestManagerFactories)
+	// 				_, err := m.GetLoginRequest(context.Background(), "1")
+	// 				require.NoError(t, err)
+	// 			})
+	// 		})
+	// 	},
+	// )
 }

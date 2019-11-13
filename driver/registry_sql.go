@@ -19,26 +19,21 @@ import (
 
 	"github.com/olekukonko/tablewriter"
 
+	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/flow/profile"
+
+	// "github.com/ory/kratos/selfservice/flow/profile"
+	"github.com/ory/kratos/selfservice/flow/registration"
+
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/selfservice"
 	"github.com/ory/kratos/selfservice/errorx"
-	"github.com/ory/kratos/selfservice/oidc"
-	"github.com/ory/kratos/selfservice/password"
+	"github.com/ory/kratos/selfservice/persistence"
 	"github.com/ory/kratos/session"
 )
 
 var _ Registry = new(RegistrySQL)
 
 var Migrations = map[string]*dbal.PackrMigrationSource{}
-
-var requestManagerFactories = map[identity.CredentialsType]func() selfservice.RequestMethodConfig{
-	identity.CredentialsTypeOIDC: func() selfservice.RequestMethodConfig {
-		return oidc.NewRequestMethodConfig()
-	},
-	identity.CredentialsTypePassword: func() selfservice.RequestMethodConfig {
-		return password.NewRequestMethodConfig()
-	},
-}
 
 func init() {
 	l := logrusx.New()
@@ -50,12 +45,11 @@ func init() {
 type RegistrySQL struct {
 	*RegistryAbstract
 
-	errorManager              errorx.Manager
-	identityPool              identity.Pool
-	sessionManager            session.Manager
-	selfserviceRequestManager selfservice.RequestManager
-
-	db *sqlx.DB
+	db                          *sqlx.DB
+	errorManager                errorx.Manager
+	identityPool                identity.Pool
+	sessionManager              session.Manager
+	selfServiceRequestPersister persistence.RequestPersister
 }
 
 func NewRegistrySQL() *RegistrySQL {
@@ -132,24 +126,23 @@ func (m *RegistrySQL) DB() *sqlx.DB {
 	return m.db
 }
 
-func (m *RegistrySQL) RegistrationRequestManager() selfservice.RegistrationRequestManager {
-	if m.selfserviceRequestManager == nil {
-		m.selfserviceRequestManager = selfservice.NewRequestManagerSQL(
-			m.DB(),
-			requestManagerFactories,
-		)
+func (m *RegistrySQL) getSelfServiceRequestPersister() persistence.RequestPersister {
+	if m.selfServiceRequestPersister == nil {
+		m.selfServiceRequestPersister = persistence.NewRequestManagerMemory() // FIXME
 	}
-	return m.selfserviceRequestManager
+	return m.selfServiceRequestPersister
 }
 
-func (m *RegistrySQL) LoginRequestManager() selfservice.LoginRequestManager {
-	if m.selfserviceRequestManager == nil {
-		m.selfserviceRequestManager = selfservice.NewRequestManagerSQL(
-			m.DB(),
-			requestManagerFactories,
-		)
-	}
-	return m.selfserviceRequestManager
+func (m *RegistrySQL) ProfileRequestPersister() profile.RequestPersister {
+	return m.getSelfServiceRequestPersister()
+}
+
+func (m *RegistrySQL) LoginRequestPersister() login.RequestPersister {
+	return m.getSelfServiceRequestPersister()
+}
+
+func (m *RegistrySQL) RegistrationRequestPersister() registration.RequestPersister {
+	return m.getSelfServiceRequestPersister()
 }
 
 func (m *RegistrySQL) CreateSchemas(dbName string) (int, error) {
