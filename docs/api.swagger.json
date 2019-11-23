@@ -335,18 +335,10 @@
         }
       }
     },
-    "ErrorParser": {
+    "RWMutex": {
+      "description": "A RWMutex must not be copied after first use.\n\nIf a goroutine holds a RWMutex for reading and another goroutine might\ncall Lock, no goroutine should expect to be able to acquire a read lock\nuntil the initial read lock is released. In particular, this prohibits\nrecursive read locking. This is to ensure that the lock eventually becomes\navailable; a blocked Lock call excludes new readers from acquiring the\nlock.",
       "type": "object",
-      "title": "ErrorParser is capable of parsing and processing errors."
-    },
-    "FieldSetter": {
-      "type": "object"
-    },
-    "Resetter": {
-      "type": "object"
-    },
-    "ValueSetter": {
-      "type": "object"
+      "title": "A RWMutex is a reader/writer mutual exclusion lock.\nThe lock can be held by an arbitrary number of readers or a single writer.\nThe zero value for a RWMutex is an unlocked mutex."
     },
     "form": {
       "description": "HTMLForm represents a HTML Form. The container can work with both HTTP Form and JSON requests",
@@ -523,7 +515,7 @@
           "format": "date-time"
         },
         "id": {
-          "description": "ID represents the request's unique ID. When performing the login flow, this\nrepresents the id in the login ui's query parameter: http://login-ui/?request=\u003cid\u003e",
+          "description": "ID represents the request's unique ID. When performing the login flow, this\nrepresents the id in the login ui's query parameter: http://\u003curls.login_ui\u003e/?request=\u003cid\u003e",
           "type": "string"
         },
         "issued_at": {
@@ -618,6 +610,7 @@
       "title": "Request presents a profile management request",
       "properties": {
         "expires_at": {
+          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile,\na new request has to be initiated.",
           "type": "string",
           "format": "date-time"
         },
@@ -625,17 +618,24 @@
           "$ref": "#/definitions/form"
         },
         "id": {
+          "description": "ID represents the request's unique ID. When performing the profile management flow, this\nrepresents the id in the profile ui's query parameter: http://\u003curls.profile_ui\u003e?request=\u003cid\u003e",
           "type": "string"
         },
         "identity": {
           "$ref": "#/definitions/identity"
         },
         "issued_at": {
+          "description": "IssuedAt is the time (UTC) when the request occurred.",
           "type": "string",
           "format": "date-time"
         },
         "request_url": {
+          "description": "RequestURL is the initial URL that was requested from ORY Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
           "type": "string"
+        },
+        "update_successful": {
+          "description": "UpdateSuccessful, if true, indicates that the profile has been updated successfully with the provided data.\nDone will stay true when repeatedly checking. If set to true, done will revert back to false only\nwhen a request with invalid (e.g. \"please use a valid phone number\") data was sent.",
+          "type": "boolean"
         }
       }
     },

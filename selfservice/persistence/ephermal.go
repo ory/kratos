@@ -138,12 +138,12 @@ func (m *RequestManagerMemory) GetProfileRequest(ctx context.Context, id string)
 func (m *RequestManagerMemory) UpdateProfileRequest(ctx context.Context, id string, request *profile.Request) error {
 	m.Lock()
 	defer m.Unlock()
-	r, ok := m.pr[id]
-	if !ok {
+
+	if _, ok := m.pr[id]; !ok {
 		return errors.WithStack(herodot.ErrNotFound.WithReasonf("Unable to find request: %s", id))
 	}
 
-	*r.Form = *request.Form
-	m.pr[id] = r
+	request.ID = id
+	m.pr[id] = *request
 	return nil
 }

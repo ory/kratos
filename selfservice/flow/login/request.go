@@ -34,7 +34,7 @@ type RequestMethodConfig interface {
 // swagger:model loginRequest
 type Request struct {
 	// ID represents the request's unique ID. When performing the login flow, this
-	// represents the id in the login ui's query parameter: http://login-ui/?request=<id>
+	// represents the id in the login ui's query parameter: http://<urls.login_ui>/?request=<id>
 	ID string `json:"id"`
 
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,

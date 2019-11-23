@@ -26,7 +26,7 @@ type LoginRequest struct {
 	ExpiresAt strfmt.DateTime `json:"expires_at,omitempty"`
 
 	// ID represents the request's unique ID. When performing the login flow, this
-	// represents the id in the login ui's query parameter: http://login-ui/?request=<id>
+	// represents the id in the login ui's query parameter: http://<urls.login_ui>/?request=<id>
 	ID string `json:"id,omitempty"`
 
 	// IssuedAt is the time (UTC) when the request occurred.

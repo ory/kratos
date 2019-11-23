@@ -40,7 +40,7 @@ type HTMLForm struct {
 	Fields Fields `json:"fields"`
 
 	// Errors contains all form errors. These will be duplicates of the individual field errors.
-	Errors []Error `json:"errors"`
+	Errors []Error `json:"errors,omitempty"`
 }
 
 // NewHTMLForm returns an empty container.
@@ -57,7 +57,9 @@ func NewHTMLForm(action string) *HTMLForm {
 func NewHTMLFormFromRequestBody(r *http.Request, action string, compiler decoderx.HTTPDecoderOption) (*HTMLForm, error) {
 	c := NewHTMLForm(action)
 	raw := json.RawMessage(`{}`)
-	if err := decoder.Decode(r, &raw, compiler); err != nil {
+	if err := decoder.Decode(r, &raw, compiler,
+		decoderx.HTTPDecoderSetIgnoreParseErrorsStrategy(decoderx.ParseErrorIgnore),
+	); err != nil {
 		if err := c.ParseError(err); err != nil {
 			return nil, err
 		}

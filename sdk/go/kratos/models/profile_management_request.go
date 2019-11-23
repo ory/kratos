@@ -22,25 +22,33 @@ import (
 // swagger:model profileManagementRequest
 type ProfileManagementRequest struct {
 
-	// expires at
+	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile,
+	// a new request has to be initiated.
 	// Format: date-time
 	ExpiresAt strfmt.DateTime `json:"expires_at,omitempty"`
 
 	// form
 	Form *Form `json:"form,omitempty"`
 
-	// id
+	// ID represents the request's unique ID. When performing the profile management flow, this
+	// represents the id in the profile ui's query parameter: http://<urls.profile_ui>?request=<id>
 	ID string `json:"id,omitempty"`
 
 	// identity
 	Identity *Identity `json:"identity,omitempty"`
 
-	// issued at
+	// IssuedAt is the time (UTC) when the request occurred.
 	// Format: date-time
 	IssuedAt strfmt.DateTime `json:"issued_at,omitempty"`
 
-	// request url
+	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used
+	// to forward information contained in the URL's path or query for example.
 	RequestURL string `json:"request_url,omitempty"`
+
+	// UpdateSuccessful, if true, indicates that the profile has been updated successfully with the provided data.
+	// Done will stay true when repeatedly checking. If set to true, done will revert back to false only
+	// when a request with invalid (e.g. "please use a valid phone number") data was sent.
+	UpdateSuccessful bool `json:"update_successful,omitempty"`
 }
 
 // Validate validates this profile management request

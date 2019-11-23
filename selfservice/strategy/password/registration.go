@@ -121,6 +121,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 	if err := decoderx.NewHTTP().Decode(r, &p,
 		decoderx.HTTPFormDecoder(),
 		option,
+		decoderx.HTTPDecoderSetIgnoreParseErrorsStrategy(decoderx.ParseErrorIgnore),
 		decoderx.HTTPDecoderSetValidatePayloads(false),
 	); err != nil {
 		s.handleRegistrationError(w, r, ar, &p, err)

@@ -58,6 +58,18 @@ func (i *Identity) SetCredentials(t CredentialsType, c Credentials) {
 	i.Credentials[t] = c
 }
 
+func (i *Identity) CopyCredentials() map[CredentialsType]Credentials {
+	result := make(map[CredentialsType]Credentials)
+	for id, credential := range i.Credentials {
+		result[id] = Credentials{
+			ID:          credential.ID,
+			Identifiers: append([]string{}, credential.Identifiers...),
+			Config:      append([]byte{}, credential.Config...),
+		}
+	}
+	return result
+}
+
 func (i *Identity) GetCredentials(t CredentialsType) (*Credentials, bool) {
 	i.lock().RLock()
 	defer i.lock().RUnlock()
