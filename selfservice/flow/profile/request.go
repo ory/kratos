@@ -24,13 +24,33 @@ import (
 //
 // swagger:model profileManagementRequest
 type Request struct {
-	ID         string             `json:"id"`
-	IssuedAt   time.Time          `json:"issued_at"`
-	ExpiresAt  time.Time          `json:"expires_at"`
-	RequestURL string             `json:"request_url"`
-	identityID string             `json:"-"`
-	Form       *form.HTMLForm     `json:"form"`
-	Identity   *identity.Identity `json:"identity"`
+	// ID represents the request's unique ID. When performing the profile management flow, this
+	// represents the id in the profile ui's query parameter: http://<urls.profile_ui>?request=<id>
+	ID string `json:"id"`
+
+	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile,
+	// a new request has to be initiated.
+	ExpiresAt time.Time `json:"expires_at"`
+
+	// IssuedAt is the time (UTC) when the request occurred.
+	IssuedAt time.Time `json:"issued_at"`
+
+	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used
+	// to forward information contained in the URL's path or query for example.
+	RequestURL string `json:"request_url"`
+
+	// Form contains form fields, errors, and so on.
+	Form *form.HTMLForm `json:"form"`
+
+	// Identity contains all of the identity's data in raw form.
+	Identity *identity.Identity `json:"identity"`
+
+	// UpdateSuccessful, if true, indicates that the profile has been updated successfully with the provided data.
+	// Done will stay true when repeatedly checking. If set to true, done will revert back to false only
+	// when a request with invalid (e.g. "please use a valid phone number") data was sent.
+	UpdateSuccessful bool `json:"update_successful,omitempty"`
+
+	identityID string `json:"-"`
 }
 
 func NewRequest(exp time.Duration, r *http.Request, s *session.Session) *Request {

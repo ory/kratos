@@ -4,6 +4,16 @@
   "title": "Person",
   "type": "object",
   "properties": {
+    "email": {
+      "type": "string",
+      "ory.sh/kratos": {
+        "credentials": {
+          "password": {
+            "identifier": true
+          }
+        }
+      }
+    },
     "stringy": {
       "type": "string"
     },
@@ -12,6 +22,10 @@
     },
     "booly": {
       "type": "boolean"
+    },
+    "should_big_number": {
+      "type": "number",
+      "minimum": 1200
     },
     "should_long_string": {
       "type": "string",

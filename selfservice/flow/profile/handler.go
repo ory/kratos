@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"reflect"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/nosurf"
@@ -262,6 +263,7 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 		decoderx.HTTPFormDecoder(),
 		option,
 		decoderx.HTTPDecoderSetValidatePayloads(false),
+		decoderx.HTTPDecoderSetIgnoreParseErrorsStrategy(decoderx.ParseErrorIgnore),
 	); err != nil {
 		h.handleProfileManagementError(w, r, nil, s.Identity.Traits, err)
 		return
@@ -288,9 +290,17 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	i := s.Identity
-	i.Traits = p.Traits
 	// identity.TraitsSchemaURL
+
+	creds, err := h.d.IdentityPool().GetClassified(r.Context(), s.Identity.ID)
+	if err != nil {
+		h.handleProfileManagementError(w, r, ar, p.Traits, err)
+		return
+	}
+
+	i := *s.Identity
+	i.Traits = p.Traits
+	i.Credentials = creds.CopyCredentials()
 
 	// If credential identifiers have changed we need to block this action UNLESS
 	// the identity has been authenticated in that request:
@@ -298,13 +308,13 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 	// - https://security.stackexchange.com/questions/24291/why-do-we-ask-for-a-users-existing-password-when-changing-their-password
 
 	// We need to make sure that the identity has a valid schema before passing it down to the identity pool.
-	if err := h.d.IdentityValidator().Validate(i); err != nil {
+	if err := h.d.IdentityValidator().Validate(&i); err != nil {
 		h.handleProfileManagementError(w, r, ar, i.Traits, err)
 		return
 	}
 
 	// Check if any credentials-related field changed.
-	if len(i.Credentials) > 0 {
+	if !reflect.DeepEqual(creds.Credentials, i.Credentials) {
 		h.handleProfileManagementError(w, r, ar, i.Traits,
 			errors.WithStack(
 				herodot.ErrInternalServerError.
@@ -313,25 +323,46 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if _, err := h.d.IdentityPool().Update(r.Context(), i); err != nil {
+	if _, err := h.d.IdentityPool().Update(r.Context(), &i); err != nil {
 		h.handleProfileManagementError(w, r, ar, i.Traits, err)
 		return
 	}
 
-	http.Redirect(w, r, urlx.AppendPaths(h.c.SelfPublicURL(), BrowserProfilePath).String(), http.StatusFound)
+	ar.Form.Reset()
+	ar.UpdateSuccessful = true
+	for name, field := range form.NewHTMLFormFromJSON("", i.Traits, "traits").Fields {
+		ar.Form.SetField(name, field)
+	}
+	ar.Form.SetValue("request", r.Form.Get("request"))
+	ar.Form.SetCSRF(nosurf.Token(r))
+
+	if err := h.d.ProfileRequestPersister().UpdateProfileRequest(r.Context(), ar.ID, ar); err != nil {
+		h.handleProfileManagementError(w, r, ar, i.Traits, err)
+		return
+	}
+
+	http.Redirect(w, r,
+		urlx.CopyWithQuery(h.c.ProfileURL(), url.Values{"request": {ar.ID}}).String(),
+		http.StatusFound,
+	)
 }
 
 // handleProfileManagementError is a convenience function for handling all types of errors that may occur (e.g. validation error)
 // during a profile management request.
 func (h *Handler) handleProfileManagementError(w http.ResponseWriter, r *http.Request, rr *Request, traits json.RawMessage, err error) {
-	rr.Form.Reset()
-	if traits != nil {
-		for name, field := range form.NewHTMLFormFromJSON("", traits, "traits").Fields {
-			rr.Form.SetField(name, field)
+	if rr != nil {
+		rr.Form.Reset()
+		rr.UpdateSuccessful = false
+
+		if traits != nil {
+			for name, field := range form.NewHTMLFormFromJSON("", traits, "traits").Fields {
+				rr.Form.SetField(name, field)
+			}
 		}
+		rr.Form.SetValue("request", r.Form.Get("request"))
+		rr.Form.SetCSRF(nosurf.Token(r))
 	}
-	rr.Form.SetValue("request", r.Form.Get("request"))
-	rr.Form.SetCSRF(nosurf.Token(r))
+
 	h.d.ProfileRequestRequestErrorHandler().HandleProfileManagementError(w, r, identity.CredentialsTypePassword, rr, err)
 }
 
