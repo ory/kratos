@@ -2,11 +2,7 @@ module github.com/ory/kratos
 
 go 1.13
 
-replace github.com/ory/x => ../x
-
-replace github.com/santhosh-tekuri/jsonschema/v2 => ../jsonschema
-
-replace github.com/ory/gojsonschema => ../gojsonschema
+replace github.com/santhosh-tekuri/jsonschema/v2 => github.com/ory/jsonschema/v2 v2.1.1-0.20191123130340-1c20114d2c04
 
 require (
 	github.com/bxcodec/faker v2.0.1+incompatible
@@ -53,7 +49,7 @@ require (
 	github.com/ory/graceful v0.1.1
 	github.com/ory/herodot v0.6.2
 	github.com/ory/viper v1.5.6
-	github.com/ory/x v0.0.82
+	github.com/ory/x v0.0.83
 	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.8.1
