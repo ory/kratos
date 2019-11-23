@@ -141,8 +141,8 @@ func (c *HTMLForm) ParseError(err error) error {
 				continue
 			}
 			switch ctx := err.Context.(type) {
-			case *jsonschema.ValidationRequiredError:
-				for _, required := range ctx.MissingPropertyPtrs {
+			case *jsonschema.ValidationContextRequired:
+				for _, required := range ctx.Missing {
 					// The pointer can be ignored because if there is an error, we'll just use
 					// the empty field (global error).
 					pointer, _ := jsonschemax.JSONPointerToDotNotation(required)
