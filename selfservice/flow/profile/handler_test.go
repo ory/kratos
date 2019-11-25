@@ -197,7 +197,7 @@ func TestUpdateProfile(t *testing.T) {
 		)
 		require.NoError(t, err, "%s", rid)
 
-		assert.Equal(t, rid, pr.Payload.ID)
+		assert.Equal(t, rid, string(pr.Payload.ID))
 		assert.NotEmpty(t, pr.Payload.Identity)
 		assert.Empty(t, pr.Payload.Identity.Credentials)
 		assert.Equal(t, primaryIdentity.ID, *(pr.Payload.Identity.ID))

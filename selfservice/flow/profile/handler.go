@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"reflect"
 
+	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
@@ -98,7 +99,7 @@ func (h *Handler) initUpdateProfile(w http.ResponseWriter, r *http.Request, ps h
 	}
 
 	http.Redirect(w, r,
-		urlx.CopyWithQuery(h.c.ProfileURL(), url.Values{"request": {a.ID}}).String(),
+		urlx.CopyWithQuery(h.c.ProfileURL(), url.Values{"request": {a.ID.String()}}).String(),
 		http.StatusFound,
 	)
 }
@@ -166,7 +167,7 @@ func fetchUpdateProfileRequestAdmin() {}
 //       302: emptyResponse
 //       500: genericError
 func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	rid := r.URL.Query().Get("request")
+	rid := x.ParseUUID(r.URL.Query().Get("request"))
 	ar, err := h.d.ProfileRequestPersister().GetProfileRequest(r.Context(), rid)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
@@ -223,7 +224,7 @@ type (
 		//
 		// type: string
 		// required: true
-		Request string `json:"request"`
+		Request uuid.UUID `json:"request"`
 	}
 )
 
@@ -269,7 +270,7 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if len(p.Request) == 0 {
+	if x.IsZeroUUID(p.Request) {
 		h.handleProfileManagementError(w, r, nil, s.Identity.Traits, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request query parameter is missing.")))
 		return
 	}
@@ -342,7 +343,7 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 	}
 
 	http.Redirect(w, r,
-		urlx.CopyWithQuery(h.c.ProfileURL(), url.Values{"request": {ar.ID}}).String(),
+		urlx.CopyWithQuery(h.c.ProfileURL(), url.Values{"request": {ar.ID.String()}}).String(),
 		http.StatusFound,
 	)
 }

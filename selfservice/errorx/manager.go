@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/x/errorsx"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -85,7 +86,7 @@ func (m *BaseManager) ForwardError(ctx context.Context, w http.ResponseWriter, r
 func (m *BaseManager) encode(errs []error) (*bytes.Buffer, error) {
 	es := make([]interface{}, len(errs))
 	for k, e := range errs {
-		e = errors.Cause(e)
+		e = errorsx.Cause(e)
 		if u := stderr.Unwrap(e); u != nil {
 			e = u
 		}

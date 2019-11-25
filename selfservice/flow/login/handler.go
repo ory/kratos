@@ -5,8 +5,7 @@ import (
 	"net/url"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/pkg/errors"
-
+	"github.com/ory/x/errorsx"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/configuration"
@@ -56,7 +55,7 @@ func (h *Handler) NewLoginRequest(w http.ResponseWriter, r *http.Request, redir 
 	}
 
 	if err := h.d.LoginHookExecutor().PreLoginHook(w, r, a); err != nil {
-		if errors.Cause(err) == ErrHookAbortRequest {
+		if errorsx.Cause(err) == ErrHookAbortRequest {
 			return nil
 		}
 		return err
@@ -95,7 +94,7 @@ func (h *Handler) NewLoginRequest(w http.ResponseWriter, r *http.Request, redir 
 //       500: genericError
 func (h *Handler) initLoginRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := h.NewLoginRequest(w, r, func(a *Request) string {
-		return urlx.CopyWithQuery(h.c.LoginURL(), url.Values{"request": {a.ID}}).String()
+		return urlx.CopyWithQuery(h.c.LoginURL(), url.Values{"request": {a.ID.String()}}).String()
 	}); err != nil {
 		h.d.ErrorManager().ForwardError(r.Context(), w, r, err)
 		return
@@ -121,11 +120,11 @@ func (h *Handler) initLoginRequest(w http.ResponseWriter, r *http.Request, ps ht
 //       302: emptyResponse
 //       500: genericError
 func (h *Handler) fetchLoginRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	ar, err := h.d.LoginRequestPersister().GetLoginRequest(r.Context(), r.URL.Query().Get("request"))
+	ar, err := h.d.LoginRequestPersister().GetLoginRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 
-	h.d.Writer().Write(w, r, ar.Declassify())
+	h.d.Writer().Write(w, r, ar)
 }

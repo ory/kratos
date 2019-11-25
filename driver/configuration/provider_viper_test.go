@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/ory/x/errorsx"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -30,7 +30,7 @@ func TestViperProvider(t *testing.T) {
 			viperx.LoggerWithValidationErrorFields(logrus.New(), err).Error(err.Error())
 		}
 
-		require.NoError(t, err, "%+v", errors.Cause(err))
+		require.NoError(t, err, "%+v", errorsx.Cause(err))
 		p := NewViperProvider(logrus.New())
 
 		t.Run("group=urls", func(t *testing.T) {

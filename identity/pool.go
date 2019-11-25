@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/ory/x/errorsx"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -89,7 +90,7 @@ func (p *abstractPool) declassifyAll(i []Identity) []Identity {
 
 func (p *abstractPool) Validate(i *Identity) error {
 	if err := p.d.IdentityValidator().Validate(i); err != nil {
-		if _, ok := errors.Cause(err).(schema.ResultErrors); ok {
+		if _, ok := errorsx.Cause(err).(schema.ResultErrors); ok {
 			return errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
 		}
 		return err

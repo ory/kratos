@@ -335,10 +335,16 @@
         }
       }
     },
-    "RWMutex": {
-      "description": "A RWMutex must not be copied after first use.\n\nIf a goroutine holds a RWMutex for reading and another goroutine might\ncall Lock, no goroutine should expect to be able to acquire a read lock\nuntil the initial read lock is released. In particular, this prohibits\nrecursive read locking. This is to ensure that the lock eventually becomes\navailable; a blocked Lock call excludes new readers from acquiring the\nlock.",
-      "type": "object",
-      "title": "A RWMutex is a reader/writer mutual exclusion lock.\nThe lock can be held by an arbitrary number of readers or a single writer.\nThe zero value for a RWMutex is an unlocked mutex."
+    "RequestMethodConfigurator": {},
+    "Resetter": {
+      "type": "object"
+    },
+    "UUID": {
+      "type": "string",
+      "format": "uuid4"
+    },
+    "ValueSetter": {
+      "type": "object"
     },
     "form": {
       "description": "HTMLForm represents a HTML Form. The container can work with both HTTP Form and JSON requests",
@@ -515,8 +521,7 @@
           "format": "date-time"
         },
         "id": {
-          "description": "ID represents the request's unique ID. When performing the login flow, this\nrepresents the id in the login ui's query parameter: http://\u003curls.login_ui\u003e/?request=\u003cid\u003e",
-          "type": "string"
+          "$ref": "#/definitions/UUID"
         },
         "issued_at": {
           "description": "IssuedAt is the time (UTC) when the request occurred.",
@@ -618,8 +623,7 @@
           "$ref": "#/definitions/form"
         },
         "id": {
-          "description": "ID represents the request's unique ID. When performing the profile management flow, this\nrepresents the id in the profile ui's query parameter: http://\u003curls.profile_ui\u003e?request=\u003cid\u003e",
-          "type": "string"
+          "$ref": "#/definitions/UUID"
         },
         "identity": {
           "$ref": "#/definitions/identity"
@@ -651,8 +655,7 @@
           "format": "date-time"
         },
         "id": {
-          "description": "ID represents the request's unique ID. When performing the registration flow, this\nrepresents the id in the registration ui's query parameter: http://registration-ui/?request=\u003cid\u003e",
-          "type": "string"
+          "$ref": "#/definitions/UUID"
         },
         "issued_at": {
           "description": "IssuedAt is the time (UTC) when the request occurred.",

@@ -6,15 +6,17 @@ import (
 
 	"github.com/bxcodec/faker"
 	"github.com/stretchr/testify/require"
+	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/x"
 )
 
 type (
 	RequestPersister interface {
 		CreateLoginRequest(context.Context, *Request) error
-		GetLoginRequest(ctx context.Context, id string) (*Request, error)
-		UpdateLoginRequest(context.Context, string, identity.CredentialsType, *RequestMethod) error
+		GetLoginRequest(context.Context, uuid.UUID) (*Request, error)
+		UpdateLoginRequest(context.Context, uuid.UUID, identity.CredentialsType, *RequestMethod) error
 	}
 	RequestPersistenceProvider interface {
 		LoginRequestPersister() RequestPersister
@@ -51,7 +53,7 @@ func TestRequestPersister(t *testing.T, p RequestPersister) {
 	// }
 
 	t.Run("case=should error when the login request does not exist", func(t *testing.T) {
-		_, err := p.GetLoginRequest(context.Background(), "does-not-exist")
+		_, err := p.GetLoginRequest(context.Background(), x.NewUUID())
 		require.NoError(t, err)
 	})
 

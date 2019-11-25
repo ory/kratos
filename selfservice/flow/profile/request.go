@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -13,6 +13,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/x"
 )
 
 // Request presents a profile management request
@@ -26,7 +27,10 @@ import (
 type Request struct {
 	// ID represents the request's unique ID. When performing the profile management flow, this
 	// represents the id in the profile ui's query parameter: http://<urls.profile_ui>?request=<id>
-	ID string `json:"id"`
+	//
+	// type: string
+	// format: uuid
+	ID uuid.UUID `json:"id"`
 
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile,
 	// a new request has to be initiated.
@@ -65,7 +69,7 @@ func NewRequest(exp time.Duration, r *http.Request, s *session.Session) *Request
 	}
 
 	return &Request{
-		ID:         uuid.New().String(),
+		ID:         x.NewUUID(),
 		ExpiresAt:  time.Now().UTC().Add(exp),
 		IssuedAt:   time.Now().UTC(),
 		RequestURL: source.String(),

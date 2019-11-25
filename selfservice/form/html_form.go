@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/pkg/errors"
+	"github.com/ory/x/errorsx"
 	"github.com/santhosh-tekuri/jsonschema/v2"
 
 	"github.com/ory/x/decoderx"
@@ -124,7 +124,7 @@ func (c *HTMLForm) Reset() {
 // This method DOES NOT touch the values of the form fields, only its errors.
 func (c *HTMLForm) ParseError(err error) error {
 	c.defaults()
-	switch e := errors.Cause(err).(type) {
+	switch e := errorsx.Cause(err).(type) {
 	case richError:
 		if e.StatusCode() == http.StatusBadRequest {
 			c.AddError(&Error{Message: e.Reason()})

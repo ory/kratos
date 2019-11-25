@@ -14,6 +14,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/form"
+	"github.com/ory/kratos/x"
 )
 
 func RegisterFakes() {
@@ -64,7 +65,7 @@ func RegisterFakes() {
 			ct := identity.CredentialsType(randx.MustString(8, randx.AlphaLower))
 			methods[ct] = &login.RequestMethod{
 				Method: ct,
-				Config: &f,
+				Config: &login.RequestMethodConfig{RequestMethodConfigurator: &f},
 			}
 		}
 
@@ -83,11 +84,17 @@ func RegisterFakes() {
 			ct := identity.CredentialsType(randx.MustString(8, randx.AlphaLower))
 			methods[ct] = &registration.RequestMethod{
 				Method: ct,
-				Config: &f,
+				Config: &registration.RequestMethodConfig{RequestMethodConfigurator: &f},
 			}
 		}
 
 		return methods, nil
+	}); err != nil {
+		panic(err)
+	}
+
+	if err := faker.AddProvider("uuid", func(v reflect.Value) (interface{}, error) {
+		return x.NewUUID(), nil
 	}); err != nil {
 		panic(err)
 	}

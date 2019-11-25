@@ -161,7 +161,7 @@ func (m *RequestManagerSQL) gr(ctx context.Context, id string, kind string) (*Re
 	columns, _ := sqlxx.NamedInsertArguments(r, "pk")
 	query := fmt.Sprintf("SELECT %s FROM %s WHERE id=? AND kind=?", columns, requestSQLTableName)
 	if err := sqlcon.HandleError(m.db.GetContext(ctx, &r, m.db.Rebind(query), id, kind)); err != nil {
-		if errors.Cause(err) == sqlcon.ErrNoRows {
+		if errorsx.Cause(err) == sqlcon.ErrNoRows {
 			return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("%s", err))
 		}
 		return nil, err

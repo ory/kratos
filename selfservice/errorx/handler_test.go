@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/ory/x/errorsx"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -68,7 +69,7 @@ func TestHandler(t *testing.T) {
 
 			gg := make([]error, len(tc.gave))
 			for k, g := range tc.gave {
-				gg[k] = errors.Cause(g)
+				gg[k] = errorsx.Cause(g)
 			}
 
 			expected, err := json.Marshal(gg)

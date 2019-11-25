@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/ory/x/errorsx"
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/sqlcon"
@@ -43,7 +44,7 @@ func (s *ManagerSQL) Get(ctx context.Context, sid string) (*Session, error) {
 	columns, _ := sqlxx.NamedInsertArguments(interim, "identity_id")
 	query := fmt.Sprintf("SELECT %s, i.id as identity_id FROM %s JOIN identity as i ON (i.pk = identity_pk) WHERE sid=?", columns, sessionSQLTableName)
 	if err := sqlcon.HandleError(s.db.GetContext(ctx, &interim, s.db.Rebind(query), sid)); err != nil {
-		if errors.Cause(err) == sqlcon.ErrNoRows {
+		if errorsx.Cause(err) == sqlcon.ErrNoRows {
 			return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("%s", err))
 		}
 		return nil, err
@@ -66,7 +67,7 @@ func (s *ManagerSQL) Get(ctx context.Context, sid string) (*Session, error) {
 func (s *ManagerSQL) Create(ctx context.Context, session *Session) error {
 	var pk uint64
 	if err := sqlcon.HandleError(s.db.GetContext(ctx, &pk, s.db.Rebind("SELECT pk FROM identity WHERE id=?"), session.Identity.ID)); err != nil {
-		if errors.Cause(err) == sqlcon.ErrNoRows {
+		if errorsx.Cause(err) == sqlcon.ErrNoRows {
 			return errors.WithStack(herodot.ErrNotFound.WithReasonf("%s", err))
 		}
 		return err

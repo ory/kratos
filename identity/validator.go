@@ -1,9 +1,8 @@
 package identity
 
 import (
-	"github.com/pkg/errors"
-
 	"github.com/ory/gojsonschema"
+	"github.com/ory/x/errorsx"
 	"github.com/ory/x/stringsx"
 
 	"github.com/ory/kratos/driver/configuration"
@@ -45,7 +44,7 @@ func (v *Validator) Validate(i *Identity) error {
 		es...,
 	)
 
-	switch errs := errors.Cause(err).(type) {
+	switch errs := errorsx.Cause(err).(type) {
 	case schema.ResultErrors:
 		for k, err := range errs {
 			errs[k].SetContext(schema.ContextSetRoot(schema.ContextRemoveRootStub(err.Context()), "traits"))

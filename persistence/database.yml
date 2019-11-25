@@ -1,0 +1,2 @@
+development:
+  url: postgres://postgres:secret@localhost:3445/postgres?sslmode=disable

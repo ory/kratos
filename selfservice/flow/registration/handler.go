@@ -5,8 +5,7 @@ import (
 	"net/url"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/pkg/errors"
-
+	"github.com/ory/x/errorsx"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/configuration"
@@ -59,7 +58,7 @@ func (h *Handler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request,
 	}
 
 	if err := h.d.RegistrationExecutor().PreRegistrationHook(w, r, a); err != nil {
-		if errors.Cause(err) == ErrHookAbortRequest {
+		if errorsx.Cause(err) == ErrHookAbortRequest {
 			return nil
 		}
 		return err
@@ -96,7 +95,7 @@ func (h *Handler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request,
 //       500: genericError
 func (h *Handler) initRegistrationRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := h.NewRegistrationRequest(w, r, func(a *Request) string {
-		return urlx.CopyWithQuery(h.c.RegisterURL(), url.Values{"request": {a.ID}}).String()
+		return urlx.CopyWithQuery(h.c.RegisterURL(), url.Values{"request": {a.ID.String()}}).String()
 	}); err != nil {
 		h.d.ErrorManager().ForwardError(r.Context(), w, r, err)
 		return
@@ -122,11 +121,11 @@ func (h *Handler) initRegistrationRequest(w http.ResponseWriter, r *http.Request
 //       404: genericError
 //       500: genericError
 func (h *Handler) fetchRegistrationRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	ar, err := h.d.RegistrationRequestPersister().GetRegistrationRequest(r.Context(), r.URL.Query().Get("request"))
+	ar, err := h.d.RegistrationRequestPersister().GetRegistrationRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 
-	h.d.Writer().Write(w, r, ar.Declassify())
+	h.d.Writer().Write(w, r, ar)
 }

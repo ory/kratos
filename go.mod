@@ -4,6 +4,10 @@ go 1.13
 
 replace github.com/santhosh-tekuri/jsonschema/v2 => github.com/ory/jsonschema/v2 v2.1.1-0.20191123130340-1c20114d2c04
 
+replace github.com/ory/herodot => ../herodot
+
+replace github.com/ory/x => ../x
+
 require (
 	github.com/bxcodec/faker v2.0.1+incompatible
 	github.com/coreos/go-oidc v2.0.0+incompatible
@@ -21,6 +25,10 @@ require (
 	github.com/go-swagger/scan-repo-boundary v0.0.0-20180623220736-973b3573c013 // indirect
 	github.com/gobuffalo/httptest v1.0.2
 	github.com/gobuffalo/packr/v2 v2.0.0-rc.15
+	github.com/gobuffalo/pop v4.8.4+incompatible
+	github.com/gobuffalo/uuid v2.0.5+incompatible
+	github.com/gobuffalo/validate v2.0.3+incompatible
+	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
 	github.com/golang/mock v1.3.1
 	github.com/google/go-github/v27 v27.0.1

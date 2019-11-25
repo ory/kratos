@@ -6,3 +6,4 @@ tmp
 scripts
 .idea
 .git/
+database.yaml

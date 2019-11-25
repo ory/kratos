@@ -87,7 +87,7 @@ func (s *ErrorHandler) HandleRegistrationError(
 	}
 
 	http.Redirect(w, r,
-		urlx.CopyWithQuery(s.c.RegisterURL(), url.Values{"request": {rr.ID}}).String(),
+		urlx.CopyWithQuery(s.c.RegisterURL(), url.Values{"request": {rr.ID.String()}}).String(),
 		http.StatusFound,
 	)
 }

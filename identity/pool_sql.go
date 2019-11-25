@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/ory/x/errorsx"
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/stringsx"
@@ -36,7 +37,7 @@ func NewPoolSQL(c configuration.Provider, d ValidationProvider, db *sqlx.DB) *Po
 func (p *PoolSQL) FindByCredentialsIdentifier(ctx context.Context, ct CredentialsType, match string) (*Identity, *Credentials, error) {
 	i, err := p.get(ctx, "WHERE ici.identifier = ? AND ic.method = ?", []interface{}{match, string(ct)})
 	if err != nil {
-		if errors.Cause(err).Error() == herodot.ErrNotFound.Error() {
+		if errorsx.Cause(err).Error() == herodot.ErrNotFound.Error() {
 			return nil, nil, herodot.ErrNotFound.WithTrace(err).WithReasonf(`No identity matching credentials identifier "%s" could be found.`, match)
 		}
 		return nil, nil, err
@@ -122,7 +123,7 @@ func (p *PoolSQL) Get(ctx context.Context, id string) (*Identity, error) {
 func (p *PoolSQL) GetClassified(ctx context.Context, id string) (*Identity, error) {
 	i, err := p.get(ctx, "WHERE i.id = ?", []interface{}{id})
 	if err != nil {
-		if errors.Cause(err).Error() == herodot.ErrNotFound.Error() {
+		if errorsx.Cause(err).Error() == herodot.ErrNotFound.Error() {
 			return nil, herodot.ErrNotFound.WithTrace(err).WithReasonf(`Identity "%s" could not be found.`, id)
 		}
 		return nil, err
@@ -245,7 +246,7 @@ LEFT OUTER JOIN identity_credential_identifier as ici ON
 	ici.identity_credential_pk = ic.pk
 %s`, where)
 	if err := sqlcon.HandleError(p.db.SelectContext(ctx, &rows, p.db.Rebind(query), args...)); err != nil {
-		if errors.Cause(err) == sqlcon.ErrNoRows {
+		if errorsx.Cause(err) == sqlcon.ErrNoRows {
 			return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf(`Identity could not be found.`))
 		}
 		return nil, err

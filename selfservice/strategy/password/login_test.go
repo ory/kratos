@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/ory/x/pointerx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -31,18 +32,18 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-func nlr(id string, exp time.Duration) *login.Request {
+func nlr(exp time.Duration) *login.Request {
+	id := x.NewUUID()
 	return &login.Request{
-		ID:             "request-" + id,
-		IssuedAt:       time.Now().UTC(),
-		ExpiresAt:      time.Now().UTC().Add(exp),
-		RequestURL:     "remove-this-if-test-fails",
-		RequestHeaders: http.Header{},
+		ID:         id,
+		IssuedAt:   time.Now().UTC(),
+		ExpiresAt:  time.Now().UTC().Add(exp),
+		RequestURL: "remove-this-if-test-fails",
 		Methods: map[identity.CredentialsType]*login.RequestMethod{
 			identity.CredentialsTypePassword: {
 				Method: identity.CredentialsTypePassword,
-				Config: &password.RequestMethod{
-					HTMLForm: &form.HTMLForm{
+				Config: &login.RequestMethodConfig{
+					RequestMethodConfigurator: &form.HTMLForm{
 						Action: "/action",
 						Fields: form.Fields{
 							"identifier": {
@@ -65,7 +66,7 @@ func nlr(id string, exp time.Duration) *login.Request {
 								Name:     "request",
 								Type:     "hidden",
 								Required: true,
-								Value:    "request-" + id,
+								Value:    id.String(),
 							},
 						},
 					},
@@ -91,36 +92,55 @@ func TestLogin(t *testing.T) {
 		}
 	}
 
-	for k, tc := range []struct {
-		d       string
-		prep    func(t *testing.T, r loginStrategyDependencies)
-		ar      *login.Request
-		rid     string
-		payload string
-		assert  func(t *testing.T, r *http.Response)
-	}{
+	type testCase struct {
+		d              string
+		prep           func(t *testing.T, r loginStrategyDependencies)
+		ar             *login.Request
+		forceRequestID *string
+		payload        string
+		assert         func(t *testing.T, tc testCase, r *http.Response)
+	}
+
+	for k, tc := range []testCase{
 
 		{
 			d:       "should show the error ui because the request is malformed",
-			ar:      nlr("0", 0),
-			rid:     "0",
+			ar:      nlr(0),
 			payload: "14=)=!(%)$/ZP()GHIÖ",
-			assert: func(t *testing.T, r *http.Response) {
+			assert: func(t *testing.T, tc testCase, r *http.Response) {
 				require.Contains(t, r.Request.URL.Path, "login-ts", "%+v", r.Request)
 				body, err := ioutil.ReadAll(r.Body)
 				require.NoError(t, err)
 
-				assert.Equal(t, "request-0", gjson.GetBytes(body, "id").String(), "%s", body)
+				assert.Equal(t, tc.ar.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
 				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.errors.0.message").String(), `invalid URL escape`)
 			},
 		},
 		{
-			d:       "should show the error ui because the request id missing",
-			ar:      nlr("0", time.Minute),
-			payload: url.Values{}.Encode(),
-			rid:     "",
-			assert: func(t *testing.T, r *http.Response) {
+			d:              "should show the error ui because the request id missing",
+			ar:             nlr(time.Minute),
+			forceRequestID: pointerx.String(""),
+			payload:        url.Values{}.Encode(),
+			assert: func(t *testing.T, tc testCase, r *http.Response) {
+				assert.Contains(t, r.Request.URL.Path, "error-ts")
+				body, err := ioutil.ReadAll(r.Body)
+				require.NoError(t, err)
+
+				assert.Equal(t, int64(http.StatusBadRequest), gjson.GetBytes(body, "0.code").Int(), "%s", body)
+				assert.Equal(t, "Bad Request", gjson.GetBytes(body, "0.status").String(), "%s", body)
+				assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "request query parameter is missing or invalid", "%s", body)
+			},
+		},
+		{
+			d:              "should return an error because the request does not exist",
+			ar:             nlr(0),
+			forceRequestID: pointerx.String(x.NewUUID().String()),
+			payload: url.Values{
+				"identifier": {"identifier"},
+				"password":   {"password"},
+			}.Encode(),
+			assert: func(t *testing.T, tc testCase, r *http.Response) {
 				assert.Contains(t, r.Request.URL.Path, "error-ts")
 				body, err := ioutil.ReadAll(r.Body)
 				require.NoError(t, err)
@@ -131,32 +151,13 @@ func TestLogin(t *testing.T) {
 			},
 		},
 		{
-			d:   "should return an error because the request does not exist",
-			ar:  nlr("1", 0),
-			rid: "does-not-exist",
+			d:  "should return an error because the request is expired",
+			ar: nlr(-time.Hour),
 			payload: url.Values{
 				"identifier": {"identifier"},
 				"password":   {"password"},
 			}.Encode(),
-			assert: func(t *testing.T, r *http.Response) {
-				assert.Contains(t, r.Request.URL.Path, "error-ts")
-				body, err := ioutil.ReadAll(r.Body)
-				require.NoError(t, err)
-
-				assert.Equal(t, int64(http.StatusNotFound), gjson.GetBytes(body, "0.code").Int(), "%s", body)
-				assert.Equal(t, "Not Found", gjson.GetBytes(body, "0.status").String(), "%s", body)
-				assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "request-does-not-exist", "%s", body)
-			},
-		},
-		{
-			d:   "should return an error because the request is expired",
-			ar:  nlr("2", -time.Hour),
-			rid: "2",
-			payload: url.Values{
-				"identifier": {"identifier"},
-				"password":   {"password"},
-			}.Encode(),
-			assert: func(t *testing.T, r *http.Response) {
+			assert: func(t *testing.T, tc testCase, r *http.Response) {
 				assert.Contains(t, r.Request.URL.Path, "error-ts")
 				body, err := ioutil.ReadAll(r.Body)
 				require.NoError(t, err)
@@ -167,37 +168,35 @@ func TestLogin(t *testing.T) {
 			},
 		},
 		{
-			d:   "should return an error because the credentials are invalid (user does not exist)",
-			ar:  nlr("3", time.Hour),
-			rid: "3",
+			d:  "should return an error because the credentials are invalid (user does not exist)",
+			ar: nlr(time.Hour),
 			payload: url.Values{
 				"identifier": {"identifier"},
 				"password":   {"password"},
 			}.Encode(),
-			assert: func(t *testing.T, r *http.Response) {
+			assert: func(t *testing.T, tc testCase, r *http.Response) {
 				require.Contains(t, r.Request.URL.Path, "login-ts")
 				body, err := ioutil.ReadAll(r.Body)
 				require.NoError(t, err)
 
-				assert.Equal(t, "request-3", gjson.GetBytes(body, "id").String(), "%s", body)
+				assert.Equal(t, tc.ar.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
 				assert.Equal(t, `The provided credentials are invalid. Check for spelling mistakes in your password or username, email address, or phone number.`, gjson.GetBytes(body, "methods.password.config.errors.0.message").String())
 			},
 		},
 		{
-			d:   "should return an error because no identifier is set",
-			ar:  nlr("4", time.Hour),
-			rid: "4",
+			d:  "should return an error because no identifier is set",
+			ar: nlr(time.Hour),
 			payload: url.Values{
 				"password": {"password"},
 			}.Encode(),
-			assert: func(t *testing.T, r *http.Response) {
+			assert: func(t *testing.T, tc testCase, r *http.Response) {
 				require.Contains(t, r.Request.URL.Path, "login-ts")
 				body, err := ioutil.ReadAll(r.Body)
 				require.NoError(t, err)
 
 				// Let's ensure that the payload is being propagated properly.
-				assert.Equal(t, "request-4", gjson.GetBytes(body, "id").String())
+				assert.Equal(t, tc.ar.ID.String(), gjson.GetBytes(body, "id").String())
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
 				ensureFieldsExist(t, body)
 				assert.Equal(t, "identifier: identifier is required", gjson.GetBytes(body, "methods.password.config.fields.identifier.errors.0.message").String(), "%s", body)
@@ -207,19 +206,18 @@ func TestLogin(t *testing.T) {
 			},
 		},
 		{
-			d:   "should return an error because no password is set",
-			ar:  nlr("5", time.Hour),
-			rid: "5",
+			d:  "should return an error because no password is set",
+			ar: nlr(time.Hour),
 			payload: url.Values{
 				"identifier": {"identifier"},
 			}.Encode(),
-			assert: func(t *testing.T, r *http.Response) {
+			assert: func(t *testing.T, tc testCase, r *http.Response) {
 				require.Contains(t, r.Request.URL.Path, "login-ts")
 				body, err := ioutil.ReadAll(r.Body)
 				require.NoError(t, err)
 
 				// Let's ensure that the payload is being propagated properly.
-				assert.Equal(t, "request-5", gjson.GetBytes(body, "id").String())
+				assert.Equal(t, tc.ar.ID.String(), gjson.GetBytes(body, "id").String())
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
 				ensureFieldsExist(t, body)
 				assert.Equal(t, "password: password is required", gjson.GetBytes(body, "methods.password.config.fields.password.errors.0.message").String(), "%s", body)
@@ -233,7 +231,7 @@ func TestLogin(t *testing.T) {
 		},
 		{
 			d:  "should return an error because the credentials are invalid (password not correct)",
-			ar: nlr("6", time.Hour),
+			ar: nlr(time.Hour),
 			prep: func(t *testing.T, r loginStrategyDependencies) {
 				p, _ := r.PasswordHasher().Generate([]byte("password"))
 				_, err := r.IdentityPool().Create(context.Background(), &identity.Identity{
@@ -249,17 +247,16 @@ func TestLogin(t *testing.T) {
 				})
 				require.NoError(t, err)
 			},
-			rid: "6",
 			payload: url.Values{
 				"identifier": {"login-identifier-6"},
 				"password":   {"not-password"},
 			}.Encode(),
-			assert: func(t *testing.T, r *http.Response) {
+			assert: func(t *testing.T, tc testCase, r *http.Response) {
 				require.Contains(t, r.Request.URL.Path, "login-ts")
 				body, err := ioutil.ReadAll(r.Body)
 				require.NoError(t, err)
 
-				assert.Equal(t, "request-6", gjson.GetBytes(body, "id").String())
+				assert.Equal(t, tc.ar.ID.String(), gjson.GetBytes(body, "id").String())
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
 				ensureFieldsExist(t, body)
 				assert.Equal(t, schema.NewInvalidCredentialsError().(schema.ResultErrors)[0].Description(), gjson.GetBytes(body, "methods.password.config.errors.0.message").String(), "%s", body)
@@ -270,7 +267,7 @@ func TestLogin(t *testing.T) {
 		},
 		{
 			d:  "should pass because everything is a-ok",
-			ar: nlr("7", time.Hour),
+			ar: nlr(time.Hour),
 			prep: func(t *testing.T, r loginStrategyDependencies) {
 				p, _ := r.PasswordHasher().Generate([]byte("password"))
 				_, err := r.IdentityPool().Create(context.Background(), &identity.Identity{
@@ -286,12 +283,11 @@ func TestLogin(t *testing.T) {
 				})
 				require.NoError(t, err)
 			},
-			rid: "7",
 			payload: url.Values{
 				"identifier": {"login-identifier-7"},
 				"password":   {"password"},
 			}.Encode(),
-			assert: func(t *testing.T, r *http.Response) {
+			assert: func(t *testing.T, tc testCase, r *http.Response) {
 				assert.Contains(t, r.Request.URL.Path, "return-ts", "%s", r.Request.URL.String())
 				body, err := ioutil.ReadAll(r.Body)
 				require.NoError(t, err)
@@ -300,28 +296,29 @@ func TestLogin(t *testing.T) {
 			},
 		},
 		{
-			d:   "should return an error because not passing validation and reset previous errors and values",
-			rid: "8",
+			d: "should return an error because not passing validation and reset previous errors and values",
 			ar: &login.Request{
-				ID:        "request-8",
+				ID:        x.NewUUID(),
 				ExpiresAt: time.Now().Add(time.Minute),
 				Methods: map[identity.CredentialsType]*login.RequestMethod{
 					identity.CredentialsTypePassword: {
 						Method: identity.CredentialsTypePassword,
-						Config: &password.RequestMethod{
-							HTMLForm: &form.HTMLForm{
-								Action: "/action",
-								Errors: []form.Error{{Message: "some error"}},
-								Fields: form.Fields{
-									"identifier": {
-										Value:  "baz",
-										Name:   "identifier",
-										Errors: []form.Error{{Message: "err"}},
-									},
-									"password": {
-										Value:  "bar",
-										Name:   "password",
-										Errors: []form.Error{{Message: "err"}},
+						Config: &login.RequestMethodConfig{
+							RequestMethodConfigurator: &password.RequestMethod{
+								HTMLForm: &form.HTMLForm{
+									Action: "/action",
+									Errors: []form.Error{{Message: "some error"}},
+									Fields: form.Fields{
+										"identifier": {
+											Value:  "baz",
+											Name:   "identifier",
+											Errors: []form.Error{{Message: "err"}},
+										},
+										"password": {
+											Value:  "bar",
+											Name:   "password",
+											Errors: []form.Error{{Message: "err"}},
+										},
 									},
 								},
 							},
@@ -333,12 +330,12 @@ func TestLogin(t *testing.T) {
 				"identifier": {"registration-identifier-9"},
 				// "password": {uuid.New().String()},
 			}.Encode(),
-			assert: func(t *testing.T, r *http.Response) {
+			assert: func(t *testing.T, tc testCase, r *http.Response) {
 				require.Contains(t, r.Request.URL.Path, "login-ts")
 				body, err := ioutil.ReadAll(r.Body)
 				require.NoError(t, err)
 
-				assert.Equal(t, "request-8", gjson.GetBytes(body, "id").String())
+				assert.Equal(t, tc.ar.ID.String(), gjson.GetBytes(body, "id").String())
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
 				ensureFieldsExist(t, body)
 
@@ -363,7 +360,7 @@ func TestLogin(t *testing.T) {
 			defer ts.Close()
 
 			errTs, uiTs, returnTs := errorx.NewErrorTestServer(t, reg), httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				e, err := reg.LoginRequestPersister().GetLoginRequest(context.Background(), r.URL.Query().Get("request"))
+				e, err := reg.LoginRequestPersister().GetLoginRequest(context.Background(), x.ParseUUID(r.URL.Query().Get("request")))
 				require.NoError(t, err)
 				reg.Writer().Write(w, r, e)
 			})), newReturnTs(t, reg)
@@ -387,12 +384,17 @@ func TestLogin(t *testing.T) {
 			c := ts.Client()
 			c.Jar, _ = cookiejar.New(&cookiejar.Options{})
 
-			res, err := c.Post(ts.URL+password.LoginPath+"?request=request-"+tc.rid, "application/x-www-form-urlencoded", strings.NewReader(tc.payload))
+			requestID := tc.ar.ID.String()
+			if tc.forceRequestID != nil {
+				requestID = *tc.forceRequestID
+			}
+
+			res, err := c.Post(ts.URL+password.LoginPath+"?request="+requestID, "application/x-www-form-urlencoded", strings.NewReader(tc.payload))
 			require.NoError(t, err)
 			defer res.Body.Close()
 			require.EqualValues(t, http.StatusOK, res.StatusCode, "Request: %+v\n\t\tResponse: %s", res.Request, res)
 
-			tc.assert(t, res)
+			tc.assert(t, tc, res)
 		})
 	}
 }

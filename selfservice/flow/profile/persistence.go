@@ -1,12 +1,16 @@
 package profile
 
-import "context"
+import (
+	"context"
+
+	"github.com/gofrs/uuid"
+)
 
 type (
 	RequestPersister interface {
 		CreateProfileRequest(context.Context, *Request) error
-		GetProfileRequest(ctx context.Context, id string) (*Request, error)
-		UpdateProfileRequest(context.Context, string, *Request) error
+		GetProfileRequest(ctx context.Context, id uuid.UUID) (*Request, error)
+		UpdateProfileRequest(context.Context, uuid.UUID, *Request) error
 	}
 	RequestPersistenceProvider interface {
 		ProfileRequestPersister() RequestPersister

@@ -76,7 +76,7 @@ func (s *ErrorHandler) HandleProfileManagementError(
 	}
 
 	http.Redirect(w, r,
-		urlx.CopyWithQuery(s.c.ProfileURL(), url.Values{"request": {rr.ID}}).String(),
+		urlx.CopyWithQuery(s.c.ProfileURL(), url.Values{"request": {rr.ID.String()}}).String(),
 		http.StatusFound,
 	)
 }

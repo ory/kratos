@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -53,7 +53,7 @@ func TestRegistration(t *testing.T) {
 		defer ts.Close()
 
 		errTs, uiTs, returnTs := newErrTs(t, reg), httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			e, err := reg.RegistrationRequestPersister().GetRegistrationRequest(r.Context(), r.URL.Query().Get("request"))
+			e, err := reg.RegistrationRequestPersister().GetRegistrationRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
 			require.NoError(t, err)
 			reg.Writer().Write(w, r, e)
 		})), newReturnTs(t, reg)
@@ -69,17 +69,19 @@ func TestRegistration(t *testing.T) {
 
 		var newRegistrationRequest = func(t *testing.T, exp time.Duration) *registration.Request {
 			rr := &registration.Request{
-				ID: "request-" + uuid.New().String(), IssuedAt: time.Now().UTC(), ExpiresAt: time.Now().UTC().Add(exp), RequestURL: ts.URL,
-				RequestHeaders: http.Header{},
+				ID:       x.NewUUID(),
+				IssuedAt: time.Now().UTC(), ExpiresAt: time.Now().UTC().Add(exp), RequestURL: ts.URL,
 				Methods: map[identity.CredentialsType]*registration.RequestMethod{
 					identity.CredentialsTypePassword: {
 						Method: identity.CredentialsTypePassword,
-						Config: &password.RequestMethod{
-							HTMLForm: &form.HTMLForm{
-								Action: "/action",
-								Fields: form.Fields{
-									"password":   {Name: "password", Type: "password", Required: true},
-									"csrf_token": {Name: "csrf_token", Type: "hidden", Required: true, Value: "csrf-token"},
+						Config: &registration.RequestMethodConfig{
+							RequestMethodConfigurator: password.RequestMethod{
+								HTMLForm: &form.HTMLForm{
+									Action: "/action",
+									Fields: form.Fields{
+										"password":   {Name: "password", Type: "password", Required: true},
+										"csrf_token": {Name: "csrf_token", Type: "hidden", Required: true, Value: "csrf-token"},
+									},
 								},
 							},
 						},
@@ -90,10 +92,10 @@ func TestRegistration(t *testing.T) {
 			return rr
 		}
 
-		var makeRequest = func(t *testing.T, rid, body string, expectedStatusCode int) ([]byte, *http.Response) {
+		var makeRequest = func(t *testing.T, rid uuid.UUID, body string, expectedStatusCode int) ([]byte, *http.Response) {
 			jar, _ := cookiejar.New(&cookiejar.Options{})
 			client := http.Client{Jar: jar}
-			res, err := client.Post(ts.URL+password.RegistrationPath+"?request="+rid, "application/x-www-form-urlencoded", strings.NewReader(body))
+			res, err := client.Post(ts.URL+password.RegistrationPath+"?request="+rid.String(), "application/x-www-form-urlencoded", strings.NewReader(body))
 			require.NoError(t, err)
 			result, err := ioutil.ReadAll(res.Body)
 			require.NoError(t, res.Body.Close())
@@ -106,13 +108,14 @@ func TestRegistration(t *testing.T) {
 			rr := newRegistrationRequest(t, time.Minute)
 			body, res := makeRequest(t, rr.ID, "14=)=!(%)$/ZP()GHIÖ", http.StatusOK)
 			assert.Contains(t, res.Request.URL.Path, "signup-ts")
-			assert.Equal(t, rr.ID, gjson.GetBytes(body, "id").String(), "%s", body)
+			assert.Equal(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.errors.0.message").String(), "invalid URL escape", "%s", body)
 		})
 
 		t.Run("case=should show the error ui because the request id is missing", func(t *testing.T) {
 			_ = newRegistrationRequest(t, time.Minute)
-			body, res := makeRequest(t, "does-not-exist", "", http.StatusOK)
+			uuidDesNotExistInStore := x.NewUUID()
+			body, res := makeRequest(t, uuidDesNotExistInStore, "", http.StatusOK)
 			assert.Contains(t, res.Request.URL.Path, "error-ts")
 			assert.Equal(t, int64(http.StatusNotFound), gjson.GetBytes(body, "0.code").Int(), "%s", body)
 			assert.Equal(t, "Not Found", gjson.GetBytes(body, "0.status").String(), "%s", body)
@@ -123,7 +126,7 @@ func TestRegistration(t *testing.T) {
 			rr := newRegistrationRequest(t, -time.Minute)
 			body, res := makeRequest(t, rr.ID, "", http.StatusOK)
 			assert.Contains(t, res.Request.URL.Path, "signup-ts")
-			assert.Equal(t, rr.ID, gjson.GetBytes(body, "id").String(), "%s", body)
+			assert.Equal(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 			assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
 			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.errors.0.message").String(), "expired", "%s", body)
 		})
@@ -136,7 +139,7 @@ func TestRegistration(t *testing.T) {
 				"traits.foobar":   {"bar"},
 			}.Encode(), http.StatusOK)
 			assert.Contains(t, res.Request.URL.Path, "signup-ts")
-			assert.Equal(t, rr.ID, gjson.GetBytes(body, "id").String(), "%s", body)
+			assert.Equal(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 			assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
 			fieldNameSet(t, body, "password", "csrf_token", "traits.username", "traits.foobar")
 			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.password.errors.0").String(), "data breaches and must no longer be used.", "%s", body)
@@ -146,10 +149,10 @@ func TestRegistration(t *testing.T) {
 			rr := newRegistrationRequest(t, time.Minute)
 			body, res := makeRequest(t, rr.ID, url.Values{
 				"traits.username": {"registration-identifier-5"},
-				"password":        {uuid.New().String()},
+				"password":        {x.NewUUID().String()},
 			}.Encode(), http.StatusOK)
 			assert.Contains(t, res.Request.URL.Path, "signup-ts")
-			assert.Equal(t, rr.ID, gjson.GetBytes(body, "id").String(), "%s", body)
+			assert.Equal(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 			assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
 			fieldNameSet(t, body, "password", "csrf_token", "traits.username", "traits.foobar")
 			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.traits\\.foobar.errors.0").String(), "foobar is required", "%s", body)
@@ -160,7 +163,7 @@ func TestRegistration(t *testing.T) {
 			rr := newRegistrationRequest(t, time.Minute)
 			body, res := makeRequest(t, rr.ID, url.Values{
 				"traits.username": {"registration-identifier-6"},
-				"password":        {uuid.New().String()},
+				"password":        {x.NewUUID().String()},
 				"traits.foobar":   {"bar"},
 			}.Encode(), http.StatusOK)
 			assert.Contains(t, res.Request.URL.Path, "error-ts")
@@ -174,7 +177,7 @@ func TestRegistration(t *testing.T) {
 			rr := newRegistrationRequest(t, time.Minute)
 			body, res := makeRequest(t, rr.ID, url.Values{
 				"traits.username": {"registration-identifier-7"},
-				"password":        {uuid.New().String()},
+				"password":        {x.NewUUID().String()},
 				"traits.foobar":   {"bar"},
 			}.Encode(), http.StatusOK)
 			assert.Contains(t, res.Request.URL.Path, "error-ts")
@@ -188,7 +191,7 @@ func TestRegistration(t *testing.T) {
 			rr := newRegistrationRequest(t, time.Minute)
 			body, res := makeRequest(t, rr.ID, url.Values{
 				"traits.username": {"registration-identifier-8"},
-				"password":        {uuid.New().String()},
+				"password":        {x.NewUUID().String()},
 				"traits.foobar":   {"bar"},
 			}.Encode(), http.StatusOK)
 			assert.Contains(t, res.Request.URL.Path, "return-ts")
@@ -200,7 +203,7 @@ func TestRegistration(t *testing.T) {
 			rr := newRegistrationRequest(t, time.Minute)
 			body, res := makeRequest(t, rr.ID, url.Values{
 				"traits.username": {"registration-identifier-8"},
-				"password":        {uuid.New().String()},
+				"password":        {x.NewUUID().String()},
 				"traits.foobar":   {"bar"},
 			}.Encode(), http.StatusOK)
 			assert.Contains(t, res.Request.URL.Path, "signup-ts")
@@ -211,21 +214,23 @@ func TestRegistration(t *testing.T) {
 			viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
 
 			rr := &registration.Request{
-				ID:        "request-9",
+				ID:        x.NewUUID(),
 				ExpiresAt: time.Now().Add(time.Minute),
 				Methods: map[identity.CredentialsType]*registration.RequestMethod{
 					identity.CredentialsTypePassword: {
 						Method: identity.CredentialsTypePassword,
-						Config: &password.RequestMethod{
-							HTMLForm: &form.HTMLForm{
-								Action: "/action",
-								Errors: []form.Error{{Message: "some error"}},
-								Fields: form.Fields{
-									"traits.foo": {
-										Name: "traits.foo", Value: "bar", Type: "text",
-										Errors: []form.Error{{Message: "bar"}},
+						Config: &registration.RequestMethodConfig{
+							RequestMethodConfigurator: &password.RequestMethod{
+								HTMLForm: &form.HTMLForm{
+									Action: "/action",
+									Errors: []form.Error{{Message: "some error"}},
+									Fields: form.Fields{
+										"traits.foo": {
+											Name: "traits.foo", Value: "bar", Type: "text",
+											Errors: []form.Error{{Message: "bar"}},
+										},
+										"password": {Name: "password"},
 									},
-									"password": {Name: "password"},
 								},
 							},
 						},
@@ -236,10 +241,10 @@ func TestRegistration(t *testing.T) {
 			require.NoError(t, reg.RegistrationRequestPersister().CreateRegistrationRequest(context.Background(), rr))
 			body, res := makeRequest(t, rr.ID, url.Values{
 				"traits.username": {"registration-identifier-9"},
-				"password":        {uuid.New().String()},
+				"password":        {x.NewUUID().String()},
 			}.Encode(), http.StatusOK)
 			assert.Contains(t, res.Request.URL.Path, "signup-ts")
-			assert.Equal(t, "request-9", gjson.GetBytes(body, "id").String(), "%s", body)
+			assert.Equal(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 			assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
 			fieldNameSet(t, body, "password", "csrf_token", "traits.username")
 
@@ -277,35 +282,37 @@ func TestRegistration(t *testing.T) {
 
 		expected := &registration.RequestMethod{
 			Method: identity.CredentialsTypePassword,
-			Config: &password.RequestMethod{
-				HTMLForm: &form.HTMLForm{
-					Action: "https://foo" + password.RegistrationPath + "?request=" + sr.ID,
-					Method: "POST",
-					Fields: form.Fields{
-						"password": {
-							Name:     "password",
-							Type:     "password",
-							Required: true,
-						},
-						"csrf_token": {
-							Name:     "csrf_token",
-							Type:     "hidden",
-							Required: true,
-							Value:    "nosurf",
-						},
-						"traits.foobar": {
-							Name: "traits.foobar",
-							Type: "text",
-						},
-						"traits.username": {
-							Name: "traits.username",
-							Type: "text",
+			Config: &registration.RequestMethodConfig{
+				RequestMethodConfigurator: &password.RequestMethod{
+					HTMLForm: &form.HTMLForm{
+						Action: "https://foo" + password.RegistrationPath + "?request=" + sr.ID.String(),
+						Method: "POST",
+						Fields: form.Fields{
+							"password": {
+								Name:     "password",
+								Type:     "password",
+								Required: true,
+							},
+							"csrf_token": {
+								Name:     "csrf_token",
+								Type:     "hidden",
+								Required: true,
+								Value:    "nosurf",
+							},
+							"traits.foobar": {
+								Name: "traits.foobar",
+								Type: "text",
+							},
+							"traits.username": {
+								Name: "traits.username",
+								Type: "text",
+							},
 						},
 					},
 				},
 			},
 		}
 		actual := sr.Methods[identity.CredentialsTypePassword]
-		assert.EqualValues(t, expected.Config.(*password.RequestMethod).HTMLForm, actual.Config.(*password.RequestMethod).HTMLForm)
+		assert.EqualValues(t, expected.Config.RequestMethodConfigurator.(*password.RequestMethod).HTMLForm, actual.Config.RequestMethodConfigurator.(*password.RequestMethod).HTMLForm)
 	})
 }

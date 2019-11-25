@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync"
 
+	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -20,16 +21,16 @@ var _ profile.RequestPersister = new(RequestManagerMemory)
 
 type RequestManagerMemory struct {
 	sync.RWMutex
-	sir map[string]login.Request
-	sur map[string]registration.Request
-	pr  map[string]profile.Request
+	sir map[uuid.UUID]login.Request
+	sur map[uuid.UUID]registration.Request
+	pr  map[uuid.UUID]profile.Request
 }
 
 func NewRequestManagerMemory() *RequestManagerMemory {
 	return &RequestManagerMemory{
-		sir: make(map[string]login.Request),
-		sur: make(map[string]registration.Request),
-		pr:  make(map[string]profile.Request),
+		sir: make(map[uuid.UUID]login.Request),
+		sur: make(map[uuid.UUID]registration.Request),
+		pr:  make(map[uuid.UUID]profile.Request),
 	}
 }
 
@@ -57,7 +58,7 @@ func (m *RequestManagerMemory) CreateRegistrationRequest(ctx context.Context, r 
 	return m.cr(r)
 }
 
-func (m *RequestManagerMemory) GetLoginRequest(ctx context.Context, id string) (*login.Request, error) {
+func (m *RequestManagerMemory) GetLoginRequest(ctx context.Context, id uuid.UUID) (*login.Request, error) {
 	m.RLock()
 	defer m.RUnlock()
 	if r, ok := m.sir[id]; ok {
@@ -67,7 +68,7 @@ func (m *RequestManagerMemory) GetLoginRequest(ctx context.Context, id string) (
 	return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("Unable to find request: %s", id))
 }
 
-func (m *RequestManagerMemory) GetRegistrationRequest(ctx context.Context, id string) (*registration.Request, error) {
+func (m *RequestManagerMemory) GetRegistrationRequest(ctx context.Context, id uuid.UUID) (*registration.Request, error) {
 	m.RLock()
 	defer m.RUnlock()
 	if r, ok := m.sur[id]; ok {
@@ -77,7 +78,7 @@ func (m *RequestManagerMemory) GetRegistrationRequest(ctx context.Context, id st
 	return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("Unable to find request: %s", id))
 }
 
-func (m *RequestManagerMemory) UpdateRegistrationRequest(ctx context.Context, id string, t identity.CredentialsType, c *registration.RequestMethod) error {
+func (m *RequestManagerMemory) UpdateRegistrationRequest(ctx context.Context, id uuid.UUID, t identity.CredentialsType, c *registration.RequestMethod) error {
 	r, err := m.GetRegistrationRequest(ctx, id)
 	if err != nil {
 		return err
@@ -99,7 +100,7 @@ func (m *RequestManagerMemory) UpdateRegistrationRequest(ctx context.Context, id
 	return nil
 }
 
-func (m *RequestManagerMemory) UpdateLoginRequest(ctx context.Context, id string, t identity.CredentialsType, c *login.RequestMethod) error {
+func (m *RequestManagerMemory) UpdateLoginRequest(ctx context.Context, id uuid.UUID, t identity.CredentialsType, c *login.RequestMethod) error {
 	r, err := m.GetLoginRequest(ctx, id)
 	if err != nil {
 		return err
@@ -125,7 +126,7 @@ func (m *RequestManagerMemory) CreateProfileRequest(ctx context.Context, r *prof
 	return m.cr(r)
 }
 
-func (m *RequestManagerMemory) GetProfileRequest(ctx context.Context, id string) (*profile.Request, error) {
+func (m *RequestManagerMemory) GetProfileRequest(ctx context.Context, id uuid.UUID) (*profile.Request, error) {
 	m.RLock()
 	defer m.RUnlock()
 	if r, ok := m.pr[id]; ok {
@@ -135,7 +136,7 @@ func (m *RequestManagerMemory) GetProfileRequest(ctx context.Context, id string)
 	return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("Unable to find request: %s", id))
 }
 
-func (m *RequestManagerMemory) UpdateProfileRequest(ctx context.Context, id string, request *profile.Request) error {
+func (m *RequestManagerMemory) UpdateProfileRequest(ctx context.Context, id uuid.UUID, request *profile.Request) error {
 	m.Lock()
 	defer m.Unlock()
 

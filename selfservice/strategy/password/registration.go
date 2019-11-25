@@ -7,6 +7,7 @@ import (
 	"net/url"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/ory/x/errorsx"
 	"github.com/pkg/errors"
 	"github.com/tidwall/sjson"
 
@@ -94,8 +95,8 @@ func (s *Strategy) decoderRegistration() (decoderx.HTTPDecoderOption, error) {
 }
 
 func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	rid := r.URL.Query().Get("request")
-	if len(rid) == 0 {
+	rid := x.ParseUUID(r.URL.Query().Get("request"))
+	if x.IsZeroUUID(rid) {
 		s.handleRegistrationError(w, r, nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request Code is missing.")))
 		return
 	}
@@ -166,7 +167,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 		s.d.PostRegistrationHooks(identity.CredentialsTypePassword),
 		ar,
 		i,
-	); errors.Cause(err) == registration.ErrHookAbortRequest {
+	); errorsx.Cause(err) == registration.ErrHookAbortRequest {
 		return
 	} else if err != nil {
 		s.handleRegistrationError(w, r, ar, &p, err)
@@ -189,7 +190,7 @@ func (s *Strategy) validateCredentials(i *identity.Identity, pw string) error {
 
 	for _, id := range c.Identifiers {
 		if err := s.d.PasswordValidator().Validate(id, pw); err != nil {
-			if _, ok := errors.Cause(err).(*herodot.DefaultError); ok {
+			if _, ok := errorsx.Cause(err).(*herodot.DefaultError); ok {
 				return err
 			}
 			return schema.NewPasswordPolicyValidation(
@@ -206,7 +207,7 @@ func (s *Strategy) validateCredentials(i *identity.Identity, pw string) error {
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.Request) error {
 	action := urlx.CopyWithQuery(
 		urlx.AppendPaths(s.c.SelfPublicURL(), RegistrationPath),
-		url.Values{"request": {sr.ID}},
+		url.Values{"request": {sr.ID.String()}},
 	)
 
 	htmlf, err := form.NewHTMLFormFromJSONSchema(action.String(), s.c.DefaultIdentityTraitsSchemaURL().String(), "traits")
@@ -220,7 +221,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.
 
 	sr.Methods[identity.CredentialsTypePassword] = &registration.RequestMethod{
 		Method: identity.CredentialsTypePassword,
-		Config: &RequestMethod{HTMLForm: htmlf},
+		Config: &registration.RequestMethodConfig{RequestMethodConfigurator: &RequestMethod{HTMLForm: htmlf}},
 	}
 
 	return nil

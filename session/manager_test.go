@@ -13,8 +13,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
-	"github.com/pkg/errors"
-
+	"github.com/ory/x/errorsx"
 	"github.com/ory/x/sqlcon/dockertest"
 
 	"github.com/ory/viper"
@@ -130,7 +129,7 @@ func TestSessionManagerHTTP(t *testing.T) {
 
 	router.GET("/get", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		s, err := sm.FetchFromRequest(context.Background(), w, r)
-		if errors.Cause(err) == ErrNoActiveSessionFound {
+		if errorsx.Cause(err) == ErrNoActiveSessionFound {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		} else if err != nil {

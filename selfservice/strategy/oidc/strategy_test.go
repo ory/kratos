@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -138,9 +138,9 @@ func TestStrategy(t *testing.T) {
 		var e interface{}
 		var err error
 		if r.URL.Path == "/login" {
-			e, err = reg.LoginRequestPersister().GetLoginRequest(r.Context(), r.URL.Query().Get("request"))
+			e, err = reg.LoginRequestPersister().GetLoginRequest(r.Context(),x.ParseUUID( r.URL.Query().Get("request")))
 		} else if r.URL.Path == "/registration" {
-			e, err = reg.RegistrationRequestPersister().GetRegistrationRequest(r.Context(), r.URL.Query().Get("request"))
+			e, err = reg.RegistrationRequestPersister().GetRegistrationRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
 		}
 
 		require.NoError(t, err)
@@ -218,9 +218,9 @@ func TestStrategy(t *testing.T) {
 	scope = []string{}
 
 	// make request
-	var mr = func(t *testing.T, provider, request string, fv url.Values) (*http.Response, []byte) {
+	var mr = func(t *testing.T, provider string, request uuid.UUID, fv url.Values) (*http.Response, []byte) {
 		fv.Set("provider", provider)
-		res, err := newClient(t).PostForm(ts.URL+oidc.BasePath+"/auth/"+request, fv)
+		res, err := newClient(t).PostForm(ts.URL+oidc.BasePath+"/auth/"+request.String(), fv)
 		require.NoError(t, err)
 
 		body, err := ioutil.ReadAll(res.Body)
@@ -255,15 +255,14 @@ func TestStrategy(t *testing.T) {
 	// new login request
 	var nlr = func(t *testing.T, redirectTo string, exp time.Duration) *login.Request {
 		r := &login.Request{
-			ID:             uuid.New().String(),
+			ID:             x.NewUUID(),
 			RequestURL:     redirectTo,
 			IssuedAt:       time.Now(),
 			ExpiresAt:      time.Now().Add(exp),
-			RequestHeaders: map[string][]string{},
 			Methods: map[identity.CredentialsType]*login.RequestMethod{
 				identity.CredentialsTypeOIDC: {
 					Method: identity.CredentialsTypeOIDC,
-					Config: oidc.NewRequestMethodConfig(form.NewHTMLForm("")),
+					Config: &login.RequestMethodConfig{RequestMethodConfigurator: oidc.NewRequestMethodConfig(form.NewHTMLForm(""))},
 				},
 			},
 		}
@@ -274,15 +273,14 @@ func TestStrategy(t *testing.T) {
 	// new registration request
 	var nrr = func(t *testing.T, redirectTo string, exp time.Duration) *registration.Request {
 		r := &registration.Request{
-			ID:             uuid.New().String(),
+			ID:             x.NewUUID(),
 			RequestURL:     redirectTo,
 			IssuedAt:       time.Now(),
 			ExpiresAt:      time.Now().Add(exp),
-			RequestHeaders: map[string][]string{},
 			Methods: map[identity.CredentialsType]*registration.RequestMethod{
 				identity.CredentialsTypeOIDC: {
 					Method: identity.CredentialsTypeOIDC,
-					Config: oidc.NewRequestMethodConfig(form.NewHTMLForm("")),
+					Config: &registration.RequestMethodConfig{RequestMethodConfigurator: oidc.NewRequestMethodConfig(form.NewHTMLForm(""))},
 				},
 			},
 		}
@@ -291,17 +289,20 @@ func TestStrategy(t *testing.T) {
 	}
 
 	t.Run("case=should fail because provider does not exist", func(t *testing.T) {
-		res, body := mr(t, "provider-does-not-exist", "request-does-not-exist", url.Values{})
+		requestDoesNotExist := x.NewUUID()
+		res, body := mr(t, "provider-does-not-exist", requestDoesNotExist, url.Values{})
 		ase(t, res, body, http.StatusNotFound, "is unknown or has not been configured")
 	})
 
 	t.Run("case=should fail because the issuer is mismatching", func(t *testing.T) {
-		res, body := mr(t, "invalid-issuer", "request-does-not-exist", url.Values{})
+		requestDoesNotExist := x.NewUUID()
+		res, body := mr(t, "invalid-issuer", requestDoesNotExist, url.Values{})
 		ase(t, res, body, http.StatusInternalServerError, "issuer did not match the issuer returned by provider")
 	})
 
 	t.Run("case=should fail because request does not exist", func(t *testing.T) {
-		res, body := mr(t, "valid", "request-does-not-exist", url.Values{})
+		requestDoesNotExist := x.NewUUID()
+		res, body := mr(t, "valid", requestDoesNotExist, url.Values{})
 		ase(t, res, body, http.StatusNotFound, "Unable to find request")
 	})
 

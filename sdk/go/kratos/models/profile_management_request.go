@@ -30,9 +30,9 @@ type ProfileManagementRequest struct {
 	// form
 	Form *Form `json:"form,omitempty"`
 
-	// ID represents the request's unique ID. When performing the profile management flow, this
-	// represents the id in the profile ui's query parameter: http://<urls.profile_ui>?request=<id>
-	ID string `json:"id,omitempty"`
+	// id
+	// Format: uuid4
+	ID UUID `json:"id,omitempty"`
 
 	// identity
 	Identity *Identity `json:"identity,omitempty"`
@@ -60,6 +60,10 @@ func (m *ProfileManagementRequest) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateForm(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateID(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -103,6 +107,22 @@ func (m *ProfileManagementRequest) validateForm(formats strfmt.Registry) error {
 			}
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (m *ProfileManagementRequest) validateID(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.ID) { // not required
+		return nil
+	}
+
+	if err := m.ID.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("id")
+		}
+		return err
 	}
 
 	return nil

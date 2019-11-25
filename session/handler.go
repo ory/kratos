@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/ory/x/errorsx"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -79,7 +80,7 @@ func (h *Handler) IsAuthenticated(wrap httprouter.Handle, onUnauthenticated http
 func (h *Handler) IsNotAuthenticated(wrap httprouter.Handle, onAuthenticated httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		if _, err := h.r.SessionManager().FetchFromRequest(r.Context(), w, r); err != nil {
-			if errors.Cause(err).Error() == ErrNoActiveSessionFound.Error() {
+			if errorsx.Cause(err).Error() == ErrNoActiveSessionFound.Error() {
 				wrap(w, r, ps)
 				return
 			}

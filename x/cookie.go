@@ -16,11 +16,7 @@ func SessionPersistValues(w http.ResponseWriter, r *http.Request, s sessions.Sto
 		cookie.Values[k] = v
 	}
 
-	if err := cookie.Save(r, w); err != nil {
-		return errors.WithStack(err)
-	}
-
-	return nil
+	return errors.WithStack(cookie.Save(r, w))
 }
 
 // SessionGetString returns a string for the given id and key or an error if the session is invalid,
