@@ -337,7 +337,7 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 	ar.Form.SetValue("request", r.Form.Get("request"))
 	ar.Form.SetCSRF(nosurf.Token(r))
 
-	if err := h.d.ProfileRequestPersister().UpdateProfileRequest(r.Context(), ar.ID, ar); err != nil {
+	if err := h.d.ProfileRequestPersister().UpdateProfileRequest(r.Context(),ar); err != nil {
 		h.handleProfileManagementError(w, r, ar, i.Traits, err)
 		return
 	}

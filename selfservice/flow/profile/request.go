@@ -78,6 +78,10 @@ func NewRequest(exp time.Duration, r *http.Request, s *session.Session) *Request
 	}
 }
 
+func (r *Request) TableName() string {
+	return "selfservice_profile_management_requests"
+}
+
 func (r *Request) Valid(s *session.Session) error {
 	if r.ExpiresAt.Before(time.Now()) {
 		return errors.WithStack(ErrRequestExpired.WithReasonf("The profile request expired %.2f minutes ago, please try again.", time.Since(r.ExpiresAt).Minutes()))

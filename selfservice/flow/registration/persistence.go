@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/bxcodec/faker"
 	"github.com/gobuffalo/uuid"
 	"github.com/stretchr/testify/require"
 
@@ -54,13 +53,7 @@ func TestRequestPersister(p RequestPersister) func(t *testing.T) {
 
 		t.Run("case=should error when the registration request does not exist", func(t *testing.T) {
 			_, err := p.GetRegistrationRequest(context.Background(), x.NewUUID())
-			require.NoError(t, err)
-		})
-
-		t.Run("case=", func(t *testing.T) {
-			var r Request
-			require.NoError(t, faker.FakeData(&r))
-			t.Logf("%+v", r)
+			require.Error(t, err)
 		})
 
 		// r := LoginRequest{Request: nbr()}

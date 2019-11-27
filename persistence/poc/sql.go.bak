@@ -1,4 +1,3 @@
-package persistence
 
 import (
 	"net/http"

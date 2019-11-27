@@ -5,10 +5,12 @@ import (
 	"testing"
 
 	"github.com/bxcodec/faker"
-	"github.com/stretchr/testify/require"
 	"github.com/gofrs/uuid"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/x"
 )
 
@@ -23,57 +25,88 @@ type (
 	}
 )
 
-func TestRequestPersister(t *testing.T, p RequestPersister) {
-	// nbr := func() *Request {
-	// 	return &Request{
-	// 		ID:             uuid.New().String(),
-	// 		IssuedAt:       time.Now().UTC().Round(time.Second),
-	// 		ExpiresAt:      time.Now().Add(time.Hour).UTC().Round(time.Second),
-	// 		RequestURL:     "https://www.ory.sh/request",
-	// 		RequestHeaders: http.Header{"Content-Type": {"application/json"}},
-	// 		// Disable Active as this value is initially empty (NULL).
-	// 		// Active:         identity.CredentialsTypePassword,
-	// 		Methods: map[identity.CredentialsType]*CredentialsRequest{
-	// 			identity.CredentialsTypePassword: {
-	// 				Method: identity.CredentialsTypePassword,
-	// 				Config: password.NewRequestMethodConfig(),
-	// 			},
-	// 			identity.CredentialsTypeOIDC: {
-	// 				Method: identity.CredentialsTypeOIDC,
-	// 				Config: oidc.NewRequestMethodConfig(),
-	// 			},
-	// 		},
-	// 	}
-	// }
-	//
-	// assertUpdated := func(t *testing.T, expected, actual Request) {
-	// 	assert.EqualValues(t, identity.CredentialsTypePassword, actual.Active)
-	// 	assert.EqualValues(t, "bar", actual.Methods[identity.CredentialsTypeOIDC].Config.(*oidc.RequestMethodConfig).Action)
-	// 	assert.EqualValues(t, "foo", actual.Methods[identity.CredentialsTypePassword].Config.(*password.RequestMethodConfig).Action)
-	// }
+func TestRequestPersister(p RequestPersister) func(t *testing.T) {
+	var clearids = func(r *Request) {
+		r.ID = uuid.UUID{}
+		for k := range r.Methods {
+			r.Methods[k].ID = uuid.UUID{}
+		}
+	}
 
-	t.Run("case=should error when the login request does not exist", func(t *testing.T) {
-		_, err := p.GetLoginRequest(context.Background(), x.NewUUID())
-		require.NoError(t, err)
-	})
+	return func(t *testing.T) {
+		t.Run("case=should error when the login request does not exist", func(t *testing.T) {
+			_, err := p.GetLoginRequest(context.Background(), x.NewUUID())
+			require.Error(t, err)
+		})
 
-	t.Run("case=", func(t *testing.T) {
-		var r Request
-		require.NoError(t, faker.FakeData(&r))
-		t.Logf("%+v", r)
-	})
+		var newRequest = func(t *testing.T) *Request {
+			var r Request
+			require.NoError(t, faker.FakeData(&r))
+			clearids(&r)
 
-	// r := LoginRequest{Request: nbr()}
-	// require.NoError(t, p.CreateLoginRequest(context.Background(), &r))
-	//
-	// g, err := p.GetLoginRequest(context.Background(), r.ID)
-	// require.NoError(t, err)
-	// assert.EqualValues(t, r, *g)
-	//
-	// require.NoError(t, p.UpdateLoginRequest(context.Background(), r.ID, identity.CredentialsTypeOIDC, &oidc.RequestMethod{Action: "bar"}))
-	// require.NoError(t, p.UpdateLoginRequest(context.Background(), r.ID, identity.CredentialsTypePassword, &password.RequestMethod{Action: "foo"}))
-	//
-	// g, err = p.GetLoginRequest(context.Background(), r.ID)
-	// require.NoError(t, err)
-	// assertUpdated(t, *r.Request, *g.Request)
+			methods := len(r.Methods)
+			assert.NotZero(t, methods)
+
+			return &r
+		}
+
+		t.Run("case=should create a new login request and properly set IDs", func(t *testing.T) {
+			r := newRequest(t)
+			methods := len(r.Methods)
+			err := p.CreateLoginRequest(context.Background(), r)
+			require.NoError(t, err, "%#v", err)
+
+			assert.Nil(t, r.MethodsRaw)
+			assert.NotEmpty(t, r.ID)
+			for _, m := range r.Methods {
+				assert.NotEmpty(t, m.ID)
+			}
+			assert.Len(t, r.Methods, methods)
+		})
+
+		t.Run("case=should create and fetch a login request", func(t *testing.T) {
+			expected := newRequest(t)
+			err := p.CreateLoginRequest(context.Background(), expected)
+			require.NoError(t, err)
+
+			actual, err := p.GetLoginRequest(context.Background(), expected.ID)
+			require.NoError(t, err)
+			assert.Empty(t, actual.MethodsRaw)
+
+			assert.EqualValues(t, expected.ID, actual.ID)
+			assert.EqualValues(t, expected.ExpiresAt, actual.ExpiresAt)
+			assert.EqualValues(t, expected.IssuedAt, actual.IssuedAt)
+			assert.EqualValues(t, expected.RequestURL, actual.RequestURL)
+			assert.EqualValues(t, expected.Active, actual.Active)
+			require.Equal(t, len(expected.Methods), len(actual.Methods), "expected:\t%s\nactual:\t%s", expected.Methods, actual.Methods)
+		})
+
+		t.Run("case=should update a login request", func(t *testing.T) {
+			expected := newRequest(t)
+			delete(expected.Methods, identity.CredentialsTypeOIDC)
+			err := p.CreateLoginRequest(context.Background(), expected)
+			require.NoError(t, err)
+
+			actual, err := p.GetLoginRequest(context.Background(), expected.ID)
+			require.NoError(t, err)
+			assert.Len(t, actual.Methods, 1)
+
+			require.NoError(t, p.UpdateLoginRequest(context.Background(), expected.ID, identity.CredentialsTypeOIDC, &RequestMethod{
+				Method: identity.CredentialsTypeOIDC,
+				Config: &RequestMethodConfig{ form.NewHTMLForm( string(identity.CredentialsTypeOIDC))},
+			}))
+
+			require.NoError(t, p.UpdateLoginRequest(context.Background(), expected.ID, identity.CredentialsTypePassword, &RequestMethod{
+				Method: identity.CredentialsTypePassword,
+				Config: &RequestMethodConfig{form.NewHTMLForm(string(identity.CredentialsTypePassword))},
+			}))
+
+			actual, err = p.GetLoginRequest(context.Background(), expected.ID)
+			require.NoError(t, err)
+			require.Len(t, actual.Methods, 2)
+
+			assert.Equal(t, string(identity.CredentialsTypePassword), actual.Methods[identity.CredentialsTypePassword].Config.RequestMethodConfigurator.(*form.HTMLForm).Action)
+			assert.Equal(t, string(identity.CredentialsTypeOIDC), actual.Methods[identity.CredentialsTypeOIDC].Config.RequestMethodConfigurator.(*form.HTMLForm).Action)
+		})
+	}
 }

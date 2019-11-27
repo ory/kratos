@@ -70,7 +70,7 @@ func (s *ErrorHandler) HandleProfileManagementError(
 		return
 	}
 
-	if err := s.d.ProfileRequestPersister().UpdateProfileRequest(r.Context(), rr.ID, rr); err != nil {
+	if err := s.d.ProfileRequestPersister().UpdateProfileRequest(r.Context(), rr); err != nil {
 		s.d.ErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}

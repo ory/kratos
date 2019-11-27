@@ -136,15 +136,14 @@ func (m *RequestManagerMemory) GetProfileRequest(ctx context.Context, id uuid.UU
 	return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("Unable to find request: %s", id))
 }
 
-func (m *RequestManagerMemory) UpdateProfileRequest(ctx context.Context, id uuid.UUID, request *profile.Request) error {
+func (m *RequestManagerMemory) UpdateProfileRequest(ctx context.Context, request *profile.Request) error {
 	m.Lock()
 	defer m.Unlock()
 
-	if _, ok := m.pr[id]; !ok {
-		return errors.WithStack(herodot.ErrNotFound.WithReasonf("Unable to find request: %s", id))
+	if _, ok := m.pr[request.ID]; !ok {
+		return errors.WithStack(herodot.ErrNotFound.WithReasonf("Unable to find request: %s", request.ID))
 	}
 
-	request.ID = id
-	m.pr[id] = *request
+	m.pr[request.ID] = *request
 	return nil
 }

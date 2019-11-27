@@ -2,64 +2,52 @@ package sql
 
 import (
 	"context"
+	"time"
 
+	"github.com/cenkalti/backoff"
+	"github.com/gobuffalo/packr"
 	"github.com/gobuffalo/pop"
-	"github.com/gobuffalo/uuid"
+	"github.com/pkg/errors"
 
-	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/persistence"
-	"github.com/ory/kratos/selfservice/flow/login"
-	"github.com/ory/kratos/selfservice/flow/registration"
 )
 
 var _ persistence.Persister = new(Persister)
+var migrations = packr.NewBox("../../contrib/sql/migrations")
 
 type Persister struct {
-	c pop.Connection
+	c  *pop.Connection
+	mb pop.MigrationBox
 }
 
-func (p Persister) CreateRegistrationRequest(_ context.Context, r *registration.Request) error {
-	return p.c.Create(r)
+func RetryConnect(dsn string) (c *pop.Connection, err error) {
+	bc := backoff.NewExponentialBackOff()
+	bc.MaxElapsedTime = time.Minute * 5
+	bc.Reset()
+
+	return c, backoff.Retry(func() (err error) {
+		c, err = pop.Connect(dsn)
+		return errors.WithStack(err)
+	}, bc)
 }
 
-func (p Persister) GetRegistrationRequest(_ context.Context, id uuid.UUID) (*registration.Request, error) {
-	var r registration.Request
-	if err := p.c.Find(&r, id); err != nil {
-		return nil, err
-	}
-	return &r, nil
-}
-
-func (p Persister) UpdateRegistrationRequest(ctx context.Context, id uuid.UUID, ct identity.CredentialsType, rm *registration.RequestMethod) error {
-	var r registration.Request
-	if err := p.c.Find(&r, id); err != nil {
-		return err
-	}
-
-	r.Methods[ct] = rm
-
-	return p.c.Update(r)
-}
-
-func (p Persister) CreateLoginRequest(_ context.Context, r *login.Request) error {
-	return p.c.Create(r)
-}
-
-func (p Persister) GetLoginRequest(_ context.Context, id uuid.UUID) (*login.Request, error) {
-	var r login.Request
-	if err := p.c.Find(&r, id); err != nil {
-		return nil, err
-	}
-	return &r, nil
-}
-
-func (p Persister) UpdateLoginRequest(ctx context.Context, id uuid.UUID, ct identity.CredentialsType, rm *login.RequestMethod) error {
-	var r login.Request
-	if err := p.c.Find(&r, id); err != nil {
-		return err
+func NewPersister(c *pop.Connection) (*Persister, error) {
+	m, err := pop.NewMigrationBox(migrations, c)
+	if err != nil {
+		return nil, errors.WithStack(err)
 	}
 
-	r.Methods[ct] = rm
+	return &Persister{c: c, mb: m}, nil
+}
 
-	return p.c.Update(r)
+func (p *Persister) MigrationStatus(c context.Context) error {
+	return errors.WithStack(p.mb.Status())
+}
+
+func (p *Persister) MigrateDown(c context.Context, steps int) error {
+	return errors.WithStack(p.mb.Down(steps))
+}
+
+func (p *Persister) MigrateUp(c context.Context) error {
+	return errors.WithStack(p.mb.Up())
 }
