@@ -26,6 +26,7 @@ type RequestMethod struct {
 	// RequestID is a helper struct field for gobuffalo.pop.
 	RequestID uuid.UUID `json:"-" db:"selfservice_login_request_id"`
 
+	// Request is a helper struct field for gobuffalo.pop.
 	Request *Request `json:"-" belongs_to:"selfservice_login_request" fk_id:"RequestID"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
@@ -39,7 +40,13 @@ func (u RequestMethod) TableName() string {
 	return "selfservice_login_request_methods"
 }
 
+type RequestMethodsRaw []RequestMethod // workaround for https://github.com/gobuffalo/pop/pull/478
 type RequestMethods map[identity.CredentialsType]*RequestMethod
+
+func (u RequestMethodsRaw) TableName() string {
+	// This must be stay a value receiver, using a pointer receiver will cause issues with pop.
+	return "selfservice_login_request_methods"
+}
 
 func (u RequestMethods) TableName() string {
 	// This must be stay a value receiver, using a pointer receiver will cause issues with pop.

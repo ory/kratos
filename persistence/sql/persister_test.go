@@ -11,6 +11,7 @@ import (
 
 	"github.com/cenkalti/backoff"
 	"github.com/gobuffalo/pop"
+	"github.com/gobuffalo/pop/logging"
 	"github.com/google/uuid"
 	"github.com/ory/x/sqlcon/dockertest"
 	"github.com/pkg/errors"
@@ -21,12 +22,14 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/persistence/sql"
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/flow/registration"
 )
 
 var sqlite = fmt.Sprintf("sqlite://%s.sql", filepath.Join(os.TempDir(), uuid.New().String()))
 
 func init() {
-	 internal.RegisterFakes()
+	internal.RegisterFakes()
+	pop.Debug = true
 }
 
 func TestMain(m *testing.M) {
@@ -36,6 +39,31 @@ func TestMain(m *testing.M) {
 		dockertest.KillAllTestDatabases()
 	})
 	atexit.Exit(m.Run())
+}
+
+func pl(t *testing.T) func(lvl logging.Level, s string, args ...interface{}) {
+	return func(lvl logging.Level, s string, args ...interface{}) {
+		if lvl == logging.SQL {
+			if len(args) > 0 {
+				xargs := make([]string, len(args))
+				for i, a := range args {
+					switch a.(type) {
+					case string:
+						xargs[i] = fmt.Sprintf("%q", a)
+					default:
+						xargs[i] = fmt.Sprintf("%v", a)
+					}
+				}
+				s = fmt.Sprintf("%s - %s | %s", lvl, s, xargs)
+			} else {
+				s = fmt.Sprintf("%s - %s", lvl, s)
+			}
+		} else {
+			s = fmt.Sprintf(s, args...)
+			s = fmt.Sprintf("%s - %s", lvl, s)
+		}
+		t.Log(s)
+	}
 }
 
 func TestPersister(t *testing.T) {
@@ -63,11 +91,19 @@ func TestPersister(t *testing.T) {
 			require.NoError(t, err)
 
 			t.Run("case=run up migrations", func(t *testing.T) {
+				pop.SetLogger(pl(t))
+				require.NoError(t, p.MigrationStatus(context.Background()))
 				require.NoError(t, p.MigrateUp(context.Background()))
 			})
 
-			t.Run("contract=login.TestRequestPersister", login.TestRequestPersister(p))
-			// t.Run("contract=registration.TestRequestPersister", registration.TestRequestPersister(p))
+			t.Run("contract=registration.TestRequestPersister", func(t *testing.T) {
+				pop.SetLogger(pl(t))
+				registration.TestRequestPersister(p)(t)
+			})
+			t.Run("contract=login.TestRequestPersister", func(t *testing.T) {
+				pop.SetLogger(pl(t))
+				login.TestRequestPersister(p)(t)
+			})
 		})
 	}
 }

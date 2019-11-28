@@ -22,15 +22,15 @@ type Identity struct {
 	// or the email, as this field is immutable.
 	//
 	// required: true
-	ID string `json:"id" faker:"uuid_hyphenated" form:"id" db:"id"`
+	ID string `json:"id" faker:"uuid" db:"id"`
 
 	// Credentials represents all credentials that can be used for authenticating this identity.
-	Credentials map[CredentialsType]Credentials `json:"credentials,omitempty" faker:"-" db:"-"`
+	Credentials map[CredentialsType]Credentials `json:"credentials,omitempty" faker:"-" db:"credentials"`
 
 	// TraitsSchemaURL is the JSON Schema to be used for validating the identity's traits.
 	//
 	// format: uri
-	TraitsSchemaURL string `json:"traits_schema_url,omitempty" form:"-" faker:"-" db:"traits_schema_url"`
+	TraitsSchemaURL string `json:"traits_schema_url,omitempty" faker:"-" db:"traits_schema_url"`
 
 	// Traits represent an identity's traits. The identity is able to create, modify, and delete traits
 	// in a self-service manner. The input will always be validated against the JSON Schema defined

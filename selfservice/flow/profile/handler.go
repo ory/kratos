@@ -180,12 +180,12 @@ func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if ar.identityID != sess.Identity.ID {
+	if ar.IdentityID != sess.Identity.ID {
 		h.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden.WithReasonf("The request was made for another identity and has been blocked for security reasons.")))
 		return
 	}
 
-	i, err := h.d.IdentityPool().Get(r.Context(), ar.identityID)
+	i, err := h.d.IdentityPool().Get(r.Context(), ar.IdentityID)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return

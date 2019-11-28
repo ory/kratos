@@ -24,10 +24,11 @@ create_table("selfservice_registration_requests") {
     t.Column("issued_at", "timestamp", { default_raw: "CURRENT_TIMESTAMP" })
     t.Column("expires_at", "timestamp")
     t.Column("active_method", "string", {"size": 32})
+
 	t.Timestamps()
 }
 
-create_table("selfservice_registration_methods") {
+create_table("selfservice_registration_request_methods") {
 	t.Column("id", "uuid", {primary: true})
     t.Column("method", "string", {"size": 32})
     t.Column("selfservice_registration_request_id", "uuid")

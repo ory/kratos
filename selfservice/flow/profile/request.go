@@ -30,21 +30,23 @@ type Request struct {
 	//
 	// type: string
 	// format: uuid
-	ID uuid.UUID `json:"id"`
+	ID uuid.UUID `json:"id" db:"id" faker:"uuid"`
 
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile,
 	// a new request has to be initiated.
-	ExpiresAt time.Time `json:"expires_at"`
+	ExpiresAt time.Time `json:"expires_at" faker:"time_type" db:"expires_at"`
 
 	// IssuedAt is the time (UTC) when the request occurred.
-	IssuedAt time.Time `json:"issued_at"`
+	IssuedAt time.Time `json:"issued_at" faker:"time_type" db:"issued_at"`
 
 	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used
 	// to forward information contained in the URL's path or query for example.
-	RequestURL string `json:"request_url"`
+	RequestURL string `json:"request_url" db:"request_url"`
 
 	// Form contains form fields, errors, and so on.
-	Form *form.HTMLForm `json:"form"`
+	Form *form.HTMLForm `json:"form" db:"form"`
+
+	IdentityID string `json:"-" db:"identity_id"`
 
 	// Identity contains all of the identity's data in raw form.
 	Identity *identity.Identity `json:"identity"`
@@ -52,9 +54,7 @@ type Request struct {
 	// UpdateSuccessful, if true, indicates that the profile has been updated successfully with the provided data.
 	// Done will stay true when repeatedly checking. If set to true, done will revert back to false only
 	// when a request with invalid (e.g. "please use a valid phone number") data was sent.
-	UpdateSuccessful bool `json:"update_successful,omitempty"`
-
-	identityID string `json:"-"`
+	UpdateSuccessful bool `json:"update_successful,omitempty" db:"update_successful"`
 }
 
 func NewRequest(exp time.Duration, r *http.Request, s *session.Session) *Request {
@@ -73,7 +73,7 @@ func NewRequest(exp time.Duration, r *http.Request, s *session.Session) *Request
 		ExpiresAt:  time.Now().UTC().Add(exp),
 		IssuedAt:   time.Now().UTC(),
 		RequestURL: source.String(),
-		identityID: s.Identity.ID,
+		IdentityID: s.Identity.ID,
 		Form:       new(form.HTMLForm),
 	}
 }
@@ -86,7 +86,7 @@ func (r *Request) Valid(s *session.Session) error {
 	if r.ExpiresAt.Before(time.Now()) {
 		return errors.WithStack(ErrRequestExpired.WithReasonf("The profile request expired %.2f minutes ago, please try again.", time.Since(r.ExpiresAt).Minutes()))
 	}
-	if r.identityID != s.Identity.ID {
+	if r.IdentityID != s.Identity.ID {
 		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("The profile request expired %.2f minutes ago, please try again", time.Since(r.ExpiresAt).Minutes()))
 	}
 	return nil

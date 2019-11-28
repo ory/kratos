@@ -41,7 +41,7 @@ type Request struct {
 	Methods map[identity.CredentialsType]*RequestMethod `json:"methods" faker:"login_request_methods" db:"-"`
 
 	// MethodsRaw is a helper struct field for gobuffalo.pop.
-	MethodsRaw []RequestMethod `json:"-" faker:"-" has_many:"selfservice_login_request_methods" fk_id:"selfservice_login_request_id"`
+	MethodsRaw RequestMethodsRaw `json:"-" faker:"-" has_many:"selfservice_login_request_methods" fk_id:"selfservice_login_request_id"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"-" db:"created_at"`
