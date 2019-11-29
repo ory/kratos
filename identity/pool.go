@@ -110,7 +110,7 @@ func TestPool(p Pool) func(t *testing.T) {
 			assertEqual(t, expected, actual)
 		})
 
-		t.Run("case=should error when the registration request does not exist", func(t *testing.T) {
+		t.Run("case=should error when the identity ID does not exist", func(t *testing.T) {
 			_, err := p.Get(context.Background(), uuid.UUID{})
 			require.Error(t, err)
 
@@ -173,8 +173,8 @@ func TestPool(p Pool) func(t *testing.T) {
 			_, err := p.Get(context.Background(), expected.ID)
 			require.Error(t, err)
 
-			second :=  oidcIdentity("", "OIDC-1")
-			require.NoError(t, p.Create(context.Background(),second), "should work because oidc is not case-sensitive")
+			second := oidcIdentity("", "OIDC-1")
+			require.NoError(t, p.Create(context.Background(), second), "should work because oidc is not case-sensitive")
 			createdIDs = append(createdIDs, second.ID)
 		})
 
@@ -201,7 +201,7 @@ func TestPool(p Pool) func(t *testing.T) {
 			require.NotEmpty(t, initial.Credentials)
 		})
 
-		t.Run("case=update an identity and ignore credentials", func(t *testing.T) {
+		t.Run("case=fail to update an identity because credentials changed but update was called", func(t *testing.T) {
 			initial := oidcIdentity("", x.NewUUID().String())
 			require.NoError(t, p.Create(context.Background(), initial))
 			createdIDs = append(createdIDs, initial.ID)
@@ -216,11 +216,14 @@ func TestPool(p Pool) func(t *testing.T) {
 			})
 			toUpdate.Traits = Traits(`{"update":"me"}`)
 			toUpdate.TraitsSchemaURL = "file://./stub/identity-2.schema.json"
-			require.NoError(t, p.Update(context.Background(), toUpdate))
+
+			err := p.Update(context.Background(), toUpdate)
+			require.Error(t, err)
+			assert.Contains(t, fmt.Sprintf("%+v", err), "A field was modified that updates one or more credentials-related settings.")
 
 			actual, err := p.GetClassified(context.Background(), toUpdate.ID)
 			require.NoError(t, err)
-			assert.Equal(t, "file://./stub/identity-2.schema.json", actual.TraitsSchemaURL)
+			assert.Equal(t, "file://./stub/identity.schema.json", actual.TraitsSchemaURL)
 			assert.Empty(t, actual.Credentials[CredentialsTypePassword])
 			assert.NotEmpty(t, actual.Credentials[CredentialsTypeOIDC])
 		})
@@ -305,9 +308,9 @@ func TestPool(p Pool) func(t *testing.T) {
 			// issues with postgres' json field.
 			expected := passwordIdentity("", x.NewUUID().String())
 			expected.SetCredentials(CredentialsTypePassword, Credentials{
-				Type: CredentialsTypePassword,
+				Type:        CredentialsTypePassword,
 				Identifiers: []string{"id-missing-creds-config"},
-				Config: json.RawMessage(``),
+				Config:      json.RawMessage(``),
 			})
 			require.NoError(t, p.Create(context.Background(), expected))
 			createdIDs = append(createdIDs, expected.ID)
@@ -326,6 +329,26 @@ func TestPool(p Pool) func(t *testing.T) {
 				}
 				assert.True(t, found, id)
 			}
+		})
+
+		t.Run("case=find identity by its credentials identifier", func(t *testing.T) {
+			expected := passwordIdentity("file://./stub/identity.schema.json", x.NewUUID().String())
+			expected.Traits = Traits(`{"email": "find-credentials-identifier@ory.sh"}`)
+
+			require.NoError(t, p.Create(context.Background(), expected))
+			createdIDs = append(createdIDs, expected.ID)
+
+			actual, creds, err := p.FindByCredentialsIdentifier(context.Background(), CredentialsTypePassword, "find-credentials-identifier@ory.sh")
+			require.NoError(t, err)
+
+			assert.EqualValues(t, expected.Credentials[CredentialsTypePassword].ID, creds.ID)
+			assert.EqualValues(t, expected.Credentials[CredentialsTypePassword].Identifiers, creds.Identifiers)
+			assert.EqualValues(t, expected.Credentials[CredentialsTypePassword].Config, creds.Config)
+			assert.EqualValues(t, expected.Credentials[CredentialsTypePassword].CreatedAt.Unix(), creds.CreatedAt.Unix())
+			assert.EqualValues(t, expected.Credentials[CredentialsTypePassword].UpdatedAt.Unix(), creds.UpdatedAt.Unix())
+
+			expected.Credentials = nil
+			assertEqual(t, expected, actual)
 		})
 	}
 }

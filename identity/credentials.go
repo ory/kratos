@@ -23,8 +23,10 @@ type (
 	Credentials struct {
 		ID uuid.UUID `json:"-" db:"id"`
 
+		CredentialTypeID uuid.UUID `json:"-" db:"identity_credential_type_id"`
+
 		// Type discriminates between different types of credentials.
-		Type CredentialsType `json:"type" db:"type"`
+		Type CredentialsType `json:"type" db:"-"`
 
 		// Identifiers represents a list of unique identifiers this credential type matches.
 		Identifiers []string `json:"identifiers" db:"-"`
@@ -43,8 +45,8 @@ type (
 
 	// swagger:ignore
 	CredentialIdentifier struct {
-		ID                    uuid.UUID `db:"id"`
-		Identifier            string    `db:"identifier"`
+		ID         uuid.UUID `db:"id"`
+		Identifier string    `db:"identifier"`
 		// IdentityCredentialsID is a helper struct field for gobuffalo.pop.
 		IdentityCredentialsID uuid.UUID `json:"-" db:"identity_credential_id"`
 		// CreatedAt is a helper struct field for gobuffalo.pop.
@@ -54,11 +56,21 @@ type (
 	}
 
 	// swagger:ignore
-	CredentialsCollection          []Credentials
+	CredentialsTypeTable struct {
+		ID   uuid.UUID       `json:"uuid" db:"id"`
+		Name CredentialsType `json:"uuid" db:"name"`
+	}
+
+	// swagger:ignore
+	CredentialsCollection []Credentials
 
 	// swagger:ignore
 	CredentialIdentifierCollection []CredentialIdentifier
 )
+
+func (c CredentialsTypeTable) TableName() string {
+	return "identity_credential_types"
+}
 
 func (c CredentialsCollection) TableName() string {
 	return "identity_credentials"

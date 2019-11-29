@@ -26,7 +26,7 @@ import (
 )
 
 // Workaround for https://github.com/gobuffalo/pop/pull/481
-var sqlite = fmt.Sprintf("sqlite3://%s.sqlite?_fk=true&mode=memory", filepath.Join(os.TempDir(), uuid.New().String()))
+var sqlite = fmt.Sprintf("sqlite3://%s.sqlite?_fk=true&mode=rwc", filepath.Join(os.TempDir(), uuid.New().String()))
 
 func init() {
 	internal.RegisterFakes()
@@ -85,7 +85,7 @@ func TestPersister(t *testing.T) {
 			bc.Reset()
 			require.NoError(t, backoff.Retry(func() (err error) {
 				c, err = pop.NewConnection(&pop.ConnectionDetails{
-					URL:        dsn,
+					URL: dsn,
 				})
 				if err != nil {
 					t.Logf("Unable to connect to database: %+v", err)
@@ -116,4 +116,6 @@ func TestPersister(t *testing.T) {
 			})
 		})
 	}
+
+	t.Logf("sqlite location: %s", sqlite)
 }

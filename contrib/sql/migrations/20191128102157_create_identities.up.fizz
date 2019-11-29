@@ -6,15 +6,26 @@ create_table("identities") {
 	t.Timestamps()
 }
 
+create_table("identity_credential_types") {
+ 	t.Column("id", "uuid", {primary: true})
+    t.Column("name", "string", { "size": 32 })
+
+    t.DisableTimestamps()
+}
+
+add_index("identity_credential_types", "name", {"unique": true})
+
 create_table("identity_credentials") {
  	t.Column("id", "uuid", {primary: true})
-    t.Column("type", "string", { "size": 32 })
-    t.Column("identity_id", "uuid")
     t.Column("config", "json")
+
+    t.Column("identity_credential_type_id", "uuid", { "size": 32 })
+    t.Column("identity_id", "uuid")
 
  	t.Timestamps()
 
     t.ForeignKey("identity_id", {"identities": ["id"]}, {"on_delete": "cascade"})
+    t.ForeignKey("identity_credential_type_id", {"identity_credential_types": ["id"]}, {"on_delete": "cascade"})
 }
 
 create_table("identity_credential_identifiers") {
