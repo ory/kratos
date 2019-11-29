@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/go-openapi/runtime"
-	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/nosurf"
 	"github.com/stretchr/testify/assert"
@@ -76,9 +75,9 @@ func TestUpdateProfile(t *testing.T) {
 	viper.Set(configuration.ViperKeyURLsLogin, ui.URL+"/login")
 
 	primaryIdentity := &identity.Identity{
-		ID: uuid.New().String(),
+		ID: x.NewUUID(),
 		Credentials: map[identity.CredentialsType]identity.Credentials{
-			"password": {ID: "password", Identifiers: []string{"john@doe.com"}, Config: json.RawMessage(`{"hashed_password":"foo"}`)},
+			"password": {Type: "password", Identifiers: []string{"john@doe.com"}, Config: json.RawMessage(`{"hashed_password":"foo"}`)},
 		},
 		TraitsSchemaURL: "file://./stub/identity.schema.json",
 		Traits:          json.RawMessage(`{"email":"john@doe.com","stringy":"foobar","booly":false,"numby":2.5}`),
@@ -90,7 +89,7 @@ func TestUpdateProfile(t *testing.T) {
 		route, _ := session.MockSessionCreateHandlerWithIdentity(t, reg, primaryIdentity)
 		router.GET("/setSession", route)
 
-		other, _ := session.MockSessionCreateHandlerWithIdentity(t, reg, &identity.Identity{ID: uuid.New().String(), TraitsSchemaURL: "file://./stub/identity.schema.json", Traits: json.RawMessage(`{}`)})
+		other, _ := session.MockSessionCreateHandlerWithIdentity(t, reg, &identity.Identity{ID: x.NewUUID(), TraitsSchemaURL: "file://./stub/identity.schema.json", Traits: json.RawMessage(`{}`)})
 		router.GET("/setSession/other-user", other)
 		n := negroni.Classic()
 		n.UseHandler(router)

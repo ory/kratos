@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync"
 
+	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/ory/go-convenience/stringslice"
@@ -83,25 +84,25 @@ func (p *PoolMemory) FindByCredentialsIdentifier(_ context.Context, ct Credentia
 	return nil, nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("No identity matching the credentials identifiers"))
 }
 
-func (p *PoolMemory) Create(_ context.Context, i *Identity) (*Identity, error) {
+func (p *PoolMemory) Create(_ context.Context, i *Identity) error {
 	insert := p.augment(*i)
 	if err := p.Validate(insert); err != nil {
-		return nil, err
+		return err
 	}
 
 	if p.hasConflictingID(insert) {
-		return nil, errors.WithStack(herodot.ErrConflict.WithReasonf("An identity with the given ID exists already."))
+		return errors.WithStack(herodot.ErrConflict.WithReasonf("An identity with the given ID exists already."))
 	}
 
 	if p.hasConflictingCredentials(insert) {
-		return nil, errors.WithStack(schema.NewDuplicateCredentialsError())
+		return errors.WithStack(schema.NewDuplicateCredentialsError())
 	}
 
 	p.Lock()
 	p.is = append(p.is, *insert)
 	p.Unlock()
 
-	return p.abstractPool.declassify(*insert), nil
+	return nil
 }
 
 func (p *PoolMemory) List(_ context.Context, limit, offset int) ([]Identity, error) {
@@ -117,23 +118,23 @@ func (p *PoolMemory) List(_ context.Context, limit, offset int) ([]Identity, err
 	return p.abstractPool.declassifyAll(p.is[start:end]), nil
 }
 
-func (p *PoolMemory) UpdateConfidential(ctx context.Context, i *Identity, ct map[CredentialsType]Credentials) (*Identity, error) {
-	return p.update(ctx, i, ct, true)
+func (p *PoolMemory) UpdateConfidential(ctx context.Context, i *Identity) error {
+	return p.update(ctx, i, i.Credentials, true)
 }
 
-func (p *PoolMemory) Update(ctx context.Context, i *Identity) (*Identity, error) {
+func (p *PoolMemory) Update(ctx context.Context, i *Identity) error {
 	return p.update(ctx, i, nil, false)
 }
 
-func (p *PoolMemory) update(ctx context.Context, i *Identity, ct map[CredentialsType]Credentials, updateCredentials bool) (*Identity, error) {
+func (p *PoolMemory) update(ctx context.Context, i *Identity, ct map[CredentialsType]Credentials, updateCredentials bool) error {
 	insert := p.augment(*i)
 	insert.Credentials = ct
 	if err := p.Validate(insert); err != nil {
-		return nil, err
+		return err
 	}
 
 	if updateCredentials && p.hasConflictingCredentials(insert) {
-		return nil, errors.WithStack(schema.NewDuplicateCredentialsError())
+		return errors.WithStack(schema.NewDuplicateCredentialsError())
 	}
 
 	p.RLock()
@@ -148,14 +149,14 @@ func (p *PoolMemory) update(ctx context.Context, i *Identity, ct map[Credentials
 			p.is[k] = *insert
 			p.Unlock()
 
-			return p.declassify(*insert), nil
+			return nil
 		}
 	}
 	p.RUnlock()
-	return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("Identity with identifier %s does not exist.", i.ID))
+	return errors.WithStack(herodot.ErrNotFound.WithReasonf("Identity with identifier %s does not exist.", i.ID))
 }
 
-func (p *PoolMemory) Get(ctx context.Context, id string) (*Identity, error) {
+func (p *PoolMemory) Get(ctx context.Context, id uuid.UUID) (*Identity, error) {
 	i, err := p.GetClassified(ctx, id)
 	if err != nil {
 		return nil, err
@@ -164,7 +165,7 @@ func (p *PoolMemory) Get(ctx context.Context, id string) (*Identity, error) {
 	return p.declassify(*i), nil
 }
 
-func (p *PoolMemory) GetClassified(_ context.Context, id string) (*Identity, error) {
+func (p *PoolMemory) GetClassified(_ context.Context, id uuid.UUID) (*Identity, error) {
 	p.RLock()
 	defer p.RUnlock()
 
@@ -177,7 +178,7 @@ func (p *PoolMemory) GetClassified(_ context.Context, id string) (*Identity, err
 	return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("Identity with identifier %s does not exist.", id))
 }
 
-func (p *PoolMemory) Delete(_ context.Context, id string) error {
+func (p *PoolMemory) Delete(_ context.Context, id uuid.UUID) error {
 	p.Lock()
 	defer p.Unlock()
 

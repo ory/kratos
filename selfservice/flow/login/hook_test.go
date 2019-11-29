@@ -93,8 +93,7 @@ func TestLoginExecutor(t *testing.T) {
 				i.TraitsSchemaURL = ""
 				i.Traits = json.RawMessage(`{}`)
 				viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/login.schema.json")
-				_, err := reg.IdentityPool().Create(context.TODO(), &i)
-				require.NoError(t, err)
+				require.NoError(t, reg.IdentityPool().Create(context.TODO(), &i))
 
 				e := login.NewHookExecutor(reg, conf)
 				err = e.PostLoginHook(nil, &http.Request{}, tc.hooks, nil, &i)

@@ -13,9 +13,12 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/profile"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/x"
 )
 
 func TestProfileRequest(t *testing.T) {
+	alice := x.NewUUID()
+	malice := x.NewUUID()
 	for k, tc := range []struct {
 		r         *profile.Request
 		s         *session.Session
@@ -25,26 +28,26 @@ func TestProfileRequest(t *testing.T) {
 			r: profile.NewRequest(
 				time.Hour,
 				&http.Request{URL: urlx.ParseOrPanic("http://foo/bar/baz"), Host: "foo"},
-				&session.Session{Identity: &identity.Identity{ID: "alice"}},
+				&session.Session{Identity: &identity.Identity{ID: alice}},
 			),
-			s: &session.Session{Identity: &identity.Identity{ID: "alice"}},
+			s: &session.Session{Identity: &identity.Identity{ID: alice}},
 		},
 		{
 			r: profile.NewRequest(
 				time.Hour,
 				&http.Request{URL: urlx.ParseOrPanic("http://foo/bar/baz"), Host: "foo"},
-				&session.Session{Identity: &identity.Identity{ID: "alice"}},
+				&session.Session{Identity: &identity.Identity{ID: alice}},
 			),
-			s:         &session.Session{Identity: &identity.Identity{ID: "malice"}},
+			s:         &session.Session{Identity: &identity.Identity{ID: malice}},
 			expectErr: true,
 		},
 		{
 			r: profile.NewRequest(
 				-time.Hour,
 				&http.Request{URL: urlx.ParseOrPanic("http://foo/bar/baz"), Host: "foo"},
-				&session.Session{Identity: &identity.Identity{ID: "alice"}},
+				&session.Session{Identity: &identity.Identity{ID: alice}},
 			),
-			s:         &session.Session{Identity: &identity.Identity{ID: "alice"}},
+			s:         &session.Session{Identity: &identity.Identity{ID: alice}},
 			expectErr: true,
 		},
 	} {

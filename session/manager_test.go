@@ -11,7 +11,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/sqlcon/dockertest"
@@ -28,6 +27,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	. "github.com/ory/kratos/session"
+	"github.com/ory/kratos/x"
 )
 
 func init() {
@@ -43,15 +43,14 @@ func TestMain(m *testing.M) {
 
 func fakeIdentity(t *testing.T, reg Registry) *identity.Identity {
 	i := &identity.Identity{
-		ID:              uuid.New().String(),
+		ID:x.NewUUID(),
 		TraitsSchemaURL: "file://./stub/identity.schema.json",
 		Traits:          json.RawMessage(`{}`),
 	}
 
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
 
-	_, err := reg.IdentityPool().Create(context.Background(), i)
-	require.NoError(t, err)
+	require.NoError(t, reg.IdentityPool().Create(context.Background(), i))
 	return i
 }
 

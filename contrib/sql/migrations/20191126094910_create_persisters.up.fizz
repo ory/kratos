@@ -14,8 +14,9 @@ create_table("selfservice_login_request_methods") {
     t.Column("selfservice_login_request_id", "uuid")
     t.Column("config", "json")
 
-    t.ForeignKey("selfservice_login_request_id", {"selfservice_login_requests": ["id"]}, {"on_delete": "cascade"})
 	t.Timestamps()
+
+    t.ForeignKey("selfservice_login_request_id", {"selfservice_login_requests": ["id"]}, {"on_delete": "cascade"})
 }
 
 create_table("selfservice_registration_requests") {
@@ -34,8 +35,9 @@ create_table("selfservice_registration_request_methods") {
     t.Column("selfservice_registration_request_id", "uuid")
     t.Column("config", "json")
 
-    t.ForeignKey("selfservice_registration_request_id", {"selfservice_registration_requests": ["id"]}, {"on_delete": "cascade"})
 	t.Timestamps()
+
+    t.ForeignKey("selfservice_registration_request_id", {"selfservice_registration_requests": ["id"]}, {"on_delete": "cascade"})
 }
 
 create_table("selfservice_profile_management_requests") {
@@ -43,5 +45,6 @@ create_table("selfservice_profile_management_requests") {
     t.Column("request_url", "string", {"size": 2048})
     t.Column("requested_at", "timestamp", { default_raw: "CURRENT_TIMESTAMP" })
     t.Column("expires_at", "timestamp")
+
 	t.Timestamps()
 }

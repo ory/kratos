@@ -1,2 +1,0 @@
-drop_table("methods")
-add_foreign_key

@@ -2,15 +2,22 @@ package identity
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"testing"
 
-	"github.com/google/uuid"
+	"github.com/gofrs/uuid"
+	"github.com/ory/viper"
 	"github.com/ory/x/errorsx"
 	"github.com/pkg/errors"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/x"
 )
 
 type (
@@ -20,7 +27,7 @@ type (
 
 		// Create creates an identity. It is capable of setting credentials without encoding. Will return an error
 		// if identity exists, backend connectivity is broken, or trait validation fails.
-		Create(context.Context, *Identity) (*Identity, error)
+		Create(context.Context, *Identity) error
 
 		// Create creates an identity. It is capable of setting credentials without encoding. Will return an error
 		// if identity exists, backend connectivity is broken, or trait validation fails.
@@ -30,24 +37,24 @@ type (
 		// if identity exists, backend connectivity is broken, or trait validation fails.
 		//
 		// Because this will overwrite credentials you always need to update the identity using `GetClassified`.
-		UpdateConfidential(context.Context, *Identity, map[CredentialsType]Credentials) (*Identity, error)
+		UpdateConfidential(context.Context, *Identity) error
 
 		// Update updates an identity excluding its confidential data. It is capable of setting credentials without encoding. Will return an error
 		// if identity exists, backend connectivity is broken, or trait validation fails.
 		//
 		// This update procedure works well with `Get`.
-		Update(context.Context, *Identity) (*Identity, error)
+		Update(context.Context, *Identity) error
 
 		// Delete removes an identity by its id. Will return an error
 		// 		// if identity exists, backend connectivity is broken, or trait validation fails.
-		Delete(context.Context, string) error
+		Delete(context.Context, uuid.UUID) error
 
 		// Get returns an identity by its id. Will return an error if the identity does not exist or backend
 		// connectivity is broken.
-		Get(context.Context, string) (*Identity, error)
+		Get(context.Context, uuid.UUID) (*Identity, error)
 
 		// GetClassified returns the identity including it's raw credentials. This should only be used internally.
-		GetClassified(_ context.Context, id string) (*Identity, error)
+		GetClassified(context.Context, uuid.UUID) (*Identity, error)
 	}
 
 	PoolProvider interface {
@@ -60,15 +67,274 @@ type (
 	}
 )
 
+func TestPool(p Pool) func(t *testing.T) {
+	return func(t *testing.T) {
+		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
+
+		var createdIDs []uuid.UUID
+
+		var passwordIdentity = func(schemaURL string, credentialsID string) *Identity {
+			i := NewIdentity(schemaURL)
+			i.SetCredentials(CredentialsTypePassword, Credentials{
+				Type: CredentialsTypePassword, Identifiers: []string{credentialsID},
+				Config: json.RawMessage(`{"foo":"bar"}`),
+			})
+			return i
+		}
+
+		var oidcIdentity = func(schemaURL string, credentialsID string) *Identity {
+			i := NewIdentity(schemaURL)
+			i.SetCredentials(CredentialsTypeOIDC, Credentials{
+				Type: CredentialsTypeOIDC, Identifiers: []string{credentialsID},
+				Config: json.RawMessage(`{}`),
+			})
+			return i
+		}
+
+		var assertEqual = func(t *testing.T, expected, actual *Identity) {
+			assert.Empty(t, actual.Credentials)
+			require.Equal(t, expected.Traits, actual.Traits)
+			require.Equal(t, expected.ID, actual.ID)
+		}
+
+		t.Run("case=create with default values", func(t *testing.T) {
+			expected := passwordIdentity("", "id-1")
+			require.NoError(t, p.Create(context.Background(), expected))
+			createdIDs = append(createdIDs, expected.ID)
+
+			actual, err := p.Get(context.Background(), expected.ID)
+			require.NoError(t, err)
+
+			assert.Equal(t, expected.ID, actual.ID)
+			assert.Equal(t, "file://./stub/identity.schema.json", actual.TraitsSchemaURL)
+			assertEqual(t, expected, actual)
+		})
+
+		t.Run("case=should error when the registration request does not exist", func(t *testing.T) {
+			_, err := p.Get(context.Background(), uuid.UUID{})
+			require.Error(t, err)
+
+			_, err = p.Get(context.Background(), x.NewUUID())
+			require.Error(t, err)
+
+			_, err = p.GetClassified(context.Background(), x.NewUUID())
+			require.Error(t, err)
+		})
+
+		t.Run("case=create and keep set values", func(t *testing.T) {
+			expected := passwordIdentity("file://./stub/identity-2.schema.json", "id-2")
+			require.NoError(t, p.Create(context.Background(), expected))
+			createdIDs = append(createdIDs, expected.ID)
+
+			actual, err := p.Get(context.Background(), expected.ID)
+			require.NoError(t, err)
+			assert.Equal(t, "file://./stub/identity-2.schema.json", actual.TraitsSchemaURL)
+			assertEqual(t, expected, actual)
+
+			actual, err = p.GetClassified(context.Background(), expected.ID)
+			require.NoError(t, err)
+			require.Equal(t, expected.Traits, actual.Traits)
+			require.Equal(t, expected.ID, actual.ID)
+
+			assert.Empty(t, actual.CredentialsCollection)
+			assert.NotEmpty(t, actual.Credentials)
+			assert.NotEmpty(t, expected.Credentials)
+
+			for m, expected := range expected.Credentials {
+				assert.Equal(t, expected.ID, actual.Credentials[m].ID)
+				assert.Equal(t, expected.Config, actual.Credentials[m].Config)
+				assert.Equal(t, expected.Identifiers, actual.Credentials[m].Identifiers)
+				assert.Equal(t, expected.Type, actual.Credentials[m].Type)
+			}
+		})
+
+		t.Run("case=fail on duplicate credential identifiers if type is password", func(t *testing.T) {
+			initial := passwordIdentity("", "foo@bar.com")
+			require.NoError(t, p.Create(context.Background(), initial))
+			createdIDs = append(createdIDs, initial.ID)
+
+			for _, ids := range []string{"foo@bar.com", "fOo@bar.com", "FOO@bar.com", "foo@Bar.com"} {
+				expected := passwordIdentity("", ids)
+				require.Error(t, p.Create(context.Background(), expected))
+
+				_, err := p.Get(context.Background(), expected.ID)
+				require.Error(t, err)
+			}
+		})
+
+		t.Run("case=fail on duplicate credential identifiers if type is oidc", func(t *testing.T) {
+			initial := oidcIdentity("", "oidc-1")
+			require.NoError(t, p.Create(context.Background(), initial))
+			createdIDs = append(createdIDs, initial.ID)
+
+			expected := oidcIdentity("", "oidc-1")
+			require.Error(t, p.Create(context.Background(), expected))
+
+			_, err := p.Get(context.Background(), expected.ID)
+			require.Error(t, err)
+
+			second :=  oidcIdentity("", "OIDC-1")
+			require.NoError(t, p.Create(context.Background(),second), "should work because oidc is not case-sensitive")
+			createdIDs = append(createdIDs, second.ID)
+		})
+
+		t.Run("case=create with invalid traits data", func(t *testing.T) {
+			expected := oidcIdentity("", x.NewUUID().String())
+			expected.Traits = Traits(`{"bar":123}`) // bar should be a string
+			err := p.Create(context.Background(), expected)
+			require.Error(t, err)
+			assert.Contains(t, fmt.Sprintf("%+v", err.Error()), "malformed")
+		})
+
+		t.Run("case=get classified credentials", func(t *testing.T) {
+			initial := oidcIdentity("", x.NewUUID().String())
+			initial.SetCredentials(CredentialsTypeOIDC, Credentials{
+				Type: CredentialsTypeOIDC, Identifiers: []string{"aylmao-oidc"},
+				Config: json.RawMessage(`{"ay":"lmao"}`),
+			})
+			require.NoError(t, p.Create(context.Background(), initial))
+			createdIDs = append(createdIDs, initial.ID)
+
+			initial, err := p.GetClassified(context.Background(), initial.ID)
+			require.NoError(t, err)
+			require.NotEmpty(t, initial.ID)
+			require.NotEmpty(t, initial.Credentials)
+		})
+
+		t.Run("case=update an identity and ignore credentials", func(t *testing.T) {
+			initial := oidcIdentity("", x.NewUUID().String())
+			require.NoError(t, p.Create(context.Background(), initial))
+			createdIDs = append(createdIDs, initial.ID)
+
+			assert.Equal(t, "file://./stub/identity.schema.json", initial.TraitsSchemaURL)
+
+			toUpdate := initial.CopyWithoutCredentials()
+			toUpdate.SetCredentials(CredentialsTypePassword, Credentials{
+				Type:        CredentialsTypePassword,
+				Identifiers: []string{"ignore-me"},
+				Config:      json.RawMessage(`{"oh":"nono"}`),
+			})
+			toUpdate.Traits = Traits(`{"update":"me"}`)
+			toUpdate.TraitsSchemaURL = "file://./stub/identity-2.schema.json"
+			require.NoError(t, p.Update(context.Background(), toUpdate))
+
+			actual, err := p.GetClassified(context.Background(), toUpdate.ID)
+			require.NoError(t, err)
+			assert.Equal(t, "file://./stub/identity-2.schema.json", actual.TraitsSchemaURL)
+			assert.Empty(t, actual.Credentials[CredentialsTypePassword])
+			assert.NotEmpty(t, actual.Credentials[CredentialsTypeOIDC])
+		})
+
+		t.Run("case=update an identity and set credentials", func(t *testing.T) {
+			initial := oidcIdentity("", x.NewUUID().String())
+			require.NoError(t, p.Create(context.Background(), initial))
+			createdIDs = append(createdIDs, initial.ID)
+
+			assert.Equal(t, "file://./stub/identity.schema.json", initial.TraitsSchemaURL)
+
+			expected := initial.CopyWithoutCredentials()
+			expected.SetCredentials(CredentialsTypePassword, Credentials{
+				Type:        CredentialsTypePassword,
+				Identifiers: []string{"ignore-me"},
+				Config:      json.RawMessage(`{"oh":"nono"}`),
+			})
+			expected.Traits = Traits(`{"update":"me"}`)
+			expected.TraitsSchemaURL = "file://./stub/identity-2.schema.json"
+			require.NoError(t, p.UpdateConfidential(context.Background(), expected))
+
+			actual, err := p.GetClassified(context.Background(), expected.ID)
+			require.NoError(t, err)
+			assert.Equal(t, "file://./stub/identity-2.schema.json", actual.TraitsSchemaURL)
+			assert.NotEmpty(t, actual.Credentials[CredentialsTypePassword])
+			assert.Empty(t, actual.Credentials[CredentialsTypeOIDC])
+
+			assert.Equal(t, expected.Credentials[CredentialsTypeOIDC], actual.Credentials[CredentialsTypeOIDC])
+		})
+
+		t.Run("case=fail to update because validation fails", func(t *testing.T) {
+			initial := oidcIdentity("", x.NewUUID().String())
+
+			require.NoError(t, p.Create(context.Background(), initial))
+			createdIDs = append(createdIDs, initial.ID)
+
+			initial.Traits = Traits(`{"bar":123}`)
+			err := p.Update(context.Background(), initial)
+			require.Error(t, err)
+			require.Contains(t, err.Error(), "malformed")
+		})
+
+		t.Run("case=should fail to insert identity because credentials from traits exist", func(t *testing.T) {
+			first := passwordIdentity("", x.NewUUID().String())
+			first.Traits = Traits(`{"email":"test-identity@ory.sh"}`)
+			require.NoError(t, p.Create(context.Background(), first))
+			createdIDs = append(createdIDs, first.ID)
+
+			second := passwordIdentity("", x.NewUUID().String())
+			require.NoError(t, p.Create(context.Background(), second))
+			createdIDs = append(createdIDs, second.ID)
+
+			second.Traits = Traits(`{"email":"test-identity@ory.sh"}`)
+			require.Error(t, p.UpdateConfidential(context.Background(), second))
+		})
+
+		t.Run("case=should succeed to update credentials from traits", func(t *testing.T) {
+			expected := passwordIdentity("", x.NewUUID().String())
+			require.NoError(t, p.Create(context.Background(), expected))
+			createdIDs = append(createdIDs, expected.ID)
+
+			expected.Traits = Traits(`{"email":"update-test-identity@ory.sh"}`)
+			require.NoError(t, p.UpdateConfidential(context.Background(), expected))
+
+			actual, err := p.GetClassified(context.Background(), expected.ID)
+			require.NoError(t, err)
+
+			assert.Equal(t, expected.Credentials[CredentialsTypePassword].Identifiers, actual.Credentials[CredentialsTypePassword].Identifiers)
+		})
+
+		t.Run("case=delete an identity", func(t *testing.T) {
+			expected := passwordIdentity("", x.NewUUID().String())
+			require.NoError(t, p.Create(context.Background(), expected))
+			require.NoError(t, p.Delete(context.Background(), expected.ID))
+
+			_, err := p.Get(context.Background(), expected.ID)
+			require.Error(t, err)
+		})
+
+		t.Run("case=create with empty credentials config", func(t *testing.T) {
+			// This test covers a case where the config value of a credentials setting is empty. This causes
+			// issues with postgres' json field.
+			expected := passwordIdentity("", x.NewUUID().String())
+			expected.SetCredentials(CredentialsTypePassword, Credentials{
+				Type: CredentialsTypePassword,
+				Identifiers: []string{"id-missing-creds-config"},
+				Config: json.RawMessage(``),
+			})
+			require.NoError(t, p.Create(context.Background(), expected))
+			createdIDs = append(createdIDs, expected.ID)
+		})
+
+		t.Run("case=list", func(t *testing.T) {
+			is, err := p.List(context.Background(), 25, 0)
+			require.NoError(t, err)
+			assert.Len(t, is, len(createdIDs))
+			for _, id := range createdIDs {
+				var found bool
+				for _, i := range is {
+					if i.ID == id {
+						found = true
+					}
+				}
+				assert.True(t, found, id)
+			}
+		})
+	}
+}
+
 func newAbstractPool(c configuration.Provider, d ValidationProvider) *abstractPool {
 	return &abstractPool{c: c, d: d}
 }
 
 func (p *abstractPool) augment(i Identity) *Identity {
-	if i.ID == "" {
-		i.ID = uuid.New().String()
-	}
-
 	if i.TraitsSchemaURL == "" {
 		i.TraitsSchemaURL = p.c.DefaultIdentityTraitsSchemaURL().String()
 	}

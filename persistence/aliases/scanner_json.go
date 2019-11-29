@@ -21,7 +21,7 @@ func JSONScan(dst interface{}, value interface{}) error {
 	}
 
 	if err := json.NewDecoder(&b).Decode(&dst); err != nil {
-		return fmt.Errorf("unable to decode payload to LoginRequestMethods: %s", err)
+		return fmt.Errorf("unable to decode payload to: %s", err)
 	}
 
 	return nil

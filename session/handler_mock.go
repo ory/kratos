@@ -19,14 +19,15 @@ import (
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/x"
 )
 
 func MockSetSession(t *testing.T, reg Registry) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		i, err := reg.IdentityPool().Create(context.Background(), identity.NewIdentity(""))
-		require.NoError(t, err)
+		i := identity.NewIdentity("")
+		require.NoError(t, reg.IdentityPool().Create(context.Background(), i))
 
-		_, err = reg.SessionManager().CreateToRequest(context.Background(), i, w, r)
+		_, err := reg.SessionManager().CreateToRequest(context.Background(), i, w, r)
 		require.NoError(t, err)
 
 		w.WriteHeader(http.StatusOK)
@@ -93,8 +94,7 @@ func MockSessionCreateHandlerWithIdentity(t *testing.T, reg Registry, i *identit
 		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/fake-session.schema.json")
 	}
 
-	_, err := reg.IdentityPool().Create(context.Background(), i)
-	require.NoError(t, err)
+	require.NoError(t, reg.IdentityPool().Create(context.Background(), i))
 
 	inserted, err := reg.IdentityPool().GetClassified(context.Background(), i.ID)
 	require.NoError(t, err)
@@ -112,8 +112,8 @@ func MockSessionCreateHandlerWithIdentity(t *testing.T, reg Registry, i *identit
 
 func MockSessionCreateHandler(t *testing.T, reg Registry) (httprouter.Handle, *Session) {
 	return MockSessionCreateHandlerWithIdentity(t, reg, &identity.Identity{
-		ID:              uuid.New().String(),
+		ID:              x.NewUUID(),
 		TraitsSchemaURL: "file://./stub/fake-session.schema.json",
-		Traits:          json.RawMessage(`{"baz":"bar","foo":true,"bar":2.5}`),
+		Traits:          identity.Traits(json.RawMessage(`{"baz":"bar","foo":true,"bar":2.5}`)),
 	})
 }

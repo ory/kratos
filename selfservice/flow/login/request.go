@@ -19,7 +19,7 @@ import (
 type Request struct {
 	// ID represents the request's unique ID. When performing the login flow, this
 	// represents the id in the login ui's query parameter: http://<urls.login_ui>/?request=<id>
-	ID uuid.UUID `json:"id" faker:"uuid" db:"id"`
+	ID uuid.UUID `json:"id" faker:"uuid" rw:"r" db:"id"`
 
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,
 	// a new request has to be initiated.

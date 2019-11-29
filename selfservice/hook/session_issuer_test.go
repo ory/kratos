@@ -32,8 +32,7 @@ func TestSessionIssuer(t *testing.T) {
 		sid := uuid.New().String()
 
 		i := identity.NewIdentity("")
-		i, err := reg.IdentityPool().Create(context.Background(), i)
-		require.NoError(t, err)
+		require.NoError(t,  reg.IdentityPool().Create(context.Background(), i))
 		require.NoError(t, h.ExecuteLoginPostHook(w, &r, nil, &session.Session{SID: sid, Identity: i}))
 
 		got, err := reg.SessionManager().Get(context.Background(), sid)
@@ -46,8 +45,7 @@ func TestSessionIssuer(t *testing.T) {
 		sid := uuid.New().String()
 
 		i := identity.NewIdentity("")
-		i, err := reg.IdentityPool().Create(context.Background(), i)
-		require.NoError(t, err)
+		require.NoError(t, reg.IdentityPool().Create(context.Background(), i))
 		require.NoError(t, h.ExecuteRegistrationPostHook(w, &r, nil, &session.Session{SID: sid, Identity: i}))
 
 		got, err := reg.SessionManager().Get(context.Background(), sid)

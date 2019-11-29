@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 
@@ -19,13 +18,15 @@ import (
 	// "github.com/ory/x/sqlcon/dockertest"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/persistence/sql"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
 )
 
-var sqlite = fmt.Sprintf("sqlite://%s.sql", filepath.Join(os.TempDir(), uuid.New().String()))
+// Workaround for https://github.com/gobuffalo/pop/pull/481
+var sqlite = fmt.Sprintf("sqlite3://%s.sqlite?_fk=true&mode=memory", filepath.Join(os.TempDir(), uuid.New().String()))
 
 func init() {
 	internal.RegisterFakes()
@@ -35,7 +36,7 @@ func init() {
 func TestMain(m *testing.M) {
 	atexit := dockertest.NewOnExit()
 	atexit.Add(func() {
-		_ = os.Remove(strings.TrimPrefix(sqlite, "sqlite://"))
+		// _ = os.Remove(strings.TrimPrefix(sqlite, "sqlite://"))
 		dockertest.KillAllTestDatabases()
 	})
 	atexit.Exit(m.Run())
@@ -67,6 +68,10 @@ func pl(t *testing.T) func(lvl logging.Level, s string, args ...interface{}) {
 }
 
 func TestPersister(t *testing.T) {
+	t.Logf("%s", sqlite)
+
+	conf, reg := internal.NewMemoryRegistry(t)
+
 	for name, dsn := range map[string]string{
 		"sqlite": sqlite,
 		// "postgres": dockertest.RunTestPostgreSQL(t),
@@ -79,22 +84,23 @@ func TestPersister(t *testing.T) {
 			bc.MaxElapsedTime = time.Minute / 2
 			bc.Reset()
 			require.NoError(t, backoff.Retry(func() (err error) {
-				c, err = pop.NewConnection(&pop.ConnectionDetails{URL: dsn})
+				c, err = pop.NewConnection(&pop.ConnectionDetails{
+					URL:        dsn,
+				})
 				if err != nil {
 					t.Logf("Unable to connect to database: %+v", err)
 					return errors.WithStack(err)
 				}
-				return nil
+				return c.Open()
 			}, bc))
 
-			p, err := sql.NewPersister(c)
+			p, err := sql.NewPersister(reg, conf, c)
 			require.NoError(t, err)
+			defer c.Close()
 
-			t.Run("case=run up migrations", func(t *testing.T) {
-				pop.SetLogger(pl(t))
-				require.NoError(t, p.MigrationStatus(context.Background()))
-				require.NoError(t, p.MigrateUp(context.Background()))
-			})
+			pop.SetLogger(pl(t))
+			require.NoError(t, p.MigrationStatus(context.Background()))
+			require.NoError(t, p.MigrateUp(context.Background()))
 
 			t.Run("contract=registration.TestRequestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
@@ -103,6 +109,10 @@ func TestPersister(t *testing.T) {
 			t.Run("contract=login.TestRequestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
 				login.TestRequestPersister(p)(t)
+			})
+			t.Run("contract=identity.TestPool", func(t *testing.T) {
+				pop.SetLogger(pl(t))
+				identity.TestPool(p)(t)
 			})
 		})
 	}

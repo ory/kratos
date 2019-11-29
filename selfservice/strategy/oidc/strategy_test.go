@@ -421,8 +421,7 @@ func TestStrategy(t *testing.T) {
 			})
 			i.Traits = json.RawMessage(`{"subject":"` + subject + `"}`)
 
-			_, err := reg.IdentityPool().Create(context.Background(), i)
-			require.NoError(t, err)
+			require.NoError(t,  reg.IdentityPool().Create(context.Background(), i))
 		})
 
 		t.Run("case=should fail registration", func(t *testing.T) {

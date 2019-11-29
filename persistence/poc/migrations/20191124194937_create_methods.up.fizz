@@ -1,6 +1,0 @@
-create_table("methods") {
-	t.Column("id", "uuid", {primary: true})
-	t.Timestamps()
-	t.Column("request_id", "uuid")
-    t.ForeignKey("request_id", {"requests": ["id"]}, {"on_delete": "cascade"})
-}

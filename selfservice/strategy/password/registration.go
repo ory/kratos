@@ -151,9 +151,9 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 	}
 
 	i := identity.NewIdentity(s.c.DefaultIdentityTraitsSchemaURL().String())
-	i.Traits = p.Traits
+	i.Traits = identity.Traits(p.Traits)
 	i.SetCredentials(s.ID(), identity.Credentials{
-		ID:          s.ID(),
+		Type:        s.ID(),
 		Identifiers: []string{},
 		Config:      json.RawMessage(co),
 	})

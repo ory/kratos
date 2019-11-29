@@ -1,0 +1,14 @@
+development:
+  url: sqlite://a/b
+
+sqlite:
+  url: sqlite://a/b
+
+postgres:
+  url: postgres://a/b
+
+mysql:
+  url: mysql://tcp(a)/b?parseTime=true&multiStatements=true
+
+cockroach:
+  url: cockroach://a/b

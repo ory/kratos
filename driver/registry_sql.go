@@ -74,7 +74,7 @@ func (m *RegistrySQL) Ping() error {
 
 func (m *RegistrySQL) IdentityPool() identity.Pool {
 	if m.identityPool == nil {
-		m.identityPool = identity.NewPoolSQL(m.c, m, m.DB())
+		m.identityPool = identity.NewPoolMemory(m.c, m)
 	}
 	return m.identityPool
 }
@@ -88,7 +88,7 @@ func (m *RegistrySQL) ErrorManager() errorx.Manager {
 
 func (m *RegistrySQL) SessionManager() session.Manager {
 	if m.sessionManager == nil {
-		m.sessionManager = session.NewManagerSQL(m.c, m, m.DB())
+		m.sessionManager = session.NewManagerMemory(m.c, m)
 	}
 	return m.sessionManager
 }

@@ -1,1 +1,0 @@
-add_column("methods", "config", "jsonb", {"default_raw": "'{}'::jsonb"})

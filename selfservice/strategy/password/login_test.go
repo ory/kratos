@@ -13,7 +13,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/ory/x/pointerx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -235,11 +234,11 @@ func TestLogin(t *testing.T) {
 			prep: func(t *testing.T, r loginStrategyDependencies) {
 				p, _ := r.PasswordHasher().Generate([]byte("password"))
 				_, err := r.IdentityPool().Create(context.Background(), &identity.Identity{
-					ID:     uuid.New().String(),
+					ID:     x.NewUUID(),
 					Traits: json.RawMessage(`{}`),
 					Credentials: map[identity.CredentialsType]identity.Credentials{
 						identity.CredentialsTypePassword: {
-							ID:          identity.CredentialsTypePassword,
+							Type:        identity.CredentialsTypePassword,
 							Identifiers: []string{"login-identifier-6"},
 							Config:      json.RawMessage(`{"hashed_password":"` + string(p) + `"}`),
 						},
@@ -271,11 +270,11 @@ func TestLogin(t *testing.T) {
 			prep: func(t *testing.T, r loginStrategyDependencies) {
 				p, _ := r.PasswordHasher().Generate([]byte("password"))
 				_, err := r.IdentityPool().Create(context.Background(), &identity.Identity{
-					ID:     uuid.New().String(),
+					ID:     x.NewUUID(),
 					Traits: json.RawMessage(`{"subject":"login-identifier-7"}`),
 					Credentials: map[identity.CredentialsType]identity.Credentials{
 						identity.CredentialsTypePassword: {
-							ID:          identity.CredentialsTypePassword,
+							Type:        identity.CredentialsTypePassword,
 							Identifiers: []string{"login-identifier-7"},
 							Config:      json.RawMessage(`{"hashed_password":"` + string(p) + `"}`),
 						},

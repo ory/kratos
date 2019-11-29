@@ -8,7 +8,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -103,7 +102,7 @@ func TestHandler(t *testing.T) {
 
 	t.Run("case=should create an identity with an ID", func(t *testing.T) {
 		var i identity.Identity
-		i.ID = "exists"
+		// i.ID = "exists"
 		i.Traits = json.RawMessage(`{"bar":"baz"}`)
 		res := send(t, "POST", "/identities", http.StatusCreated, &i)
 		assert.EqualValues(t, "exists", res.Get("id").String(), "%s", res.Raw)
@@ -140,9 +139,9 @@ func TestHandler(t *testing.T) {
 
 	t.Run("case=should not be able to update an identity that does not exist yet", func(t *testing.T) {
 		var i identity.Identity
-		i.ID = uuid.New().String()
+		i.ID = x.NewUUID()
 		i.Traits = json.RawMessage(`{"bar":"baz"}`)
-		res := send(t, "PUT", "/identities/"+i.ID, http.StatusNotFound, &i)
+		res := send(t, "PUT", "/identities/"+i.ID.String(), http.StatusNotFound, &i)
 		assert.Contains(t, res.Get("error.reason").String(), "does not exist")
 	})
 

@@ -30,7 +30,7 @@ type Request struct {
 	//
 	// type: string
 	// format: uuid
-	ID uuid.UUID `json:"id" db:"id" faker:"uuid"`
+	ID uuid.UUID `json:"id" db:"id" faker:"uuid" rw:"r"`
 
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile,
 	// a new request has to be initiated.
@@ -46,7 +46,7 @@ type Request struct {
 	// Form contains form fields, errors, and so on.
 	Form *form.HTMLForm `json:"form" db:"form"`
 
-	IdentityID string `json:"-" db:"identity_id"`
+	IdentityID uuid.UUID `json:"-" db:"identity_id"`
 
 	// Identity contains all of the identity's data in raw form.
 	Identity *identity.Identity `json:"identity"`

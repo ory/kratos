@@ -21,7 +21,7 @@ type RequestMethod struct {
 	Config *RequestMethodConfig `json:"config" db:"config"`
 
 	// ID is a helper struct field for gobuffalo.pop.
-	ID uuid.UUID `json:"-" db:"id"`
+	ID uuid.UUID `json:"-" db:"id" rw:"r"`
 
 	// RequestID is a helper struct field for gobuffalo.pop.
 	RequestID uuid.UUID `json:"-" db:"selfservice_registration_request_id"`

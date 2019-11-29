@@ -19,7 +19,7 @@ import (
 type Request struct {
 	// ID represents the request's unique ID. When performing the registration flow, this
 	// represents the id in the registration ui's query parameter: http://<urls.registration_ui>/?request=<id>
-	ID uuid.UUID `json:"id" faker:"uuid" db:"id"`
+	ID uuid.UUID `json:"id" faker:"uuid" db:"id" rw:"r"`
 
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,
 	// a new request has to be initiated.

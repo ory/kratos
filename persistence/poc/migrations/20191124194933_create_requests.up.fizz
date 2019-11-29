@@ -1,4 +1,0 @@
-create_table("requests") {
-	t.Column("id", "uuid", {primary: true})
-	t.Timestamps()
-}

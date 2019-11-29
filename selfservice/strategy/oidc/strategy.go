@@ -409,14 +409,14 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 
 	traits, err := merge(
 		x.SessionGetStringOr(r, s.d.CookieManager(), sessionName, sessionFormState, ""),
-		i.Traits, option,
+		json.RawMessage(i.Traits), option,
 	)
 	if err != nil {
 		s.handleError(w, r, a.GetID(), nil, err)
 		return
 	}
 
-	i.Traits = traits
+	i.Traits = identity.Traits(traits)
 
 	// Validate the identity itself
 	if err := s.d.IdentityValidator().Validate(i); err != nil {
@@ -434,7 +434,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 	}
 
 	i.SetCredentials(s.RegistrationStrategyID(), identity.Credentials{
-		ID:          s.RegistrationStrategyID(),
+		Type:        s.RegistrationStrategyID(),
 		Identifiers: []string{uid(provider.Config().ID, claims.Subject)},
 		Config:      b.Bytes(),
 	})

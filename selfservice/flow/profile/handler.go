@@ -92,7 +92,7 @@ func (h *Handler) initUpdateProfile(w http.ResponseWriter, r *http.Request, ps h
 	}
 
 	a := NewRequest(h.c.SelfServiceProfileRequestLifespan(), r, s)
-	a.Form = form.NewHTMLFormFromJSON(urlx.AppendPaths(h.c.SelfPublicURL(), BrowserProfilePath).String(), s.Identity.Traits, "traits")
+	a.Form = form.NewHTMLFormFromJSON(urlx.AppendPaths(h.c.SelfPublicURL(), BrowserProfilePath).String(), json.RawMessage(s.Identity.Traits), "traits")
 	if err := h.d.ProfileRequestPersister().CreateProfileRequest(r.Context(), a); err != nil {
 		h.d.ErrorManager().ForwardError(r.Context(), w, r, err)
 		return
@@ -295,12 +295,12 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 
 	creds, err := h.d.IdentityPool().GetClassified(r.Context(), s.Identity.ID)
 	if err != nil {
-		h.handleProfileManagementError(w, r, ar, p.Traits, err)
+		h.handleProfileManagementError(w, r, ar, identity.Traits(p.Traits), err)
 		return
 	}
 
 	i := *s.Identity
-	i.Traits = p.Traits
+	i.Traits = identity.Traits(p.Traits)
 	i.Credentials = creds.CopyCredentials()
 
 	// If credential identifiers have changed we need to block this action UNLESS
@@ -324,14 +324,14 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if _, err := h.d.IdentityPool().Update(r.Context(), &i); err != nil {
+	if err := h.d.IdentityPool().Update(r.Context(), &i); err != nil {
 		h.handleProfileManagementError(w, r, ar, i.Traits, err)
 		return
 	}
 
 	ar.Form.Reset()
 	ar.UpdateSuccessful = true
-	for name, field := range form.NewHTMLFormFromJSON("", i.Traits, "traits").Fields {
+	for name, field := range form.NewHTMLFormFromJSON("", json.RawMessage(i.Traits), "traits").Fields {
 		ar.Form.SetField(name, field)
 	}
 	ar.Form.SetValue("request", r.Form.Get("request"))
@@ -350,13 +350,13 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 
 // handleProfileManagementError is a convenience function for handling all types of errors that may occur (e.g. validation error)
 // during a profile management request.
-func (h *Handler) handleProfileManagementError(w http.ResponseWriter, r *http.Request, rr *Request, traits json.RawMessage, err error) {
+func (h *Handler) handleProfileManagementError(w http.ResponseWriter, r *http.Request, rr *Request, traits identity.Traits, err error) {
 	if rr != nil {
 		rr.Form.Reset()
 		rr.UpdateSuccessful = false
 
 		if traits != nil {
-			for name, field := range form.NewHTMLFormFromJSON("", traits, "traits").Fields {
+			for name, field := range form.NewHTMLFormFromJSON("", json.RawMessage(traits), "traits").Fields {
 				rr.Form.SetField(name, field)
 			}
 		}
