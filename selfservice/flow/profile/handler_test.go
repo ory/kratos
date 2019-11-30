@@ -198,8 +198,7 @@ func TestUpdateProfile(t *testing.T) {
 
 		assert.Equal(t, rid, string(pr.Payload.ID))
 		assert.NotEmpty(t, pr.Payload.Identity)
-		assert.Empty(t, pr.Payload.Identity.Credentials)
-		assert.Equal(t, primaryIdentity.ID.String(), *(pr.Payload.Identity.ID))
+		assert.Equal(t, primaryIdentity.ID.String(), string(pr.Payload.Identity.ID))
 		assert.JSONEq(t, string(primaryIdentity.Traits), x.MustEncodeJSON(t, pr.Payload.Identity.Traits))
 		assert.Equal(t, primaryIdentity.TraitsSchemaURL, pr.Payload.Identity.TraitsSchemaURL)
 		assert.Equal(t, kratos.URL+profile.BrowserProfilePath, pr.Payload.RequestURL)

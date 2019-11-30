@@ -119,7 +119,7 @@ func TestRegistration(t *testing.T) {
 			assert.Contains(t, res.Request.URL.Path, "error-ts")
 			assert.Equal(t, int64(http.StatusNotFound), gjson.GetBytes(body, "0.code").Int(), "%s", body)
 			assert.Equal(t, "Not Found", gjson.GetBytes(body, "0.status").String(), "%s", body)
-			assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "Unable to find request", "%s", body)
+			assert.Contains(t, gjson.GetBytes(body, "0.message").String(), "Unable to locate the resource", "%s", body)
 		})
 
 		t.Run("case=should return an error because the request is expired", func(t *testing.T) {

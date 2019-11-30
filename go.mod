@@ -24,18 +24,12 @@ require (
 	github.com/go-playground/universal-translator v0.16.0 // indirect
 	github.com/go-swagger/go-swagger v0.19.0
 	github.com/go-swagger/scan-repo-boundary v0.0.0-20180623220736-973b3573c013 // indirect
-	github.com/gobuffalo/buffalo-plugins v1.15.0 // indirect
-	github.com/gobuffalo/events v1.4.0 // indirect
 	github.com/gobuffalo/httptest v1.0.2
-	github.com/gobuffalo/mapi v1.2.0 // indirect
-	github.com/gobuffalo/meta v0.2.1 // indirect
 	github.com/gobuffalo/packr v1.22.0
 	github.com/gobuffalo/packr/v2 v2.7.1
 	github.com/gobuffalo/pop v4.12.2+incompatible
-	github.com/gobuffalo/syncx v0.1.0 // indirect
 	github.com/gobuffalo/tags v2.1.7+incompatible // indirect
 	github.com/gobuffalo/uuid v2.0.5+incompatible
-	github.com/gobuffalo/validate v2.0.3+incompatible
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
 	github.com/golang/mock v1.3.1
@@ -46,24 +40,17 @@ require (
 	github.com/gorilla/securecookie v1.1.1
 	github.com/gorilla/sessions v1.1.3
 	github.com/imdario/mergo v0.3.7
-	github.com/jackc/pgx v3.6.0+incompatible // indirect
 	github.com/jessevdk/go-flags v1.4.0 // indirect
-	github.com/jmoiron/sqlx v1.2.0
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/justinas/nosurf v0.0.0-20190118163749-6453469bdcc9
-	github.com/karrick/godirwalk v1.13.0 // indirect
 	github.com/leodido/go-urn v1.1.0 // indirect
 	github.com/luna-duclos/instrumentedsql v1.1.1 // indirect
-	github.com/markbates/oncer v1.0.0 // indirect
-	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/mattn/go-sqlite3 v1.13.0 // indirect
 	github.com/mattn/goveralls v0.0.4
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/olekukonko/tablewriter v0.0.1
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/ory/go-acc v0.0.0-20181118080137-ddc355013f90
-	github.com/ory/go-convenience v0.1.0
 	github.com/ory/gojsonschema v1.2.0
 	github.com/ory/graceful v0.1.1
 	github.com/ory/herodot v0.6.2
@@ -74,7 +61,6 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect
 	github.com/rogpeppe/go-internal v1.5.0 // indirect
-	github.com/rubenv/sql-migrate v0.0.0-20190212093014-1007f53448d7
 	github.com/santhosh-tekuri/jsonschema/v2 v2.1.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v0.0.5
