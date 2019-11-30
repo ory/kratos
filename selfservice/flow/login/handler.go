@@ -5,6 +5,7 @@ import (
 	"net/url"
 
 	"github.com/julienschmidt/httprouter"
+
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/urlx"
 

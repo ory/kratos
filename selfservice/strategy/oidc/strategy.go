@@ -12,8 +12,9 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/nosurf"
-	"github.com/ory/x/errorsx"
 	"github.com/pkg/errors"
+
+	"github.com/ory/x/errorsx"
 
 	"github.com/ory/x/jsonx"
 

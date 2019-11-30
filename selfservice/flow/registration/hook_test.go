@@ -112,7 +112,7 @@ func TestRegistrationExecutor(t *testing.T) {
 
 				require.NoError(t, err)
 				if tc.expectTraits != "" {
-					got, err := reg.IdentityPool().Get(context.TODO(), i.ID)
+					got, err := reg.IdentityPool().GetIdentity(context.TODO(), i.ID)
 					require.NoError(t, err)
 					assert.EqualValues(t, tc.expectTraits, string(got.Traits))
 				}

@@ -84,7 +84,7 @@ func (p *PoolMemory) FindByCredentialsIdentifier(_ context.Context, ct Credentia
 	return nil, nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("No identity matching the credentials identifiers"))
 }
 
-func (p *PoolMemory) Create(_ context.Context, i *Identity) error {
+func (p *PoolMemory) CreateIdentity(_ context.Context, i *Identity) error {
 	insert := p.augment(*i)
 	if err := p.Validate(insert); err != nil {
 		return err
@@ -105,7 +105,7 @@ func (p *PoolMemory) Create(_ context.Context, i *Identity) error {
 	return nil
 }
 
-func (p *PoolMemory) List(_ context.Context, limit, offset int) ([]Identity, error) {
+func (p *PoolMemory) ListIdentities(_ context.Context, limit, offset int) ([]Identity, error) {
 	p.RLock()
 	defer p.RUnlock()
 
@@ -118,11 +118,11 @@ func (p *PoolMemory) List(_ context.Context, limit, offset int) ([]Identity, err
 	return p.abstractPool.declassifyAll(p.is[start:end]), nil
 }
 
-func (p *PoolMemory) UpdateConfidential(ctx context.Context, i *Identity) error {
+func (p *PoolMemory) UpdateIdentityConfidential(ctx context.Context, i *Identity) error {
 	return p.update(ctx, i, i.Credentials, true)
 }
 
-func (p *PoolMemory) Update(ctx context.Context, i *Identity) error {
+func (p *PoolMemory) UpdateIdentity(ctx context.Context, i *Identity) error {
 	return p.update(ctx, i, nil, false)
 }
 
@@ -156,8 +156,8 @@ func (p *PoolMemory) update(ctx context.Context, i *Identity, ct map[Credentials
 	return errors.WithStack(herodot.ErrNotFound.WithReasonf("Identity with identifier %s does not exist.", i.ID))
 }
 
-func (p *PoolMemory) Get(ctx context.Context, id uuid.UUID) (*Identity, error) {
-	i, err := p.GetClassified(ctx, id)
+func (p *PoolMemory) GetIdentity(ctx context.Context, id uuid.UUID) (*Identity, error) {
+	i, err := p.GetIdentityConfidential(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +165,7 @@ func (p *PoolMemory) Get(ctx context.Context, id uuid.UUID) (*Identity, error) {
 	return p.declassify(*i), nil
 }
 
-func (p *PoolMemory) GetClassified(_ context.Context, id uuid.UUID) (*Identity, error) {
+func (p *PoolMemory) GetIdentityConfidential(_ context.Context, id uuid.UUID) (*Identity, error) {
 	p.RLock()
 	defer p.RUnlock()
 
@@ -178,7 +178,7 @@ func (p *PoolMemory) GetClassified(_ context.Context, id uuid.UUID) (*Identity, 
 	return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("Identity with identifier %s does not exist.", id))
 }
 
-func (p *PoolMemory) Delete(_ context.Context, id uuid.UUID) error {
+func (p *PoolMemory) DeleteIdentity(_ context.Context, id uuid.UUID) error {
 	p.Lock()
 	defer p.Unlock()
 

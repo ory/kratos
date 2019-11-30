@@ -62,14 +62,13 @@ func NewRequest(exp time.Duration, r *http.Request) *Request {
 	}
 
 	return &Request{
-		ID:             x.NewUUID(),
-		ExpiresAt:      time.Now().UTC().Add(exp),
-		IssuedAt:       time.Now().UTC(),
-		RequestURL:     source.String(),
-		Methods:        map[identity.CredentialsType]*RequestMethod{},
+		ID:         x.NewUUID(),
+		ExpiresAt:  time.Now().UTC().Add(exp),
+		IssuedAt:   time.Now().UTC(),
+		RequestURL: source.String(),
+		Methods:    map[identity.CredentialsType]*RequestMethod{},
 	}
 }
-
 
 func (r *Request) BeforeSave(_ *pop.Connection) error {
 	r.MethodsRaw = make([]RequestMethod, 0, len(r.Methods))

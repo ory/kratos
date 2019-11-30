@@ -49,7 +49,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, hoo
 	}
 
 	if s.WasIdentityModified() {
-		if err := e.d.IdentityPool().Update(r.Context(), s.Identity); err != nil {
+		if err := e.d.IdentityPool().UpdateIdentity(r.Context(), s.Identity); err != nil {
 			return err
 		}
 	}

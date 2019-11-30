@@ -25,7 +25,7 @@ import (
 func MockSetSession(t *testing.T, reg Registry) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		i := identity.NewIdentity("")
-		require.NoError(t, reg.IdentityPool().Create(context.Background(), i))
+		require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), i))
 
 		_, err := reg.SessionManager().CreateToRequest(context.Background(), i, w, r)
 		require.NoError(t, err)
@@ -94,17 +94,17 @@ func MockSessionCreateHandlerWithIdentity(t *testing.T, reg Registry, i *identit
 		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/fake-session.schema.json")
 	}
 
-	require.NoError(t, reg.IdentityPool().Create(context.Background(), i))
+	require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), i))
 
-	inserted, err := reg.IdentityPool().GetClassified(context.Background(), i.ID)
+	inserted, err := reg.IdentityPool().GetIdentityConfidential(context.Background(), i.ID)
 	require.NoError(t, err)
 	sess.Identity = inserted
 
-	require.NoError(t, reg.SessionManager().Create(context.Background(), &sess))
+	require.NoError(t, reg.SessionManager().CreateSession(context.Background(), &sess))
 	require.EqualValues(t, inserted.Credentials, i.Credentials)
 
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		require.NoError(t, reg.SessionManager().Create(context.Background(), &sess))
+		require.NoError(t, reg.SessionManager().CreateSession(context.Background(), &sess))
 		require.NoError(t, reg.SessionManager().SaveToRequest(context.Background(), &sess, w, r))
 	}, &sess
 

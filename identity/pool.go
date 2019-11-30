@@ -7,11 +7,12 @@ import (
 	"testing"
 
 	"github.com/gofrs/uuid"
-	"github.com/ory/viper"
-	"github.com/ory/x/errorsx"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ory/viper"
+	"github.com/ory/x/errorsx"
 
 	"github.com/ory/herodot"
 
@@ -27,34 +28,32 @@ type (
 
 		// Create creates an identity. It is capable of setting credentials without encoding. Will return an error
 		// if identity exists, backend connectivity is broken, or trait validation fails.
-		Create(context.Context, *Identity) error
+		CreateIdentity(context.Context, *Identity) error
 
-		// Create creates an identity. It is capable of setting credentials without encoding. Will return an error
-		// if identity exists, backend connectivity is broken, or trait validation fails.
-		List(ctx context.Context, limit, offset int) ([]Identity, error)
+		ListIdentities(ctx context.Context, limit, offset int) ([]Identity, error)
 
-		// UpdateConfidential updates an identities confidential data. It is capable of setting credentials without encoding. Will return an error
+		// UpdateIdentityConfidential updates an identities confidential data. It is capable of setting credentials without encoding. Will return an error
 		// if identity exists, backend connectivity is broken, or trait validation fails.
 		//
 		// Because this will overwrite credentials you always need to update the identity using `GetClassified`.
-		UpdateConfidential(context.Context, *Identity) error
+		UpdateIdentityConfidential(context.Context, *Identity) error
 
 		// Update updates an identity excluding its confidential data. It is capable of setting credentials without encoding. Will return an error
 		// if identity exists, backend connectivity is broken, or trait validation fails.
 		//
 		// This update procedure works well with `Get`.
-		Update(context.Context, *Identity) error
+		UpdateIdentity(context.Context, *Identity) error
 
 		// Delete removes an identity by its id. Will return an error
-		// 		// if identity exists, backend connectivity is broken, or trait validation fails.
-		Delete(context.Context, uuid.UUID) error
+		// if identity exists, backend connectivity is broken, or trait validation fails.
+		DeleteIdentity(context.Context, uuid.UUID) error
 
 		// Get returns an identity by its id. Will return an error if the identity does not exist or backend
 		// connectivity is broken.
-		Get(context.Context, uuid.UUID) (*Identity, error)
+		GetIdentity(context.Context, uuid.UUID) (*Identity, error)
 
 		// GetClassified returns the identity including it's raw credentials. This should only be used internally.
-		GetClassified(context.Context, uuid.UUID) (*Identity, error)
+		GetIdentityConfidential(context.Context, uuid.UUID) (*Identity, error)
 	}
 
 	PoolProvider interface {
@@ -97,12 +96,24 @@ func TestPool(p Pool) func(t *testing.T) {
 			require.Equal(t, expected.ID, actual.ID)
 		}
 
+		t.Run("case=should create and set missing ID", func(t *testing.T) {
+			i := NewIdentity("")
+			i.SetCredentials(CredentialsTypeOIDC, Credentials{
+				Type: CredentialsTypeOIDC, Identifiers: []string{x.NewUUID().String()},
+				Config: json.RawMessage(`{}`),
+			})
+			i.ID = uuid.Nil
+			require.NoError(t, p.CreateIdentity(context.Background(), i))
+			assert.NotEqual(t, uuid.Nil, i.ID)
+			createdIDs = append(createdIDs, i.ID)
+		})
+
 		t.Run("case=create with default values", func(t *testing.T) {
 			expected := passwordIdentity("", "id-1")
-			require.NoError(t, p.Create(context.Background(), expected))
+			require.NoError(t, p.CreateIdentity(context.Background(), expected))
 			createdIDs = append(createdIDs, expected.ID)
 
-			actual, err := p.Get(context.Background(), expected.ID)
+			actual, err := p.GetIdentity(context.Background(), expected.ID)
 			require.NoError(t, err)
 
 			assert.Equal(t, expected.ID, actual.ID)
@@ -111,27 +122,27 @@ func TestPool(p Pool) func(t *testing.T) {
 		})
 
 		t.Run("case=should error when the identity ID does not exist", func(t *testing.T) {
-			_, err := p.Get(context.Background(), uuid.UUID{})
+			_, err := p.GetIdentity(context.Background(), uuid.UUID{})
 			require.Error(t, err)
 
-			_, err = p.Get(context.Background(), x.NewUUID())
+			_, err = p.GetIdentity(context.Background(), x.NewUUID())
 			require.Error(t, err)
 
-			_, err = p.GetClassified(context.Background(), x.NewUUID())
+			_, err = p.GetIdentityConfidential(context.Background(), x.NewUUID())
 			require.Error(t, err)
 		})
 
 		t.Run("case=create and keep set values", func(t *testing.T) {
 			expected := passwordIdentity("file://./stub/identity-2.schema.json", "id-2")
-			require.NoError(t, p.Create(context.Background(), expected))
+			require.NoError(t, p.CreateIdentity(context.Background(), expected))
 			createdIDs = append(createdIDs, expected.ID)
 
-			actual, err := p.Get(context.Background(), expected.ID)
+			actual, err := p.GetIdentity(context.Background(), expected.ID)
 			require.NoError(t, err)
 			assert.Equal(t, "file://./stub/identity-2.schema.json", actual.TraitsSchemaURL)
 			assertEqual(t, expected, actual)
 
-			actual, err = p.GetClassified(context.Background(), expected.ID)
+			actual, err = p.GetIdentityConfidential(context.Background(), expected.ID)
 			require.NoError(t, err)
 			require.Equal(t, expected.Traits, actual.Traits)
 			require.Equal(t, expected.ID, actual.ID)
@@ -150,38 +161,38 @@ func TestPool(p Pool) func(t *testing.T) {
 
 		t.Run("case=fail on duplicate credential identifiers if type is password", func(t *testing.T) {
 			initial := passwordIdentity("", "foo@bar.com")
-			require.NoError(t, p.Create(context.Background(), initial))
+			require.NoError(t, p.CreateIdentity(context.Background(), initial))
 			createdIDs = append(createdIDs, initial.ID)
 
 			for _, ids := range []string{"foo@bar.com", "fOo@bar.com", "FOO@bar.com", "foo@Bar.com"} {
 				expected := passwordIdentity("", ids)
-				require.Error(t, p.Create(context.Background(), expected))
+				require.Error(t, p.CreateIdentity(context.Background(), expected))
 
-				_, err := p.Get(context.Background(), expected.ID)
+				_, err := p.GetIdentity(context.Background(), expected.ID)
 				require.Error(t, err)
 			}
 		})
 
 		t.Run("case=fail on duplicate credential identifiers if type is oidc", func(t *testing.T) {
 			initial := oidcIdentity("", "oidc-1")
-			require.NoError(t, p.Create(context.Background(), initial))
+			require.NoError(t, p.CreateIdentity(context.Background(), initial))
 			createdIDs = append(createdIDs, initial.ID)
 
 			expected := oidcIdentity("", "oidc-1")
-			require.Error(t, p.Create(context.Background(), expected))
+			require.Error(t, p.CreateIdentity(context.Background(), expected))
 
-			_, err := p.Get(context.Background(), expected.ID)
+			_, err := p.GetIdentity(context.Background(), expected.ID)
 			require.Error(t, err)
 
 			second := oidcIdentity("", "OIDC-1")
-			require.NoError(t, p.Create(context.Background(), second), "should work because oidc is not case-sensitive")
+			require.NoError(t, p.CreateIdentity(context.Background(), second), "should work because oidc is not case-sensitive")
 			createdIDs = append(createdIDs, second.ID)
 		})
 
 		t.Run("case=create with invalid traits data", func(t *testing.T) {
 			expected := oidcIdentity("", x.NewUUID().String())
 			expected.Traits = Traits(`{"bar":123}`) // bar should be a string
-			err := p.Create(context.Background(), expected)
+			err := p.CreateIdentity(context.Background(), expected)
 			require.Error(t, err)
 			assert.Contains(t, fmt.Sprintf("%+v", err.Error()), "malformed")
 		})
@@ -192,18 +203,18 @@ func TestPool(p Pool) func(t *testing.T) {
 				Type: CredentialsTypeOIDC, Identifiers: []string{"aylmao-oidc"},
 				Config: json.RawMessage(`{"ay":"lmao"}`),
 			})
-			require.NoError(t, p.Create(context.Background(), initial))
+			require.NoError(t, p.CreateIdentity(context.Background(), initial))
 			createdIDs = append(createdIDs, initial.ID)
 
-			initial, err := p.GetClassified(context.Background(), initial.ID)
+			initial, err := p.GetIdentityConfidential(context.Background(), initial.ID)
 			require.NoError(t, err)
-			require.NotEmpty(t, initial.ID)
+			require.NotEqual(t, uuid.Nil, initial.ID)
 			require.NotEmpty(t, initial.Credentials)
 		})
 
 		t.Run("case=fail to update an identity because credentials changed but update was called", func(t *testing.T) {
 			initial := oidcIdentity("", x.NewUUID().String())
-			require.NoError(t, p.Create(context.Background(), initial))
+			require.NoError(t, p.CreateIdentity(context.Background(), initial))
 			createdIDs = append(createdIDs, initial.ID)
 
 			assert.Equal(t, "file://./stub/identity.schema.json", initial.TraitsSchemaURL)
@@ -217,11 +228,11 @@ func TestPool(p Pool) func(t *testing.T) {
 			toUpdate.Traits = Traits(`{"update":"me"}`)
 			toUpdate.TraitsSchemaURL = "file://./stub/identity-2.schema.json"
 
-			err := p.Update(context.Background(), toUpdate)
+			err := p.UpdateIdentity(context.Background(), toUpdate)
 			require.Error(t, err)
 			assert.Contains(t, fmt.Sprintf("%+v", err), "A field was modified that updates one or more credentials-related settings.")
 
-			actual, err := p.GetClassified(context.Background(), toUpdate.ID)
+			actual, err := p.GetIdentityConfidential(context.Background(), toUpdate.ID)
 			require.NoError(t, err)
 			assert.Equal(t, "file://./stub/identity.schema.json", actual.TraitsSchemaURL)
 			assert.Empty(t, actual.Credentials[CredentialsTypePassword])
@@ -230,7 +241,7 @@ func TestPool(p Pool) func(t *testing.T) {
 
 		t.Run("case=update an identity and set credentials", func(t *testing.T) {
 			initial := oidcIdentity("", x.NewUUID().String())
-			require.NoError(t, p.Create(context.Background(), initial))
+			require.NoError(t, p.CreateIdentity(context.Background(), initial))
 			createdIDs = append(createdIDs, initial.ID)
 
 			assert.Equal(t, "file://./stub/identity.schema.json", initial.TraitsSchemaURL)
@@ -243,9 +254,9 @@ func TestPool(p Pool) func(t *testing.T) {
 			})
 			expected.Traits = Traits(`{"update":"me"}`)
 			expected.TraitsSchemaURL = "file://./stub/identity-2.schema.json"
-			require.NoError(t, p.UpdateConfidential(context.Background(), expected))
+			require.NoError(t, p.UpdateIdentityConfidential(context.Background(), expected))
 
-			actual, err := p.GetClassified(context.Background(), expected.ID)
+			actual, err := p.GetIdentityConfidential(context.Background(), expected.ID)
 			require.NoError(t, err)
 			assert.Equal(t, "file://./stub/identity-2.schema.json", actual.TraitsSchemaURL)
 			assert.NotEmpty(t, actual.Credentials[CredentialsTypePassword])
@@ -257,11 +268,11 @@ func TestPool(p Pool) func(t *testing.T) {
 		t.Run("case=fail to update because validation fails", func(t *testing.T) {
 			initial := oidcIdentity("", x.NewUUID().String())
 
-			require.NoError(t, p.Create(context.Background(), initial))
+			require.NoError(t, p.CreateIdentity(context.Background(), initial))
 			createdIDs = append(createdIDs, initial.ID)
 
 			initial.Traits = Traits(`{"bar":123}`)
-			err := p.Update(context.Background(), initial)
+			err := p.UpdateIdentity(context.Background(), initial)
 			require.Error(t, err)
 			require.Contains(t, err.Error(), "malformed")
 		})
@@ -269,26 +280,26 @@ func TestPool(p Pool) func(t *testing.T) {
 		t.Run("case=should fail to insert identity because credentials from traits exist", func(t *testing.T) {
 			first := passwordIdentity("", x.NewUUID().String())
 			first.Traits = Traits(`{"email":"test-identity@ory.sh"}`)
-			require.NoError(t, p.Create(context.Background(), first))
+			require.NoError(t, p.CreateIdentity(context.Background(), first))
 			createdIDs = append(createdIDs, first.ID)
 
 			second := passwordIdentity("", x.NewUUID().String())
-			require.NoError(t, p.Create(context.Background(), second))
+			require.NoError(t, p.CreateIdentity(context.Background(), second))
 			createdIDs = append(createdIDs, second.ID)
 
 			second.Traits = Traits(`{"email":"test-identity@ory.sh"}`)
-			require.Error(t, p.UpdateConfidential(context.Background(), second))
+			require.Error(t, p.UpdateIdentityConfidential(context.Background(), second))
 		})
 
 		t.Run("case=should succeed to update credentials from traits", func(t *testing.T) {
 			expected := passwordIdentity("", x.NewUUID().String())
-			require.NoError(t, p.Create(context.Background(), expected))
+			require.NoError(t, p.CreateIdentity(context.Background(), expected))
 			createdIDs = append(createdIDs, expected.ID)
 
 			expected.Traits = Traits(`{"email":"update-test-identity@ory.sh"}`)
-			require.NoError(t, p.UpdateConfidential(context.Background(), expected))
+			require.NoError(t, p.UpdateIdentityConfidential(context.Background(), expected))
 
-			actual, err := p.GetClassified(context.Background(), expected.ID)
+			actual, err := p.GetIdentityConfidential(context.Background(), expected.ID)
 			require.NoError(t, err)
 
 			assert.Equal(t, expected.Credentials[CredentialsTypePassword].Identifiers, actual.Credentials[CredentialsTypePassword].Identifiers)
@@ -296,10 +307,10 @@ func TestPool(p Pool) func(t *testing.T) {
 
 		t.Run("case=delete an identity", func(t *testing.T) {
 			expected := passwordIdentity("", x.NewUUID().String())
-			require.NoError(t, p.Create(context.Background(), expected))
-			require.NoError(t, p.Delete(context.Background(), expected.ID))
+			require.NoError(t, p.CreateIdentity(context.Background(), expected))
+			require.NoError(t, p.DeleteIdentity(context.Background(), expected.ID))
 
-			_, err := p.Get(context.Background(), expected.ID)
+			_, err := p.GetIdentity(context.Background(), expected.ID)
 			require.Error(t, err)
 		})
 
@@ -312,12 +323,12 @@ func TestPool(p Pool) func(t *testing.T) {
 				Identifiers: []string{"id-missing-creds-config"},
 				Config:      json.RawMessage(``),
 			})
-			require.NoError(t, p.Create(context.Background(), expected))
+			require.NoError(t, p.CreateIdentity(context.Background(), expected))
 			createdIDs = append(createdIDs, expected.ID)
 		})
 
 		t.Run("case=list", func(t *testing.T) {
-			is, err := p.List(context.Background(), 25, 0)
+			is, err := p.ListIdentities(context.Background(), 25, 0)
 			require.NoError(t, err)
 			assert.Len(t, is, len(createdIDs))
 			for _, id := range createdIDs {
@@ -335,7 +346,7 @@ func TestPool(p Pool) func(t *testing.T) {
 			expected := passwordIdentity("file://./stub/identity.schema.json", x.NewUUID().String())
 			expected.Traits = Traits(`{"email": "find-credentials-identifier@ory.sh"}`)
 
-			require.NoError(t, p.Create(context.Background(), expected))
+			require.NoError(t, p.CreateIdentity(context.Background(), expected))
 			createdIDs = append(createdIDs, expected.ID)
 
 			actual, creds, err := p.FindByCredentialsIdentifier(context.Background(), CredentialsTypePassword, "find-credentials-identifier@ory.sh")

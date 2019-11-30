@@ -46,15 +46,20 @@ type Request struct {
 	// Form contains form fields, errors, and so on.
 	Form *form.HTMLForm `json:"form" db:"form"`
 
-	IdentityID uuid.UUID `json:"-" db:"identity_id"`
-
 	// Identity contains all of the identity's data in raw form.
-	Identity *identity.Identity `json:"identity"`
+	Identity *identity.Identity `json:"identity" faker:"identity" db:"-" belongs_to:"identities" fk_id:"IdentityID"`
 
 	// UpdateSuccessful, if true, indicates that the profile has been updated successfully with the provided data.
 	// Done will stay true when repeatedly checking. If set to true, done will revert back to false only
 	// when a request with invalid (e.g. "please use a valid phone number") data was sent.
-	UpdateSuccessful bool `json:"update_successful,omitempty" db:"update_successful"`
+	UpdateSuccessful bool `json:"update_successful,omitempty" faker:"-" db:"update_successful"`
+
+	// IdentityID is a helper struct field for gobuffalo.pop.
+	IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
+	// CreatedAt is a helper struct field for gobuffalo.pop.
+	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
+	// UpdatedAt is a helper struct field for gobuffalo.pop.
+	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 }
 
 func NewRequest(exp time.Duration, r *http.Request, s *session.Session) *Request {
@@ -74,6 +79,7 @@ func NewRequest(exp time.Duration, r *http.Request, s *session.Session) *Request
 		IssuedAt:   time.Now().UTC(),
 		RequestURL: source.String(),
 		IdentityID: s.Identity.ID,
+		Identity:   s.Identity,
 		Form:       new(form.HTMLForm),
 	}
 }

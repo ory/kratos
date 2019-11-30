@@ -7,9 +7,10 @@ import (
 	"net/url"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/ory/x/errorsx"
 	"github.com/pkg/errors"
 	"github.com/tidwall/sjson"
+
+	"github.com/ory/x/errorsx"
 
 	"github.com/ory/x/decoderx"
 	_ "github.com/ory/x/jsonschemax/fileloader"

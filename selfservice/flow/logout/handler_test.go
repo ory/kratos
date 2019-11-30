@@ -35,9 +35,9 @@ func TestLogoutHandler(t *testing.T) {
 	defer ts.Close()
 
 	var sess session.Session
-	sess.SID = uuid.New().String()
+	sess.ID = uuid.New().String()
 	sess.Identity = new(identity.Identity)
-	require.NoError(t, reg.SessionManager().Create(context.Background(), &sess))
+	require.NoError(t, reg.SessionManager().CreateSession(context.Background(), &sess))
 
 	router.GET("/set", session.MockSetSession(t, reg))
 

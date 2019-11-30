@@ -95,4 +95,11 @@ func RegisterFakes() {
 	}); err != nil {
 		panic(err)
 	}
+
+	if err := faker.AddProvider("identity", func(v reflect.Value) (interface{}, error) {
+		var i identity.Identity
+		return &i, faker.FakeData(&i)
+	}); err != nil {
+		panic(err)
+	}
 }

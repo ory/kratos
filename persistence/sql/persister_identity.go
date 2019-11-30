@@ -9,10 +9,11 @@ import (
 
 	"github.com/gobuffalo/pop"
 	"github.com/gofrs/uuid"
+	"github.com/pkg/errors"
+
 	"github.com/ory/herodot"
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/sqlcon"
-	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
@@ -44,7 +45,7 @@ WHERE ici.identifier = 'find-credentials-identifier@ory.sh'
 		return nil, nil, sqlcon.HandleError(err)
 	}
 
-	i, err := p.GetClassified(ctx, find.IdentityID)
+	i, err := p.GetIdentityConfidential(ctx, find.IdentityID)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -110,9 +111,13 @@ func createIdentityCredentials(ctx context.Context, tx *pop.Connection, i *ident
 	return nil
 }
 
-func (p *Persister) Create(ctx context.Context, i *identity.Identity) error {
+func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) error {
 	if i.TraitsSchemaURL == "" {
 		i.TraitsSchemaURL = p.cf.DefaultIdentityTraitsSchemaURL().String()
+	}
+
+	if len(i.Traits) == 0 {
+		i.Traits = identity.Traits("{}")
 	}
 
 	if err := p.validateIdentity(i); err != nil {
@@ -128,12 +133,12 @@ func (p *Persister) Create(ctx context.Context, i *identity.Identity) error {
 	}))
 }
 
-func (p *Persister) List(ctx context.Context, limit, offset int) ([]identity.Identity, error) {
+func (p *Persister) ListIdentities(ctx context.Context, limit, offset int) ([]identity.Identity, error) {
 	var is []identity.Identity
 	return is, sqlcon.HandleError(p.c.RawQuery("SELECT * FROM identities LIMIT ? OFFSET ?", limit, offset).All(&is))
 }
 
-func (p *Persister) UpdateConfidential(ctx context.Context, i *identity.Identity) error {
+func (p *Persister) UpdateIdentityConfidential(ctx context.Context, i *identity.Identity) error {
 	if err := p.validateIdentity(i); err != nil {
 		return err
 	}
@@ -151,12 +156,12 @@ func (p *Persister) UpdateConfidential(ctx context.Context, i *identity.Identity
 	}))
 }
 
-func (p *Persister) Update(ctx context.Context, i *identity.Identity) error {
+func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) error {
 	if err := p.validateIdentity(i); err != nil {
 		return err
 	}
 
-	fs, err := p.GetClassified(ctx, i.ID)
+	fs, err := p.GetIdentityConfidential(ctx, i.ID)
 	if err != nil {
 		return err
 	}
@@ -174,11 +179,11 @@ func (p *Persister) Update(ctx context.Context, i *identity.Identity) error {
 	return sqlcon.HandleError(p.c.Update(i))
 }
 
-func (p *Persister) Delete(_ context.Context, id uuid.UUID) error {
+func (p *Persister) DeleteIdentity(_ context.Context, id uuid.UUID) error {
 	return sqlcon.HandleError(p.c.Destroy(&identity.Identity{ID: id}))
 }
 
-func (p *Persister) Get(_ context.Context, id uuid.UUID) (*identity.Identity, error) {
+func (p *Persister) GetIdentity(_ context.Context, id uuid.UUID) (*identity.Identity, error) {
 	var i identity.Identity
 	if err := p.c.Find(&i, id); err != nil {
 		return nil, sqlcon.HandleError(err)
@@ -187,7 +192,7 @@ func (p *Persister) Get(_ context.Context, id uuid.UUID) (*identity.Identity, er
 	return &i, nil
 }
 
-func (p *Persister) GetClassified(_ context.Context, id uuid.UUID) (*identity.Identity, error) {
+func (p *Persister) GetIdentityConfidential(_ context.Context, id uuid.UUID) (*identity.Identity, error) {
 	var i identity.Identity
 	if err := p.c.Eager().Find(&i, id); err != nil {
 		return nil, sqlcon.HandleError(err)

@@ -12,8 +12,9 @@ import (
 	"github.com/gobuffalo/pop"
 	"github.com/gobuffalo/pop/logging"
 	"github.com/google/uuid"
-	"github.com/ory/x/sqlcon/dockertest"
 	"github.com/pkg/errors"
+
+	"github.com/ory/x/sqlcon/dockertest"
 
 	// "github.com/ory/x/sqlcon/dockertest"
 	"github.com/stretchr/testify/require"
@@ -22,7 +23,9 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/persistence/sql"
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/flow/profile"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/session"
 )
 
 // Workaround for https://github.com/gobuffalo/pop/pull/481
@@ -102,6 +105,10 @@ func TestPersister(t *testing.T) {
 			require.NoError(t, p.MigrationStatus(context.Background()))
 			require.NoError(t, p.MigrateUp(context.Background()))
 
+			t.Run("contract=identity.TestPool", func(t *testing.T) {
+				pop.SetLogger(pl(t))
+				identity.TestPool(p)(t)
+			})
 			t.Run("contract=registration.TestRequestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
 				registration.TestRequestPersister(p)(t)
@@ -110,9 +117,13 @@ func TestPersister(t *testing.T) {
 				pop.SetLogger(pl(t))
 				login.TestRequestPersister(p)(t)
 			})
-			t.Run("contract=identity.TestPool", func(t *testing.T) {
+			t.Run("contract=profile.TestRequestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				identity.TestPool(p)(t)
+				profile.TestRequestPersister(p)(t)
+			})
+			t.Run("contract=session.TestRequestPersister", func(t *testing.T) {
+				pop.SetLogger(pl(t))
+				session.TestPersister(p)(t)
 			})
 		})
 	}

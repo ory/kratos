@@ -13,10 +13,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/x/pointerx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/pointerx"
 
 	"github.com/ory/viper"
 
@@ -233,7 +234,7 @@ func TestLogin(t *testing.T) {
 			ar: nlr(time.Hour),
 			prep: func(t *testing.T, r loginStrategyDependencies) {
 				p, _ := r.PasswordHasher().Generate([]byte("password"))
-				_, err := r.IdentityPool().Create(context.Background(), &identity.Identity{
+				_, err := r.IdentityPool().CreateIdentity(context.Background(), &identity.Identity{
 					ID:     x.NewUUID(),
 					Traits: json.RawMessage(`{}`),
 					Credentials: map[identity.CredentialsType]identity.Credentials{
@@ -269,7 +270,7 @@ func TestLogin(t *testing.T) {
 			ar: nlr(time.Hour),
 			prep: func(t *testing.T, r loginStrategyDependencies) {
 				p, _ := r.PasswordHasher().Generate([]byte("password"))
-				_, err := r.IdentityPool().Create(context.Background(), &identity.Identity{
+				_, err := r.IdentityPool().CreateIdentity(context.Background(), &identity.Identity{
 					ID:     x.NewUUID(),
 					Traits: json.RawMessage(`{"subject":"login-identifier-7"}`),
 					Credentials: map[identity.CredentialsType]identity.Credentials{

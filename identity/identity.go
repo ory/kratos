@@ -57,10 +57,10 @@ type (
 )
 
 func (t *Traits) Scan(value interface{}) error {
-	return aliases.JSONScan(t,value)
+	return aliases.JSONScan(t, value)
 }
 
-func (t *Traits) Value() (driver.Value,error) {
+func (t *Traits) Value() (driver.Value, error) {
 	return aliases.JSONValue(t)
 }
 

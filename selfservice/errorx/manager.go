@@ -9,8 +9,9 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/ory/x/errorsx"
 	"github.com/pkg/errors"
+
+	"github.com/ory/x/errorsx"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"

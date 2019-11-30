@@ -11,7 +11,8 @@ import (
 var _ profile.RequestPersister = new(Persister)
 
 func (p *Persister) CreateProfileRequest(_ context.Context, r *profile.Request) error {
-	return p.c.Eager().Create(r)
+	r.IdentityID = r.Identity.ID
+	return p.c.Create(r) // This must not be eager or identities will be created / updated
 }
 
 func (p *Persister) GetProfileRequest(_ context.Context, id uuid.UUID) (*profile.Request, error) {
@@ -23,5 +24,5 @@ func (p *Persister) GetProfileRequest(_ context.Context, id uuid.UUID) (*profile
 }
 
 func (p *Persister) UpdateProfileRequest(ctx context.Context, r *profile.Request) error {
-	return p.c.Eager().Update(&r)
+	return p.c.Update(r) // This must not be eager or identities will be created / updated
 }

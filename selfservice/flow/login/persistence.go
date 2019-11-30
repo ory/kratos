@@ -50,6 +50,12 @@ func TestRequestPersister(p RequestPersister) func(t *testing.T) {
 			return &r
 		}
 
+		t.Run("case=should create with set ids", func(t *testing.T) {
+			var r Request
+			require.NoError(t, faker.FakeData(&r))
+			require.NoError(t, p.CreateLoginRequest(context.Background(), &r))
+		})
+
 		t.Run("case=should create a new login request and properly set IDs", func(t *testing.T) {
 			r := newRequest(t)
 			methods := len(r.Methods)
@@ -57,9 +63,9 @@ func TestRequestPersister(p RequestPersister) func(t *testing.T) {
 			require.NoError(t, err, "%#v", err)
 
 			assert.Nil(t, r.MethodsRaw)
-			assert.NotEmpty(t, r.ID)
+			assert.NotEqual(t, uuid.Nil, r.ID)
 			for _, m := range r.Methods {
-				assert.NotEmpty(t, m.ID)
+				assert.NotEqual(t, uuid.Nil, m.ID)
 			}
 			assert.Len(t, r.Methods, methods)
 		})
@@ -93,7 +99,7 @@ func TestRequestPersister(p RequestPersister) func(t *testing.T) {
 
 			require.NoError(t, p.UpdateLoginRequest(context.Background(), expected.ID, identity.CredentialsTypeOIDC, &RequestMethod{
 				Method: identity.CredentialsTypeOIDC,
-				Config: &RequestMethodConfig{ form.NewHTMLForm( string(identity.CredentialsTypeOIDC))},
+				Config: &RequestMethodConfig{form.NewHTMLForm(string(identity.CredentialsTypeOIDC))},
 			}))
 
 			require.NoError(t, p.UpdateLoginRequest(context.Background(), expected.ID, identity.CredentialsTypePassword, &RequestMethod{

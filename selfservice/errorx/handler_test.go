@@ -9,10 +9,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ory/x/errorsx"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ory/x/errorsx"
 
 	"github.com/ory/herodot"
 

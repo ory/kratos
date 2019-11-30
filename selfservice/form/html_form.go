@@ -1,18 +1,21 @@
 package form
 
 import (
+	"database/sql/driver"
 	"encoding/json"
 	"net/http"
 	"sync"
 
-	"github.com/ory/x/errorsx"
 	"github.com/santhosh-tekuri/jsonschema/v2"
+
+	"github.com/ory/x/errorsx"
 
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/jsonschemax"
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/stringslice"
 
+	"github.com/ory/kratos/persistence/aliases"
 	"github.com/ory/kratos/schema"
 )
 
@@ -36,7 +39,7 @@ type HTMLForm struct {
 	// Method is the form method (e.g. POST)
 	Method string `json:"method"`
 
-	// Fields contains the form fields asdfasdffasd
+	// Fields contains the form fields.
 	Fields Fields `json:"fields"`
 
 	// Errors contains all form errors. These will be duplicates of the individual field errors.
@@ -267,6 +270,13 @@ func (c *HTMLForm) AddError(err *Error, names ...string) {
 		ff.Errors = append(ff.Errors, *err)
 		c.Fields[name] = ff
 	}
+}
+
+func (c *HTMLForm) Scan(value interface{}) error {
+	return aliases.JSONScan(c, value)
+}
+func (c *HTMLForm) Value() (driver.Value, error) {
+	return aliases.JSONValue(c)
 }
 
 func (c *HTMLForm) defaults() {

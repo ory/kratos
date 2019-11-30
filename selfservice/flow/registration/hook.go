@@ -56,7 +56,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		return err
 		// We're now creating the identity because any of the hooks could trigger a "redirect" or a "session" which
 		// would imply that the identity has to exist already.
-	} else if err := e.d.IdentityPool().Create(r.Context(), s.Identity); err != nil {
+	} else if err := e.d.IdentityPool().CreateIdentity(r.Context(), s.Identity); err != nil {
 		return err
 	}
 
@@ -77,7 +77,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		return err
 		// We're now creating the identity because any of the hooks could trigger a "redirect" or a "session" which
 		// would imply that the identity has to exist already.
-	} else if err := e.d.IdentityPool().Update(r.Context(), s.Identity); err != nil {
+	} else if err := e.d.IdentityPool().UpdateIdentity(r.Context(), s.Identity); err != nil {
 		return err
 	}
 

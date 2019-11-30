@@ -185,12 +185,6 @@ func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	i, err := h.d.IdentityPool().Get(r.Context(), ar.IdentityID)
-	if err != nil {
-		h.d.Writer().WriteError(w, r, err)
-		return
-	}
-
 	ar.Form.SetField("request", form.Field{
 		Name:     "request",
 		Type:     "hidden",
@@ -198,8 +192,6 @@ func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Reque
 		Value:    rid,
 	})
 	ar.Form.SetCSRF(nosurf.Token(r))
-	ar.Identity = i
-
 	h.d.Writer().Write(w, r, ar)
 }
 
@@ -293,7 +285,7 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 
 	// identity.TraitsSchemaURL
 
-	creds, err := h.d.IdentityPool().GetClassified(r.Context(), s.Identity.ID)
+	creds, err := h.d.IdentityPool().GetIdentityConfidential(r.Context(), s.Identity.ID)
 	if err != nil {
 		h.handleProfileManagementError(w, r, ar, identity.Traits(p.Traits), err)
 		return
@@ -324,7 +316,7 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if err := h.d.IdentityPool().Update(r.Context(), &i); err != nil {
+	if err := h.d.IdentityPool().UpdateIdentity(r.Context(), &i); err != nil {
 		h.handleProfileManagementError(w, r, ar, i.Traits, err)
 		return
 	}
@@ -337,7 +329,7 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 	ar.Form.SetValue("request", r.Form.Get("request"))
 	ar.Form.SetCSRF(nosurf.Token(r))
 
-	if err := h.d.ProfileRequestPersister().UpdateProfileRequest(r.Context(),ar); err != nil {
+	if err := h.d.ProfileRequestPersister().UpdateProfileRequest(r.Context(), ar); err != nil {
 		h.handleProfileManagementError(w, r, ar, i.Traits, err)
 		return
 	}

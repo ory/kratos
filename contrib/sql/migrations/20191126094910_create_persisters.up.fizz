@@ -43,8 +43,13 @@ create_table("selfservice_registration_request_methods") {
 create_table("selfservice_profile_management_requests") {
 	t.Column("id", "uuid", {primary: true})
     t.Column("request_url", "string", {"size": 2048})
-    t.Column("requested_at", "timestamp", { default_raw: "CURRENT_TIMESTAMP" })
+    t.Column("issued_at", "timestamp", { default_raw: "CURRENT_TIMESTAMP" })
     t.Column("expires_at", "timestamp")
+    t.Column("form", "json")
+    t.Column("update_successful", "bool")
+    t.Column("identity_id", "uuid")
 
 	t.Timestamps()
+
+    t.ForeignKey("identity_id", {"identities": ["id"]}, {"on_delete": "cascade"})
 }

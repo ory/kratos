@@ -138,7 +138,7 @@ func TestStrategy(t *testing.T) {
 		var e interface{}
 		var err error
 		if r.URL.Path == "/login" {
-			e, err = reg.LoginRequestPersister().GetLoginRequest(r.Context(),x.ParseUUID( r.URL.Query().Get("request")))
+			e, err = reg.LoginRequestPersister().GetLoginRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
 		} else if r.URL.Path == "/registration" {
 			e, err = reg.RegistrationRequestPersister().GetRegistrationRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
 		}
@@ -255,10 +255,10 @@ func TestStrategy(t *testing.T) {
 	// new login request
 	var nlr = func(t *testing.T, redirectTo string, exp time.Duration) *login.Request {
 		r := &login.Request{
-			ID:             x.NewUUID(),
-			RequestURL:     redirectTo,
-			IssuedAt:       time.Now(),
-			ExpiresAt:      time.Now().Add(exp),
+			ID:         x.NewUUID(),
+			RequestURL: redirectTo,
+			IssuedAt:   time.Now(),
+			ExpiresAt:  time.Now().Add(exp),
 			Methods: map[identity.CredentialsType]*login.RequestMethod{
 				identity.CredentialsTypeOIDC: {
 					Method: identity.CredentialsTypeOIDC,
@@ -273,10 +273,10 @@ func TestStrategy(t *testing.T) {
 	// new registration request
 	var nrr = func(t *testing.T, redirectTo string, exp time.Duration) *registration.Request {
 		r := &registration.Request{
-			ID:             x.NewUUID(),
-			RequestURL:     redirectTo,
-			IssuedAt:       time.Now(),
-			ExpiresAt:      time.Now().Add(exp),
+			ID:         x.NewUUID(),
+			RequestURL: redirectTo,
+			IssuedAt:   time.Now(),
+			ExpiresAt:  time.Now().Add(exp),
 			Methods: map[identity.CredentialsType]*registration.RequestMethod{
 				identity.CredentialsTypeOIDC: {
 					Method: identity.CredentialsTypeOIDC,
@@ -421,7 +421,7 @@ func TestStrategy(t *testing.T) {
 			})
 			i.Traits = json.RawMessage(`{"subject":"` + subject + `"}`)
 
-			require.NoError(t,  reg.IdentityPool().Create(context.Background(), i))
+			require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), i))
 		})
 
 		t.Run("case=should fail registration", func(t *testing.T) {

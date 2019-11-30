@@ -32,12 +32,12 @@ func TestSessionIssuer(t *testing.T) {
 		sid := uuid.New().String()
 
 		i := identity.NewIdentity("")
-		require.NoError(t,  reg.IdentityPool().Create(context.Background(), i))
-		require.NoError(t, h.ExecuteLoginPostHook(w, &r, nil, &session.Session{SID: sid, Identity: i}))
+		require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), i))
+		require.NoError(t, h.ExecuteLoginPostHook(w, &r, nil, &session.Session{ID: sid, Identity: i}))
 
-		got, err := reg.SessionManager().Get(context.Background(), sid)
+		got, err := reg.SessionManager().GetSession(context.Background(), sid)
 		require.NoError(t, err)
-		assert.Equal(t, sid, got.SID)
+		assert.Equal(t, sid, got.ID)
 	})
 
 	t.Run("method=sign-up", func(t *testing.T) {
@@ -45,11 +45,11 @@ func TestSessionIssuer(t *testing.T) {
 		sid := uuid.New().String()
 
 		i := identity.NewIdentity("")
-		require.NoError(t, reg.IdentityPool().Create(context.Background(), i))
-		require.NoError(t, h.ExecuteRegistrationPostHook(w, &r, nil, &session.Session{SID: sid, Identity: i}))
+		require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), i))
+		require.NoError(t, h.ExecuteRegistrationPostHook(w, &r, nil, &session.Session{ID: sid, Identity: i}))
 
-		got, err := reg.SessionManager().Get(context.Background(), sid)
+		got, err := reg.SessionManager().GetSession(context.Background(), sid)
 		require.NoError(t, err)
-		assert.Equal(t, sid, got.SID)
+		assert.Equal(t, sid, got.ID)
 	})
 }

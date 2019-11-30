@@ -4,8 +4,9 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/ory/x/errorsx"
 	"github.com/pkg/errors"
+
+	"github.com/ory/x/errorsx"
 
 	"github.com/ory/herodot"
 

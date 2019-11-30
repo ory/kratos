@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/julienschmidt/httprouter"
+
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/sqlcon/dockertest"
 
@@ -43,14 +44,14 @@ func TestMain(m *testing.M) {
 
 func fakeIdentity(t *testing.T, reg Registry) *identity.Identity {
 	i := &identity.Identity{
-		ID:x.NewUUID(),
+		ID:              x.NewUUID(),
 		TraitsSchemaURL: "file://./stub/identity.schema.json",
 		Traits:          json.RawMessage(`{}`),
 	}
 
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
 
-	require.NoError(t, reg.IdentityPool().Create(context.Background(), i))
+	require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), i))
 	return i
 }
 
@@ -78,25 +79,25 @@ func TestSessionManager(t *testing.T) {
 
 	for name, sm := range registries {
 		t.Run(fmt.Sprintf("manager=%s", name), func(t *testing.T) {
-			_, err := sm.SessionManager().Get(context.Background(), "does-not-exist")
+			_, err := sm.SessionManager().GetSession(context.Background(), "does-not-exist")
 			require.Error(t, err)
 
 			var gave Session
 			require.NoError(t, faker.FakeData(&gave))
 			gave.Identity = fakeIdentity(t, registries[name])
 
-			require.NoError(t, sm.SessionManager().Create(context.Background(), &gave))
+			require.NoError(t, sm.SessionManager().CreateSession(context.Background(), &gave))
 
-			got, err := sm.SessionManager().Get(context.Background(), gave.SID)
+			got, err := sm.SessionManager().GetSession(context.Background(), gave.ID)
 			require.NoError(t, err)
 			assert.Equal(t, gave.Identity.ID, got.Identity.ID)
-			assert.Equal(t, gave.SID, got.SID)
+			assert.Equal(t, gave.ID, got.ID)
 			assert.EqualValues(t, gave.ExpiresAt.Unix(), got.ExpiresAt.Unix())
 			assert.Equal(t, gave.AuthenticatedAt.Unix(), got.AuthenticatedAt.Unix())
 			assert.Equal(t, gave.IssuedAt.Unix(), got.IssuedAt.Unix())
 
-			require.NoError(t, sm.SessionManager().Delete(context.Background(), gave.SID))
-			_, err = sm.SessionManager().Get(context.Background(), gave.SID)
+			require.NoError(t, sm.SessionManager().DeleteSession(context.Background(), gave.ID))
+			_, err = sm.SessionManager().GetSession(context.Background(), gave.ID)
 			require.Error(t, err)
 		})
 	}
@@ -113,7 +114,7 @@ func TestSessionManagerHTTP(t *testing.T) {
 
 	router := httprouter.New()
 	router.GET("/set", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		require.NoError(t, sm.Create(context.Background(), &s))
+		require.NoError(t, sm.CreateSession(context.Background(), &s))
 		require.NoError(t, sm.SaveToRequest(context.Background(), &s, w, r))
 	})
 

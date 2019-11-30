@@ -20,8 +20,8 @@ var (
 	ErrHookAbortRequest = errors.New("abort hook")
 
 	ErrRequestExpired = herodot.ErrBadRequest.
-		WithError("login request expired").
-		WithReasonf(`The login request has expired. Please restart the flow.`)
+				WithError("login request expired").
+				WithReasonf(`The login request has expired. Please restart the flow.`)
 )
 
 type (
