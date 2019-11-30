@@ -3,6 +3,7 @@ package identity
 import (
 	"database/sql/driver"
 	"encoding/json"
+	"reflect"
 	"sync"
 	"time"
 
@@ -21,7 +22,7 @@ type (
 	//
 	// swagger:model identity
 	Identity struct {
-		l *sync.RWMutex `db:"-"`
+		l *sync.RWMutex `db:"-" faker:"-"`
 
 		// ID is a unique identifier chosen by you. It can be a URN (e.g. "arn:aws:iam::123456789012"),
 		// a stringified integer (e.g. "123456789012"), a uuid (e.g. "9f425a8d-7efc-4768-8f23-7647a74fdf13"). It is up to you
@@ -90,6 +91,33 @@ func (i *Identity) lock() *sync.RWMutex {
 		i.l = new(sync.RWMutex)
 	}
 	return i.l
+}
+
+func (i *Identity) CredentialsEqual(c map[CredentialsType]Credentials) bool {
+	if len(c) != len(i.Credentials) {
+		return false
+	}
+
+	if len(c) == 0 && len(i.Credentials) == 0 {
+		return true
+	}
+
+	for k, expect := range i.Credentials {
+		actual, found := c[k]
+		if !found {
+			return false
+		}
+
+		if string(expect.Config) != string(actual.Config) {
+			return false
+		}
+
+		if !reflect.DeepEqual(expect.Identifiers, actual.Identifiers) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func (i *Identity) SetCredentials(t CredentialsType, c Credentials) {

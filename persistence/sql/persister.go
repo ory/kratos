@@ -9,20 +9,27 @@ import (
 	"github.com/gobuffalo/pop"
 	"github.com/pkg/errors"
 
-	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/persistence"
+	"github.com/ory/kratos/x"
 )
 
 var _ persistence.Persister = new(Persister)
 var migrations = packr.NewBox("../../contrib/sql/migrations")
 
-type Persister struct {
-	c  *pop.Connection
-	mb pop.MigrationBox
-	r  driver.Registry
-	cf configuration.Provider
-}
+type (
+	persisterDependencies interface {
+		identity.ValidationProvider
+		x.LoggingProvider
+	}
+	Persister struct {
+		c  *pop.Connection
+		mb pop.MigrationBox
+		r  persisterDependencies
+		cf configuration.Provider
+	}
+)
 
 func RetryConnect(dsn string) (c *pop.Connection, err error) {
 	bc := backoff.NewExponentialBackOff()
@@ -35,7 +42,7 @@ func RetryConnect(dsn string) (c *pop.Connection, err error) {
 	}, bc)
 }
 
-func NewPersister(r driver.Registry, conf configuration.Provider, c *pop.Connection) (*Persister, error) {
+func NewPersister(r persisterDependencies, conf configuration.Provider, c *pop.Connection) (*Persister, error) {
 	m, err := pop.NewMigrationBox(migrations, c)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -54,4 +61,12 @@ func (p *Persister) MigrateDown(c context.Context, steps int) error {
 
 func (p *Persister) MigrateUp(c context.Context) error {
 	return errors.WithStack(p.mb.Up())
+}
+
+func (p *Persister) Close(c context.Context) error {
+	return errors.WithStack(p.c.Close())
+}
+
+func (p *Persister) Ping(c context.Context) error {
+	return errors.WithStack(p.c.RawQuery("SELECT 1").Exec())
 }

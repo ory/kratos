@@ -22,7 +22,13 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-func MockSetSession(t *testing.T, reg Registry) httprouter.Handle {
+type mockDeps interface {
+	identity.PoolProvider
+	ManagementProvider
+	PersistenceProvider
+}
+
+func MockSetSession(t *testing.T, reg mockDeps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		i := identity.NewIdentity("")
 		require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), i))
@@ -34,7 +40,7 @@ func MockSetSession(t *testing.T, reg Registry) httprouter.Handle {
 	}
 }
 
-func MockGetSession(t *testing.T, reg Registry) httprouter.Handle {
+func MockGetSession(t *testing.T, reg mockDeps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		_, err := reg.SessionManager().FetchFromRequest(r.Context(), w, r)
 		if r.URL.Query().Get("has") == "yes" {
@@ -46,7 +52,7 @@ func MockGetSession(t *testing.T, reg Registry) httprouter.Handle {
 	}
 }
 
-func MockMakeAuthenticatedRequest(t *testing.T, reg Registry, router *httprouter.Router, req *http.Request) ([]byte, *http.Response) {
+func MockMakeAuthenticatedRequest(t *testing.T, reg mockDeps, router *httprouter.Router, req *http.Request) ([]byte, *http.Response) {
 	set := "/" + uuid.New().String() + "/set"
 	router.GET(set, MockSetSession(t, reg))
 
@@ -86,7 +92,7 @@ func MockHydrateCookieClient(t *testing.T, c *http.Client, u string) {
 	require.True(t, found)
 }
 
-func MockSessionCreateHandlerWithIdentity(t *testing.T, reg Registry, i *identity.Identity) (httprouter.Handle, *Session) {
+func MockSessionCreateHandlerWithIdentity(t *testing.T, reg mockDeps, i *identity.Identity) (httprouter.Handle, *Session) {
 	var sess Session
 	require.NoError(t, faker.FakeData(&sess))
 
@@ -100,17 +106,16 @@ func MockSessionCreateHandlerWithIdentity(t *testing.T, reg Registry, i *identit
 	require.NoError(t, err)
 	sess.Identity = inserted
 
-	require.NoError(t, reg.SessionManager().CreateSession(context.Background(), &sess))
-	require.EqualValues(t, inserted.Credentials, i.Credentials)
+	require.NoError(t, reg.SessionPersister().CreateSession(context.Background(), &sess))
+	require.Len(t, inserted.Credentials, len(i.Credentials))
 
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		require.NoError(t, reg.SessionManager().CreateSession(context.Background(), &sess))
 		require.NoError(t, reg.SessionManager().SaveToRequest(context.Background(), &sess, w, r))
 	}, &sess
 
 }
 
-func MockSessionCreateHandler(t *testing.T, reg Registry) (httprouter.Handle, *Session) {
+func MockSessionCreateHandler(t *testing.T, reg mockDeps) (httprouter.Handle, *Session) {
 	return MockSessionCreateHandlerWithIdentity(t, reg, &identity.Identity{
 		ID:              x.NewUUID(),
 		TraitsSchemaURL: "file://./stub/fake-session.schema.json",

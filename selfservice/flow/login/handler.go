@@ -97,7 +97,7 @@ func (h *Handler) initLoginRequest(w http.ResponseWriter, r *http.Request, ps ht
 	if err := h.NewLoginRequest(w, r, func(a *Request) string {
 		return urlx.CopyWithQuery(h.c.LoginURL(), url.Values{"request": {a.ID.String()}}).String()
 	}); err != nil {
-		h.d.ErrorManager().ForwardError(r.Context(), w, r, err)
+		h.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 }

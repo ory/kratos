@@ -31,7 +31,9 @@ func (s Session) TableName() string {
 	return "sessions"
 }
 
-func NewSession(i *identity.Identity, r *http.Request, c Configuration) *Session {
+func NewSession(i *identity.Identity, r *http.Request, c interface {
+	SessionLifespan() time.Duration
+}) *Session {
 	return &Session{
 		ID:        x.NewUUID(),
 		ExpiresAt: time.Now().UTC().Add(c.SessionLifespan()),

@@ -2,7 +2,6 @@ package login_test
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -86,17 +85,17 @@ func TestLoginExecutor(t *testing.T) {
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-				conf, reg := internal.NewMemoryRegistry(t)
+				conf, reg := internal.NewRegistryDefault(t)
 
 				var i identity.Identity
 				require.NoError(t, faker.FakeData(&i))
 				i.TraitsSchemaURL = ""
-				i.Traits = json.RawMessage(`{}`)
+				i.Traits = identity.Traits(`{}`)
 				viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/login.schema.json")
 				require.NoError(t, reg.IdentityPool().CreateIdentity(context.TODO(), &i))
 
 				e := login.NewHookExecutor(reg, conf)
-				err = e.PostLoginHook(nil, &http.Request{}, tc.hooks, nil, &i)
+				err := e.PostLoginHook(nil, &http.Request{}, tc.hooks, nil, &i)
 				if tc.expectErr != nil {
 					require.EqualError(t, err, tc.expectErr.Error())
 					return
@@ -124,7 +123,7 @@ func TestLoginExecutor(t *testing.T) {
 			{reg: &loginExecutorDependenciesMock{preErr: []error{nil}}},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-				conf, _ := internal.NewMemoryRegistry(t)
+				conf, _ := internal.NewRegistryDefault(t)
 				e := login.NewHookExecutor(tc.reg, conf)
 				if tc.expectErr == nil {
 					require.NoError(t, e.PreLoginHook(nil, nil, nil))

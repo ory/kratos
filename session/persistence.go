@@ -6,9 +6,10 @@ import (
 
 	"github.com/bxcodec/faker"
 	"github.com/gofrs/uuid"
-	"github.com/ory/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ory/viper"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"

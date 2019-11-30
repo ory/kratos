@@ -2,7 +2,6 @@ package registration_test
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -30,7 +29,7 @@ type registrationPostHookMock struct {
 func (m *registrationPostHookMock) ExecuteRegistrationPostHook(w http.ResponseWriter, r *http.Request, a *registration.Request, s *session.Session) error {
 	if m.modifyIdentity {
 		i := s.Identity
-		i.Traits = json.RawMessage(`{"foo":"bar"}"`)
+		i.Traits = identity.Traits(`{"foo":"bar"}"`)
 		s.UpdateIdentity(i)
 	}
 	return m.err
@@ -91,17 +90,17 @@ func TestRegistrationExecutor(t *testing.T) {
 					new(registrationPostHookMock),
 					&registrationPostHookMock{modifyIdentity: true},
 				},
-				expectTraits: `{"foo":"bar"}"`,
+				expectTraits: `{"foo":"bar"}`,
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-				conf, reg := internal.NewMemoryRegistry(t)
+				conf, reg := internal.NewRegistryDefault(t)
 				viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://stub/registration.schema.json")
 
 				var i identity.Identity
 				require.NoError(t, faker.FakeData(&i))
 				i.TraitsSchemaURL = ""
-				i.Traits = json.RawMessage("{}")
+				i.Traits = identity.Traits("{}")
 
 				e := registration.NewHookExecutor(reg, conf)
 				err := e.PostRegistrationHook(nil, &http.Request{}, tc.hooks, nil, &i)
@@ -134,7 +133,7 @@ func TestRegistrationExecutor(t *testing.T) {
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-				conf, _ := internal.NewMemoryRegistry(t)
+				conf, _ := internal.NewRegistryDefault(t)
 				e := registration.NewHookExecutor(tc.reg, conf)
 				if tc.expectErr == nil {
 					require.NoError(t, e.PreRegistrationHook(nil, nil, nil))

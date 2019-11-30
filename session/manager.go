@@ -19,8 +19,6 @@ var (
 
 // Manager handles identity sessions.
 type Manager interface {
-	Persister
-
 	CreateToRequest(context.Context, *identity.Identity, http.ResponseWriter, *http.Request) (*Session, error)
 
 	// SaveToRequest creates an HTTP session using cookies.

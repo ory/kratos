@@ -40,7 +40,7 @@ func fieldNameSet(t *testing.T, body []byte, fields ...string) {
 
 func TestRegistration(t *testing.T) {
 	t.Run("case=registration", func(t *testing.T) {
-		_, reg := internal.NewMemoryRegistry(t)
+		_, reg := internal.NewRegistryDefault(t)
 		s := reg.RegistrationStrategies().MustStrategy(identity.CredentialsTypePassword).(*password.Strategy)
 		s.WithTokenGenerator(func(r *http.Request) string {
 			return "nosurf"
@@ -268,7 +268,7 @@ func TestRegistration(t *testing.T) {
 	})
 
 	t.Run("method=PopulateSignUpMethod", func(t *testing.T) {
-		_, reg := internal.NewMemoryRegistry(t)
+		_, reg := internal.NewRegistryDefault(t)
 		s := reg.RegistrationStrategies().MustStrategy(identity.CredentialsTypePassword).(*password.Strategy)
 		s.WithTokenGenerator(func(r *http.Request) string {
 			return "nosurf"

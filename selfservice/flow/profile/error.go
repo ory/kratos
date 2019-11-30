@@ -58,7 +58,7 @@ func (s *ErrorHandler) HandleProfileManagementError(
 		Warn("Encountered profile management error.")
 
 	if rr == nil {
-		s.d.ErrorManager().ForwardError(r.Context(), w, r, err)
+		s.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	} else if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, err)
@@ -66,12 +66,12 @@ func (s *ErrorHandler) HandleProfileManagementError(
 	}
 
 	if err := rr.Form.ParseError(err); err != nil {
-		s.d.ErrorManager().ForwardError(r.Context(), w, r, err)
+		s.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 
 	if err := s.d.ProfileRequestPersister().UpdateProfileRequest(r.Context(), rr); err != nil {
-		s.d.ErrorManager().ForwardError(r.Context(), w, r, err)
+		s.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 

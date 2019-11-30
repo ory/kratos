@@ -3,8 +3,12 @@ package registration
 import (
 	"net/http"
 
+	"github.com/ory/x/errorsx"
+	"github.com/ory/x/sqlcon"
+
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
@@ -57,6 +61,9 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		// We're now creating the identity because any of the hooks could trigger a "redirect" or a "session" which
 		// would imply that the identity has to exist already.
 	} else if err := e.d.IdentityPool().CreateIdentity(r.Context(), s.Identity); err != nil {
+		if errorsx.Cause(err) == sqlcon.ErrUniqueViolation {
+			return schema.NewDuplicateCredentialsError()
+		}
 		return err
 	}
 

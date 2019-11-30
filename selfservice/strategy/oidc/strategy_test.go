@@ -115,7 +115,7 @@ func TestStrategy(t *testing.T) {
 		remoteAdmin = "http://127.0.0.1:" + hydra.GetPort("4445/tcp")
 	}
 
-	_, reg := internal.NewMemoryRegistry(t)
+	_, reg := internal.NewRegistryDefault(t)
 	for _, strategy := range reg.LoginStrategies() {
 		// We need to replace the password strategy token generator because it is being used by the error handler...
 		strategy.(withTokenGenerator).WithTokenGenerator(func(r *http.Request) string {
@@ -240,6 +240,14 @@ func TestStrategy(t *testing.T) {
 		assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), reason, "%s", body)
 	}
 
+	// assert system error (redirect to error endpoint)
+	var asem = func(t *testing.T, res *http.Response, body []byte, code int, reason string) {
+		require.Contains(t, res.Request.URL.String(), errTS.URL, "%s", body)
+
+		assert.Equal(t, int64(code), gjson.GetBytes(body, "0.code").Int(), "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "0.message").String(), reason, "%s", body)
+	}
+
 	// assert ui error (redirect to login/registration ui endpoint)
 	var aue = func(t *testing.T, res *http.Response, body []byte, reason string) {
 		require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
@@ -303,7 +311,7 @@ func TestStrategy(t *testing.T) {
 	t.Run("case=should fail because request does not exist", func(t *testing.T) {
 		requestDoesNotExist := x.NewUUID()
 		res, body := mr(t, "valid", requestDoesNotExist, url.Values{})
-		ase(t, res, body, http.StatusNotFound, "Unable to find request")
+		asem(t, res, body, http.StatusNotFound, "Unable to locate the resource")
 	})
 
 	t.Run("case=should fail because the login request is expired", func(t *testing.T) {
@@ -419,7 +427,7 @@ func TestStrategy(t *testing.T) {
 			i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
 				Identifiers: []string{subject},
 			})
-			i.Traits = json.RawMessage(`{"subject":"` + subject + `"}`)
+			i.Traits = identity.Traits(`{"subject":"` + subject + `"}`)
 
 			require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), i))
 		})

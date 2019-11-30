@@ -1,7 +1,6 @@
 package identity_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -51,7 +50,7 @@ func TestSchemaValidator(t *testing.T) {
 	ts := httptest.NewServer(router)
 	defer ts.Close()
 
-	conf, _ := internal.NewMemoryRegistry(t)
+	conf, _ := internal.NewRegistryDefault(t)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, ts.URL+"/schema/firstName")
 	v := NewValidator(conf)
 
@@ -61,45 +60,45 @@ func TestSchemaValidator(t *testing.T) {
 	}{
 		{
 			i: &Identity{
-				Traits: json.RawMessage(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
+				Traits: Traits(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
 			},
 		},
 		{
 			i: &Identity{
-				Traits: json.RawMessage(`{ "firstName": "first-name", "lastName": "last-name", "age": -1 }`),
+				Traits: Traits(`{ "firstName": "first-name", "lastName": "last-name", "age": -1 }`),
 			},
 			err: "must be greater than or equal to 1",
 		},
 		{
 			i: &Identity{
-				Traits: json.RawMessage(`{ "whatever": "first-name", "lastName": "last-name", "age": 1 }`),
+				Traits: Traits(`{ "whatever": "first-name", "lastName": "last-name", "age": 1 }`),
 			},
 			err: "additional property whatever is not allowed",
 		},
 		{
 			i: &Identity{
 				TraitsSchemaURL: ts.URL + "/schema/whatever",
-				Traits:          json.RawMessage(`{ "whatever": "first-name", "lastName": "last-name", "age": 1 }`),
+				Traits:          Traits(`{ "whatever": "first-name", "lastName": "last-name", "age": 1 }`),
 			},
 		},
 		{
 			i: &Identity{
 				TraitsSchemaURL: ts.URL + "/schema/whatever",
-				Traits:          json.RawMessage(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
+				Traits:          Traits(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
 			},
 			err: "additional property firstName is not allowed",
 		},
 		{
 			i: &Identity{
 				TraitsSchemaURL: ts.URL,
-				Traits:          json.RawMessage(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
+				Traits:          Traits(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
 			},
 			err: "An internal server error occurred, please contact the system administrator",
 		},
 		{
 			i: &Identity{
 				TraitsSchemaURL: "not-a-url",
-				Traits:          json.RawMessage(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
+				Traits:          Traits(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
 			},
 			err: "An internal server error occurred, please contact the system administrator",
 		},

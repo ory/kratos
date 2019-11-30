@@ -3,29 +3,36 @@ package session
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/securecookie"
-	"github.com/ory/herodot"
 	"github.com/pkg/errors"
+
+	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/x"
 )
 
-type managerHTTPDependencies interface {
-	PersistenceProvider
-	x.CookieProvider
-	identity.PoolProvider
-}
-
-type ManagerHTTP struct {
-	c          Configuration
-	cookieName string
-	r          managerHTTPDependencies
-}
+type (
+	managerHTTPDependencies interface {
+		PersistenceProvider
+		x.CookieProvider
+		identity.PoolProvider
+	}
+	managerHTTPConfiguration interface {
+		SessionLifespan() time.Duration
+		SessionSecrets() [][]byte
+	}
+	ManagerHTTP struct {
+		c          managerHTTPConfiguration
+		cookieName string
+		r          managerHTTPDependencies
+	}
+)
 
 func NewManagerHTTP(
-	c Configuration,
+	c managerHTTPConfiguration,
 	r managerHTTPDependencies,
 ) *ManagerHTTP {
 	return &ManagerHTTP{

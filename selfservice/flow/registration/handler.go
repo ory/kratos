@@ -98,7 +98,7 @@ func (h *Handler) initRegistrationRequest(w http.ResponseWriter, r *http.Request
 	if err := h.NewRegistrationRequest(w, r, func(a *Request) string {
 		return urlx.CopyWithQuery(h.c.RegisterURL(), url.Values{"request": {a.ID.String()}}).String()
 	}); err != nil {
-		h.d.ErrorManager().ForwardError(r.Context(), w, r, err)
+		h.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 }

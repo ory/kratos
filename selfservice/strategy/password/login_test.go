@@ -147,7 +147,7 @@ func TestLogin(t *testing.T) {
 
 				assert.Equal(t, int64(http.StatusNotFound), gjson.GetBytes(body, "0.code").Int(), "%s", body)
 				assert.Equal(t, "Not Found", gjson.GetBytes(body, "0.status").String(), "%s", body)
-				assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "Unable to find request", "%s", body)
+				assert.Contains(t, gjson.GetBytes(body, "0.message").String(), "Unable to locate the resource", "%s", body)
 			},
 		},
 		{
@@ -234,9 +234,9 @@ func TestLogin(t *testing.T) {
 			ar: nlr(time.Hour),
 			prep: func(t *testing.T, r loginStrategyDependencies) {
 				p, _ := r.PasswordHasher().Generate([]byte("password"))
-				_, err := r.IdentityPool().CreateIdentity(context.Background(), &identity.Identity{
+				require.NoError(t, r.IdentityPool().CreateIdentity(context.Background(), &identity.Identity{
 					ID:     x.NewUUID(),
-					Traits: json.RawMessage(`{}`),
+					Traits: identity.Traits(`{}`),
 					Credentials: map[identity.CredentialsType]identity.Credentials{
 						identity.CredentialsTypePassword: {
 							Type:        identity.CredentialsTypePassword,
@@ -244,8 +244,7 @@ func TestLogin(t *testing.T) {
 							Config:      json.RawMessage(`{"hashed_password":"` + string(p) + `"}`),
 						},
 					},
-				})
-				require.NoError(t, err)
+				}))
 			},
 			payload: url.Values{
 				"identifier": {"login-identifier-6"},
@@ -270,9 +269,9 @@ func TestLogin(t *testing.T) {
 			ar: nlr(time.Hour),
 			prep: func(t *testing.T, r loginStrategyDependencies) {
 				p, _ := r.PasswordHasher().Generate([]byte("password"))
-				_, err := r.IdentityPool().CreateIdentity(context.Background(), &identity.Identity{
+				require.NoError(t, r.IdentityPool().CreateIdentity(context.Background(), &identity.Identity{
 					ID:     x.NewUUID(),
-					Traits: json.RawMessage(`{"subject":"login-identifier-7"}`),
+					Traits: identity.Traits(`{"subject":"login-identifier-7"}`),
 					Credentials: map[identity.CredentialsType]identity.Credentials{
 						identity.CredentialsTypePassword: {
 							Type:        identity.CredentialsTypePassword,
@@ -280,8 +279,7 @@ func TestLogin(t *testing.T) {
 							Config:      json.RawMessage(`{"hashed_password":"` + string(p) + `"}`),
 						},
 					},
-				})
-				require.NoError(t, err)
+				}))
 			},
 			payload: url.Values{
 				"identifier": {"login-identifier-7"},
@@ -347,7 +345,7 @@ func TestLogin(t *testing.T) {
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d/description=%s", k, tc.d), func(t *testing.T) {
-			_, reg := internal.NewMemoryRegistry(t)
+			_, reg := internal.NewRegistryDefault(t)
 			s := reg.LoginStrategies().MustStrategy(identity.CredentialsTypePassword).(*password.Strategy)
 			s.WithTokenGenerator(func(r *http.Request) string {
 				return "anti-rf-token"

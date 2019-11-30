@@ -3,6 +3,7 @@ package identity
 import (
 	"net/http"
 
+	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
@@ -77,6 +78,9 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, ps httprouter.P
 
 	// We do not allow setting credentials using this method
 	i.Credentials = nil
+	// We do not allow setting the ID using this method
+	i.ID = uuid.Nil
+
 	err := h.r.IdentityPool().CreateIdentity(r.Context(), &i)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)

@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"reflect"
 	"strings"
 
 	"github.com/gobuffalo/pop"
@@ -36,8 +35,8 @@ func (p *Persister) FindByCredentialsIdentifier(ctx context.Context, ct identity
 FROM identity_credentials ic
          INNER JOIN identity_credential_types ict on ic.identity_credential_type_id = ict.id
          INNER JOIN identity_credential_identifiers ici on ic.id = ici.identity_credential_id
-WHERE ici.identifier = 'find-credentials-identifier@ory.sh'
-  AND ict.name = 'password'`, match, ct).First(&find); err != nil {
+WHERE ici.identifier = ?
+  AND ict.name = ?`, match, ct).First(&find); err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, nil, herodot.ErrNotFound.WithTrace(err).WithReasonf(`No identity matching credentials identifier "%s" could be found.`, match)
 		}
@@ -88,7 +87,7 @@ func createIdentityCredentials(ctx context.Context, tx *pop.Connection, i *ident
 
 		cred.CredentialTypeID = ct.ID
 		if err := tx.Create(&cred); err != nil {
-			return sqlcon.HandleError(err)
+			return err
 		}
 
 		for _, ids := range cred.Identifiers {
@@ -101,7 +100,7 @@ func createIdentityCredentials(ctx context.Context, tx *pop.Connection, i *ident
 				IdentityCredentialsID: cred.ID,
 			}
 			if err := tx.Create(ci); err != nil {
-				return sqlcon.HandleError(err)
+				return err
 			}
 		}
 
@@ -126,7 +125,7 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 
 	return sqlcon.HandleError(p.c.Transaction(func(tx *pop.Connection) error {
 		if err := tx.Create(i); err != nil {
-			return sqlcon.HandleError(err)
+			return err
 		}
 
 		return createIdentityCredentials(ctx, tx, i)
@@ -134,7 +133,7 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 }
 
 func (p *Persister) ListIdentities(ctx context.Context, limit, offset int) ([]identity.Identity, error) {
-	var is []identity.Identity
+	is := make([]identity.Identity, 0)
 	return is, sqlcon.HandleError(p.c.RawQuery("SELECT * FROM identities LIMIT ? OFFSET ?", limit, offset).All(&is))
 }
 
@@ -145,11 +144,11 @@ func (p *Persister) UpdateIdentityConfidential(ctx context.Context, i *identity.
 
 	return sqlcon.HandleError(p.c.Transaction(func(tx *pop.Connection) error {
 		if err := tx.RawQuery(`DELETE FROM "identity_credentials" WHERE "identity_id" = ?`, i.ID).Exec(); err != nil {
-			return sqlcon.HandleError(err)
+			return err
 		}
 
 		if err := tx.Update(i); err != nil {
-			return sqlcon.HandleError(err)
+			return err
 		}
 
 		return createIdentityCredentials(ctx, tx, i)
@@ -170,7 +169,17 @@ func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) er
 	// the identity has been authenticated in that request:
 	//
 	// - https://security.stackexchange.com/questions/24291/why-do-we-ask-for-a-users-existing-password-when-changing-their-password
-	if !reflect.DeepEqual(fs.Credentials, i.Credentials) {
+	if !i.CredentialsEqual(fs.Credentials) {
+
+		// !! WARNING !!
+		//
+		// This will leak the credential options which may include the hashed password. Do not use seriously:
+		//
+		//	p.r.Logger().
+		//	 	WithField("original_credentials", fmt.Sprintf("%+v", fs.Credentials)).
+		//	 	WithField("updated_credentials", fmt.Sprintf("%+v", i.Credentials)).
+		//	 	Trace("Credentials changed unexpectedly in UpdateIdentity.")
+
 		return errors.WithStack(
 			herodot.ErrInternalServerError.
 				WithReasonf(`A field was modified that updates one or more credentials-related settings. This action was blocked because a unprivileged DBAL method was used to execute the update. This is either a configuration issue, or a bug.`))
@@ -180,7 +189,14 @@ func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) er
 }
 
 func (p *Persister) DeleteIdentity(_ context.Context, id uuid.UUID) error {
-	return sqlcon.HandleError(p.c.Destroy(&identity.Identity{ID: id}))
+	count, err := p.c.RawQuery("DELETE FROM identities WHERE id = ?", id).ExecWithCount()
+	if err != nil {
+		return sqlcon.HandleError(err)
+	}
+	if count == 0 {
+		return sqlcon.ErrNoRows
+	}
+	return nil
 }
 
 func (p *Persister) GetIdentity(_ context.Context, id uuid.UUID) (*identity.Identity, error) {

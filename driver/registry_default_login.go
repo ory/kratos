@@ -5,18 +5,18 @@ import (
 	"github.com/ory/kratos/selfservice/flow/login"
 )
 
-func (m *RegistryAbstract) LoginHookExecutor() *login.HookExecutor {
+func (m *RegistryDefault) LoginHookExecutor() *login.HookExecutor {
 	if m.selfserviceLoginExecutor == nil {
-		m.selfserviceLoginExecutor = login.NewHookExecutor(m.r, m.c)
+		m.selfserviceLoginExecutor = login.NewHookExecutor(m, m.c)
 	}
 	return m.selfserviceLoginExecutor
 }
 
-func (m *RegistryAbstract) PreLoginHooks() []login.PreHookExecutor {
+func (m *RegistryDefault) PreLoginHooks() []login.PreHookExecutor {
 	return []login.PreHookExecutor{}
 }
 
-func (m *RegistryAbstract) PostLoginHooks(credentialsType identity.CredentialsType) []login.PostHookExecutor {
+func (m *RegistryDefault) PostLoginHooks(credentialsType identity.CredentialsType) []login.PostHookExecutor {
 	a := m.hooksPost(credentialsType, m.c.SelfServiceLoginAfterHooks(string(credentialsType)))
 	b := make([]login.PostHookExecutor, len(a))
 	for k, v := range a {
@@ -25,17 +25,17 @@ func (m *RegistryAbstract) PostLoginHooks(credentialsType identity.CredentialsTy
 	return b
 }
 
-func (m *RegistryAbstract) LoginHandler() *login.Handler {
+func (m *RegistryDefault) LoginHandler() *login.Handler {
 	if m.selfserviceLoginHandler == nil {
-		m.selfserviceLoginHandler = login.NewHandler(m.r, m.c)
+		m.selfserviceLoginHandler = login.NewHandler(m, m.c)
 	}
 
 	return m.selfserviceLoginHandler
 }
 
-func (m *RegistryAbstract) LoginRequestErrorHandler() *login.ErrorHandler {
+func (m *RegistryDefault) LoginRequestErrorHandler() *login.ErrorHandler {
 	if m.selfserviceLoginRequestErrorHandler == nil {
-		m.selfserviceLoginRequestErrorHandler = login.NewErrorHandler(m.r, m.c)
+		m.selfserviceLoginRequestErrorHandler = login.NewErrorHandler(m, m.c)
 	}
 
 	return m.selfserviceLoginRequestErrorHandler

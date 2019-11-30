@@ -6,13 +6,10 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 
-	"github.com/cenkalti/backoff"
 	"github.com/gobuffalo/pop"
 	"github.com/gobuffalo/pop/logging"
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
 
 	"github.com/ory/x/sqlcon/dockertest"
 
@@ -21,7 +18,6 @@ import (
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/persistence/sql"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/profile"
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -71,35 +67,16 @@ func pl(t *testing.T) func(lvl logging.Level, s string, args ...interface{}) {
 }
 
 func TestPersister(t *testing.T) {
-	t.Logf("%s", sqlite)
-
-	conf, reg := internal.NewMemoryRegistry(t)
 
 	for name, dsn := range map[string]string{
 		"sqlite": sqlite,
 		// "postgres": dockertest.RunTestPostgreSQL(t),
 	} {
 		t.Run("database="+name, func(t *testing.T) {
-			var c *pop.Connection
-			var err error
+			_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
+			p := reg.Persister()
 
-			bc := backoff.NewExponentialBackOff()
-			bc.MaxElapsedTime = time.Minute / 2
-			bc.Reset()
-			require.NoError(t, backoff.Retry(func() (err error) {
-				c, err = pop.NewConnection(&pop.ConnectionDetails{
-					URL: dsn,
-				})
-				if err != nil {
-					t.Logf("Unable to connect to database: %+v", err)
-					return errors.WithStack(err)
-				}
-				return c.Open()
-			}, bc))
-
-			p, err := sql.NewPersister(reg, conf, c)
-			require.NoError(t, err)
-			defer c.Close()
+			defer p.Close(context.Background())
 
 			pop.SetLogger(pl(t))
 			require.NoError(t, p.MigrationStatus(context.Background()))

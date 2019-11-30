@@ -8,6 +8,7 @@ import (
 
 	"github.com/ory/x/healthx"
 
+	"github.com/ory/kratos/persistence"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/logout"
 	"github.com/ory/kratos/selfservice/flow/profile"
@@ -45,8 +46,11 @@ type Registry interface {
 	x.WriterProvider
 	x.LoggingProvider
 
+	persistence.Provider
+
 	errorx.ManagementProvider
 	errorx.HandlerProvider
+	errorx.PersistenceProvider
 
 	identity.HandlerProvider
 	identity.ValidationProvider
@@ -57,6 +61,7 @@ type Registry interface {
 
 	session.HandlerProvider
 	session.ManagementProvider
+	session.PersistenceProvider
 
 	profile.HandlerProvider
 	profile.ErrorHandlerProvider

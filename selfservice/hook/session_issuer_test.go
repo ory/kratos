@@ -6,7 +6,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -17,10 +16,11 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/x"
 )
 
 func TestSessionIssuer(t *testing.T) {
-	_, reg := internal.NewMemoryRegistry(t)
+	_, reg := internal.NewRegistryDefault(t)
 	viper.Set(configuration.ViperKeyURLsSelfPublic, "http://localhost/")
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/stub.schema.json")
 
@@ -29,26 +29,26 @@ func TestSessionIssuer(t *testing.T) {
 
 	t.Run("method=sign-in", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		sid := uuid.New().String()
+		sid := x.NewUUID()
 
 		i := identity.NewIdentity("")
 		require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), i))
 		require.NoError(t, h.ExecuteLoginPostHook(w, &r, nil, &session.Session{ID: sid, Identity: i}))
 
-		got, err := reg.SessionManager().GetSession(context.Background(), sid)
+		got, err := reg.SessionPersister().GetSession(context.Background(), sid)
 		require.NoError(t, err)
 		assert.Equal(t, sid, got.ID)
 	})
 
 	t.Run("method=sign-up", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		sid := uuid.New().String()
+		sid := x.NewUUID()
 
 		i := identity.NewIdentity("")
 		require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), i))
 		require.NoError(t, h.ExecuteRegistrationPostHook(w, &r, nil, &session.Session{ID: sid, Identity: i}))
 
-		got, err := reg.SessionManager().GetSession(context.Background(), sid)
+		got, err := reg.SessionPersister().GetSession(context.Background(), sid)
 		require.NoError(t, err)
 		assert.Equal(t, sid, got.ID)
 	})

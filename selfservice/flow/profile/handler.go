@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
-	"reflect"
 
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
@@ -34,6 +33,7 @@ type (
 	handlerDependencies interface {
 		x.CSRFProvider
 		x.WriterProvider
+		x.LoggingProvider
 
 		session.HandlerProvider
 		session.ManagementProvider
@@ -87,14 +87,14 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 func (h *Handler) initUpdateProfile(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.d.SessionManager().FetchFromRequest(r.Context(), w, r)
 	if err != nil {
-		h.d.ErrorManager().ForwardError(r.Context(), w, r, err)
+		h.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 
 	a := NewRequest(h.c.SelfServiceProfileRequestLifespan(), r, s)
 	a.Form = form.NewHTMLFormFromJSON(urlx.AppendPaths(h.c.SelfPublicURL(), BrowserProfilePath).String(), json.RawMessage(s.Identity.Traits), "traits")
 	if err := h.d.ProfileRequestPersister().CreateProfileRequest(r.Context(), a); err != nil {
-		h.d.ErrorManager().ForwardError(r.Context(), w, r, err)
+		h.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 
@@ -307,7 +307,17 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 	}
 
 	// Check if any credentials-related field changed.
-	if !reflect.DeepEqual(creds.Credentials, i.Credentials) {
+	if !i.CredentialsEqual(creds.Credentials) {
+
+		// !! WARNING !!
+		//
+		// This will leak the credential options which may include the hashed password. Do not use seriously:
+		//
+		//	h.d.Logger().
+		//	 	WithField("original_credentials", fmt.Sprintf("%+v", creds.Credentials)).
+		//	 	WithField("updated_credentials", fmt.Sprintf("%+v", i.Credentials)).
+		//	 	Trace("Credentials changed unexpectedly in CompleteProfileManagementFlow.")
+
 		h.handleProfileManagementError(w, r, ar, i.Traits,
 			errors.WithStack(
 				herodot.ErrInternalServerError.

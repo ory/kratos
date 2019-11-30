@@ -1,12 +1,12 @@
 package internal
 
 import (
+	"context"
+	"os"
+	"path/filepath"
 	"testing"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
-
-	"github.com/ory/x/dbal"
 
 	"github.com/ory/viper"
 
@@ -14,12 +14,13 @@ import (
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/x"
 )
 
 func resetConfig() {
 	viper.Set(configuration.ViperKeyDSN, nil)
 
-	viper.Set("LOG_LEVEL", "debug")
+	viper.Set("LOG_LEVEL", "trace")
 	viper.Set(configuration.ViperKeyHasherArgon2ConfigMemory, 64)
 	viper.Set(configuration.ViperKeyHasherArgon2ConfigIterations, 1)
 	viper.Set(configuration.ViperKeyHasherArgon2ConfigParallelism, 1)
@@ -33,22 +34,25 @@ func NewConfigurationWithDefaults() *configuration.ViperProvider {
 	return configuration.NewViperProvider(logrusx.New())
 }
 
-func NewMemoryRegistry(t *testing.T) (*configuration.ViperProvider, *driver.RegistryMemory) {
-	conf := NewConfigurationWithDefaults()
-	viper.Set(configuration.ViperKeyDSN, "memory")
-
-	reg, err := driver.NewRegistry(conf)
-	require.NoError(t, err)
-	return conf, reg.WithConfig(conf).(*driver.RegistryMemory)
+func NewRegistryDefault(t *testing.T) (*configuration.ViperProvider, *driver.RegistryDefault) {
+	conf, reg := NewRegistryDefaultWithDSN(t, "sqlite3://"+filepath.Join(os.TempDir(), x.NewUUID().String())+".sql?mode=memory&_fk=true")
+	require.NoError(t, reg.Persister().MigrateUp(context.Background()))
+	return conf, reg
 }
 
-func NewRegistrySQL(t *testing.T, db *sqlx.DB) (*configuration.ViperProvider, *driver.RegistrySQL) {
-	viper.Set("LOG_LEVEL", "debug")
-	conf := NewConfigurationWithDefaults()
-	driver.SQLPurgeTestDatabase(t, db)
-	registry := driver.NewRegistrySQL().WithConfig(conf).(*driver.RegistrySQL).WithDB(db).(*driver.RegistrySQL)
-	count, err := registry.CreateSchemas(dbal.DriverPostgreSQL)
+func NewRegistryDefaultWithDSN(t *testing.T, dsn string) (*configuration.ViperProvider, *driver.RegistryDefault) {
+	viper.Reset()
+	resetConfig()
+
+	viper.Set(configuration.ViperKeyDSN, "sqlite3://"+filepath.Join(os.TempDir(), x.NewUUID().String())+".sql?mode=memory&_fk=true")
+	if dsn != "" {
+		viper.Set(configuration.ViperKeyDSN, dsn)
+	}
+
+	d, err := driver.NewDefaultDriver(logrusx.New(), "test", "test", "test")
 	require.NoError(t, err)
-	require.True(t, count > 0, "Applied %d migrations but expected more", count)
-	return conf, registry
+
+	require.NoError(t, err)
+	require.NoError(t, d.Registry().Init())
+	return d.Configuration().(*configuration.ViperProvider), d.Registry().(*driver.RegistryDefault)
 }

@@ -14,28 +14,30 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-type HandlerProvider interface {
-	SessionHandler() *Handler
-}
+type (
+	handlerDependencies interface {
+		ManagementProvider
+		x.WriterProvider
+	}
+	HandlerProvider interface {
+		SessionHandler() *Handler
+	}
+	Handler struct {
+		r handlerDependencies
+	}
+)
 
 func NewHandler(
-	r Registry,
-	h herodot.Writer,
+	r handlerDependencies,
 ) *Handler {
 	return &Handler{
 		r: r,
-		h: h,
 	}
 }
 
 const (
 	CheckPath = "/sessions/me"
 )
-
-type Handler struct {
-	r Registry
-	h herodot.Writer
-}
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.GET(CheckPath, h.fromCookie)
@@ -48,14 +50,14 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 func (h *Handler) fromCookie(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), w, r)
 	if err != nil {
-		h.h.WriteError(w, r, err)
+		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
 	// s.Devices = nil
 	s.Identity = s.Identity.CopyWithoutCredentials()
 
-	h.h.Write(w, r, s)
+	h.r.Writer().Write(w, r, s)
 }
 
 func (h *Handler) fromPath(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -70,7 +72,7 @@ func (h *Handler) IsAuthenticated(wrap httprouter.Handle, onUnauthenticated http
 				return
 			}
 
-			h.h.WriteError(w, r, errors.WithStack(herodot.ErrForbidden.WithReason("This endpoint can only be accessed with a valid session. Please log in and try again.").WithDebugf("%+v", err)))
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden.WithReason("This endpoint can only be accessed with a valid session. Please log in and try again.").WithDebugf("%+v", err)))
 			return
 		}
 
@@ -85,7 +87,7 @@ func (h *Handler) IsNotAuthenticated(wrap httprouter.Handle, onAuthenticated htt
 				wrap(w, r, ps)
 				return
 			}
-			h.h.WriteError(w, r, err)
+			h.r.Writer().WriteError(w, r, err)
 			return
 		}
 
@@ -94,7 +96,7 @@ func (h *Handler) IsNotAuthenticated(wrap httprouter.Handle, onAuthenticated htt
 			return
 		}
 
-		h.h.WriteError(w, r, errors.WithStack(herodot.ErrForbidden.WithReason("This endpoint can only be accessed without a login session. Please log out and try again.")))
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden.WithReason("This endpoint can only be accessed without a login session. Please log out and try again.")))
 	}
 }
 

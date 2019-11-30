@@ -21,7 +21,7 @@ import (
 )
 
 func TestHandler(t *testing.T) {
-	_, reg := internal.NewMemoryRegistry(t)
+	_, reg := internal.NewRegistryDefault(t)
 	router := x.NewRouterAdmin()
 	reg.IdentityHandler().RegisterAdminRoutes(router)
 	ts := httptest.NewServer(router)
@@ -69,7 +69,7 @@ func TestHandler(t *testing.T) {
 
 	t.Run("case=should return an empty list", func(t *testing.T) {
 		parsed := get(t, "/identities", http.StatusOK)
-		require.True(t, parsed.IsArray())
+		require.True(t, parsed.IsArray(), "%s", parsed.Raw)
 		assert.Len(t, parsed.Array(), 0)
 	})
 
@@ -86,48 +86,49 @@ func TestHandler(t *testing.T) {
 
 	t.Run("case=should fail to create an entity because schema is not validating", func(t *testing.T) {
 		var i identity.Identity
-		i.Traits = json.RawMessage(`{"bar":123}`)
+		i.Traits = identity.Traits(`{"bar":123}`)
 		res := send(t, "POST", "/identities", http.StatusBadRequest, &i)
 		assert.Contains(t, res.Get("error.reason").String(), "invalid type")
 	})
 
 	t.Run("case=should create an identity without an ID", func(t *testing.T) {
 		var i identity.Identity
-		i.Traits = json.RawMessage(`{"bar":"baz"}`)
+		i.Traits = identity.Traits(`{"bar":"baz"}`)
 		res := send(t, "POST", "/identities", http.StatusCreated, &i)
 		assert.NotEmpty(t, res.Get("id").String(), "%s", res.Raw)
 		assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
 		assert.Empty(t, res.Get("credentials").String(), "%s", res.Raw)
 	})
 
-	t.Run("case=should create an identity with an ID", func(t *testing.T) {
-		var i identity.Identity
-		// i.ID = "exists"
-		i.Traits = json.RawMessage(`{"bar":"baz"}`)
+	var i identity.Identity
+	t.Run("case=should create an identity with an ID which is ignored", func(t *testing.T) {
+		i.ID = x.NewUUID()
+		i.Traits = identity.Traits(`{"bar":"baz"}`)
 		res := send(t, "POST", "/identities", http.StatusCreated, &i)
-		assert.EqualValues(t, "exists", res.Get("id").String(), "%s", res.Raw)
+		assert.NotEqual(t, i.ID.String(), res.Get("id").String(), "%s", res.Raw)
+
+		i.ID = x.ParseUUID(res.Get("id").String())
 		assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
 		assert.Empty(t, res.Get("credentials").String(), "%s", res.Raw)
 		assert.EqualValues(t, viper.GetString(configuration.ViperKeyDefaultIdentityTraitsSchemaURL), res.Get("traits_schema_url").String(), "%s", res.Raw)
 	})
 
 	t.Run("case=should be able to get the identity", func(t *testing.T) {
-		res := get(t, "/identities/exists", http.StatusOK)
-		assert.EqualValues(t, "exists", res.Get("id").String(), "%s", res.Raw)
+		res := get(t, "/identities/"+i.ID.String(), http.StatusOK)
+		assert.EqualValues(t, i.ID.String(), res.Get("id").String(), "%s", res.Raw)
 		assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
 		assert.EqualValues(t, viper.GetString(configuration.ViperKeyDefaultIdentityTraitsSchemaURL), res.Get("traits_schema_url").String(), "%s", res.Raw)
 		assert.Empty(t, res.Get("credentials").String(), "%s", res.Raw)
 	})
 
 	t.Run("case=should update an identity and persist the changes", func(t *testing.T) {
-		var i identity.Identity
-		i.Traits = json.RawMessage(`{"bar":"baz","foo":"baz"}`)
-		res := send(t, "PUT", "/identities/exists", http.StatusOK, &i)
+		i.Traits = identity.Traits(`{"bar":"baz","foo":"baz"}`)
+		res := send(t, "PUT", "/identities/"+i.ID.String(), http.StatusOK, &i)
 		assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
 		assert.EqualValues(t, "baz", res.Get("traits.foo").String(), "%s", res.Raw)
 
-		res = get(t, "/identities/exists", http.StatusOK)
-		assert.EqualValues(t, "exists", res.Get("id").String(), "%s", res.Raw)
+		res = get(t, "/identities/"+i.ID.String(), http.StatusOK)
+		assert.EqualValues(t, i.ID.String(), res.Get("id").String(), "%s", res.Raw)
 		assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
 	})
 
@@ -140,17 +141,17 @@ func TestHandler(t *testing.T) {
 	t.Run("case=should not be able to update an identity that does not exist yet", func(t *testing.T) {
 		var i identity.Identity
 		i.ID = x.NewUUID()
-		i.Traits = json.RawMessage(`{"bar":"baz"}`)
+		i.Traits = identity.Traits(`{"bar":"baz"}`)
 		res := send(t, "PUT", "/identities/"+i.ID.String(), http.StatusNotFound, &i)
-		assert.Contains(t, res.Get("error.reason").String(), "does not exist")
+		assert.Contains(t, res.Get("error.message").String(), "Unable to locate the resource", "%s", res.Raw)
 	})
 
 	t.Run("case=should delete a client and no longer be able to retrieve it", func(t *testing.T) {
-		remove(t, "/identities/exists", http.StatusNoContent)
-		_ = get(t, "/identities/exists", http.StatusNotFound)
+		remove(t, "/identities/"+i.ID.String(), http.StatusNoContent)
+		_ = get(t, "/identities/"+i.ID.String(), http.StatusNotFound)
 	})
 
-	t.Run("case=should return 404 for non-existing clients", func(t *testing.T) {
-		remove(t, "/identities/does-not-exist", http.StatusNotFound)
+	t.Run("case=should return 404 for non-existing identities", func(t *testing.T) {
+		remove(t, "/identities/"+x.NewUUID().String(), http.StatusNotFound)
 	})
 }

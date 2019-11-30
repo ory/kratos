@@ -8,14 +8,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/x"
 )
 
 func TestFakeRequestData(t *testing.T) {
-	internal.RegisterFakes()
-
 	var r registration.Request
 	require.NoError(t, faker.FakeData(&r))
 

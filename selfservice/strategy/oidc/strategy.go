@@ -524,7 +524,7 @@ func (s *Strategy) provider(id string) (Provider, error) {
 
 func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.UUID, traits json.RawMessage, err error) {
 	if x.IsZeroUUID(rid) {
-		s.d.ErrorManager().ForwardError(r.Context(), w, r, err)
+		s.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 
@@ -556,5 +556,5 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 		return
 	}
 
-	s.d.ErrorManager().ForwardError(r.Context(), w, r, err)
+	s.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
 }
