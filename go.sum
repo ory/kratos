@@ -353,6 +353,10 @@ github.com/gobuffalo/plushgen v0.0.0-20181203163832-9fc4964505c2/go.mod h1:opEdT
 github.com/gobuffalo/plushgen v0.0.0-20181207152837-eedb135bd51b/go.mod h1:Lcw7HQbEVm09sAQrCLzIxuhFbB3nAgp4c55E+UlynR0=
 github.com/gobuffalo/plushgen v0.0.0-20190104222512-177cd2b872b3/go.mod h1:tYxCozi8X62bpZyKXYHw1ncx2ZtT2nFvG42kuLwYjoc=
 github.com/gobuffalo/plushgen v0.1.2/go.mod h1:3U71v6HWZpVER1nInTXeAwdoRNsRd4W8aeIa1Lyp+Bk=
+github.com/gobuffalo/pop v4.8.2+incompatible/go.mod h1:DwBz3SD5SsHpTZiTubcsFWcVDpJWGsxjVjMPnkiThWg=
+github.com/gobuffalo/pop v4.8.3+incompatible/go.mod h1:DwBz3SD5SsHpTZiTubcsFWcVDpJWGsxjVjMPnkiThWg=
+github.com/gobuffalo/pop v4.8.4+incompatible/go.mod h1:DwBz3SD5SsHpTZiTubcsFWcVDpJWGsxjVjMPnkiThWg=
+github.com/gobuffalo/pop v4.12.2+incompatible/go.mod h1:DwBz3SD5SsHpTZiTubcsFWcVDpJWGsxjVjMPnkiThWg=
 github.com/gobuffalo/release v1.0.35/go.mod h1:VtHFAKs61vO3wboCec5xr9JPTjYyWYcvaM3lclkc4x4=
 github.com/gobuffalo/release v1.0.38/go.mod h1:VtHFAKs61vO3wboCec5xr9JPTjYyWYcvaM3lclkc4x4=
 github.com/gobuffalo/release v1.0.42/go.mod h1:RPs7EtafH4oylgetOJpGP0yCZZUiO4vqHfTHJjSdpug=
