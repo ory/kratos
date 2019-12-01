@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/go-openapi/runtime"
-	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/nosurf"
 	"github.com/stretchr/testify/assert"
@@ -50,7 +49,7 @@ func fieldsToURLValues(ff models.FormFields) url.Values {
 }
 
 func TestUpdateProfile(t *testing.T) {
-	_, reg := internal.NewMemoryRegistry(t)
+	_, reg := internal.NewRegistryDefault(t)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
 
 	ui := func() *httptest.Server {
@@ -76,12 +75,12 @@ func TestUpdateProfile(t *testing.T) {
 	viper.Set(configuration.ViperKeyURLsLogin, ui.URL+"/login")
 
 	primaryIdentity := &identity.Identity{
-		ID: uuid.New().String(),
+		ID: x.NewUUID(),
 		Credentials: map[identity.CredentialsType]identity.Credentials{
-			"password": {ID: "password", Identifiers: []string{"john@doe.com"}, Config: json.RawMessage(`{"hashed_password":"foo"}`)},
+			"password": {Type: "password", Identifiers: []string{"john@doe.com"}, Config: json.RawMessage(`{"hashed_password":"foo"}`)},
 		},
 		TraitsSchemaURL: "file://./stub/identity.schema.json",
-		Traits:          json.RawMessage(`{"email":"john@doe.com","stringy":"foobar","booly":false,"numby":2.5}`),
+		Traits:          identity.Traits(`{"email":"john@doe.com","stringy":"foobar","booly":false,"numby":2.5}`),
 	}
 
 	kratos := func() *httptest.Server {
@@ -90,7 +89,7 @@ func TestUpdateProfile(t *testing.T) {
 		route, _ := session.MockSessionCreateHandlerWithIdentity(t, reg, primaryIdentity)
 		router.GET("/setSession", route)
 
-		other, _ := session.MockSessionCreateHandlerWithIdentity(t, reg, &identity.Identity{ID: uuid.New().String(), TraitsSchemaURL: "file://./stub/identity.schema.json", Traits: json.RawMessage(`{}`)})
+		other, _ := session.MockSessionCreateHandlerWithIdentity(t, reg, &identity.Identity{ID: x.NewUUID(), TraitsSchemaURL: "file://./stub/identity.schema.json", Traits: identity.Traits(`{}`)})
 		router.GET("/setSession/other-user", other)
 		n := negroni.Classic()
 		n.UseHandler(router)
@@ -197,10 +196,9 @@ func TestUpdateProfile(t *testing.T) {
 		)
 		require.NoError(t, err, "%s", rid)
 
-		assert.Equal(t, rid, pr.Payload.ID)
+		assert.Equal(t, rid, string(pr.Payload.ID))
 		assert.NotEmpty(t, pr.Payload.Identity)
-		assert.Empty(t, pr.Payload.Identity.Credentials)
-		assert.Equal(t, primaryIdentity.ID, *(pr.Payload.Identity.ID))
+		assert.Equal(t, primaryIdentity.ID.String(), string(pr.Payload.Identity.ID))
 		assert.JSONEq(t, string(primaryIdentity.Traits), x.MustEncodeJSON(t, pr.Payload.Identity.Traits))
 		assert.Equal(t, primaryIdentity.TraitsSchemaURL, pr.Payload.Identity.TraitsSchemaURL)
 		assert.Equal(t, kratos.URL+profile.BrowserProfilePath, pr.Payload.RequestURL)

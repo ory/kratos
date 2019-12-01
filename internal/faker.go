@@ -14,6 +14,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/form"
+	"github.com/ory/kratos/x"
 )
 
 func RegisterFakes() {
@@ -55,39 +56,49 @@ func RegisterFakes() {
 	}
 
 	if err := faker.AddProvider("login_request_methods", func(v reflect.Value) (interface{}, error) {
-		methods := map[identity.CredentialsType]*login.RequestMethod{}
-		for i := 0; i <= rand.Intn(3); i++ {
+		var methods = make(map[identity.CredentialsType]*login.RequestMethod)
+		for _, ct := range []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeOIDC} {
 			var f form.HTMLForm
 			if err := faker.FakeData(&f); err != nil {
 				return nil, err
 			}
-			ct := identity.CredentialsType(randx.MustString(8, randx.AlphaLower))
 			methods[ct] = &login.RequestMethod{
 				Method: ct,
-				Config: &f,
+				Config: &login.RequestMethodConfig{RequestMethodConfigurator: &f},
 			}
-		}
 
+		}
 		return methods, nil
 	}); err != nil {
 		panic(err)
 	}
 
 	if err := faker.AddProvider("registration_request_methods", func(v reflect.Value) (interface{}, error) {
-		methods := map[identity.CredentialsType]*registration.RequestMethod{}
-		for i := 0; i <= rand.Intn(3); i++ {
+		var methods = make(map[identity.CredentialsType]*registration.RequestMethod)
+		for _, ct := range []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeOIDC} {
 			var f form.HTMLForm
 			if err := faker.FakeData(&f); err != nil {
 				return nil, err
 			}
-			ct := identity.CredentialsType(randx.MustString(8, randx.AlphaLower))
 			methods[ct] = &registration.RequestMethod{
 				Method: ct,
-				Config: &f,
+				Config: &registration.RequestMethodConfig{RequestMethodConfigurator: &f},
 			}
 		}
-
 		return methods, nil
+	}); err != nil {
+		panic(err)
+	}
+
+	if err := faker.AddProvider("uuid", func(v reflect.Value) (interface{}, error) {
+		return x.NewUUID(), nil
+	}); err != nil {
+		panic(err)
+	}
+
+	if err := faker.AddProvider("identity", func(v reflect.Value) (interface{}, error) {
+		var i identity.Identity
+		return &i, faker.FakeData(&i)
 	}); err != nil {
 		panic(err)
 	}

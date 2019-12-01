@@ -13,6 +13,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/x/errorsx"
+
 	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/internal"
@@ -21,7 +23,7 @@ import (
 )
 
 func TestHandler(t *testing.T) {
-	_, reg := internal.NewMemoryRegistry(t)
+	_, reg := internal.NewRegistryDefault(t)
 	h := errorx.NewHandler(reg)
 
 	router := x.NewRouterPublic()
@@ -55,10 +57,10 @@ func TestHandler(t *testing.T) {
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			id, err := reg.ErrorManager().Add(context.Background(), tc.gave...)
+			id, err := reg.SelfServiceErrorPersister().Add(context.Background(), tc.gave...)
 			require.NoError(t, err)
 
-			res, err := ts.Client().Get(ts.URL + "/errors?error=" + id)
+			res, err := ts.Client().Get(ts.URL + "/errors?error=" + id.String())
 			require.NoError(t, err)
 			defer res.Body.Close()
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
@@ -68,7 +70,7 @@ func TestHandler(t *testing.T) {
 
 			gg := make([]error, len(tc.gave))
 			for k, g := range tc.gave {
-				gg[k] = errors.Cause(g)
+				gg[k] = errorsx.Cause(g)
 			}
 
 			expected, err := json.Marshal(gg)

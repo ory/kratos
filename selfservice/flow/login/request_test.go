@@ -8,13 +8,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/x"
 )
 
 func TestFakeRequestData(t *testing.T) {
-	internal.RegisterFakes()
-
 	var r login.Request
 	require.NoError(t, faker.FakeData(&r))
 
@@ -28,18 +26,11 @@ func TestFakeRequestData(t *testing.T) {
 		assert.NotEmpty(t, m.Method)
 		assert.NotEmpty(t, m.Config)
 	}
-
-	assert.NotEmpty(t, r.RequestHeaders)
-	for k, v := range r.RequestHeaders {
-		assert.NotEmpty(t, k)
-		assert.NotEmpty(t, v)
-	}
 }
 
 func TestRequest(t *testing.T) {
-	r := &login.Request{ID: "request", RequestHeaders: map[string][]string{"foo": {"bar"}}}
+	r := &login.Request{ID: x.NewUUID()}
 	assert.Equal(t, r.ID, r.GetID())
-	assert.Empty(t, r.Declassify().RequestHeaders)
 
 	t.Run("case=expired", func(t *testing.T) {
 		for _, tc := range []struct {

@@ -13,6 +13,7 @@ var _ registration.PostHookExecutor = new(SessionIssuer)
 
 type sessionIssuerDependencies interface {
 	session.ManagementProvider
+	session.PersistenceProvider
 }
 
 type SessionIssuer struct {
@@ -24,14 +25,14 @@ func NewSessionIssuer(r sessionIssuerDependencies) *SessionIssuer {
 }
 
 func (e *SessionIssuer) ExecuteRegistrationPostHook(w http.ResponseWriter, r *http.Request, a *registration.Request, s *session.Session) error {
-	if err := e.r.SessionManager().Create(r.Context(), s); err != nil {
+	if err := e.r.SessionPersister().CreateSession(r.Context(), s); err != nil {
 		return err
 	}
 	return e.r.SessionManager().SaveToRequest(r.Context(), s, w, r)
 }
 
 func (e *SessionIssuer) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, a *login.Request, s *session.Session) error {
-	if err := e.r.SessionManager().Create(r.Context(), s); err != nil {
+	if err := e.r.SessionPersister().CreateSession(r.Context(), s); err != nil {
 		return err
 	}
 	return e.r.SessionManager().SaveToRequest(r.Context(), s, w, r)

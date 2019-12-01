@@ -28,7 +28,7 @@ import (
 var serveCmd = &cobra.Command{
 	Use: "serve",
 	Run: func(cmd *cobra.Command, args []string) {
-		daemon.ServeAll(driver.NewDefaultDriver(logger, BuildVersion, BuildTime, BuildGitHash))(cmd, args)
+		daemon.ServeAll(driver.MustNewDefaultDriver(logger, BuildVersion, BuildTime, BuildGitHash))(cmd, args)
 	},
 }
 

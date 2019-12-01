@@ -4,60 +4,50 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/gobuffalo/pop"
+	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/selfservice/form"
+	"github.com/ory/kratos/x"
 )
-
-// swagger:model registrationRequestMethod
-type RequestMethod struct {
-	// Method contains the request credentials type.
-	Method identity.CredentialsType `json:"method"`
-
-	// Config is the credential type's config.
-	Config RequestMethodConfig `json:"config"`
-}
-
-// swagger:model registrationRequestMethodConfig
-type RequestMethodConfig interface {
-	form.ErrorParser
-	form.CSRFSetter
-	form.Resetter
-	form.ValueSetter
-	form.FieldSetter
-}
 
 // swagger:model registrationRequest
 type Request struct {
 	// ID represents the request's unique ID. When performing the registration flow, this
-	// represents the id in the registration ui's query parameter: http://registration-ui/?request=<id>
-	ID string `json:"id"`
+	// represents the id in the registration ui's query parameter: http://<urls.registration_ui>/?request=<id>
+	ID uuid.UUID `json:"id" faker:"uuid" db:"id" rw:"r"`
 
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,
 	// a new request has to be initiated.
-	ExpiresAt time.Time `json:"expires_at"`
+	ExpiresAt time.Time `json:"expires_at" faker:"time_type" db:"expires_at"`
 
 	// IssuedAt is the time (UTC) when the request occurred.
-	IssuedAt time.Time `json:"issued_at"`
+	IssuedAt time.Time `json:"issued_at" faker:"time_type" db:"issued_at"`
 
 	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used
 	// to forward information contained in the URL's path or query for example.
-	RequestURL string `json:"request_url"`
+	RequestURL string `json:"request_url" db:"request_url"`
 
 	// Active, if set, contains the registration method that is being used. It is initially
 	// not set.
-	Active identity.CredentialsType `json:"active,omitempty"`
+	Active identity.CredentialsType `json:"active,omitempty" db:"active_method"`
 
 	// Methods contains context for all enabled registration methods. If a registration request has been
 	// processed, but for example the password is incorrect, this will contain error messages.
-	Methods map[identity.CredentialsType]*RequestMethod `json:"methods" faker:"registration_request_methods"`
+	Methods map[identity.CredentialsType]*RequestMethod `json:"methods" faker:"registration_request_methods" db:"-"`
 
-	RequestHeaders http.Header `json:"-" faker:"http_header"`
+	// MethodsRaw is a helper struct field for gobuffalo.pop.
+	MethodsRaw RequestMethodsRaw `json:"-" faker:"-" has_many:"selfservice_registration_request_methods" fk_id:"selfservice_registration_request_id"`
+
+	// CreatedAt is a helper struct field for gobuffalo.pop.
+	CreatedAt time.Time `json:"-" db:"created_at"`
+
+	// UpdatedAt is a helper struct field for gobuffalo.pop.
+	UpdatedAt time.Time `json:"-" db:"updated_at"`
 }
 
 func NewRequest(exp time.Duration, r *http.Request) *Request {
@@ -72,24 +62,47 @@ func NewRequest(exp time.Duration, r *http.Request) *Request {
 	}
 
 	return &Request{
-		ID:             uuid.New().String(),
-		ExpiresAt:      time.Now().UTC().Add(exp),
-		IssuedAt:       time.Now().UTC(),
-		RequestURL:     source.String(),
-		RequestHeaders: r.Header,
-		Methods:        map[identity.CredentialsType]*RequestMethod{},
+		ID:         x.NewUUID(),
+		ExpiresAt:  time.Now().UTC().Add(exp),
+		IssuedAt:   time.Now().UTC(),
+		RequestURL: source.String(),
+		Methods:    map[identity.CredentialsType]*RequestMethod{},
 	}
 }
 
-// Declassify returns a copy of the Request where all sensitive information
-// such as request headers is removed.
-func (r *Request) Declassify() *Request {
-	rr := *r
-	rr.RequestHeaders = http.Header{}
-	return &rr
+func (r *Request) BeforeSave(_ *pop.Connection) error {
+	r.MethodsRaw = make([]RequestMethod, 0, len(r.Methods))
+	for _, m := range r.Methods {
+		r.MethodsRaw = append(r.MethodsRaw, *m)
+	}
+	r.Methods = nil
+	return nil
 }
 
-func (r *Request) GetID() string {
+func (r *Request) AfterCreate(c *pop.Connection) error {
+	return r.AfterFind(c)
+}
+
+func (r *Request) AfterUpdate(c *pop.Connection) error {
+	return r.AfterFind(c)
+}
+
+func (r *Request) AfterFind(_ *pop.Connection) error {
+	r.Methods = make(RequestMethods)
+	for key := range r.MethodsRaw {
+		m := r.MethodsRaw[key] // required for pointer dereference
+		r.Methods[m.Method] = &m
+	}
+	r.MethodsRaw = nil
+	return nil
+}
+
+func (r Request) TableName() string {
+	// This must be stay a value receiver, using a pointer receiver will cause issues with pop.
+	return "selfservice_registration_requests"
+}
+
+func (r *Request) GetID() uuid.UUID {
 	return r.ID
 }
 

@@ -67,4 +67,3 @@ changes in [UPGRADE.md](./UPGRADE.md) and [CHANGELOG.md](./CHANGELOG.md).
 ### Command line documentation
 
 Run `kratos -h` or `kratos help`.
-

@@ -1,7 +1,6 @@
 package identity_test
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -25,7 +24,7 @@ func TestValidationExtension(t *testing.T) {
 	v := NewValidator(conf)
 
 	i := NewIdentity("")
-	i.Traits = json.RawMessage(`{
+	i.Traits = Traits(`{
   "email": "foo@bar.com",
   "names": [
     "foobar",

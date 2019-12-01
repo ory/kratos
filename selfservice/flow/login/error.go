@@ -38,7 +38,6 @@ type (
 	ErrorHandler struct {
 		d  errorHandlerDependencies
 		c  configuration.Provider
-		bd *x.BodyDecoder
 	}
 )
 
@@ -63,7 +62,7 @@ func (s *ErrorHandler) HandleLoginError(
 		Warn("Encountered login error.")
 
 	if rr == nil {
-		s.d.ErrorManager().ForwardError(r.Context(), w, r, err)
+		s.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	} else if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, err)
@@ -77,17 +76,17 @@ func (s *ErrorHandler) HandleLoginError(
 	}
 
 	if err := method.Config.ParseError(err); err != nil {
-		s.d.ErrorManager().ForwardError(r.Context(), w, r, err)
+		s.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 
 	if err := s.d.LoginRequestPersister().UpdateLoginRequest(r.Context(), rr.ID, ct, method); err != nil {
-		s.d.ErrorManager().ForwardError(r.Context(), w, r, err)
+		s.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 
 	http.Redirect(w, r,
-		urlx.CopyWithQuery(s.c.LoginURL(), url.Values{"request": {rr.ID}}).String(),
+		urlx.CopyWithQuery(s.c.LoginURL(), url.Values{"request": {rr.ID.String()}}).String(),
 		http.StatusFound,
 	)
 }

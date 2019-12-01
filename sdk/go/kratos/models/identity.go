@@ -13,28 +13,18 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// Identity Identity represents an ORY Kratos identity
-//
-// An identity can be a real human, a service, an IoT device - everything that
-// can be described as an "actor" in a system.
-// swagger:model identity
+// Identity identity
+// swagger:model Identity
 type Identity struct {
 
-	// Credentials represents all credentials that can be used for authenticating this identity.
-	Credentials map[string]IdentityCredentials `json:"credentials,omitempty"`
-
-	// ID is a unique identifier chosen by you. It can be a URN (e.g. "arn:aws:iam::123456789012"),
-	// a stringified integer (e.g. "123456789012"), a uuid (e.g. "9f425a8d-7efc-4768-8f23-7647a74fdf13"). It is up to you
-	// to pick a format you'd like. It is discouraged to use a personally identifiable value here, like the username
-	// or the email, as this field is immutable.
+	// id
 	// Required: true
-	ID *string `json:"id"`
+	// Format: uuid4
+	ID UUID `json:"id"`
 
-	// Traits represent an identity's traits. The identity is able to create, modify, and delete traits
-	// in a self-service manner. The input will always be validated against the JSON Schema defined
-	// in `traits_schema_url`.
+	// traits
 	// Required: true
-	Traits interface{} `json:"traits"`
+	Traits Traits `json:"traits"`
 
 	// TraitsSchemaURL is the JSON Schema to be used for validating the identity's traits.
 	//
@@ -45,10 +35,6 @@ type Identity struct {
 // Validate validates this identity
 func (m *Identity) Validate(formats strfmt.Registry) error {
 	var res []error
-
-	if err := m.validateCredentials(formats); err != nil {
-		res = append(res, err)
-	}
 
 	if err := m.validateID(formats); err != nil {
 		res = append(res, err)
@@ -64,31 +50,12 @@ func (m *Identity) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *Identity) validateCredentials(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.Credentials) { // not required
-		return nil
-	}
-
-	for k := range m.Credentials {
-
-		if err := validate.Required("credentials"+"."+k, "body", m.Credentials[k]); err != nil {
-			return err
-		}
-		if val, ok := m.Credentials[k]; ok {
-			if err := val.Validate(formats); err != nil {
-				return err
-			}
-		}
-
-	}
-
-	return nil
-}
-
 func (m *Identity) validateID(formats strfmt.Registry) error {
 
-	if err := validate.Required("id", "body", m.ID); err != nil {
+	if err := m.ID.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("id")
+		}
 		return err
 	}
 

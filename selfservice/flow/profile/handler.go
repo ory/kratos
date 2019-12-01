@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
-	"reflect"
 
+	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
@@ -33,6 +33,7 @@ type (
 	handlerDependencies interface {
 		x.CSRFProvider
 		x.WriterProvider
+		x.LoggingProvider
 
 		session.HandlerProvider
 		session.ManagementProvider
@@ -86,25 +87,26 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 func (h *Handler) initUpdateProfile(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.d.SessionManager().FetchFromRequest(r.Context(), w, r)
 	if err != nil {
-		h.d.ErrorManager().ForwardError(r.Context(), w, r, err)
+		h.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 
 	a := NewRequest(h.c.SelfServiceProfileRequestLifespan(), r, s)
-	a.Form = form.NewHTMLFormFromJSON(urlx.AppendPaths(h.c.SelfPublicURL(), BrowserProfilePath).String(), s.Identity.Traits, "traits")
+	a.Form = form.NewHTMLFormFromJSON(urlx.AppendPaths(h.c.SelfPublicURL(), BrowserProfilePath).String(), json.RawMessage(s.Identity.Traits), "traits")
 	if err := h.d.ProfileRequestPersister().CreateProfileRequest(r.Context(), a); err != nil {
-		h.d.ErrorManager().ForwardError(r.Context(), w, r, err)
+		h.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 
 	http.Redirect(w, r,
-		urlx.CopyWithQuery(h.c.ProfileURL(), url.Values{"request": {a.ID}}).String(),
+		urlx.CopyWithQuery(h.c.ProfileURL(), url.Values{"request": {a.ID.String()}}).String(),
 		http.StatusFound,
 	)
 }
 
 // swagger:parameters getProfileManagementRequest
 type (
+	// nolint:deadcode,unused
 	getProfileManagementRequestParameters struct {
 		// Request should be set to the value of the `request` query parameter
 		// by the profile management UI.
@@ -139,6 +141,8 @@ type (
 //       200: profileManagementRequest
 //       302: emptyResponse
 //       500: genericError
+//
+// nolint:deadcode,unused
 func fetchUpdateProfileRequestAdmin() {}
 
 // swagger:route GET /profiles/requests public getProfileManagementRequest
@@ -166,7 +170,7 @@ func fetchUpdateProfileRequestAdmin() {}
 //       302: emptyResponse
 //       500: genericError
 func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	rid := r.URL.Query().Get("request")
+	rid := x.ParseUUID(r.URL.Query().Get("request"))
 	ar, err := h.d.ProfileRequestPersister().GetProfileRequest(r.Context(), rid)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
@@ -179,14 +183,8 @@ func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if ar.identityID != sess.Identity.ID {
+	if ar.IdentityID != sess.Identity.ID {
 		h.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden.WithReasonf("The request was made for another identity and has been blocked for security reasons.")))
-		return
-	}
-
-	i, err := h.d.IdentityPool().Get(r.Context(), ar.identityID)
-	if err != nil {
-		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 
@@ -197,13 +195,12 @@ func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Reque
 		Value:    rid,
 	})
 	ar.Form.SetCSRF(nosurf.Token(r))
-	ar.Identity = i
-
 	h.d.Writer().Write(w, r, ar)
 }
 
 type (
 	// swagger:parameters completeProfileManagementFlow
+	// nolint:deadcode,unused
 	completeProfileManagementParameters struct {
 		// in: body
 		// required: true
@@ -211,6 +208,7 @@ type (
 	}
 
 	// swagger:model completeProfileManagementPayload
+	// nolint:deadcode,unused
 	completeProfileManagementPayload struct {
 		// Traits contains all of the identity's traits.
 		//
@@ -223,7 +221,7 @@ type (
 		//
 		// type: string
 		// required: true
-		Request string `json:"request"`
+		Request uuid.UUID `json:"request"`
 	}
 )
 
@@ -269,7 +267,7 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if len(p.Request) == 0 {
+	if x.IsZeroUUID(p.Request) {
 		h.handleProfileManagementError(w, r, nil, s.Identity.Traits, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request query parameter is missing.")))
 		return
 	}
@@ -292,14 +290,14 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 
 	// identity.TraitsSchemaURL
 
-	creds, err := h.d.IdentityPool().GetClassified(r.Context(), s.Identity.ID)
+	creds, err := h.d.IdentityPool().GetIdentityConfidential(r.Context(), s.Identity.ID)
 	if err != nil {
-		h.handleProfileManagementError(w, r, ar, p.Traits, err)
+		h.handleProfileManagementError(w, r, ar, identity.Traits(p.Traits), err)
 		return
 	}
 
 	i := *s.Identity
-	i.Traits = p.Traits
+	i.Traits = identity.Traits(p.Traits)
 	i.Credentials = creds.CopyCredentials()
 
 	// If credential identifiers have changed we need to block this action UNLESS
@@ -314,7 +312,17 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 	}
 
 	// Check if any credentials-related field changed.
-	if !reflect.DeepEqual(creds.Credentials, i.Credentials) {
+	if !i.CredentialsEqual(creds.Credentials) {
+
+		// !! WARNING !!
+		//
+		// This will leak the credential options which may include the hashed password. Do not use seriously:
+		//
+		//	h.d.Logger().
+		//	 	WithField("original_credentials", fmt.Sprintf("%+v", creds.Credentials)).
+		//	 	WithField("updated_credentials", fmt.Sprintf("%+v", i.Credentials)).
+		//	 	Trace("Credentials changed unexpectedly in CompleteProfileManagementFlow.")
+
 		h.handleProfileManagementError(w, r, ar, i.Traits,
 			errors.WithStack(
 				herodot.ErrInternalServerError.
@@ -323,39 +331,39 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if _, err := h.d.IdentityPool().Update(r.Context(), &i); err != nil {
+	if err := h.d.IdentityPool().UpdateIdentity(r.Context(), &i); err != nil {
 		h.handleProfileManagementError(w, r, ar, i.Traits, err)
 		return
 	}
 
 	ar.Form.Reset()
 	ar.UpdateSuccessful = true
-	for name, field := range form.NewHTMLFormFromJSON("", i.Traits, "traits").Fields {
+	for name, field := range form.NewHTMLFormFromJSON("", json.RawMessage(i.Traits), "traits").Fields {
 		ar.Form.SetField(name, field)
 	}
 	ar.Form.SetValue("request", r.Form.Get("request"))
 	ar.Form.SetCSRF(nosurf.Token(r))
 
-	if err := h.d.ProfileRequestPersister().UpdateProfileRequest(r.Context(), ar.ID, ar); err != nil {
+	if err := h.d.ProfileRequestPersister().UpdateProfileRequest(r.Context(), ar); err != nil {
 		h.handleProfileManagementError(w, r, ar, i.Traits, err)
 		return
 	}
 
 	http.Redirect(w, r,
-		urlx.CopyWithQuery(h.c.ProfileURL(), url.Values{"request": {ar.ID}}).String(),
+		urlx.CopyWithQuery(h.c.ProfileURL(), url.Values{"request": {ar.ID.String()}}).String(),
 		http.StatusFound,
 	)
 }
 
 // handleProfileManagementError is a convenience function for handling all types of errors that may occur (e.g. validation error)
 // during a profile management request.
-func (h *Handler) handleProfileManagementError(w http.ResponseWriter, r *http.Request, rr *Request, traits json.RawMessage, err error) {
+func (h *Handler) handleProfileManagementError(w http.ResponseWriter, r *http.Request, rr *Request, traits identity.Traits, err error) {
 	if rr != nil {
 		rr.Form.Reset()
 		rr.UpdateSuccessful = false
 
 		if traits != nil {
-			for name, field := range form.NewHTMLFormFromJSON("", traits, "traits").Fields {
+			for name, field := range form.NewHTMLFormFromJSON("", json.RawMessage(traits), "traits").Fields {
 				rr.Form.SetField(name, field)
 			}
 		}

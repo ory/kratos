@@ -42,7 +42,7 @@ func (h *Handler) logout(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	_ = h.d.CSRFHandler().RegenerateToken(w, r)
 
 	if err := h.d.SessionManager().PurgeFromRequest(r.Context(), w, r); err != nil {
-		h.d.ErrorManager().ForwardError(r.Context(), w, r, err)
+		h.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 

@@ -3,6 +3,7 @@ package identity
 import (
 	"net/http"
 
+	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
@@ -49,7 +50,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 
 func (h *Handler) list(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	limit, offset := pagination.Parse(r, 100, 0, 500)
-	is, err := h.r.IdentityPool().List(r.Context(), limit, offset)
+	is, err := h.r.IdentityPool().ListIdentities(r.Context(), limit, offset)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -59,7 +60,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 }
 
 func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	i, err := h.r.IdentityPool().Get(r.Context(), ps.ByName("id"))
+	i, err := h.r.IdentityPool().GetIdentity(r.Context(), x.ParseUUID(ps.ByName("id")))
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -76,7 +77,11 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	}
 
 	// We do not allow setting credentials using this method
-	created, err := h.r.IdentityPool().Create(r.Context(), i.CopyWithoutCredentials())
+	i.Credentials = nil
+	// We do not allow setting the ID using this method
+	i.ID = uuid.Nil
+
+	err := h.r.IdentityPool().CreateIdentity(r.Context(), &i)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -86,9 +91,9 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		urlx.AppendPaths(
 			h.c.SelfAdminURL(),
 			"identities",
-			created.ID,
+			i.ID.String(),
 		).String(),
-		created,
+		&i,
 	)
 }
 
@@ -99,19 +104,17 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		return
 	}
 
-	i.ID = ps.ByName("id")
-	// We do not allow setting credentials using this method
-	updated, err := h.r.IdentityPool().Update(r.Context(), (&i).CopyWithoutCredentials())
-	if err != nil {
+	i.ID = x.ParseUUID(ps.ByName("id"))
+	if err := h.r.IdentityPool().UpdateIdentity(r.Context(), &i); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
-	h.r.Writer().Write(w, r, updated)
+	h.r.Writer().Write(w, r, i)
 }
 
 func (h *Handler) delete(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.r.IdentityPool().Delete(r.Context(), ps.ByName("id")); err != nil {
+	if err := h.r.IdentityPool().DeleteIdentity(r.Context(), x.ParseUUID(ps.ByName("id"))); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}

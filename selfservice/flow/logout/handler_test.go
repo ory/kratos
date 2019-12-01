@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/gobuffalo/httptest"
-	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/nosurf"
 	"github.com/sirupsen/logrus"
@@ -25,8 +24,10 @@ import (
 )
 
 func TestLogoutHandler(t *testing.T) {
-	_, reg := internal.NewMemoryRegistry(t)
+	_, reg := internal.NewRegistryDefault(t)
 	handler := reg.LogoutHandler()
+
+	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
 
 	router := x.NewRouterPublic()
 	handler.RegisterPublicRoutes(router)
@@ -35,9 +36,10 @@ func TestLogoutHandler(t *testing.T) {
 	defer ts.Close()
 
 	var sess session.Session
-	sess.SID = uuid.New().String()
+	sess.ID = x.NewUUID()
 	sess.Identity = new(identity.Identity)
-	require.NoError(t, reg.SessionManager().Create(context.Background(), &sess))
+	require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), sess.Identity))
+	require.NoError(t, reg.SessionPersister().CreateSession(context.Background(), &sess))
 
 	router.GET("/set", session.MockSetSession(t, reg))
 
@@ -50,7 +52,6 @@ func TestLogoutHandler(t *testing.T) {
 	}))
 	defer redirTS.Close()
 
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
 	viper.Set(configuration.ViperKeySelfServiceLogoutRedirectURL, redirTS.URL)
 	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
 

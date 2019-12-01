@@ -46,6 +46,8 @@ var sanitizeCmd = &cobra.Command{
 		cmdx.Must(err, "Unable to read file: %s", err)
 
 		result := []byte(sanitizeIter(string(file)))
+		result, err = sjson.SetRawBytes(result, "definitions.UUID", []byte(`{"type": "string", "format": "uuid4"}`))
+		cmdx.Must(err, "could not set definitions.UUID: %s", err)
 
 		err = os.Remove(args[0])
 		cmdx.Must(err, "Unable to delete file: %s", err)
