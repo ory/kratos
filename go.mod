@@ -4,10 +4,6 @@ go 1.13
 
 replace github.com/santhosh-tekuri/jsonschema/v2 => github.com/ory/jsonschema/v2 v2.1.1-0.20191123130340-1c20114d2c04
 
-replace github.com/ory/herodot => ../herodot
-
-replace github.com/ory/x => ../x
-
 require (
 	github.com/bxcodec/faker v2.0.1+incompatible
 	github.com/cenkalti/backoff v2.1.1+incompatible
@@ -53,9 +49,9 @@ require (
 	github.com/ory/go-acc v0.0.0-20181118080137-ddc355013f90
 	github.com/ory/gojsonschema v1.2.0
 	github.com/ory/graceful v0.1.1
-	github.com/ory/herodot v0.6.2
+	github.com/ory/herodot v0.6.3
 	github.com/ory/viper v1.5.6
-	github.com/ory/x v0.0.83
+	github.com/ory/x v0.0.84
 	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.8.1
@@ -76,7 +72,7 @@ require (
 	golang.org/x/crypto v0.0.0-20191122220453-ac88ee75c92c
 	golang.org/x/net v0.0.0-20191125084936-ffdde1057850 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
-	golang.org/x/sys v0.0.0-20191120155948-bd437916bb0e // indirect
+	golang.org/x/sys v0.0.0-20191128015809-6d18c012aee9 // indirect
 	golang.org/x/tools v0.0.0-20191105231337-689d0f08e67a
 	golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
