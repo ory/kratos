@@ -30,7 +30,7 @@ create_table("identity_credentials") {
 
 create_table("identity_credential_identifiers") {
  	t.Column("id", "uuid", {primary: true})
-    t.Column("identifier", "string", {"size": 256})
+    t.Column("identifier", "string", {"size": 255})
     t.Column("identity_credential_id", "uuid")
 
  	t.Timestamps()

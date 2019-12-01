@@ -81,9 +81,9 @@ func TestRequestPersister(p interface {
 
 			assert.NotEmpty(t, actual.Form.Action)
 			assert.EqualValues(t, expected.ID, actual.ID)
-			assert.EqualValues(t, expected.ExpiresAt, actual.ExpiresAt)
 			assert.JSONEq(t, string(fexpected), string(factual))
-			assert.EqualValues(t, expected.IssuedAt, actual.IssuedAt)
+			x.AssertEqualTime(t, expected.IssuedAt, actual.IssuedAt)
+			x.AssertEqualTime(t, expected.ExpiresAt, actual.ExpiresAt)
 			assert.EqualValues(t, expected.RequestURL, actual.RequestURL)
 			assert.EqualValues(t, expected.Identity.ID, actual.Identity.ID)
 			assert.EqualValues(t, expected.Identity.Traits, actual.Identity.Traits)

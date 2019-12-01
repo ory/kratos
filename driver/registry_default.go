@@ -291,8 +291,12 @@ func (m *RegistryDefault) CanHandle(dsn string) bool {
 	return dsn == "memory" ||
 		strings.HasPrefix(dsn, "mysql") ||
 		strings.HasPrefix(dsn, "sqlite") ||
+		strings.HasPrefix(dsn, "sqlite3") ||
 		strings.HasPrefix(dsn, "postgres") ||
-		strings.HasPrefix(dsn, "cockroach")
+		strings.HasPrefix(dsn, "postgresql") ||
+		strings.HasPrefix(dsn, "cockroach") ||
+		strings.HasPrefix(dsn, "cockroachdb") ||
+		strings.HasPrefix(dsn, "crdb")
 }
 
 func (m *RegistryDefault) Init() error {
@@ -300,38 +304,39 @@ func (m *RegistryDefault) Init() error {
 		return nil
 	}
 
-	var c *pop.Connection
 	bc := backoff.NewExponentialBackOff()
-	bc.MaxElapsedTime = time.Minute / 5
+	bc.MaxElapsedTime = time.Minute * 5
 	bc.Reset()
-	return errors.WithStack(backoff.Retry(func() (err error) {
-		pool, idlePool, connMaxLifetime := sqlcon.ParseConnectionOptions(m.l, m.c.DSN())
-		c, err = pop.NewConnection(&pop.ConnectionDetails{
-			URL:             m.c.DSN(),
-			IdlePool:        idlePool,
-			ConnMaxLifetime: connMaxLifetime,
-			Pool:            pool,
-		})
-		if err != nil {
-			m.Logger().WithError(err).Warnf("Unable to connect to database, retrying.")
-			return errors.WithStack(err)
-		}
-		if err := c.Open(); err != nil {
-			m.Logger().WithError(err).Warnf("Unable to open database, retrying.")
-			return errors.WithStack(err)
-		}
-		p, err := sql.NewPersister(m, m.c, c)
-		if err != nil {
-			m.Logger().WithError(err).Warnf("Unable to initialize persister, retrying.")
-			return err
-		}
-		if err := p.Ping(context.Background()); err != nil {
-			m.Logger().WithError(err).Warnf("Unable to ping database, retrying.")
-			return err
-		}
-		m.persister = p
-		return nil
-	}, bc))
+	return errors.WithStack(
+		backoff.Retry(func() error {
+			pool, idlePool, connMaxLifetime := sqlcon.ParseConnectionOptions(m.l, m.c.DSN())
+			c, err := pop.NewConnection(&pop.ConnectionDetails{
+				URL:             m.c.DSN(),
+				IdlePool:        idlePool,
+				ConnMaxLifetime: connMaxLifetime,
+				Pool:            pool,
+			})
+			if err != nil {
+				m.Logger().WithError(err).Warnf("Unable to connect to database, retrying.")
+				return errors.WithStack(err)
+			}
+			if err := c.Open(); err != nil {
+				m.Logger().WithError(err).Warnf("Unable to open database, retrying.")
+				return errors.WithStack(err)
+			}
+			p, err := sql.NewPersister(m, m.c, c)
+			if err != nil {
+				m.Logger().WithError(err).Warnf("Unable to initialize persister, retrying.")
+				return err
+			}
+			if err := p.Ping(context.Background()); err != nil {
+				m.Logger().WithError(err).Warnf("Unable to ping database, retrying.")
+				return err
+			}
+			m.persister = p
+			return nil
+		}, bc),
+	)
 }
 
 func (m *RegistryDefault) IdentityPool() identity.Pool {

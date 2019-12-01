@@ -31,7 +31,18 @@ func (p *Persister) GetLoginRequest(_ context.Context, id uuid.UUID) (*login.Req
 }
 
 func (p *Persister) UpdateLoginRequest(ctx context.Context, id uuid.UUID, ct identity.CredentialsType, rm *login.RequestMethod) error {
-	rm.Method = ct
-	rm.RequestID = id
-	return p.c.Save(rm)
+	rr, err := p.GetLoginRequest(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	method, ok := rr.Methods[ct]
+	if !ok {
+		rm.RequestID = rr.ID
+		rm.Method = ct
+		return p.c.Save(rm)
+	}
+
+	method.Config = rm.Config
+	return p.c.Save(method)
 }

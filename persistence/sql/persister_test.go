@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
+	"sync"
 	"testing"
 
 	"github.com/gobuffalo/pop"
@@ -35,7 +37,7 @@ func init() {
 func TestMain(m *testing.M) {
 	atexit := dockertest.NewOnExit()
 	atexit.Add(func() {
-		// _ = os.Remove(strings.TrimPrefix(sqlite, "sqlite://"))
+		_ = os.Remove(strings.TrimPrefix(sqlite, "sqlite://"))
 		dockertest.KillAllTestDatabases()
 	})
 	atexit.Exit(m.Run())
@@ -67,43 +69,65 @@ func pl(t *testing.T) func(lvl logging.Level, s string, args ...interface{}) {
 }
 
 func TestPersister(t *testing.T) {
-
-	for name, dsn := range map[string]string{
+	conns := map[string]string{
 		"sqlite": sqlite,
-		// "postgres": dockertest.RunTestPostgreSQL(t),
-	} {
+	}
+
+	var l sync.Mutex
+	if !testing.Short() {
+		funcs := map[string]func(t *testing.T) string{
+			"mysql":    dockertest.RunTestMySQL,
+			"postgres": dockertest.RunTestPostgreSQL,
+			// "cockroach": dockertest.RunTestCockroachDB, // pending: https://github.com/gobuffalo/fizz/pull/69
+		}
+
+		var wg sync.WaitGroup
+		wg.Add(len(funcs))
+
+		for k, f := range funcs {
+			go func(s string, f func(t *testing.T) string) {
+				defer wg.Done()
+				db := f(t)
+				l.Lock()
+				conns[k] = db
+				l.Unlock()
+			}(k, f)
+		}
+
+		wg.Wait()
+	}
+
+	for name, dsn := range conns {
 		t.Run("database="+name, func(t *testing.T) {
 			_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
 			p := reg.Persister()
 
-			defer p.Close(context.Background())
-
-			pop.SetLogger(pl(t))
+			// pop.SetLogger(pl(t))
 			require.NoError(t, p.MigrationStatus(context.Background()))
 			require.NoError(t, p.MigrateUp(context.Background()))
 
 			t.Run("contract=identity.TestPool", func(t *testing.T) {
-				pop.SetLogger(pl(t))
+				// pop.SetLogger(pl(t))
 				identity.TestPool(p)(t)
 			})
 			t.Run("contract=registration.TestRequestPersister", func(t *testing.T) {
-				pop.SetLogger(pl(t))
+				// pop.SetLogger(pl(t))
 				registration.TestRequestPersister(p)(t)
 			})
 			t.Run("contract=login.TestRequestPersister", func(t *testing.T) {
-				pop.SetLogger(pl(t))
+				// pop.SetLogger(pl(t))
 				login.TestRequestPersister(p)(t)
 			})
 			t.Run("contract=profile.TestRequestPersister", func(t *testing.T) {
-				pop.SetLogger(pl(t))
+				// pop.SetLogger(pl(t))
 				profile.TestRequestPersister(p)(t)
 			})
 			t.Run("contract=session.TestRequestPersister", func(t *testing.T) {
-				pop.SetLogger(pl(t))
+				// pop.SetLogger(pl(t))
 				session.TestPersister(p)(t)
 			})
 		})
+		t.Logf("DSN: %s", dsn)
 	}
 
-	t.Logf("sqlite location: %s", sqlite)
 }

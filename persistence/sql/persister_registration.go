@@ -29,7 +29,18 @@ func (p *Persister) GetRegistrationRequest(_ context.Context, id uuid.UUID) (*re
 }
 
 func (p *Persister) UpdateRegistrationRequest(ctx context.Context, id uuid.UUID, ct identity.CredentialsType, rm *registration.RequestMethod) error {
-	rm.Method = ct
-	rm.RequestID = id
-	return p.c.Save(rm)
+	rr, err := p.GetRegistrationRequest(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	method, ok := rr.Methods[ct]
+	if !ok {
+		rm.RequestID = rr.ID
+		rm.Method = ct
+		return p.c.Save(rm)
+	}
+
+	method.Config = rm.Config
+	return p.c.Save(method)
 }

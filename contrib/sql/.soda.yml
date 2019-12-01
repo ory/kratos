@@ -11,4 +11,4 @@ mysql:
   url: mysql://tcp(a)/b?parseTime=true&multiStatements=true
 
 cockroach:
-  url: cockroach://a/b
+  url: crdb://a/b

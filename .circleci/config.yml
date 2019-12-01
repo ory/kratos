@@ -5,75 +5,103 @@ version: 2
 jobs:
   lint:
     docker:
-      - image: circleci/golang:1.13
+      -
+        image: circleci/golang:1.13
         environment:
           - GO111MODULE=on
     working_directory: /go/src/github.com/ory/kratos
     steps:
       - checkout
-      - restore_cache:
+      -
+        restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
-      - run: go mod download
-      - save_cache:
+      -
+        run: go mod download
+      -
+        save_cache:
           key: go-mod-v1-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
-      - run: curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.20.1
-      - run: make lint
+      -
+        run: curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.20.1
+      -
+        run: make lint
 
   test:
     docker:
-      - image: circleci/golang:1.13
+      -
+        image: circleci/golang:1.13
         environment:
           - GO111MODULE=on
           - TEST_SELFSERVICE_OIDC_HYDRA_ADMIN=http://127.0.0.1:4445
           - TEST_SELFSERVICE_OIDC_HYDRA_PUBLIC=http://127.0.0.1:4444
           - TEST_SELFSERVICE_OIDC_HYDRA_INTEGRATION_ADDR=127.0.0.1:4499
-          - TEST_DATABASE_POSTGRESQL=postgres://test:test@localhost:5432/hydra?sslmode=disable
-      - image: oryd/hydra:v1.0.0
+          - TEST_DATABASE_POSTGRESQL=postgres://test:test@localhost:5432/postgres?sslmode=disable
+          - TEST_DATABASE_MYSQL=mysql://root:test@(localhost:3306)/mysql?parseTime=true
+#          - TEST_DATABASE_COCKROACHDB=cockroach://root@localhost:26257/defaultdb?sslmode=disable
+      -
+        image: postgres:9.6
+        environment:
+          - POSTGRES_USER=test
+          - POSTGRES_PASSWORD=test
+          - POSTGRES_DB=postgres
+      -
+        image: mysql:5.7
+        environment:
+          - MYSQL_ROOT_PASSWORD=test
+#      -
+#        image: cockroachdb/cockroach:v19.2.0
+#        command: start --insecure
+      -
+        image: oryd/hydra:v1.0.0
         environment:
           - DSN=memory
           - URLS_SELF_ISSUER=http://127.0.0.1:4444/
           - URLS_LOGIN=http://127.0.0.1:4499/login
           - URLS_CONSENT=http://127.0.0.1:4499/consent
         command: serve all --dangerous-force-http
-      - image: postgres:9.6
-        environment:
-          - POSTGRES_USER=test
-          - POSTGRES_PASSWORD=test
-          - POSTGRES_DB=hydra
     working_directory: /go/src/github.com/ory/kratos
     steps:
       - checkout
       - setup_remote_docker
-      - run:
+      -
+        run:
           command: |
             ./.circleci/release_name.bash
             echo 'export DOCKER_SHORT_TAG=$CIRCLE_SHA1' >> $BASH_ENV
             source $BASH_ENV
-      - run: GO111MODULE=off go get github.com/mattn/goveralls github.com/ory/go-acc
-      - restore_cache:
+      -
+        run: GO111MODULE=off go get github.com/mattn/goveralls github.com/ory/go-acc
+      -
+        restore_cache:
           keys:
             - go-v1-{{ checksum "go.sum" }}
-      - run: go mod download
-      - save_cache:
+      -
+        run: go mod download
+      -
+        save_cache:
           key: go-v1-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
-      - run: timeout 15 sh -c 'until nc -z $0 $1; do sleep 1; done' 127.0.0.1 4444
-      - run: go-acc -o coverage.txt ./... -- -v -failfast -timeout=20m -tags sqlite
-      - run: test -z "$CIRCLE_PR_NUMBER" && goveralls -service=circle-ci -coverprofile=coverage.txt -repotoken=$COVERALLS_REPO_TOKEN || echo "forks are not allowed to push to coveralls"
+      -
+        run: timeout 15 sh -c 'until nc -z $0 $1; do sleep 1; done' 127.0.0.1 4444
+      -
+        run: go-acc -o coverage.txt ./... -- -v -failfast -timeout=20m -tags sqlite
+      -
+        run: test -z "$CIRCLE_PR_NUMBER" && goveralls -service=circle-ci -coverprofile=coverage.txt -repotoken=$COVERALLS_REPO_TOKEN || echo "forks are not allowed to push to coveralls"
 
 workflows:
   version: 2
   "test":
     jobs:
-      - lint:
+      -
+        lint:
           filters:
             tags:
               only: /.*/
-      - test:
+      -
+        test:
           filters:
             tags:
               only: /.*/

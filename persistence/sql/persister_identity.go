@@ -143,7 +143,7 @@ func (p *Persister) UpdateIdentityConfidential(ctx context.Context, i *identity.
 	}
 
 	return sqlcon.HandleError(p.c.Transaction(func(tx *pop.Connection) error {
-		if err := tx.RawQuery(`DELETE FROM "identity_credentials" WHERE "identity_id" = ?`, i.ID).Exec(); err != nil {
+		if err := tx.RawQuery(`DELETE FROM identity_credentials WHERE identity_id = ?`, i.ID).Exec(); err != nil {
 			return err
 		}
 

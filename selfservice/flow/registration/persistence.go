@@ -2,6 +2,7 @@ package registration
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 
 	"github.com/bxcodec/faker"
@@ -79,8 +80,8 @@ func TestRequestPersister(p RequestPersister) func(t *testing.T) {
 			assert.Empty(t, actual.MethodsRaw)
 
 			assert.EqualValues(t, expected.ID, actual.ID)
-			assert.EqualValues(t, expected.ExpiresAt, actual.ExpiresAt)
-			assert.EqualValues(t, expected.IssuedAt, actual.IssuedAt)
+			x.AssertEqualTime(t, expected.IssuedAt, actual.IssuedAt)
+			x.AssertEqualTime(t, expected.ExpiresAt, actual.ExpiresAt)
 			assert.EqualValues(t, expected.RequestURL, actual.RequestURL)
 			assert.EqualValues(t, expected.Active, actual.Active)
 			require.Equal(t, len(expected.Methods), len(actual.Methods), "expected:\t%s\nactual:\t%s", expected.Methods, actual.Methods)
@@ -110,7 +111,8 @@ func TestRequestPersister(p RequestPersister) func(t *testing.T) {
 			require.NoError(t, err)
 			require.Len(t, actual.Methods, 2)
 
-			assert.Equal(t, string(identity.CredentialsTypePassword), actual.Methods[identity.CredentialsTypePassword].Config.RequestMethodConfigurator.(*form.HTMLForm).Action)
+			js, _ := json.Marshal(actual.Methods)
+			assert.Equal(t, string(identity.CredentialsTypePassword), actual.Methods[identity.CredentialsTypePassword].Config.RequestMethodConfigurator.(*form.HTMLForm).Action, "%s", js)
 			assert.Equal(t, string(identity.CredentialsTypeOIDC), actual.Methods[identity.CredentialsTypeOIDC].Config.RequestMethodConfigurator.(*form.HTMLForm).Action)
 		})
 	}

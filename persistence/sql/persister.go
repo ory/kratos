@@ -68,5 +68,9 @@ func (p *Persister) Close(c context.Context) error {
 }
 
 func (p *Persister) Ping(c context.Context) error {
-	return errors.WithStack(p.c.RawQuery("SELECT 1").Exec())
+	type pinger interface {
+		Ping() error
+	}
+
+	return errors.WithStack(p.c.Store.(pinger).Ping())
 }
