@@ -16,11 +16,11 @@ import (
 )
 
 func newErrTs(t *testing.T, reg interface {
-	errorx.ManagementProvider
+	errorx.PersistenceProvider
 	x.WriterProvider
 }) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		e, err := reg.ErrorManager().Read(r.Context(), r.URL.Query().Get("error"))
+		e, err := reg.SelfServiceErrorPersister().Read(r.Context(), x.ParseUUID(r.URL.Query().Get("error")))
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, e)
 	}))

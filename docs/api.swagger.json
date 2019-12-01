@@ -318,9 +318,6 @@
     }
   },
   "definitions": {
-    "CSRFSetter": {
-      "type": "object"
-    },
     "CredentialsType": {
       "description": "and so on.",
       "type": "string",
@@ -335,11 +332,35 @@
         }
       }
     },
+    "Identity": {
+      "type": "object",
+      "required": [
+        "id",
+        "traits"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/UUID"
+        },
+        "traits": {
+          "$ref": "#/definitions/Traits"
+        },
+        "traits_schema_url": {
+          "description": "TraitsSchemaURL is the JSON Schema to be used for validating the identity's traits.\n\nformat: uri",
+          "type": "string"
+        }
+      }
+    },
     "RWMutex": {
       "description": "A RWMutex must not be copied after first use.\n\nIf a goroutine holds a RWMutex for reading and another goroutine might\ncall Lock, no goroutine should expect to be able to acquire a read lock\nuntil the initial read lock is released. In particular, this prohibits\nrecursive read locking. This is to ensure that the lock eventually becomes\navailable; a blocked Lock call excludes new readers from acquiring the\nlock.",
       "type": "object",
       "title": "A RWMutex is a reader/writer mutual exclusion lock.\nThe lock can be held by an arbitrary number of readers or a single writer.\nThe zero value for a RWMutex is an unlocked mutex."
     },
+    "RequestMethodConfigurator": {},
+    "Traits": {
+      "type": "object"
+    },
+    "UUID": {"type": "string", "format": "uuid4"},
     "form": {
       "description": "HTMLForm represents a HTML Form. The container can work with both HTTP Form and JSON requests",
       "type": "object",
@@ -453,56 +474,6 @@
         }
       }
     },
-    "identity": {
-      "description": "An identity can be a real human, a service, an IoT device - everything that\ncan be described as an \"actor\" in a system.",
-      "type": "object",
-      "title": "Identity represents an ORY Kratos identity",
-      "required": [
-        "id",
-        "traits"
-      ],
-      "properties": {
-        "credentials": {
-          "description": "Credentials represents all credentials that can be used for authenticating this identity.",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/identityCredentials"
-          }
-        },
-        "id": {
-          "description": "ID is a unique identifier chosen by you. It can be a URN (e.g. \"arn:aws:iam::123456789012\"),\na stringified integer (e.g. \"123456789012\"), a uuid (e.g. \"9f425a8d-7efc-4768-8f23-7647a74fdf13\"). It is up to you\nto pick a format you'd like. It is discouraged to use a personally identifiable value here, like the username\nor the email, as this field is immutable.",
-          "type": "string"
-        },
-        "traits": {
-          "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `traits_schema_url`.",
-          "type": "object"
-        },
-        "traits_schema_url": {
-          "description": "TraitsSchemaURL is the JSON Schema to be used for validating the identity's traits.\n\nformat: uri",
-          "type": "string"
-        }
-      }
-    },
-    "identityCredentials": {
-      "description": "Credentials represents a specific credential type",
-      "type": "object",
-      "properties": {
-        "config": {
-          "description": "Config contains the concrete credential payload. This might contain the bcrypt-hashed password, or the email\nfor passwordless authentication.\n\ntype: string\nformat: binary",
-          "type": "object"
-        },
-        "id": {
-          "$ref": "#/definitions/CredentialsType"
-        },
-        "identifiers": {
-          "description": "Identifiers represents a list of unique identifiers this credential type matches.",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
     "loginRequest": {
       "type": "object",
       "properties": {
@@ -515,8 +486,7 @@
           "format": "date-time"
         },
         "id": {
-          "description": "ID represents the request's unique ID. When performing the login flow, this\nrepresents the id in the login ui's query parameter: http://\u003curls.login_ui\u003e/?request=\u003cid\u003e",
-          "type": "string"
+          "$ref": "#/definitions/UUID"
         },
         "issued_at": {
           "description": "IssuedAt is the time (UTC) when the request occurred.",
@@ -618,11 +588,10 @@
           "$ref": "#/definitions/form"
         },
         "id": {
-          "description": "ID represents the request's unique ID. When performing the profile management flow, this\nrepresents the id in the profile ui's query parameter: http://\u003curls.profile_ui\u003e?request=\u003cid\u003e",
-          "type": "string"
+          "$ref": "#/definitions/UUID"
         },
         "identity": {
-          "$ref": "#/definitions/identity"
+          "$ref": "#/definitions/Identity"
         },
         "issued_at": {
           "description": "IssuedAt is the time (UTC) when the request occurred.",
@@ -651,8 +620,7 @@
           "format": "date-time"
         },
         "id": {
-          "description": "ID represents the request's unique ID. When performing the registration flow, this\nrepresents the id in the registration ui's query parameter: http://registration-ui/?request=\u003cid\u003e",
-          "type": "string"
+          "$ref": "#/definitions/UUID"
         },
         "issued_at": {
           "description": "IssuedAt is the time (UTC) when the request occurred.",

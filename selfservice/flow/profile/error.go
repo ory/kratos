@@ -34,7 +34,6 @@ type (
 	ErrorHandler struct {
 		d  errorHandlerDependencies
 		c  configuration.Provider
-		bd *x.BodyDecoder
 	}
 )
 
@@ -58,7 +57,7 @@ func (s *ErrorHandler) HandleProfileManagementError(
 		Warn("Encountered profile management error.")
 
 	if rr == nil {
-		s.d.ErrorManager().ForwardError(r.Context(), w, r, err)
+		s.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	} else if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, err)
@@ -66,17 +65,17 @@ func (s *ErrorHandler) HandleProfileManagementError(
 	}
 
 	if err := rr.Form.ParseError(err); err != nil {
-		s.d.ErrorManager().ForwardError(r.Context(), w, r, err)
+		s.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 
-	if err := s.d.ProfileRequestPersister().UpdateProfileRequest(r.Context(), rr.ID, rr); err != nil {
-		s.d.ErrorManager().ForwardError(r.Context(), w, r, err)
+	if err := s.d.ProfileRequestPersister().UpdateProfileRequest(r.Context(), rr); err != nil {
+		s.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 
 	http.Redirect(w, r,
-		urlx.CopyWithQuery(s.c.ProfileURL(), url.Values{"request": {rr.ID}}).String(),
+		urlx.CopyWithQuery(s.c.ProfileURL(), url.Values{"request": {rr.ID.String()}}).String(),
 		http.StatusFound,
 	)
 }

@@ -1,18 +1,21 @@
 package form
 
 import (
+	"database/sql/driver"
 	"encoding/json"
 	"net/http"
 	"sync"
 
-	"github.com/pkg/errors"
 	"github.com/santhosh-tekuri/jsonschema/v2"
+
+	"github.com/ory/x/errorsx"
 
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/jsonschemax"
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/stringslice"
 
+	"github.com/ory/kratos/persistence/aliases"
 	"github.com/ory/kratos/schema"
 )
 
@@ -28,7 +31,7 @@ var (
 //
 // swagger:model form
 type HTMLForm struct {
-	sync.RWMutex
+	*sync.RWMutex
 
 	// Action should be used as the form action URL (<form action="{{ .Action }}" method="post">).
 	Action string `json:"action"`
@@ -36,7 +39,7 @@ type HTMLForm struct {
 	// Method is the form method (e.g. POST)
 	Method string `json:"method"`
 
-	// Fields contains the form fields asdfasdffasd
+	// Fields contains the form fields.
 	Fields Fields `json:"fields"`
 
 	// Errors contains all form errors. These will be duplicates of the individual field errors.
@@ -46,9 +49,10 @@ type HTMLForm struct {
 // NewHTMLForm returns an empty container.
 func NewHTMLForm(action string) *HTMLForm {
 	return &HTMLForm{
-		Action: action,
-		Method: "POST",
-		Fields: Fields{},
+		RWMutex: new(sync.RWMutex),
+		Action:  action,
+		Method:  "POST",
+		Fields:  Fields{},
 	}
 }
 
@@ -124,7 +128,7 @@ func (c *HTMLForm) Reset() {
 // This method DOES NOT touch the values of the form fields, only its errors.
 func (c *HTMLForm) ParseError(err error) error {
 	c.defaults()
-	switch e := errors.Cause(err).(type) {
+	switch e := errorsx.Cause(err).(type) {
 	case richError:
 		if e.StatusCode() == http.StatusBadRequest {
 			c.AddError(&Error{Message: e.Reason()})
@@ -267,6 +271,13 @@ func (c *HTMLForm) AddError(err *Error, names ...string) {
 		ff.Errors = append(ff.Errors, *err)
 		c.Fields[name] = ff
 	}
+}
+
+func (c *HTMLForm) Scan(value interface{}) error {
+	return aliases.JSONScan(c, value)
+}
+func (c *HTMLForm) Value() (driver.Value, error) {
+	return aliases.JSONValue(c)
 }
 
 func (c *HTMLForm) defaults() {

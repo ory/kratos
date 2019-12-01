@@ -45,9 +45,9 @@ func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *
 }
 
 func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	rid := r.URL.Query().Get("request")
-	if len(rid) == 0 {
-		s.handleLoginError(w, r, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request Code is missing.")))
+	rid := x.ParseUUID(r.URL.Query().Get("request"))
+	if x.IsZeroUUID(rid) {
+		s.handleLoginError(w, r, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request query parameter is missing or invalid.")))
 		return
 	}
 
@@ -77,7 +77,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	if err := ar.Valid(); err != nil {
-		s.d.ErrorManager().ForwardError(r.Context(), w, r, err)
+		s.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 
@@ -90,7 +90,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 	var o CredentialsConfig
 	d := json.NewDecoder(bytes.NewBuffer(c.Config))
 	if err := d.Decode(&o); err != nil {
-		s.d.ErrorManager().ForwardError(r.Context(), w, r, herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error()))
+		s.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error()))
 		return
 	}
 
@@ -101,7 +101,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 
 	if err := s.d.LoginHookExecutor().PostLoginHook(w, r,
 		s.d.PostLoginHooks(identity.CredentialsTypePassword), ar, i); err != nil {
-		s.d.ErrorManager().ForwardError(r.Context(), w, r, err)
+		s.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 }
@@ -113,7 +113,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Request) error
 
 	action := urlx.CopyWithQuery(
 		urlx.AppendPaths(s.c.SelfPublicURL(), LoginPath),
-		url.Values{"request": {sr.ID}},
+		url.Values{"request": {sr.ID.String()}},
 	)
 
 	f := &form.HTMLForm{
@@ -135,7 +135,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Request) error
 
 	sr.Methods[identity.CredentialsTypePassword] = &login.RequestMethod{
 		Method: identity.CredentialsTypePassword,
-		Config: &RequestMethod{HTMLForm: f},
+		Config: &login.RequestMethodConfig{RequestMethodConfigurator: &RequestMethod{HTMLForm: f}},
 	}
 	return nil
 }

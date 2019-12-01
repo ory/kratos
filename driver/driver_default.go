@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
 	"github.com/ory/x/logrusx"
@@ -13,7 +14,7 @@ type DefaultDriver struct {
 	r Registry
 }
 
-func NewDefaultDriver(l logrus.FieldLogger, version, build, date string) Driver {
+func NewDefaultDriver(l logrus.FieldLogger, version, build, date string) (Driver, error) {
 	if l == nil {
 		l = logrusx.New()
 	}
@@ -22,7 +23,7 @@ func NewDefaultDriver(l logrus.FieldLogger, version, build, date string) Driver 
 
 	r, err := NewRegistry(c)
 	if err != nil {
-		l.WithError(err).Fatal("Unable to instantiate service registry.")
+		return nil, errors.Wrap(err, "unable to instantiate service registry")
 	}
 
 	r.
@@ -32,10 +33,18 @@ func NewDefaultDriver(l logrus.FieldLogger, version, build, date string) Driver 
 
 	// Init forces the driver to initialize and circumvent lazy loading issues.
 	if err = r.Init(); err != nil {
-		l.WithError(err).Fatal("Unable to initialize service registry.")
+		return nil, errors.Wrap(err, "unable to initialize service registry")
 	}
 
-	return &DefaultDriver{r: r, c: c}
+	return &DefaultDriver{r: r, c: c}, nil
+}
+
+func MustNewDefaultDriver(l logrus.FieldLogger, version, build, date string) Driver {
+	d, err := NewDefaultDriver(l, version, build, date)
+	if err != nil {
+		l.WithError(err).Fatal("Unable to initialize driver.")
+	}
+	return d
 }
 
 func (r *DefaultDriver) BuildInfo() *BuildInfo {

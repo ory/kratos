@@ -44,7 +44,7 @@ func (e *ValidationExtensionIdentifier) Call(value interface{}, config *schema.E
 		cred, ok := e.i.GetCredentials(CredentialsTypePassword)
 		if !ok {
 			cred = &Credentials{
-				ID:          CredentialsTypePassword,
+				Type:        CredentialsTypePassword,
 				Identifiers: []string{},
 				Config:      json.RawMessage{},
 			}

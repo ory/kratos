@@ -24,8 +24,12 @@ import (
 	"github.com/ory/kratos/x"
 )
 
+func init() {
+	internal.RegisterFakes()
+}
+
 func TestEnsureSessionRedirect(t *testing.T) {
-	_, reg := internal.NewMemoryRegistry(t)
+	_, reg := internal.NewRegistryDefault(t)
 
 	router := x.NewRouterPublic()
 	reg.RegistrationHandler().RegisterPublicRoutes(router)
@@ -60,7 +64,7 @@ func TestEnsureSessionRedirect(t *testing.T) {
 }
 
 func TestRegistrationHandler(t *testing.T) {
-	_, reg := internal.NewMemoryRegistry(t)
+	_, reg := internal.NewRegistryDefault(t)
 
 	router := x.NewRouterPublic()
 	reg.RegistrationHandler().RegisterPublicRoutes(router)

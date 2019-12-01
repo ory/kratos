@@ -20,7 +20,7 @@ func TestCopyCredentials(t *testing.T) {
 	i := NewIdentity("")
 	i.Credentials = map[CredentialsType]Credentials{
 		"foo": {
-			ID:          "foo",
+			Type:        "foo",
 			Identifiers: []string{"bar"},
 			Config:      json.RawMessage(`{"foo":"bar"}`),
 		},
@@ -28,7 +28,7 @@ func TestCopyCredentials(t *testing.T) {
 
 	creds := i.CopyCredentials()
 	creds["bar"] = Credentials{
-		ID:          "bar",
+		Type:        "bar",
 		Identifiers: []string{"bar"},
 		Config:      json.RawMessage(`{"foo":"bar"}`),
 	}

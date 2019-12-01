@@ -15,13 +15,15 @@ import (
 
 	"github.com/ory/viper"
 
-	"github.com/ory/herodot"
-
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/internal"
 	. "github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
+
+func init() {
+	internal.RegisterFakes()
+}
 
 func send(code int) httprouter.Handle {
 	return func(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
@@ -31,13 +33,13 @@ func send(code int) httprouter.Handle {
 
 func TestHandler(t *testing.T) {
 	t.Run("public", func(t *testing.T) {
-		_, reg := internal.NewMemoryRegistry(t)
+		_, reg := internal.NewRegistryDefault(t)
 		r := x.NewRouterPublic()
 
 		h, _ := MockSessionCreateHandler(t, reg)
 		r.GET("/set", h)
 
-		NewHandler(reg, herodot.NewJSONWriter(nil)).RegisterPublicRoutes(r)
+		NewHandler(reg).RegisterPublicRoutes(r)
 		ts := httptest.NewServer(r)
 		defer ts.Close()
 
@@ -61,7 +63,7 @@ func TestHandler(t *testing.T) {
 }
 
 func TestIsNotAuthenticatedSecurecookie(t *testing.T) {
-	_, reg := internal.NewMemoryRegistry(t)
+	_, reg := internal.NewRegistryDefault(t)
 	r := x.NewRouterPublic()
 	r.GET("/public/with-callback", reg.SessionHandler().IsNotAuthenticated(send(http.StatusOK), send(http.StatusBadRequest)))
 
@@ -88,7 +90,7 @@ func TestIsNotAuthenticatedSecurecookie(t *testing.T) {
 }
 
 func TestIsNotAuthenticated(t *testing.T) {
-	_, reg := internal.NewMemoryRegistry(t)
+	_, reg := internal.NewRegistryDefault(t)
 	r := x.NewRouterPublic()
 
 	h, _ := MockSessionCreateHandler(t, reg)
@@ -139,7 +141,7 @@ func TestIsNotAuthenticated(t *testing.T) {
 }
 
 func TestIsAuthenticated(t *testing.T) {
-	_, reg := internal.NewMemoryRegistry(t)
+	_, reg := internal.NewRegistryDefault(t)
 	r := x.NewRouterPublic()
 
 	h, _ := MockSessionCreateHandler(t, reg)

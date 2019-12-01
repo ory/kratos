@@ -7,9 +7,10 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ory/x/errorsx"
 
 	"github.com/ory/viper"
 
@@ -53,7 +54,7 @@ func TestRedirector(t *testing.T) {
 	var assert = func(t *testing.T, tc testCase, w *httptest.ResponseRecorder, err error) {
 		if tc.expectErr != "" {
 			require.Error(t, err)
-			assert.Contains(t, errors.Cause(err).(*herodot.DefaultError).Reason(), tc.expectErr)
+			assert.Contains(t, errorsx.Cause(err).(*herodot.DefaultError).Reason(), tc.expectErr)
 			return
 		}
 		require.NoError(t, err)

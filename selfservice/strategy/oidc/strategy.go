@@ -9,10 +9,12 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/google/uuid"
+	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
+
+	"github.com/ory/x/errorsx"
 
 	"github.com/ory/x/jsonx"
 
@@ -83,8 +85,6 @@ type dependencies interface {
 type Strategy struct {
 	c configuration.Provider
 	d dependencies
-
-	dec       *x.BodyDecoder
 	validator *schema.Validator
 	cg        form.CSRFGenerator
 }
@@ -124,7 +124,6 @@ func NewStrategy(
 		d:         d,
 		cg:        nosurf.Token,
 		validator: schema.NewValidator(),
-		dec:       x.NewBodyDecoder(),
 	}
 }
 
@@ -141,7 +140,7 @@ func (s *Strategy) LoginStrategyID() identity.CredentialsType {
 }
 
 func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var rid = ps.ByName("request")
+	rid := x.ParseUUID(ps.ByName("request"))
 
 	if err := r.ParseForm(); err != nil {
 		s.handleError(w, r, rid, nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
@@ -174,11 +173,11 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	state := uuid.New().String()
+	state := x.NewUUID().String()
 	// Any data that is posted to this endpoint will be used to fill out missing data from the oidc provider.
 	if err := x.SessionPersistValues(w, r, s.d.CookieManager(), sessionName, map[string]interface{}{
 		sessionKeyState:  state,
-		sessionRequestID: rid,
+		sessionRequestID: rid.String(),
 		sessionFormState: r.PostForm.Encode(),
 	}); err != nil {
 		s.handleError(w, r, rid, nil, err)
@@ -188,8 +187,8 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 	http.Redirect(w, r, config.AuthCodeURL(state), http.StatusFound)
 }
 
-func (s *Strategy) validateRequest(ctx context.Context, rid string) (request, error) {
-	if rid == "" {
+func (s *Strategy) validateRequest(ctx context.Context, rid uuid.UUID) (request, error) {
+	if x.IsZeroUUID(rid) {
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReason("The session cookie contains invalid values and the request could not be executed. Please try again."))
 	}
 
@@ -222,7 +221,7 @@ func (s *Strategy) validateCallback(r *http.Request) (request, error) {
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the session cookie.`))
 	}
 
-	ar, err := s.validateRequest(r.Context(), x.SessionGetStringOr(r, s.d.CookieManager(), sessionName, sessionRequestID, ""))
+	ar, err := s.validateRequest(r.Context(), x.ParseUUID(x.SessionGetStringOr(r, s.d.CookieManager(), sessionName, sessionRequestID, "")))
 	if err != nil {
 		return nil, err
 	}
@@ -249,7 +248,7 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		if ar != nil {
 			s.handleError(w, r, ar.GetID(), nil, err)
 		} else {
-			s.handleError(w, r, "", nil, err)
+			s.handleError(w, r, x.EmptyUUID, nil, err)
 		}
 		return
 	}
@@ -294,11 +293,11 @@ func uid(provider, subject string) string {
 	return fmt.Sprintf("%s:%s", provider, subject)
 }
 
-func (s *Strategy) authURL(request, provider string) string {
+func (s *Strategy) authURL(request uuid.UUID, provider string) string {
 	u := urlx.AppendPaths(
 		urlx.Copy(s.c.SelfPublicURL()),
 		strings.Replace(
-			AuthPath, ":request", request, 1,
+			AuthPath, ":request", request.String(), 1,
 		),
 	)
 
@@ -312,7 +311,7 @@ func (s *Strategy) authURL(request, provider string) string {
 func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Request, claims *Claims, provider Provider) {
 	i, c, err := s.d.IdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject))
 	if err != nil {
-		if errors.Cause(err).Error() == herodot.ErrNotFound.Error() {
+		if errorsx.Cause(err).Error() == herodot.ErrNotFound.Error() {
 			// If no account was found we're "manually" creating a new registration request and redirecting the browser
 			// to that endpoint.
 
@@ -408,14 +407,14 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 
 	traits, err := merge(
 		x.SessionGetStringOr(r, s.d.CookieManager(), sessionName, sessionFormState, ""),
-		i.Traits, option,
+		json.RawMessage(i.Traits), option,
 	)
 	if err != nil {
 		s.handleError(w, r, a.GetID(), nil, err)
 		return
 	}
 
-	i.Traits = traits
+	i.Traits = identity.Traits(traits)
 
 	// Validate the identity itself
 	if err := s.d.IdentityValidator().Validate(i); err != nil {
@@ -433,7 +432,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 	}
 
 	i.SetCredentials(s.RegistrationStrategyID(), identity.Credentials{
-		ID:          s.RegistrationStrategyID(),
+		Type:        s.RegistrationStrategyID(),
 		Identifiers: []string{uid(provider.Config().ID, claims.Subject)},
 		Config:      b.Bytes(),
 	})
@@ -460,7 +459,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 // 	return nil
 // }
 
-func (s *Strategy) populateMethod(r *http.Request, request string) (*RequestMethod, error) {
+func (s *Strategy) populateMethod(r *http.Request, request uuid.UUID) (*RequestMethod, error) {
 	conf, err := s.Config()
 	if err != nil {
 		return nil, err
@@ -479,7 +478,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Request) error
 	}
 	sr.Methods[identity.CredentialsTypeOIDC] = &login.RequestMethod{
 		Method: identity.CredentialsTypeOIDC,
-		Config: config,
+		Config: &login.RequestMethodConfig{RequestMethodConfigurator: config},
 	}
 	return nil
 }
@@ -491,7 +490,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.
 	}
 	sr.Methods[identity.CredentialsTypeOIDC] = &registration.RequestMethod{
 		Method: identity.CredentialsTypeOIDC,
-		Config: config,
+		Config: &registration.RequestMethodConfig{RequestMethodConfigurator: config},
 	}
 	return nil
 }
@@ -520,9 +519,9 @@ func (s *Strategy) provider(id string) (Provider, error) {
 	}
 }
 
-func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid string, traits json.RawMessage, err error) {
-	if rid == "" {
-		s.d.ErrorManager().ForwardError(r.Context(), w, r, err)
+func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.UUID, traits json.RawMessage, err error) {
+	if x.IsZeroUUID(rid) {
+		s.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
 		return
 	}
 
@@ -554,5 +553,5 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid strin
 		return
 	}
 
-	s.d.ErrorManager().ForwardError(r.Context(), w, r, err)
+	s.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
 }

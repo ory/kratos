@@ -25,9 +25,9 @@ type RegistrationRequest struct {
 	// Format: date-time
 	ExpiresAt strfmt.DateTime `json:"expires_at,omitempty"`
 
-	// ID represents the request's unique ID. When performing the registration flow, this
-	// represents the id in the registration ui's query parameter: http://registration-ui/?request=<id>
-	ID string `json:"id,omitempty"`
+	// id
+	// Format: uuid4
+	ID UUID `json:"id,omitempty"`
 
 	// IssuedAt is the time (UTC) when the request occurred.
 	// Format: date-time
@@ -51,6 +51,10 @@ func (m *RegistrationRequest) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateExpiresAt(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateID(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -91,6 +95,22 @@ func (m *RegistrationRequest) validateExpiresAt(formats strfmt.Registry) error {
 	}
 
 	if err := validate.FormatOf("expires_at", "body", "date-time", m.ExpiresAt.String(), formats); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *RegistrationRequest) validateID(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.ID) { // not required
+		return nil
+	}
+
+	if err := m.ID.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("id")
+		}
 		return err
 	}
 

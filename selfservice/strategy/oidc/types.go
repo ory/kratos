@@ -1,6 +1,8 @@
 package oidc
 
 import (
+	"github.com/gofrs/uuid"
+
 	"github.com/ory/kratos/selfservice/form"
 )
 
@@ -28,5 +30,5 @@ func NewRequestMethodConfig(f *form.HTMLForm) *RequestMethod {
 }
 
 type request interface {
-	GetID() string
+	GetID() uuid.UUID
 }

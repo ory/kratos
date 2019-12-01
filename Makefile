@@ -65,4 +65,4 @@ sqlbin:
 resetdb:
 		docker kill hydra_test_database_postgres || true
 		docker rm -f hydra_test_database_postgres || true
-		docker run --rm --name hydra_test_database_postgres -p 3445:5432 -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=hydra -d postgres:9.6
+		docker run --rm --name hydra_test_database_postgres -p 3445:5432 -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=postgres -d postgres:9.6
