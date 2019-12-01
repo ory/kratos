@@ -7,17 +7,12 @@ import (
 	"testing"
 
 	"github.com/gofrs/uuid"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/viper"
-	"github.com/ory/x/errorsx"
-
-	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/driver/configuration"
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/x"
 )
 
@@ -58,11 +53,6 @@ type (
 
 	PoolProvider interface {
 		IdentityPool() Pool
-	}
-
-	abstractPool struct {
-		c configuration.Provider
-		d ValidationProvider
 	}
 )
 
@@ -362,39 +352,4 @@ func TestPool(p Pool) func(t *testing.T) {
 			assertEqual(t, expected, actual)
 		})
 	}
-}
-
-func newAbstractPool(c configuration.Provider, d ValidationProvider) *abstractPool {
-	return &abstractPool{c: c, d: d}
-}
-
-func (p *abstractPool) augment(i Identity) *Identity {
-	if i.TraitsSchemaURL == "" {
-		i.TraitsSchemaURL = p.c.DefaultIdentityTraitsSchemaURL().String()
-	}
-
-	return &i
-}
-
-func (p *abstractPool) declassify(i Identity) *Identity {
-	return i.CopyWithoutCredentials()
-}
-
-func (p *abstractPool) declassifyAll(i []Identity) []Identity {
-	declassified := make([]Identity, len(i))
-	for k, ii := range i {
-		declassified[k] = *ii.CopyWithoutCredentials()
-	}
-	return declassified
-}
-
-func (p *abstractPool) Validate(i *Identity) error {
-	if err := p.d.IdentityValidator().Validate(i); err != nil {
-		if _, ok := errorsx.Cause(err).(schema.ResultErrors); ok {
-			return errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
-		}
-		return err
-	}
-
-	return nil
 }

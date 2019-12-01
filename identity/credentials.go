@@ -57,8 +57,8 @@ type (
 
 	// swagger:ignore
 	CredentialsTypeTable struct {
-		ID   uuid.UUID       `json:"uuid" db:"id"`
-		Name CredentialsType `json:"uuid" db:"name"`
+		ID   uuid.UUID       `json:"-" db:"id"`
+		Name CredentialsType `json:"-" db:"name"`
 	}
 
 	// swagger:ignore

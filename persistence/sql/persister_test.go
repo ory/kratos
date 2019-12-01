@@ -31,9 +31,10 @@ var sqlite = fmt.Sprintf("sqlite3://%s.sqlite?_fk=true&mode=rwc", filepath.Join(
 
 func init() {
 	internal.RegisterFakes()
-	pop.Debug = true
+	// pop.Debug = true
 }
 
+// nolint:staticcheck
 func TestMain(m *testing.M) {
 	atexit := dockertest.NewOnExit()
 	atexit.Add(func() {
@@ -45,6 +46,10 @@ func TestMain(m *testing.M) {
 
 func pl(t *testing.T) func(lvl logging.Level, s string, args ...interface{}) {
 	return func(lvl logging.Level, s string, args ...interface{}) {
+		if pop.Debug == false {
+			return
+		}
+
 		if lvl == logging.SQL {
 			if len(args) > 0 {
 				xargs := make([]string, len(args))
@@ -89,7 +94,7 @@ func TestPersister(t *testing.T) {
 				defer wg.Done()
 				db := f(t)
 				l.Lock()
-				conns[k] = db
+				conns[s] = db
 				l.Unlock()
 			}(k, f)
 		}
@@ -107,23 +112,23 @@ func TestPersister(t *testing.T) {
 			require.NoError(t, p.MigrateUp(context.Background()))
 
 			t.Run("contract=identity.TestPool", func(t *testing.T) {
-				// pop.SetLogger(pl(t))
+				pop.SetLogger(pl(t))
 				identity.TestPool(p)(t)
 			})
 			t.Run("contract=registration.TestRequestPersister", func(t *testing.T) {
-				// pop.SetLogger(pl(t))
+				pop.SetLogger(pl(t))
 				registration.TestRequestPersister(p)(t)
 			})
 			t.Run("contract=login.TestRequestPersister", func(t *testing.T) {
-				// pop.SetLogger(pl(t))
+				pop.SetLogger(pl(t))
 				login.TestRequestPersister(p)(t)
 			})
 			t.Run("contract=profile.TestRequestPersister", func(t *testing.T) {
-				// pop.SetLogger(pl(t))
+				pop.SetLogger(pl(t))
 				profile.TestRequestPersister(p)(t)
 			})
 			t.Run("contract=session.TestRequestPersister", func(t *testing.T) {
-				// pop.SetLogger(pl(t))
+				pop.SetLogger(pl(t))
 				session.TestPersister(p)(t)
 			})
 		})

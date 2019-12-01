@@ -24,7 +24,7 @@ type Session struct {
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 
-	modifiedIdentity bool `json:"-" faker:"-" db:"-"`
+	modifiedIdentity bool `faker:"-" db:"-"`
 }
 
 func (s Session) TableName() string {

@@ -1,11 +1,9 @@
 package client
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -80,20 +78,20 @@ func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string) {
 	// fmt.Printf("Successfully applied %d SQL migrations!\n", n)
 }
 
-func askForConfirmation(s string) bool {
-	reader := bufio.NewReader(os.Stdin)
-
-	for {
-		fmt.Printf("%s [y/n]: ", s)
-
-		response, err := reader.ReadString('\n')
-		cmdx.Must(err, "%s", err)
-
-		response = strings.ToLower(strings.TrimSpace(response))
-		if response == "y" || response == "yes" {
-			return true
-		} else if response == "n" || response == "no" {
-			return false
-		}
-	}
-}
+// func askForConfirmation(s string) bool {
+// 	reader := bufio.NewReader(os.Stdin)
+//
+// 	for {
+// 		fmt.Printf("%s [y/n]: ", s)
+//
+// 		response, err := reader.ReadString('\n')
+// 		cmdx.Must(err, "%s", err)
+//
+// 		response = strings.ToLower(strings.TrimSpace(response))
+// 		if response == "y" || response == "yes" {
+// 			return true
+// 		} else if response == "n" || response == "no" {
+// 			return false
+// 		}
+// 	}
+// }

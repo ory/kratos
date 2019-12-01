@@ -106,6 +106,7 @@ func (h *Handler) initUpdateProfile(w http.ResponseWriter, r *http.Request, ps h
 
 // swagger:parameters getProfileManagementRequest
 type (
+	// nolint:deadcode,unused
 	getProfileManagementRequestParameters struct {
 		// Request should be set to the value of the `request` query parameter
 		// by the profile management UI.
@@ -140,6 +141,8 @@ type (
 //       200: profileManagementRequest
 //       302: emptyResponse
 //       500: genericError
+//
+// nolint:deadcode,unused
 func fetchUpdateProfileRequestAdmin() {}
 
 // swagger:route GET /profiles/requests public getProfileManagementRequest
@@ -197,6 +200,7 @@ func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Reque
 
 type (
 	// swagger:parameters completeProfileManagementFlow
+	// nolint:deadcode,unused
 	completeProfileManagementParameters struct {
 		// in: body
 		// required: true
@@ -204,6 +208,7 @@ type (
 	}
 
 	// swagger:model completeProfileManagementPayload
+	// nolint:deadcode,unused
 	completeProfileManagementPayload struct {
 		// Traits contains all of the identity's traits.
 		//

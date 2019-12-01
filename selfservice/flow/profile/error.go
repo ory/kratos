@@ -34,7 +34,6 @@ type (
 	ErrorHandler struct {
 		d  errorHandlerDependencies
 		c  configuration.Provider
-		bd *x.BodyDecoder
 	}
 )
 

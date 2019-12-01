@@ -271,6 +271,7 @@ github.com/gobuffalo/logger v0.0.0-20181127160119-5b956e21995c h1:Z/ppYX6EtPEysb
 github.com/gobuffalo/logger v0.0.0-20181127160119-5b956e21995c/go.mod h1:+HxKANrR9VGw9yN3aOAppJKvhO05ctDi63w4mDnKv2U=
 github.com/gobuffalo/logger v0.0.0-20190315122211-86e12af44bc2/go.mod h1:QdxcLw541hSGtBnhUc4gaNIXRjiDppFGaDqzbrBd3v8=
 github.com/gobuffalo/logger v1.0.0/go.mod h1:2zbswyIUa45I+c+FLXuWl9zSWEiVuthsk8ze5s8JvPs=
+github.com/gobuffalo/logger v1.0.1 h1:ZEgyRGgAm4ZAhAO45YXMs5Fp+bzGLESFewzAVBMKuTg=
 github.com/gobuffalo/logger v1.0.1/go.mod h1:2zbswyIUa45I+c+FLXuWl9zSWEiVuthsk8ze5s8JvPs=
 github.com/gobuffalo/logger v1.0.3 h1:YaXOTHNPCvkqqA7w05A4v0k2tCdpr+sgFlgINbQ6gqc=
 github.com/gobuffalo/logger v1.0.3/go.mod h1:SoeejUwldiS7ZsyCBphOGURmWdwUFXs0J7TCjEhjKxM=
@@ -356,6 +357,7 @@ github.com/gobuffalo/plushgen v0.1.2/go.mod h1:3U71v6HWZpVER1nInTXeAwdoRNsRd4W8a
 github.com/gobuffalo/pop v4.8.2+incompatible/go.mod h1:DwBz3SD5SsHpTZiTubcsFWcVDpJWGsxjVjMPnkiThWg=
 github.com/gobuffalo/pop v4.8.3+incompatible/go.mod h1:DwBz3SD5SsHpTZiTubcsFWcVDpJWGsxjVjMPnkiThWg=
 github.com/gobuffalo/pop v4.8.4+incompatible/go.mod h1:DwBz3SD5SsHpTZiTubcsFWcVDpJWGsxjVjMPnkiThWg=
+github.com/gobuffalo/pop v4.12.2+incompatible h1:WFHMzzHbVLulZnEium1VlYRnWkzHz39FzVLov6rZdDI=
 github.com/gobuffalo/pop v4.12.2+incompatible/go.mod h1:DwBz3SD5SsHpTZiTubcsFWcVDpJWGsxjVjMPnkiThWg=
 github.com/gobuffalo/release v1.0.35/go.mod h1:VtHFAKs61vO3wboCec5xr9JPTjYyWYcvaM3lclkc4x4=
 github.com/gobuffalo/release v1.0.38/go.mod h1:VtHFAKs61vO3wboCec5xr9JPTjYyWYcvaM3lclkc4x4=

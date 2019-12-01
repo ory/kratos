@@ -85,8 +85,6 @@ type dependencies interface {
 type Strategy struct {
 	c configuration.Provider
 	d dependencies
-
-	dec       *x.BodyDecoder
 	validator *schema.Validator
 	cg        form.CSRFGenerator
 }
@@ -126,7 +124,6 @@ func NewStrategy(
 		d:         d,
 		cg:        nosurf.Token,
 		validator: schema.NewValidator(),
-		dec:       x.NewBodyDecoder(),
 	}
 }
 

@@ -21,6 +21,7 @@ require (
 	github.com/go-swagger/go-swagger v0.19.0
 	github.com/go-swagger/scan-repo-boundary v0.0.0-20180623220736-973b3573c013 // indirect
 	github.com/gobuffalo/httptest v1.0.2
+	github.com/gobuffalo/nulls v0.1.0 // indirect
 	github.com/gobuffalo/packr v1.22.0
 	github.com/gobuffalo/packr/v2 v2.7.1
 	github.com/gobuffalo/pop v4.12.2+incompatible

@@ -31,7 +31,7 @@ var (
 //
 // swagger:model form
 type HTMLForm struct {
-	sync.RWMutex
+	*sync.RWMutex
 
 	// Action should be used as the form action URL (<form action="{{ .Action }}" method="post">).
 	Action string `json:"action"`
@@ -49,9 +49,10 @@ type HTMLForm struct {
 // NewHTMLForm returns an empty container.
 func NewHTMLForm(action string) *HTMLForm {
 	return &HTMLForm{
-		Action: action,
-		Method: "POST",
-		Fields: Fields{},
+		RWMutex: new(sync.RWMutex),
+		Action:  action,
+		Method:  "POST",
+		Fields:  Fields{},
 	}
 }
 
