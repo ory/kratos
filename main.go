@@ -15,8 +15,13 @@
 // package main is the entry point for kratos.
 package main
 
-import "github.com/ory/kratos/cmd"
+import (
+	"github.com/markbates/pkger"
+
+	"github.com/ory/kratos/cmd"
+)
 
 func main() {
+	pkger.Include("/courier/template/templates")
 	cmd.Execute()
 }

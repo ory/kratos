@@ -2,8 +2,6 @@ create_table("identities") {
 	t.Column("id", "uuid", {primary: true})
     t.Column("traits_schema_url", "string", {"size": 2048})
     t.Column("traits", "json")
-
-	t.Timestamps()
 }
 
 create_table("identity_credential_types") {
@@ -22,8 +20,6 @@ create_table("identity_credentials") {
     t.Column("identity_credential_type_id", "uuid", { "size": 32 })
     t.Column("identity_id", "uuid")
 
- 	t.Timestamps()
-
     t.ForeignKey("identity_id", {"identities": ["id"]}, {"on_delete": "cascade"})
     t.ForeignKey("identity_credential_type_id", {"identity_credential_types": ["id"]}, {"on_delete": "cascade"})
 }
@@ -32,8 +28,6 @@ create_table("identity_credential_identifiers") {
  	t.Column("id", "uuid", {primary: true})
     t.Column("identifier", "string", {"size": 255})
     t.Column("identity_credential_id", "uuid")
-
- 	t.Timestamps()
 
     t.ForeignKey("identity_credential_id", {"identity_credentials": ["id"]}, {"on_delete": "cascade"})
 }

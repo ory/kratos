@@ -31,7 +31,7 @@ var sqlite = fmt.Sprintf("sqlite3://%s.sqlite?_fk=true&mode=rwc", filepath.Join(
 
 func init() {
 	internal.RegisterFakes()
-	// pop.Debug = true
+	// op.Debug = true
 }
 
 // nolint:staticcheck
@@ -107,7 +107,7 @@ func TestPersister(t *testing.T) {
 			_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
 			p := reg.Persister()
 
-			// pop.SetLogger(pl(t))
+			pop.SetLogger(pl(t))
 			require.NoError(t, p.MigrationStatus(context.Background()))
 			require.NoError(t, p.MigrateUp(context.Background()))
 
@@ -131,8 +131,12 @@ func TestPersister(t *testing.T) {
 				pop.SetLogger(pl(t))
 				session.TestPersister(p)(t)
 			})
+			t.Run("contract=session.TestRequestPersister", func(t *testing.T) {
+				pop.SetLogger(pl(t))
+				courier.TestPersister(p)(t)
+			})
 		})
+
 		t.Logf("DSN: %s", dsn)
 	}
-
 }

@@ -2,9 +2,7 @@ package sql
 
 import (
 	"context"
-	"time"
 
-	"github.com/cenkalti/backoff"
 	"github.com/gobuffalo/packr"
 	"github.com/gobuffalo/pop"
 	"github.com/pkg/errors"
@@ -30,17 +28,6 @@ type (
 		cf configuration.Provider
 	}
 )
-
-func RetryConnect(dsn string) (c *pop.Connection, err error) {
-	bc := backoff.NewExponentialBackOff()
-	bc.MaxElapsedTime = time.Minute * 5
-	bc.Reset()
-
-	return c, backoff.Retry(func() (err error) {
-		c, err = pop.Connect(dsn)
-		return errors.WithStack(err)
-	}, bc)
-}
 
 func NewPersister(r persisterDependencies, conf configuration.Provider, c *pop.Connection) (*Persister, error) {
 	m, err := pop.NewMigrationBox(migrations, c)

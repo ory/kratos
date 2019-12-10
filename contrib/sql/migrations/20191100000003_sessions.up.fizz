@@ -5,7 +5,5 @@ create_table("sessions") {
     t.Column("authenticated_at", "timestamp")
     t.Column("identity_id", "uuid")
 
- 	t.Timestamps()
-
     t.ForeignKey("identity_id", {"identities": ["id"]}, {"on_delete": "cascade"})
 }

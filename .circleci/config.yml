@@ -28,18 +28,34 @@ jobs:
       -
         run: make lint
 
+    Repository: "mailhog/mailhog",
+    Tag:        "v1.0.0",
+    Cmd: []string{
+           "-invite-jim",
+           "-jim-linkspeed-affect=0.25",
+           "-jim-reject-auth=0.25",
+           "-jim-reject-recipient=0.25",
+           "-jim-reject-sender=0.25",
+           "-jim-disconnect=0.25",
+           "-jim-linkspeed-min=1250",
+           "-jim-linkspeed-max=12500",
   test:
     docker:
       -
         image: circleci/golang:1.13
         environment:
           - GO111MODULE=on
+          - TEST_MAILHOG_SMTP=smtp://test:test@127.0.0.1:1025
+          - TEST_MAILHOG_API=smtp://127.0.0.1:8025
           - TEST_SELFSERVICE_OIDC_HYDRA_ADMIN=http://127.0.0.1:4445
           - TEST_SELFSERVICE_OIDC_HYDRA_PUBLIC=http://127.0.0.1:4444
           - TEST_SELFSERVICE_OIDC_HYDRA_INTEGRATION_ADDR=127.0.0.1:4499
           - TEST_DATABASE_POSTGRESQL=postgres://test:test@localhost:5432/postgres?sslmode=disable
           - TEST_DATABASE_MYSQL=mysql://root:test@(localhost:3306)/mysql?parseTime=true
 #          - TEST_DATABASE_COCKROACHDB=cockroach://root@localhost:26257/defaultdb?sslmode=disable
+      -
+        image: mailhog/mailhog:1.0.0
+        command: MailHog -invite-jim -jim-linkspeed-affect=0.25 -jim-reject-auth=0.25 -jim-reject-recipient=0.25 -jim-reject-sender=0.25 -jim-disconnect=0.25 -jim-linkspeed-min=1250 -jim-linkspeed-max=12500
       -
         image: postgres:9.6
         environment:

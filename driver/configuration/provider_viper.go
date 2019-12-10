@@ -33,6 +33,10 @@ var _ Provider = new(ViperProvider)
 const (
 	ViperKeyDSN = "dsn"
 
+	ViperKeyCourierSMTPURL       = "courier.smtp.connection_uri"
+	ViperKeyCourierTemplatesPath = "courier.template_override_path"
+	ViperKeyCourierSMTPFrom      = "courier.stmp.from_address"
+
 	ViperKeySecretsSession = "secrets.session"
 
 	ViperKeyURLsDefaultReturnTo            = "urls.default_return_to"
@@ -211,6 +215,10 @@ func (p *ViperProvider) SelfAdminURL() *url.URL {
 	return mustParseURLFromViper(p.l, ViperKeyURLsSelfAdmin)
 }
 
+func (p *ViperProvider) CourierSMTPURL() *url.URL {
+	return mustParseURLFromViper(p.l, ViperKeyCourierSMTPURL)
+}
+
 func (p *ViperProvider) LoginURL() *url.URL {
 	return mustParseURLFromViper(p.l, ViperKeyURLsLogin)
 }
@@ -260,6 +268,14 @@ func (p *ViperProvider) SelfServiceRegistrationRequestLifespan() time.Duration {
 
 func (p *ViperProvider) SelfServiceLogoutRedirectURL() *url.URL {
 	return mustParseURLFromViper(p.l, ViperKeySelfServiceLogoutRedirectURL)
+}
+
+func (p *ViperProvider) CourierSMTPFrom() string {
+	return viperx.GetString(p.l, ViperKeyCourierSMTPFrom, "noreply@kratos.ory.sh")
+}
+
+func (p *ViperProvider) CourierTemplatesRoot() string {
+	return viperx.GetString(p.l, ViperKeyCourierTemplatesPath, "/courier/template/templates/")
 }
 
 func mustParseURLFromViper(l logrus.FieldLogger, key string) *url.URL {

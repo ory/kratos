@@ -3,6 +3,4 @@ create_table("selfservice_errors") {
     t.Column("errors", "json")
     t.Column("seen_at", "timestamp")
     t.Column("was_seen", "bool")
-
- 	t.Timestamps()
 }

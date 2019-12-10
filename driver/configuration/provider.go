@@ -55,6 +55,10 @@ type Provider interface {
 	SelfServiceRegistrationAfterHooks(strategy string) []SelfServiceHook
 	SelfServiceLogoutRedirectURL() *url.URL
 
+	CourierSMTPFrom() string
+	CourierSMTPURL() *url.URL
+	CourierTemplatesRoot() string
+
 	DefaultIdentityTraitsSchemaURL() *url.URL
 
 	WhitelistedReturnToDomains() []url.URL
