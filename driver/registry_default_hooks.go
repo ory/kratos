@@ -16,7 +16,7 @@ func (m *RegistryDefault) hooksPost(credentialsType identity.CredentialsType, co
 
 	for _, h := range configs {
 		switch h.Run {
-		case hook.KeySession:
+		case hook.KeySessionIssuer:
 			i = append(
 				i,
 				hook.NewSessionIssuer(m),
