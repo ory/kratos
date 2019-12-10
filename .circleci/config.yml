@@ -28,17 +28,6 @@ jobs:
       -
         run: make lint
 
-    Repository: "mailhog/mailhog",
-    Tag:        "v1.0.0",
-    Cmd: []string{
-           "-invite-jim",
-           "-jim-linkspeed-affect=0.25",
-           "-jim-reject-auth=0.25",
-           "-jim-reject-recipient=0.25",
-           "-jim-reject-sender=0.25",
-           "-jim-disconnect=0.25",
-           "-jim-linkspeed-min=1250",
-           "-jim-linkspeed-max=12500",
   test:
     docker:
       -
