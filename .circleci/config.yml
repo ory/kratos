@@ -43,7 +43,7 @@ jobs:
           - TEST_DATABASE_MYSQL=mysql://root:test@(localhost:3306)/mysql?parseTime=true
 #          - TEST_DATABASE_COCKROACHDB=cockroach://root@localhost:26257/defaultdb?sslmode=disable
       -
-        image: mailhog/mailhog:1.0.0
+        image: mailhog/mailhog:v1.0.0
         command: MailHog -invite-jim -jim-linkspeed-affect=0.25 -jim-reject-auth=0.25 -jim-reject-recipient=0.25 -jim-reject-sender=0.25 -jim-disconnect=0.25 -jim-linkspeed-min=1250 -jim-linkspeed-max=12500
       -
         image: postgres:9.6
