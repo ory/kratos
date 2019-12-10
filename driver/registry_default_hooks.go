@@ -16,10 +16,15 @@ func (m *RegistryDefault) hooksPost(credentialsType identity.CredentialsType, co
 
 	for _, h := range configs {
 		switch h.Run {
-		case hook.KeySessionIssuer:
+		case hook.KeySession:
 			i = append(
 				i,
 				hook.NewSessionIssuer(m),
+			)
+		case hook.KeySessionDestroyer:
+			i = append(
+				i,
+				hook.NewSessionDestroyer(m),
 			)
 		case hook.KeyRedirector:
 			var rc struct {
