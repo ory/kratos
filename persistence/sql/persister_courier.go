@@ -5,8 +5,9 @@ import (
 	"database/sql"
 
 	"github.com/gofrs/uuid"
-	"github.com/ory/x/sqlcon"
 	"github.com/pkg/errors"
+
+	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/courier"
 )

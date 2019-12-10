@@ -36,8 +36,8 @@ type (
 	ErrorHandlerProvider interface{ RegistrationRequestErrorHandler() *ErrorHandler }
 
 	ErrorHandler struct {
-		d  errorHandlerDependencies
-		c  configuration.Provider
+		d errorHandlerDependencies
+		c configuration.Provider
 	}
 )
 

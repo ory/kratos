@@ -32,8 +32,8 @@ type (
 	ErrorHandlerProvider interface{ ProfileRequestRequestErrorHandler() *ErrorHandler }
 
 	ErrorHandler struct {
-		d  errorHandlerDependencies
-		c  configuration.Provider
+		d errorHandlerDependencies
+		c configuration.Provider
 	}
 )
 

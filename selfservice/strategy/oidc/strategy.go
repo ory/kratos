@@ -83,8 +83,8 @@ type dependencies interface {
 // Strategy implements selfservice.LoginStrategy, selfservice.RegistrationStrategy. It supports both login
 // and registration via OpenID Providers.
 type Strategy struct {
-	c configuration.Provider
-	d dependencies
+	c         configuration.Provider
+	d         dependencies
 	validator *schema.Validator
 	cg        form.CSRFGenerator
 }

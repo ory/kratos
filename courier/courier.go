@@ -56,7 +56,7 @@ func (m *Courier) SendEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, er
 		return uuid.Nil, err
 	}
 
-	subject, err := t.EmailBody()
+	subject, err := t.EmailSubject()
 	if err != nil {
 		return uuid.Nil, err
 	}

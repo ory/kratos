@@ -11,12 +11,13 @@ import (
 
 	"github.com/cenkalti/backoff"
 	"github.com/gofrs/uuid"
-	"github.com/ory/dockertest"
-	"github.com/ory/viper"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	"github.com/ory/dockertest"
+	"github.com/ory/viper"
 
 	templates "github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/driver/configuration"
@@ -134,6 +135,9 @@ func TestSMTP(t *testing.T) {
 
 				return nil
 			}()
+			if err == nil {
+				break
+			}
 		}
 		require.NoError(t, err)
 

@@ -18,6 +18,7 @@ import (
 	// "github.com/ory/x/sqlcon/dockertest"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/flow/login"
