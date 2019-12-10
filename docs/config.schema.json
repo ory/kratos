@@ -235,6 +235,43 @@
     "dsn": {
       "type": "string"
     },
+    "courier": {
+      "type": "object",
+      "title": "Courier configuration",
+      "description": "The courier is responsible for sending and delivering messages over email, sms, and other means.",
+      "properties": {
+        "template_override_path": {
+          "type": "string",
+          "title": "Override message templates",
+          "description": "You can override certain or all message templates by pointing this key to the path where the templates are located."
+        },
+        "smtp": {
+          "title": "SMTP Configuration",
+          "description": "Configures outgoing emails using the SMTP protocol.",
+          "type": "object",
+          "properties": {
+            "connection_uri": {
+              "title": "SMTP connection string",
+              "description": "This URI will be used to connect to the SMTP server.",
+              "examples": ["smtps://foo:bar@my-mailserver:1234/"],
+              "type": "string",
+              "format": "uri"
+            },
+            "from_address": {
+              "title": "SMTP Sender Address",
+              "description": "The recipient of an email will see this as the sender address.",
+              "type": "string",
+              "format": "email",
+              "default": "no-reply@ory.kratos.sh"
+            }
+          },
+          "required": ["connection_uri"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["smtp"],
+      "additionalProperties": false
+    },
     "serve": {
       "type": "object",
       "properties": {
@@ -425,7 +462,8 @@
   "required": [
     "dsn",
     "identity",
-    "selfservice"
+    "selfservice",
+    "courier"
   ],
   "additionalProperties": false
 }

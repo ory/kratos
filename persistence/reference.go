@@ -3,6 +3,7 @@ package persistence
 import (
 	"context"
 
+	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow/login"
@@ -20,6 +21,7 @@ type Persister interface {
 	registration.RequestPersister
 	login.RequestPersister
 	profile.RequestPersister
+	courier.Persister
 	session.Persister
 	errorx.Persister
 

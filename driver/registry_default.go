@@ -20,6 +20,7 @@ import (
 
 	"github.com/ory/x/logrusx"
 
+	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/persistence"
 	"github.com/ory/kratos/persistence/sql"
 	"github.com/ory/kratos/selfservice/flow/login"
@@ -51,6 +52,7 @@ type RegistryDefault struct {
 	writer         herodot.Writer
 	healthxHandler *healthx.Handler
 
+	courier   *courier.Courier
 	persister persistence.Persister
 
 	identityHandler   *identity.Handler
@@ -339,6 +341,13 @@ func (m *RegistryDefault) Init() error {
 	)
 }
 
+func (m *RegistryDefault) Courier() *courier.Courier {
+	if m.courier == nil {
+		m.courier = courier.NewSMTP(m, m.c)
+	}
+	return m.courier
+}
+
 func (m *RegistryDefault) IdentityPool() identity.Pool {
 	return m.persister
 }
@@ -360,6 +369,10 @@ func (m *RegistryDefault) SelfServiceErrorPersister() errorx.Persister {
 }
 
 func (m *RegistryDefault) SessionPersister() session.Persister {
+	return m.persister
+}
+
+func (m *RegistryDefault) CourierPersister() courier.Persister {
 	return m.persister
 }
 

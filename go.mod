@@ -5,6 +5,8 @@ go 1.13
 replace github.com/santhosh-tekuri/jsonschema/v2 => github.com/ory/jsonschema/v2 v2.1.1-0.20191123130340-1c20114d2c04
 
 require (
+	github.com/Masterminds/sprig/v3 v3.0.0
+	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/bxcodec/faker v2.0.1+incompatible
 	github.com/cenkalti/backoff v2.1.1+incompatible
 	github.com/coreos/go-oidc v2.0.0+incompatible
@@ -20,11 +22,15 @@ require (
 	github.com/go-playground/universal-translator v0.16.0 // indirect
 	github.com/go-swagger/go-swagger v0.19.0
 	github.com/go-swagger/scan-repo-boundary v0.0.0-20180623220736-973b3573c013 // indirect
+	github.com/gobuffalo/envy v1.8.1 // indirect
+	github.com/gobuffalo/fizz v1.9.5 // indirect
+	github.com/gobuffalo/flect v0.1.7 // indirect
+	github.com/gobuffalo/helpers v0.4.0 // indirect
 	github.com/gobuffalo/httptest v1.0.2
 	github.com/gobuffalo/nulls v0.1.0 // indirect
 	github.com/gobuffalo/packr v1.22.0
 	github.com/gobuffalo/packr/v2 v2.7.1
-	github.com/gobuffalo/pop v4.12.2+incompatible
+	github.com/gobuffalo/pop v4.13.0+incompatible
 	github.com/gobuffalo/tags v2.1.7+incompatible // indirect
 	github.com/gobuffalo/uuid v2.0.5+incompatible
 	github.com/gofrs/uuid v3.2.0+incompatible
@@ -36,6 +42,7 @@ require (
 	github.com/gorilla/handlers v1.4.1 // indirect
 	github.com/gorilla/securecookie v1.1.1
 	github.com/gorilla/sessions v1.1.3
+	github.com/hashicorp/golang-lru v0.5.1
 	github.com/imdario/mergo v0.3.7
 	github.com/jessevdk/go-flags v1.4.0 // indirect
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
@@ -43,6 +50,7 @@ require (
 	github.com/justinas/nosurf v0.0.0-20190118163749-6453469bdcc9
 	github.com/leodido/go-urn v1.1.0 // indirect
 	github.com/luna-duclos/instrumentedsql v1.1.1 // indirect
+	github.com/markbates/pkger v0.12.8
 	github.com/mattn/go-sqlite3 v1.13.0 // indirect
 	github.com/mattn/goveralls v0.0.4
 	github.com/mitchellh/go-homedir v1.1.0
@@ -59,6 +67,7 @@ require (
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect
 	github.com/rogpeppe/go-internal v1.5.0 // indirect
 	github.com/santhosh-tekuri/jsonschema/v2 v2.1.0
+	github.com/shurcooL/go v0.0.0-20180423040247-9e1955d9fb6e
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5 // indirect
@@ -70,13 +79,15 @@ require (
 	github.com/toqueteos/webbrowser v1.1.0 // indirect
 	github.com/urfave/negroni v1.0.0
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
+	go.uber.org/zap v1.10.0
 	golang.org/x/crypto v0.0.0-20191122220453-ac88ee75c92c
-	golang.org/x/net v0.0.0-20191125084936-ffdde1057850 // indirect
+	golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sys v0.0.0-20191128015809-6d18c012aee9 // indirect
 	golang.org/x/tools v0.0.0-20191105231337-689d0f08e67a
-	golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.28.0
+	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
+	gotest.tools v2.2.0+incompatible
 )
