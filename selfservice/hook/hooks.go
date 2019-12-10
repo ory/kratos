@@ -3,5 +3,5 @@ package hook
 const (
 	KeySessionIssuer    = "session"
 	KeyRedirector       = "redirect"
-	KeySessionDestroyer = "session_destroyer"
+	KeySessionDestroyer = "revoke_active_sesions"
 )
