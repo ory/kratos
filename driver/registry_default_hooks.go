@@ -20,11 +20,6 @@ func (m *RegistryDefault) hooksPost(credentialsType identity.CredentialsType, co
 				i,
 				hook.NewSessionIssuer(m),
 			)
-		case hook.KeySessionDestroyer:
-			i = append(
-				i,
-				hook.NewSessionDestroyer(m),
-			)
 		case hook.KeyRedirector:
 			var rc struct {
 				R string `json:"default_redirect_url"`
