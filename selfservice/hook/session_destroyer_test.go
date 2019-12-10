@@ -37,7 +37,7 @@ func TestSessionIssuer(t *testing.T) {
 
 		got, err := reg.SessionPersister().GetSession(context.Background(), sid)
 		require.NoError(t, err)
-		assert.Equal(t, sid, got.ID) // check if session not exist
+		assert.NoEqual(t, sid, got.ID) // check if session not exist
 	})
 
 }

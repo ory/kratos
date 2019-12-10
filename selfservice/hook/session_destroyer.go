@@ -29,7 +29,7 @@ func (e *SessionDestroyer) ExecuteRegistrationPostHook(w http.ResponseWriter, r 
 }
 
 func (e *SessionDestroyer) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, a *login.Request, s *session.Session) error {
-	if err := e.r.SessionPersister().DeleteSession(r.Context(), s.ID); err != nil {
+	if err := e.r.SessionPersister().DeleteSession(r.Context(), s.Identity.ID); err != nil {
 		return err
 	}
 	return nil
