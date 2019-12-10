@@ -1,5 +1,4 @@
-# ORY Kratos
-
+<h1 align="center"><img src="./docs/images/banner_kratos.png" alt="ORY Kratos - Cloud native Identity and User Management"></h1>
 
 <h4 align="center">
     <a href="https://discord.gg/PAMQWkr">Chat</a> |
