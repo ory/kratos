@@ -13,7 +13,6 @@ import (
 
 func (m *RegistryDefault) hooksPost(credentialsType identity.CredentialsType, configs []configuration.SelfServiceHook) postHooks {
 	var i postHooks
-
 	for _, h := range configs {
 		switch h.Run {
 		case hook.KeySessionIssuer:
