@@ -29,6 +29,9 @@ type Persister interface {
 
 	// Delete removes a session from the store
 	DeleteSession(ctx context.Context, sid uuid.UUID) error
+
+	// DeleteSessionsFor removes all active session from the store for the given identity.
+	DeleteSessionsFor(ctx context.Context, sid uuid.UUID) error
 }
 
 func TestPersister(p interface {
@@ -73,6 +76,26 @@ func TestPersister(p interface {
 
 			require.NoError(t, p.DeleteSession(context.Background(), expected.ID))
 			_, err := p.GetSession(context.Background(), expected.ID)
+			require.Error(t, err)
+		})
+
+		t.Run("case=delete session for", func(t *testing.T) {
+			var expected1 Session
+			var expected2 Session
+			require.NoError(t, faker.FakeData(&expected1))
+			require.NoError(t, p.CreateIdentity(context.Background(), expected1.Identity))
+
+			require.NoError(t, p.CreateSession(context.Background(), &expected1))
+
+			require.NoError(t, faker.FakeData(&expected2))
+			expected2.Identity = expected1.Identity
+			expected2.IdentityID = expected1.IdentityID
+			require.NoError(t, p.CreateSession(context.Background(), &expected2))
+
+			require.NoError(t, p.DeleteSessionsFor(context.Background(), expected2.IdentityID))
+			_, err := p.GetSession(context.Background(), expected1.ID)
+			require.Error(t, err)
+			_, err = p.GetSession(context.Background(), expected2.ID)
 			require.Error(t, err)
 		})
 	}
