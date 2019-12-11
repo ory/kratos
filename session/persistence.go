@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/viper"
+	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
@@ -77,6 +78,17 @@ func TestPersister(p interface {
 			require.NoError(t, p.DeleteSession(context.Background(), expected.ID))
 			_, err := p.GetSession(context.Background(), expected.ID)
 			require.Error(t, err)
+		})
+
+		t.Run("case=delete session for", func(t *testing.T) {
+			var expected Session
+			require.NoError(t, faker.FakeData(&expected))
+			require.NoError(t, p.CreateIdentity(context.Background(), expected.Identity))
+			require.NoError(t, p.CreateSession(context.Background(), &expected))
+
+			require.NoError(t, p.DeleteSessionFor(context.Background(), expected.ID))
+			_, err := p.GetSession(context.Background(), expected.ID)
+			assert.EqualError(t, err, sqlcon.ErrNoRows)
 		})
 	}
 }
