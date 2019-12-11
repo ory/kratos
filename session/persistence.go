@@ -95,7 +95,7 @@ func TestPersister(p interface {
 			require.NoError(t, p.DeleteSessionsFor(context.Background(), expected2.IdentityID))
 			_, err := p.GetSession(context.Background(), expected1.ID)
 			require.Error(t, err)
-			_, err := p.GetSession(context.Background(), expected2.ID)
+			_, err = p.GetSession(context.Background(), expected2.ID)
 			require.Error(t, err)
 		})
 	}
