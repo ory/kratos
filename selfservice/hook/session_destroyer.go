@@ -9,6 +9,7 @@ import (
 )
 
 var _ login.PostHookExecutor = new(SessionDestroyer)
+var _ registration.PostHookExecutor = new(SessionIssuer)
 
 type sessionDestroyerDependencies interface {
 	session.ManagementProvider
