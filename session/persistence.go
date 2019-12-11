@@ -85,6 +85,7 @@ func TestPersister(p interface {
 			require.NoError(t, faker.FakeData(&expected))
 			require.NoError(t, p.CreateIdentity(context.Background(), expected.Identity))
 			require.NoError(t, p.CreateSession(context.Background(), &expected))
+			require.NoError(t, p.CreateSession(context.Background(), &expected))
 
 			require.NoError(t, p.DeleteSessionFor(context.Background(), expected.ID))
 			_, err := p.GetSession(context.Background(), expected.ID)
