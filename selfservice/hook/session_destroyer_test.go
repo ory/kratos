@@ -19,7 +19,7 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-func TestSessionIssuer(t *testing.T) {
+func TestSessionDestroyer(t *testing.T) {
 	_, reg := internal.NewRegistryDefault(t)
 	viper.Set(configuration.ViperKeyURLsSelfPublic, "http://localhost/")
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/stub.schema.json")
@@ -27,7 +27,7 @@ func TestSessionIssuer(t *testing.T) {
 	var r http.Request
 	h := hook.NewSessionIssuer(reg)
 
-	t.Run("method=sign-in", func(t *testing.T) {
+	t.Run("method=ExecuteLoginPostHook", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		sid := x.NewUUID()
 
