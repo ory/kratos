@@ -68,14 +68,14 @@ selfservice:
     after:
       password:
         - run: session
-        - run: revoke_active_sesions
+        - run: revoke_active_sessions
         - run: redirect
           config:
             default_redirect_url: http://test.kratos.ory.sh:4000/
             allow_user_defined_redirect: true
       oidc:
         - run: session
-        - run: revoke_active_sesions
+        - run: revoke_active_sessions
         - run: redirect
           config:
             default_redirect_url: http://test.kratos.ory.sh:4000/
