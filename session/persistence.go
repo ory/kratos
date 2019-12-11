@@ -29,6 +29,9 @@ type Persister interface {
 
 	// Delete removes a session from the store
 	DeleteSession(ctx context.Context, sid uuid.UUID) error
+
+	// Delete removes a session the store
+	DeleteSessionsFor(ctx context.Context, sid uuid.UUID) error
 }
 
 func TestPersister(p interface {
