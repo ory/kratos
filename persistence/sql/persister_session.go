@@ -29,8 +29,7 @@ func (p *Persister) DeleteSession(ctx context.Context, sid uuid.UUID) error {
 }
 
 func (p *Persister) DeleteSessionsFor(ctx context.Context, sid uuid.UUID) error {
-	count, err := p.c.RawQuery("DELETE FROM sessions WHERE identity_id =?", sid).Exec()
-	if err != nil {
+	if err := p.c.RawQuery("DELETE FROM sessions WHERE identity_id =?", sid).Exec(); err != nil {
 		return sqlcon.HandleError(err)
 	}
 	return nil
