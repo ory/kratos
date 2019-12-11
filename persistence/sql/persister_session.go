@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/gofrs/uuid"
-	"github.com/pkg/errors"
 
 	"github.com/ory/x/sqlcon"
 
@@ -30,12 +29,9 @@ func (p *Persister) DeleteSession(ctx context.Context, sid uuid.UUID) error {
 }
 
 func (p *Persister) DeleteSessionsFor(ctx context.Context, sid uuid.UUID) error {
-	count, err := p.c.RawQuery("DELETE FROM sessions WHERE identity_id =?", sid).ExecWithCount()
+	count, err := p.c.RawQuery("DELETE FROM sessions WHERE identity_id =?", sid).Exec()
 	if err != nil {
 		return sqlcon.HandleError(err)
-	}
-	if count == 0 {
-		return errors.WithStack(sqlcon.ErrNoRows)
 	}
 	return nil
 }
