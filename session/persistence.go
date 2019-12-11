@@ -30,7 +30,7 @@ type Persister interface {
 	// Delete removes a session from the store
 	DeleteSession(ctx context.Context, sid uuid.UUID) error
 
-	// Delete removes a session the store
+	// DeleteSessionsFor removes all active session from the store for the given identity.
 	DeleteSessionsFor(ctx context.Context, sid uuid.UUID) error
 }
 
