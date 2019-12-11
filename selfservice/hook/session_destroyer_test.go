@@ -17,6 +17,7 @@ import (
 	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/sqlcon"
 )
 
 func TestSessionDestroyer(t *testing.T) {
@@ -39,9 +40,8 @@ func TestSessionDestroyer(t *testing.T) {
 		require.NoError(t, err)		
 		require.NoError(t, h.ExecuteLoginPostHook(w, &r, nil, &session.Session{ID: sid, Identity: i}))
 
-		got, err := reg.SessionPersister().GetSession(context.Background(), sid)
-		require.NoError(t, err)
-		assert.NoEqual(t, sid, got.ID) // check if session not exist
+		_, err := reg.SessionPersister().GetSession(context.Background(), sid)
+		assert.EqualError(t, err,  sqlcon.ErrNoRows)
 	})
 
 }
