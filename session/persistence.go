@@ -80,14 +80,22 @@ func TestPersister(p interface {
 		})
 
 		t.Run("case=delete session for", func(t *testing.T) {
-			var expected Session
-			require.NoError(t, faker.FakeData(&expected))
-			require.NoError(t, p.CreateIdentity(context.Background(), expected.Identity))
-			require.NoError(t, p.CreateSession(context.Background(), &expected))
-			require.NoError(t, p.CreateSession(context.Background(), &expected))
+			var expected1 Session
+			var expected2 Session
+			require.NoError(t, faker.FakeData(&expected1))
+			require.NoError(t, p.CreateIdentity(context.Background(), expected1.Identity))
 
-			require.NoError(t, p.DeleteSessionsFor(context.Background(), expected.ID))
-			_, err := p.GetSession(context.Background(), expected.ID)
+			require.NoError(t, p.CreateSession(context.Background(), &expected1))
+
+			require.NoError(t, faker.FakeData(&expected2))
+			expected2.Identity = expected1.Identity
+			expected2.IdentityID = expected1.IdentityID
+			require.NoError(t, p.CreateSession(context.Background(), &expected2))
+
+			require.NoError(t, p.DeleteSessionsFor(context.Background(), identity.ID))
+			_, err := p.GetSession(context.Background(), expected1.ID)
+			require.Error(t, err)
+			_, err := p.GetSession(context.Background(), expected2.ID)
 			require.Error(t, err)
 		})
 	}
