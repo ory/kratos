@@ -35,7 +35,7 @@ jobs:
         environment:
           - GO111MODULE=on
           - TEST_MAILHOG_SMTP=smtp://test:test@127.0.0.1:1025
-          - TEST_MAILHOG_API=smtp://127.0.0.1:8025
+          - TEST_MAILHOG_API=http://127.0.0.1:8025
           - TEST_SELFSERVICE_OIDC_HYDRA_ADMIN=http://127.0.0.1:4445
           - TEST_SELFSERVICE_OIDC_HYDRA_PUBLIC=http://127.0.0.1:4444
           - TEST_SELFSERVICE_OIDC_HYDRA_INTEGRATION_ADDR=127.0.0.1:4499
