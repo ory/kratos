@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/bxcodec/faker"
 	"github.com/pkg/errors"
@@ -47,6 +48,7 @@ func TestPersister(p interface {
 				require.NoError(t, faker.FakeData(&m))
 				require.NoError(t, p.AddMessage(context.Background(), &m))
 				messages[k] = m
+				time.Sleep(time.Second) // wait a bit so that the timestamp ordering works in MySQL.
 			}
 		})
 

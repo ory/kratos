@@ -100,7 +100,7 @@ func TestPool(p Pool) func(t *testing.T) {
 
 		t.Run("case=create with default values", func(t *testing.T) {
 			expected := passwordIdentity("", "id-1")
-			require.NoError(t, p.CreateIdentity(context.Background(), expected), "%T", p)
+			require.NoError(t, p.CreateIdentity(context.Background(), expected))
 			createdIDs = append(createdIDs, expected.ID)
 
 			actual, err := p.GetIdentity(context.Background(), expected.ID)
@@ -150,9 +150,6 @@ func TestPool(p Pool) func(t *testing.T) {
 		})
 
 		t.Run("case=fail on duplicate credential identifiers if type is password", func(t *testing.T) {
-
-			t.Skip()
-
 			initial := passwordIdentity("", "foo@bar.com")
 			require.NoError(t, p.CreateIdentity(context.Background(), initial))
 			createdIDs = append(createdIDs, initial.ID)
@@ -167,9 +164,6 @@ func TestPool(p Pool) func(t *testing.T) {
 		})
 
 		t.Run("case=fail on duplicate credential identifiers if type is oidc", func(t *testing.T) {
-
-			t.Skip()
-
 			initial := oidcIdentity("", "oidc-1")
 			require.NoError(t, p.CreateIdentity(context.Background(), initial))
 			createdIDs = append(createdIDs, initial.ID)
