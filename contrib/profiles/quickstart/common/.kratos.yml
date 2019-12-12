@@ -1,0 +1,18 @@
+log:
+  level: debug
+
+secrets:
+  session:
+    - some-not-very-secure-secret
+
+urls:
+  mfa_ui: http://127.0.0.1:4435/to-be-implemented
+  login_ui: http://127.0.0.1:4435/auth/login
+  registration_ui: http://127.0.0.1:4435/auth/registration
+  default_return_to: http://127.0.0.1:4436/
+  error_ui: http://127.0.0.1:4435/error
+  self:
+    public: http://127.0.0.1:4435/.ory/kratos/public/
+    admin: http://api.cloud.ory.local/projects/ory/services/hive/admin/
+  whitelisted_return_to_domains:
+    - http://console.cloud.ory.local/

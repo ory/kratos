@@ -1,0 +1,20 @@
+FROM golang:1.13-alpine AS builder
+RUN apk -U --no-cache add build-base git gcc
+
+WORKDIR /go/src/github.com/ory/kratos
+
+ADD . .
+RUN CGO_ENABLED=1 go build -tags sqlite -a -o /usr/bin/kratos
+
+FROM alpine:3.10
+
+RUN apk add -U --no-cache ca-certificates
+COPY --from=builder /usr/bin/kratos /usr/bin/kratos
+
+USER 1000
+
+EXPOSE 4433
+EXPOSE 4434
+
+ENTRYPOINT ["kratos"]
+CMD ["serve"]

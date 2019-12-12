@@ -1,0 +1,77 @@
+###########################################################################
+#######             FOR DEMONSTRATION PURPOSES ONLY                 #######
+###########################################################################
+
+version: '3'
+
+services:
+
+  kratos-migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile-build
+    environment:
+      - DSN=sqlite://var/lib/sqlite/db.sqlite
+    volumes:
+      - kratos-sqlite:/var/lib/sqlite/
+    command:
+      migrate sql -e --yes
+    restart: on-failure
+    network:
+      - intranet
+
+  kratos-selfservice-ui:
+    image: oryd/kratos-selfservice-ui-node:v0.0.24
+    ports:
+      - "4435:4435"
+    environment:
+      - PORT=4435
+      - KRATOS_PUBLIC_URL=http://kratos:4433/
+      - KRATOS_BROWSER_URL=http://127.0.0.1:4433/
+    network:
+      - intranet
+
+  kratos:
+    depends_on:
+      - kratos-migrate
+      - kratos-seflservice-ui
+    build:
+      context: .
+      dockerfile: Dockerfile-build
+    ports:
+      - "4433:4433" # public
+      - "4434:4434" # admin
+    restart: unless-stopped
+    environment:
+      - DSN=sqlite://var/lib/sqlite/db.sqlite
+      - LOG_LEVEL=debug
+
+      - SECRETS_SESSION=PLEASE-CHANGE-ME-I-AM-VERY-INSECURE
+
+      - URLS_LOGIN_UI=http://127.0.0.1:4435/auth/login
+      - URLS_REGISTRATION_UI=http://127.0.0.1:4435/auth/registration
+      - URLS_ERROR_UI=http://127.0.0.1:4435/error
+
+      - URLS_SELF_PUBLIC=http://127.0.0.1:4435/.ory/kratos/public/
+      - URLS_SELF_ADMIN=http://kratos:4434/
+
+      - URLS_DEFAULT_RETURN_TO=http://127.0.0.1:4436/
+      - URLS_WHITELISTED_RETURN_TO_DOMAINS=http://127.0.0.1:4436/
+
+      # These settings are set to low values for better performance in development scenarios
+      - HASHERS_ARGON2_PARALLELISM=1
+      - HASHERS_ARGON2_MEMORY=131072 # 128MB
+      - HASHERS_ARGON2_ITERATIONS=2
+
+    command:
+      serve
+    volumes:
+      - kratos-sqlite:/var/lib/sqlite/
+    network:
+      - intranet
+
+networks:
+  intranet:
+
+volumes:
+  kratos-sqlite:
