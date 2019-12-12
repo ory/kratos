@@ -41,7 +41,9 @@ import (
 var _ Registry = new(RegistryDefault)
 
 func init() {
-	dbal.RegisterDriver(NewRegistryDefault())
+	dbal.RegisterDriver(func() dbal.Driver {
+		return NewRegistryDefault()
+	})
 }
 
 type RegistryDefault struct {
@@ -303,7 +305,7 @@ func (m *RegistryDefault) CanHandle(dsn string) bool {
 
 func (m *RegistryDefault) Init() error {
 	if m.persister != nil {
-		return nil
+		panic("RegistryDefault.Init() must not be called more than once.")
 	}
 
 	bc := backoff.NewExponentialBackOff()

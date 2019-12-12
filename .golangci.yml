@@ -19,3 +19,5 @@ linters:
 run:
   skip-dirs:
     - sdk/
+  skip-files:
+    - ".+_test.go"

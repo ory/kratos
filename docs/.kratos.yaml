@@ -12,6 +12,10 @@ dsn: memory
 log:
   level: debug
 
+courier:
+  smtp:
+    connection_uri: smtp://foo:bar@baz/
+
 urls:
   default_return_to: http://return-to-3-test.ory.sh/
   mfa_ui: http://test.kratos.ory.sh/mfa
@@ -67,15 +71,15 @@ selfservice:
           allow_user_defined_redirect: false
     after:
       password:
-        - run: session
         - run: revoke_active_sessions
+        - run: session
         - run: redirect
           config:
             default_redirect_url: http://test.kratos.ory.sh:4000/
             allow_user_defined_redirect: true
       oidc:
-        - run: session
         - run: revoke_active_sessions
+        - run: session
         - run: redirect
           config:
             default_redirect_url: http://test.kratos.ory.sh:4000/
