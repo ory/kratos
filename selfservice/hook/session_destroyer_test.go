@@ -38,7 +38,7 @@ func TestSessionDestroyer(t *testing.T) {
 		require.NoError(t, err)
 		err = reg.SessionPersister().CreateSession(context.Background(), &session.Session{ID: sid2, Identity: i}))
 		require.NoError(t, err)		
-		require.NoError(t, h.ExecuteLoginPostHook(w, &r, nil, &session.Session{ID: sid, Identity: i}))
+		require.NoError(t, h.ExecuteLoginPostHook(w, &r, nil, &session.Session{ID: sid1, Identity: i}))
 
 		_, err := reg.SessionPersister().GetSession(context.Background(), sid1)
 		require.Error(t, err)
