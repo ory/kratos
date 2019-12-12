@@ -83,7 +83,7 @@ func TestPersister(t *testing.T) {
 	if !testing.Short() {
 		funcs := map[string]func(t *testing.T) string{
 			"postgres": dockertest.RunTestPostgreSQL,
-			// "mysql":    dockertest.RunTestMySQL,
+			"mysql":    dockertest.RunTestMySQL,
 			// "cockroach": dockertest.RunTestCockroachDB, // pending: https://github.com/gobuffalo/fizz/pull/69
 		}
 

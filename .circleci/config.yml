@@ -40,7 +40,7 @@ jobs:
           - TEST_SELFSERVICE_OIDC_HYDRA_PUBLIC=http://127.0.0.1:4444
           - TEST_SELFSERVICE_OIDC_HYDRA_INTEGRATION_ADDR=127.0.0.1:4499
           - TEST_DATABASE_POSTGRESQL=postgres://test:test@localhost:5432/postgres?sslmode=disable
-          - TEST_DATABASE_MYSQL=mysql://root:test@(localhost:3306)/mysql?parseTime=true
+          - TEST_DATABASE_MYSQL=mysql://root:test@(localhost:3306)/mysql?parseTime=true&multiStatements=true
           - TEST_DATABASE_COCKROACHDB=cockroach://root@localhost:26257/defaultdb?sslmode=disable
       -
         image: mailhog/mailhog:v1.0.0
