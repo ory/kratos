@@ -10,6 +10,8 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
+	"github.com/ory/viper"
+
 	"github.com/ory/herodot"
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/sqlcon"
@@ -91,8 +93,13 @@ func createIdentityCredentials(ctx context.Context, tx *pop.Connection, i *ident
 		}
 
 		for _, ids := range cred.Identifiers {
+			// Force case-insensitivity for email addresses
 			if strings.Contains(ids, "@") && cred.Type == identity.CredentialsTypePassword {
 				ids = strings.ToLower(ids)
+			}
+
+			if len(ids) == 0 {
+				return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to create identity credentials with missing or empty identifier."))
 			}
 
 			ci := &identity.CredentialIdentifier{
@@ -123,13 +130,16 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 		return err
 	}
 
-	return sqlcon.HandleError(p.c.Transaction(func(tx *pop.Connection) error {
+	if err := sqlcon.HandleError(p.c.Transaction(func(tx *pop.Connection) error {
 		if err := tx.Create(i); err != nil {
 			return err
 		}
 
 		return createIdentityCredentials(ctx, tx, i)
-	}))
+	})); err != nil {
+		return errors.Errorf("dsn: %s %s %s", p.c.Dialect.URL(), err, viper.Get("dsn"))
+	}
+	return nil
 }
 
 func (p *Persister) ListIdentities(ctx context.Context, limit, offset int) ([]identity.Identity, error) {

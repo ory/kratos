@@ -3,11 +3,15 @@ package hook_test
 import (
 	"context"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
+	"github.com/bxcodec/faker"
+	"github.com/gobuffalo/httptest"
+	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/viper"
 
@@ -16,34 +20,45 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/session"
-	"github.com/ory/kratos/x"
 )
+
+func init() {
+	internal.RegisterFakes()
+}
 
 func TestSessionDestroyer(t *testing.T) {
 	_, reg := internal.NewRegistryDefault(t)
 	viper.Set(configuration.ViperKeyURLsSelfPublic, "http://localhost/")
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/stub.schema.json")
 
-	var r http.Request
 	h := hook.NewSessionIssuer(reg)
 
 	t.Run("method=ExecuteLoginPostHook", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		sid1 := x.NewUUID()
-		sid2 := x.NewUUID()
+		var i identity.Identity
+		require.NoError(t, faker.FakeData(&i))
+		require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), &i))
 
-		i := identity.NewIdentity("")
-		require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), i))
-		err := reg.SessionPersister().CreateSession(context.Background(), &session.Session{ID: sid1, Identity: i}))
-		require.NoError(t, err)
-		err = reg.SessionPersister().CreateSession(context.Background(), &session.Session{ID: sid2, Identity: i}))
-		require.NoError(t, err)		
-		require.NoError(t, h.ExecuteLoginPostHook(w, &r, nil, &session.Session{ID: sid, Identity: i}))
+		sessions := make([]session.Session, 5)
+		for k := range sessions {
+			s := sessions[k] // keep this for pointers' sake ;)
+			require.NoError(t, faker.FakeData(&s))
+			s.IdentityID = uuid.Nil
+			s.Identity = &i
 
-		_, err := reg.SessionPersister().GetSession(context.Background(), sid1)
-		require.Error(t, err)
-		_, err := reg.SessionPersister().GetSession(context.Background(), sid2)
-		require.Error(t, err)
+			require.NoError(t, reg.SessionPersister().CreateSession(context.Background(), &s))
+		}
+
+		// Should revoke all the sessions.
+		require.NoError(t, h.ExecuteLoginPostHook(
+			httptest.NewRecorder(),
+			new(http.Request),
+			nil,
+			&session.Session{Identity: &i},
+		))
+
+		for k := range sessions {
+			_, err := reg.SessionPersister().GetSession(context.Background(), sessions[k].ID)
+			assert.EqualError(t, err, sqlcon.ErrNoRows.Error())
+		}
 	})
-
 }

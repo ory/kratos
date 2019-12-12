@@ -69,9 +69,8 @@ func TestPersister(p interface {
 				})
 			}
 
-			ms, err := p.NextMessages(context.Background(), 10)
-			require.NoError(t, err)
-			assert.Len(t, ms, 0)
+			_, err := p.NextMessages(context.Background(), 10)
+			require.EqualError(t, err, ErrQueueEmpty.Error())
 		})
 
 		t.Run("case=setting message status", func(t *testing.T) {
@@ -79,12 +78,11 @@ func TestPersister(p interface {
 			ms, err := p.NextMessages(context.Background(), 1)
 			require.NoError(t, err)
 			require.Len(t, ms, 1)
-			assert.Equal(t, messages[0].ID, ms[1].ID)
+			assert.Equal(t, messages[0].ID, ms[0].ID)
 
 			require.NoError(t, p.SetMessageStatus(context.Background(), messages[0].ID, MessageStatusSent))
-			ms, err = p.NextMessages(context.Background(), 1)
+			_, err = p.NextMessages(context.Background(), 1)
 			require.EqualError(t, err, ErrQueueEmpty.Error())
-			assert.Len(t, ms, 0)
 		})
 	}
 }
