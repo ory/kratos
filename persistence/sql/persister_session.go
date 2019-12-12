@@ -27,3 +27,10 @@ func (p *Persister) CreateSession(ctx context.Context, s *session.Session) error
 func (p *Persister) DeleteSession(ctx context.Context, sid uuid.UUID) error {
 	return p.c.Destroy(&session.Session{ID: sid}) // This must not be eager or identities will be created / updated
 }
+
+func (p *Persister) DeleteSessionsFor(ctx context.Context, sid uuid.UUID) error {
+	if err := p.c.RawQuery("DELETE FROM sessions WHERE identity_id =?", sid).Exec(); err != nil {
+		return sqlcon.HandleError(err)
+	}
+	return nil
+}
