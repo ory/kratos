@@ -34,9 +34,9 @@ func TestSessionDestroyer(t *testing.T) {
 
 		i := identity.NewIdentity("")
 		require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), i))
-		err := reg.SessionPersister().CreateSession(context.Background(), &session.Session{ID: sid1, Identity: i}))
+		err := reg.SessionPersister().CreateSession(context.Background(), &session.Session{ID: sid1, Identity: i})
 		require.NoError(t, err)
-		err = reg.SessionPersister().CreateSession(context.Background(), &session.Session{ID: sid2, Identity: i}))
+		err = reg.SessionPersister().CreateSession(context.Background(), &session.Session{ID: sid2, Identity: i})
 		require.NoError(t, err)		
 		require.NoError(t, h.ExecuteLoginPostHook(w, &r, nil, &session.Session{ID: sid1, Identity: i}))
 
