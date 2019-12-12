@@ -17,7 +17,7 @@ func (m *RegistryDefault) PreLoginHooks() []login.PreHookExecutor {
 }
 
 func (m *RegistryDefault) PostLoginHooks(credentialsType identity.CredentialsType) []login.PostHookExecutor {
-	a := m.hooksPost(credentialsType, m.c.SelfServiceLoginAfterHooks(string(credentialsType)))
+	a := m.hooksPostLogin(credentialsType, m.c.SelfServiceLoginAfterHooks(string(credentialsType)))
 	b := make([]login.PostHookExecutor, len(a))
 	for k, v := range a {
 		b[k] = v

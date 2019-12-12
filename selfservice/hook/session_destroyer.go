@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/ory/kratos/selfservice/flow/login"
-	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/session"
 )
 
@@ -21,10 +20,6 @@ type SessionDestroyer struct {
 
 func NewSessionDestroyer(r sessionDestroyerDependencies) *SessionDestroyer {
 	return &SessionDestroyer{r: r}
-}
-
-func (e *SessionDestroyer) ExecuteRegistrationPostHook(w http.ResponseWriter, r *http.Request, a *registration.Request, s *session.Session) error {
-	panic("This should not have been called. See https://github.com/ory/kratos/issues/149")
 }
 
 func (e *SessionDestroyer) ExecuteLoginPostHook(_ http.ResponseWriter, r *http.Request, _ *login.Request, s *session.Session) error {

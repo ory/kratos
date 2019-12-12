@@ -6,7 +6,7 @@ import (
 )
 
 func (m *RegistryDefault) PostRegistrationHooks(credentialsType identity.CredentialsType) []registration.PostHookExecutor {
-	a := m.hooksPost(credentialsType, m.c.SelfServiceRegistrationAfterHooks(string(credentialsType)))
+	a := m.hooksPostRegistration(credentialsType, m.c.SelfServiceRegistrationAfterHooks(string(credentialsType)))
 	b := make([]registration.PostHookExecutor, len(a))
 	for k, v := range a {
 		b[k] = v
