@@ -17,20 +17,35 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/dockertest"
+
 	"github.com/ory/viper"
+	dhelper "github.com/ory/x/sqlcon/dockertest"
 
 	templates "github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/internal"
 )
 
-func runTestSMTP(t *testing.T) (smtp, api string, r *dockertest.Resource) {
+var resources []*dockertest.Resource
+
+// nolint:staticcheck
+func TestMain(m *testing.M) {
+	atexit := dhelper.NewOnExit()
+	atexit.Add(func() {
+		for _, resource := range resources {
+			resource.Close()
+		}
+	})
+	atexit.Exit(m.Run())
+}
+
+func runTestSMTP(t *testing.T) (smtp, api string) {
 	if smtp, api := os.Getenv("TEST_MAILHOG_SMTP"), os.Getenv("TEST_MAILHOG_API"); smtp != "" && api != "" {
 		t.Logf("Skipping Docker setup because environment variables TEST_MAILHOG_SMTP and TEST_MAILHOG_API are both set.")
-		return smtp, api, nil
+		return smtp, api
 	} else if len(smtp)+len(api) > 0 {
 		t.Fatal("Environment variables TEST_MAILHOG_SMTP, TEST_MAILHOG_API must both be set!")
-		return "", "", nil
+		return "", ""
 	}
 
 	pool, err := dockertest.NewPool("")
@@ -52,6 +67,7 @@ func runTestSMTP(t *testing.T) (smtp, api string, r *dockertest.Resource) {
 			},
 		})
 	require.NoError(t, err)
+	resources = append(resources, resource)
 
 	smtp = fmt.Sprintf("smtp://test:test@127.0.0.1:%s", resource.GetPort("1025/tcp"))
 	api = fmt.Sprintf("http://127.0.0.1:%s", resource.GetPort("8025/tcp"))
@@ -70,7 +86,7 @@ func runTestSMTP(t *testing.T) (smtp, api string, r *dockertest.Resource) {
 		return nil
 	}, backoff.WithMaxRetries(backoff.NewConstantBackOff(time.Second), 15)))
 
-	return smtp, api, resource
+	return smtp, api
 }
 
 func TestSMTP(t *testing.T) {
@@ -78,8 +94,7 @@ func TestSMTP(t *testing.T) {
 		t.SkipNow()
 	}
 
-	smtp, api, resource := runTestSMTP(t)
-	defer resource.Close()
+	smtp, api := runTestSMTP(t)
 
 	conf, reg := internal.NewRegistryDefault(t)
 	viper.Set(configuration.ViperKeyCourierSMTPURL, smtp)

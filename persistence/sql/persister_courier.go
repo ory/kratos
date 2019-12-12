@@ -26,13 +26,13 @@ func (p *Persister) NextMessages(ctx context.Context, limit uint8) ([]courier.Me
 		Where("status != ?", courier.MessageStatusSent).
 		Order("created_at ASC").Limit(int(limit)).All(&m); err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
-			return nil, courier.ErrQueueEmpty
+			return nil, errors.WithStack(courier.ErrQueueEmpty)
 		}
 		return nil, sqlcon.HandleError(err)
 	}
 
 	if len(m) == 0 {
-		return nil, courier.ErrQueueEmpty
+		return nil, errors.WithStack(courier.ErrQueueEmpty)
 	}
 
 	return m, nil

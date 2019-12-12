@@ -112,7 +112,7 @@ func TestViperProvider(t *testing.T) {
 				},
 			} {
 				t.Run("hook=after/strategy="+tc.strategy, func(t *testing.T) {
-					hooks := p.SelfServiceLoginAfterHooks(tc.strategy)
+					hooks := p.SelfServiceRegistrationAfterHooks(tc.strategy)
 
 					hook := hooks[0]
 					assert.EqualValues(t, "session", hook.Run)
@@ -151,9 +151,12 @@ func TestViperProvider(t *testing.T) {
 					hooks := p.SelfServiceLoginAfterHooks(tc.strategy)
 
 					hook := hooks[0]
-					assert.EqualValues(t, "session", hook.Run)
+					assert.EqualValues(t, "revoke_active_sessions", hook.Run)
 
 					hook = hooks[1]
+					assert.EqualValues(t, "session", hook.Run)
+
+					hook = hooks[2]
 					assert.EqualValues(t, "redirect", hook.Run)
 					assert.JSONEq(t, tc.redirectConfig, string(hook.Config))
 				})

@@ -33,6 +33,18 @@
         "config"
       ]
     },
+    "selfServiceSessionRevokerHook": {
+      "type": "object",
+      "properties": {
+        "run": {
+          "const": "revoke_active_sessions"
+        }
+      },
+      "additionalItems": false,
+      "required": [
+        "run"
+      ]
+    },
     "selfServiceSessionIssuerHook": {
       "type": "object",
       "properties": {
@@ -94,7 +106,24 @@
         "schema_url"
       ]
     },
-    "selfServiceAfterHooks": {
+    "selfServiceAfterLoginHooks": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/selfServiceRedirectHook"
+          },
+          {
+            "$ref": "#/definitions/selfServiceSessionIssuerHook"
+          },
+          {
+            "$ref": "#/definitions/selfServiceSessionRevokerHook"
+          }
+        ]
+      },
+      "uniqueItems": true
+    },
+    "selfServiceAfterRegistrationHooks": {
       "type": "array",
       "items": {
         "anyOf": [
@@ -108,14 +137,26 @@
       },
       "uniqueItems": true
     },
-    "selfServiceAfter": {
+    "selfServiceAfterLogin": {
       "type": "object",
       "properties": {
         "password": {
-          "$ref": "#/definitions/selfServiceAfterHooks"
+          "$ref": "#/definitions/selfServiceAfterLoginHooks"
         },
         "oidc": {
-          "$ref": "#/definitions/selfServiceAfterHooks"
+          "$ref": "#/definitions/selfServiceAfterLoginHooks"
+        }
+      },
+      "additionalItems": false
+    },
+    "selfServiceAfterRegistration": {
+      "type": "object",
+      "properties": {
+        "password": {
+          "$ref": "#/definitions/selfServiceAfterRegistrationHooks"
+        },
+        "oidc": {
+          "$ref": "#/definitions/selfServiceAfterRegistrationHooks"
         }
       },
       "additionalItems": false
@@ -207,14 +248,14 @@
               "$ref": "#/definitions/selfServiceBefore"
             },
             "after": {
-              "$ref": "#/definitions/selfServiceAfter"
+              "$ref": "#/definitions/selfServiceAfterLogin"
             }
           },
           "additionalItems": false
         },
         "registration": {
           "type": "object",
-          "additionalItems": false,
+          "additionalProperties": false,
           "properties": {
             "request_lifespan": {
               "type": "string",
@@ -227,6 +268,9 @@
                 "$ref": "#/definitions/selfServiceRedirectHook"
               },
               "uniqueItems": true
+            },
+            "after": {
+              "$ref": "#/definitions/selfServiceAfterRegistration"
             }
           }
         }
@@ -253,7 +297,9 @@
             "connection_uri": {
               "title": "SMTP connection string",
               "description": "This URI will be used to connect to the SMTP server.",
-              "examples": ["smtps://foo:bar@my-mailserver:1234/"],
+              "examples": [
+                "smtps://foo:bar@my-mailserver:1234/"
+              ],
               "type": "string",
               "format": "uri"
             },
@@ -265,11 +311,15 @@
               "default": "no-reply@ory.kratos.sh"
             }
           },
-          "required": ["connection_uri"],
+          "required": [
+            "connection_uri"
+          ],
           "additionalProperties": false
         }
       },
-      "required": ["smtp"],
+      "required": [
+        "smtp"
+      ],
       "additionalProperties": false
     },
     "serve": {

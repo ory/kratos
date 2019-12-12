@@ -82,8 +82,8 @@ func TestPersister(t *testing.T) {
 	var l sync.Mutex
 	if !testing.Short() {
 		funcs := map[string]func(t *testing.T) string{
-			"mysql":    dockertest.RunTestMySQL,
 			"postgres": dockertest.RunTestPostgreSQL,
+			"mysql":    dockertest.RunTestMySQL,
 			// "cockroach": dockertest.RunTestCockroachDB, // pending: https://github.com/gobuffalo/fizz/pull/69
 		}
 
@@ -104,7 +104,7 @@ func TestPersister(t *testing.T) {
 	}
 
 	for name, dsn := range conns {
-		t.Run("database="+name, func(t *testing.T) {
+		t.Run(fmt.Sprintf("database=%s", name), func(t *testing.T) {
 			_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
 			p := reg.Persister()
 
@@ -132,7 +132,7 @@ func TestPersister(t *testing.T) {
 				pop.SetLogger(pl(t))
 				session.TestPersister(p)(t)
 			})
-			t.Run("contract=session.TestRequestPersister", func(t *testing.T) {
+			t.Run("contract=courier.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
 				courier.TestPersister(p)(t)
 			})

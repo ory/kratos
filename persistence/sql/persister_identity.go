@@ -91,8 +91,13 @@ func createIdentityCredentials(ctx context.Context, tx *pop.Connection, i *ident
 		}
 
 		for _, ids := range cred.Identifiers {
+			// Force case-insensitivity for email addresses
 			if strings.Contains(ids, "@") && cred.Type == identity.CredentialsTypePassword {
 				ids = strings.ToLower(ids)
+			}
+
+			if len(ids) == 0 {
+				return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to create identity credentials with missing or empty identifier."))
 			}
 
 			ci := &identity.CredentialIdentifier{

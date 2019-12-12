@@ -35,7 +35,7 @@ func NewConfigurationWithDefaults() *configuration.ViperProvider {
 }
 
 func NewRegistryDefault(t *testing.T) (*configuration.ViperProvider, *driver.RegistryDefault) {
-	conf, reg := NewRegistryDefaultWithDSN(t, "sqlite3://"+filepath.Join(os.TempDir(), x.NewUUID().String())+".sql?mode=memory&_fk=true")
+	conf, reg := NewRegistryDefaultWithDSN(t, "")
 	require.NoError(t, reg.Persister().MigrateUp(context.Background()))
 	return conf, reg
 }
@@ -51,8 +51,5 @@ func NewRegistryDefaultWithDSN(t *testing.T, dsn string) (*configuration.ViperPr
 
 	d, err := driver.NewDefaultDriver(logrusx.New(), "test", "test", "test")
 	require.NoError(t, err)
-
-	require.NoError(t, err)
-	require.NoError(t, d.Registry().Init())
 	return d.Configuration().(*configuration.ViperProvider), d.Registry().(*driver.RegistryDefault)
 }
