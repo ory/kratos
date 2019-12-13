@@ -84,7 +84,7 @@ func TestPersister(t *testing.T) {
 		funcs := map[string]func(t *testing.T) string{
 			"postgres": dockertest.RunTestPostgreSQL,
 			"mysql":    dockertest.RunTestMySQL,
-			// "cockroach": dockertest.RunTestCockroachDB, // pending: https://github.com/gobuffalo/fizz/pull/69
+			"cockroach": dockertest.RunTestCockroachDB, // pending: https://github.com/gobuffalo/fizz/pull/69
 		}
 
 		var wg sync.WaitGroup
