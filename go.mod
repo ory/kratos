@@ -4,6 +4,10 @@ go 1.13
 
 replace github.com/santhosh-tekuri/jsonschema/v2 => github.com/ory/jsonschema/v2 v2.1.1-0.20191123130340-1c20114d2c04
 
+replace github.com/gobuffalo/pop/v4 v4.13.0+incompatible => github.com/gobuffalo/pop/v5 v5.0.0
+
+replace github.com/gobuffalo/fizz v1.9.5 => github.com/gobuffalo/fizz v1.9.6-0.20191207081922-e65fa5e5bed6
+
 require (
 	github.com/Masterminds/sprig/v3 v3.0.0
 	github.com/bxcodec/faker v2.0.1+incompatible
@@ -87,7 +91,3 @@ require (
 	gopkg.in/go-playground/validator.v9 v9.28.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 )
-
-replace github.com/gobuffalo/pop/v4 v4.13.0+incompatible => github.com/gobuffalo/pop/v5 v5.0.0
-
-replace github.com/gobuffalo/fizz v1.9.5 => github.com/gobuffalo/fizz v1.9.6-0.20191207081922-e65fa5e5bed6
