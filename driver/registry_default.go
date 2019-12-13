@@ -14,6 +14,7 @@ import (
 
 	"github.com/ory/x/dbal"
 	"github.com/ory/x/healthx"
+	"github.com/ory/x/passwordstrengthmeter"
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/x/tracing"
@@ -53,6 +54,7 @@ type RegistryDefault struct {
 	trc            *tracing.Tracer
 	writer         herodot.Writer
 	healthxHandler *healthx.Handler
+	passwordStrengthMeterHandler *passwordstrengthmeter.Handler
 
 	courier   *courier.Courier
 	persister persistence.Persister
@@ -384,4 +386,12 @@ func (m *RegistryDefault) Persister() persistence.Persister {
 
 func (m *RegistryDefault) Ping() error {
 	return m.persister.Ping(context.Background())
+}
+
+func (m *RegistryDefault) PasswordStrengthMeterHandler() *passwordstrengthmeter.Handler {
+	if m.passwordStrengthMeterHandler == nil {
+		m.passwordStrengthMeterHandler = passwordstrengthmeter.NewHandler(m.Writer())
+	}
+
+	return m.passwordStrengthMeterHandler
 }

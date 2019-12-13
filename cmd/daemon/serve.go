@@ -6,6 +6,7 @@ import (
 
 	"github.com/ory/x/flagx"
 	"github.com/ory/x/healthx"
+	"github.com/ory/x/passwordstrengthmeter"
 
 	"github.com/sirupsen/logrus"
 
@@ -44,6 +45,7 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 	r.SessionHandler().RegisterPublicRoutes(router)
 	r.SelfServiceErrorHandler().RegisterPublicRoutes(router)
 	r.HealthHandler().SetRoutes(router.Router, false)
+	r.PasswordStrengthMeterHandler().SetRoutes(router.Router)
 
 	n.Use(NewNegroniLoggerMiddleware(l.(*logrus.Logger), "public#"+c.SelfPublicURL().String()))
 	r.WithCSRFHandler(x.NewCSRFHandler(
@@ -81,6 +83,7 @@ func serveAdmin(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []
 	r.IdentityHandler().RegisterAdminRoutes(router)
 	r.SessionHandler().RegisterAdminRoutes(router)
 	r.HealthHandler().SetRoutes(router.Router, false)
+	r.PasswordStrengthMeterHandler().SetRoutes(router.Router)
 
 	n.Use(NewNegroniLoggerMiddleware(l.(*logrus.Logger), "admin#"+c.SelfAdminURL().String()))
 	telemetry(cmd, n, d)

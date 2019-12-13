@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/ory/x/healthx"
+	"github.com/ory/x/passwordstrengthmeter"
 
 	"github.com/ory/kratos/persistence"
 	"github.com/ory/kratos/selfservice/flow/login"
@@ -41,6 +42,7 @@ type Registry interface {
 	WithCSRFHandler(c *nosurf.CSRFHandler)
 	CSRFHandler() *nosurf.CSRFHandler
 	HealthHandler() *healthx.Handler
+	PasswordStrengthMeterHandler() *passwordstrengthmeter.Handler
 	CookieManager() sessions.Store
 
 	x.WriterProvider
