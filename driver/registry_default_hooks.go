@@ -11,7 +11,7 @@ import (
 	"github.com/ory/kratos/selfservice/hook"
 )
 
-func (m *RegistryDefault) getHooks(credentials identity.CredentialsType, configs []configuration.SelfServiceHook) []interface{} {
+func (m *RegistryDefault) getHooks(credentialsType identity.CredentialsType, configs []configuration.SelfServiceHook) []interface{} {
 	var i []interface{}
 
 	for _, h := range configs {
@@ -34,7 +34,7 @@ func (m *RegistryDefault) getHooks(credentials identity.CredentialsType, configs
 
 			if err := json.NewDecoder(bytes.NewBuffer(h.Config)).Decode(&rc); err != nil {
 				m.l.WithError(err).
-					WithField("type", credentials).
+					WithField("type", credentialsType).
 					WithField("hook", h.Run).
 					WithField("config", fmt.Sprintf("%s", h.Config)).
 					Errorf("The after hook is misconfigured.")
@@ -44,7 +44,7 @@ func (m *RegistryDefault) getHooks(credentials identity.CredentialsType, configs
 			rcr, err := url.ParseRequestURI(rc.R)
 			if err != nil {
 				m.l.WithError(err).
-					WithField("type", credentials).
+					WithField("type", credentialsType).
 					WithField("hook", h.Run).
 					WithField("config", fmt.Sprintf("%s", h.Config)).
 					Errorf("The after hook is misconfigured.")
@@ -65,7 +65,7 @@ func (m *RegistryDefault) getHooks(credentials identity.CredentialsType, configs
 			)
 		default:
 			m.l.
-				WithField("type", credentials).
+				WithField("type", credentialsType).
 				WithField("hook", h.Run).
 				Errorf("A unknown hook was requested and can therefore not be used")
 		}
