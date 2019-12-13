@@ -198,6 +198,8 @@ github.com/gobuffalo/fizz v1.0.12 h1:JJOkmlStog5AiBL434UoGMJ896p3MnTnzedFVaZSF3k
 github.com/gobuffalo/fizz v1.0.12/go.mod h1:C0sltPxpYK8Ftvf64kbsQa2yiCZY4RZviurNxXdAKwc=
 github.com/gobuffalo/fizz v1.9.5 h1:Qh0GkP7MYtJs9RZwBkPJ0CzEXynVowdNfrjg8b+TOxA=
 github.com/gobuffalo/fizz v1.9.5/go.mod h1:v9cFl56oXm+hNNayTsIQHnq209bTDUbIM8GYWCJw3TE=
+github.com/gobuffalo/fizz v1.9.6-0.20191207081922-e65fa5e5bed6 h1:a0svvTElCdZhoScHHYJAuQGtt+rQuRfX1DZwpokkTXw=
+github.com/gobuffalo/fizz v1.9.6-0.20191207081922-e65fa5e5bed6/go.mod h1:M6I4X/qu5A79x4+5ryHRKb+RiLlEKafx3uZKdJeCrpM=
 github.com/gobuffalo/flect v0.0.0-20180907193754-dc14d8acaf9f/go.mod h1:rCiQgmAE4axgBNl3jZWzS5rETRYTGOsrixTRaCPzNdA=
 github.com/gobuffalo/flect v0.0.0-20181002182613-4571df4b1daf/go.mod h1:rCiQgmAE4axgBNl3jZWzS5rETRYTGOsrixTRaCPzNdA=
 github.com/gobuffalo/flect v0.0.0-20181007231023-ae7ed6bfe683/go.mod h1:rCiQgmAE4axgBNl3jZWzS5rETRYTGOsrixTRaCPzNdA=
