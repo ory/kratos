@@ -34,6 +34,7 @@ import (
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/selfservice/passwordstrengthmeter"
 	password2 "github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/session"
 )
@@ -69,6 +70,9 @@ type RegistryDefault struct {
 
 	errorHandler *errorx.Handler
 	errorManager *errorx.Manager
+
+	passwordstrengthmeterHandler *passwordstrengthmeter.Handler
+	passwordstrengthmeterManager *passwordstrengthmeter.Manager
 
 	selfserviceRegistrationExecutor            *registration.HookExecutor
 	selfserviceRegistrationHandler             *registration.Handler
@@ -250,6 +254,13 @@ func (m *RegistryDefault) SelfServiceErrorHandler() *errorx.Handler {
 	return m.errorHandler
 }
 
+func (m *RegistryDefault) SelfServicePasswordStrengthMeterHandler() *passwordstrengthmeter.Handler {
+	if m.passwordstrengthmeterHandler == nil {
+		m.passwordstrengthmeterHandler = passwordstrengthmeter.NewHandler(m)
+	}
+	return m.passwordstrengthmeterHandler
+}
+
 func (m *RegistryDefault) CookieManager() sessions.Store {
 	if m.sessionsStore == nil {
 		cs := sessions.NewCookieStore(m.c.SessionSecrets()...)
@@ -284,12 +295,21 @@ func (m *RegistryDefault) SessionManager() session.Manager {
 	return m.sessionManager
 }
 
+func (m *RegistryDefault) SelfServicePasswordStrengthMeterManager() *passwordstrengthmeter.Manager {
+	if m.passwordstrengthmeterManager == nil {
+		m.passwordstrengthmeterManager = passwordstrengthmeter.NewManager(m)
+	}
+	return m.passwordstrengthmeterManager
+}
+
+
 func (m *RegistryDefault) SelfServiceErrorManager() *errorx.Manager {
 	if m.errorManager == nil {
-		m.errorManager = errorx.NewManager(m, m.c)
+		m.errorManager = errorx.NewManager(m,m.c)
 	}
 	return m.errorManager
 }
+
 
 func (m *RegistryDefault) CanHandle(dsn string) bool {
 	return dsn == "memory" ||
