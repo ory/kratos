@@ -9,6 +9,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"github.com/tidwall/sjson"
+	"github.com/nbutton23/zxcvbn-go"
 
 	"github.com/ory/x/errorsx"
 
@@ -30,6 +31,7 @@ import (
 
 const (
 	RegistrationPath = "/auth/browser/methods/password/registration"
+	PasswordStrengthMeterPath = "/password/strength/check"
 
 	registrationFormPayloadSchema = `{
   "$id": "https://schemas.ory.sh/kratos/selfservice/password/registration/config.schema.json",
@@ -44,7 +46,28 @@ const (
     "traits": {}
   }
 }`
+
+passwordStrengthMeterFormPayloadSchema = `{
+	"$id": "https://schemas.ory.sh/kratos/selfservice/password/password_strength_meter/config.schema.json",
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "object",
+	"required": ["password"],
+	"properties": {
+			"password": {
+					"type": "string",
+					"minLength": 1
+			}
+	}
+}`
 )
+
+type PasswordStrengthMeterFormPayload struct {
+	Password string          `json:"password"`
+}
+
+type PasswordStrengthMeter struct {
+	Score int `json:"score"`
+}
 
 type RegistrationFormPayload struct {
 	Password string          `json:"password"`
@@ -53,6 +76,7 @@ type RegistrationFormPayload struct {
 
 func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
 	r.POST(RegistrationPath, s.d.SessionHandler().IsNotAuthenticated(s.handleRegistration, session.RedirectOnAuthenticated(s.c)))
+	r.POST(PasswordStrengthMeterPath, s.handlePasswordStrengthMeter)
 }
 
 func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Request, rr *registration.Request, p *RegistrationFormPayload, err error) {
@@ -226,4 +250,30 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.
 	}
 
 	return nil
+}
+
+func (s *Strategy) handlePasswordStrengthMeterError(w http.ResponseWriter, r *http.Request, p *PasswordStrengthMeterFormPayload, err error) {
+
+}
+
+
+func (s *Strategy) handlePasswordStrengthMeter(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	var p PasswordStrengthMeterFormPayload
+
+	if len(p.Password) == 0 {
+		s.handlePasswordStrengthMeterError(w, r, &p, errors.WithStack(schema.NewRequiredError("", gojsonschema.NewJsonContext("password", nil))))
+		return
+	}
+
+	score := zxcvbn.PasswordStrength(p.Password, nil).Score
+	data, err := json.Marshal(PasswordStrengthMeter{
+		Score : score,
+	});
+	if  err != nil {
+		s.handlePasswordStrengthMeterError(w, r, &p, errors.WithStack(schema.NewRequiredError("", gojsonschema.NewJsonContext("password", nil))))
+		return
+	} 
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(data)
+	return
 }

@@ -52,7 +52,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.13.0 // indirect
 	github.com/mattn/goveralls v0.0.4
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/nbutton23/zxcvbn-go v0.0.0-20180912185939-ae427f1e4c1d // indirect
+	github.com/nbutton23/zxcvbn-go v0.0.0-20180912185939-ae427f1e4c1d
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/ory/go-acc v0.1.0
 	github.com/ory/gojsonschema v1.2.0
