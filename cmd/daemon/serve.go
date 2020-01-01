@@ -42,7 +42,6 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 	r.LoginStrategies().RegisterPublicRoutes(router)
 	r.RegistrationStrategies().RegisterPublicRoutes(router)
 	r.SessionHandler().RegisterPublicRoutes(router)
-	r.SelfServicePasswordStrengthMeterHandler().RegisterPublicRoutes(router)
 	r.SelfServiceErrorHandler().RegisterPublicRoutes(router)
 	r.HealthHandler().SetRoutes(router.Router, false)
 

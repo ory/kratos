@@ -76,7 +76,7 @@ type RegistrationFormPayload struct {
 
 func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
 	r.POST(RegistrationPath, s.d.SessionHandler().IsNotAuthenticated(s.handleRegistration, session.RedirectOnAuthenticated(s.c)))
-	r.POST(PasswordStrengthMeterPath, s.handlePasswordStrengthMeter)
+	r.POST(PasswordStrengthMeterPath,  s.d.SessionHandler().IsNotAuthenticated(s.handlePasswordStrengthMeter,s.handlePasswordStrengthMeter))
 }
 
 func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Request, rr *registration.Request, p *RegistrationFormPayload, err error) {

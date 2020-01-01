@@ -21,7 +21,6 @@ import (
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/errorx"
-	 "github.com/ory/kratos/selfservice/passwordstrengthmeter"
 	password2 "github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/session"
 )
@@ -52,9 +51,6 @@ type Registry interface {
 	errorx.ManagementProvider
 	errorx.HandlerProvider
 	errorx.PersistenceProvider
-
-	// passwordstrengthmeter.ManagementProvider
-	passwordstrengthmeter.HandlerProvider
 
 	identity.HandlerProvider
 	identity.ValidationProvider
