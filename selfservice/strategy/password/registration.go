@@ -45,6 +45,7 @@ const (
   }
 }`
 )
+
 type RegistrationFormPayload struct {
 	Password string          `json:"password"`
 	Traits   json.RawMessage `json:"traits"`

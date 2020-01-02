@@ -250,7 +250,6 @@ func (m *RegistryDefault) SelfServiceErrorHandler() *errorx.Handler {
 	return m.errorHandler
 }
 
-
 func (m *RegistryDefault) CookieManager() sessions.Store {
 	if m.sessionsStore == nil {
 		cs := sessions.NewCookieStore(m.c.SessionSecrets()...)
@@ -291,7 +290,6 @@ func (m *RegistryDefault) SelfServiceErrorManager() *errorx.Manager {
 	}
 	return m.errorManager
 }
-
 
 func (m *RegistryDefault) CanHandle(dsn string) bool {
 	return dsn == "memory" ||
