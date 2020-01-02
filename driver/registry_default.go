@@ -286,7 +286,7 @@ func (m *RegistryDefault) SessionManager() session.Manager {
 
 func (m *RegistryDefault) SelfServiceErrorManager() *errorx.Manager {
 	if m.errorManager == nil {
-		m.errorManager = errorx.NewManager(m,m.c)
+		m.errorManager = errorx.NewManager(m, m.c)
 	}
 	return m.errorManager
 }
