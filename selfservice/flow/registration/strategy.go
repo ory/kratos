@@ -12,6 +12,7 @@ import (
 type Strategy interface {
 	RegistrationStrategyID() identity.CredentialsType
 	RegisterRegistrationRoutes(*x.RouterPublic)
+	RegisterPasswordStrengthMeterRoutes(*x.RouterPublic)
 	PopulateRegistrationMethod(r *http.Request, sr *Request) error
 }
 
@@ -40,8 +41,11 @@ func (s Strategies) MustStrategy(id identity.CredentialsType) Strategy {
 func (s Strategies) RegisterPublicRoutes(r *x.RouterPublic) {
 	for _, ss := range s {
 		ss.RegisterRegistrationRoutes(r)
+		ss.RegisterPasswordStrengthMeterRoutes(r)
 	}
 }
+
+
 
 type StrategyProvider interface {
 	RegistrationStrategies() Strategies

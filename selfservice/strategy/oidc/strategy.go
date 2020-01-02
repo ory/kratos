@@ -101,6 +101,10 @@ func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
 	s.setRoutes(r)
 }
 
+func (s *Strategy) RegisterPasswordStrengthMeterRoutes(r *x.RouterPublic) {
+	s.setRoutes(r)
+}
+
 func (s *Strategy) setRoutes(r *x.RouterPublic) {
 	if handle, _, _ := r.Lookup("GET", CallbackPath); handle == nil {
 		r.GET(CallbackPath, s.d.SessionHandler().IsNotAuthenticated(s.handleCallback, session.RedirectOnAuthenticated(s.c)))
