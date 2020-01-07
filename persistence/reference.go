@@ -19,7 +19,7 @@ type Provider interface {
 
 type Persister interface {
 	identity.Pool
-	schema.Pool
+	schema.Persister
 	registration.RequestPersister
 	login.RequestPersister
 	profile.RequestPersister

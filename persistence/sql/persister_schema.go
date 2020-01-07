@@ -1,24 +1,25 @@
 package sql
 
 import (
-	"errors"
 	"github.com/gobuffalo/pop"
 	"github.com/gofrs/uuid"
+	"github.com/ory/herodot"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/x/sqlcon"
+	"github.com/pkg/errors"
 )
 
-func (p *Persister) GetSchema(id uuid.UUID) (*schema.JsonSchema, error) {
-	var s schema.JsonSchema
+func (p *Persister) GetSchema(id uuid.UUID) (*schema.Schema, error) {
+	var s schema.Schema
 	if err := p.c.Find(&s, id); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 	return &s, nil
 }
 
-func (p *Persister) CreateSchema(s schema.JsonSchema) error {
-	if s.Url == "" {
-		return errors.New("URL must be provided")
+func (p *Persister) CreateSchema(s schema.Schema) error {
+	if s.URL == "" {
+		return errors.WithStack(herodot.ErrBadRequest.WithReason("The schema is missing the URL property."))
 	}
 
 	return sqlcon.HandleError(p.c.Transaction(func(tx *pop.Connection) error {

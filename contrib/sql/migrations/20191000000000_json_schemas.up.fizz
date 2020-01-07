@@ -1,6 +1,6 @@
-create_table("json_schemas") {
-	t.Column("id", "uuid", {primary: true})
+create_table("schemas") {
+    t.Column("id", "uuid", {primary: true})
     t.Column("url", "string", {"size": 2048})
 }
 
-add_index("json_schemas", "url", {"unique": true})
+add_index("schemas", "url", {"unique": true})

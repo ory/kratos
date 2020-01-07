@@ -364,7 +364,7 @@ func (m *RegistryDefault) IdentityPool() identity.Pool {
 	return m.persister
 }
 
-func (m *RegistryDefault) SchemaPool() schema.Pool {
+func (m *RegistryDefault) SchemaPersister() schema.Persister {
 	return m.persister
 }
 

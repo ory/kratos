@@ -117,7 +117,7 @@ func createIdentityCredentials(ctx context.Context, tx *pop.Connection, i *ident
 }
 
 func (p *Persister) injectTraitsUrl(i *identity.Identity) {
-	i.TraitsSchemaURL = fmt.Sprintf("%s/schemas/%s", p.cf.PublicListenOn(), i.TraitsSchemaID)
+	i.TraitsSchemaURL = fmt.Sprintf("%s/schemas/%s", p.cf.SelfPublicURL(), i.TraitsSchemaID)
 }
 
 func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) error {

@@ -1,1 +1,1 @@
-drop_table("json_schemas")
+drop_table("schemas")
