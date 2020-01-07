@@ -10,6 +10,7 @@ type (
 
 	Persister interface {
 		GetSchema(uuid uuid.UUID) (*Schema, error)
+		GetSchemaByUrl(url string) (*Schema, error)
 		CreateSchema(s Schema) error
 	}
 
