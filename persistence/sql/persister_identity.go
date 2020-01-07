@@ -133,13 +133,21 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 		return err
 	}
 
-	if _, err := p.GetSchemaByUrl(i.TraitsSchemaURL); err != nil {
+	s, err := p.GetSchemaByUrl(i.TraitsSchemaURL)
+	if err != nil {
 		if err = p.CreateSchema(schema.Schema{
 			URL: i.TraitsSchemaURL,
 		}); err != nil {
 			return err
 		}
+
+		if s, err = p.GetSchemaByUrl(i.TraitsSchemaURL); err != nil {
+			return err
+		}
 	}
+
+	i.TraitsSchemaURL = s.URL
+	i.TraitsSchemaID = s.ID.String()
 
 	return sqlcon.HandleError(p.c.Transaction(func(tx *pop.Connection) error {
 		if err := tx.Create(i); err != nil {

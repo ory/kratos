@@ -165,7 +165,6 @@ func (i *Identity) CopyWithoutCredentials() *Identity {
 	return &ii
 }
 
-// TODO change param to ID
 func NewIdentity(traitsSchemaURL string) *Identity {
 	return &Identity{
 		ID:              x.NewUUID(),
