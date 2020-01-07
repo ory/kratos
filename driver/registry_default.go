@@ -2,6 +2,7 @@ package driver
 
 import (
 	"context"
+	"github.com/ory/kratos/schema"
 	"strings"
 	"time"
 
@@ -59,6 +60,8 @@ type RegistryDefault struct {
 
 	identityHandler   *identity.Handler
 	identityValidator *identity.Validator
+
+	schemaHandler *schema.Handler
 
 	sessionHandler *session.Handler
 	sessionsStore  sessions.Store
@@ -222,6 +225,13 @@ func (m *RegistryDefault) IdentityHandler() *identity.Handler {
 	return m.identityHandler
 }
 
+func (m *RegistryDefault) SchemaHandler() *schema.Handler {
+	if m.schemaHandler == nil {
+		m.schemaHandler = schema.NewHandler(m.c, m)
+	}
+	return m.schemaHandler
+}
+
 func (m *RegistryDefault) SessionHandler() *session.Handler {
 	if m.sessionHandler == nil {
 		m.sessionHandler = session.NewHandler(m)
@@ -351,6 +361,10 @@ func (m *RegistryDefault) Courier() *courier.Courier {
 }
 
 func (m *RegistryDefault) IdentityPool() identity.Pool {
+	return m.persister
+}
+
+func (m *RegistryDefault) SchemaPool() schema.Pool {
 	return m.persister
 }
 
