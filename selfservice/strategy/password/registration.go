@@ -151,6 +151,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
+	// TODO default
 	i := identity.NewIdentity(s.c.DefaultIdentityTraitsSchemaURL().String())
 	i.Traits = identity.Traits(p.Traits)
 	i.SetCredentials(s.ID(), identity.Credentials{

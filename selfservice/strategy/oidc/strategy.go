@@ -377,6 +377,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		return
 	}
 
+	// TODO default
 	i := identity.NewIdentity(s.c.DefaultIdentityTraitsSchemaURL().String())
 	extension := NewValidationExtension()
 	extension.WithIdentity(i)

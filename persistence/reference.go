@@ -5,6 +5,7 @@ import (
 
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/profile"
@@ -18,6 +19,7 @@ type Provider interface {
 
 type Persister interface {
 	identity.Pool
+	schema.Pool
 	registration.RequestPersister
 	login.RequestPersister
 	profile.RequestPersister

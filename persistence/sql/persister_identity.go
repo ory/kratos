@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/gobuffalo/pop"
@@ -115,6 +116,10 @@ func createIdentityCredentials(ctx context.Context, tx *pop.Connection, i *ident
 	return nil
 }
 
+func (p *Persister) injectTraitsUrl(i *identity.Identity) {
+	i.TraitsSchemaURL = fmt.Sprintf("%s/schemas/%s", p.cf.PublicListenOn(), i.TraitsSchemaID)
+}
+
 func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) error {
 	if i.TraitsSchemaURL == "" {
 		i.TraitsSchemaURL = p.cf.DefaultIdentityTraitsSchemaURL().String()
@@ -139,7 +144,13 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 
 func (p *Persister) ListIdentities(ctx context.Context, limit, offset int) ([]identity.Identity, error) {
 	is := make([]identity.Identity, 0)
-	return is, sqlcon.HandleError(p.c.RawQuery("SELECT * FROM identities LIMIT ? OFFSET ?", limit, offset).All(&is))
+	err := sqlcon.HandleError(p.c.RawQuery("SELECT * FROM identities LIMIT ? OFFSET ?", limit, offset).All(&is))
+
+	for i := range is {
+		p.injectTraitsUrl(&is[i])
+	}
+
+	return is, err
 }
 
 func (p *Persister) UpdateIdentityConfidential(ctx context.Context, i *identity.Identity) error {
@@ -210,6 +221,7 @@ func (p *Persister) GetIdentity(_ context.Context, id uuid.UUID) (*identity.Iden
 		return nil, sqlcon.HandleError(err)
 	}
 	i.Credentials = nil
+	p.injectTraitsUrl(&i)
 	return &i, nil
 }
 
@@ -244,6 +256,7 @@ func (p *Persister) GetIdentityConfidential(_ context.Context, id uuid.UUID) (*i
 		i.Credentials[creds.Type] = creds
 	}
 	i.CredentialsCollection = nil
+	p.injectTraitsUrl(&i)
 
 	return &i, nil
 }
