@@ -2,14 +2,21 @@ package schema
 
 import (
 	"github.com/julienschmidt/httprouter"
+	"github.com/ory/herodot"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/jsonx"
+	"github.com/ory/x/urlx"
+	"github.com/pkg/errors"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 )
 
 type (
-	Configuration       interface{}
+	Configuration interface {
+		SelfPublicURL() *url.URL
+	}
 	handlerDependencies interface {
 		PersistenceProvider
 		x.WriterProvider
@@ -37,6 +44,31 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.GET("/schemas/:id", h.get)
 }
 
+func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
+	admin.PUT("/schemas", h.registerSchema)
+}
+
+func (h *Handler) registerSchema(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	var s Schema
+	if err := errors.WithStack(jsonx.NewStrictDecoder(r.Body).Decode(&s)); err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	if err := h.r.SchemaPersister().RegisterSchema(&s); err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	h.r.Writer().WriteCreated(w, r,
+		urlx.AppendPaths(
+			h.c.SelfPublicURL(),
+			"schemas",
+			s.ID.String(),
+		).String(),
+		&s)
+}
+
 func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.r.SchemaPersister().GetSchema(x.ParseUUID(ps.ByName("id")))
 	if err != nil {
@@ -44,24 +76,22 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 		return
 	}
 
-	var content []byte
-
 	if strings.HasPrefix(s.URL, "file://") {
-		f, err := os.Open(s.URL)
+		fp := strings.TrimPrefix(s.URL, "file://")
+		info, err := os.Stat(fp)
 		if err != nil {
-			h.r.Writer().WriteError(w, r, err)
+			if os.IsNotExist(err) {
+				h.r.Writer().WriteError(w, r, herodot.ErrNotFound)
+				return
+			}
+		}
+
+		if info.IsDir() {
+			h.r.Writer().WriteError(w, r, herodot.ErrNotFound)
 			return
 		}
 
-		if _, err = f.Read(content); err != nil {
-			h.r.Writer().WriteError(w, r, err)
-			return
-		}
-
-		if err = f.Close(); err != nil {
-			h.r.Writer().WriteError(w, r, err)
-			return
-		}
+		http.ServeFile(w, r, fp)
 	} else {
 		resp, err := http.Get(s.URL)
 		if err != nil {
@@ -70,11 +100,13 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 		}
 		defer resp.Body.Close()
 
+		var content []byte
+
 		if _, err = resp.Body.Read(content); err != nil {
 			h.r.Writer().WriteError(w, r, err)
 			return
 		}
-	}
 
-	h.r.Writer().Write(w, r, content)
+		h.r.Writer().Write(w, r, content)
+	}
 }

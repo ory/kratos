@@ -43,7 +43,7 @@ type (
 		// TraitsSchemaID is the ID of the JSON schema used for validating the identity's traits.
 		//
 		// format: uuid
-		TraitsSchemaID string `json:"-" faker:"-" db:"traits_schema_id"`
+		TraitsSchemaID uuid.UUID `json:"traits_schema_id" faker:"-" db:"traits_schema_id"`
 
 		// Traits represent an identity's traits. The identity is able to create, modify, and delete traits
 		// in a self-service manner. The input will always be validated against the JSON Schema defined
@@ -165,12 +165,12 @@ func (i *Identity) CopyWithoutCredentials() *Identity {
 	return &ii
 }
 
-func NewIdentity(traitsSchemaURL string) *Identity {
+func NewIdentity(traitsSchemaID uuid.UUID) *Identity {
 	return &Identity{
-		ID:              x.NewUUID(),
-		Credentials:     map[CredentialsType]Credentials{},
-		Traits:          Traits(json.RawMessage("{}")),
-		TraitsSchemaURL: traitsSchemaURL,
-		l:               new(sync.RWMutex),
+		ID:             x.NewUUID(),
+		Credentials:    map[CredentialsType]Credentials{},
+		Traits:         Traits(json.RawMessage("{}")),
+		TraitsSchemaID: traitsSchemaID,
+		l:              new(sync.RWMutex),
 	}
 }

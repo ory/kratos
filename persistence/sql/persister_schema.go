@@ -19,13 +19,13 @@ func (p *Persister) GetSchema(id uuid.UUID) (*schema.Schema, error) {
 
 func (p *Persister) GetSchemaByUrl(url string) (*schema.Schema, error) {
 	var s schema.Schema
-	if err := p.c.Where("url = ?", url).First(s); err != nil {
+	if err := p.c.Where("url = ?", url).First(&s); err != nil {
 		return nil, err
 	}
 	return &s, nil
 }
 
-func (p *Persister) CreateSchema(s schema.Schema) error {
+func (p *Persister) RegisterSchema(s *schema.Schema) error {
 	if s.URL == "" {
 		return errors.WithStack(herodot.ErrBadRequest.WithReason("The schema is missing the URL property."))
 	}

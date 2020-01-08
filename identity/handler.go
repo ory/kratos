@@ -80,6 +80,8 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	i.Credentials = nil
 	// We do not allow setting the ID using this method
 	i.ID = uuid.Nil
+	// Make sure the TraitsSchemaURL is only set by kratos
+	i.TraitsSchemaURL = ""
 
 	err := h.r.IdentityPool().CreateIdentity(r.Context(), &i)
 	if err != nil {
@@ -105,6 +107,8 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	}
 
 	i.ID = x.ParseUUID(ps.ByName("id"))
+	// Make sure the TraitsSchemaURL is only set by kratos
+	i.TraitsSchemaURL = ""
 	if err := h.r.IdentityPool().UpdateIdentity(r.Context(), &i); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return

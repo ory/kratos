@@ -193,7 +193,7 @@ func (m *RegistryDefault) LoginStrategies() login.Strategies {
 
 func (m *RegistryDefault) IdentityValidator() *identity.Validator {
 	if m.identityValidator == nil {
-		m.identityValidator = identity.NewValidator(m.c)
+		m.identityValidator = identity.NewValidator(m.c, m)
 	}
 	return m.identityValidator
 }

@@ -3,14 +3,15 @@ package identity_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"github.com/ory/kratos/schema"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/tidwall/gjson"
 
 	"github.com/ory/viper"
 
@@ -20,18 +21,36 @@ import (
 	"github.com/ory/kratos/x"
 )
 
+func registerDefaultSchema(ts *httptest.Server) {
+	var b bytes.Buffer
+	defaultSchema := &schema.Schema{
+		URL: viper.GetString(configuration.ViperKeyDefaultIdentityTraitsSchemaURL),
+	}
+	_ = json.NewEncoder(&b).Encode(defaultSchema)
+	req, _ := http.NewRequest("PUT", ts.URL+"/schemas", &b)
+	_, _ = ts.Client().Do(req)
+}
+
 func TestHandler(t *testing.T) {
 	_, reg := internal.NewRegistryDefault(t)
-	router := x.NewRouterAdmin()
-	reg.IdentityHandler().RegisterAdminRoutes(router)
-	ts := httptest.NewServer(router)
-	defer ts.Close()
+	adminRouter := x.NewRouterAdmin()
+	publicRouter := x.NewRouterPublic()
+	reg.IdentityHandler().RegisterAdminRoutes(adminRouter)
+	reg.SchemaHandler().RegisterAdminRoutes(adminRouter)
+	reg.SchemaHandler().RegisterPublicRoutes(publicRouter)
+	tsa := httptest.NewServer(adminRouter)
+	tsp := httptest.NewServer(publicRouter)
+	defer tsa.Close()
+	defer tsp.Close()
 
-	viper.Set(configuration.ViperKeyURLsSelfAdmin, ts.URL)
+	viper.Set(configuration.ViperKeyURLsSelfAdmin, tsa.URL)
+	viper.Set(configuration.ViperKeyURLsSelfPublic, tsp.URL)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
 
+	registerDefaultSchema(tsa)
+
 	var get = func(t *testing.T, href string, expectCode int) gjson.Result {
-		res, err := ts.Client().Get(ts.URL + href)
+		res, err := tsa.Client().Get(tsa.URL + href)
 		require.NoError(t, err)
 		body, err := ioutil.ReadAll(res.Body)
 		require.NoError(t, err)
@@ -42,10 +61,10 @@ func TestHandler(t *testing.T) {
 	}
 
 	var remove = func(t *testing.T, href string, expectCode int) {
-		req, err := http.NewRequest("DELETE", ts.URL+href, nil)
+		req, err := http.NewRequest("DELETE", tsa.URL+href, nil)
 		require.NoError(t, err)
 
-		res, err := ts.Client().Do(req)
+		res, err := tsa.Client().Do(req)
 		require.NoError(t, err)
 
 		require.EqualValues(t, expectCode, res.StatusCode)
@@ -54,10 +73,10 @@ func TestHandler(t *testing.T) {
 	var send = func(t *testing.T, method, href string, expectCode int, send interface{}) gjson.Result {
 		var b bytes.Buffer
 		require.NoError(t, json.NewEncoder(&b).Encode(send))
-		req, err := http.NewRequest(method, ts.URL+href, &b)
+		req, err := http.NewRequest(method, tsa.URL+href, &b)
 		require.NoError(t, err)
 		req.Header.Set("Content-Type", "application/json")
-		res, err := ts.Client().Do(req)
+		res, err := tsa.Client().Do(req)
 		require.NoError(t, err)
 		body, err := ioutil.ReadAll(res.Body)
 		require.NoError(t, err)
@@ -77,11 +96,12 @@ func TestHandler(t *testing.T) {
 		_ = get(t, "/identities/does-not-exist", http.StatusNotFound)
 	})
 
-	t.Run("case=should fail to create an entity because schema url does not exist", func(t *testing.T) {
+	t.Run("case=should fail to create an entity because schema ID does not exist", func(t *testing.T) {
 		var i identity.Identity
-		i.TraitsSchemaURL = "file://./stub/does-not-exist.schema.json"
-		res := send(t, "POST", "/identities", http.StatusInternalServerError, &i)
-		assert.Contains(t, res.Get("error.reason").String(), "does-not-exist.schema.json")
+		i.TraitsSchemaID = x.NewUUID()
+		// TODO what should the status code/message be? (deps not found)
+		res := send(t, "POST", "/identities", http.StatusNotFound, &i)
+		assert.NotEmpty(t, res.Get("error.message").String())
 	})
 
 	t.Run("case=should fail to create an entity because schema is not validating", func(t *testing.T) {
@@ -110,14 +130,14 @@ func TestHandler(t *testing.T) {
 		i.ID = x.ParseUUID(res.Get("id").String())
 		assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
 		assert.Empty(t, res.Get("credentials").String(), "%s", res.Raw)
-		assert.EqualValues(t, viper.GetString(configuration.ViperKeyDefaultIdentityTraitsSchemaURL), res.Get("traits_schema_url").String(), "%s", res.Raw)
+		assert.Regexp(t, fmt.Sprintf("^%s/schemas/*", viper.GetString(configuration.ViperKeyURLsSelfPublic)), res.Get("traits_schema_url"), "%s", res.Raw)
 	})
 
 	t.Run("case=should be able to get the identity", func(t *testing.T) {
 		res := get(t, "/identities/"+i.ID.String(), http.StatusOK)
 		assert.EqualValues(t, i.ID.String(), res.Get("id").String(), "%s", res.Raw)
 		assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
-		assert.EqualValues(t, viper.GetString(configuration.ViperKeyDefaultIdentityTraitsSchemaURL), res.Get("traits_schema_url").String(), "%s", res.Raw)
+		assert.Regexp(t, fmt.Sprintf("^%s/schemas/*", viper.GetString(configuration.ViperKeyURLsSelfPublic)), res.Get("traits_schema_url"), "%s", res.Raw)
 		assert.Empty(t, res.Get("credentials").String(), "%s", res.Raw)
 	})
 

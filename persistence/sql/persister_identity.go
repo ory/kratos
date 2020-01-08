@@ -117,12 +117,17 @@ func createIdentityCredentials(ctx context.Context, tx *pop.Connection, i *ident
 }
 
 func (p *Persister) injectTraitsUrl(i *identity.Identity) {
-	i.TraitsSchemaURL = fmt.Sprintf("%s/schemas/%s", p.cf.SelfPublicURL(), i.TraitsSchemaID)
+	i.TraitsSchemaURL = fmt.Sprintf("%s/schemas/%s", p.cf.SelfPublicURL(), i.TraitsSchemaID.String())
 }
 
 func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) error {
-	if i.TraitsSchemaURL == "" {
-		i.TraitsSchemaURL = p.cf.DefaultIdentityTraitsSchemaURL().String()
+	if uuid.Nil == i.TraitsSchemaID {
+		s, err := p.GetSchemaByUrl(p.cf.DefaultIdentityTraitsSchemaURL().String())
+		if err != nil {
+			return err
+		}
+
+		i.TraitsSchemaID = s.ID
 	}
 
 	if len(i.Traits) == 0 {
@@ -133,21 +138,7 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 		return err
 	}
 
-	s, err := p.GetSchemaByUrl(i.TraitsSchemaURL)
-	if err != nil {
-		if err = p.CreateSchema(schema.Schema{
-			URL: i.TraitsSchemaURL,
-		}); err != nil {
-			return err
-		}
-
-		if s, err = p.GetSchemaByUrl(i.TraitsSchemaURL); err != nil {
-			return err
-		}
-	}
-
-	i.TraitsSchemaURL = s.URL
-	i.TraitsSchemaID = s.ID.String()
+	p.injectTraitsUrl(i)
 
 	return sqlcon.HandleError(p.c.Transaction(func(tx *pop.Connection) error {
 		if err := tx.Create(i); err != nil {
@@ -170,6 +161,16 @@ func (p *Persister) ListIdentities(ctx context.Context, limit, offset int) ([]id
 }
 
 func (p *Persister) UpdateIdentityConfidential(ctx context.Context, i *identity.Identity) error {
+	// Inject old TraitsSchemaID if none is provided
+	if uuid.Nil == i.TraitsSchemaID {
+		io, err := p.GetIdentity(ctx, i.ID)
+		if err != nil {
+			return err
+		}
+
+		i.TraitsSchemaID = io.TraitsSchemaID
+	}
+
 	if err := p.validateIdentity(i); err != nil {
 		return err
 	}
@@ -188,6 +189,16 @@ func (p *Persister) UpdateIdentityConfidential(ctx context.Context, i *identity.
 }
 
 func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) error {
+	// Inject old TraitsSchemaID if none is provided
+	if uuid.Nil == i.TraitsSchemaID {
+		io, err := p.GetIdentity(ctx, i.ID)
+		if err != nil {
+			return err
+		}
+
+		i.TraitsSchemaID = io.TraitsSchemaID
+	}
+
 	if err := p.validateIdentity(i); err != nil {
 		return err
 	}
@@ -216,6 +227,8 @@ func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) er
 			herodot.ErrInternalServerError.
 				WithReasonf(`A field was modified that updates one or more credentials-related settings. This action was blocked because a unprivileged DBAL method was used to execute the update. This is either a configuration issue, or a bug.`))
 	}
+
+	p.injectTraitsUrl(i)
 
 	return sqlcon.HandleError(p.c.Update(i))
 }
