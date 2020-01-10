@@ -2,9 +2,10 @@ package driver
 
 import (
 	"context"
-	"github.com/ory/kratos/schema"
 	"strings"
 	"time"
+
+	"github.com/ory/kratos/schema"
 
 	"github.com/cenkalti/backoff"
 	"github.com/gobuffalo/pop"

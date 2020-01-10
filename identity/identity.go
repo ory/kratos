@@ -3,10 +3,11 @@ package identity
 import (
 	"database/sql/driver"
 	"encoding/json"
-	"github.com/ory/x/urlx"
 	"reflect"
 	"sync"
 	"time"
+
+	"github.com/ory/x/urlx"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"

@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/ory/kratos/driver/configuration"
-	"github.com/ory/viper"
 	"net/http"
 	"testing"
+
+	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/viper"
 
 	"github.com/bxcodec/faker"
 	"github.com/stretchr/testify/require"

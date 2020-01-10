@@ -2,10 +2,11 @@ package identity_test
 
 import (
 	"fmt"
-	"github.com/ory/kratos/schema"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/ory/kratos/schema"
 
 	"github.com/golang/mock/gomock"
 	"github.com/julienschmidt/httprouter"

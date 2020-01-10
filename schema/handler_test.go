@@ -3,12 +3,14 @@ package schema_test
 import (
 	"bytes"
 	"encoding/json"
+	"net/http"
+	"testing"
+
 	"github.com/gobuffalo/httptest"
+
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/viper"
-	"net/http"
-	"testing"
 )
 
 func RegisterDefaultSchema(ts *httptest.Server) {

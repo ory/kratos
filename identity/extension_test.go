@@ -1,10 +1,12 @@
 package identity_test
 
 import (
-	"github.com/gofrs/uuid"
-	"github.com/ory/kratos/x"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/gofrs/uuid"
+
+	"github.com/ory/kratos/x"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

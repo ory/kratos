@@ -1,16 +1,18 @@
 package schema
 
 import (
-	"github.com/julienschmidt/httprouter"
-	"github.com/ory/herodot"
-	"github.com/ory/kratos/x"
-	"github.com/ory/x/jsonx"
-	"github.com/ory/x/urlx"
-	"github.com/pkg/errors"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
+
+	"github.com/julienschmidt/httprouter"
+	"github.com/pkg/errors"
+
+	"github.com/ory/herodot"
+	"github.com/ory/kratos/x"
+	"github.com/ory/x/jsonx"
+	"github.com/ory/x/urlx"
 )
 
 type (

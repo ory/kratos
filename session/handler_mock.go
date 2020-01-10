@@ -3,12 +3,14 @@ package session
 import (
 	"context"
 	"encoding/json"
-	"github.com/gofrs/uuid"
-	"github.com/ory/kratos/schema"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"testing"
+
+	"github.com/gofrs/uuid"
+
+	"github.com/ory/kratos/schema"
 
 	"github.com/bxcodec/faker"
 	"github.com/julienschmidt/httprouter"

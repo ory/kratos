@@ -3,12 +3,13 @@ package sql
 import (
 	"github.com/gobuffalo/pop"
 	"github.com/gofrs/uuid"
+	"github.com/pkg/errors"
+
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/viper"
 	"github.com/ory/x/sqlcon"
-	"github.com/pkg/errors"
 )
 
 func (p *Persister) GetSchema(id uuid.UUID) (*schema.Schema, error) {

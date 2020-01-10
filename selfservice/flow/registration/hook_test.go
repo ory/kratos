@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/gofrs/uuid"
-	"github.com/ory/kratos/driver/configuration"
-	"github.com/ory/viper"
 	"net/http"
 	"testing"
+
+	"github.com/gofrs/uuid"
+
+	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/viper"
 
 	"github.com/bxcodec/faker"
 	"github.com/sirupsen/logrus"
