@@ -27,3 +27,7 @@ type (
 		SchemaPersister() Persister
 	}
 )
+
+func (s Schema) TableName() string {
+	return "json_schemas"
+}

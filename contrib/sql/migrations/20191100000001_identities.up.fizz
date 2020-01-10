@@ -3,7 +3,7 @@ create_table("identities") {
     t.Column("traits_schema_id", "uuid")
     t.Column("traits", "json")
 
-    t.ForeignKey("traits_schema_id", {"schemas": ["id"]}, {"on_delete": "restrict"})
+    t.ForeignKey("traits_schema_id", {"json_schemas": ["id"]}, {"on_delete": "restrict"})
 }
 
 create_table("identity_credential_types") {
