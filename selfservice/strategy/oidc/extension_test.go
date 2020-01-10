@@ -1,6 +1,8 @@
 package oidc_test
 
 import (
+	"github.com/gofrs/uuid"
+	"github.com/ory/kratos/internal"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -18,9 +20,11 @@ import (
 func TestValidationExtension(t *testing.T) {
 	ts := httptest.NewServer(http.FileServer(http.Dir("stub")))
 	defer ts.Close()
+	_, reg := internal.NewRegistryDefault(t)
+	_, _ = reg.SchemaPersister().RegisterDefaultSchema(ts.URL + "/registration.schema.json")
 
 	sv := schema.NewValidator()
-	i := identity.NewIdentity(ts.URL + "/registration.schema.json")
+	i := identity.NewIdentity(uuid.Nil)
 
 	ve := oidc.NewValidationExtension()
 	ve.WithIdentity(i)

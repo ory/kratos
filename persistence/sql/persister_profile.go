@@ -22,6 +22,7 @@ func (p *Persister) GetProfileRequest(_ context.Context, id uuid.UUID) (*profile
 	if err := p.c.Eager().Find(&r, id); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
+	r.Identity.InjectTraitsUrl(p.cf.SelfPublicURL().String())
 	return &r, nil
 }
 

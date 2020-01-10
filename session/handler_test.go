@@ -35,6 +35,9 @@ func TestHandler(t *testing.T) {
 	t.Run("public", func(t *testing.T) {
 		_, reg := internal.NewRegistryDefault(t)
 		r := x.NewRouterPublic()
+		// set this temporarily so there is any valid url configured
+		lh := "http://localhost"
+		viper.Set(configuration.ViperKeyURLsSelfPublic, lh)
 
 		h, _ := MockSessionCreateHandler(t, reg)
 		r.GET("/set", h)
@@ -92,6 +95,9 @@ func TestIsNotAuthenticatedSecurecookie(t *testing.T) {
 func TestIsNotAuthenticated(t *testing.T) {
 	_, reg := internal.NewRegistryDefault(t)
 	r := x.NewRouterPublic()
+	// set this temporarily so there is any valid url configured
+	lh := "http://localhost"
+	viper.Set(configuration.ViperKeyURLsSelfPublic, lh)
 
 	h, _ := MockSessionCreateHandler(t, reg)
 	r.GET("/set", h)
@@ -143,6 +149,9 @@ func TestIsNotAuthenticated(t *testing.T) {
 func TestIsAuthenticated(t *testing.T) {
 	_, reg := internal.NewRegistryDefault(t)
 	r := x.NewRouterPublic()
+	// set this temporarily so there is any valid url configured
+	lh := "http://localhost"
+	viper.Set(configuration.ViperKeyURLsSelfPublic, lh)
 
 	h, _ := MockSessionCreateHandler(t, reg)
 	r.GET("/set", h)

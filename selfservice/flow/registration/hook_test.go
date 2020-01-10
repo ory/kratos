@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/gofrs/uuid"
+	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/viper"
 	"net/http"
 	"testing"
 
@@ -12,9 +15,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -95,11 +95,12 @@ func TestRegistrationExecutor(t *testing.T) {
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				conf, reg := internal.NewRegistryDefault(t)
-				viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://stub/registration.schema.json")
+				_, _ = reg.SchemaPersister().RegisterDefaultSchema("file://./stub/registration.schema.json")
+				viper.Set(configuration.ViperKeyURLsSelfPublic, "http://mock-server.com")
 
 				var i identity.Identity
 				require.NoError(t, faker.FakeData(&i))
-				i.TraitsSchemaURL = ""
+				i.TraitsSchemaID = uuid.Nil
 				i.Traits = identity.Traits("{}")
 
 				e := registration.NewHookExecutor(reg, conf)

@@ -30,6 +30,7 @@ func init() {
 
 func TestEnsureSessionRedirect(t *testing.T) {
 	_, reg := internal.NewRegistryDefault(t)
+	viper.Set(configuration.ViperKeyURLsSelfPublic, "http://mock-server.com")
 
 	router := x.NewRouterPublic()
 	reg.RegistrationHandler().RegisterPublicRoutes(router)
@@ -44,7 +45,7 @@ func TestEnsureSessionRedirect(t *testing.T) {
 
 	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, redirTS.URL)
 	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
+	_, _ = reg.SchemaPersister().RegisterDefaultSchema("file://./stub/registration.schema.json")
 
 	for k, tc := range [][]string{
 		{"GET", registration.BrowserRegistrationPath},

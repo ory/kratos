@@ -2,6 +2,7 @@ package identity
 
 import (
 	"encoding/json"
+	"github.com/gofrs/uuid"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,7 +10,7 @@ import (
 )
 
 func TestNewIdentity(t *testing.T) {
-	i := NewIdentity("")
+	i := NewIdentity(uuid.Nil)
 	assert.NotEmpty(t, i.ID)
 	// assert.NotEmpty(t, i.Metadata)
 	assert.NotEmpty(t, i.Traits)
@@ -17,7 +18,7 @@ func TestNewIdentity(t *testing.T) {
 }
 
 func TestCopyCredentials(t *testing.T) {
-	i := NewIdentity("")
+	i := NewIdentity(uuid.Nil)
 	i.Credentials = map[CredentialsType]Credentials{
 		"foo": {
 			Type:        "foo",

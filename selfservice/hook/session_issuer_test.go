@@ -2,6 +2,7 @@ package hook_test
 
 import (
 	"context"
+	"github.com/gofrs/uuid"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -22,7 +23,7 @@ import (
 func TestSessionIssuer(t *testing.T) {
 	_, reg := internal.NewRegistryDefault(t)
 	viper.Set(configuration.ViperKeyURLsSelfPublic, "http://localhost/")
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/stub.schema.json")
+	_, _ = reg.SchemaPersister().RegisterDefaultSchema("file://./stub/stub.schema.json")
 
 	var r http.Request
 	h := hook.NewSessionIssuer(reg)
@@ -31,7 +32,7 @@ func TestSessionIssuer(t *testing.T) {
 		w := httptest.NewRecorder()
 		sid := x.NewUUID()
 
-		i := identity.NewIdentity("")
+		i := identity.NewIdentity(uuid.Nil)
 		require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), i))
 		require.NoError(t, h.ExecuteLoginPostHook(w, &r, nil, &session.Session{ID: sid, Identity: i}))
 
@@ -44,7 +45,7 @@ func TestSessionIssuer(t *testing.T) {
 		w := httptest.NewRecorder()
 		sid := x.NewUUID()
 
-		i := identity.NewIdentity("")
+		i := identity.NewIdentity(uuid.Nil)
 		require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), i))
 		require.NoError(t, h.ExecuteRegistrationPostHook(w, &r, nil, &session.Session{ID: sid, Identity: i}))
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	"github.com/gobuffalo/pop"
@@ -116,10 +115,6 @@ func createIdentityCredentials(ctx context.Context, tx *pop.Connection, i *ident
 	return nil
 }
 
-func (p *Persister) injectTraitsUrl(i *identity.Identity) {
-	i.TraitsSchemaURL = fmt.Sprintf("%s/schemas/%s", p.cf.SelfPublicURL(), i.TraitsSchemaID.String())
-}
-
 func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) error {
 	if uuid.Nil == i.TraitsSchemaID {
 		s, err := p.GetSchemaByUrl(p.cf.DefaultIdentityTraitsSchemaURL().String())
@@ -138,7 +133,7 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 		return err
 	}
 
-	p.injectTraitsUrl(i)
+	i.InjectTraitsUrl(p.cf.SelfPublicURL().String())
 
 	return sqlcon.HandleError(p.c.Transaction(func(tx *pop.Connection) error {
 		if err := tx.Create(i); err != nil {
@@ -154,7 +149,7 @@ func (p *Persister) ListIdentities(ctx context.Context, limit, offset int) ([]id
 	err := sqlcon.HandleError(p.c.RawQuery("SELECT * FROM identities LIMIT ? OFFSET ?", limit, offset).All(&is))
 
 	for i := range is {
-		p.injectTraitsUrl(&is[i])
+		is[i].InjectTraitsUrl(p.cf.SelfPublicURL().String())
 	}
 
 	return is, err
@@ -228,7 +223,7 @@ func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) er
 				WithReasonf(`A field was modified that updates one or more credentials-related settings. This action was blocked because a unprivileged DBAL method was used to execute the update. This is either a configuration issue, or a bug.`))
 	}
 
-	p.injectTraitsUrl(i)
+	i.InjectTraitsUrl(p.cf.SelfPublicURL().String())
 
 	return sqlcon.HandleError(p.c.Update(i))
 }
@@ -250,7 +245,7 @@ func (p *Persister) GetIdentity(_ context.Context, id uuid.UUID) (*identity.Iden
 		return nil, sqlcon.HandleError(err)
 	}
 	i.Credentials = nil
-	p.injectTraitsUrl(&i)
+	i.InjectTraitsUrl(p.cf.SelfPublicURL().String())
 	return &i, nil
 }
 
@@ -285,7 +280,7 @@ func (p *Persister) GetIdentityConfidential(_ context.Context, id uuid.UUID) (*i
 		i.Credentials[creds.Type] = creds
 	}
 	i.CredentialsCollection = nil
-	p.injectTraitsUrl(&i)
+	i.InjectTraitsUrl(p.cf.SelfPublicURL().String())
 
 	return &i, nil
 }

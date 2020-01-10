@@ -2,6 +2,7 @@ package identity_test
 
 import (
 	"fmt"
+	"github.com/ory/kratos/schema"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -10,9 +11,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
 	. "github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 )
@@ -50,9 +48,9 @@ func TestSchemaValidator(t *testing.T) {
 	ts := httptest.NewServer(router)
 	defer ts.Close()
 
-	conf, _ := internal.NewRegistryDefault(t)
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, ts.URL+"/schema/firstName")
-	v := NewValidator(conf)
+	conf, reg := internal.NewRegistryDefault(t)
+	_, _ = reg.SchemaPersister().RegisterDefaultSchema(ts.URL + "/schema/firstName")
+	v := NewValidator(conf, reg)
 
 	for k, tc := range []struct {
 		i   *Identity
@@ -104,6 +102,18 @@ func TestSchemaValidator(t *testing.T) {
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			if tc.i.TraitsSchemaURL != "" {
+				s, err := reg.SchemaPersister().GetSchemaByUrl(tc.i.TraitsSchemaURL)
+				if err != nil {
+					s = &schema.Schema{
+						URL: tc.i.TraitsSchemaURL,
+					}
+					_ = reg.SchemaPersister().RegisterSchema(s)
+				}
+
+				tc.i.TraitsSchemaID = s.ID
+			}
+
 			err := v.Validate(tc.i)
 			if tc.err == "" {
 				require.NoError(t, err)

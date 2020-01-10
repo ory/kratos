@@ -181,7 +181,7 @@ func TestStrategy(t *testing.T) {
 	viper.Set(configuration.ViperKeyURLsError, errTS.URL)
 	viper.Set(configuration.ViperKeyURLsLogin, uiTS.URL+"/login")
 	viper.Set(configuration.ViperKeyURLsRegistration, uiTS.URL+"/registration")
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
+	_, _ = reg.SchemaPersister().RegisterDefaultSchema("file://./stub/registration.schema.json")
 	viper.Set(configuration.ViperKeySelfServiceRegistrationAfterConfig+"."+string(identity.CredentialsTypeOIDC), hookConfig(returnTS.URL))
 	viper.Set(configuration.ViperKeySelfServiceLoginAfterConfig+"."+string(identity.CredentialsTypeOIDC), hookConfig(returnTS.URL))
 	// viper.Set(configuration.ViperKeySignupDefaultReturnToURL, returnTS.URL)
@@ -423,7 +423,7 @@ func TestStrategy(t *testing.T) {
 		scope = []string{"openid"}
 
 		t.Run("case=create password identity", func(t *testing.T) {
-			i := identity.NewIdentity("")
+			i := identity.NewIdentity(uuid.Nil)
 			i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
 				Identifiers: []string{subject},
 			})

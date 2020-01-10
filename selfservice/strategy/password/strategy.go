@@ -2,6 +2,7 @@ package password
 
 import (
 	"github.com/justinas/nosurf"
+	"github.com/ory/kratos/schema"
 	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/ory/kratos/selfservice/flow/login"
@@ -39,6 +40,8 @@ type registrationStrategyDependencies interface {
 	identity.ValidationProvider
 
 	session.HandlerProvider
+
+	schema.PersistenceProvider
 }
 
 type Strategy struct {

@@ -1,7 +1,8 @@
 package identity_test
 
 import (
-	"net/http"
+	"github.com/gofrs/uuid"
+	"github.com/ory/kratos/x"
 	"net/http/httptest"
 	"testing"
 
@@ -16,14 +17,25 @@ import (
 )
 
 func TestValidationExtension(t *testing.T) {
-	ts := httptest.NewServer(http.FileServer(http.Dir("stub")))
-	defer ts.Close()
+	_, reg := internal.NewRegistryDefault(t)
+	routera := x.NewRouterAdmin()
+	routerp := x.NewRouterPublic()
+	reg.SchemaHandler().RegisterAdminRoutes(routera)
+	reg.SchemaHandler().RegisterPublicRoutes(routerp)
+
+	tsa := httptest.NewServer(routera)
+	tsp := httptest.NewServer(routerp)
+	defer tsa.Close()
+	defer tsp.Close()
 
 	conf := internal.NewConfigurationWithDefaults()
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, ts.URL+"/extension.schema.json")
-	v := NewValidator(conf)
+	viper.Set(configuration.ViperKeyURLsSelfAdmin, tsa.URL)
+	viper.Set(configuration.ViperKeyURLsSelfPublic, tsp.URL)
+	_, _ = reg.SchemaPersister().RegisterDefaultSchema("file://../identity/stub/extension.schema.json")
 
-	i := NewIdentity("")
+	v := NewValidator(conf, reg)
+
+	i := NewIdentity(uuid.Nil)
 	i.Traits = Traits(`{
   "email": "foo@bar.com",
   "names": [

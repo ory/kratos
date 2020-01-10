@@ -3,34 +3,33 @@ package session
 import (
 	"context"
 	"encoding/json"
+	"github.com/gofrs/uuid"
+	"github.com/ory/kratos/schema"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"testing"
 
 	"github.com/bxcodec/faker"
-	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/x"
 )
 
 type mockDeps interface {
 	identity.PoolProvider
+	schema.PersistenceProvider
 	ManagementProvider
 	PersistenceProvider
 }
 
 func MockSetSession(t *testing.T, reg mockDeps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		i := identity.NewIdentity("")
+		i := identity.NewIdentity(uuid.Nil)
 		require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), i))
 
 		_, err := reg.SessionManager().CreateToRequest(context.Background(), i, w, r)
@@ -53,7 +52,7 @@ func MockGetSession(t *testing.T, reg mockDeps) httprouter.Handle {
 }
 
 func MockMakeAuthenticatedRequest(t *testing.T, reg mockDeps, router *httprouter.Router, req *http.Request) ([]byte, *http.Response) {
-	set := "/" + uuid.New().String() + "/set"
+	set := "/" + x.NewUUID().String() + "/set"
 	router.GET(set, MockSetSession(t, reg))
 
 	client := MockCookieClient(t)
@@ -96,8 +95,8 @@ func MockSessionCreateHandlerWithIdentity(t *testing.T, reg mockDeps, i *identit
 	var sess Session
 	require.NoError(t, faker.FakeData(&sess))
 
-	if viper.GetString(configuration.ViperKeyDefaultIdentityTraitsSchemaURL) == "" {
-		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/fake-session.schema.json")
+	if _, err := reg.SchemaPersister().GetDefaultSchema(); err != nil {
+		_, _ = reg.SchemaPersister().RegisterDefaultSchema("file://./stub/fake-session.schema.json")
 	}
 
 	require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), i))
@@ -116,9 +115,17 @@ func MockSessionCreateHandlerWithIdentity(t *testing.T, reg mockDeps, i *identit
 }
 
 func MockSessionCreateHandler(t *testing.T, reg mockDeps) (httprouter.Handle, *Session) {
+	surl := "file://./stub/fake-session.schema.json"
+	s, err := reg.SchemaPersister().GetSchemaByUrl(surl)
+	if err != nil {
+		s = &schema.Schema{
+			URL: surl,
+		}
+		_ = reg.SchemaPersister().RegisterSchema(s)
+	}
 	return MockSessionCreateHandlerWithIdentity(t, reg, &identity.Identity{
-		ID:              x.NewUUID(),
-		TraitsSchemaURL: "file://./stub/fake-session.schema.json",
-		Traits:          identity.Traits(json.RawMessage(`{"baz":"bar","foo":true,"bar":2.5}`)),
+		ID:             x.NewUUID(),
+		TraitsSchemaID: s.ID,
+		Traits:         identity.Traits(json.RawMessage(`{"baz":"bar","foo":true,"bar":2.5}`)),
 	})
 }

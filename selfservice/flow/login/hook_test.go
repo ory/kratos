@@ -4,16 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/viper"
 	"net/http"
 	"testing"
 
 	"github.com/bxcodec/faker"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/flow/login"
@@ -36,7 +34,6 @@ type mockPostHook struct {
 func (m *mockPostHook) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, a *login.Request, s *session.Session) error {
 	if m.modifyIdentity {
 		i := s.Identity
-		i.TraitsSchemaURL = "file://./stub/updated.schema.json"
 		s.UpdateIdentity(i)
 	}
 	return m.err
@@ -81,17 +78,19 @@ func TestLoginExecutor(t *testing.T) {
 					new(mockPostHook),
 					&mockPostHook{modifyIdentity: true},
 				},
-				expectSchemaURL: "file://./stub/updated.schema.json",
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				conf, reg := internal.NewRegistryDefault(t)
 
+				surl := "http://mock-server.com"
+				viper.Set(configuration.ViperKeyURLsSelfPublic, surl)
+
 				var i identity.Identity
 				require.NoError(t, faker.FakeData(&i))
 				i.TraitsSchemaURL = ""
 				i.Traits = identity.Traits(`{}`)
-				viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/login.schema.json")
+				_, _ = reg.SchemaPersister().RegisterDefaultSchema("file://./stub/login.schema.json")
 				require.NoError(t, reg.IdentityPool().CreateIdentity(context.TODO(), &i))
 
 				e := login.NewHookExecutor(reg, conf)
@@ -102,11 +101,6 @@ func TestLoginExecutor(t *testing.T) {
 				}
 
 				require.NoError(t, err)
-				if tc.expectSchemaURL != "" {
-					got, err := reg.IdentityPool().GetIdentity(context.TODO(), i.ID)
-					require.NoError(t, err)
-					assert.EqualValues(t, tc.expectSchemaURL, got.TraitsSchemaURL)
-				}
 			})
 		}
 	})

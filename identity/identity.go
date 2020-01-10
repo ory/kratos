@@ -3,6 +3,7 @@ package identity
 import (
 	"database/sql/driver"
 	"encoding/json"
+	"github.com/ory/x/urlx"
 	"reflect"
 	"sync"
 	"time"
@@ -89,6 +90,10 @@ func (t *Traits) UnmarshalJSON(data []byte) error {
 
 func (i Identity) TableName() string {
 	return "identities"
+}
+
+func (i *Identity) InjectTraitsUrl(host string) {
+	i.TraitsSchemaURL = urlx.MustJoin(host, "schemas", i.TraitsSchemaID.String())
 }
 
 func (i *Identity) lock() *sync.RWMutex {

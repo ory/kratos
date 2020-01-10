@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/kratos/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -21,16 +20,6 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-func registerDefaultSchema(ts *httptest.Server) {
-	var b bytes.Buffer
-	defaultSchema := &schema.Schema{
-		URL: viper.GetString(configuration.ViperKeyDefaultIdentityTraitsSchemaURL),
-	}
-	_ = json.NewEncoder(&b).Encode(defaultSchema)
-	req, _ := http.NewRequest("PUT", ts.URL+"/schemas", &b)
-	_, _ = ts.Client().Do(req)
-}
-
 func TestHandler(t *testing.T) {
 	_, reg := internal.NewRegistryDefault(t)
 	adminRouter := x.NewRouterAdmin()
@@ -45,9 +34,7 @@ func TestHandler(t *testing.T) {
 
 	viper.Set(configuration.ViperKeyURLsSelfAdmin, tsa.URL)
 	viper.Set(configuration.ViperKeyURLsSelfPublic, tsp.URL)
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
-
-	registerDefaultSchema(tsa)
+	_, _ = reg.SchemaPersister().RegisterDefaultSchema("file://./stub/identity.schema.json")
 
 	var get = func(t *testing.T, href string, expectCode int) gjson.Result {
 		res, err := tsa.Client().Get(tsa.URL + href)

@@ -78,6 +78,8 @@ type dependencies interface {
 	registration.StrategyProvider
 	registration.HandlerProvider
 	registration.ErrorHandlerProvider
+
+	schema.PersistenceProvider
 }
 
 // Strategy implements selfservice.LoginStrategy, selfservice.RegistrationStrategy. It supports both login
@@ -377,8 +379,12 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		return
 	}
 
-	// TODO default
-	i := identity.NewIdentity(s.c.DefaultIdentityTraitsSchemaURL().String())
+	ds, err := s.d.SchemaPersister().GetSchemaByUrl(s.c.DefaultIdentityTraitsSchemaURL().String())
+	if err != nil {
+		s.handleError(w, r, a.GetID(), nil, err)
+		return
+	}
+	i := identity.NewIdentity(ds.ID)
 	extension := NewValidationExtension()
 	extension.WithIdentity(i)
 

@@ -50,7 +50,7 @@ func fieldsToURLValues(ff models.FormFields) url.Values {
 
 func TestUpdateProfile(t *testing.T) {
 	_, reg := internal.NewRegistryDefault(t)
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
+	_, _ = reg.SchemaPersister().RegisterDefaultSchema("file://./stub/identity.schema.json")
 
 	ui := func() *httptest.Server {
 		router := httprouter.New()
@@ -79,10 +79,11 @@ func TestUpdateProfile(t *testing.T) {
 		Credentials: map[identity.CredentialsType]identity.Credentials{
 			"password": {Type: "password", Identifiers: []string{"john@doe.com"}, Config: json.RawMessage(`{"hashed_password":"foo"}`)},
 		},
-		TraitsSchemaURL: "file://./stub/identity.schema.json",
-		Traits:          identity.Traits(`{"email":"john@doe.com","stringy":"foobar","booly":false,"numby":2.5}`),
+		Traits: identity.Traits(`{"email":"john@doe.com","stringy":"foobar","booly":false,"numby":2.5}`),
 	}
 
+	lh := "http://localhost"
+	viper.Set(configuration.ViperKeyURLsSelfPublic, lh)
 	kratos := func() *httptest.Server {
 		router := x.NewRouterPublic()
 		reg.ProfileManagementHandler().RegisterPublicRoutes(router)
@@ -97,6 +98,8 @@ func TestUpdateProfile(t *testing.T) {
 	}()
 	defer kratos.Close()
 
+	// inject the right host
+	primaryIdentity.TraitsSchemaURL = strings.Replace(primaryIdentity.TraitsSchemaURL, lh, kratos.URL, 1)
 	viper.Set(configuration.ViperKeyURLsSelfPublic, kratos.URL)
 
 	primaryUser := func() *http.Client {

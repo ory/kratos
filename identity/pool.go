@@ -4,15 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"testing"
-
 	"github.com/gofrs/uuid"
+	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/schema"
+	"github.com/ory/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"testing"
 
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/x"
 )
 
@@ -54,16 +53,26 @@ type (
 	PoolProvider interface {
 		IdentityPool() Pool
 	}
+
+	testPool interface {
+		Pool
+		schema.Persister
+	}
 )
 
-func TestPool(p Pool) func(t *testing.T) {
+func TestPool(p testPool) func(t *testing.T) {
 	return func(t *testing.T) {
-		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
+		viper.Set(configuration.ViperKeyURLsSelfPublic, "http://mock-server.com")
+		defaultSchema, _ := p.RegisterDefaultSchema("file://./stub/identity.schema.json")
+		secondSchema := schema.Schema{
+			URL: "file://./stub/identity-2.schema.json",
+		}
+		_ = p.RegisterSchema(&secondSchema)
 
 		var createdIDs []uuid.UUID
 
-		var passwordIdentity = func(schemaURL string, credentialsID string) *Identity {
-			i := NewIdentity(schemaURL)
+		var passwordIdentity = func(schemaID uuid.UUID, credentialsID string) *Identity {
+			i := NewIdentity(schemaID)
 			i.SetCredentials(CredentialsTypePassword, Credentials{
 				Type: CredentialsTypePassword, Identifiers: []string{credentialsID},
 				Config: json.RawMessage(`{"foo":"bar"}`),
@@ -71,8 +80,8 @@ func TestPool(p Pool) func(t *testing.T) {
 			return i
 		}
 
-		var oidcIdentity = func(schemaURL string, credentialsID string) *Identity {
-			i := NewIdentity(schemaURL)
+		var oidcIdentity = func(schemaID uuid.UUID, credentialsID string) *Identity {
+			i := NewIdentity(schemaID)
 			i.SetCredentials(CredentialsTypeOIDC, Credentials{
 				Type: CredentialsTypeOIDC, Identifiers: []string{credentialsID},
 				Config: json.RawMessage(`{}`),
@@ -87,7 +96,7 @@ func TestPool(p Pool) func(t *testing.T) {
 		}
 
 		t.Run("case=should create and set missing ID", func(t *testing.T) {
-			i := NewIdentity("")
+			i := NewIdentity(uuid.Nil)
 			i.SetCredentials(CredentialsTypeOIDC, Credentials{
 				Type: CredentialsTypeOIDC, Identifiers: []string{x.NewUUID().String()},
 				Config: json.RawMessage(`{}`),
@@ -99,7 +108,7 @@ func TestPool(p Pool) func(t *testing.T) {
 		})
 
 		t.Run("case=create with default values", func(t *testing.T) {
-			expected := passwordIdentity("", "id-1")
+			expected := passwordIdentity(uuid.Nil, "id-1")
 			require.NoError(t, p.CreateIdentity(context.Background(), expected))
 			createdIDs = append(createdIDs, expected.ID)
 
@@ -107,7 +116,7 @@ func TestPool(p Pool) func(t *testing.T) {
 			require.NoError(t, err)
 
 			assert.Equal(t, expected.ID, actual.ID)
-			assert.Equal(t, "file://./stub/identity.schema.json", actual.TraitsSchemaURL)
+			assert.Regexp(t, "^http://mock-server.com/schemas/*", actual.TraitsSchemaURL)
 			assertEqual(t, expected, actual)
 		})
 
@@ -123,13 +132,13 @@ func TestPool(p Pool) func(t *testing.T) {
 		})
 
 		t.Run("case=create and keep set values", func(t *testing.T) {
-			expected := passwordIdentity("file://./stub/identity-2.schema.json", "id-2")
+			expected := passwordIdentity(secondSchema.ID, "id-2")
 			require.NoError(t, p.CreateIdentity(context.Background(), expected))
 			createdIDs = append(createdIDs, expected.ID)
 
 			actual, err := p.GetIdentity(context.Background(), expected.ID)
 			require.NoError(t, err)
-			assert.Equal(t, "file://./stub/identity-2.schema.json", actual.TraitsSchemaURL)
+			assert.Regexp(t, "^http://mock-server.com/schemas/*", actual.TraitsSchemaURL)
 			assertEqual(t, expected, actual)
 
 			actual, err = p.GetIdentityConfidential(context.Background(), expected.ID)
@@ -150,12 +159,12 @@ func TestPool(p Pool) func(t *testing.T) {
 		})
 
 		t.Run("case=fail on duplicate credential identifiers if type is password", func(t *testing.T) {
-			initial := passwordIdentity("", "foo@bar.com")
+			initial := passwordIdentity(defaultSchema.ID, "foo@bar.com")
 			require.NoError(t, p.CreateIdentity(context.Background(), initial))
 			createdIDs = append(createdIDs, initial.ID)
 
 			for _, ids := range []string{"foo@bar.com", "fOo@bar.com", "FOO@bar.com", "foo@Bar.com"} {
-				expected := passwordIdentity("", ids)
+				expected := passwordIdentity(defaultSchema.ID, ids)
 				require.Error(t, p.CreateIdentity(context.Background(), expected))
 
 				_, err := p.GetIdentity(context.Background(), expected.ID)
@@ -164,23 +173,23 @@ func TestPool(p Pool) func(t *testing.T) {
 		})
 
 		t.Run("case=fail on duplicate credential identifiers if type is oidc", func(t *testing.T) {
-			initial := oidcIdentity("", "oidc-1")
+			initial := oidcIdentity(defaultSchema.ID, "oidc-1")
 			require.NoError(t, p.CreateIdentity(context.Background(), initial))
 			createdIDs = append(createdIDs, initial.ID)
 
-			expected := oidcIdentity("", "oidc-1")
+			expected := oidcIdentity(defaultSchema.ID, "oidc-1")
 			require.Error(t, p.CreateIdentity(context.Background(), expected))
 
 			_, err := p.GetIdentity(context.Background(), expected.ID)
 			require.Error(t, err)
 
-			second := oidcIdentity("", "OIDC-1")
+			second := oidcIdentity(defaultSchema.ID, "OIDC-1")
 			require.NoError(t, p.CreateIdentity(context.Background(), second), "should work because oidc is not case-sensitive")
 			createdIDs = append(createdIDs, second.ID)
 		})
 
 		t.Run("case=create with invalid traits data", func(t *testing.T) {
-			expected := oidcIdentity("", x.NewUUID().String())
+			expected := oidcIdentity(defaultSchema.ID, x.NewUUID().String())
 			expected.Traits = Traits(`{"bar":123}`) // bar should be a string
 			err := p.CreateIdentity(context.Background(), expected)
 			require.Error(t, err)
@@ -188,7 +197,7 @@ func TestPool(p Pool) func(t *testing.T) {
 		})
 
 		t.Run("case=get classified credentials", func(t *testing.T) {
-			initial := oidcIdentity("", x.NewUUID().String())
+			initial := oidcIdentity(defaultSchema.ID, x.NewUUID().String())
 			initial.SetCredentials(CredentialsTypeOIDC, Credentials{
 				Type: CredentialsTypeOIDC, Identifiers: []string{"aylmao-oidc"},
 				Config: json.RawMessage(`{"ay":"lmao"}`),
@@ -203,11 +212,11 @@ func TestPool(p Pool) func(t *testing.T) {
 		})
 
 		t.Run("case=fail to update an identity because credentials changed but update was called", func(t *testing.T) {
-			initial := oidcIdentity("", x.NewUUID().String())
+			initial := oidcIdentity(defaultSchema.ID, x.NewUUID().String())
 			require.NoError(t, p.CreateIdentity(context.Background(), initial))
 			createdIDs = append(createdIDs, initial.ID)
 
-			assert.Equal(t, "file://./stub/identity.schema.json", initial.TraitsSchemaURL)
+			assert.Regexp(t, "^http://mock-server.com/schemas/*", initial.TraitsSchemaURL)
 
 			toUpdate := initial.CopyWithoutCredentials()
 			toUpdate.SetCredentials(CredentialsTypePassword, Credentials{
@@ -224,17 +233,17 @@ func TestPool(p Pool) func(t *testing.T) {
 
 			actual, err := p.GetIdentityConfidential(context.Background(), toUpdate.ID)
 			require.NoError(t, err)
-			assert.Equal(t, "file://./stub/identity.schema.json", actual.TraitsSchemaURL)
+			assert.Regexp(t, "^http://mock-server.com/schemas/*", actual.TraitsSchemaURL)
 			assert.Empty(t, actual.Credentials[CredentialsTypePassword])
 			assert.NotEmpty(t, actual.Credentials[CredentialsTypeOIDC])
 		})
 
 		t.Run("case=update an identity and set credentials", func(t *testing.T) {
-			initial := oidcIdentity("", x.NewUUID().String())
+			initial := oidcIdentity(defaultSchema.ID, x.NewUUID().String())
 			require.NoError(t, p.CreateIdentity(context.Background(), initial))
 			createdIDs = append(createdIDs, initial.ID)
 
-			assert.Equal(t, "file://./stub/identity.schema.json", initial.TraitsSchemaURL)
+			assert.Regexp(t, "^http://mock-server.com/schemas/*", initial.TraitsSchemaURL)
 
 			expected := initial.CopyWithoutCredentials()
 			expected.SetCredentials(CredentialsTypePassword, Credentials{
@@ -243,12 +252,12 @@ func TestPool(p Pool) func(t *testing.T) {
 				Config:      json.RawMessage(`{"oh":"nono"}`),
 			})
 			expected.Traits = Traits(`{"update":"me"}`)
-			expected.TraitsSchemaURL = "file://./stub/identity-2.schema.json"
+			expected.TraitsSchemaID = secondSchema.ID
 			require.NoError(t, p.UpdateIdentityConfidential(context.Background(), expected))
 
 			actual, err := p.GetIdentityConfidential(context.Background(), expected.ID)
 			require.NoError(t, err)
-			assert.Equal(t, "file://./stub/identity-2.schema.json", actual.TraitsSchemaURL)
+			assert.Regexp(t, "^http://mock-server.com/schemas/*", actual.TraitsSchemaURL)
 			assert.NotEmpty(t, actual.Credentials[CredentialsTypePassword])
 			assert.Empty(t, actual.Credentials[CredentialsTypeOIDC])
 
@@ -256,7 +265,7 @@ func TestPool(p Pool) func(t *testing.T) {
 		})
 
 		t.Run("case=fail to update because validation fails", func(t *testing.T) {
-			initial := oidcIdentity("", x.NewUUID().String())
+			initial := oidcIdentity(defaultSchema.ID, x.NewUUID().String())
 
 			require.NoError(t, p.CreateIdentity(context.Background(), initial))
 			createdIDs = append(createdIDs, initial.ID)
@@ -268,12 +277,12 @@ func TestPool(p Pool) func(t *testing.T) {
 		})
 
 		t.Run("case=should fail to insert identity because credentials from traits exist", func(t *testing.T) {
-			first := passwordIdentity("", x.NewUUID().String())
+			first := passwordIdentity(defaultSchema.ID, x.NewUUID().String())
 			first.Traits = Traits(`{"email":"test-identity@ory.sh"}`)
 			require.NoError(t, p.CreateIdentity(context.Background(), first))
 			createdIDs = append(createdIDs, first.ID)
 
-			second := passwordIdentity("", x.NewUUID().String())
+			second := passwordIdentity(defaultSchema.ID, x.NewUUID().String())
 			require.NoError(t, p.CreateIdentity(context.Background(), second))
 			createdIDs = append(createdIDs, second.ID)
 
@@ -282,7 +291,7 @@ func TestPool(p Pool) func(t *testing.T) {
 		})
 
 		t.Run("case=should succeed to update credentials from traits", func(t *testing.T) {
-			expected := passwordIdentity("", x.NewUUID().String())
+			expected := passwordIdentity(defaultSchema.ID, x.NewUUID().String())
 			require.NoError(t, p.CreateIdentity(context.Background(), expected))
 			createdIDs = append(createdIDs, expected.ID)
 
@@ -296,7 +305,7 @@ func TestPool(p Pool) func(t *testing.T) {
 		})
 
 		t.Run("case=delete an identity", func(t *testing.T) {
-			expected := passwordIdentity("", x.NewUUID().String())
+			expected := passwordIdentity(defaultSchema.ID, x.NewUUID().String())
 			require.NoError(t, p.CreateIdentity(context.Background(), expected))
 			require.NoError(t, p.DeleteIdentity(context.Background(), expected.ID))
 
@@ -307,7 +316,7 @@ func TestPool(p Pool) func(t *testing.T) {
 		t.Run("case=create with empty credentials config", func(t *testing.T) {
 			// This test covers a case where the config value of a credentials setting is empty. This causes
 			// issues with postgres' json field.
-			expected := passwordIdentity("", x.NewUUID().String())
+			expected := passwordIdentity(defaultSchema.ID, x.NewUUID().String())
 			expected.SetCredentials(CredentialsTypePassword, Credentials{
 				Type:        CredentialsTypePassword,
 				Identifiers: []string{"id-missing-creds-config"},
@@ -333,7 +342,7 @@ func TestPool(p Pool) func(t *testing.T) {
 		})
 
 		t.Run("case=find identity by its credentials identifier", func(t *testing.T) {
-			expected := passwordIdentity("file://./stub/identity.schema.json", x.NewUUID().String())
+			expected := passwordIdentity(defaultSchema.ID, x.NewUUID().String())
 			expected.Traits = Traits(`{"email": "find-credentials-identifier@ory.sh"}`)
 
 			require.NoError(t, p.CreateIdentity(context.Background(), expected))

@@ -80,6 +80,7 @@ type loginStrategyDependencies interface {
 	password.ValidationProvider
 	identity.PoolProvider
 	password.HashProvider
+	schema.PersistenceProvider
 }
 
 func TestLogin(t *testing.T) {
@@ -370,7 +371,7 @@ func TestLogin(t *testing.T) {
 			viper.Set(configuration.ViperKeyURLsLogin, uiTs.URL+"/login-ts")
 			viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
 			viper.Set(configuration.ViperKeySelfServiceLoginAfterConfig+"."+string(identity.CredentialsTypePassword), hookConfig(returnTs.URL+"/return-ts"))
-			viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/login.schema.json")
+			_, _ = reg.SchemaPersister().RegisterDefaultSchema("file://./stub/login.schema.json")
 
 			if tc.prep != nil {
 				tc.prep(t, reg)
