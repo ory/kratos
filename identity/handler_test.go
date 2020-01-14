@@ -30,7 +30,7 @@ func TestHandler(t *testing.T) {
 	ts := httptest.NewServer(router)
 	defer ts.Close()
 
-	mockServerURL, err := url.Parse("http://mock-server.com")
+	mockServerURL, err := url.Parse("http://example.com")
 	require.NoError(t, err)
 	defaultSchemaInternalURL, err := url.Parse("file://./stub/identity.schema.json")
 	require.NoError(t, err)
@@ -38,7 +38,7 @@ func TestHandler(t *testing.T) {
 		ID:  "default",
 		URL: defaultSchemaInternalURL,
 	}
-	defaultSchemaURL := defaultSchema.SchemaURL(mockServerURL).String()
+	defaultSchemaExternalURL := defaultSchema.SchemaURL(mockServerURL).String()
 
 	viper.Set(configuration.ViperKeyURLsSelfAdmin, ts.URL)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, defaultSchemaInternalURL.String())
@@ -124,14 +124,14 @@ func TestHandler(t *testing.T) {
 		i.ID = x.ParseUUID(res.Get("id").String())
 		assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
 		assert.Empty(t, res.Get("credentials").String(), "%s", res.Raw)
-		assert.EqualValues(t, defaultSchemaURL, res.Get("traits_schema_url").String(), "%s", res.Raw)
+		assert.EqualValues(t, defaultSchemaExternalURL, res.Get("traits_schema_url").String(), "%s", res.Raw)
 	})
 
 	t.Run("case=should be able to get the identity", func(t *testing.T) {
 		res := get(t, "/identities/"+i.ID.String(), http.StatusOK)
 		assert.EqualValues(t, i.ID.String(), res.Get("id").String(), "%s", res.Raw)
 		assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
-		assert.EqualValues(t, defaultSchemaURL, res.Get("traits_schema_url").String(), "%s", res.Raw)
+		assert.EqualValues(t, defaultSchemaExternalURL, res.Get("traits_schema_url").String(), "%s", res.Raw)
 		assert.Empty(t, res.Get("credentials").String(), "%s", res.Raw)
 	})
 

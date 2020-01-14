@@ -59,7 +59,7 @@ type (
 func TestPool(p Pool) func(t *testing.T) {
 	return func(t *testing.T) {
 		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
-		viper.Set(configuration.ViperKeyURLsSelfPublic, "http://mock-server.com")
+		viper.Set(configuration.ViperKeyURLsSelfPublic, "http://example.com")
 		const altSchema = "altSchema"
 		viper.Set(configuration.ViperKeyIdentityTraitsSchemas, []map[string]string{{
 			"id":  altSchema,
@@ -113,7 +113,7 @@ func TestPool(p Pool) func(t *testing.T) {
 			require.NoError(t, err)
 
 			assert.Equal(t, expected.ID, actual.ID)
-			assert.Equal(t, "default", actual.TraitsSchemaID)
+			assert.Equal(t, configuration.DefaultIdentityTraitsSchemaID, actual.TraitsSchemaID)
 			assertEqual(t, expected, actual)
 		})
 

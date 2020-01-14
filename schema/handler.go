@@ -57,7 +57,6 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 		}
 		defer f.Close()
 
-		var w http.ResponseWriter
 		if _, err := io.Copy(w, f); err != nil {
 			h.r.Writer().WriteError(w, r, err)
 			return

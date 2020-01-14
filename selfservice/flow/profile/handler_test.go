@@ -74,7 +74,7 @@ func TestUpdateProfile(t *testing.T) {
 	viper.Set(configuration.ViperKeyURLsProfile, ui.URL+"/profile")
 	viper.Set(configuration.ViperKeyURLsLogin, ui.URL+"/login")
 	// set this intermediate because kratos needs some valid url for CRUDE operations
-	viper.Set(configuration.ViperKeyURLsSelfPublic, "http://mock-server.com")
+	viper.Set(configuration.ViperKeyURLsSelfPublic, "http://example.com")
 
 	primaryIdentity := &identity.Identity{
 		ID: x.NewUUID(),

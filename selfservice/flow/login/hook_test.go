@@ -95,7 +95,7 @@ func TestLoginExecutor(t *testing.T) {
 				i.Traits = identity.Traits(`{}`)
 				viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/login.schema.json")
 				viper.Set(configuration.ViperKeyIdentityTraitsSchemas, []map[string]string{updatedSchema})
-				viper.Set(configuration.ViperKeyURLsSelfPublic, "http://mock-server.com")
+				viper.Set(configuration.ViperKeyURLsSelfPublic, "http://example.com")
 				require.NoError(t, reg.IdentityPool().CreateIdentity(context.TODO(), &i))
 
 				e := login.NewHookExecutor(reg, conf)

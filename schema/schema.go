@@ -23,7 +23,7 @@ func (s Schemas) GetByID(id string) (*Schema, error) {
 		}
 	}
 
-	return nil, errors.Errorf("unable to find JSON schema with ID: %s", id)
+	return nil, errors.WithStack(errors.Errorf("unable to find JSON schema with ID: %s", id))
 }
 
 type Schema struct {

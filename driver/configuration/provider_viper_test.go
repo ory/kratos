@@ -87,7 +87,7 @@ func TestViperProvider(t *testing.T) {
 			} {
 				strategy := p.SelfServiceStrategy(tc.id)
 				assert.Equal(t, tc.enabled, strategy.Enabled)
-				assert.EqualValues(t, tc.config, string(strategy.Config))
+				assert.EqualValues(t, string(tc.config), string(strategy.Config))
 			}
 		})
 
