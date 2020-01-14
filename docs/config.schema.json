@@ -448,7 +448,24 @@
           "type": "object",
           "properties": {
             "default_schema_url": {
-              "type": "string"
+              "type": "string",
+              "format": "url"
+            },
+            "schemas": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^!(default)$"
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "url"
+                  }
+                }
+              }
             }
           },
           "required": [

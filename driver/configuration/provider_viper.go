@@ -62,6 +62,7 @@ const (
 	ViperKeySelfServiceLifespanProfileRequest      = "selfservice.profile.request_lifespan"
 
 	ViperKeyDefaultIdentityTraitsSchemaURL = "identity.traits.default_schema_url"
+	ViperKeyIdentityTraitsSchemas          = "identity.traits.schemas"
 
 	ViperKeyHasherArgon2ConfigMemory      = "hashers.argon2.memory"
 	ViperKeyHasherArgon2ConfigIterations  = "hashers.argon2.iterations"
@@ -102,6 +103,27 @@ func (p *ViperProvider) listenOn(key string) string {
 
 func (p *ViperProvider) DefaultIdentityTraitsSchemaURL() *url.URL {
 	return mustParseURLFromViper(p.l, ViperKeyDefaultIdentityTraitsSchemaURL)
+}
+
+func (p *ViperProvider) IdentityTraitsSchemas() []map[string]string {
+	ds := map[string]string{"id": DefaultIdentityTraitsSchemaID, "url": p.DefaultIdentityTraitsSchemaURL().String()}
+	var b bytes.Buffer
+	var ss []map[string]string
+	raw := viper.Get(ViperKeyIdentityTraitsSchemas)
+
+	if raw == nil {
+		return []map[string]string{ds}
+	}
+
+	if err := json.NewEncoder(&b).Encode(raw); err != nil {
+		p.l.WithError(err).Fatalf("Unable to encode values from %s.", ViperKeyIdentityTraitsSchemas)
+	}
+
+	if err := jsonx.NewStrictDecoder(&b).Decode(&ss); err != nil {
+		p.l.WithError(err).Fatalf("Unable to decode values from %s.", ViperKeyIdentityTraitsSchemas)
+	}
+
+	return append(ss, ds)
 }
 
 func (p *ViperProvider) AdminListenOn() string {

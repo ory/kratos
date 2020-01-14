@@ -117,8 +117,7 @@ func MockSessionCreateHandlerWithIdentity(t *testing.T, reg mockDeps, i *identit
 
 func MockSessionCreateHandler(t *testing.T, reg mockDeps) (httprouter.Handle, *Session) {
 	return MockSessionCreateHandlerWithIdentity(t, reg, &identity.Identity{
-		ID:              x.NewUUID(),
-		TraitsSchemaURL: "file://./stub/fake-session.schema.json",
-		Traits:          identity.Traits(json.RawMessage(`{"baz":"bar","foo":true,"bar":2.5}`)),
+		ID:     x.NewUUID(),
+		Traits: identity.Traits(json.RawMessage(`{"baz":"bar","foo":true,"bar":2.5}`)),
 	})
 }

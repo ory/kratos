@@ -3,6 +3,8 @@ package identity
 import (
 	"net/http"
 
+	"github.com/ory/herodot"
+
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
@@ -76,6 +78,11 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		return
 	}
 
+	// Make sure the TraitsSchemaURL is only set by kratos
+	if i.TraitsSchemaURL != "" {
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithReason("Use the traits_schema_id to set a traits schema."))
+		return
+	}
 	// We do not allow setting credentials using this method
 	i.Credentials = nil
 	// We do not allow setting the ID using this method

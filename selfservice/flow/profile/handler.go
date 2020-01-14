@@ -2,6 +2,7 @@ package profile
 
 import (
 	"encoding/json"
+	"github.com/ory/kratos/schema"
 	"net/http"
 	"net/url"
 
@@ -13,7 +14,6 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/decoderx"
-	"github.com/ory/x/stringsx"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/configuration"
@@ -45,6 +45,8 @@ type (
 
 		ErrorHandlerProvider
 		RequestPersistenceProvider
+
+		IdentityTraitsSchemas() schema.Schemas
 	}
 	HandlerProvider interface {
 		ProfileManagementHandler() *Handler
@@ -390,10 +392,14 @@ func (h *Handler) newProfileManagementDecoder(i *identity.Identity) (decoderx.HT
 }
 `
 
+	s, err := h.d.IdentityTraitsSchemas().GetByID(i.TraitsSchemaID)
+	if err != nil {
+		return nil, err
+	}
 	raw, err := sjson.SetBytes(
 		[]byte(registrationFormPayloadSchema),
 		"properties.traits.$ref",
-		stringsx.Coalesce(i.TraitsSchemaURL, h.c.DefaultIdentityTraitsSchemaURL().String()),
+		s.URL.String(),
 	)
 	if err != nil {
 		return nil, errors.WithStack(err)

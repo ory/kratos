@@ -2,9 +2,9 @@ package sql
 
 import (
 	"context"
-
 	"github.com/gobuffalo/packr"
 	"github.com/gobuffalo/pop"
+	"github.com/ory/kratos/schema"
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/driver/configuration"
@@ -18,6 +18,7 @@ var migrations = packr.NewBox("../../contrib/sql/migrations")
 
 type (
 	persisterDependencies interface {
+		IdentityTraitsSchemas() schema.Schemas
 		identity.ValidationProvider
 		x.LoggingProvider
 	}

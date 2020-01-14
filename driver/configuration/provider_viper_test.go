@@ -1,6 +1,7 @@
-package configuration
+package configuration_test
 
 import (
+	"github.com/ory/kratos/driver/configuration"
 	"testing"
 	"time"
 
@@ -32,7 +33,7 @@ func TestViperProvider(t *testing.T) {
 		}
 
 		require.NoError(t, err, "%+v", errorsx.Cause(err))
-		p := NewViperProvider(logrus.New())
+		p := configuration.NewViperProvider(logrus.New())
 
 		t.Run("group=urls", func(t *testing.T) {
 			assert.Equal(t, "http://test.kratos.ory.sh/login", p.LoginURL().String())
@@ -85,7 +86,7 @@ func TestViperProvider(t *testing.T) {
 			} {
 				strategy := p.SelfServiceStrategy(tc.id)
 				assert.Equal(t, tc.enabled, strategy.Enabled)
-				assert.EqualValues(t, string(tc.config), string(strategy.Config))
+				assert.EqualValues(t, tc.config, string(strategy.Config))
 			}
 		})
 
@@ -164,7 +165,7 @@ func TestViperProvider(t *testing.T) {
 		})
 
 		t.Run("group=hashers", func(t *testing.T) {
-			assert.Equal(t, &HasherArgon2Config{
+			assert.Equal(t, &configuration.HasherArgon2Config{
 				Memory:      1048576,
 				Iterations:  2,
 				Parallelism: 4,

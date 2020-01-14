@@ -318,6 +318,9 @@
     }
   },
   "definitions": {
+    "CSRFSetter": {
+      "type": "object"
+    },
     "CredentialsType": {
       "description": "and so on.",
       "type": "string",
@@ -332,6 +335,10 @@
         }
       }
     },
+    "ErrorParser": {
+      "type": "object",
+      "title": "ErrorParser is capable of parsing and processing errors."
+    },
     "Identity": {
       "type": "object",
       "required": [
@@ -345,18 +352,20 @@
         "traits": {
           "$ref": "#/definitions/Traits"
         },
+        "traits_schema_id": {
+          "description": "TraitsSchemaID is the JSON Schema to be used for validating the identity's traits.",
+          "type": "string"
+        },
         "traits_schema_url": {
-          "description": "TraitsSchemaURL is the JSON Schema to be used for validating the identity's traits.\n\nformat: uri",
+          "description": "TraitsSchemaURL is the kratos public endpoint where the identity's traits schema can be fetched.",
           "type": "string"
         }
       }
     },
-    "RWMutex": {
-      "description": "A RWMutex must not be copied after first use.\n\nIf a goroutine holds a RWMutex for reading and another goroutine might\ncall Lock, no goroutine should expect to be able to acquire a read lock\nuntil the initial read lock is released. In particular, this prohibits\nrecursive read locking. This is to ensure that the lock eventually becomes\navailable; a blocked Lock call excludes new readers from acquiring the\nlock.",
-      "type": "object",
-      "title": "A RWMutex is a reader/writer mutual exclusion lock.\nThe lock can be held by an arbitrary number of readers or a single writer.\nThe zero value for a RWMutex is an unlocked mutex."
-    },
     "RequestMethodConfigurator": {},
+    "Resetter": {
+      "type": "object"
+    },
     "Traits": {
       "type": "object"
     },

@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/ory/kratos/driver/configuration"
+
 	"github.com/gobuffalo/pop"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
@@ -116,12 +118,16 @@ func createIdentityCredentials(ctx context.Context, tx *pop.Connection, i *ident
 }
 
 func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) error {
-	if i.TraitsSchemaURL == "" {
-		i.TraitsSchemaURL = p.cf.DefaultIdentityTraitsSchemaURL().String()
+	if i.TraitsSchemaID == "" {
+		i.TraitsSchemaID = configuration.DefaultIdentityTraitsSchemaID
 	}
 
 	if len(i.Traits) == 0 {
 		i.Traits = identity.Traits("{}")
+	}
+
+	if err := p.injectTraitsSchemaURL(i); err != nil {
+		return err
 	}
 
 	if err := p.validateIdentity(i); err != nil {
@@ -139,7 +145,17 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 
 func (p *Persister) ListIdentities(ctx context.Context, limit, offset int) ([]identity.Identity, error) {
 	is := make([]identity.Identity, 0)
-	return is, sqlcon.HandleError(p.c.RawQuery("SELECT * FROM identities LIMIT ? OFFSET ?", limit, offset).All(&is))
+	if err := sqlcon.HandleError(p.c.RawQuery("SELECT * FROM identities LIMIT ? OFFSET ?", limit, offset).All(&is)); err != nil {
+		return nil, err
+	}
+
+	for i := range is {
+		if err := p.injectTraitsSchemaURL(&(is[i])); err != nil {
+			return nil, err
+		}
+	}
+
+	return is, nil
 }
 
 func (p *Persister) UpdateIdentityConfidential(ctx context.Context, i *identity.Identity) error {
@@ -210,6 +226,10 @@ func (p *Persister) GetIdentity(_ context.Context, id uuid.UUID) (*identity.Iden
 		return nil, sqlcon.HandleError(err)
 	}
 	i.Credentials = nil
+	if err := p.injectTraitsSchemaURL(&i); err != nil {
+		return nil, err
+	}
+
 	return &i, nil
 }
 
@@ -244,6 +264,9 @@ func (p *Persister) GetIdentityConfidential(_ context.Context, id uuid.UUID) (*i
 		i.Credentials[creds.Type] = creds
 	}
 	i.CredentialsCollection = nil
+	if err := p.injectTraitsSchemaURL(&i); err != nil {
+		return nil, err
+	}
 
 	return &i, nil
 }
@@ -256,5 +279,17 @@ func (p *Persister) validateIdentity(i *identity.Identity) error {
 		return err
 	}
 
+	return nil
+}
+
+func (p *Persister) injectTraitsSchemaURL(i *identity.Identity) error {
+	s, err := p.r.IdentityTraitsSchemas().GetByID(i.TraitsSchemaID)
+	if err != nil {
+		return errors.WithStack(
+			herodot.ErrInternalServerError.
+				WithReasonf(
+					"Could not find the schema %s for this identities traits.", i.TraitsSchemaID))
+	}
+	i.TraitsSchemaURL = s.SchemaURL(p.cf.SelfPublicURL()).String()
 	return nil
 }

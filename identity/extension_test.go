@@ -1,6 +1,7 @@
 package identity_test
 
 import (
+	"github.com/ory/kratos/internal"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -12,16 +13,15 @@ import (
 
 	"github.com/ory/kratos/driver/configuration"
 	. "github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
 )
 
 func TestValidationExtension(t *testing.T) {
 	ts := httptest.NewServer(http.FileServer(http.Dir("stub")))
 	defer ts.Close()
 
-	conf := internal.NewConfigurationWithDefaults()
+	_, reg := internal.NewRegistryDefault(t)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, ts.URL+"/extension.schema.json")
-	v := NewValidator(conf)
+	v := NewValidator(reg)
 
 	i := NewIdentity("")
 	i.Traits = Traits(`{

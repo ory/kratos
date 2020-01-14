@@ -60,9 +60,23 @@ install:
 sqlbin:
 		cd driver; go-bindata -o sql_migration_files.go -pkg driver ../contrib/sql/...
 
-# Resets the test databases
-.PHONY: resetdb
-resetdb:
-		docker kill hydra_test_database_postgres || true
-		docker rm -f hydra_test_database_postgres || true
-		docker run --rm --name hydra_test_database_postgres -p 3445:5432 -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=postgres -d postgres:9.6
+.PHONY: test-resetdb
+test-resetdb:
+		docker kill kratos_test_database_mysql || true
+		docker kill kratos_test_database_postgres || true
+		docker kill kratos_test_database_cockroach || true
+		docker rm -f kratos_test_database_mysql || true
+		docker rm -f kratos_test_database_postgres || true
+		docker run --rm --name kratos_test_database_postgres -p 3445:5432 -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=postgres -d postgres:9.6
+		docker rm -f kratos_test_database_cockroach || true
+		docker run --rm --name kratos_test_database_mysql -p 3444:3306 -e MYSQL_ROOT_PASSWORD=secret -d mysql:5.7
+		docker run --rm --name kratos_test_database_postgres -p 3445:5432 -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=kratos -d postgres:9.6
+		docker run --rm --name kratos_test_database_cockroach -p 3446:26257 -d cockroachdb/cockroach:v2.1.6 start --insecure
+
+.PHONY: test
+test:
+		go test -short -tags sqlite ./...
+
+.PHONY: test-integration
+test-integration:
+		go test -tags sqlite ./...

@@ -50,9 +50,18 @@ func TestSchemaValidator(t *testing.T) {
 	ts := httptest.NewServer(router)
 	defer ts.Close()
 
-	conf, _ := internal.NewRegistryDefault(t)
+	_, reg := internal.NewRegistryDefault(t)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, ts.URL+"/schema/firstName")
-	v := NewValidator(conf)
+	viper.Set(configuration.ViperKeyIdentityTraitsSchemas, []map[string]string{
+		{
+			"id":  "whatever",
+			"url": ts.URL + "/schema/whatever",
+		}, {
+			"id":  "unreachable-url",
+			"url": ts.URL,
+		},
+	})
+	v := NewValidator(reg)
 
 	for k, tc := range []struct {
 		i   *Identity
@@ -77,31 +86,32 @@ func TestSchemaValidator(t *testing.T) {
 		},
 		{
 			i: &Identity{
-				TraitsSchemaURL: ts.URL + "/schema/whatever",
-				Traits:          Traits(`{ "whatever": "first-name", "lastName": "last-name", "age": 1 }`),
+				TraitsSchemaID: "whatever",
+				Traits:         Traits(`{ "whatever": "first-name", "lastName": "last-name", "age": 1 }`),
 			},
 		},
 		{
 			i: &Identity{
-				TraitsSchemaURL: ts.URL + "/schema/whatever",
-				Traits:          Traits(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
+				TraitsSchemaID: "whatever",
+				Traits:         Traits(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
 			},
 			err: "additional property firstName is not allowed",
 		},
 		{
 			i: &Identity{
-				TraitsSchemaURL: ts.URL,
-				Traits:          Traits(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
+				TraitsSchemaID: "unreachable-url",
+				Traits:         Traits(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
 			},
 			err: "An internal server error occurred, please contact the system administrator",
 		},
-		{
-			i: &Identity{
-				TraitsSchemaURL: "not-a-url",
-				Traits:          Traits(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
-			},
-			err: "An internal server error occurred, please contact the system administrator",
-		},
+		// This test case is probably not useful because all schemas have to be configured beforehand
+		//{
+		//	i: &Identity{
+		//		TraitsSchemaURL: "not-a-url",
+		//		Traits:         Traits(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
+		//	},
+		//	err: "An internal server error occurred, please contact the system administrator",
+		//},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			err := v.Validate(tc.i)

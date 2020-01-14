@@ -1,6 +1,6 @@
 create_table("identities") {
 	t.Column("id", "uuid", {primary: true})
-    t.Column("traits_schema_url", "string", {"size": 2048})
+    t.Column("traits_schema_id", "string", {"size": 2048})
     t.Column("traits", "json")
 }
 

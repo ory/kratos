@@ -36,6 +36,8 @@ func TestHandler(t *testing.T) {
 		_, reg := internal.NewRegistryDefault(t)
 		r := x.NewRouterPublic()
 
+		// set this intermediate because kratos needs some valid url for CRUDE operations
+		viper.Set(configuration.ViperKeyURLsSelfPublic, "http://mock-server.com")
 		h, _ := MockSessionCreateHandler(t, reg)
 		r.GET("/set", h)
 
@@ -92,6 +94,8 @@ func TestIsNotAuthenticatedSecurecookie(t *testing.T) {
 func TestIsNotAuthenticated(t *testing.T) {
 	_, reg := internal.NewRegistryDefault(t)
 	r := x.NewRouterPublic()
+	// set this intermediate because kratos needs some valid url for CRUDE operations
+	viper.Set(configuration.ViperKeyURLsSelfPublic, "http://mock-server.com")
 
 	h, _ := MockSessionCreateHandler(t, reg)
 	r.GET("/set", h)
@@ -143,6 +147,8 @@ func TestIsNotAuthenticated(t *testing.T) {
 func TestIsAuthenticated(t *testing.T) {
 	_, reg := internal.NewRegistryDefault(t)
 	r := x.NewRouterPublic()
+	// set this intermediate because kratos needs some valid url for CRUDE operations
+	viper.Set(configuration.ViperKeyURLsSelfPublic, "http://mock-server.com")
 
 	h, _ := MockSessionCreateHandler(t, reg)
 	r.GET("/set", h)

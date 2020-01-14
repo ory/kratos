@@ -26,6 +26,8 @@ type SelfServiceStrategy struct {
 	Config  json.RawMessage `json:"config"`
 }
 
+const DefaultIdentityTraitsSchemaID = "default"
+
 type Provider interface {
 	AdminListenOn() string
 	PublicListenOn() string
@@ -60,6 +62,7 @@ type Provider interface {
 	CourierTemplatesRoot() string
 
 	DefaultIdentityTraitsSchemaURL() *url.URL
+	IdentityTraitsSchemas() []map[string]string
 
 	WhitelistedReturnToDomains() []url.URL
 

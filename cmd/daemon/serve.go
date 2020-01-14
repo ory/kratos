@@ -43,6 +43,7 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 	r.RegistrationStrategies().RegisterPublicRoutes(router)
 	r.SessionHandler().RegisterPublicRoutes(router)
 	r.SelfServiceErrorHandler().RegisterPublicRoutes(router)
+	r.SchemaHandler().RegisterPublicRoutes(router)
 	r.HealthHandler().SetRoutes(router.Router, false)
 
 	n.Use(NewNegroniLoggerMiddleware(l.(*logrus.Logger), "public#"+c.SelfPublicURL().String()))
