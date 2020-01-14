@@ -3,12 +3,13 @@ package identity_test
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/ory/kratos/schema"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
+
+	"github.com/ory/kratos/schema"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

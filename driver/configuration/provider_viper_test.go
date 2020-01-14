@@ -1,9 +1,10 @@
 package configuration_test
 
 import (
-	"github.com/ory/kratos/driver/configuration"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/driver/configuration"
 
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"

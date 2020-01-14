@@ -1,10 +1,11 @@
 package identity_test
 
 import (
-	"github.com/ory/kratos/internal"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/ory/kratos/internal"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
