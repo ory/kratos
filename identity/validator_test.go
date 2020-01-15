@@ -52,13 +52,13 @@ func TestSchemaValidator(t *testing.T) {
 
 	_, reg := internal.NewRegistryDefault(t)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, ts.URL+"/schema/firstName")
-	viper.Set(configuration.ViperKeyIdentityTraitsSchemas, []map[string]string{
+	viper.Set(configuration.ViperKeyIdentityTraitsSchemas, []configuration.SchemaConfig{
 		{
-			"id":  "whatever",
-			"url": ts.URL + "/schema/whatever",
+			ID:  "whatever",
+			URL: ts.URL + "/schema/whatever",
 		}, {
-			"id":  "unreachable-url",
-			"url": ts.URL,
+			ID:  "unreachable-url",
+			URL: ts.URL + "/404-not-found",
 		},
 	})
 	v := NewValidator(reg)
@@ -104,14 +104,6 @@ func TestSchemaValidator(t *testing.T) {
 			},
 			err: "An internal server error occurred, please contact the system administrator",
 		},
-		// This test case is probably not useful because all schemas have to be configured beforehand
-		//{
-		//	i: &Identity{
-		//		TraitsSchemaURL: "not-a-url",
-		//		Traits:         Traits(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
-		//	},
-		//	err: "An internal server error occurred, please contact the system administrator",
-		//},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			err := v.Validate(tc.i)

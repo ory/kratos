@@ -33,12 +33,15 @@ type mockPostHook struct {
 	modifyIdentity bool
 }
 
-var updatedSchema = map[string]string{"id": "updatedSchema", "url": "file://./stub/updated.schema.json"}
+var updatedSchema = configuration.SchemaConfig{
+	ID:  "updatedSchema",
+	URL: "file://./stub/updated.schema.json",
+}
 
 func (m *mockPostHook) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, a *login.Request, s *session.Session) error {
 	if m.modifyIdentity {
 		i := s.Identity
-		i.TraitsSchemaID = updatedSchema["id"]
+		i.TraitsSchemaID = updatedSchema.ID
 		s.UpdateIdentity(i)
 	}
 	return m.err
@@ -83,7 +86,7 @@ func TestLoginExecutor(t *testing.T) {
 					new(mockPostHook),
 					&mockPostHook{modifyIdentity: true},
 				},
-				expectSchemaID: updatedSchema["id"],
+				expectSchemaID: updatedSchema.ID,
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
@@ -94,7 +97,7 @@ func TestLoginExecutor(t *testing.T) {
 				i.TraitsSchemaID = ""
 				i.Traits = identity.Traits(`{}`)
 				viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/login.schema.json")
-				viper.Set(configuration.ViperKeyIdentityTraitsSchemas, []map[string]string{updatedSchema})
+				viper.Set(configuration.ViperKeyIdentityTraitsSchemas, []configuration.SchemaConfig{updatedSchema})
 				viper.Set(configuration.ViperKeyURLsSelfPublic, "http://example.com")
 				require.NoError(t, reg.IdentityPool().CreateIdentity(context.TODO(), &i))
 

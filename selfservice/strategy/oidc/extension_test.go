@@ -24,7 +24,7 @@ func TestValidationExtension(t *testing.T) {
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, ts.URL+"/registration.schema.json")
 
 	sv := schema.NewValidator()
-	i := identity.NewIdentity("")
+	i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
 
 	ve := oidc.NewValidationExtension()
 	ve.WithIdentity(i)

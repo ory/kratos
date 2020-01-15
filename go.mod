@@ -6,6 +6,7 @@ replace github.com/santhosh-tekuri/jsonschema/v2 => github.com/ory/jsonschema/v2
 
 require (
 	github.com/Masterminds/sprig/v3 v3.0.0
+	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/bxcodec/faker v2.0.1+incompatible
 	github.com/cenkalti/backoff v2.1.1+incompatible
 	github.com/coreos/go-oidc v2.1.0+incompatible

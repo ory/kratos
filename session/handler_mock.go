@@ -30,7 +30,7 @@ type mockDeps interface {
 
 func MockSetSession(t *testing.T, reg mockDeps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		i := identity.NewIdentity("")
+		i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
 		require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), i))
 
 		_, err := reg.SessionManager().CreateToRequest(context.Background(), i, w, r)

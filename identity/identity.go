@@ -37,10 +37,12 @@ type (
 		// Credentials represents all credentials that can be used for authenticating this identity.
 		Credentials map[CredentialsType]Credentials `json:"-" faker:"-" db:"-"`
 
-		// TraitsSchemaID is the JSON Schema to be used for validating the identity's traits.
+		// TraitsSchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
 		TraitsSchemaID string `json:"traits_schema_id" faker:"-" db:"traits_schema_id"`
 
-		// TraitsSchemaURL is the kratos public endpoint where the identity's traits schema can be fetched.
+		// TraitsSchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.
+		//
+		// format: url
 		TraitsSchemaURL string `json:"traits_schema_url" faker:"-" db:"-"`
 
 		// Traits represent an identity's traits. The identity is able to create, modify, and delete traits

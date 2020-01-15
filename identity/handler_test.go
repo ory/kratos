@@ -6,8 +6,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"testing"
+
+	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/schema"
 
@@ -30,10 +31,8 @@ func TestHandler(t *testing.T) {
 	ts := httptest.NewServer(router)
 	defer ts.Close()
 
-	mockServerURL, err := url.Parse("http://example.com")
-	require.NoError(t, err)
-	defaultSchemaInternalURL, err := url.Parse("file://./stub/identity.schema.json")
-	require.NoError(t, err)
+	mockServerURL := urlx.ParseOrPanic("http://example.com")
+	defaultSchemaInternalURL := urlx.ParseOrPanic("file://./stub/identity.schema.json")
 	defaultSchema := schema.Schema{
 		ID:  "default",
 		URL: defaultSchemaInternalURL,
@@ -105,6 +104,13 @@ func TestHandler(t *testing.T) {
 		assert.Contains(t, res.Get("error.reason").String(), "invalid type")
 	})
 
+	t.Run("case=should fail to create an entity with traits_schema_url set", func(t *testing.T) {
+		var i identity.Identity
+		i.TraitsSchemaURL = "http://example.com"
+		res := send(t, "POST", "/identities", http.StatusBadRequest, &i)
+		assert.Contains(t, res.Get("error.reason").String(), "set a traits schema")
+	})
+
 	t.Run("case=should create an identity without an ID", func(t *testing.T) {
 		var i identity.Identity
 		i.Traits = identity.Traits(`{"bar":"baz"}`)
@@ -125,6 +131,7 @@ func TestHandler(t *testing.T) {
 		assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
 		assert.Empty(t, res.Get("credentials").String(), "%s", res.Raw)
 		assert.EqualValues(t, defaultSchemaExternalURL, res.Get("traits_schema_url").String(), "%s", res.Raw)
+		assert.EqualValues(t, configuration.DefaultIdentityTraitsSchemaID, res.Get("traits_schema_id").String(), "%s", res.Raw)
 	})
 
 	t.Run("case=should be able to get the identity", func(t *testing.T) {
@@ -132,6 +139,7 @@ func TestHandler(t *testing.T) {
 		assert.EqualValues(t, i.ID.String(), res.Get("id").String(), "%s", res.Raw)
 		assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
 		assert.EqualValues(t, defaultSchemaExternalURL, res.Get("traits_schema_url").String(), "%s", res.Raw)
+		assert.EqualValues(t, configuration.DefaultIdentityTraitsSchemaID, res.Get("traits_schema_id").String(), "%s", res.Raw)
 		assert.Empty(t, res.Get("credentials").String(), "%s", res.Raw)
 	})
 

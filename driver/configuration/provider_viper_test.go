@@ -58,6 +58,18 @@ func TestViperProvider(t *testing.T) {
 
 		t.Run("group=identity", func(t *testing.T) {
 			assert.Equal(t, "http://test.kratos.ory.sh/default-identity.schema.json", p.DefaultIdentityTraitsSchemaURL().String())
+
+			ss := p.IdentityTraitsSchemas()
+			assert.Equal(t, 2, len(ss))
+
+			assert.Contains(t, ss, configuration.SchemaConfig{
+				ID:  "default",
+				URL: "http://test.kratos.ory.sh/default-identity.schema.json",
+			})
+			assert.Contains(t, ss, configuration.SchemaConfig{
+				ID:  "other",
+				URL: "http://test.kratos.ory.sh/other-identity.schema.json",
+			})
 		})
 
 		t.Run("group=serve", func(t *testing.T) {

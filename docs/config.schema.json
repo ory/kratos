@@ -457,13 +457,22 @@
                 "type": "object",
                 "properties": {
                   "id": {
-                    "type": "string",
-                    "pattern": "^!(default)$"
+                    "type": "string"
                   },
                   "url": {
                     "type": "string",
                     "format": "url"
                   }
+                },
+                "not": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^default$"
+                    }
+                  },
+                  "additionalProperties": true
                 }
               }
             }

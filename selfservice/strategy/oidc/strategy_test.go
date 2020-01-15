@@ -423,7 +423,7 @@ func TestStrategy(t *testing.T) {
 		scope = []string{"openid"}
 
 		t.Run("case=create password identity", func(t *testing.T) {
-			i := identity.NewIdentity("")
+			i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
 			i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
 				Identifiers: []string{subject},
 			})

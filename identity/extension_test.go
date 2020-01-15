@@ -24,7 +24,7 @@ func TestValidationExtension(t *testing.T) {
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, ts.URL+"/extension.schema.json")
 	v := NewValidator(reg)
 
-	i := NewIdentity("")
+	i := NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
 	i.Traits = Traits(`{
   "email": "foo@bar.com",
   "names": [

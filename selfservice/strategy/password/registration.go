@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/ory/kratos/driver/configuration"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"github.com/tidwall/sjson"
@@ -151,7 +153,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	i := identity.NewIdentity("")
+	i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
 	i.Traits = identity.Traits(p.Traits)
 	i.SetCredentials(s.ID(), identity.Credentials{
 		Type:        s.ID(),
