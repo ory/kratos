@@ -32,7 +32,7 @@
         "operationId": "initializeLoginFlow",
         "responses": {
           "302": {
-            "$ref": "#/responses/emptyResponse"
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
           },
           "500": {
             "description": "genericError",
@@ -57,7 +57,7 @@
         "operationId": "initializeRegistrationFlow",
         "responses": {
           "302": {
-            "$ref": "#/responses/emptyResponse"
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
           },
           "404": {
             "description": "genericError",
@@ -97,7 +97,7 @@
             }
           },
           "302": {
-            "$ref": "#/responses/emptyResponse"
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
           },
           "500": {
             "description": "genericError",
@@ -213,7 +213,7 @@
         "operationId": "initializeProfileManagementFlow",
         "responses": {
           "302": {
-            "$ref": "#/responses/emptyResponse"
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
           },
           "500": {
             "description": "genericError",
@@ -240,7 +240,7 @@
         "operationId": "completeProfileManagementFlow",
         "responses": {
           "302": {
-            "$ref": "#/responses/emptyResponse"
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
           },
           "500": {
             "description": "genericError",
@@ -269,7 +269,6 @@
         "parameters": [
           {
             "type": "string",
-            "x-go-name": "Request",
             "description": "Request should be set to the value of the `request` query parameter\nby the profile management UI.",
             "name": "request",
             "in": "query",
@@ -284,7 +283,7 @@
             }
           },
           "302": {
-            "$ref": "#/responses/emptyResponse"
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
           },
           "500": {
             "description": "genericError",
@@ -318,15 +317,13 @@
     }
   },
   "definitions": {
-    "CSRFSetter": {
-      "type": "object"
-    },
     "CredentialsType": {
       "description": "and so on.",
       "type": "string",
-      "title": "CredentialsType  represents several different credential types, like password credentials, passwordless credentials,"
+      "title": "CredentialsType CredentialsType  represents several different credential types, like password credentials, passwordless credentials,"
     },
     "Error": {
+      "description": "Error error",
       "type": "object",
       "properties": {
         "message": {
@@ -335,11 +332,8 @@
         }
       }
     },
-    "ErrorParser": {
-      "type": "object",
-      "title": "ErrorParser is capable of parsing and processing errors."
-    },
     "Identity": {
+      "description": "Identity identity",
       "type": "object",
       "required": [
         "id",
@@ -362,16 +356,13 @@
         }
       }
     },
-    "RequestMethodConfigurator": {},
-    "Resetter": {
-      "type": "object"
-    },
     "Traits": {
+      "description": "Traits traits",
       "type": "object"
     },
-    "UUID": {"type": "string", "format": "uuid4"},
-    "ValueSetter": {
-      "type": "object"
+    "UUID": {
+      "type": "string",
+      "format": "uuid4"
     },
     "form": {
       "description": "HTMLForm represents a HTML Form. The container can work with both HTTP Form and JSON requests",
@@ -428,7 +419,7 @@
       }
     },
     "formFields": {
-      "description": "Fields contains multiple fields asdfasdf",
+      "description": "FormFields Fields contains multiple fields asdfasdf",
       "type": "object",
       "additionalProperties": {
         "$ref": "#/definitions/formField"
@@ -487,13 +478,14 @@
       }
     },
     "loginRequest": {
+      "description": "LoginRequest login request",
       "type": "object",
       "properties": {
         "active": {
           "$ref": "#/definitions/CredentialsType"
         },
         "expires_at": {
-          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,\na new request has to be initiated.",
+          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,\na new request has to be initiated.\nFormat: date-time",
           "type": "string",
           "format": "date-time"
         },
@@ -501,7 +493,7 @@
           "$ref": "#/definitions/UUID"
         },
         "issued_at": {
-          "description": "IssuedAt is the time (UTC) when the request occurred.",
+          "description": "IssuedAt is the time (UTC) when the request occurred.\nFormat: date-time",
           "type": "string",
           "format": "date-time"
         },
@@ -530,6 +522,7 @@
       }
     },
     "loginRequestMethodConfig": {
+      "description": "LoginRequestMethodConfig login request method config",
       "type": "object",
       "allOf": [
         {
@@ -546,53 +539,13 @@
         }
       ]
     },
-    "oidcStrategyCredentialsConfig": {
-      "type": "object",
-      "properties": {
-        "provider": {
-          "type": "string"
-        },
-        "subject": {
-          "type": "string"
-        }
-      }
-    },
-    "oidcStrategyRequestMethod": {
-      "type": "object",
-      "properties": {
-        "action": {
-          "description": "Action should be used as the form action URL (\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e).",
-          "type": "string"
-        },
-        "errors": {
-          "description": "Errors contains all form errors. These will be duplicates of the individual field errors.",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/Error"
-          }
-        },
-        "fields": {
-          "$ref": "#/definitions/formFields"
-        },
-        "method": {
-          "description": "Method is the form method (e.g. POST)",
-          "type": "string"
-        },
-        "providers": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/formField"
-          }
-        }
-      }
-    },
     "profileManagementRequest": {
       "description": "This request is used when an identity wants to update profile information\n(especially traits) in a selfservice manner.\n\nFor more information head over to: https://www.ory.sh/docs/kratos/selfservice/profile",
       "type": "object",
-      "title": "Request presents a profile management request",
+      "title": "ProfileManagementRequest Request presents a profile management request",
       "properties": {
         "expires_at": {
-          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile,\na new request has to be initiated.",
+          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile,\na new request has to be initiated.\nFormat: date-time",
           "type": "string",
           "format": "date-time"
         },
@@ -606,7 +559,7 @@
           "$ref": "#/definitions/Identity"
         },
         "issued_at": {
-          "description": "IssuedAt is the time (UTC) when the request occurred.",
+          "description": "IssuedAt is the time (UTC) when the request occurred.\nFormat: date-time",
           "type": "string",
           "format": "date-time"
         },
@@ -621,13 +574,14 @@
       }
     },
     "registrationRequest": {
+      "description": "RegistrationRequest registration request",
       "type": "object",
       "properties": {
         "active": {
           "$ref": "#/definitions/CredentialsType"
         },
         "expires_at": {
-          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,\na new request has to be initiated.",
+          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,\na new request has to be initiated.\nFormat: date-time",
           "type": "string",
           "format": "date-time"
         },
@@ -635,7 +589,7 @@
           "$ref": "#/definitions/UUID"
         },
         "issued_at": {
-          "description": "IssuedAt is the time (UTC) when the request occurred.",
+          "description": "IssuedAt is the time (UTC) when the request occurred.\nFormat: date-time",
           "type": "string",
           "format": "date-time"
         },
@@ -653,6 +607,7 @@
       }
     },
     "registrationRequestMethod": {
+      "description": "RegistrationRequestMethod registration request method",
       "type": "object",
       "properties": {
         "config": {
@@ -691,11 +646,6 @@
           "type": "string"
         }
       }
-    }
-  },
-  "responses": {
-    "emptyResponse": {
-      "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
     }
   },
   "x-forwarded-proto": "string",
