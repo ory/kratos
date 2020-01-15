@@ -4,3 +4,4 @@ tmp/
 .DS_Store
 ./kratos
 coverage.txt
+packrd/

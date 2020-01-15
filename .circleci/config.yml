@@ -1,7 +1,5 @@
-# Golang CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-go/ for more details
-version: 2
+version: 2.1
+
 jobs:
   lint:
     docker:
@@ -70,12 +68,6 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      -
-        run:
-          command: |
-            ./.circleci/release_name.bash
-            echo 'export DOCKER_SHORT_TAG=$CIRCLE_SHA1' >> $BASH_ENV
-            source $BASH_ENV
       -
         run: GO111MODULE=off go get github.com/mattn/goveralls github.com/ory/go-acc
       -

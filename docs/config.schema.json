@@ -336,7 +336,7 @@
               "type": "number",
               "minimum": 1,
               "maximum": 65535,
-              "default": 4433
+              "default": 4434
             }
           },
           "additionalProperties": false
@@ -352,7 +352,7 @@
               "type": "number",
               "minimum": 1,
               "maximum": 65535,
-              "default": 4434
+              "default": 4433
             }
           },
           "additionalProperties": false

@@ -2,7 +2,7 @@
 #######             FOR DEMONSTRATION PURPOSES ONLY                 #######
 ###########################################################################
 
-version: '3'
+version: '3.7'
 
 services:
 
@@ -11,30 +11,58 @@ services:
       context: .
       dockerfile: Dockerfile-build
     environment:
-      - DSN=sqlite://var/lib/sqlite/db.sqlite
+      - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true
     volumes:
-      - kratos-sqlite:/var/lib/sqlite/
+      -
+        type: volume
+        source: kratos-sqlite
+        target: /var/lib/sqlite/
+        read_only: false
+      -
+        type: bind
+        source: ./contrib/quickstart/kratos/email-password
+        target: /etc/config/kratos
+
     command:
-      migrate sql -e --yes
+      -c /etc/config/kratos/.kratos.yml migrate sql -e --yes
     restart: on-failure
-    network:
+    networks:
       - intranet
 
-  kratos-selfservice-ui:
-    image: oryd/kratos-selfservice-ui-node:v0.0.24
+  kratos-selfservice-ui-node:
+    image: oryd/kratos-selfservice-ui-node:v0.0.25-alpha.1
     ports:
       - "4435:4435"
     environment:
       - PORT=4435
       - KRATOS_PUBLIC_URL=http://kratos:4433/
-      - KRATOS_BROWSER_URL=http://127.0.0.1:4433/
-    network:
+      - KRATOS_BROWSER_URL=http://127.0.0.1:4455/.ory/kratos/public
+      - JWKS_URL=http://oathkeeper:4456/.well-known/jwks.json
+    networks:
       - intranet
+
+  oathkeeper:
+    image: oryd/oathkeeper:v0.35.0-alpha.1
+    ports:
+      - "4455:4455"
+      - "4456:4456"
+    command:
+      serve proxy -c "/etc/config/oathkeeper/.oathkeeper.yml"
+    environment:
+      - LOG_LEVEL=debug
+    restart: on-failure
+    networks:
+      - intranet
+    volumes:
+      -
+        type: bind
+        source: ./contrib/quickstart/oathkeeper
+        target: /etc/config/oathkeeper
 
   kratos:
     depends_on:
       - kratos-migrate
-      - kratos-seflservice-ui
+      - kratos-selfservice-ui-node
     build:
       context: .
       dockerfile: Dockerfile-build
@@ -43,31 +71,23 @@ services:
       - "4434:4434" # admin
     restart: unless-stopped
     environment:
-      - DSN=sqlite://var/lib/sqlite/db.sqlite
-      - LOG_LEVEL=debug
-
-      - SECRETS_SESSION=PLEASE-CHANGE-ME-I-AM-VERY-INSECURE
-
-      - URLS_LOGIN_UI=http://127.0.0.1:4435/auth/login
-      - URLS_REGISTRATION_UI=http://127.0.0.1:4435/auth/registration
-      - URLS_ERROR_UI=http://127.0.0.1:4435/error
-
-      - URLS_SELF_PUBLIC=http://127.0.0.1:4435/.ory/kratos/public/
-      - URLS_SELF_ADMIN=http://kratos:4434/
-
-      - URLS_DEFAULT_RETURN_TO=http://127.0.0.1:4436/
-      - URLS_WHITELISTED_RETURN_TO_DOMAINS=http://127.0.0.1:4436/
-
-      # These settings are set to low values for better performance in development scenarios
-      - HASHERS_ARGON2_PARALLELISM=1
-      - HASHERS_ARGON2_MEMORY=131072 # 128MB
-      - HASHERS_ARGON2_ITERATIONS=2
-
+      - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true
     command:
-      serve
+      serve -c /etc/config/kratos/.kratos.yml --dev
     volumes:
       - kratos-sqlite:/var/lib/sqlite/
-    network:
+      -
+        type: bind
+        source: ./contrib/quickstart/kratos/email-password
+        target: /etc/config/kratos
+    networks:
+      - intranet
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.0
+    ports:
+      - "8025:4436"
+    networks:
       - intranet
 
 networks:
@@ -75,3 +95,5 @@ networks:
 
 volumes:
   kratos-sqlite:
+  kratos-config:
+  oathkeeper-config:

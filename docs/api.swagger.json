@@ -318,6 +318,9 @@
     }
   },
   "definitions": {
+    "CSRFSetter": {
+      "type": "object"
+    },
     "CredentialsType": {
       "description": "and so on.",
       "type": "string",
@@ -331,6 +334,10 @@
           "type": "string"
         }
       }
+    },
+    "ErrorParser": {
+      "type": "object",
+      "title": "ErrorParser is capable of parsing and processing errors."
     },
     "Identity": {
       "type": "object",
@@ -351,16 +358,14 @@
         }
       }
     },
-    "RWMutex": {
-      "description": "A RWMutex must not be copied after first use.\n\nIf a goroutine holds a RWMutex for reading and another goroutine might\ncall Lock, no goroutine should expect to be able to acquire a read lock\nuntil the initial read lock is released. In particular, this prohibits\nrecursive read locking. This is to ensure that the lock eventually becomes\navailable; a blocked Lock call excludes new readers from acquiring the\nlock.",
-      "type": "object",
-      "title": "A RWMutex is a reader/writer mutual exclusion lock.\nThe lock can be held by an arbitrary number of readers or a single writer.\nThe zero value for a RWMutex is an unlocked mutex."
-    },
     "RequestMethodConfigurator": {},
     "Traits": {
       "type": "object"
     },
     "UUID": {"type": "string", "format": "uuid4"},
+    "ValueSetter": {
+      "type": "object"
+    },
     "form": {
       "description": "HTMLForm represents a HTML Form. The container can work with both HTTP Form and JSON requests",
       "type": "object",

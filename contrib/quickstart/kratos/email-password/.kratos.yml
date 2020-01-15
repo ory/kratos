@@ -1,0 +1,67 @@
+selfservice:
+  strategies:
+    password:
+      enabled: true
+
+  logout:
+    redirect_to: http://127.0.0.1:4455/auth/login
+
+  login:
+    request_lifespan: 10m
+    after:
+      password:
+        -
+          run: session
+        -
+          run: redirect
+          config:
+            default_redirect_url: http://127.0.0.1:4455/
+            allow_user_defined_redirect: true
+
+  registration:
+    request_lifespan: 10m
+    after:
+      password:
+        -
+          run: session
+        -
+          run: redirect
+          config:
+            default_redirect_url: http://127.0.0.1:4455/
+            allow_user_defined_redirect: true
+
+log:
+  level: debug
+
+secrets:
+  session:
+    - PLEASE-CHANGE-ME-I-AM-VERY-INSECURE
+
+urls:
+  login_ui: http://127.0.0.1:4455/auth/login
+  registration_ui: http://127.0.0.1:4455/auth/registration
+  error_ui: http://127.0.0.1:4455/error
+  profile_ui: http://127.0.0.1:4455/profile
+  mfa_ui: http://127.0.0.1:4455/mfa
+
+  self:
+    public: http://127.0.0.1:4455/.ory/kratos/public/
+    admin: http://kratos:4434/
+  default_return_to: http://127.0.0.1:4455/
+  whitelisted_return_to_domains: http://127.0.0.1:4455/
+
+hashers:
+  argon2:
+    parallelism: 1
+    memory: 131072
+    iterations: 2
+    salt_length: 16
+    key_length: 16
+
+identity:
+  traits:
+    default_schema_url: file:///etc/config/kratos/identity.traits.schema.json
+
+courier:
+  smtp:
+    connection_uri: smtp://test:test@mailhog:1025/
