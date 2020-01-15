@@ -5,3 +5,4 @@ tmp/
 ./kratos
 coverage.txt
 packrd/
+*-packr.go
