@@ -84,16 +84,10 @@ type Registry interface {
 	registration.StrategyProvider
 }
 
-type (
-	selfServiceStrategy interface {
-		login.Strategy
-		registration.Strategy
-	}
-	postHooks []interface {
-		login.PostHookExecutor
-		registration.PostHookExecutor
-	}
-)
+type selfServiceStrategy interface {
+	login.Strategy
+	registration.Strategy
+}
 
 func NewRegistry(c configuration.Provider) (Registry, error) {
 	driver, err := dbal.GetDriverFor(c.DSN())

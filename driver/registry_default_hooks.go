@@ -11,8 +11,8 @@ import (
 	"github.com/ory/kratos/selfservice/hook"
 )
 
-func (m *RegistryDefault) hooksPost(credentialsType identity.CredentialsType, configs []configuration.SelfServiceHook) postHooks {
-	var i postHooks
+func (m *RegistryDefault) getHooks(credentialsType identity.CredentialsType, configs []configuration.SelfServiceHook) []interface{} {
+	var i []interface{}
 
 	for _, h := range configs {
 		switch h.Run {
@@ -67,7 +67,7 @@ func (m *RegistryDefault) hooksPost(credentialsType identity.CredentialsType, co
 			m.l.
 				WithField("type", credentialsType).
 				WithField("hook", h.Run).
-				Errorf("A unknown post login hook was requested and can therefore not be used.")
+				Errorf("A unknown hook was requested and can therefore not be used")
 		}
 	}
 
