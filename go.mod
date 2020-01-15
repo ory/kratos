@@ -6,7 +6,6 @@ replace github.com/santhosh-tekuri/jsonschema/v2 => github.com/ory/jsonschema/v2
 
 require (
 	github.com/Masterminds/sprig/v3 v3.0.0
-	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/bxcodec/faker v2.0.1+incompatible
 	github.com/cenkalti/backoff v2.1.1+incompatible
 	github.com/coreos/go-oidc v2.1.0+incompatible
@@ -19,7 +18,7 @@ require (
 	github.com/go-openapi/validate v0.19.3
 	github.com/go-playground/locales v0.12.1 // indirect
 	github.com/go-playground/universal-translator v0.16.0 // indirect
-	github.com/go-swagger/go-swagger v0.21.1-0.20200107003254-1c98855b472d
+	github.com/go-swagger/go-swagger v0.21.0
 	github.com/gobuffalo/envy v1.8.1 // indirect
 	github.com/gobuffalo/fizz v1.9.5 // indirect
 	github.com/gobuffalo/flect v0.1.7 // indirect
@@ -76,7 +75,7 @@ require (
 	golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sys v0.0.0-20191128015809-6d18c012aee9 // indirect
-	golang.org/x/tools v0.0.0-20191224055732-dd894d0a8a40
+	golang.org/x/tools v0.0.0-20191105231337-689d0f08e67a
 	google.golang.org/appengine v1.6.5 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.28.0

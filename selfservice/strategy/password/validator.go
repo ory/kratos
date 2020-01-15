@@ -45,6 +45,7 @@ type DefaultPasswordValidator struct {
 	hashes map[string]int64
 
 	maxBreachesThreshold int64
+	ignoreNetworkErrors  bool
 }
 
 func NewDefaultPasswordValidatorStrategy() *DefaultPasswordValidator {
@@ -52,7 +53,14 @@ func NewDefaultPasswordValidatorStrategy() *DefaultPasswordValidator {
 		c:                    http.DefaultClient,
 		maxBreachesThreshold: 0,
 		hashes:               map[string]int64{},
+		ignoreNetworkErrors:  true,
 	}
+}
+
+func NewDefaultPasswordValidatorStrategyStrict() *DefaultPasswordValidator {
+	v := NewDefaultPasswordValidatorStrategy()
+	v.ignoreNetworkErrors = false
+	return v
 }
 
 func b20(src []byte) string {
@@ -64,11 +72,17 @@ func (s *DefaultPasswordValidator) fetch(hpw []byte) error {
 	loc := fmt.Sprintf("https://api.pwnedpasswords.com/range/%s", prefix)
 	res, err := s.c.Get(loc)
 	if err != nil {
+		if s.ignoreNetworkErrors {
+			return nil
+		}
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to check if password has been breached before: %s", err))
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
+		if s.ignoreNetworkErrors {
+			return nil
+		}
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to check if password has been breached before, expected status code 200 but got %d", res.StatusCode))
 	}
 

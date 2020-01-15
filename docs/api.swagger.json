@@ -370,6 +370,9 @@
       "type": "object"
     },
     "UUID": {"type": "string", "format": "uuid4"},
+    "ValueSetter": {
+      "type": "object"
+    },
     "form": {
       "description": "HTMLForm represents a HTML Form. The container can work with both HTTP Form and JSON requests",
       "type": "object",
