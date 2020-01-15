@@ -31,7 +31,7 @@ func TestSessionIssuer(t *testing.T) {
 		w := httptest.NewRecorder()
 		sid := x.NewUUID()
 
-		i := identity.NewIdentity("")
+		i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
 		require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), i))
 		require.NoError(t, h.ExecuteLoginPostHook(w, &r, nil, &session.Session{ID: sid, Identity: i}))
 
@@ -44,7 +44,7 @@ func TestSessionIssuer(t *testing.T) {
 		w := httptest.NewRecorder()
 		sid := x.NewUUID()
 
-		i := identity.NewIdentity("")
+		i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
 		require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), i))
 		require.NoError(t, h.ExecuteRegistrationPostHook(w, &r, nil, &session.Session{ID: sid, Identity: i}))
 

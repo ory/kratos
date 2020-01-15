@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/kratos/schema"
+
 	"github.com/cenkalti/backoff"
 	"github.com/gobuffalo/pop"
 	"github.com/gorilla/sessions"
@@ -59,6 +61,8 @@ type RegistryDefault struct {
 
 	identityHandler   *identity.Handler
 	identityValidator *identity.Validator
+
+	schemaHandler *schema.Handler
 
 	sessionHandler *session.Handler
 	sessionsStore  sessions.Store
@@ -190,7 +194,7 @@ func (m *RegistryDefault) LoginStrategies() login.Strategies {
 
 func (m *RegistryDefault) IdentityValidator() *identity.Validator {
 	if m.identityValidator == nil {
-		m.identityValidator = identity.NewValidator(m.c)
+		m.identityValidator = identity.NewValidator(m)
 	}
 	return m.identityValidator
 }
@@ -220,6 +224,13 @@ func (m *RegistryDefault) IdentityHandler() *identity.Handler {
 		m.identityHandler = identity.NewHandler(m.c, m)
 	}
 	return m.identityHandler
+}
+
+func (m *RegistryDefault) SchemaHandler() *schema.Handler {
+	if m.schemaHandler == nil {
+		m.schemaHandler = schema.NewHandler(m)
+	}
+	return m.schemaHandler
 }
 
 func (m *RegistryDefault) SessionHandler() *session.Handler {

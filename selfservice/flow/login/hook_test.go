@@ -33,10 +33,15 @@ type mockPostHook struct {
 	modifyIdentity bool
 }
 
+var updatedSchema = configuration.SchemaConfig{
+	ID:  "updatedSchema",
+	URL: "file://./stub/updated.schema.json",
+}
+
 func (m *mockPostHook) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, a *login.Request, s *session.Session) error {
 	if m.modifyIdentity {
 		i := s.Identity
-		i.TraitsSchemaURL = "file://./stub/updated.schema.json"
+		i.TraitsSchemaID = updatedSchema.ID
 		s.UpdateIdentity(i)
 	}
 	return m.err
@@ -65,9 +70,9 @@ func (m *loginExecutorDependenciesMock) PreLoginHooks() []login.PreHookExecutor 
 func TestLoginExecutor(t *testing.T) {
 	t.Run("method=PostLoginHook", func(t *testing.T) {
 		for k, tc := range []struct {
-			hooks           []login.PostHookExecutor
-			expectSchemaURL string
-			expectErr       error
+			hooks          []login.PostHookExecutor
+			expectSchemaID string
+			expectErr      error
 		}{
 			{hooks: nil},
 			{hooks: []login.PostHookExecutor{}},
@@ -81,7 +86,7 @@ func TestLoginExecutor(t *testing.T) {
 					new(mockPostHook),
 					&mockPostHook{modifyIdentity: true},
 				},
-				expectSchemaURL: "file://./stub/updated.schema.json",
+				expectSchemaID: updatedSchema.ID,
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
@@ -89,9 +94,11 @@ func TestLoginExecutor(t *testing.T) {
 
 				var i identity.Identity
 				require.NoError(t, faker.FakeData(&i))
-				i.TraitsSchemaURL = ""
+				i.TraitsSchemaID = ""
 				i.Traits = identity.Traits(`{}`)
 				viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/login.schema.json")
+				viper.Set(configuration.ViperKeyIdentityTraitsSchemas, []configuration.SchemaConfig{updatedSchema})
+				viper.Set(configuration.ViperKeyURLsSelfPublic, "http://example.com")
 				require.NoError(t, reg.IdentityPool().CreateIdentity(context.TODO(), &i))
 
 				e := login.NewHookExecutor(reg, conf)
@@ -102,10 +109,10 @@ func TestLoginExecutor(t *testing.T) {
 				}
 
 				require.NoError(t, err)
-				if tc.expectSchemaURL != "" {
+				if tc.expectSchemaID != "" {
 					got, err := reg.IdentityPool().GetIdentity(context.TODO(), i.ID)
 					require.NoError(t, err)
-					assert.EqualValues(t, tc.expectSchemaURL, got.TraitsSchemaURL)
+					assert.EqualValues(t, tc.expectSchemaID, got.TraitsSchemaID)
 				}
 			})
 		}

@@ -5,6 +5,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/viper"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -18,9 +21,10 @@ import (
 func TestValidationExtension(t *testing.T) {
 	ts := httptest.NewServer(http.FileServer(http.Dir("stub")))
 	defer ts.Close()
+	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, ts.URL+"/registration.schema.json")
 
 	sv := schema.NewValidator()
-	i := identity.NewIdentity(ts.URL + "/registration.schema.json")
+	i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
 
 	ve := oidc.NewValidationExtension()
 	ve.WithIdentity(i)
