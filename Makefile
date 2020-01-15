@@ -33,18 +33,6 @@ cover:
 		go test ./... -coverprofile=cover.out
 		go tool cover -func=cover.out
 
-.PHONY: sdk
-sdk:
-		GO111MODULE=on go mod tidy
-		GO111MODULE=on $$(go env GOPATH)/bin/swagger generate spec -x sdk/go/kratos -m -o ./docs/api.swagger.json
-		GO111MODULE=on $$(go env GOPATH)/bin/swagger validate ./docs/api.swagger.json
-		GO111MODULE=on go run ./contrib/swagutil sanitize ./docs/api.swagger.json
-
-		rm -rf ./sdk/go/kratos/*
-		GO111MODULE=on $$(go env GOPATH)/bin/swagger generate client --allow-template-override -f ./docs/api.swagger.json -t sdk/go/kratos -A Ory_Kratos
-
-		cd sdk/go/kratos; goreturns -w -i -local github.com/ory $$(listx .)
-
 .PHONE: mocks
 mocks:
 		mockgen -mock_names Manager=MockLoginExecutorDependencies -package internal -destination internal/hook_login_executor_dependencies.go github.com/ory/kratos/selfservice loginExecutorDependencies
@@ -80,3 +68,16 @@ test:
 .PHONY: test-integration
 test-integration:
 		go test -tags sqlite ./...
+
+
+# Generates the SDKs
+.PHONY: sdk
+sdk:
+		$$(go env GOPATH)/bin/swagger generate spec -m -o ./docs/api.swagger.json -x internal/httpclient
+		$$(go env GOPATH)/bin/swagutil sanitize ./docs/api.swagger.json
+		$$(go env GOPATH)/bin/swagger flatten --with-flatten=remove-unused -o ./docs/api.swagger.json ./docs/api.swagger.json
+		$$(go env GOPATH)/bin/swagger validate ./docs/api.swagger.json
+		rm -rf internal/httpclient
+		mkdir -p internal/httpclient
+		$$(go env GOPATH)/bin/swagger generate client -f ./docs/api.swagger.json -t internal/httpclient -A Ory_Hydra
+		make format

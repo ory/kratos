@@ -7,7 +7,7 @@ package client
 //
 // 	"github.com/ory/viper"
 //
-// 	"github.com/ory/kratos/sdk/go/kratos/client"
+// 	"github.com/ory/kratos/internal/httpclient/client"
 // 	"github.com/ory/x/cmdx"
 // 	"github.com/ory/x/flagx"
 // )
