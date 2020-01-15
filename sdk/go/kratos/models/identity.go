@@ -26,9 +26,10 @@ type Identity struct {
 	// Required: true
 	Traits Traits `json:"traits"`
 
-	// TraitsSchemaURL is the JSON Schema to be used for validating the identity's traits.
-	//
-	// format: uri
+	// TraitsSchemaID is the JSON Schema to be used for validating the identity's traits.
+	TraitsSchemaID string `json:"traits_schema_id,omitempty"`
+
+	// TraitsSchemaURL is the kratos public endpoint where the identity's traits schema can be fetched.
 	TraitsSchemaURL string `json:"traits_schema_url,omitempty"`
 }
 

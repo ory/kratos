@@ -30,7 +30,7 @@ type mockDeps interface {
 
 func MockSetSession(t *testing.T, reg mockDeps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		i := identity.NewIdentity("")
+		i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
 		require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), i))
 
 		_, err := reg.SessionManager().CreateToRequest(context.Background(), i, w, r)
@@ -117,8 +117,7 @@ func MockSessionCreateHandlerWithIdentity(t *testing.T, reg mockDeps, i *identit
 
 func MockSessionCreateHandler(t *testing.T, reg mockDeps) (httprouter.Handle, *Session) {
 	return MockSessionCreateHandlerWithIdentity(t, reg, &identity.Identity{
-		ID:              x.NewUUID(),
-		TraitsSchemaURL: "file://./stub/fake-session.schema.json",
-		Traits:          identity.Traits(json.RawMessage(`{"baz":"bar","foo":true,"bar":2.5}`)),
+		ID:     x.NewUUID(),
+		Traits: identity.Traits(json.RawMessage(`{"baz":"bar","foo":true,"bar":2.5}`)),
 	})
 }

@@ -452,7 +452,33 @@
           "type": "object",
           "properties": {
             "default_schema_url": {
-              "type": "string"
+              "type": "string",
+              "format": "url"
+            },
+            "schemas": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "url"
+                  }
+                },
+                "not": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^default$"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
             }
           },
           "required": [

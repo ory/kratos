@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/ory/kratos/schema"
+	"github.com/ory/x/urlx"
+
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -58,12 +61,28 @@ type (
 
 func TestPool(p Pool) func(t *testing.T) {
 	return func(t *testing.T) {
-		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
+		exampleServerURL := urlx.ParseOrPanic("http://example.com")
+		viper.Set(configuration.ViperKeyURLsSelfPublic, exampleServerURL)
+		defaultSchema := schema.Schema{
+			ID:     configuration.DefaultIdentityTraitsSchemaID,
+			URL:    urlx.ParseOrPanic("file://./stub/identity.schema.json"),
+			RawURL: "file://./stub/identity.schema.json",
+		}
+		altSchema := schema.Schema{
+			ID:     "altSchema",
+			URL:    urlx.ParseOrPanic("file://./stub/identity-2.schema.json"),
+			RawURL: "file://./stub/identity-2.schema.json",
+		}
+		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, defaultSchema.RawURL)
+		viper.Set(configuration.ViperKeyIdentityTraitsSchemas, []configuration.SchemaConfig{{
+			ID:  altSchema.ID,
+			URL: altSchema.RawURL,
+		}})
 
 		var createdIDs []uuid.UUID
 
-		var passwordIdentity = func(schemaURL string, credentialsID string) *Identity {
-			i := NewIdentity(schemaURL)
+		var passwordIdentity = func(schemaID string, credentialsID string) *Identity {
+			i := NewIdentity(schemaID)
 			i.SetCredentials(CredentialsTypePassword, Credentials{
 				Type: CredentialsTypePassword, Identifiers: []string{credentialsID},
 				Config: json.RawMessage(`{"foo":"bar"}`),
@@ -71,8 +90,8 @@ func TestPool(p Pool) func(t *testing.T) {
 			return i
 		}
 
-		var oidcIdentity = func(schemaURL string, credentialsID string) *Identity {
-			i := NewIdentity(schemaURL)
+		var oidcIdentity = func(schemaID string, credentialsID string) *Identity {
+			i := NewIdentity(schemaID)
 			i.SetCredentials(CredentialsTypeOIDC, Credentials{
 				Type: CredentialsTypeOIDC, Identifiers: []string{credentialsID},
 				Config: json.RawMessage(`{}`),
@@ -87,7 +106,7 @@ func TestPool(p Pool) func(t *testing.T) {
 		}
 
 		t.Run("case=should create and set missing ID", func(t *testing.T) {
-			i := NewIdentity("")
+			i := NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
 			i.SetCredentials(CredentialsTypeOIDC, Credentials{
 				Type: CredentialsTypeOIDC, Identifiers: []string{x.NewUUID().String()},
 				Config: json.RawMessage(`{}`),
@@ -107,7 +126,8 @@ func TestPool(p Pool) func(t *testing.T) {
 			require.NoError(t, err)
 
 			assert.Equal(t, expected.ID, actual.ID)
-			assert.Equal(t, "file://./stub/identity.schema.json", actual.TraitsSchemaURL)
+			assert.Equal(t, configuration.DefaultIdentityTraitsSchemaID, actual.TraitsSchemaID)
+			assert.Equal(t, defaultSchema.SchemaURL(exampleServerURL).String(), actual.TraitsSchemaURL)
 			assertEqual(t, expected, actual)
 		})
 
@@ -123,13 +143,14 @@ func TestPool(p Pool) func(t *testing.T) {
 		})
 
 		t.Run("case=create and keep set values", func(t *testing.T) {
-			expected := passwordIdentity("file://./stub/identity-2.schema.json", "id-2")
+			expected := passwordIdentity(altSchema.ID, "id-2")
 			require.NoError(t, p.CreateIdentity(context.Background(), expected))
 			createdIDs = append(createdIDs, expected.ID)
 
 			actual, err := p.GetIdentity(context.Background(), expected.ID)
 			require.NoError(t, err)
-			assert.Equal(t, "file://./stub/identity-2.schema.json", actual.TraitsSchemaURL)
+			assert.Equal(t, altSchema.ID, actual.TraitsSchemaID)
+			assert.Equal(t, altSchema.SchemaURL(exampleServerURL).String(), actual.TraitsSchemaURL)
 			assertEqual(t, expected, actual)
 
 			actual, err = p.GetIdentityConfidential(context.Background(), expected.ID)
@@ -207,7 +228,8 @@ func TestPool(p Pool) func(t *testing.T) {
 			require.NoError(t, p.CreateIdentity(context.Background(), initial))
 			createdIDs = append(createdIDs, initial.ID)
 
-			assert.Equal(t, "file://./stub/identity.schema.json", initial.TraitsSchemaURL)
+			assert.Equal(t, configuration.DefaultIdentityTraitsSchemaID, initial.TraitsSchemaID)
+			assert.Equal(t, defaultSchema.SchemaURL(exampleServerURL).String(), initial.TraitsSchemaURL)
 
 			toUpdate := initial.CopyWithoutCredentials()
 			toUpdate.SetCredentials(CredentialsTypePassword, Credentials{
@@ -216,7 +238,7 @@ func TestPool(p Pool) func(t *testing.T) {
 				Config:      json.RawMessage(`{"oh":"nono"}`),
 			})
 			toUpdate.Traits = Traits(`{"update":"me"}`)
-			toUpdate.TraitsSchemaURL = "file://./stub/identity-2.schema.json"
+			toUpdate.TraitsSchemaID = altSchema.ID
 
 			err := p.UpdateIdentity(context.Background(), toUpdate)
 			require.Error(t, err)
@@ -224,7 +246,8 @@ func TestPool(p Pool) func(t *testing.T) {
 
 			actual, err := p.GetIdentityConfidential(context.Background(), toUpdate.ID)
 			require.NoError(t, err)
-			assert.Equal(t, "file://./stub/identity.schema.json", actual.TraitsSchemaURL)
+			assert.Equal(t, configuration.DefaultIdentityTraitsSchemaID, actual.TraitsSchemaID)
+			assert.Equal(t, defaultSchema.SchemaURL(exampleServerURL).String(), actual.TraitsSchemaURL)
 			assert.Empty(t, actual.Credentials[CredentialsTypePassword])
 			assert.NotEmpty(t, actual.Credentials[CredentialsTypeOIDC])
 		})
@@ -234,7 +257,8 @@ func TestPool(p Pool) func(t *testing.T) {
 			require.NoError(t, p.CreateIdentity(context.Background(), initial))
 			createdIDs = append(createdIDs, initial.ID)
 
-			assert.Equal(t, "file://./stub/identity.schema.json", initial.TraitsSchemaURL)
+			assert.Equal(t, configuration.DefaultIdentityTraitsSchemaID, initial.TraitsSchemaID)
+			assert.Equal(t, defaultSchema.SchemaURL(exampleServerURL).String(), initial.TraitsSchemaURL)
 
 			expected := initial.CopyWithoutCredentials()
 			expected.SetCredentials(CredentialsTypePassword, Credentials{
@@ -243,12 +267,13 @@ func TestPool(p Pool) func(t *testing.T) {
 				Config:      json.RawMessage(`{"oh":"nono"}`),
 			})
 			expected.Traits = Traits(`{"update":"me"}`)
-			expected.TraitsSchemaURL = "file://./stub/identity-2.schema.json"
+			expected.TraitsSchemaID = altSchema.ID
 			require.NoError(t, p.UpdateIdentityConfidential(context.Background(), expected))
 
 			actual, err := p.GetIdentityConfidential(context.Background(), expected.ID)
 			require.NoError(t, err)
-			assert.Equal(t, "file://./stub/identity-2.schema.json", actual.TraitsSchemaURL)
+			assert.Equal(t, altSchema.ID, actual.TraitsSchemaID)
+			assert.Equal(t, altSchema.SchemaURL(exampleServerURL).String(), actual.TraitsSchemaURL)
 			assert.NotEmpty(t, actual.Credentials[CredentialsTypePassword])
 			assert.Empty(t, actual.Credentials[CredentialsTypeOIDC])
 
@@ -333,7 +358,7 @@ func TestPool(p Pool) func(t *testing.T) {
 		})
 
 		t.Run("case=find identity by its credentials identifier", func(t *testing.T) {
-			expected := passwordIdentity("file://./stub/identity.schema.json", x.NewUUID().String())
+			expected := passwordIdentity("", x.NewUUID().String())
 			expected.Traits = Traits(`{"email": "find-credentials-identifier@ory.sh"}`)
 
 			require.NoError(t, p.CreateIdentity(context.Background(), expected))

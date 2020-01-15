@@ -2,26 +2,27 @@ package identity
 
 import (
 	"github.com/ory/gojsonschema"
-	"github.com/ory/x/errorsx"
-	"github.com/ory/x/stringsx"
-
-	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/x/errorsx"
 )
 
-type Validator struct {
-	c configuration.Provider
-	v *schema.Validator
-}
+type (
+	validatorDependencies interface {
+		IdentityTraitsSchemas() schema.Schemas
+	}
+	Validator struct {
+		v *schema.Validator
+		d validatorDependencies
+	}
+	ValidationProvider interface {
+		IdentityValidator() *Validator
+	}
+)
 
-type ValidationProvider interface {
-	IdentityValidator() *Validator
-}
-
-func NewValidator(c configuration.Provider) *Validator {
+func NewValidator(d validatorDependencies) *Validator {
 	return &Validator{
-		c: c,
 		v: schema.NewValidator(),
+		d: d,
 	}
 }
 
@@ -35,11 +36,13 @@ func (v *Validator) Validate(i *Identity) error {
 		NewValidationExtensionIdentifier().WithIdentity(i),
 	}
 
-	err := v.v.Validate(
-		stringsx.Coalesce(
-			i.TraitsSchemaURL,
-			v.c.DefaultIdentityTraitsSchemaURL().String(),
-		),
+	s, err := v.d.IdentityTraitsSchemas().GetByID(i.TraitsSchemaID)
+	if err != nil {
+		return err
+	}
+
+	err = v.v.Validate(
+		s.URL.String(),
 		gojsonschema.NewBytesLoader(i.Traits),
 		es...,
 	)

@@ -6,6 +6,8 @@ import (
 	"github.com/justinas/nosurf"
 	"github.com/sirupsen/logrus"
 
+	"github.com/ory/kratos/schema"
+
 	"github.com/ory/x/healthx"
 
 	"github.com/ory/kratos/persistence"
@@ -55,6 +57,8 @@ type Registry interface {
 	identity.HandlerProvider
 	identity.ValidationProvider
 	identity.PoolProvider
+
+	schema.HandlerProvider
 
 	password2.ValidationProvider
 	password2.HashProvider
