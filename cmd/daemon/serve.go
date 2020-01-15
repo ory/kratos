@@ -105,7 +105,7 @@ func telemetry(cmd *cobra.Command, n *negroni.Negroni, d driver.Driver) {
 		&metricsx.Options{
 			Service:       "ory-kratos",
 			ClusterID:     metricsx.Hash(d.Configuration().DSN()),
-			IsDevelopment: d.Configuration().DSN() == "memory",
+			IsDevelopment: flagx.MustGetBool(cmd, "dev"),
 			WriteKey:      "qQlI6q8Q4WvkzTjKQSor4sHYOikHIvvi",
 			WhitelistedPaths: []string{
 				"/",

@@ -26,6 +26,7 @@ import (
 type ViperProvider struct {
 	l  logrus.FieldLogger
 	ss [][]byte
+	dev bool
 }
 
 var _ Provider = new(ViperProvider)
@@ -70,9 +71,10 @@ const (
 	ViperKeyHasherArgon2ConfigKeyLength   = "hashers.argon2.key_length"
 )
 
-func NewViperProvider(l logrus.FieldLogger) *ViperProvider {
+func NewViperProvider(l logrus.FieldLogger, dev bool) *ViperProvider {
 	return &ViperProvider{
 		l: l,
+		dev: dev,
 	}
 }
 
@@ -305,4 +307,8 @@ func (p *ViperProvider) TracingJaegerConfig() *tracing.JaegerConfig {
 			viperx.GetString(p.l, "tracing.providers.jaeger.propagation", "", "TRACING_PROVIDER_JAEGER_PROPAGATION"),
 		),
 	}
+}
+
+func (p *ViperProvider) InsecureDevMode() bool {
+	return p.dev
 }

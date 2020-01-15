@@ -253,7 +253,7 @@ func (m *RegistryDefault) SelfServiceErrorHandler() *errorx.Handler {
 func (m *RegistryDefault) CookieManager() sessions.Store {
 	if m.sessionsStore == nil {
 		cs := sessions.NewCookieStore(m.c.SessionSecrets()...)
-		cs.Options.Secure = m.c.SelfPublicURL().Scheme == "https"
+		cs.Options.Secure = !m.c.InsecureDevMode()
 		cs.Options.HttpOnly = true
 		m.sessionsStore = cs
 	}
