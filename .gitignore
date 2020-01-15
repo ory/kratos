@@ -6,3 +6,4 @@ tmp/
 coverage.txt
 packrd/
 *-packr.go
+dist/
