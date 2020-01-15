@@ -29,7 +29,18 @@ import (
 var serveCmd = &cobra.Command{
 	Use: "serve",
 	Run: func(cmd *cobra.Command, args []string) {
-		daemon.ServeAll(driver.MustNewDefaultDriver(logger, BuildVersion, BuildTime, BuildGitHash, flagx.MustGetBool(cmd, "dev")))(cmd, args)
+		dev := flagx.MustGetBool(cmd, "dev")
+		if dev {
+			logger.Warn(`
+
+YOU ARE RUNNING ORY KRATOS IN DEV MODE.
+SECURITY IS DISABLED.
+DON'T DO THIS IN PRODUCTION!
+
+`)
+		}
+
+		daemon.ServeAll(driver.MustNewDefaultDriver(logger, BuildVersion, BuildTime, BuildGitHash, dev))(cmd, args)
 	},
 }
 

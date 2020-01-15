@@ -334,6 +334,6 @@ func (p *ViperProvider) TracingJaegerConfig() *tracing.JaegerConfig {
 	}
 }
 
-func (p *ViperProvider) InsecureDevMode() bool {
+func (p *ViperProvider) IsInsecureDevMode() bool {
 	return p.dev
 }

@@ -19,16 +19,6 @@ func NewDefaultDriver(l logrus.FieldLogger, version, build, date string, dev boo
 		l = logrusx.New()
 	}
 
-	if dev {
-		l.Warn(`
-
-YOU ARE RUNNING ORY KRATOS IN DEV MODE.
-SECURITY IS DISABLED.
-DON'T DO THIS IN PRODUCTION!
-
-`)
-	}
-
 	c := configuration.NewViperProvider(l, dev)
 
 	r, err := NewRegistry(c)

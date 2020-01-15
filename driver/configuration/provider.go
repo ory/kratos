@@ -79,5 +79,5 @@ type Provider interface {
 	TracingProvider() string
 	TracingJaegerConfig() *tracing.JaegerConfig
 
-	InsecureDevMode() bool
+	IsInsecureDevMode() bool
 }
