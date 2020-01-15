@@ -329,12 +329,14 @@
           "type": "object",
           "properties": {
             "host": {
-              "type": "string"
+              "type": "string",
+              "default": "0.0.0.0"
             },
             "port": {
               "type": "number",
               "minimum": 1,
-              "maximum": 65535
+              "maximum": 65535,
+              "default": 4434
             }
           },
           "additionalProperties": false
@@ -343,12 +345,14 @@
           "type": "object",
           "properties": {
             "host": {
-              "type": "string"
+              "type": "string",
+              "default": "0.0.0.0"
             },
             "port": {
               "type": "number",
               "minimum": 1,
-              "maximum": 65535
+              "maximum": 65535,
+              "default": 4433
             }
           },
           "additionalProperties": false

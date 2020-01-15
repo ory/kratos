@@ -7,3 +7,5 @@ scripts
 .idea
 .git/
 database.yaml
+contrib/quickstart
+contrib/swagutil
