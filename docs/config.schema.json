@@ -74,6 +74,9 @@
         "client_id": {
           "type": "string"
         },
+        "client_secret": {
+          "type": "string"
+        },
         "issuer_url": {
           "type": "string",
           "format": "url"
