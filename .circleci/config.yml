@@ -41,7 +41,7 @@ jobs:
           - TEST_SELFSERVICE_OIDC_HYDRA_INTEGRATION_ADDR=127.0.0.1:4499
           - TEST_DATABASE_POSTGRESQL=postgres://test:test@localhost:5432/postgres?sslmode=disable
           - TEST_DATABASE_MYSQL=mysql://root:test@(localhost:3306)/mysql?parseTime=true&multiStatements=true
-          - TEST_DATABASE_COCKROACHDB=cockroach://root@localhost:26257/defaultdb?sslmode=disable
+          - TEST_DATABASE_COCKROACHDB=postgres://root@localhost:26257/defaultdb?sslmode=disable
       -
         image: mailhog/mailhog:v1.0.0
         command: MailHog -invite-jim -jim-linkspeed-affect=0.25 -jim-reject-auth=0.25 -jim-reject-recipient=0.25 -jim-reject-sender=0.25 -jim-disconnect=0.25 -jim-linkspeed-min=1250 -jim-linkspeed-max=12500
