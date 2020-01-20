@@ -14,12 +14,12 @@ type DefaultDriver struct {
 	r Registry
 }
 
-func NewDefaultDriver(l logrus.FieldLogger, version, build, date string) (Driver, error) {
+func NewDefaultDriver(l logrus.FieldLogger, version, build, date string, dev bool) (Driver, error) {
 	if l == nil {
 		l = logrusx.New()
 	}
 
-	c := configuration.NewViperProvider(l)
+	c := configuration.NewViperProvider(l, dev)
 
 	r, err := NewRegistry(c)
 	if err != nil {
@@ -39,8 +39,8 @@ func NewDefaultDriver(l logrus.FieldLogger, version, build, date string) (Driver
 	return &DefaultDriver{r: r, c: c}, nil
 }
 
-func MustNewDefaultDriver(l logrus.FieldLogger, version, build, date string) Driver {
-	d, err := NewDefaultDriver(l, version, build, date)
+func MustNewDefaultDriver(l logrus.FieldLogger, version, build, date string, dev bool) Driver {
+	d, err := NewDefaultDriver(l, version, build, date, dev)
 	if err != nil {
 		l.WithError(err).Fatal("Unable to initialize driver.")
 	}

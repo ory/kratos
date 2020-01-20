@@ -31,7 +31,7 @@ func resetConfig() {
 func NewConfigurationWithDefaults() *configuration.ViperProvider {
 	viper.Reset()
 	resetConfig()
-	return configuration.NewViperProvider(logrusx.New())
+	return configuration.NewViperProvider(logrusx.New(), true)
 }
 
 func NewRegistryDefault(t *testing.T) (*configuration.ViperProvider, *driver.RegistryDefault) {
@@ -49,7 +49,7 @@ func NewRegistryDefaultWithDSN(t *testing.T, dsn string) (*configuration.ViperPr
 		viper.Set(configuration.ViperKeyDSN, dsn)
 	}
 
-	d, err := driver.NewDefaultDriver(logrusx.New(), "test", "test", "test")
+	d, err := driver.NewDefaultDriver(logrusx.New(), "test", "test", "test", true)
 	require.NoError(t, err)
 	return d.Configuration().(*configuration.ViperProvider), d.Registry().(*driver.RegistryDefault)
 }
