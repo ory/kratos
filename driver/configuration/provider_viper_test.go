@@ -34,7 +34,7 @@ func TestViperProvider(t *testing.T) {
 		}
 
 		require.NoError(t, err, "%+v", errorsx.Cause(err))
-		p := configuration.NewViperProvider(logrus.New())
+		p := configuration.NewViperProvider(logrus.New(), true)
 
 		t.Run("group=urls", func(t *testing.T) {
 			assert.Equal(t, "http://test.kratos.ory.sh/login", p.LoginURL().String())
