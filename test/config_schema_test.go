@@ -1,4 +1,4 @@
-package docs
+package test
 
 import (
 	"fmt"
@@ -89,38 +89,44 @@ func (ss *schemas) getByName(n string) (*schema, error) {
 	return nil, errors.Errorf("could not find schema with name %s", n)
 }
 
-func TestConfigSchema(t *testing.T) {
-	f, err := os.Open("./config.schema.json")
-	require.NoError(t, err)
-	defer f.Close()
-	sb, err := ioutil.ReadAll(f)
-	require.NoError(t, err)
-
-	// To test refs independently and reduce test case size we replace every "$ref" with "const".
-	// That way refs will not be resolved but we still make sure that they are pointing to the right definition.
-	// Changing a definition will result in just changing test cases for that definition.
-	s := strings.Replace(string(sb), `"$ref":`, `"const":`, -1)
-
-	schemas := []schema{{
-		name: "main",
-		raw: s,
-	}}
-	def := gjson.Get(s, "definitions")
-	if def.Exists() {
-		require.True(t, def.IsObject())
-		def.ForEach(func(key, value gjson.Result) bool {
-			require.Equal(t, gjson.String, key.Type)
-			schemas = append(schemas, schema{
-				name: key.String(),
-				raw:    value.Raw,
-			})
-			return true
-		})
-	}
-
-	RunCases(t, schemas, "./config.schema.test.success", success)
-	RunCases(t, schemas, "./config.schema.test.failure", failure)
+func TestSchemas(t *testing.T) {
+	t.Run("test ./config.schema.json", SchemaTestRunner("../docs/config.schema.json"))
 }
+
+func SchemaTestRunner(spath string) func(*testing.T) {
+	return func(t *testing.T){
+		f, err := os.Open(spath)
+		require.NoError(t, err)
+		defer f.Close()
+		sb, err := ioutil.ReadAll(f)
+		require.NoError(t, err)
+
+		// To test refs independently and reduce test case size we replace every "$ref" with "const".
+		// That way refs will not be resolved but we still make sure that they are pointing to the right definition.
+		// Changing a definition will result in just changing test cases for that definition.
+		s := strings.Replace(string(sb), `"$ref":`, `"const":`, -1)
+
+		schemas := []schema{{
+			name: "main",
+			raw: s,
+		}}
+		def := gjson.Get(s, "definitions")
+		if def.Exists() {
+			require.True(t, def.IsObject())
+			def.ForEach(func(key, value gjson.Result) bool {
+				require.Equal(t, gjson.String, key.Type)
+				schemas = append(schemas, schema{
+					name: key.String(),
+					raw:    value.Raw,
+				})
+				return true
+			})
+		}
+
+		RunCases(t, schemas, "./config.schema.test.success", success)
+		RunCases(t, schemas, "./config.schema.test.failure", failure)
+	}
+}}
 
 func RunCases(t *testing.T, ss schemas, dir string, r result) {
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
