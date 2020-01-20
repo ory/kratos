@@ -2,23 +2,25 @@ package test
 
 import (
 	"fmt"
-	"github.com/ghodss/yaml"
-	"github.com/go-errors/errors"
-	"github.com/ory/gojsonschema"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/tidwall/gjson"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/ghodss/yaml"
+	"github.com/go-errors/errors"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
+
+	"github.com/ory/gojsonschema"
 )
 
 type schema struct {
 	name string
-	raw string
-	s *gojsonschema.Schema
+	raw  string
+	s    *gojsonschema.Schema
 }
 
 type schemas []schema
@@ -106,9 +108,9 @@ func SchemaTestRunner(spath string, sname string) func(*testing.T) {
 		// Changing a definition will result in just changing test cases for that definition.
 		s := strings.Replace(string(sb), `"$ref":`, `"const":`, -1)
 
-		schemas := []schema{{
+		schemas := schemas{{
 			name: "main",
-			raw: s,
+			raw:  s,
 		}}
 		def := gjson.Get(s, "definitions")
 		if def.Exists() {
@@ -117,7 +119,7 @@ func SchemaTestRunner(spath string, sname string) func(*testing.T) {
 				require.Equal(t, gjson.String, key.Type)
 				schemas = append(schemas, schema{
 					name: key.String(),
-					raw:    value.Raw,
+					raw:  value.Raw,
 				})
 				return true
 			})
