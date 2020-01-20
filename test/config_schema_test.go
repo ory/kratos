@@ -90,12 +90,12 @@ func (ss *schemas) getByName(n string) (*schema, error) {
 }
 
 func TestSchemas(t *testing.T) {
-	t.Run("test ./config.schema.json", SchemaTestRunner("../docs/config.schema.json"))
+	t.Run("test ./config.schema.json", SchemaTestRunner("../docs", "config"))
 }
 
-func SchemaTestRunner(spath string) func(*testing.T) {
-	return func(t *testing.T){
-		f, err := os.Open(spath)
+func SchemaTestRunner(spath string, sname string) func(*testing.T) {
+	return func(t *testing.T) {
+		f, err := os.Open(fmt.Sprintf("%s/%s.schema.json", spath, sname))
 		require.NoError(t, err)
 		defer f.Close()
 		sb, err := ioutil.ReadAll(f)
@@ -123,10 +123,10 @@ func SchemaTestRunner(spath string) func(*testing.T) {
 			})
 		}
 
-		RunCases(t, schemas, "./config.schema.test.success", success)
-		RunCases(t, schemas, "./config.schema.test.failure", failure)
+		RunCases(t, schemas, fmt.Sprintf("./%s.schema.test.success", sname), success)
+		RunCases(t, schemas, fmt.Sprintf("./%s.schema.test.failure", sname), failure)
 	}
-}}
+}
 
 func RunCases(t *testing.T, ss schemas, dir string, r result) {
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
@@ -142,7 +142,7 @@ func RunCases(t *testing.T, ss schemas, dir string, r result) {
 		s, err := ss.getByName(sName)
 		require.NoError(t, err)
 
-		t.Run(fmt.Sprintf("case=schema %s test case %s expects %s", sName, tc, r.String()), func(t *testing.T) {
+		t.Run(fmt.Sprintf("case=schema %s test case %s expects %s", sName, tc, r), func(t *testing.T) {
 			err := s.validate(path)
 			if r == success {
 				assert.NoError(t, err)
