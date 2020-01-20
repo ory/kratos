@@ -25,7 +25,7 @@ promptly return to ORY GmbH by mail any copies of ORY Kratos and related documen
 2. DISTRIBUTION
 
 ORY Kratos and the license herein granted shall not be copied, shared, distributed, re-sold, offered for re-sale,
-transferred or sub-licensed in whole or in part except that you may make one copy for arckratos purposes only. For
+transferred or sub-licensed in whole or in part except that you may make one copy for archive purposes only. For
 information about redistribution of ORY Kratos contact ORY GmbH.
 
 3. USER AGREEMENT
