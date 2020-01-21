@@ -336,6 +336,7 @@
               "type": "integer",
               "minimum": 1,
               "maximum": 65535,
+              "examples": [4434],
               "default": 4434
             }
           },
@@ -352,6 +353,7 @@
               "type": "integer",
               "minimum": 1,
               "maximum": 65535,
+              "examples": [4433],
               "default": 4433
             }
           },
