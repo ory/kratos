@@ -15,7 +15,7 @@
           "properties": {
             "default_redirect_url": {
               "type": "string",
-              "format": "url"
+              "format": "uri"
             },
             "allow_user_defined_redirect": {
               "type": "boolean"
@@ -76,19 +76,19 @@
         },
         "issuer_url": {
           "type": "string",
-          "format": "url"
+          "format": "uri"
         },
         "auth_url": {
           "type": "string",
-          "format": "url"
+          "format": "uri"
         },
         "token_url": {
           "type": "string",
-          "format": "url"
+          "format": "uri"
         },
         "schema_url": {
           "type": "string",
-          "format": "url"
+          "format": "uri"
         },
         "scope": {
           "type": "array",
@@ -368,44 +368,44 @@
           "properties": {
             "public": {
               "type": "string",
-              "format": "url"
+              "format": "uri"
             },
             "admin": {
               "type": "string",
-              "format": "url"
+              "format": "uri"
             }
           },
           "additionalProperties": false
         },
         "mfa_ui": {
           "type": "string",
-          "format": "url"
+          "format": "uri"
         },
         "login_ui": {
           "type": "string",
-          "format": "url"
+          "format": "uri"
         },
         "profile_ui": {
           "type": "string",
-          "format": "url"
+          "format": "uri"
         },
         "default_return_to": {
           "type": "string",
-          "format": "url"
+          "format": "uri"
         },
         "registration_ui": {
           "type": "string",
-          "format": "url"
+          "format": "uri"
         },
         "error_ui": {
           "type": "string",
-          "format": "url"
+          "format": "uri"
         },
         "whitelisted_return_to_domains": {
           "type": "array",
           "items": {
             "type": "string",
-            "format": "url"
+            "format": "uri"
           },
           "uniqueItems": true
         }
@@ -453,7 +453,7 @@
           "properties": {
             "default_schema_url": {
               "type": "string",
-              "format": "url"
+              "format": "uri"
             },
             "schemas": {
               "type": "array",
@@ -465,7 +465,7 @@
                   },
                   "url": {
                     "type": "string",
-                    "format": "url"
+                    "format": "uri"
                   }
                 },
                 "not": {
