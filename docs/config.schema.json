@@ -333,7 +333,7 @@
               "default": "0.0.0.0"
             },
             "port": {
-              "type": "number",
+              "type": "integer",
               "minimum": 1,
               "maximum": 65535,
               "default": 4434
@@ -349,7 +349,7 @@
               "default": "0.0.0.0"
             },
             "port": {
-              "type": "number",
+              "type": "integer",
               "minimum": 1,
               "maximum": 65535,
               "default": 4433
@@ -513,23 +513,23 @@
           "type": "object",
           "properties": {
             "memory": {
-              "type": "number",
+              "type": "integer",
               "minimum": 16384
             },
             "iterations": {
-              "type": "number",
+              "type": "integer",
               "minimum": 1
             },
             "parallelism": {
-              "type": "number",
+              "type": "integer",
               "minimum": 1
             },
             "salt_length": {
-              "type": "number",
+              "type": "integer",
               "minimum": 16
             },
             "key_length": {
-              "type": "number",
+              "type": "integer",
               "minimum": 16
             }
           },
