@@ -1,4 +1,4 @@
-package test
+package tests
 
 import (
 	"fmt"
@@ -46,15 +46,9 @@ func (s schema) validate(path string) error {
 		s.s = sx
 	}
 
-	var l gojsonschema.JSONLoader
+	var doc gojsonschema.JSONLoader
 	if strings.HasSuffix(path, "yaml") {
-		f, err := os.Open(path)
-		if err != nil {
-			return err
-		}
-		defer f.Close()
-
-		y, err := ioutil.ReadAll(f)
+		y, err := ioutil.ReadFile(path)
 		if err != nil {
 			return err
 		}
@@ -64,12 +58,12 @@ func (s schema) validate(path string) error {
 			return err
 		}
 
-		l = gojsonschema.NewBytesLoader(j)
+		doc = gojsonschema.NewBytesLoader(j)
 	} else {
-		l = gojsonschema.NewReferenceLoader(fmt.Sprintf("file://./%s", path))
+		doc = gojsonschema.NewReferenceLoader(fmt.Sprintf("file://./%s", path))
 	}
 
-	res, err := s.s.Validate(l)
+	res, err := s.s.Validate(doc)
 	if err != nil {
 		return err
 	}
@@ -92,15 +86,12 @@ func (ss *schemas) getByName(n string) (*schema, error) {
 }
 
 func TestSchemas(t *testing.T) {
-	t.Run("test ./config.schema.json", SchemaTestRunner("../docs", "config"))
+	t.Run("test docs/config.schema.json", SchemaTestRunner("../docs", "config"))
 }
 
 func SchemaTestRunner(spath string, sname string) func(*testing.T) {
 	return func(t *testing.T) {
-		f, err := os.Open(fmt.Sprintf("%s/%s.schema.json", spath, sname))
-		require.NoError(t, err)
-		defer f.Close()
-		sb, err := ioutil.ReadAll(f)
+		sb, err := ioutil.ReadFile(fmt.Sprintf("%s/%s.schema.json", spath, sname))
 		require.NoError(t, err)
 
 		// To test refs independently and reduce test case size we replace every "$ref" with "const".
@@ -125,12 +116,12 @@ func SchemaTestRunner(spath string, sname string) func(*testing.T) {
 			})
 		}
 
-		RunCases(t, schemas, fmt.Sprintf("./%s.schema.test.success", sname), success)
-		RunCases(t, schemas, fmt.Sprintf("./%s.schema.test.failure", sname), failure)
+		RunCases(t, schemas, fmt.Sprintf("./fixtures/%s.schema.test.success", sname), success)
+		RunCases(t, schemas, fmt.Sprintf("./fixtures/%s.schema.test.failure", sname), failure)
 	}
 }
 
-func RunCases(t *testing.T, ss schemas, dir string, r result) {
+func RunCases(t *testing.T, ss schemas, dir string, expected result) {
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		require.NoError(t, err)
 		if info.IsDir() {
@@ -144,9 +135,9 @@ func RunCases(t *testing.T, ss schemas, dir string, r result) {
 		s, err := ss.getByName(sName)
 		require.NoError(t, err)
 
-		t.Run(fmt.Sprintf("case=schema %s test case %s expects %s", sName, tc, r), func(t *testing.T) {
+		t.Run(fmt.Sprintf("case=schema %s test case %s expects %s", sName, tc, expected), func(t *testing.T) {
 			err := s.validate(path)
-			if r == success {
+			if expected == success {
 				assert.NoError(t, err)
 			} else {
 				assert.Error(t, err)
