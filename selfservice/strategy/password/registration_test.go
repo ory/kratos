@@ -30,12 +30,29 @@ import (
 	"github.com/ory/kratos/x"
 )
 
+func checkFormContent(t *testing.T, body []byte, requiredFields ...string) {
+	fieldNameSet(t, body, requiredFields)
+	outdatedFieldsDoNotExist(t, body)
+	formMethodIsPOST(t, body)
+}
+
 // fieldNameSet checks if the fields have the right "name" set.
-func fieldNameSet(t *testing.T, body []byte, fields ...string) {
+func fieldNameSet(t *testing.T, body []byte, fields []string) {
 	for _, f := range fields {
 		fieldid := strings.Replace(f, ".", "\\.", -1) // we need to escape this because otherwise json path will interpret this as a nested object (it is not).
 		assert.Equal(t, gjson.GetBytes(body, fmt.Sprintf("methods.password.config.fields.%s.name", fieldid)).String(), f, "%s", body)
 	}
+}
+
+// checks if some keys are not set, this should be used to catch regression issues
+func outdatedFieldsDoNotExist(t *testing.T, body []byte) {
+	for _, k := range []string{"request"} {
+		assert.Equal(t, false, gjson.GetBytes(body, fmt.Sprintf("methods.password.config.fields.%s", k)).Exists())
+	}
+}
+
+func formMethodIsPOST(t *testing.T, body []byte) {
+	assert.Equal(t, "POST", gjson.GetBytes(body, "methods.password.config.method").String())
 }
 
 func TestRegistration(t *testing.T) {
@@ -77,6 +94,7 @@ func TestRegistration(t *testing.T) {
 						Config: &registration.RequestMethodConfig{
 							RequestMethodConfigurator: password.RequestMethod{
 								HTMLForm: &form.HTMLForm{
+									Method: "POST",
 									Action: "/action",
 									Fields: form.Fields{
 										"password":   {Name: "password", Type: "password", Required: true},
@@ -141,7 +159,7 @@ func TestRegistration(t *testing.T) {
 			assert.Contains(t, res.Request.URL.Path, "signup-ts")
 			assert.Equal(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 			assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
-			fieldNameSet(t, body, "password", "csrf_token", "traits.username", "traits.foobar")
+			checkFormContent(t, body, "password", "csrf_token", "traits.username", "traits.foobar")
 			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.password.errors.0").String(), "data breaches and must no longer be used.", "%s", body)
 		})
 
@@ -154,7 +172,7 @@ func TestRegistration(t *testing.T) {
 			assert.Contains(t, res.Request.URL.Path, "signup-ts")
 			assert.Equal(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 			assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
-			fieldNameSet(t, body, "password", "csrf_token", "traits.username", "traits.foobar")
+			checkFormContent(t, body, "password", "csrf_token", "traits.username", "traits.foobar")
 			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.traits\\.foobar.errors.0").String(), "foobar is required", "%s", body)
 		})
 
@@ -222,6 +240,7 @@ func TestRegistration(t *testing.T) {
 						Config: &registration.RequestMethodConfig{
 							RequestMethodConfigurator: &password.RequestMethod{
 								HTMLForm: &form.HTMLForm{
+									Method: "POST",
 									Action: "/action",
 									Errors: []form.Error{{Message: "some error"}},
 									Fields: form.Fields{
@@ -246,7 +265,7 @@ func TestRegistration(t *testing.T) {
 			assert.Contains(t, res.Request.URL.Path, "signup-ts")
 			assert.Equal(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 			assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
-			fieldNameSet(t, body, "password", "csrf_token", "traits.username")
+			checkFormContent(t, body, "password", "csrf_token", "traits.username")
 
 			assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.traits\\.foo.value"), "%s", body)
 			assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.traits\\.foo.error"))

@@ -10,6 +10,7 @@ require (
 	github.com/cenkalti/backoff v2.1.1+incompatible
 	github.com/coreos/go-oidc v2.1.0+incompatible
 	github.com/fsnotify/fsnotify v1.4.7
+	github.com/ghodss/yaml v1.0.0
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/errors v0.19.2
 	github.com/go-openapi/runtime v0.19.5
