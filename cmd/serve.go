@@ -15,9 +15,10 @@
 package cmd
 
 import (
-	"github.com/ory/x/flagx"
 	"os"
 	"strconv"
+
+	"github.com/ory/x/flagx"
 
 	"github.com/spf13/cobra"
 

@@ -68,14 +68,7 @@ func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Reques
 				}
 			}
 
-			method.Config.SetField("request", form.Field{
-				Name:     "request",
-				Type:     "hidden",
-				Required: true,
-				Value:    r.PostForm.Get("request"),
-			})
 			method.Config.SetCSRF(s.cg(r))
-
 			rr.Methods[identity.CredentialsTypePassword] = method
 		}
 	}

@@ -24,8 +24,8 @@ import (
 )
 
 type ViperProvider struct {
-	l  logrus.FieldLogger
-	ss [][]byte
+	l   logrus.FieldLogger
+	ss  [][]byte
 	dev bool
 }
 
@@ -74,7 +74,7 @@ const (
 
 func NewViperProvider(l logrus.FieldLogger, dev bool) *ViperProvider {
 	return &ViperProvider{
-		l: l,
+		l:   l,
 		dev: dev,
 	}
 }

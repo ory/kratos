@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// Fields contains multiple fields asdfasdf
+// Fields contains multiple fields
 //
 // swagger:model formFields
 type Fields map[string]Field
@@ -15,18 +15,12 @@ type Fields map[string]Field
 // swagger:model formField
 type Field struct {
 	// Name is the equivalent of <input name="{{.Name}}">
-	//
-	// Extensions:
-	// ---
-	// x-go-name: Asdffsdafsad
-	// x-go-asdffasd: Asdffsdafsad
-	// ---
 	Name string `json:"name"`
-	// Name is the equivalent of <input type="{{.Type}}">
+	// Type is the equivalent of <input type="{{.Type}}">
 	Type string `json:"type,omitempty"`
-	// Name is the equivalent of <input required="{{.Required}}">
+	// Required is the equivalent of <input required="{{.Required}}">
 	Required bool `json:"required,omitempty"`
-	// Name is the equivalent of <input value="{{.Value}}">
+	// Value is the equivalent of <input value="{{.Value}}">
 	Value interface{} `json:"value,omitempty" faker:"name"`
 	// Errors contains all validation errors this particular field has caused.
 	Errors []Error `json:"errors,omitempty"`
