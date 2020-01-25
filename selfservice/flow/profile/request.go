@@ -80,7 +80,7 @@ func NewRequest(exp time.Duration, r *http.Request, s *session.Session) *Request
 		RequestURL: source.String(),
 		IdentityID: s.Identity.ID,
 		Identity:   s.Identity,
-		Form:       new(form.HTMLForm),
+		Form:       form.NewHTMLForm(""),
 	}
 }
 

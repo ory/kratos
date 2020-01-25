@@ -1,0 +1,88 @@
+# This is an example goreleaser.yaml file with some sane defaults.
+# Make sure to check the documentation at http://goreleaser.com
+project_name: kratos
+
+env:
+  - GO111MODULE=on
+
+before:
+  hooks:
+    - go mod download
+
+builds:
+  -
+    id: kratos
+    flags:
+      - -a
+    ldflags:
+      - -s -w -X github.com/ory/kratos/cmd.Version={{.Env.RELEASE_NAME}} -X github.com/ory/kratos/cmd.Commit={{.FullCommit}} -X github.com/ory/kratos/cmd.Date={{.Date}}
+    binary: kratos
+    env:
+      - CGO_ENABLED=1
+    goarch:
+      - amd64
+      - 386
+      - arm
+      - arm64
+    goarm:
+      - 5
+      - 6
+      - 7
+    goos:
+      - freebsd
+      - linux
+      - windows
+      - darwin
+
+archives:
+  - builds:
+      - kratos
+    id: kratos-archive
+    replacements:
+      darwin: macOS
+      linux: Linux
+      windows: Windows
+      386: 32-bit
+      amd64: 64-bit
+    format_overrides:
+      - goos: windows
+        format: zip
+
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+brews:
+  - github:
+      owner: ory
+      name: homebrew-kratos
+    ids:
+    - kratos-archive
+    homepage:  https://www.ory.sh
+    commit_author:
+      name: ory
+      email: hi@ory.sh
+
+scoop:
+  bucket:
+    owner: ory
+    name: scoop-kratos
+  homepage:  https://www.ory.sh
+  commit_author:
+    name: ory
+    email: hi@ory.sh
+
+dockers:
+  - dockerfile: Dockerfile
+    binaries:
+      - kratos
+    image_templates:
+      - "oryd/kratos:v{{ .Major }}"
+      - "oryd/kratos:v{{ .Major }}.{{ .Minor }}"
+      - "oryd/kratos:v{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
+      - "oryd/kratos:{{ .Env.DOCKER_SHORT_TAG }}"
+      - "oryd/kratos:latest"
+
+release:
+  prerelease: auto
+  name_template: "{{.Env.RELEASE_NAME}}"
