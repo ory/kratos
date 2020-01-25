@@ -11,7 +11,6 @@ require (
 	github.com/coreos/go-oidc v2.1.0+incompatible
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/ghodss/yaml v1.0.0
-	github.com/go-bindata/go-bindata v3.1.2+incompatible // indirect
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/errors v0.19.2
 	github.com/go-openapi/runtime v0.19.5
@@ -56,7 +55,7 @@ require (
 	github.com/ory/graceful v0.1.1
 	github.com/ory/herodot v0.6.3
 	github.com/ory/viper v1.5.6
-	gogithub.com/ory/x v0.0.91
+	github.com/ory/x v0.0.91
 	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
