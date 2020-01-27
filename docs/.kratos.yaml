@@ -78,7 +78,6 @@ selfservice:
             default_redirect_url: http://test.kratos.ory.sh:4000/
             allow_user_defined_redirect: true
       oidc:
-        - run: revoke_active_sessions
         - run: session
         - run: redirect
           config:
@@ -93,10 +92,10 @@ selfservice:
           allow_user_defined_redirect: false
     after:
       password:
-        - run: session
+        - run: send_activation_email
         - run: redirect
           config:
-            default_redirect_url: http://test.kratos.ory.sh:4000/
+            default_redirect_url: http://test.kratos.ory.sh:4000/please-check-your-email
             allow_user_defined_redirect: true
       oidc:
         - run: session

@@ -30,7 +30,7 @@ services:
       - intranet
 
   kratos-selfservice-ui-node:
-    image: oryd/kratos-selfservice-ui-node:v0.0.25-alpha.1
+    image: oryd/kratos-selfservice-ui-node:v0.0.26-alpha.1
     ports:
       - "4435:4435"
     environment:

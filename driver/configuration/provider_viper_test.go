@@ -94,7 +94,7 @@ func TestViperProvider(t *testing.T) {
 
 			t.Run("hook=before", func(t *testing.T) {
 				hook := p.SelfServiceRegistrationBeforeHooks()[0]
-				assert.EqualValues(t, "redirect", hook.Run)
+				assert.EqualValues(t, "redirect", hook.Job)
 				assert.JSONEq(t, `{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`, string(hook.Config))
 			})
 
@@ -115,10 +115,10 @@ func TestViperProvider(t *testing.T) {
 					hooks := p.SelfServiceRegistrationAfterHooks(tc.strategy)
 
 					hook := hooks[0]
-					assert.EqualValues(t, "session", hook.Run)
+					assert.EqualValues(t, "session", hook.Job)
 
 					hook = hooks[1]
-					assert.EqualValues(t, "redirect", hook.Run)
+					assert.EqualValues(t, "redirect", hook.Job)
 					assert.JSONEq(t, tc.redirectConfig, string(hook.Config))
 				})
 			}
@@ -130,7 +130,7 @@ func TestViperProvider(t *testing.T) {
 
 			t.Run("hook=before", func(t *testing.T) {
 				hook := p.SelfServiceLoginBeforeHooks()[0]
-				assert.EqualValues(t, "redirect", hook.Run)
+				assert.EqualValues(t, "redirect", hook.Job)
 				assert.JSONEq(t, `{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`, string(hook.Config))
 			})
 
@@ -151,13 +151,13 @@ func TestViperProvider(t *testing.T) {
 					hooks := p.SelfServiceLoginAfterHooks(tc.strategy)
 
 					hook := hooks[0]
-					assert.EqualValues(t, "revoke_active_sessions", hook.Run)
+					assert.EqualValues(t, "revoke_active_sessions", hook.Job)
 
 					hook = hooks[1]
-					assert.EqualValues(t, "session", hook.Run)
+					assert.EqualValues(t, "session", hook.Job)
 
 					hook = hooks[2]
-					assert.EqualValues(t, "redirect", hook.Run)
+					assert.EqualValues(t, "redirect", hook.Job)
 					assert.JSONEq(t, tc.redirectConfig, string(hook.Config))
 				})
 			}

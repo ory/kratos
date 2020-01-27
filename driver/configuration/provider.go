@@ -17,7 +17,7 @@ type HasherArgon2Config struct {
 }
 
 type SelfServiceHook struct {
-	Run    string          `json:"run"`
+	Job    string          `json:"job"`
 	Config json.RawMessage `json:"config"`
 }
 
