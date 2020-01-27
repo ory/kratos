@@ -30,7 +30,7 @@ services:
       - intranet
 
   kratos-selfservice-ui-node:
-    image: oryd/kratos-selfservice-ui-node:v0.0.26-alpha.1
+    image: oryd/kratos-selfservice-ui-node:latest
     ports:
       - "4435:4435"
     environment:
@@ -42,7 +42,9 @@ services:
       - intranet
 
   oathkeeper:
-    image: oryd/oathkeeper:v0.35.0-alpha.1
+    image: oryd/oathkeeper:v0.35.5-beta.1
+    depends_on:
+      - kratos
     ports:
       - "4455:4455"
       - "4456:4456"
@@ -62,7 +64,6 @@ services:
   kratos:
     depends_on:
       - kratos-migrate
-      - kratos-selfservice-ui-node
     build:
       context: .
       dockerfile: Dockerfile-build
