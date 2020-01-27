@@ -87,7 +87,7 @@ func TestRequestPersister(p interface {
 			assert.EqualValues(t, expected.RequestURL, actual.RequestURL)
 			assert.EqualValues(t, expected.Identity.ID, actual.Identity.ID)
 			assert.EqualValues(t, expected.Identity.Traits, actual.Identity.Traits)
-			assert.EqualValues(t, expected.Identity.TraitsSchemaURL, actual.Identity.TraitsSchemaURL)
+			assert.EqualValues(t, expected.Identity.TraitsSchemaID, actual.Identity.TraitsSchemaID)
 			assert.Empty(t, actual.Identity.Credentials)
 		})
 

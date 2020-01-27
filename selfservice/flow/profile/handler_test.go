@@ -26,9 +26,9 @@ import (
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/sdk/go/kratos/client"
-	"github.com/ory/kratos/sdk/go/kratos/client/public"
-	"github.com/ory/kratos/sdk/go/kratos/models"
+	"github.com/ory/kratos/internal/httpclient/client"
+	"github.com/ory/kratos/internal/httpclient/client/public"
+	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow/profile"
 	"github.com/ory/kratos/selfservice/form"
@@ -73,14 +73,16 @@ func TestUpdateProfile(t *testing.T) {
 	viper.Set(configuration.ViperKeyURLsError, errTs.URL)
 	viper.Set(configuration.ViperKeyURLsProfile, ui.URL+"/profile")
 	viper.Set(configuration.ViperKeyURLsLogin, ui.URL+"/login")
+	// set this intermediate because kratos needs some valid url for CRUDE operations
+	viper.Set(configuration.ViperKeyURLsSelfPublic, "http://example.com")
 
 	primaryIdentity := &identity.Identity{
 		ID: x.NewUUID(),
 		Credentials: map[identity.CredentialsType]identity.Credentials{
 			"password": {Type: "password", Identifiers: []string{"john@doe.com"}, Config: json.RawMessage(`{"hashed_password":"foo"}`)},
 		},
-		TraitsSchemaURL: "file://./stub/identity.schema.json",
-		Traits:          identity.Traits(`{"email":"john@doe.com","stringy":"foobar","booly":false,"numby":2.5}`),
+		Traits:         identity.Traits(`{"email":"john@doe.com","stringy":"foobar","booly":false,"numby":2.5}`),
+		TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
 	}
 
 	kratos := func() *httptest.Server {
@@ -89,7 +91,7 @@ func TestUpdateProfile(t *testing.T) {
 		route, _ := session.MockSessionCreateHandlerWithIdentity(t, reg, primaryIdentity)
 		router.GET("/setSession", route)
 
-		other, _ := session.MockSessionCreateHandlerWithIdentity(t, reg, &identity.Identity{ID: x.NewUUID(), TraitsSchemaURL: "file://./stub/identity.schema.json", Traits: identity.Traits(`{}`)})
+		other, _ := session.MockSessionCreateHandlerWithIdentity(t, reg, &identity.Identity{ID: x.NewUUID(), Traits: identity.Traits(`{}`)})
 		router.GET("/setSession/other-user", other)
 		n := negroni.Classic()
 		n.UseHandler(router)
@@ -200,7 +202,7 @@ func TestUpdateProfile(t *testing.T) {
 		assert.NotEmpty(t, pr.Payload.Identity)
 		assert.Equal(t, primaryIdentity.ID.String(), string(pr.Payload.Identity.ID))
 		assert.JSONEq(t, string(primaryIdentity.Traits), x.MustEncodeJSON(t, pr.Payload.Identity.Traits))
-		assert.Equal(t, primaryIdentity.TraitsSchemaURL, pr.Payload.Identity.TraitsSchemaURL)
+		assert.Equal(t, primaryIdentity.TraitsSchemaID, pr.Payload.Identity.TraitsSchemaID)
 		assert.Equal(t, kratos.URL+profile.BrowserProfilePath, pr.Payload.RequestURL)
 
 		require.NotEmpty(t, pr.Payload.Form.Fields[form.CSRFTokenName])

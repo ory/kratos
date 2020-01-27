@@ -35,7 +35,6 @@ func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *
 		if method, ok := rr.Methods[identity.CredentialsTypePassword]; ok {
 			method.Config.Reset()
 			method.Config.SetValue("identifier", r.PostForm.Get("identifier"))
-			method.Config.SetValue("request", r.PostForm.Get("request"))
 			method.Config.SetCSRF(s.cg(r))
 			rr.Methods[identity.CredentialsTypePassword] = method
 		}
@@ -118,6 +117,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Request) error
 
 	f := &form.HTMLForm{
 		Action: action.String(),
+		Method: "POST",
 		Fields: form.Fields{
 			"identifier": {
 				Name:     "identifier",

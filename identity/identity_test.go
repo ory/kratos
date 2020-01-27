@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/ory/kratos/driver/configuration"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNewIdentity(t *testing.T) {
-	i := NewIdentity("")
+	i := NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
 	assert.NotEmpty(t, i.ID)
 	// assert.NotEmpty(t, i.Metadata)
 	assert.NotEmpty(t, i.Traits)
@@ -17,7 +19,7 @@ func TestNewIdentity(t *testing.T) {
 }
 
 func TestCopyCredentials(t *testing.T) {
-	i := NewIdentity("")
+	i := NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
 	i.Credentials = map[CredentialsType]Credentials{
 		"foo": {
 			Type:        "foo",

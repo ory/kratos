@@ -44,6 +44,7 @@ func nlr(exp time.Duration) *login.Request {
 				Method: identity.CredentialsTypePassword,
 				Config: &login.RequestMethodConfig{
 					RequestMethodConfigurator: &form.HTMLForm{
+						Method: "POST",
 						Action: "/action",
 						Fields: form.Fields{
 							"identifier": {
@@ -62,12 +63,6 @@ func nlr(exp time.Duration) *login.Request {
 								Required: true,
 								Value:    "anti-rf-token",
 							},
-							"request": {
-								Name:     "request",
-								Type:     "hidden",
-								Required: true,
-								Value:    id.String(),
-							},
 						},
 					},
 				},
@@ -84,12 +79,9 @@ type loginStrategyDependencies interface {
 
 func TestLogin(t *testing.T) {
 	var ensureFieldsExist = func(t *testing.T, body []byte) {
-		for _, k := range []string{"identifier",
+		checkFormContent(t, body, "identifier",
 			"password",
-			"csrf_token",
-		} {
-			assert.Equal(t, k, gjson.GetBytes(body, fmt.Sprintf("methods.password.config.fields.%s.name", k)).String())
-		}
+			"csrf_token")
 	}
 
 	type testCase struct {
@@ -304,6 +296,7 @@ func TestLogin(t *testing.T) {
 						Config: &login.RequestMethodConfig{
 							RequestMethodConfigurator: &password.RequestMethod{
 								HTMLForm: &form.HTMLForm{
+									Method: "POST",
 									Action: "/action",
 									Errors: []form.Error{{Message: "some error"}},
 									Fields: form.Fields{

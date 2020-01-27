@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ory/kratos/driver/configuration"
+
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
@@ -35,10 +37,13 @@ type (
 		// Credentials represents all credentials that can be used for authenticating this identity.
 		Credentials map[CredentialsType]Credentials `json:"-" faker:"-" db:"-"`
 
-		// TraitsSchemaURL is the JSON Schema to be used for validating the identity's traits.
+		// TraitsSchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
+		TraitsSchemaID string `json:"traits_schema_id" faker:"-" db:"traits_schema_id"`
+
+		// TraitsSchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.
 		//
-		// format: uri
-		TraitsSchemaURL string `json:"traits_schema_url,omitempty" faker:"-" db:"traits_schema_url"`
+		// format: url
+		TraitsSchemaURL string `json:"traits_schema_url" faker:"-" db:"-"`
 
 		// Traits represent an identity's traits. The identity is able to create, modify, and delete traits
 		// in a self-service manner. The input will always be validated against the JSON Schema defined
@@ -160,12 +165,16 @@ func (i *Identity) CopyWithoutCredentials() *Identity {
 	return &ii
 }
 
-func NewIdentity(traitsSchemaURL string) *Identity {
+func NewIdentity(traitsSchemaID string) *Identity {
+	if traitsSchemaID == "" {
+		traitsSchemaID = configuration.DefaultIdentityTraitsSchemaID
+	}
+
 	return &Identity{
-		ID:              x.NewUUID(),
-		Credentials:     map[CredentialsType]Credentials{},
-		Traits:          Traits(json.RawMessage("{}")),
-		TraitsSchemaURL: traitsSchemaURL,
-		l:               new(sync.RWMutex),
+		ID:             x.NewUUID(),
+		Credentials:    map[CredentialsType]Credentials{},
+		Traits:         Traits(json.RawMessage("{}")),
+		TraitsSchemaID: traitsSchemaID,
+		l:              new(sync.RWMutex),
 	}
 }

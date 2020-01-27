@@ -1,8 +1,10 @@
-package configuration
+package configuration_test
 
 import (
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/driver/configuration"
 
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -32,7 +34,7 @@ func TestViperProvider(t *testing.T) {
 		}
 
 		require.NoError(t, err, "%+v", errorsx.Cause(err))
-		p := NewViperProvider(logrus.New())
+		p := configuration.NewViperProvider(logrus.New(), true)
 
 		t.Run("group=urls", func(t *testing.T) {
 			assert.Equal(t, "http://test.kratos.ory.sh/login", p.LoginURL().String())
@@ -56,6 +58,18 @@ func TestViperProvider(t *testing.T) {
 
 		t.Run("group=identity", func(t *testing.T) {
 			assert.Equal(t, "http://test.kratos.ory.sh/default-identity.schema.json", p.DefaultIdentityTraitsSchemaURL().String())
+
+			ss := p.IdentityTraitsSchemas()
+			assert.Equal(t, 2, len(ss))
+
+			assert.Contains(t, ss, configuration.SchemaConfig{
+				ID:  "default",
+				URL: "http://test.kratos.ory.sh/default-identity.schema.json",
+			})
+			assert.Contains(t, ss, configuration.SchemaConfig{
+				ID:  "other",
+				URL: "http://test.kratos.ory.sh/other-identity.schema.json",
+			})
 		})
 
 		t.Run("group=serve", func(t *testing.T) {
@@ -164,7 +178,7 @@ func TestViperProvider(t *testing.T) {
 		})
 
 		t.Run("group=hashers", func(t *testing.T) {
-			assert.Equal(t, &HasherArgon2Config{
+			assert.Equal(t, &configuration.HasherArgon2Config{
 				Memory:      1048576,
 				Iterations:  2,
 				Parallelism: 4,

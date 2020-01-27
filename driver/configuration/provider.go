@@ -26,6 +26,13 @@ type SelfServiceStrategy struct {
 	Config  json.RawMessage `json:"config"`
 }
 
+type SchemaConfig struct {
+	ID  string `json:"id"`
+	URL string `json:"url"`
+}
+
+const DefaultIdentityTraitsSchemaID = "default"
+
 type Provider interface {
 	AdminListenOn() string
 	PublicListenOn() string
@@ -60,6 +67,7 @@ type Provider interface {
 	CourierTemplatesRoot() string
 
 	DefaultIdentityTraitsSchemaURL() *url.URL
+	IdentityTraitsSchemas() []SchemaConfig
 
 	WhitelistedReturnToDomains() []url.URL
 
@@ -70,4 +78,6 @@ type Provider interface {
 	TracingServiceName() string
 	TracingProvider() string
 	TracingJaegerConfig() *tracing.JaegerConfig
+
+	IsInsecureDevMode() bool
 }

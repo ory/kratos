@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/ory/kratos/driver/configuration"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"github.com/tidwall/sjson"
@@ -66,14 +68,7 @@ func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Reques
 				}
 			}
 
-			method.Config.SetField("request", form.Field{
-				Name:     "request",
-				Type:     "hidden",
-				Required: true,
-				Value:    r.PostForm.Get("request"),
-			})
 			method.Config.SetCSRF(s.cg(r))
-
 			rr.Methods[identity.CredentialsTypePassword] = method
 		}
 	}
@@ -151,7 +146,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	i := identity.NewIdentity(s.c.DefaultIdentityTraitsSchemaURL().String())
+	i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
 	i.Traits = identity.Traits(p.Traits)
 	i.SetCredentials(s.ID(), identity.Credentials{
 		Type:        s.ID(),

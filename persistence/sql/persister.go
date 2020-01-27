@@ -7,6 +7,8 @@ import (
 	"github.com/gobuffalo/pop"
 	"github.com/pkg/errors"
 
+	"github.com/ory/kratos/schema"
+
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/persistence"
@@ -18,6 +20,7 @@ var migrations = packr.NewBox("../../contrib/sql/migrations")
 
 type (
 	persisterDependencies interface {
+		IdentityTraitsSchemas() schema.Schemas
 		identity.ValidationProvider
 		x.LoggingProvider
 	}

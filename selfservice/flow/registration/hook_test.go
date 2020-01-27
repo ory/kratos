@@ -96,10 +96,11 @@ func TestRegistrationExecutor(t *testing.T) {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				conf, reg := internal.NewRegistryDefault(t)
 				viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://stub/registration.schema.json")
+				viper.Set(configuration.ViperKeyURLsSelfPublic, "http://example.com")
 
 				var i identity.Identity
 				require.NoError(t, faker.FakeData(&i))
-				i.TraitsSchemaURL = ""
+				i.TraitsSchemaID = ""
 				i.Traits = identity.Traits("{}")
 
 				e := registration.NewHookExecutor(reg, conf)

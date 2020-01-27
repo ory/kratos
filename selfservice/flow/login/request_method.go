@@ -75,7 +75,7 @@ func (c *RequestMethodConfig) Value() (driver.Value, error) {
 }
 
 func (c *RequestMethodConfig) UnmarshalJSON(data []byte) error {
-	c.RequestMethodConfigurator = new(form.HTMLForm)
+	c.RequestMethodConfigurator = form.NewHTMLForm("")
 	return json.Unmarshal(data, c.RequestMethodConfigurator)
 }
 

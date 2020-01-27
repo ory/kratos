@@ -7,9 +7,10 @@ replace github.com/santhosh-tekuri/jsonschema/v2 => github.com/ory/jsonschema/v2
 require (
 	github.com/Masterminds/sprig/v3 v3.0.0
 	github.com/bxcodec/faker v2.0.1+incompatible
-	github.com/cenkalti/backoff v2.1.1+incompatible
+	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/coreos/go-oidc v2.1.0+incompatible
 	github.com/fsnotify/fsnotify v1.4.7
+	github.com/ghodss/yaml v1.0.0
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/errors v0.19.2
 	github.com/go-openapi/runtime v0.19.5
@@ -46,7 +47,7 @@ require (
 	github.com/leodido/go-urn v1.1.0 // indirect
 	github.com/markbates/pkger v0.12.8
 	github.com/mattn/go-sqlite3 v1.13.0 // indirect
-	github.com/mattn/goveralls v0.0.4
+	github.com/mattn/goveralls v0.0.5
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/ory/go-acc v0.1.0
@@ -54,30 +55,32 @@ require (
 	github.com/ory/graceful v0.1.1
 	github.com/ory/herodot v0.6.3
 	github.com/ory/viper v1.5.6
-	github.com/ory/x v0.0.86
+	github.com/ory/x v0.0.91
 	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
-	github.com/pkg/errors v0.8.1
+	github.com/pkg/errors v0.9.1
 	github.com/rogpeppe/go-internal v1.5.0 // indirect
 	github.com/santhosh-tekuri/jsonschema/v2 v2.1.0
 	github.com/shurcooL/go v0.0.0-20180423040247-9e1955d9fb6e
 	github.com/sirupsen/logrus v1.4.2
+	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/spf13/viper v1.5.0
+	github.com/spf13/viper v1.6.2
 	github.com/sqs/goreturns v0.0.0-20181028201513-538ac6014518
 	github.com/stretchr/testify v1.4.0
 	github.com/tidwall/gjson v1.3.2
 	github.com/tidwall/sjson v1.0.4
 	github.com/urfave/negroni v1.0.0
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
-	golang.org/x/crypto v0.0.0-20191122220453-ac88ee75c92c
-	golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553 // indirect
+	golang.org/x/crypto v0.0.0-20200117160349-530e935923ad
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
-	golang.org/x/sys v0.0.0-20191128015809-6d18c012aee9 // indirect
-	golang.org/x/tools v0.0.0-20191105231337-689d0f08e67a
+	golang.org/x/sys v0.0.0-20200124204421-9fbb57f87de9 // indirect
+	golang.org/x/tools v0.0.0-20200124220429-8fe064f891f2
 	google.golang.org/appengine v1.6.5 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.28.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
+	gopkg.in/ini.v1 v1.51.1 // indirect
+	gopkg.in/yaml.v2 v2.2.8 // indirect
 )
