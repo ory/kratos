@@ -7,7 +7,7 @@
     "selfServiceRedirectHook": {
       "type": "object",
       "properties": {
-        "run": {
+        "job": {
           "const": "redirect"
         },
         "config": {
@@ -29,32 +29,32 @@
       },
       "additionalItems": false,
       "required": [
-        "run",
+        "job",
         "config"
       ]
     },
     "selfServiceSessionRevokerHook": {
       "type": "object",
       "properties": {
-        "run": {
+        "job": {
           "const": "revoke_active_sessions"
         }
       },
       "additionalItems": false,
       "required": [
-        "run"
+        "job"
       ]
     },
     "selfServiceSessionIssuerHook": {
       "type": "object",
       "properties": {
-        "run": {
+        "job": {
           "const": "session"
         }
       },
       "additionalItems": false,
       "required": [
-        "run"
+        "job"
       ]
     },
     "selfServiceOIDCProvider": {

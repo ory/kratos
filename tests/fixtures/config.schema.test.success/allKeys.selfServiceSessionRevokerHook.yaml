@@ -1,1 +1,1 @@
-run: revoke_active_sessions
+job: revoke_active_sessions

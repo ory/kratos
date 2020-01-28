@@ -50,7 +50,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 func (h *Handler) fromCookie(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), w, r)
 	if err != nil {
-		h.r.Writer().WriteError(w, r, err)
+		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized.WithReasonf("No valid session cookie found.").WithDebugf("%+v", err))
 		return
 	}
 

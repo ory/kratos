@@ -1,9 +1,12 @@
 package client
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -44,7 +47,24 @@ func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string) {
 		d = driver.MustNewDefaultDriver(logrusx.New(), "", "", "", true)
 	}
 
-	err := d.Registry().Persister().MigrateUp(context.Background())
+	var plan bytes.Buffer
+	err := d.Registry().Persister().MigrationStatus(context.Background(), &plan)
+	cmdx.Must(err, "An error occurred planning migrations: %s", err)
+
+	fmt.Println("The following migration is planned:")
+	fmt.Println("")
+	fmt.Printf("%s", plan.String())
+
+	if !flagx.MustGetBool(cmd, "yes") {
+		fmt.Println("")
+		fmt.Println("To skip the next question use flag --yes (at your own risk).")
+		if !askForConfirmation("Do you wish to execute this migration plan?") {
+			fmt.Println("Migration aborted.")
+			return
+		}
+	}
+
+	err = d.Registry().Persister().MigrateUp(context.Background())
 	cmdx.Must(err, "An error occurred while connecting to SQL: %s", err)
 	fmt.Println("Successfully applied SQL migrations!")
 
@@ -78,20 +98,20 @@ func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string) {
 	// fmt.Printf("Successfully applied %d SQL migrations!\n", n)
 }
 
-// func askForConfirmation(s string) bool {
-// 	reader := bufio.NewReader(os.Stdin)
-//
-// 	for {
-// 		fmt.Printf("%s [y/n]: ", s)
-//
-// 		response, err := reader.ReadString('\n')
-// 		cmdx.Must(err, "%s", err)
-//
-// 		response = strings.ToLower(strings.TrimSpace(response))
-// 		if response == "y" || response == "yes" {
-// 			return true
-// 		} else if response == "n" || response == "no" {
-// 			return false
-// 		}
-// 	}
-// }
+func askForConfirmation(s string) bool {
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Printf("%s [y/n]: ", s)
+
+		response, err := reader.ReadString('\n')
+		cmdx.Must(err, "%s", err)
+
+		response = strings.ToLower(strings.TrimSpace(response))
+		if response == "y" || response == "yes" {
+			return true
+		} else if response == "n" || response == "no" {
+			return false
+		}
+	}
+}

@@ -15,7 +15,7 @@ func (m *RegistryDefault) getHooks(credentialsType identity.CredentialsType, con
 	var i []interface{}
 
 	for _, h := range configs {
-		switch h.Run {
+		switch h.Job {
 		case hook.KeySessionIssuer:
 			i = append(
 				i,
@@ -35,7 +35,7 @@ func (m *RegistryDefault) getHooks(credentialsType identity.CredentialsType, con
 			if err := json.NewDecoder(bytes.NewBuffer(h.Config)).Decode(&rc); err != nil {
 				m.l.WithError(err).
 					WithField("type", credentialsType).
-					WithField("hook", h.Run).
+					WithField("hook", h.Job).
 					WithField("config", fmt.Sprintf("%s", h.Config)).
 					Errorf("The after hook is misconfigured.")
 				continue
@@ -45,7 +45,7 @@ func (m *RegistryDefault) getHooks(credentialsType identity.CredentialsType, con
 			if err != nil {
 				m.l.WithError(err).
 					WithField("type", credentialsType).
-					WithField("hook", h.Run).
+					WithField("hook", h.Job).
 					WithField("config", fmt.Sprintf("%s", h.Config)).
 					Errorf("The after hook is misconfigured.")
 				continue
@@ -66,7 +66,7 @@ func (m *RegistryDefault) getHooks(credentialsType identity.CredentialsType, con
 		default:
 			m.l.
 				WithField("type", credentialsType).
-				WithField("hook", h.Run).
+				WithField("hook", h.Job).
 				Errorf("A unknown hook was requested and can therefore not be used")
 		}
 	}

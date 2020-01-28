@@ -11,9 +11,9 @@ selfservice:
     after:
       password:
         -
-          run: session
+          job: session
         -
-          run: redirect
+          job: redirect
           config:
             default_redirect_url: http://127.0.0.1:4455/
             allow_user_defined_redirect: true
@@ -23,9 +23,9 @@ selfservice:
     after:
       password:
         -
-          run: session
+          job: session
         -
-          run: redirect
+          job: redirect
           config:
             default_redirect_url: http://127.0.0.1:4455/
             allow_user_defined_redirect: true
@@ -48,7 +48,8 @@ urls:
     public: http://127.0.0.1:4455/.ory/kratos/public/
     admin: http://kratos:4434/
   default_return_to: http://127.0.0.1:4455/
-  whitelisted_return_to_domains: http://127.0.0.1:4455/
+  whitelisted_return_to_domains:
+    - http://127.0.0.1:4455
 
 hashers:
   argon2:

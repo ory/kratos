@@ -4,6 +4,7 @@ project_name: kratos
 
 env:
   - GO111MODULE=on
+  - CGO_ENABLED=1
 
 before:
   hooks:
@@ -25,8 +26,6 @@ builds:
       - arm
       - arm64
     goarm:
-      - 5
-      - 6
       - 7
     goos:
       - freebsd

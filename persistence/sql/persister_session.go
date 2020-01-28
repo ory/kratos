@@ -17,6 +17,9 @@ func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID) (*session.Ses
 	if err := p.c.Eager().Find(&s, sid); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
+	if err := p.injectTraitsSchemaURL(s.Identity); err != nil {
+		return nil, err
+	}
 	return &s, nil
 }
 
