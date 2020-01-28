@@ -539,14 +539,7 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 				}
 			}
 
-			method.Config.SetField("request", form.Field{
-				Name:     "request",
-				Type:     "hidden",
-				Required: true,
-				Value:    r.PostForm.Get("request"),
-			})
 			method.Config.SetCSRF(s.cg(r))
-
 			rr.Methods[s.ID()] = method
 		}
 
