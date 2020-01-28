@@ -336,24 +336,24 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 		return
 	}
 
-	var o CredentialsConfig
+	var o []CredentialsConfig
 	if err := json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&o); err != nil {
 		s.handleError(w, r, a.GetID(), nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error())))
 		return
 	}
 
-	if o.Subject != claims.Subject {
-		s.handleError(w, r, a.GetID(), nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The subjects do not match").WithDebugf("Expected credential subject to match subject from RequestID Token but values are not equal: %s != %s", o.Subject, claims.Subject)))
-		return
-	} else if o.Provider != provider.Config().ID {
-		s.handleError(w, r, a.GetID(), nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The providers do not match").WithDebugf("Expected credential provider to match provider from path but values are not equal: %s != %s", o.Subject, provider.Config().ID)))
-		return
+	for _, c := range o {
+		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
+			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, s.d.PostLoginHooks(identity.CredentialsTypeOIDC), a, i); err != nil {
+				s.handleError(w, r, a.GetID(), nil, err)
+				return
+			}
+			return
+		}
 	}
 
-	if err = s.d.LoginHookExecutor().PostLoginHook(w, r, s.d.PostLoginHooks(identity.CredentialsTypeOIDC), a, i); err != nil {
-		s.handleError(w, r, a.GetID(), nil, err)
-		return
-	}
+	s.handleError(w, r, a.GetID(), nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to find matching OpenID Connect Credentials.").WithDebugf(`Unable to find credentials that match the given provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)))
+	return
 }
 
 func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Request, claims *Claims, provider Provider) {
@@ -423,9 +423,11 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 	}
 
 	var b bytes.Buffer
-	if err := json.NewEncoder(&b).Encode(&CredentialsConfig{
-		Subject:  claims.Subject,
-		Provider: provider.Config().ID,
+	if err := json.NewEncoder(&b).Encode([]CredentialsConfig{
+		{
+			Subject:  claims.Subject,
+			Provider: provider.Config().ID,
+		},
 	}); err != nil {
 		s.handleError(w, r, a.GetID(), traits, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err)))
 		return
