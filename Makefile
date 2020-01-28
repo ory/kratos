@@ -84,10 +84,9 @@ sdk:
 
 quickstart:
 		docker pull oryd/kratos:latest
-		docker pull oryd/kratos-selfservice-ui-node:latest
-		docker-compose -f quickstart.yml up --build
+		docker-compose -f quickstart.yml up --build --force-recreate
 
 quickstart-dev:
 		docker build -f Dockerfile-build -t oryd/kratos:latest .
 		docker pull oryd/kratos-selfservice-ui-node:latest
-		docker-compose -f quickstart.yml up --build
+		docker-compose -f quickstart.yml up --build --force-recreate
