@@ -2,9 +2,10 @@ package sql
 
 import (
 	"context"
+	"io"
 
 	"github.com/gobuffalo/packr"
-	"github.com/gobuffalo/pop"
+	"github.com/gobuffalo/pop/v5"
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/schema"
@@ -41,8 +42,8 @@ func NewPersister(r persisterDependencies, conf configuration.Provider, c *pop.C
 	return &Persister{c: c, mb: m, cf: conf, r: r}, nil
 }
 
-func (p *Persister) MigrationStatus(c context.Context) error {
-	return errors.WithStack(p.mb.Status())
+func (p *Persister) MigrationStatus(c context.Context, w io.Writer) error {
+	return errors.WithStack(p.mb.Status(w))
 }
 
 func (p *Persister) MigrateDown(c context.Context, steps int) error {
