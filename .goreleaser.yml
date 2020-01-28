@@ -4,6 +4,7 @@ project_name: kratos
 
 env:
   - GO111MODULE=on
+  - CGO_ENABLED=1
 
 before:
   hooks:
