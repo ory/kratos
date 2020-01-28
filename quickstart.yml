@@ -40,6 +40,7 @@ services:
       - JWKS_URL=http://oathkeeper:4456/.well-known/jwks.json
     networks:
       - intranet
+    restart: on-failure
 
   oathkeeper:
     image: oryd/oathkeeper:v0.35.5-beta.1

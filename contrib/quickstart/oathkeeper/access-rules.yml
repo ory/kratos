@@ -26,7 +26,7 @@
     preserve_host: true
     url: "http://kratos-selfservice-ui-node:4435"
   match:
-    url: "http://127.0.0.1:4455/<(error|auth/login|auth/registration|index.css)(|/)>"
+    url: "http://127.0.0.1:4455/<(error|auth/login|auth/registration|(.+\\.css))(|/)>"
     methods:
       - GET
   authenticators:
@@ -58,4 +58,3 @@
     - handler: redirect
       config:
         to: http://127.0.0.1:4455/.ory/kratos/public/auth/browser/login
-

@@ -41,10 +41,10 @@ func hookConfig(u string) (m []map[string]interface{}) {
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(&b, `[
 	{
-		"run": "session"
+		"job": "session"
 	},
 	{
-		"run": "redirect",
+		"job": "redirect",
 		"config": {
           "default_redirect_url": "%s",
           "allow_user_defined_redirect": true
