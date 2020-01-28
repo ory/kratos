@@ -62,6 +62,8 @@ func TestPersister(p interface {
 			actual, err := p.GetSession(context.Background(), expected.ID)
 			require.NoError(t, err)
 			assert.Equal(t, expected.Identity.ID, actual.Identity.ID)
+			assert.NotEmpty(t, actual.Identity.TraitsSchemaURL)
+			assert.NotEmpty(t, actual.Identity.TraitsSchemaID)
 			assert.Equal(t, expected.ID, actual.ID)
 			assert.EqualValues(t, expected.ExpiresAt.Unix(), actual.ExpiresAt.Unix())
 			assert.Equal(t, expected.AuthenticatedAt.Unix(), actual.AuthenticatedAt.Unix())
