@@ -142,6 +142,10 @@ workflows:
           filters:
             tags:
               only: /.*/
+      - goreleaser/release-dry:
+          filters:
+            tags:
+              only: /.*/
       - goreleaser/release:
           requires:
             - goreleaser/test
