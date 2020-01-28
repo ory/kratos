@@ -81,3 +81,13 @@ sdk:
 		mkdir -p internal/httpclient
 		$$(go env GOPATH)/bin/swagger generate client -f ./docs/api.swagger.json -t internal/httpclient -A Ory_Hydra
 		make format
+
+quickstart:
+		docker pull oryd/kratos:latest
+		docker pull oryd/kratos-selfservice-ui-node:latest
+		docker-compose -f quickstart.yml up --build
+
+quickstart-dev:
+		docker build -f Dockerfile-build -t oryd/kratos:latest .
+		docker pull oryd/kratos-selfservice-ui-node:latest
+		docker-compose -f quickstart.yml up --build
