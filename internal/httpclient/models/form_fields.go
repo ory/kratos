@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// FormFields FormFields Fields contains multiple fields asdfasdf
+// FormFields Fields contains multiple fields
 // swagger:model formFields
 type FormFields map[string]FormField
 

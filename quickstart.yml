@@ -7,9 +7,7 @@ version: '3.7'
 services:
 
   kratos-migrate:
-    build:
-      context: .
-      dockerfile: Dockerfile-build
+    image: oryd/kratos:latest
     environment:
       - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true
     volumes:
@@ -30,7 +28,7 @@ services:
       - intranet
 
   kratos-selfservice-ui-node:
-    image: oryd/kratos-selfservice-ui-node:v0.0.25-alpha.1
+    image: oryd/kratos-selfservice-ui-node:latest
     ports:
       - "4435:4435"
     environment:
@@ -40,9 +38,12 @@ services:
       - JWKS_URL=http://oathkeeper:4456/.well-known/jwks.json
     networks:
       - intranet
+    restart: on-failure
 
   oathkeeper:
-    image: oryd/oathkeeper:v0.35.0-alpha.1
+    image: oryd/oathkeeper:v0.35.5-beta.1
+    depends_on:
+      - kratos
     ports:
       - "4455:4455"
       - "4456:4456"
@@ -62,10 +63,7 @@ services:
   kratos:
     depends_on:
       - kratos-migrate
-      - kratos-selfservice-ui-node
-    build:
-      context: .
-      dockerfile: Dockerfile-build
+    image: oryd/kratos:latest
     ports:
       - "4433:4433" # public
       - "4434:4434" # admin

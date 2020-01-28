@@ -24,13 +24,13 @@ type FormField struct {
 	// Name is the equivalent of <input name="{{.Name}}">
 	Name string `json:"name,omitempty"`
 
-	// Name is the equivalent of <input required="{{.Required}}">
+	// Required is the equivalent of <input required="{{.Required}}">
 	Required bool `json:"required,omitempty"`
 
-	// Name is the equivalent of <input type="{{.Type}}">
+	// Type is the equivalent of <input type="{{.Type}}">
 	Type string `json:"type,omitempty"`
 
-	// Name is the equivalent of <input value="{{.Value}}">
+	// Value is the equivalent of <input value="{{.Value}}">
 	Value interface{} `json:"value,omitempty"`
 }
 

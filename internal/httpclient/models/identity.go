@@ -13,7 +13,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// Identity Identity identity
+// Identity identity
 // swagger:model Identity
 type Identity struct {
 
@@ -26,10 +26,12 @@ type Identity struct {
 	// Required: true
 	Traits Traits `json:"traits"`
 
-	// TraitsSchemaID is the JSON Schema to be used for validating the identity's traits.
+	// TraitsSchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
 	TraitsSchemaID string `json:"traits_schema_id,omitempty"`
 
-	// TraitsSchemaURL is the kratos public endpoint where the identity's traits schema can be fetched.
+	// TraitsSchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.
+	//
+	// format: url
 	TraitsSchemaURL string `json:"traits_schema_url,omitempty"`
 }
 
