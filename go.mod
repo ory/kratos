@@ -20,15 +20,11 @@ require (
 	github.com/go-playground/locales v0.12.1 // indirect
 	github.com/go-playground/universal-translator v0.16.0 // indirect
 	github.com/go-swagger/go-swagger v0.21.0
-	github.com/gobuffalo/envy v1.8.1 // indirect
-	github.com/gobuffalo/fizz v1.9.5 // indirect
-	github.com/gobuffalo/flect v0.1.7 // indirect
-	github.com/gobuffalo/helpers v0.4.0 // indirect
 	github.com/gobuffalo/httptest v1.0.2
-	github.com/gobuffalo/nulls v0.1.0 // indirect
 	github.com/gobuffalo/packr v1.22.0
 	github.com/gobuffalo/packr/v2 v2.7.1
-	github.com/gobuffalo/pop v4.13.0+incompatible
+	github.com/gobuffalo/pop v4.8.4+incompatible
+	github.com/gobuffalo/pop/v5 v5.0.7
 	github.com/gobuffalo/tags v2.1.7+incompatible // indirect
 	github.com/gobuffalo/uuid v2.0.5+incompatible
 	github.com/gofrs/uuid v3.2.0+incompatible
@@ -46,7 +42,6 @@ require (
 	github.com/justinas/nosurf v0.0.0-20190118163749-6453469bdcc9
 	github.com/leodido/go-urn v1.1.0 // indirect
 	github.com/markbates/pkger v0.12.8
-	github.com/mattn/go-sqlite3 v1.13.0 // indirect
 	github.com/mattn/goveralls v0.0.5
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/ory/dockertest v3.3.5+incompatible

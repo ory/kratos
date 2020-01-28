@@ -8,7 +8,7 @@ import (
 	"github.com/ory/kratos/schema"
 
 	"github.com/cenkalti/backoff"
-	"github.com/gobuffalo/pop"
+	"github.com/gobuffalo/pop/v5"
 	"github.com/gorilla/sessions"
 	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
