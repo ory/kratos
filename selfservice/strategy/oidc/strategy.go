@@ -353,7 +353,6 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 	}
 
 	s.handleError(w, r, a.GetID(), nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to find matching OpenID Connect Credentials.").WithDebugf(`Unable to find credentials that match the given provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)))
-	return
 }
 
 func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Request, claims *Claims, provider Provider) {
