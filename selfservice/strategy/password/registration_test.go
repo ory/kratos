@@ -8,6 +8,7 @@ import (
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -39,15 +40,14 @@ func checkFormContent(t *testing.T, body []byte, requiredFields ...string) {
 // fieldNameSet checks if the fields have the right "name" set.
 func fieldNameSet(t *testing.T, body []byte, fields []string) {
 	for _, f := range fields {
-		fieldid := strings.Replace(f, ".", "\\.", -1) // we need to escape this because otherwise json path will interpret this as a nested object (it is not).
-		assert.Equal(t, gjson.GetBytes(body, fmt.Sprintf("methods.password.config.fields.%s.name", fieldid)).String(), f, "%s", body)
+		assert.Equal(t, f, gjson.GetBytes(body, fmt.Sprintf("methods.password.config.fields.#(name==%s).name", f)).String(), "%s", body)
 	}
 }
 
 // checks if some keys are not set, this should be used to catch regression issues
 func outdatedFieldsDoNotExist(t *testing.T, body []byte) {
 	for _, k := range []string{"request"} {
-		assert.Equal(t, false, gjson.GetBytes(body, fmt.Sprintf("methods.password.config.fields.%s", k)).Exists())
+		assert.Equal(t, false, gjson.GetBytes(body, fmt.Sprintf("methods.password.config.fields.#(name==%s)", k)).Exists())
 	}
 }
 
@@ -97,8 +97,8 @@ func TestRegistration(t *testing.T) {
 									Method: "POST",
 									Action: "/action",
 									Fields: form.Fields{
-										"password":   {Name: "password", Type: "password", Required: true},
-										"csrf_token": {Name: "csrf_token", Type: "hidden", Required: true, Value: "csrf-token"},
+										{Name: "password", Type: "password", Required: true},
+										{Name: "csrf_token", Type: "hidden", Required: true, Value: "csrf-token"},
 									},
 								},
 							},
@@ -160,7 +160,7 @@ func TestRegistration(t *testing.T) {
 			assert.Equal(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 			assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
 			checkFormContent(t, body, "password", "csrf_token", "traits.username", "traits.foobar")
-			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.password.errors.0").String(), "data breaches and must no longer be used.", "%s", body)
+			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).errors.0").String(), "data breaches and must no longer be used.", "%s", body)
 		})
 
 		t.Run("case=should return an error because not passing validation", func(t *testing.T) {
@@ -173,7 +173,7 @@ func TestRegistration(t *testing.T) {
 			assert.Equal(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 			assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
 			checkFormContent(t, body, "password", "csrf_token", "traits.username", "traits.foobar")
-			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.traits\\.foobar.errors.0").String(), "foobar is required", "%s", body)
+			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==traits.foobar).errors.0").String(), "foobar is required", "%s", body)
 		})
 
 		t.Run("case=should fail because schema did not specify an identifier", func(t *testing.T) {
@@ -244,11 +244,11 @@ func TestRegistration(t *testing.T) {
 									Action: "/action",
 									Errors: []form.Error{{Message: "some error"}},
 									Fields: form.Fields{
-										"traits.foo": {
+										{
 											Name: "traits.foo", Value: "bar", Type: "text",
 											Errors: []form.Error{{Message: "bar"}},
 										},
-										"password": {Name: "password"},
+										{Name: "password"},
 									},
 								},
 							},
@@ -267,10 +267,10 @@ func TestRegistration(t *testing.T) {
 			assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
 			checkFormContent(t, body, "password", "csrf_token", "traits.username")
 
-			assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.traits\\.foo.value"), "%s", body)
-			assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.traits\\.foo.error"))
+			assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==traits.foo).value"), "%s", body)
+			assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==traits.foo).error"))
 			assert.Empty(t, gjson.GetBytes(body, "methods.password.config.error"))
-			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.traits\\.foobar.errors.0").String(), "foobar is required", "%s", body)
+			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==traits.foobar).errors.0").String(), "foobar is required", "%s", body)
 		})
 
 		t.Run("case=should work even if password is just numbers", func(t *testing.T) {
@@ -307,22 +307,22 @@ func TestRegistration(t *testing.T) {
 						Action: "https://foo" + password.RegistrationPath + "?request=" + sr.ID.String(),
 						Method: "POST",
 						Fields: form.Fields{
-							"password": {
+							{
 								Name:     "password",
 								Type:     "password",
 								Required: true,
 							},
-							"csrf_token": {
+							{
 								Name:     "csrf_token",
 								Type:     "hidden",
 								Required: true,
 								Value:    "nosurf",
 							},
-							"traits.foobar": {
+							{
 								Name: "traits.foobar",
 								Type: "text",
 							},
-							"traits.username": {
+							{
 								Name: "traits.username",
 								Type: "text",
 							},
@@ -331,6 +331,8 @@ func TestRegistration(t *testing.T) {
 				},
 			},
 		}
+		sort.Sort(expected.Config.RequestMethodConfigurator.(*password.RequestMethod).HTMLForm.Fields)
+
 		actual := sr.Methods[identity.CredentialsTypePassword]
 		assert.EqualValues(t, expected.Config.RequestMethodConfigurator.(*password.RequestMethod).HTMLForm, actual.Config.RequestMethodConfigurator.(*password.RequestMethod).HTMLForm)
 	})

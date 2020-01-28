@@ -269,6 +269,7 @@
         "parameters": [
           {
             "type": "string",
+            "x-go-name": "Request",
             "description": "Request should be set to the value of the `request` query parameter\nby the profile management UI.",
             "name": "request",
             "in": "query",
@@ -320,10 +321,9 @@
     "CredentialsType": {
       "description": "and so on.",
       "type": "string",
-      "title": "CredentialsType CredentialsType  represents several different credential types, like password credentials, passwordless credentials,"
+      "title": "CredentialsType  represents several different credential types, like password credentials, passwordless credentials,"
     },
     "Error": {
-      "description": "Error error",
       "type": "object",
       "properties": {
         "message": {
@@ -333,7 +333,6 @@
       }
     },
     "Identity": {
-      "description": "Identity identity",
       "type": "object",
       "required": [
         "id",
@@ -347,17 +346,16 @@
           "$ref": "#/definitions/Traits"
         },
         "traits_schema_id": {
-          "description": "TraitsSchemaID is the JSON Schema to be used for validating the identity's traits.",
+          "description": "TraitsSchemaID is the ID of the JSON Schema to be used for validating the identity's traits.",
           "type": "string"
         },
         "traits_schema_url": {
-          "description": "TraitsSchemaURL is the kratos public endpoint where the identity's traits schema can be fetched.",
+          "description": "TraitsSchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.\n\nformat: url",
           "type": "string"
         }
       }
     },
     "Traits": {
-      "description": "Traits traits",
       "type": "object"
     },
     "UUID": {
@@ -401,27 +399,26 @@
         },
         "name": {
           "description": "Name is the equivalent of \u003cinput name=\"{{.Name}}\"\u003e",
-          "type": "string",
-          "x-go-asdffasd": "Asdffsdafsad"
+          "type": "string"
         },
         "required": {
-          "description": "Name is the equivalent of \u003cinput required=\"{{.Required}}\"\u003e",
+          "description": "Required is the equivalent of \u003cinput required=\"{{.Required}}\"\u003e",
           "type": "boolean"
         },
         "type": {
-          "description": "Name is the equivalent of \u003cinput type=\"{{.Type}}\"\u003e",
+          "description": "Type is the equivalent of \u003cinput type=\"{{.Type}}\"\u003e",
           "type": "string"
         },
         "value": {
-          "description": "Name is the equivalent of \u003cinput value=\"{{.Value}}\"\u003e",
+          "description": "Value is the equivalent of \u003cinput value=\"{{.Value}}\"\u003e",
           "type": "object"
         }
       }
     },
     "formFields": {
-      "description": "FormFields Fields contains multiple fields asdfasdf",
-      "type": "object",
-      "additionalProperties": {
+      "description": "Fields contains multiple fields",
+      "type": "array",
+      "items": {
         "$ref": "#/definitions/formField"
       }
     },
@@ -478,14 +475,13 @@
       }
     },
     "loginRequest": {
-      "description": "LoginRequest login request",
       "type": "object",
       "properties": {
         "active": {
           "$ref": "#/definitions/CredentialsType"
         },
         "expires_at": {
-          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,\na new request has to be initiated.\nFormat: date-time",
+          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,\na new request has to be initiated.",
           "type": "string",
           "format": "date-time"
         },
@@ -493,7 +489,7 @@
           "$ref": "#/definitions/UUID"
         },
         "issued_at": {
-          "description": "IssuedAt is the time (UTC) when the request occurred.\nFormat: date-time",
+          "description": "IssuedAt is the time (UTC) when the request occurred.",
           "type": "string",
           "format": "date-time"
         },
@@ -522,7 +518,6 @@
       }
     },
     "loginRequestMethodConfig": {
-      "description": "LoginRequestMethodConfig login request method config",
       "type": "object",
       "allOf": [
         {
@@ -542,10 +537,10 @@
     "profileManagementRequest": {
       "description": "This request is used when an identity wants to update profile information\n(especially traits) in a selfservice manner.\n\nFor more information head over to: https://www.ory.sh/docs/kratos/selfservice/profile",
       "type": "object",
-      "title": "ProfileManagementRequest Request presents a profile management request",
+      "title": "Request presents a profile management request",
       "properties": {
         "expires_at": {
-          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile,\na new request has to be initiated.\nFormat: date-time",
+          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile,\na new request has to be initiated.",
           "type": "string",
           "format": "date-time"
         },
@@ -559,7 +554,7 @@
           "$ref": "#/definitions/Identity"
         },
         "issued_at": {
-          "description": "IssuedAt is the time (UTC) when the request occurred.\nFormat: date-time",
+          "description": "IssuedAt is the time (UTC) when the request occurred.",
           "type": "string",
           "format": "date-time"
         },
@@ -574,14 +569,13 @@
       }
     },
     "registrationRequest": {
-      "description": "RegistrationRequest registration request",
       "type": "object",
       "properties": {
         "active": {
           "$ref": "#/definitions/CredentialsType"
         },
         "expires_at": {
-          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,\na new request has to be initiated.\nFormat: date-time",
+          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,\na new request has to be initiated.",
           "type": "string",
           "format": "date-time"
         },
@@ -589,7 +583,7 @@
           "$ref": "#/definitions/UUID"
         },
         "issued_at": {
-          "description": "IssuedAt is the time (UTC) when the request occurred.\nFormat: date-time",
+          "description": "IssuedAt is the time (UTC) when the request occurred.",
           "type": "string",
           "format": "date-time"
         },
@@ -607,7 +601,6 @@
       }
     },
     "registrationRequestMethod": {
-      "description": "RegistrationRequestMethod registration request method",
       "type": "object",
       "properties": {
         "config": {

@@ -119,12 +119,12 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Request) error
 		Action: action.String(),
 		Method: "POST",
 		Fields: form.Fields{
-			"identifier": {
+			{
 				Name:     "identifier",
 				Type:     "text",
 				Required: true,
 			},
-			"password": {
+			{
 				Name:     "password",
 				Type:     "password",
 				Required: true,

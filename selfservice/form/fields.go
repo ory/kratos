@@ -8,7 +8,7 @@ import (
 // Fields contains multiple fields
 //
 // swagger:model formFields
-type Fields map[string]Field
+type Fields []Field
 
 // Field represents a HTML Form Field
 //
@@ -30,6 +30,18 @@ type Field struct {
 func (f *Field) Reset() {
 	f.Errors = nil
 	f.Value = nil
+}
+
+func (ff Fields) Len() int {
+	return len(ff)
+}
+
+func (ff Fields) Swap(i, j int) {
+	ff[i], ff[j] = ff[j], ff[i]
+}
+
+func (ff Fields) Less(i, j int) bool {
+	return ff[i].Name < ff[j].Name
 }
 
 func toFormType(n string, i interface{}) string {

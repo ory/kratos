@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"sort"
 
 	"github.com/ory/kratos/schema"
 
@@ -198,6 +199,7 @@ func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Reque
 		Value:    rid,
 	})
 	ar.Form.SetCSRF(nosurf.Token(r))
+	sort.Sort(ar.Form.Fields)
 	h.d.Writer().Write(w, r, ar)
 }
 
@@ -341,11 +343,12 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 
 	ar.Form.Reset()
 	ar.UpdateSuccessful = true
-	for name, field := range form.NewHTMLFormFromJSON("", json.RawMessage(i.Traits), "traits").Fields {
-		ar.Form.SetField(name, field)
+	for _, field := range form.NewHTMLFormFromJSON("", json.RawMessage(i.Traits), "traits").Fields {
+		ar.Form.SetField(field.Name, field)
 	}
 	ar.Form.SetValue("request", r.Form.Get("request"))
 	ar.Form.SetCSRF(nosurf.Token(r))
+	sort.Sort(ar.Form.Fields)
 
 	if err := h.d.ProfileRequestPersister().UpdateProfileRequest(r.Context(), ar); err != nil {
 		h.handleProfileManagementError(w, r, ar, i.Traits, err)
@@ -366,12 +369,13 @@ func (h *Handler) handleProfileManagementError(w http.ResponseWriter, r *http.Re
 		rr.UpdateSuccessful = false
 
 		if traits != nil {
-			for name, field := range form.NewHTMLFormFromJSON("", json.RawMessage(traits), "traits").Fields {
-				rr.Form.SetField(name, field)
+			for _, field := range form.NewHTMLFormFromJSON("", json.RawMessage(traits), "traits").Fields {
+				rr.Form.SetField(field.Name, field)
 			}
 		}
 		rr.Form.SetValue("request", r.Form.Get("request"))
 		rr.Form.SetCSRF(nosurf.Token(r))
+		sort.Sort(rr.Form.Fields)
 	}
 
 	h.d.ProfileRequestRequestErrorHandler().HandleProfileManagementError(w, r, identity.CredentialsTypePassword, rr, err)

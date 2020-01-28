@@ -47,17 +47,17 @@ func nlr(exp time.Duration) *login.Request {
 						Method: "POST",
 						Action: "/action",
 						Fields: form.Fields{
-							"identifier": {
+							{
 								Name:     "identifier",
 								Type:     "text",
 								Required: true,
 							},
-							"password": {
+							{
 								Name:     "password",
 								Type:     "password",
 								Required: true,
 							},
-							form.CSRFTokenName: {
+							{
 								Name:     form.CSRFTokenName,
 								Type:     "hidden",
 								Required: true,
@@ -191,10 +191,10 @@ func TestLogin(t *testing.T) {
 				assert.Equal(t, tc.ar.ID.String(), gjson.GetBytes(body, "id").String())
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
 				ensureFieldsExist(t, body)
-				assert.Equal(t, "identifier: identifier is required", gjson.GetBytes(body, "methods.password.config.fields.identifier.errors.0.message").String(), "%s", body)
+				assert.Equal(t, "identifier: identifier is required", gjson.GetBytes(body, "methods.password.config.fields.#(name==identifier).errors.0.message").String(), "%s", body)
 
 				// The password value should not be returned!
-				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.password.value").String())
+				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).value").String())
 			},
 		},
 		{
@@ -212,13 +212,13 @@ func TestLogin(t *testing.T) {
 				assert.Equal(t, tc.ar.ID.String(), gjson.GetBytes(body, "id").String())
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
 				ensureFieldsExist(t, body)
-				assert.Equal(t, "password: password is required", gjson.GetBytes(body, "methods.password.config.fields.password.errors.0.message").String(), "%s", body)
+				assert.Equal(t, "password: password is required", gjson.GetBytes(body, "methods.password.config.fields.#(name==password).errors.0.message").String(), "%s", body)
 
-				assert.Equal(t, "anti-rf-token", gjson.GetBytes(body, "methods.password.config.fields.csrf_token.value").String())
-				assert.Equal(t, "identifier", gjson.GetBytes(body, "methods.password.config.fields.identifier.value").String(), "%s", body)
+				assert.Equal(t, "anti-rf-token", gjson.GetBytes(body, "methods.password.config.fields.#(name==csrf_token).value").String())
+				assert.Equal(t, "identifier", gjson.GetBytes(body, "methods.password.config.fields.#(name==identifier).value").String(), "%s", body)
 
 				// This must not include the password!
-				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.password.value").String())
+				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).value").String())
 			},
 		},
 		{
@@ -253,7 +253,7 @@ func TestLogin(t *testing.T) {
 				assert.Equal(t, schema.NewInvalidCredentialsError().(schema.ResultErrors)[0].Description(), gjson.GetBytes(body, "methods.password.config.errors.0.message").String(), "%s", body)
 
 				// This must not include the password!
-				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.password.value").String())
+				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).value").String())
 			},
 		},
 		{
@@ -300,12 +300,12 @@ func TestLogin(t *testing.T) {
 									Action: "/action",
 									Errors: []form.Error{{Message: "some error"}},
 									Fields: form.Fields{
-										"identifier": {
+										{
 											Value:  "baz",
 											Name:   "identifier",
 											Errors: []form.Error{{Message: "err"}},
 										},
-										"password": {
+										{
 											Value:  "bar",
 											Name:   "password",
 											Errors: []form.Error{{Message: "err"}},
@@ -330,10 +330,10 @@ func TestLogin(t *testing.T) {
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
 				ensureFieldsExist(t, body)
 
-				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.identity.value"))
-				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.identity.error"))
+				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==identity).value"))
+				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==identity).error"))
 				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.error"))
-				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.password.errors.0").String(), "password: password is required", "%s", body)
+				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).errors.0").String(), "password: password is required", "%s", body)
 			},
 		},
 	} {
