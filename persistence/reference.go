@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"context"
+	"io"
 
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/identity"
@@ -27,7 +28,7 @@ type Persister interface {
 
 	Close(context.Context) error
 	Ping(context.Context) error
-	MigrationStatus(c context.Context) error
+	MigrationStatus(c context.Context, b io.Writer) error
 	MigrateDown(c context.Context, steps int) error
 	MigrateUp(c context.Context) error
 }

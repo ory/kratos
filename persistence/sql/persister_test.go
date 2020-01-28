@@ -9,8 +9,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/gobuffalo/pop"
-	"github.com/gobuffalo/pop/logging"
+	"github.com/gobuffalo/pop/v5"
+	"github.com/gobuffalo/pop/v5/logging"
 	"github.com/google/uuid"
 
 	"github.com/ory/x/sqlcon/dockertest"
@@ -109,7 +109,7 @@ func TestPersister(t *testing.T) {
 			p := reg.Persister()
 
 			pop.SetLogger(pl(t))
-			require.NoError(t, p.MigrationStatus(context.Background()))
+			require.NoError(t, p.MigrationStatus(context.Background(), os.Stderr))
 			require.NoError(t, p.MigrateUp(context.Background()))
 
 			t.Run("contract=identity.TestPool", func(t *testing.T) {
