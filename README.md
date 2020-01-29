@@ -1,3 +1,45 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [](#)
+      - [
+    Chat |
+    Forums |
+    Newsletter
+    Guide |
+    API Docs |
+    Code Docs
+    Support this project!
+](#chat-%0A----forums-%0A----newsletter%0A----guide-%0A----api-docs-%0A----code-docs%0A----support-this-project)
+  - [What is ORY Kratos?](#what-is-ory-kratos)
+    - [Who's using it?](#whos-using-it)
+  - [Getting Started](#getting-started)
+    - [Quickstart](#quickstart)
+    - [Installation](#installation)
+  - [Ecosystem](#ecosystem)
+    - [ORY Security Console: Administrative User Interface](#ory-security-console-administrative-user-interface)
+    - [ORY Oathkeeper: Identity & Access Proxy](#ory-oathkeeper-identity--access-proxy)
+    - [ORY Keto: Access Control Policies as a Server](#ory-keto-access-control-policies-as-a-server)
+  - [Security](#security)
+    - [Disclosing vulnerabilities](#disclosing-vulnerabilities)
+  - [Telemetry](#telemetry)
+  - [Documentation](#documentation)
+    - [Guide](#guide)
+    - [HTTP API documentation](#http-api-documentation)
+    - [Upgrading and Changelog](#upgrading-and-changelog)
+    - [Command line documentation](#command-line-documentation)
+    - [Develop](#develop)
+      - [Dependencies](#dependencies)
+        - [Install Tools](#install-tools)
+      - [Formatting Code](#formatting-code)
+      - [Running Tests](#running-tests)
+        - [Short Tests](#short-tests)
+        - [Regular Tests](#regular-tests)
+      - [Build Docker](#build-docker)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 <h1 align="center"><img src="./docs/images/banner_kratos.png" alt="ORY Kratos - Cloud native Identity and User Management"></h1>
 
 <h4 align="center">
@@ -22,38 +64,82 @@
 
 ORY Kratos is the first and only cloud native Identity and User Management System in the world. Finally, it is no longer necessary to implement a User Login process for the umpteenth time! 
 
-ORY Kratos includes:
+## What is ORY Kratos?
 
-- **User login and registration** using a variety of configurable authentication mechanisms: **Username/Email + Password**, **Social Sign In** ("Sign in with GitHub, Google, ..."), with or without password and others.
-- **Multi-factor authentication** supporting a wide range of protocols such as [Google Authenticator](https://en.wikipedia.org/wiki/Google_Authenticator) (formalized as [RFC 6238](https://tools.ietf.org/html/rfc6238) and [IETF RFC 4226](https://tools.ietf.org/html/rfc4226)).
-- **Account verification** and **account recovery** by several methods: E-Mail, recovery codes, ...
-- **Storing user information** in a way that does not enforce *our* normative data model on *you*. With ORY Kratos developers define the dataset users may store using [JSON Schema](https://json-schema.org/). ORY Kratos supports multiple identity types - every identity can have its own JSON Schema - even versioned!
-- **Headless UI** - instead of learning some custom, and probably inferior, template engine, developers can choose their own! ORY Kratos is all APIs. UI's can be programmed in various languages (JavaScript, Node, Java, PHP, ...) and numerous framework (React, Vue, Angular, ...)! Check out the [reference UI implementation](https://github.com/ory/kratos-selfservice-ui-node) - it's less than 100 lines of code!
-- **Workflow engine** to decide what happens after, for example, a user signs up (redirect somewhere? require activation before login? issue session right away?) as well as to notify other systems on certain actions ("create a Stripe account after sign up", "synchronize with newsletter", ...).
-- ... and of course many more features that will be discussed outside of the Introduction in the Ory Kratos documentation [here](https://www.ory.sh/docs/next/kratos).
+ORY Kratos is an API-first Identity and User Management system that is built
+according to
+[cloud architecture best practices](https://www.ory.sh/docs/next/ecosystem/software-architecture-philosophy).
+It implements core use cases that almost every software application needs to
+deal with:
 
-## Timeline
+- **Self-service Login and Registration**: Allow end-users to create and sign
+  into accounts (we call them **identities**) using Username / Email and
+  password combinations, Social Sign In ("Sign in with Google, GitHub"),
+  Passwordless flows, and others.
+- **Multi-Factor Authentication (MFA/2FA)**: Support protocols such as TOTP
+  ([RFC 6238](https://tools.ietf.org/html/rfc6238) and
+  [IETF RFC 4226](https://tools.ietf.org/html/rfc4226) - better known as
+  [Google Authenticator](https://en.wikipedia.org/wiki/Google_Authenticator))
+- **Account Verification**: Verify that an E-Mail address, phone number, or
+  physical address actually belong to that identity.
+- **Account Recovery**: Recover access using "Forgot Password" flows, Security
+  Codes (in case of MKFA device loss), and others.
+- **Profile and Account Management**: Update passwords, personal details, email
+  addresses, linked social profiles using secure flows.
+- **Admin APIs**: Import, update, delete identities.
 
-ORY Kratos is **not yet released** and is **undergoing continuous and active development**. The core featureset is done but several more steps are required before version 0.0.1 can be released. To find out the current progress, planned features for each milestone, and more information please refer to [milestones](https://github.com/ory/kratos/milestones).
+We highly recommend reading the [ORY Kratos introduction docs](https://www.ory.sh/docs/next/kratos/)
+to learn more about ORY Krato's background, feature set, and differentiation
+from other products.
 
-## What's different?
+### Who's using it?
 
-> This section is a work in progress.
+<!--BEGIN ADOPTERS-->
+<!--END ADOPTERS-->
 
-- There is no templating as with other full-stack solutions. You implement a "login, registration, ... UI" that interacts with ORY Kratos. For instance:
+## Getting Started
 
-   * _Want Progressive Registration?_       _No problem._ 
+To get started, head over to the [ORY Kratos Documentation](https://www.ory.sh/docs/next/kratos).
 
-   * _Just need a username on sign up?_      _Sure!_ 
+### Quickstart
 
-   * _How about your favorite pet name as a required sign up field?_      _Of course!_
+The **[ORY Kratos Quickstart](https://www.ory.sh/docs/next/kratos/quickstart)** teaches you ORY Kratos basics
+and sets up an example based on Docker Compose in less than five minutes.
 
-- While other solutions support an API-driven approach, they leave you with the burden of making things secure, e.g. CSRF Tokens, storing state, and so on. In ORY Kratos, all of this is done using - among others - HTTP Redirection.
-- ORY Kratos does not need OAuth2 and OpenID Connect. We know that big players in the market have tried selling you OAuth2 and OpenID Connect for years as "the most secure" and "a very easy to use" protocol. Fact is, OAuth2 and OpenID Connect are not designed for first-party use ("I just want people to be able to log into my mobile app"). ORY Kratos makes integration a one-minute process using a HTTP Reverse Proxy. [Reverse proxy] (https://en.wikipedia.org/wiki/Reverse_proxy) (https://httpd.apache.org/docs/2.4/howto/reverse_proxy.html) **Include links to docs here.** Ory Hydra is a OAuth2 Server and OpenID Certified™ OpenID Connect Provider written in Go - cloud native, security-first, open source API security for your infrastructure. If the goal is to become the new "Sign in with Google" provider, use ORY Hydra and natively integrate with ORY Kratos!
-- The "Sign Up" and "Login" process is customisable. The developer determines next step after sign up and login, for instance:
-"Redirect the user to a certain page?" 
-"Create a Stripe account?" or
-"Require account activation via email before being allowed to sign in?"
+### Installation
+
+Head over to the [ORY Developer Documentation](https://www.ory.sh/docs/next/kratos/install.md) to learn how to install ORY Kratos on Linux, macOS, Windows, and Docker and how to build ORY Kratos from source.
+
+## Ecosystem
+
+<a href="https://console.ory.sh/">
+    <img align="right" width="30%" src="docs/images/sec-console.png" alt="ORY Security Console">
+</a>
+
+### ORY Security Console: Administrative User Interface
+
+The [ORY Security Console](https://console.ory.sh/) is a visual admin interface for managing ORY Kratos,
+ORY Oathkeeper, and ORY Keto.
+
+### ORY Oathkeeper: Identity & Access Proxy
+
+[ORY Oathkeeper](https://github.com/ory/oathkeeper) is a BeyondCorp/Zero Trust Identity & Access Proxy (IAP) built
+on top of OAuth2 and ORY Kratos.
+
+### ORY Keto: Access Control Policies as a Server
+
+[ORY Keto](https://github.com/ory/keto) is a policy decision point. It uses a set of access control policies, similar
+to AWS IAM Policies, in order to determine whether a subject (user, application, service, car, ...) is authorized to
+perform a certain action on a resource.
+
+## Security
+
+Running identity infrastructure requires [attention and knowledge of thread models](https://www.ory.sh/docs/next/kratos/concepts/security).
+
+### Disclosing vulnerabilities
+
+If you think you found a security vulnerability, please refrain from posting it publicly on the forums, the chat, or GitHub
+and send us an email to [hi@ory.am](mailto:hi@ory.sh) instead.
 
 ## Telemetry
 
@@ -78,3 +164,86 @@ changes in [UPGRADE.md](./UPGRADE.md) and [CHANGELOG.md](./CHANGELOG.md).
 ### Command line documentation
 
 Run `kratos -h` or `kratos help`.
+
+### Develop
+
+We encourage all contributions and encourage you to read our [contribution guidelines](./CONTRIBUTING.md)
+
+#### Dependencies
+
+You need Go 1.13+ with `GO111MODULE=on` and (for the test suites):
+
+- Docker and Docker Compose
+- Makefile
+- NodeJS / npm
+
+It is possible to develop ORY Kratos on Windows, but please be aware that all guides assume a Unix shell like bash or zsh.
+
+##### Install Tools
+
+When cloning ORY Kratos, run `make tools`. It will download several required dependencies. If you haven't run the command
+in a while it's probably a good idea to run it again.
+
+#### Formatting Code
+
+You can format all code using `make format`. Our CI checks if your code is properly formatted.
+
+#### Running Tests
+
+There are three types of tests you can run:
+
+- Short tests (do not require a SQL database like PostgreSQL)
+- Regular tests (do require PostgreSQL, MySQL, CockroachDB)
+- End to end tests (do require databases and will use a test browser)
+
+##### Short Tests
+
+Short tests run fairly quickly. You can either test all of the code at once
+
+```shell script
+go test -short -tags sqlite ./...
+```
+
+or test just a specific module:
+
+```shell script
+cd client; go test -tags sqlite -short .
+```
+
+##### Regular Tests
+
+Regular tests require a database set up. Our test suite is able to work with docker directly (using [ory/dockertest](https://github.com/ory/dockertest))
+but we encourage to use the Makefile instead. Using dockertest can bloat the number of Docker Images on your system
+and are quite slow. Instead we recommend doing:
+
+```shell script
+make test
+```
+
+Please be aware that `make test` recreates the databases every time you run `make test`. This can be annoying if
+you are trying to fix something very specific and need the database tests all the time. In that case we
+suggest that you initialize the databases with:
+
+```shell script
+make resetdb
+export TEST_DATABASE_MYSQL='mysql://root:secret@(127.0.0.1:3444)/mysql?parseTime=true'
+export TEST_DATABASE_POSTGRESQL='postgres://postgres:secret@127.0.0.1:3445/kratos?sslmode=disable'
+export TEST_DATABASE_COCKROACHDB='cockroach://root@127.0.0.1:3446/defaultdb?sslmode=disable'
+```
+
+Then you can run `go test` as often as you'd like:
+
+```shell script
+go test -tags sqlite ./...
+
+# or in a module:
+cd client; go test  -tags sqlite  .
+```
+
+#### Build Docker
+
+You can build a development Docker Image using:
+
+```shell script
+make docker
+```
