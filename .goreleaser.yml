@@ -177,7 +177,7 @@ checksum:
 dockers:
   - dockerfile: .docker/Dockerfile-sqlite
     builds:
-      - kratos-sqlite
+      - kratos-sqlite-linux-libmusl
     binaries:
       - kratos-sqlite-libmusl
     image_templates:
