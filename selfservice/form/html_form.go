@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"net/http"
+	"sort"
 	"sync"
 
 	"github.com/santhosh-tekuri/jsonschema/v2"
@@ -71,6 +72,7 @@ func NewHTMLFormFromRequestBody(r *http.Request, action string, compiler decoder
 	for k, v := range jsonx.Flatten(raw) {
 		c.SetValue(k, v)
 	}
+	sort.Sort(c.Fields)
 
 	return c, nil
 }
@@ -84,6 +86,8 @@ func NewHTMLFormFromJSON(action string, raw json.RawMessage, prefix string) *HTM
 		}
 		c.SetValue(k, v)
 	}
+	sort.Sort(c.Fields)
+
 	return c
 }
 
@@ -98,11 +102,12 @@ func NewHTMLFormFromJSONSchema(action, jsonSchemaRef, prefix string) (*HTMLForm,
 	c := NewHTMLForm(action)
 	for _, value := range paths {
 		name := addPrefix(value.Name, prefix, ".")
-		c.Fields[name] = Field{
+		c.Fields = append(c.Fields, Field{
 			Name: name,
 			Type: toFormType(value.Name, value.Type),
-		}
+		})
 	}
+	sort.Sort(c.Fields)
 
 	return c, nil
 }
@@ -179,15 +184,32 @@ func (c *HTMLForm) SetValues(values map[string]interface{}) {
 	}
 }
 
+// getField returns a pointer to the field with the given name.
+func (c *HTMLForm) getField(name string) *Field {
+	// to prevent blocks we don't use c.defaults() here
+	if c.Fields == nil {
+		return nil
+	}
+
+	for i := range c.Fields {
+		if c.Fields[i].Name == name {
+			return &c.Fields[i]
+		}
+	}
+
+	return nil
+}
+
 // SetRequired sets the container's fields required.
 func (c *HTMLForm) SetRequired(fields ...string) {
 	c.defaults()
+	c.Lock()
+	defer c.Unlock()
+
 	for _, field := range fields {
-		ff, ok := c.Fields[field]
-		if !ok {
-			continue
+		if f := c.getField(field); f != nil {
+			f.Required = true
 		}
-		ff.Required = true
 	}
 }
 
@@ -197,29 +219,38 @@ func (c *HTMLForm) Unset(name string) {
 	c.Lock()
 	defer c.Unlock()
 
-	delete(c.Fields, name)
+	for i := range c.Fields {
+		if c.Fields[i].Name == name {
+			c.Fields = append(c.Fields[:i], c.Fields[i+1:]...)
+			return
+		}
+	}
 }
 
 // SetCSRF sets the CSRF value using e.g. nosurf.Token(r).
 func (c *HTMLForm) SetCSRF(token string) {
-	c.defaults()
-	c.Lock()
-	defer c.Unlock()
-
-	c.Fields[CSRFTokenName] = Field{
+	c.SetField(CSRFTokenName, Field{
 		Name:     CSRFTokenName,
 		Type:     "hidden",
 		Required: true,
 		Value:    token,
-	}
+	})
 }
 
 // SetField sets a field.
-func (c *HTMLForm) SetField(name string, field Field) {
+func (c *HTMLForm) SetField(oldName string, field Field) {
 	c.defaults()
 	c.Lock()
 	defer c.Unlock()
-	c.Fields[name] = field
+
+	for i := range c.Fields {
+		if c.Fields[i].Name == oldName {
+			c.Fields[i] = field
+			return
+		}
+	}
+
+	c.Fields = append(c.Fields, field)
 }
 
 // SetValue sets a container's field to the provided name and value.
@@ -228,21 +259,16 @@ func (c *HTMLForm) SetValue(name string, value interface{}) {
 	c.Lock()
 	defer c.Unlock()
 
-	ff, ok := c.Fields[name]
-	if !ok {
-		c.Fields[name] = Field{
-			Name:  name,
-			Type:  toFormType(name, value),
-			Value: value,
-		}
+	if f := c.getField(name); f != nil {
+		f.Value = value
+		f.Type = toFormType(name, value)
+		return
 	}
-
-	ff.Name = name
-	ff.Value = value
-	if len(ff.Type) == 0 {
-		ff.Type = toFormType(name, value)
-	}
-	c.Fields[name] = ff
+	c.Fields = append(c.Fields, Field{
+		Name:  name,
+		Value: value,
+		Type:  toFormType(name, value),
+	})
 }
 
 // AddError adds the provided error, and if a non-empty names list is set,
@@ -258,17 +284,15 @@ func (c *HTMLForm) AddError(err *Error, names ...string) {
 	}
 
 	for _, name := range names {
-		ff, ok := c.Fields[name]
-		if !ok {
-			c.Fields[name] = Field{
-				Name:   name,
-				Errors: []Error{*err},
-			}
+		if ff := c.getField(name); ff != nil {
+			ff.Errors = append(ff.Errors, *err)
 			continue
 		}
 
-		ff.Errors = append(ff.Errors, *err)
-		c.Fields[name] = ff
+		c.Fields = append(c.Fields, Field{
+			Name:   name,
+			Errors: []Error{*err},
+		})
 	}
 }
 

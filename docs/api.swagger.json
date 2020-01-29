@@ -269,6 +269,7 @@
         "parameters": [
           {
             "type": "string",
+            "x-go-name": "Request",
             "description": "Request should be set to the value of the `request` query parameter\nby the profile management UI.",
             "name": "request",
             "in": "query",
@@ -416,8 +417,8 @@
     },
     "formFields": {
       "description": "Fields contains multiple fields",
-      "type": "object",
-      "additionalProperties": {
+      "type": "array",
+      "items": {
         "$ref": "#/definitions/formField"
       }
     },

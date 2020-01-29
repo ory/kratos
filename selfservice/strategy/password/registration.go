@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sort"
 
 	"github.com/ory/kratos/driver/configuration"
 
@@ -63,8 +64,8 @@ func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Reques
 			method.Config.Reset()
 
 			if p != nil {
-				for name, field := range form.NewHTMLFormFromJSON("", p.Traits, "traits").Fields {
-					method.Config.SetField(name, field)
+				for _, field := range form.NewHTMLFormFromJSON("", p.Traits, "traits").Fields {
+					method.Config.SetField(field.Name, field)
 				}
 			}
 
@@ -214,6 +215,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.
 	htmlf.Method = "POST"
 	htmlf.SetCSRF(s.cg(r))
 	htmlf.SetField("password", form.Field{Name: "password", Type: "password", Required: true})
+	sort.Sort(htmlf.Fields)
 
 	sr.Methods[identity.CredentialsTypePassword] = &registration.RequestMethod{
 		Method: identity.CredentialsTypePassword,

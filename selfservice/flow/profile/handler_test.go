@@ -205,17 +205,26 @@ func TestUpdateProfile(t *testing.T) {
 		assert.Equal(t, primaryIdentity.TraitsSchemaID, pr.Payload.Identity.TraitsSchemaID)
 		assert.Equal(t, kratos.URL+profile.BrowserProfilePath, pr.Payload.RequestURL)
 
-		require.NotEmpty(t, pr.Payload.Form.Fields[form.CSRFTokenName])
-		delete(pr.Payload.Form.Fields, form.CSRFTokenName)
+		found := false
+		for i := range pr.Payload.Form.Fields {
+			if pr.Payload.Form.Fields[i].Name == form.CSRFTokenName {
+				found = true
+				require.NotEmpty(t, pr.Payload.Form.Fields[i])
+				pr.Payload.Form.Fields = append(pr.Payload.Form.Fields[:i], pr.Payload.Form.Fields[i+1:]...)
+				break
+			}
+		}
+		require.True(t, found)
+
 		assert.Equal(t, &models.Form{
 			Action: kratos.URL + profile.BrowserProfilePath,
 			Method: "POST",
 			Fields: models.FormFields{
-				"request":        models.FormField{Name: "request", Required: true, Type: "hidden", Value: rid},
-				"traits.stringy": models.FormField{Name: "traits.stringy", Required: false, Type: "text", Value: "foobar"},
-				"traits.numby":   models.FormField{Name: "traits.numby", Required: false, Type: "number", Value: json.Number("2.5")},
-				"traits.booly":   models.FormField{Name: "traits.booly", Required: false, Type: "checkbox", Value: false},
-				"traits.email":   models.FormField{Name: "traits.email", Required: false, Type: "text", Value: "john@doe.com"},
+				&models.FormField{Name: "request", Required: true, Type: "hidden", Value: rid},
+				&models.FormField{Name: "traits.booly", Required: false, Type: "checkbox", Value: false},
+				&models.FormField{Name: "traits.email", Required: false, Type: "text", Value: "john@doe.com"},
+				&models.FormField{Name: "traits.numby", Required: false, Type: "number", Value: json.Number("2.5")},
+				&models.FormField{Name: "traits.stringy", Required: false, Type: "text", Value: "foobar"},
 			},
 		}, pr.Payload.Form)
 	})
@@ -245,11 +254,11 @@ func TestUpdateProfile(t *testing.T) {
 		values.Set("traits.stringy", "bazbar") // it should still override new values!
 		actual, _ := submitForm(t, rs, values)
 
-		assert.NotEmpty(t, "too-short", gjson.Get(actual, "form.fields.csrf_token.value").String(), "%s", actual)
-		assert.Equal(t, "too-short", gjson.Get(actual, "form.fields.traits\\.should_long_string.value").String(), "%s", actual)
-		assert.Equal(t, "bazbar", gjson.Get(actual, "form.fields.traits\\.stringy.value").String(), "%s", actual)
-		assert.Equal(t, "2.5", gjson.Get(actual, "form.fields.traits\\.numby.value").String(), "%s", actual)
-		assert.Equal(t, "traits.should_long_string: String length must be greater than or equal to 25", gjson.Get(actual, "form.fields.traits\\.should_long_string.errors.0.message").String(), "%s", actual)
+		assert.NotEmpty(t, gjson.Get(actual, "form.fields.#(name==csrf_token).value").String(), "%s", actual)
+		assert.Equal(t, "too-short", gjson.Get(actual, "form.fields.#(name==traits.should_long_string).value").String(), "%s", actual)
+		assert.Equal(t, "bazbar", gjson.Get(actual, "form.fields.#(name==traits.stringy).value").String(), "%s", actual)
+		assert.Equal(t, "2.5", gjson.Get(actual, "form.fields.#(name==traits.numby).value").String(), "%s", actual)
+		assert.Equal(t, "traits.should_long_string: String length must be greater than or equal to 25", gjson.Get(actual, "form.fields.#(name==traits.should_long_string).errors.0.message").String(), "%s", actual)
 	})
 
 	t.Run("description=should come back with form errors if trying to update email", func(t *testing.T) {
@@ -276,10 +285,10 @@ func TestUpdateProfile(t *testing.T) {
 			actual, response := submitForm(t, rs, values)
 			assert.False(t, response.Payload.UpdateSuccessful, "%s", actual)
 
-			assert.Equal(t, "1", gjson.Get(actual, "form.fields.traits\\.should_big_number.value").String(), "%s", actual)
-			assert.Equal(t, "traits.should_big_number: Must be greater than or equal to 1200", gjson.Get(actual, "form.fields.traits\\.should_big_number.errors.0.message").String(), "%s", actual)
+			assert.Equal(t, "1", gjson.Get(actual, "form.fields.#(name==traits.should_big_number).value").String(), "%s", actual)
+			assert.Equal(t, "traits.should_big_number: Must be greater than or equal to 1200", gjson.Get(actual, "form.fields.#(name==traits.should_big_number).errors.0.message").String(), "%s", actual)
 
-			assert.Equal(t, "foobar", gjson.Get(actual, "form.fields.traits\\.stringy.value").String(), "%s", actual) // sanity check if original payload is still here
+			assert.Equal(t, "foobar", gjson.Get(actual, "form.fields.#(name==traits.stringy).value").String(), "%s", actual) // sanity check if original payload is still here
 		})
 
 		t.Run("flow=fail second update", func(t *testing.T) {
@@ -291,16 +300,16 @@ func TestUpdateProfile(t *testing.T) {
 			actual, response := submitForm(t, rs, values)
 			assert.False(t, response.Payload.UpdateSuccessful, "%s", actual)
 
-			assert.Empty(t, gjson.Get(actual, "form.fields.traits\\.should_big_number.errors.0.message").String(), "%s", actual)
-			assert.Empty(t, gjson.Get(actual, "form.fields.traits\\.should_big_number.value").String(), "%s", actual)
+			assert.Empty(t, gjson.Get(actual, "form.fields.#(name==traits.should_big_number).errors.0.message").String(), "%s", actual)
+			assert.Empty(t, gjson.Get(actual, "form.fields.#(name==traits.should_big_number).value").String(), "%s", actual)
 
-			assert.Equal(t, "short", gjson.Get(actual, "form.fields.traits\\.should_long_string.value").String(), "%s", actual)
-			assert.Equal(t, "traits.should_long_string: String length must be greater than or equal to 25", gjson.Get(actual, "form.fields.traits\\.should_long_string.errors.0.message").String(), "%s", actual)
+			assert.Equal(t, "short", gjson.Get(actual, "form.fields.#(name==traits.should_long_string).value").String(), "%s", actual)
+			assert.Equal(t, "traits.should_long_string: String length must be greater than or equal to 25", gjson.Get(actual, "form.fields.#(name==traits.should_long_string).errors.0.message").String(), "%s", actual)
 
-			assert.Equal(t, "this-is-not-a-number", gjson.Get(actual, "form.fields.traits\\.numby.value").String(), "%s", actual)
-			assert.Equal(t, "traits.numby: Invalid type. Expected: number, given: string", gjson.Get(actual, "form.fields.traits\\.numby.errors.0.message").String(), "%s", actual)
+			assert.Equal(t, "this-is-not-a-number", gjson.Get(actual, "form.fields.#(name==traits.numby).value").String(), "%s", actual)
+			assert.Equal(t, "traits.numby: Invalid type. Expected: number, given: string", gjson.Get(actual, "form.fields.#(name==traits.numby).errors.0.message").String(), "%s", actual)
 
-			assert.Equal(t, "foobar", gjson.Get(actual, "form.fields.traits\\.stringy.value").String(), "%s", actual) // sanity check if original payload is still here
+			assert.Equal(t, "foobar", gjson.Get(actual, "form.fields.#(name==traits.stringy).value").String(), "%s", actual) // sanity check if original payload is still here
 		})
 
 		t.Run("flow=succeed with final request", func(t *testing.T) {
@@ -313,15 +322,15 @@ func TestUpdateProfile(t *testing.T) {
 			actual, response := submitForm(t, rs, values)
 			assert.True(t, response.Payload.UpdateSuccessful, "%s", actual)
 
-			assert.Empty(t, gjson.Get(actual, "form.fields.traits\\.numby.errors").Value(), "%s", actual)
-			assert.Empty(t, gjson.Get(actual, "form.fields.traits\\.should_big_number.errors").Value(), "%s", actual)
-			assert.Empty(t, gjson.Get(actual, "form.fields.traits\\.should_long_string.errors").Value(), "%s", actual)
+			assert.Empty(t, gjson.Get(actual, "form.fields.#(name==traits.numby).errors").Value(), "%s", actual)
+			assert.Empty(t, gjson.Get(actual, "form.fields.#(name==traits.should_big_number).errors").Value(), "%s", actual)
+			assert.Empty(t, gjson.Get(actual, "form.fields.#(name==traits.should_long_string).errors").Value(), "%s", actual)
 
-			assert.Equal(t, 15.0, gjson.Get(actual, "form.fields.traits\\.numby.value").Value(), "%s", actual)
-			assert.Equal(t, 9001.0, gjson.Get(actual, "form.fields.traits\\.should_big_number.value").Value(), "%s", actual)
-			assert.Equal(t, "this is such a long string, amazing stuff!", gjson.Get(actual, "form.fields.traits\\.should_long_string.value").Value(), "%s", actual)
+			assert.Equal(t, 15.0, gjson.Get(actual, "form.fields.#(name==traits.numby).value").Value(), "%s", actual)
+			assert.Equal(t, 9001.0, gjson.Get(actual, "form.fields.#(name==traits.should_big_number).value").Value(), "%s", actual)
+			assert.Equal(t, "this is such a long string, amazing stuff!", gjson.Get(actual, "form.fields.#(name==traits.should_long_string).value").Value(), "%s", actual)
 
-			assert.Equal(t, "foobar", gjson.Get(actual, "form.fields.traits\\.stringy.value").String(), "%s", actual) // sanity check if original payload is still here
+			assert.Equal(t, "foobar", gjson.Get(actual, "form.fields.#(name==traits.stringy).value").String(), "%s", actual) // sanity check if original payload is still here
 		})
 
 		t.Run("flow=try another update with invalid data", func(t *testing.T) {

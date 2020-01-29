@@ -107,7 +107,7 @@ func TestLoginHandler(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, "password", gjson.GetBytes(body, "methods.password.method").String(), "%s", body)
-		assert.NotEmpty(t, gjson.GetBytes(body, "methods.password.config.fields.csrf_token.value").String(), "%s", body)
+		assert.NotEmpty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==csrf_token).value").String(), "%s", body)
 		assert.NotEmpty(t, gjson.GetBytes(body, "id").String(), "%s", body)
 		assert.Empty(t, gjson.GetBytes(body, "headers").Value(), "%s", body)
 		assert.Contains(t, gjson.GetBytes(body, "methods.password.config.action").String(), gjson.GetBytes(body, "id").String(), "%s", body)

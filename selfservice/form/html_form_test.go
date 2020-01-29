@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sort"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -45,10 +46,10 @@ func TestContainer(t *testing.T) {
 				r: `{"numby":1.5,"stringy":"foobar","objy":{"objy":{},"numby":1.5,"stringy":"foobar"}}`,
 				expect: &HTMLForm{
 					Fields: Fields{
-						"numby":        Field{Name: "numby", Type: "number", Value: 1.5},
-						"stringy":      Field{Name: "stringy", Type: "text", Value: "foobar"},
-						"objy.numby":   Field{Name: "objy.numby", Type: "number", Value: 1.5},
-						"objy.stringy": Field{Name: "objy.stringy", Type: "text", Value: "foobar"},
+						Field{Name: "numby", Type: "number", Value: 1.5},
+						Field{Name: "stringy", Type: "text", Value: "foobar"},
+						Field{Name: "objy.numby", Type: "number", Value: 1.5},
+						Field{Name: "objy.stringy", Type: "text", Value: "foobar"},
 					},
 				},
 			},
@@ -57,16 +58,17 @@ func TestContainer(t *testing.T) {
 				prefix: "traits",
 				expect: &HTMLForm{
 					Fields: Fields{
-						"traits.numby":        Field{Name: "traits.numby", Type: "number", Value: 1.5},
-						"traits.stringy":      Field{Name: "traits.stringy", Type: "text", Value: "foobar"},
-						"traits.objy.numby":   Field{Name: "traits.objy.numby", Type: "number", Value: 1.5},
-						"traits.objy.stringy": Field{Name: "traits.objy.stringy", Type: "text", Value: "foobar"},
+						Field{Name: "traits.numby", Type: "number", Value: 1.5},
+						Field{Name: "traits.stringy", Type: "text", Value: "foobar"},
+						Field{Name: "traits.objy.numby", Type: "number", Value: 1.5},
+						Field{Name: "traits.objy.stringy", Type: "text", Value: "foobar"},
 					},
 				},
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				actual := NewHTMLFormFromJSON("action", json.RawMessage(tc.r), tc.prefix)
+				sort.Sort(tc.expect.Fields)
 				assert.Equal(t, "action", actual.Action)
 				assert.EqualValues(t, tc.expect.Fields, actual.Fields)
 			})
@@ -84,10 +86,10 @@ func TestContainer(t *testing.T) {
 				r:   newJSONRequest(t, `{"numby":1.5,"stringy":"foobar","objy":{"objy":{},"numby":1.5,"stringy":"foobar"}}`),
 				expect: &HTMLForm{
 					Fields: Fields{
-						"numby":        Field{Name: "numby", Type: "number", Value: 1.5},
-						"stringy":      Field{Name: "stringy", Type: "text", Value: "foobar"},
-						"objy.numby":   Field{Name: "objy.numby", Type: "number", Value: 1.5},
-						"objy.stringy": Field{Name: "objy.stringy", Type: "text", Value: "foobar"},
+						Field{Name: "numby", Type: "number", Value: 1.5},
+						Field{Name: "stringy", Type: "text", Value: "foobar"},
+						Field{Name: "objy.numby", Type: "number", Value: 1.5},
+						Field{Name: "objy.stringy", Type: "text", Value: "foobar"},
 					},
 				},
 			},
@@ -101,10 +103,10 @@ func TestContainer(t *testing.T) {
 				}),
 				expect: &HTMLForm{
 					Fields: Fields{
-						"numby":        Field{Name: "numby", Type: "number", Value: 1.5},
-						"stringy":      Field{Name: "stringy", Type: "text", Value: "foobar"},
-						"objy.numby":   Field{Name: "objy.numby", Type: "number", Value: 1.5},
-						"objy.stringy": Field{Name: "objy.stringy", Type: "text", Value: "foobar"},
+						Field{Name: "numby", Type: "number", Value: 1.5},
+						Field{Name: "stringy", Type: "text", Value: "foobar"},
+						Field{Name: "objy.numby", Type: "number", Value: 1.5},
+						Field{Name: "objy.stringy", Type: "text", Value: "foobar"},
 					},
 				},
 			},
@@ -115,8 +117,8 @@ func TestContainer(t *testing.T) {
 				}),
 				expect: &HTMLForm{
 					Fields: Fields{
-						"meal.name": Field{Name: "meal.name", Errors: []Error{{Message: "missing properties: \"name\""}}},
-						"meal.chef": Field{Name: "meal.chef", Type: "text", Value: "aeneas"},
+						Field{Name: "meal.name", Errors: []Error{{Message: "missing properties: \"name\""}}},
+						Field{Name: "meal.chef", Type: "text", Value: "aeneas"},
 					},
 				},
 			},
@@ -124,6 +126,7 @@ func TestContainer(t *testing.T) {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				actual, err := NewHTMLFormFromRequestBody(tc.r, "action", decoderx.HTTPJSONSchemaCompiler(tc.ref, nil))
 				require.NoError(t, err)
+				sort.Sort(tc.expect.Fields)
 				assert.Equal(t, "action", actual.Action)
 				assert.EqualValues(t, tc.expect.Fields, actual.Fields)
 			})
@@ -141,11 +144,11 @@ func TestContainer(t *testing.T) {
 				prefix: "",
 				expect: &HTMLForm{
 					Fields: Fields{
-						"numby":        Field{Name: "numby", Type: "number"},
-						"objy.numby":   Field{Name: "objy.numby", Type: "number"},
-						"objy.objy":    Field{Name: "objy.objy", Type: "text"},
-						"objy.stringy": Field{Name: "objy.stringy", Type: "text"},
-						"stringy":      Field{Name: "stringy", Type: "text"},
+						Field{Name: "numby", Type: "number"},
+						Field{Name: "objy.numby", Type: "number"},
+						Field{Name: "objy.objy", Type: "text"},
+						Field{Name: "objy.stringy", Type: "text"},
+						Field{Name: "stringy", Type: "text"},
 					},
 				},
 			},
@@ -154,11 +157,11 @@ func TestContainer(t *testing.T) {
 				prefix: "traits",
 				expect: &HTMLForm{
 					Fields: Fields{
-						"traits.numby":        Field{Name: "traits.numby", Type: "number"},
-						"traits.objy.numby":   Field{Name: "traits.objy.numby", Type: "number"},
-						"traits.objy.objy":    Field{Name: "traits.objy.objy", Type: "text"},
-						"traits.objy.stringy": Field{Name: "traits.objy.stringy", Type: "text"},
-						"traits.stringy":      Field{Name: "traits.stringy", Type: "text"},
+						Field{Name: "traits.numby", Type: "number"},
+						Field{Name: "traits.objy.numby", Type: "number"},
+						Field{Name: "traits.objy.objy", Type: "text"},
+						Field{Name: "traits.objy.stringy", Type: "text"},
+						Field{Name: "traits.stringy", Type: "text"},
 					},
 				},
 			},
@@ -166,10 +169,10 @@ func TestContainer(t *testing.T) {
 				ref: "./stub/complex.schema.json",
 				expect: &HTMLForm{
 					Fields: Fields{
-						"fruits":     Field{Name: "fruits", Type: "text"},
-						"meal.chef":  Field{Name: "meal.chef", Type: "text"},
-						"meal.name":  Field{Name: "meal.name", Type: "text"},
-						"vegetables": Field{Name: "vegetables", Type: "text"},
+						Field{Name: "fruits", Type: "text"},
+						Field{Name: "meal.chef", Type: "text"},
+						Field{Name: "meal.name", Type: "text"},
+						Field{Name: "vegetables", Type: "text"},
 					},
 				},
 			},
@@ -177,6 +180,7 @@ func TestContainer(t *testing.T) {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				actual, err := NewHTMLFormFromJSONSchema("action", tc.ref, tc.prefix)
 				require.NoError(t, err)
+				sort.Sort(tc.expect.Fields)
 				assert.Equal(t, "action", actual.Action)
 				assert.EqualValues(t, tc.expect.Errors, actual.Errors)
 				assert.EqualValues(t, tc.expect.Fields, actual.Fields)
@@ -194,7 +198,7 @@ func TestContainer(t *testing.T) {
 			{err: &herodot.ErrNotFound, expectErr: true},
 			{err: herodot.ErrBadRequest.WithReason("tests"), expect: HTMLForm{Fields: Fields{}, Errors: []Error{{Message: "tests"}}}},
 			{err: schema.NewInvalidCredentialsError(), expect: HTMLForm{Fields: Fields{}, Errors: []Error{{Message: "The provided credentials are invalid. Check for spelling mistakes in your password or username, email address, or phone number."}}}},
-			{err: &jsonschema.ValidationError{Message: "test", InstancePtr: "#/foo/bar/baz"}, expect: HTMLForm{Fields: Fields{"foo.bar.baz": Field{Name: "foo.bar.baz", Type: "", Errors: []Error{{Message: "test"}}}}}},
+			{err: &jsonschema.ValidationError{Message: "test", InstancePtr: "#/foo/bar/baz"}, expect: HTMLForm{Fields: Fields{Field{Name: "foo.bar.baz", Type: "", Errors: []Error{{Message: "test"}}}}}},
 			{err: &jsonschema.ValidationError{Message: "test", InstancePtr: ""}, expect: HTMLForm{Fields: Fields{}, Errors: []Error{{Message: "test"}}}},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
@@ -206,6 +210,7 @@ func TestContainer(t *testing.T) {
 						return
 					}
 					require.NoError(t, err)
+					sort.Sort(tc.expect.Fields)
 					assert.EqualValues(t, tc.expect.Errors, c.Errors)
 					assert.EqualValues(t, tc.expect.Fields, c.Fields)
 				}
@@ -216,8 +221,8 @@ func TestContainer(t *testing.T) {
 	t.Run("method=SetValue", func(t *testing.T) {
 		c := HTMLForm{
 			Fields: Fields{
-				"1": {Name: "1", Value: "foo"},
-				"2": {Name: "2", Value: ""},
+				{Name: "1", Value: "foo"},
+				{Name: "2", Value: ""},
 			},
 		}
 
@@ -229,33 +234,33 @@ func TestContainer(t *testing.T) {
 
 		assert.Len(t, c.Fields, 3)
 		for _, k := range []string{"1", "2", "3"} {
-			assert.EqualValues(t, fmt.Sprintf("baz%s", k), c.Fields[k].Value, "%+v", c)
+			assert.EqualValues(t, fmt.Sprintf("baz%s", k), c.getField(k).Value, "%+v", c)
 		}
 	})
 
 	t.Run("method=SetCSRF", func(t *testing.T) {
-		f := &HTMLForm{Fields: Fields{"1": {Name: "1", Value: "bar"}}}
+		f := &HTMLForm{Fields: Fields{{Name: "1", Value: "bar"}}}
 		f.SetCSRF("csrf-token")
-		assert.EqualValues(
+		assert.Contains(
 			t,
+			f.Fields,
 			Field{Name: CSRFTokenName, Value: "csrf-token", Type: "hidden", Required: true},
-			f.Fields[CSRFTokenName],
 		)
 
-		f = &HTMLForm{Fields: Fields{"1": {Name: "1", Value: "bar"}}}
+		f = &HTMLForm{Fields: Fields{{Name: "1", Value: "bar"}}}
 		f.SetCSRF("csrf-token")
-		assert.EqualValues(
+		assert.Contains(
 			t,
+			f.Fields,
 			Field{Name: CSRFTokenName, Value: "csrf-token", Type: "hidden", Required: true},
-			f.Fields[CSRFTokenName],
 		)
 	})
 
 	t.Run("method=AddError", func(t *testing.T) {
 		c := HTMLForm{
 			Fields: Fields{
-				"1": {Name: "1", Value: "foo", Errors: []Error{{Message: "foo"}}},
-				"2": {Name: "2", Value: "", Errors: []Error{}},
+				{Name: "1", Value: "foo", Errors: []Error{{Message: "foo"}}},
+				{Name: "2", Value: "", Errors: []Error{}},
 			},
 		}
 		assert.Len(t, c.Fields, 2)
@@ -267,10 +272,10 @@ func TestContainer(t *testing.T) {
 
 		assert.Len(t, c.Fields, 6)
 		for _, k := range []string{"1", "2", "3"} {
-			assert.EqualValues(t, fmt.Sprintf("baz%s", k), c.Fields[k].Errors[len(c.Fields[k].Errors)-1].Message, "%+v", c)
+			assert.EqualValues(t, fmt.Sprintf("baz%s", k), c.getField(k).Errors[len(c.getField(k).Errors)-1].Message, "%+v", c)
 		}
 		for _, k := range []string{"4", "5", "6"} {
-			assert.EqualValues(t, "baz", c.Fields[k].Errors[0].Message, "%+v", c)
+			assert.EqualValues(t, "baz", c.getField(k).Errors[0].Message, "%+v", c)
 		}
 
 		assert.Len(t, c.Errors, 1)
@@ -280,17 +285,17 @@ func TestContainer(t *testing.T) {
 	t.Run("method=Reset", func(t *testing.T) {
 		c := HTMLForm{
 			Fields: Fields{
-				"1": {Name: "1", Value: "foo", Errors: []Error{{Message: "foo"}}},
-				"2": {Name: "2", Value: "bar", Errors: []Error{{Message: "bar"}}},
+				{Name: "1", Value: "foo", Errors: []Error{{Message: "foo"}}},
+				{Name: "2", Value: "bar", Errors: []Error{{Message: "bar"}}},
 			},
 			Errors: []Error{{Message: ""}},
 		}
 		c.Reset()
 
 		assert.Empty(t, c.Errors)
-		assert.Empty(t, c.Fields["1"].Errors)
-		assert.Empty(t, c.Fields["1"].Value)
-		assert.Empty(t, c.Fields["2"].Errors)
-		assert.Empty(t, c.Fields["2"].Value)
+		assert.Empty(t, c.getField("1").Errors)
+		assert.Empty(t, c.getField("1").Value)
+		assert.Empty(t, c.getField("2").Errors)
+		assert.Empty(t, c.getField("2").Value)
 	})
 }
