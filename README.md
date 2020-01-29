@@ -1,45 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
-
-- [](#)
-      - [
-    Chat |
-    Forums |
-    Newsletter
-    Guide |
-    API Docs |
-    Code Docs
-    Support this project!
-](#chat-%0A----forums-%0A----newsletter%0A----guide-%0A----api-docs-%0A----code-docs%0A----support-this-project)
-  - [What is ORY Kratos?](#what-is-ory-kratos)
-    - [Who's using it?](#whos-using-it)
-  - [Getting Started](#getting-started)
-    - [Quickstart](#quickstart)
-    - [Installation](#installation)
-  - [Ecosystem](#ecosystem)
-    - [ORY Security Console: Administrative User Interface](#ory-security-console-administrative-user-interface)
-    - [ORY Oathkeeper: Identity & Access Proxy](#ory-oathkeeper-identity--access-proxy)
-    - [ORY Keto: Access Control Policies as a Server](#ory-keto-access-control-policies-as-a-server)
-  - [Security](#security)
-    - [Disclosing vulnerabilities](#disclosing-vulnerabilities)
-  - [Telemetry](#telemetry)
-  - [Documentation](#documentation)
-    - [Guide](#guide)
-    - [HTTP API documentation](#http-api-documentation)
-    - [Upgrading and Changelog](#upgrading-and-changelog)
-    - [Command line documentation](#command-line-documentation)
-    - [Develop](#develop)
-      - [Dependencies](#dependencies)
-        - [Install Tools](#install-tools)
-      - [Formatting Code](#formatting-code)
-      - [Running Tests](#running-tests)
-        - [Short Tests](#short-tests)
-        - [Regular Tests](#regular-tests)
-      - [Build Docker](#build-docker)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 <h1 align="center"><img src="./docs/images/banner_kratos.png" alt="ORY Kratos - Cloud native Identity and User Management"></h1>
 
 <h4 align="center">
@@ -63,6 +21,38 @@
 </p>
 
 ORY Kratos is the first and only cloud native Identity and User Management System in the world. Finally, it is no longer necessary to implement a User Login process for the umpteenth time! 
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**
+
+- [What is ORY Kratos?](#what-is-ory-kratos)
+  - [Who's using it?](#whos-using-it)
+- [Getting Started](#getting-started)
+  - [Quickstart](#quickstart)
+  - [Installation](#installation)
+- [Ecosystem](#ecosystem)
+  - [ORY Security Console: Administrative User Interface](#ory-security-console-administrative-user-interface)
+  - [ORY Oathkeeper: Identity & Access Proxy](#ory-oathkeeper-identity--access-proxy)
+  - [ORY Keto: Access Control Policies as a Server](#ory-keto-access-control-policies-as-a-server)
+- [Security](#security)
+  - [Disclosing vulnerabilities](#disclosing-vulnerabilities)
+- [Telemetry](#telemetry)
+- [Documentation](#documentation)
+  - [Guide](#guide)
+  - [HTTP API documentation](#http-api-documentation)
+  - [Upgrading and Changelog](#upgrading-and-changelog)
+  - [Command line documentation](#command-line-documentation)
+  - [Develop](#develop)
+    - [Dependencies](#dependencies)
+      - [Install Tools](#install-tools)
+    - [Formatting Code](#formatting-code)
+    - [Running Tests](#running-tests)
+      - [Short Tests](#short-tests)
+      - [Regular Tests](#regular-tests)
+    - [Build Docker](#build-docker)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## What is ORY Kratos?
 
