@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	BrowserLogoutPath = "/auth/browser/logout"
+	BrowserLogoutPath = "/self-service/browser/flows/logout"
 )
 
 type (

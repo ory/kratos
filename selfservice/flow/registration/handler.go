@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	BrowserRegistrationPath         = "/auth/browser/registration"
-	BrowserRegistrationRequestsPath = "/auth/browser/requests/registration"
+	BrowserRegistrationPath         = "/self-service/browser/flows/registration"
+	BrowserRegistrationRequestsPath = "/self-service/browser/flows/requests/registration"
 )
 
 type (

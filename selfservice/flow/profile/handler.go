@@ -27,8 +27,8 @@ import (
 )
 
 const (
-	BrowserProfilePath        = "/profiles"
-	BrowserProfileRequestPath = "/profiles/requests"
+	BrowserProfilePath        = "/self-service/browser/flows/profile"
+	BrowserProfileRequestPath = "/self-service/browser/flows/requests/profile"
 )
 
 type (

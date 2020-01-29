@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	BrowserLoginPath         = "/auth/browser/login"
-	BrowserLoginRequestsPath = "/auth/browser/requests/login"
+	BrowserLoginPath         = "/self-service/browser/flows/login"
+	BrowserLoginRequestsPath = "/self-service/browser/flows/requests/login"
 )
 
 type (

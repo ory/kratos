@@ -36,7 +36,8 @@ import (
 )
 
 const (
-	BasePath     = "/auth/browser/methods/oidc"
+	BasePath = "/self-service/browser/flows/registration/strategies/oidc"
+
 	AuthPath     = BasePath + "/auth/:request"
 	CallbackPath = BasePath + "/callback/:provider"
 
