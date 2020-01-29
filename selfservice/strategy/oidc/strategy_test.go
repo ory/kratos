@@ -349,7 +349,7 @@ func TestStrategy(t *testing.T) {
 		res, body := mr(t, "valid", r.ID, url.Values{})
 
 		require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
-		assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.fields.traits\\.subject.errors.0").String(), "not match format 'email'", "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.fields.#(name==traits.subject).errors.0").String(), "not match format 'email'", "%s", body)
 	})
 
 	t.Run("case=register and then login", func(t *testing.T) {
@@ -406,9 +406,9 @@ func TestStrategy(t *testing.T) {
 			res, body := mr(t, "valid", r.ID, url.Values{"traits.name": {"i"}})
 			require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
 
-			assert.Equal(t, "traits.name: String length must be greater than or equal to 2", gjson.GetBytes(body, "methods.oidc.config.fields.traits\\.name.errors.0.message").String(), "%s", body) // make sure the field is being echoed
-			assert.Equal(t, "traits.name", gjson.GetBytes(body, "methods.oidc.config.fields.traits\\.name.name").String(), "%s", body)                                                               // make sure the field is being echoed
-			assert.Equal(t, "i", gjson.GetBytes(body, "methods.oidc.config.fields.traits\\.name.value").String(), "%s", body)                                                                        // make sure the field is being echoed
+			assert.Equal(t, "traits.name: String length must be greater than or equal to 2", gjson.GetBytes(body, "methods.oidc.config.fields.#(name==traits.name).errors.0.message").String(), "%s", body) // make sure the field is being echoed
+			assert.Equal(t, "traits.name", gjson.GetBytes(body, "methods.oidc.config.fields.#(name==traits.name).name").String(), "%s", body)                                                               // make sure the field is being echoed
+			assert.Equal(t, "i", gjson.GetBytes(body, "methods.oidc.config.fields.#(name==traits.name).value").String(), "%s", body)                                                                        // make sure the field is being echoed
 		})
 
 		t.Run("case=should pass registration with valid data", func(t *testing.T) {
