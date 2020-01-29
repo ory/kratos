@@ -142,10 +142,12 @@ workflows:
           filters:
             tags:
               only: /.*/
-      - goreleaser/release-dry:
-          filters:
-            tags:
-              only: /.*/
+# Uncomment this to enable the dry-release test pipeline. Useful for debugging builds.
+#
+#      - goreleaser/release-dry:
+#          filters:
+#            tags:
+#              only: /.*/
       - goreleaser/release:
           requires:
             - goreleaser/test
