@@ -23,7 +23,6 @@ require (
 	github.com/gobuffalo/httptest v1.0.2
 	github.com/gobuffalo/packr v1.22.0
 	github.com/gobuffalo/packr/v2 v2.7.1
-	github.com/gobuffalo/pop v4.8.4+incompatible
 	github.com/gobuffalo/pop/v5 v5.0.7
 	github.com/gobuffalo/tags v2.1.7+incompatible // indirect
 	github.com/gobuffalo/uuid v2.0.5+incompatible

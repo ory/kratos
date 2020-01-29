@@ -263,9 +263,6 @@ github.com/gobuffalo/flect v0.0.0-20190117212819-a62e61d96794 h1:HZOs07hF3AmoaUj
 github.com/gobuffalo/flect v0.0.0-20190117212819-a62e61d96794/go.mod h1:397QT6v05LkZkn07oJXXT6y9FCfwC8Pug0WA2/2mE9k=
 github.com/gobuffalo/flect v0.1.5 h1:xpKq9ap8MbYfhuPCF0dBH854Gp9CxZjr/IocxELFflo=
 github.com/gobuffalo/flect v0.1.5/go.mod h1:W3K3X9ksuZfir8f/LrfVtWmCDQFfayuylOJ7sz/Fj80=
-github.com/gobuffalo/flect v0.1.6/go.mod h1:W3K3X9ksuZfir8f/LrfVtWmCDQFfayuylOJ7sz/Fj80=
-github.com/gobuffalo/flect v0.1.7 h1:qQqM2eGdM6tJX8yHKYBM0wVHBLjUT7Qs6uk5jnAhOwI=
-github.com/gobuffalo/flect v0.1.7/go.mod h1:W3K3X9ksuZfir8f/LrfVtWmCDQFfayuylOJ7sz/Fj80=
 github.com/gobuffalo/flect v0.2.0 h1:EWCvMGGxOjsgwlWaP+f4+Hh6yrrte7JeFL2S6b+0hdM=
 github.com/gobuffalo/flect v0.2.0/go.mod h1:W3K3X9ksuZfir8f/LrfVtWmCDQFfayuylOJ7sz/Fj80=
 github.com/gobuffalo/genny v0.0.0-20180924032338-7af3a40f2252/go.mod h1:tUTQOogrr7tAQnhajMSH6rv1BVev34H2sa1xNHMy94g=
@@ -306,8 +303,6 @@ github.com/gobuffalo/gogen v0.2.0/go.mod h1:V9QVDIxsgKNZs6L2IYiGR8datgMhB577vzTD
 github.com/gobuffalo/helpers v0.2.2/go.mod h1:xYbzUdCUpVzLwLnqV8HIjT6hmG0Cs7YIBCJkNM597jw=
 github.com/gobuffalo/helpers v0.2.4 h1:K5pXrMiSn8qJpMuv/q853i+WI2o47wS8ehD6NGF0hkE=
 github.com/gobuffalo/helpers v0.2.4/go.mod h1:NX7v27yxPDOPTgUFYmJ5ow37EbxdoLraucOGvMNawyk=
-github.com/gobuffalo/helpers v0.4.0 h1:DR/iYihrVCXv1cYeIGSK3EZz2CljO+DqDLQPWZAod9c=
-github.com/gobuffalo/helpers v0.4.0/go.mod h1:2q/ZnVxCehM4/y1bNz3+wXsvWvWUY+iTUr7mPC6QqGQ=
 github.com/gobuffalo/helpers v0.6.0 h1:CL1xOSGeKCaKD1IUpo4RfrkDU83kmkMG4H3dXAS7dw0=
 github.com/gobuffalo/helpers v0.6.0/go.mod h1:pncVrer7x/KRvnL5aJABLAuT/RhKRR9klL6dkUOhyv8=
 github.com/gobuffalo/httptest v1.0.2 h1:LWp2khlgA697h4BIYWW2aRxvB93jMnBrbakQ/r2KLzs=
@@ -415,8 +410,6 @@ github.com/gobuffalo/pop v4.8.2+incompatible/go.mod h1:DwBz3SD5SsHpTZiTubcsFWcVD
 github.com/gobuffalo/pop v4.8.3+incompatible/go.mod h1:DwBz3SD5SsHpTZiTubcsFWcVDpJWGsxjVjMPnkiThWg=
 github.com/gobuffalo/pop v4.8.4+incompatible h1:5v15ZgICK3MFTU90QRqCaqDUf4wcriIbws1hqpYL2Xo=
 github.com/gobuffalo/pop v4.8.4+incompatible/go.mod h1:DwBz3SD5SsHpTZiTubcsFWcVDpJWGsxjVjMPnkiThWg=
-github.com/gobuffalo/pop v4.13.0+incompatible h1:sE2C/dmCENwLhSfXyFXk3re4dzBbSkH/Ut62g6N1zDw=
-github.com/gobuffalo/pop v4.13.0+incompatible/go.mod h1:DwBz3SD5SsHpTZiTubcsFWcVDpJWGsxjVjMPnkiThWg=
 github.com/gobuffalo/pop/v5 v5.0.7 h1:QKFkUE2aPDkmM0jXv9u/96SFUDPVj5JYvJlOwXm40WY=
 github.com/gobuffalo/pop/v5 v5.0.7/go.mod h1:RRoSowwfxkKnCw8C2vr5EnCzs879Jj4fDH5fmwpWcEg=
 github.com/gobuffalo/release v1.0.35/go.mod h1:VtHFAKs61vO3wboCec5xr9JPTjYyWYcvaM3lclkc4x4=
@@ -547,6 +540,7 @@ github.com/jackc/pgconn v1.2.1 h1:+73KD6pbtv6Dbs6/rqlSRUa8XffPlW6YBd1hyFLpwuA=
 github.com/jackc/pgconn v1.2.1/go.mod h1:GgY/Lbj1VonNaVdNUHs9AwWom3yP2eymFQ1C8z9r/Lk=
 github.com/jackc/pgio v1.0.0 h1:g12B9UwVnzGhueNavwioyEEpAmqMe1E/BN9ES+8ovkE=
 github.com/jackc/pgio v1.0.0/go.mod h1:oP+2QK2wFfUWgr+gxjoBH9KGBb31Eio69xUb0w5bYf8=
+github.com/jackc/pgmock v0.0.0-20190831213851-13a1b77aafa2 h1:JVX6jT/XfzNqIjye4717ITLaNwV9mWbJx0dLCpcRzdA=
 github.com/jackc/pgmock v0.0.0-20190831213851-13a1b77aafa2/go.mod h1:fGZlG77KXmcq05nJLRkk0+p82V8B8Dw8KN2/V9c/OAE=
 github.com/jackc/pgpassfile v1.0.0 h1:/6Hmqy13Ss2zCq62VdNG8tM1wchn8zjSGOBJ6icpsIM=
 github.com/jackc/pgpassfile v1.0.0/go.mod h1:CEx0iS5ambNFdcRtxPj5JhEz+xB6uRky5eyVu/W2HEg=
@@ -676,8 +670,6 @@ github.com/mattn/go-sqlite3 v1.10.0 h1:jbhqpg7tQe4SupckyijYiy0mJJ/pRyHvXf7JdWK86
 github.com/mattn/go-sqlite3 v1.10.0/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
 github.com/mattn/go-sqlite3 v1.11.0 h1:LDdKkqtYlom37fkvqs8rMPFKAMe8+SgjbwZ6ex1/A/Q=
 github.com/mattn/go-sqlite3 v1.11.0/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
-github.com/mattn/go-sqlite3 v1.13.0 h1:LnJI81JidiW9r7pS/hXe6cFeO5EXNq7KbfvoJLRI69c=
-github.com/mattn/go-sqlite3 v1.13.0/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
 github.com/mattn/go-sqlite3 v2.0.2+incompatible h1:qzw9c2GNT8UFrgWNDhCTqRqYUSmu/Dav/9Z58LGpk7U=
 github.com/mattn/go-sqlite3 v2.0.2+incompatible/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
 github.com/mattn/goveralls v0.0.2 h1:7eJB6EqsPhRVxvwEXGnqdO2sJI0PTsrWoTMXEk9/OQc=
