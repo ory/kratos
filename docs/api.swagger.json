@@ -18,133 +18,6 @@
   },
   "basePath": "/",
   "paths": {
-    "/auth/browser/login": {
-      "get": {
-        "description": "This endpoint initializes a login flow. This endpoint **should not be called from a programatic API**\nbut instead for the, for example, browser. It will redirect the user agent (e.g. browser) to the\nconfigured login UI, appending the login challenge.\n\nIf the user-agent already has a valid authentication session, the server will respond with a 302\ncode redirecting to the config value of `urls.default_return_to`.\n\nFor an in-depth look at ORY Krato's login flow, head over to: https://www.ory.sh/docs/kratos/selfservice/login",
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "tags": [
-          "public"
-        ],
-        "summary": "Initialize a Login Flow",
-        "operationId": "initializeLoginFlow",
-        "responses": {
-          "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
-          },
-          "500": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          }
-        }
-      }
-    },
-    "/auth/browser/registration": {
-      "get": {
-        "description": "This endpoint initializes a registration flow. This endpoint **should not be called from a programatic API**\nbut instead for the, for example, browser. It will redirect the user agent (e.g. browser) to the\nconfigured registration UI, appending the registration challenge.\n\nFor an in-depth look at ORY Krato's registration flow, head over to: https://www.ory.sh/docs/kratos/selfservice/registration",
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "tags": [
-          "public"
-        ],
-        "summary": "Initialize a Registration Flow",
-        "operationId": "initializeRegistrationFlow",
-        "responses": {
-          "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
-          },
-          "404": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          },
-          "500": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          }
-        }
-      }
-    },
-    "/auth/browser/requests/login": {
-      "get": {
-        "description": "This endpoint returns a login request's context with, for example, error details and\nother information.\n\nFor an in-depth look at ORY Krato's login flow, head over to: https://www.ory.sh/docs/kratos/selfservice/login",
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "tags": [
-          "public"
-        ],
-        "summary": "Get Login Request",
-        "operationId": "getLoginRequest",
-        "responses": {
-          "200": {
-            "description": "loginRequest",
-            "schema": {
-              "$ref": "#/definitions/loginRequest"
-            }
-          },
-          "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
-          },
-          "500": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          }
-        }
-      }
-    },
-    "/auth/browser/requests/registration": {
-      "get": {
-        "description": "This endpoint returns a registration request's context with, for example, error details and\nother information.\n\nFor an in-depth look at ORY Krato's registration flow, head over to: https://www.ory.sh/docs/kratos/selfservice/registration",
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "tags": [
-          "public"
-        ],
-        "summary": "Get Registration Request",
-        "operationId": "getRegistrationRequest",
-        "responses": {
-          "200": {
-            "description": "registrationRequest",
-            "schema": {
-              "$ref": "#/definitions/registrationRequest"
-            }
-          },
-          "404": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          },
-          "500": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          }
-        }
-      }
-    },
     "/health/alive": {
       "get": {
         "description": "This endpoint returns a 200 status code when the HTTP server is up running.\nThis status does currently not include checks whether the database connection is working.\n\nIf the service supports TLS Edge Termination, this endpoint does not require the\n`X-Forwarded-Proto` header to be set.\n\nBe aware that if you are running multiple nodes of this service, the health status will never\nrefer to the cluster state, only to a single instance.",
@@ -199,9 +72,9 @@
         }
       }
     },
-    "/profiles": {
+    "/self-service/browser/flows/login": {
       "get": {
-        "description": "This endpoint initializes a profile update flow. This endpoint **should not be called from a programatic API**\nbut instead for the, for example, browser. It will redirect the user agent (e.g. browser) to the\nconfigured login UI, appending the login challenge.\n\nIf the user-agent does not have a valid authentication session, a 302 code will be returned which\nredirects to the initializeLoginFlow endpoint, appending this page as the return_to value.\n\nFor an in-depth look at ORY Krato's profile management flow, head over to: https://www.ory.sh/docs/kratos/selfservice/profile",
+        "description": "This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to\n`urls.login_ui` with the request ID set as a query parameter. If a valid user session exists already, the browser will be\nredirected to `urls.default_redirect_url`.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
         "schemes": [
           "http",
           "https"
@@ -209,35 +82,8 @@
         "tags": [
           "public"
         ],
-        "summary": "Initialize Profile Management Flow",
-        "operationId": "initializeProfileManagementFlow",
-        "responses": {
-          "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
-          },
-          "500": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          }
-        }
-      },
-      "post": {
-        "description": "This endpoint returns a login request's context with, for example, error details and\nother information.\n\nFor an in-depth look at ORY Krato's profile management flow, head over to: https://www.ory.sh/docs/kratos/selfservice/profile",
-        "consumes": [
-          "application/json",
-          "application/x-www-form-urlencoded"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "tags": [
-          "public"
-        ],
-        "summary": "Complete Profile Management Flow",
-        "operationId": "completeProfileManagementFlow",
+        "summary": "Initialize browser-based login user flow",
+        "operationId": "initializeSelfServiceBrowserLoginFlow",
         "responses": {
           "302": {
             "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
@@ -251,9 +97,113 @@
         }
       }
     },
-    "/profiles/requests": {
+    "/self-service/browser/flows/logout": {
       "get": {
-        "description": "This endpoint returns a profile management request's context with, for example, error details and\nother information.\n\nIt can be used from a Single Page Application or other applications running on a client device.\nThe request must be made with valid authentication cookies or it will fail!\n\nIf you wish to access this endpoint without the valid cookies (e.g. as part of a server)\nplease call this path at the admin port.\n\nFor an in-depth look at ORY Krato's profile management flow, head over to: https://www.ory.sh/docs/kratos/selfservice/profile",
+        "description": "This endpoint initializes a logout flow.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nOn successful logout, the browser will be redirected (HTTP 302 Found) to `urls.default_return_to`.\n\nMore information can be found at [ORY Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).",
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Initialize Browser-Based Logout User Flow",
+        "operationId": "initializeSelfServiceBrowserLogoutFlow",
+        "responses": {
+          "302": {
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
+    "/self-service/browser/flows/profile": {
+      "get": {
+        "description": "This endpoint initializes a browser-based profile management flow. Once initialized, the browser will be redirected to\n`urls.profile_ui` with the request ID set as a query parameter. If no valid user session exists, a login\nflow will be initialized.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).",
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Initialize browser-based profile management flow",
+        "operationId": "initializeSelfServiceProfileManagementFlow",
+        "responses": {
+          "302": {
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
+    "/self-service/browser/flows/profile/update": {
+      "post": {
+        "description": "This endpoint completes a browser-based profile management flow. This is usually achieved by POSTing data to this\nendpoint.\n\nIf the provided profile data is valid against the Identity's Traits JSON Schema, the data will be updated and\nthe browser redirected to `url.profile_ui` for further steps.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).",
+        "consumes": [
+          "application/json",
+          "application/x-www-form-urlencoded"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Complete the browser-based profile management flows",
+        "operationId": "completeSelfServiceBrowserProfileManagementFlow",
+        "responses": {
+          "302": {
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
+    "/self-service/browser/flows/registration": {
+      "get": {
+        "description": "This endpoint initializes a browser-based user registration flow. Once initialized, the browser will be redirected to\n`urls.registration_ui` with the request ID set as a query parameter. If a valid user session exists already, the browser will be\nredirected to `urls.default_redirect_url`.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Initialize browser-based registration user flow",
+        "operationId": "initializeSelfServiceBrowserRegistrationFlow",
+        "responses": {
+          "302": {
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
+    "/self-service/browser/flows/requests/login": {
+      "get": {
+        "description": "This endpoint returns a login request's context with, for example, error details and\nother information.\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
         "produces": [
           "application/json"
         ],
@@ -264,13 +214,55 @@
         "tags": [
           "public"
         ],
-        "summary": "Get Profile Management Request (via cookie)",
-        "operationId": "getProfileManagementRequest",
+        "summary": "Get the request context of browser-based login user flows",
+        "operationId": "getSelfServiceBrowserLoginRequest",
+        "responses": {
+          "200": {
+            "description": "loginRequest",
+            "schema": {
+              "$ref": "#/definitions/loginRequest"
+            }
+          },
+          "403": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "404": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
+    "/self-service/browser/flows/requests/profile": {
+      "get": {
+        "description": "More information can be found at [ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Get the request context of browser-based profile management flows",
+        "operationId": "getSelfServiceBrowserProfileManagementRequest",
         "parameters": [
           {
             "type": "string",
-            "x-go-name": "Request",
-            "description": "Request should be set to the value of the `request` query parameter\nby the profile management UI.",
+            "description": "Request is the Login Request ID\n\nThe value for this parameter comes from `request` URL Query parameter sent to your\napplication (e.g. `/login?request=abcde`).",
             "name": "request",
             "in": "query",
             "required": true
@@ -283,8 +275,60 @@
               "$ref": "#/definitions/profileManagementRequest"
             }
           },
-          "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+          "403": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "404": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
+    "/self-service/browser/flows/requests/registration": {
+      "get": {
+        "description": "This endpoint returns a registration request's context with, for example, error details and\nother information.\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Get the request context of browser-based registration user flows",
+        "operationId": "getSelfServiceBrowserRegistrationRequest",
+        "responses": {
+          "200": {
+            "description": "registrationRequest",
+            "schema": {
+              "$ref": "#/definitions/registrationRequest"
+            }
+          },
+          "403": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "404": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
           },
           "500": {
             "description": "genericError",
@@ -426,30 +470,46 @@
       "description": "Error responses are sent when an error (e.g. unauthorized, bad request, ...) occurred.",
       "type": "object",
       "title": "Error response",
-      "required": [
-        "error"
-      ],
       "properties": {
         "error": {
-          "description": "Name is the error name.",
-          "type": "string",
-          "example": "The requested resource could not be found"
-        },
-        "error_code": {
+          "$ref": "#/definitions/genericErrorPayload"
+        }
+      }
+    },
+    "genericErrorPayload": {
+      "type": "object",
+      "properties": {
+        "code": {
           "description": "Code represents the error status code (404, 403, 401, ...).",
           "type": "integer",
           "format": "int64",
           "example": 404
         },
-        "error_debug": {
+        "debug": {
           "description": "Debug contains debug information. This is usually not available and has to be enabled.",
           "type": "string",
           "example": "The database adapter was unable to find the element"
         },
-        "error_hint": {
-          "description": "Hint contains further information on the nature of the error.",
-          "type": "string",
-          "example": "Object with RequestID 12345 does not exist"
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object"
+            }
+          }
+        },
+        "message": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "request": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
         }
       }
     },

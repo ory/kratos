@@ -36,15 +36,16 @@ func NewHandler(
 }
 
 const (
-	CheckPath = "/sessions/me"
+	SessionsWhoamiPath = "/sessions/whoami"
+	// SessionsWhoisPath  = "/sessions/whois"
 )
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
-	public.GET(CheckPath, h.fromCookie)
+	public.GET(SessionsWhoamiPath, h.fromCookie)
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET("/sessions/:sid", h.fromPath)
+	// admin.GET(SessionsWhoisPath, h.fromPath)
 }
 
 func (h *Handler) fromCookie(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -60,9 +61,9 @@ func (h *Handler) fromCookie(w http.ResponseWriter, r *http.Request, ps httprout
 	h.r.Writer().Write(w, r, s)
 }
 
-func (h *Handler) fromPath(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	w.WriteHeader(505)
-}
+// func (h *Handler) fromPath(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// 	w.WriteHeader(505)
+// }
 
 func (h *Handler) IsAuthenticated(wrap httprouter.Handle, onUnauthenticated httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

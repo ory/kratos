@@ -7,26 +7,29 @@ package main
 // swagger:model genericError
 // nolint:deadcode,unused
 type genericError struct {
-	// Name is the error name.
-	//
-	// required: true
-	// example: The requested resource could not be found
-	Name string `json:"error"`
+	Error genericErrorPayload `json:"error"`
+}
 
-	// Hint contains further information on the nature of the error.
-	//
-	// example: Object with RequestID 12345 does not exist
-	Hint string `json:"error_hint"`
-
+type genericErrorPayload struct {
 	// Code represents the error status code (404, 403, 401, ...).
 	//
 	// example: 404
-	Code int `json:"error_code"`
+	Code int `json:"code,omitempty"`
+
+	Status string `json:"status,omitempty"`
+
+	Request string `json:"request,omitempty"`
+
+	Reason string `json:"reason,omitempty"`
+
+	Details []map[string]interface{} `json:"details,omitempty"`
+
+	Message string `json:"message"`
 
 	// Debug contains debug information. This is usually not available and has to be enabled.
 	//
 	// example: The database adapter was unable to find the element
-	Debug string `json:"error_debug"`
+	Debug string `json:"debug"`
 }
 
 // Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is

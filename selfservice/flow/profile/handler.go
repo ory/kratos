@@ -29,6 +29,7 @@ import (
 const (
 	BrowserProfilePath        = "/self-service/browser/flows/profile"
 	BrowserProfileRequestPath = "/self-service/browser/flows/requests/profile"
+	BrowserProfileUpdatePath  = "/self-service/browser/flows/profile/update"
 )
 
 type (
@@ -67,21 +68,21 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	redirect := session.RedirectOnUnauthenticated(h.c.LoginURL().String())
 	public.GET(BrowserProfilePath, h.d.SessionHandler().IsAuthenticated(h.initUpdateProfile, redirect))
 	public.GET(BrowserProfileRequestPath, h.d.SessionHandler().IsAuthenticated(h.fetchUpdateProfileRequest, redirect))
-	public.POST(BrowserProfilePath, h.d.SessionHandler().IsAuthenticated(h.completeProfileManagementFlow, redirect))
+	public.POST(BrowserProfileUpdatePath, h.d.SessionHandler().IsAuthenticated(h.completeProfileManagementFlow, redirect))
 }
 
-// swagger:route GET /profiles public initializeProfileManagementFlow
+// swagger:route GET /self-service/browser/flows/profile public initializeSelfServiceProfileManagementFlow
 //
-// Initialize Profile Management Flow
+// Initialize browser-based profile management flow
 //
-// This endpoint initializes a profile update flow. This endpoint **should not be called from a programatic API**
-// but instead for the, for example, browser. It will redirect the user agent (e.g. browser) to the
-// configured login UI, appending the login challenge.
+// This endpoint initializes a browser-based profile management flow. Once initialized, the browser will be redirected to
+// `urls.profile_ui` with the request ID set as a query parameter. If no valid user session exists, a login
+// flow will be initialized.
 //
-// If the user-agent does not have a valid authentication session, a 302 code will be returned which
-// redirects to the initializeLoginFlow endpoint, appending this page as the return_to value.
+// > This endpoint is NOT INTENDED for API clients and only works
+// with browsers (Chrome, Firefox, ...).
 //
-// For an in-depth look at ORY Krato's profile management flow, head over to: https://www.ory.sh/docs/kratos/selfservice/profile
+// More information can be found at [ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).
 //
 //     Schemes: http, https
 //
@@ -96,7 +97,7 @@ func (h *Handler) initUpdateProfile(w http.ResponseWriter, r *http.Request, ps h
 	}
 
 	a := NewRequest(h.c.SelfServiceProfileRequestLifespan(), r, s)
-	a.Form = form.NewHTMLFormFromJSON(urlx.AppendPaths(h.c.SelfPublicURL(), BrowserProfilePath).String(), json.RawMessage(s.Identity.Traits), "traits")
+	a.Form = form.NewHTMLFormFromJSON(urlx.AppendPaths(h.c.SelfPublicURL(), BrowserProfileUpdatePath).String(), json.RawMessage(s.Identity.Traits), "traits")
 	if err := h.d.ProfileRequestPersister().CreateProfileRequest(r.Context(), a); err != nil {
 		h.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
 		return
@@ -108,61 +109,24 @@ func (h *Handler) initUpdateProfile(w http.ResponseWriter, r *http.Request, ps h
 	)
 }
 
-// swagger:parameters getProfileManagementRequest
-type (
-	// nolint:deadcode,unused
-	getProfileManagementRequestParameters struct {
-		// Request should be set to the value of the `request` query parameter
-		// by the profile management UI.
-		//
-		// in: query
-		// required: true
-		Request string `json:"request"`
-	}
-)
-
-// swagger:route GET /profiles/requests admin getProfileManagementRequest
-//
-// Get Profile Management Request
-//
-// This endpoint returns a profile management request's context with, for example, error details and
-// other information.
-//
-// It can be used from a server or other applications running in a privileged network with access to
-// ORY Kratos' admin port.
-//
-// If you wish to access this endpoint from e.g. a SPA instead, please call this path at the public port
-// and make sure to include cookies in that request.
-//
-// For an in-depth look at ORY Krato's profile management flow, head over to: https://www.ory.sh/docs/kratos/selfservice/profile
-//
-//     Produces:
-//     - application/json
-//
-//     Schemes: http, https
-//
-//     Responses:
-//       200: profileManagementRequest
-//       302: emptyResponse
-//       500: genericError
-//
 // nolint:deadcode,unused
-func fetchUpdateProfileRequestAdmin() {}
+// swagger:parameters getSelfServiceBrowserProfileManagementRequest
+type getSelfServiceBrowserLoginRequestParameters struct {
+	// Request is the Login Request ID
+	//
+	// The value for this parameter comes from `request` URL Query parameter sent to your
+	// application (e.g. `/login?request=abcde`).
+	//
+	// required: true
+	// in: query
+	Request string `json:"request"`
+}
 
-// swagger:route GET /profiles/requests public getProfileManagementRequest
+// swagger:route GET /self-service/browser/flows/requests/profile public getSelfServiceBrowserProfileManagementRequest
 //
-// Get Profile Management Request (via cookie)
+// Get the request context of browser-based profile management flows
 //
-// This endpoint returns a profile management request's context with, for example, error details and
-// other information.
-//
-// It can be used from a Single Page Application or other applications running on a client device.
-// The request must be made with valid authentication cookies or it will fail!
-//
-// If you wish to access this endpoint without the valid cookies (e.g. as part of a server)
-// please call this path at the admin port.
-//
-// For an in-depth look at ORY Krato's profile management flow, head over to: https://www.ory.sh/docs/kratos/selfservice/profile
+// More information can be found at [ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).
 //
 //     Produces:
 //     - application/json
@@ -171,7 +135,8 @@ func fetchUpdateProfileRequestAdmin() {}
 //
 //     Responses:
 //       200: profileManagementRequest
-//       302: emptyResponse
+//       403: genericError
+//       404: genericError
 //       500: genericError
 func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	rid := x.ParseUUID(r.URL.Query().Get("request"))
@@ -204,17 +169,17 @@ func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Reque
 }
 
 type (
-	// swagger:parameters completeProfileManagementFlow
+	// swagger:parameters completeSelfServiceBrowserProfileManagementFlow
 	// nolint:deadcode,unused
 	completeProfileManagementParameters struct {
 		// in: body
 		// required: true
-		Body completeProfileManagementPayload
+		Body completeSelfServiceBrowserProfileManagementFlowPayload
 	}
 
-	// swagger:model completeProfileManagementPayload
+	// swagger:model completeSelfServiceBrowserProfileManagementFlowPayload
 	// nolint:deadcode,unused
-	completeProfileManagementPayload struct {
+	completeSelfServiceBrowserProfileManagementFlowPayload struct {
 		// Traits contains all of the identity's traits.
 		//
 		// type: string
@@ -230,14 +195,19 @@ type (
 	}
 )
 
-// swagger:route POST /profiles public completeProfileManagementFlow
+// swagger:route POST /self-service/browser/flows/profile/update public completeSelfServiceBrowserProfileManagementFlow
 //
-// Complete Profile Management Flow
+// Complete the browser-based profile management flows
 //
-// This endpoint returns a login request's context with, for example, error details and
-// other information.
+// This endpoint completes a browser-based profile management flow. This is usually achieved by POSTing data to this
+// endpoint.
 //
-// For an in-depth look at ORY Krato's profile management flow, head over to: https://www.ory.sh/docs/kratos/selfservice/profile
+// If the provided profile data is valid against the Identity's Traits JSON Schema, the data will be updated and
+// the browser redirected to `url.profile_ui` for further steps.
+//
+// > This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
+//
+// More information can be found at [ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).
 //
 //     Consumes:
 //     - application/json
@@ -261,7 +231,7 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	var p completeProfileManagementPayload
+	var p completeSelfServiceBrowserProfileManagementFlowPayload
 	if err := decoderx.NewHTTP().Decode(r, &p,
 		decoderx.HTTPFormDecoder(),
 		option,
@@ -292,8 +262,6 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 		h.handleProfileManagementError(w, r, ar, s.Identity.Traits, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Did not receive any value changes.")))
 		return
 	}
-
-	// identity.TraitsSchemaURL
 
 	creds, err := h.d.IdentityPool().GetIdentityConfidential(r.Context(), s.Identity.ID)
 	if err != nil {

@@ -28,10 +28,6 @@ init:
 lint:
 		GO111MODULE=on golangci-lint run -v ./...
 
-.PHONY: format
-format:
-		$$(go env GOPATH)/bin/goreturns -w -local github.com/ory $$($$(go env GOPATH)/bin/listx .)
-
 .PHONY: cover
 cover:
 		go test ./... -coverprofile=cover.out
