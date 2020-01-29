@@ -106,7 +106,7 @@ archives:
   - id: kratos-sqlite
     builds:
       - kratos-sqlite-windows
-      - kratos-sqlite-macos
+      - kratos-sqlite-darwin
       - kratos-sqlite-linux
     replacements:
       darwin: macos
@@ -118,8 +118,10 @@ archives:
         goos: windows
         format: zip
     files:
-      - README.md
+      - CHANGELOG.md
       - LICENSE
+      - README.md
+      - SECURITY.md
     name_template: "{{ .ProjectName }}_sqlite_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
 
   - id: kratos
@@ -134,14 +136,21 @@ archives:
       - goos: windows
         format: zip
     files:
-      - README.md
+      - CHANGELOG.md
       - LICENSE
+      - README.md
+      - SECURITY.md
 
   - id: kratos-brew
     builds:
-      - kratos-sqlite-macos
+      - kratos-sqlite-darwin
     replacements:
       darwin: macos
+    files:
+      - CHANGELOG.md
+      - LICENSE
+      - README.md
+      - SECURITY.md
 
 snapshot:
   name_template: "{{ .Tag }}-next"
