@@ -48,7 +48,7 @@ require (
 	github.com/ory/gojsonschema v1.2.0
 	github.com/ory/graceful v0.1.1
 	github.com/ory/herodot v0.6.3
-	github.com/ory/sdk/swagutil v0.0.0-20200129155727-8bfe32fcff3c // indirect
+	github.com/ory/sdk/swagutil v0.0.0-20200129155727-8bfe32fcff3c
 	github.com/ory/viper v1.5.6
 	github.com/ory/x v0.0.92
 	github.com/pelletier/go-toml v1.6.0 // indirect
