@@ -1,6 +1,6 @@
 FROM oryd/xgoreleaser:1.13.7
 
-WORKDIR /home/project
+WORKDIR /home/ory
 
 ADD go.mod go.mod
 ADD go.sum go.sum
