@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// GenericErrorPayload generic error payload
+// GenericErrorPayload GenericErrorPayload generic error payload
 // swagger:model genericErrorPayload
 type GenericErrorPayload struct {
 
