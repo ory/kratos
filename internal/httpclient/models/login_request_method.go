@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// LoginRequestMethod LoginRequestMethod login request method
+// LoginRequestMethod login request method
 // swagger:model loginRequestMethod
 type LoginRequestMethod struct {
 
