@@ -57,17 +57,19 @@ type (
 	Handler struct {
 		c configuration.Provider
 		d handlerDependencies
+		csrf x.CSRFToken
 	}
 )
 
 func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
-	return &Handler{d: d, c: c}
+	return &Handler{d: d, c: c, csrf: nosurf.Token}
 }
 
-func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
+func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic, admin *x.RouterAdmin) {
 	redirect := session.RedirectOnUnauthenticated(h.c.LoginURL().String())
 	public.GET(BrowserProfilePath, h.d.SessionHandler().IsAuthenticated(h.initUpdateProfile, redirect))
 	public.GET(BrowserProfileRequestPath, h.d.SessionHandler().IsAuthenticated(h.fetchUpdateProfileRequest, redirect))
+	admin.GET(BrowserProfileRequestPath, h.d.SessionHandler().IsAuthenticated(h.fetchUpdateProfileRequest, redirect))
 	public.POST(BrowserProfileUpdatePath, h.d.SessionHandler().IsAuthenticated(h.completeProfileManagementFlow, redirect))
 }
 
@@ -96,7 +98,7 @@ func (h *Handler) initUpdateProfile(w http.ResponseWriter, r *http.Request, ps h
 		return
 	}
 
-	a := NewRequest(h.c.SelfServiceProfileRequestLifespan(), r, s)
+	a := NewRequest(h.c.SelfServiceProfileRequestLifespan(), h.csrf(r), r, s)
 	a.Form = form.NewHTMLFormFromJSON(urlx.AppendPaths(h.c.SelfPublicURL(), BrowserProfileUpdatePath).String(), json.RawMessage(s.Identity.Traits), "traits")
 	if err := h.d.ProfileRequestPersister().CreateProfileRequest(r.Context(), a); err != nil {
 		h.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
@@ -138,6 +140,30 @@ type getSelfServiceBrowserLoginRequestParameters struct {
 //       403: genericError
 //       404: genericError
 //       500: genericError
+func (h *Handler) publicFetchUpdateProfileRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	h.fetchUpdateProfileRequest(w,r,ps)
+}
+
+// swagger:route GET /self-service/browser/flows/requests/profile admin getSelfServiceBrowserProfileManagementRequest
+//
+// Get the request context of browser-based profile management flows
+//
+// More information can be found at [ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).
+//
+//     Produces:
+//     - application/json
+//
+//     Schemes: http, https
+//
+//     Responses:
+//       200: profileManagementRequest
+//       403: genericError
+//       404: genericError
+//       500: genericError
+func (h *Handler) adminFetchUpdateProfileRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	h.fetchUpdateProfileRequest(w,r,ps)
+}
+
 func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	rid := x.ParseUUID(r.URL.Query().Get("request"))
 	ar, err := h.d.ProfileRequestPersister().GetProfileRequest(r.Context(), rid)

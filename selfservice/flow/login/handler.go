@@ -5,6 +5,8 @@ import (
 	"net/url"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/justinas/nosurf"
+	"github.com/pkg/errors"
 
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/urlx"
@@ -33,22 +35,24 @@ type (
 		LoginHandler() *Handler
 	}
 	Handler struct {
-		d handlerDependencies
-		c configuration.Provider
+		d    handlerDependencies
+		c    configuration.Provider
+		csrf x.CSRFToken
 	}
 )
 
 func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
-	return &Handler{d: d, c: c}
+	return &Handler{d: d, c: c, csrf: nosurf.Token}
 }
 
-func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
+func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic, admin *x.RouterAdmin) {
 	public.GET(BrowserLoginPath, h.d.SessionHandler().IsNotAuthenticated(h.initLoginRequest, session.RedirectOnAuthenticated(h.c)))
-	public.GET(BrowserLoginRequestsPath, h.fetchLoginRequest)
+	public.GET(BrowserLoginRequestsPath, h.publicFetchLoginRequest)
+	admin.GET(BrowserLoginRequestsPath, h.adminFetchLoginRequest)
 }
 
 func (h *Handler) NewLoginRequest(w http.ResponseWriter, r *http.Request, redir func(request *Request) string) error {
-	a := NewLoginRequest(h.c.SelfServiceLoginRequestLifespan(), r)
+	a := NewLoginRequest(h.c.SelfServiceLoginRequestLifespan(), h.csrf(r), r)
 	for _, s := range h.d.LoginStrategies() {
 		if err := s.PopulateLoginMethod(r, a); err != nil {
 			return err
@@ -122,6 +126,34 @@ type getSelfServiceBrowserLoginRequestParameters struct {
 // This endpoint returns a login request's context with, for example, error details and
 // other information.
 //
+// When accessing this endpoint, ensure that cookies are set as they are required for CSRF to work. To prevent
+// token scanning attacks, the public endpoint does not return 404 status codes to prevent scanning attacks.
+//
+// More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+//
+//     Produces:
+//     - application/json
+//
+//     Schemes: http, https
+//
+//     Responses:
+//       200: loginRequest
+//       403: genericError
+//       500: genericError
+func (h *Handler) publicFetchLoginRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if err := h.fetchLoginRequest(w, r, true); err != nil {
+		h.d.Writer().WriteError(w, r, x.ErrInvalidCSRFToken.WithTrace(err).WithDebugf("%s", err))
+		return
+	}
+}
+
+// swagger:route GET /self-service/browser/flows/requests/login admin getSelfServiceBrowserLoginRequest
+//
+// Get the request context of browser-based login user flows
+//
+// This endpoint returns a login request's context with, for example, error details and
+// other information.
+//
 // More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 //
 //     Produces:
@@ -134,12 +166,24 @@ type getSelfServiceBrowserLoginRequestParameters struct {
 //       403: genericError
 //       404: genericError
 //       500: genericError
-func (h *Handler) fetchLoginRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	ar, err := h.d.LoginRequestPersister().GetLoginRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
-	if err != nil {
+func (h *Handler) adminFetchLoginRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if err := h.fetchLoginRequest(w, r, false); err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
+}
+
+func (h *Handler) fetchLoginRequest(w http.ResponseWriter, r *http.Request, mustVerify bool) error {
+	ar, err := h.d.LoginRequestPersister().GetLoginRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
+	if err != nil {
+		h.d.Writer().WriteError(w, r, x.ErrInvalidCSRFToken.WithTrace(err).WithDebugf("%s", err))
+		return err
+	}
+
+	if mustVerify && !nosurf.VerifyToken(h.csrf(r), ar.CSRFToken) {
+		return errors.WithStack(x.ErrInvalidCSRFToken)
+	}
 
 	h.d.Writer().Write(w, r, ar)
+	return nil
 }

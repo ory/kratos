@@ -345,7 +345,8 @@ func TestLogin(t *testing.T) {
 			})
 
 			router := x.NewRouterPublic()
-			reg.LoginHandler().RegisterPublicRoutes(router)
+			admin := x.NewRouterAdmin()
+			reg.LoginHandler().RegisterPublicRoutes(router, admin)
 			s.RegisterLoginRoutes(router)
 			ts := httptest.NewServer(router)
 			defer ts.Close()

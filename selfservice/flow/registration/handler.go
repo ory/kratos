@@ -5,6 +5,7 @@ import (
 	"net/url"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/justinas/nosurf"
 
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/urlx"
@@ -33,13 +34,14 @@ type (
 		RegistrationHandler() *Handler
 	}
 	Handler struct {
-		d handlerDependencies
-		c configuration.Provider
+		d    handlerDependencies
+		c    configuration.Provider
+		csrf x.CSRFToken
 	}
 )
 
 func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
-	return &Handler{d: d, c: c}
+	return &Handler{d: d, c: c, csrf: nosurf.Token}
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
@@ -48,10 +50,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 }
 
 func (h *Handler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request, redir func(*Request) string) error {
-	a := NewRequest(
-		h.c.SelfServiceRegistrationRequestLifespan(),
-		r,
-	)
+	a := NewRequest(h.c.SelfServiceRegistrationRequestLifespan(), h.csrf(r), r)
 	for _, s := range h.d.RegistrationStrategies() {
 		if err := s.PopulateRegistrationMethod(r, a); err != nil {
 			return err

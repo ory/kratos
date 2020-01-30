@@ -35,7 +35,8 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 	telemetry(cmd, n, d)
 
 	router := x.NewRouterPublic()
-	r.LoginHandler().RegisterPublicRoutes(router)
+	admin := x.NewRouterAdmin()
+	r.LoginHandler().RegisterPublicRoutes(router, admin)
 	r.RegistrationHandler().RegisterPublicRoutes(router)
 	r.LogoutHandler().RegisterPublicRoutes(router)
 	r.ProfileManagementHandler().RegisterPublicRoutes(router)
