@@ -194,13 +194,13 @@ func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Reque
 
 	traitsSchema, err := h.c.IdentityTraitsSchemas().FindSchemaByID(ar.Identity.TraitsSchemaID)
 	if err != nil {
-		h.d.Writer().WriteError(w, r, err)
-		return
+		h.d.Logger().Error(err)
+		return errors.WithStack(herodot.ErrInternalServerError.WithReason("The traits schema for this identity could not be found. This is an configuration error."))
 	}
 
 	if err := ar.Form.SortFields(traitsSchema.URL, "traits"); err != nil {
-		h.d.Writer().WriteError(w, r, err)
-		return
+		h.d.Logger().Error(err)
+		return errors.WithStack(herodot.ErrInternalServerError.WithReason("There was an error with sorting the form fields. This is an configuration error."))
 	}
 
 	h.d.Writer().Write(w, r, ar)
