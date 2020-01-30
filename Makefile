@@ -77,11 +77,11 @@ sdk:
 		make format
 
 quickstart:
-		docker pull oryd/kratos:latest
+		docker pull oryd/kratos:latest-sqlite
 		docker-compose -f quickstart.yml up --build --force-recreate
 
 quickstart-dev:
-		docker build -f .docker/Dockerfile-build -t oryd/kratos:latest .
+		docker build -f .docker/Dockerfile-build -t oryd/kratos:latest-sqlite .
 		docker pull oryd/kratos-selfservice-ui-node:latest
 		docker-compose -f quickstart.yml up --build --force-recreate
 
