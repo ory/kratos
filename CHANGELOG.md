@@ -24,6 +24,10 @@
 ## [v0.0.3-alpha.2](https://github.com/ory/kratos/tree/v0.0.3-alpha.2) (2020-01-30)
 [Full Changelog](https://github.com/ory/kratos/compare/v0.0.3-alpha.1...v0.0.3-alpha.2)
 
+**Merged pull requests:**
+
+- Resolve goreleaser build issues [\#208](https://github.com/ory/kratos/pull/208) ([aeneasr](https://github.com/aeneasr))
+
 ## [v0.0.3-alpha.1](https://github.com/ory/kratos/tree/v0.0.3-alpha.1) (2020-01-30)
 [Full Changelog](https://github.com/ory/kratos/compare/v0.0.1-alpha.9...v0.0.3-alpha.1)
 
