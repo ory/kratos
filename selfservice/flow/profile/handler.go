@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
-	"sort"
+
+	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/schema"
 
-	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
@@ -107,6 +107,16 @@ func (h *Handler) initUpdateProfile(w http.ResponseWriter, r *http.Request, ps h
 		urlx.AppendPaths(h.c.SelfPublicURL(), PublicProfileManagementUpdatePath),
 		url.Values{"request": {a.ID.String()}},
 	).String(), json.RawMessage(s.Identity.Traits), "traits")
+
+	traitsSchema, err := h.c.IdentityTraitsSchemas().FindSchemaByID(s.Identity.TraitsSchemaID)
+	if err != nil {
+		h.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
+		return
+	}
+	if err := a.Form.SortFields(traitsSchema.URL, "traits"); err != nil {
+		h.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
+		return
+	}
 	if err := h.d.ProfileRequestPersister().CreateProfileRequest(r.Context(), a); err != nil {
 		h.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
 		return
@@ -184,7 +194,18 @@ func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Reque
 	}
 
 	ar.Form.SetCSRF(nosurf.Token(r))
-	sort.Sort(ar.Form.Fields)
+
+	traitsSchema, err := h.c.IdentityTraitsSchemas().FindSchemaByID(ar.Identity.TraitsSchemaID)
+	if err != nil {
+		h.d.Logger().Error(err)
+		return errors.WithStack(herodot.ErrInternalServerError.WithReason("The traits schema for this identity could not be found. This is an configuration error."))
+	}
+
+	if err := ar.Form.SortFields(traitsSchema.URL, "traits"); err != nil {
+		h.d.Logger().Error(err)
+		return errors.WithStack(herodot.ErrInternalServerError.WithReason("There was an error with sorting the form fields. This is an configuration error."))
+	}
+
 	h.d.Writer().Write(w, r, ar)
 	return nil
 }
@@ -340,7 +361,17 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 		ar.Form.SetField(field.Name, field)
 	}
 	ar.Form.SetCSRF(nosurf.Token(r))
-	sort.Sort(ar.Form.Fields)
+
+	traitsSchema, err := h.c.IdentityTraitsSchemas().FindSchemaByID(i.TraitsSchemaID)
+	if err != nil {
+		h.handleProfileManagementError(w, r, ar, i.Traits, err)
+		return
+	}
+	err = ar.Form.SortFields(traitsSchema.URL, "traits")
+	if err != nil {
+		h.handleProfileManagementError(w, r, ar, i.Traits, err)
+		return
+	}
 
 	if err := h.d.ProfileRequestPersister().UpdateProfileRequest(r.Context(), ar); err != nil {
 		h.handleProfileManagementError(w, r, ar, i.Traits, err)
@@ -371,7 +402,18 @@ func (h *Handler) handleProfileManagementError(w http.ResponseWriter, r *http.Re
 			}
 		}
 		rr.Form.SetCSRF(nosurf.Token(r))
-		sort.Sort(rr.Form.Fields)
+
+		// try to sort, might fail if the error before was sorting related
+		traitsSchema, err := h.c.IdentityTraitsSchemas().FindSchemaByID(rr.Identity.TraitsSchemaID)
+		if err != nil {
+			h.d.ProfileRequestRequestErrorHandler().HandleProfileManagementError(w, r, identity.CredentialsTypePassword, rr, err)
+			return
+		}
+		err = rr.Form.SortFields(traitsSchema.URL, "traits")
+		if err != nil {
+			h.d.ProfileRequestRequestErrorHandler().HandleProfileManagementError(w, r, identity.CredentialsTypePassword, rr, err)
+			return
+		}
 	}
 
 	h.d.ProfileRequestRequestErrorHandler().HandleProfileManagementError(w, r, identity.CredentialsTypePassword, rr, err)
@@ -387,7 +429,6 @@ func (h *Handler) newProfileManagementDecoder(i *identity.Identity) (decoderx.HT
   "type": "object",
   "required": ["traits"],
   "properties": {
-    "request": { "type": "string" },
     "traits": {}
   }
 }

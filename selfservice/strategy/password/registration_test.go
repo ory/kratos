@@ -8,7 +8,6 @@ import (
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
-	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -310,15 +309,15 @@ func TestRegistration(t *testing.T) {
 						Method: "POST",
 						Fields: form.Fields{
 							{
-								Name:     "password",
-								Type:     "password",
-								Required: true,
-							},
-							{
 								Name:     "csrf_token",
 								Type:     "hidden",
 								Required: true,
 								Value:    "nosurf",
+							},
+							{
+								Name:     "password",
+								Type:     "password",
+								Required: true,
 							},
 							{
 								Name: "traits.foobar",
@@ -333,7 +332,6 @@ func TestRegistration(t *testing.T) {
 				},
 			},
 		}
-		sort.Sort(expected.Config.RequestMethodConfigurator.(*password.RequestMethod).HTMLForm.Fields)
 
 		actual := sr.Methods[identity.CredentialsTypePassword]
 		assert.EqualValues(t, expected.Config.RequestMethodConfigurator.(*password.RequestMethod).HTMLForm, actual.Config.RequestMethodConfigurator.(*password.RequestMethod).HTMLForm)

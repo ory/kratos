@@ -60,6 +60,7 @@ type RequestMethodConfigurator interface {
 	form.ValueSetter
 	form.Resetter
 	form.CSRFSetter
+	form.FieldSorter
 }
 
 // swagger:model registrationRequestMethodConfig

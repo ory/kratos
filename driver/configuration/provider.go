@@ -5,6 +5,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/ory/x/tracing"
 )
 
@@ -29,6 +31,18 @@ type SelfServiceStrategy struct {
 type SchemaConfig struct {
 	ID  string `json:"id"`
 	URL string `json:"url"`
+}
+
+type SchemaConfigs []SchemaConfig
+
+func (s SchemaConfigs) FindSchemaByID(id string) (*SchemaConfig, error) {
+	for _, sc := range s {
+		if sc.ID == id {
+			return &sc, nil
+		}
+	}
+
+	return nil, errors.Errorf("could not find schema with id \"%s\"", id)
 }
 
 const DefaultIdentityTraitsSchemaID = "default"
@@ -67,7 +81,7 @@ type Provider interface {
 	CourierTemplatesRoot() string
 
 	DefaultIdentityTraitsSchemaURL() *url.URL
-	IdentityTraitsSchemas() []SchemaConfig
+	IdentityTraitsSchemas() SchemaConfigs
 
 	WhitelistedReturnToDomains() []url.URL
 

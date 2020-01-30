@@ -69,3 +69,19 @@ func TestSchemas_GetByID(t *testing.T) {
 		assert.Equal(t, (*Schema)(nil), s)
 	})
 }
+
+func TestGetKeysInOrder(t *testing.T) {
+	for i, tc := range []struct {
+		schemaRef string
+		keys      []string
+	}{
+		{schemaRef: "file://./stub/identity.schema.json", keys: []string{"bar", "email"}},
+		{schemaRef: "file://./stub/complex.schema.json", keys: []string{"meal.name", "meal.chef", "fruits", "vegetables"}},
+	} {
+		t.Run(fmt.Sprintf("case=%d schemaRef=%s", i, tc.schemaRef), func(t *testing.T) {
+			actual, err := GetKeysInOrder(tc.schemaRef)
+			require.NoError(t, err)
+			assert.Equal(t, tc.keys, actual)
+		})
+	}
+}

@@ -107,17 +107,17 @@ func (p *ViperProvider) DefaultIdentityTraitsSchemaURL() *url.URL {
 	return mustParseURLFromViper(p.l, ViperKeyDefaultIdentityTraitsSchemaURL)
 }
 
-func (p *ViperProvider) IdentityTraitsSchemas() []SchemaConfig {
+func (p *ViperProvider) IdentityTraitsSchemas() SchemaConfigs {
 	ds := SchemaConfig{
 		ID:  DefaultIdentityTraitsSchemaID,
 		URL: p.DefaultIdentityTraitsSchemaURL().String(),
 	}
 	var b bytes.Buffer
-	var ss []SchemaConfig
+	var ss SchemaConfigs
 	raw := viper.Get(ViperKeyIdentityTraitsSchemas)
 
 	if raw == nil {
-		return []SchemaConfig{ds}
+		return SchemaConfigs{ds}
 	}
 
 	if err := json.NewEncoder(&b).Encode(raw); err != nil {

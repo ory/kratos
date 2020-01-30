@@ -1012,6 +1012,9 @@
         },
         {
           "type": "object"
+        },
+        {
+          "type": "object"
         }
       ]
     },

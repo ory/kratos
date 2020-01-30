@@ -469,6 +469,7 @@ func (s *Strategy) populateMethod(r *http.Request, request uuid.UUID) (*RequestM
 
 	f := form.NewHTMLForm(s.authURL(request, ""))
 	f.SetCSRF(s.cg(r))
+	// does not need sorting because there is only one field
 
 	return NewRequestMethodConfig(f).AddProviders(conf.Providers), nil
 }
@@ -541,6 +542,10 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 			}
 
 			method.Config.SetCSRF(s.cg(r))
+			if errSec := method.Config.SortFields(s.c.DefaultIdentityTraitsSchemaURL().String(), "traits"); errSec != nil {
+				s.d.RegistrationRequestErrorHandler().HandleRegistrationError(w, r, identity.CredentialsTypeOIDC, rr, errors.Wrap(err, errSec.Error()))
+				return
+			}
 			rr.Methods[s.ID()] = method
 		}
 
