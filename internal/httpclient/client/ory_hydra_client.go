@@ -11,6 +11,7 @@ import (
 
 	strfmt "github.com/go-openapi/strfmt"
 
+	"github.com/ory/kratos/internal/httpclient/client/admin"
 	"github.com/ory/kratos/internal/httpclient/client/health"
 	"github.com/ory/kratos/internal/httpclient/client/public"
 	"github.com/ory/kratos/internal/httpclient/client/version"
@@ -58,6 +59,8 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *OryHydra {
 
 	cli := new(OryHydra)
 	cli.Transport = transport
+
+	cli.Admin = admin.New(transport, formats)
 
 	cli.Health = health.New(transport, formats)
 
@@ -109,6 +112,8 @@ func (cfg *TransportConfig) WithSchemes(schemes []string) *TransportConfig {
 
 // OryHydra is a client for ory hydra
 type OryHydra struct {
+	Admin *admin.Client
+
 	Health *health.Client
 
 	Public *public.Client
@@ -121,6 +126,8 @@ type OryHydra struct {
 // SetTransport changes the transport on the client and all its subresources
 func (c *OryHydra) SetTransport(transport runtime.ClientTransport) {
 	c.Transport = transport
+
+	c.Admin.SetTransport(transport)
 
 	c.Health.SetTransport(transport)
 

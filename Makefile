@@ -5,6 +5,10 @@ ifeq (, $(shell which golangci-lint))
     curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.17.1
 endif
 
+.PHONY: tools
+tools:
+		go install github.com/ory/go-acc github.com/ory/x/tools/listx github.com/go-swagger/go-swagger/cmd/swagger github.com/go-bindata/go-bindata/go-bindata github.com/sqs/goreturns github.com/ory/sdk/swagutil
+
 .PHONY: build
 build:
 		make sqlbin
@@ -23,10 +27,6 @@ init:
 .PHONY: lint
 lint:
 		GO111MODULE=on golangci-lint run -v ./...
-
-.PHONY: format
-format:
-		$$(go env GOPATH)/bin/goreturns -w -local github.com/ory $$($$(go env GOPATH)/bin/listx .)
 
 .PHONY: cover
 cover:
@@ -55,20 +55,14 @@ test-resetdb:
 		docker kill kratos_test_database_cockroach || true
 		docker rm -f kratos_test_database_mysql || true
 		docker rm -f kratos_test_database_postgres || true
-		docker run --rm --name kratos_test_database_postgres -p 3445:5432 -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=postgres -d postgres:9.6
 		docker rm -f kratos_test_database_cockroach || true
 		docker run --rm --name kratos_test_database_mysql -p 3444:3306 -e MYSQL_ROOT_PASSWORD=secret -d mysql:5.7
-		docker run --rm --name kratos_test_database_postgres -p 3445:5432 -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=kratos -d postgres:9.6
+		docker run --rm --name kratos_test_database_postgres -p 3445:5432 -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=postgres -d postgres:9.6
 		docker run --rm --name kratos_test_database_cockroach -p 3446:26257 -d cockroachdb/cockroach:v2.1.6 start --insecure
 
 .PHONY: test
 test:
-		go test -short -tags sqlite ./...
-
-.PHONY: test-integration
-test-integration:
 		go test -tags sqlite ./...
-
 
 # Generates the SDKs
 .PHONY: sdk
@@ -87,6 +81,16 @@ quickstart:
 		docker-compose -f quickstart.yml up --build --force-recreate
 
 quickstart-dev:
-		docker build -f Dockerfile-build -t oryd/kratos:latest .
+		docker build -f .docker/Dockerfile-build -t oryd/kratos:latest .
 		docker pull oryd/kratos-selfservice-ui-node:latest
 		docker-compose -f quickstart.yml up --build --force-recreate
+
+# Formats the code
+.PHONY: format
+format:
+		$$(go env GOPATH)/bin/goreturns -w -local github.com/ory $$($$(go env GOPATH)/bin/listx .)
+
+# Runs tests in short mode, without database adapters
+.PHONY: docker
+docker:
+		docker build -f .docker/Dockerfile-build -t oryd/kratos:latest .

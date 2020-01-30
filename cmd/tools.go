@@ -15,4 +15,6 @@ import (
 
 	_ "github.com/gobuffalo/packr/v2"
 	_ "github.com/jteeuwen/go-bindata"
+
+	_ "github.com/ory/sdk/swagutil"
 )

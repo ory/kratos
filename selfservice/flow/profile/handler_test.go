@@ -10,7 +10,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/go-openapi/runtime"
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/nosurf"
 	"github.com/stretchr/testify/assert"
@@ -118,12 +117,12 @@ func TestUpdateProfile(t *testing.T) {
 		&client.TransportConfig{Host: urlx.ParseOrPanic(kratos.URL).Host, BasePath: "/", Schemes: []string{"http"}},
 	)
 
-	makeRequest := func(t *testing.T) *public.GetProfileManagementRequestOK {
+	makeRequest := func(t *testing.T) *public.GetSelfServiceBrowserProfileManagementRequestOK {
 		res, err := primaryUser.Get(kratos.URL + profile.BrowserProfilePath)
 		require.NoError(t, err)
 
-		rs, err := kratosClient.Public.GetProfileManagementRequest(
-			public.NewGetProfileManagementRequestParams().WithHTTPClient(primaryUser).
+		rs, err := kratosClient.Public.GetSelfServiceBrowserProfileManagementRequest(
+			public.NewGetSelfServiceBrowserProfileManagementRequestParams().WithHTTPClient(primaryUser).
 				WithRequest(res.Request.URL.Query().Get("request")),
 		)
 		require.NoError(t, err)
@@ -142,8 +141,8 @@ func TestUpdateProfile(t *testing.T) {
 		for k, tc := range []*http.Request{
 			httpx.MustNewRequest("GET", kratos.URL+profile.BrowserProfilePath, nil, ""),
 			httpx.MustNewRequest("GET", kratos.URL+profile.BrowserProfileRequestPath, nil, ""),
-			httpx.MustNewRequest("POST", kratos.URL+profile.BrowserProfilePath, strings.NewReader(url.Values{"foo": {"bar"}}.Encode()), "application/x-www-form-urlencoded"),
-			httpx.MustNewRequest("POST", kratos.URL+profile.BrowserProfilePath, strings.NewReader(`{"foo":"bar"}`), "application/json"),
+			httpx.MustNewRequest("POST", kratos.URL+profile.BrowserProfileUpdatePath, strings.NewReader(url.Values{"foo": {"bar"}}.Encode()), "application/x-www-form-urlencoded"),
+			httpx.MustNewRequest("POST", kratos.URL+profile.BrowserProfileUpdatePath, strings.NewReader(`{"foo":"bar"}`), "application/json"),
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				res, err := http.DefaultClient.Do(tc)
@@ -154,11 +153,13 @@ func TestUpdateProfile(t *testing.T) {
 	})
 
 	t.Run("description=fetching a non-existent request should return a 404 error", func(t *testing.T) {
-		_, err := kratosClient.Public.GetProfileManagementRequest(
-			public.NewGetProfileManagementRequestParams().WithHTTPClient(otherUser).WithRequest("i-do-not-exist"),
+		_, err := kratosClient.Public.GetSelfServiceBrowserProfileManagementRequest(
+			public.NewGetSelfServiceBrowserProfileManagementRequestParams().WithHTTPClient(otherUser).WithRequest("i-do-not-exist"),
 		)
 		require.Error(t, err)
-		assert.Equal(t, http.StatusNotFound, err.(*runtime.APIError).Code)
+
+		require.IsType(t, &public.GetSelfServiceBrowserProfileManagementRequestNotFound{}, err)
+		assert.Equal(t, int64(http.StatusNotFound), err.(*public.GetSelfServiceBrowserProfileManagementRequestNotFound).Payload.Error.Code)
 	})
 
 	t.Run("description=should fail to fetch request if identity changed", func(t *testing.T) {
@@ -168,11 +169,12 @@ func TestUpdateProfile(t *testing.T) {
 		rid := res.Request.URL.Query().Get("request")
 		require.NotEmpty(t, rid)
 
-		_, err = kratosClient.Public.GetProfileManagementRequest(
-			public.NewGetProfileManagementRequestParams().WithHTTPClient(otherUser).WithRequest(rid),
+		_, err = kratosClient.Public.GetSelfServiceBrowserProfileManagementRequest(
+			public.NewGetSelfServiceBrowserProfileManagementRequestParams().WithHTTPClient(otherUser).WithRequest(rid),
 		)
 		require.Error(t, err)
-		assert.EqualValues(t, 403, err.(*runtime.APIError).Code, "should return a 403 error because the identities from the cookies do not match")
+		require.IsType(t, &public.GetSelfServiceBrowserProfileManagementRequestForbidden{}, err)
+		assert.EqualValues(t, int64(http.StatusForbidden), err.(*public.GetSelfServiceBrowserProfileManagementRequestForbidden).Payload.Error.Code, "should return a 403 error because the identities from the cookies do not match")
 	})
 
 	t.Run("description=should fail to post data if CSRF is missing", func(t *testing.T) {
@@ -193,8 +195,8 @@ func TestUpdateProfile(t *testing.T) {
 		rid := res.Request.URL.Query().Get("request")
 		require.NotEmpty(t, rid)
 
-		pr, err := kratosClient.Public.GetProfileManagementRequest(
-			public.NewGetProfileManagementRequestParams().WithHTTPClient(primaryUser).WithRequest(rid),
+		pr, err := kratosClient.Public.GetSelfServiceBrowserProfileManagementRequest(
+			public.NewGetSelfServiceBrowserProfileManagementRequestParams().WithHTTPClient(primaryUser).WithRequest(rid),
 		)
 		require.NoError(t, err, "%s", rid)
 
@@ -216,18 +218,19 @@ func TestUpdateProfile(t *testing.T) {
 		}
 		require.True(t, found)
 
-		assert.True(t, strings.HasPrefix(pr.Payload.Form.Action, fmt.Sprintf("%s%s?request=", kratos.URL, profile.BrowserProfilePath)))
-		assert.Equal(t, models.FormFields{
-			&models.FormField{Name: "traits.email", Required: false, Type: "text", Value: "john@doe.com"},
-			&models.FormField{Name: "traits.stringy", Required: false, Type: "text", Value: "foobar"},
-			&models.FormField{Name: "traits.numby", Required: false, Type: "number", Value: json.Number("2.5")},
-			&models.FormField{Name: "traits.booly", Required: false, Type: "checkbox", Value: false},
-		}, pr.Payload.Form.Fields)
-		assert.Equal(t, "POST", pr.Payload.Form.Method)
-		assert.Empty(t, pr.Payload.Form.Errors)
+		assert.Equal(t, &models.Form{
+			Action: kratos.URL + profile.BrowserProfileUpdatePath + "?request=" + rid,
+			Method: "POST",
+			Fields: models.FormFields{
+				&models.FormField{Name: "traits.booly", Required: false, Type: "checkbox", Value: false},
+				&models.FormField{Name: "traits.email", Required: false, Type: "text", Value: "john@doe.com"},
+				&models.FormField{Name: "traits.numby", Required: false, Type: "number", Value: json.Number("2.5")},
+				&models.FormField{Name: "traits.stringy", Required: false, Type: "text", Value: "foobar"},
+			},
+		}, pr.Payload.Form)
 	})
 
-	submitForm := func(t *testing.T, req *public.GetProfileManagementRequestOK, values url.Values) (string, *public.GetProfileManagementRequestOK) {
+	submitForm := func(t *testing.T, req *public.GetSelfServiceBrowserProfileManagementRequestOK, values url.Values) (string, *public.GetSelfServiceBrowserProfileManagementRequestOK) {
 		res, err := primaryUser.PostForm(req.Payload.Form.Action, values)
 		require.NoError(t, err)
 		assert.EqualValues(t, http.StatusNoContent, res.StatusCode)
@@ -235,8 +238,8 @@ func TestUpdateProfile(t *testing.T) {
 		assert.Equal(t, ui.URL, res.Request.URL.Scheme+"://"+res.Request.URL.Host)
 		assert.Equal(t, "/profile", res.Request.URL.Path, "should end up at the profile URL")
 
-		rs, err := kratosClient.Public.GetProfileManagementRequest(
-			public.NewGetProfileManagementRequestParams().WithHTTPClient(primaryUser).
+		rs, err := kratosClient.Public.GetSelfServiceBrowserProfileManagementRequest(
+			public.NewGetSelfServiceBrowserProfileManagementRequestParams().WithHTTPClient(primaryUser).
 				WithRequest(res.Request.URL.Query().Get("request")),
 		)
 		require.NoError(t, err)

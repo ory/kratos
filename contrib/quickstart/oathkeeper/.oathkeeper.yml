@@ -30,7 +30,7 @@ errors:
     redirect:
       enabled: true
       config:
-        to: http://127.0.0.1:4455/auth/browser/login
+        to: http://127.0.0.1:4455/auth/login
         when:
           -
             error:
@@ -58,7 +58,7 @@ authenticators:
   cookie_session:
     enabled: true
     config:
-      check_session_url: http://kratos:4433/sessions/me
+      check_session_url: http://kratos:4433/sessions/whoami
       preserve_path: true
       extra_from: "@this"
       subject_from: "identity.id"

@@ -27,28 +27,33 @@ type Client struct {
 }
 
 /*
-CompleteProfileManagementFlow completes profile management flow
+CompleteSelfServiceBrowserProfileManagementFlow completes the browser based profile management flows
 
-This endpoint returns a login request's context with, for example, error details and
-other information.
+This endpoint completes a browser-based profile management flow. This is usually achieved by POSTing data to this
+endpoint.
 
-For an in-depth look at ORY Krato's profile management flow, head over to: https://www.ory.sh/docs/kratos/selfservice/profile
+If the provided profile data is valid against the Identity's Traits JSON Schema, the data will be updated and
+the browser redirected to `url.profile_ui` for further steps.
+
+> This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
+
+More information can be found at [ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).
 */
-func (a *Client) CompleteProfileManagementFlow(params *CompleteProfileManagementFlowParams) error {
+func (a *Client) CompleteSelfServiceBrowserProfileManagementFlow(params *CompleteSelfServiceBrowserProfileManagementFlowParams) error {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewCompleteProfileManagementFlowParams()
+		params = NewCompleteSelfServiceBrowserProfileManagementFlowParams()
 	}
 
 	_, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "completeProfileManagementFlow",
+		ID:                 "completeSelfServiceBrowserProfileManagementFlow",
 		Method:             "POST",
-		PathPattern:        "/profiles",
+		PathPattern:        "/self-service/browser/flows/profile/update",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &CompleteProfileManagementFlowReader{formats: a.formats},
+		Reader:             &CompleteSelfServiceBrowserProfileManagementFlowReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
@@ -59,155 +64,146 @@ func (a *Client) CompleteProfileManagementFlow(params *CompleteProfileManagement
 }
 
 /*
-GetLoginRequest gets login request
+GetSelfServiceBrowserLoginRequest gets the request context of browser based login user flows
 
 This endpoint returns a login request's context with, for example, error details and
 other information.
 
-For an in-depth look at ORY Krato's login flow, head over to: https://www.ory.sh/docs/kratos/selfservice/login
+More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 */
-func (a *Client) GetLoginRequest(params *GetLoginRequestParams) (*GetLoginRequestOK, error) {
+func (a *Client) GetSelfServiceBrowserLoginRequest(params *GetSelfServiceBrowserLoginRequestParams) (*GetSelfServiceBrowserLoginRequestOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewGetLoginRequestParams()
+		params = NewGetSelfServiceBrowserLoginRequestParams()
 	}
 
 	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "getLoginRequest",
+		ID:                 "getSelfServiceBrowserLoginRequest",
 		Method:             "GET",
-		PathPattern:        "/auth/browser/requests/login",
+		PathPattern:        "/self-service/browser/flows/requests/login",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &GetLoginRequestReader{formats: a.formats},
+		Reader:             &GetSelfServiceBrowserLoginRequestReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*GetLoginRequestOK)
+	success, ok := result.(*GetSelfServiceBrowserLoginRequestOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for getLoginRequest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getSelfServiceBrowserLoginRequest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
 /*
-GetProfileManagementRequest gets profile management request via cookie
+GetSelfServiceBrowserProfileManagementRequest gets the request context of browser based profile management flows
 
-This endpoint returns a profile management request's context with, for example, error details and
-other information.
-
-It can be used from a Single Page Application or other applications running on a client device.
-The request must be made with valid authentication cookies or it will fail!
-
-If you wish to access this endpoint without the valid cookies (e.g. as part of a server)
-please call this path at the admin port.
-
-For an in-depth look at ORY Krato's profile management flow, head over to: https://www.ory.sh/docs/kratos/selfservice/profile
+More information can be found at [ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).
 */
-func (a *Client) GetProfileManagementRequest(params *GetProfileManagementRequestParams) (*GetProfileManagementRequestOK, error) {
+func (a *Client) GetSelfServiceBrowserProfileManagementRequest(params *GetSelfServiceBrowserProfileManagementRequestParams) (*GetSelfServiceBrowserProfileManagementRequestOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewGetProfileManagementRequestParams()
+		params = NewGetSelfServiceBrowserProfileManagementRequestParams()
 	}
 
 	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "getProfileManagementRequest",
+		ID:                 "getSelfServiceBrowserProfileManagementRequest",
 		Method:             "GET",
-		PathPattern:        "/profiles/requests",
+		PathPattern:        "/self-service/browser/flows/requests/profile",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &GetProfileManagementRequestReader{formats: a.formats},
+		Reader:             &GetSelfServiceBrowserProfileManagementRequestReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*GetProfileManagementRequestOK)
+	success, ok := result.(*GetSelfServiceBrowserProfileManagementRequestOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for getProfileManagementRequest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getSelfServiceBrowserProfileManagementRequest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
 /*
-GetRegistrationRequest gets registration request
+GetSelfServiceBrowserRegistrationRequest gets the request context of browser based registration user flows
 
 This endpoint returns a registration request's context with, for example, error details and
 other information.
 
-For an in-depth look at ORY Krato's registration flow, head over to: https://www.ory.sh/docs/kratos/selfservice/registration
+More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 */
-func (a *Client) GetRegistrationRequest(params *GetRegistrationRequestParams) (*GetRegistrationRequestOK, error) {
+func (a *Client) GetSelfServiceBrowserRegistrationRequest(params *GetSelfServiceBrowserRegistrationRequestParams) (*GetSelfServiceBrowserRegistrationRequestOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewGetRegistrationRequestParams()
+		params = NewGetSelfServiceBrowserRegistrationRequestParams()
 	}
 
 	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "getRegistrationRequest",
+		ID:                 "getSelfServiceBrowserRegistrationRequest",
 		Method:             "GET",
-		PathPattern:        "/auth/browser/requests/registration",
+		PathPattern:        "/self-service/browser/flows/requests/registration",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &GetRegistrationRequestReader{formats: a.formats},
+		Reader:             &GetSelfServiceBrowserRegistrationRequestReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*GetRegistrationRequestOK)
+	success, ok := result.(*GetSelfServiceBrowserRegistrationRequestOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for getRegistrationRequest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getSelfServiceBrowserRegistrationRequest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
 /*
-InitializeLoginFlow initializes a login flow
+InitializeSelfServiceBrowserLoginFlow initializes browser based login user flow
 
-This endpoint initializes a login flow. This endpoint **should not be called from a programatic API**
-but instead for the, for example, browser. It will redirect the user agent (e.g. browser) to the
-configured login UI, appending the login challenge.
+This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to
+`urls.login_ui` with the request ID set as a query parameter. If a valid user session exists already, the browser will be
+redirected to `urls.default_redirect_url`.
 
-If the user-agent already has a valid authentication session, the server will respond with a 302
-code redirecting to the config value of `urls.default_return_to`.
+> This endpoint is NOT INTENDED for API clients and only works
+with browsers (Chrome, Firefox, ...).
 
-For an in-depth look at ORY Krato's login flow, head over to: https://www.ory.sh/docs/kratos/selfservice/login
+More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 */
-func (a *Client) InitializeLoginFlow(params *InitializeLoginFlowParams) error {
+func (a *Client) InitializeSelfServiceBrowserLoginFlow(params *InitializeSelfServiceBrowserLoginFlowParams) error {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewInitializeLoginFlowParams()
+		params = NewInitializeSelfServiceBrowserLoginFlowParams()
 	}
 
 	_, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "initializeLoginFlow",
+		ID:                 "initializeSelfServiceBrowserLoginFlow",
 		Method:             "GET",
-		PathPattern:        "/auth/browser/login",
+		PathPattern:        "/self-service/browser/flows/login",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &InitializeLoginFlowReader{formats: a.formats},
+		Reader:             &InitializeSelfServiceBrowserLoginFlowReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
@@ -218,32 +214,32 @@ func (a *Client) InitializeLoginFlow(params *InitializeLoginFlowParams) error {
 }
 
 /*
-InitializeProfileManagementFlow initializes profile management flow
+InitializeSelfServiceBrowserLogoutFlow initializes browser based logout user flow
 
-This endpoint initializes a profile update flow. This endpoint **should not be called from a programatic API**
-but instead for the, for example, browser. It will redirect the user agent (e.g. browser) to the
-configured login UI, appending the login challenge.
+This endpoint initializes a logout flow.
 
-If the user-agent does not have a valid authentication session, a 302 code will be returned which
-redirects to the initializeLoginFlow endpoint, appending this page as the return_to value.
+> This endpoint is NOT INTENDED for API clients and only works
+with browsers (Chrome, Firefox, ...).
 
-For an in-depth look at ORY Krato's profile management flow, head over to: https://www.ory.sh/docs/kratos/selfservice/profile
+On successful logout, the browser will be redirected (HTTP 302 Found) to `urls.default_return_to`.
+
+More information can be found at [ORY Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
 */
-func (a *Client) InitializeProfileManagementFlow(params *InitializeProfileManagementFlowParams) error {
+func (a *Client) InitializeSelfServiceBrowserLogoutFlow(params *InitializeSelfServiceBrowserLogoutFlowParams) error {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewInitializeProfileManagementFlowParams()
+		params = NewInitializeSelfServiceBrowserLogoutFlowParams()
 	}
 
 	_, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "initializeProfileManagementFlow",
+		ID:                 "initializeSelfServiceBrowserLogoutFlow",
 		Method:             "GET",
-		PathPattern:        "/profiles",
+		PathPattern:        "/self-service/browser/flows/logout",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &InitializeProfileManagementFlowReader{formats: a.formats},
+		Reader:             &InitializeSelfServiceBrowserLogoutFlowReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
@@ -254,29 +250,32 @@ func (a *Client) InitializeProfileManagementFlow(params *InitializeProfileManage
 }
 
 /*
-InitializeRegistrationFlow initializes a registration flow
+InitializeSelfServiceBrowserRegistrationFlow initializes browser based registration user flow
 
-This endpoint initializes a registration flow. This endpoint **should not be called from a programatic API**
-but instead for the, for example, browser. It will redirect the user agent (e.g. browser) to the
-configured registration UI, appending the registration challenge.
+This endpoint initializes a browser-based user registration flow. Once initialized, the browser will be redirected to
+`urls.registration_ui` with the request ID set as a query parameter. If a valid user session exists already, the browser will be
+redirected to `urls.default_redirect_url`.
 
-For an in-depth look at ORY Krato's registration flow, head over to: https://www.ory.sh/docs/kratos/selfservice/registration
+> This endpoint is NOT INTENDED for API clients and only works
+with browsers (Chrome, Firefox, ...).
+
+More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 */
-func (a *Client) InitializeRegistrationFlow(params *InitializeRegistrationFlowParams) error {
+func (a *Client) InitializeSelfServiceBrowserRegistrationFlow(params *InitializeSelfServiceBrowserRegistrationFlowParams) error {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewInitializeRegistrationFlowParams()
+		params = NewInitializeSelfServiceBrowserRegistrationFlowParams()
 	}
 
 	_, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "initializeRegistrationFlow",
+		ID:                 "initializeSelfServiceBrowserRegistrationFlow",
 		Method:             "GET",
-		PathPattern:        "/auth/browser/registration",
+		PathPattern:        "/self-service/browser/flows/registration",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &InitializeRegistrationFlowReader{formats: a.formats},
+		Reader:             &InitializeSelfServiceBrowserRegistrationFlowReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
@@ -284,6 +283,81 @@ func (a *Client) InitializeRegistrationFlow(params *InitializeRegistrationFlowPa
 		return err
 	}
 	return nil
+}
+
+/*
+InitializeSelfServiceProfileManagementFlow initializes browser based profile management flow
+
+This endpoint initializes a browser-based profile management flow. Once initialized, the browser will be redirected to
+`urls.profile_ui` with the request ID set as a query parameter. If no valid user session exists, a login
+flow will be initialized.
+
+> This endpoint is NOT INTENDED for API clients and only works
+with browsers (Chrome, Firefox, ...).
+
+More information can be found at [ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).
+*/
+func (a *Client) InitializeSelfServiceProfileManagementFlow(params *InitializeSelfServiceProfileManagementFlowParams) error {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewInitializeSelfServiceProfileManagementFlowParams()
+	}
+
+	_, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "initializeSelfServiceProfileManagementFlow",
+		Method:             "GET",
+		PathPattern:        "/self-service/browser/flows/profile",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &InitializeSelfServiceProfileManagementFlowReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+/*
+Whoami checks who the current HTTP session belongs to
+
+Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.
+Returns a session object or 401 if the credentials are invalid or no credentials were sent.
+
+This endpoint is useful for reverse proxies and API Gateways.
+*/
+func (a *Client) Whoami(params *WhoamiParams) (*WhoamiOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWhoamiParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "whoami",
+		Method:             "GET",
+		PathPattern:        "/sessions/whoami",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &WhoamiReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WhoamiOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for whoami: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 // SetTransport changes the transport on the client

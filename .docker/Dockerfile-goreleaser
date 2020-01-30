@@ -1,0 +1,11 @@
+FROM oryd/xgoreleaser:1.13.5
+
+WORKDIR /go/src/github.com/ory/kratos
+
+ADD . .
+
+ENV RELEASE_NAME=v0.0.0-alpha.1
+ENTRYPOINT ["goreleaser"]
+CMD ["--snapshot", "--skip-publish", "--rm-dist"]
+
+# docker build -f .docker/Dockerfile-goreleaser -t build .; docker run --rm build

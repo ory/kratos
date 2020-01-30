@@ -4,7 +4,6 @@ project_name: kratos
 
 env:
   - GO111MODULE=on
-  - CGO_ENABLED=1
 
 before:
   hooks:
@@ -12,20 +11,90 @@ before:
 
 builds:
   -
-    id: kratos
+    id: kratos-sqlite-darwin
     flags:
       - -a
+      - -tags
+      - sqlite
     ldflags:
+      - -s -w -X github.com/ory/kratos/cmd.Version={{.Env.RELEASE_NAME}} -X github.com/ory/kratos/cmd.Commit={{.FullCommit}} -X github.com/ory/kratos/cmd.Date={{.Date}}
+      # - "-extldflags '-static'"
+    binary: kratos-sqlite
+    env:
+      - CGO_ENABLED=1
+      - CC=o64-clang
+      - CXX=o64-clang++
+    goarch:
+      - amd64
+    goos:
+      - darwin
+
+  -
+    id: kratos-sqlite-linux
+    flags:
+      - -a
+      - -tags
+      - sqlite
+    ldflags:
+      - -s -w -X github.com/ory/kratos/cmd.Version={{.Env.RELEASE_NAME}} -X github.com/ory/kratos/cmd.Commit={{.FullCommit}} -X github.com/ory/kratos/cmd.Date={{.Date}}
+    binary: kratos-sqlite
+    env:
+      - CGO_ENABLED=1
+    goarch:
+      - amd64
+    goos:
+      - linux
+  -
+    id: kratos-sqlite-linux-libmusl
+    flags:
+      - -a
+      - -tags
+      - sqlite
+    ldflags:
+      - -s -w -X github.com/ory/kratos/cmd.Version={{.Env.RELEASE_NAME}} -X github.com/ory/kratos/cmd.Commit={{.FullCommit}} -X github.com/ory/kratos/cmd.Date={{.Date}}
+    binary: kratos-sqlite-libmusl
+    env:
+      - CGO_ENABLED=1
+      - CC=musl-gcc
+    goarch:
+      - amd64
+    goos:
+      - linux
+  -
+    id: kratos-sqlite-windows
+    flags:
+      - -a
+      - -tags
+      - sqlite
+    ldflags:
+      - -s -w -X github.com/ory/kratos/cmd.Version={{.Env.RELEASE_NAME}} -X github.com/ory/kratos/cmd.Commit={{.FullCommit}} -X github.com/ory/kratos/cmd.Date={{.Date}}
+      - "-extldflags '-static'"
+    binary: kratos-sqlite
+    env:
+      - CGO_ENABLED=1
+      - CC=x86_64-w64-mingw32-gcc
+      - CXX=x86_64-w64-mingw32-g++
+    goarch:
+      - amd64
+    goos:
+      - windows
+
+  -
+    id: kratos
+    ldflags:
+      - -a
       - -s -w -X github.com/ory/kratos/cmd.Version={{.Env.RELEASE_NAME}} -X github.com/ory/kratos/cmd.Commit={{.FullCommit}} -X github.com/ory/kratos/cmd.Date={{.Date}}
     binary: kratos
     env:
-      - CGO_ENABLED=1
+      - CGO_ENABLED=0
     goarch:
       - amd64
       - 386
       - arm
       - arm64
     goarm:
+      - 5
+      - 6
       - 7
     goos:
       - freebsd
@@ -34,29 +103,69 @@ builds:
       - darwin
 
 archives:
-  - builds:
-      - kratos
-    id: kratos-archive
+  - id: kratos-sqlite
+    builds:
+      - kratos-sqlite-windows
+      - kratos-sqlite-darwin
+      - kratos-sqlite-linux
     replacements:
-      darwin: macOS
-      linux: Linux
-      windows: Windows
-      386: 32-bit
-      amd64: 64-bit
+      darwin: macos
+      386: 32bit
+      amd64: 64bit
+      arm: arm32
+    format_overrides:
+      -
+        goos: windows
+        format: zip
+    files:
+      - CHANGELOG.md
+      - LICENSE
+      - README.md
+      - SECURITY.md
+    name_template: "{{ .ProjectName }}_sqlite_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+
+  - id: kratos
+    builds:
+      - kratos
+    replacements:
+      darwin: macos
+      386: 32bit
+      amd64: 64bit
+      arm: arm32
     format_overrides:
       - goos: windows
         format: zip
+    files:
+      - CHANGELOG.md
+      - LICENSE
+      - README.md
+      - SECURITY.md
+
+  - id: kratos-brew
+    builds:
+      - kratos-sqlite-darwin
+    replacements:
+      darwin: macos
+    files:
+      - CHANGELOG.md
+      - LICENSE
+      - README.md
+      - SECURITY.md
 
 snapshot:
   name_template: "{{ .Tag }}-next"
+
 changelog:
   sort: asc
+  filters:
+    exclude:
+      - "CI skip"
 brews:
   - github:
       owner: ory
       name: homebrew-kratos
     ids:
-    - kratos-archive
+    - kratos-brew
     homepage:  https://www.ory.sh
     commit_author:
       name: ory
@@ -71,8 +180,24 @@ scoop:
     name: ory
     email: hi@ory.sh
 
+checksum:
+  algorithm: sha256
+
 dockers:
-  - dockerfile: Dockerfile
+  - dockerfile: .docker/Dockerfile-sqlite
+    builds:
+      - kratos-sqlite-linux-libmusl
+    binaries:
+      - kratos-sqlite-libmusl
+    image_templates:
+      - "oryd/kratos:v{{ .Major }}-sqlite"
+      - "oryd/kratos:v{{ .Major }}.{{ .Minor }}-sqlite"
+      - "oryd/kratos:v{{ .Major }}.{{ .Minor }}.{{ .Patch }}-sqlite"
+      - "oryd/kratos:{{ .Env.DOCKER_SHORT_TAG }}-sqlite"
+      - "oryd/kratos:latest-sqlite"
+  - dockerfile: .docker/Dockerfile
+    builds:
+      - kratos
     binaries:
       - kratos
     image_templates:
@@ -85,3 +210,6 @@ dockers:
 release:
   prerelease: auto
   name_template: "{{.Env.RELEASE_NAME}}"
+  ids:
+    - kratos-sqlite
+    - kratos

@@ -31,7 +31,7 @@ import (
 )
 
 const (
-	RegistrationPath = "/auth/browser/methods/password/registration"
+	RegistrationPath = "/self-service/browser/flows/registration/strategies/password"
 
 	registrationFormPayloadSchema = `{
   "$id": "https://schemas.ory.sh/kratos/selfservice/password/registration/config.schema.json",

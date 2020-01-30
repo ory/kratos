@@ -1,0 +1,10 @@
+FROM alpine:3.11
+
+RUN apk add -U --no-cache ca-certificates
+
+COPY kratos-sqlite-libmusl /usr/bin/kratos
+
+USER 1000
+
+ENTRYPOINT ["kratos"]
+CMD ["serve"]

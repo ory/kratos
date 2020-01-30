@@ -50,7 +50,7 @@ func TestHandler(t *testing.T) {
 		client := MockCookieClient(t)
 
 		// No cookie yet -> 401
-		res, err := client.Get(ts.URL + "/sessions/me")
+		res, err := client.Get(ts.URL + SessionsWhoamiPath)
 		require.NoError(t, err)
 		assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode)
 
@@ -58,7 +58,7 @@ func TestHandler(t *testing.T) {
 		MockHydrateCookieClient(t, client, ts.URL+"/set")
 
 		// Cookie set -> 200
-		res, err = client.Get(ts.URL + "/sessions/me")
+		res, err = client.Get(ts.URL + SessionsWhoamiPath)
 		require.NoError(t, err)
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
 	})
