@@ -783,6 +783,8 @@ github.com/ory/sdk/swagutil v0.0.0-20200129155727-8bfe32fcff3c h1:ZS2LX1iQd4aw7n
 github.com/ory/sdk/swagutil v0.0.0-20200129155727-8bfe32fcff3c/go.mod h1:Ufg1eAyz+Zt3+oweSZVThG13ewewWCKwBmoNmK8Z0co=
 github.com/ory/sdk/swagutil v0.0.0-20200130171837-e84d4a4046c8 h1:LBkYajX6JmhlRkj9cc6NV/sBNOhxMY/YpV9pz+PeyaA=
 github.com/ory/sdk/swagutil v0.0.0-20200130171837-e84d4a4046c8/go.mod h1:Ufg1eAyz+Zt3+oweSZVThG13ewewWCKwBmoNmK8Z0co=
+github.com/ory/sdk/swagutil v0.0.0-20200130190227-e1f6d26486c5 h1:sqkb7LZ5dg+zgDLjj/akeqYihllVb10SJ2cwN+hl89U=
+github.com/ory/sdk/swagutil v0.0.0-20200130190227-e1f6d26486c5/go.mod h1:Ufg1eAyz+Zt3+oweSZVThG13ewewWCKwBmoNmK8Z0co=
 github.com/ory/viper v1.5.6 h1:w4ceGgWwWLzAFYQ7bHaDZmwNsAto2JPVdyQjQnn7VWI=
 github.com/ory/viper v1.5.6/go.mod h1:TYmpFpKLxjQwvT4f0QPpkOn4sDXU1kDgAwJpgLYiQ28=
 github.com/ory/x v0.0.84 h1:foL2GSeL9yXBsEU14WcdX95H4Z0TmyodAJwdWkzvtHI=
