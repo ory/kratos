@@ -9,11 +9,12 @@ import (
 	"fmt"
 
 	"github.com/go-openapi/runtime"
-	"github.com/go-openapi/strfmt"
+
+	strfmt "github.com/go-openapi/strfmt"
 )
 
 // New creates a new admin API client.
-func New(transport runtime.ClientTransport, formats strfmt.Registry) ClientService {
+func New(transport runtime.ClientTransport, formats strfmt.Registry) *Client {
 	return &Client{transport: transport, formats: formats}
 }
 
@@ -25,25 +26,10 @@ type Client struct {
 	formats   strfmt.Registry
 }
 
-// ClientService is the interface for Client methods
-type ClientService interface {
-	CreateIdentity(params *CreateIdentityParams) (*CreateIdentityCreated, error)
-
-	DeleteIdentity(params *DeleteIdentityParams) (*DeleteIdentityNoContent, error)
-
-	GetIdentity(params *GetIdentityParams) (*GetIdentityOK, error)
-
-	ListIdentities(params *ListIdentitiesParams) (*ListIdentitiesOK, error)
-
-	UpdateIdentity(params *UpdateIdentityParams) (*UpdateIdentityOK, error)
-
-	SetTransport(transport runtime.ClientTransport)
-}
-
 /*
-  CreateIdentity creates an identity
+CreateIdentity creates an identity
 
-  This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)
+This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)
 using this method! A way to achieve that will be introduced in the future.
 
 Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
@@ -80,9 +66,9 @@ func (a *Client) CreateIdentity(params *CreateIdentityParams) (*CreateIdentityCr
 }
 
 /*
-  DeleteIdentity deletes an identity
+DeleteIdentity deletes an identity
 
-  This endpoint deletes an identity. This can not be undone.
+This endpoint deletes an identity. This can not be undone.
 
 Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 */
@@ -118,9 +104,9 @@ func (a *Client) DeleteIdentity(params *DeleteIdentityParams) (*DeleteIdentityNo
 }
 
 /*
-  GetIdentity gets an identity
+GetIdentity gets an identity
 
-  Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 */
 func (a *Client) GetIdentity(params *GetIdentityParams) (*GetIdentityOK, error) {
 	// TODO: Validate the params before sending
@@ -154,9 +140,9 @@ func (a *Client) GetIdentity(params *GetIdentityParams) (*GetIdentityOK, error) 
 }
 
 /*
-  ListIdentities lists all identities in the system
+ListIdentities lists all identities in the system
 
-  This endpoint returns a login request's context with, for example, error details and
+This endpoint returns a login request's context with, for example, error details and
 other information.
 
 Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
@@ -193,9 +179,9 @@ func (a *Client) ListIdentities(params *ListIdentitiesParams) (*ListIdentitiesOK
 }
 
 /*
-  UpdateIdentity updates an identity
+UpdateIdentity updates an identity
 
-  This endpoint updates an identity. It is NOT possible to set an identity's credentials (password, ...)
+This endpoint updates an identity. It is NOT possible to set an identity's credentials (password, ...)
 using this method! A way to achieve that will be introduced in the future.
 
 The full identity payload (except credentials) is expected. This endpoint does not support patching.

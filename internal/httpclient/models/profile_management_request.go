@@ -6,13 +6,14 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"github.com/go-openapi/errors"
 	strfmt "github.com/go-openapi/strfmt"
+
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
-// ProfileManagementRequest Request presents a profile management request
+// ProfileManagementRequest ProfileManagementRequest Request presents a profile management request
 //
 // This request is used when an identity wants to update profile information
 // (especially traits) in a selfservice manner.
@@ -23,6 +24,7 @@ type ProfileManagementRequest struct {
 
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile,
 	// a new request has to be initiated.
+	// Format: date-time
 	// Format: date-time
 	ExpiresAt strfmt.DateTime `json:"expires_at,omitempty"`
 
@@ -37,6 +39,7 @@ type ProfileManagementRequest struct {
 	Identity *Identity `json:"identity,omitempty"`
 
 	// IssuedAt is the time (UTC) when the request occurred.
+	// Format: date-time
 	// Format: date-time
 	IssuedAt strfmt.DateTime `json:"issued_at,omitempty"`
 

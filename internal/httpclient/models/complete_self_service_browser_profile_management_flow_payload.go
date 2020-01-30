@@ -6,13 +6,14 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"github.com/go-openapi/errors"
 	strfmt "github.com/go-openapi/strfmt"
+
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
-// CompleteSelfServiceBrowserProfileManagementFlowPayload complete self service browser profile management flow payload
+// CompleteSelfServiceBrowserProfileManagementFlowPayload CompleteSelfServiceBrowserProfileManagementFlowPayload complete self service browser profile management flow payload
 // swagger:model completeSelfServiceBrowserProfileManagementFlowPayload
 type CompleteSelfServiceBrowserProfileManagementFlowPayload struct {
 

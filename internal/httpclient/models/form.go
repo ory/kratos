@@ -8,12 +8,13 @@ package models
 import (
 	"strconv"
 
-	"github.com/go-openapi/errors"
 	strfmt "github.com/go-openapi/strfmt"
+
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
 )
 
-// Form HTMLForm represents a HTML Form. The container can work with both HTTP Form and JSON requests
+// Form Form HTMLForm represents a HTML Form. The container can work with both HTTP Form and JSON requests
 // swagger:model form
 type Form struct {
 

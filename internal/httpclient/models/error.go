@@ -7,10 +7,11 @@ package models
 
 import (
 	strfmt "github.com/go-openapi/strfmt"
+
 	"github.com/go-openapi/swag"
 )
 
-// Error error
+// Error Error error
 // swagger:model Error
 type Error struct {
 

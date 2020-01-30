@@ -6,12 +6,13 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"github.com/go-openapi/errors"
 	strfmt "github.com/go-openapi/strfmt"
+
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
 )
 
-// LoginRequestMethod login request method
+// LoginRequestMethod LoginRequestMethod login request method
 // swagger:model loginRequestMethod
 type LoginRequestMethod struct {
 

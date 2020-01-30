@@ -8,12 +8,13 @@ package models
 import (
 	"strconv"
 
-	"github.com/go-openapi/errors"
 	strfmt "github.com/go-openapi/strfmt"
+
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
 )
 
-// FormField Field represents a HTML Form Field
+// FormField FormField Field represents a HTML Form Field
 // swagger:model formField
 type FormField struct {
 
