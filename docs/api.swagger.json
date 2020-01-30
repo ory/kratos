@@ -768,6 +768,10 @@
           "description": "Name is the equivalent of \u003cinput name=\"{{.Name}}\"\u003e",
           "type": "string"
         },
+        "pattern": {
+          "description": "Disabled is the equivalent of \u003cinput disabled=\"{{.Disabled}}\"\u003e",
+          "type": "string"
+        },
         "required": {
           "description": "Required is the equivalent of \u003cinput required=\"{{.Required}}\"\u003e",
           "type": "boolean"

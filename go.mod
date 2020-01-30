@@ -52,7 +52,7 @@ require (
 	github.com/ory/gojsonschema v1.2.0
 	github.com/ory/graceful v0.1.1
 	github.com/ory/herodot v0.6.3
-	github.com/ory/sdk/swagutil v0.0.0-20200130171837-e84d4a4046c8
+	github.com/ory/sdk/swagutil v0.0.0-20200130180953-086b90a2e1ad
 	github.com/ory/viper v1.5.6
 	github.com/ory/x v0.0.92
 	github.com/pelletier/go-toml v1.6.0 // indirect

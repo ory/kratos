@@ -24,6 +24,9 @@ type FormField struct {
 	// Name is the equivalent of <input name="{{.Name}}">
 	Name string `json:"name,omitempty"`
 
+	// Disabled is the equivalent of <input disabled="{{.Disabled}}">
+	Pattern string `json:"pattern,omitempty"`
+
 	// Required is the equivalent of <input required="{{.Required}}">
 	Required bool `json:"required,omitempty"`
 
