@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// LoginRequestMethodConfig LoginRequestMethodConfig login request method config
+// LoginRequestMethodConfig login request method config
 // swagger:model loginRequestMethodConfig
 type LoginRequestMethodConfig struct {
 	LoginRequestMethodConfigAllOf0

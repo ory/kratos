@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// RegistrationRequestMethodConfig RegistrationRequestMethodConfig registration request method config
+// RegistrationRequestMethodConfig RegistrationRequestMethodConfig RegistrationRequestMethodConfig registration request method config
 // swagger:model registrationRequestMethodConfig
 type RegistrationRequestMethodConfig struct {
 	RegistrationRequestMethodConfigAllOf0
@@ -23,6 +23,8 @@ type RegistrationRequestMethodConfig struct {
 	RegistrationRequestMethodConfigAllOf3
 
 	RegistrationRequestMethodConfigAllOf4
+
+	RegistrationRequestMethodConfigAllOf5
 }
 
 // UnmarshalJSON unmarshals this object from a JSON structure
@@ -62,12 +64,19 @@ func (m *RegistrationRequestMethodConfig) UnmarshalJSON(raw []byte) error {
 	}
 	m.RegistrationRequestMethodConfigAllOf4 = aO4
 
+	// AO5
+	var aO5 RegistrationRequestMethodConfigAllOf5
+	if err := swag.ReadJSON(raw, &aO5); err != nil {
+		return err
+	}
+	m.RegistrationRequestMethodConfigAllOf5 = aO5
+
 	return nil
 }
 
 // MarshalJSON marshals this object to a JSON structure
 func (m RegistrationRequestMethodConfig) MarshalJSON() ([]byte, error) {
-	_parts := make([][]byte, 0, 5)
+	_parts := make([][]byte, 0, 6)
 
 	aO0, err := swag.WriteJSON(m.RegistrationRequestMethodConfigAllOf0)
 	if err != nil {
@@ -98,6 +107,12 @@ func (m RegistrationRequestMethodConfig) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 	_parts = append(_parts, aO4)
+
+	aO5, err := swag.WriteJSON(m.RegistrationRequestMethodConfigAllOf5)
+	if err != nil {
+		return nil, err
+	}
+	_parts = append(_parts, aO5)
 
 	return swag.ConcatJSON(_parts...), nil
 }
@@ -144,3 +159,7 @@ type RegistrationRequestMethodConfigAllOf3 interface{}
 // RegistrationRequestMethodConfigAllOf4 registration request method config all of4
 // swagger:model RegistrationRequestMethodConfigAllOf4
 type RegistrationRequestMethodConfigAllOf4 interface{}
+
+// RegistrationRequestMethodConfigAllOf5 registration request method config all of5
+// swagger:model RegistrationRequestMethodConfigAllOf5
+type RegistrationRequestMethodConfigAllOf5 interface{}

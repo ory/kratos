@@ -676,10 +676,10 @@
     "CredentialsType": {
       "description": "and so on.",
       "type": "string",
-      "title": "CredentialsType CredentialsType  represents several different credential types, like password credentials, passwordless credentials,"
+      "title": "CredentialsType CredentialsType CredentialsType  represents several different credential types, like password credentials, passwordless credentials,"
     },
     "Error": {
-      "description": "Error error",
+      "description": "Error Error error",
       "type": "object",
       "properties": {
         "message": {
@@ -689,7 +689,7 @@
       }
     },
     "Identity": {
-      "description": "Identity identity",
+      "description": "Identity Identity identity",
       "type": "object",
       "required": [
         "id",
@@ -713,7 +713,7 @@
       }
     },
     "Traits": {
-      "description": "Traits traits",
+      "description": "Traits Traits traits",
       "type": "object"
     },
     "UUID": {
@@ -721,7 +721,7 @@
       "format": "uuid4"
     },
     "completeSelfServiceBrowserProfileManagementFlowPayload": {
-      "description": "CompleteSelfServiceBrowserProfileManagementFlowPayload complete self service browser profile management flow payload",
+      "description": "CompleteSelfServiceBrowserProfileManagementFlowPayload CompleteSelfServiceBrowserProfileManagementFlowPayload complete self service browser profile management flow payload",
       "type": "object",
       "required": [
         "traits"
@@ -758,7 +758,7 @@
       }
     },
     "formField": {
-      "description": "Field represents a HTML Form Field",
+      "description": "FormField Field represents a HTML Form Field",
       "type": "object",
       "properties": {
         "errors": {
@@ -787,7 +787,7 @@
       }
     },
     "formFields": {
-      "description": "FormFields Fields contains multiple fields",
+      "description": "Fields contains multiple fields",
       "type": "array",
       "items": {
         "$ref": "#/definitions/formField"
@@ -796,7 +796,7 @@
     "genericError": {
       "description": "Error responses are sent when an error (e.g. unauthorized, bad request, ...) occurred.",
       "type": "object",
-      "title": "Error response",
+      "title": "GenericError Error response",
       "properties": {
         "error": {
           "$ref": "#/definitions/genericErrorPayload"
@@ -804,7 +804,7 @@
       }
     },
     "genericErrorPayload": {
-      "description": "GenericErrorPayload nolint:deadcode,unused",
+      "description": "GenericErrorPayload GenericErrorPayload nolint:deadcode,unused",
       "type": "object",
       "properties": {
         "code": {
@@ -866,14 +866,13 @@
       }
     },
     "loginRequest": {
-      "description": "LoginRequest login request",
       "type": "object",
       "properties": {
         "active": {
           "$ref": "#/definitions/CredentialsType"
         },
         "expires_at": {
-          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,\na new request has to be initiated.\nFormat: date-time",
+          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,\na new request has to be initiated.",
           "type": "string",
           "format": "date-time"
         },
@@ -881,7 +880,7 @@
           "$ref": "#/definitions/UUID"
         },
         "issued_at": {
-          "description": "IssuedAt is the time (UTC) when the request occurred.\nFormat: date-time",
+          "description": "IssuedAt is the time (UTC) when the request occurred.",
           "type": "string",
           "format": "date-time"
         },
@@ -899,7 +898,6 @@
       }
     },
     "loginRequestMethod": {
-      "description": "LoginRequestMethod login request method",
       "type": "object",
       "properties": {
         "config": {
@@ -911,7 +909,6 @@
       }
     },
     "loginRequestMethodConfig": {
-      "description": "LoginRequestMethodConfig login request method config",
       "type": "object",
       "allOf": [
         {
@@ -931,10 +928,10 @@
     "profileManagementRequest": {
       "description": "This request is used when an identity wants to update profile information\n(especially traits) in a selfservice manner.\n\nFor more information head over to: https://www.ory.sh/docs/kratos/selfservice/profile",
       "type": "object",
-      "title": "ProfileManagementRequest Request presents a profile management request",
+      "title": "Request presents a profile management request",
       "properties": {
         "expires_at": {
-          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile,\na new request has to be initiated.\nFormat: date-time",
+          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile,\na new request has to be initiated.",
           "type": "string",
           "format": "date-time"
         },
@@ -948,7 +945,7 @@
           "$ref": "#/definitions/Identity"
         },
         "issued_at": {
-          "description": "IssuedAt is the time (UTC) when the request occurred.\nFormat: date-time",
+          "description": "IssuedAt is the time (UTC) when the request occurred.",
           "type": "string",
           "format": "date-time"
         },
@@ -963,14 +960,14 @@
       }
     },
     "registrationRequest": {
-      "description": "RegistrationRequest registration request",
+      "description": "RegistrationRequest RegistrationRequest registration request",
       "type": "object",
       "properties": {
         "active": {
           "$ref": "#/definitions/CredentialsType"
         },
         "expires_at": {
-          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,\na new request has to be initiated.\nFormat: date-time",
+          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,\na new request has to be initiated.\nFormat: date-time\nFormat: date-time",
           "type": "string",
           "format": "date-time"
         },
@@ -978,7 +975,7 @@
           "$ref": "#/definitions/UUID"
         },
         "issued_at": {
-          "description": "IssuedAt is the time (UTC) when the request occurred.\nFormat: date-time",
+          "description": "IssuedAt is the time (UTC) when the request occurred.\nFormat: date-time\nFormat: date-time",
           "type": "string",
           "format": "date-time"
         },
@@ -1007,9 +1004,12 @@
       }
     },
     "registrationRequestMethodConfig": {
-      "description": "RegistrationRequestMethodConfig registration request method config",
+      "description": "RegistrationRequestMethodConfig RegistrationRequestMethodConfig registration request method config",
       "type": "object",
       "allOf": [
+        {
+          "type": "object"
+        },
         {
           "type": "object"
         },
@@ -1031,12 +1031,12 @@
       "type": "object",
       "properties": {
         "authenticated_at": {
-          "description": "authenticated at\nFormat: date-time",
+          "description": "authenticated at\nFormat: date-time\nFormat: date-time",
           "type": "string",
           "format": "date-time"
         },
         "expires_at": {
-          "description": "expires at\nFormat: date-time",
+          "description": "expires at\nFormat: date-time\nFormat: date-time",
           "type": "string",
           "format": "date-time"
         },
@@ -1044,7 +1044,7 @@
           "$ref": "#/definitions/Identity"
         },
         "issued_at": {
-          "description": "issued at\nFormat: date-time",
+          "description": "issued at\nFormat: date-time\nFormat: date-time",
           "type": "string",
           "format": "date-time"
         },
@@ -1054,7 +1054,6 @@
       }
     },
     "version": {
-      "description": "Version version",
       "type": "object",
       "properties": {
         "version": {

@@ -2,9 +2,10 @@ package profile
 
 import (
 	"encoding/json"
-	"github.com/gofrs/uuid"
 	"net/http"
 	"net/url"
+
+	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/schema"
 
