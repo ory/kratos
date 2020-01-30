@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	LoginPath = "/auth/browser/methods/password/login"
+	LoginPath = "/self-service/browser/flows/login/strategies/password"
 )
 
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {

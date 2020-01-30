@@ -10,27 +10,16 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
-	"github.com/go-openapi/validate"
 )
 
-// GenericError Error response
+// GenericError GenericError Error response
 //
 // Error responses are sent when an error (e.g. unauthorized, bad request, ...) occurred.
 // swagger:model genericError
 type GenericError struct {
 
-	// Name is the error name.
-	// Required: true
-	Error *string `json:"error"`
-
-	// Code represents the error status code (404, 403, 401, ...).
-	ErrorCode int64 `json:"error_code,omitempty"`
-
-	// Debug contains debug information. This is usually not available and has to be enabled.
-	ErrorDebug string `json:"error_debug,omitempty"`
-
-	// Hint contains further information on the nature of the error.
-	ErrorHint string `json:"error_hint,omitempty"`
+	// error
+	Error *GenericErrorPayload `json:"error,omitempty"`
 }
 
 // Validate validates this generic error
@@ -49,8 +38,17 @@ func (m *GenericError) Validate(formats strfmt.Registry) error {
 
 func (m *GenericError) validateError(formats strfmt.Registry) error {
 
-	if err := validate.Required("error", "body", m.Error); err != nil {
-		return err
+	if swag.IsZero(m.Error) { // not required
+		return nil
+	}
+
+	if m.Error != nil {
+		if err := m.Error.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("error")
+			}
+			return err
+		}
 	}
 
 	return nil

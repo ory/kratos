@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	BrowserRegistrationPath         = "/auth/browser/registration"
-	BrowserRegistrationRequestsPath = "/auth/browser/requests/registration"
+	BrowserRegistrationPath         = "/self-service/browser/flows/registration"
+	BrowserRegistrationRequestsPath = "/self-service/browser/flows/requests/registration"
 )
 
 type (
@@ -78,21 +78,23 @@ func (h *Handler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request,
 	return nil
 }
 
-// swagger:route GET /auth/browser/registration public initializeRegistrationFlow
+// swagger:route GET /self-service/browser/flows/registration public initializeSelfServiceBrowserRegistrationFlow
 //
-// Initialize a Registration Flow
+// Initialize browser-based registration user flow
 //
-// This endpoint initializes a registration flow. This endpoint **should not be called from a programatic API**
-// but instead for the, for example, browser. It will redirect the user agent (e.g. browser) to the
-// configured registration UI, appending the registration challenge.
+// This endpoint initializes a browser-based user registration flow. Once initialized, the browser will be redirected to
+// `urls.registration_ui` with the request ID set as a query parameter. If a valid user session exists already, the browser will be
+// redirected to `urls.default_redirect_url`.
 //
-// For an in-depth look at ORY Krato's registration flow, head over to: https://www.ory.sh/docs/kratos/selfservice/registration
+// > This endpoint is NOT INTENDED for API clients and only works
+// with browsers (Chrome, Firefox, ...).
+//
+// More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 //
 //     Schemes: http, https
 //
 //     Responses:
 //       302: emptyResponse
-//       404: genericError
 //       500: genericError
 func (h *Handler) initRegistrationRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := h.NewRegistrationRequest(w, r, func(a *Request) string {
@@ -103,14 +105,27 @@ func (h *Handler) initRegistrationRequest(w http.ResponseWriter, r *http.Request
 	}
 }
 
-// swagger:route GET /auth/browser/requests/registration public getRegistrationRequest
+// nolint:deadcode,unused
+// swagger:parameters getSelfServiceBrowserRegistrationRequest
+type getSelfServiceBrowserRegistrationRequestParameters struct {
+	// Request is the Registration Request ID
+	//
+	// The value for this parameter comes from `request` URL Query parameter sent to your
+	// application (e.g. `/registration?request=abcde`).
+	//
+	// required: true
+	// in: query
+	Request string `json:"request"`
+}
+
+// swagger:route GET /self-service/browser/flows/requests/registration public getSelfServiceBrowserRegistrationRequest
 //
-// Get Registration Request
+// Get the request context of browser-based registration user flows
 //
 // This endpoint returns a registration request's context with, for example, error details and
 // other information.
 //
-// For an in-depth look at ORY Krato's registration flow, head over to: https://www.ory.sh/docs/kratos/selfservice/registration
+// More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 //
 //     Produces:
 //     - application/json
@@ -119,6 +134,7 @@ func (h *Handler) initRegistrationRequest(w http.ResponseWriter, r *http.Request
 //
 //     Responses:
 //       200: registrationRequest
+//       403: genericError
 //       404: genericError
 //       500: genericError
 func (h *Handler) fetchRegistrationRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

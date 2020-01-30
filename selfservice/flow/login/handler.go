@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	BrowserLoginPath         = "/auth/browser/login"
-	BrowserLoginRequestsPath = "/auth/browser/requests/login"
+	BrowserLoginPath         = "/self-service/browser/flows/login"
+	BrowserLoginRequestsPath = "/self-service/browser/flows/requests/login"
 )
 
 type (
@@ -75,18 +75,18 @@ func (h *Handler) NewLoginRequest(w http.ResponseWriter, r *http.Request, redir 
 	return nil
 }
 
-// swagger:route GET /auth/browser/login public initializeLoginFlow
+// swagger:route GET /self-service/browser/flows/login public initializeSelfServiceBrowserLoginFlow
 //
-// Initialize a Login Flow
+// Initialize browser-based login user flow
 //
-// This endpoint initializes a login flow. This endpoint **should not be called from a programatic API**
-// but instead for the, for example, browser. It will redirect the user agent (e.g. browser) to the
-// configured login UI, appending the login challenge.
+// This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to
+// `urls.login_ui` with the request ID set as a query parameter. If a valid user session exists already, the browser will be
+// redirected to `urls.default_redirect_url`.
 //
-// If the user-agent already has a valid authentication session, the server will respond with a 302
-// code redirecting to the config value of `urls.default_return_to`.
+// > This endpoint is NOT INTENDED for API clients and only works
+// with browsers (Chrome, Firefox, ...).
 //
-// For an in-depth look at ORY Krato's login flow, head over to: https://www.ory.sh/docs/kratos/selfservice/login
+// More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 //
 //     Schemes: http, https
 //
@@ -102,14 +102,27 @@ func (h *Handler) initLoginRequest(w http.ResponseWriter, r *http.Request, ps ht
 	}
 }
 
-// swagger:route GET /auth/browser/requests/login public getLoginRequest
+// nolint:deadcode,unused
+// swagger:parameters getSelfServiceBrowserLoginRequest
+type getSelfServiceBrowserLoginRequestParameters struct {
+	// Request is the Login Request ID
+	//
+	// The value for this parameter comes from `request` URL Query parameter sent to your
+	// application (e.g. `/login?request=abcde`).
+	//
+	// required: true
+	// in: query
+	Request string `json:"request"`
+}
+
+// swagger:route GET /self-service/browser/flows/requests/login public getSelfServiceBrowserLoginRequest
 //
-// Get Login Request
+// Get the request context of browser-based login user flows
 //
 // This endpoint returns a login request's context with, for example, error details and
 // other information.
 //
-// For an in-depth look at ORY Krato's login flow, head over to: https://www.ory.sh/docs/kratos/selfservice/login
+// More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 //
 //     Produces:
 //     - application/json
@@ -118,7 +131,8 @@ func (h *Handler) initLoginRequest(w http.ResponseWriter, r *http.Request, ps ht
 //
 //     Responses:
 //       200: loginRequest
-//       302: emptyResponse
+//       403: genericError
+//       404: genericError
 //       500: genericError
 func (h *Handler) fetchLoginRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	ar, err := h.d.LoginRequestPersister().GetLoginRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
