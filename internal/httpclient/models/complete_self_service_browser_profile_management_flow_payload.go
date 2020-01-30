@@ -13,7 +13,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// CompleteSelfServiceBrowserProfileManagementFlowPayload CompleteSelfServiceBrowserProfileManagementFlowPayload complete self service browser profile management flow payload
+// CompleteSelfServiceBrowserProfileManagementFlowPayload complete self service browser profile management flow payload
 // swagger:model completeSelfServiceBrowserProfileManagementFlowPayload
 type CompleteSelfServiceBrowserProfileManagementFlowPayload struct {
 
