@@ -16,7 +16,7 @@ import (
 
 	strfmt "github.com/go-openapi/strfmt"
 
-	models "github.com/ory/kratos/internal/httpclient/models"
+	"github.com/ory/kratos/internal/httpclient/models"
 )
 
 // NewCreateIdentityParams creates a new CreateIdentityParams object

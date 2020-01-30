@@ -6,14 +6,13 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	strfmt "github.com/go-openapi/strfmt"
-
 	"github.com/go-openapi/errors"
+	strfmt "github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
-// LoginRequest LoginRequest login request
+// LoginRequest login request
 // swagger:model loginRequest
 type LoginRequest struct {
 
@@ -23,7 +22,6 @@ type LoginRequest struct {
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,
 	// a new request has to be initiated.
 	// Format: date-time
-	// Format: date-time
 	ExpiresAt strfmt.DateTime `json:"expires_at,omitempty"`
 
 	// id
@@ -31,7 +29,6 @@ type LoginRequest struct {
 	ID UUID `json:"id,omitempty"`
 
 	// IssuedAt is the time (UTC) when the request occurred.
-	// Format: date-time
 	// Format: date-time
 	IssuedAt strfmt.DateTime `json:"issued_at,omitempty"`
 
