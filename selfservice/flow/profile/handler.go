@@ -2,6 +2,7 @@ package profile
 
 import (
 	"encoding/json"
+	"github.com/gofrs/uuid"
 	"net/http"
 	"net/url"
 
