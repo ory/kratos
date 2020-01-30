@@ -125,13 +125,15 @@ func TestStrategy(t *testing.T) {
 
 	public := x.NewRouterPublic()
 	admin := x.NewRouterAdmin()
-	reg.LoginHandler().RegisterPublicRoutes(public, admin)
+	reg.LoginHandler().RegisterPublicRoutes(public)
+	reg.LoginHandler().RegisterAdminRoutes(admin)
 	reg.LoginHandler().WithTokenGenerator(func(r *http.Request) string {
 		return "nosurf"
 	})
 	reg.LoginStrategies().RegisterPublicRoutes(public)
 	reg.RegistrationStrategies().RegisterPublicRoutes(public)
-	reg.RegistrationHandler().RegisterRoutes(public, admin)
+	reg.RegistrationHandler().RegisterPublicRoutes(public)
+	reg.RegistrationHandler().RegisterAdminRoutes(admin)
 	reg.RegistrationHandler().WithTokenGenerator(func(r *http.Request) string {
 		return "nosurf"
 	})

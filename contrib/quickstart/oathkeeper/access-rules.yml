@@ -57,4 +57,4 @@
   errors:
     - handler: redirect
       config:
-        to: http://127.0.0.1:4455/.ory/kratos/public/auth/browser/login
+        to: http://127.0.0.1:4455/auth/login
