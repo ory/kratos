@@ -45,6 +45,10 @@ func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
 	return &Handler{d: d, c: c, csrf: nosurf.Token}
 }
 
+func (h *Handler) WithTokenGenerator(f func(r *http.Request) string) {
+	h.csrf = f
+}
+
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic, admin *x.RouterAdmin) {
 	public.GET(BrowserLoginPath, h.d.SessionHandler().IsNotAuthenticated(h.initLoginRequest, session.RedirectOnAuthenticated(h.c)))
 	public.GET(BrowserLoginRequestsPath, h.publicFetchLoginRequest)
