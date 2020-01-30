@@ -3,6 +3,7 @@
 **Table of Contents**
 
 - [Change Log](#change-log)
+  - [v0.0.3-alpha.5 (2020-01-30)](#v003-alpha5-2020-01-30)
   - [v0.0.3-alpha.4 (2020-01-30)](#v003-alpha4-2020-01-30)
   - [v0.0.3-alpha.3 (2020-01-30)](#v003-alpha3-2020-01-30)
   - [v0.0.3-alpha.2 (2020-01-30)](#v003-alpha2-2020-01-30)
@@ -22,6 +23,13 @@
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Change Log
+
+## [v0.0.3-alpha.5](https://github.com/ory/kratos/tree/v0.0.3-alpha.5) (2020-01-30)
+[Full Changelog](https://github.com/ory/kratos/compare/v0.0.3-alpha.4...v0.0.3-alpha.5)
+
+**Merged pull requests:**
+
+- ci: Resolve final docker build issues [\#210](https://github.com/ory/kratos/pull/210) ([aeneasr](https://github.com/aeneasr))
 
 ## [v0.0.3-alpha.4](https://github.com/ory/kratos/tree/v0.0.3-alpha.4) (2020-01-30)
 [Full Changelog](https://github.com/ory/kratos/compare/v0.0.3-alpha.3...v0.0.3-alpha.4)
