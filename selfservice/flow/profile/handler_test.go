@@ -222,10 +222,10 @@ func TestUpdateProfile(t *testing.T) {
 			Action: kratos.URL + profile.BrowserProfileUpdatePath + "?request=" + rid,
 			Method: "POST",
 			Fields: models.FormFields{
-				&models.FormField{Name: "traits.booly", Required: false, Type: "checkbox", Value: false},
 				&models.FormField{Name: "traits.email", Required: false, Type: "text", Value: "john@doe.com"},
-				&models.FormField{Name: "traits.numby", Required: false, Type: "number", Value: json.Number("2.5")},
 				&models.FormField{Name: "traits.stringy", Required: false, Type: "text", Value: "foobar"},
+				&models.FormField{Name: "traits.numby", Required: false, Type: "number", Value: json.Number("2.5")},
+				&models.FormField{Name: "traits.booly", Required: false, Type: "checkbox", Value: false},
 			},
 		}, pr.Payload.Form)
 	})
