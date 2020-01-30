@@ -219,10 +219,9 @@ func TestUpdateProfile(t *testing.T) {
 		require.True(t, found)
 
 		assert.Equal(t, &models.Form{
-			Action: kratos.URL + profile.BrowserProfileUpdatePath,
+			Action: kratos.URL + profile.BrowserProfileUpdatePath + "?request=" + rid,
 			Method: "POST",
 			Fields: models.FormFields{
-				&models.FormField{Name: "request", Required: true, Type: "hidden", Value: rid},
 				&models.FormField{Name: "traits.booly", Required: false, Type: "checkbox", Value: false},
 				&models.FormField{Name: "traits.email", Required: false, Type: "text", Value: "john@doe.com"},
 				&models.FormField{Name: "traits.numby", Required: false, Type: "number", Value: json.Number("2.5")},

@@ -99,7 +99,10 @@ func (h *Handler) initUpdateProfile(w http.ResponseWriter, r *http.Request, ps h
 	}
 
 	a := NewRequest(h.c.SelfServiceProfileRequestLifespan(), h.csrf(r), r, s)
-	a.Form = form.NewHTMLFormFromJSON(urlx.AppendPaths(h.c.SelfPublicURL(), BrowserProfileUpdatePath).String(), json.RawMessage(s.Identity.Traits), "traits")
+	a.Form = form.NewHTMLFormFromJSON(urlx.CopyWithQuery(
+		urlx.AppendPaths(h.c.SelfPublicURL(), BrowserProfileUpdatePath),
+		url.Values{"request": {a.ID.String()}},
+	).String(), json.RawMessage(s.Identity.Traits), "traits")
 	if err := h.d.ProfileRequestPersister().CreateProfileRequest(r.Context(), a); err != nil {
 		h.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
 		return
@@ -183,12 +186,6 @@ func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	ar.Form.SetField("request", form.Field{
-		Name:     "request",
-		Type:     "hidden",
-		Required: true,
-		Value:    rid,
-	})
 	ar.Form.SetCSRF(nosurf.Token(r))
 	sort.Sort(ar.Form.Fields)
 	h.d.Writer().Write(w, r, ar)
@@ -197,6 +194,13 @@ func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Reque
 // swagger:parameters completeSelfServiceBrowserProfileManagementFlow
 // nolint:deadcode,unused
 type completeProfileManagementParameters struct {
+	// Request is the request ID.
+	//
+	// type: string
+	// required: true
+	// in: query
+	Request uuid.UUID `json:"request"`
+
 	// in: body
 	// required: true
 	Body completeSelfServiceBrowserProfileManagementFlowPayload
@@ -211,12 +215,6 @@ type completeSelfServiceBrowserProfileManagementFlowPayload struct {
 	// format: binary
 	// required: true
 	Traits json.RawMessage `json:"traits"`
-
-	// Request is the request ID.
-	//
-	// type: string
-	// required: true
-	Request uuid.UUID `json:"request"`
 }
 
 // swagger:route POST /self-service/browser/flows/profile/update public completeSelfServiceBrowserProfileManagementFlow
@@ -266,12 +264,13 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if x.IsZeroUUID(p.Request) {
+	rid := r.URL.Query().Get("request")
+	if len(rid) == 0 {
 		h.handleProfileManagementError(w, r, nil, s.Identity.Traits, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request query parameter is missing.")))
 		return
 	}
 
-	ar, err := h.d.ProfileRequestPersister().GetProfileRequest(r.Context(), p.Request)
+	ar, err := h.d.ProfileRequestPersister().GetProfileRequest(r.Context(), x.ParseUUID(rid))
 	if err != nil {
 		h.handleProfileManagementError(w, r, nil, s.Identity.Traits, err)
 		return
@@ -333,12 +332,15 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	action := urlx.CopyWithQuery(
+		urlx.AppendPaths(h.c.SelfPublicURL(), BrowserProfileUpdatePath),
+		url.Values{"request": {ar.ID.String()}},
+	)
 	ar.Form.Reset()
 	ar.UpdateSuccessful = true
-	for _, field := range form.NewHTMLFormFromJSON("", json.RawMessage(i.Traits), "traits").Fields {
+	for _, field := range form.NewHTMLFormFromJSON(action.String(), json.RawMessage(i.Traits), "traits").Fields {
 		ar.Form.SetField(field.Name, field)
 	}
-	ar.Form.SetValue("request", r.Form.Get("request"))
 	ar.Form.SetCSRF(nosurf.Token(r))
 	sort.Sort(ar.Form.Fields)
 
@@ -357,15 +359,19 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 // during a profile management request.
 func (h *Handler) handleProfileManagementError(w http.ResponseWriter, r *http.Request, rr *Request, traits identity.Traits, err error) {
 	if rr != nil {
+		action := urlx.CopyWithQuery(
+			urlx.AppendPaths(h.c.SelfPublicURL(), BrowserProfileUpdatePath),
+			url.Values{"request": {rr.ID.String()}},
+		)
+
 		rr.Form.Reset()
 		rr.UpdateSuccessful = false
 
 		if traits != nil {
-			for _, field := range form.NewHTMLFormFromJSON("", json.RawMessage(traits), "traits").Fields {
+			for _, field := range form.NewHTMLFormFromJSON(action.String(), json.RawMessage(traits), "traits").Fields {
 				rr.Form.SetField(field.Name, field)
 			}
 		}
-		rr.Form.SetValue("request", r.Form.Get("request"))
 		rr.Form.SetCSRF(nosurf.Token(r))
 		sort.Sort(rr.Form.Fields)
 	}
