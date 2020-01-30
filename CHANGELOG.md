@@ -31,10 +31,11 @@
 **Fixed bugs:**
 
 - Improve `/profile` and `/session` URLs [\#195](https://github.com/ory/kratos/issues/195)
+- Profile Management requests sends Request ID in POST Body instead of Query Parameter [\#190](https://github.com/ory/kratos/issues/190)
 
 **Merged pull requests:**
 
-- Improve dev flag [\#167](https://github.com/ory/kratos/pull/167) ([zepatrik](https://github.com/zepatrik))
+- ss/profile: Use request ID as query param everywhere [\#202](https://github.com/ory/kratos/pull/202) ([aeneasr](https://github.com/aeneasr))
 
 ## [v0.0.1-alpha.9](https://github.com/ory/kratos/tree/v0.0.1-alpha.9) (2020-01-29)
 [Full Changelog](https://github.com/ory/kratos/compare/v0.0.1-alpha.10+oryOS.15...v0.0.1-alpha.9)
@@ -75,6 +76,7 @@
 **Merged pull requests:**
 
 - Make form fields an array [\#197](https://github.com/ory/kratos/pull/197) ([zepatrik](https://github.com/zepatrik))
+- Resolve build issues with CGO [\#196](https://github.com/ory/kratos/pull/196) ([aeneasr](https://github.com/aeneasr))
 
 ## [v0.0.1-alpha.3](https://github.com/ory/kratos/tree/v0.0.1-alpha.3) (2020-01-28)
 [Full Changelog](https://github.com/ory/kratos/compare/v0.0.1-alpha.2...v0.0.1-alpha.3)
@@ -165,7 +167,6 @@
 
 **Merged pull requests:**
 
-- Resolve build issues with CGO [\#196](https://github.com/ory/kratos/pull/196) ([aeneasr](https://github.com/aeneasr))
 - Remove redundant return statement [\#194](https://github.com/ory/kratos/pull/194) ([aeneasr](https://github.com/aeneasr))
 - ss/oidc: Remove obsolete request field from form [\#193](https://github.com/ory/kratos/pull/193) ([aeneasr](https://github.com/aeneasr))
 - sql: Re-introduce migration plans to CLI command [\#192](https://github.com/ory/kratos/pull/192) ([aeneasr](https://github.com/aeneasr))
@@ -177,6 +178,7 @@
 - Add goreleaser orb task [\#170](https://github.com/ory/kratos/pull/170) ([aeneasr](https://github.com/aeneasr))
 - Add changelog generation task [\#169](https://github.com/ory/kratos/pull/169) ([aeneasr](https://github.com/aeneasr))
 - Adopt new SDK pipeline [\#168](https://github.com/ory/kratos/pull/168) ([aeneasr](https://github.com/aeneasr))
+- Improve dev flag [\#167](https://github.com/ory/kratos/pull/167) ([zepatrik](https://github.com/zepatrik))
 - Serve json schemas [\#164](https://github.com/ory/kratos/pull/164) ([zepatrik](https://github.com/zepatrik))
 - update to readme.md [\#160](https://github.com/ory/kratos/pull/160) ([tacurran](https://github.com/tacurran))
 - Bump go-acc and resolve test issues [\#154](https://github.com/ory/kratos/pull/154) ([aeneasr](https://github.com/aeneasr))
