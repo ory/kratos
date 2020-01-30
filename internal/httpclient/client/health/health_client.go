@@ -9,11 +9,12 @@ import (
 	"fmt"
 
 	"github.com/go-openapi/runtime"
-	"github.com/go-openapi/strfmt"
+
+	strfmt "github.com/go-openapi/strfmt"
 )
 
 // New creates a new health API client.
-func New(transport runtime.ClientTransport, formats strfmt.Registry) ClientService {
+func New(transport runtime.ClientTransport, formats strfmt.Registry) *Client {
 	return &Client{transport: transport, formats: formats}
 }
 
@@ -25,19 +26,10 @@ type Client struct {
 	formats   strfmt.Registry
 }
 
-// ClientService is the interface for Client methods
-type ClientService interface {
-	IsInstanceAlive(params *IsInstanceAliveParams) (*IsInstanceAliveOK, error)
-
-	IsInstanceReady(params *IsInstanceReadyParams) (*IsInstanceReadyOK, error)
-
-	SetTransport(transport runtime.ClientTransport)
-}
-
 /*
-  IsInstanceAlive checks alive status
+IsInstanceAlive checks alive status
 
-  This endpoint returns a 200 status code when the HTTP server is up running.
+This endpoint returns a 200 status code when the HTTP server is up running.
 This status does currently not include checks whether the database connection is working.
 
 If the service supports TLS Edge Termination, this endpoint does not require the
@@ -78,9 +70,9 @@ func (a *Client) IsInstanceAlive(params *IsInstanceAliveParams) (*IsInstanceAliv
 }
 
 /*
-  IsInstanceReady checks readiness status
+IsInstanceReady checks readiness status
 
-  This endpoint returns a 200 status code when the HTTP server is up running and the environment dependencies (e.g.
+This endpoint returns a 200 status code when the HTTP server is up running and the environment dependencies (e.g.
 the database) are responsive as well.
 
 If the service supports TLS Edge Termination, this endpoint does not require the

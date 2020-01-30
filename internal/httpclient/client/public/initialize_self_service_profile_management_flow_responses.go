@@ -13,7 +13,7 @@ import (
 
 	strfmt "github.com/go-openapi/strfmt"
 
-	"github.com/ory/kratos/internal/httpclient/models"
+	models "github.com/ory/kratos/internal/httpclient/models"
 )
 
 // InitializeSelfServiceProfileManagementFlowReader is a Reader for the InitializeSelfServiceProfileManagementFlow structure.

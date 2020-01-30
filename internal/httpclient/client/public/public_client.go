@@ -9,11 +9,12 @@ import (
 	"fmt"
 
 	"github.com/go-openapi/runtime"
-	"github.com/go-openapi/strfmt"
+
+	strfmt "github.com/go-openapi/strfmt"
 )
 
 // New creates a new public API client.
-func New(transport runtime.ClientTransport, formats strfmt.Registry) ClientService {
+func New(transport runtime.ClientTransport, formats strfmt.Registry) *Client {
 	return &Client{transport: transport, formats: formats}
 }
 
@@ -25,27 +26,10 @@ type Client struct {
 	formats   strfmt.Registry
 }
 
-// ClientService is the interface for Client methods
-type ClientService interface {
-	CompleteSelfServiceBrowserProfileManagementFlow(params *CompleteSelfServiceBrowserProfileManagementFlowParams) error
-
-	InitializeSelfServiceBrowserLoginFlow(params *InitializeSelfServiceBrowserLoginFlowParams) error
-
-	InitializeSelfServiceBrowserLogoutFlow(params *InitializeSelfServiceBrowserLogoutFlowParams) error
-
-	InitializeSelfServiceBrowserRegistrationFlow(params *InitializeSelfServiceBrowserRegistrationFlowParams) error
-
-	InitializeSelfServiceProfileManagementFlow(params *InitializeSelfServiceProfileManagementFlowParams) error
-
-	Whoami(params *WhoamiParams) (*WhoamiOK, error)
-
-	SetTransport(transport runtime.ClientTransport)
-}
-
 /*
-  CompleteSelfServiceBrowserProfileManagementFlow completes the browser based profile management flows
+CompleteSelfServiceBrowserProfileManagementFlow completes the browser based profile management flows
 
-  This endpoint completes a browser-based profile management flow. This is usually achieved by POSTing data to this
+This endpoint completes a browser-based profile management flow. This is usually achieved by POSTing data to this
 endpoint.
 
 If the provided profile data is valid against the Identity's Traits JSON Schema, the data will be updated and
@@ -80,9 +64,9 @@ func (a *Client) CompleteSelfServiceBrowserProfileManagementFlow(params *Complet
 }
 
 /*
-  InitializeSelfServiceBrowserLoginFlow initializes browser based login user flow
+InitializeSelfServiceBrowserLoginFlow initializes browser based login user flow
 
-  This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to
+This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to
 `urls.login_ui` with the request ID set as a query parameter. If a valid user session exists already, the browser will be
 redirected to `urls.default_redirect_url`.
 
@@ -116,9 +100,9 @@ func (a *Client) InitializeSelfServiceBrowserLoginFlow(params *InitializeSelfSer
 }
 
 /*
-  InitializeSelfServiceBrowserLogoutFlow initializes browser based logout user flow
+InitializeSelfServiceBrowserLogoutFlow initializes browser based logout user flow
 
-  This endpoint initializes a logout flow.
+This endpoint initializes a logout flow.
 
 > This endpoint is NOT INTENDED for API clients and only works
 with browsers (Chrome, Firefox, ...).
@@ -152,9 +136,9 @@ func (a *Client) InitializeSelfServiceBrowserLogoutFlow(params *InitializeSelfSe
 }
 
 /*
-  InitializeSelfServiceBrowserRegistrationFlow initializes browser based registration user flow
+InitializeSelfServiceBrowserRegistrationFlow initializes browser based registration user flow
 
-  This endpoint initializes a browser-based user registration flow. Once initialized, the browser will be redirected to
+This endpoint initializes a browser-based user registration flow. Once initialized, the browser will be redirected to
 `urls.registration_ui` with the request ID set as a query parameter. If a valid user session exists already, the browser will be
 redirected to `urls.default_redirect_url`.
 
@@ -188,9 +172,9 @@ func (a *Client) InitializeSelfServiceBrowserRegistrationFlow(params *Initialize
 }
 
 /*
-  InitializeSelfServiceProfileManagementFlow initializes browser based profile management flow
+InitializeSelfServiceProfileManagementFlow initializes browser based profile management flow
 
-  This endpoint initializes a browser-based profile management flow. Once initialized, the browser will be redirected to
+This endpoint initializes a browser-based profile management flow. Once initialized, the browser will be redirected to
 `urls.profile_ui` with the request ID set as a query parameter. If no valid user session exists, a login
 flow will be initialized.
 
@@ -224,9 +208,9 @@ func (a *Client) InitializeSelfServiceProfileManagementFlow(params *InitializeSe
 }
 
 /*
-  Whoami checks who the current HTTP session belongs to
+Whoami checks who the current HTTP session belongs to
 
-  Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.
+Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.
 Returns a session object or 401 if the credentials are invalid or no credentials were sent.
 
 This endpoint is useful for reverse proxies and API Gateways.

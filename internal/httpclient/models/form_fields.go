@@ -8,12 +8,13 @@ package models
 import (
 	"strconv"
 
-	"github.com/go-openapi/errors"
 	strfmt "github.com/go-openapi/strfmt"
+
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
 )
 
-// FormFields Fields contains multiple fields
+// FormFields FormFields Fields contains multiple fields
 // swagger:model formFields
 type FormFields []*FormField
 

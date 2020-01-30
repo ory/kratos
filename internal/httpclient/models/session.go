@@ -6,8 +6,9 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"github.com/go-openapi/errors"
 	strfmt "github.com/go-openapi/strfmt"
+
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
@@ -18,9 +19,11 @@ type Session struct {
 
 	// authenticated at
 	// Format: date-time
+	// Format: date-time
 	AuthenticatedAt strfmt.DateTime `json:"authenticated_at,omitempty"`
 
 	// expires at
+	// Format: date-time
 	// Format: date-time
 	ExpiresAt strfmt.DateTime `json:"expires_at,omitempty"`
 
@@ -28,6 +31,7 @@ type Session struct {
 	Identity *Identity `json:"identity,omitempty"`
 
 	// issued at
+	// Format: date-time
 	// Format: date-time
 	IssuedAt strfmt.DateTime `json:"issued_at,omitempty"`
 

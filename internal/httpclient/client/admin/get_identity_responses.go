@@ -13,7 +13,7 @@ import (
 
 	strfmt "github.com/go-openapi/strfmt"
 
-	"github.com/ory/kratos/internal/httpclient/models"
+	models "github.com/ory/kratos/internal/httpclient/models"
 )
 
 // GetIdentityReader is a Reader for the GetIdentity structure.

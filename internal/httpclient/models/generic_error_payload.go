@@ -7,10 +7,11 @@ package models
 
 import (
 	strfmt "github.com/go-openapi/strfmt"
+
 	"github.com/go-openapi/swag"
 )
 
-// GenericErrorPayload nolint:deadcode,unused
+// GenericErrorPayload GenericErrorPayload nolint:deadcode,unused
 // swagger:model genericErrorPayload
 type GenericErrorPayload struct {
 
