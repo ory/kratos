@@ -3,8 +3,9 @@ package form
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/ory/x/jsonschemax"
 	"strings"
+
+	"github.com/ory/x/jsonschemax"
 
 	"github.com/ory/kratos/schema"
 )
@@ -89,8 +90,8 @@ func toFormType(n string, i interface{}) string {
 
 func fieldFromPath(name string, p jsonschemax.Path) Field {
 	f := Field{
-		Name:     name,
-		Type:     "text",
+		Name: name,
+		Type: "text",
 	}
 
 	// Estimating type

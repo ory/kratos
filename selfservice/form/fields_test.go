@@ -3,13 +3,15 @@ package form
 import (
 	"bytes"
 	"fmt"
-	"github.com/ory/x/jsonschemax"
+	"io/ioutil"
+	"testing"
+
 	"github.com/santhosh-tekuri/jsonschema/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
-	"io/ioutil"
-	"testing"
+
+	"github.com/ory/x/jsonschemax"
 )
 
 func TestFieldFromPath(t *testing.T) {
