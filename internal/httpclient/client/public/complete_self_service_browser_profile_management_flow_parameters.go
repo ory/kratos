@@ -15,12 +15,14 @@ import (
 	cr "github.com/go-openapi/runtime/client"
 
 	strfmt "github.com/go-openapi/strfmt"
+
+	models "github.com/ory/kratos/internal/httpclient/models"
 )
 
 // NewCompleteSelfServiceBrowserProfileManagementFlowParams creates a new CompleteSelfServiceBrowserProfileManagementFlowParams object
 // with the default values initialized.
 func NewCompleteSelfServiceBrowserProfileManagementFlowParams() *CompleteSelfServiceBrowserProfileManagementFlowParams {
-
+	var ()
 	return &CompleteSelfServiceBrowserProfileManagementFlowParams{
 
 		timeout: cr.DefaultTimeout,
@@ -30,7 +32,7 @@ func NewCompleteSelfServiceBrowserProfileManagementFlowParams() *CompleteSelfSer
 // NewCompleteSelfServiceBrowserProfileManagementFlowParamsWithTimeout creates a new CompleteSelfServiceBrowserProfileManagementFlowParams object
 // with the default values initialized, and the ability to set a timeout on a request
 func NewCompleteSelfServiceBrowserProfileManagementFlowParamsWithTimeout(timeout time.Duration) *CompleteSelfServiceBrowserProfileManagementFlowParams {
-
+	var ()
 	return &CompleteSelfServiceBrowserProfileManagementFlowParams{
 
 		timeout: timeout,
@@ -40,7 +42,7 @@ func NewCompleteSelfServiceBrowserProfileManagementFlowParamsWithTimeout(timeout
 // NewCompleteSelfServiceBrowserProfileManagementFlowParamsWithContext creates a new CompleteSelfServiceBrowserProfileManagementFlowParams object
 // with the default values initialized, and the ability to set a context for a request
 func NewCompleteSelfServiceBrowserProfileManagementFlowParamsWithContext(ctx context.Context) *CompleteSelfServiceBrowserProfileManagementFlowParams {
-
+	var ()
 	return &CompleteSelfServiceBrowserProfileManagementFlowParams{
 
 		Context: ctx,
@@ -50,7 +52,7 @@ func NewCompleteSelfServiceBrowserProfileManagementFlowParamsWithContext(ctx con
 // NewCompleteSelfServiceBrowserProfileManagementFlowParamsWithHTTPClient creates a new CompleteSelfServiceBrowserProfileManagementFlowParams object
 // with the default values initialized, and the ability to set a custom HTTPClient for a request
 func NewCompleteSelfServiceBrowserProfileManagementFlowParamsWithHTTPClient(client *http.Client) *CompleteSelfServiceBrowserProfileManagementFlowParams {
-
+	var ()
 	return &CompleteSelfServiceBrowserProfileManagementFlowParams{
 		HTTPClient: client,
 	}
@@ -60,6 +62,10 @@ func NewCompleteSelfServiceBrowserProfileManagementFlowParamsWithHTTPClient(clie
 for the complete self service browser profile management flow operation typically these are written to a http.Request
 */
 type CompleteSelfServiceBrowserProfileManagementFlowParams struct {
+
+	/*Body*/
+	Body *models.CompleteSelfServiceBrowserProfileManagementFlowPayload
+
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
@@ -98,6 +104,17 @@ func (o *CompleteSelfServiceBrowserProfileManagementFlowParams) SetHTTPClient(cl
 	o.HTTPClient = client
 }
 
+// WithBody adds the body to the complete self service browser profile management flow params
+func (o *CompleteSelfServiceBrowserProfileManagementFlowParams) WithBody(body *models.CompleteSelfServiceBrowserProfileManagementFlowPayload) *CompleteSelfServiceBrowserProfileManagementFlowParams {
+	o.SetBody(body)
+	return o
+}
+
+// SetBody adds the body to the complete self service browser profile management flow params
+func (o *CompleteSelfServiceBrowserProfileManagementFlowParams) SetBody(body *models.CompleteSelfServiceBrowserProfileManagementFlowPayload) {
+	o.Body = body
+}
+
 // WriteToRequest writes these params to a swagger request
 func (o *CompleteSelfServiceBrowserProfileManagementFlowParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -105,6 +122,12 @@ func (o *CompleteSelfServiceBrowserProfileManagementFlowParams) WriteToRequest(r
 		return err
 	}
 	var res []error
+
+	if o.Body != nil {
+		if err := r.SetBodyParam(o.Body); err != nil {
+			return err
+		}
+	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)

@@ -41,17 +41,37 @@ const (
 )
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
-	public.GET(SessionsWhoamiPath, h.fromCookie)
+	public.GET(SessionsWhoamiPath, h.whoami)
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	// admin.GET(SessionsWhoisPath, h.fromPath)
 }
 
-func (h *Handler) fromCookie(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// swagger:route GET /sessions/whoami public whoami
+//
+// Check who the current HTTP session belongs to
+//
+// Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.
+// Returns a session object or 401 if the credentials are invalid or no credentials were sent.
+//
+// This endpoint is useful for reverse proxies and API Gateways.
+//
+//     Produces:
+//     - application/json
+//
+//     Schemes: http, https
+//
+//     Responses:
+//       200: session
+//       403: genericError
+//       500: genericError
+func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), w, r)
 	if err != nil {
-		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized.WithReasonf("No valid session cookie found.").WithDebugf("%+v", err))
+		h.r.Writer().WriteError(w, r,
+			errors.WithStack(herodot.ErrUnauthorized.WithReasonf("No valid session cookie found.").WithDebugf("%+v", err)),
+		)
 		return
 	}
 

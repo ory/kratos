@@ -50,6 +50,44 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.PUT("/identities/:id", h.update)
 }
 
+// A single identity.
+//
+// nolint:deadcode,unused
+// swagger:response identityResponse
+type identityResponse struct {
+	// required: true
+	// in: body
+	Body *Identity
+}
+
+// A list of identities.
+//
+// nolint:deadcode,unused
+// swagger:response identityList
+type identitiesListResponse struct {
+	// in: body
+	// required: true
+	// type: array
+	Body []Identity
+}
+
+// swagger:route GET /identities admin listIdentities
+//
+// List all identities in the system
+//
+// This endpoint returns a login request's context with, for example, error details and
+// other information.
+//
+// Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+//
+//     Produces:
+//     - application/json
+//
+//     Schemes: http, https
+//
+//     Responses:
+//       200: identityList
+//       500: genericError
 func (h *Handler) list(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	limit, offset := pagination.Parse(r, 100, 0, 500)
 	is, err := h.r.IdentityPool().ListIdentities(r.Context(), limit, offset)
@@ -61,6 +99,34 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	h.r.Writer().Write(w, r, is)
 }
 
+// nolint:deadcode,unused
+// swagger:parameters getIdentity
+type getIdentityParameters struct {
+	// ID must be set to the ID of identity you want to get
+	//
+	// required: true
+	// in: path
+	ID string `json:"id"`
+}
+
+// swagger:route GET /identities/{id} admin getIdentity
+//
+// Get an identity
+//
+// Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+//
+//     Consumes:
+//     - application/json
+//
+//     Produces:
+//     - application/json
+//
+//     Schemes: http, https
+//
+//     Responses:
+//       200: identityResponse
+//       400: genericError
+//       500: genericError
 func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	i, err := h.r.IdentityPool().GetIdentity(r.Context(), x.ParseUUID(ps.ByName("id")))
 	if err != nil {
@@ -71,6 +137,35 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 	h.r.Writer().Write(w, r, i)
 }
 
+// nolint:deadcode,unused
+// swagger:parameters createIdentity
+type createIdentityParameters struct {
+	// required: true
+	// in: body
+	Body *Identity
+}
+
+// swagger:route POST /identities admin createIdentity
+//
+// Create an identity
+//
+// This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)
+// using this method! A way to achieve that will be introduced in the future.
+//
+// Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+//
+//     Consumes:
+//     - application/json
+//
+//     Produces:
+//     - application/json
+//
+//     Schemes: http, https
+//
+//     Responses:
+//       201: identityResponse
+//       400: genericError
+//       500: genericError
 func (h *Handler) create(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var i Identity
 	if err := errors.WithStack(jsonx.NewStrictDecoder(r.Body).Decode(&i)); err != nil {
@@ -104,6 +199,44 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	)
 }
 
+// nolint:deadcode,unused
+// swagger:parameters updateIdentity
+type updateIdentityParameters struct {
+	// ID must be set to the ID of identity you want to update
+	//
+	// required: true
+	// in: path
+	ID string `json:"id"`
+
+	// required: true
+	// in: body
+	Body *Identity
+}
+
+// swagger:route PUT /identities/{id} admin updateIdentity
+//
+// Update an identity
+//
+// This endpoint updates an identity. It is NOT possible to set an identity's credentials (password, ...)
+// using this method! A way to achieve that will be introduced in the future.
+//
+// The full identity payload (except credentials) is expected. This endpoint does not support patching.
+//
+// Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+//
+//     Consumes:
+//     - application/json
+//
+//     Produces:
+//     - application/json
+//
+//     Schemes: http, https
+//
+//     Responses:
+//       200: identityResponse
+//       400: genericError
+//       404: genericError
+//       500: genericError
 func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var i Identity
 	if err := errors.WithStack(jsonx.NewStrictDecoder(r.Body).Decode(&i)); err != nil {
@@ -120,6 +253,33 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	h.r.Writer().Write(w, r, i)
 }
 
+// nolint:deadcode,unused
+// swagger:parameters deleteIdentity
+type deleteIdentityParameters struct {
+	// ID is the identity's ID.
+	//
+	// required: true
+	// in: path
+	ID string `json:"id"`
+}
+
+// swagger:route DELETE /identities/{id} admin deleteIdentity
+//
+// Delete an identity
+//
+// This endpoint deletes an identity. This can not be undone.
+//
+// Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+//
+//     Produces:
+//     - application/json
+//
+//     Schemes: http, https
+//
+//     Responses:
+//       204: emptyResponse
+//       404: genericError
+//       500: genericError
 func (h *Handler) delete(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := h.r.IdentityPool().DeleteIdentity(r.Context(), x.ParseUUID(ps.ByName("id"))); err != nil {
 		h.r.Writer().WriteError(w, r, err)

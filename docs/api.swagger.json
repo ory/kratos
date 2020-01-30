@@ -72,6 +72,239 @@
         }
       }
     },
+    "/identities": {
+      "get": {
+        "description": "This endpoint returns a login request's context with, for example, error details and\nother information.\n\nLearn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "admin"
+        ],
+        "summary": "List all identities in the system",
+        "operationId": "listIdentities",
+        "responses": {
+          "200": {
+            "description": "A list of identities.\n\nnolint:deadcode,unused",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Identity"
+              }
+            }
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)\nusing this method! A way to achieve that will be introduced in the future.\n\nLearn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "admin"
+        ],
+        "summary": "Create an identity",
+        "operationId": "createIdentity",
+        "parameters": [
+          {
+            "name": "Body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Identity"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "A single identity.\n\nnolint:deadcode,unused",
+            "schema": {
+              "$ref": "#/definitions/Identity"
+            }
+          },
+          "400": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
+    "/identities/{id}": {
+      "get": {
+        "description": "Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get an identity",
+        "operationId": "getIdentity",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID must be set to the ID of identity you want to get",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A single identity.\n\nnolint:deadcode,unused",
+            "schema": {
+              "$ref": "#/definitions/Identity"
+            }
+          },
+          "400": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      },
+      "put": {
+        "description": "This endpoint updates an identity. It is NOT possible to set an identity's credentials (password, ...)\nusing this method! A way to achieve that will be introduced in the future.\n\nThe full identity payload (except credentials) is expected. This endpoint does not support patching.\n\nLearn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "admin"
+        ],
+        "summary": "Update an identity",
+        "operationId": "updateIdentity",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID must be set to the ID of identity you want to update",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Identity"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A single identity.\n\nnolint:deadcode,unused",
+            "schema": {
+              "$ref": "#/definitions/Identity"
+            }
+          },
+          "400": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "404": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "This endpoint deletes an identity. This can not be undone.\n\nLearn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "admin"
+        ],
+        "summary": "Delete an identity",
+        "operationId": "deleteIdentity",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID is the identity's ID.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+          },
+          "404": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
     "/self-service/browser/flows/login": {
       "get": {
         "description": "This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to\n`urls.login_ui` with the request ID set as a query parameter. If a valid user session exists already, the browser will be\nredirected to `urls.default_redirect_url`.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
@@ -163,6 +396,16 @@
         ],
         "summary": "Complete the browser-based profile management flows",
         "operationId": "completeSelfServiceBrowserProfileManagementFlow",
+        "parameters": [
+          {
+            "name": "Body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/completeSelfServiceBrowserProfileManagementFlowPayload"
+            }
+          }
+        ],
         "responses": {
           "302": {
             "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
@@ -216,6 +459,15 @@
         ],
         "summary": "Get the request context of browser-based login user flows",
         "operationId": "getSelfServiceBrowserLoginRequest",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Request is the Login Request ID\n\nThe value for this parameter comes from `request` URL Query parameter sent to your\napplication (e.g. `/login?request=abcde`).",
+            "name": "request",
+            "in": "query",
+            "required": true
+          }
+        ],
         "responses": {
           "200": {
             "description": "loginRequest",
@@ -311,6 +563,15 @@
         ],
         "summary": "Get the request context of browser-based registration user flows",
         "operationId": "getSelfServiceBrowserRegistrationRequest",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Request is the Registration Request ID\n\nThe value for this parameter comes from `request` URL Query parameter sent to your\napplication (e.g. `/registration?request=abcde`).",
+            "name": "request",
+            "in": "query",
+            "required": true
+          }
+        ],
         "responses": {
           "200": {
             "description": "registrationRequest",
@@ -325,6 +586,43 @@
             }
           },
           "404": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
+    "/sessions/whoami": {
+      "get": {
+        "description": "Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.\nReturns a session object or 401 if the credentials are invalid or no credentials were sent.\n\nThis endpoint is useful for reverse proxies and API Gateways.",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Check who the current HTTP session belongs to",
+        "operationId": "whoami",
+        "responses": {
+          "200": {
+            "description": "session",
+            "schema": {
+              "$ref": "#/definitions/session"
+            }
+          },
+          "403": {
             "description": "genericError",
             "schema": {
               "$ref": "#/definitions/genericError"
@@ -405,6 +703,22 @@
     "UUID": {
       "type": "string",
       "format": "uuid4"
+    },
+    "completeSelfServiceBrowserProfileManagementFlowPayload": {
+      "type": "object",
+      "required": [
+        "traits",
+        "request"
+      ],
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/UUID"
+        },
+        "traits": {
+          "description": "Traits contains all of the identity's traits.\n\ntype: string\nformat: binary",
+          "type": "object"
+        }
+      }
     },
     "form": {
       "description": "HTMLForm represents a HTML Form. The container can work with both HTTP Form and JSON requests",
@@ -690,6 +1004,29 @@
           "type": "object"
         }
       ]
+    },
+    "session": {
+      "type": "object",
+      "properties": {
+        "authenticated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "identity": {
+          "$ref": "#/definitions/Identity"
+        },
+        "issued_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "sid": {
+          "$ref": "#/definitions/UUID"
+        }
+      }
     },
     "version": {
       "type": "object",

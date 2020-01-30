@@ -20,7 +20,7 @@ import (
 // NewGetSelfServiceBrowserRegistrationRequestParams creates a new GetSelfServiceBrowserRegistrationRequestParams object
 // with the default values initialized.
 func NewGetSelfServiceBrowserRegistrationRequestParams() *GetSelfServiceBrowserRegistrationRequestParams {
-
+	var ()
 	return &GetSelfServiceBrowserRegistrationRequestParams{
 
 		timeout: cr.DefaultTimeout,
@@ -30,7 +30,7 @@ func NewGetSelfServiceBrowserRegistrationRequestParams() *GetSelfServiceBrowserR
 // NewGetSelfServiceBrowserRegistrationRequestParamsWithTimeout creates a new GetSelfServiceBrowserRegistrationRequestParams object
 // with the default values initialized, and the ability to set a timeout on a request
 func NewGetSelfServiceBrowserRegistrationRequestParamsWithTimeout(timeout time.Duration) *GetSelfServiceBrowserRegistrationRequestParams {
-
+	var ()
 	return &GetSelfServiceBrowserRegistrationRequestParams{
 
 		timeout: timeout,
@@ -40,7 +40,7 @@ func NewGetSelfServiceBrowserRegistrationRequestParamsWithTimeout(timeout time.D
 // NewGetSelfServiceBrowserRegistrationRequestParamsWithContext creates a new GetSelfServiceBrowserRegistrationRequestParams object
 // with the default values initialized, and the ability to set a context for a request
 func NewGetSelfServiceBrowserRegistrationRequestParamsWithContext(ctx context.Context) *GetSelfServiceBrowserRegistrationRequestParams {
-
+	var ()
 	return &GetSelfServiceBrowserRegistrationRequestParams{
 
 		Context: ctx,
@@ -50,7 +50,7 @@ func NewGetSelfServiceBrowserRegistrationRequestParamsWithContext(ctx context.Co
 // NewGetSelfServiceBrowserRegistrationRequestParamsWithHTTPClient creates a new GetSelfServiceBrowserRegistrationRequestParams object
 // with the default values initialized, and the ability to set a custom HTTPClient for a request
 func NewGetSelfServiceBrowserRegistrationRequestParamsWithHTTPClient(client *http.Client) *GetSelfServiceBrowserRegistrationRequestParams {
-
+	var ()
 	return &GetSelfServiceBrowserRegistrationRequestParams{
 		HTTPClient: client,
 	}
@@ -60,6 +60,16 @@ func NewGetSelfServiceBrowserRegistrationRequestParamsWithHTTPClient(client *htt
 for the get self service browser registration request operation typically these are written to a http.Request
 */
 type GetSelfServiceBrowserRegistrationRequestParams struct {
+
+	/*Request
+	  Request is the Registration Request ID
+
+	The value for this parameter comes from `request` URL Query parameter sent to your
+	application (e.g. `/registration?request=abcde`).
+
+	*/
+	Request string
+
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
@@ -98,6 +108,17 @@ func (o *GetSelfServiceBrowserRegistrationRequestParams) SetHTTPClient(client *h
 	o.HTTPClient = client
 }
 
+// WithRequest adds the request to the get self service browser registration request params
+func (o *GetSelfServiceBrowserRegistrationRequestParams) WithRequest(request string) *GetSelfServiceBrowserRegistrationRequestParams {
+	o.SetRequest(request)
+	return o
+}
+
+// SetRequest adds the request to the get self service browser registration request params
+func (o *GetSelfServiceBrowserRegistrationRequestParams) SetRequest(request string) {
+	o.Request = request
+}
+
 // WriteToRequest writes these params to a swagger request
 func (o *GetSelfServiceBrowserRegistrationRequestParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -105,6 +126,15 @@ func (o *GetSelfServiceBrowserRegistrationRequestParams) WriteToRequest(r runtim
 		return err
 	}
 	var res []error
+
+	// query param request
+	qrRequest := o.Request
+	qRequest := qrRequest
+	if qRequest != "" {
+		if err := r.SetQueryParam("request", qRequest); err != nil {
+			return err
+		}
+	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)

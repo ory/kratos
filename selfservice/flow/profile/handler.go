@@ -168,32 +168,30 @@ func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Reque
 	h.d.Writer().Write(w, r, ar)
 }
 
-type (
-	// swagger:parameters completeSelfServiceBrowserProfileManagementFlow
-	// nolint:deadcode,unused
-	completeProfileManagementParameters struct {
-		// in: body
-		// required: true
-		Body completeSelfServiceBrowserProfileManagementFlowPayload
-	}
+// swagger:parameters completeSelfServiceBrowserProfileManagementFlow
+// nolint:deadcode,unused
+type completeProfileManagementParameters struct {
+	// in: body
+	// required: true
+	Body completeSelfServiceBrowserProfileManagementFlowPayload
+}
 
-	// swagger:model completeSelfServiceBrowserProfileManagementFlowPayload
-	// nolint:deadcode,unused
-	completeSelfServiceBrowserProfileManagementFlowPayload struct {
-		// Traits contains all of the identity's traits.
-		//
-		// type: string
-		// format: binary
-		// required: true
-		Traits json.RawMessage `json:"traits"`
+// swagger:model completeSelfServiceBrowserProfileManagementFlowPayload
+// nolint:deadcode,unused
+type completeSelfServiceBrowserProfileManagementFlowPayload struct {
+	// Traits contains all of the identity's traits.
+	//
+	// type: string
+	// format: binary
+	// required: true
+	Traits json.RawMessage `json:"traits"`
 
-		// Request is the request ID.
-		//
-		// type: string
-		// required: true
-		Request uuid.UUID `json:"request"`
-	}
-)
+	// Request is the request ID.
+	//
+	// type: string
+	// required: true
+	Request uuid.UUID `json:"request"`
+}
 
 // swagger:route POST /self-service/browser/flows/profile/update public completeSelfServiceBrowserProfileManagementFlow
 //

@@ -321,6 +321,45 @@ func (a *Client) InitializeSelfServiceProfileManagementFlow(params *InitializeSe
 	return nil
 }
 
+/*
+Whoami checks who the current HTTP session belongs to
+
+Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.
+Returns a session object or 401 if the credentials are invalid or no credentials were sent.
+
+This endpoint is useful for reverse proxies and API Gateways.
+*/
+func (a *Client) Whoami(params *WhoamiParams) (*WhoamiOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWhoamiParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "whoami",
+		Method:             "GET",
+		PathPattern:        "/sessions/whoami",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &WhoamiReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WhoamiOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for whoami: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
 // SetTransport changes the transport on the client
 func (a *Client) SetTransport(transport runtime.ClientTransport) {
 	a.transport = transport

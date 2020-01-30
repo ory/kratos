@@ -103,7 +103,7 @@ func (h *Handler) initLoginRequest(w http.ResponseWriter, r *http.Request, ps ht
 }
 
 // nolint:deadcode,unused
-// swagger:parameters: getSelfServiceBrowserLoginRequest
+// swagger:parameters getSelfServiceBrowserLoginRequest
 type getSelfServiceBrowserLoginRequestParameters struct {
 	// Request is the Login Request ID
 	//

@@ -10,6 +10,7 @@ import (
 	"github.com/ory/kratos/x"
 )
 
+// swagger:model session
 type Session struct {
 	ID              uuid.UUID          `json:"sid" faker:"uuid" db:"id"`
 	ExpiresAt       time.Time          `json:"expires_at" db:"expires_at" faker:"time_type"`

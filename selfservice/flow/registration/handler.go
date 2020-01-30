@@ -106,7 +106,7 @@ func (h *Handler) initRegistrationRequest(w http.ResponseWriter, r *http.Request
 }
 
 // nolint:deadcode,unused
-// swagger:parameters: getSelfServiceBrowserRegistrationRequest
+// swagger:parameters getSelfServiceBrowserRegistrationRequest
 type getSelfServiceBrowserRegistrationRequestParameters struct {
 	// Request is the Registration Request ID
 	//

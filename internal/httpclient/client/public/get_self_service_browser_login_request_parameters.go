@@ -20,7 +20,7 @@ import (
 // NewGetSelfServiceBrowserLoginRequestParams creates a new GetSelfServiceBrowserLoginRequestParams object
 // with the default values initialized.
 func NewGetSelfServiceBrowserLoginRequestParams() *GetSelfServiceBrowserLoginRequestParams {
-
+	var ()
 	return &GetSelfServiceBrowserLoginRequestParams{
 
 		timeout: cr.DefaultTimeout,
@@ -30,7 +30,7 @@ func NewGetSelfServiceBrowserLoginRequestParams() *GetSelfServiceBrowserLoginReq
 // NewGetSelfServiceBrowserLoginRequestParamsWithTimeout creates a new GetSelfServiceBrowserLoginRequestParams object
 // with the default values initialized, and the ability to set a timeout on a request
 func NewGetSelfServiceBrowserLoginRequestParamsWithTimeout(timeout time.Duration) *GetSelfServiceBrowserLoginRequestParams {
-
+	var ()
 	return &GetSelfServiceBrowserLoginRequestParams{
 
 		timeout: timeout,
@@ -40,7 +40,7 @@ func NewGetSelfServiceBrowserLoginRequestParamsWithTimeout(timeout time.Duration
 // NewGetSelfServiceBrowserLoginRequestParamsWithContext creates a new GetSelfServiceBrowserLoginRequestParams object
 // with the default values initialized, and the ability to set a context for a request
 func NewGetSelfServiceBrowserLoginRequestParamsWithContext(ctx context.Context) *GetSelfServiceBrowserLoginRequestParams {
-
+	var ()
 	return &GetSelfServiceBrowserLoginRequestParams{
 
 		Context: ctx,
@@ -50,7 +50,7 @@ func NewGetSelfServiceBrowserLoginRequestParamsWithContext(ctx context.Context) 
 // NewGetSelfServiceBrowserLoginRequestParamsWithHTTPClient creates a new GetSelfServiceBrowserLoginRequestParams object
 // with the default values initialized, and the ability to set a custom HTTPClient for a request
 func NewGetSelfServiceBrowserLoginRequestParamsWithHTTPClient(client *http.Client) *GetSelfServiceBrowserLoginRequestParams {
-
+	var ()
 	return &GetSelfServiceBrowserLoginRequestParams{
 		HTTPClient: client,
 	}
@@ -60,6 +60,16 @@ func NewGetSelfServiceBrowserLoginRequestParamsWithHTTPClient(client *http.Clien
 for the get self service browser login request operation typically these are written to a http.Request
 */
 type GetSelfServiceBrowserLoginRequestParams struct {
+
+	/*Request
+	  Request is the Login Request ID
+
+	The value for this parameter comes from `request` URL Query parameter sent to your
+	application (e.g. `/login?request=abcde`).
+
+	*/
+	Request string
+
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
@@ -98,6 +108,17 @@ func (o *GetSelfServiceBrowserLoginRequestParams) SetHTTPClient(client *http.Cli
 	o.HTTPClient = client
 }
 
+// WithRequest adds the request to the get self service browser login request params
+func (o *GetSelfServiceBrowserLoginRequestParams) WithRequest(request string) *GetSelfServiceBrowserLoginRequestParams {
+	o.SetRequest(request)
+	return o
+}
+
+// SetRequest adds the request to the get self service browser login request params
+func (o *GetSelfServiceBrowserLoginRequestParams) SetRequest(request string) {
+	o.Request = request
+}
+
 // WriteToRequest writes these params to a swagger request
 func (o *GetSelfServiceBrowserLoginRequestParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -105,6 +126,15 @@ func (o *GetSelfServiceBrowserLoginRequestParams) WriteToRequest(r runtime.Clien
 		return err
 	}
 	var res []error
+
+	// query param request
+	qrRequest := o.Request
+	qRequest := qrRequest
+	if qRequest != "" {
+		if err := r.SetQueryParam("request", qRequest); err != nil {
+			return err
+		}
+	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
