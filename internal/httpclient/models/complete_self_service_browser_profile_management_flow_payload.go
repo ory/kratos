@@ -6,9 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	strfmt "github.com/go-openapi/strfmt"
-
 	"github.com/go-openapi/errors"
+	strfmt "github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
@@ -16,11 +15,6 @@ import (
 // CompleteSelfServiceBrowserProfileManagementFlowPayload complete self service browser profile management flow payload
 // swagger:model completeSelfServiceBrowserProfileManagementFlowPayload
 type CompleteSelfServiceBrowserProfileManagementFlowPayload struct {
-
-	// request
-	// Required: true
-	// Format: uuid4
-	Request UUID `json:"request"`
 
 	// Traits contains all of the identity's traits.
 	//
@@ -34,10 +28,6 @@ type CompleteSelfServiceBrowserProfileManagementFlowPayload struct {
 func (m *CompleteSelfServiceBrowserProfileManagementFlowPayload) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateRequest(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validateTraits(formats); err != nil {
 		res = append(res, err)
 	}
@@ -45,18 +35,6 @@ func (m *CompleteSelfServiceBrowserProfileManagementFlowPayload) Validate(format
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *CompleteSelfServiceBrowserProfileManagementFlowPayload) validateRequest(formats strfmt.Registry) error {
-
-	if err := m.Request.Validate(formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("request")
-		}
-		return err
-	}
-
 	return nil
 }
 

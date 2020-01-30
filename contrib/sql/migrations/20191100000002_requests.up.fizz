@@ -42,7 +42,6 @@ create_table("selfservice_profile_management_requests") {
     t.Column("form", "json")
     t.Column("update_successful", "bool")
     t.Column("identity_id", "uuid")
-    t.Column("csrf_token", "string")
 
     t.ForeignKey("identity_id", {"identities": ["id"]}, {"on_delete": "cascade"})
 }

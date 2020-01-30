@@ -27,7 +27,6 @@ func TestProfileRequest(t *testing.T) {
 		{
 			r: profile.NewRequest(
 				time.Hour,
-				"csrf",
 				&http.Request{URL: urlx.ParseOrPanic("http://foo/bar/baz"), Host: "foo"},
 				&session.Session{Identity: &identity.Identity{ID: alice}},
 			),
@@ -36,7 +35,6 @@ func TestProfileRequest(t *testing.T) {
 		{
 			r: profile.NewRequest(
 				time.Hour,
-				"csrf",
 				&http.Request{URL: urlx.ParseOrPanic("http://foo/bar/baz"), Host: "foo"},
 				&session.Session{Identity: &identity.Identity{ID: alice}},
 			),
@@ -46,7 +44,6 @@ func TestProfileRequest(t *testing.T) {
 		{
 			r: profile.NewRequest(
 				-time.Hour,
-				"csrf",
 				&http.Request{URL: urlx.ParseOrPanic("http://foo/bar/baz"), Host: "foo"},
 				&session.Session{Identity: &identity.Identity{ID: alice}},
 			),

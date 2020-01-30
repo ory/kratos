@@ -96,7 +96,8 @@ func TestLoginHandler(t *testing.T) {
 			if c == nil {
 				c = http.DefaultClient
 			}
-			_, _ = w.Write(easyGet(t, c, upstream+login.BrowserLoginRequestsPath+"?request="+r.URL.Query().Get("request")))
+			_, err := w.Write(easyGet(t, c, upstream+login.BrowserLoginRequestsPath+"?request="+r.URL.Query().Get("request")))
+			require.NoError(t, err)
 		}))
 	}
 

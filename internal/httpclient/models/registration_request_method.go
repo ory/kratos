@@ -6,13 +6,12 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	strfmt "github.com/go-openapi/strfmt"
-
 	"github.com/go-openapi/errors"
+	strfmt "github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 )
 
-// RegistrationRequestMethod RegistrationRequestMethod RegistrationRequestMethod registration request method
+// RegistrationRequestMethod registration request method
 // swagger:model registrationRequestMethod
 type RegistrationRequestMethod struct {
 
@@ -27,6 +26,10 @@ type RegistrationRequestMethod struct {
 func (m *RegistrationRequestMethod) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateConfig(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateMethod(formats); err != nil {
 		res = append(res, err)
 	}
@@ -34,6 +37,24 @@ func (m *RegistrationRequestMethod) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *RegistrationRequestMethod) validateConfig(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Config) { // not required
+		return nil
+	}
+
+	if m.Config != nil {
+		if err := m.Config.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("config")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 

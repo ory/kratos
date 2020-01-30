@@ -398,6 +398,13 @@
         "operationId": "completeSelfServiceBrowserProfileManagementFlow",
         "parameters": [
           {
+            "type": "string",
+            "format": "uuid4",
+            "description": "Request is the request ID.\n\ntype: string",
+            "name": "request",
+            "in": "query"
+          },
+          {
             "name": "Body",
             "in": "body",
             "required": true,
@@ -446,7 +453,7 @@
     },
     "/self-service/browser/flows/requests/login": {
       "get": {
-        "description": "This endpoint returns a login request's context with, for example, error details and\nother information.\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "description": "This endpoint returns a login request's context with, for example, error details and\nother information.\n\nWhen accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent\ntoken scanning attacks, the public endpoint does not return 404 status codes to prevent scanning attacks.\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
         "produces": [
           "application/json"
         ],
@@ -455,7 +462,9 @@
           "https"
         ],
         "tags": [
-          "public"
+          "common",
+          "public",
+          "admin"
         ],
         "summary": "Get the request context of browser-based login user flows",
         "operationId": "getSelfServiceBrowserLoginRequest",
@@ -498,7 +507,7 @@
     },
     "/self-service/browser/flows/requests/profile": {
       "get": {
-        "description": "More information can be found at [ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).",
+        "description": "When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required\nfor checking the auth session. To prevent scanning attacks, the public endpoint does not return 404 status codes\nbut instead 403 or 500.\n\nMore information can be found at [ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).",
         "produces": [
           "application/json"
         ],
@@ -507,7 +516,9 @@
           "https"
         ],
         "tags": [
-          "public"
+          "common",
+          "public",
+          "admin"
         ],
         "summary": "Get the request context of browser-based profile management flows",
         "operationId": "getSelfServiceBrowserProfileManagementRequest",
@@ -550,7 +561,7 @@
     },
     "/self-service/browser/flows/requests/registration": {
       "get": {
-        "description": "This endpoint returns a registration request's context with, for example, error details and\nother information.\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "description": "This endpoint returns a registration request's context with, for example, error details and\nother information.\n\nWhen accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent\ntoken scanning attacks, the public endpoint does not return 404 status codes to prevent scanning attacks.\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
         "produces": [
           "application/json"
         ],
@@ -559,7 +570,9 @@
           "https"
         ],
         "tags": [
-          "public"
+          "common",
+          "public",
+          "admin"
         ],
         "summary": "Get the request context of browser-based registration user flows",
         "operationId": "getSelfServiceBrowserRegistrationRequest",
@@ -663,10 +676,9 @@
     "CredentialsType": {
       "description": "and so on.",
       "type": "string",
-      "title": "CredentialsType CredentialsType CredentialsType  represents several different credential types, like password credentials, passwordless credentials,"
+      "title": "CredentialsType  represents several different credential types, like password credentials, passwordless credentials,"
     },
     "Error": {
-      "description": "Error Error error",
       "type": "object",
       "properties": {
         "message": {
@@ -676,7 +688,6 @@
       }
     },
     "Identity": {
-      "description": "Identity Identity identity",
       "type": "object",
       "required": [
         "id",
@@ -700,7 +711,6 @@
       }
     },
     "Traits": {
-      "description": "Traits Traits traits",
       "type": "object"
     },
     "UUID": {
@@ -710,13 +720,9 @@
     "completeSelfServiceBrowserProfileManagementFlowPayload": {
       "type": "object",
       "required": [
-        "request",
         "traits"
       ],
       "properties": {
-        "request": {
-          "$ref": "#/definitions/UUID"
-        },
         "traits": {
           "description": "Traits contains all of the identity's traits.\n\ntype: string\nformat: binary",
           "type": "object"
@@ -748,7 +754,7 @@
       }
     },
     "formField": {
-      "description": "FormField Field represents a HTML Form Field",
+      "description": "Field represents a HTML Form Field",
       "type": "object",
       "properties": {
         "errors": {
@@ -786,7 +792,7 @@
     "genericError": {
       "description": "Error responses are sent when an error (e.g. unauthorized, bad request, ...) occurred.",
       "type": "object",
-      "title": "GenericError Error response",
+      "title": "Error response",
       "properties": {
         "error": {
           "$ref": "#/definitions/genericErrorPayload"
@@ -809,7 +815,6 @@
           "example": "The database adapter was unable to find the element"
         },
         "details": {
-          "description": "details",
           "type": "array",
           "items": {
             "type": "object",
@@ -819,25 +824,20 @@
           }
         },
         "message": {
-          "description": "message",
           "type": "string"
         },
         "reason": {
-          "description": "reason",
           "type": "string"
         },
         "request": {
-          "description": "request",
           "type": "string"
         },
         "status": {
-          "description": "status",
           "type": "string"
         }
       }
     },
     "healthNotReadyStatus": {
-      "description": "HealthNotReadyStatus health not ready status",
       "type": "object",
       "properties": {
         "errors": {
@@ -891,7 +891,6 @@
       }
     },
     "loginRequestMethod": {
-      "description": "LoginRequestMethod login request method",
       "type": "object",
       "properties": {
         "config": {
@@ -986,7 +985,6 @@
       }
     },
     "registrationRequestMethod": {
-      "description": "RegistrationRequestMethod RegistrationRequestMethod registration request method",
       "type": "object",
       "properties": {
         "config": {
@@ -1021,12 +1019,10 @@
       "type": "object",
       "properties": {
         "authenticated_at": {
-          "description": "authenticated at\nFormat: date-time\nFormat: date-time",
           "type": "string",
           "format": "date-time"
         },
         "expires_at": {
-          "description": "expires at\nFormat: date-time\nFormat: date-time",
           "type": "string",
           "format": "date-time"
         },
@@ -1034,7 +1030,6 @@
           "$ref": "#/definitions/Identity"
         },
         "issued_at": {
-          "description": "issued at\nFormat: date-time\nFormat: date-time",
           "type": "string",
           "format": "date-time"
         },

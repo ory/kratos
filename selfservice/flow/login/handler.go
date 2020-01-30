@@ -119,40 +119,15 @@ type getSelfServiceBrowserLoginRequestParameters struct {
 	Request string `json:"request"`
 }
 
-// swagger:route GET /self-service/browser/flows/requests/login public getSelfServiceBrowserLoginRequest
+// swagger:route GET /self-service/browser/flows/requests/login common public admin getSelfServiceBrowserLoginRequest
 //
 // Get the request context of browser-based login user flows
 //
 // This endpoint returns a login request's context with, for example, error details and
 // other information.
 //
-// When accessing this endpoint, ensure that cookies are set as they are required for CSRF to work. To prevent
+// When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent
 // token scanning attacks, the public endpoint does not return 404 status codes to prevent scanning attacks.
-//
-// More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
-//
-//     Produces:
-//     - application/json
-//
-//     Schemes: http, https
-//
-//     Responses:
-//       200: loginRequest
-//       403: genericError
-//       500: genericError
-func (h *Handler) publicFetchLoginRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.fetchLoginRequest(w, r, true); err != nil {
-		h.d.Writer().WriteError(w, r, x.ErrInvalidCSRFToken.WithTrace(err).WithDebugf("%s", err))
-		return
-	}
-}
-
-// swagger:route GET /self-service/browser/flows/requests/login admin getSelfServiceBrowserLoginRequest
-//
-// Get the request context of browser-based login user flows
-//
-// This endpoint returns a login request's context with, for example, error details and
-// other information.
 //
 // More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 //
@@ -166,6 +141,13 @@ func (h *Handler) publicFetchLoginRequest(w http.ResponseWriter, r *http.Request
 //       403: genericError
 //       404: genericError
 //       500: genericError
+func (h *Handler) publicFetchLoginRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if err := h.fetchLoginRequest(w, r, true); err != nil {
+		h.d.Writer().WriteError(w, r, x.ErrInvalidCSRFToken.WithTrace(err).WithDebugf("%s", err))
+		return
+	}
+}
+
 func (h *Handler) adminFetchLoginRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := h.fetchLoginRequest(w, r, false); err != nil {
 		h.d.Writer().WriteError(w, r, err)

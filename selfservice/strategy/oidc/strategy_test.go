@@ -123,13 +123,13 @@ func TestStrategy(t *testing.T) {
 		})
 	}
 
-	router := x.NewRouterPublic()
+	public := x.NewRouterPublic()
 	admin := x.NewRouterAdmin()
-	reg.LoginHandler().RegisterPublicRoutes(router, admin)
-	reg.LoginStrategies().RegisterPublicRoutes(router)
-	reg.RegistrationStrategies().RegisterPublicRoutes(router)
-	reg.RegistrationHandler().RegisterPublicRoutes(router)
-	ts := httptest.NewServer(router)
+	reg.LoginHandler().RegisterPublicRoutes(public, admin)
+	reg.LoginStrategies().RegisterPublicRoutes(public)
+	reg.RegistrationStrategies().RegisterPublicRoutes(public)
+	reg.RegistrationHandler().RegisterRoutes(public, admin)
+	ts := httptest.NewServer(public)
 	defer ts.Close()
 
 	returnTS := newReturnTs(t, reg)

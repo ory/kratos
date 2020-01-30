@@ -6,12 +6,13 @@ package client
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
 
-	strfmt "github.com/go-openapi/strfmt"
+	"github.com/go-openapi/runtime"
+	"github.com/go-openapi/strfmt"
 
 	"github.com/ory/kratos/internal/httpclient/client/admin"
+	"github.com/ory/kratos/internal/httpclient/client/common"
 	"github.com/ory/kratos/internal/httpclient/client/health"
 	"github.com/ory/kratos/internal/httpclient/client/public"
 	"github.com/ory/kratos/internal/httpclient/client/version"
@@ -59,15 +60,11 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *OryHydra {
 
 	cli := new(OryHydra)
 	cli.Transport = transport
-
 	cli.Admin = admin.New(transport, formats)
-
+	cli.Common = common.New(transport, formats)
 	cli.Health = health.New(transport, formats)
-
 	cli.Public = public.New(transport, formats)
-
 	cli.Version = version.New(transport, formats)
-
 	return cli
 }
 
@@ -112,13 +109,15 @@ func (cfg *TransportConfig) WithSchemes(schemes []string) *TransportConfig {
 
 // OryHydra is a client for ory hydra
 type OryHydra struct {
-	Admin *admin.Client
+	Admin admin.ClientService
 
-	Health *health.Client
+	Common common.ClientService
 
-	Public *public.Client
+	Health health.ClientService
 
-	Version *version.Client
+	Public public.ClientService
+
+	Version version.ClientService
 
 	Transport runtime.ClientTransport
 }
@@ -126,13 +125,9 @@ type OryHydra struct {
 // SetTransport changes the transport on the client and all its subresources
 func (c *OryHydra) SetTransport(transport runtime.ClientTransport) {
 	c.Transport = transport
-
 	c.Admin.SetTransport(transport)
-
+	c.Common.SetTransport(transport)
 	c.Health.SetTransport(transport)
-
 	c.Public.SetTransport(transport)
-
 	c.Version.SetTransport(transport)
-
 }

@@ -16,7 +16,7 @@ import (
 
 	strfmt "github.com/go-openapi/strfmt"
 
-	models "github.com/ory/kratos/internal/httpclient/models"
+	"github.com/ory/kratos/internal/httpclient/models"
 )
 
 // NewCompleteSelfServiceBrowserProfileManagementFlowParams creates a new CompleteSelfServiceBrowserProfileManagementFlowParams object
@@ -65,6 +65,13 @@ type CompleteSelfServiceBrowserProfileManagementFlowParams struct {
 
 	/*Body*/
 	Body *models.CompleteSelfServiceBrowserProfileManagementFlowPayload
+	/*Request
+	  Request is the request ID.
+
+	type: string
+
+	*/
+	Request *strfmt.UUID4
 
 	timeout    time.Duration
 	Context    context.Context
@@ -115,6 +122,17 @@ func (o *CompleteSelfServiceBrowserProfileManagementFlowParams) SetBody(body *mo
 	o.Body = body
 }
 
+// WithRequest adds the request to the complete self service browser profile management flow params
+func (o *CompleteSelfServiceBrowserProfileManagementFlowParams) WithRequest(request *strfmt.UUID4) *CompleteSelfServiceBrowserProfileManagementFlowParams {
+	o.SetRequest(request)
+	return o
+}
+
+// SetRequest adds the request to the complete self service browser profile management flow params
+func (o *CompleteSelfServiceBrowserProfileManagementFlowParams) SetRequest(request *strfmt.UUID4) {
+	o.Request = request
+}
+
 // WriteToRequest writes these params to a swagger request
 func (o *CompleteSelfServiceBrowserProfileManagementFlowParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -127,6 +145,22 @@ func (o *CompleteSelfServiceBrowserProfileManagementFlowParams) WriteToRequest(r
 		if err := r.SetBodyParam(o.Body); err != nil {
 			return err
 		}
+	}
+
+	if o.Request != nil {
+
+		// query param request
+		var qrRequest strfmt.UUID4
+		if o.Request != nil {
+			qrRequest = *o.Request
+		}
+		qRequest := qrRequest.String()
+		if qRequest != "" {
+			if err := r.SetQueryParam("request", qRequest); err != nil {
+				return err
+			}
+		}
+
 	}
 
 	if len(res) > 0 {
