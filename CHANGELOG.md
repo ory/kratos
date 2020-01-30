@@ -33,8 +33,14 @@
 - Improve `/profile` and `/session` URLs [\#195](https://github.com/ory/kratos/issues/195)
 - Profile Management requests sends Request ID in POST Body instead of Query Parameter [\#190](https://github.com/ory/kratos/issues/190)
 
+**Closed issues:**
+
+- Rethink public fetch request protection [\#122](https://github.com/ory/kratos/issues/122)
+
 **Merged pull requests:**
 
+- Update quickstart [\#207](https://github.com/ory/kratos/pull/207) ([aeneasr](https://github.com/aeneasr))
+- ci: Bump sdk orb [\#206](https://github.com/ory/kratos/pull/206) ([aeneasr](https://github.com/aeneasr))
 - ss/profile: Use request ID as query param everywhere [\#202](https://github.com/ory/kratos/pull/202) ([aeneasr](https://github.com/aeneasr))
 
 ## [v0.0.1-alpha.9](https://github.com/ory/kratos/tree/v0.0.1-alpha.9) (2020-01-29)
@@ -105,6 +111,7 @@
 - Add continuous integration [\#53](https://github.com/ory/kratos/issues/53)
 - Support object stubs in form payloads [\#45](https://github.com/ory/kratos/issues/45)
 - Implement form-based, self-service login and registration [\#29](https://github.com/ory/kratos/issues/29)
+- Rework public and admin fetch strategy [\#203](https://github.com/ory/kratos/pull/203) ([aeneasr](https://github.com/aeneasr))
 - ss: Use JSON Schema to type assert form body [\#116](https://github.com/ory/kratos/pull/116) ([aeneasr](https://github.com/aeneasr))
 - errorx: Add SQL adapter [\#100](https://github.com/ory/kratos/pull/100) ([aeneasr](https://github.com/aeneasr))
 - Add health endpoints [\#83](https://github.com/ory/kratos/pull/83) ([aeneasr](https://github.com/aeneasr))

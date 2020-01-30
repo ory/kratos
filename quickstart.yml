@@ -34,6 +34,7 @@ services:
     environment:
       - PORT=4435
       - KRATOS_PUBLIC_URL=http://kratos:4433/
+      - KRATOS_ADMIN_URL=http://kratos:4434/
       - KRATOS_BROWSER_URL=http://127.0.0.1:4455/.ory/kratos/public
       - JWKS_URL=http://oathkeeper:4456/.well-known/jwks.json
     networks:

@@ -9,7 +9,7 @@ import (
 	strfmt "github.com/go-openapi/strfmt"
 )
 
-// CredentialsType CredentialsType CredentialsType CredentialsType  represents several different credential types, like password credentials, passwordless credentials,
+// CredentialsType CredentialsType  represents several different credential types, like password credentials, passwordless credentials,
 //
 // and so on.
 // swagger:model CredentialsType

@@ -65,7 +65,8 @@ func TestRegistration(t *testing.T) {
 		router := x.NewRouterPublic()
 		admin := x.NewRouterAdmin()
 		reg.RegistrationStrategies().RegisterPublicRoutes(router)
-		reg.RegistrationHandler().RegisterRoutes(router, admin)
+		reg.RegistrationHandler().RegisterPublicRoutes(router)
+		reg.RegistrationHandler().RegisterAdminRoutes(admin)
 		ts := httptest.NewServer(router)
 		defer ts.Close()
 

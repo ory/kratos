@@ -33,7 +33,7 @@ func TestEnsureSessionRedirect(t *testing.T) {
 	_, reg := internal.NewRegistryDefault(t)
 
 	router := x.NewRouterPublic()
-	reg.RegistrationHandler().RegisterRoutes(router, x.NewRouterAdmin())
+	reg.RegistrationHandler().RegisterPublicRoutes(router)
 	reg.RegistrationStrategies().RegisterPublicRoutes(router)
 	ts := httptest.NewServer(router)
 	defer ts.Close()
@@ -70,7 +70,8 @@ func TestRegistrationHandler(t *testing.T) {
 	public, admin := func() (*httptest.Server, *httptest.Server) {
 		public := x.NewRouterPublic()
 		admin := x.NewRouterAdmin()
-		reg.RegistrationHandler().RegisterRoutes(public, admin)
+		reg.RegistrationHandler().RegisterPublicRoutes(public)
+		reg.RegistrationHandler().RegisterAdminRoutes(admin)
 		reg.RegistrationStrategies().RegisterPublicRoutes(public)
 		return httptest.NewServer(nosurf.New(public)), httptest.NewServer(admin)
 	}()
