@@ -91,7 +91,7 @@ func TestStrategy(t *testing.T) {
 		require.NoError(t, err)
 		hydra, err := pool.RunWithOptions(&dockertest.RunOptions{
 			Repository: "oryd/hydra",
-			Tag:        "v1.0.0",
+			Tag:        "v1.2.2",
 			Env: []string{
 				"DSN=memory",
 				fmt.Sprintf("URLS_SELF_ISSUER=http://127.0.0.1:%d/", publicPort),
@@ -123,12 +123,19 @@ func TestStrategy(t *testing.T) {
 		})
 	}
 
-	router := x.NewRouterPublic()
-	reg.LoginStrategies().RegisterPublicRoutes(router)
-	reg.RegistrationStrategies().RegisterPublicRoutes(router)
-	reg.RegistrationHandler().RegisterPublicRoutes(router)
-	reg.LoginHandler().RegisterPublicRoutes(router)
-	ts := httptest.NewServer(router)
+	public := x.NewRouterPublic()
+	admin := x.NewRouterAdmin()
+	reg.LoginHandler().RegisterPublicRoutes(public, admin)
+	reg.LoginHandler().WithTokenGenerator(func(r *http.Request) string {
+		return "nosurf"
+	})
+	reg.LoginStrategies().RegisterPublicRoutes(public)
+	reg.RegistrationStrategies().RegisterPublicRoutes(public)
+	reg.RegistrationHandler().RegisterRoutes(public, admin)
+	reg.RegistrationHandler().WithTokenGenerator(func(r *http.Request) string {
+		return "nosurf"
+	})
+	ts := httptest.NewServer(public)
 	defer ts.Close()
 
 	returnTS := newReturnTs(t, reg)

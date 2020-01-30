@@ -13,14 +13,9 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// CompleteSelfServiceBrowserProfileManagementFlowPayload complete self service browser profile management flow payload
+// CompleteSelfServiceBrowserProfileManagementFlowPayload CompleteSelfServiceBrowserProfileManagementFlowPayload complete self service browser profile management flow payload
 // swagger:model completeSelfServiceBrowserProfileManagementFlowPayload
 type CompleteSelfServiceBrowserProfileManagementFlowPayload struct {
-
-	// request
-	// Required: true
-	// Format: uuid4
-	Request UUID `json:"request"`
 
 	// Traits contains all of the identity's traits.
 	//
@@ -34,10 +29,6 @@ type CompleteSelfServiceBrowserProfileManagementFlowPayload struct {
 func (m *CompleteSelfServiceBrowserProfileManagementFlowPayload) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateRequest(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validateTraits(formats); err != nil {
 		res = append(res, err)
 	}
@@ -45,18 +36,6 @@ func (m *CompleteSelfServiceBrowserProfileManagementFlowPayload) Validate(format
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *CompleteSelfServiceBrowserProfileManagementFlowPayload) validateRequest(formats strfmt.Registry) error {
-
-	if err := m.Request.Validate(formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("request")
-		}
-		return err
-	}
-
 	return nil
 }
 

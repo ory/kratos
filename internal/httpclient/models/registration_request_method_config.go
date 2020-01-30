@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// RegistrationRequestMethodConfig registration request method config
+// RegistrationRequestMethodConfig RegistrationRequestMethodConfig registration request method config
 // swagger:model registrationRequestMethodConfig
 type RegistrationRequestMethodConfig struct {
 	RegistrationRequestMethodConfigAllOf0

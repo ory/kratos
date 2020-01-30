@@ -109,7 +109,7 @@ workflows:
             tags:
               only: /.*/
       - sdk/generate:
-          appname: Ory_Hydra
+          appname: Ory_Kratos
           requires:
             - test
             - lint

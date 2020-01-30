@@ -48,9 +48,12 @@ type Request struct {
 
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"-" db:"updated_at"`
+
+	// CSRFToken contains the anti-csrf token associated with this request.
+	CSRFToken string `json:"-" db:"csrf_token"`
 }
 
-func NewLoginRequest(exp time.Duration, r *http.Request) *Request {
+func NewLoginRequest(exp time.Duration, csrf string, r *http.Request) *Request {
 	source := urlx.Copy(r.URL)
 	source.Host = r.Host
 
@@ -67,6 +70,7 @@ func NewLoginRequest(exp time.Duration, r *http.Request) *Request {
 		IssuedAt:   time.Now().UTC(),
 		RequestURL: source.String(),
 		Methods:    map[identity.CredentialsType]*RequestMethod{},
+		CSRFToken:  csrf,
 	}
 }
 

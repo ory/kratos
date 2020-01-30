@@ -5,6 +5,8 @@ import (
 	"net/url"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/justinas/nosurf"
+	"github.com/pkg/errors"
 
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/urlx"
@@ -33,25 +35,28 @@ type (
 		RegistrationHandler() *Handler
 	}
 	Handler struct {
-		d handlerDependencies
-		c configuration.Provider
+		d    handlerDependencies
+		c    configuration.Provider
+		csrf x.CSRFToken
 	}
 )
 
 func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
-	return &Handler{d: d, c: c}
+	return &Handler{d: d, c: c, csrf: nosurf.Token}
 }
 
-func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
+func (h *Handler) WithTokenGenerator(f func(r *http.Request) string) {
+	h.csrf = f
+}
+
+func (h *Handler) RegisterRoutes(public *x.RouterPublic, admin *x.RouterAdmin) {
 	public.GET(BrowserRegistrationPath, h.d.SessionHandler().IsNotAuthenticated(h.initRegistrationRequest, session.RedirectOnAuthenticated(h.c)))
-	public.GET(BrowserRegistrationRequestsPath, h.fetchRegistrationRequest)
+	public.GET(BrowserRegistrationRequestsPath, h.publicFetchRegistrationRequest)
+	admin.GET(BrowserRegistrationRequestsPath, h.adminFetchRegistrationRequest)
 }
 
 func (h *Handler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request, redir func(*Request) string) error {
-	a := NewRequest(
-		h.c.SelfServiceRegistrationRequestLifespan(),
-		r,
-	)
+	a := NewRequest(h.c.SelfServiceRegistrationRequestLifespan(), h.csrf(r), r)
 	for _, s := range h.d.RegistrationStrategies() {
 		if err := s.PopulateRegistrationMethod(r, a); err != nil {
 			return err
@@ -118,12 +123,15 @@ type getSelfServiceBrowserRegistrationRequestParameters struct {
 	Request string `json:"request"`
 }
 
-// swagger:route GET /self-service/browser/flows/requests/registration public getSelfServiceBrowserRegistrationRequest
+// swagger:route GET /self-service/browser/flows/requests/registration common public admin getSelfServiceBrowserRegistrationRequest
 //
 // Get the request context of browser-based registration user flows
 //
 // This endpoint returns a registration request's context with, for example, error details and
 // other information.
+//
+// When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent
+// token scanning attacks, the public endpoint does not return 404 status codes to prevent scanning attacks.
 //
 // More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 //
@@ -137,12 +145,32 @@ type getSelfServiceBrowserRegistrationRequestParameters struct {
 //       403: genericError
 //       404: genericError
 //       500: genericError
-func (h *Handler) fetchRegistrationRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	ar, err := h.d.RegistrationRequestPersister().GetRegistrationRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
-	if err != nil {
-		h.d.Writer().WriteError(w, r, err)
+func (h *Handler) publicFetchRegistrationRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if err := h.fetchRegistrationRequest(w, r, true); err != nil {
+		h.d.Writer().WriteError(w, r, x.ErrInvalidCSRFToken.WithTrace(err).WithDebugf("%s", err))
 		return
 	}
 
+}
+
+func (h *Handler) adminFetchRegistrationRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if err := h.fetchRegistrationRequest(w, r, false); err != nil {
+		h.d.Writer().WriteError(w, r, err)
+		return
+	}
+}
+
+func (h *Handler) fetchRegistrationRequest(w http.ResponseWriter, r *http.Request, mustVerify bool) error {
+	ar, err := h.d.RegistrationRequestPersister().GetRegistrationRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
+	if err != nil {
+		h.d.Writer().WriteError(w, r, x.ErrInvalidCSRFToken.WithTrace(err).WithDebugf("%s", err))
+		return err
+	}
+
+	if mustVerify && !nosurf.VerifyToken(h.csrf(r), ar.CSRFToken) {
+		return errors.WithStack(x.ErrInvalidCSRFToken)
+	}
+
 	h.d.Writer().Write(w, r, ar)
+	return nil
 }

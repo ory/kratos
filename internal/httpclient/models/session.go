@@ -20,11 +20,9 @@ type Session struct {
 	// authenticated at
 	// Format: date-time
 	// Format: date-time
-	// Format: date-time
 	AuthenticatedAt strfmt.DateTime `json:"authenticated_at,omitempty"`
 
 	// expires at
-	// Format: date-time
 	// Format: date-time
 	// Format: date-time
 	ExpiresAt strfmt.DateTime `json:"expires_at,omitempty"`
@@ -33,7 +31,6 @@ type Session struct {
 	Identity *Identity `json:"identity,omitempty"`
 
 	// issued at
-	// Format: date-time
 	// Format: date-time
 	// Format: date-time
 	IssuedAt strfmt.DateTime `json:"issued_at,omitempty"`

@@ -4,6 +4,7 @@ create_table("selfservice_login_requests") {
     t.Column("issued_at", "timestamp", { default_raw: "CURRENT_TIMESTAMP" })
     t.Column("expires_at", "timestamp")
     t.Column("active_method", "string", {"size": 32})
+    t.Column("csrf_token", "string")
 }
 
 create_table("selfservice_login_request_methods") {
@@ -21,6 +22,7 @@ create_table("selfservice_registration_requests") {
     t.Column("issued_at", "timestamp", { default_raw: "CURRENT_TIMESTAMP" })
     t.Column("expires_at", "timestamp")
     t.Column("active_method", "string", {"size": 32})
+    t.Column("csrf_token", "string")
 }
 
 create_table("selfservice_registration_request_methods") {
