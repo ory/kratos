@@ -3,6 +3,8 @@
 **Table of Contents**
 
 - [Change Log](#change-log)
+  - [v0.0.3-alpha.8+oryOS.15 (2020-01-30)](#v003-alpha8oryos15-2020-01-30)
+  - [v0.0.3-alpha.9 (2020-01-30)](#v003-alpha9-2020-01-30)
   - [v0.0.3-alpha.7 (2020-01-30)](#v003-alpha7-2020-01-30)
   - [v0.0.3-alpha.5 (2020-01-30)](#v003-alpha5-2020-01-30)
   - [v0.0.3-alpha.4 (2020-01-30)](#v003-alpha4-2020-01-30)
@@ -24,6 +26,12 @@
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Change Log
+
+## [v0.0.3-alpha.8+oryOS.15](https://github.com/ory/kratos/tree/v0.0.3-alpha.8+oryOS.15) (2020-01-30)
+[Full Changelog](https://github.com/ory/kratos/compare/v0.0.3-alpha.9...v0.0.3-alpha.8+oryOS.15)
+
+## [v0.0.3-alpha.9](https://github.com/ory/kratos/tree/v0.0.3-alpha.9) (2020-01-30)
+[Full Changelog](https://github.com/ory/kratos/compare/v0.0.3-alpha.7...v0.0.3-alpha.9)
 
 ## [v0.0.3-alpha.7](https://github.com/ory/kratos/tree/v0.0.3-alpha.7) (2020-01-30)
 [Full Changelog](https://github.com/ory/kratos/compare/v0.0.3-alpha.5...v0.0.3-alpha.7)
@@ -71,6 +79,7 @@
 - Update quickstart [\#207](https://github.com/ory/kratos/pull/207) ([aeneasr](https://github.com/aeneasr))
 - ci: Bump sdk orb [\#206](https://github.com/ory/kratos/pull/206) ([aeneasr](https://github.com/aeneasr))
 - Take field order from schema [\#205](https://github.com/ory/kratos/pull/205) ([zepatrik](https://github.com/zepatrik))
+- ss/profile: Use request ID as query param everywhere [\#202](https://github.com/ory/kratos/pull/202) ([aeneasr](https://github.com/aeneasr))
 
 ## [v0.0.1-alpha.9](https://github.com/ory/kratos/tree/v0.0.1-alpha.9) (2020-01-29)
 [Full Changelog](https://github.com/ory/kratos/compare/v0.0.1-alpha.10+oryOS.15...v0.0.1-alpha.9)
@@ -202,7 +211,6 @@
 
 **Merged pull requests:**
 
-- ss/profile: Use request ID as query param everywhere [\#202](https://github.com/ory/kratos/pull/202) ([aeneasr](https://github.com/aeneasr))
 - Remove redundant return statement [\#194](https://github.com/ory/kratos/pull/194) ([aeneasr](https://github.com/aeneasr))
 - ss/oidc: Remove obsolete request field from form [\#193](https://github.com/ory/kratos/pull/193) ([aeneasr](https://github.com/aeneasr))
 - sql: Re-introduce migration plans to CLI command [\#192](https://github.com/ory/kratos/pull/192) ([aeneasr](https://github.com/aeneasr))
