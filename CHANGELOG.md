@@ -26,6 +26,7 @@
 
 **Implemented enhancements:**
 
+- Rework public and admin fetch strategy [\#203](https://github.com/ory/kratos/pull/203) ([aeneasr](https://github.com/aeneasr))
 - Update HTTP routes for a consistent API naming [\#199](https://github.com/ory/kratos/pull/199) ([aeneasr](https://github.com/aeneasr))
 
 **Fixed bugs:**
@@ -39,6 +40,7 @@
 
 **Merged pull requests:**
 
+- ci: Bump sdk orb [\#206](https://github.com/ory/kratos/pull/206) ([aeneasr](https://github.com/aeneasr))
 - ss/profile: Use request ID as query param everywhere [\#202](https://github.com/ory/kratos/pull/202) ([aeneasr](https://github.com/aeneasr))
 
 ## [v0.0.1-alpha.9](https://github.com/ory/kratos/tree/v0.0.1-alpha.9) (2020-01-29)
