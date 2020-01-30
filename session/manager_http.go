@@ -6,8 +6,9 @@ import (
 	"time"
 
 	"github.com/gorilla/securecookie"
-	"github.com/ory/x/sqlcon"
 	"github.com/pkg/errors"
+
+	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/herodot"
 
@@ -85,9 +86,8 @@ func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, w http.ResponseWrite
 	}
 
 	se, err := s.r.SessionPersister().GetSession(ctx, x.ParseUUID(sid))
-	if err != nil && (
-		err.Error() == herodot.ErrNotFound.Error() ||
-			err.Error() == sqlcon.ErrNoRows.Error()) {
+	if err != nil && (err.Error() == herodot.ErrNotFound.Error() ||
+		err.Error() == sqlcon.ErrNoRows.Error()) {
 		return nil, errors.WithStack(ErrNoActiveSessionFound)
 	} else if err != nil {
 		return nil, err

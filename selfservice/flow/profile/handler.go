@@ -4,11 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
-	"sort"
 
 	"github.com/ory/kratos/schema"
 
-	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
@@ -96,7 +94,18 @@ func (h *Handler) initUpdateProfile(w http.ResponseWriter, r *http.Request, ps h
 	}
 
 	a := NewRequest(h.c.SelfServiceProfileRequestLifespan(), r, s)
-	a.Form = form.NewHTMLFormFromJSON(urlx.AppendPaths(h.c.SelfPublicURL(), BrowserProfilePath).String(), json.RawMessage(s.Identity.Traits), "traits")
+	a.Form = form.NewHTMLFormFromJSON(urlx.CopyWithQuery(urlx.AppendPaths(h.c.SelfPublicURL(), BrowserProfilePath), url.Values{"request": {a.ID.String()}}).String(), json.RawMessage(s.Identity.Traits), "traits")
+
+	traitsSchema, err := h.c.IdentityTraitsSchemas().FindSchemaByID(s.Identity.TraitsSchemaID)
+	if err != nil {
+		h.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
+		return
+	}
+	if err := a.Form.SortFields(traitsSchema.URL, "traits"); err != nil {
+		h.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
+		return
+	}
+	//a.Form.Action = urlx.CopyWithQuery(h.c.ProfileURL(), url.Values{"request": {a.ID.String()}}).String()
 	if err := h.d.ProfileRequestPersister().CreateProfileRequest(r.Context(), a); err != nil {
 		h.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
 		return
@@ -192,14 +201,19 @@ func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	ar.Form.SetField("request", form.Field{
-		Name:     "request",
-		Type:     "hidden",
-		Required: true,
-		Value:    rid,
-	})
 	ar.Form.SetCSRF(nosurf.Token(r))
-	sort.Sort(ar.Form.Fields)
+
+	traitsSchema, err := h.c.IdentityTraitsSchemas().FindSchemaByID(ar.Identity.TraitsSchemaID)
+	if err != nil {
+		h.d.Writer().WriteError(w, r, err)
+		return
+	}
+
+	if err := ar.Form.SortFields(traitsSchema.URL, "traits"); err != nil {
+		h.d.Writer().WriteError(w, r, err)
+		return
+	}
+
 	h.d.Writer().Write(w, r, ar)
 }
 
@@ -221,12 +235,6 @@ type (
 		// format: binary
 		// required: true
 		Traits json.RawMessage `json:"traits"`
-
-		// Request is the request ID.
-		//
-		// type: string
-		// required: true
-		Request uuid.UUID `json:"request"`
 	}
 )
 
@@ -272,12 +280,13 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if x.IsZeroUUID(p.Request) {
+	rid := x.ParseUUID(r.URL.Query().Get("request"))
+	if x.IsZeroUUID(rid) {
 		h.handleProfileManagementError(w, r, nil, s.Identity.Traits, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request query parameter is missing.")))
 		return
 	}
 
-	ar, err := h.d.ProfileRequestPersister().GetProfileRequest(r.Context(), p.Request)
+	ar, err := h.d.ProfileRequestPersister().GetProfileRequest(r.Context(), rid)
 	if err != nil {
 		h.handleProfileManagementError(w, r, nil, s.Identity.Traits, err)
 		return
@@ -346,9 +355,18 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 	for _, field := range form.NewHTMLFormFromJSON("", json.RawMessage(i.Traits), "traits").Fields {
 		ar.Form.SetField(field.Name, field)
 	}
-	ar.Form.SetValue("request", r.Form.Get("request"))
 	ar.Form.SetCSRF(nosurf.Token(r))
-	sort.Sort(ar.Form.Fields)
+
+	traitsSchema, err := h.c.IdentityTraitsSchemas().FindSchemaByID(i.TraitsSchemaID)
+	if err != nil {
+		h.handleProfileManagementError(w, r, ar, i.Traits, err)
+		return
+	}
+	err = ar.Form.SortFields(traitsSchema.URL, "traits")
+	if err != nil {
+		h.handleProfileManagementError(w, r, ar, i.Traits, err)
+		return
+	}
 
 	if err := h.d.ProfileRequestPersister().UpdateProfileRequest(r.Context(), ar); err != nil {
 		h.handleProfileManagementError(w, r, ar, i.Traits, err)
@@ -373,9 +391,19 @@ func (h *Handler) handleProfileManagementError(w http.ResponseWriter, r *http.Re
 				rr.Form.SetField(field.Name, field)
 			}
 		}
-		rr.Form.SetValue("request", r.Form.Get("request"))
 		rr.Form.SetCSRF(nosurf.Token(r))
-		sort.Sort(rr.Form.Fields)
+
+		// try to sort, might fail if the error before was sorting related
+		traitsSchema, err := h.c.IdentityTraitsSchemas().FindSchemaByID(rr.Identity.TraitsSchemaID)
+		if err != nil {
+			h.d.ProfileRequestRequestErrorHandler().HandleProfileManagementError(w, r, identity.CredentialsTypePassword, rr, err)
+			return
+		}
+		err = rr.Form.SortFields(traitsSchema.URL, "traits")
+		if err != nil {
+			h.d.ProfileRequestRequestErrorHandler().HandleProfileManagementError(w, r, identity.CredentialsTypePassword, rr, err)
+			return
+		}
 	}
 
 	h.d.ProfileRequestRequestErrorHandler().HandleProfileManagementError(w, r, identity.CredentialsTypePassword, rr, err)
@@ -391,7 +419,6 @@ func (h *Handler) newProfileManagementDecoder(i *identity.Identity) (decoderx.HT
   "type": "object",
   "required": ["traits"],
   "properties": {
-    "request": { "type": "string" },
     "traits": {}
   }
 }

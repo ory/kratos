@@ -47,9 +47,9 @@ func TestContainer(t *testing.T) {
 				expect: &HTMLForm{
 					Fields: Fields{
 						Field{Name: "numby", Type: "number", Value: 1.5},
-						Field{Name: "stringy", Type: "text", Value: "foobar"},
 						Field{Name: "objy.numby", Type: "number", Value: 1.5},
 						Field{Name: "objy.stringy", Type: "text", Value: "foobar"},
+						Field{Name: "stringy", Type: "text", Value: "foobar"},
 					},
 				},
 			},
@@ -59,16 +59,19 @@ func TestContainer(t *testing.T) {
 				expect: &HTMLForm{
 					Fields: Fields{
 						Field{Name: "traits.numby", Type: "number", Value: 1.5},
-						Field{Name: "traits.stringy", Type: "text", Value: "foobar"},
 						Field{Name: "traits.objy.numby", Type: "number", Value: 1.5},
 						Field{Name: "traits.objy.stringy", Type: "text", Value: "foobar"},
+						Field{Name: "traits.stringy", Type: "text", Value: "foobar"},
 					},
 				},
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				actual := NewHTMLFormFromJSON("action", json.RawMessage(tc.r), tc.prefix)
-				sort.Sort(tc.expect.Fields)
+				// sort actual.fields lexicographically to have a deterministic order
+				sort.SliceStable(actual.Fields, func(i, j int) bool {
+					return actual.Fields[i].Name < actual.Fields[j].Name
+				})
 				assert.Equal(t, "action", actual.Action)
 				assert.EqualValues(t, tc.expect.Fields, actual.Fields)
 			})
@@ -87,9 +90,9 @@ func TestContainer(t *testing.T) {
 				expect: &HTMLForm{
 					Fields: Fields{
 						Field{Name: "numby", Type: "number", Value: 1.5},
-						Field{Name: "stringy", Type: "text", Value: "foobar"},
 						Field{Name: "objy.numby", Type: "number", Value: 1.5},
 						Field{Name: "objy.stringy", Type: "text", Value: "foobar"},
+						Field{Name: "stringy", Type: "text", Value: "foobar"},
 					},
 				},
 			},
@@ -104,9 +107,9 @@ func TestContainer(t *testing.T) {
 				expect: &HTMLForm{
 					Fields: Fields{
 						Field{Name: "numby", Type: "number", Value: 1.5},
-						Field{Name: "stringy", Type: "text", Value: "foobar"},
 						Field{Name: "objy.numby", Type: "number", Value: 1.5},
 						Field{Name: "objy.stringy", Type: "text", Value: "foobar"},
+						Field{Name: "stringy", Type: "text", Value: "foobar"},
 					},
 				},
 			},
@@ -117,8 +120,8 @@ func TestContainer(t *testing.T) {
 				}),
 				expect: &HTMLForm{
 					Fields: Fields{
-						Field{Name: "meal.name", Errors: []Error{{Message: "missing properties: \"name\""}}},
 						Field{Name: "meal.chef", Type: "text", Value: "aeneas"},
+						Field{Name: "meal.name", Errors: []Error{{Message: "missing properties: \"name\""}}},
 					},
 				},
 			},
@@ -126,7 +129,10 @@ func TestContainer(t *testing.T) {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				actual, err := NewHTMLFormFromRequestBody(tc.r, "action", decoderx.HTTPJSONSchemaCompiler(tc.ref, nil))
 				require.NoError(t, err)
-				sort.Sort(tc.expect.Fields)
+				// sort actual.fields lexicographically to have a deterministic order
+				sort.SliceStable(actual.Fields, func(i, j int) bool {
+					return actual.Fields[i].Name < actual.Fields[j].Name
+				})
 				assert.Equal(t, "action", actual.Action)
 				assert.EqualValues(t, tc.expect.Fields, actual.Fields)
 			})
@@ -180,7 +186,6 @@ func TestContainer(t *testing.T) {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				actual, err := NewHTMLFormFromJSONSchema("action", tc.ref, tc.prefix)
 				require.NoError(t, err)
-				sort.Sort(tc.expect.Fields)
 				assert.Equal(t, "action", actual.Action)
 				assert.EqualValues(t, tc.expect.Errors, actual.Errors)
 				assert.EqualValues(t, tc.expect.Fields, actual.Fields)
@@ -210,7 +215,6 @@ func TestContainer(t *testing.T) {
 						return
 					}
 					require.NoError(t, err)
-					sort.Sort(tc.expect.Fields)
 					assert.EqualValues(t, tc.expect.Errors, c.Errors)
 					assert.EqualValues(t, tc.expect.Fields, c.Fields)
 				}

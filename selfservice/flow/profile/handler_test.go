@@ -216,17 +216,15 @@ func TestUpdateProfile(t *testing.T) {
 		}
 		require.True(t, found)
 
-		assert.Equal(t, &models.Form{
-			Action: kratos.URL + profile.BrowserProfilePath,
-			Method: "POST",
-			Fields: models.FormFields{
-				&models.FormField{Name: "request", Required: true, Type: "hidden", Value: rid},
-				&models.FormField{Name: "traits.booly", Required: false, Type: "checkbox", Value: false},
-				&models.FormField{Name: "traits.email", Required: false, Type: "text", Value: "john@doe.com"},
-				&models.FormField{Name: "traits.numby", Required: false, Type: "number", Value: json.Number("2.5")},
-				&models.FormField{Name: "traits.stringy", Required: false, Type: "text", Value: "foobar"},
-			},
-		}, pr.Payload.Form)
+		assert.True(t, strings.HasPrefix(pr.Payload.Form.Action, fmt.Sprintf("%s%s?request=", kratos.URL, profile.BrowserProfilePath)))
+		assert.Equal(t, models.FormFields{
+			&models.FormField{Name: "traits.email", Required: false, Type: "text", Value: "john@doe.com"},
+			&models.FormField{Name: "traits.stringy", Required: false, Type: "text", Value: "foobar"},
+			&models.FormField{Name: "traits.numby", Required: false, Type: "number", Value: json.Number("2.5")},
+			&models.FormField{Name: "traits.booly", Required: false, Type: "checkbox", Value: false},
+		}, pr.Payload.Form.Fields)
+		assert.Equal(t, "POST", pr.Payload.Form.Method)
+		assert.Empty(t, pr.Payload.Form.Errors)
 	})
 
 	submitForm := func(t *testing.T, req *public.GetProfileManagementRequestOK, values url.Values) (string, *public.GetProfileManagementRequestOK) {

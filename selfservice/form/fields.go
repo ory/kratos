@@ -3,6 +3,9 @@ package form
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
+
+	"github.com/ory/kratos/schema"
 )
 
 // Fields contains multiple fields
@@ -32,16 +35,33 @@ func (f *Field) Reset() {
 	f.Value = nil
 }
 
-func (ff Fields) Len() int {
-	return len(ff)
-}
+func (ff *Fields) sortBySchema(schemaRef, prefix string) (func(i, j int) bool, error) {
+	schemaKeys, err := schema.GetKeysInOrder(schemaRef)
+	if err != nil {
+		return nil, err
+	}
+	keysInOrder := []string{
+		CSRFTokenName,
+		"identifier",
+		"password",
+	}
+	for _, k := range schemaKeys {
+		keysInOrder = append(keysInOrder, fmt.Sprintf("%s.%s", prefix, k))
+	}
 
-func (ff Fields) Swap(i, j int) {
-	ff[i], ff[j] = ff[j], ff[i]
-}
+	getKeyPosition := func(name string) int {
+		lastPrefix := len(keysInOrder)
+		for i, n := range keysInOrder {
+			if strings.HasPrefix(name, n) {
+				lastPrefix = i
+			}
+		}
+		return lastPrefix
+	}
 
-func (ff Fields) Less(i, j int) bool {
-	return ff[i].Name < ff[j].Name
+	return func(i, j int) bool {
+		return getKeyPosition((*ff)[i].Name) < getKeyPosition((*ff)[j].Name)
+	}, nil
 }
 
 func toFormType(n string, i interface{}) string {

@@ -27,3 +27,7 @@ type Resetter interface {
 	// Reset resets errors.
 	Reset()
 }
+
+type FieldSorter interface {
+	SortFields(schemaRef string, prefix string) error
+}

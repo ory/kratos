@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"sort"
 
 	"github.com/ory/kratos/driver/configuration"
 
@@ -71,6 +70,10 @@ func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Reques
 
 			method.Config.SetCSRF(s.cg(r))
 			rr.Methods[identity.CredentialsTypePassword] = method
+			if errSec := method.Config.SortFields(s.c.DefaultIdentityTraitsSchemaURL().String(), "traits"); errSec != nil {
+				s.d.RegistrationRequestErrorHandler().HandleRegistrationError(w, r, identity.CredentialsTypePassword, rr, errors.Wrap(err, errSec.Error()))
+				return
+			}
 		}
 	}
 
@@ -215,7 +218,10 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.
 	htmlf.Method = "POST"
 	htmlf.SetCSRF(s.cg(r))
 	htmlf.SetField("password", form.Field{Name: "password", Type: "password", Required: true})
-	sort.Sort(htmlf.Fields)
+
+	if err := htmlf.SortFields(s.c.DefaultIdentityTraitsSchemaURL().String(), "traits"); err != nil {
+		return err
+	}
 
 	sr.Methods[identity.CredentialsTypePassword] = &registration.RequestMethod{
 		Method: identity.CredentialsTypePassword,

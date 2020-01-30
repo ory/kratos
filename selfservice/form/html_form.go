@@ -72,7 +72,6 @@ func NewHTMLFormFromRequestBody(r *http.Request, action string, compiler decoder
 	for k, v := range jsonx.Flatten(raw) {
 		c.SetValue(k, v)
 	}
-	sort.Sort(c.Fields)
 
 	return c, nil
 }
@@ -86,7 +85,6 @@ func NewHTMLFormFromJSON(action string, raw json.RawMessage, prefix string) *HTM
 		}
 		c.SetValue(k, v)
 	}
-	sort.Sort(c.Fields)
 
 	return c
 }
@@ -107,9 +105,18 @@ func NewHTMLFormFromJSONSchema(action, jsonSchemaRef, prefix string) (*HTMLForm,
 			Type: toFormType(value.Name, value.Type),
 		})
 	}
-	sort.Sort(c.Fields)
 
 	return c, nil
+}
+
+func (c *HTMLForm) SortFields(schemaRef, prefix string) error {
+	sortFunc, err := c.Fields.sortBySchema(schemaRef, prefix)
+	if err != nil {
+		return err
+	}
+
+	sort.SliceStable(c.Fields, sortFunc)
+	return nil
 }
 
 // Reset resets the container's errors as well as each field's value and errors.
