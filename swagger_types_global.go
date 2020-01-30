@@ -10,6 +10,7 @@ type genericError struct {
 	Error genericErrorPayload `json:"error"`
 }
 
+// nolint:deadcode,unused
 type genericErrorPayload struct {
 	// Code represents the error status code (404, 403, 401, ...).
 	//
