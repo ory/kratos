@@ -78,6 +78,7 @@ sdk:
 
 quickstart:
 		docker pull oryd/kratos:latest-sqlite
+		docker pull oryd/kratos-selfservice-ui-node:latest
 		docker-compose -f quickstart.yml up --build --force-recreate
 
 quickstart-dev:

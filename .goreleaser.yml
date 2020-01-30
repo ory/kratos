@@ -161,7 +161,10 @@ changelog:
   sort: asc
   filters:
     exclude:
-      - "CI skip"
+      - ci skip
+      - Merge pull request
+      - Merge branch
+
 brews:
   - github:
       owner: ory
