@@ -33,6 +33,10 @@
 - Improve `/profile` and `/session` URLs [\#195](https://github.com/ory/kratos/issues/195)
 - Profile Management requests sends Request ID in POST Body instead of Query Parameter [\#190](https://github.com/ory/kratos/issues/190)
 
+**Closed issues:**
+
+- Rethink public fetch request protection [\#122](https://github.com/ory/kratos/issues/122)
+
 **Merged pull requests:**
 
 - ss/profile: Use request ID as query param everywhere [\#202](https://github.com/ory/kratos/pull/202) ([aeneasr](https://github.com/aeneasr))
