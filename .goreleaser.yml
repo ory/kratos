@@ -110,6 +110,7 @@ archives:
       - kratos-sqlite-windows
       - kratos-sqlite-darwin
       - kratos-sqlite-linux
+      - kratos-sqlite-linux-libmusl
     replacements:
       darwin: macos
       386: 32bit
