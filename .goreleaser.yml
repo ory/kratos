@@ -125,7 +125,26 @@ archives:
       - LICENSE
       - README.md
       - SECURITY.md
-    name_template: "{{ .ProjectName }}_sqlite_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+    name_template: "{{ .ProjectName }}_{{ .Version }}-sqlite_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+
+  - id: kratos-sqlite-libmusl
+    builds:
+      - kratos-sqlite-linux-libmusl
+    replacements:
+      darwin: macos
+      386: 32bit
+      amd64: 64bit
+      arm: arm32
+    format_overrides:
+      -
+        goos: windows
+        format: zip
+    files:
+      - CHANGELOG.md
+      - LICENSE
+      - README.md
+      - SECURITY.md
+    name_template: "{{ .ProjectName }}_{{ .Version }}-sqlite-libmusl_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
 
   - id: kratos
     builds:
@@ -218,4 +237,5 @@ release:
   name_template: "{{.Env.RELEASE_NAME}}"
   ids:
     - kratos-sqlite
+    - kratos-sqlite-libmusl
     - kratos
