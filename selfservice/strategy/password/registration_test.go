@@ -63,8 +63,9 @@ func TestRegistration(t *testing.T) {
 		})
 
 		router := x.NewRouterPublic()
+		admin := x.NewRouterAdmin()
 		reg.RegistrationStrategies().RegisterPublicRoutes(router)
-		reg.RegistrationHandler().RegisterPublicRoutes(router)
+		reg.RegistrationHandler().RegisterRoutes(router, admin)
 		ts := httptest.NewServer(router)
 		defer ts.Close()
 
@@ -295,7 +296,7 @@ func TestRegistration(t *testing.T) {
 		viper.Set(configuration.ViperKeyURLsSelfPublic, urlx.ParseOrPanic("https://foo/"))
 		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://stub/registration.schema.json")
 
-		sr := registration.NewRequest(time.Minute, &http.Request{URL: urlx.ParseOrPanic("/")})
+		sr := registration.NewRequest(time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")})
 		require.NoError(t, s.PopulateRegistrationMethod(&http.Request{}, sr))
 
 		expected := &registration.RequestMethod{

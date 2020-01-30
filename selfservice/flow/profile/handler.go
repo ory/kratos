@@ -26,9 +26,10 @@ import (
 )
 
 const (
-	BrowserProfilePath        = "/self-service/browser/flows/profile"
-	BrowserProfileRequestPath = "/self-service/browser/flows/requests/profile"
-	BrowserProfileUpdatePath  = "/self-service/browser/flows/profile/update"
+	PublicProfileManagementPath        = "/self-service/browser/flows/profile"
+	PublicProfileManagementRequestPath = "/self-service/browser/flows/requests/profile"
+	AdminBrowserProfileRequestPath     = "/self-service/browser/flows/requests/profile"
+	PublicProfileManagementUpdatePath  = "/self-service/browser/flows/profile/update"
 )
 
 type (
@@ -54,20 +55,23 @@ type (
 		ProfileManagementHandler() *Handler
 	}
 	Handler struct {
-		c configuration.Provider
-		d handlerDependencies
+		c    configuration.Provider
+		d    handlerDependencies
+		csrf x.CSRFToken
 	}
 )
 
 func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
-	return &Handler{d: d, c: c}
+	return &Handler{d: d, c: c, csrf: nosurf.Token}
 }
 
-func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
+func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic, admin *x.RouterAdmin) {
 	redirect := session.RedirectOnUnauthenticated(h.c.LoginURL().String())
-	public.GET(BrowserProfilePath, h.d.SessionHandler().IsAuthenticated(h.initUpdateProfile, redirect))
-	public.GET(BrowserProfileRequestPath, h.d.SessionHandler().IsAuthenticated(h.fetchUpdateProfileRequest, redirect))
-	public.POST(BrowserProfileUpdatePath, h.d.SessionHandler().IsAuthenticated(h.completeProfileManagementFlow, redirect))
+	public.GET(PublicProfileManagementPath, h.d.SessionHandler().IsAuthenticated(h.initUpdateProfile, redirect))
+	public.GET(PublicProfileManagementRequestPath, h.d.SessionHandler().IsAuthenticated(h.publicFetchUpdateProfileRequest, redirect))
+	public.POST(PublicProfileManagementUpdatePath, h.d.SessionHandler().IsAuthenticated(h.completeProfileManagementFlow, redirect))
+
+	admin.GET(AdminBrowserProfileRequestPath, h.adminFetchUpdateProfileRequest)
 }
 
 // swagger:route GET /self-service/browser/flows/profile public initializeSelfServiceProfileManagementFlow
@@ -97,7 +101,7 @@ func (h *Handler) initUpdateProfile(w http.ResponseWriter, r *http.Request, ps h
 
 	a := NewRequest(h.c.SelfServiceProfileRequestLifespan(), r, s)
 	a.Form = form.NewHTMLFormFromJSON(urlx.CopyWithQuery(
-		urlx.AppendPaths(h.c.SelfPublicURL(), BrowserProfileUpdatePath),
+		urlx.AppendPaths(h.c.SelfPublicURL(), PublicProfileManagementUpdatePath),
 		url.Values{"request": {a.ID.String()}},
 	).String(), json.RawMessage(s.Identity.Traits), "traits")
 
@@ -134,9 +138,13 @@ type getSelfServiceBrowserLoginRequestParameters struct {
 	Request string `json:"request"`
 }
 
-// swagger:route GET /self-service/browser/flows/requests/profile public getSelfServiceBrowserProfileManagementRequest
+// swagger:route GET /self-service/browser/flows/requests/profile common public admin getSelfServiceBrowserProfileManagementRequest
 //
 // Get the request context of browser-based profile management flows
+//
+// When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required
+// for checking the auth session. To prevent scanning attacks, the public endpoint does not return 404 status codes
+// but instead 403 or 500.
 //
 // More information can be found at [ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).
 //
@@ -150,23 +158,36 @@ type getSelfServiceBrowserLoginRequestParameters struct {
 //       403: genericError
 //       404: genericError
 //       500: genericError
-func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) publicFetchUpdateProfileRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if err := h.fetchUpdateProfileRequest(w, r, true); err != nil {
+		h.d.Writer().WriteError(w, r, herodot.ErrForbidden.WithReasonf("Access privileges are missing, invalid, or not sufficient to access this endpoint.").WithTrace(err).WithDebugf("%s", err))
+		return
+	}
+}
+
+func (h *Handler) adminFetchUpdateProfileRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if err := h.fetchUpdateProfileRequest(w, r, false); err != nil {
+		h.d.Writer().WriteError(w, r, err)
+		return
+	}
+}
+
+func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Request, checkSession bool) error {
 	rid := x.ParseUUID(r.URL.Query().Get("request"))
 	ar, err := h.d.ProfileRequestPersister().GetProfileRequest(r.Context(), rid)
 	if err != nil {
-		h.d.Writer().WriteError(w, r, err)
-		return
+		return err
 	}
 
-	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), w, r)
-	if err != nil {
-		h.d.Writer().WriteError(w, r, err)
-		return
-	}
+	if checkSession {
+		sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), w, r)
+		if err != nil {
+			return err
+		}
 
-	if ar.IdentityID != sess.Identity.ID {
-		h.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden.WithReasonf("The request was made for another identity and has been blocked for security reasons.")))
-		return
+		if ar.IdentityID != sess.Identity.ID {
+			return errors.WithStack(herodot.ErrForbidden.WithReasonf("The request was made for another identity and has been blocked for security reasons."))
+		}
 	}
 
 	ar.Form.SetCSRF(nosurf.Token(r))
@@ -183,6 +204,7 @@ func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Reque
 	}
 
 	h.d.Writer().Write(w, r, ar)
+	return nil
 }
 
 // swagger:parameters completeSelfServiceBrowserProfileManagementFlow
@@ -327,7 +349,7 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 	}
 
 	action := urlx.CopyWithQuery(
-		urlx.AppendPaths(h.c.SelfPublicURL(), BrowserProfileUpdatePath),
+		urlx.AppendPaths(h.c.SelfPublicURL(), PublicProfileManagementUpdatePath),
 		url.Values{"request": {ar.ID.String()}},
 	)
 	ar.Form.Reset()
@@ -364,7 +386,7 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 func (h *Handler) handleProfileManagementError(w http.ResponseWriter, r *http.Request, rr *Request, traits identity.Traits, err error) {
 	if rr != nil {
 		action := urlx.CopyWithQuery(
-			urlx.AppendPaths(h.c.SelfPublicURL(), BrowserProfileUpdatePath),
+			urlx.AppendPaths(h.c.SelfPublicURL(), PublicProfileManagementUpdatePath),
 			url.Values{"request": {rr.ID.String()}},
 		)
 

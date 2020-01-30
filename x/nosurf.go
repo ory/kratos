@@ -10,6 +10,16 @@ import (
 	"github.com/ory/herodot"
 )
 
+var (
+	ErrInvalidCSRFToken = herodot.ErrForbidden.WithReasonf("A request failed due to a missing or invalid csrf_token value.")
+)
+
+type CSRFToken func(r *http.Request) string
+
+func DefaultCSRFToken(r *http.Request) string {
+	return nosurf.Token(r)
+}
+
 type CSRFProvider interface {
 	CSRFHandler() *nosurf.CSRFHandler
 }

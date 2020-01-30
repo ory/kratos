@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/cookiejar"
 	"testing"
 
 	"github.com/gobuffalo/httptest"
@@ -32,7 +33,8 @@ func TestEnsureSessionRedirect(t *testing.T) {
 	_, reg := internal.NewRegistryDefault(t)
 
 	router := x.NewRouterPublic()
-	reg.LoginHandler().RegisterPublicRoutes(router)
+	admin := x.NewRouterAdmin()
+	reg.LoginHandler().RegisterPublicRoutes(router, admin)
 	reg.LoginStrategies().RegisterPublicRoutes(router)
 	ts := httptest.NewServer(router)
 	defer ts.Close()
@@ -66,51 +68,84 @@ func TestEnsureSessionRedirect(t *testing.T) {
 func TestLoginHandler(t *testing.T) {
 	_, reg := internal.NewRegistryDefault(t)
 
-	kratos := func() *httptest.Server {
-		router := x.NewRouterPublic()
-		reg.LoginHandler().RegisterPublicRoutes(router)
-		reg.LoginStrategies().RegisterPublicRoutes(router)
-		return httptest.NewServer(nosurf.New(router))
+	public, admin := func() (*httptest.Server, *httptest.Server) {
+		public := x.NewRouterPublic()
+		admin := x.NewRouterAdmin()
+		reg.LoginHandler().RegisterPublicRoutes(public, admin)
+		reg.LoginStrategies().RegisterPublicRoutes(public)
+		return httptest.NewServer(nosurf.New(public)), httptest.NewServer(admin)
 	}()
-	defer kratos.Close()
+	defer public.Close()
 
 	redirTS := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}))
 	defer redirTS.Close()
 
-	loginTS := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		res, err := http.Get(kratos.URL + login.BrowserLoginRequestsPath + "?request=" + r.URL.Query().Get("request"))
+	easyGet := func(t *testing.T, c *http.Client, url string) []byte {
+		res, err := c.Get(url)
 		require.NoError(t, err)
 		defer res.Body.Close()
 		body, err := ioutil.ReadAll(res.Body)
 		require.NoError(t, err)
-		_, _ = w.Write(body)
-	}))
-	defer loginTS.Close()
+		return body
+	}
 
-	errTS := errorx.NewErrorTestServer(t, reg)
-	defer errTS.Close()
+	newLoginTS := func(t *testing.T, upstream string, c *http.Client) *httptest.Server {
+		return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if c == nil {
+				c = http.DefaultClient
+			}
+			_, err := w.Write(easyGet(t, c, upstream+login.BrowserLoginRequestsPath+"?request="+r.URL.Query().Get("request")))
+			require.NoError(t, err)
+		}))
+	}
 
-	viper.Set(configuration.ViperKeyURLsLogin, loginTS.URL)
-	viper.Set(configuration.ViperKeyURLsSelfPublic, kratos.URL)
-	viper.Set(configuration.ViperKeyURLsError, errTS.URL)
-
-	t.Run("", func(t *testing.T) {
-		res, err := kratos.Client().Get(kratos.URL + login.BrowserLoginPath)
-		require.NoError(t, err)
-
-		defer res.Body.Close()
-		require.Equal(t, http.StatusOK, res.StatusCode)
-
-		body, err := ioutil.ReadAll(res.Body)
-		require.NoError(t, err)
-
+	assertRequestPayload := func(t *testing.T, body []byte) {
 		assert.Equal(t, "password", gjson.GetBytes(body, "methods.password.method").String(), "%s", body)
 		assert.NotEmpty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==csrf_token).value").String(), "%s", body)
 		assert.NotEmpty(t, gjson.GetBytes(body, "id").String(), "%s", body)
 		assert.Empty(t, gjson.GetBytes(body, "headers").Value(), "%s", body)
 		assert.Contains(t, gjson.GetBytes(body, "methods.password.config.action").String(), gjson.GetBytes(body, "id").String(), "%s", body)
-		assert.Contains(t, gjson.GetBytes(body, "methods.password.config.action").String(), kratos.URL, "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "methods.password.config.action").String(), public.URL, "%s", body)
+	}
+
+	errTS := errorx.NewErrorTestServer(t, reg)
+	defer errTS.Close()
+
+	viper.Set(configuration.ViperKeyURLsSelfPublic, public.URL)
+	viper.Set(configuration.ViperKeyURLsError, errTS.URL)
+
+	t.Run("daemon=admin", func(t *testing.T) {
+		loginTS := newLoginTS(t, admin.URL, nil)
+		defer loginTS.Close()
+
+		viper.Set(configuration.ViperKeyURLsLogin, loginTS.URL)
+		assertRequestPayload(t, easyGet(t, public.Client(), public.URL+login.BrowserLoginPath))
+	})
+
+	t.Run("daemon=public", func(t *testing.T) {
+		j, err := cookiejar.New(nil)
+		require.NoError(t, err)
+		hc := &http.Client{Jar: j}
+
+		t.Run("case=with_csrf", func(t *testing.T) {
+			loginTS := newLoginTS(t, public.URL, hc)
+			defer loginTS.Close()
+			viper.Set(configuration.ViperKeyURLsLogin, loginTS.URL)
+
+			assertRequestPayload(t, easyGet(t, hc, public.URL+login.BrowserLoginPath))
+		})
+
+		t.Run("case=without_csrf", func(t *testing.T) {
+			loginTS := newLoginTS(t, public.URL,
+				// using a different client because it doesn't have access to the cookie jar
+				new(http.Client))
+			defer loginTS.Close()
+			viper.Set(configuration.ViperKeyURLsLogin, loginTS.URL)
+
+			body := easyGet(t, hc, public.URL+login.BrowserLoginPath)
+			assert.Contains(t, gjson.GetBytes(body, "error").String(), "csrf_token", "%s", body)
+		})
 	})
 }
