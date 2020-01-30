@@ -3,6 +3,7 @@
 **Table of Contents**
 
 - [Change Log](#change-log)
+  - [v0.0.3-alpha.4 (2020-01-30)](#v003-alpha4-2020-01-30)
   - [v0.0.3-alpha.3 (2020-01-30)](#v003-alpha3-2020-01-30)
   - [v0.0.3-alpha.2 (2020-01-30)](#v003-alpha2-2020-01-30)
   - [v0.0.3-alpha.1 (2020-01-30)](#v003-alpha1-2020-01-30)
@@ -21,6 +22,9 @@
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Change Log
+
+## [v0.0.3-alpha.4](https://github.com/ory/kratos/tree/v0.0.3-alpha.4) (2020-01-30)
+[Full Changelog](https://github.com/ory/kratos/compare/v0.0.3-alpha.3...v0.0.3-alpha.4)
 
 ## [v0.0.3-alpha.3](https://github.com/ory/kratos/tree/v0.0.3-alpha.3) (2020-01-30)
 [Full Changelog](https://github.com/ory/kratos/compare/v0.0.3-alpha.2...v0.0.3-alpha.3)
@@ -56,7 +60,6 @@
 - ci: Bump sdk orb [\#206](https://github.com/ory/kratos/pull/206) ([aeneasr](https://github.com/aeneasr))
 - Take field order from schema [\#205](https://github.com/ory/kratos/pull/205) ([zepatrik](https://github.com/zepatrik))
 - ss/profile: Use request ID as query param everywhere [\#202](https://github.com/ory/kratos/pull/202) ([aeneasr](https://github.com/aeneasr))
-- ss/oidc: Remove obsolete request field from form [\#193](https://github.com/ory/kratos/pull/193) ([aeneasr](https://github.com/aeneasr))
 
 ## [v0.0.1-alpha.9](https://github.com/ory/kratos/tree/v0.0.1-alpha.9) (2020-01-29)
 [Full Changelog](https://github.com/ory/kratos/compare/v0.0.1-alpha.10+oryOS.15...v0.0.1-alpha.9)
@@ -189,6 +192,7 @@
 **Merged pull requests:**
 
 - Remove redundant return statement [\#194](https://github.com/ory/kratos/pull/194) ([aeneasr](https://github.com/aeneasr))
+- ss/oidc: Remove obsolete request field from form [\#193](https://github.com/ory/kratos/pull/193) ([aeneasr](https://github.com/aeneasr))
 - sql: Re-introduce migration plans to CLI command [\#192](https://github.com/ory/kratos/pull/192) ([aeneasr](https://github.com/aeneasr))
 - Improve Docker Compose Quickstart [\#187](https://github.com/ory/kratos/pull/187) ([aeneasr](https://github.com/aeneasr))
 - Registration/Login HTML form: remove request field and ensure method is set [\#183](https://github.com/ory/kratos/pull/183) ([zepatrik](https://github.com/zepatrik))
