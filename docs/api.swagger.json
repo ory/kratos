@@ -663,10 +663,10 @@
     "CredentialsType": {
       "description": "and so on.",
       "type": "string",
-      "title": "CredentialsType CredentialsType  represents several different credential types, like password credentials, passwordless credentials,"
+      "title": "CredentialsType CredentialsType CredentialsType  represents several different credential types, like password credentials, passwordless credentials,"
     },
     "Error": {
-      "description": "Error error",
+      "description": "Error Error error",
       "type": "object",
       "properties": {
         "message": {
@@ -676,7 +676,7 @@
       }
     },
     "Identity": {
-      "description": "Identity identity",
+      "description": "Identity Identity identity",
       "type": "object",
       "required": [
         "id",
@@ -700,7 +700,7 @@
       }
     },
     "Traits": {
-      "description": "Traits traits",
+      "description": "Traits Traits traits",
       "type": "object"
     },
     "UUID": {
@@ -724,7 +724,7 @@
       }
     },
     "form": {
-      "description": "Form HTMLForm represents a HTML Form. The container can work with both HTTP Form and JSON requests",
+      "description": "HTMLForm represents a HTML Form. The container can work with both HTTP Form and JSON requests",
       "type": "object",
       "properties": {
         "action": {
@@ -748,7 +748,7 @@
       }
     },
     "formField": {
-      "description": "Field represents a HTML Form Field",
+      "description": "FormField Field represents a HTML Form Field",
       "type": "object",
       "properties": {
         "errors": {
@@ -777,7 +777,7 @@
       }
     },
     "formFields": {
-      "description": "FormFields Fields contains multiple fields",
+      "description": "Fields contains multiple fields",
       "type": "array",
       "items": {
         "$ref": "#/definitions/formField"
@@ -786,7 +786,7 @@
     "genericError": {
       "description": "Error responses are sent when an error (e.g. unauthorized, bad request, ...) occurred.",
       "type": "object",
-      "title": "Error response",
+      "title": "GenericError Error response",
       "properties": {
         "error": {
           "$ref": "#/definitions/genericErrorPayload"
@@ -794,17 +794,19 @@
       }
     },
     "genericErrorPayload": {
-      "description": "GenericErrorPayload generic error payload",
+      "description": "nolint:deadcode,unused",
       "type": "object",
       "properties": {
         "code": {
           "description": "Code represents the error status code (404, 403, 401, ...).",
           "type": "integer",
-          "format": "int64"
+          "format": "int64",
+          "example": 404
         },
         "debug": {
           "description": "Debug contains debug information. This is usually not available and has to be enabled.",
-          "type": "string"
+          "type": "string",
+          "example": "The database adapter was unable to find the element"
         },
         "details": {
           "description": "details",
@@ -835,6 +837,7 @@
       }
     },
     "healthNotReadyStatus": {
+      "description": "HealthNotReadyStatus health not ready status",
       "type": "object",
       "properties": {
         "errors": {
@@ -856,14 +859,13 @@
       }
     },
     "loginRequest": {
-      "description": "LoginRequest login request",
       "type": "object",
       "properties": {
         "active": {
           "$ref": "#/definitions/CredentialsType"
         },
         "expires_at": {
-          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,\na new request has to be initiated.\nFormat: date-time",
+          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,\na new request has to be initiated.",
           "type": "string",
           "format": "date-time"
         },
@@ -871,7 +873,7 @@
           "$ref": "#/definitions/UUID"
         },
         "issued_at": {
-          "description": "IssuedAt is the time (UTC) when the request occurred.\nFormat: date-time",
+          "description": "IssuedAt is the time (UTC) when the request occurred.",
           "type": "string",
           "format": "date-time"
         },
@@ -889,6 +891,7 @@
       }
     },
     "loginRequestMethod": {
+      "description": "LoginRequestMethod login request method",
       "type": "object",
       "properties": {
         "config": {
@@ -900,7 +903,6 @@
       }
     },
     "loginRequestMethodConfig": {
-      "description": "LoginRequestMethodConfig login request method config",
       "type": "object",
       "allOf": [
         {
@@ -984,7 +986,7 @@
       }
     },
     "registrationRequestMethod": {
-      "description": "RegistrationRequestMethod registration request method",
+      "description": "RegistrationRequestMethod RegistrationRequestMethod registration request method",
       "type": "object",
       "properties": {
         "config": {
@@ -1016,16 +1018,15 @@
       ]
     },
     "session": {
-      "description": "Session session",
       "type": "object",
       "properties": {
         "authenticated_at": {
-          "description": "authenticated at\nFormat: date-time",
+          "description": "authenticated at\nFormat: date-time\nFormat: date-time",
           "type": "string",
           "format": "date-time"
         },
         "expires_at": {
-          "description": "expires at\nFormat: date-time",
+          "description": "expires at\nFormat: date-time\nFormat: date-time",
           "type": "string",
           "format": "date-time"
         },
@@ -1033,7 +1034,7 @@
           "$ref": "#/definitions/Identity"
         },
         "issued_at": {
-          "description": "issued at\nFormat: date-time",
+          "description": "issued at\nFormat: date-time\nFormat: date-time",
           "type": "string",
           "format": "date-time"
         },
@@ -1043,7 +1044,6 @@
       }
     },
     "version": {
-      "description": "Version version",
       "type": "object",
       "properties": {
         "version": {

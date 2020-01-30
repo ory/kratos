@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// RegistrationRequestMethod RegistrationRequestMethod registration request method
+// RegistrationRequestMethod RegistrationRequestMethod RegistrationRequestMethod registration request method
 // swagger:model registrationRequestMethod
 type RegistrationRequestMethod struct {
 

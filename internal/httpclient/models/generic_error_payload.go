@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// GenericErrorPayload GenericErrorPayload generic error payload
+// GenericErrorPayload nolint:deadcode,unused
 // swagger:model genericErrorPayload
 type GenericErrorPayload struct {
 

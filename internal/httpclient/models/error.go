@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// Error Error error
+// Error Error Error error
 // swagger:model Error
 type Error struct {
 
