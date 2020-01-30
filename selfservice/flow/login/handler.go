@@ -49,9 +49,12 @@ func (h *Handler) WithTokenGenerator(f func(r *http.Request) string) {
 	h.csrf = f
 }
 
-func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic, admin *x.RouterAdmin) {
+func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.GET(BrowserLoginPath, h.d.SessionHandler().IsNotAuthenticated(h.initLoginRequest, session.RedirectOnAuthenticated(h.c)))
 	public.GET(BrowserLoginRequestsPath, h.publicFetchLoginRequest)
+}
+
+func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(BrowserLoginRequestsPath, h.adminFetchLoginRequest)
 }
 

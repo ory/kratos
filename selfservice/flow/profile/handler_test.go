@@ -87,7 +87,8 @@ func TestUpdateProfile(t *testing.T) {
 	publicTS, adminTS := func() (*httptest.Server, *httptest.Server) {
 		router := x.NewRouterPublic()
 		admin := x.NewRouterAdmin()
-		reg.ProfileManagementHandler().RegisterPublicRoutes(router, admin)
+		reg.ProfileManagementHandler().RegisterPublicRoutes(router)
+		reg.ProfileManagementHandler().RegisterAdminRoutes(admin)
 		route, _ := session.MockSessionCreateHandlerWithIdentity(t, reg, primaryIdentity)
 		router.GET("/setSession", route)
 
@@ -138,7 +139,8 @@ func TestUpdateProfile(t *testing.T) {
 
 	t.Run("description=call endpoints", func(t *testing.T) {
 		pr, ar := x.NewRouterPublic(), x.NewRouterAdmin()
-		reg.ProfileManagementHandler().RegisterPublicRoutes(pr, ar)
+		reg.ProfileManagementHandler().RegisterPublicRoutes(pr)
+		reg.ProfileManagementHandler().RegisterAdminRoutes(ar)
 
 		adminTS, publicTS := httptest.NewServer(ar), httptest.NewServer(pr)
 		defer adminTS.Close()

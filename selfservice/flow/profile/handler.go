@@ -66,12 +66,14 @@ func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
 	return &Handler{d: d, c: c, csrf: nosurf.Token}
 }
 
-func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic, admin *x.RouterAdmin) {
+func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	redirect := session.RedirectOnUnauthenticated(h.c.LoginURL().String())
 	public.GET(PublicProfileManagementPath, h.d.SessionHandler().IsAuthenticated(h.initUpdateProfile, redirect))
 	public.GET(PublicProfileManagementRequestPath, h.d.SessionHandler().IsAuthenticated(h.publicFetchUpdateProfileRequest, redirect))
 	public.POST(PublicProfileManagementUpdatePath, h.d.SessionHandler().IsAuthenticated(h.completeProfileManagementFlow, redirect))
+}
 
+func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(AdminBrowserProfileRequestPath, h.adminFetchUpdateProfileRequest)
 }
 
