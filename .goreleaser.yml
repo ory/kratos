@@ -15,7 +15,6 @@ builds:
   -
     id: kratos-sqlite-darwin
     flags:
-      - -a
       - -tags
       - sqlite
     ldflags:
@@ -34,7 +33,6 @@ builds:
   -
     id: kratos-sqlite-linux
     flags:
-      - -a
       - -tags
       - sqlite
     ldflags:
@@ -49,7 +47,6 @@ builds:
   -
     id: kratos-sqlite-linux-libmusl
     flags:
-      - -a
       - -tags
       - sqlite
     ldflags:
@@ -65,7 +62,6 @@ builds:
   -
     id: kratos-sqlite-windows
     flags:
-      - -a
       - -tags
       - sqlite
     ldflags:
@@ -84,7 +80,6 @@ builds:
   -
     id: kratos
     ldflags:
-      - -a
       - -s -w -X github.com/ory/kratos/cmd.Version={{.Env.RELEASE_NAME}} -X github.com/ory/kratos/cmd.Commit={{.FullCommit}} -X github.com/ory/kratos/cmd.Date={{.Date}}
     binary: kratos
     env:
