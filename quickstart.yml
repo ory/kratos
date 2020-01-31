@@ -9,12 +9,12 @@ services:
   kratos-migrate:
     image: oryd/kratos:latest-sqlite
     environment:
-      - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true
+      - DSN=sqlite:///home/ory/sqlite/db.sqlite?_fk=true
     volumes:
       -
         type: volume
         source: kratos-sqlite
-        target: /var/lib/sqlite/
+        target: /home/ory/sqlite
         read_only: false
       -
         type: bind
@@ -70,11 +70,15 @@ services:
       - "4434:4434" # admin
     restart: unless-stopped
     environment:
-      - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true
+      - DSN=sqlite:///home/ory/sqlite/db.sqlite?_fk=true
     command:
       serve -c /etc/config/kratos/.kratos.yml --dev
     volumes:
-      - kratos-sqlite:/var/lib/sqlite/
+      -
+        type: volume
+        source: kratos-sqlite
+        target: /home/ory/sqlite
+        read_only: false
       -
         type: bind
         source: ./contrib/quickstart/kratos/email-password
@@ -94,5 +98,3 @@ networks:
 
 volumes:
   kratos-sqlite:
-  kratos-config:
-  oathkeeper-config:
