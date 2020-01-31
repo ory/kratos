@@ -1,10 +1,27 @@
 FROM alpine:3.11
 
+# Because this image is built for SQLite, we create /home/ory and /home/ory/sqlite which is owned by the ory user
+# and declare /home/ory/sqlite a volume.
+#
+# To get SQLite and Docker Volumes working with this image, mount the volume where SQLite should be written to at:
+#
+#   /home/ory/sqlite/some-file.
+
+RUN addgroup -S ory; \
+    adduser -S ory -G ory -D  -h /home/ory -s /bin/nologin; \
+    chown -R ory:ory /home/ory
 RUN apk add -U --no-cache ca-certificates
+
+WORKDIR /home/ory
 
 COPY kratos-sqlite-libmusl /usr/bin/kratos
 
-USER 1000
+USER ory
+
+# By creating the sqlite folder as the ory user, the mounted volume will be owned by ory:ory, which
+# is required for read/write of SQLite.
+RUN mkdir -p /home/ory/sqlite
+VOLUME /home/ory/sqlite
 
 ENTRYPOINT ["kratos"]
 CMD ["serve"]
