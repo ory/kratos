@@ -21,7 +21,9 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/gobuffalo/packr/v2"
-
+	"github.com/gobuffalo/packr/v2/plog"
+	"github.com/ory/x/logrusx"
+	gbl "github.com/gobuffalo/logger"
 	"github.com/ory/gojsonschema"
 	"github.com/ory/viper"
 	"github.com/ory/x/flagx"
@@ -37,6 +39,10 @@ import (
 var serveCmd = &cobra.Command{
 	Use: "serve",
 	Run: func(cmd *cobra.Command, args []string) {
+		viperx.InitializeConfig("kratos", "", logger)
+		logger = logrusx.New()
+		plog.Logger = gbl.Logrus{FieldLogger: logger}
+
 		dev := flagx.MustGetBool(cmd, "dev")
 		if dev {
 			logger.Warn(`
@@ -47,6 +53,7 @@ DON'T DO THIS IN PRODUCTION!
 
 `)
 		}
+
 
 		watchAndValidateViper()
 		daemon.ServeAll(driver.MustNewDefaultDriver(logger, BuildVersion, BuildTime, BuildGitHash, dev))(cmd, args)

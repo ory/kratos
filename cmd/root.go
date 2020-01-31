@@ -4,11 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	gbl "github.com/gobuffalo/logger"
-	"github.com/gobuffalo/packr/v2/plog"
 	"github.com/sirupsen/logrus"
-
-	"github.com/ory/x/logrusx"
 
 	"github.com/ory/x/viperx"
 
@@ -32,11 +28,5 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(func() {
-		logger = logrusx.New()
-		viperx.InitializeConfig("kratos", "", logger)
-		plog.Logger = gbl.Logrus{FieldLogger: logger}
-	})
-
 	viperx.RegisterConfigFlag(rootCmd, "kratos")
 }
