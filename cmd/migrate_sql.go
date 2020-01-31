@@ -18,9 +18,10 @@ package cmd
 import (
 	gbl "github.com/gobuffalo/logger"
 	"github.com/gobuffalo/packr/v2/plog"
+	"github.com/spf13/cobra"
+
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/viperx"
-	"github.com/spf13/cobra"
 
 	"github.com/ory/kratos/cmd/client"
 )

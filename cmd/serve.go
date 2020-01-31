@@ -20,13 +20,14 @@ import (
 	"strconv"
 
 	"github.com/fsnotify/fsnotify"
+	gbl "github.com/gobuffalo/logger"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/gobuffalo/packr/v2/plog"
-	"github.com/ory/x/logrusx"
-	gbl "github.com/gobuffalo/logger"
+
 	"github.com/ory/gojsonschema"
 	"github.com/ory/viper"
 	"github.com/ory/x/flagx"
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/viperx"
 
 	"github.com/spf13/cobra"
@@ -53,7 +54,6 @@ DON'T DO THIS IN PRODUCTION!
 
 `)
 		}
-
 
 		watchAndValidateViper()
 		daemon.ServeAll(driver.MustNewDefaultDriver(logger, BuildVersion, BuildTime, BuildGitHash, dev))(cmd, args)
