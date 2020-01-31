@@ -3,6 +3,7 @@
 **Table of Contents**
 
 - [Change Log](#change-log)
+  - [v0.0.3-alpha.10 (2020-01-31)](#v003-alpha10-2020-01-31)
   - [v0.0.3-alpha.8+oryOS.15 (2020-01-30)](#v003-alpha8oryos15-2020-01-30)
   - [v0.0.3-alpha.9 (2020-01-30)](#v003-alpha9-2020-01-30)
   - [v0.0.3-alpha.7 (2020-01-30)](#v003-alpha7-2020-01-30)
@@ -26,6 +27,9 @@
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Change Log
+
+## [v0.0.3-alpha.10](https://github.com/ory/kratos/tree/v0.0.3-alpha.10) (2020-01-31)
+[Full Changelog](https://github.com/ory/kratos/compare/v0.0.3-alpha.8+oryOS.15...v0.0.3-alpha.10)
 
 ## [v0.0.3-alpha.8+oryOS.15](https://github.com/ory/kratos/tree/v0.0.3-alpha.8+oryOS.15) (2020-01-30)
 [Full Changelog](https://github.com/ory/kratos/compare/v0.0.3-alpha.9...v0.0.3-alpha.8+oryOS.15)
