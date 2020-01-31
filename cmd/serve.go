@@ -53,7 +53,7 @@ DON'T DO THIS IN PRODUCTION!
 	},
 }
 
-var schemas = packr.New("schemas", "../../docs")
+var schemas = packr.New("schemas", "../docs")
 
 func init() {
 	rootCmd.AddCommand(serveCmd)
