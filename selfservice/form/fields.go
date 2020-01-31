@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/ory/x/jsonschemax"
+
 	"github.com/ory/kratos/schema"
 )
 
@@ -21,6 +23,10 @@ type Field struct {
 	Name string `json:"name"`
 	// Type is the equivalent of <input type="{{.Type}}">
 	Type string `json:"type,omitempty"`
+	// Pattern is the equivalent of <input pattern="{{.Pattern}}">
+	Pattern string `json:"pattern,omitempty"`
+	// Disabled is the equivalent of <input disabled="{{.Disabled}}">
+	Disabled string `json:"disabled,omitempty"`
 	// Required is the equivalent of <input required="{{.Required}}">
 	Required bool `json:"required,omitempty"`
 	// Value is the equivalent of <input value="{{.Value}}">
@@ -80,6 +86,36 @@ func toFormType(n string, i interface{}) string {
 	}
 
 	return "text"
+}
+
+func fieldFromPath(name string, p jsonschemax.Path) Field {
+	f := Field{
+		Name: name,
+		Type: "text",
+	}
+
+	// Estimating type
+	f.Type = toFormType(p.Name, p.Type)
+
+	switch p.Format {
+	case "date-time":
+		f.Type = "datetime-local"
+	case "email":
+		f.Type = "email"
+	case "date":
+		f.Type = "date"
+	case "uri":
+		f.Type = "url"
+	case "regex":
+		f.Type = "text"
+	}
+
+	// Other properties
+	if p.Pattern != nil {
+		f.Pattern = p.Pattern.String()
+	}
+
+	return f
 }
 
 func addPrefix(name, prefix, separator string) string {

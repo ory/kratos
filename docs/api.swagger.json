@@ -757,6 +757,10 @@
       "description": "Field represents a HTML Form Field",
       "type": "object",
       "properties": {
+        "disabled": {
+          "description": "Disabled is the equivalent of \u003cinput disabled=\"{{.Disabled}}\"\u003e",
+          "type": "string"
+        },
         "errors": {
           "description": "Errors contains all validation errors this particular field has caused.",
           "type": "array",
@@ -766,6 +770,10 @@
         },
         "name": {
           "description": "Name is the equivalent of \u003cinput name=\"{{.Name}}\"\u003e",
+          "type": "string"
+        },
+        "pattern": {
+          "description": "Pattern is the equivalent of \u003cinput pattern=\"{{.Pattern}}\"\u003e",
           "type": "string"
         },
         "required": {

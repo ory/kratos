@@ -1,5 +1,39 @@
 package form
 
+import (
+	"bytes"
+	"fmt"
+	"io/ioutil"
+	"testing"
+
+	"github.com/santhosh-tekuri/jsonschema/v2"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/jsonschemax"
+)
+
+func TestFieldFromPath(t *testing.T) {
+	t.Run("all properties are properly transfered", func(t *testing.T) {
+		schema, err := ioutil.ReadFile("./stub/all_formats.schema.json")
+		require.NoError(t, err)
+
+		c := jsonschema.NewCompiler()
+		require.NoError(t, c.AddResource("test.json", bytes.NewBuffer(schema)))
+
+		paths, err := jsonschemax.ListPaths("test.json", c)
+		require.NoError(t, err)
+
+		for _, path := range paths {
+			htmlField := fieldFromPath(path.Name, path)
+			assert.Equal(t, gjson.GetBytes(schema, fmt.Sprintf("properties.%s.test_expected_type", path.Name)).String(), htmlField.Type)
+			assert.True(t, !gjson.GetBytes(schema, fmt.Sprintf("properties.%s.test_expected_pattern", path.Name)).Exists() || (gjson.GetBytes(schema, fmt.Sprintf("properties.%s.test_expected_pattern", path.Name)).Bool() && htmlField.Pattern != ""))
+			fmt.Printf("name %s\ntype %s\n", htmlField.Name, htmlField.Type)
+		}
+	})
+}
+
 //
 // func TestNewFormFieldsFromJSON(t *testing.T) {
 // 	var js = json.RawMessage(`{"numby":1.5,"stringy":"foobar","objy":{"objy":{},"numby":1.5,"stringy":"foobar"}}`)

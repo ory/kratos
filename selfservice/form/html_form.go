@@ -100,10 +100,7 @@ func NewHTMLFormFromJSONSchema(action, jsonSchemaRef, prefix string) (*HTMLForm,
 	c := NewHTMLForm(action)
 	for _, value := range paths {
 		name := addPrefix(value.Name, prefix, ".")
-		c.Fields = append(c.Fields, Field{
-			Name: name,
-			Type: toFormType(value.Name, value.Type),
-		})
+		c.Fields = append(c.Fields, fieldFromPath(name, value))
 	}
 
 	return c, nil
