@@ -20,7 +20,6 @@ import (
 	"github.com/gobuffalo/packr/v2/plog"
 	"github.com/spf13/cobra"
 
-	"github.com/ory/x/logrusx"
 	"github.com/ory/x/viperx"
 
 	"github.com/ory/kratos/cmd/client"
@@ -44,8 +43,7 @@ You can read in the database URL using the -e flag, for example:
 Before running this command on an existing database, create a back up!
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		viperx.InitializeConfig("kratos", "", nil)
-		logger = logrusx.New()
+		logger = viperx.InitializeConfig("kratos", "", logger)
 		plog.Logger = gbl.Logrus{FieldLogger: logger}
 
 		client.NewMigrateHandler().MigrateSQL(cmd, args)

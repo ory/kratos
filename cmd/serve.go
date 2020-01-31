@@ -27,7 +27,6 @@ import (
 	"github.com/ory/gojsonschema"
 	"github.com/ory/viper"
 	"github.com/ory/x/flagx"
-	"github.com/ory/x/logrusx"
 	"github.com/ory/x/viperx"
 
 	"github.com/spf13/cobra"
@@ -40,8 +39,7 @@ import (
 var serveCmd = &cobra.Command{
 	Use: "serve",
 	Run: func(cmd *cobra.Command, args []string) {
-		viperx.InitializeConfig("kratos", "", logger)
-		logger = logrusx.New()
+		logger = viperx.InitializeConfig("kratos", "", logger)
 		plog.Logger = gbl.Logrus{FieldLogger: logger}
 
 		dev := flagx.MustGetBool(cmd, "dev")

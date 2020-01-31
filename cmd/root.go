@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var logger *logrus.Logger
+var logger logrus.FieldLogger
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
