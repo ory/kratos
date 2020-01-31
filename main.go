@@ -18,10 +18,14 @@ package main
 import (
 	"github.com/markbates/pkger"
 
+	"github.com/ory/x/profilex"
+
 	"github.com/ory/kratos/cmd"
 )
 
 func main() {
+	defer profilex.Profile().Stop()
+
 	pkger.Include("/courier/template/templates")
 	cmd.Execute()
 }

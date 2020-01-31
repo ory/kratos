@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/ory/x/flagx"
 	"github.com/ory/x/healthx"
-
-	"github.com/sirupsen/logrus"
 
 	"github.com/gorilla/context"
 	"github.com/spf13/cobra"

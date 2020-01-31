@@ -24,6 +24,7 @@ require (
 	github.com/go-playground/universal-translator v0.16.0 // indirect
 	github.com/go-swagger/go-swagger v0.21.1-0.20200107003254-1c98855b472d // indirect
 	github.com/gobuffalo/httptest v1.0.2
+	github.com/gobuffalo/logger v1.0.3
 	github.com/gobuffalo/packr v1.22.0
 	github.com/gobuffalo/packr/v2 v2.7.1
 	github.com/gobuffalo/pop/v5 v5.0.7
