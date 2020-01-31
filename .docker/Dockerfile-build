@@ -1,5 +1,7 @@
 FROM golang:1.13-alpine AS builder
 
+RUN addgroup -S ory; \
+    adduser -S ory -G ory -D -H -s /bin/nologin
 RUN apk -U --no-cache add build-base git gcc
 
 WORKDIR /go/src/github.com/ory/kratos
@@ -17,6 +19,8 @@ RUN CGO_ENABLED=1 go build -tags sqlite -a -o /usr/bin/kratos
 
 EXPOSE 4433
 EXPOSE 4434
+
+USER ory
 
 ENTRYPOINT ["kratos"]
 CMD ["serve"]

@@ -1,11 +1,22 @@
-FROM oryd/xgoreleaser:1.13.5
+FROM oryd/xgoreleaser:1.13.7
 
-WORKDIR /go/src/github.com/ory/kratos
+WORKDIR /home/ory
 
-ADD . .
+ADD go.mod go.mod
+ADD go.sum go.sum
+
+RUN go mod download
 
 ENV RELEASE_NAME=v0.0.0-alpha.1
+ENV DOCKER_SHORT_TAG=v0.0.0-alpha.1
+
+ADD . .
 ENTRYPOINT ["goreleaser"]
 CMD ["--snapshot", "--skip-publish", "--rm-dist"]
 
-# docker build -f .docker/Dockerfile-goreleaser -t build .; docker run --rm build
+# Manual for debugging:
+#   docker build -f .docker/Dockerfile-goreleaser -t build .; docker run --rm build
+#
+# or:
+#   docker rm -f build || true; docker build -f .docker/Dockerfile-goreleaser -t build .; docker run --name build --entrypoint /bin/bash -it build
+#   goreleaser --snapshot --skip-publish --rm-dist
