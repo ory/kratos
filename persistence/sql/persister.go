@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	"github.com/gobuffalo/packr"
+	"github.com/gobuffalo/packr/v2"
 	"github.com/gobuffalo/pop/v5"
 	"github.com/pkg/errors"
 
@@ -17,7 +17,7 @@ import (
 )
 
 var _ persistence.Persister = new(Persister)
-var migrations = packr.NewBox("../../contrib/sql/migrations")
+var migrations = packr.New("migrations", "migrations")
 
 type (
 	persisterDependencies interface {

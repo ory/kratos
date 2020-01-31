@@ -15,8 +15,8 @@ ENTRYPOINT ["goreleaser"]
 CMD ["--snapshot", "--skip-publish", "--rm-dist"]
 
 # Manual for debugging:
-#   docker build -f .docker/Dockerfile-goreleaser -t build .; docker run --rm build
+#   docker rm -f build || true; docker build -f .docker/Dockerfile-goreleaser -t build .; docker run build
 #
 # or:
-#   docker rm -f build || true; docker build -f .docker/Dockerfile-goreleaser -t build .; docker run --name build --entrypoint /bin/bash -it build
+#   docker rm -f build || true; docker build -f .docker/Dockerfile-goreleaser -t build .; docker run --cpus 6 --name build --entrypoint /bin/bash -it build
 #   goreleaser --snapshot --skip-publish --rm-dist

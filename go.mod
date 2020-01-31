@@ -24,6 +24,7 @@ require (
 	github.com/go-playground/universal-translator v0.16.0 // indirect
 	github.com/go-swagger/go-swagger v0.21.1-0.20200107003254-1c98855b472d // indirect
 	github.com/gobuffalo/httptest v1.0.2
+	github.com/gobuffalo/logger v1.0.3
 	github.com/gobuffalo/packr v1.22.0
 	github.com/gobuffalo/packr/v2 v2.7.1
 	github.com/gobuffalo/pop/v5 v5.0.7
@@ -54,7 +55,7 @@ require (
 	github.com/ory/herodot v0.6.3
 	github.com/ory/sdk/swagutil v0.0.0-20200131083057-53fe3c2ddf8a
 	github.com/ory/viper v1.5.6
-	github.com/ory/x v0.0.92
+	github.com/ory/x v0.0.93
 	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1

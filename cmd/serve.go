@@ -15,10 +15,19 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 
+	"github.com/fsnotify/fsnotify"
+	gbl "github.com/gobuffalo/logger"
+	"github.com/gobuffalo/packr/v2"
+	"github.com/gobuffalo/packr/v2/plog"
+
+	"github.com/ory/gojsonschema"
+	"github.com/ory/viper"
 	"github.com/ory/x/flagx"
+	"github.com/ory/x/viperx"
 
 	"github.com/spf13/cobra"
 
@@ -30,6 +39,9 @@ import (
 var serveCmd = &cobra.Command{
 	Use: "serve",
 	Run: func(cmd *cobra.Command, args []string) {
+		logger = viperx.InitializeConfig("kratos", "", logger)
+		plog.Logger = gbl.Logrus{FieldLogger: logger}
+
 		dev := flagx.MustGetBool(cmd, "dev")
 		if dev {
 			logger.Warn(`
@@ -41,9 +53,12 @@ DON'T DO THIS IN PRODUCTION!
 `)
 		}
 
+		watchAndValidateViper()
 		daemon.ServeAll(driver.MustNewDefaultDriver(logger, BuildVersion, BuildTime, BuildGitHash, dev))(cmd, args)
 	},
 }
+
+var schemas = packr.New("schemas", "../docs")
 
 func init() {
 	rootCmd.AddCommand(serveCmd)
@@ -51,4 +66,37 @@ func init() {
 	disableTelemetryEnv, _ := strconv.ParseBool(os.Getenv("DISABLE_TELEMETRY"))
 	serveCmd.PersistentFlags().Bool("disable-telemetry", disableTelemetryEnv, "Disable anonymized telemetry reports - for more information please visit https://www.ory.sh/docs/ecosystem/sqa")
 	serveCmd.PersistentFlags().Bool("dev", false, "Disables critical security features to make development easier")
+}
+
+func watchAndValidateViper() {
+	schema, err := schemas.Find("config.schema.json")
+	if err != nil {
+		logger.WithError(err).Fatal("Unable to open configuration JSON Schema.")
+	}
+
+	if err := viperx.Validate(gojsonschema.NewBytesLoader(schema)); err != nil {
+		viperx.LoggerWithValidationErrorFields(logger, err).
+			WithError(err).
+			Fatal("The configuration is invalid and could not be loaded.")
+	}
+
+	viperx.AddWatcher(func(event fsnotify.Event) error {
+		if err := viperx.Validate(gojsonschema.NewBytesLoader(schema)); err != nil {
+			viperx.LoggerWithValidationErrorFields(logger, err).
+				WithError(err).
+				Error("The changed configuration is invalid and could not be loaded. Rolling back to the last working configuration revision. Please address the validation errors before restarting ORY Kratos.")
+			return viperx.ErrRollbackConfigurationChanges
+		}
+		return nil
+	})
+
+	viperx.WatchConfig(logger, &viperx.WatchOptions{
+		Immutables: []string{"serve", "profiling", "log"},
+		OnImmutableChange: func(key string) {
+			logger.
+				WithField("key", key).
+				WithField("reset_to", fmt.Sprintf("%v", viper.Get(key))).
+				Error("A configuration value marked as immutable has changed. Rolling back to the last working configuration revision. To reload the values please restart ORY Kratos.")
+		},
+	})
 }
