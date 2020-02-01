@@ -2,6 +2,7 @@ package daemon
 
 import (
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/sirupsen/logrus"
@@ -17,10 +18,15 @@ import (
 	"github.com/ory/x/metricsx"
 
 	"github.com/ory/kratos/driver"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/logout"
+	"github.com/ory/kratos/selfservice/flow/profile"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/selfservice/strategy/password"
+	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
@@ -31,8 +37,6 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 	l := d.Logger()
 	n := negroni.New()
 	r := d.Registry()
-
-	telemetry(cmd, n, d)
 
 	router := x.NewRouterPublic()
 	r.LoginHandler().RegisterPublicRoutes(router)
@@ -47,6 +51,8 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 	r.HealthHandler().SetRoutes(router.Router, false)
 
 	n.Use(NewNegroniLoggerMiddleware(l.(*logrus.Logger), "public#"+c.SelfPublicURL().String()))
+	n.Use(sqa(cmd, d))
+
 	r.WithCSRFHandler(x.NewCSRFHandler(
 		router,
 		r.Writer(),
@@ -84,10 +90,10 @@ func serveAdmin(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []
 	r.ProfileManagementHandler().RegisterAdminRoutes(router)
 	r.IdentityHandler().RegisterAdminRoutes(router)
 	r.SessionHandler().RegisterAdminRoutes(router)
-	r.HealthHandler().SetRoutes(router.Router, false)
+	r.HealthHandler().SetRoutes(router.Router, true)
 
 	n.Use(NewNegroniLoggerMiddleware(l.(*logrus.Logger), "admin#"+c.SelfAdminURL().String()))
-	telemetry(cmd, n, d)
+	n.Use(sqa(cmd, d))
 
 	n.UseHandler(router)
 	server := graceful.WithDefaults(&http.Server{
@@ -102,13 +108,20 @@ func serveAdmin(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []
 	l.Println("Admin httpd was shutdown gracefully")
 }
 
-func telemetry(cmd *cobra.Command, n *negroni.Negroni, d driver.Driver) {
-	m := metricsx.New(
+func sqa(cmd *cobra.Command, d driver.Driver) *metricsx.Service {
+	// Creates only one instance
+	return metricsx.New(
 		cmd,
 		d.Logger(),
 		&metricsx.Options{
-			Service:       "ory-kratos",
-			ClusterID:     metricsx.Hash(d.Configuration().DSN()),
+			Service: "ory-kratos",
+			ClusterID: metricsx.Hash(
+				strings.Join([]string{
+					d.Configuration().DSN(),
+					d.Configuration().SelfPublicURL().String(),
+					d.Configuration().SelfAdminURL().String(),
+				}, "|"),
+			),
 			IsDevelopment: flagx.MustGetBool(cmd, "dev"),
 			WriteKey:      "qQlI6q8Q4WvkzTjKQSor4sHYOikHIvvi",
 			WhitelistedPaths: []string{
@@ -119,18 +132,25 @@ func telemetry(cmd *cobra.Command, n *negroni.Negroni, d driver.Driver) {
 				"/auth/methods/oidc/",
 				password.RegistrationPath,
 				password.LoginPath,
+				oidc.BasePath,
 				login.BrowserLoginPath,
 				login.BrowserLoginRequestsPath,
 				logout.BrowserLogoutPath,
 				registration.BrowserRegistrationPath,
 				registration.BrowserRegistrationRequestsPath,
+				session.SessionsWhoamiPath,
+				identity.IdentitiesPath,
+				profile.PublicProfileManagementPath,
+				profile.AdminBrowserProfileRequestPath,
+				profile.PublicProfileManagementPath,
+				profile.PublicProfileManagementUpdatePath,
+				errorx.ErrorsPath,
 			},
 			BuildVersion: d.Registry().BuildVersion(),
 			BuildHash:    d.Registry().BuildHash(),
 			BuildTime:    d.Registry().BuildDate(),
 		},
 	)
-	n.Use(m)
 }
 
 func ServeAll(d driver.Driver) func(cmd *cobra.Command, args []string) {
