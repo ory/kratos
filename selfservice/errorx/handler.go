@@ -8,6 +8,8 @@ import (
 	"github.com/ory/kratos/x"
 )
 
+const ErrorsPath = "/errors"
+
 type (
 	handlerDependencies interface {
 		x.WriterProvider
@@ -28,7 +30,7 @@ func NewHandler(
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
-	public.GET("/errors", h.get)
+	public.GET(ErrorsPath, h.get)
 }
 
 func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

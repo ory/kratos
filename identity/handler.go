@@ -17,6 +17,8 @@ import (
 	"github.com/ory/kratos/x"
 )
 
+const IdentitiesPath = "/identities"
+
 type (
 	handlerDependencies interface {
 		PoolProvider
@@ -42,12 +44,12 @@ func NewHandler(
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET("/identities", h.list)
-	admin.GET("/identities/:id", h.get)
-	admin.DELETE("/identities/:id", h.delete)
+	admin.GET(IdentitiesPath, h.list)
+	admin.GET(IdentitiesPath+"/:id", h.get)
+	admin.DELETE(IdentitiesPath+"/:id", h.delete)
 
-	admin.POST("/identities", h.create)
-	admin.PUT("/identities/:id", h.update)
+	admin.POST(IdentitiesPath, h.create)
+	admin.PUT(IdentitiesPath+"/:id", h.update)
 }
 
 // A single identity.
