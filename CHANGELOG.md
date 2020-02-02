@@ -55,6 +55,7 @@
 
 **Merged pull requests:**
 
+- docs: Updates issue and pull request templates [\#222](https://github.com/ory/kratos/pull/222) ([aeneasr](https://github.com/aeneasr))
 - ci: Bump sdk and changelog versions [\#221](https://github.com/ory/kratos/pull/221) ([aeneasr](https://github.com/aeneasr))
 - feat: Override semantic config [\#220](https://github.com/ory/kratos/pull/220) ([aeneasr](https://github.com/aeneasr))
 - Add paths to sqa middleware [\#216](https://github.com/ory/kratos/pull/216) ([aeneasr](https://github.com/aeneasr))
