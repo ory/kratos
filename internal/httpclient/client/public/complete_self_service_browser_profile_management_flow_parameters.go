@@ -16,7 +16,7 @@ import (
 
 	strfmt "github.com/go-openapi/strfmt"
 
-	models "github.com/ory/kratos/internal/httpclient/models"
+	"github.com/ory/kratos/internal/httpclient/models"
 )
 
 // NewCompleteSelfServiceBrowserProfileManagementFlowParams creates a new CompleteSelfServiceBrowserProfileManagementFlowParams object
@@ -68,10 +68,8 @@ type CompleteSelfServiceBrowserProfileManagementFlowParams struct {
 	/*Request
 	  Request is the request ID.
 
-	type: string
-
 	*/
-	Request *strfmt.UUID4
+	Request string
 
 	timeout    time.Duration
 	Context    context.Context
@@ -123,13 +121,13 @@ func (o *CompleteSelfServiceBrowserProfileManagementFlowParams) SetBody(body *mo
 }
 
 // WithRequest adds the request to the complete self service browser profile management flow params
-func (o *CompleteSelfServiceBrowserProfileManagementFlowParams) WithRequest(request *strfmt.UUID4) *CompleteSelfServiceBrowserProfileManagementFlowParams {
+func (o *CompleteSelfServiceBrowserProfileManagementFlowParams) WithRequest(request string) *CompleteSelfServiceBrowserProfileManagementFlowParams {
 	o.SetRequest(request)
 	return o
 }
 
 // SetRequest adds the request to the complete self service browser profile management flow params
-func (o *CompleteSelfServiceBrowserProfileManagementFlowParams) SetRequest(request *strfmt.UUID4) {
+func (o *CompleteSelfServiceBrowserProfileManagementFlowParams) SetRequest(request string) {
 	o.Request = request
 }
 
@@ -147,20 +145,13 @@ func (o *CompleteSelfServiceBrowserProfileManagementFlowParams) WriteToRequest(r
 		}
 	}
 
-	if o.Request != nil {
-
-		// query param request
-		var qrRequest strfmt.UUID4
-		if o.Request != nil {
-			qrRequest = *o.Request
+	// query param request
+	qrRequest := o.Request
+	qRequest := qrRequest
+	if qRequest != "" {
+		if err := r.SetQueryParam("request", qRequest); err != nil {
+			return err
 		}
-		qRequest := qrRequest.String()
-		if qRequest != "" {
-			if err := r.SetQueryParam("request", qRequest); err != nil {
-				return err
-			}
-		}
-
 	}
 
 	if len(res) > 0 {

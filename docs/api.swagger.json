@@ -399,10 +399,10 @@
         "parameters": [
           {
             "type": "string",
-            "format": "uuid4",
-            "description": "Request is the request ID.\n\ntype: string",
+            "description": "Request is the request ID.",
             "name": "request",
-            "in": "query"
+            "in": "query",
+            "required": true
           },
           {
             "name": "Body",
@@ -765,10 +765,7 @@
     "Traits": {
       "type": "object"
     },
-    "UUID": {
-      "type": "string",
-      "format": "uuid4"
-    },
+    "UUID": {"type": "string", "format": "uuid4"},
     "completeSelfServiceBrowserProfileManagementFlowPayload": {
       "type": "object",
       "required": [

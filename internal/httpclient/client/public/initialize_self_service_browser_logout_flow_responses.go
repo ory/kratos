@@ -13,7 +13,7 @@ import (
 
 	strfmt "github.com/go-openapi/strfmt"
 
-	models "github.com/ory/kratos/internal/httpclient/models"
+	"github.com/ory/kratos/internal/httpclient/models"
 )
 
 // InitializeSelfServiceBrowserLogoutFlowReader is a Reader for the InitializeSelfServiceBrowserLogoutFlow structure.
