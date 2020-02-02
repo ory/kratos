@@ -18,7 +18,7 @@ import (
 	"github.com/ory/kratos/internal/httpclient/client/version"
 )
 
-// Default ory hydra HTTP client.
+// Default ory kratos HTTP client.
 var Default = NewHTTPClient(nil)
 
 const (
@@ -33,14 +33,14 @@ const (
 // DefaultSchemes are the default schemes found in Meta (info) section of spec file
 var DefaultSchemes = []string{"http", "https"}
 
-// NewHTTPClient creates a new ory hydra HTTP client.
-func NewHTTPClient(formats strfmt.Registry) *OryHydra {
+// NewHTTPClient creates a new ory kratos HTTP client.
+func NewHTTPClient(formats strfmt.Registry) *OryKratos {
 	return NewHTTPClientWithConfig(formats, nil)
 }
 
-// NewHTTPClientWithConfig creates a new ory hydra HTTP client,
+// NewHTTPClientWithConfig creates a new ory kratos HTTP client,
 // using a customizable transport config.
-func NewHTTPClientWithConfig(formats strfmt.Registry, cfg *TransportConfig) *OryHydra {
+func NewHTTPClientWithConfig(formats strfmt.Registry, cfg *TransportConfig) *OryKratos {
 	// ensure nullable parameters have default
 	if cfg == nil {
 		cfg = DefaultTransportConfig()
@@ -51,14 +51,14 @@ func NewHTTPClientWithConfig(formats strfmt.Registry, cfg *TransportConfig) *Ory
 	return New(transport, formats)
 }
 
-// New creates a new ory hydra client
-func New(transport runtime.ClientTransport, formats strfmt.Registry) *OryHydra {
+// New creates a new ory kratos client
+func New(transport runtime.ClientTransport, formats strfmt.Registry) *OryKratos {
 	// ensure nullable parameters have default
 	if formats == nil {
 		formats = strfmt.Default
 	}
 
-	cli := new(OryHydra)
+	cli := new(OryKratos)
 	cli.Transport = transport
 	cli.Admin = admin.New(transport, formats)
 	cli.Common = common.New(transport, formats)
@@ -107,8 +107,8 @@ func (cfg *TransportConfig) WithSchemes(schemes []string) *TransportConfig {
 	return cfg
 }
 
-// OryHydra is a client for ory hydra
-type OryHydra struct {
+// OryKratos is a client for ory kratos
+type OryKratos struct {
 	Admin admin.ClientService
 
 	Common common.ClientService
@@ -123,7 +123,7 @@ type OryHydra struct {
 }
 
 // SetTransport changes the transport on the client and all its subresources
-func (c *OryHydra) SetTransport(transport runtime.ClientTransport) {
+func (c *OryKratos) SetTransport(transport runtime.ClientTransport) {
 	c.Transport = transport
 	c.Admin.SetTransport(transport)
 	c.Common.SetTransport(transport)

@@ -73,7 +73,7 @@ sdk:
 		$$(go env GOPATH)/bin/swagger validate ./docs/api.swagger.json
 		rm -rf internal/httpclient
 		mkdir -p internal/httpclient
-		$$(go env GOPATH)/bin/swagger generate client -f ./docs/api.swagger.json -t internal/httpclient -A Ory_Hydra
+		$$(go env GOPATH)/bin/swagger generate client -f ./docs/api.swagger.json -t internal/httpclient -A Ory_Kratos
 		make format
 
 quickstart:
