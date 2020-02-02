@@ -613,6 +613,58 @@
         }
       }
     },
+    "/self-service/errors": {
+      "get": {
+        "description": "This endpoint returns the error associated with a user-facing self service errors.\n\nWhen accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent\ntoken scanning attacks, the public endpoint does not return 404 status codes to prevent scanning attacks.\n\nMore information can be found at [ORY Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "common",
+          "public",
+          "admin"
+        ],
+        "summary": "Get user-facing self-service errors",
+        "operationId": "getSelfServiceError",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User-facing error response",
+            "schema": {
+              "$ref": "#/definitions/errorContainer"
+            }
+          },
+          "403": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "404": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
     "/sessions/whoami": {
       "get": {
         "description": "Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.\nReturns a session object or 401 if the credentials are invalid or no credentials were sent.\n\nThis endpoint is useful for reverse proxies and API Gateways.",
@@ -726,6 +778,17 @@
         "traits": {
           "description": "Traits contains all of the identity's traits.\n\ntype: string\nformat: binary",
           "type": "object"
+        }
+      }
+    },
+    "errorContainer": {
+      "type": "object",
+      "properties": {
+        "errors": {
+          "type": "object"
+        },
+        "id": {
+          "$ref": "#/definitions/UUID"
         }
       }
     },
