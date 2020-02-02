@@ -809,6 +809,8 @@ github.com/ory/sdk/swagutil v0.0.0-20200131083057-53fe3c2ddf8a h1:bXsrzEDh1BACRH
 github.com/ory/sdk/swagutil v0.0.0-20200131083057-53fe3c2ddf8a/go.mod h1:Ufg1eAyz+Zt3+oweSZVThG13ewewWCKwBmoNmK8Z0co=
 github.com/ory/sdk/swagutil v0.0.0-20200131170418-ead0c2285f93 h1:+QLNv/tFJbwIpJ7fYGx07G0+IxO8FhhyaVGVkX6RAFM=
 github.com/ory/sdk/swagutil v0.0.0-20200131170418-ead0c2285f93/go.mod h1:Ufg1eAyz+Zt3+oweSZVThG13ewewWCKwBmoNmK8Z0co=
+github.com/ory/sdk/swagutil v0.0.0-20200202121523-307941feee4b h1:xn3WcZ8Oy285KYiCnoscQxkyRfJZT+KhIbU9LEhPLyw=
+github.com/ory/sdk/swagutil v0.0.0-20200202121523-307941feee4b/go.mod h1:Ufg1eAyz+Zt3+oweSZVThG13ewewWCKwBmoNmK8Z0co=
 github.com/ory/viper v1.5.6 h1:w4ceGgWwWLzAFYQ7bHaDZmwNsAto2JPVdyQjQnn7VWI=
 github.com/ory/viper v1.5.6/go.mod h1:TYmpFpKLxjQwvT4f0QPpkOn4sDXU1kDgAwJpgLYiQ28=
 github.com/ory/x v0.0.84 h1:foL2GSeL9yXBsEU14WcdX95H4Z0TmyodAJwdWkzvtHI=
@@ -1207,6 +1209,7 @@ golang.org/x/tools v0.0.0-20200124220429-8fe064f891f2 h1:ZNYGPNJ+tKwnFHzxlFH8bZS
 golang.org/x/tools v0.0.0-20200124220429-8fe064f891f2/go.mod h1:TB2adYChydJhpapKDTa4BR/hXlZSLoq2Wpct/0txZ28=
 golang.org/x/tools v0.0.0-20200125223703-d33eef8e6825 h1:aNQeSIHKi0RWpKA5NO0CqyLjx6Beh5l0LLUEnndEjz0=
 golang.org/x/tools v0.0.0-20200125223703-d33eef8e6825/go.mod h1:TB2adYChydJhpapKDTa4BR/hXlZSLoq2Wpct/0txZ28=
+golang.org/x/tools v0.0.0-20200131211209-ecb101ed6550 h1:3Kc3/T5DQ/majKzDmb+0NzmbXFhKLaeDTp3KqVPV5Eo=
 golang.org/x/tools v0.0.0-20200131211209-ecb101ed6550/go.mod h1:TB2adYChydJhpapKDTa4BR/hXlZSLoq2Wpct/0txZ28=
 golang.org/x/xerrors v0.0.0-20190410155217-1f06c39b4373/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20190513163551-3ee3066db522/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
