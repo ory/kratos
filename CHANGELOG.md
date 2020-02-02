@@ -39,13 +39,23 @@
 
 [Full Changelog](https://github.com/ory/kratos/compare/v0.1.0-alpha.1...HEAD)
 
+**Implemented enhancements:**
+
+- Rework errors API [\#204](https://github.com/ory/kratos/issues/204)
+
+**Fixed bugs:**
+
+- refactor!: Improve user-facing error APIs [\#219](https://github.com/ory/kratos/pull/219) ([aeneasr](https://github.com/aeneasr))
+
 **Closed issues:**
 
+- Discrepancy in documentation [\#218](https://github.com/ory/kratos/issues/218)
 - Support identity impersonation [\#201](https://github.com/ory/kratos/issues/201)
 - Implement `--dev` flag [\#36](https://github.com/ory/kratos/issues/36)
 
 **Merged pull requests:**
 
+- feat: Override semantic config [\#220](https://github.com/ory/kratos/pull/220) ([aeneasr](https://github.com/aeneasr))
 - Add paths to sqa middleware [\#216](https://github.com/ory/kratos/pull/216) ([aeneasr](https://github.com/aeneasr))
 
 ## [v0.1.0-alpha.1](https://github.com/ory/kratos/tree/v0.1.0-alpha.1) (2020-01-31)
