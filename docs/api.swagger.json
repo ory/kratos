@@ -89,13 +89,7 @@
         "operationId": "listIdentities",
         "responses": {
           "200": {
-            "description": "A list of identities.\n\nnolint:deadcode,unused",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/Identity"
-              }
-            }
+            "$ref": "#/responses/identityList"
           },
           "500": {
             "description": "genericError",
@@ -134,10 +128,7 @@
         ],
         "responses": {
           "201": {
-            "description": "A single identity.\n\nnolint:deadcode,unused",
-            "schema": {
-              "$ref": "#/definitions/Identity"
-            }
+            "$ref": "#/responses/identityResponse"
           },
           "400": {
             "description": "genericError",
@@ -175,6 +166,7 @@
         "parameters": [
           {
             "type": "string",
+            "x-go-name": "ID",
             "description": "ID must be set to the ID of identity you want to get",
             "name": "id",
             "in": "path",
@@ -183,10 +175,7 @@
         ],
         "responses": {
           "200": {
-            "description": "A single identity.\n\nnolint:deadcode,unused",
-            "schema": {
-              "$ref": "#/definitions/Identity"
-            }
+            "$ref": "#/responses/identityResponse"
           },
           "400": {
             "description": "genericError",
@@ -222,6 +211,7 @@
         "parameters": [
           {
             "type": "string",
+            "x-go-name": "ID",
             "description": "ID must be set to the ID of identity you want to update",
             "name": "id",
             "in": "path",
@@ -238,10 +228,7 @@
         ],
         "responses": {
           "200": {
-            "description": "A single identity.\n\nnolint:deadcode,unused",
-            "schema": {
-              "$ref": "#/definitions/Identity"
-            }
+            "$ref": "#/responses/identityResponse"
           },
           "400": {
             "description": "genericError",
@@ -280,6 +267,7 @@
         "parameters": [
           {
             "type": "string",
+            "x-go-name": "ID",
             "description": "ID is the identity's ID.",
             "name": "id",
             "in": "path",
@@ -288,7 +276,7 @@
         ],
         "responses": {
           "204": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "$ref": "#/responses/emptyResponse"
           },
           "404": {
             "description": "genericError",
@@ -319,7 +307,7 @@
         "operationId": "initializeSelfServiceBrowserLoginFlow",
         "responses": {
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "$ref": "#/responses/emptyResponse"
           },
           "500": {
             "description": "genericError",
@@ -344,7 +332,7 @@
         "operationId": "initializeSelfServiceBrowserLogoutFlow",
         "responses": {
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "$ref": "#/responses/emptyResponse"
           },
           "500": {
             "description": "genericError",
@@ -369,7 +357,7 @@
         "operationId": "initializeSelfServiceProfileManagementFlow",
         "responses": {
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "$ref": "#/responses/emptyResponse"
           },
           "500": {
             "description": "genericError",
@@ -399,10 +387,11 @@
         "parameters": [
           {
             "type": "string",
-            "format": "uuid4",
-            "description": "Request is the request ID.\n\ntype: string",
+            "x-go-name": "Request",
+            "description": "Request is the request ID.",
             "name": "request",
-            "in": "query"
+            "in": "query",
+            "required": true
           },
           {
             "name": "Body",
@@ -415,7 +404,7 @@
         ],
         "responses": {
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "$ref": "#/responses/emptyResponse"
           },
           "500": {
             "description": "genericError",
@@ -440,7 +429,7 @@
         "operationId": "initializeSelfServiceBrowserRegistrationFlow",
         "responses": {
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "$ref": "#/responses/emptyResponse"
           },
           "500": {
             "description": "genericError",
@@ -471,6 +460,7 @@
         "parameters": [
           {
             "type": "string",
+            "x-go-name": "Request",
             "description": "Request is the Login Request ID\n\nThe value for this parameter comes from `request` URL Query parameter sent to your\napplication (e.g. `/login?request=abcde`).",
             "name": "request",
             "in": "query",
@@ -525,6 +515,7 @@
         "parameters": [
           {
             "type": "string",
+            "x-go-name": "Request",
             "description": "Request is the Login Request ID\n\nThe value for this parameter comes from `request` URL Query parameter sent to your\napplication (e.g. `/login?request=abcde`).",
             "name": "request",
             "in": "query",
@@ -579,6 +570,7 @@
         "parameters": [
           {
             "type": "string",
+            "x-go-name": "Request",
             "description": "Request is the Registration Request ID\n\nThe value for this parameter comes from `request` URL Query parameter sent to your\napplication (e.g. `/registration?request=abcde`).",
             "name": "request",
             "in": "query",
@@ -633,16 +625,14 @@
         "parameters": [
           {
             "type": "string",
+            "x-go-name": "ID",
             "name": "id",
             "in": "query"
           }
         ],
         "responses": {
           "200": {
-            "description": "User-facing error response",
-            "schema": {
-              "$ref": "#/definitions/errorContainer"
-            }
+            "$ref": "#/responses/errorContainer"
           },
           "403": {
             "description": "genericError",
@@ -728,16 +718,19 @@
     "CredentialsType": {
       "description": "and so on.",
       "type": "string",
-      "title": "CredentialsType  represents several different credential types, like password credentials, passwordless credentials,"
+      "title": "CredentialsType  represents several different credential types, like password credentials, passwordless credentials,",
+      "x-go-package": "github.com/ory/kratos/identity"
     },
     "Error": {
       "type": "object",
       "properties": {
         "message": {
           "description": "Code    FormErrorCode `json:\"id,omitempty\"`",
-          "type": "string"
+          "type": "string",
+          "x-go-name": "Message"
         }
-      }
+      },
+      "x-go-package": "github.com/ory/kratos/selfservice/form"
     },
     "Identity": {
       "type": "object",
@@ -754,20 +747,36 @@
         },
         "traits_schema_id": {
           "description": "TraitsSchemaID is the ID of the JSON Schema to be used for validating the identity's traits.",
-          "type": "string"
+          "type": "string",
+          "x-go-name": "TraitsSchemaID"
         },
         "traits_schema_url": {
           "description": "TraitsSchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.\n\nformat: url",
-          "type": "string"
+          "type": "string",
+          "x-go-name": "TraitsSchemaURL"
         }
-      }
+      },
+      "x-go-package": "github.com/ory/kratos/identity"
+    },
+    "RWMutex": {
+      "description": "A RWMutex must not be copied after first use.\n\nIf a goroutine holds a RWMutex for reading and another goroutine might\ncall Lock, no goroutine should expect to be able to acquire a read lock\nuntil the initial read lock is released. In particular, this prohibits\nrecursive read locking. This is to ensure that the lock eventually becomes\navailable; a blocked Lock call excludes new readers from acquiring the\nlock.",
+      "type": "object",
+      "title": "A RWMutex is a reader/writer mutual exclusion lock.\nThe lock can be held by an arbitrary number of readers or a single writer.\nThe zero value for a RWMutex is an unlocked mutex.",
+      "x-go-package": "sync"
     },
     "Traits": {
-      "type": "object"
+      "type": "object",
+      "x-go-package": "github.com/ory/kratos/identity"
     },
     "UUID": {
       "type": "string",
-      "format": "uuid4"
+      "format": "uuid4",
+      "items": {
+        "type": "integer",
+        "format": "uint8"
+      },
+      "x-go-name": "uuid",
+      "x-go-package": "github.com/ory/kratos"
     },
     "completeSelfServiceBrowserProfileManagementFlowPayload": {
       "type": "object",
@@ -777,20 +786,25 @@
       "properties": {
         "traits": {
           "description": "Traits contains all of the identity's traits.\n\ntype: string\nformat: binary",
-          "type": "object"
+          "type": "object",
+          "x-go-name": "Traits"
         }
-      }
+      },
+      "x-go-package": "github.com/ory/kratos/selfservice/flow/profile"
     },
     "errorContainer": {
       "type": "object",
       "properties": {
         "errors": {
-          "type": "object"
+          "type": "object",
+          "x-go-name": "Errors"
         },
         "id": {
           "$ref": "#/definitions/UUID"
         }
-      }
+      },
+      "x-go-name": "ErrorContainer",
+      "x-go-package": "github.com/ory/kratos/selfservice/errorx"
     },
     "form": {
       "description": "HTMLForm represents a HTML Form. The container can work with both HTTP Form and JSON requests",
@@ -798,23 +812,28 @@
       "properties": {
         "action": {
           "description": "Action should be used as the form action URL (\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e).",
-          "type": "string"
+          "type": "string",
+          "x-go-name": "Action"
         },
         "errors": {
           "description": "Errors contains all form errors. These will be duplicates of the individual field errors.",
           "type": "array",
           "items": {
             "$ref": "#/definitions/Error"
-          }
+          },
+          "x-go-name": "Errors"
         },
         "fields": {
           "$ref": "#/definitions/formFields"
         },
         "method": {
           "description": "Method is the form method (e.g. POST)",
-          "type": "string"
+          "type": "string",
+          "x-go-name": "Method"
         }
-      }
+      },
+      "x-go-name": "HTMLForm",
+      "x-go-package": "github.com/ory/kratos/selfservice/form"
     },
     "formField": {
       "description": "Field represents a HTML Form Field",
@@ -822,43 +841,54 @@
       "properties": {
         "disabled": {
           "description": "Disabled is the equivalent of \u003cinput disabled=\"{{.Disabled}}\"\u003e",
-          "type": "string"
+          "type": "string",
+          "x-go-name": "Disabled"
         },
         "errors": {
           "description": "Errors contains all validation errors this particular field has caused.",
           "type": "array",
           "items": {
             "$ref": "#/definitions/Error"
-          }
+          },
+          "x-go-name": "Errors"
         },
         "name": {
           "description": "Name is the equivalent of \u003cinput name=\"{{.Name}}\"\u003e",
-          "type": "string"
+          "type": "string",
+          "x-go-name": "Name"
         },
         "pattern": {
           "description": "Pattern is the equivalent of \u003cinput pattern=\"{{.Pattern}}\"\u003e",
-          "type": "string"
+          "type": "string",
+          "x-go-name": "Pattern"
         },
         "required": {
           "description": "Required is the equivalent of \u003cinput required=\"{{.Required}}\"\u003e",
-          "type": "boolean"
+          "type": "boolean",
+          "x-go-name": "Required"
         },
         "type": {
           "description": "Type is the equivalent of \u003cinput type=\"{{.Type}}\"\u003e",
-          "type": "string"
+          "type": "string",
+          "x-go-name": "Type"
         },
         "value": {
           "description": "Value is the equivalent of \u003cinput value=\"{{.Value}}\"\u003e",
-          "type": "object"
+          "type": "object",
+          "x-go-name": "Value"
         }
-      }
+      },
+      "x-go-name": "Field",
+      "x-go-package": "github.com/ory/kratos/selfservice/form"
     },
     "formFields": {
       "description": "Fields contains multiple fields",
       "type": "array",
       "items": {
         "$ref": "#/definitions/formField"
-      }
+      },
+      "x-go-name": "Fields",
+      "x-go-package": "github.com/ory/kratos/selfservice/form"
     },
     "genericError": {
       "description": "Error responses are sent when an error (e.g. unauthorized, bad request, ...) occurred.",
@@ -868,7 +898,8 @@
         "error": {
           "$ref": "#/definitions/genericErrorPayload"
         }
-      }
+      },
+      "x-go-package": "github.com/ory/kratos"
     },
     "genericErrorPayload": {
       "description": "nolint:deadcode,unused",
@@ -878,11 +909,13 @@
           "description": "Code represents the error status code (404, 403, 401, ...).",
           "type": "integer",
           "format": "int64",
+          "x-go-name": "Code",
           "example": 404
         },
         "debug": {
           "description": "Debug contains debug information. This is usually not available and has to be enabled.",
           "type": "string",
+          "x-go-name": "Debug",
           "example": "The database adapter was unable to find the element"
         },
         "details": {
@@ -892,21 +925,27 @@
             "additionalProperties": {
               "type": "object"
             }
-          }
+          },
+          "x-go-name": "Details"
         },
         "message": {
-          "type": "string"
+          "type": "string",
+          "x-go-name": "Message"
         },
         "reason": {
-          "type": "string"
+          "type": "string",
+          "x-go-name": "Reason"
         },
         "request": {
-          "type": "string"
+          "type": "string",
+          "x-go-name": "Request"
         },
         "status": {
-          "type": "string"
+          "type": "string",
+          "x-go-name": "Status"
         }
-      }
+      },
+      "x-go-package": "github.com/ory/kratos"
     },
     "healthNotReadyStatus": {
       "type": "object",
@@ -916,18 +955,24 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "x-go-name": "Errors"
         }
-      }
+      },
+      "x-go-name": "swaggerNotReadyStatus",
+      "x-go-package": "github.com/ory/x/healthx"
     },
     "healthStatus": {
       "type": "object",
       "properties": {
         "status": {
           "description": "Status always contains \"ok\".",
-          "type": "string"
+          "type": "string",
+          "x-go-name": "Status"
         }
-      }
+      },
+      "x-go-name": "swaggerHealthStatus",
+      "x-go-package": "github.com/ory/x/healthx"
     },
     "loginRequest": {
       "type": "object",
@@ -938,7 +983,8 @@
         "expires_at": {
           "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,\na new request has to be initiated.",
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "x-go-name": "ExpiresAt"
         },
         "id": {
           "$ref": "#/definitions/UUID"
@@ -946,20 +992,25 @@
         "issued_at": {
           "description": "IssuedAt is the time (UTC) when the request occurred.",
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "x-go-name": "IssuedAt"
         },
         "methods": {
           "description": "Methods contains context for all enabled login methods. If a login request has been\nprocessed, but for example the password is incorrect, this will contain error messages.",
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/loginRequestMethod"
-          }
+          },
+          "x-go-name": "Methods"
         },
         "request_url": {
           "description": "RequestURL is the initial URL that was requested from ORY Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
-          "type": "string"
+          "type": "string",
+          "x-go-name": "RequestURL"
         }
-      }
+      },
+      "x-go-name": "Request",
+      "x-go-package": "github.com/ory/kratos/selfservice/flow/login"
     },
     "loginRequestMethod": {
       "type": "object",
@@ -970,7 +1021,9 @@
         "method": {
           "$ref": "#/definitions/CredentialsType"
         }
-      }
+      },
+      "x-go-name": "RequestMethod",
+      "x-go-package": "github.com/ory/kratos/selfservice/flow/login"
     },
     "loginRequestMethodConfig": {
       "type": "object",
@@ -987,7 +1040,59 @@
         {
           "type": "object"
         }
-      ]
+      ],
+      "x-go-name": "RequestMethodConfig",
+      "x-go-package": "github.com/ory/kratos/selfservice/flow/login"
+    },
+    "oidcStrategyCredentialsConfig": {
+      "type": "object",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "x-go-name": "Provider"
+        },
+        "subject": {
+          "type": "string",
+          "x-go-name": "Subject"
+        }
+      },
+      "x-go-name": "CredentialsConfig",
+      "x-go-package": "github.com/ory/kratos/selfservice/strategy/oidc"
+    },
+    "oidcStrategyRequestMethod": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "description": "Action should be used as the form action URL (\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e).",
+          "type": "string",
+          "x-go-name": "Action"
+        },
+        "errors": {
+          "description": "Errors contains all form errors. These will be duplicates of the individual field errors.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Error"
+          },
+          "x-go-name": "Errors"
+        },
+        "fields": {
+          "$ref": "#/definitions/formFields"
+        },
+        "method": {
+          "description": "Method is the form method (e.g. POST)",
+          "type": "string",
+          "x-go-name": "Method"
+        },
+        "providers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/formField"
+          },
+          "x-go-name": "Providers"
+        }
+      },
+      "x-go-name": "RequestMethod",
+      "x-go-package": "github.com/ory/kratos/selfservice/strategy/oidc"
     },
     "profileManagementRequest": {
       "description": "This request is used when an identity wants to update profile information\n(especially traits) in a selfservice manner.\n\nFor more information head over to: https://www.ory.sh/docs/kratos/selfservice/profile",
@@ -997,7 +1102,8 @@
         "expires_at": {
           "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile,\na new request has to be initiated.",
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "x-go-name": "ExpiresAt"
         },
         "form": {
           "$ref": "#/definitions/form"
@@ -1011,17 +1117,22 @@
         "issued_at": {
           "description": "IssuedAt is the time (UTC) when the request occurred.",
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "x-go-name": "IssuedAt"
         },
         "request_url": {
           "description": "RequestURL is the initial URL that was requested from ORY Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
-          "type": "string"
+          "type": "string",
+          "x-go-name": "RequestURL"
         },
         "update_successful": {
           "description": "UpdateSuccessful, if true, indicates that the profile has been updated successfully with the provided data.\nDone will stay true when repeatedly checking. If set to true, done will revert back to false only\nwhen a request with invalid (e.g. \"please use a valid phone number\") data was sent.",
-          "type": "boolean"
+          "type": "boolean",
+          "x-go-name": "UpdateSuccessful"
         }
-      }
+      },
+      "x-go-name": "Request",
+      "x-go-package": "github.com/ory/kratos/selfservice/flow/profile"
     },
     "registrationRequest": {
       "type": "object",
@@ -1032,7 +1143,8 @@
         "expires_at": {
           "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,\na new request has to be initiated.",
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "x-go-name": "ExpiresAt"
         },
         "id": {
           "$ref": "#/definitions/UUID"
@@ -1040,20 +1152,25 @@
         "issued_at": {
           "description": "IssuedAt is the time (UTC) when the request occurred.",
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "x-go-name": "IssuedAt"
         },
         "methods": {
           "description": "Methods contains context for all enabled registration methods. If a registration request has been\nprocessed, but for example the password is incorrect, this will contain error messages.",
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/registrationRequestMethod"
-          }
+          },
+          "x-go-name": "Methods"
         },
         "request_url": {
           "description": "RequestURL is the initial URL that was requested from ORY Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
-          "type": "string"
+          "type": "string",
+          "x-go-name": "RequestURL"
         }
-      }
+      },
+      "x-go-name": "Request",
+      "x-go-package": "github.com/ory/kratos/selfservice/flow/registration"
     },
     "registrationRequestMethod": {
       "type": "object",
@@ -1064,7 +1181,9 @@
         "method": {
           "$ref": "#/definitions/CredentialsType"
         }
-      }
+      },
+      "x-go-name": "RequestMethod",
+      "x-go-package": "github.com/ory/kratos/selfservice/flow/registration"
     },
     "registrationRequestMethodConfig": {
       "type": "object",
@@ -1087,38 +1206,74 @@
         {
           "type": "object"
         }
-      ]
+      ],
+      "x-go-name": "RequestMethodConfig",
+      "x-go-package": "github.com/ory/kratos/selfservice/flow/registration"
     },
     "session": {
       "type": "object",
       "properties": {
         "authenticated_at": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "x-go-name": "AuthenticatedAt"
         },
         "expires_at": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "x-go-name": "ExpiresAt"
         },
         "identity": {
           "$ref": "#/definitions/Identity"
         },
         "issued_at": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "x-go-name": "IssuedAt"
         },
         "sid": {
           "$ref": "#/definitions/UUID"
         }
-      }
+      },
+      "x-go-name": "Session",
+      "x-go-package": "github.com/ory/kratos/session"
     },
     "version": {
       "type": "object",
       "properties": {
         "version": {
           "description": "Version is the service's version.",
-          "type": "string"
+          "type": "string",
+          "x-go-name": "Version"
         }
+      },
+      "x-go-name": "swaggerVersion",
+      "x-go-package": "github.com/ory/x/healthx"
+    }
+  },
+  "responses": {
+    "emptyResponse": {
+      "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+    },
+    "errorContainer": {
+      "description": "User-facing error response",
+      "schema": {
+        "$ref": "#/definitions/errorContainer"
+      }
+    },
+    "identityList": {
+      "description": "A list of identities.\n\nnolint:deadcode,unused",
+      "schema": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Identity"
+        }
+      }
+    },
+    "identityResponse": {
+      "description": "A single identity.\n\nnolint:deadcode,unused",
+      "schema": {
+        "$ref": "#/definitions/Identity"
       }
     }
   },

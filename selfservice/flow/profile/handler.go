@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/gofrs/uuid"
-
 	"github.com/ory/kratos/schema"
 
 	"github.com/julienschmidt/httprouter"
@@ -210,15 +208,17 @@ func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Reque
 	return nil
 }
 
+// Complete profile update payload
+//
 // swagger:parameters completeSelfServiceBrowserProfileManagementFlow
 // nolint:deadcode,unused
 type completeProfileManagementParameters struct {
 	// Request is the request ID.
 	//
-	// type: string
 	// required: true
 	// in: query
-	Request uuid.UUID `json:"request"`
+	// format: uuid
+	Request string `json:"request"`
 
 	// in: body
 	// required: true
