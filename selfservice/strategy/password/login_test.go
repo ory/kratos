@@ -343,6 +343,7 @@ func TestLogin(t *testing.T) {
 			s.WithTokenGenerator(func(r *http.Request) string {
 				return "anti-rf-token"
 			})
+			reg.SelfServiceErrorManager().WithTokenGenerator(x.FakeCSRFTokenGenerator)
 
 			router := x.NewRouterPublic()
 			admin := x.NewRouterAdmin()

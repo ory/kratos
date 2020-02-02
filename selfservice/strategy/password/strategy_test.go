@@ -22,7 +22,7 @@ func newErrTs(t *testing.T, reg interface {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		e, err := reg.SelfServiceErrorPersister().Read(r.Context(), x.ParseUUID(r.URL.Query().Get("error")))
 		require.NoError(t, err)
-		reg.Writer().Write(w, r, e)
+		reg.Writer().Write(w, r, e.Errors)
 	}))
 }
 

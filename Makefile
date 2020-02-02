@@ -61,7 +61,7 @@ test-resetdb:
 		docker run --rm --name kratos_test_database_cockroach -p 3446:26257 -d cockroachdb/cockroach:v2.1.6 start --insecure
 
 .PHONY: test
-test:
+test: test-resetdb
 		go test -tags sqlite ./...
 
 # Generates the SDKs

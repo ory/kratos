@@ -150,6 +150,47 @@ func (a *Client) GetSelfServiceBrowserRegistrationRequest(params *GetSelfService
 	panic(msg)
 }
 
+/*
+GetSelfServiceError gets user facing self service errors
+
+This endpoint returns the error associated with a user-facing self service errors.
+
+When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent
+token scanning attacks, the public endpoint does not return 404 status codes to prevent scanning attacks.
+
+More information can be found at [ORY Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).
+*/
+func (a *Client) GetSelfServiceError(params *GetSelfServiceErrorParams) (*GetSelfServiceErrorOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetSelfServiceErrorParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "getSelfServiceError",
+		Method:             "GET",
+		PathPattern:        "/self-service/errors",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &GetSelfServiceErrorReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetSelfServiceErrorOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getSelfServiceError: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
 // SetTransport changes the transport on the client
 func (a *Client) SetTransport(transport runtime.ClientTransport) {
 	a.transport = transport

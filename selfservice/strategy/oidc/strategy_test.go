@@ -134,9 +134,8 @@ func TestStrategy(t *testing.T) {
 	reg.RegistrationStrategies().RegisterPublicRoutes(public)
 	reg.RegistrationHandler().RegisterPublicRoutes(public)
 	reg.RegistrationHandler().RegisterAdminRoutes(admin)
-	reg.RegistrationHandler().WithTokenGenerator(func(r *http.Request) string {
-		return "nosurf"
-	})
+	reg.RegistrationHandler().WithTokenGenerator(x.FakeCSRFTokenGenerator)
+	reg.SelfServiceErrorManager().WithTokenGenerator(x.FakeCSRFTokenGenerator)
 	ts := httptest.NewServer(public)
 	defer ts.Close()
 

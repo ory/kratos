@@ -18,11 +18,11 @@ import (
 type (
 	Persister interface {
 		// Add adds an error to the manager and returns a unique identifier or an error if insertion fails.
-		Add(ctx context.Context, errs ...error) (uuid.UUID, error)
+		Add(ctx context.Context, csrfToken string, errs ...error) (uuid.UUID, error)
 
 		// Read returns an error by its unique identifier and marks the error as read. If an error occurs during retrieval
 		// the second return parameter is an error.
-		Read(ctx context.Context, id uuid.UUID) ([]json.RawMessage, error)
+		Read(ctx context.Context, id uuid.UUID) (*ErrorContainer, error)
 
 		// Clear clears read containers that are older than a certain amount of time. If force is set to true, unread
 		// errors will be cleared as well.
@@ -48,19 +48,17 @@ func TestPersister(p Persister) func(t *testing.T) {
 		})
 
 		t.Run("case=en- and decode properly", func(t *testing.T) {
-			expected := herodot.ErrNotFound.WithReason("foobar")
-			actualID, err := p.Add(context.Background(), expected)
+			actualID, err := p.Add(context.Background(), "nosurf", herodot.ErrNotFound.WithReason("foobar"))
 			require.NoError(t, err)
 
 			actual, err := p.Read(context.Background(), actualID)
 			require.NoError(t, err)
 
-			assert.JSONEq(t, toJSON(t, []error{expected}), toJSON(t, actual))
+			assert.JSONEq(t, toJSON(t, "fdsasfdafa"), toJSON(t, actual))
 		})
 
 		t.Run("case=clear", func(t *testing.T) {
-			expected := herodot.ErrNotFound.WithReason("foobar")
-			actualID, err := p.Add(context.Background(), expected)
+			actualID, err := p.Add(context.Background(), "nosurf", herodot.ErrNotFound.WithReason("foobar"))
 			require.NoError(t, err)
 
 			_, err = p.Read(context.Background(), actualID)

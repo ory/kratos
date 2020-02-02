@@ -20,6 +20,10 @@ func DefaultCSRFToken(r *http.Request) string {
 	return nosurf.Token(r)
 }
 
+func FakeCSRFTokenGenerator(r *http.Request) string {
+	return "nosurf"
+}
+
 type CSRFProvider interface {
 	CSRFHandler() *nosurf.CSRFHandler
 }

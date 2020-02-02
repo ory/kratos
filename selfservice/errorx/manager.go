@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/justinas/nosurf"
+
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
 
@@ -19,8 +21,9 @@ type (
 	}
 
 	Manager struct {
-		d managerDependencies
-		c baseManagerConfiguration
+		d    managerDependencies
+		c    baseManagerConfiguration
+		csrf x.CSRFToken
 	}
 
 	ManagementProvider interface {
@@ -34,7 +37,11 @@ type (
 )
 
 func NewManager(d managerDependencies, c baseManagerConfiguration) *Manager {
-	return &Manager{d: d, c: c}
+	return &Manager{d: d, c: c, csrf: nosurf.Token}
+}
+
+func (m *Manager) WithTokenGenerator(f func(r *http.Request) string) {
+	m.csrf = f
 }
 
 // ForwardError is a simple helper that saves all errors in the store and forwards the HTTP Request
@@ -44,7 +51,7 @@ func (m *Manager) ForwardError(ctx context.Context, w http.ResponseWriter, r *ht
 		herodot.DefaultErrorLogger(m.d.Logger(), err).Errorf("An error occurred and is being forwarded to the error user interface.")
 	}
 
-	id, emerr := m.d.SelfServiceErrorPersister().Add(ctx, errs...)
+	id, emerr := m.d.SelfServiceErrorPersister().Add(ctx, m.csrf(r), errs...)
 	if emerr != nil {
 		m.d.Writer().WriteError(w, r, emerr)
 		return

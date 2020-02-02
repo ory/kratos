@@ -20,32 +20,16 @@ import (
 
 var _ errorx.Persister = new(Persister)
 
-type errorxContainer struct {
-	ID     uuid.UUID       `json:"-" db:"id"`
-	Errors json.RawMessage `json:"-" db:"errors"`
-
-	SeenAt  time.Time `json:"-" db:"seen_at"`
-	WasSeen bool      `json:"-" db:"was_seen"`
-
-	// CreatedAt is a helper struct field for gobuffalo.pop.
-	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
-	// UpdatedAt is a helper struct field for gobuffalo.pop.
-	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
-}
-
-func (e errorxContainer) TableName() string {
-	return "selfservice_errors"
-}
-
-func (p *Persister) Add(ctx context.Context, errs ...error) (uuid.UUID, error) {
+func (p *Persister) Add(ctx context.Context, csrfToken string, errs ...error) (uuid.UUID, error) {
 	buf, err := p.encodeSelfServiceErrors(errs)
 	if err != nil {
 		return uuid.Nil, err
 	}
 
-	c := &errorxContainer{
-		Errors:  buf.Bytes(),
-		WasSeen: false,
+	c := &errorx.ErrorContainer{
+		CSRFToken: csrfToken,
+		Errors:    buf.Bytes(),
+		WasSeen:   false,
 	}
 
 	if err := p.c.Create(c); err != nil {
@@ -55,23 +39,17 @@ func (p *Persister) Add(ctx context.Context, errs ...error) (uuid.UUID, error) {
 	return c.ID, nil
 }
 
-func (p *Persister) Read(ctx context.Context, id uuid.UUID) ([]json.RawMessage, error) {
-	var errs []json.RawMessage
-
-	var c errorxContainer
-	if err := p.c.Find(&c, id); err != nil {
+func (p *Persister) Read(ctx context.Context, id uuid.UUID) (*errorx.ErrorContainer, error) {
+	var ec errorx.ErrorContainer
+	if err := p.c.Find(&ec, id); err != nil {
 		return nil, sqlcon.HandleError(err)
-	}
-
-	if err := json.NewDecoder(bytes.NewBuffer(c.Errors)).Decode(&errs); err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to decode stored error messages from SQL datastore.").WithDebug(err.Error()))
 	}
 
 	if err := p.c.RawQuery("UPDATE selfservice_errors SET was_seen = true, seen_at = ? WHERE id = ?", time.Now().UTC(), id).Exec(); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
-	return errs, nil
+	return &ec, nil
 }
 
 func (p *Persister) Clear(ctx context.Context, olderThan time.Duration, force bool) (err error) {
