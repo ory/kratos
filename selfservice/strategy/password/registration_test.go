@@ -58,9 +58,8 @@ func TestRegistration(t *testing.T) {
 	t.Run("case=registration", func(t *testing.T) {
 		_, reg := internal.NewRegistryDefault(t)
 		s := reg.RegistrationStrategies().MustStrategy(identity.CredentialsTypePassword).(*password.Strategy)
-		s.WithTokenGenerator(func(r *http.Request) string {
-			return "nosurf"
-		})
+		s.WithTokenGenerator(x.FakeCSRFTokenGenerator)
+		reg.SelfServiceErrorManager().WithTokenGenerator(x.FakeCSRFTokenGenerator)
 
 		router := x.NewRouterPublic()
 		admin := x.NewRouterAdmin()
