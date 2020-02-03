@@ -91,6 +91,7 @@ func serveAdmin(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []
 	r.IdentityHandler().RegisterAdminRoutes(router)
 	r.SessionHandler().RegisterAdminRoutes(router)
 	r.HealthHandler().SetRoutes(router.Router, true)
+	r.SelfServiceErrorHandler().RegisterAdminRoutes(router)
 
 	n.Use(NewNegroniLoggerMiddleware(l.(*logrus.Logger), "admin#"+c.SelfAdminURL().String()))
 	n.Use(sqa(cmd, d))
