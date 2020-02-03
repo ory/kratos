@@ -55,6 +55,7 @@
 
 **Merged pull requests:**
 
+- Serve: add admin /self-service/errors route [\#226](https://github.com/ory/kratos/pull/226) ([zepatrik](https://github.com/zepatrik))
 - fix: Set csrf token on public endpoints [\#224](https://github.com/ory/kratos/pull/224) ([aeneasr](https://github.com/aeneasr))
 - ci: Switch to golangci orb [\#223](https://github.com/ory/kratos/pull/223) ([aeneasr](https://github.com/aeneasr))
 - docs: Updates issue and pull request templates [\#222](https://github.com/ory/kratos/pull/222) ([aeneasr](https://github.com/aeneasr))
