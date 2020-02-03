@@ -103,8 +103,11 @@ func (h *Handler) initUpdateProfile(w http.ResponseWriter, r *http.Request, ps h
 	a := NewRequest(h.c.SelfServiceProfileRequestLifespan(), r, s)
 	a.Form = form.NewHTMLFormFromJSON(urlx.CopyWithQuery(
 		urlx.AppendPaths(h.c.SelfPublicURL(), PublicProfileManagementUpdatePath),
-		url.Values{"request": {a.ID.String()}},
+		url.Values{
+			"request": {a.ID.String()},
+		},
 	).String(), json.RawMessage(s.Identity.Traits), "traits")
+	a.Form.SetCSRF(h.csrf(r))
 
 	traitsSchema, err := h.c.IdentityTraitsSchemas().FindSchemaByID(s.Identity.TraitsSchemaID)
 	if err != nil {
@@ -190,8 +193,6 @@ func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Reque
 			return errors.WithStack(herodot.ErrForbidden.WithReasonf("The request was made for another identity and has been blocked for security reasons."))
 		}
 	}
-
-	ar.Form.SetCSRF(nosurf.Token(r))
 
 	traitsSchema, err := h.c.IdentityTraitsSchemas().FindSchemaByID(ar.Identity.TraitsSchemaID)
 	if err != nil {
