@@ -5,33 +5,9 @@ orbs:
   changelog: ory/changelog@0.0.6
   goreleaser: ory/goreleaser@0.0.26
   nancy: ory/nancy@0.0.8
+  golangci: ory/golangci@0.0.1
 
 jobs:
-  lint:
-    docker:
-      -
-        image: circleci/golang:1.13
-        environment:
-          - GO111MODULE=on
-    working_directory: /go/src/github.com/ory/kratos
-    steps:
-      - checkout
-      -
-        restore_cache:
-          keys:
-            - go-mod-v1-{{ checksum "go.sum" }}
-      -
-        run: go mod download
-      -
-        save_cache:
-          key: go-mod-v1-{{ checksum "go.sum" }}
-          paths:
-            - "/go/pkg/mod"
-      -
-        run: curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.20.1
-      -
-        run: make lint
-
   test:
     docker:
       -
@@ -99,7 +75,7 @@ workflows:
     jobs:
       - nancy/test
       -
-        lint:
+        golangci/lint:
           filters:
             tags:
               only: /.*/
@@ -112,7 +88,7 @@ workflows:
           appname: Ory_Kratos
           requires:
             - test
-            - lint
+            - golangci/lint
           filters:
             tags:
               only: /.*/
@@ -121,7 +97,7 @@ workflows:
       - sdk/release:
           requires:
             - test
-            - lint
+            - golangci/lint
             - sdk/generate
             - goreleaser/release
           filters:
@@ -132,7 +108,7 @@ workflows:
       - changelog/generate:
           requires:
             - test
-            - lint
+            - golangci/lint
           filters:
             tags:
               only: /.*/
@@ -152,7 +128,7 @@ workflows:
           requires:
             - goreleaser/test
             - test
-            - lint
+            - golangci/lint
           filters:
             tags:
               only: /.*/
