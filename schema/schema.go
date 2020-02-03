@@ -6,8 +6,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/santhosh-tekuri/jsonschema/v2"
 	"github.com/tidwall/gjson"
+
+	"github.com/ory/jsonschema/v3"
 
 	"github.com/ory/kratos/driver/configuration"
 

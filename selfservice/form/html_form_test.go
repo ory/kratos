@@ -10,7 +10,8 @@ import (
 	"testing"
 
 	"github.com/pkg/errors"
-	"github.com/santhosh-tekuri/jsonschema/v2"
+
+	"github.com/ory/jsonschema/v3"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/decoderx"

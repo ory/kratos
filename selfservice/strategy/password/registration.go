@@ -14,9 +14,9 @@ import (
 
 	"github.com/ory/x/errorsx"
 
+	_ "github.com/ory/jsonschema/v3/fileloader"
+	_ "github.com/ory/jsonschema/v3/httploader"
 	"github.com/ory/x/decoderx"
-	_ "github.com/ory/x/jsonschemax/fileloader"
-	_ "github.com/ory/x/jsonschemax/httploader"
 
 	"github.com/ory/gojsonschema"
 	"github.com/ory/herodot"
