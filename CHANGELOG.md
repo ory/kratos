@@ -55,6 +55,7 @@
 
 **Merged pull requests:**
 
+- ci: Switch to golangci orb [\#223](https://github.com/ory/kratos/pull/223) ([aeneasr](https://github.com/aeneasr))
 - docs: Updates issue and pull request templates [\#222](https://github.com/ory/kratos/pull/222) ([aeneasr](https://github.com/aeneasr))
 - ci: Bump sdk and changelog versions [\#221](https://github.com/ory/kratos/pull/221) ([aeneasr](https://github.com/aeneasr))
 - feat: Override semantic config [\#220](https://github.com/ory/kratos/pull/220) ([aeneasr](https://github.com/aeneasr))
@@ -106,7 +107,6 @@
 - CSRF is broken for social sign in [\#68](https://github.com/ory/kratos/issues/68)
 - Reset CSRF Token on Principal Change \(Sign Out\) [\#38](https://github.com/ory/kratos/issues/38)
 - selfservice: Omit request header from login/registration request [\#106](https://github.com/ory/kratos/pull/106) ([aeneasr](https://github.com/aeneasr))
-- selfservice: Explicitly whitelist form parser keys [\#105](https://github.com/ory/kratos/pull/105) ([aeneasr](https://github.com/aeneasr))
 
 **Security fixes:**
 
