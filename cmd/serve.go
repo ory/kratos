@@ -24,7 +24,6 @@ import (
 	"github.com/gobuffalo/packr/v2"
 	"github.com/gobuffalo/packr/v2/plog"
 
-	"github.com/ory/gojsonschema"
 	"github.com/ory/viper"
 	"github.com/ory/x/flagx"
 	"github.com/ory/x/viperx"
@@ -74,16 +73,14 @@ func watchAndValidateViper() {
 		logger.WithError(err).Fatal("Unable to open configuration JSON Schema.")
 	}
 
-	if err := viperx.Validate(gojsonschema.NewBytesLoader(schema)); err != nil {
+	if err := viperx.Validate("config.schema.json", schema); err != nil {
 		viperx.LoggerWithValidationErrorFields(logger, err).
-			WithError(err).
 			Fatal("The configuration is invalid and could not be loaded.")
 	}
 
 	viperx.AddWatcher(func(event fsnotify.Event) error {
-		if err := viperx.Validate(gojsonschema.NewBytesLoader(schema)); err != nil {
+		if err := viperx.Validate("config.schema.json", schema); err != nil {
 			viperx.LoggerWithValidationErrorFields(logger, err).
-				WithError(err).
 				Error("The changed configuration is invalid and could not be loaded. Rolling back to the last working configuration revision. Please address the validation errors before restarting ORY Kratos.")
 			return viperx.ErrRollbackConfigurationChanges
 		}
