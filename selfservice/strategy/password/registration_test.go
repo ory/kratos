@@ -3,6 +3,7 @@ package password_test
 import (
 	"context"
 	"fmt"
+	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
@@ -58,8 +59,10 @@ func TestRegistration(t *testing.T) {
 	t.Run("case=registration", func(t *testing.T) {
 		_, reg := internal.NewRegistryDefault(t)
 		s := reg.RegistrationStrategies().MustStrategy(identity.CredentialsTypePassword).(*password.Strategy)
-		s.WithTokenGenerator(x.FakeCSRFTokenGenerator)
-		reg.SelfServiceErrorManager().WithTokenGenerator(x.FakeCSRFTokenGenerator)
+		s.WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
+		reg.RegistrationStrategies().MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
+		reg.RegistrationHandler().WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
+		reg.SelfServiceErrorManager().WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
 
 		router := x.NewRouterPublic()
 		admin := x.NewRouterAdmin()
@@ -144,9 +147,9 @@ func TestRegistration(t *testing.T) {
 			rr := newRegistrationRequest(t, -time.Minute)
 			body, res := makeRequest(t, rr.ID, "", http.StatusOK)
 			assert.Contains(t, res.Request.URL.Path, "signup-ts")
-			assert.Equal(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
-			assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
+			assert.NotEqual(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.errors.0.message").String(), "expired", "%s", body)
+			assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.errors.0.message").String(), "expired", "%s", body)
 		})
 
 		t.Run("case=should return an error because the password failed validation", func(t *testing.T) {
@@ -289,9 +292,10 @@ func TestRegistration(t *testing.T) {
 	t.Run("method=PopulateSignUpMethod", func(t *testing.T) {
 		_, reg := internal.NewRegistryDefault(t)
 		s := reg.RegistrationStrategies().MustStrategy(identity.CredentialsTypePassword).(*password.Strategy)
-		s.WithTokenGenerator(func(r *http.Request) string {
-			return "nosurf"
-		})
+		s.WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
+		reg.RegistrationStrategies().MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
+		reg.RegistrationHandler().WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
+		reg.SelfServiceErrorManager().WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
 
 		viper.Set(configuration.ViperKeyURLsSelfPublic, urlx.ParseOrPanic("https://foo/"))
 		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://stub/registration.schema.json")
@@ -311,7 +315,7 @@ func TestRegistration(t *testing.T) {
 								Name:     "csrf_token",
 								Type:     "hidden",
 								Required: true,
-								Value:    "nosurf",
+								Value:    "anti-rf-token",
 							},
 							{
 								Name:     "password",

@@ -325,8 +325,8 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 			// This is kinda hacky but the only way to ensure seamless login/registration flows when using OIDC.
 
 			s.d.Logger().WithField("provider", provider.Config().ID).WithField("subject", claims.Subject).Debug("Received successful OpenID Connect callback but user is not registered. Re-initializing registration flow now.")
-			if err := s.d.RegistrationHandler().NewRegistrationRequest(w, r, func(aa *registration.Request) string {
-				return s.authURL(aa.ID, provider.Config().ID)
+			if err := s.d.RegistrationHandler().NewRegistrationRequest(w, r, func(aa *registration.Request) (string, error) {
+				return s.authURL(aa.ID, provider.Config().ID), nil
 			}); err != nil {
 				s.handleError(w, r, a.GetID(), nil, err)
 				return

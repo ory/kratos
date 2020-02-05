@@ -58,7 +58,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(BrowserRegistrationRequestsPath, h.adminFetchRegistrationRequest)
 }
 
-func (h *Handler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request, redir func(*Request) string) error {
+func (h *Handler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request, redir func(*Request) (string, error)) error {
 	a := NewRequest(h.c.SelfServiceRegistrationRequestLifespan(), h.csrf(r), r)
 	for _, s := range h.d.RegistrationStrategies() {
 		if err := s.PopulateRegistrationMethod(r, a); err != nil {
@@ -77,9 +77,13 @@ func (h *Handler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request,
 		return err
 	}
 
+	to, err := redir(a)
+	if err != nil {
+		return err
+	}
 	http.Redirect(w,
 		r,
-		redir(a),
+		to,
 		http.StatusFound,
 	)
 
@@ -105,8 +109,8 @@ func (h *Handler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request,
 //       302: emptyResponse
 //       500: genericError
 func (h *Handler) initRegistrationRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.NewRegistrationRequest(w, r, func(a *Request) string {
-		return urlx.CopyWithQuery(h.c.RegisterURL(), url.Values{"request": {a.ID.String()}}).String()
+	if err := h.NewRegistrationRequest(w, r, func(a *Request) (string, error) {
+		return urlx.CopyWithQuery(h.c.RegisterURL(), url.Values{"request": {a.ID.String()}}).String(), nil
 	}); err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
