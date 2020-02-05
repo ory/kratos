@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
@@ -13,6 +12,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/selfservice/strategy/oidc"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
