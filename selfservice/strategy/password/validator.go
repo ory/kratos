@@ -4,11 +4,12 @@ import (
 	"bufio"
 	"crypto/sha1"
 	"fmt"
-	"github.com/arbovm/levenshtein"
 	"net/http"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/arbovm/levenshtein"
 
 	"github.com/pkg/errors"
 
@@ -53,10 +54,10 @@ type DefaultPasswordValidator struct {
 
 func NewDefaultPasswordValidatorStrategy() *DefaultPasswordValidator {
 	return &DefaultPasswordValidator{
-		c:                    http.DefaultClient,
-		maxBreachesThreshold: 0,
-		hashes:               map[string]int64{},
-		ignoreNetworkErrors:  true,
+		c:                         http.DefaultClient,
+		maxBreachesThreshold:      0,
+		hashes:                    map[string]int64{},
+		ignoreNetworkErrors:       true,
 		minIdentifierPasswordDist: 5,
 	}
 }
