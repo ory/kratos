@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"crypto/sha1"
 	"fmt"
+	"github.com/arbovm/levenshtein"
 	"net/http"
 	"strconv"
 	"strings"
@@ -46,6 +47,8 @@ type DefaultPasswordValidator struct {
 
 	maxBreachesThreshold int64
 	ignoreNetworkErrors  bool
+
+	minIdentifierPasswordDist int
 }
 
 func NewDefaultPasswordValidatorStrategy() *DefaultPasswordValidator {
@@ -54,6 +57,7 @@ func NewDefaultPasswordValidatorStrategy() *DefaultPasswordValidator {
 		maxBreachesThreshold: 0,
 		hashes:               map[string]int64{},
 		ignoreNetworkErrors:  true,
+		minIdentifierPasswordDist: 5,
 	}
 }
 
@@ -121,8 +125,8 @@ func (s *DefaultPasswordValidator) Validate(identifier, password string) error {
 		return errors.Errorf("password length must be at least 6 characters but only got %d", len(password))
 	}
 
-	if password == identifier {
-		return errors.Errorf("the password can not be equal to the user identifier")
+	if levenshtein.Distance(identifier, password) < s.minIdentifierPasswordDist {
+		return errors.Errorf("the password is to similar to the user identifier")
 	}
 
 	h := sha1.New()
