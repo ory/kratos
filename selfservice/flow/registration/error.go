@@ -62,7 +62,7 @@ func (s *ErrorHandler) HandleRegistrationError(
 		Warn("Encountered login error.")
 
 	if rr == nil {
-		s.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
+		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	} else if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, err)
@@ -76,12 +76,12 @@ func (s *ErrorHandler) HandleRegistrationError(
 	}
 
 	if err := method.Config.ParseError(err); err != nil {
-		s.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
+		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
 	if err := s.d.RegistrationRequestPersister().UpdateRegistrationRequest(r.Context(), rr.ID, ct, method); err != nil {
-		s.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
+		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 

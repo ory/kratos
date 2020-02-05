@@ -34,6 +34,7 @@ type registrationStrategyDependencies interface {
 	login.ErrorHandlerProvider
 	login.HookExecutorProvider
 	login.RequestPersistenceProvider
+	login.HandlerProvider
 
 	identity.PoolProvider
 	identity.ValidationProvider

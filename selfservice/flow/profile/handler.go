@@ -96,7 +96,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 func (h *Handler) initUpdateProfile(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.d.SessionManager().FetchFromRequest(r.Context(), w, r)
 	if err != nil {
-		h.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
@@ -111,15 +111,15 @@ func (h *Handler) initUpdateProfile(w http.ResponseWriter, r *http.Request, ps h
 
 	traitsSchema, err := h.c.IdentityTraitsSchemas().FindSchemaByID(s.Identity.TraitsSchemaID)
 	if err != nil {
-		h.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 	if err := a.Form.SortFields(traitsSchema.URL, "traits"); err != nil {
-		h.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 	if err := h.d.ProfileRequestPersister().CreateProfileRequest(r.Context(), a); err != nil {
-		h.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
