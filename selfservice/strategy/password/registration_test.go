@@ -3,7 +3,6 @@ package password_test
 import (
 	"context"
 	"fmt"
-	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
@@ -12,6 +11,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/selfservice/strategy/oidc"
 
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
