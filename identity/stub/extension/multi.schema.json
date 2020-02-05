@@ -1,0 +1,29 @@
+{
+  "type": "object",
+  "properties": {
+    "emails": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "email",
+        "ory.sh/kratos": {
+          "credentials": {
+            "password": {
+              "identifier": true
+            }
+          }
+        }
+      }
+    },
+    "username": {
+      "type": "string",
+      "ory.sh/kratos": {
+        "credentials": {
+          "password": {
+            "identifier": true
+          }
+        }
+      }
+    }
+  }
+}
