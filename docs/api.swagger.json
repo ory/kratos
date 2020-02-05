@@ -983,6 +983,9 @@
         },
         {
           "type": "object"
+        },
+        {
+          "type": "object"
         }
       ]
     },

@@ -20,6 +20,8 @@ type LoginRequestMethodConfig struct {
 	LoginRequestMethodConfigAllOf2
 
 	LoginRequestMethodConfigAllOf3
+
+	LoginRequestMethodConfigAllOf4
 }
 
 // UnmarshalJSON unmarshals this object from a JSON structure
@@ -52,12 +54,19 @@ func (m *LoginRequestMethodConfig) UnmarshalJSON(raw []byte) error {
 	}
 	m.LoginRequestMethodConfigAllOf3 = aO3
 
+	// AO4
+	var aO4 LoginRequestMethodConfigAllOf4
+	if err := swag.ReadJSON(raw, &aO4); err != nil {
+		return err
+	}
+	m.LoginRequestMethodConfigAllOf4 = aO4
+
 	return nil
 }
 
 // MarshalJSON marshals this object to a JSON structure
 func (m LoginRequestMethodConfig) MarshalJSON() ([]byte, error) {
-	_parts := make([][]byte, 0, 4)
+	_parts := make([][]byte, 0, 5)
 
 	aO0, err := swag.WriteJSON(m.LoginRequestMethodConfigAllOf0)
 	if err != nil {
@@ -82,6 +91,12 @@ func (m LoginRequestMethodConfig) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 	_parts = append(_parts, aO3)
+
+	aO4, err := swag.WriteJSON(m.LoginRequestMethodConfigAllOf4)
+	if err != nil {
+		return nil, err
+	}
+	_parts = append(_parts, aO4)
 
 	return swag.ConcatJSON(_parts...), nil
 }
@@ -124,3 +139,7 @@ type LoginRequestMethodConfigAllOf2 interface{}
 // LoginRequestMethodConfigAllOf3 login request method config all of3
 // swagger:model LoginRequestMethodConfigAllOf3
 type LoginRequestMethodConfigAllOf3 interface{}
+
+// LoginRequestMethodConfigAllOf4 login request method config all of4
+// swagger:model LoginRequestMethodConfigAllOf4
+type LoginRequestMethodConfigAllOf4 interface{}
