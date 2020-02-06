@@ -43,6 +43,10 @@
 
 [Full Changelog](https://github.com/ory/kratos/compare/v0.1.0-alpha.5...HEAD)
 
+**Implemented enhancements:**
+
+- Use jsonschema everywhere [\#225](https://github.com/ory/kratos/issues/225)
+
 **Closed issues:**
 
 - Require Levenshtein distance between identifiers and password [\#184](https://github.com/ory/kratos/issues/184)
@@ -50,6 +54,7 @@
 **Merged pull requests:**
 
 - feat: add levenshtein distance check for password validation [\#231](https://github.com/ory/kratos/pull/231) ([zepatrik](https://github.com/zepatrik))
+- Use ory/jsonschema/v3 everywhere [\#229](https://github.com/ory/kratos/pull/229) ([aeneasr](https://github.com/aeneasr))
 
 ## [v0.1.0-alpha.5](https://github.com/ory/kratos/tree/v0.1.0-alpha.5) (2020-02-06)
 
