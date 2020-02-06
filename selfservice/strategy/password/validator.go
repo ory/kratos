@@ -49,17 +49,17 @@ type DefaultPasswordValidator struct {
 	maxBreachesThreshold int64
 	ignoreNetworkErrors  bool
 
-	minIdentifierPasswordDist int
+	minIdentifierPasswordDist   int
 	maxIdentifierPasswordSubstr int
 }
 
 func NewDefaultPasswordValidatorStrategy() *DefaultPasswordValidator {
 	return &DefaultPasswordValidator{
-		c:                         http.DefaultClient,
-		maxBreachesThreshold:      0,
-		hashes:                    map[string]int64{},
-		ignoreNetworkErrors:       true,
-		minIdentifierPasswordDist: 5,
+		c:                           http.DefaultClient,
+		maxBreachesThreshold:        0,
+		hashes:                      map[string]int64{},
+		ignoreNetworkErrors:         true,
+		minIdentifierPasswordDist:   5,
 		maxIdentifierPasswordSubstr: 3,
 	}
 }

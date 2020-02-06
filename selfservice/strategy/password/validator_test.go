@@ -19,7 +19,7 @@ func TestLCSLength(t *testing.T) {
 		{a: "foobar", b: "foo", l: 3},
 		{a: "foobar", b: "oo", l: 2},
 		{a: "foobar", b: "a", l: 1},
-	}{
+	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			require.Equal(t, tc.l, lcsLength(tc.a, tc.b))
 			require.Equal(t, tc.l, lcsLength(tc.b, tc.a))
