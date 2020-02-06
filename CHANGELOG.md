@@ -4,6 +4,7 @@
 
 - [Changelog](#changelog)
   - [Unreleased](#unreleased)
+  - [v0.1.0-alpha.5 (2020-02-06)](#v010-alpha5-2020-02-06)
   - [v0.1.0-alpha.4 (2020-02-06)](#v010-alpha4-2020-02-06)
   - [v0.1.0-alpha.3 (2020-02-06)](#v010-alpha3-2020-02-06)
   - [v0.1.0-alpha.2 (2020-02-03)](#v010-alpha2-2020-02-03)
@@ -40,7 +41,19 @@
 
 ## [Unreleased](https://github.com/ory/kratos/tree/HEAD)
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.1.0-alpha.4...HEAD)
+[Full Changelog](https://github.com/ory/kratos/compare/v0.1.0-alpha.5...HEAD)
+
+**Closed issues:**
+
+- Require Levenshtein distance between identifiers and password [\#184](https://github.com/ory/kratos/issues/184)
+
+**Merged pull requests:**
+
+- feat: add levenshtein distance check for password validation [\#231](https://github.com/ory/kratos/pull/231) ([zepatrik](https://github.com/zepatrik))
+
+## [v0.1.0-alpha.5](https://github.com/ory/kratos/tree/v0.1.0-alpha.5) (2020-02-06)
+
+[Full Changelog](https://github.com/ory/kratos/compare/v0.1.0-alpha.4...v0.1.0-alpha.5)
 
 **Fixed bugs:**
 
