@@ -3,6 +3,7 @@
 **Table of Contents**
 
 - [Changelog](#changelog)
+  - [Unreleased](#unreleased)
   - [v0.1.0-alpha.4 (2020-02-06)](#v010-alpha4-2020-02-06)
   - [v0.1.0-alpha.3 (2020-02-06)](#v010-alpha3-2020-02-06)
   - [v0.1.0-alpha.2 (2020-02-03)](#v010-alpha2-2020-02-03)
@@ -36,6 +37,18 @@
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Changelog
+
+## [Unreleased](https://github.com/ory/kratos/tree/HEAD)
+
+[Full Changelog](https://github.com/ory/kratos/compare/v0.1.0-alpha.4...HEAD)
+
+**Fixed bugs:**
+
+- Mitigate expired login and registration requests [\#96](https://github.com/ory/kratos/issues/96)
+
+**Merged pull requests:**
+
+- feat: redirect to new auth session on expired auth sessions [\#230](https://github.com/ory/kratos/pull/230) ([zepatrik](https://github.com/zepatrik))
 
 ## [v0.1.0-alpha.4](https://github.com/ory/kratos/tree/v0.1.0-alpha.4) (2020-02-06)
 
