@@ -69,7 +69,7 @@ func TestViperProvider(t *testing.T) {
 		})
 
 		t.Run("group=dsn", func(t *testing.T) {
-			assert.Equal(t, "memory", p.DSN())
+			assert.Equal(t, "sqlite://foo.db?mode=memory&_fk=true", p.DSN())
 		})
 
 		t.Run("group=secrets", func(t *testing.T) {

@@ -30,7 +30,6 @@ func TestFieldFromPath(t *testing.T) {
 			htmlField := fieldFromPath(path.Name, path)
 			assert.Equal(t, gjson.GetBytes(schema, fmt.Sprintf("properties.%s.test_expected_type", path.Name)).String(), htmlField.Type)
 			assert.True(t, !gjson.GetBytes(schema, fmt.Sprintf("properties.%s.test_expected_pattern", path.Name)).Exists() || (gjson.GetBytes(schema, fmt.Sprintf("properties.%s.test_expected_pattern", path.Name)).Bool() && htmlField.Pattern != ""))
-			fmt.Printf("name %s\ntype %s\n", htmlField.Name, htmlField.Type)
 		}
 	})
 }

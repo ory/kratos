@@ -1,6 +1,6 @@
 {
   "properties": {
-    "ory.kratos/sh": {
+    "ory.sh/kratos": {
       "type": "object",
       "properties": {
         "credentials": {

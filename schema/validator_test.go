@@ -10,37 +10,15 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/gojsonschema"
 	"github.com/ory/x/stringsx"
 )
 
 func TestSchemaValidator(t *testing.T) {
 	router := httprouter.New()
-	router.GET("/schema/:name", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		_, _ = w.Write([]byte(`{
-  "$id": "https://example.com/person.schema.json",
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Person",
-  "type": "object",
-  "properties": {
-    "` + ps.ByName("name") + `": {
-      "type": "string",
-      "description": "The person's first name."
-    },
-    "lastName": {
-      "type": "string",
-      "description": "The person's last name."
-    },
-    "age": {
-      "description": "Age in years which must be equal to or greater than zero.",
-      "type": "integer",
-      "minimum": 1
-    }
-  },
-  "additionalProperties": false
-}`))
+	fs := http.StripPrefix("/schema", http.FileServer(http.Dir("stub/validator")))
+	router.GET("/schema/:name", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		fs.ServeHTTP(w, r)
 	})
-
 	ts := httptest.NewServer(router)
 	defer ts.Close()
 
@@ -54,38 +32,20 @@ func TestSchemaValidator(t *testing.T) {
 		},
 		{
 			i:   json.RawMessage(`{ "firstName": "first-name", "lastName": "last-name", "age": -1 }`),
-			err: "must be greater than or equal to 1",
-			// gojsonschema.ResultError{
-			// 	FieldName: "age", Type: "number_gte", Value: "-1", Message: "Must be greater than or equal to 1/1",
-			// 	Details: map[string]interface{}{"min": new(big.Rat).SetInt(big.NewInt(1)), "field": "age", "context": "(root).age"},
-			// },
+			err: "I[#/age] S[#/properties/age/minimum] must be >= 1 but found -1",
 		},
 		{
 			i:   json.RawMessage(`{ "whatever": "first-name", "lastName": "last-name", "age": 1 }`),
-			err: "additional property whatever is not allowed",
-			// gojsonschema.ResultError{
-			// 	FieldName:   "(root)",
-			// 	Type:    "additional_property_not_allowed",
-			// 	Message: "Additional property whatever is not allowed",
-			// 	Value:   "first-name",
-			// 	Details: map[string]interface{}{"property": "whatever", "field": "(root)", "context": "(root)"},
-			// },
+			err: `I[#] S[#/additionalProperties] additionalProperties "whatever" not allowed`,
 		},
 		{
-			u: ts.URL + "/schema/whatever",
+			u: ts.URL + "/schema/whatever.schema.json",
 			i: json.RawMessage(`{ "whatever": "first-name", "lastName": "last-name", "age": 1 }`),
 		},
 		{
-			u:   ts.URL + "/schema/whatever",
+			u:   ts.URL + "/schema/whatever.schema.json",
 			i:   json.RawMessage(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
-			err: "additional property firstName is not allowed",
-			// gojsonschema.ResultError{
-			// 	FieldName:   "(root)",
-			// 	Type:    "additional_property_not_allowed",
-			// 	Message: "Additional property firstName is not allowed",
-			// 	Value:   "first-name",
-			// 	Details: map[string]interface{}{"property": "firstName", "field": "(root)", "context": "(root)"},
-			// },
+			err: `I[#] S[#/additionalProperties] additionalProperties "firstName" not allowed`,
 		},
 		{
 			u:   ts.URL,
@@ -99,37 +59,12 @@ func TestSchemaValidator(t *testing.T) {
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			err := NewValidator().Validate(
-				stringsx.Coalesce(
-					tc.u,
-					ts.URL+"/schema/firstName"),
-				gojsonschema.NewGoLoader(tc.i),
-			)
-
+			err := NewValidator().Validate(stringsx.Coalesce(tc.u, ts.URL+"/schema/firstName.schema.json"), tc.i, )
 			if tc.err == "" {
 				require.NoError(t, err)
 			} else {
 				require.EqualError(t, err, tc.err)
 			}
-
-			// require.Len(t, fe, len(tc.expected))
-			// for _, g := range fe {
-			// 	var found bool
-			// 	for _, e := range tc.expected {
-			// 		if e.Error() == g.Error() {
-			// 			found = true
-			// 			g.Internal = nil
-			// 			assert.EqualValues(t, e, g)
-			// 			break
-			// 		}
-			// 	}
-			//
-			// 	if found {
-			// 		continue
-			// 	}
-			//
-			// 	require.True(t, found, "%+v", g.Internal.Description())
-			// }
 		})
 	}
 }

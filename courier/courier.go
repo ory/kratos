@@ -45,6 +45,7 @@ func NewSMTP(d smtpDependencies, c configuration.Provider) *Courier {
 			Username:  uri.User.Username(),
 			Password:  password,
 			SSL:       uri.Scheme == "smtps",
+			/* #nosec we need to support SMTP servers wihout TLS */
 			TLSConfig: &tls.Config{InsecureSkipVerify: sslSkipVerify},
 		},
 	}

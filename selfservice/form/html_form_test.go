@@ -203,7 +203,7 @@ func TestContainer(t *testing.T) {
 			{err: errors.New("foo"), expectErr: true},
 			{err: &herodot.ErrNotFound, expectErr: true},
 			{err: herodot.ErrBadRequest.WithReason("tests"), expect: HTMLForm{Fields: Fields{}, Errors: []Error{{Message: "tests"}}}},
-			{err: schema.NewInvalidCredentialsError(), expect: HTMLForm{Fields: Fields{}, Errors: []Error{{Message: "The provided credentials are invalid. Check for spelling mistakes in your password or username, email address, or phone number."}}}},
+			{err: schema.NewInvalidCredentialsError(), expect: HTMLForm{Fields: Fields{}, Errors: []Error{{Message: "the provided credentials are invalid, check for spelling mistakes in your password or username, email address, or phone number"}}}},
 			{err: &jsonschema.ValidationError{Message: "test", InstancePtr: "#/foo/bar/baz"}, expect: HTMLForm{Fields: Fields{Field{Name: "foo.bar.baz", Type: "", Errors: []Error{{Message: "test"}}}}}},
 			{err: &jsonschema.ValidationError{Message: "test", InstancePtr: ""}, expect: HTMLForm{Fields: Fields{}, Errors: []Error{{Message: "test"}}}},
 		} {

@@ -8,13 +8,13 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/ory/jsonschema/v3"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/sqlcon"
 
-	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
 )
 
@@ -78,8 +78,7 @@ func (p *Persister) encodeSelfServiceErrors(errs []error) (*bytes.Buffer, error)
 		// pass through system errors.
 		switch e.(type) {
 		case *herodot.DefaultError:
-		case *schema.ResultErrors:
-		case schema.ResultErrors:
+		case *jsonschema.ValidationError:
 		default:
 			e = herodot.ToDefaultError(e, "")
 		}

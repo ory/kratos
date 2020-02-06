@@ -76,13 +76,13 @@ func TestSchemaValidator(t *testing.T) {
 			i: &Identity{
 				Traits: Traits(`{ "firstName": "first-name", "lastName": "last-name", "age": -1 }`),
 			},
-			err: "must be greater than or equal to 1",
+			err: "I[#/traits/age] S[#/properties/age/minimum] must be >= 1 but found -1",
 		},
 		{
 			i: &Identity{
 				Traits: Traits(`{ "whatever": "first-name", "lastName": "last-name", "age": 1 }`),
 			},
-			err: "additional property whatever is not allowed",
+			err: `I[#/traits] S[#/additionalProperties] additionalProperties "whatever" not allowed`,
 		},
 		{
 			i: &Identity{
@@ -95,7 +95,7 @@ func TestSchemaValidator(t *testing.T) {
 				TraitsSchemaID: "whatever",
 				Traits:         Traits(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
 			},
-			err: "additional property firstName is not allowed",
+			err: `I[#/traits] S[#/additionalProperties] additionalProperties "firstName" not allowed`,
 		},
 		{
 			i: &Identity{

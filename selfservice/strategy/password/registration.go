@@ -18,7 +18,6 @@ import (
 	_ "github.com/ory/jsonschema/v3/httploader"
 	"github.com/ory/x/decoderx"
 
-	"github.com/ory/gojsonschema"
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
 
@@ -130,7 +129,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 	}
 
 	if len(p.Password) == 0 {
-		s.handleRegistrationError(w, r, ar, &p, errors.WithStack(schema.NewRequiredError("", gojsonschema.NewJsonContext("password", nil))))
+		s.handleRegistrationError(w, r, ar, &p, schema.NewRequiredError("#/", "password"))
 		return
 	}
 
@@ -193,11 +192,7 @@ func (s *Strategy) validateCredentials(i *identity.Identity, pw string) error {
 			if _, ok := errorsx.Cause(err).(*herodot.DefaultError); ok {
 				return err
 			}
-			return schema.NewPasswordPolicyValidation(
-				"",
-				err.Error(),
-				gojsonschema.NewJsonContext("password", nil),
-			)
+			return schema.NewPasswordPolicyViolationError("#/password", err.Error())
 		}
 	}
 

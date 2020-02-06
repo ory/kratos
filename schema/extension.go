@@ -12,8 +12,8 @@ import (
 var box = packr.New("contrib", "contrib")
 
 const (
-	ExtensionRunnerIdentityMetaSchema ExtensionRunnerMetaSchema = "extensions/identity.json"
-	ExtensionRunnerOIDCMetaSchema     ExtensionRunnerMetaSchema = "extensions/oidc.json"
+	ExtensionRunnerIdentityMetaSchema ExtensionRunnerMetaSchema = "extension/identity.schema.json"
+	ExtensionRunnerOIDCMetaSchema     ExtensionRunnerMetaSchema = "extension/oidc.schema.json"
 	extensionName                                               = "ory.sh/kratos"
 )
 

@@ -173,7 +173,7 @@ func TestRegistration(t *testing.T) {
 			assert.Equal(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 			assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
 			checkFormContent(t, body, "password", "csrf_token", "traits.username", "traits.foobar")
-			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==traits.foobar).errors.0").String(), "foobar is required", "%s", body)
+			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==traits.foobar).errors.0").String(), `missing properties: \"foobar\"`, "%s", body)
 		})
 
 		t.Run("case=should fail because schema did not specify an identifier", func(t *testing.T) {
@@ -225,7 +225,7 @@ func TestRegistration(t *testing.T) {
 				"traits.foobar":   {"bar"},
 			}.Encode(), http.StatusOK)
 			assert.Contains(t, res.Request.URL.Path, "signup-ts")
-			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.errors.0.message").String(), "An account with the same identifier (email, phone, username, ...) exists already.", "%s", body)
+			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.errors.0.message").String(), "an account with the same identifier (email, phone, username, ...) exists already", "%s", body)
 		})
 
 		t.Run("case=should return an error because not passing validation and reset previous errors and values", func(t *testing.T) {
@@ -270,7 +270,7 @@ func TestRegistration(t *testing.T) {
 			assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==traits.foo).value"), "%s", body)
 			assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==traits.foo).error"))
 			assert.Empty(t, gjson.GetBytes(body, "methods.password.config.error"))
-			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==traits.foobar).errors.0").String(), "foobar is required", "%s", body)
+			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==traits.foobar).errors.0").String(), `missing properties: \"foobar\"`, "%s", body)
 		})
 
 		t.Run("case=should work even if password is just numbers", func(t *testing.T) {

@@ -20,12 +20,12 @@ func TestExtensionRunner(t *testing.T) {
 	}{
 		{
 			doc:    `{"email":"foo@ory.sh"}`,
-			schema: "file://./stub/extensions/identity_traits/schema.json",
+			schema: "file://./stub/extension/schema.json",
 			expect: []string{"foo@ory.sh"},
 		},
 		{
 			doc:    `{"emails":["foo@ory.sh","bar@ory.sh"]}`,
-			schema: "file://./stub/extensions/identity_traits/schema.nested.json",
+			schema: "file://./stub/extension/schema.nested.json",
 			expect: []string{"foo@ory.sh","bar@ory.sh"},
 		},
 	} {

@@ -18,7 +18,6 @@ import (
 
 	"github.com/ory/x/jsonx"
 
-	"github.com/ory/gojsonschema"
 	"github.com/ory/herodot"
 	"github.com/ory/x/stringsx"
 	"github.com/ory/x/urlx"
@@ -378,16 +377,25 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 	}
 
 	i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
-	extension := NewValidationExtension()
-	extension.WithIdentity(i)
+	runner, err := schema.NewExtensionRunner(schema.ExtensionRunnerOIDCMetaSchema, NewValidationExtensionRunner(i).Runner)
+	if err != nil {
+		s.handleError(w, r, a.GetID(), nil, err)
+		return
+	}
+
+	var doc bytes.Buffer
+	if err := json.NewEncoder(&doc).Encode(claims); err != nil {
+		s.handleError(w, r, a.GetID(), nil, err)
+		return
+	}
 
 	// Validate the claims first (which will also copy the values around based on the schema)
 	if err := s.validator.Validate(
 		stringsx.Coalesce(
 			provider.Config().SchemaURL,
 		),
-		gojsonschema.NewGoLoader(claims),
-		extension,
+		doc.Bytes(),
+		schema.WithExtensionRunner(runner),
 	); err != nil {
 		s.d.Logger().
 			WithField("provider", provider.Config().ID).

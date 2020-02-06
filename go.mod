@@ -2,18 +2,10 @@ module github.com/ory/kratos
 
 go 1.13
 
-// replace github.com/santhosh-tekuri/jsonschema/v2 => ../jsonschema
-
-replace github.com/ory/x => ../x
-
-replace github.com/ory/jsonschema/v3 => ../jsonschema
-
 require (
 	github.com/Masterminds/sprig/v3 v3.0.0
-	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/bxcodec/faker v2.0.1+incompatible
 	github.com/cenkalti/backoff v2.2.1+incompatible
-	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/ghodss/yaml v1.0.0
@@ -51,13 +43,12 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/ory/go-acc v0.1.0
-	github.com/ory/gojsonschema v1.2.0
 	github.com/ory/graceful v0.1.1
 	github.com/ory/herodot v0.6.3
-	github.com/ory/jsonschema/v3 v3.0.0
+	github.com/ory/jsonschema/v3 v3.0.1
 	github.com/ory/sdk/swagutil v0.0.0-20200202121523-307941feee4b
 	github.com/ory/viper v1.5.6
-	github.com/ory/x v0.0.93
+	github.com/ory/x v0.0.94
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/rogpeppe/go-internal v1.5.0 // indirect
@@ -71,14 +62,10 @@ require (
 	github.com/tidwall/gjson v1.3.5
 	github.com/tidwall/sjson v1.0.4
 	github.com/urfave/negroni v1.0.0
-	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
-	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
-	github.com/ziutek/mymysql v1.5.4 // indirect
 	golang.org/x/crypto v0.0.0-20200128174031-69ecbb4d6d5d
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/tools v0.0.0-20200203215610-ab391d50b528
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.28.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
-	gopkg.in/gorp.v1 v1.7.2 // indirect
 )
