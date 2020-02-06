@@ -7,6 +7,26 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestLCSLength(t *testing.T) {
+	for k, tc := range []struct {
+		a string
+		b string
+		l int
+	}{
+		{a: "foo", b: "foo", l: 3},
+		{a: "fo", b: "foo", l: 2},
+		{a: "bar", b: "foo", l: 0},
+		{a: "foobar", b: "foo", l: 3},
+		{a: "foobar", b: "oo", l: 2},
+		{a: "foobar", b: "a", l: 1},
+	}{
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			require.Equal(t, tc.l, lcsLength(tc.a, tc.b))
+			require.Equal(t, tc.l, lcsLength(tc.b, tc.a))
+		})
+	}
+}
+
 func TestDefaultPasswordValidationStrategy(t *testing.T) {
 	// Tests are based on:
 	// - https://www.troyhunt.com/passwords-evolved-authentication-guidance-for-the-modern-era/
@@ -28,13 +48,13 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 		{pw: "qwertyui", pass: false},
 		{pw: "l3f9toh1uaf81n21", pass: true},
 		{pw: "l3f9toh1uaf81n21", id: "l3f9toh1uaf81n21", pass: false},
-		{pw: "l3f9toh1uaf81n21", id: "l3f9txh1uaf81n21", pass: false},
-		{pw: "l3f9toh1uaf81n21", id: "l3f9txh1uafa1n21", pass: false},
-		{pw: "l3f9toh1uaf81n21", id: "l3f9txh1uafa1n11", pass: false},
-		{pw: "l3f9toh1uaf81n21", id: "q3f9txh1uafa1n11", pass: false},
-		{pw: "l3f9toh1uaf81n21", id: "q3x9txh1uafa1n11", pass: true},
 		{pw: "l3f9toh1", pass: true},
 		{pw: "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", pass: true},
+		// simple permutation tests
+		{id: "hello@example.com", pw: "hello@example.com12345", pass: false},
+		{id: "hello@example.com", pw: "123hello@example.com123", pass: false},
+		{id: "hello@example.com", pw: "hello@exam", pass: false},
+		{id: "ab", pw: "0000ab0000", pass: true},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			err := s.Validate(tc.id, tc.pw)
