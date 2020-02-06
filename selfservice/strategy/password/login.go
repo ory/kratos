@@ -77,21 +77,12 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 	if err := ar.Valid(); err != nil {
 		// create new request if the old one is not valid
 		if err = s.d.LoginHandler().NewLoginRequest(w, r, func(a *login.Request) (string, error) {
-			expiredError := form.Error{
-				Message: "Your session expired, please start again.",
-			}
-
-			if passwordMethod, ok := a.Methods[identity.CredentialsTypePassword]; ok {
-				passwordMethod.Config.AddError(&expiredError)
-				if err := s.d.LoginRequestPersister().UpdateLoginRequest(context.TODO(), a.ID, identity.CredentialsTypePassword, passwordMethod); err != nil {
+			for name, method := range a.Methods {
+				method.Config.AddError(&form.Error{Message: "Your session expired, please try again."})
+				if err := s.d.LoginRequestPersister().UpdateLoginRequest(context.TODO(), a.ID, name, method); err != nil {
 					return s.d.SelfServiceErrorManager().Create(r.Context(), w, r, err)
 				}
-			}
-			if oidcMethod, ok := a.Methods[identity.CredentialsTypeOIDC]; ok {
-				oidcMethod.Config.AddError(&expiredError)
-				if err := s.d.LoginRequestPersister().UpdateLoginRequest(context.TODO(), a.ID, identity.CredentialsTypeOIDC, oidcMethod); err != nil {
-					return s.d.SelfServiceErrorManager().Create(r.Context(), w, r, err)
-				}
+				a.Methods[name] = method
 			}
 
 			return urlx.CopyWithQuery(s.c.LoginURL(), url.Values{"request": {a.ID.String()}}).String(), nil

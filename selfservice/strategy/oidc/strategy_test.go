@@ -414,9 +414,9 @@ func TestStrategy(t *testing.T) {
 			res, body := mr(t, "valid", r.ID, url.Values{"traits.name": {"i"}})
 			require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
 
-			assert.Equal(t, "traits.name: String length must be greater than or equal to 2", gjson.GetBytes(body, "methods.oidc.config.fields.#(name==traits.name).errors.0.message").String(), "%s", body) // make sure the field is being echoed
-			assert.Equal(t, "traits.name", gjson.GetBytes(body, "methods.oidc.config.fields.#(name==traits.name).name").String(), "%s", body)                                                               // make sure the field is being echoed
-			assert.Equal(t, "i", gjson.GetBytes(body, "methods.oidc.config.fields.#(name==traits.name).value").String(), "%s", body)                                                                        // make sure the field is being echoed
+			assert.Equal(t, "length must be >= 2, but got 1", gjson.GetBytes(body, "methods.oidc.config.fields.#(name==traits.name).errors.0.message").String(), "%s", body) // make sure the field is being echoed
+			assert.Equal(t, "traits.name", gjson.GetBytes(body, "methods.oidc.config.fields.#(name==traits.name).name").String(), "%s", body)                                // make sure the field is being echoed
+			assert.Equal(t, "i", gjson.GetBytes(body, "methods.oidc.config.fields.#(name==traits.name).value").String(), "%s", body)                                         // make sure the field is being echoed
 		})
 
 		t.Run("case=should pass registration with valid data", func(t *testing.T) {
@@ -443,13 +443,13 @@ func TestStrategy(t *testing.T) {
 		t.Run("case=should fail registration", func(t *testing.T) {
 			r := nrr(t, returnTS.URL, time.Minute)
 			res, body := mr(t, "valid", r.ID, url.Values{})
-			aue(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already.")
+			aue(t, res, body, "an account with the same identifier (email, phone, username, ...) exists already")
 		})
 
 		t.Run("case=should fail login", func(t *testing.T) {
 			r := nlr(t, returnTS.URL, time.Minute)
 			res, body := mr(t, "valid", r.ID, url.Values{})
-			aue(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already.")
+			aue(t, res, body, "an account with the same identifier (email, phone, username, ...) exists already")
 		})
 	})
 }
