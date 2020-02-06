@@ -3,6 +3,7 @@
 **Table of Contents**
 
 - [Changelog](#changelog)
+  - [v0.1.0-alpha.4 (2020-02-06)](#v010-alpha4-2020-02-06)
   - [v0.1.0-alpha.3 (2020-02-06)](#v010-alpha3-2020-02-06)
   - [v0.1.0-alpha.2 (2020-02-03)](#v010-alpha2-2020-02-03)
   - [v0.1.0-alpha.1 (2020-01-31)](#v010-alpha1-2020-01-31)
@@ -35,6 +36,10 @@
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Changelog
+
+## [v0.1.0-alpha.4](https://github.com/ory/kratos/tree/v0.1.0-alpha.4) (2020-02-06)
+
+[Full Changelog](https://github.com/ory/kratos/compare/v0.1.0-alpha.3...v0.1.0-alpha.4)
 
 ## [v0.1.0-alpha.3](https://github.com/ory/kratos/tree/v0.1.0-alpha.3) (2020-02-06)
 
