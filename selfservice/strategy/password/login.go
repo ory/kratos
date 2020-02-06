@@ -2,6 +2,7 @@ package password
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/url"
@@ -76,7 +77,30 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	if err := ar.Valid(); err != nil {
-		s.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
+		// create new request if the old one is not valid
+		if err = s.d.LoginHandler().NewLoginRequest(w, r, func(a *login.Request) (string, error) {
+			expiredError := form.Error{
+				Message: "Your session expired, please start again.",
+			}
+
+			if passwordMethod, ok := a.Methods[identity.CredentialsTypePassword]; ok {
+				passwordMethod.Config.AddError(&expiredError)
+				if err := s.d.LoginRequestPersister().UpdateLoginRequest(context.TODO(), a.ID, identity.CredentialsTypePassword, passwordMethod); err != nil {
+					return s.d.SelfServiceErrorManager().Create(r.Context(), w, r, err)
+				}
+			}
+			if oidcMethod, ok := a.Methods[identity.CredentialsTypeOIDC]; ok {
+				oidcMethod.Config.AddError(&expiredError)
+				if err := s.d.LoginRequestPersister().UpdateLoginRequest(context.TODO(), a.ID, identity.CredentialsTypeOIDC, oidcMethod); err != nil {
+					return s.d.SelfServiceErrorManager().Create(r.Context(), w, r, err)
+				}
+			}
+
+			return urlx.CopyWithQuery(s.c.LoginURL(), url.Values{"request": {a.ID.String()}}).String(), nil
+		}); err != nil {
+			s.handleLoginError(w, r, ar, err)
+			return
+		}
 		return
 	}
 
@@ -89,7 +113,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 	var o CredentialsConfig
 	d := json.NewDecoder(bytes.NewBuffer(c.Config))
 	if err := d.Decode(&o); err != nil {
-		s.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error()))
+		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error()))
 		return
 	}
 
@@ -100,7 +124,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 
 	if err := s.d.LoginHookExecutor().PostLoginHook(w, r,
 		s.d.PostLoginHooks(identity.CredentialsTypePassword), ar, i); err != nil {
-		s.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
+		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 }

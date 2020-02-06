@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/selfservice/strategy/oidc"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -143,20 +145,21 @@ func TestLogin(t *testing.T) {
 			},
 		},
 		{
-			d:  "should return an error because the request is expired",
+			d:  "should redirect to login init because the request is expired",
 			ar: nlr(-time.Hour),
 			payload: url.Values{
 				"identifier": {"identifier"},
 				"password":   {"password"},
 			}.Encode(),
 			assert: func(t *testing.T, tc testCase, r *http.Response) {
-				assert.Contains(t, r.Request.URL.Path, "error-ts")
+				assert.Contains(t, r.Request.URL.Path, "login-ts")
 				body, err := ioutil.ReadAll(r.Body)
 				require.NoError(t, err)
 
-				assert.Equal(t, int64(http.StatusBadRequest), gjson.GetBytes(body, "0.code").Int(), "%s", body)
-				assert.Equal(t, "Bad Request", gjson.GetBytes(body, "0.status").String(), "%s", body)
-				assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "expired", "%s", body)
+				assert.NotEqual(t, tc.ar.ID, gjson.GetBytes(body, "id"))
+
+				assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.errors.0").String(), "expired", "%s", body)
+				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.errors.0").String(), "expired", "%s", body)
 			},
 		},
 		{
@@ -340,10 +343,10 @@ func TestLogin(t *testing.T) {
 		t.Run(fmt.Sprintf("case=%d/description=%s", k, tc.d), func(t *testing.T) {
 			_, reg := internal.NewRegistryDefault(t)
 			s := reg.LoginStrategies().MustStrategy(identity.CredentialsTypePassword).(*password.Strategy)
-			s.WithTokenGenerator(func(r *http.Request) string {
-				return "anti-rf-token"
-			})
-			reg.SelfServiceErrorManager().WithTokenGenerator(x.FakeCSRFTokenGenerator)
+			s.WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
+			reg.LoginStrategies().MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
+			reg.LoginHandler().WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
+			reg.SelfServiceErrorManager().WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
 
 			router := x.NewRouterPublic()
 			admin := x.NewRouterAdmin()

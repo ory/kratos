@@ -1,6 +1,7 @@
 package password
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -108,7 +109,31 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 	}
 
 	if err := ar.Valid(); err != nil {
-		s.handleRegistrationError(w, r, ar, nil, err)
+		// create new request if the old one is not valid
+		if err = s.d.RegistrationHandler().NewRegistrationRequest(w, r, func(a *registration.Request) (string, error) {
+			expiredError := form.Error{
+				Message: "Your session expired, please start again.",
+			}
+
+			if passwordMethod, ok := a.Methods[identity.CredentialsTypePassword]; ok {
+				passwordMethod.Config.AddError(&expiredError)
+				if err := s.d.RegistrationRequestPersister().UpdateRegistrationRequest(context.TODO(), a.ID, identity.CredentialsTypePassword, passwordMethod); err != nil {
+					return s.d.SelfServiceErrorManager().Create(r.Context(), w, r, err)
+				}
+			}
+			if oidcMethod, ok := a.Methods[identity.CredentialsTypeOIDC]; ok {
+				oidcMethod.Config.AddError(&expiredError)
+				if err := s.d.RegistrationRequestPersister().UpdateRegistrationRequest(context.TODO(), a.ID, identity.CredentialsTypeOIDC, oidcMethod); err != nil {
+					return s.d.SelfServiceErrorManager().Create(r.Context(), w, r, err)
+				}
+			}
+
+			return urlx.CopyWithQuery(s.c.RegisterURL(), url.Values{"request": {a.ID.String()}}).String(), nil
+		}); err != nil {
+			s.handleRegistrationError(w, r, ar, nil, err)
+			return
+		}
+
 		return
 	}
 

@@ -18,6 +18,11 @@ type ValueSetter interface {
 	SetValue(name string, value interface{})
 }
 
+type ErrorAdder interface {
+	// AddError adds an error to the form.
+	AddError(err *Error, names ...string)
+}
+
 type CSRFSetter interface {
 	// SetCSRF sets the CSRF value for the form.
 	SetCSRF(string)

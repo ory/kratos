@@ -325,8 +325,8 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 			// This is kinda hacky but the only way to ensure seamless login/registration flows when using OIDC.
 
 			s.d.Logger().WithField("provider", provider.Config().ID).WithField("subject", claims.Subject).Debug("Received successful OpenID Connect callback but user is not registered. Re-initializing registration flow now.")
-			if err := s.d.RegistrationHandler().NewRegistrationRequest(w, r, func(aa *registration.Request) string {
-				return s.authURL(aa.ID, provider.Config().ID)
+			if err := s.d.RegistrationHandler().NewRegistrationRequest(w, r, func(aa *registration.Request) (string, error) {
+				return s.authURL(aa.ID, provider.Config().ID), nil
 			}); err != nil {
 				s.handleError(w, r, a.GetID(), nil, err)
 				return
@@ -368,8 +368,8 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 
 		// This is kinda hacky but the only way to ensure seamless login/registration flows when using OIDC.
 		s.d.Logger().WithField("provider", provider.Config().ID).WithField("subject", claims.Subject).Debug("Received successful OpenID Connect callback but user is already registered. Re-initializing login flow now.")
-		if err := s.d.LoginHandler().NewLoginRequest(w, r, func(aa *login.Request) string {
-			return s.authURL(aa.ID, provider.Config().ID)
+		if err := s.d.LoginHandler().NewLoginRequest(w, r, func(aa *login.Request) (string, error) {
+			return s.authURL(aa.ID, provider.Config().ID), nil
 		}); err != nil {
 			s.handleError(w, r, a.GetID(), nil, err)
 			return
@@ -524,7 +524,7 @@ func (s *Strategy) provider(id string) (Provider, error) {
 
 func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.UUID, traits json.RawMessage, err error) {
 	if x.IsZeroUUID(rid) {
-		s.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
+		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
@@ -553,5 +553,5 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 		return
 	}
 
-	s.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
+	s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 }
