@@ -357,7 +357,7 @@ func TestStrategy(t *testing.T) {
 		res, body := mr(t, "valid", r.ID, url.Values{})
 
 		require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
-		assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.fields.#(name==traits.subject).errors.0").String(), "not match format 'email'", "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.fields.#(name==traits.subject).errors.0").String(), "not-an-email\" is not valid \"email\"", "%s", body)
 	})
 
 	t.Run("case=register and then login", func(t *testing.T) {
