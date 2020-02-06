@@ -3,8 +3,9 @@ package schema
 import (
 	"fmt"
 
-	"github.com/ory/jsonschema/v3"
 	"github.com/pkg/errors"
+
+	"github.com/ory/jsonschema/v3"
 )
 
 func NewRequiredError(instancePtr, missing string) error {

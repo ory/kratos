@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/ory/jsonschema/v3"
-	_ "github.com/ory/jsonschema/v3/fileloader"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ory/jsonschema/v3"
+	_ "github.com/ory/jsonschema/v3/fileloader"
 )
 
 func TestExtensionRunner(t *testing.T) {
@@ -26,7 +27,7 @@ func TestExtensionRunner(t *testing.T) {
 		{
 			doc:    `{"emails":["foo@ory.sh","bar@ory.sh"]}`,
 			schema: "file://./stub/extension/schema.nested.json",
-			expect: []string{"foo@ory.sh","bar@ory.sh"},
+			expect: []string{"foo@ory.sh", "bar@ory.sh"},
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {

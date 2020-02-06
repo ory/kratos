@@ -3,8 +3,9 @@ package oidc
 import (
 	"sync"
 
-	"github.com/ory/jsonschema/v3"
 	"github.com/tidwall/sjson"
+
+	"github.com/ory/jsonschema/v3"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
@@ -16,7 +17,7 @@ type ValidationExtensionRunner struct {
 }
 
 func NewValidationExtensionRunner(i *identity.Identity) *ValidationExtensionRunner {
-	return &ValidationExtensionRunner{i:i}
+	return &ValidationExtensionRunner{i: i}
 }
 
 func (r *ValidationExtensionRunner) Runner(ctx jsonschema.ValidationContext, config schema.ExtensionConfig, value interface{}) error {

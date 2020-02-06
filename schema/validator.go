@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"sync"
 
-	"github.com/ory/herodot"
 	"github.com/pkg/errors"
+
+	"github.com/ory/herodot"
 
 	"github.com/ory/jsonschema/v3"
 )

@@ -55,7 +55,7 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The file for this JSON Schema ID could not be found or opened. This is a configuration issue.").WithDebugf("%+v", err)))
 			return
 		}
-		err = src.Close()
+		defer src.Close()
 	} else {
 		resp, err := http.Get(s.URL.String())
 		if err != nil {
@@ -69,9 +69,5 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 	if _, err := io.Copy(w, src); err != nil {
 		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The file for this JSON Schema ID could not be found or opened. This is a configuration issue.").WithDebugf("%+v", err)))
 		return
-	}
-
-	if err != nil {
-		h.r.Logger().Debugf("%+v", err)
 	}
 }

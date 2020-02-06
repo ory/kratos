@@ -6,6 +6,8 @@ import (
 
 	"github.com/ory/kratos/driver/configuration"
 
+	_ "github.com/ory/jsonschema/v3/fileloader"
+
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

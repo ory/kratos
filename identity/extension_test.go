@@ -31,7 +31,7 @@ func TestExtensionRunnerIdentityTraits(t *testing.T) {
 		{
 			doc:    `{"emails":["foo@ory.sh","bar@ory.sh"], "username": "foobar"}`,
 			schema: "file://./stub/extension/multi.schema.json",
-			expect: []string{"foo@ory.sh","bar@ory.sh", "foobar"},
+			expect: []string{"foo@ory.sh", "bar@ory.sh", "foobar"},
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {

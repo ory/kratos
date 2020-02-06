@@ -5,9 +5,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ory/jsonschema/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ory/jsonschema/v3"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"

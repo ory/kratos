@@ -40,11 +40,11 @@ func NewSMTP(d smtpDependencies, c configuration.Provider) *Courier {
 		d: d,
 		c: c,
 		dialer: &gomail.Dialer{
-			Host:      uri.Hostname(),
-			Port:      int(port),
-			Username:  uri.User.Username(),
-			Password:  password,
-			SSL:       uri.Scheme == "smtps",
+			Host:     uri.Hostname(),
+			Port:     int(port),
+			Username: uri.User.Username(),
+			Password: password,
+			SSL:      uri.Scheme == "smtps",
 			/* #nosec we need to support SMTP servers wihout TLS */
 			TLSConfig: &tls.Config{InsecureSkipVerify: sslSkipVerify},
 		},

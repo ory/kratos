@@ -13,6 +13,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/jsonschema/v3"
+	"github.com/ory/x/errorsx"
+
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 
 	"github.com/stretchr/testify/assert"
@@ -176,7 +179,7 @@ func TestLogin(t *testing.T) {
 
 				assert.Equal(t, tc.ar.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
-				assert.Equal(t, `The provided credentials are invalid. Check for spelling mistakes in your password or username, email address, or phone number.`, gjson.GetBytes(body, "methods.password.config.errors.0.message").String())
+				assert.Equal(t, `the provided credentials are invalid, check for spelling mistakes in your password or username, email address, or phone number`, gjson.GetBytes(body, "methods.password.config.errors.0.message").String())
 			},
 		},
 		{
@@ -194,7 +197,7 @@ func TestLogin(t *testing.T) {
 				assert.Equal(t, tc.ar.ID.String(), gjson.GetBytes(body, "id").String())
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
 				ensureFieldsExist(t, body)
-				assert.Equal(t, "identifier: identifier is required", gjson.GetBytes(body, "methods.password.config.fields.#(name==identifier).errors.0.message").String(), "%s", body)
+				assert.Equal(t, "missing properties: identifier", gjson.GetBytes(body, "methods.password.config.fields.#(name==identifier).errors.0.message").String(), "%s", body)
 
 				// The password value should not be returned!
 				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).value").String())
@@ -215,7 +218,7 @@ func TestLogin(t *testing.T) {
 				assert.Equal(t, tc.ar.ID.String(), gjson.GetBytes(body, "id").String())
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
 				ensureFieldsExist(t, body)
-				assert.Equal(t, "password: password is required", gjson.GetBytes(body, "methods.password.config.fields.#(name==password).errors.0.message").String(), "%s", body)
+				assert.Equal(t, "missing properties: password", gjson.GetBytes(body, "methods.password.config.fields.#(name==password).errors.0.message").String(), "%s", body)
 
 				assert.Equal(t, "anti-rf-token", gjson.GetBytes(body, "methods.password.config.fields.#(name==csrf_token).value").String())
 				assert.Equal(t, "identifier", gjson.GetBytes(body, "methods.password.config.fields.#(name==identifier).value").String(), "%s", body)
@@ -253,7 +256,11 @@ func TestLogin(t *testing.T) {
 				assert.Equal(t, tc.ar.ID.String(), gjson.GetBytes(body, "id").String())
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
 				ensureFieldsExist(t, body)
-				assert.Equal(t, schema.NewInvalidCredentialsError().(schema.ResultErrors)[0].Description(), gjson.GetBytes(body, "methods.password.config.errors.0.message").String(), "%s", body)
+				assert.Equal(t,
+					errorsx.Cause(schema.NewInvalidCredentialsError()).(*jsonschema.ValidationError).Message,
+					gjson.GetBytes(body, "methods.password.config.errors.0.message").String(),
+					"%s", body,
+				)
 
 				// This must not include the password!
 				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).value").String())
@@ -336,7 +343,7 @@ func TestLogin(t *testing.T) {
 				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==identity).value"))
 				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==identity).error"))
 				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.error"))
-				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).errors.0").String(), "password: password is required", "%s", body)
+				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).errors.0").String(), "missing properties: password", "%s", body)
 			},
 		},
 	} {

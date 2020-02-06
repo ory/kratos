@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/ory/jsonschema/v3"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/ory/jsonschema/v3"
 )
 
 func TestContextSetRoot(t *testing.T) {
@@ -21,7 +22,7 @@ func TestContextSetRoot(t *testing.T) {
 				Context:     &jsonschema.ValidationErrorContextRequired{Missing: []string{"#/foo/bar/baz"}},
 				Causes: []*jsonschema.ValidationError{{
 					InstancePtr: "#/foo/bar",
-					Context:     &jsonschema.ValidationErrorContextRequired{Missing: []string{"#/foo/bar/baz"},},
+					Context:     &jsonschema.ValidationErrorContextRequired{Missing: []string{"#/foo/bar/baz"}},
 				}},
 			},
 			expect: jsonschema.ValidationError{
@@ -29,7 +30,7 @@ func TestContextSetRoot(t *testing.T) {
 				Context:     &jsonschema.ValidationErrorContextRequired{Missing: []string{"#/traits/foo/bar/baz"}},
 				Causes: []*jsonschema.ValidationError{{
 					InstancePtr: "#/traits/foo/bar",
-					Context:     &jsonschema.ValidationErrorContextRequired{Missing: []string{"#/traits/foo/bar/baz"},},
+					Context:     &jsonschema.ValidationErrorContextRequired{Missing: []string{"#/traits/foo/bar/baz"}},
 				}},
 			},
 		},

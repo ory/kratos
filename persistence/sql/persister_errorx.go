@@ -8,8 +8,9 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/ory/jsonschema/v3"
 	"github.com/pkg/errors"
+
+	"github.com/ory/jsonschema/v3"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/errorsx"

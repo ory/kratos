@@ -59,7 +59,7 @@ func TestSchemaValidator(t *testing.T) {
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			err := NewValidator().Validate(stringsx.Coalesce(tc.u, ts.URL+"/schema/firstName.schema.json"), tc.i, )
+			err := NewValidator().Validate(stringsx.Coalesce(tc.u, ts.URL+"/schema/firstName.schema.json"), tc.i)
 			if tc.err == "" {
 				require.NoError(t, err)
 			} else {

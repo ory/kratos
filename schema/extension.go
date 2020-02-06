@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 
 	"github.com/gobuffalo/packr/v2"
-	"github.com/ory/jsonschema/v3"
 	"github.com/pkg/errors"
+
+	"github.com/ory/jsonschema/v3"
 )
 
 var box = packr.New("contrib", "contrib")
