@@ -9,6 +9,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/arbovm/levenshtein"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -46,14 +48,19 @@ type DefaultPasswordValidator struct {
 
 	maxBreachesThreshold int64
 	ignoreNetworkErrors  bool
+
+	minIdentifierPasswordDist   int
+	maxIdentifierPasswordSubstr int
 }
 
 func NewDefaultPasswordValidatorStrategy() *DefaultPasswordValidator {
 	return &DefaultPasswordValidator{
-		c:                    http.DefaultClient,
-		maxBreachesThreshold: 0,
-		hashes:               map[string]int64{},
-		ignoreNetworkErrors:  true,
+		c:                           http.DefaultClient,
+		maxBreachesThreshold:        0,
+		hashes:                      map[string]int64{},
+		ignoreNetworkErrors:         true,
+		minIdentifierPasswordDist:   5,
+		maxIdentifierPasswordSubstr: 3,
 	}
 }
 
@@ -65,6 +72,28 @@ func NewDefaultPasswordValidatorStrategyStrict() *DefaultPasswordValidator {
 
 func b20(src []byte) string {
 	return fmt.Sprintf("%X", src)
+}
+
+// code inspired by https://rosettacode.org/wiki/Longest_Common_Substring#Go
+func lcsLength(a, b string) int {
+	lengths := make([]int, len(a)*len(b))
+	greatestLength := 0
+	for i, x := range a {
+		for j, y := range b {
+			if x == y {
+				curr := 1
+				if i != 0 && j != 0 {
+					curr = lengths[(i-1)*len(b)+j-1] + 1
+				}
+
+				if curr > greatestLength {
+					greatestLength = curr
+				}
+				lengths[i*len(b)+j] = curr
+			}
+		}
+	}
+	return greatestLength
 }
 
 func (s *DefaultPasswordValidator) fetch(hpw []byte) error {
@@ -121,8 +150,9 @@ func (s *DefaultPasswordValidator) Validate(identifier, password string) error {
 		return errors.Errorf("password length must be at least 6 characters but only got %d", len(password))
 	}
 
-	if password == identifier {
-		return errors.Errorf("the password can not be equal to the user identifier")
+	compIdentifier, compPassword := strings.ToLower(identifier), strings.ToLower(password)
+	if levenshtein.Distance(compIdentifier, compPassword) < s.minIdentifierPasswordDist || lcsLength(compIdentifier, compPassword) > s.maxIdentifierPasswordSubstr {
+		return errors.Errorf("the password is to similar to the user identifier")
 	}
 
 	h := sha1.New()
