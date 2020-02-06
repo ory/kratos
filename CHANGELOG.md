@@ -3,7 +3,8 @@
 **Table of Contents**
 
 - [Changelog](#changelog)
-  - [Unreleased](#unreleased)
+  - [v0.1.0-alpha.3 (2020-02-06)](#v010-alpha3-2020-02-06)
+  - [v0.1.0-alpha.2 (2020-02-03)](#v010-alpha2-2020-02-03)
   - [v0.1.0-alpha.1 (2020-01-31)](#v010-alpha1-2020-01-31)
   - [v0.0.3-alpha.15 (2020-01-31)](#v003-alpha15-2020-01-31)
   - [v0.0.3-alpha.14 (2020-01-31)](#v003-alpha14-2020-01-31)
@@ -35,9 +36,13 @@
 
 # Changelog
 
-## [Unreleased](https://github.com/ory/kratos/tree/HEAD)
+## [v0.1.0-alpha.3](https://github.com/ory/kratos/tree/v0.1.0-alpha.3) (2020-02-06)
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.1.0-alpha.1...HEAD)
+[Full Changelog](https://github.com/ory/kratos/compare/v0.1.0-alpha.2...v0.1.0-alpha.3)
+
+## [v0.1.0-alpha.2](https://github.com/ory/kratos/tree/v0.1.0-alpha.2) (2020-02-03)
+
+[Full Changelog](https://github.com/ory/kratos/compare/v0.1.0-alpha.1...v0.1.0-alpha.2)
 
 **Implemented enhancements:**
 
