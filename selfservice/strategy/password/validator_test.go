@@ -59,8 +59,8 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 		{pw: "hello@example.com", id: "hello@exam", pass: false},
 		{id: "hello@example.com", pw: "h3ll0@example", pass: false},
 		{pw: "hello@example.com", id: "hello@exam", pass: false},
-		{pw: "abcd", id: "9d3c8a1b", pass: true},
-		{pw: "a", id: "kjOkla", pass: true},
+		{id: "abcd", pw: "9d3c8a1b", pass: true},
+		{id: "a", pw: "kjOkla", pass: true},
 		{id: "ab", pw: "0000ab0000", pass: true},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
