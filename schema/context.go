@@ -3,27 +3,33 @@ package schema
 import (
 	"strings"
 
-	"github.com/ory/gojsonschema"
+	"github.com/ory/jsonschema/v3"
 )
 
-func ContextSetRoot(c *gojsonschema.JsonContext, head string) *gojsonschema.JsonContext {
-	var nc *gojsonschema.JsonContext
-	list := append([]string{head}, strings.Split(c.String("."), ".")...)
-	for _, item := range list {
-		nc = gojsonschema.NewJsonContext(item, nc)
-	}
-	return nc
-}
+func ContextSetRoot(err *jsonschema.ValidationError, head string) *jsonschema.ValidationError {
+	err.InstancePtr = prefixPointer(err.InstancePtr, head)
 
-func ContextRemoveRootStub(c *gojsonschema.JsonContext) *gojsonschema.JsonContext {
-	var nc *gojsonschema.JsonContext
-	for _, item := range strings.Split(c.String("."), ".") {
-		if item != gojsonschema.STRING_CONTEXT_ROOT {
-			nc = gojsonschema.NewJsonContext(item, nc)
+	if err.Context != nil {
+		switch ctx := err.Context.(type) {
+		case *jsonschema.ValidationErrorContextRequired:
+			for k, pointer := range ctx.Missing {
+				ctx.Missing[k] = prefixPointer(pointer, head)
+			}
 		}
 	}
-	if nc == nil {
-		return gojsonschema.NewJsonContext("", nil)
+
+	for k := range err.Causes {
+		err.Causes[k] = ContextSetRoot(err.Causes[k], head)
 	}
-	return nc
+
+	return err
+}
+
+func prefixPointer(pointer, head string) string {
+	if pointer == "#" || pointer == "#/" {
+		pointer = "#/" + head
+	} else {
+		pointer = "#/" + head + "/" + strings.TrimPrefix(pointer, "#/")
+	}
+	return pointer
 }

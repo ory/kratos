@@ -11,6 +11,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	_ "github.com/ory/jsonschema/v3/fileloader"
+
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/schema"

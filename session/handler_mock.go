@@ -79,6 +79,7 @@ func MockCookieClient(t *testing.T) *http.Client {
 func MockHydrateCookieClient(t *testing.T, c *http.Client, u string) {
 	res, err := c.Get(u)
 	require.NoError(t, err)
+	defer res.Body.Close()
 	assert.EqualValues(t, http.StatusOK, res.StatusCode)
 
 	t.Logf("Cookies: %+v", res.Cookies())

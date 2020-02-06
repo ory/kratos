@@ -6,17 +6,15 @@ import (
 
 	"github.com/ory/kratos/driver/configuration"
 
+	_ "github.com/ory/jsonschema/v3/fileloader"
+
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/x/errorsx"
-
 	"github.com/ory/viper"
 
 	"github.com/ory/x/viperx"
-
-	"github.com/ory/kratos/schema"
 )
 
 func TestViperProvider(t *testing.T) {
@@ -28,12 +26,7 @@ func TestViperProvider(t *testing.T) {
 			logrus.New(),
 		)
 
-		err := viperx.Validate(schema.MustNewWindowsCompatibleReferenceLoader("file://../../docs/config.schema.json"))
-		if err != nil {
-			viperx.LoggerWithValidationErrorFields(logrus.New(), err).Error(err.Error())
-		}
-
-		require.NoError(t, err, "%+v", errorsx.Cause(err))
+		require.NoError(t, viperx.ValidateFromURL("file://../../docs/config.schema.json"))
 		p := configuration.NewViperProvider(logrus.New(), true)
 
 		t.Run("group=urls", func(t *testing.T) {
@@ -78,7 +71,7 @@ func TestViperProvider(t *testing.T) {
 		})
 
 		t.Run("group=dsn", func(t *testing.T) {
-			assert.Equal(t, "memory", p.DSN())
+			assert.Equal(t, "sqlite://foo.db?mode=memory&_fk=true", p.DSN())
 		})
 
 		t.Run("group=secrets", func(t *testing.T) {

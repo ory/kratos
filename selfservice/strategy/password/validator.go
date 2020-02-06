@@ -2,6 +2,7 @@ package password
 
 import (
 	"bufio"
+	/* #nosec G505 sha1 is used for k-anonymity */
 	"crypto/sha1"
 	"fmt"
 	"net/http"
@@ -155,6 +156,7 @@ func (s *DefaultPasswordValidator) Validate(identifier, password string) error {
 		return errors.Errorf("the password is to similar to the user identifier")
 	}
 
+	/* #nosec G401 sha1 is used for k-anonymity */
 	h := sha1.New()
 	if _, err := h.Write([]byte(password)); err != nil {
 		return err

@@ -6,10 +6,11 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/santhosh-tekuri/jsonschema/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	"github.com/ory/jsonschema/v3"
 
 	"github.com/ory/x/jsonschemax"
 )
@@ -29,7 +30,6 @@ func TestFieldFromPath(t *testing.T) {
 			htmlField := fieldFromPath(path.Name, path)
 			assert.Equal(t, gjson.GetBytes(schema, fmt.Sprintf("properties.%s.test_expected_type", path.Name)).String(), htmlField.Type)
 			assert.True(t, !gjson.GetBytes(schema, fmt.Sprintf("properties.%s.test_expected_pattern", path.Name)).Exists() || (gjson.GetBytes(schema, fmt.Sprintf("properties.%s.test_expected_pattern", path.Name)).Bool() && htmlField.Pattern != ""))
-			fmt.Printf("name %s\ntype %s\n", htmlField.Name, htmlField.Type)
 		}
 	})
 }

@@ -1,7 +1,9 @@
 package tests
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -14,13 +16,14 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/gojsonschema"
+	"github.com/ory/jsonschema/v3"
+	_ "github.com/ory/jsonschema/v3/fileloader"
 )
 
 type schema struct {
 	name string
 	raw  string
-	s    *gojsonschema.Schema
+	s    *jsonschema.Schema
 }
 
 type schemas []schema
@@ -38,7 +41,12 @@ func (r result) String() string {
 
 func (s schema) validate(path string) error {
 	if s.s == nil {
-		sx, err := gojsonschema.NewSchema(gojsonschema.NewStringLoader(s.raw))
+		compiler := jsonschema.NewCompiler()
+		if err := compiler.AddResource(s.name, strings.NewReader(s.raw)); err != nil {
+			return err
+		}
+
+		sx, err := compiler.Compile(s.name)
 		if err != nil {
 			return err
 		}
@@ -46,7 +54,7 @@ func (s schema) validate(path string) error {
 		s.s = sx
 	}
 
-	var doc gojsonschema.JSONLoader
+	var doc io.Reader
 	if strings.HasSuffix(path, "yaml") {
 		y, err := ioutil.ReadFile(path)
 		if err != nil {
@@ -58,18 +66,19 @@ func (s schema) validate(path string) error {
 			return err
 		}
 
-		doc = gojsonschema.NewBytesLoader(j)
+		doc = bytes.NewBuffer(j)
 	} else {
-		doc = gojsonschema.NewReferenceLoader(fmt.Sprintf("file://./%s", path))
+
+		buf, err := jsonschema.LoadURL(fmt.Sprintf("file://./%s", path))
+		if err != nil {
+			return err
+		}
+
+		doc = buf
 	}
 
-	res, err := s.s.Validate(doc)
-	if err != nil {
-		return err
-	}
-
-	if len(res.Errors()) != 0 {
-		return errors.Errorf("there were validation errors: %s", res.Errors().Error())
+	if err := s.s.Validate(doc); err != nil {
+		return errors.Errorf("there were validation errors: %s", err)
 	}
 
 	return nil

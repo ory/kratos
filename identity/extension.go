@@ -2,46 +2,30 @@ package identity
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"sync"
 
-	"github.com/pkg/errors"
-
-	"github.com/ory/gojsonschema"
+	"github.com/ory/jsonschema/v3"
 
 	"github.com/ory/kratos/schema"
 )
 
-var _ ValidationExtender = new(ValidationExtensionIdentifier)
-
-type ValidationExtensionIdentifier struct {
-	l sync.Mutex
-	v []string
+type ValidationExtensionRunner struct {
 	i *Identity
+	v []string
+	l sync.Mutex
 }
 
-func NewValidationExtensionIdentifier() *ValidationExtensionIdentifier {
-	return &ValidationExtensionIdentifier{
-		v: make([]string, 0),
-	}
+func NewValidationExtensionRunner(i *Identity) *ValidationExtensionRunner {
+	return &ValidationExtensionRunner{i: i}
 }
 
-func (e *ValidationExtensionIdentifier) WithIdentity(i *Identity) ValidationExtender {
-	e.i = i
-	return e
-}
-
-func (e *ValidationExtensionIdentifier) Call(value interface{}, config *schema.Extension, context *gojsonschema.JsonContext) error {
-	if config.Credentials.Password.Identifier {
-		e.l.Lock()
-		defer e.l.Unlock()
-
-		vs, ok := value.(string)
-		if !ok {
-			return errors.Errorf(`schema: expected value of "%s" to be string but got: %T`, context.String("."), value)
-		}
-
-		cred, ok := e.i.GetCredentials(CredentialsTypePassword)
+func (r *ValidationExtensionRunner) Runner(_ jsonschema.ValidationContext, s schema.ExtensionConfig, value interface{}) error {
+	r.l.Lock()
+	defer r.l.Unlock()
+	if s.Credentials.Password.Identifier {
+		cred, ok := r.i.GetCredentials(CredentialsTypePassword)
 		if !ok {
 			cred = &Credentials{
 				Type:        CredentialsTypePassword,
@@ -50,10 +34,9 @@ func (e *ValidationExtensionIdentifier) Call(value interface{}, config *schema.E
 			}
 		}
 
-		e.v = append(e.v, strings.ToLower(vs))
-		cred.Identifiers = e.v
-		e.i.SetCredentials(CredentialsTypePassword, *cred)
+		r.v = append(r.v, strings.ToLower(fmt.Sprintf("%s", value)))
+		cred.Identifiers = r.v
+		r.i.SetCredentials(CredentialsTypePassword, *cred)
 	}
-
 	return nil
 }

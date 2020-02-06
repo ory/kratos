@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/ory/jsonschema/v3"
+
 	"github.com/ory/kratos/driver/configuration"
 
 	"github.com/gobuffalo/pop/v5"
@@ -17,7 +19,6 @@ import (
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/schema"
 )
 
 var _ identity.Pool = new(Persister)
@@ -273,7 +274,7 @@ func (p *Persister) GetIdentityConfidential(_ context.Context, id uuid.UUID) (*i
 
 func (p *Persister) validateIdentity(i *identity.Identity) error {
 	if err := p.r.IdentityValidator().Validate(i); err != nil {
-		if _, ok := errorsx.Cause(err).(schema.ResultErrors); ok {
+		if _, ok := errorsx.Cause(err).(*jsonschema.ValidationError); ok {
 			return errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
 		}
 		return err

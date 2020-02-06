@@ -7,7 +7,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/santhosh-tekuri/jsonschema/v2"
+	"github.com/ory/jsonschema/v3"
 
 	"github.com/ory/x/errorsx"
 
@@ -17,7 +17,6 @@ import (
 	"github.com/ory/x/stringslice"
 
 	"github.com/ory/kratos/persistence/aliases"
-	"github.com/ory/kratos/schema"
 )
 
 var (
@@ -153,7 +152,7 @@ func (c *HTMLForm) ParseError(err error) error {
 				continue
 			}
 			switch ctx := err.Context.(type) {
-			case *jsonschema.ValidationContextRequired:
+			case *jsonschema.ValidationErrorContextRequired:
 				for _, required := range ctx.Missing {
 					// The pointer can be ignored because if there is an error, we'll just use
 					// the empty field (global error).
@@ -163,16 +162,6 @@ func (c *HTMLForm) ParseError(err error) error {
 			default:
 				c.AddError(&Error{Message: err.Message}, pointer)
 				continue
-			}
-		}
-		return nil
-	case schema.ResultErrors:
-		for _, ei := range e {
-			switch ei.Type() {
-			case "invalid_credentials":
-				c.AddError(&Error{Message: ei.Description()})
-			default:
-				c.AddError(&Error{Message: ei.String()}, ei.Field())
 			}
 		}
 		return nil

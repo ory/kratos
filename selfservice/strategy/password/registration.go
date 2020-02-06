@@ -15,11 +15,10 @@ import (
 
 	"github.com/ory/x/errorsx"
 
+	_ "github.com/ory/jsonschema/v3/fileloader"
+	_ "github.com/ory/jsonschema/v3/httploader"
 	"github.com/ory/x/decoderx"
-	_ "github.com/ory/x/jsonschemax/fileloader"
-	_ "github.com/ory/x/jsonschemax/httploader"
 
-	"github.com/ory/gojsonschema"
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
 
@@ -111,21 +110,12 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 	if err := ar.Valid(); err != nil {
 		// create new request if the old one is not valid
 		if err = s.d.RegistrationHandler().NewRegistrationRequest(w, r, func(a *registration.Request) (string, error) {
-			expiredError := form.Error{
-				Message: "Your session expired, please start again.",
-			}
-
-			if passwordMethod, ok := a.Methods[identity.CredentialsTypePassword]; ok {
-				passwordMethod.Config.AddError(&expiredError)
-				if err := s.d.RegistrationRequestPersister().UpdateRegistrationRequest(context.TODO(), a.ID, identity.CredentialsTypePassword, passwordMethod); err != nil {
+			for name, method := range a.Methods {
+				method.Config.AddError(&form.Error{Message: "Your session expired, please try again."})
+				if err := s.d.RegistrationRequestPersister().UpdateRegistrationRequest(context.TODO(), a.ID, name, method); err != nil {
 					return s.d.SelfServiceErrorManager().Create(r.Context(), w, r, err)
 				}
-			}
-			if oidcMethod, ok := a.Methods[identity.CredentialsTypeOIDC]; ok {
-				oidcMethod.Config.AddError(&expiredError)
-				if err := s.d.RegistrationRequestPersister().UpdateRegistrationRequest(context.TODO(), a.ID, identity.CredentialsTypeOIDC, oidcMethod); err != nil {
-					return s.d.SelfServiceErrorManager().Create(r.Context(), w, r, err)
-				}
+				a.Methods[name] = method
 			}
 
 			return urlx.CopyWithQuery(s.c.RegisterURL(), url.Values{"request": {a.ID.String()}}).String(), nil
@@ -155,7 +145,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 	}
 
 	if len(p.Password) == 0 {
-		s.handleRegistrationError(w, r, ar, &p, errors.WithStack(schema.NewRequiredError("", gojsonschema.NewJsonContext("password", nil))))
+		s.handleRegistrationError(w, r, ar, &p, schema.NewRequiredError("#/", "password"))
 		return
 	}
 
@@ -218,11 +208,7 @@ func (s *Strategy) validateCredentials(i *identity.Identity, pw string) error {
 			if _, ok := errorsx.Cause(err).(*herodot.DefaultError); ok {
 				return err
 			}
-			return schema.NewPasswordPolicyValidation(
-				"",
-				err.Error(),
-				gojsonschema.NewJsonContext("password", nil),
-			)
+			return schema.NewPasswordPolicyViolationError("#/password", err.Error())
 		}
 	}
 

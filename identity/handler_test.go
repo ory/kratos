@@ -101,7 +101,7 @@ func TestHandler(t *testing.T) {
 		var i identity.Identity
 		i.Traits = identity.Traits(`{"bar":123}`)
 		res := send(t, "POST", "/identities", http.StatusBadRequest, &i)
-		assert.Contains(t, res.Get("error.reason").String(), "invalid type")
+		assert.Contains(t, res.Get("error.reason").String(), "I[#/traits/bar] S[#/properties/bar/type] expected string, but got number")
 	})
 
 	t.Run("case=should fail to create an entity with traits_schema_url set", func(t *testing.T) {

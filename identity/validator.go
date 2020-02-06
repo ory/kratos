@@ -1,8 +1,12 @@
 package identity
 
 import (
-	"github.com/ory/gojsonschema"
+	"encoding/json"
+
+	"github.com/ory/jsonschema/v3"
+
 	"github.com/ory/kratos/schema"
+
 	"github.com/ory/x/errorsx"
 )
 
@@ -26,14 +30,13 @@ func NewValidator(d validatorDependencies) *Validator {
 	}
 }
 
-type ValidationExtender interface {
-	WithIdentity(*Identity) ValidationExtender
-	schema.ValidationExtender
-}
-
 func (v *Validator) Validate(i *Identity) error {
-	es := []schema.ValidationExtender{
-		NewValidationExtensionIdentifier().WithIdentity(i),
+	runner, err := schema.NewExtensionRunner(
+		schema.ExtensionRunnerIdentityMetaSchema,
+		NewValidationExtensionRunner(i).Runner,
+	)
+	if err != nil {
+		return err
 	}
 
 	s, err := v.d.IdentityTraitsSchemas().GetByID(i.TraitsSchemaID)
@@ -43,16 +46,14 @@ func (v *Validator) Validate(i *Identity) error {
 
 	err = v.v.Validate(
 		s.URL.String(),
-		gojsonschema.NewBytesLoader(i.Traits),
-		es...,
+		json.RawMessage(i.Traits),
+		schema.WithExtensionRunner(runner),
 	)
 
-	switch errs := errorsx.Cause(err).(type) {
-	case schema.ResultErrors:
-		for k, err := range errs {
-			errs[k].SetContext(schema.ContextSetRoot(schema.ContextRemoveRootStub(err.Context()), "traits"))
-		}
-		return errs
+	switch e := errorsx.Cause(err).(type) {
+	case *jsonschema.ValidationError:
+		return schema.ContextSetRoot(e, "traits")
 	}
+
 	return err
 }

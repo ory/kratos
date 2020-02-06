@@ -7,7 +7,7 @@ serve:
     port: 1235
     host: public.kratos.ory.sh
 
-dsn: memory
+dsn: sqlite://foo.db?mode=memory&_fk=true
 
 log:
   level: debug
