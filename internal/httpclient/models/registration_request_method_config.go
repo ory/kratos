@@ -24,6 +24,8 @@ type RegistrationRequestMethodConfig struct {
 	RegistrationRequestMethodConfigAllOf4
 
 	RegistrationRequestMethodConfigAllOf5
+
+	RegistrationRequestMethodConfigAllOf6
 }
 
 // UnmarshalJSON unmarshals this object from a JSON structure
@@ -70,12 +72,19 @@ func (m *RegistrationRequestMethodConfig) UnmarshalJSON(raw []byte) error {
 	}
 	m.RegistrationRequestMethodConfigAllOf5 = aO5
 
+	// AO6
+	var aO6 RegistrationRequestMethodConfigAllOf6
+	if err := swag.ReadJSON(raw, &aO6); err != nil {
+		return err
+	}
+	m.RegistrationRequestMethodConfigAllOf6 = aO6
+
 	return nil
 }
 
 // MarshalJSON marshals this object to a JSON structure
 func (m RegistrationRequestMethodConfig) MarshalJSON() ([]byte, error) {
-	_parts := make([][]byte, 0, 6)
+	_parts := make([][]byte, 0, 7)
 
 	aO0, err := swag.WriteJSON(m.RegistrationRequestMethodConfigAllOf0)
 	if err != nil {
@@ -112,6 +121,12 @@ func (m RegistrationRequestMethodConfig) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 	_parts = append(_parts, aO5)
+
+	aO6, err := swag.WriteJSON(m.RegistrationRequestMethodConfigAllOf6)
+	if err != nil {
+		return nil, err
+	}
+	_parts = append(_parts, aO6)
 
 	return swag.ConcatJSON(_parts...), nil
 }
@@ -162,3 +177,7 @@ type RegistrationRequestMethodConfigAllOf4 interface{}
 // RegistrationRequestMethodConfigAllOf5 registration request method config all of5
 // swagger:model RegistrationRequestMethodConfigAllOf5
 type RegistrationRequestMethodConfigAllOf5 interface{}
+
+// RegistrationRequestMethodConfigAllOf6 registration request method config all of6
+// swagger:model RegistrationRequestMethodConfigAllOf6
+type RegistrationRequestMethodConfigAllOf6 interface{}

@@ -1086,6 +1086,9 @@
         },
         {
           "type": "object"
+        },
+        {
+          "type": "object"
         }
       ]
     },
