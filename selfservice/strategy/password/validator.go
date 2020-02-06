@@ -150,7 +150,8 @@ func (s *DefaultPasswordValidator) Validate(identifier, password string) error {
 		return errors.Errorf("password length must be at least 6 characters but only got %d", len(password))
 	}
 
-	if levenshtein.Distance(identifier, password) < s.minIdentifierPasswordDist || lcsLength(identifier, password) > s.maxIdentifierPasswordSubstr {
+	compIdentifier, compPassword := strings.ToLower(identifier), strings.ToLower(password)
+	if levenshtein.Distance(compIdentifier, compPassword) < s.minIdentifierPasswordDist || lcsLength(compIdentifier, compPassword) > s.maxIdentifierPasswordSubstr {
 		return errors.Errorf("the password is to similar to the user identifier")
 	}
 
