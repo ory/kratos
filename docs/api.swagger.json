@@ -983,6 +983,9 @@
         },
         {
           "type": "object"
+        },
+        {
+          "type": "object"
         }
       ]
     },
@@ -1066,6 +1069,9 @@
     "registrationRequestMethodConfig": {
       "type": "object",
       "allOf": [
+        {
+          "type": "object"
+        },
         {
           "type": "object"
         },

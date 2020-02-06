@@ -58,7 +58,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(BrowserLoginRequestsPath, h.adminFetchLoginRequest)
 }
 
-func (h *Handler) NewLoginRequest(w http.ResponseWriter, r *http.Request, redir func(request *Request) string) error {
+func (h *Handler) NewLoginRequest(w http.ResponseWriter, r *http.Request, redir func(request *Request) (string, error)) error {
 	a := NewLoginRequest(h.c.SelfServiceLoginRequestLifespan(), h.csrf(r), r)
 	for _, s := range h.d.LoginStrategies() {
 		if err := s.PopulateLoginMethod(r, a); err != nil {
@@ -77,9 +77,13 @@ func (h *Handler) NewLoginRequest(w http.ResponseWriter, r *http.Request, redir 
 		return err
 	}
 
+	to, err := redir(a)
+	if err != nil {
+		return err
+	}
 	http.Redirect(w,
 		r,
-		redir(a),
+		to,
 		http.StatusFound,
 	)
 
@@ -105,10 +109,10 @@ func (h *Handler) NewLoginRequest(w http.ResponseWriter, r *http.Request, redir 
 //       302: emptyResponse
 //       500: genericError
 func (h *Handler) initLoginRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.NewLoginRequest(w, r, func(a *Request) string {
-		return urlx.CopyWithQuery(h.c.LoginURL(), url.Values{"request": {a.ID.String()}}).String()
+	if err := h.NewLoginRequest(w, r, func(a *Request) (string, error) {
+		return urlx.CopyWithQuery(h.c.LoginURL(), url.Values{"request": {a.ID.String()}}).String(), nil
 	}); err != nil {
-		h.d.SelfServiceErrorManager().ForwardError(r.Context(), w, r, err)
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 }

@@ -25,6 +25,7 @@ type registrationStrategyDependencies interface {
 	ValidationProvider
 	HashProvider
 
+	registration.HandlerProvider
 	registration.HooksProvider
 	registration.ErrorHandlerProvider
 	registration.HookExecutorProvider
@@ -34,6 +35,7 @@ type registrationStrategyDependencies interface {
 	login.ErrorHandlerProvider
 	login.HookExecutorProvider
 	login.RequestPersistenceProvider
+	login.HandlerProvider
 
 	identity.PoolProvider
 	identity.ValidationProvider

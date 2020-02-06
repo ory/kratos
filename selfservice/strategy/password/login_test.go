@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/jsonschema/v3"
-	"github.com/ory/x/errorsx"
+	"github.com/ory/kratos/selfservice/strategy/oidc"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -145,20 +145,21 @@ func TestLogin(t *testing.T) {
 			},
 		},
 		{
-			d:  "should return an error because the request is expired",
+			d:  "should redirect to login init because the request is expired",
 			ar: nlr(-time.Hour),
 			payload: url.Values{
 				"identifier": {"identifier"},
 				"password":   {"password"},
 			}.Encode(),
 			assert: func(t *testing.T, tc testCase, r *http.Response) {
-				assert.Contains(t, r.Request.URL.Path, "error-ts")
+				assert.Contains(t, r.Request.URL.Path, "login-ts")
 				body, err := ioutil.ReadAll(r.Body)
 				require.NoError(t, err)
 
-				assert.Equal(t, int64(http.StatusBadRequest), gjson.GetBytes(body, "0.code").Int(), "%s", body)
-				assert.Equal(t, "Bad Request", gjson.GetBytes(body, "0.status").String(), "%s", body)
-				assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "expired", "%s", body)
+				assert.NotEqual(t, tc.ar.ID, gjson.GetBytes(body, "id"))
+
+				assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.errors.0").String(), "expired", "%s", body)
+				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.errors.0").String(), "expired", "%s", body)
 			},
 		},
 		{
@@ -175,7 +176,7 @@ func TestLogin(t *testing.T) {
 
 				assert.Equal(t, tc.ar.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
-				assert.Equal(t, `the provided credentials are invalid, check for spelling mistakes in your password or username, email address, or phone number`, gjson.GetBytes(body, "methods.password.config.errors.0.message").String())
+				assert.Equal(t, `The provided credentials are invalid. Check for spelling mistakes in your password or username, email address, or phone number.`, gjson.GetBytes(body, "methods.password.config.errors.0.message").String())
 			},
 		},
 		{
@@ -193,7 +194,7 @@ func TestLogin(t *testing.T) {
 				assert.Equal(t, tc.ar.ID.String(), gjson.GetBytes(body, "id").String())
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
 				ensureFieldsExist(t, body)
-				assert.Equal(t, "missing properties: identifier", gjson.GetBytes(body, "methods.password.config.fields.#(name==identifier).errors.0.message").String(), "%s", body)
+				assert.Equal(t, "identifier: identifier is required", gjson.GetBytes(body, "methods.password.config.fields.#(name==identifier).errors.0.message").String(), "%s", body)
 
 				// The password value should not be returned!
 				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).value").String())
@@ -214,7 +215,7 @@ func TestLogin(t *testing.T) {
 				assert.Equal(t, tc.ar.ID.String(), gjson.GetBytes(body, "id").String())
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
 				ensureFieldsExist(t, body)
-				assert.Equal(t, "missing properties: password", gjson.GetBytes(body, "methods.password.config.fields.#(name==password).errors.0.message").String(), "%s", body)
+				assert.Equal(t, "password: password is required", gjson.GetBytes(body, "methods.password.config.fields.#(name==password).errors.0.message").String(), "%s", body)
 
 				assert.Equal(t, "anti-rf-token", gjson.GetBytes(body, "methods.password.config.fields.#(name==csrf_token).value").String())
 				assert.Equal(t, "identifier", gjson.GetBytes(body, "methods.password.config.fields.#(name==identifier).value").String(), "%s", body)
@@ -252,7 +253,7 @@ func TestLogin(t *testing.T) {
 				assert.Equal(t, tc.ar.ID.String(), gjson.GetBytes(body, "id").String())
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
 				ensureFieldsExist(t, body)
-				assert.Equal(t, errorsx.Cause(schema.NewInvalidCredentialsError()).(*jsonschema.ValidationError).Message, gjson.GetBytes(body, "methods.password.config.errors.0.message").String(), "%s", body)
+				assert.Equal(t, schema.NewInvalidCredentialsError().(schema.ResultErrors)[0].Description(), gjson.GetBytes(body, "methods.password.config.errors.0.message").String(), "%s", body)
 
 				// This must not include the password!
 				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).value").String())
@@ -335,17 +336,17 @@ func TestLogin(t *testing.T) {
 				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==identity).value"))
 				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==identity).error"))
 				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.error"))
-				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).errors.0").String(), "missing properties: password", "%s", body)
+				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).errors.0").String(), "password: password is required", "%s", body)
 			},
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d/description=%s", k, tc.d), func(t *testing.T) {
 			_, reg := internal.NewRegistryDefault(t)
 			s := reg.LoginStrategies().MustStrategy(identity.CredentialsTypePassword).(*password.Strategy)
-			s.WithTokenGenerator(func(r *http.Request) string {
-				return "anti-rf-token"
-			})
-			reg.SelfServiceErrorManager().WithTokenGenerator(x.FakeCSRFTokenGenerator)
+			s.WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
+			reg.LoginStrategies().MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
+			reg.LoginHandler().WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
+			reg.SelfServiceErrorManager().WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
 
 			router := x.NewRouterPublic()
 			admin := x.NewRouterAdmin()

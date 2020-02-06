@@ -24,6 +24,12 @@ func FakeCSRFTokenGenerator(r *http.Request) string {
 	return "nosurf"
 }
 
+func FakeCSRFTokenGeneratorWithToken(token string) func(r *http.Request) string {
+	return func(r *http.Request) string {
+		return token
+	}
+}
+
 type CSRFProvider interface {
 	CSRFHandler() *nosurf.CSRFHandler
 }
