@@ -7,6 +7,8 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/ory/kratos/schema"
+
 	"github.com/ory/jsonschema/v3"
 
 	"github.com/ory/x/errorsx"
@@ -78,12 +80,7 @@ func NewHTMLFormFromRequestBody(r *http.Request, action string, compiler decoder
 // NewHTMLFormFromJSON creates a HTML form based on the provided JSON struct.
 func NewHTMLFormFromJSON(action string, raw json.RawMessage, prefix string) *HTMLForm {
 	c := NewHTMLForm(action)
-	for k, v := range jsonx.Flatten(raw) {
-		if prefix != "" {
-			k = prefix + "." + k
-		}
-		c.SetValue(k, v)
-	}
+	c.SetValuesFromJSON(raw, prefix)
 
 	return c
 }
@@ -91,7 +88,13 @@ func NewHTMLFormFromJSON(action string, raw json.RawMessage, prefix string) *HTM
 // NewHTMLFormFromJSONSchema creates a new HTMLForm and populates the fields
 // using the provided JSON Schema.
 func NewHTMLFormFromJSONSchema(action, jsonSchemaRef, prefix string) (*HTMLForm, error) {
-	paths, err := jsonschemax.ListPaths(jsonSchemaRef, nil)
+	compiler := jsonschema.NewCompiler()
+	extensionRunner, err := schema.NewExtensionRunner(schema.ExtensionRunnerIdentityMetaSchema)
+	if err != nil {
+		return nil, err
+	}
+	extensionRunner.Register(compiler)
+	paths, err := jsonschemax.ListPaths(jsonSchemaRef, compiler)
 	if err != nil {
 		return nil, err
 	}
@@ -173,6 +176,17 @@ func (c *HTMLForm) ParseError(err error) error {
 func (c *HTMLForm) SetValues(values map[string]interface{}) {
 	c.defaults()
 	for k, v := range values {
+		c.SetValue(k, v)
+	}
+}
+
+// S sets the container's fields to the provided values.
+func (c *HTMLForm) SetValuesFromJSON(raw json.RawMessage, prefix string) {
+	c.defaults()
+	for k, v := range jsonx.Flatten(raw) {
+		if prefix != "" {
+			k = prefix + "." + k
+		}
 		c.SetValue(k, v)
 	}
 }

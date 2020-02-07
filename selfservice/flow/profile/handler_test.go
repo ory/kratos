@@ -80,7 +80,7 @@ func TestUpdateProfile(t *testing.T) {
 		Credentials: map[identity.CredentialsType]identity.Credentials{
 			"password": {Type: "password", Identifiers: []string{"john@doe.com"}, Config: json.RawMessage(`{"hashed_password":"foo"}`)},
 		},
-		Traits:         identity.Traits(`{"email":"john@doe.com","stringy":"foobar","booly":false,"numby":2.5}`),
+		Traits:         identity.Traits(`{"email":"john@doe.com","stringy":"foobar","booly":false,"numby":2.5,"should_long_string":"asdfasdfasdfasdfasfdasdfasdfasdf","should_big_number":2048}`),
 		TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
 	}
 
@@ -260,10 +260,12 @@ func TestUpdateProfile(t *testing.T) {
 			Action: publicTS.URL + profile.PublicProfileManagementUpdatePath + "?request=" + rid,
 			Method: "POST",
 			Fields: models.FormFields{
-				&models.FormField{Name: "traits.email", Required: false, Type: "text", Value: "john@doe.com"},
+				&models.FormField{Name: "traits.email", Required: false, Type: "text", Value: "john@doe.com", Disabled: true},
 				&models.FormField{Name: "traits.stringy", Required: false, Type: "text", Value: "foobar"},
 				&models.FormField{Name: "traits.numby", Required: false, Type: "number", Value: json.Number("2.5")},
 				&models.FormField{Name: "traits.booly", Required: false, Type: "checkbox", Value: false},
+				&models.FormField{Name: "traits.should_big_number", Required: false, Type: "number", Value: json.Number("2048")},
+				&models.FormField{Name: "traits.should_long_string", Required: false, Type: "text", Value: "asdfasdfasdfasdfasfdasdfasdfasdf"},
 			},
 		}, pr.Payload.Form)
 	})

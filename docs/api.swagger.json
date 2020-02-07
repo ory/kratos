@@ -765,7 +765,10 @@
     "Traits": {
       "type": "object"
     },
-    "UUID": {"type": "string", "format": "uuid4"},
+    "UUID": {
+      "type": "string",
+      "format": "uuid4"
+    },
     "completeSelfServiceBrowserProfileManagementFlowPayload": {
       "type": "object",
       "required": [
@@ -819,7 +822,7 @@
       "properties": {
         "disabled": {
           "description": "Disabled is the equivalent of \u003cinput disabled=\"{{.Disabled}}\"\u003e",
-          "type": "string"
+          "type": "boolean"
         },
         "errors": {
           "description": "Errors contains all validation errors this particular field has caused.",

@@ -3,6 +3,9 @@ package schema
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+
+	"github.com/ory/x/jsonschemax"
 
 	"github.com/gobuffalo/packr/v2"
 	"github.com/pkg/errors"
@@ -16,6 +19,7 @@ const (
 	ExtensionRunnerIdentityMetaSchema ExtensionRunnerMetaSchema = "extension/identity.schema.json"
 	ExtensionRunnerOIDCMetaSchema     ExtensionRunnerMetaSchema = "extension/oidc.schema.json"
 	extensionName                                               = "ory.sh/kratos"
+	IsIdentifierFlag                                            = "isIdentifierFlag"
 )
 
 type (
@@ -43,6 +47,18 @@ type (
 		runners []runner
 	}
 )
+
+// this function adds the custom property IsIdentifierFlag to the path so that we can use it to disable form fields etc.
+func (ec *ExtensionConfig) EnhancePath(_ jsonschemax.Path) map[string]interface{} {
+	fmt.Printf("Enhance path called with %v\n", ec.Credentials.Password.Identifier)
+	// if this path is an identifier the form field should be disabled
+	if ec.Credentials.Password.Identifier {
+		return map[string]interface{}{
+			IsIdentifierFlag: true,
+		}
+	}
+	return nil
+}
 
 func NewExtensionRunner(meta ExtensionRunnerMetaSchema, runners ...runner) (*ExtensionRunner, error) {
 	var err error

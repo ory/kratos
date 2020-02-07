@@ -26,13 +26,14 @@ type Field struct {
 	// Pattern is the equivalent of <input pattern="{{.Pattern}}">
 	Pattern string `json:"pattern,omitempty"`
 	// Disabled is the equivalent of <input disabled="{{.Disabled}}">
-	Disabled string `json:"disabled,omitempty"`
+	Disabled bool `json:"disabled,omitempty"`
 	// Required is the equivalent of <input required="{{.Required}}">
 	Required bool `json:"required,omitempty"`
 	// Value is the equivalent of <input value="{{.Value}}">
 	Value interface{} `json:"value,omitempty" faker:"name"`
 	// Errors contains all validation errors this particular field has caused.
-	Errors []Error `json:"errors,omitempty"`
+	Errors       []Error `json:"errors,omitempty"`
+	IsIdentifier bool    `json:"-"`
 }
 
 // Reset resets a field's value and errors.
@@ -113,6 +114,13 @@ func fieldFromPath(name string, p jsonschemax.Path) Field {
 	// Other properties
 	if p.Pattern != nil {
 		f.Pattern = p.Pattern.String()
+	}
+
+	// Set disabled if the custom property is set
+	if isIdentifier, ok := p.CustomProperties[schema.IsIdentifierFlag]; ok {
+		if isIdentifier, ok := isIdentifier.(bool); ok {
+			f.IsIdentifier = isIdentifier
+		}
 	}
 
 	return f

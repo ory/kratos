@@ -18,7 +18,7 @@ import (
 type FormField struct {
 
 	// Disabled is the equivalent of <input disabled="{{.Disabled}}">
-	Disabled string `json:"disabled,omitempty"`
+	Disabled bool `json:"disabled,omitempty"`
 
 	// Errors contains all validation errors this particular field has caused.
 	Errors []*Error `json:"errors"`
