@@ -113,6 +113,11 @@ func (h *Handler) initUpdateProfile(w http.ResponseWriter, r *http.Request, ps h
 			"request": {a.ID.String()},
 		},
 	).String(), traitsSchema.URL, "traits")
+	if err != nil {
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		return
+	}
+
 	a.Form.SetValuesFromJSON(json.RawMessage(s.Identity.Traits), "traits")
 	a.Form.SetCSRF(h.csrf(r))
 
