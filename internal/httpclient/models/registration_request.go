@@ -17,28 +17,34 @@ import (
 type RegistrationRequest struct {
 
 	// active
-	Active CredentialsType `json:"active,omitempty"`
+	// Required: true
+	Active CredentialsType `json:"active"`
 
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,
 	// a new request has to be initiated.
+	// Required: true
 	// Format: date-time
-	ExpiresAt strfmt.DateTime `json:"expires_at,omitempty"`
+	ExpiresAt *strfmt.DateTime `json:"expires_at"`
 
 	// id
+	// Required: true
 	// Format: uuid4
-	ID UUID `json:"id,omitempty"`
+	ID UUID `json:"id"`
 
 	// IssuedAt is the time (UTC) when the request occurred.
+	// Required: true
 	// Format: date-time
-	IssuedAt strfmt.DateTime `json:"issued_at,omitempty"`
+	IssuedAt *strfmt.DateTime `json:"issued_at"`
 
 	// Methods contains context for all enabled registration methods. If a registration request has been
 	// processed, but for example the password is incorrect, this will contain error messages.
-	Methods map[string]RegistrationRequestMethod `json:"methods,omitempty"`
+	// Required: true
+	Methods map[string]RegistrationRequestMethod `json:"methods"`
 
 	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used
 	// to forward information contained in the URL's path or query for example.
-	RequestURL string `json:"request_url,omitempty"`
+	// Required: true
+	RequestURL *string `json:"request_url"`
 }
 
 // Validate validates this registration request
@@ -65,6 +71,10 @@ func (m *RegistrationRequest) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
+	if err := m.validateRequestURL(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -72,10 +82,6 @@ func (m *RegistrationRequest) Validate(formats strfmt.Registry) error {
 }
 
 func (m *RegistrationRequest) validateActive(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.Active) { // not required
-		return nil
-	}
 
 	if err := m.Active.Validate(formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
@@ -89,8 +95,8 @@ func (m *RegistrationRequest) validateActive(formats strfmt.Registry) error {
 
 func (m *RegistrationRequest) validateExpiresAt(formats strfmt.Registry) error {
 
-	if swag.IsZero(m.ExpiresAt) { // not required
-		return nil
+	if err := validate.Required("expires_at", "body", m.ExpiresAt); err != nil {
+		return err
 	}
 
 	if err := validate.FormatOf("expires_at", "body", "date-time", m.ExpiresAt.String(), formats); err != nil {
@@ -101,10 +107,6 @@ func (m *RegistrationRequest) validateExpiresAt(formats strfmt.Registry) error {
 }
 
 func (m *RegistrationRequest) validateID(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.ID) { // not required
-		return nil
-	}
 
 	if err := m.ID.Validate(formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
@@ -118,8 +120,8 @@ func (m *RegistrationRequest) validateID(formats strfmt.Registry) error {
 
 func (m *RegistrationRequest) validateIssuedAt(formats strfmt.Registry) error {
 
-	if swag.IsZero(m.IssuedAt) { // not required
-		return nil
+	if err := validate.Required("issued_at", "body", m.IssuedAt); err != nil {
+		return err
 	}
 
 	if err := validate.FormatOf("issued_at", "body", "date-time", m.IssuedAt.String(), formats); err != nil {
@@ -130,10 +132,6 @@ func (m *RegistrationRequest) validateIssuedAt(formats strfmt.Registry) error {
 }
 
 func (m *RegistrationRequest) validateMethods(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.Methods) { // not required
-		return nil
-	}
 
 	for k := range m.Methods {
 
@@ -146,6 +144,15 @@ func (m *RegistrationRequest) validateMethods(formats strfmt.Registry) error {
 			}
 		}
 
+	}
+
+	return nil
+}
+
+func (m *RegistrationRequest) validateRequestURL(formats strfmt.Registry) error {
+
+	if err := validate.Required("request_url", "body", m.RequestURL); err != nil {
+		return err
 	}
 
 	return nil

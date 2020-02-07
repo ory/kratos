@@ -36,12 +36,18 @@ type HTMLForm struct {
 	sync.RWMutex
 
 	// Action should be used as the form action URL (<form action="{{ .Action }}" method="post">).
+	//
+	// required: true
 	Action string `json:"action"`
 
 	// Method is the form method (e.g. POST)
+	//
+	// required: true
 	Method string `json:"method"`
 
 	// Fields contains the form fields.
+	//
+	// required: true
 	Fields Fields `json:"fields"`
 
 	// Errors contains all form errors. These will be duplicates of the individual field errors.

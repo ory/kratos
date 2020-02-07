@@ -66,7 +66,18 @@ type RequestMethodConfigurator interface {
 
 // swagger:model registrationRequestMethodConfig
 type RequestMethodConfig struct {
+	// swagger:ignore
 	RequestMethodConfigurator
+
+	requestMethodConfigMock
+}
+
+// swagger:model registrationRequestMethodConfigPayload
+type requestMethodConfigMock struct {
+	*form.HTMLForm
+
+	// Providers is set for the "oidc" request method.
+	Providers []form.Field `json:"providers"`
 }
 
 func (c *RequestMethodConfig) Scan(value interface{}) error {

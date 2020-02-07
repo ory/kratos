@@ -6,133 +6,148 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"strconv"
+
+	"github.com/go-openapi/errors"
 	strfmt "github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // RegistrationRequestMethodConfig registration request method config
 // swagger:model registrationRequestMethodConfig
 type RegistrationRequestMethodConfig struct {
-	RegistrationRequestMethodConfigAllOf0
 
-	RegistrationRequestMethodConfigAllOf1
+	// Action should be used as the form action URL (<form action="{{ .Action }}" method="post">).
+	// Required: true
+	Action *string `json:"action"`
 
-	RegistrationRequestMethodConfigAllOf2
+	// Errors contains all form errors. These will be duplicates of the individual field errors.
+	Errors []*Error `json:"errors"`
 
-	RegistrationRequestMethodConfigAllOf3
+	// fields
+	// Required: true
+	Fields FormFields `json:"fields"`
 
-	RegistrationRequestMethodConfigAllOf4
+	// Method is the form method (e.g. POST)
+	// Required: true
+	Method *string `json:"method"`
 
-	RegistrationRequestMethodConfigAllOf5
-
-	RegistrationRequestMethodConfigAllOf6
-}
-
-// UnmarshalJSON unmarshals this object from a JSON structure
-func (m *RegistrationRequestMethodConfig) UnmarshalJSON(raw []byte) error {
-	// AO0
-	var aO0 RegistrationRequestMethodConfigAllOf0
-	if err := swag.ReadJSON(raw, &aO0); err != nil {
-		return err
-	}
-	m.RegistrationRequestMethodConfigAllOf0 = aO0
-
-	// AO1
-	var aO1 RegistrationRequestMethodConfigAllOf1
-	if err := swag.ReadJSON(raw, &aO1); err != nil {
-		return err
-	}
-	m.RegistrationRequestMethodConfigAllOf1 = aO1
-
-	// AO2
-	var aO2 RegistrationRequestMethodConfigAllOf2
-	if err := swag.ReadJSON(raw, &aO2); err != nil {
-		return err
-	}
-	m.RegistrationRequestMethodConfigAllOf2 = aO2
-
-	// AO3
-	var aO3 RegistrationRequestMethodConfigAllOf3
-	if err := swag.ReadJSON(raw, &aO3); err != nil {
-		return err
-	}
-	m.RegistrationRequestMethodConfigAllOf3 = aO3
-
-	// AO4
-	var aO4 RegistrationRequestMethodConfigAllOf4
-	if err := swag.ReadJSON(raw, &aO4); err != nil {
-		return err
-	}
-	m.RegistrationRequestMethodConfigAllOf4 = aO4
-
-	// AO5
-	var aO5 RegistrationRequestMethodConfigAllOf5
-	if err := swag.ReadJSON(raw, &aO5); err != nil {
-		return err
-	}
-	m.RegistrationRequestMethodConfigAllOf5 = aO5
-
-	// AO6
-	var aO6 RegistrationRequestMethodConfigAllOf6
-	if err := swag.ReadJSON(raw, &aO6); err != nil {
-		return err
-	}
-	m.RegistrationRequestMethodConfigAllOf6 = aO6
-
-	return nil
-}
-
-// MarshalJSON marshals this object to a JSON structure
-func (m RegistrationRequestMethodConfig) MarshalJSON() ([]byte, error) {
-	_parts := make([][]byte, 0, 7)
-
-	aO0, err := swag.WriteJSON(m.RegistrationRequestMethodConfigAllOf0)
-	if err != nil {
-		return nil, err
-	}
-	_parts = append(_parts, aO0)
-
-	aO1, err := swag.WriteJSON(m.RegistrationRequestMethodConfigAllOf1)
-	if err != nil {
-		return nil, err
-	}
-	_parts = append(_parts, aO1)
-
-	aO2, err := swag.WriteJSON(m.RegistrationRequestMethodConfigAllOf2)
-	if err != nil {
-		return nil, err
-	}
-	_parts = append(_parts, aO2)
-
-	aO3, err := swag.WriteJSON(m.RegistrationRequestMethodConfigAllOf3)
-	if err != nil {
-		return nil, err
-	}
-	_parts = append(_parts, aO3)
-
-	aO4, err := swag.WriteJSON(m.RegistrationRequestMethodConfigAllOf4)
-	if err != nil {
-		return nil, err
-	}
-	_parts = append(_parts, aO4)
-
-	aO5, err := swag.WriteJSON(m.RegistrationRequestMethodConfigAllOf5)
-	if err != nil {
-		return nil, err
-	}
-	_parts = append(_parts, aO5)
-
-	aO6, err := swag.WriteJSON(m.RegistrationRequestMethodConfigAllOf6)
-	if err != nil {
-		return nil, err
-	}
-	_parts = append(_parts, aO6)
-
-	return swag.ConcatJSON(_parts...), nil
+	// Providers is set for the "oidc" request method.
+	Providers []*FormField `json:"providers"`
 }
 
 // Validate validates this registration request method config
 func (m *RegistrationRequestMethodConfig) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateAction(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateErrors(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateFields(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateMethod(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateProviders(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *RegistrationRequestMethodConfig) validateAction(formats strfmt.Registry) error {
+
+	if err := validate.Required("action", "body", m.Action); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *RegistrationRequestMethodConfig) validateErrors(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Errors) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Errors); i++ {
+		if swag.IsZero(m.Errors[i]) { // not required
+			continue
+		}
+
+		if m.Errors[i] != nil {
+			if err := m.Errors[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("errors" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *RegistrationRequestMethodConfig) validateFields(formats strfmt.Registry) error {
+
+	if err := validate.Required("fields", "body", m.Fields); err != nil {
+		return err
+	}
+
+	if err := m.Fields.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("fields")
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (m *RegistrationRequestMethodConfig) validateMethod(formats strfmt.Registry) error {
+
+	if err := validate.Required("method", "body", m.Method); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *RegistrationRequestMethodConfig) validateProviders(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Providers) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Providers); i++ {
+		if swag.IsZero(m.Providers[i]) { // not required
+			continue
+		}
+
+		if m.Providers[i] != nil {
+			if err := m.Providers[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("providers" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 
@@ -153,31 +168,3 @@ func (m *RegistrationRequestMethodConfig) UnmarshalBinary(b []byte) error {
 	*m = res
 	return nil
 }
-
-// RegistrationRequestMethodConfigAllOf0 registration request method config all of0
-// swagger:model RegistrationRequestMethodConfigAllOf0
-type RegistrationRequestMethodConfigAllOf0 interface{}
-
-// RegistrationRequestMethodConfigAllOf1 registration request method config all of1
-// swagger:model RegistrationRequestMethodConfigAllOf1
-type RegistrationRequestMethodConfigAllOf1 interface{}
-
-// RegistrationRequestMethodConfigAllOf2 registration request method config all of2
-// swagger:model RegistrationRequestMethodConfigAllOf2
-type RegistrationRequestMethodConfigAllOf2 interface{}
-
-// RegistrationRequestMethodConfigAllOf3 registration request method config all of3
-// swagger:model RegistrationRequestMethodConfigAllOf3
-type RegistrationRequestMethodConfigAllOf3 interface{}
-
-// RegistrationRequestMethodConfigAllOf4 registration request method config all of4
-// swagger:model RegistrationRequestMethodConfigAllOf4
-type RegistrationRequestMethodConfigAllOf4 interface{}
-
-// RegistrationRequestMethodConfigAllOf5 registration request method config all of5
-// swagger:model RegistrationRequestMethodConfigAllOf5
-type RegistrationRequestMethodConfigAllOf5 interface{}
-
-// RegistrationRequestMethodConfigAllOf6 registration request method config all of6
-// swagger:model RegistrationRequestMethodConfigAllOf6
-type RegistrationRequestMethodConfigAllOf6 interface{}
