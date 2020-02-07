@@ -26,7 +26,8 @@ type Identity struct {
 	Traits Traits `json:"traits"`
 
 	// TraitsSchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
-	TraitsSchemaID string `json:"traits_schema_id,omitempty"`
+	// Required: true
+	TraitsSchemaID *string `json:"traits_schema_id"`
 
 	// TraitsSchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.
 	//
@@ -43,6 +44,10 @@ func (m *Identity) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateTraits(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateTraitsSchemaID(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -67,6 +72,15 @@ func (m *Identity) validateID(formats strfmt.Registry) error {
 func (m *Identity) validateTraits(formats strfmt.Registry) error {
 
 	if err := validate.Required("traits", "body", m.Traits); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *Identity) validateTraitsSchemaID(formats strfmt.Registry) error {
+
+	if err := validate.Required("traits_schema_id", "body", m.TraitsSchemaID); err != nil {
 		return err
 	}
 

@@ -6,103 +6,148 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"strconv"
+
+	"github.com/go-openapi/errors"
 	strfmt "github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // LoginRequestMethodConfig login request method config
 // swagger:model loginRequestMethodConfig
 type LoginRequestMethodConfig struct {
-	LoginRequestMethodConfigAllOf0
 
-	LoginRequestMethodConfigAllOf1
+	// Action should be used as the form action URL (<form action="{{ .Action }}" method="post">).
+	// Required: true
+	Action *string `json:"action"`
 
-	LoginRequestMethodConfigAllOf2
+	// Errors contains all form errors. These will be duplicates of the individual field errors.
+	Errors []*Error `json:"errors"`
 
-	LoginRequestMethodConfigAllOf3
+	// fields
+	// Required: true
+	Fields FormFields `json:"fields"`
 
-	LoginRequestMethodConfigAllOf4
-}
+	// Method is the form method (e.g. POST)
+	// Required: true
+	Method *string `json:"method"`
 
-// UnmarshalJSON unmarshals this object from a JSON structure
-func (m *LoginRequestMethodConfig) UnmarshalJSON(raw []byte) error {
-	// AO0
-	var aO0 LoginRequestMethodConfigAllOf0
-	if err := swag.ReadJSON(raw, &aO0); err != nil {
-		return err
-	}
-	m.LoginRequestMethodConfigAllOf0 = aO0
-
-	// AO1
-	var aO1 LoginRequestMethodConfigAllOf1
-	if err := swag.ReadJSON(raw, &aO1); err != nil {
-		return err
-	}
-	m.LoginRequestMethodConfigAllOf1 = aO1
-
-	// AO2
-	var aO2 LoginRequestMethodConfigAllOf2
-	if err := swag.ReadJSON(raw, &aO2); err != nil {
-		return err
-	}
-	m.LoginRequestMethodConfigAllOf2 = aO2
-
-	// AO3
-	var aO3 LoginRequestMethodConfigAllOf3
-	if err := swag.ReadJSON(raw, &aO3); err != nil {
-		return err
-	}
-	m.LoginRequestMethodConfigAllOf3 = aO3
-
-	// AO4
-	var aO4 LoginRequestMethodConfigAllOf4
-	if err := swag.ReadJSON(raw, &aO4); err != nil {
-		return err
-	}
-	m.LoginRequestMethodConfigAllOf4 = aO4
-
-	return nil
-}
-
-// MarshalJSON marshals this object to a JSON structure
-func (m LoginRequestMethodConfig) MarshalJSON() ([]byte, error) {
-	_parts := make([][]byte, 0, 5)
-
-	aO0, err := swag.WriteJSON(m.LoginRequestMethodConfigAllOf0)
-	if err != nil {
-		return nil, err
-	}
-	_parts = append(_parts, aO0)
-
-	aO1, err := swag.WriteJSON(m.LoginRequestMethodConfigAllOf1)
-	if err != nil {
-		return nil, err
-	}
-	_parts = append(_parts, aO1)
-
-	aO2, err := swag.WriteJSON(m.LoginRequestMethodConfigAllOf2)
-	if err != nil {
-		return nil, err
-	}
-	_parts = append(_parts, aO2)
-
-	aO3, err := swag.WriteJSON(m.LoginRequestMethodConfigAllOf3)
-	if err != nil {
-		return nil, err
-	}
-	_parts = append(_parts, aO3)
-
-	aO4, err := swag.WriteJSON(m.LoginRequestMethodConfigAllOf4)
-	if err != nil {
-		return nil, err
-	}
-	_parts = append(_parts, aO4)
-
-	return swag.ConcatJSON(_parts...), nil
+	// Providers is set for the "oidc" request method.
+	Providers []*FormField `json:"providers"`
 }
 
 // Validate validates this login request method config
 func (m *LoginRequestMethodConfig) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateAction(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateErrors(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateFields(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateMethod(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateProviders(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *LoginRequestMethodConfig) validateAction(formats strfmt.Registry) error {
+
+	if err := validate.Required("action", "body", m.Action); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *LoginRequestMethodConfig) validateErrors(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Errors) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Errors); i++ {
+		if swag.IsZero(m.Errors[i]) { // not required
+			continue
+		}
+
+		if m.Errors[i] != nil {
+			if err := m.Errors[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("errors" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *LoginRequestMethodConfig) validateFields(formats strfmt.Registry) error {
+
+	if err := validate.Required("fields", "body", m.Fields); err != nil {
+		return err
+	}
+
+	if err := m.Fields.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("fields")
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (m *LoginRequestMethodConfig) validateMethod(formats strfmt.Registry) error {
+
+	if err := validate.Required("method", "body", m.Method); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *LoginRequestMethodConfig) validateProviders(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Providers) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Providers); i++ {
+		if swag.IsZero(m.Providers[i]) { // not required
+			continue
+		}
+
+		if m.Providers[i] != nil {
+			if err := m.Providers[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("providers" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 
@@ -123,23 +168,3 @@ func (m *LoginRequestMethodConfig) UnmarshalBinary(b []byte) error {
 	*m = res
 	return nil
 }
-
-// LoginRequestMethodConfigAllOf0 login request method config all of0
-// swagger:model LoginRequestMethodConfigAllOf0
-type LoginRequestMethodConfigAllOf0 interface{}
-
-// LoginRequestMethodConfigAllOf1 login request method config all of1
-// swagger:model LoginRequestMethodConfigAllOf1
-type LoginRequestMethodConfigAllOf1 interface{}
-
-// LoginRequestMethodConfigAllOf2 login request method config all of2
-// swagger:model LoginRequestMethodConfigAllOf2
-type LoginRequestMethodConfigAllOf2 interface{}
-
-// LoginRequestMethodConfigAllOf3 login request method config all of3
-// swagger:model LoginRequestMethodConfigAllOf3
-type LoginRequestMethodConfigAllOf3 interface{}
-
-// LoginRequestMethodConfigAllOf4 login request method config all of4
-// swagger:model LoginRequestMethodConfigAllOf4
-type LoginRequestMethodConfigAllOf4 interface{}
