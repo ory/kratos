@@ -12,7 +12,7 @@ type CredentialsConfig struct {
 	Provider string `json:"provider"`
 }
 
-// swagger:model oidcStrategyRequestMethod
+// swagger:model oidcRequestMethodConfig
 type RequestMethod struct {
 	*form.HTMLForm
 	Providers []form.Field `json:"providers"`

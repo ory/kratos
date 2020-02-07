@@ -9,6 +9,7 @@ import (
 	"github.com/go-openapi/errors"
 	strfmt "github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // LoginRequestMethod login request method
@@ -16,10 +17,12 @@ import (
 type LoginRequestMethod struct {
 
 	// config
-	Config *LoginRequestMethodConfig `json:"config,omitempty"`
+	// Required: true
+	Config *LoginRequestMethodConfig `json:"config"`
 
 	// method
-	Method CredentialsType `json:"method,omitempty"`
+	// Required: true
+	Method CredentialsType `json:"method"`
 }
 
 // Validate validates this login request method
@@ -42,8 +45,8 @@ func (m *LoginRequestMethod) Validate(formats strfmt.Registry) error {
 
 func (m *LoginRequestMethod) validateConfig(formats strfmt.Registry) error {
 
-	if swag.IsZero(m.Config) { // not required
-		return nil
+	if err := validate.Required("config", "body", m.Config); err != nil {
+		return err
 	}
 
 	if m.Config != nil {
@@ -59,10 +62,6 @@ func (m *LoginRequestMethod) validateConfig(formats strfmt.Registry) error {
 }
 
 func (m *LoginRequestMethod) validateMethod(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.Method) { // not required
-		return nil
-	}
 
 	if err := m.Method.Validate(formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {

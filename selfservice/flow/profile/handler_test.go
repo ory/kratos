@@ -17,6 +17,8 @@ import (
 	"github.com/tidwall/gjson"
 	"github.com/urfave/negroni"
 
+	"github.com/ory/x/pointerx"
+
 	"github.com/ory/x/httpx"
 
 	"github.com/ory/viper"
@@ -42,7 +44,7 @@ func init() {
 func fieldsToURLValues(ff models.FormFields) url.Values {
 	values := url.Values{}
 	for _, f := range ff {
-		values.Set(f.Name, fmt.Sprintf("%v", f.Value))
+		values.Set(pointerx.StringR(f.Name), fmt.Sprintf("%v", f.Value))
 	}
 	return values
 }
@@ -218,7 +220,7 @@ func TestUpdateProfile(t *testing.T) {
 	t.Run("description=should fail to post data if CSRF is missing", func(t *testing.T) {
 		rs := makeRequest(t)
 		f := rs.Payload.Form
-		res, err := primaryUser.PostForm(f.Action, url.Values{})
+		res, err := primaryUser.PostForm(pointerx.StringR(f.Action), url.Values{})
 		require.NoError(t, err)
 		assert.EqualValues(t, 400, res.StatusCode, "should return a 400 error because CSRF token is not set")
 	})
@@ -242,12 +244,12 @@ func TestUpdateProfile(t *testing.T) {
 		assert.NotEmpty(t, pr.Payload.Identity)
 		assert.Equal(t, primaryIdentity.ID.String(), string(pr.Payload.Identity.ID))
 		assert.JSONEq(t, string(primaryIdentity.Traits), x.MustEncodeJSON(t, pr.Payload.Identity.Traits))
-		assert.Equal(t, primaryIdentity.TraitsSchemaID, pr.Payload.Identity.TraitsSchemaID)
-		assert.Equal(t, publicTS.URL+profile.PublicProfileManagementPath, pr.Payload.RequestURL)
+		assert.Equal(t, primaryIdentity.TraitsSchemaID, pointerx.StringR(pr.Payload.Identity.TraitsSchemaID))
+		assert.Equal(t, publicTS.URL+profile.PublicProfileManagementPath, pointerx.StringR(pr.Payload.RequestURL))
 
 		found := false
 		for i := range pr.Payload.Form.Fields {
-			if pr.Payload.Form.Fields[i].Name == form.CSRFTokenName {
+			if pointerx.StringR(pr.Payload.Form.Fields[i].Name) == form.CSRFTokenName {
 				found = true
 				require.NotEmpty(t, pr.Payload.Form.Fields[i])
 				pr.Payload.Form.Fields = append(pr.Payload.Form.Fields[:i], pr.Payload.Form.Fields[i+1:]...)
@@ -256,20 +258,20 @@ func TestUpdateProfile(t *testing.T) {
 		}
 		require.True(t, found)
 
-		assert.Equal(t, &models.Form{
-			Action: publicTS.URL + profile.PublicProfileManagementUpdatePath + "?request=" + rid,
-			Method: "POST",
+		assert.EqualValues(t, &models.Form{
+			Action: pointerx.String(publicTS.URL + profile.PublicProfileManagementUpdatePath + "?request=" + rid),
+			Method: pointerx.String("POST"),
 			Fields: models.FormFields{
-				&models.FormField{Name: "traits.email", Required: false, Type: "text", Value: "john@doe.com"},
-				&models.FormField{Name: "traits.stringy", Required: false, Type: "text", Value: "foobar"},
-				&models.FormField{Name: "traits.numby", Required: false, Type: "number", Value: json.Number("2.5")},
-				&models.FormField{Name: "traits.booly", Required: false, Type: "checkbox", Value: false},
+				&models.FormField{Name: pointerx.String("traits.email"), Type: pointerx.String("text"), Value: "john@doe.com"},
+				&models.FormField{Name: pointerx.String("traits.stringy"), Type: pointerx.String("text"), Value: "foobar"},
+				&models.FormField{Name: pointerx.String("traits.numby"), Type: pointerx.String("number"), Value: json.Number("2.5")},
+				&models.FormField{Name: pointerx.String("traits.booly"), Type: pointerx.String("checkbox"), Value: false},
 			},
 		}, pr.Payload.Form)
 	})
 
 	submitForm := func(t *testing.T, req *common.GetSelfServiceBrowserProfileManagementRequestOK, values url.Values) (string, *common.GetSelfServiceBrowserProfileManagementRequestOK) {
-		res, err := primaryUser.PostForm(req.Payload.Form.Action, values)
+		res, err := primaryUser.PostForm(pointerx.StringR(req.Payload.Form.Action), values)
 		require.NoError(t, err)
 		assert.EqualValues(t, http.StatusNoContent, res.StatusCode)
 
@@ -304,7 +306,7 @@ func TestUpdateProfile(t *testing.T) {
 		rs := makeRequest(t)
 		values := fieldsToURLValues(rs.Payload.Form.Fields)
 		values.Set("traits.email", "not-john-doe")
-		res, err := primaryUser.PostForm(rs.Payload.Form.Action, values)
+		res, err := primaryUser.PostForm(pointerx.StringR(rs.Payload.Form.Action), values)
 		require.NoError(t, err)
 		defer res.Body.Close()
 
@@ -322,7 +324,7 @@ func TestUpdateProfile(t *testing.T) {
 			values := fieldsToURLValues(rs.Payload.Form.Fields)
 			values.Set("traits.should_big_number", "1")
 			actual, response := submitForm(t, rs, values)
-			assert.False(t, response.Payload.UpdateSuccessful, "%s", actual)
+			assert.False(t, pointerx.BoolR(response.Payload.UpdateSuccessful), "%s", actual)
 
 			assert.Equal(t, "1", gjson.Get(actual, "form.fields.#(name==traits.should_big_number).value").String(), "%s", actual)
 			assert.Equal(t, "must be >= 1200 but found 1", gjson.Get(actual, "form.fields.#(name==traits.should_big_number).errors.0.message").String(), "%s", actual)
@@ -337,7 +339,7 @@ func TestUpdateProfile(t *testing.T) {
 			values.Set("traits.should_long_string", "short")
 			values.Set("traits.numby", "this-is-not-a-number")
 			actual, response := submitForm(t, rs, values)
-			assert.False(t, response.Payload.UpdateSuccessful, "%s", actual)
+			assert.False(t, pointerx.BoolR(response.Payload.UpdateSuccessful), "%s", actual)
 
 			assert.Empty(t, gjson.Get(actual, "form.fields.#(name==traits.should_big_number).errors.0.message").String(), "%s", actual)
 			assert.Empty(t, gjson.Get(actual, "form.fields.#(name==traits.should_big_number).value").String(), "%s", actual)
@@ -359,7 +361,7 @@ func TestUpdateProfile(t *testing.T) {
 			values.Set("traits.should_big_number", "9001")
 			values.Set("traits.should_long_string", "this is such a long string, amazing stuff!")
 			actual, response := submitForm(t, rs, values)
-			assert.True(t, response.Payload.UpdateSuccessful, "%s", actual)
+			assert.True(t, pointerx.BoolR(response.Payload.UpdateSuccessful), "%s", actual)
 
 			assert.Empty(t, gjson.Get(actual, "form.fields.#(name==traits.numby).errors").Value(), "%s", actual)
 			assert.Empty(t, gjson.Get(actual, "form.fields.#(name==traits.should_big_number).errors").Value(), "%s", actual)
@@ -377,7 +379,7 @@ func TestUpdateProfile(t *testing.T) {
 			values := fieldsToURLValues(rs.Payload.Form.Fields)
 			values.Set("traits.should_long_string", "short")
 			actual, response := submitForm(t, rs, values)
-			assert.False(t, response.Payload.UpdateSuccessful, "%s", actual)
+			assert.False(t, pointerx.BoolR(response.Payload.UpdateSuccessful), "%s", actual)
 		})
 	})
 }

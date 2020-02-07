@@ -15,9 +15,13 @@ import (
 // swagger:model loginRequestMethod
 type RequestMethod struct {
 	// Method contains the request credentials type.
+	//
+	// required: true
 	Method identity.CredentialsType `json:"method" db:"method"`
 
 	// Config is the credential type's config.
+	//
+	// required: true
 	Config *RequestMethodConfig `json:"config" db:"config"`
 
 	// ID is a helper struct field for gobuffalo.pop.
@@ -64,7 +68,18 @@ type RequestMethodConfigurator interface {
 
 // swagger:model loginRequestMethodConfig
 type RequestMethodConfig struct {
+	// swagger:ignore
 	RequestMethodConfigurator
+
+	requestMethodConfigMock
+}
+
+// swagger:model loginRequestMethodConfigPayload
+type requestMethodConfigMock struct {
+	*form.HTMLForm
+
+	// Providers is set for the "oidc" request method.
+	Providers []form.Field `json:"providers"`
 }
 
 func (c *RequestMethodConfig) Scan(value interface{}) error {

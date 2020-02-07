@@ -38,6 +38,8 @@ type (
 		Credentials map[CredentialsType]Credentials `json:"-" faker:"-" db:"-"`
 
 		// TraitsSchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
+		//
+		// required: true
 		TraitsSchemaID string `json:"traits_schema_id" faker:"-" db:"traits_schema_id"`
 
 		// TraitsSchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.
