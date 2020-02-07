@@ -99,12 +99,12 @@ func TestRequestPersister(p RequestPersister) func(t *testing.T) {
 
 			require.NoError(t, p.UpdateLoginRequest(context.Background(), expected.ID, identity.CredentialsTypeOIDC, &RequestMethod{
 				Method: identity.CredentialsTypeOIDC,
-				Config: &RequestMethodConfig{form.NewHTMLForm(string(identity.CredentialsTypeOIDC))},
+				Config: &RequestMethodConfig{RequestMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypeOIDC))},
 			}))
 
 			require.NoError(t, p.UpdateLoginRequest(context.Background(), expected.ID, identity.CredentialsTypePassword, &RequestMethod{
 				Method: identity.CredentialsTypePassword,
-				Config: &RequestMethodConfig{form.NewHTMLForm(string(identity.CredentialsTypePassword))},
+				Config: &RequestMethodConfig{RequestMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypePassword))},
 			}))
 
 			actual, err = p.GetLoginRequest(context.Background(), expected.ID)

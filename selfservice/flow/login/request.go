@@ -19,17 +19,25 @@ import (
 type Request struct {
 	// ID represents the request's unique ID. When performing the login flow, this
 	// represents the id in the login ui's query parameter: http://<urls.login_ui>/?request=<id>
+	//
+	// required: true
 	ID uuid.UUID `json:"id" faker:"uuid" rw:"r" db:"id"`
 
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,
 	// a new request has to be initiated.
+	//
+	// required: true
 	ExpiresAt time.Time `json:"expires_at" faker:"time_type" db:"expires_at"`
 
 	// IssuedAt is the time (UTC) when the request occurred.
+	//
+	// required: true
 	IssuedAt time.Time `json:"issued_at" faker:"time_type" db:"issued_at"`
 
 	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used
 	// to forward information contained in the URL's path or query for example.
+	//
+	// required: true
 	RequestURL string `json:"request_url" db:"request_url"`
 
 	// Active, if set, contains the login method that is being used. It is initially
@@ -38,6 +46,8 @@ type Request struct {
 
 	// Methods contains context for all enabled login methods. If a login request has been
 	// processed, but for example the password is incorrect, this will contain error messages.
+	//
+	// required: true
 	Methods map[identity.CredentialsType]*RequestMethod `json:"methods" faker:"login_request_methods" db:"-"`
 
 	// MethodsRaw is a helper struct field for gobuffalo.pop.

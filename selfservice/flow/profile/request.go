@@ -28,30 +28,43 @@ type Request struct {
 	// ID represents the request's unique ID. When performing the profile management flow, this
 	// represents the id in the profile ui's query parameter: http://<urls.profile_ui>?request=<id>
 	//
+	// required: true
 	// type: string
 	// format: uuid
 	ID uuid.UUID `json:"id" db:"id" faker:"uuid" rw:"r"`
 
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile,
 	// a new request has to be initiated.
+	//
+	// required: true
 	ExpiresAt time.Time `json:"expires_at" faker:"time_type" db:"expires_at"`
 
 	// IssuedAt is the time (UTC) when the request occurred.
+	//
+	// required: true
 	IssuedAt time.Time `json:"issued_at" faker:"time_type" db:"issued_at"`
 
 	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used
 	// to forward information contained in the URL's path or query for example.
+	//
+	// required: true
 	RequestURL string `json:"request_url" db:"request_url"`
 
 	// Form contains form fields, errors, and so on.
+	//
+	// required: true
 	Form *form.HTMLForm `json:"form" db:"form"`
 
 	// Identity contains all of the identity's data in raw form.
+	//
+	// required: true
 	Identity *identity.Identity `json:"identity" faker:"identity" db:"-" belongs_to:"identities" fk_id:"IdentityID"`
 
 	// UpdateSuccessful, if true, indicates that the profile has been updated successfully with the provided data.
 	// Done will stay true when repeatedly checking. If set to true, done will revert back to false only
 	// when a request with invalid (e.g. "please use a valid phone number") data was sent.
+	//
+	// required: true
 	UpdateSuccessful bool `json:"update_successful,omitempty" faker:"-" db:"update_successful"`
 
 	// IdentityID is a helper struct field for gobuffalo.pop.
