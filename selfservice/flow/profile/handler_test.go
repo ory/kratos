@@ -262,12 +262,12 @@ func TestUpdateProfile(t *testing.T) {
 			Action: pointerx.String(publicTS.URL + profile.PublicProfileManagementUpdatePath + "?request=" + rid),
 			Method: pointerx.String("POST"),
 			Fields: models.FormFields{
-				&models.FormField{Name: pointerx.String("traits.email"), Type: pointerx.String("text"), Value: "john@doe.com"},
+				&models.FormField{Name: pointerx.String("traits.email"), Type: pointerx.String("text"), Value: "john@doe.com", Disabled: true},
 				&models.FormField{Name: pointerx.String("traits.stringy"), Type: pointerx.String("text"), Value: "foobar"},
 				&models.FormField{Name: pointerx.String("traits.numby"), Type: pointerx.String("number"), Value: json.Number("2.5")},
 				&models.FormField{Name: pointerx.String("traits.booly"), Type: pointerx.String("checkbox"), Value: false},
-				&models.FormField{Name: pointerx.String("traits.should_big_number"), Required: false, Type: "number", Value: json.Number("2048")},
-				&models.FormField{Name: pointerx.String("traits.should_long_string"), Required: false, Type: "text", Value: "asdfasdfasdfasdfasfdasdfasdfasdf"},
+				&models.FormField{Name: pointerx.String("traits.should_big_number"), Type: pointerx.String("number"), Value: json.Number("2048")},
+				&models.FormField{Name: pointerx.String("traits.should_long_string"), Type: pointerx.String("text"), Value: "asdfasdfasdfasdfasfdasdfasdfasdf"},
 			},
 		}, pr.Payload.Form)
 	})

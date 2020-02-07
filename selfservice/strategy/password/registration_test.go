@@ -328,8 +328,9 @@ func TestRegistration(t *testing.T) {
 								Type: "text",
 							},
 							{
-								Name: "traits.username",
-								Type: "text",
+								Name:         "traits.username",
+								Type:         "text",
+								IsIdentifier: true,
 							},
 						},
 					},
