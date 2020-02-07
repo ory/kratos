@@ -47,12 +47,17 @@
 
 - Use jsonschema everywhere [\#225](https://github.com/ory/kratos/issues/225)
 
+**Fixed bugs:**
+
+- Mark fields required in login / registration methods [\#234](https://github.com/ory/kratos/issues/234)
+
 **Closed issues:**
 
 - Require Levenshtein distance between identifiers and password [\#184](https://github.com/ory/kratos/issues/184)
 
 **Merged pull requests:**
 
+- fix\(swagger\): Use correct annotations for request methods [\#237](https://github.com/ory/kratos/pull/237) ([aeneasr](https://github.com/aeneasr))
 - feat: add levenshtein distance check for password validation [\#231](https://github.com/ory/kratos/pull/231) ([zepatrik](https://github.com/zepatrik))
 - Use ory/jsonschema/v3 everywhere [\#229](https://github.com/ory/kratos/pull/229) ([aeneasr](https://github.com/aeneasr))
 
@@ -180,7 +185,6 @@
 - ss/oidc: Remove obsolete request field from form [\#193](https://github.com/ory/kratos/pull/193) ([aeneasr](https://github.com/aeneasr))
 - sql: Re-introduce migration plans to CLI command [\#192](https://github.com/ory/kratos/pull/192) ([aeneasr](https://github.com/aeneasr))
 - courier: Implement message templates and SMTP delivery [\#146](https://github.com/ory/kratos/pull/146) ([aeneasr](https://github.com/aeneasr))
-- Implement base features for v0.0.1 release [\#102](https://github.com/ory/kratos/pull/102) ([aeneasr](https://github.com/aeneasr))
 
 ## [v0.0.3-alpha.15](https://github.com/ory/kratos/tree/v0.0.3-alpha.15) (2020-01-31)
 
