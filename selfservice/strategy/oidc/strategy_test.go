@@ -325,6 +325,9 @@ func TestStrategy(t *testing.T) {
 	t.Run("case=should fail because the login request is expired", func(t *testing.T) {
 		r := nlr(t, returnTS.URL, -time.Minute)
 		res, body := mr(t, "valid", r.ID, url.Values{})
+
+		t.Log(body)
+		assert.NotEqual(t, r.ID, gjson.GetBytes(body, "id"))
 		aue(t, res, body, "login request expired")
 	})
 

@@ -168,7 +168,7 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	if _, err := s.validateRequest(r.Context(), rid); err != nil {
+	if _, err := s.validateRequest(w, r, rid); err != nil {
 		s.handleError(w, r, rid, nil, err)
 		return
 	}
@@ -187,56 +187,94 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 	http.Redirect(w, r, config.AuthCodeURL(state), http.StatusFound)
 }
 
-func (s *Strategy) validateRequest(ctx context.Context, rid uuid.UUID) (request, error) {
+func (s *Strategy) validateRequest(w http.ResponseWriter, r *http.Request, rid uuid.UUID) request {
 	if x.IsZeroUUID(rid) {
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithReason("The session cookie contains invalid values and the request could not be executed. Please try again."))
+		s.handleError(w, r, rid, nil, errors.WithStack(herodot.ErrBadRequest.WithReason("The session cookie contains invalid values and the request could not be executed. Please try again.")))
+		return nil
 	}
 
-	if ar, err := s.d.RegistrationRequestPersister().GetRegistrationRequest(ctx, rid); err == nil {
+	if ar, err := s.d.RegistrationRequestPersister().GetRegistrationRequest(r.Context(), rid); err == nil {
 		if err := ar.Valid(); err != nil {
 			// create new request because the old one is not valid
-			return nil, err
+			if err = s.d.LoginHandler().NewLoginRequest(w, r, func(a *login.Request) (string, error) {
+				for name, method := range a.Methods {
+					method.Config.AddError(&form.Error{Message: "Your session expired, please try again."})
+					if err := s.d.LoginRequestPersister().UpdateLoginRequest(context.TODO(), a.ID, name, method); err != nil {
+						return s.d.SelfServiceErrorManager().Create(r.Context(), w, r, err)
+					}
+					a.Methods[name] = method
+				}
+
+				return urlx.CopyWithQuery(s.c.LoginURL(), url.Values{"request": {a.ID.String()}}).String(), nil
+			}); err != nil {
+				s.handleError(w, r, rid, nil, err)
+				return nil
+			}
+			s.handleError(w, r, rid, nil, err)
+			return nil
 		}
-		return ar, nil
+		return ar
 	}
 
-	ar, err := s.d.LoginRequestPersister().GetLoginRequest(ctx, rid)
+	ar, err := s.d.LoginRequestPersister().GetLoginRequest(r.Context(), rid)
 	if err != nil {
-		return nil, err
+		s.handleError(w, r, rid, nil, err)
+		return nil
 	}
 
 	if err := ar.Valid(); err != nil {
 		// create new request because the old one is not valid
-		return nil, err
+		// create new request because the old one is not valid
+		if err = s.d.RegistrationHandler().NewRegistrationRequest(w, r, func(a *registration.Request) (string, error) {
+			for name, method := range a.Methods {
+				method.Config.AddError(&form.Error{Message: "Your session expired, please try again."})
+				if err := s.d.RegistrationRequestPersister().UpdateRegistrationRequest(context.TODO(), a.ID, name, method); err != nil {
+					return s.d.SelfServiceErrorManager().Create(r.Context(), w, r, err)
+				}
+				a.Methods[name] = method
+			}
+
+			return urlx.CopyWithQuery(s.c.LoginURL(), url.Values{"request": {a.ID.String()}}).String(), nil
+		}); err != nil {
+			s.handleError(w, r, rid, nil, err)
+			return nil
+		}
+		s.handleError(w, r, rid, nil, err)
+		return nil
 	}
 
-	return ar, nil
+	return ar
 }
 
-func (s *Strategy) validateCallback(r *http.Request) (request, error) {
+func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) request {
 	var (
 		code = r.URL.Query().Get("code")
+		rid = x.ParseUUID(x.SessionGetStringOr(r, s.d.CookieManager(), sessionName, sessionRequestID, ""))
 	)
 	if state := r.URL.Query().Get("state"); state == "" {
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the state query parameter.`))
+		s.handleError(w, r, rid, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the state query parameter.`)))
+		return nil
 	} else if state != x.SessionGetStringOr(r, s.d.CookieManager(), sessionName, sessionKeyState, "") {
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the session cookie.`))
+		s.handleError(w, r, rid, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the session cookie.`)))
+		return nil
 	}
 
-	ar, err := s.validateRequest(r.Context(), x.ParseUUID(x.SessionGetStringOr(r, s.d.CookieManager(), sessionName, sessionRequestID, "")))
-	if err != nil {
-		return nil, err
+	ar := s.validateRequest(w, r, rid)
+	if ar == nil {
+		return nil
 	}
 
 	if r.URL.Query().Get("error") != "" {
-		return ar, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider returned error "%s": %s`, r.URL.Query().Get("error"), r.URL.Query().Get("error_description")))
+		s.handleError(w, r, rid, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider returned error "%s": %s`, r.URL.Query().Get("error"), r.URL.Query().Get("error_description"))))
+		return ar
 	}
 
 	if code == "" {
-		return ar, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the code query parameter.`))
+		s.handleError(w, r, rid, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the code query parameter.`)))
+		return ar
 	}
 
-	return ar, nil
+	return ar
 }
 
 func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -245,13 +283,8 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		pid  = ps.ByName("provider")
 	)
 
-	ar, err := s.validateCallback(r)
-	if err != nil {
-		if ar != nil {
-			s.handleError(w, r, ar.GetID(), nil, err)
-		} else {
-			s.handleError(w, r, x.EmptyUUID, nil, err)
-		}
+	ar := s.validateCallback(w, r)
+	if ar == nil {
 		return
 	}
 
