@@ -766,7 +766,10 @@
     "Traits": {
       "type": "object"
     },
-    "UUID": {"type": "string", "format": "uuid4"},
+    "UUID": {
+      "type": "string",
+      "format": "uuid4"
+    },
     "completeSelfServiceBrowserProfileManagementFlowPayload": {
       "type": "object",
       "required": [
