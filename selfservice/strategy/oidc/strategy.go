@@ -194,6 +194,7 @@ func (s *Strategy) validateRequest(ctx context.Context, rid uuid.UUID) (request,
 
 	if ar, err := s.d.RegistrationRequestPersister().GetRegistrationRequest(ctx, rid); err == nil {
 		if err := ar.Valid(); err != nil {
+			// create new request because the old one is not valid
 			return nil, err
 		}
 		return ar, nil
@@ -205,6 +206,7 @@ func (s *Strategy) validateRequest(ctx context.Context, rid uuid.UUID) (request,
 	}
 
 	if err := ar.Valid(); err != nil {
+		// create new request because the old one is not valid
 		return nil, err
 	}
 
