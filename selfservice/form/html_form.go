@@ -7,8 +7,6 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/ory/kratos/schema"
-
 	"github.com/ory/jsonschema/v3"
 
 	"github.com/ory/x/errorsx"
@@ -93,13 +91,7 @@ func NewHTMLFormFromJSON(action string, raw json.RawMessage, prefix string) *HTM
 
 // NewHTMLFormFromJSONSchema creates a new HTMLForm and populates the fields
 // using the provided JSON Schema.
-func NewHTMLFormFromJSONSchema(action, jsonSchemaRef, prefix string) (*HTMLForm, error) {
-	compiler := jsonschema.NewCompiler()
-	extensionRunner, err := schema.NewExtensionRunner(schema.ExtensionRunnerIdentityMetaSchema)
-	if err != nil {
-		return nil, err
-	}
-	extensionRunner.Register(compiler)
+func NewHTMLFormFromJSONSchema(action, jsonSchemaRef, prefix string, compiler *jsonschema.Compiler) (*HTMLForm, error) {
 	paths, err := jsonschemax.ListPaths(jsonSchemaRef, compiler)
 	if err != nil {
 		return nil, err
