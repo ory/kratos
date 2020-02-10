@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/ory/jsonschema/v3"
+
 	"github.com/ory/kratos/schema"
 
 	"github.com/julienschmidt/httprouter"
@@ -107,12 +109,16 @@ func (h *Handler) initUpdateProfile(w http.ResponseWriter, r *http.Request, ps h
 	}
 
 	a := NewRequest(h.c.SelfServiceProfileRequestLifespan(), r, s)
+	// use a schema compiler that disables identifiers
+	schemaCompiler := jsonschema.NewCompiler()
+	schema.RegisterNewDisableIdentifiersExtension(schemaCompiler)
+
 	a.Form, err = form.NewHTMLFormFromJSONSchema(urlx.CopyWithQuery(
 		urlx.AppendPaths(h.c.SelfPublicURL(), PublicProfileManagementUpdatePath),
 		url.Values{
 			"request": {a.ID.String()},
 		},
-	).String(), traitsSchema.URL, "traits")
+	).String(), traitsSchema.URL, "traits", schemaCompiler)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
@@ -124,12 +130,6 @@ func (h *Handler) initUpdateProfile(w http.ResponseWriter, r *http.Request, ps h
 	if err := a.Form.SortFields(traitsSchema.URL, "traits"); err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
-	}
-
-	for i := range a.Form.Fields {
-		if a.Form.Fields[i].IsIdentifier {
-			a.Form.Fields[i].Disabled = true
-		}
 	}
 
 	if err := h.d.ProfileRequestPersister().CreateProfileRequest(r.Context(), a); err != nil {

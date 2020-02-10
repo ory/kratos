@@ -43,8 +43,7 @@ type Field struct {
 	Value interface{} `json:"value,omitempty" faker:"name"`
 
 	// Errors contains all validation errors this particular field has caused.
-	Errors       []Error `json:"errors,omitempty"`
-	IsIdentifier bool    `json:"-"`
+	Errors []Error `json:"errors,omitempty"`
 }
 
 // Reset resets a field's value and errors.
@@ -128,9 +127,9 @@ func fieldFromPath(name string, p jsonschemax.Path) Field {
 	}
 
 	// Set disabled if the custom property is set
-	if isIdentifier, ok := p.CustomProperties[schema.IsIdentifierFlag]; ok {
-		if isIdentifier, ok := isIdentifier.(bool); ok {
-			f.IsIdentifier = isIdentifier
+	if isDisabled, ok := p.CustomProperties[schema.IsDisabledField]; ok {
+		if isDisabled, ok := isDisabled.(bool); ok {
+			f.Disabled = isDisabled
 		}
 	}
 
