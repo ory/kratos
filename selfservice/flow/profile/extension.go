@@ -24,11 +24,10 @@ type disableIdentifiersExtConfig struct {
 
 func registerNewDisableIdentifiersExtension(compiler *jsonschema.Compiler) {
 	compiler.Extensions[extensionName] = jsonschema.Extension{
-		// as we just use the content to check whether there the flag *.ory\.sh/kratos.credentials.password.identifier
+		// as we just use the compiler to check whether there the flag *.ory\.sh/kratos.credentials.password.identifier
 		// set we don't really need a meta schema
-		Meta:     nil,
-		Compile:  compile,
-		Validate: validate,
+		Meta:    nil,
+		Compile: compile,
 	}
 }
 
@@ -56,8 +55,4 @@ func compile(_ jsonschema.CompilerContext, m map[string]interface{}) (interface{
 		return &e, nil
 	}
 	return nil, nil
-}
-
-func validate(_ jsonschema.ValidationContext, _, _ interface{}) error {
-	return nil
 }
