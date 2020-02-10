@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 
-	"github.com/ory/x/jsonschemax"
-
 	"github.com/gobuffalo/packr/v2"
 	"github.com/pkg/errors"
 
@@ -18,20 +16,17 @@ const (
 	ExtensionRunnerIdentityMetaSchema ExtensionRunnerMetaSchema = "extension/identity.schema.json"
 	ExtensionRunnerOIDCMetaSchema     ExtensionRunnerMetaSchema = "extension/oidc.schema.json"
 	extensionName                                               = "ory.sh/kratos"
-	IsDisabledField                                             = "isDisabledField"
-	disableIdentifiersExtensionName                             = "disableIdentifiersExtension"
 )
 
 type (
 	ExtensionRunnerMetaSchema string
-	ExtensionCredentials      struct {
-		Password struct {
-			Identifier bool `json:"identifier"`
-		} `json:"password"`
-	}
-	ExtensionConfig struct {
-		Credentials ExtensionCredentials `json:"credentials"`
-		Mappings    struct {
+	ExtensionConfig           struct {
+		Credentials struct {
+			Password struct {
+				Identifier bool `json:"identifier"`
+			} `json:"password"`
+		} `json:"credentials"`
+		Mappings struct {
 			Identity struct {
 				Traits []struct {
 					Path string `json:"path"`
@@ -47,49 +42,7 @@ type (
 
 		runners []runner
 	}
-	DisableIdentifiersExtension struct {
-		Credentials ExtensionCredentials `json:"credentials"`
-	}
 )
-
-func RegisterNewDisableIdentifiersExtension(compiler *jsonschema.Compiler) {
-	ext := jsonschema.Extension{
-		// as we just use the content to check whether there the flag *.ory\.sh/kratos.credentials.password.identifier
-		// set we don't really need a meta schema
-		Meta: nil,
-		Compile: func(ctx jsonschema.CompilerContext, m map[string]interface{}) (interface{}, error) {
-			if raw, ok := m[extensionName]; ok {
-				var b bytes.Buffer
-				if err := json.NewEncoder(&b).Encode(raw); err != nil {
-					return nil, errors.WithStack(err)
-				}
-
-				var e DisableIdentifiersExtension
-				if err := json.NewDecoder(&b).Decode(&e); err != nil {
-					return nil, errors.WithStack(err)
-				}
-
-				return &e, nil
-			}
-			return nil, nil
-		},
-		Validate: func(_ jsonschema.ValidationContext, _, _ interface{}) error {
-			return nil
-		},
-	}
-	compiler.Extensions[disableIdentifiersExtensionName] = ext
-}
-
-// this function adds the custom property IsDisabledField to the path so that we can use it to disable form fields etc.
-func (ec *DisableIdentifiersExtension) EnhancePath(_ jsonschemax.Path) map[string]interface{} {
-	// if this path is an identifier the form field should be disabled
-	if ec.Credentials.Password.Identifier {
-		return map[string]interface{}{
-			IsDisabledField: true,
-		}
-	}
-	return nil
-}
 
 func NewExtensionRunner(meta ExtensionRunnerMetaSchema, runners ...runner) (*ExtensionRunner, error) {
 	var err error

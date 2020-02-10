@@ -10,6 +10,8 @@ import (
 	"github.com/ory/kratos/schema"
 )
 
+const DisableFormField = "disableFormField"
+
 // Fields contains multiple fields
 //
 // swagger:model formFields
@@ -127,7 +129,7 @@ func fieldFromPath(name string, p jsonschemax.Path) Field {
 	}
 
 	// Set disabled if the custom property is set
-	if isDisabled, ok := p.CustomProperties[schema.IsDisabledField]; ok {
+	if isDisabled, ok := p.CustomProperties[DisableFormField]; ok {
 		if isDisabled, ok := isDisabled.(bool); ok {
 			f.Disabled = isDisabled
 		}
