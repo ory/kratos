@@ -50,6 +50,7 @@
 **Fixed bugs:**
 
 - Mark fields required in login / registration methods [\#234](https://github.com/ory/kratos/issues/234)
+- Resolve flaky SDK generation issues caused by UUID [\#240](https://github.com/ory/kratos/pull/240) ([aeneasr](https://github.com/aeneasr))
 
 **Closed issues:**
 
@@ -137,6 +138,7 @@
 - Rework public and admin fetch strategy [\#203](https://github.com/ory/kratos/pull/203) ([aeneasr](https://github.com/aeneasr))
 - Update HTTP routes for a consistent API naming [\#199](https://github.com/ory/kratos/pull/199) ([aeneasr](https://github.com/aeneasr))
 - ss: Use JSON Schema to type assert form body [\#116](https://github.com/ory/kratos/pull/116) ([aeneasr](https://github.com/aeneasr))
+- errorx: Add SQL adapter [\#100](https://github.com/ory/kratos/pull/100) ([aeneasr](https://github.com/aeneasr))
 
 **Fixed bugs:**
 
@@ -184,7 +186,7 @@
 - ci: Bump sdk orb [\#206](https://github.com/ory/kratos/pull/206) ([aeneasr](https://github.com/aeneasr))
 - ss/oidc: Remove obsolete request field from form [\#193](https://github.com/ory/kratos/pull/193) ([aeneasr](https://github.com/aeneasr))
 - sql: Re-introduce migration plans to CLI command [\#192](https://github.com/ory/kratos/pull/192) ([aeneasr](https://github.com/aeneasr))
-- courier: Implement message templates and SMTP delivery [\#146](https://github.com/ory/kratos/pull/146) ([aeneasr](https://github.com/aeneasr))
+- Implement base features for v0.0.1 release [\#102](https://github.com/ory/kratos/pull/102) ([aeneasr](https://github.com/aeneasr))
 
 ## [v0.0.3-alpha.15](https://github.com/ory/kratos/tree/v0.0.3-alpha.15) (2020-01-31)
 
