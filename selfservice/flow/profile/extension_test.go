@@ -25,7 +25,7 @@ func TestDisableIdentifiersExtension(t *testing.T) {
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			c := jsonschema.NewCompiler()
-			RegisterNewDisableIdentifiersExtension(c)
+			registerNewDisableIdentifiersExtension(c)
 			paths, err := jsonschemax.ListPaths(tc.schema, c)
 			require.NoError(t, err)
 

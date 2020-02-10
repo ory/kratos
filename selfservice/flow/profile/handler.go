@@ -111,7 +111,7 @@ func (h *Handler) initUpdateProfile(w http.ResponseWriter, r *http.Request, ps h
 	a := NewRequest(h.c.SelfServiceProfileRequestLifespan(), r, s)
 	// use a schema compiler that disables identifiers
 	schemaCompiler := jsonschema.NewCompiler()
-	RegisterNewDisableIdentifiersExtension(schemaCompiler)
+	registerNewDisableIdentifiersExtension(schemaCompiler)
 
 	a.Form, err = form.NewHTMLFormFromJSONSchema(urlx.CopyWithQuery(
 		urlx.AppendPaths(h.c.SelfPublicURL(), PublicProfileManagementUpdatePath),

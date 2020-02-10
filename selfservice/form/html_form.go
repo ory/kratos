@@ -178,7 +178,7 @@ func (c *HTMLForm) SetValues(values map[string]interface{}) {
 	}
 }
 
-// S sets the container's fields to the provided values.
+// SetValuesFromJSON sets the container's fields to the provided values.
 func (c *HTMLForm) SetValuesFromJSON(raw json.RawMessage, prefix string) {
 	c.defaults()
 	for k, v := range jsonx.Flatten(raw) {

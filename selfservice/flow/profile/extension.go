@@ -3,8 +3,6 @@ package profile
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
-
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 
@@ -19,28 +17,22 @@ const (
 	extensionKey  = "ory.sh/kratos"
 )
 
-type DisableIdentifiersExtension struct {
+type disableIdentifiersExtConfig struct {
 	disabled bool
 }
 
-func RegisterNewDisableIdentifiersExtension(compiler *jsonschema.Compiler) {
-	if _, ok := compiler.Extensions[extensionName]; ok {
-		// extension is already registered
-		return
-	}
-
-	ext := jsonschema.Extension{
+func registerNewDisableIdentifiersExtension(compiler *jsonschema.Compiler) {
+	compiler.Extensions[extensionName] = jsonschema.Extension{
 		// as we just use the content to check whether there the flag *.ory\.sh/kratos.credentials.password.identifier
 		// set we don't really need a meta schema
 		Meta:     nil,
 		Compile:  compile,
 		Validate: validate,
 	}
-	compiler.Extensions[extensionName] = ext
 }
 
 // this function adds the custom property IsDisabledField to the path so that we can use it to disable form fields etc.
-func (ec *DisableIdentifiersExtension) EnhancePath(_ jsonschemax.Path) map[string]interface{} {
+func (ec *disableIdentifiersExtConfig) EnhancePath(_ jsonschemax.Path) map[string]interface{} {
 	// if this path is an identifier the form field should be disabled
 	if ec.disabled {
 		return map[string]interface{}{
@@ -57,12 +49,8 @@ func compile(_ jsonschema.CompilerContext, m map[string]interface{}) (interface{
 			return nil, errors.WithStack(err)
 		}
 
-		schema, err := ioutil.ReadAll(&b)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-		var e DisableIdentifiersExtension
-		e.disabled = gjson.GetBytes(schema, "credentials.password.identifier").Bool()
+		var e disableIdentifiersExtConfig
+		e.disabled = gjson.GetBytes(b.Bytes(), "credentials.password.identifier").Bool()
 
 		return &e, nil
 	}
