@@ -41,10 +41,9 @@ type (
 		FindAddressByValue(ctx context.Context, via Via, address string) (*Address, error)
 
 		// VerifyAddress verifies an address by the given id.
-		VerifyAddress(ctx context.Context, id uuid.UUID) error
+		VerifyAddress(ctx context.Context, code string) error
 
-		// VerifyAddress verifies an address by the given id.
-		RefreshAddress(ctx context.Context, id uuid.UUID) (*Address, error)
+		UpdateAddress(ctx context.Context, address *Address) error
 	}
 )
 
@@ -180,7 +179,7 @@ func TestPersister(p interface {
 				address.ID = x.NewUUID()
 
 				require.NoError(t, p.TrackAddresses(context.Background(), []Address{*address}))
-				require.NoError(t, p.VerifyAddress(context.Background(), address.ID))
+				require.NoError(t, p.VerifyAddress(context.Background(), address.Code))
 
 				actual, err := p.FindAddressByValue(context.Background(), address.Via, address.Value)
 				require.NoError(t, err)
@@ -188,6 +187,25 @@ func TestPersister(p interface {
 				assert.True(t, actual.Verified)
 				assert.EqualValues(t, StatusCompleted, actual.Status)
 				assert.NotEmpty(t, actual.VerifiedAt)
+			})
+
+			t.Run("case=update", func(t *testing.T) {
+				var i identity.Identity
+				require.NoError(t, faker.FakeData(&i))
+				require.NoError(t, p.CreateIdentity(context.Background(), &i))
+
+				address, err := NewEmailAddress("verify.TestPersister.Update@ory.sh", i.ID, time.Minute)
+				require.NoError(t, err)
+				address.ID = x.NewUUID()
+
+				require.NoError(t, p.TrackAddresses(context.Background(), []Address{*address}))
+
+				address.Code = "new-code"
+				require.NoError(t, p.UpdateAddress(context.Background(), address))
+
+				actual, err := p.FindAddressByValue(context.Background(), address.Via, address.Value)
+				require.NoError(t, err)
+				assert.Equal(t, "new-code", actual.Code)
 			})
 		})
 	}

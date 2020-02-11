@@ -31,4 +31,5 @@ create_table("selfservice_verification_requests") {
     t.Column("form", "json")
     t.Column("via", "string", {"size": 16})
     t.Column("csrf_token", "string")
+    t.Column("success", "bool")
 }

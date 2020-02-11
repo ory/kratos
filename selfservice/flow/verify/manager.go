@@ -3,6 +3,7 @@ package verify
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/sqlcon"
@@ -62,7 +63,7 @@ func (m *Manager) SendCode(ctx context.Context, via Via, value string) error {
 	address, err := m.r.VerificationPersister().FindAddressByValue(ctx, via, value)
 	if err != nil {
 		if errorsx.Cause(err) == sqlcon.ErrNoRows {
-			if err := m.sendToUnknownAddress(r.Context(), ViaEmail, value); err != nil {
+			if err := m.sendToUnknownAddress(ctx, ViaEmail, value); err != nil {
 				return err
 			}
 			return nil
@@ -70,16 +71,18 @@ func (m *Manager) SendCode(ctx context.Context, via Via, value string) error {
 		return err
 	}
 
-	return m.sendCodeToKnownAddress(ctx, address)
-}
-
-func (m *Manager) Verify(ctx context.Context, code string) error {
-	a, err := m.r.VerificationPersister().FindAddressByCode(ctx, code)
+	code, err := NewVerifyCode()
 	if err != nil {
 		return err
 	}
 
-	return m.r.VerificationPersister().VerifyAddress(ctx, a.ID)
+	address.Code = code
+	address.ExpiresAt = time.Now().UTC().Add(m.c.SelfServiceVerificationLinkLifespan())
+	if err := m.r.VerificationPersister().UpdateAddress(ctx, address); err != nil {
+		return err
+	}
+
+	return m.sendCodeToKnownAddress(ctx, address)
 }
 
 func (m *Manager) TrackAndSend(ctx context.Context, addresses []Address) error {
@@ -87,9 +90,8 @@ func (m *Manager) TrackAndSend(ctx context.Context, addresses []Address) error {
 		return err
 	}
 
-	for k := range addresses {
-		address := addresses[k]
-		if err := m.sendCodeToKnownAddress(ctx, &address); err != nil {
+	for _, address := range addresses {
+		if err := m.SendCode(ctx, address.Via, address.Value); err != nil {
 			return err
 		}
 	}

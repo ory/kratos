@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/pkg/errors"
-
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/selfservice/form"
@@ -48,6 +46,9 @@ type Request struct {
 
 	// CSRFToken contains the anti-csrf token associated with this request.
 	CSRFToken string `json:"-" db:"csrf_token"`
+
+	// Success, if true, implies that the request was completed successfully.
+	Success bool `json:"success" db:"success"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
@@ -94,7 +95,7 @@ func NewRequest(
 
 func (r *Request) Valid() error {
 	if r.ExpiresAt.Before(time.Now()) {
-		return errors.WithStack(ErrRequestExpired.WithReasonf("The verification request expired %.2f minutes ago, please try again.", time.Since(r.ExpiresAt).Minutes()))
+		return newErrRequestRequired(time.Since(r.ExpiresAt).Minutes())
 	}
 	return nil
 }

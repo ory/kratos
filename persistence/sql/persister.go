@@ -8,12 +8,10 @@ import (
 	"github.com/gobuffalo/pop/v5"
 	"github.com/pkg/errors"
 
-	"github.com/ory/kratos/schema"
-	"github.com/ory/kratos/selfservice/flow/verify"
-
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/persistence"
+	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/x"
 )
 

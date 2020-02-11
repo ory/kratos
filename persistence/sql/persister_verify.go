@@ -64,41 +64,24 @@ func (p *Persister) FindAddressByValue(ctx context.Context, via verify.Via, valu
 	return &address, nil
 }
 
-func (p *Persister) VerifyAddress(ctx context.Context, id uuid.UUID) error {
-	code, err := verify.NewVerifyCode()
+func (p *Persister) VerifyAddress(ctx context.Context, code string) error {
+	newCode, err := verify.NewVerifyCode()
 	if err != nil {
 		return err
 	}
 
 	return sqlcon.HandleError(p.c.RawQuery(
 		fmt.Sprintf(
-			"UPDATE %s SET status = ?, verified = true, verified_at = ?, code = ? WHERE id = ?",
+			"UPDATE %s SET status = ?, verified = true, verified_at = ?, code = ? WHERE code = ?",
 			new(verify.Address).TableName(),
 		),
 		verify.StatusCompleted,
 		time.Now().UTC().Round(time.Second),
+		newCode,
 		code,
-		id,
 	).Exec())
 }
 
-
-func (p *Persister) RefreshAddress(ctx context.Context, id uuid.UUID, expiresAt time.Time) (*verify.Address, error) {
-	var address verify.Address
-	if err := p.c.Find(address, id); err != nil {
-		return nil, sqlcon.HandleError(err)
-	}
-
-	code, err := verify.NewVerifyCode()
-	if err != nil {
-		return nil, err
-	}
-	address.ExpiresAt = expiresAt
-	address.Code = code
-
-	if err := p.c.Update(address); err != nil {
-		return nil, sqlcon.HandleError(err)
-	}
-
-	return &address,nil
+func (p *Persister) UpdateAddress(ctx context.Context, address *verify.Address) error {
+	return sqlcon.HandleError(p.c.Update(address))
 }

@@ -10,8 +10,6 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/jsonschema/v3"
-	"github.com/ory/x/errorsx"
-	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/configuration"
@@ -222,43 +220,47 @@ func (h *Handler) complete(w http.ResponseWriter, r *http.Request, _ httprouter.
 
 	vr, err := h.d.VerificationPersister().GetVerifyRequest(r.Context(), x.ParseUUID(rid))
 	if err != nil {
-		h.handleError(w, r, nil, err)
+		h.handleError(w, r, vr, err)
+		return
+	}
+
+	if err := vr.Valid(); err != nil {
+		h.handleError(w, r, vr, err)
 		return
 	}
 
 	switch vr.Via {
 	case ViaEmail:
 		h.completeViaEmail(w, r, vr)
-
-	default:
-		h.handleError(w, r, vr, errors.WithStack(herodot.ErrInternalServerError.WithDebugf("Ended up with an invalid VerifyRequest.Via: %s", vr.Via)))
 		return
 	}
+
+	h.handleError(w, r, vr, errors.WithStack(herodot.ErrInternalServerError.WithDebugf("Ended up with an invalid VerifyRequest.Via: %s", vr.Via)))
 }
 
 func (h *Handler) completeViaEmail(w http.ResponseWriter, r *http.Request, vr *Request) {
-	panic("not implemented")
-
 	to := r.PostForm.Get("to_verify")
 	if !jsonschema.Formats["email"](to) {
 		h.handleError(w, r, vr, errors.WithStack(schema.NewInvalidFormatError("#/to_verify", "email", to)))
 		return
 	}
 
-	address, err := h.d.VerificationPersister().FindAddressByValue(r.Context(), ViaEmail, to)
-	if err != nil {
-		if errorsx.Cause(err) == sqlcon.ErrNoRows {
-			if err := h.d.VerificationManager().sendToUnknownAddress(r.Context(), ViaEmail, to); err != nil {
-				h.handleError(w, r, vr, err)
-				return
-			}
-			return
-		}
+	if err := h.d.VerificationManager().SendCode(r.Context(), ViaEmail, to); err != nil {
 		h.handleError(w, r, vr, err)
 		return
 	}
 
-	h.d.VerificationManager().sendCodeToKnownAddress(r.Context(), address)
+	vr.Form = nil
+	vr.Success = true
+	if err := h.d.VerificationPersister().UpdateVerifyRequest(r.Context(), vr); err != nil {
+		h.handleError(w, r, vr, err)
+		return
+	}
+
+	http.Redirect(w, r,
+		urlx.CopyWithQuery(h.c.VerificationURL(), url.Values{"request": {vr.ID.String()}}).String(),
+		http.StatusFound,
+	)
 }
 
 // nolint:deadcode,unused
@@ -289,17 +291,12 @@ type selfServiceBrowserVerifyParameters struct {
 //       302: emptyResponse
 //       500: genericError
 func (h *Handler) verify(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	panic("not implemented")
-	if err := h.d.VerificationManager().Verify(r.Context(), ps.ByName("code")); err != nil {
-
-		// TODO ADD RETRY LINK?
+	if err := h.d.VerificationPersister().VerifyAddress(r.Context(), ps.ByName("code")); err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
-	// TODO CHECK EXPIRY
-
-	http.Redirect(w, r, h.c.DefaultReturnToURL().String(), http.StatusFound)
+	http.Redirect(w, r, h.c.SelfServiceVerificationReturnTo().String(), http.StatusFound)
 }
 
 // handleError is a convenience function for handling all types of errors that may occur (e.g. validation error).

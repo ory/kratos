@@ -77,7 +77,8 @@ type Provider interface {
 	SelfServiceLoginAfterHooks(strategy string) []SelfServiceHook
 	SelfServiceRegistrationAfterHooks(strategy string) []SelfServiceHook
 	SelfServiceLogoutRedirectURL() *url.URL
- SelfServiceVerificationLinkLifespan() time.Duration
+	SelfServiceVerificationLinkLifespan() time.Duration
+	SelfServiceVerificationReturnTo() *url.URL
 
 	CourierSMTPFrom() string
 	CourierSMTPURL() *url.URL

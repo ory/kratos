@@ -64,6 +64,7 @@ const (
 	ViperKeySelfServiceLifespanProfileRequest      = "selfservice.profile.request_lifespan"
 	ViperKeySelfServiceLifespanLink                = "selfservice.profile.link_lifespan"
 	ViperKeySelfServiceLifespanVerificationRequest = "selfservice.verify.request_lifespan"
+	ViperKeySelfServiceVerifyReturnTo              = "selfservice.verify.return_to"
 
 	ViperKeyDefaultIdentityTraitsSchemaURL = "identity.traits.default_schema_url"
 	ViperKeyIdentityTraitsSchemas          = "identity.traits.schemas"
@@ -353,4 +354,8 @@ func (p *ViperProvider) SelfServiceVerificationRequestLifespan() time.Duration {
 
 func (p *ViperProvider) SelfServiceVerificationLinkLifespan() time.Duration {
 	return viperx.GetDuration(p.l, ViperKeySelfServiceLifespanLink, time.Hour*24)
+}
+
+func (p *ViperProvider) SelfServiceVerificationReturnTo() *url.URL {
+	return  mustParseURLFromViper(p.l, ViperKeySelfServiceVerifyReturnTo)
 }

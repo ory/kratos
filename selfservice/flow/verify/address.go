@@ -80,6 +80,18 @@ func NewVerifyCode() (string, error) {
 	return string(code), nil
 }
 
+func MustNewEmailAddress(
+	value string,
+	identity uuid.UUID,
+	expiresIn time.Duration,
+) *Address {
+	a, err := NewEmailAddress(value, identity, expiresIn)
+	if err != nil {
+		panic(err)
+	}
+	return a
+}
+
 func NewEmailAddress(
 	value string,
 	identity uuid.UUID,
