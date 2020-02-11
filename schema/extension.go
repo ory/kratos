@@ -26,6 +26,9 @@ type (
 				Identifier bool `json:"identifier"`
 			} `json:"password"`
 		} `json:"credentials"`
+		Verification struct {
+			Via string `json:"via"`
+		}
 		Mappings struct {
 			Identity struct {
 				Traits []struct {

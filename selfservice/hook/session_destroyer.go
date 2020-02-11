@@ -9,14 +9,15 @@ import (
 
 var _ login.PostHookExecutor = new(SessionDestroyer)
 
-type sessionDestroyerDependencies interface {
-	session.ManagementProvider
-	session.PersistenceProvider
-}
-
-type SessionDestroyer struct {
-	r sessionDestroyerDependencies
-}
+type (
+	sessionDestroyerDependencies interface {
+		session.ManagementProvider
+		session.PersistenceProvider
+	}
+	SessionDestroyer struct {
+		r sessionDestroyerDependencies
+	}
+)
 
 func NewSessionDestroyer(r sessionDestroyerDependencies) *SessionDestroyer {
 	return &SessionDestroyer{r: r}

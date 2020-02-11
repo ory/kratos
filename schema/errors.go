@@ -18,6 +18,13 @@ func NewRequiredError(instancePtr, missing string) error {
 	})
 }
 
+func NewInvalidFormatError(instancePtr, format, value string) error {
+	return errors.WithStack(&jsonschema.ValidationError{
+		Message:     fmt.Sprintf("%q is not valid %q", value, format),
+		InstancePtr: instancePtr,
+	})
+}
+
 type ValidationErrorContextPasswordPolicyViolation struct {
 	Reason string
 }

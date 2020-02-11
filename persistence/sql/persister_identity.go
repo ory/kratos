@@ -210,7 +210,7 @@ func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) er
 	return sqlcon.HandleError(p.c.Update(i))
 }
 
-func (p *Persister) DeleteIdentity(_ context.Context, id uuid.UUID) error {
+func (p *Persister) DeleteIdentity(ctx context.Context, id uuid.UUID) error {
 	count, err := p.c.RawQuery("DELETE FROM identities WHERE id = ?", id).ExecWithCount()
 	if err != nil {
 		return sqlcon.HandleError(err)
@@ -221,7 +221,7 @@ func (p *Persister) DeleteIdentity(_ context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func (p *Persister) GetIdentity(_ context.Context, id uuid.UUID) (*identity.Identity, error) {
+func (p *Persister) GetIdentity(ctx context.Context, id uuid.UUID) (*identity.Identity, error) {
 	var i identity.Identity
 	if err := p.c.Find(&i, id); err != nil {
 		return nil, sqlcon.HandleError(err)
@@ -234,7 +234,7 @@ func (p *Persister) GetIdentity(_ context.Context, id uuid.UUID) (*identity.Iden
 	return &i, nil
 }
 
-func (p *Persister) GetIdentityConfidential(_ context.Context, id uuid.UUID) (*identity.Identity, error) {
+func (p *Persister) GetIdentityConfidential(ctx context.Context, id uuid.UUID) (*identity.Identity, error) {
 	var i identity.Identity
 	if err := p.c.Eager().Find(&i, id); err != nil {
 		return nil, sqlcon.HandleError(err)

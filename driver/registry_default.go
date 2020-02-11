@@ -2,10 +2,13 @@ package driver
 
 import (
 	"context"
+	"net/http"
 	"strings"
 	"time"
 
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/flow/verify"
+	"github.com/ory/kratos/x"
 
 	"github.com/cenkalti/backoff"
 	"github.com/gobuffalo/pop/v5"
@@ -86,6 +89,10 @@ type RegistryDefault struct {
 	selfserviceProfileManagementHandler          *profile.Handler
 	selfserviceProfileRequestRequestErrorHandler *profile.ErrorHandler
 
+	selfserviceVerifyErrorHandler *verify.ErrorHandler
+	selfserviceVerifyManager      *verify.Manager
+	selfserviceVerifyHandler      *verify.Handler
+
 	selfserviceLogoutHandler *logout.Handler
 
 	selfserviceStrategies []selfServiceStrategy
@@ -93,6 +100,8 @@ type RegistryDefault struct {
 	buildVersion string
 	buildHash    string
 	buildDate    string
+
+	csrfTokenGenerator x.CSRFToken
 }
 
 func NewRegistryDefault() *RegistryDefault {
@@ -395,4 +404,11 @@ func (m *RegistryDefault) Persister() persistence.Persister {
 
 func (m *RegistryDefault) Ping() error {
 	return m.persister.Ping(context.Background())
+}
+
+func (m *RegistryDefault) GenerateCSRFToken(r *http.Request) string {
+	if m.csrfTokenGenerator == nil {
+		m.csrfTokenGenerator = x.DefaultCSRFToken
+	}
+	return m.csrfTokenGenerator(r)
 }

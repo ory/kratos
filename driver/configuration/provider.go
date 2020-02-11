@@ -61,11 +61,13 @@ type Provider interface {
 
 	ProfileURL() *url.URL
 	LoginURL() *url.URL
+	VerificationURL() *url.URL
 	ErrorURL() *url.URL
 	MultiFactorURL() *url.URL
 
 	SessionLifespan() time.Duration
 	SelfServiceProfileRequestLifespan() time.Duration
+	SelfServiceVerificationRequestLifespan() time.Duration
 	SelfServiceLoginRequestLifespan() time.Duration
 	SelfServiceRegistrationRequestLifespan() time.Duration
 
@@ -75,6 +77,7 @@ type Provider interface {
 	SelfServiceLoginAfterHooks(strategy string) []SelfServiceHook
 	SelfServiceRegistrationAfterHooks(strategy string) []SelfServiceHook
 	SelfServiceLogoutRedirectURL() *url.URL
+ SelfServiceVerificationLinkLifespan() time.Duration
 
 	CourierSMTPFrom() string
 	CourierSMTPURL() *url.URL

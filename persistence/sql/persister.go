@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/flow/verify"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"

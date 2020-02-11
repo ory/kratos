@@ -15,6 +15,15 @@
               }
             }
           }
+        },
+        "verification": {
+          "type": "object",
+          "properties": {
+            "via": {
+              "type": "string",
+              "enum": ["email"]
+            }
+          }
         }
       }
     }

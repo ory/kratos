@@ -10,6 +10,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/profile"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/flow/verify"
 	"github.com/ory/kratos/session"
 )
 
@@ -25,6 +26,7 @@ type Persister interface {
 	courier.Persister
 	session.Persister
 	errorx.Persister
+	verify.Persister
 
 	Close(context.Context) error
 	Ping(context.Context) error

@@ -359,7 +359,7 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 	ar.Form.Reset()
 	ar.UpdateSuccessful = true
 	for _, field := range form.NewHTMLFormFromJSON(action.String(), json.RawMessage(i.Traits), "traits").Fields {
-		ar.Form.SetField(field.Name, field)
+		ar.Form.SetField(field)
 	}
 	ar.Form.SetCSRF(nosurf.Token(r))
 
@@ -399,7 +399,7 @@ func (h *Handler) handleProfileManagementError(w http.ResponseWriter, r *http.Re
 
 		if traits != nil {
 			for _, field := range form.NewHTMLFormFromJSON(action.String(), json.RawMessage(traits), "traits").Fields {
-				rr.Form.SetField(field.Name, field)
+				rr.Form.SetField(field)
 			}
 		}
 		rr.Form.SetCSRF(nosurf.Token(r))
@@ -407,17 +407,17 @@ func (h *Handler) handleProfileManagementError(w http.ResponseWriter, r *http.Re
 		// try to sort, might fail if the error before was sorting related
 		traitsSchema, err := h.c.IdentityTraitsSchemas().FindSchemaByID(rr.Identity.TraitsSchemaID)
 		if err != nil {
-			h.d.ProfileRequestRequestErrorHandler().HandleProfileManagementError(w, r, identity.CredentialsTypePassword, rr, err)
+			h.d.ProfileRequestRequestErrorHandler().HandleProfileManagementError(w, r, rr, err)
 			return
 		}
 		err = rr.Form.SortFields(traitsSchema.URL, "traits")
 		if err != nil {
-			h.d.ProfileRequestRequestErrorHandler().HandleProfileManagementError(w, r, identity.CredentialsTypePassword, rr, err)
+			h.d.ProfileRequestRequestErrorHandler().HandleProfileManagementError(w, r, rr, err)
 			return
 		}
 	}
 
-	h.d.ProfileRequestRequestErrorHandler().HandleProfileManagementError(w, r, identity.CredentialsTypePassword, rr, err)
+	h.d.ProfileRequestRequestErrorHandler().HandleProfileManagementError(w, r, rr, err)
 }
 
 // newProfileManagementDecoder returns a decoderx.HTTPDecoderOption with a JSON Schema for type assertion and

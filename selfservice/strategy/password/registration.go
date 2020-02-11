@@ -64,7 +64,7 @@ func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Reques
 
 			if p != nil {
 				for _, field := range form.NewHTMLFormFromJSON("", p.Traits, "traits").Fields {
-					method.Config.SetField(field.Name, field)
+					method.Config.SetField(field)
 				}
 			}
 
@@ -228,7 +228,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.
 
 	htmlf.Method = "POST"
 	htmlf.SetCSRF(s.cg(r))
-	htmlf.SetField("password", form.Field{Name: "password", Type: "password", Required: true})
+	htmlf.SetField(form.Field{Name: "password", Type: "password", Required: true})
 
 	if err := htmlf.SortFields(s.c.DefaultIdentityTraitsSchemaURL().String(), "traits"); err != nil {
 		return err

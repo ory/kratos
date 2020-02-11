@@ -12,12 +12,12 @@ import (
 
 var _ profile.RequestPersister = new(Persister)
 
-func (p *Persister) CreateProfileRequest(_ context.Context, r *profile.Request) error {
+func (p *Persister) CreateProfileRequest(ctx context.Context, r *profile.Request) error {
 	r.IdentityID = r.Identity.ID
 	return sqlcon.HandleError(p.c.Create(r)) // This must not be eager or identities will be created / updated
 }
 
-func (p *Persister) GetProfileRequest(_ context.Context, id uuid.UUID) (*profile.Request, error) {
+func (p *Persister) GetProfileRequest(ctx context.Context, id uuid.UUID) (*profile.Request, error) {
 	var r profile.Request
 	if err := p.c.Eager().Find(&r, id); err != nil {
 		return nil, sqlcon.HandleError(err)

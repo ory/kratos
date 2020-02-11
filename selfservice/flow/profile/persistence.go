@@ -58,7 +58,6 @@ func TestRequestPersister(p interface {
 			r := newRequest(t)
 			err := p.CreateProfileRequest(context.Background(), r)
 			require.NoError(t, err, "%#v", err)
-
 		})
 
 		t.Run("case=should create with set ids", func(t *testing.T) {

@@ -11,11 +11,11 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 )
 
-func (p *Persister) CreateRegistrationRequest(_ context.Context, r *registration.Request) error {
+func (p *Persister) CreateRegistrationRequest(ctx context.Context, r *registration.Request) error {
 	return p.c.Eager().Create(r)
 }
 
-func (p *Persister) GetRegistrationRequest(_ context.Context, id uuid.UUID) (*registration.Request, error) {
+func (p *Persister) GetRegistrationRequest(ctx context.Context, id uuid.UUID) (*registration.Request, error) {
 	var r registration.Request
 	if err := p.c.Eager().Find(&r, id); err != nil {
 		return nil, sqlcon.HandleError(err)

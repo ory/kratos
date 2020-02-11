@@ -9,7 +9,6 @@ import (
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/configuration"
-	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/x"
 )
@@ -47,7 +46,6 @@ func NewErrorHandler(d errorHandlerDependencies, c configuration.Provider) *Erro
 func (s *ErrorHandler) HandleProfileManagementError(
 	w http.ResponseWriter,
 	r *http.Request,
-	ct identity.CredentialsType,
 	rr *Request,
 	err error,
 ) {

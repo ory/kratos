@@ -14,6 +14,10 @@ var (
 	ErrInvalidCSRFToken = herodot.ErrForbidden.WithReasonf("A request failed due to a missing or invalid csrf_token value.")
 )
 
+type CSRFTokenGeneratorProvider interface {
+	GenerateCSRFToken(r *http.Request) string
+}
+
 type CSRFToken func(r *http.Request) string
 
 func DefaultCSRFToken(r *http.Request) string {

@@ -545,7 +545,7 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 
 			if traits != nil {
 				for _, field := range form.NewHTMLFormFromJSON("", traits, "traits").Fields {
-					method.Config.SetField(field.Name, field)
+					method.Config.SetField(field)
 				}
 			}
 

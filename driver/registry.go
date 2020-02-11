@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/flow/verify"
 
 	"github.com/ory/x/healthx"
 
@@ -86,6 +87,12 @@ type Registry interface {
 	registration.HookExecutorProvider
 	registration.HandlerProvider
 	registration.StrategyProvider
+
+	verify.PersistenceProvider
+	verify.ErrorHandlerProvider
+	verify.ManagementProvider
+
+	x.CSRFTokenGeneratorProvider
 }
 
 type selfServiceStrategy interface {
