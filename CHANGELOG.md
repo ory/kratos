@@ -45,6 +45,7 @@
 
 **Implemented enhancements:**
 
+- Make OIDC strategy capable of dealing with expiry errors [\#233](https://github.com/ory/kratos/issues/233)
 - selfservice/updateProfileFlow: disable form fields that the user is not allowed to update [\#227](https://github.com/ory/kratos/issues/227)
 - Use jsonschema everywhere [\#225](https://github.com/ory/kratos/issues/225)
 
@@ -59,6 +60,7 @@
 
 **Merged pull requests:**
 
+- fix\(SelfService/Strategy/oidc\): rework auth session expiry  [\#242](https://github.com/ory/kratos/pull/242) ([zepatrik](https://github.com/zepatrik))
 - feat\(selfservice/profile\): Add disabled flag to identifier form fields [\#238](https://github.com/ory/kratos/pull/238) ([zepatrik](https://github.com/zepatrik))
 - fix\(swagger\): Use correct annotations for request methods [\#237](https://github.com/ory/kratos/pull/237) ([aeneasr](https://github.com/aeneasr))
 - feat: add levenshtein distance check for password validation [\#231](https://github.com/ory/kratos/pull/231) ([zepatrik](https://github.com/zepatrik))
@@ -159,7 +161,6 @@
 - Reset CSRF Token on Principal Change \(Sign Out\) [\#38](https://github.com/ory/kratos/issues/38)
 - selfservice: Omit request header from login/registration request [\#106](https://github.com/ory/kratos/pull/106) ([aeneasr](https://github.com/aeneasr))
 - selfservice: Explicitly whitelist form parser keys [\#105](https://github.com/ory/kratos/pull/105) ([aeneasr](https://github.com/aeneasr))
-- Force path and domain on CSRF cookie [\#70](https://github.com/ory/kratos/pull/70) ([aeneasr](https://github.com/aeneasr))
 
 **Security fixes:**
 
