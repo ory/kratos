@@ -11,6 +11,7 @@ import (
 	"github.com/go-openapi/errors"
 	strfmt "github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // Form HTMLForm represents a HTML Form. The container can work with both HTTP Form and JSON requests
@@ -18,21 +19,28 @@ import (
 type Form struct {
 
 	// Action should be used as the form action URL (<form action="{{ .Action }}" method="post">).
-	Action string `json:"action,omitempty"`
+	// Required: true
+	Action *string `json:"action"`
 
 	// Errors contains all form errors. These will be duplicates of the individual field errors.
 	Errors []*Error `json:"errors"`
 
 	// fields
-	Fields FormFields `json:"fields,omitempty"`
+	// Required: true
+	Fields FormFields `json:"fields"`
 
 	// Method is the form method (e.g. POST)
-	Method string `json:"method,omitempty"`
+	// Required: true
+	Method *string `json:"method"`
 }
 
 // Validate validates this form
 func (m *Form) Validate(formats strfmt.Registry) error {
 	var res []error
+
+	if err := m.validateAction(formats); err != nil {
+		res = append(res, err)
+	}
 
 	if err := m.validateErrors(formats); err != nil {
 		res = append(res, err)
@@ -42,9 +50,22 @@ func (m *Form) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
+	if err := m.validateMethod(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *Form) validateAction(formats strfmt.Registry) error {
+
+	if err := validate.Required("action", "body", m.Action); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -75,14 +96,23 @@ func (m *Form) validateErrors(formats strfmt.Registry) error {
 
 func (m *Form) validateFields(formats strfmt.Registry) error {
 
-	if swag.IsZero(m.Fields) { // not required
-		return nil
+	if err := validate.Required("fields", "body", m.Fields); err != nil {
+		return err
 	}
 
 	if err := m.Fields.Validate(formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
 			return ve.ValidateName("fields")
 		}
+		return err
+	}
+
+	return nil
+}
+
+func (m *Form) validateMethod(formats strfmt.Registry) error {
+
+	if err := validate.Required("method", "body", m.Method); err != nil {
 		return err
 	}
 

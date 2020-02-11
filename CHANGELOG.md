@@ -45,7 +45,14 @@
 
 **Implemented enhancements:**
 
+- Make OIDC strategy capable of dealing with expiry errors [\#233](https://github.com/ory/kratos/issues/233)
+- selfservice/updateProfileFlow: disable form fields that the user is not allowed to update [\#227](https://github.com/ory/kratos/issues/227)
 - Use jsonschema everywhere [\#225](https://github.com/ory/kratos/issues/225)
+
+**Fixed bugs:**
+
+- Mark fields required in login / registration methods [\#234](https://github.com/ory/kratos/issues/234)
+- Resolve flaky SDK generation issues caused by UUID [\#240](https://github.com/ory/kratos/pull/240) ([aeneasr](https://github.com/aeneasr))
 
 **Closed issues:**
 
@@ -53,6 +60,9 @@
 
 **Merged pull requests:**
 
+- fix\(SelfService/Strategy/oidc\): rework auth session expiry  [\#242](https://github.com/ory/kratos/pull/242) ([zepatrik](https://github.com/zepatrik))
+- feat\(selfservice/profile\): Add disabled flag to identifier form fields [\#238](https://github.com/ory/kratos/pull/238) ([zepatrik](https://github.com/zepatrik))
+- fix\(swagger\): Use correct annotations for request methods [\#237](https://github.com/ory/kratos/pull/237) ([aeneasr](https://github.com/aeneasr))
 - feat: add levenshtein distance check for password validation [\#231](https://github.com/ory/kratos/pull/231) ([zepatrik](https://github.com/zepatrik))
 - Use ory/jsonschema/v3 everywhere [\#229](https://github.com/ory/kratos/pull/229) ([aeneasr](https://github.com/aeneasr))
 

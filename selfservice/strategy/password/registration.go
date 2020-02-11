@@ -1,7 +1,6 @@
 package password
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -108,22 +107,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 	}
 
 	if err := ar.Valid(); err != nil {
-		// create new request if the old one is not valid
-		if err = s.d.RegistrationHandler().NewRegistrationRequest(w, r, func(a *registration.Request) (string, error) {
-			for name, method := range a.Methods {
-				method.Config.AddError(&form.Error{Message: "Your session expired, please try again."})
-				if err := s.d.RegistrationRequestPersister().UpdateRegistrationRequest(context.TODO(), a.ID, name, method); err != nil {
-					return s.d.SelfServiceErrorManager().Create(r.Context(), w, r, err)
-				}
-				a.Methods[name] = method
-			}
-
-			return urlx.CopyWithQuery(s.c.RegisterURL(), url.Values{"request": {a.ID.String()}}).String(), nil
-		}); err != nil {
-			s.handleRegistrationError(w, r, ar, nil, err)
-			return
-		}
-
+		s.handleRegistrationError(w, r, ar, nil, err)
 		return
 	}
 
@@ -221,7 +205,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.
 		url.Values{"request": {sr.ID.String()}},
 	)
 
-	htmlf, err := form.NewHTMLFormFromJSONSchema(action.String(), s.c.DefaultIdentityTraitsSchemaURL().String(), "traits")
+	htmlf, err := form.NewHTMLFormFromJSONSchema(action.String(), s.c.DefaultIdentityTraitsSchemaURL().String(), "traits", nil)
 	if err != nil {
 		return err
 	}

@@ -12,11 +12,20 @@ import (
 
 // swagger:model session
 type Session struct {
-	ID              uuid.UUID          `json:"sid" faker:"uuid" db:"id"`
-	ExpiresAt       time.Time          `json:"expires_at" db:"expires_at" faker:"time_type"`
-	AuthenticatedAt time.Time          `json:"authenticated_at" db:"authenticated_at" faker:"time_type"`
-	IssuedAt        time.Time          `json:"issued_at" db:"issued_at" faker:"time_type"`
-	Identity        *identity.Identity `json:"identity" faker:"identity" db:"-" belongs_to:"identities" fk_id:"IdentityID"`
+	// required: true
+	ID uuid.UUID `json:"sid" faker:"uuid" db:"id"`
+
+	// required: true
+	ExpiresAt time.Time `json:"expires_at" db:"expires_at" faker:"time_type"`
+
+	// required: true
+	AuthenticatedAt time.Time `json:"authenticated_at" db:"authenticated_at" faker:"time_type"`
+
+	// required: true
+	IssuedAt time.Time `json:"issued_at" db:"issued_at" faker:"time_type"`
+
+	// required: true
+	Identity *identity.Identity `json:"identity" faker:"identity" db:"-" belongs_to:"identities" fk_id:"IdentityID"`
 
 	// IdentityID is a helper struct field for gobuffalo.pop.
 	IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`

@@ -34,12 +34,18 @@ type HTMLForm struct {
 	sync.RWMutex
 
 	// Action should be used as the form action URL (<form action="{{ .Action }}" method="post">).
+	//
+	// required: true
 	Action string `json:"action"`
 
 	// Method is the form method (e.g. POST)
+	//
+	// required: true
 	Method string `json:"method"`
 
 	// Fields contains the form fields.
+	//
+	// required: true
 	Fields Fields `json:"fields"`
 
 	// Errors contains all form errors. These will be duplicates of the individual field errors.
@@ -78,20 +84,15 @@ func NewHTMLFormFromRequestBody(r *http.Request, action string, compiler decoder
 // NewHTMLFormFromJSON creates a HTML form based on the provided JSON struct.
 func NewHTMLFormFromJSON(action string, raw json.RawMessage, prefix string) *HTMLForm {
 	c := NewHTMLForm(action)
-	for k, v := range jsonx.Flatten(raw) {
-		if prefix != "" {
-			k = prefix + "." + k
-		}
-		c.SetValue(k, v)
-	}
+	c.SetValuesFromJSON(raw, prefix)
 
 	return c
 }
 
 // NewHTMLFormFromJSONSchema creates a new HTMLForm and populates the fields
 // using the provided JSON Schema.
-func NewHTMLFormFromJSONSchema(action, jsonSchemaRef, prefix string) (*HTMLForm, error) {
-	paths, err := jsonschemax.ListPaths(jsonSchemaRef, nil)
+func NewHTMLFormFromJSONSchema(action, jsonSchemaRef, prefix string, compiler *jsonschema.Compiler) (*HTMLForm, error) {
+	paths, err := jsonschemax.ListPaths(jsonSchemaRef, compiler)
 	if err != nil {
 		return nil, err
 	}
@@ -173,6 +174,17 @@ func (c *HTMLForm) ParseError(err error) error {
 func (c *HTMLForm) SetValues(values map[string]interface{}) {
 	c.defaults()
 	for k, v := range values {
+		c.SetValue(k, v)
+	}
+}
+
+// SetValuesFromJSON sets the container's fields to the provided values.
+func (c *HTMLForm) SetValuesFromJSON(raw json.RawMessage, prefix string) {
+	c.defaults()
+	for k, v := range jsonx.Flatten(raw) {
+		if prefix != "" {
+			k = prefix + "." + k
+		}
 		c.SetValue(k, v)
 	}
 }

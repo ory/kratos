@@ -57,7 +57,7 @@ require (
 	github.com/ory/jsonschema/v3 v3.0.1
 	github.com/ory/sdk/swagutil v0.0.0-20200202121523-307941feee4b
 	github.com/ory/viper v1.5.6
-	github.com/ory/x v0.0.94
+	github.com/ory/x v0.0.95
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/rogpeppe/go-internal v1.5.2 // indirect
