@@ -325,13 +325,17 @@ func TestStrategy(t *testing.T) {
 	t.Run("case=should fail because the login request is expired", func(t *testing.T) {
 		r := nlr(t, returnTS.URL, -time.Minute)
 		res, body := mr(t, "valid", r.ID, url.Values{})
-		aue(t, res, body, "login request expired")
+
+		assert.NotEqual(t, r.ID, gjson.GetBytes(body, "id"))
+		aue(t, res, body, "session expired")
 	})
 
 	t.Run("case=should fail because the registration request is expired", func(t *testing.T) {
 		r := nrr(t, returnTS.URL, -time.Minute)
 		res, body := mr(t, "valid", r.ID, url.Values{})
-		aue(t, res, body, "registration request expired")
+
+		assert.NotEqual(t, r.ID, gjson.GetBytes(body, "id"))
+		aue(t, res, body, "session expired")
 	})
 
 	t.Run("case=should fail registration because scope was not provided", func(t *testing.T) {
