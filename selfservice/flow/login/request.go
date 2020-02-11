@@ -118,7 +118,7 @@ func (r Request) TableName() string {
 
 func (r *Request) Valid() error {
 	if r.ExpiresAt.Before(time.Now()) {
-		return errors.WithStack(ErrRequestExpired.WithReasonf("The login request expired %.2f minutes ago, please try again.", time.Since(r.ExpiresAt).Minutes()))
+		return errors.WithStack(newRequestExpiredError(time.Since(r.ExpiresAt)))
 	}
 
 	if r.IssuedAt.After(time.Now()) {

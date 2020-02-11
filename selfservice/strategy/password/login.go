@@ -2,7 +2,6 @@ package password
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/url"
@@ -75,21 +74,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	if err := ar.Valid(); err != nil {
-		// create new request if the old one is not valid
-		if err = s.d.LoginHandler().NewLoginRequest(w, r, func(a *login.Request) (string, error) {
-			for name, method := range a.Methods {
-				method.Config.AddError(&form.Error{Message: "Your session expired, please try again."})
-				if err := s.d.LoginRequestPersister().UpdateLoginRequest(context.TODO(), a.ID, name, method); err != nil {
-					return s.d.SelfServiceErrorManager().Create(r.Context(), w, r, err)
-				}
-				a.Methods[name] = method
-			}
-
-			return urlx.CopyWithQuery(s.c.LoginURL(), url.Values{"request": {a.ID.String()}}).String(), nil
-		}); err != nil {
-			s.handleLoginError(w, r, ar, err)
-			return
-		}
+		s.handleLoginError(w, r, ar, err)
 		return
 	}
 
