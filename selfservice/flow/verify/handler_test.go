@@ -29,4 +29,6 @@ func TestHandler(t *testing.T) {
 		w.WriteHeader(http.StatusNoContent)
 	}))
 	defer redirTS.Close()
+
+	t.Fatal("not implemented")
 }
