@@ -185,7 +185,7 @@ func TestContainer(t *testing.T) {
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-				actual, err := NewHTMLFormFromJSONSchema("action", tc.ref, tc.prefix)
+				actual, err := NewHTMLFormFromJSONSchema("action", tc.ref, tc.prefix, nil)
 				require.NoError(t, err)
 				assert.Equal(t, "action", actual.Action)
 				assert.EqualValues(t, tc.expect.Errors, actual.Errors)

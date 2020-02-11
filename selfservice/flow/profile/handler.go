@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/ory/jsonschema/v3"
+
 	"github.com/ory/kratos/schema"
 
 	"github.com/julienschmidt/httprouter"
@@ -100,24 +102,36 @@ func (h *Handler) initUpdateProfile(w http.ResponseWriter, r *http.Request, ps h
 		return
 	}
 
-	a := NewRequest(h.c.SelfServiceProfileRequestLifespan(), r, s)
-	a.Form = form.NewHTMLFormFromJSON(urlx.CopyWithQuery(
-		urlx.AppendPaths(h.c.SelfPublicURL(), PublicProfileManagementUpdatePath),
-		url.Values{
-			"request": {a.ID.String()},
-		},
-	).String(), json.RawMessage(s.Identity.Traits), "traits")
-	a.Form.SetCSRF(h.csrf(r))
-
 	traitsSchema, err := h.c.IdentityTraitsSchemas().FindSchemaByID(s.Identity.TraitsSchemaID)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
+
+	a := NewRequest(h.c.SelfServiceProfileRequestLifespan(), r, s)
+	// use a schema compiler that disables identifiers
+	schemaCompiler := jsonschema.NewCompiler()
+	registerNewDisableIdentifiersExtension(schemaCompiler)
+
+	a.Form, err = form.NewHTMLFormFromJSONSchema(urlx.CopyWithQuery(
+		urlx.AppendPaths(h.c.SelfPublicURL(), PublicProfileManagementUpdatePath),
+		url.Values{
+			"request": {a.ID.String()},
+		},
+	).String(), traitsSchema.URL, "traits", schemaCompiler)
+	if err != nil {
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		return
+	}
+
+	a.Form.SetValuesFromJSON(json.RawMessage(s.Identity.Traits), "traits")
+	a.Form.SetCSRF(h.csrf(r))
+
 	if err := a.Form.SortFields(traitsSchema.URL, "traits"); err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
+
 	if err := h.d.ProfileRequestPersister().CreateProfileRequest(r.Context(), a); err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return

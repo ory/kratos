@@ -205,7 +205,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.
 		url.Values{"request": {sr.ID.String()}},
 	)
 
-	htmlf, err := form.NewHTMLFormFromJSONSchema(action.String(), s.c.DefaultIdentityTraitsSchemaURL().String(), "traits")
+	htmlf, err := form.NewHTMLFormFromJSONSchema(action.String(), s.c.DefaultIdentityTraitsSchemaURL().String(), "traits", nil)
 	if err != nil {
 		return err
 	}
