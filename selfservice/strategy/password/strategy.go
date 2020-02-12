@@ -37,7 +37,7 @@ type registrationStrategyDependencies interface {
 	login.RequestPersistenceProvider
 	login.HandlerProvider
 
-	identity.PoolProvider
+	identity.PrivilegedPoolProvider
 	identity.ValidationProvider
 
 	session.HandlerProvider

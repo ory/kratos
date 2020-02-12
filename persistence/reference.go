@@ -19,7 +19,7 @@ type Provider interface {
 }
 
 type Persister interface {
-	identity.Pool
+	identity.PrivilegedPool
 	registration.RequestPersister
 	login.RequestPersister
 	profile.RequestPersister

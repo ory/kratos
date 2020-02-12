@@ -65,3 +65,14 @@ func NewCSRFHandler(
 	}))
 	return n
 }
+
+func NewTestCSRFHandler(router http.Handler) *nosurf.CSRFHandler {
+	n := nosurf.New(router)
+	n.SetBaseCookie(http.Cookie{
+		MaxAge:   nosurf.MaxAge,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false,
+	})
+	return n
+}

@@ -5,13 +5,15 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/pkg/errors"
+
 	"github.com/ory/herodot"
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/urlx"
-	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/x"
 )
 
@@ -68,11 +70,12 @@ func (s *ErrorHandler) HandleVerificationError(
 		return
 	}
 
-	if _, ok := errorsx.Cause(err).(errRequestExpired); ok {
+	if e, ok := errorsx.Cause(err).(*errRequestExpired); ok {
 		a := NewRequest(
 			s.c.SelfServiceProfileRequestLifespan(), r, rr.Via,
 			urlx.AppendPaths(s.c.SelfPublicURL(), PublicVerificationRequestPath), s.d.GenerateCSRFToken,
 		)
+		a.Form.AddError(&form.Error{Message:e.ReasonField})
 
 		if err := s.d.VerificationPersister().CreateVerifyRequest(r.Context(), a); err != nil {
 			s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
@@ -80,7 +83,7 @@ func (s *ErrorHandler) HandleVerificationError(
 		}
 
 		http.Redirect(w, r,
-			urlx.CopyWithQuery(h.c.VerificationURL(), url.Values{"request": {a.ID.String()}}).String(),
+			urlx.CopyWithQuery(s.c.VerificationURL(), url.Values{"request": {a.ID.String()}}).String(),
 			http.StatusFound,
 		)
 		return

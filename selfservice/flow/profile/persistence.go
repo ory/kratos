@@ -30,7 +30,7 @@ type (
 
 func TestRequestPersister(p interface {
 	RequestPersister
-	identity.Pool
+	identity.PrivilegedPool
 }) func(t *testing.T) {
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
 

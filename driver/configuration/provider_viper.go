@@ -357,5 +357,5 @@ func (p *ViperProvider) SelfServiceVerificationLinkLifespan() time.Duration {
 }
 
 func (p *ViperProvider) SelfServiceVerificationReturnTo() *url.URL {
-	return  mustParseURLFromViper(p.l, ViperKeySelfServiceVerifyReturnTo)
+	return mustParseURLFromViper(p.l, ViperKeySelfServiceVerifyReturnTo)
 }

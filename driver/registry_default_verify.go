@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/verify"
 )
 
@@ -16,9 +17,9 @@ func (m *RegistryDefault) VerificationRequestErrorHandler() *verify.ErrorHandler
 	return m.selfserviceVerifyErrorHandler
 }
 
-func (m *RegistryDefault) VerificationManager() *verify.Manager {
+func (m *RegistryDefault) VerificationManager() *identity.Manager {
 	if m.selfserviceVerifyManager == nil {
-		m.selfserviceVerifyManager = verify.NewManager(m, m.c)
+		m.selfserviceVerifyManager = identity.NewManager(m, m.c)
 	}
 
 	return m.selfserviceVerifyManager
@@ -30,4 +31,12 @@ func (m *RegistryDefault) VerificationHandler() *verify.Handler {
 	}
 
 	return m.selfserviceVerifyHandler
+}
+
+func (m *RegistryDefault) VerificationSender() *verify.Sender {
+	if m.selfserviceVerifySender == nil {
+		m.selfserviceVerifySender = verify.NewSender(m, m.c)
+	}
+
+	return m.selfserviceVerifySender
 }

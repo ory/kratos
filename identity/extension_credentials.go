@@ -11,17 +11,17 @@ import (
 	"github.com/ory/kratos/schema"
 )
 
-type ValidationExtensionRunner struct {
+type SchemaExtensionCredentials struct {
 	i *Identity
 	v []string
 	l sync.Mutex
 }
 
-func NewValidationExtensionRunner(i *Identity) *ValidationExtensionRunner {
-	return &ValidationExtensionRunner{i: i}
+func NewSchemaExtensionCredentials(i *Identity) *SchemaExtensionCredentials {
+	return &SchemaExtensionCredentials{i: i}
 }
 
-func (r *ValidationExtensionRunner) Runner(_ jsonschema.ValidationContext, s schema.ExtensionConfig, value interface{}) error {
+func (r *SchemaExtensionCredentials) Runner(_ jsonschema.ValidationContext, s schema.ExtensionConfig, value interface{}) error {
 	r.l.Lock()
 	defer r.l.Unlock()
 	if s.Credentials.Password.Identifier {

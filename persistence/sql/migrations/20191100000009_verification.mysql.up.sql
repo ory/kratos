@@ -1,1 +1,1 @@
-ALTER TABLE selfservice_verification_addresses MODIFY COLUMN code VARCHAR(255) BINARY;
+ALTER TABLE identity_verifiable_addresses MODIFY COLUMN code VARCHAR(255) BINARY;

@@ -58,6 +58,8 @@ type Registry interface {
 	identity.HandlerProvider
 	identity.ValidationProvider
 	identity.PoolProvider
+	identity.PrivilegedPoolProvider
+	identity.ManagementProvider
 
 	schema.HandlerProvider
 
@@ -90,7 +92,7 @@ type Registry interface {
 
 	verify.PersistenceProvider
 	verify.ErrorHandlerProvider
-	verify.ManagementProvider
+	verify.SenderProvider
 
 	x.CSRFTokenGeneratorProvider
 }

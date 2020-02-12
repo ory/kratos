@@ -1,4 +1,4 @@
-package verify
+package identity
 
 import (
 	"encoding/json"
@@ -11,15 +11,15 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-func TestNewEmailAddress(t *testing.T) {
+func TestNewVerifiableEmailAddress(t *testing.T) {
 	iid := x.NewUUID()
-	a, err := NewEmailAddress("foo@ory.sh", iid,time.Minute)
+	a, err := NewVerifiableEmailAddress("foo@ory.sh", iid, time.Minute)
 	require.NoError(t, err)
 
 	assert.Len(t, a.Code, 32)
 	assert.Equal(t, a.Value, "foo@ory.sh")
-	assert.Equal(t, a.Via, ViaEmail)
-	assert.Equal(t, a.Status, StatusPending)
+	assert.Equal(t, a.Via, VerifiableAddressTypeEmail)
+	assert.Equal(t, a.Status, VerifiableAddressStatusPending)
 	assert.Equal(t, a.Verified, false)
 	assert.Nil(t, a.VerifiedAt)
 	assert.NotEmpty(t, a.ID)

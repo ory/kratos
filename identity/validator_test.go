@@ -50,18 +50,13 @@ func TestSchemaValidator(t *testing.T) {
 	ts := httptest.NewServer(router)
 	defer ts.Close()
 
-	_, reg := internal.NewRegistryDefault(t)
+	conf, reg := internal.NewRegistryDefault(t)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, ts.URL+"/schema/firstName")
 	viper.Set(configuration.ViperKeyIdentityTraitsSchemas, []configuration.SchemaConfig{
-		{
-			ID:  "whatever",
-			URL: ts.URL + "/schema/whatever",
-		}, {
-			ID:  "unreachable-url",
-			URL: ts.URL + "/404-not-found",
-		},
+		{ID: "whatever", URL: ts.URL + "/schema/whatever"},
+		{ID: "unreachable-url", URL: ts.URL + "/404-not-found"},
 	})
-	v := NewValidator(reg)
+	v := NewValidator(reg, conf)
 
 	for k, tc := range []struct {
 		i   *Identity

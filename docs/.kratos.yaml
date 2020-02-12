@@ -21,6 +21,7 @@ urls:
   mfa_ui: http://test.kratos.ory.sh/mfa
   login_ui: http://test.kratos.ory.sh/login
   profile_ui: http://test.kratos.ory.sh/profile
+  verify_ui: http://test.kratos.ory.sh/verify
   registration_ui: http://test.kratos.ory.sh/register
   self:
     public: http://public.kratos.ory.sh

@@ -31,25 +31,12 @@ type (
 		CreateVerifyRequest(context.Context, *Request) error
 		GetVerifyRequest(ctx context.Context, id uuid.UUID) (*Request, error)
 		UpdateVerifyRequest(context.Context, *Request) error
-
-		TrackAddresses(ctx context.Context, addresses []Address) error
-
-		// FindAddressByCode returns a matching address or sql.ErrNoRows if no address could be found.
-		FindAddressByCode(ctx context.Context, code string) (*Address, error)
-
-		// FindAddressByValue returns a matching address or sql.ErrNoRows if no address could be found.
-		FindAddressByValue(ctx context.Context, via Via, address string) (*Address, error)
-
-		// VerifyAddress verifies an address by the given id.
-		VerifyAddress(ctx context.Context, code string) error
-
-		UpdateAddress(ctx context.Context, address *Address) error
 	}
 )
 
 func TestPersister(p interface {
 	Persister
-	identity.Pool
+	identity.PrivilegedPool
 }) func(t *testing.T) {
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
 	return func(t *testing.T) {
@@ -113,41 +100,39 @@ func TestPersister(p interface {
 		})
 
 		t.Run("suite=address", func(t *testing.T) {
+			createIdentityWithAddresses := func(t *testing.T, expiry time.Duration, email string) identity.VerifiableAddress {
+				var i identity.Identity
+				require.NoError(t, faker.FakeData(&i))
+
+				address, err := identity.NewVerifiableEmailAddress(email, i.ID, expiry)
+				require.NoError(t, err)
+				i.Addresses = append(i.Addresses, *address)
+
+				require.NoError(t, p.CreateIdentity(context.Background(), &i))
+				return i.Addresses[0]
+			}
+
 			t.Run("case=not found", func(t *testing.T) {
 				_, err := p.FindAddressByCode(context.Background(), "does-not-exist")
 				require.Equal(t, sqlcon.ErrNoRows, errorsx.Cause(err))
 
-				_, err = p.FindAddressByValue(context.Background(), ViaEmail, "does-not-exist")
+				_, err = p.FindAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "does-not-exist")
 				require.Equal(t, sqlcon.ErrNoRows, errorsx.Cause(err))
 			})
 
 			t.Run("case=create and find", func(t *testing.T) {
-				addresses := make([]Address, 15)
+				addresses := make([]identity.VerifiableAddress, 15)
 				for k := range addresses {
-					var i identity.Identity
-					require.NoError(t, faker.FakeData(&i))
-					require.NoError(t, p.CreateIdentity(context.Background(), &i))
-
-					address, err := NewEmailAddress("verify.TestPersister.CreateIdentity"+strconv.Itoa(k)+"@ory.sh", i.ID, time.Minute)
-					require.NoError(t, err)
-					address.ID = uuid.Nil
-
-					addresses[k] = *address
+					addresses[k] = createIdentityWithAddresses(t, time.Minute, "verify.TestPersister.Create"+strconv.Itoa(k)+"@ory.sh")
+					require.NotEmpty(t, addresses[k].ID)
 				}
 
-				require.NoError(t, p.TrackAddresses(context.Background(), addresses))
-
-				for _, address := range addresses {
-					require.NotEmpty(t, address.ID)
-				}
-
-				compare := func(t *testing.T, expected, actual Address) {
+				compare := func(t *testing.T, expected, actual identity.VerifiableAddress) {
 					actual.CreatedAt = actual.CreatedAt.UTC()
 					actual.UpdatedAt = actual.UpdatedAt.UTC()
 					expected.CreatedAt = expected.CreatedAt.UTC()
 					expected.UpdatedAt = expected.UpdatedAt.UTC()
 					assert.EqualValues(t, expected, actual)
-
 				}
 
 				for k, expected := range addresses {
@@ -170,38 +155,22 @@ func TestPersister(p interface {
 			})
 
 			t.Run("case=create and verify", func(t *testing.T) {
-				var i identity.Identity
-				require.NoError(t, faker.FakeData(&i))
-				require.NoError(t, p.CreateIdentity(context.Background(), &i))
-
-				address, err := NewEmailAddress("verify.TestPersister.VerifyAddress@ory.sh", i.ID, time.Minute)
-				require.NoError(t, err)
-				address.ID = x.NewUUID()
-
-				require.NoError(t, p.TrackAddresses(context.Background(), []Address{*address}))
+				address := createIdentityWithAddresses(t, time.Minute, "verify.TestPersister.VerifyAddress@ory.sh")
 				require.NoError(t, p.VerifyAddress(context.Background(), address.Code))
 
 				actual, err := p.FindAddressByValue(context.Background(), address.Via, address.Value)
 				require.NoError(t, err)
 				assert.NotEqual(t, address.Code, actual.Code)
 				assert.True(t, actual.Verified)
-				assert.EqualValues(t, StatusCompleted, actual.Status)
+				assert.EqualValues(t, identity.VerifiableAddressStatusCompleted, actual.Status)
 				assert.NotEmpty(t, actual.VerifiedAt)
 			})
 
 			t.Run("case=update", func(t *testing.T) {
-				var i identity.Identity
-				require.NoError(t, faker.FakeData(&i))
-				require.NoError(t, p.CreateIdentity(context.Background(), &i))
-
-				address, err := NewEmailAddress("verify.TestPersister.Update@ory.sh", i.ID, time.Minute)
-				require.NoError(t, err)
-				address.ID = x.NewUUID()
-
-				require.NoError(t, p.TrackAddresses(context.Background(), []Address{*address}))
+				address := createIdentityWithAddresses(t, time.Minute, "verify.TestPersister.Update@ory.sh")
 
 				address.Code = "new-code"
-				require.NoError(t, p.UpdateAddress(context.Background(), address))
+				require.NoError(t, p.UpdateVerifiableAddress(context.Background(), &address))
 
 				actual, err := p.FindAddressByValue(context.Background(), address.Via, address.Value)
 				require.NoError(t, err)

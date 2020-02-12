@@ -613,6 +613,167 @@
         }
       }
     },
+    "/self-service/browser/flows/requests/verification": {
+      "get": {
+        "description": "When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required\nfor checking the auth session. To prevent scanning attacks, the public endpoint does not return 404 status codes\nbut instead 403 or 500.\n\nMore information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "common",
+          "public",
+          "admin"
+        ],
+        "summary": "Get the request context of browser-based verification flows",
+        "operationId": "getSelfServiceVerificationRequest",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Request is the Request ID\n\nThe value for this parameter comes from `request` URL Query parameter sent to your\napplication (e.g. `/verify?request=abcde`).",
+            "name": "request",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "verificationRequest",
+            "schema": {
+              "$ref": "#/definitions/verificationRequest"
+            }
+          },
+          "403": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "404": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "This endpoint completes a browser-based profile management flow. This is usually achieved by POSTing data to this\nendpoint.\n\nIf the provided profile data is valid against the Identity's Traits JSON Schema, the data will be updated and\nthe browser redirected to `url.profile_ui` for further steps.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
+        "consumes": [
+          "application/json",
+          "application/x-www-form-urlencoded"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Complete the browser-based profile management flows",
+        "operationId": "completeSelfServiceBrowserVerificationFlow",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Request is the Request ID\n\nThe value for this parameter comes from `request` URL Query parameter sent to your\napplication (e.g. `/verify?request=abcde`).",
+            "name": "request",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
+    "/self-service/browser/flows/verification/confirm/{code}": {
+      "get": {
+        "description": "This endpoint completes a browser-based verification flow.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
+        "consumes": [
+          "application/json",
+          "application/x-www-form-urlencoded"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Complete the browser-based verification flows",
+        "operationId": "selfServiceBrowserVerify",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "code",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
+    "/self-service/browser/flows/verification/init/{via}": {
+      "get": {
+        "description": "This endpoint initializes a browser-based profile management flow. Once initialized, the browser will be redirected to\n`urls.profile_ui` with the request ID set as a query parameter. If no valid user session exists, a login\nflow will be initialized.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Initialize browser-based verification flow",
+        "operationId": "initializeSelfServiceBrowserVerificationFlow",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "What to verify\n\nCurrently only \"email\" is supported.",
+            "name": "via",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
     "/self-service/errors": {
       "get": {
         "description": "This endpoint returns the error associated with a user-facing self service errors.\n\nWhen accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent\ntoken scanning attacks, the public endpoint does not return 404 status codes to prevent scanning attacks.\n\nMore information can be found at [ORY Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).",
@@ -769,6 +930,9 @@
     "UUID": {
       "type": "string",
       "format": "uuid4"
+    },
+    "Via": {
+      "type": "string"
     },
     "completeSelfServiceBrowserProfileManagementFlowPayload": {
       "type": "object",
@@ -1185,6 +1349,40 @@
         },
         "sid": {
           "$ref": "#/definitions/UUID"
+        }
+      }
+    },
+    "verificationRequest": {
+      "description": "This request is used when an identity wants to verify an out-of-band communication\nchannel such as an email address or a phone number.\n\nFor more information head over to: https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation",
+      "type": "object",
+      "title": "Request presents a verification request",
+      "properties": {
+        "expires_at": {
+          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile,\na new request has to be initiated.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "form": {
+          "$ref": "#/definitions/form"
+        },
+        "id": {
+          "$ref": "#/definitions/UUID"
+        },
+        "issued_at": {
+          "description": "IssuedAt is the time (UTC) when the request occurred.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "request_url": {
+          "description": "RequestURL is the initial URL that was requested from ORY Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
+          "type": "string"
+        },
+        "success": {
+          "description": "Success, if true, implies that the request was completed successfully.",
+          "type": "boolean"
+        },
+        "via": {
+          "$ref": "#/definitions/Via"
         }
       }
     },

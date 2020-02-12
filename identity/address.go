@@ -1,4 +1,4 @@
-package verify
+package identity
 
 import (
 	"time"
@@ -10,11 +10,10 @@ import (
 )
 
 const (
-	ViaEmail Via = "email"
+	VerifiableAddressTypeEmail VerifiableAddressType = "email"
 
-	StatusPending   Status = "pending"
-	StatusCompleted Status = "completed"
-	// StatusDelivered = "delivered"
+	VerifiableAddressStatusPending   VerifiableAddressStatus = "pending"
+	VerifiableAddressStatusCompleted VerifiableAddressStatus = "completed"
 
 	// codeEntropy sets the number of characters used for generating verification codes. This must not be
 	// changed to another value as we only have 32 characters available in the SQL schema.
@@ -22,15 +21,17 @@ const (
 )
 
 type (
-	// Via must not exceed 16 characters as that is the limitation in the SQL Schema.
-	Via string
+	// VerifiableAddressType must not exceed 16 characters as that is the limitation in the SQL Schema.
+	VerifiableAddressType string
 
-	// Status must not exceed 16 characters as that is the limitation in the SQL Schema.
-	Status string
+	// VerifiableAddressStatus must not exceed 16 characters as that is the limitation in the SQL Schema.
+	VerifiableAddressStatus string
 
-	Address struct {
+	// swagger:model verifiableIdentityAddress
+	VerifiableAddress struct {
 		// required: true
 		ID uuid.UUID `json:"id" db:"id" faker:"uuid" rw:"r"`
+
 		// required: true
 		Value string `json:"value" db:"value"`
 
@@ -38,16 +39,13 @@ type (
 		Verified bool `json:"verified" db:"verified"`
 
 		// required: true
-		Via Via `json:"via" db:"via"`
+		Via VerifiableAddressType `json:"via" db:"via"`
 
 		// required: true
 		VerifiedAt *time.Time `json:"verified_at" faker:"-" db:"verified_at"`
 
 		// required: true
 		ExpiresAt time.Time `json:"expires_at" faker:"time_type" db:"expires_at"`
-
-		// required: true
-		Status Status `json:"status" db:"status"`
 
 		// IdentityID is a helper struct field for gobuffalo.pop.
 		IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
@@ -56,20 +54,21 @@ type (
 		// UpdatedAt is a helper struct field for gobuffalo.pop.
 		UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 		// Code is the verification code, never to be shared as JSON
-		Code string `json:"-" db:"code"`
+		Code   string                  `json:"-" db:"code"`
+		Status VerifiableAddressStatus `json:"-" db:"status"`
 	}
 )
 
-func (v Via) HTMLFormInputType() string {
+func (v VerifiableAddressType) HTMLFormInputType() string {
 	switch v {
-	case ViaEmail:
+	case VerifiableAddressTypeEmail:
 		return "email"
 	}
 	return ""
 }
 
-func (a Address) TableName() string {
-	return "selfservice_verification_addresses"
+func (a VerifiableAddress) TableName() string {
+	return "identity_verifiable_addresses"
 }
 
 func NewVerifyCode() (string, error) {
@@ -80,34 +79,22 @@ func NewVerifyCode() (string, error) {
 	return string(code), nil
 }
 
-func MustNewEmailAddress(
+func NewVerifiableEmailAddress(
 	value string,
 	identity uuid.UUID,
 	expiresIn time.Duration,
-) *Address {
-	a, err := NewEmailAddress(value, identity, expiresIn)
-	if err != nil {
-		panic(err)
-	}
-	return a
-}
-
-func NewEmailAddress(
-	value string,
-	identity uuid.UUID,
-	expiresIn time.Duration,
-) (*Address, error) {
+) (*VerifiableAddress, error) {
 	code, err := NewVerifyCode()
 	if err != nil {
 		return nil, err
 	}
 
-	return &Address{
+	return &VerifiableAddress{
 		Code:       code,
 		Value:      value,
 		Verified:   false,
-		Status:     StatusPending,
-		Via:        ViaEmail,
+		Status:     VerifiableAddressStatusPending,
+		Via:        VerifiableAddressTypeEmail,
 		ExpiresAt:  time.Now().Add(expiresIn).UTC(),
 		IdentityID: identity,
 	}, nil

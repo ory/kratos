@@ -36,7 +36,7 @@ func TestSessionDestroyer(t *testing.T) {
 	t.Run("method=ExecuteLoginPostHook", func(t *testing.T) {
 		var i identity.Identity
 		require.NoError(t, faker.FakeData(&i))
-		require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), &i))
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
 
 		sessions := make([]session.Session, 5)
 		for k := range sessions {

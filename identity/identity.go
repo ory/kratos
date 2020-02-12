@@ -3,7 +3,6 @@ package identity
 import (
 	"database/sql/driver"
 	"encoding/json"
-	"reflect"
 	"sync"
 	"time"
 
@@ -52,7 +51,9 @@ type (
 		// in `traits_schema_url`.
 		//
 		// required: true
-		Traits Traits `json:"traits" form:"traits" faker:"-" db:"traits"`
+		Traits Traits `json:"traits" faker:"-" db:"traits"`
+
+		Addresses []VerifiableAddress `json:"addresses" fake:"-" has_many:"identity_verifiable_addresses" fk_id:"identity_id"`
 
 		// CredentialsCollection is a helper struct field for gobuffalo.pop.
 		CredentialsCollection CredentialsCollection `json:"-" faker:"-" has_many:"identity_credentials" fk_id:"identity_id"`
@@ -100,33 +101,6 @@ func (i *Identity) lock() *sync.RWMutex {
 	return i.l
 }
 
-func (i *Identity) CredentialsEqual(c map[CredentialsType]Credentials) bool {
-	if len(c) != len(i.Credentials) {
-		return false
-	}
-
-	if len(c) == 0 && len(i.Credentials) == 0 {
-		return true
-	}
-
-	for k, expect := range i.Credentials {
-		actual, found := c[k]
-		if !found {
-			return false
-		}
-
-		if string(expect.Config) != string(actual.Config) {
-			return false
-		}
-
-		if !reflect.DeepEqual(expect.Identifiers, actual.Identifiers) {
-			return false
-		}
-	}
-
-	return true
-}
-
 func (i *Identity) SetCredentials(t CredentialsType, c Credentials) {
 	i.lock().Lock()
 	defer i.lock().Unlock()
@@ -136,18 +110,6 @@ func (i *Identity) SetCredentials(t CredentialsType, c Credentials) {
 
 	c.Type = t
 	i.Credentials[t] = c
-}
-
-func (i *Identity) CopyCredentials() map[CredentialsType]Credentials {
-	result := make(map[CredentialsType]Credentials)
-	for id, credential := range i.Credentials {
-		result[id] = Credentials{
-			Type:        credential.Type,
-			Identifiers: append([]string{}, credential.Identifiers...),
-			Config:      append([]byte{}, credential.Config...),
-		}
-	}
-	return result
 }
 
 func (i *Identity) GetCredentials(t CredentialsType) (*Credentials, bool) {

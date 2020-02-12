@@ -1,4 +1,4 @@
-create_table("selfservice_verification_addresses") {
+create_table("identity_verifiable_addresses") {
 	t.Column("id", "uuid", {primary: true})
 
     t.Column("code", "string", {"size": 32})

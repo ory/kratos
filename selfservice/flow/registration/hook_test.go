@@ -55,6 +55,10 @@ func (m *registrationExecutorDependenciesMock) IdentityPool() identity.Pool {
 	return nil
 }
 
+func (m *registrationExecutorDependenciesMock) PrivilegedIdentityPool() identity.PrivilegedPool {
+	return nil
+}
+
 func (m *registrationExecutorDependenciesMock) IdentityValidator() *identity.Validator {
 	return nil
 }

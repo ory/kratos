@@ -13,25 +13,29 @@ import (
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/x"
 )
 
 const (
-	PublicVerificationPath        = "/self-service/browser/flows/verification/:via"
-	PublicVerificationRequestPath = "/self-service/browser/flows/requests/verification"
-	PublicVerificationConfirmPath = "/self-service/browser/flows/verification/:code"
+	PublicVerificationInitPath     = "/self-service/browser/flows/verification/init/:via"
+	PublicVerificationCompletePath = "/self-service/browser/flows/verification/complete"
+	PublicVerificationRequestPath  = "/self-service/browser/flows/requests/verification"
+	PublicVerificationConfirmPath  = "/self-service/browser/flows/verification/confirm/:code"
 )
 
 type (
 	handlerDependencies interface {
-		x.CSRFTokenGeneratorProvider
 		errorx.ManagementProvider
+		identity.ManagementProvider
+		identity.PrivilegedPoolProvider
+		SenderProvider
+		x.CSRFTokenGeneratorProvider
 		x.WriterProvider
 
 		PersistenceProvider
-		ManagementProvider
 		ErrorHandlerProvider
 	}
 	Handler struct {
@@ -45,9 +49,9 @@ func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
-	public.GET(PublicVerificationPath, h.init)
+	public.GET(PublicVerificationInitPath, h.init)
 	public.GET(PublicVerificationRequestPath, h.publicFetch)
-	public.POST(PublicVerificationRequestPath, h.complete)
+	public.POST(PublicVerificationCompletePath, h.complete)
 	public.GET(PublicVerificationConfirmPath, h.verify)
 }
 
@@ -56,7 +60,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 }
 
 // nolint:deadcode,unused
-// swagger:parameters initializeSelfServiceVerificationFlowParameters
+// swagger:parameters initializeSelfServiceBrowserVerificationFlow
 type initializeSelfServiceVerificationFlowParameters struct {
 	// What to verify
 	//
@@ -67,7 +71,7 @@ type initializeSelfServiceVerificationFlowParameters struct {
 	Via string `json:"via"`
 }
 
-// swagger:route GET /self-service/browser/flows/verification/{via} public initializeSelfServiceBrowserVerificationFlow
+// swagger:route GET /self-service/browser/flows/verification/init/{via} public initializeSelfServiceBrowserVerificationFlow
 //
 // Initialize browser-based verification flow
 //
@@ -94,7 +98,7 @@ func (h *Handler) init(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 
 	a := NewRequest(
 		h.c.SelfServiceProfileRequestLifespan(), r, via,
-		urlx.AppendPaths(h.c.SelfPublicURL(), PublicVerificationRequestPath), h.d.GenerateCSRFToken,
+		urlx.AppendPaths(h.c.SelfPublicURL(), PublicVerificationCompletePath), h.d.GenerateCSRFToken,
 	)
 
 	if err := h.d.VerificationPersister().CreateVerifyRequest(r.Context(), a); err != nil {
@@ -163,7 +167,7 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, mustVerify bool)
 	}
 
 	if mustVerify && !nosurf.VerifyToken(h.d.GenerateCSRFToken(r), ar.CSRFToken) {
-		return errors.WithStack(x.ErrInvalidCSRFToken)
+		return errors.WithStack(x.ErrInvalidCSRFToken.WithDebugf("Expected %s but got %s", h.d.GenerateCSRFToken(r), ar.CSRFToken))
 	}
 
 	h.d.Writer().Write(w, r, ar)
@@ -183,7 +187,7 @@ type completeSelfServiceBrowserVerificationFlowParameters struct {
 	Request string `json:"request"`
 }
 
-// swagger:route POST /self-service/browser/flows/requests/verification public completeSelfServiceBrowserVerificationFlow
+// swagger:route POST /self-service/browser/flows/verification/complete public completeSelfServiceBrowserVerificationFlow
 //
 // Complete the browser-based profile management flows
 //
@@ -229,13 +233,19 @@ func (h *Handler) complete(w http.ResponseWriter, r *http.Request, _ httprouter.
 		return
 	}
 
+	if vr.Success {
+		// was already handled, do not allow retry
+		h.handleError(w, r, vr, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request was already completed successfully and can not be retried.")))
+		return
+	}
+
 	switch vr.Via {
-	case ViaEmail:
+	case identity.VerifiableAddressTypeEmail:
 		h.completeViaEmail(w, r, vr)
 		return
 	}
 
-	h.handleError(w, r, vr, errors.WithStack(herodot.ErrInternalServerError.WithDebugf("Ended up with an invalid VerifyRequest.Via: %s", vr.Via)))
+	h.handleError(w, r, vr, errors.WithStack(herodot.ErrInternalServerError.WithDebugf("Ended up with an invalid VerifyRequest.VerifiableAddressType: %s", vr.Via)))
 }
 
 func (h *Handler) completeViaEmail(w http.ResponseWriter, r *http.Request, vr *Request) {
@@ -245,7 +255,7 @@ func (h *Handler) completeViaEmail(w http.ResponseWriter, r *http.Request, vr *R
 		return
 	}
 
-	if err := h.d.VerificationManager().SendCode(r.Context(), ViaEmail, to); err != nil {
+	if err := h.d.VerificationSender().SendCode(r.Context(), identity.VerifiableAddressTypeEmail, to); err != nil {
 		h.handleError(w, r, vr, err)
 		return
 	}
@@ -257,10 +267,7 @@ func (h *Handler) completeViaEmail(w http.ResponseWriter, r *http.Request, vr *R
 		return
 	}
 
-	http.Redirect(w, r,
-		urlx.CopyWithQuery(h.c.VerificationURL(), url.Values{"request": {vr.ID.String()}}).String(),
-		http.StatusFound,
-	)
+	http.Redirect(w, r, h.c.SelfServiceVerificationReturnTo().String(), http.StatusFound)
 }
 
 // nolint:deadcode,unused
@@ -271,7 +278,7 @@ type selfServiceBrowserVerifyParameters struct {
 	Code string `json:"code"`
 }
 
-// swagger:route GET /self-service/browser/flows/verification/{code} public selfServiceBrowserVerify
+// swagger:route GET /self-service/browser/flows/verification/confirm/{code} public selfServiceBrowserVerify
 //
 // Complete the browser-based verification flows
 //
@@ -291,7 +298,7 @@ type selfServiceBrowserVerifyParameters struct {
 //       302: emptyResponse
 //       500: genericError
 func (h *Handler) verify(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.d.VerificationPersister().VerifyAddress(r.Context(), ps.ByName("code")); err != nil {
+	if err := h.d.PrivilegedIdentityPool().VerifyAddress(r.Context(), ps.ByName("code")); err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
@@ -309,11 +316,11 @@ func (h *Handler) handleError(w http.ResponseWriter, r *http.Request, rr *Reques
 	h.d.VerificationRequestErrorHandler().HandleVerificationError(w, r, rr, err)
 }
 
-func (h *Handler) toVia(ps httprouter.Params) (Via, error) {
+func (h *Handler) toVia(ps httprouter.Params) (identity.VerifiableAddressType, error) {
 	v := ps.ByName("via")
-	switch Via(v) {
-	case ViaEmail:
-		return ViaEmail, nil
+	switch identity.VerifiableAddressType(v) {
+	case identity.VerifiableAddressTypeEmail:
+		return identity.VerifiableAddressTypeEmail, nil
 	}
 	return "", errors.WithStack(herodot.ErrBadRequest.WithReasonf("Verification only works for email but got: %s", v))
 }

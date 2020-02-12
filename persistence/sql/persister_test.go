@@ -115,7 +115,7 @@ func TestPersister(t *testing.T) {
 
 			t.Run("contract=identity.TestPool", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				identity.TestPool(p)(t)
+				identity.TestPool(p.(identity.PrivilegedPool))(t)
 			})
 			t.Run("contract=registration.TestRequestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))

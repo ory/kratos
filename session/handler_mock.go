@@ -23,7 +23,7 @@ import (
 )
 
 type mockDeps interface {
-	identity.PoolProvider
+	identity.PrivilegedPoolProvider
 	ManagementProvider
 	PersistenceProvider
 }
@@ -31,7 +31,7 @@ type mockDeps interface {
 func MockSetSession(t *testing.T, reg mockDeps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
-		require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), i))
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 
 		_, err := reg.SessionManager().CreateToRequest(context.Background(), i, w, r)
 		require.NoError(t, err)
@@ -101,9 +101,9 @@ func MockSessionCreateHandlerWithIdentity(t *testing.T, reg mockDeps, i *identit
 		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/fake-session.schema.json")
 	}
 
-	require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), i))
+	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 
-	inserted, err := reg.IdentityPool().GetIdentityConfidential(context.Background(), i.ID)
+	inserted, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), i.ID)
 	require.NoError(t, err)
 	sess.Identity = inserted
 

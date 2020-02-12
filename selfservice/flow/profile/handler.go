@@ -42,8 +42,8 @@ type (
 		session.HandlerProvider
 		session.ManagementProvider
 
-		identity.PoolProvider
 		identity.ValidationProvider
+		identity.ManagementProvider
 
 		errorx.ManagementProvider
 
@@ -320,49 +320,9 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	creds, err := h.d.IdentityPool().GetIdentityConfidential(r.Context(), s.Identity.ID)
-	if err != nil {
+
+	if err := h.d.IdentityManager().UpdateUnprotectedTraits(r.Context(), s.Identity.ID, identity.Traits(p.Traits)); err != nil {
 		h.handleProfileManagementError(w, r, ar, identity.Traits(p.Traits), err)
-		return
-	}
-
-	i := *s.Identity
-	i.Traits = identity.Traits(p.Traits)
-	i.Credentials = creds.CopyCredentials()
-
-	// If credential identifiers have changed we need to block this action UNLESS
-	// the identity has been authenticated in that request:
-	//
-	// - https://security.stackexchange.com/questions/24291/why-do-we-ask-for-a-users-existing-password-when-changing-their-password
-
-	// We need to make sure that the identity has a valid schema before passing it down to the identity pool.
-	if err := h.d.IdentityValidator().Validate(&i); err != nil {
-		h.handleProfileManagementError(w, r, ar, i.Traits, err)
-		return
-	}
-
-	// Check if any credentials-related field changed.
-	if !i.CredentialsEqual(creds.Credentials) {
-
-		// !! WARNING !!
-		//
-		// This will leak the credential options which may include the hashed password. Do not use seriously:
-		//
-		//	h.d.Logger().
-		//	 	WithField("original_credentials", fmt.Sprintf("%+v", creds.Credentials)).
-		//	 	WithField("updated_credentials", fmt.Sprintf("%+v", i.Credentials)).
-		//	 	Trace("Credentials changed unexpectedly in CompleteProfileManagementFlow.")
-
-		h.handleProfileManagementError(w, r, ar, i.Traits,
-			errors.WithStack(
-				herodot.ErrInternalServerError.
-					WithReasonf(`A field was modified that updates one or more credentials-related settings. These fields can only be updated as part of a "Change your password", or "Link authentication methods" flow which requires prior authentication. This is a configuration error.`)),
-		)
-		return
-	}
-
-	if err := h.d.IdentityPool().UpdateIdentity(r.Context(), &i); err != nil {
-		h.handleProfileManagementError(w, r, ar, i.Traits, err)
 		return
 	}
 
@@ -372,24 +332,25 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 	)
 	ar.Form.Reset()
 	ar.UpdateSuccessful = true
-	for _, field := range form.NewHTMLFormFromJSON(action.String(), json.RawMessage(i.Traits), "traits").Fields {
+	for _, field := range form.NewHTMLFormFromJSON(action.String(), p.Traits, "traits").Fields {
 		ar.Form.SetField(field)
 	}
 	ar.Form.SetCSRF(nosurf.Token(r))
 
-	traitsSchema, err := h.c.IdentityTraitsSchemas().FindSchemaByID(i.TraitsSchemaID)
+	traitsSchema, err := h.c.IdentityTraitsSchemas().FindSchemaByID(s.Identity.TraitsSchemaID)
 	if err != nil {
-		h.handleProfileManagementError(w, r, ar, i.Traits, err)
+		h.handleProfileManagementError(w, r, ar, identity.Traits(p.Traits), err)
 		return
 	}
-	err = ar.Form.SortFields(traitsSchema.URL, "traits")
-	if err != nil {
-		h.handleProfileManagementError(w, r, ar, i.Traits, err)
+
+
+	if err = ar.Form.SortFields(traitsSchema.URL, "traits"); err != nil {
+		h.handleProfileManagementError(w, r, ar, identity.Traits(p.Traits), err)
 		return
 	}
 
 	if err := h.d.ProfileRequestPersister().UpdateProfileRequest(r.Context(), ar); err != nil {
-		h.handleProfileManagementError(w, r, ar, i.Traits, err)
+		h.handleProfileManagementError(w, r, ar, identity.Traits(p.Traits), err)
 		return
 	}
 

@@ -6,8 +6,10 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+
 	"github.com/ory/x/urlx"
 
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/x"
 )
@@ -42,7 +44,7 @@ type Request struct {
 	// Form contains form fields, errors, and so on.
 	Form *form.HTMLForm `json:"form" faker:"-" db:"form"`
 
-	Via Via `json:"via" db:"via"`
+	Via identity.VerifiableAddressType `json:"via" db:"via"`
 
 	// CSRFToken contains the anti-csrf token associated with this request.
 	CSRFToken string `json:"-" db:"csrf_token"`
@@ -61,7 +63,7 @@ func (r Request) TableName() string {
 }
 
 func NewRequest(
-	exp time.Duration, r *http.Request, via Via, action *url.URL, generator form.CSRFGenerator) *Request {
+	exp time.Duration, r *http.Request, via identity.VerifiableAddressType, action *url.URL, generator form.CSRFGenerator) *Request {
 	source := urlx.Copy(r.URL)
 	source.Host = r.Host
 
@@ -73,9 +75,10 @@ func NewRequest(
 	}
 
 	id := x.NewUUID()
+	csrf := generator(r)
 
 	f := form.NewHTMLForm(urlx.CopyWithQuery(action, url.Values{"request": {id.String()}}).String())
-	f.SetCSRF(generator(r))
+	f.SetCSRF(csrf)
 	f.SetField(form.Field{
 		Name:     "to_verify",
 		Type:     via.HTMLFormInputType(),
@@ -88,7 +91,7 @@ func NewRequest(
 		IssuedAt:   time.Now().UTC(),
 		RequestURL: source.String(),
 		Form:       f,
-		CSRFToken:  generator(r),
+		CSRFToken:  csrf,
 		Via:        via,
 	}
 }

@@ -8,15 +8,14 @@ import (
 	"github.com/ory/jsonschema/v3"
 	_ "github.com/ory/jsonschema/v3/fileloader"
 
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	. "github.com/ory/kratos/identity"
 )
 
-func TestExtensionRunnerIdentityTraits(t *testing.T) {
+func TestSchemaExtensionCredentials(t *testing.T) {
 	for k, tc := range []struct {
 		expectErr error
 		schema    string
@@ -39,8 +38,8 @@ func TestExtensionRunnerIdentityTraits(t *testing.T) {
 			runner, err := schema.NewExtensionRunner(schema.ExtensionRunnerIdentityMetaSchema)
 			require.NoError(t, err)
 
-			i := new(Identity)
-			e := NewValidationExtensionRunner(i)
+			i := new(identity.Identity)
+			e := identity.NewSchemaExtensionCredentials(i)
 			runner.AddRunner(e.Runner).Register(c)
 
 			err = c.MustCompile(tc.schema).Validate(bytes.NewBufferString(tc.doc))
@@ -48,7 +47,7 @@ func TestExtensionRunnerIdentityTraits(t *testing.T) {
 				require.EqualError(t, err, tc.expectErr.Error())
 			}
 
-			credentials, ok := i.GetCredentials(CredentialsTypePassword)
+			credentials, ok := i.GetCredentials(identity.CredentialsTypePassword)
 			require.True(t, ok)
 			assert.ElementsMatch(t, tc.expect, credentials.Identifiers)
 		})

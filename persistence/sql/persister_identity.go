@@ -4,7 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"strings"
+	"time"
 
 	"github.com/ory/jsonschema/v3"
 
@@ -22,6 +24,7 @@ import (
 )
 
 var _ identity.Pool = new(Persister)
+var _ identity.PrivilegedPool = new(Persister)
 
 func (p *Persister) FindByCredentialsIdentifier(ctx context.Context, ct identity.CredentialsType, match string) (*identity.Identity, *identity.Credentials, error) {
 	var cts []identity.CredentialsTypeTable
@@ -118,6 +121,16 @@ func createIdentityCredentials(ctx context.Context, tx *pop.Connection, i *ident
 	return nil
 }
 
+func createVerifiableAddresses(ctx context.Context, tx *pop.Connection, i *identity.Identity) error {
+	for k := range i.Addresses {
+		i.Addresses[k].IdentityID = i.ID
+		if err := tx.Create(&i.Addresses[k]); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) error {
 	if i.TraitsSchemaID == "" {
 		i.TraitsSchemaID = configuration.DefaultIdentityTraitsSchemaID
@@ -140,13 +153,17 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 			return err
 		}
 
+		if err := createVerifiableAddresses(ctx, tx, i); err != nil {
+			return err
+		}
+
 		return createIdentityCredentials(ctx, tx, i)
 	}))
 }
 
 func (p *Persister) ListIdentities(ctx context.Context, limit, offset int) ([]identity.Identity, error) {
 	is := make([]identity.Identity, 0)
-	if err := sqlcon.HandleError(p.c.RawQuery("SELECT * FROM identities LIMIT ? OFFSET ?", limit, offset).All(&is)); err != nil {
+	if err := sqlcon.HandleError(p.c.RawQuery(fmt.Sprintf("SELECT * FROM %s LIMIT ? OFFSET ?",new(identity.Identity).TableName()), limit, offset).All(&is)); err != nil {
 		return nil, err
 	}
 
@@ -159,13 +176,17 @@ func (p *Persister) ListIdentities(ctx context.Context, limit, offset int) ([]id
 	return is, nil
 }
 
-func (p *Persister) UpdateIdentityConfidential(ctx context.Context, i *identity.Identity) error {
+func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) error {
 	if err := p.validateIdentity(i); err != nil {
 		return err
 	}
 
 	return sqlcon.HandleError(p.c.Transaction(func(tx *pop.Connection) error {
-		if err := tx.RawQuery(`DELETE FROM identity_credentials WHERE identity_id = ?`, i.ID).Exec(); err != nil {
+		if err := tx.RawQuery(fmt.Sprintf(`DELETE FROM %s WHERE identity_id = ?`, new(identity.Credentials).TableName()), i.ID).Exec(); err != nil {
+			return err
+		}
+
+		if err := tx.RawQuery(fmt.Sprintf(`DELETE FROM %s WHERE identity_id = ?`, new(identity.VerifiableAddress).TableName()), i.ID).Exec(); err != nil {
 			return err
 		}
 
@@ -173,45 +194,16 @@ func (p *Persister) UpdateIdentityConfidential(ctx context.Context, i *identity.
 			return err
 		}
 
+		if err := createVerifiableAddresses(ctx, tx, i); err != nil {
+			return err
+		}
+
 		return createIdentityCredentials(ctx, tx, i)
 	}))
 }
 
-func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) error {
-	if err := p.validateIdentity(i); err != nil {
-		return err
-	}
-
-	fs, err := p.GetIdentityConfidential(ctx, i.ID)
-	if err != nil {
-		return err
-	}
-
-	// If credential identifiers have changed we need to block this action UNLESS
-	// the identity has been authenticated in that request:
-	//
-	// - https://security.stackexchange.com/questions/24291/why-do-we-ask-for-a-users-existing-password-when-changing-their-password
-	if !i.CredentialsEqual(fs.Credentials) {
-
-		// !! WARNING !!
-		//
-		// This will leak the credential options which may include the hashed password. Do not use seriously:
-		//
-		//	p.r.Logger().
-		//	 	WithField("original_credentials", fmt.Sprintf("%+v", fs.Credentials)).
-		//	 	WithField("updated_credentials", fmt.Sprintf("%+v", i.Credentials)).
-		//	 	Trace("Credentials changed unexpectedly in UpdateIdentity.")
-
-		return errors.WithStack(
-			herodot.ErrInternalServerError.
-				WithReasonf(`A field was modified that updates one or more credentials-related settings. This action was blocked because a unprivileged DBAL method was used to execute the update. This is either a configuration issue, or a bug.`))
-	}
-
-	return sqlcon.HandleError(p.c.Update(i))
-}
-
 func (p *Persister) DeleteIdentity(ctx context.Context, id uuid.UUID) error {
-	count, err := p.c.RawQuery("DELETE FROM identities WHERE id = ?", id).ExecWithCount()
+	count, err := p.c.RawQuery(fmt.Sprintf("DELETE FROM %s WHERE id = ?", new(identity.Identity).TableName()), id).ExecWithCount()
 	if err != nil {
 		return sqlcon.HandleError(err)
 	}
@@ -272,8 +264,48 @@ func (p *Persister) GetIdentityConfidential(ctx context.Context, id uuid.UUID) (
 	return &i, nil
 }
 
+func (p *Persister) FindAddressByCode(ctx context.Context, code string) (*identity.VerifiableAddress, error) {
+	var address identity.VerifiableAddress
+	if err := p.c.Where("code = ?", code).First(&address); err != nil {
+		return nil, sqlcon.HandleError(err)
+	}
+
+	return &address, nil
+}
+
+func (p *Persister) FindAddressByValue(ctx context.Context, via identity.VerifiableAddressType, value string) (*identity.VerifiableAddress, error) {
+	var address identity.VerifiableAddress
+	if err := p.c.Where("via = ? AND value = ?", via, value).First(&address); err != nil {
+		return nil, sqlcon.HandleError(err)
+	}
+
+	return &address, nil
+}
+
+func (p *Persister) VerifyAddress(ctx context.Context, code string) error {
+	newCode, err := identity.NewVerifyCode()
+	if err != nil {
+		return err
+	}
+
+	return sqlcon.HandleError(p.c.RawQuery(
+		fmt.Sprintf(
+			"UPDATE %s SET status = ?, verified = true, verified_at = ?, code = ? WHERE code = ?",
+			new(identity.VerifiableAddress).TableName(),
+		),
+		identity.VerifiableAddressStatusCompleted,
+		time.Now().UTC().Round(time.Second),
+		newCode,
+		code,
+	).Exec())
+}
+
+func (p *Persister) UpdateVerifiableAddress(ctx context.Context, address *identity.VerifiableAddress) error {
+	return sqlcon.HandleError(p.c.Update(address))
+}
+
 func (p *Persister) validateIdentity(i *identity.Identity) error {
-	if err := p.r.IdentityValidator().Validate(i); err != nil {
+	if err := p.r.IdentityValidator().ValidateWithRunner(i); err != nil {
 		if _, ok := errorsx.Cause(err).(*jsonschema.ValidationError); ok {
 			return errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
 		}
@@ -286,10 +318,8 @@ func (p *Persister) validateIdentity(i *identity.Identity) error {
 func (p *Persister) injectTraitsSchemaURL(i *identity.Identity) error {
 	s, err := p.r.IdentityTraitsSchemas().GetByID(i.TraitsSchemaID)
 	if err != nil {
-		return errors.WithStack(
-			herodot.ErrInternalServerError.
-				WithReasonf(
-					`The JSON Schema "%s" for this identity's traits could not be found.`, i.TraitsSchemaID))
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf(
+			`The JSON Schema "%s" for this identity's traits could not be found.`, i.TraitsSchemaID))
 	}
 	i.TraitsSchemaURL = s.SchemaURL(p.cf.SelfPublicURL()).String()
 	return nil

@@ -60,7 +60,7 @@ type dependencies interface {
 	x.CookieProvider
 
 	identity.ValidationProvider
-	identity.PoolProvider
+	identity.PrivilegedPoolProvider
 
 	session.ManagementProvider
 	session.HandlerProvider
@@ -309,7 +309,7 @@ func (s *Strategy) authURL(request uuid.UUID, provider string) string {
 }
 
 func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Request, claims *Claims, provider Provider) {
-	i, c, err := s.d.IdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject))
+	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject))
 	if err != nil {
 		if errorsx.Cause(err).Error() == herodot.ErrNotFound.Error() {
 			// If no account was found we're "manually" creating a new registration request and redirecting the browser
@@ -356,7 +356,7 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 }
 
 func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Request, claims *Claims, provider Provider) {
-	if _, _, err := s.d.IdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject)); err == nil {
+	if _, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject)); err == nil {
 		// If the identity already exists, we should perform the login flow instead.
 
 		// That will execute the "pre login" hook which allows to e.g. disallow this request. The login

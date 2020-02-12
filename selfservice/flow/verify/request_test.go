@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/x/urlx"
+
+	"github.com/ory/kratos/identity"
 )
 
 func TestNewRequest(t *testing.T) {
@@ -19,7 +21,7 @@ func TestNewRequest(t *testing.T) {
 			Host: "kratos.ory.sh",
 			TLS:  new(tls.ConnectionState),
 		},
-		ViaEmail,
+		identity.VerifiableAddressTypeEmail,
 		urlx.ParseOrPanic("https://kratos.ory.sh/action"),
 		func(r *http.Request) string {
 			return "anti-csrf"
@@ -32,7 +34,7 @@ func TestNewRequest(t *testing.T) {
 	assert.Equal(t, "https://kratos.ory.sh/action?request="+r.ID.String(), r.Form.Action)
 	assert.Equal(t, "anti-csrf", r.Form.Fields[0].Value)
 	assert.Equal(t, "to_verify", r.Form.Fields[1].Name)
-	assert.Equal(t, ViaEmail, r.Via)
+	assert.Equal(t, identity.VerifiableAddressTypeEmail, r.Via)
 	assert.Equal(t, "anti-csrf", r.CSRFToken)
 
 	t.Run("method=Valid", func(t *testing.T) {

@@ -37,17 +37,17 @@ type (
 			} `json:"identity"`
 		} `json:"mappings"`
 	}
-	runner          func(ctx jsonschema.ValidationContext, config ExtensionConfig, value interface{}) error
-	ExtensionRunner struct {
+	ExtensionRunnerFunc func(ctx jsonschema.ValidationContext, config ExtensionConfig, value interface{}) error
+	ExtensionRunner     struct {
 		meta     *jsonschema.Schema
 		compile  func(ctx jsonschema.CompilerContext, m map[string]interface{}) (interface{}, error)
 		validate func(ctx jsonschema.ValidationContext, s interface{}, v interface{}) error
 
-		runners []runner
+		runners []ExtensionRunnerFunc
 	}
 )
 
-func NewExtensionRunner(meta ExtensionRunnerMetaSchema, runners ...runner) (*ExtensionRunner, error) {
+func NewExtensionRunner(meta ExtensionRunnerMetaSchema, runners ...ExtensionRunnerFunc) (*ExtensionRunner, error) {
 	var err error
 	schema, err := box.FindString(string(meta))
 	if err != nil {
@@ -108,7 +108,7 @@ func (r *ExtensionRunner) Extension() jsonschema.Extension {
 	}
 }
 
-func (r *ExtensionRunner) AddRunner(run runner) *ExtensionRunner {
+func (r *ExtensionRunner) AddRunner(run ExtensionRunnerFunc) *ExtensionRunner {
 	r.runners = append(r.runners, run)
 	return r
 }

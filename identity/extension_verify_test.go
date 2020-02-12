@@ -1,4 +1,4 @@
-package verify
+package identity
 
 import (
 	"bytes"
@@ -10,7 +10,6 @@ import (
 	"github.com/ory/jsonschema/v3"
 	_ "github.com/ory/jsonschema/v3/fileloader"
 
-	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/x"
 
@@ -19,22 +18,22 @@ import (
 )
 
 func TestExtensionRunnerIdentityTraits(t *testing.T) {
-	id := &identity.Identity{ID: x.NewUUID()}
+	id := &Identity{ID: x.NewUUID()}
 	for k, tc := range []struct {
 		expectErr error
 		schema    string
 		doc       string
-		expect    []Address
+		expect    []VerifiableAddress
 	}{
 		{
 			doc:    `{"username":"foo@ory.sh"}`,
 			schema: "file://./stub/extension/schema.json",
-			expect: []Address{
+			expect: []VerifiableAddress{
 				{
 					Value:      "foo@ory.sh",
 					Verified:   false,
-					Status:     StatusPending,
-					Via:        ViaEmail,
+					Status:     VerifiableAddressStatusPending,
+					Via:        VerifiableAddressTypeEmail,
 					IdentityID: id.ID,
 				},
 			},
@@ -47,26 +46,26 @@ func TestExtensionRunnerIdentityTraits(t *testing.T) {
 		{
 			doc:    `{"emails":["foo@ory.sh","bar@ory.sh"], "username": "foobar@ory.sh"}`,
 			schema: "file://./stub/extension/schema.json",
-			expect: []Address{
+			expect: []VerifiableAddress{
 				{
 					Value:      "foo@ory.sh",
 					Verified:   false,
-					Status:     StatusPending,
-					Via:        ViaEmail,
+					Status:     VerifiableAddressStatusPending,
+					Via:        VerifiableAddressTypeEmail,
 					IdentityID: id.ID,
 				},
 				{
 					Value:      "bar@ory.sh",
 					Verified:   false,
-					Status:     StatusPending,
-					Via:        ViaEmail,
+					Status:     VerifiableAddressStatusPending,
+					Via:        VerifiableAddressTypeEmail,
 					IdentityID: id.ID,
 				},
 				{
 					Value:      "foobar@ory.sh",
 					Verified:   false,
-					Status:     StatusPending,
-					Via:        ViaEmail,
+					Status:     VerifiableAddressStatusPending,
+					Via:        VerifiableAddressTypeEmail,
 					IdentityID: id.ID,
 				},
 			},
@@ -76,7 +75,9 @@ func TestExtensionRunnerIdentityTraits(t *testing.T) {
 			c := jsonschema.NewCompiler()
 			runner, err := schema.NewExtensionRunner(schema.ExtensionRunnerIdentityMetaSchema)
 			require.NoError(t, err)
-			e := NewValidationExtensionRunner(id,time.Minute)
+
+			const expiresAt = time.Minute
+			e := NewSchemaExtensionVerify(id, time.Minute)
 			runner.AddRunner(e.Runner).Register(c)
 
 			err = c.MustCompile(tc.schema).Validate(bytes.NewBufferString(tc.doc))
@@ -89,6 +90,10 @@ func TestExtensionRunnerIdentityTraits(t *testing.T) {
 			for k := range addresses {
 				assert.NotEmpty(t, addresses[k].Code)
 				addresses[k].Code = ""
+
+				// Prevent time synchro issues
+				assert.True(t, addresses[k].ExpiresAt.After(time.Now().Add(expiresAt-time.Second)))
+				addresses[k].ExpiresAt = time.Time{}
 			}
 			assert.EqualValues(t, tc.expect, e.Addresses())
 		})
