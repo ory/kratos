@@ -48,9 +48,12 @@
 - Make OIDC strategy capable of dealing with expiry errors [\#233](https://github.com/ory/kratos/issues/233)
 - selfservice/updateProfileFlow: disable form fields that the user is not allowed to update [\#227](https://github.com/ory/kratos/issues/227)
 - Use jsonschema everywhere [\#225](https://github.com/ory/kratos/issues/225)
+- Implement Verification [\#27](https://github.com/ory/kratos/issues/27)
+- feat: Implement email verification [\#245](https://github.com/ory/kratos/pull/245) ([aeneasr](https://github.com/aeneasr))
 
 **Fixed bugs:**
 
+- Investigate MySQL empty timestamp issue on session [\#244](https://github.com/ory/kratos/issues/244)
 - Mark fields required in login / registration methods [\#234](https://github.com/ory/kratos/issues/234)
 - fix: Set AuthenticatedAt in session issuer hook [\#246](https://github.com/ory/kratos/pull/246) ([aeneasr](https://github.com/aeneasr))
 - Resolve flaky SDK generation issues caused by UUID [\#240](https://github.com/ory/kratos/pull/240) ([aeneasr](https://github.com/aeneasr))
