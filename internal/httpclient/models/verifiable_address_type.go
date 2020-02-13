@@ -9,11 +9,11 @@ import (
 	strfmt "github.com/go-openapi/strfmt"
 )
 
-// Via via
-// swagger:model Via
-type Via string
+// VerifiableAddressType verifiable address type
+// swagger:model VerifiableAddressType
+type VerifiableAddressType string
 
-// Validate validates this via
-func (m Via) Validate(formats strfmt.Registry) error {
+// Validate validates this verifiable address type
+func (m VerifiableAddressType) Validate(formats strfmt.Registry) error {
 	return nil
 }

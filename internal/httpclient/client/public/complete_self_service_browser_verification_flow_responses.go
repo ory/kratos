@@ -56,7 +56,7 @@ type CompleteSelfServiceBrowserVerificationFlowFound struct {
 }
 
 func (o *CompleteSelfServiceBrowserVerificationFlowFound) Error() string {
-	return fmt.Sprintf("[POST /self-service/browser/flows/requests/verification][%d] completeSelfServiceBrowserVerificationFlowFound ", 302)
+	return fmt.Sprintf("[POST /self-service/browser/flows/verification/complete][%d] completeSelfServiceBrowserVerificationFlowFound ", 302)
 }
 
 func (o *CompleteSelfServiceBrowserVerificationFlowFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -78,7 +78,7 @@ type CompleteSelfServiceBrowserVerificationFlowInternalServerError struct {
 }
 
 func (o *CompleteSelfServiceBrowserVerificationFlowInternalServerError) Error() string {
-	return fmt.Sprintf("[POST /self-service/browser/flows/requests/verification][%d] completeSelfServiceBrowserVerificationFlowInternalServerError  %+v", 500, o.Payload)
+	return fmt.Sprintf("[POST /self-service/browser/flows/verification/complete][%d] completeSelfServiceBrowserVerificationFlowInternalServerError  %+v", 500, o.Payload)
 }
 
 func (o *CompleteSelfServiceBrowserVerificationFlowInternalServerError) GetPayload() *models.GenericError {

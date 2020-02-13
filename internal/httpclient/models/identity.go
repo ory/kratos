@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"strconv"
+
 	"github.com/go-openapi/errors"
 	strfmt "github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -15,6 +17,9 @@ import (
 // Identity identity
 // swagger:model Identity
 type Identity struct {
+
+	// addresses
+	Addresses []*VerifiableAddress `json:"addresses"`
 
 	// id
 	// Required: true
@@ -39,6 +44,10 @@ type Identity struct {
 func (m *Identity) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateAddresses(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateID(formats); err != nil {
 		res = append(res, err)
 	}
@@ -54,6 +63,31 @@ func (m *Identity) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *Identity) validateAddresses(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Addresses) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Addresses); i++ {
+		if swag.IsZero(m.Addresses[i]) { // not required
+			continue
+		}
+
+		if m.Addresses[i] != nil {
+			if err := m.Addresses[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("addresses" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 

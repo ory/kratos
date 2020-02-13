@@ -665,7 +665,9 @@
             }
           }
         }
-      },
+      }
+    },
+    "/self-service/browser/flows/verification/complete": {
       "post": {
         "description": "This endpoint completes a browser-based profile management flow. This is usually achieved by POSTing data to this\nendpoint.\n\nIf the provided profile data is valid against the Identity's Traits JSON Schema, the data will be updated and\nthe browser redirected to `url.profile_ui` for further steps.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
         "consumes": [
@@ -908,6 +910,12 @@
         "traits"
       ],
       "properties": {
+        "addresses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VerifiableAddress"
+          }
+        },
         "id": {
           "$ref": "#/definitions/UUID"
         },
@@ -931,7 +939,40 @@
       "type": "string",
       "format": "uuid4"
     },
-    "Via": {
+    "VerifiableAddress": {
+      "type": "object",
+      "required": [
+        "id",
+        "value",
+        "verified",
+        "via",
+        "verified_at",
+        "expires_at"
+      ],
+      "properties": {
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "id": {
+          "$ref": "#/definitions/UUID"
+        },
+        "value": {
+          "type": "string"
+        },
+        "verified": {
+          "type": "boolean"
+        },
+        "verified_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "via": {
+          "$ref": "#/definitions/VerifiableAddressType"
+        }
+      }
+    },
+    "VerifiableAddressType": {
       "type": "string"
     },
     "completeSelfServiceBrowserProfileManagementFlowPayload": {
@@ -1382,7 +1423,7 @@
           "type": "boolean"
         },
         "via": {
-          "$ref": "#/definitions/Via"
+          "$ref": "#/definitions/VerifiableAddressType"
         }
       }
     },

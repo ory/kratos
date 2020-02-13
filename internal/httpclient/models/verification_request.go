@@ -45,7 +45,7 @@ type VerificationRequest struct {
 	Success bool `json:"success,omitempty"`
 
 	// via
-	Via Via `json:"via,omitempty"`
+	Via VerifiableAddressType `json:"via,omitempty"`
 }
 
 // Validate validates this verification request
