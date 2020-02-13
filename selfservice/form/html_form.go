@@ -256,7 +256,6 @@ func (c *HTMLForm) SetField(field Field) {
 	}
 
 	c.Fields = append(c.Fields, field)
-	return
 }
 
 // SetValue sets a container's field to the provided name and value.

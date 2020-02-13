@@ -15,11 +15,11 @@ create_table("identity_verifiable_addresses") {
     t.ForeignKey("identity_id", {"identities": ["id"]}, {"on_delete": "cascade"})
 }
 
-add_index("selfservice_verification_addresses", ["code"], { "unique": true, "name": "selfservice_verification_addresses_code_uq_idx" })
-add_index("selfservice_verification_addresses", ["code"], { "name": "selfservice_verification_addresses_code_idx" })
+add_index("identity_verifiable_addresses", ["code"], { "unique": true, "name": "identity_verifiable_addresses_code_uq_idx" })
+add_index("identity_verifiable_addresses", ["code"], { "name": "identity_verifiable_addresses_code_idx" })
 
-add_index("selfservice_verification_addresses", ["via", "value"], { "unique": true, "name": "selfservice_verification_addresses_status_via_uq_idx" })
-add_index("table_name", ["via", "value"], { "name": "selfservice_verification_addresses_status_via_idx" })
+add_index("identity_verifiable_addresses", ["via", "value"], { "unique": true, "name": "identity_verifiable_addresses_status_via_uq_idx" })
+add_index("identity_verifiable_addresses", ["via", "value"], { "name": "identity_verifiable_addresses_status_via_idx" })
 
 create_table("selfservice_verification_requests") {
 	t.Column("id", "uuid", {primary: true})

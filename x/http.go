@@ -26,7 +26,7 @@ func EasyGet(t *testing.T, c *http.Client, url string) (*http.Response, []byte) 
 }
 
 func EasyGetBody(t *testing.T, c *http.Client, url string) []byte {
-	_, body := EasyGet(t, c, url)
+	_, body := EasyGet(t, c, url) // nolint: bodyclose
 	return body
 }
 

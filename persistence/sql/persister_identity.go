@@ -163,6 +163,8 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 
 func (p *Persister) ListIdentities(ctx context.Context, limit, offset int) ([]identity.Identity, error) {
 	is := make([]identity.Identity, 0)
+
+	/* #nosec G201 TableName is static */
 	if err := sqlcon.HandleError(p.c.RawQuery(fmt.Sprintf("SELECT * FROM %s LIMIT ? OFFSET ?", new(identity.Identity).TableName()), limit, offset).All(&is)); err != nil {
 		return nil, err
 	}
@@ -188,10 +190,12 @@ func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) er
 			return sql.ErrNoRows
 		}
 
+		/* #nosec G201 TableName is static */
 		if err := tx.RawQuery(fmt.Sprintf(`DELETE FROM %s WHERE identity_id = ?`, new(identity.Credentials).TableName()), i.ID).Exec(); err != nil {
 			return err
 		}
 
+		/* #nosec G201 TableName is static */
 		if err := tx.RawQuery(fmt.Sprintf(`DELETE FROM %s WHERE identity_id = ?`, new(identity.VerifiableAddress).TableName()), i.ID).Exec(); err != nil {
 			return err
 		}
@@ -209,6 +213,7 @@ func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) er
 }
 
 func (p *Persister) DeleteIdentity(ctx context.Context, id uuid.UUID) error {
+	/* #nosec G201 TableName is static */
 	count, err := p.c.RawQuery(fmt.Sprintf("DELETE FROM %s WHERE id = ?", new(identity.Identity).TableName()), id).ExecWithCount()
 	if err != nil {
 		return sqlcon.HandleError(err)
@@ -295,6 +300,7 @@ func (p *Persister) VerifyAddress(ctx context.Context, code string) error {
 	}
 
 	return sqlcon.HandleError(p.c.RawQuery(
+		/* #nosec G201 TableName is static */
 		fmt.Sprintf(
 			"UPDATE %s SET status = ?, verified = true, verified_at = ?, code = ? WHERE code = ?",
 			new(identity.VerifiableAddress).TableName(),
