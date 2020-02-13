@@ -4,10 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"testing"
+	"time"
+
+	"github.com/bxcodec/faker"
+
+	"github.com/ory/x/errorsx"
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/schema"
-	"github.com/ory/x/urlx"
 
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
@@ -21,45 +28,56 @@ import (
 
 type (
 	Pool interface {
-		// FindByCredentialsIdentifier returns an identity by querying for it's credential identifiers.
-		FindByCredentialsIdentifier(ctx context.Context, ct CredentialsType, match string) (*Identity, *Credentials, error)
-
-		// Create creates an identity. It is capable of setting credentials without encoding. Will return an error
-		// if identity exists, backend connectivity is broken, or trait validation fails.
-		CreateIdentity(context.Context, *Identity) error
-
 		ListIdentities(ctx context.Context, limit, offset int) ([]Identity, error)
-
-		// UpdateIdentityConfidential updates an identities confidential data. It is capable of setting credentials without encoding. Will return an error
-		// if identity exists, backend connectivity is broken, or trait validation fails.
-		//
-		// Because this will overwrite credentials you always need to update the identity using `GetClassified`.
-		UpdateIdentityConfidential(context.Context, *Identity) error
-
-		// Update updates an identity excluding its confidential data. It is capable of setting credentials without encoding. Will return an error
-		// if identity exists, backend connectivity is broken, or trait validation fails.
-		//
-		// This update procedure works well with `Get`.
-		UpdateIdentity(context.Context, *Identity) error
-
-		// Delete removes an identity by its id. Will return an error
-		// if identity exists, backend connectivity is broken, or trait validation fails.
-		DeleteIdentity(context.Context, uuid.UUID) error
 
 		// Get returns an identity by its id. Will return an error if the identity does not exist or backend
 		// connectivity is broken.
 		GetIdentity(context.Context, uuid.UUID) (*Identity, error)
 
-		// GetClassified returns the identity including it's raw credentials. This should only be used internally.
-		GetIdentityConfidential(context.Context, uuid.UUID) (*Identity, error)
+		// FindAddressByCode returns a matching address or sql.ErrNoRows if no address could be found.
+		FindAddressByCode(ctx context.Context, code string) (*VerifiableAddress, error)
+
+		// FindAddressByValue returns a matching address or sql.ErrNoRows if no address could be found.
+		FindAddressByValue(ctx context.Context, via VerifiableAddressType, address string) (*VerifiableAddress, error)
 	}
 
 	PoolProvider interface {
 		IdentityPool() Pool
 	}
+
+	PrivilegedPoolProvider interface {
+		PrivilegedIdentityPool() PrivilegedPool
+	}
+
+	PrivilegedPool interface {
+		Pool
+
+		// FindByCredentialsIdentifier returns an identity by querying for it's credential identifiers.
+		FindByCredentialsIdentifier(ctx context.Context, ct CredentialsType, match string) (*Identity, *Credentials, error)
+
+		// Delete removes an identity by its id. Will return an error
+		// if identity exists, backend connectivity is broken, or trait validation fails.
+		DeleteIdentity(context.Context, uuid.UUID) error
+
+		// VerifyAddress verifies an address by the given code.
+		VerifyAddress(ctx context.Context, code string) error
+
+		// UpdateVerifiableAddress
+		UpdateVerifiableAddress(ctx context.Context, address *VerifiableAddress) error
+
+		// Create creates an identity. It is capable of setting credentials without encoding. Will return an error
+		// if identity exists, backend connectivity is broken, or trait validation fails.
+		CreateIdentity(context.Context, *Identity) error
+
+		// UpdateUnprotectedTraits updates an identity excluding its confidential / privileged / protected data.
+		UpdateIdentity(context.Context, *Identity) error
+
+		// GetClassified returns the identity including it's raw credentials. This should only be used internally.
+		GetIdentityConfidential(context.Context, uuid.UUID) (*Identity, error)
+	}
 )
 
-func TestPool(p Pool) func(t *testing.T) {
+func TestPool(p PrivilegedPool) func(t *testing.T) {
 	return func(t *testing.T) {
 		exampleServerURL := urlx.ParseOrPanic("http://example.com")
 		viper.Set(configuration.ViperKeyURLsSelfPublic, exampleServerURL)
@@ -223,35 +241,6 @@ func TestPool(p Pool) func(t *testing.T) {
 			require.NotEmpty(t, initial.Credentials)
 		})
 
-		t.Run("case=fail to update an identity because credentials changed but update was called", func(t *testing.T) {
-			initial := oidcIdentity("", x.NewUUID().String())
-			require.NoError(t, p.CreateIdentity(context.Background(), initial))
-			createdIDs = append(createdIDs, initial.ID)
-
-			assert.Equal(t, configuration.DefaultIdentityTraitsSchemaID, initial.TraitsSchemaID)
-			assert.Equal(t, defaultSchema.SchemaURL(exampleServerURL).String(), initial.TraitsSchemaURL)
-
-			toUpdate := initial.CopyWithoutCredentials()
-			toUpdate.SetCredentials(CredentialsTypePassword, Credentials{
-				Type:        CredentialsTypePassword,
-				Identifiers: []string{"ignore-me"},
-				Config:      json.RawMessage(`{"oh":"nono"}`),
-			})
-			toUpdate.Traits = Traits(`{"update":"me"}`)
-			toUpdate.TraitsSchemaID = altSchema.ID
-
-			err := p.UpdateIdentity(context.Background(), toUpdate)
-			require.Error(t, err)
-			assert.Contains(t, fmt.Sprintf("%+v", err), "A field was modified that updates one or more credentials-related settings.")
-
-			actual, err := p.GetIdentityConfidential(context.Background(), toUpdate.ID)
-			require.NoError(t, err)
-			assert.Equal(t, configuration.DefaultIdentityTraitsSchemaID, actual.TraitsSchemaID)
-			assert.Equal(t, defaultSchema.SchemaURL(exampleServerURL).String(), actual.TraitsSchemaURL)
-			assert.Empty(t, actual.Credentials[CredentialsTypePassword])
-			assert.NotEmpty(t, actual.Credentials[CredentialsTypeOIDC])
-		})
-
 		t.Run("case=update an identity and set credentials", func(t *testing.T) {
 			initial := oidcIdentity("", x.NewUUID().String())
 			require.NoError(t, p.CreateIdentity(context.Background(), initial))
@@ -268,7 +257,7 @@ func TestPool(p Pool) func(t *testing.T) {
 			})
 			expected.Traits = Traits(`{"update":"me"}`)
 			expected.TraitsSchemaID = altSchema.ID
-			require.NoError(t, p.UpdateIdentityConfidential(context.Background(), expected))
+			require.NoError(t, p.UpdateIdentity(context.Background(), expected))
 
 			actual, err := p.GetIdentityConfidential(context.Background(), expected.ID)
 			require.NoError(t, err)
@@ -293,17 +282,25 @@ func TestPool(p Pool) func(t *testing.T) {
 		})
 
 		t.Run("case=should fail to insert identity because credentials from traits exist", func(t *testing.T) {
-			first := passwordIdentity("", x.NewUUID().String())
-			first.Traits = Traits(`{"email":"test-identity@ory.sh"}`)
+			first := passwordIdentity("", "test-identity@ory.sh")
+			first.Traits = Traits(`{}`)
 			require.NoError(t, p.CreateIdentity(context.Background(), first))
 			createdIDs = append(createdIDs, first.ID)
 
-			second := passwordIdentity("", x.NewUUID().String())
-			require.NoError(t, p.CreateIdentity(context.Background(), second))
-			createdIDs = append(createdIDs, second.ID)
+			second := passwordIdentity("", "test-identity@ory.sh")
+			require.Error(t, p.CreateIdentity(context.Background(), second))
+		})
 
-			second.Traits = Traits(`{"email":"test-identity@ory.sh"}`)
-			require.Error(t, p.UpdateIdentityConfidential(context.Background(), second))
+		t.Run("case=should fail to update identity because credentials exist", func(t *testing.T) {
+			first := passwordIdentity("", x.NewUUID().String())
+			first.Traits = Traits(`{}`)
+			require.NoError(t, p.CreateIdentity(context.Background(), first))
+			createdIDs = append(createdIDs, first.ID)
+
+			c := first.Credentials[CredentialsTypePassword]
+			c.Identifiers = []string{"test-identity@ory.sh"}
+			first.Credentials[CredentialsTypePassword] = c
+			require.Error(t, p.UpdateIdentity(context.Background(), first))
 		})
 
 		t.Run("case=should succeed to update credentials from traits", func(t *testing.T) {
@@ -312,7 +309,7 @@ func TestPool(p Pool) func(t *testing.T) {
 			createdIDs = append(createdIDs, expected.ID)
 
 			expected.Traits = Traits(`{"email":"update-test-identity@ory.sh"}`)
-			require.NoError(t, p.UpdateIdentityConfidential(context.Background(), expected))
+			require.NoError(t, p.UpdateIdentity(context.Background(), expected))
 
 			actual, err := p.GetIdentityConfidential(context.Background(), expected.ID)
 			require.NoError(t, err)
@@ -358,8 +355,8 @@ func TestPool(p Pool) func(t *testing.T) {
 		})
 
 		t.Run("case=find identity by its credentials identifier", func(t *testing.T) {
-			expected := passwordIdentity("", x.NewUUID().String())
-			expected.Traits = Traits(`{"email": "find-credentials-identifier@ory.sh"}`)
+			expected := passwordIdentity("", "find-credentials-identifier@ory.sh")
+			expected.Traits = Traits(`{}`)
 
 			require.NoError(t, p.CreateIdentity(context.Background(), expected))
 			createdIDs = append(createdIDs, expected.ID)
@@ -375,6 +372,89 @@ func TestPool(p Pool) func(t *testing.T) {
 
 			expected.Credentials = nil
 			assertEqual(t, expected, actual)
+		})
+
+		t.Run("suite=address", func(t *testing.T) {
+			createIdentityWithAddresses := func(t *testing.T, expiry time.Duration, email string) VerifiableAddress {
+				var i Identity
+				require.NoError(t, faker.FakeData(&i))
+
+				address, err := NewVerifiableEmailAddress(email, i.ID, expiry)
+				require.NoError(t, err)
+
+				address.ExpiresAt = address.ExpiresAt.Round(time.Minute) // prevent mysql time synchro issues
+				i.Addresses = append(i.Addresses, *address)
+
+				require.NoError(t, p.CreateIdentity(context.Background(), &i))
+				return i.Addresses[0]
+			}
+
+			t.Run("case=not found", func(t *testing.T) {
+				_, err := p.FindAddressByCode(context.Background(), "does-not-exist")
+				require.Equal(t, sqlcon.ErrNoRows, errorsx.Cause(err))
+
+				_, err = p.FindAddressByValue(context.Background(), VerifiableAddressTypeEmail, "does-not-exist")
+				require.Equal(t, sqlcon.ErrNoRows, errorsx.Cause(err))
+			})
+
+			t.Run("case=create and find", func(t *testing.T) {
+				addresses := make([]VerifiableAddress, 15)
+				for k := range addresses {
+					addresses[k] = createIdentityWithAddresses(t, time.Minute, "verify.TestPersister.Create"+strconv.Itoa(k)+"@ory.sh")
+					require.NotEmpty(t, addresses[k].ID)
+				}
+
+				compare := func(t *testing.T, expected, actual VerifiableAddress) {
+					actual.CreatedAt = actual.CreatedAt.UTC().Round(time.Hour * 24)
+					actual.UpdatedAt = actual.UpdatedAt.UTC().Round(time.Hour * 24)
+					actual.ExpiresAt = actual.ExpiresAt.UTC().Round(time.Hour * 24)
+					expected.CreatedAt = expected.CreatedAt.UTC().Round(time.Hour * 24)
+					expected.UpdatedAt = expected.UpdatedAt.UTC().Round(time.Hour * 24)
+					expected.ExpiresAt = expected.ExpiresAt.UTC().Round(time.Hour * 24)
+					assert.EqualValues(t, expected, actual)
+				}
+
+				for k, expected := range addresses {
+					t.Run("method=FindAddressByCode", func(t *testing.T) {
+						t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+							actual, err := p.FindAddressByCode(context.Background(), expected.Code)
+							require.NoError(t, err)
+							compare(t, expected, *actual)
+						})
+					})
+
+					t.Run("method=FindAddressByValue", func(t *testing.T) {
+						t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+							actual, err := p.FindAddressByValue(context.Background(), expected.Via, expected.Value)
+							require.NoError(t, err)
+							compare(t, expected, *actual)
+						})
+					})
+				}
+			})
+
+			t.Run("case=create and verify", func(t *testing.T) {
+				address := createIdentityWithAddresses(t, time.Minute, "verify.TestPersister.VerifyAddress@ory.sh")
+				require.NoError(t, p.VerifyAddress(context.Background(), address.Code))
+
+				actual, err := p.FindAddressByValue(context.Background(), address.Via, address.Value)
+				require.NoError(t, err)
+				assert.NotEqual(t, address.Code, actual.Code)
+				assert.True(t, actual.Verified)
+				assert.EqualValues(t, VerifiableAddressStatusCompleted, actual.Status)
+				assert.NotEmpty(t, actual.VerifiedAt)
+			})
+
+			t.Run("case=update", func(t *testing.T) {
+				address := createIdentityWithAddresses(t, time.Minute, "verify.TestPersister.Update@ory.sh")
+
+				address.Code = "new-code"
+				require.NoError(t, p.UpdateVerifiableAddress(context.Background(), &address))
+
+				actual, err := p.FindAddressByValue(context.Background(), address.Via, address.Value)
+				require.NoError(t, err)
+				assert.Equal(t, "new-code", actual.Code)
+			})
 		})
 	}
 }

@@ -10,7 +10,7 @@ type ErrorParser interface {
 
 type FieldSetter interface {
 	// SetField sets a field of the form.
-	SetField(name string, field Field)
+	SetField(field Field)
 }
 
 type ValueSetter interface {

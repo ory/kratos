@@ -35,7 +35,7 @@ func TestValidationExtensionRunner(t *testing.T) {
 
 			var i identity.Identity
 			runner.
-				AddRunner(oidc.NewValidationExtensionRunner(&i).Runner).
+				AddRunner(oidc.NewValidationExtensionRunner(&i)).
 				Register(c)
 
 			doc, err := os.Open(tc.doc)

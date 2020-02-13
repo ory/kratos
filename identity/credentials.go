@@ -2,6 +2,7 @@ package identity
 
 import (
 	"encoding/json"
+	"reflect"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -86,4 +87,31 @@ func (c CredentialIdentifierCollection) TableName() string {
 
 func (c CredentialIdentifier) TableName() string {
 	return "identity_credential_identifiers"
+}
+
+func CredentialsEqual(a, b map[CredentialsType]Credentials) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	if len(a) == 0 && len(b) == 0 {
+		return true
+	}
+
+	for k, expect := range b {
+		actual, found := a[k]
+		if !found {
+			return false
+		}
+
+		if string(expect.Config) != string(actual.Config) {
+			return false
+		}
+
+		if !reflect.DeepEqual(expect.Identifiers, actual.Identifiers) {
+			return false
+		}
+	}
+
+	return true
 }

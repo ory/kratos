@@ -23,7 +23,7 @@ type (
 
 type (
 	loginExecutorDependencies interface {
-		identity.PoolProvider
+		identity.ManagementProvider
 		HooksProvider
 	}
 	HookExecutor struct {
@@ -49,7 +49,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, hoo
 	}
 
 	if s.WasIdentityModified() {
-		if err := e.d.IdentityPool().UpdateIdentity(r.Context(), s.Identity); err != nil {
+		if err := e.d.IdentityManager().Update(r.Context(), s.Identity); err != nil {
 			return err
 		}
 	}

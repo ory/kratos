@@ -62,7 +62,7 @@ test-resetdb:
 
 .PHONY: test
 test: test-resetdb
-		go test -tags sqlite ./...
+		source scripts/test-env.sh && go test -tags sqlite ./...
 
 # Generates the SDKs
 .PHONY: sdk

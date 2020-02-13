@@ -234,7 +234,7 @@ func (c *HTMLForm) Unset(name string) {
 
 // SetCSRF sets the CSRF value using e.g. nosurf.Token(r).
 func (c *HTMLForm) SetCSRF(token string) {
-	c.SetField(CSRFTokenName, Field{
+	c.SetField(Field{
 		Name:     CSRFTokenName,
 		Type:     "hidden",
 		Required: true,
@@ -243,13 +243,13 @@ func (c *HTMLForm) SetCSRF(token string) {
 }
 
 // SetField sets a field.
-func (c *HTMLForm) SetField(oldName string, field Field) {
+func (c *HTMLForm) SetField(field Field) {
 	c.defaults()
 	c.Lock()
 	defer c.Unlock()
 
 	for i := range c.Fields {
-		if c.Fields[i].Name == oldName {
+		if c.Fields[i].Name == field.Name {
 			c.Fields[i] = field
 			return
 		}

@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "properties": {
+    "emails": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "ory.sh/kratos": {
+          "verification": {
+            "via": "email"
+          }
+        }
+      }
+    },
+    "username": {
+      "type": "string",
+      "ory.sh/kratos": {
+        "verification": {
+          "via": "email"
+        }
+      }
+    }
+  }
+}

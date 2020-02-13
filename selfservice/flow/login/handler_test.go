@@ -2,13 +2,11 @@ package login_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"testing"
 
 	"github.com/gobuffalo/httptest"
-	"github.com/justinas/nosurf"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -75,7 +73,7 @@ func TestLoginHandler(t *testing.T) {
 		reg.LoginHandler().RegisterPublicRoutes(public)
 		reg.LoginHandler().RegisterAdminRoutes(admin)
 		reg.LoginStrategies().RegisterPublicRoutes(public)
-		return httptest.NewServer(nosurf.New(public)), httptest.NewServer(admin)
+		return httptest.NewServer(x.NewTestCSRFHandler(public)), httptest.NewServer(admin)
 	}()
 	defer public.Close()
 
@@ -84,21 +82,12 @@ func TestLoginHandler(t *testing.T) {
 	}))
 	defer redirTS.Close()
 
-	easyGet := func(t *testing.T, c *http.Client, url string) []byte {
-		res, err := c.Get(url)
-		require.NoError(t, err)
-		defer res.Body.Close()
-		body, err := ioutil.ReadAll(res.Body)
-		require.NoError(t, err)
-		return body
-	}
-
 	newLoginTS := func(t *testing.T, upstream string, c *http.Client) *httptest.Server {
 		return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if c == nil {
 				c = http.DefaultClient
 			}
-			_, err := w.Write(easyGet(t, c, upstream+login.BrowserLoginRequestsPath+"?request="+r.URL.Query().Get("request")))
+			_, err := w.Write(x.EasyGetBody(t, c, upstream+login.BrowserLoginRequestsPath+"?request="+r.URL.Query().Get("request")))
 			require.NoError(t, err)
 		}))
 	}
@@ -123,7 +112,7 @@ func TestLoginHandler(t *testing.T) {
 		defer loginTS.Close()
 
 		viper.Set(configuration.ViperKeyURLsLogin, loginTS.URL)
-		assertRequestPayload(t, easyGet(t, public.Client(), public.URL+login.BrowserLoginPath))
+		assertRequestPayload(t, x.EasyGetBody(t, public.Client(), public.URL+login.BrowserLoginPath))
 	})
 
 	t.Run("daemon=public", func(t *testing.T) {
@@ -136,7 +125,7 @@ func TestLoginHandler(t *testing.T) {
 			defer loginTS.Close()
 			viper.Set(configuration.ViperKeyURLsLogin, loginTS.URL)
 
-			assertRequestPayload(t, easyGet(t, hc, public.URL+login.BrowserLoginPath))
+			assertRequestPayload(t, x.EasyGetBody(t, hc, public.URL+login.BrowserLoginPath))
 		})
 
 		t.Run("case=without_csrf", func(t *testing.T) {
@@ -146,7 +135,7 @@ func TestLoginHandler(t *testing.T) {
 			defer loginTS.Close()
 			viper.Set(configuration.ViperKeyURLsLogin, loginTS.URL)
 
-			body := easyGet(t, hc, public.URL+login.BrowserLoginPath)
+			body := x.EasyGetBody(t, hc, public.URL+login.BrowserLoginPath)
 			assert.Contains(t, gjson.GetBytes(body, "error").String(), "csrf_token", "%s", body)
 		})
 	})

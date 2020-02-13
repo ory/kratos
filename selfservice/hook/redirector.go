@@ -12,8 +12,10 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-var _ login.PostHookExecutor = new(Redirector)
-var _ registration.PostHookExecutor = new(Redirector)
+var (
+	_ login.PostHookExecutor        = new(Redirector)
+	_ registration.PostHookExecutor = new(Redirector)
+)
 
 type Redirector struct {
 	returnTo         func() *url.URL

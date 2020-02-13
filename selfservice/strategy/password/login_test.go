@@ -78,7 +78,7 @@ func nlr(exp time.Duration) *login.Request {
 
 type loginStrategyDependencies interface {
 	password.ValidationProvider
-	identity.PoolProvider
+	identity.PrivilegedPoolProvider
 	password.HashProvider
 }
 
@@ -232,7 +232,7 @@ func TestLogin(t *testing.T) {
 			ar: nlr(time.Hour),
 			prep: func(t *testing.T, r loginStrategyDependencies) {
 				p, _ := r.PasswordHasher().Generate([]byte("password"))
-				require.NoError(t, r.IdentityPool().CreateIdentity(context.Background(), &identity.Identity{
+				require.NoError(t, r.PrivilegedIdentityPool().CreateIdentity(context.Background(), &identity.Identity{
 					ID:     x.NewUUID(),
 					Traits: identity.Traits(`{}`),
 					Credentials: map[identity.CredentialsType]identity.Credentials{
@@ -271,7 +271,7 @@ func TestLogin(t *testing.T) {
 			ar: nlr(time.Hour),
 			prep: func(t *testing.T, r loginStrategyDependencies) {
 				p, _ := r.PasswordHasher().Generate([]byte("password"))
-				require.NoError(t, r.IdentityPool().CreateIdentity(context.Background(), &identity.Identity{
+				require.NoError(t, r.PrivilegedIdentityPool().CreateIdentity(context.Background(), &identity.Identity{
 					ID:     x.NewUUID(),
 					Traits: identity.Traits(`{"subject":"login-identifier-7"}`),
 					Credentials: map[identity.CredentialsType]identity.Credentials{

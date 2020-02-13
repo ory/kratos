@@ -22,6 +22,7 @@ const IdentitiesPath = "/identities"
 type (
 	handlerDependencies interface {
 		PoolProvider
+		ManagementProvider
 		x.WriterProvider
 	}
 	HandlerProvider interface {
@@ -185,7 +186,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	// We do not allow setting the ID using this method
 	i.ID = uuid.Nil
 
-	err := h.r.IdentityPool().CreateIdentity(r.Context(), &i)
+	err := h.r.IdentityManager().Create(r.Context(), &i)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -247,7 +248,7 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	}
 
 	i.ID = x.ParseUUID(ps.ByName("id"))
-	if err := h.r.IdentityPool().UpdateIdentity(r.Context(), &i); err != nil {
+	if err := h.r.IdentityManager().Update(r.Context(), &i); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
@@ -283,7 +284,7 @@ type deleteIdentityParameters struct {
 //       404: genericError
 //       500: genericError
 func (h *Handler) delete(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.r.IdentityPool().DeleteIdentity(r.Context(), x.ParseUUID(ps.ByName("id"))); err != nil {
+	if err := h.r.IdentityPool().(PrivilegedPool).DeleteIdentity(r.Context(), x.ParseUUID(ps.ByName("id"))); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}

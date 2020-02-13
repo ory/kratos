@@ -2,13 +2,11 @@ package registration_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/justinas/nosurf"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -73,7 +71,7 @@ func TestRegistrationHandler(t *testing.T) {
 		reg.RegistrationHandler().RegisterPublicRoutes(public)
 		reg.RegistrationHandler().RegisterAdminRoutes(admin)
 		reg.RegistrationStrategies().RegisterPublicRoutes(public)
-		return httptest.NewServer(nosurf.New(public)), httptest.NewServer(admin)
+		return httptest.NewServer(x.NewTestCSRFHandler(public)), httptest.NewServer(admin)
 	}()
 	defer public.Close()
 	defer admin.Close()
@@ -83,22 +81,12 @@ func TestRegistrationHandler(t *testing.T) {
 	}))
 	defer redirTS.Close()
 
-	easyGet := func(t *testing.T, c *http.Client, url string) []byte {
-		res, err := c.Get(url)
-		require.NoError(t, err)
-		defer res.Body.Close()
-		body, err := ioutil.ReadAll(res.Body)
-		require.NoError(t, err)
-		return body
-	}
-
 	newRegistrationTS := func(t *testing.T, upstream string, c *http.Client) *httptest.Server {
 		return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if c == nil {
 				c = http.DefaultClient
 			}
-			body := easyGet(t, c, upstream+registration.BrowserRegistrationRequestsPath+"?request="+r.URL.Query().Get("request"))
-			_, _ = w.Write(body)
+			_, _ = w.Write(x.EasyGetBody(t, c, upstream+registration.BrowserRegistrationRequestsPath+"?request="+r.URL.Query().Get("request")))
 		}))
 	}
 
@@ -123,11 +111,10 @@ func TestRegistrationHandler(t *testing.T) {
 		defer regTS.Close()
 
 		viper.Set(configuration.ViperKeyURLsRegistration, regTS.URL)
-		assertRequestPayload(t, easyGet(t, public.Client(), public.URL+registration.BrowserRegistrationPath))
+		assertRequestPayload(t, x.EasyGetBody(t, public.Client(), public.URL+registration.BrowserRegistrationPath))
 	})
 
 	t.Run("daemon=public", func(t *testing.T) {
-
 		t.Run("case=with_csrf", func(t *testing.T) {
 			j, err := cookiejar.New(nil)
 			require.NoError(t, err)
@@ -137,7 +124,7 @@ func TestRegistrationHandler(t *testing.T) {
 			defer regTS.Close()
 			viper.Set(configuration.ViperKeyURLsRegistration, regTS.URL)
 
-			body := easyGet(t, hc, public.URL+registration.BrowserRegistrationPath)
+			body := x.EasyGetBody(t, hc, public.URL+registration.BrowserRegistrationPath)
 			assertRequestPayload(t, body)
 		})
 
@@ -148,7 +135,7 @@ func TestRegistrationHandler(t *testing.T) {
 			defer regTS.Close()
 			viper.Set(configuration.ViperKeyURLsRegistration, regTS.URL)
 
-			body := easyGet(t, new(http.Client), public.URL+registration.BrowserRegistrationPath)
+			body := x.EasyGetBody(t, new(http.Client), public.URL+registration.BrowserRegistrationPath)
 			assert.Contains(t, gjson.GetBytes(body, "error").String(), "csrf_token", "%s", body)
 		})
 	})

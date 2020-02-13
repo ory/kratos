@@ -9,17 +9,20 @@ import (
 	"github.com/ory/kratos/session"
 )
 
-var _ login.PostHookExecutor = new(SessionIssuer)
-var _ registration.PostHookExecutor = new(SessionIssuer)
+var (
+	_ login.PostHookExecutor        = new(SessionIssuer)
+	_ registration.PostHookExecutor = new(SessionIssuer)
+)
 
-type sessionIssuerDependencies interface {
-	session.ManagementProvider
-	session.PersistenceProvider
-}
-
-type SessionIssuer struct {
-	r sessionIssuerDependencies
-}
+type (
+	sessionIssuerDependencies interface {
+		session.ManagementProvider
+		session.PersistenceProvider
+	}
+	SessionIssuer struct {
+		r sessionIssuerDependencies
+	}
+)
 
 func NewSessionIssuer(r sessionIssuerDependencies) *SessionIssuer {
 	return &SessionIssuer{r: r}

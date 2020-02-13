@@ -51,7 +51,11 @@ func (m *registrationExecutorDependenciesMock) PostRegistrationHooks(credentials
 	return nil
 }
 
-func (m *registrationExecutorDependenciesMock) IdentityPool() identity.Pool {
+func (m *registrationExecutorDependenciesMock) IdentityManager() *identity.Manager {
+	return nil
+}
+
+func (m *registrationExecutorDependenciesMock) PrivilegedIdentityPool() identity.PrivilegedPool {
 	return nil
 }
 
