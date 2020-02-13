@@ -2,7 +2,6 @@ package sql
 
 import (
 	"context"
-
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/x/sqlcon"
@@ -30,7 +29,17 @@ func (p *Persister) GetLoginRequest(_ context.Context, id uuid.UUID) (*login.Req
 	return &r, nil
 }
 
-func (p *Persister) UpdateLoginRequest(ctx context.Context, id uuid.UUID, ct identity.CredentialsType, rm *login.RequestMethod) error {
+func (p *Persister) UpdateLoginRequestReauth(ctx context.Context, id uuid.UUID, reauth bool) error {
+	lr, err := p.GetLoginRequest(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	lr.IsReauthentication = reauth
+	return p.c.Save(lr)
+}
+
+func (p *Persister) UpdateLoginRequestMethod(ctx context.Context, id uuid.UUID, ct identity.CredentialsType, rm *login.RequestMethod) error {
 	rr, err := p.GetLoginRequest(ctx, id)
 	if err != nil {
 		return err

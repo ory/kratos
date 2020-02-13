@@ -1,6 +1,7 @@
 package login
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 
@@ -50,7 +51,7 @@ func (h *Handler) WithTokenGenerator(f func(r *http.Request) string) {
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
-	public.GET(BrowserLoginPath, h.d.SessionHandler().IsNotAuthenticated(h.initLoginRequest, session.RedirectOnAuthenticated(h.c)))
+	public.GET(BrowserLoginPath, h.d.SessionHandler().IsNotAuthenticated(h.initLoginRequest, h.initReauthRequest))
 	public.GET(BrowserLoginRequestsPath, h.publicFetchLoginRequest)
 }
 
@@ -109,7 +110,22 @@ func (h *Handler) NewLoginRequest(w http.ResponseWriter, r *http.Request, redir 
 //       302: emptyResponse
 //       500: genericError
 func (h *Handler) initLoginRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	// todo check if session exists and if yes check if this is a reauth request
+
 	if err := h.NewLoginRequest(w, r, func(a *Request) (string, error) {
+		return urlx.CopyWithQuery(h.c.LoginURL(), url.Values{"request": {a.ID.String()}}).String(), nil
+	}); err != nil {
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		return
+	}
+}
+
+func (h *Handler) initReauthRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if err := h.NewLoginRequest(w, r, func(a *Request) (string, error) {
+		if err := h.d.LoginRequestPersister().UpdateLoginRequestReauth(context.TODO(), a.ID, true); err != nil {
+			return "", err
+		}
 		return urlx.CopyWithQuery(h.c.LoginURL(), url.Values{"request": {a.ID.String()}}).String(), nil
 	}); err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)

@@ -1,17 +1,27 @@
 package login_test
 
 import (
+	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
+	"net/url"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/gobuffalo/httptest"
+	"github.com/gofrs/uuid"
+	"github.com/gorilla/sessions"
 	"github.com/justinas/nosurf"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	"github.com/ory/kratos/selfservice/form"
+	"github.com/ory/kratos/selfservice/strategy/password"
 
 	"github.com/ory/viper"
 
@@ -20,22 +30,75 @@ import (
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
-	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
+
+type (
+	withTokenGenerator interface {
+		WithTokenGenerator(g form.CSRFGenerator)
+	}
+	testHTTPWriter struct {
+		*testing.T
+		r *http.Request
+	}
+	testHTTPHeader struct {
+		http.Header
+		r *http.Request
+		t *testing.T
+	}
+)
+
+func (h testHTTPHeader) Add(key, value string) {
+	if h.r != nil && key == "Set-Cookie" {
+		header := http.Header{}
+		header.Add(key, value)
+		req := http.Request{Header: header}
+		for _, c := range req.Cookies() {
+			h.r.AddCookie(c)
+		}
+	} else {
+		h.t.Logf("Add() request: %+v", h.r)
+	}
+
+	h.t.Logf("called Add(%s, %s)\n", key, value)
+}
+
+func (t testHTTPWriter) Header() http.Header {
+	t.Log("called Header()\n")
+	return http.Header(testHTTPHeader{
+		Header: http.Header{},
+		r:      t.r,
+		t:      t.T,
+	})
+}
+
+func (t testHTTPWriter) Write(b []byte) (int, error) {
+	t.Logf("called Write(\"%s\")\n", b)
+	return len(b), nil
+}
+
+func (t testHTTPWriter) WriteHeader(statusCode int) {
+	t.Logf("called WriteHeader(%d)\n", statusCode)
+}
 
 func init() {
 	internal.RegisterFakes()
 }
 
-func TestEnsureSessionRedirect(t *testing.T) {
+func TestSessionReauthFunctionality(t *testing.T) {
 	_, reg := internal.NewRegistryDefault(t)
+	for _, strategy := range reg.LoginStrategies() {
+		// We need to know the csrf token
+		strategy.(withTokenGenerator).WithTokenGenerator(x.FakeCSRFTokenGenerator)
+	}
 
 	router := x.NewRouterPublic()
 	admin := x.NewRouterAdmin()
 	reg.LoginHandler().RegisterPublicRoutes(router)
 	reg.LoginHandler().RegisterAdminRoutes(admin)
+	reg.LoginHandler().WithTokenGenerator(x.FakeCSRFTokenGenerator)
+	reg.SelfServiceErrorManager().WithTokenGenerator(x.FakeCSRFTokenGenerator)
 	reg.LoginStrategies().RegisterPublicRoutes(router)
 	ts := httptest.NewServer(router)
 	defer ts.Close()
@@ -45,23 +108,100 @@ func TestEnsureSessionRedirect(t *testing.T) {
 	}))
 	defer redirTS.Close()
 
+	loginTS := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		request := r.URL.Query().Get("request")
+
+		if request != "" {
+			_, err := w.Write([]byte(request))
+			require.NoError(t, err)
+			return
+		}
+		_, err := w.Write([]byte("no request id"))
+		require.NoError(t, err)
+	}))
+
+	errorTS := errorx.NewErrorTestServer(t, reg)
+
 	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, redirTS.URL)
 	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
+	viper.Set(configuration.ViperKeyURLsLogin, loginTS.URL)
+	viper.Set(configuration.ViperKeyURLsError, errorTS.URL)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/login.schema.json")
 
-	for k, tc := range [][]string{
-		{"GET", login.BrowserLoginPath},
-
-		{"POST", password.LoginPath},
-
-		// it is ok that these contain the parameters as raw strings as we are only interested in checking if the middleware is working
-		{"POST", oidc.AuthPath},
-		{"GET", oidc.AuthPath},
-		{"GET", oidc.CallbackPath},
+	pathWithRequestQuery := func(path, otherQuery string) func(id uuid.UUID) (string, string) {
+		return func(id uuid.UUID) (string, string) {
+			qs := fmt.Sprintf("request=%s", id)
+			if otherQuery != "" {
+				qs += "&" + otherQuery
+			}
+			return path, qs
+		}
+	}
+	oidcAuthPath := func(id uuid.UUID) (string, string) {
+		return strings.ReplaceAll(oidc.AuthPath, ":request", id.String()), ""
+	}
+	for k, tc := range []struct {
+		method        string
+		pathAndQuery  func(id uuid.UUID) (string, string)
+		formContent   url.Values
+		modifyRequest func(t *testing.T, r *http.Request, rid string)
+	}{
+		{
+			method:       "GET",
+			pathAndQuery: pathWithRequestQuery(login.BrowserLoginPath, ""),
+		},
+		{
+			method:       "POST",
+			pathAndQuery: pathWithRequestQuery(password.LoginPath, ""),
+			formContent: url.Values{
+				"identifier": {"foo"},
+				"password":   {"zq32klsjd12ed"},
+			},
+		},
+		{
+			method:       "POST",
+			pathAndQuery: oidcAuthPath,
+		},
+		{
+			method:       "GET",
+			pathAndQuery: oidcAuthPath,
+		},
+		{
+			method:       "GET",
+			pathAndQuery: pathWithRequestQuery(oidc.CallbackPath, "state=state"),
+			modifyRequest: func(t *testing.T, r *http.Request, rid string) {
+				require.NoError(t, x.SessionPersistValues(testHTTPWriter{t, r}, r, reg.CookieManager(), "oicd_session", map[string]interface{}{
+					"state":      "state",
+					"request_id": rid,
+					"form":       r.PostForm.Encode(),
+				}))
+				r.AddCookie(sessions.NewCookie("state", "state", &sessions.Options{
+					Path:     "/",
+					HttpOnly: true,
+				}))
+			},
+		},
 	} {
-		t.Run(fmt.Sprintf("case=%d/method=%s/path=%s", k, tc[0], tc[1]), func(t *testing.T) {
-			body, _ := session.MockMakeAuthenticatedRequest(t, reg, router.Router, x.NewTestHTTPRequest(t, tc[0], ts.URL+tc[1], nil))
-			assert.EqualValues(t, "already authenticated", string(body))
+		t.Run(fmt.Sprintf("case=%d/method=%s", k, tc.method), func(t *testing.T) {
+			rid := x.NewUUID()
+			path, qs := tc.pathAndQuery(rid)
+
+			req := x.NewTestHTTPRequest(t, tc.method, ts.URL+path, bytes.NewBuffer(([]byte)(tc.formContent.Encode())))
+			loginReq := login.NewLoginRequest(time.Minute, x.FakeCSRFToken, req)
+			loginReq.ID = rid
+			for _, s := range reg.LoginStrategies() {
+				require.NoError(t, s.PopulateLoginMethod(req, loginReq))
+			}
+			require.NoError(t, reg.LoginRequestPersister().CreateLoginRequest(context.TODO(), loginReq), loginReq)
+
+			req.URL.RawQuery = qs
+			if tc.modifyRequest != nil {
+				tc.modifyRequest(t, req, rid.String())
+			}
+
+			body, resp := session.MockMakeAuthenticatedRequest(t, reg, router.Router, req)
+			assert.EqualValues(t, resp.Request.URL.Query().Get("request"), string(body), resp)
+			assert.True(t, strings.HasPrefix(resp.Request.URL.String(), loginTS.URL+"?request="))
 		})
 	}
 }

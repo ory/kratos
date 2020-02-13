@@ -41,6 +41,7 @@ type registrationStrategyDependencies interface {
 	identity.ValidationProvider
 
 	session.HandlerProvider
+	session.ManagementProvider
 }
 
 type Strategy struct {

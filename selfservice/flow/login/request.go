@@ -61,6 +61,9 @@ type Request struct {
 
 	// CSRFToken contains the anti-csrf token associated with this request.
 	CSRFToken string `json:"-" db:"csrf_token"`
+
+	// IsReauthentication stores whether this login request is a reauthenication request.
+	IsReauthentication bool `json:"is_reauthentication" db:"is_reauthentication"`
 }
 
 func NewLoginRequest(exp time.Duration, csrf string, r *http.Request) *Request {

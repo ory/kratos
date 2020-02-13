@@ -118,18 +118,14 @@ func TestStrategy(t *testing.T) {
 	_, reg := internal.NewRegistryDefault(t)
 	for _, strategy := range reg.LoginStrategies() {
 		// We need to replace the password strategy token generator because it is being used by the error handler...
-		strategy.(withTokenGenerator).WithTokenGenerator(func(r *http.Request) string {
-			return "nosurf"
-		})
+		strategy.(withTokenGenerator).WithTokenGenerator(x.FakeCSRFTokenGenerator)
 	}
 
 	public := x.NewRouterPublic()
 	admin := x.NewRouterAdmin()
 	reg.LoginHandler().RegisterPublicRoutes(public)
 	reg.LoginHandler().RegisterAdminRoutes(admin)
-	reg.LoginHandler().WithTokenGenerator(func(r *http.Request) string {
-		return "nosurf"
-	})
+	reg.LoginHandler().WithTokenGenerator(x.FakeCSRFTokenGenerator)
 	reg.LoginStrategies().RegisterPublicRoutes(public)
 	reg.RegistrationStrategies().RegisterPublicRoutes(public)
 	reg.RegistrationHandler().RegisterPublicRoutes(public)

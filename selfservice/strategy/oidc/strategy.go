@@ -103,15 +103,15 @@ func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
 
 func (s *Strategy) setRoutes(r *x.RouterPublic) {
 	if handle, _, _ := r.Lookup("GET", CallbackPath); handle == nil {
-		r.GET(CallbackPath, s.d.SessionHandler().IsNotAuthenticated(s.handleCallback, session.RedirectOnAuthenticated(s.c)))
+		r.GET(CallbackPath, s.d.SessionHandler().IsNotAuthenticated(s.handleCallback, s.handleReCallback))
 	}
 
 	if handle, _, _ := r.Lookup("POST", AuthPath); handle == nil {
-		r.POST(AuthPath, s.d.SessionHandler().IsNotAuthenticated(s.handleAuth, session.RedirectOnAuthenticated(s.c)))
+		r.POST(AuthPath, s.d.SessionHandler().IsNotAuthenticated(s.handleAuth, s.handleReauth))
 	}
 
 	if handle, _, _ := r.Lookup("GET", AuthPath); handle == nil {
-		r.GET(AuthPath, s.d.SessionHandler().IsNotAuthenticated(s.handleAuth, session.RedirectOnAuthenticated(s.c)))
+		r.GET(AuthPath, s.d.SessionHandler().IsNotAuthenticated(s.handleAuth, s.handleReauth))
 	}
 }
 
@@ -137,6 +137,16 @@ func (s *Strategy) RegistrationStrategyID() identity.CredentialsType {
 
 func (s *Strategy) LoginStrategyID() identity.CredentialsType {
 	return s.ID()
+}
+
+func (s *Strategy) handleReauth(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// TODO set prompt=login
+	s.handleAuth(w, r, ps)
+}
+
+func (s *Strategy) handleReCallback(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// TODO
+	s.handleCallback(w, r, ps)
 }
 
 func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

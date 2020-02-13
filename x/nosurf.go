@@ -20,8 +20,10 @@ func DefaultCSRFToken(r *http.Request) string {
 	return nosurf.Token(r)
 }
 
+const FakeCSRFToken = "nosurf"
+
 func FakeCSRFTokenGenerator(r *http.Request) string {
-	return "nosurf"
+	return FakeCSRFToken
 }
 
 func FakeCSRFTokenGeneratorWithToken(token string) func(r *http.Request) string {

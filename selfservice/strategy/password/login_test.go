@@ -76,250 +76,243 @@ func nlr(exp time.Duration) *login.Request {
 	}
 }
 
-type loginStrategyDependencies interface {
-	password.ValidationProvider
-	identity.PoolProvider
-	password.HashProvider
-}
+func TestLoginNew(t *testing.T) {
+	_, reg := internal.NewRegistryDefault(t)
+	s := reg.LoginStrategies().MustStrategy(identity.CredentialsTypePassword).(*password.Strategy)
+	s.WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
+	reg.LoginStrategies().MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
+	reg.LoginHandler().WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
+	reg.SelfServiceErrorManager().WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
 
-func TestLogin(t *testing.T) {
-	var ensureFieldsExist = func(t *testing.T, body []byte) {
+	router := x.NewRouterPublic()
+	admin := x.NewRouterAdmin()
+	reg.LoginHandler().RegisterPublicRoutes(router)
+	reg.LoginHandler().RegisterAdminRoutes(admin)
+	s.RegisterLoginRoutes(router)
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	errTs, uiTs, returnTs := errorx.NewErrorTestServer(t, reg), httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		e, err := reg.LoginRequestPersister().GetLoginRequest(context.Background(), x.ParseUUID(r.URL.Query().Get("request")))
+		require.NoError(t, err)
+		reg.Writer().Write(w, r, e)
+	})), newReturnTs(t, reg)
+	defer errTs.Close()
+	defer uiTs.Close()
+	defer returnTs.Close()
+
+	viper.Set(configuration.ViperKeyURLsError, errTs.URL+"/error-ts")
+	viper.Set(configuration.ViperKeyURLsLogin, uiTs.URL+"/login-ts")
+	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
+	viper.Set(configuration.ViperKeySelfServiceLoginAfterConfig+"."+string(identity.CredentialsTypePassword), hookConfig(returnTs.URL+"/return-ts"))
+	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/login.schema.json")
+	viper.Set(configuration.ViperKeySecretsSession, []string{"not-a-secure-session-key"})
+	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, returnTs.URL+"/return-ts")
+
+	makeRequest := func(lr *login.Request, payload string, forceRequestID *string, jar *cookiejar.Jar) (*http.Response, []byte) {
+		lr.RequestURL = ts.URL
+		require.NoError(t, reg.LoginRequestPersister().CreateLoginRequest(context.TODO(), lr))
+
+		c := ts.Client()
+		if jar == nil {
+			c.Jar, _ = cookiejar.New(&cookiejar.Options{})
+		} else {
+			c.Jar = jar
+		}
+
+		requestID := lr.ID.String()
+		if forceRequestID != nil {
+			requestID = *forceRequestID
+		}
+
+		res, err := c.Post(ts.URL+password.LoginPath+"?request="+requestID, "application/x-www-form-urlencoded", strings.NewReader(payload))
+		require.NoError(t, err)
+		defer res.Body.Close()
+		require.EqualValues(t, http.StatusOK, res.StatusCode, "Request: %+v\n\t\tResponse: %s", res.Request, res)
+		body, err := ioutil.ReadAll(res.Body)
+		require.NoError(t, err)
+		return res, body
+	}
+
+	ensureFieldsExist := func(t *testing.T, body []byte) {
 		checkFormContent(t, body, "identifier",
 			"password",
 			"csrf_token")
 	}
 
-	type testCase struct {
-		d              string
-		prep           func(t *testing.T, r loginStrategyDependencies)
-		ar             *login.Request
-		forceRequestID *string
-		payload        string
-		assert         func(t *testing.T, tc testCase, r *http.Response)
+	createIdentity := func(identifier, password string) {
+		p, _ := reg.PasswordHasher().Generate([]byte(password))
+		require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), &identity.Identity{
+			ID:     x.NewUUID(),
+			Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),
+			Credentials: map[identity.CredentialsType]identity.Credentials{
+				identity.CredentialsTypePassword: {
+					Type:        identity.CredentialsTypePassword,
+					Identifiers: []string{identifier},
+					Config:      json.RawMessage(`{"hashed_password":"` + string(p) + `"}`),
+				},
+			},
+		}))
 	}
 
-	for k, tc := range []testCase{
+	t.Run("should show the error ui because the request is malformed", func(t *testing.T) {
+		lr := nlr(0)
+		res, body := makeRequest(lr, "14=)=!(%)$/ZP()GHIÖ", nil, nil)
 
-		{
-			d:       "should show the error ui because the request is malformed",
-			ar:      nlr(0),
-			payload: "14=)=!(%)$/ZP()GHIÖ",
-			assert: func(t *testing.T, tc testCase, r *http.Response) {
-				require.Contains(t, r.Request.URL.Path, "login-ts", "%+v", r.Request)
-				body, err := ioutil.ReadAll(r.Body)
-				require.NoError(t, err)
+		require.Contains(t, res.Request.URL.Path, "login-ts", "%+v", res.Request)
+		assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
+		assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "methods.password.config.errors.0.message").String(), `invalid URL escape`)
+	})
 
-				assert.Equal(t, tc.ar.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
-				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
-				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.errors.0.message").String(), `invalid URL escape`)
-			},
-		},
-		{
-			d:              "should show the error ui because the request id missing",
-			ar:             nlr(time.Minute),
-			forceRequestID: pointerx.String(""),
-			payload:        url.Values{}.Encode(),
-			assert: func(t *testing.T, tc testCase, r *http.Response) {
-				assert.Contains(t, r.Request.URL.Path, "error-ts")
-				body, err := ioutil.ReadAll(r.Body)
-				require.NoError(t, err)
+	t.Run("should show the error ui because the request id missing", func(t *testing.T) {
+		lr := nlr(time.Minute)
+		res, body := makeRequest(lr, url.Values{}.Encode(), pointerx.String(""), nil)
 
-				assert.Equal(t, int64(http.StatusBadRequest), gjson.GetBytes(body, "0.code").Int(), "%s", body)
-				assert.Equal(t, "Bad Request", gjson.GetBytes(body, "0.status").String(), "%s", body)
-				assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "request query parameter is missing or invalid", "%s", body)
-			},
-		},
-		{
-			d:              "should return an error because the request does not exist",
-			ar:             nlr(0),
-			forceRequestID: pointerx.String(x.NewUUID().String()),
-			payload: url.Values{
-				"identifier": {"identifier"},
-				"password":   {"password"},
-			}.Encode(),
-			assert: func(t *testing.T, tc testCase, r *http.Response) {
-				assert.Contains(t, r.Request.URL.Path, "error-ts")
-				body, err := ioutil.ReadAll(r.Body)
-				require.NoError(t, err)
+		require.Contains(t, res.Request.URL.Path, "error-ts")
+		assert.Equal(t, int64(http.StatusBadRequest), gjson.GetBytes(body, "0.code").Int(), "%s", body)
+		assert.Equal(t, "Bad Request", gjson.GetBytes(body, "0.status").String(), "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "request query parameter is missing or invalid", "%s", body)
+	})
 
-				assert.Equal(t, int64(http.StatusNotFound), gjson.GetBytes(body, "0.code").Int(), "%s", body)
-				assert.Equal(t, "Not Found", gjson.GetBytes(body, "0.status").String(), "%s", body)
-				assert.Contains(t, gjson.GetBytes(body, "0.message").String(), "Unable to locate the resource", "%s", body)
-			},
-		},
-		{
-			d:  "should redirect to login init because the request is expired",
-			ar: nlr(-time.Hour),
-			payload: url.Values{
-				"identifier": {"identifier"},
-				"password":   {"password"},
-			}.Encode(),
-			assert: func(t *testing.T, tc testCase, r *http.Response) {
-				assert.Contains(t, r.Request.URL.Path, "login-ts")
-				body, err := ioutil.ReadAll(r.Body)
-				require.NoError(t, err)
+	t.Run("should return an error because the request does not exist", func(t *testing.T) {
+		lr := nlr(0)
+		res, body := makeRequest(lr, url.Values{
+			"identifier": {"identifier"},
+			"password":   {"password"},
+		}.Encode(), pointerx.String(x.NewUUID().String()), nil)
 
-				assert.NotEqual(t, tc.ar.ID, gjson.GetBytes(body, "id"))
+		require.Contains(t, res.Request.URL.Path, "error-ts")
+		assert.Equal(t, int64(http.StatusNotFound), gjson.GetBytes(body, "0.code").Int(), "%s", body)
+		assert.Equal(t, "Not Found", gjson.GetBytes(body, "0.status").String(), "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "0.message").String(), "Unable to locate the resource", "%s", body)
+	})
 
-				assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.errors.0").String(), "expired", "%s", body)
-				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.errors.0").String(), "expired", "%s", body)
-			},
-		},
-		{
-			d:  "should return an error because the credentials are invalid (user does not exist)",
-			ar: nlr(time.Hour),
-			payload: url.Values{
-				"identifier": {"identifier"},
-				"password":   {"password"},
-			}.Encode(),
-			assert: func(t *testing.T, tc testCase, r *http.Response) {
-				require.Contains(t, r.Request.URL.Path, "login-ts")
-				body, err := ioutil.ReadAll(r.Body)
-				require.NoError(t, err)
+	t.Run("should redirect to login init because the request is expired", func(t *testing.T) {
+		lr := nlr(-time.Hour)
+		res, body := makeRequest(lr, url.Values{
+			"identifier": {"identifier"},
+			"password":   {"password"},
+		}.Encode(), nil, nil)
 
-				assert.Equal(t, tc.ar.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
-				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
-				assert.Equal(t, `the provided credentials are invalid, check for spelling mistakes in your password or username, email address, or phone number`, gjson.GetBytes(body, "methods.password.config.errors.0.message").String())
-			},
-		},
-		{
-			d:  "should return an error because no identifier is set",
-			ar: nlr(time.Hour),
-			payload: url.Values{
-				"password": {"password"},
-			}.Encode(),
-			assert: func(t *testing.T, tc testCase, r *http.Response) {
-				require.Contains(t, r.Request.URL.Path, "login-ts")
-				body, err := ioutil.ReadAll(r.Body)
-				require.NoError(t, err)
+		require.Contains(t, res.Request.URL.Path, "login-ts")
+		assert.NotEqual(t, lr.ID, gjson.GetBytes(body, "id"))
+		assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.errors.0").String(), "expired", "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "methods.password.config.errors.0").String(), "expired", "%s", body)
+	})
 
-				// Let's ensure that the payload is being propagated properly.
-				assert.Equal(t, tc.ar.ID.String(), gjson.GetBytes(body, "id").String())
-				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
-				ensureFieldsExist(t, body)
-				assert.Equal(t, "missing properties: identifier", gjson.GetBytes(body, "methods.password.config.fields.#(name==identifier).errors.0.message").String(), "%s", body)
+	t.Run("should return an error because the credentials are invalid (user does not exist)", func(t *testing.T) {
+		lr := nlr(time.Hour)
+		res, body := makeRequest(lr, url.Values{
+			"identifier": {"identifier"},
+			"password":   {"password"},
+		}.Encode(), nil, nil)
 
-				// The password value should not be returned!
-				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).value").String())
-			},
-		},
-		{
-			d:  "should return an error because no password is set",
-			ar: nlr(time.Hour),
-			payload: url.Values{
-				"identifier": {"identifier"},
-			}.Encode(),
-			assert: func(t *testing.T, tc testCase, r *http.Response) {
-				require.Contains(t, r.Request.URL.Path, "login-ts")
-				body, err := ioutil.ReadAll(r.Body)
-				require.NoError(t, err)
+		require.Contains(t, res.Request.URL.Path, "login-ts")
+		assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
+		assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
+		assert.Equal(t, `the provided credentials are invalid, check for spelling mistakes in your password or username, email address, or phone number`, gjson.GetBytes(body, "methods.password.config.errors.0.message").String())
+	})
 
-				// Let's ensure that the payload is being propagated properly.
-				assert.Equal(t, tc.ar.ID.String(), gjson.GetBytes(body, "id").String())
-				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
-				ensureFieldsExist(t, body)
-				assert.Equal(t, "missing properties: password", gjson.GetBytes(body, "methods.password.config.fields.#(name==password).errors.0.message").String(), "%s", body)
+	t.Run("should return an error because no identifier is set", func(t *testing.T) {
+		lr := nlr(time.Hour)
+		res, body := makeRequest(lr, url.Values{
+			"password": {"password"},
+		}.Encode(), nil, nil)
 
-				assert.Equal(t, "anti-rf-token", gjson.GetBytes(body, "methods.password.config.fields.#(name==csrf_token).value").String())
-				assert.Equal(t, "identifier", gjson.GetBytes(body, "methods.password.config.fields.#(name==identifier).value").String(), "%s", body)
+		require.Contains(t, res.Request.URL.Path, "login-ts")
+		// Let's ensure that the payload is being propagated properly.
+		assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String())
+		assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
+		ensureFieldsExist(t, body)
+		assert.Equal(t, "missing properties: identifier", gjson.GetBytes(body, "methods.password.config.fields.#(name==identifier).errors.0.message").String(), "%s", body)
 
-				// This must not include the password!
-				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).value").String())
-			},
-		},
-		{
-			d:  "should return an error because the credentials are invalid (password not correct)",
-			ar: nlr(time.Hour),
-			prep: func(t *testing.T, r loginStrategyDependencies) {
-				p, _ := r.PasswordHasher().Generate([]byte("password"))
-				require.NoError(t, r.IdentityPool().CreateIdentity(context.Background(), &identity.Identity{
-					ID:     x.NewUUID(),
-					Traits: identity.Traits(`{}`),
-					Credentials: map[identity.CredentialsType]identity.Credentials{
-						identity.CredentialsTypePassword: {
-							Type:        identity.CredentialsTypePassword,
-							Identifiers: []string{"login-identifier-6"},
-							Config:      json.RawMessage(`{"hashed_password":"` + string(p) + `"}`),
-						},
-					},
-				}))
-			},
-			payload: url.Values{
-				"identifier": {"login-identifier-6"},
-				"password":   {"not-password"},
-			}.Encode(),
-			assert: func(t *testing.T, tc testCase, r *http.Response) {
-				require.Contains(t, r.Request.URL.Path, "login-ts")
-				body, err := ioutil.ReadAll(r.Body)
-				require.NoError(t, err)
+		// The password value should not be returned!
+		assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).value").String())
+	})
 
-				assert.Equal(t, tc.ar.ID.String(), gjson.GetBytes(body, "id").String())
-				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
-				ensureFieldsExist(t, body)
-				assert.Equal(t,
-					errorsx.Cause(schema.NewInvalidCredentialsError()).(*jsonschema.ValidationError).Message,
-					gjson.GetBytes(body, "methods.password.config.errors.0.message").String(),
-					"%s", body,
-				)
+	t.Run("should return an error because no password is set", func(t *testing.T) {
+		lr := nlr(time.Hour)
+		res, body := makeRequest(lr, url.Values{
+			"identifier": {"identifier"},
+		}.Encode(), nil, nil)
 
-				// This must not include the password!
-				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).value").String())
-			},
-		},
-		{
-			d:  "should pass because everything is a-ok",
-			ar: nlr(time.Hour),
-			prep: func(t *testing.T, r loginStrategyDependencies) {
-				p, _ := r.PasswordHasher().Generate([]byte("password"))
-				require.NoError(t, r.IdentityPool().CreateIdentity(context.Background(), &identity.Identity{
-					ID:     x.NewUUID(),
-					Traits: identity.Traits(`{"subject":"login-identifier-7"}`),
-					Credentials: map[identity.CredentialsType]identity.Credentials{
-						identity.CredentialsTypePassword: {
-							Type:        identity.CredentialsTypePassword,
-							Identifiers: []string{"login-identifier-7"},
-							Config:      json.RawMessage(`{"hashed_password":"` + string(p) + `"}`),
-						},
-					},
-				}))
-			},
-			payload: url.Values{
-				"identifier": {"login-identifier-7"},
-				"password":   {"password"},
-			}.Encode(),
-			assert: func(t *testing.T, tc testCase, r *http.Response) {
-				assert.Contains(t, r.Request.URL.Path, "return-ts", "%s", r.Request.URL.String())
-				body, err := ioutil.ReadAll(r.Body)
-				require.NoError(t, err)
+		require.Contains(t, res.Request.URL.Path, "login-ts")
+		// Let's ensure that the payload is being propagated properly.
+		assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String())
+		assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
+		ensureFieldsExist(t, body)
+		assert.Equal(t, "missing properties: password", gjson.GetBytes(body, "methods.password.config.fields.#(name==password).errors.0.message").String(), "%s", body)
 
-				assert.Equal(t, `login-identifier-7`, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
-			},
-		},
-		{
-			d: "should return an error because not passing validation and reset previous errors and values",
-			ar: &login.Request{
-				ID:        x.NewUUID(),
-				ExpiresAt: time.Now().Add(time.Minute),
-				Methods: map[identity.CredentialsType]*login.RequestMethod{
-					identity.CredentialsTypePassword: {
-						Method: identity.CredentialsTypePassword,
-						Config: &login.RequestMethodConfig{
-							RequestMethodConfigurator: &password.RequestMethod{
-								HTMLForm: &form.HTMLForm{
-									Method: "POST",
-									Action: "/action",
-									Errors: []form.Error{{Message: "some error"}},
-									Fields: form.Fields{
-										{
-											Value:  "baz",
-											Name:   "identifier",
-											Errors: []form.Error{{Message: "err"}},
-										},
-										{
-											Value:  "bar",
-											Name:   "password",
-											Errors: []form.Error{{Message: "err"}},
-										},
+		assert.Equal(t, "anti-rf-token", gjson.GetBytes(body, "methods.password.config.fields.#(name==csrf_token).value").String())
+		assert.Equal(t, "identifier", gjson.GetBytes(body, "methods.password.config.fields.#(name==identifier).value").String(), "%s", body)
+
+		// This must not include the password!
+		assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).value").String())
+	})
+
+	t.Run("should return an error because the credentials are invalid (password not correct)", func(t *testing.T) {
+		identifier, pwd := "login-identifier-6", "password"
+		createIdentity(identifier, pwd)
+
+		lr := nlr(time.Hour)
+		res, body := makeRequest(lr, url.Values{
+			"identifier": {identifier},
+			"password":   {"not-password"},
+		}.Encode(), nil, nil)
+
+		require.Contains(t, res.Request.URL.Path, "login-ts")
+
+		assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String())
+		assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
+		ensureFieldsExist(t, body)
+		assert.Equal(t,
+			errorsx.Cause(schema.NewInvalidCredentialsError()).(*jsonschema.ValidationError).Message,
+			gjson.GetBytes(body, "methods.password.config.errors.0.message").String(),
+			"%s", body,
+		)
+
+		// This must not include the password!
+		assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).value").String())
+	})
+
+	t.Run("should pass because everything is a-ok", func(t *testing.T) {
+		identifier, pwd := "login-identifier-7", "password"
+		createIdentity(identifier, pwd)
+
+		lr := nlr(time.Hour)
+		res, body := makeRequest(lr, url.Values{
+			"identifier": {identifier},
+			"password":   {pwd},
+		}.Encode(), nil, nil)
+
+		require.Contains(t, res.Request.URL.Path, "return-ts", "%s", res.Request.URL.String())
+		assert.Equal(t, identifier, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
+	})
+
+	t.Run("should return an error because not passing validation and reset previous errors and values", func(t *testing.T) {
+		lr := &login.Request{
+			ID:        x.NewUUID(),
+			ExpiresAt: time.Now().Add(time.Minute),
+			Methods: map[identity.CredentialsType]*login.RequestMethod{
+				identity.CredentialsTypePassword: {
+					Method: identity.CredentialsTypePassword,
+					Config: &login.RequestMethodConfig{
+						RequestMethodConfigurator: &password.RequestMethod{
+							HTMLForm: &form.HTMLForm{
+								Method: "POST",
+								Action: "/action",
+								Errors: []form.Error{{Message: "some error"}},
+								Fields: form.Fields{
+									{
+										Value:  "baz",
+										Name:   "identifier",
+										Errors: []form.Error{{Message: "err"}},
+									},
+									{
+										Value:  "bar",
+										Name:   "password",
+										Errors: []form.Error{{Message: "err"}},
 									},
 								},
 							},
@@ -327,78 +320,66 @@ func TestLogin(t *testing.T) {
 					},
 				},
 			},
-			payload: url.Values{
-				"identifier": {"registration-identifier-9"},
-				// "password": {uuid.New().String()},
-			}.Encode(),
-			assert: func(t *testing.T, tc testCase, r *http.Response) {
-				require.Contains(t, r.Request.URL.Path, "login-ts")
-				body, err := ioutil.ReadAll(r.Body)
-				require.NoError(t, err)
+		}
 
-				assert.Equal(t, tc.ar.ID.String(), gjson.GetBytes(body, "id").String())
-				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
-				ensureFieldsExist(t, body)
+		res, body := makeRequest(lr, url.Values{
+			"identifier": {"registration-identifier-9"},
+			// "password": {uuid.New().String()},
+		}.Encode(), nil, nil)
 
-				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==identity).value"))
-				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==identity).error"))
-				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.error"))
-				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).errors.0").String(), "missing properties: password", "%s", body)
-			},
-		},
-	} {
-		t.Run(fmt.Sprintf("case=%d/description=%s", k, tc.d), func(t *testing.T) {
-			_, reg := internal.NewRegistryDefault(t)
-			s := reg.LoginStrategies().MustStrategy(identity.CredentialsTypePassword).(*password.Strategy)
-			s.WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
-			reg.LoginStrategies().MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
-			reg.LoginHandler().WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
-			reg.SelfServiceErrorManager().WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
+		require.Contains(t, res.Request.URL.Path, "login-ts")
+		assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String())
+		assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
+		ensureFieldsExist(t, body)
 
-			router := x.NewRouterPublic()
-			admin := x.NewRouterAdmin()
-			reg.LoginHandler().RegisterPublicRoutes(router)
-			reg.LoginHandler().RegisterAdminRoutes(admin)
-			s.RegisterLoginRoutes(router)
-			ts := httptest.NewServer(router)
-			defer ts.Close()
+		assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==identity).value"))
+		assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==identity).error"))
+		assert.Empty(t, gjson.GetBytes(body, "methods.password.config.error"))
+		assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).errors.0").String(), "missing properties: password", "%s", body)
+	})
 
-			errTs, uiTs, returnTs := errorx.NewErrorTestServer(t, reg), httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				e, err := reg.LoginRequestPersister().GetLoginRequest(context.Background(), x.ParseUUID(r.URL.Query().Get("request")))
-				require.NoError(t, err)
-				reg.Writer().Write(w, r, e)
-			})), newReturnTs(t, reg)
-			defer errTs.Close()
-			defer uiTs.Close()
-			defer returnTs.Close()
+	t.Run("should be a new session with reauth flag", func(t *testing.T) {
+		identifier, pwd := "login-identifier-reauth", "password"
+		createIdentity(identifier, pwd)
 
-			viper.Set(configuration.ViperKeyURLsError, errTs.URL+"/error-ts")
-			viper.Set(configuration.ViperKeyURLsLogin, uiTs.URL+"/login-ts")
-			viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
-			viper.Set(configuration.ViperKeySelfServiceLoginAfterConfig+"."+string(identity.CredentialsTypePassword), hookConfig(returnTs.URL+"/return-ts"))
-			viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/login.schema.json")
+		jar, err := cookiejar.New(&cookiejar.Options{})
+		require.NoError(t, err)
+		_, body1 := makeRequest(nlr(time.Hour), url.Values{
+			"identifier": {identifier},
+			"password":   {pwd},
+		}.Encode(), nil, jar)
 
-			if tc.prep != nil {
-				tc.prep(t, reg)
-			}
+		lr2 := nlr(time.Hour)
+		lr2.IsReauthentication = true
+		res, body2 := makeRequest(lr2, url.Values{
+			"identifier": {identifier},
+			"password":   {pwd},
+		}.Encode(), nil, jar)
 
-			tc.ar.RequestURL = ts.URL
-			require.NoError(t, reg.LoginRequestPersister().CreateLoginRequest(context.TODO(), tc.ar))
+		require.Contains(t, res.Request.URL.Path, "return-ts", "%s", res.Request.URL.String())
+		assert.Equal(t, identifier, gjson.GetBytes(body2, "identity.traits.subject").String(), "%s", body2)
+		assert.NotEqual(t, gjson.GetBytes(body1, "sid").String(), gjson.GetBytes(body2, "sid").String(), "%s\n\n%s\n", body1, body2)
+	})
 
-			c := ts.Client()
-			c.Jar, _ = cookiejar.New(&cookiejar.Options{})
+	t.Run("should be the same session without reauth flag", func(t *testing.T) {
+		identifier, pwd := "login-identifier-no-reauth", "password"
+		createIdentity(identifier, pwd)
 
-			requestID := tc.ar.ID.String()
-			if tc.forceRequestID != nil {
-				requestID = *tc.forceRequestID
-			}
+		jar, err := cookiejar.New(&cookiejar.Options{})
+		require.NoError(t, err)
+		_, body1 := makeRequest(nlr(time.Hour), url.Values{
+			"identifier": {identifier},
+			"password":   {pwd},
+		}.Encode(), nil, jar)
 
-			res, err := c.Post(ts.URL+password.LoginPath+"?request="+requestID, "application/x-www-form-urlencoded", strings.NewReader(tc.payload))
-			require.NoError(t, err)
-			defer res.Body.Close()
-			require.EqualValues(t, http.StatusOK, res.StatusCode, "Request: %+v\n\t\tResponse: %s", res.Request, res)
+		lr2 := nlr(time.Hour)
+		res, body2 := makeRequest(lr2, url.Values{
+			"identifier": {identifier},
+			"password":   {pwd},
+		}.Encode(), nil, jar)
 
-			tc.assert(t, tc, res)
-		})
-	}
+		require.Contains(t, res.Request.URL.Path, "return-ts", "%s", res.Request.URL.String())
+		assert.Equal(t, identifier, gjson.GetBytes(body2, "identity.traits.subject").String(), "%s", body2)
+		assert.Equal(t, gjson.GetBytes(body1, "sid").String(), gjson.GetBytes(body2, "sid").String(), "%s\n\n%s\n", body1, body2)
+	})
 }
