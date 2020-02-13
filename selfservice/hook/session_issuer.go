@@ -2,6 +2,7 @@ package hook
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -25,6 +26,7 @@ func NewSessionIssuer(r sessionIssuerDependencies) *SessionIssuer {
 }
 
 func (e *SessionIssuer) ExecuteRegistrationPostHook(w http.ResponseWriter, r *http.Request, a *registration.Request, s *session.Session) error {
+	s.AuthenticatedAt = time.Now().UTC()
 	if err := e.r.SessionPersister().CreateSession(r.Context(), s); err != nil {
 		return err
 	}
@@ -32,6 +34,7 @@ func (e *SessionIssuer) ExecuteRegistrationPostHook(w http.ResponseWriter, r *ht
 }
 
 func (e *SessionIssuer) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, a *login.Request, s *session.Session) error {
+	s.AuthenticatedAt = time.Now().UTC()
 	if err := e.r.SessionPersister().CreateSession(r.Context(), s); err != nil {
 		return err
 	}

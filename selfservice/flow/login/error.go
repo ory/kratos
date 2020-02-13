@@ -3,11 +3,12 @@ package login
 import (
 	"context"
 	"fmt"
-	"github.com/ory/kratos/selfservice/form"
-	"github.com/ory/x/errorsx"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/ory/kratos/selfservice/form"
+	"github.com/ory/x/errorsx"
 
 	"github.com/pkg/errors"
 

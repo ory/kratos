@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -38,6 +39,7 @@ func TestSessionIssuer(t *testing.T) {
 		got, err := reg.SessionPersister().GetSession(context.Background(), sid)
 		require.NoError(t, err)
 		assert.Equal(t, sid, got.ID)
+		assert.True(t, got.AuthenticatedAt.After(time.Now().Add(-time.Minute)))
 	})
 
 	t.Run("method=sign-up", func(t *testing.T) {
@@ -51,5 +53,6 @@ func TestSessionIssuer(t *testing.T) {
 		got, err := reg.SessionPersister().GetSession(context.Background(), sid)
 		require.NoError(t, err)
 		assert.Equal(t, sid, got.ID)
+		assert.True(t, got.AuthenticatedAt.After(time.Now().Add(-time.Minute)))
 	})
 }
