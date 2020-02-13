@@ -53,7 +53,7 @@ type (
 		// required: true
 		Traits Traits `json:"traits" faker:"-" db:"traits"`
 
-		Addresses []VerifiableAddress `json:"addresses" fake:"-" has_many:"identity_verifiable_addresses" fk_id:"identity_id"`
+		Addresses []VerifiableAddress `json:"addresses" faker:"-" has_many:"identity_verifiable_addresses" fk_id:"identity_id"`
 
 		// CredentialsCollection is a helper struct field for gobuffalo.pop.
 		CredentialsCollection CredentialsCollection `json:"-" faker:"-" has_many:"identity_credentials" fk_id:"identity_id"`

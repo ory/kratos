@@ -4,10 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"testing"
+	"time"
+
+	"github.com/bxcodec/faker"
+
+	"github.com/ory/x/errorsx"
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/schema"
-	"github.com/ory/x/urlx"
 
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
@@ -365,6 +372,89 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 
 			expected.Credentials = nil
 			assertEqual(t, expected, actual)
+		})
+
+		t.Run("suite=address", func(t *testing.T) {
+			createIdentityWithAddresses := func(t *testing.T, expiry time.Duration, email string) VerifiableAddress {
+				var i Identity
+				require.NoError(t, faker.FakeData(&i))
+
+				address, err := NewVerifiableEmailAddress(email, i.ID, expiry)
+				require.NoError(t, err)
+
+				address.ExpiresAt = address.ExpiresAt.Round(time.Minute) // prevent mysql time synchro issues
+				i.Addresses = append(i.Addresses, *address)
+
+				require.NoError(t, p.CreateIdentity(context.Background(), &i))
+				return i.Addresses[0]
+			}
+
+			t.Run("case=not found", func(t *testing.T) {
+				_, err := p.FindAddressByCode(context.Background(), "does-not-exist")
+				require.Equal(t, sqlcon.ErrNoRows, errorsx.Cause(err))
+
+				_, err = p.FindAddressByValue(context.Background(), VerifiableAddressTypeEmail, "does-not-exist")
+				require.Equal(t, sqlcon.ErrNoRows, errorsx.Cause(err))
+			})
+
+			t.Run("case=create and find", func(t *testing.T) {
+				addresses := make([]VerifiableAddress, 15)
+				for k := range addresses {
+					addresses[k] = createIdentityWithAddresses(t, time.Minute, "verify.TestPersister.Create"+strconv.Itoa(k)+"@ory.sh")
+					require.NotEmpty(t, addresses[k].ID)
+				}
+
+				compare := func(t *testing.T, expected, actual VerifiableAddress) {
+					actual.CreatedAt = actual.CreatedAt.UTC().Round(time.Hour * 24)
+					actual.UpdatedAt = actual.UpdatedAt.UTC().Round(time.Hour * 24)
+					actual.ExpiresAt = actual.ExpiresAt.UTC().Round(time.Hour * 24)
+					expected.CreatedAt = expected.CreatedAt.UTC().Round(time.Hour * 24)
+					expected.UpdatedAt = expected.UpdatedAt.UTC().Round(time.Hour * 24)
+					expected.ExpiresAt = expected.ExpiresAt.UTC().Round(time.Hour * 24)
+					assert.EqualValues(t, expected, actual)
+				}
+
+				for k, expected := range addresses {
+					t.Run("method=FindAddressByCode", func(t *testing.T) {
+						t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+							actual, err := p.FindAddressByCode(context.Background(), expected.Code)
+							require.NoError(t, err)
+							compare(t, expected, *actual)
+						})
+					})
+
+					t.Run("method=FindAddressByValue", func(t *testing.T) {
+						t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+							actual, err := p.FindAddressByValue(context.Background(), expected.Via, expected.Value)
+							require.NoError(t, err)
+							compare(t, expected, *actual)
+						})
+					})
+				}
+			})
+
+			t.Run("case=create and verify", func(t *testing.T) {
+				address := createIdentityWithAddresses(t, time.Minute, "verify.TestPersister.VerifyAddress@ory.sh")
+				require.NoError(t, p.VerifyAddress(context.Background(), address.Code))
+
+				actual, err := p.FindAddressByValue(context.Background(), address.Via, address.Value)
+				require.NoError(t, err)
+				assert.NotEqual(t, address.Code, actual.Code)
+				assert.True(t, actual.Verified)
+				assert.EqualValues(t, VerifiableAddressStatusCompleted, actual.Status)
+				assert.NotEmpty(t, actual.VerifiedAt)
+			})
+
+			t.Run("case=update", func(t *testing.T) {
+				address := createIdentityWithAddresses(t, time.Minute, "verify.TestPersister.Update@ory.sh")
+
+				address.Code = "new-code"
+				require.NoError(t, p.UpdateVerifiableAddress(context.Background(), &address))
+
+				actual, err := p.FindAddressByValue(context.Background(), address.Via, address.Value)
+				require.NoError(t, err)
+				assert.Equal(t, "new-code", actual.Code)
+			})
 		})
 	}
 }
