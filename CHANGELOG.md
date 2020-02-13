@@ -52,6 +52,7 @@
 **Fixed bugs:**
 
 - Mark fields required in login / registration methods [\#234](https://github.com/ory/kratos/issues/234)
+- fix: Set AuthenticatedAt in session issuer hook [\#246](https://github.com/ory/kratos/pull/246) ([aeneasr](https://github.com/aeneasr))
 - Resolve flaky SDK generation issues caused by UUID [\#240](https://github.com/ory/kratos/pull/240) ([aeneasr](https://github.com/aeneasr))
 
 **Closed issues:**
