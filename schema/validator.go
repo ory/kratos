@@ -63,5 +63,13 @@ func (v *Validator) Validate(
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to parse validate JSON object against JSON schema.").WithDebugf("%s", err))
 	}
 
-	return errors.WithStack(schema.Validate(bytes.NewBuffer(document)))
+	if err := schema.Validate(bytes.NewBuffer(document)); err != nil {
+		return errors.WithStack(err)
+	}
+
+	if o.e != nil {
+		return o.e.Finish()
+	}
+
+	return nil
 }

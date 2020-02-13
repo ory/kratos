@@ -5,9 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ory/viper"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
@@ -37,9 +38,9 @@ func TestManager(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, messages, 2)
 
-		assert.EqualValues(t,  address.Value, messages[0].Recipient)
+		assert.EqualValues(t, address.Value, messages[0].Recipient)
 		assert.Contains(t, messages[0].Subject, "Please verify")
 		assert.EqualValues(t, "not-tracked@ory.sh", messages[1].Recipient)
-		assert.Contains(t, messages[2].Subject, "tried to verify")
+		assert.Contains(t, messages[1].Subject, "tried to verify")
 	})
 }

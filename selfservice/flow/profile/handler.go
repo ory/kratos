@@ -320,8 +320,9 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 		return
 	}
 
-
-	if err := h.d.IdentityManager().UpdateUnprotectedTraits(r.Context(), s.Identity.ID, identity.Traits(p.Traits)); err != nil {
+	if err := h.d.IdentityManager().UpdateUnprotectedTraits(
+		r.Context(), s.Identity.ID, identity.Traits(p.Traits),
+		identity.ManagerExposeValidationErrors); err != nil {
 		h.handleProfileManagementError(w, r, ar, identity.Traits(p.Traits), err)
 		return
 	}
@@ -342,7 +343,6 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 		h.handleProfileManagementError(w, r, ar, identity.Traits(p.Traits), err)
 		return
 	}
-
 
 	if err = ar.Form.SortFields(traitsSchema.URL, "traits"); err != nil {
 		h.handleProfileManagementError(w, r, ar, identity.Traits(p.Traits), err)

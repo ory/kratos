@@ -12,6 +12,20 @@ import (
 	_ "github.com/ory/jsonschema/v3/fileloader"
 )
 
+type extensionStub struct {
+	identifiers []string
+}
+
+func (r *extensionStub) Run(ctx jsonschema.ValidationContext, config ExtensionConfig, value interface{}) error {
+	if config.Credentials.Password.Identifier {
+		r.identifiers = append(r.identifiers, fmt.Sprintf("%s", value))
+	}
+	return nil
+}
+func (r *extensionStub) Finish() error {
+	return nil
+}
+
 func TestExtensionRunner(t *testing.T) {
 	for k, tc := range []struct {
 		expectErr error
@@ -35,20 +49,15 @@ func TestExtensionRunner(t *testing.T) {
 			runner, err := NewExtensionRunner(ExtensionRunnerIdentityMetaSchema)
 			require.NoError(t, err)
 
-			var identifiers []string
-			runner.AddRunner(func(ctx jsonschema.ValidationContext, config ExtensionConfig, value interface{}) error {
-				if config.Credentials.Password.Identifier {
-					identifiers = append(identifiers, fmt.Sprintf("%s", value))
-				}
-				return nil
-			}).Register(c)
+			r := new(extensionStub)
+			runner.AddRunner(r).Register(c)
 
 			err = c.MustCompile(tc.schema).Validate(bytes.NewBufferString(tc.doc))
 			if tc.expectErr != nil {
 				require.EqualError(t, err, tc.expectErr.Error())
 			}
 
-			assert.EqualValues(t, tc.expect, identifiers)
+			assert.EqualValues(t, tc.expect, r.identifiers)
 		})
 	}
 }

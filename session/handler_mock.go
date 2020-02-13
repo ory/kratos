@@ -82,8 +82,6 @@ func MockHydrateCookieClient(t *testing.T, c *http.Client, u string) {
 	defer res.Body.Close()
 	assert.EqualValues(t, http.StatusOK, res.StatusCode)
 
-	t.Logf("Cookies: %+v", res.Cookies())
-
 	var found bool
 	for _, c := range res.Cookies() {
 		if c.Name == DefaultSessionCookieName {

@@ -11,9 +11,9 @@ import (
 )
 
 type SchemaExtensionVerify struct {
-	as       []VerifiableAddress
 	lifespan time.Duration
 	l        sync.Mutex
+	v        []VerifiableAddress
 	i        *Identity
 }
 
@@ -21,7 +21,7 @@ func NewSchemaExtensionVerify(i *Identity, lifespan time.Duration) *SchemaExtens
 	return &SchemaExtensionVerify{i: i, lifespan: lifespan}
 }
 
-func (r *SchemaExtensionVerify) Runner(ctx jsonschema.ValidationContext, s schema.ExtensionConfig, value interface{}) error {
+func (r *SchemaExtensionVerify) Run(ctx jsonschema.ValidationContext, s schema.ExtensionConfig, value interface{}) error {
 	r.l.Lock()
 	defer r.l.Unlock()
 
@@ -36,14 +36,35 @@ func (r *SchemaExtensionVerify) Runner(ctx jsonschema.ValidationContext, s schem
 			return err
 		}
 
-		r.as = append(r.as, *address)
-	default:
+		if has := r.has(r.i.Addresses, address); has != nil {
+			if r.has(r.v, address) == nil {
+				r.v = append(r.v, *has)
+			}
+			return nil
+		}
+
+		if has := r.has(r.v, address); has == nil {
+			r.v = append(r.v, *address)
+		}
+
+		return nil
+	case "":
 		return nil
 	}
 
+	return ctx.Error("", "verification.via has unknown value %q", s.Verification.Via)
+}
+
+func (r *SchemaExtensionVerify) has(haystack []VerifiableAddress, needle *VerifiableAddress) *VerifiableAddress {
+	for _, has := range haystack {
+		if has.Value == needle.Value && has.Via == needle.Via {
+			return &has
+		}
+	}
 	return nil
 }
 
-func (r *SchemaExtensionVerify) Addresses() []VerifiableAddress {
-	return r.as
+func (r *SchemaExtensionVerify) Finish() error {
+	r.i.Addresses = r.v
+	return nil
 }

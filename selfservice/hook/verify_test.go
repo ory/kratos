@@ -29,8 +29,7 @@ func TestVerifier(t *testing.T) {
 
 	i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
 	i.Traits = identity.Traits(`{"emails":["foo@ory.sh","bar@ory.sh"]}`)
-
-	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+	require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
 	require.NoError(t, h.ExecuteRegistrationPostHook(httptest.NewRecorder(), new(http.Request), nil, &session.Session{
 		ID: x.NewUUID(), Identity: i,
 	}))

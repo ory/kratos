@@ -90,11 +90,11 @@ func TestHandler(t *testing.T) {
 		_ = get(t, "/identities/does-not-exist", http.StatusNotFound)
 	})
 
-	t.Run("case=should fail to create an entity because schema id does not exist", func(t *testing.T) {
+	t.Run("case=should fail to create an identity because schema id does not exist", func(t *testing.T) {
 		var i identity.Identity
 		i.TraitsSchemaID = "does-not-exist"
-		res := send(t, "POST", "/identities", http.StatusInternalServerError, &i)
-		assert.Contains(t, res.Get("error.reason").String(), "does-not-exist")
+		res := send(t, "POST", "/identities", http.StatusBadRequest, &i)
+		assert.Contains(t, res.Get("error.reason").String(), "does-not-exist", "%s", res)
 	})
 
 	t.Run("case=should fail to create an entity because schema is not validating", func(t *testing.T) {

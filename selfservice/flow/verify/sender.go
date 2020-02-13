@@ -4,10 +4,11 @@ import (
 	"context"
 	"strings"
 
+	"github.com/pkg/errors"
+
 	"github.com/ory/go-convenience/urlx"
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/sqlcon"
-	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/courier"
 	templates "github.com/ory/kratos/courier/template"

@@ -8,6 +8,8 @@ import (
 
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/herodot"
+
 	"github.com/ory/jsonschema/v3"
 
 	"github.com/ory/kratos/driver/configuration"
@@ -30,7 +32,7 @@ func (s Schemas) GetByID(id string) (*Schema, error) {
 		}
 	}
 
-	return nil, errors.WithStack(errors.Errorf("unable to find JSON schema with ID: %s", id))
+	return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to find JSON Schema ID: %s", id))
 }
 
 var orderedKeyCacheMutex sync.RWMutex

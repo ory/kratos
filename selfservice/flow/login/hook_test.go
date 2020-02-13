@@ -55,7 +55,7 @@ func (m *loginExecutorDependenciesMock) PostLoginHooks(credentialsType identity.
 	return []login.PostHookExecutor{}
 }
 
-func (m *loginExecutorDependenciesMock) PrivilegedIdentityPool() identity.PrivilegedPool {
+func (m *loginExecutorDependenciesMock) IdentityManager() *identity.Manager {
 	return nil
 }
 

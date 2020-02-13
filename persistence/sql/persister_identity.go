@@ -163,7 +163,7 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 
 func (p *Persister) ListIdentities(ctx context.Context, limit, offset int) ([]identity.Identity, error) {
 	is := make([]identity.Identity, 0)
-	if err := sqlcon.HandleError(p.c.RawQuery(fmt.Sprintf("SELECT * FROM %s LIMIT ? OFFSET ?",new(identity.Identity).TableName()), limit, offset).All(&is)); err != nil {
+	if err := sqlcon.HandleError(p.c.RawQuery(fmt.Sprintf("SELECT * FROM %s LIMIT ? OFFSET ?", new(identity.Identity).TableName()), limit, offset).All(&is)); err != nil {
 		return nil, err
 	}
 
@@ -182,6 +182,12 @@ func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) er
 	}
 
 	return sqlcon.HandleError(p.c.Transaction(func(tx *pop.Connection) error {
+		if count, err := tx.Where("id = ?", i.ID).Count(i); err != nil {
+			return err
+		} else if count == 0 {
+			return sql.ErrNoRows
+		}
+
 		if err := tx.RawQuery(fmt.Sprintf(`DELETE FROM %s WHERE identity_id = ?`, new(identity.Credentials).TableName()), i.ID).Exec(); err != nil {
 			return err
 		}

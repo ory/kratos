@@ -64,7 +64,7 @@ type RegistryDefault struct {
 
 	identityHandler   *identity.Handler
 	identityValidator *identity.Validator
-	identityManager *identity.Manager
+	identityManager   *identity.Manager
 
 	schemaHandler *schema.Handler
 
@@ -93,7 +93,7 @@ type RegistryDefault struct {
 	selfserviceVerifyErrorHandler *verify.ErrorHandler
 	selfserviceVerifyManager      *identity.Manager
 	selfserviceVerifyHandler      *verify.Handler
-	selfserviceVerifySender      *verify.Sender
+	selfserviceVerifySender       *verify.Sender
 
 	selfserviceLogoutHandler *logout.Handler
 
@@ -205,7 +205,7 @@ func (m *RegistryDefault) LoginStrategies() login.Strategies {
 
 func (m *RegistryDefault) IdentityValidator() *identity.Validator {
 	if m.identityValidator == nil {
-		m.identityValidator = identity.NewValidator(m,m.c)
+		m.identityValidator = identity.NewValidator(m, m.c)
 	}
 	return m.identityValidator
 }

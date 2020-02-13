@@ -28,7 +28,7 @@ type (
 		} `json:"credentials"`
 		Verification struct {
 			Via string `json:"via"`
-		}
+		} `json:"verification"`
 		Mappings struct {
 			Identity struct {
 				Traits []struct {
@@ -37,17 +37,22 @@ type (
 			} `json:"identity"`
 		} `json:"mappings"`
 	}
-	ExtensionRunnerFunc func(ctx jsonschema.ValidationContext, config ExtensionConfig, value interface{}) error
-	ExtensionRunner     struct {
+
+	Extension interface {
+		Run(ctx jsonschema.ValidationContext, config ExtensionConfig, value interface{}) error
+		Finish() error
+	}
+
+	ExtensionRunner struct {
 		meta     *jsonschema.Schema
 		compile  func(ctx jsonschema.CompilerContext, m map[string]interface{}) (interface{}, error)
 		validate func(ctx jsonschema.ValidationContext, s interface{}, v interface{}) error
 
-		runners []ExtensionRunnerFunc
+		runners []Extension
 	}
 )
 
-func NewExtensionRunner(meta ExtensionRunnerMetaSchema, runners ...ExtensionRunnerFunc) (*ExtensionRunner, error) {
+func NewExtensionRunner(meta ExtensionRunnerMetaSchema, runners ...Extension) (*ExtensionRunner, error) {
 	var err error
 	schema, err := box.FindString(string(meta))
 	if err != nil {
@@ -84,7 +89,7 @@ func NewExtensionRunner(meta ExtensionRunnerMetaSchema, runners ...ExtensionRunn
 		}
 
 		for _, runner := range r.runners {
-			if err := runner(ctx, *c, v); err != nil {
+			if err := runner.Run(ctx, *c, v); err != nil {
 				return err
 			}
 		}
@@ -108,7 +113,16 @@ func (r *ExtensionRunner) Extension() jsonschema.Extension {
 	}
 }
 
-func (r *ExtensionRunner) AddRunner(run ExtensionRunnerFunc) *ExtensionRunner {
+func (r *ExtensionRunner) AddRunner(run Extension) *ExtensionRunner {
 	r.runners = append(r.runners, run)
 	return r
+}
+
+func (r *ExtensionRunner) Finish() error {
+	for _, runner := range r.runners {
+		if err := runner.Finish(); err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -75,7 +75,7 @@ func (s *ErrorHandler) HandleVerificationError(
 			s.c.SelfServiceProfileRequestLifespan(), r, rr.Via,
 			urlx.AppendPaths(s.c.SelfPublicURL(), PublicVerificationRequestPath), s.d.GenerateCSRFToken,
 		)
-		a.Form.AddError(&form.Error{Message:e.ReasonField})
+		a.Form.AddError(&form.Error{Message: e.ReasonField})
 
 		if err := s.d.VerificationPersister().CreateVerifyRequest(r.Context(), a); err != nil {
 			s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)

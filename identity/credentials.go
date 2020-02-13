@@ -89,7 +89,7 @@ func (c CredentialIdentifier) TableName() string {
 	return "identity_credential_identifiers"
 }
 
-func CredentialsEqual(a,b map[CredentialsType]Credentials) bool {
+func CredentialsEqual(a, b map[CredentialsType]Credentials) bool {
 	if len(a) != len(b) {
 		return false
 	}

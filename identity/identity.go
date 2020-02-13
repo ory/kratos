@@ -73,6 +73,10 @@ func (t *Traits) Value() (driver.Value, error) {
 	return aliases.JSONValue(t)
 }
 
+func (t *Traits) String() string {
+	return string(*t)
+}
+
 // MarshalJSON returns m as the JSON encoding of m.
 func (t Traits) MarshalJSON() ([]byte, error) {
 	if t == nil {
@@ -140,5 +144,6 @@ func NewIdentity(traitsSchemaID string) *Identity {
 		Traits:         Traits(json.RawMessage("{}")),
 		TraitsSchemaID: traitsSchemaID,
 		l:              new(sync.RWMutex),
+		Addresses:      []VerifiableAddress{},
 	}
 }

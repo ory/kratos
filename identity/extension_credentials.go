@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/ory/go-convenience/stringslice"
 	"github.com/ory/jsonschema/v3"
 
 	"github.com/ory/kratos/schema"
@@ -21,7 +22,7 @@ func NewSchemaExtensionCredentials(i *Identity) *SchemaExtensionCredentials {
 	return &SchemaExtensionCredentials{i: i}
 }
 
-func (r *SchemaExtensionCredentials) Runner(_ jsonschema.ValidationContext, s schema.ExtensionConfig, value interface{}) error {
+func (r *SchemaExtensionCredentials) Run(_ jsonschema.ValidationContext, s schema.ExtensionConfig, value interface{}) error {
 	r.l.Lock()
 	defer r.l.Unlock()
 	if s.Credentials.Password.Identifier {
@@ -34,9 +35,13 @@ func (r *SchemaExtensionCredentials) Runner(_ jsonschema.ValidationContext, s sc
 			}
 		}
 
-		r.v = append(r.v, strings.ToLower(fmt.Sprintf("%s", value)))
+		r.v = stringslice.Unique(append(r.v, strings.ToLower(fmt.Sprintf("%s", value))))
 		cred.Identifiers = r.v
 		r.i.SetCredentials(CredentialsTypePassword, *cred)
 	}
+	return nil
+}
+
+func (r *SchemaExtensionCredentials) Finish() error {
 	return nil
 }

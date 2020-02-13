@@ -21,16 +21,25 @@ func TestSchemaExtensionCredentials(t *testing.T) {
 		schema    string
 		doc       string
 		expect    []string
+		existing  *identity.Credentials
 	}{
 		{
 			doc:    `{"email":"foo@ory.sh"}`,
-			schema: "file://./stub/extension/schema.json",
+			schema: "file://./stub/extension/credentials/schema.json",
 			expect: []string{"foo@ory.sh"},
 		},
 		{
-			doc:    `{"emails":["foo@ory.sh","bar@ory.sh"], "username": "foobar"}`,
-			schema: "file://./stub/extension/multi.schema.json",
+			doc:    `{"emails":["foo@ory.sh","foo@ory.sh","bar@ory.sh"], "username": "foobar"}`,
+			schema: "file://./stub/extension/credentials/multi.schema.json",
 			expect: []string{"foo@ory.sh", "bar@ory.sh", "foobar"},
+		},
+		{
+			doc:    `{"emails":["foo@ory.sh","bar@ory.sh"], "username": "foobar"}`,
+			schema: "file://./stub/extension/credentials/multi.schema.json",
+			expect: []string{"foo@ory.sh", "bar@ory.sh", "foobar"},
+			existing: &identity.Credentials{
+				Identifiers: []string{"not-foo@ory.sh"},
+			},
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
@@ -40,12 +49,16 @@ func TestSchemaExtensionCredentials(t *testing.T) {
 
 			i := new(identity.Identity)
 			e := identity.NewSchemaExtensionCredentials(i)
-			runner.AddRunner(e.Runner).Register(c)
+			if tc.existing != nil {
+				i.SetCredentials(identity.CredentialsTypePassword, *tc.existing)
+			}
 
+			runner.AddRunner(e).Register(c)
 			err = c.MustCompile(tc.schema).Validate(bytes.NewBufferString(tc.doc))
 			if tc.expectErr != nil {
 				require.EqualError(t, err, tc.expectErr.Error())
 			}
+			require.NoError(t, e.Finish())
 
 			credentials, ok := i.GetCredentials(identity.CredentialsTypePassword)
 			require.True(t, ok)

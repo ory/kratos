@@ -11,11 +11,12 @@ import (
 	"time"
 
 	"github.com/bxcodec/faker"
-	"github.com/ory/x/stringslice"
-	"github.com/ory/x/urlx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/stringslice"
+	"github.com/ory/x/urlx"
 
 	"github.com/ory/viper"
 
@@ -97,6 +98,7 @@ func TestHandler(t *testing.T) {
 
 	t.Run("case=init and validate request payload", func(t *testing.T) {
 		hc := &http.Client{Jar: x.EasyCookieJar(t, nil)}
+
 		res, _ := x.EasyGet(t, hc, initURL)
 		assert.Contains(t, res.Request.URL.String(), verifyTS.URL)
 

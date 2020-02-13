@@ -275,17 +275,25 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 		})
 
 		t.Run("case=should fail to insert identity because credentials from traits exist", func(t *testing.T) {
-			first := passwordIdentity("", x.NewUUID().String())
-			first.Traits = Traits(`{"email":"test-identity@ory.sh"}`)
+			first := passwordIdentity("", "test-identity@ory.sh")
+			first.Traits = Traits(`{}`)
 			require.NoError(t, p.CreateIdentity(context.Background(), first))
 			createdIDs = append(createdIDs, first.ID)
 
-			second := passwordIdentity("", x.NewUUID().String())
-			require.NoError(t, p.CreateIdentity(context.Background(), second))
-			createdIDs = append(createdIDs, second.ID)
+			second := passwordIdentity("", "test-identity@ory.sh")
+			require.Error(t, p.CreateIdentity(context.Background(), second))
+		})
 
-			second.Traits = Traits(`{"email":"test-identity@ory.sh"}`)
-			require.Error(t, p.UpdateIdentity(context.Background(), second))
+		t.Run("case=should fail to update identity because credentials exist", func(t *testing.T) {
+			first := passwordIdentity("", x.NewUUID().String())
+			first.Traits = Traits(`{}`)
+			require.NoError(t, p.CreateIdentity(context.Background(), first))
+			createdIDs = append(createdIDs, first.ID)
+
+			c := first.Credentials[CredentialsTypePassword]
+			c.Identifiers = []string{"test-identity@ory.sh"}
+			first.Credentials[CredentialsTypePassword] = c
+			require.Error(t, p.UpdateIdentity(context.Background(), first))
 		})
 
 		t.Run("case=should succeed to update credentials from traits", func(t *testing.T) {
@@ -340,8 +348,8 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 		})
 
 		t.Run("case=find identity by its credentials identifier", func(t *testing.T) {
-			expected := passwordIdentity("", x.NewUUID().String())
-			expected.Traits = Traits(`{"email": "find-credentials-identifier@ory.sh"}`)
+			expected := passwordIdentity("", "find-credentials-identifier@ory.sh")
+			expected.Traits = Traits(`{}`)
 
 			require.NoError(t, p.CreateIdentity(context.Background(), expected))
 			createdIDs = append(createdIDs, expected.ID)

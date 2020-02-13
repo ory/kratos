@@ -377,7 +377,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 	}
 
 	i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
-	runner, err := schema.NewExtensionRunner(schema.ExtensionRunnerOIDCMetaSchema, NewValidationExtensionRunner(i).Runner)
+	runner, err := schema.NewExtensionRunner(schema.ExtensionRunnerOIDCMetaSchema, NewValidationExtensionRunner(i))
 	if err != nil {
 		s.handleError(w, r, a.GetID(), nil, err)
 		return

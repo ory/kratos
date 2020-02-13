@@ -21,7 +21,8 @@ const IdentitiesPath = "/identities"
 
 type (
 	handlerDependencies interface {
-		PrivilegedPoolProvider
+		PoolProvider
+		ManagementProvider
 		x.WriterProvider
 	}
 	HandlerProvider interface {
@@ -92,7 +93,7 @@ type identitiesListResponse struct {
 //       500: genericError
 func (h *Handler) list(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	limit, offset := pagination.Parse(r, 100, 0, 500)
-	is, err := h.r.PrivilegedIdentityPool().ListIdentities(r.Context(), limit, offset)
+	is, err := h.r.IdentityPool().ListIdentities(r.Context(), limit, offset)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -130,7 +131,7 @@ type getIdentityParameters struct {
 //       400: genericError
 //       500: genericError
 func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	i, err := h.r.PrivilegedIdentityPool().GetIdentity(r.Context(), x.ParseUUID(ps.ByName("id")))
+	i, err := h.r.IdentityPool().GetIdentity(r.Context(), x.ParseUUID(ps.ByName("id")))
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -185,7 +186,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	// We do not allow setting the ID using this method
 	i.ID = uuid.Nil
 
-	err := h.r.PrivilegedIdentityPool().CreateIdentity(r.Context(), &i)
+	err := h.r.IdentityManager().Create(r.Context(), &i)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -247,7 +248,7 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	}
 
 	i.ID = x.ParseUUID(ps.ByName("id"))
-	if err := h.r.PrivilegedIdentityPool().UpdateIdentity(r.Context(), &i); err != nil {
+	if err := h.r.IdentityManager().Update(r.Context(), &i); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
@@ -283,7 +284,7 @@ type deleteIdentityParameters struct {
 //       404: genericError
 //       500: genericError
 func (h *Handler) delete(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.r.PrivilegedIdentityPool().DeleteIdentity(r.Context(), x.ParseUUID(ps.ByName("id"))); err != nil {
+	if err := h.r.IdentityPool().(PrivilegedPool).DeleteIdentity(r.Context(), x.ParseUUID(ps.ByName("id"))); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
