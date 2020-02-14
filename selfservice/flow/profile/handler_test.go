@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/justinas/nosurf"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -98,7 +97,7 @@ func TestUpdateProfile(t *testing.T) {
 		router.GET("/setSession/other-user", other)
 		n := negroni.Classic()
 		n.UseHandler(router)
-		return httptest.NewServer(nosurf.New(n)), httptest.NewServer(admin)
+		return httptest.NewServer(x.NewTestCSRFHandler(n)), httptest.NewServer(admin)
 	}()
 	defer publicTS.Close()
 

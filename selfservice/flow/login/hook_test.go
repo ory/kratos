@@ -55,7 +55,7 @@ func (m *loginExecutorDependenciesMock) PostLoginHooks(credentialsType identity.
 	return []login.PostHookExecutor{}
 }
 
-func (m *loginExecutorDependenciesMock) IdentityPool() identity.Pool {
+func (m *loginExecutorDependenciesMock) IdentityManager() *identity.Manager {
 	return nil
 }
 
@@ -99,7 +99,7 @@ func TestLoginExecutor(t *testing.T) {
 				viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/login.schema.json")
 				viper.Set(configuration.ViperKeyIdentityTraitsSchemas, []configuration.SchemaConfig{updatedSchema})
 				viper.Set(configuration.ViperKeyURLsSelfPublic, "http://example.com")
-				require.NoError(t, reg.IdentityPool().CreateIdentity(context.TODO(), &i))
+				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.TODO(), &i))
 
 				e := login.NewHookExecutor(reg, conf)
 				err := e.PostLoginHook(nil, &http.Request{}, tc.hooks, nil, &i)

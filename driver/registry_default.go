@@ -2,10 +2,13 @@ package driver
 
 import (
 	"context"
+	"net/http"
 	"strings"
 	"time"
 
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/flow/verify"
+	"github.com/ory/kratos/x"
 
 	"github.com/cenkalti/backoff"
 	"github.com/gobuffalo/pop/v5"
@@ -61,6 +64,7 @@ type RegistryDefault struct {
 
 	identityHandler   *identity.Handler
 	identityValidator *identity.Validator
+	identityManager   *identity.Manager
 
 	schemaHandler *schema.Handler
 
@@ -86,6 +90,11 @@ type RegistryDefault struct {
 	selfserviceProfileManagementHandler          *profile.Handler
 	selfserviceProfileRequestRequestErrorHandler *profile.ErrorHandler
 
+	selfserviceVerifyErrorHandler *verify.ErrorHandler
+	selfserviceVerifyManager      *identity.Manager
+	selfserviceVerifyHandler      *verify.Handler
+	selfserviceVerifySender       *verify.Sender
+
 	selfserviceLogoutHandler *logout.Handler
 
 	selfserviceStrategies []selfServiceStrategy
@@ -93,6 +102,8 @@ type RegistryDefault struct {
 	buildVersion string
 	buildHash    string
 	buildDate    string
+
+	csrfTokenGenerator x.CSRFToken
 }
 
 func NewRegistryDefault() *RegistryDefault {
@@ -194,7 +205,7 @@ func (m *RegistryDefault) LoginStrategies() login.Strategies {
 
 func (m *RegistryDefault) IdentityValidator() *identity.Validator {
 	if m.identityValidator == nil {
-		m.identityValidator = identity.NewValidator(m)
+		m.identityValidator = identity.NewValidator(m, m.c)
 	}
 	return m.identityValidator
 }
@@ -365,6 +376,10 @@ func (m *RegistryDefault) IdentityPool() identity.Pool {
 	return m.persister
 }
 
+func (m *RegistryDefault) PrivilegedIdentityPool() identity.PrivilegedPool {
+	return m.persister
+}
+
 func (m *RegistryDefault) RegistrationRequestPersister() registration.RequestPersister {
 	return m.persister
 }
@@ -395,4 +410,18 @@ func (m *RegistryDefault) Persister() persistence.Persister {
 
 func (m *RegistryDefault) Ping() error {
 	return m.persister.Ping(context.Background())
+}
+
+func (m *RegistryDefault) GenerateCSRFToken(r *http.Request) string {
+	if m.csrfTokenGenerator == nil {
+		m.csrfTokenGenerator = x.DefaultCSRFToken
+	}
+	return m.csrfTokenGenerator(r)
+}
+
+func (m *RegistryDefault) IdentityManager() *identity.Manager {
+	if m.identityManager == nil {
+		m.identityManager = identity.NewManager(m, m.c)
+	}
+	return m.identityManager
 }

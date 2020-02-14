@@ -20,7 +20,7 @@ func NewValidationExtensionRunner(i *identity.Identity) *ValidationExtensionRunn
 	return &ValidationExtensionRunner{i: i}
 }
 
-func (r *ValidationExtensionRunner) Runner(ctx jsonschema.ValidationContext, config schema.ExtensionConfig, value interface{}) error {
+func (r *ValidationExtensionRunner) Run(ctx jsonschema.ValidationContext, config schema.ExtensionConfig, value interface{}) error {
 	r.l.Lock()
 	defer r.l.Unlock()
 
@@ -34,5 +34,9 @@ func (r *ValidationExtensionRunner) Runner(ctx jsonschema.ValidationContext, con
 			r.i.Traits = res
 		}
 	}
+	return nil
+}
+
+func (r *ValidationExtensionRunner) Finish() error {
 	return nil
 }

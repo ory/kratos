@@ -12,11 +12,11 @@ import (
 
 var _ login.RequestPersister = new(Persister)
 
-func (p *Persister) CreateLoginRequest(_ context.Context, r *login.Request) error {
+func (p *Persister) CreateLoginRequest(ctx context.Context, r *login.Request) error {
 	return p.c.Eager().Create(r)
 }
 
-func (p *Persister) GetLoginRequest(_ context.Context, id uuid.UUID) (*login.Request, error) {
+func (p *Persister) GetLoginRequest(ctx context.Context, id uuid.UUID) (*login.Request, error) {
 	var r login.Request
 	if err := p.c.Eager().Find(&r, id); err != nil {
 		return nil, sqlcon.HandleError(err)

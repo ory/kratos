@@ -45,6 +45,7 @@ const (
 	ViperKeyURLsSelfAdmin                  = "urls.self.admin"
 	ViperKeyURLsLogin                      = "urls.login_ui"
 	ViperKeyURLsError                      = "urls.error_ui"
+	ViperKeyURLsVerification               = "urls.verify_ui"
 	ViperKeyURLsProfile                    = "urls.profile_ui"
 	ViperKeyURLsMFA                        = "urls.mfa_ui"
 	ViperKeyURLsRegistration               = "urls.registration_ui"
@@ -61,6 +62,9 @@ const (
 	ViperKeySelfServiceLifespanLoginRequest        = "selfservice.login.request_lifespan"
 	ViperKeySelfServiceLogoutRedirectURL           = "selfservice.logout.redirect_to"
 	ViperKeySelfServiceLifespanProfileRequest      = "selfservice.profile.request_lifespan"
+	ViperKeySelfServiceLifespanLink                = "selfservice.profile.link_lifespan"
+	ViperKeySelfServiceLifespanVerificationRequest = "selfservice.verify.request_lifespan"
+	ViperKeySelfServiceVerifyReturnTo              = "selfservice.verify.return_to"
 
 	ViperKeyDefaultIdentityTraitsSchemaURL = "identity.traits.default_schema_url"
 	ViperKeyIdentityTraitsSchemas          = "identity.traits.schemas"
@@ -336,4 +340,22 @@ func (p *ViperProvider) TracingJaegerConfig() *tracing.JaegerConfig {
 
 func (p *ViperProvider) IsInsecureDevMode() bool {
 	return p.dev
+}
+
+func (p *ViperProvider) VerificationURL() *url.URL {
+	return mustParseURLFromViper(p.l, ViperKeyURLsVerification)
+}
+
+// SelfServiceVerificationRequestLifespan defines the lifespan of a verification request (the ui interaction). This
+// does not specify the lifespan of a verification code!
+func (p *ViperProvider) SelfServiceVerificationRequestLifespan() time.Duration {
+	return viperx.GetDuration(p.l, ViperKeySelfServiceLifespanVerificationRequest, time.Hour)
+}
+
+func (p *ViperProvider) SelfServiceVerificationLinkLifespan() time.Duration {
+	return viperx.GetDuration(p.l, ViperKeySelfServiceLifespanLink, time.Hour*24)
+}
+
+func (p *ViperProvider) SelfServiceVerificationReturnTo() *url.URL {
+	return mustParseURLFromViper(p.l, ViperKeySelfServiceVerifyReturnTo)
 }

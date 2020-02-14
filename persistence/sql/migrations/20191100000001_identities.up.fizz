@@ -17,7 +17,7 @@ create_table("identity_credentials") {
  	t.Column("id", "uuid", {primary: true})
     t.Column("config", "json")
 
-    t.Column("identity_credential_type_id", "uuid", { "size": 32 })
+    t.Column("identity_credential_type_id", "uuid")
     t.Column("identity_id", "uuid")
 
     t.ForeignKey("identity_id", {"identities": ["id"]}, {"on_delete": "cascade"})

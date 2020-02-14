@@ -106,7 +106,7 @@ func TestSMTP(t *testing.T) {
 	}()
 
 	t.Run("case=queue messages", func(t *testing.T) {
-		id, err := c.SendEmail(context.Background(), templates.NewTestStub(conf, &templates.TestStubModel{
+		id, err := c.QueueEmail(context.Background(), templates.NewTestStub(conf, &templates.TestStubModel{
 			To:      "test-recipient-1@example.org",
 			Subject: "test-subject-1",
 			Body:    "test-body-1",
@@ -114,7 +114,7 @@ func TestSMTP(t *testing.T) {
 		require.NoError(t, err)
 		require.NotEqual(t, uuid.Nil, id)
 
-		id, err = c.SendEmail(context.Background(), templates.NewTestStub(conf, &templates.TestStubModel{
+		id, err = c.QueueEmail(context.Background(), templates.NewTestStub(conf, &templates.TestStubModel{
 			To:      "test-recipient-2@example.org",
 			Subject: "test-subject-2",
 			Body:    "test-body-2",

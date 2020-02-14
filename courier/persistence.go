@@ -12,8 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/gofrs/uuid"
-
-	"github.com/ory/kratos/identity"
 )
 
 var ErrQueueEmpty = errors.New("queue is empty")
@@ -25,21 +23,24 @@ type (
 		NextMessages(context.Context, uint8) ([]Message, error)
 
 		SetMessageStatus(context.Context, uuid.UUID, MessageStatus) error
+
+		LatestQueuedMessage(ctx context.Context) (*Message, error)
 	}
+
 	PersistenceProvider interface {
 		CourierPersister() Persister
 	}
 )
 
-func TestPersister(p interface {
-	Persister
-	identity.Pool
-}) func(t *testing.T) {
+func TestPersister(p Persister) func(t *testing.T) {
 	return func(t *testing.T) {
 		t.Run("case=no messages in queue", func(t *testing.T) {
 			m, err := p.NextMessages(context.Background(), 10)
 			require.EqualError(t, err, ErrQueueEmpty.Error())
 			assert.Len(t, m, 0)
+
+			_, err = p.LatestQueuedMessage(context.Background())
+			require.EqualError(t, err, ErrQueueEmpty.Error())
 		})
 
 		messages := make([]Message, 5)
@@ -50,6 +51,15 @@ func TestPersister(p interface {
 				messages[k] = m
 				time.Sleep(time.Second) // wait a bit so that the timestamp ordering works in MySQL.
 			}
+		})
+
+		t.Run("case=latest message in queue", func(t *testing.T) {
+			expected, err := p.LatestQueuedMessage(context.Background())
+			require.NoError(t, err)
+
+			actual := messages[len(messages)-1]
+			assert.Equal(t, expected.ID, actual.ID)
+			assert.Equal(t, expected.Subject, actual.Subject)
 		})
 
 		t.Run("case=pull messages from the queue", func(t *testing.T) {

@@ -38,6 +38,21 @@ func (p *Persister) NextMessages(ctx context.Context, limit uint8) ([]courier.Me
 	return m, nil
 }
 
+func (p *Persister) LatestQueuedMessage(ctx context.Context) (*courier.Message, error) {
+	var m courier.Message
+	if err := p.c.
+		Eager().
+		Where("status != ?", courier.MessageStatusSent).
+		Order("created_at DESC").First(&m); err != nil {
+		if errors.Cause(err) == sql.ErrNoRows {
+			return nil, errors.WithStack(courier.ErrQueueEmpty)
+		}
+		return nil, sqlcon.HandleError(err)
+	}
+
+	return &m, nil
+}
+
 func (p *Persister) SetMessageStatus(ctx context.Context, id uuid.UUID, ms courier.MessageStatus) error {
 	count, err := p.c.RawQuery("UPDATE courier_messages SET status = ? WHERE id = ?", ms, id).ExecWithCount()
 	if err != nil {

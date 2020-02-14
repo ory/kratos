@@ -5,9 +5,10 @@ import (
 
 	"github.com/ory/jsonschema/v3"
 
-	"github.com/ory/kratos/schema"
-
 	"github.com/ory/x/errorsx"
+
+	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/schema"
 )
 
 type (
@@ -17,23 +18,25 @@ type (
 	Validator struct {
 		v *schema.Validator
 		d validatorDependencies
+		c configuration.Provider
 	}
 	ValidationProvider interface {
 		IdentityValidator() *Validator
 	}
 )
 
-func NewValidator(d validatorDependencies) *Validator {
+func NewValidator(d validatorDependencies, c configuration.Provider) *Validator {
 	return &Validator{
 		v: schema.NewValidator(),
 		d: d,
+		c: c,
 	}
 }
 
-func (v *Validator) Validate(i *Identity) error {
+func (v *Validator) ValidateWithRunner(i *Identity, runners ...schema.Extension) error {
 	runner, err := schema.NewExtensionRunner(
 		schema.ExtensionRunnerIdentityMetaSchema,
-		NewValidationExtensionRunner(i).Runner,
+		runners...,
 	)
 	if err != nil {
 		return err
@@ -56,4 +59,11 @@ func (v *Validator) Validate(i *Identity) error {
 	}
 
 	return err
+}
+
+func (v *Validator) Validate(i *Identity) error {
+	return v.ValidateWithRunner(i,
+		NewSchemaExtensionCredentials(i),
+		NewSchemaExtensionVerify(i, v.c.SelfServiceVerificationLinkLifespan()),
+	)
 }

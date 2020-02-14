@@ -437,7 +437,7 @@ func TestStrategy(t *testing.T) {
 			})
 			i.Traits = identity.Traits(`{"subject":"` + subject + `"}`)
 
-			require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), i))
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 		})
 
 		t.Run("case=should fail registration", func(t *testing.T) {

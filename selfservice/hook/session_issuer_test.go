@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -32,12 +33,13 @@ func TestSessionIssuer(t *testing.T) {
 		sid := x.NewUUID()
 
 		i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
-		require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), i))
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 		require.NoError(t, h.ExecuteLoginPostHook(w, &r, nil, &session.Session{ID: sid, Identity: i}))
 
 		got, err := reg.SessionPersister().GetSession(context.Background(), sid)
 		require.NoError(t, err)
 		assert.Equal(t, sid, got.ID)
+		assert.True(t, got.AuthenticatedAt.After(time.Now().Add(-time.Minute)))
 	})
 
 	t.Run("method=sign-up", func(t *testing.T) {
@@ -45,11 +47,12 @@ func TestSessionIssuer(t *testing.T) {
 		sid := x.NewUUID()
 
 		i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
-		require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), i))
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 		require.NoError(t, h.ExecuteRegistrationPostHook(w, &r, nil, &session.Session{ID: sid, Identity: i}))
 
 		got, err := reg.SessionPersister().GetSession(context.Background(), sid)
 		require.NoError(t, err)
 		assert.Equal(t, sid, got.ID)
+		assert.True(t, got.AuthenticatedAt.After(time.Now().Add(-time.Minute)))
 	})
 }

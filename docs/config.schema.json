@@ -45,6 +45,18 @@
         "job"
       ]
     },
+    "selfServiceVerifyHook": {
+      "type": "object",
+      "properties": {
+        "job": {
+          "const": "verify"
+        }
+      },
+      "additionalItems": false,
+      "required": [
+        "job"
+      ]
+    },
     "selfServiceSessionIssuerHook": {
       "type": "object",
       "properties": {
@@ -135,6 +147,9 @@
           },
           {
             "$ref": "#/definitions/selfServiceSessionIssuerHook"
+          },
+          {
+            "$ref": "#/definitions/selfServiceVerifyHook"
           }
         ]
       },
@@ -236,6 +251,25 @@
               "type": "string",
               "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
               "default": "1h"
+            }
+          }
+        },
+        "verify": {
+          "type": "object",
+          "properties": {
+            "request_lifespan": {
+              "title": "Self-Service Verification Request Lifespan",
+              "description": "Sets how long the verification request (for the UI interaction) is valid.",
+              "type": "string",
+              "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+              "default": "1h"
+            },
+            "link_lifespan": {
+              "title": "Self-Service Verification Link Lifespan",
+              "description": "Sets how long the verification link (e.g. the one sent via email) is valid for.",
+              "type": "string",
+              "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+              "default": "24h"
             }
           }
         },
@@ -406,6 +440,12 @@
           "type": "string",
           "format": "uri"
         },
+        "verify_ui": {
+          "title": "Verify User Interface URL",
+          "description": "The URL of the Verify User Interface, the page where users can request activate and / or verify their email or telephone number.",
+          "type": "string",
+          "format": "uri"
+        },
         "whitelisted_return_to_domains": {
           "type": "array",
           "items": {
@@ -421,6 +461,7 @@
         "login_ui",
         "registration_ui",
         "error_ui",
+        "verify_ui",
         "default_return_to"
       ],
       "additionalProperties": false

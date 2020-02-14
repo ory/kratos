@@ -14,6 +14,10 @@ var (
 	ErrInvalidCSRFToken = herodot.ErrForbidden.WithReasonf("A request failed due to a missing or invalid csrf_token value.")
 )
 
+type CSRFTokenGeneratorProvider interface {
+	GenerateCSRFToken(r *http.Request) string
+}
+
 type CSRFToken func(r *http.Request) string
 
 func DefaultCSRFToken(r *http.Request) string {
@@ -61,5 +65,16 @@ func NewCSRFHandler(
 
 		writer.WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("CSRF token is missing or invalid.")))
 	}))
+	return n
+}
+
+func NewTestCSRFHandler(router http.Handler) *nosurf.CSRFHandler {
+	n := nosurf.New(router)
+	n.SetBaseCookie(http.Cookie{
+		MaxAge:   nosurf.MaxAge,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false,
+	})
 	return n
 }

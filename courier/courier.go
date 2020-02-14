@@ -51,7 +51,7 @@ func NewSMTP(d smtpDependencies, c configuration.Provider) *Courier {
 	}
 }
 
-func (m *Courier) SendEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, error) {
+func (m *Courier) QueueEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, error) {
 	body, err := t.EmailBody()
 	if err != nil {
 		return uuid.Nil, err

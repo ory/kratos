@@ -93,7 +93,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
-	i, c, err := s.d.IdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), p.Identifier)
+	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), p.Identifier)
 	if err != nil {
 		s.handleLoginError(w, r, ar, errors.WithStack(schema.NewInvalidCredentialsError()))
 		return
