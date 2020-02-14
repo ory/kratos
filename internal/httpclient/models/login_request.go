@@ -30,6 +30,9 @@ type LoginRequest struct {
 	// Format: uuid4
 	ID UUID `json:"id"`
 
+	// IsReauthentication stores whether this login request is a reauthenication request.
+	IsReauthentication bool `json:"is_reauthentication,omitempty"`
+
 	// IssuedAt is the time (UTC) when the request occurred.
 	// Required: true
 	// Format: date-time

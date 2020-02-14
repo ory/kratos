@@ -1166,6 +1166,10 @@
         "id": {
           "$ref": "#/definitions/UUID"
         },
+        "is_reauthentication": {
+          "description": "IsReauthentication stores whether this login request is a reauthenication request.",
+          "type": "boolean"
+        },
         "issued_at": {
           "description": "IssuedAt is the time (UTC) when the request occurred.",
           "type": "string",
