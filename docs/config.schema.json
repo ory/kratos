@@ -45,6 +45,18 @@
         "job"
       ]
     },
+    "selfServiceVerifyHook": {
+      "type": "object",
+      "properties": {
+        "job": {
+          "const": "verify"
+        }
+      },
+      "additionalItems": false,
+      "required": [
+        "job"
+      ]
+    },
     "selfServiceSessionIssuerHook": {
       "type": "object",
       "properties": {
@@ -135,6 +147,9 @@
           },
           {
             "$ref": "#/definitions/selfServiceSessionIssuerHook"
+          },
+          {
+            "$ref": "#/definitions/selfServiceVerifyHook"
           }
         ]
       },
