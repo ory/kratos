@@ -2,12 +2,15 @@
   "properties": {
     "ory.sh/kratos": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "credentials": {
           "type": "object",
+          "additionalProperties": false,
           "properties": {
             "password": {
               "type": "object",
+              "additionalProperties": false,
               "properties": {
                 "identifier": {
                   "type": "string"
@@ -18,6 +21,7 @@
         },
         "verification": {
           "type": "object",
+          "additionalProperties": false,
           "properties": {
             "via": {
               "type": "string",

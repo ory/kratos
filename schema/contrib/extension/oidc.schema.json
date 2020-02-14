@@ -2,18 +2,23 @@
   "properties": {
     "ory.sh/kratos": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "traits": {
           "type": "object",
+          "additionalProperties": false,
           "properties": {
             "mappings": {
               "type": "object",
+              "additionalProperties": false,
               "properties": {
                 "identity": {
                   "type": "object",
+                  "additionalProperties": false,
                   "properties": {
                     "traits": {
                       "type": "object",
+                      "additionalProperties": false,
                       "properties": {
                         "path": {
                           "type": "string"
