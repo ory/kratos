@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/ory/kratos/session"
 	"net/http"
 	"net/url"
+
+	"github.com/ory/kratos/session"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
@@ -43,7 +44,6 @@ func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *
 }
 
 func (s *Strategy) handleReauthLogin(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-
 
 	session.RedirectOnAuthenticated(s.c)(w, r, p)
 }

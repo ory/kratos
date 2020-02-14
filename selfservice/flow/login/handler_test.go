@@ -3,7 +3,6 @@ package login_test
 import (
 	"context"
 	"io/ioutil"
-	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -11,7 +10,6 @@ import (
 	"time"
 
 	"github.com/gobuffalo/httptest"
-	"github.com/justinas/nosurf"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -86,7 +84,6 @@ func TestHandlerSettingReauth(t *testing.T) {
 		req.URL.RawQuery = url.Values{
 			"request": {rid.String()},
 		}.Encode()
-
 
 		body, _ := session.MockMakeAuthenticatedRequest(t, reg, router.Router, req)
 

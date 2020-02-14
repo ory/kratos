@@ -2,10 +2,11 @@ package login
 
 import (
 	"context"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
