@@ -1,7 +1,10 @@
 package login
 
 import (
+	"context"
+	"github.com/stretchr/testify/require"
 	"net/http"
+	"testing"
 	"time"
 
 	"github.com/gobuffalo/pop/v5"
@@ -132,4 +135,17 @@ func (r *Request) Valid() error {
 
 func (r *Request) GetID() uuid.UUID {
 	return r.ID
+}
+
+type testRequestHandlerDependencies interface {
+	RequestPersistenceProvider
+	x.WriterProvider
+}
+
+func TestRequestHandler(t *testing.T, reg testRequestHandlerDependencies) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		e, err := reg.LoginRequestPersister().GetLoginRequest(context.Background(), x.ParseUUID(r.URL.Query().Get("request")))
+		require.NoError(t, err)
+		reg.Writer().Write(w, r, e)
+	}
 }

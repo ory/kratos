@@ -92,11 +92,7 @@ func TestLoginNew(t *testing.T) {
 	ts := httptest.NewServer(router)
 	defer ts.Close()
 
-	errTs, uiTs, returnTs := errorx.NewErrorTestServer(t, reg), httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		e, err := reg.LoginRequestPersister().GetLoginRequest(context.Background(), x.ParseUUID(r.URL.Query().Get("request")))
-		require.NoError(t, err)
-		reg.Writer().Write(w, r, e)
-	})), newReturnTs(t, reg)
+	errTs, uiTs, returnTs := errorx.NewErrorTestServer(t, reg), httptest.NewServer(login.TestRequestHandler(t, reg)), newReturnTs(t, reg)
 	defer errTs.Close()
 	defer uiTs.Close()
 	defer returnTs.Close()

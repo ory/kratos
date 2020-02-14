@@ -26,7 +26,7 @@ const (
 )
 
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
-	r.POST(LoginPath, s.d.SessionHandler().IsNotAuthenticated(s.handleLogin, s.handleReauthLogin))
+	r.POST(LoginPath, s.handleLogin)
 }
 
 func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *login.Request, err error) {

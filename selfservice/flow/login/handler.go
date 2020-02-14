@@ -30,6 +30,7 @@ type (
 		errorx.ManagementProvider
 		StrategyProvider
 		session.HandlerProvider
+		session.ManagementProvider
 		x.WriterProvider
 	}
 	HandlerProvider interface {
@@ -51,7 +52,7 @@ func (h *Handler) WithTokenGenerator(f func(r *http.Request) string) {
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
-	public.GET(BrowserLoginPath, h.d.SessionHandler().IsNotAuthenticated(h.initLoginRequest, h.initReauthRequest))
+	public.GET(BrowserLoginPath, h.initLoginRequest)
 	public.GET(BrowserLoginRequestsPath, h.publicFetchLoginRequest)
 }
 
@@ -110,21 +111,12 @@ func (h *Handler) NewLoginRequest(w http.ResponseWriter, r *http.Request, redir 
 //       302: emptyResponse
 //       500: genericError
 func (h *Handler) initLoginRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-
-	// todo check if session exists and if yes check if this is a reauth request
-
 	if err := h.NewLoginRequest(w, r, func(a *Request) (string, error) {
-		return urlx.CopyWithQuery(h.c.LoginURL(), url.Values{"request": {a.ID.String()}}).String(), nil
-	}); err != nil {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
-		return
-	}
-}
-
-func (h *Handler) initReauthRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.NewLoginRequest(w, r, func(a *Request) (string, error) {
-		if err := h.d.LoginRequestPersister().UpdateLoginRequestReauth(context.TODO(), a.ID, true); err != nil {
-			return "", err
+		// we assume an error means the user has no session
+		if _, err := h.d.SessionManager().FetchFromRequest(context.TODO(), w, r); err == nil {
+			if err := h.d.LoginRequestPersister().UpdateLoginRequestReauth(r.Context(), a.ID, true); err != nil {
+				return "", err
+			}
 		}
 		return urlx.CopyWithQuery(h.c.LoginURL(), url.Values{"request": {a.ID.String()}}).String(), nil
 	}); err != nil {
