@@ -188,8 +188,7 @@ func TestStrategy(t *testing.T) {
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
 	viper.Set(configuration.ViperKeySelfServiceRegistrationAfterConfig+"."+string(identity.CredentialsTypeOIDC), hookConfig(returnTS.URL))
 	viper.Set(configuration.ViperKeySelfServiceLoginAfterConfig+"."+string(identity.CredentialsTypeOIDC), hookConfig(returnTS.URL))
-	// viper.Set(configuration.ViperKeySignupDefaultReturnToURL, returnTS.URL)
-	// viper.Set(configuration.ViperKeyAuthnDefaultReturnToURL, returnTS.URL)
+	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, returnTS.URL)
 
 	t.Logf("Kratos Public URL: %s", ts.URL)
 	t.Logf("Kratos Error URL: %s", errTS.URL)

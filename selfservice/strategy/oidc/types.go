@@ -1,7 +1,12 @@
 package oidc
 
 import (
+	"net/http"
+	"net/url"
+
 	"github.com/gofrs/uuid"
+
+	"github.com/ory/kratos/session"
 
 	"github.com/ory/kratos/selfservice/form"
 )
@@ -31,4 +36,5 @@ func NewRequestMethodConfig(f *form.HTMLForm) *RequestMethod {
 
 type request interface {
 	GetID() uuid.UUID
+	RedirectOnAuthenticated(w http.ResponseWriter, rr *http.Request, sessionManager session.Manager, to *url.URL) bool
 }

@@ -103,15 +103,15 @@ func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
 
 func (s *Strategy) setRoutes(r *x.RouterPublic) {
 	if handle, _, _ := r.Lookup("GET", CallbackPath); handle == nil {
-		r.GET(CallbackPath, s.d.SessionHandler().IsNotAuthenticated(s.handleCallback, s.handleReCallback))
+		r.GET(CallbackPath, s.handleCallback)
 	}
 
 	if handle, _, _ := r.Lookup("POST", AuthPath); handle == nil {
-		r.POST(AuthPath, s.d.SessionHandler().IsNotAuthenticated(s.handleAuth, s.handleReauth))
+		r.POST(AuthPath, s.handleAuth)
 	}
 
 	if handle, _, _ := r.Lookup("GET", AuthPath); handle == nil {
-		r.GET(AuthPath, s.d.SessionHandler().IsNotAuthenticated(s.handleAuth, s.handleReauth))
+		r.GET(AuthPath, s.handleAuth)
 	}
 }
 
@@ -137,16 +137,6 @@ func (s *Strategy) RegistrationStrategyID() identity.CredentialsType {
 
 func (s *Strategy) LoginStrategyID() identity.CredentialsType {
 	return s.ID()
-}
-
-func (s *Strategy) handleReauth(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// TODO set prompt=login
-	s.handleAuth(w, r, ps)
-}
-
-func (s *Strategy) handleReCallback(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// TODO
-	s.handleCallback(w, r, ps)
 }
 
 func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -178,8 +168,14 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	if _, err := s.validateRequest(r.Context(), rid); err != nil {
+	ar, err := s.validateRequest(r.Context(), rid)
+	if err != nil {
 		s.handleError(w, r, rid, nil, err)
+		return
+	}
+
+	if ar.RedirectOnAuthenticated(w, r, s.d.SessionManager(), s.c.DefaultReturnToURL()) {
+		// already redirected
 		return
 	}
 
@@ -260,6 +256,11 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		} else {
 			s.handleError(w, r, x.EmptyUUID, nil, err)
 		}
+		return
+	}
+
+	if ar.RedirectOnAuthenticated(w, r, s.d.SessionManager(), s.c.DefaultReturnToURL()) {
+		// already redirected
 		return
 	}
 

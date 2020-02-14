@@ -1,7 +1,6 @@
 package registration_test
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
@@ -17,8 +16,6 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow/registration"
-	"github.com/ory/kratos/selfservice/strategy/oidc"
-	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
@@ -27,7 +24,7 @@ func init() {
 	internal.RegisterFakes()
 }
 
-func TestEnsureSessionRedirect(t *testing.T) {
+func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 	_, reg := internal.NewRegistryDefault(t)
 
 	router := x.NewRouterPublic()
@@ -45,21 +42,10 @@ func TestEnsureSessionRedirect(t *testing.T) {
 	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
 
-	for k, tc := range [][]string{
-		{"GET", registration.BrowserRegistrationPath},
-
-		{"POST", password.RegistrationPath},
-
-		// it is ok that these contain the parameters as arw strings as we are only interested in checking if the middleware is working
-		{"POST", oidc.AuthPath},
-		{"GET", oidc.AuthPath},
-		{"GET", oidc.CallbackPath},
-	} {
-		t.Run(fmt.Sprintf("case=%d/method=%s/path=%s", k, tc[0], tc[1]), func(t *testing.T) {
-			body, _ := session.MockMakeAuthenticatedRequest(t, reg, router.Router, x.NewTestHTTPRequest(t, tc[0], ts.URL+tc[1], nil))
-			assert.EqualValues(t, "already authenticated", string(body))
-		})
-	}
+	t.Run("does redirect to default on authenticated request", func(t *testing.T) {
+		body, _ := session.MockMakeAuthenticatedRequest(t, reg, router.Router, x.NewTestHTTPRequest(t, "GET", ts.URL+registration.BrowserRegistrationPath, nil))
+		assert.EqualValues(t, "already authenticated", string(body))
+	})
 }
 
 func TestRegistrationHandler(t *testing.T) {

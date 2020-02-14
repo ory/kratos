@@ -47,18 +47,14 @@ func TestHandlerSettingReauth(t *testing.T) {
 	reg.LoginHandler().RegisterPublicRoutes(router)
 	reg.LoginHandler().RegisterAdminRoutes(admin)
 	reg.LoginHandler().WithTokenGenerator(x.FakeCSRFTokenGenerator)
-	reg.SelfServiceErrorManager().WithTokenGenerator(x.FakeCSRFTokenGenerator)
 	reg.LoginStrategies().RegisterPublicRoutes(router)
 	ts := httptest.NewServer(router)
 	defer ts.Close()
 
 	loginTS := httptest.NewServer(login.TestRequestHandler(t, reg))
 
-	errorTS := errorx.NewErrorTestServer(t, reg)
-
 	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
 	viper.Set(configuration.ViperKeyURLsLogin, loginTS.URL)
-	viper.Set(configuration.ViperKeyURLsError, errorTS.URL)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/login.schema.json")
 
 	t.Run("does not set reauth flag on unauthenticated request", func(t *testing.T) {
@@ -79,7 +75,7 @@ func TestHandlerSettingReauth(t *testing.T) {
 		for _, s := range reg.LoginStrategies() {
 			require.NoError(t, s.PopulateLoginMethod(req, loginReq))
 		}
-		require.NoError(t, reg.LoginRequestPersister().CreateLoginRequest(context.TODO(), loginReq), loginReq)
+		require.NoError(t, reg.LoginRequestPersister().CreateLoginRequest(context.TODO(), loginReq), "%+v", loginReq)
 
 		req.URL.RawQuery = url.Values{
 			"request": {rid.String()},

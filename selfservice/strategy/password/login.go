@@ -2,12 +2,9 @@ package password
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/url"
-
-	"github.com/ory/kratos/session"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
@@ -43,11 +40,6 @@ func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *
 	s.d.LoginRequestErrorHandler().HandleLoginError(w, r, identity.CredentialsTypePassword, rr, err)
 }
 
-func (s *Strategy) handleReauthLogin(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-
-	session.RedirectOnAuthenticated(s.c)(w, r, p)
-}
-
 func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	rid := x.ParseUUID(r.URL.Query().Get("request"))
 	if x.IsZeroUUID(rid) {
@@ -61,12 +53,9 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
-	// we assume an error means the user has no session
-	if _, err := s.d.SessionManager().FetchFromRequest(context.TODO(), w, r); err == nil {
-		if !ar.IsReauthentication {
-			http.Redirect(w, r, s.c.DefaultReturnToURL().String(), http.StatusFound)
-			return
-		}
+	if ar.RedirectOnAuthenticated(w, r, s.d.SessionManager(), s.c.DefaultReturnToURL()) {
+		// redirected already
+		return
 	}
 
 	var p LoginFormPayload

@@ -138,7 +138,7 @@ func TestLoginNew(t *testing.T) {
 
 	createIdentity := func(identifier, password string) {
 		p, _ := reg.PasswordHasher().Generate([]byte(password))
-		require.NoError(t, reg.IdentityPool().CreateIdentity(context.Background(), &identity.Identity{
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &identity.Identity{
 			ID:     x.NewUUID(),
 			Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),
 			Credentials: map[identity.CredentialsType]identity.Credentials{
