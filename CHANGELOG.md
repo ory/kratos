@@ -53,7 +53,6 @@
 
 **Fixed bugs:**
 
-- Investigate MySQL empty timestamp issue on session [\#244](https://github.com/ory/kratos/issues/244)
 - Mark fields required in login / registration methods [\#234](https://github.com/ory/kratos/issues/234)
 - fix: Set AuthenticatedAt in session issuer hook [\#246](https://github.com/ory/kratos/pull/246) ([aeneasr](https://github.com/aeneasr))
 - Resolve flaky SDK generation issues caused by UUID [\#240](https://github.com/ory/kratos/pull/240) ([aeneasr](https://github.com/aeneasr))
@@ -64,6 +63,7 @@
 
 **Merged pull requests:**
 
+- fix: Adapt quickstart to verify changes [\#247](https://github.com/ory/kratos/pull/247) ([aeneasr](https://github.com/aeneasr))
 - fix\(SelfService/Strategy/oidc\): rework auth session expiry  [\#242](https://github.com/ory/kratos/pull/242) ([zepatrik](https://github.com/zepatrik))
 - feat\(selfservice/profile\): Add disabled flag to identifier form fields [\#238](https://github.com/ory/kratos/pull/238) ([zepatrik](https://github.com/zepatrik))
 - fix\(swagger\): Use correct annotations for request methods [\#237](https://github.com/ory/kratos/pull/237) ([aeneasr](https://github.com/aeneasr))
@@ -114,7 +114,6 @@
 - fix: Set csrf token on public endpoints [\#224](https://github.com/ory/kratos/pull/224) ([aeneasr](https://github.com/aeneasr))
 - ci: Switch to golangci orb [\#223](https://github.com/ory/kratos/pull/223) ([aeneasr](https://github.com/aeneasr))
 - docs: Updates issue and pull request templates [\#222](https://github.com/ory/kratos/pull/222) ([aeneasr](https://github.com/aeneasr))
-- ci: Bump sdk and changelog versions [\#221](https://github.com/ory/kratos/pull/221) ([aeneasr](https://github.com/aeneasr))
 - feat: Override semantic config [\#220](https://github.com/ory/kratos/pull/220) ([aeneasr](https://github.com/aeneasr))
 - Add paths to sqa middleware [\#216](https://github.com/ory/kratos/pull/216) ([aeneasr](https://github.com/aeneasr))
 
@@ -222,6 +221,7 @@
 
 **Merged pull requests:**
 
+- ci: Bump sdk and changelog versions [\#221](https://github.com/ory/kratos/pull/221) ([aeneasr](https://github.com/aeneasr))
 - Improve field types [\#209](https://github.com/ory/kratos/pull/209) ([zepatrik](https://github.com/zepatrik))
 
 ## [v0.0.3-alpha.10](https://github.com/ory/kratos/tree/v0.0.3-alpha.10) (2020-01-31)
