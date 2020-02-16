@@ -1,6 +1,7 @@
 package daemon
 
 import (
+	stdctx "context"
 	"net/http"
 	"strings"
 	"sync"
@@ -24,6 +25,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/logout"
 	"github.com/ory/kratos/selfservice/flow/profile"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/flow/verify"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/session"
@@ -48,6 +50,7 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 	r.SessionHandler().RegisterPublicRoutes(router)
 	r.SelfServiceErrorHandler().RegisterPublicRoutes(router)
 	r.SchemaHandler().RegisterPublicRoutes(router)
+	r.VerificationHandler().RegisterPublicRoutes(router)
 	r.HealthHandler().SetRoutes(router.Router, false)
 
 	n.Use(NewNegroniLoggerMiddleware(l.(*logrus.Logger), "public#"+c.SelfPublicURL().String()))
@@ -87,6 +90,7 @@ func serveAdmin(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []
 	router := x.NewRouterAdmin()
 	r.RegistrationHandler().RegisterAdminRoutes(router)
 	r.LoginHandler().RegisterAdminRoutes(router)
+	r.VerificationHandler().RegisterAdminRoutes(router)
 	r.ProfileManagementHandler().RegisterAdminRoutes(router)
 	r.IdentityHandler().RegisterAdminRoutes(router)
 	r.SessionHandler().RegisterAdminRoutes(router)
@@ -145,6 +149,10 @@ func sqa(cmd *cobra.Command, d driver.Driver) *metricsx.Service {
 				profile.AdminBrowserProfileRequestPath,
 				profile.PublicProfileManagementPath,
 				profile.PublicProfileManagementUpdatePath,
+				verify.PublicVerificationCompletePath,
+				strings.ReplaceAll(verify.PublicVerificationConfirmPath, ":code", ""),
+				strings.ReplaceAll(verify.PublicVerificationInitPath, ":via", ""),
+				verify.PublicVerificationRequestPath,
 				errorx.ErrorsPath,
 			},
 			BuildVersion: d.Registry().BuildVersion(),
@@ -154,12 +162,21 @@ func sqa(cmd *cobra.Command, d driver.Driver) *metricsx.Service {
 	)
 }
 
+func bgTasks(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []string) {
+	defer wg.Done()
+
+	if err := d.Registry().Courier().Work(stdctx.Background()); err != nil {
+		d.Logger().WithError(err).Fatalf("Failed to run courier worker.")
+	}
+}
+
 func ServeAll(d driver.Driver) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
 		var wg sync.WaitGroup
-		wg.Add(2)
+		wg.Add(3)
 		go servePublic(d, &wg, cmd, args)
 		go serveAdmin(d, &wg, cmd, args)
+		go bgTasks(d, &wg, cmd, args)
 		wg.Wait()
 	}
 }

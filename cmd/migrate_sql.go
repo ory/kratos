@@ -16,8 +16,6 @@ limitations under the License.
 package cmd
 
 import (
-	gbl "github.com/gobuffalo/logger"
-	"github.com/gobuffalo/packr/v2/plog"
 	"github.com/spf13/cobra"
 
 	"github.com/ory/x/viperx"
@@ -44,7 +42,7 @@ Before running this command on an existing database, create a back up!
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		logger = viperx.InitializeConfig("kratos", "", logger)
-		plog.Logger = gbl.Logrus{FieldLogger: logger}
+		// plog.Logger = gbl.Logrus{FieldLogger: logger}
 
 		client.NewMigrateHandler().MigrateSQL(cmd, args)
 	},

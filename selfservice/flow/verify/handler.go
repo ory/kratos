@@ -27,6 +27,9 @@ const (
 )
 
 type (
+	HandlerProvider interface {
+		VerificationHandler() *Handler
+	}
 	handlerDependencies interface {
 		errorx.ManagementProvider
 		identity.ManagementProvider

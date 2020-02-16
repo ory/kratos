@@ -16,6 +16,11 @@ func (m *RegistryDefault) getHooks(credentialsType identity.CredentialsType, con
 
 	for _, h := range configs {
 		switch h.Job {
+		case hook.KeyVerify:
+			i = append(
+				i,
+				hook.NewVerifier(m),
+			)
 		case hook.KeySessionIssuer:
 			i = append(
 				i,
