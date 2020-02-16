@@ -3,6 +3,7 @@
 **Table of Contents**
 
 - [Changelog](#changelog)
+  - [Unreleased](#unreleased)
   - [v0.1.0-alpha.6 (2020-02-16)](#v010-alpha6-2020-02-16)
   - [v0.1.0-alpha.5 (2020-02-06)](#v010-alpha5-2020-02-06)
   - [v0.1.0-alpha.4 (2020-02-06)](#v010-alpha4-2020-02-06)
@@ -38,6 +39,14 @@
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Changelog
+
+## [Unreleased](https://github.com/ory/kratos/tree/HEAD)
+
+[Full Changelog](https://github.com/ory/kratos/compare/v0.1.0-alpha.6...HEAD)
+
+**Merged pull requests:**
+
+- fix: Add verify return to address [\#252](https://github.com/ory/kratos/pull/252) ([aeneasr](https://github.com/aeneasr))
 
 ## [v0.1.0-alpha.6](https://github.com/ory/kratos/tree/v0.1.0-alpha.6) (2020-02-16)
 
