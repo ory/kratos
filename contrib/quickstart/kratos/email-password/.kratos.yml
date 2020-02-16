@@ -3,6 +3,9 @@ selfservice:
     password:
       enabled: true
 
+  verify:
+    return_to: http://127.0.0.1:4455/
+
   logout:
     redirect_to: http://127.0.0.1:4455/auth/login
 
