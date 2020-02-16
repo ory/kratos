@@ -86,10 +86,12 @@ services:
     networks:
       - intranet
 
-  mailhog:
-    image: mailhog/mailhog:v1.0.0
+  mailslurper:
+    build:
+      context: .docker/mailslurper
     ports:
-      - "8025:4436"
+      - "4436:4436"
+      - "4437:4437"
     networks:
       - intranet
 

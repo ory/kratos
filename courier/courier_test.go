@@ -95,6 +95,8 @@ func TestSMTP(t *testing.T) {
 	}
 
 	smtp, api := runTestSMTP(t)
+	t.Logf("SMTP URL: %s",smtp)
+	t.Logf("API URL: %s",api)
 
 	conf, reg := internal.NewRegistryDefault(t)
 	viper.Set(configuration.ViperKeyCourierSMTPURL, smtp)

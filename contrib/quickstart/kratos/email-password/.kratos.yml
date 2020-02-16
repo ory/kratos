@@ -23,6 +23,8 @@ selfservice:
     after:
       password:
         -
+          job: verify
+        -
           job: session
         -
           job: redirect
@@ -42,10 +44,10 @@ urls:
   registration_ui: http://127.0.0.1:4455/auth/registration
   error_ui: http://127.0.0.1:4455/error
   profile_ui: http://127.0.0.1:4455/profile
+  verify_ui: http://127.0.0.1:4455/verify
 
   # These are undefined because not available in this demo
   mfa_ui: http://127.0.0.1:4455/
-  verify_ui: http://127.0.0.1:4455/
 
   self:
     public: http://127.0.0.1:4455/.ory/kratos/public/
@@ -68,4 +70,4 @@ identity:
 
 courier:
   smtp:
-    connection_uri: smtp://test:test@mailhog:1025/
+    connection_uri: smtps://test:test@mailslurper:1025/?skip_ssl_verify=true

@@ -6,6 +6,7 @@ import (
 	"github.com/justinas/nosurf"
 	"github.com/sirupsen/logrus"
 
+	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow/verify"
 
@@ -48,6 +49,8 @@ type Registry interface {
 
 	x.WriterProvider
 	x.LoggingProvider
+
+	courier.Provider
 
 	persistence.Provider
 
@@ -93,6 +96,7 @@ type Registry interface {
 	verify.PersistenceProvider
 	verify.ErrorHandlerProvider
 	verify.SenderProvider
+	verify.HandlerProvider
 
 	x.CSRFTokenGeneratorProvider
 }
