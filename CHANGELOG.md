@@ -3,7 +3,7 @@
 **Table of Contents**
 
 - [Changelog](#changelog)
-  - [Unreleased](#unreleased)
+  - [v0.1.0-alpha.6 (2020-02-16)](#v010-alpha6-2020-02-16)
   - [v0.1.0-alpha.5 (2020-02-06)](#v010-alpha5-2020-02-06)
   - [v0.1.0-alpha.4 (2020-02-06)](#v010-alpha4-2020-02-06)
   - [v0.1.0-alpha.3 (2020-02-06)](#v010-alpha3-2020-02-06)
@@ -39,9 +39,9 @@
 
 # Changelog
 
-## [Unreleased](https://github.com/ory/kratos/tree/HEAD)
+## [v0.1.0-alpha.6](https://github.com/ory/kratos/tree/v0.1.0-alpha.6) (2020-02-16)
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.1.0-alpha.5...HEAD)
+[Full Changelog](https://github.com/ory/kratos/compare/v0.1.0-alpha.5...v0.1.0-alpha.6)
 
 **Implemented enhancements:**
 
@@ -63,6 +63,7 @@
 
 **Merged pull requests:**
 
+- feat: Add verification to quickstart [\#251](https://github.com/ory/kratos/pull/251) ([aeneasr](https://github.com/aeneasr))
 - fix: Adapt quickstart to verify changes [\#247](https://github.com/ory/kratos/pull/247) ([aeneasr](https://github.com/aeneasr))
 - fix\(SelfService/Strategy/oidc\): rework auth session expiry  [\#242](https://github.com/ory/kratos/pull/242) ([zepatrik](https://github.com/zepatrik))
 - feat\(selfservice/profile\): Add disabled flag to identifier form fields [\#238](https://github.com/ory/kratos/pull/238) ([zepatrik](https://github.com/zepatrik))
@@ -114,6 +115,7 @@
 - fix: Set csrf token on public endpoints [\#224](https://github.com/ory/kratos/pull/224) ([aeneasr](https://github.com/aeneasr))
 - ci: Switch to golangci orb [\#223](https://github.com/ory/kratos/pull/223) ([aeneasr](https://github.com/aeneasr))
 - docs: Updates issue and pull request templates [\#222](https://github.com/ory/kratos/pull/222) ([aeneasr](https://github.com/aeneasr))
+- ci: Bump sdk and changelog versions [\#221](https://github.com/ory/kratos/pull/221) ([aeneasr](https://github.com/aeneasr))
 - feat: Override semantic config [\#220](https://github.com/ory/kratos/pull/220) ([aeneasr](https://github.com/aeneasr))
 - Add paths to sqa middleware [\#216](https://github.com/ory/kratos/pull/216) ([aeneasr](https://github.com/aeneasr))
 
@@ -221,7 +223,6 @@
 
 **Merged pull requests:**
 
-- ci: Bump sdk and changelog versions [\#221](https://github.com/ory/kratos/pull/221) ([aeneasr](https://github.com/aeneasr))
 - Improve field types [\#209](https://github.com/ory/kratos/pull/209) ([zepatrik](https://github.com/zepatrik))
 
 ## [v0.0.3-alpha.10](https://github.com/ory/kratos/tree/v0.0.3-alpha.10) (2020-01-31)
