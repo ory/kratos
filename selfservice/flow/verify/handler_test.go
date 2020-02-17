@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -153,14 +154,8 @@ func TestHandler(t *testing.T) {
 		to      string
 		subject string
 	}{
-		"tracked": {
-			to:      "does-not-exist@ory.sh",
-			subject: "tried to verify",
-		},
-		"untracked": {
-			to:      "exists@ory.sh",
-			subject: "Please verify",
-		},
+		"untracked": {to: "does-not-exist@ory.sh", subject: "tried to verify"},
+		"tracked":   {to: "exists@ory.sh", subject: "Please verify"},
 	} {
 		t.Run("case=request verify of "+name+" address", func(t *testing.T) {
 			hc := &http.Client{Jar: x.EasyCookieJar(t, nil)}
@@ -193,6 +188,44 @@ func TestHandler(t *testing.T) {
 			})
 		})
 	}
+
+	t.Run("case=verify address", func(t *testing.T) {
+		hc := &http.Client{Jar: x.EasyCookieJar(t, nil)}
+		svr, err := publicClient.Common.GetSelfServiceVerificationRequest(common.
+			NewGetSelfServiceVerificationRequestParams().WithHTTPClient(hc).
+			WithRequest(string(x.EasyGetBody(t, hc, initURL))))
+		require.NoError(t, err)
+
+		_, err = hc.PostForm(genForm(t, svr, "exists@ory.sh"))
+		require.NoError(t, err)
+		m, err := reg.CourierPersister().LatestQueuedMessage(context.Background())
+		require.NoError(t, err)
+
+		match := regexp.MustCompile(`<a href="([^"]+)">`).FindStringSubmatch(m.Body)
+		require.Len(t, match, 2)
+
+		res, err := hc.Get(match[1])
+		require.NoError(t, err)
+
+		assert.Equal(t, redirTS.URL, res.Request.URL.String())
+		assert.Equal(t, http.StatusNoContent, res.StatusCode)
+	})
+
+	t.Run("case=verify unknown code", func(t *testing.T) {
+		hc := &http.Client{Jar: x.EasyCookieJar(t, nil)}
+		res, _ := x.EasyGet(t, hc,
+			publicTS.URL+strings.ReplaceAll(
+				strings.ReplaceAll(verify.PublicVerificationConfirmPath, ":code", "unknown-code"),
+				":via", "email"))
+		assert.Contains(t, res.Request.URL.String(), verifyTS.URL)
+
+		rid := res.Request.URL.Query().Get("request")
+		require.NotEmpty(t, rid)
+
+		svr, err := adminClient.Common.GetSelfServiceVerificationRequest(common.NewGetSelfServiceVerificationRequestParams().WithRequest(rid))
+		require.NoError(t, err)
+		assert.Equal(t, "The verification code has expired or was otherwise invalid. Please request another code.", svr.Payload.Form.Errors[0].Message)
+	})
 
 	t.Run("case=complete expired", func(t *testing.T) {
 		hc := &http.Client{Jar: x.EasyCookieJar(t, nil)}

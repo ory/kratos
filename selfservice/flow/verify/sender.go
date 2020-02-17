@@ -17,6 +17,8 @@ import (
 	"github.com/ory/kratos/x"
 )
 
+var ErrUnknownAddress = errors.New("verification requested for unknown address")
+
 type (
 	senderDependencies interface {
 		courier.Provider
@@ -37,25 +39,31 @@ func NewSender(r senderDependencies, c configuration.Provider) *Sender {
 	return &Sender{r: r, c: c}
 }
 
-func (m *Sender) SendCode(ctx context.Context, via identity.VerifiableAddressType, value string) error {
+// SendCode sends a code to the specified address. If the address does not exist in the store, an email is
+// still being sent to prevent account enumeration attacks. In that case, this function returns the ErrUnknownAddress
+// error.
+func (m *Sender) SendCode(ctx context.Context, via identity.VerifiableAddressType, value string) (*identity.VerifiableAddress, error) {
 	m.r.Logger().WithField("via", via).Debug("Sending out verification code.")
 
 	address, err := m.r.IdentityPool().FindAddressByValue(ctx, via, value)
 	if err != nil {
 		if errorsx.Cause(err) == sqlcon.ErrNoRows {
 			if err := m.sendToUnknownAddress(ctx, identity.VerifiableAddressTypeEmail, value); err != nil {
-				return err
+				return nil, err
 			}
-			return nil
+			return nil, errors.Cause(ErrUnknownAddress)
 		}
-		return err
+		return nil, err
 	}
 
 	if err := m.r.IdentityManager().RefreshVerifyAddress(ctx, address); err != nil {
-		return err
+		return nil, err
 	}
 
-	return m.sendCodeToKnownAddress(ctx, address)
+	if err := m.sendCodeToKnownAddress(ctx, address); err != nil {
+		return nil, err
+	}
+	return address, nil
 }
 
 func (m *Sender) sendToUnknownAddress(ctx context.Context, via identity.VerifiableAddressType, address string) error {
@@ -75,10 +83,10 @@ func (m *Sender) sendCodeToKnownAddress(ctx context.Context, address *identity.V
 				To: address.Value,
 				VerifyURL: urlx.AppendPaths(
 					m.c.SelfPublicURL(),
-					strings.Replace(
-						PublicVerificationConfirmPath, ":code",
-						address.Code, 1,
-					)).String(),
+					strings.ReplaceAll(
+						strings.ReplaceAll(PublicVerificationConfirmPath, ":via", string(address.Via)),
+						":code", address.Code)).
+					String(),
 			},
 		))
 		return err

@@ -433,8 +433,17 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 				}
 			})
 
+			t.Run("case=verify expired should not work", func(t *testing.T) {
+				address := createIdentityWithAddresses(t, -time.Minute, "verify.TestPersister.VerifyAddress.expired@ory.sh")
+				require.EqualError(t, errorsx.Cause(p.VerifyAddress(context.Background(), address.Code)), sqlcon.ErrNoRows.Error())
+			})
+
 			t.Run("case=create and verify", func(t *testing.T) {
-				address := createIdentityWithAddresses(t, time.Minute, "verify.TestPersister.VerifyAddress@ory.sh")
+				require.EqualError(t, errorsx.Cause(p.VerifyAddress(context.Background(), "i-do-not-exist")), sqlcon.ErrNoRows.Error())
+			})
+
+			t.Run("case=create and verify", func(t *testing.T) {
+				address := createIdentityWithAddresses(t, time.Minute, "verify.TestPersister.VerifyAddress.valid@ory.sh")
 				require.NoError(t, p.VerifyAddress(context.Background(), address.Code))
 
 				actual, err := p.FindAddressByValue(context.Background(), address.Via, address.Value)

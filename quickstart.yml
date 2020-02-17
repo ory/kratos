@@ -12,10 +12,9 @@ services:
       - DSN=sqlite:///home/ory/sqlite/db.sqlite?_fk=true
     volumes:
       -
-        type: volume
-        source: kratos-sqlite
+        type: bind
+        source: ./contrib/quickstart/kratos/sqlite
         target: /home/ory/sqlite
-        read_only: false
       -
         type: bind
         source: ./contrib/quickstart/kratos/email-password
@@ -75,10 +74,9 @@ services:
       serve -c /etc/config/kratos/.kratos.yml --dev
     volumes:
       -
-        type: volume
-        source: kratos-sqlite
+        type: bind
+        source: ./contrib/quickstart/kratos/sqlite
         target: /home/ory/sqlite
-        read_only: false
       -
         type: bind
         source: ./contrib/quickstart/kratos/email-password
@@ -87,8 +85,7 @@ services:
       - intranet
 
   mailslurper:
-    build:
-      context: .docker/mailslurper
+    image: oryd/mailslurper:latest-smtps
     ports:
       - "4436:4436"
       - "4437:4437"
@@ -98,5 +95,5 @@ services:
 networks:
   intranet:
 
-volumes:
-  kratos-sqlite:
+#volumes:
+#  kratos-sqlite:

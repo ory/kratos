@@ -27,10 +27,12 @@ func (e *Verifier) ExecuteRegistrationPostHook(w http.ResponseWriter, r *http.Re
 	// Ths is called after the identity has been created so we can safely assume that all addresses are available
 	// already.
 
-	for _, address := range s.Identity.Addresses {
-		if err := e.r.VerificationSender().SendCode(r.Context(), address.Via, address.Value); err != nil {
+	for k, address := range s.Identity.Addresses {
+		sent, err := e.r.VerificationSender().SendCode(r.Context(), address.Via, address.Value)
+		if err != nil {
 			return err
 		}
+		s.Identity.Addresses[k] = *sent
 	}
 
 	return nil

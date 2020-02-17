@@ -12,6 +12,8 @@ import (
 	"github.com/pkg/errors"
 	"gopkg.in/gomail.v2"
 
+	"github.com/ory/x/errorsx"
+
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/x"
 )
@@ -99,11 +101,14 @@ func (m *Courier) watchMessages(ctx context.Context, errChan chan error) {
 		if err := backoff.Retry(func() error {
 			messages, err := m.d.CourierPersister().NextMessages(ctx, 10)
 			if err != nil {
+				if errorsx.Cause(err) == ErrQueueEmpty {
+					return nil
+				}
 				return err
 			}
 
 			for k := range messages {
-				var msg Message = messages[k]
+				var msg = messages[k]
 
 				switch msg.Type {
 				case MessageTypeEmail:
@@ -120,7 +125,8 @@ func (m *Courier) watchMessages(ctx context.Context, errChan chan error) {
 							WithError(err).
 							WithField("smtp_server", fmt.Sprintf("%s:%d", m.dialer.Host, m.dialer.Port)).
 							WithField("smtp_ssl_enabled", m.dialer.SSL).
-							WithField("email_to", msg.Recipient).WithField("email_from", from).
+							// WithField("email_to", msg.Recipient).
+							WithField("message_from", from).
 							Error("Unable to send email using SMTP connection.")
 						continue
 					}
@@ -132,6 +138,12 @@ func (m *Courier) watchMessages(ctx context.Context, errChan chan error) {
 							Error(`Unable to set the message status to "sent".`)
 						return err
 					}
+
+					m.d.Logger().
+						WithField("message_id", msg.ID).
+						WithField("message_type", msg.Type).
+						WithField("message_subject", msg.Subject).
+						Debug("Courier sent out message.")
 				default:
 					return errors.Errorf("received unexpected message type: %d", msg.Type)
 				}

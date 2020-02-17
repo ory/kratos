@@ -13,6 +13,7 @@ import (
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/selfservice/flow/verify"
 )
 
 func TestManager(t *testing.T) {
@@ -31,8 +32,11 @@ func TestManager(t *testing.T) {
 		i.Traits = identity.Traits("{}")
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 
-		require.NoError(t, reg.VerificationSender().SendCode(context.Background(), address.Via, address.Value))
-		require.NoError(t, reg.VerificationSender().SendCode(context.Background(), address.Via, "not-tracked@ory.sh"))
+		address, err = reg.VerificationSender().SendCode(context.Background(), address.Via, address.Value)
+		require.NoError(t, err)
+
+		_, err = reg.VerificationSender().SendCode(context.Background(), address.Via, "not-tracked@ory.sh")
+		require.EqualError(t, err, verify.ErrUnknownAddress.Error())
 
 		messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
 		require.NoError(t, err)
@@ -40,6 +44,12 @@ func TestManager(t *testing.T) {
 
 		assert.EqualValues(t, address.Value, messages[0].Recipient)
 		assert.Contains(t, messages[0].Subject, "Please verify")
+
+		assert.Contains(t, messages[0].Body, address.Code)
+		fromStore, err := reg.Persister().GetIdentity(context.Background(), i.ID)
+		require.NoError(t, err)
+		assert.Contains(t, messages[0].Body, fromStore.Addresses[0].Code)
+
 		assert.EqualValues(t, "not-tracked@ory.sh", messages[1].Recipient)
 		assert.Contains(t, messages[1].Subject, "tried to verify")
 	})
