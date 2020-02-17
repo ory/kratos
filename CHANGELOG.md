@@ -44,6 +44,10 @@
 
 [Full Changelog](https://github.com/ory/kratos/compare/v0.1.0-alpha.6...HEAD)
 
+**Fixed bugs:**
+
+- fix: Resolve several verification problems [\#253](https://github.com/ory/kratos/pull/253) ([aeneasr](https://github.com/aeneasr))
+
 **Merged pull requests:**
 
 - refactor\(persistence/sql\): move connection to context to enable transactions [\#254](https://github.com/ory/kratos/pull/254) ([zepatrik](https://github.com/zepatrik))
@@ -176,7 +180,6 @@
 - Reset CSRF Token on Principal Change \(Sign Out\) [\#38](https://github.com/ory/kratos/issues/38)
 - selfservice: Omit request header from login/registration request [\#106](https://github.com/ory/kratos/pull/106) ([aeneasr](https://github.com/aeneasr))
 - selfservice: Explicitly whitelist form parser keys [\#105](https://github.com/ory/kratos/pull/105) ([aeneasr](https://github.com/aeneasr))
-- Require no session when accessing login or sign up [\#67](https://github.com/ory/kratos/pull/67) ([aeneasr](https://github.com/aeneasr))
 
 **Security fixes:**
 
