@@ -155,6 +155,9 @@ func TestPersister(t *testing.T) {
 }
 
 func getErr(args ...interface{}) error {
+	if len(args) == 0 {
+		return nil
+	}
 	lastArg := args[len(args)-1]
 	if e, ok := lastArg.(error); ok {
 		return e
