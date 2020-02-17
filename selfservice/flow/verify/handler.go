@@ -295,7 +295,7 @@ type selfServiceBrowserVerifyParameters struct {
 	Via string `json:"via"`
 }
 
-// swagger:route GET /self-service/browser/flows/verification/:via/confirm/{code} public selfServiceBrowserVerify
+// swagger:route GET /self-service/browser/flows/verification/{via}/confirm/{code} public selfServiceBrowserVerify
 //
 // Complete the browser-based verification flows
 //

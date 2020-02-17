@@ -320,7 +320,7 @@ func (a *Client) SelfServiceBrowserVerify(params *SelfServiceBrowserVerifyParams
 	_, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "selfServiceBrowserVerify",
 		Method:             "GET",
-		PathPattern:        "/self-service/browser/flows/verification/confirm/{code}",
+		PathPattern:        "/self-service/browser/flows/verification/{via}/confirm/{code}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
