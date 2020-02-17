@@ -41,30 +41,26 @@ func NewPersister(r persisterDependencies, conf configuration.Provider, c *pop.C
 	return &Persister{c: c, mb: m, cf: conf, r: r}, nil
 }
 
-func (p *Persister) BeginTX() (context.Context, error) {
-	panic("Ni")
-}
-
-func (p *Persister) MigrationStatus(c context.Context, w io.Writer) error {
+func (p *Persister) MigrationStatus(ctx context.Context, w io.Writer) error {
 	return errors.WithStack(p.mb.Status(w))
 }
 
-func (p *Persister) MigrateDown(c context.Context, steps int) error {
+func (p *Persister) MigrateDown(ctx context.Context, steps int) error {
 	return errors.WithStack(p.mb.Down(steps))
 }
 
-func (p *Persister) MigrateUp(c context.Context) error {
+func (p *Persister) MigrateUp(ctx context.Context) error {
 	return errors.WithStack(p.mb.Up())
 }
 
-func (p *Persister) Close(c context.Context) error {
-	return errors.WithStack(p.c.Close())
+func (p *Persister) Close(ctx context.Context) error {
+	return errors.WithStack(p.GetConnection(ctx).Close())
 }
 
-func (p *Persister) Ping(c context.Context) error {
+func (p *Persister) Ping(ctx context.Context) error {
 	type pinger interface {
 		Ping() error
 	}
 
-	return errors.WithStack(p.c.Store.(pinger).Ping())
+	return errors.WithStack(p.GetConnection(ctx).Store.(pinger).Ping())
 }
