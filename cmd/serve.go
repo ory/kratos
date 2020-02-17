@@ -21,6 +21,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/gobuffalo/packr/v2"
+
 	"github.com/ory/viper"
 	"github.com/ory/x/flagx"
 	"github.com/ory/x/viperx"

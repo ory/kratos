@@ -16,12 +16,12 @@ var _ courier.Persister = new(Persister)
 
 func (p *Persister) AddMessage(ctx context.Context, m *courier.Message) error {
 	m.Status = courier.MessageStatusQueued
-	return sqlcon.HandleError(p.c.Create(m)) // do not create eager to avoid identity injection.
+	return sqlcon.HandleError(p.GetConnection(ctx).Create(m)) // do not create eager to avoid identity injection.
 }
 
 func (p *Persister) NextMessages(ctx context.Context, limit uint8) ([]courier.Message, error) {
 	var m []courier.Message
-	if err := p.c.
+	if err := p.GetConnection(ctx).
 		Eager().
 		Where("status != ?", courier.MessageStatusSent).
 		Order("created_at ASC").Limit(int(limit)).All(&m); err != nil {
@@ -40,7 +40,7 @@ func (p *Persister) NextMessages(ctx context.Context, limit uint8) ([]courier.Me
 
 func (p *Persister) LatestQueuedMessage(ctx context.Context) (*courier.Message, error) {
 	var m courier.Message
-	if err := p.c.
+	if err := p.GetConnection(ctx).
 		Eager().
 		Where("status != ?", courier.MessageStatusSent).
 		Order("created_at DESC").First(&m); err != nil {
@@ -54,7 +54,7 @@ func (p *Persister) LatestQueuedMessage(ctx context.Context) (*courier.Message, 
 }
 
 func (p *Persister) SetMessageStatus(ctx context.Context, id uuid.UUID, ms courier.MessageStatus) error {
-	count, err := p.c.RawQuery("UPDATE courier_messages SET status = ? WHERE id = ?", ms, id).ExecWithCount()
+	count, err := p.GetConnection(ctx).RawQuery("UPDATE courier_messages SET status = ? WHERE id = ?", ms, id).ExecWithCount()
 	if err != nil {
 		return sqlcon.HandleError(err)
 	}
