@@ -114,8 +114,7 @@ func TestRegistration(t *testing.T) {
 			return rr
 		}
 
-		var makeRequest = func(t *testing.T, rid uuid.UUID, body string, expectedStatusCode int) ([]byte, *http.Response) {
-			jar, _ := cookiejar.New(&cookiejar.Options{})
+		var makeRequestWithCookieJar = func(t *testing.T, rid uuid.UUID, body string, expectedStatusCode int, jar *cookiejar.Jar) ([]byte, *http.Response) {
 			client := http.Client{Jar: jar}
 			res, err := client.Post(ts.URL+password.RegistrationPath+"?request="+rid.String(), "application/x-www-form-urlencoded", strings.NewReader(body))
 			require.NoError(t, err)
@@ -124,6 +123,11 @@ func TestRegistration(t *testing.T) {
 			require.NoError(t, err)
 			require.EqualValues(t, expectedStatusCode, res.StatusCode, "Request: %+v\n\t\tResponse: %s", res.Request, res)
 			return result, res
+		}
+
+		var makeRequest = func(t *testing.T, rid uuid.UUID, body string, expectedStatusCode int) ([]byte, *http.Response) {
+			jar, _ := cookiejar.New(&cookiejar.Options{})
+			return makeRequestWithCookieJar(t, rid, body, expectedStatusCode, jar)
 		}
 
 		t.Run("case=should show the error ui because the request payload is malformed", func(t *testing.T) {
@@ -287,6 +291,23 @@ func TestRegistration(t *testing.T) {
 			}.Encode(), http.StatusOK)
 			assert.Contains(t, res.Request.URL.Path, "return-ts")
 			assert.Equal(t, `registration-identifier-10`, gjson.GetBytes(body, "identity.traits.username").String(), "%s", body)
+		})
+
+		t.Run("case=register and then send same request", func(t *testing.T) {
+			viper.Set(configuration.ViperKeyURLsDefaultReturnTo, returnTs.URL+"/default-return-to")
+			jar, _ := cookiejar.New(&cookiejar.Options{})
+			formValues := url.Values{
+				"traits.username": {"registration-identifier-11"},
+				"password":        {"O(lf<ys87LÖ:(h<dsjfl"},
+				"traits.foobar":   {"bar"},
+			}.Encode()
+			rr1 := newRegistrationRequest(t, time.Minute)
+			body1, res1 := makeRequestWithCookieJar(t, rr1.ID, formValues, http.StatusOK, jar)
+			assert.Contains(t, res1.Request.URL.Path, "return-ts")
+			rr2 := newRegistrationRequest(t, time.Minute)
+			body2, res2 := makeRequestWithCookieJar(t, rr2.ID, formValues, http.StatusOK, jar)
+			assert.Contains(t, res2.Request.URL.Path, "default-return-to")
+			assert.Equal(t, body1, body2)
 		})
 	})
 
