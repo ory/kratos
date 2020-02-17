@@ -165,7 +165,9 @@ func (p *Persister) ListIdentities(ctx context.Context, limit, offset int) ([]id
 	is := make([]identity.Identity, 0)
 
 	/* #nosec G201 TableName is static */
-	if err := sqlcon.HandleError(p.c.RawQuery(fmt.Sprintf("SELECT * FROM %s LIMIT ? OFFSET ?", new(identity.Identity).TableName()), limit, offset).All(&is)); err != nil {
+	if err := sqlcon.HandleError(p.c.
+		RawQuery(fmt.Sprintf("SELECT * FROM %s LIMIT ? OFFSET ?", new(identity.Identity).TableName()), limit, offset).
+		Eager("Addresses").All(&is)); err != nil {
 		return nil, err
 	}
 
@@ -226,7 +228,7 @@ func (p *Persister) DeleteIdentity(ctx context.Context, id uuid.UUID) error {
 
 func (p *Persister) GetIdentity(ctx context.Context, id uuid.UUID) (*identity.Identity, error) {
 	var i identity.Identity
-	if err := p.c.Find(&i, id); err != nil {
+	if err := p.c.Eager("Addresses").Find(&i, id); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 	i.Credentials = nil
@@ -299,17 +301,27 @@ func (p *Persister) VerifyAddress(ctx context.Context, code string) error {
 		return err
 	}
 
-	return sqlcon.HandleError(p.c.RawQuery(
+	count, err := p.c.RawQuery(
 		/* #nosec G201 TableName is static */
 		fmt.Sprintf(
-			"UPDATE %s SET status = ?, verified = true, verified_at = ?, code = ? WHERE code = ?",
+			"UPDATE %s SET status = ?, verified = true, verified_at = ?, code = ? WHERE code = ? AND expires_at > ?",
 			new(identity.VerifiableAddress).TableName(),
 		),
 		identity.VerifiableAddressStatusCompleted,
 		time.Now().UTC().Round(time.Second),
 		newCode,
 		code,
-	).Exec())
+		time.Now().UTC(),
+	).ExecWithCount()
+	if err != nil {
+		return sqlcon.HandleError(err)
+	}
+
+	if count == 0 {
+		return sqlcon.HandleError(sqlcon.ErrNoRows)
+	}
+
+	return nil
 }
 
 func (p *Persister) UpdateVerifiableAddress(ctx context.Context, address *identity.VerifiableAddress) error {

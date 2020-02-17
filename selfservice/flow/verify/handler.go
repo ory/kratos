@@ -8,6 +8,9 @@ import (
 	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
 
+	"github.com/ory/x/errorsx"
+	"github.com/ory/x/sqlcon"
+
 	"github.com/ory/herodot"
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/x/urlx"
@@ -16,14 +19,15 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/x"
 )
 
 const (
-	PublicVerificationInitPath     = "/self-service/browser/flows/verification/init/:via"
+	PublicVerificationInitPath     = "/self-service/browser/flows/verification/:via"
 	PublicVerificationCompletePath = "/self-service/browser/flows/verification/complete"
 	PublicVerificationRequestPath  = "/self-service/browser/flows/requests/verification"
-	PublicVerificationConfirmPath  = "/self-service/browser/flows/verification/confirm/:code"
+	PublicVerificationConfirmPath  = "/self-service/browser/flows/verification/:via/confirm/:code"
 )
 
 type (
@@ -258,9 +262,11 @@ func (h *Handler) completeViaEmail(w http.ResponseWriter, r *http.Request, vr *R
 		return
 	}
 
-	if err := h.d.VerificationSender().SendCode(r.Context(), identity.VerifiableAddressTypeEmail, to); err != nil {
-		h.handleError(w, r, vr, err)
-		return
+	if _, err := h.d.VerificationSender().SendCode(r.Context(), identity.VerifiableAddressTypeEmail, to); err != nil {
+		if errorsx.Cause(err) != ErrUnknownAddress {
+			h.handleError(w, r, vr, err)
+			return
+		}
 	}
 
 	vr.Form = nil
@@ -279,9 +285,17 @@ type selfServiceBrowserVerifyParameters struct {
 	// required: true
 	// in: path
 	Code string `json:"code"`
+
+	// What to verify
+	//
+	// Currently only "email" is supported.
+	//
+	// required: true
+	// in: path
+	Via string `json:"via"`
 }
 
-// swagger:route GET /self-service/browser/flows/verification/confirm/{code} public selfServiceBrowserVerify
+// swagger:route GET /self-service/browser/flows/verification/:via/confirm/{code} public selfServiceBrowserVerify
 //
 // Complete the browser-based verification flows
 //
@@ -301,7 +315,31 @@ type selfServiceBrowserVerifyParameters struct {
 //       302: emptyResponse
 //       500: genericError
 func (h *Handler) verify(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	via, err := h.toVia(ps)
+	if err != nil {
+		h.handleError(w, r, nil, err)
+		return
+	}
+
 	if err := h.d.PrivilegedIdentityPool().VerifyAddress(r.Context(), ps.ByName("code")); err != nil {
+		if errorsx.Cause(err) == sqlcon.ErrNoRows {
+			a := NewRequest(
+				h.c.SelfServiceProfileRequestLifespan(), r, via,
+				urlx.AppendPaths(h.c.SelfPublicURL(), PublicVerificationCompletePath), h.d.GenerateCSRFToken,
+			)
+			a.Form.AddError(&form.Error{Message: "The verification code has expired or was otherwise invalid. Please request another code."})
+
+			if err := h.d.VerificationPersister().CreateVerifyRequest(r.Context(), a); err != nil {
+				h.handleError(w, r, nil, err)
+				return
+			}
+
+			http.Redirect(w, r,
+				urlx.CopyWithQuery(h.c.VerificationURL(), url.Values{"request": {a.ID.String()}}).String(),
+				http.StatusFound,
+			)
+		}
+
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}

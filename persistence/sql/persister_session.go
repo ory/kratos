@@ -14,12 +14,14 @@ var _ session.Persister = new(Persister)
 
 func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID) (*session.Session, error) {
 	var s session.Session
-	if err := p.c.Eager().Find(&s, sid); err != nil {
+	if err := p.c.Find(&s, sid); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
-	if err := p.injectTraitsSchemaURL(s.Identity); err != nil {
+	i, err := p.GetIdentity(ctx, s.IdentityID)
+	if err != nil {
 		return nil, err
 	}
+	s.Identity = i
 	return &s, nil
 }
 
