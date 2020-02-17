@@ -2,12 +2,14 @@ package oidc
 
 import (
 	"context"
-	"github.com/ory/kratos/selfservice/flow/login"
-	"github.com/ory/kratos/x"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"net/url"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/x"
 )
 
 func makeAuthCodeURL(t *testing.T, r *login.Request) string {
@@ -29,7 +31,7 @@ func makeAuthCodeURL(t *testing.T, r *login.Request) string {
 func TestProviderGenericOIDC_AddAuthCodeURLOptions(t *testing.T) {
 	t.Run("case=expect prompt to be login with reauthentication flag", func(t *testing.T) {
 		r := &login.Request{
-			ID: x.NewUUID(),
+			ID:                 x.NewUUID(),
 			IsReauthentication: true,
 		}
 		assert.Contains(t, makeAuthCodeURL(t, r), "prompt=login")
