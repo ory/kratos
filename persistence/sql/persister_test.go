@@ -9,6 +9,13 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/go-errors/errors"
+	"github.com/stretchr/testify/assert"
+
+	"github.com/ory/kratos/persistence/sql"
+	"github.com/ory/kratos/x"
+	"github.com/ory/x/sqlcon"
+
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gobuffalo/pop/v5/logging"
 	"github.com/google/uuid"
@@ -145,4 +152,57 @@ func TestPersister(t *testing.T) {
 
 		t.Logf("DSN: %s", dsn)
 	}
+}
+
+func getErr(args ...interface{}) error {
+	if len(args) == 0 {
+		return nil
+	}
+	lastArg := args[len(args)-1]
+	if e, ok := lastArg.(error); ok {
+		return e
+	}
+	return nil
+}
+
+func TestPersister_Transaction(t *testing.T) {
+	_, reg := internal.NewRegistryDefault(t)
+	p := reg.Persister()
+
+	t.Run("case=should not create identity because callback returned error", func(t *testing.T) {
+		i := &identity.Identity{
+			ID:     x.NewUUID(),
+			Traits: identity.Traits(""),
+		}
+		errMessage := "failing because why not"
+		err := p.Transaction(context.Background(), func(connection *pop.Connection) error {
+			require.NoError(t, connection.Create(i))
+			return errors.Errorf(errMessage)
+		})
+		require.Error(t, err)
+		assert.Equal(t, errMessage, err.Error())
+		_, err = p.GetIdentity(context.Background(), i.ID)
+		require.Error(t, err)
+		assert.Equal(t, sqlcon.ErrNoRows.Error(), err.Error())
+	})
+
+	t.Run("case=functions should use the context connection", func(t *testing.T) {
+		c := p.GetConnection(context.Background())
+		errMessage := "some stupid error you can't debug"
+		lr := &login.Request{
+			ID: x.NewUUID(),
+		}
+		err := c.Transaction(func(tx *pop.Connection) error {
+			ctx := sql.WithTransaction(context.Background(), tx)
+			require.NoError(t, p.CreateLoginRequest(ctx, lr), "%+v", lr)
+			require.NoError(t, p.UpdateLoginRequest(ctx, lr.ID, identity.CredentialsTypePassword, &login.RequestMethod{}))
+			require.NoError(t, getErr(p.GetLoginRequest(ctx, lr.ID)), "%+v", lr)
+			return errors.Errorf(errMessage)
+		})
+		require.Error(t, err)
+		assert.Equal(t, errMessage, err.Error())
+		_, err = p.GetLoginRequest(context.Background(), lr.ID)
+		require.Error(t, err)
+		assert.Equal(t, sqlcon.ErrNoRows.Error(), err.Error())
+	})
 }

@@ -33,7 +33,7 @@ func (p *Persister) Add(ctx context.Context, csrfToken string, errs ...error) (u
 		WasSeen:   false,
 	}
 
-	if err := p.c.Create(c); err != nil {
+	if err := p.GetConnection(ctx).Create(c); err != nil {
 		return uuid.Nil, sqlcon.HandleError(err)
 	}
 
@@ -42,11 +42,11 @@ func (p *Persister) Add(ctx context.Context, csrfToken string, errs ...error) (u
 
 func (p *Persister) Read(ctx context.Context, id uuid.UUID) (*errorx.ErrorContainer, error) {
 	var ec errorx.ErrorContainer
-	if err := p.c.Find(&ec, id); err != nil {
+	if err := p.GetConnection(ctx).Find(&ec, id); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
-	if err := p.c.RawQuery("UPDATE selfservice_errors SET was_seen = true, seen_at = ? WHERE id = ?", time.Now().UTC(), id).Exec(); err != nil {
+	if err := p.GetConnection(ctx).RawQuery("UPDATE selfservice_errors SET was_seen = true, seen_at = ? WHERE id = ?", time.Now().UTC(), id).Exec(); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
@@ -55,9 +55,9 @@ func (p *Persister) Read(ctx context.Context, id uuid.UUID) (*errorx.ErrorContai
 
 func (p *Persister) Clear(ctx context.Context, olderThan time.Duration, force bool) (err error) {
 	if force {
-		err = p.c.RawQuery("DELETE FROM selfservice_errors WHERE seen_at < ?", olderThan).Exec()
+		err = p.GetConnection(ctx).RawQuery("DELETE FROM selfservice_errors WHERE seen_at < ?", olderThan).Exec()
 	} else {
-		err = p.c.RawQuery("DELETE FROM selfservice_errors WHERE was_seen=true AND seen_at < ?", time.Now().UTC().Add(-olderThan)).Exec()
+		err = p.GetConnection(ctx).RawQuery("DELETE FROM selfservice_errors WHERE was_seen=true AND seen_at < ?", time.Now().UTC().Add(-olderThan)).Exec()
 	}
 
 	return sqlcon.HandleError(err)
