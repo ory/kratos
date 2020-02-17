@@ -53,9 +53,11 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
-	if ar.RedirectOnAuthenticated(w, r, s.d.SessionManager(), s.c.DefaultReturnToURL()) {
-		// redirected already
-		return
+	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), w, r); err == nil {
+		if !ar.IsReauthentication {
+			http.Redirect(w, r, s.c.DefaultReturnToURL().String(), http.StatusFound)
+			return
+		}
 	}
 
 	var p LoginFormPayload

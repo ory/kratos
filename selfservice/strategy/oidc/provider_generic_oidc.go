@@ -68,6 +68,15 @@ func (g *ProviderGenericOIDC) OAuth2(ctx context.Context) (*oauth2.Config, error
 	}, nil
 }
 
+func (g *ProviderGenericOIDC) AddAuthCodeURLOptions(r request) []oauth2.AuthCodeOption {
+	if r.IsReauth() {
+		return []oauth2.AuthCodeOption{
+			oauth2.SetAuthURLParam("prompt", "login"),
+		}
+	}
+	return []oauth2.AuthCodeOption{}
+}
+
 func (g *ProviderGenericOIDC) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
 	raw, ok := exchange.Extra("id_token").(string)
 	if !ok || len(raw) == 0 {

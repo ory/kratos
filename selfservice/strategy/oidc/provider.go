@@ -10,6 +10,7 @@ type Provider interface {
 	Config() *Configuration
 	OAuth2(ctx context.Context) (*oauth2.Config, error)
 	Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error)
+	AddAuthCodeURLOptions(r request) []oauth2.AuthCodeOption
 }
 
 type Claims struct {

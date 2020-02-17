@@ -2,10 +2,7 @@ package registration
 
 import (
 	"net/http"
-	"net/url"
 	"time"
-
-	"github.com/ory/kratos/session"
 
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
@@ -125,13 +122,7 @@ func (r *Request) GetID() uuid.UUID {
 	return r.ID
 }
 
-func (r *Request) RedirectOnAuthenticated(w http.ResponseWriter, rr *http.Request, sessionManager session.Manager, to *url.URL) bool {
-	// we assume an error means the user has no session
-	if _, err := sessionManager.FetchFromRequest(rr.Context(), w, rr); err == nil {
-		http.Redirect(w, rr, to.String(), http.StatusFound)
-		return true
-	}
-
+func (r *Request) IsReauth() bool {
 	return false
 }
 

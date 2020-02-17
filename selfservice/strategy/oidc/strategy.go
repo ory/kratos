@@ -174,9 +174,12 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	if ar.RedirectOnAuthenticated(w, r, s.d.SessionManager(), s.c.DefaultReturnToURL()) {
-		// already redirected
-		return
+	// we assume an error means the user has no session
+	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), w, r); err == nil {
+		if !ar.IsReauth() {
+			http.Redirect(w, r, s.c.DefaultReturnToURL().String(), http.StatusFound)
+			return
+		}
 	}
 
 	state := x.NewUUID().String()
@@ -190,7 +193,7 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	http.Redirect(w, r, config.AuthCodeURL(state), http.StatusFound)
+	http.Redirect(w, r, config.AuthCodeURL(state, provider.AddAuthCodeURLOptions(ar)...), http.StatusFound)
 }
 
 func (s *Strategy) validateRequest(ctx context.Context, rid uuid.UUID) (request, error) {
@@ -259,9 +262,12 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	if ar.RedirectOnAuthenticated(w, r, s.d.SessionManager(), s.c.DefaultReturnToURL()) {
-		// already redirected
-		return
+	// we assume an error means the user has no session
+	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), w, r); err == nil {
+		if !ar.IsReauth() {
+			http.Redirect(w, r, s.c.DefaultReturnToURL().String(), http.StatusFound)
+			return
+		}
 	}
 
 	provider, err := s.provider(pid)
