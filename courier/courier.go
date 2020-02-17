@@ -118,7 +118,8 @@ func (m *Courier) watchMessages(ctx context.Context, errChan chan error) {
 					if err := m.dialer.DialAndSend(gm); err != nil {
 						m.d.Logger().
 							WithError(err).
-							WithField("smtp_server", fmt.Sprintf("smtp(s)://%s:%d", m.dialer.Host, m.dialer.Port)).
+							WithField("smtp_server", fmt.Sprintf("%s:%d", m.dialer.Host, m.dialer.Port)).
+							WithField("smtp_ssl_enabled", m.dialer.SSL).
 							WithField("email_to", msg.Recipient).WithField("email_from", from).
 							Error("Unable to send email using SMTP connection.")
 						continue

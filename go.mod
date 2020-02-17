@@ -23,7 +23,6 @@ require (
 	github.com/gobuffalo/fizz v1.9.6 // indirect
 	github.com/gobuffalo/helpers v0.6.1 // indirect
 	github.com/gobuffalo/httptest v1.0.2
-	github.com/gobuffalo/logger v1.0.3
 	github.com/gobuffalo/nulls v0.2.0 // indirect
 	github.com/gobuffalo/packd v1.0.0 // indirect
 	github.com/gobuffalo/packr/v2 v2.7.1

@@ -20,10 +20,7 @@ import (
 	"strconv"
 
 	"github.com/fsnotify/fsnotify"
-	gbl "github.com/gobuffalo/logger"
 	"github.com/gobuffalo/packr/v2"
-	"github.com/gobuffalo/packr/v2/plog"
-
 	"github.com/ory/viper"
 	"github.com/ory/x/flagx"
 	"github.com/ory/x/viperx"
@@ -39,7 +36,7 @@ var serveCmd = &cobra.Command{
 	Use: "serve",
 	Run: func(cmd *cobra.Command, args []string) {
 		logger = viperx.InitializeConfig("kratos", "", logger)
-		plog.Logger = gbl.Logrus{FieldLogger: logger}
+		// plog.Logger = gbl.Logrus{FieldLogger: logger}
 
 		dev := flagx.MustGetBool(cmd, "dev")
 		if dev {
