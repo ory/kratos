@@ -3,6 +3,7 @@ package verify
 import (
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/nosurf"
@@ -25,7 +26,7 @@ import (
 
 const (
 	PublicVerificationInitPath     = "/self-service/browser/flows/verification/:via"
-	PublicVerificationCompletePath = "/self-service/browser/flows/verification/complete"
+	PublicVerificationCompletePath = "/self-service/browser/flows/verification/:via/complete"
 	PublicVerificationRequestPath  = "/self-service/browser/flows/requests/verification"
 	PublicVerificationConfirmPath  = "/self-service/browser/flows/verification/:via/confirm/:code"
 )
@@ -105,7 +106,7 @@ func (h *Handler) init(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 
 	a := NewRequest(
 		h.c.SelfServiceProfileRequestLifespan(), r, via,
-		urlx.AppendPaths(h.c.SelfPublicURL(), PublicVerificationCompletePath), h.d.GenerateCSRFToken,
+		urlx.AppendPaths(h.c.SelfPublicURL(), strings.ReplaceAll(PublicVerificationCompletePath, ":via", string(via))), h.d.GenerateCSRFToken,
 	)
 
 	if err := h.d.VerificationPersister().CreateVerifyRequest(r.Context(), a); err != nil {
@@ -192,9 +193,17 @@ type completeSelfServiceBrowserVerificationFlowParameters struct {
 	// required: true
 	// in: query
 	Request string `json:"request"`
+
+	// What to verify
+	//
+	// Currently only "email" is supported.
+	//
+	// required: true
+	// in: path
+	Via string `json:"via"`
 }
 
-// swagger:route POST /self-service/browser/flows/verification/complete public completeSelfServiceBrowserVerificationFlow
+// swagger:route POST /self-service/browser/flows/verification/{via}/complete public completeSelfServiceBrowserVerificationFlow
 //
 // Complete the browser-based profile management flows
 //
@@ -217,7 +226,12 @@ type completeSelfServiceBrowserVerificationFlowParameters struct {
 //     Responses:
 //       302: emptyResponse
 //       500: genericError
-func (h *Handler) complete(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) complete(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if _, err := h.toVia(ps); err != nil {
+		h.handleError(w, r, nil, err)
+		return
+	}
+
 	if err := r.ParseForm(); err != nil {
 		h.handleError(w, r, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to parse the request: %s", err)))
 		return
@@ -325,7 +339,7 @@ func (h *Handler) verify(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		if errorsx.Cause(err) == sqlcon.ErrNoRows {
 			a := NewRequest(
 				h.c.SelfServiceProfileRequestLifespan(), r, via,
-				urlx.AppendPaths(h.c.SelfPublicURL(), PublicVerificationCompletePath), h.d.GenerateCSRFToken,
+				urlx.AppendPaths(h.c.SelfPublicURL(), strings.ReplaceAll(PublicVerificationCompletePath, ":via", string(via))), h.d.GenerateCSRFToken,
 			)
 			a.Form.AddError(&form.Error{Message: "The verification code has expired or was otherwise invalid. Please request another code."})
 

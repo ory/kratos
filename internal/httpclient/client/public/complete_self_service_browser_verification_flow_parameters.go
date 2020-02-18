@@ -69,6 +69,13 @@ type CompleteSelfServiceBrowserVerificationFlowParams struct {
 
 	*/
 	Request string
+	/*Via
+	  What to verify
+
+	Currently only "email" is supported.
+
+	*/
+	Via string
 
 	timeout    time.Duration
 	Context    context.Context
@@ -119,6 +126,17 @@ func (o *CompleteSelfServiceBrowserVerificationFlowParams) SetRequest(request st
 	o.Request = request
 }
 
+// WithVia adds the via to the complete self service browser verification flow params
+func (o *CompleteSelfServiceBrowserVerificationFlowParams) WithVia(via string) *CompleteSelfServiceBrowserVerificationFlowParams {
+	o.SetVia(via)
+	return o
+}
+
+// SetVia adds the via to the complete self service browser verification flow params
+func (o *CompleteSelfServiceBrowserVerificationFlowParams) SetVia(via string) {
+	o.Via = via
+}
+
 // WriteToRequest writes these params to a swagger request
 func (o *CompleteSelfServiceBrowserVerificationFlowParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -134,6 +152,11 @@ func (o *CompleteSelfServiceBrowserVerificationFlowParams) WriteToRequest(r runt
 		if err := r.SetQueryParam("request", qRequest); err != nil {
 			return err
 		}
+	}
+
+	// path param via
+	if err := r.SetPathParam("via", o.Via); err != nil {
+		return err
 	}
 
 	if len(res) > 0 {

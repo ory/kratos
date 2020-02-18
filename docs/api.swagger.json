@@ -667,7 +667,41 @@
         }
       }
     },
-    "/self-service/browser/flows/verification/complete": {
+    "/self-service/browser/flows/verification/init/{via}": {
+      "get": {
+        "description": "This endpoint initializes a browser-based profile management flow. Once initialized, the browser will be redirected to\n`urls.profile_ui` with the request ID set as a query parameter. If no valid user session exists, a login\nflow will be initialized.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Initialize browser-based verification flow",
+        "operationId": "initializeSelfServiceBrowserVerificationFlow",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "What to verify\n\nCurrently only \"email\" is supported.",
+            "name": "via",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
+    "/self-service/browser/flows/verification/{via}/complete": {
       "post": {
         "description": "This endpoint completes a browser-based profile management flow. This is usually achieved by POSTing data to this\nendpoint.\n\nIf the provided profile data is valid against the Identity's Traits JSON Schema, the data will be updated and\nthe browser redirected to `url.profile_ui` for further steps.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
         "consumes": [
@@ -690,34 +724,7 @@
             "name": "request",
             "in": "query",
             "required": true
-          }
-        ],
-        "responses": {
-          "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
           },
-          "500": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          }
-        }
-      }
-    },
-    "/self-service/browser/flows/verification/init/{via}": {
-      "get": {
-        "description": "This endpoint initializes a browser-based profile management flow. Once initialized, the browser will be redirected to\n`urls.profile_ui` with the request ID set as a query parameter. If no valid user session exists, a login\nflow will be initialized.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "tags": [
-          "public"
-        ],
-        "summary": "Initialize browser-based verification flow",
-        "operationId": "initializeSelfServiceBrowserVerificationFlow",
-        "parameters": [
           {
             "type": "string",
             "description": "What to verify\n\nCurrently only \"email\" is supported.",
