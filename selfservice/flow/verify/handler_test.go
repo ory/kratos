@@ -113,7 +113,7 @@ func TestHandler(t *testing.T) {
 		assert.True(t, time.Time(svr.Payload.ExpiresAt).After(time.Now()))
 		assert.Contains(t, svr.Payload.RequestURL, initURL)
 		assert.Contains(t, svr.Payload.ID, rid)
-		assert.Equal(t, publicTS.URL+verify.PublicVerificationCompletePath+"?request="+rid, *svr.Payload.Form.Action)
+		assert.Equal(t, publicTS.URL+strings.Replace(verify.PublicVerificationCompletePath, ":via", "email", 1)+"?request="+rid, *svr.Payload.Form.Action)
 		assert.Contains(t, "csrf_token", *svr.Payload.Form.Fields[0].Name)
 		assert.Contains(t, "to_verify", *svr.Payload.Form.Fields[1].Name)
 		assert.Contains(t, "email", *svr.Payload.Form.Fields[1].Type)

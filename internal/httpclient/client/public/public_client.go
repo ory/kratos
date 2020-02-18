@@ -107,7 +107,7 @@ func (a *Client) CompleteSelfServiceBrowserVerificationFlow(params *CompleteSelf
 	_, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "completeSelfServiceBrowserVerificationFlow",
 		Method:             "POST",
-		PathPattern:        "/self-service/browser/flows/verification/complete",
+		PathPattern:        "/self-service/browser/flows/verification/{via}/complete",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
