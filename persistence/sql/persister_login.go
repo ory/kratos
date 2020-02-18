@@ -34,7 +34,7 @@ func (p *Persister) GetLoginRequest(ctx context.Context, id uuid.UUID) (*login.R
 }
 
 func (p *Persister) UpdateLoginRequestReauth(ctx context.Context, id uuid.UUID, reauth bool) error {
-	return p.Transaction(func(tx *pop.Connection) error {
+	return p.Transaction(ctx, func(tx *pop.Connection) error {
 		ctx := WithTransaction(ctx, tx)
 		lr, err := p.GetLoginRequest(ctx, id)
 		if err != nil {
@@ -42,7 +42,7 @@ func (p *Persister) UpdateLoginRequestReauth(ctx context.Context, id uuid.UUID, 
 		}
 
 		lr.IsReauthentication = reauth
-		return p.c.Save(lr)
+		return tx.Save(lr)
 	})
 }
 

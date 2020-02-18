@@ -79,6 +79,7 @@ func TestHandlerSettingReauth(t *testing.T) {
 
 		req.URL.RawQuery = url.Values{
 			"request": {rid.String()},
+			"prompt":  {"true"},
 		}.Encode()
 
 		body, _ := session.MockMakeAuthenticatedRequest(t, reg, router.Router, req)
