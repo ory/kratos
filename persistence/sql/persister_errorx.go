@@ -30,6 +30,7 @@ func (p *Persister) Add(ctx context.Context, csrfToken string, errs ...error) (u
 	c := &errorx.ErrorContainer{
 		CSRFToken: csrfToken,
 		Errors:    buf.Bytes(),
+		SeenAt:    time.Now().UTC(),
 		WasSeen:   false,
 	}
 
