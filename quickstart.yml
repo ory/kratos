@@ -20,7 +20,6 @@ services:
         type: bind
         source: ./contrib/quickstart/kratos/email-password
         target: /etc/config/kratos
-
     command:
       -c /etc/config/kratos/.kratos.yml migrate sql -e --yes
     restart: on-failure
@@ -87,8 +86,7 @@ services:
       - intranet
 
   mailslurper:
-    build:
-      context: .docker/mailslurper
+    image: oryd/mailslurper:latest-smtps
     ports:
       - "4436:4436"
       - "4437:4437"

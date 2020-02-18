@@ -28,7 +28,7 @@ var _ identity.PrivilegedPool = new(Persister)
 
 func (p *Persister) FindByCredentialsIdentifier(ctx context.Context, ct identity.CredentialsType, match string) (*identity.Identity, *identity.Credentials, error) {
 	var cts []identity.CredentialsTypeTable
-	if err := p.c.All(&cts); err != nil {
+	if err := p.GetConnection(ctx).All(&cts); err != nil {
 		return nil, nil, sqlcon.HandleError(err)
 	}
 
@@ -36,7 +36,7 @@ func (p *Persister) FindByCredentialsIdentifier(ctx context.Context, ct identity
 		IdentityID uuid.UUID `db:"identity_id"`
 	}
 
-	if err := p.c.RawQuery(`SELECT
+	if err := p.GetConnection(ctx).RawQuery(`SELECT
     ic.identity_id
 FROM identity_credentials ic
          INNER JOIN identity_credential_types ict on ic.identity_credential_type_id = ict.id
@@ -148,7 +148,7 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 		return err
 	}
 
-	return sqlcon.HandleError(p.c.Transaction(func(tx *pop.Connection) error {
+	return sqlcon.HandleError(p.GetConnection(ctx).Transaction(func(tx *pop.Connection) error {
 		if err := tx.Create(i); err != nil {
 			return err
 		}
@@ -165,7 +165,9 @@ func (p *Persister) ListIdentities(ctx context.Context, limit, offset int) ([]id
 	is := make([]identity.Identity, 0)
 
 	/* #nosec G201 TableName is static */
-	if err := sqlcon.HandleError(p.c.RawQuery(fmt.Sprintf("SELECT * FROM %s LIMIT ? OFFSET ?", new(identity.Identity).TableName()), limit, offset).All(&is)); err != nil {
+	if err := sqlcon.HandleError(p.GetConnection(ctx).
+		RawQuery(fmt.Sprintf("SELECT * FROM %s LIMIT ? OFFSET ?", new(identity.Identity).TableName()), limit, offset).
+		Eager("Addresses").All(&is)); err != nil {
 		return nil, err
 	}
 
@@ -183,7 +185,7 @@ func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) er
 		return err
 	}
 
-	return sqlcon.HandleError(p.c.Transaction(func(tx *pop.Connection) error {
+	return sqlcon.HandleError(p.GetConnection(ctx).Transaction(func(tx *pop.Connection) error {
 		if count, err := tx.Where("id = ?", i.ID).Count(i); err != nil {
 			return err
 		} else if count == 0 {
@@ -214,7 +216,7 @@ func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) er
 
 func (p *Persister) DeleteIdentity(ctx context.Context, id uuid.UUID) error {
 	/* #nosec G201 TableName is static */
-	count, err := p.c.RawQuery(fmt.Sprintf("DELETE FROM %s WHERE id = ?", new(identity.Identity).TableName()), id).ExecWithCount()
+	count, err := p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE id = ?", new(identity.Identity).TableName()), id).ExecWithCount()
 	if err != nil {
 		return sqlcon.HandleError(err)
 	}
@@ -226,7 +228,7 @@ func (p *Persister) DeleteIdentity(ctx context.Context, id uuid.UUID) error {
 
 func (p *Persister) GetIdentity(ctx context.Context, id uuid.UUID) (*identity.Identity, error) {
 	var i identity.Identity
-	if err := p.c.Find(&i, id); err != nil {
+	if err := p.GetConnection(ctx).Eager("Addresses").Find(&i, id); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 	i.Credentials = nil
@@ -239,19 +241,19 @@ func (p *Persister) GetIdentity(ctx context.Context, id uuid.UUID) (*identity.Id
 
 func (p *Persister) GetIdentityConfidential(ctx context.Context, id uuid.UUID) (*identity.Identity, error) {
 	var i identity.Identity
-	if err := p.c.Eager().Find(&i, id); err != nil {
+	if err := p.GetConnection(ctx).Eager().Find(&i, id); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
 	var cts []identity.CredentialsTypeTable
-	if err := p.c.All(&cts); err != nil {
+	if err := p.GetConnection(ctx).All(&cts); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
 	i.Credentials = map[identity.CredentialsType]identity.Credentials{}
 	for _, creds := range i.CredentialsCollection {
 		var cs identity.CredentialIdentifierCollection
-		if err := p.c.Where("identity_credential_id = ?", creds.ID).All(&cs); err != nil {
+		if err := p.GetConnection(ctx).Where("identity_credential_id = ?", creds.ID).All(&cs); err != nil {
 			return nil, sqlcon.HandleError(err)
 		}
 
@@ -277,7 +279,7 @@ func (p *Persister) GetIdentityConfidential(ctx context.Context, id uuid.UUID) (
 
 func (p *Persister) FindAddressByCode(ctx context.Context, code string) (*identity.VerifiableAddress, error) {
 	var address identity.VerifiableAddress
-	if err := p.c.Where("code = ?", code).First(&address); err != nil {
+	if err := p.GetConnection(ctx).Where("code = ?", code).First(&address); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
@@ -286,7 +288,7 @@ func (p *Persister) FindAddressByCode(ctx context.Context, code string) (*identi
 
 func (p *Persister) FindAddressByValue(ctx context.Context, via identity.VerifiableAddressType, value string) (*identity.VerifiableAddress, error) {
 	var address identity.VerifiableAddress
-	if err := p.c.Where("via = ? AND value = ?", via, value).First(&address); err != nil {
+	if err := p.GetConnection(ctx).Where("via = ? AND value = ?", via, value).First(&address); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
@@ -299,21 +301,31 @@ func (p *Persister) VerifyAddress(ctx context.Context, code string) error {
 		return err
 	}
 
-	return sqlcon.HandleError(p.c.RawQuery(
+	count, err := p.GetConnection(ctx).RawQuery(
 		/* #nosec G201 TableName is static */
 		fmt.Sprintf(
-			"UPDATE %s SET status = ?, verified = true, verified_at = ?, code = ? WHERE code = ?",
+			"UPDATE %s SET status = ?, verified = true, verified_at = ?, code = ? WHERE code = ? AND expires_at > ?",
 			new(identity.VerifiableAddress).TableName(),
 		),
 		identity.VerifiableAddressStatusCompleted,
 		time.Now().UTC().Round(time.Second),
 		newCode,
 		code,
-	).Exec())
+		time.Now().UTC(),
+	).ExecWithCount()
+	if err != nil {
+		return sqlcon.HandleError(err)
+	}
+
+	if count == 0 {
+		return sqlcon.HandleError(sqlcon.ErrNoRows)
+	}
+
+	return nil
 }
 
 func (p *Persister) UpdateVerifiableAddress(ctx context.Context, address *identity.VerifiableAddress) error {
-	return sqlcon.HandleError(p.c.Update(address))
+	return sqlcon.HandleError(p.GetConnection(ctx).Update(address))
 }
 
 func (p *Persister) validateIdentity(i *identity.Identity) error {

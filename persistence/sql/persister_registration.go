@@ -12,16 +12,16 @@ import (
 )
 
 func (p *Persister) CreateRegistrationRequest(ctx context.Context, r *registration.Request) error {
-	return p.c.Eager().Create(r)
+	return p.GetConnection(ctx).Eager().Create(r)
 }
 
 func (p *Persister) GetRegistrationRequest(ctx context.Context, id uuid.UUID) (*registration.Request, error) {
 	var r registration.Request
-	if err := p.c.Eager().Find(&r, id); err != nil {
+	if err := p.GetConnection(ctx).Eager().Find(&r, id); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
-	if err := (&r).AfterFind(p.c); err != nil {
+	if err := (&r).AfterFind(p.GetConnection(ctx)); err != nil {
 		return nil, err
 	}
 
@@ -38,9 +38,9 @@ func (p *Persister) UpdateRegistrationRequest(ctx context.Context, id uuid.UUID,
 	if !ok {
 		rm.RequestID = rr.ID
 		rm.Method = ct
-		return p.c.Save(rm)
+		return p.GetConnection(ctx).Save(rm)
 	}
 
 	method.Config = rm.Config
-	return p.c.Save(method)
+	return p.GetConnection(ctx).Save(method)
 }

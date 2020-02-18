@@ -91,5 +91,9 @@ func TestManager(t *testing.T) {
 		require.NoError(t, reg.IdentityManager().RefreshVerifyAddress(context.Background(), address))
 		assert.NotEqual(t, pc, address.Code)
 		assert.NotEqual(t, ea, address.ExpiresAt)
+
+		fromStore, err := reg.IdentityPool().GetIdentity(context.Background(), original.ID)
+		require.NoError(t, err)
+		assert.NotEqual(t, pc, fromStore.Addresses[0].Code)
 	})
 }

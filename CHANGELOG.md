@@ -44,8 +44,14 @@
 
 [Full Changelog](https://github.com/ory/kratos/compare/v0.1.0-alpha.6...HEAD)
 
+**Fixed bugs:**
+
+- fix: Resolve several verification problems [\#253](https://github.com/ory/kratos/pull/253) ([aeneasr](https://github.com/aeneasr))
+
 **Merged pull requests:**
 
+- fix: Clean up docker quickstart [\#255](https://github.com/ory/kratos/pull/255) ([aeneasr](https://github.com/aeneasr))
+- refactor\(persistence/sql\): move connection to context to enable transactions [\#254](https://github.com/ory/kratos/pull/254) ([zepatrik](https://github.com/zepatrik))
 - fix: Add verify return to address [\#252](https://github.com/ory/kratos/pull/252) ([aeneasr](https://github.com/aeneasr))
 
 ## [v0.1.0-alpha.6](https://github.com/ory/kratos/tree/v0.1.0-alpha.6) (2020-02-16)
@@ -108,10 +114,6 @@
 
 - Rework errors API [\#204](https://github.com/ory/kratos/issues/204)
 
-**Fixed bugs:**
-
-- refactor!: Improve user-facing error APIs [\#219](https://github.com/ory/kratos/pull/219) ([aeneasr](https://github.com/aeneasr))
-
 **Closed issues:**
 
 - Discrepancy in documentation [\#218](https://github.com/ory/kratos/issues/218)
@@ -156,6 +158,7 @@
 - Rework public and admin fetch strategy [\#203](https://github.com/ory/kratos/pull/203) ([aeneasr](https://github.com/aeneasr))
 - Update HTTP routes for a consistent API naming [\#199](https://github.com/ory/kratos/pull/199) ([aeneasr](https://github.com/aeneasr))
 - ss: Use JSON Schema to type assert form body [\#116](https://github.com/ory/kratos/pull/116) ([aeneasr](https://github.com/aeneasr))
+- errorx: Add SQL adapter [\#100](https://github.com/ory/kratos/pull/100) ([aeneasr](https://github.com/aeneasr))
 
 **Fixed bugs:**
 
@@ -230,6 +233,10 @@
 
 [Full Changelog](https://github.com/ory/kratos/compare/v0.0.3-alpha.10...v0.0.3-alpha.11)
 
+**Fixed bugs:**
+
+- refactor!: Improve user-facing error APIs [\#219](https://github.com/ory/kratos/pull/219) ([aeneasr](https://github.com/aeneasr))
+
 **Merged pull requests:**
 
 - Improve field types [\#209](https://github.com/ory/kratos/pull/209) ([zepatrik](https://github.com/zepatrik))
@@ -283,6 +290,7 @@
 - Update quickstart [\#207](https://github.com/ory/kratos/pull/207) ([aeneasr](https://github.com/aeneasr))
 - Take field order from schema [\#205](https://github.com/ory/kratos/pull/205) ([zepatrik](https://github.com/zepatrik))
 - ss/profile: Use request ID as query param everywhere [\#202](https://github.com/ory/kratos/pull/202) ([aeneasr](https://github.com/aeneasr))
+- Make form fields an array [\#197](https://github.com/ory/kratos/pull/197) ([zepatrik](https://github.com/zepatrik))
 
 ## [v0.0.1-alpha.9](https://github.com/ory/kratos/tree/v0.0.1-alpha.9) (2020-01-29)
 
@@ -322,7 +330,6 @@
 
 **Merged pull requests:**
 
-- Make form fields an array [\#197](https://github.com/ory/kratos/pull/197) ([zepatrik](https://github.com/zepatrik))
 - Resolve build issues with CGO [\#196](https://github.com/ory/kratos/pull/196) ([aeneasr](https://github.com/aeneasr))
 
 ## [v0.0.1-alpha.3](https://github.com/ory/kratos/tree/v0.0.1-alpha.3) (2020-01-28)
