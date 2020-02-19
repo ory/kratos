@@ -66,8 +66,8 @@ type Request struct {
 	// CSRFToken contains the anti-csrf token associated with this request.
 	CSRFToken string `json:"-" db:"csrf_token"`
 
-	// IsReauthentication stores whether this login request is a reauthenication request.
-	IsReauthentication bool `json:"is_reauthentication" db:"is_reauthentication"`
+	// Forced stores whether this login request should enforce reauthentication.
+	Forced bool `json:"forced" db:"forced"`
 }
 
 func NewLoginRequest(exp time.Duration, csrf string, r *http.Request) *Request {
@@ -138,8 +138,8 @@ func (r *Request) GetID() uuid.UUID {
 	return r.ID
 }
 
-func (r *Request) IsReauth() bool {
-	return r.IsReauthentication
+func (r *Request) IsForced() bool {
+	return r.Forced
 }
 
 type testRequestHandlerDependencies interface {

@@ -1,1 +1,0 @@
-add_column("selfservice_login_requests", "is_reauthentication", "bool", {default: false})

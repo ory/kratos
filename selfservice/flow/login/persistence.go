@@ -19,7 +19,7 @@ type (
 		CreateLoginRequest(context.Context, *Request) error
 		GetLoginRequest(context.Context, uuid.UUID) (*Request, error)
 		UpdateLoginRequestMethod(context.Context, uuid.UUID, identity.CredentialsType, *RequestMethod) error
-		UpdateLoginRequestReauth(ctx context.Context, id uuid.UUID, reauth bool) error
+		MarkRequestForced(ctx context.Context, id uuid.UUID) error
 	}
 	RequestPersistenceProvider interface {
 		LoginRequestPersister() RequestPersister

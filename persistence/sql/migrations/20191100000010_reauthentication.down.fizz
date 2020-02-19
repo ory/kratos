@@ -1,1 +1,0 @@
-drop_column("selfservice_login_requests", "is_reauthentication")

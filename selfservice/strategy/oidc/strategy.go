@@ -176,7 +176,7 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 
 	// we assume an error means the user has no session
 	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), w, r); err == nil {
-		if !ar.IsReauth() {
+		if !ar.IsForced() {
 			http.Redirect(w, r, s.c.DefaultReturnToURL().String(), http.StatusFound)
 			return
 		}
@@ -193,7 +193,7 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	http.Redirect(w, r, config.AuthCodeURL(state, provider.AddAuthCodeURLOptions(ar)...), http.StatusFound)
+	http.Redirect(w, r, config.AuthCodeURL(state, provider.AuthCodeURLOptions(ar)...), http.StatusFound)
 }
 
 func (s *Strategy) validateRequest(ctx context.Context, rid uuid.UUID) (request, error) {
@@ -264,7 +264,7 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 
 	// we assume an error means the user has no session
 	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), w, r); err == nil {
-		if !ar.IsReauth() {
+		if !ar.IsForced() {
 			http.Redirect(w, r, s.c.DefaultReturnToURL().String(), http.StatusFound)
 			return
 		}

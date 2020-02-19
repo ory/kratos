@@ -122,7 +122,7 @@ func (r *Request) GetID() uuid.UUID {
 	return r.ID
 }
 
-func (r *Request) IsReauth() bool {
+func (r *Request) IsForced() bool {
 	return false
 }
 

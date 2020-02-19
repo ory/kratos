@@ -35,7 +35,7 @@ func init() {
 	internal.RegisterFakes()
 }
 
-func TestHandlerSettingReauth(t *testing.T) {
+func TestHandlerSettingForced(t *testing.T) {
 	_, reg := internal.NewRegistryDefault(t)
 	for _, strategy := range reg.LoginStrategies() {
 		// We need to know the csrf token
@@ -57,17 +57,15 @@ func TestHandlerSettingReauth(t *testing.T) {
 	viper.Set(configuration.ViperKeyURLsLogin, loginTS.URL)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/login.schema.json")
 
-	t.Run("does not set reauth flag on unauthenticated request", func(t *testing.T) {
-		c := ts.Client()
-		res, err := c.Get(ts.URL + login.BrowserLoginPath)
-		require.NoError(t, err)
-		defer res.Body.Close()
-		body, err := ioutil.ReadAll(res.Body)
+	// assert bool
+	ab := func(body []byte, exp bool) {
+		r := gjson.GetBytes(body, "forced")
+		assert.True(t, r.Exists(), "%s", body)
+		assert.Equal(t, exp, r.Bool(), "%s", body)
+	}
 
-		assert.Equal(t, false, gjson.GetBytes(body, "is_reauthentication").Bool(), "%s", body)
-	})
-
-	t.Run("does set reauth flag on authenticated request", func(t *testing.T) {
+	// make authenticated request
+	mar := func(extQuery url.Values) []byte {
 		rid := x.NewUUID()
 		req := x.NewTestHTTPRequest(t, "GET", ts.URL+login.BrowserLoginPath, nil)
 		loginReq := login.NewLoginRequest(time.Minute, x.FakeCSRFToken, req)
@@ -77,14 +75,57 @@ func TestHandlerSettingReauth(t *testing.T) {
 		}
 		require.NoError(t, reg.LoginRequestPersister().CreateLoginRequest(context.TODO(), loginReq), "%+v", loginReq)
 
-		req.URL.RawQuery = url.Values{
+		q := url.Values{
 			"request": {rid.String()},
-			"prompt":  {"true"},
-		}.Encode()
+		}
+		for key := range extQuery {
+			q.Set(key, extQuery.Get(key))
+		}
+		req.URL.RawQuery = q.Encode()
 
 		body, _ := session.MockMakeAuthenticatedRequest(t, reg, router.Router, req)
+		return body
+	}
 
-		assert.Equal(t, true, gjson.GetBytes(body, "is_reauthentication").Bool(), "%s", body)
+	// make unauthenticated request
+	mur := func(query url.Values) []byte {
+		c := ts.Client()
+		u, err := url.ParseRequestURI(ts.URL)
+		require.NoError(t, err)
+		u.Path = login.BrowserLoginPath
+		u.RawQuery = query.Encode()
+		res, err := c.Get(u.String())
+		require.NoError(t, err)
+		defer res.Body.Close()
+		body, err := ioutil.ReadAll(res.Body)
+		require.NoError(t, err)
+		return body
+	}
+
+	t.Run("case=does not set forced flag on unauthenticated request", func(t *testing.T) {
+		ab(mur(url.Values{}), false)
+	})
+
+	t.Run("case=does not set forced flag on unauthenticated request with prompt=login", func(t *testing.T) {
+		ab(mur(url.Values{
+			"prompt": {"login"},
+		}), false)
+	})
+
+	t.Run("case=does not set forced flag on authenticated request without prompt=login", func(t *testing.T) {
+		ab(mar(url.Values{}), false)
+	})
+
+	t.Run("case=does not set forced flag on authenticated request with prompt=false", func(t *testing.T) {
+		ab(mar(url.Values{
+			"prompt": {"false"},
+		}), false)
+	})
+
+	t.Run("case=does set forced flag on authenticated request with prompt=login", func(t *testing.T) {
+		ab(mar(url.Values{
+			"prompt": {"login"},
+		}), true)
 	})
 }
 

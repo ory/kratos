@@ -31,5 +31,5 @@ func NewRequestMethodConfig(f *form.HTMLForm) *RequestMethod {
 
 type request interface {
 	GetID() uuid.UUID
-	IsReauth() bool
+	IsForced() bool
 }

@@ -334,7 +334,7 @@ func TestLoginNew(t *testing.T) {
 		assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).errors.0").String(), "missing properties: password", "%s", body)
 	})
 
-	t.Run("should be a new session with reauth flag", func(t *testing.T) {
+	t.Run("should be a new session with forced flag", func(t *testing.T) {
 		identifier, pwd := "login-identifier-reauth", "password"
 		createIdentity(identifier, pwd)
 
@@ -346,7 +346,7 @@ func TestLoginNew(t *testing.T) {
 		}.Encode(), nil, jar)
 
 		lr2 := nlr(time.Hour)
-		lr2.IsReauthentication = true
+		lr2.Forced = true
 		res, body2 := makeRequest(lr2, url.Values{
 			"identifier": {identifier},
 			"password":   {pwd},
@@ -357,7 +357,7 @@ func TestLoginNew(t *testing.T) {
 		assert.NotEqual(t, gjson.GetBytes(body1, "sid").String(), gjson.GetBytes(body2, "sid").String(), "%s\n\n%s\n", body1, body2)
 	})
 
-	t.Run("should be the same session without reauth flag", func(t *testing.T) {
+	t.Run("should be the same session without forced flag", func(t *testing.T) {
 		identifier, pwd := "login-identifier-no-reauth", "password"
 		createIdentity(identifier, pwd)
 

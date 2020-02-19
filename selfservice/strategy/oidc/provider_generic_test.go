@@ -25,19 +25,19 @@ func makeAuthCodeURL(t *testing.T, r *login.Request) string {
 	}, public)
 	c, err := p.OAuth2(context.TODO())
 	require.NoError(t, err)
-	return c.AuthCodeURL("state", p.AddAuthCodeURLOptions(r)...)
+	return c.AuthCodeURL("state", p.AuthCodeURLOptions(r)...)
 }
 
 func TestProviderGenericOIDC_AddAuthCodeURLOptions(t *testing.T) {
-	t.Run("case=expect prompt to be login with reauthentication flag", func(t *testing.T) {
+	t.Run("case=expect prompt to be login with forced flag", func(t *testing.T) {
 		r := &login.Request{
-			ID:                 x.NewUUID(),
-			IsReauthentication: true,
+			ID:     x.NewUUID(),
+			Forced: true,
 		}
 		assert.Contains(t, makeAuthCodeURL(t, r), "prompt=login")
 	})
 
-	t.Run("case=expect prompt to not be login without reauthentication flag", func(t *testing.T) {
+	t.Run("case=expect prompt to not be login without forced flag", func(t *testing.T) {
 		r := &login.Request{
 			ID: x.NewUUID(),
 		}

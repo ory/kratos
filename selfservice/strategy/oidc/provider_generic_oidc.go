@@ -68,8 +68,8 @@ func (g *ProviderGenericOIDC) OAuth2(ctx context.Context) (*oauth2.Config, error
 	}, nil
 }
 
-func (g *ProviderGenericOIDC) AddAuthCodeURLOptions(r request) []oauth2.AuthCodeOption {
-	if r.IsReauth() {
+func (g *ProviderGenericOIDC) AuthCodeURLOptions(r request) []oauth2.AuthCodeOption {
+	if r.IsForced() {
 		return []oauth2.AuthCodeOption{
 			oauth2.SetAuthURLParam("prompt", "login"),
 		}

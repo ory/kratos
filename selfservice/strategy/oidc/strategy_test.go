@@ -460,7 +460,7 @@ func TestStrategy(t *testing.T) {
 		})
 	})
 
-	t.Run("case=should redirect to default return ts when sending authenticated login request without reauth flag", func(t *testing.T) {
+	t.Run("case=should redirect to default return ts when sending authenticated login request without forced flag", func(t *testing.T) {
 		subject = "no-reauth-login@ory.sh"
 		scope = []string{"openid"}
 
@@ -475,7 +475,7 @@ func TestStrategy(t *testing.T) {
 		assert.Equal(t, body1, body2)
 	})
 
-	t.Run("case=should reauthenticate when sending authenticated login request with reauth flag", func(t *testing.T) {
+	t.Run("case=should reauthenticate when sending authenticated login request with forced flag", func(t *testing.T) {
 		subject = "reauth-login@ory.sh"
 		scope = []string{"openid"}
 
@@ -485,7 +485,7 @@ func TestStrategy(t *testing.T) {
 		res1, body1 := mrj(t, "valid", r1.ID, fv, jar)
 		ai(t, res1, body1)
 		r2 := nlr(t, returnTS.URL, time.Minute)
-		require.NoError(t, reg.LoginRequestPersister().UpdateLoginRequestReauth(context.Background(), r2.ID, true))
+		require.NoError(t, reg.LoginRequestPersister().MarkRequestForced(context.Background(), r2.ID))
 		res2, body2 := mrj(t, "valid", r2.ID, fv, jar)
 		ai(t, res2, body2)
 		assert.NotEqual(t, gjson.GetBytes(body1, "sid"), gjson.GetBytes(body2, "sid"))

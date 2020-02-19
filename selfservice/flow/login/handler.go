@@ -112,8 +112,8 @@ func (h *Handler) NewLoginRequest(w http.ResponseWriter, r *http.Request, redir 
 func (h *Handler) initLoginRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := h.NewLoginRequest(w, r, func(a *Request) (string, error) {
 		// we assume an error means the user has no session
-		if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), w, r); err == nil && r.URL.Query().Get("prompt") == "true" {
-			if err := h.d.LoginRequestPersister().UpdateLoginRequestReauth(r.Context(), a.ID, true); err != nil {
+		if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), w, r); err == nil && r.URL.Query().Get("prompt") == "login" {
+			if err := h.d.LoginRequestPersister().MarkRequestForced(r.Context(), a.ID); err != nil {
 				return "", err
 			}
 		}
