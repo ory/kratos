@@ -4,6 +4,7 @@
 
 - [Changelog](#changelog)
   - [Unreleased](#unreleased)
+  - [v0.1.1-alpha.1 (2020-02-18)](#v011-alpha1-2020-02-18)
   - [v0.1.0-alpha.6 (2020-02-16)](#v010-alpha6-2020-02-16)
   - [v0.1.0-alpha.5 (2020-02-06)](#v010-alpha5-2020-02-06)
   - [v0.1.0-alpha.4 (2020-02-06)](#v010-alpha4-2020-02-06)
@@ -42,7 +43,23 @@
 
 ## [Unreleased](https://github.com/ory/kratos/tree/HEAD)
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.1.0-alpha.6...HEAD)
+[Full Changelog](https://github.com/ory/kratos/compare/v0.1.1-alpha.1...HEAD)
+
+**Fixed bugs:**
+
+- feat: Enable CockroachDB integration [\#260](https://github.com/ory/kratos/pull/260) ([aeneasr](https://github.com/aeneasr))
+
+**Security fixes:**
+
+- Implement Password Strength Meter API [\#136](https://github.com/ory/kratos/issues/136)
+
+**Closed issues:**
+
+- Enable CockroachDB test suite and integration [\#132](https://github.com/ory/kratos/issues/132)
+
+## [v0.1.1-alpha.1](https://github.com/ory/kratos/tree/v0.1.1-alpha.1) (2020-02-18)
+
+[Full Changelog](https://github.com/ory/kratos/compare/v0.1.0-alpha.6...v0.1.1-alpha.1)
 
 **Fixed bugs:**
 
@@ -277,6 +294,10 @@
 
 [Full Changelog](https://github.com/ory/kratos/compare/v0.0.3-alpha.1...v0.0.3-alpha.2)
 
+**Merged pull requests:**
+
+- ss/profile: Use request ID as query param everywhere [\#202](https://github.com/ory/kratos/pull/202) ([aeneasr](https://github.com/aeneasr))
+
 ## [v0.0.3-alpha.1](https://github.com/ory/kratos/tree/v0.0.3-alpha.1) (2020-01-30)
 
 [Full Changelog](https://github.com/ory/kratos/compare/v0.0.1-alpha.9...v0.0.3-alpha.1)
@@ -289,7 +310,6 @@
 
 - Update quickstart [\#207](https://github.com/ory/kratos/pull/207) ([aeneasr](https://github.com/aeneasr))
 - Take field order from schema [\#205](https://github.com/ory/kratos/pull/205) ([zepatrik](https://github.com/zepatrik))
-- ss/profile: Use request ID as query param everywhere [\#202](https://github.com/ory/kratos/pull/202) ([aeneasr](https://github.com/aeneasr))
 
 ## [v0.0.1-alpha.9](https://github.com/ory/kratos/tree/v0.0.1-alpha.9) (2020-01-29)
 
