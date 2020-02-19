@@ -12,9 +12,10 @@ import (
 	"github.com/go-errors/errors"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/ory/x/sqlcon"
+
 	"github.com/ory/kratos/persistence/sql"
 	"github.com/ory/kratos/x"
-	"github.com/ory/x/sqlcon"
 
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gobuffalo/pop/v5/logging"
@@ -90,9 +91,9 @@ func TestPersister(t *testing.T) {
 	var l sync.Mutex
 	if !testing.Short() {
 		funcs := map[string]func(t *testing.T) string{
-			"postgres": dockertest.RunTestPostgreSQL,
-			"mysql":    dockertest.RunTestMySQL,
-			// "cockroach": dockertest.RunTestCockroachDB, // pending: https://github.com/gobuffalo/fizz/pull/69
+			"postgres":  dockertest.RunTestPostgreSQL,
+			"mysql":     dockertest.RunTestMySQL,
+			"cockroach": dockertest.RunTestCockroachDB,
 		}
 
 		var wg sync.WaitGroup
