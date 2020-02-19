@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/kratos/persistence/sql"
+	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/sqlcon"
 
@@ -127,6 +128,10 @@ func TestPersister(t *testing.T) {
 			t.Run("contract=registration.TestRequestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
 				registration.TestRequestPersister(p)(t)
+			})
+			t.Run("contract=errorx.TestPersister", func(t *testing.T) {
+				pop.SetLogger(pl(t))
+				errorx.TestPersister(p)(t)
 			})
 			t.Run("contract=login.TestRequestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
