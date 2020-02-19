@@ -2,6 +2,8 @@ module github.com/ory/kratos
 
 go 1.13
 
+replace github.com/gobuffalo/fizz => ../../gobuffalo/fizz
+
 require (
 	github.com/Masterminds/sprig/v3 v3.0.0
 	github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0
@@ -23,10 +25,9 @@ require (
 	github.com/gobuffalo/fizz v1.9.6 // indirect
 	github.com/gobuffalo/helpers v0.6.1 // indirect
 	github.com/gobuffalo/httptest v1.0.2
-	github.com/gobuffalo/nulls v0.2.0 // indirect
 	github.com/gobuffalo/packd v1.0.0 // indirect
 	github.com/gobuffalo/packr/v2 v2.7.1
-	github.com/gobuffalo/pop/v5 v5.0.7
+	github.com/gobuffalo/pop/v5 v5.0.8
 	github.com/gobuffalo/tags v2.1.7+incompatible // indirect
 	github.com/gobuffalo/uuid v2.0.5+incompatible
 	github.com/gobuffalo/validate/v3 v3.1.0 // indirect
@@ -40,7 +41,6 @@ require (
 	github.com/gorilla/sessions v1.1.3
 	github.com/hashicorp/golang-lru v0.5.1
 	github.com/imdario/mergo v0.3.7
-	github.com/jackc/pgconn v1.3.1 // indirect
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/justinas/nosurf v0.0.0-20190118163749-6453469bdcc9
