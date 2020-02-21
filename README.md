@@ -256,7 +256,7 @@ to perform a certain action on a resource.
 
 ## Security
 
-Running identity infrastructure requires [attention and knowledge of thread models](https://www.ory.sh/docs/next/kratos/concepts/security).
+Running identity infrastructure requires [attention and knowledge of threat models](https://www.ory.sh/docs/next/kratos/concepts/security).
 
 ### Disclosing vulnerabilities
 
