@@ -62,6 +62,7 @@ const (
 	ViperKeySelfServiceLifespanLoginRequest        = "selfservice.login.request_lifespan"
 	ViperKeySelfServiceLogoutRedirectURL           = "selfservice.logout.redirect_to"
 	ViperKeySelfServiceLifespanProfileRequest      = "selfservice.profile.request_lifespan"
+	ViperKeySelfServiceTimeoutPrivileged           = "selfservice.profile.privileged_timeout"
 	ViperKeySelfServiceLifespanLink                = "selfservice.profile.link_lifespan"
 	ViperKeySelfServiceLifespanVerificationRequest = "selfservice.verify.request_lifespan"
 	ViperKeySelfServiceVerifyReturnTo              = "selfservice.verify.return_to"
@@ -358,4 +359,8 @@ func (p *ViperProvider) SelfServiceVerificationLinkLifespan() time.Duration {
 
 func (p *ViperProvider) SelfServiceVerificationReturnTo() *url.URL {
 	return mustParseURLFromViper(p.l, ViperKeySelfServiceVerifyReturnTo)
+}
+
+func (p *ViperProvider) SelfServicePrivilegedTimeout() time.Duration {
+	return viperx.GetDuration(p.l, ViperKeySelfServiceTimeoutPrivileged, time.Hour)
 }

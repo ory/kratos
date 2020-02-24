@@ -75,7 +75,7 @@ func (m *Manager) Update(ctx context.Context, i *Identity, opts ...managerOption
 	return m.r.IdentityPool().(PrivilegedPool).UpdateIdentity(ctx, i)
 }
 
-func (m *Manager) UpdateUnprotectedTraits(ctx context.Context, id uuid.UUID, traits Traits, opts ...managerOption) error {
+func (m *Manager) UpdateTraits(ctx context.Context, id uuid.UUID, traits Traits, allowAllTraits bool, opts ...managerOption) error {
 	o := newManagerOptions(opts)
 
 	identity, err := m.r.IdentityPool().(PrivilegedPool).GetIdentityConfidential(ctx, id)
@@ -89,14 +89,16 @@ func (m *Manager) UpdateUnprotectedTraits(ctx context.Context, id uuid.UUID, tra
 		return err
 	}
 
-	if !CredentialsEqual(identity.Credentials, original.Credentials) {
-		return errors.WithStack(ErrProtectedFieldModified)
-	}
+	if !allowAllTraits {
+		if !CredentialsEqual(identity.Credentials, original.Credentials) {
+			return errors.WithStack(ErrProtectedFieldModified)
+		}
 
-	if !reflect.DeepEqual(original.Addresses, identity.Addresses) &&
-		/* prevent nil != []string{} */
-		len(original.Addresses)+len(identity.Addresses) != 0 {
-		return errors.WithStack(ErrProtectedFieldModified)
+		if !reflect.DeepEqual(original.Addresses, identity.Addresses) &&
+			/* prevent nil != []string{} */
+			len(original.Addresses)+len(identity.Addresses) != 0 {
+			return errors.WithStack(ErrProtectedFieldModified)
+		}
 	}
 
 	return m.r.IdentityPool().(PrivilegedPool).UpdateIdentity(ctx, identity)
