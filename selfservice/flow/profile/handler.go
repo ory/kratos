@@ -321,7 +321,7 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	authenticatedBefore := time.Now().Sub(s.AuthenticatedAt).Nanoseconds()
+	authenticatedBefore := time.Since(s.AuthenticatedAt).Nanoseconds()
 	if authenticatedBefore < 0 {
 		h.handleProfileManagementError(w, r, ar, s.Identity.Traits, errors.WithStack(
 			herodot.ErrInternalServerError.
