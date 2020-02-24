@@ -35,10 +35,11 @@ type (
 	}
 
 	managerOptions struct {
-		ExposeValidationErrors bool
+		ExposeValidationErrors    bool
+		AllowWriteProtectedTraits bool
 	}
 
-	managerOption func(*managerOptions)
+	ManagerOption func(*managerOptions)
 )
 
 func NewManager(r managerDependencies, c configuration.Provider) *Manager {
@@ -49,7 +50,11 @@ func ManagerExposeValidationErrors(options *managerOptions) {
 	options.ExposeValidationErrors = true
 }
 
-func newManagerOptions(opts []managerOption) *managerOptions {
+func ManagerAllowWriteProtectedTraits(options *managerOptions) {
+	options.AllowWriteProtectedTraits = true
+}
+
+func newManagerOptions(opts []ManagerOption) *managerOptions {
 	var o managerOptions
 	for _, f := range opts {
 		f(&o)
@@ -57,7 +62,7 @@ func newManagerOptions(opts []managerOption) *managerOptions {
 	return &o
 }
 
-func (m *Manager) Create(ctx context.Context, i *Identity, opts ...managerOption) error {
+func (m *Manager) Create(ctx context.Context, i *Identity, opts ...ManagerOption) error {
 	o := newManagerOptions(opts)
 	if err := m.validate(i, o); err != nil {
 		return err
@@ -66,7 +71,7 @@ func (m *Manager) Create(ctx context.Context, i *Identity, opts ...managerOption
 	return m.r.IdentityPool().(PrivilegedPool).CreateIdentity(ctx, i)
 }
 
-func (m *Manager) Update(ctx context.Context, i *Identity, opts ...managerOption) error {
+func (m *Manager) Update(ctx context.Context, i *Identity, opts ...ManagerOption) error {
 	o := newManagerOptions(opts)
 	if err := m.validate(i, o); err != nil {
 		return err
@@ -75,7 +80,7 @@ func (m *Manager) Update(ctx context.Context, i *Identity, opts ...managerOption
 	return m.r.IdentityPool().(PrivilegedPool).UpdateIdentity(ctx, i)
 }
 
-func (m *Manager) UpdateTraits(ctx context.Context, id uuid.UUID, traits Traits, allowAllTraits bool, opts ...managerOption) error {
+func (m *Manager) UpdateTraits(ctx context.Context, id uuid.UUID, traits Traits, opts ...ManagerOption) error {
 	o := newManagerOptions(opts)
 
 	identity, err := m.r.IdentityPool().(PrivilegedPool).GetIdentityConfidential(ctx, id)
@@ -89,7 +94,7 @@ func (m *Manager) UpdateTraits(ctx context.Context, id uuid.UUID, traits Traits,
 		return err
 	}
 
-	if !allowAllTraits {
+	if !o.AllowWriteProtectedTraits {
 		if !CredentialsEqual(identity.Credentials, original.Credentials) {
 			return errors.WithStack(ErrProtectedFieldModified)
 		}

@@ -326,13 +326,14 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 		h.handleProfileManagementError(w, r, ar, s.Identity.Traits, errors.WithStack(
 			herodot.ErrInternalServerError.
 				WithReason("There was a configuration error, please contact the administrator.").
-				//WithDebugf("session.AuthenticatedAt was %dns in the future. This should not happen.", authenticatedBefore).
-				WithDebugf("authenticated at %s", s.AuthenticatedAt)))
+				WithDebugf("session.AuthenticatedAt was %dns in the future. This should not happen.", authenticatedBefore)))
 		return
 	}
-	if err := h.d.IdentityManager().UpdateTraits(
-		r.Context(), s.Identity.ID, identity.Traits(p.Traits), authenticatedBefore < h.c.SelfServicePrivilegedTimeout().Nanoseconds(),
-		identity.ManagerExposeValidationErrors); err != nil {
+	identityManagerOptions := []identity.ManagerOption{identity.ManagerExposeValidationErrors}
+	if authenticatedBefore < h.c.SelfServicePrivilegedTimeout().Nanoseconds() {
+		identityManagerOptions = append(identityManagerOptions, identity.ManagerAllowWriteProtectedTraits)
+	}
+	if err := h.d.IdentityManager().UpdateTraits(r.Context(), s.Identity.ID, identity.Traits(p.Traits), identityManagerOptions...); err != nil {
 		h.handleProfileManagementError(w, r, ar, identity.Traits(p.Traits), err)
 		return
 	}

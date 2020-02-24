@@ -66,11 +66,11 @@ func TestManager(t *testing.T) {
 		require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
 
 		// These should all fail because they modify existing keys
-		require.Error(t, reg.IdentityManager().UpdateTraits(context.Background(), original.ID, identity.Traits(`{"email":"not-baz@ory.sh","email_verify":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "foo"}`), false))
-		require.Error(t, reg.IdentityManager().UpdateTraits(context.Background(), original.ID, identity.Traits(`{"email":"baz@ory.sh","email_verify":"not-baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "foo"}`), false))
-		require.Error(t, reg.IdentityManager().UpdateTraits(context.Background(), original.ID, identity.Traits(`{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_creds":"not-baz@ory.sh","unprotected": "foo"}`), false))
+		require.Error(t, reg.IdentityManager().UpdateTraits(context.Background(), original.ID, identity.Traits(`{"email":"not-baz@ory.sh","email_verify":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "foo"}`)))
+		require.Error(t, reg.IdentityManager().UpdateTraits(context.Background(), original.ID, identity.Traits(`{"email":"baz@ory.sh","email_verify":"not-baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "foo"}`)))
+		require.Error(t, reg.IdentityManager().UpdateTraits(context.Background(), original.ID, identity.Traits(`{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_creds":"not-baz@ory.sh","unprotected": "foo"}`)))
 
-		require.NoError(t, reg.IdentityManager().UpdateTraits(context.Background(), original.ID, identity.Traits(`{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "bar"}`), false))
+		require.NoError(t, reg.IdentityManager().UpdateTraits(context.Background(), original.ID, identity.Traits(`{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "bar"}`)))
 		checkExtensionFields(t, "baz@ory.sh", original)
 
 		actual, err := reg.IdentityPool().GetIdentity(context.Background(), original.ID)
