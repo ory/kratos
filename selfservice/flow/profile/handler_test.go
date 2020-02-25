@@ -381,6 +381,8 @@ func TestUpdateProfile(t *testing.T) {
 		t.Run("flow=succeed with final request", func(t *testing.T) {
 			rs := makeRequest(t)
 			values := fieldsToURLValues(rs.Payload.Form.Fields)
+			// set email to the one that is in the db as it should not be modified
+			values.Set("traits.email", "not-john-doe@mail.com")
 			values.Set("traits.numby", "15")
 			values.Set("traits.should_big_number", "9001")
 			values.Set("traits.should_long_string", "this is such a long string, amazing stuff!")

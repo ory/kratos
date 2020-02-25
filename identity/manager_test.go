@@ -90,11 +90,11 @@ func TestManager(t *testing.T) {
 			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
 
 			// These should all fail because they modify existing keys
-			require.Error(t, reg.IdentityManager().UpdateTraits(context.Background(), original, identity.Traits(`{"email":"not-baz@ory.sh","email_verify":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "foo"}`)))
-			require.Error(t, reg.IdentityManager().UpdateTraits(context.Background(), original, identity.Traits(`{"email":"baz@ory.sh","email_verify":"not-baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "foo"}`)))
-			require.Error(t, reg.IdentityManager().UpdateTraits(context.Background(), original, identity.Traits(`{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_creds":"not-baz@ory.sh","unprotected": "foo"}`)))
+			require.Error(t, reg.IdentityManager().UpdateTraits(context.Background(), original.ID, identity.Traits(`{"email":"not-baz@ory.sh","email_verify":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "foo"}`)))
+			require.Error(t, reg.IdentityManager().UpdateTraits(context.Background(), original.ID, identity.Traits(`{"email":"baz@ory.sh","email_verify":"not-baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "foo"}`)))
+			require.Error(t, reg.IdentityManager().UpdateTraits(context.Background(), original.ID, identity.Traits(`{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_creds":"not-baz@ory.sh","unprotected": "foo"}`)))
 
-			require.NoError(t, reg.IdentityManager().UpdateTraits(context.Background(), original, identity.Traits(`{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "bar"}`)))
+			require.NoError(t, reg.IdentityManager().UpdateTraits(context.Background(), original.ID, identity.Traits(`{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "bar"}`)))
 			checkExtensionFieldsForIdentities(t, "baz@ory.sh", original)
 
 			actual, err := reg.IdentityPool().GetIdentity(context.Background(), original.ID)
@@ -110,12 +110,14 @@ func TestManager(t *testing.T) {
 			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
 
 			require.NoError(t, reg.IdentityManager().UpdateTraits(
-				context.Background(), original, identity.Traits(`{"email":"email2@ory.sh"}`),
+				context.Background(), original.ID, identity.Traits(`{"email":"email2@ory.sh"}`),
 				identity.ManagerAllowWriteProtectedTraits))
 
+			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), original.ID)
+			require.NoError(t, err)
 			// As UpdateTraits takes only the ID as a parameter it cannot update the identity in place.
 			// That is why we only check the identity in the store.
-			checkExtensionFieldsForIdentities(t, "email2@ory.sh", original)
+			checkExtensionFields(fromStore, "email2@ory.sh")(t)
 		})
 
 		t.Run("case=should not update protected traits without option", func(t *testing.T) {
@@ -124,11 +126,15 @@ func TestManager(t *testing.T) {
 			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
 
 			err := reg.IdentityManager().UpdateTraits(
-				context.Background(), original, identity.Traits(`{"email":"email2@ory.sh"}`))
+				context.Background(), original.ID, identity.Traits(`{"email":"email2@ory.sh"}`))
 			require.Error(t, err)
 			assert.Equal(t, identity.ErrProtectedFieldModified, errors.Cause(err))
 
-			checkExtensionFieldsForIdentities(t, "email1@ory.sh", original)
+			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), original.ID)
+			require.NoError(t, err)
+			// As UpdateTraits takes only the ID as a parameter it cannot update the identity in place.
+			// That is why we only check the identity in the store.
+			checkExtensionFields(fromStore, "email1@ory.sh")(t)
 		})
 	})
 

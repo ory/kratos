@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/mohae/deepcopy"
 	"github.com/pkg/errors"
 
@@ -79,9 +81,13 @@ func (m *Manager) Update(ctx context.Context, i *Identity, opts ...ManagerOption
 	return m.r.IdentityPool().(PrivilegedPool).UpdateIdentity(ctx, i)
 }
 
-func (m *Manager) UpdateTraits(ctx context.Context, identity *Identity, traits Traits, opts ...ManagerOption) error {
+func (m *Manager) UpdateTraits(ctx context.Context, id uuid.UUID, traits Traits, opts ...ManagerOption) error {
 	o := newManagerOptions(opts)
 
+	identity, err := m.r.IdentityPool().(PrivilegedPool).GetIdentityConfidential(ctx, id)
+	if err != nil {
+		return err
+	}
 	// original is used to check whether protected traits were modified
 	original := deepcopy.Copy(identity).(*Identity)
 	identity.Traits = traits

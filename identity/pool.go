@@ -405,12 +405,12 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 				}
 
 				compare := func(t *testing.T, expected, actual VerifiableAddress) {
-					actual.CreatedAt = actual.CreatedAt.UTC().Round(time.Hour * 24)
-					actual.UpdatedAt = actual.UpdatedAt.UTC().Round(time.Hour * 24)
-					actual.ExpiresAt = actual.ExpiresAt.UTC().Round(time.Hour * 24)
-					expected.CreatedAt = expected.CreatedAt.UTC().Round(time.Hour * 24)
-					expected.UpdatedAt = expected.UpdatedAt.UTC().Round(time.Hour * 24)
-					expected.ExpiresAt = expected.ExpiresAt.UTC().Round(time.Hour * 24)
+					actual.CreatedAt = actual.CreatedAt.UTC().Truncate(time.Hour * 24)
+					actual.UpdatedAt = actual.UpdatedAt.UTC().Truncate(time.Hour * 24)
+					actual.ExpiresAt = actual.ExpiresAt.UTC().Truncate(time.Hour * 24)
+					expected.CreatedAt = expected.CreatedAt.UTC().Truncate(time.Hour * 24)
+					expected.UpdatedAt = expected.UpdatedAt.UTC().Truncate(time.Hour * 24)
+					expected.ExpiresAt = expected.ExpiresAt.UTC().Truncate(time.Hour * 24)
 					assert.EqualValues(t, expected, actual)
 				}
 
