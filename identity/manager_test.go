@@ -3,11 +3,13 @@ package identity_test
 import (
 	"context"
 	"fmt"
-	"github.com/ory/viper"
+	"testing"
+
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
+
+	"github.com/ory/viper"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
@@ -27,14 +29,15 @@ func TestManager(t *testing.T) {
 	})
 
 	checkExtensionFields := func(i *identity.Identity, expected string) func(*testing.T) {
-		return func(t *testing.T){
-		require.Len(t, i.Addresses, 1)
-		assert.EqualValues(t, expected, i.Addresses[0].Value)
-		assert.EqualValues(t, identity.VerifiableAddressTypeEmail, i.Addresses[0].Via)
+		return func(t *testing.T) {
+			require.Len(t, i.Addresses, 1)
+			assert.EqualValues(t, expected, i.Addresses[0].Value)
+			assert.EqualValues(t, identity.VerifiableAddressTypeEmail, i.Addresses[0].Via)
 
-		require.NotNil(t, i.Credentials[identity.CredentialsTypePassword])
-		assert.Equal(t, []string{expected}, i.Credentials[identity.CredentialsTypePassword].Identifiers)
-	}}
+			require.NotNil(t, i.Credentials[identity.CredentialsTypePassword])
+			assert.Equal(t, []string{expected}, i.Credentials[identity.CredentialsTypePassword].Identifiers)
+		}
+	}
 
 	checkExtensionFieldsForIdentities := func(t *testing.T, expected string, original *identity.Identity) {
 		fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), original.ID)
