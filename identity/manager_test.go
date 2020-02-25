@@ -3,12 +3,11 @@ package identity_test
 import (
 	"context"
 	"fmt"
-	"testing"
-
+	"github.com/ory/viper"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/ory/viper"
+	"testing"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
@@ -27,55 +26,107 @@ func TestManager(t *testing.T) {
 		require.Error(t, reg.IdentityManager().Create(context.Background(), i))
 	})
 
-	checkExtensionFields := func(t *testing.T, expected string, original *identity.Identity) {
+	checkExtensionFields := func(i *identity.Identity, expected string) func(*testing.T) {
+		return func(t *testing.T){
+		require.Len(t, i.Addresses, 1)
+		assert.EqualValues(t, expected, i.Addresses[0].Value)
+		assert.EqualValues(t, identity.VerifiableAddressTypeEmail, i.Addresses[0].Via)
+
+		require.NotNil(t, i.Credentials[identity.CredentialsTypePassword])
+		assert.Equal(t, []string{expected}, i.Credentials[identity.CredentialsTypePassword].Identifiers)
+	}}
+
+	checkExtensionFieldsForIdentities := func(t *testing.T, expected string, original *identity.Identity) {
 		fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), original.ID)
 		require.NoError(t, err)
 		for k, i := range []identity.Identity{*original, *fromStore} {
-			t.Run(fmt.Sprintf("identity=%d", k), func(t *testing.T) {
-				require.Len(t, i.Addresses, 1)
-				assert.EqualValues(t, expected, i.Addresses[0].Value)
-				assert.EqualValues(t, identity.VerifiableAddressTypeEmail, i.Addresses[0].Via)
-
-				require.NotNil(t, i.Credentials[identity.CredentialsTypePassword])
-				assert.Equal(t, []string{expected}, i.Credentials[identity.CredentialsTypePassword].Identifiers)
-			})
+			t.Run(fmt.Sprintf("identity=%d", k), checkExtensionFields(&i, expected))
 		}
 	}
 
-	t.Run("method=Create/case=should create identity and track extension fields", func(t *testing.T) {
-		original := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
-		original.Traits = identity.Traits(`{"email":"foo@ory.sh"}`)
-		require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
-		checkExtensionFields(t, "foo@ory.sh", original)
+	t.Run("method=Create", func(t *testing.T) {
+		t.Run("case=should create identity and track extension fields", func(t *testing.T) {
+			original := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+			original.Traits = identity.Traits(`{"email":"foo@ory.sh"}`)
+			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
+			checkExtensionFieldsForIdentities(t, "foo@ory.sh", original)
+		})
+
+		t.Run("case=should expose validation errors with option", func(t *testing.T) {
+			original := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+			original.Traits = identity.Traits(`{"email":"not an email"}`)
+			err := reg.IdentityManager().Create(context.Background(), original, identity.ManagerExposeValidationErrors)
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "\"not an email\" is not valid \"email\"")
+		})
+
+		t.Run("case=should not expose validation errors without option", func(t *testing.T) {
+			original := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+			original.Traits = identity.Traits(`{"email":"not an email"}`)
+			err := reg.IdentityManager().Create(context.Background(), original)
+			require.Error(t, err)
+			assert.NotContains(t, err.Error(), "\"not an email\" is not valid \"email\"")
+		})
 	})
 
-	t.Run("method=Update/case=should update identity and update extension fields", func(t *testing.T) {
-		original := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
-		original.Traits = identity.Traits(`{"email":"baz@ory.sh"}`)
-		require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
+	t.Run("method=Update", func(t *testing.T) {
+		t.Run("case=should update identity and update extension fields", func(t *testing.T) {
+			original := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+			original.Traits = identity.Traits(`{"email":"baz@ory.sh"}`)
+			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
 
-		original.Traits = identity.Traits(`{"email":"bar@ory.sh"}`)
-		require.NoError(t, reg.IdentityManager().Update(context.Background(), original))
+			original.Traits = identity.Traits(`{"email":"bar@ory.sh"}`)
+			require.NoError(t, reg.IdentityManager().Update(context.Background(), original))
 
-		checkExtensionFields(t, "bar@ory.sh", original)
+			checkExtensionFieldsForIdentities(t, "bar@ory.sh", original)
+		})
+
+		t.Run("case=should update identity and update extension fields", func(t *testing.T) {
+			original := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+			original.Traits = identity.Traits(`{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "foo"}`)
+			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
+
+			// These should all fail because they modify existing keys
+			require.Error(t, reg.IdentityManager().UpdateTraits(context.Background(), original, identity.Traits(`{"email":"not-baz@ory.sh","email_verify":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "foo"}`)))
+			require.Error(t, reg.IdentityManager().UpdateTraits(context.Background(), original, identity.Traits(`{"email":"baz@ory.sh","email_verify":"not-baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "foo"}`)))
+			require.Error(t, reg.IdentityManager().UpdateTraits(context.Background(), original, identity.Traits(`{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_creds":"not-baz@ory.sh","unprotected": "foo"}`)))
+
+			require.NoError(t, reg.IdentityManager().UpdateTraits(context.Background(), original, identity.Traits(`{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "bar"}`)))
+			checkExtensionFieldsForIdentities(t, "baz@ory.sh", original)
+
+			actual, err := reg.IdentityPool().GetIdentity(context.Background(), original.ID)
+			require.NoError(t, err)
+			assert.JSONEq(t, `{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "bar"}`, string(actual.Traits))
+		})
 	})
 
-	t.Run("method=Update/case=should update identity and update extension fields", func(t *testing.T) {
-		original := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
-		original.Traits = identity.Traits(`{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "foo"}`)
-		require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
+	t.Run("method=UpdateTraits", func(t *testing.T) {
+		t.Run("case=should update protected traits with option", func(t *testing.T) {
+			original := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+			original.Traits = identity.Traits(`{"email":"email1@ory.sh"}`)
+			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
 
-		// These should all fail because they modify existing keys
-		require.Error(t, reg.IdentityManager().UpdateTraits(context.Background(), original.ID, identity.Traits(`{"email":"not-baz@ory.sh","email_verify":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "foo"}`)))
-		require.Error(t, reg.IdentityManager().UpdateTraits(context.Background(), original.ID, identity.Traits(`{"email":"baz@ory.sh","email_verify":"not-baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "foo"}`)))
-		require.Error(t, reg.IdentityManager().UpdateTraits(context.Background(), original.ID, identity.Traits(`{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_creds":"not-baz@ory.sh","unprotected": "foo"}`)))
+			require.NoError(t, reg.IdentityManager().UpdateTraits(
+				context.Background(), original, identity.Traits(`{"email":"email2@ory.sh"}`),
+				identity.ManagerAllowWriteProtectedTraits))
 
-		require.NoError(t, reg.IdentityManager().UpdateTraits(context.Background(), original.ID, identity.Traits(`{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "bar"}`)))
-		checkExtensionFields(t, "baz@ory.sh", original)
+			// As UpdateTraits takes only the ID as a parameter it cannot update the identity in place.
+			// That is why we only check the identity in the store.
+			checkExtensionFieldsForIdentities(t, "email2@ory.sh", original)
+		})
 
-		actual, err := reg.IdentityPool().GetIdentity(context.Background(), original.ID)
-		require.NoError(t, err)
-		assert.JSONEq(t, `{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "bar"}`, string(actual.Traits))
+		t.Run("case=should not update protected traits without option", func(t *testing.T) {
+			original := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+			original.Traits = identity.Traits(`{"email":"email1@ory.sh"}`)
+			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
+
+			err := reg.IdentityManager().UpdateTraits(
+				context.Background(), original, identity.Traits(`{"email":"email2@ory.sh"}`))
+			require.Error(t, err)
+			assert.Equal(t, identity.ErrProtectedFieldModified, errors.Cause(err))
+
+			checkExtensionFieldsForIdentities(t, "email1@ory.sh", original)
+		})
 	})
 
 	t.Run("method=RefreshVerifyAddress", func(t *testing.T) {
