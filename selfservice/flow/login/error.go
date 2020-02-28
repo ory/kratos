@@ -1,7 +1,6 @@
 package login
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -81,7 +80,7 @@ func (s *ErrorHandler) HandleLoginError(
 		if err = s.d.LoginHandler().NewLoginRequest(w, r, func(a *Request) (string, error) {
 			for name, method := range a.Methods {
 				method.Config.AddError(&form.Error{Message: "Your session expired, please try again."})
-				if err := s.d.LoginRequestPersister().UpdateLoginRequest(context.TODO(), a.ID, name, method); err != nil {
+				if err := s.d.LoginRequestPersister().UpdateLoginRequestMethod(r.Context(), a.ID, name, method); err != nil {
 					return s.d.SelfServiceErrorManager().Create(r.Context(), w, r, err)
 				}
 				a.Methods[name] = method
@@ -114,7 +113,7 @@ func (s *ErrorHandler) HandleLoginError(
 		return
 	}
 
-	if err := s.d.LoginRequestPersister().UpdateLoginRequest(r.Context(), rr.ID, ct, method); err != nil {
+	if err := s.d.LoginRequestPersister().UpdateLoginRequestMethod(r.Context(), rr.ID, ct, method); err != nil {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}

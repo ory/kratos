@@ -33,7 +33,20 @@ func (p *Persister) GetLoginRequest(ctx context.Context, id uuid.UUID) (*login.R
 	return &r, nil
 }
 
-func (p *Persister) UpdateLoginRequest(ctx context.Context, id uuid.UUID, ct identity.CredentialsType, rm *login.RequestMethod) error {
+func (p *Persister) MarkRequestForced(ctx context.Context, id uuid.UUID) error {
+	return p.Transaction(ctx, func(tx *pop.Connection) error {
+		ctx := WithTransaction(ctx, tx)
+		lr, err := p.GetLoginRequest(ctx, id)
+		if err != nil {
+			return err
+		}
+
+		lr.Forced = true
+		return tx.Save(lr)
+	})
+}
+
+func (p *Persister) UpdateLoginRequestMethod(ctx context.Context, id uuid.UUID, ct identity.CredentialsType, rm *login.RequestMethod) error {
 	return p.Transaction(ctx, func(tx *pop.Connection) error {
 		ctx := WithTransaction(ctx, tx)
 		rr, err := p.GetLoginRequest(ctx, id)

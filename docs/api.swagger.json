@@ -1177,6 +1177,10 @@
           "type": "string",
           "format": "date-time"
         },
+        "forced": {
+          "description": "Forced stores whether this login request should enforce reauthentication.",
+          "type": "boolean"
+        },
         "id": {
           "$ref": "#/definitions/UUID"
         },

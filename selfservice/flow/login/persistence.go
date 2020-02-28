@@ -18,7 +18,8 @@ type (
 	RequestPersister interface {
 		CreateLoginRequest(context.Context, *Request) error
 		GetLoginRequest(context.Context, uuid.UUID) (*Request, error)
-		UpdateLoginRequest(context.Context, uuid.UUID, identity.CredentialsType, *RequestMethod) error
+		UpdateLoginRequestMethod(context.Context, uuid.UUID, identity.CredentialsType, *RequestMethod) error
+		MarkRequestForced(ctx context.Context, id uuid.UUID) error
 	}
 	RequestPersistenceProvider interface {
 		LoginRequestPersister() RequestPersister
@@ -97,12 +98,12 @@ func TestRequestPersister(p RequestPersister) func(t *testing.T) {
 			require.NoError(t, err)
 			assert.Len(t, actual.Methods, 1)
 
-			require.NoError(t, p.UpdateLoginRequest(context.Background(), expected.ID, identity.CredentialsTypeOIDC, &RequestMethod{
+			require.NoError(t, p.UpdateLoginRequestMethod(context.Background(), expected.ID, identity.CredentialsTypeOIDC, &RequestMethod{
 				Method: identity.CredentialsTypeOIDC,
 				Config: &RequestMethodConfig{RequestMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypeOIDC))},
 			}))
 
-			require.NoError(t, p.UpdateLoginRequest(context.Background(), expected.ID, identity.CredentialsTypePassword, &RequestMethod{
+			require.NoError(t, p.UpdateLoginRequestMethod(context.Background(), expected.ID, identity.CredentialsTypePassword, &RequestMethod{
 				Method: identity.CredentialsTypePassword,
 				Config: &RequestMethodConfig{RequestMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypePassword))},
 			}))

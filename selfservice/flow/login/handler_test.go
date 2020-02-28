@@ -1,67 +1,132 @@
 package login_test
 
 import (
-	"fmt"
+	"context"
+	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
+	"net/url"
 	"testing"
+	"time"
 
 	"github.com/gobuffalo/httptest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/viper"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow/login"
-	"github.com/ory/kratos/selfservice/strategy/oidc"
-	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+)
+
+type (
+	withTokenGenerator interface {
+		WithTokenGenerator(g form.CSRFGenerator)
+	}
 )
 
 func init() {
 	internal.RegisterFakes()
 }
 
-func TestEnsureSessionRedirect(t *testing.T) {
+func TestHandlerSettingForced(t *testing.T) {
 	_, reg := internal.NewRegistryDefault(t)
+	for _, strategy := range reg.LoginStrategies() {
+		// We need to know the csrf token
+		strategy.(withTokenGenerator).WithTokenGenerator(x.FakeCSRFTokenGenerator)
+	}
 
 	router := x.NewRouterPublic()
 	admin := x.NewRouterAdmin()
 	reg.LoginHandler().RegisterPublicRoutes(router)
 	reg.LoginHandler().RegisterAdminRoutes(admin)
+	reg.LoginHandler().WithTokenGenerator(x.FakeCSRFTokenGenerator)
 	reg.LoginStrategies().RegisterPublicRoutes(router)
 	ts := httptest.NewServer(router)
 	defer ts.Close()
 
-	redirTS := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, _ = w.Write([]byte("already authenticated"))
-	}))
-	defer redirTS.Close()
+	loginTS := httptest.NewServer(login.TestRequestHandler(t, reg))
 
-	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, redirTS.URL)
 	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
+	viper.Set(configuration.ViperKeyURLsLogin, loginTS.URL)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/login.schema.json")
 
-	for k, tc := range [][]string{
-		{"GET", login.BrowserLoginPath},
-
-		{"POST", password.LoginPath},
-
-		// it is ok that these contain the parameters as raw strings as we are only interested in checking if the middleware is working
-		{"POST", oidc.AuthPath},
-		{"GET", oidc.AuthPath},
-		{"GET", oidc.CallbackPath},
-	} {
-		t.Run(fmt.Sprintf("case=%d/method=%s/path=%s", k, tc[0], tc[1]), func(t *testing.T) {
-			body, _ := session.MockMakeAuthenticatedRequest(t, reg, router.Router, x.NewTestHTTPRequest(t, tc[0], ts.URL+tc[1], nil))
-			assert.EqualValues(t, "already authenticated", string(body))
-		})
+	// assert bool
+	ab := func(body []byte, exp bool) {
+		r := gjson.GetBytes(body, "forced")
+		assert.True(t, r.Exists(), "%s", body)
+		assert.Equal(t, exp, r.Bool(), "%s", body)
 	}
+
+	// make authenticated request
+	mar := func(extQuery url.Values) []byte {
+		rid := x.NewUUID()
+		req := x.NewTestHTTPRequest(t, "GET", ts.URL+login.BrowserLoginPath, nil)
+		loginReq := login.NewLoginRequest(time.Minute, x.FakeCSRFToken, req)
+		loginReq.ID = rid
+		for _, s := range reg.LoginStrategies() {
+			require.NoError(t, s.PopulateLoginMethod(req, loginReq))
+		}
+		require.NoError(t, reg.LoginRequestPersister().CreateLoginRequest(context.TODO(), loginReq), "%+v", loginReq)
+
+		q := url.Values{
+			"request": {rid.String()},
+		}
+		for key := range extQuery {
+			q.Set(key, extQuery.Get(key))
+		}
+		req.URL.RawQuery = q.Encode()
+
+		body, _ := session.MockMakeAuthenticatedRequest(t, reg, router.Router, req)
+		return body
+	}
+
+	// make unauthenticated request
+	mur := func(query url.Values) []byte {
+		c := ts.Client()
+		u, err := url.ParseRequestURI(ts.URL)
+		require.NoError(t, err)
+		u.Path = login.BrowserLoginPath
+		u.RawQuery = query.Encode()
+		res, err := c.Get(u.String())
+		require.NoError(t, err)
+		defer res.Body.Close()
+		body, err := ioutil.ReadAll(res.Body)
+		require.NoError(t, err)
+		return body
+	}
+
+	t.Run("case=does not set forced flag on unauthenticated request", func(t *testing.T) {
+		ab(mur(url.Values{}), false)
+	})
+
+	t.Run("case=does not set forced flag on unauthenticated request with prompt=login", func(t *testing.T) {
+		ab(mur(url.Values{
+			"prompt": {"login"},
+		}), false)
+	})
+
+	t.Run("case=does not set forced flag on authenticated request without prompt=login", func(t *testing.T) {
+		ab(mar(url.Values{}), false)
+	})
+
+	t.Run("case=does not set forced flag on authenticated request with prompt=false", func(t *testing.T) {
+		ab(mar(url.Values{
+			"prompt": {"false"},
+		}), false)
+	})
+
+	t.Run("case=does set forced flag on authenticated request with prompt=login", func(t *testing.T) {
+		ab(mar(url.Values{
+			"prompt": {"login"},
+		}), true)
+	})
 }
 
 func TestLoginHandler(t *testing.T) {

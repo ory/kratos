@@ -34,6 +34,7 @@ require (
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
 	github.com/golang/mock v1.3.1
 	github.com/google/go-github/v27 v27.0.1
+	github.com/google/go-querystring v1.0.0
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/securecookie v1.1.1

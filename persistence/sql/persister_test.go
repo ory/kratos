@@ -196,7 +196,7 @@ func TestPersister_Transaction(t *testing.T) {
 		err := c.Transaction(func(tx *pop.Connection) error {
 			ctx := sql.WithTransaction(context.Background(), tx)
 			require.NoError(t, p.CreateLoginRequest(ctx, lr), "%+v", lr)
-			require.NoError(t, p.UpdateLoginRequest(ctx, lr.ID, identity.CredentialsTypePassword, &login.RequestMethod{}))
+			require.NoError(t, p.UpdateLoginRequestMethod(ctx, lr.ID, identity.CredentialsTypePassword, &login.RequestMethod{}))
 			require.NoError(t, getErr(p.GetLoginRequest(ctx, lr.ID)), "%+v", lr)
 			return errors.Errorf(errMessage)
 		})

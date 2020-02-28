@@ -118,18 +118,14 @@ func TestStrategy(t *testing.T) {
 	_, reg := internal.NewRegistryDefault(t)
 	for _, strategy := range reg.LoginStrategies() {
 		// We need to replace the password strategy token generator because it is being used by the error handler...
-		strategy.(withTokenGenerator).WithTokenGenerator(func(r *http.Request) string {
-			return "nosurf"
-		})
+		strategy.(withTokenGenerator).WithTokenGenerator(x.FakeCSRFTokenGenerator)
 	}
 
 	public := x.NewRouterPublic()
 	admin := x.NewRouterAdmin()
 	reg.LoginHandler().RegisterPublicRoutes(public)
 	reg.LoginHandler().RegisterAdminRoutes(admin)
-	reg.LoginHandler().WithTokenGenerator(func(r *http.Request) string {
-		return "nosurf"
-	})
+	reg.LoginHandler().WithTokenGenerator(x.FakeCSRFTokenGenerator)
 	reg.LoginStrategies().RegisterPublicRoutes(public)
 	reg.RegistrationStrategies().RegisterPublicRoutes(public)
 	reg.RegistrationHandler().RegisterPublicRoutes(public)
@@ -192,8 +188,7 @@ func TestStrategy(t *testing.T) {
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
 	viper.Set(configuration.ViperKeySelfServiceRegistrationAfterConfig+"."+string(identity.CredentialsTypeOIDC), hookConfig(returnTS.URL))
 	viper.Set(configuration.ViperKeySelfServiceLoginAfterConfig+"."+string(identity.CredentialsTypeOIDC), hookConfig(returnTS.URL))
-	// viper.Set(configuration.ViperKeySignupDefaultReturnToURL, returnTS.URL)
-	// viper.Set(configuration.ViperKeyAuthnDefaultReturnToURL, returnTS.URL)
+	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, returnTS.URL)
 
 	t.Logf("Kratos Public URL: %s", ts.URL)
 	t.Logf("Kratos Error URL: %s", errTS.URL)
@@ -202,9 +197,12 @@ func TestStrategy(t *testing.T) {
 	t.Logf("Hydra Integration URL: %s", hydraIntegrationTSURL)
 	t.Logf("Return URL: %s", returnTS.URL)
 
-	var newClient = func(t *testing.T) *http.Client {
-		jar, err := cookiejar.New(nil)
-		require.NoError(t, err)
+	var newClient = func(t *testing.T, jar *cookiejar.Jar) *http.Client {
+		if jar == nil {
+			j, err := cookiejar.New(nil)
+			jar = j
+			require.NoError(t, err)
+		}
 		return &http.Client{
 			Jar: jar,
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -225,10 +223,10 @@ func TestStrategy(t *testing.T) {
 	subject = "foo@bar.com"
 	scope = []string{}
 
-	// make request
-	var mr = func(t *testing.T, provider string, request uuid.UUID, fv url.Values) (*http.Response, []byte) {
+	// make request with cookie jar
+	var mrj = func(t *testing.T, provider string, request uuid.UUID, fv url.Values, jar *cookiejar.Jar) (*http.Response, []byte) {
 		fv.Set("provider", provider)
-		res, err := newClient(t).PostForm(ts.URL+oidc.BasePath+"/auth/"+request.String(), fv)
+		res, err := newClient(t, jar).PostForm(ts.URL+oidc.BasePath+"/auth/"+request.String(), fv)
 		require.NoError(t, err)
 
 		body, err := ioutil.ReadAll(res.Body)
@@ -238,6 +236,11 @@ func TestStrategy(t *testing.T) {
 		require.Equal(t, 200, res.StatusCode, "%s: %s\n\t%s", request, res.Request.URL.String(), body)
 
 		return res, body
+	}
+
+	// make request
+	var mr = func(t *testing.T, provider string, request uuid.UUID, fv url.Values) (*http.Response, []byte) {
+		return mrj(t, provider, request, fv, nil)
 	}
 
 	// assert system error (redirect to error endpoint)
@@ -455,5 +458,42 @@ func TestStrategy(t *testing.T) {
 			res, body := mr(t, "valid", r.ID, url.Values{})
 			aue(t, res, body, "an account with the same identifier (email, phone, username, ...) exists already")
 		})
+	})
+
+	t.Run("case=should redirect to default return ts when sending authenticated login request without forced flag", func(t *testing.T) {
+		subject = "no-reauth-login@ory.sh"
+		scope = []string{"openid"}
+
+		fv := url.Values{"traits.name": {"valid-name"}}
+		jar, _ := cookiejar.New(nil)
+		r1 := nlr(t, returnTS.URL, time.Minute)
+		res1, body1 := mrj(t, "valid", r1.ID, fv, jar)
+		ai(t, res1, body1)
+		r2 := nlr(t, returnTS.URL, time.Minute)
+		res2, body2 := mrj(t, "valid", r2.ID, fv, jar)
+		ai(t, res2, body2)
+		assert.Equal(t, body1, body2)
+	})
+
+	t.Run("case=should reauthenticate when sending authenticated login request with forced flag", func(t *testing.T) {
+		subject = "reauth-login@ory.sh"
+		scope = []string{"openid"}
+
+		fv := url.Values{"traits.name": {"valid-name"}}
+		jar, _ := cookiejar.New(nil)
+		r1 := nlr(t, returnTS.URL, time.Minute)
+		res1, body1 := mrj(t, "valid", r1.ID, fv, jar)
+		ai(t, res1, body1)
+		r2 := nlr(t, returnTS.URL, time.Minute)
+		require.NoError(t, reg.LoginRequestPersister().MarkRequestForced(context.Background(), r2.ID))
+		res2, body2 := mrj(t, "valid", r2.ID, fv, jar)
+		ai(t, res2, body2)
+		assert.NotEqual(t, gjson.GetBytes(body1, "sid"), gjson.GetBytes(body2, "sid"))
+		authAt1, err := time.Parse(time.RFC3339, gjson.GetBytes(body1, "authenticated_at").String())
+		require.NoError(t, err)
+		authAt2, err := time.Parse(time.RFC3339, gjson.GetBytes(body2, "authenticated_at").String())
+		require.NoError(t, err)
+		// authenticated at is newer in the second body
+		assert.Greater(t, authAt2.Sub(authAt1).Milliseconds(), int64(0), "%s - %s", authAt2, authAt1)
 	})
 }

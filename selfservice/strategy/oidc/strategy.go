@@ -103,15 +103,15 @@ func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
 
 func (s *Strategy) setRoutes(r *x.RouterPublic) {
 	if handle, _, _ := r.Lookup("GET", CallbackPath); handle == nil {
-		r.GET(CallbackPath, s.d.SessionHandler().IsNotAuthenticated(s.handleCallback, session.RedirectOnAuthenticated(s.c)))
+		r.GET(CallbackPath, s.handleCallback)
 	}
 
 	if handle, _, _ := r.Lookup("POST", AuthPath); handle == nil {
-		r.POST(AuthPath, s.d.SessionHandler().IsNotAuthenticated(s.handleAuth, session.RedirectOnAuthenticated(s.c)))
+		r.POST(AuthPath, s.handleAuth)
 	}
 
 	if handle, _, _ := r.Lookup("GET", AuthPath); handle == nil {
-		r.GET(AuthPath, s.d.SessionHandler().IsNotAuthenticated(s.handleAuth, session.RedirectOnAuthenticated(s.c)))
+		r.GET(AuthPath, s.handleAuth)
 	}
 }
 
@@ -168,9 +168,18 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	if _, err := s.validateRequest(r.Context(), rid); err != nil {
+	ar, err := s.validateRequest(r.Context(), rid)
+	if err != nil {
 		s.handleError(w, r, rid, nil, err)
 		return
+	}
+
+	// we assume an error means the user has no session
+	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), w, r); err == nil {
+		if !ar.IsForced() {
+			http.Redirect(w, r, s.c.DefaultReturnToURL().String(), http.StatusFound)
+			return
+		}
 	}
 
 	state := x.NewUUID().String()
@@ -184,7 +193,7 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	http.Redirect(w, r, config.AuthCodeURL(state), http.StatusFound)
+	http.Redirect(w, r, config.AuthCodeURL(state, provider.AuthCodeURLOptions(ar)...), http.StatusFound)
 }
 
 func (s *Strategy) validateRequest(ctx context.Context, rid uuid.UUID) (request, error) {
@@ -251,6 +260,14 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 			s.handleError(w, r, x.EmptyUUID, nil, err)
 		}
 		return
+	}
+
+	// we assume an error means the user has no session
+	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), w, r); err == nil {
+		if !ar.IsForced() {
+			http.Redirect(w, r, s.c.DefaultReturnToURL().String(), http.StatusFound)
+			return
+		}
 	}
 
 	provider, err := s.provider(pid)

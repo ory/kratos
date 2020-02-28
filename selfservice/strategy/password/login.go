@@ -16,7 +16,6 @@ import (
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/form"
-	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
@@ -25,7 +24,7 @@ const (
 )
 
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
-	r.POST(LoginPath, s.d.SessionHandler().IsNotAuthenticated(s.handleLogin, session.RedirectOnAuthenticated(s.c)))
+	r.POST(LoginPath, s.handleLogin)
 }
 
 func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *login.Request, err error) {
@@ -52,6 +51,13 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 	if err != nil {
 		s.handleLoginError(w, r, nil, err)
 		return
+	}
+
+	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), w, r); err == nil {
+		if !ar.Forced {
+			http.Redirect(w, r, s.c.DefaultReturnToURL().String(), http.StatusFound)
+			return
+		}
 	}
 
 	var p LoginFormPayload

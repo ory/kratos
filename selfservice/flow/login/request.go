@@ -1,8 +1,12 @@
 package login
 
 import (
+	"context"
 	"net/http"
+	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
@@ -61,6 +65,9 @@ type Request struct {
 
 	// CSRFToken contains the anti-csrf token associated with this request.
 	CSRFToken string `json:"-" db:"csrf_token"`
+
+	// Forced stores whether this login request should enforce reauthentication.
+	Forced bool `json:"forced" db:"forced"`
 }
 
 func NewLoginRequest(exp time.Duration, csrf string, r *http.Request) *Request {
@@ -129,4 +136,21 @@ func (r *Request) Valid() error {
 
 func (r *Request) GetID() uuid.UUID {
 	return r.ID
+}
+
+func (r *Request) IsForced() bool {
+	return r.Forced
+}
+
+type testRequestHandlerDependencies interface {
+	RequestPersistenceProvider
+	x.WriterProvider
+}
+
+func TestRequestHandler(t *testing.T, reg testRequestHandlerDependencies) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		e, err := reg.LoginRequestPersister().GetLoginRequest(context.Background(), x.ParseUUID(r.URL.Query().Get("request")))
+		require.NoError(t, err)
+		reg.Writer().Write(w, r, e)
+	}
 }

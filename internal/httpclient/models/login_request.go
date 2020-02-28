@@ -25,6 +25,9 @@ type LoginRequest struct {
 	// Format: date-time
 	ExpiresAt *strfmt.DateTime `json:"expires_at"`
 
+	// Forced stores whether this login request should enforce reauthentication.
+	Forced bool `json:"forced,omitempty"`
+
 	// id
 	// Required: true
 	// Format: uuid4

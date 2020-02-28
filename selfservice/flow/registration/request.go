@@ -122,6 +122,10 @@ func (r *Request) GetID() uuid.UUID {
 	return r.ID
 }
 
+func (r *Request) IsForced() bool {
+	return false
+}
+
 func (r *Request) Valid() error {
 	if r.ExpiresAt.Before(time.Now()) {
 		return errors.WithStack(newRequestExpiredError(time.Since(r.ExpiresAt)))
