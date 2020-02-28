@@ -55,11 +55,14 @@
 
 **Closed issues:**
 
+- MailSlurper is not sending the verification email [\#264](https://github.com/ory/kratos/issues/264)
+- SQLite database errors in quickstart [\#263](https://github.com/ory/kratos/issues/263)
 - Enable CockroachDB test suite and integration [\#132](https://github.com/ory/kratos/issues/132)
 
 **Merged pull requests:**
 
 - docs: Typo in README.md [\#265](https://github.com/ory/kratos/pull/265) ([cuttlefish](https://github.com/cuttlefish))
+- feat\(selfservice/login\): enable reauthentication functionality [\#248](https://github.com/ory/kratos/pull/248) ([zepatrik](https://github.com/zepatrik))
 
 ## [v0.1.1-alpha.1](https://github.com/ory/kratos/tree/v0.1.1-alpha.1) (2020-02-18)
 
