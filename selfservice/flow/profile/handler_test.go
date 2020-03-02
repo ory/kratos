@@ -75,7 +75,7 @@ func TestUpdateProfile(t *testing.T) {
 	viper.Set(configuration.ViperKeyURLsLogin, ui.URL+"/login")
 	// set this intermediate because kratos needs some valid url for CRUDE operations
 	viper.Set(configuration.ViperKeyURLsSelfPublic, "http://example.com")
-	viper.Set(configuration.ViperKeySelfServiceTimeoutPrivileged, "1ns")
+	viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
 
 	primaryIdentity := &identity.Identity{
 		ID: x.NewUUID(),
@@ -308,8 +308,8 @@ func TestUpdateProfile(t *testing.T) {
 	})
 
 	t.Run("description=should update protected field with sudo mode", func(t *testing.T) {
-		viper.Set(configuration.ViperKeySelfServiceTimeoutPrivileged, "1m")
-		defer viper.Set(configuration.ViperKeySelfServiceTimeoutPrivileged, "1ns")
+		viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1m")
+		defer viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
 
 		rs := makeRequest(t)
 		newEmail := "not-john-doe@mail.com"

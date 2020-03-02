@@ -330,7 +330,7 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 		return
 	}
 	identityManagerOptions := []identity.ManagerOption{identity.ManagerExposeValidationErrors}
-	if time.Since(s.AuthenticatedAt) < h.c.SelfServicePrivilegedTimeout() {
+	if time.Since(s.AuthenticatedAt) < h.c.SelfServicePrivilegedSessionMaxAge() {
 		identityManagerOptions = append(identityManagerOptions, identity.ManagerAllowWriteProtectedTraits)
 	}
 	if err := h.d.IdentityManager().UpdateTraits(r.Context(), s.Identity.ID, identity.Traits(p.Traits), identityManagerOptions...); err != nil {

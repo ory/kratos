@@ -53,19 +53,19 @@ const (
 
 	ViperKeyLifespanSession = "ttl.session"
 
-	ViperKeySelfServiceStrategyConfig              = "selfservice.strategies"
-	ViperKeySelfServiceRegistrationBeforeConfig    = "selfservice.registration.before"
-	ViperKeySelfServiceRegistrationAfterConfig     = "selfservice.registration.after"
-	ViperKeySelfServiceLifespanRegistrationRequest = "selfservice.registration.request_lifespan"
-	ViperKeySelfServiceLoginBeforeConfig           = "selfservice.login.before"
-	ViperKeySelfServiceLoginAfterConfig            = "selfservice.login.after"
-	ViperKeySelfServiceLifespanLoginRequest        = "selfservice.login.request_lifespan"
-	ViperKeySelfServiceLogoutRedirectURL           = "selfservice.logout.redirect_to"
-	ViperKeySelfServiceLifespanProfileRequest      = "selfservice.profile.request_lifespan"
-	ViperKeySelfServiceTimeoutPrivileged           = "selfservice.profile.privileged_timeout"
-	ViperKeySelfServiceLifespanLink                = "selfservice.profile.link_lifespan"
-	ViperKeySelfServiceLifespanVerificationRequest = "selfservice.verify.request_lifespan"
-	ViperKeySelfServiceVerifyReturnTo              = "selfservice.verify.return_to"
+	ViperKeySelfServiceStrategyConfig                = "selfservice.strategies"
+	ViperKeySelfServiceRegistrationBeforeConfig      = "selfservice.registration.before"
+	ViperKeySelfServiceRegistrationAfterConfig       = "selfservice.registration.after"
+	ViperKeySelfServiceLifespanRegistrationRequest   = "selfservice.registration.request_lifespan"
+	ViperKeySelfServiceLoginBeforeConfig             = "selfservice.login.before"
+	ViperKeySelfServiceLoginAfterConfig              = "selfservice.login.after"
+	ViperKeySelfServiceLifespanLoginRequest          = "selfservice.login.request_lifespan"
+	ViperKeySelfServiceLogoutRedirectURL             = "selfservice.logout.redirect_to"
+	ViperKeySelfServiceLifespanProfileRequest        = "selfservice.profile.request_lifespan"
+	ViperKeySelfServicePrivilegedAuthenticationAfter = "selfservice.profile.privileged_session_max_age"
+	ViperKeySelfServiceLifespanLink                  = "selfservice.profile.link_lifespan"
+	ViperKeySelfServiceLifespanVerificationRequest   = "selfservice.verify.request_lifespan"
+	ViperKeySelfServiceVerifyReturnTo                = "selfservice.verify.return_to"
 
 	ViperKeyDefaultIdentityTraitsSchemaURL = "identity.traits.default_schema_url"
 	ViperKeyIdentityTraitsSchemas          = "identity.traits.schemas"
@@ -361,6 +361,6 @@ func (p *ViperProvider) SelfServiceVerificationReturnTo() *url.URL {
 	return mustParseURLFromViper(p.l, ViperKeySelfServiceVerifyReturnTo)
 }
 
-func (p *ViperProvider) SelfServicePrivilegedTimeout() time.Duration {
-	return viperx.GetDuration(p.l, ViperKeySelfServiceTimeoutPrivileged, time.Hour)
+func (p *ViperProvider) SelfServicePrivilegedSessionMaxAge() time.Duration {
+	return viperx.GetDuration(p.l, ViperKeySelfServicePrivilegedAuthenticationAfter, time.Hour)
 }
