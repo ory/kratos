@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/ory/jsonschema/v3"
 
@@ -44,6 +45,7 @@ type (
 
 		identity.ValidationProvider
 		identity.ManagementProvider
+		identity.PrivilegedPoolProvider
 
 		errorx.ManagementProvider
 
@@ -320,9 +322,18 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if err := h.d.IdentityManager().UpdateUnprotectedTraits(
-		r.Context(), s.Identity.ID, identity.Traits(p.Traits),
-		identity.ManagerExposeValidationErrors); err != nil {
+	if s.AuthenticatedAt.After(time.Now()) {
+		h.handleProfileManagementError(w, r, ar, s.Identity.Traits, errors.WithStack(
+			herodot.ErrInternalServerError.
+				WithReason("There was a configuration error, please contact the administrator.").
+				WithDebugf("session.AuthenticatedAt was %fs in the future. This should not happen.", time.Since(s.AuthenticatedAt).Seconds())))
+		return
+	}
+	identityManagerOptions := []identity.ManagerOption{identity.ManagerExposeValidationErrors}
+	if time.Since(s.AuthenticatedAt) < h.c.SelfServicePrivilegedSessionMaxAge() {
+		identityManagerOptions = append(identityManagerOptions, identity.ManagerAllowWriteProtectedTraits)
+	}
+	if err := h.d.IdentityManager().UpdateTraits(r.Context(), s.Identity.ID, identity.Traits(p.Traits), identityManagerOptions...); err != nil {
 		h.handleProfileManagementError(w, r, ar, identity.Traits(p.Traits), err)
 		return
 	}
