@@ -145,6 +145,10 @@ func (p *ViperProvider) PublicListenOn() string {
 
 func (p *ViperProvider) DSN() string {
 	if dsn := viperx.GetString(p.l, ViperKeyDSN, ""); len(dsn) > 0 {
+		if dsn == "memory" {
+			// we should run migrations in this case but not here
+			return "sqlite://:memory:?_fk=true"
+		}
 		return dsn
 	}
 

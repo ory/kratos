@@ -9,7 +9,7 @@ services:
   kratos-migrate:
     image: oryd/kratos:latest-sqlite
     environment:
-      - DSN=sqlite:///home/ory/sqlite/db.sqlite?_fk=true
+      - DSN=sqlite://:memory:?_fk=true
     volumes:
       -
         type: volume
@@ -69,7 +69,7 @@ services:
       - "4434:4434" # admin
     restart: unless-stopped
     environment:
-      - DSN=sqlite:///home/ory/sqlite/db.sqlite?_fk=true
+      - DSN=sqlite://:memory:?_fk=true
     command:
       serve -c /etc/config/kratos/.kratos.yml --dev
     volumes:
