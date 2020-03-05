@@ -2,8 +2,6 @@ module github.com/ory/kratos
 
 go 1.13
 
-replace github.com/gobuffalo/fizz => ../../gobuffalo/fizz
-
 require (
 	github.com/Masterminds/sprig/v3 v3.0.0
 	github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0
@@ -22,15 +20,12 @@ require (
 	github.com/go-playground/universal-translator v0.16.0 // indirect
 	github.com/go-swagger/go-swagger v0.22.0
 	github.com/gobuffalo/envy v1.9.0 // indirect
-	github.com/gobuffalo/fizz v1.9.6 // indirect
-	github.com/gobuffalo/helpers v0.6.1 // indirect
 	github.com/gobuffalo/httptest v1.0.2
 	github.com/gobuffalo/packd v1.0.0 // indirect
 	github.com/gobuffalo/packr/v2 v2.7.1
-	github.com/gobuffalo/pop/v5 v5.0.8
+	github.com/gobuffalo/pop/v5 v5.0.9
 	github.com/gobuffalo/tags v2.1.7+incompatible // indirect
 	github.com/gobuffalo/uuid v2.0.5+incompatible
-	github.com/gobuffalo/validate/v3 v3.1.0 // indirect
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
 	github.com/golang/mock v1.3.1
