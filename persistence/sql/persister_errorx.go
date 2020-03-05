@@ -55,9 +55,9 @@ func (p *Persister) Read(ctx context.Context, id uuid.UUID) (*errorx.ErrorContai
 
 func (p *Persister) Clear(ctx context.Context, olderThan time.Duration, force bool) (err error) {
 	if force {
-		err = p.GetConnection(ctx).RawQuery("DELETE FROM selfservice_errors WHERE seen_at < ?", olderThan).Exec()
+		err = p.GetConnection(ctx).RawQuery("DELETE FROM selfservice_errors WHERE seen_at < ? AND seen_at IS NOT NULL", olderThan).Exec()
 	} else {
-		err = p.GetConnection(ctx).RawQuery("DELETE FROM selfservice_errors WHERE was_seen=true AND seen_at < ?", time.Now().UTC().Add(-olderThan)).Exec()
+		err = p.GetConnection(ctx).RawQuery("DELETE FROM selfservice_errors WHERE was_seen=true AND seen_at < ? AND seen_at IS NOT NULL", time.Now().UTC().Add(-olderThan)).Exec()
 	}
 
 	return sqlcon.HandleError(err)
