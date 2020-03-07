@@ -36,7 +36,7 @@ const (
 
 	ViperKeyCourierSMTPURL       = "courier.smtp.connection_uri"
 	ViperKeyCourierTemplatesPath = "courier.template_override_path"
-	ViperKeyCourierSMTPFrom      = "courier.stmp.from_address"
+	ViperKeyCourierSMTPFrom      = "courier.smtp.from_address"
 
 	ViperKeySecretsSession = "secrets.session"
 
