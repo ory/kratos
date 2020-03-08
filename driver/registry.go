@@ -1,9 +1,9 @@
 package driver
 
 import (
-	"github.com/go-errors/errors"
 	"github.com/gorilla/sessions"
 	"github.com/justinas/nosurf"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
 	"github.com/ory/kratos/courier"
@@ -107,9 +107,15 @@ type selfServiceStrategy interface {
 }
 
 func NewRegistry(c configuration.Provider) (Registry, error) {
-	driver, err := dbal.GetDriverFor(c.DSN())
+	dsn := c.DSN()
+	dsnAddress := dsn
+	if dsn == "memory" {
+		dsnAddress = "sqlite://:memory:?_fk=true"
+	}
+
+	driver, err := dbal.GetDriverFor(dsnAddress)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	registry, ok := driver.(Registry)

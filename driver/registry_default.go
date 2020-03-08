@@ -335,6 +335,13 @@ func (m *RegistryDefault) Init() error {
 	bc.Reset()
 	return errors.WithStack(
 		backoff.Retry(func() error {
+			dsnAddress := m.c.DSN()
+			// if dsn is memory we have to run the migrations on every start
+			if dsnAddress == "memory" {
+				if err := registry.Persister().MigrateUp(context.Background()); err != nil {
+					return nil, errors.WithStack(err)
+				}
+			}
 			pool, idlePool, connMaxLifetime := sqlcon.ParseConnectionOptions(m.l, m.c.DSN())
 			c, err := pop.NewConnection(&pop.ConnectionDetails{
 				URL:             m.c.DSN(),
