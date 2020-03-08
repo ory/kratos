@@ -47,7 +47,11 @@
 
 **Fixed bugs:**
 
+- Same version of migration version 20191100000010 caused test failure [\#279](https://github.com/ory/kratos/issues/279)
+- Email Verification Error when using PostgreSQL [\#269](https://github.com/ory/kratos/issues/269)
+- Investigate MySQL empty timestamp issue on session [\#244](https://github.com/ory/kratos/issues/244)
 - feat: Enable CockroachDB integration [\#260](https://github.com/ory/kratos/pull/260) ([aeneasr](https://github.com/aeneasr))
+- fix: Resolve NULL value for seen\_at [\#259](https://github.com/ory/kratos/pull/259) ([aeneasr](https://github.com/aeneasr))
 
 **Security fixes:**
 
@@ -61,6 +65,8 @@
 
 **Merged pull requests:**
 
+- fix: rename migrations with same version [\#280](https://github.com/ory/kratos/pull/280) ([zepatrik](https://github.com/zepatrik))
+- fix\(sql/migrations\): change type of courier\_message.body to "text" [\#276](https://github.com/ory/kratos/pull/276) ([zepatrik](https://github.com/zepatrik))
 - fix: Use host volume mount for sqlite [\#272](https://github.com/ory/kratos/pull/272) ([aeneasr](https://github.com/aeneasr))
 - feat\(selfService/profile\): enable updating auth related traits [\#266](https://github.com/ory/kratos/pull/266) ([zepatrik](https://github.com/zepatrik))
 - docs: Typo in README.md [\#265](https://github.com/ory/kratos/pull/265) ([cuttlefish](https://github.com/cuttlefish))
@@ -315,6 +321,7 @@
 
 - Update quickstart [\#207](https://github.com/ory/kratos/pull/207) ([aeneasr](https://github.com/aeneasr))
 - Take field order from schema [\#205](https://github.com/ory/kratos/pull/205) ([zepatrik](https://github.com/zepatrik))
+- ss/profile: Use request ID as query param everywhere [\#202](https://github.com/ory/kratos/pull/202) ([aeneasr](https://github.com/aeneasr))
 
 ## [v0.0.1-alpha.9](https://github.com/ory/kratos/tree/v0.0.1-alpha.9) (2020-01-29)
 
@@ -388,7 +395,6 @@
 
 **Merged pull requests:**
 
-- ss/profile: Use request ID as query param everywhere [\#202](https://github.com/ory/kratos/pull/202) ([aeneasr](https://github.com/aeneasr))
 - Remove redundant return statement [\#194](https://github.com/ory/kratos/pull/194) ([aeneasr](https://github.com/aeneasr))
 - Improve Docker Compose Quickstart [\#187](https://github.com/ory/kratos/pull/187) ([aeneasr](https://github.com/aeneasr))
 - Registration/Login HTML form: remove request field and ensure method is set [\#183](https://github.com/ory/kratos/pull/183) ([zepatrik](https://github.com/zepatrik))
