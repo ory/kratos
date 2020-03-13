@@ -75,6 +75,7 @@ func TestUpdateProfile(t *testing.T) {
 	viper.Set(configuration.ViperKeyURLsLogin, ui.URL+"/login")
 	// set this intermediate because kratos needs some valid url for CRUDE operations
 	viper.Set(configuration.ViperKeyURLsSelfPublic, "http://example.com")
+	viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
 
 	primaryIdentity := &identity.Identity{
 		ID: x.NewUUID(),
@@ -274,7 +275,10 @@ func TestUpdateProfile(t *testing.T) {
 	submitForm := func(t *testing.T, req *common.GetSelfServiceBrowserProfileManagementRequestOK, values url.Values) (string, *common.GetSelfServiceBrowserProfileManagementRequestOK) {
 		res, err := primaryUser.PostForm(pointerx.StringR(req.Payload.Form.Action), values)
 		require.NoError(t, err)
-		assert.EqualValues(t, http.StatusNoContent, res.StatusCode)
+		b, err := ioutil.ReadAll(res.Body)
+		require.NoError(t, err)
+		defer res.Body.Close()
+		assert.EqualValues(t, http.StatusNoContent, res.StatusCode, "%s", b)
 
 		assert.Equal(t, ui.URL, res.Request.URL.Scheme+"://"+res.Request.URL.Host)
 		assert.Equal(t, "/profile", res.Request.URL.Path, "should end up at the profile URL")
@@ -303,7 +307,27 @@ func TestUpdateProfile(t *testing.T) {
 		assert.Equal(t, "length must be >= 25, but got 9", gjson.Get(actual, "form.fields.#(name==traits.should_long_string).errors.0.message").String(), "%s", actual)
 	})
 
-	t.Run("description=should come back with form errors if trying to update email", func(t *testing.T) {
+	t.Run("description=should update protected field with sudo mode", func(t *testing.T) {
+		viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1m")
+		defer viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
+
+		rs := makeRequest(t)
+		newEmail := "not-john-doe@mail.com"
+		values := fieldsToURLValues(rs.Payload.Form.Fields)
+		values.Set("traits.email", newEmail)
+		actual, response := submitForm(t, rs, values)
+		assert.True(t, pointerx.BoolR(response.Payload.UpdateSuccessful), "%s", actual)
+
+		assert.Empty(t, gjson.Get(actual, "form.fields.#(name==traits.numby).errors").Value(), "%s", actual)
+		assert.Empty(t, gjson.Get(actual, "form.fields.#(name==traits.should_big_number).errors").Value(), "%s", actual)
+		assert.Empty(t, gjson.Get(actual, "form.fields.#(name==traits.should_long_string).errors").Value(), "%s", actual)
+
+		assert.Equal(t, newEmail, gjson.Get(actual, "form.fields.#(name==traits.email).value").Value(), "%s", actual)
+
+		assert.Equal(t, "foobar", gjson.Get(actual, "form.fields.#(name==traits.stringy).value").String(), "%s", actual) // sanity check if original payload is still here
+	})
+
+	t.Run("description=should come back with form errors if trying to update protected field without sudo mode", func(t *testing.T) {
 		rs := makeRequest(t)
 		values := fieldsToURLValues(rs.Payload.Form.Fields)
 		values.Set("traits.email", "not-john-doe")
@@ -357,7 +381,8 @@ func TestUpdateProfile(t *testing.T) {
 		t.Run("flow=succeed with final request", func(t *testing.T) {
 			rs := makeRequest(t)
 			values := fieldsToURLValues(rs.Payload.Form.Fields)
-			values.Set("traits.email", "john@doe.com")
+			// set email to the one that is in the db as it should not be modified
+			values.Set("traits.email", "not-john-doe@mail.com")
 			values.Set("traits.numby", "15")
 			values.Set("traits.should_big_number", "9001")
 			values.Set("traits.should_long_string", "this is such a long string, amazing stuff!")

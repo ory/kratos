@@ -1,6 +1,7 @@
 package errorx
 
 import (
+	"database/sql"
 	"encoding/json"
 	"time"
 
@@ -21,8 +22,8 @@ type ErrorContainer struct {
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"-" db:"updated_at"`
 
-	SeenAt  time.Time `json:"-" db:"seen_at"`
-	WasSeen bool      `json:"-" db:"was_seen"`
+	SeenAt  sql.NullTime `json:"-" db:"seen_at"`
+	WasSeen bool         `json:"-" db:"was_seen"`
 }
 
 func (e ErrorContainer) TableName() string {

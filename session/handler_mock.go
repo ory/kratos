@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"testing"
+	"time"
 
 	"github.com/bxcodec/faker"
 	"github.com/google/uuid"
@@ -94,6 +95,8 @@ func MockHydrateCookieClient(t *testing.T, c *http.Client, u string) {
 func MockSessionCreateHandlerWithIdentity(t *testing.T, reg mockDeps, i *identity.Identity) (httprouter.Handle, *Session) {
 	var sess Session
 	require.NoError(t, faker.FakeData(&sess))
+	// require AuthenticatedAt to be time.Now() as we always compare it to the current time
+	sess.AuthenticatedAt = time.Now()
 
 	if viper.GetString(configuration.ViperKeyDefaultIdentityTraitsSchemaURL) == "" {
 		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/fake-session.schema.json")
