@@ -55,7 +55,7 @@ func TestPersister(p Persister) func(t *testing.T) {
 			actual, err := p.Read(context.Background(), actualID)
 			require.NoError(t, err)
 
-			assert.JSONEq(t, `{"code":404,"status":"Not Found","reason":"foobar","message":"The requested resource could not be found"}`, gjson.Get(toJSON(t, actual),"errors.0").String(), toJSON(t, actual))
+			assert.JSONEq(t, `{"code":404,"status":"Not Found","reason":"foobar","message":"The requested resource could not be found"}`, gjson.Get(toJSON(t, actual), "errors.0").String(), toJSON(t, actual))
 		})
 
 		t.Run("case=clear", func(t *testing.T) {

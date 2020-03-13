@@ -2,6 +2,7 @@ package driver
 
 import (
 	"context"
+
 	"github.com/gorilla/sessions"
 	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
