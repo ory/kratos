@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"context"
 	"github.com/gorilla/sessions"
 	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
@@ -107,13 +108,7 @@ type selfServiceStrategy interface {
 }
 
 func NewRegistry(c configuration.Provider) (Registry, error) {
-	dsn := c.DSN()
-	dsnAddress := dsn
-	if dsn == "memory" {
-		dsnAddress = "sqlite://:memory:?_fk=true"
-	}
-
-	driver, err := dbal.GetDriverFor(dsnAddress)
+	driver, err := dbal.GetDriverFor(c.DSNAddress())
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -123,5 +118,13 @@ func NewRegistry(c configuration.Provider) (Registry, error) {
 		return nil, errors.Errorf("driver of type %T does not implement interface Registry", driver)
 	}
 
+	// if dsn is memory we have to run the migrations on every start
+	if c.DSN() == "memory" {
+		registry.Logger().Print("Kratos is running migrations on every startup as DSN is memory.\n")
+		registry.Logger().Print("This means your data are lost when Kratos terminates.\n")
+		if err := registry.Persister().MigrateUp(context.Background()); err != nil {
+			return nil, err
+		}
+	}
 	return registry, nil
 }

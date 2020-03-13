@@ -153,6 +153,15 @@ func (p *ViperProvider) DSN() string {
 	return ""
 }
 
+func (p *ViperProvider) DSNAddress() string {
+	dsn := p.DSN()
+	if dsn == "memory" {
+		return "sqlite://:memory:?_fk=true"
+	}
+
+	return dsn
+}
+
 func (p *ViperProvider) SelfServiceLoginBeforeHooks() []SelfServiceHook {
 	return p.selfServiceHooks(ViperKeySelfServiceLoginBeforeConfig)
 }
