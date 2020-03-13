@@ -45,6 +45,10 @@
 
 [Full Changelog](https://github.com/ory/kratos/compare/v0.1.1-alpha.1...HEAD)
 
+**Implemented enhancements:**
+
+- Error authenticating POST requests from browser session behind Oathkeeper [\#270](https://github.com/ory/kratos/issues/270)
+
 **Fixed bugs:**
 
 - Same version of migration version 20191100000010 caused test failure [\#279](https://github.com/ory/kratos/issues/279)
@@ -59,13 +63,16 @@
 
 **Closed issues:**
 
+- Viper key for SMTP from address appears to be incorrect [\#277](https://github.com/ory/kratos/issues/277)
 - MailSlurper is not sending the verification email [\#264](https://github.com/ory/kratos/issues/264)
 - SQLite database errors in quickstart [\#263](https://github.com/ory/kratos/issues/263)
 - Enable CockroachDB test suite and integration [\#132](https://github.com/ory/kratos/issues/132)
 
 **Merged pull requests:**
 
+- fix\(session\): whoami endpoint now supports all HTTP methods [\#283](https://github.com/ory/kratos/pull/283) ([aeneasr](https://github.com/aeneasr))
 - fix: rename migrations with same version [\#280](https://github.com/ory/kratos/pull/280) ([zepatrik](https://github.com/zepatrik))
+- Fix smtp/stmp typo [\#278](https://github.com/ory/kratos/pull/278) ([jdnurmi](https://github.com/jdnurmi))
 - fix\(sql/migrations\): change type of courier\_message.body to "text" [\#276](https://github.com/ory/kratos/pull/276) ([zepatrik](https://github.com/zepatrik))
 - fix: Use host volume mount for sqlite [\#272](https://github.com/ory/kratos/pull/272) ([aeneasr](https://github.com/aeneasr))
 - feat\(selfService/profile\): enable updating auth related traits [\#266](https://github.com/ory/kratos/pull/266) ([zepatrik](https://github.com/zepatrik))
