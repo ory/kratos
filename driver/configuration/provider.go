@@ -51,7 +51,6 @@ type Provider interface {
 	AdminListenOn() string
 	PublicListenOn() string
 	DSN() string
-	DSNAddress() string
 
 	SessionSecrets() [][]byte
 

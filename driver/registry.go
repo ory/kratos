@@ -2,6 +2,7 @@ package driver
 
 import (
 	"context"
+	"net/url"
 
 	"github.com/gorilla/sessions"
 	"github.com/justinas/nosurf"
@@ -109,7 +110,12 @@ type selfServiceStrategy interface {
 }
 
 func NewRegistry(c configuration.Provider) (Registry, error) {
-	driver, err := dbal.GetDriverFor(c.DSNAddress())
+	dsn, err := url.Parse(c.DSN())
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	driver, err := dbal.GetDriverFor(dsn.String())
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -120,9 +126,9 @@ func NewRegistry(c configuration.Provider) (Registry, error) {
 	}
 
 	// if dsn is memory we have to run the migrations on every start
-	if c.DSN() == "memory" {
+	if dsn.Scheme == "sqlite" && dsn.Query().Get("mode") == "memory" {
 		registry.Logger().Print("Kratos is running migrations on every startup as DSN is memory.\n")
-		registry.Logger().Print("This means your data are lost when Kratos terminates.\n")
+		registry.Logger().Print("This means your data is lost when Kratos terminates.\n")
 		if err := registry.Persister().MigrateUp(context.Background()); err != nil {
 			return nil, err
 		}
