@@ -37,7 +37,11 @@ func FakeCSRFTokenGeneratorWithToken(token string) func(r *http.Request) string 
 }
 
 type CSRFProvider interface {
-	CSRFHandler() *nosurf.CSRFHandler
+	CSRFHandler() CSRFHandler
+}
+
+type CSRFHandler interface {
+	RegenerateToken(w http.ResponseWriter, r *http.Request) string
 }
 
 func NewCSRFHandler(

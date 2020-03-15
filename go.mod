@@ -39,7 +39,7 @@ require (
 	github.com/imdario/mergo v0.3.7
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/julienschmidt/httprouter v1.2.0
-	github.com/justinas/nosurf v0.0.0-20190118163749-6453469bdcc9
+	github.com/justinas/nosurf v1.1.0
 	github.com/leodido/go-urn v1.1.0 // indirect
 	github.com/markbates/pkger v0.12.8
 	github.com/mattn/go-isatty v0.0.12 // indirect

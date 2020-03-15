@@ -13,7 +13,6 @@ import (
 	"github.com/cenkalti/backoff"
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gorilla/sessions"
-	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
@@ -54,7 +53,7 @@ func init() {
 type RegistryDefault struct {
 	l              logrus.FieldLogger
 	c              configuration.Provider
-	nosurf         *nosurf.CSRFHandler
+	nosurf         x.CSRFHandler
 	trc            *tracing.Tracer
 	writer         herodot.Writer
 	healthxHandler *healthx.Handler
@@ -165,11 +164,11 @@ func (m *RegistryDefault) HealthHandler() *healthx.Handler {
 	return m.healthxHandler
 }
 
-func (m *RegistryDefault) WithCSRFHandler(c *nosurf.CSRFHandler) {
+func (m *RegistryDefault) WithCSRFHandler(c x.CSRFHandler) {
 	m.nosurf = c
 }
 
-func (m *RegistryDefault) CSRFHandler() *nosurf.CSRFHandler {
+func (m *RegistryDefault) CSRFHandler() x.CSRFHandler {
 	if m.nosurf == nil {
 		panic("csrf handler is not set")
 	}
