@@ -11,15 +11,19 @@ import (
 
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/x"
 )
 
 type mockCSRFHandler struct {
 	c int
 }
 
+func (f *mockCSRFHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+}
+
 func (f *mockCSRFHandler) RegenerateToken(w http.ResponseWriter, r *http.Request) string {
 	f.c++
-	return "csrf_token"
+	return x.FakeCSRFToken
 }
 
 func TestManagerHTTP(t *testing.T) {

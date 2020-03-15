@@ -98,7 +98,9 @@ func TestUpdateProfile(t *testing.T) {
 		router.GET("/setSession/other-user", other)
 		n := negroni.Classic()
 		n.UseHandler(router)
-		return httptest.NewServer(x.NewTestCSRFHandler(n)), httptest.NewServer(admin)
+		hh := x.NewTestCSRFHandler(n)
+		reg.WithCSRFHandler(hh)
+		return httptest.NewServer(hh), httptest.NewServer(admin)
 	}()
 	defer publicTS.Close()
 

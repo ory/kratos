@@ -36,11 +36,21 @@ func FakeCSRFTokenGeneratorWithToken(token string) func(r *http.Request) string 
 	}
 }
 
+type FakeCSRFHandler struct {}
+
+func (f *FakeCSRFHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+}
+
+func (f *FakeCSRFHandler) RegenerateToken(w http.ResponseWriter, r *http.Request) string {
+	return FakeCSRFToken
+}
+
 type CSRFProvider interface {
 	CSRFHandler() CSRFHandler
 }
 
 type CSRFHandler interface {
+	http.Handler
 	RegenerateToken(w http.ResponseWriter, r *http.Request) string
 }
 
