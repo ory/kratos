@@ -26,6 +26,6 @@ import (
 func main() {
 	defer profilex.Profile().Stop()
 
-	pkger.Include("/courier/template/templates")
+	_ = pkger.Include("/courier/template/templates")
 	cmd.Execute()
 }
