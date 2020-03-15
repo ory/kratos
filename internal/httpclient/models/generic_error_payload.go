@@ -22,7 +22,7 @@ type GenericErrorPayload struct {
 	Debug string `json:"debug,omitempty"`
 
 	// details
-	Details []map[string]interface{} `json:"details"`
+	Details map[string]interface{} `json:"details,omitempty"`
 
 	// message
 	Message string `json:"message,omitempty"`

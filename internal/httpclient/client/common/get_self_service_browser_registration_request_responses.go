@@ -41,6 +41,12 @@ func (o *GetSelfServiceBrowserRegistrationRequestReader) ReadResponse(response r
 			return nil, err
 		}
 		return nil, result
+	case 410:
+		result := NewGetSelfServiceBrowserRegistrationRequestGone()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	case 500:
 		result := NewGetSelfServiceBrowserRegistrationRequestInternalServerError()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
@@ -141,6 +147,39 @@ func (o *GetSelfServiceBrowserRegistrationRequestNotFound) GetPayload() *models.
 }
 
 func (o *GetSelfServiceBrowserRegistrationRequestNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.GenericError)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+		return err
+	}
+
+	return nil
+}
+
+// NewGetSelfServiceBrowserRegistrationRequestGone creates a GetSelfServiceBrowserRegistrationRequestGone with default headers values
+func NewGetSelfServiceBrowserRegistrationRequestGone() *GetSelfServiceBrowserRegistrationRequestGone {
+	return &GetSelfServiceBrowserRegistrationRequestGone{}
+}
+
+/*GetSelfServiceBrowserRegistrationRequestGone handles this case with default header values.
+
+genericError
+*/
+type GetSelfServiceBrowserRegistrationRequestGone struct {
+	Payload *models.GenericError
+}
+
+func (o *GetSelfServiceBrowserRegistrationRequestGone) Error() string {
+	return fmt.Sprintf("[GET /self-service/browser/flows/requests/registration][%d] getSelfServiceBrowserRegistrationRequestGone  %+v", 410, o.Payload)
+}
+
+func (o *GetSelfServiceBrowserRegistrationRequestGone) GetPayload() *models.GenericError {
+	return o.Payload
+}
+
+func (o *GetSelfServiceBrowserRegistrationRequestGone) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.GenericError)
 
