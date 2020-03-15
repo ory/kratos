@@ -55,6 +55,7 @@
 - Email Verification Error when using PostgreSQL [\#269](https://github.com/ory/kratos/issues/269)
 - HBIP check hangs when connection is slow or ends with a network error [\#261](https://github.com/ory/kratos/issues/261)
 - Investigate MySQL empty timestamp issue on session [\#244](https://github.com/ory/kratos/issues/244)
+- Return REST error when fetching expired login/registration/profile request [\#235](https://github.com/ory/kratos/issues/235)
 - feat: Enable CockroachDB integration [\#260](https://github.com/ory/kratos/pull/260) ([aeneasr](https://github.com/aeneasr))
 - fix: Resolve NULL value for seen\_at [\#259](https://github.com/ory/kratos/pull/259) ([aeneasr](https://github.com/aeneasr))
 
@@ -73,6 +74,7 @@
 
 **Merged pull requests:**
 
+- feat: Return 410 when selfservice requests expire [\#289](https://github.com/ory/kratos/pull/289) ([aeneasr](https://github.com/aeneasr))
 - fix: Use resilient client for HIBP lookup [\#288](https://github.com/ory/kratos/pull/288) ([aeneasr](https://github.com/aeneasr))
 - Revert "fix: Use host volume mount for sqlite" [\#285](https://github.com/ory/kratos/pull/285) ([aeneasr](https://github.com/aeneasr))
 - fix\(session\): whoami endpoint now supports all HTTP methods [\#283](https://github.com/ory/kratos/pull/283) ([aeneasr](https://github.com/aeneasr))
