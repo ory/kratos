@@ -42,7 +42,7 @@ const (
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch,
-		http.MethodDelete, http.MethodConnect, http.MethodOptions, http.MethodTrace,} {
+		http.MethodDelete, http.MethodConnect, http.MethodOptions, http.MethodTrace} {
 		public.Handle(m, SessionsWhoamiPath, h.whoami)
 	}
 }

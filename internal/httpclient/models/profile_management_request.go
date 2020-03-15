@@ -7,7 +7,7 @@ package models
 
 import (
 	"github.com/go-openapi/errors"
-	strfmt "github.com/go-openapi/strfmt"
+	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
@@ -18,6 +18,7 @@ import (
 // (especially traits) in a selfservice manner.
 //
 // For more information head over to: https://www.ory.sh/docs/kratos/selfservice/profile
+//
 // swagger:model profileManagementRequest
 type ProfileManagementRequest struct {
 

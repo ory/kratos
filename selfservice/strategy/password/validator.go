@@ -12,6 +12,8 @@ import (
 
 	"github.com/arbovm/levenshtein"
 
+	"github.com/ory/x/httpx"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -56,7 +58,7 @@ type DefaultPasswordValidator struct {
 
 func NewDefaultPasswordValidatorStrategy() *DefaultPasswordValidator {
 	return &DefaultPasswordValidator{
-		c:                           http.DefaultClient,
+		c:                           httpx.NewResilientClientLatencyToleranceMedium(nil),
 		maxBreachesThreshold:        0,
 		hashes:                      map[string]int64{},
 		ignoreNetworkErrors:         true,
