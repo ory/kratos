@@ -53,6 +53,7 @@
 
 - Same version of migration version 20191100000010 caused test failure [\#279](https://github.com/ory/kratos/issues/279)
 - Email Verification Error when using PostgreSQL [\#269](https://github.com/ory/kratos/issues/269)
+- HBIP check hangs when connection is slow or ends with a network error [\#261](https://github.com/ory/kratos/issues/261)
 - Investigate MySQL empty timestamp issue on session [\#244](https://github.com/ory/kratos/issues/244)
 - feat: Enable CockroachDB integration [\#260](https://github.com/ory/kratos/pull/260) ([aeneasr](https://github.com/aeneasr))
 - fix: Resolve NULL value for seen\_at [\#259](https://github.com/ory/kratos/pull/259) ([aeneasr](https://github.com/aeneasr))
@@ -63,13 +64,17 @@
 
 **Closed issues:**
 
+- Quickstart broken, db.sqlite not writabel [\#281](https://github.com/ory/kratos/issues/281)
 - Viper key for SMTP from address appears to be incorrect [\#277](https://github.com/ory/kratos/issues/277)
 - MailSlurper is not sending the verification email [\#264](https://github.com/ory/kratos/issues/264)
 - SQLite database errors in quickstart [\#263](https://github.com/ory/kratos/issues/263)
+- CSRF token is missing or invalid [\#250](https://github.com/ory/kratos/issues/250)
 - Enable CockroachDB test suite and integration [\#132](https://github.com/ory/kratos/issues/132)
 
 **Merged pull requests:**
 
+- fix: Use resilient client for HIBP lookup [\#288](https://github.com/ory/kratos/pull/288) ([aeneasr](https://github.com/aeneasr))
+- Revert "fix: Use host volume mount for sqlite" [\#285](https://github.com/ory/kratos/pull/285) ([aeneasr](https://github.com/aeneasr))
 - fix\(session\): whoami endpoint now supports all HTTP methods [\#283](https://github.com/ory/kratos/pull/283) ([aeneasr](https://github.com/aeneasr))
 - fix: rename migrations with same version [\#280](https://github.com/ory/kratos/pull/280) ([zepatrik](https://github.com/zepatrik))
 - Fix smtp/stmp typo [\#278](https://github.com/ory/kratos/pull/278) ([jdnurmi](https://github.com/jdnurmi))
