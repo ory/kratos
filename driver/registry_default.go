@@ -412,6 +412,10 @@ func (m *RegistryDefault) Ping() error {
 	return m.persister.Ping(context.Background())
 }
 
+func (m *RegistryDefault) SetCSRFTokenGenerator(g x.CSRFToken) {
+	m.csrfTokenGenerator = g
+}
+
 func (m *RegistryDefault) GenerateCSRFToken(r *http.Request) string {
 	if m.csrfTokenGenerator == nil {
 		m.csrfTokenGenerator = x.DefaultCSRFToken

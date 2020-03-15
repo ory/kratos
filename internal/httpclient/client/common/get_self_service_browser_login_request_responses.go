@@ -10,7 +10,8 @@ import (
 	"io"
 
 	"github.com/go-openapi/runtime"
-	"github.com/go-openapi/strfmt"
+
+	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/ory/kratos/internal/httpclient/models"
 )
@@ -37,6 +38,12 @@ func (o *GetSelfServiceBrowserLoginRequestReader) ReadResponse(response runtime.
 		return nil, result
 	case 404:
 		result := NewGetSelfServiceBrowserLoginRequestNotFound()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 410:
+		result := NewGetSelfServiceBrowserLoginRequestGone()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
@@ -141,6 +148,39 @@ func (o *GetSelfServiceBrowserLoginRequestNotFound) GetPayload() *models.Generic
 }
 
 func (o *GetSelfServiceBrowserLoginRequestNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.GenericError)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+		return err
+	}
+
+	return nil
+}
+
+// NewGetSelfServiceBrowserLoginRequestGone creates a GetSelfServiceBrowserLoginRequestGone with default headers values
+func NewGetSelfServiceBrowserLoginRequestGone() *GetSelfServiceBrowserLoginRequestGone {
+	return &GetSelfServiceBrowserLoginRequestGone{}
+}
+
+/*GetSelfServiceBrowserLoginRequestGone handles this case with default header values.
+
+genericError
+*/
+type GetSelfServiceBrowserLoginRequestGone struct {
+	Payload *models.GenericError
+}
+
+func (o *GetSelfServiceBrowserLoginRequestGone) Error() string {
+	return fmt.Sprintf("[GET /self-service/browser/flows/requests/login][%d] getSelfServiceBrowserLoginRequestGone  %+v", 410, o.Payload)
+}
+
+func (o *GetSelfServiceBrowserLoginRequestGone) GetPayload() *models.GenericError {
+	return o.Payload
+}
+
+func (o *GetSelfServiceBrowserLoginRequestGone) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.GenericError)
 

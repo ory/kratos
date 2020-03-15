@@ -3,6 +3,7 @@ package login
 import (
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/nosurf"
@@ -158,10 +159,11 @@ type getSelfServiceBrowserLoginRequestParameters struct {
 //       200: loginRequest
 //       403: genericError
 //       404: genericError
+//       410: genericError
 //       500: genericError
 func (h *Handler) publicFetchLoginRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := h.fetchLoginRequest(w, r, true); err != nil {
-		h.d.Writer().WriteError(w, r, x.ErrInvalidCSRFToken.WithTrace(err).WithDebugf("%s", err))
+		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 }
@@ -173,15 +175,26 @@ func (h *Handler) adminFetchLoginRequest(w http.ResponseWriter, r *http.Request,
 	}
 }
 
-func (h *Handler) fetchLoginRequest(w http.ResponseWriter, r *http.Request, mustVerify bool) error {
+func (h *Handler) fetchLoginRequest(w http.ResponseWriter, r *http.Request, isPublic bool) error {
 	ar, err := h.d.LoginRequestPersister().GetLoginRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
 	if err != nil {
-		h.d.Writer().WriteError(w, r, x.ErrInvalidCSRFToken.WithTrace(err).WithDebugf("%s", err))
+		if isPublic {
+			return errors.WithStack(x.ErrInvalidCSRFToken.WithTrace(err).WithDebugf("%s", err))
+		}
 		return err
 	}
 
-	if mustVerify && !nosurf.VerifyToken(h.csrf(r), ar.CSRFToken) {
-		return errors.WithStack(x.ErrInvalidCSRFToken)
+	if isPublic {
+		if !nosurf.VerifyToken(h.csrf(r), ar.CSRFToken) {
+
+			return errors.WithStack(x.ErrInvalidCSRFToken)
+		}
+	}
+
+	if ar.ExpiresAt.Before(time.Now()) {
+		return errors.WithStack(x.ErrGone.
+			WithReason("The login request has expired. Redirect the user to the login endpoint to initialize a new session.").
+			WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), BrowserLoginPath).String()))
 	}
 
 	h.d.Writer().Write(w, r, ar)

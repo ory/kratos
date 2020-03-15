@@ -23,7 +23,7 @@ type genericErrorPayload struct {
 
 	Reason string `json:"reason,omitempty"`
 
-	Details []map[string]interface{} `json:"details,omitempty"`
+	Details map[string]interface{} `json:"details,omitempty"`
 
 	Message string `json:"message"`
 

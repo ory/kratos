@@ -10,12 +10,14 @@ import (
 	"time"
 
 	"github.com/gobuffalo/httptest"
+	"github.com/justinas/nosurf"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/viper"
+
+	"github.com/ory/kratos/selfservice/form"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/internal"
@@ -141,6 +143,7 @@ func TestLoginHandler(t *testing.T) {
 		return httptest.NewServer(x.NewTestCSRFHandler(public)), httptest.NewServer(admin)
 	}()
 	defer public.Close()
+	defer admin.Close()
 
 	redirTS := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
@@ -166,6 +169,21 @@ func TestLoginHandler(t *testing.T) {
 		assert.Contains(t, gjson.GetBytes(body, "methods.password.config.action").String(), public.URL, "%s", body)
 	}
 
+	assertExpiredPayload := func(t *testing.T, res *http.Response, body []byte) {
+		assert.EqualValues(t, http.StatusGone, res.StatusCode)
+		assert.Equal(t, public.URL+login.BrowserLoginPath, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
+	}
+
+	newExpiredRequest := func() *login.Request {
+		return &login.Request{
+			ID:         x.NewUUID(),
+			ExpiresAt:  time.Now().Add(-time.Minute),
+			IssuedAt:   time.Now().Add(-time.Minute * 2),
+			RequestURL: public.URL + login.BrowserLoginPath,
+			CSRFToken:  x.FakeCSRFToken,
+		}
+	}
+
 	errTS := errorx.NewErrorTestServer(t, reg)
 	defer errTS.Close()
 
@@ -175,9 +193,18 @@ func TestLoginHandler(t *testing.T) {
 	t.Run("daemon=admin", func(t *testing.T) {
 		loginTS := newLoginTS(t, admin.URL, nil)
 		defer loginTS.Close()
-
 		viper.Set(configuration.ViperKeyURLsLogin, loginTS.URL)
-		assertRequestPayload(t, x.EasyGetBody(t, public.Client(), public.URL+login.BrowserLoginPath))
+
+		t.Run("case=valid", func(t *testing.T) {
+			assertRequestPayload(t, x.EasyGetBody(t, admin.Client(), public.URL+login.BrowserLoginPath))
+		})
+
+		t.Run("case=expired", func(t *testing.T) {
+			lr := newExpiredRequest()
+			require.NoError(t, reg.LoginRequestPersister().CreateLoginRequest(context.Background(), lr))
+			res, body := x.EasyGet(t, admin.Client(), admin.URL+login.BrowserLoginRequestsPath+"?request="+lr.ID.String())
+			assertExpiredPayload(t, res, body)
+		})
 	})
 
 	t.Run("daemon=public", func(t *testing.T) {
@@ -202,6 +229,21 @@ func TestLoginHandler(t *testing.T) {
 
 			body := x.EasyGetBody(t, hc, public.URL+login.BrowserLoginPath)
 			assert.Contains(t, gjson.GetBytes(body, "error").String(), "csrf_token", "%s", body)
+		})
+
+		t.Run("case=expired", func(t *testing.T) {
+			reg.SetCSRFTokenGenerator(x.FakeCSRFTokenGenerator)
+			t.Cleanup(func() {
+				reg.SetCSRFTokenGenerator(nosurf.Token)
+			})
+
+			loginTS := newLoginTS(t, public.URL, hc)
+			defer loginTS.Close()
+
+			lr := newExpiredRequest()
+			require.NoError(t, reg.LoginRequestPersister().CreateLoginRequest(context.Background(), lr))
+			res, body := x.EasyGet(t, admin.Client(), admin.URL+login.BrowserLoginRequestsPath+"?request="+lr.ID.String())
+			assertExpiredPayload(t, res, body)
 		})
 	})
 }

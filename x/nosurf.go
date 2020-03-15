@@ -12,6 +12,14 @@ import (
 
 var (
 	ErrInvalidCSRFToken = herodot.ErrForbidden.WithReasonf("A request failed due to a missing or invalid csrf_token value.")
+	ErrGone             = herodot.DefaultError{
+		CodeField:    http.StatusGone,
+		StatusField:  http.StatusText(http.StatusGone),
+		ReasonField:  "",
+		DebugField:   "",
+		DetailsField: nil,
+		ErrorField:   "The requested resource is no longer available because it has expired or is otherwise invalid.",
+	}
 )
 
 type CSRFTokenGeneratorProvider interface {
