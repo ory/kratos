@@ -28,6 +28,7 @@ func init() {
 
 func TestSessionDestroyer(t *testing.T) {
 	_, reg := internal.NewRegistryDefault(t)
+
 	viper.Set(configuration.ViperKeyURLsSelfPublic, "http://localhost/")
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/stub.schema.json")
 

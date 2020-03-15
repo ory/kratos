@@ -11,7 +11,6 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
-	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/errorsx"
@@ -58,6 +57,7 @@ type dependencies interface {
 
 	x.LoggingProvider
 	x.CookieProvider
+	x.CSRFTokenGeneratorProvider
 
 	identity.ValidationProvider
 	identity.PrivilegedPoolProvider
@@ -86,11 +86,6 @@ type Strategy struct {
 	c         configuration.Provider
 	d         dependencies
 	validator *schema.Validator
-	cg        form.CSRFGenerator
-}
-
-func (s *Strategy) WithTokenGenerator(g form.CSRFGenerator) {
-	s.cg = g
 }
 
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
@@ -122,7 +117,6 @@ func NewStrategy(
 	return &Strategy{
 		c:         c,
 		d:         d,
-		cg:        nosurf.Token,
 		validator: schema.NewValidator(),
 	}
 }
@@ -493,7 +487,7 @@ func (s *Strategy) populateMethod(r *http.Request, request uuid.UUID) (*RequestM
 	}
 
 	f := form.NewHTMLForm(s.authURL(request, ""))
-	f.SetCSRF(s.cg(r))
+	f.SetCSRF(s.d.GenerateCSRFToken(r))
 	// does not need sorting because there is only one field
 
 	return NewRequestMethodConfig(f).AddProviders(conf.Providers), nil
@@ -566,7 +560,7 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 				}
 			}
 
-			method.Config.SetCSRF(s.cg(r))
+			method.Config.SetCSRF(s.d.GenerateCSRFToken(r))
 			if errSec := method.Config.SortFields(s.c.DefaultIdentityTraitsSchemaURL().String(), "traits"); errSec != nil {
 				s.d.RegistrationRequestErrorHandler().HandleRegistrationError(w, r, identity.CredentialsTypeOIDC, rr, errors.Wrap(err, errSec.Error()))
 				return

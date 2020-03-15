@@ -53,6 +53,7 @@ func init() {
 type RegistryDefault struct {
 	l              logrus.FieldLogger
 	c              configuration.Provider
+
 	nosurf         x.CSRFHandler
 	trc            *tracing.Tracer
 	writer         herodot.Writer
@@ -409,6 +410,11 @@ func (m *RegistryDefault) Persister() persistence.Persister {
 
 func (m *RegistryDefault) Ping() error {
 	return m.persister.Ping(context.Background())
+}
+
+
+func (m *RegistryDefault) WithCSRFTokenGenerator(cg x.CSRFToken){
+	m.csrfTokenGenerator = cg
 }
 
 func (m *RegistryDefault) GenerateCSRFToken(r *http.Request) string {

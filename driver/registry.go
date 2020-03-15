@@ -42,6 +42,8 @@ type Registry interface {
 	WithBuildInfo(version, hash, date string) Registry
 
 	WithCSRFHandler(c x.CSRFHandler)
+	WithCSRFTokenGenerator(cg x.CSRFToken)
+
 	HealthHandler() *healthx.Handler
 	CookieManager() sessions.Store
 

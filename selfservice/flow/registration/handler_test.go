@@ -57,7 +57,7 @@ func TestRegistrationHandler(t *testing.T) {
 		reg.RegistrationHandler().RegisterPublicRoutes(public)
 		reg.RegistrationHandler().RegisterAdminRoutes(admin)
 		reg.RegistrationStrategies().RegisterPublicRoutes(public)
-		return httptest.NewServer(x.NewTestCSRFHandler(public)), httptest.NewServer(admin)
+		return httptest.NewServer(x.NewTestCSRFHandler(public,reg)), httptest.NewServer(admin)
 	}()
 	defer public.Close()
 	defer admin.Close()

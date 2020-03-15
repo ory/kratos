@@ -36,6 +36,8 @@ func NewConfigurationWithDefaults() *configuration.ViperProvider {
 
 func NewRegistryDefault(t *testing.T) (*configuration.ViperProvider, *driver.RegistryDefault) {
 	conf, reg := NewRegistryDefaultWithDSN(t, "")
+	reg.WithCSRFTokenGenerator(x.FakeCSRFTokenGenerator)
+	reg.WithCSRFHandler(x.NewFakeCSRFHandler(""))
 	require.NoError(t, reg.Persister().MigrateUp(context.Background()))
 	return conf, reg
 }

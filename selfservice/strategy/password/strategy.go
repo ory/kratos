@@ -1,16 +1,13 @@
 package password
 
 import (
-	"github.com/justinas/nosurf"
 	"gopkg.in/go-playground/validator.v9"
-
-	"github.com/ory/kratos/selfservice/flow/login"
-	"github.com/ory/kratos/selfservice/flow/registration"
-	"github.com/ory/kratos/selfservice/form"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
@@ -21,6 +18,8 @@ var _ registration.Strategy = new(Strategy)
 type registrationStrategyDependencies interface {
 	x.LoggingProvider
 	x.WriterProvider
+	x.CSRFTokenGeneratorProvider
+
 	errorx.ManagementProvider
 	ValidationProvider
 	HashProvider
@@ -48,7 +47,6 @@ type Strategy struct {
 	c  configuration.Provider
 	d  registrationStrategyDependencies
 	v  *validator.Validate
-	cg form.CSRFGenerator
 }
 
 func NewStrategy(
@@ -59,12 +57,7 @@ func NewStrategy(
 		c:  c,
 		d:  d,
 		v:  validator.New(),
-		cg: nosurf.Token,
 	}
-}
-
-func (s *Strategy) WithTokenGenerator(g form.CSRFGenerator) {
-	s.cg = g
 }
 
 func (s *Strategy) ID() identity.CredentialsType {

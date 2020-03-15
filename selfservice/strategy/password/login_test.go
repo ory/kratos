@@ -16,8 +16,6 @@ import (
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/x/errorsx"
 
-	"github.com/ory/kratos/selfservice/strategy/oidc"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -66,7 +64,7 @@ func nlr(exp time.Duration) *login.Request {
 								Name:     form.CSRFTokenName,
 								Type:     "hidden",
 								Required: true,
-								Value:    "anti-rf-token",
+								Value:    x.FakeCSRFToken,
 							},
 						},
 					},
@@ -78,17 +76,14 @@ func nlr(exp time.Duration) *login.Request {
 
 func TestLoginNew(t *testing.T) {
 	_, reg := internal.NewRegistryDefault(t)
-	s := reg.LoginStrategies().MustStrategy(identity.CredentialsTypePassword).(*password.Strategy)
-	s.WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
-	reg.LoginStrategies().MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
-	reg.LoginHandler().WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
-	reg.SelfServiceErrorManager().WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
 
 	router := x.NewRouterPublic()
 	admin := x.NewRouterAdmin()
+
 	reg.LoginHandler().RegisterPublicRoutes(router)
 	reg.LoginHandler().RegisterAdminRoutes(admin)
-	s.RegisterLoginRoutes(router)
+	reg.LoginStrategies().MustStrategy(identity.CredentialsTypePassword).(*password.Strategy).RegisterLoginRoutes(router)
+
 	ts := httptest.NewServer(router)
 	defer ts.Close()
 
@@ -240,7 +235,7 @@ func TestLoginNew(t *testing.T) {
 		ensureFieldsExist(t, body)
 		assert.Equal(t, "missing properties: password", gjson.GetBytes(body, "methods.password.config.fields.#(name==password).errors.0.message").String(), "%s", body)
 
-		assert.Equal(t, "anti-rf-token", gjson.GetBytes(body, "methods.password.config.fields.#(name==csrf_token).value").String())
+		assert.Equal(t, x.FakeCSRFToken, gjson.GetBytes(body, "methods.password.config.fields.#(name==csrf_token).value").String())
 		assert.Equal(t, "identifier", gjson.GetBytes(body, "methods.password.config.fields.#(name==identifier).value").String(), "%s", body)
 
 		// This must not include the password!

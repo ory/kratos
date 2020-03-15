@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/viper"
 
 	"github.com/ory/kratos/driver/configuration"
@@ -25,28 +24,18 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-type (
-	withTokenGenerator interface {
-		WithTokenGenerator(g form.CSRFGenerator)
-	}
-)
-
 func init() {
 	internal.RegisterFakes()
 }
 
 func TestHandlerSettingForced(t *testing.T) {
 	_, reg := internal.NewRegistryDefault(t)
-	for _, strategy := range reg.LoginStrategies() {
-		// We need to know the csrf token
-		strategy.(withTokenGenerator).WithTokenGenerator(x.FakeCSRFTokenGenerator)
-	}
+	reg.WithCSRFTokenGenerator(x.FakeCSRFTokenGenerator)
 
 	router := x.NewRouterPublic()
 	admin := x.NewRouterAdmin()
 	reg.LoginHandler().RegisterPublicRoutes(router)
 	reg.LoginHandler().RegisterAdminRoutes(admin)
-	reg.LoginHandler().WithTokenGenerator(x.FakeCSRFTokenGenerator)
 	reg.LoginStrategies().RegisterPublicRoutes(router)
 	ts := httptest.NewServer(router)
 	defer ts.Close()
@@ -138,7 +127,7 @@ func TestLoginHandler(t *testing.T) {
 		reg.LoginHandler().RegisterPublicRoutes(public)
 		reg.LoginHandler().RegisterAdminRoutes(admin)
 		reg.LoginStrategies().RegisterPublicRoutes(public)
-		return httptest.NewServer(x.NewTestCSRFHandler(public)), httptest.NewServer(admin)
+		return httptest.NewServer(x.NewTestCSRFHandler(public, reg)), httptest.NewServer(admin)
 	}()
 	defer public.Close()
 

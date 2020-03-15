@@ -32,7 +32,8 @@ func TestHandler(t *testing.T) {
 
 	t.Run("case=public authorization", func(t *testing.T) {
 		router := x.NewRouterPublic()
-		ns := nosurf.New(router)
+		ns := x.NewTestCSRFHandler(router, reg)
+
 		h.RegisterPublicRoutes(router)
 		router.GET("/regen", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 			ns.RegenerateToken(w, r)
