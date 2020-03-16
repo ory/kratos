@@ -56,11 +56,13 @@
 - HBIP check hangs when connection is slow or ends with a network error [\#261](https://github.com/ory/kratos/issues/261)
 - Investigate MySQL empty timestamp issue on session [\#244](https://github.com/ory/kratos/issues/244)
 - Return REST error when fetching expired login/registration/profile request [\#235](https://github.com/ory/kratos/issues/235)
+- fix\(swagger\): Move nolint,deadcode instructions to own file [\#293](https://github.com/ory/kratos/pull/293) ([aeneasr](https://github.com/aeneasr))
 - feat: Enable CockroachDB integration [\#260](https://github.com/ory/kratos/pull/260) ([aeneasr](https://github.com/aeneasr))
 - fix: Resolve NULL value for seen\_at [\#259](https://github.com/ory/kratos/pull/259) ([aeneasr](https://github.com/aeneasr))
 
 **Security fixes:**
 
+- Regenerate CSRF Tokens on principal change [\#217](https://github.com/ory/kratos/issues/217)
 - Implement Password Strength Meter API [\#136](https://github.com/ory/kratos/issues/136)
 
 **Closed issues:**
@@ -74,6 +76,7 @@
 
 **Merged pull requests:**
 
+- fix\(session\): Regenerate CSRF Token on principal change [\#290](https://github.com/ory/kratos/pull/290) ([aeneasr](https://github.com/aeneasr))
 - feat: Return 410 when selfservice requests expire [\#289](https://github.com/ory/kratos/pull/289) ([aeneasr](https://github.com/aeneasr))
 - fix: Use resilient client for HIBP lookup [\#288](https://github.com/ory/kratos/pull/288) ([aeneasr](https://github.com/aeneasr))
 - Revert "fix: Use host volume mount for sqlite" [\#285](https://github.com/ory/kratos/pull/285) ([aeneasr](https://github.com/aeneasr))
@@ -83,7 +86,6 @@
 - fix\(sql/migrations\): change type of courier\_message.body to "text" [\#276](https://github.com/ory/kratos/pull/276) ([zepatrik](https://github.com/zepatrik))
 - fix: Use host volume mount for sqlite [\#272](https://github.com/ory/kratos/pull/272) ([aeneasr](https://github.com/aeneasr))
 - feat\(selfService/profile\): enable updating auth related traits [\#266](https://github.com/ory/kratos/pull/266) ([zepatrik](https://github.com/zepatrik))
-- docs: Typo in README.md [\#265](https://github.com/ory/kratos/pull/265) ([cuttlefish](https://github.com/cuttlefish))
 - feat\(selfservice/login\): enable reauthentication functionality [\#248](https://github.com/ory/kratos/pull/248) ([zepatrik](https://github.com/zepatrik))
 
 ## [v0.1.1-alpha.1](https://github.com/ory/kratos/tree/v0.1.1-alpha.1) (2020-02-18)
@@ -96,6 +98,7 @@
 
 **Merged pull requests:**
 
+- docs: Typo in README.md [\#265](https://github.com/ory/kratos/pull/265) ([cuttlefish](https://github.com/cuttlefish))
 - fix: Update verify URLs [\#258](https://github.com/ory/kratos/pull/258) ([aeneasr](https://github.com/aeneasr))
 - fix: Clean up docker quickstart [\#255](https://github.com/ory/kratos/pull/255) ([aeneasr](https://github.com/aeneasr))
 - refactor\(persistence/sql\): move connection to context to enable transactions [\#254](https://github.com/ory/kratos/pull/254) ([zepatrik](https://github.com/zepatrik))
