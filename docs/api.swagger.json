@@ -89,7 +89,7 @@
         "operationId": "listIdentities",
         "responses": {
           "200": {
-            "description": "A list of identities.\n\nnolint:deadcode,unused",
+            "description": "A list of identities.",
             "schema": {
               "type": "array",
               "items": {
@@ -134,7 +134,7 @@
         ],
         "responses": {
           "201": {
-            "description": "A single identity.\n\nnolint:deadcode,unused",
+            "description": "A single identity.",
             "schema": {
               "$ref": "#/definitions/Identity"
             }
@@ -183,7 +183,7 @@
         ],
         "responses": {
           "200": {
-            "description": "A single identity.\n\nnolint:deadcode,unused",
+            "description": "A single identity.",
             "schema": {
               "$ref": "#/definitions/Identity"
             }
@@ -238,7 +238,7 @@
         ],
         "responses": {
           "200": {
-            "description": "A single identity.\n\nnolint:deadcode,unused",
+            "description": "A single identity.",
             "schema": {
               "$ref": "#/definitions/Identity"
             }
@@ -1119,7 +1119,6 @@
       }
     },
     "genericErrorPayload": {
-      "description": "nolint:deadcode,unused",
       "type": "object",
       "properties": {
         "code": {
