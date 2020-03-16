@@ -7,12 +7,13 @@ package models
 
 import (
 	"github.com/go-openapi/errors"
-	strfmt "github.com/go-openapi/strfmt"
+	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
 // CompleteSelfServiceBrowserProfileManagementFlowPayload complete self service browser profile management flow payload
+//
 // swagger:model completeSelfServiceBrowserProfileManagementFlowPayload
 type CompleteSelfServiceBrowserProfileManagementFlowPayload struct {
 
