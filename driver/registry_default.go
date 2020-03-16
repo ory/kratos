@@ -51,8 +51,8 @@ func init() {
 }
 
 type RegistryDefault struct {
-	l              logrus.FieldLogger
-	c              configuration.Provider
+	l logrus.FieldLogger
+	c configuration.Provider
 
 	nosurf         x.CSRFHandler
 	trc            *tracing.Tracer
@@ -412,7 +412,7 @@ func (m *RegistryDefault) Ping() error {
 	return m.persister.Ping(context.Background())
 }
 
-func (m *RegistryDefault) WithCSRFTokenGenerator(cg x.CSRFToken){
+func (m *RegistryDefault) WithCSRFTokenGenerator(cg x.CSRFToken) {
 	m.csrfTokenGenerator = cg
 }
 

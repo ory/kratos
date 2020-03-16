@@ -38,8 +38,8 @@ type (
 		LoginHandler() *Handler
 	}
 	Handler struct {
-		d    handlerDependencies
-		c    configuration.Provider
+		d handlerDependencies
+		c configuration.Provider
 	}
 )
 

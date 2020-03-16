@@ -20,8 +20,8 @@ type (
 	}
 
 	Manager struct {
-		d    managerDependencies
-		c    baseManagerConfiguration
+		d managerDependencies
+		c baseManagerConfiguration
 	}
 
 	ManagementProvider interface {

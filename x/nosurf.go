@@ -4,9 +4,10 @@ import (
 	"net/http"
 
 	"github.com/justinas/nosurf"
-	"github.com/ory/x/stringsx"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+
+	"github.com/ory/x/stringsx"
 
 	"github.com/ory/herodot"
 )
@@ -97,7 +98,7 @@ func NewCSRFHandler(
 	return n
 }
 
-func NewTestCSRFHandler(router http.Handler, reg interface{
+func NewTestCSRFHandler(router http.Handler, reg interface {
 	WithCSRFHandler(CSRFHandler)
 	WithCSRFTokenGenerator(CSRFToken)
 }) *nosurf.CSRFHandler {

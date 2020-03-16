@@ -44,9 +44,9 @@ type registrationStrategyDependencies interface {
 }
 
 type Strategy struct {
-	c  configuration.Provider
-	d  registrationStrategyDependencies
-	v  *validator.Validate
+	c configuration.Provider
+	d registrationStrategyDependencies
+	v *validator.Validate
 }
 
 func NewStrategy(
@@ -54,9 +54,9 @@ func NewStrategy(
 	c configuration.Provider,
 ) *Strategy {
 	return &Strategy{
-		c:  c,
-		d:  d,
-		v:  validator.New(),
+		c: c,
+		d: d,
+		v: validator.New(),
 	}
 }
 

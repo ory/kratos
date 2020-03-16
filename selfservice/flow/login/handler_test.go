@@ -17,8 +17,6 @@ import (
 
 	"github.com/ory/viper"
 
-	"github.com/ory/kratos/selfservice/form"
-
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/errorx"
@@ -222,9 +220,9 @@ func TestLoginHandler(t *testing.T) {
 		})
 
 		t.Run("case=expired", func(t *testing.T) {
-			reg.SetCSRFTokenGenerator(x.FakeCSRFTokenGenerator)
+			reg.WithCSRFTokenGenerator(x.FakeCSRFTokenGenerator)
 			t.Cleanup(func() {
-				reg.SetCSRFTokenGenerator(nosurf.Token)
+				reg.WithCSRFTokenGenerator(nosurf.Token)
 			})
 
 			loginTS := newLoginTS(t, public.URL, hc)
