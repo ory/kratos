@@ -32,23 +32,19 @@ type (
 		session.HandlerProvider
 		session.ManagementProvider
 		x.WriterProvider
+		x.CSRFTokenGeneratorProvider
 	}
 	HandlerProvider interface {
 		LoginHandler() *Handler
 	}
 	Handler struct {
-		d    handlerDependencies
-		c    configuration.Provider
-		csrf x.CSRFToken
+		d handlerDependencies
+		c configuration.Provider
 	}
 )
 
 func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
-	return &Handler{d: d, c: c, csrf: nosurf.Token}
-}
-
-func (h *Handler) WithTokenGenerator(f func(r *http.Request) string) {
-	h.csrf = f
+	return &Handler{d: d, c: c}
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
@@ -61,7 +57,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 }
 
 func (h *Handler) NewLoginRequest(w http.ResponseWriter, r *http.Request, redir func(request *Request) (string, error)) error {
-	a := NewLoginRequest(h.c.SelfServiceLoginRequestLifespan(), h.csrf(r), r)
+	a := NewLoginRequest(h.c.SelfServiceLoginRequestLifespan(), h.d.GenerateCSRFToken(r), r)
 	for _, s := range h.d.LoginStrategies() {
 		if err := s.PopulateLoginMethod(r, a); err != nil {
 			return err
@@ -185,8 +181,7 @@ func (h *Handler) fetchLoginRequest(w http.ResponseWriter, r *http.Request, isPu
 	}
 
 	if isPublic {
-		if !nosurf.VerifyToken(h.csrf(r), ar.CSRFToken) {
-
+		if !nosurf.VerifyToken(h.d.GenerateCSRFToken(r), ar.CSRFToken) {
 			return errors.WithStack(x.ErrInvalidCSRFToken)
 		}
 	}

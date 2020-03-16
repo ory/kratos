@@ -60,7 +60,7 @@ func TestRegistrationHandler(t *testing.T) {
 		reg.RegistrationHandler().RegisterPublicRoutes(public)
 		reg.RegistrationHandler().RegisterAdminRoutes(admin)
 		reg.RegistrationStrategies().RegisterPublicRoutes(public)
-		return httptest.NewServer(x.NewTestCSRFHandler(public)), httptest.NewServer(admin)
+		return httptest.NewServer(x.NewTestCSRFHandler(public, reg)), httptest.NewServer(admin)
 	}()
 	defer public.Close()
 	defer admin.Close()
@@ -153,9 +153,9 @@ func TestRegistrationHandler(t *testing.T) {
 		})
 
 		t.Run("case=expired", func(t *testing.T) {
-			reg.SetCSRFTokenGenerator(x.FakeCSRFTokenGenerator)
+			reg.WithCSRFTokenGenerator(x.FakeCSRFTokenGenerator)
 			t.Cleanup(func() {
-				reg.SetCSRFTokenGenerator(nosurf.Token)
+				reg.WithCSRFTokenGenerator(nosurf.Token)
 			})
 
 			j, err := cookiejar.New(nil)

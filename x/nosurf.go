@@ -7,6 +7,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
+	"github.com/ory/x/stringsx"
+
 	"github.com/ory/herodot"
 )
 
@@ -44,8 +46,28 @@ func FakeCSRFTokenGeneratorWithToken(token string) func(r *http.Request) string 
 	}
 }
 
+type FakeCSRFHandler struct{ name string }
+
+func NewFakeCSRFHandler(name string) *FakeCSRFHandler {
+	return &FakeCSRFHandler{
+		name: name,
+	}
+}
+
+func (f *FakeCSRFHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+}
+
+func (f *FakeCSRFHandler) RegenerateToken(w http.ResponseWriter, r *http.Request) string {
+	return stringsx.Coalesce(f.name, FakeCSRFToken)
+}
+
 type CSRFProvider interface {
-	CSRFHandler() *nosurf.CSRFHandler
+	CSRFHandler() CSRFHandler
+}
+
+type CSRFHandler interface {
+	http.Handler
+	RegenerateToken(w http.ResponseWriter, r *http.Request) string
 }
 
 func NewCSRFHandler(
@@ -76,7 +98,10 @@ func NewCSRFHandler(
 	return n
 }
 
-func NewTestCSRFHandler(router http.Handler) *nosurf.CSRFHandler {
+func NewTestCSRFHandler(router http.Handler, reg interface {
+	WithCSRFHandler(CSRFHandler)
+	WithCSRFTokenGenerator(CSRFToken)
+}) *nosurf.CSRFHandler {
 	n := nosurf.New(router)
 	n.SetBaseCookie(http.Cookie{
 		MaxAge:   nosurf.MaxAge,
@@ -84,5 +109,7 @@ func NewTestCSRFHandler(router http.Handler) *nosurf.CSRFHandler {
 		HttpOnly: true,
 		Secure:   false,
 	})
+	reg.WithCSRFHandler(n)
+	reg.WithCSRFTokenGenerator(nosurf.Token)
 	return n
 }

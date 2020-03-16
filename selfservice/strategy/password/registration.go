@@ -67,7 +67,7 @@ func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Reques
 				}
 			}
 
-			method.Config.SetCSRF(s.cg(r))
+			method.Config.SetCSRF(s.d.GenerateCSRFToken(r))
 			rr.Methods[identity.CredentialsTypePassword] = method
 			if errSec := method.Config.SortFields(s.c.DefaultIdentityTraitsSchemaURL().String(), "traits"); errSec != nil {
 				s.d.RegistrationRequestErrorHandler().HandleRegistrationError(w, r, identity.CredentialsTypePassword, rr, errors.Wrap(err, errSec.Error()))
@@ -211,7 +211,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.
 	}
 
 	htmlf.Method = "POST"
-	htmlf.SetCSRF(s.cg(r))
+	htmlf.SetCSRF(s.d.GenerateCSRFToken(r))
 	htmlf.SetField(form.Field{Name: "password", Type: "password", Required: true})
 
 	if err := htmlf.SortFields(s.c.DefaultIdentityTraitsSchemaURL().String(), "traits"); err != nil {

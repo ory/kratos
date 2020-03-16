@@ -3,7 +3,6 @@ package driver
 import (
 	"github.com/go-errors/errors"
 	"github.com/gorilla/sessions"
-	"github.com/justinas/nosurf"
 	"github.com/sirupsen/logrus"
 
 	"github.com/ory/kratos/courier"
@@ -42,11 +41,13 @@ type Registry interface {
 	BuildHash() string
 	WithBuildInfo(version, hash, date string) Registry
 
-	WithCSRFHandler(c *nosurf.CSRFHandler)
-	CSRFHandler() *nosurf.CSRFHandler
+	WithCSRFHandler(c x.CSRFHandler)
+	WithCSRFTokenGenerator(cg x.CSRFToken)
+
 	HealthHandler() *healthx.Handler
 	CookieManager() sessions.Store
 
+	x.CSRFProvider
 	x.WriterProvider
 	x.LoggingProvider
 
