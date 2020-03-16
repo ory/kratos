@@ -65,11 +65,12 @@ func TestPersister(p Persister) func(t *testing.T) {
 			_, err = p.Read(context.Background(), actualID)
 			require.NoError(t, err)
 
-			time.Sleep(time.Millisecond * 100)
-
-			require.NoError(t, p.Clear(context.Background(), time.Millisecond, false))
-			_, err = p.Read(context.Background(), actualID)
-			require.Error(t, err)
+			// We need to wait for at least one second or MySQL will randomly fail as it does not support
+			// millisecond resolution on timestamp columns.
+			time.Sleep(time.Second + time.Millisecond*500)
+			require.NoError(t, p.Clear(context.Background(), time.Second, false))
+			got, err := p.Read(context.Background(), actualID)
+			require.Error(t, err, "%+v", got)
 		})
 	}
 }

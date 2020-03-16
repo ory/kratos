@@ -10,8 +10,7 @@ import (
 	"io"
 
 	"github.com/go-openapi/runtime"
-
-	strfmt "github.com/go-openapi/strfmt"
+	"github.com/go-openapi/strfmt"
 
 	"github.com/ory/kratos/internal/httpclient/models"
 )
@@ -56,8 +55,6 @@ func NewCreateIdentityCreated() *CreateIdentityCreated {
 /*CreateIdentityCreated handles this case with default header values.
 
 A single identity.
-
-nolint:deadcode,unused
 */
 type CreateIdentityCreated struct {
 	Payload *models.Identity

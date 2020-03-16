@@ -32,7 +32,7 @@ func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *
 		if method, ok := rr.Methods[identity.CredentialsTypePassword]; ok {
 			method.Config.Reset()
 			method.Config.SetValue("identifier", r.PostForm.Get("identifier"))
-			method.Config.SetCSRF(s.cg(r))
+			method.Config.SetCSRF(s.d.GenerateCSRFToken(r))
 			rr.Methods[identity.CredentialsTypePassword] = method
 		}
 	}
@@ -135,7 +135,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Request) error
 			},
 		},
 	}
-	f.SetCSRF(s.cg(r))
+	f.SetCSRF(s.d.GenerateCSRFToken(r))
 
 	sr.Methods[identity.CredentialsTypePassword] = &login.RequestMethod{
 		Method: identity.CredentialsTypePassword,

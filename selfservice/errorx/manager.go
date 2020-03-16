@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/justinas/nosurf"
-
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
 
@@ -18,12 +16,12 @@ type (
 		PersistenceProvider
 		x.LoggingProvider
 		x.WriterProvider
+		x.CSRFTokenGeneratorProvider
 	}
 
 	Manager struct {
-		d    managerDependencies
-		c    baseManagerConfiguration
-		csrf x.CSRFToken
+		d managerDependencies
+		c baseManagerConfiguration
 	}
 
 	ManagementProvider interface {
@@ -37,11 +35,7 @@ type (
 )
 
 func NewManager(d managerDependencies, c baseManagerConfiguration) *Manager {
-	return &Manager{d: d, c: c, csrf: nosurf.Token}
-}
-
-func (m *Manager) WithTokenGenerator(f func(r *http.Request) string) {
-	m.csrf = f
+	return &Manager{d: d, c: c}
 }
 
 // Create is a simple helper that saves all errors in the store and returns the
@@ -51,7 +45,7 @@ func (m *Manager) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 		herodot.DefaultErrorLogger(m.d.Logger(), err).Errorf("An error occurred and is being forwarded to the error user interface.")
 	}
 
-	id, emerr := m.d.SelfServiceErrorPersister().Add(ctx, m.csrf(r), errs...)
+	id, emerr := m.d.SelfServiceErrorPersister().Add(ctx, m.d.GenerateCSRFToken(r), errs...)
 	if emerr != nil {
 		return "", emerr
 	}

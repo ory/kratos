@@ -10,8 +10,7 @@ import (
 	"io"
 
 	"github.com/go-openapi/runtime"
-
-	strfmt "github.com/go-openapi/strfmt"
+	"github.com/go-openapi/strfmt"
 
 	"github.com/ory/kratos/internal/httpclient/models"
 )
@@ -50,8 +49,6 @@ func NewListIdentitiesOK() *ListIdentitiesOK {
 /*ListIdentitiesOK handles this case with default header values.
 
 A list of identities.
-
-nolint:deadcode,unused
 */
 type ListIdentitiesOK struct {
 	Payload []*models.Identity

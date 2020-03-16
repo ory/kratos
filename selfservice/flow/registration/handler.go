@@ -3,6 +3,7 @@ package registration
 import (
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/nosurf"
@@ -28,6 +29,7 @@ type (
 		errorx.ManagementProvider
 		session.HandlerProvider
 		x.WriterProvider
+		x.CSRFTokenGeneratorProvider
 		HookExecutorProvider
 		RequestPersistenceProvider
 	}
@@ -35,18 +37,13 @@ type (
 		RegistrationHandler() *Handler
 	}
 	Handler struct {
-		d    handlerDependencies
-		c    configuration.Provider
-		csrf x.CSRFToken
+		d handlerDependencies
+		c configuration.Provider
 	}
 )
 
 func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
-	return &Handler{d: d, c: c, csrf: nosurf.Token}
-}
-
-func (h *Handler) WithTokenGenerator(f func(r *http.Request) string) {
-	h.csrf = f
+	return &Handler{d: d, c: c}
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
@@ -59,7 +56,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 }
 
 func (h *Handler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request, redir func(*Request) (string, error)) error {
-	a := NewRequest(h.c.SelfServiceRegistrationRequestLifespan(), h.csrf(r), r)
+	a := NewRequest(h.c.SelfServiceRegistrationRequestLifespan(), h.d.GenerateCSRFToken(r), r)
 	for _, s := range h.d.RegistrationStrategies() {
 		if err := s.PopulateRegistrationMethod(r, a); err != nil {
 			return err
@@ -151,10 +148,11 @@ type getSelfServiceBrowserRegistrationRequestParameters struct {
 //       200: registrationRequest
 //       403: genericError
 //       404: genericError
+//       410: genericError
 //       500: genericError
 func (h *Handler) publicFetchRegistrationRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := h.fetchRegistrationRequest(w, r, true); err != nil {
-		h.d.Writer().WriteError(w, r, x.ErrInvalidCSRFToken.WithTrace(err).WithDebugf("%s", err))
+		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 
@@ -167,15 +165,23 @@ func (h *Handler) adminFetchRegistrationRequest(w http.ResponseWriter, r *http.R
 	}
 }
 
-func (h *Handler) fetchRegistrationRequest(w http.ResponseWriter, r *http.Request, mustVerify bool) error {
+func (h *Handler) fetchRegistrationRequest(w http.ResponseWriter, r *http.Request, isPublic bool) error {
 	ar, err := h.d.RegistrationRequestPersister().GetRegistrationRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
 	if err != nil {
-		h.d.Writer().WriteError(w, r, x.ErrInvalidCSRFToken.WithTrace(err).WithDebugf("%s", err))
+		if isPublic {
+			return errors.WithStack(x.ErrInvalidCSRFToken.WithTrace(err).WithDebugf("%s", err))
+		}
 		return err
 	}
 
-	if mustVerify && !nosurf.VerifyToken(h.csrf(r), ar.CSRFToken) {
+	if isPublic && !nosurf.VerifyToken(h.d.GenerateCSRFToken(r), ar.CSRFToken) {
 		return errors.WithStack(x.ErrInvalidCSRFToken)
+	}
+
+	if ar.ExpiresAt.Before(time.Now()) {
+		return errors.WithStack(x.ErrGone.
+			WithReason("The registration request has expired. Redirect the user to the login endpoint to initialize a new session.").
+			WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), BrowserRegistrationPath).String()))
 	}
 
 	h.d.Writer().Write(w, r, ar)

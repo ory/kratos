@@ -10,8 +10,7 @@ import (
 	"io"
 
 	"github.com/go-openapi/runtime"
-
-	strfmt "github.com/go-openapi/strfmt"
+	"github.com/go-openapi/strfmt"
 
 	"github.com/ory/kratos/internal/httpclient/models"
 )
@@ -38,6 +37,12 @@ func (o *GetSelfServiceBrowserProfileManagementRequestReader) ReadResponse(respo
 		return nil, result
 	case 404:
 		result := NewGetSelfServiceBrowserProfileManagementRequestNotFound()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 410:
+		result := NewGetSelfServiceBrowserProfileManagementRequestGone()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
@@ -142,6 +147,39 @@ func (o *GetSelfServiceBrowserProfileManagementRequestNotFound) GetPayload() *mo
 }
 
 func (o *GetSelfServiceBrowserProfileManagementRequestNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.GenericError)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+		return err
+	}
+
+	return nil
+}
+
+// NewGetSelfServiceBrowserProfileManagementRequestGone creates a GetSelfServiceBrowserProfileManagementRequestGone with default headers values
+func NewGetSelfServiceBrowserProfileManagementRequestGone() *GetSelfServiceBrowserProfileManagementRequestGone {
+	return &GetSelfServiceBrowserProfileManagementRequestGone{}
+}
+
+/*GetSelfServiceBrowserProfileManagementRequestGone handles this case with default header values.
+
+genericError
+*/
+type GetSelfServiceBrowserProfileManagementRequestGone struct {
+	Payload *models.GenericError
+}
+
+func (o *GetSelfServiceBrowserProfileManagementRequestGone) Error() string {
+	return fmt.Sprintf("[GET /self-service/browser/flows/requests/profile][%d] getSelfServiceBrowserProfileManagementRequestGone  %+v", 410, o.Payload)
+}
+
+func (o *GetSelfServiceBrowserProfileManagementRequestGone) GetPayload() *models.GenericError {
+	return o.Payload
+}
+
+func (o *GetSelfServiceBrowserProfileManagementRequestGone) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.GenericError)
 

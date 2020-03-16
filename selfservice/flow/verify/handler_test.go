@@ -43,7 +43,7 @@ func TestHandler(t *testing.T) {
 		admin := x.NewRouterAdmin()
 		reg.VerificationHandler().RegisterPublicRoutes(public)
 		reg.VerificationHandler().RegisterAdminRoutes(admin)
-		return httptest.NewServer(x.NewTestCSRFHandler(public)), httptest.NewServer(admin)
+		return httptest.NewServer(x.NewTestCSRFHandler(public, reg)), httptest.NewServer(admin)
 	}()
 	defer publicTS.Close()
 	defer adminTS.Close()

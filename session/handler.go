@@ -41,7 +41,10 @@ const (
 )
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
-	public.GET(SessionsWhoamiPath, h.whoami)
+	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch,
+		http.MethodDelete, http.MethodConnect, http.MethodOptions, http.MethodTrace} {
+		public.Handle(m, SessionsWhoamiPath, h.whoami)
+	}
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {

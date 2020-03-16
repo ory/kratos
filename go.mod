@@ -1,6 +1,6 @@
 module github.com/ory/kratos
 
-go 1.13
+go 1.14
 
 require (
 	github.com/Masterminds/sprig/v3 v3.0.0
@@ -8,17 +8,17 @@ require (
 	github.com/bxcodec/faker v2.0.1+incompatible
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/coreos/go-oidc v2.2.1+incompatible
-	github.com/fsnotify/fsnotify v1.4.7
+	github.com/fsnotify/fsnotify v1.4.9
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-errors/errors v1.0.1
-	github.com/go-openapi/errors v0.19.3
-	github.com/go-openapi/runtime v0.19.11
-	github.com/go-openapi/strfmt v0.19.4
-	github.com/go-openapi/swag v0.19.7
-	github.com/go-openapi/validate v0.19.6
+	github.com/go-openapi/errors v0.19.4
+	github.com/go-openapi/runtime v0.19.12
+	github.com/go-openapi/strfmt v0.19.5
+	github.com/go-openapi/swag v0.19.8
+	github.com/go-openapi/validate v0.19.7
 	github.com/go-playground/locales v0.12.1 // indirect
 	github.com/go-playground/universal-translator v0.16.0 // indirect
-	github.com/go-swagger/go-swagger v0.22.0
+	github.com/go-swagger/go-swagger v0.23.0
 	github.com/gobuffalo/envy v1.9.0 // indirect
 	github.com/gobuffalo/httptest v1.0.2
 	github.com/gobuffalo/packd v1.0.0 // indirect
@@ -30,7 +30,6 @@ require (
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
 	github.com/golang/mock v1.3.1
 	github.com/google/go-github/v27 v27.0.1
-	github.com/google/go-querystring v1.0.0
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/securecookie v1.1.1
@@ -39,7 +38,7 @@ require (
 	github.com/imdario/mergo v0.3.7
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/julienschmidt/httprouter v1.2.0
-	github.com/justinas/nosurf v0.0.0-20190118163749-6453469bdcc9
+	github.com/justinas/nosurf v1.1.0
 	github.com/leodido/go-urn v1.1.0 // indirect
 	github.com/markbates/pkger v0.12.8
 	github.com/mattn/go-isatty v0.0.12 // indirect
@@ -50,11 +49,11 @@ require (
 	github.com/ory/go-acc v0.1.0
 	github.com/ory/go-convenience v0.1.0
 	github.com/ory/graceful v0.1.1
-	github.com/ory/herodot v0.6.3
+	github.com/ory/herodot v0.7.0
 	github.com/ory/jsonschema/v3 v3.0.1
 	github.com/ory/sdk/swagutil v0.0.0-20200202121523-307941feee4b
 	github.com/ory/viper v1.5.6
-	github.com/ory/x v0.0.95
+	github.com/ory/x v0.0.103
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/rogpeppe/go-internal v1.5.2 // indirect
@@ -68,11 +67,9 @@ require (
 	github.com/tidwall/gjson v1.3.5
 	github.com/tidwall/sjson v1.0.4
 	github.com/urfave/negroni v1.0.0
-	golang.org/x/crypto v0.0.0-20200210222208-86ce3cb69678
+	golang.org/x/crypto v0.0.0-20200311171314-f7b00557c8c4
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5 // indirect
-	golang.org/x/tools v0.0.0-20200203215610-ab391d50b528
-	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543 // indirect
+	golang.org/x/tools v0.0.0-20200313205530-4303120df7d8
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.28.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df

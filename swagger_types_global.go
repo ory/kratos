@@ -1,3 +1,4 @@
+// nolint:deadcode,unused
 package main
 
 // Error response
@@ -5,12 +6,10 @@ package main
 // Error responses are sent when an error (e.g. unauthorized, bad request, ...) occurred.
 //
 // swagger:model genericError
-// nolint:deadcode,unused
 type genericError struct {
 	Error genericErrorPayload `json:"error"`
 }
 
-// nolint:deadcode,unused
 type genericErrorPayload struct {
 	// Code represents the error status code (404, 403, 401, ...).
 	//
@@ -23,7 +22,7 @@ type genericErrorPayload struct {
 
 	Reason string `json:"reason,omitempty"`
 
-	Details []map[string]interface{} `json:"details,omitempty"`
+	Details map[string]interface{} `json:"details,omitempty"`
 
 	Message string `json:"message"`
 
@@ -37,5 +36,4 @@ type genericErrorPayload struct {
 // typically 201.
 //
 // swagger:response emptyResponse
-// nolint:deadcode,unused
 type emptyResponse struct{}

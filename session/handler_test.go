@@ -35,6 +35,7 @@ func TestHandler(t *testing.T) {
 	t.Run("public", func(t *testing.T) {
 		_, reg := internal.NewRegistryDefault(t)
 		r := x.NewRouterPublic()
+		reg.WithCSRFHandler(new(x.FakeCSRFHandler))
 
 		// set this intermediate because kratos needs some valid url for CRUDE operations
 		viper.Set(configuration.ViperKeyURLsSelfPublic, "http://example.com")
@@ -97,6 +98,7 @@ func TestIsNotAuthenticated(t *testing.T) {
 	// set this intermediate because kratos needs some valid url for CRUDE operations
 	viper.Set(configuration.ViperKeyURLsSelfPublic, "http://example.com")
 
+	reg.WithCSRFHandler(new(x.FakeCSRFHandler))
 	h, _ := MockSessionCreateHandler(t, reg)
 	r.GET("/set", h)
 	r.GET("/public/with-callback", reg.SessionHandler().IsNotAuthenticated(send(http.StatusOK), send(http.StatusBadRequest)))
@@ -146,6 +148,7 @@ func TestIsNotAuthenticated(t *testing.T) {
 
 func TestIsAuthenticated(t *testing.T) {
 	_, reg := internal.NewRegistryDefault(t)
+	reg.WithCSRFHandler(new(x.FakeCSRFHandler))
 	r := x.NewRouterPublic()
 	// set this intermediate because kratos needs some valid url for CRUDE operations
 	viper.Set(configuration.ViperKeyURLsSelfPublic, "http://example.com")

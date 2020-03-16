@@ -10,8 +10,7 @@ import (
 	"io"
 
 	"github.com/go-openapi/runtime"
-
-	strfmt "github.com/go-openapi/strfmt"
+	"github.com/go-openapi/strfmt"
 
 	"github.com/ory/kratos/internal/httpclient/models"
 )
@@ -62,8 +61,6 @@ func NewUpdateIdentityOK() *UpdateIdentityOK {
 /*UpdateIdentityOK handles this case with default header values.
 
 A single identity.
-
-nolint:deadcode,unused
 */
 type UpdateIdentityOK struct {
 	Payload *models.Identity

@@ -177,10 +177,11 @@ type getSelfServiceBrowserLoginRequestParameters struct {
 //       200: profileManagementRequest
 //       403: genericError
 //       404: genericError
+//       410: genericError
 //       500: genericError
 func (h *Handler) publicFetchUpdateProfileRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := h.fetchUpdateProfileRequest(w, r, true); err != nil {
-		h.d.Writer().WriteError(w, r, herodot.ErrForbidden.WithReasonf("Access privileges are missing, invalid, or not sufficient to access this endpoint.").WithTrace(err).WithDebugf("%s", err))
+		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 }
@@ -192,36 +193,48 @@ func (h *Handler) adminFetchUpdateProfileRequest(w http.ResponseWriter, r *http.
 	}
 }
 
+func (h *Handler) wrapErrorForbidden(err error, shouldWrap bool) error {
+	if shouldWrap {
+		return herodot.ErrForbidden.WithReasonf("Access privileges are missing, invalid, or not sufficient to access this endpoint.").WithTrace(err).WithDebugf("%s", err)
+	}
+
+	return err
+}
+
 func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Request, checkSession bool) error {
 	rid := x.ParseUUID(r.URL.Query().Get("request"))
-	ar, err := h.d.ProfileRequestPersister().GetProfileRequest(r.Context(), rid)
+	pr, err := h.d.ProfileRequestPersister().GetProfileRequest(r.Context(), rid)
 	if err != nil {
-		return err
+		return h.wrapErrorForbidden(err, checkSession)
 	}
 
 	if checkSession {
 		sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), w, r)
 		if err != nil {
-			return err
+			return h.wrapErrorForbidden(err, checkSession)
 		}
 
-		if ar.IdentityID != sess.Identity.ID {
+		if pr.IdentityID != sess.Identity.ID {
 			return errors.WithStack(herodot.ErrForbidden.WithReasonf("The request was made for another identity and has been blocked for security reasons."))
 		}
 	}
 
-	traitsSchema, err := h.c.IdentityTraitsSchemas().FindSchemaByID(ar.Identity.TraitsSchemaID)
+	if pr.ExpiresAt.Before(time.Now()) {
+		return errors.WithStack(x.ErrGone.
+			WithReason("The profile management request has expired. Redirect the user to the login endpoint to initialize a new session.").
+			WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), PublicProfileManagementPath).String()))
+	}
+
+	traitsSchema, err := h.c.IdentityTraitsSchemas().FindSchemaByID(pr.Identity.TraitsSchemaID)
 	if err != nil {
-		h.d.Logger().Error(err)
-		return errors.WithStack(herodot.ErrInternalServerError.WithReason("The traits schema for this identity could not be found. This is an configuration error."))
+		return herodot.ErrInternalServerError.WithReason("The traits schema for this identity could not be found. This is an configuration error.").WithDebugf("%s", err).WithTrace(err)
 	}
 
-	if err := ar.Form.SortFields(traitsSchema.URL, "traits"); err != nil {
-		h.d.Logger().Error(err)
-		return errors.WithStack(herodot.ErrInternalServerError.WithReason("There was an error with sorting the form fields. This is an configuration error."))
+	if err := pr.Form.SortFields(traitsSchema.URL, "traits"); err != nil {
+		return herodot.ErrInternalServerError.WithReason("There was an error with sorting the form fields. This is an configuration error.").WithDebugf("%s", err).WithTrace(err)
 	}
 
-	h.d.Writer().Write(w, r, ar)
+	h.d.Writer().Write(w, r, pr)
 	return nil
 }
 

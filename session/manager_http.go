@@ -21,6 +21,7 @@ type (
 		PersistenceProvider
 		x.CookieProvider
 		identity.PoolProvider
+		x.CSRFProvider
 	}
 	managerHTTPConfiguration interface {
 		SessionLifespan() time.Duration
@@ -58,6 +59,7 @@ func (s *ManagerHTTP) CreateToRequest(ctx context.Context, i *identity.Identity,
 }
 
 func (s *ManagerHTTP) SaveToRequest(ctx context.Context, session *Session, w http.ResponseWriter, r *http.Request) error {
+	_ = s.r.CSRFHandler().RegenerateToken(w, r)
 	cookie, _ := s.r.CookieManager().Get(r, s.cookieName)
 	cookie.Values["sid"] = session.ID.String()
 	if err := cookie.Save(r, w); err != nil {

@@ -11,12 +11,14 @@ services:
     environment:
       - DSN=sqlite:///home/ory/sqlite/db.sqlite?_fk=true
     volumes:
-      - type: bind
-        source: ./contrib/quickstart/kratos/email-password/sqlite
+      -
+        type: volume
+        source: kratos-sqlite
         target: /home/ory/sqlite
+        read_only: false
       -
         type: bind
-        source: ./contrib/quickstart/kratos/email-password/config
+        source: ./contrib/quickstart/kratos/email-password
         target: /etc/config/kratos
     command:
       -c /etc/config/kratos/.kratos.yml migrate sql -e --yes
@@ -71,11 +73,14 @@ services:
     command:
       serve -c /etc/config/kratos/.kratos.yml --dev
     volumes:
-      - type: bind
-        source: ./contrib/quickstart/kratos/email-password/sqlite
+      -
+        type: volume
+        source: kratos-sqlite
         target: /home/ory/sqlite
-      - type: bind
-        source: ./contrib/quickstart/kratos/email-password/config
+        read_only: false
+      -
+        type: bind
+        source: ./contrib/quickstart/kratos/email-password
         target: /etc/config/kratos
     networks:
       - intranet
@@ -90,3 +95,6 @@ services:
 
 networks:
   intranet:
+
+volumes:
+  kratos-sqlite:

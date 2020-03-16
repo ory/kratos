@@ -12,8 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/selfservice/strategy/oidc"
-
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -59,11 +57,6 @@ func formMethodIsPOST(t *testing.T, body []byte) {
 func TestRegistration(t *testing.T) {
 	t.Run("case=registration", func(t *testing.T) {
 		_, reg := internal.NewRegistryDefault(t)
-		s := reg.RegistrationStrategies().MustStrategy(identity.CredentialsTypePassword).(*password.Strategy)
-		s.WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
-		reg.RegistrationStrategies().MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
-		reg.RegistrationHandler().WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
-		reg.SelfServiceErrorManager().WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
 
 		router := x.NewRouterPublic()
 		admin := x.NewRouterAdmin()
@@ -313,17 +306,12 @@ func TestRegistration(t *testing.T) {
 
 	t.Run("method=PopulateSignUpMethod", func(t *testing.T) {
 		_, reg := internal.NewRegistryDefault(t)
-		s := reg.RegistrationStrategies().MustStrategy(identity.CredentialsTypePassword).(*password.Strategy)
-		s.WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
-		reg.RegistrationStrategies().MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
-		reg.RegistrationHandler().WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
-		reg.SelfServiceErrorManager().WithTokenGenerator(x.FakeCSRFTokenGeneratorWithToken("anti-rf-token"))
 
 		viper.Set(configuration.ViperKeyURLsSelfPublic, urlx.ParseOrPanic("https://foo/"))
 		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://stub/registration.schema.json")
 
 		sr := registration.NewRequest(time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")})
-		require.NoError(t, s.PopulateRegistrationMethod(&http.Request{}, sr))
+		require.NoError(t, reg.RegistrationStrategies().MustStrategy(identity.CredentialsTypePassword).(*password.Strategy).PopulateRegistrationMethod(&http.Request{}, sr))
 
 		expected := &registration.RequestMethod{
 			Method: identity.CredentialsTypePassword,
@@ -337,7 +325,7 @@ func TestRegistration(t *testing.T) {
 								Name:     "csrf_token",
 								Type:     "hidden",
 								Required: true,
-								Value:    "anti-rf-token",
+								Value:    x.FakeCSRFToken,
 							},
 							{
 								Name:     "password",

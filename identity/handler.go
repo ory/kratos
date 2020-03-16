@@ -1,3 +1,4 @@
+// nolint:deadcode,unused
 package identity
 
 import (
@@ -55,7 +56,6 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 
 // A single identity.
 //
-// nolint:deadcode,unused
 // swagger:response identityResponse
 type identityResponse struct {
 	// required: true
@@ -64,8 +64,6 @@ type identityResponse struct {
 }
 
 // A list of identities.
-//
-// nolint:deadcode,unused
 // swagger:response identityList
 type identitiesListResponse struct {
 	// in: body
@@ -102,7 +100,6 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	h.r.Writer().Write(w, r, is)
 }
 
-// nolint:deadcode,unused
 // swagger:parameters getIdentity
 type getIdentityParameters struct {
 	// ID must be set to the ID of identity you want to get
@@ -138,14 +135,6 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 	}
 
 	h.r.Writer().Write(w, r, i)
-}
-
-// nolint:deadcode,unused
-// swagger:parameters createIdentity
-type createIdentityParameters struct {
-	// required: true
-	// in: body
-	Body *Identity
 }
 
 // swagger:route POST /identities admin createIdentity
@@ -202,20 +191,6 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	)
 }
 
-// nolint:deadcode,unused
-// swagger:parameters updateIdentity
-type updateIdentityParameters struct {
-	// ID must be set to the ID of identity you want to update
-	//
-	// required: true
-	// in: path
-	ID string `json:"id"`
-
-	// required: true
-	// in: body
-	Body *Identity
-}
-
 // swagger:route PUT /identities/{id} admin updateIdentity
 //
 // Update an identity
@@ -254,16 +229,6 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	}
 
 	h.r.Writer().Write(w, r, i)
-}
-
-// nolint:deadcode,unused
-// swagger:parameters deleteIdentity
-type deleteIdentityParameters struct {
-	// ID is the identity's ID.
-	//
-	// required: true
-	// in: path
-	ID string `json:"id"`
 }
 
 // swagger:route DELETE /identities/{id} admin deleteIdentity

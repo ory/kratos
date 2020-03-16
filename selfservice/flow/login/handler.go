@@ -3,6 +3,7 @@ package login
 import (
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/nosurf"
@@ -31,23 +32,19 @@ type (
 		session.HandlerProvider
 		session.ManagementProvider
 		x.WriterProvider
+		x.CSRFTokenGeneratorProvider
 	}
 	HandlerProvider interface {
 		LoginHandler() *Handler
 	}
 	Handler struct {
-		d    handlerDependencies
-		c    configuration.Provider
-		csrf x.CSRFToken
+		d handlerDependencies
+		c configuration.Provider
 	}
 )
 
 func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
-	return &Handler{d: d, c: c, csrf: nosurf.Token}
-}
-
-func (h *Handler) WithTokenGenerator(f func(r *http.Request) string) {
-	h.csrf = f
+	return &Handler{d: d, c: c}
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
@@ -60,7 +57,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 }
 
 func (h *Handler) NewLoginRequest(w http.ResponseWriter, r *http.Request, redir func(request *Request) (string, error)) error {
-	a := NewLoginRequest(h.c.SelfServiceLoginRequestLifespan(), h.csrf(r), r)
+	a := NewLoginRequest(h.c.SelfServiceLoginRequestLifespan(), h.d.GenerateCSRFToken(r), r)
 	for _, s := range h.d.LoginStrategies() {
 		if err := s.PopulateLoginMethod(r, a); err != nil {
 			return err
@@ -158,10 +155,11 @@ type getSelfServiceBrowserLoginRequestParameters struct {
 //       200: loginRequest
 //       403: genericError
 //       404: genericError
+//       410: genericError
 //       500: genericError
 func (h *Handler) publicFetchLoginRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := h.fetchLoginRequest(w, r, true); err != nil {
-		h.d.Writer().WriteError(w, r, x.ErrInvalidCSRFToken.WithTrace(err).WithDebugf("%s", err))
+		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 }
@@ -173,15 +171,25 @@ func (h *Handler) adminFetchLoginRequest(w http.ResponseWriter, r *http.Request,
 	}
 }
 
-func (h *Handler) fetchLoginRequest(w http.ResponseWriter, r *http.Request, mustVerify bool) error {
+func (h *Handler) fetchLoginRequest(w http.ResponseWriter, r *http.Request, isPublic bool) error {
 	ar, err := h.d.LoginRequestPersister().GetLoginRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
 	if err != nil {
-		h.d.Writer().WriteError(w, r, x.ErrInvalidCSRFToken.WithTrace(err).WithDebugf("%s", err))
+		if isPublic {
+			return errors.WithStack(x.ErrInvalidCSRFToken.WithTrace(err).WithDebugf("%s", err))
+		}
 		return err
 	}
 
-	if mustVerify && !nosurf.VerifyToken(h.csrf(r), ar.CSRFToken) {
-		return errors.WithStack(x.ErrInvalidCSRFToken)
+	if isPublic {
+		if !nosurf.VerifyToken(h.d.GenerateCSRFToken(r), ar.CSRFToken) {
+			return errors.WithStack(x.ErrInvalidCSRFToken)
+		}
+	}
+
+	if ar.ExpiresAt.Before(time.Now()) {
+		return errors.WithStack(x.ErrGone.
+			WithReason("The login request has expired. Redirect the user to the login endpoint to initialize a new session.").
+			WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), BrowserLoginPath).String()))
 	}
 
 	h.d.Writer().Write(w, r, ar)

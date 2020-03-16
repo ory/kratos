@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/gorilla/sessions"
-	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
@@ -46,11 +45,13 @@ type Registry interface {
 	BuildHash() string
 	WithBuildInfo(version, hash, date string) Registry
 
-	WithCSRFHandler(c *nosurf.CSRFHandler)
-	CSRFHandler() *nosurf.CSRFHandler
+	WithCSRFHandler(c x.CSRFHandler)
+	WithCSRFTokenGenerator(cg x.CSRFToken)
+
 	HealthHandler() *healthx.Handler
 	CookieManager() sessions.Store
 
+	x.CSRFProvider
 	x.WriterProvider
 	x.LoggingProvider
 
