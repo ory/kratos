@@ -148,7 +148,7 @@ func (p *ViperProvider) DSN() string {
 	dsn := viperx.GetString(p.l, ViperKeyDSN, "")
 
 	if dsn == "memory" {
-		return "sqlite://mem.db?mode=memory?_fk=true&cache=shared"
+		return "sqlite://mem.db?mode=memory&_fk=true&cache=shared"
 	}
 
 	if len(dsn) > 0 {

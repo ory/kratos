@@ -181,3 +181,57 @@ func TestViperProvider(t *testing.T) {
 		})
 	})
 }
+
+type InterceptHook struct {
+	lastEntry *logrus.Entry
+}
+
+func (l InterceptHook) Levels() []logrus.Level {
+	return []logrus.Level{logrus.FatalLevel}
+}
+
+func (l InterceptHook) Fire(e *logrus.Entry) error {
+	l.lastEntry = e
+	return nil
+}
+
+func TestViperProvider_DSN(t *testing.T) {
+	t.Run("case=dsn: memory", func(t *testing.T) {
+		viper.Reset()
+		viper.Set(configuration.ViperKeyDSN, "memory")
+
+		l := logrus.New()
+		p := configuration.NewViperProvider(l, false)
+
+		assert.Equal(t, "sqlite://mem.db?mode=memory&_fk=true&cache=shared", p.DSN())
+	})
+
+	t.Run("case=dsn: not memory", func(t *testing.T) {
+		dsn := "sqlite://foo.db?_fk=true"
+		viper.Reset()
+		viper.Set(configuration.ViperKeyDSN, dsn)
+
+		l := logrus.New()
+		p := configuration.NewViperProvider(l, false)
+
+		assert.Equal(t, dsn, p.DSN())
+	})
+
+	t.Run("case=dsn: not set", func(t *testing.T) {
+		dsn := ""
+		viper.Reset()
+		viper.Set(configuration.ViperKeyDSN, dsn)
+
+		l := logrus.New()
+		p := configuration.NewViperProvider(l, false)
+
+		var exitCode int
+		l.ExitFunc = func(i int) {
+			exitCode = i
+		}
+		h := InterceptHook{}
+		l.AddHook(h)
+		assert.Equal(t, dsn, p.DSN())
+		assert.NotEqual(t, 0, exitCode)
+	})
+}

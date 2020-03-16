@@ -3,6 +3,7 @@ package driver
 import (
 	"context"
 	"net/url"
+	"strings"
 
 	"github.com/gorilla/sessions"
 	"github.com/justinas/nosurf"
@@ -110,12 +111,8 @@ type selfServiceStrategy interface {
 }
 
 func NewRegistry(c configuration.Provider) (Registry, error) {
-	dsn, err := url.Parse(c.DSN())
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	driver, err := dbal.GetDriverFor(dsn.String())
+	dsn := c.DSN()
+	driver, err := dbal.GetDriverFor(dsn)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -126,11 +123,17 @@ func NewRegistry(c configuration.Provider) (Registry, error) {
 	}
 
 	// if dsn is memory we have to run the migrations on every start
-	if dsn.Scheme == "sqlite" && dsn.Query().Get("mode") == "memory" {
-		registry.Logger().Print("Kratos is running migrations on every startup as DSN is memory.\n")
-		registry.Logger().Print("This means your data is lost when Kratos terminates.\n")
-		if err := registry.Persister().MigrateUp(context.Background()); err != nil {
-			return nil, err
+	if urlParts := strings.SplitN(dsn, "?", 1); len(urlParts) == 2 && strings.HasPrefix(dsn, "sqlite://") {
+		queryVals, err := url.ParseQuery(urlParts[1])
+		if err != nil {
+			return nil, errors.WithMessage(errors.WithStack(err), "unable to parse the DSN url")
+		}
+		if queryVals.Get("mode") == "memory" {
+			registry.Logger().Print("Kratos is running migrations on every startup as DSN is memory.\n")
+			registry.Logger().Print("This means your data is lost when Kratos terminates.\n")
+			if err := registry.Persister().MigrateUp(context.Background()); err != nil {
+				return nil, err
+			}
 		}
 	}
 	return registry, nil
