@@ -10,7 +10,7 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// GenericErrorPayload generic error payload
+// GenericErrorPayload nolint:deadcode,unused
 //
 // swagger:model genericErrorPayload
 type GenericErrorPayload struct {
@@ -22,7 +22,7 @@ type GenericErrorPayload struct {
 	Debug string `json:"debug,omitempty"`
 
 	// details
-	Details map[string]interface{} `json:"details,omitempty"`
+	Details []map[string]interface{} `json:"details"`
 
 	// message
 	Message string `json:"message,omitempty"`
