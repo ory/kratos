@@ -145,7 +145,13 @@ func (p *ViperProvider) PublicListenOn() string {
 }
 
 func (p *ViperProvider) DSN() string {
-	if dsn := viperx.GetString(p.l, ViperKeyDSN, ""); len(dsn) > 0 {
+	dsn := viperx.GetString(p.l, ViperKeyDSN, "")
+
+	if dsn == "memory" {
+		return "sqlite://mem.db?mode=memory&_fk=true&cache=shared"
+	}
+
+	if len(dsn) > 0 {
 		return dsn
 	}
 

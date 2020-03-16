@@ -1,8 +1,12 @@
 package driver
 
 import (
-	"github.com/go-errors/errors"
+	"context"
+	"net/url"
+	"strings"
+
 	"github.com/gorilla/sessions"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
 	"github.com/ory/kratos/courier"
@@ -108,9 +112,10 @@ type selfServiceStrategy interface {
 }
 
 func NewRegistry(c configuration.Provider) (Registry, error) {
-	driver, err := dbal.GetDriverFor(c.DSN())
+	dsn := c.DSN()
+	driver, err := dbal.GetDriverFor(dsn)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	registry, ok := driver.(Registry)
@@ -118,5 +123,19 @@ func NewRegistry(c configuration.Provider) (Registry, error) {
 		return nil, errors.Errorf("driver of type %T does not implement interface Registry", driver)
 	}
 
+	// if dsn is memory we have to run the migrations on every start
+	if urlParts := strings.SplitN(dsn, "?", 1); len(urlParts) == 2 && strings.HasPrefix(dsn, "sqlite://") {
+		queryVals, err := url.ParseQuery(urlParts[1])
+		if err != nil {
+			return nil, errors.WithMessage(errors.WithStack(err), "unable to parse the DSN url")
+		}
+		if queryVals.Get("mode") == "memory" {
+			registry.Logger().Print("Kratos is running migrations on every startup as DSN is memory.\n")
+			registry.Logger().Print("This means your data is lost when Kratos terminates.\n")
+			if err := registry.Persister().MigrateUp(context.Background()); err != nil {
+				return nil, err
+			}
+		}
+	}
 	return registry, nil
 }
