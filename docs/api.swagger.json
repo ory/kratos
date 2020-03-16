@@ -496,6 +496,12 @@
               "$ref": "#/definitions/genericError"
             }
           },
+          "410": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
           "500": {
             "description": "genericError",
             "schema": {
@@ -550,6 +556,12 @@
               "$ref": "#/definitions/genericError"
             }
           },
+          "410": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
           "500": {
             "description": "genericError",
             "schema": {
@@ -599,6 +611,12 @@
             }
           },
           "404": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "410": {
             "description": "genericError",
             "schema": {
               "$ref": "#/definitions/genericError"
@@ -1116,12 +1134,9 @@
           "example": "The database adapter was unable to find the element"
         },
         "details": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "object"
-            }
+          "type": "object",
+          "additionalProperties": {
+            "type": "object"
           }
         },
         "message": {

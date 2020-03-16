@@ -412,7 +412,6 @@ func (m *RegistryDefault) Ping() error {
 	return m.persister.Ping(context.Background())
 }
 
-
 func (m *RegistryDefault) WithCSRFTokenGenerator(cg x.CSRFToken){
 	m.csrfTokenGenerator = cg
 }

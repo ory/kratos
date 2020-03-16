@@ -1,11 +1,14 @@
 package registration_test
 
 import (
+	"context"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"testing"
+	"time"
 
+	"github.com/justinas/nosurf"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -85,6 +88,21 @@ func TestRegistrationHandler(t *testing.T) {
 		assert.Contains(t, gjson.GetBytes(body, "methods.password.config.action").String(), public.URL, "%s", body)
 	}
 
+	assertExpiredPayload := func(t *testing.T, res *http.Response, body []byte) {
+		assert.EqualValues(t, http.StatusGone, res.StatusCode)
+		assert.Equal(t, public.URL+registration.BrowserRegistrationPath, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
+	}
+
+	newExpiredRequest := func() *registration.Request {
+		return &registration.Request{
+			ID:         x.NewUUID(),
+			ExpiresAt:  time.Now().Add(-time.Minute),
+			IssuedAt:   time.Now().Add(-time.Minute * 2),
+			RequestURL: public.URL + registration.BrowserRegistrationPath,
+			CSRFToken:  x.FakeCSRFToken,
+		}
+	}
+
 	errTS := errorx.NewErrorTestServer(t, reg)
 	defer errTS.Close()
 
@@ -95,9 +113,18 @@ func TestRegistrationHandler(t *testing.T) {
 	t.Run("daemon=admin", func(t *testing.T) {
 		regTS := newRegistrationTS(t, admin.URL, nil)
 		defer regTS.Close()
-
 		viper.Set(configuration.ViperKeyURLsRegistration, regTS.URL)
-		assertRequestPayload(t, x.EasyGetBody(t, public.Client(), public.URL+registration.BrowserRegistrationPath))
+
+		t.Run("case=valid", func(t *testing.T) {
+			assertRequestPayload(t, x.EasyGetBody(t, public.Client(), public.URL+registration.BrowserRegistrationPath))
+		})
+
+		t.Run("case=expired", func(t *testing.T) {
+			rr := newExpiredRequest()
+			require.NoError(t, reg.RegistrationRequestPersister().CreateRegistrationRequest(context.Background(), rr))
+			res, body := x.EasyGet(t, admin.Client(), admin.URL+registration.BrowserRegistrationRequestsPath+"?request="+rr.ID.String())
+			assertExpiredPayload(t, res, body)
+		})
 	})
 
 	t.Run("daemon=public", func(t *testing.T) {
@@ -123,6 +150,25 @@ func TestRegistrationHandler(t *testing.T) {
 
 			body := x.EasyGetBody(t, new(http.Client), public.URL+registration.BrowserRegistrationPath)
 			assert.Contains(t, gjson.GetBytes(body, "error").String(), "csrf_token", "%s", body)
+		})
+
+		t.Run("case=expired", func(t *testing.T) {
+			reg.SetCSRFTokenGenerator(x.FakeCSRFTokenGenerator)
+			t.Cleanup(func() {
+				reg.SetCSRFTokenGenerator(nosurf.Token)
+			})
+
+			j, err := cookiejar.New(nil)
+			require.NoError(t, err)
+			hc := &http.Client{Jar: j}
+
+			regTS := newRegistrationTS(t, public.URL, hc)
+			defer regTS.Close()
+
+			rr := newExpiredRequest()
+			require.NoError(t, reg.RegistrationRequestPersister().CreateRegistrationRequest(context.Background(), rr))
+			res, body := x.EasyGet(t, admin.Client(), admin.URL+registration.BrowserRegistrationRequestsPath+"?request="+rr.ID.String())
+			assertExpiredPayload(t, res, body)
 		})
 	})
 }
