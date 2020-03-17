@@ -27,6 +27,9 @@ type (
 		dialer *gomail.Dialer
 		d      smtpDependencies
 		c      configuration.Provider
+		// graceful shutdown handling
+		ctx      context.Context
+		shutdown context.CancelFunc
 	}
 	Provider interface {
 		Courier() *Courier
@@ -38,9 +41,12 @@ func NewSMTP(d smtpDependencies, c configuration.Provider) *Courier {
 	sslSkipVerify, _ := strconv.ParseBool(uri.Query().Get("skip_ssl_verify"))
 	password, _ := uri.User.Password()
 	port, _ := strconv.ParseInt(uri.Port(), 10, 64)
+	ctx, cancel := context.WithCancel(context.Background())
 	return &Courier{
-		d: d,
-		c: c,
+		d:        d,
+		c:        c,
+		ctx:      ctx,
+		shutdown: cancel,
 		dialer: &gomail.Dialer{
 			Host:     uri.Hostname(),
 			Port:     int(port),
@@ -82,18 +88,26 @@ func (m *Courier) QueueEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, e
 	return message.ID, nil
 }
 
-func (m *Courier) Work(ctx context.Context) error {
+func (m *Courier) Work() error {
 	errChan := make(chan error)
 	defer close(errChan)
 
-	go m.watchMessages(ctx, errChan)
+	go m.watchMessages(m.ctx, errChan)
 
 	select {
-	case <-ctx.Done():
-		return ctx.Err()
+	case <-m.ctx.Done():
+		if m.ctx.Err() == context.Canceled {
+			return nil
+		}
+		return m.ctx.Err()
 	case err := <-errChan:
 		return err
 	}
+}
+
+func (m *Courier) Shutdown(ctx context.Context) error {
+	m.shutdown()
+	return nil
 }
 
 func (m *Courier) watchMessages(ctx context.Context, errChan chan error) {
