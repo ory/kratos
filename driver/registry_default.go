@@ -97,7 +97,10 @@ type RegistryDefault struct {
 
 	selfserviceLogoutHandler *logout.Handler
 
-	selfserviceStrategies []selfServiceStrategy
+	selfserviceStrategies  []interface{}
+	loginStrategies        []login.Strategy
+	registrationStrategies []registration.Strategy
+	profileStrategies      []profile.Strategy
 
 	buildVersion string
 	buildHash    string
@@ -176,31 +179,49 @@ func (m *RegistryDefault) CSRFHandler() x.CSRFHandler {
 	return m.nosurf
 }
 
-func (m *RegistryDefault) selfServiceStrategies() []selfServiceStrategy {
-	if m.selfserviceStrategies == nil {
-		m.selfserviceStrategies = []selfServiceStrategy{
+func (m *RegistryDefault) selfServiceStrategies() []interface{} {
+	if len(m.selfserviceStrategies) == 0 {
+		m.selfserviceStrategies = []interface{}{
 			password2.NewStrategy(m, m.c),
 			oidc.NewStrategy(m, m.c),
+			profile.NewStrategyTraits(m, m.c),
 		}
 	}
 
 	return m.selfserviceStrategies
 }
 
-func (m *RegistryDefault) RegistrationStrategies() registration.Strategies {
-	strategies := make([]registration.Strategy, len(m.selfServiceStrategies()))
-	for i := range strategies {
-		strategies[i] = m.selfServiceStrategies()[i]
+func (m *RegistryDefault) ProfileManagementStrategies() profile.Strategies {
+	if len(m.profileStrategies) == 0 {
+		for _, strategy := range m.selfServiceStrategies() {
+			if s, ok := strategy.(profile.Strategy); ok {
+				m.profileStrategies = append(m.profileStrategies, s)
+			}
+		}
 	}
-	return strategies
+	return m.profileStrategies
+}
+
+func (m *RegistryDefault) RegistrationStrategies() registration.Strategies {
+	if len(m.registrationStrategies) == 0 {
+		for _, strategy := range m.selfServiceStrategies() {
+			if s, ok := strategy.(registration.Strategy); ok {
+				m.registrationStrategies = append(m.registrationStrategies, s)
+			}
+		}
+	}
+	return m.registrationStrategies
 }
 
 func (m *RegistryDefault) LoginStrategies() login.Strategies {
-	strategies := make([]login.Strategy, len(m.selfServiceStrategies()))
-	for i := range strategies {
-		strategies[i] = m.selfServiceStrategies()[i]
+	if len(m.loginStrategies) == 0 {
+		for _, strategy := range m.selfServiceStrategies() {
+			if s, ok := strategy.(login.Strategy); ok {
+				m.loginStrategies = append(m.loginStrategies, s)
+			}
+		}
 	}
-	return strategies
+	return m.loginStrategies
 }
 
 func (m *RegistryDefault) IdentityValidator() *identity.Validator {

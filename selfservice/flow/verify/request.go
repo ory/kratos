@@ -41,7 +41,7 @@ type Request struct {
 	// to forward information contained in the URL's path or query for example.
 	RequestURL string `json:"request_url" db:"request_url"`
 
-	// Form contains form fields, errors, and so on.
+	// TraitsForm contains form fields, errors, and so on.
 	Form *form.HTMLForm `json:"form" faker:"-" db:"form"`
 
 	Via identity.VerifiableAddressType `json:"via" db:"via"`

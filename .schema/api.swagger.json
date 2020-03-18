@@ -1011,6 +1011,34 @@
         }
       }
     },
+    "RequestMethodConfig": {
+      "type": "object",
+      "required": [
+        "action",
+        "method",
+        "fields"
+      ],
+      "properties": {
+        "action": {
+          "description": "Action should be used as the form action URL (\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e).",
+          "type": "string"
+        },
+        "errors": {
+          "description": "Errors contains all form errors. These will be duplicates of the individual field errors.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Error"
+          }
+        },
+        "fields": {
+          "$ref": "#/definitions/formFields"
+        },
+        "method": {
+          "description": "Method is the form method (e.g. POST)",
+          "type": "string"
+        }
+      }
+    },
     "Traits": {
       "type": "object"
     },
@@ -1322,7 +1350,7 @@
         "expires_at",
         "issued_at",
         "request_url",
-        "form",
+        "methods",
         "identity",
         "update_successful"
       ],
@@ -1332,8 +1360,9 @@
           "type": "string",
           "format": "date-time"
         },
-        "form": {
-          "$ref": "#/definitions/form"
+        "form_active": {
+          "description": "FormActive, if set, contains the registration method that is being used. It is initially\nnot set.",
+          "type": "string"
         },
         "id": {
           "$ref": "#/definitions/UUID"
@@ -1346,6 +1375,13 @@
           "type": "string",
           "format": "date-time"
         },
+        "methods": {
+          "description": "Methods contains context for all enabled registration methods. If a registration request has been\nprocessed, but for example the password is incorrect, this will contain error messages.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/profileRequestForm"
+          }
+        },
         "request_url": {
           "description": "RequestURL is the initial URL that was requested from ORY Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
           "type": "string"
@@ -1353,6 +1389,18 @@
         "update_successful": {
           "description": "UpdateSuccessful, if true, indicates that the profile has been updated successfully with the provided data.\nDone will stay true when repeatedly checking. If set to true, done will revert back to false only\nwhen a request with invalid (e.g. \"please use a valid phone number\") data was sent.",
           "type": "boolean"
+        }
+      }
+    },
+    "profileRequestForm": {
+      "type": "object",
+      "properties": {
+        "config": {
+          "$ref": "#/definitions/RequestMethodConfig"
+        },
+        "method": {
+          "description": "Method contains the request credentials type.",
+          "type": "string"
         }
       }
     },

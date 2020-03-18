@@ -14,6 +14,7 @@ import (
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/x"
 )
 
@@ -75,10 +76,10 @@ func TestRequestPersister(p interface {
 			actual, err := p.GetProfileRequest(context.Background(), expected.ID)
 			require.NoError(t, err)
 
-			factual, _ := json.Marshal(actual.Form)
-			fexpected, _ := json.Marshal(expected.Form)
+			factual, _ := json.Marshal(actual.Methods[FormTraitsID].Config)
+			fexpected, _ := json.Marshal(expected.Methods[FormTraitsID].Config)
 
-			assert.NotEmpty(t, actual.Form.Action)
+			require.NotEmpty(t, actual.Methods[FormTraitsID].Config.RequestMethodConfigurator.(*form.HTMLForm).Action)
 			assert.EqualValues(t, expected.ID, actual.ID)
 			assert.JSONEq(t, string(fexpected), string(factual))
 			x.AssertEqualTime(t, expected.IssuedAt, actual.IssuedAt)
@@ -103,14 +104,14 @@ func TestRequestPersister(p interface {
 			err := p.CreateProfileRequest(context.Background(), expected)
 			require.NoError(t, err)
 
-			expected.Form.Action = "/new-action"
+			expected.Methods[FormTraitsID].Config.RequestMethodConfigurator.(*form.HTMLForm).Action = "/new-action"
 			expected.RequestURL = "/new-request-url"
 			require.NoError(t, p.UpdateProfileRequest(context.Background(), expected))
 
 			actual, err := p.GetProfileRequest(context.Background(), expected.ID)
 			require.NoError(t, err)
 
-			assert.Equal(t, "/new-action", actual.Form.Action)
+			assert.Equal(t, "/new-action", actual.Methods[FormTraitsID].Config.RequestMethodConfigurator.(*form.HTMLForm).Action)
 			assert.Equal(t, "/new-request-url", actual.RequestURL)
 		})
 	}

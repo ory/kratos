@@ -9,13 +9,12 @@ import (
 	"strconv"
 
 	"github.com/go-openapi/errors"
-	"github.com/go-openapi/strfmt"
+	strfmt "github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
 // FormField Field represents a HTML Form Field
-//
 // swagger:model formField
 type FormField struct {
 

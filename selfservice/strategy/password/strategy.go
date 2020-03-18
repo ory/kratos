@@ -63,11 +63,3 @@ func NewStrategy(
 func (s *Strategy) ID() identity.CredentialsType {
 	return identity.CredentialsTypePassword
 }
-
-func (s *Strategy) RegistrationStrategyID() identity.CredentialsType {
-	return s.ID()
-}
-
-func (s *Strategy) LoginStrategyID() identity.CredentialsType {
-	return s.ID()
-}

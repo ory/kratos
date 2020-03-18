@@ -4,14 +4,16 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
+
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
@@ -50,10 +52,18 @@ type Request struct {
 	// required: true
 	RequestURL string `json:"request_url" db:"request_url"`
 
-	// Form contains form fields, errors, and so on.
+	// FormActive, if set, contains the registration method that is being used. It is initially
+	// not set.
+	FormActive sqlxx.NullString `json:"active,omitempty" db:"active_method"`
+
+	// Methods contains context for all enabled registration methods. If a registration request has been
+	// processed, but for example the password is incorrect, this will contain error messages.
 	//
 	// required: true
-	Form *form.HTMLForm `json:"form" db:"form"`
+	Methods map[string]*RequestMethod `json:"methods" faker:"profile_management_request_methods" db:"-"`
+
+	// MethodsRaw is a helper struct field for gobuffalo.pop.
+	MethodsRaw RequestMethodsRaw `json:"-" faker:"-" has_many:"selfservice_profile_management_request_methods" fk_id:"selfservice_profile_management_request_id"`
 
 	// Identity contains all of the identity's data in raw form.
 	//
@@ -93,7 +103,7 @@ func NewRequest(exp time.Duration, r *http.Request, s *session.Session) *Request
 		RequestURL: source.String(),
 		IdentityID: s.Identity.ID,
 		Identity:   s.Identity,
-		Form:       form.NewHTMLForm(""),
+		Methods:    map[string]*RequestMethod{},
 	}
 }
 
@@ -108,5 +118,28 @@ func (r *Request) Valid(s *session.Session) error {
 	if r.IdentityID != s.Identity.ID {
 		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("The profile request expired %.2f minutes ago, please try again", time.Since(r.ExpiresAt).Minutes()))
 	}
+	return nil
+}
+
+func (r *Request) BeforeSave(_ *pop.Connection) error {
+	r.MethodsRaw = make([]RequestMethod, 0, len(r.Methods))
+	for _, m := range r.Methods {
+		r.MethodsRaw = append(r.MethodsRaw, *m)
+	}
+	r.Methods = nil
+	return nil
+}
+
+func (r *Request) AfterSave(c *pop.Connection) error {
+	return r.AfterFind(c)
+}
+
+func (r *Request) AfterFind(_ *pop.Connection) error {
+	r.Methods = make(RequestForms)
+	for key := range r.MethodsRaw {
+		m := r.MethodsRaw[key] // required for pointer dereference
+		r.Methods[m.Method] = &m
+	}
+	r.MethodsRaw = nil
 	return nil
 }
