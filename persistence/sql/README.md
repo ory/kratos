@@ -3,7 +3,8 @@
 To create a new [fizz](https://gobuffalo.io/en/docs/db/fizz/) migration run in the project root:
 
 ```
-$ soda generate fizz -c ./contrib/sql/.soda.yml -p ./contrib/sql/migrations [name]
+$ name=
+$ soda generate fizz $name -c ./contrib/sql/.soda.yml -p ./contrib/sql/migrations
 ```
 
 To create SQL migrations, target each database individually and run

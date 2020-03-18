@@ -62,15 +62,17 @@ func (s *ErrorHandler) HandleProfileManagementError(
 		return
 	}
 
-	if err := rr.Form.ParseError(err); err != nil {
+	if err := rr.Methods[FormTraitsID].Config.ParseError(err); err != nil {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
+	fmt.Printf("done handling profile management: %+v\n", rr.Methods[FormTraitsID].Config.RequestMethodConfigurator)
 	if err := s.d.ProfileRequestPersister().UpdateProfileRequest(r.Context(), rr); err != nil {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
+	fmt.Printf("done handling profile management 2: %+v\n\n", rr.Methods[FormTraitsID].Config.RequestMethodConfigurator)
 
 	http.Redirect(w, r,
 		urlx.CopyWithQuery(s.c.ProfileURL(), url.Values{"request": {rr.ID.String()}}).String(),

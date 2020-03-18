@@ -7,7 +7,7 @@ package models
 
 import (
 	"github.com/go-openapi/errors"
-	"github.com/go-openapi/strfmt"
+	strfmt "github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
@@ -18,7 +18,6 @@ import (
 // channel such as an email address or a phone number.
 //
 // For more information head over to: https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation
-//
 // swagger:model verificationRequest
 type VerificationRequest struct {
 

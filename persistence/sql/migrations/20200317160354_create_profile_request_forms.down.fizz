@@ -1,0 +1,6 @@
+add_column("selfservice_profile_management_requests, "form", "json", { default: "{}" })
+
+sql("UPDATE selfservice_profile_management_requests SET form=f.config FROM selfservice_profile_management_requests as r INNER JOIN selfservice_profile_management_request_methods as f ON f.id=r.selfservice_profile_management_request_id;")
+
+drop_table("selfservice_profile_management_request_methods")
+drop_column("selfservice_profile_management_requests", "active_method")

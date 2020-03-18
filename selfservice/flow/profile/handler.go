@@ -6,8 +6,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/ory/jsonschema/v3"
-
 	"github.com/ory/kratos/schema"
 
 	"github.com/julienschmidt/httprouter"
@@ -51,6 +49,7 @@ type (
 
 		ErrorHandlerProvider
 		RequestPersistenceProvider
+		StrategyProvider
 
 		IdentityTraitsSchemas() schema.Schemas
 	}
@@ -104,34 +103,12 @@ func (h *Handler) initUpdateProfile(w http.ResponseWriter, r *http.Request, ps h
 		return
 	}
 
-	traitsSchema, err := h.c.IdentityTraitsSchemas().FindSchemaByID(s.Identity.TraitsSchemaID)
-	if err != nil {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
-		return
-	}
-
 	a := NewRequest(h.c.SelfServiceProfileRequestLifespan(), r, s)
-	// use a schema compiler that disables identifiers
-	schemaCompiler := jsonschema.NewCompiler()
-	registerNewDisableIdentifiersExtension(schemaCompiler)
-
-	a.Form, err = form.NewHTMLFormFromJSONSchema(urlx.CopyWithQuery(
-		urlx.AppendPaths(h.c.SelfPublicURL(), PublicProfileManagementUpdatePath),
-		url.Values{
-			"request": {a.ID.String()},
-		},
-	).String(), traitsSchema.URL, "traits", schemaCompiler)
-	if err != nil {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
-		return
-	}
-
-	a.Form.SetValuesFromJSON(json.RawMessage(s.Identity.Traits), "traits")
-	a.Form.SetCSRF(h.csrf(r))
-
-	if err := a.Form.SortFields(traitsSchema.URL, "traits"); err != nil {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
-		return
+	for _, strategy := range h.d.ProfileManagementStrategies() {
+		if err := strategy.PopulateProfileManagementMethod(r, s, a); err != nil {
+			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+			return
+		}
 	}
 
 	if err := h.d.ProfileRequestPersister().CreateProfileRequest(r.Context(), a); err != nil {
@@ -223,15 +200,6 @@ func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Reque
 		return errors.WithStack(x.ErrGone.
 			WithReason("The profile management request has expired. Redirect the user to the login endpoint to initialize a new session.").
 			WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), PublicProfileManagementPath).String()))
-	}
-
-	traitsSchema, err := h.c.IdentityTraitsSchemas().FindSchemaByID(pr.Identity.TraitsSchemaID)
-	if err != nil {
-		return herodot.ErrInternalServerError.WithReason("The traits schema for this identity could not be found. This is an configuration error.").WithDebugf("%s", err).WithTrace(err)
-	}
-
-	if err := pr.Form.SortFields(traitsSchema.URL, "traits"); err != nil {
-		return herodot.ErrInternalServerError.WithReason("There was an error with sorting the form fields. This is an configuration error.").WithDebugf("%s", err).WithTrace(err)
 	}
 
 	h.d.Writer().Write(w, r, pr)
@@ -342,10 +310,12 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 				WithDebugf("session.AuthenticatedAt was %fs in the future. This should not happen.", time.Since(s.AuthenticatedAt).Seconds())))
 		return
 	}
+
 	identityManagerOptions := []identity.ManagerOption{identity.ManagerExposeValidationErrors}
 	if time.Since(s.AuthenticatedAt) < h.c.SelfServicePrivilegedSessionMaxAge() {
 		identityManagerOptions = append(identityManagerOptions, identity.ManagerAllowWriteProtectedTraits)
 	}
+
 	if err := h.d.IdentityManager().UpdateTraits(r.Context(), s.Identity.ID, identity.Traits(p.Traits), identityManagerOptions...); err != nil {
 		h.handleProfileManagementError(w, r, ar, identity.Traits(p.Traits), err)
 		return
@@ -355,12 +325,12 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 		urlx.AppendPaths(h.c.SelfPublicURL(), PublicProfileManagementUpdatePath),
 		url.Values{"request": {ar.ID.String()}},
 	)
-	ar.Form.Reset()
+	ar.Methods[FormTraitsID].Config.Reset()
 	ar.UpdateSuccessful = true
 	for _, field := range form.NewHTMLFormFromJSON(action.String(), p.Traits, "traits").Fields {
-		ar.Form.SetField(field)
+		ar.Methods[FormTraitsID].Config.SetField(field)
 	}
-	ar.Form.SetCSRF(nosurf.Token(r))
+	ar.Methods[FormTraitsID].Config.SetCSRF(nosurf.Token(r))
 
 	traitsSchema, err := h.c.IdentityTraitsSchemas().FindSchemaByID(s.Identity.TraitsSchemaID)
 	if err != nil {
@@ -368,7 +338,7 @@ func (h *Handler) completeProfileManagementFlow(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if err = ar.Form.SortFields(traitsSchema.URL, "traits"); err != nil {
+	if err = ar.Methods[FormTraitsID].Config.SortFields(traitsSchema.URL, "traits"); err != nil {
 		h.handleProfileManagementError(w, r, ar, identity.Traits(p.Traits), err)
 		return
 	}
@@ -393,15 +363,15 @@ func (h *Handler) handleProfileManagementError(w http.ResponseWriter, r *http.Re
 			url.Values{"request": {rr.ID.String()}},
 		)
 
-		rr.Form.Reset()
+		rr.Methods[FormTraitsID].Config.Reset()
 		rr.UpdateSuccessful = false
 
 		if traits != nil {
 			for _, field := range form.NewHTMLFormFromJSON(action.String(), json.RawMessage(traits), "traits").Fields {
-				rr.Form.SetField(field)
+				rr.Methods[FormTraitsID].Config.SetField(field)
 			}
 		}
-		rr.Form.SetCSRF(nosurf.Token(r))
+		rr.Methods[FormTraitsID].Config.SetCSRF(nosurf.Token(r))
 
 		// try to sort, might fail if the error before was sorting related
 		traitsSchema, err := h.c.IdentityTraitsSchemas().FindSchemaByID(rr.Identity.TraitsSchemaID)
@@ -409,8 +379,13 @@ func (h *Handler) handleProfileManagementError(w http.ResponseWriter, r *http.Re
 			h.d.ProfileRequestRequestErrorHandler().HandleProfileManagementError(w, r, rr, err)
 			return
 		}
-		err = rr.Form.SortFields(traitsSchema.URL, "traits")
-		if err != nil {
+
+		if err := rr.Methods[FormTraitsID].Config.SortFields(traitsSchema.URL, "traits"); err != nil {
+			h.d.ProfileRequestRequestErrorHandler().HandleProfileManagementError(w, r, rr, err)
+			return
+		}
+
+		if err := h.d.ProfileRequestPersister().UpdateProfileRequest(r.Context(), rr); err != nil {
 			h.d.ProfileRequestRequestErrorHandler().HandleProfileManagementError(w, r, rr, err)
 			return
 		}

@@ -7,7 +7,7 @@ package models
 
 import (
 	"github.com/go-openapi/errors"
-	"github.com/go-openapi/strfmt"
+	strfmt "github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
@@ -18,7 +18,6 @@ import (
 // (especially traits) in a selfservice manner.
 //
 // For more information head over to: https://www.ory.sh/docs/kratos/selfservice/profile
-//
 // swagger:model profileManagementRequest
 type ProfileManagementRequest struct {
 
@@ -28,9 +27,9 @@ type ProfileManagementRequest struct {
 	// Format: date-time
 	ExpiresAt *strfmt.DateTime `json:"expires_at"`
 
-	// form
-	// Required: true
-	Form *Form `json:"form"`
+	// FormActive, if set, contains the registration method that is being used. It is initially
+	// not set.
+	FormActive string `json:"form_active,omitempty"`
 
 	// id
 	// Required: true
@@ -45,6 +44,11 @@ type ProfileManagementRequest struct {
 	// Required: true
 	// Format: date-time
 	IssuedAt *strfmt.DateTime `json:"issued_at"`
+
+	// Methods contains context for all enabled registration methods. If a registration request has been
+	// processed, but for example the password is incorrect, this will contain error messages.
+	// Required: true
+	Methods map[string]ProfileRequestForm `json:"methods"`
 
 	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used
 	// to forward information contained in the URL's path or query for example.
@@ -66,10 +70,6 @@ func (m *ProfileManagementRequest) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
-	if err := m.validateForm(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validateID(formats); err != nil {
 		res = append(res, err)
 	}
@@ -79,6 +79,10 @@ func (m *ProfileManagementRequest) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateIssuedAt(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateMethods(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -104,24 +108,6 @@ func (m *ProfileManagementRequest) validateExpiresAt(formats strfmt.Registry) er
 
 	if err := validate.FormatOf("expires_at", "body", "date-time", m.ExpiresAt.String(), formats); err != nil {
 		return err
-	}
-
-	return nil
-}
-
-func (m *ProfileManagementRequest) validateForm(formats strfmt.Registry) error {
-
-	if err := validate.Required("form", "body", m.Form); err != nil {
-		return err
-	}
-
-	if m.Form != nil {
-		if err := m.Form.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("form")
-			}
-			return err
-		}
 	}
 
 	return nil
@@ -165,6 +151,24 @@ func (m *ProfileManagementRequest) validateIssuedAt(formats strfmt.Registry) err
 
 	if err := validate.FormatOf("issued_at", "body", "date-time", m.IssuedAt.String(), formats); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (m *ProfileManagementRequest) validateMethods(formats strfmt.Registry) error {
+
+	for k := range m.Methods {
+
+		if err := validate.Required("methods"+"."+k, "body", m.Methods[k]); err != nil {
+			return err
+		}
+		if val, ok := m.Methods[k]; ok {
+			if err := val.Validate(formats); err != nil {
+				return err
+			}
+		}
+
 	}
 
 	return nil

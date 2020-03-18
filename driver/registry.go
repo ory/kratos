@@ -106,11 +106,6 @@ type Registry interface {
 	x.CSRFTokenGeneratorProvider
 }
 
-type selfServiceStrategy interface {
-	login.Strategy
-	registration.Strategy
-}
-
 func NewRegistry(c configuration.Provider) (Registry, error) {
 	dsn := c.DSN()
 	driver, err := dbal.GetDriverFor(dsn)

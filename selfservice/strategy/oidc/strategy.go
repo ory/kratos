@@ -125,14 +125,6 @@ func (s *Strategy) ID() identity.CredentialsType {
 	return identity.CredentialsTypeOIDC
 }
 
-func (s *Strategy) RegistrationStrategyID() identity.CredentialsType {
-	return s.ID()
-}
-
-func (s *Strategy) LoginStrategyID() identity.CredentialsType {
-	return s.ID()
-}
-
 func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	rid := x.ParseUUID(ps.ByName("request"))
 
@@ -452,8 +444,8 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		return
 	}
 
-	i.SetCredentials(s.RegistrationStrategyID(), identity.Credentials{
-		Type:        s.RegistrationStrategyID(),
+	i.SetCredentials(s.ID(), identity.Credentials{
+		Type:        s.ID(),
 		Identifiers: []string{uid(provider.Config().ID, claims.Subject)},
 		Config:      b.Bytes(),
 	})
