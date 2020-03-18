@@ -305,6 +305,53 @@
         }
       }
     },
+    "/schemas/{id}": {
+      "get": {
+        "description": "Get a traits schema definition",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "common",
+          "public",
+          "admin"
+        ],
+        "operationId": "getSchema",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ID must be set to the ID of schema you want to get",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The raw identity traits schema",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "404": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
     "/self-service/browser/flows/login": {
       "get": {
         "description": "This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to\n`urls.login_ui` with the request ID set as a query parameter. If a valid user session exists already, the browser will be\nredirected to `urls.default_redirect_url`.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
