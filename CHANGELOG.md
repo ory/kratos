@@ -79,6 +79,7 @@
 
 **Merged pull requests:**
 
+- fix: Linux install script [\#302](https://github.com/ory/kratos/pull/302) ([guillett](https://github.com/guillett))
 - Document the schema API and serve it in the admin API [\#299](https://github.com/ory/kratos/pull/299) ([sandhose](https://github.com/sandhose))
 - docs: Updates issue and pull request templates [\#298](https://github.com/ory/kratos/pull/298) ([aeneasr](https://github.com/aeneasr))
 - fix:add graceful shutdown to courier handler [\#296](https://github.com/ory/kratos/pull/296) ([Gibheer](https://github.com/Gibheer))
