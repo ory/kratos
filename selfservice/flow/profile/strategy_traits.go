@@ -42,7 +42,6 @@ func (s *StrategyTraits) ID() string {
 }
 
 func (s *StrategyTraits) RegisterProfileManagementRoutes(*x.RouterPublic) {
-	return
 }
 
 func (s *StrategyTraits) PopulateProfileManagementMethod(r *http.Request, ss *session.Session, pr *Request) error {
