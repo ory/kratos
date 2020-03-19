@@ -14,7 +14,7 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-const FormTraitsID = "traits"
+const FormTraitsID = "profile"
 
 var _ Strategy = new(StrategyTraits)
 
