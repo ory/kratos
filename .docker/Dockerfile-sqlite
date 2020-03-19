@@ -16,12 +16,13 @@ WORKDIR /home/ory
 
 COPY kratos-sqlite-libmusl /usr/bin/kratos
 
-USER ory
-
 # By creating the sqlite folder as the ory user, the mounted volume will be owned by ory:ory, which
 # is required for read/write of SQLite.
-RUN mkdir -p /home/ory/sqlite
-VOLUME /home/ory/sqlite
+RUN mkdir -p /var/lib/sqlite
+RUN chown ory:ory /var/lib/sqlite
+VOLUME /var/lib/sqlite
+
+USER ory
 
 ENTRYPOINT ["kratos"]
 CMD ["serve"]
