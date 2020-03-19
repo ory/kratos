@@ -20,6 +20,12 @@ RUN CGO_ENABLED=1 go build -tags sqlite -a -o /usr/bin/kratos
 EXPOSE 4433
 EXPOSE 4434
 
+# By creating the sqlite folder as the ory user, the mounted volume will be owned by ory:ory, which
+# is required for read/write of SQLite.
+RUN mkdir -p /var/lib/sqlite
+RUN chown ory:ory /var/lib/sqlite
+VOLUME /var/lib/sqlite
+
 USER ory
 
 ENTRYPOINT ["kratos"]
