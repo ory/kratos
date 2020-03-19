@@ -89,6 +89,7 @@ func serveAdmin(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []
 	router := x.NewRouterAdmin()
 	r.RegistrationHandler().RegisterAdminRoutes(router)
 	r.LoginHandler().RegisterAdminRoutes(router)
+	r.SchemaHandler().RegisterAdminRoutes(router)
 	r.VerificationHandler().RegisterAdminRoutes(router)
 	r.ProfileManagementHandler().RegisterAdminRoutes(router)
 	r.IdentityHandler().RegisterAdminRoutes(router)
