@@ -333,11 +333,11 @@ func TestUpdateProfile(t *testing.T) {
 			values.Set("traits.stringy", "bazbar") // it should still override new values!
 			actual, _ := submitForm(t, rs, values)
 
-			assert.NotEmpty(t, gjson.Get(actual, "methods.traits.config.fields.#(name==csrf_token).value").String(), "%s", actual)
-			assert.Equal(t, "too-short", gjson.Get(actual, "methods.traits.config.fields.#(name==traits.should_long_string).value").String(), "%s", actual)
-			assert.Equal(t, "bazbar", gjson.Get(actual, "methods.traits.config.fields.#(name==traits.stringy).value").String(), "%s", actual)
-			assert.Equal(t, "2.5", gjson.Get(actual, "methods.traits.config.fields.#(name==traits.numby).value").String(), "%s", actual)
-			assert.Equal(t, "length must be >= 25, but got 9", gjson.Get(actual, "methods.traits.config.fields.#(name==traits.should_long_string).errors.0.message").String(), "%s", actual)
+			assert.NotEmpty(t, gjson.Get(actual, "methods.profile.config.fields.#(name==csrf_token).value").String(), "%s", actual)
+			assert.Equal(t, "too-short", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_long_string).value").String(), "%s", actual)
+			assert.Equal(t, "bazbar", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.stringy).value").String(), "%s", actual)
+			assert.Equal(t, "2.5", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.numby).value").String(), "%s", actual)
+			assert.Equal(t, "length must be >= 25, but got 9", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_long_string).errors.0.message").String(), "%s", actual)
 		})
 
 		t.Run("description=should update protected field with sudo mode", func(t *testing.T) {
@@ -352,13 +352,13 @@ func TestUpdateProfile(t *testing.T) {
 			actual, response := submitForm(t, rs, values)
 			assert.True(t, pointerx.BoolR(response.Payload.UpdateSuccessful), "%s", actual)
 
-			assert.Empty(t, gjson.Get(actual, "methods.traits.config.fields.#(name==traits.numby).errors").Value(), "%s", actual)
-			assert.Empty(t, gjson.Get(actual, "methods.traits.config.fields.#(name==traits.should_big_number).errors").Value(), "%s", actual)
-			assert.Empty(t, gjson.Get(actual, "methods.traits.config.fields.#(name==traits.should_long_string).errors").Value(), "%s", actual)
+			assert.Empty(t, gjson.Get(actual, "methods.profile.config.fields.#(name==traits.numby).errors").Value(), "%s", actual)
+			assert.Empty(t, gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_big_number).errors").Value(), "%s", actual)
+			assert.Empty(t, gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_long_string).errors").Value(), "%s", actual)
 
-			assert.Equal(t, newEmail, gjson.Get(actual, "methods.traits.config.fields.#(name==traits.email).value").Value(), "%s", actual)
+			assert.Equal(t, newEmail, gjson.Get(actual, "methods.profile.config.fields.#(name==traits.email).value").Value(), "%s", actual)
 
-			assert.Equal(t, "foobar", gjson.Get(actual, "methods.traits.config.fields.#(name==traits.stringy).value").String(), "%s", actual) // sanity check if original payload is still here
+			assert.Equal(t, "foobar", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.stringy).value").String(), "%s", actual) // sanity check if original payload is still here
 		})
 
 		t.Run("description=should come back with form errors if trying to update protected field without sudo mode", func(t *testing.T) {
@@ -389,10 +389,10 @@ func TestUpdateProfile(t *testing.T) {
 				actual, response := submitForm(t, rs, values)
 				assert.False(t, pointerx.BoolR(response.Payload.UpdateSuccessful), "%s", actual)
 
-				assert.Equal(t, "1", gjson.Get(actual, "methods.traits.config.fields.#(name==traits.should_big_number).value").String(), "%s", actual)
-				assert.Equal(t, "must be >= 1200 but found 1", gjson.Get(actual, "methods.traits.config.fields.#(name==traits.should_big_number).errors.0.message").String(), "%s", actual)
+				assert.Equal(t, "1", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_big_number).value").String(), "%s", actual)
+				assert.Equal(t, "must be >= 1200 but found 1", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_big_number).errors.0.message").String(), "%s", actual)
 
-				assert.Equal(t, "foobar", gjson.Get(actual, "methods.traits.config.fields.#(name==traits.stringy).value").String(), "%s", actual) // sanity check if original payload is still here
+				assert.Equal(t, "foobar", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.stringy).value").String(), "%s", actual) // sanity check if original payload is still here
 			})
 
 			t.Run("flow=fail second update", func(t *testing.T) {
@@ -406,16 +406,16 @@ func TestUpdateProfile(t *testing.T) {
 				actual, response := submitForm(t, rs, values)
 				assert.False(t, pointerx.BoolR(response.Payload.UpdateSuccessful), "%s", actual)
 
-				assert.Empty(t, gjson.Get(actual, "methods.traits.config.fields.#(name==traits.should_big_number).errors.0.message").String(), "%s", actual)
-				assert.Empty(t, gjson.Get(actual, "methods.traits.config.fields.#(name==traits.should_big_number).value").String(), "%s", actual)
+				assert.Empty(t, gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_big_number).errors.0.message").String(), "%s", actual)
+				assert.Empty(t, gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_big_number).value").String(), "%s", actual)
 
-				assert.Equal(t, "short", gjson.Get(actual, "methods.traits.config.fields.#(name==traits.should_long_string).value").String(), "%s", actual)
-				assert.Equal(t, "length must be >= 25, but got 5", gjson.Get(actual, "methods.traits.config.fields.#(name==traits.should_long_string).errors.0.message").String(), "%s", actual)
+				assert.Equal(t, "short", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_long_string).value").String(), "%s", actual)
+				assert.Equal(t, "length must be >= 25, but got 5", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_long_string).errors.0.message").String(), "%s", actual)
 
-				assert.Equal(t, "this-is-not-a-number", gjson.Get(actual, "methods.traits.config.fields.#(name==traits.numby).value").String(), "%s", actual)
-				assert.Equal(t, "expected number, but got string", gjson.Get(actual, "methods.traits.config.fields.#(name==traits.numby).errors.0.message").String(), "%s", actual)
+				assert.Equal(t, "this-is-not-a-number", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.numby).value").String(), "%s", actual)
+				assert.Equal(t, "expected number, but got string", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.numby).errors.0.message").String(), "%s", actual)
 
-				assert.Equal(t, "foobar", gjson.Get(actual, "methods.traits.config.fields.#(name==traits.stringy).value").String(), "%s", actual) // sanity check if original payload is still here
+				assert.Equal(t, "foobar", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.stringy).value").String(), "%s", actual) // sanity check if original payload is still here
 			})
 
 			t.Run("flow=succeed with final request", func(t *testing.T) {
@@ -431,15 +431,15 @@ func TestUpdateProfile(t *testing.T) {
 				actual, response := submitForm(t, rs, values)
 				assert.True(t, pointerx.BoolR(response.Payload.UpdateSuccessful), "%s", actual)
 
-				assert.Empty(t, gjson.Get(actual, "methods.traits.config.fields.#(name==traits.numby).errors").Value(), "%s", actual)
-				assert.Empty(t, gjson.Get(actual, "methods.traits.config.fields.#(name==traits.should_big_number).errors").Value(), "%s", actual)
-				assert.Empty(t, gjson.Get(actual, "methods.traits.config.fields.#(name==traits.should_long_string).errors").Value(), "%s", actual)
+				assert.Empty(t, gjson.Get(actual, "methods.profile.config.fields.#(name==traits.numby).errors").Value(), "%s", actual)
+				assert.Empty(t, gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_big_number).errors").Value(), "%s", actual)
+				assert.Empty(t, gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_long_string).errors").Value(), "%s", actual)
 
-				assert.Equal(t, 15.0, gjson.Get(actual, "methods.traits.config.fields.#(name==traits.numby).value").Value(), "%s", actual)
-				assert.Equal(t, 9001.0, gjson.Get(actual, "methods.traits.config.fields.#(name==traits.should_big_number).value").Value(), "%s", actual)
-				assert.Equal(t, "this is such a long string, amazing stuff!", gjson.Get(actual, "methods.traits.config.fields.#(name==traits.should_long_string).value").Value(), "%s", actual)
+				assert.Equal(t, 15.0, gjson.Get(actual, "methods.profile.config.fields.#(name==traits.numby).value").Value(), "%s", actual)
+				assert.Equal(t, 9001.0, gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_big_number).value").Value(), "%s", actual)
+				assert.Equal(t, "this is such a long string, amazing stuff!", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_long_string).value").Value(), "%s", actual)
 
-				assert.Equal(t, "foobar", gjson.Get(actual, "methods.traits.config.fields.#(name==traits.stringy).value").String(), "%s", actual) // sanity check if original payload is still here
+				assert.Equal(t, "foobar", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.stringy).value").String(), "%s", actual) // sanity check if original payload is still here
 			})
 
 			t.Run("flow=try another update with invalid data", func(t *testing.T) {

@@ -21,15 +21,15 @@ import (
 // swagger:model profileManagementRequest
 type ProfileManagementRequest struct {
 
+	// FormActive, if set, contains the registration method that is being used. It is initially
+	// not set.
+	Active string `json:"active,omitempty"`
+
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile,
 	// a new request has to be initiated.
 	// Required: true
 	// Format: date-time
 	ExpiresAt *strfmt.DateTime `json:"expires_at"`
-
-	// FormActive, if set, contains the registration method that is being used. It is initially
-	// not set.
-	FormActive string `json:"form_active,omitempty"`
 
 	// id
 	// Required: true

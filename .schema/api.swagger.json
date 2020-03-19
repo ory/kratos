@@ -1355,14 +1355,14 @@
         "update_successful"
       ],
       "properties": {
+        "active": {
+          "description": "FormActive, if set, contains the registration method that is being used. It is initially\nnot set.",
+          "type": "string"
+        },
         "expires_at": {
           "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile,\na new request has to be initiated.",
           "type": "string",
           "format": "date-time"
-        },
-        "form_active": {
-          "description": "FormActive, if set, contains the registration method that is being used. It is initially\nnot set.",
-          "type": "string"
         },
         "id": {
           "$ref": "#/definitions/UUID"
