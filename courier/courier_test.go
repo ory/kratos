@@ -104,7 +104,7 @@ func TestSMTP(t *testing.T) {
 	c := reg.Courier()
 
 	go func() {
-		require.NoError(t, c.Work(context.Background()))
+		require.NoError(t, c.Work())
 	}()
 
 	t.Run("case=queue messages", func(t *testing.T) {

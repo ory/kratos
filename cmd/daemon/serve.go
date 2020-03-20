@@ -1,7 +1,6 @@
 package daemon
 
 import (
-	stdctx "context"
 	"net/http"
 	"strings"
 	"sync"
@@ -90,6 +89,7 @@ func serveAdmin(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []
 	router := x.NewRouterAdmin()
 	r.RegistrationHandler().RegisterAdminRoutes(router)
 	r.LoginHandler().RegisterAdminRoutes(router)
+	r.SchemaHandler().RegisterAdminRoutes(router)
 	r.VerificationHandler().RegisterAdminRoutes(router)
 	r.ProfileManagementHandler().RegisterAdminRoutes(router)
 	r.IdentityHandler().RegisterAdminRoutes(router)
@@ -165,9 +165,10 @@ func sqa(cmd *cobra.Command, d driver.Driver) *metricsx.Service {
 func bgTasks(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []string) {
 	defer wg.Done()
 
-	if err := d.Registry().Courier().Work(stdctx.Background()); err != nil {
+	if err := graceful.Graceful(d.Registry().Courier().Work, d.Registry().Courier().Shutdown); err != nil {
 		d.Logger().WithError(err).Fatalf("Failed to run courier worker.")
 	}
+	d.Logger().Println("courier worker was shutdown gracefully")
 }
 
 func ServeAll(d driver.Driver) func(cmd *cobra.Command, args []string) {

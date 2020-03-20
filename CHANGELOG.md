@@ -52,6 +52,7 @@
 
 **Fixed bugs:**
 
+- shutdown doesn't complete [\#295](https://github.com/ory/kratos/issues/295)
 - Same version of migration version 20191100000010 caused test failure [\#279](https://github.com/ory/kratos/issues/279)
 - Email Verification Error when using PostgreSQL [\#269](https://github.com/ory/kratos/issues/269)
 - HBIP check hangs when connection is slow or ends with a network error [\#261](https://github.com/ory/kratos/issues/261)
@@ -68,6 +69,7 @@
 
 **Closed issues:**
 
+- Serve the schemas in the common API and have it documented [\#287](https://github.com/ory/kratos/issues/287)
 - Quickstart broken, db.sqlite not writabel [\#281](https://github.com/ory/kratos/issues/281)
 - Viper key for SMTP from address appears to be incorrect [\#277](https://github.com/ory/kratos/issues/277)
 - MailSlurper is not sending the verification email [\#264](https://github.com/ory/kratos/issues/264)
@@ -77,6 +79,10 @@
 
 **Merged pull requests:**
 
+- fix: Linux install script [\#302](https://github.com/ory/kratos/pull/302) ([guillett](https://github.com/guillett))
+- Document the schema API and serve it in the admin API [\#299](https://github.com/ory/kratos/pull/299) ([sandhose](https://github.com/sandhose))
+- docs: Updates issue and pull request templates [\#298](https://github.com/ory/kratos/pull/298) ([aeneasr](https://github.com/aeneasr))
+- fix:add graceful shutdown to courier handler [\#296](https://github.com/ory/kratos/pull/296) ([Gibheer](https://github.com/Gibheer))
 - fix\(session\): Regenerate CSRF Token on principal change [\#290](https://github.com/ory/kratos/pull/290) ([aeneasr](https://github.com/aeneasr))
 - feat: Return 410 when selfservice requests expire [\#289](https://github.com/ory/kratos/pull/289) ([aeneasr](https://github.com/aeneasr))
 - fix: Use resilient client for HIBP lookup [\#288](https://github.com/ory/kratos/pull/288) ([aeneasr](https://github.com/aeneasr))

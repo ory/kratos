@@ -130,9 +130,9 @@ adjust_os() {
   # adjust archive name based on OS
   case ${OS} in
     386) OS=32-bit ;;
-    amd64) OS=64-bit ;;
+    amd64) OS=64bit ;;
     darwin) OS=macOS ;;
-    linux) OS=Linux ;;
+    linux) OS=linux ;;
     windows) OS=Windows ;;
   esac
   true
@@ -141,9 +141,9 @@ adjust_arch() {
   # adjust archive name based on ARCH
   case ${ARCH} in
     386) ARCH=32-bit ;;
-    amd64) ARCH=64-bit ;;
+    amd64) ARCH=64bit ;;
     darwin) ARCH=macOS ;;
-    linux) ARCH=Linux ;;
+    linux) ARCH=linux ;;
     windows) ARCH=Windows ;;
   esac
   true
