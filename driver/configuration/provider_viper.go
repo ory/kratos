@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
 	"runtime"
 	"time"
@@ -52,6 +53,8 @@ const (
 	ViperKeyURLsWhitelistedReturnToDomains = "urls.whitelisted_return_to_domains"
 
 	ViperKeyLifespanSession = "ttl.session"
+
+	ViperKeySessionSameSite = "security.session.cookie.same_site"
 
 	ViperKeySelfServiceStrategyConfig                = "selfservice.strategies"
 	ViperKeySelfServiceRegistrationBeforeConfig      = "selfservice.registration.before"
@@ -369,4 +372,16 @@ func (p *ViperProvider) SelfServiceVerificationReturnTo() *url.URL {
 
 func (p *ViperProvider) SelfServicePrivilegedSessionMaxAge() time.Duration {
 	return viperx.GetDuration(p.l, ViperKeySelfServicePrivilegedAuthenticationAfter, time.Hour)
+}
+
+func (p *ViperProvider) SessionSameSiteMode() http.SameSite {
+	switch viperx.GetString(p.l, ViperKeySessionSameSite, "Lax") {
+	case "Lax":
+		return http.SameSiteLaxMode
+	case "Strict":
+		return http.SameSiteStrictMode
+	case "None":
+		return http.SameSiteNoneMode
+	}
+	return http.SameSiteDefaultMode
 }

@@ -277,6 +277,7 @@ func (m *RegistryDefault) CookieManager() sessions.Store {
 		cs := sessions.NewCookieStore(m.c.SessionSecrets()...)
 		cs.Options.Secure = !m.c.IsInsecureDevMode()
 		cs.Options.HttpOnly = true
+		cs.Options.SameSite = m.c.SessionSameSiteMode()
 		m.sessionsStore = cs
 	}
 	return m.sessionsStore
