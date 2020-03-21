@@ -10,6 +10,7 @@ require (
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/ghodss/yaml v1.0.0
+	github.com/go-bindata/go-bindata v3.1.2+incompatible // indirect
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/errors v0.19.4
 	github.com/go-openapi/runtime v0.19.12
@@ -44,23 +45,24 @@ require (
 	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/mattn/goveralls v0.0.5
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/mitchellh/mapstructure v1.2.2 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/ory/dockertest v3.3.5+incompatible
-	github.com/ory/go-acc v0.1.0
+	github.com/ory/go-acc v0.2.1
 	github.com/ory/go-convenience v0.1.0
 	github.com/ory/graceful v0.1.1
 	github.com/ory/herodot v0.7.0
 	github.com/ory/jsonschema/v3 v3.0.1
 	github.com/ory/sdk/swagutil v0.0.0-20200202121523-307941feee4b
-	github.com/ory/viper v1.5.6
-	github.com/ory/x v0.0.103
+	github.com/ory/viper v1.7.1
+	github.com/ory/x v0.0.104
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/rogpeppe/go-internal v1.5.2 // indirect
 	github.com/segmentio/backo-go v0.0.0-20200129164019-23eae7c10bd3 // indirect
 	github.com/shurcooL/go v0.0.0-20180423040247-9e1955d9fb6e
 	github.com/sirupsen/logrus v1.4.2
-	github.com/spf13/cobra v0.0.5
+	github.com/spf13/cobra v0.0.6
 	github.com/spf13/viper v1.6.2
 	github.com/sqs/goreturns v0.0.0-20181028201513-538ac6014518
 	github.com/stretchr/testify v1.4.0
@@ -69,7 +71,8 @@ require (
 	github.com/urfave/negroni v1.0.0
 	golang.org/x/crypto v0.0.0-20200311171314-f7b00557c8c4
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/tools v0.0.0-20200313205530-4303120df7d8
+	golang.org/x/sys v0.0.0-20200320181252-af34d8274f85 // indirect
+	golang.org/x/tools v0.0.0-20200321014904-268ba720d32c
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.28.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
