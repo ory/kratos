@@ -185,6 +185,15 @@
         "$ref": "#/definitions/selfServiceRedirectHook"
       },
       "uniqueItems": true
+    },
+    "cookiesSameSite": {
+      "type": "string",
+      "enum": [
+        "Strict",
+        "Lax",
+        "None"
+      ],
+      "default": "Lax"
     }
   },
   "properties": {
@@ -582,6 +591,27 @@
             "key_length": {
               "type": "integer",
               "minimum": 16
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "session": {
+          "type": "object",
+          "properties": {
+            "cookie": {
+              "type": "object",
+              "properties": {
+                "same_site": {
+                  "$ref": "#/definitions/cookiesSameSite"
+                }
+              },
+              "additionalProperties": false
             }
           },
           "additionalProperties": false

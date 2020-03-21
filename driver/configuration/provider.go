@@ -2,6 +2,7 @@ package configuration
 
 import (
 	"encoding/json"
+	"net/http"
 	"net/url"
 	"time"
 
@@ -99,4 +100,6 @@ type Provider interface {
 	TracingJaegerConfig() *tracing.JaegerConfig
 
 	IsInsecureDevMode() bool
+
+	SessionSameSiteMode() http.SameSite
 }

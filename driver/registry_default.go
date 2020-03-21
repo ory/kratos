@@ -69,7 +69,7 @@ type RegistryDefault struct {
 	schemaHandler *schema.Handler
 
 	sessionHandler *session.Handler
-	sessionsStore  sessions.Store
+	sessionsStore  *sessions.CookieStore
 	sessionManager session.Manager
 
 	passwordHasher    password2.Hasher
@@ -279,6 +279,7 @@ func (m *RegistryDefault) CookieManager() sessions.Store {
 		cs.Options.HttpOnly = true
 		m.sessionsStore = cs
 	}
+	m.sessionsStore.Options.SameSite = m.c.SessionSameSiteMode()
 	return m.sessionsStore
 }
 
