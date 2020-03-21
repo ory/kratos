@@ -74,11 +74,13 @@
 - Viper key for SMTP from address appears to be incorrect [\#277](https://github.com/ory/kratos/issues/277)
 - MailSlurper is not sending the verification email [\#264](https://github.com/ory/kratos/issues/264)
 - SQLite database errors in quickstart [\#263](https://github.com/ory/kratos/issues/263)
+- Allow configuration of same-site cookie [\#257](https://github.com/ory/kratos/issues/257)
 - CSRF token is missing or invalid [\#250](https://github.com/ory/kratos/issues/250)
 - Enable CockroachDB test suite and integration [\#132](https://github.com/ory/kratos/issues/132)
 
 **Merged pull requests:**
 
+- feat: allow configuring same-site for session cookies [\#303](https://github.com/ory/kratos/pull/303) ([zepatrik](https://github.com/zepatrik))
 - fix: Linux install script [\#302](https://github.com/ory/kratos/pull/302) ([guillett](https://github.com/guillett))
 - Document the schema API and serve it in the admin API [\#299](https://github.com/ory/kratos/pull/299) ([sandhose](https://github.com/sandhose))
 - docs: Updates issue and pull request templates [\#298](https://github.com/ory/kratos/pull/298) ([aeneasr](https://github.com/aeneasr))
