@@ -89,6 +89,7 @@ type RegistryDefault struct {
 
 	selfserviceProfileManagementHandler          *profile.Handler
 	selfserviceProfileRequestRequestErrorHandler *profile.ErrorHandler
+	selfserviceProfileManagementExecutor         *profile.HookExecutor
 
 	selfserviceVerifyErrorHandler *verify.ErrorHandler
 	selfserviceVerifyManager      *identity.Manager

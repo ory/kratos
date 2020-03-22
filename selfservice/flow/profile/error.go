@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/pkg/errors"
+
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
 
@@ -15,8 +17,9 @@ import (
 
 var (
 	ErrRequestExpired = herodot.ErrBadRequest.
-		WithError("profile management request expired").
-		WithReasonf(`The profile management request has expired. Please restart the flow.`)
+				WithError("profile management request expired").
+				WithReasonf(`The profile management request has expired. Please restart the flow.`)
+	ErrHookAbortRequest = errors.New("abort hook")
 )
 
 type (
@@ -48,6 +51,7 @@ func (s *ErrorHandler) HandleProfileManagementError(
 	r *http.Request,
 	rr *Request,
 	err error,
+	method string,
 ) {
 	s.d.Logger().WithError(err).
 		WithField("details", fmt.Sprintf("%+v", err)).
@@ -62,17 +66,20 @@ func (s *ErrorHandler) HandleProfileManagementError(
 		return
 	}
 
-	if err := rr.Methods[FormTraitsID].Config.ParseError(err); err != nil {
+	if _, ok := rr.Methods[method]; !ok {
+		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected profile management method %s to exist.", method)))
+		return
+	}
+
+	if err := rr.Methods[method].Config.ParseError(err); err != nil {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
-	fmt.Printf("done handling profile management: %+v\n", rr.Methods[FormTraitsID].Config.RequestMethodConfigurator)
 	if err := s.d.ProfileRequestPersister().UpdateProfileRequest(r.Context(), rr); err != nil {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
-	fmt.Printf("done handling profile management 2: %+v\n\n", rr.Methods[FormTraitsID].Config.RequestMethodConfigurator)
 
 	http.Redirect(w, r,
 		urlx.CopyWithQuery(s.c.ProfileURL(), url.Values{"request": {rr.ID.String()}}).String(),

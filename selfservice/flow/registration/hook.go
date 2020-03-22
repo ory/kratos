@@ -27,14 +27,14 @@ type (
 )
 
 type (
-	registrationExecutorDependencies interface {
+	executorDependencies interface {
 		identity.ManagementProvider
 		identity.ValidationProvider
 		HooksProvider
 		x.LoggingProvider
 	}
 	HookExecutor struct {
-		d registrationExecutorDependencies
+		d executorDependencies
 		c configuration.Provider
 	}
 	HookExecutorProvider interface {
@@ -43,7 +43,7 @@ type (
 )
 
 func NewHookExecutor(
-	d registrationExecutorDependencies,
+	d executorDependencies,
 	c configuration.Provider,
 ) *HookExecutor {
 	return &HookExecutor{

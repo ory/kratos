@@ -7,11 +7,10 @@ import (
 	"net/url"
 
 	"github.com/ory/kratos/driver/configuration"
-	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/hook"
 )
 
-func (m *RegistryDefault) getHooks(credentialsType identity.CredentialsType, configs []configuration.SelfServiceHook) []interface{} {
+func (m *RegistryDefault) getHooks(credentialsType string, configs []configuration.SelfServiceHook) []interface{} {
 	var i []interface{}
 
 	for _, h := range configs {

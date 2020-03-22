@@ -1,0 +1,22 @@
+{
+  "$id": "https://example.com/person.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Person",
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string",
+      "ory.sh/kratos": {
+        "credentials": {
+          "password": {
+            "identifier": true
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "email"
+  ],
+  "additionalProperties": false
+}

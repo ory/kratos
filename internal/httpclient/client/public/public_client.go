@@ -27,7 +27,7 @@ type Client struct {
 
 // ClientService is the interface for Client methods
 type ClientService interface {
-	CompleteSelfServiceBrowserProfileManagementFlow(params *CompleteSelfServiceBrowserProfileManagementFlowParams) error
+	CompleteSelfServiceBrowserProfileManagementPasswordStrategyFlow(params *CompleteSelfServiceBrowserProfileManagementPasswordStrategyFlowParams) error
 
 	CompleteSelfServiceBrowserVerificationFlow(params *CompleteSelfServiceBrowserVerificationFlowParams) error
 
@@ -49,33 +49,30 @@ type ClientService interface {
 }
 
 /*
-  CompleteSelfServiceBrowserProfileManagementFlow completes the browser based profile management flows
+  CompleteSelfServiceBrowserProfileManagementPasswordStrategyFlow completes the browser based profile management flow for the password strategy
 
   This endpoint completes a browser-based profile management flow. This is usually achieved by POSTing data to this
 endpoint.
-
-If the provided profile data is valid against the Identity's Traits JSON Schema, the data will be updated and
-the browser redirected to `url.profile_ui` for further steps.
 
 > This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
 
 More information can be found at [ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).
 */
-func (a *Client) CompleteSelfServiceBrowserProfileManagementFlow(params *CompleteSelfServiceBrowserProfileManagementFlowParams) error {
+func (a *Client) CompleteSelfServiceBrowserProfileManagementPasswordStrategyFlow(params *CompleteSelfServiceBrowserProfileManagementPasswordStrategyFlowParams) error {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewCompleteSelfServiceBrowserProfileManagementFlowParams()
+		params = NewCompleteSelfServiceBrowserProfileManagementPasswordStrategyFlowParams()
 	}
 
 	_, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "completeSelfServiceBrowserProfileManagementFlow",
+		ID:                 "completeSelfServiceBrowserProfileManagementPasswordStrategyFlow",
 		Method:             "POST",
-		PathPattern:        "/self-service/browser/flows/profile/update",
+		PathPattern:        "/self-service/browser/flows/profile/strategies/profile",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &CompleteSelfServiceBrowserProfileManagementFlowReader{formats: a.formats},
+		Reader:             &CompleteSelfServiceBrowserProfileManagementPasswordStrategyFlowReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})

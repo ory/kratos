@@ -81,6 +81,7 @@ type Registry interface {
 	profile.HandlerProvider
 	profile.ErrorHandlerProvider
 	profile.RequestPersistenceProvider
+	profile.StrategyProvider
 
 	login.RequestPersistenceProvider
 	login.ErrorHandlerProvider
