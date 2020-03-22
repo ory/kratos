@@ -46,6 +46,7 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 	r.LogoutHandler().RegisterPublicRoutes(router)
 	r.ProfileManagementHandler().RegisterPublicRoutes(router)
 	r.LoginStrategies().RegisterPublicRoutes(router)
+	r.ProfileManagementStrategies().RegisterPublicRoutes(router)
 	r.RegistrationStrategies().RegisterPublicRoutes(router)
 	r.SessionHandler().RegisterPublicRoutes(router)
 	r.SelfServiceErrorHandler().RegisterPublicRoutes(router)
@@ -147,7 +148,7 @@ func sqa(cmd *cobra.Command, d driver.Driver) *metricsx.Service {
 				session.SessionsWhoamiPath,
 				identity.IdentitiesPath,
 				profile.PublicProfileManagementPath,
-				profile.AdminBrowserProfileRequestPath,
+				profile.BrowserProfileRequestPath,
 				profile.PublicProfileManagementPath,
 				profile.PublicProfileManagementUpdatePath,
 				verify.PublicVerificationCompletePath,

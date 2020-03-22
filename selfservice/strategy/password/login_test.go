@@ -27,8 +27,8 @@ import (
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/schema"
-	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/selfservice/strategy/password"
@@ -87,7 +87,7 @@ func TestLoginNew(t *testing.T) {
 	ts := httptest.NewServer(router)
 	defer ts.Close()
 
-	errTs, uiTs, returnTs := errorx.NewErrorTestServer(t, reg), httptest.NewServer(login.TestRequestHandler(t, reg)), newReturnTs(t, reg)
+	errTs, uiTs, returnTs := testhelpers.NewErrorTestServer(t, reg), httptest.NewServer(login.TestRequestHandler(t, reg)), newReturnTs(t, reg)
 	defer errTs.Close()
 	defer uiTs.Close()
 	defer returnTs.Close()

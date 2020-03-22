@@ -76,10 +76,10 @@ func TestRequestPersister(p interface {
 			actual, err := p.GetProfileRequest(context.Background(), expected.ID)
 			require.NoError(t, err)
 
-			factual, _ := json.Marshal(actual.Methods[FormTraitsID].Config)
-			fexpected, _ := json.Marshal(expected.Methods[FormTraitsID].Config)
+			factual, _ := json.Marshal(actual.Methods[StrategyTraitsID].Config)
+			fexpected, _ := json.Marshal(expected.Methods[StrategyTraitsID].Config)
 
-			require.NotEmpty(t, actual.Methods[FormTraitsID].Config.RequestMethodConfigurator.(*form.HTMLForm).Action)
+			require.NotEmpty(t, actual.Methods[StrategyTraitsID].Config.RequestMethodConfigurator.(*form.HTMLForm).Action)
 			assert.EqualValues(t, expected.ID, actual.ID)
 			assert.JSONEq(t, string(fexpected), string(factual))
 			x.AssertEqualTime(t, expected.IssuedAt, actual.IssuedAt)
@@ -104,14 +104,14 @@ func TestRequestPersister(p interface {
 			err := p.CreateProfileRequest(context.Background(), expected)
 			require.NoError(t, err)
 
-			expected.Methods[FormTraitsID].Config.RequestMethodConfigurator.(*form.HTMLForm).Action = "/new-action"
+			expected.Methods[StrategyTraitsID].Config.RequestMethodConfigurator.(*form.HTMLForm).Action = "/new-action"
 			expected.RequestURL = "/new-request-url"
 			require.NoError(t, p.UpdateProfileRequest(context.Background(), expected))
 
 			actual, err := p.GetProfileRequest(context.Background(), expected.ID)
 			require.NoError(t, err)
 
-			assert.Equal(t, "/new-action", actual.Methods[FormTraitsID].Config.RequestMethodConfigurator.(*form.HTMLForm).Action)
+			assert.Equal(t, "/new-action", actual.Methods[StrategyTraitsID].Config.RequestMethodConfigurator.(*form.HTMLForm).Action)
 			assert.Equal(t, "/new-request-url", actual.RequestURL)
 		})
 	}

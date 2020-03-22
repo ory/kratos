@@ -26,7 +26,7 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/httpclient/client"
 	"github.com/ory/kratos/internal/httpclient/client/common"
-	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/verify"
 	"github.com/ory/kratos/x"
 )
@@ -58,7 +58,7 @@ func TestHandler(t *testing.T) {
 	}))
 	defer verifyTS.Close()
 
-	errTS := errorx.NewErrorTestServer(t, reg)
+	errTS := testhelpers.NewErrorTestServer(t, reg)
 	defer errTS.Close()
 
 	viper.Set(configuration.ViperKeyURLsSelfPublic, publicTS.URL)

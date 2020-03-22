@@ -72,46 +72,62 @@ func (m *Manager) Create(ctx context.Context, i *Identity, opts ...ManagerOption
 	return m.r.IdentityPool().(PrivilegedPool).CreateIdentity(ctx, i)
 }
 
-func (m *Manager) Update(ctx context.Context, i *Identity, opts ...ManagerOption) error {
+func (m *Manager) requiresPrivilegedAccess(_ context.Context, original, updated *Identity, o *managerOptions) error {
+	if !o.AllowWriteProtectedTraits {
+		if !CredentialsEqual(updated.Credentials, original.Credentials) {
+			// reset the identity
+			*updated = *original
+			return errors.WithStack(ErrProtectedFieldModified)
+		}
+
+		if !reflect.DeepEqual(original.Addresses, updated.Addresses) &&
+			/* prevent nil != []string{} */
+			len(original.Addresses)+len(updated.Addresses) != 0 {
+			// reset the identity
+			*updated = *original
+			return errors.WithStack(ErrProtectedFieldModified)
+		}
+	}
+	return nil
+}
+
+func (m *Manager) Update(ctx context.Context, updated *Identity, opts ...ManagerOption) error {
 	o := newManagerOptions(opts)
-	if err := m.validate(i, o); err != nil {
+	if err := m.validate(updated, o); err != nil {
 		return err
 	}
 
-	return m.r.IdentityPool().(PrivilegedPool).UpdateIdentity(ctx, i)
+	original, err := m.r.IdentityPool().(PrivilegedPool).GetIdentityConfidential(ctx, updated.ID)
+	if err != nil {
+		return err
+	}
+
+	if err := m.requiresPrivilegedAccess(ctx, original, updated, o); err != nil {
+		return err
+	}
+
+	return m.r.IdentityPool().(PrivilegedPool).UpdateIdentity(ctx, updated)
 }
 
 func (m *Manager) UpdateTraits(ctx context.Context, id uuid.UUID, traits Traits, opts ...ManagerOption) error {
 	o := newManagerOptions(opts)
-
-	identity, err := m.r.IdentityPool().(PrivilegedPool).GetIdentityConfidential(ctx, id)
+	original, err := m.r.IdentityPool().(PrivilegedPool).GetIdentityConfidential(ctx, id)
 	if err != nil {
 		return err
 	}
+
 	// original is used to check whether protected traits were modified
-	original := deepcopy.Copy(identity).(*Identity)
-	identity.Traits = traits
-	if err := m.validate(identity, o); err != nil {
+	updated := deepcopy.Copy(original).(*Identity)
+	updated.Traits = traits
+	if err := m.validate(updated, o); err != nil {
 		return err
 	}
 
-	if !o.AllowWriteProtectedTraits {
-		if !CredentialsEqual(identity.Credentials, original.Credentials) {
-			// reset the identity
-			*identity = *original
-			return errors.WithStack(ErrProtectedFieldModified)
-		}
-
-		if !reflect.DeepEqual(original.Addresses, identity.Addresses) &&
-			/* prevent nil != []string{} */
-			len(original.Addresses)+len(identity.Addresses) != 0 {
-			// reset the identity
-			*identity = *original
-			return errors.WithStack(ErrProtectedFieldModified)
-		}
+	if err := m.requiresPrivilegedAccess(ctx, original, updated, o); err != nil {
+		return err
 	}
 
-	return m.r.IdentityPool().(PrivilegedPool).UpdateIdentity(ctx, identity)
+	return m.r.IdentityPool().(PrivilegedPool).UpdateIdentity(ctx, updated)
 }
 
 func (m *Manager) RefreshVerifyAddress(ctx context.Context, address *VerifiableAddress) error {

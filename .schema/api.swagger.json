@@ -427,9 +427,9 @@
         }
       }
     },
-    "/self-service/browser/flows/profile/update": {
+    "/self-service/browser/flows/profile/strategies/profile": {
       "post": {
-        "description": "This endpoint completes a browser-based profile management flow. This is usually achieved by POSTing data to this\nendpoint.\n\nIf the provided profile data is valid against the Identity's Traits JSON Schema, the data will be updated and\nthe browser redirected to `url.profile_ui` for further steps.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).",
+        "description": "This endpoint completes a browser-based profile management flow. This is usually achieved by POSTing data to this\nendpoint.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).",
         "consumes": [
           "application/json",
           "application/x-www-form-urlencoded"
@@ -441,25 +441,8 @@
         "tags": [
           "public"
         ],
-        "summary": "Complete the browser-based profile management flows",
-        "operationId": "completeSelfServiceBrowserProfileManagementFlow",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "Request is the request ID.",
-            "name": "request",
-            "in": "query",
-            "required": true
-          },
-          {
-            "name": "Body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/completeSelfServiceBrowserProfileManagementFlowPayload"
-            }
-          }
-        ],
+        "summary": "Complete the browser-based profile management flow for the password strategy",
+        "operationId": "completeSelfServiceBrowserProfileManagementPasswordStrategyFlow",
         "responses": {
           "302": {
             "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
@@ -1081,18 +1064,6 @@
     },
     "VerifiableAddressType": {
       "type": "string"
-    },
-    "completeSelfServiceBrowserProfileManagementFlowPayload": {
-      "type": "object",
-      "required": [
-        "traits"
-      ],
-      "properties": {
-        "traits": {
-          "description": "Traits contains all of the identity's traits.\n\ntype: string\nformat: binary",
-          "type": "object"
-        }
-      }
     },
     "errorContainer": {
       "type": "object",

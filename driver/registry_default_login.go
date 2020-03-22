@@ -17,7 +17,7 @@ func (m *RegistryDefault) PreLoginHooks() []login.PreHookExecutor {
 }
 
 func (m *RegistryDefault) PostLoginHooks(credentialsType identity.CredentialsType) []login.PostHookExecutor {
-	a := m.getHooks(credentialsType, m.c.SelfServiceLoginAfterHooks(string(credentialsType)))
+	a := m.getHooks(string(credentialsType), m.c.SelfServiceLoginAfterHooks(string(credentialsType)))
 
 	var b []login.PostHookExecutor
 

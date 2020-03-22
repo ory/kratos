@@ -22,12 +22,12 @@ type (
 )
 
 type (
-	loginExecutorDependencies interface {
+	executorDependencies interface {
 		identity.ManagementProvider
 		HooksProvider
 	}
 	HookExecutor struct {
-		d loginExecutorDependencies
+		d executorDependencies
 		c configuration.Provider
 	}
 	HookExecutorProvider interface {
@@ -35,7 +35,7 @@ type (
 	}
 )
 
-func NewHookExecutor(d loginExecutorDependencies, c configuration.Provider) *HookExecutor {
+func NewHookExecutor(d executorDependencies, c configuration.Provider) *HookExecutor {
 	return &HookExecutor{d: d, c: c}
 }
 

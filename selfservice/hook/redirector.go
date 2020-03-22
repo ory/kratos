@@ -7,6 +7,7 @@ import (
 	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/flow/profile"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
@@ -37,6 +38,10 @@ func NewRedirector(
 
 func (e *Redirector) ExecuteRegistrationPostHook(w http.ResponseWriter, r *http.Request, sr *registration.Request, _ *session.Session) error {
 	return e.do(w, r, sr.RequestURL)
+}
+
+func (e *Redirector) ExecuteProfileManagementPostHook(w http.ResponseWriter, r *http.Request, pr *profile.Request, _ *session.Session) error {
+	return e.do(w, r, pr.RequestURL)
 }
 
 func (e *Redirector) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, sr *login.Request, _ *session.Session) error {

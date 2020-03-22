@@ -10,7 +10,7 @@ import (
 )
 
 type Strategy interface {
-	ID() string
+	ProfileManagementStrategyID() string
 	RegisterProfileManagementRoutes(*x.RouterPublic)
 	PopulateProfileManagementMethod(*http.Request, *session.Session, *Request) error
 }
@@ -20,8 +20,8 @@ type Strategies []Strategy
 func (s Strategies) Strategy(id string) (Strategy, error) {
 	ids := make([]string, len(s))
 	for k, ss := range s {
-		ids[k] = ss.ID()
-		if ss.ID() == id {
+		ids[k] = ss.ProfileManagementStrategyID()
+		if ss.ProfileManagementStrategyID() == id {
 			return ss, nil
 		}
 	}

@@ -19,7 +19,7 @@ import (
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
@@ -172,7 +172,7 @@ func TestLoginHandler(t *testing.T) {
 		}
 	}
 
-	errTS := errorx.NewErrorTestServer(t, reg)
+	errTS := testhelpers.NewErrorTestServer(t, reg)
 	defer errTS.Close()
 
 	viper.Set(configuration.ViperKeyURLsSelfPublic, public.URL)

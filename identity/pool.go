@@ -69,7 +69,7 @@ type (
 		// if identity exists, backend connectivity is broken, or trait validation fails.
 		CreateIdentity(context.Context, *Identity) error
 
-		// UpdateUnprotectedTraits updates an identity excluding its confidential / privileged / protected data.
+		// UpdateIdentity updates an identity including its confidential / privileged / protected data.
 		UpdateIdentity(context.Context, *Identity) error
 
 		// GetClassified returns the identity including it's raw credentials. This should only be used internally.
