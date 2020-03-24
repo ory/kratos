@@ -58,6 +58,7 @@ require (
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/rogpeppe/go-internal v1.5.2 // indirect
+	github.com/segmentio/analytics-go v3.1.0+incompatible
 	github.com/segmentio/backo-go v0.0.0-20200129164019-23eae7c10bd3 // indirect
 	github.com/shurcooL/go v0.0.0-20180423040247-9e1955d9fb6e
 	github.com/sirupsen/logrus v1.4.2

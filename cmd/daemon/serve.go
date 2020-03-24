@@ -5,6 +5,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/segmentio/analytics-go"
 	"github.com/sirupsen/logrus"
 
 	"github.com/ory/x/flagx"
