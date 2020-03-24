@@ -116,7 +116,8 @@ func serveAdmin(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []
 }
 
 func sqa(cmd *cobra.Command, d driver.Driver) *metricsx.Service {
-	// Creates only one instance
+	// Creates only ones
+	// instance
 	return metricsx.New(
 		cmd,
 		d.Logger(),
