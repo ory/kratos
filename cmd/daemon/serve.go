@@ -158,6 +158,9 @@ func sqa(cmd *cobra.Command, d driver.Driver) *metricsx.Service {
 			BuildVersion: d.Registry().BuildVersion(),
 			BuildHash:    d.Registry().BuildHash(),
 			BuildTime:    d.Registry().BuildDate(),
+			Config: &analytics.Config{
+				Endpoint: "https://sqa.ory.sh",
+			},
 		},
 	)
 }

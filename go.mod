@@ -10,7 +10,6 @@ require (
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/ghodss/yaml v1.0.0
-	github.com/go-bindata/go-bindata v3.1.2+incompatible // indirect
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/errors v0.19.4
 	github.com/go-openapi/runtime v0.19.12
