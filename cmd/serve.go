@@ -15,14 +15,13 @@
 package cmd
 
 import (
+	"github.com/ory/x/viperx"
 	"os"
 	"strconv"
 
 	"github.com/gobuffalo/packr/v2"
 
 	"github.com/ory/x/flagx"
-	"github.com/ory/x/viperx"
-
 	"github.com/spf13/cobra"
 
 	"github.com/ory/kratos/cmd/daemon"
@@ -47,11 +46,7 @@ DON'T DO THIS IN PRODUCTION!
 `)
 		}
 
-		schema, err := schemas.Find("config.schema.json")
-		if err != nil {
-			logger.WithError(err).Fatal("Unable to open configuration JSON Schema.")
-		}
-		viperx.WatchAndValidateViper(logger, schema, "ORY Kratos", []string{"serve", "profiling", "log"})
+		watchAndValidateViper()
 		daemon.ServeAll(driver.MustNewDefaultDriver(logger, BuildVersion, BuildTime, BuildGitHash, dev))(cmd, args)
 	},
 }
