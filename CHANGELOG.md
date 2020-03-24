@@ -80,6 +80,7 @@
 
 **Merged pull requests:**
 
+- chore: moved watchAndValidateViper to viperx [\#307](https://github.com/ory/kratos/pull/307) ([zepatrik](https://github.com/zepatrik))
 - chore: update ory/x dependency and add test case [\#305](https://github.com/ory/kratos/pull/305) ([zepatrik](https://github.com/zepatrik))
 - feat: allow configuring same-site for session cookies [\#303](https://github.com/ory/kratos/pull/303) ([zepatrik](https://github.com/zepatrik))
 - fix: Linux install script [\#302](https://github.com/ory/kratos/pull/302) ([guillett](https://github.com/guillett))
