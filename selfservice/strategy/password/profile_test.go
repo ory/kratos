@@ -45,8 +45,15 @@ func TestProfile(t *testing.T) {
 		Traits:         identity.Traits(`{"email":"john@doe.com"}`),
 		TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
 	}
-	publicTS, _ := testhelpers.NewProfileAPIServer(t, reg, []identity.Identity{*primaryIdentity})
+	secondaryIdentity := &identity.Identity{
+		ID:             x.NewUUID(),
+		Credentials:    map[identity.CredentialsType]identity.Credentials{},
+		Traits:         identity.Traits(`{}`),
+		TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
+	}
+	publicTS, _ := testhelpers.NewProfileAPIServer(t, reg, []identity.Identity{*primaryIdentity, *secondaryIdentity})
 	primaryUser := testhelpers.NewSessionClient(t, publicTS.URL+"/sessions/set/0")
+	secondaryUser := testhelpers.NewSessionClient(t, publicTS.URL+"/sessions/set/1")
 
 	t.Run("description=should fail to update when session is too old", func(t *testing.T) {
 		viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
@@ -98,6 +105,25 @@ func TestProfile(t *testing.T) {
 		cfg := string(actualIdentity.Credentials[identity.CredentialsTypePassword].Config)
 		assert.NotContains(t, cfg, "foo")
 		assert.NotEqual(t, `{"hashed_password":"foo"}`, cfg)
+	})
+
+	t.Run("description=should update the password even if no password was set before", func(t *testing.T) {
+		rs := testhelpers.GetProfileManagementRequest(t, secondaryUser, publicTS)
+
+		form := rs.Payload.Methods[string(identity.CredentialsTypePassword)].Config
+		values := testhelpers.SDKFormFieldsToURLValues(form.Fields)
+		values.Set("password", uuid.New().String())
+		actual, _ := testhelpers.ProfileSubmitForm(t, form, secondaryUser, values)
+
+		assert.Equal(t, true, gjson.Get(actual, "update_successful").Bool(), "%s", actual)
+		assert.Empty(t, gjson.Get(actual, "methods.password.fields.#(name==password).value").String(), "%s", actual)
+
+		actualIdentity, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), secondaryIdentity.ID)
+		require.NoError(t, err)
+		cfg := string(actualIdentity.Credentials[identity.CredentialsTypePassword].Config)
+		assert.Contains(t, cfg, "hashed_password")
+		require.Len(t, actualIdentity.Credentials[identity.CredentialsTypePassword].Identifiers, 1)
+		assert.Contains(t, actualIdentity.Credentials[identity.CredentialsTypePassword].Identifiers[0], "-4")
 	})
 
 	t.Run("description=should update the password and execute hooks", func(t *testing.T) {

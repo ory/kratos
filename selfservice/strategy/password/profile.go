@@ -113,8 +113,9 @@ func (s *Strategy) completeProfileManagementFlow(w http.ResponseWriter, r *http.
 
 	c, ok := i.GetCredentials(s.ID())
 	if !ok {
-		s.handleProfileManagementError(w, r, ar, ss.Identity.Traits, errors.WithStack(herodot.ErrBadRequest.WithReasonf("A password change request was made but this identity does not use a password flow.")))
-		return
+		c = &identity.Credentials{Type: s.ID(),
+			// Prevent duplicates
+			Identifiers: []string{x.NewUUID().String()}}
 	}
 
 	c.Config = co
@@ -143,16 +144,6 @@ func (s *Strategy) completeProfileManagementFlow(w http.ResponseWriter, r *http.
 }
 
 func (s *Strategy) PopulateProfileManagementMethod(r *http.Request, ss *session.Session, pr *profile.Request) error {
-	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), ss.Identity.ID)
-	if err != nil {
-		return err
-	}
-
-	if _, ok := i.GetCredentials(identity.CredentialsTypePassword); !ok {
-		// Ignore this method if no password flow is set up.
-		return nil
-	}
-
 	f := &form.HTMLForm{
 		Action: urlx.CopyWithQuery(
 			urlx.AppendPaths(s.c.SelfPublicURL(), ProfilePath),

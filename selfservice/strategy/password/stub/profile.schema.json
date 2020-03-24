@@ -15,8 +15,5 @@
       }
     }
   },
-  "required": [
-    "email"
-  ],
   "additionalProperties": false
 }
