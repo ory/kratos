@@ -875,7 +875,7 @@
         "parameters": [
           {
             "type": "string",
-            "name": "id",
+            "name": "error",
             "in": "query"
           }
         ],
