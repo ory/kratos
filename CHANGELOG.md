@@ -80,6 +80,8 @@
 
 **Merged pull requests:**
 
+- fix: move to ory sqa service [\#309](https://github.com/ory/kratos/pull/309) ([aeneasr](https://github.com/aeneasr))
+- Fix the query parameter name in the get self-service error endpoint in API docs [\#308](https://github.com/ory/kratos/pull/308) ([sandhose](https://github.com/sandhose))
 - chore: moved watchAndValidateViper to viperx [\#307](https://github.com/ory/kratos/pull/307) ([zepatrik](https://github.com/zepatrik))
 - chore: update ory/x dependency and add test case [\#305](https://github.com/ory/kratos/pull/305) ([zepatrik](https://github.com/zepatrik))
 - feat: allow configuring same-site for session cookies [\#303](https://github.com/ory/kratos/pull/303) ([zepatrik](https://github.com/zepatrik))
