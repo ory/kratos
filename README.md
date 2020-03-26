@@ -1,7 +1,7 @@
 <h1 align="center"><img src="./docs/images/banner_kratos.png" alt="ORY Kratos - Cloud native Identity and User Management"></h1>
 
 <h4 align="center">
-    <a href="https://discord.gg/PAMQWkr">Chat</a> |
+    <a href="https://www.ory.sh/chat">Chat</a> |
     <a href="https://community.ory.sh/">Forums</a> |
     <a href="http://eepurl.com/di390P">Newsletter</a><br/><br/>
     <a href="https://www.ory.sh/docs/next/kratos/">Guide</a> |
