@@ -80,6 +80,7 @@
 
 **Merged pull requests:**
 
+- chore: bump ory/x to have csv parsing from env vars [\#312](https://github.com/ory/kratos/pull/312) ([zepatrik](https://github.com/zepatrik))
 - fix: move to ory sqa service [\#309](https://github.com/ory/kratos/pull/309) ([aeneasr](https://github.com/aeneasr))
 - Fix the query parameter name in the get self-service error endpoint in API docs [\#308](https://github.com/ory/kratos/pull/308) ([sandhose](https://github.com/sandhose))
 - chore: moved watchAndValidateViper to viperx [\#307](https://github.com/ory/kratos/pull/307) ([zepatrik](https://github.com/zepatrik))
