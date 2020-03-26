@@ -53,8 +53,8 @@ require (
 	github.com/ory/herodot v0.7.0
 	github.com/ory/jsonschema/v3 v3.0.1
 	github.com/ory/sdk/swagutil v0.0.0-20200202121523-307941feee4b
-	github.com/ory/viper v1.7.3
-	github.com/ory/x v0.0.106
+	github.com/ory/viper v1.7.4
+	github.com/ory/x v0.0.109
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/rogpeppe/go-internal v1.5.2 // indirect
@@ -71,8 +71,7 @@ require (
 	github.com/urfave/negroni v1.0.0
 	golang.org/x/crypto v0.0.0-20200320181102-891825fb96df
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/sys v0.0.0-20200321134203-328b4cd54aae // indirect
-	golang.org/x/tools v0.0.0-20200323171731-e609210bcd3f
+	golang.org/x/tools v0.0.0-20200325203130-f53864d0dba1
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.28.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
