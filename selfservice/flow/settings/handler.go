@@ -1,4 +1,4 @@
-package profile
+package settings
 
 import (
 	"net/http"
@@ -22,8 +22,8 @@ import (
 )
 
 const (
-	PublicProfileManagementPath = "/self-service/browser/flows/profile"
-	BrowserProfileRequestPath   = "/self-service/browser/flows/requests/profile"
+	PublicPath        = "/self-service/browser/flows/settings"
+	PublicRequestPath = "/self-service/browser/flows/requests/settings"
 )
 
 type (
@@ -48,7 +48,7 @@ type (
 		IdentityTraitsSchemas() schema.Schemas
 	}
 	HandlerProvider interface {
-		ProfileManagementHandler() *Handler
+		SettingsHandler() *Handler
 	}
 	Handler struct {
 		c    configuration.Provider
@@ -63,60 +63,60 @@ func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	redirect := session.RedirectOnUnauthenticated(h.c.LoginURL().String())
-	public.GET(PublicProfileManagementPath, h.d.SessionHandler().IsAuthenticated(h.initUpdateProfile, redirect))
-	public.GET(BrowserProfileRequestPath, h.d.SessionHandler().IsAuthenticated(h.publicFetchUpdateProfileRequest, redirect))
+	public.GET(PublicPath, h.d.SessionHandler().IsAuthenticated(h.initUpdateSettings, redirect))
+	public.GET(PublicRequestPath, h.d.SessionHandler().IsAuthenticated(h.publicFetchUpdateSettingsRequest, redirect))
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(BrowserProfileRequestPath, h.adminFetchUpdateProfileRequest)
+	admin.GET(PublicRequestPath, h.adminFetchUpdateSettingsRequest)
 }
 
-// swagger:route GET /self-service/browser/flows/profile public initializeSelfServiceProfileManagementFlow
+// swagger:route GET /self-service/browser/flows/settings public initializeSelfServiceSettingsFlow
 //
-// Initialize browser-based profile management flow
+// Initialize browser-based settings flow
 //
-// This endpoint initializes a browser-based profile management flow. Once initialized, the browser will be redirected to
-// `urls.profile_ui` with the request ID set as a query parameter. If no valid user session exists, a login
+// This endpoint initializes a browser-based settings flow. Once initialized, the browser will be redirected to
+// `urls.settings_ui` with the request ID set as a query parameter. If no valid user session exists, a login
 // flow will be initialized.
 //
 // > This endpoint is NOT INTENDED for API clients and only works
 // with browsers (Chrome, Firefox, ...).
 //
-// More information can be found at [ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).
+// More information can be found at [ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
 //
 //     Schemes: http, https
 //
 //     Responses:
 //       302: emptyResponse
 //       500: genericError
-func (h *Handler) initUpdateProfile(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) initUpdateSettings(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.d.SessionManager().FetchFromRequest(r.Context(), w, r)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
-	a := NewRequest(h.c.SelfServiceProfileRequestLifespan(), r, s)
-	for _, strategy := range h.d.ProfileManagementStrategies() {
-		if err := strategy.PopulateProfileManagementMethod(r, s, a); err != nil {
+	a := NewRequest(h.c.SelfServiceSettingsRequestLifespan(), r, s)
+	for _, strategy := range h.d.SettingsStrategies() {
+		if err := strategy.PopulateSettingsMethod(r, s, a); err != nil {
 			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 			return
 		}
 	}
 
-	if err := h.d.ProfileRequestPersister().CreateProfileRequest(r.Context(), a); err != nil {
+	if err := h.d.SettingsRequestPersister().CreateSettingsRequest(r.Context(), a); err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
 	http.Redirect(w, r,
-		urlx.CopyWithQuery(h.c.ProfileURL(), url.Values{"request": {a.ID.String()}}).String(),
+		urlx.CopyWithQuery(h.c.SettingsURL(), url.Values{"request": {a.ID.String()}}).String(),
 		http.StatusFound,
 	)
 }
 
 // nolint:deadcode,unused
-// swagger:parameters getSelfServiceBrowserProfileManagementRequest
+// swagger:parameters getSelfServiceBrowserSettingsRequest
 type getSelfServiceBrowserLoginRequestParameters struct {
 	// Request is the Login Request ID
 	//
@@ -128,15 +128,15 @@ type getSelfServiceBrowserLoginRequestParameters struct {
 	Request string `json:"request"`
 }
 
-// swagger:route GET /self-service/browser/flows/requests/profile common public admin getSelfServiceBrowserProfileManagementRequest
+// swagger:route GET /self-service/browser/flows/requests/settings common public admin getSelfServiceBrowserSettingsRequest
 //
-// Get the request context of browser-based profile management flows
+// Get the request context of browser-based settings flows
 //
 // When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required
 // for checking the auth session. To prevent scanning attacks, the public endpoint does not return 404 status codes
 // but instead 403 or 500.
 //
-// More information can be found at [ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).
+// More information can be found at [ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
 //
 //     Produces:
 //     - application/json
@@ -144,24 +144,28 @@ type getSelfServiceBrowserLoginRequestParameters struct {
 //     Schemes: http, https
 //
 //     Responses:
-//       200: profileManagementRequest
+//       200: settingsRequest
 //       403: genericError
 //       404: genericError
 //       410: genericError
 //       500: genericError
-func (h *Handler) publicFetchUpdateProfileRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.fetchUpdateProfileRequest(w, r, true); err != nil {
+func (h *Handler) publicFetchUpdateSettingsRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if err := h.fetchUpdateSettingsRequest(w, r, true); err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 }
 
-func (h *Handler) adminFetchUpdateProfileRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.fetchUpdateProfileRequest(w, r, false); err != nil {
+func (h *Handler) adminFetchUpdateSettingsRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if err := h.fetchUpdateSettingsRequest(w, r, false); err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 }
+
+// func (h *Handler) resumeAbortedRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+//
+// }
 
 func (h *Handler) wrapErrorForbidden(err error, shouldWrap bool) error {
 	if shouldWrap {
@@ -171,9 +175,9 @@ func (h *Handler) wrapErrorForbidden(err error, shouldWrap bool) error {
 	return err
 }
 
-func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Request, checkSession bool) error {
+func (h *Handler) fetchUpdateSettingsRequest(w http.ResponseWriter, r *http.Request, checkSession bool) error {
 	rid := x.ParseUUID(r.URL.Query().Get("request"))
-	pr, err := h.d.ProfileRequestPersister().GetProfileRequest(r.Context(), rid)
+	pr, err := h.d.SettingsRequestPersister().GetSettingsRequest(r.Context(), rid)
 	if err != nil {
 		return h.wrapErrorForbidden(err, checkSession)
 	}
@@ -191,8 +195,8 @@ func (h *Handler) fetchUpdateProfileRequest(w http.ResponseWriter, r *http.Reque
 
 	if pr.ExpiresAt.Before(time.Now()) {
 		return errors.WithStack(x.ErrGone.
-			WithReason("The profile management request has expired. Redirect the user to the login endpoint to initialize a new session.").
-			WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), PublicProfileManagementPath).String()))
+			WithReason("The settings request has expired. Redirect the user to the login endpoint to initialize a new session.").
+			WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), PublicPath).String()))
 	}
 
 	h.d.Writer().Write(w, r, pr)

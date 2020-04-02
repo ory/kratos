@@ -1,4 +1,4 @@
-package profile
+package settings
 
 import (
 	"net/http"
@@ -10,9 +10,9 @@ import (
 )
 
 type Strategy interface {
-	ProfileManagementStrategyID() string
-	RegisterProfileManagementRoutes(*x.RouterPublic)
-	PopulateProfileManagementMethod(*http.Request, *session.Session, *Request) error
+	SettingsStrategyID() string
+	RegisterSettingsRoutes(*x.RouterPublic)
+	PopulateSettingsMethod(*http.Request, *session.Session, *Request) error
 }
 
 type Strategies []Strategy
@@ -20,8 +20,8 @@ type Strategies []Strategy
 func (s Strategies) Strategy(id string) (Strategy, error) {
 	ids := make([]string, len(s))
 	for k, ss := range s {
-		ids[k] = ss.ProfileManagementStrategyID()
-		if ss.ProfileManagementStrategyID() == id {
+		ids[k] = ss.SettingsStrategyID()
+		if ss.SettingsStrategyID() == id {
 			return ss, nil
 		}
 	}
@@ -39,10 +39,10 @@ func (s Strategies) MustStrategy(id string) Strategy {
 
 func (s Strategies) RegisterPublicRoutes(r *x.RouterPublic) {
 	for _, ss := range s {
-		ss.RegisterProfileManagementRoutes(r)
+		ss.RegisterSettingsRoutes(r)
 	}
 }
 
 type StrategyProvider interface {
-	ProfileManagementStrategies() Strategies
+	SettingsStrategies() Strategies
 }

@@ -23,14 +23,14 @@ import (
 //
 // swagger:model verificationRequest
 type Request struct {
-	// ID represents the request's unique ID. When performing the profile management flow, this
-	// represents the id in the profile ui's query parameter: http://<urls.profile_ui>?request=<id>
+	// ID represents the request's unique ID. When performing the verification flow, this
+	// represents the id in the verify ui's query parameter: http://<urls.verify_ui>?request=<id>
 	//
 	// type: string
 	// format: uuid
 	ID uuid.UUID `json:"id" db:"id" faker:"uuid" rw:"r"`
 
-	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile,
+	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address,
 	// a new request has to be initiated.
 	ExpiresAt time.Time `json:"expires_at" faker:"time_type" db:"expires_at"`
 

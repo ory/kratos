@@ -12,20 +12,20 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// ProfileManagementRequest Request presents a profile management request
+// SettingsRequest Request presents a settings request
 //
-// This request is used when an identity wants to update profile information
-// (especially traits) in a selfservice manner.
+// This request is used when an identity wants to update settings
+// (e.g. profile data, passwords, ...) in a selfservice manner.
 //
-// For more information head over to: https://www.ory.sh/docs/kratos/selfservice/profile
-// swagger:model profileManagementRequest
-type ProfileManagementRequest struct {
+// For more information head over to: https://www.ory.sh/docs/kratos/selfservice/flows/user-settings-profile-management
+// swagger:model settingsRequest
+type SettingsRequest struct {
 
-	// FormActive, if set, contains the registration method that is being used. It is initially
+	// Active, if set, contains the registration method that is being used. It is initially
 	// not set.
 	Active string `json:"active,omitempty"`
 
-	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile,
+	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting,
 	// a new request has to be initiated.
 	// Required: true
 	// Format: date-time
@@ -48,22 +48,22 @@ type ProfileManagementRequest struct {
 	// Methods contains context for all enabled registration methods. If a registration request has been
 	// processed, but for example the password is incorrect, this will contain error messages.
 	// Required: true
-	Methods map[string]ProfileRequestForm `json:"methods"`
+	Methods map[string]SettingsRequestMethod `json:"methods"`
 
 	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used
 	// to forward information contained in the URL's path or query for example.
 	// Required: true
 	RequestURL *string `json:"request_url"`
 
-	// UpdateSuccessful, if true, indicates that the profile has been updated successfully with the provided data.
+	// UpdateSuccessful, if true, indicates that the settings request has been updated successfully with the provided data.
 	// Done will stay true when repeatedly checking. If set to true, done will revert back to false only
 	// when a request with invalid (e.g. "please use a valid phone number") data was sent.
 	// Required: true
 	UpdateSuccessful *bool `json:"update_successful"`
 }
 
-// Validate validates this profile management request
-func (m *ProfileManagementRequest) Validate(formats strfmt.Registry) error {
+// Validate validates this settings request
+func (m *SettingsRequest) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateExpiresAt(formats); err != nil {
@@ -100,7 +100,7 @@ func (m *ProfileManagementRequest) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *ProfileManagementRequest) validateExpiresAt(formats strfmt.Registry) error {
+func (m *SettingsRequest) validateExpiresAt(formats strfmt.Registry) error {
 
 	if err := validate.Required("expires_at", "body", m.ExpiresAt); err != nil {
 		return err
@@ -113,7 +113,7 @@ func (m *ProfileManagementRequest) validateExpiresAt(formats strfmt.Registry) er
 	return nil
 }
 
-func (m *ProfileManagementRequest) validateID(formats strfmt.Registry) error {
+func (m *SettingsRequest) validateID(formats strfmt.Registry) error {
 
 	if err := m.ID.Validate(formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
@@ -125,7 +125,7 @@ func (m *ProfileManagementRequest) validateID(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *ProfileManagementRequest) validateIdentity(formats strfmt.Registry) error {
+func (m *SettingsRequest) validateIdentity(formats strfmt.Registry) error {
 
 	if err := validate.Required("identity", "body", m.Identity); err != nil {
 		return err
@@ -143,7 +143,7 @@ func (m *ProfileManagementRequest) validateIdentity(formats strfmt.Registry) err
 	return nil
 }
 
-func (m *ProfileManagementRequest) validateIssuedAt(formats strfmt.Registry) error {
+func (m *SettingsRequest) validateIssuedAt(formats strfmt.Registry) error {
 
 	if err := validate.Required("issued_at", "body", m.IssuedAt); err != nil {
 		return err
@@ -156,7 +156,7 @@ func (m *ProfileManagementRequest) validateIssuedAt(formats strfmt.Registry) err
 	return nil
 }
 
-func (m *ProfileManagementRequest) validateMethods(formats strfmt.Registry) error {
+func (m *SettingsRequest) validateMethods(formats strfmt.Registry) error {
 
 	for k := range m.Methods {
 
@@ -174,7 +174,7 @@ func (m *ProfileManagementRequest) validateMethods(formats strfmt.Registry) erro
 	return nil
 }
 
-func (m *ProfileManagementRequest) validateRequestURL(formats strfmt.Registry) error {
+func (m *SettingsRequest) validateRequestURL(formats strfmt.Registry) error {
 
 	if err := validate.Required("request_url", "body", m.RequestURL); err != nil {
 		return err
@@ -183,7 +183,7 @@ func (m *ProfileManagementRequest) validateRequestURL(formats strfmt.Registry) e
 	return nil
 }
 
-func (m *ProfileManagementRequest) validateUpdateSuccessful(formats strfmt.Registry) error {
+func (m *SettingsRequest) validateUpdateSuccessful(formats strfmt.Registry) error {
 
 	if err := validate.Required("update_successful", "body", m.UpdateSuccessful); err != nil {
 		return err
@@ -193,7 +193,7 @@ func (m *ProfileManagementRequest) validateUpdateSuccessful(formats strfmt.Regis
 }
 
 // MarshalBinary interface implementation
-func (m *ProfileManagementRequest) MarshalBinary() ([]byte, error) {
+func (m *SettingsRequest) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -201,8 +201,8 @@ func (m *ProfileManagementRequest) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *ProfileManagementRequest) UnmarshalBinary(b []byte) error {
-	var res ProfileManagementRequest
+func (m *SettingsRequest) UnmarshalBinary(b []byte) error {
+	var res SettingsRequest
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

@@ -31,7 +31,7 @@ func TestViperProvider(t *testing.T) {
 
 		t.Run("group=urls", func(t *testing.T) {
 			assert.Equal(t, "http://test.kratos.ory.sh/login", p.LoginURL().String())
-			assert.Equal(t, "http://test.kratos.ory.sh/profile", p.ProfileURL().String())
+			assert.Equal(t, "http://test.kratos.ory.sh/settings", p.SettingsURL().String())
 			assert.Equal(t, "http://test.kratos.ory.sh/register", p.RegisterURL().String())
 			assert.Equal(t, "http://test.kratos.ory.sh/mfa", p.MultiFactorURL().String())
 			assert.Equal(t, "http://test.kratos.ory.sh/error", p.ErrorURL().String())

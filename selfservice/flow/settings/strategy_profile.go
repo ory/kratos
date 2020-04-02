@@ -1,10 +1,13 @@
-package profile
+package settings
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
@@ -16,6 +19,7 @@ import (
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/urlx"
 
+	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
@@ -26,9 +30,11 @@ import (
 )
 
 const (
-	StrategyTraitsID                  = "profile"
-	PublicProfileManagementUpdatePath = "/self-service/browser/flows/profile/strategies/profile"
+	StrategyTraitsID          = "profile"
+	PublicSettingsProfilePath = "/self-service/browser/flows/settings/strategies/profile"
 )
+
+var strategyProfileContinuityName = fmt.Sprintf("%x", sha256.Sum256([]byte(PublicSettingsProfilePath)))
 
 var _ Strategy = new(StrategyTraits)
 
@@ -38,6 +44,8 @@ type (
 		x.CSRFTokenGeneratorProvider
 		x.WriterProvider
 		x.LoggingProvider
+
+		continuity.ManagementProvider
 
 		session.HandlerProvider
 		session.ManagementProvider
@@ -71,16 +79,16 @@ func NewStrategyTraits(d strategyDependencies, c configuration.Provider) *Strate
 	return &StrategyTraits{c: c, d: d}
 }
 
-func (s *StrategyTraits) ProfileManagementStrategyID() string {
+func (s *StrategyTraits) SettingsStrategyID() string {
 	return StrategyTraitsID
 }
 
-func (s *StrategyTraits) RegisterProfileManagementRoutes(public *x.RouterPublic) {
+func (s *StrategyTraits) RegisterSettingsRoutes(public *x.RouterPublic) {
 	redirect := session.RedirectOnUnauthenticated(s.c.LoginURL().String())
-	public.POST(PublicProfileManagementUpdatePath, s.d.SessionHandler().IsAuthenticated(s.completeProfileManagementFlow, redirect))
+	public.POST(PublicSettingsProfilePath, s.d.SessionHandler().IsAuthenticated(s.completeSettingsFlow, redirect))
 }
 
-func (s *StrategyTraits) PopulateProfileManagementMethod(r *http.Request, ss *session.Session, pr *Request) error {
+func (s *StrategyTraits) PopulateSettingsMethod(r *http.Request, ss *session.Session, pr *Request) error {
 	traitsSchema, err := s.c.IdentityTraitsSchemas().FindSchemaByID(ss.Identity.TraitsSchemaID)
 	if err != nil {
 		return err
@@ -88,10 +96,12 @@ func (s *StrategyTraits) PopulateProfileManagementMethod(r *http.Request, ss *se
 
 	// use a schema compiler that disables identifiers
 	schemaCompiler := jsonschema.NewCompiler()
-	registerNewDisableIdentifiersExtension(schemaCompiler)
+	if ss.AuthenticatedAt.Add(s.c.SelfServicePrivilegedSessionMaxAge()).Before(time.Now()) {
+		registerNewDisableIdentifiersExtension(schemaCompiler)
+	}
 
 	f, err := form.NewHTMLFormFromJSONSchema(urlx.CopyWithQuery(
-		urlx.AppendPaths(s.c.SelfPublicURL(), PublicProfileManagementUpdatePath),
+		urlx.AppendPaths(s.c.SelfPublicURL(), PublicSettingsProfilePath),
 		url.Values{"request": {pr.ID.String()}},
 	).String(), traitsSchema.URL, "traits", schemaCompiler)
 	if err != nil {
@@ -105,26 +115,26 @@ func (s *StrategyTraits) PopulateProfileManagementMethod(r *http.Request, ss *se
 		return err
 	}
 
-	pr.Methods[s.ProfileManagementStrategyID()] = &RequestMethod{
-		Method: s.ProfileManagementStrategyID(),
+	pr.Methods[s.SettingsStrategyID()] = &RequestMethod{
+		Method: s.SettingsStrategyID(),
 		Config: &RequestMethodConfig{RequestMethodConfigurator: &TraitsRequestMethod{HTMLForm: f}},
 	}
 	return nil
 }
 
-// swagger:route POST /self-service/browser/flows/profile/strategies/profile public completeSelfServiceBrowserProfileManagementProfileStrategyFlow
+// swagger:route POST /self-service/browser/flows/settings/strategies/profile public completeSelfServiceBrowserSettingsProfileStrategyFlow
 //
-// Complete the browser-based profile management flow for profile data
+// Complete the browser-based settings flow for profile data
 //
-// This endpoint completes a browser-based profile management flow. This is usually achieved by POSTing data to this
+// This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this
 // endpoint.
 //
 // If the provided profile data is valid against the Identity's Traits JSON Schema, the data will be updated and
-// the browser redirected to `url.profile_ui` for further steps.
+// the browser redirected to `url.settings_ui` for further steps.
 //
 // > This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
 //
-// More information can be found at [ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).
+// More information can be found at [ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
 //
 //     Consumes:
 //     - application/json
@@ -135,77 +145,103 @@ func (s *StrategyTraits) PopulateProfileManagementMethod(r *http.Request, ss *se
 //     Responses:
 //       302: emptyResponse
 //       500: genericError
-func (s *StrategyTraits) completeProfileManagementFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (s *StrategyTraits) completeSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	ss, err := s.d.SessionManager().FetchFromRequest(r.Context(), w, r)
 	if err != nil {
-		s.handleProfileManagementError(w, r, nil, nil, nil, err)
+		s.handleSettingsError(w, r, nil, nil, nil, err)
 		return
 	}
 
-	option, err := s.newProfileManagementDecoder(ss.Identity)
+	option, err := s.newSettingsProfileDecoder(ss.Identity)
 	if err != nil {
-		s.handleProfileManagementError(w, r, nil, ss, json.RawMessage(ss.Identity.Traits), err)
+		s.handleSettingsError(w, r, nil, ss, json.RawMessage(ss.Identity.Traits), err)
 		return
 	}
 
-	var p completeSelfServiceBrowserProfileManagementFlowPayload
+	var p completeSelfServiceBrowserSettingsStrategyProfileFlowPayload
 	if err := decoderx.NewHTTP().Decode(r, &p,
 		decoderx.HTTPFormDecoder(),
 		option,
 		decoderx.HTTPDecoderSetValidatePayloads(false),
 		decoderx.HTTPDecoderSetIgnoreParseErrorsStrategy(decoderx.ParseErrorIgnore),
 	); err != nil {
-		s.handleProfileManagementError(w, r, nil, ss, json.RawMessage(ss.Identity.Traits), err)
+		s.handleSettingsError(w, r, nil, ss, json.RawMessage(ss.Identity.Traits), err)
 		return
 	}
 
 	rid := r.URL.Query().Get("request")
 	if len(rid) == 0 {
-		s.handleProfileManagementError(w, r, nil, ss, json.RawMessage(ss.Identity.Traits), errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request query parameter is missing.")))
+		s.handleSettingsError(w, r, nil, ss, json.RawMessage(ss.Identity.Traits), errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request query parameter is missing.")))
 		return
 	}
 
-	ar, err := s.d.ProfileRequestPersister().GetProfileRequest(r.Context(), x.ParseUUID(rid))
+	p.RequestID = rid
+	if err := s.d.ContinuityManager().Pause(
+		r.Context(), w, r,
+		strategyProfileContinuityName,
+		continuity.WithPayload(&p),
+		continuity.WithIdentity(ss.Identity),
+		continuity.WithLifespan(time.Minute*15),
+	); err != nil {
+		s.handleSettingsError(w, r, nil, ss, json.RawMessage(ss.Identity.Traits), err)
+		return
+	}
+
+	s.CompleteSettingsFlow(w, r, ss)
+}
+
+func (s *StrategyTraits) CompleteSettingsFlow(w http.ResponseWriter, r *http.Request, ss *session.Session) {
+	var p completeSelfServiceBrowserSettingsStrategyProfileFlowPayload
+	if _, err := s.d.ContinuityManager().Continue(r.Context(), r,
+		strategyProfileContinuityName,
+		continuity.WithIdentity(ss.Identity),
+		continuity.WithPayload(&p),
+	); err != nil {
+		s.handleSettingsError(w, r, nil, ss, json.RawMessage(ss.Identity.Traits), err)
+		return
+	}
+
+	ar, err := s.d.SettingsRequestPersister().GetSettingsRequest(r.Context(), x.ParseUUID(p.RequestID))
 	if err != nil {
-		s.handleProfileManagementError(w, r, nil, ss, json.RawMessage(ss.Identity.Traits), err)
+		s.handleSettingsError(w, r, nil, ss, json.RawMessage(ss.Identity.Traits), err)
 		return
 	}
 
 	if err := ar.Valid(ss); err != nil {
-		s.handleProfileManagementError(w, r, ar, ss, json.RawMessage(ss.Identity.Traits), err)
+		s.handleSettingsError(w, r, ar, ss, json.RawMessage(ss.Identity.Traits), err)
 		return
 	}
 
 	if len(p.Traits) == 0 {
-		s.handleProfileManagementError(w, r, ar, ss, json.RawMessage(ss.Identity.Traits), errors.WithStack(herodot.ErrBadRequest.WithReasonf("Did not receive any value changes.")))
+		s.handleSettingsError(w, r, ar, ss, json.RawMessage(ss.Identity.Traits), errors.WithStack(herodot.ErrBadRequest.WithReasonf("Did not receive any value changes.")))
 		return
 	}
 
 	if err := s.hydrateForm(r, ar, ss, p.Traits); err != nil {
-		s.d.ProfileRequestRequestErrorHandler().HandleProfileManagementError(w, r, ar, err, StrategyTraitsID)
+		s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, ar, err, StrategyTraitsID)
 		return
 	}
 
 	update, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), ss.Identity.ID)
 	if err != nil {
-		s.d.ProfileRequestRequestErrorHandler().HandleProfileManagementError(w, r, ar, err, StrategyTraitsID)
+		s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, ar, err, StrategyTraitsID)
 		return
 	}
 	update.Traits = identity.Traits(p.Traits)
 
-	if err := s.d.ProfileManagementExecutor().PostProfileManagementHook(w, r,
-		s.d.PostProfileManagementHooks(StrategyTraitsID),
+	if err := s.d.SettingsExecutor().PostSettingsHook(w, r,
+		s.d.PostSettingsHooks(StrategyTraitsID),
 		ar, ss, update,
 	); errorsx.Cause(err) == ErrHookAbortRequest {
 		return
 	} else if err != nil {
-		s.handleProfileManagementError(w, r, ar, ss, p.Traits, err)
+		s.handleSettingsError(w, r, ar, ss, p.Traits, err)
 		return
 	}
 
 	if len(w.Header().Get("Location")) == 0 {
 		http.Redirect(w, r,
-			urlx.CopyWithQuery(s.c.ProfileURL(), url.Values{"request": {ar.ID.String()}}).String(),
+			urlx.CopyWithQuery(s.c.SettingsURL(), url.Values{"request": {ar.ID.String()}}).String(),
 			http.StatusFound,
 		)
 	}
@@ -213,9 +249,9 @@ func (s *StrategyTraits) completeProfileManagementFlow(w http.ResponseWriter, r 
 
 // Complete profile update payload
 //
-// swagger:parameters completeSelfServiceBrowserProfileManagementFlow
+// swagger:parameters completeSelfServiceBrowserSettingsProfileStrategyFlow
 // nolint:deadcode,unused
-type completeProfileManagementParameters struct {
+type completeSelfServiceBrowserSettingsProfileStrategyFlow struct {
 	// Request is the request ID.
 	//
 	// required: true
@@ -225,23 +261,28 @@ type completeProfileManagementParameters struct {
 
 	// in: body
 	// required: true
-	Body completeSelfServiceBrowserProfileManagementFlowPayload
+	Body completeSelfServiceBrowserSettingsStrategyProfileFlowPayload
 }
 
-// swagger:model completeSelfServiceBrowserProfileManagementFlowPayload
+// swagger:model completeSelfServiceBrowserSettingsStrategyProfileFlowPayload
 // nolint:deadcode,unused
-type completeSelfServiceBrowserProfileManagementFlowPayload struct {
+type completeSelfServiceBrowserSettingsStrategyProfileFlowPayload struct {
 	// Traits contains all of the identity's traits.
 	//
 	// type: string
 	// format: binary
 	// required: true
 	Traits json.RawMessage `json:"traits"`
+
+	// RequestID is request ID.
+	//
+	// in: query
+	RequestID string `json:"request_id"`
 }
 
 func (s *StrategyTraits) hydrateForm(r *http.Request, ar *Request, ss *session.Session, traits json.RawMessage) error {
 	action := urlx.CopyWithQuery(
-		urlx.AppendPaths(s.c.SelfPublicURL(), PublicProfileManagementUpdatePath),
+		urlx.AppendPaths(s.c.SelfPublicURL(), PublicSettingsProfilePath),
 		url.Values{"request": {ar.ID.String()}},
 	)
 
@@ -265,30 +306,30 @@ func (s *StrategyTraits) hydrateForm(r *http.Request, ar *Request, ss *session.S
 	return nil
 }
 
-// handleProfileManagementError is a convenience function for handling all types of errors that may occur (e.g. validation error)
-// during a profile management request.
-func (s *StrategyTraits) handleProfileManagementError(w http.ResponseWriter, r *http.Request, rr *Request, ss *session.Session, traits json.RawMessage, err error) {
+// handleSettingsError is a convenience function for handling all types of errors that may occur (e.g. validation error)
+// during a settings request.
+func (s *StrategyTraits) handleSettingsError(w http.ResponseWriter, r *http.Request, rr *Request, ss *session.Session, traits json.RawMessage, err error) {
 	if rr != nil {
 		if err := s.hydrateForm(r, rr, ss, traits); err != nil {
-			s.d.ProfileRequestRequestErrorHandler().HandleProfileManagementError(w, r, rr, err, StrategyTraitsID)
+			s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, rr, err, StrategyTraitsID)
 			return
 		}
 
-		if err := s.d.ProfileRequestPersister().UpdateProfileRequest(r.Context(), rr); err != nil {
-			s.d.ProfileRequestRequestErrorHandler().HandleProfileManagementError(w, r, rr, err, StrategyTraitsID)
+		if err := s.d.SettingsRequestPersister().UpdateSettingsRequest(r.Context(), rr); err != nil {
+			s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, rr, err, StrategyTraitsID)
 			return
 		}
 	}
 
-	s.d.ProfileRequestRequestErrorHandler().HandleProfileManagementError(w, r, rr, err, StrategyTraitsID)
+	s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, rr, err, StrategyTraitsID)
 }
 
-// newProfileManagementDecoder returns a decoderx.HTTPDecoderOption with a JSON Schema for type assertion and
+// newSettingsProfileDecoder returns a decoderx.HTTPDecoderOption with a JSON Schema for type assertion and
 // validation.
-func (s *StrategyTraits) newProfileManagementDecoder(i *identity.Identity) (decoderx.HTTPDecoderOption, error) {
+func (s *StrategyTraits) newSettingsProfileDecoder(i *identity.Identity) (decoderx.HTTPDecoderOption, error) {
 	const registrationFormPayloadSchema = `
 {
-  "$id": "./selfservice/profile/decoder.schema.json",
+  "$id": "./selfservice/settings/decoder.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "required": ["traits"],

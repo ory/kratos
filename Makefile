@@ -84,7 +84,6 @@ quickstart:
 
 quickstart-dev:
 		docker build -f .docker/Dockerfile-build -t oryd/kratos:latest-sqlite .
-		docker pull oryd/kratos-selfservice-ui-node:latest
 		docker-compose -f quickstart.yml up --build --force-recreate
 
 # Formats the code

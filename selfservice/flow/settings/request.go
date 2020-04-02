@@ -1,4 +1,4 @@
-package profile
+package settings
 
 import (
 	"net/http"
@@ -18,24 +18,24 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-// Request presents a profile management request
+// Request presents a settings request
 //
-// This request is used when an identity wants to update profile information
-// (especially traits) in a selfservice manner.
+// This request is used when an identity wants to update settings
+// (e.g. profile data, passwords, ...) in a selfservice manner.
 //
-// For more information head over to: https://www.ory.sh/docs/kratos/selfservice/profile
+// For more information head over to: https://www.ory.sh/docs/kratos/selfservice/flows/user-settings-profile-management
 //
-// swagger:model profileManagementRequest
+// swagger:model settingsRequest
 type Request struct {
-	// ID represents the request's unique ID. When performing the profile management flow, this
-	// represents the id in the profile ui's query parameter: http://<urls.profile_ui>?request=<id>
+	// ID represents the request's unique ID. When performing the settings flow, this
+	// represents the id in the settings ui's query parameter: http://<urls.settings_ui>?request=<id>
 	//
 	// required: true
 	// type: string
 	// format: uuid
 	ID uuid.UUID `json:"id" db:"id" faker:"uuid" rw:"r"`
 
-	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile,
+	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting,
 	// a new request has to be initiated.
 	//
 	// required: true
@@ -52,30 +52,30 @@ type Request struct {
 	// required: true
 	RequestURL string `json:"request_url" db:"request_url"`
 
-	// FormActive, if set, contains the registration method that is being used. It is initially
+	// Active, if set, contains the registration method that is being used. It is initially
 	// not set.
-	FormActive sqlxx.NullString `json:"active,omitempty" db:"active_method"`
+	Active sqlxx.NullString `json:"active,omitempty" db:"active_method"`
 
 	// Methods contains context for all enabled registration methods. If a registration request has been
 	// processed, but for example the password is incorrect, this will contain error messages.
 	//
 	// required: true
-	Methods map[string]*RequestMethod `json:"methods" faker:"profile_management_request_methods" db:"-"`
+	Methods map[string]*RequestMethod `json:"methods" faker:"settings_request_methods" db:"-"`
 
 	// MethodsRaw is a helper struct field for gobuffalo.pop.
-	MethodsRaw RequestMethodsRaw `json:"-" faker:"-" has_many:"selfservice_profile_management_request_methods" fk_id:"selfservice_profile_management_request_id"`
+	MethodsRaw RequestMethodsRaw `json:"-" faker:"-" has_many:"selfservice_settings_request_methods" fk_id:"selfservice_settings_request_id"`
 
 	// Identity contains all of the identity's data in raw form.
 	//
 	// required: true
 	Identity *identity.Identity `json:"identity" faker:"identity" db:"-" belongs_to:"identities" fk_id:"IdentityID"`
 
-	// UpdateSuccessful, if true, indicates that the profile has been updated successfully with the provided data.
+	// UpdateSuccessful, if true, indicates that the settings request has been updated successfully with the provided data.
 	// Done will stay true when repeatedly checking. If set to true, done will revert back to false only
 	// when a request with invalid (e.g. "please use a valid phone number") data was sent.
 	//
 	// required: true
-	UpdateSuccessful bool `json:"update_successful,omitempty" faker:"-" db:"update_successful"`
+	UpdateSuccessful bool `json:"update_successful" faker:"-" db:"update_successful"`
 
 	// IdentityID is a helper struct field for gobuffalo.pop.
 	IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
@@ -108,15 +108,15 @@ func NewRequest(exp time.Duration, r *http.Request, s *session.Session) *Request
 }
 
 func (r *Request) TableName() string {
-	return "selfservice_profile_management_requests"
+	return "selfservice_settings_requests"
 }
 
 func (r *Request) Valid(s *session.Session) error {
 	if r.ExpiresAt.Before(time.Now()) {
-		return errors.WithStack(ErrRequestExpired.WithReasonf("The profile request expired %.2f minutes ago, please try again.", time.Since(r.ExpiresAt).Minutes()))
+		return errors.WithStack(ErrRequestExpired.WithReasonf("The settings request expired %.2f minutes ago, please try again.", time.Since(r.ExpiresAt).Minutes()))
 	}
 	if r.IdentityID != s.Identity.ID {
-		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("The profile request expired %.2f minutes ago, please try again", time.Since(r.ExpiresAt).Minutes()))
+		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("The settings request expired %.2f minutes ago, please try again", time.Since(r.ExpiresAt).Minutes()))
 	}
 	return nil
 }

@@ -44,7 +44,7 @@
     preserve_host: true
     url: "http://kratos-selfservice-ui-node:4435"
   match:
-    url: "http://127.0.0.1:4455<(/debug|/|/dashboard|/profile|)(|/)>"
+    url: "http://127.0.0.1:4455<(/debug|/|/dashboard|/settings|)(|/)>"
     methods:
       - GET
   authenticators:

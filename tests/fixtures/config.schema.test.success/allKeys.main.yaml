@@ -48,7 +48,7 @@ urls:
     admin: https://example.com
   mfa_ui: https://example.com
   login_ui: https://example.com
-  profile_ui: https://example.com
+  settings_ui: https://example.com
   verify_ui: https://example.com
   default_return_to: https://example.com
   registration_ui: https://example.com

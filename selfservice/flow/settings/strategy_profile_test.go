@@ -1,4 +1,4 @@
-package profile_test
+package settings_test
 
 import (
 	"encoding/json"
@@ -27,7 +27,7 @@ import (
 	"github.com/ory/kratos/internal/httpclient/client/common"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/kratos/selfservice/flow/profile"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/x"
 )
@@ -36,7 +36,7 @@ func TestStrategyTraits(t *testing.T) {
 	_, reg := internal.NewRegistryDefault(t)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
 
-	ui := testhelpers.NewProfileUITestServer(t)
+	ui := testhelpers.NewSettingsUITestServer(t)
 	errTs := testhelpers.NewErrorTestServer(t, reg)
 	viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
 
@@ -48,7 +48,7 @@ func TestStrategyTraits(t *testing.T) {
 		Traits:         identity.Traits(`{"email":"john@doe.com","stringy":"foobar","booly":false,"numby":2.5,"should_long_string":"asdfasdfasdfasdfasfdasdfasdfasdf","should_big_number":2048}`),
 		TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
 	}
-	publicTS, _ := testhelpers.NewProfileAPIServer(t, reg, []identity.Identity{
+	publicTS, _ := testhelpers.NewSettingsAPIServer(t, reg, []identity.Identity{
 		*primaryIdentity, {ID: x.NewUUID(), Traits: identity.Traits(`{}`)}})
 
 	primaryUser := testhelpers.NewSessionClient(t, publicTS.URL+"/sessions/set/0")
@@ -56,17 +56,17 @@ func TestStrategyTraits(t *testing.T) {
 
 	t.Run("description=not authorized to call endpoints without a session", func(t *testing.T) {
 		pr, ar := x.NewRouterPublic(), x.NewRouterAdmin()
-		reg.ProfileManagementStrategies().RegisterPublicRoutes(pr)
-		reg.ProfileManagementHandler().RegisterPublicRoutes(pr)
-		reg.ProfileManagementHandler().RegisterAdminRoutes(ar)
+		reg.SettingsStrategies().RegisterPublicRoutes(pr)
+		reg.SettingsHandler().RegisterPublicRoutes(pr)
+		reg.SettingsHandler().RegisterAdminRoutes(ar)
 
 		adminTS, publicTS := httptest.NewServer(ar), httptest.NewServer(pr)
 		defer adminTS.Close()
 		defer publicTS.Close()
 
 		for k, tc := range []*http.Request{
-			httpx.MustNewRequest("POST", publicTS.URL+profile.PublicProfileManagementUpdatePath, strings.NewReader(url.Values{"foo": {"bar"}}.Encode()), "application/x-www-form-urlencoded"),
-			httpx.MustNewRequest("POST", publicTS.URL+profile.PublicProfileManagementUpdatePath, strings.NewReader(`{"foo":"bar"}`), "application/json"),
+			httpx.MustNewRequest("POST", publicTS.URL+settings.PublicSettingsProfilePath, strings.NewReader(url.Values{"foo": {"bar"}}.Encode()), "application/x-www-form-urlencoded"),
+			httpx.MustNewRequest("POST", publicTS.URL+settings.PublicSettingsProfilePath, strings.NewReader(`{"foo":"bar"}`), "application/json"),
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				res, err := http.DefaultClient.Do(tc)
@@ -81,24 +81,24 @@ func TestStrategyTraits(t *testing.T) {
 
 	t.Run("daemon=public", func(t *testing.T) {
 		t.Run("description=should fail to post data if CSRF is missing", func(t *testing.T) {
-			f := testhelpers.GetProfileManagementRequestMethodConfig(t, primaryUser, publicTS, profile.StrategyTraitsID)
+			f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyTraitsID)
 			res, err := primaryUser.PostForm(pointerx.StringR(f.Action), url.Values{})
 			require.NoError(t, err)
 			assert.EqualValues(t, 400, res.StatusCode, "should return a 400 error because CSRF token is not set")
 		})
 
-		t.Run("description=should redirect to profile management ui and /profiles/requests?request=... should come back with the right information", func(t *testing.T) {
-			res, err := primaryUser.Get(publicTS.URL + profile.PublicProfileManagementPath)
+		t.Run("description=should redirect to settings management ui and /settings/requests?request=... should come back with the right information", func(t *testing.T) {
+			res, err := primaryUser.Get(publicTS.URL + settings.PublicPath)
 			require.NoError(t, err)
 
 			assert.Equal(t, ui.URL, res.Request.URL.Scheme+"://"+res.Request.URL.Host)
-			assert.Equal(t, "/profile", res.Request.URL.Path, "should end up at the profile URL")
+			assert.Equal(t, "/settings", res.Request.URL.Path, "should end up at the profile URL")
 
 			rid := res.Request.URL.Query().Get("request")
 			require.NotEmpty(t, rid)
 
-			pr, err := publicClient.Common.GetSelfServiceBrowserProfileManagementRequest(
-				common.NewGetSelfServiceBrowserProfileManagementRequestParams().WithHTTPClient(primaryUser).WithRequest(rid),
+			pr, err := publicClient.Common.GetSelfServiceBrowserSettingsRequest(
+				common.NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(primaryUser).WithRequest(rid),
 			)
 			require.NoError(t, err, "%s", rid)
 
@@ -107,12 +107,12 @@ func TestStrategyTraits(t *testing.T) {
 			assert.Equal(t, primaryIdentity.ID.String(), string(pr.Payload.Identity.ID))
 			assert.JSONEq(t, string(primaryIdentity.Traits), x.MustEncodeJSON(t, pr.Payload.Identity.Traits))
 			assert.Equal(t, primaryIdentity.TraitsSchemaID, pointerx.StringR(pr.Payload.Identity.TraitsSchemaID))
-			assert.Equal(t, publicTS.URL+profile.PublicProfileManagementPath, pointerx.StringR(pr.Payload.RequestURL))
+			assert.Equal(t, publicTS.URL+settings.PublicPath, pointerx.StringR(pr.Payload.RequestURL))
 
 			found := false
 
-			require.NotNil(t, pr.Payload.Methods[profile.StrategyTraitsID].Config)
-			f := pr.Payload.Methods[profile.StrategyTraitsID].Config
+			require.NotNil(t, pr.Payload.Methods[settings.StrategyTraitsID].Config)
+			f := pr.Payload.Methods[settings.StrategyTraitsID].Config
 
 			for i := range f.Fields {
 				if pointerx.StringR(f.Fields[i].Name) == form.CSRFTokenName {
@@ -125,7 +125,7 @@ func TestStrategyTraits(t *testing.T) {
 			require.True(t, found)
 
 			assert.EqualValues(t, &models.Form{
-				Action: pointerx.String(publicTS.URL + profile.PublicProfileManagementUpdatePath + "?request=" + rid),
+				Action: pointerx.String(publicTS.URL + settings.PublicSettingsProfilePath + "?request=" + rid),
 				Method: pointerx.String("POST"),
 				Fields: models.FormFields{
 					&models.FormField{Name: pointerx.String("traits.email"), Type: pointerx.String("text"), Value: "john@doe.com", Disabled: true},
@@ -139,12 +139,12 @@ func TestStrategyTraits(t *testing.T) {
 		})
 
 		t.Run("description=should come back with form errors if some profile data is invalid", func(t *testing.T) {
-			config := testhelpers.GetProfileManagementRequestMethodConfig(t, primaryUser, publicTS, profile.StrategyTraitsID)
+			config := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyTraitsID)
 
 			values := testhelpers.SDKFormFieldsToURLValues(config.Fields)
 			values.Set("traits.should_long_string", "too-short")
 			values.Set("traits.stringy", "bazbar") // it should still override new values!
-			actual, _ := testhelpers.ProfileSubmitForm(t, config, primaryUser, values)
+			actual, _ := testhelpers.SettingsSubmitForm(t, config, primaryUser, values)
 
 			assert.NotEmpty(t, gjson.Get(actual, "methods.profile.config.fields.#(name==csrf_token).value").String(), "%s", actual)
 			assert.Equal(t, "too-short", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_long_string).value").String(), "%s", actual)
@@ -157,11 +157,11 @@ func TestStrategyTraits(t *testing.T) {
 			viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1m")
 			defer viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
 
-			config := testhelpers.GetProfileManagementRequestMethodConfig(t, primaryUser, publicTS, profile.StrategyTraitsID)
+			config := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyTraitsID)
 			newEmail := "not-john-doe@mail.com"
 			values := testhelpers.SDKFormFieldsToURLValues(config.Fields)
 			values.Set("traits.email", newEmail)
-			actual, response := testhelpers.ProfileSubmitForm(t, config, primaryUser, values)
+			actual, response := testhelpers.SettingsSubmitForm(t, config, primaryUser, values)
 			assert.True(t, pointerx.BoolR(response.Payload.UpdateSuccessful), "%s", actual)
 
 			assert.Empty(t, gjson.Get(actual, "methods.profile.config.fields.#(name==traits.numby).errors").Value(), "%s", actual)
@@ -174,7 +174,7 @@ func TestStrategyTraits(t *testing.T) {
 		})
 
 		t.Run("description=should come back with form errors if trying to update protected field without sudo mode", func(t *testing.T) {
-			f := testhelpers.GetProfileManagementRequestMethodConfig(t, primaryUser, publicTS, profile.StrategyTraitsID)
+			f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyTraitsID)
 
 			values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
 			values.Set("traits.email", "not-john-doe")
@@ -187,16 +187,16 @@ func TestStrategyTraits(t *testing.T) {
 
 			body, err := ioutil.ReadAll(res.Body)
 			require.NoError(t, err)
-			assert.Contains(t, gjson.Get(string(body), "0.reason").String(), "A field was modified that updates one or more credentials-related settings", "%s", body)
+			assert.Contains(t, gjson.Get(string(body), "0.reason").String(), "session is too old and thus not allowed to update these fields. Please re-authenticate", "%s", body)
 		})
 
 		t.Run("description=should retry with invalid payloads multiple times before succeeding", func(t *testing.T) {
 			t.Run("flow=fail first update", func(t *testing.T) {
-				f := testhelpers.GetProfileManagementRequestMethodConfig(t, primaryUser, publicTS, profile.StrategyTraitsID)
+				f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyTraitsID)
 
 				values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
 				values.Set("traits.should_big_number", "1")
-				actual, response := testhelpers.ProfileSubmitForm(t, f, primaryUser, values)
+				actual, response := testhelpers.SettingsSubmitForm(t, f, primaryUser, values)
 				assert.False(t, pointerx.BoolR(response.Payload.UpdateSuccessful), "%s", actual)
 
 				assert.Equal(t, "1", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_big_number).value").String(), "%s", actual)
@@ -206,13 +206,13 @@ func TestStrategyTraits(t *testing.T) {
 			})
 
 			t.Run("flow=fail second update", func(t *testing.T) {
-				f := testhelpers.GetProfileManagementRequestMethodConfig(t, primaryUser, publicTS, profile.StrategyTraitsID)
+				f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyTraitsID)
 
 				values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
 				values.Del("traits.should_big_number")
 				values.Set("traits.should_long_string", "short")
 				values.Set("traits.numby", "this-is-not-a-number")
-				actual, response := testhelpers.ProfileSubmitForm(t, f, primaryUser, values)
+				actual, response := testhelpers.SettingsSubmitForm(t, f, primaryUser, values)
 				assert.False(t, pointerx.BoolR(response.Payload.UpdateSuccessful), "%s", actual)
 
 				assert.Empty(t, gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_big_number).errors.0.message").String(), "%s", actual)
@@ -228,7 +228,7 @@ func TestStrategyTraits(t *testing.T) {
 			})
 
 			t.Run("flow=succeed with final request", func(t *testing.T) {
-				f := testhelpers.GetProfileManagementRequestMethodConfig(t, primaryUser, publicTS, profile.StrategyTraitsID)
+				f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyTraitsID)
 
 				values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
 				// set email to the one that is in the db as it should not be modified
@@ -236,7 +236,7 @@ func TestStrategyTraits(t *testing.T) {
 				values.Set("traits.numby", "15")
 				values.Set("traits.should_big_number", "9001")
 				values.Set("traits.should_long_string", "this is such a long string, amazing stuff!")
-				actual, response := testhelpers.ProfileSubmitForm(t, f, primaryUser, values)
+				actual, response := testhelpers.SettingsSubmitForm(t, f, primaryUser, values)
 				assert.True(t, pointerx.BoolR(response.Payload.UpdateSuccessful), "%s", actual)
 
 				assert.Empty(t, gjson.Get(actual, "methods.profile.config.fields.#(name==traits.numby).errors").Value(), "%s", actual)
@@ -251,11 +251,11 @@ func TestStrategyTraits(t *testing.T) {
 			})
 
 			t.Run("flow=try another update with invalid data", func(t *testing.T) {
-				f := testhelpers.GetProfileManagementRequestMethodConfig(t, primaryUser, publicTS, profile.StrategyTraitsID)
+				f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyTraitsID)
 
 				values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
 				values.Set("traits.should_long_string", "short")
-				actual, response := testhelpers.ProfileSubmitForm(t, f, primaryUser, values)
+				actual, response := testhelpers.SettingsSubmitForm(t, f, primaryUser, values)
 				assert.False(t, pointerx.BoolR(response.Payload.UpdateSuccessful), "%s", actual)
 			})
 		})
@@ -270,9 +270,9 @@ func TestStrategyTraits(t *testing.T) {
 		rts := httptest.NewServer(router)
 		defer rts.Close()
 
-		viper.Set(configuration.ViperKeySelfServiceProfileManagementAfterConfig+"."+profile.StrategyTraitsID, testhelpers.HookConfigRedirectTo(t, rts.URL+"/return-ts"))
+		viper.Set(configuration.ViperKeySelfServiceSettingsAfterConfig+"."+settings.StrategyTraitsID, testhelpers.HookConfigRedirectTo(t, rts.URL+"/return-ts"))
 
-		f := testhelpers.GetProfileManagementRequestMethodConfig(t, primaryUser, publicTS, profile.StrategyTraitsID)
+		f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyTraitsID)
 
 		values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
 		values.Set("traits.should_big_number", "9001")

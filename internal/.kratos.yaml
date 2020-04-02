@@ -20,7 +20,7 @@ urls:
   default_return_to: http://return-to-3-test.ory.sh/
   mfa_ui: http://test.kratos.ory.sh/mfa
   login_ui: http://test.kratos.ory.sh/login
-  profile_ui: http://test.kratos.ory.sh/profile
+  settings_ui: http://test.kratos.ory.sh/settings
   verify_ui: http://test.kratos.ory.sh/verify
   registration_ui: http://test.kratos.ory.sh/register
   self:

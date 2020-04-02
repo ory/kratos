@@ -40,7 +40,7 @@ type Request struct {
 	// required: true
 	RequestURL string `json:"request_url" db:"request_url"`
 
-	// FormActive, if set, contains the registration method that is being used. It is initially
+	// Active, if set, contains the registration method that is being used. It is initially
 	// not set.
 	//
 	// required: true

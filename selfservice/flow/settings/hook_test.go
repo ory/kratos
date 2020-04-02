@@ -1,4 +1,4 @@
-package profile_test
+package settings_test
 
 import (
 	"context"
@@ -18,7 +18,7 @@ import (
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/selfservice/flow/profile"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/session"
 )
 
@@ -26,7 +26,7 @@ type mockPostHook struct {
 	err error
 }
 
-func (m *mockPostHook) ExecuteProfileManagementPostHook(w http.ResponseWriter, r *http.Request, a *profile.Request, s *session.Session) error {
+func (m *mockPostHook) ExecuteSettingsPostHook(w http.ResponseWriter, r *http.Request, a *settings.Request, s *session.Session) error {
 	return m.err
 }
 
@@ -34,25 +34,25 @@ type loginExecutorDependenciesMock struct {
 	preErr []error
 }
 
-func (m *loginExecutorDependenciesMock) PostLoginHooks(credentialsType identity.CredentialsType) []profile.PostHookExecutor {
-	hooks := make([]profile.PostHookExecutor, len(m.preErr))
+func (m *loginExecutorDependenciesMock) PostLoginHooks(credentialsType identity.CredentialsType) []settings.PostHookExecutor {
+	hooks := make([]settings.PostHookExecutor, len(m.preErr))
 	for k := range hooks {
 		hooks[k] = &mockPostHook{m.preErr[k]}
 	}
 	return hooks
 }
 
-func TestProfileManagementExecutor(t *testing.T) {
-	t.Run("method=PostProfileManagementHook", func(t *testing.T) {
+func TestSettingsExecutor(t *testing.T) {
+	t.Run("method=PostSettingsHook", func(t *testing.T) {
 		for k, tc := range []struct {
-			hooks          []profile.PostHookExecutor
+			hooks          []settings.PostHookExecutor
 			expectSchemaID string
 			expectErr      error
 		}{
 			{hooks: nil},
-			{hooks: []profile.PostHookExecutor{}},
-			{hooks: []profile.PostHookExecutor{&mockPostHook{err: errors.New("err")}}, expectErr: errors.New("err")},
-			{hooks: []profile.PostHookExecutor{
+			{hooks: []settings.PostHookExecutor{}},
+			{hooks: []settings.PostHookExecutor{&mockPostHook{err: errors.New("err")}}, expectErr: errors.New("err")},
+			{hooks: []settings.PostHookExecutor{
 				new(mockPostHook),
 				&mockPostHook{err: errors.New("err")}}, expectErr: errors.New("err"),
 			},
@@ -69,11 +69,11 @@ func TestProfileManagementExecutor(t *testing.T) {
 				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.TODO(), &i))
 
 				sess := &session.Session{Identity: &i, IdentityID: i.ID}
-				pr := profile.NewRequest(time.Hour, &http.Request{URL: new(url.URL)}, sess)
-				require.NoError(t, reg.ProfileRequestPersister().CreateProfileRequest(context.Background(), pr))
+				pr := settings.NewRequest(time.Hour, &http.Request{URL: new(url.URL)}, sess)
+				require.NoError(t, reg.SettingsRequestPersister().CreateSettingsRequest(context.Background(), pr))
 
-				e := profile.NewHookExecutor(reg, conf)
-				err := e.PostProfileManagementHook(nil, &http.Request{}, tc.hooks, pr, sess, &i)
+				e := settings.NewHookExecutor(reg, conf)
+				err := e.PostSettingsHook(nil, &http.Request{}, tc.hooks, pr, sess, &i)
 				if tc.expectErr != nil {
 					require.EqualError(t, err, tc.expectErr.Error())
 					return

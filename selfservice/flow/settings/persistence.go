@@ -1,4 +1,4 @@
-package profile
+package settings
 
 import (
 	"context"
@@ -20,12 +20,12 @@ import (
 
 type (
 	RequestPersister interface {
-		CreateProfileRequest(context.Context, *Request) error
-		GetProfileRequest(ctx context.Context, id uuid.UUID) (*Request, error)
-		UpdateProfileRequest(context.Context, *Request) error
+		CreateSettingsRequest(context.Context, *Request) error
+		GetSettingsRequest(ctx context.Context, id uuid.UUID) (*Request, error)
+		UpdateSettingsRequest(context.Context, *Request) error
 	}
 	RequestPersistenceProvider interface {
-		ProfileRequestPersister() RequestPersister
+		SettingsRequestPersister() RequestPersister
 	}
 )
 
@@ -42,8 +42,8 @@ func TestRequestPersister(p interface {
 	}
 
 	return func(t *testing.T) {
-		t.Run("case=should error when the profile request does not exist", func(t *testing.T) {
-			_, err := p.GetProfileRequest(context.Background(), x.NewUUID())
+		t.Run("case=should error when the settings request does not exist", func(t *testing.T) {
+			_, err := p.GetSettingsRequest(context.Background(), x.NewUUID())
 			require.Error(t, err)
 		})
 
@@ -55,9 +55,9 @@ func TestRequestPersister(p interface {
 			return &r
 		}
 
-		t.Run("case=should create a new profile request", func(t *testing.T) {
+		t.Run("case=should create a new settings request", func(t *testing.T) {
 			r := newRequest(t)
-			err := p.CreateProfileRequest(context.Background(), r)
+			err := p.CreateSettingsRequest(context.Background(), r)
 			require.NoError(t, err, "%#v", err)
 		})
 
@@ -65,15 +65,15 @@ func TestRequestPersister(p interface {
 			var r Request
 			require.NoError(t, faker.FakeData(&r))
 			require.NoError(t, p.CreateIdentity(context.Background(), r.Identity))
-			require.NoError(t, p.CreateProfileRequest(context.Background(), &r))
+			require.NoError(t, p.CreateSettingsRequest(context.Background(), &r))
 		})
 
-		t.Run("case=should create and fetch a profile request", func(t *testing.T) {
+		t.Run("case=should create and fetch a settings request", func(t *testing.T) {
 			expected := newRequest(t)
-			err := p.CreateProfileRequest(context.Background(), expected)
+			err := p.CreateSettingsRequest(context.Background(), expected)
 			require.NoError(t, err)
 
-			actual, err := p.GetProfileRequest(context.Background(), expected.ID)
+			actual, err := p.GetSettingsRequest(context.Background(), expected.ID)
 			require.NoError(t, err)
 
 			factual, _ := json.Marshal(actual.Methods[StrategyTraitsID].Config)
@@ -95,20 +95,20 @@ func TestRequestPersister(p interface {
 			var expected Request
 			require.NoError(t, faker.FakeData(&expected))
 			clearids(&expected)
-			err := p.CreateProfileRequest(context.Background(), &expected)
+			err := p.CreateSettingsRequest(context.Background(), &expected)
 			require.Error(t, err)
 		})
 
-		t.Run("case=should create and update a profile request", func(t *testing.T) {
+		t.Run("case=should create and update a settings request", func(t *testing.T) {
 			expected := newRequest(t)
-			err := p.CreateProfileRequest(context.Background(), expected)
+			err := p.CreateSettingsRequest(context.Background(), expected)
 			require.NoError(t, err)
 
 			expected.Methods[StrategyTraitsID].Config.RequestMethodConfigurator.(*form.HTMLForm).Action = "/new-action"
 			expected.RequestURL = "/new-request-url"
-			require.NoError(t, p.UpdateProfileRequest(context.Background(), expected))
+			require.NoError(t, p.UpdateSettingsRequest(context.Background(), expected))
 
-			actual, err := p.GetProfileRequest(context.Background(), expected.ID)
+			actual, err := p.GetSettingsRequest(context.Background(), expected.ID)
 			require.NoError(t, err)
 
 			assert.Equal(t, "/new-action", actual.Methods[StrategyTraitsID].Config.RequestMethodConfigurator.(*form.HTMLForm).Action)
