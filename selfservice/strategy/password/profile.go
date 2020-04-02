@@ -1,7 +1,9 @@
 package password
 
 import (
+	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"time"
@@ -9,40 +11,62 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
+	"github.com/ory/x/sqlxx"
+
 	"github.com/ory/herodot"
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/urlx"
 
+	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
-	"github.com/ory/kratos/selfservice/flow/profile"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
 const (
-	ProfilePath = "/self-service/browser/flows/profile/strategies/password"
+	SettingsPath = "/self-service/browser/flows/settings/strategies/password"
 )
 
-func (s *Strategy) RegisterProfileManagementRoutes(router *x.RouterPublic) {
-	router.POST(ProfilePath, s.completeProfileManagementFlow)
+var (
+	continuityKeySettings = fmt.Sprintf("%x", sha256.Sum256([]byte(SettingsPath)))
+)
+
+func (s *Strategy) RegisterSettingsRoutes(router *x.RouterPublic) {
+	router.POST(SettingsPath, s.completeSettingsFlow)
 }
 
-func (s *Strategy) ProfileManagementStrategyID() string {
+func (s *Strategy) SettingsStrategyID() string {
 	return string(identity.CredentialsTypePassword)
 }
 
-// swagger:route POST /self-service/browser/flows/profile/strategies/profile public completeSelfServiceBrowserProfileManagementPasswordStrategyFlow
+// swagger:model completeSelfServiceBrowserSettingsPasswordFlowPayload
+type completeSelfServiceBrowserSettingsPasswordFlowPayload struct {
+	// Password is the updated password
+	//
+	// type: string
+	// in: body
+	// required: true
+	Password string `json:"password"`
+
+	// RequestID is request ID.
+	//
+	// in: query
+	RequestID string `json:"request_id"`
+}
+
+// swagger:route POST /self-service/browser/flows/settings/strategies/password public completeSelfServiceBrowserSettingsPasswordStrategyFlow
 //
-// Complete the browser-based profile management flow for the password strategy
+// Complete the browser-based settings flow for the password strategy
 //
-// This endpoint completes a browser-based profile management flow. This is usually achieved by POSTing data to this
+// This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this
 // endpoint.
 //
 // > This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
 //
-// More information can be found at [ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).
+// More information can be found at [ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
 //
 //     Consumes:
 //     - application/json
@@ -53,61 +77,89 @@ func (s *Strategy) ProfileManagementStrategyID() string {
 //     Responses:
 //       302: emptyResponse
 //       500: genericError
-func (s *Strategy) completeProfileManagementFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (s *Strategy) completeSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	ss, err := s.d.SessionManager().FetchFromRequest(r.Context(), w, r)
 	if err != nil {
-		s.handleProfileManagementError(w, r, nil, nil, err)
+		s.handleSettingsError(w, r, nil, nil, err)
 		return
 	}
 
 	rid := r.URL.Query().Get("request")
 	if len(rid) == 0 {
-		s.handleProfileManagementError(w, r, nil, ss.Identity.Traits, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request query parameter is missing.")))
-		return
-	}
-
-	ar, err := s.d.ProfileRequestPersister().GetProfileRequest(r.Context(), x.ParseUUID(rid))
-	if err != nil {
-		s.handleProfileManagementError(w, r, nil, ss.Identity.Traits, err)
-		return
-	}
-
-	if err := ar.Valid(ss); err != nil {
-		s.handleProfileManagementError(w, r, ar, ss.Identity.Traits, err)
-		return
-	}
-
-	if ss.AuthenticatedAt.Add(s.c.SelfServicePrivilegedSessionMaxAge()).Before(time.Now()) {
-		s.handleProfileManagementError(w, r, nil, ss.Identity.Traits, errors.WithStack(herodot.ErrForbidden.WithReasonf("The session is too old and thus not allowed to update the password.")))
+		s.handleSettingsError(w, r, nil, ss.Identity.Traits, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request query parameter is missing.")))
 		return
 	}
 
 	if err := r.ParseForm(); err != nil {
-		s.handleProfileManagementError(w, r, ar, ss.Identity.Traits, errors.WithStack(err))
+		s.handleSettingsError(w, r, nil, ss.Identity.Traits, errors.WithStack(err))
 		return
 	}
 
-	password := r.PostForm.Get("password")
-	if len(password) == 0 {
-		s.handleProfileManagementError(w, r, ar, ss.Identity.Traits, schema.NewRequiredError("#/", "password"))
+	p := completeSelfServiceBrowserSettingsPasswordFlowPayload{
+		RequestID: rid,
+		Password:  r.PostFormValue("password"),
+	}
+	if err := s.d.ContinuityManager().Pause(
+		r.Context(), w, r,
+		continuityKeySettings,
+		continuity.WithPayload(&p),
+		continuity.WithIdentity(ss.Identity),
+		continuity.WithLifespan(time.Minute*15),
+	); err != nil {
+		s.handleSettingsError(w, r, nil, ss.Identity.Traits, errors.WithStack(err))
 		return
 	}
 
-	hpw, err := s.d.PasswordHasher().Generate([]byte(password))
+	s.CompleteSettingsFlow(w, r, ss)
+}
+
+func (s *Strategy) CompleteSettingsFlow(w http.ResponseWriter, r *http.Request, ss *session.Session) {
+	var p completeSelfServiceBrowserSettingsPasswordFlowPayload
+	if _, err := s.d.ContinuityManager().Continue(r.Context(), r,
+		continuityKeySettings,
+		continuity.WithIdentity(ss.Identity),
+		continuity.WithPayload(&p),
+	); err != nil {
+		s.handleSettingsError(w, r, nil, ss.Identity.Traits, err)
+		return
+	}
+
+	ar, err := s.d.SettingsRequestPersister().GetSettingsRequest(r.Context(), x.ParseUUID(p.RequestID))
 	if err != nil {
-		s.handleProfileManagementError(w, r, ar, ss.Identity.Traits, err)
+		s.handleSettingsError(w, r, nil, ss.Identity.Traits, err)
+		return
+	}
+
+	if err := ar.Valid(ss); err != nil {
+		s.handleSettingsError(w, r, ar, ss.Identity.Traits, err)
+		return
+	}
+
+	if ss.AuthenticatedAt.Add(s.c.SelfServicePrivilegedSessionMaxAge()).Before(time.Now()) {
+		s.handleSettingsError(w, r, nil, ss.Identity.Traits, errors.WithStack(settings.ErrRequestNeedsReAuthentication))
+		return
+	}
+
+	if len(p.Password) == 0 {
+		s.handleSettingsError(w, r, ar, ss.Identity.Traits, schema.NewRequiredError("#/", "password"))
+		return
+	}
+
+	hpw, err := s.d.PasswordHasher().Generate([]byte(p.Password))
+	if err != nil {
+		s.handleSettingsError(w, r, ar, ss.Identity.Traits, err)
 		return
 	}
 
 	co, err := json.Marshal(&CredentialsConfig{HashedPassword: string(hpw)})
 	if err != nil {
-		s.handleProfileManagementError(w, r, ar, ss.Identity.Traits, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err)))
+		s.handleSettingsError(w, r, ar, ss.Identity.Traits, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err)))
 		return
 	}
 
 	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), ss.Identity.ID)
 	if err != nil {
-		s.handleProfileManagementError(w, r, ar, ss.Identity.Traits, err)
+		s.handleSettingsError(w, r, ar, ss.Identity.Traits, err)
 		return
 	}
 
@@ -120,33 +172,35 @@ func (s *Strategy) completeProfileManagementFlow(w http.ResponseWriter, r *http.
 
 	c.Config = co
 	i.SetCredentials(s.ID(), *c)
-	if err := s.validateCredentials(i, password); err != nil {
-		s.handleProfileManagementError(w, r, ar, ss.Identity.Traits, err)
+	if err := s.validateCredentials(i, p.Password); err != nil {
+		s.handleSettingsError(w, r, ar, ss.Identity.Traits, err)
 		return
 	}
 
-	if err := s.d.ProfileManagementExecutor().PostProfileManagementHook(w, r,
-		s.d.PostProfileManagementHooks(profile.StrategyTraitsID),
+	if err := s.d.SettingsExecutor().PostSettingsHook(w, r,
+		s.d.PostSettingsHooks(settings.StrategyTraitsID),
 		ar, ss, i,
-	); errorsx.Cause(err) == profile.ErrHookAbortRequest {
+	); errorsx.Cause(err) == settings.ErrHookAbortRequest {
 		return
 	} else if err != nil {
-		s.handleProfileManagementError(w, r, ar, ss.Identity.Traits, err)
+		s.handleSettingsError(w, r, ar, ss.Identity.Traits, err)
 		return
 	}
 
 	if len(w.Header().Get("Location")) == 0 {
 		http.Redirect(w, r,
-			urlx.CopyWithQuery(s.c.ProfileURL(), url.Values{"request": {ar.ID.String()}}).String(),
+			urlx.CopyWithQuery(s.c.SettingsURL(), url.Values{"request": {ar.ID.String()}}).String(),
 			http.StatusFound,
 		)
 	}
 }
 
-func (s *Strategy) PopulateProfileManagementMethod(r *http.Request, ss *session.Session, pr *profile.Request) error {
+func (s *Strategy) PopulateSettingsMethod(r *http.Request, ss *session.Session, pr *settings.Request) error {
+	disabled := ss.AuthenticatedAt.Add(s.c.SelfServicePrivilegedSessionMaxAge()).Before(time.Now())
+
 	f := &form.HTMLForm{
 		Action: urlx.CopyWithQuery(
-			urlx.AppendPaths(s.c.SelfPublicURL(), ProfilePath),
+			urlx.AppendPaths(s.c.SelfPublicURL(), SettingsPath),
 			url.Values{"request": {pr.ID.String()}},
 		).String(),
 		Method: "POST",
@@ -155,22 +209,25 @@ func (s *Strategy) PopulateProfileManagementMethod(r *http.Request, ss *session.
 				Name:     "password",
 				Type:     "password",
 				Required: true,
+				Disabled: disabled,
 			},
 		},
 	}
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 
-	pr.Methods[string(s.ID())] = &profile.RequestMethod{
+	pr.Methods[string(s.ID())] = &settings.RequestMethod{
 		Method: string(s.ID()),
-		Config: &profile.RequestMethodConfig{RequestMethodConfigurator: &RequestMethod{HTMLForm: f}},
+		Config: &settings.RequestMethodConfig{RequestMethodConfigurator: &RequestMethod{HTMLForm: f}},
 	}
+	pr.Active = sqlxx.NullString(s.ID())
 	return nil
 }
 
-func (s *Strategy) handleProfileManagementError(w http.ResponseWriter, r *http.Request, rr *profile.Request, traits identity.Traits, err error) {
+func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, rr *settings.Request, traits identity.Traits, err error) {
 	if rr != nil {
-		rr.Methods[s.ProfileManagementStrategyID()].Config.Reset()
+		rr.Methods[s.SettingsStrategyID()].Config.Reset()
+		rr.Methods[s.SettingsStrategyID()].Config.SetCSRF(s.d.GenerateCSRFToken(r))
 	}
 
-	s.d.ProfileRequestRequestErrorHandler().HandleProfileManagementError(w, r, rr, err, string(identity.CredentialsTypePassword))
+	s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, rr, err, string(identity.CredentialsTypePassword))
 }

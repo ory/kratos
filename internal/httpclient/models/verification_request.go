@@ -21,7 +21,7 @@ import (
 // swagger:model verificationRequest
 type VerificationRequest struct {
 
-	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile,
+	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address,
 	// a new request has to be initiated.
 	// Format: date-time
 	ExpiresAt strfmt.DateTime `json:"expires_at,omitempty"`

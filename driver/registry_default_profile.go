@@ -1,15 +1,13 @@
 package driver
 
-import (
-	"github.com/ory/kratos/selfservice/flow/profile"
-)
+import "github.com/ory/kratos/selfservice/flow/settings"
 
-func (m *RegistryDefault) PostProfileManagementHooks(credentialsType string) []profile.PostHookExecutor {
-	a := m.getHooks(credentialsType, m.c.SelfServiceProfileManagementAfterHooks(credentialsType))
+func (m *RegistryDefault) PostSettingsHooks(credentialsType string) []settings.PostHookExecutor {
+	a := m.getHooks(credentialsType, m.c.SelfServiceSettingsAfterHooks(credentialsType))
 
-	var b []profile.PostHookExecutor
+	var b []settings.PostHookExecutor
 	for _, v := range a {
-		if hook, ok := v.(profile.PostHookExecutor); ok {
+		if hook, ok := v.(settings.PostHookExecutor); ok {
 			b = append(b, hook)
 		}
 	}
@@ -17,9 +15,9 @@ func (m *RegistryDefault) PostProfileManagementHooks(credentialsType string) []p
 	return b
 }
 
-func (m *RegistryDefault) ProfileManagementExecutor() *profile.HookExecutor {
-	if m.selfserviceProfileManagementExecutor == nil {
-		m.selfserviceProfileManagementExecutor = profile.NewHookExecutor(m, m.c)
+func (m *RegistryDefault) SettingsExecutor() *settings.HookExecutor {
+	if m.selfserviceSettingsExecutor == nil {
+		m.selfserviceSettingsExecutor = settings.NewHookExecutor(m, m.c)
 	}
-	return m.selfserviceProfileManagementExecutor
+	return m.selfserviceSettingsExecutor
 }

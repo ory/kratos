@@ -31,9 +31,9 @@ type ClientService interface {
 
 	GetSelfServiceBrowserLoginRequest(params *GetSelfServiceBrowserLoginRequestParams) (*GetSelfServiceBrowserLoginRequestOK, error)
 
-	GetSelfServiceBrowserProfileManagementRequest(params *GetSelfServiceBrowserProfileManagementRequestParams) (*GetSelfServiceBrowserProfileManagementRequestOK, error)
-
 	GetSelfServiceBrowserRegistrationRequest(params *GetSelfServiceBrowserRegistrationRequestParams) (*GetSelfServiceBrowserRegistrationRequestOK, error)
+
+	GetSelfServiceBrowserSettingsRequest(params *GetSelfServiceBrowserSettingsRequestParams) (*GetSelfServiceBrowserSettingsRequestOK, error)
 
 	GetSelfServiceError(params *GetSelfServiceErrorParams) (*GetSelfServiceErrorOK, error)
 
@@ -119,46 +119,6 @@ func (a *Client) GetSelfServiceBrowserLoginRequest(params *GetSelfServiceBrowser
 }
 
 /*
-  GetSelfServiceBrowserProfileManagementRequest gets the request context of browser based profile management flows
-
-  When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required
-for checking the auth session. To prevent scanning attacks, the public endpoint does not return 404 status codes
-but instead 403 or 500.
-
-More information can be found at [ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).
-*/
-func (a *Client) GetSelfServiceBrowserProfileManagementRequest(params *GetSelfServiceBrowserProfileManagementRequestParams) (*GetSelfServiceBrowserProfileManagementRequestOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewGetSelfServiceBrowserProfileManagementRequestParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "getSelfServiceBrowserProfileManagementRequest",
-		Method:             "GET",
-		PathPattern:        "/self-service/browser/flows/requests/profile",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
-		Schemes:            []string{"http", "https"},
-		Params:             params,
-		Reader:             &GetSelfServiceBrowserProfileManagementRequestReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*GetSelfServiceBrowserProfileManagementRequestOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for getSelfServiceBrowserProfileManagementRequest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
   GetSelfServiceBrowserRegistrationRequest gets the request context of browser based registration user flows
 
   This endpoint returns a registration request's context with, for example, error details and
@@ -197,6 +157,46 @@ func (a *Client) GetSelfServiceBrowserRegistrationRequest(params *GetSelfService
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for getSelfServiceBrowserRegistrationRequest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  GetSelfServiceBrowserSettingsRequest gets the request context of browser based settings flows
+
+  When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required
+for checking the auth session. To prevent scanning attacks, the public endpoint does not return 404 status codes
+but instead 403 or 500.
+
+More information can be found at [ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
+*/
+func (a *Client) GetSelfServiceBrowserSettingsRequest(params *GetSelfServiceBrowserSettingsRequestParams) (*GetSelfServiceBrowserSettingsRequestOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetSelfServiceBrowserSettingsRequestParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "getSelfServiceBrowserSettingsRequest",
+		Method:             "GET",
+		PathPattern:        "/self-service/browser/flows/requests/settings",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &GetSelfServiceBrowserSettingsRequestReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetSelfServiceBrowserSettingsRequestOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getSelfServiceBrowserSettingsRequest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

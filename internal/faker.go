@@ -12,8 +12,8 @@ import (
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/login"
-	"github.com/ory/kratos/selfservice/flow/profile"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/x"
 )
@@ -91,16 +91,16 @@ func RegisterFakes() {
 		panic(err)
 	}
 
-	if err := faker.AddProvider("profile_management_request_methods", func(v reflect.Value) (interface{}, error) {
-		var methods = make(map[string]*profile.RequestMethod)
-		for _, ct := range []string{profile.StrategyTraitsID, string(identity.CredentialsTypePassword), string(identity.CredentialsTypeOIDC)} {
+	if err := faker.AddProvider("settings_request_methods", func(v reflect.Value) (interface{}, error) {
+		var methods = make(map[string]*settings.RequestMethod)
+		for _, ct := range []string{settings.StrategyTraitsID, string(identity.CredentialsTypePassword), string(identity.CredentialsTypeOIDC)} {
 			var f form.HTMLForm
 			if err := faker.FakeData(&f); err != nil {
 				return nil, err
 			}
-			methods[ct] = &profile.RequestMethod{
+			methods[ct] = &settings.RequestMethod{
 				Method: ct,
-				Config: &profile.RequestMethodConfig{RequestMethodConfigurator: &f},
+				Config: &settings.RequestMethodConfig{RequestMethodConfigurator: &f},
 			}
 		}
 		return methods, nil

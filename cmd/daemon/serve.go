@@ -23,8 +23,8 @@ import (
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/logout"
-	"github.com/ory/kratos/selfservice/flow/profile"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verify"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/selfservice/strategy/password"
@@ -44,9 +44,9 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 	r.LoginHandler().RegisterPublicRoutes(router)
 	r.RegistrationHandler().RegisterPublicRoutes(router)
 	r.LogoutHandler().RegisterPublicRoutes(router)
-	r.ProfileManagementHandler().RegisterPublicRoutes(router)
+	r.SettingsHandler().RegisterPublicRoutes(router)
 	r.LoginStrategies().RegisterPublicRoutes(router)
-	r.ProfileManagementStrategies().RegisterPublicRoutes(router)
+	r.SettingsStrategies().RegisterPublicRoutes(router)
 	r.RegistrationStrategies().RegisterPublicRoutes(router)
 	r.SessionHandler().RegisterPublicRoutes(router)
 	r.SelfServiceErrorHandler().RegisterPublicRoutes(router)
@@ -93,7 +93,7 @@ func serveAdmin(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []
 	r.LoginHandler().RegisterAdminRoutes(router)
 	r.SchemaHandler().RegisterAdminRoutes(router)
 	r.VerificationHandler().RegisterAdminRoutes(router)
-	r.ProfileManagementHandler().RegisterAdminRoutes(router)
+	r.SettingsHandler().RegisterAdminRoutes(router)
 	r.IdentityHandler().RegisterAdminRoutes(router)
 	r.SessionHandler().RegisterAdminRoutes(router)
 	r.HealthHandler().SetRoutes(router.Router, true)
@@ -148,10 +148,10 @@ func sqa(cmd *cobra.Command, d driver.Driver) *metricsx.Service {
 				registration.BrowserRegistrationRequestsPath,
 				session.SessionsWhoamiPath,
 				identity.IdentitiesPath,
-				profile.PublicProfileManagementPath,
-				profile.BrowserProfileRequestPath,
-				profile.PublicProfileManagementPath,
-				profile.PublicProfileManagementUpdatePath,
+				settings.PublicSettingsProfilePath,
+				settings.PublicPath,
+				settings.PublicRequestPath,
+				settings.PublicSettingsProfilePath,
 				verify.PublicVerificationCompletePath,
 				strings.ReplaceAll(strings.ReplaceAll(verify.PublicVerificationConfirmPath, ":via", "email"), ":code", ""),
 				strings.ReplaceAll(verify.PublicVerificationInitPath, ":via", "email"),

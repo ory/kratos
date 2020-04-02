@@ -78,7 +78,7 @@ func TestPersister(p interface {
 				assert.EqualValues(t, expected.CSRFToken, actual.CSRFToken)
 			})
 
-			t.Run("case=should create and update a profile request", func(t *testing.T) {
+			t.Run("case=should create and update a verify request", func(t *testing.T) {
 				expected := newRequest(t)
 				expected.Form = form.NewHTMLForm("some/action")
 				err := p.CreateVerifyRequest(context.Background(), expected)

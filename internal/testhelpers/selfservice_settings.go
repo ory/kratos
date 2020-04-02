@@ -24,7 +24,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal/httpclient/client/common"
 	"github.com/ory/kratos/internal/httpclient/models"
-	"github.com/ory/kratos/selfservice/flow/profile"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
@@ -46,14 +46,15 @@ func HookConfigRedirectTo(t *testing.T, u string) (m []map[string]interface{}) {
 	return m
 }
 
-func GetProfileManagementRequest(t *testing.T, primaryUser *http.Client, ts *httptest.Server) *common.GetSelfServiceBrowserProfileManagementRequestOK {
+func GetSettingsRequest(t *testing.T, primaryUser *http.Client, ts *httptest.Server) *common.GetSelfServiceBrowserSettingsRequestOK {
 	publicClient := NewSDKClient(ts)
 
-	res, err := primaryUser.Get(ts.URL + profile.PublicProfileManagementPath)
+	res, err := primaryUser.Get(ts.URL + settings.PublicPath)
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 
-	rs, err := publicClient.Common.GetSelfServiceBrowserProfileManagementRequest(
-		common.NewGetSelfServiceBrowserProfileManagementRequestParams().WithHTTPClient(primaryUser).
+	rs, err := publicClient.Common.GetSelfServiceBrowserSettingsRequest(
+		common.NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(primaryUser).
 			WithRequest(res.Request.URL.Query().Get("request")),
 	)
 	require.NoError(t, err)
@@ -61,8 +62,8 @@ func GetProfileManagementRequest(t *testing.T, primaryUser *http.Client, ts *htt
 	return rs
 }
 
-func GetProfileManagementRequestMethodConfig(t *testing.T, primaryUser *http.Client, ts *httptest.Server, id string) *models.RequestMethodConfig {
-	rs := GetProfileManagementRequest(t, primaryUser, ts)
+func GetSettingsMethodConfig(t *testing.T, primaryUser *http.Client, ts *httptest.Server, id string) *models.RequestMethodConfig {
+	rs := GetSettingsRequest(t, primaryUser, ts)
 
 	require.NotEmpty(t, rs.Payload.Methods[id])
 	require.NotEmpty(t, rs.Payload.Methods[id].Config)
@@ -71,9 +72,9 @@ func GetProfileManagementRequestMethodConfig(t *testing.T, primaryUser *http.Cli
 	return rs.Payload.Methods[id].Config
 }
 
-func NewProfileUITestServer(t *testing.T) *httptest.Server {
+func NewSettingsUITestServer(t *testing.T) *httptest.Server {
 	router := httprouter.New()
-	router.GET("/profile", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	router.GET("/settings", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		w.WriteHeader(http.StatusNoContent)
 	})
 	router.GET("/login", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -82,18 +83,18 @@ func NewProfileUITestServer(t *testing.T) *httptest.Server {
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)
 
-	viper.Set(configuration.ViperKeyURLsProfile, ts.URL+"/profile")
+	viper.Set(configuration.ViperKeyURLsProfile, ts.URL+"/settings")
 	viper.Set(configuration.ViperKeyURLsLogin, ts.URL+"/login")
 
 	return ts
 }
 
-func NewProfileAPIServer(t *testing.T, reg *driver.RegistryDefault, ids []identity.Identity) (*httptest.Server, *httptest.Server) {
+func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, ids []identity.Identity) (*httptest.Server, *httptest.Server) {
 	public, admin := x.NewRouterPublic(), x.NewRouterAdmin()
-	reg.ProfileManagementHandler().RegisterAdminRoutes(admin)
+	reg.SettingsHandler().RegisterAdminRoutes(admin)
 
-	reg.ProfileManagementHandler().RegisterPublicRoutes(public)
-	reg.ProfileManagementStrategies().RegisterPublicRoutes(public)
+	reg.SettingsHandler().RegisterPublicRoutes(public)
+	reg.SettingsStrategies().RegisterPublicRoutes(public)
 
 	n := negroni.Classic()
 	n.UseHandler(public)
@@ -115,12 +116,12 @@ func NewProfileAPIServer(t *testing.T, reg *driver.RegistryDefault, ids []identi
 	return tsp, tsa
 }
 
-func ProfileSubmitForm(
+func SettingsSubmitForm(
 	t *testing.T,
 	f *models.RequestMethodConfig,
 	hc *http.Client,
 	values url.Values,
-) (string, *common.GetSelfServiceBrowserProfileManagementRequestOK) {
+) (string, *common.GetSelfServiceBrowserSettingsRequestOK) {
 	require.NotEmpty(t, f.Action)
 
 	res, err := hc.PostForm(pointerx.StringR(f.Action), values)
@@ -131,10 +132,10 @@ func ProfileSubmitForm(
 	require.NoError(t, err)
 	assert.EqualValues(t, http.StatusNoContent, res.StatusCode, "%s", b)
 
-	assert.Equal(t, viper.GetString(configuration.ViperKeyURLsProfile), res.Request.URL.Scheme+"://"+res.Request.URL.Host+res.Request.URL.Path, "should end up at the profile URL, used: %s", pointerx.StringR(f.Action))
+	assert.Equal(t, viper.GetString(configuration.ViperKeyURLsProfile), res.Request.URL.Scheme+"://"+res.Request.URL.Host+res.Request.URL.Path, "should end up at the settings URL, used: %s", pointerx.StringR(f.Action))
 
-	rs, err := NewSDKClientFromURL(viper.GetString(configuration.ViperKeyURLsSelfPublic)).Common.GetSelfServiceBrowserProfileManagementRequest(
-		common.NewGetSelfServiceBrowserProfileManagementRequestParams().WithHTTPClient(hc).
+	rs, err := NewSDKClientFromURL(viper.GetString(configuration.ViperKeyURLsSelfPublic)).Common.GetSelfServiceBrowserSettingsRequest(
+		common.NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(hc).
 			WithRequest(res.Request.URL.Query().Get("request")),
 	)
 	require.NoError(t, err)

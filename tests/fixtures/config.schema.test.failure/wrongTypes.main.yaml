@@ -48,7 +48,7 @@ urls:
     admin: 1
   mfa_ui: 1
   login_ui: 1
-  profile_ui: 1
+  settings_ui: 1
   default_return_to: 1
   registration_ui: 1
   error_ui: 1

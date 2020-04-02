@@ -7,8 +7,8 @@ import (
 	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/selfservice/flow/login"
-	"github.com/ory/kratos/selfservice/flow/profile"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
@@ -40,7 +40,7 @@ func (e *Redirector) ExecuteRegistrationPostHook(w http.ResponseWriter, r *http.
 	return e.do(w, r, sr.RequestURL)
 }
 
-func (e *Redirector) ExecuteProfileManagementPostHook(w http.ResponseWriter, r *http.Request, pr *profile.Request, _ *session.Session) error {
+func (e *Redirector) ExecuteSettingsPostHook(w http.ResponseWriter, r *http.Request, pr *settings.Request, _ *session.Session) error {
 	return e.do(w, r, pr.RequestURL)
 }
 

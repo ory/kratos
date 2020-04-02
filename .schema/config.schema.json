@@ -121,6 +121,17 @@
         "schema_url"
       ]
     },
+    "selfServiceAfterSettingsHooks": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/selfServiceRedirectHook"
+          }
+        ]
+      },
+      "uniqueItems": true
+    },
     "selfServiceAfterLoginHooks": {
       "type": "array",
       "items": {
@@ -154,6 +165,18 @@
         ]
       },
       "uniqueItems": true
+    },
+    "selfServiceAfterSettings": {
+      "type": "object",
+      "properties": {
+        "password": {
+          "$ref": "#/definitions/selfServiceAfterSettingsHooks"
+        },
+        "profile": {
+          "$ref": "#/definitions/selfServiceAfterSettingsHooks"
+        }
+      },
+      "additionalItems": false
     },
     "selfServiceAfterLogin": {
       "type": "object",
@@ -253,8 +276,9 @@
             "redirect_to"
           ]
         },
-        "profile": {
+        "settings": {
           "type": "object",
+          "additionalItems": false,
           "properties": {
             "request_lifespan": {
               "type": "string",
@@ -265,6 +289,9 @@
               "type": "string",
               "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
               "default": "1h"
+            },
+            "after": {
+              "$ref": "#/definitions/selfServiceAfterSettings"
             }
           }
         },
@@ -438,7 +465,7 @@
           "type": "string",
           "format": "uri"
         },
-        "profile_ui": {
+        "settings_ui": {
           "type": "string",
           "format": "uri"
         },
@@ -470,7 +497,7 @@
         }
       },
       "required": [
-        "profile_ui",
+        "settings_ui",
         "mfa_ui",
         "login_ui",
         "registration_ui",

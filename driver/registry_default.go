@@ -6,7 +6,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verify"
 	"github.com/ory/kratos/x"
 
@@ -29,7 +31,6 @@ import (
 	"github.com/ory/kratos/persistence/sql"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/logout"
-	"github.com/ory/kratos/selfservice/flow/profile"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 
@@ -66,6 +67,8 @@ type RegistryDefault struct {
 	identityValidator *identity.Validator
 	identityManager   *identity.Manager
 
+	continuityManager continuity.Manager
+
 	schemaHandler *schema.Handler
 
 	sessionHandler *session.Handler
@@ -87,9 +90,9 @@ type RegistryDefault struct {
 	selfserviceLoginHandler             *login.Handler
 	selfserviceLoginRequestErrorHandler *login.ErrorHandler
 
-	selfserviceProfileManagementHandler          *profile.Handler
-	selfserviceProfileRequestRequestErrorHandler *profile.ErrorHandler
-	selfserviceProfileManagementExecutor         *profile.HookExecutor
+	selfserviceSettingsHandler      *settings.Handler
+	selfserviceSettingsErrorHandler *settings.ErrorHandler
+	selfserviceSettingsExecutor     *settings.HookExecutor
 
 	selfserviceVerifyErrorHandler *verify.ErrorHandler
 	selfserviceVerifyManager      *identity.Manager
@@ -101,7 +104,7 @@ type RegistryDefault struct {
 	selfserviceStrategies  []interface{}
 	loginStrategies        []login.Strategy
 	registrationStrategies []registration.Strategy
-	profileStrategies      []profile.Strategy
+	profileStrategies      []settings.Strategy
 
 	buildVersion string
 	buildHash    string
@@ -138,18 +141,18 @@ func (m *RegistryDefault) WithLogger(l logrus.FieldLogger) Registry {
 	return m
 }
 
-func (m *RegistryDefault) ProfileManagementHandler() *profile.Handler {
-	if m.selfserviceProfileManagementHandler == nil {
-		m.selfserviceProfileManagementHandler = profile.NewHandler(m, m.c)
+func (m *RegistryDefault) SettingsHandler() *settings.Handler {
+	if m.selfserviceSettingsHandler == nil {
+		m.selfserviceSettingsHandler = settings.NewHandler(m, m.c)
 	}
-	return m.selfserviceProfileManagementHandler
+	return m.selfserviceSettingsHandler
 }
 
-func (m *RegistryDefault) ProfileRequestRequestErrorHandler() *profile.ErrorHandler {
-	if m.selfserviceProfileRequestRequestErrorHandler == nil {
-		m.selfserviceProfileRequestRequestErrorHandler = profile.NewErrorHandler(m, m.c)
+func (m *RegistryDefault) SettingsRequestErrorHandler() *settings.ErrorHandler {
+	if m.selfserviceSettingsErrorHandler == nil {
+		m.selfserviceSettingsErrorHandler = settings.NewErrorHandler(m, m.c)
 	}
-	return m.selfserviceProfileRequestRequestErrorHandler
+	return m.selfserviceSettingsErrorHandler
 }
 
 func (m *RegistryDefault) LogoutHandler() *logout.Handler {
@@ -185,17 +188,17 @@ func (m *RegistryDefault) selfServiceStrategies() []interface{} {
 		m.selfserviceStrategies = []interface{}{
 			password2.NewStrategy(m, m.c),
 			oidc.NewStrategy(m, m.c),
-			profile.NewStrategyTraits(m, m.c),
+			settings.NewStrategyTraits(m, m.c),
 		}
 	}
 
 	return m.selfserviceStrategies
 }
 
-func (m *RegistryDefault) ProfileManagementStrategies() profile.Strategies {
+func (m *RegistryDefault) SettingsStrategies() settings.Strategies {
 	if len(m.profileStrategies) == 0 {
 		for _, strategy := range m.selfServiceStrategies() {
-			if s, ok := strategy.(profile.Strategy); ok {
+			if s, ok := strategy.(settings.Strategy); ok {
 				m.profileStrategies = append(m.profileStrategies, s)
 			}
 		}
@@ -395,6 +398,17 @@ func (m *RegistryDefault) Courier() *courier.Courier {
 	return m.courier
 }
 
+func (m *RegistryDefault) ContinuityManager() continuity.Manager {
+	if m.continuityManager == nil {
+		m.continuityManager = continuity.NewManagerCookie(m)
+	}
+	return m.continuityManager
+}
+
+func (m *RegistryDefault) ContinuityPersister() continuity.Persister {
+	return m.persister
+}
+
 func (m *RegistryDefault) IdentityPool() identity.Pool {
 	return m.persister
 }
@@ -411,7 +425,7 @@ func (m *RegistryDefault) LoginRequestPersister() login.RequestPersister {
 	return m.persister
 }
 
-func (m *RegistryDefault) ProfileRequestPersister() profile.RequestPersister {
+func (m *RegistryDefault) SettingsRequestPersister() settings.RequestPersister {
 	return m.persister
 }
 

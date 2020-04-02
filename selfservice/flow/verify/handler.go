@@ -83,8 +83,8 @@ type initializeSelfServiceVerificationFlowParameters struct {
 //
 // Initialize browser-based verification flow
 //
-// This endpoint initializes a browser-based profile management flow. Once initialized, the browser will be redirected to
-// `urls.profile_ui` with the request ID set as a query parameter. If no valid user session exists, a login
+// This endpoint initializes a browser-based verification flow. Once initialized, the browser will be redirected to
+// `urls.settings_ui` with the request ID set as a query parameter. If no valid user session exists, a login
 // flow will be initialized.
 //
 // > This endpoint is NOT INTENDED for API clients and only works
@@ -105,7 +105,7 @@ func (h *Handler) init(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	}
 
 	a := NewRequest(
-		h.c.SelfServiceProfileRequestLifespan(), r, via,
+		h.c.SelfServiceSettingsRequestLifespan(), r, via,
 		urlx.AppendPaths(h.c.SelfPublicURL(), strings.ReplaceAll(PublicVerificationCompletePath, ":via", string(via))), h.d.GenerateCSRFToken,
 	)
 
@@ -205,13 +205,13 @@ type completeSelfServiceBrowserVerificationFlowParameters struct {
 
 // swagger:route POST /self-service/browser/flows/verification/{via}/complete public completeSelfServiceBrowserVerificationFlow
 //
-// Complete the browser-based profile management flows
+// Complete the browser-based verification flows
 //
-// This endpoint completes a browser-based profile management flow. This is usually achieved by POSTing data to this
+// This endpoint completes a browser-based verification flow. This is usually achieved by POSTing data to this
 // endpoint.
 //
-// If the provided profile data is valid against the Identity's Traits JSON Schema, the data will be updated and
-// the browser redirected to `url.profile_ui` for further steps.
+// If the provided data is valid against the Identity's Traits JSON Schema, the data will be updated and
+// the browser redirected to `url.settings_ui` for further steps.
 //
 // > This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
 //
@@ -338,7 +338,7 @@ func (h *Handler) verify(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	if err := h.d.PrivilegedIdentityPool().VerifyAddress(r.Context(), ps.ByName("code")); err != nil {
 		if errorsx.Cause(err) == sqlcon.ErrNoRows {
 			a := NewRequest(
-				h.c.SelfServiceProfileRequestLifespan(), r, via,
+				h.c.SelfServiceSettingsRequestLifespan(), r, via,
 				urlx.AppendPaths(h.c.SelfPublicURL(), strings.ReplaceAll(PublicVerificationCompletePath, ":via", string(via))), h.d.GenerateCSRFToken,
 			)
 			a.Form.AddError(&form.Error{Message: "The verification code has expired or was otherwise invalid. Please request another code."})

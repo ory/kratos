@@ -10,7 +10,10 @@ import (
 // SessionPersistValues adds values to the session store and persists the changes.
 func SessionPersistValues(w http.ResponseWriter, r *http.Request, s sessions.Store, id string, values map[string]interface{}) error {
 	// The error does not matter because in the worst case we're re-writing the session cookie.
-	cookie, _ := s.Get(r, id)
+	cookie, err := s.Get(r, id)
+	if err != nil {
+		cookie = sessions.NewSession(s, id)
+	}
 
 	for k, v := range values {
 		cookie.Values[k] = v

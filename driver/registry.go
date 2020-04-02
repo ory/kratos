@@ -9,8 +9,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
+	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verify"
 
 	"github.com/ory/x/healthx"
@@ -18,7 +20,6 @@ import (
 	"github.com/ory/kratos/persistence"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/logout"
-	"github.com/ory/kratos/selfservice/flow/profile"
 	"github.com/ory/kratos/selfservice/flow/registration"
 
 	"github.com/ory/kratos/x"
@@ -55,6 +56,9 @@ type Registry interface {
 	x.WriterProvider
 	x.LoggingProvider
 
+	continuity.ManagementProvider
+	continuity.PersistenceProvider
+
 	courier.Provider
 
 	persistence.Provider
@@ -78,10 +82,10 @@ type Registry interface {
 	session.ManagementProvider
 	session.PersistenceProvider
 
-	profile.HandlerProvider
-	profile.ErrorHandlerProvider
-	profile.RequestPersistenceProvider
-	profile.StrategyProvider
+	settings.HandlerProvider
+	settings.ErrorHandlerProvider
+	settings.RequestPersistenceProvider
+	settings.StrategyProvider
 
 	login.RequestPersistenceProvider
 	login.ErrorHandlerProvider

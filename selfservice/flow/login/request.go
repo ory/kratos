@@ -44,7 +44,7 @@ type Request struct {
 	// required: true
 	RequestURL string `json:"request_url" db:"request_url"`
 
-	// FormActive, if set, contains the login method that is being used. It is initially
+	// Active, if set, contains the login method that is being used. It is initially
 	// not set.
 	Active identity.CredentialsType `json:"active,omitempty" db:"active_method"`
 

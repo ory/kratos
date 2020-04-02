@@ -402,60 +402,6 @@
         }
       }
     },
-    "/self-service/browser/flows/profile": {
-      "get": {
-        "description": "This endpoint initializes a browser-based profile management flow. Once initialized, the browser will be redirected to\n`urls.profile_ui` with the request ID set as a query parameter. If no valid user session exists, a login\nflow will be initialized.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).",
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "tags": [
-          "public"
-        ],
-        "summary": "Initialize browser-based profile management flow",
-        "operationId": "initializeSelfServiceProfileManagementFlow",
-        "responses": {
-          "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
-          },
-          "500": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          }
-        }
-      }
-    },
-    "/self-service/browser/flows/profile/strategies/profile": {
-      "post": {
-        "description": "This endpoint completes a browser-based profile management flow. This is usually achieved by POSTing data to this\nendpoint.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).",
-        "consumes": [
-          "application/json",
-          "application/x-www-form-urlencoded"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "tags": [
-          "public"
-        ],
-        "summary": "Complete the browser-based profile management flow for the password strategy",
-        "operationId": "completeSelfServiceBrowserProfileManagementPasswordStrategyFlow",
-        "responses": {
-          "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
-          },
-          "500": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          }
-        }
-      }
-    },
     "/self-service/browser/flows/registration": {
       "get": {
         "description": "This endpoint initializes a browser-based user registration flow. Once initialized, the browser will be redirected to\n`urls.registration_ui` with the request ID set as a query parameter. If a valid user session exists already, the browser will be\nredirected to `urls.default_redirect_url`.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
@@ -512,66 +458,6 @@
             "description": "loginRequest",
             "schema": {
               "$ref": "#/definitions/loginRequest"
-            }
-          },
-          "403": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          },
-          "404": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          },
-          "410": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          },
-          "500": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          }
-        }
-      }
-    },
-    "/self-service/browser/flows/requests/profile": {
-      "get": {
-        "description": "When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required\nfor checking the auth session. To prevent scanning attacks, the public endpoint does not return 404 status codes\nbut instead 403 or 500.\n\nMore information can be found at [ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).",
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "tags": [
-          "common",
-          "public",
-          "admin"
-        ],
-        "summary": "Get the request context of browser-based profile management flows",
-        "operationId": "getSelfServiceBrowserProfileManagementRequest",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "Request is the Login Request ID\n\nThe value for this parameter comes from `request` URL Query parameter sent to your\napplication (e.g. `/login?request=abcde`).",
-            "name": "request",
-            "in": "query",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "profileManagementRequest",
-            "schema": {
-              "$ref": "#/definitions/profileManagementRequest"
             }
           },
           "403": {
@@ -661,6 +547,66 @@
         }
       }
     },
+    "/self-service/browser/flows/requests/settings": {
+      "get": {
+        "description": "When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required\nfor checking the auth session. To prevent scanning attacks, the public endpoint does not return 404 status codes\nbut instead 403 or 500.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "common",
+          "public",
+          "admin"
+        ],
+        "summary": "Get the request context of browser-based settings flows",
+        "operationId": "getSelfServiceBrowserSettingsRequest",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Request is the Login Request ID\n\nThe value for this parameter comes from `request` URL Query parameter sent to your\napplication (e.g. `/login?request=abcde`).",
+            "name": "request",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "settingsRequest",
+            "schema": {
+              "$ref": "#/definitions/settingsRequest"
+            }
+          },
+          "403": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "404": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "410": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
     "/self-service/browser/flows/requests/verification": {
       "get": {
         "description": "When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required\nfor checking the auth session. To prevent scanning attacks, the public endpoint does not return 404 status codes\nbut instead 403 or 500.\n\nMore information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
@@ -715,9 +661,109 @@
         }
       }
     },
+    "/self-service/browser/flows/settings": {
+      "get": {
+        "description": "This endpoint initializes a browser-based settings flow. Once initialized, the browser will be redirected to\n`urls.settings_ui` with the request ID set as a query parameter. If no valid user session exists, a login\nflow will be initialized.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).",
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Initialize browser-based settings flow",
+        "operationId": "initializeSelfServiceSettingsFlow",
+        "responses": {
+          "302": {
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
+    "/self-service/browser/flows/settings/strategies/password": {
+      "post": {
+        "description": "This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this\nendpoint.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).",
+        "consumes": [
+          "application/json",
+          "application/x-www-form-urlencoded"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Complete the browser-based settings flow for the password strategy",
+        "operationId": "completeSelfServiceBrowserSettingsPasswordStrategyFlow",
+        "responses": {
+          "302": {
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
+    "/self-service/browser/flows/settings/strategies/profile": {
+      "post": {
+        "description": "This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this\nendpoint.\n\nIf the provided profile data is valid against the Identity's Traits JSON Schema, the data will be updated and\nthe browser redirected to `url.settings_ui` for further steps.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).",
+        "consumes": [
+          "application/json",
+          "application/x-www-form-urlencoded"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Complete the browser-based settings flow for profile data",
+        "operationId": "completeSelfServiceBrowserSettingsProfileStrategyFlow",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Request is the request ID.",
+            "name": "request",
+            "in": "query",
+            "required": true
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/completeSelfServiceBrowserSettingsStrategyProfileFlowPayload"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
     "/self-service/browser/flows/verification/init/{via}": {
       "get": {
-        "description": "This endpoint initializes a browser-based profile management flow. Once initialized, the browser will be redirected to\n`urls.profile_ui` with the request ID set as a query parameter. If no valid user session exists, a login\nflow will be initialized.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
+        "description": "This endpoint initializes a browser-based verification flow. Once initialized, the browser will be redirected to\n`urls.settings_ui` with the request ID set as a query parameter. If no valid user session exists, a login\nflow will be initialized.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
         "schemes": [
           "http",
           "https"
@@ -751,7 +797,7 @@
     },
     "/self-service/browser/flows/verification/{via}/complete": {
       "post": {
-        "description": "This endpoint completes a browser-based profile management flow. This is usually achieved by POSTing data to this\nendpoint.\n\nIf the provided profile data is valid against the Identity's Traits JSON Schema, the data will be updated and\nthe browser redirected to `url.profile_ui` for further steps.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
+        "description": "This endpoint completes a browser-based verification flow. This is usually achieved by POSTing data to this\nendpoint.\n\nIf the provided data is valid against the Identity's Traits JSON Schema, the data will be updated and\nthe browser redirected to `url.settings_ui` for further steps.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
         "consumes": [
           "application/json",
           "application/x-www-form-urlencoded"
@@ -763,7 +809,7 @@
         "tags": [
           "public"
         ],
-        "summary": "Complete the browser-based profile management flows",
+        "summary": "Complete the browser-based verification flows",
         "operationId": "completeSelfServiceBrowserVerificationFlow",
         "parameters": [
           {
@@ -1065,6 +1111,22 @@
     "VerifiableAddressType": {
       "type": "string"
     },
+    "completeSelfServiceBrowserSettingsStrategyProfileFlowPayload": {
+      "type": "object",
+      "required": [
+        "traits"
+      ],
+      "properties": {
+        "request_id": {
+          "description": "RequestID is request ID.\n\nin: query",
+          "type": "string"
+        },
+        "traits": {
+          "description": "Traits contains all of the identity's traits.\n\ntype: string\nformat: binary",
+          "type": "object"
+        }
+      }
+    },
     "errorContainer": {
       "type": "object",
       "properties": {
@@ -1312,69 +1374,6 @@
         }
       }
     },
-    "profileManagementRequest": {
-      "description": "This request is used when an identity wants to update profile information\n(especially traits) in a selfservice manner.\n\nFor more information head over to: https://www.ory.sh/docs/kratos/selfservice/profile",
-      "type": "object",
-      "title": "Request presents a profile management request",
-      "required": [
-        "id",
-        "expires_at",
-        "issued_at",
-        "request_url",
-        "methods",
-        "identity",
-        "update_successful"
-      ],
-      "properties": {
-        "active": {
-          "description": "FormActive, if set, contains the registration method that is being used. It is initially\nnot set.",
-          "type": "string"
-        },
-        "expires_at": {
-          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile,\na new request has to be initiated.",
-          "type": "string",
-          "format": "date-time"
-        },
-        "id": {
-          "$ref": "#/definitions/UUID"
-        },
-        "identity": {
-          "$ref": "#/definitions/Identity"
-        },
-        "issued_at": {
-          "description": "IssuedAt is the time (UTC) when the request occurred.",
-          "type": "string",
-          "format": "date-time"
-        },
-        "methods": {
-          "description": "Methods contains context for all enabled registration methods. If a registration request has been\nprocessed, but for example the password is incorrect, this will contain error messages.",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/profileRequestForm"
-          }
-        },
-        "request_url": {
-          "description": "RequestURL is the initial URL that was requested from ORY Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
-          "type": "string"
-        },
-        "update_successful": {
-          "description": "UpdateSuccessful, if true, indicates that the profile has been updated successfully with the provided data.\nDone will stay true when repeatedly checking. If set to true, done will revert back to false only\nwhen a request with invalid (e.g. \"please use a valid phone number\") data was sent.",
-          "type": "boolean"
-        }
-      }
-    },
-    "profileRequestForm": {
-      "type": "object",
-      "properties": {
-        "config": {
-          "$ref": "#/definitions/RequestMethodConfig"
-        },
-        "method": {
-          "description": "Method contains the request credentials type.",
-          "type": "string"
-        }
-      }
-    },
     "registrationRequest": {
       "type": "object",
       "required": [
@@ -1491,13 +1490,76 @@
         }
       }
     },
+    "settingsRequest": {
+      "description": "This request is used when an identity wants to update settings\n(e.g. profile data, passwords, ...) in a selfservice manner.\n\nFor more information head over to: https://www.ory.sh/docs/kratos/selfservice/flows/user-settings-profile-management",
+      "type": "object",
+      "title": "Request presents a settings request",
+      "required": [
+        "id",
+        "expires_at",
+        "issued_at",
+        "request_url",
+        "methods",
+        "identity",
+        "update_successful"
+      ],
+      "properties": {
+        "active": {
+          "description": "Active, if set, contains the registration method that is being used. It is initially\nnot set.",
+          "type": "string"
+        },
+        "expires_at": {
+          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting,\na new request has to be initiated.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "id": {
+          "$ref": "#/definitions/UUID"
+        },
+        "identity": {
+          "$ref": "#/definitions/Identity"
+        },
+        "issued_at": {
+          "description": "IssuedAt is the time (UTC) when the request occurred.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "methods": {
+          "description": "Methods contains context for all enabled registration methods. If a registration request has been\nprocessed, but for example the password is incorrect, this will contain error messages.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/settingsRequestMethod"
+          }
+        },
+        "request_url": {
+          "description": "RequestURL is the initial URL that was requested from ORY Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
+          "type": "string"
+        },
+        "update_successful": {
+          "description": "UpdateSuccessful, if true, indicates that the settings request has been updated successfully with the provided data.\nDone will stay true when repeatedly checking. If set to true, done will revert back to false only\nwhen a request with invalid (e.g. \"please use a valid phone number\") data was sent.",
+          "type": "boolean"
+        }
+      }
+    },
+    "settingsRequestMethod": {
+      "type": "object",
+      "properties": {
+        "config": {
+          "$ref": "#/definitions/RequestMethodConfig"
+        },
+        "method": {
+          "description": "Method contains the request credentials type.",
+          "type": "string"
+        }
+      }
+    },
     "verificationRequest": {
       "description": "This request is used when an identity wants to verify an out-of-band communication\nchannel such as an email address or a phone number.\n\nFor more information head over to: https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation",
       "type": "object",
       "title": "Request presents a verification request",
       "properties": {
         "expires_at": {
-          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile,\na new request has to be initiated.",
+          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address,\na new request has to be initiated.",
           "type": "string",
           "format": "date-time"
         },
