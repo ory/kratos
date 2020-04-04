@@ -69,6 +69,7 @@
 
 **Closed issues:**
 
+- Quickstart app doubt for authentication only\(not authorization\) with mysql database  [\#297](https://github.com/ory/kratos/issues/297)
 - Serve the schemas in the common API and have it documented [\#287](https://github.com/ory/kratos/issues/287)
 - Quickstart broken, db.sqlite not writabel [\#281](https://github.com/ory/kratos/issues/281)
 - Viper key for SMTP from address appears to be incorrect [\#277](https://github.com/ory/kratos/issues/277)
@@ -80,6 +81,7 @@
 
 **Merged pull requests:**
 
+- docs: Updates issue and pull request templates [\#313](https://github.com/ory/kratos/pull/313) ([aeneasr](https://github.com/aeneasr))
 - chore: bump ory/x to have csv parsing from env vars [\#312](https://github.com/ory/kratos/pull/312) ([zepatrik](https://github.com/zepatrik))
 - fix: move to ory sqa service [\#309](https://github.com/ory/kratos/pull/309) ([aeneasr](https://github.com/aeneasr))
 - Fix the query parameter name in the get self-service error endpoint in API docs [\#308](https://github.com/ory/kratos/pull/308) ([sandhose](https://github.com/sandhose))
