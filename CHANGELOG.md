@@ -81,6 +81,7 @@
 
 **Merged pull requests:**
 
+- docs: Updates issue and pull request templates [\#314](https://github.com/ory/kratos/pull/314) ([aeneasr](https://github.com/aeneasr))
 - docs: Updates issue and pull request templates [\#313](https://github.com/ory/kratos/pull/313) ([aeneasr](https://github.com/aeneasr))
 - chore: bump ory/x to have csv parsing from env vars [\#312](https://github.com/ory/kratos/pull/312) ([zepatrik](https://github.com/zepatrik))
 - fix: move to ory sqa service [\#309](https://github.com/ory/kratos/pull/309) ([aeneasr](https://github.com/aeneasr))
