@@ -47,7 +47,6 @@
 
 **Implemented enhancements:**
 
-- Error authenticating POST requests from browser session behind Oathkeeper [\#270](https://github.com/ory/kratos/issues/270)
 - Have `dsn: memory` as an alias for SQLite in memory DSN [\#228](https://github.com/ory/kratos/issues/228)
 
 **Fixed bugs:**
@@ -81,6 +80,8 @@
 
 **Merged pull requests:**
 
+- refactor: move docs to this repository [\#317](https://github.com/ory/kratos/pull/317) ([aeneasr](https://github.com/aeneasr))
+- docs: Updates issue and pull request templates [\#315](https://github.com/ory/kratos/pull/315) ([aeneasr](https://github.com/aeneasr))
 - docs: Updates issue and pull request templates [\#314](https://github.com/ory/kratos/pull/314) ([aeneasr](https://github.com/aeneasr))
 - docs: Updates issue and pull request templates [\#313](https://github.com/ory/kratos/pull/313) ([aeneasr](https://github.com/aeneasr))
 - chore: bump ory/x to have csv parsing from env vars [\#312](https://github.com/ory/kratos/pull/312) ([zepatrik](https://github.com/zepatrik))
