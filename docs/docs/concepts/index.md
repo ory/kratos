@@ -7,7 +7,7 @@ ORY Kratos is a new software archetype **Identity Infrastructure Service**.
 Traditional identity systems - sometimes referred to as Identity and Access
 Management (IAM), Identity Management (IdM), Identity Provider (I(d)P), or IDaaS
 (Identity as a Service) - have shortcomings that highlight the main differences
-betweeen ORY Kratos and other systems.
+between ORY Kratos and other systems.
 
 ORY Kratos solves identity on the network. It is not a on-device, for instance
 mobile phones, user database. In Ory Kratos there is always an exchange of
