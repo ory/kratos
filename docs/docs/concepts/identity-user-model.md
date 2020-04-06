@@ -14,7 +14,7 @@ is always called an "Identity," and it always exposed as `identity` in the API
 Endpoints, request and response payloads.
 
 The following examples uses YAML for improved readability. However the API
-payload is usually in JSON format. An `identity has the following properties:
+payload is usually in JSON format. An `identity` has the following properties:
 
 ```yaml
 # A universally unique ID that is generated when the identity is created and that cannot be changed or updated
