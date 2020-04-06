@@ -80,6 +80,7 @@
 
 **Merged pull requests:**
 
+- chore: update docusaurus template [\#318](https://github.com/ory/kratos/pull/318) ([aeneasr](https://github.com/aeneasr))
 - refactor: move docs to this repository [\#317](https://github.com/ory/kratos/pull/317) ([aeneasr](https://github.com/aeneasr))
 - docs: Updates issue and pull request templates [\#315](https://github.com/ory/kratos/pull/315) ([aeneasr](https://github.com/aeneasr))
 - docs: Updates issue and pull request templates [\#314](https://github.com/ory/kratos/pull/314) ([aeneasr](https://github.com/aeneasr))
