@@ -22,7 +22,7 @@ func TestViperProvider(t *testing.T) {
 		viper.Reset()
 		viperx.InitializeConfig(
 			"kratos",
-			"./../../docs/",
+			"./../../internal/",
 			logrus.New(),
 		)
 
