@@ -67,14 +67,14 @@ test: test-resetdb
 # Generates the SDKs
 .PHONY: sdk
 sdk:
-		$$(go env GOPATH)/bin/swagger generate spec -m -o docs/api.swagger.json -x internal/httpclient
-		$$(go env GOPATH)/bin/swagutil sanitize ./docs/api.swagger.json
-		$$(go env GOPATH)/bin/swagger validate ./docs/api.swagger.json
-		$$(go env GOPATH)/bin/swagger flatten --with-flatten=remove-unused -o ./docs/api.swagger.json ./docs/api.swagger.json
-		$$(go env GOPATH)/bin/swagger validate ./docs/api.swagger.json
+		$$(go env GOPATH)/bin/swagger generate spec -m -o .schema/api.swagger.json -x internal/httpclient
+		$$(go env GOPATH)/bin/swagutil sanitize ./.schema/api.swagger.json
+		$$(go env GOPATH)/bin/swagger validate ./.schema/api.swagger.json
+		$$(go env GOPATH)/bin/swagger flatten --with-flatten=remove-unused -o ./.schema/api.swagger.json ./.schema/api.swagger.json
+		$$(go env GOPATH)/bin/swagger validate ./.schema/api.swagger.json
 		rm -rf internal/httpclient
 		mkdir -p internal/httpclient
-		$$(go env GOPATH)/bin/swagger generate client -f ./docs/api.swagger.json -t internal/httpclient -A Ory_Kratos
+		$$(go env GOPATH)/bin/swagger generate client -f ./.schema/api.swagger.json -t internal/httpclient -A Ory_Kratos
 		make format
 
 quickstart:

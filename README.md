@@ -1,4 +1,4 @@
-<h1 align="center"><img src="./docs/images/banner_kratos.png" alt="ORY Kratos - Cloud native Identity and User Management"></h1>
+<h1 align="center"><img src=".github/banner_kratos.png" alt="ORY Kratos - Cloud native Identity and User Management"></h1>
 
 <h4 align="center">
     <a href="https://www.ory.sh/chat">Chat</a> |

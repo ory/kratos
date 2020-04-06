@@ -22,11 +22,11 @@ func TestViperProvider(t *testing.T) {
 		viper.Reset()
 		viperx.InitializeConfig(
 			"kratos",
-			"./../../docs/",
+			"./../../internal/",
 			logrus.New(),
 		)
 
-		require.NoError(t, viperx.ValidateFromURL("file://../../docs/config.schema.json"))
+		require.NoError(t, viperx.ValidateFromURL("file://../../.schema/config.schema.json"))
 		p := configuration.NewViperProvider(logrus.New(), true)
 
 		t.Run("group=urls", func(t *testing.T) {

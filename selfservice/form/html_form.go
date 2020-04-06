@@ -33,7 +33,7 @@ var (
 type HTMLForm struct {
 	sync.RWMutex
 
-	// Action should be used as the form action URL (<form action="{{ .Action }}" method="post">).
+	// Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`.
 	//
 	// required: true
 	Action string `json:"action"`

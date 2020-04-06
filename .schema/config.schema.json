@@ -1,5 +1,5 @@
 {
-  "$id": "https://github.com/ory/kratos/docs/config.schema.json",
+  "$id": "https://github.com/ory/kratos/.schema/config.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "ORY Kratos Configuration",
   "type": "object",
