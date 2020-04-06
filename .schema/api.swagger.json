@@ -1087,7 +1087,7 @@
       ],
       "properties": {
         "action": {
-          "description": "Action should be used as the form action URL (\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e).",
+          "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
           "type": "string"
         },
         "errors": {
@@ -1116,7 +1116,7 @@
       ],
       "properties": {
         "disabled": {
-          "description": "Disabled is the equivalent of \u003cinput disabled=\"{{.Disabled}}\"\u003e",
+          "description": "Disabled is the equivalent of `\u003cinput disabled=\"{{.Disabled}}\"\u003e`",
           "type": "boolean"
         },
         "errors": {
@@ -1127,23 +1127,23 @@
           }
         },
         "name": {
-          "description": "Name is the equivalent of \u003cinput name=\"{{.Name}}\"\u003e",
+          "description": "Name is the equivalent of `\u003cinput name=\"{{.Name}}\"\u003e`",
           "type": "string"
         },
         "pattern": {
-          "description": "Pattern is the equivalent of \u003cinput pattern=\"{{.Pattern}}\"\u003e",
+          "description": "Pattern is the equivalent of `\u003cinput pattern=\"{{.Pattern}}\"\u003e`",
           "type": "string"
         },
         "required": {
-          "description": "Required is the equivalent of \u003cinput required=\"{{.Required}}\"\u003e",
+          "description": "Required is the equivalent of `\u003cinput required=\"{{.Required}}\"\u003e`",
           "type": "boolean"
         },
         "type": {
-          "description": "Type is the equivalent of \u003cinput type=\"{{.Type}}\"\u003e",
+          "description": "Type is the equivalent of `\u003cinput type=\"{{.Type}}\"\u003e`",
           "type": "string"
         },
         "value": {
-          "description": "Value is the equivalent of \u003cinput value=\"{{.Value}}\"\u003e",
+          "description": "Value is the equivalent of `\u003cinput value=\"{{.Value}}\"\u003e`",
           "type": "object"
         }
       }
@@ -1287,7 +1287,7 @@
       ],
       "properties": {
         "action": {
-          "description": "Action should be used as the form action URL (\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e).",
+          "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
           "type": "string"
         },
         "errors": {
@@ -1416,7 +1416,7 @@
       ],
       "properties": {
         "action": {
-          "description": "Action should be used as the form action URL (\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e).",
+          "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
           "type": "string"
         },
         "errors": {
