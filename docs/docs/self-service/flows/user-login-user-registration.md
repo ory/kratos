@@ -142,7 +142,7 @@ const config = {
 //  app.get('/auth/registration', authHandler('registration'))
 //  app.get('/auth/login', authHandler('login'))
 
-export const authHandler = flow => (req, res, next) => {
+export const authHandler = (flow) => (req, res, next) => {
   // The request ID is used to identify the login and registraion request and
   // return data like the csrf_token and so on.
   const request = req.query.request;
@@ -158,7 +158,7 @@ export const authHandler = flow => (req, res, next) => {
   url.searchParams.set('request', request);
 
   fetch(url.toString())
-    .then(response => {
+    .then((response) => {
       // A 404 code means that this code does not exist. We'll retry by re-initiating the flow.
       if (response.status == 404) {
         res.redirect(`${config.kratos.browser}/auth/browser/${flow}`);
@@ -167,7 +167,7 @@ export const authHandler = flow => (req, res, next) => {
 
       return response.json();
     })
-    .then(request => {
+    .then((request) => {
       // Request contains all the request data for this Registration request.
       // You can process that data here, if you want.
 

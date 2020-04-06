@@ -15,7 +15,7 @@ module.exports = {
     "self-service/flows/index",
     "self-service/flows/user-login-user-registration",
     "self-service/flows/user-logout",
-    "self-service/flows/user-profile-management",
+    "self-service/flows/user-settings-profile-management",
     "self-service/flows/password-reset-account-recovery",
     "self-service/flows/user-facing-errors",
     "self-service/flows/verify-email-account-activation"

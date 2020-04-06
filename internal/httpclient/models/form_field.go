@@ -19,28 +19,28 @@ import (
 // swagger:model formField
 type FormField struct {
 
-	// Disabled is the equivalent of <input disabled="{{.Disabled}}">
+	// Disabled is the equivalent of `<input disabled="{{.Disabled}}">`
 	Disabled bool `json:"disabled,omitempty"`
 
 	// Errors contains all validation errors this particular field has caused.
 	Errors []*Error `json:"errors"`
 
-	// Name is the equivalent of <input name="{{.Name}}">
+	// Name is the equivalent of `<input name="{{.Name}}">`
 	// Required: true
 	Name *string `json:"name"`
 
-	// Pattern is the equivalent of <input pattern="{{.Pattern}}">
+	// Pattern is the equivalent of `<input pattern="{{.Pattern}}">`
 	Pattern string `json:"pattern,omitempty"`
 
-	// Required is the equivalent of <input required="{{.Required}}">
+	// Required is the equivalent of `<input required="{{.Required}}">`
 	// Required: true
 	Required *bool `json:"required"`
 
-	// Type is the equivalent of <input type="{{.Type}}">
+	// Type is the equivalent of `<input type="{{.Type}}">`
 	// Required: true
 	Type *string `json:"type"`
 
-	// Value is the equivalent of <input value="{{.Value}}">
+	// Value is the equivalent of `<input value="{{.Value}}">`
 	Value interface{} `json:"value,omitempty"`
 }
 

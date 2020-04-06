@@ -3,8 +3,8 @@ id: user-settings-profile-management
 title: User Settings and Profile Management
 ---
 
-ORY Kratos allows users to update their own settings and profile information using two
-principal flows:
+ORY Kratos allows users to update their own settings and profile information
+using two principal flows:
 
 - Browser-based (easy): This flow works for all applications running on top of a
   browser. Websites, single-page apps, Cordova/Ionic, and so on.
@@ -14,8 +14,8 @@ principal flows:
 This flow does not allow updates of security-sensitive information such as the
 password, fields associated with login (e.g. email), fields associated with
 account recovery (e.g. recovery email address). These fields must be updated
-using a separate flow which requires prior security checks.
-using a separate flow which requires prior security checks.
+using a separate flow which requires prior security checks. using a separate
+flow which requires prior security checks.
 
 The updated profile must be valid against the JSON Schema defined for its
 [Identity Traits](../../concepts/identity-user-model.md). If one or more fields
@@ -50,7 +50,7 @@ follows for Profile Management:
    `https://ory-kratos-admin.example-org.vpc/self-service/browser/flows/requests/settings?request=abcde`
    and fetches Profile Management Request JSON Payload that represent the
    individual fields that can be updated.
-4. The User updates the profile data and sends a HTTP POST request to, e.g., 
+4. The User updates the profile data and sends a HTTP POST request to, e.g.,
    `https://example.org/.ory/kratos/public/self-service/browser/flows/settings/strategies/password?request=abcde`.
    - If the profile data is invalid, all validation errors will be collected and
      added to the Profile Management JSON Payload. The Browser is redirected to

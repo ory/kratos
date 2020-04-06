@@ -5,7 +5,7 @@ module.exports = {
   updateTags: [
     {
       image: 'oryd/kratos',
-      files: ['docs/docs/configure-deploy.md']
+      files: ['docs/docs/quickstart.mdx']
     }
   ],
   updateConfig: {

@@ -1,6 +1,11 @@
 ---
-title: REST API
-id: api
+title: Ory Kratos
+language_tabs: []
+toc_footers: []
+includes: []
+search: false
+highlight_theme: darkula
+headingLevel: 2
 ---
 
 Welcome to the ORY Kratos HTTP API documentation!
@@ -54,7 +59,7 @@ status will never refer to the cluster state, only to a single instance.
 
 ##### Examples
 
-###### 200 response
+> 200 Response
 
 ```json
 {
@@ -232,7 +237,7 @@ status will never refer to the cluster state, only to a single instance.
 
 ##### Examples
 
-###### 200 response
+> 200 Response
 
 ```json
 {
@@ -404,12 +409,10 @@ Learn how identities work in
 
 ##### Overview
 
-| Status | Meaning                                                 | Description           | Schema |
-| ------ | ------------------------------------------------------- | --------------------- | ------ |
-| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1) | A list of identities. |
-
-nolint:deadcode,unused|Inline|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status | Meaning                                                                    | Description           | Schema                              |
+| ------ | -------------------------------------------------------------------------- | --------------------- | ----------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | A list of identities. | Inline                              |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError          | [genericError](#schemagenericerror) |
 
 <a id="list-all-identities-in-the-system-responseschema"></a>
 
@@ -434,18 +437,18 @@ Status Code **200**
 
 ##### Examples
 
-###### 200 response
+> 200 Response
 
 ```json
 [
   {
     "addresses": [
       {
-        "expires_at": "2020-03-25T17:39:55Z",
+        "expires_at": "2020-04-06T10:21:38Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-03-25T17:39:55Z",
+        "verified_at": "2020-04-06T10:21:38Z",
         "via": "string"
       }
     ],
@@ -619,11 +622,11 @@ Learn how identities work in
 {
   "addresses": [
     {
-      "expires_at": "2020-03-25T17:39:55Z",
+      "expires_at": "2020-04-06T10:21:38Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-03-25T17:39:55Z",
+      "verified_at": "2020-04-06T10:21:38Z",
       "via": "string"
     }
   ],
@@ -648,27 +651,25 @@ Learn how identities work in
 
 ##### Overview
 
-| Status | Meaning                                                      | Description        | Schema |
-| ------ | ------------------------------------------------------------ | ------------------ | ------ |
-| 201    | [Created](https://tools.ietf.org/html/rfc7231#section-6.3.2) | A single identity. |
-
-nolint:deadcode,unused|[Identity](#schemaidentity)|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|genericError|[genericError](#schemagenericerror)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status | Meaning                                                                    | Description        | Schema                              |
+| ------ | -------------------------------------------------------------------------- | ------------------ | ----------------------------------- |
+| 201    | [Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)               | A single identity. | [Identity](#schemaidentity)         |
+| 400    | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | genericError       | [genericError](#schemagenericerror) |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError       | [genericError](#schemagenericerror) |
 
 ##### Examples
 
-###### 201 response
+> 201 Response
 
 ```json
 {
   "addresses": [
     {
-      "expires_at": "2020-03-25T17:39:55Z",
+      "expires_at": "2020-04-06T10:21:38Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-03-25T17:39:55Z",
+      "verified_at": "2020-04-06T10:21:38Z",
       "via": "string"
     }
   ],
@@ -741,11 +742,11 @@ const fetch = require('node-fetch');
 const input = '{
   "addresses": [
     {
-      "expires_at": "2020-03-25T17:39:55Z",
+      "expires_at": "2020-04-06T10:21:38Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-03-25T17:39:55Z",
+      "verified_at": "2020-04-06T10:21:38Z",
       "via": "string"
     }
   ],
@@ -863,27 +864,25 @@ Learn how identities work in
 
 ##### Overview
 
-| Status | Meaning                                                 | Description        | Schema |
-| ------ | ------------------------------------------------------- | ------------------ | ------ |
-| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1) | A single identity. |
-
-nolint:deadcode,unused|[Identity](#schemaidentity)|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|genericError|[genericError](#schemagenericerror)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status | Meaning                                                                    | Description        | Schema                              |
+| ------ | -------------------------------------------------------------------------- | ------------------ | ----------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | A single identity. | [Identity](#schemaidentity)         |
+| 400    | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | genericError       | [genericError](#schemagenericerror) |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError       | [genericError](#schemagenericerror) |
 
 ##### Examples
 
-###### 200 response
+> 200 Response
 
 ```json
 {
   "addresses": [
     {
-      "expires_at": "2020-03-25T17:39:55Z",
+      "expires_at": "2020-04-06T10:21:38Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-03-25T17:39:55Z",
+      "verified_at": "2020-04-06T10:21:38Z",
       "via": "string"
     }
   ],
@@ -1059,11 +1058,11 @@ Learn how identities work in
 {
   "addresses": [
     {
-      "expires_at": "2020-03-25T17:39:55Z",
+      "expires_at": "2020-04-06T10:21:38Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-03-25T17:39:55Z",
+      "verified_at": "2020-04-06T10:21:38Z",
       "via": "string"
     }
   ],
@@ -1089,28 +1088,26 @@ Learn how identities work in
 
 ##### Overview
 
-| Status | Meaning                                                 | Description        | Schema |
-| ------ | ------------------------------------------------------- | ------------------ | ------ |
-| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1) | A single identity. |
-
-nolint:deadcode,unused|[Identity](#schemaidentity)|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|genericError|[genericError](#schemagenericerror)|
-|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|genericError|[genericError](#schemagenericerror)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status | Meaning                                                                    | Description        | Schema                              |
+| ------ | -------------------------------------------------------------------------- | ------------------ | ----------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | A single identity. | [Identity](#schemaidentity)         |
+| 400    | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | genericError       | [genericError](#schemagenericerror) |
+| 404    | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError       | [genericError](#schemagenericerror) |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError       | [genericError](#schemagenericerror) |
 
 ##### Examples
 
-###### 200 response
+> 200 Response
 
 ```json
 {
   "addresses": [
     {
-      "expires_at": "2020-03-25T17:39:55Z",
+      "expires_at": "2020-04-06T10:21:38Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-03-25T17:39:55Z",
+      "verified_at": "2020-04-06T10:21:38Z",
       "via": "string"
     }
   ],
@@ -1183,11 +1180,11 @@ const fetch = require('node-fetch');
 const input = '{
   "addresses": [
     {
-      "expires_at": "2020-03-25T17:39:55Z",
+      "expires_at": "2020-04-06T10:21:38Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-03-25T17:39:55Z",
+      "verified_at": "2020-04-06T10:21:38Z",
       "via": "string"
     }
   ],
@@ -1316,19 +1313,17 @@ Learn how identities work in
 
 ##### Examples
 
-###### 404 response
+> 404 Response
 
 ```json
 {
   "error": {
     "code": 404,
     "debug": "The database adapter was unable to find the element",
-    "details": [
-      {
-        "property1": {},
-        "property2": {}
-      }
-    ],
+    "details": {
+      "property1": {},
+      "property2": {}
+    },
     "message": "string",
     "reason": "string",
     "request": "string",
@@ -1475,1616 +1470,191 @@ p JSON.parse(result)
 </div>
 </div>
 
-<a id="ory-kratos-public-endpoints"></a>
-
-## Public Endpoints
-
-<a id="opIdinitializeSelfServiceBrowserLoginFlow"></a>
-
-### Initialize browser-based login user flow
-
-```
-GET /self-service/browser/flows/login HTTP/1.1
-Accept: application/json
-
-```
-
-This endpoint initializes a browser-based user login flow. Once initialized, the
-browser will be redirected to `urls.login_ui` with the request ID set as a query
-parameter. If a valid user session exists already, the browser will be
-redirected to `urls.default_redirect_url`.
-
-> This endpoint is NOT INTENDED for API clients and only works with browsers
-> (Chrome, Firefox, ...).
-
-More information can be found at
-[ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
-
-#### Responses
-
-<a id="initialize-browser-based-login-user-flow-responses"></a>
-
-##### Overview
-
-| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
-| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
-| typically 201. | None                                                                       |
-| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
-
-##### Examples
-
-###### 500 response
-
-```json
-{
-  "error": {
-    "code": 404,
-    "debug": "The database adapter was unable to find the element",
-    "details": [
-      {
-        "property1": {},
-        "property2": {}
-      }
-    ],
-    "message": "string",
-    "reason": "string",
-    "request": "string",
-    "status": "string"
-  }
-}
-```
-
-<aside class="success">
-This operation does not require authentication
-</aside>
-
-#### Code samples
-
-<div class="tabs" id="tab-initializeSelfServiceBrowserLoginFlow">
-<nav class="tabs-nav">
-<ul class="nav nav-tabs au-link-list au-link-list--inline">
-<li class="nav-item"><a class="nav-link active" role="tab" href="#tab-initializeSelfServiceBrowserLoginFlow-shell">Shell</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserLoginFlow-go">Go</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserLoginFlow-node">Node.js</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserLoginFlow-java">Java</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserLoginFlow-python">Python</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserLoginFlow-ruby">Ruby</a></li>
-</ul>
-</nav>
-<div class="tab-content">
-<div class="tab-pane active" role="tabpanel" id="tab-initializeSelfServiceBrowserLoginFlow-shell">
-
-```shell
-curl -X GET /self-service/browser/flows/login \
-  -H 'Accept: application/json'
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserLoginFlow-go">
-
-```go
-package main
-
-import (
-    "bytes"
-    "net/http"
-)
-
-func main() {
-    headers := map[string][]string{
-        "Accept": []string{"application/json"},
-    }
-
-    var body []byte
-    // body = ...
-
-    req, err := http.NewRequest("GET", "/self-service/browser/flows/login", bytes.NewBuffer(body))
-    req.Header = headers
-
-    client := &http.Client{}
-    resp, err := client.Do(req)
-    // ...
-}
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserLoginFlow-node">
-
-```nodejs
-const fetch = require('node-fetch');
-
-const headers = {
-  'Accept': 'application/json'
-}
-
-fetch('/self-service/browser/flows/login', {
-  method: 'GET',
-  headers
-})
-.then(r => r.json())
-.then((body) => {
-    console.log(body)
-})
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserLoginFlow-java">
-
-```java
-// This sample needs improvement.
-URL obj = new URL("/self-service/browser/flows/login");
-
-HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-con.setRequestMethod("GET");
-
-int responseCode = con.getResponseCode();
-
-BufferedReader in = new BufferedReader(
-    new InputStreamReader(con.getInputStream())
-);
-
-String inputLine;
-StringBuffer response = new StringBuffer();
-while ((inputLine = in.readLine()) != null) {
-    response.append(inputLine);
-}
-in.close();
-
-System.out.println(response.toString());
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserLoginFlow-python">
-
-```python
-import requests
-
-headers = {
-  'Accept': 'application/json'
-}
-
-r = requests.get(
-  '/self-service/browser/flows/login',
-  params={},
-  headers = headers)
-
-print r.json()
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserLoginFlow-ruby">
-
-```ruby
-require 'rest-client'
-require 'json'
-
-headers = {
-  'Accept' => 'application/json'
-}
-
-result = RestClient.get '/self-service/browser/flows/login',
-  params: {}, headers: headers
-
-p JSON.parse(result)
-```
-
-</div>
-</div>
-</div>
-
-<a id="opIdinitializeSelfServiceBrowserLogoutFlow"></a>
-
-### Initialize Browser-Based Logout User Flow
-
-```
-GET /self-service/browser/flows/logout HTTP/1.1
-Accept: application/json
-
-```
-
-This endpoint initializes a logout flow.
-
-> This endpoint is NOT INTENDED for API clients and only works with browsers
-> (Chrome, Firefox, ...).
-
-On successful logout, the browser will be redirected (HTTP 302 Found) to
-`urls.default_return_to`.
-
-More information can be found at
-[ORY Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
-
-#### Responses
-
-<a id="initialize-browser-based-logout-user-flow-responses"></a>
-
-##### Overview
-
-| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
-| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
-| typically 201. | None                                                                       |
-| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
-
-##### Examples
-
-###### 500 response
-
-```json
-{
-  "error": {
-    "code": 404,
-    "debug": "The database adapter was unable to find the element",
-    "details": [
-      {
-        "property1": {},
-        "property2": {}
-      }
-    ],
-    "message": "string",
-    "reason": "string",
-    "request": "string",
-    "status": "string"
-  }
-}
-```
-
-<aside class="success">
-This operation does not require authentication
-</aside>
-
-#### Code samples
-
-<div class="tabs" id="tab-initializeSelfServiceBrowserLogoutFlow">
-<nav class="tabs-nav">
-<ul class="nav nav-tabs au-link-list au-link-list--inline">
-<li class="nav-item"><a class="nav-link active" role="tab" href="#tab-initializeSelfServiceBrowserLogoutFlow-shell">Shell</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserLogoutFlow-go">Go</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserLogoutFlow-node">Node.js</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserLogoutFlow-java">Java</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserLogoutFlow-python">Python</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserLogoutFlow-ruby">Ruby</a></li>
-</ul>
-</nav>
-<div class="tab-content">
-<div class="tab-pane active" role="tabpanel" id="tab-initializeSelfServiceBrowserLogoutFlow-shell">
-
-```shell
-curl -X GET /self-service/browser/flows/logout \
-  -H 'Accept: application/json'
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserLogoutFlow-go">
-
-```go
-package main
-
-import (
-    "bytes"
-    "net/http"
-)
-
-func main() {
-    headers := map[string][]string{
-        "Accept": []string{"application/json"},
-    }
-
-    var body []byte
-    // body = ...
-
-    req, err := http.NewRequest("GET", "/self-service/browser/flows/logout", bytes.NewBuffer(body))
-    req.Header = headers
-
-    client := &http.Client{}
-    resp, err := client.Do(req)
-    // ...
-}
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserLogoutFlow-node">
-
-```nodejs
-const fetch = require('node-fetch');
-
-const headers = {
-  'Accept': 'application/json'
-}
-
-fetch('/self-service/browser/flows/logout', {
-  method: 'GET',
-  headers
-})
-.then(r => r.json())
-.then((body) => {
-    console.log(body)
-})
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserLogoutFlow-java">
-
-```java
-// This sample needs improvement.
-URL obj = new URL("/self-service/browser/flows/logout");
-
-HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-con.setRequestMethod("GET");
-
-int responseCode = con.getResponseCode();
-
-BufferedReader in = new BufferedReader(
-    new InputStreamReader(con.getInputStream())
-);
-
-String inputLine;
-StringBuffer response = new StringBuffer();
-while ((inputLine = in.readLine()) != null) {
-    response.append(inputLine);
-}
-in.close();
-
-System.out.println(response.toString());
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserLogoutFlow-python">
-
-```python
-import requests
-
-headers = {
-  'Accept': 'application/json'
-}
-
-r = requests.get(
-  '/self-service/browser/flows/logout',
-  params={},
-  headers = headers)
-
-print r.json()
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserLogoutFlow-ruby">
-
-```ruby
-require 'rest-client'
-require 'json'
-
-headers = {
-  'Accept' => 'application/json'
-}
-
-result = RestClient.get '/self-service/browser/flows/logout',
-  params: {}, headers: headers
-
-p JSON.parse(result)
-```
-
-</div>
-</div>
-</div>
-
-<a id="opIdinitializeSelfServiceProfileManagementFlow"></a>
-
-### Initialize browser-based profile management flow
-
-```
-GET /self-service/browser/flows/profile HTTP/1.1
-Accept: application/json
-
-```
-
-This endpoint initializes a browser-based profile management flow. Once
-initialized, the browser will be redirected to `urls.profile_ui` with the
-request ID set as a query parameter. If no valid user session exists, a login
-flow will be initialized.
-
-> This endpoint is NOT INTENDED for API clients and only works with browsers
-> (Chrome, Firefox, ...).
-
-More information can be found at
-[ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).
-
-#### Responses
-
-<a id="initialize-browser-based-profile-management-flow-responses"></a>
-
-##### Overview
-
-| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
-| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
-| typically 201. | None                                                                       |
-| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
-
-##### Examples
-
-###### 500 response
-
-```json
-{
-  "error": {
-    "code": 404,
-    "debug": "The database adapter was unable to find the element",
-    "details": [
-      {
-        "property1": {},
-        "property2": {}
-      }
-    ],
-    "message": "string",
-    "reason": "string",
-    "request": "string",
-    "status": "string"
-  }
-}
-```
-
-<aside class="success">
-This operation does not require authentication
-</aside>
-
-#### Code samples
-
-<div class="tabs" id="tab-initializeSelfServiceProfileManagementFlow">
-<nav class="tabs-nav">
-<ul class="nav nav-tabs au-link-list au-link-list--inline">
-<li class="nav-item"><a class="nav-link active" role="tab" href="#tab-initializeSelfServiceProfileManagementFlow-shell">Shell</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceProfileManagementFlow-go">Go</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceProfileManagementFlow-node">Node.js</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceProfileManagementFlow-java">Java</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceProfileManagementFlow-python">Python</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceProfileManagementFlow-ruby">Ruby</a></li>
-</ul>
-</nav>
-<div class="tab-content">
-<div class="tab-pane active" role="tabpanel" id="tab-initializeSelfServiceProfileManagementFlow-shell">
-
-```shell
-curl -X GET /self-service/browser/flows/profile \
-  -H 'Accept: application/json'
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceProfileManagementFlow-go">
-
-```go
-package main
-
-import (
-    "bytes"
-    "net/http"
-)
-
-func main() {
-    headers := map[string][]string{
-        "Accept": []string{"application/json"},
-    }
-
-    var body []byte
-    // body = ...
-
-    req, err := http.NewRequest("GET", "/self-service/browser/flows/profile", bytes.NewBuffer(body))
-    req.Header = headers
-
-    client := &http.Client{}
-    resp, err := client.Do(req)
-    // ...
-}
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceProfileManagementFlow-node">
-
-```nodejs
-const fetch = require('node-fetch');
-
-const headers = {
-  'Accept': 'application/json'
-}
-
-fetch('/self-service/browser/flows/profile', {
-  method: 'GET',
-  headers
-})
-.then(r => r.json())
-.then((body) => {
-    console.log(body)
-})
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceProfileManagementFlow-java">
-
-```java
-// This sample needs improvement.
-URL obj = new URL("/self-service/browser/flows/profile");
-
-HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-con.setRequestMethod("GET");
-
-int responseCode = con.getResponseCode();
-
-BufferedReader in = new BufferedReader(
-    new InputStreamReader(con.getInputStream())
-);
-
-String inputLine;
-StringBuffer response = new StringBuffer();
-while ((inputLine = in.readLine()) != null) {
-    response.append(inputLine);
-}
-in.close();
-
-System.out.println(response.toString());
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceProfileManagementFlow-python">
-
-```python
-import requests
-
-headers = {
-  'Accept': 'application/json'
-}
-
-r = requests.get(
-  '/self-service/browser/flows/profile',
-  params={},
-  headers = headers)
-
-print r.json()
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceProfileManagementFlow-ruby">
-
-```ruby
-require 'rest-client'
-require 'json'
-
-headers = {
-  'Accept' => 'application/json'
-}
-
-result = RestClient.get '/self-service/browser/flows/profile',
-  params: {}, headers: headers
-
-p JSON.parse(result)
-```
-
-</div>
-</div>
-</div>
-
-<a id="opIdcompleteSelfServiceBrowserVerificationFlow"></a>
-
-### Complete the browser-based profile management flows
-
-```
-POST /self-service/browser/flows/verification/{via}/complete?request=string HTTP/1.1
-Accept: application/json
-
-```
-
-This endpoint completes a browser-based profile management flow. This is usually
-achieved by POSTing data to this endpoint.
-
-If the provided profile data is valid against the Identity's Traits JSON Schema,
-the data will be updated and the browser redirected to `url.profile_ui` for
-further steps.
-
-> This endpoint is NOT INTENDED for API clients and only works with browsers
-> (Chrome, Firefox, ...) and HTML Forms.
-
-More information can be found at
-[ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
-
-<a id="complete-the-browser-based-profile-management-flows-parameters"></a>
-
-##### Parameters
-
-| Parameter | In    | Type   | Required | Description               |
-| --------- | ----- | ------ | -------- | ------------------------- |
-| request   | query | string | true     | Request is the Request ID |
-| via       | path  | string | true     | What to verify            |
-
-##### Detailed descriptions
-
-**request**: Request is the Request ID
-
-The value for this parameter comes from `request` URL Query parameter sent to
-your application (e.g. `/verify?request=abcde`).
-
-**via**: What to verify
-
-Currently only "email" is supported.
-
-#### Responses
-
-<a id="complete-the-browser-based-profile-management-flows-responses"></a>
-
-##### Overview
-
-| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
-| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
-| typically 201. | None                                                                       |
-| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
-
-##### Examples
-
-###### 500 response
-
-```json
-{
-  "error": {
-    "code": 404,
-    "debug": "The database adapter was unable to find the element",
-    "details": [
-      {
-        "property1": {},
-        "property2": {}
-      }
-    ],
-    "message": "string",
-    "reason": "string",
-    "request": "string",
-    "status": "string"
-  }
-}
-```
-
-<aside class="success">
-This operation does not require authentication
-</aside>
-
-#### Code samples
-
-<div class="tabs" id="tab-completeSelfServiceBrowserVerificationFlow">
-<nav class="tabs-nav">
-<ul class="nav nav-tabs au-link-list au-link-list--inline">
-<li class="nav-item"><a class="nav-link active" role="tab" href="#tab-completeSelfServiceBrowserVerificationFlow-shell">Shell</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserVerificationFlow-go">Go</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserVerificationFlow-node">Node.js</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserVerificationFlow-java">Java</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserVerificationFlow-python">Python</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserVerificationFlow-ruby">Ruby</a></li>
-</ul>
-</nav>
-<div class="tab-content">
-<div class="tab-pane active" role="tabpanel" id="tab-completeSelfServiceBrowserVerificationFlow-shell">
-
-```shell
-curl -X POST /self-service/browser/flows/verification/{via}/complete?request=string \
-  -H 'Accept: application/json'
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserVerificationFlow-go">
-
-```go
-package main
-
-import (
-    "bytes"
-    "net/http"
-)
-
-func main() {
-    headers := map[string][]string{
-        "Accept": []string{"application/json"},
-    }
-
-    var body []byte
-    // body = ...
-
-    req, err := http.NewRequest("POST", "/self-service/browser/flows/verification/{via}/complete", bytes.NewBuffer(body))
-    req.Header = headers
-
-    client := &http.Client{}
-    resp, err := client.Do(req)
-    // ...
-}
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserVerificationFlow-node">
-
-```nodejs
-const fetch = require('node-fetch');
-
-const headers = {
-  'Accept': 'application/json'
-}
-
-fetch('/self-service/browser/flows/verification/{via}/complete?request=string', {
-  method: 'POST',
-  headers
-})
-.then(r => r.json())
-.then((body) => {
-    console.log(body)
-})
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserVerificationFlow-java">
-
-```java
-// This sample needs improvement.
-URL obj = new URL("/self-service/browser/flows/verification/{via}/complete?request=string");
-
-HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-con.setRequestMethod("POST");
-
-int responseCode = con.getResponseCode();
-
-BufferedReader in = new BufferedReader(
-    new InputStreamReader(con.getInputStream())
-);
-
-String inputLine;
-StringBuffer response = new StringBuffer();
-while ((inputLine = in.readLine()) != null) {
-    response.append(inputLine);
-}
-in.close();
-
-System.out.println(response.toString());
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserVerificationFlow-python">
-
-```python
-import requests
-
-headers = {
-  'Accept': 'application/json'
-}
-
-r = requests.post(
-  '/self-service/browser/flows/verification/{via}/complete',
-  params={
-    'request': 'string'},
-  headers = headers)
-
-print r.json()
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserVerificationFlow-ruby">
-
-```ruby
-require 'rest-client'
-require 'json'
-
-headers = {
-  'Accept' => 'application/json'
-}
-
-result = RestClient.post '/self-service/browser/flows/verification/{via}/complete',
-  params: {
-    'request' => 'string'}, headers: headers
-
-p JSON.parse(result)
-```
-
-</div>
-</div>
-</div>
-
-<a id="opIdinitializeSelfServiceBrowserRegistrationFlow"></a>
-
-### Initialize browser-based registration user flow
-
-```
-GET /self-service/browser/flows/registration HTTP/1.1
-Accept: application/json
-
-```
-
-This endpoint initializes a browser-based user registration flow. Once
-initialized, the browser will be redirected to `urls.registration_ui` with the
-request ID set as a query parameter. If a valid user session exists already, the
-browser will be redirected to `urls.default_redirect_url`.
-
-> This endpoint is NOT INTENDED for API clients and only works with browsers
-> (Chrome, Firefox, ...).
-
-More information can be found at
-[ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
-
-#### Responses
-
-<a id="initialize-browser-based-registration-user-flow-responses"></a>
-
-##### Overview
-
-| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
-| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
-| typically 201. | None                                                                       |
-| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
-
-##### Examples
-
-###### 500 response
-
-```json
-{
-  "error": {
-    "code": 404,
-    "debug": "The database adapter was unable to find the element",
-    "details": [
-      {
-        "property1": {},
-        "property2": {}
-      }
-    ],
-    "message": "string",
-    "reason": "string",
-    "request": "string",
-    "status": "string"
-  }
-}
-```
-
-<aside class="success">
-This operation does not require authentication
-</aside>
-
-#### Code samples
-
-<div class="tabs" id="tab-initializeSelfServiceBrowserRegistrationFlow">
-<nav class="tabs-nav">
-<ul class="nav nav-tabs au-link-list au-link-list--inline">
-<li class="nav-item"><a class="nav-link active" role="tab" href="#tab-initializeSelfServiceBrowserRegistrationFlow-shell">Shell</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserRegistrationFlow-go">Go</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserRegistrationFlow-node">Node.js</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserRegistrationFlow-java">Java</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserRegistrationFlow-python">Python</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserRegistrationFlow-ruby">Ruby</a></li>
-</ul>
-</nav>
-<div class="tab-content">
-<div class="tab-pane active" role="tabpanel" id="tab-initializeSelfServiceBrowserRegistrationFlow-shell">
-
-```shell
-curl -X GET /self-service/browser/flows/registration \
-  -H 'Accept: application/json'
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserRegistrationFlow-go">
-
-```go
-package main
-
-import (
-    "bytes"
-    "net/http"
-)
-
-func main() {
-    headers := map[string][]string{
-        "Accept": []string{"application/json"},
-    }
-
-    var body []byte
-    // body = ...
-
-    req, err := http.NewRequest("GET", "/self-service/browser/flows/registration", bytes.NewBuffer(body))
-    req.Header = headers
-
-    client := &http.Client{}
-    resp, err := client.Do(req)
-    // ...
-}
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserRegistrationFlow-node">
-
-```nodejs
-const fetch = require('node-fetch');
-
-const headers = {
-  'Accept': 'application/json'
-}
-
-fetch('/self-service/browser/flows/registration', {
-  method: 'GET',
-  headers
-})
-.then(r => r.json())
-.then((body) => {
-    console.log(body)
-})
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserRegistrationFlow-java">
-
-```java
-// This sample needs improvement.
-URL obj = new URL("/self-service/browser/flows/registration");
-
-HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-con.setRequestMethod("GET");
-
-int responseCode = con.getResponseCode();
-
-BufferedReader in = new BufferedReader(
-    new InputStreamReader(con.getInputStream())
-);
-
-String inputLine;
-StringBuffer response = new StringBuffer();
-while ((inputLine = in.readLine()) != null) {
-    response.append(inputLine);
-}
-in.close();
-
-System.out.println(response.toString());
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserRegistrationFlow-python">
-
-```python
-import requests
-
-headers = {
-  'Accept': 'application/json'
-}
-
-r = requests.get(
-  '/self-service/browser/flows/registration',
-  params={},
-  headers = headers)
-
-print r.json()
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserRegistrationFlow-ruby">
-
-```ruby
-require 'rest-client'
-require 'json'
-
-headers = {
-  'Accept' => 'application/json'
-}
-
-result = RestClient.get '/self-service/browser/flows/registration',
-  params: {}, headers: headers
-
-p JSON.parse(result)
-```
-
-</div>
-</div>
-</div>
-
-<a id="opIdinitializeSelfServiceBrowserVerificationFlow"></a>
-
-### Initialize browser-based verification flow
-
-```
-GET /self-service/browser/flows/verification/init/{via} HTTP/1.1
-Accept: application/json
-
-```
-
-This endpoint initializes a browser-based profile management flow. Once
-initialized, the browser will be redirected to `urls.profile_ui` with the
-request ID set as a query parameter. If no valid user session exists, a login
-flow will be initialized.
-
-> This endpoint is NOT INTENDED for API clients and only works with browsers
-> (Chrome, Firefox, ...).
-
-More information can be found at
-[ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
-
-<a id="initialize-browser-based-verification-flow-parameters"></a>
-
-##### Parameters
-
-| Parameter | In   | Type   | Required | Description    |
-| --------- | ---- | ------ | -------- | -------------- |
-| via       | path | string | true     | What to verify |
-
-##### Detailed descriptions
-
-**via**: What to verify
-
-Currently only "email" is supported.
-
-#### Responses
-
-<a id="initialize-browser-based-verification-flow-responses"></a>
-
-##### Overview
-
-| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
-| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
-| typically 201. | None                                                                       |
-| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
-
-##### Examples
-
-###### 500 response
-
-```json
-{
-  "error": {
-    "code": 404,
-    "debug": "The database adapter was unable to find the element",
-    "details": [
-      {
-        "property1": {},
-        "property2": {}
-      }
-    ],
-    "message": "string",
-    "reason": "string",
-    "request": "string",
-    "status": "string"
-  }
-}
-```
-
-<aside class="success">
-This operation does not require authentication
-</aside>
-
-#### Code samples
-
-<div class="tabs" id="tab-initializeSelfServiceBrowserVerificationFlow">
-<nav class="tabs-nav">
-<ul class="nav nav-tabs au-link-list au-link-list--inline">
-<li class="nav-item"><a class="nav-link active" role="tab" href="#tab-initializeSelfServiceBrowserVerificationFlow-shell">Shell</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserVerificationFlow-go">Go</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserVerificationFlow-node">Node.js</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserVerificationFlow-java">Java</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserVerificationFlow-python">Python</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserVerificationFlow-ruby">Ruby</a></li>
-</ul>
-</nav>
-<div class="tab-content">
-<div class="tab-pane active" role="tabpanel" id="tab-initializeSelfServiceBrowserVerificationFlow-shell">
-
-```shell
-curl -X GET /self-service/browser/flows/verification/init/{via} \
-  -H 'Accept: application/json'
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserVerificationFlow-go">
-
-```go
-package main
-
-import (
-    "bytes"
-    "net/http"
-)
-
-func main() {
-    headers := map[string][]string{
-        "Accept": []string{"application/json"},
-    }
-
-    var body []byte
-    // body = ...
-
-    req, err := http.NewRequest("GET", "/self-service/browser/flows/verification/init/{via}", bytes.NewBuffer(body))
-    req.Header = headers
-
-    client := &http.Client{}
-    resp, err := client.Do(req)
-    // ...
-}
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserVerificationFlow-node">
-
-```nodejs
-const fetch = require('node-fetch');
-
-const headers = {
-  'Accept': 'application/json'
-}
-
-fetch('/self-service/browser/flows/verification/init/{via}', {
-  method: 'GET',
-  headers
-})
-.then(r => r.json())
-.then((body) => {
-    console.log(body)
-})
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserVerificationFlow-java">
-
-```java
-// This sample needs improvement.
-URL obj = new URL("/self-service/browser/flows/verification/init/{via}");
-
-HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-con.setRequestMethod("GET");
-
-int responseCode = con.getResponseCode();
-
-BufferedReader in = new BufferedReader(
-    new InputStreamReader(con.getInputStream())
-);
-
-String inputLine;
-StringBuffer response = new StringBuffer();
-while ((inputLine = in.readLine()) != null) {
-    response.append(inputLine);
-}
-in.close();
-
-System.out.println(response.toString());
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserVerificationFlow-python">
-
-```python
-import requests
-
-headers = {
-  'Accept': 'application/json'
-}
-
-r = requests.get(
-  '/self-service/browser/flows/verification/init/{via}',
-  params={},
-  headers = headers)
-
-print r.json()
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserVerificationFlow-ruby">
-
-```ruby
-require 'rest-client'
-require 'json'
-
-headers = {
-  'Accept' => 'application/json'
-}
-
-result = RestClient.get '/self-service/browser/flows/verification/init/{via}',
-  params: {}, headers: headers
-
-p JSON.parse(result)
-```
-
-</div>
-</div>
-</div>
-
-<a id="opIdselfServiceBrowserVerify"></a>
-
-### Complete the browser-based verification flows
-
-```
-GET /self-service/browser/flows/verification/{via}/confirm/{code} HTTP/1.1
-Accept: application/json
-
-```
-
-This endpoint completes a browser-based verification flow.
-
-> This endpoint is NOT INTENDED for API clients and only works with browsers
-> (Chrome, Firefox, ...) and HTML Forms.
-
-More information can be found at
-[ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
-
-<a id="complete-the-browser-based-verification-flows-parameters"></a>
-
-##### Parameters
-
-| Parameter | In   | Type   | Required | Description    |
-| --------- | ---- | ------ | -------- | -------------- |
-| code      | path | string | true     | none           |
-| via       | path | string | true     | What to verify |
-
-##### Detailed descriptions
-
-**via**: What to verify
-
-Currently only "email" is supported.
-
-#### Responses
-
-<a id="complete-the-browser-based-verification-flows-responses"></a>
-
-##### Overview
-
-| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
-| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
-| typically 201. | None                                                                       |
-| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
-
-##### Examples
-
-###### 500 response
-
-```json
-{
-  "error": {
-    "code": 404,
-    "debug": "The database adapter was unable to find the element",
-    "details": [
-      {
-        "property1": {},
-        "property2": {}
-      }
-    ],
-    "message": "string",
-    "reason": "string",
-    "request": "string",
-    "status": "string"
-  }
-}
-```
-
-<aside class="success">
-This operation does not require authentication
-</aside>
-
-#### Code samples
-
-<div class="tabs" id="tab-selfServiceBrowserVerify">
-<nav class="tabs-nav">
-<ul class="nav nav-tabs au-link-list au-link-list--inline">
-<li class="nav-item"><a class="nav-link active" role="tab" href="#tab-selfServiceBrowserVerify-shell">Shell</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-selfServiceBrowserVerify-go">Go</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-selfServiceBrowserVerify-node">Node.js</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-selfServiceBrowserVerify-java">Java</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-selfServiceBrowserVerify-python">Python</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-selfServiceBrowserVerify-ruby">Ruby</a></li>
-</ul>
-</nav>
-<div class="tab-content">
-<div class="tab-pane active" role="tabpanel" id="tab-selfServiceBrowserVerify-shell">
-
-```shell
-curl -X GET /self-service/browser/flows/verification/{via}/confirm/{code} \
-  -H 'Accept: application/json'
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-selfServiceBrowserVerify-go">
-
-```go
-package main
-
-import (
-    "bytes"
-    "net/http"
-)
-
-func main() {
-    headers := map[string][]string{
-        "Accept": []string{"application/json"},
-    }
-
-    var body []byte
-    // body = ...
-
-    req, err := http.NewRequest("GET", "/self-service/browser/flows/verification/{via}/confirm/{code}", bytes.NewBuffer(body))
-    req.Header = headers
-
-    client := &http.Client{}
-    resp, err := client.Do(req)
-    // ...
-}
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-selfServiceBrowserVerify-node">
-
-```nodejs
-const fetch = require('node-fetch');
-
-const headers = {
-  'Accept': 'application/json'
-}
-
-fetch('/self-service/browser/flows/verification/{via}/confirm/{code}', {
-  method: 'GET',
-  headers
-})
-.then(r => r.json())
-.then((body) => {
-    console.log(body)
-})
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-selfServiceBrowserVerify-java">
-
-```java
-// This sample needs improvement.
-URL obj = new URL("/self-service/browser/flows/verification/{via}/confirm/{code}");
-
-HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-con.setRequestMethod("GET");
-
-int responseCode = con.getResponseCode();
-
-BufferedReader in = new BufferedReader(
-    new InputStreamReader(con.getInputStream())
-);
-
-String inputLine;
-StringBuffer response = new StringBuffer();
-while ((inputLine = in.readLine()) != null) {
-    response.append(inputLine);
-}
-in.close();
-
-System.out.println(response.toString());
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-selfServiceBrowserVerify-python">
-
-```python
-import requests
-
-headers = {
-  'Accept': 'application/json'
-}
-
-r = requests.get(
-  '/self-service/browser/flows/verification/{via}/confirm/{code}',
-  params={},
-  headers = headers)
-
-print r.json()
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-selfServiceBrowserVerify-ruby">
-
-```ruby
-require 'rest-client'
-require 'json'
-
-headers = {
-  'Accept' => 'application/json'
-}
-
-result = RestClient.get '/self-service/browser/flows/verification/{via}/confirm/{code}',
-  params: {}, headers: headers
-
-p JSON.parse(result)
-```
-
-</div>
-</div>
-</div>
-
-<a id="opIdwhoami"></a>
-
-### Check who the current HTTP session belongs to
-
-```
-GET /sessions/whoami HTTP/1.1
-Accept: application/json
-
-```
-
-Uses the HTTP Headers in the GET request to determine (e.g. by using checking
-the cookies) who is authenticated. Returns a session object or 401 if the
-credentials are invalid or no credentials were sent.
-
-This endpoint is useful for reverse proxies and API Gateways.
-
-#### Responses
-
-<a id="check-who-the-current-http-session-belongs-to-responses"></a>
-
-##### Overview
-
-| Status | Meaning                                                                    | Description  | Schema                              |
-| ------ | -------------------------------------------------------------------------- | ------------ | ----------------------------------- |
-| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | session      | [session](#schemasession)           |
-| 403    | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | genericError | [genericError](#schemagenericerror) |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError | [genericError](#schemagenericerror) |
-
-##### Examples
-
-###### 200 response
-
-```json
-{
-  "authenticated_at": "2020-03-25T17:39:55Z",
-  "expires_at": "2020-03-25T17:39:55Z",
-  "identity": {
-    "addresses": [
-      {
-        "expires_at": "2020-03-25T17:39:55Z",
-        "id": "string",
-        "value": "string",
-        "verified": true,
-        "verified_at": "2020-03-25T17:39:55Z",
-        "via": "string"
-      }
-    ],
-    "id": "string",
-    "traits": {},
-    "traits_schema_id": "string",
-    "traits_schema_url": "string"
-  },
-  "issued_at": "2020-03-25T17:39:55Z",
-  "sid": "string"
-}
-```
-
-<aside class="success">
-This operation does not require authentication
-</aside>
-
-#### Code samples
-
-<div class="tabs" id="tab-whoami">
-<nav class="tabs-nav">
-<ul class="nav nav-tabs au-link-list au-link-list--inline">
-<li class="nav-item"><a class="nav-link active" role="tab" href="#tab-whoami-shell">Shell</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-whoami-go">Go</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-whoami-node">Node.js</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-whoami-java">Java</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-whoami-python">Python</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-whoami-ruby">Ruby</a></li>
-</ul>
-</nav>
-<div class="tab-content">
-<div class="tab-pane active" role="tabpanel" id="tab-whoami-shell">
-
-```shell
-curl -X GET /sessions/whoami \
-  -H 'Accept: application/json'
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-whoami-go">
-
-```go
-package main
-
-import (
-    "bytes"
-    "net/http"
-)
-
-func main() {
-    headers := map[string][]string{
-        "Accept": []string{"application/json"},
-    }
-
-    var body []byte
-    // body = ...
-
-    req, err := http.NewRequest("GET", "/sessions/whoami", bytes.NewBuffer(body))
-    req.Header = headers
-
-    client := &http.Client{}
-    resp, err := client.Do(req)
-    // ...
-}
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-whoami-node">
-
-```nodejs
-const fetch = require('node-fetch');
-
-const headers = {
-  'Accept': 'application/json'
-}
-
-fetch('/sessions/whoami', {
-  method: 'GET',
-  headers
-})
-.then(r => r.json())
-.then((body) => {
-    console.log(body)
-})
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-whoami-java">
-
-```java
-// This sample needs improvement.
-URL obj = new URL("/sessions/whoami");
-
-HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-con.setRequestMethod("GET");
-
-int responseCode = con.getResponseCode();
-
-BufferedReader in = new BufferedReader(
-    new InputStreamReader(con.getInputStream())
-);
-
-String inputLine;
-StringBuffer response = new StringBuffer();
-while ((inputLine = in.readLine()) != null) {
-    response.append(inputLine);
-}
-in.close();
-
-System.out.println(response.toString());
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-whoami-python">
-
-```python
-import requests
-
-headers = {
-  'Accept': 'application/json'
-}
-
-r = requests.get(
-  '/sessions/whoami',
-  params={},
-  headers = headers)
-
-print r.json()
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-whoami-ruby">
-
-```ruby
-require 'rest-client'
-require 'json'
-
-headers = {
-  'Accept' => 'application/json'
-}
-
-result = RestClient.get '/sessions/whoami',
-  params: {}, headers: headers
-
-p JSON.parse(result)
-```
-
-</div>
-</div>
-</div>
-
 <a id="ory-kratos-common"></a>
 
 ## common
+
+<a id="opIdgetSchema"></a>
+
+### getSchema
+
+```
+GET /schemas/{id} HTTP/1.1
+Accept: application/json
+
+```
+
+Get a traits schema definition
+
+<a id="getschema-parameters"></a>
+
+##### Parameters
+
+| Parameter | In   | Type   | Required | Description                                        |
+| --------- | ---- | ------ | -------- | -------------------------------------------------- |
+| id        | path | string | true     | ID must be set to the ID of schema you want to get |
+
+#### Responses
+
+<a id="getschema-responses"></a>
+
+##### Overview
+
+| Status | Meaning                                                                    | Description                    | Schema                              |
+| ------ | -------------------------------------------------------------------------- | ------------------------------ | ----------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | The raw identity traits schema | Inline                              |
+| 404    | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError                   | [genericError](#schemagenericerror) |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                   | [genericError](#schemagenericerror) |
+
+<a id="getschema-responseschema"></a>
+
+##### Response Schema
+
+##### Examples
+
+> 200 Response
+
+```json
+{}
+```
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+#### Code samples
+
+<div class="tabs" id="tab-getSchema">
+<nav class="tabs-nav">
+<ul class="nav nav-tabs au-link-list au-link-list--inline">
+<li class="nav-item"><a class="nav-link active" role="tab" href="#tab-getSchema-shell">Shell</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-getSchema-go">Go</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-getSchema-node">Node.js</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-getSchema-java">Java</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-getSchema-python">Python</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-getSchema-ruby">Ruby</a></li>
+</ul>
+</nav>
+<div class="tab-content">
+<div class="tab-pane active" role="tabpanel" id="tab-getSchema-shell">
+
+```shell
+curl -X GET /schemas/{id} \
+  -H 'Accept: application/json'
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-getSchema-go">
+
+```go
+package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    var body []byte
+    // body = ...
+
+    req, err := http.NewRequest("GET", "/schemas/{id}", bytes.NewBuffer(body))
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-getSchema-node">
+
+```nodejs
+const fetch = require('node-fetch');
+
+const headers = {
+  'Accept': 'application/json'
+}
+
+fetch('/schemas/{id}', {
+  method: 'GET',
+  headers
+})
+.then(r => r.json())
+.then((body) => {
+    console.log(body)
+})
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-getSchema-java">
+
+```java
+// This sample needs improvement.
+URL obj = new URL("/schemas/{id}");
+
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+
+int responseCode = con.getResponseCode();
+
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream())
+);
+
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+
+System.out.println(response.toString());
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-getSchema-python">
+
+```python
+import requests
+
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get(
+  '/schemas/{id}',
+  params={},
+  headers = headers)
+
+print r.json()
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-getSchema-ruby">
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get '/schemas/{id}',
+  params: {}, headers: headers
+
+p JSON.parse(result)
+```
+
+</div>
+</div>
+</div>
 
 <a id="opIdgetSelfServiceBrowserLoginRequest"></a>
 
@@ -3133,18 +1703,20 @@ your application (e.g. `/login?request=abcde`).
 | 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | loginRequest | [loginRequest](#schemaloginrequest) |
 | 403    | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | genericError | [genericError](#schemagenericerror) |
 | 404    | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError | [genericError](#schemagenericerror) |
+| 410    | [Gone](https://tools.ietf.org/html/rfc7231#section-6.5.9)                  | genericError | [genericError](#schemagenericerror) |
 | 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError | [genericError](#schemagenericerror) |
 
 ##### Examples
 
-###### 200 response
+> 200 Response
 
 ```json
 {
   "active": "string",
-  "expires_at": "2020-03-25T17:39:55Z",
+  "expires_at": "2020-04-06T10:21:38Z",
+  "forced": true,
   "id": "string",
-  "issued_at": "2020-03-25T17:39:55Z",
+  "issued_at": "2020-04-06T10:21:38Z",
   "methods": {
     "property1": {
       "config": {
@@ -3419,15 +1991,16 @@ your application (e.g. `/login?request=abcde`).
 | 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | profileManagementRequest | [profileManagementRequest](#schemaprofilemanagementrequest) |
 | 403    | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | genericError             | [genericError](#schemagenericerror)                         |
 | 404    | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError             | [genericError](#schemagenericerror)                         |
+| 410    | [Gone](https://tools.ietf.org/html/rfc7231#section-6.5.9)                  | genericError             | [genericError](#schemagenericerror)                         |
 | 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError             | [genericError](#schemagenericerror)                         |
 
 ##### Examples
 
-###### 200 response
+> 200 Response
 
 ```json
 {
-  "expires_at": "2020-03-25T17:39:55Z",
+  "expires_at": "2020-04-06T10:21:38Z",
   "form": {
     "action": "string",
     "errors": [
@@ -3456,11 +2029,11 @@ your application (e.g. `/login?request=abcde`).
   "identity": {
     "addresses": [
       {
-        "expires_at": "2020-03-25T17:39:55Z",
+        "expires_at": "2020-04-06T10:21:38Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-03-25T17:39:55Z",
+        "verified_at": "2020-04-06T10:21:38Z",
         "via": "string"
       }
     ],
@@ -3469,7 +2042,7 @@ your application (e.g. `/login?request=abcde`).
     "traits_schema_id": "string",
     "traits_schema_url": "string"
   },
-  "issued_at": "2020-03-25T17:39:55Z",
+  "issued_at": "2020-04-06T10:21:38Z",
   "request_url": "string",
   "update_successful": true
 }
@@ -3662,18 +2235,19 @@ your application (e.g. `/registration?request=abcde`).
 | 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | registrationRequest | [registrationRequest](#schemaregistrationrequest) |
 | 403    | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | genericError        | [genericError](#schemagenericerror)               |
 | 404    | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError        | [genericError](#schemagenericerror)               |
+| 410    | [Gone](https://tools.ietf.org/html/rfc7231#section-6.5.9)                  | genericError        | [genericError](#schemagenericerror)               |
 | 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError        | [genericError](#schemagenericerror)               |
 
 ##### Examples
 
-###### 200 response
+> 200 Response
 
 ```json
 {
   "active": "string",
-  "expires_at": "2020-03-25T17:39:55Z",
+  "expires_at": "2020-04-06T10:21:38Z",
   "id": "string",
-  "issued_at": "2020-03-25T17:39:55Z",
+  "issued_at": "2020-04-06T10:21:38Z",
   "methods": {
     "property1": {
       "config": {
@@ -3952,11 +2526,11 @@ your application (e.g. `/verify?request=abcde`).
 
 ##### Examples
 
-###### 200 response
+> 200 Response
 
 ```json
 {
-  "expires_at": "2020-03-25T17:39:55Z",
+  "expires_at": "2020-04-06T10:21:38Z",
   "form": {
     "action": "string",
     "errors": [
@@ -3982,7 +2556,7 @@ your application (e.g. `/verify?request=abcde`).
     "method": "string"
   },
   "id": "string",
-  "issued_at": "2020-03-25T17:39:55Z",
+  "issued_at": "2020-04-06T10:21:38Z",
   "request_url": "string",
   "success": true,
   "via": "string"
@@ -4156,7 +2730,7 @@ More information can be found at
 
 | Parameter | In    | Type   | Required | Description |
 | --------- | ----- | ------ | -------- | ----------- |
-| id        | query | string | false    | none        |
+| error     | query | string | false    | none        |
 
 #### Responses
 
@@ -4173,7 +2747,7 @@ More information can be found at
 
 ##### Examples
 
-###### 200 response
+> 200 Response
 
 ```json
 {
@@ -4320,6 +2894,1599 @@ p JSON.parse(result)
 </div>
 </div>
 
+<a id="ory-kratos-public-endpoints"></a>
+
+## Public Endpoints
+
+<a id="opIdinitializeSelfServiceBrowserLoginFlow"></a>
+
+### Initialize browser-based login user flow
+
+```
+GET /self-service/browser/flows/login HTTP/1.1
+Accept: application/json
+
+```
+
+This endpoint initializes a browser-based user login flow. Once initialized, the
+browser will be redirected to `urls.login_ui` with the request ID set as a query
+parameter. If a valid user session exists already, the browser will be
+redirected to `urls.default_redirect_url`.
+
+> This endpoint is NOT INTENDED for API clients and only works with browsers
+> (Chrome, Firefox, ...).
+
+More information can be found at
+[ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+
+#### Responses
+
+<a id="initialize-browser-based-login-user-flow-responses"></a>
+
+##### Overview
+
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
+
+##### Examples
+
+> 500 Response
+
+```json
+{
+  "error": {
+    "code": 404,
+    "debug": "The database adapter was unable to find the element",
+    "details": {
+      "property1": {},
+      "property2": {}
+    },
+    "message": "string",
+    "reason": "string",
+    "request": "string",
+    "status": "string"
+  }
+}
+```
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+#### Code samples
+
+<div class="tabs" id="tab-initializeSelfServiceBrowserLoginFlow">
+<nav class="tabs-nav">
+<ul class="nav nav-tabs au-link-list au-link-list--inline">
+<li class="nav-item"><a class="nav-link active" role="tab" href="#tab-initializeSelfServiceBrowserLoginFlow-shell">Shell</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserLoginFlow-go">Go</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserLoginFlow-node">Node.js</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserLoginFlow-java">Java</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserLoginFlow-python">Python</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserLoginFlow-ruby">Ruby</a></li>
+</ul>
+</nav>
+<div class="tab-content">
+<div class="tab-pane active" role="tabpanel" id="tab-initializeSelfServiceBrowserLoginFlow-shell">
+
+```shell
+curl -X GET /self-service/browser/flows/login \
+  -H 'Accept: application/json'
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserLoginFlow-go">
+
+```go
+package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    var body []byte
+    // body = ...
+
+    req, err := http.NewRequest("GET", "/self-service/browser/flows/login", bytes.NewBuffer(body))
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserLoginFlow-node">
+
+```nodejs
+const fetch = require('node-fetch');
+
+const headers = {
+  'Accept': 'application/json'
+}
+
+fetch('/self-service/browser/flows/login', {
+  method: 'GET',
+  headers
+})
+.then(r => r.json())
+.then((body) => {
+    console.log(body)
+})
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserLoginFlow-java">
+
+```java
+// This sample needs improvement.
+URL obj = new URL("/self-service/browser/flows/login");
+
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+
+int responseCode = con.getResponseCode();
+
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream())
+);
+
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+
+System.out.println(response.toString());
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserLoginFlow-python">
+
+```python
+import requests
+
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get(
+  '/self-service/browser/flows/login',
+  params={},
+  headers = headers)
+
+print r.json()
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserLoginFlow-ruby">
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get '/self-service/browser/flows/login',
+  params: {}, headers: headers
+
+p JSON.parse(result)
+```
+
+</div>
+</div>
+</div>
+
+<a id="opIdinitializeSelfServiceBrowserLogoutFlow"></a>
+
+### Initialize Browser-Based Logout User Flow
+
+```
+GET /self-service/browser/flows/logout HTTP/1.1
+Accept: application/json
+
+```
+
+This endpoint initializes a logout flow.
+
+> This endpoint is NOT INTENDED for API clients and only works with browsers
+> (Chrome, Firefox, ...).
+
+On successful logout, the browser will be redirected (HTTP 302 Found) to
+`urls.default_return_to`.
+
+More information can be found at
+[ORY Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
+
+#### Responses
+
+<a id="initialize-browser-based-logout-user-flow-responses"></a>
+
+##### Overview
+
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
+
+##### Examples
+
+> 500 Response
+
+```json
+{
+  "error": {
+    "code": 404,
+    "debug": "The database adapter was unable to find the element",
+    "details": {
+      "property1": {},
+      "property2": {}
+    },
+    "message": "string",
+    "reason": "string",
+    "request": "string",
+    "status": "string"
+  }
+}
+```
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+#### Code samples
+
+<div class="tabs" id="tab-initializeSelfServiceBrowserLogoutFlow">
+<nav class="tabs-nav">
+<ul class="nav nav-tabs au-link-list au-link-list--inline">
+<li class="nav-item"><a class="nav-link active" role="tab" href="#tab-initializeSelfServiceBrowserLogoutFlow-shell">Shell</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserLogoutFlow-go">Go</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserLogoutFlow-node">Node.js</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserLogoutFlow-java">Java</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserLogoutFlow-python">Python</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserLogoutFlow-ruby">Ruby</a></li>
+</ul>
+</nav>
+<div class="tab-content">
+<div class="tab-pane active" role="tabpanel" id="tab-initializeSelfServiceBrowserLogoutFlow-shell">
+
+```shell
+curl -X GET /self-service/browser/flows/logout \
+  -H 'Accept: application/json'
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserLogoutFlow-go">
+
+```go
+package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    var body []byte
+    // body = ...
+
+    req, err := http.NewRequest("GET", "/self-service/browser/flows/logout", bytes.NewBuffer(body))
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserLogoutFlow-node">
+
+```nodejs
+const fetch = require('node-fetch');
+
+const headers = {
+  'Accept': 'application/json'
+}
+
+fetch('/self-service/browser/flows/logout', {
+  method: 'GET',
+  headers
+})
+.then(r => r.json())
+.then((body) => {
+    console.log(body)
+})
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserLogoutFlow-java">
+
+```java
+// This sample needs improvement.
+URL obj = new URL("/self-service/browser/flows/logout");
+
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+
+int responseCode = con.getResponseCode();
+
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream())
+);
+
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+
+System.out.println(response.toString());
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserLogoutFlow-python">
+
+```python
+import requests
+
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get(
+  '/self-service/browser/flows/logout',
+  params={},
+  headers = headers)
+
+print r.json()
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserLogoutFlow-ruby">
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get '/self-service/browser/flows/logout',
+  params: {}, headers: headers
+
+p JSON.parse(result)
+```
+
+</div>
+</div>
+</div>
+
+<a id="opIdinitializeSelfServiceProfileManagementFlow"></a>
+
+### Initialize browser-based profile management flow
+
+```
+GET /self-service/browser/flows/profile HTTP/1.1
+Accept: application/json
+
+```
+
+This endpoint initializes a browser-based profile management flow. Once
+initialized, the browser will be redirected to `urls.profile_ui` with the
+request ID set as a query parameter. If no valid user session exists, a login
+flow will be initialized.
+
+> This endpoint is NOT INTENDED for API clients and only works with browsers
+> (Chrome, Firefox, ...).
+
+More information can be found at
+[ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).
+
+#### Responses
+
+<a id="initialize-browser-based-profile-management-flow-responses"></a>
+
+##### Overview
+
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
+
+##### Examples
+
+> 500 Response
+
+```json
+{
+  "error": {
+    "code": 404,
+    "debug": "The database adapter was unable to find the element",
+    "details": {
+      "property1": {},
+      "property2": {}
+    },
+    "message": "string",
+    "reason": "string",
+    "request": "string",
+    "status": "string"
+  }
+}
+```
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+#### Code samples
+
+<div class="tabs" id="tab-initializeSelfServiceProfileManagementFlow">
+<nav class="tabs-nav">
+<ul class="nav nav-tabs au-link-list au-link-list--inline">
+<li class="nav-item"><a class="nav-link active" role="tab" href="#tab-initializeSelfServiceProfileManagementFlow-shell">Shell</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceProfileManagementFlow-go">Go</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceProfileManagementFlow-node">Node.js</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceProfileManagementFlow-java">Java</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceProfileManagementFlow-python">Python</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceProfileManagementFlow-ruby">Ruby</a></li>
+</ul>
+</nav>
+<div class="tab-content">
+<div class="tab-pane active" role="tabpanel" id="tab-initializeSelfServiceProfileManagementFlow-shell">
+
+```shell
+curl -X GET /self-service/browser/flows/profile \
+  -H 'Accept: application/json'
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceProfileManagementFlow-go">
+
+```go
+package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    var body []byte
+    // body = ...
+
+    req, err := http.NewRequest("GET", "/self-service/browser/flows/profile", bytes.NewBuffer(body))
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceProfileManagementFlow-node">
+
+```nodejs
+const fetch = require('node-fetch');
+
+const headers = {
+  'Accept': 'application/json'
+}
+
+fetch('/self-service/browser/flows/profile', {
+  method: 'GET',
+  headers
+})
+.then(r => r.json())
+.then((body) => {
+    console.log(body)
+})
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceProfileManagementFlow-java">
+
+```java
+// This sample needs improvement.
+URL obj = new URL("/self-service/browser/flows/profile");
+
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+
+int responseCode = con.getResponseCode();
+
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream())
+);
+
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+
+System.out.println(response.toString());
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceProfileManagementFlow-python">
+
+```python
+import requests
+
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get(
+  '/self-service/browser/flows/profile',
+  params={},
+  headers = headers)
+
+print r.json()
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceProfileManagementFlow-ruby">
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get '/self-service/browser/flows/profile',
+  params: {}, headers: headers
+
+p JSON.parse(result)
+```
+
+</div>
+</div>
+</div>
+
+<a id="opIdcompleteSelfServiceBrowserVerificationFlow"></a>
+
+### Complete the browser-based profile management flows
+
+```
+POST /self-service/browser/flows/verification/{via}/complete?request=string HTTP/1.1
+Accept: application/json
+
+```
+
+This endpoint completes a browser-based profile management flow. This is usually
+achieved by POSTing data to this endpoint.
+
+If the provided profile data is valid against the Identity's Traits JSON Schema,
+the data will be updated and the browser redirected to `url.profile_ui` for
+further steps.
+
+> This endpoint is NOT INTENDED for API clients and only works with browsers
+> (Chrome, Firefox, ...) and HTML Forms.
+
+More information can be found at
+[ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+
+<a id="complete-the-browser-based-profile-management-flows-parameters"></a>
+
+##### Parameters
+
+| Parameter | In    | Type   | Required | Description               |
+| --------- | ----- | ------ | -------- | ------------------------- |
+| request   | query | string | true     | Request is the Request ID |
+| via       | path  | string | true     | What to verify            |
+
+##### Detailed descriptions
+
+**request**: Request is the Request ID
+
+The value for this parameter comes from `request` URL Query parameter sent to
+your application (e.g. `/verify?request=abcde`).
+
+**via**: What to verify
+
+Currently only "email" is supported.
+
+#### Responses
+
+<a id="complete-the-browser-based-profile-management-flows-responses"></a>
+
+##### Overview
+
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
+
+##### Examples
+
+> 500 Response
+
+```json
+{
+  "error": {
+    "code": 404,
+    "debug": "The database adapter was unable to find the element",
+    "details": {
+      "property1": {},
+      "property2": {}
+    },
+    "message": "string",
+    "reason": "string",
+    "request": "string",
+    "status": "string"
+  }
+}
+```
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+#### Code samples
+
+<div class="tabs" id="tab-completeSelfServiceBrowserVerificationFlow">
+<nav class="tabs-nav">
+<ul class="nav nav-tabs au-link-list au-link-list--inline">
+<li class="nav-item"><a class="nav-link active" role="tab" href="#tab-completeSelfServiceBrowserVerificationFlow-shell">Shell</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserVerificationFlow-go">Go</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserVerificationFlow-node">Node.js</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserVerificationFlow-java">Java</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserVerificationFlow-python">Python</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserVerificationFlow-ruby">Ruby</a></li>
+</ul>
+</nav>
+<div class="tab-content">
+<div class="tab-pane active" role="tabpanel" id="tab-completeSelfServiceBrowserVerificationFlow-shell">
+
+```shell
+curl -X POST /self-service/browser/flows/verification/{via}/complete?request=string \
+  -H 'Accept: application/json'
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserVerificationFlow-go">
+
+```go
+package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    var body []byte
+    // body = ...
+
+    req, err := http.NewRequest("POST", "/self-service/browser/flows/verification/{via}/complete", bytes.NewBuffer(body))
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserVerificationFlow-node">
+
+```nodejs
+const fetch = require('node-fetch');
+
+const headers = {
+  'Accept': 'application/json'
+}
+
+fetch('/self-service/browser/flows/verification/{via}/complete?request=string', {
+  method: 'POST',
+  headers
+})
+.then(r => r.json())
+.then((body) => {
+    console.log(body)
+})
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserVerificationFlow-java">
+
+```java
+// This sample needs improvement.
+URL obj = new URL("/self-service/browser/flows/verification/{via}/complete?request=string");
+
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("POST");
+
+int responseCode = con.getResponseCode();
+
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream())
+);
+
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+
+System.out.println(response.toString());
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserVerificationFlow-python">
+
+```python
+import requests
+
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.post(
+  '/self-service/browser/flows/verification/{via}/complete',
+  params={
+    'request': 'string'},
+  headers = headers)
+
+print r.json()
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserVerificationFlow-ruby">
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.post '/self-service/browser/flows/verification/{via}/complete',
+  params: {
+    'request' => 'string'}, headers: headers
+
+p JSON.parse(result)
+```
+
+</div>
+</div>
+</div>
+
+<a id="opIdinitializeSelfServiceBrowserRegistrationFlow"></a>
+
+### Initialize browser-based registration user flow
+
+```
+GET /self-service/browser/flows/registration HTTP/1.1
+Accept: application/json
+
+```
+
+This endpoint initializes a browser-based user registration flow. Once
+initialized, the browser will be redirected to `urls.registration_ui` with the
+request ID set as a query parameter. If a valid user session exists already, the
+browser will be redirected to `urls.default_redirect_url`.
+
+> This endpoint is NOT INTENDED for API clients and only works with browsers
+> (Chrome, Firefox, ...).
+
+More information can be found at
+[ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+
+#### Responses
+
+<a id="initialize-browser-based-registration-user-flow-responses"></a>
+
+##### Overview
+
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
+
+##### Examples
+
+> 500 Response
+
+```json
+{
+  "error": {
+    "code": 404,
+    "debug": "The database adapter was unable to find the element",
+    "details": {
+      "property1": {},
+      "property2": {}
+    },
+    "message": "string",
+    "reason": "string",
+    "request": "string",
+    "status": "string"
+  }
+}
+```
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+#### Code samples
+
+<div class="tabs" id="tab-initializeSelfServiceBrowserRegistrationFlow">
+<nav class="tabs-nav">
+<ul class="nav nav-tabs au-link-list au-link-list--inline">
+<li class="nav-item"><a class="nav-link active" role="tab" href="#tab-initializeSelfServiceBrowserRegistrationFlow-shell">Shell</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserRegistrationFlow-go">Go</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserRegistrationFlow-node">Node.js</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserRegistrationFlow-java">Java</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserRegistrationFlow-python">Python</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserRegistrationFlow-ruby">Ruby</a></li>
+</ul>
+</nav>
+<div class="tab-content">
+<div class="tab-pane active" role="tabpanel" id="tab-initializeSelfServiceBrowserRegistrationFlow-shell">
+
+```shell
+curl -X GET /self-service/browser/flows/registration \
+  -H 'Accept: application/json'
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserRegistrationFlow-go">
+
+```go
+package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    var body []byte
+    // body = ...
+
+    req, err := http.NewRequest("GET", "/self-service/browser/flows/registration", bytes.NewBuffer(body))
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserRegistrationFlow-node">
+
+```nodejs
+const fetch = require('node-fetch');
+
+const headers = {
+  'Accept': 'application/json'
+}
+
+fetch('/self-service/browser/flows/registration', {
+  method: 'GET',
+  headers
+})
+.then(r => r.json())
+.then((body) => {
+    console.log(body)
+})
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserRegistrationFlow-java">
+
+```java
+// This sample needs improvement.
+URL obj = new URL("/self-service/browser/flows/registration");
+
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+
+int responseCode = con.getResponseCode();
+
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream())
+);
+
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+
+System.out.println(response.toString());
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserRegistrationFlow-python">
+
+```python
+import requests
+
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get(
+  '/self-service/browser/flows/registration',
+  params={},
+  headers = headers)
+
+print r.json()
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserRegistrationFlow-ruby">
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get '/self-service/browser/flows/registration',
+  params: {}, headers: headers
+
+p JSON.parse(result)
+```
+
+</div>
+</div>
+</div>
+
+<a id="opIdinitializeSelfServiceBrowserVerificationFlow"></a>
+
+### Initialize browser-based verification flow
+
+```
+GET /self-service/browser/flows/verification/init/{via} HTTP/1.1
+Accept: application/json
+
+```
+
+This endpoint initializes a browser-based profile management flow. Once
+initialized, the browser will be redirected to `urls.profile_ui` with the
+request ID set as a query parameter. If no valid user session exists, a login
+flow will be initialized.
+
+> This endpoint is NOT INTENDED for API clients and only works with browsers
+> (Chrome, Firefox, ...).
+
+More information can be found at
+[ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+
+<a id="initialize-browser-based-verification-flow-parameters"></a>
+
+##### Parameters
+
+| Parameter | In   | Type   | Required | Description    |
+| --------- | ---- | ------ | -------- | -------------- |
+| via       | path | string | true     | What to verify |
+
+##### Detailed descriptions
+
+**via**: What to verify
+
+Currently only "email" is supported.
+
+#### Responses
+
+<a id="initialize-browser-based-verification-flow-responses"></a>
+
+##### Overview
+
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
+
+##### Examples
+
+> 500 Response
+
+```json
+{
+  "error": {
+    "code": 404,
+    "debug": "The database adapter was unable to find the element",
+    "details": {
+      "property1": {},
+      "property2": {}
+    },
+    "message": "string",
+    "reason": "string",
+    "request": "string",
+    "status": "string"
+  }
+}
+```
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+#### Code samples
+
+<div class="tabs" id="tab-initializeSelfServiceBrowserVerificationFlow">
+<nav class="tabs-nav">
+<ul class="nav nav-tabs au-link-list au-link-list--inline">
+<li class="nav-item"><a class="nav-link active" role="tab" href="#tab-initializeSelfServiceBrowserVerificationFlow-shell">Shell</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserVerificationFlow-go">Go</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserVerificationFlow-node">Node.js</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserVerificationFlow-java">Java</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserVerificationFlow-python">Python</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceBrowserVerificationFlow-ruby">Ruby</a></li>
+</ul>
+</nav>
+<div class="tab-content">
+<div class="tab-pane active" role="tabpanel" id="tab-initializeSelfServiceBrowserVerificationFlow-shell">
+
+```shell
+curl -X GET /self-service/browser/flows/verification/init/{via} \
+  -H 'Accept: application/json'
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserVerificationFlow-go">
+
+```go
+package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    var body []byte
+    // body = ...
+
+    req, err := http.NewRequest("GET", "/self-service/browser/flows/verification/init/{via}", bytes.NewBuffer(body))
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserVerificationFlow-node">
+
+```nodejs
+const fetch = require('node-fetch');
+
+const headers = {
+  'Accept': 'application/json'
+}
+
+fetch('/self-service/browser/flows/verification/init/{via}', {
+  method: 'GET',
+  headers
+})
+.then(r => r.json())
+.then((body) => {
+    console.log(body)
+})
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserVerificationFlow-java">
+
+```java
+// This sample needs improvement.
+URL obj = new URL("/self-service/browser/flows/verification/init/{via}");
+
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+
+int responseCode = con.getResponseCode();
+
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream())
+);
+
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+
+System.out.println(response.toString());
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserVerificationFlow-python">
+
+```python
+import requests
+
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get(
+  '/self-service/browser/flows/verification/init/{via}',
+  params={},
+  headers = headers)
+
+print r.json()
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceBrowserVerificationFlow-ruby">
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get '/self-service/browser/flows/verification/init/{via}',
+  params: {}, headers: headers
+
+p JSON.parse(result)
+```
+
+</div>
+</div>
+</div>
+
+<a id="opIdselfServiceBrowserVerify"></a>
+
+### Complete the browser-based verification flows
+
+```
+GET /self-service/browser/flows/verification/{via}/confirm/{code} HTTP/1.1
+Accept: application/json
+
+```
+
+This endpoint completes a browser-based verification flow.
+
+> This endpoint is NOT INTENDED for API clients and only works with browsers
+> (Chrome, Firefox, ...) and HTML Forms.
+
+More information can be found at
+[ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+
+<a id="complete-the-browser-based-verification-flows-parameters"></a>
+
+##### Parameters
+
+| Parameter | In   | Type   | Required | Description    |
+| --------- | ---- | ------ | -------- | -------------- |
+| code      | path | string | true     | none           |
+| via       | path | string | true     | What to verify |
+
+##### Detailed descriptions
+
+**via**: What to verify
+
+Currently only "email" is supported.
+
+#### Responses
+
+<a id="complete-the-browser-based-verification-flows-responses"></a>
+
+##### Overview
+
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
+
+##### Examples
+
+> 500 Response
+
+```json
+{
+  "error": {
+    "code": 404,
+    "debug": "The database adapter was unable to find the element",
+    "details": {
+      "property1": {},
+      "property2": {}
+    },
+    "message": "string",
+    "reason": "string",
+    "request": "string",
+    "status": "string"
+  }
+}
+```
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+#### Code samples
+
+<div class="tabs" id="tab-selfServiceBrowserVerify">
+<nav class="tabs-nav">
+<ul class="nav nav-tabs au-link-list au-link-list--inline">
+<li class="nav-item"><a class="nav-link active" role="tab" href="#tab-selfServiceBrowserVerify-shell">Shell</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-selfServiceBrowserVerify-go">Go</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-selfServiceBrowserVerify-node">Node.js</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-selfServiceBrowserVerify-java">Java</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-selfServiceBrowserVerify-python">Python</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-selfServiceBrowserVerify-ruby">Ruby</a></li>
+</ul>
+</nav>
+<div class="tab-content">
+<div class="tab-pane active" role="tabpanel" id="tab-selfServiceBrowserVerify-shell">
+
+```shell
+curl -X GET /self-service/browser/flows/verification/{via}/confirm/{code} \
+  -H 'Accept: application/json'
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-selfServiceBrowserVerify-go">
+
+```go
+package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    var body []byte
+    // body = ...
+
+    req, err := http.NewRequest("GET", "/self-service/browser/flows/verification/{via}/confirm/{code}", bytes.NewBuffer(body))
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-selfServiceBrowserVerify-node">
+
+```nodejs
+const fetch = require('node-fetch');
+
+const headers = {
+  'Accept': 'application/json'
+}
+
+fetch('/self-service/browser/flows/verification/{via}/confirm/{code}', {
+  method: 'GET',
+  headers
+})
+.then(r => r.json())
+.then((body) => {
+    console.log(body)
+})
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-selfServiceBrowserVerify-java">
+
+```java
+// This sample needs improvement.
+URL obj = new URL("/self-service/browser/flows/verification/{via}/confirm/{code}");
+
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+
+int responseCode = con.getResponseCode();
+
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream())
+);
+
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+
+System.out.println(response.toString());
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-selfServiceBrowserVerify-python">
+
+```python
+import requests
+
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get(
+  '/self-service/browser/flows/verification/{via}/confirm/{code}',
+  params={},
+  headers = headers)
+
+print r.json()
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-selfServiceBrowserVerify-ruby">
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get '/self-service/browser/flows/verification/{via}/confirm/{code}',
+  params: {}, headers: headers
+
+p JSON.parse(result)
+```
+
+</div>
+</div>
+</div>
+
+<a id="opIdwhoami"></a>
+
+### Check who the current HTTP session belongs to
+
+```
+GET /sessions/whoami HTTP/1.1
+Accept: application/json
+
+```
+
+Uses the HTTP Headers in the GET request to determine (e.g. by using checking
+the cookies) who is authenticated. Returns a session object or 401 if the
+credentials are invalid or no credentials were sent.
+
+This endpoint is useful for reverse proxies and API Gateways.
+
+#### Responses
+
+<a id="check-who-the-current-http-session-belongs-to-responses"></a>
+
+##### Overview
+
+| Status | Meaning                                                                    | Description  | Schema                              |
+| ------ | -------------------------------------------------------------------------- | ------------ | ----------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | session      | [session](#schemasession)           |
+| 403    | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | genericError | [genericError](#schemagenericerror) |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError | [genericError](#schemagenericerror) |
+
+##### Examples
+
+> 200 Response
+
+```json
+{
+  "authenticated_at": "2020-04-06T10:21:38Z",
+  "expires_at": "2020-04-06T10:21:38Z",
+  "identity": {
+    "addresses": [
+      {
+        "expires_at": "2020-04-06T10:21:38Z",
+        "id": "string",
+        "value": "string",
+        "verified": true,
+        "verified_at": "2020-04-06T10:21:38Z",
+        "via": "string"
+      }
+    ],
+    "id": "string",
+    "traits": {},
+    "traits_schema_id": "string",
+    "traits_schema_url": "string"
+  },
+  "issued_at": "2020-04-06T10:21:38Z",
+  "sid": "string"
+}
+```
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+#### Code samples
+
+<div class="tabs" id="tab-whoami">
+<nav class="tabs-nav">
+<ul class="nav nav-tabs au-link-list au-link-list--inline">
+<li class="nav-item"><a class="nav-link active" role="tab" href="#tab-whoami-shell">Shell</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-whoami-go">Go</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-whoami-node">Node.js</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-whoami-java">Java</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-whoami-python">Python</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-whoami-ruby">Ruby</a></li>
+</ul>
+</nav>
+<div class="tab-content">
+<div class="tab-pane active" role="tabpanel" id="tab-whoami-shell">
+
+```shell
+curl -X GET /sessions/whoami \
+  -H 'Accept: application/json'
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-whoami-go">
+
+```go
+package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    var body []byte
+    // body = ...
+
+    req, err := http.NewRequest("GET", "/sessions/whoami", bytes.NewBuffer(body))
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-whoami-node">
+
+```nodejs
+const fetch = require('node-fetch');
+
+const headers = {
+  'Accept': 'application/json'
+}
+
+fetch('/sessions/whoami', {
+  method: 'GET',
+  headers
+})
+.then(r => r.json())
+.then((body) => {
+    console.log(body)
+})
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-whoami-java">
+
+```java
+// This sample needs improvement.
+URL obj = new URL("/sessions/whoami");
+
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+
+int responseCode = con.getResponseCode();
+
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream())
+);
+
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+
+System.out.println(response.toString());
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-whoami-python">
+
+```python
+import requests
+
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get(
+  '/sessions/whoami',
+  params={},
+  headers = headers)
+
+print r.json()
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-whoami-ruby">
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get '/sessions/whoami',
+  params: {}, headers: headers
+
+p JSON.parse(result)
+```
+
+</div>
+</div>
+</div>
+
 <a id="ory-kratos-version"></a>
 
 ## version
@@ -4355,7 +4522,7 @@ status will never refer to the cluster state, only to a single instance.
 
 ##### Examples
 
-###### 200 response
+> 200 Response
 
 ```json
 {
@@ -4550,11 +4717,11 @@ credentials, passwordless credentials,_
 {
   "addresses": [
     {
-      "expires_at": "2020-03-25T17:39:55Z",
+      "expires_at": "2020-04-06T10:21:38Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-03-25T17:39:55Z",
+      "verified_at": "2020-04-06T10:21:38Z",
       "via": "string"
     }
   ],
@@ -4613,11 +4780,11 @@ _None_
 
 ```json
 {
-  "expires_at": "2020-03-25T17:39:55Z",
+  "expires_at": "2020-04-06T10:21:38Z",
   "id": "string",
   "value": "string",
   "verified": true,
-  "verified_at": "2020-03-25T17:39:55Z",
+  "verified_at": "2020-04-06T10:21:38Z",
   "via": "string"
 }
 ```
@@ -4760,13 +4927,13 @@ _Field represents a HTML Form Field_
 
 | Name     | Type                    | Required | Restrictions | Description                                                             |
 | -------- | ----------------------- | -------- | ------------ | ----------------------------------------------------------------------- |
-| disabled | boolean                 | false    | none         | Disabled is the equivalent of `<input disabled="{{.Disabled}}">`        |
+| disabled | boolean                 | false    | none         | Disabled is the equivalent of `<input disabled="{{.Disabled}}">`         |
 | errors   | [[Error](#schemaerror)] | false    | none         | Errors contains all validation errors this particular field has caused. |
-| name     | string                  | true     | none         | Name is the equivalent of `<input name="{{.Name}}">`                    |
-| pattern  | string                  | false    | none         | Pattern is the equivalent of `<input pattern="{{.Pattern}}">`           |
-| required | boolean                 | true     | none         | Required is the equivalent of `<input required="{{.Required}}">`        |
-| type     | string                  | true     | none         | Type is the equivalent of `<input type="{{.Type}}">`                    |
-| value    | object                  | false    | none         | Value is the equivalent of `<input value="{{.Value}}">`                 |
+| name     | string                  | true     | none         | Name is the equivalent of `<input name="{{.Name}}">`                      |
+| pattern  | string                  | false    | none         | Pattern is the equivalent of `<input pattern="{{.Pattern}}">`             |
+| required | boolean                 | true     | none         | Required is the equivalent of `<input required="{{.Required}}">`          |
+| type     | string                  | true     | none         | Type is the equivalent of `<input type="{{.Type}}">`                      |
+| value    | object                  | false    | none         | Value is the equivalent of `<input value="{{.Value}}">`                   |
 
 <a id="tocSformfields">formFields</a>
 
@@ -4811,12 +4978,10 @@ _Fields contains multiple fields_
   "error": {
     "code": 404,
     "debug": "The database adapter was unable to find the element",
-    "details": [
-      {
-        "property1": {},
-        "property2": {}
-      }
-    ],
+    "details": {
+      "property1": {},
+      "property2": {}
+    },
     "message": "string",
     "reason": "string",
     "request": "string",
@@ -4829,9 +4994,9 @@ _Error response_
 
 #### Properties
 
-| Name  | Type                                              | Required | Restrictions | Description            |
-| ----- | ------------------------------------------------- | -------- | ------------ | ---------------------- |
-| error | [genericErrorPayload](#schemagenericerrorpayload) | false    | none         | nolint:deadcode,unused |
+| Name  | Type                                              | Required | Restrictions | Description |
+| ----- | ------------------------------------------------- | -------- | ------------ | ----------- |
+| error | [genericErrorPayload](#schemagenericerrorpayload) | false    | none         | none        |
 
 <a id="tocSgenericerrorpayload">genericErrorPayload</a>
 
@@ -4843,12 +5008,10 @@ _Error response_
 {
   "code": 404,
   "debug": "The database adapter was unable to find the element",
-  "details": [
-    {
-      "property1": {},
-      "property2": {}
-    }
-  ],
+  "details": {
+    "property1": {},
+    "property2": {}
+  },
   "message": "string",
   "reason": "string",
   "request": "string",
@@ -4856,15 +5019,13 @@ _Error response_
 }
 ```
 
-_nolint:deadcode,unused_
-
 #### Properties
 
 | Name                       | Type           | Required | Restrictions | Description                                                                            |
 | -------------------------- | -------------- | -------- | ------------ | -------------------------------------------------------------------------------------- |
 | code                       | integer(int64) | false    | none         | Code represents the error status code (404, 403, 401, ...).                            |
 | debug                      | string         | false    | none         | Debug contains debug information. This is usually not available and has to be enabled. |
-| details                    | [object]       | false    | none         | none                                                                                   |
+| details                    | object         | false    | none         | none                                                                                   |
 | » **additionalProperties** | object         | false    | none         | none                                                                                   |
 | message                    | string         | false    | none         | none                                                                                   |
 | reason                     | string         | false    | none         | none                                                                                   |
@@ -4920,9 +5081,10 @@ _nolint:deadcode,unused_
 ```json
 {
   "active": "string",
-  "expires_at": "2020-03-25T17:39:55Z",
+  "expires_at": "2020-04-06T10:21:38Z",
+  "forced": true,
   "id": "string",
-  "issued_at": "2020-03-25T17:39:55Z",
+  "issued_at": "2020-04-06T10:21:38Z",
   "methods": {
     "property1": {
       "config": {
@@ -5019,6 +5181,7 @@ _nolint:deadcode,unused_
 | -------------------------- | ----------------------------------------------- | -------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | active                     | [CredentialsType](#schemacredentialstype)       | false    | none         | and so on.                                                                                                                                                                  |
 | expires_at                 | string(date-time)                               | true     | none         | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in, a new request has to be initiated.                                                |
+| forced                     | boolean                                         | false    | none         | Forced stores whether this login request should enforce reauthentication.                                                                                                   |
 | id                         | [UUID](#schemauuid)                             | true     | none         | none                                                                                                                                                                        |
 | issued_at                  | string(date-time)                               | true     | none         | IssuedAt is the time (UTC) when the request occurred.                                                                                                                       |
 | methods                    | object                                          | true     | none         | Methods contains context for all enabled login methods. If a login request has been processed, but for example the password is incorrect, this will contain error messages. |
@@ -5149,7 +5312,7 @@ _nolint:deadcode,unused_
 
 ```json
 {
-  "expires_at": "2020-03-25T17:39:55Z",
+  "expires_at": "2020-04-06T10:21:38Z",
   "form": {
     "action": "string",
     "errors": [
@@ -5178,11 +5341,11 @@ _nolint:deadcode,unused_
   "identity": {
     "addresses": [
       {
-        "expires_at": "2020-03-25T17:39:55Z",
+        "expires_at": "2020-04-06T10:21:38Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-03-25T17:39:55Z",
+        "verified_at": "2020-04-06T10:21:38Z",
         "via": "string"
       }
     ],
@@ -5191,7 +5354,7 @@ _nolint:deadcode,unused_
     "traits_schema_id": "string",
     "traits_schema_url": "string"
   },
-  "issued_at": "2020-03-25T17:39:55Z",
+  "issued_at": "2020-04-06T10:21:38Z",
   "request_url": "string",
   "update_successful": true
 }
@@ -5220,9 +5383,9 @@ _Request presents a profile management request_
 ```json
 {
   "active": "string",
-  "expires_at": "2020-03-25T17:39:55Z",
+  "expires_at": "2020-04-06T10:21:38Z",
   "id": "string",
-  "issued_at": "2020-03-25T17:39:55Z",
+  "issued_at": "2020-04-06T10:21:38Z",
   "methods": {
     "property1": {
       "config": {
@@ -5449,16 +5612,16 @@ _Request presents a profile management request_
 
 ```json
 {
-  "authenticated_at": "2020-03-25T17:39:55Z",
-  "expires_at": "2020-03-25T17:39:55Z",
+  "authenticated_at": "2020-04-06T10:21:38Z",
+  "expires_at": "2020-04-06T10:21:38Z",
   "identity": {
     "addresses": [
       {
-        "expires_at": "2020-03-25T17:39:55Z",
+        "expires_at": "2020-04-06T10:21:38Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-03-25T17:39:55Z",
+        "verified_at": "2020-04-06T10:21:38Z",
         "via": "string"
       }
     ],
@@ -5467,7 +5630,7 @@ _Request presents a profile management request_
     "traits_schema_id": "string",
     "traits_schema_url": "string"
   },
-  "issued_at": "2020-03-25T17:39:55Z",
+  "issued_at": "2020-04-06T10:21:38Z",
   "sid": "string"
 }
 ```
@@ -5490,7 +5653,7 @@ _Request presents a profile management request_
 
 ```json
 {
-  "expires_at": "2020-03-25T17:39:55Z",
+  "expires_at": "2020-04-06T10:21:38Z",
   "form": {
     "action": "string",
     "errors": [
@@ -5516,7 +5679,7 @@ _Request presents a profile management request_
     "method": "string"
   },
   "id": "string",
-  "issued_at": "2020-03-25T17:39:55Z",
+  "issued_at": "2020-04-06T10:21:38Z",
   "request_url": "string",
   "success": true,
   "via": "string"

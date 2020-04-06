@@ -49,7 +49,7 @@ function Version() {
             <tr>
               <th>master</th>
               <td>
-                <Link to={useBaseUrl('/docs/next/introduction')}>
+                <Link to={useBaseUrl('/docs/next/index')}>
                   Documentation
                 </Link>
               </td>
@@ -72,7 +72,7 @@ function Version() {
                 <tr key={version}>
                   <th>{version}</th>
                   <td>
-                    <Link to={useBaseUrl(`/docs/${version}`)}>
+                    <Link to={useBaseUrl(`/docs/${version}/index`)}>
                       Documentation
                     </Link>
                   </td>
