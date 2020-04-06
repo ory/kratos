@@ -1,11 +1,6 @@
 ---
-title: Ory Kratos
-language_tabs: []
-toc_footers: []
-includes: []
-search: false
-highlight_theme: darkula
-headingLevel: 2
+title: REST API
+id: api
 ---
 
 Welcome to the ORY Kratos HTTP API documentation!
