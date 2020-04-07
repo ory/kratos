@@ -12,6 +12,10 @@ import (
 // and so on.
 type CredentialsType string
 
+func (c CredentialsType) String() string {
+	return string(c)
+}
+
 const (
 	CredentialsTypePassword CredentialsType = "password"
 	CredentialsTypeOIDC     CredentialsType = "oidc"

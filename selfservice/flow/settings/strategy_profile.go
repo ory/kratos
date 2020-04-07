@@ -96,9 +96,6 @@ func (s *StrategyTraits) PopulateSettingsMethod(r *http.Request, ss *session.Ses
 
 	// use a schema compiler that disables identifiers
 	schemaCompiler := jsonschema.NewCompiler()
-	if ss.AuthenticatedAt.Add(s.c.SelfServicePrivilegedSessionMaxAge()).Before(time.Now()) {
-		registerNewDisableIdentifiersExtension(schemaCompiler)
-	}
 
 	f, err := form.NewHTMLFormFromJSONSchema(urlx.CopyWithQuery(
 		urlx.AppendPaths(s.c.SelfPublicURL(), PublicSettingsProfilePath),

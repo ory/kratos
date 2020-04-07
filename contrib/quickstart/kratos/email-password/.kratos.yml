@@ -4,7 +4,7 @@ selfservice:
       enabled: true
 
   settings:
-    privileged_session_max_age: 15h
+    privileged_session_max_age: 1m
     after:
       profile:
         -

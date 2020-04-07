@@ -39,7 +39,7 @@ func (s *Strategy) RegisterSettingsRoutes(router *x.RouterPublic) {
 }
 
 func (s *Strategy) SettingsStrategyID() string {
-	return string(identity.CredentialsTypePassword)
+	return identity.CredentialsTypePassword.String()
 }
 
 // swagger:model completeSelfServiceBrowserSettingsPasswordFlowPayload
@@ -178,7 +178,7 @@ func (s *Strategy) CompleteSettingsFlow(w http.ResponseWriter, r *http.Request, 
 	}
 
 	if err := s.d.SettingsExecutor().PostSettingsHook(w, r,
-		s.d.PostSettingsHooks(settings.StrategyTraitsID),
+		s.d.PostSettingsHooks(s.SettingsStrategyID()),
 		ar, ss, i,
 	); errorsx.Cause(err) == settings.ErrHookAbortRequest {
 		return
@@ -196,22 +196,11 @@ func (s *Strategy) CompleteSettingsFlow(w http.ResponseWriter, r *http.Request, 
 }
 
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, ss *session.Session, pr *settings.Request) error {
-	disabled := ss.AuthenticatedAt.Add(s.c.SelfServicePrivilegedSessionMaxAge()).Before(time.Now())
-
 	f := &form.HTMLForm{
-		Action: urlx.CopyWithQuery(
-			urlx.AppendPaths(s.c.SelfPublicURL(), SettingsPath),
+		Action: urlx.CopyWithQuery(urlx.AppendPaths(s.c.SelfPublicURL(), SettingsPath),
 			url.Values{"request": {pr.ID.String()}},
 		).String(),
-		Method: "POST",
-		Fields: form.Fields{
-			{
-				Name:     "password",
-				Type:     "password",
-				Required: true,
-				Disabled: disabled,
-			},
-		},
+		Fields: form.Fields{{Name: "password", Type: "password", Required: true}}, Method: "POST",
 	}
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 
@@ -229,5 +218,5 @@ func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, r
 		rr.Methods[s.SettingsStrategyID()].Config.SetCSRF(s.d.GenerateCSRFToken(r))
 	}
 
-	s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, rr, err, string(identity.CredentialsTypePassword))
+	s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, rr, err, s.SettingsStrategyID())
 }
