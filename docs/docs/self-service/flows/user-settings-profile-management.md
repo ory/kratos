@@ -14,8 +14,7 @@ using two principal flows:
 This flow does not allow updates of security-sensitive information such as the
 password, fields associated with login (e.g. email), fields associated with
 account recovery (e.g. recovery email address). These fields must be updated
-using a separate flow which requires prior security checks. using a separate
-flow which requires prior security checks.
+using a separate flow which requires prior security checks.
 
 The updated profile must be valid against the JSON Schema defined for its
 [Identity Traits](../../concepts/identity-user-model.md). If one or more fields
