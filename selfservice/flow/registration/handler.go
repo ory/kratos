@@ -28,6 +28,7 @@ type (
 		StrategyProvider
 		errorx.ManagementProvider
 		session.HandlerProvider
+		session.ManagementProvider
 		x.WriterProvider
 		x.CSRFTokenGeneratorProvider
 		HookExecutorProvider
@@ -107,7 +108,12 @@ func (h *Handler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request,
 //       500: genericError
 func (h *Handler) initRegistrationRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := h.NewRegistrationRequest(w, r, func(a *Request) (string, error) {
-		return urlx.CopyWithQuery(h.c.RegisterURL(), url.Values{"request": {a.ID.String()}}).String(), nil
+		// we assume an error means the user has no session
+		if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), w, r); err != nil {
+			return urlx.CopyWithQuery(h.c.RegisterURL(), url.Values{"request": {a.ID.String()}}).String(), nil
+		}
+
+		return h.c.DefaultReturnToURL().String(), nil
 	}); err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
