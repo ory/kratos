@@ -80,6 +80,7 @@
 
 **Merged pull requests:**
 
+- fix writing [\#322](https://github.com/ory/kratos/pull/322) ([gwind](https://github.com/gwind))
 - chore: update docusaurus template [\#321](https://github.com/ory/kratos/pull/321) ([aeneasr](https://github.com/aeneasr))
 - chore: update docusaurus template [\#320](https://github.com/ory/kratos/pull/320) ([aeneasr](https://github.com/aeneasr))
 - chore: update docusaurus template [\#319](https://github.com/ory/kratos/pull/319) ([aeneasr](https://github.com/aeneasr))
