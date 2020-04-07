@@ -15,14 +15,16 @@
 package cmd
 
 import (
-	"github.com/ory/x/viperx"
 	"os"
 	"strconv"
 
+	"github.com/ory/x/viperx"
+
 	"github.com/gobuffalo/packr/v2"
 
-	"github.com/ory/x/flagx"
 	"github.com/spf13/cobra"
+
+	"github.com/ory/x/flagx"
 
 	"github.com/ory/kratos/cmd/daemon"
 	"github.com/ory/kratos/driver"

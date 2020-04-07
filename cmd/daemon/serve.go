@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/segmentio/analytics-go"
+	"github.com/ory/analytics-go/v4"
 	"github.com/sirupsen/logrus"
 
 	"github.com/ory/x/flagx"

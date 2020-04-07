@@ -1049,7 +1049,7 @@
       ],
       "properties": {
         "action": {
-          "description": "Action should be used as the form action URL (\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e).",
+          "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
           "type": "string"
         },
         "errors": {

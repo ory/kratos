@@ -128,7 +128,7 @@ func TestStrategyTraits(t *testing.T) {
 				Action: pointerx.String(publicTS.URL + settings.PublicSettingsProfilePath + "?request=" + rid),
 				Method: pointerx.String("POST"),
 				Fields: models.FormFields{
-					&models.FormField{Name: pointerx.String("traits.email"), Type: pointerx.String("text"), Value: "john@doe.com", Disabled: true},
+					&models.FormField{Name: pointerx.String("traits.email"), Type: pointerx.String("text"), Value: "john@doe.com"},
 					&models.FormField{Name: pointerx.String("traits.stringy"), Type: pointerx.String("text"), Value: "foobar"},
 					&models.FormField{Name: pointerx.String("traits.numby"), Type: pointerx.String("number"), Value: json.Number("2.5")},
 					&models.FormField{Name: pointerx.String("traits.booly"), Type: pointerx.String("checkbox"), Value: false},
@@ -174,20 +174,34 @@ func TestStrategyTraits(t *testing.T) {
 		})
 
 		t.Run("description=should come back with form errors if trying to update protected field without sudo mode", func(t *testing.T) {
-			f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyTraitsID)
+			var run = func(t *testing.T) {
+				f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyTraitsID)
 
-			values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
-			values.Set("traits.email", "not-john-doe")
-			res, err := primaryUser.PostForm(pointerx.StringR(f.Action), values)
-			require.NoError(t, err)
-			defer res.Body.Close()
+				values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
+				values.Set("traits.email", "not-john-doe")
+				res, err := primaryUser.PostForm(pointerx.StringR(f.Action), values)
+				require.NoError(t, err)
+				defer res.Body.Close()
 
-			assert.Contains(t, res.Request.URL.String(), errTs.URL)
-			assert.EqualValues(t, http.StatusOK, res.StatusCode)
+				assert.Contains(t, res.Request.URL.String(), errTs.URL)
+				assert.EqualValues(t, http.StatusOK, res.StatusCode)
 
-			body, err := ioutil.ReadAll(res.Body)
-			require.NoError(t, err)
-			assert.Contains(t, gjson.Get(string(body), "0.reason").String(), "session is too old and thus not allowed to update these fields. Please re-authenticate", "%s", body)
+				body, err := ioutil.ReadAll(res.Body)
+				require.NoError(t, err)
+				assert.Contains(t, gjson.Get(string(body), "0.reason").String(), "session is too old and thus not allowed to update these fields. Please re-authenticate", "%s", body)
+			}
+
+			t.Run("case=should fail with hooks", func(t *testing.T) {
+				testhelpers.SetSettingsStrategyAfterHooks(t, settings.StrategyTraitsID, publicTS.URL+"/return-ts")
+				t.Cleanup(func() {
+					viper.Set(configuration.ViperKeySelfServiceSettingsAfterConfig+"."+settings.StrategyTraitsID, nil)
+				})
+				run(t)
+			})
+
+			t.Run("case=should fail without hooks", func(t *testing.T) {
+				run(t)
+			})
 		})
 
 		t.Run("description=should retry with invalid payloads multiple times before succeeding", func(t *testing.T) {

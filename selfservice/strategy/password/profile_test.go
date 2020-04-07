@@ -60,6 +60,7 @@ func TestProfile(t *testing.T) {
 		t.Cleanup(func() {
 			viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1m")
 		})
+
 		rs := testhelpers.GetSettingsRequest(t, primaryUser, publicTS)
 
 		form := rs.Payload.Methods[string(identity.CredentialsTypePassword)].Config

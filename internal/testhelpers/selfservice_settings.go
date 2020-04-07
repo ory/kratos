@@ -29,6 +29,12 @@ import (
 	"github.com/ory/kratos/x"
 )
 
+func SetSettingsStrategyAfterHooks(t *testing.T, strategy string, u string) {
+	viper.Set(
+		configuration.ViperKeySelfServiceSettingsAfterConfig+"."+strategy,
+		HookConfigRedirectTo(t, u))
+}
+
 func HookConfigRedirectTo(t *testing.T, u string) (m []map[string]interface{}) {
 	var b bytes.Buffer
 	_, err := fmt.Fprintf(&b, `[

@@ -6,8 +6,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/errorsx"
-
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/session"
@@ -51,6 +49,23 @@ func NewHookExecutor(
 }
 
 func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, hooks []PostHookExecutor, a *Request, ss *session.Session, i *identity.Identity) error {
+	options := []identity.ManagerOption{identity.ManagerExposeValidationErrors}
+	if ss.AuthenticatedAt.Add(e.c.SelfServicePrivilegedSessionMaxAge()).After(time.Now()) {
+		options = append(options, identity.ManagerAllowWriteProtectedTraits)
+	}
+
+	if err := e.d.IdentityManager().Update(r.Context(), i, options...); err != nil {
+		if errors.Is(err, identity.ErrProtectedFieldModified) {
+			return errors.WithStack(ErrRequestNeedsReAuthentication)
+		}
+		return err
+	}
+
+	a.UpdateSuccessful = true
+	if err := e.d.SettingsRequestPersister().UpdateSettingsRequest(r.Context(), a); err != nil {
+		return err
+	}
+
 	e.d.Logger().
 		WithField("identity_id", i.ID).
 		Debug("An identity's settings have been updated, running post hooks.")
@@ -60,23 +75,6 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		if err := executor.ExecuteSettingsPostHook(w, r, a, ss); err != nil {
 			return err
 		}
-	}
-
-	options := []identity.ManagerOption{identity.ManagerExposeValidationErrors}
-	if ss.AuthenticatedAt.Add(e.c.SelfServicePrivilegedSessionMaxAge()).After(time.Now()) {
-		options = append(options, identity.ManagerAllowWriteProtectedTraits)
-	}
-
-	if err := e.d.IdentityManager().Update(r.Context(), i, options...); err != nil {
-		if errorsx.Cause(err) == identity.ErrProtectedFieldModified {
-			return errors.WithStack(ErrRequestNeedsReAuthentication)
-		}
-		return err
-	}
-
-	a.UpdateSuccessful = true
-	if err := e.d.SettingsRequestPersister().UpdateSettingsRequest(r.Context(), a); err != nil {
-		return err
 	}
 
 	e.d.Logger().
