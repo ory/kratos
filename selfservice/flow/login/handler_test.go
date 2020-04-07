@@ -45,6 +45,7 @@ func TestHandlerSettingForced(t *testing.T) {
 
 	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
 	viper.Set(configuration.ViperKeyURLsLogin, loginTS.URL)
+	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, "https://www.ory.sh")
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/login.schema.json")
 
 	// assert bool
@@ -55,7 +56,7 @@ func TestHandlerSettingForced(t *testing.T) {
 	}
 
 	// make authenticated request
-	mar := func(extQuery url.Values) []byte {
+	mar := func(t *testing.T, extQuery url.Values) (*http.Response, []byte) {
 		rid := x.NewUUID()
 		req := x.NewTestHTTPRequest(t, "GET", ts.URL+login.BrowserLoginPath, nil)
 		loginReq := login.NewLoginRequest(time.Minute, x.FakeCSRFToken, req)
@@ -65,57 +66,59 @@ func TestHandlerSettingForced(t *testing.T) {
 		}
 		require.NoError(t, reg.LoginRequestPersister().CreateLoginRequest(context.TODO(), loginReq), "%+v", loginReq)
 
-		q := url.Values{
-			"request": {rid.String()},
-		}
+		q := url.Values{"request": {rid.String()}}
 		for key := range extQuery {
 			q.Set(key, extQuery.Get(key))
 		}
 		req.URL.RawQuery = q.Encode()
 
-		body, _ := session.MockMakeAuthenticatedRequest(t, reg, router.Router, req)
-		return body
+		body, res := session.MockMakeAuthenticatedRequest(t, reg, router.Router, req)
+		return res, body
 	}
 
 	// make unauthenticated request
-	mur := func(query url.Values) []byte {
+	mur := func(t *testing.T, query url.Values) (*http.Response, []byte) {
 		c := ts.Client()
-		u, err := url.ParseRequestURI(ts.URL)
-		require.NoError(t, err)
-		u.Path = login.BrowserLoginPath
-		u.RawQuery = query.Encode()
-		res, err := c.Get(u.String())
+		res, err := c.Get(ts.URL + login.BrowserLoginPath + "?" + query.Encode())
 		require.NoError(t, err)
 		defer res.Body.Close()
 		body, err := ioutil.ReadAll(res.Body)
 		require.NoError(t, err)
-		return body
+		return res, body
 	}
 
 	t.Run("case=does not set forced flag on unauthenticated request", func(t *testing.T) {
-		ab(mur(url.Values{}), false)
+		res, body := mur(t, url.Values{})
+		ab(body, false)
+		assert.Contains(t, res.Request.URL.String(), loginTS.URL)
 	})
 
 	t.Run("case=does not set forced flag on unauthenticated request with prompt=login", func(t *testing.T) {
-		ab(mur(url.Values{
+		res, body := mur(t, url.Values{
 			"prompt": {"login"},
-		}), false)
+		})
+		ab(body, false)
+		assert.Contains(t, res.Request.URL.String(), loginTS.URL)
 	})
 
 	t.Run("case=does not set forced flag on authenticated request without prompt=login", func(t *testing.T) {
-		ab(mar(url.Values{}), false)
+		res, _ := mar(t, url.Values{})
+		assert.Contains(t, res.Request.URL.String(), "https://www.ory.sh")
 	})
 
 	t.Run("case=does not set forced flag on authenticated request with prompt=false", func(t *testing.T) {
-		ab(mar(url.Values{
+		res, _ := mar(t, url.Values{
 			"prompt": {"false"},
-		}), false)
+		})
+		assert.Contains(t, res.Request.URL.String(), "https://www.ory.sh")
 	})
 
 	t.Run("case=does set forced flag on authenticated request with prompt=login", func(t *testing.T) {
-		ab(mar(url.Values{
+		res, body := mar(t, url.Values{
 			"prompt": {"login"},
-		}), true)
+		})
+		ab(body, true)
+		assert.Contains(t, res.Request.URL.String(), loginTS.URL)
 	})
 }
 

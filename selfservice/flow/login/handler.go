@@ -109,12 +109,18 @@ func (h *Handler) NewLoginRequest(w http.ResponseWriter, r *http.Request, redir 
 func (h *Handler) initLoginRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := h.NewLoginRequest(w, r, func(a *Request) (string, error) {
 		// we assume an error means the user has no session
-		if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), w, r); err == nil && r.URL.Query().Get("prompt") == "login" {
+		if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), w, r); err != nil {
+			return urlx.CopyWithQuery(h.c.LoginURL(), url.Values{"request": {a.ID.String()}}).String(), nil
+		}
+
+		if r.URL.Query().Get("prompt") == "login" {
 			if err := h.d.LoginRequestPersister().MarkRequestForced(r.Context(), a.ID); err != nil {
 				return "", err
 			}
+			return urlx.CopyWithQuery(h.c.LoginURL(), url.Values{"request": {a.ID.String()}}).String(), nil
 		}
-		return urlx.CopyWithQuery(h.c.LoginURL(), url.Values{"request": {a.ID.String()}}).String(), nil
+
+		return h.c.DefaultReturnToURL().String(), nil
 	}); err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
