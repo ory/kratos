@@ -236,6 +236,7 @@
 - Rework public and admin fetch strategy [\#203](https://github.com/ory/kratos/pull/203) ([aeneasr](https://github.com/aeneasr))
 - Update HTTP routes for a consistent API naming [\#199](https://github.com/ory/kratos/pull/199) ([aeneasr](https://github.com/aeneasr))
 - ss: Use JSON Schema to type assert form body [\#116](https://github.com/ory/kratos/pull/116) ([aeneasr](https://github.com/aeneasr))
+- Enable Circle CI [\#57](https://github.com/ory/kratos/pull/57) ([aeneasr](https://github.com/aeneasr))
 
 **Fixed bugs:**
 
