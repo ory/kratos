@@ -80,6 +80,7 @@
 
 **Merged pull requests:**
 
+- chore: update docusaurus template [\#324](https://github.com/ory/kratos/pull/324) ([aeneasr](https://github.com/aeneasr))
 - fix writing [\#322](https://github.com/ory/kratos/pull/322) ([gwind](https://github.com/gwind))
 - chore: update docusaurus template [\#321](https://github.com/ory/kratos/pull/321) ([aeneasr](https://github.com/aeneasr))
 - chore: update docusaurus template [\#320](https://github.com/ory/kratos/pull/320) ([aeneasr](https://github.com/aeneasr))
@@ -236,7 +237,6 @@
 - Rework public and admin fetch strategy [\#203](https://github.com/ory/kratos/pull/203) ([aeneasr](https://github.com/aeneasr))
 - Update HTTP routes for a consistent API naming [\#199](https://github.com/ory/kratos/pull/199) ([aeneasr](https://github.com/aeneasr))
 - ss: Use JSON Schema to type assert form body [\#116](https://github.com/ory/kratos/pull/116) ([aeneasr](https://github.com/aeneasr))
-- Enable Circle CI [\#57](https://github.com/ory/kratos/pull/57) ([aeneasr](https://github.com/aeneasr))
 
 **Fixed bugs:**
 
@@ -463,6 +463,7 @@
 - docs: Updates issue and pull request templates [\#59](https://github.com/ory/kratos/pull/59) ([aeneasr](https://github.com/aeneasr))
 - docs: Updates issue and pull request templates [\#40](https://github.com/ory/kratos/pull/40) ([aeneasr](https://github.com/aeneasr))
 - docs: Updates issue and pull request templates [\#39](https://github.com/ory/kratos/pull/39) ([aeneasr](https://github.com/aeneasr))
+- Spike [\#22](https://github.com/ory/kratos/pull/22) ([aeneasr](https://github.com/aeneasr))
 - docs: Updates issue and pull request templates [\#8](https://github.com/ory/kratos/pull/8) ([aeneasr](https://github.com/aeneasr))
 - docs: Updates issue and pull request templates [\#7](https://github.com/ory/kratos/pull/7) ([aeneasr](https://github.com/aeneasr))
 
