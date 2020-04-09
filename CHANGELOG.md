@@ -463,7 +463,6 @@
 - docs: Updates issue and pull request templates [\#59](https://github.com/ory/kratos/pull/59) ([aeneasr](https://github.com/aeneasr))
 - docs: Updates issue and pull request templates [\#40](https://github.com/ory/kratos/pull/40) ([aeneasr](https://github.com/aeneasr))
 - docs: Updates issue and pull request templates [\#39](https://github.com/ory/kratos/pull/39) ([aeneasr](https://github.com/aeneasr))
-- Spike [\#22](https://github.com/ory/kratos/pull/22) ([aeneasr](https://github.com/aeneasr))
 - docs: Updates issue and pull request templates [\#8](https://github.com/ory/kratos/pull/8) ([aeneasr](https://github.com/aeneasr))
 - docs: Updates issue and pull request templates [\#7](https://github.com/ory/kratos/pull/7) ([aeneasr](https://github.com/aeneasr))
 
