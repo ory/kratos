@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/schema"
 
 	"github.com/julienschmidt/httprouter"
@@ -31,6 +32,8 @@ type (
 		x.CSRFProvider
 		x.WriterProvider
 		x.LoggingProvider
+
+		continuity.ManagementProvider
 
 		session.HandlerProvider
 		session.ManagementProvider
@@ -98,6 +101,11 @@ func (h *Handler) initUpdateSettings(w http.ResponseWriter, r *http.Request, ps 
 
 	a := NewRequest(h.c.SelfServiceSettingsRequestLifespan(), r, s)
 	for _, strategy := range h.d.SettingsStrategies() {
+		if err := h.d.ContinuityManager().Abort(r.Context(), w, r, "settings_"+strategy.SettingsStrategyID()); err != nil {
+			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+			return
+		}
+
 		if err := strategy.PopulateSettingsMethod(r, s, a); err != nil {
 			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 			return
@@ -163,9 +171,6 @@ func (h *Handler) adminFetchUpdateSettingsRequest(w http.ResponseWriter, r *http
 	}
 }
 
-// func (h *Handler) resumeAbortedRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-//
-// }
 
 func (h *Handler) wrapErrorForbidden(err error, shouldWrap bool) error {
 	if shouldWrap {

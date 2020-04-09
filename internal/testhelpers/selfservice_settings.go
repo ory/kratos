@@ -101,6 +101,9 @@ func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, ids []ident
 
 	reg.SettingsHandler().RegisterPublicRoutes(public)
 	reg.SettingsStrategies().RegisterPublicRoutes(public)
+	reg.LoginHandler().RegisterPublicRoutes(public)
+	reg.LoginHandler().RegisterAdminRoutes(admin)
+	reg.LoginStrategies().RegisterPublicRoutes(public)
 
 	n := negroni.Classic()
 	n.UseHandler(public)

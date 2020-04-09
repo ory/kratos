@@ -15,6 +15,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/x/urlx"
+
 	"github.com/ory/x/pointerx"
 
 	"github.com/ory/x/httpx"
@@ -37,7 +39,6 @@ func TestStrategyTraits(t *testing.T) {
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
 
 	ui := testhelpers.NewSettingsUITestServer(t)
-	errTs := testhelpers.NewErrorTestServer(t, reg)
 	viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
 
 	primaryIdentity := &identity.Identity{
@@ -48,11 +49,12 @@ func TestStrategyTraits(t *testing.T) {
 		Traits:         identity.Traits(`{"email":"john@doe.com","stringy":"foobar","booly":false,"numby":2.5,"should_long_string":"asdfasdfasdfasdfasfdasdfasdfasdf","should_big_number":2048}`),
 		TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
 	}
-	publicTS, _ := testhelpers.NewSettingsAPIServer(t, reg, []identity.Identity{
+	publicTS, adminTS := testhelpers.NewSettingsAPIServer(t, reg, []identity.Identity{
 		*primaryIdentity, {ID: x.NewUUID(), Traits: identity.Traits(`{}`)}})
 
 	primaryUser := testhelpers.NewSessionClient(t, publicTS.URL+"/sessions/set/0")
 	publicClient := testhelpers.NewSDKClient(publicTS)
+	adminClient := testhelpers.NewSDKClient(adminTS)
 
 	t.Run("description=not authorized to call endpoints without a session", func(t *testing.T) {
 		pr, ar := x.NewRouterPublic(), x.NewRouterAdmin()
@@ -154,8 +156,26 @@ func TestStrategyTraits(t *testing.T) {
 		})
 
 		t.Run("description=should update protected field with sudo mode", func(t *testing.T) {
-			viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1m")
-			defer viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
+			var called int
+			loginTS := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				require.Equal(t, 0, called)
+				called++
+
+				viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "5m")
+				t.Cleanup(func() {
+					viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
+				})
+
+				res, err := adminClient.Common.GetSelfServiceBrowserLoginRequest(common.NewGetSelfServiceBrowserLoginRequestParams().WithRequest(r.URL.Query().Get("request")))
+				require.NoError(t, err)
+				require.NotEmpty(t, res.Payload.RequestURL)
+
+				redir := urlx.ParseOrPanic(*res.Payload.RequestURL).Query().Get("return_to")
+				t.Logf("Redirecting to: %s", redir)
+				http.Redirect(w, r, redir, http.StatusFound)
+			}))
+			defer loginTS.Close()
+			viper.Set(configuration.ViperKeyURLsLogin, loginTS.URL+"/login")
 
 			config := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyTraitsID)
 			newEmail := "not-john-doe@mail.com"
@@ -173,7 +193,13 @@ func TestStrategyTraits(t *testing.T) {
 			assert.Equal(t, "foobar", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.stringy).value").String(), "%s", actual) // sanity check if original payload is still here
 		})
 
-		t.Run("description=should come back with form errors if trying to update protected field without sudo mode", func(t *testing.T) {
+		t.Run("description=should end up at the login endpoint if trying to update protected field without sudo mode", func(t *testing.T) {
+			loginTS := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				assert.Equal(t, r.URL.Path, "/login")
+				_, _ = w.Write([]byte("called login page"))
+			}))
+			viper.Set(configuration.ViperKeyURLsLogin, loginTS.URL+"/login")
+
 			var run = func(t *testing.T) {
 				f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyTraitsID)
 
@@ -183,23 +209,18 @@ func TestStrategyTraits(t *testing.T) {
 				require.NoError(t, err)
 				defer res.Body.Close()
 
-				assert.Contains(t, res.Request.URL.String(), errTs.URL)
-				assert.EqualValues(t, http.StatusOK, res.StatusCode)
-
 				body, err := ioutil.ReadAll(res.Body)
 				require.NoError(t, err)
-				assert.Contains(t, gjson.Get(string(body), "0.reason").String(), "session is too old and thus not allowed to update these fields. Please re-authenticate", "%s", body)
+				assert.EqualValues(t, string(body), "called login page", "%s", body)
 			}
+
+			t.Run("case=should fail without hooks", run)
 
 			t.Run("case=should fail with hooks", func(t *testing.T) {
 				testhelpers.SetSettingsStrategyAfterHooks(t, settings.StrategyTraitsID, publicTS.URL+"/return-ts")
 				t.Cleanup(func() {
 					viper.Set(configuration.ViperKeySelfServiceSettingsAfterConfig+"."+settings.StrategyTraitsID, nil)
 				})
-				run(t)
-			})
-
-			t.Run("case=should fail without hooks", func(t *testing.T) {
 				run(t)
 			})
 		})

@@ -120,7 +120,12 @@ func (h *Handler) initLoginRequest(w http.ResponseWriter, r *http.Request, ps ht
 			return urlx.CopyWithQuery(h.c.LoginURL(), url.Values{"request": {a.ID.String()}}).String(), nil
 		}
 
-		return h.c.DefaultReturnToURL().String(), nil
+		returnTo, err := x.DetermineReturnToURL(r.URL, h.c.DefaultReturnToURL(), []url.URL{*h.c.SelfPublicURL()})
+		if err != nil {
+			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		}
+
+		return returnTo, nil
 	}); err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return

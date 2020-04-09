@@ -20,6 +20,7 @@ type ManagementProvider interface {
 type Manager interface {
 	Pause(ctx context.Context, w http.ResponseWriter, r *http.Request, name string, opts ...ManagerOption) error
 	Continue(ctx context.Context, r *http.Request, name string, opts ...ManagerOption) (*Container, error)
+	Abort(ctx context.Context, w http.ResponseWriter, r *http.Request, name string) error
 }
 
 type managerOptions struct {

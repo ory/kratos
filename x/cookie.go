@@ -48,3 +48,13 @@ func SessionGetStringOr(r *http.Request, s sessions.Store, id, key, fallback str
 	}
 	return v
 }
+
+func SessionUnset(w http.ResponseWriter, r *http.Request, s sessions.Store, id string) error {
+	cookie, err := s.Get(r, id)
+	if err != nil {
+		return nil
+	}
+
+	cookie.Options.MaxAge = -1
+	return errors.WithStack(cookie.Save(r, w))
+}
