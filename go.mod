@@ -28,7 +28,6 @@ require (
 	github.com/google/go-github/v27 v27.0.1
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/context v1.1.1
-	github.com/gorilla/securecookie v1.1.1
 	github.com/gorilla/sessions v1.1.3
 	github.com/hashicorp/golang-lru v0.5.1
 	github.com/imdario/mergo v0.3.7
@@ -45,7 +44,7 @@ require (
 	github.com/ory/go-acc v0.1.0
 	github.com/ory/go-convenience v0.1.0
 	github.com/ory/graceful v0.1.1
-	github.com/ory/herodot v0.8.1
+	github.com/ory/herodot v0.8.2
 	github.com/ory/jsonschema/v3 v3.0.1
 	github.com/ory/sdk/swagutil v0.0.0-20200407150153-53df6d772608
 	github.com/ory/viper v1.7.4

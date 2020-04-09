@@ -74,7 +74,7 @@ type completeSelfServiceBrowserSettingsPasswordFlowPayload struct {
 //       302: emptyResponse
 //       500: genericError
 func (s *Strategy) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	ss, err := s.d.SessionManager().FetchFromRequest(r.Context(), w, r)
+	ss, err := s.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		s.handleSettingsError(w, r, nil, ss, nil, err)
 		return
@@ -122,7 +122,6 @@ func (s *Strategy) completeSettingsFlow(
 	w http.ResponseWriter, r *http.Request,
 	ss *session.Session, p *completeSelfServiceBrowserSettingsPasswordFlowPayload,
 ) {
-
 	ar, err := s.d.SettingsRequestPersister().GetSettingsRequest(r.Context(), x.ParseUUID(p.RequestID))
 	if err != nil {
 		s.handleSettingsError(w, r, nil, ss, p, err)
@@ -135,7 +134,7 @@ func (s *Strategy) completeSettingsFlow(
 	}
 
 	if ss.AuthenticatedAt.Add(s.c.SelfServicePrivilegedSessionMaxAge()).Before(time.Now()) {
-		s.handleSettingsError(w, r, nil, ss, p, errors.WithStack(settings.ErrRequestNeedsReAuthentication))
+		s.handleSettingsError(w, r, ar, ss, p, errors.WithStack(settings.ErrRequestNeedsReAuthentication))
 		return
 	}
 
@@ -165,7 +164,7 @@ func (s *Strategy) completeSettingsFlow(
 	c, ok := i.GetCredentials(s.ID())
 	if !ok {
 		c = &identity.Credentials{Type: s.ID(),
-			// Prevent duplicates
+			// We need to insert a random identifier now...
 			Identifiers: []string{x.NewUUID().String()}}
 	}
 
@@ -213,10 +212,12 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, ss *session.Session, 
 
 func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, rr *settings.Request, ss *session.Session, p *completeSelfServiceBrowserSettingsPasswordFlowPayload, err error) {
 	if errors.Is(err, settings.ErrRequestNeedsReAuthentication) {
-		if _, err := s.d.ContinuityManager().Continue(r.Context(), r,
+		if err := s.d.ContinuityManager().Pause(
+			r.Context(), w, r,
 			continuityKeySettings,
+			continuity.WithPayload(p),
 			continuity.WithIdentity(ss.Identity),
-			continuity.WithPayload(&p),
+			continuity.WithLifespan(time.Minute*15),
 		); err != nil {
 			s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, rr, err, s.SettingsStrategyID())
 			return

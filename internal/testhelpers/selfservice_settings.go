@@ -16,12 +16,15 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/urfave/negroni"
 
+	"github.com/ory/x/urlx"
+
 	"github.com/ory/viper"
 	"github.com/ory/x/pointerx"
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/internal/httpclient/client"
 	"github.com/ory/kratos/internal/httpclient/client/common"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/selfservice/flow/settings"
@@ -93,6 +96,29 @@ func NewSettingsUITestServer(t *testing.T) *httptest.Server {
 	viper.Set(configuration.ViperKeyURLsLogin, ts.URL+"/login")
 
 	return ts
+}
+
+func NewSettingsLoginAcceptAPIServer(t *testing.T, adminClient *client.OryKratos) *httptest.Server {
+	var called int
+	loginTS := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, 0, called)
+		called++
+
+		viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "5m")
+
+		res, err := adminClient.Common.GetSelfServiceBrowserLoginRequest(common.NewGetSelfServiceBrowserLoginRequestParams().WithRequest(r.URL.Query().Get("request")))
+		require.NoError(t, err)
+		require.NotEmpty(t, res.Payload.RequestURL)
+
+		redir := urlx.ParseOrPanic(*res.Payload.RequestURL).Query().Get("return_to")
+		t.Logf("Redirecting to: %s", redir)
+		http.Redirect(w, r, redir, http.StatusFound)
+	}))
+	t.Cleanup(func() {
+		loginTS.Close()
+	})
+	viper.Set(configuration.ViperKeyURLsLogin, loginTS.URL+"/login")
+	return loginTS
 }
 
 func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, ids []identity.Identity) (*httptest.Server, *httptest.Server) {

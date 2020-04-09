@@ -53,7 +53,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
-	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), w, r); err == nil {
+	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
 		if !ar.Forced {
 			http.Redirect(w, r, s.c.DefaultReturnToURL().String(), http.StatusFound)
 			return
@@ -114,11 +114,25 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Request) error
 		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to decode POST body: %s", err))
 	}
 
+	var identifier string
+	if !sr.IsForced() {
+		// do nothing
+	} else if sess, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err != nil {
+		// do nothing
+	} else if id, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), sess.IdentityID); err != nil {
+		// do nothing
+	} else if creds, ok := id.GetCredentials(s.ID()); !ok {
+		// do nothing
+	} else if len(creds.Identifiers) == 0 {
+		// do nothing
+	} else {
+		identifier = creds.Identifiers[0]
+	}
+
 	action := urlx.CopyWithQuery(
 		urlx.AppendPaths(s.c.SelfPublicURL(), LoginPath),
 		url.Values{"request": {sr.ID.String()}},
 	)
-
 	f := &form.HTMLForm{
 		Action: action.String(),
 		Method: "POST",
@@ -126,6 +140,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Request) error
 			{
 				Name:     "identifier",
 				Type:     "text",
+				Value:    identifier,
 				Required: true,
 			},
 			{

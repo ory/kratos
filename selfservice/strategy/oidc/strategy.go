@@ -161,7 +161,7 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 	}
 
 	// we assume an error means the user has no session
-	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), w, r); err == nil {
+	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
 		if !ar.IsForced() {
 			http.Redirect(w, r, s.c.DefaultReturnToURL().String(), http.StatusFound)
 			return
@@ -249,7 +249,7 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	}
 
 	// we assume an error means the user has no session
-	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), w, r); err == nil {
+	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
 		if !ar.IsForced() {
 			http.Redirect(w, r, s.c.DefaultReturnToURL().String(), http.StatusFound)
 			return

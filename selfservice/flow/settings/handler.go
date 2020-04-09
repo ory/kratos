@@ -93,7 +93,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //       302: emptyResponse
 //       500: genericError
 func (h *Handler) initUpdateSettings(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	s, err := h.d.SessionManager().FetchFromRequest(r.Context(), w, r)
+	s, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
@@ -171,7 +171,6 @@ func (h *Handler) adminFetchUpdateSettingsRequest(w http.ResponseWriter, r *http
 	}
 }
 
-
 func (h *Handler) wrapErrorForbidden(err error, shouldWrap bool) error {
 	if shouldWrap {
 		return herodot.ErrForbidden.WithReasonf("Access privileges are missing, invalid, or not sufficient to access this endpoint.").WithTrace(err).WithDebugf("%s", err)
@@ -188,7 +187,7 @@ func (h *Handler) fetchUpdateSettingsRequest(w http.ResponseWriter, r *http.Requ
 	}
 
 	if checkSession {
-		sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), w, r)
+		sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 		if err != nil {
 			return h.wrapErrorForbidden(err, checkSession)
 		}

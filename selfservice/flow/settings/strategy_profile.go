@@ -141,7 +141,7 @@ func (s *StrategyTraits) PopulateSettingsMethod(r *http.Request, ss *session.Ses
 //       302: emptyResponse
 //       500: genericError
 func (s *StrategyTraits) handleSubmit(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	ss, err := s.d.SessionManager().FetchFromRequest(r.Context(), w, r)
+	ss, err := s.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		s.handleSettingsError(w, r, nil, nil, nil, nil, err)
 		return
@@ -308,11 +308,6 @@ func (s *StrategyTraits) handleSettingsError(w http.ResponseWriter, r *http.Requ
 
 	if rr != nil {
 		if err := s.hydrateForm(r, rr, ss, traits); err != nil {
-			s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, rr, err, s.SettingsStrategyID())
-			return
-		}
-
-		if err := s.d.SettingsRequestPersister().UpdateSettingsRequest(r.Context(), rr); err != nil {
 			s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, rr, err, s.SettingsStrategyID())
 			return
 		}

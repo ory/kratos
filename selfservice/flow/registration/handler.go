@@ -109,7 +109,7 @@ func (h *Handler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request,
 func (h *Handler) initRegistrationRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := h.NewRegistrationRequest(w, r, func(a *Request) (string, error) {
 		// we assume an error means the user has no session
-		if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), w, r); err != nil {
+		if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err != nil {
 			return urlx.CopyWithQuery(h.c.RegisterURL(), url.Values{"request": {a.ID.String()}}).String(), nil
 		}
 

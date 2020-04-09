@@ -886,8 +886,8 @@ github.com/ory/graceful v0.1.1/go.mod h1:zqu70l95WrKHF4AZ6tXHvAqAvpY6M7g6ttaAVcM
 github.com/ory/herodot v0.6.2/go.mod h1:3BOneqcyBsVybCPAJoi92KN2BpJHcmDqAMcAAaJiJow=
 github.com/ory/herodot v0.7.0 h1:DGPUyPDBZwQSaQzci4UW/edjG6OWixZTwXyfjBgEVgs=
 github.com/ory/herodot v0.7.0/go.mod h1:YXKOfAXYdQojDP5sD8m0ajowq3+QXNdtxA+QiUXBwn0=
-github.com/ory/herodot v0.8.1 h1:eG4zsUfNVwkIpUQf6+YT141DoSZuuMrU2A1jvmsOC1c=
-github.com/ory/herodot v0.8.1/go.mod h1:kFWnruHnnokHH4e7tbkGyHOjHGj70sJTrdiz01Xcq4Y=
+github.com/ory/herodot v0.8.2 h1:Lq5DpT81tkcegzp1QFqVFlcDWNCcq9xIq5FQ191rI0E=
+github.com/ory/herodot v0.8.2/go.mod h1:kFWnruHnnokHH4e7tbkGyHOjHGj70sJTrdiz01Xcq4Y=
 github.com/ory/jsonschema/v3 v3.0.1 h1:xzV7w2rt/Qn+jvh71joIXNKKOCqqNyTlaIxdxU0IQJc=
 github.com/ory/jsonschema/v3 v3.0.1/go.mod h1:jgLHekkFk0uiGdEWGleC+tOm6JSSP8cbf17PnBuGXlw=
 github.com/ory/sdk/swagutil v0.0.0-20200202121523-307941feee4b h1:xn3WcZ8Oy285KYiCnoscQxkyRfJZT+KhIbU9LEhPLyw=

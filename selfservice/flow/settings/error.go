@@ -59,7 +59,7 @@ func (s *ErrorHandler) reauthenticate(
 		return
 	}
 
-	returnTo := urlx.CopyWithQuery(urlx.AppendPaths(s.c.SelfPublicURL(),r.URL.Path),r.URL.Query())
+	returnTo := urlx.CopyWithQuery(urlx.AppendPaths(s.c.SelfPublicURL(), r.URL.Path), r.URL.Query())
 	s.c.SelfPublicURL()
 	u := urlx.AppendPaths(
 		urlx.CopyWithQuery(s.c.SelfPublicURL(), url.Values{
@@ -90,17 +90,17 @@ func (s *ErrorHandler) HandleSettingsError(
 		return
 	}
 
+	if errors.Is(err, ErrRequestNeedsReAuthentication) {
+		s.reauthenticate(w, r, rr)
+		return
+	}
+
 	if _, ok := rr.Methods[method]; !ok {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected settings method %s to exist.", method)))
 		return
 	}
 
 	rr.Active = sqlxx.NullString(method)
-
-	if errors.Is(err, ErrRequestNeedsReAuthentication) {
-		s.reauthenticate(w, r, rr)
-		return
-	}
 
 	if err := rr.Methods[method].Config.ParseError(err); err != nil {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
