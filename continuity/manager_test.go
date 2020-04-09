@@ -78,6 +78,15 @@ func TestManager(t *testing.T) {
 			writer.Write(w, r, c)
 		})
 
+		router.DELETE("/:name", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+			c, err := p.Continue(r.Context(), r, ps.ByName("name"), tc.ro...)
+			if err != nil {
+				writer.WriteError(w, r, err)
+				return
+			}
+			writer.Write(w, r, c)
+		})
+
 		ts := httptest.NewServer(router)
 		t.Cleanup(func() {
 			ts.Close()
@@ -148,7 +157,7 @@ func TestManager(t *testing.T) {
 						assert.Contains(t, href, gjson.GetBytes(body, "name").String(), "%s", body)
 					})
 
-					t.Run("case=pause and abort session", func(t *testing.T) {
+					t.Run("case=pause and retry session", func(t *testing.T) {
 						href := genid()
 						res, err := cl.Do(x.NewTestHTTPRequest(t, "PUT", href, nil))
 						require.NoError(t, err)

@@ -21,7 +21,6 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/x"
 )
 
@@ -137,7 +136,7 @@ func TestProfile(t *testing.T) {
 		rts := httptest.NewServer(router)
 		defer rts.Close()
 
-		viper.Set(configuration.ViperKeySelfServiceSettingsAfterConfig+"."+settings.StrategyTraitsID, testhelpers.HookConfigRedirectTo(t, rts.URL+"/return-ts"))
+		viper.Set(configuration.ViperKeySelfServiceSettingsAfterConfig+"."+identity.CredentialsTypePassword.String(), testhelpers.HookConfigRedirectTo(t, rts.URL+"/return-ts"))
 		t.Cleanup(func() {
 			viper.Set(configuration.ViperKeySelfServiceLoginAfterConfig+"."+string(identity.CredentialsTypePassword), nil)
 		})

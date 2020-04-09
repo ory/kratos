@@ -2,9 +2,7 @@ package settings
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"time"
@@ -30,11 +28,10 @@ import (
 )
 
 const (
-	StrategyTraitsID          = "profile"
-	PublicSettingsProfilePath = "/self-service/browser/flows/settings/strategies/profile"
+	StrategyTraitsID              = "profile"
+	PublicSettingsProfilePath     = "/self-service/browser/flows/settings/strategies/profile"
+	strategyProfileContinuityName = "settings_profile"
 )
-
-var strategyProfileContinuityName = fmt.Sprintf("%x", sha256.Sum256([]byte(PublicSettingsProfilePath)))
 
 var _ Strategy = new(StrategyTraits)
 
@@ -85,7 +82,8 @@ func (s *StrategyTraits) SettingsStrategyID() string {
 
 func (s *StrategyTraits) RegisterSettingsRoutes(public *x.RouterPublic) {
 	redirect := session.RedirectOnUnauthenticated(s.c.LoginURL().String())
-	public.POST(PublicSettingsProfilePath, s.d.SessionHandler().IsAuthenticated(s.completeSettingsFlow, redirect))
+	public.POST(PublicSettingsProfilePath, s.d.SessionHandler().IsAuthenticated(s.handleSubmit, redirect))
+	public.GET(PublicSettingsProfilePath, s.d.SessionHandler().IsAuthenticated(s.handleSubmit, redirect))
 }
 
 func (s *StrategyTraits) PopulateSettingsMethod(r *http.Request, ss *session.Session, pr *Request) error {
@@ -142,75 +140,64 @@ func (s *StrategyTraits) PopulateSettingsMethod(r *http.Request, ss *session.Ses
 //     Responses:
 //       302: emptyResponse
 //       500: genericError
-func (s *StrategyTraits) completeSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (s *StrategyTraits) handleSubmit(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	ss, err := s.d.SessionManager().FetchFromRequest(r.Context(), w, r)
 	if err != nil {
-		s.handleSettingsError(w, r, nil, nil, nil, err)
+		s.handleSettingsError(w, r, nil, nil, nil, nil, err)
+		return
+	}
+
+	var p completeSelfServiceBrowserSettingsStrategyProfileFlowPayload
+	if _, err := s.d.ContinuityManager().Continue(r.Context(), r,
+		strategyProfileContinuityName,
+		continuity.WithIdentity(ss.Identity),
+		continuity.WithPayload(&p),
+	); err == nil {
+		s.continueFlow(w, r, ss, &p)
 		return
 	}
 
 	option, err := s.newSettingsProfileDecoder(ss.Identity)
 	if err != nil {
-		s.handleSettingsError(w, r, nil, ss, json.RawMessage(ss.Identity.Traits), err)
+		s.handleSettingsError(w, r, nil, ss, json.RawMessage(ss.Identity.Traits), &p, err)
 		return
 	}
 
-	var p completeSelfServiceBrowserSettingsStrategyProfileFlowPayload
+	p = completeSelfServiceBrowserSettingsStrategyProfileFlowPayload{}
 	if err := decoderx.NewHTTP().Decode(r, &p,
 		decoderx.HTTPFormDecoder(),
 		option,
 		decoderx.HTTPDecoderSetValidatePayloads(false),
 		decoderx.HTTPDecoderSetIgnoreParseErrorsStrategy(decoderx.ParseErrorIgnore),
 	); err != nil {
-		s.handleSettingsError(w, r, nil, ss, json.RawMessage(ss.Identity.Traits), err)
+		s.handleSettingsError(w, r, nil, ss, json.RawMessage(ss.Identity.Traits), &p, err)
 		return
 	}
 
 	rid := r.URL.Query().Get("request")
 	if len(rid) == 0 {
-		s.handleSettingsError(w, r, nil, ss, json.RawMessage(ss.Identity.Traits), errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request query parameter is missing.")))
+		s.handleSettingsError(w, r, nil, ss, json.RawMessage(ss.Identity.Traits), &p, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request query parameter is missing.")))
 		return
 	}
 
 	p.RequestID = rid
-	if err := s.d.ContinuityManager().Pause(
-		r.Context(), w, r,
-		strategyProfileContinuityName,
-		continuity.WithPayload(&p),
-		continuity.WithIdentity(ss.Identity),
-		continuity.WithLifespan(time.Minute*15),
-	); err != nil {
-		s.handleSettingsError(w, r, nil, ss, json.RawMessage(ss.Identity.Traits), err)
-		return
-	}
-
-	s.CompleteSettingsFlow(w, r, ss)
+	s.continueFlow(w, r, ss, &p)
 }
 
-func (s *StrategyTraits) CompleteSettingsFlow(w http.ResponseWriter, r *http.Request, ss *session.Session) {
-	var p completeSelfServiceBrowserSettingsStrategyProfileFlowPayload
-	if _, err := s.d.ContinuityManager().Continue(r.Context(), r,
-		strategyProfileContinuityName,
-		continuity.WithIdentity(ss.Identity),
-		continuity.WithPayload(&p),
-	); err != nil {
-		s.handleSettingsError(w, r, nil, ss, json.RawMessage(ss.Identity.Traits), err)
-		return
-	}
-
+func (s *StrategyTraits) continueFlow(w http.ResponseWriter, r *http.Request, ss *session.Session, p *completeSelfServiceBrowserSettingsStrategyProfileFlowPayload) {
 	ar, err := s.d.SettingsRequestPersister().GetSettingsRequest(r.Context(), x.ParseUUID(p.RequestID))
 	if err != nil {
-		s.handleSettingsError(w, r, nil, ss, json.RawMessage(ss.Identity.Traits), err)
+		s.handleSettingsError(w, r, nil, ss, json.RawMessage(ss.Identity.Traits), p, err)
 		return
 	}
 
 	if err := ar.Valid(ss); err != nil {
-		s.handleSettingsError(w, r, ar, ss, json.RawMessage(ss.Identity.Traits), err)
+		s.handleSettingsError(w, r, ar, ss, json.RawMessage(ss.Identity.Traits), p, err)
 		return
 	}
 
 	if len(p.Traits) == 0 {
-		s.handleSettingsError(w, r, ar, ss, json.RawMessage(ss.Identity.Traits), errors.WithStack(herodot.ErrBadRequest.WithReasonf("Did not receive any value changes.")))
+		s.handleSettingsError(w, r, ar, ss, json.RawMessage(ss.Identity.Traits), p, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Did not receive any value changes.")))
 		return
 	}
 
@@ -232,7 +219,7 @@ func (s *StrategyTraits) CompleteSettingsFlow(w http.ResponseWriter, r *http.Req
 	); errorsx.Cause(err) == ErrHookAbortRequest {
 		return
 	} else if err != nil {
-		s.handleSettingsError(w, r, ar, ss, p.Traits, err)
+		s.handleSettingsError(w, r, ar, ss, p.Traits, p, err)
 		return
 	}
 
@@ -305,20 +292,33 @@ func (s *StrategyTraits) hydrateForm(r *http.Request, ar *Request, ss *session.S
 
 // handleSettingsError is a convenience function for handling all types of errors that may occur (e.g. validation error)
 // during a settings request.
-func (s *StrategyTraits) handleSettingsError(w http.ResponseWriter, r *http.Request, rr *Request, ss *session.Session, traits json.RawMessage, err error) {
-	if rr != nil {
-		if err := s.hydrateForm(r, rr, ss, traits); err != nil {
-			s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, rr, err, StrategyTraitsID)
-			return
-		}
-
-		if err := s.d.SettingsRequestPersister().UpdateSettingsRequest(r.Context(), rr); err != nil {
-			s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, rr, err, StrategyTraitsID)
+func (s *StrategyTraits) handleSettingsError(w http.ResponseWriter, r *http.Request, rr *Request, ss *session.Session, traits json.RawMessage, p *completeSelfServiceBrowserSettingsStrategyProfileFlowPayload, err error) {
+	if errors.Is(err, ErrRequestNeedsReAuthentication) {
+		if err := s.d.ContinuityManager().Pause(
+			r.Context(), w, r,
+			strategyProfileContinuityName,
+			continuity.WithPayload(p),
+			continuity.WithIdentity(ss.Identity),
+			continuity.WithLifespan(time.Minute*15),
+		); err != nil {
+			s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, rr, err, s.SettingsStrategyID())
 			return
 		}
 	}
 
-	s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, rr, err, StrategyTraitsID)
+	if rr != nil {
+		if err := s.hydrateForm(r, rr, ss, traits); err != nil {
+			s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, rr, err, s.SettingsStrategyID())
+			return
+		}
+
+		if err := s.d.SettingsRequestPersister().UpdateSettingsRequest(r.Context(), rr); err != nil {
+			s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, rr, err, s.SettingsStrategyID())
+			return
+		}
+	}
+
+	s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, rr, err, s.SettingsStrategyID())
 }
 
 // newSettingsProfileDecoder returns a decoderx.HTTPDecoderOption with a JSON Schema for type assertion and

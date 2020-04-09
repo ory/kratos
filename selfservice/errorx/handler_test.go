@@ -115,6 +115,11 @@ func TestHandler(t *testing.T) {
 					errors.WithStack(herodot.ErrNotFound.WithReason("foobar")),
 				},
 			},
+			{
+				gave: []error{
+					errors.WithStack(herodot.ErrNotFound.WithReason("foobar").WithTrace(errors.New("asdf"))),
+				},
+			},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				csrf := x.NewUUID()

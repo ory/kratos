@@ -40,12 +40,12 @@ require (
 	github.com/mattn/goveralls v0.0.5
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
-	github.com/ory/analytics-go v3.1.0+incompatible
+	github.com/ory/analytics-go/v4 v4.0.0
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/ory/go-acc v0.1.0
 	github.com/ory/go-convenience v0.1.0
 	github.com/ory/graceful v0.1.1
-	github.com/ory/herodot v0.7.0
+	github.com/ory/herodot v0.8.1
 	github.com/ory/jsonschema/v3 v3.0.1
 	github.com/ory/sdk/swagutil v0.0.0-20200407150153-53df6d772608
 	github.com/ory/viper v1.7.4

@@ -5,8 +5,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ory/analytics-go/v4"
 	"github.com/sirupsen/logrus"
+
+	"github.com/ory/analytics-go/v4"
 
 	"github.com/ory/x/flagx"
 	"github.com/ory/x/healthx"

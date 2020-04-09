@@ -65,6 +65,7 @@ func (m *RegistryDefault) getHooks(credentialsType string, configs []configurati
 					func() bool {
 						return rc.A
 					},
+					m.c.SelfPublicURL,
 				),
 			)
 		default:

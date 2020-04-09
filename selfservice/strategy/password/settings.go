@@ -1,9 +1,7 @@
 package password
 
 import (
-	"crypto/sha256"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"time"
@@ -27,15 +25,13 @@ import (
 )
 
 const (
-	SettingsPath = "/self-service/browser/flows/settings/strategies/password"
-)
-
-var (
-	continuityKeySettings = fmt.Sprintf("%x", sha256.Sum256([]byte(SettingsPath)))
+	SettingsPath          = "/self-service/browser/flows/settings/strategies/password"
+	continuityKeySettings = "settings_password"
 )
 
 func (s *Strategy) RegisterSettingsRoutes(router *x.RouterPublic) {
-	router.POST(SettingsPath, s.completeSettingsFlow)
+	router.POST(SettingsPath, s.submitSettingsFlow)
+	router.GET(SettingsPath, s.submitSettingsFlow)
 }
 
 func (s *Strategy) SettingsStrategyID() string {
@@ -77,25 +73,34 @@ type completeSelfServiceBrowserSettingsPasswordFlowPayload struct {
 //     Responses:
 //       302: emptyResponse
 //       500: genericError
-func (s *Strategy) completeSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (s *Strategy) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	ss, err := s.d.SessionManager().FetchFromRequest(r.Context(), w, r)
 	if err != nil {
-		s.handleSettingsError(w, r, nil, nil, err)
+		s.handleSettingsError(w, r, nil, ss, nil, err)
+		return
+	}
+
+	var p completeSelfServiceBrowserSettingsPasswordFlowPayload
+	if _, err := s.d.ContinuityManager().Continue(r.Context(), r,
+		continuityKeySettings,
+		continuity.WithIdentity(ss.Identity),
+		continuity.WithPayload(&p)); err == nil {
+		s.completeSettingsFlow(w, r, ss, &p)
 		return
 	}
 
 	rid := r.URL.Query().Get("request")
 	if len(rid) == 0 {
-		s.handleSettingsError(w, r, nil, ss.Identity.Traits, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request query parameter is missing.")))
+		s.handleSettingsError(w, r, nil, ss, &p, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request query parameter is missing.")))
 		return
 	}
 
 	if err := r.ParseForm(); err != nil {
-		s.handleSettingsError(w, r, nil, ss.Identity.Traits, errors.WithStack(err))
+		s.handleSettingsError(w, r, nil, ss, &p, errors.WithStack(err))
 		return
 	}
 
-	p := completeSelfServiceBrowserSettingsPasswordFlowPayload{
+	p = completeSelfServiceBrowserSettingsPasswordFlowPayload{
 		RequestID: rid,
 		Password:  r.PostFormValue("password"),
 	}
@@ -106,60 +111,54 @@ func (s *Strategy) completeSettingsFlow(w http.ResponseWriter, r *http.Request, 
 		continuity.WithIdentity(ss.Identity),
 		continuity.WithLifespan(time.Minute*15),
 	); err != nil {
-		s.handleSettingsError(w, r, nil, ss.Identity.Traits, errors.WithStack(err))
+		s.handleSettingsError(w, r, nil, ss, &p, errors.WithStack(err))
 		return
 	}
 
-	s.CompleteSettingsFlow(w, r, ss)
+	s.completeSettingsFlow(w, r, ss, &p)
 }
 
-func (s *Strategy) CompleteSettingsFlow(w http.ResponseWriter, r *http.Request, ss *session.Session) {
-	var p completeSelfServiceBrowserSettingsPasswordFlowPayload
-	if _, err := s.d.ContinuityManager().Continue(r.Context(), r,
-		continuityKeySettings,
-		continuity.WithIdentity(ss.Identity),
-		continuity.WithPayload(&p),
-	); err != nil {
-		s.handleSettingsError(w, r, nil, ss.Identity.Traits, err)
-		return
-	}
+func (s *Strategy) completeSettingsFlow(
+	w http.ResponseWriter, r *http.Request,
+	ss *session.Session, p *completeSelfServiceBrowserSettingsPasswordFlowPayload,
+) {
 
 	ar, err := s.d.SettingsRequestPersister().GetSettingsRequest(r.Context(), x.ParseUUID(p.RequestID))
 	if err != nil {
-		s.handleSettingsError(w, r, nil, ss.Identity.Traits, err)
+		s.handleSettingsError(w, r, nil, ss, p, err)
 		return
 	}
 
 	if err := ar.Valid(ss); err != nil {
-		s.handleSettingsError(w, r, ar, ss.Identity.Traits, err)
+		s.handleSettingsError(w, r, ar, ss, p, err)
 		return
 	}
 
 	if ss.AuthenticatedAt.Add(s.c.SelfServicePrivilegedSessionMaxAge()).Before(time.Now()) {
-		s.handleSettingsError(w, r, nil, ss.Identity.Traits, errors.WithStack(settings.ErrRequestNeedsReAuthentication))
+		s.handleSettingsError(w, r, nil, ss, p, errors.WithStack(settings.ErrRequestNeedsReAuthentication))
 		return
 	}
 
 	if len(p.Password) == 0 {
-		s.handleSettingsError(w, r, ar, ss.Identity.Traits, schema.NewRequiredError("#/", "password"))
+		s.handleSettingsError(w, r, ar, ss, p, schema.NewRequiredError("#/", "password"))
 		return
 	}
 
 	hpw, err := s.d.PasswordHasher().Generate([]byte(p.Password))
 	if err != nil {
-		s.handleSettingsError(w, r, ar, ss.Identity.Traits, err)
+		s.handleSettingsError(w, r, ar, ss, p, err)
 		return
 	}
 
 	co, err := json.Marshal(&CredentialsConfig{HashedPassword: string(hpw)})
 	if err != nil {
-		s.handleSettingsError(w, r, ar, ss.Identity.Traits, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err)))
+		s.handleSettingsError(w, r, ar, ss, p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err)))
 		return
 	}
 
 	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), ss.Identity.ID)
 	if err != nil {
-		s.handleSettingsError(w, r, ar, ss.Identity.Traits, err)
+		s.handleSettingsError(w, r, ar, ss, p, err)
 		return
 	}
 
@@ -173,7 +172,7 @@ func (s *Strategy) CompleteSettingsFlow(w http.ResponseWriter, r *http.Request, 
 	c.Config = co
 	i.SetCredentials(s.ID(), *c)
 	if err := s.validateCredentials(i, p.Password); err != nil {
-		s.handleSettingsError(w, r, ar, ss.Identity.Traits, err)
+		s.handleSettingsError(w, r, ar, ss, p, err)
 		return
 	}
 
@@ -183,7 +182,7 @@ func (s *Strategy) CompleteSettingsFlow(w http.ResponseWriter, r *http.Request, 
 	); errorsx.Cause(err) == settings.ErrHookAbortRequest {
 		return
 	} else if err != nil {
-		s.handleSettingsError(w, r, ar, ss.Identity.Traits, err)
+		s.handleSettingsError(w, r, ar, ss, p, err)
 		return
 	}
 
@@ -212,7 +211,18 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, ss *session.Session, 
 	return nil
 }
 
-func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, rr *settings.Request, traits identity.Traits, err error) {
+func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, rr *settings.Request, ss *session.Session, p *completeSelfServiceBrowserSettingsPasswordFlowPayload, err error) {
+	if errors.Is(err, settings.ErrRequestNeedsReAuthentication) {
+		if _, err := s.d.ContinuityManager().Continue(r.Context(), r,
+			continuityKeySettings,
+			continuity.WithIdentity(ss.Identity),
+			continuity.WithPayload(&p),
+		); err != nil {
+			s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, rr, err, s.SettingsStrategyID())
+			return
+		}
+	}
+
 	if rr != nil {
 		rr.Methods[s.SettingsStrategyID()].Config.Reset()
 		rr.Methods[s.SettingsStrategyID()].Config.SetCSRF(s.d.GenerateCSRFToken(r))

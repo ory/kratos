@@ -5,6 +5,7 @@ import (
 	"net/url"
 
 	"github.com/ory/herodot"
+	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -22,17 +23,20 @@ type Redirector struct {
 	returnTo         func() *url.URL
 	whitelist        func() []url.URL
 	allowUserDefined func() bool
+	publicURL        func() *url.URL
 }
 
 func NewRedirector(
 	returnTo func() *url.URL,
 	whitelist func() []url.URL,
 	allowUserDefined func() bool,
+	publicURL func() *url.URL,
 ) *Redirector {
 	return &Redirector{
 		returnTo:         returnTo,
 		whitelist:        whitelist,
 		allowUserDefined: allowUserDefined,
+		publicURL:        publicURL,
 	}
 }
 
@@ -56,11 +60,13 @@ func (e *Redirector) do(w http.ResponseWriter, r *http.Request, originalURL stri
 
 	returnTo := e.returnTo().String()
 	if e.allowUserDefined() {
-		var err error
 		returnTo, err = x.DetermineReturnToURL(ou, e.returnTo(), e.whitelist())
-		if err != nil {
-			return err
-		}
+	} else {
+		returnTo, err = x.DetermineReturnToURL(ou, e.returnTo(), []url.URL{*urlx.AppendPaths(e.publicURL(), "self-service")})
+	}
+
+	if err != nil {
+		return err
 	}
 
 	http.Redirect(w, r, returnTo, http.StatusFound)
