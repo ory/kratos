@@ -15,8 +15,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/x/urlx"
-
 	"github.com/ory/x/pointerx"
 
 	"github.com/ory/x/httpx"
@@ -156,26 +154,10 @@ func TestStrategyTraits(t *testing.T) {
 		})
 
 		t.Run("description=should update protected field with sudo mode", func(t *testing.T) {
-			var called int
-			loginTS := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				require.Equal(t, 0, called)
-				called++
-
-				viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "5m")
-				t.Cleanup(func() {
-					viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
-				})
-
-				res, err := adminClient.Common.GetSelfServiceBrowserLoginRequest(common.NewGetSelfServiceBrowserLoginRequestParams().WithRequest(r.URL.Query().Get("request")))
-				require.NoError(t, err)
-				require.NotEmpty(t, res.Payload.RequestURL)
-
-				redir := urlx.ParseOrPanic(*res.Payload.RequestURL).Query().Get("return_to")
-				t.Logf("Redirecting to: %s", redir)
-				http.Redirect(w, r, redir, http.StatusFound)
-			}))
-			defer loginTS.Close()
-			viper.Set(configuration.ViperKeyURLsLogin, loginTS.URL+"/login")
+			_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, adminClient)
+			t.Cleanup(func() {
+				viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
+			})
 
 			config := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyTraitsID)
 			newEmail := "not-john-doe@mail.com"

@@ -31,7 +31,7 @@ func newReturnTs(t *testing.T, reg interface {
 	x.WriterProvider
 }) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		sess, err := reg.SessionManager().FetchFromRequest(r.Context(), w, r)
+		sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, sess)
 	}))

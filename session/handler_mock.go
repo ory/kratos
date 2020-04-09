@@ -43,7 +43,7 @@ func MockSetSession(t *testing.T, reg mockDeps) httprouter.Handle {
 
 func MockGetSession(t *testing.T, reg mockDeps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		_, err := reg.SessionManager().FetchFromRequest(r.Context(), w, r)
+		_, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
 		if r.URL.Query().Get("has") == "yes" {
 			require.NoError(t, err)
 		} else {

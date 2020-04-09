@@ -25,7 +25,7 @@ type Manager interface {
 	SaveToRequest(context.Context, *Session, http.ResponseWriter, *http.Request) error
 
 	// FetchFromRequest creates an HTTP session using cookies.
-	FetchFromRequest(context.Context, http.ResponseWriter, *http.Request) (*Session, error)
+	FetchFromRequest(context.Context, *http.Request) (*Session, error)
 
 	// PurgeFromRequest removes an HTTP session.
 	PurgeFromRequest(context.Context, http.ResponseWriter, *http.Request) error

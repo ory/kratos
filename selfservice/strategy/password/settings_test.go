@@ -3,7 +3,6 @@ package password_test
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -50,44 +49,36 @@ func TestProfile(t *testing.T) {
 		Traits:         identity.Traits(`{}`),
 		TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
 	}
-	publicTS, _ := testhelpers.NewSettingsAPIServer(t, reg, []identity.Identity{*primaryIdentity, *secondaryIdentity})
+	publicTS, adminTS := testhelpers.NewSettingsAPIServer(t, reg, []identity.Identity{*primaryIdentity, *secondaryIdentity})
 	primaryUser := testhelpers.NewSessionClient(t, publicTS.URL+"/sessions/set/0")
 	secondaryUser := testhelpers.NewSessionClient(t, publicTS.URL+"/sessions/set/1")
+	adminClient := testhelpers.NewSDKClient(adminTS)
 
-	t.Run("description=should fail to update when session is too old", func(t *testing.T) {
-		viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
-		t.Cleanup(func() {
-			viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1m")
+	t.Run("description=should fail if password violates policy", func(t *testing.T) {
+		var run = func(t *testing.T) {
+			rs := testhelpers.GetSettingsRequest(t, primaryUser, publicTS)
+			form := rs.Payload.Methods[string(identity.CredentialsTypePassword)].Config
+			values := testhelpers.SDKFormFieldsToURLValues(form.Fields)
+			values.Set("password", "123456")
+			actual, _ := testhelpers.SettingsSubmitForm(t, form, primaryUser, values)
+
+			assert.Equal(t, *form.Action, gjson.Get(actual, "methods.password.config.action").String(), "%s", actual)
+			assert.Empty(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).value").String(), "%s", actual)
+			assert.NotEmpty(t, gjson.Get(actual, "methods.password.config.fields.#(name==csrf_token).value").String(), "%s", actual)
+			assert.Contains(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).errors.0.message").String(), "the password does not fulfill the password policy because", "%s", actual)
+		}
+
+		t.Run("session=with privileged session", run)
+
+		t.Run("session=needs reauthentication", func(t *testing.T) {
+			viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
+
+			_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, adminClient)
+			t.Cleanup(func() {
+				viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "5m")
+			})
+			run(t)
 		})
-
-		rs := testhelpers.GetSettingsRequest(t, primaryUser, publicTS)
-
-		form := rs.Payload.Methods[string(identity.CredentialsTypePassword)].Config
-		values := testhelpers.SDKFormFieldsToURLValues(form.Fields)
-		values.Set("password", "123456")
-
-		res, err := primaryUser.PostForm(pointerx.StringR(form.Action), values)
-		require.NoError(t, err)
-		defer res.Body.Close()
-		body, err := ioutil.ReadAll(res.Body)
-		require.NoError(t, err)
-
-		assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "session is too old and thus not allowed to update these fields. Please re-authenticate")
-		assert.Equal(t, int64(http.StatusForbidden), gjson.GetBytes(body, "0.code").Int())
-	})
-
-	t.Run("description=should come back with form errors if the password data is invalid", func(t *testing.T) {
-		rs := testhelpers.GetSettingsRequest(t, primaryUser, publicTS)
-
-		form := rs.Payload.Methods[string(identity.CredentialsTypePassword)].Config
-		values := testhelpers.SDKFormFieldsToURLValues(form.Fields)
-		values.Set("password", "123456")
-		actual, _ := testhelpers.SettingsSubmitForm(t, form, primaryUser, values)
-
-		assert.Equal(t, *form.Action, gjson.Get(actual, "methods.password.config.action").String(), "%s", actual)
-		assert.Empty(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).value").String(), "%s", actual)
-		assert.NotEmpty(t, gjson.Get(actual, "methods.password.config.fields.#(name==csrf_token).value").String(), "%s", actual)
-		assert.Contains(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).errors.0.message").String(), "the password does not fulfill the password policy because", "%s", actual)
 	})
 
 	t.Run("description=should update the password if everything is ok", func(t *testing.T) {
