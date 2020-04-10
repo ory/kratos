@@ -25,6 +25,7 @@ type Field struct {
 	//
 	// required: true
 	Name string `json:"name"`
+
 	// Type is the equivalent of `<input type="{{.Type}}">`
 	//
 	// required: true
@@ -39,7 +40,7 @@ type Field struct {
 	// Required is the equivalent of `<input required="{{.Required}}">`
 	//
 	// required: true
-	Required bool `json:"required,omitempty"`
+	Required bool `json:"required"`
 
 	// Value is the equivalent of `<input value="{{.Value}}">`
 	Value interface{} `json:"value,omitempty" faker:"name"`
