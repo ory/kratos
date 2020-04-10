@@ -97,7 +97,7 @@ func TestHandlerSettingForced(t *testing.T) {
 		res, body := mur(t, url.Values{
 			"prompt": {"login"},
 		})
-		ab(body, false)
+		ab(body, true)
 		assert.Contains(t, res.Request.URL.String(), loginTS.URL)
 	})
 
