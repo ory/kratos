@@ -37,7 +37,7 @@ func TestPersister(p interface {
 	}
 
 	var createContainer = func(t *testing.T) Container {
-		m := sqlxx.NullJSONRawMessage(`{"foo":"bar"}`)
+		m := sqlxx.NullJSONRawMessage(`{"foo": "bar"}`)
 		return Container{Name: "foo", IdentityID: x.PointToUUID(createIdentity(t).ID),
 			ExpiresAt: time.Now().Add(time.Hour).UTC().Truncate(time.Second),
 			Payload:   m,
@@ -56,6 +56,7 @@ func TestPersister(p interface {
 
 			actual, err := p.GetContinuitySession(context.Background(), expected.ID)
 			require.NoError(t, err)
+			actual.UpdatedAt, actual.CreatedAt, expected.UpdatedAt, expected.CreatedAt = time.Time{}, time.Time{}, time.Time{}, time.Time{}
 			assert.EqualValues(t, expected.UTC(), actual.UTC())
 		})
 

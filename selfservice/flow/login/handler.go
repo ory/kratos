@@ -113,7 +113,7 @@ func (h *Handler) initLoginRequest(w http.ResponseWriter, r *http.Request, ps ht
 			return urlx.CopyWithQuery(h.c.LoginURL(), url.Values{"request": {a.ID.String()}}).String(), nil
 		}
 
-		if r.URL.Query().Get("prompt") == "login" {
+		if a.Forced {
 			if err := h.d.LoginRequestPersister().MarkRequestForced(r.Context(), a.ID); err != nil {
 				return "", err
 			}
