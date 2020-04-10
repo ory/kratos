@@ -357,7 +357,8 @@
     "dsn": {
       "type": "string",
       "title": "Data Source Name",
-      "description": "DSN is used to specify the database credentials as a connection URI."
+      "description": "DSN is used to specify the database credentials as a connection URI.",
+      "examples": ["postgres://user:password@localhost:5432/database"]
     },
     "courier": {
       "type": "object",
