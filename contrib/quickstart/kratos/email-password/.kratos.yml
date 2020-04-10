@@ -8,6 +8,8 @@ selfservice:
     after:
       profile:
         -
+          job: verify
+        -
           job: redirect
           config:
             default_redirect_url: http://127.0.0.1:4455/dashboard
