@@ -56,17 +56,17 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 	n.Use(NewNegroniLoggerMiddleware(l.(*logrus.Logger), "public#"+c.SelfPublicURL().String()))
 	n.Use(sqa(cmd, d))
 
-	r.WithCSRFHandler(x.NewCSRFHandler(
+	csrf := x.NewCSRFHandler(
 		router,
 		r.Writer(),
 		l,
 		c.SelfPublicURL().Path,
 		c.SelfPublicURL().Hostname(),
 		!flagx.MustGetBool(cmd, "dev"),
-	))
-	n.UseHandler(
-		r.CSRFHandler(),
 	)
+	csrf.ExemptPath(session.SessionsWhoamiPath)
+	r.WithCSRFHandler(csrf)
+	n.UseHandler(r.CSRFHandler())
 	server := graceful.WithDefaults(&http.Server{
 		Addr:    c.PublicListenOn(),
 		Handler: context.ClearHandler(n),

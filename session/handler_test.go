@@ -31,11 +31,10 @@ func send(code int) httprouter.Handle {
 	}
 }
 
-func TestHandler(t *testing.T) {
+func TestSessionWhoAmI(t *testing.T) {
 	t.Run("public", func(t *testing.T) {
 		_, reg := internal.NewRegistryDefault(t)
 		r := x.NewRouterPublic()
-		reg.WithCSRFHandler(new(x.FakeCSRFHandler))
 
 		// set this intermediate because kratos needs some valid url for CRUDE operations
 		viper.Set(configuration.ViperKeyURLsSelfPublic, "http://example.com")
@@ -58,10 +57,22 @@ func TestHandler(t *testing.T) {
 		// Set cookie
 		MockHydrateCookieClient(t, client, ts.URL+"/set")
 
-		// Cookie set -> 200
-		res, err = client.Get(ts.URL + SessionsWhoamiPath)
-		require.NoError(t, err)
-		assert.EqualValues(t, http.StatusOK, res.StatusCode)
+		// Cookie set -> 200 (GET)
+		for _, method := range []string{
+			"GET",
+			"POST",
+			"PUT",
+			"DELETE",
+		} {
+			t.Run("http_method="+method, func(t *testing.T) {
+				req, err := http.NewRequest(method, ts.URL+SessionsWhoamiPath, nil)
+				require.NoError(t, err)
+
+				res, err = client.Do(req)
+				require.NoError(t, err)
+				assert.EqualValues(t, http.StatusOK, res.StatusCode)
+			})
+		}
 	})
 }
 
