@@ -187,7 +187,7 @@ func TestStrategyTraits(t *testing.T) {
 				f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyTraitsID)
 
 				values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
-				values.Set("traits.email", "not-john-doe")
+				values.Set("traits.email", "not-john-doe@foo.bar")
 				res, err := primaryUser.PostForm(pointerx.StringR(f.Action), values)
 				require.NoError(t, err)
 				defer res.Body.Close()
