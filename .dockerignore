@@ -9,3 +9,4 @@ scripts
 database.yaml
 contrib/quickstart
 contrib/swagutil
+node_modules/
