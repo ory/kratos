@@ -52,7 +52,7 @@ require (
 	github.com/ory/graceful v0.1.1
 	github.com/ory/herodot v0.7.0
 	github.com/ory/jsonschema/v3 v3.0.1
-	github.com/ory/sdk/swagutil v0.0.0-20200202121523-307941feee4b
+	github.com/ory/sdk/swagutil v0.0.0-20200407150153-53df6d772608
 	github.com/ory/viper v1.7.4
 	github.com/ory/x v0.0.109
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2

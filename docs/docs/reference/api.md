@@ -1,11 +1,6 @@
 ---
-title: Ory Kratos
-language_tabs: []
-toc_footers: []
-includes: []
-search: false
-highlight_theme: darkula
-headingLevel: 2
+title: REST API
+id: api
 ---
 
 Welcome to the ORY Kratos HTTP API documentation!
@@ -59,7 +54,7 @@ status will never refer to the cluster state, only to a single instance.
 
 ##### Examples
 
-> 200 Response
+###### 200 response
 
 ```json
 {
@@ -237,7 +232,7 @@ status will never refer to the cluster state, only to a single instance.
 
 ##### Examples
 
-> 200 Response
+###### 200 response
 
 ```json
 {
@@ -437,18 +432,18 @@ Status Code **200**
 
 ##### Examples
 
-> 200 Response
+###### 200 response
 
 ```json
 [
   {
     "addresses": [
       {
-        "expires_at": "2020-04-06T10:21:38Z",
+        "expires_at": "2020-04-10T06:37:45Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-04-06T10:21:38Z",
+        "verified_at": "2020-04-10T06:37:45Z",
         "via": "string"
       }
     ],
@@ -622,11 +617,11 @@ Learn how identities work in
 {
   "addresses": [
     {
-      "expires_at": "2020-04-06T10:21:38Z",
+      "expires_at": "2020-04-10T06:37:45Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-06T10:21:38Z",
+      "verified_at": "2020-04-10T06:37:45Z",
       "via": "string"
     }
   ],
@@ -659,17 +654,17 @@ Learn how identities work in
 
 ##### Examples
 
-> 201 Response
+###### 201 response
 
 ```json
 {
   "addresses": [
     {
-      "expires_at": "2020-04-06T10:21:38Z",
+      "expires_at": "2020-04-10T06:37:45Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-06T10:21:38Z",
+      "verified_at": "2020-04-10T06:37:45Z",
       "via": "string"
     }
   ],
@@ -742,11 +737,11 @@ const fetch = require('node-fetch');
 const input = '{
   "addresses": [
     {
-      "expires_at": "2020-04-06T10:21:38Z",
+      "expires_at": "2020-04-10T06:37:45Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-06T10:21:38Z",
+      "verified_at": "2020-04-10T06:37:45Z",
       "via": "string"
     }
   ],
@@ -872,17 +867,17 @@ Learn how identities work in
 
 ##### Examples
 
-> 200 Response
+###### 200 response
 
 ```json
 {
   "addresses": [
     {
-      "expires_at": "2020-04-06T10:21:38Z",
+      "expires_at": "2020-04-10T06:37:45Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-06T10:21:38Z",
+      "verified_at": "2020-04-10T06:37:45Z",
       "via": "string"
     }
   ],
@@ -1058,11 +1053,11 @@ Learn how identities work in
 {
   "addresses": [
     {
-      "expires_at": "2020-04-06T10:21:38Z",
+      "expires_at": "2020-04-10T06:37:45Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-06T10:21:38Z",
+      "verified_at": "2020-04-10T06:37:45Z",
       "via": "string"
     }
   ],
@@ -1097,17 +1092,17 @@ Learn how identities work in
 
 ##### Examples
 
-> 200 Response
+###### 200 response
 
 ```json
 {
   "addresses": [
     {
-      "expires_at": "2020-04-06T10:21:38Z",
+      "expires_at": "2020-04-10T06:37:45Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-06T10:21:38Z",
+      "verified_at": "2020-04-10T06:37:45Z",
       "via": "string"
     }
   ],
@@ -1180,11 +1175,11 @@ const fetch = require('node-fetch');
 const input = '{
   "addresses": [
     {
-      "expires_at": "2020-04-06T10:21:38Z",
+      "expires_at": "2020-04-10T06:37:45Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-06T10:21:38Z",
+      "verified_at": "2020-04-10T06:37:45Z",
       "via": "string"
     }
   ],
@@ -1313,7 +1308,7 @@ Learn how identities work in
 
 ##### Examples
 
-> 404 Response
+###### 404 response
 
 ```json
 {
@@ -1512,7 +1507,7 @@ Get a traits schema definition
 
 ##### Examples
 
-> 200 Response
+###### 200 response
 
 ```json
 {}
@@ -1708,15 +1703,15 @@ your application (e.g. `/login?request=abcde`).
 
 ##### Examples
 
-> 200 Response
+###### 200 response
 
 ```json
 {
   "active": "string",
-  "expires_at": "2020-04-06T10:21:38Z",
+  "expires_at": "2020-04-10T06:37:45Z",
   "forced": true,
   "id": "string",
-  "issued_at": "2020-04-06T10:21:38Z",
+  "issued_at": "2020-04-10T06:37:45Z",
   "methods": {
     "property1": {
       "config": {
@@ -1996,11 +1991,11 @@ your application (e.g. `/login?request=abcde`).
 
 ##### Examples
 
-> 200 Response
+###### 200 response
 
 ```json
 {
-  "expires_at": "2020-04-06T10:21:38Z",
+  "expires_at": "2020-04-10T06:37:45Z",
   "form": {
     "action": "string",
     "errors": [
@@ -2029,11 +2024,11 @@ your application (e.g. `/login?request=abcde`).
   "identity": {
     "addresses": [
       {
-        "expires_at": "2020-04-06T10:21:38Z",
+        "expires_at": "2020-04-10T06:37:45Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-04-06T10:21:38Z",
+        "verified_at": "2020-04-10T06:37:45Z",
         "via": "string"
       }
     ],
@@ -2042,7 +2037,7 @@ your application (e.g. `/login?request=abcde`).
     "traits_schema_id": "string",
     "traits_schema_url": "string"
   },
-  "issued_at": "2020-04-06T10:21:38Z",
+  "issued_at": "2020-04-10T06:37:45Z",
   "request_url": "string",
   "update_successful": true
 }
@@ -2240,14 +2235,14 @@ your application (e.g. `/registration?request=abcde`).
 
 ##### Examples
 
-> 200 Response
+###### 200 response
 
 ```json
 {
   "active": "string",
-  "expires_at": "2020-04-06T10:21:38Z",
+  "expires_at": "2020-04-10T06:37:45Z",
   "id": "string",
-  "issued_at": "2020-04-06T10:21:38Z",
+  "issued_at": "2020-04-10T06:37:45Z",
   "methods": {
     "property1": {
       "config": {
@@ -2526,11 +2521,11 @@ your application (e.g. `/verify?request=abcde`).
 
 ##### Examples
 
-> 200 Response
+###### 200 response
 
 ```json
 {
-  "expires_at": "2020-04-06T10:21:38Z",
+  "expires_at": "2020-04-10T06:37:45Z",
   "form": {
     "action": "string",
     "errors": [
@@ -2556,7 +2551,7 @@ your application (e.g. `/verify?request=abcde`).
     "method": "string"
   },
   "id": "string",
-  "issued_at": "2020-04-06T10:21:38Z",
+  "issued_at": "2020-04-10T06:37:45Z",
   "request_url": "string",
   "success": true,
   "via": "string"
@@ -2747,7 +2742,7 @@ More information can be found at
 
 ##### Examples
 
-> 200 Response
+###### 200 response
 
 ```json
 {
@@ -2933,7 +2928,7 @@ More information can be found at
 
 ##### Examples
 
-> 500 Response
+###### 500 response
 
 ```json
 {
@@ -3125,7 +3120,7 @@ More information can be found at
 
 ##### Examples
 
-> 500 Response
+###### 500 response
 
 ```json
 {
@@ -3317,7 +3312,7 @@ More information can be found at
 
 ##### Examples
 
-> 500 Response
+###### 500 response
 
 ```json
 {
@@ -3531,7 +3526,7 @@ Currently only "email" is supported.
 
 ##### Examples
 
-> 500 Response
+###### 500 response
 
 ```json
 {
@@ -3725,7 +3720,7 @@ More information can be found at
 
 ##### Examples
 
-> 500 Response
+###### 500 response
 
 ```json
 {
@@ -3931,7 +3926,7 @@ Currently only "email" is supported.
 
 ##### Examples
 
-> 500 Response
+###### 500 response
 
 ```json
 {
@@ -4135,7 +4130,7 @@ Currently only "email" is supported.
 
 ##### Examples
 
-> 500 Response
+###### 500 response
 
 ```json
 {
@@ -4322,20 +4317,20 @@ This endpoint is useful for reverse proxies and API Gateways.
 
 ##### Examples
 
-> 200 Response
+###### 200 response
 
 ```json
 {
-  "authenticated_at": "2020-04-06T10:21:38Z",
-  "expires_at": "2020-04-06T10:21:38Z",
+  "authenticated_at": "2020-04-10T06:37:45Z",
+  "expires_at": "2020-04-10T06:37:45Z",
   "identity": {
     "addresses": [
       {
-        "expires_at": "2020-04-06T10:21:38Z",
+        "expires_at": "2020-04-10T06:37:45Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-04-06T10:21:38Z",
+        "verified_at": "2020-04-10T06:37:45Z",
         "via": "string"
       }
     ],
@@ -4344,7 +4339,7 @@ This endpoint is useful for reverse proxies and API Gateways.
     "traits_schema_id": "string",
     "traits_schema_url": "string"
   },
-  "issued_at": "2020-04-06T10:21:38Z",
+  "issued_at": "2020-04-10T06:37:45Z",
   "sid": "string"
 }
 ```
@@ -4522,7 +4517,7 @@ status will never refer to the cluster state, only to a single instance.
 
 ##### Examples
 
-> 200 Response
+###### 200 response
 
 ```json
 {
@@ -4717,11 +4712,11 @@ credentials, passwordless credentials,_
 {
   "addresses": [
     {
-      "expires_at": "2020-04-06T10:21:38Z",
+      "expires_at": "2020-04-10T06:37:45Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-06T10:21:38Z",
+      "verified_at": "2020-04-10T06:37:45Z",
       "via": "string"
     }
   ],
@@ -4780,11 +4775,11 @@ _None_
 
 ```json
 {
-  "expires_at": "2020-04-06T10:21:38Z",
+  "expires_at": "2020-04-10T06:37:45Z",
   "id": "string",
   "value": "string",
   "verified": true,
-  "verified_at": "2020-04-06T10:21:38Z",
+  "verified_at": "2020-04-10T06:37:45Z",
   "via": "string"
 }
 ```
@@ -5081,10 +5076,10 @@ _Error response_
 ```json
 {
   "active": "string",
-  "expires_at": "2020-04-06T10:21:38Z",
+  "expires_at": "2020-04-10T06:37:45Z",
   "forced": true,
   "id": "string",
-  "issued_at": "2020-04-06T10:21:38Z",
+  "issued_at": "2020-04-10T06:37:45Z",
   "methods": {
     "property1": {
       "config": {
@@ -5312,7 +5307,7 @@ _Error response_
 
 ```json
 {
-  "expires_at": "2020-04-06T10:21:38Z",
+  "expires_at": "2020-04-10T06:37:45Z",
   "form": {
     "action": "string",
     "errors": [
@@ -5341,11 +5336,11 @@ _Error response_
   "identity": {
     "addresses": [
       {
-        "expires_at": "2020-04-06T10:21:38Z",
+        "expires_at": "2020-04-10T06:37:45Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-04-06T10:21:38Z",
+        "verified_at": "2020-04-10T06:37:45Z",
         "via": "string"
       }
     ],
@@ -5354,7 +5349,7 @@ _Error response_
     "traits_schema_id": "string",
     "traits_schema_url": "string"
   },
-  "issued_at": "2020-04-06T10:21:38Z",
+  "issued_at": "2020-04-10T06:37:45Z",
   "request_url": "string",
   "update_successful": true
 }
@@ -5383,9 +5378,9 @@ _Request presents a profile management request_
 ```json
 {
   "active": "string",
-  "expires_at": "2020-04-06T10:21:38Z",
+  "expires_at": "2020-04-10T06:37:45Z",
   "id": "string",
-  "issued_at": "2020-04-06T10:21:38Z",
+  "issued_at": "2020-04-10T06:37:45Z",
   "methods": {
     "property1": {
       "config": {
@@ -5612,16 +5607,16 @@ _Request presents a profile management request_
 
 ```json
 {
-  "authenticated_at": "2020-04-06T10:21:38Z",
-  "expires_at": "2020-04-06T10:21:38Z",
+  "authenticated_at": "2020-04-10T06:37:45Z",
+  "expires_at": "2020-04-10T06:37:45Z",
   "identity": {
     "addresses": [
       {
-        "expires_at": "2020-04-06T10:21:38Z",
+        "expires_at": "2020-04-10T06:37:45Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-04-06T10:21:38Z",
+        "verified_at": "2020-04-10T06:37:45Z",
         "via": "string"
       }
     ],
@@ -5630,7 +5625,7 @@ _Request presents a profile management request_
     "traits_schema_id": "string",
     "traits_schema_url": "string"
   },
-  "issued_at": "2020-04-06T10:21:38Z",
+  "issued_at": "2020-04-10T06:37:45Z",
   "sid": "string"
 }
 ```
@@ -5653,7 +5648,7 @@ _Request presents a profile management request_
 
 ```json
 {
-  "expires_at": "2020-04-06T10:21:38Z",
+  "expires_at": "2020-04-10T06:37:45Z",
   "form": {
     "action": "string",
     "errors": [
@@ -5679,7 +5674,7 @@ _Request presents a profile management request_
     "method": "string"
   },
   "id": "string",
-  "issued_at": "2020-04-06T10:21:38Z",
+  "issued_at": "2020-04-10T06:37:45Z",
   "request_url": "string",
   "success": true,
   "via": "string"
