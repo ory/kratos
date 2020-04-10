@@ -303,7 +303,7 @@ func TestLoginNew(t *testing.T) {
 	})
 
 	t.Run("should pass with real request", func(t *testing.T) {
-		identifier, pwd := "login-identifier-7", "password"
+		identifier, pwd := "login-identifier-8", "password"
 		createIdentity(identifier, pwd)
 
 		jar, _ := cookiejar.New(nil)
