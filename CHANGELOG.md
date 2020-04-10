@@ -47,16 +47,23 @@
 
 **Implemented enhancements:**
 
+- Rename profile module to settings [\#311](https://github.com/ory/kratos/issues/311)
+- Include authentication URL for protected user settings [\#310](https://github.com/ory/kratos/issues/310)
+- Rename profile module to settings [\#304](https://github.com/ory/kratos/issues/304)
+- Error authenticating POST requests from browser session behind Oathkeeper [\#270](https://github.com/ory/kratos/issues/270)
 - Have `dsn: memory` as an alias for SQLite in memory DSN [\#228](https://github.com/ory/kratos/issues/228)
+- refactor: Prepare profile management payloads for credentials [\#300](https://github.com/ory/kratos/pull/300) ([aeneasr](https://github.com/aeneasr))
 
 **Fixed bugs:**
 
+- Fix broken redirect in login handler [\#323](https://github.com/ory/kratos/issues/323)
 - shutdown doesn't complete [\#295](https://github.com/ory/kratos/issues/295)
 - Same version of migration version 20191100000010 caused test failure [\#279](https://github.com/ory/kratos/issues/279)
 - Email Verification Error when using PostgreSQL [\#269](https://github.com/ory/kratos/issues/269)
 - HBIP check hangs when connection is slow or ends with a network error [\#261](https://github.com/ory/kratos/issues/261)
 - Investigate MySQL empty timestamp issue on session [\#244](https://github.com/ory/kratos/issues/244)
 - Return REST error when fetching expired login/registration/profile request [\#235](https://github.com/ory/kratos/issues/235)
+- fix: fix swagger annotation [\#331](https://github.com/ory/kratos/pull/331) ([aeneasr](https://github.com/aeneasr))
 - fix\(swagger\): Move nolint,deadcode instructions to own file [\#293](https://github.com/ory/kratos/pull/293) ([aeneasr](https://github.com/aeneasr))
 - feat: Enable CockroachDB integration [\#260](https://github.com/ory/kratos/pull/260) ([aeneasr](https://github.com/aeneasr))
 - fix: Resolve NULL value for seen\_at [\#259](https://github.com/ory/kratos/pull/259) ([aeneasr](https://github.com/aeneasr))
@@ -68,18 +75,24 @@
 
 **Closed issues:**
 
+- Kratos as library for any Golang project [\#328](https://github.com/ory/kratos/issues/328)
+- DOCS, wrong link [\#327](https://github.com/ory/kratos/issues/327)
 - Quickstart app doubt for authentication only\(not authorization\) with mysql database  [\#297](https://github.com/ory/kratos/issues/297)
 - Serve the schemas in the common API and have it documented [\#287](https://github.com/ory/kratos/issues/287)
 - Quickstart broken, db.sqlite not writabel [\#281](https://github.com/ory/kratos/issues/281)
 - Viper key for SMTP from address appears to be incorrect [\#277](https://github.com/ory/kratos/issues/277)
+- Make the session cookie name configurable [\#268](https://github.com/ory/kratos/issues/268)
 - MailSlurper is not sending the verification email [\#264](https://github.com/ory/kratos/issues/264)
 - SQLite database errors in quickstart [\#263](https://github.com/ory/kratos/issues/263)
 - Allow configuration of same-site cookie [\#257](https://github.com/ory/kratos/issues/257)
 - CSRF token is missing or invalid [\#250](https://github.com/ory/kratos/issues/250)
+- selfservice/profile: sudo mode for updating auth related stuff [\#243](https://github.com/ory/kratos/issues/243)
 - Enable CockroachDB test suite and integration [\#132](https://github.com/ory/kratos/issues/132)
+- Implement selfservice credentials management [\#113](https://github.com/ory/kratos/issues/113)
 
 **Merged pull requests:**
 
+- fix: exempt whomai from csrf protection [\#329](https://github.com/ory/kratos/pull/329) ([aeneasr](https://github.com/aeneasr))
 - chore: update docusaurus template [\#324](https://github.com/ory/kratos/pull/324) ([aeneasr](https://github.com/aeneasr))
 - fix writing [\#322](https://github.com/ory/kratos/pull/322) ([gwind](https://github.com/gwind))
 - chore: update docusaurus template [\#321](https://github.com/ory/kratos/pull/321) ([aeneasr](https://github.com/aeneasr))
