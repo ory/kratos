@@ -5,7 +5,7 @@ title: Introduction
 
 ORY Kratos is an API-first Identity and User Management system that is built
 according to
-[cloud architecture best practices](../ecosystem/software-architecture-philosophy.md).
+[cloud architecture best practices](https://www.ory.sh/docs/ecosystem/software-architecture-philosophy/).
 It implements core use cases that almost every software application needs to
 deal with:
 
