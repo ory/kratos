@@ -1,6 +1,7 @@
 package settings_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -301,5 +302,29 @@ func TestStrategyTraits(t *testing.T) {
 		body, err := ioutil.ReadAll(res.Body)
 		require.NoError(t, err)
 		assert.True(t, returned, "%d - %s", res.StatusCode, body)
+	})
+
+	t.Run("description=should send email with verifiable address", func(t *testing.T) {
+		_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, adminClient)
+		viper.Set(configuration.ViperKeySelfServiceSettingsAfterConfig+"."+settings.StrategyTraitsID, testhelpers.HookVerify(t))
+		viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1h")
+		viper.Set(configuration.ViperKeyCourierSMTPURL, "smtp://foo:bar@irrelevant.com/")
+		t.Cleanup(func() {
+			viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
+			viper.Set(configuration.ViperKeySelfServiceSettingsAfterConfig+"."+settings.StrategyTraitsID, nil)
+		})
+
+		config := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyTraitsID)
+		newEmail := "update-verify@mail.com"
+		values := testhelpers.SDKFormFieldsToURLValues(config.Fields)
+		values.Set("traits.email", newEmail)
+
+		actual, response := testhelpers.SettingsSubmitForm(t, config, primaryUser, values)
+		assert.True(t, pointerx.BoolR(response.Payload.UpdateSuccessful), "%s", actual)
+		assert.Equal(t, newEmail, gjson.Get(actual, "methods.profile.config.fields.#(name==traits.email).value").Value(), "%s", actual)
+
+		m, err := reg.CourierPersister().LatestQueuedMessage(context.Background())
+		require.NoError(t, err)
+		assert.Contains(t, m.Subject, "verify your email address")
 	})
 }
