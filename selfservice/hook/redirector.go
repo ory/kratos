@@ -58,7 +58,7 @@ func (e *Redirector) do(w http.ResponseWriter, r *http.Request, originalURL stri
 		return herodot.ErrInternalServerError.WithReasonf("The redirect hook was unable to parse the original request URL: %s", err)
 	}
 
-	returnTo := e.returnTo().String()
+	var returnTo string
 	if e.allowUserDefined() {
 		returnTo, err = x.DetermineReturnToURL(ou, e.returnTo(), e.whitelist())
 	} else {
