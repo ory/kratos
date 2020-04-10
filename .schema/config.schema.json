@@ -355,7 +355,9 @@
       }
     },
     "dsn": {
-      "type": "string"
+      "type": "string",
+      "title": "Data Source Name",
+      "description": "DSN is used to specify the database credentials as a connection URI."
     },
     "courier": {
       "type": "object",

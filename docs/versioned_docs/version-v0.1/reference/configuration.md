@@ -32,7 +32,7 @@ To find out more about edge cases like setting string array values through envir
 # - Windows Command Line (CMD):
 #    > set DSN=<value>
 #
-dsn: occaecat
+dsn: postgres://user:password@localhost:5432/database
 
 ## identity ##
 #
