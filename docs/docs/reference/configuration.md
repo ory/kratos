@@ -7,42 +7,46 @@ title: Configuration
 OPEN AN ISSUE IF YOU WOULD LIKE TO MAKE ADJUSTMENTS HERE AND MAINTAINERS WILL HELP YOU LOCATE THE RIGHT
 FILE -->
 
-If file `$HOME/.kratos.yaml` exists, it will be used as a configuration file
-which supports all configuration settings listed below.
+If file `$HOME/.kratos.yaml` exists, it will be used as a configuration file which supports all
+configuration settings listed below.
 
-You can load the config file from another source using the
-`-c path/to/config.yaml` or `--config path/to/config.yaml` flag:
-`kratos --config path/to/config.yaml`.
+You can load the config file from another source using the `-c path/to/config.yaml` or `--config path/to/config.yaml`
+flag: `kratos --config path/to/config.yaml`.
 
-Config files can be formatted as JSON, YAML and TOML. Some configuration values
-support reloading without server restart. All configuration values can be set
-using environment variables, as documented below.
+Config files can be formatted as JSON, YAML and TOML. Some configuration values support reloading without server restart.
+All configuration values can be set using environment variables, as documented below.
 
-To find out more about edge cases like setting string array values through
-environmental variables head to the
-[Configuring ORY services](https://www.ory.sh/docs/ecosystem/configuring)
-section.
+To find out more about edge cases like setting string array values through environmental variables head to the
+[Configuring ORY services](https://www.ory.sh/docs/ecosystem/configuring) section.
 
 ```yaml
 ## ORY Kratos Configuration
 #
 
-## dsn ##
+
+## Data Source Name ##
 #
+# DSN is used to specify the database credentials as a connection URI.
+#
+# Examples:
+# - postgres://user:password@localhost:5432/database
+# 
 # Set this value using environment variables on
 # - Linux/macOS:
 #    $ export DSN=<value>
 # - Windows Command Line (CMD):
 #    > set DSN=<value>
 #
-dsn: incididunt sed
+dsn: postgres://user:password@localhost:5432/database
 
 ## identity ##
 #
 identity:
+  
   ## traits ##
   #
   traits:
+    
     ## default_schema_url ##
     #
     # Set this value using environment variables on
@@ -51,7 +55,7 @@ identity:
     # - Windows Command Line (CMD):
     #    > set IDENTITY_TRAITS_DEFAULT_SCHEMA_URL=<value>
     #
-    default_schema_url: http://UiZBEpglJFJasHwcnmGSNLqNxceqTszQ.yudf86xNGtsuzQwojxwBwmoZgPqybhHtFx8MVPKagGRv198efH7rZ+l0EfBn59SGKTcGTYegGwz
+    default_schema_url: http://DtjjDkKuieRldUloBoJUH.pzd5TVXzmxCKYP,Xjaoykz-OpUOxIIgqMSCDy4d4PW.X0wak8rRBCPJWfUG4
 
     ## schemas ##
     #
@@ -62,18 +66,18 @@ identity:
     #    > set IDENTITY_TRAITS_SCHEMAS=<value>
     #
     schemas:
-      - -4426198.611738071
-      - -20973061
-      - 30539143.671887502
-      - -80654892
-      - -23320403
+      - null
+      - occaecat
+      - false
 
 ## selfservice ##
 #
 selfservice:
+  
   ## logout ##
   #
   logout:
+    
     ## redirect_to ##
     #
     # Set this value using environment variables on
@@ -82,14 +86,16 @@ selfservice:
     # - Windows Command Line (CMD):
     #    > set SELFSERVICE_LOGOUT_REDIRECT_TO=<value>
     #
-    redirect_to: http://rQcuiQiHEQtVbjJdjfAdAjZPCdrKB.ekpGZyP.X.cJOzZkIDVD
+    redirect_to: https://CWHESVGZUaKjSwIUWZ.ruQTscEqPJ8vmBFeLV-VqOSmnv09BIOIk0NUdq.5vi5q9Akt+LP
 
   ## strategies ##
   #
   strategies:
+    
     ## password ##
     #
     password:
+      
       ## enabled ##
       #
       # Set this value using environment variables on
@@ -103,6 +109,7 @@ selfservice:
     ## oidc ##
     #
     oidc:
+      
       ## enabled ##
       #
       # Set this value using environment variables on
@@ -111,11 +118,12 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_STRATEGIES_OIDC_ENABLED=<value>
       #
-      enabled: true
+      enabled: false
 
       ## config ##
       #
       config:
+        
         ## providers ##
         #
         # Set this value using environment variables on
@@ -125,34 +133,35 @@ selfservice:
         #    > set SELFSERVICE_STRATEGIES_OIDC_CONFIG_PROVIDERS=<value>
         #
         providers:
-          - id: ipsum enim pariatur ex
-            provider: generic
-            client_id: elit pariatur esse voluptate
-            client_secret: exercitation nostrud
-            schema_url: http://PpxILCGFxIdvmdzSG.zcwXeqXRZ6z0nV.1PHlM-CLTQmf5H-
-            issuer_url: http://UTJOJNnIFuKioDApBvYJRVQ.dipeLxSyff6NngZKKFoWIe3xdp6ZBehasuaekBqv+jC7ohG6lTCRqgA1wOVdlwKw3
-            auth_url: http://lDicgdbXPdTMhGiXQuy.yotxYu8SdnadrRfbIHlpBmT-Wamk1YGKonJ3sJn.urUPs-PDVeqp
-            token_url: https://yyChgalbSouVoVmuGKOmiXCTNTugR.lbfu8oK79mGfOV.qgZyI7ZElr2wKMiAaRr2jfv-pAd-fvH166UkH9
+          - id: occaecat velit
+            provider: github
+            client_id: Excepteur reprehenderit irure aliqua
+            client_secret: Ut do
+            schema_url: https://HOKSAviGwOLGpwhZyKhtEaFJDNApaAh.jiwbXiOt2m5UFza0vfw,pQuyO7MmtB2Doo,eYwsWhqrbtB2l0LQHnd-QTq5sZe
+            issuer_url: http://XixfGcTIez.jnHS-kaBKiuWE
+            auth_url: https://oCDRaiUpwPCMIJoigltgbgOvN.tfyoVWWiHe3ExNY4-YJDSrK,o9CE+zRi7lvQu,Ly5cETsydyq2cOhvHyLx+Htcn
+            token_url: https://XWJqt.wyjywG-PnQRl.DLX8rPGFy2GWgskty6mVEaViUHkg3y0.QetxWr2pbx3IyXPTpEkub4llAX5t6cUSjW
             scope:
-              - sed
-              - ad sunt fugiat non
-              - ex consectetur mollit in
-              - Excepteur non
+              - exercitation aute in dolore elit
+              - ipsum veniam mollit
+              - qui occaecat
+              - cupidatat
 
-  ## profile ##
+  ## settings ##
   #
-  profile:
+  settings:
+    
     ## request_lifespan ##
     #
     # Default value: 1h
     #
     # Set this value using environment variables on
     # - Linux/macOS:
-    #    $ export SELFSERVICE_PROFILE_REQUEST_LIFESPAN=<value>
+    #    $ export SELFSERVICE_SETTINGS_REQUEST_LIFESPAN=<value>
     # - Windows Command Line (CMD):
-    #    > set SELFSERVICE_PROFILE_REQUEST_LIFESPAN=<value>
+    #    > set SELFSERVICE_SETTINGS_REQUEST_LIFESPAN=<value>
     #
-    request_lifespan: 6631us
+    request_lifespan: 53ns
 
     ## privileged_session_max_age ##
     #
@@ -160,15 +169,64 @@ selfservice:
     #
     # Set this value using environment variables on
     # - Linux/macOS:
-    #    $ export SELFSERVICE_PROFILE_PRIVILEGED_SESSION_MAX_AGE=<value>
+    #    $ export SELFSERVICE_SETTINGS_PRIVILEGED_SESSION_MAX_AGE=<value>
     # - Windows Command Line (CMD):
-    #    > set SELFSERVICE_PROFILE_PRIVILEGED_SESSION_MAX_AGE=<value>
+    #    > set SELFSERVICE_SETTINGS_PRIVILEGED_SESSION_MAX_AGE=<value>
     #
-    privileged_session_max_age: 97ms
+    privileged_session_max_age: 467227398us
+
+    ## after ##
+    #
+    after:
+      
+      ## password ##
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SELFSERVICE_SETTINGS_AFTER_PASSWORD=<value>
+      # - Windows Command Line (CMD):
+      #    > set SELFSERVICE_SETTINGS_AFTER_PASSWORD=<value>
+      #
+      password:
+        - job: redirect
+          config:
+            default_redirect_url: http://iqM.knNoTfoDcL-cvBrSbEQDv3bKr-nmRJEI+
+            allow_user_defined_redirect: false
+
+      ## profile ##
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SELFSERVICE_SETTINGS_AFTER_PROFILE=<value>
+      # - Windows Command Line (CMD):
+      #    > set SELFSERVICE_SETTINGS_AFTER_PROFILE=<value>
+      #
+      profile:
+        - job: redirect
+          config:
+            default_redirect_url: https://iervFKfgunZwAKXOqyn.gafqFvCmRSK6TeLOAHKrXUiXJ4Bw
+            allow_user_defined_redirect: true
+        - job: redirect
+          config:
+            default_redirect_url: http://yrazqvImTyVFAG.ukvxOlH-n6IRVHao+LOelMQsweXiu5lfO8ArF0Q,vGASTr+
+            allow_user_defined_redirect: false
+        - job: redirect
+          config:
+            default_redirect_url: https://tbEYSsWBDi.conqJATGyLu28i6jSvrVvjg4DYe3pbPgxe
+            allow_user_defined_redirect: false
+        - job: redirect
+          config:
+            default_redirect_url: https://DlbIzoOqhuchDdXEVprcav.oxocLDpfnxrfHnbGqMiITQ+AwzHldeeZW4wqUBr1HvG6lCMJF0KUVLUFlMimw8Zo4jusqbfDcgDV
+            allow_user_defined_redirect: false
+        - job: redirect
+          config:
+            default_redirect_url: https://zYpCBNzmaK.xhwfJy34JI8seWF56CNXIBK,iGB.u3bikEOcYXvwAXWbzqCJ9FoxdysDfd5Na,ygHjUk
+            allow_user_defined_redirect: false
 
   ## verify ##
   #
   verify:
+    
     ## Self-Service Verification Request Lifespan ##
     #
     # Sets how long the verification request (for the UI interaction) is valid.
@@ -181,7 +239,7 @@ selfservice:
     # - Windows Command Line (CMD):
     #    > set SELFSERVICE_VERIFY_REQUEST_LIFESPAN=<value>
     #
-    request_lifespan: 81s
+    request_lifespan: 1161796018ms
 
     ## Self-Service Verification Link Lifespan ##
     #
@@ -195,11 +253,12 @@ selfservice:
     # - Windows Command Line (CMD):
     #    > set SELFSERVICE_VERIFY_LINK_LIFESPAN=<value>
     #
-    link_lifespan: 01443817h
+    link_lifespan: 4938m
 
   ## login ##
   #
   login:
+    
     ## request_lifespan ##
     #
     # Default value: 1h
@@ -210,7 +269,7 @@ selfservice:
     # - Windows Command Line (CMD):
     #    > set SELFSERVICE_LOGIN_REQUEST_LIFESPAN=<value>
     #
-    request_lifespan: 9801s
+    request_lifespan: 27131m
 
     ## before ##
     #
@@ -223,16 +282,21 @@ selfservice:
     before:
       - job: redirect
         config:
-          default_redirect_url: https://YMiAxqdnyOXqOsOOATQsWtnO.obwaCoJh2VJjvhMmE3s8+vHoxt1
+          default_redirect_url: http://YREurHiLzp.ttwfmsYFQA9aGYT3Qu8htMz-wHAW0AvQ
+          allow_user_defined_redirect: true
+      - job: redirect
+        config:
+          default_redirect_url: https://hxQRVEKrwjdzhzjLBHNGBC.ungocFe,.HUdc9ct.fXZLvUeNHhKcgmcEntz,krQFNqLAZbl36BnBHEPhQlHsvJABH
           allow_user_defined_redirect: false
       - job: redirect
         config:
-          default_redirect_url: http://gNypoTJloTerpFuUTZ.vevYHEnBqnjty9tCK0zO1nG1mV3UNlTjVV0Yga
+          default_redirect_url: https://meTWpwfA.ttphLRWbjY-DiwVEdsTuhLEy-gp-k
           allow_user_defined_redirect: true
 
     ## after ##
     #
     after:
+      
       ## password ##
       #
       # Set this value using environment variables on
@@ -242,7 +306,19 @@ selfservice:
       #    > set SELFSERVICE_LOGIN_AFTER_PASSWORD=<value>
       #
       password:
+        - job: redirect
+          config:
+            default_redirect_url: https://gpGbnLHFfCvFKWuhqWpyLlcbJYGD.laIWvzfRX8QDxRI3Dr4Ucc.SUHsH
+            allow_user_defined_redirect: true
+        - job: redirect
+          config:
+            default_redirect_url: https://puPhOLCtteVfJMCBgetkleH.rrknmg.rUAueqwSn6bmxDK8M7CDjdbcprssPvwtgCYcbtjIHpI-SF
+            allow_user_defined_redirect: true
         - job: session
+        - job: redirect
+          config:
+            default_redirect_url: http://UpoxON.ogqxXKs4vv5dEaesVNBOCjY44FLI1UmzKxhN5Z5S1Hff2ATifH6qh8vv93AyIbA8S7qZsZbC1ShT5
+            allow_user_defined_redirect: false
 
       ## oidc ##
       #
@@ -253,14 +329,17 @@ selfservice:
       #    > set SELFSERVICE_LOGIN_AFTER_OIDC=<value>
       #
       oidc:
+        - job: revoke_active_sessions
         - job: redirect
           config:
-            default_redirect_url: https://GLmUoEaZe.ffGBPEFSxPGfHtXYdupILxsQcfRLT0xSya0RY0
-            allow_user_defined_redirect: false
+            default_redirect_url: https://SmJsGNNluRRKSgxOXRgiUVzJiEfLSPot.jwPunEJNPf6c6jB5jr2U0CqzFmI4J8aAJ
+            allow_user_defined_redirect: true
+        - job: session
 
   ## registration ##
   #
   registration:
+    
     ## request_lifespan ##
     #
     # Default value: 1h
@@ -271,7 +350,7 @@ selfservice:
     # - Windows Command Line (CMD):
     #    > set SELFSERVICE_REGISTRATION_REQUEST_LIFESPAN=<value>
     #
-    request_lifespan: 97733237ns
+    request_lifespan: 72565h
 
     ## before ##
     #
@@ -284,20 +363,13 @@ selfservice:
     before:
       - job: redirect
         config:
-          default_redirect_url: http://adpKHiYwrLHVMHxbehR.sletbrGNjT,ayog.gSCMhi
+          default_redirect_url: https://SypafnuKOgLcckTwxntddnduEyNI.eowW7OL2xW23+TYUH,iiBG1JQ,ObEZ7lW67OFM
           allow_user_defined_redirect: false
-      - job: redirect
-        config:
-          default_redirect_url: http://wlgRNYewWndobZdfGcsamnSvvkZfwbPeA.uqsrqOKPw9pUXh,wnA2PO3s7
-          allow_user_defined_redirect: true
-      - job: redirect
-        config:
-          default_redirect_url: https://nTKzsMZNNuca.xeoOAH657.F
-          allow_user_defined_redirect: true
 
     ## after ##
     #
     after:
+      
       ## password ##
       #
       # Set this value using environment variables on
@@ -307,22 +379,19 @@ selfservice:
       #    > set SELFSERVICE_REGISTRATION_AFTER_PASSWORD=<value>
       #
       password:
+        - job: redirect
+          config:
+            default_redirect_url: http://hJKGYTVgVKkuztkNPTFeVrd.wzddjJn
+            allow_user_defined_redirect: false
         - job: verify
+        - job: session
         - job: redirect
           config:
-            default_redirect_url: http://hbdMlaQwGMyWFPuzXwQxBRphtalNHwMxK.ipxruNeStlNsSe2UG5Hy,crqed.-X
-            allow_user_defined_redirect: false
-        - job: redirect
-          config:
-            default_redirect_url: http://k.qxnZsxSsJUHqgegZzQhTtLF4o14Uy4E
-            allow_user_defined_redirect: false
-        - job: redirect
-          config:
-            default_redirect_url: http://SlvUPhsysIqAKUrFPgEJVm.cdoKMCMhoHTzs.MfoMlr3sTeIPVRqLr+EmYNEBmdA02X7tl2B
+            default_redirect_url: https://jXNiSAcUCnCA.psOQuczXJrk0rVCBl2QXiRV1i
             allow_user_defined_redirect: true
         - job: redirect
           config:
-            default_redirect_url: http://e.hnzjfzdHCZviT,pnFxpUmThECVcsnk
+            default_redirect_url: http://QMpBCZwClyHilHGYbStxkxw.jkfSpIEWNSsjxeoRymJcpC
             allow_user_defined_redirect: false
 
       ## oidc ##
@@ -334,29 +403,28 @@ selfservice:
       #    > set SELFSERVICE_REGISTRATION_AFTER_OIDC=<value>
       #
       oidc:
+        - job: session
         - job: verify
-        - job: redirect
-          config:
-            default_redirect_url: https://hkjzLy.khlbvZi4LCf3-wdx1zGx4sNwDI1Ka
-            allow_user_defined_redirect: true
 
 ## Courier configuration ##
 #
 # The courier is responsible for sending and delivering messages over email, sms, and other means.
 #
 courier:
+  
   ## SMTP Configuration ##
   #
   # Configures outgoing emails using the SMTP protocol.
   #
   smtp:
+    
     ## SMTP connection string ##
     #
     # This URI will be used to connect to the SMTP server.
     #
     # Examples:
     # - smtps://foo:bar@my-mailserver:1234/
-    #
+    # 
     # Set this value using environment variables on
     # - Linux/macOS:
     #    $ export COURIER_SMTP_CONNECTION_URI=<value>
@@ -377,7 +445,7 @@ courier:
     # - Windows Command Line (CMD):
     #    > set COURIER_SMTP_FROM_ADDRESS=<value>
     #
-    from_address: fet@yzfcDtrPKTjPKtruIQ.xxfq
+    from_address: vAKZxglwVAyu5Cp@JojoWUObAffBJknCkaupbxfkkbqAsSOwr.mkq
 
   ## Override message templates ##
   #
@@ -389,14 +457,16 @@ courier:
   # - Windows Command Line (CMD):
   #    > set COURIER_TEMPLATE_OVERRIDE_PATH=<value>
   #
-  template_override_path: exercitation dolor nisi
+  template_override_path: anim adipisicing labore ad
 
 ## serve ##
 #
 serve:
+  
   ## admin ##
   #
   admin:
+    
     ## host ##
     #
     # Default value: 0.0.0.0
@@ -407,7 +477,7 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_ADMIN_HOST=<value>
     #
-    host: velit Duis
+    host: aliquip Ut
 
     ## port ##
     #
@@ -415,7 +485,7 @@ serve:
     #
     # Examples:
     # - 4434
-    #
+    # 
     # Set this value using environment variables on
     # - Linux/macOS:
     #    $ export SERVE_ADMIN_PORT=<value>
@@ -427,6 +497,7 @@ serve:
   ## public ##
   #
   public:
+    
     ## host ##
     #
     # Default value: 0.0.0.0
@@ -437,7 +508,7 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_PUBLIC_HOST=<value>
     #
-    host: incididunt dolore ea commodo sit
+    host: dolore amet dolor
 
     ## port ##
     #
@@ -445,7 +516,7 @@ serve:
     #
     # Examples:
     # - 4433
-    #
+    # 
     # Set this value using environment variables on
     # - Linux/macOS:
     #    $ export SERVE_PUBLIC_PORT=<value>
@@ -457,15 +528,16 @@ serve:
 ## urls ##
 #
 urls:
-  ## profile_ui ##
+  
+  ## settings_ui ##
   #
   # Set this value using environment variables on
   # - Linux/macOS:
-  #    $ export URLS_PROFILE_UI=<value>
+  #    $ export URLS_SETTINGS_UI=<value>
   # - Windows Command Line (CMD):
-  #    > set URLS_PROFILE_UI=<value>
+  #    > set URLS_SETTINGS_UI=<value>
   #
-  profile_ui: https://YUHf.ljyE6ce,izXD0+cX4h.UgwvzlzvTWwuPZA2I
+  settings_ui: https://TEQPRfsOc.zeuD9WxdAqFein24B7RGFr1xbz9elO3Epo2pe
 
   ## mfa_ui ##
   #
@@ -475,7 +547,7 @@ urls:
   # - Windows Command Line (CMD):
   #    > set URLS_MFA_UI=<value>
   #
-  mfa_ui: http://SDclIjhhLBHpxiybCEPvCcHusj.qqccejcQkCk5FB-tuFVsetfMquNfHOry6upMe
+  mfa_ui: http://p.xhkFW6mGC3m3oxwfROys8JCTIFltsVXLLlm+eVhKrtXo-5hK
 
   ## login_ui ##
   #
@@ -485,7 +557,7 @@ urls:
   # - Windows Command Line (CMD):
   #    > set URLS_LOGIN_UI=<value>
   #
-  login_ui: http://dpnTUSElNHmXWRrrtbkY.tjqgokPIn21eBI3f-gL18A,sezrd1qG-XgE4QICLW,xqeqeYjXjIe
+  login_ui: https://hYiS.ssamQbQlXOzWW6ZMi0RFITqWKbjQ09Qo1003mYgeryQrc7qcI
 
   ## registration_ui ##
   #
@@ -495,7 +567,7 @@ urls:
   # - Windows Command Line (CMD):
   #    > set URLS_REGISTRATION_UI=<value>
   #
-  registration_ui: https://GrlEuZIioiSNyFNPW.dnovnIm+TWTekKojZeHVgMnCSoA0Ws,Rze8pU-4bO
+  registration_ui: https://UKkmnyVtTItDZUjPvvA.igk2KB,iPptbkfGq4vEXrjuMX8LAON9mQPISuxoE7rKzs7vUxBHz5wCal
 
   ## error_ui ##
   #
@@ -505,7 +577,7 @@ urls:
   # - Windows Command Line (CMD):
   #    > set URLS_ERROR_UI=<value>
   #
-  error_ui: https://sSPVIE.ugfHsG3LuzH
+  error_ui: https://PSFLXNBuuzLOINZPpwJbAHnIyhXlaNHp.tgdnUMxLi1ahwdXmTScR0ovpGMDYC7ITzg4MFNw1qPb
 
   ## Verify User Interface URL ##
   #
@@ -517,7 +589,7 @@ urls:
   # - Windows Command Line (CMD):
   #    > set URLS_VERIFY_UI=<value>
   #
-  verify_ui: http://mhwtRNkuyoCqYNMUv.uxeeSBuIGdz2vlD7KM3X2KTdvP7eWgXOW612qdJke2GuG8c,rIB142nad2x1qibe+d
+  verify_ui: http://VpsTSvbIoDGR.sqenIgZWamJhTygY3bZKreNJMJkZIcinLb1T2roKQ9CbChdcm12IAdfJNyRIc3NfjrH.AE,
 
   ## default_return_to ##
   #
@@ -527,11 +599,12 @@ urls:
   # - Windows Command Line (CMD):
   #    > set URLS_DEFAULT_RETURN_TO=<value>
   #
-  default_return_to: http://ljnYOAfFOjxducArzGPCspTrFvihXysoP.unbmoqo+Ll-t0+aWP6ivsIBzRBfqAbn9fXz9Ylf.gn,jm
+  default_return_to: https://kvaMNtsGsytSgLZWJbMqJclCOlCx.joihqdxBskgZOihrJ
 
   ## self ##
   #
   self:
+    
     ## public ##
     #
     # Set this value using environment variables on
@@ -540,7 +613,7 @@ urls:
     # - Windows Command Line (CMD):
     #    > set URLS_SELF_PUBLIC=<value>
     #
-    public: http://iGlUd.tqacGB2JGr-sjo38AP8Vs+iODE
+    public: http://NXtzTFgrZV.bvbppl7WvKv,shiH0MiMgabqAeldgmQn3InJhGmC0zDraJR8P0KrB8
 
     ## admin ##
     #
@@ -550,7 +623,7 @@ urls:
     # - Windows Command Line (CMD):
     #    > set URLS_SELF_ADMIN=<value>
     #
-    admin: http://jHBWBVdCpFDOIabFPH.ckcs7zgGtvdb5XzVuOfrAR02EdZ
+    admin: https://aqw.hxbqLQgxMl8.fzOQhgh4-y
 
   ## whitelisted_return_to_domains ##
   #
@@ -561,12 +634,16 @@ urls:
   #    > set URLS_WHITELISTED_RETURN_TO_DOMAINS=<value>
   #
   whitelisted_return_to_domains:
-    - http://gxKvKS.znwzk2i8HY-GUkMoLct3JU.pvrWFrhewWsktb7ciGA9Z0UEOLUXi2VkrM+WpH
-    - https://GcnbHAQKJAeaPecnOKUNvrSsqLcNdq.toauHDa751a2KhtqtyNeciOtKUxLTE7cZgX1gc85G5TzIKuFyC2yU0wjLyUfR
+    - https://bLogannxoDTTyWOapwPx.kafZ47UAltiG
+    - http://po.xlu-.ING4fGzXovGecl8mTqF5CNvEs-f3PEG8pUBW7.9kP7vC4iVJLM
+    - https://CcljrjsSWDdiUyrPOFtjiN.lnZ,7+DVwJghPODsoP3ZPT67PHTbGXNxelOCqLdPNZuT33YVch
+    - https://UOuNPcscNlARebZqSEXVVAzXmOpZog.tvjPb6osVZh9Ne4mJzgi-CyxSl1MLf7rqRQM6WtEhL5yft9bI.uWkkaXSp,+GX2Z
+    - https://Ckk.qpaes86fTOaygFZ6vhEv5d
 
 ## log ##
 #
 log:
+  
   ## level ##
   #
   # Set this value using environment variables on
@@ -575,7 +652,7 @@ log:
   # - Windows Command Line (CMD):
   #    > set LOG_LEVEL=<value>
   #
-  level: info
+  level: warning
 
   ## format ##
   #
@@ -590,6 +667,7 @@ log:
 ## secrets ##
 #
 secrets:
+  
   ## session ##
   #
   # Set this value using environment variables on
@@ -599,18 +677,20 @@ secrets:
   #    > set SECRETS_SESSION=<value>
   #
   session:
-    - mollit dolore laboris
-    - Ut etExcepteursit in culpa nisi
-    - magna aliqua aute
-    - dolor occaecatnulla
-    - ea aliquasint irure sunt sit
+    - aliquipveniam aute
+    - quis ut incididunt proident
+    - fugiatanim irure proident
+    - Ut ea proidentUt minim veniam nostrud irure
+    - esse dolor tempor ipsum fugiat
 
 ## hashers ##
 #
 hashers:
+  
   ## argon2 ##
   #
   argon2:
+    
     ## memory ##
     #
     # Set this value using environment variables on
@@ -619,7 +699,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_MEMORY=<value>
     #
-    memory: 31292956
+    memory: 76609206
 
     ## iterations ##
     #
@@ -629,7 +709,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_ITERATIONS=<value>
     #
-    iterations: 3228708
+    iterations: 56167537
 
     ## parallelism ##
     #
@@ -639,7 +719,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_PARALLELISM=<value>
     #
-    parallelism: 52425634
+    parallelism: 50445769
 
     ## salt_length ##
     #
@@ -649,7 +729,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_SALT_LENGTH=<value>
     #
-    salt_length: 57006570
+    salt_length: 9907940
 
     ## key_length ##
     #
@@ -659,17 +739,20 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_KEY_LENGTH=<value>
     #
-    key_length: 18810883
+    key_length: 28822133
 
 ## security ##
 #
 security:
+  
   ## session ##
   #
   session:
+    
     ## cookie ##
     #
     cookie:
+      
       ## same_site ##
       #
       # Default value: Lax
@@ -680,5 +763,6 @@ security:
       # - Windows Command Line (CMD):
       #    > set SECURITY_SESSION_COOKIE_SAME_SITE=<value>
       #
-      same_site: Strict
+      same_site: None
+
 ```
