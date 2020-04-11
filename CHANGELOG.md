@@ -51,6 +51,7 @@
 - Include authentication URL for protected user settings [\#310](https://github.com/ory/kratos/issues/310)
 - Rename profile module to settings [\#304](https://github.com/ory/kratos/issues/304)
 - Error authenticating POST requests from browser session behind Oathkeeper [\#270](https://github.com/ory/kratos/issues/270)
+- verified email address: resend verification challenge when the address changes  [\#267](https://github.com/ory/kratos/issues/267)
 - Have `dsn: memory` as an alias for SQLite in memory DSN [\#228](https://github.com/ory/kratos/issues/228)
 - refactor: Prepare profile management payloads for credentials [\#300](https://github.com/ory/kratos/pull/300) ([aeneasr](https://github.com/aeneasr))
 
@@ -92,6 +93,7 @@
 
 **Merged pull requests:**
 
+- feat: send verification emails on profile update [\#333](https://github.com/ory/kratos/pull/333) ([aeneasr](https://github.com/aeneasr))
 - fix: exempt whomai from csrf protection [\#329](https://github.com/ory/kratos/pull/329) ([aeneasr](https://github.com/aeneasr))
 - chore: update docusaurus template [\#324](https://github.com/ory/kratos/pull/324) ([aeneasr](https://github.com/aeneasr))
 - fix writing [\#322](https://github.com/ory/kratos/pull/322) ([gwind](https://github.com/gwind))

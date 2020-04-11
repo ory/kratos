@@ -61,7 +61,9 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		return err
 	}
 
+	ss.Identity = i
 	a.UpdateSuccessful = true
+
 	if err := e.d.SettingsRequestPersister().UpdateSettingsRequest(r.Context(), a); err != nil {
 		return err
 	}

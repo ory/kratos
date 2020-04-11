@@ -55,6 +55,11 @@ func HookConfigRedirectTo(t *testing.T, u string) (m []map[string]interface{}) {
 	return m
 }
 
+func HookVerify(t *testing.T) (m []map[string]interface{}) {
+	require.NoError(t, json.NewDecoder(bytes.NewBufferString(`[{"job": "verify"}]`)).Decode(&m))
+	return m
+}
+
 func GetSettingsRequest(t *testing.T, primaryUser *http.Client, ts *httptest.Server) *common.GetSelfServiceBrowserSettingsRequestOK {
 	publicClient := NewSDKClient(ts)
 
