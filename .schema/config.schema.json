@@ -361,7 +361,12 @@
       "type": "string",
       "title": "Data Source Name",
       "description": "DSN is used to specify the database credentials as a connection URI.",
-      "examples": ["postgres://user:password@localhost:5432/database"]
+      "examples": [
+        "postgres://user: password@postgresd:5432/database?sslmode=disable&max_conns=20&max_idle_conns=4",
+        "mysql://user:secret@tcp(mysqld:3306)/database?max_conns=20&max_idle_conns=4",
+        "cockroach://user@cockroachdb:26257/database?sslmode=disable&max_conns=20&max_idle_conns=4",
+        "sqlite:///var/lib/sqlite/db.sqlite?_fk=true&mode=rwc"
+      ]
     },
     "courier": {
       "type": "object",
