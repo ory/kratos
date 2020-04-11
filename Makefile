@@ -77,11 +77,13 @@ sdk:
 		$$(go env GOPATH)/bin/swagger generate client -f ./.schema/api.swagger.json -t internal/httpclient -A Ory_Kratos
 		make format
 
+.PHONY: quickstart
 quickstart:
 		docker pull oryd/kratos:latest-sqlite
 		docker pull oryd/kratos-selfservice-ui-node:latest
 		docker-compose -f quickstart.yml up --build --force-recreate
 
+.PHONY: quickstart-dev
 quickstart-dev:
 		docker build -f .docker/Dockerfile-build -t oryd/kratos:latest-sqlite .
 		docker-compose -f quickstart.yml up --build --force-recreate
@@ -95,3 +97,6 @@ format:
 .PHONY: docker
 docker:
 		docker build -f .docker/Dockerfile-build -t oryd/kratos:latest .
+
+.PHONY: test-e2e
+test-e2e:
