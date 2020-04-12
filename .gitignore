@@ -8,3 +8,4 @@ packrd/
 *-packr.go
 dist/
 node_modules
+.bin/
