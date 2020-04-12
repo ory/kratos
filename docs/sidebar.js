@@ -11,23 +11,38 @@ module.exports = {
     "concepts/federation",
     "concepts/security"
   ],
-  "Self Service Flows": [
-    "self-service/flows/index",
-    "self-service/flows/user-login-user-registration",
-    "self-service/flows/user-logout",
-    "self-service/flows/user-settings-profile-management",
-    "self-service/flows/password-reset-account-recovery",
-    "self-service/flows/user-facing-errors",
-    "self-service/flows/verify-email-account-activation"
+  "Self Service": [
+    {
+      type: "category",
+      label: "Flows", items: [
+        "self-service/flows/index",
+        "self-service/flows/user-login-user-registration",
+        "self-service/flows/user-logout",
+        "self-service/flows/user-settings-profile-management",
+        "self-service/flows/password-reset-account-recovery",
+        "self-service/flows/user-facing-errors",
+        "self-service/flows/verify-email-account-activation"
+
+      ]
+    },
+    {
+      type: "category",
+      label: "Strategies", items: [
+        "self-service/strategies/index",
+        "self-service/strategies/username-email-password",
+        "self-service/strategies/openid-connect-social-sign-in-oauth2"
+      ]
+    },
+    {
+      type: "category",
+      label: "Hooks / Jobs", items: [
+        "self-service/workflows/jobs/before",
+        "self-service/workflows/jobs/after"
+      ]
+    }
   ],
-  "Self Service Strategies": [
-    "self-service/strategies/index",
-    "self-service/strategies/username-email-password",
-    "self-service/strategies/openid-connect-social-sign-in-oauth2"
-  ],
-  "Self Service Jobs and Workflows": [
-    "self-service/workflows/jobs/before",
-    "self-service/workflows/jobs/after"
+  Guides: [
+    "guides/zero-trust-iap-proxy-identity-access-proxy"
   ],
   "Reference": [
     "reference/configuration",
