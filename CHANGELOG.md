@@ -76,6 +76,7 @@
 
 **Closed issues:**
 
+- Quickstart: configuration invalid [\#335](https://github.com/ory/kratos/issues/335)
 - Kratos as library for any Golang project [\#328](https://github.com/ory/kratos/issues/328)
 - DOCS, wrong link [\#327](https://github.com/ory/kratos/issues/327)
 - Quickstart app doubt for authentication only\(not authorization\) with mysql database  [\#297](https://github.com/ory/kratos/issues/297)
@@ -93,6 +94,8 @@
 
 **Merged pull requests:**
 
+- chore: update docusaurus template [\#340](https://github.com/ory/kratos/pull/340) ([aeneasr](https://github.com/aeneasr))
+- fix-335 [\#339](https://github.com/ory/kratos/pull/339) ([aeneasr](https://github.com/aeneasr))
 - docs: update github templates [\#338](https://github.com/ory/kratos/pull/338) ([aeneasr](https://github.com/aeneasr))
 - chore: update docusaurus template [\#337](https://github.com/ory/kratos/pull/337) ([aeneasr](https://github.com/aeneasr))
 - feat: send verification emails on profile update [\#333](https://github.com/ory/kratos/pull/333) ([aeneasr](https://github.com/aeneasr))
@@ -173,6 +176,7 @@
 
 - feat: Add verification to quickstart [\#251](https://github.com/ory/kratos/pull/251) ([aeneasr](https://github.com/aeneasr))
 - fix: Adapt quickstart to verify changes [\#247](https://github.com/ory/kratos/pull/247) ([aeneasr](https://github.com/aeneasr))
+- fix\(SelfService/Strategy/oidc\): rework auth session expiry  [\#242](https://github.com/ory/kratos/pull/242) ([zepatrik](https://github.com/zepatrik))
 - feat\(selfservice/profile\): Add disabled flag to identifier form fields [\#238](https://github.com/ory/kratos/pull/238) ([zepatrik](https://github.com/zepatrik))
 - fix\(swagger\): Use correct annotations for request methods [\#237](https://github.com/ory/kratos/pull/237) ([aeneasr](https://github.com/aeneasr))
 - feat: add levenshtein distance check for password validation [\#231](https://github.com/ory/kratos/pull/231) ([zepatrik](https://github.com/zepatrik))
@@ -218,7 +222,6 @@
 
 **Merged pull requests:**
 
-- fix\(SelfService/Strategy/oidc\): rework auth session expiry  [\#242](https://github.com/ory/kratos/pull/242) ([zepatrik](https://github.com/zepatrik))
 - Serve: add admin /self-service/errors route [\#226](https://github.com/ory/kratos/pull/226) ([zepatrik](https://github.com/zepatrik))
 - fix: Set csrf token on public endpoints [\#224](https://github.com/ory/kratos/pull/224) ([aeneasr](https://github.com/aeneasr))
 - ci: Switch to golangci orb [\#223](https://github.com/ory/kratos/pull/223) ([aeneasr](https://github.com/aeneasr))
@@ -423,6 +426,7 @@
 
 - Make form fields an array [\#197](https://github.com/ory/kratos/pull/197) ([zepatrik](https://github.com/zepatrik))
 - Resolve build issues with CGO [\#196](https://github.com/ory/kratos/pull/196) ([aeneasr](https://github.com/aeneasr))
+- Remove redundant return statement [\#194](https://github.com/ory/kratos/pull/194) ([aeneasr](https://github.com/aeneasr))
 
 ## [v0.0.1-alpha.3](https://github.com/ory/kratos/tree/v0.0.1-alpha.3) (2020-01-28)
 
@@ -455,7 +459,6 @@
 
 **Merged pull requests:**
 
-- Remove redundant return statement [\#194](https://github.com/ory/kratos/pull/194) ([aeneasr](https://github.com/aeneasr))
 - Improve Docker Compose Quickstart [\#187](https://github.com/ory/kratos/pull/187) ([aeneasr](https://github.com/aeneasr))
 - Registration/Login HTML form: remove request field and ensure method is set [\#183](https://github.com/ory/kratos/pull/183) ([zepatrik](https://github.com/zepatrik))
 - Replace number with integer in config JSON Schema [\#177](https://github.com/ory/kratos/pull/177) ([aeneasr](https://github.com/aeneasr))
