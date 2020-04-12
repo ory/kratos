@@ -46,6 +46,7 @@ errors:
         verbose: true
 
 access_rules:
+  matching_strategy: glob
   repositories:
     - file:///etc/config/oathkeeper/access-rules.yml
 

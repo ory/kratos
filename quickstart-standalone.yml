@@ -1,0 +1,9 @@
+version: '3.7'
+
+services:
+  kratos-selfservice-ui-node:
+    ports:
+      - "4455:4455"
+    environment:
+      - PORT=4455
+      - SECURITY_MODE=cookie

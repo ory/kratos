@@ -76,6 +76,7 @@
 
 **Closed issues:**
 
+- Quickstart: configuration invalid [\#335](https://github.com/ory/kratos/issues/335)
 - Kratos as library for any Golang project [\#328](https://github.com/ory/kratos/issues/328)
 - DOCS, wrong link [\#327](https://github.com/ory/kratos/issues/327)
 - Quickstart app doubt for authentication only\(not authorization\) with mysql database  [\#297](https://github.com/ory/kratos/issues/297)
@@ -85,6 +86,7 @@
 - Make the session cookie name configurable [\#268](https://github.com/ory/kratos/issues/268)
 - MailSlurper is not sending the verification email [\#264](https://github.com/ory/kratos/issues/264)
 - SQLite database errors in quickstart [\#263](https://github.com/ory/kratos/issues/263)
+- Add a clear guide how to use Kratos without Oathkeeper [\#262](https://github.com/ory/kratos/issues/262)
 - Allow configuration of same-site cookie [\#257](https://github.com/ory/kratos/issues/257)
 - CSRF token is missing or invalid [\#250](https://github.com/ory/kratos/issues/250)
 - selfservice/profile: sudo mode for updating auth related stuff [\#243](https://github.com/ory/kratos/issues/243)
@@ -93,7 +95,13 @@
 
 **Merged pull requests:**
 
+- chore: update docusaurus template [\#340](https://github.com/ory/kratos/pull/340) ([aeneasr](https://github.com/aeneasr))
+- fix-335 [\#339](https://github.com/ory/kratos/pull/339) ([aeneasr](https://github.com/aeneasr))
+- docs: update github templates [\#338](https://github.com/ory/kratos/pull/338) ([aeneasr](https://github.com/aeneasr))
+- chore: update docusaurus template [\#337](https://github.com/ory/kratos/pull/337) ([aeneasr](https://github.com/aeneasr))
+- Improve quickstart [\#336](https://github.com/ory/kratos/pull/336) ([aeneasr](https://github.com/aeneasr))
 - feat: send verification emails on profile update [\#333](https://github.com/ory/kratos/pull/333) ([aeneasr](https://github.com/aeneasr))
+- docs: Added database connection documentation [\#332](https://github.com/ory/kratos/pull/332) ([koenmtb1](https://github.com/koenmtb1))
 - fix: exempt whomai from csrf protection [\#329](https://github.com/ory/kratos/pull/329) ([aeneasr](https://github.com/aeneasr))
 - chore: update docusaurus template [\#324](https://github.com/ory/kratos/pull/324) ([aeneasr](https://github.com/aeneasr))
 - fix writing [\#322](https://github.com/ory/kratos/pull/322) ([gwind](https://github.com/gwind))

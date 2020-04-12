@@ -1,31 +1,33 @@
 SHELL=/bin/bash -o pipefail
 
-all:
-ifeq (, $(shell which golangci-lint))
-    curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.23.2
+EXECUTABLES = docker-compose docker node npm go
+K := $(foreach exec,$(EXECUTABLES),\
+        $(if $(shell which $(exec)),some string,$(error "No $(exec) in PATH")))
+
+export GO111MODULE := on
+export PATH := .bin:${PATH}
+
+deps:
+ifneq ("v0",$(shell cat .bin/.lock))
+		curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b .bin/ v1.24.0
+		go build -o .bin/go-acc github.com/ory/go-acc
+		go build -o .bin/goreturns github.com/sqs/goreturns
+		go build -o .bin/listx github.com/ory/x/tools/listx
+		go build -o .bin/mockgen github.com/golang/mock/mockgen
+		go build -o .bin/swagger github.com/go-swagger/go-swagger/cmd/swagger
+		go build -o .bin/goimports golang.org/x/tools/cmd/goimports
+		go build -o .bin/swagutil github.com/ory/sdk/swagutil
+		go build -o .bin/packr2 github.com/gobuffalo/packr/v2/packr2
+		echo "v0" > .bin/.lock
 endif
 
-.PHONY: tools
-tools:
-		go install github.com/ory/go-acc github.com/ory/x/tools/listx github.com/go-swagger/go-swagger/cmd/swagger github.com/go-bindata/go-bindata/go-bindata github.com/sqs/goreturns github.com/ory/sdk/swagutil
-
-.PHONY: build
-build:
-		make sqlbin
-		CGO_ENABLED=0 GO111MODULE=on GOOS=linux GOARCH=amd64 go build -o kratos .
-
-.PHONY: init
-init:
-		go install \
-			github.com/sqs/goreturns \
-			github.com/ory/x/tools/listx \
-			github.com/ory/go-acc \
-			github.com/golang/mock/mockgen \
-			github.com/go-swagger/go-swagger/cmd/swagger \
-			golang.org/x/tools/cmd/goimports
+.PHONY: docs
+docs:
+		cd docs; npm i; npm run build
 
 .PHONY: lint
-lint:
+lint: deps
+		which golangci-lint
 		GO111MODULE=on golangci-lint run -v ./...
 
 .PHONY: cover
@@ -34,19 +36,14 @@ cover:
 		go tool cover -func=cover.out
 
 .PHONE: mocks
-mocks:
+mocks: deps
 		mockgen -mock_names Manager=MockLoginExecutorDependencies -package internal -destination internal/hook_login_executor_dependencies.go github.com/ory/kratos/selfservice loginExecutorDependencies
 
 .PHONY: install
-install:
-		packr2 || (GO111MODULE=on go install github.com/gobuffalo/packr/v2/packr2 && packr2)
+install: deps
+		packr2
 		GO111MODULE=on go install .
 		packr2 clean
-
-# Adds sql files to the binary using go-bindata
-.PHONY: sqlbin
-sqlbin:
-		cd driver; go-bindata -o sql_migration_files.go -pkg driver ../contrib/sql/...
 
 .PHONY: test-resetdb
 test-resetdb:
@@ -66,7 +63,7 @@ test: test-resetdb
 
 # Generates the SDKs
 .PHONY: sdk
-sdk:
+sdk: deps
 		$$(go env GOPATH)/bin/swagger generate spec -m -o .schema/api.swagger.json -x internal/httpclient
 		$$(go env GOPATH)/bin/swagutil sanitize ./.schema/api.swagger.json
 		$$(go env GOPATH)/bin/swagger validate ./.schema/api.swagger.json
@@ -81,16 +78,16 @@ sdk:
 quickstart:
 		docker pull oryd/kratos:latest-sqlite
 		docker pull oryd/kratos-selfservice-ui-node:latest
-		docker-compose -f quickstart.yml up --build --force-recreate
+		docker-compose -f quickstart.yml -f quickstart-standalone.yml up --build --force-recreate
 
 .PHONY: quickstart-dev
 quickstart-dev:
 		docker build -f .docker/Dockerfile-build -t oryd/kratos:latest-sqlite .
-		docker-compose -f quickstart.yml up --build --force-recreate
+		docker-compose -f quickstart.yml -f quickstart-standalone.yml up --build --force-recreate
 
 # Formats the code
 .PHONY: format
-format:
+format: deps
 		$$(go env GOPATH)/bin/goreturns -w -local github.com/ory $$($$(go env GOPATH)/bin/listx .)
 
 # Runs tests in short mode, without database adapters

@@ -7,4 +7,5 @@ coverage.txt
 packrd/
 *-packr.go
 dist/
-node_modules/
+node_modules
+.bin/
