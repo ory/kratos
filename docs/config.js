@@ -6,6 +6,10 @@ module.exports = {
     {
       image: 'oryd/kratos',
       files: ['docs/docs/quickstart.mdx']
+    },
+    {
+      replacer: ({content, next}) => content.replace(/git checkout (v[0-9a-zA-Z\\.\\-]+)/gi, `git checkout ${next}`),
+      files: ['docs/docs/quickstart.mdx']
     }
   ],
   updateConfig: {
