@@ -3,7 +3,7 @@ id: zero-trust-iap-proxy-identity-access-proxy
 title: Zero Trust with IAP Proxy
 ---
 
-import useBaseUrl from '@docusaurus/useBaseUrl';
+import useBaseUrl from '@docusaurus/useBaseUrl'
 
 The [Quickstart](../quickstart.mdx) covers a basic set up that uses a pipe
 in SecureApp to forward requests to ORY Kratos.
@@ -259,14 +259,8 @@ access_rules:
     - file:///etc/config/oathkeeper/`access-rules.yml`
 ```
 
-In `access-rules.yml` we define three rules:
+In `access-rules.yml` we define three rules. The first rule forwards all traffic matching `http://127.0.0.1:4455/.ory/kratos/public/` to ORY Kratos' Public API:
 
-- one forwarding all traffic matching `http://127.0.0.1:4455/.ory/kratos/public/` to ORY Kratos' Public API;
-- one allowing anonymous requests to login, registration, re-send verification email, and the error page plus any
-assets.
-- one requiring a valid session before allowing requests to the dashboard and user settings.
-
-With ORY Oathkeeper this looks as follows:
 
 ```yaml title="contrib/quickstart/oathkeeper/access-rules.yml"
 -
@@ -290,7 +284,13 @@ With ORY Oathkeeper this looks as follows:
     handler: allow
   mutators:
     - handler: noop
+```
 
+The second rule allows anonymous requests to login, registration, re-send verification email, and the error page plus any
+assets:
+
+```yaml title="contrib/quickstart/oathkeeper/access-rules.yml"
+# ...
 -
   id: "ory:kratos-selfservice-ui-node:anonymous"
   upstream:
@@ -308,7 +308,12 @@ With ORY Oathkeeper this looks as follows:
   mutators:
     -
       handler: noop
+```
 
+And the final rule requires a valid session before allowing requests to the dashboard and user settings:
+
+```yaml title="contrib/quickstart/oathkeeper/access-rules.yml"
+# ...
 -
   id: "ory:kratos-selfservice-ui-node:protected"
   upstream:
