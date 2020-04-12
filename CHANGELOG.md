@@ -93,6 +93,8 @@
 
 **Merged pull requests:**
 
+- docs: update github templates [\#338](https://github.com/ory/kratos/pull/338) ([aeneasr](https://github.com/aeneasr))
+- chore: update docusaurus template [\#337](https://github.com/ory/kratos/pull/337) ([aeneasr](https://github.com/aeneasr))
 - feat: send verification emails on profile update [\#333](https://github.com/ory/kratos/pull/333) ([aeneasr](https://github.com/aeneasr))
 - docs: Added database connection documentation [\#332](https://github.com/ory/kratos/pull/332) ([koenmtb1](https://github.com/koenmtb1))
 - fix: exempt whomai from csrf protection [\#329](https://github.com/ory/kratos/pull/329) ([aeneasr](https://github.com/aeneasr))
@@ -128,7 +130,6 @@
 - fix: Use host volume mount for sqlite [\#272](https://github.com/ory/kratos/pull/272) ([aeneasr](https://github.com/aeneasr))
 - feat\(selfService/profile\): enable updating auth related traits [\#266](https://github.com/ory/kratos/pull/266) ([zepatrik](https://github.com/zepatrik))
 - docs: Typo in README.md [\#265](https://github.com/ory/kratos/pull/265) ([cuttlefish](https://github.com/cuttlefish))
-- fix: Clean up docker quickstart [\#255](https://github.com/ory/kratos/pull/255) ([aeneasr](https://github.com/aeneasr))
 - feat\(selfservice/login\): enable reauthentication functionality [\#248](https://github.com/ory/kratos/pull/248) ([zepatrik](https://github.com/zepatrik))
 
 ## [v0.1.1-alpha.1](https://github.com/ory/kratos/tree/v0.1.1-alpha.1) (2020-02-18)
@@ -142,6 +143,7 @@
 **Merged pull requests:**
 
 - fix: Update verify URLs [\#258](https://github.com/ory/kratos/pull/258) ([aeneasr](https://github.com/aeneasr))
+- fix: Clean up docker quickstart [\#255](https://github.com/ory/kratos/pull/255) ([aeneasr](https://github.com/aeneasr))
 - refactor\(persistence/sql\): move connection to context to enable transactions [\#254](https://github.com/ory/kratos/pull/254) ([zepatrik](https://github.com/zepatrik))
 - fix: Add verify return to address [\#252](https://github.com/ory/kratos/pull/252) ([aeneasr](https://github.com/aeneasr))
 
@@ -171,7 +173,6 @@
 
 - feat: Add verification to quickstart [\#251](https://github.com/ory/kratos/pull/251) ([aeneasr](https://github.com/aeneasr))
 - fix: Adapt quickstart to verify changes [\#247](https://github.com/ory/kratos/pull/247) ([aeneasr](https://github.com/aeneasr))
-- fix\(SelfService/Strategy/oidc\): rework auth session expiry  [\#242](https://github.com/ory/kratos/pull/242) ([zepatrik](https://github.com/zepatrik))
 - feat\(selfservice/profile\): Add disabled flag to identifier form fields [\#238](https://github.com/ory/kratos/pull/238) ([zepatrik](https://github.com/zepatrik))
 - fix\(swagger\): Use correct annotations for request methods [\#237](https://github.com/ory/kratos/pull/237) ([aeneasr](https://github.com/aeneasr))
 - feat: add levenshtein distance check for password validation [\#231](https://github.com/ory/kratos/pull/231) ([zepatrik](https://github.com/zepatrik))
@@ -217,6 +218,7 @@
 
 **Merged pull requests:**
 
+- fix\(SelfService/Strategy/oidc\): rework auth session expiry  [\#242](https://github.com/ory/kratos/pull/242) ([zepatrik](https://github.com/zepatrik))
 - Serve: add admin /self-service/errors route [\#226](https://github.com/ory/kratos/pull/226) ([zepatrik](https://github.com/zepatrik))
 - fix: Set csrf token on public endpoints [\#224](https://github.com/ory/kratos/pull/224) ([aeneasr](https://github.com/aeneasr))
 - ci: Switch to golangci orb [\#223](https://github.com/ory/kratos/pull/223) ([aeneasr](https://github.com/aeneasr))

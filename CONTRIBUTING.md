@@ -8,6 +8,7 @@
 - [Contributing Code](#contributing-code)
 - [Disclosing vulnerabilities](#disclosing-vulnerabilities)
 - [Code Style](#code-style)
+- [Documentation](#documentation)
 - [Pull request procedure](#pull-request-procedure)
 - [Communication](#communication)
 - [Conduct](#conduct)
@@ -55,14 +56,22 @@ should be merged by the submitter after review.
 
 ## Disclosing vulnerabilities
 
-Please disclose vulnerabilities exclusively to [hi@ory.am](mailto:hi@ory.am). Do
+Please disclose vulnerabilities exclusively to [security@ory.sh](mailto:security@ory.sh). Do
 not use GitHub issues.
 
 ## Code Style
 
 Please follow these guidelines when formatting source code:
 
-- Go code should match the output of `gofmt -s`
+- Go code should match the output of `gofmt -s` and pass `golangci-lint run`.
+- NodeJS and JavaScript code should be prettified using `npm run format` where appropriate.
+
+## Documentation
+
+Please provide documentation when changing, removing, or adding features. Documentation
+resides in the project's [docs](docs) folder. Some documents are generated using `npm run gen`.
+
+More information on the docs pipeline can be found in [docs/README.md](docs/README.md).
 
 ## Pull request procedure
 
@@ -87,12 +96,6 @@ feedback on the style and substance of the patch.
 Normally, all pull requests must include tests that test your change.
 Occasionally, a change will be very difficult to test for. In those cases,
 please include a note in your commit message explaining why.
-
-If you've change documentation. Please re-compile this by following these steps:
-1. Make sure you have Node installed.
-2. `npm install docs/`
-3. `node docs/scripts/config.js docs/config.js`
-4. Commit all the markdown files with your changes.
 
 ## Communication
 
