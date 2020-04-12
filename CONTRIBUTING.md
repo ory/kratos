@@ -88,6 +88,12 @@ Normally, all pull requests must include tests that test your change.
 Occasionally, a change will be very difficult to test for. In those cases,
 please include a note in your commit message explaining why.
 
+If you've change documentation. Please re-compile this by following these steps:
+1. Make sure you have Node installed.
+2. `npm install docs/`
+3. `node docs/scripts/config.js docs/config.js`
+4. Commit all the markdown files with your changes.
+
 ## Communication
 
 We use [discord](https://www.ory.sh/chat). You are welcome to drop in and ask

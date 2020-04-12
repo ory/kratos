@@ -94,6 +94,7 @@
 **Merged pull requests:**
 
 - feat: send verification emails on profile update [\#333](https://github.com/ory/kratos/pull/333) ([aeneasr](https://github.com/aeneasr))
+- docs: Added database connection documentation [\#332](https://github.com/ory/kratos/pull/332) ([koenmtb1](https://github.com/koenmtb1))
 - fix: exempt whomai from csrf protection [\#329](https://github.com/ory/kratos/pull/329) ([aeneasr](https://github.com/aeneasr))
 - chore: update docusaurus template [\#324](https://github.com/ory/kratos/pull/324) ([aeneasr](https://github.com/aeneasr))
 - fix writing [\#322](https://github.com/ory/kratos/pull/322) ([gwind](https://github.com/gwind))
@@ -127,6 +128,7 @@
 - fix: Use host volume mount for sqlite [\#272](https://github.com/ory/kratos/pull/272) ([aeneasr](https://github.com/aeneasr))
 - feat\(selfService/profile\): enable updating auth related traits [\#266](https://github.com/ory/kratos/pull/266) ([zepatrik](https://github.com/zepatrik))
 - docs: Typo in README.md [\#265](https://github.com/ory/kratos/pull/265) ([cuttlefish](https://github.com/cuttlefish))
+- fix: Clean up docker quickstart [\#255](https://github.com/ory/kratos/pull/255) ([aeneasr](https://github.com/aeneasr))
 - feat\(selfservice/login\): enable reauthentication functionality [\#248](https://github.com/ory/kratos/pull/248) ([zepatrik](https://github.com/zepatrik))
 
 ## [v0.1.1-alpha.1](https://github.com/ory/kratos/tree/v0.1.1-alpha.1) (2020-02-18)
@@ -140,7 +142,6 @@
 **Merged pull requests:**
 
 - fix: Update verify URLs [\#258](https://github.com/ory/kratos/pull/258) ([aeneasr](https://github.com/aeneasr))
-- fix: Clean up docker quickstart [\#255](https://github.com/ory/kratos/pull/255) ([aeneasr](https://github.com/aeneasr))
 - refactor\(persistence/sql\): move connection to context to enable transactions [\#254](https://github.com/ory/kratos/pull/254) ([zepatrik](https://github.com/zepatrik))
 - fix: Add verify return to address [\#252](https://github.com/ory/kratos/pull/252) ([aeneasr](https://github.com/aeneasr))
 
