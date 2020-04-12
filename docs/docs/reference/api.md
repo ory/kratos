@@ -439,11 +439,11 @@ Status Code **200**
   {
     "addresses": [
       {
-        "expires_at": "2020-04-10T06:37:45Z",
+        "expires_at": "2020-04-12T08:41:41Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-04-10T06:37:45Z",
+        "verified_at": "2020-04-12T08:41:41Z",
         "via": "string"
       }
     ],
@@ -617,11 +617,11 @@ Learn how identities work in
 {
   "addresses": [
     {
-      "expires_at": "2020-04-10T06:37:45Z",
+      "expires_at": "2020-04-12T08:41:41Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-10T06:37:45Z",
+      "verified_at": "2020-04-12T08:41:41Z",
       "via": "string"
     }
   ],
@@ -660,11 +660,11 @@ Learn how identities work in
 {
   "addresses": [
     {
-      "expires_at": "2020-04-10T06:37:45Z",
+      "expires_at": "2020-04-12T08:41:41Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-10T06:37:45Z",
+      "verified_at": "2020-04-12T08:41:41Z",
       "via": "string"
     }
   ],
@@ -737,11 +737,11 @@ const fetch = require('node-fetch');
 const input = '{
   "addresses": [
     {
-      "expires_at": "2020-04-10T06:37:45Z",
+      "expires_at": "2020-04-12T08:41:41Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-10T06:37:45Z",
+      "verified_at": "2020-04-12T08:41:41Z",
       "via": "string"
     }
   ],
@@ -873,11 +873,11 @@ Learn how identities work in
 {
   "addresses": [
     {
-      "expires_at": "2020-04-10T06:37:45Z",
+      "expires_at": "2020-04-12T08:41:41Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-10T06:37:45Z",
+      "verified_at": "2020-04-12T08:41:41Z",
       "via": "string"
     }
   ],
@@ -1053,11 +1053,11 @@ Learn how identities work in
 {
   "addresses": [
     {
-      "expires_at": "2020-04-10T06:37:45Z",
+      "expires_at": "2020-04-12T08:41:41Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-10T06:37:45Z",
+      "verified_at": "2020-04-12T08:41:41Z",
       "via": "string"
     }
   ],
@@ -1098,11 +1098,11 @@ Learn how identities work in
 {
   "addresses": [
     {
-      "expires_at": "2020-04-10T06:37:45Z",
+      "expires_at": "2020-04-12T08:41:41Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-10T06:37:45Z",
+      "verified_at": "2020-04-12T08:41:41Z",
       "via": "string"
     }
   ],
@@ -1175,11 +1175,11 @@ const fetch = require('node-fetch');
 const input = '{
   "addresses": [
     {
-      "expires_at": "2020-04-10T06:37:45Z",
+      "expires_at": "2020-04-12T08:41:41Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-10T06:37:45Z",
+      "verified_at": "2020-04-12T08:41:41Z",
       "via": "string"
     }
   ],
@@ -1708,10 +1708,10 @@ your application (e.g. `/login?request=abcde`).
 ```json
 {
   "active": "string",
-  "expires_at": "2020-04-10T06:37:45Z",
+  "expires_at": "2020-04-12T08:41:41Z",
   "forced": true,
   "id": "string",
-  "issued_at": "2020-04-10T06:37:45Z",
+  "issued_at": "2020-04-12T08:41:41Z",
   "methods": {
     "property1": {
       "config": {
@@ -1942,247 +1942,6 @@ p JSON.parse(result)
 </div>
 </div>
 
-<a id="opIdgetSelfServiceBrowserProfileManagementRequest"></a>
-
-### Get the request context of browser-based profile management flows
-
-```
-GET /self-service/browser/flows/requests/profile?request=string HTTP/1.1
-Accept: application/json
-
-```
-
-When accessing this endpoint through ORY Kratos' Public API, ensure that cookies
-are set as they are required for checking the auth session. To prevent scanning
-attacks, the public endpoint does not return 404 status codes but instead 403
-or 500.
-
-More information can be found at
-[ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).
-
-<a id="get-the-request-context-of-browser-based-profile-management-flows-parameters"></a>
-
-##### Parameters
-
-| Parameter | In    | Type   | Required | Description                     |
-| --------- | ----- | ------ | -------- | ------------------------------- |
-| request   | query | string | true     | Request is the Login Request ID |
-
-##### Detailed descriptions
-
-**request**: Request is the Login Request ID
-
-The value for this parameter comes from `request` URL Query parameter sent to
-your application (e.g. `/login?request=abcde`).
-
-#### Responses
-
-<a id="get-the-request-context-of-browser-based-profile-management-flows-responses"></a>
-
-##### Overview
-
-| Status | Meaning                                                                    | Description              | Schema                                                      |
-| ------ | -------------------------------------------------------------------------- | ------------------------ | ----------------------------------------------------------- |
-| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | profileManagementRequest | [profileManagementRequest](#schemaprofilemanagementrequest) |
-| 403    | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | genericError             | [genericError](#schemagenericerror)                         |
-| 404    | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError             | [genericError](#schemagenericerror)                         |
-| 410    | [Gone](https://tools.ietf.org/html/rfc7231#section-6.5.9)                  | genericError             | [genericError](#schemagenericerror)                         |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError             | [genericError](#schemagenericerror)                         |
-
-##### Examples
-
-###### 200 response
-
-```json
-{
-  "expires_at": "2020-04-10T06:37:45Z",
-  "form": {
-    "action": "string",
-    "errors": [
-      {
-        "message": "string"
-      }
-    ],
-    "fields": [
-      {
-        "disabled": true,
-        "errors": [
-          {
-            "message": "string"
-          }
-        ],
-        "name": "string",
-        "pattern": "string",
-        "required": true,
-        "type": "string",
-        "value": {}
-      }
-    ],
-    "method": "string"
-  },
-  "id": "string",
-  "identity": {
-    "addresses": [
-      {
-        "expires_at": "2020-04-10T06:37:45Z",
-        "id": "string",
-        "value": "string",
-        "verified": true,
-        "verified_at": "2020-04-10T06:37:45Z",
-        "via": "string"
-      }
-    ],
-    "id": "string",
-    "traits": {},
-    "traits_schema_id": "string",
-    "traits_schema_url": "string"
-  },
-  "issued_at": "2020-04-10T06:37:45Z",
-  "request_url": "string",
-  "update_successful": true
-}
-```
-
-<aside class="success">
-This operation does not require authentication
-</aside>
-
-#### Code samples
-
-<div class="tabs" id="tab-getSelfServiceBrowserProfileManagementRequest">
-<nav class="tabs-nav">
-<ul class="nav nav-tabs au-link-list au-link-list--inline">
-<li class="nav-item"><a class="nav-link active" role="tab" href="#tab-getSelfServiceBrowserProfileManagementRequest-shell">Shell</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-getSelfServiceBrowserProfileManagementRequest-go">Go</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-getSelfServiceBrowserProfileManagementRequest-node">Node.js</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-getSelfServiceBrowserProfileManagementRequest-java">Java</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-getSelfServiceBrowserProfileManagementRequest-python">Python</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-getSelfServiceBrowserProfileManagementRequest-ruby">Ruby</a></li>
-</ul>
-</nav>
-<div class="tab-content">
-<div class="tab-pane active" role="tabpanel" id="tab-getSelfServiceBrowserProfileManagementRequest-shell">
-
-```shell
-curl -X GET /self-service/browser/flows/requests/profile?request=string \
-  -H 'Accept: application/json'
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-getSelfServiceBrowserProfileManagementRequest-go">
-
-```go
-package main
-
-import (
-    "bytes"
-    "net/http"
-)
-
-func main() {
-    headers := map[string][]string{
-        "Accept": []string{"application/json"},
-    }
-
-    var body []byte
-    // body = ...
-
-    req, err := http.NewRequest("GET", "/self-service/browser/flows/requests/profile", bytes.NewBuffer(body))
-    req.Header = headers
-
-    client := &http.Client{}
-    resp, err := client.Do(req)
-    // ...
-}
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-getSelfServiceBrowserProfileManagementRequest-node">
-
-```nodejs
-const fetch = require('node-fetch');
-
-const headers = {
-  'Accept': 'application/json'
-}
-
-fetch('/self-service/browser/flows/requests/profile?request=string', {
-  method: 'GET',
-  headers
-})
-.then(r => r.json())
-.then((body) => {
-    console.log(body)
-})
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-getSelfServiceBrowserProfileManagementRequest-java">
-
-```java
-// This sample needs improvement.
-URL obj = new URL("/self-service/browser/flows/requests/profile?request=string");
-
-HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-con.setRequestMethod("GET");
-
-int responseCode = con.getResponseCode();
-
-BufferedReader in = new BufferedReader(
-    new InputStreamReader(con.getInputStream())
-);
-
-String inputLine;
-StringBuffer response = new StringBuffer();
-while ((inputLine = in.readLine()) != null) {
-    response.append(inputLine);
-}
-in.close();
-
-System.out.println(response.toString());
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-getSelfServiceBrowserProfileManagementRequest-python">
-
-```python
-import requests
-
-headers = {
-  'Accept': 'application/json'
-}
-
-r = requests.get(
-  '/self-service/browser/flows/requests/profile',
-  params={
-    'request': 'string'},
-  headers = headers)
-
-print r.json()
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-getSelfServiceBrowserProfileManagementRequest-ruby">
-
-```ruby
-require 'rest-client'
-require 'json'
-
-headers = {
-  'Accept' => 'application/json'
-}
-
-result = RestClient.get '/self-service/browser/flows/requests/profile',
-  params: {
-    'request' => 'string'}, headers: headers
-
-p JSON.parse(result)
-```
-
-</div>
-</div>
-</div>
-
 <a id="opIdgetSelfServiceBrowserRegistrationRequest"></a>
 
 ### Get the request context of browser-based registration user flows
@@ -2240,9 +1999,9 @@ your application (e.g. `/registration?request=abcde`).
 ```json
 {
   "active": "string",
-  "expires_at": "2020-04-10T06:37:45Z",
+  "expires_at": "2020-04-12T08:41:41Z",
   "id": "string",
-  "issued_at": "2020-04-10T06:37:45Z",
+  "issued_at": "2020-04-12T08:41:41Z",
   "methods": {
     "property1": {
       "config": {
@@ -2473,6 +2232,280 @@ p JSON.parse(result)
 </div>
 </div>
 
+<a id="opIdgetSelfServiceBrowserSettingsRequest"></a>
+
+### Get the request context of browser-based settings flows
+
+```
+GET /self-service/browser/flows/requests/settings?request=string HTTP/1.1
+Accept: application/json
+
+```
+
+When accessing this endpoint through ORY Kratos' Public API, ensure that cookies
+are set as they are required for checking the auth session. To prevent scanning
+attacks, the public endpoint does not return 404 status codes but instead 403
+or 500.
+
+More information can be found at
+[ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
+
+<a id="get-the-request-context-of-browser-based-settings-flows-parameters"></a>
+
+##### Parameters
+
+| Parameter | In    | Type   | Required | Description                     |
+| --------- | ----- | ------ | -------- | ------------------------------- |
+| request   | query | string | true     | Request is the Login Request ID |
+
+##### Detailed descriptions
+
+**request**: Request is the Login Request ID
+
+The value for this parameter comes from `request` URL Query parameter sent to
+your application (e.g. `/login?request=abcde`).
+
+#### Responses
+
+<a id="get-the-request-context-of-browser-based-settings-flows-responses"></a>
+
+##### Overview
+
+| Status | Meaning                                                                    | Description     | Schema                                    |
+| ------ | -------------------------------------------------------------------------- | --------------- | ----------------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | settingsRequest | [settingsRequest](#schemasettingsrequest) |
+| 403    | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | genericError    | [genericError](#schemagenericerror)       |
+| 404    | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError    | [genericError](#schemagenericerror)       |
+| 410    | [Gone](https://tools.ietf.org/html/rfc7231#section-6.5.9)                  | genericError    | [genericError](#schemagenericerror)       |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError    | [genericError](#schemagenericerror)       |
+
+##### Examples
+
+###### 200 response
+
+```json
+{
+  "active": "string",
+  "expires_at": "2020-04-12T08:41:41Z",
+  "id": "string",
+  "identity": {
+    "addresses": [
+      {
+        "expires_at": "2020-04-12T08:41:41Z",
+        "id": "string",
+        "value": "string",
+        "verified": true,
+        "verified_at": "2020-04-12T08:41:41Z",
+        "via": "string"
+      }
+    ],
+    "id": "string",
+    "traits": {},
+    "traits_schema_id": "string",
+    "traits_schema_url": "string"
+  },
+  "issued_at": "2020-04-12T08:41:41Z",
+  "methods": {
+    "property1": {
+      "config": {
+        "action": "string",
+        "errors": [
+          {
+            "message": "string"
+          }
+        ],
+        "fields": [
+          {
+            "disabled": true,
+            "errors": [
+              {
+                "message": "string"
+              }
+            ],
+            "name": "string",
+            "pattern": "string",
+            "required": true,
+            "type": "string",
+            "value": {}
+          }
+        ],
+        "method": "string"
+      },
+      "method": "string"
+    },
+    "property2": {
+      "config": {
+        "action": "string",
+        "errors": [
+          {
+            "message": "string"
+          }
+        ],
+        "fields": [
+          {
+            "disabled": true,
+            "errors": [
+              {
+                "message": "string"
+              }
+            ],
+            "name": "string",
+            "pattern": "string",
+            "required": true,
+            "type": "string",
+            "value": {}
+          }
+        ],
+        "method": "string"
+      },
+      "method": "string"
+    }
+  },
+  "request_url": "string",
+  "update_successful": true
+}
+```
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+#### Code samples
+
+<div class="tabs" id="tab-getSelfServiceBrowserSettingsRequest">
+<nav class="tabs-nav">
+<ul class="nav nav-tabs au-link-list au-link-list--inline">
+<li class="nav-item"><a class="nav-link active" role="tab" href="#tab-getSelfServiceBrowserSettingsRequest-shell">Shell</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-getSelfServiceBrowserSettingsRequest-go">Go</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-getSelfServiceBrowserSettingsRequest-node">Node.js</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-getSelfServiceBrowserSettingsRequest-java">Java</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-getSelfServiceBrowserSettingsRequest-python">Python</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-getSelfServiceBrowserSettingsRequest-ruby">Ruby</a></li>
+</ul>
+</nav>
+<div class="tab-content">
+<div class="tab-pane active" role="tabpanel" id="tab-getSelfServiceBrowserSettingsRequest-shell">
+
+```shell
+curl -X GET /self-service/browser/flows/requests/settings?request=string \
+  -H 'Accept: application/json'
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-getSelfServiceBrowserSettingsRequest-go">
+
+```go
+package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    var body []byte
+    // body = ...
+
+    req, err := http.NewRequest("GET", "/self-service/browser/flows/requests/settings", bytes.NewBuffer(body))
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-getSelfServiceBrowserSettingsRequest-node">
+
+```nodejs
+const fetch = require('node-fetch');
+
+const headers = {
+  'Accept': 'application/json'
+}
+
+fetch('/self-service/browser/flows/requests/settings?request=string', {
+  method: 'GET',
+  headers
+})
+.then(r => r.json())
+.then((body) => {
+    console.log(body)
+})
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-getSelfServiceBrowserSettingsRequest-java">
+
+```java
+// This sample needs improvement.
+URL obj = new URL("/self-service/browser/flows/requests/settings?request=string");
+
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+
+int responseCode = con.getResponseCode();
+
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream())
+);
+
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+
+System.out.println(response.toString());
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-getSelfServiceBrowserSettingsRequest-python">
+
+```python
+import requests
+
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get(
+  '/self-service/browser/flows/requests/settings',
+  params={
+    'request': 'string'},
+  headers = headers)
+
+print r.json()
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-getSelfServiceBrowserSettingsRequest-ruby">
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get '/self-service/browser/flows/requests/settings',
+  params: {
+    'request' => 'string'}, headers: headers
+
+p JSON.parse(result)
+```
+
+</div>
+</div>
+</div>
+
 <a id="opIdgetSelfServiceVerificationRequest"></a>
 
 ### Get the request context of browser-based verification flows
@@ -2525,7 +2558,7 @@ your application (e.g. `/verify?request=abcde`).
 
 ```json
 {
-  "expires_at": "2020-04-10T06:37:45Z",
+  "expires_at": "2020-04-12T08:41:41Z",
   "form": {
     "action": "string",
     "errors": [
@@ -2551,7 +2584,7 @@ your application (e.g. `/verify?request=abcde`).
     "method": "string"
   },
   "id": "string",
-  "issued_at": "2020-04-10T06:37:45Z",
+  "issued_at": "2020-04-12T08:41:41Z",
   "request_url": "string",
   "success": true,
   "via": "string"
@@ -3277,414 +3310,6 @@ p JSON.parse(result)
 </div>
 </div>
 
-<a id="opIdinitializeSelfServiceProfileManagementFlow"></a>
-
-### Initialize browser-based profile management flow
-
-```
-GET /self-service/browser/flows/profile HTTP/1.1
-Accept: application/json
-
-```
-
-This endpoint initializes a browser-based profile management flow. Once
-initialized, the browser will be redirected to `urls.profile_ui` with the
-request ID set as a query parameter. If no valid user session exists, a login
-flow will be initialized.
-
-> This endpoint is NOT INTENDED for API clients and only works with browsers
-> (Chrome, Firefox, ...).
-
-More information can be found at
-[ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).
-
-#### Responses
-
-<a id="initialize-browser-based-profile-management-flow-responses"></a>
-
-##### Overview
-
-| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
-| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
-| typically 201. | None                                                                       |
-| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
-
-##### Examples
-
-###### 500 response
-
-```json
-{
-  "error": {
-    "code": 404,
-    "debug": "The database adapter was unable to find the element",
-    "details": {
-      "property1": {},
-      "property2": {}
-    },
-    "message": "string",
-    "reason": "string",
-    "request": "string",
-    "status": "string"
-  }
-}
-```
-
-<aside class="success">
-This operation does not require authentication
-</aside>
-
-#### Code samples
-
-<div class="tabs" id="tab-initializeSelfServiceProfileManagementFlow">
-<nav class="tabs-nav">
-<ul class="nav nav-tabs au-link-list au-link-list--inline">
-<li class="nav-item"><a class="nav-link active" role="tab" href="#tab-initializeSelfServiceProfileManagementFlow-shell">Shell</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceProfileManagementFlow-go">Go</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceProfileManagementFlow-node">Node.js</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceProfileManagementFlow-java">Java</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceProfileManagementFlow-python">Python</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceProfileManagementFlow-ruby">Ruby</a></li>
-</ul>
-</nav>
-<div class="tab-content">
-<div class="tab-pane active" role="tabpanel" id="tab-initializeSelfServiceProfileManagementFlow-shell">
-
-```shell
-curl -X GET /self-service/browser/flows/profile \
-  -H 'Accept: application/json'
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceProfileManagementFlow-go">
-
-```go
-package main
-
-import (
-    "bytes"
-    "net/http"
-)
-
-func main() {
-    headers := map[string][]string{
-        "Accept": []string{"application/json"},
-    }
-
-    var body []byte
-    // body = ...
-
-    req, err := http.NewRequest("GET", "/self-service/browser/flows/profile", bytes.NewBuffer(body))
-    req.Header = headers
-
-    client := &http.Client{}
-    resp, err := client.Do(req)
-    // ...
-}
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceProfileManagementFlow-node">
-
-```nodejs
-const fetch = require('node-fetch');
-
-const headers = {
-  'Accept': 'application/json'
-}
-
-fetch('/self-service/browser/flows/profile', {
-  method: 'GET',
-  headers
-})
-.then(r => r.json())
-.then((body) => {
-    console.log(body)
-})
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceProfileManagementFlow-java">
-
-```java
-// This sample needs improvement.
-URL obj = new URL("/self-service/browser/flows/profile");
-
-HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-con.setRequestMethod("GET");
-
-int responseCode = con.getResponseCode();
-
-BufferedReader in = new BufferedReader(
-    new InputStreamReader(con.getInputStream())
-);
-
-String inputLine;
-StringBuffer response = new StringBuffer();
-while ((inputLine = in.readLine()) != null) {
-    response.append(inputLine);
-}
-in.close();
-
-System.out.println(response.toString());
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceProfileManagementFlow-python">
-
-```python
-import requests
-
-headers = {
-  'Accept': 'application/json'
-}
-
-r = requests.get(
-  '/self-service/browser/flows/profile',
-  params={},
-  headers = headers)
-
-print r.json()
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceProfileManagementFlow-ruby">
-
-```ruby
-require 'rest-client'
-require 'json'
-
-headers = {
-  'Accept' => 'application/json'
-}
-
-result = RestClient.get '/self-service/browser/flows/profile',
-  params: {}, headers: headers
-
-p JSON.parse(result)
-```
-
-</div>
-</div>
-</div>
-
-<a id="opIdcompleteSelfServiceBrowserVerificationFlow"></a>
-
-### Complete the browser-based profile management flows
-
-```
-POST /self-service/browser/flows/verification/{via}/complete?request=string HTTP/1.1
-Accept: application/json
-
-```
-
-This endpoint completes a browser-based profile management flow. This is usually
-achieved by POSTing data to this endpoint.
-
-If the provided profile data is valid against the Identity's Traits JSON Schema,
-the data will be updated and the browser redirected to `url.profile_ui` for
-further steps.
-
-> This endpoint is NOT INTENDED for API clients and only works with browsers
-> (Chrome, Firefox, ...) and HTML Forms.
-
-More information can be found at
-[ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
-
-<a id="complete-the-browser-based-profile-management-flows-parameters"></a>
-
-##### Parameters
-
-| Parameter | In    | Type   | Required | Description               |
-| --------- | ----- | ------ | -------- | ------------------------- |
-| request   | query | string | true     | Request is the Request ID |
-| via       | path  | string | true     | What to verify            |
-
-##### Detailed descriptions
-
-**request**: Request is the Request ID
-
-The value for this parameter comes from `request` URL Query parameter sent to
-your application (e.g. `/verify?request=abcde`).
-
-**via**: What to verify
-
-Currently only "email" is supported.
-
-#### Responses
-
-<a id="complete-the-browser-based-profile-management-flows-responses"></a>
-
-##### Overview
-
-| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
-| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
-| typically 201. | None                                                                       |
-| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
-
-##### Examples
-
-###### 500 response
-
-```json
-{
-  "error": {
-    "code": 404,
-    "debug": "The database adapter was unable to find the element",
-    "details": {
-      "property1": {},
-      "property2": {}
-    },
-    "message": "string",
-    "reason": "string",
-    "request": "string",
-    "status": "string"
-  }
-}
-```
-
-<aside class="success">
-This operation does not require authentication
-</aside>
-
-#### Code samples
-
-<div class="tabs" id="tab-completeSelfServiceBrowserVerificationFlow">
-<nav class="tabs-nav">
-<ul class="nav nav-tabs au-link-list au-link-list--inline">
-<li class="nav-item"><a class="nav-link active" role="tab" href="#tab-completeSelfServiceBrowserVerificationFlow-shell">Shell</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserVerificationFlow-go">Go</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserVerificationFlow-node">Node.js</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserVerificationFlow-java">Java</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserVerificationFlow-python">Python</a></li>
-<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserVerificationFlow-ruby">Ruby</a></li>
-</ul>
-</nav>
-<div class="tab-content">
-<div class="tab-pane active" role="tabpanel" id="tab-completeSelfServiceBrowserVerificationFlow-shell">
-
-```shell
-curl -X POST /self-service/browser/flows/verification/{via}/complete?request=string \
-  -H 'Accept: application/json'
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserVerificationFlow-go">
-
-```go
-package main
-
-import (
-    "bytes"
-    "net/http"
-)
-
-func main() {
-    headers := map[string][]string{
-        "Accept": []string{"application/json"},
-    }
-
-    var body []byte
-    // body = ...
-
-    req, err := http.NewRequest("POST", "/self-service/browser/flows/verification/{via}/complete", bytes.NewBuffer(body))
-    req.Header = headers
-
-    client := &http.Client{}
-    resp, err := client.Do(req)
-    // ...
-}
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserVerificationFlow-node">
-
-```nodejs
-const fetch = require('node-fetch');
-
-const headers = {
-  'Accept': 'application/json'
-}
-
-fetch('/self-service/browser/flows/verification/{via}/complete?request=string', {
-  method: 'POST',
-  headers
-})
-.then(r => r.json())
-.then((body) => {
-    console.log(body)
-})
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserVerificationFlow-java">
-
-```java
-// This sample needs improvement.
-URL obj = new URL("/self-service/browser/flows/verification/{via}/complete?request=string");
-
-HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-con.setRequestMethod("POST");
-
-int responseCode = con.getResponseCode();
-
-BufferedReader in = new BufferedReader(
-    new InputStreamReader(con.getInputStream())
-);
-
-String inputLine;
-StringBuffer response = new StringBuffer();
-while ((inputLine = in.readLine()) != null) {
-    response.append(inputLine);
-}
-in.close();
-
-System.out.println(response.toString());
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserVerificationFlow-python">
-
-```python
-import requests
-
-headers = {
-  'Accept': 'application/json'
-}
-
-r = requests.post(
-  '/self-service/browser/flows/verification/{via}/complete',
-  params={
-    'request': 'string'},
-  headers = headers)
-
-print r.json()
-```
-
-</div>
-<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserVerificationFlow-ruby">
-
-```ruby
-require 'rest-client'
-require 'json'
-
-headers = {
-  'Accept' => 'application/json'
-}
-
-result = RestClient.post '/self-service/browser/flows/verification/{via}/complete',
-  params: {
-    'request' => 'string'}, headers: headers
-
-p JSON.parse(result)
-```
-
-</div>
-</div>
-</div>
-
 <a id="opIdinitializeSelfServiceBrowserRegistrationFlow"></a>
 
 ### Initialize browser-based registration user flow
@@ -3877,6 +3502,615 @@ p JSON.parse(result)
 </div>
 </div>
 
+<a id="opIdinitializeSelfServiceSettingsFlow"></a>
+
+### Initialize browser-based settings flow
+
+```
+GET /self-service/browser/flows/settings HTTP/1.1
+Accept: application/json
+
+```
+
+This endpoint initializes a browser-based settings flow. Once initialized, the
+browser will be redirected to `urls.settings_ui` with the request ID set as a
+query parameter. If no valid user session exists, a login flow will be
+initialized.
+
+> This endpoint is NOT INTENDED for API clients and only works with browsers
+> (Chrome, Firefox, ...).
+
+More information can be found at
+[ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
+
+#### Responses
+
+<a id="initialize-browser-based-settings-flow-responses"></a>
+
+##### Overview
+
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
+
+##### Examples
+
+###### 500 response
+
+```json
+{
+  "error": {
+    "code": 404,
+    "debug": "The database adapter was unable to find the element",
+    "details": {
+      "property1": {},
+      "property2": {}
+    },
+    "message": "string",
+    "reason": "string",
+    "request": "string",
+    "status": "string"
+  }
+}
+```
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+#### Code samples
+
+<div class="tabs" id="tab-initializeSelfServiceSettingsFlow">
+<nav class="tabs-nav">
+<ul class="nav nav-tabs au-link-list au-link-list--inline">
+<li class="nav-item"><a class="nav-link active" role="tab" href="#tab-initializeSelfServiceSettingsFlow-shell">Shell</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceSettingsFlow-go">Go</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceSettingsFlow-node">Node.js</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceSettingsFlow-java">Java</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceSettingsFlow-python">Python</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-initializeSelfServiceSettingsFlow-ruby">Ruby</a></li>
+</ul>
+</nav>
+<div class="tab-content">
+<div class="tab-pane active" role="tabpanel" id="tab-initializeSelfServiceSettingsFlow-shell">
+
+```shell
+curl -X GET /self-service/browser/flows/settings \
+  -H 'Accept: application/json'
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceSettingsFlow-go">
+
+```go
+package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    var body []byte
+    // body = ...
+
+    req, err := http.NewRequest("GET", "/self-service/browser/flows/settings", bytes.NewBuffer(body))
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceSettingsFlow-node">
+
+```nodejs
+const fetch = require('node-fetch');
+
+const headers = {
+  'Accept': 'application/json'
+}
+
+fetch('/self-service/browser/flows/settings', {
+  method: 'GET',
+  headers
+})
+.then(r => r.json())
+.then((body) => {
+    console.log(body)
+})
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceSettingsFlow-java">
+
+```java
+// This sample needs improvement.
+URL obj = new URL("/self-service/browser/flows/settings");
+
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+
+int responseCode = con.getResponseCode();
+
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream())
+);
+
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+
+System.out.println(response.toString());
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceSettingsFlow-python">
+
+```python
+import requests
+
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get(
+  '/self-service/browser/flows/settings',
+  params={},
+  headers = headers)
+
+print r.json()
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-initializeSelfServiceSettingsFlow-ruby">
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get '/self-service/browser/flows/settings',
+  params: {}, headers: headers
+
+p JSON.parse(result)
+```
+
+</div>
+</div>
+</div>
+
+<a id="opIdcompleteSelfServiceBrowserSettingsPasswordStrategyFlow"></a>
+
+### Complete the browser-based settings flow for the password strategy
+
+```
+POST /self-service/browser/flows/settings/strategies/password HTTP/1.1
+Accept: application/json
+
+```
+
+This endpoint completes a browser-based settings flow. This is usually achieved
+by POSTing data to this endpoint.
+
+> This endpoint is NOT INTENDED for API clients and only works with browsers
+> (Chrome, Firefox, ...) and HTML Forms.
+
+More information can be found at
+[ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
+
+#### Responses
+
+<a id="complete-the-browser-based-settings-flow-for-the-password-strategy-responses"></a>
+
+##### Overview
+
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
+
+##### Examples
+
+###### 500 response
+
+```json
+{
+  "error": {
+    "code": 404,
+    "debug": "The database adapter was unable to find the element",
+    "details": {
+      "property1": {},
+      "property2": {}
+    },
+    "message": "string",
+    "reason": "string",
+    "request": "string",
+    "status": "string"
+  }
+}
+```
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+#### Code samples
+
+<div class="tabs" id="tab-completeSelfServiceBrowserSettingsPasswordStrategyFlow">
+<nav class="tabs-nav">
+<ul class="nav nav-tabs au-link-list au-link-list--inline">
+<li class="nav-item"><a class="nav-link active" role="tab" href="#tab-completeSelfServiceBrowserSettingsPasswordStrategyFlow-shell">Shell</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserSettingsPasswordStrategyFlow-go">Go</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserSettingsPasswordStrategyFlow-node">Node.js</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserSettingsPasswordStrategyFlow-java">Java</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserSettingsPasswordStrategyFlow-python">Python</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserSettingsPasswordStrategyFlow-ruby">Ruby</a></li>
+</ul>
+</nav>
+<div class="tab-content">
+<div class="tab-pane active" role="tabpanel" id="tab-completeSelfServiceBrowserSettingsPasswordStrategyFlow-shell">
+
+```shell
+curl -X POST /self-service/browser/flows/settings/strategies/password \
+  -H 'Accept: application/json'
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserSettingsPasswordStrategyFlow-go">
+
+```go
+package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    var body []byte
+    // body = ...
+
+    req, err := http.NewRequest("POST", "/self-service/browser/flows/settings/strategies/password", bytes.NewBuffer(body))
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserSettingsPasswordStrategyFlow-node">
+
+```nodejs
+const fetch = require('node-fetch');
+
+const headers = {
+  'Accept': 'application/json'
+}
+
+fetch('/self-service/browser/flows/settings/strategies/password', {
+  method: 'POST',
+  headers
+})
+.then(r => r.json())
+.then((body) => {
+    console.log(body)
+})
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserSettingsPasswordStrategyFlow-java">
+
+```java
+// This sample needs improvement.
+URL obj = new URL("/self-service/browser/flows/settings/strategies/password");
+
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("POST");
+
+int responseCode = con.getResponseCode();
+
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream())
+);
+
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+
+System.out.println(response.toString());
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserSettingsPasswordStrategyFlow-python">
+
+```python
+import requests
+
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.post(
+  '/self-service/browser/flows/settings/strategies/password',
+  params={},
+  headers = headers)
+
+print r.json()
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserSettingsPasswordStrategyFlow-ruby">
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.post '/self-service/browser/flows/settings/strategies/password',
+  params: {}, headers: headers
+
+p JSON.parse(result)
+```
+
+</div>
+</div>
+</div>
+
+<a id="opIdcompleteSelfServiceBrowserSettingsProfileStrategyFlow"></a>
+
+### Complete the browser-based settings flow for profile data
+
+```
+POST /self-service/browser/flows/settings/strategies/profile?request=string HTTP/1.1
+Content-Type: application/json
+Accept: application/json
+
+```
+
+This endpoint completes a browser-based settings flow. This is usually achieved
+by POSTing data to this endpoint.
+
+If the provided profile data is valid against the Identity's Traits JSON Schema,
+the data will be updated and the browser redirected to `url.settings_ui` for
+further steps.
+
+> This endpoint is NOT INTENDED for API clients and only works with browsers
+> (Chrome, Firefox, ...) and HTML Forms.
+
+More information can be found at
+[ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
+
+#### Request body
+
+```json
+{
+  "request_id": "string",
+  "traits": {}
+}
+```
+
+```yaml
+request_id: string
+traits: {}
+```
+
+<a id="complete-the-browser-based-settings-flow-for-profile-data-parameters"></a>
+
+##### Parameters
+
+| Parameter | In    | Type                                                                                                                                | Required | Description                |
+| --------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------- |
+| request   | query | string                                                                                                                              | true     | Request is the request ID. |
+| body      | body  | [completeSelfServiceBrowserSettingsStrategyProfileFlowPayload](#schemacompleteselfservicebrowsersettingsstrategyprofileflowpayload) | true     | none                       |
+
+#### Responses
+
+<a id="complete-the-browser-based-settings-flow-for-profile-data-responses"></a>
+
+##### Overview
+
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
+
+##### Examples
+
+###### 500 response
+
+```json
+{
+  "error": {
+    "code": 404,
+    "debug": "The database adapter was unable to find the element",
+    "details": {
+      "property1": {},
+      "property2": {}
+    },
+    "message": "string",
+    "reason": "string",
+    "request": "string",
+    "status": "string"
+  }
+}
+```
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+#### Code samples
+
+<div class="tabs" id="tab-completeSelfServiceBrowserSettingsProfileStrategyFlow">
+<nav class="tabs-nav">
+<ul class="nav nav-tabs au-link-list au-link-list--inline">
+<li class="nav-item"><a class="nav-link active" role="tab" href="#tab-completeSelfServiceBrowserSettingsProfileStrategyFlow-shell">Shell</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserSettingsProfileStrategyFlow-go">Go</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserSettingsProfileStrategyFlow-node">Node.js</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserSettingsProfileStrategyFlow-java">Java</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserSettingsProfileStrategyFlow-python">Python</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserSettingsProfileStrategyFlow-ruby">Ruby</a></li>
+</ul>
+</nav>
+<div class="tab-content">
+<div class="tab-pane active" role="tabpanel" id="tab-completeSelfServiceBrowserSettingsProfileStrategyFlow-shell">
+
+```shell
+curl -X POST /self-service/browser/flows/settings/strategies/profile?request=string \
+  -H 'Content-Type: application/json' \  -H 'Accept: application/json'
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserSettingsProfileStrategyFlow-go">
+
+```go
+package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    headers := map[string][]string{
+        "Content-Type": []string{"application/json"},
+        "Accept": []string{"application/json"},
+    }
+
+    var body []byte
+    // body = ...
+
+    req, err := http.NewRequest("POST", "/self-service/browser/flows/settings/strategies/profile", bytes.NewBuffer(body))
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserSettingsProfileStrategyFlow-node">
+
+```nodejs
+const fetch = require('node-fetch');
+const input = '{
+  "request_id": "string",
+  "traits": {}
+}';
+const headers = {
+  'Content-Type': 'application/json',  'Accept': 'application/json'
+}
+
+fetch('/self-service/browser/flows/settings/strategies/profile?request=string', {
+  method: 'POST',
+  body: input,
+  headers
+})
+.then(r => r.json())
+.then((body) => {
+    console.log(body)
+})
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserSettingsProfileStrategyFlow-java">
+
+```java
+// This sample needs improvement.
+URL obj = new URL("/self-service/browser/flows/settings/strategies/profile?request=string");
+
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("POST");
+
+int responseCode = con.getResponseCode();
+
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream())
+);
+
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+
+System.out.println(response.toString());
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserSettingsProfileStrategyFlow-python">
+
+```python
+import requests
+
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+r = requests.post(
+  '/self-service/browser/flows/settings/strategies/profile',
+  params={
+    'request': 'string'},
+  headers = headers)
+
+print r.json()
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserSettingsProfileStrategyFlow-ruby">
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json'
+}
+
+result = RestClient.post '/self-service/browser/flows/settings/strategies/profile',
+  params: {
+    'request' => 'string'}, headers: headers
+
+p JSON.parse(result)
+```
+
+</div>
+</div>
+</div>
+
 <a id="opIdinitializeSelfServiceBrowserVerificationFlow"></a>
 
 ### Initialize browser-based verification flow
@@ -3887,10 +4121,10 @@ Accept: application/json
 
 ```
 
-This endpoint initializes a browser-based profile management flow. Once
-initialized, the browser will be redirected to `urls.profile_ui` with the
-request ID set as a query parameter. If no valid user session exists, a login
-flow will be initialized.
+This endpoint initializes a browser-based verification flow. Once initialized,
+the browser will be redirected to `urls.settings_ui` with the request ID set as
+a query parameter. If no valid user session exists, a login flow will be
+initialized.
 
 > This endpoint is NOT INTENDED for API clients and only works with browsers
 > (Chrome, Firefox, ...).
@@ -4321,16 +4555,16 @@ This endpoint is useful for reverse proxies and API Gateways.
 
 ```json
 {
-  "authenticated_at": "2020-04-10T06:37:45Z",
-  "expires_at": "2020-04-10T06:37:45Z",
+  "authenticated_at": "2020-04-12T08:41:41Z",
+  "expires_at": "2020-04-12T08:41:41Z",
   "identity": {
     "addresses": [
       {
-        "expires_at": "2020-04-10T06:37:45Z",
+        "expires_at": "2020-04-12T08:41:41Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-04-10T06:37:45Z",
+        "verified_at": "2020-04-12T08:41:41Z",
         "via": "string"
       }
     ],
@@ -4339,7 +4573,7 @@ This endpoint is useful for reverse proxies and API Gateways.
     "traits_schema_id": "string",
     "traits_schema_url": "string"
   },
-  "issued_at": "2020-04-10T06:37:45Z",
+  "issued_at": "2020-04-12T08:41:41Z",
   "sid": "string"
 }
 ```
@@ -4712,11 +4946,11 @@ credentials, passwordless credentials,_
 {
   "addresses": [
     {
-      "expires_at": "2020-04-10T06:37:45Z",
+      "expires_at": "2020-04-12T08:41:41Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-10T06:37:45Z",
+      "verified_at": "2020-04-12T08:41:41Z",
       "via": "string"
     }
   ],
@@ -4736,6 +4970,48 @@ credentials, passwordless credentials,_
 | traits            | [Traits](#schematraits)                         | true     | none         | none                                                                                                           |
 | traits_schema_id  | string                                          | true     | none         | TraitsSchemaID is the ID of the JSON Schema to be used for validating the identity's traits.                   |
 | traits_schema_url | string                                          | false    | none         | TraitsSchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from. format: url |
+
+<a id="tocSrequestmethodconfig">RequestMethodConfig</a>
+
+#### RequestMethodConfig
+
+<a id="schemarequestmethodconfig"></a>
+
+```json
+{
+  "action": "string",
+  "errors": [
+    {
+      "message": "string"
+    }
+  ],
+  "fields": [
+    {
+      "disabled": true,
+      "errors": [
+        {
+          "message": "string"
+        }
+      ],
+      "name": "string",
+      "pattern": "string",
+      "required": true,
+      "type": "string",
+      "value": {}
+    }
+  ],
+  "method": "string"
+}
+```
+
+#### Properties
+
+| Name   | Type                            | Required | Restrictions | Description                                                                                 |
+| ------ | ------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------- |
+| action | string                          | true     | none         | Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`. |
+| errors | [[Error](#schemaerror)]         | false    | none         | Errors contains all form errors. These will be duplicates of the individual field errors.   |
+| fields | [formFields](#schemaformfields) | true     | none         | Fields contains multiple fields                                                             |
+| method | string                          | true     | none         | Method is the form method (e.g. POST)                                                       |
 
 <a id="tocStraits">Traits</a>
 
@@ -4775,11 +5051,11 @@ _None_
 
 ```json
 {
-  "expires_at": "2020-04-10T06:37:45Z",
+  "expires_at": "2020-04-12T08:41:41Z",
   "id": "string",
   "value": "string",
   "verified": true,
-  "verified_at": "2020-04-10T06:37:45Z",
+  "verified_at": "2020-04-12T08:41:41Z",
   "via": "string"
 }
 ```
@@ -4811,23 +5087,25 @@ _None_
 | ----------- | ------ | -------- | ------------ | ----------- |
 | _anonymous_ | string | false    | none         | none        |
 
-<a id="tocScompleteselfservicebrowserprofilemanagementflowpayload">completeSelfServiceBrowserProfileManagementFlowPayload</a>
+<a id="tocScompleteselfservicebrowsersettingsstrategyprofileflowpayload">completeSelfServiceBrowserSettingsStrategyProfileFlowPayload</a>
 
-#### completeSelfServiceBrowserProfileManagementFlowPayload
+#### completeSelfServiceBrowserSettingsStrategyProfileFlowPayload
 
-<a id="schemacompleteselfservicebrowserprofilemanagementflowpayload"></a>
+<a id="schemacompleteselfservicebrowsersettingsstrategyprofileflowpayload"></a>
 
 ```json
 {
+  "request_id": "string",
   "traits": {}
 }
 ```
 
 #### Properties
 
-| Name   | Type   | Required | Restrictions | Description                                                               |
-| ------ | ------ | -------- | ------------ | ------------------------------------------------------------------------- |
-| traits | object | true     | none         | Traits contains all of the identity's traits. type: string format: binary |
+| Name       | Type   | Required | Restrictions | Description                                                               |
+| ---------- | ------ | -------- | ------------ | ------------------------------------------------------------------------- |
+| request_id | string | false    | none         | RequestID is request ID. in: query                                        |
+| traits     | object | true     | none         | Traits contains all of the identity's traits. type: string format: binary |
 
 <a id="tocSerrorcontainer">errorContainer</a>
 
@@ -5076,10 +5354,10 @@ _Error response_
 ```json
 {
   "active": "string",
-  "expires_at": "2020-04-10T06:37:45Z",
+  "expires_at": "2020-04-12T08:41:41Z",
   "forced": true,
   "id": "string",
-  "issued_at": "2020-04-10T06:37:45Z",
+  "issued_at": "2020-04-12T08:41:41Z",
   "methods": {
     "property1": {
       "config": {
@@ -5299,76 +5577,6 @@ _Error response_
 | method    | string                          | true     | none         | Method is the form method (e.g. POST)                                                       |
 | providers | [[formField](#schemaformfield)] | false    | none         | Providers is set for the "oidc" request method.                                             |
 
-<a id="tocSprofilemanagementrequest">profileManagementRequest</a>
-
-#### profileManagementRequest
-
-<a id="schemaprofilemanagementrequest"></a>
-
-```json
-{
-  "expires_at": "2020-04-10T06:37:45Z",
-  "form": {
-    "action": "string",
-    "errors": [
-      {
-        "message": "string"
-      }
-    ],
-    "fields": [
-      {
-        "disabled": true,
-        "errors": [
-          {
-            "message": "string"
-          }
-        ],
-        "name": "string",
-        "pattern": "string",
-        "required": true,
-        "type": "string",
-        "value": {}
-      }
-    ],
-    "method": "string"
-  },
-  "id": "string",
-  "identity": {
-    "addresses": [
-      {
-        "expires_at": "2020-04-10T06:37:45Z",
-        "id": "string",
-        "value": "string",
-        "verified": true,
-        "verified_at": "2020-04-10T06:37:45Z",
-        "via": "string"
-      }
-    ],
-    "id": "string",
-    "traits": {},
-    "traits_schema_id": "string",
-    "traits_schema_url": "string"
-  },
-  "issued_at": "2020-04-10T06:37:45Z",
-  "request_url": "string",
-  "update_successful": true
-}
-```
-
-_Request presents a profile management request_
-
-#### Properties
-
-| Name              | Type                        | Required | Restrictions | Description                                                                                                                                                                                                                                                                                       |
-| ----------------- | --------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| expires_at        | string(date-time)           | true     | none         | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile, a new request has to be initiated.                                                                                                                                                          |
-| form              | [form](#schemaform)         | true     | none         | HTMLForm represents a HTML Form. The container can work with both HTTP Form and JSON requests                                                                                                                                                                                                     |
-| id                | [UUID](#schemauuid)         | true     | none         | none                                                                                                                                                                                                                                                                                              |
-| identity          | [Identity](#schemaidentity) | true     | none         | none                                                                                                                                                                                                                                                                                              |
-| issued_at         | string(date-time)           | true     | none         | IssuedAt is the time (UTC) when the request occurred.                                                                                                                                                                                                                                             |
-| request_url       | string                      | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.                                                                                                                                         |
-| update_successful | boolean                     | true     | none         | UpdateSuccessful, if true, indicates that the profile has been updated successfully with the provided data. Done will stay true when repeatedly checking. If set to true, done will revert back to false only when a request with invalid (e.g. "please use a valid phone number") data was sent. |
-
 <a id="tocSregistrationrequest">registrationRequest</a>
 
 #### registrationRequest
@@ -5378,9 +5586,9 @@ _Request presents a profile management request_
 ```json
 {
   "active": "string",
-  "expires_at": "2020-04-10T06:37:45Z",
+  "expires_at": "2020-04-12T08:41:41Z",
   "id": "string",
-  "issued_at": "2020-04-10T06:37:45Z",
+  "issued_at": "2020-04-12T08:41:41Z",
   "methods": {
     "property1": {
       "config": {
@@ -5607,16 +5815,16 @@ _Request presents a profile management request_
 
 ```json
 {
-  "authenticated_at": "2020-04-10T06:37:45Z",
-  "expires_at": "2020-04-10T06:37:45Z",
+  "authenticated_at": "2020-04-12T08:41:41Z",
+  "expires_at": "2020-04-12T08:41:41Z",
   "identity": {
     "addresses": [
       {
-        "expires_at": "2020-04-10T06:37:45Z",
+        "expires_at": "2020-04-12T08:41:41Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-04-10T06:37:45Z",
+        "verified_at": "2020-04-12T08:41:41Z",
         "via": "string"
       }
     ],
@@ -5625,7 +5833,7 @@ _Request presents a profile management request_
     "traits_schema_id": "string",
     "traits_schema_url": "string"
   },
-  "issued_at": "2020-04-10T06:37:45Z",
+  "issued_at": "2020-04-12T08:41:41Z",
   "sid": "string"
 }
 ```
@@ -5640,6 +5848,154 @@ _Request presents a profile management request_
 | issued_at        | string(date-time)           | true     | none         | none        |
 | sid              | [UUID](#schemauuid)         | true     | none         | none        |
 
+<a id="tocSsettingsrequest">settingsRequest</a>
+
+#### settingsRequest
+
+<a id="schemasettingsrequest"></a>
+
+```json
+{
+  "active": "string",
+  "expires_at": "2020-04-12T08:41:41Z",
+  "id": "string",
+  "identity": {
+    "addresses": [
+      {
+        "expires_at": "2020-04-12T08:41:41Z",
+        "id": "string",
+        "value": "string",
+        "verified": true,
+        "verified_at": "2020-04-12T08:41:41Z",
+        "via": "string"
+      }
+    ],
+    "id": "string",
+    "traits": {},
+    "traits_schema_id": "string",
+    "traits_schema_url": "string"
+  },
+  "issued_at": "2020-04-12T08:41:41Z",
+  "methods": {
+    "property1": {
+      "config": {
+        "action": "string",
+        "errors": [
+          {
+            "message": "string"
+          }
+        ],
+        "fields": [
+          {
+            "disabled": true,
+            "errors": [
+              {
+                "message": "string"
+              }
+            ],
+            "name": "string",
+            "pattern": "string",
+            "required": true,
+            "type": "string",
+            "value": {}
+          }
+        ],
+        "method": "string"
+      },
+      "method": "string"
+    },
+    "property2": {
+      "config": {
+        "action": "string",
+        "errors": [
+          {
+            "message": "string"
+          }
+        ],
+        "fields": [
+          {
+            "disabled": true,
+            "errors": [
+              {
+                "message": "string"
+              }
+            ],
+            "name": "string",
+            "pattern": "string",
+            "required": true,
+            "type": "string",
+            "value": {}
+          }
+        ],
+        "method": "string"
+      },
+      "method": "string"
+    }
+  },
+  "request_url": "string",
+  "update_successful": true
+}
+```
+
+_Request presents a settings request_
+
+#### Properties
+
+| Name                       | Type                                                  | Required | Restrictions | Description                                                                                                                                                                                                                                                                                                |
+| -------------------------- | ----------------------------------------------------- | -------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| active                     | string                                                | false    | none         | Active, if set, contains the registration method that is being used. It is initially not set.                                                                                                                                                                                                              |
+| expires_at                 | string(date-time)                                     | true     | none         | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting, a new request has to be initiated.                                                                                                                                                                   |
+| id                         | [UUID](#schemauuid)                                   | true     | none         | none                                                                                                                                                                                                                                                                                                       |
+| identity                   | [Identity](#schemaidentity)                           | true     | none         | none                                                                                                                                                                                                                                                                                                       |
+| issued_at                  | string(date-time)                                     | true     | none         | IssuedAt is the time (UTC) when the request occurred.                                                                                                                                                                                                                                                      |
+| methods                    | object                                                | true     | none         | Methods contains context for all enabled registration methods. If a registration request has been processed, but for example the password is incorrect, this will contain error messages.                                                                                                                  |
+| » **additionalProperties** | [settingsRequestMethod](#schemasettingsrequestmethod) | false    | none         | none                                                                                                                                                                                                                                                                                                       |
+| request_url                | string                                                | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.                                                                                                                                                  |
+| update_successful          | boolean                                               | true     | none         | UpdateSuccessful, if true, indicates that the settings request has been updated successfully with the provided data. Done will stay true when repeatedly checking. If set to true, done will revert back to false only when a request with invalid (e.g. "please use a valid phone number") data was sent. |
+
+<a id="tocSsettingsrequestmethod">settingsRequestMethod</a>
+
+#### settingsRequestMethod
+
+<a id="schemasettingsrequestmethod"></a>
+
+```json
+{
+  "config": {
+    "action": "string",
+    "errors": [
+      {
+        "message": "string"
+      }
+    ],
+    "fields": [
+      {
+        "disabled": true,
+        "errors": [
+          {
+            "message": "string"
+          }
+        ],
+        "name": "string",
+        "pattern": "string",
+        "required": true,
+        "type": "string",
+        "value": {}
+      }
+    ],
+    "method": "string"
+  },
+  "method": "string"
+}
+```
+
+#### Properties
+
+| Name   | Type                                              | Required | Restrictions | Description                                   |
+| ------ | ------------------------------------------------- | -------- | ------------ | --------------------------------------------- |
+| config | [RequestMethodConfig](#schemarequestmethodconfig) | false    | none         | none                                          |
+| method | string                                            | false    | none         | Method contains the request credentials type. |
+
 <a id="tocSverificationrequest">verificationRequest</a>
 
 #### verificationRequest
@@ -5648,7 +6004,7 @@ _Request presents a profile management request_
 
 ```json
 {
-  "expires_at": "2020-04-10T06:37:45Z",
+  "expires_at": "2020-04-12T08:41:41Z",
   "form": {
     "action": "string",
     "errors": [
@@ -5674,7 +6030,7 @@ _Request presents a profile management request_
     "method": "string"
   },
   "id": "string",
-  "issued_at": "2020-04-10T06:37:45Z",
+  "issued_at": "2020-04-12T08:41:41Z",
   "request_url": "string",
   "success": true,
   "via": "string"
@@ -5687,7 +6043,7 @@ _Request presents a verification request_
 
 | Name        | Type                                                  | Required | Restrictions | Description                                                                                                                                               |
 | ----------- | ----------------------------------------------------- | -------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| expires_at  | string(date-time)                                     | false    | none         | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile, a new request has to be initiated.                  |
+| expires_at  | string(date-time)                                     | false    | none         | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address, a new request has to be initiated.                  |
 | form        | [form](#schemaform)                                   | false    | none         | HTMLForm represents a HTML Form. The container can work with both HTTP Form and JSON requests                                                             |
 | id          | [UUID](#schemauuid)                                   | false    | none         | none                                                                                                                                                      |
 | issued_at   | string(date-time)                                     | false    | none         | IssuedAt is the time (UTC) when the request occurred.                                                                                                     |
