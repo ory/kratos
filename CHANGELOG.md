@@ -76,6 +76,7 @@
 
 **Closed issues:**
 
+- Document CSRF pitfalls [\#341](https://github.com/ory/kratos/issues/341)
 - Quickstart: configuration invalid [\#335](https://github.com/ory/kratos/issues/335)
 - Kratos as library for any Golang project [\#328](https://github.com/ory/kratos/issues/328)
 - DOCS, wrong link [\#327](https://github.com/ory/kratos/issues/327)
@@ -95,6 +96,7 @@
 
 **Merged pull requests:**
 
+- docs: add csrf and cookie debug section [\#342](https://github.com/ory/kratos/pull/342) ([aeneasr](https://github.com/aeneasr))
 - chore: update docusaurus template [\#340](https://github.com/ory/kratos/pull/340) ([aeneasr](https://github.com/aeneasr))
 - fix-335 [\#339](https://github.com/ory/kratos/pull/339) ([aeneasr](https://github.com/aeneasr))
 - docs: update github templates [\#338](https://github.com/ory/kratos/pull/338) ([aeneasr](https://github.com/aeneasr))
