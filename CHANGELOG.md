@@ -86,6 +86,7 @@
 - Make the session cookie name configurable [\#268](https://github.com/ory/kratos/issues/268)
 - MailSlurper is not sending the verification email [\#264](https://github.com/ory/kratos/issues/264)
 - SQLite database errors in quickstart [\#263](https://github.com/ory/kratos/issues/263)
+- Add a clear guide how to use Kratos without Oathkeeper [\#262](https://github.com/ory/kratos/issues/262)
 - Allow configuration of same-site cookie [\#257](https://github.com/ory/kratos/issues/257)
 - CSRF token is missing or invalid [\#250](https://github.com/ory/kratos/issues/250)
 - selfservice/profile: sudo mode for updating auth related stuff [\#243](https://github.com/ory/kratos/issues/243)
@@ -98,6 +99,7 @@
 - fix-335 [\#339](https://github.com/ory/kratos/pull/339) ([aeneasr](https://github.com/aeneasr))
 - docs: update github templates [\#338](https://github.com/ory/kratos/pull/338) ([aeneasr](https://github.com/aeneasr))
 - chore: update docusaurus template [\#337](https://github.com/ory/kratos/pull/337) ([aeneasr](https://github.com/aeneasr))
+- Improve quickstart [\#336](https://github.com/ory/kratos/pull/336) ([aeneasr](https://github.com/aeneasr))
 - feat: send verification emails on profile update [\#333](https://github.com/ory/kratos/pull/333) ([aeneasr](https://github.com/aeneasr))
 - docs: Added database connection documentation [\#332](https://github.com/ory/kratos/pull/332) ([koenmtb1](https://github.com/koenmtb1))
 - fix: exempt whomai from csrf protection [\#329](https://github.com/ory/kratos/pull/329) ([aeneasr](https://github.com/aeneasr))
@@ -426,7 +428,6 @@
 
 - Make form fields an array [\#197](https://github.com/ory/kratos/pull/197) ([zepatrik](https://github.com/zepatrik))
 - Resolve build issues with CGO [\#196](https://github.com/ory/kratos/pull/196) ([aeneasr](https://github.com/aeneasr))
-- Remove redundant return statement [\#194](https://github.com/ory/kratos/pull/194) ([aeneasr](https://github.com/aeneasr))
 
 ## [v0.0.1-alpha.3](https://github.com/ory/kratos/tree/v0.0.1-alpha.3) (2020-01-28)
 
@@ -459,6 +460,7 @@
 
 **Merged pull requests:**
 
+- Remove redundant return statement [\#194](https://github.com/ory/kratos/pull/194) ([aeneasr](https://github.com/aeneasr))
 - Improve Docker Compose Quickstart [\#187](https://github.com/ory/kratos/pull/187) ([aeneasr](https://github.com/aeneasr))
 - Registration/Login HTML form: remove request field and ensure method is set [\#183](https://github.com/ory/kratos/pull/183) ([zepatrik](https://github.com/zepatrik))
 - Replace number with integer in config JSON Schema [\#177](https://github.com/ory/kratos/pull/177) ([aeneasr](https://github.com/aeneasr))
