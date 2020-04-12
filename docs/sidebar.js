@@ -50,6 +50,9 @@ module.exports = {
     "reference/html-forms",
     "reference/api"
   ],
+  "Debug & Help": [
+    "debug/csrf"
+  ],
   SDKs: ["sdk/index"],
   "Further Reading": [
     "further-reading/comparison"
