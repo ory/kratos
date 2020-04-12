@@ -10,3 +10,5 @@ database.yaml
 contrib/quickstart
 contrib/swagutil
 node_modules/
+./quickstart.yml
+./quickstart-*.yml

@@ -5,7 +5,7 @@
     url: "http://kratos:4433"
     strip_path: /.ory/kratos/public
   match:
-    url: "http://127.0.0.1:4455/.ory/kratos/public/<.*>"
+    url: "http://127.0.0.1:4455/.ory/kratos/public/<**>"
     methods:
       - GET
       - POST
@@ -26,7 +26,7 @@
     preserve_host: true
     url: "http://kratos-selfservice-ui-node:4435"
   match:
-    url: "http://127.0.0.1:4455/<(error|verify|auth/login|auth/registration|(.+\\.css))(|/)>"
+    url: "http://127.0.0.1:4455/<{error,verify,auth/*,**.css,**.js}{/,}>"
     methods:
       - GET
   authenticators:
@@ -44,7 +44,7 @@
     preserve_host: true
     url: "http://kratos-selfservice-ui-node:4435"
   match:
-    url: "http://127.0.0.1:4455<(/debug|/|/dashboard|/settings|)(|/)>"
+    url: "http://127.0.0.1:4455/<{,debug,dashboard,settings}{/,}>"
     methods:
       - GET
   authenticators:
