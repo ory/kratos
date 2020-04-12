@@ -1,6 +1,6 @@
 ---
 id: zero-trust-iap-proxy-identity-access-proxy
-title: Zero Trust with an IAP Proxy
+title: Zero Trust with IAP Proxy
 ---
 
 import useBaseUrl from '@docusaurus/useBaseUrl';
@@ -35,6 +35,7 @@ git clone https://github.com/ory/kratos.git
 # or if you have git+ssh set up:
 #  git clone git@github.com:ory/kratos.git
 cd kratos
+git checkout v0.1.1-alpha.1
 
 docker pull oryd/kratos:latest-sqlite
 docker pull oryd/kratos-selfservice-ui-node:latest
