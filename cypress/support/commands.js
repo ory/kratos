@@ -23,3 +23,22 @@
 //
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
+
+Cypress.Commands.add(
+  'register',
+  ({
+     email,
+     password
+   }) => {
+    if (!email) {
+      email = Math.random().toString(36).substring(7) + "@" + Math.random().toString(36).substring(7)
+    }
+    if (!password) {
+      password = Math.random().toString(36).substring(7)
+    }
+    cy.visit(APP_URL + '/auth/registration')
+    cy.get('input[name="traits.email"]').type(email)
+    cy.get('input[name="password"]').type(password)
+    cy.get('button[type="submit"]').click()
+  }
+);
