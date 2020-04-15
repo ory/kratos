@@ -36,7 +36,7 @@ func init() {
 }
 
 func TestHandler(t *testing.T) {
-	_, reg := internal.NewRegistryDefault(t)
+	_, reg := internal.NewFastRegistryWithMocks(t)
 
 	publicTS, adminTS := func() (*httptest.Server, *httptest.Server) {
 		public := x.NewRouterPublic()

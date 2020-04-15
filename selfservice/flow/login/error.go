@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	ErrHookAbortRequest = errors.New("abort hook")
+	ErrHookAbortRequest = errors.New("aborted login hook execution")
 )
 
 type (

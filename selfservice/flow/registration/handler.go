@@ -9,7 +9,6 @@ import (
 	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/errorsx"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/configuration"
@@ -65,7 +64,7 @@ func (h *Handler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request,
 	}
 
 	if err := h.d.RegistrationExecutor().PreRegistrationHook(w, r, a); err != nil {
-		if errorsx.Cause(err) == ErrHookAbortRequest {
+		if errors.Is(err, ErrHookAbortRequest) {
 			return nil
 		}
 		return err

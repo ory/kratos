@@ -70,7 +70,7 @@ type Request struct {
 	Forced bool `json:"forced" db:"forced"`
 }
 
-func NewLoginRequest(exp time.Duration, csrf string, r *http.Request) *Request {
+func NewRequest(exp time.Duration, csrf string, r *http.Request) *Request {
 	source := urlx.Copy(r.URL)
 	source.Host = r.Host
 

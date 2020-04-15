@@ -570,18 +570,11 @@ selfservice:
     after:
       password:
         # !! DO NOT enable `session` or all registration processes will fail!!
-        # - run: session
+        # - hook: session
 
         # You **must** enable identifier verification or no email will be sent and the registration is thus just a blank
         # entry in the database with no way of logging in.
-        - run: verify
-
-        # You **must** enable redirection. The page should show a message such as: "Registration complete, please
-        # check your email for further steps". The user will be redirected to this page regardless of the registration
-        # status (success, invalid).
-        - run: redirect
-          config:
-            default_redirect_url: http://test.kratos.ory.sh:4000/registration_next_steps
+        - hook: verify
 ```
 
 #### Disable Account Enumeration Defenses
@@ -629,13 +622,8 @@ selfservice:
   registration:
     after:
       password:
-        - run: session
+        - hook: session
 
         # You can optionally enable verification of the provided email address(es) or phone number(s)
-        # - run: verify
-
-        # You may now directly redirect to e.g. the dashboard:
-        - run: redirect
-          config:
-            default_redirect_url: http://test.kratos.ory.sh:4000/dashboard
+        # - hook: verify
 ```

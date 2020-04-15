@@ -17,7 +17,7 @@ already known. Depending on the result, one of the two flows will be executed:
 
 - Unknown email address: An email is sent to the address informing the recipient
   that someone tried to verify this email address but that it is not known by
-  the system:  
+  the system:
   <img alt="Verification email for unknown address" src={useBaseUrl('img/docs/email-verify-unknown.png')} />;
 - Known email address: An email which includes a verification link is sent to
   the address:
@@ -31,7 +31,7 @@ The emails are using templates that can be customised as explained in
 template IDs are:
 
 - Unknown email address: `verify_invalid`
-- Known email address: `verify_valids`
+- Known email address: `verify_valid`
 
 ## Account Activation
 
@@ -118,7 +118,7 @@ selfservice:
     after:
       password:
         # ....
-        - job: verify # This sends the verification email after successful registration
+        - hook: verify # This sends the verification email after successful registration
         # ....
 ```
 

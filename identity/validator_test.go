@@ -50,7 +50,7 @@ func TestSchemaValidator(t *testing.T) {
 	ts := httptest.NewServer(router)
 	defer ts.Close()
 
-	conf, reg := internal.NewRegistryDefault(t)
+	conf, reg := internal.NewFastRegistryWithMocks(t)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, ts.URL+"/schema/firstName")
 	viper.Set(configuration.ViperKeyIdentityTraitsSchemas, []configuration.SchemaConfig{
 		{ID: "whatever", URL: ts.URL + "/schema/whatever"},

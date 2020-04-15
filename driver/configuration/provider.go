@@ -20,7 +20,7 @@ type HasherArgon2Config struct {
 }
 
 type SelfServiceHook struct {
-	Job    string          `json:"job"`
+	Name   string          `json:"hook"`
 	Config json.RawMessage `json:"config"`
 }
 
@@ -76,8 +76,11 @@ type Provider interface {
 	SelfServiceLoginBeforeHooks() []SelfServiceHook
 	SelfServiceRegistrationBeforeHooks() []SelfServiceHook
 	SelfServiceLoginAfterHooks(strategy string) []SelfServiceHook
+	SelfServiceLoginReturnTo(strategy string) *url.URL
 	SelfServiceRegistrationAfterHooks(strategy string) []SelfServiceHook
+	SelfServiceRegistrationReturnTo(strategy string) *url.URL
 	SelfServiceSettingsAfterHooks(strategy string) []SelfServiceHook
+	SelfServiceSettingsReturnTo(strategy string, defaultReturnTo *url.URL) *url.URL
 	SelfServiceLogoutRedirectURL() *url.URL
 	SelfServiceVerificationLinkLifespan() time.Duration
 	SelfServicePrivilegedSessionMaxAge() time.Duration

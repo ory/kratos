@@ -22,7 +22,7 @@ import (
 )
 
 func TestHandler(t *testing.T) {
-	_, reg := internal.NewRegistryDefault(t)
+	_, reg := internal.NewFastRegistryWithMocks(t)
 	router := x.NewRouterPublic()
 	reg.SchemaHandler().RegisterPublicRoutes(router)
 	ts := httptest.NewServer(router)

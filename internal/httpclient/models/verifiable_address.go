@@ -7,13 +7,12 @@ package models
 
 import (
 	"github.com/go-openapi/errors"
-	"github.com/go-openapi/strfmt"
+	strfmt "github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
 // VerifiableAddress verifiable address
-//
 // swagger:model VerifiableAddress
 type VerifiableAddress struct {
 

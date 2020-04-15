@@ -14,7 +14,6 @@ import (
 	"github.com/ory/herodot"
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/x/decoderx"
-	"github.com/ory/x/errorsx"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/continuity"
@@ -28,7 +27,7 @@ import (
 )
 
 const (
-	StrategyTraitsID              = "profile"
+	StrategyProfile               = "profile"
 	PublicSettingsProfilePath     = "/self-service/browser/flows/settings/strategies/profile"
 	strategyProfileContinuityName = "settings_profile"
 )
@@ -77,7 +76,7 @@ func NewStrategyTraits(d strategyDependencies, c configuration.Provider) *Strate
 }
 
 func (s *StrategyTraits) SettingsStrategyID() string {
-	return StrategyTraitsID
+	return StrategyProfile
 }
 
 func (s *StrategyTraits) RegisterSettingsRoutes(public *x.RouterPublic) {
@@ -202,32 +201,23 @@ func (s *StrategyTraits) continueFlow(w http.ResponseWriter, r *http.Request, ss
 	}
 
 	if err := s.hydrateForm(r, ar, ss, p.Traits); err != nil {
-		s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, ar, err, StrategyTraitsID)
+		s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, ar, err, StrategyProfile)
 		return
 	}
 
 	update, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), ss.Identity.ID)
 	if err != nil {
-		s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, ar, err, StrategyTraitsID)
+		s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, ar, err, StrategyProfile)
 		return
 	}
 	update.Traits = identity.Traits(p.Traits)
 
-	if err := s.d.SettingsExecutor().PostSettingsHook(w, r,
-		s.d.PostSettingsHooks(StrategyTraitsID),
+	if err := s.d.SettingsHookExecutor().PostSettingsHook(w, r,
+		StrategyProfile,
 		ar, ss, update,
-	); errorsx.Cause(err) == ErrHookAbortRequest {
-		return
-	} else if err != nil {
+	); err != nil {
 		s.handleSettingsError(w, r, ar, ss, p.Traits, p, err)
 		return
-	}
-
-	if len(w.Header().Get("Location")) == 0 {
-		http.Redirect(w, r,
-			urlx.CopyWithQuery(s.c.SettingsURL(), url.Values{"request": {ar.ID.String()}}).String(),
-			http.StatusFound,
-		)
 	}
 }
 
@@ -270,20 +260,20 @@ func (s *StrategyTraits) hydrateForm(r *http.Request, ar *Request, ss *session.S
 		url.Values{"request": {ar.ID.String()}},
 	)
 
-	ar.Methods[StrategyTraitsID].Config.Reset()
+	ar.Methods[StrategyProfile].Config.Reset()
 	if traits != nil {
 		for _, field := range form.NewHTMLFormFromJSON(action.String(), traits, "traits").Fields {
-			ar.Methods[StrategyTraitsID].Config.SetField(field)
+			ar.Methods[StrategyProfile].Config.SetField(field)
 		}
 	}
-	ar.Methods[StrategyTraitsID].Config.SetCSRF(s.d.GenerateCSRFToken(r))
+	ar.Methods[StrategyProfile].Config.SetCSRF(s.d.GenerateCSRFToken(r))
 
 	traitsSchema, err := s.c.IdentityTraitsSchemas().FindSchemaByID(ss.Identity.TraitsSchemaID)
 	if err != nil {
 		return err
 	}
 
-	if err = ar.Methods[StrategyTraitsID].Config.SortFields(traitsSchema.URL, "traits"); err != nil {
+	if err = ar.Methods[StrategyProfile].Config.SortFields(traitsSchema.URL, "traits"); err != nil {
 		return err
 	}
 

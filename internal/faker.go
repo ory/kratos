@@ -93,7 +93,7 @@ func RegisterFakes() {
 
 	if err := faker.AddProvider("settings_request_methods", func(v reflect.Value) (interface{}, error) {
 		var methods = make(map[string]*settings.RequestMethod)
-		for _, ct := range []string{settings.StrategyTraitsID, string(identity.CredentialsTypePassword), string(identity.CredentialsTypeOIDC)} {
+		for _, ct := range []string{settings.StrategyProfile, string(identity.CredentialsTypePassword), string(identity.CredentialsTypeOIDC)} {
 			var f form.HTMLForm
 			if err := faker.FakeData(&f); err != nil {
 				return nil, err

@@ -9,7 +9,6 @@ import (
 	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/errorsx"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/configuration"
@@ -57,7 +56,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 }
 
 func (h *Handler) NewLoginRequest(w http.ResponseWriter, r *http.Request, redir func(request *Request) (string, error)) error {
-	a := NewLoginRequest(h.c.SelfServiceLoginRequestLifespan(), h.d.GenerateCSRFToken(r), r)
+	a := NewRequest(h.c.SelfServiceLoginRequestLifespan(), h.d.GenerateCSRFToken(r), r)
 	for _, s := range h.d.LoginStrategies() {
 		if err := s.PopulateLoginMethod(r, a); err != nil {
 			return err
@@ -65,7 +64,7 @@ func (h *Handler) NewLoginRequest(w http.ResponseWriter, r *http.Request, redir 
 	}
 
 	if err := h.d.LoginHookExecutor().PreLoginHook(w, r, a); err != nil {
-		if errorsx.Cause(err) == ErrHookAbortRequest {
+		if errors.Is(err, ErrHookAbortRequest) {
 			return nil
 		}
 		return err
@@ -120,12 +119,15 @@ func (h *Handler) initLoginRequest(w http.ResponseWriter, r *http.Request, ps ht
 			return urlx.CopyWithQuery(h.c.LoginURL(), url.Values{"request": {a.ID.String()}}).String(), nil
 		}
 
-		returnTo, err := x.DetermineReturnToURL(r.URL, h.c.DefaultReturnToURL(), []url.URL{*h.c.SelfPublicURL()})
+		returnTo, err := x.SecureRedirectTo(r, h.c.DefaultReturnToURL(),
+			x.SecureRedirectAllowSelfServiceURLs(h.c.SelfPublicURL()),
+			x.SecureRedirectAllowURLs(h.c.WhitelistedReturnToDomains()),
+		)
 		if err != nil {
 			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		}
 
-		return returnTo, nil
+		return returnTo.String(), nil
 	}); err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return

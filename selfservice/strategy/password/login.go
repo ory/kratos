@@ -102,8 +102,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
-	if err := s.d.LoginHookExecutor().PostLoginHook(w, r,
-		s.d.PostLoginHooks(identity.CredentialsTypePassword), ar, i); err != nil {
+	if err := s.d.LoginHookExecutor().PostLoginHook(w, r, identity.CredentialsTypePassword, ar, i); err != nil {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
@@ -116,7 +115,6 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Request) error
 
 	var identifier string
 	if !sr.IsForced() {
-		print("forced")
 		// do nothing
 	} else if sess, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err != nil {
 		print("sm")

@@ -21,7 +21,7 @@ import (
 )
 
 func TestSessionIssuer(t *testing.T) {
-	_, reg := internal.NewRegistryDefault(t)
+	_, reg := internal.NewFastRegistryWithMocks(t)
 	viper.Set(configuration.ViperKeyURLsSelfPublic, "http://localhost/")
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/stub.schema.json")
 
@@ -48,7 +48,7 @@ func TestSessionIssuer(t *testing.T) {
 
 		i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
-		require.NoError(t, h.ExecuteRegistrationPostHook(w, &r, nil, &session.Session{ID: sid, Identity: i}))
+		require.NoError(t, h.ExecutePostRegistrationPostPersistHook(w, &r, nil, &session.Session{ID: sid, Identity: i}))
 
 		got, err := reg.SessionPersister().GetSession(context.Background(), sid)
 		require.NoError(t, err)
