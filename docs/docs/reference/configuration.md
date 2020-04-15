@@ -600,15 +600,15 @@ urls:
     #
     admin: http://PfnGJZXKZpWcmAW.wcmhK-Z
 
-  ## whitelisted_return_to_domains ##
+  ## whitelisted_return_to_urls ##
   #
   # Set this value using environment variables on
   # - Linux/macOS:
-  #    $ export URLS_WHITELISTED_RETURN_TO_DOMAINS=<value>
+  #    $ export URLS_whitelisted_return_to_urls=<value>
   # - Windows Command Line (CMD):
-  #    > set URLS_WHITELISTED_RETURN_TO_DOMAINS=<value>
+  #    > set URLS_whitelisted_return_to_urls=<value>
   #
-  whitelisted_return_to_domains:
+  whitelisted_return_to_urls:
     - https://mLXbuCzlJbAaYVJaVQ.namM9tRqlZAoKO+uRYpH
     - http://WhIslWEQlfsYCGFmZrbPBCAX.qqlJ4L
     - http://JDOLAPSVNPPoVJlrCKjfXcNRPwlhn.qbcYGB2ssMW5wJ6gALSyIC9Xcb

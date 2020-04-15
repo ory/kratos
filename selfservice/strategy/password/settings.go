@@ -12,7 +12,6 @@ import (
 	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/herodot"
-	"github.com/ory/x/errorsx"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/continuity"
@@ -175,12 +174,10 @@ func (s *Strategy) completeSettingsFlow(
 		return
 	}
 
-	if err := s.d.SettingsExecutor().PostSettingsHook(w, r,
-		s.d.PostSettingsHooks(s.SettingsStrategyID()),
+	if err := s.d.SettingsHookExecutor().PostSettingsHook(w, r,
+		s.SettingsStrategyID(),
 		ar, ss, i,
-	); errorsx.Cause(err) == settings.ErrHookAbortRequest {
-		return
-	} else if err != nil {
+	); err != nil {
 		s.handleSettingsError(w, r, ar, ss, p, err)
 		return
 	}

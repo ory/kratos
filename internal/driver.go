@@ -14,6 +14,7 @@ import (
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/x"
 )
 
@@ -34,14 +35,23 @@ func NewConfigurationWithDefaults() *configuration.ViperProvider {
 	return configuration.NewViperProvider(logrusx.New(), true)
 }
 
-func NewRegistryDefault(t *testing.T) (*configuration.ViperProvider, *driver.RegistryDefault) {
+// NewFastRegistryWithMocks returns a registry with several mocks and an SQLite in memory database that make testing
+// easier and way faster. This suite does not work for e2e or advanced integration tests.
+func NewFastRegistryWithMocks(t *testing.T) (*configuration.ViperProvider, *driver.RegistryDefault) {
 	conf, reg := NewRegistryDefaultWithDSN(t, "")
 	reg.WithCSRFTokenGenerator(x.FakeCSRFTokenGenerator)
 	reg.WithCSRFHandler(x.NewFakeCSRFHandler(""))
+	reg.WithHooks(map[string]func(configuration.SelfServiceHook) interface{}{
+		"err": func(c configuration.SelfServiceHook) interface{} {
+			return &hook.Error{Config: c.Config}
+		},
+	})
+
 	require.NoError(t, reg.Persister().MigrateUp(context.Background()))
 	return conf, reg
 }
 
+// NewRegistryDefaultWithDSN returns a more standard registry without mocks. Good for e2e and advanced integration testing!
 func NewRegistryDefaultWithDSN(t *testing.T, dsn string) (*configuration.ViperProvider, *driver.RegistryDefault) {
 	viper.Reset()
 	resetConfig()

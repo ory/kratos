@@ -22,7 +22,7 @@ var (
 	ErrRequestExpired = herodot.ErrBadRequest.
 				WithError("settings request expired").
 				WithReasonf(`The settings request has expired. Please restart the flow.`)
-	ErrHookAbortRequest             = errors.New("abort hook")
+	ErrHookAbortRequest             = errors.New("aborted settings hook execution")
 	ErrRequestNeedsReAuthentication = herodot.ErrForbidden.WithReasonf("The login session is too old and thus not allowed to update these fields. Please re-authenticate.")
 )
 

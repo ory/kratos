@@ -28,21 +28,14 @@ import (
 	"github.com/ory/kratos/internal/httpclient/client/common"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/selfservice/flow/settings"
-	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
-
-func SetSettingsStrategyAfterHooks(t *testing.T, strategy string, u string) {
-	viper.Set(
-		configuration.ViperKeySelfServiceSettingsAfterConfig+"."+strategy,
-		HookConfigRedirectTo(t, u))
-}
 
 func HookConfigRedirectTo(t *testing.T, u string) (m []map[string]interface{}) {
 	var b bytes.Buffer
 	_, err := fmt.Fprintf(&b, `[
 	{
-		"job": "redirect",
+		"hook": "redirect",
 		"config": {
           "default_redirect_url": "%s",
           "allow_user_defined_redirect": true
@@ -97,7 +90,7 @@ func NewSettingsUITestServer(t *testing.T) *httptest.Server {
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)
 
-	viper.Set(configuration.ViperKeyURLsProfile, ts.URL+"/settings")
+	viper.Set(configuration.ViperKeyURLsSettings, ts.URL+"/settings")
 	viper.Set(configuration.ViperKeyURLsLogin, ts.URL+"/login")
 
 	return ts
@@ -149,7 +142,7 @@ func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, ids []ident
 	viper.Set(configuration.ViperKeyURLsSelfAdmin, tsa.URL)
 
 	for k := range ids {
-		route, _ := session.MockSessionCreateHandlerWithIdentity(t, reg, &ids[k])
+		route, _ := MockSessionCreateHandlerWithIdentity(t, reg, &ids[k])
 		public.GET("/sessions/set/"+strconv.Itoa(k), route)
 	}
 
@@ -172,7 +165,7 @@ func SettingsSubmitForm(
 	require.NoError(t, err)
 	assert.EqualValues(t, http.StatusNoContent, res.StatusCode, "%s", b)
 
-	assert.Equal(t, viper.GetString(configuration.ViperKeyURLsProfile), res.Request.URL.Scheme+"://"+res.Request.URL.Host+res.Request.URL.Path, "should end up at the settings URL, used: %s", pointerx.StringR(f.Action))
+	assert.Equal(t, viper.GetString(configuration.ViperKeyURLsSettings), res.Request.URL.Scheme+"://"+res.Request.URL.Host+res.Request.URL.Path, "should end up at the settings URL, used: %s", pointerx.StringR(f.Action))
 
 	rs, err := NewSDKClientFromURL(viper.GetString(configuration.ViperKeyURLsSelfPublic)).Common.GetSelfServiceBrowserSettingsRequest(
 		common.NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(hc).

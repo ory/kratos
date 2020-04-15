@@ -2,7 +2,6 @@ package session
 
 import (
 	"net/http"
-	"net/url"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
@@ -127,12 +126,13 @@ func (h *Handler) IsNotAuthenticated(wrap httprouter.Handle, onAuthenticated htt
 
 func RedirectOnAuthenticated(c configuration.Provider) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		returnTo, err := x.DetermineReturnToURL(r.URL, c.DefaultReturnToURL(), []url.URL{*c.SelfPublicURL()})
+		returnTo, err := x.SecureRedirectTo(r, c.DefaultReturnToURL(), x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL()))
 		if err != nil {
 			http.Redirect(w, r, c.DefaultReturnToURL().String(), http.StatusFound)
+			return
 		}
 
-		http.Redirect(w, r, returnTo, http.StatusFound)
+		http.Redirect(w, r, returnTo.String(), http.StatusFound)
 	}
 }
 

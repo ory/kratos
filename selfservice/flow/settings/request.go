@@ -11,7 +11,6 @@ import (
 	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/herodot"
-	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/session"
@@ -86,21 +85,11 @@ type Request struct {
 }
 
 func NewRequest(exp time.Duration, r *http.Request, s *session.Session) *Request {
-	source := urlx.Copy(r.URL)
-	source.Host = r.Host
-
-	if len(source.Scheme) == 0 {
-		source.Scheme = "http"
-		if r.TLS != nil {
-			source.Scheme = "https"
-		}
-	}
-
 	return &Request{
 		ID:         x.NewUUID(),
 		ExpiresAt:  time.Now().UTC().Add(exp),
 		IssuedAt:   time.Now().UTC(),
-		RequestURL: source.String(),
+		RequestURL: x.RequestURL(r).String(),
 		IdentityID: s.Identity.ID,
 		Identity:   s.Identity,
 		Methods:    map[string]*RequestMethod{},

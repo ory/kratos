@@ -1,9 +1,7 @@
 package oidc_test
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -37,34 +35,6 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/x"
 )
-
-func hookConfig(u string) (m []map[string]interface{}) {
-	var b bytes.Buffer
-	if _, err := fmt.Fprintf(&b, `[
-	{
-		"job": "session"
-	},
-	{
-		"job": "redirect",
-		"config": {
-          "default_redirect_url": "%s",
-          "allow_user_defined_redirect": true
-		}
-	}
-]`, u); err != nil {
-		panic(err)
-	}
-
-	if err := json.NewDecoder(&b).Decode(&m); err != nil {
-		panic(err)
-	}
-
-	return m
-}
-
-type withTokenGenerator interface {
-	WithTokenGenerator(g form.CSRFGenerator)
-}
 
 const debugRedirects = false
 
@@ -115,7 +85,7 @@ func TestStrategy(t *testing.T) {
 		remoteAdmin = "http://127.0.0.1:" + hydra.GetPort("4445/tcp")
 	}
 
-	_, reg := internal.NewRegistryDefault(t)
+	_, reg := internal.NewFastRegistryWithMocks(t)
 
 	public := x.NewRouterPublic()
 	admin := x.NewRouterAdmin()
@@ -179,9 +149,10 @@ func TestStrategy(t *testing.T) {
 	viper.Set(configuration.ViperKeyURLsLogin, uiTS.URL+"/login")
 	viper.Set(configuration.ViperKeyURLsRegistration, uiTS.URL+"/registration")
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
-	viper.Set(configuration.ViperKeySelfServiceRegistrationAfterConfig+"."+string(identity.CredentialsTypeOIDC), hookConfig(returnTS.URL))
-	viper.Set(configuration.ViperKeySelfServiceLoginAfterConfig+"."+string(identity.CredentialsTypeOIDC), hookConfig(returnTS.URL))
 	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, returnTS.URL)
+	viper.Set(
+		configuration.HookStrategyKey(configuration.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypeOIDC.String()),
+		[]configuration.SelfServiceHook{{Name: "session"}})
 
 	t.Logf("Kratos Public URL: %s", ts.URL)
 	t.Logf("Kratos Error URL: %s", errTS.URL)
@@ -487,6 +458,6 @@ func TestStrategy(t *testing.T) {
 		authAt2, err := time.Parse(time.RFC3339, gjson.GetBytes(body2, "authenticated_at").String())
 		require.NoError(t, err)
 		// authenticated at is newer in the second body
-		assert.Greater(t, authAt2.Sub(authAt1).Milliseconds(), int64(0), "%s - %s", authAt2, authAt1)
+		assert.Greater(t, authAt2.Sub(authAt1).Milliseconds(), int64(0), "%s - %s : %s - %s", authAt2, authAt1, body2, body1)
 	})
 }

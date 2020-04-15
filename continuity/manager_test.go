@@ -37,7 +37,7 @@ type persisterTestPayload struct {
 }
 
 func TestManager(t *testing.T) {
-	_, reg := internal.NewRegistryDefault(t)
+	_, reg := internal.NewFastRegistryWithMocks(t)
 
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
 	viper.Set(configuration.ViperKeyURLsSelfPublic, "https://www.ory.sh")

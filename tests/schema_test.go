@@ -95,6 +95,7 @@ func (ss *schemas) getByName(n string) (*schema, error) {
 }
 
 func TestSchemas(t *testing.T) {
+	t.Skip("See https://github.com/ory/kratos/issues/347")
 	t.Run("test .schema/config.schema.json", SchemaTestRunner("../.schema", "config"))
 }
 

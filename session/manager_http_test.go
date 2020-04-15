@@ -28,12 +28,12 @@ func (f *mockCSRFHandler) RegenerateToken(w http.ResponseWriter, r *http.Request
 
 func TestManagerHTTP(t *testing.T) {
 	t.Run("method=SaveToRequest", func(t *testing.T) {
-		_, reg := internal.NewRegistryDefault(t)
+		_, reg := internal.NewFastRegistryWithMocks(t)
 
 		mock := new(mockCSRFHandler)
 		reg.WithCSRFHandler(mock)
 
-		require.NoError(t, reg.SessionManager().SaveToRequest(context.Background(), new(session.Session), httptest.NewRecorder(), new(http.Request)))
+		require.NoError(t, reg.SessionManager().SaveToRequest(context.Background(), httptest.NewRecorder(), new(http.Request), new(session.Session)))
 		assert.Equal(t, 1, mock.c)
 	})
 }

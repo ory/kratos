@@ -2,20 +2,24 @@ package driver
 
 import "github.com/ory/kratos/selfservice/flow/settings"
 
-func (m *RegistryDefault) PostSettingsHooks(credentialsType string) []settings.PostHookExecutor {
-	a := m.getHooks(credentialsType, m.c.SelfServiceSettingsAfterHooks(credentialsType))
-
-	var b []settings.PostHookExecutor
-	for _, v := range a {
-		if hook, ok := v.(settings.PostHookExecutor); ok {
+func (m *RegistryDefault) PostSettingsPrePersistHooks(settingsType string) (b []settings.PostHookPrePersistExecutor) {
+	for _, v := range m.getHooks(settingsType, m.c.SelfServiceSettingsAfterHooks(settingsType)) {
+		if hook, ok := v.(settings.PostHookPrePersistExecutor); ok {
 			b = append(b, hook)
 		}
 	}
-
-	return b
+	return
+}
+func (m *RegistryDefault) PostSettingsPostPersistHooks(settingsType string) (b []settings.PostHookPostPersistExecutor) {
+	for _, v := range m.getHooks(settingsType, m.c.SelfServiceSettingsAfterHooks(settingsType)) {
+		if hook, ok := v.(settings.PostHookPostPersistExecutor); ok {
+			b = append(b, hook)
+		}
+	}
+	return
 }
 
-func (m *RegistryDefault) SettingsExecutor() *settings.HookExecutor {
+func (m *RegistryDefault) SettingsHookExecutor() *settings.HookExecutor {
 	if m.selfserviceSettingsExecutor == nil {
 		m.selfserviceSettingsExecutor = settings.NewHookExecutor(m, m.c)
 	}

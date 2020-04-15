@@ -27,7 +27,7 @@ urls:
     public: http://public.kratos.ory.sh
     admin: http://admin.kratos.ory.sh
   error_ui: http://test.kratos.ory.sh/error
-  whitelisted_return_to_domains:
+  whitelisted_return_to_urls:
     - http://return-to-1-test.ory.sh/
     - http://return-to-2-test.ory.sh/
 
@@ -66,58 +66,65 @@ selfservice:
             schema_url: http://test.kratos.ory.sh/default-identity.schema.json
   logout:
     redirect_to: http://test.kratos.ory.sh:4000/
+
+  settings:
+    request_lifespan: 99m
+    privileged_session_max_age: 5m
+    after:
+      default_return_to: https://self-service/settings/return_to
+      password:
+        default_return_to: https://self-service/settings/password/return_to
+      profile:
+        hooks:
+          -
+            hook: verify
   login:
     request_lifespan: 99m
     before:
-      - job: redirect
-        config:
-          default_redirect_url: http://test.kratos.ory.sh:4000/
-          allow_user_defined_redirect: false
+      hooks:
+        - hook: redirect
+          config:
+            default_redirect_url: http://test.kratos.ory.sh:4000/
+            allow_user_defined_redirect: false
     after:
+      default_return_to: https://self-service/login/return_to
       password:
-        -
-          job: revoke_active_sessions
-        - job: session
-        - job: redirect
-          config:
-            default_redirect_url: http://test.kratos.ory.sh:4000/
-            allow_user_defined_redirect: true
+        default_return_to: https://self-service/login/password/return_to
+        hooks:
+          -
+            hook: revoke_active_sessions
       oidc:
-        -
-          job: revoke_active_sessions
-        - job: session
-        - job: redirect
-          config:
-            default_redirect_url: http://test.kratos.ory.sh:4000/
-            allow_user_defined_redirect: true
+        hooks:
+          -
+            hook: revoke_active_sessions
   registration:
     request_lifespan: 98m
     before:
-      - job: redirect
-        config:
-          default_redirect_url: http://test.kratos.ory.sh:4000/
-          allow_user_defined_redirect: false
+      hooks:
+        - hook: redirect
+          config:
+            default_redirect_url: http://test.kratos.ory.sh:4000/
+            allow_user_defined_redirect: false
     after:
+      default_return_to: https://self-service/registration/return_to
       password:
-        -
-          job: session
-        -
-          job: redirect
-          config:
-            default_redirect_url: http://test.kratos.ory.sh:4000/
-            allow_user_defined_redirect: true
+        hooks:
+          -
+            hook: session
+          -
+            hook: verify
+          - hook: redirect
+            config:
+              default_redirect_url: http://test.kratos.ory.sh:4000/
+              allow_user_defined_redirect: false
       oidc:
-        -
-          job: session
-        -
-          job: redirect
-          config:
-            default_redirect_url: http://test.kratos.ory.sh:4000/
-            allow_user_defined_redirect: true
-
-#      - job: account_activation
-#        config:
-#          redirect:
-#            pending:
-#            success:
-#            invalidate_after: 10h
+        default_return_to: https://self-service/registration/oidc/return_to
+        hooks:
+          -
+            hook: verify
+          -
+            hook: session
+          - hook: redirect
+            config:
+              default_redirect_url: http://test.kratos.ory.sh:4000/
+              allow_user_defined_redirect: false

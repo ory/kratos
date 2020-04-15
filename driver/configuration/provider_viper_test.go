@@ -1,6 +1,7 @@
 package configuration_test
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -47,6 +48,17 @@ func TestViperProvider(t *testing.T) {
 				"http://return-to-1-test.ory.sh/",
 				"http://return-to-2-test.ory.sh/",
 			}, ds)
+		})
+
+		t.Run("group=default_return_to", func(t *testing.T) {
+			assert.Equal(t, "https://self-service/login/password/return_to", p.SelfServiceLoginReturnTo("password").String())
+			assert.Equal(t, "https://self-service/login/return_to", p.SelfServiceLoginReturnTo("oidc").String())
+
+			assert.Equal(t, "https://self-service/registration/return_to", p.SelfServiceRegistrationReturnTo("password").String())
+			assert.Equal(t, "https://self-service/registration/oidc/return_to", p.SelfServiceRegistrationReturnTo("oidc").String())
+
+			assert.Equal(t, "https://self-service/settings/password/return_to", p.SelfServiceSettingsReturnTo("password", p.DefaultReturnToURL()).String())
+			assert.Equal(t, "https://self-service/settings/return_to", p.SelfServiceSettingsReturnTo("profile", p.DefaultReturnToURL()).String())
 		})
 
 		t.Run("group=identity", func(t *testing.T) {
@@ -101,35 +113,36 @@ func TestViperProvider(t *testing.T) {
 
 			t.Run("hook=before", func(t *testing.T) {
 				hook := p.SelfServiceRegistrationBeforeHooks()[0]
-				assert.EqualValues(t, "redirect", hook.Job)
+				assert.EqualValues(t, "redirect", hook.Name)
 				assert.JSONEq(t, `{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`, string(hook.Config))
 			})
 
 			for _, tc := range []struct {
-				strategy       string
-				redirectConfig string
+				strategy string
+				hooks    []configuration.SelfServiceHook
 			}{
 				{
-					strategy:       "password",
-					redirectConfig: `{"allow_user_defined_redirect":true,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`,
+					strategy: "password",
+					hooks: []configuration.SelfServiceHook{
+						{Name: "session", Config: json.RawMessage(`{}`)},
+						{Name: "verify", Config: json.RawMessage(`{}`)},
+						{Name: "redirect", Config: json.RawMessage(`{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`)},
+					},
 				},
 				{
-					strategy:       "oidc",
-					redirectConfig: `{"allow_user_defined_redirect":true,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`,
+					strategy: "oidc",
+					hooks: []configuration.SelfServiceHook{
+						{Name: "verify", Config: json.RawMessage(`{}`)},
+						{Name: "session", Config: json.RawMessage(`{}`)},
+						{Name: "redirect", Config: json.RawMessage(`{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`)},
+					},
 				},
 			} {
 				t.Run("hook=after/strategy="+tc.strategy, func(t *testing.T) {
 					hooks := p.SelfServiceRegistrationAfterHooks(tc.strategy)
-
-					hook := hooks[0]
-					assert.EqualValues(t, "session", hook.Job)
-
-					hook = hooks[1]
-					assert.EqualValues(t, "redirect", hook.Job)
-					assert.JSONEq(t, tc.redirectConfig, string(hook.Config))
+					assert.Equal(t, tc.hooks, hooks)
 				})
 			}
-
 		})
 
 		t.Run("method=login", func(t *testing.T) {
@@ -137,35 +150,62 @@ func TestViperProvider(t *testing.T) {
 
 			t.Run("hook=before", func(t *testing.T) {
 				hook := p.SelfServiceLoginBeforeHooks()[0]
-				assert.EqualValues(t, "redirect", hook.Job)
+				assert.EqualValues(t, "redirect", hook.Name)
 				assert.JSONEq(t, `{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`, string(hook.Config))
 			})
 
 			for _, tc := range []struct {
-				strategy       string
-				redirectConfig string
+				strategy string
+				hooks    []configuration.SelfServiceHook
 			}{
 				{
-					strategy:       "password",
-					redirectConfig: `{"allow_user_defined_redirect":true,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`,
+					strategy: "password",
+					hooks: []configuration.SelfServiceHook{
+						{Name: "revoke_active_sessions", Config: json.RawMessage(`{}`)},
+					},
 				},
 				{
-					strategy:       "oidc",
-					redirectConfig: `{"allow_user_defined_redirect":true,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`,
+					strategy: "oidc",
+					hooks: []configuration.SelfServiceHook{
+						{Name: "revoke_active_sessions", Config: json.RawMessage(`{}`)},
+					},
 				},
 			} {
 				t.Run("hook=after/strategy="+tc.strategy, func(t *testing.T) {
 					hooks := p.SelfServiceLoginAfterHooks(tc.strategy)
+					assert.Equal(t, tc.hooks, hooks)
+				})
+			}
+		})
 
-					hook := hooks[0]
-					assert.EqualValues(t, "revoke_active_sessions", hook.Job)
+		t.Run("method=settings", func(t *testing.T) {
+			assert.Equal(t, time.Minute*99, p.SelfServiceSettingsRequestLifespan())
+			assert.Equal(t, time.Minute*5, p.SelfServicePrivilegedSessionMaxAge())
 
-					hook = hooks[1]
-					assert.EqualValues(t, "session", hook.Job)
+			t.Run("hook=before", func(t *testing.T) {
+				hook := p.SelfServiceLoginBeforeHooks()[0]
+				assert.EqualValues(t, "redirect", hook.Name)
+				assert.JSONEq(t, `{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`, string(hook.Config))
+			})
 
-					hook = hooks[2]
-					assert.EqualValues(t, "redirect", hook.Job)
-					assert.JSONEq(t, tc.redirectConfig, string(hook.Config))
+			for _, tc := range []struct {
+				strategy string
+				hooks    []configuration.SelfServiceHook
+			}{
+				{
+					strategy: "password",
+					hooks:    []configuration.SelfServiceHook{},
+				},
+				{
+					strategy: "profile",
+					hooks: []configuration.SelfServiceHook{
+						{Name: "verify", Config: json.RawMessage(`{}`)},
+					},
+				},
+			} {
+				t.Run("hook=after/strategy="+tc.strategy, func(t *testing.T) {
+					hooks := p.SelfServiceSettingsAfterHooks(tc.strategy)
+					assert.Equal(t, tc.hooks, hooks)
 				})
 			}
 		})

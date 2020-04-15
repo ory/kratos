@@ -18,13 +18,14 @@ import (
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/logout"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
 func TestLogoutHandler(t *testing.T) {
-	_, reg := internal.NewRegistryDefault(t)
+	conf, reg := internal.NewFastRegistryWithMocks(t)
 	handler := reg.LogoutHandler()
 
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
@@ -42,7 +43,7 @@ func TestLogoutHandler(t *testing.T) {
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), sess.Identity))
 	require.NoError(t, reg.SessionPersister().CreateSession(context.Background(), &sess))
 
-	router.GET("/set", session.MockSetSession(t, reg))
+	router.GET("/set", testhelpers.MockSetSession(t, reg, conf))
 
 	router.GET("/csrf", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		_, _ = w.Write([]byte(nosurf.Token(r)))
@@ -56,10 +57,10 @@ func TestLogoutHandler(t *testing.T) {
 	viper.Set(configuration.ViperKeySelfServiceLogoutRedirectURL, redirTS.URL)
 	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
 
-	client := session.MockCookieClient(t)
+	client := testhelpers.MockCookieClient(t)
 
 	t.Run("case=set initial session", func(t *testing.T) {
-		session.MockHydrateCookieClient(t, client, ts.URL+"/set")
+		testhelpers.MockHydrateCookieClient(t, client, ts.URL+"/set")
 	})
 
 	var token string

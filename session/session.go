@@ -1,7 +1,6 @@
 package session
 
 import (
-	"net/http"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -33,20 +32,19 @@ type Session struct {
 	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
-
-	modifiedIdentity bool `faker:"-" db:"-"`
 }
 
 func (s Session) TableName() string {
 	return "sessions"
 }
 
-func NewSession(i *identity.Identity, r *http.Request, c interface {
+func NewSession(i *identity.Identity, c interface {
 	SessionLifespan() time.Duration
-}) *Session {
+}, authenticatedAt time.Time) *Session {
 	return &Session{
 		ID:        x.NewUUID(),
-		ExpiresAt: time.Now().UTC().Add(c.SessionLifespan()),
+		ExpiresAt: authenticatedAt.Add(c.SessionLifespan()),
+		AuthenticatedAt: authenticatedAt,
 		IssuedAt:  time.Now().UTC(),
 		Identity:  i,
 	}
@@ -57,21 +55,7 @@ type Device struct {
 	SeenAt    []time.Time `json:"seen_at" faker:"time_types"`
 }
 
-func (s *Session) UpdateIdentity(i *identity.Identity) *Session {
-	s.Identity = i
-	s.modifiedIdentity = true
-	return s
-}
-
-func (s *Session) GetIdentity() *identity.Identity {
-	return s.Identity
-}
-
-func (s *Session) WasIdentityModified() bool {
-	return s.modifiedIdentity
-}
-
-func (s *Session) ResetModifiedIdentityFlag() *Session {
-	s.modifiedIdentity = false
+func (s *Session) Declassify() *Session {
+	s.Identity = s.Identity.CopyWithoutCredentials()
 	return s
 }

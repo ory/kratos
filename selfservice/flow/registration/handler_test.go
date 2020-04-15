@@ -19,7 +19,6 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/registration"
-	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
@@ -28,7 +27,7 @@ func init() {
 }
 
 func TestHandlerRedirectOnAuthenticated(t *testing.T) {
-	_, reg := internal.NewRegistryDefault(t)
+	conf, reg := internal.NewFastRegistryWithMocks(t)
 
 	router := x.NewRouterPublic()
 	reg.RegistrationHandler().RegisterPublicRoutes(router)
@@ -46,13 +45,13 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
 
 	t.Run("does redirect to default on authenticated request", func(t *testing.T) {
-		body, _ := session.MockMakeAuthenticatedRequest(t, reg, router.Router, x.NewTestHTTPRequest(t, "GET", ts.URL+registration.BrowserRegistrationPath, nil))
+		body, _ := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, x.NewTestHTTPRequest(t, "GET", ts.URL+registration.BrowserRegistrationPath, nil))
 		assert.EqualValues(t, "already authenticated", string(body))
 	})
 }
 
 func TestRegistrationHandler(t *testing.T) {
-	_, reg := internal.NewRegistryDefault(t)
+	_, reg := internal.NewFastRegistryWithMocks(t)
 
 	public, admin := func() (*httptest.Server, *httptest.Server) {
 		public := x.NewRouterPublic()

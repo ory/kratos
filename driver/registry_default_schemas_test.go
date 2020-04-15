@@ -13,7 +13,7 @@ import (
 )
 
 func TestRegistryDefault_IdentityTraitsSchemas(t *testing.T) {
-	_, reg := internal.NewRegistryDefault(t)
+	_, reg := internal.NewFastRegistryWithMocks(t)
 	defaultSchema := schema.Schema{
 		ID:     "default",
 		URL:    urlx.ParseOrPanic("file://default.schema.json"),

@@ -41,35 +41,41 @@ const (
 
 	ViperKeySecretsSession = "secrets.session"
 
-	ViperKeyURLsDefaultReturnTo            = "urls.default_return_to"
+	ViperKeyDefaultReturnTo                = "default_return_to"
+	ViperKeyURLsDefaultReturnTo            = "urls." + ViperKeyDefaultReturnTo
 	ViperKeyURLsSelfPublic                 = "urls.self.public"
 	ViperKeyURLsSelfAdmin                  = "urls.self.admin"
 	ViperKeyURLsLogin                      = "urls.login_ui"
 	ViperKeyURLsError                      = "urls.error_ui"
 	ViperKeyURLsVerification               = "urls.verify_ui"
-	ViperKeyURLsProfile                    = "urls.settings_ui"
+	ViperKeyURLsSettings                   = "urls.settings_ui"
 	ViperKeyURLsMFA                        = "urls.mfa_ui"
 	ViperKeyURLsRegistration               = "urls.registration_ui"
-	ViperKeyURLsWhitelistedReturnToDomains = "urls.whitelisted_return_to_domains"
+	ViperKeyURLsWhitelistedReturnToDomains = "urls.whitelisted_return_to_urls"
 
 	ViperKeyLifespanSession = "ttl.session"
 
 	ViperKeySessionSameSite = "security.session.cookie.same_site"
 
-	ViperKeySelfServiceStrategyConfig                = "selfservice.strategies"
-	ViperKeySelfServiceRegistrationBeforeConfig      = "selfservice.registration.before"
-	ViperKeySelfServiceRegistrationAfterConfig       = "selfservice.registration.after"
-	ViperKeySelfServiceLifespanRegistrationRequest   = "selfservice.registration.request_lifespan"
-	ViperKeySelfServiceLoginBeforeConfig             = "selfservice.login.before"
-	ViperKeySelfServiceLoginAfterConfig              = "selfservice.login.after"
-	ViperKeySelfServiceLifespanLoginRequest          = "selfservice.login.request_lifespan"
-	ViperKeySelfServiceLogoutRedirectURL             = "selfservice.logout.redirect_to"
-	ViperKeySelfServiceSettingsAfterConfig           = "selfservice.settings.after"
+	ViperKeySelfServiceStrategyConfig = "selfservice.strategies"
+
+	ViperKeySelfServiceRegistrationAfter           = "selfservice.registration.after"
+	ViperKeySelfServiceRegistrationBeforeHooks     = "selfservice.registration.before.hooks"
+	ViperKeySelfServiceLifespanRegistrationRequest = "selfservice.registration.request_lifespan"
+
+	ViperKeySelfServiceLoginAfter           = "selfservice.login.after"
+	ViperKeySelfServiceLoginBeforeHooks     = "selfservice.login.before.hooks"
+	ViperKeySelfServiceLifespanLoginRequest = "selfservice.login.request_lifespan"
+
+	ViperKeySelfServiceLogoutRedirectURL = "selfservice.logout.redirect_to"
+
+	ViperKeySelfServiceSettingsAfter                 = "selfservice.settings.after"
 	ViperKeySelfServiceSettingsRequestLifespan       = "selfservice.settings.request_lifespan"
 	ViperKeySelfServicePrivilegedAuthenticationAfter = "selfservice.settings.privileged_session_max_age"
-	ViperKeySelfServiceLifespanLink                  = "selfservice.verify.link_lifespan"
-	ViperKeySelfServiceLifespanVerificationRequest   = "selfservice.verify.request_lifespan"
-	ViperKeySelfServiceVerifyReturnTo                = "selfservice.verify.return_to"
+
+	ViperKeySelfServiceLifespanLink                = "selfservice.verify.link_lifespan"
+	ViperKeySelfServiceLifespanVerificationRequest = "selfservice.verify.request_lifespan"
+	ViperKeySelfServiceVerifyReturnTo              = "selfservice.verify.return_to"
 
 	ViperKeyDefaultIdentityTraitsSchemaURL = "identity.traits.default_schema_url"
 	ViperKeyIdentityTraitsSchemas          = "identity.traits.schemas"
@@ -80,6 +86,10 @@ const (
 	ViperKeyHasherArgon2ConfigSaltLength  = "hashers.argon2.salt_length"
 	ViperKeyHasherArgon2ConfigKeyLength   = "hashers.argon2.key_length"
 )
+
+func HookStrategyKey(key, strategy string) string {
+	return fmt.Sprintf("%s.%s.hooks", key, strategy)
+}
 
 func NewViperProvider(l logrus.FieldLogger, dev bool) *ViperProvider {
 	return &ViperProvider{
@@ -164,11 +174,11 @@ func (p *ViperProvider) DSN() string {
 }
 
 func (p *ViperProvider) SelfServiceLoginBeforeHooks() []SelfServiceHook {
-	return p.selfServiceHooks(ViperKeySelfServiceLoginBeforeConfig)
+	return p.selfServiceHooks(ViperKeySelfServiceLoginBeforeHooks)
 }
 
 func (p *ViperProvider) SelfServiceRegistrationBeforeHooks() []SelfServiceHook {
-	return p.selfServiceHooks(ViperKeySelfServiceRegistrationBeforeConfig)
+	return p.selfServiceHooks(ViperKeySelfServiceRegistrationBeforeHooks)
 }
 
 func (p *ViperProvider) selfServiceHooks(key string) []SelfServiceHook {
@@ -198,15 +208,15 @@ func (p *ViperProvider) selfServiceHooks(key string) []SelfServiceHook {
 }
 
 func (p *ViperProvider) SelfServiceLoginAfterHooks(strategy string) []SelfServiceHook {
-	return p.selfServiceHooks(ViperKeySelfServiceLoginAfterConfig + "." + strategy)
+	return p.selfServiceHooks(HookStrategyKey(ViperKeySelfServiceLoginAfter, strategy))
 }
 
 func (p *ViperProvider) SelfServiceSettingsAfterHooks(strategy string) []SelfServiceHook {
-	return p.selfServiceHooks(ViperKeySelfServiceSettingsAfterConfig + "." + strategy)
+	return p.selfServiceHooks(HookStrategyKey(ViperKeySelfServiceSettingsAfter, strategy))
 }
 
 func (p *ViperProvider) SelfServiceRegistrationAfterHooks(strategy string) []SelfServiceHook {
-	return p.selfServiceHooks(ViperKeySelfServiceRegistrationAfterConfig + "." + strategy)
+	return p.selfServiceHooks(HookStrategyKey(ViperKeySelfServiceRegistrationAfter, strategy))
 }
 
 func (p *ViperProvider) SelfServiceStrategy(strategy string) *SelfServiceStrategy {
@@ -270,7 +280,7 @@ func (p *ViperProvider) LoginURL() *url.URL {
 }
 
 func (p *ViperProvider) SettingsURL() *url.URL {
-	return mustParseURLFromViper(p.l, ViperKeyURLsProfile)
+	return mustParseURLFromViper(p.l, ViperKeyURLsSettings)
 }
 
 func (p *ViperProvider) ErrorURL() *url.URL {
@@ -389,4 +399,31 @@ func (p *ViperProvider) SessionSameSiteMode() http.SameSite {
 		return http.SameSiteNoneMode
 	}
 	return http.SameSiteDefaultMode
+}
+
+func (p *ViperProvider) SelfServiceLoginReturnTo(strategy string) *url.URL {
+	return p.selfServiceReturnTo(ViperKeySelfServiceLoginAfter, strategy)
+}
+
+func (p *ViperProvider) SelfServiceRegistrationReturnTo(strategy string) *url.URL {
+	return p.selfServiceReturnTo(ViperKeySelfServiceRegistrationAfter, strategy)
+}
+
+func (p *ViperProvider) SelfServiceSettingsReturnTo(strategy string, defaultReturnTo *url.URL) *url.URL {
+	redir, err := url.ParseRequestURI(
+		viperx.GetString(p.l, ViperKeySelfServiceSettingsAfter+"."+strategy+"."+ViperKeyDefaultReturnTo,
+			viperx.GetString(p.l, ViperKeySelfServiceSettingsAfter+"."+ViperKeyDefaultReturnTo, "")))
+	if err != nil {
+		return defaultReturnTo
+	}
+	return redir
+}
+
+func (p *ViperProvider) selfServiceReturnTo(key string, strategy string) *url.URL {
+	redir, err := url.ParseRequestURI(
+		viperx.GetString(p.l, key+"."+strategy+"."+ViperKeyDefaultReturnTo, viperx.GetString(p.l, key+"."+ViperKeyDefaultReturnTo, "")))
+	if err != nil {
+		return p.DefaultReturnToURL()
+	}
+	return redir
 }

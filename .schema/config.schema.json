@@ -4,10 +4,20 @@
   "title": "ORY Kratos Configuration",
   "type": "object",
   "definitions": {
+    "defaultReturnTo": {
+      "title": "Default Return To URL",
+      "description": "ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. This value may be overridden by a `default_return_to` in a lower configuration level (`foo.bar.default_return_to` overrides `foo.default_return_to` overrides `default_return_to`) and by the `?return_to` query in certain cases.",
+      "type": "string",
+      "format": "uri",
+      "minLength": 6,
+      "examples": [
+        "https://my-app.com/dashboard"
+      ]
+    },
     "selfServiceRedirectHook": {
       "type": "object",
       "properties": {
-        "job": {
+        "hook": {
           "const": "redirect"
         },
         "config": {
@@ -29,44 +39,44 @@
       },
       "additionalItems": false,
       "required": [
-        "job",
+        "hook",
         "config"
       ]
     },
     "selfServiceSessionRevokerHook": {
       "type": "object",
       "properties": {
-        "job": {
+        "hook": {
           "const": "revoke_active_sessions"
         }
       },
       "additionalItems": false,
       "required": [
-        "job"
+        "hook"
       ]
     },
     "selfServiceVerifyHook": {
       "type": "object",
       "properties": {
-        "job": {
+        "hook": {
           "const": "verify"
         }
       },
       "additionalItems": false,
       "required": [
-        "job"
+        "hook"
       ]
     },
     "selfServiceSessionIssuerHook": {
       "type": "object",
       "properties": {
-        "job": {
+        "hook": {
           "const": "session"
         }
       },
       "additionalItems": false,
       "required": [
-        "job"
+        "hook"
       ]
     },
     "selfServiceOIDCProvider": {
@@ -121,96 +131,132 @@
         "schema_url"
       ]
     },
-    "selfServiceAfterSettingsHooks": {
-      "type": "array",
-      "items": {
-        "anyOf": [
-          {
-            "$ref": "#/definitions/selfServiceRedirectHook"
+    "selfServiceAfterSettingsStrategy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_return_to": {
+          "$ref": "#/definitions/defaultReturnTo"
+        },
+        "hooks": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/selfServiceVerifyHook"
+              }
+            ]
           },
-          {
-            "$ref": "#/definitions/selfServiceVerifyHook"
-          }
-        ]
-      },
-      "uniqueItems": true
+          "uniqueItems": true,
+          "additionalItems": false
+        }
+      }
     },
-    "selfServiceAfterLoginHooks": {
-      "type": "array",
-      "items": {
-        "anyOf": [
-          {
-            "$ref": "#/definitions/selfServiceRedirectHook"
+    "selfServiceAfterLoginStrategy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_return_to": {
+          "$ref": "#/definitions/defaultReturnTo"
+        },
+        "hooks": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/selfServiceSessionRevokerHook"
+              }
+            ]
           },
-          {
-            "$ref": "#/definitions/selfServiceSessionIssuerHook"
-          },
-          {
-            "$ref": "#/definitions/selfServiceSessionRevokerHook"
-          }
-        ]
-      },
-      "uniqueItems": true
+          "uniqueItems": true,
+          "additionalItems": false
+        }
+      }
     },
-    "selfServiceAfterRegistrationHooks": {
-      "type": "array",
-      "items": {
-        "anyOf": [
-          {
-            "$ref": "#/definitions/selfServiceRedirectHook"
+    "selfServiceAfterRegistrationStrategy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_return_to": {
+          "$ref": "#/definitions/defaultReturnTo"
+        },
+        "hooks": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/selfServiceRedirectHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceSessionIssuerHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceVerifyHook"
+              }
+            ]
           },
-          {
-            "$ref": "#/definitions/selfServiceSessionIssuerHook"
-          },
-          {
-            "$ref": "#/definitions/selfServiceVerifyHook"
-          }
-        ]
-      },
-      "uniqueItems": true
+          "uniqueItems": true,
+          "additionalItems": false
+        }
+      }
     },
     "selfServiceAfterSettings": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
+        "default_return_to": {
+          "$ref": "#/definitions/defaultReturnTo"
+        },
         "password": {
-          "$ref": "#/definitions/selfServiceAfterSettingsHooks"
+          "$ref": "#/definitions/selfServiceAfterSettingsStrategy"
         },
         "profile": {
-          "$ref": "#/definitions/selfServiceAfterSettingsHooks"
+          "$ref": "#/definitions/selfServiceAfterSettingsStrategy"
         }
-      },
-      "additionalItems": false
+      }
     },
     "selfServiceAfterLogin": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
+        "default_return_to": {
+          "$ref": "#/definitions/defaultReturnTo"
+        },
         "password": {
-          "$ref": "#/definitions/selfServiceAfterLoginHooks"
+          "$ref": "#/definitions/selfServiceAfterLoginStrategy"
         },
         "oidc": {
-          "$ref": "#/definitions/selfServiceAfterLoginHooks"
+          "$ref": "#/definitions/selfServiceAfterLoginStrategy"
         }
-      },
-      "additionalItems": false
+      }
     },
     "selfServiceAfterRegistration": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
+        "default_return_to": {
+          "$ref": "#/definitions/defaultReturnTo"
+        },
         "password": {
-          "$ref": "#/definitions/selfServiceAfterRegistrationHooks"
+          "$ref": "#/definitions/selfServiceAfterRegistrationStrategy"
         },
         "oidc": {
-          "$ref": "#/definitions/selfServiceAfterRegistrationHooks"
+          "$ref": "#/definitions/selfServiceAfterRegistrationStrategy"
         }
-      },
-      "additionalItems": false
+      }
     },
     "selfServiceBefore": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/selfServiceRedirectHook"
-      },
-      "uniqueItems": true
+      "type": "object",
+      "additionalItems": false,
+      "properties": {
+        "hooks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/selfServiceRedirectHook"
+          },
+          "uniqueItems": true
+        }
+      }
     },
     "cookiesSameSite": {
       "type": "string",
@@ -344,11 +390,7 @@
               "default": "1h"
             },
             "before": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/selfServiceRedirectHook"
-              },
-              "uniqueItems": true
+              "$ref": "#/definitions/selfServiceBefore"
             },
             "after": {
               "$ref": "#/definitions/selfServiceAfterRegistration"
@@ -376,7 +418,10 @@
         "template_override_path": {
           "type": "string",
           "title": "Override message templates",
-          "description": "You can override certain or all message templates by pointing this key to the path where the templates are located."
+          "description": "You can override certain or all message templates by pointing this key to the path where the templates are located.",
+          "examples": [
+            "/conf/courier-templates"
+          ]
         },
         "smtp": {
           "title": "SMTP Configuration",
@@ -385,9 +430,9 @@
           "properties": {
             "connection_uri": {
               "title": "SMTP connection string",
-              "description": "This URI will be used to connect to the SMTP server.",
+              "description": "This URI will be used to connect to the SMTP server. Use the query parameter to allow (`?skip_ssl_verify=true`) or disallow (`?skip_ssl_verify=false`) self-signed TLS certificates. Please keep in mind that any host other than localhost / 127.0.0.1 must use smtp over TLS (smtps) or the connection will not be possible.",
               "examples": [
-                "smtps://foo:bar@my-mailserver:1234/"
+                "smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=false"
               ],
               "type": "string",
               "format": "uri"
@@ -425,7 +470,9 @@
               "type": "integer",
               "minimum": 1,
               "maximum": 65535,
-              "examples": [4434],
+              "examples": [
+                4434
+              ],
               "default": 4434
             }
           },
@@ -442,7 +489,9 @@
               "type": "integer",
               "minimum": 1,
               "maximum": 65535,
-              "examples": [4433],
+              "examples": [
+                4433
+              ],
               "default": 4433
             }
           },
@@ -456,60 +505,98 @@
       "properties": {
         "self": {
           "type": "object",
+          "additionalProperties": false,
           "properties": {
             "public": {
               "type": "string",
-              "format": "uri"
+              "format": "uri",
+              "examples": [
+                "https://my-app.com/.ory/kratos/public"
+              ]
             },
             "admin": {
               "type": "string",
-              "format": "uri"
+              "format": "uri",
+              "examples": [
+                "https://kratos.private-network:4434/"
+              ]
             }
-          },
-          "additionalProperties": false
+          }
         },
         "mfa_ui": {
+          "title": "Multi-Factor UI URL",
+          "description": "URL where the Multi-Factor UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
           "type": "string",
-          "format": "uri"
+          "format": "uri",
+          "examples": [
+            "https://my-app.com/login/mfa"
+          ]
         },
         "login_ui": {
+          "title": "Login UI URL",
+          "description": "URL where the Login UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
           "type": "string",
-          "format": "uri"
+          "format": "uri",
+          "examples": [
+            "https://my-app.com/login"
+          ]
         },
         "settings_ui": {
+          "title": "Settings UI URL",
+          "description": "URL where the Settings UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
           "type": "string",
-          "format": "uri"
+          "format": "uri",
+          "examples": [
+            "https://my-app.com/user/settings"
+          ]
         },
         "default_return_to": {
-          "type": "string",
-          "format": "uri"
+          "$ref": "#/definitions/defaultReturnTo"
         },
         "registration_ui": {
+          "title": "Registration UI URL",
+          "description": "URL where the Registration UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
           "type": "string",
-          "format": "uri"
+          "format": "uri",
+          "examples": [
+            "https://my-app.com/signup"
+          ]
         },
         "error_ui": {
+          "title": "ORY Kratos Error UI URL",
+          "description": "URL where the ORY Kratos Error UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
           "type": "string",
-          "format": "uri"
+          "format": "uri",
+          "examples": [
+            "https://my-app.com/kratos-error"
+          ]
         },
         "verify_ui": {
-          "title": "Verify User Interface URL",
-          "description": "The URL of the Verify User Interface, the page where users can request activate and / or verify their email or telephone number.",
+          "title": "Verify UI URL",
+          "description": "URL where the ORY Verify UI is hosted. This is the page where users activate and / or verify their email or telephone number. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
           "type": "string",
-          "format": "uri"
+          "format": "uri",
+          "examples": [
+            "https://my-app.com/verify"
+          ]
         },
-        "whitelisted_return_to_domains": {
+        "whitelisted_return_to_urls": {
+          "title": "Whitelisted Return To URLs",
+          "description": "List of URLs that are allowed to be redirected to. A redirection request is made by appending `?return_to=...` to Login, Registration, and other self-service flows.",
           "type": "array",
           "items": {
             "type": "string",
             "format": "uri"
           },
+          "examples": [
+            "https://app.my-app.com/dashboard",
+            "https://www.my-app.com/"
+          ],
           "uniqueItems": true
         }
       },
       "required": [
         "settings_ui",
-        "mfa_ui",
         "login_ui",
         "registration_ui",
         "error_ui",

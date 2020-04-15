@@ -35,9 +35,8 @@ module.exports = {
     },
     {
       type: "category",
-      label: "Hooks / Jobs", items: [
-        "self-service/workflows/jobs/before",
-        "self-service/workflows/jobs/after"
+      label: "Hooks", items: [
+        "self-service/hooks/index"
       ]
     }
   ],

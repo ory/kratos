@@ -5,8 +5,6 @@ import (
 	"net/http"
 
 	"github.com/ory/herodot"
-
-	"github.com/ory/kratos/identity"
 )
 
 // DefaultSessionCookieName returns the default cookie name for the kratos session.
@@ -19,10 +17,10 @@ var (
 
 // Manager handles identity sessions.
 type Manager interface {
-	CreateToRequest(context.Context, *identity.Identity, http.ResponseWriter, *http.Request) (*Session, error)
+	CreateToRequest(context.Context, http.ResponseWriter, *http.Request, *Session) error
 
 	// SaveToRequest creates an HTTP session using cookies.
-	SaveToRequest(context.Context, *Session, http.ResponseWriter, *http.Request) error
+	SaveToRequest(context.Context, http.ResponseWriter, *http.Request, *Session) error
 
 	// FetchFromRequest creates an HTTP session using cookies.
 	FetchFromRequest(context.Context, *http.Request) (*Session, error)
