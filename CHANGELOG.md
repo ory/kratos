@@ -53,6 +53,7 @@
 - Error authenticating POST requests from browser session behind Oathkeeper [\#270](https://github.com/ory/kratos/issues/270)
 - verified email address: resend verification challenge when the address changes  [\#267](https://github.com/ory/kratos/issues/267)
 - Have `dsn: memory` as an alias for SQLite in memory DSN [\#228](https://github.com/ory/kratos/issues/228)
+- Remove identity if one of the post-registration workflow jobs returns 403 \(unauthorized\) [\#51](https://github.com/ory/kratos/issues/51)
 - refactor: Prepare profile management payloads for credentials [\#300](https://github.com/ory/kratos/pull/300) ([aeneasr](https://github.com/aeneasr))
 
 **Fixed bugs:**
@@ -72,10 +73,11 @@
 **Security fixes:**
 
 - Regenerate CSRF Tokens on principal change [\#217](https://github.com/ory/kratos/issues/217)
-- Implement Password Strength Meter API [\#136](https://github.com/ory/kratos/issues/136)
 
 **Closed issues:**
 
+- Document new redirect behvaior [\#348](https://github.com/ory/kratos/issues/348)
+- Quickstart not working on Windows [\#346](https://github.com/ory/kratos/issues/346)
 - Document CSRF pitfalls [\#341](https://github.com/ory/kratos/issues/341)
 - Quickstart: configuration invalid [\#335](https://github.com/ory/kratos/issues/335)
 - Kratos as library for any Golang project [\#328](https://github.com/ory/kratos/issues/328)
@@ -93,9 +95,13 @@
 - selfservice/profile: sudo mode for updating auth related stuff [\#243](https://github.com/ory/kratos/issues/243)
 - Enable CockroachDB test suite and integration [\#132](https://github.com/ory/kratos/issues/132)
 - Implement selfservice credentials management [\#113](https://github.com/ory/kratos/issues/113)
+- Rebrand hooks to workflow\(s\) [\#50](https://github.com/ory/kratos/issues/50)
+- Document identity hooks [\#31](https://github.com/ory/kratos/issues/31)
 
 **Merged pull requests:**
 
+- refactor: rework hooks and self-service flow completion [\#349](https://github.com/ory/kratos/pull/349) ([aeneasr](https://github.com/aeneasr))
+- docs: update github templates [\#343](https://github.com/ory/kratos/pull/343) ([aeneasr](https://github.com/aeneasr))
 - docs: add csrf and cookie debug section [\#342](https://github.com/ory/kratos/pull/342) ([aeneasr](https://github.com/aeneasr))
 - chore: update docusaurus template [\#340](https://github.com/ory/kratos/pull/340) ([aeneasr](https://github.com/aeneasr))
 - fix-335 [\#339](https://github.com/ory/kratos/pull/339) ([aeneasr](https://github.com/aeneasr))
