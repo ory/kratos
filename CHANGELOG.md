@@ -100,6 +100,8 @@
 
 **Merged pull requests:**
 
+- docs: update github templates [\#351](https://github.com/ory/kratos/pull/351) ([aeneasr](https://github.com/aeneasr))
+- docs: update github templates [\#350](https://github.com/ory/kratos/pull/350) ([aeneasr](https://github.com/aeneasr))
 - refactor: rework hooks and self-service flow completion [\#349](https://github.com/ory/kratos/pull/349) ([aeneasr](https://github.com/aeneasr))
 - docs: update github templates [\#343](https://github.com/ory/kratos/pull/343) ([aeneasr](https://github.com/aeneasr))
 - docs: add csrf and cookie debug section [\#342](https://github.com/ory/kratos/pull/342) ([aeneasr](https://github.com/aeneasr))
