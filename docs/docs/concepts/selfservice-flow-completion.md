@@ -3,15 +3,17 @@ id: selfservice-flow-completion
 title: Self-Service Flow Completion
 ---
 
-Self-Service flows such as Login, Registration, Updating Settings support two successful response modes:
+Self-Service flows such as Login, Registration, Updating Settings support two
+successful response modes:
 
 - For browsers, the response will be a [redirection](#redirection).
 - For API clients (this includes AJAX) the response will be in [JSON](#json).
 
 ## Redirection
 
-Browser requests, identified by the `Accept: text/html` header, complete with a redirection flow.
-If no redirection URL is set for the flow, the Default Redirect URL will be used:
+Browser requests, identified by the `Accept: text/html` header, complete with a
+redirection flow. If no redirection URL is set for the flow, the Default
+Redirect URL will be used:
 
 ```yaml file="path/to/my/kratos.config.yml"
 urls:
@@ -31,7 +33,8 @@ selfservice:
   # ...
 ```
 
-You may also set redirect URLs per strategy (overrides `selfservice.<login|registration|...>.default_return_to`):
+You may also set redirect URLs per strategy (overrides
+`selfservice.<login|registration|...>.default_return_to`):
 
 ```yaml file="path/to/my/kratos.config.yml"
 selfservice:
@@ -43,12 +46,14 @@ selfservice:
     # ...
 ```
 
-It is also possible to redirect someone back to the original URL. For example, if a user
-requests `https://www.myapp.com/blog/write` but is not logged in, we want the user
-to end up at that page after login. To achieve that, you append `?return_to=https://www.myapp.com/blog/write`
-when initializing the Login / Registration /Settings flow.
+It is also possible to redirect someone back to the original URL. For example,
+if a user requests `https://www.myapp.com/blog/write` but is not logged in, we
+want the user to end up at that page after login. To achieve that, you append
+`?return_to=https://www.myapp.com/blog/write` when initializing the Login /
+Registration /Settings flow.
 
-Because ORY Kratos prevents Open Redirect Attacks, you need to whitelist the domain in your ORY Kratos config:
+Because ORY Kratos prevents Open Redirect Attacks, you need to whitelist the
+domain in your ORY Kratos config:
 
 ```yaml file="path/to/my/kratos.config.yml"
 urls:
@@ -58,4 +63,5 @@ urls:
 
 ## JSON
 
-This feature is currently in prototype phase and will be documented at a later stage.
+This feature is currently in prototype phase and will be documented at a later
+stage.

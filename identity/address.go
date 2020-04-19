@@ -41,7 +41,6 @@ type (
 		// required: true
 		Via VerifiableAddressType `json:"via" db:"via"`
 
-		// required: true
 		VerifiedAt *time.Time `json:"verified_at" faker:"-" db:"verified_at"`
 
 		// required: true

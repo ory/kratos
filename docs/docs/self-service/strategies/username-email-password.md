@@ -623,7 +623,6 @@ selfservice:
     after:
       password:
         - hook: session
-
         # You can optionally enable verification of the provided email address(es) or phone number(s)
         # - hook: verify
 ```

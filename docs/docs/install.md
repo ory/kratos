@@ -27,7 +27,8 @@ $ kratos help
 
 ## Linux
 
-On linux, you can use `bash <(curl ...)` to fetch the latest stable binary using:
+On linux, you can use `bash <(curl ...)` to fetch the latest stable binary
+using:
 
 ```shell
 $ bash <(curl https://raw.githubusercontent.com/ory/kratos/master/install.sh) -b . v0.1.1-alpha.1
