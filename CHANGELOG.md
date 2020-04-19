@@ -100,6 +100,8 @@
 
 **Merged pull requests:**
 
+- Update isntall [\#354](https://github.com/ory/kratos/pull/354) ([aeneasr](https://github.com/aeneasr))
+- fix: verified\_at field should not be required [\#353](https://github.com/ory/kratos/pull/353) ([AntiSC2](https://github.com/AntiSC2))
 - docs: update github templates [\#351](https://github.com/ory/kratos/pull/351) ([aeneasr](https://github.com/aeneasr))
 - docs: update github templates [\#350](https://github.com/ory/kratos/pull/350) ([aeneasr](https://github.com/aeneasr))
 - refactor: rework hooks and self-service flow completion [\#349](https://github.com/ory/kratos/pull/349) ([aeneasr](https://github.com/aeneasr))
@@ -270,7 +272,6 @@
 - Rework public and admin fetch strategy [\#203](https://github.com/ory/kratos/pull/203) ([aeneasr](https://github.com/aeneasr))
 - Update HTTP routes for a consistent API naming [\#199](https://github.com/ory/kratos/pull/199) ([aeneasr](https://github.com/aeneasr))
 - ss: Use JSON Schema to type assert form body [\#116](https://github.com/ory/kratos/pull/116) ([aeneasr](https://github.com/aeneasr))
-- errorx: Add SQL adapter [\#100](https://github.com/ory/kratos/pull/100) ([aeneasr](https://github.com/aeneasr))
 
 **Fixed bugs:**
 
