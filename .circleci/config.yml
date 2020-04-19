@@ -124,23 +124,53 @@ workflows:
               only: /.*/
             branches:
               only: master
-      - goreleaser/test:
+      -
+        goreleaser/test:
           filters:
             tags:
               only: /.*/
-# Uncomment this to enable the dry-release test pipeline. Useful for debugging builds.
-#
-#      - goreleaser/release-dry:
-#          filters:
-#            tags:
-#              only: /.*/
-      - goreleaser/release:
+      -
+        goreleaser/release:
           requires:
             - goreleaser/test
             - test
             - golangci/lint
           filters:
-            tags:
-              only: /.*/
             branches:
               ignore: /.*/
+            tags:
+              only: /.*/
+      -
+        goreleaser/newsletter-draft:
+          chimp-list: f605a41b53
+          chimp-segment: 6478605
+          requires:
+            - goreleaser/release
+          filters:
+            tags:
+              only: /.*/
+      -
+        slack/approval-notification:
+          message: Pending approval
+          channel: release-automation
+          requires:
+            - goreleaser/newsletter-draft
+          filters:
+            tags:
+              only: /.*/
+      -
+        newsletter-approval:
+          type: approval
+          requires:
+            - goreleaser/newsletter-draft
+          filters:
+            tags:
+              only: /.*/
+      -
+        goreleaser/newsletter-send:
+          chimp-list: f605a41b53
+          requires:
+            - newsletter-approval
+          filters:
+            tags:
+              only: /.*/
