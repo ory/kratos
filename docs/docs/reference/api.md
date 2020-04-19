@@ -439,11 +439,11 @@ Status Code **200**
   {
     "addresses": [
       {
-        "expires_at": "2020-04-12T08:41:41Z",
+        "expires_at": "2020-04-19T13:15:51Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-04-12T08:41:41Z",
+        "verified_at": "2020-04-19T13:15:51Z",
         "via": "string"
       }
     ],
@@ -617,11 +617,11 @@ Learn how identities work in
 {
   "addresses": [
     {
-      "expires_at": "2020-04-12T08:41:41Z",
+      "expires_at": "2020-04-19T13:15:51Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-12T08:41:41Z",
+      "verified_at": "2020-04-19T13:15:51Z",
       "via": "string"
     }
   ],
@@ -660,11 +660,11 @@ Learn how identities work in
 {
   "addresses": [
     {
-      "expires_at": "2020-04-12T08:41:41Z",
+      "expires_at": "2020-04-19T13:15:51Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-12T08:41:41Z",
+      "verified_at": "2020-04-19T13:15:51Z",
       "via": "string"
     }
   ],
@@ -737,11 +737,11 @@ const fetch = require('node-fetch');
 const input = '{
   "addresses": [
     {
-      "expires_at": "2020-04-12T08:41:41Z",
+      "expires_at": "2020-04-19T13:15:51Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-12T08:41:41Z",
+      "verified_at": "2020-04-19T13:15:51Z",
       "via": "string"
     }
   ],
@@ -873,11 +873,11 @@ Learn how identities work in
 {
   "addresses": [
     {
-      "expires_at": "2020-04-12T08:41:41Z",
+      "expires_at": "2020-04-19T13:15:51Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-12T08:41:41Z",
+      "verified_at": "2020-04-19T13:15:51Z",
       "via": "string"
     }
   ],
@@ -1053,11 +1053,11 @@ Learn how identities work in
 {
   "addresses": [
     {
-      "expires_at": "2020-04-12T08:41:41Z",
+      "expires_at": "2020-04-19T13:15:51Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-12T08:41:41Z",
+      "verified_at": "2020-04-19T13:15:51Z",
       "via": "string"
     }
   ],
@@ -1098,11 +1098,11 @@ Learn how identities work in
 {
   "addresses": [
     {
-      "expires_at": "2020-04-12T08:41:41Z",
+      "expires_at": "2020-04-19T13:15:51Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-12T08:41:41Z",
+      "verified_at": "2020-04-19T13:15:51Z",
       "via": "string"
     }
   ],
@@ -1175,11 +1175,11 @@ const fetch = require('node-fetch');
 const input = '{
   "addresses": [
     {
-      "expires_at": "2020-04-12T08:41:41Z",
+      "expires_at": "2020-04-19T13:15:51Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-12T08:41:41Z",
+      "verified_at": "2020-04-19T13:15:51Z",
       "via": "string"
     }
   ],
@@ -1708,10 +1708,10 @@ your application (e.g. `/login?request=abcde`).
 ```json
 {
   "active": "string",
-  "expires_at": "2020-04-12T08:41:41Z",
+  "expires_at": "2020-04-19T13:15:51Z",
   "forced": true,
   "id": "string",
-  "issued_at": "2020-04-12T08:41:41Z",
+  "issued_at": "2020-04-19T13:15:51Z",
   "methods": {
     "property1": {
       "config": {
@@ -1999,9 +1999,9 @@ your application (e.g. `/registration?request=abcde`).
 ```json
 {
   "active": "string",
-  "expires_at": "2020-04-12T08:41:41Z",
+  "expires_at": "2020-04-19T13:15:51Z",
   "id": "string",
-  "issued_at": "2020-04-12T08:41:41Z",
+  "issued_at": "2020-04-19T13:15:51Z",
   "methods": {
     "property1": {
       "config": {
@@ -2286,16 +2286,16 @@ your application (e.g. `/login?request=abcde`).
 ```json
 {
   "active": "string",
-  "expires_at": "2020-04-12T08:41:41Z",
+  "expires_at": "2020-04-19T13:15:51Z",
   "id": "string",
   "identity": {
     "addresses": [
       {
-        "expires_at": "2020-04-12T08:41:41Z",
+        "expires_at": "2020-04-19T13:15:51Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-04-12T08:41:41Z",
+        "verified_at": "2020-04-19T13:15:51Z",
         "via": "string"
       }
     ],
@@ -2304,7 +2304,7 @@ your application (e.g. `/login?request=abcde`).
     "traits_schema_id": "string",
     "traits_schema_url": "string"
   },
-  "issued_at": "2020-04-12T08:41:41Z",
+  "issued_at": "2020-04-19T13:15:51Z",
   "methods": {
     "property1": {
       "config": {
@@ -2558,7 +2558,7 @@ your application (e.g. `/verify?request=abcde`).
 
 ```json
 {
-  "expires_at": "2020-04-12T08:41:41Z",
+  "expires_at": "2020-04-19T13:15:51Z",
   "form": {
     "action": "string",
     "errors": [
@@ -2584,7 +2584,7 @@ your application (e.g. `/verify?request=abcde`).
     "method": "string"
   },
   "id": "string",
-  "issued_at": "2020-04-12T08:41:41Z",
+  "issued_at": "2020-04-19T13:15:51Z",
   "request_url": "string",
   "success": true,
   "via": "string"
@@ -4555,16 +4555,16 @@ This endpoint is useful for reverse proxies and API Gateways.
 
 ```json
 {
-  "authenticated_at": "2020-04-12T08:41:41Z",
-  "expires_at": "2020-04-12T08:41:41Z",
+  "authenticated_at": "2020-04-19T13:15:51Z",
+  "expires_at": "2020-04-19T13:15:51Z",
   "identity": {
     "addresses": [
       {
-        "expires_at": "2020-04-12T08:41:41Z",
+        "expires_at": "2020-04-19T13:15:51Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-04-12T08:41:41Z",
+        "verified_at": "2020-04-19T13:15:51Z",
         "via": "string"
       }
     ],
@@ -4573,7 +4573,7 @@ This endpoint is useful for reverse proxies and API Gateways.
     "traits_schema_id": "string",
     "traits_schema_url": "string"
   },
-  "issued_at": "2020-04-12T08:41:41Z",
+  "issued_at": "2020-04-19T13:15:51Z",
   "sid": "string"
 }
 ```
@@ -4946,11 +4946,11 @@ credentials, passwordless credentials,_
 {
   "addresses": [
     {
-      "expires_at": "2020-04-12T08:41:41Z",
+      "expires_at": "2020-04-19T13:15:51Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-12T08:41:41Z",
+      "verified_at": "2020-04-19T13:15:51Z",
       "via": "string"
     }
   ],
@@ -5051,11 +5051,11 @@ _None_
 
 ```json
 {
-  "expires_at": "2020-04-12T08:41:41Z",
+  "expires_at": "2020-04-19T13:15:51Z",
   "id": "string",
   "value": "string",
   "verified": true,
-  "verified_at": "2020-04-12T08:41:41Z",
+  "verified_at": "2020-04-19T13:15:51Z",
   "via": "string"
 }
 ```
@@ -5354,10 +5354,10 @@ _Error response_
 ```json
 {
   "active": "string",
-  "expires_at": "2020-04-12T08:41:41Z",
+  "expires_at": "2020-04-19T13:15:51Z",
   "forced": true,
   "id": "string",
-  "issued_at": "2020-04-12T08:41:41Z",
+  "issued_at": "2020-04-19T13:15:51Z",
   "methods": {
     "property1": {
       "config": {
@@ -5586,9 +5586,9 @@ _Error response_
 ```json
 {
   "active": "string",
-  "expires_at": "2020-04-12T08:41:41Z",
+  "expires_at": "2020-04-19T13:15:51Z",
   "id": "string",
-  "issued_at": "2020-04-12T08:41:41Z",
+  "issued_at": "2020-04-19T13:15:51Z",
   "methods": {
     "property1": {
       "config": {
@@ -5815,16 +5815,16 @@ _Error response_
 
 ```json
 {
-  "authenticated_at": "2020-04-12T08:41:41Z",
-  "expires_at": "2020-04-12T08:41:41Z",
+  "authenticated_at": "2020-04-19T13:15:51Z",
+  "expires_at": "2020-04-19T13:15:51Z",
   "identity": {
     "addresses": [
       {
-        "expires_at": "2020-04-12T08:41:41Z",
+        "expires_at": "2020-04-19T13:15:51Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-04-12T08:41:41Z",
+        "verified_at": "2020-04-19T13:15:51Z",
         "via": "string"
       }
     ],
@@ -5833,7 +5833,7 @@ _Error response_
     "traits_schema_id": "string",
     "traits_schema_url": "string"
   },
-  "issued_at": "2020-04-12T08:41:41Z",
+  "issued_at": "2020-04-19T13:15:51Z",
   "sid": "string"
 }
 ```
@@ -5857,16 +5857,16 @@ _Error response_
 ```json
 {
   "active": "string",
-  "expires_at": "2020-04-12T08:41:41Z",
+  "expires_at": "2020-04-19T13:15:51Z",
   "id": "string",
   "identity": {
     "addresses": [
       {
-        "expires_at": "2020-04-12T08:41:41Z",
+        "expires_at": "2020-04-19T13:15:51Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-04-12T08:41:41Z",
+        "verified_at": "2020-04-19T13:15:51Z",
         "via": "string"
       }
     ],
@@ -5875,7 +5875,7 @@ _Error response_
     "traits_schema_id": "string",
     "traits_schema_url": "string"
   },
-  "issued_at": "2020-04-12T08:41:41Z",
+  "issued_at": "2020-04-19T13:15:51Z",
   "methods": {
     "property1": {
       "config": {
@@ -6004,7 +6004,7 @@ _Request presents a settings request_
 
 ```json
 {
-  "expires_at": "2020-04-12T08:41:41Z",
+  "expires_at": "2020-04-19T13:15:51Z",
   "form": {
     "action": "string",
     "errors": [
@@ -6030,7 +6030,7 @@ _Request presents a settings request_
     "method": "string"
   },
   "id": "string",
-  "issued_at": "2020-04-12T08:41:41Z",
+  "issued_at": "2020-04-19T13:15:51Z",
   "request_url": "string",
   "success": true,
   "via": "string"

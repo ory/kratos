@@ -98,16 +98,14 @@ for rendering all the Login, Registration, ... screens, and another app (think
 "Service Oriented Architecture", "Micro-Services" or "Service Mesh") is
 responsible for rendering your Dashboards, Management Screens, and so on.
 
-::: Note
-It is RECOMMENDED to put all applications (or "services"), including
+::: Note It is RECOMMENDED to put all applications (or "services"), including
 ORY Kratos, behind a common API Gateway or Reverse Proxy. This greatly reduces
 the amount of work you have to do to get all the Cookies working properly. We
 RECOMMEND using [ORY Oathkeeper](http://github.com/ory/oathkeeper) for this as
 it integrates best with the ORY Ecosystem and because all of our examples use
 ORY Oathkeeper. You MAY of course use any other reverse proxy (Envoy, AWS API
 Gateway, Ambassador, Nginx, Kong, ...), but we do not have examples or guides
-for those at this time.
-:::
+for those at this time. :::
 
 ### Code
 
@@ -198,18 +196,23 @@ these type of applications, read this section first and go to section
 
 #### Network Architecture
 
-We recommend checking out the [Quickstart Network Architecture](../../quickstart.mdx#network-architecture)
-for a high-level, exemplary, overview of the network. In summary:
+We recommend checking out the
+[Quickstart Network Architecture](../../quickstart.mdx#network-architecture) for
+a high-level, exemplary, overview of the network. In summary:
 
-1. The SecureApp (your application) is exposed at http://127.0.0.1:4455 and proxies requests matching path `./ory/kratos/public/*`
-to ORY Krato's Public API Port.
-1. ORY Kratos exposes (for debugging only!!) the Public API at http://127.0.0.1:4433 and Admin API at http://127.0.0.1:4434.
-1. Within the "intranet" or "private network", ORY Kratos is exposed at http://kratos:4433 and http://kratos:4434. These
-URLs are be used by the SecureApp to communicate with ORY Kratos.
+1. The SecureApp (your application) is exposed at http://127.0.0.1:4455 and
+   proxies requests matching path `./ory/kratos/public/*` to ORY Krato's Public
+   API Port.
+1. ORY Kratos exposes (for debugging only!!) the Public API at
+   http://127.0.0.1:4433 and Admin API at http://127.0.0.1:4434.
+1. Within the "intranet" or "private network", ORY Kratos is exposed at
+   http://kratos:4433 and http://kratos:4434. These URLs are be used by the
+   SecureApp to communicate with ORY Kratos.
 
-Keep in mind that his architecture is just one of many possible network architectures.
-It is however one of the simplest as well and it works locally. For production deployments
-you would probably use an Reverse Proxy such as Nginx, Kong, Envoy, ORY Oathkeeper, or others.
+Keep in mind that his architecture is just one of many possible network
+architectures. It is however one of the simplest as well and it works locally.
+For production deployments you would probably use an Reverse Proxy such as
+Nginx, Kong, Envoy, ORY Oathkeeper, or others.
 
 #### User Login and User Registration Process Sequence
 
@@ -233,9 +236,10 @@ summarized in this state diagram:
    `URLS_REGISTRATION_UI`) environment variable, which is set to the ui
    endpoints - for example `https://127.0.0.1:4455/auth/login` and
    `https://127.0.0.1:4455/auth/registration`). The user's browser is thus
-   redirected to `https://127.0.0.1:4455/auth/(login|registration)?request=abcde`.
-   The `request` query parameter includes a unique ID which will be used to
-   fetch contextual data for this login request.
+   redirected to
+   `https://127.0.0.1:4455/auth/(login|registration)?request=abcde`. The
+   `request` query parameter includes a unique ID which will be used to fetch
+   contextual data for this login request.
 1. Your Server-Side Application makes a `GET` request to
    `http://kratos:4434/auth/browser/requests/(login|registration)?request=abcde`.
    ORY Kratos responds with a JSON Payload that contains data (form fields,
@@ -286,11 +290,12 @@ summarized in this state diagram:
    - If credentials / data is valid, ORY Kratos proceeds with the next step.
    - If the flow is a registration request and the registration data is valid,
      the identity is created.
-1. ORY Kratos executes hooks defined in the **After
-   Login/Registration Workflow**. If a failure occurs, the whole flow is
-   aborted.
-1. The client receives the expected response. For browsers, this is a HTTP Redirection, for API clients it will
-be a JSON response containing the session and/or identity. For more information on this topic check [Self-Service Flow Completion](../../concepts/selfservice-flow-completion.md).
+1. ORY Kratos executes hooks defined in the **After Login/Registration
+   Workflow**. If a failure occurs, the whole flow is aborted.
+1. The client receives the expected response. For browsers, this is a HTTP
+   Redirection, for API clients it will be a JSON response containing the
+   session and/or identity. For more information on this topic check
+   [Self-Service Flow Completion](../../concepts/selfservice-flow-completion.md).
 
 [![User Login Sequence Diagram for Server-Side Applications](https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gIHBhcnRpY2lwYW50IEIgYXMgQnJvd3NlclxuICBwYXJ0aWNpcGFudCBBIGFzIFlvdXIgU2VydmVyLVNpZGUgQXBwbGljYXRpb25cbiAgcGFydGljaXBhbnQgS1AgYXMgT1JZIEtyYXRvcyBQdWJsaWMgQVBJXG4gIHBhcnRpY2lwYW50IEtBIGFzIE9SWSBLcmF0b3MgQWRtaW4gQVBJXG5cbiAgQi0-PitBOiBHRVQgLy5vcnkva3JhdG9zL3B1YmxpYy9zZWxmLXNlcnZpY2UvYnJvd3Nlci9mbG93cy8obG9naW58cmVnaXN0cmF0aW9uKVxuICBBLT4-K0tQOiBHRVQgL3NlbGYtc2VydmljZS9icm93c2VyL2Zsb3dzL2xvZ2luKGxvZ2lufHJlZ2lzdHJhdGlvbilcbiAgS1AtLT4-S1A6IEV4ZWN1dGUgSG9va3MgZGVmaW5lZCBpbiBcIkJlZm9yZSBMb2dpbi9SZWdpc3RyYXRpb25cIlxuICBLUC0tPj4tQTogSFRUUCAzMDIgRm91bmQgL2F1dGgvKGxvZ2lufHJlZ2lzdHJhdGlvbik_cmVxdWVzdD1hYmNkZVxuICBBLS0-Pi1COiBIVFRQIDMwMiBGb3VuZCAvYXV0aC8obG9naW58cmVnaXN0cmF0aW9uKT9yZXF1ZXN0PWFiY2RlXG5cbiAgQi0-PitBOiBHRVQgL2F1dGgvKGxvZ2lufHJlZ2lzdHJhdGlvbik_cmVxdWVzdD1hYmNkZVxuICBBLT4-K0tBOiBHRVQvc2VsZi1zZXJ2aWNlL2Jyb3dzZXIvZmxvd3MvcmVxdWVzdHMvKGxvZ2lufHJlZ2lzdHJhdGlvbik_cmVxdWVzdD1hYmNkZVxuICBLQS0-Pi1BOiBTZW5kcyBMb2dpbi9SZWdpc3RyYXRpb24gUmVxdWVzdCBKU09OIFBheWxvYWRcbiAgTm90ZSBvdmVyIEEsS0E6ICB7XCJtZXRob2RzXCI6e1wicGFzc3dvcmRcIjouLi4sXCJvaWRjXCI6Li59fVxuICBBLS0-PkE6IEdlbmVyYXRlIGFuZCByZW5kZXIgSFRNTFxuICBBLS0-Pi1COiBSZXR1cm4gSFRNTCAoRm9ybSwgLi4uKVxuXG4gIEItLT4-QjogRmlsbCBvdXQgSFRNTFxuXG4gIEItPj4rS1A6IFBPU1QgSFRNTCBGb3JtXG4gIEtQLS0-PktQOiBDaGVja3MgbG9naW4gLyByZWdpc3RyYXRpb24gZGF0YVxuXG5cbiAgYWx0IExvZ2luIGRhdGEgaXMgdmFsaWRcbiAgICBLUC0tPj4tS1A6IEV4ZWN1dGUgSm9icyBkZWZpbmVkIGluIFwiQWZ0ZXIgTG9naW4gV29ya2Zsb3cocylcIlxuICAgIEtQLS0-PkE6IEhUVFAgMzAyIEZvdW5kIC9kYXNoYm9hcmRcbiAgICBOb3RlIG92ZXIgS1AsQjogU2V0LUNvb2tpZTogYXV0aF9zZXNzaW9uPS4uLlxuICAgIEItPj4rQTogR0VUIC9kYXNoYm9hcmRcbiAgICBBLS0-S0E6IFZhbGlkYXRlcyBTZXNzaW9uIENvb2tpZVxuICAgIEEtPj4tQjogU2VuZCBEYXNoYm9hcmQgUmVzcG9uc2VcbiAgZWxzZSBMb2dpbiBkYXRhIGlzIGludmFsaWRcbiAgICBOb3RlIG92ZXIgS1AsQjogVXNlciByZXRyaWVzIGxvZ2luIC8gcmVnaXN0cmF0aW9uXG4gICAgS1AtLT4-QjogSFRUUCAzMDIgRm91bmQgL2F1dGgvKGxvZ2lufHJlZ2lzdHJhdGlvbik_cmVxdWVzdD1hYmNkZVxuICBlbmRcbiAgIiwibWVybWFpZCI6eyJ0aGVtZSI6Im5ldXRyYWwiLCJzZXF1ZW5jZURpYWdyYW0iOnsiZGlhZ3JhbU1hcmdpblgiOjE1LCJkaWFncmFtTWFyZ2luWSI6MTUsImJveFRleHRNYXJnaW4iOjEsIm5vdGVNYXJnaW4iOjEwLCJtZXNzYWdlTWFyZ2luIjo1NSwibWlycm9yQWN0b3JzIjp0cnVlfX0sInVwZGF0ZUVkaXRvciI6ZmFsc2V9)](https://mermaid-js.github.io/mermaid-live-editor/#/edit/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gIHBhcnRpY2lwYW50IEIgYXMgQnJvd3NlclxuICBwYXJ0aWNpcGFudCBBIGFzIFlvdXIgU2VydmVyLVNpZGUgQXBwbGljYXRpb25cbiAgcGFydGljaXBhbnQgS1AgYXMgT1JZIEtyYXRvcyBQdWJsaWMgQVBJXG4gIHBhcnRpY2lwYW50IEtBIGFzIE9SWSBLcmF0b3MgQWRtaW4gQVBJXG5cbiAgQi0-PitBOiBHRVQgLy5vcnkva3JhdG9zL3B1YmxpYy9zZWxmLXNlcnZpY2UvYnJvd3Nlci9mbG93cy8obG9naW58cmVnaXN0cmF0aW9uKVxuICBBLT4-K0tQOiBHRVQgL3NlbGYtc2VydmljZS9icm93c2VyL2Zsb3dzL2xvZ2luKGxvZ2lufHJlZ2lzdHJhdGlvbilcbiAgS1AtLT4-S1A6IEV4ZWN1dGUgSG9va3MgZGVmaW5lZCBpbiBcIkJlZm9yZSBMb2dpbi9SZWdpc3RyYXRpb25cIlxuICBLUC0tPj4tQTogSFRUUCAzMDIgRm91bmQgL2F1dGgvKGxvZ2lufHJlZ2lzdHJhdGlvbik_cmVxdWVzdD1hYmNkZVxuICBBLS0-Pi1COiBIVFRQIDMwMiBGb3VuZCAvYXV0aC8obG9naW58cmVnaXN0cmF0aW9uKT9yZXF1ZXN0PWFiY2RlXG5cbiAgQi0-PitBOiBHRVQgL2F1dGgvKGxvZ2lufHJlZ2lzdHJhdGlvbik_cmVxdWVzdD1hYmNkZVxuICBBLT4-K0tBOiBHRVQvc2VsZi1zZXJ2aWNlL2Jyb3dzZXIvZmxvd3MvcmVxdWVzdHMvKGxvZ2lufHJlZ2lzdHJhdGlvbik_cmVxdWVzdD1hYmNkZVxuICBLQS0-Pi1BOiBTZW5kcyBMb2dpbi9SZWdpc3RyYXRpb24gUmVxdWVzdCBKU09OIFBheWxvYWRcbiAgTm90ZSBvdmVyIEEsS0E6ICB7XCJtZXRob2RzXCI6e1wicGFzc3dvcmRcIjouLi4sXCJvaWRjXCI6Li59fVxuICBBLS0-PkE6IEdlbmVyYXRlIGFuZCByZW5kZXIgSFRNTFxuICBBLS0-Pi1COiBSZXR1cm4gSFRNTCAoRm9ybSwgLi4uKVxuXG4gIEItLT4-QjogRmlsbCBvdXQgSFRNTFxuXG4gIEItPj4rS1A6IFBPU1QgSFRNTCBGb3JtXG4gIEtQLS0-PktQOiBDaGVja3MgbG9naW4gLyByZWdpc3RyYXRpb24gZGF0YVxuXG5cbiAgYWx0IExvZ2luIGRhdGEgaXMgdmFsaWRcbiAgICBLUC0tPj4tS1A6IEV4ZWN1dGUgSm9icyBkZWZpbmVkIGluIFwiQWZ0ZXIgTG9naW4gV29ya2Zsb3cocylcIlxuICAgIEtQLS0-PkE6IEhUVFAgMzAyIEZvdW5kIC9kYXNoYm9hcmRcbiAgICBOb3RlIG92ZXIgS1AsQjogU2V0LUNvb2tpZTogYXV0aF9zZXNzaW9uPS4uLlxuICAgIEItPj4rQTogR0VUIC9kYXNoYm9hcmRcbiAgICBBLS0-S0E6IFZhbGlkYXRlcyBTZXNzaW9uIENvb2tpZVxuICAgIEEtPj4tQjogU2VuZCBEYXNoYm9hcmQgUmVzcG9uc2VcbiAgZWxzZSBMb2dpbiBkYXRhIGlzIGludmFsaWRcbiAgICBOb3RlIG92ZXIgS1AsQjogVXNlciByZXRyaWVzIGxvZ2luIC8gcmVnaXN0cmF0aW9uXG4gICAgS1AtLT4-QjogSFRUUCAzMDIgRm91bmQgL2F1dGgvKGxvZ2lufHJlZ2lzdHJhdGlvbik_cmVxdWVzdD1hYmNkZVxuICBlbmRcbiAgIiwibWVybWFpZCI6eyJ0aGVtZSI6Im5ldXRyYWwiLCJzZXF1ZW5jZURpYWdyYW0iOnsiZGlhZ3JhbU1hcmdpblgiOjE1LCJkaWFncmFtTWFyZ2luWSI6MTUsImJveFRleHRNYXJnaW4iOjEsIm5vdGVNYXJnaW4iOjEwLCJtZXNzYWdlTWFyZ2luIjo1NSwibWlycm9yQWN0b3JzIjp0cnVlfX0sInVwZGF0ZUVkaXRvciI6ZmFsc2V9)
 
@@ -304,13 +309,11 @@ Applications, with the small difference that
 would be called via AJAX instead of making a request to
 `https://kratos:4434/auth/browser/requests/login?request=abcde`.
 
-::: Note
-To prevent brute force, guessing, session injection, and other attacks, it is
-required that cookies are working for this endpoint. The cookie set in the
+::: Note To prevent brute force, guessing, session injection, and other attacks,
+it is required that cookies are working for this endpoint. The cookie set in the
 initial HTTP request made to
 `https://127.0.0.1:4455/.ory/kratos/public/auth/browser/login` MUST be set and
-available when calling this endpoint!
-:::
+available when calling this endpoint! :::
 
 ## Self-Service User Login and User Registration for API Clients
 
@@ -319,8 +322,8 @@ Will be addressed in a future release.
 ## Hooks
 
 ORY Kratos allows you to configure hooks that run before and after a Login or
-Registration Request is generated. This may be helpful if you'd
-like to restrict logins to IPs coming
-from your internal network or other logic.
+Registration Request is generated. This may be helpful if you'd like to restrict
+logins to IPs coming from your internal network or other logic.
 
-For more information about hooks please read the [Hook Documentation](../hooks/index.md).
+For more information about hooks please read the
+[Hook Documentation](../hooks/index.md).
