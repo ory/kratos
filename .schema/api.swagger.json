@@ -1082,7 +1082,6 @@
         "value",
         "verified",
         "via",
-        "verified_at",
         "expires_at"
       ],
       "properties": {
