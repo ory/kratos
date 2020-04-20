@@ -100,6 +100,7 @@
 
 **Merged pull requests:**
 
+- fix: docs: spelling in quickstart [\#356](https://github.com/ory/kratos/pull/356) ([Jackneill](https://github.com/Jackneill))
 - Update isntall [\#354](https://github.com/ory/kratos/pull/354) ([aeneasr](https://github.com/aeneasr))
 - fix: verified\_at field should not be required [\#353](https://github.com/ory/kratos/pull/353) ([AntiSC2](https://github.com/AntiSC2))
 - docs: update github templates [\#351](https://github.com/ory/kratos/pull/351) ([aeneasr](https://github.com/aeneasr))
