@@ -1,7 +1,5 @@
 FROM golang:1.14-alpine AS builder
 
-RUN addgroup -S ory; \
-    adduser -S ory -G ory -D -H -s /bin/nologin
 RUN apk -U --no-cache add build-base git gcc
 
 WORKDIR /go/src/github.com/ory/kratos
@@ -17,8 +15,15 @@ ADD . .
 RUN packr2
 RUN CGO_ENABLED=1 go build -tags sqlite -a -o /usr/bin/kratos
 
+FROM alpine:3.11
+
+RUN addgroup -S ory; \
+    adduser -S ory -G ory -D -H -s /bin/nologin
+
 EXPOSE 4433
 EXPOSE 4434
+
+COPY --from=builder /usr/bin/kratos /usr/bin/kratos
 
 # By creating the sqlite folder as the ory user, the mounted volume will be owned by ory:ory, which
 # is required for read/write of SQLite.
