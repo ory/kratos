@@ -6,12 +6,13 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	strfmt "github.com/go-openapi/strfmt"
+	"github.com/go-openapi/strfmt"
 )
 
 // CredentialsType CredentialsType  represents several different credential types, like password credentials, passwordless credentials,
 //
 // and so on.
+//
 // swagger:model CredentialsType
 type CredentialsType string
 
