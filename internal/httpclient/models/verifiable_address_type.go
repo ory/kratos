@@ -6,11 +6,10 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"github.com/go-openapi/strfmt"
+	strfmt "github.com/go-openapi/strfmt"
 )
 
 // VerifiableAddressType verifiable address type
-//
 // swagger:model VerifiableAddressType
 type VerifiableAddressType string
 
