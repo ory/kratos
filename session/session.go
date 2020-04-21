@@ -42,11 +42,11 @@ func NewSession(i *identity.Identity, c interface {
 	SessionLifespan() time.Duration
 }, authenticatedAt time.Time) *Session {
 	return &Session{
-		ID:        x.NewUUID(),
-		ExpiresAt: authenticatedAt.Add(c.SessionLifespan()),
+		ID:              x.NewUUID(),
+		ExpiresAt:       authenticatedAt.Add(c.SessionLifespan()),
 		AuthenticatedAt: authenticatedAt,
-		IssuedAt:  time.Now().UTC(),
-		Identity:  i,
+		IssuedAt:        time.Now().UTC(),
+		Identity:        i,
 	}
 }
 
