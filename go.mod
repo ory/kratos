@@ -20,7 +20,7 @@ require (
 	github.com/go-swagger/go-swagger v0.23.0
 	github.com/gobuffalo/httptest v1.0.2
 	github.com/gobuffalo/packr/v2 v2.8.0
-	github.com/gobuffalo/pop/v5 v5.0.9
+	github.com/gobuffalo/pop/v5 v5.0.11
 	github.com/gobuffalo/uuid v2.0.5+incompatible
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
@@ -48,7 +48,7 @@ require (
 	github.com/ory/jsonschema/v3 v3.0.1
 	github.com/ory/sdk/swagutil v0.0.0-20200425113349-92ce176f501e
 	github.com/ory/viper v1.7.4
-	github.com/ory/x v0.0.112
+	github.com/ory/x v0.0.115
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/shurcooL/go v0.0.0-20180423040247-9e1955d9fb6e
