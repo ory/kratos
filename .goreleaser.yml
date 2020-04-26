@@ -18,7 +18,7 @@ builds:
       - -tags
       - sqlite
     ldflags:
-      - -s -w -X github.com/ory/kratos/cmd.Version={{.Env.RELEASE_NAME}} -X github.com/ory/kratos/cmd.Commit={{.FullCommit}} -X github.com/ory/kratos/cmd.Date={{.Date}}
+      - -s -w -X github.com/ory/kratos/cmd.Version={{.Tag}} -X github.com/ory/kratos/cmd.Commit={{.FullCommit}} -X github.com/ory/kratos/cmd.Date={{.Date}}
       # - "-extldflags '-static'"
     binary: kratos-sqlite
     env:
@@ -36,7 +36,7 @@ builds:
       - -tags
       - sqlite
     ldflags:
-      - -s -w -X github.com/ory/kratos/cmd.Version={{.Env.RELEASE_NAME}} -X github.com/ory/kratos/cmd.Commit={{.FullCommit}} -X github.com/ory/kratos/cmd.Date={{.Date}}
+      - -s -w -X github.com/ory/kratos/cmd.Version={{.Tag}} -X github.com/ory/kratos/cmd.Commit={{.FullCommit}} -X github.com/ory/kratos/cmd.Date={{.Date}}
     binary: kratos-sqlite
     env:
       - CGO_ENABLED=1
@@ -50,7 +50,7 @@ builds:
       - -tags
       - sqlite
     ldflags:
-      - -s -w -X github.com/ory/kratos/cmd.Version={{.Env.RELEASE_NAME}} -X github.com/ory/kratos/cmd.Commit={{.FullCommit}} -X github.com/ory/kratos/cmd.Date={{.Date}}
+      - -s -w -X github.com/ory/kratos/cmd.Version={{.Tag}} -X github.com/ory/kratos/cmd.Commit={{.FullCommit}} -X github.com/ory/kratos/cmd.Date={{.Date}}
     binary: kratos-sqlite-libmusl
     env:
       - CGO_ENABLED=1
@@ -65,7 +65,7 @@ builds:
       - -tags
       - sqlite
     ldflags:
-      - -s -w -X github.com/ory/kratos/cmd.Version={{.Env.RELEASE_NAME}} -X github.com/ory/kratos/cmd.Commit={{.FullCommit}} -X github.com/ory/kratos/cmd.Date={{.Date}}
+      - -s -w -X github.com/ory/kratos/cmd.Version={{.Tag}} -X github.com/ory/kratos/cmd.Commit={{.FullCommit}} -X github.com/ory/kratos/cmd.Date={{.Date}}
       - "-extldflags '-static'"
     binary: kratos-sqlite
     env:
@@ -80,7 +80,7 @@ builds:
   -
     id: kratos
     ldflags:
-      - -s -w -X github.com/ory/kratos/cmd.Version={{.Env.RELEASE_NAME}} -X github.com/ory/kratos/cmd.Commit={{.FullCommit}} -X github.com/ory/kratos/cmd.Date={{.Date}}
+      - -s -w -X github.com/ory/kratos/cmd.Version={{.Tag}} -X github.com/ory/kratos/cmd.Commit={{.FullCommit}} -X github.com/ory/kratos/cmd.Date={{.Date}}
     binary: kratos
     env:
       - CGO_ENABLED=0
@@ -213,7 +213,7 @@ dockers:
       - "oryd/kratos:v{{ .Major }}-sqlite"
       - "oryd/kratos:v{{ .Major }}.{{ .Minor }}-sqlite"
       - "oryd/kratos:v{{ .Major }}.{{ .Minor }}.{{ .Patch }}-sqlite"
-      - "oryd/kratos:{{ .Env.DOCKER_SHORT_TAG }}-sqlite"
+      - "oryd/kratos:{{.Tag}}-sqlite"
       - "oryd/kratos:latest-sqlite"
   - dockerfile: .docker/Dockerfile
     builds:
@@ -224,12 +224,12 @@ dockers:
       - "oryd/kratos:v{{ .Major }}"
       - "oryd/kratos:v{{ .Major }}.{{ .Minor }}"
       - "oryd/kratos:v{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
-      - "oryd/kratos:{{ .Env.DOCKER_SHORT_TAG }}"
+      - "oryd/kratos:{{.Tag}}"
       - "oryd/kratos:latest"
 
 release:
   prerelease: auto
-  name_template: "{{.Env.RELEASE_NAME}}"
+  name_template: "{{.Tag}}"
   ids:
     - kratos-sqlite
     - kratos-sqlite-libmusl

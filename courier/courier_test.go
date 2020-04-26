@@ -98,7 +98,7 @@ func TestSMTP(t *testing.T) {
 	t.Logf("SMTP URL: %s", smtp)
 	t.Logf("API URL: %s", api)
 
-	conf, reg := internal.NewRegistryDefault(t)
+	conf, reg := internal.NewFastRegistryWithMocks(t)
 	viper.Set(configuration.ViperKeyCourierSMTPURL, smtp)
 	viper.Set(configuration.ViperKeyCourierSMTPFrom, "test-stub@ory.sh")
 	c := reg.Courier()

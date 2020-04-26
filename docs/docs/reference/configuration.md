@@ -61,7 +61,7 @@ identity:
     # - Windows Command Line (CMD):
     #    > set IDENTITY_TRAITS_DEFAULT_SCHEMA_URL=<value>
     #
-    default_schema_url: https://cxE.zqrdEhnC2EWi
+    default_schema_url: https://YwiTUhFn.xdVJwzjCf.3qsOwH6SFaFWO-P.WCs+.IkZQH,d0SDlX
 
     ## schemas ##
     #
@@ -72,11 +72,10 @@ identity:
     #    > set IDENTITY_TRAITS_SCHEMAS=<value>
     #
     schemas:
-      - 46430357.842930496
-      - sunt
-      - true
-      - 4227808
-      - true
+      - -54965187
+      - false
+      - null
+      - 76034857
 
 ## selfservice ##
 #
@@ -92,7 +91,7 @@ selfservice:
     # - Windows Command Line (CMD):
     #    > set SELFSERVICE_LOGOUT_REDIRECT_TO=<value>
     #
-    redirect_to: https://yXHrkOAUMgtjShUxOmmN.aovL2qLQma6zHRVKjTWhCZ7O2vyZWn5p+56Re
+    redirect_to: https://IgPJtFFMkPzFeLUedWMYsqFGC.irwuquYjMinMgaFg4yTXtSuxzhJAhe-ia655Ec
 
   ## strategies ##
   #
@@ -121,7 +120,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_STRATEGIES_OIDC_ENABLED=<value>
       #
-      enabled: true
+      enabled: false
 
       ## config ##
       #
@@ -135,20 +134,64 @@ selfservice:
         #    > set SELFSERVICE_STRATEGIES_OIDC_CONFIG_PROVIDERS=<value>
         #
         providers:
-          - id: nulla sit dolor qui
-            provider: generic
-            client_id: sed pariatur commodo proident
-            client_secret: commodo ullamco
-            schema_url: https://fRZBUeVznHWjiIPhgGuEYdZ.mpfuzgF+jDV6rMUswLn+Lxnab+KICB-pnABLpuiFRQEiAnlsBlk1vzaCA
-            issuer_url: https://ZWkKOZXMJQSckOKzNuoSelxRVYUsfdNB.peyxBDnQ3xnsqKyQ05vRHlrrq4mGIt-
-            auth_url: https://LiUzWpDPEqaXBGoIJwztEzERyPz.abjohV
-            token_url: http://sJpuqVLMSYebYlfFJjLxs.snetmQs0l0pjS9LcYE8UvQZEoxPuuRf.Rp5spluMz,MmipV.i9-Is
+          - id: sunt
+            provider: github
+            client_id: aliquip laboris Lorem
+            client_secret: magna laboris in
+            schema_url: https://t.ptytE6YQRtBGIULTAxF7WkUwQb+CKe2rYGz-B7zN9vakVJiTndKrriBgDvJZMqUqgHe
+            issuer_url: https://JQXWBhCve.cfE,8iHPHrdOELwpyBmE+79+BJxqgFNNKm8Racg5+pGgyf
+            auth_url: http://DJanWUg.nooiqfGbtQ7feBQv3FbAe5XbrAlW10K1BQIKmxxrUNnRRWziqamh.H.lLsuM4qzPW+jh
+            token_url: https://FKBohGziukBlcPZEvBWEYMjyLrlMCvxLw.riyzOqEC
             scope:
-              - exercitation ea aute in
-              - esse consectetur
-              - consequat laboris
-              - exercitation
-              - Ut non id
+              - elit consequat et esse
+              - Ut incididunt eiusmod pariatur
+              - cupidatat aliquip ullamco deserunt
+          - id: aliqua anim occaecat
+            provider: google
+            client_id: irure dolor
+            client_secret: id nostrud quis minim laboris
+            schema_url: https://gVYWBaGqh.ulwbq1ieM,L1HXxDveXiG.xUG.fEHNasBa-Sa4harwUW+XjJEs2I38UQgdb7KG3Yo
+            issuer_url: http://MefIueILYHVnDLAEegNBVxT.atvSu4hXbSB.rkY0CGHqGVZCFaufQQM6argqsiv
+            auth_url: https://EbFsuXQqZJPKVCj.opNf85,I4
+            token_url: http://iISMvTLWrQonxPhfsjAY.dlrvHXK+BftxtOfp+LRYkIg1ybaq15hPI4yHf.ZIP+PN+G7XLkbX
+            scope:
+              - tempor mollit in magna velit
+              - Excepteur incididunt magna nisi nulla
+          - id: dolore
+            provider: google
+            client_id: esse elit laboris fugiat quis
+            client_secret: aliquip
+            schema_url: http://mzvYJuKogZKMzirjXdbrrxfst.xjSp7DIEPaMRsSvwjb60p.eK4KU8,b+FozyNbT,ZICFahR6XHj71wtNY
+            issuer_url: https://wtMsPaTFmswIBefStEzcgkoEEon.xvun,6dAuWGbTlmwQD-aK+3jrIjSOo.HjwL-afJNffgfrsDAHX4M+0HprGS.CQafph3y8Mq
+            auth_url: http://eoChiDSpaEpbs.jaobpJuUvMIWEDys0PECaxkl8cfsWB5iQUqgHDMsJqH2+dBp
+            token_url: https://xemUApAo.igPo+abg.dAxQInZQF6
+            scope:
+              - pariatur
+              - in sunt commodo
+              - non
+          - id: labore fugiat
+            provider: generic
+            client_id: laborum ut
+            client_secret: ipsum ad
+            schema_url: https://dnkakJvN.mmwX-qjyv,FqEYmndXv6k9VRvVcP
+            issuer_url: http://wnzehgJyAEHOHqGXnHmFhN.zaaUB043PZRXAoiaWLy0Q8W,huWHgt
+            auth_url: http://kfBPfpBDl.czdHSV-ClAR20z,Ctb.Dcpi23.gzzhkTkv2fjW
+            token_url: https://WcDqLVfRgxnDwKASLXErFRciMLa.ujwnz0n.aBB8QvVbXBL5smwzhD47qPMOjtd-eKyX+Pk7
+            scope:
+              - mollit in eu consectetur velit
+              - magna proident sint sit tempor
+              - minim
+              - reprehenderit velit veniam in est
+          - id: elit qui consequat nisi amet
+            provider: generic
+            client_id: tempor ipsum incididunt
+            client_secret: nostrud elit
+            schema_url: https://cnSJq.mjegSmGx0GPz5
+            issuer_url: https://nTvLqGYOVaZDlZLi.zjKsnwVMgqaUQLxste4
+            auth_url: http://IwqRwZhYXTHKzjWXkjASLiIYSH.ytxtc5yPfdYf3K-,n8PS-SF1-yHw
+            token_url: https://HbNVOMbqixWTjDoidF.uenqdXCDEmDJNyKLTyqiF-a9fRO-WT9zfNPHTP+FcKG4mYkwKmJzzogW,5YAxp
+            scope:
+              - non culpa
 
   ## settings ##
   #
@@ -163,7 +206,7 @@ selfservice:
     # - Windows Command Line (CMD):
     #    > set SELFSERVICE_SETTINGS_REQUEST_LIFESPAN=<value>
     #
-    request_lifespan: 11986m
+    request_lifespan: 151ms
 
     ## privileged_session_max_age ##
     #
@@ -175,48 +218,83 @@ selfservice:
     # - Windows Command Line (CMD):
     #    > set SELFSERVICE_SETTINGS_PRIVILEGED_SESSION_MAX_AGE=<value>
     #
-    privileged_session_max_age: 1895827ns
+    privileged_session_max_age: 27m
 
     ## after ##
     #
     after:
-      ## password ##
+      ## Default Return To URL ##
+      #
+      # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. This value may be overridden by a `default_return_to` in a lower configuration level (`foo.bar.default_return_to` overrides `foo.default_return_to` overrides `default_return_to`) and by the `?return_to` query in certain cases.
+      #
+      # Examples:
+      # - https://my-app.com/dashboard
       #
       # Set this value using environment variables on
       # - Linux/macOS:
-      #    $ export SELFSERVICE_SETTINGS_AFTER_PASSWORD=<value>
+      #    $ export SELFSERVICE_SETTINGS_AFTER_DEFAULT_RETURN_TO=<value>
       # - Windows Command Line (CMD):
-      #    > set SELFSERVICE_SETTINGS_AFTER_PASSWORD=<value>
+      #    > set SELFSERVICE_SETTINGS_AFTER_DEFAULT_RETURN_TO=<value>
+      #
+      default_return_to: https://my-app.com/dashboard
+
+      ## password ##
       #
       password:
-        - job: verify
-        - job: redirect
-          config:
-            default_redirect_url: https://bylYGWdXhPMOlgETHFLDYpAPXw.foqskCnwgBac9jTKPPUtyMQSntq3gVwffrbxTSeeYDo7
-            allow_user_defined_redirect: true
+        ## Default Return To URL ##
+        #
+        # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. This value may be overridden by a `default_return_to` in a lower configuration level (`foo.bar.default_return_to` overrides `foo.default_return_to` overrides `default_return_to`) and by the `?return_to` query in certain cases.
+        #
+        # Examples:
+        # - https://my-app.com/dashboard
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_SETTINGS_AFTER_PASSWORD_DEFAULT_RETURN_TO=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_SETTINGS_AFTER_PASSWORD_DEFAULT_RETURN_TO=<value>
+        #
+        default_return_to: https://my-app.com/dashboard
+
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_SETTINGS_AFTER_PASSWORD_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_SETTINGS_AFTER_PASSWORD_HOOKS=<value>
+        #
+        hooks:
+          - hook: verify
 
       ## profile ##
       #
-      # Set this value using environment variables on
-      # - Linux/macOS:
-      #    $ export SELFSERVICE_SETTINGS_AFTER_PROFILE=<value>
-      # - Windows Command Line (CMD):
-      #    > set SELFSERVICE_SETTINGS_AFTER_PROFILE=<value>
-      #
       profile:
-        - job: redirect
-          config:
-            default_redirect_url: http://zVDjpjpHraGnnoJQvmethywVZpH.gjNOh6WlzFjO7U8l5Q6HdVeiQ5YbjWoP5
-            allow_user_defined_redirect: false
-        - job: redirect
-          config:
-            default_redirect_url: http://fjpOpoKfEyfQrv.fmjscUOm,ZHbqe2gfkwnp,i2LorPzQH0V0hNglGDL3E
-            allow_user_defined_redirect: false
-        - job: redirect
-          config:
-            default_redirect_url: https://cndbxNASYwjSzIzckckzGyqSwZKZWHlK.kyhaCm0ieSv,c
-            allow_user_defined_redirect: true
-        - job: verify
+        ## Default Return To URL ##
+        #
+        # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. This value may be overridden by a `default_return_to` in a lower configuration level (`foo.bar.default_return_to` overrides `foo.default_return_to` overrides `default_return_to`) and by the `?return_to` query in certain cases.
+        #
+        # Examples:
+        # - https://my-app.com/dashboard
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_SETTINGS_AFTER_PROFILE_DEFAULT_RETURN_TO=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_SETTINGS_AFTER_PROFILE_DEFAULT_RETURN_TO=<value>
+        #
+        default_return_to: https://my-app.com/dashboard
+
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_SETTINGS_AFTER_PROFILE_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_SETTINGS_AFTER_PROFILE_HOOKS=<value>
+        #
+        hooks:
+          - hook: verify
 
   ## verify ##
   #
@@ -233,7 +311,7 @@ selfservice:
     # - Windows Command Line (CMD):
     #    > set SELFSERVICE_VERIFY_REQUEST_LIFESPAN=<value>
     #
-    request_lifespan: 5us
+    request_lifespan: 299568509ns
 
     ## Self-Service Verification Link Lifespan ##
     #
@@ -247,7 +325,7 @@ selfservice:
     # - Windows Command Line (CMD):
     #    > set SELFSERVICE_VERIFY_LINK_LIFESPAN=<value>
     #
-    link_lifespan: 08174629us
+    link_lifespan: 5792m
 
   ## login ##
   #
@@ -262,58 +340,104 @@ selfservice:
     # - Windows Command Line (CMD):
     #    > set SELFSERVICE_LOGIN_REQUEST_LIFESPAN=<value>
     #
-    request_lifespan: 430ns
+    request_lifespan: 116101us
 
     ## before ##
     #
-    # Set this value using environment variables on
-    # - Linux/macOS:
-    #    $ export SELFSERVICE_LOGIN_BEFORE=<value>
-    # - Windows Command Line (CMD):
-    #    > set SELFSERVICE_LOGIN_BEFORE=<value>
-    #
     before:
-      - job: redirect
-        config:
-          default_redirect_url: https://Onq.ekva66ChGJy8k7T,uVP5wLMBQ6tkiRs-KRjLf9t5Qv0Zk6jsZGzpuUGkpKybLwzZ,WrX
-          allow_user_defined_redirect: false
-      - job: redirect
-        config:
-          default_redirect_url: http://ErPLvISC.tujcyWXjGWrWaKKW1UU,g
-          allow_user_defined_redirect: true
+      ## hooks ##
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SELFSERVICE_LOGIN_BEFORE_HOOKS=<value>
+      # - Windows Command Line (CMD):
+      #    > set SELFSERVICE_LOGIN_BEFORE_HOOKS=<value>
+      #
+      hooks:
+        - hook: redirect
+          config:
+            default_redirect_url: http://AeQUKIfeL.bpscm6payF9TEQrDtPi8MQ4nAVS1xG5SEEs8O6pSAOXFfdKVke5SPUIubSP5uaT7QS
+            allow_user_defined_redirect: true
+        - hook: redirect
+          config:
+            default_redirect_url: http://qkLILhrEgmdlxhVsXWkuTCragSyfWPuv.fnVwDHmNhonSeDMh+Qtd-p7F00,iZQiwL-1NaJfM,YUblJuSjXPupxWQL0
+            allow_user_defined_redirect: false
 
     ## after ##
     #
     after:
-      ## password ##
+      ## Default Return To URL ##
+      #
+      # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. This value may be overridden by a `default_return_to` in a lower configuration level (`foo.bar.default_return_to` overrides `foo.default_return_to` overrides `default_return_to`) and by the `?return_to` query in certain cases.
+      #
+      # Examples:
+      # - https://my-app.com/dashboard
       #
       # Set this value using environment variables on
       # - Linux/macOS:
-      #    $ export SELFSERVICE_LOGIN_AFTER_PASSWORD=<value>
+      #    $ export SELFSERVICE_LOGIN_AFTER_DEFAULT_RETURN_TO=<value>
       # - Windows Command Line (CMD):
-      #    > set SELFSERVICE_LOGIN_AFTER_PASSWORD=<value>
+      #    > set SELFSERVICE_LOGIN_AFTER_DEFAULT_RETURN_TO=<value>
+      #
+      default_return_to: https://my-app.com/dashboard
+
+      ## password ##
       #
       password:
-        - job: redirect
-          config:
-            default_redirect_url: https://znYBnrPWZTTbeT.sfgp0RbLJe9Eie0JzQgx,,yNL1A3.y7zNdzZeQhV1UmMh1SofCpoyRaPoFTcnmjurOUGFttPePL5.TS0
-            allow_user_defined_redirect: false
-        - job: revoke_active_sessions
+        ## Default Return To URL ##
+        #
+        # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. This value may be overridden by a `default_return_to` in a lower configuration level (`foo.bar.default_return_to` overrides `foo.default_return_to` overrides `default_return_to`) and by the `?return_to` query in certain cases.
+        #
+        # Examples:
+        # - https://my-app.com/dashboard
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_LOGIN_AFTER_PASSWORD_DEFAULT_RETURN_TO=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_LOGIN_AFTER_PASSWORD_DEFAULT_RETURN_TO=<value>
+        #
+        default_return_to: https://my-app.com/dashboard
+
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_LOGIN_AFTER_PASSWORD_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_LOGIN_AFTER_PASSWORD_HOOKS=<value>
+        #
+        hooks:
+          - hook: revoke_active_sessions
 
       ## oidc ##
       #
-      # Set this value using environment variables on
-      # - Linux/macOS:
-      #    $ export SELFSERVICE_LOGIN_AFTER_OIDC=<value>
-      # - Windows Command Line (CMD):
-      #    > set SELFSERVICE_LOGIN_AFTER_OIDC=<value>
-      #
       oidc:
-        - job: revoke_active_sessions
-        - job: redirect
-          config:
-            default_redirect_url: https://DiwBfLPpgautsYDHfKIseekWraYkhjok.kejpSr5uL5luHAvYXVLoK6M.N0cfJI0DzHKdrSLgAoZ8jk-HcrI-HsLvkH3wquf51gNJ8Q2G,IRERYGex5
-            allow_user_defined_redirect: true
+        ## Default Return To URL ##
+        #
+        # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. This value may be overridden by a `default_return_to` in a lower configuration level (`foo.bar.default_return_to` overrides `foo.default_return_to` overrides `default_return_to`) and by the `?return_to` query in certain cases.
+        #
+        # Examples:
+        # - https://my-app.com/dashboard
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_LOGIN_AFTER_OIDC_DEFAULT_RETURN_TO=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_LOGIN_AFTER_OIDC_DEFAULT_RETURN_TO=<value>
+        #
+        default_return_to: https://my-app.com/dashboard
+
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_LOGIN_AFTER_OIDC_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_LOGIN_AFTER_OIDC_HOOKS=<value>
+        #
+        hooks:
+          - hook: revoke_active_sessions
 
   ## registration ##
   #
@@ -328,65 +452,113 @@ selfservice:
     # - Windows Command Line (CMD):
     #    > set SELFSERVICE_REGISTRATION_REQUEST_LIFESPAN=<value>
     #
-    request_lifespan: 3ns
+    request_lifespan: 4h
 
     ## before ##
     #
-    # Set this value using environment variables on
-    # - Linux/macOS:
-    #    $ export SELFSERVICE_REGISTRATION_BEFORE=<value>
-    # - Windows Command Line (CMD):
-    #    > set SELFSERVICE_REGISTRATION_BEFORE=<value>
-    #
     before:
-      - job: redirect
-        config:
-          default_redirect_url: https://EIQPBaZyPKvfaNPn.wwzkGTlGJJe0h0nT-99U9oJE4Ii34vu9ocet,IOEiRXyMo1p6lfV8sb3MK4f4
-          allow_user_defined_redirect: false
-      - job: redirect
-        config:
-          default_redirect_url: https://cDEaBRfmdFlLaVdlCxBrqySNUjviz.enQLMHFJdAsphpap3
-          allow_user_defined_redirect: false
+      ## hooks ##
+      #
+      # Set this value using environment variables on
+      # - Linux/macOS:
+      #    $ export SELFSERVICE_REGISTRATION_BEFORE_HOOKS=<value>
+      # - Windows Command Line (CMD):
+      #    > set SELFSERVICE_REGISTRATION_BEFORE_HOOKS=<value>
+      #
+      hooks:
+        - hook: redirect
+          config:
+            default_redirect_url: http://kjuzzYIpiYphxkdCvSFEIEBI.xcsUg3nzt
+            allow_user_defined_redirect: true
 
     ## after ##
     #
     after:
-      ## password ##
+      ## Default Return To URL ##
+      #
+      # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. This value may be overridden by a `default_return_to` in a lower configuration level (`foo.bar.default_return_to` overrides `foo.default_return_to` overrides `default_return_to`) and by the `?return_to` query in certain cases.
+      #
+      # Examples:
+      # - https://my-app.com/dashboard
       #
       # Set this value using environment variables on
       # - Linux/macOS:
-      #    $ export SELFSERVICE_REGISTRATION_AFTER_PASSWORD=<value>
+      #    $ export SELFSERVICE_REGISTRATION_AFTER_DEFAULT_RETURN_TO=<value>
       # - Windows Command Line (CMD):
-      #    > set SELFSERVICE_REGISTRATION_AFTER_PASSWORD=<value>
+      #    > set SELFSERVICE_REGISTRATION_AFTER_DEFAULT_RETURN_TO=<value>
+      #
+      default_return_to: https://my-app.com/dashboard
+
+      ## password ##
       #
       password:
-        - job: redirect
-          config:
-            default_redirect_url: http://JhEXFvJnNbZKwIut.ywkiuYaJ06ItyYizPG,ap9JBtVqjKL1kRiOxx59oCGOIyX
-            allow_user_defined_redirect: true
-        - job: session
-        - job: redirect
-          config:
-            default_redirect_url: https://olFF.qwtGKSnDp8aTp
-            allow_user_defined_redirect: false
+        ## Default Return To URL ##
+        #
+        # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. This value may be overridden by a `default_return_to` in a lower configuration level (`foo.bar.default_return_to` overrides `foo.default_return_to` overrides `default_return_to`) and by the `?return_to` query in certain cases.
+        #
+        # Examples:
+        # - https://my-app.com/dashboard
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_REGISTRATION_AFTER_PASSWORD_DEFAULT_RETURN_TO=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_REGISTRATION_AFTER_PASSWORD_DEFAULT_RETURN_TO=<value>
+        #
+        default_return_to: https://my-app.com/dashboard
+
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_REGISTRATION_AFTER_PASSWORD_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_REGISTRATION_AFTER_PASSWORD_HOOKS=<value>
+        #
+        hooks:
+          - hook: redirect
+            config:
+              default_redirect_url: http://ZyzP.kydES37RTxApWhjMU3dG+Bmcrxx6yURU-xGNp4ooNnyKn2B3Tpuroqn
+              allow_user_defined_redirect: true
+          - hook: redirect
+            config:
+              default_redirect_url: http://tSvWfk.efblhIOJa-H6YjNMaKcfGLj8j
+              allow_user_defined_redirect: false
+          - hook: redirect
+            config:
+              default_redirect_url: https://ohouPiGDyUOJvvzmn.bwhbiVW1kwXyDhzB,3HgXwy2W+dPwUHRwKYW2w3Sb
+              allow_user_defined_redirect: true
+          - hook: session
 
       ## oidc ##
       #
-      # Set this value using environment variables on
-      # - Linux/macOS:
-      #    $ export SELFSERVICE_REGISTRATION_AFTER_OIDC=<value>
-      # - Windows Command Line (CMD):
-      #    > set SELFSERVICE_REGISTRATION_AFTER_OIDC=<value>
-      #
       oidc:
-        - job: redirect
-          config:
-            default_redirect_url: http://qLMzanEJ.ykBDPsAnhk6
-            allow_user_defined_redirect: true
-        - job: redirect
-          config:
-            default_redirect_url: http://trNorZlje.xrHf8blytUB
-            allow_user_defined_redirect: true
+        ## Default Return To URL ##
+        #
+        # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. This value may be overridden by a `default_return_to` in a lower configuration level (`foo.bar.default_return_to` overrides `foo.default_return_to` overrides `default_return_to`) and by the `?return_to` query in certain cases.
+        #
+        # Examples:
+        # - https://my-app.com/dashboard
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_REGISTRATION_AFTER_OIDC_DEFAULT_RETURN_TO=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_REGISTRATION_AFTER_OIDC_DEFAULT_RETURN_TO=<value>
+        #
+        default_return_to: https://my-app.com/dashboard
+
+        ## hooks ##
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_REGISTRATION_AFTER_OIDC_HOOKS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_REGISTRATION_AFTER_OIDC_HOOKS=<value>
+        #
+        hooks:
+          - hook: verify
+          - hook: session
 
 ## Courier configuration ##
 #
@@ -400,10 +572,10 @@ courier:
   smtp:
     ## SMTP connection string ##
     #
-    # This URI will be used to connect to the SMTP server.
+    # This URI will be used to connect to the SMTP server. Use the query parameter to allow (`?skip_ssl_verify=true`) or disallow (`?skip_ssl_verify=false`) self-signed TLS certificates. Please keep in mind that any host other than localhost / 127.0.0.1 must use smtp over TLS (smtps) or the connection will not be possible.
     #
     # Examples:
-    # - smtps://foo:bar@my-mailserver:1234/
+    # - smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=false
     #
     # Set this value using environment variables on
     # - Linux/macOS:
@@ -411,7 +583,7 @@ courier:
     # - Windows Command Line (CMD):
     #    > set COURIER_SMTP_CONNECTION_URI=<value>
     #
-    connection_uri: smtps://foo:bar@my-mailserver:1234/
+    connection_uri: smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=false
 
     ## SMTP Sender Address ##
     #
@@ -425,11 +597,14 @@ courier:
     # - Windows Command Line (CMD):
     #    > set COURIER_SMTP_FROM_ADDRESS=<value>
     #
-    from_address: Ou-d4YQ@CdlLYZDo.bt
+    from_address: lvh5@SGnNlDVsEz.oo
 
   ## Override message templates ##
   #
   # You can override certain or all message templates by pointing this key to the path where the templates are located.
+  #
+  # Examples:
+  # - /conf/courier-templates
   #
   # Set this value using environment variables on
   # - Linux/macOS:
@@ -437,7 +612,7 @@ courier:
   # - Windows Command Line (CMD):
   #    > set COURIER_TEMPLATE_OVERRIDE_PATH=<value>
   #
-  template_override_path: mollit eiusmod
+  template_override_path: /conf/courier-templates
 
 ## serve ##
 #
@@ -455,7 +630,7 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_ADMIN_HOST=<value>
     #
-    host: pariatur Excepteur Lorem laboris aute
+    host: consequat in laborum cillum occaecat
 
     ## port ##
     #
@@ -485,7 +660,7 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_PUBLIC_HOST=<value>
     #
-    host: Duis enim ut cillum
+    host: sint ut
 
     ## port ##
     #
@@ -505,7 +680,12 @@ serve:
 ## urls ##
 #
 urls:
-  ## settings_ui ##
+  ## Settings UI URL ##
+  #
+  # URL where the Settings UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
+  #
+  # Examples:
+  # - https://my-app.com/user/settings
   #
   # Set this value using environment variables on
   # - Linux/macOS:
@@ -513,19 +693,14 @@ urls:
   # - Windows Command Line (CMD):
   #    > set URLS_SETTINGS_UI=<value>
   #
-  settings_ui: https://bpEJKaB.azyDo86oKwN1wfbGx0JsEcK
+  settings_ui: https://my-app.com/user/settings
 
-  ## mfa_ui ##
+  ## Login UI URL ##
   #
-  # Set this value using environment variables on
-  # - Linux/macOS:
-  #    $ export URLS_MFA_UI=<value>
-  # - Windows Command Line (CMD):
-  #    > set URLS_MFA_UI=<value>
+  # URL where the Login UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
   #
-  mfa_ui: http://iCHtBWZjWFkl.ujwKx,UcsGzc.qDzBV4wOAlzeOMG
-
-  ## login_ui ##
+  # Examples:
+  # - https://my-app.com/login
   #
   # Set this value using environment variables on
   # - Linux/macOS:
@@ -533,9 +708,14 @@ urls:
   # - Windows Command Line (CMD):
   #    > set URLS_LOGIN_UI=<value>
   #
-  login_ui: http://VHkYFEOlmHxeBuKA.pjDGbjRNQElUV6,k6CgLuo0T-qDh+ZtQUAXixoPqQ.MWqFi.oerjTswpoqo5mpe
+  login_ui: https://my-app.com/login
 
-  ## registration_ui ##
+  ## Registration UI URL ##
+  #
+  # URL where the Registration UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
+  #
+  # Examples:
+  # - https://my-app.com/signup
   #
   # Set this value using environment variables on
   # - Linux/macOS:
@@ -543,9 +723,14 @@ urls:
   # - Windows Command Line (CMD):
   #    > set URLS_REGISTRATION_UI=<value>
   #
-  registration_ui: http://HoErpcMluYnLMWmjqyjGgKWbJlPclt.uttdzVGlmc2VXb57Y2IX0wC-JeqTWNMyg-7YO073BK1RxMpHR1zs2b0+aNXEb68M2FxCAOIQtguXrLJerjT5exKj
+  registration_ui: https://my-app.com/signup
 
-  ## error_ui ##
+  ## ORY Kratos Error UI URL ##
+  #
+  # URL where the ORY Kratos Error UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
+  #
+  # Examples:
+  # - https://my-app.com/kratos-error
   #
   # Set this value using environment variables on
   # - Linux/macOS:
@@ -553,11 +738,14 @@ urls:
   # - Windows Command Line (CMD):
   #    > set URLS_ERROR_UI=<value>
   #
-  error_ui: http://dEKpltztPgsJxLoIBnNLEFgnEs.wrmacY,vD7wlSEDTeoiHT2dbUcYcDYYQOKEkpVYeY
+  error_ui: https://my-app.com/kratos-error
 
-  ## Verify User Interface URL ##
+  ## Verify UI URL ##
   #
-  # The URL of the Verify User Interface, the page where users can request activate and / or verify their email or telephone number.
+  # URL where the ORY Verify UI is hosted. This is the page where users activate and / or verify their email or telephone number. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
+  #
+  # Examples:
+  # - https://my-app.com/verify
   #
   # Set this value using environment variables on
   # - Linux/macOS:
@@ -565,9 +753,14 @@ urls:
   # - Windows Command Line (CMD):
   #    > set URLS_VERIFY_UI=<value>
   #
-  verify_ui: https://zxaFXYDA.cgbCNEpxg4VfUuoZbdn7xyBTy3SbKZgP
+  verify_ui: https://my-app.com/verify
 
-  ## default_return_to ##
+  ## Default Return To URL ##
+  #
+  # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. This value may be overridden by a `default_return_to` in a lower configuration level (`foo.bar.default_return_to` overrides `foo.default_return_to` overrides `default_return_to`) and by the `?return_to` query in certain cases.
+  #
+  # Examples:
+  # - https://my-app.com/dashboard
   #
   # Set this value using environment variables on
   # - Linux/macOS:
@@ -575,12 +768,15 @@ urls:
   # - Windows Command Line (CMD):
   #    > set URLS_DEFAULT_RETURN_TO=<value>
   #
-  default_return_to: http://nXykReCXwPFMMsLiHr.dxuWIIE+65ftLp2swqQndP0d
+  default_return_to: https://my-app.com/dashboard
 
   ## self ##
   #
   self:
     ## public ##
+    #
+    # Examples:
+    # - https://my-app.com/.ory/kratos/public
     #
     # Set this value using environment variables on
     # - Linux/macOS:
@@ -588,9 +784,12 @@ urls:
     # - Windows Command Line (CMD):
     #    > set URLS_SELF_PUBLIC=<value>
     #
-    public: http://iZKbRSHZepNHxkfU.tqiPEhHqAdl9zphBpK0JLkt+kyoZWmfl1sn
+    public: https://my-app.com/.ory/kratos/public
 
     ## admin ##
+    #
+    # Examples:
+    # - https://kratos.private-network:4434/
     #
     # Set this value using environment variables on
     # - Linux/macOS:
@@ -598,22 +797,38 @@ urls:
     # - Windows Command Line (CMD):
     #    > set URLS_SELF_ADMIN=<value>
     #
-    admin: http://PfnGJZXKZpWcmAW.wcmhK-Z
+    admin: https://kratos.private-network:4434/
 
-  ## whitelisted_return_to_domains ##
+  ## Multi-Factor UI URL ##
+  #
+  # URL where the Multi-Factor UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
+  #
+  # Examples:
+  # - https://my-app.com/login/mfa
   #
   # Set this value using environment variables on
   # - Linux/macOS:
-  #    $ export URLS_WHITELISTED_RETURN_TO_DOMAINS=<value>
+  #    $ export URLS_MFA_UI=<value>
   # - Windows Command Line (CMD):
-  #    > set URLS_WHITELISTED_RETURN_TO_DOMAINS=<value>
+  #    > set URLS_MFA_UI=<value>
   #
-  whitelisted_return_to_domains:
-    - https://mLXbuCzlJbAaYVJaVQ.namM9tRqlZAoKO+uRYpH
-    - http://WhIslWEQlfsYCGFmZrbPBCAX.qqlJ4L
-    - http://JDOLAPSVNPPoVJlrCKjfXcNRPwlhn.qbcYGB2ssMW5wJ6gALSyIC9Xcb
-    - http://AvZhqhALhEiVGwKHYv.hejlPo1f
-    - http://srNUFuVdN.wtvgraSNguY0z+m29TUKewiZro,XuP8yHw.-6Pdl+dStj1JDZe
+  mfa_ui: https://my-app.com/login/mfa
+
+  ## Whitelisted Return To URLs ##
+  #
+  # List of URLs that are allowed to be redirected to. A redirection request is made by appending `?return_to=...` to Login, Registration, and other self-service flows.
+  #
+  # Examples:
+  # - https://app.my-app.com/dashboard
+  # - https://www.my-app.com/
+  #
+  # Set this value using environment variables on
+  # - Linux/macOS:
+  #    $ export URLS_WHITELISTED_RETURN_TO_URLS=<value>
+  # - Windows Command Line (CMD):
+  #    > set URLS_WHITELISTED_RETURN_TO_URLS=<value>
+  #
+  whitelisted_return_to_urls: https://www.my-app.com/
 
 ## log ##
 #
@@ -636,7 +851,7 @@ log:
   # - Windows Command Line (CMD):
   #    > set LOG_FORMAT=<value>
   #
-  format: json
+  format: text
 
 ## secrets ##
 #
@@ -650,10 +865,8 @@ secrets:
   #    > set SECRETS_SESSION=<value>
   #
   session:
-    - eiusmodeu animdolore aliqua
-    - dolore officiaaliqua pariatur in adipisicing
-    - occaecat ad sit velit aute
-    - sit sedofficia commodo magna
+    - eu in aute dolor
+    - irurefugiat irure
 
 ## hashers ##
 #
@@ -669,7 +882,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_MEMORY=<value>
     #
-    memory: 59788135
+    memory: 57282769
 
     ## iterations ##
     #
@@ -679,7 +892,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_ITERATIONS=<value>
     #
-    iterations: 89048388
+    iterations: 63837243
 
     ## parallelism ##
     #
@@ -689,7 +902,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_PARALLELISM=<value>
     #
-    parallelism: 6070036
+    parallelism: 56328996
 
     ## salt_length ##
     #
@@ -699,7 +912,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_SALT_LENGTH=<value>
     #
-    salt_length: 94287601
+    salt_length: 34739021
 
     ## key_length ##
     #
@@ -709,7 +922,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_KEY_LENGTH=<value>
     #
-    key_length: 97471191
+    key_length: 12971068
 
 ## security ##
 #
@@ -730,5 +943,5 @@ security:
       # - Windows Command Line (CMD):
       #    > set SECURITY_SESSION_COOKIE_SAME_SITE=<value>
       #
-      same_site: Strict
+      same_site: None
 ```

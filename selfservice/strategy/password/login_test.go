@@ -75,7 +75,7 @@ func nlr(exp time.Duration) *login.Request {
 }
 
 func TestLoginNew(t *testing.T) {
-	_, reg := internal.NewRegistryDefault(t)
+	_, reg := internal.NewFastRegistryWithMocks(t)
 
 	router := x.NewRouterPublic()
 	admin := x.NewRouterAdmin()
@@ -95,7 +95,6 @@ func TestLoginNew(t *testing.T) {
 	viper.Set(configuration.ViperKeyURLsError, errTs.URL+"/error-ts")
 	viper.Set(configuration.ViperKeyURLsLogin, uiTs.URL+"/login-ts")
 	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
-	viper.Set(configuration.ViperKeySelfServiceLoginAfterConfig+"."+string(identity.CredentialsTypePassword), hookConfig(returnTs.URL+"/return-ts"))
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/login.schema.json")
 	viper.Set(configuration.ViperKeySecretsSession, []string{"not-a-secure-session-key"})
 	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, returnTs.URL+"/return-ts")

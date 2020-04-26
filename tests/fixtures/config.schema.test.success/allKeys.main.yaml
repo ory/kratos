@@ -14,17 +14,31 @@ selfservice:
 
   profile:
     request_lifespan: 10m
+    after:
+      profile:
+        hooks: "#/definitions/selfServiceAfterLoginStrategy"
+      password:
+        hooks: "#/definitions/selfServiceAfterLoginStrategy"
 
   login:
     request_lifespan: 10m
-    before: "#/definitions/selfServiceBefore"
-    after: "#/definitions/selfServiceAfterLogin"
+    before:
+      hooks: "#/definitions/selfServiceBefore"
+    after:
+      password:
+        hooks: "#/definitions/selfServiceAfterLoginStrategy"
+      oidc:
+        hooks: "#/definitions/selfServiceAfterLoginStrategy"
 
   registration:
     request_lifespan: 10m
     before:
-      - "#/definitions/selfServiceRedirectHook"
-    after: "#/definitions/selfServiceAfterRegistration"
+      hooks: "#/definitions/selfServiceBefore"
+    after:
+      password:
+        hooks: "#/definitions/selfServiceAfterRegistrationStrategy"
+      oidc:
+        hooks: "#/definitions/selfServiceAfterRegistrationStrategy"
 
 dsn: foo
 
@@ -50,10 +64,10 @@ urls:
   login_ui: https://example.com
   settings_ui: https://example.com
   verify_ui: https://example.com
-  default_return_to: https://example.com
+  default_return_to: "#/definitions/defaultReturnTo"
   registration_ui: https://example.com
   error_ui: https://example.com
-  whitelisted_return_to_domains:
+  whitelisted_return_to_urls:
     - https://example0.com
     - https://example1.com
 

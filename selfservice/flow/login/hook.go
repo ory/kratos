@@ -2,19 +2,25 @@ package login
 
 import (
 	"net/http"
+	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/x"
 )
 
 type (
 	PreHookExecutor interface {
 		ExecuteLoginPreHook(w http.ResponseWriter, r *http.Request, a *Request) error
 	}
+
 	PostHookExecutor interface {
 		ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, a *Request, s *session.Session) error
 	}
+
 	HooksProvider interface {
 		PreLoginHooks() []PreHookExecutor
 		PostLoginHooks(credentialsType identity.CredentialsType) []PostHookExecutor
@@ -23,8 +29,10 @@ type (
 
 type (
 	executorDependencies interface {
-		identity.ManagementProvider
 		HooksProvider
+		session.ManagementProvider
+		x.WriterProvider
+		x.LoggingProvider
 	}
 	HookExecutor struct {
 		d executorDependencies
@@ -36,26 +44,31 @@ type (
 )
 
 func NewHookExecutor(d executorDependencies, c configuration.Provider) *HookExecutor {
-	return &HookExecutor{d: d, c: c}
+	return &HookExecutor{
+		d: d,
+		c: c,
+	}
 }
 
-func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, hooks []PostHookExecutor, a *Request, i *identity.Identity) error {
-	s := session.NewSession(i, r, e.c)
+func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, a *Request, i *identity.Identity) error {
+	s := session.NewSession(i, e.c, time.Now().UTC()).Declassify()
 
-	for _, executor := range hooks {
+	for _, executor := range e.d.PostLoginHooks(ct) {
 		if err := executor.ExecuteLoginPostHook(w, r, a, s); err != nil {
+			if errors.Is(err, ErrHookAbortRequest) {
+				e.d.Logger().Warn("A successful login attempt was aborted because a hook returned ErrHookAbortRequest.")
+				return nil
+			}
 			return err
 		}
 	}
 
-	if s.WasIdentityModified() {
-		if err := e.d.IdentityManager().Update(r.Context(), s.Identity); err != nil {
-			return err
-		}
+	if err := e.d.SessionManager().CreateToRequest(r.Context(), w, r, s); err != nil {
+		return errors.WithStack(err)
 	}
 
-	s.ResetModifiedIdentityFlag()
-	return nil
+	return x.SecureContentNegotiationRedirection(w, r, s.Declassify(), a.RequestURL,
+		e.d.Writer(), e.c, x.SecureRedirectOverrideDefaultReturnTo(e.c.SelfServiceLoginReturnTo(ct.String())))
 }
 
 func (e *HookExecutor) PreLoginHook(w http.ResponseWriter, r *http.Request, a *Request) error {

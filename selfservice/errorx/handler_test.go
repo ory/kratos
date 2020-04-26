@@ -27,7 +27,7 @@ import (
 )
 
 func TestHandler(t *testing.T) {
-	_, reg := internal.NewRegistryDefault(t)
+	_, reg := internal.NewFastRegistryWithMocks(t)
 	h := errorx.NewHandler(reg)
 
 	t.Run("case=public authorization", func(t *testing.T) {

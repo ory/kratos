@@ -11,7 +11,7 @@ binaries, Docker Images and support various package managers.
 We recommend using Docker to run ORY Kratos:
 
 ```shell
-$ docker pull oryd/kratos
+$ docker pull oryd/kratos:v0.1.1-alpha.1
 $ docker run --rm -it oryd/kratos help
 ```
 
@@ -27,10 +27,11 @@ $ kratos help
 
 ## Linux
 
-On linux, you can use `curl | bash` to fetch the latest stable binary using:
+On linux, you can use `bash <(curl ...)` to fetch the latest stable binary
+using:
 
 ```shell
-$ curl https://raw.githubusercontent.com/ory/kratos/master/install.sh | bash -s -- -b .
+$ bash <(curl https://raw.githubusercontent.com/ory/kratos/master/install.sh) -b . v0.1.1-alpha.1
 $ ./kratos help
 ```
 

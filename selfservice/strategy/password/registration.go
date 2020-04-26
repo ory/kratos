@@ -162,13 +162,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r,
-		s.d.PostRegistrationHooks(identity.CredentialsTypePassword),
-		ar,
-		i,
-	); errorsx.Cause(err) == registration.ErrHookAbortRequest {
-		return
-	} else if err != nil {
+	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, identity.CredentialsTypePassword, ar, i); err != nil {
 		s.handleRegistrationError(w, r, ar, &p, err)
 		return
 	}

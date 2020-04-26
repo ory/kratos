@@ -5,18 +5,19 @@ title: Zero Trust with IAP Proxy
 
 import useBaseUrl from '@docusaurus/useBaseUrl'
 
-The [Quickstart](../quickstart.mdx) covers a basic set up that uses a pipe
-in SecureApp to forward requests to ORY Kratos.
+The [Quickstart](../quickstart.mdx) covers a basic set up that uses a pipe in
+SecureApp to forward requests to ORY Kratos.
 
 Systems that have more than a few components often use Reverse Proxies such as
 Nginx, Envoy, Kong to route and authorize traffic to applications. ORY Kratos
-works very well in such a environment and the purpose of this guide
-is clarifying how one can use a reverse proxy with IAP (Identity and Access Proxy)
-capabilities to authorize incoming requests. In this tutorial, we will
-use ORY Oathkeeper to achieve this.
+works very well in such a environment and the purpose of this guide is
+clarifying how one can use a reverse proxy with IAP (Identity and Access Proxy)
+capabilities to authorize incoming requests. In this tutorial, we will use ORY
+Oathkeeper to achieve this.
 
 This guide expects that you have familiarized yourself with ORY Kratos' concepts
-and that builds on the components and flows established in the [Quickstart](../quickstart.mdx).
+and that builds on the components and flows established in the
+[Quickstart](../quickstart.mdx).
 
 To ensure that no one can access the dashboard without prior authentication
 (login), we will use a reverse proxy
@@ -64,16 +65,14 @@ oathkeeper_1                  | {"level":"info","msg":"TLS has not been configur
 oathkeeper_1                  | {"level":"info","msg":"Listening on http://:4455","time":"2020-01-20T09:22:09Z"}
 ```
 
-:::note
-There are two important factors to get a fully functional system:
+:::note There are two important factors to get a fully functional system:
 
 - You need to make sure that ports `4435`, `4455`, `4456`, `4433`, `4434`,
   `4436` >
   [are free](https://serverfault.com/questions/309052/check-if-port-is-open-or-closed-on-a-linux-server).
 - Make sure to always use `127.0.0.1` as the hostname, never use `localhost`!
   This is important because browsers treat these two as separate domains and
-  will therefore have issues with setting and using the right cookies.
-:::
+  will therefore have issues with setting and using the right cookies. :::
 
 ### Network Architecture
 
@@ -125,18 +124,21 @@ You can find all configuration files for this quickstart guide in
 
 ### ORY Oathkeeper: Identity and Access Proxy
 
-All configuration for [ORY Oathkeeper](https://www.ory.sh/oathkeeper/) resides in `./contrib/quickstart/oathkeeper`.
+All configuration for [ORY Oathkeeper](https://www.ory.sh/oathkeeper/) resides
+in `./contrib/quickstart/oathkeeper`.
 
 #### Configuration
 
-We define several configuration options for ORY Oathkeeper, such as the port where the proxy should run
-or where to load the access rules from.
+We define several configuration options for ORY Oathkeeper, such as the port
+where the proxy should run or where to load the access rules from.
 
 ##### Cookie Session Authenticator
 
-The [Cookie Session Authenticator](https://www.ory.sh/docs/oathkeeper/pipeline/authn#cookie_session)
-is enabled and points to [ORY Kratos' `/sessions/whoami` API](../reference/api.md). It
-uses the `ory_kratos_session` cookie to identify if a request contains a session or not:
+The
+[Cookie Session Authenticator](https://www.ory.sh/docs/oathkeeper/pipeline/authn#cookie_session)
+is enabled and points to
+[ORY Kratos' `/sessions/whoami` API](../reference/api.md). It uses the
+`ory_kratos_session` cookie to identify if a request contains a session or not:
 
 ```yaml title="contrib/quickstart/oathkeeper/.oathkeeper.yml"
 # ...
@@ -153,12 +155,14 @@ authenticators
 # ...
 ```
 
-It's more or less doing what the `needsLogin` function does in the [Quickstart](../quickstart.mdx).
+It's more or less doing what the `needsLogin` function does in the
+[Quickstart](../quickstart.mdx).
 
 #### Anonymous Authenticator
 
-The [Anonymous Authenticator](https://www.ory.sh/docs/oathkeeper/pipeline/authn#anonymous) is useful
-for endpoints that do not need login, such as the registration screen:
+The
+[Anonymous Authenticator](https://www.ory.sh/docs/oathkeeper/pipeline/authn#anonymous)
+is useful for endpoints that do not need login, such as the registration screen:
 
 ```yaml title="contrib/quickstart/oathkeeper/.oathkeeper.yml"
 # ...
@@ -172,9 +176,10 @@ authenticators
 
 #### Allowed Authorizer
 
-The [Allowed Authenticator](https://www.ory.sh/docs/oathkeeper/pipeline/authz#allowed) simply allows
-all users to access the URL. Since we don't have RBAC or ACL in place for this example, this will
-be enough.
+The
+[Allowed Authenticator](https://www.ory.sh/docs/oathkeeper/pipeline/authz#allowed)
+simply allows all users to access the URL. Since we don't have RBAC or ACL in
+place for this example, this will be enough.
 
 ```yaml title="contrib/quickstart/oathkeeper/.oathkeeper.yml"
 # ...
@@ -186,16 +191,19 @@ authorizers
 
 ### ID Token Mutator
 
-The [ID Token Mutator](https://www.ory.sh/docs/oathkeeper/pipeline/mutator#id_token) takes
-all the available session information and puts it into a JSON Web Token (JWT). The protected
-SecureApp will now receive `Authorization: bearer <jwt...>` in the HTTP Header instead of
-`Cookie: ory_kratos_session=...`. The JWT is signed using a RS256 key. To verify the JWT
-we can use the public key provided by ORY Oathkeeper's JWKS API
-`http://127.0.0.1:4456/.well-known/jwks.json`. You can generate the RS256 key yourself by running:
+The
+[ID Token Mutator](https://www.ory.sh/docs/oathkeeper/pipeline/mutator#id_token)
+takes all the available session information and puts it into a JSON Web Token
+(JWT). The protected SecureApp will now receive `Authorization: bearer <jwt...>`
+in the HTTP Header instead of `Cookie: ory_kratos_session=...`. The JWT is
+signed using a RS256 key. To verify the JWT we can use the public key provided
+by ORY Oathkeeper's JWKS API `http://127.0.0.1:4456/.well-known/jwks.json`. You
+can generate the RS256 key yourself by running:
 `oathkeeper credentials generate --alg RS256 > id_token.jwks.json`.
 
-We also enabled the [NoOp Mutator](https://www.ory.sh/docs/oathkeeper/pipeline/mutator#) for
-the login, registration, ... endpoints:
+We also enabled the
+[NoOp Mutator](https://www.ory.sh/docs/oathkeeper/pipeline/mutator#) for the
+login, registration, ... endpoints:
 
 ```yaml title="contrib/quickstart/oathkeeper/.oathkeeper.yml"
 mutators:
@@ -219,8 +227,8 @@ use headers such as `X-User-ID` instead of the JWT.
 
 ### Error Handling
 
-We configure the error handling in such a way that a missing or invalid login session
-(when accessed from a browser) leads to a redirect to `/auth/login`:
+We configure the error handling in such a way that a missing or invalid login
+session (when accessed from a browser) leads to a redirect to `/auth/login`:
 
 ```yaml title="contrib/quickstart/oathkeeper/.oathkeeper.yml"
 errors:
@@ -233,8 +241,7 @@ errors:
       config:
         to: http://127.0.0.1:4455/auth/login
         when:
-          -
-            error:
+          - error:
               - unauthorized
               - forbidden
             request:
@@ -250,7 +257,8 @@ errors:
 
 ### Access Rules
 
-We use [glob matching](https://github.com/gobwas/glob) to match the HTTP requests for our access rules:
+We use [glob matching](https://github.com/gobwas/glob) to match the HTTP
+requests for our access rules:
 
 ```yaml title="contrib/quickstart/oathkeeper/.oathkeeper.yml"
 access_rules:
@@ -259,18 +267,17 @@ access_rules:
     - file:///etc/config/oathkeeper/`access-rules.yml`
 ```
 
-In `access-rules.yml` we define three rules. The first rule forwards all traffic matching `http://127.0.0.1:4455/.ory/kratos/public/` to ORY Kratos' Public API:
-
+In `access-rules.yml` we define three rules. The first rule forwards all traffic
+matching `http://127.0.0.1:4455/.ory/kratos/public/` to ORY Kratos' Public API:
 
 ```yaml title="contrib/quickstart/oathkeeper/access-rules.yml"
--
-  id: "ory:kratos:public"
+- id: 'ory:kratos:public'
   upstream:
     preserve_host: true
-    url: "http://kratos:4433"
+    url: 'http://kratos:4433'
     strip_path: /.ory/kratos/public
   match:
-    url: "http://127.0.0.1:4455/.ory/kratos/public/<**>"
+    url: 'http://127.0.0.1:4455/.ory/kratos/public/<**>'
     methods:
       - GET
       - POST
@@ -278,54 +285,49 @@ In `access-rules.yml` we define three rules. The first rule forwards all traffic
       - DELETE
       - PATCH
   authenticators:
-    -
-      handler: noop
+    - handler: noop
   authorizer:
     handler: allow
   mutators:
     - handler: noop
 ```
 
-The second rule allows anonymous requests to login, registration, re-send verification email, and the error page plus any
-assets:
+The second rule allows anonymous requests to login, registration, re-send
+verification email, and the error page plus any assets:
 
 ```yaml title="contrib/quickstart/oathkeeper/access-rules.yml"
 # ...
--
-  id: "ory:kratos-selfservice-ui-node:anonymous"
+- id: 'ory:kratos-selfservice-ui-node:anonymous'
   upstream:
     preserve_host: true
-    url: "http://kratos-selfservice-ui-node:4435"
+    url: 'http://kratos-selfservice-ui-node:4435'
   match:
-    url: "http://127.0.0.1:4455/<{error,verify,auth/*,**.css,**.js}{/,}>"
+    url: 'http://127.0.0.1:4455/<{error,verify,auth/*,**.css,**.js}{/,}>'
     methods:
       - GET
   authenticators:
-    -
-      handler: anonymous
+    - handler: anonymous
   authorizer:
     handler: allow
   mutators:
-    -
-      handler: noop
+    - handler: noop
 ```
 
-And the final rule requires a valid session before allowing requests to the dashboard and user settings:
+And the final rule requires a valid session before allowing requests to the
+dashboard and user settings:
 
 ```yaml title="contrib/quickstart/oathkeeper/access-rules.yml"
 # ...
--
-  id: "ory:kratos-selfservice-ui-node:protected"
+- id: 'ory:kratos-selfservice-ui-node:protected'
   upstream:
     preserve_host: true
-    url: "http://kratos-selfservice-ui-node:4435"
+    url: 'http://kratos-selfservice-ui-node:4435'
   match:
-    url: "http://127.0.0.1:4455/<{,debug,dashboard,settings}{/,}>"
+    url: 'http://127.0.0.1:4455/<{,debug,dashboard,settings}{/,}>'
     methods:
       - GET
   authenticators:
-    -
-      handler: cookie_session
+    - handler: cookie_session
   authorizer:
     handler: allow
   mutators:

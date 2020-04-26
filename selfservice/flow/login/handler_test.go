@@ -21,7 +21,6 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/login"
-	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
@@ -30,7 +29,7 @@ func init() {
 }
 
 func TestHandlerSettingForced(t *testing.T) {
-	_, reg := internal.NewRegistryDefault(t)
+	conf, reg := internal.NewFastRegistryWithMocks(t)
 	reg.WithCSRFTokenGenerator(x.FakeCSRFTokenGenerator)
 
 	router := x.NewRouterPublic()
@@ -59,7 +58,7 @@ func TestHandlerSettingForced(t *testing.T) {
 	mar := func(t *testing.T, extQuery url.Values) (*http.Response, []byte) {
 		rid := x.NewUUID()
 		req := x.NewTestHTTPRequest(t, "GET", ts.URL+login.BrowserLoginPath, nil)
-		loginReq := login.NewLoginRequest(time.Minute, x.FakeCSRFToken, req)
+		loginReq := login.NewRequest(time.Minute, x.FakeCSRFToken, req)
 		loginReq.ID = rid
 		for _, s := range reg.LoginStrategies() {
 			require.NoError(t, s.PopulateLoginMethod(req, loginReq))
@@ -72,7 +71,7 @@ func TestHandlerSettingForced(t *testing.T) {
 		}
 		req.URL.RawQuery = q.Encode()
 
-		body, res := session.MockMakeAuthenticatedRequest(t, reg, router.Router, req)
+		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, req)
 		return res, body
 	}
 
@@ -123,7 +122,7 @@ func TestHandlerSettingForced(t *testing.T) {
 }
 
 func TestLoginHandler(t *testing.T) {
-	_, reg := internal.NewRegistryDefault(t)
+	_, reg := internal.NewFastRegistryWithMocks(t)
 
 	public, admin := func() (*httptest.Server, *httptest.Server) {
 		public := x.NewRouterPublic()

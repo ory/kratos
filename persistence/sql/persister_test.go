@@ -177,7 +177,7 @@ func getErr(args ...interface{}) error {
 }
 
 func TestPersister_Transaction(t *testing.T) {
-	_, reg := internal.NewRegistryDefault(t)
+	_, reg := internal.NewFastRegistryWithMocks(t)
 	p := reg.Persister()
 
 	t.Run("case=should not create identity because callback returned error", func(t *testing.T) {

@@ -22,16 +22,16 @@ import (
 func TestVerifier(t *testing.T) {
 	for k, hf := range map[string]func(*hook.Verifier, *identity.Identity) error{
 		"settings": func(h *hook.Verifier, i *identity.Identity) error {
-			return h.ExecuteSettingsPostHook(
-				httptest.NewRecorder(), new(http.Request), nil, &session.Session{ID: x.NewUUID(), Identity: i})
+			return h.ExecuteSettingsPostPersistHook(
+				httptest.NewRecorder(), new(http.Request), nil, i)
 		},
 		"register": func(h *hook.Verifier, i *identity.Identity) error {
-			return h.ExecuteRegistrationPostHook(
+			return h.ExecutePostRegistrationPostPersistHook(
 				httptest.NewRecorder(), new(http.Request), nil, &session.Session{ID: x.NewUUID(), Identity: i})
 		},
 	} {
 		t.Run("name="+k, func(t *testing.T) {
-			_, reg := internal.NewRegistryDefault(t)
+			_, reg := internal.NewFastRegistryWithMocks(t)
 			viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/verify.schema.json")
 			viper.Set(configuration.ViperKeyURLsSelfPublic, "https://www.ory.sh/")
 			viper.Set(configuration.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")

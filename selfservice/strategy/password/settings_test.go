@@ -28,7 +28,8 @@ func init() {
 }
 
 func TestProfile(t *testing.T) {
-	_, reg := internal.NewRegistryDefault(t)
+	_, reg := internal.NewFastRegistryWithMocks(t)
+	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, "https://www.ory.sh/")
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/profile.schema.json")
 
 	_ = testhelpers.NewSettingsUITestServer(t)
@@ -127,9 +128,9 @@ func TestProfile(t *testing.T) {
 		rts := httptest.NewServer(router)
 		defer rts.Close()
 
-		viper.Set(configuration.ViperKeySelfServiceSettingsAfterConfig+"."+identity.CredentialsTypePassword.String(), testhelpers.HookConfigRedirectTo(t, rts.URL+"/return-ts"))
+		viper.Set(configuration.ViperKeySelfServiceSettingsAfter+"."+configuration.ViperKeyDefaultReturnTo, rts.URL+"/return-ts")
 		t.Cleanup(func() {
-			viper.Set(configuration.ViperKeySelfServiceLoginAfterConfig+"."+string(identity.CredentialsTypePassword), nil)
+			viper.Set(configuration.ViperKeySelfServiceSettingsAfter, nil)
 		})
 
 		rs := testhelpers.GetSettingsRequest(t, primaryUser, publicTS)

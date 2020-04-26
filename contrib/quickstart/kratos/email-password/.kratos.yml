@@ -7,17 +7,9 @@ selfservice:
     privileged_session_max_age: 1m
     after:
       profile:
-        -
-          job: verify
-        -
-          job: redirect
-          config:
-            default_redirect_url: http://127.0.0.1:4455/dashboard
-      password:
-        -
-          job: redirect
-          config:
-            default_redirect_url: http://127.0.0.1:4455/dashboard
+        hooks:
+          -
+            hook: verify
 
   verify:
     return_to: http://127.0.0.1:4455/
@@ -27,29 +19,16 @@ selfservice:
 
   login:
     request_lifespan: 10m
-    after:
-      password:
-        -
-          job: session
-        -
-          job: redirect
-          config:
-            default_redirect_url: http://127.0.0.1:4455/
-            allow_user_defined_redirect: true
 
   registration:
     request_lifespan: 10m
     after:
       password:
-        -
-          job: verify
-        -
-          job: session
-        -
-          job: redirect
-          config:
-            default_redirect_url: http://127.0.0.1:4455/
-            allow_user_defined_redirect: true
+        hooks:
+          -
+            hook: session
+          -
+            hook: verify
 
 log:
   level: debug
@@ -72,7 +51,7 @@ urls:
     public: http://127.0.0.1:4455/.ory/kratos/public/
     admin: http://kratos:4434/
   default_return_to: http://127.0.0.1:4455/
-  whitelisted_return_to_domains:
+  whitelisted_return_to_urls:
     - http://127.0.0.1:4455
 
 hashers:

@@ -2,150 +2,166 @@ package registration_test
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"net/http"
+	"net/url"
 	"testing"
+	"time"
 
-	"github.com/bxcodec/faker"
-	"github.com/sirupsen/logrus"
+	"github.com/gobuffalo/httptest"
+	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
 
 	"github.com/ory/viper"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/registration"
-	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/x"
 )
 
-type registrationPostHookMock struct {
-	err            error
-	modifyIdentity bool
-}
-
-func (m *registrationPostHookMock) ExecuteRegistrationPostHook(w http.ResponseWriter, r *http.Request, a *registration.Request, s *session.Session) error {
-	if m.modifyIdentity {
-		i := s.Identity
-		i.Traits = identity.Traits(`{"foo":"bar"}"`)
-		s.UpdateIdentity(i)
-	}
-	return m.err
-}
-
-type registrationPreHookMock struct {
-	err error
-}
-
-func (m *registrationPreHookMock) ExecuteRegistrationPreHook(w http.ResponseWriter, r *http.Request, a *registration.Request) error {
-	return m.err
-}
-
-type registrationExecutorDependenciesMock struct {
-	preErr []error
-}
-
-func (m *registrationExecutorDependenciesMock) PostRegistrationHooks(credentialsType identity.CredentialsType) []registration.PostHookExecutor {
-	return nil
-}
-
-func (m *registrationExecutorDependenciesMock) IdentityManager() *identity.Manager {
-	return nil
-}
-
-func (m *registrationExecutorDependenciesMock) PrivilegedIdentityPool() identity.PrivilegedPool {
-	return nil
-}
-
-func (m *registrationExecutorDependenciesMock) IdentityValidator() *identity.Validator {
-	return nil
-}
-
-func (m *registrationExecutorDependenciesMock) Logger() logrus.FieldLogger {
-	return logrus.New()
-}
-
-func (m *registrationExecutorDependenciesMock) PreRegistrationHooks() []registration.PreHookExecutor {
-	hooks := make([]registration.PreHookExecutor, len(m.preErr))
-	for k := range hooks {
-		hooks[k] = &registrationPreHookMock{m.preErr[k]}
-	}
-	return hooks
-}
-
 func TestRegistrationExecutor(t *testing.T) {
-	t.Run("method=PostRegistrationHook", func(t *testing.T) {
-		for k, tc := range []struct {
-			hooks        []registration.PostHookExecutor
-			expectTraits string
-			expectErr    error
-		}{
-			{hooks: nil},
-			{hooks: []registration.PostHookExecutor{}},
-			{hooks: []registration.PostHookExecutor{&registrationPostHookMock{err: errors.New("err")}}, expectErr: errors.New("err")},
-			{hooks: []registration.PostHookExecutor{
-				new(registrationPostHookMock),
-				&registrationPostHookMock{err: errors.New("err")}}, expectErr: errors.New("err"),
-			},
-			{
-				hooks: []registration.PostHookExecutor{
-					new(registrationPostHookMock),
-					&registrationPostHookMock{modifyIdentity: true},
-				},
-				expectTraits: `{"foo":"bar"}`,
-			},
-		} {
-			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-				conf, reg := internal.NewRegistryDefault(t)
-				viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://stub/registration.schema.json")
-				viper.Set(configuration.ViperKeyURLsSelfPublic, "http://example.com")
+	for _, strategy := range []string{
+		identity.CredentialsTypePassword.String(),
+		identity.CredentialsTypeOIDC.String(),
+	} {
+		t.Run("strategy="+strategy, func(t *testing.T) {
+			_, reg := internal.NewFastRegistryWithMocks(t)
+			viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
+			viper.Set(configuration.ViperKeyURLsDefaultReturnTo, "https://www.ory.sh/")
 
-				var i identity.Identity
-				require.NoError(t, faker.FakeData(&i))
-				i.TraitsSchemaID = ""
-				i.Traits = identity.Traits("{}")
+			newServer := func(t *testing.T, i *identity.Identity) *httptest.Server {
+				router := httprouter.New()
+				handleErr := testhelpers.SelfServiceHookRegistrationErrorHandler
+				router.GET("/registration/pre", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+					if handleErr(t, w, r, reg.RegistrationHookExecutor().PreRegistrationHook(w, r, registration.NewRequest(time.Minute, x.FakeCSRFToken, r))) {
+						w.Write([]byte("ok"))
+					}
+				})
 
-				e := registration.NewHookExecutor(reg, conf)
-				err := e.PostRegistrationHook(nil, &http.Request{}, tc.hooks, nil, &i)
-				if tc.expectErr != nil {
-					require.EqualError(t, err, tc.expectErr.Error())
-					return
-				}
+				router.GET("/registration/post", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+					if i == nil {
+						i = testhelpers.SelfServiceHookFakeIdentity(t)
+					}
+					a := registration.NewRequest(time.Minute, x.FakeCSRFToken, r)
+					a.RequestURL = x.RequestURL(r).String()
+					_ = handleErr(t, w, r, reg.RegistrationHookExecutor().PostRegistrationHook(w, r, identity.CredentialsType(strategy), a, i))
+				})
 
-				require.NoError(t, err)
-				if tc.expectTraits != "" {
-					got, err := reg.IdentityPool().GetIdentity(context.TODO(), i.ID)
+				ts := httptest.NewServer(router)
+				t.Cleanup(ts.Close)
+				viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
+				return ts
+			}
+
+			makeRequestPost := testhelpers.SelfServiceMakeRegistrationPostHookRequest
+			viperSetPost := testhelpers.SelfServiceHookRegistrationViperSetPost
+			t.Run("method=PostRegistrationHook", func(t *testing.T) {
+				t.Run("case=pass without hooks", func(t *testing.T) {
+					t.Cleanup(testhelpers.SelfServiceHookConfigReset)
+					i := testhelpers.SelfServiceHookFakeIdentity(t)
+
+					ts := newServer(t, i)
+					res, _ := makeRequestPost(t, ts, false, url.Values{})
+					assert.EqualValues(t, http.StatusOK, res.StatusCode)
+					assert.EqualValues(t, "https://www.ory.sh/", res.Request.URL.String())
+
+					actual, err := reg.IdentityPool().GetIdentity(context.Background(), i.ID)
 					require.NoError(t, err)
-					assert.EqualValues(t, tc.expectTraits, string(got.Traits))
-				}
-			})
-		}
-	})
+					assert.Equal(t, actual.Traits, i.Traits)
+				})
 
-	t.Run("method=PreRegistrationHook", func(t *testing.T) {
-		for k, tc := range []struct {
-			expectErr error
-			reg       *registrationExecutorDependenciesMock
-		}{
-			{
-				reg:       &registrationExecutorDependenciesMock{preErr: []error{nil, nil, errors.New("err")}},
-				expectErr: errors.New("err"),
-			},
-			{
-				reg: &registrationExecutorDependenciesMock{preErr: []error{nil}},
-			},
-		} {
-			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-				conf, _ := internal.NewRegistryDefault(t)
-				e := registration.NewHookExecutor(tc.reg, conf)
-				if tc.expectErr == nil {
-					require.NoError(t, e.PreRegistrationHook(nil, nil, nil))
-				} else {
-					require.EqualError(t, e.PreRegistrationHook(nil, nil, nil), tc.expectErr.Error())
-				}
+				t.Run("case=pass if hooks pass", func(t *testing.T) {
+					t.Cleanup(testhelpers.SelfServiceHookConfigReset)
+					viperSetPost(strategy, []configuration.SelfServiceHook{{Name: "err", Config: []byte(`{}`)}})
+
+					res, _ := makeRequestPost(t, newServer(t, nil), false, url.Values{})
+					assert.EqualValues(t, http.StatusOK, res.StatusCode)
+					assert.EqualValues(t, "https://www.ory.sh/", res.Request.URL.String())
+				})
+
+				t.Run("case=fail if hooks fail", func(t *testing.T) {
+					t.Cleanup(testhelpers.SelfServiceHookConfigReset)
+					viperSetPost(strategy, []configuration.SelfServiceHook{{Name: "err", Config: []byte(`{"ExecutePostRegistrationPrePersistHook": "abort"}`)}})
+					i := testhelpers.SelfServiceHookFakeIdentity(t)
+
+					res, body := makeRequestPost(t, newServer(t, i), false, url.Values{})
+					assert.EqualValues(t, http.StatusOK, res.StatusCode)
+					assert.Equal(t, "", body)
+
+					_, err := reg.IdentityPool().GetIdentity(context.Background(), i.ID)
+					require.Error(t, err)
+				})
+
+				t.Run("case=prevent return_to value because domain not whitelisted", func(t *testing.T) {
+					t.Cleanup(testhelpers.SelfServiceHookConfigReset)
+					i := testhelpers.SelfServiceHookFakeIdentity(t)
+
+					res, body := makeRequestPost(t, newServer(t, i), false, url.Values{"return_to": {"https://www.ory.sh/kratos/"}})
+					assert.EqualValues(t, http.StatusInternalServerError, res.StatusCode)
+					assert.Contains(t, body, "malformed or contained invalid")
+
+					actual, err := reg.IdentityPool().GetIdentity(context.Background(), i.ID)
+					require.NoError(t, err)
+					assert.Equal(t, actual.Traits, i.Traits)
+				})
+
+				t.Run("case=use return_to value", func(t *testing.T) {
+					t.Cleanup(testhelpers.SelfServiceHookConfigReset)
+					viper.Set(configuration.ViperKeyURLsWhitelistedReturnToDomains, []string{"https://www.ory.sh/"})
+
+					res, _ := makeRequestPost(t, newServer(t, nil), false, url.Values{"return_to": {"https://www.ory.sh/kratos/"}})
+					assert.EqualValues(t, http.StatusOK, res.StatusCode)
+					assert.EqualValues(t, "https://www.ory.sh/kratos/", res.Request.URL.String())
+				})
+
+				t.Run("case=use nested config value", func(t *testing.T) {
+					t.Cleanup(testhelpers.SelfServiceHookConfigReset)
+					testhelpers.SelfServiceHookRegistrationSetDefaultRedirectToStrategy(strategy, "https://www.ory.sh/kratos")
+
+					res, _ := makeRequestPost(t, newServer(t, nil), false, url.Values{})
+					assert.EqualValues(t, http.StatusOK, res.StatusCode)
+					assert.EqualValues(t, "https://www.ory.sh/kratos/", res.Request.URL.String())
+				})
+
+				t.Run("case=use nested config value", func(t *testing.T) {
+					t.Cleanup(testhelpers.SelfServiceHookConfigReset)
+					testhelpers.SelfServiceHookRegistrationSetDefaultRedirectTo("https://www.ory.sh/not-kratos")
+					testhelpers.SelfServiceHookRegistrationSetDefaultRedirectToStrategy(strategy, "https://www.ory.sh/kratos")
+
+					res, _ := makeRequestPost(t, newServer(t, nil), false, url.Values{})
+					assert.EqualValues(t, http.StatusOK, res.StatusCode)
+					assert.EqualValues(t, "https://www.ory.sh/kratos/", res.Request.URL.String())
+				})
+
+				t.Run("case=pass if hooks pass", func(t *testing.T) {
+					t.Cleanup(testhelpers.SelfServiceHookConfigReset)
+					viperSetPost(strategy, []configuration.SelfServiceHook{{Name: "err", Config: []byte(`{}`)}})
+
+					res, _ := makeRequestPost(t, newServer(t, nil), false, url.Values{})
+					assert.EqualValues(t, http.StatusOK, res.StatusCode)
+					assert.EqualValues(t, "https://www.ory.sh/", res.Request.URL.String())
+				})
+
+				t.Run("case=send a json response for API clients", func(t *testing.T) {
+					t.Cleanup(testhelpers.SelfServiceHookConfigReset)
+
+					res, body := makeRequestPost(t, newServer(t, nil), true, url.Values{})
+					assert.EqualValues(t, http.StatusOK, res.StatusCode)
+					assert.NotEmpty(t, gjson.Get(body, "identity.id"))
+				})
 			})
-		}
-	})
+
+			t.Run("method=PreRegistrationHook", testhelpers.TestSelfServicePreHook(
+				configuration.ViperKeySelfServiceRegistrationBeforeHooks,
+				testhelpers.SelfServiceMakeRegistrationPreHookRequest,
+				func(t *testing.T) *httptest.Server {
+					return newServer(t, nil)
+				},
+			))
+		})
+	}
 }

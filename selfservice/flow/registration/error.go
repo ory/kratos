@@ -22,7 +22,7 @@ import (
 )
 
 var (
-	ErrHookAbortRequest = errors.New("abort hook")
+	ErrHookAbortRequest = errors.New("aborted registration hook execution")
 )
 
 type (

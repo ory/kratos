@@ -8,13 +8,13 @@ linters:
     - structcheck
     - typecheck
     - unused
-    - bodyclose
     - dupl
     - gosec
     - varcheck
   disable:
     - ineffassign
     - godox
+    - bodyclose # too many false negatives
 
 run:
   skip-dirs:

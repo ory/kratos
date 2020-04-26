@@ -13,6 +13,12 @@ module.exports = {
         'docs/docs/guides/zero-trust-iap-proxy-identity-access-proxy.md',
         'docs/docs/quickstart.mdx',
       ]
+    },
+    {
+      replacer: ({content, next}) => content.replace(/v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?/gi, `${next}`),
+      files: [
+        'docs/docs/install.md',
+      ]
     }
   ],
   updateConfig: {

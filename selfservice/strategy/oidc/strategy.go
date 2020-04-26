@@ -347,7 +347,7 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 
 	for _, c := range o {
 		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
-			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, s.d.PostLoginHooks(identity.CredentialsTypeOIDC), a, i); err != nil {
+			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, identity.CredentialsTypeOIDC, a, i); err != nil {
 				s.handleError(w, r, a.GetID(), nil, err)
 				return
 			}
@@ -450,7 +450,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		Config:      b.Bytes(),
 	})
 
-	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, s.d.PostRegistrationHooks(identity.CredentialsTypeOIDC), a, i); err != nil {
+	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, identity.CredentialsTypeOIDC, a, i); err != nil {
 		s.handleError(w, r, a.GetID(), traits, err)
 		return
 	}

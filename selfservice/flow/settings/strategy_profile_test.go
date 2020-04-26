@@ -34,8 +34,10 @@ import (
 )
 
 func TestStrategyTraits(t *testing.T) {
-	_, reg := internal.NewRegistryDefault(t)
+	_, reg := internal.NewFastRegistryWithMocks(t)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
+	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, "https://www.ory.sh/")
+	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, "https://www.ory.sh/")
 
 	ui := testhelpers.NewSettingsUITestServer(t)
 	viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
@@ -82,7 +84,7 @@ func TestStrategyTraits(t *testing.T) {
 
 	t.Run("daemon=public", func(t *testing.T) {
 		t.Run("description=should fail to post data if CSRF is missing", func(t *testing.T) {
-			f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyTraitsID)
+			f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyProfile)
 			res, err := primaryUser.PostForm(pointerx.StringR(f.Action), url.Values{})
 			require.NoError(t, err)
 			assert.EqualValues(t, 400, res.StatusCode, "should return a 400 error because CSRF token is not set")
@@ -112,8 +114,8 @@ func TestStrategyTraits(t *testing.T) {
 
 			found := false
 
-			require.NotNil(t, pr.Payload.Methods[settings.StrategyTraitsID].Config)
-			f := pr.Payload.Methods[settings.StrategyTraitsID].Config
+			require.NotNil(t, pr.Payload.Methods[settings.StrategyProfile].Config)
+			f := pr.Payload.Methods[settings.StrategyProfile].Config
 
 			for i := range f.Fields {
 				if pointerx.StringR(f.Fields[i].Name) == form.CSRFTokenName {
@@ -140,7 +142,7 @@ func TestStrategyTraits(t *testing.T) {
 		})
 
 		t.Run("description=should come back with form errors if some profile data is invalid", func(t *testing.T) {
-			config := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyTraitsID)
+			config := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyProfile)
 
 			values := testhelpers.SDKFormFieldsToURLValues(config.Fields)
 			values.Set("traits.should_long_string", "too-short")
@@ -160,7 +162,7 @@ func TestStrategyTraits(t *testing.T) {
 				viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
 			})
 
-			config := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyTraitsID)
+			config := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyProfile)
 			newEmail := "not-john-doe@mail.com"
 			values := testhelpers.SDKFormFieldsToURLValues(config.Fields)
 			values.Set("traits.email", newEmail)
@@ -184,7 +186,7 @@ func TestStrategyTraits(t *testing.T) {
 			viper.Set(configuration.ViperKeyURLsLogin, loginTS.URL+"/login")
 
 			var run = func(t *testing.T) {
-				f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyTraitsID)
+				f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyProfile)
 
 				values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
 				values.Set("traits.email", "not-john-doe@foo.bar")
@@ -200,17 +202,15 @@ func TestStrategyTraits(t *testing.T) {
 			t.Run("case=should fail without hooks", run)
 
 			t.Run("case=should fail with hooks", func(t *testing.T) {
-				testhelpers.SetSettingsStrategyAfterHooks(t, settings.StrategyTraitsID, publicTS.URL+"/return-ts")
-				t.Cleanup(func() {
-					viper.Set(configuration.ViperKeySelfServiceSettingsAfterConfig+"."+settings.StrategyTraitsID, nil)
-				})
+				testhelpers.SelfServiceHookSettingsSetDefaultRedirectTo(publicTS.URL + "/return-ts")
+				t.Cleanup(testhelpers.SelfServiceHookConfigReset)
 				run(t)
 			})
 		})
 
 		t.Run("description=should retry with invalid payloads multiple times before succeeding", func(t *testing.T) {
 			t.Run("flow=fail first update", func(t *testing.T) {
-				f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyTraitsID)
+				f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyProfile)
 
 				values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
 				values.Set("traits.should_big_number", "1")
@@ -224,7 +224,7 @@ func TestStrategyTraits(t *testing.T) {
 			})
 
 			t.Run("flow=fail second update", func(t *testing.T) {
-				f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyTraitsID)
+				f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyProfile)
 
 				values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
 				values.Del("traits.should_big_number")
@@ -246,7 +246,7 @@ func TestStrategyTraits(t *testing.T) {
 			})
 
 			t.Run("flow=succeed with final request", func(t *testing.T) {
-				f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyTraitsID)
+				f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyProfile)
 
 				values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
 				// set email to the one that is in the db as it should not be modified
@@ -269,7 +269,7 @@ func TestStrategyTraits(t *testing.T) {
 			})
 
 			t.Run("flow=try another update with invalid data", func(t *testing.T) {
-				f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyTraitsID)
+				f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyProfile)
 
 				values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
 				values.Set("traits.should_long_string", "short")
@@ -286,11 +286,12 @@ func TestStrategyTraits(t *testing.T) {
 			returned = true
 		})
 		rts := httptest.NewServer(router)
-		defer rts.Close()
+		t.Cleanup(rts.Close)
 
-		viper.Set(configuration.ViperKeySelfServiceSettingsAfterConfig+"."+settings.StrategyTraitsID, testhelpers.HookConfigRedirectTo(t, rts.URL+"/return-ts"))
+		testhelpers.SelfServiceHookSettingsSetDefaultRedirectTo(rts.URL + "/return-ts")
+		t.Cleanup(testhelpers.SelfServiceHookConfigReset)
 
-		f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyTraitsID)
+		f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyProfile)
 
 		values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
 		values.Set("traits.should_big_number", "9001")
@@ -306,15 +307,16 @@ func TestStrategyTraits(t *testing.T) {
 
 	t.Run("description=should send email with verifiable address", func(t *testing.T) {
 		_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, adminClient)
-		viper.Set(configuration.ViperKeySelfServiceSettingsAfterConfig+"."+settings.StrategyTraitsID, testhelpers.HookVerify(t))
+		viper.Set(configuration.HookStrategyKey(configuration.ViperKeySelfServiceSettingsAfter, settings.StrategyProfile), []configuration.SelfServiceHook{{Name: "verify"}})
 		viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1h")
 		viper.Set(configuration.ViperKeyCourierSMTPURL, "smtp://foo:bar@irrelevant.com/")
+
 		t.Cleanup(func() {
 			viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
-			viper.Set(configuration.ViperKeySelfServiceSettingsAfterConfig+"."+settings.StrategyTraitsID, nil)
+			viper.Set(configuration.HookStrategyKey(configuration.ViperKeySelfServiceSettingsAfter, settings.StrategyProfile), nil)
 		})
 
-		config := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyTraitsID)
+		config := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyProfile)
 		newEmail := "update-verify@mail.com"
 		values := testhelpers.SDKFormFieldsToURLValues(config.Fields)
 		values.Set("traits.email", newEmail)

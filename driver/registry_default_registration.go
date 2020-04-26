@@ -5,23 +5,33 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 )
 
-func (m *RegistryDefault) PostRegistrationHooks(credentialsType identity.CredentialsType) []registration.PostHookExecutor {
-	a := m.getHooks(string(credentialsType), m.c.SelfServiceRegistrationAfterHooks(string(credentialsType)))
-
-	var b []registration.PostHookExecutor
-
-	for _, v := range a {
-		if hook, ok := v.(registration.PostHookExecutor); ok {
+func (m *RegistryDefault) PostRegistrationPrePersistHooks(credentialsType identity.CredentialsType) (b []registration.PostHookPrePersistExecutor) {
+	for _, v := range m.getHooks(string(credentialsType), m.c.SelfServiceRegistrationAfterHooks(string(credentialsType))) {
+		if hook, ok := v.(registration.PostHookPrePersistExecutor); ok {
 			b = append(b, hook)
 		}
 	}
-
-	return b
+	return
 }
 
-func (m *RegistryDefault) PreRegistrationHooks() []registration.PreHookExecutor {
-	return []registration.PreHookExecutor{}
+func (m *RegistryDefault) PostRegistrationPostPersistHooks(credentialsType identity.CredentialsType) (b []registration.PostHookPostPersistExecutor) {
+	for _, v := range m.getHooks(string(credentialsType), m.c.SelfServiceRegistrationAfterHooks(string(credentialsType))) {
+		if hook, ok := v.(registration.PostHookPostPersistExecutor); ok {
+			b = append(b, hook)
+		}
+	}
+	return
 }
+
+func (m *RegistryDefault) PreRegistrationHooks() (b []registration.PreHookExecutor) {
+	for _, v := range m.getHooks("", m.c.SelfServiceRegistrationBeforeHooks()) {
+		if hook, ok := v.(registration.PreHookExecutor); ok {
+			b = append(b, hook)
+		}
+	}
+	return
+}
+
 func (m *RegistryDefault) RegistrationExecutor() *registration.HookExecutor {
 	if m.selfserviceRegistrationExecutor == nil {
 		m.selfserviceRegistrationExecutor = registration.NewHookExecutor(m, m.c)

@@ -10,6 +10,7 @@ import (
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verify"
+	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/x"
 
 	"github.com/cenkalti/backoff"
@@ -55,6 +56,8 @@ type RegistryDefault struct {
 	l logrus.FieldLogger
 	c configuration.Provider
 
+	injectedSelfserviceHooks map[string]func(configuration.SelfServiceHook) interface{}
+
 	nosurf         x.CSRFHandler
 	trc            *tracing.Tracer
 	writer         herodot.Writer
@@ -62,6 +65,10 @@ type RegistryDefault struct {
 
 	courier   *courier.Courier
 	persister persistence.Persister
+
+	hookVerifier         *hook.Verifier
+	hookSessionIssuer    *hook.SessionIssuer
+	hookSessionDestroyer *hook.SessionDestroyer
 
 	identityHandler   *identity.Handler
 	identityValidator *identity.Validator
