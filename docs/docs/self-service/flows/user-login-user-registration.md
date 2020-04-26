@@ -247,7 +247,15 @@ summarized in this state diagram:
    `http://kratos:4434/self-service/browser/flows/requests/(login|registration)?request=abcde`.
    ORY Kratos responds with a JSON Payload that contains data (form fields,
    error messages, ...) for all enabled User Login Strategies:
-   `json5 { "id": "abcde", "expires_at": "2020-01-27T09:34:39.3249566Z", "issued_at": "2020-01-27T09:24:39.3249689Z", "request_url": "https://example.org/.ory/kratos/public/self-service/browser/flows/requests/(login|registration)", "methods": { "oidc": { "method": "oidc", "config": { /* ... */ } }, "password": { "method": "password", "config": { /* ... */ } } // ... } }`
+   ```json5
+   {
+     "id": "abcde",
+     "expires_at": "2020-01-27T09:34:39.3249566Z",
+     "issued_at": "2020-01-27T09:24:39.3249689Z",
+     "request_url": "https://example.org/.ory/kratos/public/self-service/browser/flows/requests/(login|registration)",
+     "methods": { "oidc": { "method": "oidc", "config": { /* ... */ } },
+     "password": { "method": "password", "config": { /* ... */ } } // ... } }
+   ```
 1. Your Server-Side applications renders the data however you see fit. The User
    interacts with it an completes the Login by clicking, for example, the
    "Login", the "Login with Google", ... button.
