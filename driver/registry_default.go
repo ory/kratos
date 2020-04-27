@@ -368,9 +368,9 @@ func (m *RegistryDefault) Init() error {
 	bc.Reset()
 	return errors.WithStack(
 		backoff.Retry(func() error {
-			pool, idlePool, connMaxLifetime := sqlcon.ParseConnectionOptions(m.l, m.c.DSN())
+			pool, idlePool, connMaxLifetime, cleanedDSN := sqlcon.ParseConnectionOptions(m.l, m.c.DSN())
 			c, err := pop.NewConnection(&pop.ConnectionDetails{
-				URL:             m.c.DSN(),
+				URL:             cleanedDSN,
 				IdlePool:        idlePool,
 				ConnMaxLifetime: connMaxLifetime,
 				Pool:            pool,
