@@ -1,507 +1,703 @@
+# Changelog
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Changelog](#changelog)
-  - [Unreleased](#unreleased)
-  - [v0.1.1-alpha.1 (2020-02-18)](#v011-alpha1-2020-02-18)
-  - [v0.1.0-alpha.6 (2020-02-16)](#v010-alpha6-2020-02-16)
-  - [v0.1.0-alpha.5 (2020-02-06)](#v010-alpha5-2020-02-06)
-  - [v0.1.0-alpha.4 (2020-02-06)](#v010-alpha4-2020-02-06)
-  - [v0.1.0-alpha.3 (2020-02-06)](#v010-alpha3-2020-02-06)
-  - [v0.1.0-alpha.2 (2020-02-03)](#v010-alpha2-2020-02-03)
-  - [v0.1.0-alpha.1 (2020-01-31)](#v010-alpha1-2020-01-31)
-  - [v0.0.3-alpha.15 (2020-01-31)](#v003-alpha15-2020-01-31)
-  - [v0.0.3-alpha.14 (2020-01-31)](#v003-alpha14-2020-01-31)
-  - [v0.0.3-alpha.12 (2020-01-31)](#v003-alpha12-2020-01-31)
-  - [v0.0.3-alpha.13 (2020-01-31)](#v003-alpha13-2020-01-31)
-  - [v0.0.3-alpha.11 (2020-01-31)](#v003-alpha11-2020-01-31)
-  - [v0.0.3-alpha.10 (2020-01-31)](#v003-alpha10-2020-01-31)
-  - [v0.0.3-alpha.8+oryOS.15 (2020-01-30)](#v003-alpha8oryos15-2020-01-30)
-  - [v0.0.3-alpha.9 (2020-01-30)](#v003-alpha9-2020-01-30)
-  - [v0.0.3-alpha.7 (2020-01-30)](#v003-alpha7-2020-01-30)
-  - [v0.0.3-alpha.5 (2020-01-30)](#v003-alpha5-2020-01-30)
-  - [v0.0.3-alpha.4 (2020-01-30)](#v003-alpha4-2020-01-30)
-  - [v0.0.3-alpha.3 (2020-01-30)](#v003-alpha3-2020-01-30)
-  - [v0.0.3-alpha.2 (2020-01-30)](#v003-alpha2-2020-01-30)
-  - [v0.0.3-alpha.1 (2020-01-30)](#v003-alpha1-2020-01-30)
-  - [v0.0.1-alpha.9 (2020-01-29)](#v001-alpha9-2020-01-29)
-  - [v0.0.1-alpha.10+oryOS.15 (2020-01-29)](#v001-alpha10oryos15-2020-01-29)
-  - [v0.0.1-alpha.11 (2020-01-29)](#v001-alpha11-2020-01-29)
-  - [v0.0.1-alpha.7 (2020-01-29)](#v001-alpha7-2020-01-29)
-  - [v0.0.1-alpha.8 (2020-01-29)](#v001-alpha8-2020-01-29)
-  - [v0.0.2-alpha.1 (2020-01-29)](#v002-alpha1-2020-01-29)
-  - [v0.0.1-alpha.6 (2020-01-29)](#v001-alpha6-2020-01-29)
-  - [v0.0.1-alpha.5 (2020-01-29)](#v001-alpha5-2020-01-29)
-  - [v0.0.1-alpha.3 (2020-01-28)](#v001-alpha3-2020-01-28)
-  - [v0.0.1-alpha.2 (2020-01-28)](#v001-alpha2-2020-01-28)
-  - [v0.0.1-alpha.1 (2020-01-28)](#v001-alpha1-2020-01-28)
+- [Unreleased (2020-04-27)](#unreleased-2020-04-27)
+    - [Bug Fixes](#bug-fixes)
+    - [Code Refactoring](#code-refactoring)
+    - [Documentation](#documentation)
+    - [Features](#features)
+    - [Unclassified](#unclassified)
+    - [BREAKING CHANGES](#breaking-changes)
+  - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
+    - [Bug Fixes](#bug-fixes-1)
+    - [Code Refactoring](#code-refactoring-1)
+    - [Documentation](#documentation-1)
+- [0.1.0-alpha.6 (2020-02-16)](#010-alpha6-2020-02-16)
+    - [Bug Fixes](#bug-fixes-2)
+    - [Code Refactoring](#code-refactoring-2)
+    - [Documentation](#documentation-2)
+    - [Features](#features-1)
+- [0.1.0-alpha.5 (2020-02-06)](#010-alpha5-2020-02-06)
+    - [Documentation](#documentation-3)
+    - [Features](#features-2)
+- [0.1.0-alpha.4 (2020-02-06)](#010-alpha4-2020-02-06)
+    - [Documentation](#documentation-4)
+- [0.1.0-alpha.3 (2020-02-06)](#010-alpha3-2020-02-06)
+- [0.1.0-alpha.2 (2020-02-03)](#010-alpha2-2020-02-03)
+    - [Bug Fixes](#bug-fixes-3)
+    - [Documentation](#documentation-5)
+    - [Features](#features-3)
+    - [Unclassified](#unclassified-1)
+- [0.1.0-alpha.1 (2020-01-31)](#010-alpha1-2020-01-31)
+    - [Documentation](#documentation-6)
+  - [0.0.3-alpha.15 (2020-01-31)](#003-alpha15-2020-01-31)
+    - [Unclassified](#unclassified-2)
+  - [0.0.3-alpha.14 (2020-01-31)](#003-alpha14-2020-01-31)
+    - [Unclassified](#unclassified-3)
+  - [0.0.3-alpha.13 (2020-01-31)](#003-alpha13-2020-01-31)
+    - [Unclassified](#unclassified-4)
+  - [0.0.3-alpha.11 (2020-01-31)](#003-alpha11-2020-01-31)
+    - [Unclassified](#unclassified-5)
+  - [0.0.3-alpha.10 (2020-01-31)](#003-alpha10-2020-01-31)
+    - [Unclassified](#unclassified-6)
+  - [0.0.3-alpha.7 (2020-01-30)](#003-alpha7-2020-01-30)
+    - [Unclassified](#unclassified-7)
+  - [0.0.3-alpha.5 (2020-01-30)](#003-alpha5-2020-01-30)
+    - [Unclassified](#unclassified-8)
+  - [0.0.3-alpha.4 (2020-01-30)](#003-alpha4-2020-01-30)
+    - [Unclassified](#unclassified-9)
+  - [0.0.3-alpha.2 (2020-01-30)](#003-alpha2-2020-01-30)
+    - [Unclassified](#unclassified-10)
+  - [0.0.3-alpha.1 (2020-01-30)](#003-alpha1-2020-01-30)
+    - [Unclassified](#unclassified-11)
+  - [0.0.1-alpha.9 (2020-01-29)](#001-alpha9-2020-01-29)
+  - [0.0.2-alpha.1 (2020-01-29)](#002-alpha1-2020-01-29)
+    - [Unclassified](#unclassified-12)
+  - [0.0.1-alpha.6 (2020-01-29)](#001-alpha6-2020-01-29)
+  - [0.0.1-alpha.5 (2020-01-29)](#001-alpha5-2020-01-29)
+    - [Unclassified](#unclassified-13)
+  - [0.0.1-alpha.3 (2020-01-28)](#001-alpha3-2020-01-28)
+  - [0.0.1-alpha.2 (2020-01-28)](#001-alpha2-2020-01-28)
+  - [0.0.1-alpha.1 (2020-01-28)](#001-alpha1-2020-01-28)
+    - [Documentation](#documentation-7)
+    - [Unclassified](#unclassified-14)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# Changelog
-
-## [Unreleased](https://github.com/ory/kratos/tree/HEAD)
-
-[Full Changelog](https://github.com/ory/kratos/compare/v0.1.1-alpha.1...HEAD)
-
-**Implemented enhancements:**
-
-- Rename profile module to settings [\#311](https://github.com/ory/kratos/issues/311)
-- Include authentication URL for protected user settings [\#310](https://github.com/ory/kratos/issues/310)
-- Rename profile module to settings [\#304](https://github.com/ory/kratos/issues/304)
-- Error authenticating POST requests from browser session behind Oathkeeper [\#270](https://github.com/ory/kratos/issues/270)
-- verified email address: resend verification challenge when the address changes  [\#267](https://github.com/ory/kratos/issues/267)
-- Have `dsn: memory` as an alias for SQLite in memory DSN [\#228](https://github.com/ory/kratos/issues/228)
-- Remove identity if one of the post-registration workflow jobs returns 403 \(unauthorized\) [\#51](https://github.com/ory/kratos/issues/51)
-- refactor: Prepare profile management payloads for credentials [\#300](https://github.com/ory/kratos/pull/300) ([aeneasr](https://github.com/aeneasr))
-
-**Fixed bugs:**
-
-- Fix broken redirect in login handler [\#323](https://github.com/ory/kratos/issues/323)
-- shutdown doesn't complete [\#295](https://github.com/ory/kratos/issues/295)
-- Same version of migration version 20191100000010 caused test failure [\#279](https://github.com/ory/kratos/issues/279)
-- Email Verification Error when using PostgreSQL [\#269](https://github.com/ory/kratos/issues/269)
-- HBIP check hangs when connection is slow or ends with a network error [\#261](https://github.com/ory/kratos/issues/261)
-- Investigate MySQL empty timestamp issue on session [\#244](https://github.com/ory/kratos/issues/244)
-- Return REST error when fetching expired login/registration/profile request [\#235](https://github.com/ory/kratos/issues/235)
-- fix: fix swagger annotation [\#331](https://github.com/ory/kratos/pull/331) ([aeneasr](https://github.com/aeneasr))
-- fix\(swagger\): Move nolint,deadcode instructions to own file [\#293](https://github.com/ory/kratos/pull/293) ([aeneasr](https://github.com/aeneasr))
-- feat: Enable CockroachDB integration [\#260](https://github.com/ory/kratos/pull/260) ([aeneasr](https://github.com/aeneasr))
-- fix: Resolve NULL value for seen\_at [\#259](https://github.com/ory/kratos/pull/259) ([aeneasr](https://github.com/aeneasr))
-
-**Security fixes:**
-
-- Regenerate CSRF Tokens on principal change [\#217](https://github.com/ory/kratos/issues/217)
-
-**Closed issues:**
-
-- Document new redirect behvaior [\#348](https://github.com/ory/kratos/issues/348)
-- Quickstart not working on Windows [\#346](https://github.com/ory/kratos/issues/346)
-- Document CSRF pitfalls [\#341](https://github.com/ory/kratos/issues/341)
-- Quickstart: configuration invalid [\#335](https://github.com/ory/kratos/issues/335)
-- Kratos as library for any Golang project [\#328](https://github.com/ory/kratos/issues/328)
-- DOCS, wrong link [\#327](https://github.com/ory/kratos/issues/327)
-- Quickstart app doubt for authentication only\(not authorization\) with mysql database  [\#297](https://github.com/ory/kratos/issues/297)
-- Serve the schemas in the common API and have it documented [\#287](https://github.com/ory/kratos/issues/287)
-- Quickstart broken, db.sqlite not writabel [\#281](https://github.com/ory/kratos/issues/281)
-- Viper key for SMTP from address appears to be incorrect [\#277](https://github.com/ory/kratos/issues/277)
-- Make the session cookie name configurable [\#268](https://github.com/ory/kratos/issues/268)
-- MailSlurper is not sending the verification email [\#264](https://github.com/ory/kratos/issues/264)
-- SQLite database errors in quickstart [\#263](https://github.com/ory/kratos/issues/263)
-- Add a clear guide how to use Kratos without Oathkeeper [\#262](https://github.com/ory/kratos/issues/262)
-- Allow configuration of same-site cookie [\#257](https://github.com/ory/kratos/issues/257)
-- CSRF token is missing or invalid [\#250](https://github.com/ory/kratos/issues/250)
-- selfservice/profile: sudo mode for updating auth related stuff [\#243](https://github.com/ory/kratos/issues/243)
-- Enable CockroachDB test suite and integration [\#132](https://github.com/ory/kratos/issues/132)
-- Implement selfservice credentials management [\#113](https://github.com/ory/kratos/issues/113)
-- Rebrand hooks to workflow\(s\) [\#50](https://github.com/ory/kratos/issues/50)
-- Document identity hooks [\#31](https://github.com/ory/kratos/issues/31)
-
-**Merged pull requests:**
-
-- fix: docs: spelling in quickstart [\#356](https://github.com/ory/kratos/pull/356) ([Jackneill](https://github.com/Jackneill))
-- Update isntall [\#354](https://github.com/ory/kratos/pull/354) ([aeneasr](https://github.com/aeneasr))
-- fix: verified\_at field should not be required [\#353](https://github.com/ory/kratos/pull/353) ([AntiSC2](https://github.com/AntiSC2))
-- docs: update github templates [\#351](https://github.com/ory/kratos/pull/351) ([aeneasr](https://github.com/aeneasr))
-- docs: update github templates [\#350](https://github.com/ory/kratos/pull/350) ([aeneasr](https://github.com/aeneasr))
-- refactor: rework hooks and self-service flow completion [\#349](https://github.com/ory/kratos/pull/349) ([aeneasr](https://github.com/aeneasr))
-- docs: update github templates [\#343](https://github.com/ory/kratos/pull/343) ([aeneasr](https://github.com/aeneasr))
-- docs: add csrf and cookie debug section [\#342](https://github.com/ory/kratos/pull/342) ([aeneasr](https://github.com/aeneasr))
-- chore: update docusaurus template [\#340](https://github.com/ory/kratos/pull/340) ([aeneasr](https://github.com/aeneasr))
-- fix-335 [\#339](https://github.com/ory/kratos/pull/339) ([aeneasr](https://github.com/aeneasr))
-- docs: update github templates [\#338](https://github.com/ory/kratos/pull/338) ([aeneasr](https://github.com/aeneasr))
-- chore: update docusaurus template [\#337](https://github.com/ory/kratos/pull/337) ([aeneasr](https://github.com/aeneasr))
-- Improve quickstart [\#336](https://github.com/ory/kratos/pull/336) ([aeneasr](https://github.com/aeneasr))
-- feat: send verification emails on profile update [\#333](https://github.com/ory/kratos/pull/333) ([aeneasr](https://github.com/aeneasr))
-- docs: Added database connection documentation [\#332](https://github.com/ory/kratos/pull/332) ([koenmtb1](https://github.com/koenmtb1))
-- fix: exempt whomai from csrf protection [\#329](https://github.com/ory/kratos/pull/329) ([aeneasr](https://github.com/aeneasr))
-- chore: update docusaurus template [\#324](https://github.com/ory/kratos/pull/324) ([aeneasr](https://github.com/aeneasr))
-- fix writing [\#322](https://github.com/ory/kratos/pull/322) ([gwind](https://github.com/gwind))
-- chore: update docusaurus template [\#321](https://github.com/ory/kratos/pull/321) ([aeneasr](https://github.com/aeneasr))
-- chore: update docusaurus template [\#320](https://github.com/ory/kratos/pull/320) ([aeneasr](https://github.com/aeneasr))
-- chore: update docusaurus template [\#319](https://github.com/ory/kratos/pull/319) ([aeneasr](https://github.com/aeneasr))
-- chore: update docusaurus template [\#318](https://github.com/ory/kratos/pull/318) ([aeneasr](https://github.com/aeneasr))
-- refactor: move docs to this repository [\#317](https://github.com/ory/kratos/pull/317) ([aeneasr](https://github.com/aeneasr))
-- docs: Updates issue and pull request templates [\#315](https://github.com/ory/kratos/pull/315) ([aeneasr](https://github.com/aeneasr))
-- docs: Updates issue and pull request templates [\#314](https://github.com/ory/kratos/pull/314) ([aeneasr](https://github.com/aeneasr))
-- docs: Updates issue and pull request templates [\#313](https://github.com/ory/kratos/pull/313) ([aeneasr](https://github.com/aeneasr))
-- chore: bump ory/x to have csv parsing from env vars [\#312](https://github.com/ory/kratos/pull/312) ([zepatrik](https://github.com/zepatrik))
-- fix: move to ory sqa service [\#309](https://github.com/ory/kratos/pull/309) ([aeneasr](https://github.com/aeneasr))
-- Fix the query parameter name in the get self-service error endpoint in API docs [\#308](https://github.com/ory/kratos/pull/308) ([sandhose](https://github.com/sandhose))
-- chore: moved watchAndValidateViper to viperx [\#307](https://github.com/ory/kratos/pull/307) ([zepatrik](https://github.com/zepatrik))
-- chore: update ory/x dependency and add test case [\#305](https://github.com/ory/kratos/pull/305) ([zepatrik](https://github.com/zepatrik))
-- feat: allow configuring same-site for session cookies [\#303](https://github.com/ory/kratos/pull/303) ([zepatrik](https://github.com/zepatrik))
-- fix: Linux install script [\#302](https://github.com/ory/kratos/pull/302) ([guillett](https://github.com/guillett))
-- Document the schema API and serve it in the admin API [\#299](https://github.com/ory/kratos/pull/299) ([sandhose](https://github.com/sandhose))
-- docs: Updates issue and pull request templates [\#298](https://github.com/ory/kratos/pull/298) ([aeneasr](https://github.com/aeneasr))
-- fix:add graceful shutdown to courier handler [\#296](https://github.com/ory/kratos/pull/296) ([Gibheer](https://github.com/Gibheer))
-- fix\(session\): Regenerate CSRF Token on principal change [\#290](https://github.com/ory/kratos/pull/290) ([aeneasr](https://github.com/aeneasr))
-- feat: Return 410 when selfservice requests expire [\#289](https://github.com/ory/kratos/pull/289) ([aeneasr](https://github.com/aeneasr))
-- fix: Use resilient client for HIBP lookup [\#288](https://github.com/ory/kratos/pull/288) ([aeneasr](https://github.com/aeneasr))
-- Revert "fix: Use host volume mount for sqlite" [\#285](https://github.com/ory/kratos/pull/285) ([aeneasr](https://github.com/aeneasr))
-- feat: add `dsn: memory` shorthand [\#284](https://github.com/ory/kratos/pull/284) ([zepatrik](https://github.com/zepatrik))
-- fix\(session\): whoami endpoint now supports all HTTP methods [\#283](https://github.com/ory/kratos/pull/283) ([aeneasr](https://github.com/aeneasr))
-- fix: rename migrations with same version [\#280](https://github.com/ory/kratos/pull/280) ([zepatrik](https://github.com/zepatrik))
-- Fix smtp/stmp typo [\#278](https://github.com/ory/kratos/pull/278) ([jdnurmi](https://github.com/jdnurmi))
-- fix\(sql/migrations\): change type of courier\_message.body to "text" [\#276](https://github.com/ory/kratos/pull/276) ([zepatrik](https://github.com/zepatrik))
-- fix: Use host volume mount for sqlite [\#272](https://github.com/ory/kratos/pull/272) ([aeneasr](https://github.com/aeneasr))
-- feat\(selfService/profile\): enable updating auth related traits [\#266](https://github.com/ory/kratos/pull/266) ([zepatrik](https://github.com/zepatrik))
-- docs: Typo in README.md [\#265](https://github.com/ory/kratos/pull/265) ([cuttlefish](https://github.com/cuttlefish))
-- feat\(selfservice/login\): enable reauthentication functionality [\#248](https://github.com/ory/kratos/pull/248) ([zepatrik](https://github.com/zepatrik))
+# [Unreleased](https://github.com/ory/kratos/compare/v0.1.1-alpha.1...10b6481774aaff42b70b9c6af3ed776ac8f7734c) (2020-04-27)
+
+
+### Bug Fixes
+
+* Create pop connection without parsed connection options ([#366](https://github.com/ory/kratos/issues/366)) ([10b6481](https://github.com/ory/kratos/commit/10b6481774aaff42b70b9c6af3ed776ac8f7734c))
+* **docker:** Throw away build artifacts ([481ec1b](https://github.com/ory/kratos/commit/481ec1ba14480ced39516f6e0c47a40b6a44a631))
+* Allow setting new password in profile flow ([3b5fd5c](https://github.com/ory/kratos/commit/3b5fd5ca8c09b2344c0262547f2b387bda362362))
+* Decouple quickstart scenarios ([#336](https://github.com/ory/kratos/issues/336)) ([17363b3](https://github.com/ory/kratos/commit/17363b312deff8b92fc1b0d158dc70670d5938e5)), closes [#262](https://github.com/ory/kratos/issues/262):
+  > Creates several docker compose examples which include various
+  > scenarios of the quickstart.
+  > 
+  > The regular quickstart guide now works without ORY Oathkeeper
+  > and uses the standalone mode of the example app instead.
+  > 
+  > Additionally, the Makefile was improved and now automatically pulls
+  > required dependencies in the appropriate version.
+* Document Schema API and serve over admin endpoint ([#299](https://github.com/ory/kratos/issues/299)) ([4be417c](https://github.com/ory/kratos/commit/4be417c0ee18622247a15d2803f7f436cfe3c229)), closes [#287](https://github.com/ory/kratos/issues/287)
+* Exempt whomai from csrf protection ([#329](https://github.com/ory/kratos/issues/329)) ([31d4065](https://github.com/ory/kratos/commit/31d4065c2b0cbd6c8d2b0031ce8f6f157ff967cf))
+* Fix swagger annotation ([#331](https://github.com/ory/kratos/issues/331)) ([5c5c78f](https://github.com/ory/kratos/commit/5c5c78f404a11d5df25cb68584b826b685bf5385)):
+  > Closes https://github.com/ory/sdk/issues/10
+* Move to ory sqa service ([#309](https://github.com/ory/kratos/issues/309)) ([7c244e0](https://github.com/ory/kratos/commit/7c244e0a28a010e56e07d061132dad7a0309ea75))
+* Properly annotate error API ([a6f1300](https://github.com/ory/kratos/commit/a6f1300951010e7c862c410e93653f7c02c2e79f))
+* Remove unused returnTo ([e64e5b0](https://github.com/ory/kratos/commit/e64e5b0cecceedda29a525f683cbf6070a9ef1eb))
+* Resolve docker build permission issues ([f3612e8](https://github.com/ory/kratos/commit/f3612e8f82018bae17c9146d273fe7e82ceb033d))
+* Resolve failing test issues ([2e968e5](https://github.com/ory/kratos/commit/2e968e52d3ae3396a3f2e212c0dab22677b4b5fd))
+* Resolve linux install script archive naming ([#302](https://github.com/ory/kratos/issues/302)) ([c98b8aa](https://github.com/ory/kratos/commit/c98b8aa4cd3ab881b904e9dc4cdcb6383a8ad09b))
+* Resolve password continuity issues ([56a44fa](https://github.com/ory/kratos/commit/56a44fa33d325eea9fddec4269e34e632310f77b))
+* Revert use host volume mount for sqlite ([#272](https://github.com/ory/kratos/issues/272)) ([#285](https://github.com/ory/kratos/issues/285)) ([a7477ab](https://github.com/ory/kratos/commit/a7477ab1db0d986f96e754946607d05888de4c97)):
+  > This reverts commit 230ab2d83f4d187f410e267c6d68554e82514948.
+* Self-service error query parameter name ([#308](https://github.com/ory/kratos/issues/308)) ([be257f5](https://github.com/ory/kratos/commit/be257f5448abaa48e25735a088757f3fd6dc6d22)):
+  > The query parameter for the self-service errors endpoint was named `id`
+  > in the API docs, whereas it is the `error` param that is used by the
+  > handler.
+* Show log in ui only when unauthenticated or forced ([df77310](https://github.com/ory/kratos/commit/df77310ffbe7cfc90fa3bc5dad0450e79c34ebef)), closes [#323](https://github.com/ory/kratos/issues/323)
+* Use semver-regex replacer func ([d5c9a47](https://github.com/ory/kratos/commit/d5c9a47800fc2a55b96c7b9330f68b0a2db328cb))
+* Verified_at field should not be required ([#353](https://github.com/ory/kratos/issues/353)) ([15d5e26](https://github.com/ory/kratos/commit/15d5e268d2ec397f0647d2407d86404c4ee8bfa3)):
+  > Closes https://github.com/ory/sdk/issues/11
+  > 
+  > 
+* **config:** Rename config key stmp to smtp ([#278](https://github.com/ory/kratos/issues/278)) ([ef95811](https://github.com/ory/kratos/commit/ef95811bb891afe3a0ef3b19514f13a56a32ea3b))
+* **session:** Regenerate CSRF Token on principal change ([#290](https://github.com/ory/kratos/issues/290)) ([1527ef4](https://github.com/ory/kratos/commit/1527ef4209b937e2175b60d56efd019f17b33b04)), closes [#217](https://github.com/ory/kratos/issues/217)
+* **session:** Whoami endpoint now supports all HTTP methods ([#283](https://github.com/ory/kratos/issues/283)) ([4bf645b](https://github.com/ory/kratos/commit/4bf645b66c7a128182ff55e52fdad7f53d752ce7)), closes [#270](https://github.com/ory/kratos/issues/270)
+* **swagger:** Move nolint,deadcode instructions to own file ([#293](https://github.com/ory/kratos/issues/293)) ([1935510](https://github.com/ory/kratos/commit/1935510ad9b0f387eb3b2e690e31c5313a06883e)):
+  > Closes https://github.com/ory/docs/pull/279
+* Use host volume mount for sqlite ([#272](https://github.com/ory/kratos/issues/272)) ([230ab2d](https://github.com/ory/kratos/commit/230ab2d83f4d187f410e267c6d68554e82514948))
+* Use resilient client for HIBP lookup ([#288](https://github.com/ory/kratos/issues/288)) ([735b435](https://github.com/ory/kratos/commit/735b43508392c6966a57907c20caa7cf9df4fc4d)), closes [#261](https://github.com/ory/kratos/issues/261)
+* **sql:** Rename migrations with same version ([#280](https://github.com/ory/kratos/issues/280)) ([07e46b9](https://github.com/ory/kratos/commit/07e46b9c9e57940bec904d744ffdd272d610a77b)), closes [#279](https://github.com/ory/kratos/issues/279)
+* Resolve NULL value for seen_at ([#259](https://github.com/ory/kratos/issues/259)) ([a7d1e86](https://github.com/ory/kratos/commit/a7d1e86844a9cdd0c58353e1f1e4340dac4260b3)), closes [#244](https://github.com/ory/kratos/issues/244):
+  > Previously, errorx tests were not executed which caused several bugs.
+
+
+### Code Refactoring
+
+* Move docs to this repository ([#317](https://github.com/ory/kratos/issues/317)) ([aa0d726](https://github.com/ory/kratos/commit/aa0d72639ecae3b0649761e6ee881a59b2f3e94e))
+* Prepare profile management payloads for credentials ([44493f3](https://github.com/ory/kratos/commit/44493f3ddbb449981576ec317ac45530ca3be14d))
+* Rename traits method to profile ([4f1e033](https://github.com/ory/kratos/commit/4f1e0339ecc1efbdfa3d3680ad64b7683e90e447))
+* Rework hooks and self-service flow completion ([#349](https://github.com/ory/kratos/issues/349)) ([a7c7fef](https://github.com/ory/kratos/commit/a7c7fef758e843393b0dc1e60bee11b88b8c9b4a)), closes [#348](https://github.com/ory/kratos/issues/348) [#347](https://github.com/ory/kratos/issues/347) [#179](https://github.com/ory/kratos/issues/179) [#51](https://github.com/ory/kratos/issues/51) [#50](https://github.com/ory/kratos/issues/50) [#31](https://github.com/ory/kratos/issues/31):
+  > This patch focuses on refactoring how self-service flows terminate and
+  > changes how hooks behave and when they are executed.
+  > 
+  > Before this patch, it was not clear whether hooks run before or
+  > after an identity is persisted. This caused problems with multiple
+  > writes on the HTTP ResponseWriter and other bugs.
+  > 
+  > This patch removes certain hooks from after login, registration, and profile flows.
+  > Per default, these flows now respond with an appropriate payload (
+  > redirect for browsers, JSON for API clients) and deprecate
+  > the `redirect` hook. This patch includes documentation which explains
+  > how these hooks work now.
+  > 
+  > Additionally, the documentation was updated. Especially the sections
+  > about hooks have been refactored. The login and user registration docs
+  > have been updated to reflect the latest changes as well.
+  > 
+  > Also, some other minor, cosmetic, changes to the documentation have been made.
+
+
+### Documentation
+
+* Add banner kratos ([8a9dfbb](https://github.com/ory/kratos/commit/8a9dfbbd54bac14778cc84ec13326eb1ef80f5b3))
+* Add csrf and cookie debug section ([#342](https://github.com/ory/kratos/issues/342)) ([cac2948](https://github.com/ory/kratos/commit/cac2948685ed2a3c3edbc8eb4696bbfb8523dfeb)), closes [#341](https://github.com/ory/kratos/issues/341)
+* Add database connection documentation ([#332](https://github.com/ory/kratos/issues/332)) ([4f9e8b0](https://github.com/ory/kratos/commit/4f9e8b00bacda3612db3f48b81fabd562075470a))
+* Add quickstart notes for docker debugging ([74f082a](https://github.com/ory/kratos/commit/74f082a407ee73741453ff6a394f47790e79b667))
+* Declare api frontmatter properly ([df7591f](https://github.com/ory/kratos/commit/df7591f7b70c94cfe62042a598eceb36b6a4f29a))
+* Fix broken images in quickstart ([52aa4cf](https://github.com/ory/kratos/commit/52aa4cf0b6967108fa58f58b6b151e6f6118bcc9))
+* Fix broken link ([bf7843c](https://github.com/ory/kratos/commit/bf7843cd96795a894488a0910529c847cf7eee19)), closes [#327](https://github.com/ory/kratos/issues/327)
+* Fix broken link ([c2adc73](https://github.com/ory/kratos/commit/c2adc734a73758d858d50d8738dc2a556110f26c)), closes [#327](https://github.com/ory/kratos/issues/327)
+* Fix broken mermaid links ([f24fc1b](https://github.com/ory/kratos/commit/f24fc1bbba234d71098298bcddbba236ac4297f3))
+* Fix spelling in quickstart ([#356](https://github.com/ory/kratos/issues/356)) ([3ce6b4a](https://github.com/ory/kratos/commit/3ce6b4a1b0722a96bcbae79b7261616f20741494))
+* Regenerate and update changelog ([7d4ed98](https://github.com/ory/kratos/commit/7d4ed9873f25b14b59f727002fb08a8b8a4e91a6))
+* Regenerate and update changelog ([175b626](https://github.com/ory/kratos/commit/175b626f74b4471e068bd79259c6d479fd6c1a7d))
+* Regenerate and update changelog ([e60e2df](https://github.com/ory/kratos/commit/e60e2df5d5cc4c1ef8a6a7f13487d4ebbf54741e))
+* Regenerate and update changelog ([41eeb75](https://github.com/ory/kratos/commit/41eeb7587fad864f64c4179ac20847f902c438b3))
+* Regenerate and update changelog ([468105a](https://github.com/ory/kratos/commit/468105a6080b861f1e02db3a404f2bac7f2f5eb6))
+* Regenerate and update changelog ([8414520](https://github.com/ory/kratos/commit/8414520c995cb2405ed051952357d37ca8111f25))
+* Regenerate and update changelog ([85d5866](https://github.com/ory/kratos/commit/85d5866df403b3cfa5566cef5cb983714b395505))
+* Regenerate and update changelog ([e8d2d10](https://github.com/ory/kratos/commit/e8d2d1019bbc05fbe4eeaaee7a8eb1e8f2d18cf9))
+* Regenerate and update changelog ([4c58b6d](https://github.com/ory/kratos/commit/4c58b6de4a3a39b1e94516abd1ea8ed7b09c1fe4))
+* Regenerate and update changelog ([a726eb2](https://github.com/ory/kratos/commit/a726eb202a070038148612f98f12e5d22170d1ec))
+* Regenerate and update changelog ([87b47ba](https://github.com/ory/kratos/commit/87b47baa9cdc0175c58ccbb20e67b458ce6a445f))
+* Regenerate and update changelog ([537d496](https://github.com/ory/kratos/commit/537d496d2043a17c68f31a8744c39bc76f76314c))
+* Regenerate and update changelog ([00e6af9](https://github.com/ory/kratos/commit/00e6af96060ec38059c449ac5e8b3c1df5bb8c95))
+* Regenerate and update changelog ([48a2eca](https://github.com/ory/kratos/commit/48a2eca2dcd274ca73d55132efca4a6dae63efdf))
+* Regenerate and update changelog ([8a71948](https://github.com/ory/kratos/commit/8a719481b54957681aa21eff5415229f3e5d4bff))
+* Regenerate and update changelog ([ad3d510](https://github.com/ory/kratos/commit/ad3d5101dad3c8a2725083c63f155638905b6e8c))
+* Regenerate and update changelog ([48bcc70](https://github.com/ory/kratos/commit/48bcc704ed22d8c78620aa3a5f8ecb5b41937759))
+* Regenerate and update changelog ([816a55c](https://github.com/ory/kratos/commit/816a55c81a27b53d5bd823392751853b68d3f607))
+* Regenerate and update changelog ([4ed74d2](https://github.com/ory/kratos/commit/4ed74d25c45f6e439377329d42cd7ae0acf9d0f1))
+* Regenerate and update changelog ([367927e](https://github.com/ory/kratos/commit/367927e716e7c1c6898151a5f14876fb30070dd3))
+* Regenerate and update changelog ([38f4019](https://github.com/ory/kratos/commit/38f40190f54264808c7a2716555876d05cdf560f))
+* Typo in README.md ([#265](https://github.com/ory/kratos/issues/265)) ([9f865a2](https://github.com/ory/kratos/commit/9f865a2ebace801414b2de17fe2f627d91f23474))
+* Update banner url ([292c986](https://github.com/ory/kratos/commit/292c986729d83187f7e77365e11ef74a6f3cadf6))
+* Update forum and chat links ([3039191](https://github.com/ory/kratos/commit/30391919d7ea58609dd3cd37db2709495e7abc76))
+* Update github templates ([#338](https://github.com/ory/kratos/issues/338)) ([57dbc77](https://github.com/ory/kratos/commit/57dbc77b548383522ca428e899dfde461334216c))
+* Update github templates ([#343](https://github.com/ory/kratos/issues/343)) ([eb13dc1](https://github.com/ory/kratos/commit/eb13dc1285cb16515d1c63b99cc389147508a31e))
+* Update github templates ([#350](https://github.com/ory/kratos/issues/350)) ([faf2f30](https://github.com/ory/kratos/commit/faf2f305aea1826e3d5f0b2614313920ac2b585b))
+* Update github templates ([#351](https://github.com/ory/kratos/issues/351)) ([20ff289](https://github.com/ory/kratos/commit/20ff2890004745231073cd4fd6ef1b37521cde72))
+* Update linux install guide ([3b8e549](https://github.com/ory/kratos/commit/3b8e5493a01357f8c442a8a2dc9437712498452c))
+* Update linux install guide ([#354](https://github.com/ory/kratos/issues/354)) ([ec49cae](https://github.com/ory/kratos/commit/ec49caec6ddea2c800db0779005bac6da73903e1))
+* Update self service reg docs ([#367](https://github.com/ory/kratos/issues/367)) ([4cf0323](https://github.com/ory/kratos/commit/4cf0323095990c5ec25283a01561cb9b8833f9ef)), closes [/github.com/ory/kratos-selfservice-ui-node/blob/489c76d1b0474ee55ef56804b28f54d8718747ba/src/routes/auth.ts#L28](https://github.com//github.com/ory/kratos-selfservice-ui-node/blob/489c76d1b0474ee55ef56804b28f54d8718747ba/src/routes/auth.ts/issues/L28):
+  > The old links pointed at `/auth/browser/(login|registration)`
+  > which seems to be outdated now.
+* Update user-settings-profile-management.md ([#322](https://github.com/ory/kratos/issues/322)) ([45dc3a5](https://github.com/ory/kratos/commit/45dc3a56c15ae442890313a7dbc784b75644248a))
+* Use git checkout <tag> in quickstart ([#339](https://github.com/ory/kratos/issues/339)) ([2d2562b](https://github.com/ory/kratos/commit/2d2562b587a69a2891ff29d927cb001e15d75b5d)), closes [#335](https://github.com/ory/kratos/issues/335)
+* **concepts:** Fix typo ([a49184c](https://github.com/ory/kratos/commit/a49184c30d9c2ccff5a2d41d3aff61b24e7d2ea9)):
+  > Closes https://github.com/ory/docs/pull/296
+* **concepts:** Properly close code tag ([1c841c2](https://github.com/ory/kratos/commit/1c841c213bdbc79a6aa41e8450444d8d6c1f0284))
+* Updates issue and pull request templates ([#298](https://github.com/ory/kratos/issues/298)) ([1be738d](https://github.com/ory/kratos/commit/1be738d3f8e9bbc6dae31ffad5d990657a66761c))
+* Updates issue and pull request templates ([#313](https://github.com/ory/kratos/issues/313)) ([299063c](https://github.com/ory/kratos/commit/299063caf2fdde40713bae4c36abb3b6fac7271d))
+* Updates issue and pull request templates ([#314](https://github.com/ory/kratos/issues/314)) ([d5ae452](https://github.com/ory/kratos/commit/d5ae452a8ce5f641a40e510e82441d4eb8137218))
+* Updates issue and pull request templates ([#315](https://github.com/ory/kratos/issues/315)) ([8b68db1](https://github.com/ory/kratos/commit/8b68db140a7fc1c0eaa9318c1759ea9d8d0c27df))
+
+
+### Features
+
+* Add `dsn: memory` shorthand ([#284](https://github.com/ory/kratos/issues/284)) ([e66a030](https://github.com/ory/kratos/commit/e66a030f7d67dec639121fb23dfc7f1444474c6b)), closes [#228](https://github.com/ory/kratos/issues/228)
+* Add and test id hint in reauth flow ([2298f01](https://github.com/ory/kratos/commit/2298f0140e77da870c842daa8eaca274e5d64254)), closes [#323](https://github.com/ory/kratos/issues/323)
+* Allow configuring same-site for session cookies ([#303](https://github.com/ory/kratos/issues/303)) ([2eb2054](https://github.com/ory/kratos/commit/2eb2054a94281aefa9a0818110d168cc9c052094)), closes [#257](https://github.com/ory/kratos/issues/257):
+  > It is now possible to set SameSite for the session cookie via the key `security.session.cookie.same_site`.
+* Enable CockroachDB integration ([#260](https://github.com/ory/kratos/issues/260)) ([adc5153](https://github.com/ory/kratos/commit/adc5153410fb4d9f99702d7c73a78aeec8c1e9f1)), closes [#132](https://github.com/ory/kratos/issues/132) [#155](https://github.com/ory/kratos/issues/155)
+* Enable continuity management for settings module ([009d755](https://github.com/ory/kratos/commit/009d7558f525168fecf86168de2906088662535e))
+* Enable updating auth related traits ([#266](https://github.com/ory/kratos/issues/266)) ([65b88ba](https://github.com/ory/kratos/commit/65b88ba52fb9e6da3c1a65f734352519303327a6)), closes [#243](https://github.com/ory/kratos/issues/243)
+* Implement password profile management flow ([a31839a](https://github.com/ory/kratos/commit/a31839a5c33c80500c900fb50d1dd499ab1161a1)), closes [#243](https://github.com/ory/kratos/issues/243)
+* Return 410 when selfservice requests expire ([#289](https://github.com/ory/kratos/issues/289)) ([b414607](https://github.com/ory/kratos/commit/b4146076148d9ff079e9d433f0a90f5bc938650c)), closes [#235](https://github.com/ory/kratos/issues/235)
+* Send verification emails on profile update ([#333](https://github.com/ory/kratos/issues/333)) ([1cacc80](https://github.com/ory/kratos/commit/1cacc80c54f92b380ef3752591970cc4dd97085e)), closes [#267](https://github.com/ory/kratos/issues/267)
+* **continuity:** Implement request continuity ([135e047](https://github.com/ory/kratos/commit/135e04750b1855ab0db812517c61e292a770ba94)), closes [#304](https://github.com/ory/kratos/issues/304) [#311](https://github.com/ory/kratos/issues/311):
+  > This patch adds a module which is capable of aborting a request, waiting for
+  > another option to complete, and then resuming the request again.
+  > 
+  > This feature makes use of a temporary cookie which keeps track of the
+  > request state.
+  > 
+  > This feature is required for several workflows that update privileged
+  > fields such as passwords, 2fa recovery codes, email addresses.
+  > 
+  > refactor: rename profile to settings flow
+  > 
+  > Renames selfservice/profile to settings. The settings flow includes a strategy for managing profile information
+* **login:** Forced reauthentication ([#248](https://github.com/ory/kratos/issues/248)) ([344fc9c](https://github.com/ory/kratos/commit/344fc9cddccff958f13249b999a835d3e46a7771)), closes [#243](https://github.com/ory/kratos/issues/243)
+
+
+### Unclassified
+
+* Make format ([b85e5af](https://github.com/ory/kratos/commit/b85e5af2e29f9ca3bc3341ba4f2b1b338b441398))
+* u ([03fa4f0](https://github.com/ory/kratos/commit/03fa4f05363aa1f38fe45730317375ce380cfa31))
+* u ([a3dfd9d](https://github.com/ory/kratos/commit/a3dfd9d15e1f7287558b85c3a4f23d02444b0bf4))
+* u ([616aa0f](https://github.com/ory/kratos/commit/616aa0f0cf3d662b48fcaa02715e02e854e05581))
+* fix:add graceful shutdown to courier handler (#296) ([235d784](https://github.com/ory/kratos/commit/235d784b7f8bf38859d15d68c37b089fc9371195)), closes [#296](https://github.com/ory/kratos/issues/296) [#295](https://github.com/ory/kratos/issues/295):
+  > Courier would not stop with the provided Background handler.
+  > This changes the methods of Courier so that the graceful package can be
+  > used in the same way as the http endpoints can be used.
+* fix(sql) change courier body to text field (#276) ([ed5268d](https://github.com/ory/kratos/commit/ed5268d539b2a28f5367e8ba2e2e6bd3a605ce5b)), closes [#276](https://github.com/ory/kratos/issues/276) [#269](https://github.com/ory/kratos/issues/269)
+
+
+### BREAKING CHANGES
 
-## [v0.1.1-alpha.1](https://github.com/ory/kratos/tree/v0.1.1-alpha.1) (2020-02-18)
+* Please remove the `redirect` hook from both login,
+registration, and settings after configuration. Please remove
+the `session` hook from your login after configuration. Hooks
+have moved down a level and are now configured at
+`selfservice.<login|registration|settings>.<after|before>.hooks`
+instead of
+`selfservice.<login|registration|settings>.<after|before>.hooks`.
+Hooks are now identified by `hook:` instead of `job:`. Please
+rename those sections accordingly.
+* **continuity:** Several profile-related URLs have and payloads been updated. Please consult the most recent documentation.
+* The payloads of the Profile Management Request API
+that previously were set in `{ "methods": { "traits": { ... } }}` have now moved to
+`{ "methods": { "profile": { ... } }}`.
+* This patch introduces a refactor that is needed
+for the profile management API to be capable of handling (password,
+oidc, ...) credential changes as well.
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.1.0-alpha.6...v0.1.1-alpha.1)
+To implement this, the payloads of the Profile Management Request API
+that previously were set in `{"form": {...} }` have now moved to
+`{"methods": { "traits": { ... } }}`.
 
-**Fixed bugs:**
+In the future, as more credential updates are handled, there will
+be additional keys in the forms key
+`{"methods": { "traits": { ... }, "password": { ... } }}`.
 
-- fix: Resolve several verification problems [\#253](https://github.com/ory/kratos/pull/253) ([aeneasr](https://github.com/aeneasr))
 
-**Merged pull requests:**
 
-- fix: Update verify URLs [\#258](https://github.com/ory/kratos/pull/258) ([aeneasr](https://github.com/aeneasr))
-- fix: Clean up docker quickstart [\#255](https://github.com/ory/kratos/pull/255) ([aeneasr](https://github.com/aeneasr))
-- refactor\(persistence/sql\): move connection to context to enable transactions [\#254](https://github.com/ory/kratos/pull/254) ([zepatrik](https://github.com/zepatrik))
-- fix: Add verify return to address [\#252](https://github.com/ory/kratos/pull/252) ([aeneasr](https://github.com/aeneasr))
+## [0.1.1-alpha.1](https://github.com/ory/kratos/compare/v0.1.0-alpha.6...v0.1.1-alpha.1) (2020-02-18)
 
-## [v0.1.0-alpha.6](https://github.com/ory/kratos/tree/v0.1.0-alpha.6) (2020-02-16)
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.1.0-alpha.5...v0.1.0-alpha.6)
+### Bug Fixes
 
-**Implemented enhancements:**
+* Add verify return to address ([#252](https://github.com/ory/kratos/issues/252)) ([64ab9e5](https://github.com/ory/kratos/commit/64ab9e510e6b65f9dd16fdfaadfd24785dab0c93))
+* Clean up docker quickstart ([#255](https://github.com/ory/kratos/issues/255)) ([7f0996b](https://github.com/ory/kratos/commit/7f0996b99646e57136f20c04a77a6f682eecdd9c))
+* Resolve several verification problems ([#253](https://github.com/ory/kratos/issues/253)) ([30d4632](https://github.com/ory/kratos/commit/30d46326373cf038b600ee07db3e95ce6d94ab12))
+* Update verify URLs ([#258](https://github.com/ory/kratos/issues/258)) ([5d4f909](https://github.com/ory/kratos/commit/5d4f9099b5c61ff9572ad23a3eb9c0e0025d92da))
 
-- Make OIDC strategy capable of dealing with expiry errors [\#233](https://github.com/ory/kratos/issues/233)
-- selfservice/updateProfileFlow: disable form fields that the user is not allowed to update [\#227](https://github.com/ory/kratos/issues/227)
-- Use jsonschema everywhere [\#225](https://github.com/ory/kratos/issues/225)
-- Implement Verification [\#27](https://github.com/ory/kratos/issues/27)
-- feat: Implement email verification [\#245](https://github.com/ory/kratos/pull/245) ([aeneasr](https://github.com/aeneasr))
 
-**Fixed bugs:**
+### Code Refactoring
 
-- Mark fields required in login / registration methods [\#234](https://github.com/ory/kratos/issues/234)
-- fix: Set AuthenticatedAt in session issuer hook [\#246](https://github.com/ory/kratos/pull/246) ([aeneasr](https://github.com/aeneasr))
-- Resolve flaky SDK generation issues caused by UUID [\#240](https://github.com/ory/kratos/pull/240) ([aeneasr](https://github.com/aeneasr))
+* Support context-based SQL transactions ([#254](https://github.com/ory/kratos/issues/254)) ([6ace1ee](https://github.com/ory/kratos/commit/6ace1ee2070c35b0da3e36dcd5417ff70a4ff9cb))
 
-**Closed issues:**
 
-- Require Levenshtein distance between identifiers and password [\#184](https://github.com/ory/kratos/issues/184)
+### Documentation
 
-**Merged pull requests:**
+* Regenerate and update changelog ([a125822](https://github.com/ory/kratos/commit/a1258221a1fef82cc525be7b1042e91e2d20b1eb))
+* Regenerate and update changelog ([b3a8220](https://github.com/ory/kratos/commit/b3a822035509ec2c9fb04037b2088ce6df8191da))
+* Regenerate and update changelog ([a141b30](https://github.com/ory/kratos/commit/a141b309a1fc22bc45d70a090869fdee198a065e))
+* Regenerate and update changelog ([7e12e20](https://github.com/ory/kratos/commit/7e12e20be0fa61a2f41a416a3edcd2b522165196))
+* Regenerate and update changelog ([3c1c67b](https://github.com/ory/kratos/commit/3c1c67b31a54dd8d5fceac9449d305db82ff8844))
+* Regenerate and update changelog ([ee07937](https://github.com/ory/kratos/commit/ee07937d5e797f0217c86946da42d0070ca7c250))
 
-- feat: Add verification to quickstart [\#251](https://github.com/ory/kratos/pull/251) ([aeneasr](https://github.com/aeneasr))
-- fix: Adapt quickstart to verify changes [\#247](https://github.com/ory/kratos/pull/247) ([aeneasr](https://github.com/aeneasr))
-- fix\(SelfService/Strategy/oidc\): rework auth session expiry  [\#242](https://github.com/ory/kratos/pull/242) ([zepatrik](https://github.com/zepatrik))
-- feat\(selfservice/profile\): Add disabled flag to identifier form fields [\#238](https://github.com/ory/kratos/pull/238) ([zepatrik](https://github.com/zepatrik))
-- fix\(swagger\): Use correct annotations for request methods [\#237](https://github.com/ory/kratos/pull/237) ([aeneasr](https://github.com/aeneasr))
-- feat: add levenshtein distance check for password validation [\#231](https://github.com/ory/kratos/pull/231) ([zepatrik](https://github.com/zepatrik))
-- Use ory/jsonschema/v3 everywhere [\#229](https://github.com/ory/kratos/pull/229) ([aeneasr](https://github.com/aeneasr))
 
-## [v0.1.0-alpha.5](https://github.com/ory/kratos/tree/v0.1.0-alpha.5) (2020-02-06)
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.1.0-alpha.4...v0.1.0-alpha.5)
+# [0.1.0-alpha.6](https://github.com/ory/kratos/compare/v0.1.0-alpha.5...v0.1.0-alpha.6) (2020-02-16)
 
-**Fixed bugs:**
 
-- Mitigate expired login and registration requests [\#96](https://github.com/ory/kratos/issues/96)
+### Bug Fixes
 
-**Merged pull requests:**
+* Adapt quickstart to verify changes ([#247](https://github.com/ory/kratos/issues/247)) ([24eceb7](https://github.com/ory/kratos/commit/24eceb7147cef1081ac1ad969713ca1bc36229cb))
+* Gracefully handle selfservice request expiry ([#242](https://github.com/ory/kratos/issues/242)) ([4421e6b](https://github.com/ory/kratos/commit/4421e6bde494fbe9672251cf813a39e3031bf3fd)), closes [#233](https://github.com/ory/kratos/issues/233)
+* Set AuthenticatedAt in session issuer hook ([#246](https://github.com/ory/kratos/issues/246)) ([29c83fa](https://github.com/ory/kratos/commit/29c83fa986c612fb17e13fe9415f7836062159d2)), closes [#224](https://github.com/ory/kratos/issues/224)
+* **swagger:** Sanitize before validate ([c72f140](https://github.com/ory/kratos/commit/c72f140083e94f3a47ee2398c56d188e6d4edcb4))
+* **swagger:** Use correct annotations for request methods ([#237](https://github.com/ory/kratos/issues/237)) ([8473c85](https://github.com/ory/kratos/commit/8473c85d8282b27375b53babbbc79046d407b3fb)), closes [#234](https://github.com/ory/kratos/issues/234)
 
-- feat: redirect to new auth session on expired auth sessions [\#230](https://github.com/ory/kratos/pull/230) ([zepatrik](https://github.com/zepatrik))
 
-## [v0.1.0-alpha.4](https://github.com/ory/kratos/tree/v0.1.0-alpha.4) (2020-02-06)
+### Code Refactoring
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.1.0-alpha.3...v0.1.0-alpha.4)
+* Move to ory/jsonschema/v3 everywhere ([#229](https://github.com/ory/kratos/issues/229)) ([61f5c1d](https://github.com/ory/kratos/commit/61f5c1d3d896841b08deb08c42ba896118e3fc71)), closes [#225](https://github.com/ory/kratos/issues/225)
 
-## [v0.1.0-alpha.3](https://github.com/ory/kratos/tree/v0.1.0-alpha.3) (2020-02-06)
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.1.0-alpha.2...v0.1.0-alpha.3)
+### Documentation
 
-## [v0.1.0-alpha.2](https://github.com/ory/kratos/tree/v0.1.0-alpha.2) (2020-02-03)
+* Regenerate and update changelog ([922cf0f](https://github.com/ory/kratos/commit/922cf0f3d7ec8860d13aff3b88849a71fb59e2c9))
+* Regenerate and update changelog ([e097c23](https://github.com/ory/kratos/commit/e097c23d8b4902a9013f3a8fa9a397033a92fb88))
+* Regenerate and update changelog ([2d1685f](https://github.com/ory/kratos/commit/2d1685f4f4235e9293b1ab79e67050042787c6e9))
+* Regenerate and update changelog ([f8964e9](https://github.com/ory/kratos/commit/f8964e9e5c442f75ba501ce7cfcb18916b781dc1))
+* Regenerate and update changelog ([92b8001](https://github.com/ory/kratos/commit/92b80013c98e9556138eff04aa24dc696b8d6128))
+* Regenerate and update changelog ([d7083ab](https://github.com/ory/kratos/commit/d7083ab9fb8e8172707cae3ac4a8a183f0c25903))
+* Regenerate and update changelog ([c4547dc](https://github.com/ory/kratos/commit/c4547dc53ecf167b63e5d7d3b6764535bd86fa5a))
+* Regenerate and update changelog ([d8d8bba](https://github.com/ory/kratos/commit/d8d8bbae055e2220023a45b832d2435984191029))
+* Regenerate and update changelog ([b012ed9](https://github.com/ory/kratos/commit/b012ed9ce1f4fd0ece2e3463e952711b4380f4a4))
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.1.0-alpha.1...v0.1.0-alpha.2)
 
-**Implemented enhancements:**
+### Features
 
-- Rework errors API [\#204](https://github.com/ory/kratos/issues/204)
+* Add disabled flag to identifier form fields ([#238](https://github.com/ory/kratos/issues/238)) ([a2178bd](https://github.com/ory/kratos/commit/a2178bdbbe20798a3e1e3fb5ed7b44afc187c640)), closes [#227](https://github.com/ory/kratos/issues/227)
+* Add verification to quickstart ([#251](https://github.com/ory/kratos/issues/251)) ([172dc87](https://github.com/ory/kratos/commit/172dc87d22f925668c21da1b3b581156e01d45a4))
+* Implement email verification ([#245](https://github.com/ory/kratos/issues/245)) ([eed00f4](https://github.com/ory/kratos/commit/eed00f4b328c173057455980ce0e1aad909c278f)), closes [#27](https://github.com/ory/kratos/issues/27)
+* Improve password validation strategy ([#231](https://github.com/ory/kratos/issues/231)) ([256fad3](https://github.com/ory/kratos/commit/256fad37164c81cc44c35e77b99911996722a86a))
 
-**Fixed bugs:**
 
-- refactor!: Improve user-facing error APIs [\#219](https://github.com/ory/kratos/pull/219) ([aeneasr](https://github.com/aeneasr))
 
-**Closed issues:**
+# [0.1.0-alpha.5](https://github.com/ory/kratos/compare/v0.1.0-alpha.4...v0.1.0-alpha.5) (2020-02-06)
 
-- Discrepancy in documentation [\#218](https://github.com/ory/kratos/issues/218)
-- Support identity impersonation [\#201](https://github.com/ory/kratos/issues/201)
-- Implement `--dev` flag [\#36](https://github.com/ory/kratos/issues/36)
 
-**Merged pull requests:**
+### Documentation
 
-- Serve: add admin /self-service/errors route [\#226](https://github.com/ory/kratos/pull/226) ([zepatrik](https://github.com/zepatrik))
-- fix: Set csrf token on public endpoints [\#224](https://github.com/ory/kratos/pull/224) ([aeneasr](https://github.com/aeneasr))
-- ci: Switch to golangci orb [\#223](https://github.com/ory/kratos/pull/223) ([aeneasr](https://github.com/aeneasr))
-- docs: Updates issue and pull request templates [\#222](https://github.com/ory/kratos/pull/222) ([aeneasr](https://github.com/aeneasr))
-- ci: Bump sdk and changelog versions [\#221](https://github.com/ory/kratos/pull/221) ([aeneasr](https://github.com/aeneasr))
-- feat: Override semantic config [\#220](https://github.com/ory/kratos/pull/220) ([aeneasr](https://github.com/aeneasr))
-- Add paths to sqa middleware [\#216](https://github.com/ory/kratos/pull/216) ([aeneasr](https://github.com/aeneasr))
+* Regenerate and update changelog ([e87e9c9](https://github.com/ory/kratos/commit/e87e9c9ec9cf55351439ab16a778f3ea303ec646))
+* Regenerate and update changelog ([d6f0794](https://github.com/ory/kratos/commit/d6f0794d53b6e7d6d9e3bc63a77d402e43a29bed))
+* Regenerate and update changelog ([eb7326c](https://github.com/ory/kratos/commit/eb7326c98c2d5e87a8ac3cd9f2efb43f2552164a))
 
-## [v0.1.0-alpha.1](https://github.com/ory/kratos/tree/v0.1.0-alpha.1) (2020-01-31)
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.0.3-alpha.15...v0.1.0-alpha.1)
+### Features
 
-**Implemented enhancements:**
+* Redirect to new auth session on expired auth sessions ([#230](https://github.com/ory/kratos/issues/230)) ([b477ecd](https://github.com/ory/kratos/commit/b477ecd47de33a9a45159a298ac288c4ad5a0b55)), closes [#96](https://github.com/ory/kratos/issues/96)
 
-- FormFields for Login, Registration, Profile requests should be array and not maps [\#186](https://github.com/ory/kratos/issues/186)
-- Adopt CircleCI orbs for SDK, goreleaser, changelog [\#166](https://github.com/ory/kratos/issues/166)
-- Improve `--dev` flag [\#162](https://github.com/ory/kratos/issues/162)
-- Reintroduce SQL Migration plans [\#131](https://github.com/ory/kratos/issues/131)
-- Refactor DBAL layer [\#128](https://github.com/ory/kratos/issues/128)
-- Populate registration form with data from JSON Schema [\#120](https://github.com/ory/kratos/issues/120)
-- Implement selfservice profile management [\#112](https://github.com/ory/kratos/issues/112)
-- Implement SQL backend for errorx package [\#92](https://github.com/ory/kratos/issues/92)
-- Schemas should be mirrored by hive at some well-known url [\#86](https://github.com/ory/kratos/issues/86)
-- Add health endpoints [\#82](https://github.com/ory/kratos/issues/82)
-- Check all credentials for uniqueness to support uniqueness in passwordless flows [\#78](https://github.com/ory/kratos/issues/78)
-- Implement persistent DBAL using Postgres [\#66](https://github.com/ory/kratos/issues/66)
-- Disable login and registration when session exists [\#63](https://github.com/ory/kratos/issues/63)
-- Implement Admin CRUD for Identities [\#58](https://github.com/ory/kratos/issues/58)
-- Write test for missing data during sign up with oidc [\#55](https://github.com/ory/kratos/issues/55)
-- Write tests for selfservice.ErrorHandler [\#54](https://github.com/ory/kratos/issues/54)
-- Add continuous integration [\#53](https://github.com/ory/kratos/issues/53)
-- Support object stubs in form payloads [\#45](https://github.com/ory/kratos/issues/45)
-- Implement form-based, self-service login and registration [\#29](https://github.com/ory/kratos/issues/29)
-- Rework public and admin fetch strategy [\#203](https://github.com/ory/kratos/pull/203) ([aeneasr](https://github.com/aeneasr))
-- Update HTTP routes for a consistent API naming [\#199](https://github.com/ory/kratos/pull/199) ([aeneasr](https://github.com/aeneasr))
-- ss: Use JSON Schema to type assert form body [\#116](https://github.com/ory/kratos/pull/116) ([aeneasr](https://github.com/aeneasr))
 
-**Fixed bugs:**
 
-- Improve `/profile` and `/session` URLs [\#195](https://github.com/ory/kratos/issues/195)
-- Profile Management requests sends Request ID in POST Body instead of Query Parameter [\#190](https://github.com/ory/kratos/issues/190)
-- Key `traits\_schema\_url` not populated in profile management request [\#189](https://github.com/ory/kratos/issues/189)
-- Update Quickstart Access Rules to include new CSS files for sample app [\#188](https://github.com/ory/kratos/issues/188)
-- Send right field type in registration/login request information [\#175](https://github.com/ory/kratos/issues/175)
-- Ensure that decoderx works with checkboxes [\#125](https://github.com/ory/kratos/issues/125)
-- OIDC Credentials do not allow multiple connections [\#114](https://github.com/ory/kratos/issues/114)
-- selfservice: Form BodyParser should assert types using JSON Schema [\#109](https://github.com/ory/kratos/issues/109)
-- Using only numbers as password during sign up leads to error [\#98](https://github.com/ory/kratos/issues/98)
-- Irrecoverable state when "securecookie" fails. [\#97](https://github.com/ory/kratos/issues/97)
-- Do not echo headers in login/register request response [\#95](https://github.com/ory/kratos/issues/95)
-- Registration values are not properly propagated [\#71](https://github.com/ory/kratos/issues/71)
-- CSRF is broken for social sign in [\#68](https://github.com/ory/kratos/issues/68)
-- Reset CSRF Token on Principal Change \(Sign Out\) [\#38](https://github.com/ory/kratos/issues/38)
-- selfservice: Omit request header from login/registration request [\#106](https://github.com/ory/kratos/pull/106) ([aeneasr](https://github.com/aeneasr))
-- selfservice: Explicitly whitelist form parser keys [\#105](https://github.com/ory/kratos/pull/105) ([aeneasr](https://github.com/aeneasr))
+# [0.1.0-alpha.4](https://github.com/ory/kratos/compare/v0.1.0-alpha.3...v0.1.0-alpha.4) (2020-02-06)
 
-**Security fixes:**
 
-- Rethink public fetch request protection [\#122](https://github.com/ory/kratos/issues/122)
-- Prevent credentials from being filled in without validation [\#46](https://github.com/ory/kratos/issues/46)
+### Documentation
 
-**Closed issues:**
+* Regenerate and update changelog ([f02afb3](https://github.com/ory/kratos/commit/f02afb3fed310f7fe9c5e6f7df34dfc9738018ad))
 
-- OIDC method has "request" field in the form [\#180](https://github.com/ory/kratos/issues/180)
-- Schemas should be tested [\#165](https://github.com/ory/kratos/issues/165)
-- JSON Schema `ory.sh/kratos` keyword extension design document [\#118](https://github.com/ory/kratos/issues/118)
-- Decide JSON Schema custom keyword prefix for custom logic [\#115](https://github.com/ory/kratos/issues/115)
-- Implement profile and credentials management [\#108](https://github.com/ory/kratos/issues/108)
-- hermes: Notification architecture [\#99](https://github.com/ory/kratos/issues/99)
-- Omit oidc client secret, cookie secret, and dsn from k8s configmap [\#88](https://github.com/ory/kratos/issues/88)
-- Document Self-Service state machine [\#52](https://github.com/ory/kratos/issues/52)
-- Document how the form parser works [\#41](https://github.com/ory/kratos/issues/41)
-- docs: Document that the password strategy lowercases identifiers [\#25](https://github.com/ory/kratos/issues/25)
-- Dealing with missing data when using 3rd-party registration [\#23](https://github.com/ory/kratos/issues/23)
 
-**Merged pull requests:**
 
-- docs: Updates issue and pull request templates [\#215](https://github.com/ory/kratos/pull/215) ([aeneasr](https://github.com/aeneasr))
-- Clean up and resolve packr2 issues [\#211](https://github.com/ory/kratos/pull/211) ([aeneasr](https://github.com/aeneasr))
-- Resolve goreleaser build issues [\#208](https://github.com/ory/kratos/pull/208) ([aeneasr](https://github.com/aeneasr))
-- ci: Bump sdk orb [\#206](https://github.com/ory/kratos/pull/206) ([aeneasr](https://github.com/aeneasr))
-- ss/oidc: Remove obsolete request field from form [\#193](https://github.com/ory/kratos/pull/193) ([aeneasr](https://github.com/aeneasr))
-- sql: Re-introduce migration plans to CLI command [\#192](https://github.com/ory/kratos/pull/192) ([aeneasr](https://github.com/aeneasr))
-- courier: Implement message templates and SMTP delivery [\#146](https://github.com/ory/kratos/pull/146) ([aeneasr](https://github.com/aeneasr))
-- Implement base features for v0.0.1 release [\#102](https://github.com/ory/kratos/pull/102) ([aeneasr](https://github.com/aeneasr))
+# [0.1.0-alpha.3](https://github.com/ory/kratos/compare/v0.1.0-alpha.2...v0.1.0-alpha.3) (2020-02-06)
 
-## [v0.0.3-alpha.15](https://github.com/ory/kratos/tree/v0.0.3-alpha.15) (2020-01-31)
+No significant changes have been made for this release.
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.0.3-alpha.14...v0.0.3-alpha.15)
 
-## [v0.0.3-alpha.14](https://github.com/ory/kratos/tree/v0.0.3-alpha.14) (2020-01-31)
+# [0.1.0-alpha.2](https://github.com/ory/kratos/compare/v0.1.0-alpha.1...v0.1.0-alpha.2) (2020-02-03)
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.0.3-alpha.12...v0.0.3-alpha.14)
 
-## [v0.0.3-alpha.12](https://github.com/ory/kratos/tree/v0.0.3-alpha.12) (2020-01-31)
+### Bug Fixes
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.0.3-alpha.13...v0.0.3-alpha.12)
+* **daemon:** Register error routes on admin port ([#226](https://github.com/ory/kratos/issues/226)) ([decd8d8](https://github.com/ory/kratos/commit/decd8d8ef8dac3674938b564962238195ffaf017))
+* Add paths to sqa middleware ([#216](https://github.com/ory/kratos/issues/216)) ([130c9c2](https://github.com/ory/kratos/commit/130c9c242e1434074d9fa4970b60ccb9b4f2ff47))
+* Set csrf token on public endpoints ([d0b15ae](https://github.com/ory/kratos/commit/d0b15aeca991a94771715a6eabd4a956be41ceda))
 
-## [v0.0.3-alpha.13](https://github.com/ory/kratos/tree/v0.0.3-alpha.13) (2020-01-31)
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.0.3-alpha.11...v0.0.3-alpha.13)
+### Documentation
 
-**Merged pull requests:**
+* Introduce upgrade guide ([736a3b1](https://github.com/ory/kratos/commit/736a3b19bfe35cc699dea508b4bdb56b3302ba7e))
+* Prepare ecosystem automation ([7013b6c](https://github.com/ory/kratos/commit/7013b6c9a856e05f6ad385eb8ce36c5faf342f5a))
+* Regenerate and update changelog ([f39b942](https://github.com/ory/kratos/commit/f39b9422d79d3e69304f013c85f3850337ca1730))
+* Regenerate and update changelog ([c121601](https://github.com/ory/kratos/commit/c121601b5c741c846d9c478b01aabb9907d81b95))
+* Regenerate and update changelog ([a947d55](https://github.com/ory/kratos/commit/a947d554ba2be94f334568a4e77a501742ca95af))
+* Regenerate and update changelog ([8ba2044](https://github.com/ory/kratos/commit/8ba2044ebb369ea741f99c65163f650c607e6c07))
+* Regenerate and update changelog ([9c023e1](https://github.com/ory/kratos/commit/9c023e1a9288f156c79ea78b3a979d0fefab8825))
+* Regenerate and update changelog ([1e855a9](https://github.com/ory/kratos/commit/1e855a9e0ebd232ba2b07dc4a8bb79b84cd548e6))
+* Regenerate and update changelog ([01ce3a8](https://github.com/ory/kratos/commit/01ce3a891edd84174694111637dd44fe65e48b37))
+* Updates issue and pull request templates ([#222](https://github.com/ory/kratos/issues/222)) ([4daae88](https://github.com/ory/kratos/commit/4daae88af527018e9ee4e1e9717a07dffab427fe))
 
-- Allow mounting SQLite in /home/ory/sqlite [\#212](https://github.com/ory/kratos/pull/212) ([aeneasr](https://github.com/aeneasr))
 
-## [v0.0.3-alpha.11](https://github.com/ory/kratos/tree/v0.0.3-alpha.11) (2020-01-31)
+### Features
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.0.3-alpha.10...v0.0.3-alpha.11)
+* Override semantic config ([#220](https://github.com/ory/kratos/issues/220)) ([9b4214b](https://github.com/ory/kratos/commit/9b4214bf5eac81a92513e04dc5f862b93df86935))
 
-**Merged pull requests:**
 
-- Improve field types [\#209](https://github.com/ory/kratos/pull/209) ([zepatrik](https://github.com/zepatrik))
+### Unclassified
 
-## [v0.0.3-alpha.10](https://github.com/ory/kratos/tree/v0.0.3-alpha.10) (2020-01-31)
+* Update CHANGELOG [ci skip] ([ce9390c](https://github.com/ory/kratos/commit/ce9390c27f61966b7ed23244400215c2218bbc0b))
+* refactor!: Improve user-facing error APIs (#219) ([7d4054f](https://github.com/ory/kratos/commit/7d4054f4363da7bc0e943e7abfbd0c804eb7f0c1)), closes [#219](https://github.com/ory/kratos/issues/219) [#204](https://github.com/ory/kratos/issues/204):
+  > This patch refactors user-facing error APIs:
+  > 
+  > - The `/errors` endpoint moved to `/self-service/errors`
+  > - The endpoint is now available at both the Admin and Public API. The Public API requires CSRF Token match or a 403 error will be returned.
+  > - The Public API endpoint no longer returns 404 errors but 403 instead.
+  > - The response payload changed. What was `[{"code": ...}]` is now `{"id": "...", "errors": [{"code": ...}]}`
+  > 
+  > This patch requires running `kratos migrate sql` as a new column (`csrf_token`) has been added to the user-facing error store.
+* Update CHANGELOG [ci skip] ([c368a11](https://github.com/ory/kratos/commit/c368a11523a9bcb30a830d65c11e4f6d27417a78))
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.0.3-alpha.8+oryOS.15...v0.0.3-alpha.10)
 
-## [v0.0.3-alpha.8+oryOS.15](https://github.com/ory/kratos/tree/v0.0.3-alpha.8+oryOS.15) (2020-01-30)
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.0.3-alpha.9...v0.0.3-alpha.8+oryOS.15)
+# [0.1.0-alpha.1](https://github.com/ory/kratos/compare/v0.0.3-alpha.15...v0.1.0-alpha.1) (2020-01-31)
 
-## [v0.0.3-alpha.9](https://github.com/ory/kratos/tree/v0.0.3-alpha.9) (2020-01-30)
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.0.3-alpha.7...v0.0.3-alpha.9)
+### Documentation
 
-## [v0.0.3-alpha.7](https://github.com/ory/kratos/tree/v0.0.3-alpha.7) (2020-01-30)
+* Updates issue and pull request templates ([#215](https://github.com/ory/kratos/issues/215)) ([10c45f2](https://github.com/ory/kratos/commit/10c45f23e11abba1ca82095548769cd923a6a6a6))
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.0.3-alpha.5...v0.0.3-alpha.7)
 
-## [v0.0.3-alpha.5](https://github.com/ory/kratos/tree/v0.0.3-alpha.5) (2020-01-30)
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.0.3-alpha.4...v0.0.3-alpha.5)
+## [0.0.3-alpha.15](https://github.com/ory/kratos/compare/v0.0.3-alpha.14...v0.0.3-alpha.15) (2020-01-31)
 
-**Merged pull requests:**
 
-- ci: Resolve final docker build issues [\#210](https://github.com/ory/kratos/pull/210) ([aeneasr](https://github.com/aeneasr))
+### Unclassified
 
-## [v0.0.3-alpha.4](https://github.com/ory/kratos/tree/v0.0.3-alpha.4) (2020-01-30)
+* Update permissions in SQLite Dockerfile ([1266e53](https://github.com/ory/kratos/commit/1266e533ac9a1f6ec375980cadce9755998f9fe6))
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.0.3-alpha.3...v0.0.3-alpha.4)
 
-## [v0.0.3-alpha.3](https://github.com/ory/kratos/tree/v0.0.3-alpha.3) (2020-01-30)
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.0.3-alpha.2...v0.0.3-alpha.3)
+## [0.0.3-alpha.14](https://github.com/ory/kratos/compare/v0.0.3-alpha.13...v0.0.3-alpha.14) (2020-01-31)
 
-## [v0.0.3-alpha.2](https://github.com/ory/kratos/tree/v0.0.3-alpha.2) (2020-01-30)
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.0.3-alpha.1...v0.0.3-alpha.2)
+### Unclassified
 
-## [v0.0.3-alpha.1](https://github.com/ory/kratos/tree/v0.0.3-alpha.1) (2020-01-30)
+* Update README.md ([db8d65b](https://github.com/ory/kratos/commit/db8d65bf136223df546aa27f1ecff03d01159624))
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.0.1-alpha.9...v0.0.3-alpha.1)
 
-**Fixed bugs:**
 
-- Order registration/login form fields according to schema [\#176](https://github.com/ory/kratos/issues/176)
+## [0.0.3-alpha.13](https://github.com/ory/kratos/compare/v0.0.3-alpha.12...v0.0.3-alpha.13) (2020-01-31)
 
-**Merged pull requests:**
 
-- Update quickstart [\#207](https://github.com/ory/kratos/pull/207) ([aeneasr](https://github.com/aeneasr))
-- Take field order from schema [\#205](https://github.com/ory/kratos/pull/205) ([zepatrik](https://github.com/zepatrik))
-- ss/profile: Use request ID as query param everywhere [\#202](https://github.com/ory/kratos/pull/202) ([aeneasr](https://github.com/aeneasr))
+### Unclassified
 
-## [v0.0.1-alpha.9](https://github.com/ory/kratos/tree/v0.0.1-alpha.9) (2020-01-29)
+* Allow mounting SQLite in /home/ory/sqlite (#212) ([2fe8c0f](https://github.com/ory/kratos/commit/2fe8c0f752e870028d68e8593a46c0902f673a65)), closes [#212](https://github.com/ory/kratos/issues/212)
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.0.1-alpha.10+oryOS.15...v0.0.1-alpha.9)
 
-## [v0.0.1-alpha.10+oryOS.15](https://github.com/ory/kratos/tree/v0.0.1-alpha.10+oryOS.15) (2020-01-29)
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.0.1-alpha.11...v0.0.1-alpha.10+oryOS.15)
+## [0.0.3-alpha.11](https://github.com/ory/kratos/compare/v0.0.3-alpha.10...v0.0.3-alpha.11) (2020-01-31)
 
-## [v0.0.1-alpha.11](https://github.com/ory/kratos/tree/v0.0.1-alpha.11) (2020-01-29)
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.0.1-alpha.7...v0.0.1-alpha.11)
+### Unclassified
 
-## [v0.0.1-alpha.7](https://github.com/ory/kratos/tree/v0.0.1-alpha.7) (2020-01-29)
+* Clean up cmd and resolve packr2 issues (#211) ([2e43ec0](https://github.com/ory/kratos/commit/2e43ec09e9d6aa572c4351bfef4c59dfc43f2343)), closes [#211](https://github.com/ory/kratos/issues/211):
+  > This patch addresses issues with the build pipeline caused by an invalid import. Profiling was also added.
+* Improve field types (#209) ([aeefa93](https://github.com/ory/kratos/commit/aeefa93bf0427685f6ffadad5abfaa1fc26ce074)), closes [#209](https://github.com/ory/kratos/issues/209)
+* Update CHANGELOG [ci skip] ([fc32207](https://github.com/ory/kratos/commit/fc32207482861b8f989cb1d6fe5d96bf34c54e4c))
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.0.1-alpha.8...v0.0.1-alpha.7)
 
-## [v0.0.1-alpha.8](https://github.com/ory/kratos/tree/v0.0.1-alpha.8) (2020-01-29)
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.0.2-alpha.1...v0.0.1-alpha.8)
+## [0.0.3-alpha.10](https://github.com/ory/kratos/compare/v0.0.3-alpha.9...v0.0.3-alpha.10) (2020-01-31)
 
-## [v0.0.2-alpha.1](https://github.com/ory/kratos/tree/v0.0.2-alpha.1) (2020-01-29)
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.0.1-alpha.6...v0.0.2-alpha.1)
+### Unclassified
 
-## [v0.0.1-alpha.6](https://github.com/ory/kratos/tree/v0.0.1-alpha.6) (2020-01-29)
+* Update README ([35a310d](https://github.com/ory/kratos/commit/35a310d6de52fa74ad8728b1df67f88ce900aa61))
+* Update CHANGELOG [ci skip] ([3c98745](https://github.com/ory/kratos/commit/3c987455a44b9e12e31619ba9f447e8a5feafc38))
+* Update CHANGELOG [ci skip] ([c1c01df](https://github.com/ory/kratos/commit/c1c01df3a04fc7988bf847e3f31680112f5a642d))
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.0.1-alpha.5...v0.0.1-alpha.6)
 
-## [v0.0.1-alpha.5](https://github.com/ory/kratos/tree/v0.0.1-alpha.5) (2020-01-29)
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.0.1-alpha.3...v0.0.1-alpha.5)
+## [0.0.3-alpha.7](https://github.com/ory/kratos/compare/v0.0.3-alpha.5...v0.0.3-alpha.7) (2020-01-30)
 
-**Closed issues:**
 
-- Issue with the quickstart build failure [\#198](https://github.com/ory/kratos/issues/198)
+### Unclassified
 
-**Merged pull requests:**
+* Use correct project root in Dockerfile ([3528758](https://github.com/ory/kratos/commit/352875878c74d15b522336b518df339c8ad48e49))
+* Update CHANGELOG [ci skip] ([e78bbbe](https://github.com/ory/kratos/commit/e78bbbecbd9515c02e447efc3208599bf27ef85c))
 
-- Make form fields an array [\#197](https://github.com/ory/kratos/pull/197) ([zepatrik](https://github.com/zepatrik))
-- Resolve build issues with CGO [\#196](https://github.com/ory/kratos/pull/196) ([aeneasr](https://github.com/aeneasr))
 
-## [v0.0.1-alpha.3](https://github.com/ory/kratos/tree/v0.0.1-alpha.3) (2020-01-28)
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.0.1-alpha.2...v0.0.1-alpha.3)
+## [0.0.3-alpha.5](https://github.com/ory/kratos/compare/v0.0.3-alpha.4...v0.0.3-alpha.5) (2020-01-30)
 
-## [v0.0.1-alpha.2](https://github.com/ory/kratos/tree/v0.0.1-alpha.2) (2020-01-28)
 
-[Full Changelog](https://github.com/ory/kratos/compare/v0.0.1-alpha.1...v0.0.1-alpha.2)
+### Unclassified
 
-## [v0.0.1-alpha.1](https://github.com/ory/kratos/tree/v0.0.1-alpha.1) (2020-01-28)
+* Update CHANGELOG [ci skip] ([ebb1744](https://github.com/ory/kratos/commit/ebb1744d68b8a416774477182b1e2b2cd8bdfc43))
+* Add libmusl to binary output ([e9b8445](https://github.com/ory/kratos/commit/e9b8445f2fc8e9e571ec0b8480cc70fe3251db9e))
 
-[Full Changelog](https://github.com/ory/kratos/compare/ab6f24a85276bdd8687f2fc06390c1279892b005...v0.0.1-alpha.1)
 
-**Fixed bugs:**
 
-- Contain security context for reading schemas from disk [\#163](https://github.com/ory/kratos/issues/163)
-- strategy/oidc: Allow multiple OIDC Connections [\#191](https://github.com/ory/kratos/pull/191) ([aeneasr](https://github.com/aeneasr))
+## [0.0.3-alpha.4](https://github.com/ory/kratos/compare/v0.0.3-alpha.3...v0.0.3-alpha.4) (2020-01-30)
 
-**Closed issues:**
 
-- Registration/Login form fields should not include "request" [\#178](https://github.com/ory/kratos/issues/178)
-- Fix broken CI test pipeline [\#151](https://github.com/ory/kratos/issues/151)
-- Seprate out login & registeration POST hooks [\#149](https://github.com/ory/kratos/issues/149)
-- Optionally allow only one active session per identity [\#139](https://github.com/ory/kratos/issues/139)
-- Deleting user does not delete sessions [\#69](https://github.com/ory/kratos/issues/69)
-- Support RISC [\#10](https://github.com/ory/kratos/issues/10)
-- pool: Comparing email addresses properly [\#3](https://github.com/ory/kratos/issues/3)
-- Sign here to help! [\#2](https://github.com/ory/kratos/issues/2)
-- Rough feature-ideas \(wip\) [\#1](https://github.com/ory/kratos/issues/1)
+### Unclassified
 
-**Merged pull requests:**
+* Update CHANGELOG [ci skip] ([018c229](https://github.com/ory/kratos/commit/018c229c4cff62e47c1154ca29ab9c70766a43e5))
+* Add and use ory docker user ([cccbe09](https://github.com/ory/kratos/commit/cccbe09cc6e2ad72847206d46afe3e0bf7f79ab5))
+* Update CHANGELOG [ci skip] ([0e436e5](https://github.com/ory/kratos/commit/0e436e57f79692c4c6e0a0c25f48a41654afcda1))
+* Update goreleaser changelog filters ([7e5af97](https://github.com/ory/kratos/commit/7e5af97fded9f56a3cc9d1d92a7726e7b613b586))
+* Update CHANGELOG [ci skip] ([4387503](https://github.com/ory/kratos/commit/438750326c5d6ad1569802c82806e831f43e785e))
 
-- Remove redundant return statement [\#194](https://github.com/ory/kratos/pull/194) ([aeneasr](https://github.com/aeneasr))
-- Improve Docker Compose Quickstart [\#187](https://github.com/ory/kratos/pull/187) ([aeneasr](https://github.com/aeneasr))
-- Registration/Login HTML form: remove request field and ensure method is set [\#183](https://github.com/ory/kratos/pull/183) ([zepatrik](https://github.com/zepatrik))
-- Replace number with integer in config JSON Schema [\#177](https://github.com/ory/kratos/pull/177) ([aeneasr](https://github.com/aeneasr))
-- docs: Updates issue and pull request templates [\#174](https://github.com/ory/kratos/pull/174) ([aeneasr](https://github.com/aeneasr))
-- Schema testing [\#171](https://github.com/ory/kratos/pull/171) ([zepatrik](https://github.com/zepatrik))
-- Add goreleaser orb task [\#170](https://github.com/ory/kratos/pull/170) ([aeneasr](https://github.com/aeneasr))
-- Add changelog generation task [\#169](https://github.com/ory/kratos/pull/169) ([aeneasr](https://github.com/aeneasr))
-- Adopt new SDK pipeline [\#168](https://github.com/ory/kratos/pull/168) ([aeneasr](https://github.com/aeneasr))
-- Improve dev flag [\#167](https://github.com/ory/kratos/pull/167) ([zepatrik](https://github.com/zepatrik))
-- Serve json schemas [\#164](https://github.com/ory/kratos/pull/164) ([zepatrik](https://github.com/zepatrik))
-- update to readme.md [\#160](https://github.com/ory/kratos/pull/160) ([tacurran](https://github.com/tacurran))
-- Bump go-acc and resolve test issues [\#154](https://github.com/ory/kratos/pull/154) ([aeneasr](https://github.com/aeneasr))
-- Docker compose [\#153](https://github.com/ory/kratos/pull/153) ([aeneasr](https://github.com/aeneasr))
-- Separate post register/login hooks [\#150](https://github.com/ory/kratos/pull/150) ([nmlc](https://github.com/nmlc))
-- Optionally allow only one active session per identity  [\#148](https://github.com/ory/kratos/pull/148) ([evalsocket](https://github.com/evalsocket))
-- Update documentation images [\#145](https://github.com/ory/kratos/pull/145) ([jfcurran](https://github.com/jfcurran))
-- Refactor selfservice modules and add profile management [\#126](https://github.com/ory/kratos/pull/126) ([aeneasr](https://github.com/aeneasr))
-- Rebrand ORY Hive to ORY Kratos [\#111](https://github.com/ory/kratos/pull/111) ([aeneasr](https://github.com/aeneasr))
-- vendor: Update to ory/x 0.0.80 [\#110](https://github.com/ory/kratos/pull/110) ([aeneasr](https://github.com/aeneasr))
-- Update README.md [\#107](https://github.com/ory/kratos/pull/107) ([aeneasr](https://github.com/aeneasr))
-- Fix broken tests and linter issues  [\#104](https://github.com/ory/kratos/pull/104) ([aeneasr](https://github.com/aeneasr))
-- errorx: Move package to selfservice [\#103](https://github.com/ory/kratos/pull/103) ([aeneasr](https://github.com/aeneasr))
-- docs: Updates issue and pull request templates [\#59](https://github.com/ory/kratos/pull/59) ([aeneasr](https://github.com/aeneasr))
-- docs: Updates issue and pull request templates [\#40](https://github.com/ory/kratos/pull/40) ([aeneasr](https://github.com/aeneasr))
-- docs: Updates issue and pull request templates [\#39](https://github.com/ory/kratos/pull/39) ([aeneasr](https://github.com/aeneasr))
-- docs: Updates issue and pull request templates [\#8](https://github.com/ory/kratos/pull/8) ([aeneasr](https://github.com/aeneasr))
-- docs: Updates issue and pull request templates [\#7](https://github.com/ory/kratos/pull/7) ([aeneasr](https://github.com/aeneasr))
 
 
+## [0.0.3-alpha.2](https://github.com/ory/kratos/compare/v0.0.3-alpha.1...v0.0.3-alpha.2) (2020-01-30)
 
-\* *This Changelog was automatically generated by [github_changelog_generator](https://github.com/github-changelog-generator/github-changelog-generator)*
+
+### Unclassified
+
+* Resolve goreleaser build issues (#208) ([d59a08a](https://github.com/ory/kratos/commit/d59a08a0ef680a984352d7f5068626cc1958185a)), closes [#208](https://github.com/ory/kratos/issues/208)
+
+
+
+## [0.0.3-alpha.1](https://github.com/ory/kratos/compare/v0.0.1-alpha.9...v0.0.3-alpha.1) (2020-01-30)
+
+
+### Unclassified
+
+* Update CHANGELOG [ci skip] ([49e09ea](https://github.com/ory/kratos/commit/49e09eaaab1fc681f9330e12ce6e5483c62ee9e3))
+* Take form field orders from JSON Schema (#205) ([a880f0d](https://github.com/ory/kratos/commit/a880f0ddb52fb4366acf8fbd80aabaa9843445a9)), closes [#205](https://github.com/ory/kratos/issues/205) [#176](https://github.com/ory/kratos/issues/176)
+* Update CHANGELOG [ci skip] ([ff52bbb](https://github.com/ory/kratos/commit/ff52bbb264542b48658679bf5563b0f3b7ad73c7))
+* Adapt quickstart docker compose config (#207) ([e532583](https://github.com/ory/kratos/commit/e532583b35a22cb39bbab0101bf86c0bf01b1088)), closes [#207](https://github.com/ory/kratos/issues/207)
+* Update CHANGELOG [ci skip] ([7f4800b](https://github.com/ory/kratos/commit/7f4800b07556e688ba0cd551438876b3bf23ace5))
+* Update CHANGELOG [ci skip] ([1b2c3f6](https://github.com/ory/kratos/commit/1b2c3f645e64848e7fba6656aa730c7e346ed75d))
+* Rework public and admin fetch strategy (#203) ([99aa169](https://github.com/ory/kratos/commit/99aa1693e758f706f264c2439594e2be37ae9bc6)), closes [#203](https://github.com/ory/kratos/issues/203) [#122](https://github.com/ory/kratos/issues/122)
+* Update CHANGELOG [ci skip] ([1cea427](https://github.com/ory/kratos/commit/1cea42780a95d4ebf5520e1c1803fb13ef596d52))
+* ss/profile: Use request ID as query param everywhere (#202) ([ed32b14](https://github.com/ory/kratos/commit/ed32b14f8ea972cf549480f29cbf1b95d010789c)), closes [#202](https://github.com/ory/kratos/issues/202) [#190](https://github.com/ory/kratos/issues/190)
+* Update CHANGELOG [ci skip] ([a392027](https://github.com/ory/kratos/commit/a3920278129399ce576c5336c2e50dd015b8f2f8))
+* Update HTTP routes for a consistent API naming (#199) ([9ed4bda](https://github.com/ory/kratos/commit/9ed4bda9f0b0d45e8ac0de0c42b78f717f3d92f3)), closes [#199](https://github.com/ory/kratos/issues/199) [#195](https://github.com/ory/kratos/issues/195)
+
+
+
+## [0.0.1-alpha.9](https://github.com/ory/kratos/compare/v0.0.1-alpha.11...v0.0.1-alpha.9) (2020-01-29)
+
+No significant changes have been made for this release.
+
+
+## [0.0.2-alpha.1](https://github.com/ory/kratos/compare/v0.0.1-alpha.8...v0.0.2-alpha.1) (2020-01-29)
+
+
+### Unclassified
+
+* Use correct build archive for homebrew ([74ac29f](https://github.com/ory/kratos/commit/74ac29f43f2937cad9065ad3c03cf3cf909cff42))
+
+
+
+## [0.0.1-alpha.6](https://github.com/ory/kratos/compare/v0.0.1-alpha.5...v0.0.1-alpha.6) (2020-01-29)
+
+No significant changes have been made for this release.
+
+
+## [0.0.1-alpha.5](https://github.com/ory/kratos/compare/v0.0.1-alpha.3...v0.0.1-alpha.5) (2020-01-29)
+
+
+### Unclassified
+
+* Resolve build issues with CGO (#196) ([298f4ea](https://github.com/ory/kratos/commit/298f4ea85b3e7405929f481b756efe8c5c133479)), closes [#196](https://github.com/ory/kratos/issues/196)
+* ss/password: Make form fields an array (#197) ([6cb0058](https://github.com/ory/kratos/commit/6cb005860755ff897ad847f09af50bc911bbc7f0)), closes [#197](https://github.com/ory/kratos/issues/197) [#186](https://github.com/ory/kratos/issues/186)
+
+
+
+## [0.0.1-alpha.3](https://github.com/ory/kratos/compare/v0.0.1-alpha.2...v0.0.1-alpha.3) (2020-01-28)
+
+No significant changes have been made for this release.
+
+
+## [0.0.1-alpha.2](https://github.com/ory/kratos/compare/v0.0.1-alpha.1...v0.0.1-alpha.2) (2020-01-28)
+
+No significant changes have been made for this release.
+
+
+## [0.0.1-alpha.1](https://github.com/ory/kratos/compare/ab6f24a85276bdd8687f2fc06390c1279892b005...v0.0.1-alpha.1) (2020-01-28)
+
+
+### Documentation
+
+* Present ORY Hive to the world ([#107](https://github.com/ory/kratos/issues/107)) ([7883589](https://github.com/ory/kratos/commit/78835897664a5ab5564751fc9f04172f7d20d572))
+* Updates issue and pull request templates ([0441dff](https://github.com/ory/kratos/commit/0441dffe0c439cc54214bf9ee8f4a4bd25206999))
+* Updates issue and pull request templates ([#174](https://github.com/ory/kratos/issues/174)) ([ad405e9](https://github.com/ory/kratos/commit/ad405e9037e2db2910a012f414556fea672e732a))
+* Updates issue and pull request templates ([#39](https://github.com/ory/kratos/issues/39)) ([daf5aa8](https://github.com/ory/kratos/commit/daf5aa89c717de6176ee25119d2e751ae2ef6558))
+* Updates issue and pull request templates ([#40](https://github.com/ory/kratos/issues/40)) ([f5907f3](https://github.com/ory/kratos/commit/f5907f3f248e05511b19ff6dc15bf6f60f8b62da))
+* Updates issue and pull request templates ([#59](https://github.com/ory/kratos/issues/59)) ([8c5612c](https://github.com/ory/kratos/commit/8c5612c080e5b7531028b778b86cc4cde2abd516))
+* Updates issue and pull request templates ([#7](https://github.com/ory/kratos/issues/7)) ([a1220ba](https://github.com/ory/kratos/commit/a1220ba1e950498a6e9594266dc730c9a8731b49))
+* Updates issue and pull request templates ([#8](https://github.com/ory/kratos/issues/8)) ([c56798a](https://github.com/ory/kratos/commit/c56798ab29e72ed308fff840e3b1b98ead19aea6))
+
+
+### Unclassified
+
+* Inject Identity Traits JSON Schema ([3a4c5ad](https://github.com/ory/kratos/commit/3a4c5ad35f885c7d38ffcf1d5836fb485f122fe9)), closes [#189](https://github.com/ory/kratos/issues/189)
+* Remove redundant return statement ([7c2989f](https://github.com/ory/kratos/commit/7c2989f52c090bb9900380b4ec74e04d9c37a441))
+* ss/oidc: Remove obsolete request field from form (#193) ([59671ba](https://github.com/ory/kratos/commit/59671badb63009e2440b14868b622adc75cf882f)), closes [#193](https://github.com/ory/kratos/issues/193) [#180](https://github.com/ory/kratos/issues/180)
+* Re-introduce migration plans to CLI command ([#192](https://github.com/ory/kratos/issues/192)) ([bb32cd3](https://github.com/ory/kratos/commit/bb32cd3cad3cd0bd6f3166de0166701e1f676ac6)), closes [#131](https://github.com/ory/kratos/issues/131)
+* strategy/oidc: Allow multiple OIDC Connections (#191) ([8984831](https://github.com/ory/kratos/commit/898483137ff9dc47d65750cd94a973f2e5bee770)), closes [#191](https://github.com/ory/kratos/issues/191) [#114](https://github.com/ory/kratos/issues/114)
+* Improve Docker Compose Quickstart (#187) ([9459072](https://github.com/ory/kratos/commit/945907297ded4b18e1bd0e7c9824a975ac7395c6)), closes [#187](https://github.com/ory/kratos/issues/187) [#188](https://github.com/ory/kratos/issues/188)
+* Fix broken import ([308aa13](https://github.com/ory/kratos/commit/308aa1334dd43bc4bebade4e70e9c81c83fe8806))
+* selfservice/password: Remove request field and ensure method is set (#183) ([e035adc](https://github.com/ory/kratos/commit/e035adc233198e9b5c9a6e08d442fb5fb3290816)), closes [#183](https://github.com/ory/kratos/issues/183)
+* Add tests and fixtures for the config JSON Schema (#171) ([ede9c0e](https://github.com/ory/kratos/commit/ede9c0e9c45ee91e60587311dc18a0a04ff62295)), closes [#171](https://github.com/ory/kratos/issues/171)
+* Add example values for config JSON Schema ([12ba728](https://github.com/ory/kratos/commit/12ba7283bf879cd7682d3017c3b3f12e49029d6b))
+* Replace `url` with `uri` format in config JSON Schema ([68eddef](https://github.com/ory/kratos/commit/68eddef0cf179bf61abb999d84d2af19c3703c80))
+* Replace number with integer in config JSON Schema (#177) ([9eff6fd](https://github.com/ory/kratos/commit/9eff6fd09720b11acae089ebfcaf37288bc031b0)), closes [#177](https://github.com/ory/kratos/issues/177)
+* Improve `--dev` flag (#167) ([9b61ee1](https://github.com/ory/kratos/commit/9b61ee10bbb4710d6694addfa60c04313855516f)), closes [#167](https://github.com/ory/kratos/issues/167) [#162](https://github.com/ory/kratos/issues/162)
+* Add goreleaser orb task (#170) ([5df0def](https://github.com/ory/kratos/commit/5df0defefc95ced289a9c59a4f5deb3c67446e75)), closes [#170](https://github.com/ory/kratos/issues/170)
+* Add changelog generation task (#169) ([edd937c](https://github.com/ory/kratos/commit/edd937c21b7e37b2f2e926f0fe62c2e7d4a7d608)), closes [#169](https://github.com/ory/kratos/issues/169)
+* Adopt new SDK pipeline (#168) ([21d9b6d](https://github.com/ory/kratos/commit/21d9b6d27adbfe8504fb46ac95952e7cea239085)), closes [#168](https://github.com/ory/kratos/issues/168)
+* Add ability to define multiple schemas and serve them over HTTP ([#164](https://github.com/ory/kratos/issues/164)) ([c65119c](https://github.com/ory/kratos/commit/c65119c24378dabd306e5a49f89c28c0367f7c2e)), closes [#86](https://github.com/ory/kratos/issues/86):
+  > All identity traits schemas have to be configured using a human readable ID and the corresponding URL. This PR enables multiple schemas to be used next to the default schema.
+  > It also adds the kratos.public/schemas/:id endpoint that mirrors all schemas.
+* Add docker-compose quickstart (#153) ([e096190](https://github.com/ory/kratos/commit/e096190e778f22573e30f35e85b7cf147caf851b)), closes [#153](https://github.com/ory/kratos/issues/153)
+* Update README (#160) ([533775b](https://github.com/ory/kratos/commit/533775ba78a2c1758c47ed093da6acc18ab951c2)), closes [#160](https://github.com/ory/kratos/issues/160)
+* Separate post register/login hooks (#150) ([f4b7812](https://github.com/ory/kratos/commit/f4b78122d9cbe4dcc05b4fd52d94a2d9f1b16eb2)), closes [#150](https://github.com/ory/kratos/issues/150) [#149](https://github.com/ory/kratos/issues/149)
+* Update README badges ([4f7838e](https://github.com/ory/kratos/commit/4f7838e69181c5a10e27cde1e241779e4e724909))
+* Bump go-acc and resolve test issues (#154) ([15b1b63](https://github.com/ory/kratos/commit/15b1b630c5363e0e1afbed53285b3f39098c0792)), closes [#154](https://github.com/ory/kratos/issues/154) [#152](https://github.com/ory/kratos/issues/152) [#151](https://github.com/ory/kratos/issues/151):
+  > Due to a bug in `go-acc`, tests would not run if `-tags sqlite` was supplied as a go tool argument to `go-acc`. This patch resolves that issue and also includes several test patches from previous community PRs and some internal test issues.
+* Add helper for requiring authentication ([3888fbd](https://github.com/ory/kratos/commit/3888fbdc239b7a06c7fca34d08de7d55af69a48c))
+* Add session destroyer hook  ([#148](https://github.com/ory/kratos/issues/148)) ([d17f002](https://github.com/ory/kratos/commit/d17f002cdfe1f11ebb6bcbb17f6976aa329eab4a)), closes [#139](https://github.com/ory/kratos/issues/139):
+  > This patch adds a hook that destroys all active session by the identity which is being logged in. This can be useful in scenarios where only one session should be active at any given time.
+* Add ORY Kratos banner to README (#145) ([23b824f](https://github.com/ory/kratos/commit/23b824f7f99efbc23787508c03506e73a3240a2a)), closes [#145](https://github.com/ory/kratos/issues/145)
+* Implement message templates and SMTP delivery ([#146](https://github.com/ory/kratos/issues/146)) ([dc674bf](https://github.com/ory/kratos/commit/dc674bfa7d1fa9ee94b014d09866bbdc0a97c321)), closes [#99](https://github.com/ory/kratos/issues/99):
+  > This patch adds a message templates (with override capabilities)
+  > and SMTP delivery.
+  > 
+  > Integration tests using MailHog test fault resilience and e2e email
+  > delivery.
+  > 
+  > This system is designed to be extended for SMS and other use cases.
+* Replace DBAL layer with gobuffalo/pop (#130) ([21d08b8](https://github.com/ory/kratos/commit/21d08b84560230d8a063a418a74efcf53c146872)), closes [#130](https://github.com/ory/kratos/issues/130):
+  > This is a major refactoring of the internal DBAL. After a successful proof of concept and evaluation of gobuffalo/pop, we believe this to be the best DBAL for Go at the moment. It abstracts a lot of boilerplate code away.
+  > 
+  > As with all sophisticated DBALs, pop too has its quirks. There are several issues that have been discovered during testing and adoption: https://github.com/gobuffalo/pop/issues/136 https://github.com/gobuffalo/pop/issues/476 https://github.com/gobuffalo/pop/issues/473 https://github.com/gobuffalo/pop/issues/469 https://github.com/gobuffalo/pop/issues/466
+  > 
+  > However, the upside of moving much of the hard database/sql plumbing into another library cleans up the code base significantly and reduces complexity.
+  > 
+  > As part of this change, the "ephermal" DBAL ("in memory") will be removed and sqlite will be used instead. This further reduces complexity of the code base and code-duplication.
+  > 
+  > To support sqlite, CGO is required, which means that we need to run tests with `go test -tags sqlite` on a machine that has g++ installed. This also means that we need a Docker Image with `alpine` as opposed to pure `scratch`. While this is certainly a downside, the upside of less maintenance and "free" support for SQLite, PostgreSQL, MySQL, and CockroachDB simply outweighs any downsides that come with CGO.
+* Replace local deps with remote ones ([8605e45](https://github.com/ory/kratos/commit/8605e454cf538e047c5a9c3479372892d6b3f483))
+* ss/profile: Improve success and error flows ([9e0015a](https://github.com/ory/kratos/commit/9e0015acec7f8d927498e48366b377e22ec768b7)), closes [#112](https://github.com/ory/kratos/issues/112):
+  > This patch completes the profile management flow by implementing proper error and success states and adding several data integrity tests.
+* Add helpers for go-swagger ([165a660](https://github.com/ory/kratos/commit/165a660f277588ed572d7843354c207f72f1678d)):
+  > See https://github.com/go-swagger/go-swagger/issues/2119
+* Add profile management and refactor internals ([3ec9263](https://github.com/ory/kratos/commit/3ec9263f597a5949d0de6d10073cc626cfcfcca4)), closes [#112](https://github.com/ory/kratos/issues/112)
+* Update keyword from kratos to ory.sh/kratos ([f45cbe0](https://github.com/ory/kratos/commit/f45cbe0339db8d129522314f3099e6944e4a6ea3)), closes [#115](https://github.com/ory/kratos/issues/115)
+* Update sdk generation method ([24aa3d7](https://github.com/ory/kratos/commit/24aa3d73354d5a28f05999a09e7bbbe51a44d44e))
+* Use JSON Schema to type assert form body ([#116](https://github.com/ory/kratos/issues/116)) ([1944c7c](https://github.com/ory/kratos/commit/1944c7c6e82b5b6a3b9d47db94c8f8f45248feb7)), closes [#109](https://github.com/ory/kratos/issues/109)
+* Rebrand ORY Hive to ORY Kratos (#111) ([ceda7fb](https://github.com/ory/kratos/commit/ceda7fb3472b081f0c6066aa1f282d4ec1787f7b)), closes [#111](https://github.com/ory/kratos/issues/111)
+* Add SQL adapter ([#100](https://github.com/ory/kratos/issues/100)) ([9e7f998](https://github.com/ory/kratos/commit/9e7f99871e3f09e7ae9ec1c38c8b8cf94d076f45)), closes [#92](https://github.com/ory/kratos/issues/92)
+* Explicitly whitelist form parser keys ([#105](https://github.com/ory/kratos/issues/105)) ([28b056e](https://github.com/ory/kratos/commit/28b056e5bbfec645262914c52f0386d70c787a32)), closes [#98](https://github.com/ory/kratos/issues/98):
+  > Previously the form parser would try to detect the field type by
+  > asserting types for the whole form. That caused passwords
+  > containing only numbers to fail to unmarshal into a string
+  > value.
+  > 
+  > This patch resolves that issue by introducing a prefix
+  > option to the BodyParser
+* Handle securecookie errors appropriately ([#101](https://github.com/ory/kratos/issues/101)) ([75bf6fe](https://github.com/ory/kratos/commit/75bf6fe3f79d025f2aaa79d06db39c26430dc3fc)), closes [#97](https://github.com/ory/kratos/issues/97):
+  > Previously, IsNotAuthenticated would not handle securecookie errors appropriately.
+  > This has been resolved.
+* Improve migration command ([#94](https://github.com/ory/kratos/issues/94)) ([2b631de](https://github.com/ory/kratos/commit/2b631de6d621dcebac5318f6dd628646fec7712f))
+* Mark active field as nullable ([#89](https://github.com/ory/kratos/issues/89)) ([292702d](https://github.com/ory/kratos/commit/292702d9e031e43c63e0ecb59354557139499e87))
+* Move package to selfservice ([063b767](https://github.com/ory/kratos/commit/063b7679af76333fc546e94e92b197079e5bdb30)):
+  > Because this module is primarily used
+  > in selfservice scenarios, it has been
+  > moved to the selfservice parent.
+* Omit request header from login/registration request ([#106](https://github.com/ory/kratos/issues/106)) ([9b07587](https://github.com/ory/kratos/commit/9b07587f2de2b270c5c326e37b2b6b3dbbfa8595)), closes [#95](https://github.com/ory/kratos/issues/95):
+  > When fetching a login and registration request, the HTTP Request Headers
+  > must not be included in the response, as they contain irrelevant
+  > information for the API caller.
+* Properly handle empty credentials config in sql ([#93](https://github.com/ory/kratos/issues/93)) ([b79c5d1](https://github.com/ory/kratos/commit/b79c5d1d5216e994f986ce739285cb1a89523df5))
+* Resolve wrong column reference in sql ([#90](https://github.com/ory/kratos/issues/90)) ([0c0eb87](https://github.com/ory/kratos/commit/0c0eb87cd341bd3e73eb9adb303054b38c103ba9)):
+  > Reference ic.method instead of ici.method.
+  > 
+  > Added regression tests against this particular issue.
+* Update to ory/x 0.0.80 ([#110](https://github.com/ory/kratos/issues/110)) ([64de2f8](https://github.com/ory/kratos/commit/64de2f86540bf8715a1703d773fa95011603a854)):
+  > Removes the need for BindEnv()
+* Fix broken tests and ci linter issues  (#104) ([69760fe](https://github.com/ory/kratos/commit/69760fe9fecb2f302dd5c1821185ea990f4e411c)), closes [#104](https://github.com/ory/kratos/issues/104)
+* Update to Go modules 1.13 ([1da4d75](https://github.com/ory/kratos/commit/1da4d757bc2434f97c588e395305066edce9ef0d))
+* Resolve minor configuration issues and response errors (#85) ([a44913b](https://github.com/ory/kratos/commit/a44913b26b515333576def6b882861ff2c8d4aff)), closes [#85](https://github.com/ory/kratos/issues/85)
+* Clean up dead files (#84) ([e0c96ef](https://github.com/ory/kratos/commit/e0c96effbee2521b12eeedc851b67fa3a1ae41c8)), closes [#84](https://github.com/ory/kratos/issues/84)
+* Add health endpoints (#83) ([0e936f7](https://github.com/ory/kratos/commit/0e936f7047bb9eacae0c5107360ce752a23d8282)), closes [#83](https://github.com/ory/kratos/issues/83) [#82](https://github.com/ory/kratos/issues/82)
+* Update Dockerfile and related build tools (#80) ([d20c701](https://github.com/ory/kratos/commit/d20c701433cea916d3df4863846cf09743150966)), closes [#80](https://github.com/ory/kratos/issues/80)
+* Implement SQL Database adapter (#79) ([86d07c4](https://github.com/ory/kratos/commit/86d07c4a9e3b3e6607e73f4d54b4e7b9f0382e59)), closes [#79](https://github.com/ory/kratos/issues/79) [#69](https://github.com/ory/kratos/issues/69)
+* Prevent duplicate signups (#76) ([4c88968](https://github.com/ory/kratos/commit/4c88968a6853396755f61db2673a0cb2201868f7)), closes [#76](https://github.com/ory/kratos/issues/76) [#46](https://github.com/ory/kratos/issues/46)
+* Contributing 08 10 19 00 52 45 (#74) ([43b511f](https://github.com/ory/kratos/commit/43b511f1a43be114ac04b377434b22ec8afe465b)), closes [#74](https://github.com/ory/kratos/issues/74)
+* Echo form values from oidc signup ([98b1da5](https://github.com/ory/kratos/commit/98b1da5f59d5dcde4416b74ea323af3e29fefa75)), closes [#71](https://github.com/ory/kratos/issues/71)
+* Properly decode values in error handler ([5eb9088](https://github.com/ory/kratos/commit/5eb9088efb291256d65fadbd5a803369cc96bdd2)), closes [#71](https://github.com/ory/kratos/issues/71)
+* Force path and domain on CSRF cookie (#70) ([a80d8b0](https://github.com/ory/kratos/commit/a80d8b0e0bb16fce530559826de29fd6b9836873)), closes [#70](https://github.com/ory/kratos/issues/70) [#68](https://github.com/ory/kratos/issues/68)
+* Require no session when accessing login or sign up (#67) ([c0e0da1](https://github.com/ory/kratos/commit/c0e0da1b38ebadaa33eb5b59dc566731b3320b70)), closes [#67](https://github.com/ory/kratos/issues/67) [#63](https://github.com/ory/kratos/issues/63)
+* Reset CSRF token on principal change ([#64](https://github.com/ory/kratos/issues/64)) ([9c889ab](https://github.com/ory/kratos/commit/9c889ab4f6c846812a4290545fef7d8106da35f0)), closes [#38](https://github.com/ory/kratos/issues/38):
+  > Add tests for logout.
+* Add tests for selfservice ErrorHandler (#62) ([4bb9e70](https://github.com/ory/kratos/commit/4bb9e7086ee57c4eb1a73fea436c7b2dec0257b7)), closes [#62](https://github.com/ory/kratos/issues/62)
+* Implement CRUD for identities ([#60](https://github.com/ory/kratos/issues/60)) ([58a3c24](https://github.com/ory/kratos/commit/58a3c240fca66e1195bf310024a2f8473826bce6)), closes [#58](https://github.com/ory/kratos/issues/58)
+* Enable Circle CI (#57) ([6fb0afd](https://github.com/ory/kratos/commit/6fb0afd30e3755026b6ffca0cc80f2fe00267681)), closes [#57](https://github.com/ory/kratos/issues/57) [#53](https://github.com/ory/kratos/issues/53)
+* OIDC provider selfservice data enrichment (#56) ([936970a](https://github.com/ory/kratos/commit/936970a9abaadeab5c191ff52218bf4f65af2220)), closes [#56](https://github.com/ory/kratos/issues/56) [#23](https://github.com/ory/kratos/issues/23) [#55](https://github.com/ory/kratos/issues/55)
+* Remove local jsonschema module override ([cd2a5d8](https://github.com/ory/kratos/commit/cd2a5d8c74b21b122f5d5437702d8c74fb1cb726))
+* Implement identity management, login, and registration (#22) ([bf3395e](https://github.com/ory/kratos/commit/bf3395ea34ecf85303034f3e941a049c8cbd6229)), closes [#22](https://github.com/ory/kratos/issues/22)
+* Revert incorrect license changes ([fb9740b](https://github.com/ory/kratos/commit/fb9740b37a94dbdde1a8f4433fb7e5a8b4dac295))
+* Create FUNDING.yml ([3c67ac8](https://github.com/ory/kratos/commit/3c67ac83f58c5b03dc3935d279083268b8a85e0d))
+* Initial commit ([ab6f24a](https://github.com/ory/kratos/commit/ab6f24a85276bdd8687f2fc06390c1279892b005))
+
+
+
