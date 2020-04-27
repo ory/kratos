@@ -148,20 +148,22 @@ export const authHandler = (flow) => (req, res, next) => {
   const request = req.query.request;
   if (!request) {
     console.log('No request found in URL, initializing ${flow} flow.');
-    res.redirect(`${config.kratos.browser}/auth/browser/${flow}`);
+    res.redirect(`${config.kratos.browser}/self-service/browser/${flow}`);
     return;
   }
 
   // This is the ORY Kratos URL. If this app and ORY Kratos are running
   // on the same (e.g. Kubernetes) cluster, this should be ORY Kratos's internal hostname.
-  const url = new URL(`${config.kratos.admin}/auth/browser/requests/${flow}`);
+  const url = new URL(
+    `${config.kratos.admin}/self-service/browser/flows/requests/${flow}`
+  );
   url.searchParams.set('request', request);
 
   fetch(url.toString())
     .then((response) => {
       // A 404 code means that this code does not exist. We'll retry by re-initiating the flow.
       if (response.status == 404) {
-        res.redirect(`${config.kratos.browser}/auth/browser/${flow}`);
+        res.redirect(`${config.kratos.browser}/self-service/browser/${flow}`);
         return;
       }
 
@@ -226,9 +228,10 @@ summarized in this state diagram:
 1. ORY Kratos executes Jobs defined in the **Before Login/Registration
    Workflow**. If a failure occurs, the whole flow is aborted.
 1. The user's browser is redirected to
-   `http://127.0.0.1:4455/.ory/kratos/public/auth/browser/(login|registration)`
+   `http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/requests/(login|registration)`
    (the notation `(login|registration)` expresses the two possibilities of
-   `../auth/browser/login` or `../auth/browser/registration`).
+   `../self-service/browser/flows/requests/login` or
+   `../self-service/browser/flows/requests/registration`).
 1. ORY Kratos does some internal processing (e.g. checks if a session cookie is
    set, generates payloads for form fields, sets CSRF token, ...) and redirects
    the user's browser to the Login UI URL which is defined using the
@@ -241,17 +244,25 @@ summarized in this state diagram:
    `request` query parameter includes a unique ID which will be used to fetch
    contextual data for this login request.
 1. Your Server-Side Application makes a `GET` request to
-   `http://kratos:4434/auth/browser/requests/(login|registration)?request=abcde`.
+   `http://kratos:4434/self-service/browser/flows/requests/(login|registration)?request=abcde`.
    ORY Kratos responds with a JSON Payload that contains data (form fields,
    error messages, ...) for all enabled User Login Strategies:
-   `json5 { "id": "abcde", "expires_at": "2020-01-27T09:34:39.3249566Z", "issued_at": "2020-01-27T09:24:39.3249689Z", "request_url": "https://example.org/.ory/kratos/public/auth/browser/(login|registration)", "methods": { "oidc": { "method": "oidc", "config": { /* ... */ } }, "password": { "method": "password", "config": { /* ... */ } } // ... } }`
+   ```json5
+   {
+     "id": "abcde",
+     "expires_at": "2020-01-27T09:34:39.3249566Z",
+     "issued_at": "2020-01-27T09:24:39.3249689Z",
+     "request_url": "https://example.org/.ory/kratos/public/self-service/browser/flows/requests/(login|registration)",
+     "methods": { "oidc": { "method": "oidc", "config": { /* ... */ } },
+     "password": { "method": "password", "config": { /* ... */ } } // ... } }
+   ```
 1. Your Server-Side applications renders the data however you see fit. The User
    interacts with it an completes the Login by clicking, for example, the
    "Login", the "Login with Google", ... button.
 1. The User's browser makes a request to one of ORY Kratos' Strategy URLs (e.g.
-   `http://127.0.0.1:4455/.ory/kratos/public/auth/browser/methods/password/(login|registration)`
+   `http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/strategies/password/(login|registration)`
    or
-   `https://127.0.0.1:4455/.ory/kratos/public/auth/browser/methods/oidc/auth/abcde`).
+   `https://127.0.0.1:4455/.ory/kratos/public/self-service/browser/strategies/oidc/auth/abcde`).
    ORY Kratos validates the User's credentials (when logging in - e.g. Username
    and Password, by performing an OpenID Connect flow, ...) or the registration
    form data (when signing up - e.g. is the E-Mail address valid, is the person
@@ -263,7 +274,7 @@ summarized in this state diagram:
        id: 'abcde',
        expires_at: '2020-01-27T10:05:50.1678228Z',
        issued_at: '2020-01-27T09:55:50.1678348Z',
-       request_url: 'http://127.0.0.1:4455/auth/browser/(login|registration)',
+       request_url: 'http://127.0.0.1:4455/self-service/browser/(login|registration)',
        methods: {
          oidc: {
            method: 'oidc',
@@ -305,15 +316,15 @@ Because Client-Side Browser Applications do not have access to ORY Kratos' Admin
 API, they must use the ORY Kratos Public API instead. The flow for a Client-Side
 Browser Application is almost the exact same as the one for Server-Side
 Applications, with the small difference that
-`https://127.0.0.1:4455/.ory/kratos/public/auth/browser/requests/login?request=abcde`
+`https://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/requests/login?request=abcde`
 would be called via AJAX instead of making a request to
-`https://kratos:4434/auth/browser/requests/login?request=abcde`.
+`https://kratos:4434/self-service/browser/flows/requests/login?request=abcde`.
 
 ::: Note To prevent brute force, guessing, session injection, and other attacks,
 it is required that cookies are working for this endpoint. The cookie set in the
 initial HTTP request made to
-`https://127.0.0.1:4455/.ory/kratos/public/auth/browser/login` MUST be set and
-available when calling this endpoint! :::
+`https://127.0.0.1:4455/.ory/kratos/public/self-service/browser/login` MUST be
+set and available when calling this endpoint! :::
 
 ## Self-Service User Login and User Registration for API Clients
 
