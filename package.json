@@ -7,7 +7,7 @@
     "wait-on": "wait-on"
   },
   "devDependencies": {
-    "cypress": "4.3.0",
+    "cypress": "4.4.1",
     "prettier": "2.0.4",
     "wait-on": "4.0.2"
   }

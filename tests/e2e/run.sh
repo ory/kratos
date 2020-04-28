@@ -4,7 +4,6 @@ set -euxo pipefail
 
 cd "$( dirname "${BASH_SOURCE[0]}" )/../.."
 
-export IDENTITY_TRAITS_DEFAULT_SCHEMA_URL=file://contrib/quickstart/kratos/email-password/identity.traits.schema.json
 export KRATOS_PUBLIC_URL=http://127.0.0.1:4433/
 export KRATOS_ADMIN_URL=http://127.0.0.1:4434/
 
@@ -32,7 +31,6 @@ if [ -z ${CI+x} ]; then
   docker rm mailslurper -f || true
   docker run --name mailslurper -p 4436:4436 -p 4437:4437 -p 1025:1025 oryd/mailslurper:latest-smtps > "${base}/tests/e2e/mailslurper.e2e.log" 2>&1 &
 fi
-export COURIER_SMTP_CONNECTION_URI="smtp://test:test@127.0.0.1:1025/?skip_ssl_verify=true"
 
 watch=no
 for i in "$@"
@@ -46,13 +44,21 @@ esac
 done
 
 run() {
+  profile=$2
   killall kratos || true
   killall node || true
 
-  (cd "$dir"; PORT=4455 SECURITY_MODE=cookie npm run serve > "${base}/tests/e2e/secureapp.e2e.log" 2>&1 &)
+  if [ -z ${KRATOS_APP_PATH+x} ]; then
+    (cd "$dir"; PORT=4455 SECURITY_MODE=cookie npm run serve > "${base}/tests/e2e/secureapp.e2e.log" 2>&1 &)
+  else
+    (cd "$dir"; PORT=4455 SECURITY_MODE=cookie npm run start > "${base}/tests/e2e/secureapp.e2e.log" 2>&1 &)
+  fi
+
   export DSN=${1}
   $kratos migrate sql -e --yes
-  ($kratos serve --dev -c contrib/quickstart/kratos/email-password/.kratos.yml > "${base}/tests/e2e/kratos.e2e.log" 2>&1 &)
+
+  yq merge tests/e2e/profiles/kratos.base.yml "tests/e2e/profiles/${profile}/.kratos.yml" > tests/e2e/kratos.generated.yml
+  ($kratos serve --dev -c tests/e2e/kratos.generated.yml > "${base}/tests/e2e/kratos.${profile}.e2e.log" 2>&1 &)
 
   npm run wait-on -- -t 10000 http-get://127.0.0.1:4434/health/ready \
     http-get://127.0.0.1:4455/health \
@@ -64,7 +70,7 @@ run() {
 export TEST_DATABASE_SQLITE="sqlite:///$(mktemp -d -t ci-XXXXXXXXXX)/db.sqlite?_fk=true"
 case "$1" in
         sqlite)
-          run "${TEST_DATABASE_SQLITE}"
+          run "${TEST_DATABASE_SQLITE}" email
           ;;
 
         mysql)

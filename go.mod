@@ -37,8 +37,10 @@ require (
 	github.com/leodido/go-urn v1.1.0 // indirect
 	github.com/markbates/pkger v0.12.8
 	github.com/mattn/goveralls v0.0.5
+	github.com/mikefarah/yq v1.15.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
+	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect
 	github.com/ory/analytics-go/v4 v4.0.0
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/ory/go-acc v0.1.0
@@ -46,6 +48,7 @@ require (
 	github.com/ory/graceful v0.1.1
 	github.com/ory/herodot v0.8.2
 	github.com/ory/jsonschema/v3 v3.0.1
+	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/sdk/swagutil v0.0.0-20200425113349-92ce176f501e
 	github.com/ory/viper v1.7.4
 	github.com/ory/x v0.0.112

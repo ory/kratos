@@ -42,6 +42,8 @@ func TestStrategyTraits(t *testing.T) {
 	ui := testhelpers.NewSettingsUITestServer(t)
 	viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
 
+	_ = testhelpers.NewErrorTestServer(t, reg)
+
 	primaryIdentity := &identity.Identity{
 		ID: x.NewUUID(),
 		Credentials: map[identity.CredentialsType]identity.Credentials{

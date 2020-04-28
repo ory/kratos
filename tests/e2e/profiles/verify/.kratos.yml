@@ -1,0 +1,33 @@
+selfservice:
+  strategies:
+    password:
+      enabled: true
+
+  settings:
+    privileged_session_max_age: 1m
+    after:
+      profile:
+        hooks:
+          -
+            hook: verify
+
+  verify:
+    return_to: http://127.0.0.1:4455/
+
+  logout:
+    redirect_to: http://127.0.0.1:4455/auth/login
+
+  login:
+    request_lifespan: 10m
+
+  registration:
+    request_lifespan: 10m
+    after:
+      password:
+        hooks:
+          -
+            hook: verify
+
+identity:
+  traits:
+    default_schema_url: file://tests/e2e/profiles/verify/identity.traits.schema.json

@@ -5,7 +5,7 @@ K := $(foreach exec,$(EXECUTABLES),\
         $(if $(shell which $(exec)),some string,$(error "No $(exec) in PATH")))
 
 export GO111MODULE := on
-export PATH := .bin:${PATH}
+export PATH := $(pwd)/.bin:${PATH}
 
 deps:
 ifneq ("v0", $(shell cat .bin/.lock))
@@ -18,6 +18,7 @@ ifneq ("v0", $(shell cat .bin/.lock))
 		go build -o .bin/goimports golang.org/x/tools/cmd/goimports
 		go build -o .bin/swagutil github.com/ory/sdk/swagutil
 		go build -o .bin/packr2 github.com/gobuffalo/packr/v2/packr2
+		go build -o .bin/yq github.com/mikefarah/yq
 		echo "v0" > .bin/.lock
 endif
 

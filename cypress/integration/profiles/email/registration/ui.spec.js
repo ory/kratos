@@ -1,4 +1,4 @@
-const {APP_URL} = require("../../helpers")
+import {APP_URL} from "../../../../helpers"
 
 context('Registration', () => {
   beforeEach(() => {
@@ -14,9 +14,10 @@ context('Registration', () => {
       cy.get('.password-visibility-toggle').click()
       cy.get('input[name="password"]').should('have.prop', 'type','password')
     })
+
     it('clicks the log in link', () => {
-      cy.get('a[href="/auth/login"]').click()
-      cy.location('pathname').should('include', '/auth/login')
+      cy.get('a[href*="auth/login"]').click()
+      cy.location('pathname').should('include', 'auth/login')
       cy.location('search').should('not.be.empty', 'request')
     })
   })

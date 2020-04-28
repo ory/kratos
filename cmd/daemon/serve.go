@@ -172,10 +172,11 @@ func sqa(cmd *cobra.Command, d driver.Driver) *metricsx.Service {
 func bgTasks(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []string) {
 	defer wg.Done()
 
+	d.Logger().Println("Courier worker started.")
 	if err := graceful.Graceful(d.Registry().Courier().Work, d.Registry().Courier().Shutdown); err != nil {
 		d.Logger().WithError(err).Fatalf("Failed to run courier worker.")
 	}
-	d.Logger().Println("courier worker was shutdown gracefully")
+	d.Logger().Println("Courier worker was shutdown gracefully.")
 }
 
 func ServeAll(d driver.Driver) func(cmd *cobra.Command, args []string) {
