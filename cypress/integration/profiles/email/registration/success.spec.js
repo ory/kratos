@@ -1,4 +1,4 @@
-import { APP_URL, gen, password } from '../../../../helpers'
+import { APP_URL, gen } from '../../../../helpers'
 
 context('Registration', () => {
   beforeEach(() => {
@@ -7,6 +7,7 @@ context('Registration', () => {
 
   it('should sign up and be logged in', () => {
     const email = gen.email()
+    const password = gen.password()
     const website = 'https://www.ory.sh/'
     cy.get('input[name="traits.email"]').type(email)
     cy.get('input[name="traits.website').type(website)

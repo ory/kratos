@@ -31,8 +31,6 @@ module.exports = {
     /\/$/,
     ''
   ),
-  identity: 'foo@bar.com',
-  password: 'JfiAKvhjA9',
   website: 'https://www.ory.sh/',
   parseHtml,
   gen: {

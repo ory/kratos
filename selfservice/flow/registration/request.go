@@ -130,7 +130,9 @@ func (r *Request) Valid() error {
 	if r.ExpiresAt.Before(time.Now()) {
 		return errors.WithStack(newRequestExpiredError(time.Since(r.ExpiresAt)))
 	}
-	if r.IssuedAt.After(time.Now()) {
+
+	// Add a grace second for MySQL
+	if r.IssuedAt.Truncate(time.Second).After(time.Now()) {
 		return errors.WithStack(herodot.ErrBadRequest.WithReason("The registration request was issued in the future."))
 	}
 	return nil

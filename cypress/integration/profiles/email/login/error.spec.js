@@ -1,4 +1,4 @@
-import { APP_URL, identity } from '../../../../helpers'
+import {APP_URL, gen} from '../../../../helpers'
 
 context('Login', () => {
   beforeEach(() => {
@@ -27,6 +27,7 @@ context('Login', () => {
     })
 
     it('should show an error when the password is missing', () => {
+      const identity = gen.email()
       cy.get('input[name="identifier"]')
         .type(identity)
         .should('have.value', identity)

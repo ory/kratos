@@ -1,9 +1,12 @@
-import { APP_URL, identity, password } from '../../../../helpers'
+import {APP_URL, gen} from '../../../../helpers'
 
 context('Registration', () => {
   beforeEach(() => {
     cy.visit(APP_URL + '/auth/registration')
   })
+
+  const identity = gen.email()
+  const password = gen.password()
 
   it('fails when CSRF cookies are missing', () => {
     cy.clearCookies()
