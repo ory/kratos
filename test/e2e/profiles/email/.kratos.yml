@@ -4,7 +4,7 @@ selfservice:
       enabled: true
 
   settings:
-    privileged_session_max_age: 1500ms
+    privileged_session_max_age: 5000ms
 
   logout:
     redirect_to: http://127.0.0.1:4455/auth/login
@@ -18,4 +18,4 @@ selfservice:
 
 identity:
   traits:
-    default_schema_url: file://tests/e2e/profiles/email/identity.traits.schema.json
+    default_schema_url: file://test/e2e/profiles/email/identity.traits.schema.json

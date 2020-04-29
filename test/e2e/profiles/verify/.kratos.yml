@@ -27,4 +27,4 @@ selfservice:
 
 identity:
   traits:
-    default_schema_url: file://tests/e2e/profiles/verify/identity.traits.schema.json
+    default_schema_url: file://test/e2e/profiles/verify/identity.traits.schema.json

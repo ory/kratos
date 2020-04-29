@@ -49,5 +49,5 @@ module.exports = {
   // intervals define how long to wait for something,
   pollInterval: 100, // how long to wait before retry
   verifyLifespan: 5000, // how long to wait before retry
-  privilegedLifespan: 1501, // how long to wait before retry
+  privilegedLifespan: 5000, // how long to wait before retry
 }

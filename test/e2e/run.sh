@@ -24,12 +24,12 @@ else
   dir="${KRATOS_APP_PATH}"
 fi
 
-kratos=./tests/e2e/.bin/kratos
+kratos=./test/e2e/.bin/kratos
 go build -tags sqlite -o $kratos .
 
 if [ -z ${CI+x} ]; then
   docker rm mailslurper -f || true
-  docker run --name mailslurper -p 4436:4436 -p 4437:4437 -p 1025:1025 oryd/mailslurper:latest-smtps > "${base}/tests/e2e/mailslurper.e2e.log" 2>&1 &
+  docker run --name mailslurper -p 4436:4436 -p 4437:4437 -p 1025:1025 oryd/mailslurper:latest-smtps > "${base}/test/e2e/mailslurper.e2e.log" 2>&1 &
 fi
 
 dev=no
@@ -50,17 +50,17 @@ run() {
 
   if [ -z ${KRATOS_APP_PATH+x} ]; then
     (cd "$dir"; PORT=4455 SECURITY_MODE=cookie npm run serve \
-      > "${base}/tests/e2e/secureapp.e2e.log" 2>&1 &)
+      > "${base}/test/e2e/secureapp.e2e.log" 2>&1 &)
   else
     (cd "$dir"; PORT=4455 SECURITY_MODE=cookie npm run start \
-     > "${base}/tests/e2e/secureapp.e2e.log" 2>&1 &)
+     > "${base}/test/e2e/secureapp.e2e.log" 2>&1 &)
   fi
 
   export DSN=${1}
   $kratos migrate sql -e --yes
 
-  yq merge tests/e2e/profiles/kratos.base.yml "tests/e2e/profiles/${profile}/.kratos.yml" > tests/e2e/kratos.generated.yml
-  ($kratos serve --dev -c tests/e2e/kratos.generated.yml > "${base}/tests/e2e/kratos.${profile}.e2e.log" 2>&1 &)
+  yq merge test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.generated.yml
+  ($kratos serve --dev -c test/e2e/kratos.generated.yml > "${base}/test/e2e/kratos.${profile}.e2e.log" 2>&1 &)
 
   npm run wait-on -- -t 10000 http-get://127.0.0.1:4434/health/ready \
     http-get://127.0.0.1:4455/health \
@@ -87,6 +87,21 @@ To run the tests just pick a database name:
     $0 postgres
     $0 cockroach
     ...
+
+  If you are using a database other than SQLite, you need to set
+  an environment variable that points to it:
+
+    export TEST_DATABASE_MYSQL=...
+    export TEST_DATABASE_POSTGRESQL=...
+    export TEST_DATABASE_COCKROACHDB=...
+    $0 <database>
+
+  The Makefile has a helper for that which uses Docker to start the
+  databases:
+
+    make test-resetdb
+    source scripts/test-envs.sh
+    $0 <database>
 
 To run e2e tests in dev mode (useful for writing them), run:
 
@@ -116,27 +131,29 @@ fi
 export TEST_DATABASE_SQLITE="sqlite:///$(mktemp -d -t ci-XXXXXXXXXX)/db.sqlite?_fk=true"
 case "$1" in
         sqlite)
-          if [[ $dev = "yes" ]]; then
-            run "${TEST_DATABASE_SQLITE}" "$2"
-          else
-            run "${TEST_DATABASE_SQLITE}" email
-            run "${TEST_DATABASE_SQLITE}" profile
-          fi
+          db="${TEST_DATABASE_SQLITE}"
           ;;
 
         mysql)
-          run "${TEST_DATABASE_MYSQL}"
+          db="${TEST_DATABASE_MYSQL}"
           ;;
 
         postgres)
-          run "${TEST_DATABASE_POSTGRESQL}"
+          db="${TEST_DATABASE_POSTGRESQL}"
           ;;
 
         cockroach)
-          run "${TEST_DATABASE_COCKROACHDB}"
+          db="${TEST_DATABASE_COCKROACHDB}"
           ;;
 
         *)
             usage
             exit 1
 esac
+
+if [[ $dev = "yes" ]]; then
+  run "${db}" "$2"
+else
+  run "${db}" email
+  run "${db}" profile
+fi

@@ -1,4 +1,10 @@
-import {APP_URL, assertAddress, gen, parseHtml, verifyHrefPattern,} from '../../../../helpers'
+import {
+  APP_URL,
+  assertAddress,
+  gen,
+  parseHtml,
+  verifyHrefPattern,
+} from '../../../../helpers'
 
 context('Settings', () => {
   describe('error flow', () => {
@@ -10,7 +16,7 @@ context('Settings', () => {
     beforeEach(() => {
       identity = gen.identity()
       cy.register(identity)
-      cy.deleteMail({atLeast: 1}) // clean up registration email
+      cy.deleteMail({ atLeast: 1 }) // clean up registration email
 
       cy.login(identity)
       cy.visit(APP_URL + '/settings')
@@ -20,7 +26,7 @@ context('Settings', () => {
       const email = `not-${identity.email}`
       cy.get('#user-profile input[name="traits.email"]').clear().type(email)
       cy.get('#user-profile button[type="submit"]').click()
-      cy.verifyEmailButExpired({expect: {email}})
+      cy.verifyEmailButExpired({ expect: { email } })
     })
 
     it('is unable to verify the email address if the code is incorrect', () => {
@@ -35,7 +41,7 @@ context('Settings', () => {
 
         cy.visit(link.href + '-not') // add random stuff to the confirm challenge
         cy.log(link.href)
-        cy.session().then(assertAddress({isVerified: false, email}))
+        cy.session().then(assertAddress({ isVerified: false, email }))
       })
     })
 

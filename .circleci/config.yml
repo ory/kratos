@@ -72,12 +72,83 @@ jobs:
       -
         run: test -z "$CIRCLE_PR_NUMBER" && goveralls -service=circle-ci -coverprofile=coverage.txt -repotoken=$COVERALLS_REPO_TOKEN || echo "forks are not allowed to push to coveralls"
 
+  test-e2e:
+    parameters:
+      flavor:
+        type: string
+    docker:
+      - image: oryd/e2e-env:latest
+        environment:
+          - GO111MODULE=on
+          - TEST_DATABASE_MYSQL=mysql://root:test@(localhost:3306)/mysql?parseTime=true
+          - TEST_DATABASE_COCKROACHDB=cockroach://root@localhost:26257/defaultdb?sslmode=disable
+          - TEST_DATABASE_POSTGRESQL=postgres://test:test@localhost:5432/hydra?sslmode=disable
+      - image: postgres:9.6
+        environment:
+          - POSTGRES_USER=test
+          - POSTGRES_PASSWORD=test
+          - POSTGRES_DB=hydra
+      - image: cockroachdb/cockroach:v2.1.6
+        command: start --insecure
+      - image: mysql:5.7
+        environment:
+          - MYSQL_ROOT_PASSWORD=test
+    working_directory: /go/src/github.com/ory/hydra
+    steps:
+      - checkout
+      # core node_modules cache
+      - restore_cache:
+          keys:
+            - v1-deps-{{ checksum "package-lock.json" }}
+            - v1-deps
+      - run: npm ci
+      - save_cache:
+          key: v1-deps-{{ checksum "package-lock.json" }}
+          # cache NPM modules and the folder with the Cypress binary
+          paths:
+            - ~/.npm
+            - ~/.cache
+      # go modules cache
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
+      - run: go mod download
+      - save_cache:
+          key: go-mod-v1-{{ checksum "go.sum" }}
+          paths:
+            - "/go/pkg/mod"
+      - run: ./tests/e2e/run.bash << parameters.flavor >>
+
 workflows:
   tbr:
     jobs:
       - nancy/test
       -
         golangci/lint:
+          filters:
+            tags:
+              only: /.*/
+      - test-e2e:
+          name: test-e2e-sqlite
+          flavor: sqlite
+          filters:
+            tags:
+              only: /.*/
+      - test-e2e:
+          name: test-e2e-postgres
+          flavor: postgres
+          filters:
+            tags:
+              only: /.*/
+      - test-e2e:
+          name: test-e2e-mysql
+          flavor: mysql
+          filters:
+            tags:
+              only: /.*/
+      - test-e2e:
+          name: test-e2e-cockroach
+          flavor: cockroach
           filters:
             tags:
               only: /.*/
@@ -90,6 +161,11 @@ workflows:
           appname: Ory_Kratos
           requires:
             - test
+            - test-e2e-memory
+            - test-e2e-postgres
+            - test-e2e-mysql
+            - test-e2e-cockroach
+            - test-e2e-plugin
             - golangci/lint
           filters:
             tags:
@@ -99,6 +175,11 @@ workflows:
       - docs/build:
           requires:
             - test
+            - test-e2e-memory
+            - test-e2e-postgres
+            - test-e2e-mysql
+            - test-e2e-cockroach
+            - test-e2e-plugin
             - golangci/lint
           filters:
             tags:
@@ -108,6 +189,11 @@ workflows:
       - sdk/release:
           requires:
             - test
+            - test-e2e-memory
+            - test-e2e-postgres
+            - test-e2e-mysql
+            - test-e2e-cockroach
+            - test-e2e-plugin
             - golangci/lint
             - sdk/generate
             - goreleaser/release
@@ -119,6 +205,11 @@ workflows:
       - changelog/generate:
           requires:
             - test
+            - test-e2e-memory
+            - test-e2e-postgres
+            - test-e2e-mysql
+            - test-e2e-cockroach
+            - test-e2e-plugin
             - golangci/lint
           filters:
             tags:
@@ -135,6 +226,11 @@ workflows:
           requires:
             - goreleaser/test
             - test
+            - test-e2e-memory
+            - test-e2e-postgres
+            - test-e2e-mysql
+            - test-e2e-cockroach
+            - test-e2e-plugin
             - golangci/lint
           filters:
             branches:

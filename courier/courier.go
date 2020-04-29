@@ -46,6 +46,7 @@ func NewSMTP(d smtpDependencies, c configuration.Provider) *Courier {
 	if uri.Scheme == "smtps" {
 		ssl = true
 		sslSkipVerify, _ := strconv.ParseBool(uri.Query().Get("skip_ssl_verify"))
+		// #nosec G402 This is ok (and required!) because it is configurable and disabled by default.
 		tlsConfig = &tls.Config{InsecureSkipVerify: sslSkipVerify}
 	}
 

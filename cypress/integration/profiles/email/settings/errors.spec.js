@@ -1,6 +1,12 @@
 // TODO: implement wrong credentials when reauthing
 // TODO: implement other account when reauthing
-import {APP_URL, gen, password, privilegedLifespan, website} from '../../../../helpers'
+import {
+  APP_URL,
+  gen,
+  password,
+  privilegedLifespan,
+  website,
+} from '../../../../helpers'
 
 context('Settings', () => {
   let email = gen.email()
