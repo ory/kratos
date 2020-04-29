@@ -161,7 +161,7 @@ workflows:
           appname: Ory_Kratos
           requires:
             - test
-            - test-e2e-memory
+            - test-e2e-sqlite
             - test-e2e-postgres
             - test-e2e-mysql
             - test-e2e-cockroach
@@ -175,7 +175,7 @@ workflows:
       - docs/build:
           requires:
             - test
-            - test-e2e-memory
+            - test-e2e-sqlite
             - test-e2e-postgres
             - test-e2e-mysql
             - test-e2e-cockroach
@@ -189,7 +189,7 @@ workflows:
       - sdk/release:
           requires:
             - test
-            - test-e2e-memory
+            - test-e2e-sqlite
             - test-e2e-postgres
             - test-e2e-mysql
             - test-e2e-cockroach
@@ -205,7 +205,7 @@ workflows:
       - changelog/generate:
           requires:
             - test
-            - test-e2e-memory
+            - test-e2e-sqlite
             - test-e2e-postgres
             - test-e2e-mysql
             - test-e2e-cockroach
@@ -226,7 +226,7 @@ workflows:
           requires:
             - goreleaser/test
             - test
-            - test-e2e-memory
+            - test-e2e-sqlite
             - test-e2e-postgres
             - test-e2e-mysql
             - test-e2e-cockroach
