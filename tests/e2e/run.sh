@@ -32,12 +32,12 @@ if [ -z ${CI+x} ]; then
   docker run --name mailslurper -p 4436:4436 -p 4437:4437 -p 1025:1025 oryd/mailslurper:latest-smtps > "${base}/tests/e2e/mailslurper.e2e.log" 2>&1 &
 fi
 
-watch=no
+dev=no
 for i in "$@"
 do
 case $i in
-    --watch)
-    watch=yes
+    --dev)
+    dev=yes
     shift # past argument=value
     ;;
 esac
@@ -49,9 +49,11 @@ run() {
   killall node || true
 
   if [ -z ${KRATOS_APP_PATH+x} ]; then
-    (cd "$dir"; PORT=4455 SECURITY_MODE=cookie npm run serve > "${base}/tests/e2e/secureapp.e2e.log" 2>&1 &)
+    (cd "$dir"; PORT=4455 SECURITY_MODE=cookie npm run serve \
+      > "${base}/tests/e2e/secureapp.e2e.log" 2>&1 &)
   else
-    (cd "$dir"; PORT=4455 SECURITY_MODE=cookie npm run start > "${base}/tests/e2e/secureapp.e2e.log" 2>&1 &)
+    (cd "$dir"; PORT=4455 SECURITY_MODE=cookie npm run start \
+     > "${base}/tests/e2e/secureapp.e2e.log" 2>&1 &)
   fi
 
   export DSN=${1}
@@ -64,13 +66,62 @@ run() {
     http-get://127.0.0.1:4455/health \
     http-get://127.0.0.1:4437/mail
 
-  if [[ $watch = "yes" ]]; then npm run test:watch; else npm run test; fi
+  if [[ $dev = "yes" ]]; then
+    npm run test:watch -- --config integrationFolder="cypress/integration/profiles/$profile"
+  else
+    npm run test -- --config integrationFolder="cypress/integration/profiles/$profile"
+  fi
 }
+
+usage() {
+    echo $"This script runs the e2e tests.
+
+To run the tests just pick a database name:
+
+  $0 <database>
+
+  Supported databases are 'sqlite', 'mysql', 'postgres', 'cockroach':
+
+    $0 sqlite
+    $0 mysql
+    $0 postgres
+    $0 cockroach
+    ...
+
+To run e2e tests in dev mode (useful for writing them), run:
+
+  $0 --dev <database> <profile>
+
+  Supported profiles are 'email', 'verify':
+
+    $0 --dev <database> email
+    $0 --dev <database> verify
+    ...
+
+If you are making changes to the kratos-selfservice-ui-node
+project as well, point the 'KRATOS_APP_PATH' environment variable to
+the path where the kratos-selfservice-ui-node project is checked out:
+
+  export KRATOS_APP_PATH=$HOME/workspace/kratos-selfservice-ui-node
+  $0 ..."
+}
+
+if [[ $dev = "yes" ]]; then
+  if [ -z ${2+x} ]; then
+    usage
+    exit 1
+  fi
+fi
 
 export TEST_DATABASE_SQLITE="sqlite:///$(mktemp -d -t ci-XXXXXXXXXX)/db.sqlite?_fk=true"
 case "$1" in
         sqlite)
-          run "${TEST_DATABASE_SQLITE}" email
+          if [[ $dev = "yes" ]]; then
+            run "${TEST_DATABASE_SQLITE}" "$2"
+          else
+            run "${TEST_DATABASE_SQLITE}" email
+            run "${TEST_DATABASE_SQLITE}" profile
+          fi
           ;;
 
         mysql)
@@ -85,14 +136,7 @@ case "$1" in
           run "${TEST_DATABASE_COCKROACHDB}"
           ;;
 
-        all)
-          run "${TEST_DATABASE_SQLITE}"
-          run "${TEST_DATABASE_MYSQL}"
-          run "${TEST_DATABASE_POSTGRESQL}"
-          run "${TEST_DATABASE_COCKROACHDB}"
-          ;;
-
         *)
-            echo $"Usage: $0 [--watch] all|sqlite|mysql|postgres|cockroach"
+            usage
             exit 1
 esac

@@ -25,8 +25,8 @@ urls:
 hashers:
   argon2:
     parallelism: 1
-    memory: 131072
-    iterations: 2
+    memory: 16384
+    iterations: 1
     salt_length: 16
     key_length: 16
 

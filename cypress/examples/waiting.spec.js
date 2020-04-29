@@ -30,5 +30,4 @@ context('Waiting', () => {
     // wait for GET comments/1
     cy.wait('@getComment').its('status').should('eq', 200)
   })
-
 })

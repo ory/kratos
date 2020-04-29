@@ -1,4 +1,4 @@
-import {APP_URL, gen, password} from "../../../../helpers";
+import { APP_URL, gen, password } from '../../../../helpers'
 
 context('Registration', () => {
   beforeEach(() => {
@@ -14,14 +14,16 @@ context('Registration', () => {
 
     cy.get('button[type="submit"]').click()
     cy.get('pre').should('contain.text', email)
-    cy.get('.greeting').should('contain.text', "Welcome back")
+    cy.get('.greeting').should('contain.text', 'Welcome back')
 
-    cy.session().should(({body: session}) => {
-      const {identity} = session
+    cy.session().should((session) => {
+      const { identity } = session
       expect(identity.id).to.not.be.empty
       expect(identity.addresses).to.be.undefined
       expect(identity.traits_schema_id).to.equal('default')
-      expect(identity.traits_schema_url).to.equal(`${APP_URL}/.ory/kratos/public/schemas/default`)
+      expect(identity.traits_schema_url).to.equal(
+        `${APP_URL}/.ory/kratos/public/schemas/default`
+      )
       expect(identity.traits.website).to.equal(website)
       expect(identity.traits.email).to.equal(email)
     })

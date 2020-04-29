@@ -1,16 +1,20 @@
-import {APP_URL,identity,  password} from "../../../../helpers"
+import { APP_URL, identity, password } from '../../../../helpers'
 
 context('Registration', () => {
   beforeEach(() => {
     cy.visit(APP_URL + '/auth/registration')
   })
 
-  it("fails when CSRF cookies are missing", () => {
+  it('fails when CSRF cookies are missing', () => {
     cy.clearCookies()
 
     cy.get('input[name="traits.website"]').type('https://www.ory.sh')
-    cy.get('input[name="traits.email"]').type(identity).should('have.value', identity)
-    cy.get('input[name="password"]').type('123456').should('have.value', '123456')
+    cy.get('input[name="traits.email"]')
+      .type(identity)
+      .should('have.value', identity)
+    cy.get('input[name="password"]')
+      .type('123456')
+      .should('have.value', '123456')
 
     cy.get('button[type="submit"]').click()
 
@@ -18,11 +22,15 @@ context('Registration', () => {
     cy.get('html').should('contain.text', 'CSRF token is missing or invalid')
   })
 
-  describe("show errors when invalid signup data is used", () => {
+  describe('show errors when invalid signup data is used', () => {
     it('should show an error when the password has leaked before', () => {
       cy.get('input[name="traits.website"]').type('https://www.ory.sh')
-      cy.get('input[name="traits.email"]').type(identity).should('have.value', identity)
-      cy.get('input[name="password"]').type('123456').should('have.value', '123456')
+      cy.get('input[name="traits.email"]')
+        .type(identity)
+        .should('have.value', identity)
+      cy.get('input[name="password"]')
+        .type('123456')
+        .should('have.value', '123456')
 
       cy.get('button[type="submit"]').click()
       cy.get('.form-errors .message').should('contain.text', 'data breaches')
@@ -55,7 +63,7 @@ context('Registration', () => {
 
     it('should show an error when the email is not an email', () => {
       cy.get('input[name="traits.website"]').type('https://www.ory.sh')
-      cy.get('input[name="password"]').type("not-an-email")
+      cy.get('input[name="password"]').type('not-an-email')
 
       cy.get('button[type="submit"]').click()
       cy.get('.form-errors .message').should('contain.text', 'valid "email"')
@@ -63,13 +71,18 @@ context('Registration', () => {
 
     it('should show a missing indicator if no fields are set', () => {
       cy.get('button[type="submit"]').click()
-      cy.get('.form-errors .message').should('contain.text', 'missing properties')
+      cy.get('.form-errors .message').should(
+        'contain.text',
+        'missing properties'
+      )
     })
 
     it('should show an error when the website is not a valid URI', () => {
-      cy.get('input[name="traits.website"]').type('1234').then(($input) => {
-        expect($input[0].validationMessage).to.contain('URL')
-      })
+      cy.get('input[name="traits.website"]')
+        .type('1234')
+        .then(($input) => {
+          expect($input[0].validationMessage).to.contain('URL')
+        })
     })
 
     it('should show an error when the website is too short', () => {
@@ -79,7 +92,10 @@ context('Registration', () => {
       cy.get('input[name="password"]').type(password)
 
       cy.get('button[type="submit"]').click()
-      cy.get('.form-errors .message').should('contain.text', 'length must be >= 10')
+      cy.get('.form-errors .message').should(
+        'contain.text',
+        'length must be >= 10'
+      )
     })
   })
 })

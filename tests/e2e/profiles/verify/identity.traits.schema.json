@@ -19,15 +19,10 @@
           "via": "email"
         }
       }
-    },
-    "website": {
-      "type": "string",
-      "format": "uri"
     }
   },
   "required": [
-    "email",
-    "website"
+    "email"
   ],
   "additionalProperties": false
 }

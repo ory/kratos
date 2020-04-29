@@ -1,13 +1,13 @@
 {
   "private": true,
   "scripts": {
-    "format": "prettier --single-quote --trailing-comma none --write \"{cypress}/**/*.js\"",
+    "format": "prettier --no-semi --single-quote --trailing-comma es5 --write \"cypress/**/*.js\"",
     "test": "cypress run",
     "test:watch": "cypress open",
     "wait-on": "wait-on"
   },
   "devDependencies": {
-    "cypress": "4.4.1",
+    "cypress": "4.5.0",
     "prettier": "2.0.4",
     "wait-on": "4.0.2"
   }

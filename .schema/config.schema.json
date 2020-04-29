@@ -31,13 +31,13 @@
               "type": "boolean"
             }
           },
-          "additionalItems": false,
+          "additionalProperties": false,
           "required": [
             "default_redirect_url"
           ]
         }
       },
-      "additionalItems": false,
+      "additionalProperties": false,
       "required": [
         "hook",
         "config"
@@ -50,7 +50,7 @@
           "const": "revoke_active_sessions"
         }
       },
-      "additionalItems": false,
+      "additionalProperties": false,
       "required": [
         "hook"
       ]
@@ -62,7 +62,7 @@
           "const": "verify"
         }
       },
-      "additionalItems": false,
+      "additionalProperties": false,
       "required": [
         "hook"
       ]
@@ -74,7 +74,7 @@
           "const": "session"
         }
       },
-      "additionalItems": false,
+      "additionalProperties": false,
       "required": [
         "hook"
       ]
@@ -122,7 +122,7 @@
           }
         }
       },
-      "additionalItems": false,
+      "additionalProperties": false,
       "required": [
         "id",
         "provider",
@@ -247,7 +247,7 @@
     },
     "selfServiceBefore": {
       "type": "object",
-      "additionalItems": false,
+      "additionalProperties": false,
       "properties": {
         "hooks": {
           "type": "array",
@@ -271,18 +271,18 @@
   "properties": {
     "selfservice": {
       "type": "object",
-      "additionalItems": false,
+      "additionalProperties": false,
       "required": [
         "logout"
       ],
       "properties": {
         "strategies": {
           "type": "object",
-          "additionalItems": false,
+          "additionalProperties": false,
           "properties": {
             "password": {
               "type": "object",
-              "additionalItems": false,
+              "additionalProperties": false,
               "properties": {
                 "enabled": {
                   "type": "boolean"
@@ -291,14 +291,14 @@
             },
             "oidc": {
               "type": "object",
-              "additionalItems": false,
+              "additionalProperties": false,
               "properties": {
                 "enabled": {
                   "type": "boolean"
                 },
                 "config": {
                   "type": "object",
-                  "additionalItems": false,
+                  "additionalProperties": false,
                   "properties": {
                     "providers": {
                       "type": "array",
@@ -320,14 +320,14 @@
               "format": "uri"
             }
           },
-          "additionalItems": false,
+          "additionalProperties": false,
           "required": [
             "redirect_to"
           ]
         },
         "settings": {
           "type": "object",
-          "additionalItems": false,
+          "additionalProperties": false,
           "properties": {
             "request_lifespan": {
               "type": "string",
@@ -378,7 +378,7 @@
               "$ref": "#/definitions/selfServiceAfterLogin"
             }
           },
-          "additionalItems": false
+          "additionalProperties": false
         },
         "registration": {
           "type": "object",

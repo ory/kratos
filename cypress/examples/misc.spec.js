@@ -33,24 +33,21 @@ context('Misc', () => {
     // on CircleCI Windows build machines we have a failure to run bash shell
     // https://github.com/cypress-io/cypress/issues/5169
     // so skip some of the tests by passing flag "--env circle=true"
-    const isCircleOnWindows = Cypress.platform === 'win32' && Cypress.env('circle')
+    const isCircleOnWindows =
+      Cypress.platform === 'win32' && Cypress.env('circle')
 
     if (isCircleOnWindows) {
       return
     }
 
-    cy.exec('echo Jane Lane')
-      .its('stdout').should('contain', 'Jane Lane')
+    cy.exec('echo Jane Lane').its('stdout').should('contain', 'Jane Lane')
 
     if (Cypress.platform === 'win32') {
-      cy.exec('print cypress.json')
-        .its('stderr').should('be.empty')
+      cy.exec('print cypress.json').its('stderr').should('be.empty')
     } else {
-      cy.exec('cat cypress.json')
-        .its('stderr').should('be.empty')
+      cy.exec('cat cypress.json').its('stderr').should('be.empty')
 
-      cy.exec('pwd')
-        .its('code').should('eq', 0)
+      cy.exec('pwd').its('code').should('eq', 0)
     }
   })
 
@@ -77,16 +74,14 @@ context('Misc', () => {
         scale: false,
         disableTimersAndAnimations: true,
         screenshotOnRunFailure: true,
-        beforeScreenshot () { },
-        afterScreenshot () { },
+        beforeScreenshot() {},
+        afterScreenshot() {},
       })
     })
   })
 
   it('cy.wrap() - wrap an object', () => {
     // https://on.cypress.io/wrap
-    cy.wrap({ foo: 'bar' })
-      .should('have.property', 'foo')
-      .and('include', 'bar')
+    cy.wrap({ foo: 'bar' }).should('have.property', 'foo').and('include', 'bar')
   })
 })

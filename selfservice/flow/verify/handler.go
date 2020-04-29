@@ -336,7 +336,7 @@ func (h *Handler) verify(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	}
 
 	if err := h.d.PrivilegedIdentityPool().VerifyAddress(r.Context(), ps.ByName("code")); err != nil {
-		if errorsx.Cause(err) == sqlcon.ErrNoRows {
+		if errors.Is(err, sqlcon.ErrNoRows) {
 			a := NewRequest(
 				h.c.SelfServiceSettingsRequestLifespan(), r, via,
 				urlx.AppendPaths(h.c.SelfPublicURL(), strings.ReplaceAll(PublicVerificationCompletePath, ":via", string(via))), h.d.GenerateCSRFToken,
@@ -352,6 +352,7 @@ func (h *Handler) verify(w http.ResponseWriter, r *http.Request, ps httprouter.P
 				urlx.CopyWithQuery(h.c.VerificationURL(), url.Values{"request": {a.ID.String()}}).String(),
 				http.StatusFound,
 			)
+			return
 		}
 
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)

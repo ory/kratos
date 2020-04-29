@@ -8,32 +8,37 @@ context('Cypress.Commands', () => {
   // https://on.cypress.io/custom-commands
 
   it('.add() - create a custom command', () => {
-    Cypress.Commands.add('console', {
-      prevSubject: true,
-    }, (subject, method) => {
-      // the previous subject is automatically received
-      // and the commands arguments are shifted
+    Cypress.Commands.add(
+      'console',
+      {
+        prevSubject: true,
+      },
+      (subject, method) => {
+        // the previous subject is automatically received
+        // and the commands arguments are shifted
 
-      // allow us to change the console method used
-      method = method || 'log'
+        // allow us to change the console method used
+        method = method || 'log'
 
-      // log the subject to the console
-      // @ts-ignore TS7017
-      console[method]('The subject is', subject)
+        // log the subject to the console
+        // @ts-ignore TS7017
+        console[method]('The subject is', subject)
 
-      // whatever we return becomes the new subject
-      // we don't want to change the subject so
-      // we return whatever was passed in
-      return subject
-    })
+        // whatever we return becomes the new subject
+        // we don't want to change the subject so
+        // we return whatever was passed in
+        return subject
+      }
+    )
 
     // @ts-ignore TS2339
-    cy.get('button').console('info').then(($button) => {
-      // subject is still $button
-    })
+    cy.get('button')
+      .console('info')
+      .then(($button) => {
+        // subject is still $button
+      })
   })
 })
-
 
 context('Cypress.Cookies', () => {
   beforeEach(() => {
@@ -71,7 +76,6 @@ context('Cypress.Cookies', () => {
     })
   })
 })
-
 
 context('Cypress.Server', () => {
   beforeEach(() => {
@@ -172,7 +176,10 @@ context('Cypress.env()', () => {
 
     // get all environment variable
     expect(Cypress.env()).to.have.property('host', 'veronica.dev.local')
-    expect(Cypress.env()).to.have.property('api_server', 'http://localhost:8888/v2/')
+    expect(Cypress.env()).to.have.property(
+      'api_server',
+      'http://localhost:8888/v2/'
+    )
   })
 })
 
@@ -185,7 +192,6 @@ context('Cypress.log', () => {
     // https://on.cypress.io/cypress-log
   })
 })
-
 
 context('Cypress.platform', () => {
   beforeEach(() => {
@@ -217,6 +223,10 @@ context('Cypress.spec', () => {
   it('Get current spec information', () => {
     // https://on.cypress.io/spec
     // wrap the object so we can inspect it easily by clicking in the command log
-    cy.wrap(Cypress.spec).should('include.keys', ['name', 'relative', 'absolute'])
+    cy.wrap(Cypress.spec).should('include.keys', [
+      'name',
+      'relative',
+      'absolute',
+    ])
   })
 })

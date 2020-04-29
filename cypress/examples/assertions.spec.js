@@ -129,14 +129,14 @@ context('Assertions', () => {
       /**
        * Text from the first element.
        * @type {string}
-      */
+       */
       let text
 
       /**
        * Normalizes passed text,
        * useful before comparing text with spaces and different capitalization.
        * @param {string} s Text to normalize
-      */
+       */
       const normalizeText = (s) => s.replace(/\s/g, '').toLowerCase()
 
       cy.get('.two-elements')

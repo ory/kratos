@@ -13,15 +13,12 @@ selfservice:
 
   verify:
     return_to: http://127.0.0.1:4455/
+    link_lifespan: 5s
 
   logout:
     redirect_to: http://127.0.0.1:4455/auth/login
 
-  login:
-    request_lifespan: 10m
-
   registration:
-    request_lifespan: 10m
     after:
       password:
         hooks:
