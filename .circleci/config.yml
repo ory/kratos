@@ -165,7 +165,6 @@ workflows:
             - test-e2e-postgres
             - test-e2e-mysql
             - test-e2e-cockroach
-            - test-e2e-plugin
             - golangci/lint
           filters:
             tags:
@@ -179,7 +178,6 @@ workflows:
             - test-e2e-postgres
             - test-e2e-mysql
             - test-e2e-cockroach
-            - test-e2e-plugin
             - golangci/lint
           filters:
             tags:
@@ -193,7 +191,6 @@ workflows:
             - test-e2e-postgres
             - test-e2e-mysql
             - test-e2e-cockroach
-            - test-e2e-plugin
             - golangci/lint
             - sdk/generate
             - goreleaser/release
@@ -209,7 +206,6 @@ workflows:
             - test-e2e-postgres
             - test-e2e-mysql
             - test-e2e-cockroach
-            - test-e2e-plugin
             - golangci/lint
           filters:
             tags:
@@ -230,7 +226,6 @@ workflows:
             - test-e2e-postgres
             - test-e2e-mysql
             - test-e2e-cockroach
-            - test-e2e-plugin
             - golangci/lint
           filters:
             branches:

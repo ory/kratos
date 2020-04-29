@@ -1,0 +1,33 @@
+Error: open tests/e2e/profiles/verify/.kratos.yml: no such file or directory
+Usage:
+  yq merge [initial_yaml_file] [additional_yaml_file]... [flags]
+
+Aliases:
+  merge, m
+
+Examples:
+
+yq merge things.yaml other.yaml
+yq merge --inplace things.yaml other.yaml
+yq m -i things.yaml other.yaml
+yq m --overwrite things.yaml other.yaml
+yq m -i -x things.yaml other.yaml
+yq m -i -a things.yaml other.yaml
+yq m -i --autocreate=false things.yaml other.yaml
+      
+
+Flags:
+  -a, --append       update the yaml file by appending array values
+  -c, --autocreate   automatically create any missing entries (default true)
+  -d, --doc string   process document index number (0 based, * for all documents) (default "0")
+  -h, --help         help for merge
+  -i, --inplace      update the yaml file inplace
+  -x, --overwrite    update the yaml file by overwriting existing values
+
+Global Flags:
+  -C, --colors        print with colors
+  -I, --indent int    sets indent level for output (default 2)
+  -P, --prettyPrint   pretty print
+  -j, --tojson        output as json. By default it prints a json document in one line, use the prettyPrint flag to print a formatted doc.
+  -v, --verbose       verbose mode
+

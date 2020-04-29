@@ -48,6 +48,8 @@ module.exports = {
 
   // intervals define how long to wait for something,
   pollInterval: 100, // how long to wait before retry
-  verifyLifespan: 5000, // how long to wait before retry
-  privilegedLifespan: 5000, // how long to wait before retry
+
+  // Adding 1+ second on top because MySQL doesn't do millisecs.
+  verifyLifespan: 5000 + 1050,
+  privilegedLifespan: 5000 + 1050,
 }

@@ -1,0 +1,7 @@
+
+> kratos-selfservice-ui-node@0.0.1 start /Users/foobar/workspaces/js/kratos-selfservice-ui-node
+> ts-node-dev --watch public,views --respawn src/index.ts
+
+Using ts-node version 8.6.2, typescript version 3.7.5
+Listening on http://0.0.0.0:4455
+Security mode: cookie
