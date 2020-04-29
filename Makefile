@@ -44,7 +44,7 @@ mocks: deps
 .PHONY: install
 install: deps
 		packr2
-		GO111MODULE=on go install .
+		GO111MODULE=on go install -tags sqlite .
 		packr2 clean
 
 .PHONY: test-resetdb
