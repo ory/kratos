@@ -10,7 +10,7 @@ require (
 	github.com/bxcodec/faker v2.0.1+incompatible
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/coreos/go-oidc v2.2.1+incompatible
-	github.com/davidrjonas/semver-cli v0.0.0-20190116233701-ee19a9a0dda6 // indirect
+	github.com/davidrjonas/semver-cli v0.0.0-20190116233701-ee19a9a0dda6
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/errors v0.19.4
@@ -51,7 +51,7 @@ require (
 	github.com/ory/jsonschema/v3 v3.0.1
 	github.com/ory/sdk/swagutil v0.0.0-20200430101046-db494fac5eb6
 	github.com/ory/viper v1.7.4
-	github.com/ory/x v0.0.115
+	github.com/ory/x v0.0.116
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/shurcooL/go v0.0.0-20180423040247-9e1955d9fb6e
