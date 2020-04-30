@@ -105,14 +105,21 @@ Cypress.Commands.add('session', () =>
     .request('GET', `${APP_URL}/.ory/kratos/public/sessions/whoami`)
     .then((response) => {
       expect(response.body.sid).to.not.be.empty
-      expect(Cypress.moment().isBefore(Cypress.moment(response.body.expires_at))).to
-        .be.true
+      expect(
+        Cypress.moment().isBefore(Cypress.moment(response.body.expires_at))
+      ).to.be.true
 
       // Add a grace second for MySQL which does not support millisecs.
-      expect(Cypress.moment().isAfter(Cypress.moment(response.body.issued_at).subtract(1,'s'))).to.be
-        .true
-      expect(Cypress.moment().isAfter(Cypress.moment(response.body.authenticated_at).subtract(1,'s')))
-        .to.be.true
+      expect(
+        Cypress.moment().isAfter(
+          Cypress.moment(response.body.issued_at).subtract(1, 's')
+        )
+      ).to.be.true
+      expect(
+        Cypress.moment().isAfter(
+          Cypress.moment(response.body.authenticated_at).subtract(1, 's')
+        )
+      ).to.be.true
       expect(response.body.identity).to.exist
       return response.body
     })

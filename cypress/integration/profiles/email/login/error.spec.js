@@ -1,4 +1,4 @@
-import {APP_URL, gen} from '../../../../helpers'
+import { APP_URL, gen } from '../../../../helpers'
 
 context('Login', () => {
   beforeEach(() => {

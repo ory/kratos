@@ -155,5 +155,5 @@ if [[ $dev = "yes" ]]; then
   run "${db}" "$2"
 else
   run "${db}" email
-  run "${db}" profile
+  run "${db}" verify
 fi
