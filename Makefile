@@ -66,14 +66,14 @@ test: test-resetdb
 # Generates the SDKs
 .PHONY: sdk
 sdk: deps
-		$$(go env GOPATH)/bin/swagger generate spec -m -o .schema/api.swagger.json -x internal/httpclient
-		$$(go env GOPATH)/bin/swagutil sanitize ./.schema/api.swagger.json
-		$$(go env GOPATH)/bin/swagger validate ./.schema/api.swagger.json
-		$$(go env GOPATH)/bin/swagger flatten --with-flatten=remove-unused -o ./.schema/api.swagger.json ./.schema/api.swagger.json
-		$$(go env GOPATH)/bin/swagger validate ./.schema/api.swagger.json
+		swagger generate spec -m -o .schema/api.swagger.json -x internal/httpclient
+		swagutil sanitize ./.schema/api.swagger.json
+		swagger validate ./.schema/api.swagger.json
+		swagger flatten --with-flatten=remove-unused -o ./.schema/api.swagger.json ./.schema/api.swagger.json
+		swagger validate ./.schema/api.swagger.json
 		rm -rf internal/httpclient
 		mkdir -p internal/httpclient
-		$$(go env GOPATH)/bin/swagger generate client -f ./.schema/api.swagger.json -t internal/httpclient -A Ory_Kratos
+		swagger generate client -f ./.schema/api.swagger.json -t internal/httpclient -A Ory_Kratos
 		make format
 
 .PHONY: quickstart
@@ -90,7 +90,7 @@ quickstart-dev:
 # Formats the code
 .PHONY: format
 format: deps
-		$$(go env GOPATH)/bin/goreturns -w -local github.com/ory $$($$(go env GOPATH)/bin/listx .)
+		goreturns -w -local github.com/ory $$($$(go env GOPATH)/bin/listx .)
 		npm run format
 
 # Runs tests in short mode, without database adapters
