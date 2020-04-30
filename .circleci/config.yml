@@ -41,7 +41,7 @@ jobs:
         image: cockroachdb/cockroach:v19.2.0
         command: start --insecure
       -
-        image: oryd/hydra:v1.4.5
+        image: oryd/hydra:v1.2.2
         environment:
           - DSN=memory
           - URLS_SELF_ISSUER=http://127.0.0.1:4444/
