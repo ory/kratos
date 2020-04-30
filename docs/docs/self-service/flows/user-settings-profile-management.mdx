@@ -3,18 +3,25 @@ id: user-settings-profile-management
 title: User Settings and Profile Management
 ---
 
-ORY Kratos allows users to update their own settings and profile information
-using two principal flows:
+ORY Kratos allows users to change their settings (e.g. update password, change
+address, ...) using two principal flows:
 
 - Browser-based (easy): This flow works for all applications running on top of a
   browser. Websites, single-page apps, Cordova/Ionic, and so on.
 - API-based (advanced): This flow works for native applications like iOS
   (Swift), Android (Java), Microsoft (.NET), React Native, Electron, and others.
 
-This flow does not allow updates of security-sensitive information such as the
-password, fields associated with login (e.g. email), fields associated with
-account recovery (e.g. recovery email address). These fields must be updated
-using a separate flow which requires prior security checks.
+:::tip
+
+This document explains the high-level flow for managing settings
+and documents the primary profile strategy ("update your profile information").
+
+Changing settings for *"Username or Email
+and Password"* ("change your password") or *"Social Sign In"* ("un-/link a
+social profile") strategies [is documented in Self-Service Strategies](../strategies/index.md).
+
+:::
+
 
 The updated profile must be valid against the JSON Schema defined for its
 [Identity Traits](../../concepts/identity-user-model.md). If one or more fields
@@ -27,6 +34,13 @@ The only required configuration is setting the Profile UI URL in the
 urls:
   settings_ui: https://.../..
 ```
+
+## Updating sensitive information
+
+This flow does not allow updates of security-sensitive information such as the
+password, fields associated with login (e.g. email), fields associated with
+account recovery (e.g. recovery email address). These fields must be updated
+using a separate flow which requires prior security checks.
 
 ## Self-Service User Profile Management for Browser Applications
 
@@ -60,7 +74,7 @@ follows for Profile Management:
 
 Assuming the Identity's Traits JSON Schema is defined as
 
-```json
+```json title="path/to/identity.traits.schema.json"
 {
   "$id": "https://example.org/identity.traits.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",

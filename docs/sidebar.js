@@ -6,7 +6,15 @@ module.exports = {
     "concepts/index",
     "concepts/ui-user-interface",
     "concepts/identity-user-model",
-    "concepts/credentials",
+    {
+      label:'Identity Credentials',
+      type: "category",
+      items:[
+        "concepts/credentials",
+        "concepts/credentials/username-email-password",
+        "concepts/credentials/openid-connect-oidc-oauth2",
+      ]
+    },
     "concepts/email-sms",
     "concepts/federation",
     "concepts/security"
@@ -14,7 +22,9 @@ module.exports = {
   "Self Service": [
     {
       type: "category",
-      label: "Flows", items: [
+      label: "Flows",
+      items:
+        [
         "self-service/flows/index",
         "self-service/flows/user-login-user-registration",
         "self-service/flows/user-logout",

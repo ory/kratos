@@ -458,6 +458,10 @@ response:
 }
 ```
 
+### Settings
+
+FIXME - TO BE DONE
+
 ## API Clients
 
 API-based login and registration using this strategy will be addressed in a
@@ -514,8 +518,14 @@ being used.
 
 ### Account Enumeration Defenses (work in progress)
 
-> This feature is a work in progress and is tracked as
-> [kratos#133](https://github.com/ory/kratos/issues/133).
+:::warn
+
+This feature is a work in progress and is tracked as
+[kratos#133](https://github.com/ory/kratos/issues/133).
+
+It does not yet work as documented!
+
+:::
 
 Account enumeration attacks allow a attacker to find out who is signed up. This
 compromises the privacy of your users and can hurt reputation depending on the
@@ -586,13 +596,13 @@ disable account enumeration defenses.
 You can disable the defense mechanism on a per-field basis in your Identity
 Traits Schema:
 
-```yaml
+```json title="path/to/my/identity.traits.schema.json"
 {
-  '$id': 'https://example.com/registration.schema.json',
-  '$schema': 'http://json-schema.org/draft-07/schema#',
-  'title': 'Person',
-  'type': 'object',
-  'properties':
+  $id': 'https://example.com/identity.traits.schema.json',
+  $schema': 'http://json-schema.org/draft-07/schema#',
+  title': 'Person',
+  type': 'object',
+  properties':
     {
       'username':
         {

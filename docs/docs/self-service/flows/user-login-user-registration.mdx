@@ -10,6 +10,14 @@ ORY Kratos supports two type of login and registration flows:
 - API-based (advanced): This flow works for native applications like iOS
   (Swift), Android (Java), Microsoft (.NET), React Native, Electron, and others.
 
+:::tip
+
+This is a high-level description of the flow which is then implemented
+by [several strategies](../strategies/index.md) such as *"Username or Email
+and Password"* or *"Social Sign In"*.
+
+:::
+
 ## Self-Service User Login and User Registration for Browser Applications
 
 ORY Kratos supports browser applications that run on server-side (e.g. Java,
@@ -98,14 +106,18 @@ for rendering all the Login, Registration, ... screens, and another app (think
 "Service Oriented Architecture", "Micro-Services" or "Service Mesh") is
 responsible for rendering your Dashboards, Management Screens, and so on.
 
-::: Note It is RECOMMENDED to put all applications (or "services"), including
+:::note
+
+It is RECOMMENDED to put all applications (or "services"), including
 ORY Kratos, behind a common API Gateway or Reverse Proxy. This greatly reduces
 the amount of work you have to do to get all the Cookies working properly. We
 RECOMMEND using [ORY Oathkeeper](http://github.com/ory/oathkeeper) for this as
 it integrates best with the ORY Ecosystem and because all of our examples use
 ORY Oathkeeper. You MAY of course use any other reverse proxy (Envoy, AWS API
 Gateway, Ambassador, Nginx, Kong, ...), but we do not have examples or guides
-for those at this time. :::
+for those at this time.
+
+:::
 
 ### Code
 
@@ -320,11 +332,15 @@ Applications, with the small difference that
 would be called via AJAX instead of making a request to
 `https://kratos:4434/self-service/browser/flows/requests/login?request=abcde`.
 
-::: Note To prevent brute force, guessing, session injection, and other attacks,
+:::note
+
+To prevent brute force, guessing, session injection, and other attacks,
 it is required that cookies are working for this endpoint. The cookie set in the
 initial HTTP request made to
 `https://127.0.0.1:4455/.ory/kratos/public/self-service/browser/login` MUST be
-set and available when calling this endpoint! :::
+set and available when calling this endpoint!
+
+:::
 
 ## Self-Service User Login and User Registration for API Clients
 

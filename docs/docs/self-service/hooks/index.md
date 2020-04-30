@@ -179,10 +179,12 @@ selfservice:
 The `redirect` hook sends HTTP 302 Found and redirects the client
 to the specified endpoint.
 
-::: Note
+:::note
+
 Using this hook for registration disables user registration because it runs
 before the identity is saved to the database. It may
 be useful in cases where you temporary suspend user registration.
+
 :::
 
 Using this hook should be an exception.
