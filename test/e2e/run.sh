@@ -17,10 +17,7 @@ base=$(pwd)
 if [ -z ${KRATOS_APP_PATH+x} ]; then
   dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-node"
   git clone git@github.com:ory/kratos-selfservice-ui-node.git "$dir"
-  (cd "$dir"; \
-    npm i; \
-    KRATOS_DIR=${base} make build-sdk; \
-    npm run build)
+  (cd "$dir"; npm i && npm run build)
 else
   dir="${KRATOS_APP_PATH}"
 fi
