@@ -117,7 +117,7 @@ jobs:
           key: go-mod-v1-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
-      - run: ./tests/e2e/run.bash << parameters.flavor >>
+      - run: ./test/e2e/run.bash << parameters.flavor >>
 
 workflows:
   tbr:
