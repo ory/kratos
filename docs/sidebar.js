@@ -41,7 +41,8 @@ module.exports = {
     }
   ],
   Guides: [
-    "guides/zero-trust-iap-proxy-identity-access-proxy"
+    "guides/zero-trust-iap-proxy-identity-access-proxy",
+    "guides/multi-tenancy-multitenant"
   ],
   "Reference": [
     "reference/configuration",
