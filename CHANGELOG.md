@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-04-28)](#unreleased-2020-04-28)
+- [Unreleased (2020-04-30)](#unreleased-2020-04-30)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -67,7 +67,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.1.1-alpha.1...2c82784cd69e0468a72354f6898945032d826306) (2020-04-28)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.1.1-alpha.1...9be1064500dd86489b79e1abd9cbf1268b97853a) (2020-04-30)
 
 
 ### Bug Fixes
@@ -153,6 +153,7 @@
 * Add database connection documentation ([#332](https://github.com/ory/kratos/issues/332)) ([4f9e8b0](https://github.com/ory/kratos/commit/4f9e8b00bacda3612db3f48b81fabd562075470a))
 * Add quickstart notes for docker debugging ([74f082a](https://github.com/ory/kratos/commit/74f082a407ee73741453ff6a394f47790e79b667))
 * Declare api frontmatter properly ([df7591f](https://github.com/ory/kratos/commit/df7591f7b70c94cfe62042a598eceb36b6a4f29a))
+* Document 0.2.0 high-level changes ([9be1064](https://github.com/ory/kratos/commit/9be1064500dd86489b79e1abd9cbf1268b97853a))
 * Fix broken images in quickstart ([52aa4cf](https://github.com/ory/kratos/commit/52aa4cf0b6967108fa58f58b6b151e6f6118bcc9))
 * Fix broken link ([bf7843c](https://github.com/ory/kratos/commit/bf7843cd96795a894488a0910529c847cf7eee19)), closes [#327](https://github.com/ory/kratos/issues/327)
 * Fix broken link ([c2adc73](https://github.com/ory/kratos/commit/c2adc734a73758d858d50d8738dc2a556110f26c)), closes [#327](https://github.com/ory/kratos/issues/327)
@@ -192,14 +193,14 @@
   > The old links pointed at `/auth/browser/(login|registration)`
   > which seems to be outdated now.
 * Update user-settings-profile-management.md ([#322](https://github.com/ory/kratos/issues/322)) ([45dc3a5](https://github.com/ory/kratos/commit/45dc3a56c15ae442890313a7dbc784b75644248a))
-* Use git checkout <tag> in quickstart ([#339](https://github.com/ory/kratos/issues/339)) ([2d2562b](https://github.com/ory/kratos/commit/2d2562b587a69a2891ff29d927cb001e15d75b5d)), closes [#335](https://github.com/ory/kratos/issues/335)
-* **concepts:** Fix typo ([a49184c](https://github.com/ory/kratos/commit/a49184c30d9c2ccff5a2d41d3aff61b24e7d2ea9)):
-  > Closes https://github.com/ory/docs/pull/296
-* **concepts:** Properly close code tag ([1c841c2](https://github.com/ory/kratos/commit/1c841c213bdbc79a6aa41e8450444d8d6c1f0284))
 * Updates issue and pull request templates ([#298](https://github.com/ory/kratos/issues/298)) ([1be738d](https://github.com/ory/kratos/commit/1be738d3f8e9bbc6dae31ffad5d990657a66761c))
 * Updates issue and pull request templates ([#313](https://github.com/ory/kratos/issues/313)) ([299063c](https://github.com/ory/kratos/commit/299063caf2fdde40713bae4c36abb3b6fac7271d))
 * Updates issue and pull request templates ([#314](https://github.com/ory/kratos/issues/314)) ([d5ae452](https://github.com/ory/kratos/commit/d5ae452a8ce5f641a40e510e82441d4eb8137218))
 * Updates issue and pull request templates ([#315](https://github.com/ory/kratos/issues/315)) ([8b68db1](https://github.com/ory/kratos/commit/8b68db140a7fc1c0eaa9318c1759ea9d8d0c27df))
+* Use git checkout <tag> in quickstart ([#339](https://github.com/ory/kratos/issues/339)) ([2d2562b](https://github.com/ory/kratos/commit/2d2562b587a69a2891ff29d927cb001e15d75b5d)), closes [#335](https://github.com/ory/kratos/issues/335)
+* **concepts:** Fix typo ([a49184c](https://github.com/ory/kratos/commit/a49184c30d9c2ccff5a2d41d3aff61b24e7d2ea9)):
+  > Closes https://github.com/ory/docs/pull/296
+* **concepts:** Properly close code tag ([1c841c2](https://github.com/ory/kratos/commit/1c841c213bdbc79a6aa41e8450444d8d6c1f0284))
 
 
 ### Features
