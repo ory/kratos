@@ -67,7 +67,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.1.1-alpha.1...2e5c59158915d1ccbb90363e23f73a09c227b6f7) (2020-04-30)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.1.1-alpha.1...55b5fe00c0472f5f6f7408eee76bf9a39318db7e) (2020-04-30)
 
 
 ### Bug Fixes
@@ -152,6 +152,7 @@
 * Add csrf and cookie debug section ([#342](https://github.com/ory/kratos/issues/342)) ([cac2948](https://github.com/ory/kratos/commit/cac2948685ed2a3c3edbc8eb4696bbfb8523dfeb)), closes [#341](https://github.com/ory/kratos/issues/341)
 * Add database connection documentation ([#332](https://github.com/ory/kratos/issues/332)) ([4f9e8b0](https://github.com/ory/kratos/commit/4f9e8b00bacda3612db3f48b81fabd562075470a))
 * Add HA docs ([2e5c591](https://github.com/ory/kratos/commit/2e5c59158915d1ccbb90363e23f73a09c227b6f7))
+* Add hook changes to upgrade guide ([55b5fe0](https://github.com/ory/kratos/commit/55b5fe00c0472f5f6f7408eee76bf9a39318db7e))
 * Add quickstart notes for docker debugging ([74f082a](https://github.com/ory/kratos/commit/74f082a407ee73741453ff6a394f47790e79b667))
 * Declare api frontmatter properly ([df7591f](https://github.com/ory/kratos/commit/df7591f7b70c94cfe62042a598eceb36b6a4f29a))
 * Document 0.2.0 high-level changes ([9be1064](https://github.com/ory/kratos/commit/9be1064500dd86489b79e1abd9cbf1268b97853a))
