@@ -4,10 +4,13 @@ go 1.14
 
 require (
 	github.com/Masterminds/sprig/v3 v3.0.0
+	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
+	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0
 	github.com/bxcodec/faker v2.0.1+incompatible
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/coreos/go-oidc v2.2.1+incompatible
+	github.com/davidrjonas/semver-cli v0.0.0-20190116233701-ee19a9a0dda6 // indirect
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/errors v0.19.4

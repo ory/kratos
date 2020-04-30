@@ -9,6 +9,7 @@
   "devDependencies": {
     "cypress": "4.5.0",
     "prettier": "2.0.4",
-    "wait-on": "4.0.2"
+    "wait-on": "4.0.2",
+    "openapi-generator": "^0.1.36"
   }
 }

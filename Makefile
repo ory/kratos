@@ -90,7 +90,7 @@ quickstart-dev:
 # Formats the code
 .PHONY: format
 format: deps
-		goreturns -w -local github.com/ory $$($$(go env GOPATH)/bin/listx .)
+		goreturns -w -local github.com/ory listx .)
 		npm run format
 
 # Runs tests in short mode, without database adapters
