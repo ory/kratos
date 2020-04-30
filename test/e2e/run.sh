@@ -4,7 +4,7 @@ set -euxo pipefail
 
 cd "$( dirname "${BASH_SOURCE[0]}" )/../.."
 
-export PATH=./bin:$PATH
+export PATH=.bin:$PATH
 export KRATOS_PUBLIC_URL=http://127.0.0.1:4433/
 export KRATOS_ADMIN_URL=http://127.0.0.1:4434/
 
