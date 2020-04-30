@@ -7,25 +7,22 @@ title: Configuration
 OPEN AN ISSUE IF YOU WOULD LIKE TO MAKE ADJUSTMENTS HERE AND MAINTAINERS WILL HELP YOU LOCATE THE RIGHT
 FILE -->
 
-If file `$HOME/.kratos.yaml` exists, it will be used as a configuration file
-which supports all configuration settings listed below.
+If file `$HOME/.kratos.yaml` exists, it will be used as a configuration file which supports all
+configuration settings listed below.
 
-You can load the config file from another source using the
-`-c path/to/config.yaml` or `--config path/to/config.yaml` flag:
-`kratos --config path/to/config.yaml`.
+You can load the config file from another source using the `-c path/to/config.yaml` or `--config path/to/config.yaml`
+flag: `kratos --config path/to/config.yaml`.
 
-Config files can be formatted as JSON, YAML and TOML. Some configuration values
-support reloading without server restart. All configuration values can be set
-using environment variables, as documented below.
+Config files can be formatted as JSON, YAML and TOML. Some configuration values support reloading without server restart.
+All configuration values can be set using environment variables, as documented below.
 
-To find out more about edge cases like setting string array values through
-environmental variables head to the
-[Configuring ORY services](https://www.ory.sh/docs/ecosystem/configuring)
-section.
+To find out more about edge cases like setting string array values through environmental variables head to the
+[Configuring ORY services](https://www.ory.sh/docs/ecosystem/configuring) section.
 
 ```yaml
 ## ORY Kratos Configuration
 #
+
 
 ## Data Source Name ##
 #
@@ -38,33 +35,51 @@ section.
 # - mysql://user:secret@tcp(mysqld:3306)/database?max_conns=20&max_idle_conns=4
 # - cockroach://user@cockroachdb:26257/database?sslmode=disable&max_conns=20&max_idle_conns=4
 # - sqlite:///var/lib/sqlite/db.sqlite?_fk=true&mode=rwc
-#
+# 
 # Set this value using environment variables on
 # - Linux/macOS:
 #    $ export DSN=<value>
 # - Windows Command Line (CMD):
 #    > set DSN=<value>
 #
-dsn: sqlite:///var/lib/sqlite/db.sqlite?_fk=true&mode=rwc
+dsn: "postgres://user:
+  password@postgresd:5432/database?sslmode=disable&max_conns=20&max_idle_conns=\
+  4"
 
 ## identity ##
 #
 identity:
+  
   ## traits ##
   #
   traits:
-    ## default_schema_url ##
+    
+    ## JSON Schema URL for default identity traits ##
     #
+    # Path to the JSON Schema which describes a default identity's traits.
+    #
+    # Examples:
+    # - file://path/to/identity.traits.schema.json
+    # - httpss://foo.bar.com/path/to/identity.traits.schema.json
+    # 
     # Set this value using environment variables on
     # - Linux/macOS:
     #    $ export IDENTITY_TRAITS_DEFAULT_SCHEMA_URL=<value>
     # - Windows Command Line (CMD):
     #    > set IDENTITY_TRAITS_DEFAULT_SCHEMA_URL=<value>
     #
-    default_schema_url: http://NedlKbwQRDCY.dkgmNoGG3ruSLokfRyoBqkuVIbLPF.k7,Bp4MTMWDcuKpD8skNPoTuR0nNX
+    default_schema_url: httpss://foo.bar.com/path/to/identity.traits.schema.json
 
-    ## schemas ##
+    ## Additional JSON Schemas for Identity Traits ##
     #
+    # Examples:
+    # - - id: customer
+    #     url: https://foo.bar.com/path/to/customer.traits.schema.json
+    #   - id: employee
+    #     url: https://foo.bar.com/path/to/employee.traits.schema.json
+    #   - id: employee-v2
+    #     url: https://foo.bar.com/path/to/employee.v2.traits.schema.json
+    # 
     # Set this value using environment variables on
     # - Linux/macOS:
     #    $ export IDENTITY_TRAITS_SCHEMAS=<value>
@@ -72,30 +87,42 @@ identity:
     #    > set IDENTITY_TRAITS_SCHEMAS=<value>
     #
     schemas:
-      - null
+      - id: customer
+        url: https://foo.bar.com/path/to/customer.traits.schema.json
+      - id: employee
+        url: https://foo.bar.com/path/to/employee.traits.schema.json
+      - id: employee-v2
+        url: https://foo.bar.com/path/to/employee.v2.traits.schema.json
 
 ## selfservice ##
 #
 selfservice:
+  
   ## logout ##
   #
   logout:
-    ## redirect_to ##
+    
+    ## Redirect to URL after logout ##
     #
+    # Examples:
+    # - https://www.myapp.com/home
+    # 
     # Set this value using environment variables on
     # - Linux/macOS:
     #    $ export SELFSERVICE_LOGOUT_REDIRECT_TO=<value>
     # - Windows Command Line (CMD):
     #    > set SELFSERVICE_LOGOUT_REDIRECT_TO=<value>
     #
-    redirect_to: http://STdHhpxbTWy.hmaeHgLae,o2bezkaEXQ24sr1x4BGCvjMO-UxChL+XXsYGQitpI.VMoC,M18m3Hfm
+    redirect_to: https://www.myapp.com/home
 
   ## strategies ##
   #
   strategies:
+    
     ## password ##
     #
     password:
+      
       ## enabled ##
       #
       # Set this value using environment variables on
@@ -104,11 +131,12 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_STRATEGIES_PASSWORD_ENABLED=<value>
       #
-      enabled: true
+      enabled: false
 
     ## oidc ##
     #
     oidc:
+      
       ## enabled ##
       #
       # Set this value using environment variables on
@@ -117,12 +145,15 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_STRATEGIES_OIDC_ENABLED=<value>
       #
-      enabled: true
+      enabled: false
 
       ## config ##
       #
       config:
-        ## providers ##
+        
+        ## OpenID Connect and OAuth2 Providers ##
+        #
+        # A list and configuration of OAuth2 and OpenID Connect providers ORY Kratos should integrate with.
         #
         # Set this value using environment variables on
         # - Linux/macOS:
@@ -131,58 +162,81 @@ selfservice:
         #    > set SELFSERVICE_STRATEGIES_OIDC_CONFIG_PROVIDERS=<value>
         #
         providers:
-          - id: fugiat officia
+          - id: google
             provider: google
-            client_id: ut sit qui
-            client_secret: exercitation velit
-            schema_url: http://DCkHbxiDbxjktRnIbaBEnApSjrLZmA.vapMRipyT33YFFJ2VGdYTSZvefJ,VVZMod6TNchAtcWhJ9AiibZXwo.Sb
-            issuer_url: http://EPwupMlvwJVyfmRNpYVyuKGVuLAu.zpvoZoAkzX.8,
-            auth_url: https://ZvFI.mkfPEhYgtvxUlBGRLWM-4Rp,,ig1Q
-            token_url: https://ClyKSKOuLHguywLcBcjIQSSUWmNjdh.ixgubB.GLeAJD+VjaNtvxJVWetZR1cOBtc+h3TPyLMwTvhf3uiRS
+            client_id: dolore adipisicing amet
+            client_secret: esse ex ipsum qui commodo
+            schema_url: https://foo.bar.com/path/to/oidc.schema.json
+            issuer_url: https://accounts.google.com
+            auth_url: https://accounts.google.com/o/oauth2/v2/auth
+            token_url: https://www.googleapis.com/oauth2/v4/token
             scope:
-              - sit ut ut
-              - eu magna veniam
-              - proident
-              - veniam tempor
-              - et nostrud eu Ut est
+              - profile
+              - profile
+              - profile
+              - profile
+              - profile
+          - id: google
+            provider: google
+            client_id: est
+            client_secret: sit Excepteur cillum
+            schema_url: file://path/to/oidc.schema.json
+            issuer_url: https://accounts.google.com
+            auth_url: https://accounts.google.com/o/oauth2/v2/auth
+            token_url: https://www.googleapis.com/oauth2/v4/token
+            scope:
+              - offline_access
+              - offline_access
 
   ## settings ##
   #
   settings:
+    
     ## request_lifespan ##
     #
     # Default value: 1h
     #
+    # Examples:
+    # - 1h
+    # - 1m
+    # - 1s
+    # 
     # Set this value using environment variables on
     # - Linux/macOS:
     #    $ export SELFSERVICE_SETTINGS_REQUEST_LIFESPAN=<value>
     # - Windows Command Line (CMD):
     #    > set SELFSERVICE_SETTINGS_REQUEST_LIFESPAN=<value>
     #
-    request_lifespan: 453238h
+    request_lifespan: 1m
 
     ## privileged_session_max_age ##
     #
     # Default value: 1h
     #
+    # Examples:
+    # - 1h
+    # - 1m
+    # - 1s
+    # 
     # Set this value using environment variables on
     # - Linux/macOS:
     #    $ export SELFSERVICE_SETTINGS_PRIVILEGED_SESSION_MAX_AGE=<value>
     # - Windows Command Line (CMD):
     #    > set SELFSERVICE_SETTINGS_PRIVILEGED_SESSION_MAX_AGE=<value>
     #
-    privileged_session_max_age: 72s
+    privileged_session_max_age: 1s
 
     ## after ##
     #
     after:
+      
       ## Default Return To URL ##
       #
       # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. This value may be overridden by a `default_return_to` in a lower configuration level (`foo.bar.default_return_to` overrides `foo.default_return_to` overrides `default_return_to`) and by the `?return_to` query in certain cases.
       #
       # Examples:
       # - https://my-app.com/dashboard
-      #
+      # 
       # Set this value using environment variables on
       # - Linux/macOS:
       #    $ export SELFSERVICE_SETTINGS_AFTER_DEFAULT_RETURN_TO=<value>
@@ -194,13 +248,14 @@ selfservice:
       ## password ##
       #
       password:
+        
         ## Default Return To URL ##
         #
         # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. This value may be overridden by a `default_return_to` in a lower configuration level (`foo.bar.default_return_to` overrides `foo.default_return_to` overrides `default_return_to`) and by the `?return_to` query in certain cases.
         #
         # Examples:
         # - https://my-app.com/dashboard
-        #
+        # 
         # Set this value using environment variables on
         # - Linux/macOS:
         #    $ export SELFSERVICE_SETTINGS_AFTER_PASSWORD_DEFAULT_RETURN_TO=<value>
@@ -223,13 +278,14 @@ selfservice:
       ## profile ##
       #
       profile:
+        
         ## Default Return To URL ##
         #
         # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. This value may be overridden by a `default_return_to` in a lower configuration level (`foo.bar.default_return_to` overrides `foo.default_return_to` overrides `default_return_to`) and by the `?return_to` query in certain cases.
         #
         # Examples:
         # - https://my-app.com/dashboard
-        #
+        # 
         # Set this value using environment variables on
         # - Linux/macOS:
         #    $ export SELFSERVICE_SETTINGS_AFTER_PROFILE_DEFAULT_RETURN_TO=<value>
@@ -252,19 +308,25 @@ selfservice:
   ## verify ##
   #
   verify:
+    
     ## Self-Service Verification Request Lifespan ##
     #
     # Sets how long the verification request (for the UI interaction) is valid.
     #
     # Default value: 1h
     #
+    # Examples:
+    # - 1h
+    # - 1m
+    # - 1s
+    # 
     # Set this value using environment variables on
     # - Linux/macOS:
     #    $ export SELFSERVICE_VERIFY_REQUEST_LIFESPAN=<value>
     # - Windows Command Line (CMD):
     #    > set SELFSERVICE_VERIFY_REQUEST_LIFESPAN=<value>
     #
-    request_lifespan: 25332us
+    request_lifespan: 1h
 
     ## Self-Service Verification Link Lifespan ##
     #
@@ -272,32 +334,44 @@ selfservice:
     #
     # Default value: 24h
     #
+    # Examples:
+    # - 1h
+    # - 1m
+    # - 1s
+    # 
     # Set this value using environment variables on
     # - Linux/macOS:
     #    $ export SELFSERVICE_VERIFY_LINK_LIFESPAN=<value>
     # - Windows Command Line (CMD):
     #    > set SELFSERVICE_VERIFY_LINK_LIFESPAN=<value>
     #
-    link_lifespan: 75us
+    link_lifespan: 1h
 
   ## login ##
   #
   login:
+    
     ## request_lifespan ##
     #
     # Default value: 1h
     #
+    # Examples:
+    # - 1h
+    # - 1m
+    # - 1s
+    # 
     # Set this value using environment variables on
     # - Linux/macOS:
     #    $ export SELFSERVICE_LOGIN_REQUEST_LIFESPAN=<value>
     # - Windows Command Line (CMD):
     #    > set SELFSERVICE_LOGIN_REQUEST_LIFESPAN=<value>
     #
-    request_lifespan: 8093865h
+    request_lifespan: 1h
 
     ## before ##
     #
     before:
+      
       ## hooks ##
       #
       # Set this value using environment variables on
@@ -309,35 +383,28 @@ selfservice:
       hooks:
         - hook: redirect
           config:
-            default_redirect_url: http://HqJbeKjozmWslIEQKZOCaLlE.xsQmXQg5NDQ2QUKNcE3
+            default_redirect_url: https://RuRpDxGostkcVWIQOAHwbGxVnxJTbqrrX.upInhARM2qxBxkG4xDqxZAT9UK7SXwH+-jGMGgmGJthoi.58AZVyPZWA+Gzjn2HQo
             allow_user_defined_redirect: true
         - hook: redirect
           config:
-            default_redirect_url: http://rJnZVfunzGaD.jhjENRq7x9tzL7mvm.Bd9a91
+            default_redirect_url: https://FXKFEFkRfRHYXySvc.bpAjtCUEIaQIdV2blx7-J.cgEx
             allow_user_defined_redirect: false
         - hook: redirect
           config:
-            default_redirect_url: https://cNwwGvIasKKp.jxbkbAC,NEbXIWbrQjk9DSEcLR1kfv6CkvYhcBDCNk
+            default_redirect_url: https://xFqgELpmuXFky.nqJ.F99qIRqLpD2t1nuhP0OabsI04jrXZLIDZjoGhG.4AITTj8IPGG,Hw4HbkhRR4nRAg3E0QVuLCZ6
             allow_user_defined_redirect: true
-        - hook: redirect
-          config:
-            default_redirect_url: https://dfawGZxoksPOLjtsrkntYhUmQ.tgydIoipECSWIw2Mk
-            allow_user_defined_redirect: false
-        - hook: redirect
-          config:
-            default_redirect_url: http://sHcIOpxDHBQBbCqrsTIGoSnqgTk.cqySMaurkwY4ptxVgtzG2EE+jloFdiWYjo2bDPwK8-wuaxfeB48CEGgCYvD
-            allow_user_defined_redirect: false
 
     ## after ##
     #
     after:
+      
       ## Default Return To URL ##
       #
       # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. This value may be overridden by a `default_return_to` in a lower configuration level (`foo.bar.default_return_to` overrides `foo.default_return_to` overrides `default_return_to`) and by the `?return_to` query in certain cases.
       #
       # Examples:
       # - https://my-app.com/dashboard
-      #
+      # 
       # Set this value using environment variables on
       # - Linux/macOS:
       #    $ export SELFSERVICE_LOGIN_AFTER_DEFAULT_RETURN_TO=<value>
@@ -349,13 +416,14 @@ selfservice:
       ## password ##
       #
       password:
+        
         ## Default Return To URL ##
         #
         # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. This value may be overridden by a `default_return_to` in a lower configuration level (`foo.bar.default_return_to` overrides `foo.default_return_to` overrides `default_return_to`) and by the `?return_to` query in certain cases.
         #
         # Examples:
         # - https://my-app.com/dashboard
-        #
+        # 
         # Set this value using environment variables on
         # - Linux/macOS:
         #    $ export SELFSERVICE_LOGIN_AFTER_PASSWORD_DEFAULT_RETURN_TO=<value>
@@ -378,13 +446,14 @@ selfservice:
       ## oidc ##
       #
       oidc:
+        
         ## Default Return To URL ##
         #
         # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. This value may be overridden by a `default_return_to` in a lower configuration level (`foo.bar.default_return_to` overrides `foo.default_return_to` overrides `default_return_to`) and by the `?return_to` query in certain cases.
         #
         # Examples:
         # - https://my-app.com/dashboard
-        #
+        # 
         # Set this value using environment variables on
         # - Linux/macOS:
         #    $ export SELFSERVICE_LOGIN_AFTER_OIDC_DEFAULT_RETURN_TO=<value>
@@ -407,21 +476,28 @@ selfservice:
   ## registration ##
   #
   registration:
+    
     ## request_lifespan ##
     #
     # Default value: 1h
     #
+    # Examples:
+    # - 1h
+    # - 1m
+    # - 1s
+    # 
     # Set this value using environment variables on
     # - Linux/macOS:
     #    $ export SELFSERVICE_REGISTRATION_REQUEST_LIFESPAN=<value>
     # - Windows Command Line (CMD):
     #    > set SELFSERVICE_REGISTRATION_REQUEST_LIFESPAN=<value>
     #
-    request_lifespan: 407907ns
+    request_lifespan: 1m
 
     ## before ##
     #
     before:
+      
       ## hooks ##
       #
       # Set this value using environment variables on
@@ -433,19 +509,28 @@ selfservice:
       hooks:
         - hook: redirect
           config:
-            default_redirect_url: https://XUFTOArJyxaVkPqBxShz.zcroFz3.k1qyQVFRsVIOejgaVQmuJGF,q
+            default_redirect_url: http://yGtxVUQOkfbyeholrdjtbLMNX.zgxXQF3uwDMsNe18k-zgvnskS8sH3ftjZ9WefSJ.n2wpJsFEdrXi3h
+            allow_user_defined_redirect: true
+        - hook: redirect
+          config:
+            default_redirect_url: https://zrRHtzdFxpdGvEqCzYTzOkuBWHCw.hammheOKSzGxmwue.2c3PhAovYQ2YlXHvjOmoxdYp,5KN3pOj5PxRxIpED-IflJ,uzyFaNsMfEnz
+            allow_user_defined_redirect: false
+        - hook: redirect
+          config:
+            default_redirect_url: https://KijJVaKCzIYlMuJiu.xicVNxwVHdFKWmUsG+vba5Ip1XNez3mLG0E7PYGo6.uxT2jP7l9U
             allow_user_defined_redirect: false
 
     ## after ##
     #
     after:
+      
       ## Default Return To URL ##
       #
       # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. This value may be overridden by a `default_return_to` in a lower configuration level (`foo.bar.default_return_to` overrides `foo.default_return_to` overrides `default_return_to`) and by the `?return_to` query in certain cases.
       #
       # Examples:
       # - https://my-app.com/dashboard
-      #
+      # 
       # Set this value using environment variables on
       # - Linux/macOS:
       #    $ export SELFSERVICE_REGISTRATION_AFTER_DEFAULT_RETURN_TO=<value>
@@ -457,13 +542,14 @@ selfservice:
       ## password ##
       #
       password:
+        
         ## Default Return To URL ##
         #
         # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. This value may be overridden by a `default_return_to` in a lower configuration level (`foo.bar.default_return_to` overrides `foo.default_return_to` overrides `default_return_to`) and by the `?return_to` query in certain cases.
         #
         # Examples:
         # - https://my-app.com/dashboard
-        #
+        # 
         # Set this value using environment variables on
         # - Linux/macOS:
         #    $ export SELFSERVICE_REGISTRATION_AFTER_PASSWORD_DEFAULT_RETURN_TO=<value>
@@ -481,27 +567,28 @@ selfservice:
         #    > set SELFSERVICE_REGISTRATION_AFTER_PASSWORD_HOOKS=<value>
         #
         hooks:
-          - hook: session
-          - hook: verify
           - hook: redirect
             config:
-              default_redirect_url: http://uuJWoDhHw.dagfwa8bFXNY1hsQytAZAeDROZf
-              allow_user_defined_redirect: false
-          - hook: redirect
-            config:
-              default_redirect_url: http://dpyfrlbjtHCiAxTzc.zukNru.GgBeaqvgokBIHTQxMytsyROfqwkg6QDIY.y
+              default_redirect_url: https://QVrbrLUUJzBZdLvIlgrFtXMwndPbTGTd.muebtY,..w+CZHjfG0pyIwqlzUdDLEHY.mqwdPgQLid9T5FlvLNfJjulpOcTXeG-qaX,g
               allow_user_defined_redirect: true
+          - hook: verify
+          - hook: session
+          - hook: redirect
+            config:
+              default_redirect_url: http://KIz.nhlueozSA0ugo8ozxRc,TaQVv4E1Vc5fpn
+              allow_user_defined_redirect: false
 
       ## oidc ##
       #
       oidc:
+        
         ## Default Return To URL ##
         #
         # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. This value may be overridden by a `default_return_to` in a lower configuration level (`foo.bar.default_return_to` overrides `foo.default_return_to` overrides `default_return_to`) and by the `?return_to` query in certain cases.
         #
         # Examples:
         # - https://my-app.com/dashboard
-        #
+        # 
         # Set this value using environment variables on
         # - Linux/macOS:
         #    $ export SELFSERVICE_REGISTRATION_AFTER_OIDC_DEFAULT_RETURN_TO=<value>
@@ -519,13 +606,15 @@ selfservice:
         #    > set SELFSERVICE_REGISTRATION_AFTER_OIDC_HOOKS=<value>
         #
         hooks:
+          - hook: session
+          - hook: verify
           - hook: redirect
             config:
-              default_redirect_url: https://ELFTPJmf.evNx59IHKArnj-8wIY.n9UWnpaJQb6US3u,AihhvG-gf2OlbuwfzfSPw
+              default_redirect_url: http://nVPqduVH.xvvRVqj+u0
               allow_user_defined_redirect: true
           - hook: redirect
             config:
-              default_redirect_url: https://flGWdNTgjrZSYcDqvhkCGptaEl.wyjccbgy4iErDgf0XYkXMgPUluxX
+              default_redirect_url: https://mYFiatdMMUvTEERlyAh.ucptMqdAbUTLcQrWZvwWZqriGzs
               allow_user_defined_redirect: false
 
 ## Courier configuration ##
@@ -533,18 +622,20 @@ selfservice:
 # The courier is responsible for sending and delivering messages over email, sms, and other means.
 #
 courier:
+  
   ## SMTP Configuration ##
   #
   # Configures outgoing emails using the SMTP protocol.
   #
   smtp:
+    
     ## SMTP connection string ##
     #
     # This URI will be used to connect to the SMTP server. Use the query parameter to allow (`?skip_ssl_verify=true`) or disallow (`?skip_ssl_verify=false`) self-signed TLS certificates. Please keep in mind that any host other than localhost / 127.0.0.1 must use smtp over TLS (smtps) or the connection will not be possible.
     #
     # Examples:
     # - smtps://foo:bar@my-mailserver:1234/?skip_ssl_verify=false
-    #
+    # 
     # Set this value using environment variables on
     # - Linux/macOS:
     #    $ export COURIER_SMTP_CONNECTION_URI=<value>
@@ -565,7 +656,7 @@ courier:
     # - Windows Command Line (CMD):
     #    > set COURIER_SMTP_FROM_ADDRESS=<value>
     #
-    from_address: 5odaU1Mxs-f5pI@bmRoDiZsF.bgp
+    from_address: dZq@Z.xtul
 
   ## Override message templates ##
   #
@@ -573,7 +664,7 @@ courier:
   #
   # Examples:
   # - /conf/courier-templates
-  #
+  # 
   # Set this value using environment variables on
   # - Linux/macOS:
   #    $ export COURIER_TEMPLATE_OVERRIDE_PATH=<value>
@@ -585,9 +676,11 @@ courier:
 ## serve ##
 #
 serve:
+  
   ## admin ##
   #
   admin:
+    
     ## host ##
     #
     # Default value: 0.0.0.0
@@ -598,7 +691,7 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_ADMIN_HOST=<value>
     #
-    host: amet velit est magna
+    host: tempor nisi enim consectetur veniam
 
     ## port ##
     #
@@ -606,7 +699,7 @@ serve:
     #
     # Examples:
     # - 4434
-    #
+    # 
     # Set this value using environment variables on
     # - Linux/macOS:
     #    $ export SERVE_ADMIN_PORT=<value>
@@ -618,6 +711,7 @@ serve:
   ## public ##
   #
   public:
+    
     ## host ##
     #
     # Default value: 0.0.0.0
@@ -628,7 +722,7 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_PUBLIC_HOST=<value>
     #
-    host: proident in
+    host: id occaecat aliqua reprehenderit amet
 
     ## port ##
     #
@@ -636,7 +730,7 @@ serve:
     #
     # Examples:
     # - 4433
-    #
+    # 
     # Set this value using environment variables on
     # - Linux/macOS:
     #    $ export SERVE_PUBLIC_PORT=<value>
@@ -648,13 +742,14 @@ serve:
 ## urls ##
 #
 urls:
+  
   ## Settings UI URL ##
   #
   # URL where the Settings UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
   #
   # Examples:
   # - https://my-app.com/user/settings
-  #
+  # 
   # Set this value using environment variables on
   # - Linux/macOS:
   #    $ export URLS_SETTINGS_UI=<value>
@@ -669,7 +764,7 @@ urls:
   #
   # Examples:
   # - https://my-app.com/login
-  #
+  # 
   # Set this value using environment variables on
   # - Linux/macOS:
   #    $ export URLS_LOGIN_UI=<value>
@@ -684,7 +779,7 @@ urls:
   #
   # Examples:
   # - https://my-app.com/signup
-  #
+  # 
   # Set this value using environment variables on
   # - Linux/macOS:
   #    $ export URLS_REGISTRATION_UI=<value>
@@ -699,7 +794,7 @@ urls:
   #
   # Examples:
   # - https://my-app.com/kratos-error
-  #
+  # 
   # Set this value using environment variables on
   # - Linux/macOS:
   #    $ export URLS_ERROR_UI=<value>
@@ -714,7 +809,7 @@ urls:
   #
   # Examples:
   # - https://my-app.com/verify
-  #
+  # 
   # Set this value using environment variables on
   # - Linux/macOS:
   #    $ export URLS_VERIFY_UI=<value>
@@ -729,7 +824,7 @@ urls:
   #
   # Examples:
   # - https://my-app.com/dashboard
-  #
+  # 
   # Set this value using environment variables on
   # - Linux/macOS:
   #    $ export URLS_DEFAULT_RETURN_TO=<value>
@@ -741,11 +836,12 @@ urls:
   ## self ##
   #
   self:
+    
     ## public ##
     #
     # Examples:
     # - https://my-app.com/.ory/kratos/public
-    #
+    # 
     # Set this value using environment variables on
     # - Linux/macOS:
     #    $ export URLS_SELF_PUBLIC=<value>
@@ -758,7 +854,7 @@ urls:
     #
     # Examples:
     # - https://kratos.private-network:4434/
-    #
+    # 
     # Set this value using environment variables on
     # - Linux/macOS:
     #    $ export URLS_SELF_ADMIN=<value>
@@ -773,7 +869,7 @@ urls:
   #
   # Examples:
   # - https://my-app.com/login/mfa
-  #
+  # 
   # Set this value using environment variables on
   # - Linux/macOS:
   #    $ export URLS_MFA_UI=<value>
@@ -789,7 +885,7 @@ urls:
   # Examples:
   # - https://app.my-app.com/dashboard
   # - https://www.my-app.com/
-  #
+  # 
   # Set this value using environment variables on
   # - Linux/macOS:
   #    $ export URLS_WHITELISTED_RETURN_TO_URLS=<value>
@@ -801,6 +897,7 @@ urls:
 ## log ##
 #
 log:
+  
   ## level ##
   #
   # Set this value using environment variables on
@@ -809,7 +906,7 @@ log:
   # - Windows Command Line (CMD):
   #    > set LOG_LEVEL=<value>
   #
-  level: info
+  level: debug
 
   ## format ##
   #
@@ -824,6 +921,7 @@ log:
 ## secrets ##
 #
 secrets:
+  
   ## session ##
   #
   # Set this value using environment variables on
@@ -833,17 +931,17 @@ secrets:
   #    > set SECRETS_SESSION=<value>
   #
   session:
-    - commodo utinaliqua nostrud velit do dolore
-    - laboris amet consequat in
-    - fugiat sed laborum sint eiusmod
-    - Excepteurreprehenderit pariatur
+    - voluptate ullamco proident
+    - sed aute commodo cupidatat
 
 ## hashers ##
 #
 hashers:
+  
   ## argon2 ##
   #
   argon2:
+    
     ## memory ##
     #
     # Set this value using environment variables on
@@ -852,7 +950,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_MEMORY=<value>
     #
-    memory: 39746533
+    memory: 1421164
 
     ## iterations ##
     #
@@ -862,7 +960,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_ITERATIONS=<value>
     #
-    iterations: 95029377
+    iterations: 61189230
 
     ## parallelism ##
     #
@@ -872,7 +970,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_PARALLELISM=<value>
     #
-    parallelism: 84161559
+    parallelism: 96467155
 
     ## salt_length ##
     #
@@ -882,7 +980,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_SALT_LENGTH=<value>
     #
-    salt_length: 60047844
+    salt_length: 61865753
 
     ## key_length ##
     #
@@ -892,17 +990,20 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_KEY_LENGTH=<value>
     #
-    key_length: 73506562
+    key_length: 14300065
 
 ## security ##
 #
 security:
+  
   ## session ##
   #
   session:
+    
     ## cookie ##
     #
     cookie:
+      
       ## same_site ##
       #
       # Default value: Lax
@@ -913,5 +1014,6 @@ security:
       # - Windows Command Line (CMD):
       #    > set SECURITY_SESSION_COOKIE_SAME_SITE=<value>
       #
-      same_site: None
+      same_site: Strict
+
 ```

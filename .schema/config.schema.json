@@ -83,13 +83,21 @@
       "type": "object",
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "examples": [
+            "google"
+          ]
         },
         "provider": {
+          "title": "Provider",
+          "description": "Can be one of github, generic, google.",
           "type": "string",
           "enum": [
             "github",
             "generic",
+            "google"
+          ],
+          "examples": [
             "google"
           ]
         },
@@ -101,24 +109,41 @@
         },
         "issuer_url": {
           "type": "string",
-          "format": "uri"
+          "format": "uri",
+          "examples": [
+            "https://accounts.google.com"
+          ]
         },
         "auth_url": {
           "type": "string",
-          "format": "uri"
+          "format": "uri",
+          "examples": [
+            "https://accounts.google.com/o/oauth2/v2/auth"
+          ]
         },
         "token_url": {
           "type": "string",
-          "format": "uri"
+          "format": "uri",
+          "examples": [
+            "https://www.googleapis.com/oauth2/v4/token"
+          ]
         },
         "schema_url": {
           "type": "string",
-          "format": "uri"
+          "format": "uri",
+          "examples": [
+            "file://path/to/oidc.schema.json",
+            "https://foo.bar.com/path/to/oidc.schema.json"
+          ]
         },
         "scope": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "examples": [
+              "offline_access",
+              "profile"
+            ]
           }
         }
       },
@@ -301,6 +326,8 @@
                   "additionalProperties": false,
                   "properties": {
                     "providers": {
+                      "title": "OpenID Connect and OAuth2 Providers",
+                      "description": "A list and configuration of OAuth2 and OpenID Connect providers ORY Kratos should integrate with.",
                       "type": "array",
                       "items": {
                         "$ref": "#/definitions/selfServiceOIDCProvider"
@@ -316,8 +343,12 @@
           "type": "object",
           "properties": {
             "redirect_to": {
+              "title": "Redirect to URL after logout",
               "type": "string",
-              "format": "uri"
+              "format": "uri",
+              "examples": [
+                "https://www.myapp.com/home"
+              ]
             }
           },
           "additionalProperties": false,
@@ -332,12 +363,22 @@
             "request_lifespan": {
               "type": "string",
               "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
-              "default": "1h"
+              "default": "1h",
+              "examples": [
+                "1h",
+                "1m",
+                "1s"
+              ]
             },
             "privileged_session_max_age": {
               "type": "string",
               "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
-              "default": "1h"
+              "default": "1h",
+              "examples": [
+                "1h",
+                "1m",
+                "1s"
+              ]
             },
             "after": {
               "$ref": "#/definitions/selfServiceAfterSettings"
@@ -352,14 +393,24 @@
               "description": "Sets how long the verification request (for the UI interaction) is valid.",
               "type": "string",
               "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
-              "default": "1h"
+              "default": "1h",
+              "examples": [
+                "1h",
+                "1m",
+                "1s"
+              ]
             },
             "link_lifespan": {
               "title": "Self-Service Verification Link Lifespan",
               "description": "Sets how long the verification link (e.g. the one sent via email) is valid for.",
               "type": "string",
               "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
-              "default": "24h"
+              "default": "24h",
+              "examples": [
+                "1h",
+                "1m",
+                "1s"
+              ]
             }
           }
         },
@@ -369,7 +420,12 @@
             "request_lifespan": {
               "type": "string",
               "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
-              "default": "1h"
+              "default": "1h",
+              "examples": [
+                "1h",
+                "1m",
+                "1s"
+              ]
             },
             "before": {
               "$ref": "#/definitions/selfServiceBefore"
@@ -387,7 +443,12 @@
             "request_lifespan": {
               "type": "string",
               "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
-              "default": "1h"
+              "default": "1h",
+              "examples": [
+                "1h",
+                "1m",
+                "1s"
+              ]
             },
             "before": {
               "$ref": "#/definitions/selfServiceBefore"
@@ -637,20 +698,52 @@
           "type": "object",
           "properties": {
             "default_schema_url": {
+              "title": "JSON Schema URL for default identity traits",
+              "description": "Path to the JSON Schema which describes a default identity's traits.",
               "type": "string",
-              "format": "uri"
+              "format": "uri",
+              "examples": [
+                "file://path/to/identity.traits.schema.json",
+                "httpss://foo.bar.com/path/to/identity.traits.schema.json"
+              ]
             },
             "schemas": {
               "type": "array",
+              "title": "Additional JSON Schemas for Identity Traits",
+              "examples": [
+                [
+                  {
+                    "id": "customer",
+                    "url": "https://foo.bar.com/path/to/customer.traits.schema.json"
+                  },
+                  {
+                    "id": "employee",
+                    "url": "https://foo.bar.com/path/to/employee.traits.schema.json"
+                  },
+                  {
+                    "id": "employee-v2",
+                    "url": "https://foo.bar.com/path/to/employee.v2.traits.schema.json"
+                  }
+                ]
+              ],
               "items": {
                 "type": "object",
                 "properties": {
                   "id": {
-                    "type": "string"
+                    "title": "The schema's ID.",
+                    "type": "string",
+                    "examples": [
+                      "employee"
+                    ]
                   },
                   "url": {
                     "type": "string",
-                    "format": "uri"
+                    "title": "Path to the JSON Schema",
+                    "format": "uri",
+                    "examples": [
+                      "file://path/to/identity.traits.schema.json",
+                      "https://foo.bar.com/path/to/identity.traits.schema.json"
+                    ]
                   }
                 },
                 "not": {

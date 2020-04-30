@@ -10,7 +10,7 @@ require (
 	github.com/bxcodec/faker v2.0.1+incompatible
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/coreos/go-oidc v2.2.1+incompatible
-	github.com/davidrjonas/semver-cli v0.0.0-20190116233701-ee19a9a0dda6 // indirect
+	github.com/davidrjonas/semver-cli v0.0.0-20190116233701-ee19a9a0dda6
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/errors v0.19.4
@@ -40,7 +40,7 @@ require (
 	github.com/leodido/go-urn v1.1.0 // indirect
 	github.com/markbates/pkger v0.12.8
 	github.com/mattn/goveralls v0.0.5
-	github.com/mikefarah/yq v1.15.0 // indirect
+	github.com/mikefarah/yq v1.15.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect
@@ -54,7 +54,7 @@ require (
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/sdk/swagutil v0.0.0-20200425113349-92ce176f501e
 	github.com/ory/viper v1.7.4
-	github.com/ory/x v0.0.115
+	github.com/ory/x v0.0.116
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/shurcooL/go v0.0.0-20180423040247-9e1955d9fb6e
@@ -70,5 +70,4 @@ require (
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/tools v0.0.0-20200331202046-9d5940d49312
 	gopkg.in/go-playground/validator.v9 v9.28.0
-	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 )
