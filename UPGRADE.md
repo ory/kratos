@@ -35,6 +35,35 @@ This prevents your colleague or evil friend to take over your account while you 
 ORY Kratos now supports this by redirecting the user to the login screen if the changes are made to sensitive fields.
 The changes will only be applied after successful reauthentication.
 
+### Changes to Hooks
+
+This patch focuses on refactoring how self-service flows terminate and
+changes how hooks behave and when they are executed.
+
+Before this patch, it was not clear whether hooks run before or
+after an identity is persisted. This caused problems with multiple
+writes on the HTTP ResponseWriter and other bugs.
+
+This patch removes certain hooks from after login, registration, and profile flows.
+Per default, these flows now respond with an appropriate payload (
+redirect for browsers, JSON for API clients) and deprecate
+the `redirect` hook. This patch includes documentation which explains
+how these hooks work now.
+
+Additionally, the documentation was updated. Especially the sections
+about hooks have been refactored. The login and user registration docs
+have been updated to reflect the latest changes as well.
+
+BREAKING CHANGE: Please remove the `redirect` hook from both login,
+registration, and settings after configuration. Please remove
+the `session` hook from your login after configuration. Hooks
+have moved down a level and are now configured at
+`selfservice.<login|registration|settings>.<after|before>.hooks`
+instead of
+`selfservice.<login|registration|settings>.<after|before>.hooks`.
+Hooks are now identified by `hook:` instead of `job:`. Please
+rename those sections accordingly.
+
 ### Changing Passwords
 
 It's now possible to change your password using the Self-Service Settings Flow! Lean more about this flow
