@@ -2,5 +2,8 @@
   "private": true,
   "devDependencies": {
     "cypress": "^4.3.0"
+  },
+  "dependencies": {
+    "openapi-generator": "^0.1.36"
   }
 }
