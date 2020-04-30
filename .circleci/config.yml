@@ -18,9 +18,9 @@ jobs:
           - GO111MODULE=on
           - TEST_MAILHOG_SMTP=smtp://test:test@127.0.0.1:1025
           - TEST_MAILHOG_API=http://127.0.0.1:8025
-          - TEST_SELFSERVICE_OIDC_HYDRA_ADMIN=http://127.0.0.1:4445
-          - TEST_SELFSERVICE_OIDC_HYDRA_PUBLIC=http://127.0.0.1:4444
-          - TEST_SELFSERVICE_OIDC_HYDRA_INTEGRATION_ADDR=127.0.0.1:4499
+          - TEST_SELFSERVICE_OIDC_kratos_ADMIN=http://127.0.0.1:4445
+          - TEST_SELFSERVICE_OIDC_kratos_PUBLIC=http://127.0.0.1:4444
+          - TEST_SELFSERVICE_OIDC_kratos_INTEGRATION_ADDR=127.0.0.1:4499
           - TEST_DATABASE_POSTGRESQL=postgres://test:test@localhost:5432/postgres?sslmode=disable
           - TEST_DATABASE_MYSQL=mysql://root:test@(localhost:3306)/mysql?parseTime=true&multiStatements=true
           - TEST_DATABASE_COCKROACHDB=cockroach://root@localhost:26257/defaultdb?sslmode=disable
@@ -41,7 +41,7 @@ jobs:
         image: cockroachdb/cockroach:v19.2.0
         command: start --insecure
       -
-        image: oryd/hydra:v1.2.2
+        image: oryd/kratos:v1.2.2
         environment:
           - DSN=memory
           - URLS_SELF_ISSUER=http://127.0.0.1:4444/
@@ -82,18 +82,19 @@ jobs:
           - GO111MODULE=on
           - TEST_DATABASE_MYSQL=mysql://root:test@(localhost:3306)/mysql?parseTime=true
           - TEST_DATABASE_COCKROACHDB=cockroach://root@localhost:26257/defaultdb?sslmode=disable
-          - TEST_DATABASE_POSTGRESQL=postgres://test:test@localhost:5432/hydra?sslmode=disable
+          - TEST_DATABASE_POSTGRESQL=postgres://test:test@localhost:5432/kratos?sslmode=disable
       - image: postgres:9.6
         environment:
           - POSTGRES_USER=test
           - POSTGRES_PASSWORD=test
-          - POSTGRES_DB=hydra
+          - POSTGRES_DB=kratos
       - image: cockroachdb/cockroach:v2.1.6
         command: start --insecure
       - image: mysql:5.7
         environment:
           - MYSQL_ROOT_PASSWORD=test
-    working_directory: /go/src/github.com/ory/hydra
+      - image: oryd/mailslurper:latest-smtps
+    working_directory: /go/src/github.com/ory/kratos
     steps:
       - checkout
       # core node_modules cache
