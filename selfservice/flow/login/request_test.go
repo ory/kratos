@@ -41,7 +41,6 @@ func TestRequest(t *testing.T) {
 				r:     &login.Request{ExpiresAt: time.Now().Add(time.Hour), IssuedAt: time.Now().Add(-time.Minute)},
 				valid: true,
 			},
-			{r: &login.Request{ExpiresAt: time.Now().Add(time.Hour), IssuedAt: time.Now().Add(time.Minute)}},
 			{r: &login.Request{ExpiresAt: time.Now().Add(-time.Hour), IssuedAt: time.Now().Add(-time.Minute)}},
 		} {
 			if tc.valid {

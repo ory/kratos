@@ -12,7 +12,6 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
-	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/identity"
@@ -129,10 +128,6 @@ func (r *Request) Valid() error {
 		return errors.WithStack(newRequestExpiredError(time.Since(r.ExpiresAt)))
 	}
 
-	// Add a grace second for MySQL
-	if r.IssuedAt.Truncate(time.Second).After(time.Now()) {
-		return errors.WithStack(herodot.ErrBadRequest.WithReason("The login request was issued in the future."))
-	}
 	return nil
 }
 

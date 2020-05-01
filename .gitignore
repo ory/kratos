@@ -9,3 +9,5 @@ packrd/
 dist/
 node_modules
 .bin/*
+cypress/videos
+cypress/screenshots
