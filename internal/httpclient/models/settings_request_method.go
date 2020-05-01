@@ -7,11 +7,12 @@ package models
 
 import (
 	"github.com/go-openapi/errors"
-	strfmt "github.com/go-openapi/strfmt"
+	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 )
 
 // SettingsRequestMethod settings request method
+//
 // swagger:model settingsRequestMethod
 type SettingsRequestMethod struct {
 
