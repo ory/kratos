@@ -27,10 +27,14 @@ import (
 )
 
 const (
-	StrategyProfile               = "profile"
-	PublicSettingsProfilePath     = "/self-service/browser/flows/settings/strategies/profile"
-	strategyProfileContinuityName = "settings_profile"
+	StrategyProfile           = "profile"
+	PublicSettingsProfilePath = "/self-service/browser/flows/settings/strategies/profile"
 )
+
+func strategyProfileContinuityName(rid string) string {
+	// Use one individual container per request ID to prevent resuming other request IDs.
+	return "ory_kratos_settings_profile." + rid
+}
 
 var _ Strategy = new(StrategyTraits)
 
@@ -147,12 +151,24 @@ func (s *StrategyTraits) handleSubmit(w http.ResponseWriter, r *http.Request, ps
 	}
 
 	var p completeSelfServiceBrowserSettingsStrategyProfileFlowPayload
-	if _, err := s.d.ContinuityManager().Continue(r.Context(), r,
-		strategyProfileContinuityName,
+	rid := r.URL.Query().Get("request")
+	p = completeSelfServiceBrowserSettingsStrategyProfileFlowPayload{RequestID: rid}
+	if len(rid) == 0 {
+		s.handleSettingsError(w, r, nil, ss, json.RawMessage(ss.Identity.Traits), &p, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request query parameter is missing.")))
+		return
+	}
+
+	if _, err = s.d.ContinuityManager().Continue(r.Context(), r,
+		strategyProfileContinuityName(rid),
 		continuity.WithIdentity(ss.Identity),
 		continuity.WithPayload(&p),
 	); err == nil {
-		s.continueFlow(w, r, ss, &p)
+		if p.RequestID == r.URL.Query().Get("request") {
+			s.continueFlow(w, r, ss, &p)
+			return
+		}
+	} else if !errors.Is(err, &continuity.ErrNotResumable) {
+		s.handleSettingsError(w, r, nil, ss, json.RawMessage(ss.Identity.Traits), &p, err)
 		return
 	}
 
@@ -170,12 +186,6 @@ func (s *StrategyTraits) handleSubmit(w http.ResponseWriter, r *http.Request, ps
 		decoderx.HTTPDecoderSetIgnoreParseErrorsStrategy(decoderx.ParseErrorIgnore),
 	); err != nil {
 		s.handleSettingsError(w, r, nil, ss, json.RawMessage(ss.Identity.Traits), &p, err)
-		return
-	}
-
-	rid := r.URL.Query().Get("request")
-	if len(rid) == 0 {
-		s.handleSettingsError(w, r, nil, ss, json.RawMessage(ss.Identity.Traits), &p, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request query parameter is missing.")))
 		return
 	}
 
@@ -286,7 +296,7 @@ func (s *StrategyTraits) handleSettingsError(w http.ResponseWriter, r *http.Requ
 	if errors.Is(err, ErrRequestNeedsReAuthentication) {
 		if err := s.d.ContinuityManager().Pause(
 			r.Context(), w, r,
-			strategyProfileContinuityName,
+			strategyProfileContinuityName(r.URL.Query().Get("request")),
 			continuity.WithPayload(p),
 			continuity.WithIdentity(ss.Identity),
 			continuity.WithLifespan(time.Minute*15),

@@ -16,6 +16,8 @@ import (
 	_ "github.com/gobuffalo/packr/v2"
 	_ "github.com/jteeuwen/go-bindata"
 
+	_ "github.com/mikefarah/yq"
+
 	_ "github.com/ory/sdk/swagutil"
 	_ "github.com/davidrjonas/semver-cli"
 )

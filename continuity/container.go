@@ -53,11 +53,11 @@ func NewContainer(name string, o managerOptions) *Container {
 
 func (c *Container) Valid(identity uuid.UUID) error {
 	if c.ExpiresAt.Before(time.Now()) {
-		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("You mast restart the flow because the resumable session has expired."))
+		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("You must restart the flow because the resumable session has expired."))
 	}
 
 	if identity != uuid.Nil && x.DerefUUID(c.IdentityID) != identity {
-		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("You mast restart the flow because the resumable session was initiated by another person."))
+		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("You must restart the flow because the resumable session was initiated by another person."))
 	}
 
 	return nil
