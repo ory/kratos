@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-05-01)](#unreleased-2020-05-01)
+- [Unreleased (2020-05-02)](#unreleased-2020-05-02)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -67,7 +67,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.1.1-alpha.1...abc0e91e278f7938b264598ac0c60d18c5a9e8a0) (2020-05-01)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.1.1-alpha.1...3cc097934edc81d4c6d853594eed5e68e9e48445) (2020-05-02)
 
 
 ### Bug Fixes
@@ -156,6 +156,7 @@
 * Add hook changes to upgrade guide ([55b5fe0](https://github.com/ory/kratos/commit/55b5fe00c0472f5f6f7408eee76bf9a39318db7e))
 * Add more examples to config schema ([#372](https://github.com/ory/kratos/issues/372)) ([ed2ccb9](https://github.com/ory/kratos/commit/ed2ccb935fdcfcb11999996cd582726bba096435)), closes [#345](https://github.com/ory/kratos/issues/345)
 * Add quickstart notes for docker debugging ([74f082a](https://github.com/ory/kratos/commit/74f082a407ee73741453ff6a394f47790e79b667))
+* Add settings docs and improve flows ([#375](https://github.com/ory/kratos/issues/375)) ([478cd9c](https://github.com/ory/kratos/commit/478cd9c5b5755030307d1f11e9bcbd4e171ee0d6)), closes [#345](https://github.com/ory/kratos/issues/345)
 * Declare api frontmatter properly ([df7591f](https://github.com/ory/kratos/commit/df7591f7b70c94cfe62042a598eceb36b6a4f29a))
 * Document 0.2.0 high-level changes ([9be1064](https://github.com/ory/kratos/commit/9be1064500dd86489b79e1abd9cbf1268b97853a))
 * Document multi-tenant set up ([891594d](https://github.com/ory/kratos/commit/891594df488e42ce30a81465f10f2936d152cb55)), closes [#370](https://github.com/ory/kratos/issues/370)
@@ -164,6 +165,7 @@
 * Fix broken link ([c2adc73](https://github.com/ory/kratos/commit/c2adc734a73758d858d50d8738dc2a556110f26c)), closes [#327](https://github.com/ory/kratos/issues/327)
 * Fix broken mermaid links ([f24fc1b](https://github.com/ory/kratos/commit/f24fc1bbba234d71098298bcddbba236ac4297f3))
 * Fix spelling in quickstart ([#356](https://github.com/ory/kratos/issues/356)) ([3ce6b4a](https://github.com/ory/kratos/commit/3ce6b4a1b0722a96bcbae79b7261616f20741494))
+* Improve profile section and restructure nav ([#373](https://github.com/ory/kratos/issues/373)) ([3cc0979](https://github.com/ory/kratos/commit/3cc097934edc81d4c6d853594eed5e68e9e48445)), closes [#345](https://github.com/ory/kratos/issues/345)
 * Regenerate and update changelog ([7d4ed98](https://github.com/ory/kratos/commit/7d4ed9873f25b14b59f727002fb08a8b8a4e91a6))
 * Regenerate and update changelog ([175b626](https://github.com/ory/kratos/commit/175b626f74b4471e068bd79259c6d479fd6c1a7d))
 * Regenerate and update changelog ([e60e2df](https://github.com/ory/kratos/commit/e60e2df5d5cc4c1ef8a6a7f13487d4ebbf54741e))
