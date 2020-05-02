@@ -297,9 +297,6 @@
     "selfservice": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "logout"
-      ],
       "properties": {
         "strategies": {
           "type": "object",
@@ -351,10 +348,7 @@
               ]
             }
           },
-          "additionalProperties": false,
-          "required": [
-            "redirect_to"
-          ]
+          "additionalProperties": false
         },
         "settings": {
           "type": "object",
@@ -591,7 +585,8 @@
           "format": "uri",
           "examples": [
             "https://my-app.com/login/mfa"
-          ]
+          ],
+          "default": "https://www.ory.sh/kratos/docs/fallback/mfa"
         },
         "login_ui": {
           "title": "Login UI URL",
@@ -600,7 +595,8 @@
           "format": "uri",
           "examples": [
             "https://my-app.com/login"
-          ]
+          ],
+          "default": "https://www.ory.sh/kratos/docs/fallback/login"
         },
         "settings_ui": {
           "title": "Settings UI URL",
@@ -609,7 +605,8 @@
           "format": "uri",
           "examples": [
             "https://my-app.com/user/settings"
-          ]
+          ],
+          "default": "https://www.ory.sh/kratos/docs/fallback/settings"
         },
         "default_return_to": {
           "$ref": "#/definitions/defaultReturnTo"
@@ -621,7 +618,8 @@
           "format": "uri",
           "examples": [
             "https://my-app.com/signup"
-          ]
+          ],
+          "default": "https://www.ory.sh/kratos/docs/fallback/registration"
         },
         "error_ui": {
           "title": "ORY Kratos Error UI URL",
@@ -630,7 +628,8 @@
           "format": "uri",
           "examples": [
             "https://my-app.com/kratos-error"
-          ]
+          ],
+          "default": "https://www.ory.sh/kratos/docs/fallback/error"
         },
         "verify_ui": {
           "title": "Verify UI URL",
@@ -639,7 +638,8 @@
           "format": "uri",
           "examples": [
             "https://my-app.com/verify"
-          ]
+          ],
+          "default": "https://www.ory.sh/kratos/docs/fallback/verify"
         },
         "whitelisted_return_to_urls": {
           "title": "Whitelisted Return To URLs",
@@ -656,14 +656,7 @@
           "uniqueItems": true
         }
       },
-      "required": [
-        "settings_ui",
-        "login_ui",
-        "registration_ui",
-        "error_ui",
-        "verify_ui",
-        "default_return_to"
-      ],
+      "required": [],
       "additionalProperties": false
     },
     "log": {
@@ -840,9 +833,7 @@
   },
   "required": [
     "dsn",
-    "identity",
-    "selfservice",
-    "courier"
+    "identity"
   ],
   "additionalProperties": false
 }
