@@ -55,7 +55,7 @@ able to do in your application logic or API Gateways.
 You must define at least one Identity Traits field as a verification field. You
 can do so by defining the following section in your Identity Traits JSON Schema:
 
-```json5
+```json5 title="path/to/identity.traits.schema.json"
 {
   // ...
   properties: {
@@ -77,7 +77,7 @@ can do so by defining the following section in your Identity Traits JSON Schema:
 
 You can also combine this with the password strategy login identifier.
 
-```json5
+```json5 title="path/to/identity.traits.schema.json"
 {
   // ...
   properties: {
@@ -110,7 +110,7 @@ serve as both the login identifier as well as a verifiable email address.
 To send an email after user registration, add the following sections to your ORY
 Kratos config file:
 
-```yaml
+```yaml title="path/to/kratos.config.yml"
 # required
 urls:
   # Similar to login_ui or profile_ui, this points to the user interface where the verificaiton
@@ -123,9 +123,10 @@ selfservice:
   registration:
     after:
       password:
-        # ....
-        - hook: verify # This sends the verification email after successful registration
-        # ....
+        hooks:
+          # ....
+          - hook: verify # This sends the verification email after successful registration
+          # ....
 ```
 
 ## Self-Service Request or Resend Verification Link for Browser Applications

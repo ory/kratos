@@ -20,7 +20,7 @@ set up in the configuration file using an absolute URL with the `smtp` schema:
 ```yaml
 courier:
   smtp:
-    connection_uri: smtp://test:test@my-smtp-server:1025/
+    connection_uri: smtps://test:test@my-smtp-server:1025/
 ```
 
 ### Templates

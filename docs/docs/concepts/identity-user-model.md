@@ -1,6 +1,6 @@
 ---
 id: identity-user-model
-title: Identity and User Model
+title: Identity Data Model
 ---
 
 An identity ("user", "user account", "account", "subject") is the "who" of a
@@ -16,7 +16,7 @@ Endpoints, request and response payloads.
 The following examples uses YAML for improved readability. However the API
 payload is usually in JSON format. An `identity` has the following properties:
 
-```yaml
+```yaml title="path/to/kratos.config.yaml"
 # A universally unique ID that is generated when the identity is created and that cannot be changed or updated
 # at a later stage.
 id: '9f425a8d-7efc-4768-8f23-7647a74fdf13'
