@@ -7,7 +7,8 @@ The `password` strategy implements the most-common used form of login and
 registration: An identifier (username, email, phone number, ...) and a password.
 
 It implements several flows, specifically
-[User Login and User Registration](../flows/user-login-user-registration.md).
+[User Login and User Registration](../flows/user-login-user-registration.mdx)
+and [User Settings](../flows/user-settings-profile-management.mdx).
 
 To enable the `password` strategy, set `selfservice.strategies.password.enabled`
 to true in your ORY Kratos configuration:
@@ -223,7 +224,7 @@ You may also mix usernames and passwords:
 ### Registration
 
 This strategy uses the high-level registration flow defined in chapter
-[Self-Service Registration User Flow](../flows/user-login-user-registration.md).
+[Self-Service Registration User Flow](../flows/user-login-user-registration.mdx).
 
 Once the user is redirected to the Registration UI URL, the endpoint responsible
 for that URL makes a request to ORY Kratos' Public / Admin API and appends the
@@ -234,7 +235,7 @@ to generate a list of form fields and add it to the Registration Request.
 
 Using a JSON Schema like
 
-```json
+```json title="my/identity.schema.json"
 {
   "$id": "https://schemas.ory.sh/presets/kratos/quickstart/email-password/identity.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -283,7 +284,7 @@ will result in the following Registration Request
     password: {
       method: 'password',
       config: {
-        action: 'http://127.0.0.1:4455/.ory/kratos/public/auth/browser/methods/password/registration?request=713df601-d6c8-4331-8195-c29b92db459f',
+        action: 'http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/registration/strategies/password?request=713df601-d6c8-4331-8195-c29b92db459f',
         method: 'POST',
         fields: [
           {
@@ -343,7 +344,7 @@ as:
   id: '713df601-d6c8-4331-8195-c29b92db459f',
   expires_at: '2020-01-27T16:31:00.3507956Z',
   issued_at: '2020-01-27T16:21:00.3508076Z',
-  request_url: 'http://127.0.0.1:4455/auth/browser/registration',
+  request_url: 'http://127.0.0.1:4433/self-service/browser/flows/registration',
   methods: {
     password: {
       method: 'password',
@@ -353,7 +354,7 @@ as:
             message: 'Please update the Form Fields to proceed.',
           },
         ],
-        action: 'http://127.0.0.1:4455/.ory/kratos/public/auth/browser/methods/password/registration?request=713df601-d6c8-4331-8195-c29b92db459f',
+        action: 'http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/registration/strategies/password?request=713df601-d6c8-4331-8195-c29b92db459f',
         method: 'POST',
         fields: [
           /* ... */
@@ -388,12 +389,12 @@ is that only three fields will be requested:
   id: '0cfb0f7e-3866-453c-9c23-28cc2cb7fead',
   expires_at: '2020-01-27T16:48:53.8826084Z',
   issued_at: '2020-01-27T16:38:53.8826392Z',
-  request_url: 'http://127.0.0.1:4455/auth/browser/login',
+  request_url: 'http://127.0.0.1:4433/self-service/browser/flows/login',
   methods: {
     password: {
       method: 'password',
       config: {
-        action: 'http://127.0.0.1:4455/.ory/kratos/public/auth/browser/methods/password/login?request=0cfb0f7e-3866-453c-9c23-28cc2cb7fead',
+        action: 'http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/login/strategies/password?request=0cfb0f7e-3866-453c-9c23-28cc2cb7fead',
         method: 'POST',
         fields: [
           {
@@ -437,7 +438,7 @@ response:
             message: 'Please check the data you provided.',
           },
         ],
-        action: 'http://127.0.0.1:4455/.ory/kratos/public/auth/browser/methods/password/login?request=0cfb0f7e-3866-453c-9c23-28cc2cb7fead',
+        action: 'http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/login/strategies/password?request=0cfb0f7e-3866-453c-9c23-28cc2cb7fead',
         method: 'POST',
         fields: [
           /* ... */
@@ -457,6 +458,109 @@ response:
   },
 }
 ```
+
+### Settings
+
+The Settings flow allows a user to change his/her password. This action will
+require the user to sign in again, unless the session is younger than the
+configured:
+
+```yaml title="path/to/kratos/config.yml"
+selfservice:
+  settings:
+    # Sessions older than a minute requires the user to sign in again before
+    # the password is changed.
+    privileged_session_max_age: 1m
+```
+
+The Settings Request payload for this strategy looks as follows:
+
+```json
+{
+  "id": "71da1753-e135-441c-b4df-e7b7cd90ad88",
+  "expires_at": "2020-05-02T15:52:09.67209Z",
+  "issued_at": "2020-05-02T14:52:09.67209Z",
+  "request_url": "http://127.0.0.1:4433/self-service/browser/flows/settings",
+  "active": "password",
+  "methods": {
+    "password": {
+      "method": "password",
+      "config": {
+        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/settings/strategies/password?request=71da1753-e135-441c-b4df-e7b7cd90ad88",
+        "method": "POST",
+        "fields": [
+          {
+            "name": "password",
+            "type": "password",
+            "required": true
+          },
+          {
+            "name": "csrf_token",
+            "type": "hidden",
+            "required": true,
+            "value": "UjEPiUMubRiAl0NG7yUzsww8XjpJvW+HBrh6JirjLxPqhlW2ql+0kYknjd8gdsx0v08vQSmqUEcZhNPsvkr2Kw=="
+          }
+        ]
+      }
+    }
+  },
+  "identity": {
+    "id": "f48c43bb-50ea-4520-9280-37a891175aba",
+    "traits": {
+      "email": "h71x9a@j6r8c"
+    }
+  },
+  "update_successful": false
+}
+```
+
+If the form validation fails, an error will bei included:
+
+```json5
+{
+  id: '71da1753-e135-441c-b4df-e7b7cd90ad88',
+  // expires_at, ...
+  active: 'password',
+  methods: {
+    config: {
+      // action, method ...
+      errors: [
+        {
+          message: 'Please check the data you provided.',
+        },
+      ],
+      fields: [
+        // ...
+        {
+          name: 'password',
+          type: 'password',
+          required: true,
+          errors: [
+            {
+              message: 'password: password is required',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // identity, ...
+  update_successful: false,
+}
+```
+
+A successful flow will be marked with:
+
+```json5
+{
+  id: '71da1753-e135-441c-b4df-e7b7cd90ad88',
+  // expires_at, ...
+  update_successful: true,
+}
+```
+
+Apart from that, there is nothing else to configure. Just render the HTML Form
+which includes the update password field!
 
 ## API Clients
 
@@ -492,6 +596,13 @@ CAPTCHA in the following scenarios:
 
 For integration guidelines, please check the individual flow's (registration,
 login, account recovery) integration documentation.
+
+### Account Takeover Defenses
+
+The Settings flow implements account takeover defenses as it is not possible to
+change the password without knowing the existing password. A good example of
+this flow is the
+[GitHub sudo mode](https://help.github.com/en/github/authenticating-to-github/sudo-mode).
 
 ### Password Validation
 

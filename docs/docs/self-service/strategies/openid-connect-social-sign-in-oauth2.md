@@ -3,9 +3,13 @@ id: openid-connect-social-sign-in-oauth2
 title: Social Sign In with OpenID Connect and OAuth2
 ---
 
-> The OpenID Connect Strategy does already work but needs further documentation
-> and code improvements. It will be documented in an upcoming release of ORY
-> Kratos.
+:::info
+
+The OpenID Connect Strategy does already work but needs further documentation
+and code improvements. It will be documented in an upcoming release of ORY
+Kratos.
+
+:::
 
 The Social Sign In Strategy enables you to use
 
@@ -20,6 +24,7 @@ The Social Sign In Strategy enables you to use
 as the Identity Provider.
 
 Because of the nature of this flow (a browser is required) it does not work
+API-only flows.
 
 ## Browser Clients
 
@@ -34,6 +39,11 @@ Sign Up on conflict with existing primary identifiers like email:
 
 - Sign Up is dis-allowed and the user is asked to instead log in and then link
   his/her account instead.
+
+### Settings
+
+A user may link and unlink social profiles. Unlinking is only allowed if at
+least one other sign in method is enabled.
 
 ## API Clients
 
