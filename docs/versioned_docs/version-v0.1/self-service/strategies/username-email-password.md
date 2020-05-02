@@ -7,7 +7,7 @@ The `password` strategy implements the most-common used form of login and
 registration: An identifier (username, email, phone number, ...) and a password.
 
 It implements several flows, specifically
-[User Login and User Registration](../flows/user-login-user-registration.md).
+[User Login and User Registration](../flows/user-login-user-registration.mdx).
 
 To enable the `password` strategy, set `selfservice.strategies.password.enabled`
 to true in your ORY Kratos configuration:
@@ -223,7 +223,7 @@ You may also mix usernames and passwords:
 ### Registration
 
 This strategy uses the high-level registration flow defined in chapter
-[Self-Service Registration User Flow](../flows/user-login-user-registration.md).
+[Self-Service Registration User Flow](../flows/user-login-user-registration.mdx).
 
 Once the user is redirected to the Registration UI URL, the endpoint responsible
 for that URL makes a request to ORY Kratos' Public / Admin API and appends the

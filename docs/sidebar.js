@@ -12,6 +12,7 @@ module.exports = {
     "concepts/security"
   ],
   "Self Service": [
+    "self-service/index",
     {
       type: "category",
       label: "Flows", items: [
@@ -21,16 +22,16 @@ module.exports = {
         "self-service/flows/user-settings-profile-management",
         "self-service/flows/password-reset-account-recovery",
         "self-service/flows/user-facing-errors",
-        "self-service/flows/verify-email-account-activation"
-
+        "self-service/flows/verify-email-account-activation",
+        "self-service/flows/2fa-mfa-multi-factor-authentication"
       ]
     },
     {
       type: "category",
       label: "Strategies", items: [
-        "self-service/strategies/index",
         "self-service/strategies/username-email-password",
-        "self-service/strategies/openid-connect-social-sign-in-oauth2"
+        "self-service/strategies/openid-connect-social-sign-in-oauth2",
+        "self-service/strategies/user-settings-profile"
       ]
     },
     {

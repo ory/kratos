@@ -13,7 +13,7 @@ privileges to create, update, or delete accounts.
 ## Network Flows for Browsers
 
 All Self-Service Flows such as [User Login](./user-login.md),
-[User Registration](./user-login-user-registration.md),
+[User Registration](./user-login-user-registration.mdx),
 [Profile Management](./user-profile-management.md) use the same template:
 
 1. The Browser makes an HTTP request to the flow's initialization endpoint (e.g.

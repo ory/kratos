@@ -10,6 +10,11 @@ ORY Kratos supports two type of login and registration flows:
 - API-based (advanced): This flow works for native applications like iOS
   (Swift), Android (Java), Microsoft (.NET), React Native, Electron, and others.
 
+The login and registration flows documented here are the foundation for the
+[password](../strategies/username-email-password.md) and
+[social](../strategies/openid-connect-social-sign-in-oauth2.md) sign in and sign
+up strategies.
+
 ## Self-Service User Login and User Registration for Browser Applications
 
 ORY Kratos supports browser applications that run on server-side (e.g. Java,
@@ -37,8 +42,8 @@ clients that do not work well with HTTP Cookies and HTTP Redirects.
 
 ### The Login and Registration User Interface
 
-In Browser Applications, the User Interface is typically rendered as an HTML
-Form:
+The Login and Registration User Interface is a route (page / site) in your
+application that should render a sign in and registration form:
 
 ```html
 <!-- Login -->
@@ -64,7 +69,17 @@ Form:
 </form>
 ```
 
-Depending on the type of login flows you want to support, this might also be a
+Once implemented (using e.g. our
+[reference implementation](https://github.com/ory/kratos-selfservice-ui-node))
+you reference these routes in your ORY Kratos config file:
+
+```yaml title="path/to/kratos/config.yml"
+urls:
+  login_ui: https://.../login
+  registration_ui: https://.../registration
+```
+
+Depending on the type of login flows you want to support, you may a also add a
 "Sign up/in with GitHub" flow:
 
 ```html
@@ -85,7 +100,7 @@ flexibility and customizability in your user interface flows and designs.
 Each Login and Registration Strategy (e.g.
 [Username and Password](../strategies/username-email-password.md),
 [Social Sign In](../strategies/openid-connect-social-sign-in-oauth2.md),
-Passwordless, ...) works a bit differently but they all boil down to the same
+Passwordless, ...) works a bit different but they all boil down to the same
 abstract sequence:
 
 [![Abstract Login and Registration User Flow](https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gIHBhcnRpY2lwYW50IEIgYXMgQnJvd3NlclxuICBwYXJ0aWNpcGFudCBLIGFzIE9SWSBLcmF0b3NcbiAgcGFydGljaXBhbnQgQSBhcyBZb3VyIEFwcGxpY2F0aW9uXG5cblxuICBCLT4-SzogSW5pdGlhdGUgTG9naW5cbiAgSy0-PkI6IFJlZGlyZWN0cyB0byB5b3VyIEFwcGxpY2F0aW9uJ3MgL2xvZ2luIGVuZHBvaW50XG4gIEItPj5BOiBDYWxscyAvbG9naW5cbiAgQS0tPj5LOiBGZXRjaGVzIGRhdGEgdG8gcmVuZGVyIGZvcm1zIGV0Y1xuICBCLS0-PkE6IEZpbGxzIG91dCBmb3JtcywgY2xpY2tzIGUuZy4gXCJTdWJtaXQgTG9naW5cIlxuICBCLT4-SzogUE9TVHMgZGF0YSB0b1xuICBLLS0-Pks6IFByb2Nlc3NlcyBMb2dpbiBJbmZvXG5cbiAgYWx0IExvZ2luIGRhdGEgdmFsaWRcbiAgICBLLS0-PkI6IFNldHMgc2Vzc2lvbiBjb29raWVcbiAgICBLLT4-QjogUmVkaXJlY3RzIHRvIGUuZy4gRGFzaGJvYXJkXG4gIGVsc2UgTG9naW4gZGF0YSBpbnZhbGlkXG4gICAgSy0tPj5COiBSZWRpcmVjdHMgdG8geW91ciBBcHBsaWNhaXRvbidzIC9sb2dpbiBlbmRwb2ludFxuICAgIEItPj5BOiBDYWxscyAvbG9naW5cbiAgICBBLS0-Pks6IEZldGNoZXMgZGF0YSB0byByZW5kZXIgZm9ybSBmaWVsZHMgYW5kIGVycm9yc1xuICAgIEItLT4-QTogRmlsbHMgb3V0IGZvcm1zIGFnYWluLCBjb3JyZWN0cyBlcnJvcnNcbiAgICBCLT4-SzogUE9TVHMgZGF0YSBhZ2FpbiAtIGFuZCBzbyBvbi4uLlxuICBlbmRcbiIsIm1lcm1haWQiOnsidGhlbWUiOiJuZXV0cmFsIiwic2VxdWVuY2VEaWFncmFtIjp7ImRpYWdyYW1NYXJnaW5YIjoxNSwiZGlhZ3JhbU1hcmdpblkiOjE1LCJib3hUZXh0TWFyZ2luIjowLCJub3RlTWFyZ2luIjoxNSwibWVzc2FnZU1hcmdpbiI6NDUsIm1pcnJvckFjdG9ycyI6dHJ1ZX19fQ)](https://mermaid-js.github.io/mermaid-live-editor/#/edit/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gIHBhcnRpY2lwYW50IEIgYXMgQnJvd3NlclxuICBwYXJ0aWNpcGFudCBLIGFzIE9SWSBLcmF0b3NcbiAgcGFydGljaXBhbnQgQSBhcyBZb3VyIEFwcGxpY2F0aW9uXG5cblxuICBCLT4-SzogSW5pdGlhdGUgTG9naW5cbiAgSy0-PkI6IFJlZGlyZWN0cyB0byB5b3VyIEFwcGxpY2F0aW9uJ3MgL2xvZ2luIGVuZHBvaW50XG4gIEItPj5BOiBDYWxscyAvbG9naW5cbiAgQS0tPj5LOiBGZXRjaGVzIGRhdGEgdG8gcmVuZGVyIGZvcm1zIGV0Y1xuICBCLS0-PkE6IEZpbGxzIG91dCBmb3JtcywgY2xpY2tzIGUuZy4gXCJTdWJtaXQgTG9naW5cIlxuICBCLT4-SzogUE9TVHMgZGF0YSB0b1xuICBLLS0-Pks6IFByb2Nlc3NlcyBMb2dpbiBJbmZvXG5cbiAgYWx0IExvZ2luIGRhdGEgdmFsaWRcbiAgICBLLS0-PkI6IFNldHMgc2Vzc2lvbiBjb29raWVcbiAgICBLLT4-QjogUmVkaXJlY3RzIHRvIGUuZy4gRGFzaGJvYXJkXG4gIGVsc2UgTG9naW4gZGF0YSBpbnZhbGlkXG4gICAgSy0tPj5COiBSZWRpcmVjdHMgdG8geW91ciBBcHBsaWNhaXRvbidzIC9sb2dpbiBlbmRwb2ludFxuICAgIEItPj5BOiBDYWxscyAvbG9naW5cbiAgICBBLS0-Pks6IEZldGNoZXMgZGF0YSB0byByZW5kZXIgZm9ybSBmaWVsZHMgYW5kIGVycm9yc1xuICAgIEItLT4-QTogRmlsbHMgb3V0IGZvcm1zIGFnYWluLCBjb3JyZWN0cyBlcnJvcnNcbiAgICBCLT4-SzogUE9TVHMgZGF0YSBhZ2FpbiAtIGFuZCBzbyBvbi4uLlxuICBlbmRcbiIsIm1lcm1haWQiOnsidGhlbWUiOiJuZXV0cmFsIiwic2VxdWVuY2VEaWFncmFtIjp7ImRpYWdyYW1NYXJnaW5YIjoxNSwiZGlhZ3JhbU1hcmdpblkiOjE1LCJib3hUZXh0TWFyZ2luIjowLCJub3RlTWFyZ2luIjoxNSwibWVzc2FnZU1hcmdpbiI6NDUsIm1pcnJvckFjdG9ycyI6dHJ1ZX19fQ)
@@ -98,14 +113,18 @@ for rendering all the Login, Registration, ... screens, and another app (think
 "Service Oriented Architecture", "Micro-Services" or "Service Mesh") is
 responsible for rendering your Dashboards, Management Screens, and so on.
 
-::: Note It is RECOMMENDED to put all applications (or "services"), including
-ORY Kratos, behind a common API Gateway or Reverse Proxy. This greatly reduces
-the amount of work you have to do to get all the Cookies working properly. We
-RECOMMEND using [ORY Oathkeeper](http://github.com/ory/oathkeeper) for this as
-it integrates best with the ORY Ecosystem and because all of our examples use
-ORY Oathkeeper. You MAY of course use any other reverse proxy (Envoy, AWS API
-Gateway, Ambassador, Nginx, Kong, ...), but we do not have examples or guides
-for those at this time. :::
+:::note
+
+It is RECOMMENDED to put all applications (or "services"), including ORY Kratos,
+behind a common API Gateway or Reverse Proxy. This greatly reduces the amount of
+work you have to do to get all the Cookies working properly. We RECOMMEND using
+[ORY Oathkeeper](http://github.com/ory/oathkeeper) for this as it integrates
+best with the ORY Ecosystem and because all of our examples use ORY Oathkeeper.
+You MAY of course use any other reverse proxy (Envoy, AWS API Gateway,
+Ambassador, Nginx, Kong, ...), but we do not have examples or guides for those
+at this time.
+
+:::
 
 ### Code
 
@@ -117,66 +136,114 @@ be found on
 The code example used here is universal and does not use an SDK because we want
 you to understand the fundamentals of how this flow works.
 
+#### Server-side route
+
 While this example assumes a Server-Side Application, a Client-Side (e.g.
 ReactJS) Application would work the same, but use ORY Kratos' Public API
 instead.
 
 ```js
-const fetch = require('node-fetch');
+// Uses the ORY Kratos NodeJS SDK - for more SDKs check:
+//
+//  https://www.ory.sh/kratos/docs/sdk/index
+const { AdminApi } = require('@oryd/kratos-client');
 
-const config = {
-  kratos: {
-    // The browser config key is used to redirect the user. It reflects where ORY Kratos' Public API
-    // is accessible from. Here, we're assuming traffic going to `http://example.org/.ory/kratos/public/`
-    // will be forwarded to ORY Kratos' Public API.
-    browser: 'http://example.org/.ory/kratos/public/',
+// The browser config key is used to redirect the user. It reflects where ORY Kratos' Public API
+// is accessible from. Here, we're assuming traffic going to `http://example.org/.ory/kratos/public/`
+// will be forwarded to ORY Kratos' Public API.
+const kratosBrowserUrl = 'http://example.org/.ory/kratos/public/';
 
-    // This is where ORY Kratos' Admin API is accessible.
-    admin: 'https://ory-kratos-admin.example-org.vpc/',
-  },
-};
+// Initializes the SDK with ORY Kratos' Admin API.
+const adminEndpoint = new AdminApi('https://ory-kratos-admin.example-org.vpc/');
 
 // The parameter "flow" can be "login" and "registration".
 // You would register the two routes in express js like this:
 //
 //  app.get('/auth/registration', authHandler('registration'))
 //  app.get('/auth/login', authHandler('login'))
-
+//
 export const authHandler = (flow) => (req, res, next) => {
   // The request ID is used to identify the login and registraion request and
   // return data like the csrf_token and so on.
   const request = req.query.request;
   if (!request) {
-    console.log('No request found in URL, initializing ${flow} flow.');
-    res.redirect(`${config.kratos.browser}/self-service/browser/${flow}`);
+    console.log(`No request found in URL, initializing ${flow} flow.`);
+    res.redirect(`${kratosBrowserUrl}/self-service/browser/${flow}`);
     return;
   }
 
-  // This is the ORY Kratos URL. If this app and ORY Kratos are running
-  // on the same (e.g. Kubernetes) cluster, this should be ORY Kratos's internal hostname.
-  const url = new URL(
-    `${config.kratos.admin}/self-service/browser/flows/requests/${flow}`
-  );
-  url.searchParams.set('request', request);
+  const authRequest =
+    type === 'login'
+      ? adminEndpoint.getSelfServiceBrowserLoginRequest(request)
+      : adminEndpoint.getSelfServiceBrowserRegistrationRequest(request);
 
-  fetch(url.toString())
-    .then((response) => {
-      // A 404 code means that this code does not exist. We'll retry by re-initiating the flow.
-      if (response.status == 404) {
-        res.redirect(`${config.kratos.browser}/self-service/browser/${flow}`);
-        return;
-      }
+  authRequest.then(({ body, response }) => {
+    if (response.statusCode !== 200) {
+      res.redirect(
+        `${config.kratos.browser}/self-service/browser/flows/${type}`
+      );
+      return;
+    }
 
-      return response.json();
-    })
-    .then((request) => {
-      // Request contains all the request data for this Registration request.
-      // You can process that data here, if you want.
+    // "body" contains all the request data for this Registration request.
+    // You can process that data here, if you want.
 
-      // Lastly, you probably want to render the data using a view (e.g. Jade Template):
-      res.render(flow, request);
-    });
+    // Lastly, you probably want to render the data using a view (e.g. Jade Template):
+    res.render(flow, body);
+  });
+  // Handle errors using ExpressJS' next functionality:
+  //
+  //    .catch(next)
 };
+```
+
+#### Views
+
+Your views can be rather simple, as ORY Kratos provides you with all the
+information you need for rendering the forms. The following example illustrates
+a generic form generator (we use handlebars here) that works with ORY Kratos:
+
+```handlebars name="views/partials/form.hbs"
+<form action="{{form.action}}" method="{{form.method}}">
+    {{~#each form.errors~}}
+        <!-- global form validation errors -->
+        <div class="error">{{message}}</div>
+    {{~/each~}}
+
+    {{#each form.fields}}
+        {{~#each errors~}}
+            <!-- validation errors for this specific field -->
+            <div class="error">{{message}}</div>
+        {{~/each~}}
+        <input name="{{name}}" type="{{type}}" value="{{value}}" {{#if disabled}}disabled{{/if}}>
+    {{/each}}
+
+    <button type="submit">Register</button>
+
+    <!--
+        This example also works for the login screen:
+
+            <button type="submit">Sign in</button>
+    -->
+</form>
+```
+
+In your main "Login" or "Sign Up" view you would then consume this template for
+all the methods you want to support:
+
+```handlebars name="views/login_or_signup.hbs"
+<!-- Username / Email and Password login / sign up form: -->
+{{#if methods.password.config}}
+    {{> form form=methods.password.config}}
+{{/if}}
+
+<!-- Social sign in/up form: -->
+{{#if methods.oidc.config}}
+    {{> form form=methods.oidc.config}}
+{{/if}}
+
+<!-- ... form: -->
+<!-- ... -->
 ```
 
 For details on payloads and potential HTML snippets consult the individual
@@ -221,7 +288,7 @@ Nginx, Kong, Envoy, ORY Oathkeeper, or others.
 The Login and Registration User Flow is composed of several high-level steps
 summarized in this state diagram:
 
-[![User Login and Registration State Machine](https://mermaid.ink/img/eyJjb2RlIjoic3RhdGVEaWFncmFtXG4gIHMxOiBVc2VyIGJyb3dzZXMgYXBwXG4gIHMyOiBFeGVjdXRlIFwiQmVmb3JlIExvZ2luL1JlZ2lzdHJhdGlvbiBIb29rKHMpXCJcbiAgczM6IFVzZXIgSW50ZXJmYWNlIEFwcGxpY2F0aW9uIHJlbmRlcnMgXCJMb2dpbi9SZWdpc3RyYXRpb24gUmVxdWVzdFwiXG4gIHM0OiBFeGVjdXRlIFwiQWZ0ZXIgTG9naW4vUmVnaXN0cmF0aW9uIEhvb2socylcIlxuICBzNTogVXBkYXRlIFwiTG9naW4vUmVnaXN0cmF0aW9uIFJlcXVlc3RcIiB3aXRoIEVycm9yIENvbnRleHQocylcbiAgczY6IExvZ2luL1JlZ2lzdHJhdGlvbiBzdWNjZXNzZnVsXG5cblxuXG5cdFsqXSAtLT4gczFcbiAgczEgLS0-IHMyIDogVXNlciBjbGlja3MgXCJMb2cgaW4gLyBTaWduIHVwXCJcbiAgczIgLS0-IEVycm9yIDogQSBob29rIGZhaWxzXG4gIHMyIC0tPiBzMyA6IFVzZXIgaXMgcmVkaXJlY3RlZCB0byBMb2dpbi9SZWdpc3RyYXRpb24gVUkgVVJMXG4gIHMzIC0tPiBzNCA6IFVzZXIgcHJvdmlkZXMgdmFsaWQgY3JlZGVudGlhbHMvcmVnaXN0cmF0aW9uIGRhdGFcbiAgczMgLS0-IHM1IDogVXNlciBwcm92aWRlcyBpbnZhbGlkIGNyZWRlbnRpYWxzL3JlZ2lzdHJhdGlvbiBkYXRhXG4gIHM1IC0tPiBzMyA6IFVzZXIgaXMgcmVkaXJlY3RlZCB0byBMb2dpbi9SZWdpc3RyYXRpb24gVUkgVVJMXG4gIHM0IC0tPiBFcnJvciA6IEEgSG9vayBmYWlsc1xuICBzNCAtLT4gczZcbiAgczYgLS0-IFsqXVxuXG4gIEVycm9yIC0tPiBbKl1cblxuXG4iLCJtZXJtYWlkIjp7InRoZW1lIjoiZGVmYXVsdCJ9LCJ1cGRhdGVFZGl0b3IiOmZhbHNlfQ)](https://mermaid-js.github.io/mermaid-live-editor/#/edit/eyJjb2RlIjoic3RhdGVEaWFncmFtXG4gIHMxOiBVc2VyIGJyb3dzZXMgYXBwXG4gIHMyOiBFeGVjdXRlIFwiQmVmb3JlIExvZ2luL1JlZ2lzdHJhdGlvbiBIb29rKHMpXCJcbiAgczM6IFVzZXIgSW50ZXJmYWNlIEFwcGxpY2F0aW9uIHJlbmRlcnMgXCJMb2dpbi9SZWdpc3RyYXRpb24gUmVxdWVzdFwiXG4gIHM0OiBFeGVjdXRlIFwiQWZ0ZXIgTG9naW4vUmVnaXN0cmF0aW9uIEhvb2socylcIlxuICBzNTogVXBkYXRlIFwiTG9naW4vUmVnaXN0cmF0aW9uIFJlcXVlc3RcIiB3aXRoIEVycm9yIENvbnRleHQocylcbiAgczY6IExvZ2luL1JlZ2lzdHJhdGlvbiBzdWNjZXNzZnVsXG5cblxuXG5cdFsqXSAtLT4gczFcbiAgczEgLS0-IHMyIDogVXNlciBjbGlja3MgXCJMb2cgaW4gLyBTaWduIHVwXCJcbiAgczIgLS0-IEVycm9yIDogQSBob29rIGZhaWxzXG4gIHMyIC0tPiBzMyA6IFVzZXIgaXMgcmVkaXJlY3RlZCB0byBMb2dpbi9SZWdpc3RyYXRpb24gVUkgVVJMXG4gIHMzIC0tPiBzNCA6IFVzZXIgcHJvdmlkZXMgdmFsaWQgY3JlZGVudGlhbHMvcmVnaXN0cmF0aW9uIGRhdGFcbiAgczMgLS0-IHM1IDogVXNlciBwcm92aWRlcyBpbnZhbGlkIGNyZWRlbnRpYWxzL3JlZ2lzdHJhdGlvbiBkYXRhXG4gIHM1IC0tPiBzMyA6IFVzZXIgaXMgcmVkaXJlY3RlZCB0byBMb2dpbi9SZWdpc3RyYXRpb24gVUkgVVJMXG4gIHM0IC0tPiBFcnJvciA6IEEgSG9vayBmYWlsc1xuICBzNCAtLT4gczZcbiAgczYgLS0-IFsqXVxuXG4gIEVycm9yIC0tPiBbKl1cblxuXG4iLCJtZXJtYWlkIjp7InRoZW1lIjoiZGVmYXVsdCJ9LCJ1cGRhdGVFZGl0b3IiOmZhbHNlfQ)
+[![User Settings State Machine](https://mermaid.ink/img/eyJjb2RlIjoic3RhdGVEaWFncmFtXG4gIHMxOiBVc2VyIGJyb3dzZXMgYXBwXG4gIHMzOiBVc2VyIEludGVyZmFjZSBBcHBsaWNhdGlvbiByZW5kZXJzIFwiTG9naW4vUmVnaXN0cmF0aW9uIFJlcXVlc3RcIlxuICBzNDogRXhlY3V0ZSBcIkFmdGVyIExvZ2luL1JlZ2lzdHJhdGlvbiBIb29rKHMpXCJcbiAgczU6IFVwZGF0ZSBcIlNldHRpbmdzIFJlcXVlc3RcIiB3aXRoIEVycm9yIENvbnRleHQocylcbiAgczY6IFNldHRpbmdzIHVwZGF0ZSBzdWNjZXNzZnVsXG5cblx0WypdIC0tPiBzMVxuICBzMSAtLT4gczMgOiBVc2VyIGNsaWNrcyBcIk1hbmFnZSBBY2NvdW50XCIgYW5kIGlzIHJlZGlyZWN0ZWQgdG8gU2V0dGluZ3MgSW5pdCBFbmRwb2ludFxuICBzMyAtLT4gczQgOiBVc2VyIHByb3ZpZGVzIHZhbGlkIHByb2ZpbGUgZGF0YVxuICBzMyAtLT4gczUgOiBVc2VyIHByb3ZpZGVzIGludmFsaWQgcHJvZmlsZSBkYXRhXG4gIHM1IC0tPiBzMyA6IFVzZXIgaXMgcmVkaXJlY3RlZCB0byBTZXR0aW5ncyBVSSBVUkxcbiAgczQgLS0-IEVycm9yIDogQSBIb29rIGZhaWxzXG4gIHM0IC0tPiBzNlxuICBzNiAtLT4gWypdXG5cbiAgRXJyb3IgLS0-IFsqXVxuXG5cbiIsIm1lcm1haWQiOnsidGhlbWUiOiJkZWZhdWx0In0sInVwZGF0ZUVkaXRvciI6ZmFsc2V9)](https://mermaid-js.github.io/mermaid-live-editor/#/edit/eyJjb2RlIjoic3RhdGVEaWFncmFtXG4gIHMxOiBVc2VyIGJyb3dzZXMgYXBwXG4gIHMzOiBVc2VyIEludGVyZmFjZSBBcHBsaWNhdGlvbiByZW5kZXJzIFwiTG9naW4vUmVnaXN0cmF0aW9uIFJlcXVlc3RcIlxuICBzNDogRXhlY3V0ZSBcIkFmdGVyIExvZ2luL1JlZ2lzdHJhdGlvbiBIb29rKHMpXCJcbiAgczU6IFVwZGF0ZSBcIlNldHRpbmdzIFJlcXVlc3RcIiB3aXRoIEVycm9yIENvbnRleHQocylcbiAgczY6IFNldHRpbmdzIHVwZGF0ZSBzdWNjZXNzZnVsXG5cblx0WypdIC0tPiBzMVxuICBzMSAtLT4gczMgOiBVc2VyIGNsaWNrcyBcIk1hbmFnZSBBY2NvdW50XCIgYW5kIGlzIHJlZGlyZWN0ZWQgdG8gU2V0dGluZ3MgSW5pdCBFbmRwb2ludFxuICBzMyAtLT4gczQgOiBVc2VyIHByb3ZpZGVzIHZhbGlkIHByb2ZpbGUgZGF0YVxuICBzMyAtLT4gczUgOiBVc2VyIHByb3ZpZGVzIGludmFsaWQgcHJvZmlsZSBkYXRhXG4gIHM1IC0tPiBzMyA6IFVzZXIgaXMgcmVkaXJlY3RlZCB0byBTZXR0aW5ncyBVSSBVUkxcbiAgczQgLS0-IEVycm9yIDogQSBIb29rIGZhaWxzXG4gIHM0IC0tPiBzNlxuICBzNiAtLT4gWypdXG5cbiAgRXJyb3IgLS0-IFsqXVxuXG5cbiIsIm1lcm1haWQiOnsidGhlbWUiOiJkZWZhdWx0In0sInVwZGF0ZUVkaXRvciI6ZmFsc2V9)
 
 1. The **Login/Registration User Flow** is initiated because a link was clicked
    or an action was performed that requires an active user session.
@@ -249,12 +316,12 @@ summarized in this state diagram:
    error messages, ...) for all enabled User Login Strategies:
    ```json5
    {
-     "id": "abcde",
-     "expires_at": "2020-01-27T09:34:39.3249566Z",
-     "issued_at": "2020-01-27T09:24:39.3249689Z",
-     "request_url": "https://example.org/.ory/kratos/public/self-service/browser/flows/requests/(login|registration)",
-     "methods": { "oidc": { "method": "oidc", "config": { /* ... */ } },
-     "password": { "method": "password", "config": { /* ... */ } } // ... } }
+     id: 'abcde',
+     methods: {
+       password: { method: 'password', config: { action: '...', fields: [] } },
+       oidc: { method: 'oidc', config: { action: '...', fields: [] } },
+     },
+   }
    ```
 1. Your Server-Side applications renders the data however you see fit. The User
    interacts with it an completes the Login by clicking, for example, the
@@ -272,9 +339,6 @@ summarized in this state diagram:
      ```json5
      {
        id: 'abcde',
-       expires_at: '2020-01-27T10:05:50.1678228Z',
-       issued_at: '2020-01-27T09:55:50.1678348Z',
-       request_url: 'http://127.0.0.1:4455/self-service/browser/(login|registration)',
        methods: {
          oidc: {
            method: 'oidc',
@@ -301,8 +365,8 @@ summarized in this state diagram:
    - If credentials / data is valid, ORY Kratos proceeds with the next step.
    - If the flow is a registration request and the registration data is valid,
      the identity is created.
-1. ORY Kratos executes hooks defined in the **After Login/Registration
-   Workflow**. If a failure occurs, the whole flow is aborted.
+1. ORY Kratos executes hooks defined in the **After Login/Registration Hooks**.
+   If a failure occurs, the whole flow is aborted.
 1. The client receives the expected response. For browsers, this is a HTTP
    Redirection, for API clients it will be a JSON response containing the
    session and/or identity. For more information on this topic check
@@ -320,11 +384,21 @@ Applications, with the small difference that
 would be called via AJAX instead of making a request to
 `https://kratos:4434/self-service/browser/flows/requests/login?request=abcde`.
 
-::: Note To prevent brute force, guessing, session injection, and other attacks,
-it is required that cookies are working for this endpoint. The cookie set in the
+To prevent brute force, guessing, session injection, and other attacks, it is
+required that cookies are working for this endpoint. The cookie set in the
 initial HTTP request made to
 `https://127.0.0.1:4455/.ory/kratos/public/self-service/browser/login` MUST be
-set and available when calling this endpoint! :::
+set and available when calling this endpoint!
+
+:::info
+
+The initialization request
+(`http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/(login|registration)`)
+**cannot** be made via AJAX or API requests. You **must** open that URL in the
+user's browser using e.g. `window.open` `location.href` or plain and simple old
+`<a href=...>`.
+
+:::
 
 ## Self-Service User Login and User Registration for API Clients
 
@@ -337,4 +411,4 @@ Registration Request is generated. This may be helpful if you'd like to restrict
 logins to IPs coming from your internal network or other logic.
 
 For more information about hooks please read the
-[Hook Documentation](../hooks/index.md).
+[Hook Documentation](../hooks/index.mdx).
