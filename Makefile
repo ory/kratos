@@ -5,7 +5,7 @@ K := $(foreach exec,$(EXECUTABLES),\
         $(if $(shell which $(exec)),some string,$(error "No $(exec) in PATH")))
 
 export GO111MODULE := on
-export PATH := .bin:${PATH}
+export PATH := $(pwd)/.bin:${PATH}
 
 deps:
 ifneq ("v0", $(shell cat .bin/.lock))
@@ -18,7 +18,8 @@ ifneq ("v0", $(shell cat .bin/.lock))
 		go build -o .bin/goimports golang.org/x/tools/cmd/goimports
 		go build -o .bin/swagutil github.com/ory/sdk/swagutil
 		go build -o .bin/packr2 github.com/gobuffalo/packr/v2/packr2
-		npm i
+		go build -o .bin/yq github.com/mikefarah/yq
+		npm ci
 		echo "v0" > .bin/.lock
 endif
 
@@ -60,7 +61,7 @@ test-resetdb:
 
 .PHONY: test
 test: test-resetdb
-		source scripts/test-envs.sh && go test -tags sqlite -count=1 ./...
+		source script/test-envs.sh && go test -tags sqlite -count=1 ./...
 
 # Generates the SDKs
 .PHONY: sdk
@@ -90,8 +91,17 @@ quickstart-dev:
 .PHONY: format
 format: deps
 		goreturns -w -local github.com/ory $$(listx .)
+		npm run format
 
 # Runs tests in short mode, without database adapters
 .PHONY: docker
 docker:
 		docker build -f .docker/Dockerfile-build -t oryd/kratos:latest .
+
+.PHONY: test-e2e
+test-e2e: test-resetdb
+		source script/test-envs.sh
+		test/e2e/run.sh sqlite
+		test/e2e/run.sh postgres
+		test/e2e/run.sh cockroach
+		test/e2e/run.sh mysql

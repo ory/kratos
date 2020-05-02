@@ -18,10 +18,16 @@ already known. Depending on the result, one of the two flows will be executed:
 - Unknown email address: An email is sent to the address informing the recipient
   that someone tried to verify this email address but that it is not known by
   the system:
-  <img alt="Verification email for unknown address" src={useBaseUrl('img/docs/email-verify-unknown.png')} />;
+  <img
+    alt="Verification email for unknown address"
+    src={useBaseUrl('img/docs/email-verify-unknown.png')}
+  />
 - Known email address: An email which includes a verification link is sent to
   the address:
-  <img alt="Verification email for known address" src={useBaseUrl('img/docs/email-verify-known.png')} />;
+  <img
+    alt="Verification email for known address"
+    src={useBaseUrl('img/docs/email-verify-known.png')}
+  />
 
 This prevents Account Enumeration Attacks at is is not possible for a threat
 agent to determine if an account exists or not based on the verification flow.

@@ -20,7 +20,7 @@
     <a href="#backers" alt="sponsors on Open Collective"><img src="https://opencollective.com/ory/backers/badge.svg" /></a> <a href="#sponsors" alt="Sponsors on Open Collective"><img src="https://opencollective.com/ory/sponsors/badge.svg" /></a>
 </p>
 
-ORY Kratos is the first and only cloud native Identity and User Management System in the world. Finally, it is no longer necessary to implement a User Login process for the umpteenth time! 
+ORY Kratos is the first and only cloud native Identity and User Management System in the world. Finally, it is no longer necessary to implement a User Login process for the umpteenth time!
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -327,6 +327,12 @@ It is possible to develop ORY Kratos on Windows, but please be aware that all gu
 When cloning ORY Kratos, run `make tools`. It will download several required dependencies. If you haven't run the command
 in a while it's probably a good idea to run it again.
 
+#### Install from source
+
+```shell script
+make install
+```
+
 #### Formatting Code
 
 You can format all code using `make format`. Our CI checks if your code is properly formatted.
@@ -382,6 +388,21 @@ go test -tags sqlite ./...
 # or in a module:
 cd client; go test  -tags sqlite  .
 ```
+
+##### End-to-End Tests
+
+We use [Cypress](https://www.cypress.io) to run our e2e tests. You can run all tests using:
+
+```shell script
+make test-e2e
+```
+
+If you intend developing e2e tests, run the following command for more details:
+
+```shell script
+./test/e2e/run.sh
+```
+
 
 #### Build Docker
 

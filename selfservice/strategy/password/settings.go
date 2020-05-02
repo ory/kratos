@@ -24,9 +24,13 @@ import (
 )
 
 const (
-	SettingsPath          = "/self-service/browser/flows/settings/strategies/password"
-	continuityKeySettings = "settings_password"
+	SettingsPath = "/self-service/browser/flows/settings/strategies/password"
 )
+
+func continuityKeySettings(rid string) string {
+	// Use one individual container per request ID to prevent resuming other request IDs.
+	return "settings_password." + rid
+}
 
 func (s *Strategy) RegisterSettingsRoutes(router *x.RouterPublic) {
 	router.POST(SettingsPath, s.submitSettingsFlow)
@@ -79,18 +83,24 @@ func (s *Strategy) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps
 		return
 	}
 
-	var p completeSelfServiceBrowserSettingsPasswordFlowPayload
-	if _, err := s.d.ContinuityManager().Continue(r.Context(), r,
-		continuityKeySettings,
-		continuity.WithIdentity(ss.Identity),
-		continuity.WithPayload(&p)); err == nil {
-		s.completeSettingsFlow(w, r, ss, &p)
+	rid := r.URL.Query().Get("request")
+	if len(rid) == 0 {
+		s.handleSettingsError(w, r, nil, ss, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request query parameter is missing.")))
 		return
 	}
 
-	rid := r.URL.Query().Get("request")
-	if len(rid) == 0 {
-		s.handleSettingsError(w, r, nil, ss, &p, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request query parameter is missing.")))
+	var p completeSelfServiceBrowserSettingsPasswordFlowPayload
+	if _, err := s.d.ContinuityManager().Continue(r.Context(), r,
+		continuityKeySettings(r.URL.Query().Get("request")),
+		continuity.WithIdentity(ss.Identity),
+		continuity.WithPayload(&p)); err == nil {
+		if p.RequestID == r.URL.Query().Get("request") {
+			s.completeSettingsFlow(w, r, ss, &p)
+			return
+		}
+		return
+	} else if !errors.Is(err, &continuity.ErrNotResumable) {
+		s.handleSettingsError(w, r, nil, ss, &p, err)
 		return
 	}
 
@@ -105,7 +115,7 @@ func (s *Strategy) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps
 	}
 	if err := s.d.ContinuityManager().Pause(
 		r.Context(), w, r,
-		continuityKeySettings,
+		continuityKeySettings(r.URL.Query().Get("request")),
 		continuity.WithPayload(&p),
 		continuity.WithIdentity(ss.Identity),
 		continuity.WithLifespan(time.Minute*15),
@@ -211,7 +221,7 @@ func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, r
 	if errors.Is(err, settings.ErrRequestNeedsReAuthentication) {
 		if err := s.d.ContinuityManager().Pause(
 			r.Context(), w, r,
-			continuityKeySettings,
+			continuityKeySettings(r.URL.Query().Get("request")),
 			continuity.WithPayload(p),
 			continuity.WithIdentity(ss.Identity),
 			continuity.WithLifespan(time.Minute*15),

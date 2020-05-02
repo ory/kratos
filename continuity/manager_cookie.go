@@ -17,9 +17,9 @@ import (
 )
 
 var _ Manager = new(ManagerCookie)
-var ErrNotResumable = *herodot.ErrBadRequest.WithReasonf("No resumable session could be found in the HTTP Header.")
+var ErrNotResumable = *herodot.ErrBadRequest.WithError("session is not resumable").WithReasonf("No resumable session could be found in the HTTP Header.")
 
-const sessionKeyID = "id"
+const cookieName = "ory_kratos_continuity"
 
 type (
 	managerCookieDependencies interface {
@@ -47,8 +47,8 @@ func (m *ManagerCookie) Pause(ctx context.Context, w http.ResponseWriter, r *htt
 	}
 	c := NewContainer(name, *o)
 
-	if err := x.SessionPersistValues(w, r, m.d.CookieManager(), name, map[string]interface{}{
-		sessionKeyID: c.ID.String(),
+	if err := x.SessionPersistValues(w, r, m.d.CookieManager(), cookieName, map[string]interface{}{
+		name: c.ID.String(),
 	}); err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func (m *ManagerCookie) Continue(ctx context.Context, r *http.Request, name stri
 	}
 
 	if err := container.Valid(o.iid); err != nil {
-		return nil, errors.WithStack(ErrNotResumable.WithDebugf("%+v", err))
+		return nil, err
 	}
 
 	if o.payloadRaw != nil && container.Payload != nil {
@@ -90,7 +90,7 @@ func (m *ManagerCookie) Continue(ctx context.Context, r *http.Request, name stri
 
 func (m *ManagerCookie) sid(ctx context.Context, r *http.Request, name string) (uuid.UUID, error) {
 	var sid uuid.UUID
-	if s, err := x.SessionGetString(r, m.d.CookieManager(), name, sessionKeyID); err != nil {
+	if s, err := x.SessionGetString(r, m.d.CookieManager(), cookieName, name); err != nil {
 		return sid, errors.WithStack(ErrNotResumable.WithDebugf("%+v", err))
 	} else if sid = x.ParseUUID(s); sid == uuid.Nil {
 		return sid, errors.WithStack(ErrNotResumable.WithDebug("sid is not a valid uuid"))
@@ -123,8 +123,8 @@ func (m ManagerCookie) Abort(ctx context.Context, w http.ResponseWriter, r *http
 		return err
 	}
 
-	if err := x.SessionPersistValues(w, r, m.d.CookieManager(), name, map[string]interface{}{
-		sessionKeyID: "",
+	if err := x.SessionPersistValues(w, r, m.d.CookieManager(), cookieName, map[string]interface{}{
+		name: "",
 	}); err != nil {
 		return err
 	}

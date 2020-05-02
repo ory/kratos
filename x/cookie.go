@@ -31,7 +31,7 @@ func SessionGetString(r *http.Request, s sessions.Store, id string, key interfac
 	}
 
 	if v, ok := cookie.Values[key]; !ok {
-		return "", errors.Errorf("key %s does not exist in cookie", key)
+		return "", errors.Errorf("key %s does not exist in cookie: %+v", key, cookie.Values)
 	} else if vv, ok := v.(string); !ok {
 		return "", errors.Errorf("value of key %s is not of type string in cookie", key)
 	} else {

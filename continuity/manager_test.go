@@ -79,12 +79,12 @@ func TestManager(t *testing.T) {
 		})
 
 		router.DELETE("/:name", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-			c, err := p.Continue(r.Context(), r, ps.ByName("name"), tc.ro...)
+			err := p.Abort(r.Context(), w, r, ps.ByName("name"))
 			if err != nil {
 				writer.WriteError(w, r, err)
 				return
 			}
-			writer.Write(w, r, c)
+			w.WriteHeader(http.StatusNoContent)
 		})
 
 		ts := httptest.NewServer(router)
@@ -189,6 +189,27 @@ func TestManager(t *testing.T) {
 						body := x.MustReadAll(res.Body)
 						assert.JSONEq(t, b.String(), gjson.GetBytes(body, "payload").Raw, "%s", body)
 						assert.Contains(t, href, gjson.GetBytes(body, "name").String(), "%s", body)
+					})
+
+					t.Run("case=pause, abort, and continue session with failure", func(t *testing.T) {
+						href := genid()
+						res, err := cl.Do(x.NewTestHTTPRequest(t, "PUT", href, nil))
+						require.NoError(t, err)
+						require.NoError(t, res.Body.Close())
+						require.Equal(t, http.StatusNoContent, res.StatusCode)
+
+						res, err = cl.Do(x.NewTestHTTPRequest(t, "DELETE", href, nil))
+						require.NoError(t, err)
+						t.Cleanup(func() { require.NoError(t, res.Body.Close()) })
+						require.Equal(t, http.StatusNoContent, res.StatusCode)
+
+						res, err = cl.Do(x.NewTestHTTPRequest(t, "GET", href, nil))
+						require.NoError(t, err)
+						t.Cleanup(func() { require.NoError(t, res.Body.Close()) })
+
+						require.Equal(t, http.StatusBadRequest, res.StatusCode)
+						body := x.MustReadAll(res.Body)
+						assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), "resumable session")
 					})
 				})
 			}

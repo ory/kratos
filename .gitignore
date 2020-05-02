@@ -8,4 +8,6 @@ packrd/
 *-packr.go
 dist/
 node_modules
-.bin/
+.bin/*
+cypress/videos
+cypress/screenshots

@@ -56,15 +56,14 @@ Templating Engine. We will implement all the user-facing UIs (dashboard, login,
 registration, ...) in our NodeJS SecureApp!
 
 To ensure that no one can access the dashboard without prior authentication
-(login), we can use a small piece of code (here ExpressJS)
-to do that:
+(login), we can use a small piece of code (here ExpressJS) to do that:
 
 ```js
 // Import the ORY Kratos SDK. SDKs are available for all popular programming
 // languages!
 //
 // We will add examples for other programming languages here soon!
-import { KratosPublicSDK } from '@oryd/kratos-client'
+import { KratosPublicSDK } from '@oryd/kratos-client';
 
 // You can use protect as a middleware for expressJS:
 //
@@ -73,37 +72,41 @@ import { KratosPublicSDK } from '@oryd/kratos-client'
 //   app.get("/dashboard", needsLogin, dashboard)
 //
 const needsLogin = (req, res, next) => {
-  new KratosPublicSDK("https://public.ory-kratos")
-    .whoami(req).then(({ body }) => {
-      req.user = { session: body }
-      next()
-    }).catch(() => { res.redirect('/login') })
-}
+  new KratosPublicSDK('https://public.ory-kratos')
+    .whoami(req)
+    .then(({ body }) => {
+      req.user = { session: body };
+      next();
+    })
+    .catch(() => {
+      res.redirect('/login');
+    });
+};
 ```
 
-:::info
-ORY Kratos is not just an API, it uses cookies, HTTP redirects, Anti-CSRF Tokens
-and more so you don't have to!
-:::
+:::info ORY Kratos is not just an API, it uses cookies, HTTP redirects,
+Anti-CSRF Tokens and more so you don't have to! :::
 
-Because our SecureApp and ORY Kratos need to share cookies, in order for Anti-CSRF Tokens
-and Login Session to work, we will set up path with forwards requests to ORY Krato's Public API.
-If a HTTP Request to `https://my-secureap/.ory/kratos/public/self-service/browser/flows/login`
-is made, we forward (like a proxy) the request to `https://public.ory-kratos/self-service/browser/flows/login`
-and pipe the response back to the initial HTTP Request:
+Because our SecureApp and ORY Kratos need to share cookies, in order for
+Anti-CSRF Tokens and Login Session to work, we will set up path with forwards
+requests to ORY Krato's Public API. If a HTTP Request to
+`https://my-secureap/.ory/kratos/public/self-service/browser/flows/login` is
+made, we forward (like a proxy) the request to
+`https://public.ory-kratos/self-service/browser/flows/login` and pipe the
+response back to the initial HTTP Request:
 
 ```js
-import express from 'express'
-import request from 'request'
-const app = express()
+import express from 'express';
+import request from 'request';
+const app = express();
 
-const pathPrefix = '/.ory/kratos/public'
+const pathPrefix = '/.ory/kratos/public';
 app.use(pathPrefix + '/', (req, res) => {
-    const url = 'https://public.ory-kratos' + req.url.replace(pathPrefix, '')
+  const url = 'https://public.ory-kratos' + req.url.replace(pathPrefix, '');
 
-    // Uses the request library to forward the request to ORY Kratos
-    req.pipe(request(url, { followRedirect: false })).pipe(res)
-})
+  // Uses the request library to forward the request to ORY Kratos
+  req.pipe(request(url, { followRedirect: false })).pipe(res);
+});
 
 // ...
 // app.get("/dashboard", needsLogin, dashboard)
@@ -125,17 +128,16 @@ To get this example working, you will need Git and
 your system. No other dependencies are required. Before you start, make sure
 that Docker has enough disk space.
 
-:::tip
-This tutorial uses Docker-Compose volumes which have reported to run out of disk space. Check the remaining disk space
-using `docker system df`. If the volumes are above the 85% threshold, [prune old Docker objects](https://docs.docker.com/config/pruning/) before you start!
-:::
+:::tip This tutorial uses Docker-Compose volumes which have reported to run out
+of disk space. Check the remaining disk space using `docker system df`. If the
+volumes are above the 85% threshold,
+[prune old Docker objects](https://docs.docker.com/config/pruning/) before you
+start! :::
 
-:::tip
-If you encounter build errors (e.g. network timeout), make sure that the network
-is running correctly and run `macke docker`
-again. If the problem persists, feel free to
-[open an issue](https://github.com/ory/kratos/issues/new/choose).
-:::
+:::tip If you encounter build errors (e.g. network timeout), make sure that the
+network is running correctly and run `macke docker` again. If the problem
+persists, feel free to
+[open an issue](https://github.com/ory/kratos/issues/new/choose). :::
 
 Let's clone ORY Kratos and run `docker-compose`:
 
@@ -162,15 +164,13 @@ kratos_1                      | time="2020-01-20T14:52:13Z" level=info msg="Star
 kratos_1                      | time="2020-01-20T14:52:13Z" level=info msg="Starting the public httpd on: 0.0.0.0:4433"
 ```
 
-:::note
-There are two important factors to get a fully functional system:
+:::note There are two important factors to get a fully functional system:
 
 - You need to make sure that ports `4455`, `4433`, `4434`, `4436` >
   [are free](https://serverfault.com/questions/309052/check-if-port-is-open-or-closed-on-a-linux-server).
 - Make sure to always use `127.0.0.1` as the hostname, never use `localhost`!
   This is important because browsers treat these two as separate domains and
-  will therefore have issues with setting and using the right cookies.
-:::
+  will therefore have issues with setting and using the right cookies. :::
 
 You might notice that no database is being used in this example. ORY Kratos
 supports SQLite, PostgreSQL, MySQL, and CockroachDB as database backends. For
@@ -195,9 +195,9 @@ Docker (Compose) Networks work:
 
 [![User Login and Registration Network Topology](https://mermaid.ink/img/eyJjb2RlIjoiZ3JhcGggVERcblxuc3ViZ3JhcGggaG5bSG9zdCBOZXR3b3JrXVxuICAgIEJbQnJvd3Nlcl1cbiAgICBCLS0-fENhbiBhY2Nlc3MgVVJMcyB2aWEgMTI3LjAuMC4xOjQ0NTV8T0tQSE5cbiAgICBCLS0-fENhbiBhY2Nlc3MgVUkgdmlhIDEyNy4wLjAuMTo0NDM2fFNNVFBVSVxuICAgIE9LUEhOKFtTZWN1cmVBcHAgZXhwb3NlZCBhdCA6NDQ1NV0pXG4gICAgU01UUFVJKFtNYWlsU2x1cnBlciBVSSBleHBvc2VkIGF0IDo0NDM2XSlcbmVuZFxuXG5zdWJncmFwaCBkbltcIkludGVybmFsIERvY2tlciBOZXR3b3JrIChpbnRyYW5ldClcIl1cbiAgICBPS1BITi0uLT5TQVxuICAgIFNNVFBVSS0uLT5TTVRQXG4gICAgU0EtLT58UHJveGllcyBVUkxzIC8ub3J5L2tyYXRvcy9wdWJsaWMvKiB0b3xPS1xuICAgIFNBLS0-fFRhbGtzIHRvIGFuZCB2YWxpZGF0ZXMgbG9naW4gc2Vzc2lvbnMgdXNpbmd8T0tcbiAgICBPSy0tPnxTZW5kcyBtYWlsIHZpYXxTTVRQXG5cbiAgICBPS1tPUlkgS3JhdG9zXVxuICAgIFNBW1wiU2VjdXJlQXBwIChPUlkgS3JhdG9zIFNlbGZTZXJ2aWNlIFVJIE5vZGUgRXhhbXBsZSlcIl1cbiAgICBTTVRQW1wiU01UUCBTZXJ2ZXIgKE1haWxTbHVycGVyKVwiXVxuZW5kXG4iLCJtZXJtYWlkIjp7InRoZW1lIjoibmV1dHJhbCIsImZsb3djaGFydCI6eyJyYW5rU3BhY2luZyI6NjUsIm5vZGVTcGFjaW5nIjozMCwiY3VydmUiOiJiYXNpcyJ9fSwidXBkYXRlRWRpdG9yIjpmYWxzZX0)](https://mermaid-js.github.io/mermaid-live-editor/#/edit/eyJjb2RlIjoiZ3JhcGggVERcblxuc3ViZ3JhcGggaG5bSG9zdCBOZXR3b3JrXVxuICAgIEJbQnJvd3Nlcl1cbiAgICBCLS0-fENhbiBhY2Nlc3MgVVJMcyB2aWEgMTI3LjAuMC4xOjQ0NTV8T0tQSE5cbiAgICBCLS0-fENhbiBhY2Nlc3MgVUkgdmlhIDEyNy4wLjAuMTo0NDM2fFNNVFBVSVxuICAgIE9LUEhOKFtTZWN1cmVBcHAgZXhwb3NlZCBhdCA6NDQ1NV0pXG4gICAgU01UUFVJKFtNYWlsU2x1cnBlciBVSSBleHBvc2VkIGF0IDo0NDM2XSlcbmVuZFxuXG5zdWJncmFwaCBkbltcIkludGVybmFsIERvY2tlciBOZXR3b3JrIChpbnRyYW5ldClcIl1cbiAgICBPS1BITi0uLT5TQVxuICAgIFNNVFBVSS0uLT5TTVRQXG4gICAgU0EtLT58UHJveGllcyBVUkxzIC8ub3J5L2tyYXRvcy9wdWJsaWMvKiB0b3xPS1xuICAgIFNBLS0-fFRhbGtzIHRvIGFuZCB2YWxpZGF0ZXMgbG9naW4gc2Vzc2lvbnMgdXNpbmd8T0tcbiAgICBPSy0tPnxTZW5kcyBtYWlsIHZpYXxTTVRQXG5cbiAgICBPS1tPUlkgS3JhdG9zXVxuICAgIFNBW1wiU2VjdXJlQXBwIChPUlkgS3JhdG9zIFNlbGZTZXJ2aWNlIFVJIE5vZGUgRXhhbXBsZSlcIl1cbiAgICBTTVRQW1wiU01UUCBTZXJ2ZXIgKE1haWxTbHVycGVyKVwiXVxuZW5kXG4iLCJtZXJtYWlkIjp7InRoZW1lIjoibmV1dHJhbCIsImZsb3djaGFydCI6eyJyYW5rU3BhY2luZyI6NjUsIm5vZGVTcGFjaW5nIjozMCwiY3VydmUiOiJiYXNpcyJ9fSwidXBkYXRlRWRpdG9yIjpmYWxzZX0)
 
-As already explained, we're proxying requests to ORY Kratos' Public API. We
-are doing this because that way all requests are going to and coming from the
-same hostname. This avoids common cross-domain issues with cookies.
+As already explained, we're proxying requests to ORY Kratos' Public API. We are
+doing this because that way all requests are going to and coming from the same
+hostname. This avoids common cross-domain issues with cookies.
 
 ## Perform registration, logout, login
 
@@ -206,21 +206,27 @@ the dashboard - **go to
 [127.0.0.1:4455/dashboard](http://127.0.0.1:4455/dashboard)**. You will probably
 notice that you're ending up at the login endpoint:
 
-<img alt="Login screen of your secured app" src={useBaseUrl('img/docs/secureapp-login.png')} />
+<img
+  alt="Login screen of your secured app"
+  src={useBaseUrl('img/docs/secureapp-login.png')}
+/>
 
 Looking at the network stack, you can see two redirects happening:
 
-<img alt="Network trace of your secured app" src={useBaseUrl('img/docs/secureapp-login-ntrace.png')} />
+<img
+  alt="Network trace of your secured app"
+  src={useBaseUrl('img/docs/secureapp-login-ntrace.png')}
+/>
 
 The first redirect from `http://127.0.0.1:4445/dashboard` to
-`http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/login` is initiated
-because the browser does not have a valid authentication (login) session yet. The
-redirect points to one of ORY Krato's APIs used for logging in browser-based
-applications. ORY Kratos does some security checks and prepares form data and
-redirects the browser to `http://127.0.0.1:4445/auth/login`, appending a
-`?request=...` query parameter. The endpoint at `/auth/login` (which belongs to
-our SecureApp) then fetches data important for rendering the forms from ORY
-Krato's Admin API:
+`http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/login` is
+initiated because the browser does not have a valid authentication (login)
+session yet. The redirect points to one of ORY Krato's APIs used for logging in
+browser-based applications. ORY Kratos does some security checks and prepares
+form data and redirects the browser to `http://127.0.0.1:4445/auth/login`,
+appending a `?request=...` query parameter. The endpoint at `/auth/login` (which
+belongs to our SecureApp) then fetches data important for rendering the forms
+from ORY Krato's Admin API:
 
 ```shell script
 $ curl http://127.0.0.1:4434/self-service/browser/flows/requests/login?request=<request-id>
@@ -267,16 +273,25 @@ the specific flows (login, registration, logout, ...), head over to the
 Let's move on to the next flow - registration! Click on "Create an account",
 which initiates a flow similar to the one we just used:
 
-<img alt="Registration screen of your secured app" src={useBaseUrl('img/docs/secureapp-registration.png')} />
+<img
+  alt="Registration screen of your secured app"
+  src={useBaseUrl('img/docs/secureapp-registration.png')}
+/>
 
 The network trace looks familiar by now:
 
-<img alt="Registration with network trace screen of your secured app" src={useBaseUrl('img/docs/secureapp-registration-ntrace.png')} />
+<img
+  alt="Registration with network trace screen of your secured app"
+  src={useBaseUrl('img/docs/secureapp-registration-ntrace.png')}
+/>
 
 If we try to sign up using a password like `123456`, ORY Krato's password policy
 will complain:
 
-<img alt="Registration with network trace screen of your secured app" src={useBaseUrl('img/docs/secureapp-registration-pwpolicy.png')} />
+<img
+  alt="Registration with network trace screen of your secured app"
+  src={useBaseUrl('img/docs/secureapp-registration-pwpolicy.png')}
+/>
 
 The error message is coming directly from ORY Krato's API:
 
@@ -324,15 +339,18 @@ $ curl http://127.0.0.1:4434/self-service/browser/flows/requests/registration?re
 Setting a password that doesn't violate these policies, we will be immediately
 redirected to the Dashboard:
 
-<img alt="SecureApp Dashboard" src={useBaseUrl('img/docs/secureapp-dashboard.png')} />
+<img
+  alt="SecureApp Dashboard"
+  src={useBaseUrl('img/docs/secureapp-dashboard.png')}
+/>
 
 By using "logout" you will be redirected to the log in screen again an will be
 able to use the credentials just set up to log in!
 
 ### Understanding how Login and Registration works
 
-Head over to the [Self-Service Flows Chapter](self-service/flows/index.md) for
-a in-depth explanation of how the individual flows work.
+Head over to the [Self-Service Flows Chapter](self-service/flows/index.md) for a
+in-depth explanation of how the individual flows work.
 
 ### Email Verification
 
@@ -343,7 +361,10 @@ You can retrieve the email however by opening the MailSlurper UI at
 
 You should see something like this:
 
-<img alt="User Email Verification" src={useBaseUrl('img/docs/mailslurper-quickstart.png')} />
+<img
+  alt="User Email Verification"
+  src={useBaseUrl('img/docs/mailslurper-quickstart.png')}
+/>
 
 If not, hard refresh the tab or click on the home icon in the menu bar.
 
@@ -351,7 +372,10 @@ Next, click the verification link. You will end up at the dashboard, with a
 verified E-Mail Address (check the `verified` and `verified_at` field in the
 JSON Payload):
 
-<img alt="SecureApp Dashboard" src={useBaseUrl('img/docs/secureapp-verified-dashboard.png')} />
+<img
+  alt="SecureApp Dashboard"
+  src={useBaseUrl('img/docs/secureapp-verified-dashboard.png')}
+/>
 
 To re-request the verification email, fill out the form at
 [127.0.0.1:4455/verify](http://127.0.0.1:4455/verify).
