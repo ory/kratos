@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/ory/x/urlx"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -187,24 +188,63 @@ func TestStrategy(t *testing.T) {
 	subject = "foo@bar.com"
 	scope = []string{}
 
+	// assert form values
+	var afv = func(t *testing.T, request uuid.UUID, provider string) (action string) {
+		var config *form.HTMLForm
+		if req, err := reg.RegistrationRequestPersister().GetRegistrationRequest(context.Background(), request); err == nil {
+			require.EqualValues(t, req.ID, request)
+			method := req.Methods[identity.CredentialsTypeOIDC]
+			require.NotNil(t, method)
+			config = method.Config.RequestMethodConfigurator.(*form.HTMLForm)
+			require.NotNil(t, config)
+		} else if req, err := reg.LoginRequestPersister().GetLoginRequest(context.Background(), request); err == nil {
+			require.EqualValues(t, req.ID, request)
+			method := req.Methods[identity.CredentialsTypeOIDC]
+			require.NotNil(t, method)
+			config = method.Config.RequestMethodConfigurator.(*form.HTMLForm)
+			require.NotNil(t, config)
+		} else {
+			require.NoError(t, err)
+			return
+		}
+
+		assert.Equal(t, "POST", config.Method)
+
+		var found bool
+		for _, field := range config.Fields {
+			if field.Name == "provider" && field.Value == provider {
+				found = true
+				break
+			}
+		}
+		require.True(t, found)
+
+		return config.Action
+	}
+
+	// request action
+	var ra = func(request uuid.UUID) string {
+		return ts.URL + oidc.BasePath + "/auth/" + request.String()
+	}
+
 	// make request with cookie jar
-	var mrj = func(t *testing.T, provider string, request uuid.UUID, fv url.Values, jar *cookiejar.Jar) (*http.Response, []byte) {
+	var mrj = func(t *testing.T, provider string, action string, fv url.Values, jar *cookiejar.Jar) (*http.Response, []byte) {
 		fv.Set("provider", provider)
-		res, err := newClient(t, jar).PostForm(ts.URL+oidc.BasePath+"/auth/"+request.String(), fv)
+		res, err := newClient(t, jar).PostForm(action, fv)
 		require.NoError(t, err)
 
 		body, err := ioutil.ReadAll(res.Body)
 		require.NoError(t, res.Body.Close())
 		require.NoError(t, err)
 
-		require.Equal(t, 200, res.StatusCode, "%s: %s\n\t%s", request, res.Request.URL.String(), body)
+		require.Equal(t, 200, res.StatusCode, "%s: %s\n\t%s", action, res.Request.URL.String(), body)
 
 		return res, body
 	}
 
 	// make request
-	var mr = func(t *testing.T, provider string, request uuid.UUID, fv url.Values) (*http.Response, []byte) {
-		return mrj(t, provider, request, fv, nil)
+	var mr = func(t *testing.T, provider string, action string, fv url.Values) (*http.Response, []byte) {
+		return mrj(t, provider, action, fv, nil)
 	}
 
 	// assert system error (redirect to error endpoint)
@@ -236,62 +276,68 @@ func TestStrategy(t *testing.T) {
 	}
 
 	// new login request
-	var nlr = func(t *testing.T, redirectTo string, exp time.Duration) *login.Request {
-		r := &login.Request{
-			ID:         x.NewUUID(),
-			RequestURL: redirectTo,
-			IssuedAt:   time.Now(),
-			ExpiresAt:  time.Now().Add(exp),
-			Methods: map[identity.CredentialsType]*login.RequestMethod{
-				identity.CredentialsTypeOIDC: {
-					Method: identity.CredentialsTypeOIDC,
-					Config: &login.RequestMethodConfig{RequestMethodConfigurator: oidc.NewRequestMethodConfig(form.NewHTMLForm(""))},
-				},
-			},
-		}
-		require.NoError(t, reg.LoginRequestPersister().CreateLoginRequest(context.Background(), r))
-		return r
+	var nlr = func(t *testing.T, redirectTo string, exp time.Duration) (req *login.Request) {
+		// Use NewLoginRequest to instantiate the request but change the things we need to control a copy of it.
+		require.NoError(t, reg.LoginHandler().NewLoginRequest(httptest.NewRecorder(),
+			&http.Request{URL: urlx.ParseOrPanic(redirectTo)}, func(request *login.Request) (string, error) {
+				request.RequestURL = redirectTo
+				request.ExpiresAt = time.Now().Add(exp)
+				req = request
+				require.NoError(t, reg.LoginRequestPersister().UpdateLoginRequest(context.Background(), req))
+				return "/", nil // This is irrelevant because of httptest.NewRecorder()
+			}))
+
+		// sanity check
+		got, err := reg.LoginRequestPersister().GetLoginRequest(context.Background(), req.ID)
+		require.NoError(t, err)
+		require.Len(t, got.Methods, len(req.Methods))
+
+		return
 	}
 
 	// new registration request
-	var nrr = func(t *testing.T, redirectTo string, exp time.Duration) *registration.Request {
-		r := &registration.Request{
-			ID:         x.NewUUID(),
-			RequestURL: redirectTo,
-			IssuedAt:   time.Now(),
-			ExpiresAt:  time.Now().Add(exp),
-			Methods: map[identity.CredentialsType]*registration.RequestMethod{
-				identity.CredentialsTypeOIDC: {
-					Method: identity.CredentialsTypeOIDC,
-					Config: &registration.RequestMethodConfig{RequestMethodConfigurator: oidc.NewRequestMethodConfig(form.NewHTMLForm(""))},
-				},
-			},
-		}
-		require.NoError(t, reg.RegistrationRequestPersister().CreateRegistrationRequest(context.Background(), r))
-		return r
+	var nrr = func(t *testing.T, redirectTo string, exp time.Duration) (req *registration.Request) {
+		// Use NewLoginRequest to instantiate the request but change the things we need to control a copy of it.
+		require.NoError(t, reg.RegistrationHandler().NewRegistrationRequest(httptest.NewRecorder(),
+			&http.Request{URL: urlx.ParseOrPanic(redirectTo)}, func(request *registration.Request) (string, error) {
+				request.RequestURL = redirectTo
+				request.ExpiresAt = time.Now().Add(exp)
+				req = request
+				require.NoError(t, reg.RegistrationRequestPersister().UpdateRegistrationRequest(context.Background(), req))
+				return "/", nil // This is irrelevant because of httptest.NewRecorder()
+			}))
+
+		// sanity check
+		got, err := reg.RegistrationRequestPersister().GetRegistrationRequest(context.Background(), req.ID)
+		require.NoError(t, err)
+		require.Len(t, got.Methods, len(req.Methods))
+
+		return
 	}
 
 	t.Run("case=should fail because provider does not exist", func(t *testing.T) {
 		requestDoesNotExist := x.NewUUID()
-		res, body := mr(t, "provider-does-not-exist", requestDoesNotExist, url.Values{})
+		res, body := mr(t, "provider-does-not-exist", ra(requestDoesNotExist), url.Values{})
 		ase(t, res, body, http.StatusNotFound, "is unknown or has not been configured")
 	})
 
 	t.Run("case=should fail because the issuer is mismatching", func(t *testing.T) {
 		requestDoesNotExist := x.NewUUID()
-		res, body := mr(t, "invalid-issuer", requestDoesNotExist, url.Values{})
+		res, body := mr(t, "invalid-issuer", ra(requestDoesNotExist), url.Values{})
 		ase(t, res, body, http.StatusInternalServerError, "issuer did not match the issuer returned by provider")
 	})
 
 	t.Run("case=should fail because request does not exist", func(t *testing.T) {
 		requestDoesNotExist := x.NewUUID()
-		res, body := mr(t, "valid", requestDoesNotExist, url.Values{})
+		res, body := mr(t, "valid", ra(requestDoesNotExist), url.Values{})
 		asem(t, res, body, http.StatusNotFound, "Unable to locate the resource")
 	})
 
 	t.Run("case=should fail because the login request is expired", func(t *testing.T) {
 		r := nlr(t, returnTS.URL, -time.Minute)
-		res, body := mr(t, "valid", r.ID, url.Values{})
+		action := afv(t, r.ID, "valid")
+		t.Logf("action: %s id: %s", action, r.ID)
+		res, body := mr(t, "valid", action, url.Values{})
 
 		assert.NotEqual(t, r.ID, gjson.GetBytes(body, "id"))
 		aue(t, res, body, "session expired")
@@ -299,7 +345,8 @@ func TestStrategy(t *testing.T) {
 
 	t.Run("case=should fail because the registration request is expired", func(t *testing.T) {
 		r := nrr(t, returnTS.URL, -time.Minute)
-		res, body := mr(t, "valid", r.ID, url.Values{})
+		action := afv(t, r.ID, "valid")
+		res, body := mr(t, "valid", action, url.Values{})
 
 		assert.NotEqual(t, r.ID, gjson.GetBytes(body, "id"))
 		aue(t, res, body, "session expired")
@@ -310,13 +357,15 @@ func TestStrategy(t *testing.T) {
 		scope = []string{}
 
 		r := nrr(t, returnTS.URL, time.Minute)
-		res, body := mr(t, "valid", r.ID, url.Values{})
+		action := afv(t, r.ID, "valid")
+		res, body := mr(t, "valid", action, url.Values{})
 		aue(t, res, body, "no id_token was returned")
 	})
 
 	t.Run("case=should fail login because scope was not provided", func(t *testing.T) {
 		r := nlr(t, returnTS.URL, time.Minute)
-		res, body := mr(t, "valid", r.ID, url.Values{})
+		action := afv(t, r.ID, "valid")
+		res, body := mr(t, "valid", action, url.Values{})
 		aue(t, res, body, "no id_token was returned")
 	})
 
@@ -325,7 +374,8 @@ func TestStrategy(t *testing.T) {
 		scope = []string{"openid"}
 
 		r := nrr(t, returnTS.URL, time.Minute)
-		res, body := mr(t, "valid", r.ID, url.Values{})
+		action := afv(t, r.ID, "valid")
+		res, body := mr(t, "valid", action, url.Values{})
 
 		require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
 		assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.fields.#(name==traits.subject).errors.0").String(), "is not valid", "%s", body)
@@ -337,13 +387,15 @@ func TestStrategy(t *testing.T) {
 
 		t.Run("case=should pass registration", func(t *testing.T) {
 			r := nrr(t, returnTS.URL, time.Minute)
-			res, body := mr(t, "valid", r.ID, url.Values{})
+			action := afv(t, r.ID, "valid")
+			res, body := mr(t, "valid", action, url.Values{})
 			ai(t, res, body)
 		})
 
 		t.Run("case=should pass login", func(t *testing.T) {
 			r := nlr(t, returnTS.URL, time.Minute)
-			res, body := mr(t, "valid", r.ID, url.Values{})
+			action := afv(t, r.ID, "valid")
+			res, body := mr(t, "valid", action, url.Values{})
 			ai(t, res, body)
 		})
 	})
@@ -354,7 +406,8 @@ func TestStrategy(t *testing.T) {
 
 		t.Run("case=should pass login", func(t *testing.T) {
 			r := nlr(t, returnTS.URL, time.Minute)
-			res, body := mr(t, "valid", r.ID, url.Values{})
+			action := afv(t, r.ID, "valid")
+			res, body := mr(t, "valid", action, url.Values{})
 			ai(t, res, body)
 		})
 	})
@@ -365,13 +418,15 @@ func TestStrategy(t *testing.T) {
 
 		t.Run("case=should pass registration", func(t *testing.T) {
 			r := nrr(t, returnTS.URL, time.Minute)
-			res, body := mr(t, "valid", r.ID, url.Values{})
+			action := afv(t, r.ID, "valid")
+			res, body := mr(t, "valid", action, url.Values{})
 			ai(t, res, body)
 		})
 
 		t.Run("case=should pass second time registration", func(t *testing.T) {
 			r := nlr(t, returnTS.URL, time.Minute)
-			res, body := mr(t, "valid", r.ID, url.Values{})
+			action := afv(t, r.ID, "valid")
+			res, body := mr(t, "valid", action, url.Values{})
 			ai(t, res, body)
 		})
 	})
@@ -382,7 +437,8 @@ func TestStrategy(t *testing.T) {
 
 		t.Run("case=should fail registration on first attempt", func(t *testing.T) {
 			r := nrr(t, returnTS.URL, time.Minute)
-			res, body := mr(t, "valid", r.ID, url.Values{"traits.name": {"i"}})
+			action := afv(t, r.ID, "valid")
+			res, body := mr(t, "valid", action, url.Values{"traits.name": {"i"}})
 			require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
 
 			assert.Equal(t, "length must be >= 2, but got 1", gjson.GetBytes(body, "methods.oidc.config.fields.#(name==traits.name).errors.0.message").String(), "%s", body) // make sure the field is being echoed
@@ -392,7 +448,8 @@ func TestStrategy(t *testing.T) {
 
 		t.Run("case=should pass registration with valid data", func(t *testing.T) {
 			r := nrr(t, returnTS.URL, time.Minute)
-			res, body := mr(t, "valid", r.ID, url.Values{"traits.name": {"valid-name"}})
+			action := afv(t, r.ID, "valid")
+			res, body := mr(t, "valid", action, url.Values{"traits.name": {"valid-name"}})
 			ai(t, res, body)
 		})
 	})
@@ -413,13 +470,15 @@ func TestStrategy(t *testing.T) {
 
 		t.Run("case=should fail registration", func(t *testing.T) {
 			r := nrr(t, returnTS.URL, time.Minute)
-			res, body := mr(t, "valid", r.ID, url.Values{})
+			action := afv(t, r.ID, "valid")
+			res, body := mr(t, "valid", action, url.Values{})
 			aue(t, res, body, "an account with the same identifier (email, phone, username, ...) exists already")
 		})
 
 		t.Run("case=should fail login", func(t *testing.T) {
 			r := nlr(t, returnTS.URL, time.Minute)
-			res, body := mr(t, "valid", r.ID, url.Values{})
+			action := afv(t, r.ID, "valid")
+			res, body := mr(t, "valid", action, url.Values{})
 			aue(t, res, body, "an account with the same identifier (email, phone, username, ...) exists already")
 		})
 	})
@@ -431,10 +490,10 @@ func TestStrategy(t *testing.T) {
 		fv := url.Values{"traits.name": {"valid-name"}}
 		jar, _ := cookiejar.New(nil)
 		r1 := nlr(t, returnTS.URL, time.Minute)
-		res1, body1 := mrj(t, "valid", r1.ID, fv, jar)
+		res1, body1 := mrj(t, "valid", afv(t, r1.ID, "valid"), fv, jar)
 		ai(t, res1, body1)
 		r2 := nlr(t, returnTS.URL, time.Minute)
-		res2, body2 := mrj(t, "valid", r2.ID, fv, jar)
+		res2, body2 := mrj(t, "valid", afv(t, r2.ID, "valid"), fv, jar)
 		ai(t, res2, body2)
 		assert.Equal(t, body1, body2)
 	})
@@ -446,11 +505,11 @@ func TestStrategy(t *testing.T) {
 		fv := url.Values{"traits.name": {"valid-name"}}
 		jar, _ := cookiejar.New(nil)
 		r1 := nlr(t, returnTS.URL, time.Minute)
-		res1, body1 := mrj(t, "valid", r1.ID, fv, jar)
+		res1, body1 := mrj(t, "valid", afv(t, r1.ID, "valid"), fv, jar)
 		ai(t, res1, body1)
 		r2 := nlr(t, returnTS.URL, time.Minute)
 		require.NoError(t, reg.LoginRequestPersister().MarkRequestForced(context.Background(), r2.ID))
-		res2, body2 := mrj(t, "valid", r2.ID, fv, jar)
+		res2, body2 := mrj(t, "valid", afv(t, r2.ID, "valid"), fv, jar)
 		ai(t, res2, body2)
 		assert.NotEqual(t, gjson.GetBytes(body1, "sid"), gjson.GetBytes(body2, "sid"))
 		authAt1, err := time.Parse(time.RFC3339, gjson.GetBytes(body1, "authenticated_at").String())
@@ -459,5 +518,85 @@ func TestStrategy(t *testing.T) {
 		require.NoError(t, err)
 		// authenticated at is newer in the second body
 		assert.Greater(t, authAt2.Sub(authAt1).Milliseconds(), int64(0), "%s - %s : %s - %s", authAt2, authAt1, body2, body1)
+	})
+
+	t.Run("method=TestPopulateSignUpMethod", func(t *testing.T) {
+		viper.Set(configuration.ViperKeyURLsSelfPublic, urlx.ParseOrPanic("https://foo/"))
+
+		sr := registration.NewRequest(time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")})
+		require.NoError(t, reg.RegistrationStrategies().MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateRegistrationMethod(&http.Request{}, sr))
+
+		expected := &registration.RequestMethod{
+			Method: identity.CredentialsTypeOIDC,
+			Config: &registration.RequestMethodConfig{
+				RequestMethodConfigurator: &oidc.RequestMethod{
+					HTMLForm: &form.HTMLForm{
+						Action: "https://foo" + strings.ReplaceAll(oidc.AuthPath, ":request", sr.ID.String()),
+						Method: "POST",
+						Fields: form.Fields{
+							{
+								Name:     "csrf_token",
+								Type:     "hidden",
+								Required: true,
+								Value:    x.FakeCSRFToken,
+							},
+							{
+								Name:  "provider",
+								Type:  "submit",
+								Value: "valid",
+							},
+							{
+								Name:  "provider",
+								Type:  "submit",
+								Value: "invalid-issuer",
+							},
+						},
+					},
+				},
+			},
+		}
+
+		actual := sr.Methods[identity.CredentialsTypeOIDC]
+		assert.EqualValues(t, expected.Config.RequestMethodConfigurator.(*oidc.RequestMethod).HTMLForm, actual.Config.RequestMethodConfigurator.(*oidc.RequestMethod).HTMLForm)
+	})
+
+	t.Run("method=TestPopulateLoginMethod", func(t *testing.T) {
+		viper.Set(configuration.ViperKeyURLsSelfPublic, urlx.ParseOrPanic("https://foo/"))
+
+		sr := login.NewRequest(time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")})
+		require.NoError(t, reg.LoginStrategies().MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateLoginMethod(&http.Request{}, sr))
+
+		expected := &login.RequestMethod{
+			Method: identity.CredentialsTypeOIDC,
+			Config: &login.RequestMethodConfig{
+				RequestMethodConfigurator: &oidc.RequestMethod{
+					HTMLForm: &form.HTMLForm{
+						Action: "https://foo" + strings.ReplaceAll(oidc.AuthPath, ":request", sr.ID.String()),
+						Method: "POST",
+						Fields: form.Fields{
+							{
+								Name:     "csrf_token",
+								Type:     "hidden",
+								Required: true,
+								Value:    x.FakeCSRFToken,
+							},
+							{
+								Name:  "provider",
+								Type:  "submit",
+								Value: "valid",
+							},
+							{
+								Name:  "provider",
+								Type:  "submit",
+								Value: "invalid-issuer",
+							},
+						},
+					},
+				},
+			},
+		}
+
+		actual := sr.Methods[identity.CredentialsTypeOIDC]
+		assert.EqualValues(t, expected.Config.RequestMethodConfigurator.(*oidc.RequestMethod).HTMLForm, actual.Config.RequestMethodConfigurator.(*oidc.RequestMethod).HTMLForm)
 	})
 }

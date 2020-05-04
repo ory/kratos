@@ -52,6 +52,7 @@ module.exports = {
     }
   ],
   Guides: [
+    "guides/sign-in-with-github",
     "guides/zero-trust-iap-proxy-identity-access-proxy",
     "guides/multi-tenancy-multitenant",
     "guides/high-availability-ha"

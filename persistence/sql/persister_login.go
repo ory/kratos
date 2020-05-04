@@ -19,6 +19,34 @@ func (p *Persister) CreateLoginRequest(ctx context.Context, r *login.Request) er
 	return p.GetConnection(ctx).Eager().Create(r)
 }
 
+func (p *Persister) UpdateLoginRequest(ctx context.Context, r *login.Request) error {
+	return p.Transaction(ctx, func(tx *pop.Connection) error {
+		ctx := WithTransaction(ctx, tx)
+		rr, err := p.GetLoginRequest(ctx, r.ID)
+		if err != nil {
+			return err
+		}
+
+		for id, form := range r.Methods {
+			for oid := range rr.Methods {
+				if oid == id {
+					rr.Methods[id].Config = form.Config
+					break
+				}
+			}
+			rr.Methods[id] = form
+		}
+
+		for _, of := range rr.Methods {
+			if err := tx.Save(of); err != nil {
+				return sqlcon.HandleError(err)
+			}
+		}
+
+		return tx.Save(r)
+	})
+}
+
 func (p *Persister) GetLoginRequest(ctx context.Context, id uuid.UUID) (*login.Request, error) {
 	conn := p.GetConnection(ctx)
 	var r login.Request
@@ -62,6 +90,11 @@ func (p *Persister) UpdateLoginRequestMethod(ctx context.Context, id uuid.UUID, 
 		}
 
 		method.Config = rm.Config
-		return tx.Save(method)
+		if err := tx.Save(method); err != nil {
+			return err
+		}
+
+		rr.Active = ct
+		return tx.Save(rr)
 	})
 }

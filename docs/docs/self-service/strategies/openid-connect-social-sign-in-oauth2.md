@@ -3,13 +3,13 @@ id: openid-connect-social-sign-in-oauth2
 title: Social Sign In with OpenID Connect and OAuth2
 ---
 
-:::info
+:::tip
 
-The OpenID Connect Strategy does already work but needs further documentation
-and code improvements. It will be documented in an upcoming release of ORY
-Kratos.
+Have you read the [OpenID Connect / OAuth2 Documentation](../../concepts/credentials/openid-connect-oidc-oauth2.mdx)
+yet? If not, this would be a perfect opportunity!
 
 :::
+
 
 The Social Sign In Strategy enables you to use
 

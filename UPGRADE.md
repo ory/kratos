@@ -6,7 +6,7 @@ before finalizing the upgrade process.
 
 ## v0.2.0-alpha.1
 
-This is a heavy release with over 150 commits and 430 files changed! Let's take a look
+This is a heavy release with over hundreds of commits and files changed! Let's take a look
 at some of the highlights!
 
 ### ORY Oathkeeper now optional
@@ -14,30 +14,38 @@ at some of the highlights!
 Using ORY Oathkeeper to protect your API is now optional. The basic quickstart now uses a much simpler set up.
 Go [check it out](https://www.ory.sh/kratos/docs/quickstart) now!
 
-### PostgreSQL, MySQL, CockroachDB support official!
+### PostgreSQL, MySQL, CockroachDB support now tested and official!
 
 All three databases now pass acceptance tests and are thus officially supported!
 
+### OpenID Connect and OAuth2 now official!
+
+Using social profiles to sign up and log in is now as easy as setting two config entries! Check out
+
+- [The OpenID Connect & OAuth2 Credential Documentation](https://www.ory.sh/kratos/docs/concepts/credentials/openid-connect-oidc-oauth2);
+- [The Flow Description](https://www.ory.sh/kratos/docs/concepts/credentials/openid-connect-oidc-oauth2);
+- [The "Sign in with GitHub" Guide](https://www.ory.sh/kratos/docs/guides/sign-in-with-github)!
+
 ### Self-Service Profile Flow
 
-The self-service profile flow has been refactored into a more generic flow which allows the user to make modification
-to his/her traits and credentials. Check out the
+The self-service profile flow has been refactored into a more generic flow allowing users to make modifications
+to their traits and credentials. Check out the
 [docs to learn more]([here](https://www.ory.sh/kratos/docs/self-service/flows/user-settings-profile-management)
 about the flow and it's features.
 
-Please keep in mind that the flow's APIs have changed!
+Please keep in mind that the flow's APIs have changed. We recommend re-reading the docs!
 
 ### Managing Privileged Profile Fields
 
 Flows such as changing ones profile or primary email address should not be possible unless the login session is fresh.
 This prevents your colleague or evil friend to take over your account while you make yourself a coffee.
 
-ORY Kratos now supports this by redirecting the user to the login screen if the changes are made to sensitive fields.
+ORY Kratos now supports this by redirecting the user to the login screen if changes to sensitive fields are made.
 The changes will only be applied after successful reauthentication.
 
 ### Changes to Hooks
 
-This patch focuses on refactoring how self-service flows terminate and
+This patch refactors how self-service flows terminate and
 changes how hooks behave and when they are executed.
 
 Before this patch, it was not clear whether hooks run before or
@@ -63,6 +71,8 @@ instead of
 `selfservice.<login|registration|settings>.<after|before>.hooks`.
 Hooks are now identified by `hook:` instead of `job:`. Please
 rename those sections accordingly.
+
+We recommend re-reading the [Hooks Documentation](https://www.ory.sh/kratos/docs/self-service/hooks/index).
 
 ### Changing Passwords
 

@@ -74,14 +74,14 @@ func (s *ErrorHandler) HandleRegistrationError(
 		WithField("details", fmt.Sprintf("%+v", err)).
 		WithField("credentials_type", ct).
 		WithField("login_request", rr).
-		Warn("Encountered login error.")
+		Warn("Encountered registration error.")
 
 	if _, ok := errorsx.Cause(err).(requestExpiredError); ok {
 		// create new request because the old one is not valid
 		if err = s.d.RegistrationHandler().NewRegistrationRequest(w, r, func(a *Request) (string, error) {
 			for name, method := range a.Methods {
 				method.Config.AddError(&form.Error{Message: "Your session expired, please try again."})
-				if err := s.d.RegistrationRequestPersister().UpdateRegistrationRequest(context.TODO(), a.ID, name, method); err != nil {
+				if err := s.d.RegistrationRequestPersister().UpdateRegistrationRequestMethod(context.TODO(), a.ID, name, method); err != nil {
 					return s.d.SelfServiceErrorManager().Create(r.Context(), w, r, err)
 				}
 				a.Methods[name] = method
@@ -105,7 +105,7 @@ func (s *ErrorHandler) HandleRegistrationError(
 
 	method, ok := rr.Methods[ct]
 	if !ok {
-		s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithErrorf(`Expected method "%s" to exist in request. This is a bug in the code and should be reported on GitHub.`, ct)))
+		s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithDebugf("Methods: %+v",rr.Methods).WithErrorf(`Expected registration method "%s" to exist in request. This is a bug in the code and should be reported on GitHub.`, ct)))
 		return
 	}
 
@@ -114,7 +114,7 @@ func (s *ErrorHandler) HandleRegistrationError(
 		return
 	}
 
-	if err := s.d.RegistrationRequestPersister().UpdateRegistrationRequest(r.Context(), rr.ID, ct, method); err != nil {
+	if err := s.d.RegistrationRequestPersister().UpdateRegistrationRequestMethod(r.Context(), rr.ID, ct, method); err != nil {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}

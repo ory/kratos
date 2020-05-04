@@ -104,7 +104,7 @@ func (s *ErrorHandler) HandleLoginError(
 
 	method, ok := rr.Methods[ct]
 	if !ok {
-		s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithErrorf(`Expected method "%s" to exist in request. This is a bug in the code and should be reported on GitHub.`, ct)))
+		s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithDebugf("Methods: %+v",rr.Methods).WithErrorf(`Expected login method "%s" to exist in request. This is a bug in the code and should be reported on GitHub.`, ct)))
 		return
 	}
 
