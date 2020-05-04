@@ -1,0 +1,351 @@
+---
+id: user-settings-profile-management
+title: User Settings and Profile Management
+---
+
+ORY Kratos allows users to update their own settings and profile information
+using two principal flows:
+
+- Browser-based (easy): This flow works for all applications running on top of a
+  browser. Websites, single-page apps, Cordova/Ionic, and so on.
+- API-based (advanced): This flow works for native applications like iOS
+  (Swift), Android (Java), Microsoft (.NET), React Native, Electron, and others.
+
+The flow described here is implemented by the
+[profile](../strategies/user-settings-profile.md),
+[password](../strategies/username-email-password.md), and
+[oidc](../strategies/openid-connect-social-sign-in-oauth2.md). strategy.
+
+## Self-Service User Settings for Browser Applications
+
+ORY Kratos supports browser applications that run on server-side (e.g. Java,
+NodeJS, PHP) as well as client-side (e.g. JQuery, ReactJS, AngularJS, ...).
+
+Browser-based user settings management makes use of three core HTTP
+technologies:
+
+- HTTP Redirects
+- HTTP POST (`application/json`, `application/x-www-urlencoded`) and RESTful GET
+  requests.
+- HTTP Cookies to prevent CSRF and Session Hijaking attack vectors.
+
+The browser flow is the easiest and most secure to set up and integrated with.
+ORY Kratos takes care of all required session and CSRF cookies and ensures that
+all security requirements are fulfilled.
+
+This flow is not suitable for scenarios where you use purely programmatic
+clients that do not work well with HTTP Cookies and HTTP Redirects.
+
+### The Settings User Interface
+
+The Settings User Interface is a route (page / site) in your application that
+should render a sign in and registration form:
+
+```html
+<!-- Profile management -->
+<form action="..." method="POST">
+  <input type="hidden" name="csrf_token" value="cdef..." />
+  <input type="string" name="first_name" />
+  <input type="string" name="last_name" />
+  <input type="string" name="address" />
+  <input type="..." name="..." />
+  <input type="submit" />
+</form>
+
+<!-- Password management -->
+<form action="..." method="POST">
+  <input type="hidden" name="csrf_token" value="cdef..." />
+  <input
+    type="password"
+    name="password"
+    placeholder="Enter your new password here"
+  />
+</form>
+
+<!-- Social Sign in  management -->
+<form action="..." method="POST">
+  <input type="hidden" name="csrf_token" value="cdef..." />
+  <!-- ... -->
+</form>
+```
+
+Reference these UI endpoints your ORY Kratos config file:
+
+```yaml title="path/to/kratos/config.yml"
+urls:
+  settings_ui: https://.../settings
+```
+
+In stark contrast to other Identity Systems, ORY Kratos does not render this
+HTML. Instead, you need to implement the HTML code in your application (e.g.
+NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
+flexibility and customizability in your user interface flows and designs.
+
+Each Settings Strategy ([Profile](../strategies/user-settings-profile.md),
+[Username and Password](../strategies/username-email-password.md),
+[Social Sign In](../strategies/openid-connect-social-sign-in-oauth2.md),
+Passwordless, ...) works a bit different but they all boil down to the same
+abstract sequence:
+
+[![Abstract Settings Flow](https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gIHBhcnRpY2lwYW50IEIgYXMgQnJvd3NlclxuICBwYXJ0aWNpcGFudCBLIGFzIE9SWSBLcmF0b3NcbiAgcGFydGljaXBhbnQgQSBhcyBZb3VyIEFwcGxpY2F0aW9uXG5cblxuICBCLT4-SzogSW5pdGlhdGUgTG9naW5cbiAgSy0-PkI6IFJlZGlyZWN0cyB0byB5b3VyIEFwcGxpY2F0aW9uJ3MgL3NldHRpbmdzX3VpIGVuZHBvaW50XG4gIEItPj5BOiBDYWxscyAvc2V0dGluZ3NfdWlcbiAgQS0tPj5LOiBGZXRjaGVzIGRhdGEgdG8gcmVuZGVyIGZvcm1zIGV0Y1xuICBCLS0-PkE6IEZpbGxzIG91dCBmb3JtcywgY2xpY2tzIGUuZy4gXCJTYXZlIENoYW5nZXNcIlxuICBCLT4-SzogUE9TVHMgZGF0YSB0b1xuICBLLS0-Pks6IFByb2Nlc3NlcyBTZXR0aW5ncyBJbmZvXG5cbiAgYWx0IFNldHRpbmdzIGRhdGEgdmFsaWRcbiAgICBLLS0-PkI6IFVwZGF0ZXMgSWRlbnRpdHkgU2V0dGluZ3NcbiAgICBLLT4-QjogUmVkaXJlY3RzIHRvIGUuZy4gRGFzaGJvYXJkXG4gIGVsc2UgU2V0aW5ncyBkYXRhIGludmFsaWRcbiAgICBLLS0-PkI6IFJlZGlyZWN0cyB0byB5b3VyIEFwcGxpY2FpdG9uJ3MgL3NldHRpbmdzX3VpIGVuZHBvaW50XG4gICAgQi0-PkE6IENhbGxzIC9zZXR0aW5nc191aVxuICAgIEEtLT4-SzogRmV0Y2hlcyBkYXRhIHRvIHJlbmRlciBmb3JtIGZpZWxkcyBhbmQgZXJyb3JzXG4gICAgQi0tPj5BOiBGaWxscyBvdXQgZm9ybXMgYWdhaW4sIGNvcnJlY3RzIGVycm9yc1xuICAgIEItPj5LOiBQT1NUcyBkYXRhIGFnYWluIC0gYW5kIHNvIG9uLi4uXG4gIGVuZFxuIiwibWVybWFpZCI6eyJ0aGVtZSI6Im5ldXRyYWwiLCJzZXF1ZW5jZURpYWdyYW0iOnsiZGlhZ3JhbU1hcmdpblgiOjE1LCJkaWFncmFtTWFyZ2luWSI6MTUsImJveFRleHRNYXJnaW4iOjAsIm5vdGVNYXJnaW4iOjE1LCJtZXNzYWdlTWFyZ2luIjo0NSwibWlycm9yQWN0b3JzIjp0cnVlfX0sInVwZGF0ZUVkaXRvciI6ZmFsc2V9)](https://mermaid-js.github.io/mermaid-live-editor/#/edit/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gIHBhcnRpY2lwYW50IEIgYXMgQnJvd3NlclxuICBwYXJ0aWNpcGFudCBLIGFzIE9SWSBLcmF0b3NcbiAgcGFydGljaXBhbnQgQSBhcyBZb3VyIEFwcGxpY2F0aW9uXG5cblxuICBCLT4-SzogSW5pdGlhdGUgTG9naW5cbiAgSy0-PkI6IFJlZGlyZWN0cyB0byB5b3VyIEFwcGxpY2F0aW9uJ3MgL3NldHRpbmdzX3VpIGVuZHBvaW50XG4gIEItPj5BOiBDYWxscyAvc2V0dGluZ3NfdWlcbiAgQS0tPj5LOiBGZXRjaGVzIGRhdGEgdG8gcmVuZGVyIGZvcm1zIGV0Y1xuICBCLS0-PkE6IEZpbGxzIG91dCBmb3JtcywgY2xpY2tzIGUuZy4gXCJTYXZlIENoYW5nZXNcIlxuICBCLT4-SzogUE9TVHMgZGF0YSB0b1xuICBLLS0-Pks6IFByb2Nlc3NlcyBTZXR0aW5ncyBJbmZvXG5cbiAgYWx0IFNldHRpbmdzIGRhdGEgdmFsaWRcbiAgICBLLS0-PkI6IFVwZGF0ZXMgSWRlbnRpdHkgU2V0dGluZ3NcbiAgICBLLT4-QjogUmVkaXJlY3RzIHRvIGUuZy4gRGFzaGJvYXJkXG4gIGVsc2UgU2V0aW5ncyBkYXRhIGludmFsaWRcbiAgICBLLS0-PkI6IFJlZGlyZWN0cyB0byB5b3VyIEFwcGxpY2FpdG9uJ3MgL3NldHRpbmdzX3VpIGVuZHBvaW50XG4gICAgQi0-PkE6IENhbGxzIC9zZXR0aW5nc191aVxuICAgIEEtLT4-SzogRmV0Y2hlcyBkYXRhIHRvIHJlbmRlciBmb3JtIGZpZWxkcyBhbmQgZXJyb3JzXG4gICAgQi0tPj5BOiBGaWxscyBvdXQgZm9ybXMgYWdhaW4sIGNvcnJlY3RzIGVycm9yc1xuICAgIEItPj5LOiBQT1NUcyBkYXRhIGFnYWluIC0gYW5kIHNvIG9uLi4uXG4gIGVuZFxuIiwibWVybWFpZCI6eyJ0aGVtZSI6Im5ldXRyYWwiLCJzZXF1ZW5jZURpYWdyYW0iOnsiZGlhZ3JhbU1hcmdpblgiOjE1LCJkaWFncmFtTWFyZ2luWSI6MTUsImJveFRleHRNYXJnaW4iOjAsIm5vdGVNYXJnaW4iOjE1LCJtZXNzYWdlTWFyZ2luIjo0NSwibWlycm9yQWN0b3JzIjp0cnVlfX0sInVwZGF0ZUVkaXRvciI6ZmFsc2V9)
+
+### Code
+
+The code example used here is universal and does not use an SDK because we want
+you to understand the fundamentals of how this flow works.
+
+While this example assumes a Server-Side Application, a Client-Side (e.g.
+ReactJS) Application would work the same, but use ORY Kratos' Public API
+instead.
+
+#### Server-side route
+
+You will notice that this endpoint is very similar to the one documented for
+[User Login and Registration](user-settings-profile-management.mdx).
+
+```js
+// Uses the ORY Kratos NodeJS SDK - for more SDKs check:
+//
+//  https://www.ory.sh/kratos/docs/sdk/index
+const { CommonApi } = require('@oryd/kratos-client');
+
+// The browser config key is used to redirect the user. It reflects where ORY Kratos' Public API
+// is accessible from. Here, we're assuming traffic going to `http://example.org/.ory/kratos/public/`
+// will be forwarded to ORY Kratos' Public API.
+const kratosBrowserUrl = 'http://example.org/.ory/kratos/public/';
+
+// Initializes the SDK with ORY Kratos' Admin API.
+const commonApi = new CommonApi('https://ory-kratos-admin.example-org.vpc/');
+
+// This route would be used like:
+//
+//    app.get('/user/settings', authHandler('registration'))
+//
+export const settingsHandler = (req, res, next) => {
+  // The request ID is used to identify the login and registraion request and
+  // return data like the csrf_token and so on.
+  const request = req.query.request;
+  if (!request) {
+    console.log('No request found in URL, initializing flow.');
+    res.redirect(`${kratosBrowserUrl}/self-service/browser/flows/settings`);
+    return;
+  }
+
+  commonApi
+    .getSelfServiceBrowserSettingsRequest(request)
+    .then(({ body, response }) => {
+      if (response.statusCode !== 200) {
+        res.redirect(`${kratosBrowserUrl}/self-service/browser/flows/settings`);
+        return;
+      }
+
+      // "body" contains all the request data for this Registration request.
+      // You can process that data here, if you want.
+
+      // Lastly, you probably want to render the data using a view (e.g. Jade Template):
+      res.render('settings', body);
+    });
+  // Handle errors using ExpressJS' next functionality:
+  //
+  //    .catch(next)
+};
+```
+
+#### Views
+
+Implementing the view is simple as ORY Kratos provides you with all the
+information you need for rendering the forms. The following example illustrates
+a generic form generator (we use handlebars here) that works with ORY Kratos:
+
+```handlebars name="views/partials/form.hbs"
+<form action="{{form.action}}" method="{{form.method}}">
+    {{~#each form.errors~}}
+        <!-- global form validation errors -->
+        <div class="error">{{message}}</div>
+    {{~/each~}}
+
+    {{#each form.fields}}
+        {{~#each errors~}}
+            <!-- validation errors for this specific field -->
+            <div class="error">{{message}}</div>
+        {{~/each~}}
+        <input name="{{name}}" type="{{type}}" value="{{value}}" {{#if disabled}}disabled{{/if}}>
+    {{/each}}
+
+    <button type="submit">Save</button>
+</form>
+```
+
+In your main "Settings" view you would then consume this template for all the
+methods you want to support:
+
+```handlebars name="views/login_or_signup.hbs"
+<!-- Make profile changes form: -->
+{{#if methods.profile.config}}
+    {{> form form=methods.profile.config}}
+{{/if}}
+
+<!-- Change passowrd form: -->
+{{#if methods.password.config}}
+    {{> form form=methods.password.config}}
+{{/if}}
+
+<!-- ... form: -->
+<!-- ... -->
+```
+
+For details on payloads and potential HTML snippets consult the individual
+Self-Service Strategies for:
+
+- [Username and Password Strategy](../strategies/username-email-password.md)
+- [Social Sign In Strategy](../strategies/openid-connect-social-sign-in-oauth2.md)
+- [Profile](../strategies/user-settings-profile.md)
+
+### Server-Side Browser Applications
+
+Let's take a look at the concrete network topologies, calls, and payloads. Here,
+we're assuming that you're running a server-side browser application (written in
+e.g. PHP, Java, NodeJS) to render the settings screen on the server and make all
+API calls from that server code. The counterpart to this would be a client-side
+browser application (written in e.g. Vanilla JavaScript, JQuery, ReactJS,
+AngularJS, ...) that uses AJAX requests to fetch data. For these type of
+applications, read this section first and go to section
+[Client-Side Browser Applications](#client-side-browser-applications) next.
+
+#### Network Architecture
+
+We recommend checking out the
+[Quickstart Network Architecture](../../quickstart.mdx#network-architecture) for
+a high-level, exemplary, overview of the network. In summary:
+
+1. The SecureApp (your application) is exposed at http://127.0.0.1:4455 and
+   proxies requests matching path `./ory/kratos/public/*` to ORY Krato's Public
+   API Port.
+1. ORY Kratos exposes (for debugging only!!) the Public API at
+   http://127.0.0.1:4433 and Admin API at http://127.0.0.1:4434.
+1. Within the "intranet" or "private network", ORY Kratos is exposed at
+   http://kratos:4433 and http://kratos:4434. These URLs are be used by the
+   SecureApp to communicate with ORY Kratos.
+
+Keep in mind that his architecture is just one of many possible network
+architectures. It is however one of the simplest as well and it works locally.
+For production deployments you would probably use an Reverse Proxy such as
+Nginx, Kong, Envoy, ORY Oathkeeper, or others.
+
+#### User Settings Process Sequence
+
+The User Settings Flow is composed of several high-level steps summarized in
+this state diagram:
+
+[![User Login and Registration State Machine](https://mermaid.ink/img/eyJjb2RlIjoic3RhdGVEaWFncmFtXG4gIHMxOiBVc2VyIGJyb3dzZXMgYXBwXG4gIHMyOiBFeGVjdXRlIFwiQmVmb3JlIExvZ2luL1JlZ2lzdHJhdGlvbiBIb29rKHMpXCJcbiAgczM6IFVzZXIgSW50ZXJmYWNlIEFwcGxpY2F0aW9uIHJlbmRlcnMgXCJMb2dpbi9SZWdpc3RyYXRpb24gUmVxdWVzdFwiXG4gIHM0OiBFeGVjdXRlIFwiQWZ0ZXIgTG9naW4vUmVnaXN0cmF0aW9uIEhvb2socylcIlxuICBzNTogVXBkYXRlIFwiTG9naW4vUmVnaXN0cmF0aW9uIFJlcXVlc3RcIiB3aXRoIEVycm9yIENvbnRleHQocylcbiAgczY6IExvZ2luL1JlZ2lzdHJhdGlvbiBzdWNjZXNzZnVsXG5cblxuXG5cdFsqXSAtLT4gczFcbiAgczEgLS0-IHMyIDogVXNlciBjbGlja3MgXCJMb2cgaW4gLyBTaWduIHVwXCJcbiAgczIgLS0-IEVycm9yIDogQSBob29rIGZhaWxzXG4gIHMyIC0tPiBzMyA6IFVzZXIgaXMgcmVkaXJlY3RlZCB0byBMb2dpbi9SZWdpc3RyYXRpb24gVUkgVVJMXG4gIHMzIC0tPiBzNCA6IFVzZXIgcHJvdmlkZXMgdmFsaWQgY3JlZGVudGlhbHMvcmVnaXN0cmF0aW9uIGRhdGFcbiAgczMgLS0-IHM1IDogVXNlciBwcm92aWRlcyBpbnZhbGlkIGNyZWRlbnRpYWxzL3JlZ2lzdHJhdGlvbiBkYXRhXG4gIHM1IC0tPiBzMyA6IFVzZXIgaXMgcmVkaXJlY3RlZCB0byBMb2dpbi9SZWdpc3RyYXRpb24gVUkgVVJMXG4gIHM0IC0tPiBFcnJvciA6IEEgSG9vayBmYWlsc1xuICBzNCAtLT4gczZcbiAgczYgLS0-IFsqXVxuXG4gIEVycm9yIC0tPiBbKl1cblxuXG4iLCJtZXJtYWlkIjp7InRoZW1lIjoiZGVmYXVsdCJ9LCJ1cGRhdGVFZGl0b3IiOmZhbHNlfQ)](https://mermaid-js.github.io/mermaid-live-editor/#/edit/eyJjb2RlIjoic3RhdGVEaWFncmFtXG4gIHMxOiBVc2VyIGJyb3dzZXMgYXBwXG4gIHMyOiBFeGVjdXRlIFwiQmVmb3JlIExvZ2luL1JlZ2lzdHJhdGlvbiBIb29rKHMpXCJcbiAgczM6IFVzZXIgSW50ZXJmYWNlIEFwcGxpY2F0aW9uIHJlbmRlcnMgXCJMb2dpbi9SZWdpc3RyYXRpb24gUmVxdWVzdFwiXG4gIHM0OiBFeGVjdXRlIFwiQWZ0ZXIgTG9naW4vUmVnaXN0cmF0aW9uIEhvb2socylcIlxuICBzNTogVXBkYXRlIFwiTG9naW4vUmVnaXN0cmF0aW9uIFJlcXVlc3RcIiB3aXRoIEVycm9yIENvbnRleHQocylcbiAgczY6IExvZ2luL1JlZ2lzdHJhdGlvbiBzdWNjZXNzZnVsXG5cblxuXG5cdFsqXSAtLT4gczFcbiAgczEgLS0-IHMyIDogVXNlciBjbGlja3MgXCJMb2cgaW4gLyBTaWduIHVwXCJcbiAgczIgLS0-IEVycm9yIDogQSBob29rIGZhaWxzXG4gIHMyIC0tPiBzMyA6IFVzZXIgaXMgcmVkaXJlY3RlZCB0byBMb2dpbi9SZWdpc3RyYXRpb24gVUkgVVJMXG4gIHMzIC0tPiBzNCA6IFVzZXIgcHJvdmlkZXMgdmFsaWQgY3JlZGVudGlhbHMvcmVnaXN0cmF0aW9uIGRhdGFcbiAgczMgLS0-IHM1IDogVXNlciBwcm92aWRlcyBpbnZhbGlkIGNyZWRlbnRpYWxzL3JlZ2lzdHJhdGlvbiBkYXRhXG4gIHM1IC0tPiBzMyA6IFVzZXIgaXMgcmVkaXJlY3RlZCB0byBMb2dpbi9SZWdpc3RyYXRpb24gVUkgVVJMXG4gIHM0IC0tPiBFcnJvciA6IEEgSG9vayBmYWlsc1xuICBzNCAtLT4gczZcbiAgczYgLS0-IFsqXVxuXG4gIEVycm9yIC0tPiBbKl1cblxuXG4iLCJtZXJtYWlkIjp7InRoZW1lIjoiZGVmYXVsdCJ9LCJ1cGRhdGVFZGl0b3IiOmZhbHNlfQ)
+
+1. The flow is initiated by directing the user's browser to
+   `http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/settings`.
+1. ORY Kratos does some internal processing (e.g. checks if a session cookie is
+   set, generates payloads for form fields, sets CSRF token, ...) and redirects
+   the user's browser to the Settings UI URL which is defined using the
+   `urls.settings_ui` config or `URLS_SETTINGS_UI` environment variable, which
+   is set to the ui endpoints - for example `https://127.0.0.1:4455/settings`.
+   The user's browser is thus redirected to
+   `https://127.0.0.1:4455/settings?request=abcde`. The `request` query
+   parameter includes a unique ID which will be used to fetch contextual data
+   for this login request.
+1. Your Server-Side Application makes a `GET` request to
+   `http://kratos:4434/self-service/browser/flows/requests/settings?request=abcde`.
+   ORY Kratos responds with a JSON Payload that contains data (form fields,
+   error messages, ...) for all enabled User Profile Strategies:
+   ```json5
+   {
+     id: 'abcde',
+     request_url: '...',
+     methods: {
+       profile: { method: 'profile', config: { action: '...', fields: [] } },
+       password: { method: 'password', config: { action: '...', fields: [] } },
+       oidc: { method: 'oidc', config: { action: '...', fields: [] } },
+     },
+   }
+   ```
+1. Your Server-Side applications renders the data however you see fit. The User
+   interacts with it and completes the flow by e.g. updating the password or
+   some other profile data.
+1. The User's browser makes a request to one of ORY Kratos' Strategy URLs (e.g.
+   `http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/settings/strategies/profile?request=abcde`
+   or `/self-service/browser/flows/settings/strategies/password?request=abcde`).
+   ORY Kratos validates the data:
+   - If the form data is invalid, the Login Request's JSON Payload is updated -
+     for example with
+     ```json5
+     {
+       id: 'abcde',
+       methods: {
+         oidc: {
+           method: 'oidc',
+           config: {
+             /* ... */
+           },
+         },
+         password: {
+           method: 'password',
+           config: {
+             /* ... */
+             errors: [
+               {
+                 message: 'The provided credentials are invalid. Check for spelling mistakes in your password or username, email address, or phone number.',
+               },
+             ],
+           },
+         },
+       },
+     }
+     ```
+     and the user's Browser is redirected back to the Login UI:
+     `https://127.0.0.1:4455/settings_ui?request=abcde`.
+   - If the data is valid but the modifications require proof of identity (e.g.
+     because the primary email address or the password was changed), a login
+     flow is executed. Only after a successful login flow will the changed data
+     be stored!
+   - If data is valid, ORY Kratos proceeds with the next step.
+1. ORY Kratos executes hooks defined in the **After Settings Hooks**. If a
+   failure occurs, the whole flow is aborted.
+1. The client receives the expected response. For browsers, this is a HTTP
+   Redirection, for API clients it will be a JSON response containing the
+   session and/or identity. For more information on this topic check
+   [Self-Service Flow Completion](../../concepts/selfservice-flow-completion.md).
+
+[![User Settings Sequence Diagram for Server-Side Applications](https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gIHBhcnRpY2lwYW50IEIgYXMgQnJvd3NlclxuICBwYXJ0aWNpcGFudCBBIGFzIFlvdXIgU2VydmVyLVNpZGUgQXBwbGljYXRpb25cbiAgcGFydGljaXBhbnQgS1AgYXMgT1JZIEtyYXRvcyBQdWJsaWMgQVBJXG4gIHBhcnRpY2lwYW50IEtBIGFzIE9SWSBLcmF0b3MgQWRtaW4gQVBJXG5cbiAgQi0-PitBOiBHRVQgLy5vcnkva3JhdG9zL3B1YmxpYy9zZWxmLXNlcnZpY2UvYnJvd3Nlci9mbG93cy9zZXR0aW5nc1xuICBBLT4-K0tQOiBHRVQgL3NlbGYtc2VydmljZS9icm93c2VyL2Zsb3dzL3NldHRpbmdzXG4gIEtQLS0-Pi1BOiBIVFRQIDMwMiBGb3VuZCAvc2V0dGluZ3M_cmVxdWVzdD1hYmNkZVxuICBBLS0-Pi1COiBIVFRQIDMwMiBGb3VuZCAvc2V0dGluZ3M_cmVxdWVzdD1hYmNkZVxuXG4gIEItPj4rQTogR0VUIC9zZXR0aW5ncz9yZXF1ZXN0PWFiY2RlXG4gIEEtPj4rS0E6IEdFVCAvc2VsZi1zZXJ2aWNlL2Jyb3dzZXIvZmxvd3MvcmVxdWVzdHMvc2V0dGluZ3M_cmVxdWVzdD1hYmNkZVxuICBLQS0-Pi1BOiBTZW5kcyBTZXR0aW5ncyBSZXF1ZXN0IEpTT04gUGF5bG9hZFxuICBOb3RlIG92ZXIgQSxLQTogIHtcIm1ldGhvZHNcIjp7XCJwYXNzd29yZFwiOi4uLixcIm9pZGNcIjouLn19XG4gIEEtLT4-QTogR2VuZXJhdGUgYW5kIHJlbmRlciBIVE1MXG4gIEEtLT4-LUI6IFJldHVybiBIVE1MIChGb3JtLCAuLi4pXG5cbiAgQi0tPj5COiBGaWxsIG91dCBIVE1MXG5cbiAgQi0-PitLUDogUE9TVCBIVE1MIEZvcm1cbiAgS1AtLT4-S1A6IENoZWNrcyBwcm9maWxlIGRhdGFcblxuXG4gIGFsdCBTZXR0aW5nIHVwZGF0ZXMgYXJlIHZhbGlkXG4gICAgS1AtLT4-LUtQOiBFeGVjdXRlIEpvYnMgZGVmaW5lZCBpbiBcIkFmdGVyIFNldHRpbmdzIFdvcmtmbG93KHMpXCJcbiAgICBLUC0tPj5BOiBIVFRQIDMwMiBGb3VuZCAvZGFzaGJvYXJkXG4gIGVsc2UgU2V0dGluZyB1cGRhdGVzIHJlcXVpcmUgcmUtYXV0aGVudGljYXRpb25cbiAgICBOb3RlIG92ZXIgS1AsQjogVXNlciBpcyBhc2tlZCB0byBsb2dpbiBpbiBhZ2Fpbi4gSWYgdGhlIGxvZ2luIGlzIHZhbGlkLCB0aGUgZGF0YSBpcyB1cGRhdGVkLlxuICAgIEtQLS0-PkI6IEhUVFAgMzAyIEZvdW5kIC9zZXR0aW5ncz9yZXF1ZXN0PWFiY2RlXG4gIGVsc2UgU2V0dGluZyB1cGRhdGVzIGFyZSBpbnZhbGlkXG4gICAgTm90ZSBvdmVyIEtQLEI6IFVzZXIgcmV0cmllcyBzZXR0aW5ncyBmbG93XG4gICAgS1AtLT4-QjogSFRUUCAzMDIgRm91bmQgL3NldHRpbmdzP3JlcXVlc3Q9YWJjZGVcbiAgZW5kXG4gICIsIm1lcm1haWQiOnsidGhlbWUiOiJuZXV0cmFsIiwic2VxdWVuY2VEaWFncmFtIjp7ImRpYWdyYW1NYXJnaW5YIjoxNSwiZGlhZ3JhbU1hcmdpblkiOjE1LCJib3hUZXh0TWFyZ2luIjoxLCJub3RlTWFyZ2luIjoxMCwibWVzc2FnZU1hcmdpbiI6NTUsIm1pcnJvckFjdG9ycyI6dHJ1ZX19LCJ1cGRhdGVFZGl0b3IiOmZhbHNlfQ)](https://mermaid-js.github.io/mermaid-live-editor/#/edit/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gIHBhcnRpY2lwYW50IEIgYXMgQnJvd3NlclxuICBwYXJ0aWNpcGFudCBBIGFzIFlvdXIgU2VydmVyLVNpZGUgQXBwbGljYXRpb25cbiAgcGFydGljaXBhbnQgS1AgYXMgT1JZIEtyYXRvcyBQdWJsaWMgQVBJXG4gIHBhcnRpY2lwYW50IEtBIGFzIE9SWSBLcmF0b3MgQWRtaW4gQVBJXG5cbiAgQi0-PitBOiBHRVQgLy5vcnkva3JhdG9zL3B1YmxpYy9zZWxmLXNlcnZpY2UvYnJvd3Nlci9mbG93cy9zZXR0aW5nc1xuICBBLT4-K0tQOiBHRVQgL3NlbGYtc2VydmljZS9icm93c2VyL2Zsb3dzL3NldHRpbmdzXG4gIEtQLS0-Pi1BOiBIVFRQIDMwMiBGb3VuZCAvc2V0dGluZ3M_cmVxdWVzdD1hYmNkZVxuICBBLS0-Pi1COiBIVFRQIDMwMiBGb3VuZCAvc2V0dGluZ3M_cmVxdWVzdD1hYmNkZVxuXG4gIEItPj4rQTogR0VUIC9zZXR0aW5ncz9yZXF1ZXN0PWFiY2RlXG4gIEEtPj4rS0E6IEdFVCAvc2VsZi1zZXJ2aWNlL2Jyb3dzZXIvZmxvd3MvcmVxdWVzdHMvc2V0dGluZ3M_cmVxdWVzdD1hYmNkZVxuICBLQS0-Pi1BOiBTZW5kcyBTZXR0aW5ncyBSZXF1ZXN0IEpTT04gUGF5bG9hZFxuICBOb3RlIG92ZXIgQSxLQTogIHtcIm1ldGhvZHNcIjp7XCJwYXNzd29yZFwiOi4uLixcIm9pZGNcIjouLn19XG4gIEEtLT4-QTogR2VuZXJhdGUgYW5kIHJlbmRlciBIVE1MXG4gIEEtLT4-LUI6IFJldHVybiBIVE1MIChGb3JtLCAuLi4pXG5cbiAgQi0tPj5COiBGaWxsIG91dCBIVE1MXG5cbiAgQi0-PitLUDogUE9TVCBIVE1MIEZvcm1cbiAgS1AtLT4-S1A6IENoZWNrcyBwcm9maWxlIGRhdGFcblxuXG4gIGFsdCBTZXR0aW5nIHVwZGF0ZXMgYXJlIHZhbGlkXG4gICAgS1AtLT4-LUtQOiBFeGVjdXRlIEpvYnMgZGVmaW5lZCBpbiBcIkFmdGVyIFNldHRpbmdzIFdvcmtmbG93KHMpXCJcbiAgICBLUC0tPj5BOiBIVFRQIDMwMiBGb3VuZCAvZGFzaGJvYXJkXG4gIGVsc2UgU2V0dGluZyB1cGRhdGVzIHJlcXVpcmUgcmUtYXV0aGVudGljYXRpb25cbiAgICBOb3RlIG92ZXIgS1AsQjogVXNlciBpcyBhc2tlZCB0byBsb2dpbiBpbiBhZ2Fpbi4gSWYgdGhlIGxvZ2luIGlzIHZhbGlkLCB0aGUgZGF0YSBpcyB1cGRhdGVkLlxuICAgIEtQLS0-PkI6IEhUVFAgMzAyIEZvdW5kIC9zZXR0aW5ncz9yZXF1ZXN0PWFiY2RlXG4gIGVsc2UgU2V0dGluZyB1cGRhdGVzIGFyZSBpbnZhbGlkXG4gICAgTm90ZSBvdmVyIEtQLEI6IFVzZXIgcmV0cmllcyBzZXR0aW5ncyBmbG93XG4gICAgS1AtLT4-QjogSFRUUCAzMDIgRm91bmQgL3NldHRpbmdzP3JlcXVlc3Q9YWJjZGVcbiAgZW5kXG4gICIsIm1lcm1haWQiOnsidGhlbWUiOiJuZXV0cmFsIiwic2VxdWVuY2VEaWFncmFtIjp7ImRpYWdyYW1NYXJnaW5YIjoxNSwiZGlhZ3JhbU1hcmdpblkiOjE1LCJib3hUZXh0TWFyZ2luIjoxLCJub3RlTWFyZ2luIjoxMCwibWVzc2FnZU1hcmdpbiI6NTUsIm1pcnJvckFjdG9ycyI6dHJ1ZX19LCJ1cGRhdGVFZGl0b3IiOmZhbHNlfQ)
+
+### Client-Side Browser Applications
+
+Because Client-Side Browser Applications do not have access to ORY Kratos' Admin
+API, they must use the ORY Kratos Public API instead. The flow for a Client-Side
+Browser Application is almost the exact same as the one for Server-Side
+Applications, with the small difference that
+`https://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/requests/settings?request=abcde`
+would be called via AJAX instead of making a request to
+`https://kratos:4434/self-service/browser/flows/requests/settings?request=abcde`.
+
+To prevent brute force, guessing, session injection, and other attacks, it is
+required that cookies are working for this endpoint. The cookie set in the
+initial HTTP request made to
+`https://127.0.0.1:4455/.ory/kratos/public/self-service/browser/settings` MUST
+be set and available when calling this endpoint!
+
+:::info
+
+The initialization request
+(`http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/settings`)
+**cannot** be made via AJAX or API requests. You **must** open that URL in the
+user's browser using e.g. `window.open` `location.href` or plain and simple old
+`<a href=...>`.
+
+:::
+
+## Self-Service User Settings for API Clients
+
+Will be addressed in a future release.
+
+## Hooks
+
+ORY Kratos allows you to configure hooks that run before and after a profile
+update was successful. For more information about hooks please read the
+[Hook Documentation](../hooks/index.mdx).

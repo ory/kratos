@@ -86,8 +86,8 @@ const needsLogin = (req, res, next) => {
 
 :::info
 
-ORY Kratos is not just an API, it uses cookies, HTTP redirects, Anti-CSRF Tokens
-and more so you don't have to!
+ORY Kratos is not just an API, it uses cookies, HTTP redirects,
+Anti-CSRF Tokens and more so you don't have to!
 
 :::
 
@@ -134,9 +134,9 @@ that Docker has enough disk space.
 
 :::tip
 
-This tutorial uses Docker-Compose volumes which have reported to run out of disk
-space. Check the remaining disk space using `docker system df`. If the volumes
-are above the 85% threshold,
+This tutorial uses Docker-Compose volumes which have reported to run out
+of disk space. Check the remaining disk space using `docker system df`. If the
+volumes are above the 85% threshold,
 [prune old Docker objects](https://docs.docker.com/config/pruning/) before you
 start!
 
@@ -144,9 +144,10 @@ start!
 
 :::tip
 
-If you encounter build errors (e.g. network timeout), make sure that the network
-is running correctly and run `macke docker` again. If the problem persists, feel
-free to [open an issue](https://github.com/ory/kratos/issues/new/choose).
+If you encounter build errors (e.g. network timeout), make sure that the
+network is running correctly and run `macke docker` again. If the problem
+persists, feel free to
+[open an issue](https://github.com/ory/kratos/issues/new/choose).
 
 :::
 
@@ -184,7 +185,7 @@ There are two important factors to get a fully functional system:
 - Make sure to always use `127.0.0.1` as the hostname, never use `localhost`!
   This is important because browsers treat these two as separate domains and
   will therefore have issues with setting and using the right cookies.
-
+  
 :::
 
 You might notice that no database is being used in this example. ORY Kratos
@@ -404,9 +405,9 @@ this documentation.
 
 :::note
 
-To get a minimal version of ORY Kratos running, you need to set configuration
-items `identity.traits.default_schema_url` and `dsn`. You should also configure
-`urls.*_ui` because your users will end up at fallbacks otherwise.
+To get a minimal version of ORY Kratos running, you need to set configuration items
+`identity.traits.default_schema_url` and `dsn`. You should also configure `urls.*_ui`
+because your users will end up at fallbacks otherwise.
 
 :::
 
