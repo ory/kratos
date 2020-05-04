@@ -5,6 +5,7 @@
 **Table of Contents**
 
 - [Unreleased (2020-05-04)](#unreleased-2020-05-04)
+- [0.2.0-alpha.1 (2020-05-04)](#020-alpha1-2020-05-04)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -67,7 +68,12 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.1.1-alpha.1...b3bcb25be6b417647ece2b3dda26d691f8e8d685) (2020-05-04)
+# Unreleased (2020-05-04)
+
+No significant changes have been made for this release.
+
+
+# [0.2.0-alpha.1](https://github.com/ory/kratos/compare/v0.1.1-alpha.1...v0.2.0-alpha.1) (2020-05-04)
 
 
 ### Bug Fixes
@@ -154,6 +160,7 @@
 * Add database connection documentation ([#332](https://github.com/ory/kratos/issues/332)) ([4f9e8b0](https://github.com/ory/kratos/commit/4f9e8b00bacda3612db3f48b81fabd562075470a))
 * Add HA docs ([2e5c591](https://github.com/ory/kratos/commit/2e5c59158915d1ccbb90363e23f73a09c227b6f7))
 * Add hook changes to upgrade guide ([55b5fe0](https://github.com/ory/kratos/commit/55b5fe00c0472f5f6f7408eee76bf9a39318db7e))
+* Add info to oidc ([#382](https://github.com/ory/kratos/issues/382)) ([6eeeb5d](https://github.com/ory/kratos/commit/6eeeb5dbe98d2f31fd922d60a35d9d8f81d0b2a8))
 * Add more examples to config schema ([#372](https://github.com/ory/kratos/issues/372)) ([ed2ccb9](https://github.com/ory/kratos/commit/ed2ccb935fdcfcb11999996cd582726bba096435)), closes [#345](https://github.com/ory/kratos/issues/345)
 * Add quickstart notes for docker debugging ([74f082a](https://github.com/ory/kratos/commit/74f082a407ee73741453ff6a394f47790e79b667))
 * Add settings docs and improve flows ([#375](https://github.com/ory/kratos/issues/375)) ([478cd9c](https://github.com/ory/kratos/commit/478cd9c5b5755030307d1f11e9bcbd4e171ee0d6)), closes [#345](https://github.com/ory/kratos/issues/345)
