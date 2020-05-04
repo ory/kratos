@@ -84,8 +84,12 @@ const needsLogin = (req, res, next) => {
 };
 ```
 
-:::info ORY Kratos is not just an API, it uses cookies, HTTP redirects,
-Anti-CSRF Tokens and more so you don't have to! :::
+:::info
+
+ORY Kratos is not just an API, it uses cookies, HTTP redirects,
+Anti-CSRF Tokens and more so you don't have to!
+
+:::
 
 Because our SecureApp and ORY Kratos need to share cookies, in order for
 Anti-CSRF Tokens and Login Session to work, we will set up path with forwards
@@ -128,16 +132,24 @@ To get this example working, you will need Git and
 your system. No other dependencies are required. Before you start, make sure
 that Docker has enough disk space.
 
-:::tip This tutorial uses Docker-Compose volumes which have reported to run out
+:::tip
+
+This tutorial uses Docker-Compose volumes which have reported to run out
 of disk space. Check the remaining disk space using `docker system df`. If the
 volumes are above the 85% threshold,
 [prune old Docker objects](https://docs.docker.com/config/pruning/) before you
-start! :::
+start!
 
-:::tip If you encounter build errors (e.g. network timeout), make sure that the
+:::
+
+:::tip
+
+If you encounter build errors (e.g. network timeout), make sure that the
 network is running correctly and run `macke docker` again. If the problem
 persists, feel free to
-[open an issue](https://github.com/ory/kratos/issues/new/choose). :::
+[open an issue](https://github.com/ory/kratos/issues/new/choose).
+
+:::
 
 Let's clone ORY Kratos and run `docker-compose`:
 
@@ -164,13 +176,17 @@ kratos_1                      | time="2020-01-20T14:52:13Z" level=info msg="Star
 kratos_1                      | time="2020-01-20T14:52:13Z" level=info msg="Starting the public httpd on: 0.0.0.0:4433"
 ```
 
-:::note There are two important factors to get a fully functional system:
+:::note
+
+There are two important factors to get a fully functional system:
 
 - You need to make sure that ports `4455`, `4433`, `4434`, `4436` >
   [are free](https://serverfault.com/questions/309052/check-if-port-is-open-or-closed-on-a-linux-server).
 - Make sure to always use `127.0.0.1` as the hostname, never use `localhost`!
   This is important because browsers treat these two as separate domains and
-  will therefore have issues with setting and using the right cookies. :::
+  will therefore have issues with setting and using the right cookies.
+  
+:::
 
 You might notice that no database is being used in this example. ORY Kratos
 supports SQLite, PostgreSQL, MySQL, and CockroachDB as database backends. For
