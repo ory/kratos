@@ -18,7 +18,7 @@ builds:
       - -tags
       - sqlite
     ldflags:
-      - -s -w -X github.com/ory/kratos/cmd.Version={{.Tag}} -X github.com/ory/kratos/cmd.Commit={{.FullCommit}} -X github.com/ory/kratos/cmd.Date={{.Date}}
+      - -s -w -X github.com/ory/kratos/cmd.BuildVersion={{.Tag}} -X github.com/ory/kratos/cmd.BuildGitHash={{.FullCommit}} -X github.com/ory/kratos/cmd.BuildTime={{.Date}}
       # - "-extldflags '-static'"
     binary: kratos-sqlite
     env:
@@ -36,7 +36,7 @@ builds:
       - -tags
       - sqlite
     ldflags:
-      - -s -w -X github.com/ory/kratos/cmd.Version={{.Tag}} -X github.com/ory/kratos/cmd.Commit={{.FullCommit}} -X github.com/ory/kratos/cmd.Date={{.Date}}
+      - -s -w -X github.com/ory/kratos/cmd.BuildVersion={{.Tag}} -X github.com/ory/kratos/cmd.BuildGitHash={{.FullCommit}} -X github.com/ory/kratos/cmd.BuildTime={{.Date}}
     binary: kratos-sqlite
     env:
       - CGO_ENABLED=1
@@ -50,7 +50,7 @@ builds:
       - -tags
       - sqlite
     ldflags:
-      - -s -w -X github.com/ory/kratos/cmd.Version={{.Tag}} -X github.com/ory/kratos/cmd.Commit={{.FullCommit}} -X github.com/ory/kratos/cmd.Date={{.Date}}
+      - -s -w -X github.com/ory/kratos/cmd.BuildVersion={{.Tag}} -X github.com/ory/kratos/cmd.BuildGitHash={{.FullCommit}} -X github.com/ory/kratos/cmd.BuildTime={{.Date}}
     binary: kratos-sqlite-libmusl
     env:
       - CGO_ENABLED=1
@@ -65,7 +65,7 @@ builds:
       - -tags
       - sqlite
     ldflags:
-      - -s -w -X github.com/ory/kratos/cmd.Version={{.Tag}} -X github.com/ory/kratos/cmd.Commit={{.FullCommit}} -X github.com/ory/kratos/cmd.Date={{.Date}}
+      - -s -w -X github.com/ory/kratos/cmd.BuildVersion={{.Tag}} -X github.com/ory/kratos/cmd.BuildGitHash={{.FullCommit}} -X github.com/ory/kratos/cmd.BuildTime={{.Date}}
       - "-extldflags '-static'"
     binary: kratos-sqlite
     env:
@@ -80,7 +80,7 @@ builds:
   -
     id: kratos
     ldflags:
-      - -s -w -X github.com/ory/kratos/cmd.Version={{.Tag}} -X github.com/ory/kratos/cmd.Commit={{.FullCommit}} -X github.com/ory/kratos/cmd.Date={{.Date}}
+      - -s -w -X github.com/ory/kratos/cmd.BuildVersion={{.Tag}} -X github.com/ory/kratos/cmd.BuildGitHash={{.FullCommit}} -X github.com/ory/kratos/cmd.BuildTime={{.Date}}
     binary: kratos
     env:
       - CGO_ENABLED=0

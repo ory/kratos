@@ -10,7 +10,6 @@ yet? If not, this would be a perfect opportunity!
 
 :::
 
-
 The Social Sign In Strategy enables you to use
 
 - [GitHub](http://github.com/);
