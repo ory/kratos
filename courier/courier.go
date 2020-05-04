@@ -11,6 +11,8 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
+	"github.com/ory/herodot"
+
 	gomail "github.com/ory/mail/v3"
 
 	"github.com/ory/kratos/driver/configuration"
@@ -123,6 +125,10 @@ func (m *Courier) Shutdown(ctx context.Context) error {
 func (m *Courier) watchMessages(ctx context.Context, errChan chan error) {
 	for {
 		if err := backoff.Retry(func() error {
+			if len(m.Dialer.Host) == 0 {
+				return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Courier tried to deliver an email but courier.smtp_url is not set!"))
+			}
+
 			messages, err := m.d.CourierPersister().NextMessages(ctx, 10)
 			if err != nil {
 				if errors.Is(err, ErrQueueEmpty) {

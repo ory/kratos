@@ -387,6 +387,14 @@ You can find all configuration files for this quickstart guide in
 individual configuration files are doing, you must consult the other chapters of
 this documentation.
 
+:::note
+
+To get a minimal version of ORY Kratos running, you need to set configuration items
+`identity.traits.default_schema_url` and `dsn`. You should also configure `urls.*_ui`
+because your users will end up at fallbacks otherwise.
+
+:::
+
 In the future, this guide will support more use cases such as:
 
 - Use GitHub to login in and sign up

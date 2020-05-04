@@ -272,7 +272,11 @@ func (p *ViperProvider) SelfAdminURL() *url.URL {
 }
 
 func (p *ViperProvider) CourierSMTPURL() *url.URL {
-	return mustParseURLFromViper(p.l, ViperKeyCourierSMTPURL)
+	u, err := url.ParseRequestURI(viper.GetString(ViperKeyCourierSMTPURL))
+	if err != nil {
+		return new(url.URL)
+	}
+	return u
 }
 
 func (p *ViperProvider) LoginURL() *url.URL {
