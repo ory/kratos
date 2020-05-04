@@ -5,9 +5,8 @@ title: Social Sign In with OpenID Connect and OAuth2
 
 :::info
 
-The OpenID Connect Strategy does already work but needs further documentation
-and code improvements. It will be documented in an upcoming release of ORY
-Kratos.
+OpenID Connect is undergoing active refactoring and these docs will change. See
+[#381](https://github.com/ory/kratos/pull/381).
 
 :::
 

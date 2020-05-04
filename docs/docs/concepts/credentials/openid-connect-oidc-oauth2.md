@@ -3,6 +3,13 @@ id: openid-connect-oidc-oauth2
 title: Social Sign In, OpenID Connect, and OAuth2
 ---
 
+:::info
+
+OpenID Connect is undergoing active refactoring and these docs will change. See
+[#381](https://github.com/ory/kratos/pull/381).
+
+:::
+
 The `oidc` method uses OpenID Connect, or OAuth2 where OpenID Connect is not
 supported, to authenticate identities using a third-party identity provider,
 such as Google, Microsoft, GitHub - or any other OAuth2 / OpenID Connect
