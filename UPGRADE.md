@@ -63,7 +63,7 @@ BREAKING CHANGE: Please remove the `redirect` hook from both login,
 registration, and settings after configuration. Please remove the `session` hook
 from your login after configuration. Hooks have moved down a level and are now
 configured at `selfservice.<login|registration|settings>.<after|before>.hooks`
-instead of `selfservice.<login|registration|settings>.<after|before>.hooks`.
+instead of `selfservice.<login|registration|settings>.<after|before>`.
 Hooks are now identified by `hook:` instead of `job:`. Please rename those
 sections accordingly.
 
