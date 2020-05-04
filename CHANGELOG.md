@@ -5,35 +5,36 @@
 **Table of Contents**
 
 - [Unreleased (2020-05-04)](#unreleased-2020-05-04)
+    - [Documentation](#documentation)
 - [0.2.0-alpha.2 (2020-05-04)](#020-alpha2-2020-05-04)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
-    - [Documentation](#documentation)
+    - [Documentation](#documentation-1)
     - [Features](#features)
     - [Unclassified](#unclassified)
     - [BREAKING CHANGES](#breaking-changes)
   - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
     - [Bug Fixes](#bug-fixes-1)
     - [Code Refactoring](#code-refactoring-1)
-    - [Documentation](#documentation-1)
+    - [Documentation](#documentation-2)
 - [0.1.0-alpha.6 (2020-02-16)](#010-alpha6-2020-02-16)
     - [Bug Fixes](#bug-fixes-2)
     - [Code Refactoring](#code-refactoring-2)
-    - [Documentation](#documentation-2)
+    - [Documentation](#documentation-3)
     - [Features](#features-1)
 - [0.1.0-alpha.5 (2020-02-06)](#010-alpha5-2020-02-06)
-    - [Documentation](#documentation-3)
+    - [Documentation](#documentation-4)
     - [Features](#features-2)
 - [0.1.0-alpha.4 (2020-02-06)](#010-alpha4-2020-02-06)
-    - [Documentation](#documentation-4)
+    - [Documentation](#documentation-5)
 - [0.1.0-alpha.3 (2020-02-06)](#010-alpha3-2020-02-06)
 - [0.1.0-alpha.2 (2020-02-03)](#010-alpha2-2020-02-03)
     - [Bug Fixes](#bug-fixes-3)
-    - [Documentation](#documentation-5)
+    - [Documentation](#documentation-6)
     - [Features](#features-3)
     - [Unclassified](#unclassified-1)
 - [0.1.0-alpha.1 (2020-01-31)](#010-alpha1-2020-01-31)
-    - [Documentation](#documentation-6)
+    - [Documentation](#documentation-7)
   - [0.0.3-alpha.15 (2020-01-31)](#003-alpha15-2020-01-31)
     - [Unclassified](#unclassified-2)
   - [0.0.3-alpha.14 (2020-01-31)](#003-alpha14-2020-01-31)
@@ -63,14 +64,19 @@
   - [0.0.1-alpha.3 (2020-01-28)](#001-alpha3-2020-01-28)
   - [0.0.1-alpha.2 (2020-01-28)](#001-alpha2-2020-01-28)
   - [0.0.1-alpha.1 (2020-01-28)](#001-alpha1-2020-01-28)
-    - [Documentation](#documentation-7)
+    - [Documentation](#documentation-8)
     - [Unclassified](#unclassified-14)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# Unreleased (2020-05-04)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.2.0-alpha.2...a1b1d7c9cbe5fad3b1112a16eced4f3064cfdda0) (2020-05-04)
 
-No significant changes have been made for this release.
+
+### Documentation
+
+* Fix quickstart hero sections ([7c6c439](https://github.com/ory/kratos/commit/7c6c4397bccd2b505fc04cc8d3b0944ceca18982))
+* Fix typo in upgrade guide ([a1b1d7c](https://github.com/ory/kratos/commit/a1b1d7c9cbe5fad3b1112a16eced4f3064cfdda0))
+
 
 
 # [0.2.0-alpha.2](https://github.com/ory/kratos/compare/v0.1.1-alpha.1...v0.2.0-alpha.2) (2020-05-04)
