@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-05-02)](#unreleased-2020-05-02)
+- [Unreleased (2020-05-04)](#unreleased-2020-05-04)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -67,7 +67,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.1.1-alpha.1...3cc097934edc81d4c6d853594eed5e68e9e48445) (2020-05-02)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.1.1-alpha.1...b3bcb25be6b417647ece2b3dda26d691f8e8d685) (2020-05-04)
 
 
 ### Bug Fixes
@@ -219,6 +219,10 @@
   > It is now possible to set SameSite for the session cookie via the key `security.session.cookie.same_site`.
 * Enable CockroachDB integration ([#260](https://github.com/ory/kratos/issues/260)) ([adc5153](https://github.com/ory/kratos/commit/adc5153410fb4d9f99702d7c73a78aeec8c1e9f1)), closes [#132](https://github.com/ory/kratos/issues/132) [#155](https://github.com/ory/kratos/issues/155)
 * Enable continuity management for settings module ([009d755](https://github.com/ory/kratos/commit/009d7558f525168fecf86168de2906088662535e))
+* Enable updating auth related traits ([#266](https://github.com/ory/kratos/issues/266)) ([65b88ba](https://github.com/ory/kratos/commit/65b88ba52fb9e6da3c1a65f734352519303327a6)), closes [#243](https://github.com/ory/kratos/issues/243)
+* Implement password profile management flow ([a31839a](https://github.com/ory/kratos/commit/a31839a5c33c80500c900fb50d1dd499ab1161a1)), closes [#243](https://github.com/ory/kratos/issues/243)
+* Introduce fallbacks for required configs ([#376](https://github.com/ory/kratos/issues/376)) ([b3bcb25](https://github.com/ory/kratos/commit/b3bcb25be6b417647ece2b3dda26d691f8e8d685)), closes [#369](https://github.com/ory/kratos/issues/369) [#352](https://github.com/ory/kratos/issues/352)
+* Return 410 when selfservice requests expire ([#289](https://github.com/ory/kratos/issues/289)) ([b414607](https://github.com/ory/kratos/commit/b4146076148d9ff079e9d433f0a90f5bc938650c)), closes [#235](https://github.com/ory/kratos/issues/235)
 * Send verification emails on profile update ([#333](https://github.com/ory/kratos/issues/333)) ([1cacc80](https://github.com/ory/kratos/commit/1cacc80c54f92b380ef3752591970cc4dd97085e)), closes [#267](https://github.com/ory/kratos/issues/267)
 * **continuity:** Implement request continuity ([135e047](https://github.com/ory/kratos/commit/135e04750b1855ab0db812517c61e292a770ba94)), closes [#304](https://github.com/ory/kratos/issues/304) [#311](https://github.com/ory/kratos/issues/311):
   > This patch adds a module which is capable of aborting a request, waiting for
@@ -233,9 +237,6 @@
   > refactor: rename profile to settings flow
   > 
   > Renames selfservice/profile to settings. The settings flow includes a strategy for managing profile information
-* Enable updating auth related traits ([#266](https://github.com/ory/kratos/issues/266)) ([65b88ba](https://github.com/ory/kratos/commit/65b88ba52fb9e6da3c1a65f734352519303327a6)), closes [#243](https://github.com/ory/kratos/issues/243)
-* Implement password profile management flow ([a31839a](https://github.com/ory/kratos/commit/a31839a5c33c80500c900fb50d1dd499ab1161a1)), closes [#243](https://github.com/ory/kratos/issues/243)
-* Return 410 when selfservice requests expire ([#289](https://github.com/ory/kratos/issues/289)) ([b414607](https://github.com/ory/kratos/commit/b4146076148d9ff079e9d433f0a90f5bc938650c)), closes [#235](https://github.com/ory/kratos/issues/235)
 * **login:** Forced reauthentication ([#248](https://github.com/ory/kratos/issues/248)) ([344fc9c](https://github.com/ory/kratos/commit/344fc9cddccff958f13249b999a835d3e46a7771)), closes [#243](https://github.com/ory/kratos/issues/243)
 
 
