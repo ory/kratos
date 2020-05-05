@@ -43,7 +43,9 @@ type Configuration struct {
 	// Scope specifies optional requested permissions.
 	Scope []string `json:"scope"`
 
-	SchemaURL string `json:"schema_url"`
+	// Normalize specifies the JSONNet code snippet which uses the OpenID Connect Provider's data (e.g. GitHub or Google
+	// profile information) to hydrate the identity's data.
+	Normalize string `json:"normalizer"`
 }
 
 func (p Configuration) Redir(public *url.URL) string {
