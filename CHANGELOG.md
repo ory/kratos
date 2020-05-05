@@ -5,22 +5,23 @@
 **Table of Contents**
 
 - [Unreleased (2020-05-05)](#unreleased-2020-05-05)
+    - [Code Refactoring](#code-refactoring)
   - [0.2.1-alpha.1 (2020-05-05)](#021-alpha1-2020-05-05)
     - [Documentation](#documentation)
 - [0.2.0-alpha.2 (2020-05-04)](#020-alpha2-2020-05-04)
     - [Bug Fixes](#bug-fixes)
-    - [Code Refactoring](#code-refactoring)
+    - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation-1)
     - [Features](#features)
     - [Unclassified](#unclassified)
     - [BREAKING CHANGES](#breaking-changes)
   - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
     - [Bug Fixes](#bug-fixes-1)
-    - [Code Refactoring](#code-refactoring-1)
+    - [Code Refactoring](#code-refactoring-2)
     - [Documentation](#documentation-2)
 - [0.1.0-alpha.6 (2020-02-16)](#010-alpha6-2020-02-16)
     - [Bug Fixes](#bug-fixes-2)
-    - [Code Refactoring](#code-refactoring-2)
+    - [Code Refactoring](#code-refactoring-3)
     - [Documentation](#documentation-3)
     - [Features](#features-1)
 - [0.1.0-alpha.5 (2020-02-06)](#010-alpha5-2020-02-06)
@@ -70,9 +71,14 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# Unreleased (2020-05-05)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.2.1-alpha.1...f9a50790637a848897ba275373bc538728e09f3d) (2020-05-05)
 
-No significant changes have been made for this release.
+
+### Code Refactoring
+
+* Improve oidc flows and payloads and add e2e tests ([#381](https://github.com/ory/kratos/issues/381)) ([f9a5079](https://github.com/ory/kratos/commit/f9a50790637a848897ba275373bc538728e09f3d)), closes [#387](https://github.com/ory/kratos/issues/387):
+  > This patch improves the OpenID Connect login and registration user experience by simplifying the network flows and introduces e2e tests using ORY Hydra.
+
 
 
 ## [0.2.1-alpha.1](https://github.com/ory/kratos/compare/v0.2.0-alpha.2...v0.2.1-alpha.1) (2020-05-05)
