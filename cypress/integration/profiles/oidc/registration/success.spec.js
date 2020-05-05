@@ -47,13 +47,37 @@ context('Register', () => {
     cy.registerOidc({email, website})
     cy.session().should(shouldSession(email))
   })
-
-  xit('should be able to sign up, sign out, and then sign in', () => {
+  it('should be able to convert a sign up flow to a sign in flow', () => {
     const email = gen.email()
 
     cy.registerOidc({email, website})
-    cy.clearCookies()
-    cy.registerOidc({email})
+    cy.get('a[href*="logout"]').click()
+    cy.noSession()
+    cy.visit(APP_URL + '/auth/registration')
+    cy.get('button[value="hydra"]').click()
+
+    cy.session().should(shouldSession(email))
+  })
+
+  it('should be able to convert a sign in flow to a sign up flow', () => {
+    const email = gen.email()
+    cy.visit(APP_URL + '/auth/login')
+    cy.get('button[value="hydra"]').click()
+    cy.get('#username').clear().type(email)
+    cy.get('#remember').click()
+    cy.get('#accept').click()
+    cy.get('input[name="scope"]').each($el => cy.wrap($el).click())
+    cy.get('#remember').click()
+    cy.get('#accept').click()
+
+    cy.get('.form-errors .message').should('contain.text', 'missing properties: "website"')
+    cy.get('#registration-oidc input[name="traits.website"]').type("http://s")
+    cy.get('button[value="hydra"]').click()
+
+    cy.get('.form-errors .message').should('contain.text', 'length must be >= 10')
+    cy.get('#registration-oidc input[name="traits.website"]').should('have.value', 'http://s').clear().type(website)
+    cy.get('button[value="hydra"]').click()
+
     cy.session().should(shouldSession(email))
   })
 })

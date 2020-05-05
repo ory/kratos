@@ -99,11 +99,10 @@ func (h *Handler) initRegistrationRequest(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	redirTo := h.c.DefaultReturnToURL().String()
-	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err != nil {
-		redirTo = urlx.CopyWithQuery(h.c.RegisterURL(), url.Values{"request": {a.ID.String()}}).String()
+	redirTo := urlx.CopyWithQuery(h.c.RegisterURL(), url.Values{"request": {a.ID.String()}}).String()
+	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
+		redirTo = h.c.DefaultReturnToURL().String()
 	}
-
 	http.Redirect(w, r, redirTo, http.StatusFound)
 }
 

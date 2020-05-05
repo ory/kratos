@@ -176,4 +176,5 @@ if [[ $dev = "yes" ]]; then
 else
   run "${db}" email
   run "${db}" verify
+  run "${db}" oidc
 fi
