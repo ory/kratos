@@ -7,20 +7,16 @@ id: api
 
 Welcome to the ORY Kratos HTTP API documentation!
 
-> You are viewing REST API documentation. This documentation is auto-generated
-> from a swagger specification which itself is generated from annotations in the
-> source code of the project. It is possible that this documentation includes
-> bugs and that code samples are incomplete or wrong.
+> You are viewing REST API documentation. This documentation is auto-generated from a swagger specification which
+itself is generated from annotations in the source code of the project. It is possible that this documentation includes
+bugs and that code samples are incomplete or wrong.
 >
 > If you find issues in the respective documentation, please do not edit the
-> Markdown files directly (as they are generated) but raise an issue on the
-> project's GitHub presence instead. This documentation will improve over time
-> with your help! If you have ideas how to improve this part of the
-> documentation, feel free to share them in a
-> [GitHub issue](https://github.com/ory/docs/issues/new) any time.
+Markdown files directly (as they are generated) but raise an issue on the project's GitHub presence instead. This documentation
+will improve over time with your help! If you have ideas how to improve this part of the documentation, feel free to
+share them in a [GitHub issue](https://github.com/ory/docs/issues/new) any time.
 
 <a id="ory-kratos-health"></a>
-
 ## health
 
 <a id="opIdisInstanceAlive"></a>
@@ -33,26 +29,24 @@ Accept: application/json
 
 ```
 
-This endpoint returns a 200 status code when the HTTP server is up running. This
-status does currently not include checks whether the database connection is
-working.
+This endpoint returns a 200 status code when the HTTP server is up running.
+This status does currently not include checks whether the database connection is working.
 
 If the service supports TLS Edge Termination, this endpoint does not require the
 `X-Forwarded-Proto` header to be set.
 
-Be aware that if you are running multiple nodes of this service, the health
-status will never refer to the cluster state, only to a single instance.
+Be aware that if you are running multiple nodes of this service, the health status will never
+refer to the cluster state, only to a single instance.
 
 #### Responses
 
 <a id="check-alive-status-responses"></a>
-
 ##### Overview
 
-| Status | Meaning                                                                    | Description  | Schema                              |
-| ------ | -------------------------------------------------------------------------- | ------------ | ----------------------------------- |
-| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | healthStatus | [healthStatus](#schemahealthstatus) |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError | [genericError](#schemagenericerror) |
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|healthStatus|[healthStatus](#schemahealthstatus)|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
 
 ##### Examples
 
@@ -101,7 +95,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{
+    headers := map[string][]string{ 
         "Accept": []string{"application/json"},
     }
 
@@ -212,25 +206,24 @@ Accept: application/json
 
 ```
 
-This endpoint returns a 200 status code when the HTTP server is up running and
-the environment dependencies (e.g. the database) are responsive as well.
+This endpoint returns a 200 status code when the HTTP server is up running and the environment dependencies (e.g.
+the database) are responsive as well.
 
 If the service supports TLS Edge Termination, this endpoint does not require the
 `X-Forwarded-Proto` header to be set.
 
-Be aware that if you are running multiple nodes of this service, the health
-status will never refer to the cluster state, only to a single instance.
+Be aware that if you are running multiple nodes of this service, the health status will never
+refer to the cluster state, only to a single instance.
 
 #### Responses
 
 <a id="check-readiness-status-responses"></a>
-
 ##### Overview
 
-| Status | Meaning                                                                  | Description          | Schema                                              |
-| ------ | ------------------------------------------------------------------------ | -------------------- | --------------------------------------------------- |
-| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                  | healthStatus         | [healthStatus](#schemahealthstatus)                 |
-| 503    | [Service Unavailable](https://tools.ietf.org/html/rfc7231#section-6.6.4) | healthNotReadyStatus | [healthNotReadyStatus](#schemahealthnotreadystatus) |
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|healthStatus|[healthStatus](#schemahealthstatus)|
+|503|[Service Unavailable](https://tools.ietf.org/html/rfc7231#section-6.6.4)|healthNotReadyStatus|[healthNotReadyStatus](#schemahealthnotreadystatus)|
 
 ##### Examples
 
@@ -279,7 +272,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{
+    headers := map[string][]string{ 
         "Accept": []string{"application/json"},
     }
 
@@ -381,7 +374,6 @@ p JSON.parse(result)
 </div>
 
 <a id="ory-kratos-administrative-endpoints"></a>
-
 ## Administrative Endpoints
 
 <a id="opIdlistIdentities"></a>
@@ -394,43 +386,40 @@ Accept: application/json
 
 ```
 
-This endpoint returns a login request's context with, for example, error details
-and other information.
+This endpoint returns a login request's context with, for example, error details and
+other information.
 
-Learn how identities work in
-[ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 
 #### Responses
 
 <a id="list-all-identities-in-the-system-responses"></a>
-
 ##### Overview
 
-| Status | Meaning                                                                    | Description           | Schema                              |
-| ------ | -------------------------------------------------------------------------- | --------------------- | ----------------------------------- |
-| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | A list of identities. | Inline                              |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError          | [genericError](#schemagenericerror) |
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|A list of identities.|Inline|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
 
 <a id="list-all-identities-in-the-system-responseschema"></a>
-
 ##### Response Schema
 
 Status Code **200**
 
-| Name                | Type                                                  | Required | Restrictions | Description                                                                                                    |
-| ------------------- | ----------------------------------------------------- | -------- | ------------ | -------------------------------------------------------------------------------------------------------------- |
-| _anonymous_         | [[Identity](#schemaidentity)]                         | false    | none         | none                                                                                                           |
-| » addresses         | [[VerifiableAddress](#schemaverifiableaddress)]       | false    | none         | none                                                                                                           |
-| »» expires_at       | string(date-time)                                     | true     | none         | none                                                                                                           |
-| »» id               | [UUID](#schemauuid)(uuid4)                            | true     | none         | none                                                                                                           |
-| »» value            | string                                                | true     | none         | none                                                                                                           |
-| »» verified         | boolean                                               | true     | none         | none                                                                                                           |
-| »» verified_at      | string(date-time)                                     | false    | none         | none                                                                                                           |
-| »» via              | [VerifiableAddressType](#schemaverifiableaddresstype) | true     | none         | none                                                                                                           |
-| » id                | [UUID](#schemauuid)(uuid4)                            | true     | none         | none                                                                                                           |
-| » traits            | [Traits](#schematraits)                               | true     | none         | none                                                                                                           |
-| » traits_schema_id  | string                                                | true     | none         | TraitsSchemaID is the ID of the JSON Schema to be used for validating the identity's traits.                   |
-| » traits_schema_url | string                                                | false    | none         | TraitsSchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from. format: url |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|*anonymous*|[[Identity](#schemaidentity)]|false|none|none|
+|» addresses|[[VerifiableAddress](#schemaverifiableaddress)]|false|none|none|
+|»» expires_at|string(date-time)|true|none|none|
+|»» id|[UUID](#schemauuid)(uuid4)|true|none|none|
+|»» value|string|true|none|none|
+|»» verified|boolean|true|none|none|
+|»» verified_at|string(date-time)|false|none|none|
+|»» via|[VerifiableAddressType](#schemaverifiableaddresstype)|true|none|none|
+|» id|[UUID](#schemauuid)(uuid4)|true|none|none|
+|» traits|[Traits](#schematraits)|true|none|none|
+|» traits_schema_id|string|true|none|TraitsSchemaID is the ID of the JSON Schema to be used for validating the identity's traits.|
+|» traits_schema_url|string|false|none|TraitsSchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.  format: url|
 
 ##### Examples
 
@@ -441,11 +430,11 @@ Status Code **200**
   {
     "addresses": [
       {
-        "expires_at": "2020-04-30T11:21:09Z",
+        "expires_at": "2020-05-05T09:51:17Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-04-30T11:21:09Z",
+        "verified_at": "2020-05-05T09:51:17Z",
         "via": "string"
       }
     ],
@@ -494,7 +483,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{
+    headers := map[string][]string{ 
         "Accept": []string{"application/json"},
     }
 
@@ -606,12 +595,10 @@ Accept: application/json
 
 ```
 
-This endpoint creates an identity. It is NOT possible to set an identity's
-credentials (password, ...) using this method! A way to achieve that will be
-introduced in the future.
+This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)
+using this method! A way to achieve that will be introduced in the future.
 
-Learn how identities work in
-[ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 
 #### Request body
 
@@ -619,11 +606,11 @@ Learn how identities work in
 {
   "addresses": [
     {
-      "expires_at": "2020-04-30T11:21:09Z",
+      "expires_at": "2020-05-05T09:51:17Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-30T11:21:09Z",
+      "verified_at": "2020-05-05T09:51:17Z",
       "via": "string"
     }
   ],
@@ -635,24 +622,22 @@ Learn how identities work in
 ```
 
 <a id="create-an-identity-parameters"></a>
-
 ##### Parameters
 
-| Parameter | In   | Type                        | Required | Description |
-| --------- | ---- | --------------------------- | -------- | ----------- |
-| body      | body | [Identity](#schemaidentity) | true     | none        |
+|Parameter|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|[Identity](#schemaidentity)|true|none|
 
 #### Responses
 
 <a id="create-an-identity-responses"></a>
-
 ##### Overview
 
-| Status | Meaning                                                                    | Description        | Schema                              |
-| ------ | -------------------------------------------------------------------------- | ------------------ | ----------------------------------- |
-| 201    | [Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)               | A single identity. | [Identity](#schemaidentity)         |
-| 400    | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | genericError       | [genericError](#schemagenericerror) |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError       | [genericError](#schemagenericerror) |
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|A single identity.|[Identity](#schemaidentity)|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|genericError|[genericError](#schemagenericerror)|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
 
 ##### Examples
 
@@ -662,11 +647,11 @@ Learn how identities work in
 {
   "addresses": [
     {
-      "expires_at": "2020-04-30T11:21:09Z",
+      "expires_at": "2020-05-05T09:51:17Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-30T11:21:09Z",
+      "verified_at": "2020-05-05T09:51:17Z",
       "via": "string"
     }
   ],
@@ -714,7 +699,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{
+    headers := map[string][]string{ 
         "Content-Type": []string{"application/json"},
         "Accept": []string{"application/json"},
     }
@@ -739,11 +724,11 @@ const fetch = require('node-fetch');
 const input = '{
   "addresses": [
     {
-      "expires_at": "2020-04-30T11:21:09Z",
+      "expires_at": "2020-05-05T09:51:17Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-30T11:21:09Z",
+      "verified_at": "2020-05-05T09:51:17Z",
       "via": "string"
     }
   ],
@@ -844,28 +829,25 @@ Accept: application/json
 
 ```
 
-Learn how identities work in
-[ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 
 <a id="get-an-identity-parameters"></a>
-
 ##### Parameters
 
-| Parameter | In   | Type   | Required | Description                                          |
-| --------- | ---- | ------ | -------- | ---------------------------------------------------- |
-| id        | path | string | true     | ID must be set to the ID of identity you want to get |
+|Parameter|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|string|true|ID must be set to the ID of identity you want to get|
 
 #### Responses
 
 <a id="get-an-identity-responses"></a>
-
 ##### Overview
 
-| Status | Meaning                                                                    | Description        | Schema                              |
-| ------ | -------------------------------------------------------------------------- | ------------------ | ----------------------------------- |
-| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | A single identity. | [Identity](#schemaidentity)         |
-| 400    | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | genericError       | [genericError](#schemagenericerror) |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError       | [genericError](#schemagenericerror) |
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|A single identity.|[Identity](#schemaidentity)|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|genericError|[genericError](#schemagenericerror)|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
 
 ##### Examples
 
@@ -875,11 +857,11 @@ Learn how identities work in
 {
   "addresses": [
     {
-      "expires_at": "2020-04-30T11:21:09Z",
+      "expires_at": "2020-05-05T09:51:17Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-30T11:21:09Z",
+      "verified_at": "2020-05-05T09:51:17Z",
       "via": "string"
     }
   ],
@@ -927,7 +909,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{
+    headers := map[string][]string{ 
         "Accept": []string{"application/json"},
     }
 
@@ -1039,15 +1021,12 @@ Accept: application/json
 
 ```
 
-This endpoint updates an identity. It is NOT possible to set an identity's
-credentials (password, ...) using this method! A way to achieve that will be
-introduced in the future.
+This endpoint updates an identity. It is NOT possible to set an identity's credentials (password, ...)
+using this method! A way to achieve that will be introduced in the future.
 
-The full identity payload (except credentials) is expected. This endpoint does
-not support patching.
+The full identity payload (except credentials) is expected. This endpoint does not support patching.
 
-Learn how identities work in
-[ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 
 #### Request body
 
@@ -1055,11 +1034,11 @@ Learn how identities work in
 {
   "addresses": [
     {
-      "expires_at": "2020-04-30T11:21:09Z",
+      "expires_at": "2020-05-05T09:51:17Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-30T11:21:09Z",
+      "verified_at": "2020-05-05T09:51:17Z",
       "via": "string"
     }
   ],
@@ -1071,26 +1050,24 @@ Learn how identities work in
 ```
 
 <a id="update-an-identity-parameters"></a>
-
 ##### Parameters
 
-| Parameter | In   | Type                        | Required | Description                                             |
-| --------- | ---- | --------------------------- | -------- | ------------------------------------------------------- |
-| id        | path | string                      | true     | ID must be set to the ID of identity you want to update |
-| body      | body | [Identity](#schemaidentity) | true     | none                                                    |
+|Parameter|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|string|true|ID must be set to the ID of identity you want to update|
+|body|body|[Identity](#schemaidentity)|true|none|
 
 #### Responses
 
 <a id="update-an-identity-responses"></a>
-
 ##### Overview
 
-| Status | Meaning                                                                    | Description        | Schema                              |
-| ------ | -------------------------------------------------------------------------- | ------------------ | ----------------------------------- |
-| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | A single identity. | [Identity](#schemaidentity)         |
-| 400    | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | genericError       | [genericError](#schemagenericerror) |
-| 404    | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError       | [genericError](#schemagenericerror) |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError       | [genericError](#schemagenericerror) |
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|A single identity.|[Identity](#schemaidentity)|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|genericError|[genericError](#schemagenericerror)|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|genericError|[genericError](#schemagenericerror)|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
 
 ##### Examples
 
@@ -1100,11 +1077,11 @@ Learn how identities work in
 {
   "addresses": [
     {
-      "expires_at": "2020-04-30T11:21:09Z",
+      "expires_at": "2020-05-05T09:51:17Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-30T11:21:09Z",
+      "verified_at": "2020-05-05T09:51:17Z",
       "via": "string"
     }
   ],
@@ -1152,7 +1129,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{
+    headers := map[string][]string{ 
         "Content-Type": []string{"application/json"},
         "Accept": []string{"application/json"},
     }
@@ -1177,11 +1154,11 @@ const fetch = require('node-fetch');
 const input = '{
   "addresses": [
     {
-      "expires_at": "2020-04-30T11:21:09Z",
+      "expires_at": "2020-05-05T09:51:17Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-30T11:21:09Z",
+      "verified_at": "2020-05-05T09:51:17Z",
       "via": "string"
     }
   ],
@@ -1284,29 +1261,26 @@ Accept: application/json
 
 This endpoint deletes an identity. This can not be undone.
 
-Learn how identities work in
-[ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 
 <a id="delete-an-identity-parameters"></a>
-
 ##### Parameters
 
-| Parameter | In   | Type   | Required | Description              |
-| --------- | ---- | ------ | -------- | ------------------------ |
-| id        | path | string | true     | ID is the identity's ID. |
+|Parameter|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|string|true|ID is the identity's ID.|
 
 #### Responses
 
 <a id="delete-an-identity-responses"></a>
-
 ##### Overview
 
-| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
-| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 204            | [No Content](https://tools.ietf.org/html/rfc7231#section-6.3.5)            | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
-| typically 201. | None                                                                       |
-| 404            | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError                                                                                                   | [genericError](#schemagenericerror) |
-| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|204|[No Content](https://tools.ietf.org/html/rfc7231#section-6.3.5)|Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
+typically 201.|None|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|genericError|[genericError](#schemagenericerror)|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
 
 ##### Examples
 
@@ -1366,7 +1340,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{
+    headers := map[string][]string{ 
         "Accept": []string{"application/json"},
     }
 
@@ -1468,7 +1442,6 @@ p JSON.parse(result)
 </div>
 
 <a id="ory-kratos-common"></a>
-
 ## common
 
 <a id="opIdgetSchema"></a>
@@ -1484,27 +1457,24 @@ Accept: application/json
 Get a traits schema definition
 
 <a id="getschema-parameters"></a>
-
 ##### Parameters
 
-| Parameter | In   | Type   | Required | Description                                        |
-| --------- | ---- | ------ | -------- | -------------------------------------------------- |
-| id        | path | string | true     | ID must be set to the ID of schema you want to get |
+|Parameter|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|string|true|ID must be set to the ID of schema you want to get|
 
 #### Responses
 
 <a id="getschema-responses"></a>
-
 ##### Overview
 
-| Status | Meaning                                                                    | Description                    | Schema                              |
-| ------ | -------------------------------------------------------------------------- | ------------------------------ | ----------------------------------- |
-| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | The raw identity traits schema | Inline                              |
-| 404    | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError                   | [genericError](#schemagenericerror) |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                   | [genericError](#schemagenericerror) |
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|The raw identity traits schema|Inline|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|genericError|[genericError](#schemagenericerror)|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
 
 <a id="getschema-responseschema"></a>
-
 ##### Response Schema
 
 ##### Examples
@@ -1552,7 +1522,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{
+    headers := map[string][]string{ 
         "Accept": []string{"application/json"},
     }
 
@@ -1663,45 +1633,40 @@ Accept: application/json
 
 ```
 
-This endpoint returns a login request's context with, for example, error details
-and other information.
+This endpoint returns a login request's context with, for example, error details and
+other information.
 
-When accessing this endpoint through ORY Kratos' Public API, ensure that cookies
-are set as they are required for CSRF to work. To prevent token scanning
-attacks, the public endpoint does not return 404 status codes to prevent
-scanning attacks.
+When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent
+token scanning attacks, the public endpoint does not return 404 status codes to prevent scanning attacks.
 
-More information can be found at
-[ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 
 <a id="get-the-request-context-of-browser-based-login-user-flows-parameters"></a>
-
 ##### Parameters
 
-| Parameter | In    | Type   | Required | Description                     |
-| --------- | ----- | ------ | -------- | ------------------------------- |
-| request   | query | string | true     | Request is the Login Request ID |
+|Parameter|In|Type|Required|Description|
+|---|---|---|---|---|
+|request|query|string|true|Request is the Login Request ID|
 
 ##### Detailed descriptions
 
 **request**: Request is the Login Request ID
 
-The value for this parameter comes from `request` URL Query parameter sent to
-your application (e.g. `/login?request=abcde`).
+The value for this parameter comes from `request` URL Query parameter sent to your
+application (e.g. `/login?request=abcde`).
 
 #### Responses
 
 <a id="get-the-request-context-of-browser-based-login-user-flows-responses"></a>
-
 ##### Overview
 
-| Status | Meaning                                                                    | Description  | Schema                              |
-| ------ | -------------------------------------------------------------------------- | ------------ | ----------------------------------- |
-| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | loginRequest | [loginRequest](#schemaloginrequest) |
-| 403    | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | genericError | [genericError](#schemagenericerror) |
-| 404    | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError | [genericError](#schemagenericerror) |
-| 410    | [Gone](https://tools.ietf.org/html/rfc7231#section-6.5.9)                  | genericError | [genericError](#schemagenericerror) |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError | [genericError](#schemagenericerror) |
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|loginRequest|[loginRequest](#schemaloginrequest)|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|genericError|[genericError](#schemagenericerror)|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|genericError|[genericError](#schemagenericerror)|
+|410|[Gone](https://tools.ietf.org/html/rfc7231#section-6.5.9)|genericError|[genericError](#schemagenericerror)|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
 
 ##### Examples
 
@@ -1710,10 +1675,10 @@ your application (e.g. `/login?request=abcde`).
 ```json
 {
   "active": "string",
-  "expires_at": "2020-04-30T11:21:09Z",
+  "expires_at": "2020-05-05T09:51:17Z",
   "forced": true,
   "id": "string",
-  "issued_at": "2020-04-30T11:21:09Z",
+  "issued_at": "2020-05-05T09:51:17Z",
   "methods": {
     "property1": {
       "config": {
@@ -1841,7 +1806,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{
+    headers := map[string][]string{ 
         "Accept": []string{"application/json"},
     }
 
@@ -1954,45 +1919,40 @@ Accept: application/json
 
 ```
 
-This endpoint returns a registration request's context with, for example, error
-details and other information.
+This endpoint returns a registration request's context with, for example, error details and
+other information.
 
-When accessing this endpoint through ORY Kratos' Public API, ensure that cookies
-are set as they are required for CSRF to work. To prevent token scanning
-attacks, the public endpoint does not return 404 status codes to prevent
-scanning attacks.
+When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent
+token scanning attacks, the public endpoint does not return 404 status codes to prevent scanning attacks.
 
-More information can be found at
-[ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 
 <a id="get-the-request-context-of-browser-based-registration-user-flows-parameters"></a>
-
 ##### Parameters
 
-| Parameter | In    | Type   | Required | Description                            |
-| --------- | ----- | ------ | -------- | -------------------------------------- |
-| request   | query | string | true     | Request is the Registration Request ID |
+|Parameter|In|Type|Required|Description|
+|---|---|---|---|---|
+|request|query|string|true|Request is the Registration Request ID|
 
 ##### Detailed descriptions
 
 **request**: Request is the Registration Request ID
 
-The value for this parameter comes from `request` URL Query parameter sent to
-your application (e.g. `/registration?request=abcde`).
+The value for this parameter comes from `request` URL Query parameter sent to your
+application (e.g. `/registration?request=abcde`).
 
 #### Responses
 
 <a id="get-the-request-context-of-browser-based-registration-user-flows-responses"></a>
-
 ##### Overview
 
-| Status | Meaning                                                                    | Description         | Schema                                            |
-| ------ | -------------------------------------------------------------------------- | ------------------- | ------------------------------------------------- |
-| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | registrationRequest | [registrationRequest](#schemaregistrationrequest) |
-| 403    | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | genericError        | [genericError](#schemagenericerror)               |
-| 404    | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError        | [genericError](#schemagenericerror)               |
-| 410    | [Gone](https://tools.ietf.org/html/rfc7231#section-6.5.9)                  | genericError        | [genericError](#schemagenericerror)               |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError        | [genericError](#schemagenericerror)               |
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|registrationRequest|[registrationRequest](#schemaregistrationrequest)|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|genericError|[genericError](#schemagenericerror)|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|genericError|[genericError](#schemagenericerror)|
+|410|[Gone](https://tools.ietf.org/html/rfc7231#section-6.5.9)|genericError|[genericError](#schemagenericerror)|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
 
 ##### Examples
 
@@ -2001,9 +1961,9 @@ your application (e.g. `/registration?request=abcde`).
 ```json
 {
   "active": "string",
-  "expires_at": "2020-04-30T11:21:09Z",
+  "expires_at": "2020-05-05T09:51:17Z",
   "id": "string",
-  "issued_at": "2020-04-30T11:21:09Z",
+  "issued_at": "2020-05-05T09:51:17Z",
   "methods": {
     "property1": {
       "config": {
@@ -2131,7 +2091,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{
+    headers := map[string][]string{ 
         "Accept": []string{"application/json"},
     }
 
@@ -2244,42 +2204,38 @@ Accept: application/json
 
 ```
 
-When accessing this endpoint through ORY Kratos' Public API, ensure that cookies
-are set as they are required for checking the auth session. To prevent scanning
-attacks, the public endpoint does not return 404 status codes but instead 403
-or 500.
+When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required
+for checking the auth session. To prevent scanning attacks, the public endpoint does not return 404 status codes
+but instead 403 or 500.
 
-More information can be found at
-[ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
+More information can be found at [ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
 
 <a id="get-the-request-context-of-browser-based-settings-flows-parameters"></a>
-
 ##### Parameters
 
-| Parameter | In    | Type   | Required | Description                     |
-| --------- | ----- | ------ | -------- | ------------------------------- |
-| request   | query | string | true     | Request is the Login Request ID |
+|Parameter|In|Type|Required|Description|
+|---|---|---|---|---|
+|request|query|string|true|Request is the Login Request ID|
 
 ##### Detailed descriptions
 
 **request**: Request is the Login Request ID
 
-The value for this parameter comes from `request` URL Query parameter sent to
-your application (e.g. `/login?request=abcde`).
+The value for this parameter comes from `request` URL Query parameter sent to your
+application (e.g. `/login?request=abcde`).
 
 #### Responses
 
 <a id="get-the-request-context-of-browser-based-settings-flows-responses"></a>
-
 ##### Overview
 
-| Status | Meaning                                                                    | Description     | Schema                                    |
-| ------ | -------------------------------------------------------------------------- | --------------- | ----------------------------------------- |
-| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | settingsRequest | [settingsRequest](#schemasettingsrequest) |
-| 403    | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | genericError    | [genericError](#schemagenericerror)       |
-| 404    | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError    | [genericError](#schemagenericerror)       |
-| 410    | [Gone](https://tools.ietf.org/html/rfc7231#section-6.5.9)                  | genericError    | [genericError](#schemagenericerror)       |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError    | [genericError](#schemagenericerror)       |
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|settingsRequest|[settingsRequest](#schemasettingsrequest)|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|genericError|[genericError](#schemagenericerror)|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|genericError|[genericError](#schemagenericerror)|
+|410|[Gone](https://tools.ietf.org/html/rfc7231#section-6.5.9)|genericError|[genericError](#schemagenericerror)|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
 
 ##### Examples
 
@@ -2288,16 +2244,16 @@ your application (e.g. `/login?request=abcde`).
 ```json
 {
   "active": "string",
-  "expires_at": "2020-04-30T11:21:09Z",
+  "expires_at": "2020-05-05T09:51:17Z",
   "id": "string",
   "identity": {
     "addresses": [
       {
-        "expires_at": "2020-04-30T11:21:09Z",
+        "expires_at": "2020-05-05T09:51:17Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-04-30T11:21:09Z",
+        "verified_at": "2020-05-05T09:51:17Z",
         "via": "string"
       }
     ],
@@ -2306,7 +2262,7 @@ your application (e.g. `/login?request=abcde`).
     "traits_schema_id": "string",
     "traits_schema_url": "string"
   },
-  "issued_at": "2020-04-30T11:21:09Z",
+  "issued_at": "2020-05-05T09:51:17Z",
   "methods": {
     "property1": {
       "config": {
@@ -2405,7 +2361,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{
+    headers := map[string][]string{ 
         "Accept": []string{"application/json"},
     }
 
@@ -2518,41 +2474,37 @@ Accept: application/json
 
 ```
 
-When accessing this endpoint through ORY Kratos' Public API, ensure that cookies
-are set as they are required for checking the auth session. To prevent scanning
-attacks, the public endpoint does not return 404 status codes but instead 403
-or 500.
+When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required
+for checking the auth session. To prevent scanning attacks, the public endpoint does not return 404 status codes
+but instead 403 or 500.
 
-More information can be found at
-[ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 
 <a id="get-the-request-context-of-browser-based-verification-flows-parameters"></a>
-
 ##### Parameters
 
-| Parameter | In    | Type   | Required | Description               |
-| --------- | ----- | ------ | -------- | ------------------------- |
-| request   | query | string | true     | Request is the Request ID |
+|Parameter|In|Type|Required|Description|
+|---|---|---|---|---|
+|request|query|string|true|Request is the Request ID|
 
 ##### Detailed descriptions
 
 **request**: Request is the Request ID
 
-The value for this parameter comes from `request` URL Query parameter sent to
-your application (e.g. `/verify?request=abcde`).
+The value for this parameter comes from `request` URL Query parameter sent to your
+application (e.g. `/verify?request=abcde`).
 
 #### Responses
 
 <a id="get-the-request-context-of-browser-based-verification-flows-responses"></a>
-
 ##### Overview
 
-| Status | Meaning                                                                    | Description         | Schema                                            |
-| ------ | -------------------------------------------------------------------------- | ------------------- | ------------------------------------------------- |
-| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | verificationRequest | [verificationRequest](#schemaverificationrequest) |
-| 403    | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | genericError        | [genericError](#schemagenericerror)               |
-| 404    | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError        | [genericError](#schemagenericerror)               |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError        | [genericError](#schemagenericerror)               |
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|verificationRequest|[verificationRequest](#schemaverificationrequest)|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|genericError|[genericError](#schemagenericerror)|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|genericError|[genericError](#schemagenericerror)|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
 
 ##### Examples
 
@@ -2560,7 +2512,7 @@ your application (e.g. `/verify?request=abcde`).
 
 ```json
 {
-  "expires_at": "2020-04-30T11:21:09Z",
+  "expires_at": "2020-05-05T09:51:17Z",
   "form": {
     "action": "string",
     "errors": [
@@ -2586,7 +2538,7 @@ your application (e.g. `/verify?request=abcde`).
     "method": "string"
   },
   "id": "string",
-  "issued_at": "2020-04-30T11:21:09Z",
+  "issued_at": "2020-05-05T09:51:17Z",
   "request_url": "string",
   "success": true,
   "via": "string"
@@ -2630,7 +2582,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{
+    headers := map[string][]string{ 
         "Accept": []string{"application/json"},
     }
 
@@ -2743,37 +2695,31 @@ Accept: application/json
 
 ```
 
-This endpoint returns the error associated with a user-facing self service
-errors.
+This endpoint returns the error associated with a user-facing self service errors.
 
-When accessing this endpoint through ORY Kratos' Public API, ensure that cookies
-are set as they are required for CSRF to work. To prevent token scanning
-attacks, the public endpoint does not return 404 status codes to prevent
-scanning attacks.
+When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent
+token scanning attacks, the public endpoint does not return 404 status codes to prevent scanning attacks.
 
-More information can be found at
-[ORY Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).
+More information can be found at [ORY Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).
 
 <a id="get-user-facing-self-service-errors-parameters"></a>
-
 ##### Parameters
 
-| Parameter | In    | Type   | Required | Description |
-| --------- | ----- | ------ | -------- | ----------- |
-| error     | query | string | false    | none        |
+|Parameter|In|Type|Required|Description|
+|---|---|---|---|---|
+|error|query|string|false|none|
 
 #### Responses
 
 <a id="get-user-facing-self-service-errors-responses"></a>
-
 ##### Overview
 
-| Status | Meaning                                                                    | Description                | Schema                                  |
-| ------ | -------------------------------------------------------------------------- | -------------------------- | --------------------------------------- |
-| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | User-facing error response | [errorContainer](#schemaerrorcontainer) |
-| 403    | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | genericError               | [genericError](#schemagenericerror)     |
-| 404    | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError               | [genericError](#schemagenericerror)     |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError               | [genericError](#schemagenericerror)     |
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|User-facing error response|[errorContainer](#schemaerrorcontainer)|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|genericError|[genericError](#schemagenericerror)|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|genericError|[genericError](#schemagenericerror)|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
 
 ##### Examples
 
@@ -2823,7 +2769,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{
+    headers := map[string][]string{ 
         "Accept": []string{"application/json"},
     }
 
@@ -2925,7 +2871,6 @@ p JSON.parse(result)
 </div>
 
 <a id="ory-kratos-public-endpoints"></a>
-
 ## Public Endpoints
 
 <a id="opIdinitializeSelfServiceBrowserLoginFlow"></a>
@@ -2938,28 +2883,25 @@ Accept: application/json
 
 ```
 
-This endpoint initializes a browser-based user login flow. Once initialized, the
-browser will be redirected to `urls.login_ui` with the request ID set as a query
-parameter. If a valid user session exists already, the browser will be
+This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to
+`urls.login_ui` with the request ID set as a query parameter. If a valid user session exists already, the browser will be
 redirected to `urls.default_redirect_url`.
 
-> This endpoint is NOT INTENDED for API clients and only works with browsers
-> (Chrome, Firefox, ...).
+> This endpoint is NOT INTENDED for API clients and only works
+with browsers (Chrome, Firefox, ...).
 
-More information can be found at
-[ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 
 #### Responses
 
 <a id="initialize-browser-based-login-user-flow-responses"></a>
-
 ##### Overview
 
-| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
-| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
-| typically 201. | None                                                                       |
-| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|302|[Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)|Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
+typically 201.|None|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
 
 ##### Examples
 
@@ -3019,7 +2961,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{
+    headers := map[string][]string{ 
         "Accept": []string{"application/json"},
     }
 
@@ -3132,26 +3074,23 @@ Accept: application/json
 
 This endpoint initializes a logout flow.
 
-> This endpoint is NOT INTENDED for API clients and only works with browsers
-> (Chrome, Firefox, ...).
+> This endpoint is NOT INTENDED for API clients and only works
+with browsers (Chrome, Firefox, ...).
 
-On successful logout, the browser will be redirected (HTTP 302 Found) to
-`urls.default_return_to`.
+On successful logout, the browser will be redirected (HTTP 302 Found) to `urls.default_return_to`.
 
-More information can be found at
-[ORY Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
+More information can be found at [ORY Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
 
 #### Responses
 
 <a id="initialize-browser-based-logout-user-flow-responses"></a>
-
 ##### Overview
 
-| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
-| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
-| typically 201. | None                                                                       |
-| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|302|[Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)|Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
+typically 201.|None|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
 
 ##### Examples
 
@@ -3211,7 +3150,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{
+    headers := map[string][]string{ 
         "Accept": []string{"application/json"},
     }
 
@@ -3322,28 +3261,25 @@ Accept: application/json
 
 ```
 
-This endpoint initializes a browser-based user registration flow. Once
-initialized, the browser will be redirected to `urls.registration_ui` with the
-request ID set as a query parameter. If a valid user session exists already, the
-browser will be redirected to `urls.default_redirect_url`.
+This endpoint initializes a browser-based user registration flow. Once initialized, the browser will be redirected to
+`urls.registration_ui` with the request ID set as a query parameter. If a valid user session exists already, the browser will be
+redirected to `urls.default_redirect_url`.
 
-> This endpoint is NOT INTENDED for API clients and only works with browsers
-> (Chrome, Firefox, ...).
+> This endpoint is NOT INTENDED for API clients and only works
+with browsers (Chrome, Firefox, ...).
 
-More information can be found at
-[ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 
 #### Responses
 
 <a id="initialize-browser-based-registration-user-flow-responses"></a>
-
 ##### Overview
 
-| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
-| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
-| typically 201. | None                                                                       |
-| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|302|[Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)|Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
+typically 201.|None|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
 
 ##### Examples
 
@@ -3403,7 +3339,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{
+    headers := map[string][]string{ 
         "Accept": []string{"application/json"},
     }
 
@@ -3514,28 +3450,25 @@ Accept: application/json
 
 ```
 
-This endpoint initializes a browser-based settings flow. Once initialized, the
-browser will be redirected to `urls.settings_ui` with the request ID set as a
-query parameter. If no valid user session exists, a login flow will be
-initialized.
+This endpoint initializes a browser-based settings flow. Once initialized, the browser will be redirected to
+`urls.settings_ui` with the request ID set as a query parameter. If no valid user session exists, a login
+flow will be initialized.
 
-> This endpoint is NOT INTENDED for API clients and only works with browsers
-> (Chrome, Firefox, ...).
+> This endpoint is NOT INTENDED for API clients and only works
+with browsers (Chrome, Firefox, ...).
 
-More information can be found at
-[ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
+More information can be found at [ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
 
 #### Responses
 
 <a id="initialize-browser-based-settings-flow-responses"></a>
-
 ##### Overview
 
-| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
-| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
-| typically 201. | None                                                                       |
-| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|302|[Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)|Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
+typically 201.|None|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
 
 ##### Examples
 
@@ -3595,7 +3528,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{
+    headers := map[string][]string{ 
         "Accept": []string{"application/json"},
     }
 
@@ -3706,26 +3639,23 @@ Accept: application/json
 
 ```
 
-This endpoint completes a browser-based settings flow. This is usually achieved
-by POSTing data to this endpoint.
+This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this
+endpoint.
 
-> This endpoint is NOT INTENDED for API clients and only works with browsers
-> (Chrome, Firefox, ...) and HTML Forms.
+> This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
 
-More information can be found at
-[ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
+More information can be found at [ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
 
 #### Responses
 
 <a id="complete-the-browser-based-settings-flow-for-the-password-strategy-responses"></a>
-
 ##### Overview
 
-| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
-| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
-| typically 201. | None                                                                       |
-| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|302|[Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)|Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
+typically 201.|None|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
 
 ##### Examples
 
@@ -3785,7 +3715,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{
+    headers := map[string][]string{ 
         "Accept": []string{"application/json"},
     }
 
@@ -3897,18 +3827,15 @@ Accept: application/json
 
 ```
 
-This endpoint completes a browser-based settings flow. This is usually achieved
-by POSTing data to this endpoint.
+This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this
+endpoint.
 
-If the provided profile data is valid against the Identity's Traits JSON Schema,
-the data will be updated and the browser redirected to `url.settings_ui` for
-further steps.
+If the provided profile data is valid against the Identity's Traits JSON Schema, the data will be updated and
+the browser redirected to `url.settings_ui` for further steps.
 
-> This endpoint is NOT INTENDED for API clients and only works with browsers
-> (Chrome, Firefox, ...) and HTML Forms.
+> This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
 
-More information can be found at
-[ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
+More information can be found at [ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
 
 #### Request body
 
@@ -3922,28 +3849,27 @@ More information can be found at
 ```yaml
 request_id: string
 traits: {}
+
 ```
 
 <a id="complete-the-browser-based-settings-flow-for-profile-data-parameters"></a>
-
 ##### Parameters
 
-| Parameter | In    | Type                                                                                                                                | Required | Description                |
-| --------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------- |
-| request   | query | string                                                                                                                              | true     | Request is the request ID. |
-| body      | body  | [completeSelfServiceBrowserSettingsStrategyProfileFlowPayload](#schemacompleteselfservicebrowsersettingsstrategyprofileflowpayload) | true     | none                       |
+|Parameter|In|Type|Required|Description|
+|---|---|---|---|---|
+|request|query|string|true|Request is the request ID.|
+|body|body|[completeSelfServiceBrowserSettingsStrategyProfileFlowPayload](#schemacompleteselfservicebrowsersettingsstrategyprofileflowpayload)|true|none|
 
 #### Responses
 
 <a id="complete-the-browser-based-settings-flow-for-profile-data-responses"></a>
-
 ##### Overview
 
-| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
-| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
-| typically 201. | None                                                                       |
-| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|302|[Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)|Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
+typically 201.|None|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
 
 ##### Examples
 
@@ -4003,7 +3929,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{
+    headers := map[string][]string{ 
         "Content-Type": []string{"application/json"},
         "Accept": []string{"application/json"},
     }
@@ -4123,24 +4049,21 @@ Accept: application/json
 
 ```
 
-This endpoint initializes a browser-based verification flow. Once initialized,
-the browser will be redirected to `urls.settings_ui` with the request ID set as
-a query parameter. If no valid user session exists, a login flow will be
-initialized.
+This endpoint initializes a browser-based verification flow. Once initialized, the browser will be redirected to
+`urls.settings_ui` with the request ID set as a query parameter. If no valid user session exists, a login
+flow will be initialized.
 
-> This endpoint is NOT INTENDED for API clients and only works with browsers
-> (Chrome, Firefox, ...).
+> This endpoint is NOT INTENDED for API clients and only works
+with browsers (Chrome, Firefox, ...).
 
-More information can be found at
-[ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 
 <a id="initialize-browser-based-verification-flow-parameters"></a>
-
 ##### Parameters
 
-| Parameter | In   | Type   | Required | Description    |
-| --------- | ---- | ------ | -------- | -------------- |
-| via       | path | string | true     | What to verify |
+|Parameter|In|Type|Required|Description|
+|---|---|---|---|---|
+|via|path|string|true|What to verify|
 
 ##### Detailed descriptions
 
@@ -4151,14 +4074,13 @@ Currently only "email" is supported.
 #### Responses
 
 <a id="initialize-browser-based-verification-flow-responses"></a>
-
 ##### Overview
 
-| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
-| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
-| typically 201. | None                                                                       |
-| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|302|[Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)|Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
+typically 201.|None|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
 
 ##### Examples
 
@@ -4218,7 +4140,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{
+    headers := map[string][]string{ 
         "Accept": []string{"application/json"},
     }
 
@@ -4331,20 +4253,17 @@ Accept: application/json
 
 This endpoint completes a browser-based verification flow.
 
-> This endpoint is NOT INTENDED for API clients and only works with browsers
-> (Chrome, Firefox, ...) and HTML Forms.
+> This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
 
-More information can be found at
-[ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 
 <a id="complete-the-browser-based-verification-flows-parameters"></a>
-
 ##### Parameters
 
-| Parameter | In   | Type   | Required | Description    |
-| --------- | ---- | ------ | -------- | -------------- |
-| code      | path | string | true     | none           |
-| via       | path | string | true     | What to verify |
+|Parameter|In|Type|Required|Description|
+|---|---|---|---|---|
+|code|path|string|true|none|
+|via|path|string|true|What to verify|
 
 ##### Detailed descriptions
 
@@ -4355,14 +4274,13 @@ Currently only "email" is supported.
 #### Responses
 
 <a id="complete-the-browser-based-verification-flows-responses"></a>
-
 ##### Overview
 
-| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
-| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
-| typically 201. | None                                                                       |
-| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|302|[Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)|Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
+typically 201.|None|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
 
 ##### Examples
 
@@ -4422,7 +4340,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{
+    headers := map[string][]string{ 
         "Accept": []string{"application/json"},
     }
 
@@ -4533,23 +4451,21 @@ Accept: application/json
 
 ```
 
-Uses the HTTP Headers in the GET request to determine (e.g. by using checking
-the cookies) who is authenticated. Returns a session object or 401 if the
-credentials are invalid or no credentials were sent.
+Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.
+Returns a session object or 401 if the credentials are invalid or no credentials were sent.
 
 This endpoint is useful for reverse proxies and API Gateways.
 
 #### Responses
 
 <a id="check-who-the-current-http-session-belongs-to-responses"></a>
-
 ##### Overview
 
-| Status | Meaning                                                                    | Description  | Schema                              |
-| ------ | -------------------------------------------------------------------------- | ------------ | ----------------------------------- |
-| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | session      | [session](#schemasession)           |
-| 403    | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | genericError | [genericError](#schemagenericerror) |
-| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError | [genericError](#schemagenericerror) |
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|session|[session](#schemasession)|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|genericError|[genericError](#schemagenericerror)|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
 
 ##### Examples
 
@@ -4557,16 +4473,16 @@ This endpoint is useful for reverse proxies and API Gateways.
 
 ```json
 {
-  "authenticated_at": "2020-04-30T11:21:09Z",
-  "expires_at": "2020-04-30T11:21:09Z",
+  "authenticated_at": "2020-05-05T09:51:17Z",
+  "expires_at": "2020-05-05T09:51:17Z",
   "identity": {
     "addresses": [
       {
-        "expires_at": "2020-04-30T11:21:09Z",
+        "expires_at": "2020-05-05T09:51:17Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-04-30T11:21:09Z",
+        "verified_at": "2020-05-05T09:51:17Z",
         "via": "string"
       }
     ],
@@ -4575,7 +4491,7 @@ This endpoint is useful for reverse proxies and API Gateways.
     "traits_schema_id": "string",
     "traits_schema_url": "string"
   },
-  "issued_at": "2020-04-30T11:21:09Z",
+  "issued_at": "2020-05-05T09:51:17Z",
   "sid": "string"
 }
 ```
@@ -4617,7 +4533,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{
+    headers := map[string][]string{ 
         "Accept": []string{"application/json"},
     }
 
@@ -4719,7 +4635,6 @@ p JSON.parse(result)
 </div>
 
 <a id="ory-kratos-version"></a>
-
 ## version
 
 <a id="opIdgetVersion"></a>
@@ -4732,24 +4647,22 @@ Accept: application/json
 
 ```
 
-This endpoint returns the service version typically notated using semantic
-versioning.
+This endpoint returns the service version typically notated using semantic versioning.
 
 If the service supports TLS Edge Termination, this endpoint does not require the
 `X-Forwarded-Proto` header to be set.
 
-Be aware that if you are running multiple nodes of this service, the health
-status will never refer to the cluster state, only to a single instance.
+Be aware that if you are running multiple nodes of this service, the health status will never
+refer to the cluster state, only to a single instance.
 
 #### Responses
 
 <a id="get-service-version-responses"></a>
-
 ##### Overview
 
-| Status | Meaning                                                 | Description | Schema                    |
-| ------ | ------------------------------------------------------- | ----------- | ------------------------- |
-| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1) | version     | [version](#schemaversion) |
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|version|[version](#schemaversion)|
 
 ##### Examples
 
@@ -4798,7 +4711,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{
+    headers := map[string][]string{ 
         "Accept": []string{"application/json"},
     }
 
@@ -4902,26 +4815,24 @@ p JSON.parse(result)
 ## Schemas
 
 <a id="tocScredentialstype">CredentialsType</a>
-
 #### CredentialsType
 
 <a id="schemacredentialstype"></a>
 
 ```json
 "string"
+
 ```
 
-_CredentialsType represents several different credential types, like password
-credentials, passwordless credentials,_
+*CredentialsType  represents several different credential types, like password credentials, passwordless credentials,*
 
 #### Properties
 
-| Name                                                                                                                | Type   | Required | Restrictions | Description |
-| ------------------------------------------------------------------------------------------------------------------- | ------ | -------- | ------------ | ----------- |
-| CredentialsType represents several different credential types, like password credentials, passwordless credentials, | string | false    | none         | and so on.  |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|CredentialsType  represents several different credential types, like password credentials, passwordless credentials,|string|false|none|and so on.|
 
 <a id="tocSerror">Error</a>
-
 #### Error
 
 <a id="schemaerror"></a>
@@ -4930,16 +4841,16 @@ credentials, passwordless credentials,_
 {
   "message": "string"
 }
+
 ```
 
 #### Properties
 
-| Name    | Type   | Required | Restrictions | Description                              |
-| ------- | ------ | -------- | ------------ | ---------------------------------------- |
-| message | string | false    | none         | Code FormErrorCode `json:"id,omitempty"` |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|message|string|false|none|Code    FormErrorCode `json:"id,omitempty"`|
 
 <a id="tocSidentity">Identity</a>
-
 #### Identity
 
 <a id="schemaidentity"></a>
@@ -4948,11 +4859,11 @@ credentials, passwordless credentials,_
 {
   "addresses": [
     {
-      "expires_at": "2020-04-30T11:21:09Z",
+      "expires_at": "2020-05-05T09:51:17Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-04-30T11:21:09Z",
+      "verified_at": "2020-05-05T09:51:17Z",
       "via": "string"
     }
   ],
@@ -4961,20 +4872,20 @@ credentials, passwordless credentials,_
   "traits_schema_id": "string",
   "traits_schema_url": "string"
 }
+
 ```
 
 #### Properties
 
-| Name              | Type                                            | Required | Restrictions | Description                                                                                                    |
-| ----------------- | ----------------------------------------------- | -------- | ------------ | -------------------------------------------------------------------------------------------------------------- |
-| addresses         | [[VerifiableAddress](#schemaverifiableaddress)] | false    | none         | none                                                                                                           |
-| id                | [UUID](#schemauuid)                             | true     | none         | none                                                                                                           |
-| traits            | [Traits](#schematraits)                         | true     | none         | none                                                                                                           |
-| traits_schema_id  | string                                          | true     | none         | TraitsSchemaID is the ID of the JSON Schema to be used for validating the identity's traits.                   |
-| traits_schema_url | string                                          | false    | none         | TraitsSchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from. format: url |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|addresses|[[VerifiableAddress](#schemaverifiableaddress)]|false|none|none|
+|id|[UUID](#schemauuid)|true|none|none|
+|traits|[Traits](#schematraits)|true|none|none|
+|traits_schema_id|string|true|none|TraitsSchemaID is the ID of the JSON Schema to be used for validating the identity's traits.|
+|traits_schema_url|string|false|none|TraitsSchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.  format: url|
 
 <a id="tocSrequestmethodconfig">RequestMethodConfig</a>
-
 #### RequestMethodConfig
 
 <a id="schemarequestmethodconfig"></a>
@@ -5004,93 +4915,93 @@ credentials, passwordless credentials,_
   ],
   "method": "string"
 }
+
 ```
 
 #### Properties
 
-| Name   | Type                            | Required | Restrictions | Description                                                                                 |
-| ------ | ------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------- |
-| action | string                          | true     | none         | Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`. |
-| errors | [[Error](#schemaerror)]         | false    | none         | Errors contains all form errors. These will be duplicates of the individual field errors.   |
-| fields | [formFields](#schemaformfields) | true     | none         | Fields contains multiple fields                                                             |
-| method | string                          | true     | none         | Method is the form method (e.g. POST)                                                       |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|action|string|true|none|Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`.|
+|errors|[[Error](#schemaerror)]|false|none|Errors contains all form errors. These will be duplicates of the individual field errors.|
+|fields|[formFields](#schemaformfields)|true|none|Fields contains multiple fields|
+|method|string|true|none|Method is the form method (e.g. POST)|
 
 <a id="tocStraits">Traits</a>
-
 #### Traits
 
 <a id="schematraits"></a>
 
 ```json
 {}
+
 ```
 
 #### Properties
 
-_None_
+*None*
 
 <a id="tocSuuid">UUID</a>
-
 #### UUID
 
 <a id="schemauuid"></a>
 
 ```json
 "string"
+
 ```
 
 #### Properties
 
-| Name        | Type          | Required | Restrictions | Description |
-| ----------- | ------------- | -------- | ------------ | ----------- |
-| _anonymous_ | string(uuid4) | false    | none         | none        |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|*anonymous*|string(uuid4)|false|none|none|
 
 <a id="tocSverifiableaddress">VerifiableAddress</a>
-
 #### VerifiableAddress
 
 <a id="schemaverifiableaddress"></a>
 
 ```json
 {
-  "expires_at": "2020-04-30T11:21:09Z",
+  "expires_at": "2020-05-05T09:51:17Z",
   "id": "string",
   "value": "string",
   "verified": true,
-  "verified_at": "2020-04-30T11:21:09Z",
+  "verified_at": "2020-05-05T09:51:17Z",
   "via": "string"
 }
+
 ```
 
 #### Properties
 
-| Name        | Type                                                  | Required | Restrictions | Description |
-| ----------- | ----------------------------------------------------- | -------- | ------------ | ----------- |
-| expires_at  | string(date-time)                                     | true     | none         | none        |
-| id          | [UUID](#schemauuid)                                   | true     | none         | none        |
-| value       | string                                                | true     | none         | none        |
-| verified    | boolean                                               | true     | none         | none        |
-| verified_at | string(date-time)                                     | false    | none         | none        |
-| via         | [VerifiableAddressType](#schemaverifiableaddresstype) | true     | none         | none        |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|expires_at|string(date-time)|true|none|none|
+|id|[UUID](#schemauuid)|true|none|none|
+|value|string|true|none|none|
+|verified|boolean|true|none|none|
+|verified_at|string(date-time)|false|none|none|
+|via|[VerifiableAddressType](#schemaverifiableaddresstype)|true|none|none|
 
 <a id="tocSverifiableaddresstype">VerifiableAddressType</a>
-
 #### VerifiableAddressType
 
 <a id="schemaverifiableaddresstype"></a>
 
 ```json
 "string"
+
 ```
 
 #### Properties
 
-| Name        | Type   | Required | Restrictions | Description |
-| ----------- | ------ | -------- | ------------ | ----------- |
-| _anonymous_ | string | false    | none         | none        |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|*anonymous*|string|false|none|none|
 
 <a id="tocScompleteselfservicebrowsersettingsstrategyprofileflowpayload">completeSelfServiceBrowserSettingsStrategyProfileFlowPayload</a>
-
 #### completeSelfServiceBrowserSettingsStrategyProfileFlowPayload
 
 <a id="schemacompleteselfservicebrowsersettingsstrategyprofileflowpayload"></a>
@@ -5100,17 +5011,17 @@ _None_
   "request_id": "string",
   "traits": {}
 }
+
 ```
 
 #### Properties
 
-| Name       | Type   | Required | Restrictions | Description                                                               |
-| ---------- | ------ | -------- | ------------ | ------------------------------------------------------------------------- |
-| request_id | string | false    | none         | RequestID is request ID. in: query                                        |
-| traits     | object | true     | none         | Traits contains all of the identity's traits. type: string format: binary |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|request_id|string|false|none|RequestID is request ID.  in: query|
+|traits|object|true|none|Traits contains all of the identity's traits.  type: string format: binary|
 
 <a id="tocSerrorcontainer">errorContainer</a>
-
 #### errorContainer
 
 <a id="schemaerrorcontainer"></a>
@@ -5120,17 +5031,17 @@ _None_
   "errors": {},
   "id": "string"
 }
+
 ```
 
 #### Properties
 
-| Name   | Type                | Required | Restrictions | Description |
-| ------ | ------------------- | -------- | ------------ | ----------- |
-| errors | object              | false    | none         | none        |
-| id     | [UUID](#schemauuid) | false    | none         | none        |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|errors|object|false|none|none|
+|id|[UUID](#schemauuid)|false|none|none|
 
 <a id="tocSform">form</a>
-
 #### form
 
 <a id="schemaform"></a>
@@ -5160,22 +5071,21 @@ _None_
   ],
   "method": "string"
 }
+
 ```
 
-_HTMLForm represents a HTML Form. The container can work with both HTTP Form and
-JSON requests_
+*HTMLForm represents a HTML Form. The container can work with both HTTP Form and JSON requests*
 
 #### Properties
 
-| Name   | Type                            | Required | Restrictions | Description                                                                                 |
-| ------ | ------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------- |
-| action | string                          | true     | none         | Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`. |
-| errors | [[Error](#schemaerror)]         | false    | none         | Errors contains all form errors. These will be duplicates of the individual field errors.   |
-| fields | [formFields](#schemaformfields) | true     | none         | Fields contains multiple fields                                                             |
-| method | string                          | true     | none         | Method is the form method (e.g. POST)                                                       |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|action|string|true|none|Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`.|
+|errors|[[Error](#schemaerror)]|false|none|Errors contains all form errors. These will be duplicates of the individual field errors.|
+|fields|[formFields](#schemaformfields)|true|none|Fields contains multiple fields|
+|method|string|true|none|Method is the form method (e.g. POST)|
 
 <a id="tocSformfield">formField</a>
-
 #### formField
 
 <a id="schemaformfield"></a>
@@ -5194,24 +5104,24 @@ JSON requests_
   "type": "string",
   "value": {}
 }
+
 ```
 
-_Field represents a HTML Form Field_
+*Field represents a HTML Form Field*
 
 #### Properties
 
-| Name     | Type                    | Required | Restrictions | Description                                                             |
-| -------- | ----------------------- | -------- | ------------ | ----------------------------------------------------------------------- |
-| disabled | boolean                 | false    | none         | Disabled is the equivalent of `<input disabled="{{.Disabled}}">`        |
-| errors   | [[Error](#schemaerror)] | false    | none         | Errors contains all validation errors this particular field has caused. |
-| name     | string                  | true     | none         | Name is the equivalent of `<input name="{{.Name}}">`                    |
-| pattern  | string                  | false    | none         | Pattern is the equivalent of `<input pattern="{{.Pattern}}">`           |
-| required | boolean                 | true     | none         | Required is the equivalent of `<input required="{{.Required}}">`        |
-| type     | string                  | true     | none         | Type is the equivalent of `<input type="{{.Type}}">`                    |
-| value    | object                  | false    | none         | Value is the equivalent of `<input value="{{.Value}}">`                 |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|disabled|boolean|false|none|Disabled is the equivalent of `<input disabled="{{.Disabled}}">`|
+|errors|[[Error](#schemaerror)]|false|none|Errors contains all validation errors this particular field has caused.|
+|name|string|true|none|Name is the equivalent of `<input name="{{.Name}}">`|
+|pattern|string|false|none|Pattern is the equivalent of `<input pattern="{{.Pattern}}">`|
+|required|boolean|true|none|Required is the equivalent of `<input required="{{.Required}}">`|
+|type|string|true|none|Type is the equivalent of `<input type="{{.Type}}">`|
+|value|object|false|none|Value is the equivalent of `<input value="{{.Value}}">`|
 
 <a id="tocSformfields">formFields</a>
-
 #### formFields
 
 <a id="schemaformfields"></a>
@@ -5232,18 +5142,18 @@ _Field represents a HTML Form Field_
     "value": {}
   }
 ]
+
 ```
 
-_Fields contains multiple fields_
+*Fields contains multiple fields*
 
 #### Properties
 
-| Name        | Type                            | Required | Restrictions | Description                     |
-| ----------- | ------------------------------- | -------- | ------------ | ------------------------------- |
-| _anonymous_ | [[formField](#schemaformfield)] | false    | none         | Fields contains multiple fields |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|*anonymous*|[[formField](#schemaformfield)]|false|none|Fields contains multiple fields|
 
 <a id="tocSgenericerror">genericError</a>
-
 #### genericError
 
 <a id="schemagenericerror"></a>
@@ -5263,18 +5173,18 @@ _Fields contains multiple fields_
     "status": "string"
   }
 }
+
 ```
 
-_Error response_
+*Error response*
 
 #### Properties
 
-| Name  | Type                                              | Required | Restrictions | Description |
-| ----- | ------------------------------------------------- | -------- | ------------ | ----------- |
-| error | [genericErrorPayload](#schemagenericerrorpayload) | false    | none         | none        |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|error|[genericErrorPayload](#schemagenericerrorpayload)|false|none|none|
 
 <a id="tocSgenericerrorpayload">genericErrorPayload</a>
-
 #### genericErrorPayload
 
 <a id="schemagenericerrorpayload"></a>
@@ -5292,23 +5202,23 @@ _Error response_
   "request": "string",
   "status": "string"
 }
+
 ```
 
 #### Properties
 
-| Name                       | Type           | Required | Restrictions | Description                                                                            |
-| -------------------------- | -------------- | -------- | ------------ | -------------------------------------------------------------------------------------- |
-| code                       | integer(int64) | false    | none         | Code represents the error status code (404, 403, 401, ...).                            |
-| debug                      | string         | false    | none         | Debug contains debug information. This is usually not available and has to be enabled. |
-| details                    | object         | false    | none         | none                                                                                   |
-| » **additionalProperties** | object         | false    | none         | none                                                                                   |
-| message                    | string         | false    | none         | none                                                                                   |
-| reason                     | string         | false    | none         | none                                                                                   |
-| request                    | string         | false    | none         | none                                                                                   |
-| status                     | string         | false    | none         | none                                                                                   |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|code|integer(int64)|false|none|Code represents the error status code (404, 403, 401, ...).|
+|debug|string|false|none|Debug contains debug information. This is usually not available and has to be enabled.|
+|details|object|false|none|none|
+|» **additionalProperties**|object|false|none|none|
+|message|string|false|none|none|
+|reason|string|false|none|none|
+|request|string|false|none|none|
+|status|string|false|none|none|
 
 <a id="tocShealthnotreadystatus">healthNotReadyStatus</a>
-
 #### healthNotReadyStatus
 
 <a id="schemahealthnotreadystatus"></a>
@@ -5320,17 +5230,17 @@ _Error response_
     "property2": "string"
   }
 }
+
 ```
 
 #### Properties
 
-| Name                       | Type   | Required | Restrictions | Description                                                        |
-| -------------------------- | ------ | -------- | ------------ | ------------------------------------------------------------------ |
-| errors                     | object | false    | none         | Errors contains a list of errors that caused the not ready status. |
-| » **additionalProperties** | string | false    | none         | none                                                               |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|errors|object|false|none|Errors contains a list of errors that caused the not ready status.|
+|» **additionalProperties**|string|false|none|none|
 
 <a id="tocShealthstatus">healthStatus</a>
-
 #### healthStatus
 
 <a id="schemahealthstatus"></a>
@@ -5339,16 +5249,16 @@ _Error response_
 {
   "status": "string"
 }
+
 ```
 
 #### Properties
 
-| Name   | Type   | Required | Restrictions | Description                  |
-| ------ | ------ | -------- | ------------ | ---------------------------- |
-| status | string | false    | none         | Status always contains "ok". |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|status|string|false|none|Status always contains "ok".|
 
 <a id="tocSloginrequest">loginRequest</a>
-
 #### loginRequest
 
 <a id="schemaloginrequest"></a>
@@ -5356,10 +5266,10 @@ _Error response_
 ```json
 {
   "active": "string",
-  "expires_at": "2020-04-30T11:21:09Z",
+  "expires_at": "2020-05-05T09:51:17Z",
   "forced": true,
   "id": "string",
-  "issued_at": "2020-04-30T11:21:09Z",
+  "issued_at": "2020-05-05T09:51:17Z",
   "methods": {
     "property1": {
       "config": {
@@ -5448,23 +5358,23 @@ _Error response_
   },
   "request_url": "string"
 }
+
 ```
 
 #### Properties
 
-| Name                       | Type                                            | Required | Restrictions | Description                                                                                                                                                                 |
-| -------------------------- | ----------------------------------------------- | -------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| active                     | [CredentialsType](#schemacredentialstype)       | false    | none         | and so on.                                                                                                                                                                  |
-| expires_at                 | string(date-time)                               | true     | none         | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in, a new request has to be initiated.                                                |
-| forced                     | boolean                                         | false    | none         | Forced stores whether this login request should enforce reauthentication.                                                                                                   |
-| id                         | [UUID](#schemauuid)                             | true     | none         | none                                                                                                                                                                        |
-| issued_at                  | string(date-time)                               | true     | none         | IssuedAt is the time (UTC) when the request occurred.                                                                                                                       |
-| methods                    | object                                          | true     | none         | Methods contains context for all enabled login methods. If a login request has been processed, but for example the password is incorrect, this will contain error messages. |
-| » **additionalProperties** | [loginRequestMethod](#schemaloginrequestmethod) | false    | none         | none                                                                                                                                                                        |
-| request_url                | string                                          | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.                   |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|active|[CredentialsType](#schemacredentialstype)|false|none|and so on.|
+|expires_at|string(date-time)|true|none|ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in, a new request has to be initiated.|
+|forced|boolean|false|none|Forced stores whether this login request should enforce reauthentication.|
+|id|[UUID](#schemauuid)|true|none|none|
+|issued_at|string(date-time)|true|none|IssuedAt is the time (UTC) when the request occurred.|
+|methods|object|true|none|Methods contains context for all enabled login methods. If a login request has been processed, but for example the password is incorrect, this will contain error messages.|
+|» **additionalProperties**|[loginRequestMethod](#schemaloginrequestmethod)|false|none|none|
+|request_url|string|true|none|RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.|
 
 <a id="tocSloginrequestmethod">loginRequestMethod</a>
-
 #### loginRequestMethod
 
 <a id="schemaloginrequestmethod"></a>
@@ -5512,17 +5422,17 @@ _Error response_
   },
   "method": "string"
 }
+
 ```
 
 #### Properties
 
-| Name   | Type                                                        | Required | Restrictions | Description |
-| ------ | ----------------------------------------------------------- | -------- | ------------ | ----------- |
-| config | [loginRequestMethodConfig](#schemaloginrequestmethodconfig) | true     | none         | none        |
-| method | [CredentialsType](#schemacredentialstype)                   | true     | none         | and so on.  |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|config|[loginRequestMethodConfig](#schemaloginrequestmethodconfig)|true|none|none|
+|method|[CredentialsType](#schemacredentialstype)|true|none|and so on.|
 
 <a id="tocSloginrequestmethodconfig">loginRequestMethodConfig</a>
-
 #### loginRequestMethodConfig
 
 <a id="schemaloginrequestmethodconfig"></a>
@@ -5567,20 +5477,20 @@ _Error response_
     }
   ]
 }
+
 ```
 
 #### Properties
 
-| Name      | Type                            | Required | Restrictions | Description                                                                                 |
-| --------- | ------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------- |
-| action    | string                          | true     | none         | Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`. |
-| errors    | [[Error](#schemaerror)]         | false    | none         | Errors contains all form errors. These will be duplicates of the individual field errors.   |
-| fields    | [formFields](#schemaformfields) | true     | none         | Fields contains multiple fields                                                             |
-| method    | string                          | true     | none         | Method is the form method (e.g. POST)                                                       |
-| providers | [[formField](#schemaformfield)] | false    | none         | Providers is set for the "oidc" request method.                                             |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|action|string|true|none|Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`.|
+|errors|[[Error](#schemaerror)]|false|none|Errors contains all form errors. These will be duplicates of the individual field errors.|
+|fields|[formFields](#schemaformfields)|true|none|Fields contains multiple fields|
+|method|string|true|none|Method is the form method (e.g. POST)|
+|providers|[[formField](#schemaformfield)]|false|none|Providers is set for the "oidc" request method.|
 
 <a id="tocSregistrationrequest">registrationRequest</a>
-
 #### registrationRequest
 
 <a id="schemaregistrationrequest"></a>
@@ -5588,9 +5498,9 @@ _Error response_
 ```json
 {
   "active": "string",
-  "expires_at": "2020-04-30T11:21:09Z",
+  "expires_at": "2020-05-05T09:51:17Z",
   "id": "string",
-  "issued_at": "2020-04-30T11:21:09Z",
+  "issued_at": "2020-05-05T09:51:17Z",
   "methods": {
     "property1": {
       "config": {
@@ -5679,22 +5589,22 @@ _Error response_
   },
   "request_url": "string"
 }
+
 ```
 
 #### Properties
 
-| Name                       | Type                                                          | Required | Restrictions | Description                                                                                                                                                                               |
-| -------------------------- | ------------------------------------------------------------- | -------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| active                     | [CredentialsType](#schemacredentialstype)                     | true     | none         | and so on.                                                                                                                                                                                |
-| expires_at                 | string(date-time)                                             | true     | none         | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in, a new request has to be initiated.                                                              |
-| id                         | [UUID](#schemauuid)                                           | true     | none         | none                                                                                                                                                                                      |
-| issued_at                  | string(date-time)                                             | true     | none         | IssuedAt is the time (UTC) when the request occurred.                                                                                                                                     |
-| methods                    | object                                                        | true     | none         | Methods contains context for all enabled registration methods. If a registration request has been processed, but for example the password is incorrect, this will contain error messages. |
-| » **additionalProperties** | [registrationRequestMethod](#schemaregistrationrequestmethod) | false    | none         | none                                                                                                                                                                                      |
-| request_url                | string                                                        | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.                                 |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|active|[CredentialsType](#schemacredentialstype)|true|none|and so on.|
+|expires_at|string(date-time)|true|none|ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in, a new request has to be initiated.|
+|id|[UUID](#schemauuid)|true|none|none|
+|issued_at|string(date-time)|true|none|IssuedAt is the time (UTC) when the request occurred.|
+|methods|object|true|none|Methods contains context for all enabled registration methods. If a registration request has been processed, but for example the password is incorrect, this will contain error messages.|
+|» **additionalProperties**|[registrationRequestMethod](#schemaregistrationrequestmethod)|false|none|none|
+|request_url|string|true|none|RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.|
 
 <a id="tocSregistrationrequestmethod">registrationRequestMethod</a>
-
 #### registrationRequestMethod
 
 <a id="schemaregistrationrequestmethod"></a>
@@ -5742,17 +5652,17 @@ _Error response_
   },
   "method": "string"
 }
+
 ```
 
 #### Properties
 
-| Name   | Type                                                                      | Required | Restrictions | Description |
-| ------ | ------------------------------------------------------------------------- | -------- | ------------ | ----------- |
-| config | [registrationRequestMethodConfig](#schemaregistrationrequestmethodconfig) | false    | none         | none        |
-| method | [CredentialsType](#schemacredentialstype)                                 | false    | none         | and so on.  |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|config|[registrationRequestMethodConfig](#schemaregistrationrequestmethodconfig)|false|none|none|
+|method|[CredentialsType](#schemacredentialstype)|false|none|and so on.|
 
 <a id="tocSregistrationrequestmethodconfig">registrationRequestMethodConfig</a>
-
 #### registrationRequestMethodConfig
 
 <a id="schemaregistrationrequestmethodconfig"></a>
@@ -5797,36 +5707,36 @@ _Error response_
     }
   ]
 }
+
 ```
 
 #### Properties
 
-| Name      | Type                            | Required | Restrictions | Description                                                                                 |
-| --------- | ------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------- |
-| action    | string                          | true     | none         | Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`. |
-| errors    | [[Error](#schemaerror)]         | false    | none         | Errors contains all form errors. These will be duplicates of the individual field errors.   |
-| fields    | [formFields](#schemaformfields) | true     | none         | Fields contains multiple fields                                                             |
-| method    | string                          | true     | none         | Method is the form method (e.g. POST)                                                       |
-| providers | [[formField](#schemaformfield)] | false    | none         | Providers is set for the "oidc" request method.                                             |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|action|string|true|none|Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`.|
+|errors|[[Error](#schemaerror)]|false|none|Errors contains all form errors. These will be duplicates of the individual field errors.|
+|fields|[formFields](#schemaformfields)|true|none|Fields contains multiple fields|
+|method|string|true|none|Method is the form method (e.g. POST)|
+|providers|[[formField](#schemaformfield)]|false|none|Providers is set for the "oidc" request method.|
 
 <a id="tocSsession">session</a>
-
 #### session
 
 <a id="schemasession"></a>
 
 ```json
 {
-  "authenticated_at": "2020-04-30T11:21:09Z",
-  "expires_at": "2020-04-30T11:21:09Z",
+  "authenticated_at": "2020-05-05T09:51:17Z",
+  "expires_at": "2020-05-05T09:51:17Z",
   "identity": {
     "addresses": [
       {
-        "expires_at": "2020-04-30T11:21:09Z",
+        "expires_at": "2020-05-05T09:51:17Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-04-30T11:21:09Z",
+        "verified_at": "2020-05-05T09:51:17Z",
         "via": "string"
       }
     ],
@@ -5835,23 +5745,23 @@ _Error response_
     "traits_schema_id": "string",
     "traits_schema_url": "string"
   },
-  "issued_at": "2020-04-30T11:21:09Z",
+  "issued_at": "2020-05-05T09:51:17Z",
   "sid": "string"
 }
+
 ```
 
 #### Properties
 
-| Name             | Type                        | Required | Restrictions | Description |
-| ---------------- | --------------------------- | -------- | ------------ | ----------- |
-| authenticated_at | string(date-time)           | true     | none         | none        |
-| expires_at       | string(date-time)           | true     | none         | none        |
-| identity         | [Identity](#schemaidentity) | true     | none         | none        |
-| issued_at        | string(date-time)           | true     | none         | none        |
-| sid              | [UUID](#schemauuid)         | true     | none         | none        |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|authenticated_at|string(date-time)|true|none|none|
+|expires_at|string(date-time)|true|none|none|
+|identity|[Identity](#schemaidentity)|true|none|none|
+|issued_at|string(date-time)|true|none|none|
+|sid|[UUID](#schemauuid)|true|none|none|
 
 <a id="tocSsettingsrequest">settingsRequest</a>
-
 #### settingsRequest
 
 <a id="schemasettingsrequest"></a>
@@ -5859,16 +5769,16 @@ _Error response_
 ```json
 {
   "active": "string",
-  "expires_at": "2020-04-30T11:21:09Z",
+  "expires_at": "2020-05-05T09:51:17Z",
   "id": "string",
   "identity": {
     "addresses": [
       {
-        "expires_at": "2020-04-30T11:21:09Z",
+        "expires_at": "2020-05-05T09:51:17Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-04-30T11:21:09Z",
+        "verified_at": "2020-05-05T09:51:17Z",
         "via": "string"
       }
     ],
@@ -5877,7 +5787,7 @@ _Error response_
     "traits_schema_id": "string",
     "traits_schema_url": "string"
   },
-  "issued_at": "2020-04-30T11:21:09Z",
+  "issued_at": "2020-05-05T09:51:17Z",
   "methods": {
     "property1": {
       "config": {
@@ -5937,26 +5847,26 @@ _Error response_
   "request_url": "string",
   "update_successful": true
 }
+
 ```
 
-_Request presents a settings request_
+*Request presents a settings request*
 
 #### Properties
 
-| Name                       | Type                                                  | Required | Restrictions | Description                                                                                                                                                                                                                                                                                                |
-| -------------------------- | ----------------------------------------------------- | -------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| active                     | string                                                | false    | none         | Active, if set, contains the registration method that is being used. It is initially not set.                                                                                                                                                                                                              |
-| expires_at                 | string(date-time)                                     | true     | none         | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting, a new request has to be initiated.                                                                                                                                                                   |
-| id                         | [UUID](#schemauuid)                                   | true     | none         | none                                                                                                                                                                                                                                                                                                       |
-| identity                   | [Identity](#schemaidentity)                           | true     | none         | none                                                                                                                                                                                                                                                                                                       |
-| issued_at                  | string(date-time)                                     | true     | none         | IssuedAt is the time (UTC) when the request occurred.                                                                                                                                                                                                                                                      |
-| methods                    | object                                                | true     | none         | Methods contains context for all enabled registration methods. If a registration request has been processed, but for example the password is incorrect, this will contain error messages.                                                                                                                  |
-| » **additionalProperties** | [settingsRequestMethod](#schemasettingsrequestmethod) | false    | none         | none                                                                                                                                                                                                                                                                                                       |
-| request_url                | string                                                | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.                                                                                                                                                  |
-| update_successful          | boolean                                               | true     | none         | UpdateSuccessful, if true, indicates that the settings request has been updated successfully with the provided data. Done will stay true when repeatedly checking. If set to true, done will revert back to false only when a request with invalid (e.g. "please use a valid phone number") data was sent. |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|active|string|false|none|Active, if set, contains the registration method that is being used. It is initially not set.|
+|expires_at|string(date-time)|true|none|ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting, a new request has to be initiated.|
+|id|[UUID](#schemauuid)|true|none|none|
+|identity|[Identity](#schemaidentity)|true|none|none|
+|issued_at|string(date-time)|true|none|IssuedAt is the time (UTC) when the request occurred.|
+|methods|object|true|none|Methods contains context for all enabled registration methods. If a registration request has been processed, but for example the password is incorrect, this will contain error messages.|
+|» **additionalProperties**|[settingsRequestMethod](#schemasettingsrequestmethod)|false|none|none|
+|request_url|string|true|none|RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.|
+|update_successful|boolean|true|none|UpdateSuccessful, if true, indicates that the settings request has been updated successfully with the provided data. Done will stay true when repeatedly checking. If set to true, done will revert back to false only when a request with invalid (e.g. "please use a valid phone number") data was sent.|
 
 <a id="tocSsettingsrequestmethod">settingsRequestMethod</a>
-
 #### settingsRequestMethod
 
 <a id="schemasettingsrequestmethod"></a>
@@ -5989,24 +5899,24 @@ _Request presents a settings request_
   },
   "method": "string"
 }
+
 ```
 
 #### Properties
 
-| Name   | Type                                              | Required | Restrictions | Description                                   |
-| ------ | ------------------------------------------------- | -------- | ------------ | --------------------------------------------- |
-| config | [RequestMethodConfig](#schemarequestmethodconfig) | false    | none         | none                                          |
-| method | string                                            | false    | none         | Method contains the request credentials type. |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|config|[RequestMethodConfig](#schemarequestmethodconfig)|false|none|none|
+|method|string|false|none|Method contains the request credentials type.|
 
 <a id="tocSverificationrequest">verificationRequest</a>
-
 #### verificationRequest
 
 <a id="schemaverificationrequest"></a>
 
 ```json
 {
-  "expires_at": "2020-04-30T11:21:09Z",
+  "expires_at": "2020-05-05T09:51:17Z",
   "form": {
     "action": "string",
     "errors": [
@@ -6032,29 +5942,29 @@ _Request presents a settings request_
     "method": "string"
   },
   "id": "string",
-  "issued_at": "2020-04-30T11:21:09Z",
+  "issued_at": "2020-05-05T09:51:17Z",
   "request_url": "string",
   "success": true,
   "via": "string"
 }
+
 ```
 
-_Request presents a verification request_
+*Request presents a verification request*
 
 #### Properties
 
-| Name        | Type                                                  | Required | Restrictions | Description                                                                                                                                               |
-| ----------- | ----------------------------------------------------- | -------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| expires_at  | string(date-time)                                     | false    | none         | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address, a new request has to be initiated.                  |
-| form        | [form](#schemaform)                                   | false    | none         | HTMLForm represents a HTML Form. The container can work with both HTTP Form and JSON requests                                                             |
-| id          | [UUID](#schemauuid)                                   | false    | none         | none                                                                                                                                                      |
-| issued_at   | string(date-time)                                     | false    | none         | IssuedAt is the time (UTC) when the request occurred.                                                                                                     |
-| request_url | string                                                | false    | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example. |
-| success     | boolean                                               | false    | none         | Success, if true, implies that the request was completed successfully.                                                                                    |
-| via         | [VerifiableAddressType](#schemaverifiableaddresstype) | false    | none         | none                                                                                                                                                      |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|expires_at|string(date-time)|false|none|ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address, a new request has to be initiated.|
+|form|[form](#schemaform)|false|none|HTMLForm represents a HTML Form. The container can work with both HTTP Form and JSON requests|
+|id|[UUID](#schemauuid)|false|none|none|
+|issued_at|string(date-time)|false|none|IssuedAt is the time (UTC) when the request occurred.|
+|request_url|string|false|none|RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.|
+|success|boolean|false|none|Success, if true, implies that the request was completed successfully.|
+|via|[VerifiableAddressType](#schemaverifiableaddresstype)|false|none|none|
 
 <a id="tocSversion">version</a>
-
 #### version
 
 <a id="schemaversion"></a>
@@ -6063,10 +5973,12 @@ _Request presents a verification request_
 {
   "version": "string"
 }
+
 ```
 
 #### Properties
 
-| Name    | Type   | Required | Restrictions | Description                       |
-| ------- | ------ | -------- | ------------ | --------------------------------- |
-| version | string | false    | none         | Version is the service's version. |
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|version|string|false|none|Version is the service's version.|
+
