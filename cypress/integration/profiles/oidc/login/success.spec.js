@@ -1,22 +1,16 @@
 import { APP_URL, gen, website } from '../../../../helpers'
 
 context('Login', () => {
-  const email = gen.email()
-  const password = gen.password()
-
   beforeEach(() => {
     cy.clearCookies()
-    cy.visit(APP_URL + '/auth/login')
   })
 
-  it('should sign up and then log in', () => {
-    cy.get('#login-oidc button[value="hydra"]').click()
+  it('should be able to sign up, sign out, and then sign in', () => {
+    const email = gen.email()
 
-    cy.get('input[type="email"]').type('foo@bar.com')
-    cy.get('input[type="password"]').type('foobar')
-    cy.get('#accept').click()
-
-    cy.get('#openid').click()
-    cy.get('#accept').click()
+    cy.registerOidc({email, website})
+    cy.get('a[href*="logout"]').click()
+    cy.noSession()
+    cy.loginOidc({email})
   })
 })

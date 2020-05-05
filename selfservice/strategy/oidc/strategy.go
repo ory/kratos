@@ -13,8 +13,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/errorsx"
-
 	"github.com/ory/x/jsonx"
 
 	"github.com/ory/herodot"
@@ -314,7 +312,7 @@ func (s *Strategy) authURL(request uuid.UUID, provider string) string {
 func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Request, claims *Claims, provider Provider) {
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject))
 	if err != nil {
-		if errorsx.Cause(err).Error() == herodot.ErrNotFound.Error() {
+		if errors.Is(err, herodot.ErrNotFound) {
 			// If no account was found we're "manually" creating a new registration request and redirecting the browser
 			// to that endpoint.
 
@@ -327,14 +325,16 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 			// This is kinda hacky but the only way to ensure seamless login/registration flows when using OIDC.
 
 			s.d.Logger().WithField("provider", provider.Config().ID).WithField("subject", claims.Subject).Debug("Received successful OpenID Connect callback but user is not registered. Re-initializing registration flow now.")
-			if err := s.d.RegistrationHandler().NewRegistrationRequest(w, r, func(aa *registration.Request) (string, error) {
-				return s.authURL(aa.ID, provider.Config().ID), nil
-			}); err != nil {
+			aa, err := s.d.RegistrationHandler().NewRegistrationRequest(w, r)
+			if err != nil {
 				s.handleError(w, r, a.GetID(), provider.Config().ID,nil, err)
 				return
 			}
+
+			s.processRegistration(w,r,aa,claims,provider)
 			return
 		}
+
 		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
 		return
 	}
@@ -370,12 +370,13 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 
 		// This is kinda hacky but the only way to ensure seamless login/registration flows when using OIDC.
 		s.d.Logger().WithField("provider", provider.Config().ID).WithField("subject", claims.Subject).Debug("Received successful OpenID Connect callback but user is already registered. Re-initializing login flow now.")
-		if err := s.d.LoginHandler().NewLoginRequest(w, r, func(aa *login.Request) (string, error) {
-			return s.authURL(aa.ID, provider.Config().ID), nil
-		}); err != nil {
+		ar, err := s.d.LoginHandler().NewLoginRequest(w, r)
+		if err != nil {
 			s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
 			return
 		}
+
+		s.processLogin(w,r,ar,claims,provider)
 		return
 	}
 

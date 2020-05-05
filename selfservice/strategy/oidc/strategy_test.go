@@ -278,14 +278,12 @@ func TestStrategy(t *testing.T) {
 	// new login request
 	var nlr = func(t *testing.T, redirectTo string, exp time.Duration) (req *login.Request) {
 		// Use NewLoginRequest to instantiate the request but change the things we need to control a copy of it.
-		require.NoError(t, reg.LoginHandler().NewLoginRequest(httptest.NewRecorder(),
-			&http.Request{URL: urlx.ParseOrPanic(redirectTo)}, func(request *login.Request) (string, error) {
-				request.RequestURL = redirectTo
-				request.ExpiresAt = time.Now().Add(exp)
-				req = request
-				require.NoError(t, reg.LoginRequestPersister().UpdateLoginRequest(context.Background(), req))
-				return "/", nil // This is irrelevant because of httptest.NewRecorder()
-			}))
+		req, err := reg.LoginHandler().NewLoginRequest(httptest.NewRecorder(),
+			&http.Request{URL: urlx.ParseOrPanic(redirectTo)})
+		require.NoError(t, err)
+		req.RequestURL = redirectTo
+		req.ExpiresAt = time.Now().Add(exp)
+		require.NoError(t, reg.LoginRequestPersister().UpdateLoginRequest(context.Background(), req))
 
 		// sanity check
 		got, err := reg.LoginRequestPersister().GetLoginRequest(context.Background(), req.ID)
@@ -296,23 +294,21 @@ func TestStrategy(t *testing.T) {
 	}
 
 	// new registration request
-	var nrr = func(t *testing.T, redirectTo string, exp time.Duration) (req *registration.Request) {
+	var nrr = func(t *testing.T, redirectTo string, exp time.Duration) (*registration.Request) {
 		// Use NewLoginRequest to instantiate the request but change the things we need to control a copy of it.
-		require.NoError(t, reg.RegistrationHandler().NewRegistrationRequest(httptest.NewRecorder(),
-			&http.Request{URL: urlx.ParseOrPanic(redirectTo)}, func(request *registration.Request) (string, error) {
-				request.RequestURL = redirectTo
-				request.ExpiresAt = time.Now().Add(exp)
-				req = request
-				require.NoError(t, reg.RegistrationRequestPersister().UpdateRegistrationRequest(context.Background(), req))
-				return "/", nil // This is irrelevant because of httptest.NewRecorder()
-			}))
+		req, err := reg.RegistrationHandler().NewRegistrationRequest(httptest.NewRecorder(),
+			&http.Request{URL: urlx.ParseOrPanic(redirectTo)})
+		require.NoError(t, err)
+		req.RequestURL = redirectTo
+		req.ExpiresAt = time.Now().Add(exp)
+		require.NoError(t, reg.RegistrationRequestPersister().UpdateRegistrationRequest(context.Background(), req))
 
 		// sanity check
 		got, err := reg.RegistrationRequestPersister().GetRegistrationRequest(context.Background(), req.ID)
 		require.NoError(t, err)
 		require.Len(t, got.Methods, len(req.Methods))
 
-		return
+		return req
 	}
 
 	t.Run("case=should fail because provider does not exist", func(t *testing.T) {

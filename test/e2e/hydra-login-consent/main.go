@@ -19,6 +19,14 @@ func check(err error) {
 	}
 }
 
+func checkReq(w http.ResponseWriter, err error) bool {
+	if err != nil {
+		http.Error(w, fmt.Sprintf("%+v", err), 500)
+		return false
+	}
+	return true
+}
+
 func main() {
 	router := httprouter.New()
 
@@ -31,14 +39,17 @@ func main() {
 	router.GET("/login", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		res, err := hc.Admin.GetLoginRequest(admin.NewGetLoginRequestParams().
 			WithLoginChallenge(r.URL.Query().Get("login_challenge")))
-		check(err)
+		if !checkReq(w, err) {
+			return
+		}
 		if res.Payload.Skip {
 			res, err := hc.Admin.AcceptLoginRequest(admin.NewAcceptLoginRequestParams().
 				WithLoginChallenge(r.URL.Query().Get("login_challenge")).
 				WithBody(&models.AcceptLoginRequest{Remember: true, RememberFor: 3600,
-					Subject: pointerx.String(res.Payload.Subject),
-				}))
-			check(err)
+					Subject: pointerx.String(res.Payload.Subject)}))
+			if !checkReq(w, err) {
+				return
+			}
 			http.Redirect(w, r, res.Payload.RedirectTo, http.StatusFound)
 			return
 		}
@@ -48,7 +59,7 @@ func main() {
 <body>
 	<form action="/login?login_challenge=%s" method="post">
 		<input type="text" name="username" id="username" />
-		<input type="text" name="website" id="website" />
+		<input type="checkbox" name="remember" id="remember" value="true"/> Remember me
 		<button type="submit" name="action" value="accept" id="accept">login</button>
 		<button type="submit" name="action" value="reject" id="reject">reject</button>
 	</form>
@@ -61,38 +72,44 @@ func main() {
 		if r.Form.Get("action") == "accept" {
 			res, err := hc.Admin.AcceptLoginRequest(admin.NewAcceptLoginRequestParams().
 				WithLoginChallenge(r.URL.Query().Get("login_challenge")).
-				WithBody(&models.AcceptLoginRequest{Remember: true, RememberFor: 3600,
-					Subject: pointerx.String(r.Form.Get("subject")),
-				}))
-			check(err)
+				WithBody(&models.AcceptLoginRequest{
+					RememberFor: 3600, Remember: r.Form.Get("remember") == "true",
+					Subject: pointerx.String(r.Form.Get("username"))}))
+			if !checkReq(w, err) {
+				return
+			}
 			http.Redirect(w, r, res.Payload.RedirectTo, http.StatusFound)
 			return
 		}
 		res, err := hc.Admin.RejectLoginRequest(admin.NewRejectLoginRequestParams().
 			WithLoginChallenge(r.URL.Query().Get("login_challenge")).
 			WithBody(&models.RejectRequest{Error: "login rejected request"}))
-		check(err)
+		if !checkReq(w, err) {
+			return
+		}
 		http.Redirect(w, r, res.Payload.RedirectTo, http.StatusFound)
 	})
 
 	router.GET("/consent", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		res, err := hc.Admin.GetConsentRequest(admin.NewGetConsentRequestParams().
 			WithConsentChallenge(r.URL.Query().Get("consent_challenge")))
-		check(err)
+		if !checkReq(w, err) {
+			return
+		}
 		if res.Payload.Skip {
 			res, err := hc.Admin.AcceptConsentRequest(admin.NewAcceptConsentRequestParams().
 				WithConsentChallenge(r.URL.Query().Get("consent_challenge")).
-				WithBody(&models.AcceptConsentRequest{Remember: true, RememberFor: 3600,
-					GrantScope: res.Payload.RequestedScope,
-				}))
-			check(err)
+				WithBody(&models.AcceptConsentRequest{GrantScope: res.Payload.RequestedScope}))
+			if !checkReq(w, err) {
+				return
+			}
 			http.Redirect(w, r, res.Payload.RedirectTo, http.StatusFound)
 			return
 		}
 
 		checkoxes := ""
 		for _, s := range res.Payload.RequestedScope {
-			checkoxes += fmt.Sprintf(`<li><input type="checkbox" name="scope" value="%s" id="%s"/></li>`, s, s)
+			checkoxes += fmt.Sprintf(`<li><input type="checkbox" name="scope" value="%s" id="%s"/>%s</li>`, s, s, s)
 		}
 
 		challenge := r.URL.Query().Get("consent_challenge")
@@ -102,11 +119,13 @@ func main() {
 		<ul>
 		%s
 		</ul>
+		<input type="text" name="website" id="website" />
+		<input type="checkbox" name="remember" id="remember" value="true"/> Remember me
 		<button type="submit" name="action" value="accept" id="accept">login</button>
 		<button type="submit" name="action" value="reject" id="reject">reject</button>
 	</form>
 </body>
-</html>`, checkoxes, challenge)
+</html>`, challenge, checkoxes)
 	})
 
 	router.POST("/consent", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -114,15 +133,26 @@ func main() {
 		if r.Form.Get("action") == "accept" {
 			res, err := hc.Admin.AcceptConsentRequest(admin.NewAcceptConsentRequestParams().
 				WithConsentChallenge(r.URL.Query().Get("consent_challenge")).
-				WithBody(&models.AcceptConsentRequest{Remember: true, RememberFor: 3600,
+				WithBody(&models.AcceptConsentRequest{
+					Session: &models.ConsentRequestSession{
+						IDToken: map[string]interface{}{
+							"website": r.Form.Get("website"),
+						},
+					},
+					Remember: r.Form.Get("remember") == "true", RememberFor: 3600,
 					GrantScope: r.Form["scope"]}))
-			check(err)
+			if !checkReq(w, err) {
+				return
+			}
 			http.Redirect(w, r, res.Payload.RedirectTo, http.StatusFound)
+			return
 		}
 		res, err := hc.Admin.RejectConsentRequest(admin.NewRejectConsentRequestParams().
 			WithConsentChallenge(r.URL.Query().Get("consent_challenge")).
 			WithBody(&models.RejectRequest{Error: "consent rejected request"}))
-		check(err)
+		if !checkReq(w, err) {
+			return
+		}
 		http.Redirect(w, r, res.Payload.RedirectTo, http.StatusFound)
 	})
 

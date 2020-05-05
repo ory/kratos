@@ -16,6 +16,20 @@
           }
         }
       }
+    },
+    "website": {
+      "type": "string",
+      "ory.sh/kratos": {
+        "mappings": {
+          "identity": {
+            "traits": [
+              {
+                "path": "website"
+              }
+            ]
+          }
+        }
+      }
     }
   },
   "required": [

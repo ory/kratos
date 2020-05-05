@@ -2,10 +2,9 @@ import { APP_URL, gen, password, website } from '../../../../helpers'
 
 context('Login', () => {
   const email = gen.email()
-  const password = gen.password()
 
   before(() => {
-    cy.register({ email, password, fields: { 'traits.website': website } })
+    cy.registerOidc({email, website})
   })
 
   beforeEach(() => {
