@@ -3,10 +3,10 @@ id: openid-connect-social-sign-in-oauth2
 title: Social Sign In with OpenID Connect and OAuth2
 ---
 
-:::info
+:::tip
 
-OpenID Connect is undergoing active refactoring and these docs will change. See
-[#381](https://github.com/ory/kratos/pull/381).
+Have you read the [OpenID Connect / OAuth2 Documentation](../../concepts/credentials/openid-connect-oidc-oauth2.mdx)
+yet? If not, this would be a perfect opportunity!
 
 :::
 

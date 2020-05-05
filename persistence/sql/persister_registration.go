@@ -3,6 +3,7 @@ package sql
 import (
 	"context"
 
+	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/x/sqlcon"
@@ -13,6 +14,34 @@ import (
 
 func (p *Persister) CreateRegistrationRequest(ctx context.Context, r *registration.Request) error {
 	return p.GetConnection(ctx).Eager().Create(r)
+}
+
+func (p *Persister) UpdateRegistrationRequest(ctx context.Context, r *registration.Request) error {
+	return p.Transaction(ctx, func(tx *pop.Connection) error {
+		ctx := WithTransaction(ctx, tx)
+		rr, err := p.GetRegistrationRequest(ctx, r.ID)
+		if err != nil {
+			return err
+		}
+
+		for id, form := range r.Methods {
+			for oid := range rr.Methods {
+				if oid == id {
+					rr.Methods[id].Config = form.Config
+					break
+				}
+			}
+			rr.Methods[id] = form
+		}
+
+		for _, of := range rr.Methods {
+			if err := tx.Save(of); err != nil {
+				return sqlcon.HandleError(err)
+			}
+		}
+
+		return tx.Save(r)
+	})
 }
 
 func (p *Persister) GetRegistrationRequest(ctx context.Context, id uuid.UUID) (*registration.Request, error) {
@@ -28,19 +57,27 @@ func (p *Persister) GetRegistrationRequest(ctx context.Context, id uuid.UUID) (*
 	return &r, nil
 }
 
-func (p *Persister) UpdateRegistrationRequest(ctx context.Context, id uuid.UUID, ct identity.CredentialsType, rm *registration.RequestMethod) error {
-	rr, err := p.GetRegistrationRequest(ctx, id)
-	if err != nil {
-		return err
-	}
+func (p *Persister) UpdateRegistrationRequestMethod(ctx context.Context, id uuid.UUID, ct identity.CredentialsType, rm *registration.RequestMethod) error {
+	return p.Transaction(ctx, func(tx *pop.Connection) error {
+		ctx := WithTransaction(ctx, tx)
+		rr, err := p.GetRegistrationRequest(ctx, id)
+		if err != nil {
+			return err
+		}
 
-	method, ok := rr.Methods[ct]
-	if !ok {
-		rm.RequestID = rr.ID
-		rm.Method = ct
-		return p.GetConnection(ctx).Save(rm)
-	}
+		method, ok := rr.Methods[ct]
+		if !ok {
+			rm.RequestID = rr.ID
+			rm.Method = ct
+			return tx.Save(rm)
+		}
 
-	method.Config = rm.Config
-	return p.GetConnection(ctx).Save(method)
+		method.Config = rm.Config
+		if err := tx.Save(method); err != nil {
+			return err
+		}
+
+		rr.Active = ct
+		return tx.Save(rr)
+	})
 }

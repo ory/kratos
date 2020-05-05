@@ -10,6 +10,7 @@ export PATH := $(pwd)/.bin:${PATH}
 deps:
 ifneq ("v0", $(shell cat .bin/.lock))
 		curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b .bin/ v1.24.0
+		bash <(curl https://raw.githubusercontent.com/ory/hydra/master/install.sh) -b .bin/ v1.4.10
 		go build -o .bin/go-acc github.com/ory/go-acc
 		go build -o .bin/goreturns github.com/sqs/goreturns
 		go build -o .bin/listx github.com/ory/x/tools/listx

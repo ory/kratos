@@ -56,8 +56,10 @@ func (u RequestMethodsRaw) TableName() string {
 type RequestMethodConfigurator interface {
 	form.ErrorParser
 	form.FieldSetter
+	form.FieldUnsetter
 	form.ValueSetter
 	form.Resetter
+	form.ErrorResetter
 	form.CSRFSetter
 	form.FieldSorter
 	form.ErrorAdder

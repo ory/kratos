@@ -18,6 +18,7 @@ import (
 
 	_ "github.com/mikefarah/yq"
 
-	_ "github.com/ory/sdk/swagutil"
 	_ "github.com/davidrjonas/semver-cli"
+
+	_ "github.com/ory/sdk/swagutil"
 )

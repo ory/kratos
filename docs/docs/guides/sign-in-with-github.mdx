@@ -1,0 +1,75 @@
+---
+id: sign-in-with-github
+title: Sign in with GitHub
+---
+
+In this document we will take a look at setting up "Sign in with GitHub"
+using ORY Kratos.
+
+Run the [Quickstart](../quickstart.mdx) with Docker Compose:
+
+```shell script
+# This assumes that you have ORY Kratos checked out locally and
+# that your current directory ("pwd") is the folder where ORY Kratos
+# is.
+
+$ make quickstart
+```
+
+To set up "Sign in with GitHub" you must create a
+[GitHub OAuth2 Client](https://developer.github.com/apps/building-oauth-apps/creating-an-oauth-app/)
+and set the "Authorization callback URL" to
+`http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/registration/strategies/oidc/callback/github`. The
+pattern of this URL is `http(s)://<domain-of-ory-kratos>:<public-port>/self-service/browser/flows/registration/strategies/oidc/callback/<provider-id>`.
+The provider ID must point to the provider's ID set in the ORY Kratos configuration file (explained in paragraphs).
+
+As explained in [OpenID Connect and OAuth2 Credentails](../concepts/credentials/openid-connect-oidc-oauth2.mdx), you
+must also create a JSON Schema for the provider. Save the JSON Schema in `<kratos-directory>/contrib/quickstart/kratos/email-password/github.schema.json`.
+The following schema takes take `email_primary` maps it to `traits.email`:
+
+```json title="contrib/quickstart/kratos/email-password/github.schema.json"
+{
+  "$id": "http://mydomain.com/github.schema.json ",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "email_primary": {
+      "type": "string",
+      "ory.sh/kratos": {
+        "mappings": {
+          "identity": {
+            "traits": [
+              {
+                "path": "email"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Now, enable the GitHub provider in the ORY Kratos config located at
+`<kratos-directory>/contrib/quickstart/kratos/email-password/.kratos.yml`.
+
+```yaml title="contrib/quickstart/kratos/email-password/.kratos.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  strategies:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: github # this is `<provider-id>` in the Authorization callback URL
+            provider: github
+            client_id: .... # Replace this with the OAuth2 Client ID provided by GitHub
+            client_secret: .... # Replace this with the OAuth2 Client Secret provided by GitHub
+            schema_url: file:///etc/config/kratos/github.schema.json
+            scope:
+              - user:email
+```
+
+Next, open the login endpoint of the SecureApp and you should see the GitHub Login option!
+

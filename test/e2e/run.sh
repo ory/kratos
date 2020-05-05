@@ -26,7 +26,7 @@ kratos=./test/e2e/.bin/kratos
 go build -tags sqlite -o $kratos .
 
 if [ -z ${CI+x} ]; then
-  docker rm mailslurper -f || true
+  docker rm mailslurper hydra hydra-ui -f || true
   docker run --name mailslurper -p 4436:4436 -p 4437:4437 -p 1025:1025 oryd/mailslurper:latest-smtps > "${base}/test/e2e/mailslurper.e2e.log" 2>&1 &
 fi
 
@@ -45,6 +45,22 @@ run() {
   profile=$2
   killall kratos || true
   killall node || true
+  killall hydra || true
+  killall hydra-login-consent || true
+
+  DSN=memory URLS_SELF_ISSUER=http://127.0.0.1:4444 \
+    URLS_LOGIN=http://127.0.0.1:4446/login \
+    URLS_CONSENT=http://127.0.0.1:4446/consent \
+    hydra serve all --dangerous-force-http > "${base}/test/e2e/hydra.e2e.log" 2>&1 &
+
+  hydra clients create \
+    --endpoint http://127.0.0.1:4445 \
+    --id kratos-client \
+    --secret kratos-secret \
+    --grant-types authorization_code,refresh_token \
+    --response-types code,id_token \
+    --scope openid,offline \
+    --callbacks http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/registration/strategies/oidc/callback/hydra
 
   if [ -z ${KRATOS_APP_PATH+x} ]; then
     (cd "$dir"; PORT=4455 SECURITY_MODE=cookie npm run serve \
@@ -54,6 +70,10 @@ run() {
      > "${base}/test/e2e/secureapp.e2e.log" 2>&1 &)
   fi
 
+  (cd test/e2e/hydra-login-consent; \
+    go build . && \
+    PORT=4446 HYDRA_ADMIN_URL=http://127.0.0.1:4445 ./hydra-login-consent > "${base}/test/e2e/hydra-ui.e2e.log" 2>&1 &)
+
   export DSN=${1}
   $kratos migrate sql -e --yes
 
@@ -62,6 +82,8 @@ run() {
 
   npm run wait-on -- -t 10000 http-get://127.0.0.1:4434/health/ready \
     http-get://127.0.0.1:4455/health \
+    http-get://127.0.0.1:4445/health/ready \
+    http-get://127.0.0.1:4446/ \
     http-get://127.0.0.1:4437/mail
 
   if [[ $dev = "yes" ]]; then
@@ -154,4 +176,5 @@ if [[ $dev = "yes" ]]; then
 else
   run "${db}" email
   run "${db}" verify
+  run "${db}" oidc
 fi

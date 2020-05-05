@@ -23,19 +23,11 @@
 //
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
-import {
-  APP_URL,
-  assertAddress,
-  gen,
-  MAIL_API,
-  parseHtml,
-  pollInterval,
-  privilegedLifespan,
-} from '../helpers'
+import {APP_URL, assertAddress, gen, MAIL_API, parseHtml, pollInterval, privilegedLifespan,} from '../helpers'
 
 Cypress.Commands.add(
   'register',
-  ({ email = gen.email(), password = gen.password(), fields = {} } = {}) => {
+  ({email = gen.email(), password = gen.password(), fields = {}} = {}) => {
     cy.visit(APP_URL + '/auth/registration')
     cy.get('input[name="traits.email"]').type(email)
     cy.get('input[name="password"]').type(password)
@@ -47,7 +39,60 @@ Cypress.Commands.add(
   }
 )
 
-Cypress.Commands.add('login', ({ email, password, expectSession = true }) => {
+Cypress.Commands.add('registerOidc', ({email, website, scopes, rememberLogin = true, rememberConsent = true, acceptLogin = true, acceptConsent = true, expectSession = true}) => {
+  cy.visit(APP_URL + '/auth/registration')
+
+  cy.get('button[value="hydra"]').click()
+
+  cy.get('#username').type(email)
+  if (rememberLogin) {
+    cy.get('#remember').click()
+  }
+  if (acceptLogin) {
+    cy.get('#accept').click()
+  } else {
+    cy.get('#reject').click()
+  }
+
+  if (scopes) {
+    scopes.forEach((scope) => {
+      cy.get('#' + scope).click()
+    })
+  } else {
+    cy.get('input[name="scope"]').each($el => cy.wrap($el).click())
+  }
+
+  if (website) {
+    cy.get('#website').clear().type(website)
+  }
+
+  if (rememberConsent) {
+    cy.get('#remember').click()
+  }
+  if (acceptConsent) {
+    cy.get('#accept').click()
+  } else {
+    cy.get('#reject').click()
+  }
+
+  if (expectSession) {
+    cy.session()
+  } else {
+    cy.noSession()
+  }
+})
+
+Cypress.Commands.add('loginOidc', ({expectSession = true}) => {
+  cy.visit(APP_URL + '/auth/login')
+  cy.get('button[value="hydra"]').click()
+  if (expectSession) {
+    cy.session()
+  } else {
+    cy.noSession()
+  }
+})
+
+Cypress.Commands.add('login', ({email, password, expectSession = true}) => {
   cy.visit(APP_URL + '/auth/login')
   cy.get('input[name="identifier"]').clear().type(email)
   cy.get('input[name="password"]').clear().type(password)
@@ -62,9 +107,9 @@ Cypress.Commands.add('login', ({ email, password, expectSession = true }) => {
 Cypress.Commands.add(
   'reauth',
   ({
-    expect: { email },
-    type: { email: temail, password: tpassword } = {},
-  }) => {
+     expect: {email},
+     type: {email: temail, password: tpassword} = {},
+   }) => {
     cy.url().should('include', '/auth/login')
     cy.get('input[name="identifier"]').should('have.value', email)
     if (temail) {
@@ -77,13 +122,13 @@ Cypress.Commands.add(
   }
 )
 
-Cypress.Commands.add('deleteMail', ({ atLeast = 0 } = {}) => {
+Cypress.Commands.add('deleteMail', ({atLeast = 0} = {}) => {
   let tries = 0
   let count = 0
   const req = () =>
     cy
-      .request('DELETE', `${MAIL_API}/mail`, { pruneCode: 'all' })
-      .then(({ body }) => {
+      .request('DELETE', `${MAIL_API}/mail`, {pruneCode: 'all'})
+      .then(({body}) => {
         count += parseInt(body)
         if (count < atLeast && tries < 100) {
           cy.log(
@@ -138,7 +183,7 @@ Cypress.Commands.add('noSession', () =>
     })
 )
 
-Cypress.Commands.add('verifyEmail', ({ expect: { email } = {} } = {}) =>
+Cypress.Commands.add('verifyEmail', ({expect: {email} = {}} = {}) =>
   cy.getMail().then((message) => {
     expect(message.subject.trim()).to.equal('Please verify your email address')
     expect(message.fromAddress.trim()).to.equal('no-reply@ory.kratos.sh')
@@ -151,14 +196,14 @@ Cypress.Commands.add('verifyEmail', ({ expect: { email } = {} } = {}) =>
 
     cy.visit(link.href)
     cy.location('pathname').should('not.contain', 'verify')
-    cy.session().should(assertAddress({ isVerified: true, email }))
+    cy.session().should(assertAddress({isVerified: true, email}))
   })
 )
 
 // Uses the verification email but waits so that it expires
 Cypress.Commands.add(
   'verifyEmailButExpired',
-  ({ expect: { email } = {} } = {}) =>
+  ({expect: {email} = {}} = {}) =>
     cy.getMail().then((message) => {
       expect(message.subject.trim()).to.equal(
         'Please verify your email address'
@@ -169,7 +214,7 @@ Cypress.Commands.add(
 
       const link = parseHtml(message.body).querySelector('a')
       cy.session().should((session) => {
-        assertAddress({ isVerified: false, email: email })(session)
+        assertAddress({isVerified: false, email: email})(session)
         cy.wait(
           Cypress.moment(session.identity.addresses[0].expires_at).diff(
             Cypress.moment()
@@ -182,7 +227,7 @@ Cypress.Commands.add(
       cy.location('search').should('not.be.empty', 'request')
       cy.get('.form-errors .message').should('contain.text', 'code has expired')
 
-      cy.session().should(assertAddress({ isVerified: false, email: email }))
+      cy.session().should(assertAddress({isVerified: false, email: email}))
     })
 )
 
@@ -198,7 +243,7 @@ Cypress.Commands.add('waitForPrivilegedSessionToExpire', () => {
   })
 })
 
-Cypress.Commands.add('getMail', ({ removeMail = true } = {}) => {
+Cypress.Commands.add('getMail', ({removeMail = true} = {}) => {
   let tries = 0
   const req = () =>
     cy.request(`${MAIL_API}/mail`).then((response) => {
@@ -213,7 +258,7 @@ Cypress.Commands.add('getMail', ({ removeMail = true } = {}) => {
       expect(count).to.equal(1)
       if (removeMail) {
         return cy
-          .deleteMail({ atLeast: count })
+          .deleteMail({atLeast: count})
           .then(() => Promise.resolve(response.body.mailItems[0]))
       }
 

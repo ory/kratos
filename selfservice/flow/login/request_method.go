@@ -62,6 +62,7 @@ type RequestMethodConfigurator interface {
 	form.ErrorParser
 	form.ValueSetter
 	form.Resetter
+	form.ErrorResetter
 	form.CSRFSetter
 	form.ErrorAdder
 }
