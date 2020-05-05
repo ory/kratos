@@ -14,7 +14,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/errorsx"
 	"github.com/ory/x/fetcher"
 
 	"github.com/ory/x/jsonx"
@@ -132,7 +131,7 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 	rid := x.ParseUUID(ps.ByName("request"))
 
 	if err := r.ParseForm(); err != nil {
-		s.handleError(w, r, rid, nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
+		s.handleError(w, r, rid, "",nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
 		return
 	}
 
@@ -141,25 +140,25 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 	)
 
 	if pid == "" {
-		s.handleError(w, r, rid, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`The HTTP request did not contain the required "provider" form field`)))
+		s.handleError(w, r, rid, pid,nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`The HTTP request did not contain the required "provider" form field`)))
 		return
 	}
 
 	provider, err := s.provider(pid)
 	if err != nil {
-		s.handleError(w, r, rid, nil, err)
+		s.handleError(w, r, rid, pid, nil, err)
 		return
 	}
 
 	config, err := provider.OAuth2(r.Context())
 	if err != nil {
-		s.handleError(w, r, rid, nil, err)
+		s.handleError(w, r, rid, pid, nil, err)
 		return
 	}
 
 	ar, err := s.validateRequest(r.Context(), rid)
 	if err != nil {
-		s.handleError(w, r, rid, nil, err)
+		s.handleError(w, r, rid, pid, nil, err)
 		return
 	}
 
@@ -178,7 +177,7 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 		sessionRequestID: rid.String(),
 		sessionFormState: r.PostForm.Encode(),
 	}); err != nil {
-		s.handleError(w, r, rid, nil, err)
+		s.handleError(w, r, rid, pid, nil, err)
 		return
 	}
 
@@ -244,9 +243,9 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	ar, err := s.validateCallback(r)
 	if err != nil {
 		if ar != nil {
-			s.handleError(w, r, ar.GetID(), nil, err)
+			s.handleError(w, r, ar.GetID(),pid,nil, err)
 		} else {
-			s.handleError(w, r, x.EmptyUUID, nil, err)
+			s.handleError(w, r, x.EmptyUUID, pid,nil, err)
 		}
 		return
 	}
@@ -261,25 +260,25 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 
 	provider, err := s.provider(pid)
 	if err != nil {
-		s.handleError(w, r, ar.GetID(), nil, err)
+		s.handleError(w, r, ar.GetID(), pid,nil, err)
 		return
 	}
 
 	config, err := provider.OAuth2(context.Background())
 	if err != nil {
-		s.handleError(w, r, ar.GetID(), nil, err)
+		s.handleError(w, r, ar.GetID(), pid,nil, err)
 		return
 	}
 
 	token, err := config.Exchange(r.Context(), code)
 	if err != nil {
-		s.handleError(w, r, ar.GetID(), nil, err)
+		s.handleError(w, r, ar.GetID(), pid,nil, err)
 		return
 	}
 
 	claims, err := provider.Claims(r.Context(), token)
 	if err != nil {
-		s.handleError(w, r, ar.GetID(), nil, err)
+		s.handleError(w, r, ar.GetID(), pid,nil, err)
 		return
 	}
 
@@ -317,7 +316,7 @@ func (s *Strategy) authURL(request uuid.UUID, provider string) string {
 func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Request, claims *Claims, provider Provider) {
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject))
 	if err != nil {
-		if errorsx.Cause(err).Error() == herodot.ErrNotFound.Error() {
+		if errors.Is(err, herodot.ErrNotFound) {
 			// If no account was found we're "manually" creating a new registration request and redirecting the browser
 			// to that endpoint.
 
@@ -330,35 +329,37 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 			// This is kinda hacky but the only way to ensure seamless login/registration flows when using OIDC.
 
 			s.d.Logger().WithField("provider", provider.Config().ID).WithField("subject", claims.Subject).Debug("Received successful OpenID Connect callback but user is not registered. Re-initializing registration flow now.")
-			if err := s.d.RegistrationHandler().NewRegistrationRequest(w, r, func(aa *registration.Request) (string, error) {
-				return s.authURL(aa.ID, provider.Config().ID), nil
-			}); err != nil {
-				s.handleError(w, r, a.GetID(), nil, err)
+			aa, err := s.d.RegistrationHandler().NewRegistrationRequest(w, r)
+			if err != nil {
+				s.handleError(w, r, a.GetID(), provider.Config().ID,nil, err)
 				return
 			}
+
+			s.processRegistration(w,r,aa,claims,provider)
 			return
 		}
-		s.handleError(w, r, a.GetID(), nil, err)
+
+		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
 		return
 	}
 
 	var o []CredentialsConfig
 	if err := json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&o); err != nil {
-		s.handleError(w, r, a.GetID(), nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error())))
+		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error())))
 		return
 	}
 
 	for _, c := range o {
 		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
 			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, identity.CredentialsTypeOIDC, a, i); err != nil {
-				s.handleError(w, r, a.GetID(), nil, err)
+				s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
 				return
 			}
 			return
 		}
 	}
 
-	s.handleError(w, r, a.GetID(), nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to find matching OpenID Connect Credentials.").WithDebugf(`Unable to find credentials that match the given provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)))
+	s.handleError(w, r, a.GetID(), provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to find matching OpenID Connect Credentials.").WithDebugf(`Unable to find credentials that match the given provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)))
 }
 
 func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Request, claims *Claims, provider Provider) {
@@ -373,24 +374,25 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 
 		// This is kinda hacky but the only way to ensure seamless login/registration flows when using OIDC.
 		s.d.Logger().WithField("provider", provider.Config().ID).WithField("subject", claims.Subject).Debug("Received successful OpenID Connect callback but user is already registered. Re-initializing login flow now.")
-		if err := s.d.LoginHandler().NewLoginRequest(w, r, func(aa *login.Request) (string, error) {
-			return s.authURL(aa.ID, provider.Config().ID), nil
-		}); err != nil {
-			s.handleError(w, r, a.GetID(), nil, err)
+		ar, err := s.d.LoginHandler().NewLoginRequest(w, r)
+		if err != nil {
+			s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
 			return
 		}
+
+		s.processLogin(w,r,ar,claims,provider)
 		return
 	}
 
 	jn, err := s.f.Fetch(provider.Config().Normalize)
 	if err != nil {
-		s.handleError(w, r, a.GetID(), nil, err)
+		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
 		return
 	}
 
 	var jsonClaims bytes.Buffer
 	if err := json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
-		s.handleError(w, r, a.GetID(), nil, err)
+		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
 		return
 	}
 
@@ -398,7 +400,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 	vm.ExtCode("claims", jsonClaims.String())
 	snippetTraits, err := vm.EvaluateSnippet(provider.Config().Normalize, jn.String())
 	if err != nil {
-		s.handleError(w, r, a.GetID(), nil, err)
+		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
 		return
 	}
 
@@ -406,7 +408,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 	i.Traits = identity.Traits(snippetTraits)
 	option, err := decoderRegistration(s.c.DefaultIdentityTraitsSchemaURL().String())
 	if err != nil {
-		s.handleError(w, r, a.GetID(), nil, err)
+		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
 		return
 	}
 
@@ -415,13 +417,13 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		json.RawMessage(snippetTraits), option,
 	)
 	if err != nil {
-		s.handleError(w, r, a.GetID(), nil, err)
+		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
 		return
 	}
 
 	// Validate the identity itself
 	if err := s.d.IdentityValidator().Validate(i); err != nil {
-		s.handleError(w, r, a.GetID(), i.Traits, err)
+		s.handleError(w, r, a.GetID(), provider.Config().ID, i.Traits, err)
 		return
 	}
 
@@ -432,7 +434,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 			Provider: provider.Config().ID,
 		},
 	}); err != nil {
-		s.handleError(w, r, a.GetID(), i.Traits, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err)))
+		s.handleError(w, r, a.GetID(), provider.Config().ID, i.Traits, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err)))
 		return
 	}
 
@@ -443,7 +445,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 	})
 
 	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, identity.CredentialsTypeOIDC, a, i); err != nil {
-		s.handleError(w, r, a.GetID(), i.Traits, err)
+		s.handleError(w, r, a.GetID(), provider.Config().ID, i.Traits, err)
 		return
 	}
 }
@@ -525,7 +527,7 @@ func (s *Strategy) provider(id string) (Provider, error) {
 	}
 }
 
-func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.UUID, traits []byte, err error) {
+func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.UUID, provider string, traits []byte, err error) {
 	if x.IsZeroUUID(rid) {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
@@ -536,6 +538,7 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 		return
 	} else if rr, rerr := s.d.RegistrationRequestPersister().GetRegistrationRequest(r.Context(), rid); rerr == nil {
 		if method, ok := rr.Methods[s.ID()]; ok {
+			method.Config.UnsetField("provider")
 			method.Config.Reset()
 
 			if traits != nil {
@@ -544,11 +547,19 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 				}
 			}
 
+			if errSec := method.Config.ParseError(err); errSec != nil {
+				s.d.RegistrationRequestErrorHandler().HandleRegistrationError(w, r, identity.CredentialsTypeOIDC, rr, errors.Wrap(err, errSec.Error()))
+				return
+			}
+			method.Config.ResetErrors()
+
 			method.Config.SetCSRF(s.d.GenerateCSRFToken(r))
 			if errSec := method.Config.SortFields(s.c.DefaultIdentityTraitsSchemaURL().String(), "traits"); errSec != nil {
 				s.d.RegistrationRequestErrorHandler().HandleRegistrationError(w, r, identity.CredentialsTypeOIDC, rr, errors.Wrap(err, errSec.Error()))
 				return
 			}
+
+			method.Config.SetField(form.Field{Name: "provider", Value: provider, Type: "submit"})
 			rr.Methods[s.ID()] = method
 		}
 

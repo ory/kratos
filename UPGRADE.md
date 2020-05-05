@@ -5,6 +5,19 @@ possible. Please note that not all breaking changes might be included here.
 Please check the [CHANGELOG.md](./CHANGELOG.md) for a full list of changes
 before finalizing the upgrade process.
 
+## unreleased
+
+These changes have not yet been released and this area's purpose is to keep
+track of future changes.
+
+### OpenID Connect and OAuth2 now official!
+
+Using social profiles to sign up and log in is now as easy as setting two config entries! Check out
+
+- [The OpenID Connect & OAuth2 Credential Documentation](https://www.ory.sh/kratos/docs/concepts/credentials/openid-connect-oidc-oauth2);
+- [The Flow Description](https://www.ory.sh/kratos/docs/concepts/credentials/openid-connect-oidc-oauth2);
+- [The "Sign in with GitHub" Guide](https://www.ory.sh/kratos/docs/guides/sign-in-with-github)!
+
 ## v0.2.0-alpha.2
 
 This is a heavy release with over hundreds of commits and files changed! Let's

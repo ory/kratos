@@ -17,7 +17,8 @@ required for The following exemplary use cases require these messages:
 To have E-Mail delivery running with ORY Kratos requires an SMTP server. This is
 set up in the configuration file using an absolute URL with the `smtp` schema:
 
-```yaml
+```yaml title="path/to/my/kratos/config.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
 courier:
   smtp:
     connection_uri: smtps://test:test@my-smtp-server:1025/

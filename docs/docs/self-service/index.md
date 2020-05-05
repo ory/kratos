@@ -36,7 +36,7 @@ Research, Troy Hunt, ...) and implements the following flows:
 Some flows break down into strategies which implement some of the flow's
 business logic:
 
-- The [Password Strategy](strategies/username-email-password.md) implements
+- The [Password Strategy](strategies/username-email-password.mdx) implements
   login and registration flows (with email/username and password), account
   recovery flows ("reset your password"), and user settings flows ("change your
   password").

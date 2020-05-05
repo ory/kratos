@@ -7,6 +7,7 @@ require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0
+	github.com/aws/aws-sdk-go v1.23.19
 	github.com/bxcodec/faker v2.0.1+incompatible
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/coreos/go-oidc v2.2.1+incompatible
@@ -54,7 +55,7 @@ require (
 	github.com/ory/herodot v0.8.2
 	github.com/ory/jsonschema/v3 v3.0.1
 	github.com/ory/mail/v3 v3.0.0
-	github.com/ory/sdk/swagutil v0.0.0-20200425113349-92ce176f501e
+	github.com/ory/sdk/swagutil v0.0.0-20200504143611-75777fae6684
 	github.com/ory/viper v1.7.4
 	github.com/ory/x v0.0.117
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
