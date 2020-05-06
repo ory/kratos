@@ -7,84 +7,121 @@
 - [Unreleased (2020-05-06)](#unreleased-2020-05-06)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
-  - [0.2.1-alpha.1 (2020-05-05)](#021-alpha1-2020-05-05)
     - [Documentation](#documentation)
-- [0.2.0-alpha.2 (2020-05-04)](#020-alpha2-2020-05-04)
-    - [Bug Fixes](#bug-fixes-1)
-    - [Code Refactoring](#code-refactoring-1)
-    - [Documentation](#documentation-1)
     - [Features](#features)
     - [Unclassified](#unclassified)
     - [BREAKING CHANGES](#breaking-changes)
+  - [0.2.1-alpha.1 (2020-05-05)](#021-alpha1-2020-05-05)
+    - [Documentation](#documentation-1)
+- [0.2.0-alpha.2 (2020-05-04)](#020-alpha2-2020-05-04)
+    - [Bug Fixes](#bug-fixes-1)
+    - [Code Refactoring](#code-refactoring-1)
+    - [Documentation](#documentation-2)
+    - [Features](#features-1)
+    - [Unclassified](#unclassified-1)
+    - [BREAKING CHANGES](#breaking-changes-1)
   - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
     - [Bug Fixes](#bug-fixes-2)
     - [Code Refactoring](#code-refactoring-2)
-    - [Documentation](#documentation-2)
+    - [Documentation](#documentation-3)
 - [0.1.0-alpha.6 (2020-02-16)](#010-alpha6-2020-02-16)
     - [Bug Fixes](#bug-fixes-3)
     - [Code Refactoring](#code-refactoring-3)
-    - [Documentation](#documentation-3)
-    - [Features](#features-1)
-- [0.1.0-alpha.5 (2020-02-06)](#010-alpha5-2020-02-06)
     - [Documentation](#documentation-4)
     - [Features](#features-2)
-- [0.1.0-alpha.4 (2020-02-06)](#010-alpha4-2020-02-06)
+- [0.1.0-alpha.5 (2020-02-06)](#010-alpha5-2020-02-06)
     - [Documentation](#documentation-5)
+    - [Features](#features-3)
+- [0.1.0-alpha.4 (2020-02-06)](#010-alpha4-2020-02-06)
+    - [Documentation](#documentation-6)
 - [0.1.0-alpha.3 (2020-02-06)](#010-alpha3-2020-02-06)
 - [0.1.0-alpha.2 (2020-02-03)](#010-alpha2-2020-02-03)
     - [Bug Fixes](#bug-fixes-4)
-    - [Documentation](#documentation-6)
-    - [Features](#features-3)
-    - [Unclassified](#unclassified-1)
-- [0.1.0-alpha.1 (2020-01-31)](#010-alpha1-2020-01-31)
     - [Documentation](#documentation-7)
-  - [0.0.3-alpha.15 (2020-01-31)](#003-alpha15-2020-01-31)
+    - [Features](#features-4)
     - [Unclassified](#unclassified-2)
-  - [0.0.3-alpha.14 (2020-01-31)](#003-alpha14-2020-01-31)
+- [0.1.0-alpha.1 (2020-01-31)](#010-alpha1-2020-01-31)
+    - [Documentation](#documentation-8)
+  - [0.0.3-alpha.15 (2020-01-31)](#003-alpha15-2020-01-31)
     - [Unclassified](#unclassified-3)
-  - [0.0.3-alpha.13 (2020-01-31)](#003-alpha13-2020-01-31)
+  - [0.0.3-alpha.14 (2020-01-31)](#003-alpha14-2020-01-31)
     - [Unclassified](#unclassified-4)
-  - [0.0.3-alpha.11 (2020-01-31)](#003-alpha11-2020-01-31)
+  - [0.0.3-alpha.13 (2020-01-31)](#003-alpha13-2020-01-31)
     - [Unclassified](#unclassified-5)
-  - [0.0.3-alpha.10 (2020-01-31)](#003-alpha10-2020-01-31)
+  - [0.0.3-alpha.11 (2020-01-31)](#003-alpha11-2020-01-31)
     - [Unclassified](#unclassified-6)
-  - [0.0.3-alpha.7 (2020-01-30)](#003-alpha7-2020-01-30)
+  - [0.0.3-alpha.10 (2020-01-31)](#003-alpha10-2020-01-31)
     - [Unclassified](#unclassified-7)
-  - [0.0.3-alpha.5 (2020-01-30)](#003-alpha5-2020-01-30)
+  - [0.0.3-alpha.7 (2020-01-30)](#003-alpha7-2020-01-30)
     - [Unclassified](#unclassified-8)
-  - [0.0.3-alpha.4 (2020-01-30)](#003-alpha4-2020-01-30)
+  - [0.0.3-alpha.5 (2020-01-30)](#003-alpha5-2020-01-30)
     - [Unclassified](#unclassified-9)
-  - [0.0.3-alpha.2 (2020-01-30)](#003-alpha2-2020-01-30)
+  - [0.0.3-alpha.4 (2020-01-30)](#003-alpha4-2020-01-30)
     - [Unclassified](#unclassified-10)
-  - [0.0.3-alpha.1 (2020-01-30)](#003-alpha1-2020-01-30)
+  - [0.0.3-alpha.2 (2020-01-30)](#003-alpha2-2020-01-30)
     - [Unclassified](#unclassified-11)
+  - [0.0.3-alpha.1 (2020-01-30)](#003-alpha1-2020-01-30)
+    - [Unclassified](#unclassified-12)
   - [0.0.1-alpha.9 (2020-01-29)](#001-alpha9-2020-01-29)
   - [0.0.2-alpha.1 (2020-01-29)](#002-alpha1-2020-01-29)
-    - [Unclassified](#unclassified-12)
+    - [Unclassified](#unclassified-13)
   - [0.0.1-alpha.6 (2020-01-29)](#001-alpha6-2020-01-29)
   - [0.0.1-alpha.5 (2020-01-29)](#001-alpha5-2020-01-29)
-    - [Unclassified](#unclassified-13)
+    - [Unclassified](#unclassified-14)
   - [0.0.1-alpha.3 (2020-01-28)](#001-alpha3-2020-01-28)
   - [0.0.1-alpha.2 (2020-01-28)](#001-alpha2-2020-01-28)
   - [0.0.1-alpha.1 (2020-01-28)](#001-alpha1-2020-01-28)
-    - [Documentation](#documentation-8)
-    - [Unclassified](#unclassified-14)
+    - [Documentation](#documentation-9)
+    - [Unclassified](#unclassified-15)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.2.1-alpha.1...5ed6d05b3e13027e4e7ffef1ff10ab2fb948093d) (2020-05-06)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.2.1-alpha.1...4db674de14bc50e782321c7bd88ac8077db2bf75) (2020-05-06)
 
 
 ### Bug Fixes
 
 * Access rules of oathkeeper for quick start ([#390](https://github.com/ory/kratos/issues/390)) ([5ed6d05](https://github.com/ory/kratos/commit/5ed6d05b3e13027e4e7ffef1ff10ab2fb948093d)), closes [#389](https://github.com/ory/kratos/issues/389):
   > To access `/` as dashboard
+* Adopt jsonnet in e2e oidc tests ([5e518fb](https://github.com/ory/kratos/commit/5e518fb2de678e27fcc0e4fff020a4d575f1c109))
+* Fix oidc strategy jsonnet test ([f6c48bf](https://github.com/ory/kratos/commit/f6c48bf2c64cea1f111e5777de22878e0be5f03c))
+* Test and implement mapper_url for jsonnet ([40ac3dc](https://github.com/ory/kratos/commit/40ac3dc7b5828ac775055fed3c0bd9ff393e5d86))
 
 
 ### Code Refactoring
 
 * Improve oidc flows and payloads and add e2e tests ([#381](https://github.com/ory/kratos/issues/381)) ([f9a5079](https://github.com/ory/kratos/commit/f9a50790637a848897ba275373bc538728e09f3d)), closes [#387](https://github.com/ory/kratos/issues/387):
   > This patch improves the OpenID Connect login and registration user experience by simplifying the network flows and introduces e2e tests using ORY Hydra.
+* Replace oidc jsonschema with jsonnet ([2b45e79](https://github.com/ory/kratos/commit/2b45e7953787ad46a6937fe44cb24b6c786eb223)), closes [#380](https://github.com/ory/kratos/issues/380):
+  > This patch replaces the previous methodology of merging OIDC data which used JSON Schema with Extensions and JSON Path in favor of a much easier to use approach with JSONNet.
+
+
+### Documentation
+
+* Document new oidc jsonnet mapper ([#392](https://github.com/ory/kratos/issues/392)) ([088b30f](https://github.com/ory/kratos/commit/088b30feb6845863e6651489e0c963cde7e10516))
+* Explain that form data is merged with oidc data ([#394](https://github.com/ory/kratos/issues/394)) ([b0dbec4](https://github.com/ory/kratos/commit/b0dbec403c96af41346b6b14fc74b7010e7f8e8a)), closes [#127](https://github.com/ory/kratos/issues/127)
+* Improve social sign in guide ([#393](https://github.com/ory/kratos/issues/393)) ([647ced3](https://github.com/ory/kratos/commit/647ced3084d203e9954ca037afea34316f2080d8)), closes [#49](https://github.com/ory/kratos/issues/49):
+  > This patch changes the social sign in guide to represent more use cases such as Google and Facebook. Additionally, the example has been updated to work with Jsonnet.
+  > 
+  > This patch also documents limitations around merging user data from GitHub.
+* Ui should show only active form sections ([#395](https://github.com/ory/kratos/issues/395)) ([4db674d](https://github.com/ory/kratos/commit/4db674de14bc50e782321c7bd88ac8077db2bf75))
+
+
+### Features
+
+* Add format and lint for JSONNet files ([0a1b244](https://github.com/ory/kratos/commit/0a1b244a6fd2f714a12d101071b3c0f82b4da584)):
+  > This patch adds two commands `kratos jsonnet format` and `kratos jsonnet lint` that help with formatting and linting JSONNet code.
+* Introduce leaklog for debugging oidc map payloads ([238d7a4](https://github.com/ory/kratos/commit/238d7a493566bcc28f08b1b2bf6463f95b100254))
+
+
+### Unclassified
+
+* Format code ([bc7557a](https://github.com/ory/kratos/commit/bc7557a4247ede1fdb4141f2670532aec7cbd456))
+
+
+### BREAKING CHANGES
+
+* This is a breaking change as previous OIDC configurations will not work. Please consult the newly written documentation on OpenID Connect to learn how to use OIDC in your login and registration flows. Since the OIDC feature was not publicly broadcasted yet we have chosen not to provide an upgrade path. If you have issues, please reach out on the forums or slack.
 
 
 
