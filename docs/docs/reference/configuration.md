@@ -45,7 +45,7 @@ section.
 # - Windows Command Line (CMD):
 #    > set DSN=<value>
 #
-dsn: sqlite:///var/lib/sqlite/db.sqlite?_fk=true&mode=rwc
+dsn: mysql://user:secret@tcp(mysqld:3306)/database?max_conns=20&max_idle_conns=4
 
 ## identity ##
 #
@@ -67,7 +67,7 @@ identity:
     # - Windows Command Line (CMD):
     #    > set IDENTITY_TRAITS_DEFAULT_SCHEMA_URL=<value>
     #
-    default_schema_url: httpss://foo.bar.com/path/to/identity.traits.schema.json
+    default_schema_url: file://path/to/identity.traits.schema.json
 
     ## Additional JSON Schemas for Identity Traits ##
     #
@@ -110,7 +110,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_STRATEGIES_PASSWORD_ENABLED=<value>
       #
-      enabled: true
+      enabled: false
 
     ## oidc ##
     #
@@ -123,7 +123,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_STRATEGIES_OIDC_ENABLED=<value>
       #
-      enabled: true
+      enabled: false
 
       ## config ##
       #
@@ -141,53 +141,61 @@ selfservice:
         providers:
           - id: google
             provider: google
-            client_id: labore non velit ex commodo
-            client_secret: elit aliquip Lorem adipisicing
-            schema_url: https://foo.bar.com/path/to/oidc.schema.json
+            client_id: eu
+            client_secret: occaecat id sunt amet
+            mapper_url: https://foo.bar.com/path/to/oidc.jsonnet
             issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
             token_url: https://www.googleapis.com/oauth2/v4/token
             scope:
-              - profile
-              - offline_access
               - profile
               - offline_access
           - id: google
             provider: google
-            client_id: dolor Excepteur eu occaecat
-            client_secret: ex
-            schema_url: https://foo.bar.com/path/to/oidc.schema.json
+            client_id: mollit deserunt
+            client_secret: eiusmod adipisicing dolor incididunt sed
+            mapper_url: file://path/to/oidc.jsonnet
             issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
             token_url: https://www.googleapis.com/oauth2/v4/token
             scope:
-              - offline_access
-              - offline_access
               - offline_access
               - profile
           - id: google
             provider: google
-            client_id: anim ipsum
-            client_secret: veniam officia minim in do
-            schema_url: https://foo.bar.com/path/to/oidc.schema.json
+            client_id: aute Ut id
+            client_secret: in eiusmod in enim
+            mapper_url: file://path/to/oidc.jsonnet
             issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
             token_url: https://www.googleapis.com/oauth2/v4/token
             scope:
               - profile
               - offline_access
-              - profile
-              - profile
               - offline_access
           - id: google
             provider: google
-            client_id: fugiat reprehenderit
-            client_secret: velit non dolore pariatur irure
-            schema_url: https://foo.bar.com/path/to/oidc.schema.json
+            client_id: aute enim nisi eiusmod laboris
+            client_secret: Duis officia
+            mapper_url: file://path/to/oidc.jsonnet
             issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
             token_url: https://www.googleapis.com/oauth2/v4/token
             scope:
+              - profile
+              - profile
+              - offline_access
+              - offline_access
+          - id: google
+            provider: google
+            client_id: velit nulla veniam
+            client_secret: nulla amet
+            mapper_url: base64://bG9jYWwgc3ViamVjdCA9I...
+            issuer_url: https://accounts.google.com
+            auth_url: https://accounts.google.com/o/oauth2/v2/auth
+            token_url: https://www.googleapis.com/oauth2/v4/token
+            scope:
+              - profile
               - offline_access
 
   ## logout ##
@@ -224,7 +232,7 @@ selfservice:
     # - Windows Command Line (CMD):
     #    > set SELFSERVICE_SETTINGS_REQUEST_LIFESPAN=<value>
     #
-    request_lifespan: 1s
+    request_lifespan: 1m
 
     ## privileged_session_max_age ##
     #
@@ -358,7 +366,7 @@ selfservice:
     # - Windows Command Line (CMD):
     #    > set SELFSERVICE_VERIFY_LINK_LIFESPAN=<value>
     #
-    link_lifespan: 24h
+    link_lifespan: 1h
 
   ## login ##
   #
@@ -394,7 +402,23 @@ selfservice:
       hooks:
         - hook: redirect
           config:
-            default_redirect_url: http://On.kucsfSMWNCn0
+            default_redirect_url: https://vNrGQOShybZtvpdWsLKLFHg.dwqzRKNoO2P9Mj.4a6Ih
+            allow_user_defined_redirect: false
+        - hook: redirect
+          config:
+            default_redirect_url: http://QeLSk.hwvad.ef1boy0pIqywpw+OWson9rtHv
+            allow_user_defined_redirect: true
+        - hook: redirect
+          config:
+            default_redirect_url: https://Rf.bfpnuIqeV
+            allow_user_defined_redirect: true
+        - hook: redirect
+          config:
+            default_redirect_url: http://kroFFCAAzYCtiLFRyxWV.xkY9LTCRQU6D-ljDQ
+            allow_user_defined_redirect: false
+        - hook: redirect
+          config:
+            default_redirect_url: http://AleaKRoeEveDcNA.bsvsmbez3gDCt7GrrzPEB3uFYLFW+Yoh0MUl4oO16HJQJH.eRmhQEWOJFYdzU
             allow_user_defined_redirect: true
 
     ## after ##
@@ -507,7 +531,11 @@ selfservice:
       hooks:
         - hook: redirect
           config:
-            default_redirect_url: https://zkni.ldod0pxQ3UhmgRTIJ4IjZkz,lmej2iWC8ePPiruT3X31XyGlBVZ-6FwB0MSd
+            default_redirect_url: http://vWrJmhcnjewBJOiTcDVdv.ibcfIQDI8+NH5jbHm47vieykPCVbRzT03ykkXgbv+zOUWXMwHeVbxMuK
+            allow_user_defined_redirect: true
+        - hook: redirect
+          config:
+            default_redirect_url: https://HbZYxiZFuXwEIydUJUXWnDYEGTDw.xiwJyhiYxfTBX
             allow_user_defined_redirect: true
 
     ## after ##
@@ -555,8 +583,10 @@ selfservice:
         #    > set SELFSERVICE_REGISTRATION_AFTER_PASSWORD_HOOKS=<value>
         #
         hooks:
-          - hook: session
-          - hook: verify
+          - hook: redirect
+            config:
+              default_redirect_url: https://JBdIwgXYnmPafakyYVGMP.qkku4rb58yJVgtBxR5iX2dneE-.PqTcBPezn,BP7,3IOXQmj50PPRGCkxkj4oZMUMK2zPJLu
+              allow_user_defined_redirect: false
 
       ## oidc ##
       #
@@ -585,7 +615,19 @@ selfservice:
         #    > set SELFSERVICE_REGISTRATION_AFTER_OIDC_HOOKS=<value>
         #
         hooks:
+          - hook: redirect
+            config:
+              default_redirect_url: https://dVmrmZBlsrCRcaJglSkTNkcUnMKMkesRX.jpsphJbVjax1
+              allow_user_defined_redirect: false
           - hook: verify
+          - hook: redirect
+            config:
+              default_redirect_url: http://DXaGZcA.sshR-KePsoNNqL2g9S4i6rm6faIHWlF.pympAe5i6AX1ix8gQt
+              allow_user_defined_redirect: true
+          - hook: redirect
+            config:
+              default_redirect_url: https://Kmhkg.caeqm6jhaZ5EofC7Ohaq2neAgm,Hc5tE7Oy5lbBKgZLa.wY
+              allow_user_defined_redirect: true
           - hook: session
 
 ## Courier configuration ##
@@ -625,7 +667,7 @@ courier:
     # - Windows Command Line (CMD):
     #    > set COURIER_SMTP_FROM_ADDRESS=<value>
     #
-    from_address: A2e2Dacuj7gY@ErJEKRnmEcRpXdDxXkjDU.nlc
+    from_address: pDGKVqqVSV-p2w@FBLoezyegcObiN.uu
 
   ## Override message templates ##
   #
@@ -658,7 +700,7 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_ADMIN_HOST=<value>
     #
-    host: laborum amet id
+    host: enim eiusmod nostrud dolor officia
 
     ## port ##
     #
@@ -688,7 +730,7 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_PUBLIC_HOST=<value>
     #
-    host: nulla incididunt id
+    host: et do consequat qui
 
     ## port ##
     #
@@ -818,7 +860,7 @@ urls:
   # - Windows Command Line (CMD):
   #    > set URLS_REGISTRATION_UI=<value>
   #
-  registration_ui: https://www.ory.sh/kratos/docs/fallback/registration
+  registration_ui: https://my-app.com/signup
 
   ## ORY Kratos Error UI URL ##
   #
@@ -852,7 +894,7 @@ urls:
   # - Windows Command Line (CMD):
   #    > set URLS_VERIFY_UI=<value>
   #
-  verify_ui: https://www.ory.sh/kratos/docs/fallback/verify
+  verify_ui: https://my-app.com/verify
 
   ## Whitelisted Return To URLs ##
   #
@@ -881,7 +923,7 @@ log:
   # - Windows Command Line (CMD):
   #    > set LOG_LEVEL=<value>
   #
-  level: fatal
+  level: error
 
   ## format ##
   #
@@ -891,7 +933,7 @@ log:
   # - Windows Command Line (CMD):
   #    > set LOG_FORMAT=<value>
   #
-  format: text
+  format: json
 
 ## secrets ##
 #
@@ -905,10 +947,11 @@ secrets:
   #    > set SECRETS_SESSION=<value>
   #
   session:
-    - cillum Loremnisi
-    - sit doet ea deserunt eiusmod
-    - Excepteur nostrud sit sunt
-    - cupidatat nostrud laboris voluptate dolor
+    - non ex Duisadsit anim sunt
+    - Excepteur mollit Duis pariatur consequat
+    - et consecteturcommodo voluptate in
+    - voluptate ea sunt elit in
+    - commodonisi eiusmod ut Excepteur
 
 ## hashers ##
 #
@@ -924,7 +967,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_MEMORY=<value>
     #
-    memory: 66029649
+    memory: 57778550
 
     ## iterations ##
     #
@@ -934,7 +977,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_ITERATIONS=<value>
     #
-    iterations: 63610290
+    iterations: 35873485
 
     ## parallelism ##
     #
@@ -944,7 +987,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_PARALLELISM=<value>
     #
-    parallelism: 69447193
+    parallelism: 22416448
 
     ## salt_length ##
     #
@@ -954,7 +997,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_SALT_LENGTH=<value>
     #
-    salt_length: 88928367
+    salt_length: 20363085
 
     ## key_length ##
     #
@@ -964,7 +1007,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_KEY_LENGTH=<value>
     #
-    key_length: 91259979
+    key_length: 52558806
 
 ## security ##
 #

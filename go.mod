@@ -55,7 +55,7 @@ require (
 	github.com/ory/herodot v0.8.2
 	github.com/ory/jsonschema/v3 v3.0.1
 	github.com/ory/mail/v3 v3.0.0
-	github.com/ory/sdk/swagutil v0.0.0-20200504143611-75777fae6684
+	github.com/ory/sdk/swagutil v0.0.0-20200505101021-3f40b808145c
 	github.com/ory/viper v1.7.4
 	github.com/ory/x v0.0.117
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
