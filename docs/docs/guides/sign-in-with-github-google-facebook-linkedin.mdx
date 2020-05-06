@@ -36,7 +36,7 @@ and adds that data to `std.extVar('claims')`. Check out what data is available
 at
 [GitHub's Scope Docs](https://developer.github.com/apps/building-oauth-apps/understanding-scopes-for-oauth-apps/).
 Not all GitHub fields are supported however. Check the list of supported fields
-[in the source code](https://github.com/ory/kratos/blob/v0.2.1-alpha.1/selfservice/strategy/oidc/provider_github.go#L72-L80).
+[in the source code](https://github.com/ory/kratos/blob/v0.2.1-alpha.1/selfservice/strategy/oidc/provider_github.go#L72-L98).
 
 :::
 
@@ -47,12 +47,20 @@ you must also create a Jsonnet code snippet for the provider. Save the code in
 The following schema takes `email_primary` and maps it to `traits.email`:
 
 ```json title="contrib/quickstart/kratos/email-password/oidc.github.jsonnet"
-local claims = std.extVar('claims');
+local claims = {
+  email_verified: false
+} + std.extVar('claims');
 
 {
   identity: {
     traits: {
-      [if "email_primary" in claims then "email" else null]: claims.email_primary,
+      // Allowing unverified email addresses enables account
+      // enumeration attacks, especially if the value is used for
+      // e.g. verification or as a password login identifier.
+      //
+      // Therefore we only return the email if it (a) exists and (b) is marked verified
+      // by GitHub.
+      [if "email_primary" in claims && claims.email_verified then "email" else null]: claims.email_primary,
     },
   },
 }
