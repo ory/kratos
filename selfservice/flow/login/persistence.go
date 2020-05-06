@@ -16,7 +16,7 @@ import (
 
 type (
 	RequestPersister interface {
-		UpdateLoginRequest(context.Context,   *Request) error
+		UpdateLoginRequest(context.Context, *Request) error
 		CreateLoginRequest(context.Context, *Request) error
 		GetLoginRequest(context.Context, uuid.UUID) (*Request, error)
 		UpdateLoginRequestMethod(context.Context, uuid.UUID, identity.CredentialsType, *RequestMethod) error

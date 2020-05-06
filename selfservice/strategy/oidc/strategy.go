@@ -127,7 +127,7 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 	rid := x.ParseUUID(ps.ByName("request"))
 
 	if err := r.ParseForm(); err != nil {
-		s.handleError(w, r, rid, "",nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
+		s.handleError(w, r, rid, "", nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
 		return
 	}
 
@@ -136,7 +136,7 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 	)
 
 	if pid == "" {
-		s.handleError(w, r, rid, pid,nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`The HTTP request did not contain the required "provider" form field`)))
+		s.handleError(w, r, rid, pid, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`The HTTP request did not contain the required "provider" form field`)))
 		return
 	}
 
@@ -239,9 +239,9 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	ar, err := s.validateCallback(r)
 	if err != nil {
 		if ar != nil {
-			s.handleError(w, r, ar.GetID(),pid,nil, err)
+			s.handleError(w, r, ar.GetID(), pid, nil, err)
 		} else {
-			s.handleError(w, r, x.EmptyUUID, pid,nil, err)
+			s.handleError(w, r, x.EmptyUUID, pid, nil, err)
 		}
 		return
 	}
@@ -256,25 +256,25 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 
 	provider, err := s.provider(pid)
 	if err != nil {
-		s.handleError(w, r, ar.GetID(), pid,nil, err)
+		s.handleError(w, r, ar.GetID(), pid, nil, err)
 		return
 	}
 
 	config, err := provider.OAuth2(context.Background())
 	if err != nil {
-		s.handleError(w, r, ar.GetID(), pid,nil, err)
+		s.handleError(w, r, ar.GetID(), pid, nil, err)
 		return
 	}
 
 	token, err := config.Exchange(r.Context(), code)
 	if err != nil {
-		s.handleError(w, r, ar.GetID(), pid,nil, err)
+		s.handleError(w, r, ar.GetID(), pid, nil, err)
 		return
 	}
 
 	claims, err := provider.Claims(r.Context(), token)
 	if err != nil {
-		s.handleError(w, r, ar.GetID(), pid,nil, err)
+		s.handleError(w, r, ar.GetID(), pid, nil, err)
 		return
 	}
 
@@ -327,11 +327,11 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 			s.d.Logger().WithField("provider", provider.Config().ID).WithField("subject", claims.Subject).Debug("Received successful OpenID Connect callback but user is not registered. Re-initializing registration flow now.")
 			aa, err := s.d.RegistrationHandler().NewRegistrationRequest(w, r)
 			if err != nil {
-				s.handleError(w, r, a.GetID(), provider.Config().ID,nil, err)
+				s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
 				return
 			}
 
-			s.processRegistration(w,r,aa,claims,provider)
+			s.processRegistration(w, r, aa, claims, provider)
 			return
 		}
 
@@ -376,7 +376,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 			return
 		}
 
-		s.processLogin(w,r,ar,claims,provider)
+		s.processLogin(w, r, ar, claims, provider)
 		return
 	}
 

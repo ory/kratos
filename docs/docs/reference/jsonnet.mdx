@@ -1,0 +1,41 @@
+---
+id: jsonnet
+title: Data Mapping with Jsonnet
+---
+
+Some modules like the [OpenID Connect and OAuth2 Strategy](../concepts/credentials/openid-connect-oidc-oauth2.mdx)
+support [Jsonnet](https://jsonnet.org), allowing you to easily write code that modifies your identity's data
+and load it into ORY Kratos.
+
+We highly recommend checking out the official [learning Jsonnet tutorial](https://jsonnet.org/learning/tutorial.html).
+
+## Formatting Jsonnet Code
+
+Format Jsonnet code snippets using:
+
+```shell script
+$ kratos help jsonnet format
+
+# e.g.:
+% kratos jsonnet format --write path/to/files/*.jsonnet
+```
+
+## Linting Jsonnet Code
+
+Lint Jsonnet code snippets using:
+
+```shell script
+$ kratos help jsonnet lint
+
+# e.g.:
+$ kratos jsonnet lint path/to/files/*.jsonnet
+```
+
+The command will exit with an exit code of `1` and
+print all found lint errors to stderr if the code
+snippet has lint issues.
+
+## Testing Jsonnet Code
+
+This is an anticipated future feature. For progress
+check out [kratos#391](https://github.com/ory/kratos/issues/391).
