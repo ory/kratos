@@ -1,6 +1,6 @@
 ---
-id: sign-in-with-github
-title: Sign in with GitHub
+id: sign-in-with-github-google-facebook-linkedin
+title: Sign in with GitHub, Google, Facebook, LinkedIn, ...
 ---
 
 In this document we will take a look at setting up "Sign in with GitHub" using
@@ -16,6 +16,8 @@ Run the [Quickstart](../quickstart.mdx) with Docker Compose:
 $ make quickstart
 ```
 
+## GitHub
+
 To set up "Sign in with GitHub" you must create a
 [GitHub OAuth2 Client](https://developer.github.com/apps/building-oauth-apps/creating-an-oauth-app/)
 and set the "Authorization callback URL" to
@@ -25,33 +27,34 @@ The pattern of this URL is
 The provider ID must point to the provider's ID set in the ORY Kratos
 configuration file (explained in paragraphs).
 
+:::note
+
+GitHub does not implement OpenID Connect. Therefore, ORY Kratos makes a request
+to
+[GitHub's User API](https://developer.github.com/v3/users/#get-the-authenticated-user)
+and adds that data to `std.extVar('claims')`. Check out what data is available
+at
+[GitHub's Scope Docs](https://developer.github.com/apps/building-oauth-apps/understanding-scopes-for-oauth-apps/).
+Not all GitHub fields are supported however. Check the list of supported fields
+[in the source code](https://github.com/ory/kratos/blob/v0.2.1-alpha.1/selfservice/strategy/oidc/provider_github.go#L72-L80).
+
+:::
+
 As explained in
 [OpenID Connect and OAuth2 Credentails](../concepts/credentials/openid-connect-oidc-oauth2.mdx),
-you must also create a JSON Schema for the provider. Save the JSON Schema in
-`<kratos-directory>/contrib/quickstart/kratos/email-password/github.schema.json`.
-The following schema takes take `email_primary` maps it to `traits.email`:
+you must also create a Jsonnet code snippet for the provider. Save the code in
+`<kratos-directory>/contrib/quickstart/kratos/email-password/oidc.github.jsonnet`.
+The following schema takes `email_primary` and maps it to `traits.email`:
 
-```json title="contrib/quickstart/kratos/email-password/github.schema.json"
+```json title="contrib/quickstart/kratos/email-password/oidc.github.jsonnet"
+local claims = std.extVar('claims');
+
 {
-  "$id": "http://mydomain.com/github.schema.json ",
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "type": "object",
-  "properties": {
-    "email_primary": {
-      "type": "string",
-      "ory.sh/kratos": {
-        "mappings": {
-          "identity": {
-            "traits": [
-              {
-                "path": "email"
-              }
-            ]
-          }
-        }
-      }
-    }
-  }
+  identity: {
+    traits: {
+      [if "email_primary" in claims then "email" else null]: claims.email_primary,
+    },
+  },
 }
 ```
 
@@ -70,10 +73,16 @@ selfservice:
             provider: github
             client_id: .... # Replace this with the OAuth2 Client ID provided by GitHub
             client_secret: .... # Replace this with the OAuth2 Client Secret provided by GitHub
-            schema_url: file:///etc/config/kratos/github.schema.json
+            mapper_url: file:///etc/config/kratos/oidc.github.jsonnet
             scope:
               - user:email
 ```
 
 Next, open the login endpoint of the SecureApp and you should see the GitHub
 Login option!
+
+## Google, LinkedIn, Facebook
+
+Connecting with other Social Sign In providers will be very similar to the
+GitHub flow. If you've managed to do it, write it down and make a PR against
+this document! :)
