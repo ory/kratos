@@ -3,7 +3,7 @@ id: csrf
 title: Common Cookie and CSRF Pitfalls
 ---
 
-import useBaseUrl from '@docusaurus/useBaseUrl';
+import useBaseUrl from '@docusaurus/useBaseUrl'
 
 Because ORY Kratos is not just an API, but instead talks to your users' browsers
 directly, several security measures have been implemented in ORY Kratos. One of
