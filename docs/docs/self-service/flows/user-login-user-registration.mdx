@@ -188,8 +188,20 @@ export const authHandler = (flow) => (req, res, next) => {
     // "body" contains all the request data for this Registration request.
     // You can process that data here, if you want.
 
+    // only show the form section that is "active" to avoid user confusion.
+    let password = body.methods.password.config;
+    let oidc = body.methods.oidc.config;
+    switch (body.active) {
+      case 'password':
+        oidc = undefined; // if password is active hide this
+        break;
+      case 'oidc':
+        password = undefined; // if oidc is active hide this
+        break;
+    }
+
     // Lastly, you probably want to render the data using a view (e.g. Jade Template):
-    res.render(flow, body);
+    res.render(flow, { oidc, password });
   });
   // Handle errors using ExpressJS' next functionality:
   //
@@ -233,13 +245,13 @@ all the methods you want to support:
 
 ```handlebars name="views/login_or_signup.hbs"
 <!-- Username / Email and Password login / sign up form: -->
-{{#if methods.password.config}}
-    {{> form form=methods.password.config}}
+{{#if password}}
+    {{> form form=password}}
 {{/if}}
 
 <!-- Social sign in/up form: -->
-{{#if methods.oidc.config}}
-    {{> form form=methods.oidc.config}}
+{{#if oidc}}
+    {{> form form=oidc}}
 {{/if}}
 
 <!-- ... form: -->
