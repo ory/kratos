@@ -4,23 +4,24 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-05-05)](#unreleased-2020-05-05)
+- [Unreleased (2020-05-06)](#unreleased-2020-05-06)
+    - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
   - [0.2.1-alpha.1 (2020-05-05)](#021-alpha1-2020-05-05)
     - [Documentation](#documentation)
 - [0.2.0-alpha.2 (2020-05-04)](#020-alpha2-2020-05-04)
-    - [Bug Fixes](#bug-fixes)
+    - [Bug Fixes](#bug-fixes-1)
     - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation-1)
     - [Features](#features)
     - [Unclassified](#unclassified)
     - [BREAKING CHANGES](#breaking-changes)
   - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
-    - [Bug Fixes](#bug-fixes-1)
+    - [Bug Fixes](#bug-fixes-2)
     - [Code Refactoring](#code-refactoring-2)
     - [Documentation](#documentation-2)
 - [0.1.0-alpha.6 (2020-02-16)](#010-alpha6-2020-02-16)
-    - [Bug Fixes](#bug-fixes-2)
+    - [Bug Fixes](#bug-fixes-3)
     - [Code Refactoring](#code-refactoring-3)
     - [Documentation](#documentation-3)
     - [Features](#features-1)
@@ -31,7 +32,7 @@
     - [Documentation](#documentation-5)
 - [0.1.0-alpha.3 (2020-02-06)](#010-alpha3-2020-02-06)
 - [0.1.0-alpha.2 (2020-02-03)](#010-alpha2-2020-02-03)
-    - [Bug Fixes](#bug-fixes-3)
+    - [Bug Fixes](#bug-fixes-4)
     - [Documentation](#documentation-6)
     - [Features](#features-3)
     - [Unclassified](#unclassified-1)
@@ -71,7 +72,13 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.2.1-alpha.1...f9a50790637a848897ba275373bc538728e09f3d) (2020-05-05)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.2.1-alpha.1...5ed6d05b3e13027e4e7ffef1ff10ab2fb948093d) (2020-05-06)
+
+
+### Bug Fixes
+
+* Access rules of oathkeeper for quick start ([#390](https://github.com/ory/kratos/issues/390)) ([5ed6d05](https://github.com/ory/kratos/commit/5ed6d05b3e13027e4e7ffef1ff10ab2fb948093d)), closes [#389](https://github.com/ory/kratos/issues/389):
+  > To access `/` as dashboard
 
 
 ### Code Refactoring
