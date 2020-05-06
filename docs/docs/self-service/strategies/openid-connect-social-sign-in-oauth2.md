@@ -5,7 +5,8 @@ title: Social Sign In with OpenID Connect and OAuth2
 
 :::tip
 
-Have you read the [OpenID Connect / OAuth2 Documentation](../../concepts/credentials/openid-connect-oidc-oauth2.mdx)
+Have you read the
+[OpenID Connect / OAuth2 Documentation](../../concepts/credentials/openid-connect-oidc-oauth2.mdx)
 yet? If not, this would be a perfect opportunity!
 
 :::
