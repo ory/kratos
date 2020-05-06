@@ -26,10 +26,12 @@ require (
 	github.com/gobuffalo/packr/v2 v2.8.0
 	github.com/gobuffalo/pop/v5 v5.0.11
 	github.com/gobuffalo/uuid v2.0.5+incompatible
+	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
 	github.com/golang/mock v1.3.1
 	github.com/google/go-github/v27 v27.0.1
+	github.com/google/go-jsonnet v0.15.1-0.20200415122941-8a0084e64395
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/sessions v1.1.3
@@ -55,7 +57,7 @@ require (
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/sdk/swagutil v0.0.0-20200504143611-75777fae6684
 	github.com/ory/viper v1.7.4
-	github.com/ory/x v0.0.116
+	github.com/ory/x v0.0.117
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/shurcooL/go v0.0.0-20180423040247-9e1955d9fb6e

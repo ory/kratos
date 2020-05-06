@@ -100,11 +100,11 @@ func TestViperProvider(t *testing.T) {
 				enabled bool
 			}{
 				{id: "password", enabled: true, config: "{}"},
-				{id: "oidc", enabled: true, config: `{"providers":[{"client_id":"a","client_secret":"b","id":"github","provider":"github","schema_url":"http://test.kratos.ory.sh/default-identity.schema.json"}]}`},
+				{id: "oidc", enabled: true, config: `{"providers":[{"client_id":"a","client_secret":"b","id":"github","provider":"github","mapper_url":"http://test.kratos.ory.sh/default-identity.schema.json"}]}`},
 			} {
 				strategy := p.SelfServiceStrategy(tc.id)
 				assert.Equal(t, tc.enabled, strategy.Enabled)
-				assert.EqualValues(t, string(tc.config), string(strategy.Config))
+				assert.JSONEq(t, string(tc.config), string(strategy.Config))
 			}
 		})
 

@@ -14,11 +14,12 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/ory/x/urlx"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/urlx"
 
 	"github.com/ory/viper"
 
@@ -127,7 +128,7 @@ func TestStrategy(t *testing.T) {
 					ClientID:     "client",
 					ClientSecret: "secret",
 					IssuerURL:    remotePublic + "/",
-					SchemaURL:    "file://./stub/hydra.schema.json",
+					Mapper:       "file://./stub/oidc.hydra.jsonnet",
 				},
 				{
 					Provider:     "generic",
@@ -135,7 +136,7 @@ func TestStrategy(t *testing.T) {
 					ClientID:     "client",
 					ClientSecret: "secret",
 					IssuerURL:    strings.Replace(remotePublic, "127.0.0.1", "localhost", 1) + "/",
-					SchemaURL:    "file://./stub/hydra.schema.json",
+					Mapper:       "file://./stub/oidc.hydra.jsonnet",
 				},
 			},
 		},
@@ -294,7 +295,7 @@ func TestStrategy(t *testing.T) {
 	}
 
 	// new registration request
-	var nrr = func(t *testing.T, redirectTo string, exp time.Duration) (*registration.Request) {
+	var nrr = func(t *testing.T, redirectTo string, exp time.Duration) *registration.Request {
 		// Use NewLoginRequest to instantiate the request but change the things we need to control a copy of it.
 		req, err := reg.RegistrationHandler().NewRegistrationRequest(httptest.NewRecorder(),
 			&http.Request{URL: urlx.ParseOrPanic(redirectTo)})

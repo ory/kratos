@@ -128,12 +128,15 @@
             "https://www.googleapis.com/oauth2/v4/token"
           ]
         },
-        "schema_url": {
+        "mapper_url": {
+          "title": "Jsonnet Mapper URL",
+          "description": "The URL where the jsonnet source is located for mapping the provider's data to ORY Kratos data.",
           "type": "string",
           "format": "uri",
           "examples": [
-            "file://path/to/oidc.schema.json",
-            "https://foo.bar.com/path/to/oidc.schema.json"
+            "file://path/to/oidc.jsonnet",
+            "https://foo.bar.com/path/to/oidc.jsonnet",
+            "base64://bG9jYWwgc3ViamVjdCA9I..."
           ]
         },
         "scope": {
@@ -153,7 +156,7 @@
         "provider",
         "client_id",
         "client_secret",
-        "schema_url"
+        "mapper_url"
       ]
     },
     "selfServiceAfterSettingsStrategy": {
