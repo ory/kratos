@@ -43,7 +43,11 @@ type Configuration struct {
 	// Scope specifies optional requested permissions.
 	Scope []string `json:"scope"`
 
-	SchemaURL string `json:"schema_url"`
+	// Mapper specifies the JSONNet code snippet which uses the OpenID Connect Provider's data (e.g. GitHub or Google
+	// profile information) to hydrate the identity's data.
+	//
+	// It can be either a URL (file://, http(s)://, base64://) or an inline JSONNet code snippet.
+	Mapper string `json:"mapper_url"`
 }
 
 func (p Configuration) Redir(public *url.URL) string {

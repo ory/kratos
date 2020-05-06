@@ -8,10 +8,10 @@ selfservice:
             provider: generic
             client_id: kratos-client
             client_secret: kratos-secret
-            schema_url: file://test/e2e/profiles/oidc/hydra.schema.json
             issuer_url: http://127.0.0.1:4444/
             scope:
               - offline
+            mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
 
     password:
       enabled: true

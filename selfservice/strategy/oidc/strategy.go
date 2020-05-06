@@ -10,13 +10,16 @@ import (
 	"strings"
 
 	"github.com/gofrs/uuid"
+	"github.com/google/go-jsonnet"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
+	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/fetcher"
 
 	"github.com/ory/x/jsonx"
 
 	"github.com/ory/herodot"
-	"github.com/ory/x/stringsx"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/selfservice/flow/login"
@@ -83,6 +86,7 @@ type dependencies interface {
 type Strategy struct {
 	c         configuration.Provider
 	d         dependencies
+	f         *fetcher.Fetcher
 	validator *schema.Validator
 }
 
@@ -115,6 +119,7 @@ func NewStrategy(
 	return &Strategy{
 		c:         c,
 		d:         d,
+		f:         fetcher.NewFetcher(),
 		validator: schema.NewValidator(),
 	}
 }
@@ -380,35 +385,44 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		return
 	}
 
-	i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
-	runner, err := schema.NewExtensionRunner(schema.ExtensionRunnerOIDCMetaSchema, NewValidationExtensionRunner(i))
+	jn, err := s.f.Fetch(provider.Config().Mapper)
 	if err != nil {
 		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
 		return
 	}
 
-	var doc bytes.Buffer
-	if err := json.NewEncoder(&doc).Encode(claims); err != nil {
+	var jsonClaims bytes.Buffer
+	if err := json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
 		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
 		return
 	}
 
-	// Validate the claims first (which will also copy the values around based on the schema)
-	if err := s.validator.Validate(
-		stringsx.Coalesce(
-			provider.Config().SchemaURL,
-		),
-		doc.Bytes(),
-		schema.WithExtensionRunner(runner),
-	); err != nil {
-		s.d.Logger().
-			WithField("provider", provider.Config().ID).
-			WithField("schema_url", provider.Config().SchemaURL).
-			WithField("claims", fmt.Sprintf("%+v", claims)).
-			Error("Unable to validate claims against provider schema. Your schema should work regardless of these values.")
-		// Force a system error because this can not be resolved by the user.
-		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithTrace(err).WithReasonf("%s", err)))
+	i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+
+	vm := jsonnet.MakeVM()
+	vm.ExtCode("claims", jsonClaims.String())
+	evaluated, err := vm.EvaluateSnippet(provider.Config().Mapper, jn.String())
+	if err != nil {
+		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
 		return
+	} else if traits := gjson.Get(evaluated, "identity.traits"); !traits.IsObject() {
+		i.Traits = []byte{'{', '}'}
+		s.d.Logger().
+			WithField("oidc_provider", provider.Config().ID).
+			WithField("oidc_claims", x.RedactInProd(s.c, claims)).
+			WithField("mapper_jsonnet_output", evaluated).
+			WithField("mapper_jsonnet_url", provider.Config().Mapper).
+			Warn("OpenID Connect Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!")
+	} else {
+		i.Traits = []byte(traits.Raw)
+	}
+	if s.c.IsInsecureDevMode() {
+		s.d.Logger().
+			WithField("oidc_provider", provider.Config().ID).
+			WithField("oidc_claims", x.RedactInProd(s.c, claims)).
+			WithField("mapper_jsonnet_output", evaluated).
+			WithField("mapper_jsonnet_url", provider.Config().Mapper).
+			Debug("OpenID Connect Jsonnet mapper completed.")
 	}
 
 	option, err := decoderRegistration(s.c.DefaultIdentityTraitsSchemaURL().String())
@@ -417,7 +431,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		return
 	}
 
-	traits, err := merge(
+	i.Traits, err = merge(
 		x.SessionGetStringOr(r, s.d.CookieManager(), sessionName, sessionFormState, ""),
 		json.RawMessage(i.Traits), option,
 	)
@@ -426,11 +440,9 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		return
 	}
 
-	i.Traits = identity.Traits(traits)
-
 	// Validate the identity itself
 	if err := s.d.IdentityValidator().Validate(i); err != nil {
-		s.handleError(w, r, a.GetID(), provider.Config().ID, traits, err)
+		s.handleError(w, r, a.GetID(), provider.Config().ID, i.Traits, err)
 		return
 	}
 
@@ -441,7 +453,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 			Provider: provider.Config().ID,
 		},
 	}); err != nil {
-		s.handleError(w, r, a.GetID(), provider.Config().ID, traits, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err)))
+		s.handleError(w, r, a.GetID(), provider.Config().ID, i.Traits, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err)))
 		return
 	}
 
@@ -452,7 +464,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 	})
 
 	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, identity.CredentialsTypeOIDC, a, i); err != nil {
-		s.handleError(w, r, a.GetID(), provider.Config().ID, traits, err)
+		s.handleError(w, r, a.GetID(), provider.Config().ID, i.Traits, err)
 		return
 	}
 }
@@ -534,7 +546,7 @@ func (s *Strategy) provider(id string) (Provider, error) {
 	}
 }
 
-func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.UUID, provider string, traits json.RawMessage, err error) {
+func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.UUID, provider string, traits []byte, err error) {
 	if x.IsZeroUUID(rid) {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return

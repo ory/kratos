@@ -128,7 +128,7 @@ func TestStrategy(t *testing.T) {
 					ClientID:     "client",
 					ClientSecret: "secret",
 					IssuerURL:    remotePublic + "/",
-					SchemaURL:    "file://./stub/hydra.schema.json",
+					Mapper:       "file://./stub/oidc.hydra.jsonnet",
 				},
 				{
 					Provider:     "generic",
@@ -136,7 +136,7 @@ func TestStrategy(t *testing.T) {
 					ClientID:     "client",
 					ClientSecret: "secret",
 					IssuerURL:    strings.Replace(remotePublic, "127.0.0.1", "localhost", 1) + "/",
-					SchemaURL:    "file://./stub/hydra.schema.json",
+					Mapper:       "file://./stub/oidc.hydra.jsonnet",
 				},
 			},
 		},
