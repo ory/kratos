@@ -1,11 +1,9 @@
-local subject = std.toString(std.extVar('claims').sub);
-
-if std.length(subject) == 0 then error 'claim sub not set'
+local subject = {sub: ''} + std.extVar('claims').sub;
 
 {
   identity: {
     traits: {
-      subject: subject,
+      subject: std.extVar('claims').sub,
     },
   },
 }
