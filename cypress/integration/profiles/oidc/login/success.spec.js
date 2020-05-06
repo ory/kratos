@@ -8,9 +8,9 @@ context('Login', () => {
   it('should be able to sign up, sign out, and then sign in', () => {
     const email = gen.email()
 
-    cy.registerOidc({email, website})
+    cy.registerOidc({ email, website })
     cy.get('a[href*="logout"]').click()
     cy.noSession()
-    cy.loginOidc({email})
+    cy.loginOidc({ email })
   })
 })

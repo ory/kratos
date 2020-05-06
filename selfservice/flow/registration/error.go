@@ -93,7 +93,7 @@ func (s *ErrorHandler) HandleRegistrationError(
 					s.HandleRegistrationError(w, r, ct, rr, err)
 					return
 				}
-				http.Redirect(w,r,redirTo,http.StatusFound)
+				http.Redirect(w, r, redirTo, http.StatusFound)
 				return
 			}
 			a.Methods[name] = method

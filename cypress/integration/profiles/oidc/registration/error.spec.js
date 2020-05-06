@@ -1,4 +1,4 @@
-import {APP_URL, gen, website} from "../../../../helpers";
+import { APP_URL, gen, website } from '../../../../helpers'
 
 context('Register', () => {
   beforeEach(() => {
@@ -10,8 +10,11 @@ context('Register', () => {
     const email = gen.email()
     cy.get('button[value="hydra"]').click()
     cy.get('#reject').click()
-    cy.location('pathname').should('equal','/auth/registration')
-    cy.get('.form-errors .message').should('contain.text', 'login rejected request')
+    cy.location('pathname').should('equal', '/auth/registration')
+    cy.get('.form-errors .message').should(
+      'contain.text',
+      'login rejected request'
+    )
     cy.noSession()
   })
 
@@ -21,8 +24,11 @@ context('Register', () => {
     cy.get('#username').type(email)
     cy.get('#accept').click()
     cy.get('#reject').click()
-    cy.location('pathname').should('equal','/auth/registration')
-    cy.get('.form-errors .message').should('contain.text', 'consent rejected request')
+    cy.location('pathname').should('equal', '/auth/registration')
+    cy.get('.form-errors .message').should(
+      'contain.text',
+      'consent rejected request'
+    )
     cy.noSession()
   })
 
@@ -33,7 +39,7 @@ context('Register', () => {
     cy.get('#accept').click()
     cy.get('#website').type(website)
     cy.get('#accept').click()
-    cy.location('pathname').should('equal','/auth/registration')
+    cy.location('pathname').should('equal', '/auth/registration')
     cy.get('.form-errors .message').should('contain.text', 'no id_token')
   })
 })
