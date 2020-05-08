@@ -205,10 +205,10 @@ incoming requests to the appropriate service:
   which in turn:
   - proxies URLs matching `https://example.org/auth/login` to your Server-Side
     Application available at
-    `https://your-service-side-application.example-org.vpc/auth/login`
+    `https://your-server-side-application.example-org.vpc/auth/login`
   - proxies URLs matching `https://example.org/auth/registration` to your
     Server-Side Application available at
-    `https://your-service-side-application.example-org.vpc/auth/registration`
+    `https://your-server-side-application.example-org.vpc/auth/registration`
   - `https://example.org/.ory/kratos/public/*` is proxied to
     `https://ory-kratos-public.example-org.vpc/`
 - `https://ory-kratos-admin.example-org.vpc/` exposes ORY Kratos' Admin API and
@@ -216,7 +216,7 @@ incoming requests to the appropriate service:
   Application.
 - `https://ory-kratos-public.example-org.vpc` exposes ORY Kratos' Public API and
   is ideally only accessible by ORY Oathkeeper.
-- `https://your-service-side-application.example-org.vpc` exposes your
+- `https://your-server-side-application.example-org.vpc` exposes your
   Server-Side Application and is ideally only accessible by ORY Oathkeeper.
 
 The ORY Kratos Admin API is exposed only in the intranet and only the
