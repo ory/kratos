@@ -8,6 +8,10 @@ import (
 
 // swagger:model oidcStrategyCredentialsConfig
 type CredentialsConfig struct {
+	Providers []ProviderCredentialsConfig `json:"providers"`
+}
+
+type ProviderCredentialsConfig struct {
 	Subject  string `json:"subject"`
 	Provider string `json:"provider"`
 }
