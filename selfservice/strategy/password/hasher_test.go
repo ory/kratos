@@ -37,6 +37,7 @@ func TestHasher(t *testing.T) {
 					require.NoError(t, err)
 					assert.NotEqual(t, pw, hs)
 
+					t.Logf("hash: %s", hs)
 					require.NoError(t, h.Compare(pw, hs))
 
 					mod := make([]byte, len(pw))

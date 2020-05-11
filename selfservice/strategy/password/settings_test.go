@@ -27,7 +27,7 @@ func init() {
 	internal.RegisterFakes()
 }
 
-func TestProfile(t *testing.T) {
+func TestSettings(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, "https://www.ory.sh/")
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/profile.schema.json")
@@ -50,7 +50,7 @@ func TestProfile(t *testing.T) {
 		Traits:         identity.Traits(`{}`),
 		TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
 	}
-	publicTS, adminTS := testhelpers.NewSettingsAPIServer(t, reg, []identity.Identity{*primaryIdentity, *secondaryIdentity})
+	publicTS, adminTS := testhelpers.NewSettingsAPIServer(t, reg, []*identity.Identity{primaryIdentity, secondaryIdentity})
 	primaryUser := testhelpers.NewSessionClient(t, publicTS.URL+"/sessions/set/0")
 	secondaryUser := testhelpers.NewSessionClient(t, publicTS.URL+"/sessions/set/1")
 	adminClient := testhelpers.NewSDKClient(adminTS)
