@@ -6,11 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strings"
 
 	"github.com/gofrs/uuid"
-	"github.com/google/go-jsonnet"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
@@ -39,19 +37,9 @@ const (
 
 	AuthPath     = BasePath + "/auth/:request"
 	CallbackPath = BasePath + "/callback/:provider"
-
-	registrationFormPayloadSchema = `{
-  "$id": "https://schemas.ory.sh/kratos/selfservice/oidc/registration/config.schema.json",
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "type": "object",
-  "properties": {
-    "traits": {}
-  }
-}`
 )
 
-var _ login.Strategy = new(Strategy)
-var _ registration.Strategy = new(Strategy)
+var _ identity.ActiveCredentialsCounter = new(Strategy)
 
 type dependencies interface {
 	errorx.ManagementProvider
@@ -79,6 +67,8 @@ type dependencies interface {
 	registration.StrategyProvider
 	registration.HandlerProvider
 	registration.ErrorHandlerProvider
+
+	identity.ActiveCredentialsCounterStrategyProvider
 }
 
 // Strategy implements selfservice.LoginStrategy, selfservice.RegistrationStrategy. It supports both login
@@ -90,12 +80,29 @@ type Strategy struct {
 	validator *schema.Validator
 }
 
-func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
-	s.setRoutes(r)
-}
+func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
+	for _, c := range cc {
+		if c.Type == s.ID() && gjson.ValidBytes(c.Config) {
+			var conf CredentialsConfig
+			if err = json.Unmarshal(c.Config, &conf); err != nil {
+				return 0, errors.WithStack(err)
+			}
 
-func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
-	s.setRoutes(r)
+			for _, ider := range c.Identifiers {
+				parts := strings.Split(ider, ":")
+				if len(parts) != 2 {
+					continue
+				}
+
+				for _, prov := range conf.Providers {
+					if parts[0] == prov.Provider && parts[1] == prov.Subject && len(prov.Subject) > 1 && len(prov.Provider) > 1 {
+						count++
+					}
+				}
+			}
+		}
+	}
+	return
 }
 
 func (s *Strategy) setRoutes(r *x.RouterPublic) {
@@ -299,191 +306,14 @@ func uid(provider, subject string) string {
 	return fmt.Sprintf("%s:%s", provider, subject)
 }
 
-func (s *Strategy) authURL(request uuid.UUID, provider string) string {
-	u := urlx.AppendPaths(
+func (s *Strategy) authURL(request uuid.UUID) string {
+	return urlx.AppendPaths(
 		urlx.Copy(s.c.SelfPublicURL()),
 		strings.Replace(
 			AuthPath, ":request", request.String(), 1,
 		),
-	)
-
-	if provider != "" {
-		return urlx.CopyWithQuery(u, url.Values{"provider": {provider}}).String()
-	}
-
-	return u.String()
+	).String()
 }
-
-func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Request, claims *Claims, provider Provider) {
-	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject))
-	if err != nil {
-		if errors.Is(err, herodot.ErrNotFound) {
-			// If no account was found we're "manually" creating a new registration request and redirecting the browser
-			// to that endpoint.
-
-			// That will execute the "pre registration" hook which allows to e.g. disallow this request. The registration
-			// ui however will NOT be shown, instead the user is directly redirected to the auth path. That should then
-			// do a silent re-request. While this might be a bit excessive from a network perspective it should usually
-			// happen without any downsides to user experience as the request has already been authorized and should
-			// not need additional consent/login.
-
-			// This is kinda hacky but the only way to ensure seamless login/registration flows when using OIDC.
-
-			s.d.Logger().WithField("provider", provider.Config().ID).WithField("subject", claims.Subject).Debug("Received successful OpenID Connect callback but user is not registered. Re-initializing registration flow now.")
-			aa, err := s.d.RegistrationHandler().NewRegistrationRequest(w, r)
-			if err != nil {
-				s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
-				return
-			}
-
-			s.processRegistration(w, r, aa, claims, provider)
-			return
-		}
-
-		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
-		return
-	}
-
-	var o []CredentialsConfig
-	if err := json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&o); err != nil {
-		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error())))
-		return
-	}
-
-	for _, c := range o {
-		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
-			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, identity.CredentialsTypeOIDC, a, i); err != nil {
-				s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
-				return
-			}
-			return
-		}
-	}
-
-	s.handleError(w, r, a.GetID(), provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to find matching OpenID Connect Credentials.").WithDebugf(`Unable to find credentials that match the given provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)))
-}
-
-func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Request, claims *Claims, provider Provider) {
-	if _, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject)); err == nil {
-		// If the identity already exists, we should perform the login flow instead.
-
-		// That will execute the "pre login" hook which allows to e.g. disallow this request. The login
-		// ui however will NOT be shown, instead the user is directly redirected to the auth path. That should then
-		// do a silent re-request. While this might be a bit excessive from a network perspective it should usually
-		// happen without any downsides to user experience as the request has already been authorized and should
-		// not need additional consent/login.
-
-		// This is kinda hacky but the only way to ensure seamless login/registration flows when using OIDC.
-		s.d.Logger().WithField("provider", provider.Config().ID).WithField("subject", claims.Subject).Debug("Received successful OpenID Connect callback but user is already registered. Re-initializing login flow now.")
-		ar, err := s.d.LoginHandler().NewLoginRequest(w, r)
-		if err != nil {
-			s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
-			return
-		}
-
-		s.processLogin(w, r, ar, claims, provider)
-		return
-	}
-
-	jn, err := s.f.Fetch(provider.Config().Mapper)
-	if err != nil {
-		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
-		return
-	}
-
-	var jsonClaims bytes.Buffer
-	if err := json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
-		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
-		return
-	}
-
-	i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
-
-	vm := jsonnet.MakeVM()
-	vm.ExtCode("claims", jsonClaims.String())
-	evaluated, err := vm.EvaluateSnippet(provider.Config().Mapper, jn.String())
-	if err != nil {
-		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
-		return
-	} else if traits := gjson.Get(evaluated, "identity.traits"); !traits.IsObject() {
-		i.Traits = []byte{'{', '}'}
-		s.d.Logger().
-			WithField("oidc_provider", provider.Config().ID).
-			WithField("oidc_claims", x.RedactInProd(s.c, claims)).
-			WithField("mapper_jsonnet_output", evaluated).
-			WithField("mapper_jsonnet_url", provider.Config().Mapper).
-			Warn("OpenID Connect Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!")
-	} else {
-		i.Traits = []byte(traits.Raw)
-	}
-	if s.c.IsInsecureDevMode() {
-		s.d.Logger().
-			WithField("oidc_provider", provider.Config().ID).
-			WithField("oidc_claims", x.RedactInProd(s.c, claims)).
-			WithField("mapper_jsonnet_output", evaluated).
-			WithField("mapper_jsonnet_url", provider.Config().Mapper).
-			Debug("OpenID Connect Jsonnet mapper completed.")
-	}
-
-	option, err := decoderRegistration(s.c.DefaultIdentityTraitsSchemaURL().String())
-	if err != nil {
-		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
-		return
-	}
-
-	i.Traits, err = merge(
-		x.SessionGetStringOr(r, s.d.CookieManager(), sessionName, sessionFormState, ""),
-		json.RawMessage(i.Traits), option,
-	)
-	if err != nil {
-		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
-		return
-	}
-
-	// Validate the identity itself
-	if err := s.d.IdentityValidator().Validate(i); err != nil {
-		s.handleError(w, r, a.GetID(), provider.Config().ID, i.Traits, err)
-		return
-	}
-
-	var b bytes.Buffer
-	if err := json.NewEncoder(&b).Encode([]CredentialsConfig{
-		{
-			Subject:  claims.Subject,
-			Provider: provider.Config().ID,
-		},
-	}); err != nil {
-		s.handleError(w, r, a.GetID(), provider.Config().ID, i.Traits, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err)))
-		return
-	}
-
-	i.SetCredentials(s.ID(), identity.Credentials{
-		Type:        s.ID(),
-		Identifiers: []string{uid(provider.Config().ID, claims.Subject)},
-		Config:      b.Bytes(),
-	})
-
-	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, identity.CredentialsTypeOIDC, a, i); err != nil {
-		s.handleError(w, r, a.GetID(), provider.Config().ID, i.Traits, err)
-		return
-	}
-}
-
-// func (s *Strategy) verifyIdentity(i *identity.Identity, c identity.Credentials, token oidc.IDToken, pid string) error {
-// 	var o CredentialsConfig
-//
-// 	if err := json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&o); err != nil {
-// 		return errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error()))
-// 	}
-//
-// 	if o.Subject != token.Subject {
-// 		return errors.WithStack(herodot.ErrInternalServerError.WithReason("The subjects do not match").WithDebugf("Expected credential subject to match subject from RequestID Token but values are not equal: %s != %s", o.Subject, token.Subject))
-// 	} else if o.Provider != pid {
-// 		return errors.WithStack(herodot.ErrInternalServerError.WithReason("The providers do not match").WithDebugf("Expected credential provider to match provider from path but values are not equal: %s != %s", o.Subject, pid))
-// 	}
-//
-// 	return nil
-// }
 
 func (s *Strategy) populateMethod(r *http.Request, request uuid.UUID) (*RequestMethod, error) {
 	conf, err := s.Config()
@@ -491,35 +321,11 @@ func (s *Strategy) populateMethod(r *http.Request, request uuid.UUID) (*RequestM
 		return nil, err
 	}
 
-	f := form.NewHTMLForm(s.authURL(request, ""))
+	f := form.NewHTMLForm(s.authURL(request))
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 	// does not need sorting because there is only one field
 
 	return NewRequestMethodConfig(f).AddProviders(conf.Providers), nil
-}
-
-func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Request) error {
-	config, err := s.populateMethod(r, sr.ID)
-	if err != nil {
-		return err
-	}
-	sr.Methods[identity.CredentialsTypeOIDC] = &login.RequestMethod{
-		Method: identity.CredentialsTypeOIDC,
-		Config: &login.RequestMethodConfig{RequestMethodConfigurator: config},
-	}
-	return nil
-}
-
-func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.Request) error {
-	config, err := s.populateMethod(r, sr.ID)
-	if err != nil {
-		return err
-	}
-	sr.Methods[identity.CredentialsTypeOIDC] = &registration.RequestMethod{
-		Method: identity.CredentialsTypeOIDC,
-		Config: &registration.RequestMethodConfig{RequestMethodConfigurator: config},
-	}
-	return nil
 }
 
 func (s *Strategy) Config() (*ConfigurationCollection, error) {
