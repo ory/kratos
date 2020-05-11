@@ -12,11 +12,15 @@ track of future changes.
 
 ### OpenID Connect and OAuth2 now official!
 
-Using social profiles to sign up and log in is now as easy as setting two config entries! Check out
+Using social profiles to sign up and log in is now as easy as setting two config entries! Check out:
 
 - [The OpenID Connect & OAuth2 Credential Documentation](https://www.ory.sh/kratos/docs/concepts/credentials/openid-connect-oidc-oauth2);
 - [The Flow Description](https://www.ory.sh/kratos/docs/concepts/credentials/openid-connect-oidc-oauth2);
 - [The "Sign in with GitHub" Guide](https://www.ory.sh/kratos/docs/guides/sign-in-with-github)!
+- [Jsonnet Reference](https://www.ory.sh/kratos/docs/reference/jsonnet)!
+
+If you've been using the preview and have users with this strategy signed up, create an issue,
+and we'll provide guidance on upgrading.
 
 ## v0.2.0-alpha.2
 

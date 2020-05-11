@@ -51,9 +51,10 @@ func TestStrategyTraits(t *testing.T) {
 		},
 		Traits:         identity.Traits(`{"email":"john@doe.com","stringy":"foobar","booly":false,"numby":2.5,"should_long_string":"asdfasdfasdfasdfasfdasdfasdfasdf","should_big_number":2048}`),
 		TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
+		Addresses:      []identity.VerifiableAddress{{Value: "john@doe.com", Via: identity.VerifiableAddressTypeEmail}},
 	}
-	publicTS, adminTS := testhelpers.NewSettingsAPIServer(t, reg, []identity.Identity{
-		*primaryIdentity, {ID: x.NewUUID(), Traits: identity.Traits(`{}`)}})
+	publicTS, adminTS := testhelpers.NewSettingsAPIServer(t, reg, []*identity.Identity{
+		primaryIdentity, {ID: x.NewUUID(), Traits: identity.Traits(`{}`)}})
 
 	primaryUser := testhelpers.NewSessionClient(t, publicTS.URL+"/sessions/set/0")
 	publicClient := testhelpers.NewSDKClient(publicTS)
@@ -159,6 +160,7 @@ func TestStrategyTraits(t *testing.T) {
 		})
 
 		t.Run("description=should update protected field with sudo mode", func(t *testing.T) {
+			viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "5m")
 			_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, adminClient)
 			t.Cleanup(func() {
 				viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")

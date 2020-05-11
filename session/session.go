@@ -47,6 +47,7 @@ func NewSession(i *identity.Identity, c interface {
 		AuthenticatedAt: authenticatedAt,
 		IssuedAt:        time.Now().UTC(),
 		Identity:        i,
+		IdentityID:      i.ID,
 	}
 }
 

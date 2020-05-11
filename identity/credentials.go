@@ -71,6 +71,16 @@ type (
 
 	// swagger:ignore
 	CredentialIdentifierCollection []CredentialIdentifier
+
+	// swagger:ignore
+	ActiveCredentialsCounter interface {
+		CountActiveCredentials(cc map[CredentialsType]Credentials) (int, error)
+	}
+
+	// swagger:ignore
+	ActiveCredentialsCounterStrategyProvider interface {
+		ActiveCredentialsCounterStrategies() []ActiveCredentialsCounter
+	}
 )
 
 func (c CredentialsTypeTable) TableName() string {

@@ -108,10 +108,11 @@ type RegistryDefault struct {
 
 	selfserviceLogoutHandler *logout.Handler
 
-	selfserviceStrategies  []interface{}
-	loginStrategies        []login.Strategy
-	registrationStrategies []registration.Strategy
-	profileStrategies      []settings.Strategy
+	selfserviceStrategies              []interface{}
+	loginStrategies                    []login.Strategy
+	activeCredentialsCounterStrategies []identity.ActiveCredentialsCounter
+	registrationStrategies             []registration.Strategy
+	profileStrategies                  []settings.Strategy
 
 	buildVersion string
 	buildHash    string
@@ -233,6 +234,17 @@ func (m *RegistryDefault) LoginStrategies() login.Strategies {
 		}
 	}
 	return m.loginStrategies
+}
+
+func (m *RegistryDefault) ActiveCredentialsCounterStrategies() []identity.ActiveCredentialsCounter {
+	if len(m.activeCredentialsCounterStrategies) == 0 {
+		for _, strategy := range m.selfServiceStrategies() {
+			if s, ok := strategy.(identity.ActiveCredentialsCounter); ok {
+				m.activeCredentialsCounterStrategies = append(m.activeCredentialsCounterStrategies, s)
+			}
+		}
+	}
+	return m.activeCredentialsCounterStrategies
 }
 
 func (m *RegistryDefault) IdentityValidator() *identity.Validator {

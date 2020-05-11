@@ -72,6 +72,7 @@ type Registry interface {
 	identity.PoolProvider
 	identity.PrivilegedPoolProvider
 	identity.ManagementProvider
+	identity.ActiveCredentialsCounterStrategyProvider
 
 	schema.HandlerProvider
 

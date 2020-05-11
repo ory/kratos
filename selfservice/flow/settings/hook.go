@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"time"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
@@ -68,13 +68,13 @@ func NewHookExecutor(
 	}
 }
 
-func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, settingsType string, a *Request, ss *session.Session, i *identity.Identity) error {
+func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, settingsType string, ctxUpdate *UpdateContext, i *identity.Identity) error {
 	e.d.Logger().
 		WithField("identity_id", i.ID).
 		Debug("An identity's settings have been updated, running post hooks.")
 
 	for _, executor := range e.d.PostSettingsPrePersistHooks(settingsType) {
-		if err := executor.ExecuteSettingsPrePersistHook(w, r, a, i); err != nil {
+		if err := executor.ExecuteSettingsPrePersistHook(w, r, ctxUpdate.Request, i); err != nil {
 			if errors.Is(err, ErrHookAbortRequest) {
 				return nil
 			}
@@ -83,25 +83,27 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 	}
 
 	options := []identity.ManagerOption{identity.ManagerExposeValidationErrors}
-	if ss.AuthenticatedAt.Add(e.c.SelfServicePrivilegedSessionMaxAge()).After(time.Now()) {
+	ttl := e.c.SelfServicePrivilegedSessionMaxAge()
+	if ctxUpdate.Session.AuthenticatedAt.Add(ttl).After(time.Now()) {
 		options = append(options, identity.ManagerAllowWriteProtectedTraits)
 	}
 
 	if err := e.d.IdentityManager().Update(r.Context(), i, options...); err != nil {
 		if errors.Is(err, identity.ErrProtectedFieldModified) {
+			e.d.Logger().WithField("error", fmt.Sprintf("%+v", err)).Debug("Modifying protected field requires re-authentication.")
 			return errors.WithStack(ErrRequestNeedsReAuthentication)
 		}
 		return err
 	}
 
-	ss.Identity = i
-	a.UpdateSuccessful = true
-	if err := e.d.SettingsRequestPersister().UpdateSettingsRequest(r.Context(), a); err != nil {
+	ctxUpdate.Session.Identity = i
+	ctxUpdate.Request.UpdateSuccessful = true
+	if err := e.d.SettingsRequestPersister().UpdateSettingsRequest(r.Context(), ctxUpdate.Request); err != nil {
 		return err
 	}
 
 	for _, executor := range e.d.PostSettingsPostPersistHooks(settingsType) {
-		if err := executor.ExecuteSettingsPostPersistHook(w, r, a, i); err != nil {
+		if err := executor.ExecuteSettingsPostPersistHook(w, r, ctxUpdate.Request, i); err != nil {
 			if errors.Is(err, ErrHookAbortRequest) {
 				return nil
 			}
@@ -113,10 +115,10 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		WithField("identity_id", i.ID).
 		Debug("Post settings execution hooks completed successfully.")
 
-	return x.SecureContentNegotiationRedirection(w, r, ss.Declassify(), a.RequestURL, e.d.Writer(), e.c,
+	return x.SecureContentNegotiationRedirection(w, r, ctxUpdate.Session.Declassify(), ctxUpdate.Request.RequestURL, e.d.Writer(), e.c,
 		x.SecureRedirectOverrideDefaultReturnTo(
 			e.c.SelfServiceSettingsReturnTo(settingsType,
 				urlx.CopyWithQuery(
 					e.c.SettingsURL(),
-					url.Values{"request": {a.ID.String()}}))))
+					url.Values{"request": {ctxUpdate.Request.ID.String()}}))))
 }
