@@ -41,8 +41,6 @@ type Request struct {
 
 	// Active, if set, contains the registration method that is being used. It is initially
 	// not set.
-	//
-	// required: true
 	Active identity.CredentialsType `json:"active,omitempty" db:"active_method"`
 
 	// Methods contains context for all enabled registration methods. If a registration request has been
