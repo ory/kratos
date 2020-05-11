@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-05-08)](#unreleased-2020-05-08)
+- [Unreleased (2020-05-11)](#unreleased-2020-05-11)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -76,16 +76,18 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.2.1-alpha.1...4db674de14bc50e782321c7bd88ac8077db2bf75) (2020-05-08)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.2.1-alpha.1...aed2a5c3c8e39132df53ae8f0eecfb7924296796) (2020-05-11)
 
 
 ### Bug Fixes
 
 * Access rules of oathkeeper for quick start ([#390](https://github.com/ory/kratos/issues/390)) ([5ed6d05](https://github.com/ory/kratos/commit/5ed6d05b3e13027e4e7ffef1ff10ab2fb948093d)), closes [#389](https://github.com/ory/kratos/issues/389):
   > To access `/` as dashboard
+* Active field should not be required ([#401](https://github.com/ory/kratos/issues/401)) ([aed2a5c](https://github.com/ory/kratos/commit/aed2a5c3c8e39132df53ae8f0eecfb7924296796)), closes [ory/sdk#14](https://github.com/ory/sdk/issues/14)
 * Adopt jsonnet in e2e oidc tests ([5e518fb](https://github.com/ory/kratos/commit/5e518fb2de678e27fcc0e4fff020a4d575f1c109))
 * Fix oidc strategy jsonnet test ([f6c48bf](https://github.com/ory/kratos/commit/f6c48bf2c64cea1f111e5777de22878e0be5f03c))
 * Test and implement mapper_url for jsonnet ([40ac3dc](https://github.com/ory/kratos/commit/40ac3dc7b5828ac775055fed3c0bd9ff393e5d86))
+* Transaction usage in the identity persister ([#404](https://github.com/ory/kratos/issues/404)) ([7f5072d](https://github.com/ory/kratos/commit/7f5072dc2d4fbf1f48cdf4d199ce4e89683a87b1))
 
 
 ### Code Refactoring
@@ -100,6 +102,7 @@
 
 * Document new oidc jsonnet mapper ([#392](https://github.com/ory/kratos/issues/392)) ([088b30f](https://github.com/ory/kratos/commit/088b30feb6845863e6651489e0c963cde7e10516))
 * Explain that form data is merged with oidc data ([#394](https://github.com/ory/kratos/issues/394)) ([b0dbec4](https://github.com/ory/kratos/commit/b0dbec403c96af41346b6b14fc74b7010e7f8e8a)), closes [#127](https://github.com/ory/kratos/issues/127)
+* Fix links in README ([efb6102](https://github.com/ory/kratos/commit/efb610239ac2ae828db26ee84c4c5a83c54c0a6a)), closes [#403](https://github.com/ory/kratos/issues/403)
 * Improve social sign in guide ([#393](https://github.com/ory/kratos/issues/393)) ([647ced3](https://github.com/ory/kratos/commit/647ced3084d203e9954ca037afea34316f2080d8)), closes [#49](https://github.com/ory/kratos/issues/49):
   > This patch changes the social sign in guide to represent more use cases such as Google and Facebook. Additionally, the example has been updated to work with Jsonnet.
   > 
