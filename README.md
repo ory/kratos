@@ -4,8 +4,8 @@
     <a href="https://www.ory.sh/chat">Chat</a> |
     <a href="https://community.ory.sh/">Forums</a> |
     <a href="http://eepurl.com/di390P">Newsletter</a><br/><br/>
-    <a href="https://www.ory.sh/docs/next/kratos/">Guide</a> |
-    <a href="https://www.ory.sh/docs/next/kratos/sdk/api">API Docs</a> |
+    <a href="https://www.ory.sh/kratos/docs/">Guide</a> |
+    <a href="https://www.ory.sh/kratos/docs/sdk/api">API Docs</a> |
     <a href="https://godoc.org/github.com/ory/kratos">Code Docs</a><br/><br/>
     <a href="https://opencollective.com/ory">Support this project!</a>
 </h4>
@@ -58,7 +58,7 @@ ORY Kratos is the first and only cloud native Identity and User Management Syste
 
 ORY Kratos is an API-first Identity and User Management system that is built
 according to
-[cloud architecture best practices](https://www.ory.sh/docs/next/ecosystem/software-architecture-philosophy).
+[cloud architecture best practices](https://www.ory.sh/docs/ecosystem/software-architecture-philosophy).
 It implements core use cases that almost every software application needs to
 deal with:
 
@@ -78,7 +78,7 @@ deal with:
   addresses, linked social profiles using secure flows.
 - **Admin APIs**: Import, update, delete identities.
 
-We highly recommend reading the [ORY Kratos introduction docs](https://www.ory.sh/docs/next/kratos/)
+We highly recommend reading the [ORY Kratos introduction docs](https://www.ory.sh/kratos/docs/)
 to learn more about ORY Krato's background, feature set, and differentiation
 from other products.
 
@@ -204,16 +204,16 @@ TheCrealm.
 
 ## Getting Started
 
-To get started, head over to the [ORY Kratos Documentation](https://www.ory.sh/docs/next/kratos).
+To get started, head over to the [ORY Kratos Documentation](https://www.ory.sh/kratos/docs).
 
 ### Quickstart
 
-The **[ORY Kratos Quickstart](https://www.ory.sh/docs/next/kratos/quickstart)** teaches you ORY Kratos basics
+The **[ORY Kratos Quickstart](https://www.ory.sh/kratos/docs/quickstart)** teaches you ORY Kratos basics
 and sets up an example based on Docker Compose in less than five minutes.
 
 ### Installation
 
-Head over to the [ORY Developer Documentation](https://www.ory.sh/docs/next/kratos/install.md) to learn how to install ORY Kratos on Linux, macOS, Windows, and Docker and how to build ORY Kratos from source.
+Head over to the [ORY Developer Documentation](https://www.ory.sh/kratos/docs/install) to learn how to install ORY Kratos on Linux, macOS, Windows, and Docker and how to build ORY Kratos from source.
 
 ## Ecosystem
 
@@ -237,7 +237,7 @@ dependencies (Java, Node, Ruby, libxml, ...).
 
 [ORY Kratos](https://github.com/ory/kratos) is an API-first Identity and User
 Management system that is built according to
-[cloud architecture best practices](https://www.ory.sh/docs/next/ecosystem/software-architecture-philosophy).
+[cloud architecture best practices](https://www.ory.sh/docs/ecosystem/software-architecture-philosophy).
 It implements core use cases that almost every software application needs to
 deal with: Self-service Login and Registration, Multi-Factor Authentication
 (MFA/2FA), Account Recovery and Verification, Profile and Account Management.
@@ -277,7 +277,7 @@ to perform a certain action on a resource.
 
 ## Security
 
-Running identity infrastructure requires [attention and knowledge of threat models](https://www.ory.sh/docs/next/kratos/concepts/security).
+Running identity infrastructure requires [attention and knowledge of threat models](https://www.ory.sh/kratos/docs/concepts/security).
 
 ### Disclosing vulnerabilities
 
@@ -287,17 +287,17 @@ and send us an email to [hi@ory.am](mailto:hi@ory.sh) instead.
 ## Telemetry
 
 Ory's services collect summarized, anonymized data that can optionally be turned off. Click
-[here](https://www.ory.sh/docs/next/ecosystem/sqa) to learn more.
+[here](https://www.ory.sh/docs/ecosystem/sqa) to learn more.
 
 ## Documentation
 
 ### Guide
 
-The Guide is available [here](https://www.ory.sh/docs/next/kratos).
+The Guide is available [here](https://www.ory.sh/kratos/docs).
 
 ### HTTP API documentation
 
-The HTTP API is documented [here](https://www.ory.sh/docs/next/kratos/sdk/api).
+The HTTP API is documented [here](https://www.ory.sh/kratos/docs/sdk/api).
 
 ### Upgrading and Changelog
 
