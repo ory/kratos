@@ -149,6 +149,8 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 	}
 
 	return sqlcon.HandleError(p.Transaction(ctx, func(tx *pop.Connection) error {
+		ctx := WithTransaction(ctx, tx)
+
 		if err := tx.Create(i); err != nil {
 			return err
 		}
@@ -186,6 +188,7 @@ func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) er
 	}
 
 	return sqlcon.HandleError(p.Transaction(ctx, func(tx *pop.Connection) error {
+		ctx := WithTransaction(ctx, tx)
 		if count, err := tx.Where("id = ?", i.ID).Count(i); err != nil {
 			return err
 		} else if count == 0 {
