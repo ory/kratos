@@ -55,7 +55,7 @@ require (
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/sdk/swagutil v0.0.0-20200505101021-3f40b808145c
 	github.com/ory/viper v1.7.4
-	github.com/ory/x v0.0.120
+	github.com/ory/x v0.0.121
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/shurcooL/go v0.0.0-20180423040247-9e1955d9fb6e

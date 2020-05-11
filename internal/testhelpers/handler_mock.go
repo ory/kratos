@@ -96,7 +96,9 @@ func MockSessionCreateHandlerWithIdentity(t *testing.T, reg mockDeps, i *identit
 	var sess session.Session
 	require.NoError(t, faker.FakeData(&sess))
 	// require AuthenticatedAt to be time.Now() as we always compare it to the current time
-	sess.AuthenticatedAt = time.Now()
+	sess.AuthenticatedAt = time.Now().UTC()
+	sess.IssuedAt = time.Now().UTC()
+	sess.ExpiresAt = time.Now().UTC().Add(time.Hour * 24)
 
 	if viper.GetString(configuration.ViperKeyDefaultIdentityTraitsSchemaURL) == "" {
 		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/fake-session.schema.json")

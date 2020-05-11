@@ -119,7 +119,7 @@ func NewSettingsLoginAcceptAPIServer(t *testing.T, adminClient *client.OryKratos
 	return loginTS
 }
 
-func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, ids []identity.Identity) (*httptest.Server, *httptest.Server) {
+func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, ids []*identity.Identity) (*httptest.Server, *httptest.Server) {
 	public, admin := x.NewRouterPublic(), x.NewRouterAdmin()
 	reg.SettingsHandler().RegisterAdminRoutes(admin)
 
@@ -142,7 +142,7 @@ func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, ids []ident
 	viper.Set(configuration.ViperKeyURLsSelfAdmin, tsa.URL)
 
 	for k := range ids {
-		route, _ := MockSessionCreateHandlerWithIdentity(t, reg, &ids[k])
+		route, _ := MockSessionCreateHandlerWithIdentity(t, reg, ids[k])
 		public.GET("/sessions/set/"+strconv.Itoa(k), route)
 	}
 
