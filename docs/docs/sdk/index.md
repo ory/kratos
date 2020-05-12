@@ -18,7 +18,7 @@ We publish our SDKs for popular languages in their respective package
 repositories:
 
 - [Python](https://pypi.org/project/ory-kratos-client/)
-- [PHP](https://packagist.org/packages/ory/kratos-client)
+- [PHP](https://github.com/ory/kratos-client-php)
 - [Go](https://github.com/ory/kratos-client-go)
 - [NodeJS](https://www.npmjs.com/package/@oryd/kratos-client) (with TypeScript)
 - [Java](https://search.maven.org/artifact/sh.ory.kratos/kratos-client)
