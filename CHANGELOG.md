@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-05-11)](#unreleased-2020-05-11)
+- [Unreleased (2020-05-12)](#unreleased-2020-05-12)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -76,7 +76,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.2.1-alpha.1...aed2a5c3c8e39132df53ae8f0eecfb7924296796) (2020-05-11)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.2.1-alpha.1...5aaebffd8c03e613ec60735536b6ef38d4da39e3) (2020-05-12)
 
 
 ### Bug Fixes
@@ -107,6 +107,7 @@
   > This patch changes the social sign in guide to represent more use cases such as Google and Facebook. Additionally, the example has been updated to work with Jsonnet.
   > 
   > This patch also documents limitations around merging user data from GitHub.
+* Include redirect doc in nav ([5aaebff](https://github.com/ory/kratos/commit/5aaebffd8c03e613ec60735536b6ef38d4da39e3)), closes [#406](https://github.com/ory/kratos/issues/406)
 * Ui should show only active form sections ([#395](https://github.com/ory/kratos/issues/395)) ([4db674d](https://github.com/ory/kratos/commit/4db674de14bc50e782321c7bd88ac8077db2bf75))
 
 
