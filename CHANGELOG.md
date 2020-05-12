@@ -76,7 +76,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.2.1-alpha.1...5aaebffd8c03e613ec60735536b6ef38d4da39e3) (2020-05-12)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.2.1-alpha.1...6e646b033e0d43499bf37579a2f04b726af0e3f7) (2020-05-12)
 
 
 ### Bug Fixes
@@ -109,6 +109,7 @@
   > This patch also documents limitations around merging user data from GitHub.
 * Include redirect doc in nav ([5aaebff](https://github.com/ory/kratos/commit/5aaebffd8c03e613ec60735536b6ef38d4da39e3)), closes [#406](https://github.com/ory/kratos/issues/406)
 * Ui should show only active form sections ([#395](https://github.com/ory/kratos/issues/395)) ([4db674d](https://github.com/ory/kratos/commit/4db674de14bc50e782321c7bd88ac8077db2bf75))
+* Update github templates ([#408](https://github.com/ory/kratos/issues/408)) ([6e646b0](https://github.com/ory/kratos/commit/6e646b033e0d43499bf37579a2f04b726af0e3f7))
 
 
 ### Features
