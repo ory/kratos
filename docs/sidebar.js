@@ -5,7 +5,7 @@ module.exports = {
   Concepts: [
     "concepts/index",
     "concepts/ui-user-interface",
-    "concepts/identity-user-model",
+    "concepts/identity-data-model",
     {
       label:'Identity Credentials',
       type: "category",

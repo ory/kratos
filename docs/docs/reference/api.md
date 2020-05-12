@@ -396,7 +396,7 @@ This endpoint returns a login request's context with, for example, error details
 and other information.
 
 Learn how identities work in
-[ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+[ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-data-model).
 
 #### Responses
 
@@ -609,7 +609,7 @@ credentials (password, ...) using this method! A way to achieve that will be
 introduced in the future.
 
 Learn how identities work in
-[ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+[ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-data-model).
 
 #### Request body
 
@@ -843,7 +843,7 @@ Accept: application/json
 ```
 
 Learn how identities work in
-[ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+[ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-data-model).
 
 <a id="get-an-identity-parameters"></a>
 
@@ -1045,7 +1045,7 @@ The full identity payload (except credentials) is expected. This endpoint does
 not support patching.
 
 Learn how identities work in
-[ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+[ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-data-model).
 
 #### Request body
 
@@ -1283,7 +1283,7 @@ Accept: application/json
 This endpoint deletes an identity. This can not be undone.
 
 Learn how identities work in
-[ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+[ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-data-model).
 
 <a id="delete-an-identity-parameters"></a>
 
