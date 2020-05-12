@@ -155,13 +155,6 @@ func (s *Strategy) continueSettingsFlow(
 		s.handleSettingsError(w, r, ctxUpdate, p, err)
 		return
 	}
-
-	if len(w.Header().Get("Location")) == 0 {
-		http.Redirect(w, r,
-			urlx.CopyWithQuery(s.c.SettingsURL(), url.Values{"request": {ctxUpdate.Request.ID.String()}}).String(),
-			http.StatusFound,
-		)
-	}
 }
 
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, ss *session.Session, pr *settings.Request) error {

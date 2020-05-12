@@ -6,31 +6,32 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/cookiejar"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/phayes/freeport"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/dockertest/v3"
+	"github.com/ory/dockertest/v3/docker"
+	"github.com/ory/viper"
 	"github.com/ory/x/resilience"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver"
+	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/x"
 )
 
-func newErrTs(t *testing.T, reg driver.Registry) *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		e, err := reg.SelfServiceErrorPersister().Read(r.Context(), x.ParseUUID(r.URL.Query().Get("error")))
-		require.NoError(t, err)
-		reg.Writer().Write(w, r, e.Errors)
-	}))
-}
-
-func createClient(t *testing.T, remote string, redir string) {
+func createClient(t *testing.T, remote string, redir, id string) {
 	require.NoError(t, resilience.Retry(logrus.New(), time.Second*10, time.Minute*2, func() error {
 		if req, err := http.NewRequest("DELETE", remote+"/clients/client", nil); err != nil {
 			return err
@@ -47,7 +48,7 @@ func createClient(t *testing.T, remote string, redir string) {
 			ResponseTypes []string `json:"response_types"`
 			RedirectURIs  []string `json:"redirect_uris"`
 		}{
-			ClientID:      "client",
+			ClientID:      id,
 			ClientSecret:  "secret",
 			GrantTypes:    []string{"authorization_code", "refresh_token"},
 			ResponseTypes: []string{"code"},
@@ -125,24 +126,149 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, scope *[
 
 	if addr == "" {
 		server := httptest.NewServer(router)
+		t.Cleanup(server.Close)
 		return server.Config, server.URL
 	}
+
 	server := &http.Server{Addr: addr, Handler: router}
-	go func() {
+	go func(t *testing.T) {
 		err := server.ListenAndServe()
 		if err == http.ErrServerClosed {
-		} else if err != nil {
-			panic(err)
 		}
-	}()
+		require.NoError(t, server.Close())
+	}(t)
+	t.Cleanup(func() {
+		require.NoError(t, server.Close())
+	})
 	return server, fmt.Sprintf("http://%s", addr)
 }
 
 func newReturnTs(t *testing.T, reg driver.Registry) *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
 		require.NoError(t, err)
 		require.Empty(t, sess.Identity.Credentials)
 		reg.Writer().Write(w, r, sess)
 	}))
+	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, ts.URL)
+	t.Cleanup(ts.Close)
+	return ts
+}
+
+func newUI(t *testing.T, reg driver.Registry) *httptest.Server {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var e interface{}
+		var err error
+		if r.URL.Path == "/login" {
+			e, err = reg.LoginRequestPersister().GetLoginRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
+		} else if r.URL.Path == "/registration" {
+			e, err = reg.RegistrationRequestPersister().GetRegistrationRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
+		} else if r.URL.Path == "/settings" {
+			e, err = reg.SettingsRequestPersister().GetSettingsRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
+		}
+
+		require.NoError(t, err)
+		reg.Writer().Write(w, r, e)
+	}))
+	t.Cleanup(ts.Close)
+	viper.Set(configuration.ViperKeyURLsLogin, ts.URL+"/login")
+	viper.Set(configuration.ViperKeyURLsRegistration, ts.URL+"/registration")
+	viper.Set(configuration.ViperKeyURLsSettings, ts.URL+"/settings")
+	return ts
+}
+
+func newHydra(t *testing.T, subject *string, scope *[]string) (remoteAdmin, remotePublic, hydraIntegrationTSURL string) {
+	remoteAdmin = os.Getenv("TEST_SELFSERVICE_OIDC_HYDRA_ADMIN")
+	remotePublic = os.Getenv("TEST_SELFSERVICE_OIDC_HYDRA_PUBLIC")
+
+	hydraIntegrationTS, hydraIntegrationTSURL := newHydraIntegration(t, &remoteAdmin, subject, scope, os.Getenv("TEST_SELFSERVICE_OIDC_HYDRA_INTEGRATION_ADDR"))
+	t.Cleanup(func() {
+		require.NoError(t, hydraIntegrationTS.Close())
+	})
+
+	if remotePublic == "" && remoteAdmin == "" {
+		t.Logf("Environment did not provide ORY Hydra, starting fresh.")
+		publicPort, err := freeport.GetFreePort()
+		require.NoError(t, err)
+
+		pool, err := dockertest.NewPool("")
+		require.NoError(t, err)
+		hydra, err := pool.RunWithOptions(&dockertest.RunOptions{
+			Repository: "oryd/hydra",
+			Tag:        "v1.4.10",
+			Env: []string{
+				"DSN=memory",
+				fmt.Sprintf("URLS_SELF_ISSUER=http://127.0.0.1:%d/", publicPort),
+				"URLS_LOGIN=" + hydraIntegrationTSURL + "/login",
+				"URLS_CONSENT=" + hydraIntegrationTSURL + "/consent",
+			},
+			Cmd:          []string{"serve", "all", "--dangerous-force-http"},
+			ExposedPorts: []string{"4444/tcp", "4445/tcp"},
+			PortBindings: map[docker.Port][]docker.PortBinding{
+				"4444/tcp": {{HostPort: fmt.Sprintf("%d/tcp", publicPort)}},
+			},
+		})
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			require.NoError(t, hydra.Close())
+		})
+		require.NoError(t, hydra.Expire(uint(60*5)))
+
+		require.NotEmpty(t, hydra.GetPort("4444/tcp"), "%+v", hydra.Container.NetworkSettings.Ports)
+		require.NotEmpty(t, hydra.GetPort("4445/tcp"), "%+v", hydra.Container)
+
+		remotePublic = "http://127.0.0.1:" + hydra.GetPort("4444/tcp")
+		remoteAdmin = "http://127.0.0.1:" + hydra.GetPort("4445/tcp")
+	}
+
+	t.Logf("ORY Hydra running at: %s %s", remotePublic, remoteAdmin)
+
+	return remoteAdmin, remotePublic, hydraIntegrationTSURL
+}
+
+func newOIDCProvider(
+	t *testing.T,
+	kratos *httptest.Server,
+	hydraPublic string,
+	hydraAdmin string,
+	id, clientID string,
+) oidc.Configuration {
+	createClient(t, hydraAdmin, kratos.URL+oidc.BasePath+"/callback/"+id, clientID)
+
+	return oidc.Configuration{
+		Provider:     "generic",
+		ID:           id,
+		ClientID:     clientID,
+		ClientSecret: "secret",
+		IssuerURL:    hydraPublic + "/",
+		Mapper:       "file://./stub/oidc.hydra.jsonnet",
+	}
+}
+
+func viperSetProviderConfig(providers ...oidc.Configuration) {
+	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC),
+		map[string]interface{}{"config": &oidc.ConfigurationCollection{Providers: providers}})
+}
+
+func newClient(t *testing.T, jar *cookiejar.Jar) *http.Client {
+	if jar == nil {
+		j, err := cookiejar.New(nil)
+		jar = j
+		require.NoError(t, err)
+	}
+	return &http.Client{
+		Jar: jar,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			if debugRedirects {
+				t.Logf("Redirect: %s", req.URL.String())
+			}
+			if len(via) >= 20 {
+				for k, v := range via {
+					t.Logf("Failed with redirect (%d): %s", k, v.URL.String())
+				}
+				return errors.New("stopped after 20 redirects")
+			}
+			return nil
+		},
+	}
 }

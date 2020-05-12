@@ -100,6 +100,10 @@ func (r *Request) TableName() string {
 	return "selfservice_settings_requests"
 }
 
+func (r *Request) GetID() uuid.UUID {
+	return r.ID
+}
+
 func (r *Request) Valid(s *session.Session) error {
 	if r.ExpiresAt.Before(time.Now()) {
 		return errors.WithStack(ErrRequestExpired.WithReasonf("The settings request expired %.2f minutes ago, please try again.", time.Since(r.ExpiresAt).Minutes()))

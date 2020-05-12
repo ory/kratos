@@ -42,19 +42,7 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 	r := d.Registry()
 
 	router := x.NewRouterPublic()
-	r.LoginHandler().RegisterPublicRoutes(router)
-	r.RegistrationHandler().RegisterPublicRoutes(router)
-	r.LogoutHandler().RegisterPublicRoutes(router)
-	r.SettingsHandler().RegisterPublicRoutes(router)
-	r.LoginStrategies().RegisterPublicRoutes(router)
-	r.SettingsStrategies().RegisterPublicRoutes(router)
-	r.RegistrationStrategies().RegisterPublicRoutes(router)
-	r.SessionHandler().RegisterPublicRoutes(router)
-	r.SelfServiceErrorHandler().RegisterPublicRoutes(router)
-	r.SchemaHandler().RegisterPublicRoutes(router)
-	r.VerificationHandler().RegisterPublicRoutes(router)
-	r.HealthHandler().SetRoutes(router.Router, false)
-
+	r.RegisterPublicRoutes(router)
 	n.Use(NewNegroniLoggerMiddleware(l.(*logrus.Logger), "public#"+c.SelfPublicURL().String()))
 	n.Use(sqa(cmd, d))
 
@@ -90,16 +78,7 @@ func serveAdmin(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []
 	r := d.Registry()
 
 	router := x.NewRouterAdmin()
-	r.RegistrationHandler().RegisterAdminRoutes(router)
-	r.LoginHandler().RegisterAdminRoutes(router)
-	r.SchemaHandler().RegisterAdminRoutes(router)
-	r.VerificationHandler().RegisterAdminRoutes(router)
-	r.SettingsHandler().RegisterAdminRoutes(router)
-	r.IdentityHandler().RegisterAdminRoutes(router)
-	r.SessionHandler().RegisterAdminRoutes(router)
-	r.HealthHandler().SetRoutes(router.Router, true)
-	r.SelfServiceErrorHandler().RegisterAdminRoutes(router)
-
+	r.RegisterAdminRoutes(router)
 	n.Use(NewNegroniLoggerMiddleware(l.(*logrus.Logger), "admin#"+c.SelfAdminURL().String()))
 	n.Use(sqa(cmd, d))
 
