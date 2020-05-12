@@ -30,7 +30,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Request) error
 	return nil
 }
 
-func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Request, claims *Claims, provider Provider) {
+func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Request, claims *Claims, provider Provider, container *authCodeContainer) {
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject))
 	if err != nil {
 		if errors.Is(err, herodot.ErrNotFound) {
@@ -52,7 +52,7 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 				return
 			}
 
-			s.processRegistration(w, r, aa, claims, provider)
+			s.processRegistration(w, r, aa, claims, provider, container)
 			return
 		}
 

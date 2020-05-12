@@ -6,10 +6,7 @@ import (
 	"net/http"
 
 	"github.com/google/go-jsonnet"
-	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
-
-	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
@@ -46,7 +43,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.
 	return nil
 }
 
-func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Request, claims *Claims, provider Provider) {
+func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Request, claims *Claims, provider Provider, container *authCodeContainer) {
 	if _, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject)); err == nil {
 		// If the identity already exists, we should perform the login flow instead.
 
@@ -64,7 +61,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 			return
 		}
 
-		s.processLogin(w, r, ar, claims, provider)
+		s.processLogin(w, r, ar, claims, provider, container)
 		return
 	}
 
@@ -114,10 +111,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		return
 	}
 
-	i.Traits, err = merge(
-		x.SessionGetStringOr(r, s.d.CookieManager(), sessionName, sessionFormState, ""),
-		json.RawMessage(i.Traits), option,
-	)
+	i.Traits, err = merge(container.Form.Encode(), json.RawMessage(i.Traits), option)
 	if err != nil {
 		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
 		return
@@ -129,25 +123,13 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		return
 	}
 
-	var b bytes.Buffer
-	if err := json.NewEncoder(&b).Encode(CredentialsConfig{
-		Providers: []ProviderCredentialsConfig{
-			{
-				Subject:  claims.Subject,
-				Provider: provider.Config().ID,
-			},
-		},
-	}); err != nil {
-		s.handleError(w, r, a.GetID(), provider.Config().ID, i.Traits, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err)))
+	creds, err := NewCredentials(provider.Config().ID, claims.Subject)
+	if err != nil {
+		s.handleError(w, r, a.GetID(), provider.Config().ID, i.Traits, err)
 		return
 	}
 
-	i.SetCredentials(s.ID(), identity.Credentials{
-		Type:        s.ID(),
-		Identifiers: []string{uid(provider.Config().ID, claims.Subject)},
-		Config:      b.Bytes(),
-	})
-
+	i.SetCredentials(s.ID(), *creds)
 	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, identity.CredentialsTypeOIDC, a, i); err != nil {
 		s.handleError(w, r, a.GetID(), provider.Config().ID, i.Traits, err)
 		return

@@ -19,11 +19,12 @@ import (
 
 func NewErrorTestServer(t *testing.T, reg interface{ errorx.PersistenceProvider }) *httptest.Server {
 	logger := logrus.New()
+	logger.Level = logrus.TraceLevel
 	writer := herodot.NewJSONWriter(logger)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		e, err := reg.SelfServiceErrorPersister().Read(r.Context(), x.ParseUUID(r.URL.Query().Get("error")))
 		require.NoError(t, err)
-		logger.Errorf("Found error in NewErrorTestServer: %s", e.Errors)
+		t.Logf("Found error in NewErrorTestServer: %s", e.Errors)
 		writer.Write(w, r, e.Errors)
 	}))
 	t.Cleanup(ts.Close)
