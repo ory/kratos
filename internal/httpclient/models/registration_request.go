@@ -18,8 +18,7 @@ import (
 type RegistrationRequest struct {
 
 	// active
-	// Required: true
-	Active CredentialsType `json:"active"`
+	Active CredentialsType `json:"active,omitempty"`
 
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,
 	// a new request has to be initiated.
@@ -83,6 +82,10 @@ func (m *RegistrationRequest) Validate(formats strfmt.Registry) error {
 }
 
 func (m *RegistrationRequest) validateActive(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Active) { // not required
+		return nil
+	}
 
 	if err := m.Active.Validate(formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {

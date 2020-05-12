@@ -1380,7 +1380,6 @@
         "expires_at",
         "issued_at",
         "request_url",
-        "active",
         "methods"
       ],
       "properties": {
