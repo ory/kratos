@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"testing"
 	"time"
@@ -16,7 +17,9 @@ import (
 	"github.com/phayes/freeport"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
 
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
@@ -33,7 +36,7 @@ import (
 
 func createClient(t *testing.T, remote string, redir, id string) {
 	require.NoError(t, resilience.Retry(logrus.New(), time.Second*10, time.Minute*2, func() error {
-		if req, err := http.NewRequest("DELETE", remote+"/clients/client", nil); err != nil {
+		if req, err := http.NewRequest("DELETE", remote+"/clients/"+id, nil); err != nil {
 			return err
 		} else if _, err := http.DefaultClient.Do(req); err != nil {
 			return err
@@ -130,17 +133,21 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, scope *[
 		return server.Config, server.URL
 	}
 
-	server := &http.Server{Addr: addr, Handler: router}
+	parsed, err := url.ParseRequestURI(addr)
+	require.NoError(t, err)
+
+	server := &http.Server{Addr: ":" + parsed.Port(), Handler: router}
 	go func(t *testing.T) {
-		err := server.ListenAndServe()
-		if err == http.ErrServerClosed {
+		if err := server.ListenAndServe(); err != http.ErrServerClosed {
+			require.NoError(t, err)
+		} else if err == nil {
+			require.NoError(t, server.Close())
 		}
-		require.NoError(t, server.Close())
 	}(t)
 	t.Cleanup(func() {
 		require.NoError(t, server.Close())
 	})
-	return server, fmt.Sprintf("http://%s", addr)
+	return server, addr
 }
 
 func newReturnTs(t *testing.T, reg driver.Registry) *httptest.Server {
@@ -271,4 +278,12 @@ func newClient(t *testing.T, jar *cookiejar.Jar) *http.Client {
 			return nil
 		},
 	}
+}
+
+// AssertSystemError asserts an error ui response
+func AssertSystemError(t *testing.T, errTS *httptest.Server, res *http.Response, body []byte, code int, reason string) {
+	require.Contains(t, res.Request.URL.String(), errTS.URL, "%s", body)
+
+	assert.Equal(t, int64(code), gjson.GetBytes(body, "0.code").Int(), "%s", body)
+	assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), reason, "%s", body)
 }

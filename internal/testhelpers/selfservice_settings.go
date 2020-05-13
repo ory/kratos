@@ -2,12 +2,12 @@ package testhelpers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"strconv"
 	"testing"
 
 	"github.com/gobuffalo/httptest"
@@ -65,6 +65,7 @@ func GetSettingsRequest(t *testing.T, primaryUser *http.Client, ts *httptest.Ser
 			WithRequest(res.Request.URL.Query().Get("request")),
 	)
 	require.NoError(t, err)
+	assert.Empty(t, rs.Payload.Active)
 
 	return rs
 }
@@ -119,7 +120,7 @@ func NewSettingsLoginAcceptAPIServer(t *testing.T, adminClient *client.OryKratos
 	return loginTS
 }
 
-func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, ids []*identity.Identity) (*httptest.Server, *httptest.Server) {
+func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, ids map[string]*identity.Identity) (*httptest.Server, *httptest.Server, map[string]*http.Client) {
 	public, admin := x.NewRouterPublic(), x.NewRouterAdmin()
 	reg.SettingsHandler().RegisterAdminRoutes(admin)
 
@@ -140,13 +141,32 @@ func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, ids []*iden
 
 	viper.Set(configuration.ViperKeyURLsSelfPublic, tsp.URL)
 	viper.Set(configuration.ViperKeyURLsSelfAdmin, tsa.URL)
+	return tsp, tsa, AddAndLoginIdentities(t, reg, &httptest.Server{Config: &http.Server{Handler: public}, URL: tsp.URL}, ids)
+}
 
+// AddAndLoginIdentities adds the given identities to the store (like a registration flow) and returns http.Clients
+// which contain their sessions.
+func AddAndLoginIdentities(t *testing.T, reg *driver.RegistryDefault, public *httptest.Server, ids map[string]*identity.Identity) map[string]*http.Client {
+	result := map[string]*http.Client{}
 	for k := range ids {
+		tid := x.NewUUID().String()
+		_ = reg.PrivilegedIdentityPool().DeleteIdentity(context.Background(), ids[k].ID)
 		route, _ := MockSessionCreateHandlerWithIdentity(t, reg, ids[k])
-		public.GET("/sessions/set/"+strconv.Itoa(k), route)
-	}
+		location := "/sessions/set/" + tid
 
-	return tsp, tsa
+		if router, ok := public.Config.Handler.(*x.RouterPublic); ok {
+			router.Router.GET(location, route)
+		} else if router, ok := public.Config.Handler.(*httprouter.Router); ok {
+			router.GET(location, route)
+		} else if router, ok := public.Config.Handler.(*x.RouterAdmin); ok {
+			router.GET(location, route)
+		} else {
+			t.Logf("Got unknown type: %T", public.Config.Handler)
+			t.FailNow()
+		}
+		result[k] = NewSessionClient(t, public.URL+location)
+	}
+	return result
 }
 
 func SettingsSubmitForm(

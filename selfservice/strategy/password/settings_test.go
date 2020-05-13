@@ -50,9 +50,11 @@ func TestSettings(t *testing.T) {
 		Traits:         identity.Traits(`{}`),
 		TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
 	}
-	publicTS, adminTS := testhelpers.NewSettingsAPIServer(t, reg, []*identity.Identity{primaryIdentity, secondaryIdentity})
-	primaryUser := testhelpers.NewSessionClient(t, publicTS.URL+"/sessions/set/0")
-	secondaryUser := testhelpers.NewSessionClient(t, publicTS.URL+"/sessions/set/1")
+	publicTS, adminTS, clients := testhelpers.NewSettingsAPIServer(t, reg, map[string]*identity.Identity{
+		"primary": primaryIdentity, "secondary": secondaryIdentity})
+
+	primaryUser := clients["primary"]
+	secondaryUser := clients["secondary"]
 	adminClient := testhelpers.NewSDKClient(adminTS)
 
 	t.Run("description=should fail if password violates policy", func(t *testing.T) {

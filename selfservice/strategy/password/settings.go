@@ -10,8 +10,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/sqlxx"
-
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
 
@@ -56,8 +54,6 @@ type completeSelfServiceBrowserSettingsPasswordFlowPayload struct {
 	//
 	// in: query
 	RequestID string `json:"request_id"`
-
-	rid uuid.UUID
 }
 
 func (p *completeSelfServiceBrowserSettingsPasswordFlowPayload) GetRequestID() uuid.UUID {
@@ -170,7 +166,6 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, ss *session.Session, 
 		Method: string(s.ID()),
 		Config: &settings.RequestMethodConfig{RequestMethodConfigurator: &RequestMethod{HTMLForm: f}},
 	}
-	pr.Active = sqlxx.NullString(s.ID())
 	return nil
 }
 

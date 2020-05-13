@@ -39,11 +39,11 @@ func TestHandler(t *testing.T) {
 
 	viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
 	primaryIdentity := &identity.Identity{ID: x.NewUUID(), Traits: identity.Traits(`{}`)}
-	publicTS, adminTS := testhelpers.NewSettingsAPIServer(t, reg, []*identity.Identity{
-		primaryIdentity, {ID: x.NewUUID(), Traits: identity.Traits(`{}`)}})
+	publicTS, adminTS, clients := testhelpers.NewSettingsAPIServer(t, reg, map[string]*identity.Identity{
+		"primary":   primaryIdentity,
+		"secondary": {ID: x.NewUUID(), Traits: identity.Traits(`{}`)}})
 
-	primaryUser, otherUser := testhelpers.NewSessionClient(t, publicTS.URL+"/sessions/set/0"),
-		testhelpers.NewSessionClient(t, publicTS.URL+"/sessions/set/1")
+	primaryUser, otherUser := clients["primary"], clients["secondary"]
 	publicClient, adminClient := testhelpers.NewSDKClient(publicTS), testhelpers.NewSDKClient(adminTS)
 	newExpiredRequest := func() *settings.Request {
 		return settings.NewRequest(-time.Minute,

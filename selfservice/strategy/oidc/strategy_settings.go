@@ -2,7 +2,6 @@ package oidc
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -31,12 +30,13 @@ const (
 
 var _ settings.Strategy = new(Strategy)
 var UnknownConnectionValidationError = &jsonschema.ValidationError{
-	Message: fmt.Sprintf("can not unlink non-existing OpenID Connect connection"), InstancePtr: "#/unlink"}
+	Message: "can not unlink non-existing OpenID Connect connection", InstancePtr: "#/"}
 var ConnectionExistValidationError = &jsonschema.ValidationError{
-	Message: fmt.Sprintf("can not override existing OpenID Connect connection"), InstancePtr: "#/link"}
+	Message: "can not link unknown or already existing OpenID Connect connection", InstancePtr: "#/"}
 
 func (s *Strategy) RegisterSettingsRoutes(router *x.RouterPublic) {
 	router.POST(SettingsPath, s.completeSettingsFlow)
+	router.GET(SettingsPath, s.completeSettingsFlow)
 }
 
 func (s *Strategy) SettingsStrategyID() string {
@@ -222,9 +222,7 @@ func (s *Strategy) completeSettingsFlow(w http.ResponseWriter, r *http.Request, 
 	ctxUpdate, err := settings.PrepareUpdate(s.d, r, continuityPrefix, &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
 		if l := len(p.Link); l > 0 {
-			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.c.SelfPublicURL(),
-				strings.Replace(AuthPath, ":request", p.RequestID, 1)),
-				url.Values{"provider": {p.Link}}).String(), http.StatusFound)
+			s.initLinkProvider(w, r, ctxUpdate, &p)
 			return
 		} else if u := len(p.Unlink); u > 0 {
 			s.unlinkProvider(w, r, ctxUpdate, &p)
@@ -238,26 +236,72 @@ func (s *Strategy) completeSettingsFlow(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
-	if l := len(p.Link); l > 0 {
-		http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.c.SelfPublicURL(),
-			strings.Replace(AuthPath, ":request", p.RequestID, 1)),
-			url.Values{"provider": {p.Link}}).String(), http.StatusFound)
-		return
-	} else if u := len(p.Unlink); u > 0 {
-		s.unlinkProvider(w, r, ctxUpdate, &p)
-		return
-	} else if l+u == 0 {
+	p.Link = r.Form.Get("link")
+	p.Unlink = r.Form.Get("unlink")
+	if l, u := len(p.Link), len(p.Unlink); l > 0 && u > 0 {
 		s.handleSettingsError(w, r, ctxUpdate, &p, errors.WithStack(&jsonschema.ValidationError{
-			Message:     fmt.Sprintf("it is not possible to link and unlink providers in the same request"),
-			InstancePtr: "#/unlink",
+			Message:     "it is not possible to link and unlink providers in the same request",
+			InstancePtr: "#/",
 		}))
+		return
+	} else if l > 0 {
+		s.initLinkProvider(w, r, ctxUpdate, &p)
+		return
+	} else if u > 0 {
+		s.unlinkProvider(w, r, ctxUpdate, &p)
 		return
 	}
 
 	s.handleSettingsError(w, r, ctxUpdate, &p, errors.WithStack(errors.WithStack(&jsonschema.ValidationError{
-		Message: fmt.Sprintf("missing properties: link, unlink"), InstancePtr: "#/",
+		Message: "missing properties: link, unlink", InstancePtr: "#/",
 		Context: &jsonschema.ValidationErrorContextRequired{Missing: []string{"link", "unlink"}}})))
-	return
+}
+
+func (s *Strategy) isLinkable(r *http.Request, ctxUpdate *settings.UpdateContext, toLink string) (*identity.Identity, error) {
+	providers, err := s.Config()
+	if err != nil {
+		return nil, err
+	}
+
+	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), ctxUpdate.Session.Identity.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	linkable, err := s.linkableProviders(providers, i)
+	if err != nil {
+		return nil, err
+	}
+
+	var found bool
+	for _, available := range linkable {
+		if toLink == available.Config().ID {
+			found = true
+		}
+	}
+
+	if !found {
+		return nil, errors.WithStack(ConnectionExistValidationError)
+	}
+
+	return i, nil
+}
+
+func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext,
+	p *completeSelfServiceBrowserSettingsOIDCFlowPayload) {
+	if _, err := s.isLinkable(r, ctxUpdate, p.Link); err != nil {
+		s.handleSettingsError(w, r, ctxUpdate, p, err)
+		return
+	}
+
+	if ctxUpdate.Session.AuthenticatedAt.Add(s.c.SelfServicePrivilegedSessionMaxAge()).Before(time.Now()) {
+		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.ErrRequestNeedsReAuthentication))
+		return
+	}
+
+	http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.c.SelfPublicURL(),
+		strings.Replace(AuthPath, ":request", p.RequestID, 1)),
+		url.Values{"provider": {p.Link}}).String(), http.StatusFound)
 }
 
 func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request,
@@ -269,38 +313,14 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	providers, err := s.Config()
+	i, err := s.isLinkable(r, ctxUpdate, p.Link)
 	if err != nil {
 		s.handleSettingsError(w, r, ctxUpdate, p, err)
-		return
-	}
-
-	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), ctxUpdate.Session.Identity.ID)
-	if err != nil {
-		s.handleSettingsError(w, r, ctxUpdate, p, err)
-		return
-	}
-
-	linkable, err := s.linkableProviders(providers, i)
-	if err != nil {
-		s.handleSettingsError(w, r, ctxUpdate, p, err)
-		return
-	}
-
-	var found bool
-	for _, available := range linkable {
-		if p.Link == available.Config().ID {
-			found = true
-		}
-	}
-
-	if !found {
-		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(ConnectionExistValidationError))
 		return
 	}
 
 	var conf CredentialsConfig
-	creds, err := i.ParseCredentials(s.ID(), conf)
+	creds, err := i.ParseCredentials(s.ID(), &conf)
 	if errors.Is(err, herodot.ErrNotFound) {
 		var err error
 		if creds, err = NewCredentials(provider.Config().ID, claims.Subject); err != nil {
@@ -314,9 +334,7 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request,
 
 	creds.Identifiers = append(creds.Identifiers, uid(provider.Config().ID, claims.Subject))
 	conf.Providers = append(conf.Providers, ProviderCredentialsConfig{
-		Subject:  claims.Subject,
-		Provider: provider.Config().ID,
-	})
+		Subject: claims.Subject, Provider: provider.Config().ID})
 
 	creds.Config, err = json.Marshal(conf)
 	if err != nil {
