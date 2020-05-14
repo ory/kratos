@@ -7,6 +7,8 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/ory/x/sqlxx"
+
 	"github.com/ory/jsonschema/v3"
 
 	"github.com/ory/x/errorsx"
@@ -15,8 +17,6 @@ import (
 	"github.com/ory/x/jsonschemax"
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/stringslice"
-
-	"github.com/ory/kratos/persistence/aliases"
 )
 
 var (
@@ -319,10 +319,10 @@ func (c *HTMLForm) AddError(err *Error, names ...string) {
 }
 
 func (c *HTMLForm) Scan(value interface{}) error {
-	return aliases.JSONScan(c, value)
+	return sqlxx.JSONScan(c, value)
 }
 func (c *HTMLForm) Value() (driver.Value, error) {
-	return aliases.JSONValue(c)
+	return sqlxx.JSONValue(c)
 }
 
 func (c *HTMLForm) defaults() {

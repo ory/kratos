@@ -1,17 +1,17 @@
 package identity
 
 import (
-	"database/sql/driver"
 	"encoding/json"
 	"sync"
 	"time"
+
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/driver/configuration"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
-	"github.com/ory/kratos/persistence/aliases"
 	"github.com/ory/kratos/x"
 )
 
@@ -62,16 +62,8 @@ type (
 		// UpdatedAt is a helper struct field for gobuffalo.pop.
 		UpdatedAt time.Time `json:"-" db:"updated_at"`
 	}
-	Traits json.RawMessage
+	Traits sqlxx.JSONRawMessage
 )
-
-func (t *Traits) Scan(value interface{}) error {
-	return aliases.JSONScan(t, value)
-}
-
-func (t *Traits) Value() (driver.Value, error) {
-	return aliases.JSONValue(t)
-}
 
 func (t *Traits) String() string {
 	return string(*t)

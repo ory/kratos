@@ -1040,6 +1040,10 @@
         }
       }
     },
+    "JSONRawMessage": {
+      "type": "object",
+      "title": "JSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger."
+    },
     "RequestMethodConfig": {
       "type": "object",
       "required": [
@@ -1069,7 +1073,7 @@
       }
     },
     "Traits": {
-      "type": "object"
+      "$ref": "#/definitions/JSONRawMessage"
     },
     "UUID": {
       "type": "string",
@@ -1380,7 +1384,6 @@
         "expires_at",
         "issued_at",
         "request_url",
-        "active",
         "methods"
       ],
       "properties": {
