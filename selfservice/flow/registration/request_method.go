@@ -3,12 +3,12 @@ package registration
 import (
 	"database/sql/driver"
 	"encoding/json"
+	"github.com/ory/x/sqlxx"
 	"time"
 
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/persistence/aliases"
 	"github.com/ory/kratos/selfservice/form"
 )
 
@@ -83,11 +83,11 @@ type requestMethodConfigMock struct {
 }
 
 func (c *RequestMethodConfig) Scan(value interface{}) error {
-	return aliases.JSONScan(c, value)
+	return sqlxx.JSONScan(c, value)
 }
 
 func (c *RequestMethodConfig) Value() (driver.Value, error) {
-	return aliases.JSONValue(c)
+	return sqlxx.JSONValue(c)
 }
 
 func (c *RequestMethodConfig) UnmarshalJSON(data []byte) error {
