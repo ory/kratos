@@ -197,7 +197,7 @@ func (h *Handler) fetchUpdateSettingsRequest(w http.ResponseWriter, r *http.Requ
 		}
 	}
 
-	if pr.ExpiresAt.Before(time.Now()) {
+	if pr.ExpiresAt.Before(time.Now().UTC()) {
 		return errors.WithStack(x.ErrGone.
 			WithReason("The settings request has expired. Redirect the user to the login endpoint to initialize a new session.").
 			WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), PublicPath).String()))
