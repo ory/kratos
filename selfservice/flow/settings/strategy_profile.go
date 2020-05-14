@@ -3,8 +3,11 @@ package settings
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
+	"reflect"
+	"runtime/debug"
 
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
@@ -30,20 +33,15 @@ const (
 	StrategyProfile           = "profile"
 	PublicSettingsProfilePath = "/self-service/browser/flows/settings/strategies/profile"
 
-	continuityPrefix = "ory_kratos_settings_profile"
+	ContinuityPrefix = "ory_kratos_settings"
 )
 
-func strategyProfileContinuityNameFromRequest(r *http.Request) string {
-	// Use one individual container per request ID to prevent resuming other request IDs.
-	return strategyProfileContinuityName(r.URL.Query().Get("request"))
-}
-
-func strategyProfileContinuityName(rid string) string {
-	// Use one individual container per request ID to prevent resuming other request IDs.
-	return continuityPrefix + "." + rid
+func ContinuityKey(id string) string {
+	return ContinuityPrefix + "_" + id
 }
 
 var _ Strategy = new(StrategyTraits)
+var pkgName = reflect.TypeOf(StrategyTraits{}).PkgPath()
 
 type (
 	strategyDependencies interface {
@@ -152,7 +150,13 @@ func (s *StrategyTraits) PopulateSettingsMethod(r *http.Request, ss *session.Ses
 //       500: genericError
 func (s *StrategyTraits) handleSubmit(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var p completeSelfServiceBrowserSettingsStrategyProfileFlowPayload
-	ctxUpdate, err := PrepareUpdate(s.d, r, continuityPrefix, &p)
+	ctxUpdate, err := PrepareUpdate(s.d, w, r, ContinuityKey(s.SettingsStrategyID()), &p)
+	s.d.Logger().
+		WithField("err", fmt.Sprintf("%+v", err)).
+		WithField("ctxUpdate", fmt.Sprintf("%+v", ctxUpdate)).
+		WithField("package", pkgName).
+		WithField("stack_trace", fmt.Sprintf("%s", debug.Stack())).
+		Debug("handleSubmit: PrepareUpdate")
 	if errors.Is(err, ErrContinuePreviousAction) {
 		s.continueFlow(w, r, ctxUpdate, &p)
 		return
@@ -177,7 +181,6 @@ func (s *StrategyTraits) handleSubmit(w http.ResponseWriter, r *http.Request, ps
 		return
 	}
 
-	p.RequestID = p.GetRequestID().String()
 	s.continueFlow(w, r, ctxUpdate, &p)
 }
 
@@ -279,7 +282,15 @@ func (s *StrategyTraits) hydrateForm(r *http.Request, ar *Request, ss *session.S
 // during a settings request.
 func (s *StrategyTraits) handleSettingsError(w http.ResponseWriter, r *http.Request, puc *UpdateContext, traits json.RawMessage, p *completeSelfServiceBrowserSettingsStrategyProfileFlowPayload, err error) {
 	if errors.Is(err, ErrRequestNeedsReAuthentication) {
-		if err := s.d.ContinuityManager().Pause(r.Context(), w, r, strategyProfileContinuityNameFromRequest(r),
+		s.d.Logger().
+			WithField("err", fmt.Sprintf("%+v", err)).
+			WithField("key", ContinuityKey(s.SettingsStrategyID())).
+			WithField("package", pkgName).
+			WithField("stack_trace", fmt.Sprintf("%s", debug.Stack())).
+			Debug("handleSettingsError: Pause")
+
+		if err := s.d.ContinuityManager().Pause(r.Context(), w, r,
+			ContinuityKey(s.SettingsStrategyID()),
 			ContinuityOptions(p, puc.Session.Identity)...); err != nil {
 			s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, puc.Request, err, s.SettingsStrategyID())
 			return

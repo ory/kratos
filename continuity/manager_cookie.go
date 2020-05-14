@@ -60,7 +60,7 @@ func (m *ManagerCookie) Pause(ctx context.Context, w http.ResponseWriter, r *htt
 	return nil
 }
 
-func (m *ManagerCookie) Continue(ctx context.Context, r *http.Request, name string, opts ...ManagerOption) (*Container, error) {
+func (m *ManagerCookie) Continue(ctx context.Context, w http.ResponseWriter, r *http.Request, name string, opts ...ManagerOption) (*Container, error) {
 	container, err := m.container(ctx, r, name)
 	if err != nil {
 		return nil, err
@@ -82,6 +82,10 @@ func (m *ManagerCookie) Continue(ctx context.Context, r *http.Request, name stri
 	}
 
 	if err := m.d.ContinuityPersister().DeleteContinuitySession(ctx, container.ID); err != nil {
+		return nil, err
+	}
+
+	if err := x.SessionUnsetKey(w, r, m.d.CookieManager(), cookieName, name); err != nil {
 		return nil, err
 	}
 
@@ -123,9 +127,7 @@ func (m ManagerCookie) Abort(ctx context.Context, w http.ResponseWriter, r *http
 		return err
 	}
 
-	if err := x.SessionPersistValues(w, r, m.d.CookieManager(), cookieName, map[string]interface{}{
-		name: "",
-	}); err != nil {
+	if err := x.SessionUnsetKey(w, r, m.d.CookieManager(), cookieName, name); err != nil {
 		return err
 	}
 

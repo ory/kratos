@@ -101,7 +101,7 @@ func (h *Handler) initUpdateSettings(w http.ResponseWriter, r *http.Request, ps 
 
 	a := NewRequest(h.c.SelfServiceSettingsRequestLifespan(), r, s)
 	for _, strategy := range h.d.SettingsStrategies() {
-		if err := h.d.ContinuityManager().Abort(r.Context(), w, r, "settings_"+strategy.SettingsStrategyID()); err != nil {
+		if err := h.d.ContinuityManager().Abort(r.Context(), w, r, ContinuityKey(strategy.SettingsStrategyID())); err != nil {
 			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 			return
 		}

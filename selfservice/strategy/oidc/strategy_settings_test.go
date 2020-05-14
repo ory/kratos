@@ -441,6 +441,12 @@ func TestSettingsStrategy(t *testing.T) {
 			require.NoError(t, err)
 			require.EqualValues(t, true, *rs.Payload.UpdateSuccessful)
 
+			testhelpers.JSONEq(t, append(models.FormFields{csrfField}, models.FormFields{
+				{Type: pointerx.String("submit"), Name: pointerx.String("unlink"), Value: "ory"},
+				{Type: pointerx.String("submit"), Name: pointerx.String("unlink"), Value: "github"},
+				{Type: pointerx.String("submit"), Name: pointerx.String("unlink"), Value: "google"},
+			}...), rs.Payload.Methods[identity.CredentialsTypeOIDC.String()].Config.Fields)
+
 			checkCredentials(t, true, users[agent].ID, provider, subject)
 		})
 

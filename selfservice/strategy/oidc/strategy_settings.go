@@ -24,8 +24,6 @@ import (
 
 const (
 	SettingsPath = BasePath + "/settings/connections"
-
-	continuityPrefix = "ory_kratos_settings_oidc"
 )
 
 var _ settings.Strategy = new(Strategy)
@@ -219,7 +217,7 @@ func (p *completeSelfServiceBrowserSettingsOIDCFlowPayload) SetRequestID(rid uui
 //       500: genericError
 func (s *Strategy) completeSettingsFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var p completeSelfServiceBrowserSettingsOIDCFlowPayload
-	ctxUpdate, err := settings.PrepareUpdate(s.d, r, continuityPrefix, &p)
+	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
 		if l := len(p.Link); l > 0 {
 			s.initLinkProvider(w, r, ctxUpdate, &p)
@@ -343,7 +341,9 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request,
 	}
 
 	i.Credentials[s.ID()] = *creds
-	if err := s.d.SettingsHookExecutor().PostSettingsHook(w, r, s.SettingsStrategyID(), ctxUpdate, i); err != nil {
+	if err := s.d.SettingsHookExecutor().PostSettingsHook(w, r, s.SettingsStrategyID(), ctxUpdate, i, settings.WithCallback(func(ctxUpdate *settings.UpdateContext) error {
+		return s.PopulateSettingsMethod(r, ctxUpdate.Session, ctxUpdate.Request)
+	})); err != nil {
 		s.handleSettingsError(w, r, ctxUpdate, p, err)
 		return
 	}
@@ -410,7 +410,9 @@ func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request,
 	}
 
 	i.Credentials[s.ID()] = *creds
-	if err := s.d.SettingsHookExecutor().PostSettingsHook(w, r, s.SettingsStrategyID(), ctxUpdate, i); err != nil {
+	if err := s.d.SettingsHookExecutor().PostSettingsHook(w, r, s.SettingsStrategyID(), ctxUpdate, i, settings.WithCallback(func(ctxUpdate *settings.UpdateContext) error {
+		return s.PopulateSettingsMethod(r, ctxUpdate.Session, ctxUpdate.Request)
+	})); err != nil {
 		s.handleSettingsError(w, r, ctxUpdate, p, err)
 		return
 	}
@@ -419,7 +421,7 @@ func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request,
 func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *completeSelfServiceBrowserSettingsOIDCFlowPayload, err error) {
 	if errors.Is(err, settings.ErrRequestNeedsReAuthentication) {
 		if err := s.d.ContinuityManager().Pause(r.Context(), w, r,
-			continuityPrefix+"."+r.URL.Query().Get("request"), settings.ContinuityOptions(p, ctxUpdate.Session.Identity)...); err != nil {
+			settings.ContinuityKey(s.SettingsStrategyID()), settings.ContinuityOptions(p, ctxUpdate.Session.Identity)...); err != nil {
 			s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, ctxUpdate.Request, err, s.SettingsStrategyID())
 			return
 		}

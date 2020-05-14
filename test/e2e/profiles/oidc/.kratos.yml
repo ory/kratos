@@ -12,6 +12,22 @@ selfservice:
             scope:
               - offline
             mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
+          - id: google
+            provider: generic
+            client_id: google-client
+            client_secret: kratos-secret
+            issuer_url: http://127.0.0.1:4444/
+            scope:
+              - offline
+            mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
+          - id: github
+            provider: generic
+            client_id: github-client
+            client_secret: kratos-secret
+            issuer_url: http://127.0.0.1:4444/
+            scope:
+              - offline
+            mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
 
     password:
       enabled: true

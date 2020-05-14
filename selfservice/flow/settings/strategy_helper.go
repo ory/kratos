@@ -1,7 +1,9 @@
 package settings
 
 import (
+	"fmt"
 	"net/http"
+	"runtime/debug"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -33,10 +35,11 @@ type UpdateContext struct {
 }
 
 func PrepareUpdate(d interface {
+	x.LoggingProvider
 	continuity.ManagementProvider
 	session.ManagementProvider
 	RequestPersistenceProvider
-}, r *http.Request, prefix string, payload UpdatePayload) (*UpdateContext, error) {
+}, w http.ResponseWriter, r *http.Request, name string, payload UpdatePayload) (*UpdateContext, error) {
 	ss, err := d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		return new(UpdateContext), err
@@ -46,6 +49,8 @@ func PrepareUpdate(d interface {
 	if err != nil {
 		return new(UpdateContext), err
 	}
+
+	payload.SetRequestID(rid)
 
 	req, err := d.SettingsRequestPersister().GetSettingsRequest(r.Context(), rid)
 	if errors.Is(err, sqlcon.ErrNoRows) {
@@ -60,13 +65,18 @@ func PrepareUpdate(d interface {
 
 	c := &UpdateContext{Session: ss, Request: req, Valid: true}
 	if _, err := d.ContinuityManager().Continue(
-		r.Context(), r,
-		prefix+"."+rid.String(),
+		r.Context(), w, r, name,
 		ContinuityOptions(payload, ss.Identity)...); err == nil {
 		c.Valid = true
 		if payload.GetRequestID() == rid {
 			return c, ErrContinuePreviousAction
 		}
+		d.Logger().
+			WithField("package", pkgName).
+			WithField("stack_trace", fmt.Sprintf("%s", debug.Stack())).
+			WithField("expected_request_id", payload.GetRequestID()).
+			WithField("actual_request_id", rid).
+			Debug("Request ID from continuity manager does not match Request ID from request.")
 		return c, nil
 	} else if !errors.Is(err, &continuity.ErrNotResumable) {
 		return new(UpdateContext), err
@@ -77,7 +87,6 @@ func PrepareUpdate(d interface {
 	}
 
 	c.Valid = true
-	payload.SetRequestID(rid)
 	return c, nil
 }
 
