@@ -36,6 +36,7 @@ context('Register', () => {
       'contain.text',
       'missing properties: "website"'
     )
+    cy.get('button[name="provider"]').should('have.length', 1)
     cy.get('#registration-oidc input[name="traits.website"]').type('http://s')
 
     cy.get('button[value="hydra"]').click()
