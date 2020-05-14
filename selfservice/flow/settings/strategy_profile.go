@@ -181,6 +181,9 @@ func (s *StrategyTraits) handleSubmit(w http.ResponseWriter, r *http.Request, ps
 		return
 	}
 
+	// Reset after decoding form
+	p.SetRequestID(ctxUpdate.Request.ID)
+
 	s.continueFlow(w, r, ctxUpdate, &p)
 }
 
