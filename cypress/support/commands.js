@@ -124,6 +124,11 @@ Cypress.Commands.add('login', ({ email, password, expectSession = true }) => {
   }
 })
 
+Cypress.Commands.add('logout', () => {
+  cy.get('.logout a').click()
+  cy.noSession()
+})
+
 Cypress.Commands.add(
   'reauth',
   ({
