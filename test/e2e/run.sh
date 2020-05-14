@@ -105,9 +105,9 @@ run() {
     http-get://127.0.0.1:4437/mail
 
   if [[ $dev = "yes" ]]; then
-    npm run test:watch -- --config integrationFolder="cypress/integration/profiles/$profile"
+    npm run test:watch -- --config integrationFolder="test/e2e/cypress/integration/profiles/$profile"
   else
-    npm run test -- --config integrationFolder="cypress/integration/profiles/$profile"
+    npm run test -- --config integrationFolder="test/e2e/cypress/integration/profiles/$profile"
   fi
 }
 
