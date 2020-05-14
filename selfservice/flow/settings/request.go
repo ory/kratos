@@ -105,11 +105,14 @@ func (r *Request) GetID() uuid.UUID {
 }
 
 func (r *Request) Valid(s *session.Session) error {
-	if r.ExpiresAt.Before(time.Now()) {
-		return errors.WithStack(ErrRequestExpired.WithReasonf("The settings request expired %.2f minutes ago, please try again.", time.Since(r.ExpiresAt).Minutes()))
+	if r.ExpiresAt.Before(time.Now().UTC()) {
+		return errors.WithStack(ErrRequestExpired.
+			WithReasonf("The settings request expired %.2f minutes ago, please try again.",
+				-time.Since(r.ExpiresAt).Minutes()))
 	}
 	if r.IdentityID != s.Identity.ID {
-		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("The settings request expired %.2f minutes ago, please try again", time.Since(r.ExpiresAt).Minutes()))
+		return errors.WithStack(herodot.ErrBadRequest.WithReasonf(
+			"You must restart the flow because the resumable session was initiated by another person."))
 	}
 	return nil
 }
