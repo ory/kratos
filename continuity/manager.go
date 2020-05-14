@@ -19,7 +19,7 @@ type ManagementProvider interface {
 
 type Manager interface {
 	Pause(ctx context.Context, w http.ResponseWriter, r *http.Request, name string, opts ...ManagerOption) error
-	Continue(ctx context.Context, r *http.Request, name string, opts ...ManagerOption) (*Container, error)
+	Continue(ctx context.Context, w http.ResponseWriter, r *http.Request, name string, opts ...ManagerOption) (*Container, error)
 	Abort(ctx context.Context, w http.ResponseWriter, r *http.Request, name string) error
 }
 
@@ -28,13 +28,15 @@ type managerOptions struct {
 	ttl        time.Duration
 	payload    json.RawMessage
 	payloadRaw interface{}
+	cleanUp    bool
 }
 
 type ManagerOption func(*managerOptions) error
 
 func newManagerOptions(opts []ManagerOption) (*managerOptions, error) {
 	var o = &managerOptions{
-		ttl: time.Minute,
+		ttl:     time.Minute,
+		cleanUp: true,
 	}
 	for _, opt := range opts {
 		if err := opt(o); err != nil {
@@ -42,6 +44,13 @@ func newManagerOptions(opts []ManagerOption) (*managerOptions, error) {
 		}
 	}
 	return o, nil
+}
+
+func DontCleanUp() ManagerOption {
+	return func(o *managerOptions) error {
+		o.cleanUp = false
+		return nil
+	}
 }
 
 func WithIdentity(i *identity.Identity) ManagerOption {

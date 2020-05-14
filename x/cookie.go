@@ -58,3 +58,13 @@ func SessionUnset(w http.ResponseWriter, r *http.Request, s sessions.Store, id s
 	cookie.Options.MaxAge = -1
 	return errors.WithStack(cookie.Save(r, w))
 }
+
+func SessionUnsetKey(w http.ResponseWriter, r *http.Request, s sessions.Store, id, key string) error {
+	cookie, err := s.Get(r, id)
+	if err != nil {
+		return nil
+	}
+
+	delete(cookie.Values, key)
+	return errors.WithStack(cookie.Save(r, w))
+}

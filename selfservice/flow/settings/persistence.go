@@ -101,10 +101,18 @@ func TestRequestPersister(p interface {
 
 		t.Run("case=should create and update a settings request", func(t *testing.T) {
 			expected := newRequest(t)
+			expected.Methods["oidc"] = &RequestMethod{
+				Method: "oidc", Config: &RequestMethodConfig{RequestMethodConfigurator: &form.HTMLForm{Fields: []form.Field{{
+					Name: "zab", Type: "bar", Pattern: "baz"}}}}}
+			expected.Methods["password"] = &RequestMethod{
+				Method: "password", Config: &RequestMethodConfig{RequestMethodConfigurator: &form.HTMLForm{Fields: []form.Field{{
+					Name: "foo", Type: "bar", Pattern: "baz"}}}}}
 			err := p.CreateSettingsRequest(context.Background(), expected)
 			require.NoError(t, err)
 
 			expected.Methods[StrategyProfile].Config.RequestMethodConfigurator.(*form.HTMLForm).Action = "/new-action"
+			expected.Methods["password"].Config.RequestMethodConfigurator.(*form.HTMLForm).Fields = []form.Field{{
+				Name: "zab", Type: "zab", Pattern: "zab"}}
 			expected.RequestURL = "/new-request-url"
 			require.NoError(t, p.UpdateSettingsRequest(context.Background(), expected))
 
@@ -113,6 +121,10 @@ func TestRequestPersister(p interface {
 
 			assert.Equal(t, "/new-action", actual.Methods[StrategyProfile].Config.RequestMethodConfigurator.(*form.HTMLForm).Action)
 			assert.Equal(t, "/new-request-url", actual.RequestURL)
+			assert.EqualValues(t, []form.Field{{Name: "zab", Type: "zab", Pattern: "zab"}}, actual.
+				Methods["password"].Config.RequestMethodConfigurator.(*form.HTMLForm).Fields)
+			assert.EqualValues(t, []form.Field{{Name: "zab", Type: "bar", Pattern: "baz"}}, actual.
+				Methods["oidc"].Config.RequestMethodConfigurator.(*form.HTMLForm).Fields)
 		})
 	}
 }

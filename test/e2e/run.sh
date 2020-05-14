@@ -62,6 +62,24 @@ run() {
     --scope openid,offline \
     --callbacks http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/callback/hydra
 
+  hydra clients create \
+    --endpoint http://127.0.0.1:4445 \
+    --id google-client \
+    --secret kratos-secret \
+    --grant-types authorization_code,refresh_token \
+    --response-types code,id_token \
+    --scope openid,offline \
+    --callbacks http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/callback/google
+
+  hydra clients create \
+    --endpoint http://127.0.0.1:4445 \
+    --id github-client \
+    --secret kratos-secret \
+    --grant-types authorization_code,refresh_token \
+    --response-types code,id_token \
+    --scope openid,offline \
+    --callbacks http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/callback/github
+
   if [ -z ${KRATOS_APP_PATH+x} ]; then
     (cd "$dir"; PORT=4455 SECURITY_MODE=cookie npm run serve \
       > "${base}/test/e2e/secureapp.e2e.log" 2>&1 &)

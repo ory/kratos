@@ -23,14 +23,7 @@ import (
 
 const (
 	SettingsPath = "/self-service/browser/flows/settings/strategies/password"
-
-	continuityPrefix = "ory_kratos_settings_password"
 )
-
-func continuityKeySettings(rid string) string {
-	// Use one individual container per request ID to prevent resuming other request IDs.
-	return continuityPrefix + "." + rid
-}
 
 func (s *Strategy) RegisterSettingsRoutes(router *x.RouterPublic) {
 	router.POST(SettingsPath, s.submitSettingsFlow)
@@ -86,7 +79,7 @@ func (p *completeSelfServiceBrowserSettingsPasswordFlowPayload) SetRequestID(rid
 //       500: genericError
 func (s *Strategy) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var p completeSelfServiceBrowserSettingsPasswordFlowPayload
-	ctxUpdate, err := settings.PrepareUpdate(s.d, r, continuityPrefix, &p)
+	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
 		s.continueSettingsFlow(w, r, ctxUpdate, &p)
 		return
@@ -172,7 +165,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, ss *session.Session, 
 func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *completeSelfServiceBrowserSettingsPasswordFlowPayload, err error) {
 	if errors.Is(err, settings.ErrRequestNeedsReAuthentication) {
 		if err := s.d.ContinuityManager().Pause(r.Context(), w, r,
-			continuityKeySettings(r.URL.Query().Get("request")), settings.ContinuityOptions(p, ctxUpdate.Session.Identity)...); err != nil {
+			settings.ContinuityKey(s.SettingsStrategyID()), settings.ContinuityOptions(p, ctxUpdate.Session.Identity)...); err != nil {
 			s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, ctxUpdate.Request, err, s.SettingsStrategyID())
 			return
 		}

@@ -243,7 +243,7 @@ func (s *Strategy) validateRequest(ctx context.Context, r *http.Request, rid uui
 	return ar, err // this must return the error
 }
 
-func (s *Strategy) validateCallback(r *http.Request) (request, *authCodeContainer, error) {
+func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (request, *authCodeContainer, error) {
 	var (
 		code  = r.URL.Query().Get("code")
 		state = r.URL.Query().Get("state")
@@ -254,7 +254,7 @@ func (s *Strategy) validateCallback(r *http.Request) (request, *authCodeContaine
 	}
 
 	var container authCodeContainer
-	if _, err := s.d.ContinuityManager().Continue(context.Background(), r, sessionName, continuity.WithPayload(&container)); err != nil {
+	if _, err := s.d.ContinuityManager().Continue(context.Background(), w, r, sessionName, continuity.WithPayload(&container)); err != nil {
 		return nil, nil, err
 	}
 
@@ -298,7 +298,7 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		pid  = ps.ByName("provider")
 	)
 
-	req, container, err := s.validateCallback(r)
+	req, container, err := s.validateCallback(w, r)
 	if err != nil {
 		if req != nil {
 			s.handleError(w, r, req.GetID(), pid, nil, err)
@@ -443,6 +443,7 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 				return
 			}
 
+			method.Config.UnsetField("provider")
 			method.Config.SetField(form.Field{Name: "provider", Value: provider, Type: "submit"})
 			rr.Methods[s.ID()] = method
 		}

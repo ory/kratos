@@ -61,7 +61,7 @@ func TestManager(t *testing.T) {
 				return
 			}
 
-			c, err := p.Continue(r.Context(), r, ps.ByName("name"), tc.wo...)
+			c, err := p.Continue(r.Context(), w, r, ps.ByName("name"), tc.wo...)
 			if err != nil {
 				writer.WriteError(w, r, err)
 				return
@@ -70,7 +70,7 @@ func TestManager(t *testing.T) {
 		})
 
 		router.GET("/:name", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-			c, err := p.Continue(r.Context(), r, ps.ByName("name"), tc.ro...)
+			c, err := p.Continue(r.Context(), w, r, ps.ByName("name"), tc.ro...)
 			if err != nil {
 				writer.WriteError(w, r, err)
 				return

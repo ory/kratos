@@ -68,7 +68,24 @@ func NewHookExecutor(
 	}
 }
 
-func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, settingsType string, ctxUpdate *UpdateContext, i *identity.Identity) error {
+type PostSettingsHookOption func(o *postSettingsHookOptions)
+
+type postSettingsHookOptions struct {
+	cb func(ctxUpdate *UpdateContext) error
+}
+
+func WithCallback(cb func(ctxUpdate *UpdateContext) error) func(o *postSettingsHookOptions) {
+	return func(o *postSettingsHookOptions) {
+		o.cb = cb
+	}
+}
+
+func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, settingsType string, ctxUpdate *UpdateContext, i *identity.Identity, opts ...PostSettingsHookOption) error {
+	config := new(postSettingsHookOptions)
+	for _, f := range opts {
+		f(config)
+	}
+
 	e.d.Logger().
 		WithField("identity_id", i.ID).
 		Debug("An identity's settings have been updated, running post hooks.")
@@ -98,6 +115,13 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 
 	ctxUpdate.Session.Identity = i
 	ctxUpdate.Request.UpdateSuccessful = true
+
+	if config.cb != nil {
+		if err := config.cb(ctxUpdate); err != nil {
+			return err
+		}
+	}
+
 	if err := e.d.SettingsRequestPersister().UpdateSettingsRequest(r.Context(), ctxUpdate.Request); err != nil {
 		return err
 	}
