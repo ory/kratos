@@ -2,9 +2,10 @@ package identity
 
 import (
 	"encoding/json"
-	"github.com/ory/x/sqlxx"
 	"sync"
 	"time"
+
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/driver/configuration"
 

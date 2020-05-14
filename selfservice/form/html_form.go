@@ -3,10 +3,11 @@ package form
 import (
 	"database/sql/driver"
 	"encoding/json"
-	"github.com/ory/x/sqlxx"
 	"net/http"
 	"sort"
 	"sync"
+
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/jsonschema/v3"
 

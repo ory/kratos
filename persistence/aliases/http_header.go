@@ -2,8 +2,9 @@ package aliases
 
 import (
 	"database/sql/driver"
-	"github.com/ory/x/sqlxx"
 	"net/http"
+
+	"github.com/ory/x/sqlxx"
 )
 
 type HTTPHeader http.Header

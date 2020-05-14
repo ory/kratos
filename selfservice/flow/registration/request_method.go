@@ -3,8 +3,9 @@ package registration
 import (
 	"database/sql/driver"
 	"encoding/json"
-	"github.com/ory/x/sqlxx"
 	"time"
+
+	"github.com/ory/x/sqlxx"
 
 	"github.com/gofrs/uuid"
 
