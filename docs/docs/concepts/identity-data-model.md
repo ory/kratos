@@ -8,15 +8,13 @@ software system. It can be a customer, an employee, a user, a contractor, and
 even a programmatic identity such as an IoT device, an application, or some
 other type of "robot."
 
-Identities take different roles sometimes for instance called "Account Recovery"
-or "User Account" since these are commonly used terms. In ORY Kratos an identity
-is always called an "Identity," and it always exposed as `identity` in the API
-Endpoints, request and response payloads.
+In ORY Kratos' terminology we call all of them "Identity", and it is always
+exposed as `identity` in the API Endpoints, request and response payloads.
 
-The following examples uses YAML for improved readability. However the API
+The following examples uses YAML for improved readability. However, the API
 payload is usually in JSON format. An `identity` has the following properties:
 
-```yaml title="path/to/kratos.config.yaml"
+```yaml title="$ curl kratos-host-url/admin-endpoint/identities/9f425a8d-7efc-4768-8f23-7647a74fdf13"
 # A universally unique ID that is generated when the identity is created and that cannot be changed or updated
 # at a later stage.
 id: '9f425a8d-7efc-4768-8f23-7647a74fdf13'
@@ -60,18 +58,16 @@ traits:
 
 ## Identity Traits and JSON Schemas
 
-An identity may have one or more traits. Traits can be modified by the identity
-itself e.g. as part of the registration or profile update process as well as
-anyone having access to ORY Krato's Admin API.
-
-Traits tell ORY Kratos that a field has a particular meaning. For example, trait
-`email` is a good candidate for the field "Email + Password" for signing up or
-logging in.
+Traits are data associated with an identity. You have to define its schema
+according to your application's needs. They are also supposed to be modified by
+the identity itself e.g. as part of the registration or profile update process
+as well as anyone having access to ORY Krato's Admin API.
 
 To validate traits Ory Kratos uses
 [JSON Schema](https://json-schema.org/learn/getting-started-step-by-step.html)
 adding a small extension "Vocabulary" that allows you to tell ORY Kratos that a
-specific trait adds some specific meaning to the standard JSON Schema .
+specific trait adds some specific meaning to the standard JSON Schema (more on
+that later).
 
 Each identity can, theoretically, have a different Traits Schema. This is useful
 in the following situations:
@@ -87,12 +83,12 @@ in the following situations:
 The following example illustrates a usage scenario with three types of
 identities: Regular customers,
 [grandfather accounts](https://en.wikipedia.org/wiki/Grandfather_clause), and
-Service Accounts (Microsoft provides
+Service Accounts (e.g. Microsoft provides
 [Service Accounts](https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/service-accounts)).
 There would be one JSON Schema per type of identity:
 
-- Customers: `http://mydomain.com/schemas/v1/customer.schema.json`
-- Grandfather Accounts: `http://mydomain.com/schemas/v2/customer.schema.json`
+- Customers: `http://mydomain.com/schemas/v2/customer.schema.json`
+- Grandfather Accounts: `http://mydomain.com/schemas/v1/customer.schema.json`
 - Service Accounts: `http://mydomain.com/schemas/service-account.schema.json`
 
 ORY Kratos expects the JSON Schemas in its configuration file:
@@ -113,14 +109,16 @@ identity:
         url: http://foo.bar.com/customer.schema.json
 ```
 
-ORY Kratos enforces each of these schemas when at an identity's creation or
-update. The employed business logic must be able to distingush between these
-three identities. The switch statement is used in this case. For example:
+ORY Kratos validates the traits against the corresponding schema on all writing
+operations like create or update. The employed business logic must be able to
+distinguish these three types of identities. You might use a switch statement
+like in the following example:
 
 ```go
-// This is an example program that can deal with all three identities
-// session := ...
-switch (session.Identity.TraitsSchemaURL) {
+// This is an example program that can deal with all three types of identities
+session, err := ory.SessionFromRequest(r)
+// some error handling
+switch (session.Identity.TraitsSchemaID) {
     case "customer":
         // ...
     case "employee":
@@ -134,11 +132,11 @@ switch (session.Identity.TraitsSchemaURL) {
 
 ## JSON Schema Vocabulary Extensions
 
-As already explained, traits tell ORY Kratos that a particular field has a
-system-relevant meaning. That would for example include:
+Because ORY Kratos does not know that a particular field has a system-relevant
+meaning you have to specify these in the schema. This includes for example:
 
 - The email address for recovering a lost password
-- The identifier for logging in e.g. username and password or email and password
+- The identifier for logging in with a password e.g. username or email
 - The phone number for enabling SMS 2FA
 - ...
 
@@ -174,9 +172,9 @@ An overview of available configuration options follows in the next sections.
 
 ### Identifier for Username and Password Flows
 
-ORY Kratos can set specific fields to be used as the _identifier_ e.g. username,
-email, phone number, etc., in the Username and Password Registration and Login
-Flow:
+You can configure ORY Kratos to use specific fields as the _identifier_ e.g.
+username, email, phone number, etc., in the Username and Password Registration
+and Login Flow:
 
 ```json5
 {
