@@ -10,17 +10,27 @@ before finalizing the upgrade process.
 These changes have not yet been released and this area's purpose is to keep
 track of future changes.
 
-### OpenID Connect and OAuth2 now official!
+## v0.3.0-alpha.1
 
-Using social profiles to sign up and log in is now as easy as setting two config entries! Check out:
+This release finalizes the OpenID Connect and OAuth2 login, registration, and settings strategy with JsonNet data transformation! From now on, "Sign in with Google, Github, ..." is officially supported! It's also possible to link and unlink these connections using the Self-Service Settings Flow! The documentation has been updated to reflect those changes and includes guides to setting up "Sign in with GitHub" in under 5 Minutes! Please be aware that existing OpenID Connect connections will stop working. Check out the "Breaking Changes" section for more info! Want to learn more? Check [out the docs](https://www.ory.sh/kratos/docs/concepts/credentials/openid-connect-oidc-oauth2)!
 
-- [The OpenID Connect & OAuth2 Credential Documentation](https://www.ory.sh/kratos/docs/concepts/credentials/openid-connect-oidc-oauth2);
-- [The Flow Description](https://www.ory.sh/kratos/docs/concepts/credentials/openid-connect-oidc-oauth2);
-- [The "Sign in with GitHub" Guide](https://www.ory.sh/kratos/docs/guides/sign-in-with-github)!
-- [Jsonnet Reference](https://www.ory.sh/kratos/docs/reference/jsonnet)!
+We changed the config validation output, making it easier than ever to find bugs in your config:
 
-If you've been using the preview and have users with this strategy signed up, create an issue,
-and we'll provide guidance on upgrading.
+```
+% kratos --config invalid-config.yml serve
+INFO[0001] Config file loaded successfully.              path=invalid-config.yml
+ERRO[0001] The provided configuration is invalid and could not be loaded. Check the output below to understand why.  config_file=invalid-config.yml
+
+dsn: <nil>
+     ^-- one or more required properties are missing
+
+urls.whitelisted_return_to_urls: https://selfservice.office.example.com
+                                 ^-- expected array, but got string
+
+FATA[0001] The services failed to start because the configuration is invalid. Check the output above for more details.
+```
+
+This release concludes over 50 commits and 16.000 lines of code changed.
 
 ## v0.2.0-alpha.2
 
