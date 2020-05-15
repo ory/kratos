@@ -11,9 +11,9 @@ code when upgrading versions. Therefore, we do not make backwards compatibility
 promises with regards to the generated SDKs. We hope to improve this process in
 the future.
 
-Before you check out the SDKs, head over to the [REST API](sdk/api.md) documentation
-which includes code samples for common programming languages for each REST
-endpoint.
+Before you check out the SDKs, head over to the [REST API](sdk/api.md)
+documentation which includes code samples for common programming languages for
+each REST endpoint.
 
 We publish our SDKs for popular languages in their respective package
 repositories:

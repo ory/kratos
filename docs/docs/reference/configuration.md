@@ -45,7 +45,9 @@ section.
 # - Windows Command Line (CMD):
 #    > set DSN=<value>
 #
-dsn: mysql://user:secret@tcp(mysqld:3306)/database?max_conns=20&max_idle_conns=4
+dsn: "postgres://user:
+  password@postgresd:5432/database?sslmode=disable&max_conns=20&max_idle_conns=\
+  4"
 
 ## identity ##
 #
@@ -67,7 +69,7 @@ identity:
     # - Windows Command Line (CMD):
     #    > set IDENTITY_TRAITS_DEFAULT_SCHEMA_URL=<value>
     #
-    default_schema_url: file://path/to/identity.traits.schema.json
+    default_schema_url: httpss://foo.bar.com/path/to/identity.traits.schema.json
 
     ## Additional JSON Schemas for Identity Traits ##
     #
@@ -110,7 +112,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_STRATEGIES_PASSWORD_ENABLED=<value>
       #
-      enabled: false
+      enabled: true
 
     ## oidc ##
     #
@@ -123,7 +125,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_STRATEGIES_OIDC_ENABLED=<value>
       #
-      enabled: false
+      enabled: true
 
       ## config ##
       #
@@ -141,62 +143,38 @@ selfservice:
         providers:
           - id: google
             provider: google
-            client_id: eu
-            client_secret: occaecat id sunt amet
-            mapper_url: https://foo.bar.com/path/to/oidc.jsonnet
-            issuer_url: https://accounts.google.com
-            auth_url: https://accounts.google.com/o/oauth2/v2/auth
-            token_url: https://www.googleapis.com/oauth2/v4/token
-            scope:
-              - profile
-              - offline_access
-          - id: google
-            provider: google
-            client_id: mollit deserunt
-            client_secret: eiusmod adipisicing dolor incididunt sed
-            mapper_url: file://path/to/oidc.jsonnet
-            issuer_url: https://accounts.google.com
-            auth_url: https://accounts.google.com/o/oauth2/v2/auth
-            token_url: https://www.googleapis.com/oauth2/v4/token
-            scope:
-              - offline_access
-              - profile
-          - id: google
-            provider: google
-            client_id: aute Ut id
-            client_secret: in eiusmod in enim
-            mapper_url: file://path/to/oidc.jsonnet
-            issuer_url: https://accounts.google.com
-            auth_url: https://accounts.google.com/o/oauth2/v2/auth
-            token_url: https://www.googleapis.com/oauth2/v4/token
-            scope:
-              - profile
-              - offline_access
-              - offline_access
-          - id: google
-            provider: google
-            client_id: aute enim nisi eiusmod laboris
-            client_secret: Duis officia
-            mapper_url: file://path/to/oidc.jsonnet
-            issuer_url: https://accounts.google.com
-            auth_url: https://accounts.google.com/o/oauth2/v2/auth
-            token_url: https://www.googleapis.com/oauth2/v4/token
-            scope:
-              - profile
-              - profile
-              - offline_access
-              - offline_access
-          - id: google
-            provider: google
-            client_id: velit nulla veniam
-            client_secret: nulla amet
+            client_id: veniam eu ullamco amet in
+            client_secret: fugiat
             mapper_url: base64://bG9jYWwgc3ViamVjdCA9I...
             issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
             token_url: https://www.googleapis.com/oauth2/v4/token
             scope:
               - profile
+          - id: google
+            provider: google
+            client_id: minim est qui sit
+            client_secret: non sit Lorem
+            mapper_url: https://foo.bar.com/path/to/oidc.jsonnet
+            issuer_url: https://accounts.google.com
+            auth_url: https://accounts.google.com/o/oauth2/v2/auth
+            token_url: https://www.googleapis.com/oauth2/v4/token
+            scope:
+              - profile
+              - profile
+          - id: google
+            provider: google
+            client_id: laboris sit
+            client_secret: dolor Excepteur eiusmod minim
+            mapper_url: file://path/to/oidc.jsonnet
+            issuer_url: https://accounts.google.com
+            auth_url: https://accounts.google.com/o/oauth2/v2/auth
+            token_url: https://www.googleapis.com/oauth2/v4/token
+            scope:
+              - profile
               - offline_access
+              - offline_access
+              - profile
 
   ## logout ##
   #
@@ -232,7 +210,7 @@ selfservice:
     # - Windows Command Line (CMD):
     #    > set SELFSERVICE_SETTINGS_REQUEST_LIFESPAN=<value>
     #
-    request_lifespan: 1m
+    request_lifespan: 1h
 
     ## privileged_session_max_age ##
     #
@@ -366,7 +344,7 @@ selfservice:
     # - Windows Command Line (CMD):
     #    > set SELFSERVICE_VERIFY_LINK_LIFESPAN=<value>
     #
-    link_lifespan: 1h
+    link_lifespan: 1s
 
   ## login ##
   #
@@ -386,7 +364,7 @@ selfservice:
     # - Windows Command Line (CMD):
     #    > set SELFSERVICE_LOGIN_REQUEST_LIFESPAN=<value>
     #
-    request_lifespan: 1s
+    request_lifespan: 1h
 
     ## before ##
     #
@@ -402,23 +380,15 @@ selfservice:
       hooks:
         - hook: redirect
           config:
-            default_redirect_url: https://vNrGQOShybZtvpdWsLKLFHg.dwqzRKNoO2P9Mj.4a6Ih
+            default_redirect_url: https://BrsUkkGoUBCCF.lhWHDQWvaoqvfvBV3-2.Y,r7PuAy32pikhVf,8knIOqHbAaG84kJ6QaOAWoLJMOq4tCzLNp2+lG
             allow_user_defined_redirect: false
         - hook: redirect
           config:
-            default_redirect_url: http://QeLSk.hwvad.ef1boy0pIqywpw+OWson9rtHv
-            allow_user_defined_redirect: true
-        - hook: redirect
-          config:
-            default_redirect_url: https://Rf.bfpnuIqeV
-            allow_user_defined_redirect: true
-        - hook: redirect
-          config:
-            default_redirect_url: http://kroFFCAAzYCtiLFRyxWV.xkY9LTCRQU6D-ljDQ
+            default_redirect_url: https://WEfLjfKGxhVbEfu.slBXtdq.OMin-PtmdvzOkKac2ClnlEgL
             allow_user_defined_redirect: false
         - hook: redirect
           config:
-            default_redirect_url: http://AleaKRoeEveDcNA.bsvsmbez3gDCt7GrrzPEB3uFYLFW+Yoh0MUl4oO16HJQJH.eRmhQEWOJFYdzU
+            default_redirect_url: https://FALmJ.mwgV-Fp-H4W.Kzas8soLEFS,sMOIkpc80
             allow_user_defined_redirect: true
 
     ## after ##
@@ -515,7 +485,7 @@ selfservice:
     # - Windows Command Line (CMD):
     #    > set SELFSERVICE_REGISTRATION_REQUEST_LIFESPAN=<value>
     #
-    request_lifespan: 1h
+    request_lifespan: 1s
 
     ## before ##
     #
@@ -531,11 +501,11 @@ selfservice:
       hooks:
         - hook: redirect
           config:
-            default_redirect_url: http://vWrJmhcnjewBJOiTcDVdv.ibcfIQDI8+NH5jbHm47vieykPCVbRzT03ykkXgbv+zOUWXMwHeVbxMuK
-            allow_user_defined_redirect: true
+            default_redirect_url: https://Ron.brrMZExQqLWaw+
+            allow_user_defined_redirect: false
         - hook: redirect
           config:
-            default_redirect_url: https://HbZYxiZFuXwEIydUJUXWnDYEGTDw.xiwJyhiYxfTBX
+            default_redirect_url: https://vuxmezXXkZxwCfUWYAwKVpFGcCjWBwjx.rmzKyY0XYH6i2dPQgJPINO-T+7geJMkfZoYCGSdPi2y,4h+-qiRPqtgrFbK+-PQUINW5
             allow_user_defined_redirect: true
 
     ## after ##
@@ -583,10 +553,7 @@ selfservice:
         #    > set SELFSERVICE_REGISTRATION_AFTER_PASSWORD_HOOKS=<value>
         #
         hooks:
-          - hook: redirect
-            config:
-              default_redirect_url: https://JBdIwgXYnmPafakyYVGMP.qkku4rb58yJVgtBxR5iX2dneE-.PqTcBPezn,BP7,3IOXQmj50PPRGCkxkj4oZMUMK2zPJLu
-              allow_user_defined_redirect: false
+          - hook: session
 
       ## oidc ##
       #
@@ -615,19 +582,7 @@ selfservice:
         #    > set SELFSERVICE_REGISTRATION_AFTER_OIDC_HOOKS=<value>
         #
         hooks:
-          - hook: redirect
-            config:
-              default_redirect_url: https://dVmrmZBlsrCRcaJglSkTNkcUnMKMkesRX.jpsphJbVjax1
-              allow_user_defined_redirect: false
           - hook: verify
-          - hook: redirect
-            config:
-              default_redirect_url: http://DXaGZcA.sshR-KePsoNNqL2g9S4i6rm6faIHWlF.pympAe5i6AX1ix8gQt
-              allow_user_defined_redirect: true
-          - hook: redirect
-            config:
-              default_redirect_url: https://Kmhkg.caeqm6jhaZ5EofC7Ohaq2neAgm,Hc5tE7Oy5lbBKgZLa.wY
-              allow_user_defined_redirect: true
           - hook: session
 
 ## Courier configuration ##
@@ -667,7 +622,7 @@ courier:
     # - Windows Command Line (CMD):
     #    > set COURIER_SMTP_FROM_ADDRESS=<value>
     #
-    from_address: pDGKVqqVSV-p2w@FBLoezyegcObiN.uu
+    from_address: HoWttSNEMAmxT@WHPbRvYZBJxRTrfwScsYYsgGspaYtmuRP.lh
 
   ## Override message templates ##
   #
@@ -700,7 +655,7 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_ADMIN_HOST=<value>
     #
-    host: enim eiusmod nostrud dolor officia
+    host: amet
 
     ## port ##
     #
@@ -730,7 +685,7 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_PUBLIC_HOST=<value>
     #
-    host: et do consequat qui
+    host: minim esse officia
 
     ## port ##
     #
@@ -794,7 +749,7 @@ urls:
   # - Windows Command Line (CMD):
   #    > set URLS_MFA_UI=<value>
   #
-  mfa_ui: https://www.ory.sh/kratos/docs/fallback/mfa
+  mfa_ui: https://my-app.com/login/mfa
 
   ## Login UI URL ##
   #
@@ -811,7 +766,7 @@ urls:
   # - Windows Command Line (CMD):
   #    > set URLS_LOGIN_UI=<value>
   #
-  login_ui: https://www.ory.sh/kratos/docs/fallback/login
+  login_ui: https://my-app.com/login
 
   ## Settings UI URL ##
   #
@@ -828,7 +783,7 @@ urls:
   # - Windows Command Line (CMD):
   #    > set URLS_SETTINGS_UI=<value>
   #
-  settings_ui: https://www.ory.sh/kratos/docs/fallback/settings
+  settings_ui: https://my-app.com/user/settings
 
   ## Default Return To URL ##
   #
@@ -860,7 +815,7 @@ urls:
   # - Windows Command Line (CMD):
   #    > set URLS_REGISTRATION_UI=<value>
   #
-  registration_ui: https://my-app.com/signup
+  registration_ui: https://www.ory.sh/kratos/docs/fallback/registration
 
   ## ORY Kratos Error UI URL ##
   #
@@ -910,7 +865,7 @@ urls:
   # - Windows Command Line (CMD):
   #    > set URLS_WHITELISTED_RETURN_TO_URLS=<value>
   #
-  whitelisted_return_to_urls: https://www.my-app.com/
+  whitelisted_return_to_urls: https://app.my-app.com/dashboard
 
 ## log ##
 #
@@ -923,7 +878,7 @@ log:
   # - Windows Command Line (CMD):
   #    > set LOG_LEVEL=<value>
   #
-  level: error
+  level: trace
 
   ## format ##
   #
@@ -933,7 +888,7 @@ log:
   # - Windows Command Line (CMD):
   #    > set LOG_FORMAT=<value>
   #
-  format: json
+  format: text
 
 ## secrets ##
 #
@@ -947,11 +902,8 @@ secrets:
   #    > set SECRETS_SESSION=<value>
   #
   session:
-    - non ex Duisadsit anim sunt
-    - Excepteur mollit Duis pariatur consequat
-    - et consecteturcommodo voluptate in
-    - voluptate ea sunt elit in
-    - commodonisi eiusmod ut Excepteur
+    - dolore occaecat nostrud Ut
+    - sit et commodoaute ut voluptate consectetur Duis
 
 ## hashers ##
 #
@@ -967,7 +919,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_MEMORY=<value>
     #
-    memory: 57778550
+    memory: 11021305
 
     ## iterations ##
     #
@@ -977,7 +929,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_ITERATIONS=<value>
     #
-    iterations: 35873485
+    iterations: 12577683
 
     ## parallelism ##
     #
@@ -987,7 +939,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_PARALLELISM=<value>
     #
-    parallelism: 22416448
+    parallelism: 10081210
 
     ## salt_length ##
     #
@@ -997,7 +949,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_SALT_LENGTH=<value>
     #
-    salt_length: 20363085
+    salt_length: 26983481
 
     ## key_length ##
     #
@@ -1007,7 +959,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_KEY_LENGTH=<value>
     #
-    key_length: 52558806
+    key_length: 65249925
 
 ## security ##
 #

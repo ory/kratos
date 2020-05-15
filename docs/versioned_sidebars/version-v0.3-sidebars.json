@@ -1,0 +1,285 @@
+{
+  "version-v0.3/docs": [
+    {
+      "type": "category",
+      "label": "Introduction",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-v0.3/index"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.3/quickstart"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.3/install"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Concepts",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-v0.3/concepts/index"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.3/concepts/ui-user-interface"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.3/concepts/identity-user-model"
+        },
+        {
+          "label": "Identity Credentials",
+          "type": "category",
+          "items": [
+            {
+              "type": "doc",
+              "id": "version-v0.3/concepts/credentials"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.3/concepts/credentials/username-email-password"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.3/concepts/credentials/openid-connect-oidc-oauth2"
+            }
+          ]
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.3/concepts/selfservice-flow-completion"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.3/concepts/email-sms"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.3/concepts/federation"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.3/concepts/security"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Self Service",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-v0.3/self-service"
+        },
+        {
+          "type": "category",
+          "label": "User Login and User Registration",
+          "items": [
+            {
+              "type": "doc",
+              "id": "version-v0.3/self-service/flows/user-login-user-registration"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.3/self-service/flows/user-login-user-registration/username-email-password"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.3/self-service/flows/user-login-user-registration/openid-connect-social-sign-in-oauth2"
+            }
+          ]
+        },
+        {
+          "type": "category",
+          "label": "User Settings",
+          "items": [
+            {
+              "type": "doc",
+              "id": "version-v0.3/self-service/flows/user-settings"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.3/self-service/flows/user-settings/user-profile-management"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.3/self-service/flows/user-settings/change-password"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.3/self-service/flows/user-settings/link-unlink-openid-connect-oauth2"
+            }
+          ]
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.3/self-service/flows/user-logout"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.3/self-service/flows/password-reset-account-recovery"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.3/self-service/flows/user-facing-errors"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.3/self-service/flows/verify-email-account-activation"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.3/self-service/flows/2fa-mfa-multi-factor-authentication"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.3/self-service/hooks/index"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Guides",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-v0.3/guides/sign-in-with-github-google-facebook-linkedin"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.3/guides/zero-trust-iap-proxy-identity-access-proxy"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.3/guides/multi-tenancy-multitenant"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.3/guides/high-availability-ha"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Reference",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-v0.3/reference/configuration"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.3/reference/json-schema-json-paths"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.3/reference/html-forms"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.3/reference/api"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Debug & Help",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-v0.3/debug/csrf"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "SDKs",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-v0.3/sdk"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Further Reading",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-v0.3/further-reading/comparison"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "ORY Hydra",
+      "items": [
+        {
+          "type": "link",
+          "label": "Home",
+          "href": "https://www.ory.sh/hydra"
+        },
+        {
+          "type": "link",
+          "label": "Docs",
+          "href": "https://www.ory.sh/hydra/docs"
+        },
+        {
+          "type": "link",
+          "label": "GitHub",
+          "href": "https://github.com/ory/hydra"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "ORY Oathkeeper",
+      "items": [
+        {
+          "type": "link",
+          "label": "Home",
+          "href": "https://www.ory.sh/oathkeeper"
+        },
+        {
+          "type": "link",
+          "label": "Docs",
+          "href": "https://www.ory.sh/oathkeeper/docs"
+        },
+        {
+          "type": "link",
+          "label": "GitHub",
+          "href": "https://github.com/ory/oathkeeper"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "ORY Keto",
+      "items": [
+        {
+          "type": "link",
+          "label": "Home",
+          "href": "https://www.ory.sh/keto"
+        },
+        {
+          "type": "link",
+          "label": "Docs",
+          "href": "https://www.ory.sh/keto/docs"
+        },
+        {
+          "type": "link",
+          "label": "GitHub",
+          "href": "https://github.com/ory/keto"
+        }
+      ]
+    }
+  ]
+}

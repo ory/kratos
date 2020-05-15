@@ -38,21 +38,28 @@ Some flows break down into strategies which implement some of the flow's
 business logic:
 
 - The `password` strategy implement the
-  [login and registration flow (with email/username and password)](self-service/flows/user-login-user-registration/username-email-password.mdx), account recovery flow ("reset your password"), and [user settings flow ("change your password")](self-service/flows/user-settings/change-password.mdx).
-- The `oidc` (OpenID Connect, OAuth2, Social Sign In) strategy
-  implements [login and registration flow ("Sign in with ...")](self-service/flows/user-login-user-registration/openid-connect-social-sign-in-oauth2.mdx),
-  and [user settings flow ("un/link another social account")](self-service/flows/user-settings/link-unlink-openid-connect-oauth2.mdx).
-- The `profile` strategy implements the [settings flow ("update your profile", "change your first/last name, ...")](self-service/flows/user-settings/user-profile-management.mdx).
+  [login and registration flow (with email/username and password)](self-service/flows/user-login-user-registration/username-email-password.mdx),
+  account recovery flow ("reset your password"), and
+  [user settings flow ("change your password")](self-service/flows/user-settings/change-password.mdx).
+- The `oidc` (OpenID Connect, OAuth2, Social Sign In) strategy implements
+  [login and registration flow ("Sign in with ...")](self-service/flows/user-login-user-registration/openid-connect-social-sign-in-oauth2.mdx),
+  and
+  [user settings flow ("un/link another social account")](self-service/flows/user-settings/link-unlink-openid-connect-oauth2.mdx).
+- The `profile` strategy implements the
+  [settings flow ("update your profile", "change your first/last name, ...")](self-service/flows/user-settings/user-profile-management.mdx).
 
-Some flows additionally implement the ability [to run hooks](self-service/hooks/index.mdx) which allow users
-to be immediately signed in after registration, notify another system on
-successful registration (e.g. Mailchimp), and so on.
+Some flows additionally implement the ability
+[to run hooks](self-service/hooks/index.mdx) which allow users to be immediately
+signed in after registration, notify another system on successful registration
+(e.g. Mailchimp), and so on.
 
 ## Network Flows for Browsers
 
-All Self-Service Flows such as [User Login](self-service/flows/user-login-user-registration.mdx),
+All Self-Service Flows such as
+[User Login](self-service/flows/user-login-user-registration.mdx),
 [User Registration](self-service/flows/user-login-user-registration.mdx),
-[Profile Management](self-service/flows/user-settings.mdx) use the same template:
+[Profile Management](self-service/flows/user-settings.mdx) use the same
+template:
 
 1. The Browser makes an HTTP request to the flow's initialization endpoint (e.g.
    `/auth/browser/login`);

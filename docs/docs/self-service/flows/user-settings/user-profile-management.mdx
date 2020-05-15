@@ -13,8 +13,8 @@ The `profile` strategy allows a user to change their identity traits
 ("profile").
 
 The updated traits must be valid against the JSON Schema defined for its
-[Identity Traits](../../../concepts/identity-user-model.md). If one or more fields
-do not validate (e.g. "Not an email"), the profile will not be updated.
+[Identity Traits](../../../concepts/identity-user-model.md). If one or more
+fields do not validate (e.g. "Not an email"), the profile will not be updated.
 
 ORY Kratos will prompt the user to re-authenticate if a privileged trait (e.g.
 email used to log in) is changed, similar to the
@@ -34,8 +34,10 @@ This strategy does not implement any other flow.
 
 ## Browser Clients
 
-Redirecting the browser to the [Self-Service Settings Endpoint](../user-settings.mdx#user-settings-process-sequence)
-initiates the flow. The Settings Request Response Payload always include a `profile` method:
+Redirecting the browser to the
+[Self-Service Settings Endpoint](../user-settings.mdx#user-settings-process-sequence)
+initiates the flow. The Settings Request Response Payload always include a
+`profile` method:
 
 ```json title="$ curl http://<kratos-admin>/self-service/browser/flows/requests/settings?request=9c6473d4-9ffd-44cd-9794-adb82cbe4009"
 {

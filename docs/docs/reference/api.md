@@ -439,11 +439,11 @@ Status Code **200**
   {
     "addresses": [
       {
-        "expires_at": "2020-05-06T13:28:13Z",
+        "expires_at": "2020-05-15T13:19:28Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-05-06T13:28:13Z",
+        "verified_at": "2020-05-15T13:19:28Z",
         "via": "string"
       }
     ],
@@ -617,11 +617,11 @@ Learn how identities work in
 {
   "addresses": [
     {
-      "expires_at": "2020-05-06T13:28:13Z",
+      "expires_at": "2020-05-15T13:19:28Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-05-06T13:28:13Z",
+      "verified_at": "2020-05-15T13:19:28Z",
       "via": "string"
     }
   ],
@@ -660,11 +660,11 @@ Learn how identities work in
 {
   "addresses": [
     {
-      "expires_at": "2020-05-06T13:28:13Z",
+      "expires_at": "2020-05-15T13:19:28Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-05-06T13:28:13Z",
+      "verified_at": "2020-05-15T13:19:28Z",
       "via": "string"
     }
   ],
@@ -737,11 +737,11 @@ const fetch = require('node-fetch');
 const input = '{
   "addresses": [
     {
-      "expires_at": "2020-05-06T13:28:13Z",
+      "expires_at": "2020-05-15T13:19:28Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-05-06T13:28:13Z",
+      "verified_at": "2020-05-15T13:19:28Z",
       "via": "string"
     }
   ],
@@ -873,11 +873,11 @@ Learn how identities work in
 {
   "addresses": [
     {
-      "expires_at": "2020-05-06T13:28:13Z",
+      "expires_at": "2020-05-15T13:19:28Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-05-06T13:28:13Z",
+      "verified_at": "2020-05-15T13:19:28Z",
       "via": "string"
     }
   ],
@@ -1053,11 +1053,11 @@ Learn how identities work in
 {
   "addresses": [
     {
-      "expires_at": "2020-05-06T13:28:13Z",
+      "expires_at": "2020-05-15T13:19:28Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-05-06T13:28:13Z",
+      "verified_at": "2020-05-15T13:19:28Z",
       "via": "string"
     }
   ],
@@ -1098,11 +1098,11 @@ Learn how identities work in
 {
   "addresses": [
     {
-      "expires_at": "2020-05-06T13:28:13Z",
+      "expires_at": "2020-05-15T13:19:28Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-05-06T13:28:13Z",
+      "verified_at": "2020-05-15T13:19:28Z",
       "via": "string"
     }
   ],
@@ -1175,11 +1175,11 @@ const fetch = require('node-fetch');
 const input = '{
   "addresses": [
     {
-      "expires_at": "2020-05-06T13:28:13Z",
+      "expires_at": "2020-05-15T13:19:28Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-05-06T13:28:13Z",
+      "verified_at": "2020-05-15T13:19:28Z",
       "via": "string"
     }
   ],
@@ -1708,10 +1708,10 @@ your application (e.g. `/login?request=abcde`).
 ```json
 {
   "active": "string",
-  "expires_at": "2020-05-06T13:28:13Z",
+  "expires_at": "2020-05-15T13:19:28Z",
   "forced": true,
   "id": "string",
-  "issued_at": "2020-05-06T13:28:13Z",
+  "issued_at": "2020-05-15T13:19:28Z",
   "methods": {
     "property1": {
       "config": {
@@ -1999,9 +1999,9 @@ your application (e.g. `/registration?request=abcde`).
 ```json
 {
   "active": "string",
-  "expires_at": "2020-05-06T13:28:13Z",
+  "expires_at": "2020-05-15T13:19:28Z",
   "id": "string",
-  "issued_at": "2020-05-06T13:28:13Z",
+  "issued_at": "2020-05-15T13:19:28Z",
   "methods": {
     "property1": {
       "config": {
@@ -2248,7 +2248,7 @@ attacks, the public endpoint does not return 404 status codes but instead 403
 or 500.
 
 More information can be found at
-[ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings).
+[ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 
 <a id="get-the-request-context-of-browser-based-settings-flows-parameters"></a>
 
@@ -2286,16 +2286,16 @@ your application (e.g. `/login?request=abcde`).
 ```json
 {
   "active": "string",
-  "expires_at": "2020-05-06T13:28:13Z",
+  "expires_at": "2020-05-15T13:19:28Z",
   "id": "string",
   "identity": {
     "addresses": [
       {
-        "expires_at": "2020-05-06T13:28:13Z",
+        "expires_at": "2020-05-15T13:19:28Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-05-06T13:28:13Z",
+        "verified_at": "2020-05-15T13:19:28Z",
         "via": "string"
       }
     ],
@@ -2304,7 +2304,7 @@ your application (e.g. `/login?request=abcde`).
     "traits_schema_id": "string",
     "traits_schema_url": "string"
   },
-  "issued_at": "2020-05-06T13:28:13Z",
+  "issued_at": "2020-05-15T13:19:28Z",
   "methods": {
     "property1": {
       "config": {
@@ -2558,7 +2558,7 @@ your application (e.g. `/verify?request=abcde`).
 
 ```json
 {
-  "expires_at": "2020-05-06T13:28:13Z",
+  "expires_at": "2020-05-15T13:19:28Z",
   "form": {
     "action": "string",
     "errors": [
@@ -2584,7 +2584,7 @@ your application (e.g. `/verify?request=abcde`).
     "method": "string"
   },
   "id": "string",
-  "issued_at": "2020-05-06T13:28:13Z",
+  "issued_at": "2020-05-15T13:19:28Z",
   "request_url": "string",
   "success": true,
   "via": "string"
@@ -3502,6 +3502,196 @@ p JSON.parse(result)
 </div>
 </div>
 
+<a id="opIdcompleteSelfServiceBrowserSettingsOIDCSettingsFlow"></a>
+
+### Complete the browser-based settings flow for the OpenID Connect strategy
+
+```
+POST /self-service/browser/flows/registration/strategies/oidc/settings/connections HTTP/1.1
+Accept: application/json
+
+```
+
+This endpoint completes a browser-based settings flow. This is usually achieved
+by POSTing data to this endpoint.
+
+> This endpoint is NOT INTENDED for API clients and only works with browsers
+> (Chrome, Firefox, ...) and HTML Forms.
+
+More information can be found at
+[ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+
+#### Responses
+
+<a id="complete-the-browser-based-settings-flow-for-the-openid-connect-strategy-responses"></a>
+
+##### Overview
+
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
+
+##### Examples
+
+###### 500 response
+
+```json
+{
+  "error": {
+    "code": 404,
+    "debug": "The database adapter was unable to find the element",
+    "details": {
+      "property1": {},
+      "property2": {}
+    },
+    "message": "string",
+    "reason": "string",
+    "request": "string",
+    "status": "string"
+  }
+}
+```
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+#### Code samples
+
+<div class="tabs" id="tab-completeSelfServiceBrowserSettingsOIDCSettingsFlow">
+<nav class="tabs-nav">
+<ul class="nav nav-tabs au-link-list au-link-list--inline">
+<li class="nav-item"><a class="nav-link active" role="tab" href="#tab-completeSelfServiceBrowserSettingsOIDCSettingsFlow-shell">Shell</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserSettingsOIDCSettingsFlow-go">Go</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserSettingsOIDCSettingsFlow-node">Node.js</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserSettingsOIDCSettingsFlow-java">Java</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserSettingsOIDCSettingsFlow-python">Python</a></li>
+<li class="nav-item"><a class="nav-link" role="tab" href="#tab-completeSelfServiceBrowserSettingsOIDCSettingsFlow-ruby">Ruby</a></li>
+</ul>
+</nav>
+<div class="tab-content">
+<div class="tab-pane active" role="tabpanel" id="tab-completeSelfServiceBrowserSettingsOIDCSettingsFlow-shell">
+
+```shell
+curl -X POST /self-service/browser/flows/registration/strategies/oidc/settings/connections \
+  -H 'Accept: application/json'
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserSettingsOIDCSettingsFlow-go">
+
+```go
+package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    var body []byte
+    // body = ...
+
+    req, err := http.NewRequest("POST", "/self-service/browser/flows/registration/strategies/oidc/settings/connections", bytes.NewBuffer(body))
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserSettingsOIDCSettingsFlow-node">
+
+```nodejs
+const fetch = require('node-fetch');
+
+const headers = {
+  'Accept': 'application/json'
+}
+
+fetch('/self-service/browser/flows/registration/strategies/oidc/settings/connections', {
+  method: 'POST',
+  headers
+})
+.then(r => r.json())
+.then((body) => {
+    console.log(body)
+})
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserSettingsOIDCSettingsFlow-java">
+
+```java
+// This sample needs improvement.
+URL obj = new URL("/self-service/browser/flows/registration/strategies/oidc/settings/connections");
+
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("POST");
+
+int responseCode = con.getResponseCode();
+
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream())
+);
+
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+
+System.out.println(response.toString());
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserSettingsOIDCSettingsFlow-python">
+
+```python
+import requests
+
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.post(
+  '/self-service/browser/flows/registration/strategies/oidc/settings/connections',
+  params={},
+  headers = headers)
+
+print r.json()
+```
+
+</div>
+<div class="tab-pane" role="tabpanel"  id="tab-completeSelfServiceBrowserSettingsOIDCSettingsFlow-ruby">
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.post '/self-service/browser/flows/registration/strategies/oidc/settings/connections',
+  params: {}, headers: headers
+
+p JSON.parse(result)
+```
+
+</div>
+</div>
+</div>
+
 <a id="opIdinitializeSelfServiceSettingsFlow"></a>
 
 ### Initialize browser-based settings flow
@@ -3521,7 +3711,7 @@ initialized.
 > (Chrome, Firefox, ...).
 
 More information can be found at
-[ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings).
+[ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 
 #### Responses
 
@@ -3711,7 +3901,7 @@ by POSTing data to this endpoint.
 > (Chrome, Firefox, ...) and HTML Forms.
 
 More information can be found at
-[ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings).
+[ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 
 #### Responses
 
@@ -3906,7 +4096,7 @@ further steps.
 > (Chrome, Firefox, ...) and HTML Forms.
 
 More information can be found at
-[ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings).
+[ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 
 #### Request body
 
@@ -4555,16 +4745,16 @@ This endpoint is useful for reverse proxies and API Gateways.
 
 ```json
 {
-  "authenticated_at": "2020-05-06T13:28:13Z",
-  "expires_at": "2020-05-06T13:28:13Z",
+  "authenticated_at": "2020-05-15T13:19:28Z",
+  "expires_at": "2020-05-15T13:19:28Z",
   "identity": {
     "addresses": [
       {
-        "expires_at": "2020-05-06T13:28:13Z",
+        "expires_at": "2020-05-15T13:19:28Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-05-06T13:28:13Z",
+        "verified_at": "2020-05-15T13:19:28Z",
         "via": "string"
       }
     ],
@@ -4573,7 +4763,7 @@ This endpoint is useful for reverse proxies and API Gateways.
     "traits_schema_id": "string",
     "traits_schema_url": "string"
   },
-  "issued_at": "2020-05-06T13:28:13Z",
+  "issued_at": "2020-05-15T13:19:28Z",
   "sid": "string"
 }
 ```
@@ -4936,6 +5126,26 @@ credentials, passwordless credentials,_
 | ------- | ------ | -------- | ------------ | ---------------------------------------- |
 | message | string | false    | none         | Code FormErrorCode `json:"id,omitempty"` |
 
+<a id="tocSerrors">Errors</a>
+
+#### Errors
+
+<a id="schemaerrors"></a>
+
+```json
+[
+  {
+    "message": "string"
+  }
+]
+```
+
+#### Properties
+
+| Name        | Type                    | Required | Restrictions | Description |
+| ----------- | ----------------------- | -------- | ------------ | ----------- |
+| _anonymous_ | [[Error](#schemaerror)] | false    | none         | none        |
+
 <a id="tocSidentity">Identity</a>
 
 #### Identity
@@ -4946,11 +5156,11 @@ credentials, passwordless credentials,_
 {
   "addresses": [
     {
-      "expires_at": "2020-05-06T13:28:13Z",
+      "expires_at": "2020-05-15T13:19:28Z",
       "id": "string",
       "value": "string",
       "verified": true,
-      "verified_at": "2020-05-06T13:28:13Z",
+      "verified_at": "2020-05-15T13:19:28Z",
       "via": "string"
     }
   ],
@@ -4970,6 +5180,26 @@ credentials, passwordless credentials,_
 | traits            | [Traits](#schematraits)                         | true     | none         | none                                                                                                           |
 | traits_schema_id  | string                                          | true     | none         | TraitsSchemaID is the ID of the JSON Schema to be used for validating the identity's traits.                   |
 | traits_schema_url | string                                          | false    | none         | TraitsSchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from. format: url |
+
+<a id="tocSprovidercredentialsconfig">ProviderCredentialsConfig</a>
+
+#### ProviderCredentialsConfig
+
+<a id="schemaprovidercredentialsconfig"></a>
+
+```json
+{
+  "provider": "string",
+  "subject": "string"
+}
+```
+
+#### Properties
+
+| Name     | Type   | Required | Restrictions | Description |
+| -------- | ------ | -------- | ------------ | ----------- |
+| provider | string | false    | none         | none        |
+| subject  | string | false    | none         | none        |
 
 <a id="tocSrequestmethodconfig">RequestMethodConfig</a>
 
@@ -5051,11 +5281,11 @@ _None_
 
 ```json
 {
-  "expires_at": "2020-05-06T13:28:13Z",
+  "expires_at": "2020-05-15T13:19:28Z",
   "id": "string",
   "value": "string",
   "verified": true,
-  "verified_at": "2020-05-06T13:28:13Z",
+  "verified_at": "2020-05-15T13:19:28Z",
   "via": "string"
 }
 ```
@@ -5198,15 +5428,15 @@ _Field represents a HTML Form Field_
 
 #### Properties
 
-| Name     | Type                    | Required | Restrictions | Description                                                             |
-| -------- | ----------------------- | -------- | ------------ | ----------------------------------------------------------------------- |
-| disabled | boolean                 | false    | none         | Disabled is the equivalent of `<input disabled="{{.Disabled}}">`        |
-| errors   | [[Error](#schemaerror)] | false    | none         | Errors contains all validation errors this particular field has caused. |
-| name     | string                  | true     | none         | Name is the equivalent of `<input name="{{.Name}}">`                    |
-| pattern  | string                  | false    | none         | Pattern is the equivalent of `<input pattern="{{.Pattern}}">`           |
-| required | boolean                 | true     | none         | Required is the equivalent of `<input required="{{.Required}}">`        |
-| type     | string                  | true     | none         | Type is the equivalent of `<input type="{{.Type}}">`                    |
-| value    | object                  | false    | none         | Value is the equivalent of `<input value="{{.Value}}">`                 |
+| Name     | Type                    | Required | Restrictions | Description                                                      |
+| -------- | ----------------------- | -------- | ------------ | ---------------------------------------------------------------- |
+| disabled | boolean                 | false    | none         | Disabled is the equivalent of `<input disabled="{{.Disabled}}">` |
+| errors   | [Errors](#schemaerrors) | false    | none         | none                                                             |
+| name     | string                  | true     | none         | Name is the equivalent of `<input name="{{.Name}}">`             |
+| pattern  | string                  | false    | none         | Pattern is the equivalent of `<input pattern="{{.Pattern}}">`    |
+| required | boolean                 | false    | none         | Required is the equivalent of `<input required="{{.Required}}">` |
+| type     | string                  | true     | none         | Type is the equivalent of `<input type="{{.Type}}">`             |
+| value    | object                  | false    | none         | Value is the equivalent of `<input value="{{.Value}}">`          |
 
 <a id="tocSformfields">formFields</a>
 
@@ -5354,10 +5584,10 @@ _Error response_
 ```json
 {
   "active": "string",
-  "expires_at": "2020-05-06T13:28:13Z",
+  "expires_at": "2020-05-15T13:19:28Z",
   "forced": true,
   "id": "string",
-  "issued_at": "2020-05-06T13:28:13Z",
+  "issued_at": "2020-05-15T13:19:28Z",
   "methods": {
     "property1": {
       "config": {
@@ -5586,9 +5816,9 @@ _Error response_
 ```json
 {
   "active": "string",
-  "expires_at": "2020-05-06T13:28:13Z",
+  "expires_at": "2020-05-15T13:19:28Z",
   "id": "string",
-  "issued_at": "2020-05-06T13:28:13Z",
+  "issued_at": "2020-05-15T13:19:28Z",
   "methods": {
     "property1": {
       "config": {
@@ -5683,7 +5913,7 @@ _Error response_
 
 | Name                       | Type                                                          | Required | Restrictions | Description                                                                                                                                                                               |
 | -------------------------- | ------------------------------------------------------------- | -------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| active                     | [CredentialsType](#schemacredentialstype)                     | true     | none         | and so on.                                                                                                                                                                                |
+| active                     | [CredentialsType](#schemacredentialstype)                     | false    | none         | and so on.                                                                                                                                                                                |
 | expires_at                 | string(date-time)                                             | true     | none         | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in, a new request has to be initiated.                                                              |
 | id                         | [UUID](#schemauuid)                                           | true     | none         | none                                                                                                                                                                                      |
 | issued_at                  | string(date-time)                                             | true     | none         | IssuedAt is the time (UTC) when the request occurred.                                                                                                                                     |
@@ -5815,16 +6045,16 @@ _Error response_
 
 ```json
 {
-  "authenticated_at": "2020-05-06T13:28:13Z",
-  "expires_at": "2020-05-06T13:28:13Z",
+  "authenticated_at": "2020-05-15T13:19:28Z",
+  "expires_at": "2020-05-15T13:19:28Z",
   "identity": {
     "addresses": [
       {
-        "expires_at": "2020-05-06T13:28:13Z",
+        "expires_at": "2020-05-15T13:19:28Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-05-06T13:28:13Z",
+        "verified_at": "2020-05-15T13:19:28Z",
         "via": "string"
       }
     ],
@@ -5833,7 +6063,7 @@ _Error response_
     "traits_schema_id": "string",
     "traits_schema_url": "string"
   },
-  "issued_at": "2020-05-06T13:28:13Z",
+  "issued_at": "2020-05-15T13:19:28Z",
   "sid": "string"
 }
 ```
@@ -5857,16 +6087,16 @@ _Error response_
 ```json
 {
   "active": "string",
-  "expires_at": "2020-05-06T13:28:13Z",
+  "expires_at": "2020-05-15T13:19:28Z",
   "id": "string",
   "identity": {
     "addresses": [
       {
-        "expires_at": "2020-05-06T13:28:13Z",
+        "expires_at": "2020-05-15T13:19:28Z",
         "id": "string",
         "value": "string",
         "verified": true,
-        "verified_at": "2020-05-06T13:28:13Z",
+        "verified_at": "2020-05-15T13:19:28Z",
         "via": "string"
       }
     ],
@@ -5875,7 +6105,7 @@ _Error response_
     "traits_schema_id": "string",
     "traits_schema_url": "string"
   },
-  "issued_at": "2020-05-06T13:28:13Z",
+  "issued_at": "2020-05-15T13:19:28Z",
   "methods": {
     "property1": {
       "config": {
@@ -6004,7 +6234,7 @@ _Request presents a settings request_
 
 ```json
 {
-  "expires_at": "2020-05-06T13:28:13Z",
+  "expires_at": "2020-05-15T13:19:28Z",
   "form": {
     "action": "string",
     "errors": [
@@ -6030,7 +6260,7 @@ _Request presents a settings request_
     "method": "string"
   },
   "id": "string",
-  "issued_at": "2020-05-06T13:28:13Z",
+  "issued_at": "2020-05-15T13:19:28Z",
   "request_url": "string",
   "success": true,
   "via": "string"

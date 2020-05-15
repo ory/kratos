@@ -99,9 +99,10 @@ selfservice:
 
 ### Post-Settings Redirection
 
-Post-settings redirection **does not use** the `urls.default_redirect_to` configuration key. Instead
-the redirect ends at the same Settings UI with the same Settings Request ID and key `update_successful`
-set to `true`. If the listed keys are set, the redirection will end up at the specified values:
+Post-settings redirection **does not use** the `urls.default_redirect_to`
+configuration key. Instead the redirect ends at the same Settings UI with the
+same Settings Request ID and key `update_successful` set to `true`. If the
+listed keys are set, the redirection will end up at the specified values:
 
 ```yaml file="path/to/my/kratos.config.yml"
 selfservice:

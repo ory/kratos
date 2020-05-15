@@ -57,7 +57,7 @@ require (
 	github.com/ory/herodot v0.8.2
 	github.com/ory/jsonschema/v3 v3.0.1
 	github.com/ory/mail/v3 v3.0.0
-	github.com/ory/sdk/swagutil v0.0.0-20200505101021-3f40b808145c
+	github.com/ory/sdk/swagutil v0.0.0-20200508110558-16957df12672
 	github.com/ory/viper v1.7.5
 	github.com/ory/x v0.0.122
 	github.com/pelletier/go-toml v1.7.0 // indirect
