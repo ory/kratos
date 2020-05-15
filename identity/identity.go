@@ -1,6 +1,7 @@
 package identity
 
 import (
+	"database/sql/driver"
 	"encoding/json"
 	"sync"
 	"time"
@@ -62,9 +63,16 @@ type (
 		// UpdatedAt is a helper struct field for gobuffalo.pop.
 		UpdatedAt time.Time `json:"-" db:"updated_at"`
 	}
-	Traits sqlxx.JSONRawMessage
+	Traits json.RawMessage
 )
 
+func (t *Traits) Scan(value interface{}) error {
+	return sqlxx.JSONScan(t, value)
+}
+
+func (t *Traits) Value() (driver.Value, error) {
+	return sqlxx.JSONValue(t)
+}
 func (t *Traits) String() string {
 	return string(*t)
 }

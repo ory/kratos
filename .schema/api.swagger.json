@@ -1075,10 +1075,6 @@
         }
       }
     },
-    "JSONRawMessage": {
-      "type": "object",
-      "title": "JSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger."
-    },
     "ProviderCredentialsConfig": {
       "type": "object",
       "properties": {
@@ -1119,7 +1115,7 @@
       }
     },
     "Traits": {
-      "$ref": "#/definitions/JSONRawMessage"
+      "type": "object"
     },
     "UUID": {
       "type": "string",

@@ -8,4 +8,4 @@ package models
 // Traits traits
 //
 // swagger:model Traits
-type Traits = JSONRawMessage
+type Traits interface{}
