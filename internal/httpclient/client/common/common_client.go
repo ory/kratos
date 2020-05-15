@@ -167,7 +167,7 @@ func (a *Client) GetSelfServiceBrowserRegistrationRequest(params *GetSelfService
 for checking the auth session. To prevent scanning attacks, the public endpoint does not return 404 status codes
 but instead 403 or 500.
 
-More information can be found at [ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
+More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 */
 func (a *Client) GetSelfServiceBrowserSettingsRequest(params *GetSelfServiceBrowserSettingsRequestParams) (*GetSelfServiceBrowserSettingsRequestOK, error) {
 	// TODO: Validate the params before sending
