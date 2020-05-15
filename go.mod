@@ -45,7 +45,6 @@ require (
 	github.com/markbates/pkger v0.12.8
 	github.com/mattn/goveralls v0.0.5
 	github.com/mikefarah/yq v1.15.0
-	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.3.0 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect
@@ -67,7 +66,6 @@ require (
 	github.com/shurcooL/go v0.0.0-20180423040247-9e1955d9fb6e
 	github.com/sirupsen/logrus v1.5.0
 	github.com/spf13/cobra v0.0.7
-	github.com/spf13/viper v1.7.0
 	github.com/sqs/goreturns v0.0.0-20181028201513-538ac6014518
 	github.com/stretchr/testify v1.5.1
 	github.com/tidwall/gjson v1.3.5
