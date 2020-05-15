@@ -4,7 +4,7 @@ title: Installation
 ---
 
 Installing ORY Kratos on any system is straight forward. We provide pre-built
-binaries, Docker Images and support various package managers.
+binaries, Docker images and support various package managers.
 
 ## Docker
 
