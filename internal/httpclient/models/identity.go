@@ -106,7 +106,10 @@ func (m *Identity) validateID(formats strfmt.Registry) error {
 
 func (m *Identity) validateTraits(formats strfmt.Registry) error {
 
-	if err := validate.Required("traits", "body", m.Traits); err != nil {
+	if err := m.Traits.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("traits")
+		}
 		return err
 	}
 
