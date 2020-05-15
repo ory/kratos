@@ -37,7 +37,6 @@ func TestStrategyTraits(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
 	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, "https://www.ory.sh/")
-	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, "https://www.ory.sh/")
 
 	ui := testhelpers.NewSettingsUITestServer(t)
 	viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
@@ -51,11 +50,13 @@ func TestStrategyTraits(t *testing.T) {
 		},
 		Traits:         identity.Traits(`{"email":"john@doe.com","stringy":"foobar","booly":false,"numby":2.5,"should_long_string":"asdfasdfasdfasdfasfdasdfasdfasdf","should_big_number":2048}`),
 		TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
+		Addresses:      []identity.VerifiableAddress{{Value: "john@doe.com", Via: identity.VerifiableAddressTypeEmail}},
 	}
-	publicTS, adminTS := testhelpers.NewSettingsAPIServer(t, reg, []identity.Identity{
-		*primaryIdentity, {ID: x.NewUUID(), Traits: identity.Traits(`{}`)}})
+	publicTS, adminTS, clients := testhelpers.NewSettingsAPIServer(t, reg, map[string]*identity.Identity{
+		"primary":   primaryIdentity,
+		"secondary": {ID: x.NewUUID(), Traits: identity.Traits(`{}`)}})
 
-	primaryUser := testhelpers.NewSessionClient(t, publicTS.URL+"/sessions/set/0")
+	primaryUser := clients["primary"]
 	publicClient := testhelpers.NewSDKClient(publicTS)
 	adminClient := testhelpers.NewSDKClient(adminTS)
 
@@ -133,12 +134,12 @@ func TestStrategyTraits(t *testing.T) {
 				Action: pointerx.String(publicTS.URL + settings.PublicSettingsProfilePath + "?request=" + rid),
 				Method: pointerx.String("POST"),
 				Fields: models.FormFields{
-					&models.FormField{Required: pointerx.Bool(false), Name: pointerx.String("traits.email"), Type: pointerx.String("text"), Value: "john@doe.com"},
-					&models.FormField{Required: pointerx.Bool(false), Name: pointerx.String("traits.stringy"), Type: pointerx.String("text"), Value: "foobar"},
-					&models.FormField{Required: pointerx.Bool(false), Name: pointerx.String("traits.numby"), Type: pointerx.String("number"), Value: json.Number("2.5")},
-					&models.FormField{Required: pointerx.Bool(false), Name: pointerx.String("traits.booly"), Type: pointerx.String("checkbox"), Value: false},
-					&models.FormField{Required: pointerx.Bool(false), Name: pointerx.String("traits.should_big_number"), Type: pointerx.String("number"), Value: json.Number("2048")},
-					&models.FormField{Required: pointerx.Bool(false), Name: pointerx.String("traits.should_long_string"), Type: pointerx.String("text"), Value: "asdfasdfasdfasdfasfdasdfasdfasdf"},
+					&models.FormField{Name: pointerx.String("traits.email"), Type: pointerx.String("text"), Value: "john@doe.com"},
+					&models.FormField{Name: pointerx.String("traits.stringy"), Type: pointerx.String("text"), Value: "foobar"},
+					&models.FormField{Name: pointerx.String("traits.numby"), Type: pointerx.String("number"), Value: json.Number("2.5")},
+					&models.FormField{Name: pointerx.String("traits.booly"), Type: pointerx.String("checkbox"), Value: false},
+					&models.FormField{Name: pointerx.String("traits.should_big_number"), Type: pointerx.String("number"), Value: json.Number("2048")},
+					&models.FormField{Name: pointerx.String("traits.should_long_string"), Type: pointerx.String("text"), Value: "asdfasdfasdfasdfasfdasdfasdfasdf"},
 				},
 			}, f)
 		})
@@ -159,6 +160,7 @@ func TestStrategyTraits(t *testing.T) {
 		})
 
 		t.Run("description=should update protected field with sudo mode", func(t *testing.T) {
+			viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "5m")
 			_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, adminClient)
 			t.Cleanup(func() {
 				viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")

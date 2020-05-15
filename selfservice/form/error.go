@@ -6,6 +6,9 @@ type (
 		Reason() string
 	}
 
+	// swagger:model formErrors
+	Errors []Error
+
 	// swagger:model formError
 	Error struct {
 		// Code    FormErrorCode `json:"id,omitempty"`

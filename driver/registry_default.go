@@ -108,16 +108,49 @@ type RegistryDefault struct {
 
 	selfserviceLogoutHandler *logout.Handler
 
-	selfserviceStrategies  []interface{}
-	loginStrategies        []login.Strategy
-	registrationStrategies []registration.Strategy
-	profileStrategies      []settings.Strategy
+	selfserviceStrategies              []interface{}
+	loginStrategies                    []login.Strategy
+	activeCredentialsCounterStrategies []identity.ActiveCredentialsCounter
+	registrationStrategies             []registration.Strategy
+	profileStrategies                  []settings.Strategy
 
 	buildVersion string
 	buildHash    string
 	buildDate    string
 
 	csrfTokenGenerator x.CSRFToken
+}
+
+func (m *RegistryDefault) RegisterPublicRoutes(router *x.RouterPublic) {
+	m.LoginHandler().RegisterPublicRoutes(router)
+	m.RegistrationHandler().RegisterPublicRoutes(router)
+	m.LogoutHandler().RegisterPublicRoutes(router)
+	m.SettingsHandler().RegisterPublicRoutes(router)
+	m.LoginStrategies().RegisterPublicRoutes(router)
+	m.SettingsStrategies().RegisterPublicRoutes(router)
+	m.RegistrationStrategies().RegisterPublicRoutes(router)
+	m.SessionHandler().RegisterPublicRoutes(router)
+	m.SelfServiceErrorHandler().RegisterPublicRoutes(router)
+	m.SchemaHandler().RegisterPublicRoutes(router)
+	m.VerificationHandler().RegisterPublicRoutes(router)
+	m.HealthHandler().SetRoutes(router.Router, false)
+}
+
+func (m *RegistryDefault) RegisterAdminRoutes(router *x.RouterAdmin) {
+	m.RegistrationHandler().RegisterAdminRoutes(router)
+	m.LoginHandler().RegisterAdminRoutes(router)
+	m.SchemaHandler().RegisterAdminRoutes(router)
+	m.VerificationHandler().RegisterAdminRoutes(router)
+	m.SettingsHandler().RegisterAdminRoutes(router)
+	m.IdentityHandler().RegisterAdminRoutes(router)
+	m.SessionHandler().RegisterAdminRoutes(router)
+	m.SelfServiceErrorHandler().RegisterAdminRoutes(router)
+	m.HealthHandler().SetRoutes(router.Router, true)
+}
+
+func (m *RegistryDefault) RegisterRoutes(public *x.RouterPublic, admin *x.RouterAdmin) {
+	m.RegisterAdminRoutes(admin)
+	m.RegisterPublicRoutes(public)
 }
 
 func NewRegistryDefault() *RegistryDefault {
@@ -233,6 +266,17 @@ func (m *RegistryDefault) LoginStrategies() login.Strategies {
 		}
 	}
 	return m.loginStrategies
+}
+
+func (m *RegistryDefault) ActiveCredentialsCounterStrategies() []identity.ActiveCredentialsCounter {
+	if len(m.activeCredentialsCounterStrategies) == 0 {
+		for _, strategy := range m.selfServiceStrategies() {
+			if s, ok := strategy.(identity.ActiveCredentialsCounter); ok {
+				m.activeCredentialsCounterStrategies = append(m.activeCredentialsCounterStrategies, s)
+			}
+		}
+	}
+	return m.activeCredentialsCounterStrategies
 }
 
 func (m *RegistryDefault) IdentityValidator() *identity.Validator {

@@ -13,7 +13,7 @@ successful response modes:
 
 Browser requests, identified by the `Accept: text/html` header, complete with a
 redirection flow. If no redirection URL is set for the flow, the Default
-Redirect URL will be used:
+Redirect URL will be used for most flows (e.g. login, registration):
 
 ```yaml file="path/to/my/kratos.config.yml"
 urls:
@@ -59,6 +59,59 @@ domain in your ORY Kratos config:
 urls:
   whitelisted_return_to_urls:
     - https://www.myapp.com/
+```
+
+### Post-Login Redirection
+
+Post-login redirection considers the following configuration keys:
+
+```yaml file="path/to/my/kratos.config.yml"
+urls:
+  default_redirect_to: https://end-up-here-per-default/
+
+selfservice:
+  login:
+    after:
+      # overrides url.default_redirect_to
+      default_redirect_to: https://this-is-overridden-by-password/
+      password:
+        # overrides selfservice.login.after.default_redirect_to
+        default_redirect_to: https://end-up-here-after-login-with-password/
+```
+
+### Post-Registration Redirection
+
+Post-login redirection considers the following configuration keys:
+
+```yaml file="path/to/my/kratos.config.yml"
+urls:
+  default_redirect_to: https://end-up-here-per-default/
+
+selfservice:
+  registration:
+    after:
+      # overrides url.default_redirect_to
+      default_redirect_to: https://this-is-overridden-by-password/
+      password:
+        # overrides selfservice.registration.after.default_redirect_to
+        default_redirect_to: https://end-up-here-after-registration-with-password/
+```
+
+### Post-Settings Redirection
+
+Post-settings redirection **does not use** the `urls.default_redirect_to` configuration key. Instead
+the redirect ends at the same Settings UI with the same Settings Request ID and key `update_successful`
+set to `true`. If the listed keys are set, the redirection will end up at the specified values:
+
+```yaml file="path/to/my/kratos.config.yml"
+selfservice:
+  settings:
+    after:
+      # overrides url.default_redirect_to
+      default_redirect_to: https://this-is-overridden-by-password/
+      password:
+        # overrides selfservice.settings.after.default_redirect_to
+        default_redirect_to: https://end-up-here-after-settings-with-password/
 ```
 
 ## JSON

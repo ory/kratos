@@ -127,7 +127,6 @@ func (r *Request) Valid() error {
 	if r.ExpiresAt.Before(time.Now()) {
 		return errors.WithStack(newRequestExpiredError(time.Since(r.ExpiresAt)))
 	}
-
 	return nil
 }
 

@@ -52,6 +52,10 @@ type Registry interface {
 	HealthHandler() *healthx.Handler
 	CookieManager() sessions.Store
 
+	RegisterRoutes(public *x.RouterPublic, admin *x.RouterAdmin)
+	RegisterPublicRoutes(public *x.RouterPublic)
+	RegisterAdminRoutes(admin *x.RouterAdmin)
+
 	x.CSRFProvider
 	x.WriterProvider
 	x.LoggingProvider
@@ -72,6 +76,7 @@ type Registry interface {
 	identity.PoolProvider
 	identity.PrivilegedPoolProvider
 	identity.ManagementProvider
+	identity.ActiveCredentialsCounterStrategyProvider
 
 	schema.HandlerProvider
 

@@ -1,6 +1,7 @@
 ---
-id: user-settings-profile-management
-title: User Settings and Profile Management
+id: user-settings
+title: User Settings
+sidebar_label: Overview
 ---
 
 ORY Kratos allows users to update their own settings and profile information
@@ -12,9 +13,9 @@ using two principal flows:
   (Swift), Android (Java), Microsoft (.NET), React Native, Electron, and others.
 
 The flow described here is implemented by the
-[profile](../strategies/user-settings-profile.md),
-[password](../strategies/username-email-password.mdx), and
-[oidc](../strategies/openid-connect-social-sign-in-oauth2.md). strategy.
+[profile](user-settings/user-profile-management.mdx),
+[password](user-login-user-registration/username-email-password.mdx), and
+[oidc](user-login-user-registration/openid-connect-social-sign-in-oauth2.mdx). strategy.
 
 ## Self-Service User Settings for Browser Applications
 
@@ -81,9 +82,9 @@ HTML. Instead, you need to implement the HTML code in your application (e.g.
 NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
 flexibility and customizability in your user interface flows and designs.
 
-Each Settings Strategy ([Profile](../strategies/user-settings-profile.md),
-[Username and Password](../strategies/username-email-password.mdx),
-[Social Sign In](../strategies/openid-connect-social-sign-in-oauth2.md),
+Each Settings Strategy ([Profile](user-settings/user-profile-management.mdx),
+[Username and Password](user-login-user-registration/username-email-password.mdx),
+[Social Sign In](user-login-user-registration/openid-connect-social-sign-in-oauth2.mdx),
 Passwordless, ...) works a bit different but they all boil down to the same
 abstract sequence:
 
@@ -101,7 +102,7 @@ instead.
 #### Server-side route
 
 You will notice that this endpoint is very similar to the one documented for
-[User Login and Registration](user-settings-profile-management.mdx).
+[User Login and Registration](user-settings.mdx).
 
 ```js
 // Uses the ORY Kratos NodeJS SDK - for more SDKs check:
@@ -197,9 +198,9 @@ methods you want to support:
 For details on payloads and potential HTML snippets consult the individual
 Self-Service Strategies for:
 
-- [Username and Password Strategy](../strategies/username-email-password.mdx)
-- [Social Sign In Strategy](../strategies/openid-connect-social-sign-in-oauth2.md)
-- [Profile](../strategies/user-settings-profile.md)
+- [Username and Password Strategy](user-login-user-registration/username-email-password.mdx)
+- [Social Sign In Strategy](user-login-user-registration/openid-connect-social-sign-in-oauth2.mdx)
+- [Profile](user-settings/user-profile-management.mdx)
 
 ### Server-Side Browser Applications
 
@@ -237,7 +238,7 @@ Nginx, Kong, Envoy, ORY Oathkeeper, or others.
 The User Settings Flow is composed of several high-level steps summarized in
 this state diagram:
 
-[![User Login and Registration State Machine](https://mermaid.ink/img/eyJjb2RlIjoic3RhdGVEaWFncmFtXG4gIHMxOiBVc2VyIGJyb3dzZXMgYXBwXG4gIHMyOiBFeGVjdXRlIFwiQmVmb3JlIExvZ2luL1JlZ2lzdHJhdGlvbiBIb29rKHMpXCJcbiAgczM6IFVzZXIgSW50ZXJmYWNlIEFwcGxpY2F0aW9uIHJlbmRlcnMgXCJMb2dpbi9SZWdpc3RyYXRpb24gUmVxdWVzdFwiXG4gIHM0OiBFeGVjdXRlIFwiQWZ0ZXIgTG9naW4vUmVnaXN0cmF0aW9uIEhvb2socylcIlxuICBzNTogVXBkYXRlIFwiTG9naW4vUmVnaXN0cmF0aW9uIFJlcXVlc3RcIiB3aXRoIEVycm9yIENvbnRleHQocylcbiAgczY6IExvZ2luL1JlZ2lzdHJhdGlvbiBzdWNjZXNzZnVsXG5cblxuXG5cdFsqXSAtLT4gczFcbiAgczEgLS0-IHMyIDogVXNlciBjbGlja3MgXCJMb2cgaW4gLyBTaWduIHVwXCJcbiAgczIgLS0-IEVycm9yIDogQSBob29rIGZhaWxzXG4gIHMyIC0tPiBzMyA6IFVzZXIgaXMgcmVkaXJlY3RlZCB0byBMb2dpbi9SZWdpc3RyYXRpb24gVUkgVVJMXG4gIHMzIC0tPiBzNCA6IFVzZXIgcHJvdmlkZXMgdmFsaWQgY3JlZGVudGlhbHMvcmVnaXN0cmF0aW9uIGRhdGFcbiAgczMgLS0-IHM1IDogVXNlciBwcm92aWRlcyBpbnZhbGlkIGNyZWRlbnRpYWxzL3JlZ2lzdHJhdGlvbiBkYXRhXG4gIHM1IC0tPiBzMyA6IFVzZXIgaXMgcmVkaXJlY3RlZCB0byBMb2dpbi9SZWdpc3RyYXRpb24gVUkgVVJMXG4gIHM0IC0tPiBFcnJvciA6IEEgSG9vayBmYWlsc1xuICBzNCAtLT4gczZcbiAgczYgLS0-IFsqXVxuXG4gIEVycm9yIC0tPiBbKl1cblxuXG4iLCJtZXJtYWlkIjp7InRoZW1lIjoiZGVmYXVsdCJ9LCJ1cGRhdGVFZGl0b3IiOmZhbHNlfQ)](https://mermaid-js.github.io/mermaid-live-editor/#/edit/eyJjb2RlIjoic3RhdGVEaWFncmFtXG4gIHMxOiBVc2VyIGJyb3dzZXMgYXBwXG4gIHMyOiBFeGVjdXRlIFwiQmVmb3JlIExvZ2luL1JlZ2lzdHJhdGlvbiBIb29rKHMpXCJcbiAgczM6IFVzZXIgSW50ZXJmYWNlIEFwcGxpY2F0aW9uIHJlbmRlcnMgXCJMb2dpbi9SZWdpc3RyYXRpb24gUmVxdWVzdFwiXG4gIHM0OiBFeGVjdXRlIFwiQWZ0ZXIgTG9naW4vUmVnaXN0cmF0aW9uIEhvb2socylcIlxuICBzNTogVXBkYXRlIFwiTG9naW4vUmVnaXN0cmF0aW9uIFJlcXVlc3RcIiB3aXRoIEVycm9yIENvbnRleHQocylcbiAgczY6IExvZ2luL1JlZ2lzdHJhdGlvbiBzdWNjZXNzZnVsXG5cblxuXG5cdFsqXSAtLT4gczFcbiAgczEgLS0-IHMyIDogVXNlciBjbGlja3MgXCJMb2cgaW4gLyBTaWduIHVwXCJcbiAgczIgLS0-IEVycm9yIDogQSBob29rIGZhaWxzXG4gIHMyIC0tPiBzMyA6IFVzZXIgaXMgcmVkaXJlY3RlZCB0byBMb2dpbi9SZWdpc3RyYXRpb24gVUkgVVJMXG4gIHMzIC0tPiBzNCA6IFVzZXIgcHJvdmlkZXMgdmFsaWQgY3JlZGVudGlhbHMvcmVnaXN0cmF0aW9uIGRhdGFcbiAgczMgLS0-IHM1IDogVXNlciBwcm92aWRlcyBpbnZhbGlkIGNyZWRlbnRpYWxzL3JlZ2lzdHJhdGlvbiBkYXRhXG4gIHM1IC0tPiBzMyA6IFVzZXIgaXMgcmVkaXJlY3RlZCB0byBMb2dpbi9SZWdpc3RyYXRpb24gVUkgVVJMXG4gIHM0IC0tPiBFcnJvciA6IEEgSG9vayBmYWlsc1xuICBzNCAtLT4gczZcbiAgczYgLS0-IFsqXVxuXG4gIEVycm9yIC0tPiBbKl1cblxuXG4iLCJtZXJtYWlkIjp7InRoZW1lIjoiZGVmYXVsdCJ9LCJ1cGRhdGVFZGl0b3IiOmZhbHNlfQ)
+[![User Settings State Machine](https://mermaid.ink/img/eyJjb2RlIjoic3RhdGVEaWFncmFtXG4gIHMxOiBVc2VyIGJyb3dzZXMgYXBwXG4gIHMzOiBVc2VyIEludGVyZmFjZSBBcHBsaWNhdGlvbiByZW5kZXJzIFwiU2V0dGluZ3MgUmVxdWVzdFwiXG4gIHM0OiBFeGVjdXRlIFwiQWZ0ZXIgU2V0dGluZ3MgSG9vayhzKVwiXG4gIHM1OiBVcGRhdGUgXCJTZXR0aW5ncyBSZXF1ZXN0XCIgd2l0aCBFcnJvciBDb250ZXh0KHMpXG4gIHM2OiBTZXR0aW5ncyB1cGRhdGUgc3VjY2Vzc2Z1bFxuXG5cdFsqXSAtLT4gczFcbiAgczEgLS0-IHMzIDogVXNlciBjbGlja3MgXCJNYW5hZ2UgQWNjb3VudFwiIGFuZCBpcyByZWRpcmVjdGVkIHRvIFNldHRpbmdzIEluaXQgRW5kcG9pbnRcbiAgczMgLS0-IHM0IDogVXNlciBwcm92aWRlcyB2YWxpZCBwcm9maWxlIGRhdGFcbiAgczMgLS0-IHM1IDogVXNlciBwcm92aWRlcyBpbnZhbGlkIHByb2ZpbGUgZGF0YVxuICBzNSAtLT4gczMgOiBVc2VyIGlzIHJlZGlyZWN0ZWQgdG8gU2V0dGluZ3MgVUkgVVJMXG4gIHM0IC0tPiBFcnJvciA6IEEgSG9vayBmYWlsc1xuICBzNCAtLT4gczZcbiAgczYgLS0-IFsqXVxuXG4gIEVycm9yIC0tPiBbKl1cblxuXG4iLCJtZXJtYWlkIjp7InRoZW1lIjoiZGVmYXVsdCJ9LCJ1cGRhdGVFZGl0b3IiOmZhbHNlfQ)](https://mermaid-js.github.io/mermaid-live-editor/#/edit/eyJjb2RlIjoic3RhdGVEaWFncmFtXG4gIHMxOiBVc2VyIGJyb3dzZXMgYXBwXG4gIHMzOiBVc2VyIEludGVyZmFjZSBBcHBsaWNhdGlvbiByZW5kZXJzIFwiU2V0dGluZ3MgUmVxdWVzdFwiXG4gIHM0OiBFeGVjdXRlIFwiQWZ0ZXIgU2V0dGluZ3MgSG9vayhzKVwiXG4gIHM1OiBVcGRhdGUgXCJTZXR0aW5ncyBSZXF1ZXN0XCIgd2l0aCBFcnJvciBDb250ZXh0KHMpXG4gIHM2OiBTZXR0aW5ncyB1cGRhdGUgc3VjY2Vzc2Z1bFxuXG5cdFsqXSAtLT4gczFcbiAgczEgLS0-IHMzIDogVXNlciBjbGlja3MgXCJNYW5hZ2UgQWNjb3VudFwiIGFuZCBpcyByZWRpcmVjdGVkIHRvIFNldHRpbmdzIEluaXQgRW5kcG9pbnRcbiAgczMgLS0-IHM0IDogVXNlciBwcm92aWRlcyB2YWxpZCBwcm9maWxlIGRhdGFcbiAgczMgLS0-IHM1IDogVXNlciBwcm92aWRlcyBpbnZhbGlkIHByb2ZpbGUgZGF0YVxuICBzNSAtLT4gczMgOiBVc2VyIGlzIHJlZGlyZWN0ZWQgdG8gU2V0dGluZ3MgVUkgVVJMXG4gIHM0IC0tPiBFcnJvciA6IEEgSG9vayBmYWlsc1xuICBzNCAtLT4gczZcbiAgczYgLS0-IFsqXVxuXG4gIEVycm9yIC0tPiBbKl1cblxuXG4iLCJtZXJtYWlkIjp7InRoZW1lIjoiZGVmYXVsdCJ9LCJ1cGRhdGVFZGl0b3IiOmZhbHNlfQ)
 
 1. The flow is initiated by directing the user's browser to
    `http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/settings`.

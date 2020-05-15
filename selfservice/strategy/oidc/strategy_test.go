@@ -2,19 +2,18 @@ package oidc_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
-	"os"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -23,14 +22,10 @@ import (
 
 	"github.com/ory/viper"
 
-	"github.com/ory/dockertest"
-	"github.com/ory/dockertest/docker"
-
-	"github.com/phayes/freeport"
-
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/form"
@@ -41,120 +36,36 @@ import (
 const debugRedirects = false
 
 func TestStrategy(t *testing.T) {
-	var (
-		subject      string
-		scope        []string
-		remoteAdmin  = os.Getenv("TEST_SELFSERVICE_OIDC_HYDRA_ADMIN")
-		remotePublic = os.Getenv("TEST_SELFSERVICE_OIDC_HYDRA_PUBLIC")
-	)
-
-	hydraIntegrationTS, hydraIntegrationTSURL := newHydraIntegration(t, &remoteAdmin, &subject, &scope, os.Getenv("TEST_SELFSERVICE_OIDC_HYDRA_INTEGRATION_ADDR"))
-	defer hydraIntegrationTS.Close()
-
 	if testing.Short() {
 		t.Skip()
 	}
 
-	if remotePublic == "" && remoteAdmin == "" {
-		publicPort, err := freeport.GetFreePort()
-		require.NoError(t, err)
+	var (
+		_, reg  = internal.NewFastRegistryWithMocks(t)
+		subject string
+		scope   []string
+	)
 
-		pool, err := dockertest.NewPool("")
-		require.NoError(t, err)
-		hydra, err := pool.RunWithOptions(&dockertest.RunOptions{
-			Repository: "oryd/hydra",
-			Tag:        "v1.2.2",
-			Env: []string{
-				"DSN=memory",
-				fmt.Sprintf("URLS_SELF_ISSUER=http://127.0.0.1:%d/", publicPort),
-				"URLS_LOGIN=" + hydraIntegrationTSURL + "/login",
-				"URLS_CONSENT=" + hydraIntegrationTSURL + "/consent",
-			},
-			Cmd:          []string{"serve", "all", "--dangerous-force-http"},
-			ExposedPorts: []string{"4444/tcp", "4445/tcp"},
-			PortBindings: map[docker.Port][]docker.PortBinding{
-				"4444/tcp": {{HostPort: fmt.Sprintf("%d/tcp", publicPort)}},
-			},
-		})
-		require.NoError(t, err)
-		defer hydra.Close()
-		require.NoError(t, hydra.Expire(uint(60*15)))
-
-		require.NotEmpty(t, hydra.GetPort("4444/tcp"), "%+v", hydra.Container.NetworkSettings.Ports)
-		require.NotEmpty(t, hydra.GetPort("4445/tcp"), "%+v", hydra.Container)
-
-		remotePublic = "http://127.0.0.1:" + hydra.GetPort("4444/tcp")
-		remoteAdmin = "http://127.0.0.1:" + hydra.GetPort("4445/tcp")
-	}
-
-	_, reg := internal.NewFastRegistryWithMocks(t)
-
-	public := x.NewRouterPublic()
-	admin := x.NewRouterAdmin()
-	reg.LoginHandler().RegisterPublicRoutes(public)
-	reg.LoginHandler().RegisterAdminRoutes(admin)
-	reg.LoginStrategies().RegisterPublicRoutes(public)
-	reg.RegistrationStrategies().RegisterPublicRoutes(public)
-	reg.RegistrationHandler().RegisterPublicRoutes(public)
-	reg.RegistrationHandler().RegisterAdminRoutes(admin)
-	ts := httptest.NewServer(public)
-	defer ts.Close()
-
+	remoteAdmin, remotePublic, hydraIntegrationTSURL := newHydra(t, &subject, &scope)
 	returnTS := newReturnTs(t, reg)
-	defer returnTS.Close()
+	uiTS := newUI(t, reg)
+	errTS := testhelpers.NewErrorTestServer(t, reg)
+	ts, _ := testhelpers.NewKratosServer(t, reg)
 
-	uiTS := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var e interface{}
-		var err error
-		if r.URL.Path == "/login" {
-			e, err = reg.LoginRequestPersister().GetLoginRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
-		} else if r.URL.Path == "/registration" {
-			e, err = reg.RegistrationRequestPersister().GetRegistrationRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
-		}
-
-		require.NoError(t, err)
-		reg.Writer().Write(w, r, e)
-	}))
-	defer uiTS.Close()
-
-	createClient(t, remoteAdmin, ts.URL+oidc.BasePath+"/callback/valid")
-
-	cb := map[string]interface{}{
-		"config": &oidc.ConfigurationCollection{
-			Providers: []oidc.Configuration{
-				{
-					Provider:     "generic",
-					ID:           "valid",
-					ClientID:     "client",
-					ClientSecret: "secret",
-					IssuerURL:    remotePublic + "/",
-					Mapper:       "file://./stub/oidc.hydra.jsonnet",
-				},
-				{
-					Provider:     "generic",
-					ID:           "invalid-issuer",
-					ClientID:     "client",
-					ClientSecret: "secret",
-					IssuerURL:    strings.Replace(remotePublic, "127.0.0.1", "localhost", 1) + "/",
-					Mapper:       "file://./stub/oidc.hydra.jsonnet",
-				},
-			},
+	viperSetProviderConfig(
+		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid", "client"),
+		oidc.Configuration{
+			Provider:     "generic",
+			ID:           "invalid-issuer",
+			ClientID:     "client",
+			ClientSecret: "secret",
+			IssuerURL:    strings.Replace(remotePublic, "127.0.0.1", "localhost", 1) + "/",
+			Mapper:       "file://./stub/oidc.hydra.jsonnet",
 		},
-	}
-
-	errTS := newErrTs(t, reg)
-	defer errTS.Close()
-
-	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC), cb)
-	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
-	viper.Set(configuration.ViperKeyURLsError, errTS.URL)
-	viper.Set(configuration.ViperKeyURLsLogin, uiTS.URL+"/login")
-	viper.Set(configuration.ViperKeyURLsRegistration, uiTS.URL+"/registration")
+	)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
-	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, returnTS.URL)
-	viper.Set(
-		configuration.HookStrategyKey(configuration.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypeOIDC.String()),
-		[]configuration.SelfServiceHook{{Name: "session"}})
+	viper.Set(configuration.HookStrategyKey(configuration.ViperKeySelfServiceRegistrationAfter,
+		identity.CredentialsTypeOIDC.String()), []configuration.SelfServiceHook{{Name: "session"}})
 
 	t.Logf("Kratos Public URL: %s", ts.URL)
 	t.Logf("Kratos Error URL: %s", errTS.URL)
@@ -162,29 +73,6 @@ func TestStrategy(t *testing.T) {
 	t.Logf("Hydra Admin URL: %s", remoteAdmin)
 	t.Logf("Hydra Integration URL: %s", hydraIntegrationTSURL)
 	t.Logf("Return URL: %s", returnTS.URL)
-
-	var newClient = func(t *testing.T, jar *cookiejar.Jar) *http.Client {
-		if jar == nil {
-			j, err := cookiejar.New(nil)
-			jar = j
-			require.NoError(t, err)
-		}
-		return &http.Client{
-			Jar: jar,
-			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				if debugRedirects {
-					t.Logf("Redirect: %s", req.URL.String())
-				}
-				if len(via) >= 20 {
-					for k, v := range via {
-						t.Logf("Failed with redirect (%d): %s", k, v.URL.String())
-					}
-					return errors.New("stopped after 20 redirects")
-				}
-				return nil
-			},
-		}
-	}
 
 	subject = "foo@bar.com"
 	scope = []string{}
@@ -596,4 +484,100 @@ func TestStrategy(t *testing.T) {
 		actual := sr.Methods[identity.CredentialsTypeOIDC]
 		assert.EqualValues(t, expected.Config.RequestMethodConfigurator.(*oidc.RequestMethod).HTMLForm, actual.Config.RequestMethodConfigurator.(*oidc.RequestMethod).HTMLForm)
 	})
+}
+
+func TestCountActiveCredentials(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	strategy := oidc.NewStrategy(reg, conf)
+
+	toJson := func(c oidc.CredentialsConfig) []byte {
+		out, err := json.Marshal(&c)
+		require.NoError(t, err)
+		return out
+	}
+
+	for k, tc := range []struct {
+		in       identity.CredentialsCollection
+		expected int
+	}{
+		{
+			in: identity.CredentialsCollection{{
+				Type:   strategy.ID(),
+				Config: json.RawMessage{},
+			}},
+		},
+		{
+			in: identity.CredentialsCollection{{
+				Type: strategy.ID(),
+				Config: toJson(oidc.CredentialsConfig{Providers: []oidc.ProviderCredentialsConfig{
+					{Subject: "foo", Provider: "bar"},
+				}}),
+			}},
+		},
+		{
+			in: identity.CredentialsCollection{{
+				Type:        strategy.ID(),
+				Identifiers: []string{""},
+				Config: toJson(oidc.CredentialsConfig{Providers: []oidc.ProviderCredentialsConfig{
+					{Subject: "foo", Provider: "bar"},
+				}}),
+			}},
+		},
+		{
+			in: identity.CredentialsCollection{{
+				Type:        strategy.ID(),
+				Identifiers: []string{"bar:"},
+				Config: toJson(oidc.CredentialsConfig{Providers: []oidc.ProviderCredentialsConfig{
+					{Subject: "foo", Provider: "bar"},
+				}}),
+			}},
+		},
+		{
+			in: identity.CredentialsCollection{{
+				Type:        strategy.ID(),
+				Identifiers: []string{":foo"},
+				Config: toJson(oidc.CredentialsConfig{Providers: []oidc.ProviderCredentialsConfig{
+					{Subject: "foo", Provider: "bar"},
+				}}),
+			}},
+		},
+		{
+			in: identity.CredentialsCollection{{
+				Type:        strategy.ID(),
+				Identifiers: []string{"not-bar:foo"},
+				Config: toJson(oidc.CredentialsConfig{Providers: []oidc.ProviderCredentialsConfig{
+					{Subject: "foo", Provider: "bar"},
+				}}),
+			}},
+		},
+		{
+			in: identity.CredentialsCollection{{
+				Type:        strategy.ID(),
+				Identifiers: []string{"bar:not-foo"},
+				Config: toJson(oidc.CredentialsConfig{Providers: []oidc.ProviderCredentialsConfig{
+					{Subject: "foo", Provider: "bar"},
+				}}),
+			}},
+		},
+		{
+			in: identity.CredentialsCollection{{
+				Type:        strategy.ID(),
+				Identifiers: []string{"bar:foo"},
+				Config: toJson(oidc.CredentialsConfig{Providers: []oidc.ProviderCredentialsConfig{
+					{Subject: "foo", Provider: "bar"},
+				}}),
+			}},
+			expected: 1,
+		},
+	} {
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			in := make(map[identity.CredentialsType]identity.Credentials)
+			for _, v := range tc.in {
+				in[v.Type] = v
+			}
+			actual, err := strategy.CountActiveCredentials(in)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, actual)
+		})
+	}
 }

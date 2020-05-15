@@ -22,7 +22,7 @@ import (
 // This request is used when an identity wants to update settings
 // (e.g. profile data, passwords, ...) in a selfservice manner.
 //
-// For more information head over to: https://www.ory.sh/docs/kratos/selfservice/flows/user-settings-profile-management
+// We recommend reading the [User Settings Documentation](../self-service/flows/user-settings)
 //
 // swagger:model settingsRequest
 type Request struct {
@@ -100,12 +100,19 @@ func (r *Request) TableName() string {
 	return "selfservice_settings_requests"
 }
 
+func (r *Request) GetID() uuid.UUID {
+	return r.ID
+}
+
 func (r *Request) Valid(s *session.Session) error {
-	if r.ExpiresAt.Before(time.Now()) {
-		return errors.WithStack(ErrRequestExpired.WithReasonf("The settings request expired %.2f minutes ago, please try again.", time.Since(r.ExpiresAt).Minutes()))
+	if r.ExpiresAt.Before(time.Now().UTC()) {
+		return errors.WithStack(ErrRequestExpired.
+			WithReasonf("The settings request expired %.2f minutes ago, please try again.",
+				-time.Since(r.ExpiresAt).Minutes()))
 	}
 	if r.IdentityID != s.Identity.ID {
-		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("The settings request expired %.2f minutes ago, please try again", time.Since(r.ExpiresAt).Minutes()))
+		return errors.WithStack(herodot.ErrBadRequest.WithReasonf(
+			"You must restart the flow because the resumable session was initiated by another person."))
 	}
 	return nil
 }

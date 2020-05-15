@@ -2248,7 +2248,7 @@ attacks, the public endpoint does not return 404 status codes but instead 403
 or 500.
 
 More information can be found at
-[ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
+[ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings).
 
 <a id="get-the-request-context-of-browser-based-settings-flows-parameters"></a>
 
@@ -3521,7 +3521,7 @@ initialized.
 > (Chrome, Firefox, ...).
 
 More information can be found at
-[ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
+[ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings).
 
 #### Responses
 
@@ -3711,7 +3711,7 @@ by POSTing data to this endpoint.
 > (Chrome, Firefox, ...) and HTML Forms.
 
 More information can be found at
-[ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
+[ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings).
 
 #### Responses
 
@@ -3906,7 +3906,7 @@ further steps.
 > (Chrome, Firefox, ...) and HTML Forms.
 
 More information can be found at
-[ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
+[ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings).
 
 #### Request body
 

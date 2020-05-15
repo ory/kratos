@@ -60,7 +60,25 @@ run() {
     --grant-types authorization_code,refresh_token \
     --response-types code,id_token \
     --scope openid,offline \
-    --callbacks http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/registration/strategies/oidc/callback/hydra
+    --callbacks http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/callback/hydra
+
+  hydra clients create \
+    --endpoint http://127.0.0.1:4445 \
+    --id google-client \
+    --secret kratos-secret \
+    --grant-types authorization_code,refresh_token \
+    --response-types code,id_token \
+    --scope openid,offline \
+    --callbacks http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/callback/google
+
+  hydra clients create \
+    --endpoint http://127.0.0.1:4445 \
+    --id github-client \
+    --secret kratos-secret \
+    --grant-types authorization_code,refresh_token \
+    --response-types code,id_token \
+    --scope openid,offline \
+    --callbacks http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/callback/github
 
   if [ -z ${KRATOS_APP_PATH+x} ]; then
     (cd "$dir"; PORT=4455 SECURITY_MODE=cookie npm run serve \
@@ -87,9 +105,9 @@ run() {
     http-get://127.0.0.1:4437/mail
 
   if [[ $dev = "yes" ]]; then
-    npm run test:watch -- --config integrationFolder="cypress/integration/profiles/$profile"
+    npm run test:watch -- --config integrationFolder="test/e2e/cypress/integration/profiles/$profile"
   else
-    npm run test -- --config integrationFolder="cypress/integration/profiles/$profile"
+    npm run test -- --config integrationFolder="test/e2e/cypress/integration/profiles/$profile"
   fi
 }
 

@@ -27,6 +27,8 @@ type Client struct {
 
 // ClientService is the interface for Client methods
 type ClientService interface {
+	CompleteSelfServiceBrowserSettingsOIDCSettingsFlow(params *CompleteSelfServiceBrowserSettingsOIDCSettingsFlowParams) error
+
 	CompleteSelfServiceBrowserSettingsPasswordStrategyFlow(params *CompleteSelfServiceBrowserSettingsPasswordStrategyFlowParams) error
 
 	CompleteSelfServiceBrowserSettingsProfileStrategyFlow(params *CompleteSelfServiceBrowserSettingsProfileStrategyFlowParams) error
@@ -51,6 +53,40 @@ type ClientService interface {
 }
 
 /*
+  CompleteSelfServiceBrowserSettingsOIDCSettingsFlow completes the browser based settings flow for the open ID connect strategy
+
+  This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this
+endpoint.
+
+> This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
+
+More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+*/
+func (a *Client) CompleteSelfServiceBrowserSettingsOIDCSettingsFlow(params *CompleteSelfServiceBrowserSettingsOIDCSettingsFlowParams) error {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewCompleteSelfServiceBrowserSettingsOIDCSettingsFlowParams()
+	}
+
+	_, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "completeSelfServiceBrowserSettingsOIDCSettingsFlow",
+		Method:             "POST",
+		PathPattern:        "/self-service/browser/flows/registration/strategies/oidc/settings/connections",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &CompleteSelfServiceBrowserSettingsOIDCSettingsFlowReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+/*
   CompleteSelfServiceBrowserSettingsPasswordStrategyFlow completes the browser based settings flow for the password strategy
 
   This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this
@@ -58,7 +94,7 @@ endpoint.
 
 > This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
 
-More information can be found at [ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
+More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 */
 func (a *Client) CompleteSelfServiceBrowserSettingsPasswordStrategyFlow(params *CompleteSelfServiceBrowserSettingsPasswordStrategyFlowParams) error {
 	// TODO: Validate the params before sending
@@ -95,7 +131,7 @@ the browser redirected to `url.settings_ui` for further steps.
 
 > This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
 
-More information can be found at [ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
+More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 */
 func (a *Client) CompleteSelfServiceBrowserSettingsProfileStrategyFlow(params *CompleteSelfServiceBrowserSettingsProfileStrategyFlowParams) error {
 	// TODO: Validate the params before sending
@@ -312,7 +348,7 @@ flow will be initialized.
 > This endpoint is NOT INTENDED for API clients and only works
 with browsers (Chrome, Firefox, ...).
 
-More information can be found at [ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
+More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 */
 func (a *Client) InitializeSelfServiceSettingsFlow(params *InitializeSelfServiceSettingsFlowParams) error {
 	// TODO: Validate the params before sending

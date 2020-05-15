@@ -1,10 +1,4 @@
-import {
-  APP_URL,
-  gen,
-  password,
-  privilegedLifespan,
-  website,
-} from '../../../../helpers'
+import { APP_URL, gen, website } from '../../../../helpers'
 
 context('Settings', () => {
   let email = gen.email()

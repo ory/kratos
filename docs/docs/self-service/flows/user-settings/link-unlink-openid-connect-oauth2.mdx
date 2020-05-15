@@ -1,0 +1,186 @@
+---
+id: link-unlink-openid-connect-oauth2
+title: Link and Unlink OpenID Connect and OAuth2 Connections
+---
+
+:::tip Before you start
+
+Please read the
+[Username / Email & Password Credentials Documentation](../../../concepts/credentials/username-email-password.mdx)
+[OpenID Connect / OAuth2 Credentials Documentation](../../../concepts/credentials/openid-connect-oidc-oauth2.mdx)
+and [User Settings Documentation](../user-settings.mdx) first.
+
+:::
+
+Because OAuth2 and OpenID Connect (OIDC) require the user to interact with a browser,
+this strategy does not work with API-only flows. You cannot log in or sign up a user
+using this strategy
+
+- with REST API or AJAX requests only;
+- without a browser.
+
+This document summarizes exemplary request payloads for performing "link / unlink your account
+from Google, Github, ..." flows using the user settings flow with the `oidc` strategy.
+
+ORY Kratos will prompt the user to re-authenticate before the password is changed, similar to the
+[GitHub sudo mode](https://help.github.com/en/github/authenticating-to-github/sudo-mode).
+
+You can configure how long a session is "privileged" by setting:
+
+```yaml title="path/to/kratos/config.yml"
+selfservice:
+  settings:
+    # Sessions older than a minute requires the user to sign in again before
+    # the password is changed.
+    privileged_session_max_age: 1m
+```
+
+The provider's configured JSONNet is not used in this flow. This means that the Identity's Traits will
+not change when a OpenID Connect / OAuth2 Provider is linked or unlinked.
+
+Here we use a configuration with 3 providers:
+
+```yaml title="path/to/my/kratos/config.yml"
+selfservice:
+  strategies:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: hydra
+            # provider, client_id, issuer_url, scope, ...
+          - id: google
+            # provider, client_id, issuer_url, scope, ...
+          - id: github
+            # provider, client_id, issuer_url, scope, ...
+```
+
+## Flow
+
+Redirecting the browser to the [Self-Service Settings Endpoint](../user-settings.mdx#user-settings-process-sequence)
+initiates the flow. If the `oidc` strategy is enabled, the Settings Request Response Payload will include a `oidc` method.
+
+A provider can be unlinked if there is at least one other method (credential) of signing in (e.g. connected to both GitHub
+and Google, or having set an email/username + password). A provider can be linked if it has not yet been linked.
+
+In this example, the user used Google to sign in. Because no other credential is enabled, it can not be unlinked
+and is therefore hidden from the form:
+
+```json5 title="$ curl http://<kratos-admin>/self-service/browser/flows/requests/settings?request=d88e67a6-7011-482b-b448-54629c434f6a"
+{
+    "id": "d88e67a6-7011-482b-b448-54629c434f6a",
+    "expires_at": "2020-05-15T11:11:19.909207Z",
+    "issued_at": "2020-05-15T10:11:19.909207Z",
+    "request_url": "http://127.0.0.1:4433/self-service/browser/flows/settings",
+    "methods": {
+        // password, profile, ...
+        "oidc": {
+            "method": "oidc",
+            "config": {
+                "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/settings/connections?request=e354472c-32b3-4c23-89b7-7edf7418395e",
+                "method": "POST",
+                "fields": [
+                    {
+                        "name": "csrf_token",
+                        "type": "hidden",
+                        "required": true,
+                        "value": "a1CNYwJo3G603eaMLHcDyqPgJz9ArZu2cqJqE+tAvvUkGz63Y1G6WYuBc/EdjFHZM7mSjglbroNQyEAjuY21pw=="
+                    },
+                    {
+                        "name": "link",
+                        "type": "submit",
+                        "value": "hydra"
+                    },
+                    {
+                        "name": "link",
+                        "type": "submit",
+                        "value": "github"
+                    }
+                ]
+            }
+        }
+    },
+    "identity": {
+        "id": "dd8ce04e-c636-4488-bc92-b5debf73fd30",
+        "traits_schema_id": "default",
+        "traits_schema_url": "",
+        "traits": {
+            "email": "superuser@ory.sh",
+            "website": "https://www.ory.sh"
+        }
+    },
+    "update_successful": false
+}
+```
+
+Assuming the user chooses to link the GitHub profile, the payload will look like this after a successful flow:
+
+```json5 title="$ curl http://<kratos-admin>/self-service/browser/flows/requests/settings?request=d88e67a6-7011-482b-b448-54629c434f6a"
+{
+    "id": "d88e67a6-7011-482b-b448-54629c434f6a",
+    // expires_at, ...
+    "update_successful": true // <-- this is now true
+    "methods": {
+        "oidc": {
+            "method": "oidc",
+            "config": {
+                "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/settings/connections?request=d88e67a6-7011-482b-b448-54629c434f6a",
+                "method": "POST",
+                "fields": [
+                    {
+                        "name": "csrf_token",
+                        "type": "hidden",
+                        "required": true,
+                        "value": "f+SbISlrPFgmV3AtU3GtqJZ5lN0tpRBFLXaeo+6ENw4c/MfQStdBlB1wqja9lS5tSKtXzo1Ex/wPdhPoeLlPrQ=="
+                    },
+                    {
+                        "name": "link",
+                        "type": "submit",
+                        "value": "hydra"
+                    },
+                    {
+                        "name": "unlink", // <- you can now unlink google because github is set up!
+                        "type": "submit",
+                        "value": "google"
+                    },
+                    {
+                        "name": "unlink",  // <- this is now unlink!
+                        "type": "submit",
+                        "value": "github"
+                    }
+                ]
+            }
+        },
+    },
+    // ...
+}
+```
+
+If an error occurs during the flow, it will be included in the form error:
+
+```json5 title="$ curl http://<kratos-admin>/self-service/browser/flows/requests/settings?request=d88e67a6-7011-482b-b448-54629c434f6a"
+{
+    "id": "d88e67a6-7011-482b-b448-54629c434f6a",
+    // expires_at, ...
+    "methods": {
+        "oidc": {
+            "method": "oidc",
+            "config": {
+                "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/settings/connections?request=d88e67a6-7011-482b-b448-54629c434f6a",
+                "method": "POST",
+                "errors": [
+                    {
+                        "message": "Authentication failed because no id_token was returned. Please accept the \"openid\" permission and try again."
+                    }
+                ]
+                // fields
+            }
+        },
+    },
+    // ...
+}
+```
+
+## Security and Defenses
+
+Please head over to [OpenID Connect Security and Defenses](../user-login-user-registration/openid-connect-social-sign-in-oauth2.mdx#security-and-defenses)

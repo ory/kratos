@@ -1,17 +1,17 @@
 package identity
 
 import (
-	"database/sql/driver"
 	"encoding/json"
 	"sync"
 	"time"
+
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/driver/configuration"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
-	"github.com/ory/kratos/persistence/aliases"
 	"github.com/ory/kratos/x"
 )
 
@@ -62,16 +62,8 @@ type (
 		// UpdatedAt is a helper struct field for gobuffalo.pop.
 		UpdatedAt time.Time `json:"-" db:"updated_at"`
 	}
-	Traits json.RawMessage
+	Traits sqlxx.JSONRawMessage
 )
-
-func (t *Traits) Scan(value interface{}) error {
-	return aliases.JSONScan(t, value)
-}
-
-func (t *Traits) Value() (driver.Value, error) {
-	return aliases.JSONValue(t)
-}
 
 func (t *Traits) String() string {
 	return string(*t)
@@ -125,6 +117,20 @@ func (i *Identity) GetCredentials(t CredentialsType) (*Credentials, bool) {
 	}
 
 	return nil, false
+}
+
+func (i *Identity) ParseCredentials(t CredentialsType, config interface{}) (*Credentials, error) {
+	i.lock().RLock()
+	defer i.lock().RUnlock()
+
+	if c, ok := i.Credentials[t]; ok {
+		if err := json.Unmarshal(c.Config, config); err != nil {
+			return nil, errors.WithStack(err)
+		}
+		return &c, nil
+	}
+
+	return nil, errors.Errorf("identity does not have credential type %s", t)
 }
 
 func (i *Identity) CopyWithoutCredentials() *Identity {

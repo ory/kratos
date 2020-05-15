@@ -1,6 +1,10 @@
 package password
 
 import (
+	"encoding/json"
+	"strings"
+
+	"github.com/pkg/errors"
 	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/ory/kratos/continuity"
@@ -16,6 +20,7 @@ import (
 
 var _ login.Strategy = new(Strategy)
 var _ registration.Strategy = new(Strategy)
+var _ identity.ActiveCredentialsCounter = new(Strategy)
 
 type registrationStrategyDependencies interface {
 	x.LoggingProvider
@@ -56,6 +61,23 @@ type Strategy struct {
 	c configuration.Provider
 	d registrationStrategyDependencies
 	v *validator.Validate
+}
+
+func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
+	for _, c := range cc {
+		if c.Type == s.ID() && len(c.Config) > 0 {
+			var conf CredentialsConfig
+			if err = json.Unmarshal(c.Config, &conf); err != nil {
+				return 0, errors.WithStack(err)
+			}
+
+			if len(c.Identifiers) > 0 && len(c.Identifiers[0]) > 0 &&
+				strings.HasPrefix(conf.HashedPassword, "$argon2id$") {
+				count++
+			}
+		}
+	}
+	return
 }
 
 func NewStrategy(

@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/google/go-jsonnet"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
@@ -22,8 +22,10 @@ import (
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
 
+	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/form"
 
 	"github.com/ory/kratos/driver/configuration"
@@ -35,23 +37,13 @@ import (
 )
 
 const (
-	BasePath = "/self-service/browser/flows/registration/strategies/oidc"
+	BasePath = "/self-service/browser/flows/strategies/oidc"
 
 	AuthPath     = BasePath + "/auth/:request"
 	CallbackPath = BasePath + "/callback/:provider"
-
-	registrationFormPayloadSchema = `{
-  "$id": "https://schemas.ory.sh/kratos/selfservice/oidc/registration/config.schema.json",
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "type": "object",
-  "properties": {
-    "traits": {}
-  }
-}`
 )
 
-var _ login.Strategy = new(Strategy)
-var _ registration.Strategy = new(Strategy)
+var _ identity.ActiveCredentialsCounter = new(Strategy)
 
 type dependencies interface {
 	errorx.ManagementProvider
@@ -79,6 +71,21 @@ type dependencies interface {
 	registration.StrategyProvider
 	registration.HandlerProvider
 	registration.ErrorHandlerProvider
+
+	settings.ErrorHandlerProvider
+	settings.RequestPersistenceProvider
+	settings.HookExecutorProvider
+
+	continuity.ManagementProvider
+
+	identity.ActiveCredentialsCounterStrategyProvider
+}
+
+func isForced(req interface{}) bool {
+	f, ok := req.(interface {
+		IsForced() bool
+	})
+	return ok && f.IsForced()
 }
 
 // Strategy implements selfservice.LoginStrategy, selfservice.RegistrationStrategy. It supports both login
@@ -90,12 +97,35 @@ type Strategy struct {
 	validator *schema.Validator
 }
 
-func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
-	s.setRoutes(r)
+type authCodeContainer struct {
+	RequestID string     `json:"request_id"`
+	State     string     `json:"state"`
+	Form      url.Values `json:"form"`
 }
 
-func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
-	s.setRoutes(r)
+func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
+	for _, c := range cc {
+		if c.Type == s.ID() && gjson.ValidBytes(c.Config) {
+			var conf CredentialsConfig
+			if err = json.Unmarshal(c.Config, &conf); err != nil {
+				return 0, errors.WithStack(err)
+			}
+
+			for _, ider := range c.Identifiers {
+				parts := strings.Split(ider, ":")
+				if len(parts) != 2 {
+					continue
+				}
+
+				for _, prov := range conf.Providers {
+					if parts[0] == prov.Provider && parts[1] == prov.Subject && len(prov.Subject) > 1 && len(prov.Provider) > 1 {
+						count++
+					}
+				}
+			}
+		}
+	}
+	return
 }
 
 func (s *Strategy) setRoutes(r *x.RouterPublic) {
@@ -130,16 +160,12 @@ func (s *Strategy) ID() identity.CredentialsType {
 
 func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	rid := x.ParseUUID(ps.ByName("request"))
-
 	if err := r.ParseForm(); err != nil {
 		s.handleError(w, r, rid, "", nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
 		return
 	}
 
-	var (
-		pid = r.Form.Get("provider") // this can come from both url query and post body
-	)
-
+	var pid = r.Form.Get("provider") // this can come from both url query and post body
 	if pid == "" {
 		s.handleError(w, r, rid, pid, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`The HTTP request did not contain the required "provider" form field`)))
 		return
@@ -157,35 +183,32 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	ar, err := s.validateRequest(r.Context(), rid)
+	req, err := s.validateRequest(r.Context(), r, rid)
 	if err != nil {
 		s.handleError(w, r, rid, pid, nil, err)
 		return
 	}
 
-	// we assume an error means the user has no session
-	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
-		if !ar.IsForced() {
-			http.Redirect(w, r, s.c.DefaultReturnToURL().String(), http.StatusFound)
-			return
-		}
+	if s.alreadyAuthenticated(w, r, req) {
+		return
 	}
 
 	state := x.NewUUID().String()
-	// Any data that is posted to this endpoint will be used to fill out missing data from the oidc provider.
-	if err := x.SessionPersistValues(w, r, s.d.CookieManager(), sessionName, map[string]interface{}{
-		sessionKeyState:  state,
-		sessionRequestID: rid.String(),
-		sessionFormState: r.PostForm.Encode(),
-	}); err != nil {
+	if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
+		continuity.WithPayload(&authCodeContainer{
+			State:     state,
+			RequestID: rid.String(),
+			Form:      r.PostForm,
+		}),
+		continuity.WithLifespan(time.Minute*30)); err != nil {
 		s.handleError(w, r, rid, pid, nil, err)
 		return
 	}
 
-	http.Redirect(w, r, config.AuthCodeURL(state, provider.AuthCodeURLOptions(ar)...), http.StatusFound)
+	http.Redirect(w, r, config.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...), http.StatusFound)
 }
 
-func (s *Strategy) validateRequest(ctx context.Context, rid uuid.UUID) (request, error) {
+func (s *Strategy) validateRequest(ctx context.Context, r *http.Request, rid uuid.UUID) (request, error) {
 	if x.IsZeroUUID(rid) {
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReason("The session cookie contains invalid values and the request could not be executed. Please try again."))
 	}
@@ -197,42 +220,76 @@ func (s *Strategy) validateRequest(ctx context.Context, rid uuid.UUID) (request,
 		return ar, nil
 	}
 
-	ar, err := s.d.LoginRequestPersister().GetLoginRequest(ctx, rid)
-	if err != nil {
-		return nil, err
+	if ar, err := s.d.LoginRequestPersister().GetLoginRequest(ctx, rid); err == nil {
+		if err := ar.Valid(); err != nil {
+			return ar, err
+		}
+		return ar, nil
 	}
 
-	if err := ar.Valid(); err != nil {
-		return ar, err
+	ar, err := s.d.SettingsRequestPersister().GetSettingsRequest(ctx, rid)
+	if err == nil {
+		sess, err := s.d.SessionManager().FetchFromRequest(ctx, r)
+		if err != nil {
+			return ar, err
+		}
+
+		if err := ar.Valid(sess); err != nil {
+			return ar, err
+		}
+		return ar, nil
 	}
 
-	return ar, nil
+	return ar, err // this must return the error
 }
 
-func (s *Strategy) validateCallback(r *http.Request) (request, error) {
+func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (request, *authCodeContainer, error) {
 	var (
-		code = r.URL.Query().Get("code")
+		code  = r.URL.Query().Get("code")
+		state = r.URL.Query().Get("state")
 	)
-	if state := r.URL.Query().Get("state"); state == "" {
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the state query parameter.`))
-	} else if state != x.SessionGetStringOr(r, s.d.CookieManager(), sessionName, sessionKeyState, "") {
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the session cookie.`))
+
+	if state == "" {
+		return nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the state query parameter.`))
 	}
 
-	ar, err := s.validateRequest(r.Context(), x.ParseUUID(x.SessionGetStringOr(r, s.d.CookieManager(), sessionName, sessionRequestID, "")))
+	var container authCodeContainer
+	if _, err := s.d.ContinuityManager().Continue(context.Background(), w, r, sessionName, continuity.WithPayload(&container)); err != nil {
+		return nil, nil, err
+	}
+
+	if state != container.State {
+		return nil, &container, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the session cookie.`))
+	}
+
+	req, err := s.validateRequest(r.Context(), r, x.ParseUUID(container.RequestID))
 	if err != nil {
-		return nil, err
+		return nil, &container, err
 	}
 
 	if r.URL.Query().Get("error") != "" {
-		return ar, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider returned error "%s": %s`, r.URL.Query().Get("error"), r.URL.Query().Get("error_description")))
+		return req, &container, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider returned error "%s": %s`, r.URL.Query().Get("error"), r.URL.Query().Get("error_description")))
 	}
 
 	if code == "" {
-		return ar, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the code query parameter.`))
+		return req, &container, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the code query parameter.`))
 	}
 
-	return ar, nil
+	return req, &container, nil
+}
+
+func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, req interface{}) bool {
+	// we assume an error means the user has no session
+	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
+		if _, ok := req.(*settings.Request); ok {
+			// ignore this if it's a settings request
+		} else if !isForced(req) {
+			http.Redirect(w, r, s.c.DefaultReturnToURL().String(), http.StatusFound)
+			return true
+		}
+	}
+
+	return false
 }
 
 func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -241,57 +298,63 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		pid  = ps.ByName("provider")
 	)
 
-	ar, err := s.validateCallback(r)
+	req, container, err := s.validateCallback(w, r)
 	if err != nil {
-		if ar != nil {
-			s.handleError(w, r, ar.GetID(), pid, nil, err)
+		if req != nil {
+			s.handleError(w, r, req.GetID(), pid, nil, err)
 		} else {
 			s.handleError(w, r, x.EmptyUUID, pid, nil, err)
 		}
 		return
 	}
 
-	// we assume an error means the user has no session
-	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
-		if !ar.IsForced() {
-			http.Redirect(w, r, s.c.DefaultReturnToURL().String(), http.StatusFound)
-			return
-		}
+	if s.alreadyAuthenticated(w, r, req) {
+		return
 	}
 
 	provider, err := s.provider(pid)
 	if err != nil {
-		s.handleError(w, r, ar.GetID(), pid, nil, err)
+		s.handleError(w, r, req.GetID(), pid, nil, err)
 		return
 	}
 
 	config, err := provider.OAuth2(context.Background())
 	if err != nil {
-		s.handleError(w, r, ar.GetID(), pid, nil, err)
+		s.handleError(w, r, req.GetID(), pid, nil, err)
 		return
 	}
 
 	token, err := config.Exchange(r.Context(), code)
 	if err != nil {
-		s.handleError(w, r, ar.GetID(), pid, nil, err)
+		s.handleError(w, r, req.GetID(), pid, nil, err)
 		return
 	}
 
 	claims, err := provider.Claims(r.Context(), token)
 	if err != nil {
-		s.handleError(w, r, ar.GetID(), pid, nil, err)
+		s.handleError(w, r, req.GetID(), pid, nil, err)
 		return
 	}
 
-	switch a := ar.(type) {
+	switch a := req.(type) {
 	case *login.Request:
-		s.processLogin(w, r, a, claims, provider)
+		s.processLogin(w, r, a, claims, provider, container)
 		return
 	case *registration.Request:
-		s.processRegistration(w, r, a, claims, provider)
+		s.processRegistration(w, r, a, claims, provider, container)
+		return
+	case *settings.Request:
+		sess, err := s.d.SessionManager().FetchFromRequest(r.Context(), r)
+		if err != nil {
+			s.handleError(w, r, req.GetID(), pid, nil, err)
+			return
+		}
+		s.linkProvider(w, r, &settings.UpdateContext{Session: sess, Request: a}, claims, provider)
 		return
 	default:
-		panic(fmt.Sprintf("unexpected type: %T", a))
+		s.handleError(w, r, req.GetID(), pid, nil, errors.WithStack(x.PseudoPanic.
+			WithDetailf("cause", "Unexpected type in OpenID Connect flow: %T", a)))
+		return
 	}
 }
 
@@ -299,191 +362,14 @@ func uid(provider, subject string) string {
 	return fmt.Sprintf("%s:%s", provider, subject)
 }
 
-func (s *Strategy) authURL(request uuid.UUID, provider string) string {
-	u := urlx.AppendPaths(
+func (s *Strategy) authURL(request uuid.UUID) string {
+	return urlx.AppendPaths(
 		urlx.Copy(s.c.SelfPublicURL()),
 		strings.Replace(
 			AuthPath, ":request", request.String(), 1,
 		),
-	)
-
-	if provider != "" {
-		return urlx.CopyWithQuery(u, url.Values{"provider": {provider}}).String()
-	}
-
-	return u.String()
+	).String()
 }
-
-func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Request, claims *Claims, provider Provider) {
-	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject))
-	if err != nil {
-		if errors.Is(err, herodot.ErrNotFound) {
-			// If no account was found we're "manually" creating a new registration request and redirecting the browser
-			// to that endpoint.
-
-			// That will execute the "pre registration" hook which allows to e.g. disallow this request. The registration
-			// ui however will NOT be shown, instead the user is directly redirected to the auth path. That should then
-			// do a silent re-request. While this might be a bit excessive from a network perspective it should usually
-			// happen without any downsides to user experience as the request has already been authorized and should
-			// not need additional consent/login.
-
-			// This is kinda hacky but the only way to ensure seamless login/registration flows when using OIDC.
-
-			s.d.Logger().WithField("provider", provider.Config().ID).WithField("subject", claims.Subject).Debug("Received successful OpenID Connect callback but user is not registered. Re-initializing registration flow now.")
-			aa, err := s.d.RegistrationHandler().NewRegistrationRequest(w, r)
-			if err != nil {
-				s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
-				return
-			}
-
-			s.processRegistration(w, r, aa, claims, provider)
-			return
-		}
-
-		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
-		return
-	}
-
-	var o []CredentialsConfig
-	if err := json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&o); err != nil {
-		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error())))
-		return
-	}
-
-	for _, c := range o {
-		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
-			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, identity.CredentialsTypeOIDC, a, i); err != nil {
-				s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
-				return
-			}
-			return
-		}
-	}
-
-	s.handleError(w, r, a.GetID(), provider.Config().ID, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to find matching OpenID Connect Credentials.").WithDebugf(`Unable to find credentials that match the given provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)))
-}
-
-func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Request, claims *Claims, provider Provider) {
-	if _, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject)); err == nil {
-		// If the identity already exists, we should perform the login flow instead.
-
-		// That will execute the "pre login" hook which allows to e.g. disallow this request. The login
-		// ui however will NOT be shown, instead the user is directly redirected to the auth path. That should then
-		// do a silent re-request. While this might be a bit excessive from a network perspective it should usually
-		// happen without any downsides to user experience as the request has already been authorized and should
-		// not need additional consent/login.
-
-		// This is kinda hacky but the only way to ensure seamless login/registration flows when using OIDC.
-		s.d.Logger().WithField("provider", provider.Config().ID).WithField("subject", claims.Subject).Debug("Received successful OpenID Connect callback but user is already registered. Re-initializing login flow now.")
-		ar, err := s.d.LoginHandler().NewLoginRequest(w, r)
-		if err != nil {
-			s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
-			return
-		}
-
-		s.processLogin(w, r, ar, claims, provider)
-		return
-	}
-
-	jn, err := s.f.Fetch(provider.Config().Mapper)
-	if err != nil {
-		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
-		return
-	}
-
-	var jsonClaims bytes.Buffer
-	if err := json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
-		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
-		return
-	}
-
-	i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
-
-	vm := jsonnet.MakeVM()
-	vm.ExtCode("claims", jsonClaims.String())
-	evaluated, err := vm.EvaluateSnippet(provider.Config().Mapper, jn.String())
-	if err != nil {
-		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
-		return
-	} else if traits := gjson.Get(evaluated, "identity.traits"); !traits.IsObject() {
-		i.Traits = []byte{'{', '}'}
-		s.d.Logger().
-			WithField("oidc_provider", provider.Config().ID).
-			WithField("oidc_claims", x.RedactInProd(s.c, claims)).
-			WithField("mapper_jsonnet_output", evaluated).
-			WithField("mapper_jsonnet_url", provider.Config().Mapper).
-			Warn("OpenID Connect Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!")
-	} else {
-		i.Traits = []byte(traits.Raw)
-	}
-	if s.c.IsInsecureDevMode() {
-		s.d.Logger().
-			WithField("oidc_provider", provider.Config().ID).
-			WithField("oidc_claims", x.RedactInProd(s.c, claims)).
-			WithField("mapper_jsonnet_output", evaluated).
-			WithField("mapper_jsonnet_url", provider.Config().Mapper).
-			Debug("OpenID Connect Jsonnet mapper completed.")
-	}
-
-	option, err := decoderRegistration(s.c.DefaultIdentityTraitsSchemaURL().String())
-	if err != nil {
-		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
-		return
-	}
-
-	i.Traits, err = merge(
-		x.SessionGetStringOr(r, s.d.CookieManager(), sessionName, sessionFormState, ""),
-		json.RawMessage(i.Traits), option,
-	)
-	if err != nil {
-		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
-		return
-	}
-
-	// Validate the identity itself
-	if err := s.d.IdentityValidator().Validate(i); err != nil {
-		s.handleError(w, r, a.GetID(), provider.Config().ID, i.Traits, err)
-		return
-	}
-
-	var b bytes.Buffer
-	if err := json.NewEncoder(&b).Encode([]CredentialsConfig{
-		{
-			Subject:  claims.Subject,
-			Provider: provider.Config().ID,
-		},
-	}); err != nil {
-		s.handleError(w, r, a.GetID(), provider.Config().ID, i.Traits, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err)))
-		return
-	}
-
-	i.SetCredentials(s.ID(), identity.Credentials{
-		Type:        s.ID(),
-		Identifiers: []string{uid(provider.Config().ID, claims.Subject)},
-		Config:      b.Bytes(),
-	})
-
-	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, identity.CredentialsTypeOIDC, a, i); err != nil {
-		s.handleError(w, r, a.GetID(), provider.Config().ID, i.Traits, err)
-		return
-	}
-}
-
-// func (s *Strategy) verifyIdentity(i *identity.Identity, c identity.Credentials, token oidc.IDToken, pid string) error {
-// 	var o CredentialsConfig
-//
-// 	if err := json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&o); err != nil {
-// 		return errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error()))
-// 	}
-//
-// 	if o.Subject != token.Subject {
-// 		return errors.WithStack(herodot.ErrInternalServerError.WithReason("The subjects do not match").WithDebugf("Expected credential subject to match subject from RequestID Token but values are not equal: %s != %s", o.Subject, token.Subject))
-// 	} else if o.Provider != pid {
-// 		return errors.WithStack(herodot.ErrInternalServerError.WithReason("The providers do not match").WithDebugf("Expected credential provider to match provider from path but values are not equal: %s != %s", o.Subject, pid))
-// 	}
-//
-// 	return nil
-// }
 
 func (s *Strategy) populateMethod(r *http.Request, request uuid.UUID) (*RequestMethod, error) {
 	conf, err := s.Config()
@@ -491,35 +377,11 @@ func (s *Strategy) populateMethod(r *http.Request, request uuid.UUID) (*RequestM
 		return nil, err
 	}
 
-	f := form.NewHTMLForm(s.authURL(request, ""))
+	f := form.NewHTMLForm(s.authURL(request))
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 	// does not need sorting because there is only one field
 
 	return NewRequestMethodConfig(f).AddProviders(conf.Providers), nil
-}
-
-func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Request) error {
-	config, err := s.populateMethod(r, sr.ID)
-	if err != nil {
-		return err
-	}
-	sr.Methods[identity.CredentialsTypeOIDC] = &login.RequestMethod{
-		Method: identity.CredentialsTypeOIDC,
-		Config: &login.RequestMethodConfig{RequestMethodConfigurator: config},
-	}
-	return nil
-}
-
-func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.Request) error {
-	config, err := s.populateMethod(r, sr.ID)
-	if err != nil {
-		return err
-	}
-	sr.Methods[identity.CredentialsTypeOIDC] = &registration.RequestMethod{
-		Method: identity.CredentialsTypeOIDC,
-		Config: &registration.RequestMethodConfig{RequestMethodConfigurator: config},
-	}
-	return nil
 }
 
 func (s *Strategy) Config() (*ConfigurationCollection, error) {
@@ -527,7 +389,7 @@ func (s *Strategy) Config() (*ConfigurationCollection, error) {
 
 	if err := jsonx.
 		NewStrictDecoder(
-			bytes.NewBuffer(s.c.SelfServiceStrategy(string(identity.CredentialsTypeOIDC)).Config),
+			bytes.NewBuffer(s.c.SelfServiceStrategy(string(s.ID())).Config),
 		).
 		Decode(&c); err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode OpenID Connect Provider configuration: %s", err))
@@ -553,7 +415,10 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 	}
 
 	if lr, rerr := s.d.LoginRequestPersister().GetLoginRequest(r.Context(), rid); rerr == nil {
-		s.d.LoginRequestErrorHandler().HandleLoginError(w, r, identity.CredentialsTypeOIDC, lr, err)
+		s.d.LoginRequestErrorHandler().HandleLoginError(w, r, s.ID(), lr, err)
+		return
+	} else if sr, rerr := s.d.SettingsRequestPersister().GetSettingsRequest(r.Context(), rid); rerr == nil {
+		s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, sr, err, s.SettingsStrategyID())
 		return
 	} else if rr, rerr := s.d.RegistrationRequestPersister().GetRegistrationRequest(r.Context(), rid); rerr == nil {
 		if method, ok := rr.Methods[s.ID()]; ok {
@@ -567,22 +432,23 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 			}
 
 			if errSec := method.Config.ParseError(err); errSec != nil {
-				s.d.RegistrationRequestErrorHandler().HandleRegistrationError(w, r, identity.CredentialsTypeOIDC, rr, errors.Wrap(err, errSec.Error()))
+				s.d.RegistrationRequestErrorHandler().HandleRegistrationError(w, r, s.ID(), rr, errors.Wrap(err, errSec.Error()))
 				return
 			}
 			method.Config.ResetErrors()
 
 			method.Config.SetCSRF(s.d.GenerateCSRFToken(r))
 			if errSec := method.Config.SortFields(s.c.DefaultIdentityTraitsSchemaURL().String(), "traits"); errSec != nil {
-				s.d.RegistrationRequestErrorHandler().HandleRegistrationError(w, r, identity.CredentialsTypeOIDC, rr, errors.Wrap(err, errSec.Error()))
+				s.d.RegistrationRequestErrorHandler().HandleRegistrationError(w, r, s.ID(), rr, errors.Wrap(err, errSec.Error()))
 				return
 			}
 
+			method.Config.UnsetField("provider")
 			method.Config.SetField(form.Field{Name: "provider", Value: provider, Type: "submit"})
 			rr.Methods[s.ID()] = method
 		}
 
-		s.d.RegistrationRequestErrorHandler().HandleRegistrationError(w, r, identity.CredentialsTypeOIDC, rr, err)
+		s.d.RegistrationRequestErrorHandler().HandleRegistrationError(w, r, s.ID(), rr, err)
 		return
 	}
 
