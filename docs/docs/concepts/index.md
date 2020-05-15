@@ -262,7 +262,7 @@ system:
   attached to the profile.
 
 ORY Kratos implements both scenarios by using
-[JSON Schemas for Identity Traits](./identity-data-model.md)
+[JSON Schemas for Identity Traits](./identity-user-model.md)
 
 ### Forget passport-js, oidc-client, ...
 
