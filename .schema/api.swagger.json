@@ -427,6 +427,35 @@
         }
       }
     },
+    "/self-service/browser/flows/registration/strategies/oidc/settings/connections": {
+      "post": {
+        "description": "This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this\nendpoint.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).",
+        "consumes": [
+          "application/json",
+          "application/x-www-form-urlencoded"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Complete the browser-based settings flow for the OpenID Connect strategy",
+        "operationId": "completeSelfServiceBrowserSettingsOIDCSettingsFlow",
+        "responses": {
+          "302": {
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
     "/self-service/browser/flows/requests/login": {
       "get": {
         "description": "This endpoint returns a login request's context with, for example, error details and\nother information.\n\nWhen accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent\ntoken scanning attacks, the public endpoint does not return 404 status codes to prevent scanning attacks.\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
@@ -1010,6 +1039,12 @@
         }
       }
     },
+    "Errors": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Error"
+      }
+    },
     "Identity": {
       "type": "object",
       "required": [
@@ -1043,6 +1078,17 @@
     "JSONRawMessage": {
       "type": "object",
       "title": "JSONRawMessage represents a json.RawMessage that works well with JSON, SQL, and Swagger."
+    },
+    "ProviderCredentialsConfig": {
+      "type": "object",
+      "properties": {
+        "provider": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        }
+      }
     },
     "RequestMethodConfig": {
       "type": "object",
@@ -1175,8 +1221,7 @@
       "type": "object",
       "required": [
         "name",
-        "type",
-        "required"
+        "type"
       ],
       "properties": {
         "disabled": {
@@ -1184,11 +1229,7 @@
           "type": "boolean"
         },
         "errors": {
-          "description": "Errors contains all validation errors this particular field has caused.",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/Error"
-          }
+          "$ref": "#/definitions/Errors"
         },
         "name": {
           "description": "Name is the equivalent of `\u003cinput name=\"{{.Name}}\"\u003e`",

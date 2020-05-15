@@ -101,7 +101,7 @@ func (h *Handler) initUpdateSettings(w http.ResponseWriter, r *http.Request, ps 
 
 	a := NewRequest(h.c.SelfServiceSettingsRequestLifespan(), r, s)
 	for _, strategy := range h.d.SettingsStrategies() {
-		if err := h.d.ContinuityManager().Abort(r.Context(), w, r, "settings_"+strategy.SettingsStrategyID()); err != nil {
+		if err := h.d.ContinuityManager().Abort(r.Context(), w, r, ContinuityKey(strategy.SettingsStrategyID())); err != nil {
 			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 			return
 		}
@@ -197,7 +197,7 @@ func (h *Handler) fetchUpdateSettingsRequest(w http.ResponseWriter, r *http.Requ
 		}
 	}
 
-	if pr.ExpiresAt.Before(time.Now()) {
+	if pr.ExpiresAt.Before(time.Now().UTC()) {
 		return errors.WithStack(x.ErrGone.
 			WithReason("The settings request has expired. Redirect the user to the login endpoint to initialize a new session.").
 			WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), PublicPath).String()))

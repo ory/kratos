@@ -6,15 +6,13 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
-
-	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow/settings"
@@ -26,11 +24,6 @@ import (
 const (
 	SettingsPath = "/self-service/browser/flows/settings/strategies/password"
 )
-
-func continuityKeySettings(rid string) string {
-	// Use one individual container per request ID to prevent resuming other request IDs.
-	return "settings_password." + rid
-}
 
 func (s *Strategy) RegisterSettingsRoutes(router *x.RouterPublic) {
 	router.POST(SettingsPath, s.submitSettingsFlow)
@@ -56,6 +49,14 @@ type completeSelfServiceBrowserSettingsPasswordFlowPayload struct {
 	RequestID string `json:"request_id"`
 }
 
+func (p *completeSelfServiceBrowserSettingsPasswordFlowPayload) GetRequestID() uuid.UUID {
+	return x.ParseUUID(p.RequestID)
+}
+
+func (p *completeSelfServiceBrowserSettingsPasswordFlowPayload) SetRequestID(rid uuid.UUID) {
+	p.RequestID = rid.String()
+}
+
 // swagger:route POST /self-service/browser/flows/settings/strategies/password public completeSelfServiceBrowserSettingsPasswordStrategyFlow
 //
 // Complete the browser-based settings flow for the password strategy
@@ -77,96 +78,50 @@ type completeSelfServiceBrowserSettingsPasswordFlowPayload struct {
 //       302: emptyResponse
 //       500: genericError
 func (s *Strategy) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	ss, err := s.d.SessionManager().FetchFromRequest(r.Context(), r)
-	if err != nil {
-		s.handleSettingsError(w, r, nil, ss, nil, err)
-		return
-	}
-
-	rid := r.URL.Query().Get("request")
-	if len(rid) == 0 {
-		s.handleSettingsError(w, r, nil, ss, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request query parameter is missing.")))
-		return
-	}
-
 	var p completeSelfServiceBrowserSettingsPasswordFlowPayload
-	if _, err := s.d.ContinuityManager().Continue(r.Context(), r,
-		continuityKeySettings(r.URL.Query().Get("request")),
-		continuity.WithIdentity(ss.Identity),
-		continuity.WithPayload(&p)); err == nil {
-		if p.RequestID == r.URL.Query().Get("request") {
-			s.completeSettingsFlow(w, r, ss, &p)
-			return
-		}
+	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, settings.ContinuityKey(s.SettingsStrategyID()), &p)
+	if errors.Is(err, settings.ErrContinuePreviousAction) {
+		s.continueSettingsFlow(w, r, ctxUpdate, &p)
 		return
-	} else if !errors.Is(err, &continuity.ErrNotResumable) {
-		s.handleSettingsError(w, r, nil, ss, &p, err)
+	} else if err != nil {
+		s.handleSettingsError(w, r, ctxUpdate, &p, err)
 		return
 	}
 
-	if err := r.ParseForm(); err != nil {
-		s.handleSettingsError(w, r, nil, ss, &p, errors.WithStack(err))
-		return
-	}
-
-	p = completeSelfServiceBrowserSettingsPasswordFlowPayload{
-		RequestID: rid,
-		Password:  r.PostFormValue("password"),
-	}
-	if err := s.d.ContinuityManager().Pause(
-		r.Context(), w, r,
-		continuityKeySettings(r.URL.Query().Get("request")),
-		continuity.WithPayload(&p),
-		continuity.WithIdentity(ss.Identity),
-		continuity.WithLifespan(time.Minute*15),
-	); err != nil {
-		s.handleSettingsError(w, r, nil, ss, &p, errors.WithStack(err))
-		return
-	}
-
-	s.completeSettingsFlow(w, r, ss, &p)
+	p.RequestID = ctxUpdate.Request.ID.String()
+	p.Password = r.PostFormValue("password")
+	s.continueSettingsFlow(w, r, ctxUpdate, &p)
 }
 
-func (s *Strategy) completeSettingsFlow(
+func (s *Strategy) continueSettingsFlow(
 	w http.ResponseWriter, r *http.Request,
-	ss *session.Session, p *completeSelfServiceBrowserSettingsPasswordFlowPayload,
+	ctxUpdate *settings.UpdateContext, p *completeSelfServiceBrowserSettingsPasswordFlowPayload,
 ) {
-	ar, err := s.d.SettingsRequestPersister().GetSettingsRequest(r.Context(), x.ParseUUID(p.RequestID))
-	if err != nil {
-		s.handleSettingsError(w, r, nil, ss, p, err)
-		return
-	}
-
-	if err := ar.Valid(ss); err != nil {
-		s.handleSettingsError(w, r, ar, ss, p, err)
-		return
-	}
-
-	if ss.AuthenticatedAt.Add(s.c.SelfServicePrivilegedSessionMaxAge()).Before(time.Now()) {
-		s.handleSettingsError(w, r, ar, ss, p, errors.WithStack(settings.ErrRequestNeedsReAuthentication))
+	if ctxUpdate.Session.AuthenticatedAt.Add(s.c.SelfServicePrivilegedSessionMaxAge()).Before(time.Now()) {
+		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.ErrRequestNeedsReAuthentication))
 		return
 	}
 
 	if len(p.Password) == 0 {
-		s.handleSettingsError(w, r, ar, ss, p, schema.NewRequiredError("#/", "password"))
+		s.handleSettingsError(w, r, ctxUpdate, p, schema.NewRequiredError("#/", "password"))
 		return
 	}
 
 	hpw, err := s.d.PasswordHasher().Generate([]byte(p.Password))
 	if err != nil {
-		s.handleSettingsError(w, r, ar, ss, p, err)
+		s.handleSettingsError(w, r, ctxUpdate, p, err)
 		return
 	}
 
 	co, err := json.Marshal(&CredentialsConfig{HashedPassword: string(hpw)})
 	if err != nil {
-		s.handleSettingsError(w, r, ar, ss, p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err)))
+		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err)))
 		return
 	}
 
-	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), ss.Identity.ID)
+	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), ctxUpdate.Session.Identity.ID)
 	if err != nil {
-		s.handleSettingsError(w, r, ar, ss, p, err)
+		s.handleSettingsError(w, r, ctxUpdate, p, err)
 		return
 	}
 
@@ -180,23 +135,14 @@ func (s *Strategy) completeSettingsFlow(
 	c.Config = co
 	i.SetCredentials(s.ID(), *c)
 	if err := s.validateCredentials(i, p.Password); err != nil {
-		s.handleSettingsError(w, r, ar, ss, p, err)
+		s.handleSettingsError(w, r, ctxUpdate, p, err)
 		return
 	}
 
 	if err := s.d.SettingsHookExecutor().PostSettingsHook(w, r,
-		s.SettingsStrategyID(),
-		ar, ss, i,
-	); err != nil {
-		s.handleSettingsError(w, r, ar, ss, p, err)
+		s.SettingsStrategyID(), ctxUpdate, i); err != nil {
+		s.handleSettingsError(w, r, ctxUpdate, p, err)
 		return
-	}
-
-	if len(w.Header().Get("Location")) == 0 {
-		http.Redirect(w, r,
-			urlx.CopyWithQuery(s.c.SettingsURL(), url.Values{"request": {ar.ID.String()}}).String(),
-			http.StatusFound,
-		)
 	}
 }
 
@@ -213,28 +159,22 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, ss *session.Session, 
 		Method: string(s.ID()),
 		Config: &settings.RequestMethodConfig{RequestMethodConfigurator: &RequestMethod{HTMLForm: f}},
 	}
-	pr.Active = sqlxx.NullString(s.ID())
 	return nil
 }
 
-func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, rr *settings.Request, ss *session.Session, p *completeSelfServiceBrowserSettingsPasswordFlowPayload, err error) {
+func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *completeSelfServiceBrowserSettingsPasswordFlowPayload, err error) {
 	if errors.Is(err, settings.ErrRequestNeedsReAuthentication) {
-		if err := s.d.ContinuityManager().Pause(
-			r.Context(), w, r,
-			continuityKeySettings(r.URL.Query().Get("request")),
-			continuity.WithPayload(p),
-			continuity.WithIdentity(ss.Identity),
-			continuity.WithLifespan(time.Minute*15),
-		); err != nil {
-			s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, rr, err, s.SettingsStrategyID())
+		if err := s.d.ContinuityManager().Pause(r.Context(), w, r,
+			settings.ContinuityKey(s.SettingsStrategyID()), settings.ContinuityOptions(p, ctxUpdate.Session.Identity)...); err != nil {
+			s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, ctxUpdate.Request, err, s.SettingsStrategyID())
 			return
 		}
 	}
 
-	if rr != nil {
-		rr.Methods[s.SettingsStrategyID()].Config.Reset()
-		rr.Methods[s.SettingsStrategyID()].Config.SetCSRF(s.d.GenerateCSRFToken(r))
+	if ctxUpdate.Request != nil {
+		ctxUpdate.Request.Methods[s.SettingsStrategyID()].Config.Reset()
+		ctxUpdate.Request.Methods[s.SettingsStrategyID()].Config.SetCSRF(s.d.GenerateCSRFToken(r))
 	}
 
-	s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, rr, err, s.SettingsStrategyID())
+	s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, ctxUpdate.Request, err, s.SettingsStrategyID())
 }

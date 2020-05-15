@@ -6,8 +6,9 @@ import (
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
 
-	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/x/sqlcon"
+
+	"github.com/ory/kratos/selfservice/flow/settings"
 )
 
 var _ settings.RequestPersister = new(Persister)
@@ -39,13 +40,17 @@ func (p *Persister) UpdateSettingsRequest(ctx context.Context, r *settings.Reque
 		}
 
 		for id, form := range r.Methods {
+			var found bool
 			for oid := range rr.Methods {
 				if oid == id {
 					rr.Methods[id].Config = form.Config
+					found = true
 					break
 				}
 			}
-			rr.Methods[id] = form
+			if !found {
+				rr.Methods[id] = form
+			}
 		}
 
 		for _, of := range rr.Methods {

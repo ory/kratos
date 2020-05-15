@@ -119,6 +119,20 @@ func (i *Identity) GetCredentials(t CredentialsType) (*Credentials, bool) {
 	return nil, false
 }
 
+func (i *Identity) ParseCredentials(t CredentialsType, config interface{}) (*Credentials, error) {
+	i.lock().RLock()
+	defer i.lock().RUnlock()
+
+	if c, ok := i.Credentials[t]; ok {
+		if err := json.Unmarshal(c.Config, config); err != nil {
+			return nil, errors.WithStack(err)
+		}
+		return &c, nil
+	}
+
+	return nil, errors.Errorf("identity does not have credential type %s", t)
+}
+
 func (i *Identity) CopyWithoutCredentials() *Identity {
 	var ii = *i
 	ii.Credentials = nil

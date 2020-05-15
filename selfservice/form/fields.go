@@ -38,15 +38,13 @@ type Field struct {
 	Disabled bool `json:"disabled,omitempty"`
 
 	// Required is the equivalent of `<input required="{{.Required}}">`
-	//
-	// required: true
-	Required bool `json:"required"`
+	Required bool `json:"required,omitempty"`
 
 	// Value is the equivalent of `<input value="{{.Value}}">`
 	Value interface{} `json:"value,omitempty" faker:"name"`
 
 	// Errors contains all validation errors this particular field has caused.
-	Errors []Error `json:"errors,omitempty"`
+	Errors Errors `json:"errors,omitempty"`
 }
 
 // Reset resets a field's value and errors.

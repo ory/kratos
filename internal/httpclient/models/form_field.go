@@ -6,8 +6,6 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"strconv"
-
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -22,8 +20,8 @@ type FormField struct {
 	// Disabled is the equivalent of `<input disabled="{{.Disabled}}">`
 	Disabled bool `json:"disabled,omitempty"`
 
-	// Errors contains all validation errors this particular field has caused.
-	Errors []*Error `json:"errors"`
+	// errors
+	Errors Errors `json:"errors,omitempty"`
 
 	// Name is the equivalent of `<input name="{{.Name}}">`
 	// Required: true
@@ -33,8 +31,7 @@ type FormField struct {
 	Pattern string `json:"pattern,omitempty"`
 
 	// Required is the equivalent of `<input required="{{.Required}}">`
-	// Required: true
-	Required *bool `json:"required"`
+	Required bool `json:"required,omitempty"`
 
 	// Type is the equivalent of `<input type="{{.Type}}">`
 	// Required: true
@@ -56,10 +53,6 @@ func (m *FormField) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
-	if err := m.validateRequired(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validateType(formats); err != nil {
 		res = append(res, err)
 	}
@@ -76,20 +69,11 @@ func (m *FormField) validateErrors(formats strfmt.Registry) error {
 		return nil
 	}
 
-	for i := 0; i < len(m.Errors); i++ {
-		if swag.IsZero(m.Errors[i]) { // not required
-			continue
+	if err := m.Errors.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("errors")
 		}
-
-		if m.Errors[i] != nil {
-			if err := m.Errors[i].Validate(formats); err != nil {
-				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("errors" + "." + strconv.Itoa(i))
-				}
-				return err
-			}
-		}
-
+		return err
 	}
 
 	return nil
@@ -98,15 +82,6 @@ func (m *FormField) validateErrors(formats strfmt.Registry) error {
 func (m *FormField) validateName(formats strfmt.Registry) error {
 
 	if err := validate.Required("name", "body", m.Name); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *FormField) validateRequired(formats strfmt.Registry) error {
-
-	if err := validate.Required("required", "body", m.Required); err != nil {
 		return err
 	}
 
