@@ -85,7 +85,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 // > This endpoint is NOT INTENDED for API clients and only works
 // with browsers (Chrome, Firefox, ...).
 //
-// More information can be found at [ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
+// More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
 //     Schemes: http, https
 //
@@ -144,7 +144,7 @@ type getSelfServiceBrowserLoginRequestParameters struct {
 // for checking the auth session. To prevent scanning attacks, the public endpoint does not return 404 status codes
 // but instead 403 or 500.
 //
-// More information can be found at [ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
+// More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
 //     Produces:
 //     - application/json

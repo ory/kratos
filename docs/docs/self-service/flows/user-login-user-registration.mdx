@@ -1,6 +1,7 @@
 ---
 id: user-login-user-registration
-title: User Login and User Registration
+title: User Login And Registration
+sidebar_label: Overview
 ---
 
 ORY Kratos supports two type of login and registration flows:
@@ -11,8 +12,8 @@ ORY Kratos supports two type of login and registration flows:
   (Swift), Android (Java), Microsoft (.NET), React Native, Electron, and others.
 
 The login and registration flows documented here are the foundation for the
-[password](../strategies/username-email-password.mdx) and
-[social](../strategies/openid-connect-social-sign-in-oauth2.md) sign in and sign
+[password](user-login-user-registration/username-email-password.mdx) and
+[social](user-login-user-registration/openid-connect-social-sign-in-oauth2.mdx) sign in and sign
 up strategies.
 
 ## Self-Service User Login and User Registration for Browser Applications
@@ -98,8 +99,8 @@ NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
 flexibility and customizability in your user interface flows and designs.
 
 Each Login and Registration Strategy (e.g.
-[Username and Password](../strategies/username-email-password.mdx),
-[Social Sign In](../strategies/openid-connect-social-sign-in-oauth2.md),
+[Username and Password](user-login-user-registration/username-email-password.mdx),
+[Social Sign In](user-login-user-registration/openid-connect-social-sign-in-oauth2.mdx),
 Passwordless, ...) works a bit different but they all boil down to the same
 abstract sequence:
 
@@ -261,8 +262,8 @@ all the methods you want to support:
 For details on payloads and potential HTML snippets consult the individual
 Self-Service Strategies for:
 
-- [Username and Password Strategy](../strategies/username-email-password.mdx)
-- [Social Sign In Strategy](../strategies/openid-connect-social-sign-in-oauth2.md)
+- [Username and Password Strategy](user-login-user-registration/username-email-password.mdx)
+- [Social Sign In Strategy](user-login-user-registration/openid-connect-social-sign-in-oauth2.mdx)
 
 ### Server-Side Browser Applications
 
@@ -300,7 +301,7 @@ Nginx, Kong, Envoy, ORY Oathkeeper, or others.
 The Login and Registration User Flow is composed of several high-level steps
 summarized in this state diagram:
 
-[![User Settings State Machine](https://mermaid.ink/img/eyJjb2RlIjoic3RhdGVEaWFncmFtXG4gIHMxOiBVc2VyIGJyb3dzZXMgYXBwXG4gIHMzOiBVc2VyIEludGVyZmFjZSBBcHBsaWNhdGlvbiByZW5kZXJzIFwiTG9naW4vUmVnaXN0cmF0aW9uIFJlcXVlc3RcIlxuICBzNDogRXhlY3V0ZSBcIkFmdGVyIExvZ2luL1JlZ2lzdHJhdGlvbiBIb29rKHMpXCJcbiAgczU6IFVwZGF0ZSBcIlNldHRpbmdzIFJlcXVlc3RcIiB3aXRoIEVycm9yIENvbnRleHQocylcbiAgczY6IFNldHRpbmdzIHVwZGF0ZSBzdWNjZXNzZnVsXG5cblx0WypdIC0tPiBzMVxuICBzMSAtLT4gczMgOiBVc2VyIGNsaWNrcyBcIk1hbmFnZSBBY2NvdW50XCIgYW5kIGlzIHJlZGlyZWN0ZWQgdG8gU2V0dGluZ3MgSW5pdCBFbmRwb2ludFxuICBzMyAtLT4gczQgOiBVc2VyIHByb3ZpZGVzIHZhbGlkIHByb2ZpbGUgZGF0YVxuICBzMyAtLT4gczUgOiBVc2VyIHByb3ZpZGVzIGludmFsaWQgcHJvZmlsZSBkYXRhXG4gIHM1IC0tPiBzMyA6IFVzZXIgaXMgcmVkaXJlY3RlZCB0byBTZXR0aW5ncyBVSSBVUkxcbiAgczQgLS0-IEVycm9yIDogQSBIb29rIGZhaWxzXG4gIHM0IC0tPiBzNlxuICBzNiAtLT4gWypdXG5cbiAgRXJyb3IgLS0-IFsqXVxuXG5cbiIsIm1lcm1haWQiOnsidGhlbWUiOiJkZWZhdWx0In0sInVwZGF0ZUVkaXRvciI6ZmFsc2V9)](https://mermaid-js.github.io/mermaid-live-editor/#/edit/eyJjb2RlIjoic3RhdGVEaWFncmFtXG4gIHMxOiBVc2VyIGJyb3dzZXMgYXBwXG4gIHMzOiBVc2VyIEludGVyZmFjZSBBcHBsaWNhdGlvbiByZW5kZXJzIFwiTG9naW4vUmVnaXN0cmF0aW9uIFJlcXVlc3RcIlxuICBzNDogRXhlY3V0ZSBcIkFmdGVyIExvZ2luL1JlZ2lzdHJhdGlvbiBIb29rKHMpXCJcbiAgczU6IFVwZGF0ZSBcIlNldHRpbmdzIFJlcXVlc3RcIiB3aXRoIEVycm9yIENvbnRleHQocylcbiAgczY6IFNldHRpbmdzIHVwZGF0ZSBzdWNjZXNzZnVsXG5cblx0WypdIC0tPiBzMVxuICBzMSAtLT4gczMgOiBVc2VyIGNsaWNrcyBcIk1hbmFnZSBBY2NvdW50XCIgYW5kIGlzIHJlZGlyZWN0ZWQgdG8gU2V0dGluZ3MgSW5pdCBFbmRwb2ludFxuICBzMyAtLT4gczQgOiBVc2VyIHByb3ZpZGVzIHZhbGlkIHByb2ZpbGUgZGF0YVxuICBzMyAtLT4gczUgOiBVc2VyIHByb3ZpZGVzIGludmFsaWQgcHJvZmlsZSBkYXRhXG4gIHM1IC0tPiBzMyA6IFVzZXIgaXMgcmVkaXJlY3RlZCB0byBTZXR0aW5ncyBVSSBVUkxcbiAgczQgLS0-IEVycm9yIDogQSBIb29rIGZhaWxzXG4gIHM0IC0tPiBzNlxuICBzNiAtLT4gWypdXG5cbiAgRXJyb3IgLS0-IFsqXVxuXG5cbiIsIm1lcm1haWQiOnsidGhlbWUiOiJkZWZhdWx0In0sInVwZGF0ZUVkaXRvciI6ZmFsc2V9)
+[![User Login and Registration State Machine](https://mermaid.ink/img/eyJjb2RlIjoic3RhdGVEaWFncmFtXG4gIHMxOiBVc2VyIGJyb3dzZXMgYXBwXG4gIHMyOiBFeGVjdXRlIFwiQmVmb3JlIExvZ2luL1JlZ2lzdHJhdGlvbiBIb29rKHMpXCJcbiAgczM6IFVzZXIgSW50ZXJmYWNlIEFwcGxpY2F0aW9uIHJlbmRlcnMgXCJMb2dpbi9SZWdpc3RyYXRpb24gUmVxdWVzdFwiXG4gIHM0OiBFeGVjdXRlIFwiQWZ0ZXIgTG9naW4vUmVnaXN0cmF0aW9uIEhvb2socylcIlxuICBzNTogVXBkYXRlIFwiTG9naW4vUmVnaXN0cmF0aW9uIFJlcXVlc3RcIiB3aXRoIEVycm9yIENvbnRleHQocylcbiAgczY6IExvZ2luL1JlZ2lzdHJhdGlvbiBzdWNjZXNzZnVsXG5cblxuXG5cdFsqXSAtLT4gczFcbiAgczEgLS0-IHMyIDogVXNlciBjbGlja3MgXCJMb2cgaW4gLyBTaWduIHVwXCJcbiAgczIgLS0-IEVycm9yIDogQSBob29rIGZhaWxzXG4gIHMyIC0tPiBzMyA6IFVzZXIgaXMgcmVkaXJlY3RlZCB0byBMb2dpbi9SZWdpc3RyYXRpb24gVUkgVVJMXG4gIHMzIC0tPiBzNCA6IFVzZXIgcHJvdmlkZXMgdmFsaWQgY3JlZGVudGlhbHMvcmVnaXN0cmF0aW9uIGRhdGFcbiAgczMgLS0-IHM1IDogVXNlciBwcm92aWRlcyBpbnZhbGlkIGNyZWRlbnRpYWxzL3JlZ2lzdHJhdGlvbiBkYXRhXG4gIHM1IC0tPiBzMyA6IFVzZXIgaXMgcmVkaXJlY3RlZCB0byBMb2dpbi9SZWdpc3RyYXRpb24gVUkgVVJMXG4gIHM0IC0tPiBFcnJvciA6IEEgSG9vayBmYWlsc1xuICBzNCAtLT4gczZcbiAgczYgLS0-IFsqXVxuXG4gIEVycm9yIC0tPiBbKl1cblxuXG4iLCJtZXJtYWlkIjp7InRoZW1lIjoiZGVmYXVsdCJ9LCJ1cGRhdGVFZGl0b3IiOmZhbHNlfQ)](https://mermaid-js.github.io/mermaid-live-editor/#/edit/eyJjb2RlIjoic3RhdGVEaWFncmFtXG4gIHMxOiBVc2VyIGJyb3dzZXMgYXBwXG4gIHMyOiBFeGVjdXRlIFwiQmVmb3JlIExvZ2luL1JlZ2lzdHJhdGlvbiBIb29rKHMpXCJcbiAgczM6IFVzZXIgSW50ZXJmYWNlIEFwcGxpY2F0aW9uIHJlbmRlcnMgXCJMb2dpbi9SZWdpc3RyYXRpb24gUmVxdWVzdFwiXG4gIHM0OiBFeGVjdXRlIFwiQWZ0ZXIgTG9naW4vUmVnaXN0cmF0aW9uIEhvb2socylcIlxuICBzNTogVXBkYXRlIFwiTG9naW4vUmVnaXN0cmF0aW9uIFJlcXVlc3RcIiB3aXRoIEVycm9yIENvbnRleHQocylcbiAgczY6IExvZ2luL1JlZ2lzdHJhdGlvbiBzdWNjZXNzZnVsXG5cblxuXG5cdFsqXSAtLT4gczFcbiAgczEgLS0-IHMyIDogVXNlciBjbGlja3MgXCJMb2cgaW4gLyBTaWduIHVwXCJcbiAgczIgLS0-IEVycm9yIDogQSBob29rIGZhaWxzXG4gIHMyIC0tPiBzMyA6IFVzZXIgaXMgcmVkaXJlY3RlZCB0byBMb2dpbi9SZWdpc3RyYXRpb24gVUkgVVJMXG4gIHMzIC0tPiBzNCA6IFVzZXIgcHJvdmlkZXMgdmFsaWQgY3JlZGVudGlhbHMvcmVnaXN0cmF0aW9uIGRhdGFcbiAgczMgLS0-IHM1IDogVXNlciBwcm92aWRlcyBpbnZhbGlkIGNyZWRlbnRpYWxzL3JlZ2lzdHJhdGlvbiBkYXRhXG4gIHM1IC0tPiBzMyA6IFVzZXIgaXMgcmVkaXJlY3RlZCB0byBMb2dpbi9SZWdpc3RyYXRpb24gVUkgVVJMXG4gIHM0IC0tPiBFcnJvciA6IEEgSG9vayBmYWlsc1xuICBzNCAtLT4gczZcbiAgczYgLS0-IFsqXVxuXG4gIEVycm9yIC0tPiBbKl1cblxuXG4iLCJtZXJtYWlkIjp7InRoZW1lIjoiZGVmYXVsdCJ9LCJ1cGRhdGVFZGl0b3IiOmZhbHNlfQ)
 
 1. The **Login/Registration User Flow** is initiated because a link was clicked
    or an action was performed that requires an active user session.

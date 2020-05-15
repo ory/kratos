@@ -429,7 +429,7 @@
     },
     "/self-service/browser/flows/registration/strategies/oidc/settings/connections": {
       "post": {
-        "description": "This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this\nendpoint.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).",
+        "description": "This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this\nendpoint.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
         "consumes": [
           "application/json",
           "application/x-www-form-urlencoded"
@@ -578,7 +578,7 @@
     },
     "/self-service/browser/flows/requests/settings": {
       "get": {
-        "description": "When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required\nfor checking the auth session. To prevent scanning attacks, the public endpoint does not return 404 status codes\nbut instead 403 or 500.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).",
+        "description": "When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required\nfor checking the auth session. To prevent scanning attacks, the public endpoint does not return 404 status codes\nbut instead 403 or 500.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
         "produces": [
           "application/json"
         ],
@@ -692,7 +692,7 @@
     },
     "/self-service/browser/flows/settings": {
       "get": {
-        "description": "This endpoint initializes a browser-based settings flow. Once initialized, the browser will be redirected to\n`urls.settings_ui` with the request ID set as a query parameter. If no valid user session exists, a login\nflow will be initialized.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).",
+        "description": "This endpoint initializes a browser-based settings flow. Once initialized, the browser will be redirected to\n`urls.settings_ui` with the request ID set as a query parameter. If no valid user session exists, a login\nflow will be initialized.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
         "schemes": [
           "http",
           "https"
@@ -717,7 +717,7 @@
     },
     "/self-service/browser/flows/settings/strategies/password": {
       "post": {
-        "description": "This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this\nendpoint.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).",
+        "description": "This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this\nendpoint.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
         "consumes": [
           "application/json",
           "application/x-www-form-urlencoded"
@@ -746,7 +746,7 @@
     },
     "/self-service/browser/flows/settings/strategies/profile": {
       "post": {
-        "description": "This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this\nendpoint.\n\nIf the provided profile data is valid against the Identity's Traits JSON Schema, the data will be updated and\nthe browser redirected to `url.settings_ui` for further steps.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).",
+        "description": "This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this\nendpoint.\n\nIf the provided profile data is valid against the Identity's Traits JSON Schema, the data will be updated and\nthe browser redirected to `url.settings_ui` for further steps.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
         "consumes": [
           "application/json",
           "application/x-www-form-urlencoded"
@@ -1534,7 +1534,7 @@
       }
     },
     "settingsRequest": {
-      "description": "This request is used when an identity wants to update settings\n(e.g. profile data, passwords, ...) in a selfservice manner.\n\nFor more information head over to: https://www.ory.sh/docs/kratos/selfservice/flows/user-settings-profile-management",
+      "description": "This request is used when an identity wants to update settings\n(e.g. profile data, passwords, ...) in a selfservice manner.\n\nWe recommend reading the [User Settings Documentation](../self-service/flows/user-settings)",
       "type": "object",
       "title": "Request presents a settings request",
       "required": [
