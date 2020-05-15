@@ -7,9 +7,9 @@ module.exports = {
     "concepts/ui-user-interface",
     "concepts/identity-user-model",
     {
-      label:'Identity Credentials',
+      label: 'Identity Credentials',
       type: "category",
-      items:[
+      items: [
         "concepts/credentials",
         "concepts/credentials/username-email-password",
         "concepts/credentials/openid-connect-oidc-oauth2",
@@ -21,36 +21,34 @@ module.exports = {
     "concepts/security"
   ],
   "Self Service": [
-    "self-service/index",
+    "self-service",
     {
       type: "category",
-      label: "Flows",
+      label: "User Login and User Registration",
       items:
         [
-        "self-service/flows/index",
-        "self-service/flows/user-login-user-registration",
-        "self-service/flows/user-logout",
-        "self-service/flows/user-settings-profile-management",
-        "self-service/flows/password-reset-account-recovery",
-        "self-service/flows/user-facing-errors",
-        "self-service/flows/verify-email-account-activation",
-        "self-service/flows/2fa-mfa-multi-factor-authentication"
-      ]
+          "self-service/flows/user-login-user-registration",
+          "self-service/flows/user-login-user-registration/username-email-password",
+          "self-service/flows/user-login-user-registration/openid-connect-social-sign-in-oauth2",
+        ]
     },
     {
       type: "category",
-      label: "Strategies", items: [
-        "self-service/strategies/username-email-password",
-        "self-service/strategies/openid-connect-social-sign-in-oauth2",
-        "self-service/strategies/user-settings-profile"
-      ]
+      label: "User Settings",
+      items:
+        [
+          "self-service/flows/user-settings",
+          "self-service/flows/user-settings/user-profile-management",
+          "self-service/flows/user-settings/change-password",
+          "self-service/flows/user-settings/link-unlink-openid-connect-oauth2",
+        ]
     },
-    {
-      type: "category",
-      label: "Hooks", items: [
-        "self-service/hooks/index"
-      ]
-    }
+    "self-service/flows/user-logout",
+    "self-service/flows/password-reset-account-recovery",
+    "self-service/flows/user-facing-errors",
+    "self-service/flows/verify-email-account-activation",
+    "self-service/flows/2fa-mfa-multi-factor-authentication",
+    "self-service/hooks/index",
   ],
   Guides: [
     "guides/sign-in-with-github-google-facebook-linkedin",
@@ -67,7 +65,7 @@ module.exports = {
   "Debug & Help": [
     "debug/csrf"
   ],
-  SDKs: ["sdk/index"],
+  SDKs: ["sdk"],
   "Further Reading": [
     "further-reading/comparison"
   ],

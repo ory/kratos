@@ -1,13 +1,19 @@
 ---
-id: user-settings-profile
-title: User Profile
+id: user-profile-management
+title: User Profile Management
 ---
+
+:::tip Before you start
+
+Please the [User Settings Documentation](../user-settings.mdx) first.
+
+:::
 
 The `profile` strategy allows a user to change their identity traits
 ("profile").
 
 The updated traits must be valid against the JSON Schema defined for its
-[Identity Traits](../../concepts/identity-user-model.md). If one or more fields
+[Identity Traits](../../../concepts/identity-user-model.md). If one or more fields
 do not validate (e.g. "Not an email"), the profile will not be updated.
 
 ORY Kratos will prompt the user to re-authenticate if a privileged trait (e.g.
@@ -24,13 +30,14 @@ selfservice:
     privileged_session_max_age: 1m
 ```
 
-This strategy does not implement any other flow!
+This strategy does not implement any other flow.
 
 ## Browser Clients
 
-The Settings Request payload for this strategy looks as follows:
+Redirecting the browser to the [Self-Service Settings Endpoint](../user-settings.mdx#user-settings-process-sequence)
+initiates the flow. The Settings Request Response Payload always include a `profile` method:
 
-```json
+```json title="$ curl http://<kratos-admin>/self-service/browser/flows/requests/settings?request=9c6473d4-9ffd-44cd-9794-adb82cbe4009"
 {
   "id": "9c6473d4-9ffd-44cd-9794-adb82cbe4009",
   "expires_at": "2020-05-02T16:06:08.131598Z",
@@ -80,11 +87,11 @@ The Settings Request payload for this strategy looks as follows:
 
 If the form validation fails, an error will bei included:
 
-```json5
+```json5 title="$ curl http://<kratos-admin>/self-service/browser/flows/requests/settings?request=9c6473d4-9ffd-44cd-9794-adb82cbe4009"
 {
   id: '9c6473d4-9ffd-44cd-9794-adb82cbe4009',
   // expires_at, ...
-  active: 'profile',
+  active: 'profile', // <- this is now set!
   methods: {
     profile: {
       method: 'profile',
@@ -114,10 +121,10 @@ If the form validation fails, an error will bei included:
 
 A successful flow will be marked with:
 
-```json5
+```json5 title="$ curl http://<kratos-admin>/self-service/browser/flows/requests/settings?request=9c6473d4-9ffd-44cd-9794-adb82cbe4009"
 {
   id: '9c6473d4-9ffd-44cd-9794-adb82cbe4009',
-  // expires_at, ...
+  // expires_at, active, methods, ...
   update_successful: true,
 }
 ```

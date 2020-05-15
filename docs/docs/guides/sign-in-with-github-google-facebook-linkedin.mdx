@@ -19,11 +19,21 @@ $ make quickstart
 ## GitHub
 
 To set up "Sign in with GitHub" you must create a
-[GitHub OAuth2 Client](https://developer.github.com/apps/building-oauth-apps/creating-an-oauth-app/)
-and set the "Authorization callback URL" to
-`http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/callback/github`.
-The pattern of this URL is
-`http(s)://<domain-of-ory-kratos>:<public-port>/self-service/browser/flows/strategies/oidc/callback/<provider-id>`.
+[GitHub OAuth2 Client](https://developer.github.com/apps/building-oauth-apps/creating-an-oauth-app/).
+
+Set the "Authorization callback URL" to:
+
+```
+http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/callback/github
+```
+
+The pattern of this URL is:
+
+
+```
+http(s)://<domain-of-ory-kratos>:<public-port>/self-service/browser/flows/strategies/oidc/callback/<provider-id>
+```
+
 The provider ID must point to the provider's ID set in the ORY Kratos
 configuration file (explained in paragraphs).
 
@@ -77,7 +87,7 @@ selfservice:
       enabled: true
       config:
         providers:
-          - id: github # this is `<provider-id>` in the Authorization callback URL
+          - id: github # this is `<provider-id>` in the Authorization callback URL. DO NOT CHANGE IT ONCE SET!
             provider: github
             client_id: .... # Replace this with the OAuth2 Client ID provided by GitHub
             client_secret: .... # Replace this with the OAuth2 Client Secret provided by GitHub

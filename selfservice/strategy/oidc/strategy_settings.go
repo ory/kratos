@@ -204,7 +204,7 @@ func (p *completeSelfServiceBrowserSettingsOIDCFlowPayload) SetRequestID(rid uui
 //
 // > This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
 //
-// More information can be found at [ORY Kratos User Settings & Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-settings-profile-management).
+// More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
 //     Consumes:
 //     - application/json
