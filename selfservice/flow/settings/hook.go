@@ -122,6 +122,8 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		}
 	}
 
+	ctxUpdate.Request.Methods[settingsType].Config.ResetErrors()
+
 	if err := e.d.SettingsRequestPersister().UpdateSettingsRequest(r.Context(), ctxUpdate.Request); err != nil {
 		return err
 	}
