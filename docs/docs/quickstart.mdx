@@ -13,7 +13,7 @@ Please be aware that this guide is not a replacement for studying the docs. You
 must understand core concepts and APIs to use ORY Kratos productively. This is
 merely a guide to get you set up with some examples.
 
-## Use case: application login and registration
+## Use Case: Application Login and Registration
 
 This section gives you some context on what we want to achieve and what tools we
 need for that. You will also learn about the network set up we picked for this
@@ -73,8 +73,12 @@ const needsLogin = (req, res, next) => {
     });
 };
 
-// You can use `needsLogin` as a middleware for Express: 
-// app.get("/dashboard", needsLogin, dashboard)
+// You can use `needsLogin` as a middleware for Express or any other web framework: 
+//   import express from 'express'
+//   const app = express()
+//
+//   app.get("/dashboard", needsLogin, dashboard)
+//
 ```
 
 :::info
@@ -128,11 +132,29 @@ with ORY Kratos' Administrative APIs.
 The quickstart also comes with [MailSlurper](https://mailslurper.com), a mock
 SMTP server the demo uses to show how e.g. email verification works.
 
-### Clone ORY Kratos and run it in Docker
+### Clone ORY Kratos and Run it in Docker
 
 To get this example working, you will need Git,
 [Docker](https://docs.docker.com/get-docker/), and [Docker Compose](https://docs.docker.com/compose/install/) installed on
-your system. No other dependencies are required.
+your system. No other dependencies are required. Before you start, make sure that Docker has enough disk space.
+
+:::tip
+
+This tutorial uses Docker-Compose volumes which have reported to run out of disk
+space. Check the remaining disk space using `docker system df`. If the volumes
+are above the 85% threshold,
+[prune old Docker objects](https://docs.docker.com/config/pruning/) before you
+start!
+
+:::
+
+:::tip
+
+If you encounter build errors (e.g. network timeout), make sure that the network
+is running correctly and run `make docker` again. If the problem persists, feel
+free to [open an issue](https://github.com/ory/kratos/issues/new/choose).
+
+:::
 
 Let's clone ORY Kratos and run `docker-compose`:
 
@@ -172,7 +194,7 @@ in.
 
 Future guides will explain how to set up a production system.
 
-### Network architecture
+### Network Architecture
 
 This demo makes use of several services:
 
@@ -194,10 +216,10 @@ Docker networks work:
 In order to avoid common cross-domain issues with cookies, we're proxying requests to ORY Kratos' Public API so that all requests come from the same
 hostname.
 
-## Perform registration, logout, login
+## Perform Registration, Login, and Logout
 
 Enough theory! Let's start by trying to open
-the dashboard: go to **[127.0.0.1:4455/dashboard](http://127.0.0.1:4455/dashboard)**.
+the dashboard: go to [127.0.0.1:4455/dashboard](http://127.0.0.1:4455/dashboard).
 
 You should notice that you're ending up at the login endpoint instead of the dashboard:
 
@@ -395,12 +417,12 @@ redirected to the dashboard:
 By clicking the "logout" icon in the top right, you will be redirected to the login screen again
 where you will be able to use your credentials to log back in again. Exciting!
 
-### Understanding how login and registration works
+### Understanding How Login and Registration Works
 
 Head over to the [Self-Service Flows Chapter](self-service/flows/index.md) for an
 in-depth explanation of how each individual flow works.
 
-### Email verification
+### Email Verification
 
 As you've signed up, an email was sent to the email address you used. Because
 the quickstart uses a fake SMTP server, the email did not arrive in your inbox.
@@ -453,7 +475,7 @@ In the future, this guide will support more use cases such as:
 
 - GitHub to login and registration
 
-## Cleaning up Docker
+## Cleaning Up Docker
 
 To clean everything up, you need to bring down the Docker Compose environment
 and remove all mounted volumes.

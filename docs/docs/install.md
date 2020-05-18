@@ -52,7 +52,7 @@ You can install ORY Kratos using [scoop](https://scoop.sh) on Windows:
 > kratos help
 ```
 
-## Download binaries
+## Download Binaries
 
 The client and server binaries are downloadable at the
 [releases tab](https://github.com/ory/kratos/releases). There is currently no
@@ -66,10 +66,10 @@ Once installed, you should be able to run:
 $ kratos help
 ```
 
-## Building from source
+## Building From Source
 
 If you wish to compile ORY Kratos yourself, you need to install and set up
-[Go 1.12+](https://golang.org/) and add `$GOPATH/bin` to your path.
+[Go 1.12+](https://golang.org/) and add `$GOPATH/bin` to your `$PATH`.
 
 The following commands will check out the latest release tag of ORY Kratos,
 compile it, and set up flags so that `kratos version` works as expected. Please
