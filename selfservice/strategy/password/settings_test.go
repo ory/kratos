@@ -57,49 +57,50 @@ func TestSettings(t *testing.T) {
 	secondaryUser := clients["secondary"]
 	adminClient := testhelpers.NewSDKClient(adminTS)
 
-	t.Run("description=should fail if password violates policy", func(t *testing.T) {
-		var run = func(t *testing.T) {
-			rs := testhelpers.GetSettingsRequest(t, primaryUser, publicTS)
-			form := rs.Payload.Methods[string(identity.CredentialsTypePassword)].Config
-			values := testhelpers.SDKFormFieldsToURLValues(form.Fields)
-			values.Set("password", "123456")
-			actual, _ := testhelpers.SettingsSubmitForm(t, form, primaryUser, values)
-
-			assert.Equal(t, *form.Action, gjson.Get(actual, "methods.password.config.action").String(), "%s", actual)
-			assert.Empty(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).value").String(), "%s", actual)
-			assert.NotEmpty(t, gjson.Get(actual, "methods.password.config.fields.#(name==csrf_token).value").String(), "%s", actual)
-			assert.Contains(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).errors.0.message").String(), "the password does not fulfill the password policy because", "%s", actual)
-		}
-
-		t.Run("session=with privileged session", run)
-
-		t.Run("session=needs reauthentication", func(t *testing.T) {
-			viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
-
-			_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, adminClient)
-			t.Cleanup(func() {
-				viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "5m")
-			})
-			run(t)
-		})
-	})
-
-	t.Run("description=should update the password if everything is ok", func(t *testing.T) {
+	t.Run("description=should update the password and clear errors after input error occurred", func(t *testing.T) {
 		rs := testhelpers.GetSettingsRequest(t, primaryUser, publicTS)
 
 		form := rs.Payload.Methods[string(identity.CredentialsTypePassword)].Config
 		values := testhelpers.SDKFormFieldsToURLValues(form.Fields)
-		values.Set("password", uuid.New().String())
-		actual, _ := testhelpers.SettingsSubmitForm(t, form, primaryUser, values)
 
-		assert.Equal(t, true, gjson.Get(actual, "update_successful").Bool(), "%s", actual)
-		assert.Empty(t, gjson.Get(actual, "methods.password.fields.#(name==password).value").String(), "%s", actual)
+		t.Run("description=should fail if password violates policy", func(t *testing.T) {
+			var run = func(t *testing.T) {
+				values.Set("password", "123456")
+				actual, _ := testhelpers.SettingsSubmitForm(t, form, primaryUser, values)
 
-		actualIdentity, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), primaryIdentity.ID)
-		require.NoError(t, err)
-		cfg := string(actualIdentity.Credentials[identity.CredentialsTypePassword].Config)
-		assert.NotContains(t, cfg, "foo")
-		assert.NotEqual(t, `{"hashed_password":"foo"}`, cfg)
+				assert.Equal(t, *form.Action, gjson.Get(actual, "methods.password.config.action").String(), "%s", actual)
+				assert.Empty(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).value").String(), "%s", actual)
+				assert.NotEmpty(t, gjson.Get(actual, "methods.password.config.fields.#(name==csrf_token).value").String(), "%s", actual)
+				assert.Contains(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).errors.0.message").String(), "the password does not fulfill the password policy because", "%s", actual)
+			}
+
+			t.Run("session=with privileged session", run)
+
+			t.Run("session=needs reauthentication", func(t *testing.T) {
+				viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
+
+				_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, adminClient)
+				t.Cleanup(func() {
+					viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "5m")
+				})
+				run(t)
+			})
+		})
+
+		t.Run("description=should update the password and clear errors if everything is ok", func(t *testing.T) {
+			values.Set("password", uuid.New().String())
+			actual, _ := testhelpers.SettingsSubmitForm(t, form, primaryUser, values)
+
+			assert.Equal(t, true, gjson.Get(actual, "update_successful").Bool(), "%s", actual)
+			assert.Empty(t, gjson.Get(actual, "methods.password.fields.#(name==password).value").String(), "%s", actual)
+			assert.Empty(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).errors.0.message").String(), actual)
+
+			actualIdentity, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), primaryIdentity.ID)
+			require.NoError(t, err)
+			cfg := string(actualIdentity.Credentials[identity.CredentialsTypePassword].Config)
+			assert.NotContains(t, cfg, "foo")
+			assert.NotEqual(t, `{"hashed_password":"foo"}`, cfg)
+		})
 	})
 
 	t.Run("description=should update the password even if no password was set before", func(t *testing.T) {

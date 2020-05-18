@@ -122,6 +122,10 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		}
 	}
 
+	if method, ok := ctxUpdate.Request.Methods[settingsType]; ok {
+		method.Config.ResetErrors()
+	}
+
 	if err := e.d.SettingsRequestPersister().UpdateSettingsRequest(r.Context(), ctxUpdate.Request); err != nil {
 		return err
 	}
