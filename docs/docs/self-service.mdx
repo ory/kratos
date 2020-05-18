@@ -1,0 +1,76 @@
+---
+id: self-service
+title: Self-Service Flows
+sidebar_label: Before you start reading
+---
+
+ORY Kratos implements flows that users perform themselves as opposed to
+administrative intervention. Facebook and Google both provide self-service
+registration and profile management features as you are able to make changes to
+your profile and sign up yourself.
+
+Most believe that user management systems are easy to implement because picking
+the right password hashing algorithm and sending an account verification code is
+a solvable challenge. The real complexity however hides in the details and
+attack vectors of self-service flows. Most data leaks happen because someone is
+able to exploit
+
+- registration: with attack vectors such as account enumeration (), ...;
+- login: phishing, account enumeration, leaked password databases, brute-force,
+  ...;
+- user settings: account enumeration, account takeover, ...;
+- account recovery: social engineering attacks, account takeover, spoofing, and
+  so on.
+
+ORY Kratos applies best practices established by experts (National Institute of
+Sciences NIST, Internet Engineering Task Force IETF, Microsoft Research, Google
+Research, Troy Hunt, ...) and implements the following flows:
+
+- [Login and Registration](self-service/flows/user-login-user-registration.mdx)
+- [Logout](self-service/flows/user-logout.md)
+- [User Settings](self-service/flows/user-settings.mdx)
+- [Account Recovery](self-service/flows/password-reset-account-recovery.md)
+- [Address Verification](self-service/flows/verify-email-account-activation.mdx)
+- [User-Facing Error](self-service/flows/user-facing-errors.md)
+- [2FA / MFA](self-service/flows/2fa-mfa-multi-factor-authentication.md)
+
+Some flows break down into strategies which implement some of the flow's
+business logic:
+
+- The `password` strategy implement the
+  [login and registration flow (with email/username and password)](self-service/flows/user-login-user-registration/username-email-password.mdx),
+  account recovery flow ("reset your password"), and
+  [user settings flow ("change your password")](self-service/flows/user-settings/change-password.mdx).
+- The `oidc` (OpenID Connect, OAuth2, Social Sign In) strategy implements
+  [login and registration flow ("Sign in with ...")](self-service/flows/user-login-user-registration/openid-connect-social-sign-in-oauth2.mdx),
+  and
+  [user settings flow ("un/link another social account")](self-service/flows/user-settings/link-unlink-openid-connect-oauth2.mdx).
+- The `profile` strategy implements the
+  [settings flow ("update your profile", "change your first/last name, ...")](self-service/flows/user-settings/user-profile-management.mdx).
+
+Some flows additionally implement the ability
+[to run hooks](self-service/hooks/index.mdx) which allow users to be immediately
+signed in after registration, notify another system on successful registration
+(e.g. Mailchimp), and so on.
+
+## Network Flows for Browsers
+
+All Self-Service Flows such as
+[User Login](self-service/flows/user-login-user-registration.mdx),
+[User Registration](self-service/flows/user-login-user-registration.mdx),
+[Profile Management](self-service/flows/user-settings.mdx) use the same
+template:
+
+1. The Browser makes an HTTP request to the flow's initialization endpoint (e.g.
+   `/auth/browser/login`);
+2. The initialization endpoint processes data and associates it with a request
+   ID and redirects the browser to the flow's configured UI URL (e.g.
+   `urls.login_ui`), appending the request ID as the `request` URL Query
+   Parameter;
+3. The endpoint responsible for the UI URL uses the `request` URL Query
+   Parameter (e.g. `http://my-app/auth/login?request=abcde`) to fetch the data
+   previously associated with the Request ID from either ORY Kratos's Public or
+   Admin API.
+4. The UI endpoint renders the fetched data in any way it sees it fit. The flow
+   is typically completed by the browser making another request to one of ORY
+   Kratos' endpoints, which is usually described in the fetched request data.

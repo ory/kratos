@@ -56,7 +56,7 @@ func formMethodIsPOST(t *testing.T, body []byte) {
 
 func TestRegistration(t *testing.T) {
 	t.Run("case=registration", func(t *testing.T) {
-		_, reg := internal.NewRegistryDefault(t)
+		_, reg := internal.NewFastRegistryWithMocks(t)
 
 		router := x.NewRouterPublic()
 		admin := x.NewRouterAdmin()
@@ -78,7 +78,8 @@ func TestRegistration(t *testing.T) {
 		viper.Set(configuration.ViperKeyURLsError, errTs.URL+"/error-ts")
 		viper.Set(configuration.ViperKeyURLsRegistration, uiTs.URL+"/signup-ts")
 		viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
-		viper.Set(configuration.ViperKeySelfServiceRegistrationAfterConfig+"."+string(identity.CredentialsTypePassword), hookConfig(returnTs.URL+"/return-ts"))
+		viper.Set(configuration.ViperKeyURLsDefaultReturnTo, returnTs.URL+"/default-return-to")
+		viper.Set(configuration.ViperKeySelfServiceRegistrationAfter+"."+configuration.ViperKeyDefaultReturnTo, returnTs.URL+"/return-ts")
 		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
 
 		var newRegistrationRequest = func(t *testing.T, exp time.Duration) *registration.Request {
@@ -207,6 +208,10 @@ func TestRegistration(t *testing.T) {
 
 		t.Run("case=should pass and set up a session", func(t *testing.T) {
 			viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
+			viper.Set(
+				configuration.HookStrategyKey(configuration.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()),
+				[]configuration.SelfServiceHook{{Name: "session"}})
+
 			rr := newRegistrationRequest(t, time.Minute)
 			body, res := makeRequest(t, rr.ID, url.Values{
 				"traits.username": {"registration-identifier-8"},
@@ -287,7 +292,6 @@ func TestRegistration(t *testing.T) {
 		})
 
 		t.Run("case=register and then send same request", func(t *testing.T) {
-			viper.Set(configuration.ViperKeyURLsDefaultReturnTo, returnTs.URL+"/default-return-to")
 			jar, _ := cookiejar.New(&cookiejar.Options{})
 			formValues := url.Values{
 				"traits.username": {"registration-identifier-11"},
@@ -305,7 +309,7 @@ func TestRegistration(t *testing.T) {
 	})
 
 	t.Run("method=PopulateSignUpMethod", func(t *testing.T) {
-		_, reg := internal.NewRegistryDefault(t)
+		_, reg := internal.NewFastRegistryWithMocks(t)
 
 		viper.Set(configuration.ViperKeyURLsSelfPublic, urlx.ParseOrPanic("https://foo/"))
 		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://stub/registration.schema.json")

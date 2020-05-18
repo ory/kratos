@@ -57,7 +57,7 @@ type errorContainerResponse struct {
 // swagger:parameters getSelfServiceError
 type errorContainerParameters struct {
 	// in: query
-	ID string `json:"id"`
+	Error string `json:"error"`
 }
 
 // swagger:route GET /self-service/errors common public admin getSelfServiceError

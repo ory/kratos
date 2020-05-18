@@ -1,20 +1,15 @@
-###########################################################################
-#######             FOR DEMONSTRATION PURPOSES ONLY                 #######
-###########################################################################
-
 version: '3.7'
 
 services:
-
   kratos-migrate:
     image: oryd/kratos:latest-sqlite
     environment:
-      - DSN=sqlite:///home/ory/sqlite/db.sqlite?_fk=true
+      - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true&mode=rwc
     volumes:
       -
         type: volume
         source: kratos-sqlite
-        target: /home/ory/sqlite
+        target: /var/lib/sqlite
         read_only: false
       -
         type: bind
@@ -28,37 +23,12 @@ services:
 
   kratos-selfservice-ui-node:
     image: oryd/kratos-selfservice-ui-node:latest
-    ports:
-      - "4435:4435"
     environment:
-      - PORT=4435
       - KRATOS_PUBLIC_URL=http://kratos:4433/
       - KRATOS_ADMIN_URL=http://kratos:4434/
-      - KRATOS_BROWSER_URL=http://127.0.0.1:4455/.ory/kratos/public
-      - JWKS_URL=http://oathkeeper:4456/.well-known/jwks.json
     networks:
       - intranet
     restart: on-failure
-
-  oathkeeper:
-    image: oryd/oathkeeper:v0.35.5-beta.1
-    depends_on:
-      - kratos
-    ports:
-      - "4455:4455"
-      - "4456:4456"
-    command:
-      serve proxy -c "/etc/config/oathkeeper/.oathkeeper.yml"
-    environment:
-      - LOG_LEVEL=debug
-    restart: on-failure
-    networks:
-      - intranet
-    volumes:
-      -
-        type: bind
-        source: ./contrib/quickstart/oathkeeper
-        target: /etc/config/oathkeeper
 
   kratos:
     depends_on:
@@ -69,14 +39,14 @@ services:
       - "4434:4434" # admin
     restart: unless-stopped
     environment:
-      - DSN=sqlite:///home/ory/sqlite/db.sqlite?_fk=true
+      - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true
     command:
       serve -c /etc/config/kratos/.kratos.yml --dev
     volumes:
       -
         type: volume
         source: kratos-sqlite
-        target: /home/ory/sqlite
+        target: /var/lib/sqlite
         read_only: false
       -
         type: bind

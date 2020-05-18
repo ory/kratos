@@ -8,6 +8,7 @@
 - [Contributing Code](#contributing-code)
 - [Disclosing vulnerabilities](#disclosing-vulnerabilities)
 - [Code Style](#code-style)
+- [Documentation](#documentation)
 - [Pull request procedure](#pull-request-procedure)
 - [Communication](#communication)
 - [Conduct](#conduct)
@@ -55,14 +56,24 @@ should be merged by the submitter after review.
 
 ## Disclosing vulnerabilities
 
-Please disclose vulnerabilities exclusively to [hi@ory.am](mailto:hi@ory.am). Do
-not use GitHub issues.
+Please disclose vulnerabilities exclusively to
+[security@ory.sh](mailto:security@ory.sh). Do not use GitHub issues.
 
 ## Code Style
 
 Please follow these guidelines when formatting source code:
 
-- Go code should match the output of `gofmt -s`
+- Go code should match the output of `gofmt -s` and pass `golangci-lint run`.
+- NodeJS and JavaScript code should be prettified using `npm run format` where
+  appropriate.
+
+## Documentation
+
+Please provide documentation when changing, removing, or adding features.
+Documentation resides in the project's [docs](docs) folder. Generate API and
+configuration reference documentation using `cd docs; npm run gen`.
+
+For further instructions please head over to [docs/README.md](docs/README.md).
 
 ## Pull request procedure
 
@@ -90,7 +101,7 @@ please include a note in your commit message explaining why.
 
 ## Communication
 
-We use [discord](https://www.ory.sh/chat). You are welcome to drop in and ask
+We use [Slack](https://www.ory.sh/chat). You are welcome to drop in and ask
 questions, discuss bugs, etc.
 
 ## Conduct

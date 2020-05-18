@@ -7,8 +7,9 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/x/errorsx"
+
+	"github.com/ory/kratos/selfservice/form"
 
 	"github.com/pkg/errors"
 
@@ -22,7 +23,7 @@ import (
 )
 
 var (
-	ErrHookAbortRequest = errors.New("abort hook")
+	ErrHookAbortRequest = errors.New("aborted registration hook execution")
 )
 
 type (
@@ -74,24 +75,31 @@ func (s *ErrorHandler) HandleRegistrationError(
 		WithField("details", fmt.Sprintf("%+v", err)).
 		WithField("credentials_type", ct).
 		WithField("login_request", rr).
-		Warn("Encountered login error.")
+		Warn("Encountered registration error.")
 
 	if _, ok := errorsx.Cause(err).(requestExpiredError); ok {
 		// create new request because the old one is not valid
-		if err = s.d.RegistrationHandler().NewRegistrationRequest(w, r, func(a *Request) (string, error) {
-			for name, method := range a.Methods {
-				method.Config.AddError(&form.Error{Message: "Your session expired, please try again."})
-				if err := s.d.RegistrationRequestPersister().UpdateRegistrationRequest(context.TODO(), a.ID, name, method); err != nil {
-					return s.d.SelfServiceErrorManager().Create(r.Context(), w, r, err)
-				}
-				a.Methods[name] = method
-			}
-
-			return urlx.CopyWithQuery(s.c.RegisterURL(), url.Values{"request": {a.ID.String()}}).String(), nil
-		}); err != nil {
+		a, err := s.d.RegistrationHandler().NewRegistrationRequest(w, r)
+		if err != nil {
 			// failed to create a new session and redirect to it, handle that error as a new one
 			s.HandleRegistrationError(w, r, ct, rr, err)
+			return
 		}
+		for name, method := range a.Methods {
+			method.Config.AddError(&form.Error{Message: "Your session expired, please try again."})
+			if err := s.d.RegistrationRequestPersister().UpdateRegistrationRequestMethod(context.TODO(), a.ID, name, method); err != nil {
+				redirTo, err := s.d.SelfServiceErrorManager().Create(r.Context(), w, r, err)
+				if err != nil {
+					s.HandleRegistrationError(w, r, ct, rr, err)
+					return
+				}
+				http.Redirect(w, r, redirTo, http.StatusFound)
+				return
+			}
+			a.Methods[name] = method
+		}
+
+		http.Redirect(w, r, urlx.CopyWithQuery(s.c.RegisterURL(), url.Values{"request": {a.ID.String()}}).String(), http.StatusFound)
 		return
 	}
 
@@ -105,7 +113,7 @@ func (s *ErrorHandler) HandleRegistrationError(
 
 	method, ok := rr.Methods[ct]
 	if !ok {
-		s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithErrorf(`Expected method "%s" to exist in request. This is a bug in the code and should be reported on GitHub.`, ct)))
+		s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithDebugf("Methods: %+v", rr.Methods).WithErrorf(`Expected registration method "%s" to exist in request. This is a bug in the code and should be reported on GitHub.`, ct)))
 		return
 	}
 
@@ -114,7 +122,7 @@ func (s *ErrorHandler) HandleRegistrationError(
 		return
 	}
 
-	if err := s.d.RegistrationRequestPersister().UpdateRegistrationRequest(r.Context(), rr.ID, ct, method); err != nil {
+	if err := s.d.RegistrationRequestPersister().UpdateRegistrationRequestMethod(r.Context(), rr.ID, ct, method); err != nil {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}

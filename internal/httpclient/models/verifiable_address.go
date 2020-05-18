@@ -36,9 +36,8 @@ type VerifiableAddress struct {
 	Verified *bool `json:"verified"`
 
 	// verified at
-	// Required: true
 	// Format: date-time
-	VerifiedAt *strfmt.DateTime `json:"verified_at"`
+	VerifiedAt strfmt.DateTime `json:"verified_at,omitempty"`
 
 	// via
 	// Required: true
@@ -124,8 +123,8 @@ func (m *VerifiableAddress) validateVerified(formats strfmt.Registry) error {
 
 func (m *VerifiableAddress) validateVerifiedAt(formats strfmt.Registry) error {
 
-	if err := validate.Required("verified_at", "body", m.VerifiedAt); err != nil {
-		return err
+	if swag.IsZero(m.VerifiedAt) { // not required
+		return nil
 	}
 
 	if err := validate.FormatOf("verified_at", "body", "date-time", m.VerifiedAt.String(), formats); err != nil {

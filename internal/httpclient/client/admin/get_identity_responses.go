@@ -55,8 +55,6 @@ func NewGetIdentityOK() *GetIdentityOK {
 /*GetIdentityOK handles this case with default header values.
 
 A single identity.
-
-nolint:deadcode,unused
 */
 type GetIdentityOK struct {
 	Payload *models.Identity

@@ -1,8 +1,5 @@
 package oidc
 
 const (
-	sessionName      = "oidc_session"
-	sessionRequestID = "request_id"
-	sessionKeyState  = "state"
-	sessionFormState = "form"
+	sessionName = "ory_kratos_oidc_auth_code_session"
 )

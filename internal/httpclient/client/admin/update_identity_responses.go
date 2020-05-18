@@ -61,8 +61,6 @@ func NewUpdateIdentityOK() *UpdateIdentityOK {
 /*UpdateIdentityOK handles this case with default header values.
 
 A single identity.
-
-nolint:deadcode,unused
 */
 type UpdateIdentityOK struct {
 	Payload *models.Identity

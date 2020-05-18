@@ -1,0 +1,50 @@
+selfservice:
+  strategies:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: hydra
+            provider: generic
+            client_id: kratos-client
+            client_secret: kratos-secret
+            issuer_url: http://127.0.0.1:4444/
+            scope:
+              - offline
+            mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
+          - id: google
+            provider: generic
+            client_id: google-client
+            client_secret: kratos-secret
+            issuer_url: http://127.0.0.1:4444/
+            scope:
+              - offline
+            mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
+          - id: github
+            provider: generic
+            client_id: github-client
+            client_secret: kratos-secret
+            issuer_url: http://127.0.0.1:4444/
+            scope:
+              - offline
+            mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
+
+    password:
+      enabled: true
+
+  settings:
+    privileged_session_max_age: 5000ms
+
+  logout:
+    redirect_to: http://127.0.0.1:4455/auth/login
+
+  registration:
+    after:
+      oidc:
+        hooks:
+          -
+            hook: session
+
+identity:
+  traits:
+    default_schema_url: file://test/e2e/profiles/oidc/identity.traits.schema.json

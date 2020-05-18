@@ -19,7 +19,7 @@ import (
 // swagger:model registrationRequestMethodConfig
 type RegistrationRequestMethodConfig struct {
 
-	// Action should be used as the form action URL (<form action="{{ .Action }}" method="post">).
+	// Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`.
 	// Required: true
 	Action *string `json:"action"`
 

@@ -6,8 +6,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verify"
+	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/x"
 
 	"github.com/cenkalti/backoff"
@@ -29,7 +32,6 @@ import (
 	"github.com/ory/kratos/persistence/sql"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/logout"
-	"github.com/ory/kratos/selfservice/flow/profile"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 
@@ -54,6 +56,8 @@ type RegistryDefault struct {
 	l logrus.FieldLogger
 	c configuration.Provider
 
+	injectedSelfserviceHooks map[string]func(configuration.SelfServiceHook) interface{}
+
 	nosurf         x.CSRFHandler
 	trc            *tracing.Tracer
 	writer         herodot.Writer
@@ -62,14 +66,20 @@ type RegistryDefault struct {
 	courier   *courier.Courier
 	persister persistence.Persister
 
+	hookVerifier         *hook.Verifier
+	hookSessionIssuer    *hook.SessionIssuer
+	hookSessionDestroyer *hook.SessionDestroyer
+
 	identityHandler   *identity.Handler
 	identityValidator *identity.Validator
 	identityManager   *identity.Manager
 
+	continuityManager continuity.Manager
+
 	schemaHandler *schema.Handler
 
 	sessionHandler *session.Handler
-	sessionsStore  sessions.Store
+	sessionsStore  *sessions.CookieStore
 	sessionManager session.Manager
 
 	passwordHasher    password2.Hasher
@@ -87,8 +97,9 @@ type RegistryDefault struct {
 	selfserviceLoginHandler             *login.Handler
 	selfserviceLoginRequestErrorHandler *login.ErrorHandler
 
-	selfserviceProfileManagementHandler          *profile.Handler
-	selfserviceProfileRequestRequestErrorHandler *profile.ErrorHandler
+	selfserviceSettingsHandler      *settings.Handler
+	selfserviceSettingsErrorHandler *settings.ErrorHandler
+	selfserviceSettingsExecutor     *settings.HookExecutor
 
 	selfserviceVerifyErrorHandler *verify.ErrorHandler
 	selfserviceVerifyManager      *identity.Manager
@@ -97,13 +108,49 @@ type RegistryDefault struct {
 
 	selfserviceLogoutHandler *logout.Handler
 
-	selfserviceStrategies []selfServiceStrategy
+	selfserviceStrategies              []interface{}
+	loginStrategies                    []login.Strategy
+	activeCredentialsCounterStrategies []identity.ActiveCredentialsCounter
+	registrationStrategies             []registration.Strategy
+	profileStrategies                  []settings.Strategy
 
 	buildVersion string
 	buildHash    string
 	buildDate    string
 
 	csrfTokenGenerator x.CSRFToken
+}
+
+func (m *RegistryDefault) RegisterPublicRoutes(router *x.RouterPublic) {
+	m.LoginHandler().RegisterPublicRoutes(router)
+	m.RegistrationHandler().RegisterPublicRoutes(router)
+	m.LogoutHandler().RegisterPublicRoutes(router)
+	m.SettingsHandler().RegisterPublicRoutes(router)
+	m.LoginStrategies().RegisterPublicRoutes(router)
+	m.SettingsStrategies().RegisterPublicRoutes(router)
+	m.RegistrationStrategies().RegisterPublicRoutes(router)
+	m.SessionHandler().RegisterPublicRoutes(router)
+	m.SelfServiceErrorHandler().RegisterPublicRoutes(router)
+	m.SchemaHandler().RegisterPublicRoutes(router)
+	m.VerificationHandler().RegisterPublicRoutes(router)
+	m.HealthHandler().SetRoutes(router.Router, false)
+}
+
+func (m *RegistryDefault) RegisterAdminRoutes(router *x.RouterAdmin) {
+	m.RegistrationHandler().RegisterAdminRoutes(router)
+	m.LoginHandler().RegisterAdminRoutes(router)
+	m.SchemaHandler().RegisterAdminRoutes(router)
+	m.VerificationHandler().RegisterAdminRoutes(router)
+	m.SettingsHandler().RegisterAdminRoutes(router)
+	m.IdentityHandler().RegisterAdminRoutes(router)
+	m.SessionHandler().RegisterAdminRoutes(router)
+	m.SelfServiceErrorHandler().RegisterAdminRoutes(router)
+	m.HealthHandler().SetRoutes(router.Router, true)
+}
+
+func (m *RegistryDefault) RegisterRoutes(public *x.RouterPublic, admin *x.RouterAdmin) {
+	m.RegisterAdminRoutes(admin)
+	m.RegisterPublicRoutes(public)
 }
 
 func NewRegistryDefault() *RegistryDefault {
@@ -134,18 +181,18 @@ func (m *RegistryDefault) WithLogger(l logrus.FieldLogger) Registry {
 	return m
 }
 
-func (m *RegistryDefault) ProfileManagementHandler() *profile.Handler {
-	if m.selfserviceProfileManagementHandler == nil {
-		m.selfserviceProfileManagementHandler = profile.NewHandler(m, m.c)
+func (m *RegistryDefault) SettingsHandler() *settings.Handler {
+	if m.selfserviceSettingsHandler == nil {
+		m.selfserviceSettingsHandler = settings.NewHandler(m, m.c)
 	}
-	return m.selfserviceProfileManagementHandler
+	return m.selfserviceSettingsHandler
 }
 
-func (m *RegistryDefault) ProfileRequestRequestErrorHandler() *profile.ErrorHandler {
-	if m.selfserviceProfileRequestRequestErrorHandler == nil {
-		m.selfserviceProfileRequestRequestErrorHandler = profile.NewErrorHandler(m, m.c)
+func (m *RegistryDefault) SettingsRequestErrorHandler() *settings.ErrorHandler {
+	if m.selfserviceSettingsErrorHandler == nil {
+		m.selfserviceSettingsErrorHandler = settings.NewErrorHandler(m, m.c)
 	}
-	return m.selfserviceProfileRequestRequestErrorHandler
+	return m.selfserviceSettingsErrorHandler
 }
 
 func (m *RegistryDefault) LogoutHandler() *logout.Handler {
@@ -176,31 +223,60 @@ func (m *RegistryDefault) CSRFHandler() x.CSRFHandler {
 	return m.nosurf
 }
 
-func (m *RegistryDefault) selfServiceStrategies() []selfServiceStrategy {
-	if m.selfserviceStrategies == nil {
-		m.selfserviceStrategies = []selfServiceStrategy{
+func (m *RegistryDefault) selfServiceStrategies() []interface{} {
+	if len(m.selfserviceStrategies) == 0 {
+		m.selfserviceStrategies = []interface{}{
 			password2.NewStrategy(m, m.c),
 			oidc.NewStrategy(m, m.c),
+			settings.NewStrategyTraits(m, m.c),
 		}
 	}
 
 	return m.selfserviceStrategies
 }
 
-func (m *RegistryDefault) RegistrationStrategies() registration.Strategies {
-	strategies := make([]registration.Strategy, len(m.selfServiceStrategies()))
-	for i := range strategies {
-		strategies[i] = m.selfServiceStrategies()[i]
+func (m *RegistryDefault) SettingsStrategies() settings.Strategies {
+	if len(m.profileStrategies) == 0 {
+		for _, strategy := range m.selfServiceStrategies() {
+			if s, ok := strategy.(settings.Strategy); ok {
+				m.profileStrategies = append(m.profileStrategies, s)
+			}
+		}
 	}
-	return strategies
+	return m.profileStrategies
+}
+
+func (m *RegistryDefault) RegistrationStrategies() registration.Strategies {
+	if len(m.registrationStrategies) == 0 {
+		for _, strategy := range m.selfServiceStrategies() {
+			if s, ok := strategy.(registration.Strategy); ok {
+				m.registrationStrategies = append(m.registrationStrategies, s)
+			}
+		}
+	}
+	return m.registrationStrategies
 }
 
 func (m *RegistryDefault) LoginStrategies() login.Strategies {
-	strategies := make([]login.Strategy, len(m.selfServiceStrategies()))
-	for i := range strategies {
-		strategies[i] = m.selfServiceStrategies()[i]
+	if len(m.loginStrategies) == 0 {
+		for _, strategy := range m.selfServiceStrategies() {
+			if s, ok := strategy.(login.Strategy); ok {
+				m.loginStrategies = append(m.loginStrategies, s)
+			}
+		}
 	}
-	return strategies
+	return m.loginStrategies
+}
+
+func (m *RegistryDefault) ActiveCredentialsCounterStrategies() []identity.ActiveCredentialsCounter {
+	if len(m.activeCredentialsCounterStrategies) == 0 {
+		for _, strategy := range m.selfServiceStrategies() {
+			if s, ok := strategy.(identity.ActiveCredentialsCounter); ok {
+				m.activeCredentialsCounterStrategies = append(m.activeCredentialsCounterStrategies, s)
+			}
+		}
+	}
+	return m.activeCredentialsCounterStrategies
 }
 
 func (m *RegistryDefault) IdentityValidator() *identity.Validator {
@@ -279,6 +355,7 @@ func (m *RegistryDefault) CookieManager() sessions.Store {
 		cs.Options.HttpOnly = true
 		m.sessionsStore = cs
 	}
+	m.sessionsStore.Options.SameSite = m.c.SessionSameSiteMode()
 	return m.sessionsStore
 }
 
@@ -335,9 +412,9 @@ func (m *RegistryDefault) Init() error {
 	bc.Reset()
 	return errors.WithStack(
 		backoff.Retry(func() error {
-			pool, idlePool, connMaxLifetime := sqlcon.ParseConnectionOptions(m.l, m.c.DSN())
+			pool, idlePool, connMaxLifetime, cleanedDSN := sqlcon.ParseConnectionOptions(m.l, m.c.DSN())
 			c, err := pop.NewConnection(&pop.ConnectionDetails{
-				URL:             m.c.DSN(),
+				URL:             sqlcon.FinalizeDSN(m.l, cleanedDSN),
 				IdlePool:        idlePool,
 				ConnMaxLifetime: connMaxLifetime,
 				Pool:            pool,
@@ -372,6 +449,17 @@ func (m *RegistryDefault) Courier() *courier.Courier {
 	return m.courier
 }
 
+func (m *RegistryDefault) ContinuityManager() continuity.Manager {
+	if m.continuityManager == nil {
+		m.continuityManager = continuity.NewManagerCookie(m)
+	}
+	return m.continuityManager
+}
+
+func (m *RegistryDefault) ContinuityPersister() continuity.Persister {
+	return m.persister
+}
+
 func (m *RegistryDefault) IdentityPool() identity.Pool {
 	return m.persister
 }
@@ -388,7 +476,7 @@ func (m *RegistryDefault) LoginRequestPersister() login.RequestPersister {
 	return m.persister
 }
 
-func (m *RegistryDefault) ProfileRequestPersister() profile.RequestPersister {
+func (m *RegistryDefault) SettingsRequestPersister() settings.RequestPersister {
 	return m.persister
 }
 

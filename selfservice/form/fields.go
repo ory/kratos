@@ -21,31 +21,30 @@ type Fields []Field
 //
 // swagger:model formField
 type Field struct {
-	// Name is the equivalent of <input name="{{.Name}}">
+	// Name is the equivalent of `<input name="{{.Name}}">`
 	//
 	// required: true
 	Name string `json:"name"`
-	// Type is the equivalent of <input type="{{.Type}}">
+
+	// Type is the equivalent of `<input type="{{.Type}}">`
 	//
 	// required: true
 	Type string `json:"type"`
 
-	// Pattern is the equivalent of <input pattern="{{.Pattern}}">
+	// Pattern is the equivalent of `<input pattern="{{.Pattern}}">`
 	Pattern string `json:"pattern,omitempty"`
 
-	// Disabled is the equivalent of <input disabled="{{.Disabled}}">
+	// Disabled is the equivalent of `<input disabled="{{.Disabled}}">`
 	Disabled bool `json:"disabled,omitempty"`
 
-	// Required is the equivalent of <input required="{{.Required}}">
-	//
-	// required: true
+	// Required is the equivalent of `<input required="{{.Required}}">`
 	Required bool `json:"required,omitempty"`
 
-	// Value is the equivalent of <input value="{{.Value}}">
+	// Value is the equivalent of `<input value="{{.Value}}">`
 	Value interface{} `json:"value,omitempty" faker:"name"`
 
 	// Errors contains all validation errors this particular field has caused.
-	Errors []Error `json:"errors,omitempty"`
+	Errors Errors `json:"errors,omitempty"`
 }
 
 // Reset resets a field's value and errors.

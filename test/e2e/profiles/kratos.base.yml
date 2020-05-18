@@ -1,0 +1,35 @@
+log:
+  level: trace
+
+secrets:
+  session:
+    - PLEASE-CHANGE-ME-I-AM-VERY-INSECURE
+
+urls:
+  login_ui: http://127.0.0.1:4455/auth/login
+  registration_ui: http://127.0.0.1:4455/auth/registration
+  error_ui: http://127.0.0.1:4455/error
+  settings_ui: http://127.0.0.1:4455/settings
+  verify_ui: http://127.0.0.1:4455/verify
+
+  # These are undefined because not available in this demo
+  mfa_ui: http://127.0.0.1:4455/
+
+  self:
+    public: http://127.0.0.1:4455/.ory/kratos/public/
+    admin: http://kratos:4434/
+  default_return_to: http://127.0.0.1:4455/
+  whitelisted_return_to_urls:
+    - http://127.0.0.1:4455
+
+hashers:
+  argon2:
+    parallelism: 1
+    memory: 16384
+    iterations: 1
+    salt_length: 16
+    key_length: 16
+
+courier:
+  smtp:
+    connection_uri: smtps://test:test@127.0.0.1:1025/?skip_ssl_verify=true

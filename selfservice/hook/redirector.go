@@ -1,63 +1,85 @@
 package hook
 
 import (
+	"encoding/json"
 	"net/http"
-	"net/url"
+
+	"github.com/pkg/errors"
+	"github.com/tidwall/gjson"
 
 	"github.com/ory/herodot"
 
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/session"
-	"github.com/ory/kratos/x"
 )
 
 var (
-	_ login.PostHookExecutor        = new(Redirector)
-	_ registration.PostHookExecutor = new(Redirector)
+	_ login.PostHookExecutor                  = new(Redirector)
+	_ registration.PostHookPrePersistExecutor = new(Redirector)
+	_ registration.PreHookExecutor            = new(Redirector)
+	_ login.PreHookExecutor                   = new(Redirector)
+	_ settings.PostHookPostPersistExecutor    = new(Redirector)
 )
 
+func NewRedirector(config json.RawMessage) *Redirector {
+	return &Redirector{config: config}
+}
+
 type Redirector struct {
-	returnTo         func() *url.URL
-	whitelist        func() []url.URL
-	allowUserDefined func() bool
+	config json.RawMessage
 }
 
-func NewRedirector(
-	returnTo func() *url.URL,
-	whitelist func() []url.URL,
-	allowUserDefined func() bool,
-) *Redirector {
-	return &Redirector{
-		returnTo:         returnTo,
-		whitelist:        whitelist,
-		allowUserDefined: allowUserDefined,
+func (e *Redirector) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, _ *settings.Request, _ *identity.Identity) error {
+	if err := e.do(w, r); err != nil {
+		return err
 	}
+	return errors.WithStack(settings.ErrHookAbortRequest)
 }
 
-func (e *Redirector) ExecuteRegistrationPostHook(w http.ResponseWriter, r *http.Request, sr *registration.Request, _ *session.Session) error {
-	return e.do(w, r, sr.RequestURL)
+func (e *Redirector) ExecuteLoginPreHook(w http.ResponseWriter, r *http.Request, _ *login.Request) error {
+	if err := e.do(w, r); err != nil {
+		return err
+	}
+	return errors.WithStack(login.ErrHookAbortRequest)
 }
 
-func (e *Redirector) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, sr *login.Request, _ *session.Session) error {
-	return e.do(w, r, sr.RequestURL)
+func (e *Redirector) ExecuteRegistrationPreHook(w http.ResponseWriter, r *http.Request, _ *registration.Request) error {
+	if err := e.do(w, r); err != nil {
+		return err
+	}
+	return errors.WithStack(registration.ErrHookAbortRequest)
 }
 
-func (e *Redirector) do(w http.ResponseWriter, r *http.Request, originalURL string) error {
-	ou, err := url.ParseRequestURI(originalURL)
-	if err != nil {
-		return herodot.ErrInternalServerError.WithReasonf("The redirect hook was unable to parse the original request URL: %s", err)
+func (e *Redirector) ExecutePostRegistrationPrePersistHook(w http.ResponseWriter, r *http.Request, _ *registration.Request, _ *identity.Identity) error {
+	if err := e.do(w, r); err != nil {
+		return err
+	}
+	return errors.WithStack(registration.ErrHookAbortRequest)
+}
+
+func (e *Redirector) ExecuteSettingsPrePersistHook(w http.ResponseWriter, r *http.Request, _ *settings.Request, _ *identity.Identity) error {
+	if err := e.do(w, r); err != nil {
+		return err
+	}
+	return errors.WithStack(settings.ErrHookAbortRequest)
+}
+
+func (e *Redirector) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, _ *login.Request, _ *session.Session) error {
+	if err := e.do(w, r); err != nil {
+		return err
+	}
+	return errors.WithStack(login.ErrHookAbortRequest)
+}
+
+func (e *Redirector) do(w http.ResponseWriter, r *http.Request) error {
+	rt := gjson.GetBytes(e.config, "to").String()
+	if rt == "" {
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("A redirector hook was configured without a redirect_to value set."))
 	}
 
-	returnTo := e.returnTo().String()
-	if e.allowUserDefined() {
-		var err error
-		returnTo, err = x.DetermineReturnToURL(ou, e.returnTo(), e.whitelist())
-		if err != nil {
-			return err
-		}
-	}
-
-	http.Redirect(w, r, returnTo, http.StatusFound)
+	http.Redirect(w, r, rt, http.StatusFound)
 	return nil
 }

@@ -70,7 +70,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //       403: genericError
 //       500: genericError
 func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), w, r)
+	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		h.r.Writer().WriteError(w, r,
 			errors.WithStack(herodot.ErrUnauthorized.WithReasonf("No valid session cookie found.").WithDebugf("%+v", err)),
@@ -90,7 +90,7 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 
 func (h *Handler) IsAuthenticated(wrap httprouter.Handle, onUnauthenticated httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		if _, err := h.r.SessionManager().FetchFromRequest(r.Context(), w, r); err != nil {
+		if _, err := h.r.SessionManager().FetchFromRequest(r.Context(), r); err != nil {
 			if onUnauthenticated != nil {
 				onUnauthenticated(w, r, ps)
 				return
@@ -106,7 +106,7 @@ func (h *Handler) IsAuthenticated(wrap httprouter.Handle, onUnauthenticated http
 
 func (h *Handler) IsNotAuthenticated(wrap httprouter.Handle, onAuthenticated httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		if _, err := h.r.SessionManager().FetchFromRequest(r.Context(), w, r); err != nil {
+		if _, err := h.r.SessionManager().FetchFromRequest(r.Context(), r); err != nil {
 			if errorsx.Cause(err).Error() == ErrNoActiveSessionFound.Error() {
 				wrap(w, r, ps)
 				return
@@ -126,7 +126,13 @@ func (h *Handler) IsNotAuthenticated(wrap httprouter.Handle, onAuthenticated htt
 
 func RedirectOnAuthenticated(c configuration.Provider) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		http.Redirect(w, r, c.DefaultReturnToURL().String(), http.StatusFound)
+		returnTo, err := x.SecureRedirectTo(r, c.DefaultReturnToURL(), x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL()))
+		if err != nil {
+			http.Redirect(w, r, c.DefaultReturnToURL().String(), http.StatusFound)
+			return
+		}
+
+		http.Redirect(w, r, returnTo.String(), http.StatusFound)
 	}
 }
 

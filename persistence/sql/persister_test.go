@@ -14,6 +14,7 @@ import (
 
 	"github.com/ory/x/sqlcon"
 
+	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/persistence/sql"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/x"
@@ -31,8 +32,8 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/flow/login"
-	"github.com/ory/kratos/selfservice/flow/profile"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verify"
 	"github.com/ory/kratos/session"
 )
@@ -138,9 +139,9 @@ func TestPersister(t *testing.T) {
 				pop.SetLogger(pl(t))
 				login.TestRequestPersister(p)(t)
 			})
-			t.Run("contract=profile.TestRequestPersister", func(t *testing.T) {
+			t.Run("contract=settings.TestRequestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				profile.TestRequestPersister(p)(t)
+				settings.TestRequestPersister(p)(t)
 			})
 			t.Run("contract=session.TestRequestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
@@ -153,6 +154,10 @@ func TestPersister(t *testing.T) {
 			t.Run("contract=verify.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
 				verify.TestPersister(p)(t)
+			})
+			t.Run("contract=continuity.TestPersister", func(t *testing.T) {
+				pop.SetLogger(pl(t))
+				continuity.TestPersister(p)(t)
 			})
 		})
 
@@ -172,7 +177,7 @@ func getErr(args ...interface{}) error {
 }
 
 func TestPersister_Transaction(t *testing.T) {
-	_, reg := internal.NewRegistryDefault(t)
+	_, reg := internal.NewFastRegistryWithMocks(t)
 	p := reg.Persister()
 
 	t.Run("case=should not create identity because callback returned error", func(t *testing.T) {

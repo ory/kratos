@@ -7,6 +7,8 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/ory/x/sqlxx"
+
 	"github.com/ory/jsonschema/v3"
 
 	"github.com/ory/x/errorsx"
@@ -15,8 +17,6 @@ import (
 	"github.com/ory/x/jsonschemax"
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/stringslice"
-
-	"github.com/ory/kratos/persistence/aliases"
 )
 
 var (
@@ -33,7 +33,7 @@ var (
 type HTMLForm struct {
 	sync.RWMutex
 
-	// Action should be used as the form action URL (<form action="{{ .Action }}" method="post">).
+	// Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`.
 	//
 	// required: true
 	Action string `json:"action"`
@@ -117,14 +117,31 @@ func (c *HTMLForm) SortFields(schemaRef, prefix string) error {
 }
 
 // Reset resets the container's errors as well as each field's value and errors.
-func (c *HTMLForm) Reset() {
+func (c *HTMLForm) ResetErrors(exclude ...string) {
 	c.defaults()
 	c.Lock()
 	defer c.Unlock()
 
 	c.Errors = nil
 	for k, f := range c.Fields {
-		f.Reset()
+		if !stringslice.Has(exclude, f.Name) {
+			f.Errors = nil
+		}
+		c.Fields[k] = f
+	}
+}
+
+// Reset resets the container's errors as well as each field's value and errors.
+func (c *HTMLForm) Reset(exclude ...string) {
+	c.defaults()
+	c.Lock()
+	defer c.Unlock()
+
+	c.Errors = nil
+	for k, f := range c.Fields {
+		if !stringslice.Has(exclude, f.Name) {
+			f.Reset()
+		}
 		c.Fields[k] = f
 	}
 }
@@ -219,7 +236,7 @@ func (c *HTMLForm) SetRequired(fields ...string) {
 }
 
 // Unset removes a field from the container.
-func (c *HTMLForm) Unset(name string) {
+func (c *HTMLForm) UnsetField(name string) {
 	c.defaults()
 	c.Lock()
 	defer c.Unlock()
@@ -302,10 +319,10 @@ func (c *HTMLForm) AddError(err *Error, names ...string) {
 }
 
 func (c *HTMLForm) Scan(value interface{}) error {
-	return aliases.JSONScan(c, value)
+	return sqlxx.JSONScan(c, value)
 }
 func (c *HTMLForm) Value() (driver.Value, error) {
-	return aliases.JSONValue(c)
+	return sqlxx.JSONValue(c)
 }
 
 func (c *HTMLForm) defaults() {

@@ -1,0 +1,31 @@
+version: '3.7'
+
+services:
+  kratos-selfservice-ui-node:
+    ports:
+      - "4435:4435"
+    environment:
+      - PORT=4435
+      - KRATOS_BROWSER_URL=http://127.0.0.1:4455/.ory/kratos/public
+      - JWKS_URL=http://oathkeeper:4456/.well-known/jwks.json
+      - SECURITY_MODE=jwks
+
+  oathkeeper:
+    image: oryd/oathkeeper:v0.37
+    depends_on:
+      - kratos
+    ports:
+      - "4455:4455"
+      - "4456:4456"
+    command:
+      serve proxy -c "/etc/config/oathkeeper/.oathkeeper.yml"
+    environment:
+      - LOG_LEVEL=debug
+    restart: on-failure
+    networks:
+      - intranet
+    volumes:
+      -
+        type: bind
+        source: ./contrib/quickstart/oathkeeper
+        target: /etc/config/oathkeeper

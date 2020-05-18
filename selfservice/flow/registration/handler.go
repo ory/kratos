@@ -9,7 +9,6 @@ import (
 	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/errorsx"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/configuration"
@@ -28,6 +27,7 @@ type (
 		StrategyProvider
 		errorx.ManagementProvider
 		session.HandlerProvider
+		session.ManagementProvider
 		x.WriterProvider
 		x.CSRFTokenGeneratorProvider
 		HookExecutorProvider
@@ -55,36 +55,23 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(BrowserRegistrationRequestsPath, h.adminFetchRegistrationRequest)
 }
 
-func (h *Handler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request, redir func(*Request) (string, error)) error {
+func (h *Handler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request) (*Request, error) {
 	a := NewRequest(h.c.SelfServiceRegistrationRequestLifespan(), h.d.GenerateCSRFToken(r), r)
 	for _, s := range h.d.RegistrationStrategies() {
 		if err := s.PopulateRegistrationMethod(r, a); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	if err := h.d.RegistrationExecutor().PreRegistrationHook(w, r, a); err != nil {
-		if errorsx.Cause(err) == ErrHookAbortRequest {
-			return nil
-		}
-		return err
+		return nil, err
 	}
 
 	if err := h.d.RegistrationRequestPersister().CreateRegistrationRequest(r.Context(), a); err != nil {
-		return err
+		return nil, err
 	}
 
-	to, err := redir(a)
-	if err != nil {
-		return err
-	}
-	http.Redirect(w,
-		r,
-		to,
-		http.StatusFound,
-	)
-
-	return nil
+	return a, nil
 }
 
 // swagger:route GET /self-service/browser/flows/registration public initializeSelfServiceBrowserRegistrationFlow
@@ -106,12 +93,17 @@ func (h *Handler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request,
 //       302: emptyResponse
 //       500: genericError
 func (h *Handler) initRegistrationRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.NewRegistrationRequest(w, r, func(a *Request) (string, error) {
-		return urlx.CopyWithQuery(h.c.RegisterURL(), url.Values{"request": {a.ID.String()}}).String(), nil
-	}); err != nil {
+	a, err := h.NewRegistrationRequest(w, r)
+	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
+
+	redirTo := urlx.CopyWithQuery(h.c.RegisterURL(), url.Values{"request": {a.ID.String()}}).String()
+	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
+		redirTo = h.c.DefaultReturnToURL().String()
+	}
+	http.Redirect(w, r, redirTo, http.StatusFound)
 }
 
 // nolint:deadcode,unused

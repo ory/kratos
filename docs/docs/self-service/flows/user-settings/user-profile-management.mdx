@@ -1,0 +1,151 @@
+---
+id: user-profile-management
+title: User Profile Management
+---
+
+:::tip Before you start
+
+Please the [User Settings Documentation](../user-settings.mdx) first.
+
+:::
+
+The `profile` strategy allows a user to change their identity traits
+("profile").
+
+The updated traits must be valid against the JSON Schema defined for its
+[Identity Traits](../../../concepts/identity-user-model.md). If one or more
+fields do not validate (e.g. "Not an email"), the profile will not be updated.
+
+ORY Kratos will prompt the user to re-authenticate if a privileged trait (e.g.
+email used to log in) is changed, similar to the
+[GitHub sudo mode](https://help.github.com/en/github/authenticating-to-github/sudo-mode).
+
+You can configure how long a session is "privileged" by setting:
+
+```yaml title="path/to/kratos/config.yml"
+selfservice:
+  settings:
+    # Sessions older than a minute requires the user to sign in again before
+    # the password is changed.
+    privileged_session_max_age: 1m
+```
+
+This strategy does not implement any other flow.
+
+## Browser Clients
+
+Redirecting the browser to the
+[Self-Service Settings Endpoint](../user-settings.mdx#user-settings-process-sequence)
+initiates the flow. The Settings Request Response Payload always include a
+`profile` method:
+
+```json title="$ curl http://<kratos-admin>/self-service/browser/flows/requests/settings?request=9c6473d4-9ffd-44cd-9794-adb82cbe4009"
+{
+  "id": "9c6473d4-9ffd-44cd-9794-adb82cbe4009",
+  "expires_at": "2020-05-02T16:06:08.131598Z",
+  "issued_at": "2020-05-02T15:06:08.131599Z",
+  "request_url": "http://127.0.0.1:4433/self-service/browser/flows/settings",
+  "active": "profile",
+  "methods": {
+    "profile": {
+      "method": "profile",
+      "config": {
+        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/settings/strategies/profile?request=9c6473d4-9ffd-44cd-9794-adb82cbe4009",
+        "method": "POST",
+        "fields": [
+          {
+            "name": "csrf_token",
+            "type": "hidden",
+            "required": true,
+            "value": "HfvOBEv/D6PbXc89hsoEd0UMfZXKsvQXJzmXZJnq6BsBAwm8zbMKQF4LLZwRL67hPDlViB/qcJtu6yf+klIBeg=="
+          },
+          {
+            "name": "traits.email",
+            "type": "text",
+            "required": false,
+            "value": "xx0bdh@l7zkk8"
+          },
+          {
+            "name": "traits.website",
+            "type": "text",
+            "required": false,
+            "value": "http://github.com/aeneasr"
+          }
+        ]
+      }
+    }
+  },
+  "identity": {
+    "id": "93548b1b-c8dc-4d3e-b19f-cfc6d812a8d0",
+    "traits_schema_id": "default",
+    "traits": {
+      "email": "xx0bdh@l7zkk8",
+      "website": "http://github.com/aeneasr"
+    }
+  },
+  "update_successful": false
+}
+```
+
+If the form validation fails, an error will bei included:
+
+```json5 title="$ curl http://<kratos-admin>/self-service/browser/flows/requests/settings?request=9c6473d4-9ffd-44cd-9794-adb82cbe4009"
+{
+  id: '9c6473d4-9ffd-44cd-9794-adb82cbe4009',
+  // expires_at, ...
+  active: 'profile', // <- this is now set!
+  methods: {
+    profile: {
+      method: 'profile',
+      config: {
+        // action, ...
+        fields: [
+          // csrf_token, ...
+          {
+            name: 'traits.website',
+            type: 'text',
+            required: false,
+            value: 'http://s',
+            errors: [
+              {
+                message: 'length must be >= 10, but got 8',
+              },
+            ],
+          },
+        ],
+      },
+    },
+  },
+  // identity, ...
+  update_successful: false,
+}
+```
+
+A successful flow will be marked with:
+
+```json5 title="$ curl http://<kratos-admin>/self-service/browser/flows/requests/settings?request=9c6473d4-9ffd-44cd-9794-adb82cbe4009"
+{
+  id: '9c6473d4-9ffd-44cd-9794-adb82cbe4009',
+  // expires_at, active, methods, ...
+  update_successful: true,
+}
+```
+
+## API Clients
+
+API-based login and registration using this strategy will be addressed in a
+future release of ORY Kratos.
+
+## Security
+
+### Account Enumeration Defenses (work in progress)
+
+> This feature is a work in progress and is tracked as
+> [kratos#133](https://github.com/ory/kratos/issues/133).
+
+### Account Takeover Defenses
+
+The Settings flow implements account takeover defenses as it is not possible to
+change the password without knowing the existing password. A good example of
+this flow is the
+[GitHub sudo mode](https://help.github.com/en/github/authenticating-to-github/sudo-mode).

@@ -41,6 +41,42 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.GET(fmt.Sprintf("/%s/:id", SchemasPath), h.get)
 }
 
+func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
+	admin.GET(fmt.Sprintf("/%s/:id", SchemasPath), h.get)
+}
+
+// The raw identity traits schema
+//
+// swagger:response schemaResponse
+// nolint:deadcode,unused
+type schemaResponse struct {
+	// in: body
+	Body interface{}
+}
+
+// nolint:deadcode,unused
+// swagger:parameters getSchema
+type getSchemaParameters struct {
+	// ID must be set to the ID of schema you want to get
+	//
+	// required: true
+	// in: path
+	ID string `json:"id"`
+}
+
+// swagger:route GET /schemas/{id} common public admin getSchema
+//
+// Get a traits schema definition
+//
+//     Produces:
+//     - application/json
+//
+//     Schemes: http, https
+//
+//     Responses:
+//       200: schemaResponse
+//       404: genericError
+//       500: genericError
 func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.r.IdentityTraitsSchemas().GetByID(ps.ByName("id"))
 	if err != nil {
@@ -66,6 +102,7 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 		src = resp.Body
 	}
 
+	w.Header().Add("Content-Type", "application/json")
 	if _, err := io.Copy(w, src); err != nil {
 		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The file for this JSON Schema ID could not be found or opened. This is a configuration issue.").WithDebugf("%+v", err)))
 		return

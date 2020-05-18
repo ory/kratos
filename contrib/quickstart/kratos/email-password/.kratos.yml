@@ -3,6 +3,14 @@ selfservice:
     password:
       enabled: true
 
+  settings:
+    privileged_session_max_age: 1m
+    after:
+      profile:
+        hooks:
+          -
+            hook: verify
+
   verify:
     return_to: http://127.0.0.1:4455/
 
@@ -11,29 +19,16 @@ selfservice:
 
   login:
     request_lifespan: 10m
-    after:
-      password:
-        -
-          job: session
-        -
-          job: redirect
-          config:
-            default_redirect_url: http://127.0.0.1:4455/
-            allow_user_defined_redirect: true
 
   registration:
     request_lifespan: 10m
     after:
       password:
-        -
-          job: verify
-        -
-          job: session
-        -
-          job: redirect
-          config:
-            default_redirect_url: http://127.0.0.1:4455/
-            allow_user_defined_redirect: true
+        hooks:
+          -
+            hook: session
+          -
+            hook: verify
 
 log:
   level: debug
@@ -46,7 +41,7 @@ urls:
   login_ui: http://127.0.0.1:4455/auth/login
   registration_ui: http://127.0.0.1:4455/auth/registration
   error_ui: http://127.0.0.1:4455/error
-  profile_ui: http://127.0.0.1:4455/profile
+  settings_ui: http://127.0.0.1:4455/settings
   verify_ui: http://127.0.0.1:4455/verify
 
   # These are undefined because not available in this demo
@@ -56,7 +51,7 @@ urls:
     public: http://127.0.0.1:4455/.ory/kratos/public/
     admin: http://kratos:4434/
   default_return_to: http://127.0.0.1:4455/
-  whitelisted_return_to_domains:
+  whitelisted_return_to_urls:
     - http://127.0.0.1:4455
 
 hashers:

@@ -7,3 +7,7 @@ coverage.txt
 packrd/
 *-packr.go
 dist/
+node_modules
+.bin/*
+cypress/videos
+cypress/screenshots

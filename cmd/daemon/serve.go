@@ -1,12 +1,13 @@
 package daemon
 
 import (
-	stdctx "context"
 	"net/http"
 	"strings"
 	"sync"
 
 	"github.com/sirupsen/logrus"
+
+	"github.com/ory/analytics-go/v4"
 
 	"github.com/ory/x/flagx"
 	"github.com/ory/x/healthx"
@@ -23,8 +24,8 @@ import (
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/logout"
-	"github.com/ory/kratos/selfservice/flow/profile"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verify"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/selfservice/strategy/password"
@@ -41,32 +42,21 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 	r := d.Registry()
 
 	router := x.NewRouterPublic()
-	r.LoginHandler().RegisterPublicRoutes(router)
-	r.RegistrationHandler().RegisterPublicRoutes(router)
-	r.LogoutHandler().RegisterPublicRoutes(router)
-	r.ProfileManagementHandler().RegisterPublicRoutes(router)
-	r.LoginStrategies().RegisterPublicRoutes(router)
-	r.RegistrationStrategies().RegisterPublicRoutes(router)
-	r.SessionHandler().RegisterPublicRoutes(router)
-	r.SelfServiceErrorHandler().RegisterPublicRoutes(router)
-	r.SchemaHandler().RegisterPublicRoutes(router)
-	r.VerificationHandler().RegisterPublicRoutes(router)
-	r.HealthHandler().SetRoutes(router.Router, false)
-
+	r.RegisterPublicRoutes(router)
 	n.Use(NewNegroniLoggerMiddleware(l.(*logrus.Logger), "public#"+c.SelfPublicURL().String()))
 	n.Use(sqa(cmd, d))
 
-	r.WithCSRFHandler(x.NewCSRFHandler(
+	csrf := x.NewCSRFHandler(
 		router,
 		r.Writer(),
 		l,
 		c.SelfPublicURL().Path,
 		c.SelfPublicURL().Hostname(),
 		!flagx.MustGetBool(cmd, "dev"),
-	))
-	n.UseHandler(
-		r.CSRFHandler(),
 	)
+	csrf.ExemptPath(session.SessionsWhoamiPath)
+	r.WithCSRFHandler(csrf)
+	n.UseHandler(r.CSRFHandler())
 	server := graceful.WithDefaults(&http.Server{
 		Addr:    c.PublicListenOn(),
 		Handler: context.ClearHandler(n),
@@ -88,15 +78,7 @@ func serveAdmin(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []
 	r := d.Registry()
 
 	router := x.NewRouterAdmin()
-	r.RegistrationHandler().RegisterAdminRoutes(router)
-	r.LoginHandler().RegisterAdminRoutes(router)
-	r.VerificationHandler().RegisterAdminRoutes(router)
-	r.ProfileManagementHandler().RegisterAdminRoutes(router)
-	r.IdentityHandler().RegisterAdminRoutes(router)
-	r.SessionHandler().RegisterAdminRoutes(router)
-	r.HealthHandler().SetRoutes(router.Router, true)
-	r.SelfServiceErrorHandler().RegisterAdminRoutes(router)
-
+	r.RegisterAdminRoutes(router)
 	n.Use(NewNegroniLoggerMiddleware(l.(*logrus.Logger), "admin#"+c.SelfAdminURL().String()))
 	n.Use(sqa(cmd, d))
 
@@ -114,7 +96,8 @@ func serveAdmin(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []
 }
 
 func sqa(cmd *cobra.Command, d driver.Driver) *metricsx.Service {
-	// Creates only one instance
+	// Creates only ones
+	// instance
 	return metricsx.New(
 		cmd,
 		d.Logger(),
@@ -145,10 +128,10 @@ func sqa(cmd *cobra.Command, d driver.Driver) *metricsx.Service {
 				registration.BrowserRegistrationRequestsPath,
 				session.SessionsWhoamiPath,
 				identity.IdentitiesPath,
-				profile.PublicProfileManagementPath,
-				profile.AdminBrowserProfileRequestPath,
-				profile.PublicProfileManagementPath,
-				profile.PublicProfileManagementUpdatePath,
+				settings.PublicSettingsProfilePath,
+				settings.PublicPath,
+				settings.PublicRequestPath,
+				settings.PublicSettingsProfilePath,
 				verify.PublicVerificationCompletePath,
 				strings.ReplaceAll(strings.ReplaceAll(verify.PublicVerificationConfirmPath, ":via", "email"), ":code", ""),
 				strings.ReplaceAll(verify.PublicVerificationInitPath, ":via", "email"),
@@ -158,6 +141,9 @@ func sqa(cmd *cobra.Command, d driver.Driver) *metricsx.Service {
 			BuildVersion: d.Registry().BuildVersion(),
 			BuildHash:    d.Registry().BuildHash(),
 			BuildTime:    d.Registry().BuildDate(),
+			Config: &analytics.Config{
+				Endpoint: "https://sqa.ory.sh",
+			},
 		},
 	)
 }
@@ -165,9 +151,11 @@ func sqa(cmd *cobra.Command, d driver.Driver) *metricsx.Service {
 func bgTasks(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []string) {
 	defer wg.Done()
 
-	if err := d.Registry().Courier().Work(stdctx.Background()); err != nil {
+	d.Logger().Println("Courier worker started.")
+	if err := graceful.Graceful(d.Registry().Courier().Work, d.Registry().Courier().Shutdown); err != nil {
 		d.Logger().WithError(err).Fatalf("Failed to run courier worker.")
 	}
+	d.Logger().Println("Courier worker was shutdown gracefully.")
 }
 
 func ServeAll(d driver.Driver) func(cmd *cobra.Command, args []string) {

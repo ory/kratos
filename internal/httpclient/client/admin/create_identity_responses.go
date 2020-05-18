@@ -55,8 +55,6 @@ func NewCreateIdentityCreated() *CreateIdentityCreated {
 /*CreateIdentityCreated handles this case with default header values.
 
 A single identity.
-
-nolint:deadcode,unused
 */
 type CreateIdentityCreated struct {
 	Payload *models.Identity

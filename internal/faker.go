@@ -13,6 +13,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/x"
 )
@@ -83,6 +84,23 @@ func RegisterFakes() {
 			methods[ct] = &registration.RequestMethod{
 				Method: ct,
 				Config: &registration.RequestMethodConfig{RequestMethodConfigurator: &f},
+			}
+		}
+		return methods, nil
+	}); err != nil {
+		panic(err)
+	}
+
+	if err := faker.AddProvider("settings_request_methods", func(v reflect.Value) (interface{}, error) {
+		var methods = make(map[string]*settings.RequestMethod)
+		for _, ct := range []string{settings.StrategyProfile, string(identity.CredentialsTypePassword), string(identity.CredentialsTypeOIDC)} {
+			var f form.HTMLForm
+			if err := faker.FakeData(&f); err != nil {
+				return nil, err
+			}
+			methods[ct] = &settings.RequestMethod{
+				Method: ct,
+				Config: &settings.RequestMethodConfig{RequestMethodConfigurator: &f},
 			}
 		}
 		return methods, nil

@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gorilla/securecookie"
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/sqlcon"
@@ -45,20 +44,19 @@ func NewManagerHTTP(
 	}
 }
 
-func (s *ManagerHTTP) CreateToRequest(ctx context.Context, i *identity.Identity, w http.ResponseWriter, r *http.Request) (*Session, error) {
-	p := NewSession(i, r, s.c)
-	if err := s.r.SessionPersister().CreateSession(ctx, p); err != nil {
-		return nil, err
+func (s *ManagerHTTP) CreateToRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, ss *Session) error {
+	if err := s.r.SessionPersister().CreateSession(ctx, ss); err != nil {
+		return err
 	}
 
-	if err := s.SaveToRequest(ctx, p, w, r); err != nil {
-		return nil, err
+	if err := s.SaveToRequest(ctx, w, r, ss); err != nil {
+		return err
 	}
 
-	return p, nil
+	return nil
 }
 
-func (s *ManagerHTTP) SaveToRequest(ctx context.Context, session *Session, w http.ResponseWriter, r *http.Request) error {
+func (s *ManagerHTTP) SaveToRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, session *Session) error {
 	_ = s.r.CSRFHandler().RegenerateToken(w, r)
 	cookie, _ := s.r.CookieManager().Get(r, s.cookieName)
 	cookie.Values["sid"] = session.ID.String()
@@ -68,18 +66,10 @@ func (s *ManagerHTTP) SaveToRequest(ctx context.Context, session *Session, w htt
 	return nil
 }
 
-func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, w http.ResponseWriter, r *http.Request) (*Session, error) {
+func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (*Session, error) {
 	cookie, err := s.r.CookieManager().Get(r, s.cookieName)
 	if err != nil {
-		if _, ok := err.(securecookie.Error); ok {
-			// If securecookie returns an error, the HMAC is probably invalid. In that case, we really want
-			// to remove the cookie from the browser as it is invalid anyways.
-			if err := s.PurgeFromRequest(ctx, w, r); err != nil {
-				return nil, err
-			}
-		}
-
-		return nil, errors.WithStack(ErrNoActiveSessionFound.WithDebug(err.Error()))
+		return nil, errors.WithStack(ErrNoActiveSessionFound.WithWrap(err).WithDebugf("%s", err))
 	}
 
 	sid, ok := cookie.Values["sid"].(string)

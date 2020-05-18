@@ -2,6 +2,7 @@ package configuration
 
 import (
 	"encoding/json"
+	"net/http"
 	"net/url"
 	"time"
 
@@ -19,7 +20,7 @@ type HasherArgon2Config struct {
 }
 
 type SelfServiceHook struct {
-	Job    string          `json:"job"`
+	Name   string          `json:"hook"`
 	Config json.RawMessage `json:"config"`
 }
 
@@ -59,14 +60,14 @@ type Provider interface {
 
 	DefaultReturnToURL() *url.URL
 
-	ProfileURL() *url.URL
+	SettingsURL() *url.URL
 	LoginURL() *url.URL
 	VerificationURL() *url.URL
 	ErrorURL() *url.URL
 	MultiFactorURL() *url.URL
 
 	SessionLifespan() time.Duration
-	SelfServiceProfileRequestLifespan() time.Duration
+	SelfServiceSettingsRequestLifespan() time.Duration
 	SelfServiceVerificationRequestLifespan() time.Duration
 	SelfServiceLoginRequestLifespan() time.Duration
 	SelfServiceRegistrationRequestLifespan() time.Duration
@@ -75,7 +76,11 @@ type Provider interface {
 	SelfServiceLoginBeforeHooks() []SelfServiceHook
 	SelfServiceRegistrationBeforeHooks() []SelfServiceHook
 	SelfServiceLoginAfterHooks(strategy string) []SelfServiceHook
+	SelfServiceLoginReturnTo(strategy string) *url.URL
 	SelfServiceRegistrationAfterHooks(strategy string) []SelfServiceHook
+	SelfServiceRegistrationReturnTo(strategy string) *url.URL
+	SelfServiceSettingsAfterHooks(strategy string) []SelfServiceHook
+	SelfServiceSettingsReturnTo(strategy string, defaultReturnTo *url.URL) *url.URL
 	SelfServiceLogoutRedirectURL() *url.URL
 	SelfServiceVerificationLinkLifespan() time.Duration
 	SelfServicePrivilegedSessionMaxAge() time.Duration
@@ -99,4 +104,6 @@ type Provider interface {
 	TracingJaegerConfig() *tracing.JaegerConfig
 
 	IsInsecureDevMode() bool
+
+	SessionSameSiteMode() http.SameSite
 }

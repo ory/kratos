@@ -12,6 +12,10 @@ import (
 // and so on.
 type CredentialsType string
 
+func (c CredentialsType) String() string {
+	return string(c)
+}
+
 const (
 	CredentialsTypePassword CredentialsType = "password"
 	CredentialsTypeOIDC     CredentialsType = "oidc"
@@ -67,6 +71,16 @@ type (
 
 	// swagger:ignore
 	CredentialIdentifierCollection []CredentialIdentifier
+
+	// swagger:ignore
+	ActiveCredentialsCounter interface {
+		CountActiveCredentials(cc map[CredentialsType]Credentials) (int, error)
+	}
+
+	// swagger:ignore
+	ActiveCredentialsCounterStrategyProvider interface {
+		ActiveCredentialsCounterStrategies() []ActiveCredentialsCounter
+	}
 )
 
 func (c CredentialsTypeTable) TableName() string {

@@ -23,14 +23,14 @@ import (
 //
 // swagger:model verificationRequest
 type Request struct {
-	// ID represents the request's unique ID. When performing the profile management flow, this
-	// represents the id in the profile ui's query parameter: http://<urls.profile_ui>?request=<id>
+	// ID represents the request's unique ID. When performing the verification flow, this
+	// represents the id in the verify ui's query parameter: http://<urls.verify_ui>?request=<id>
 	//
 	// type: string
 	// format: uuid
 	ID uuid.UUID `json:"id" db:"id" faker:"uuid" rw:"r"`
 
-	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the profile,
+	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address,
 	// a new request has to be initiated.
 	ExpiresAt time.Time `json:"expires_at" faker:"time_type" db:"expires_at"`
 
@@ -41,7 +41,7 @@ type Request struct {
 	// to forward information contained in the URL's path or query for example.
 	RequestURL string `json:"request_url" db:"request_url"`
 
-	// Form contains form fields, errors, and so on.
+	// TraitsForm contains form fields, errors, and so on.
 	Form *form.HTMLForm `json:"form" faker:"-" db:"form"`
 
 	Via identity.VerifiableAddressType `json:"via" db:"via"`

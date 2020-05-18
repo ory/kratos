@@ -13,6 +13,10 @@ type FieldSetter interface {
 	SetField(field Field)
 }
 
+type FieldUnsetter interface {
+	UnsetField(name string)
+}
+
 type ValueSetter interface {
 	// SetValue sets a value of the form.
 	SetValue(name string, value interface{})
@@ -30,7 +34,12 @@ type CSRFSetter interface {
 
 type Resetter interface {
 	// Reset resets errors.
-	Reset()
+	Reset(exclude ...string)
+}
+
+type ErrorResetter interface {
+	// ResetErrors resets errors.
+	ResetErrors(exclude ...string)
 }
 
 type FieldSorter interface {

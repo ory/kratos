@@ -9,7 +9,6 @@ import (
 	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/errorsx"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/configuration"
@@ -56,36 +55,23 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.GET(BrowserLoginRequestsPath, h.adminFetchLoginRequest)
 }
 
-func (h *Handler) NewLoginRequest(w http.ResponseWriter, r *http.Request, redir func(request *Request) (string, error)) error {
-	a := NewLoginRequest(h.c.SelfServiceLoginRequestLifespan(), h.d.GenerateCSRFToken(r), r)
+func (h *Handler) NewLoginRequest(w http.ResponseWriter, r *http.Request) (*Request, error) {
+	a := NewRequest(h.c.SelfServiceLoginRequestLifespan(), h.d.GenerateCSRFToken(r), r)
 	for _, s := range h.d.LoginStrategies() {
 		if err := s.PopulateLoginMethod(r, a); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	if err := h.d.LoginHookExecutor().PreLoginHook(w, r, a); err != nil {
-		if errorsx.Cause(err) == ErrHookAbortRequest {
-			return nil
-		}
-		return err
+		return nil, err
 	}
 
 	if err := h.d.LoginRequestPersister().CreateLoginRequest(r.Context(), a); err != nil {
-		return err
+		return nil, err
 	}
 
-	to, err := redir(a)
-	if err != nil {
-		return err
-	}
-	http.Redirect(w,
-		r,
-		to,
-		http.StatusFound,
-	)
-
-	return nil
+	return a, nil
 }
 
 // swagger:route GET /self-service/browser/flows/login public initializeSelfServiceBrowserLoginFlow
@@ -107,18 +93,38 @@ func (h *Handler) NewLoginRequest(w http.ResponseWriter, r *http.Request, redir 
 //       302: emptyResponse
 //       500: genericError
 func (h *Handler) initLoginRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.NewLoginRequest(w, r, func(a *Request) (string, error) {
-		// we assume an error means the user has no session
-		if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), w, r); err == nil && r.URL.Query().Get("prompt") == "login" {
-			if err := h.d.LoginRequestPersister().MarkRequestForced(r.Context(), a.ID); err != nil {
-				return "", err
-			}
-		}
-		return urlx.CopyWithQuery(h.c.LoginURL(), url.Values{"request": {a.ID.String()}}).String(), nil
-	}); err != nil {
+	a, err := h.NewLoginRequest(w, r)
+
+	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
+
+	// we assume an error means the user has no session
+	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err != nil {
+		http.Redirect(w, r, urlx.CopyWithQuery(h.c.LoginURL(), url.Values{"request": {a.ID.String()}}).String(), http.StatusFound)
+		return
+	}
+
+	if a.Forced {
+		if err := h.d.LoginRequestPersister().MarkRequestForced(r.Context(), a.ID); err != nil {
+			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+			return
+		}
+		http.Redirect(w, r, urlx.CopyWithQuery(h.c.LoginURL(), url.Values{"request": {a.ID.String()}}).String(), http.StatusFound)
+		return
+	}
+
+	returnTo, err := x.SecureRedirectTo(r, h.c.DefaultReturnToURL(),
+		x.SecureRedirectAllowSelfServiceURLs(h.c.SelfPublicURL()),
+		x.SecureRedirectAllowURLs(h.c.WhitelistedReturnToDomains()),
+	)
+	if err != nil {
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		return
+	}
+
+	http.Redirect(w, r, returnTo.String(), http.StatusFound)
 }
 
 // nolint:deadcode,unused

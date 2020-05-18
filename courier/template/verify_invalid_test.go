@@ -11,7 +11,7 @@ import (
 )
 
 func TestVerifyInvalid(t *testing.T) {
-	conf, _ := internal.NewRegistryDefault(t)
+	conf, _ := internal.NewFastRegistryWithMocks(t)
 	tpl := template.NewVerifyInvalid(conf, &template.VerifyInvalidModel{})
 
 	rendered, err := tpl.EmailBody()

@@ -21,7 +21,7 @@ func makeAuthCodeURL(t *testing.T, r *login.Request) string {
 		ClientID:     "client",
 		ClientSecret: "secret",
 		IssuerURL:    "https://accounts.google.com",
-		SchemaURL:    "file://./stub/hydra.schema.json",
+		Mapper:       "file://./stub/hydra.schema.json",
 	}, public)
 	c, err := p.OAuth2(context.TODO())
 	require.NoError(t, err)

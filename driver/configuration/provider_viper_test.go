@@ -1,6 +1,7 @@
 package configuration_test
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -22,16 +23,16 @@ func TestViperProvider(t *testing.T) {
 		viper.Reset()
 		viperx.InitializeConfig(
 			"kratos",
-			"./../../docs/",
+			"./../../internal/",
 			logrus.New(),
 		)
 
-		require.NoError(t, viperx.ValidateFromURL("file://../../docs/config.schema.json"))
+		require.NoError(t, viperx.ValidateFromURL("file://../../.schema/config.schema.json"))
 		p := configuration.NewViperProvider(logrus.New(), true)
 
 		t.Run("group=urls", func(t *testing.T) {
 			assert.Equal(t, "http://test.kratos.ory.sh/login", p.LoginURL().String())
-			assert.Equal(t, "http://test.kratos.ory.sh/profile", p.ProfileURL().String())
+			assert.Equal(t, "http://test.kratos.ory.sh/settings", p.SettingsURL().String())
 			assert.Equal(t, "http://test.kratos.ory.sh/register", p.RegisterURL().String())
 			assert.Equal(t, "http://test.kratos.ory.sh/mfa", p.MultiFactorURL().String())
 			assert.Equal(t, "http://test.kratos.ory.sh/error", p.ErrorURL().String())
@@ -47,6 +48,17 @@ func TestViperProvider(t *testing.T) {
 				"http://return-to-1-test.ory.sh/",
 				"http://return-to-2-test.ory.sh/",
 			}, ds)
+		})
+
+		t.Run("group=default_return_to", func(t *testing.T) {
+			assert.Equal(t, "https://self-service/login/password/return_to", p.SelfServiceLoginReturnTo("password").String())
+			assert.Equal(t, "https://self-service/login/return_to", p.SelfServiceLoginReturnTo("oidc").String())
+
+			assert.Equal(t, "https://self-service/registration/return_to", p.SelfServiceRegistrationReturnTo("password").String())
+			assert.Equal(t, "https://self-service/registration/oidc/return_to", p.SelfServiceRegistrationReturnTo("oidc").String())
+
+			assert.Equal(t, "https://self-service/settings/password/return_to", p.SelfServiceSettingsReturnTo("password", p.DefaultReturnToURL()).String())
+			assert.Equal(t, "https://self-service/settings/return_to", p.SelfServiceSettingsReturnTo("profile", p.DefaultReturnToURL()).String())
 		})
 
 		t.Run("group=identity", func(t *testing.T) {
@@ -88,11 +100,11 @@ func TestViperProvider(t *testing.T) {
 				enabled bool
 			}{
 				{id: "password", enabled: true, config: "{}"},
-				{id: "oidc", enabled: true, config: `{"providers":[{"client_id":"a","client_secret":"b","id":"github","provider":"github","schema_url":"http://test.kratos.ory.sh/default-identity.schema.json"}]}`},
+				{id: "oidc", enabled: true, config: `{"providers":[{"client_id":"a","client_secret":"b","id":"github","provider":"github","mapper_url":"http://test.kratos.ory.sh/default-identity.schema.json"}]}`},
 			} {
 				strategy := p.SelfServiceStrategy(tc.id)
 				assert.Equal(t, tc.enabled, strategy.Enabled)
-				assert.EqualValues(t, string(tc.config), string(strategy.Config))
+				assert.JSONEq(t, string(tc.config), string(strategy.Config))
 			}
 		})
 
@@ -101,35 +113,36 @@ func TestViperProvider(t *testing.T) {
 
 			t.Run("hook=before", func(t *testing.T) {
 				hook := p.SelfServiceRegistrationBeforeHooks()[0]
-				assert.EqualValues(t, "redirect", hook.Job)
+				assert.EqualValues(t, "redirect", hook.Name)
 				assert.JSONEq(t, `{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`, string(hook.Config))
 			})
 
 			for _, tc := range []struct {
-				strategy       string
-				redirectConfig string
+				strategy string
+				hooks    []configuration.SelfServiceHook
 			}{
 				{
-					strategy:       "password",
-					redirectConfig: `{"allow_user_defined_redirect":true,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`,
+					strategy: "password",
+					hooks: []configuration.SelfServiceHook{
+						{Name: "session", Config: json.RawMessage(`{}`)},
+						{Name: "verify", Config: json.RawMessage(`{}`)},
+						{Name: "redirect", Config: json.RawMessage(`{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`)},
+					},
 				},
 				{
-					strategy:       "oidc",
-					redirectConfig: `{"allow_user_defined_redirect":true,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`,
+					strategy: "oidc",
+					hooks: []configuration.SelfServiceHook{
+						{Name: "verify", Config: json.RawMessage(`{}`)},
+						{Name: "session", Config: json.RawMessage(`{}`)},
+						{Name: "redirect", Config: json.RawMessage(`{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`)},
+					},
 				},
 			} {
 				t.Run("hook=after/strategy="+tc.strategy, func(t *testing.T) {
 					hooks := p.SelfServiceRegistrationAfterHooks(tc.strategy)
-
-					hook := hooks[0]
-					assert.EqualValues(t, "session", hook.Job)
-
-					hook = hooks[1]
-					assert.EqualValues(t, "redirect", hook.Job)
-					assert.JSONEq(t, tc.redirectConfig, string(hook.Config))
+					assert.Equal(t, tc.hooks, hooks)
 				})
 			}
-
 		})
 
 		t.Run("method=login", func(t *testing.T) {
@@ -137,35 +150,62 @@ func TestViperProvider(t *testing.T) {
 
 			t.Run("hook=before", func(t *testing.T) {
 				hook := p.SelfServiceLoginBeforeHooks()[0]
-				assert.EqualValues(t, "redirect", hook.Job)
+				assert.EqualValues(t, "redirect", hook.Name)
 				assert.JSONEq(t, `{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`, string(hook.Config))
 			})
 
 			for _, tc := range []struct {
-				strategy       string
-				redirectConfig string
+				strategy string
+				hooks    []configuration.SelfServiceHook
 			}{
 				{
-					strategy:       "password",
-					redirectConfig: `{"allow_user_defined_redirect":true,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`,
+					strategy: "password",
+					hooks: []configuration.SelfServiceHook{
+						{Name: "revoke_active_sessions", Config: json.RawMessage(`{}`)},
+					},
 				},
 				{
-					strategy:       "oidc",
-					redirectConfig: `{"allow_user_defined_redirect":true,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`,
+					strategy: "oidc",
+					hooks: []configuration.SelfServiceHook{
+						{Name: "revoke_active_sessions", Config: json.RawMessage(`{}`)},
+					},
 				},
 			} {
 				t.Run("hook=after/strategy="+tc.strategy, func(t *testing.T) {
 					hooks := p.SelfServiceLoginAfterHooks(tc.strategy)
+					assert.Equal(t, tc.hooks, hooks)
+				})
+			}
+		})
 
-					hook := hooks[0]
-					assert.EqualValues(t, "revoke_active_sessions", hook.Job)
+		t.Run("method=settings", func(t *testing.T) {
+			assert.Equal(t, time.Minute*99, p.SelfServiceSettingsRequestLifespan())
+			assert.Equal(t, time.Minute*5, p.SelfServicePrivilegedSessionMaxAge())
 
-					hook = hooks[1]
-					assert.EqualValues(t, "session", hook.Job)
+			t.Run("hook=before", func(t *testing.T) {
+				hook := p.SelfServiceLoginBeforeHooks()[0]
+				assert.EqualValues(t, "redirect", hook.Name)
+				assert.JSONEq(t, `{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`, string(hook.Config))
+			})
 
-					hook = hooks[2]
-					assert.EqualValues(t, "redirect", hook.Job)
-					assert.JSONEq(t, tc.redirectConfig, string(hook.Config))
+			for _, tc := range []struct {
+				strategy string
+				hooks    []configuration.SelfServiceHook
+			}{
+				{
+					strategy: "password",
+					hooks:    []configuration.SelfServiceHook{},
+				},
+				{
+					strategy: "profile",
+					hooks: []configuration.SelfServiceHook{
+						{Name: "verify", Config: json.RawMessage(`{}`)},
+					},
+				},
+			} {
+				t.Run("hook=after/strategy="+tc.strategy, func(t *testing.T) {
+					hooks := p.SelfServiceSettingsAfterHooks(tc.strategy)
+					assert.Equal(t, tc.hooks, hooks)
 				})
 			}
 		})
@@ -179,5 +219,59 @@ func TestViperProvider(t *testing.T) {
 				KeyLength:   32,
 			}, p.HashersArgon2())
 		})
+	})
+}
+
+type InterceptHook struct {
+	lastEntry *logrus.Entry
+}
+
+func (l InterceptHook) Levels() []logrus.Level {
+	return []logrus.Level{logrus.FatalLevel}
+}
+
+func (l InterceptHook) Fire(e *logrus.Entry) error {
+	l.lastEntry = e
+	return nil
+}
+
+func TestViperProvider_DSN(t *testing.T) {
+	t.Run("case=dsn: memory", func(t *testing.T) {
+		viper.Reset()
+		viper.Set(configuration.ViperKeyDSN, "memory")
+
+		l := logrus.New()
+		p := configuration.NewViperProvider(l, false)
+
+		assert.Equal(t, "sqlite://mem.db?mode=memory&_fk=true&cache=shared", p.DSN())
+	})
+
+	t.Run("case=dsn: not memory", func(t *testing.T) {
+		dsn := "sqlite://foo.db?_fk=true"
+		viper.Reset()
+		viper.Set(configuration.ViperKeyDSN, dsn)
+
+		l := logrus.New()
+		p := configuration.NewViperProvider(l, false)
+
+		assert.Equal(t, dsn, p.DSN())
+	})
+
+	t.Run("case=dsn: not set", func(t *testing.T) {
+		dsn := ""
+		viper.Reset()
+		viper.Set(configuration.ViperKeyDSN, dsn)
+
+		l := logrus.New()
+		p := configuration.NewViperProvider(l, false)
+
+		var exitCode int
+		l.ExitFunc = func(i int) {
+			exitCode = i
+		}
+		h := InterceptHook{}
+		l.AddHook(h)
+		assert.Equal(t, dsn, p.DSN())
+		assert.NotEqual(t, 0, exitCode)
 	})
 }

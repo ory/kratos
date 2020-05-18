@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/ory/x/sqlxx"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/persistence/aliases"
 	"github.com/ory/kratos/selfservice/form"
 )
 
@@ -57,8 +58,10 @@ func (u RequestMethodsRaw) TableName() string {
 type RequestMethodConfigurator interface {
 	form.ErrorParser
 	form.FieldSetter
+	form.FieldUnsetter
 	form.ValueSetter
 	form.Resetter
+	form.ErrorResetter
 	form.CSRFSetter
 	form.FieldSorter
 	form.ErrorAdder
@@ -81,11 +84,11 @@ type requestMethodConfigMock struct {
 }
 
 func (c *RequestMethodConfig) Scan(value interface{}) error {
-	return aliases.JSONScan(c, value)
+	return sqlxx.JSONScan(c, value)
 }
 
 func (c *RequestMethodConfig) Value() (driver.Value, error) {
-	return aliases.JSONValue(c)
+	return sqlxx.JSONValue(c)
 }
 
 func (c *RequestMethodConfig) UnmarshalJSON(data []byte) error {

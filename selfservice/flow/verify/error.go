@@ -72,7 +72,7 @@ func (s *ErrorHandler) HandleVerificationError(
 
 	if e, ok := errorsx.Cause(err).(*errRequestExpired); ok {
 		a := NewRequest(
-			s.c.SelfServiceProfileRequestLifespan(), r, rr.Via,
+			s.c.SelfServiceSettingsRequestLifespan(), r, rr.Via,
 			urlx.AppendPaths(s.c.SelfPublicURL(), PublicVerificationRequestPath), s.d.GenerateCSRFToken,
 		)
 		a.Form.AddError(&form.Error{Message: e.ReasonField})

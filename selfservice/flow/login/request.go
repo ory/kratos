@@ -12,7 +12,6 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
-	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/identity"
@@ -70,7 +69,7 @@ type Request struct {
 	Forced bool `json:"forced" db:"forced"`
 }
 
-func NewLoginRequest(exp time.Duration, csrf string, r *http.Request) *Request {
+func NewRequest(exp time.Duration, csrf string, r *http.Request) *Request {
 	source := urlx.Copy(r.URL)
 	source.Host = r.Host
 
@@ -88,6 +87,7 @@ func NewLoginRequest(exp time.Duration, csrf string, r *http.Request) *Request {
 		RequestURL: source.String(),
 		Methods:    map[identity.CredentialsType]*RequestMethod{},
 		CSRFToken:  csrf,
+		Forced:     r.URL.Query().Get("prompt") == "login",
 	}
 }
 
@@ -126,10 +126,6 @@ func (r Request) TableName() string {
 func (r *Request) Valid() error {
 	if r.ExpiresAt.Before(time.Now()) {
 		return errors.WithStack(newRequestExpiredError(time.Since(r.ExpiresAt)))
-	}
-
-	if r.IssuedAt.After(time.Now()) {
-		return errors.WithStack(herodot.ErrBadRequest.WithReason("The login request was issued in the future."))
 	}
 	return nil
 }

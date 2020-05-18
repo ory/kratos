@@ -60,8 +60,8 @@ for the get self service error operation typically these are written to a http.R
 */
 type GetSelfServiceErrorParams struct {
 
-	/*ID*/
-	ID *string
+	/*Error*/
+	Error *string
 
 	timeout    time.Duration
 	Context    context.Context
@@ -101,15 +101,15 @@ func (o *GetSelfServiceErrorParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the get self service error params
-func (o *GetSelfServiceErrorParams) WithID(id *string) *GetSelfServiceErrorParams {
-	o.SetID(id)
+// WithError adds the error to the get self service error params
+func (o *GetSelfServiceErrorParams) WithError(error *string) *GetSelfServiceErrorParams {
+	o.SetError(error)
 	return o
 }
 
-// SetID adds the id to the get self service error params
-func (o *GetSelfServiceErrorParams) SetID(id *string) {
-	o.ID = id
+// SetError adds the error to the get self service error params
+func (o *GetSelfServiceErrorParams) SetError(error *string) {
+	o.Error = error
 }
 
 // WriteToRequest writes these params to a swagger request
@@ -120,16 +120,16 @@ func (o *GetSelfServiceErrorParams) WriteToRequest(r runtime.ClientRequest, reg 
 	}
 	var res []error
 
-	if o.ID != nil {
+	if o.Error != nil {
 
-		// query param id
-		var qrID string
-		if o.ID != nil {
-			qrID = *o.ID
+		// query param error
+		var qrError string
+		if o.Error != nil {
+			qrError = *o.Error
 		}
-		qID := qrID
-		if qID != "" {
-			if err := r.SetQueryParam("id", qID); err != nil {
+		qError := qrError
+		if qError != "" {
+			if err := r.SetQueryParam("error", qError); err != nil {
 				return err
 			}
 		}

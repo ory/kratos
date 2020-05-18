@@ -16,6 +16,7 @@ import (
 
 type (
 	RequestPersister interface {
+		UpdateLoginRequest(context.Context, *Request) error
 		CreateLoginRequest(context.Context, *Request) error
 		GetLoginRequest(context.Context, uuid.UUID) (*Request, error)
 		UpdateLoginRequestMethod(context.Context, uuid.UUID, identity.CredentialsType, *RequestMethod) error
@@ -111,6 +112,7 @@ func TestRequestPersister(p RequestPersister) func(t *testing.T) {
 			actual, err = p.GetLoginRequest(context.Background(), expected.ID)
 			require.NoError(t, err)
 			require.Len(t, actual.Methods, 2)
+			assert.EqualValues(t, identity.CredentialsTypePassword, actual.Active)
 
 			assert.Equal(t, string(identity.CredentialsTypePassword), actual.Methods[identity.CredentialsTypePassword].Config.RequestMethodConfigurator.(*form.HTMLForm).Action)
 			assert.Equal(t, string(identity.CredentialsTypeOIDC), actual.Methods[identity.CredentialsTypeOIDC].Config.RequestMethodConfigurator.(*form.HTMLForm).Action)

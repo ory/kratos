@@ -8,7 +8,6 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
-	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/identity"
@@ -42,8 +41,6 @@ type Request struct {
 
 	// Active, if set, contains the registration method that is being used. It is initially
 	// not set.
-	//
-	// required: true
 	Active identity.CredentialsType `json:"active,omitempty" db:"active_method"`
 
 	// Methods contains context for all enabled registration methods. If a registration request has been
@@ -122,16 +119,9 @@ func (r *Request) GetID() uuid.UUID {
 	return r.ID
 }
 
-func (r *Request) IsForced() bool {
-	return false
-}
-
 func (r *Request) Valid() error {
 	if r.ExpiresAt.Before(time.Now()) {
 		return errors.WithStack(newRequestExpiredError(time.Since(r.ExpiresAt)))
-	}
-	if r.IssuedAt.After(time.Now()) {
-		return errors.WithStack(herodot.ErrBadRequest.WithReason("The registration request was issued in the future."))
 	}
 	return nil
 }

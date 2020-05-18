@@ -1,12 +1,18 @@
 package driver
 
 import (
-	"github.com/go-errors/errors"
+	"context"
+	"net/url"
+	"strings"
+
 	"github.com/gorilla/sessions"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
+	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verify"
 
 	"github.com/ory/x/healthx"
@@ -14,7 +20,6 @@ import (
 	"github.com/ory/kratos/persistence"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/logout"
-	"github.com/ory/kratos/selfservice/flow/profile"
 	"github.com/ory/kratos/selfservice/flow/registration"
 
 	"github.com/ory/kratos/x"
@@ -47,9 +52,16 @@ type Registry interface {
 	HealthHandler() *healthx.Handler
 	CookieManager() sessions.Store
 
+	RegisterRoutes(public *x.RouterPublic, admin *x.RouterAdmin)
+	RegisterPublicRoutes(public *x.RouterPublic)
+	RegisterAdminRoutes(admin *x.RouterAdmin)
+
 	x.CSRFProvider
 	x.WriterProvider
 	x.LoggingProvider
+
+	continuity.ManagementProvider
+	continuity.PersistenceProvider
 
 	courier.Provider
 
@@ -64,6 +76,7 @@ type Registry interface {
 	identity.PoolProvider
 	identity.PrivilegedPoolProvider
 	identity.ManagementProvider
+	identity.ActiveCredentialsCounterStrategyProvider
 
 	schema.HandlerProvider
 
@@ -74,9 +87,10 @@ type Registry interface {
 	session.ManagementProvider
 	session.PersistenceProvider
 
-	profile.HandlerProvider
-	profile.ErrorHandlerProvider
-	profile.RequestPersistenceProvider
+	settings.HandlerProvider
+	settings.ErrorHandlerProvider
+	settings.RequestPersistenceProvider
+	settings.StrategyProvider
 
 	login.RequestPersistenceProvider
 	login.ErrorHandlerProvider
@@ -102,15 +116,11 @@ type Registry interface {
 	x.CSRFTokenGeneratorProvider
 }
 
-type selfServiceStrategy interface {
-	login.Strategy
-	registration.Strategy
-}
-
 func NewRegistry(c configuration.Provider) (Registry, error) {
-	driver, err := dbal.GetDriverFor(c.DSN())
+	dsn := c.DSN()
+	driver, err := dbal.GetDriverFor(dsn)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	registry, ok := driver.(Registry)
@@ -118,5 +128,19 @@ func NewRegistry(c configuration.Provider) (Registry, error) {
 		return nil, errors.Errorf("driver of type %T does not implement interface Registry", driver)
 	}
 
+	// if dsn is memory we have to run the migrations on every start
+	if urlParts := strings.SplitN(dsn, "?", 1); len(urlParts) == 2 && strings.HasPrefix(dsn, "sqlite://") {
+		queryVals, err := url.ParseQuery(urlParts[1])
+		if err != nil {
+			return nil, errors.WithMessage(errors.WithStack(err), "unable to parse the DSN url")
+		}
+		if queryVals.Get("mode") == "memory" {
+			registry.Logger().Print("Kratos is running migrations on every startup as DSN is memory.\n")
+			registry.Logger().Print("This means your data is lost when Kratos terminates.\n")
+			if err := registry.Persister().MigrateUp(context.Background()); err != nil {
+				return nil, err
+			}
+		}
+	}
 	return registry, nil
 }

@@ -1,0 +1,279 @@
+{
+  "version-v0.2/docs": [
+    {
+      "type": "category",
+      "label": "Introduction",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-v0.2/index"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.2/quickstart"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.2/install"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Concepts",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-v0.2/concepts/index"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.2/concepts/ui-user-interface"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.2/concepts/identity-user-model"
+        },
+        {
+          "label": "Identity Credentials",
+          "type": "category",
+          "items": [
+            {
+              "type": "doc",
+              "id": "version-v0.2/concepts/credentials"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.2/concepts/credentials/username-email-password"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.2/concepts/credentials/openid-connect-oidc-oauth2"
+            }
+          ]
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.2/concepts/email-sms"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.2/concepts/federation"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.2/concepts/security"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Self Service",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-v0.2/self-service/index"
+        },
+        {
+          "type": "category",
+          "label": "Flows",
+          "items": [
+            {
+              "type": "doc",
+              "id": "version-v0.2/self-service/flows/index"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.2/self-service/flows/user-login-user-registration"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.2/self-service/flows/user-logout"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.2/self-service/flows/user-settings-profile-management"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.2/self-service/flows/password-reset-account-recovery"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.2/self-service/flows/user-facing-errors"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.2/self-service/flows/verify-email-account-activation"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.2/self-service/flows/2fa-mfa-multi-factor-authentication"
+            }
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Strategies",
+          "items": [
+            {
+              "type": "doc",
+              "id": "version-v0.2/self-service/strategies/username-email-password"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.2/self-service/strategies/openid-connect-social-sign-in-oauth2"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.2/self-service/strategies/user-settings-profile"
+            }
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Hooks",
+          "items": [
+            {
+              "type": "doc",
+              "id": "version-v0.2/self-service/hooks/index"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Guides",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-v0.2/guides/zero-trust-iap-proxy-identity-access-proxy"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.2/guides/multi-tenancy-multitenant"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.2/guides/high-availability-ha"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Reference",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-v0.2/reference/configuration"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.2/reference/json-schema-json-paths"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.2/reference/html-forms"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.2/reference/api"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Debug & Help",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-v0.2/debug/csrf"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "SDKs",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-v0.2/sdk/index"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Further Reading",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-v0.2/further-reading/comparison"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "ORY Hydra",
+      "items": [
+        {
+          "type": "link",
+          "label": "Home",
+          "href": "https://www.ory.sh/hydra"
+        },
+        {
+          "type": "link",
+          "label": "Docs",
+          "href": "https://www.ory.sh/hydra/docs"
+        },
+        {
+          "type": "link",
+          "label": "GitHub",
+          "href": "https://github.com/ory/hydra"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "ORY Oathkeeper",
+      "items": [
+        {
+          "type": "link",
+          "label": "Home",
+          "href": "https://www.ory.sh/oathkeeper"
+        },
+        {
+          "type": "link",
+          "label": "Docs",
+          "href": "https://www.ory.sh/oathkeeper/docs"
+        },
+        {
+          "type": "link",
+          "label": "GitHub",
+          "href": "https://github.com/ory/oathkeeper"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "ORY Keto",
+      "items": [
+        {
+          "type": "link",
+          "label": "Home",
+          "href": "https://www.ory.sh/keto"
+        },
+        {
+          "type": "link",
+          "label": "Docs",
+          "href": "https://www.ory.sh/keto/docs"
+        },
+        {
+          "type": "link",
+          "label": "GitHub",
+          "href": "https://github.com/ory/keto"
+        }
+      ]
+    }
+  ]
+}

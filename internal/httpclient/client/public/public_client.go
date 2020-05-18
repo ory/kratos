@@ -27,7 +27,11 @@ type Client struct {
 
 // ClientService is the interface for Client methods
 type ClientService interface {
-	CompleteSelfServiceBrowserProfileManagementFlow(params *CompleteSelfServiceBrowserProfileManagementFlowParams) error
+	CompleteSelfServiceBrowserSettingsOIDCSettingsFlow(params *CompleteSelfServiceBrowserSettingsOIDCSettingsFlowParams) error
+
+	CompleteSelfServiceBrowserSettingsPasswordStrategyFlow(params *CompleteSelfServiceBrowserSettingsPasswordStrategyFlowParams) error
+
+	CompleteSelfServiceBrowserSettingsProfileStrategyFlow(params *CompleteSelfServiceBrowserSettingsProfileStrategyFlowParams) error
 
 	CompleteSelfServiceBrowserVerificationFlow(params *CompleteSelfServiceBrowserVerificationFlowParams) error
 
@@ -39,7 +43,7 @@ type ClientService interface {
 
 	InitializeSelfServiceBrowserVerificationFlow(params *InitializeSelfServiceBrowserVerificationFlowParams) error
 
-	InitializeSelfServiceProfileManagementFlow(params *InitializeSelfServiceProfileManagementFlowParams) error
+	InitializeSelfServiceSettingsFlow(params *InitializeSelfServiceSettingsFlowParams) error
 
 	SelfServiceBrowserVerify(params *SelfServiceBrowserVerifyParams) error
 
@@ -49,33 +53,30 @@ type ClientService interface {
 }
 
 /*
-  CompleteSelfServiceBrowserProfileManagementFlow completes the browser based profile management flows
+  CompleteSelfServiceBrowserSettingsOIDCSettingsFlow completes the browser based settings flow for the open ID connect strategy
 
-  This endpoint completes a browser-based profile management flow. This is usually achieved by POSTing data to this
+  This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this
 endpoint.
-
-If the provided profile data is valid against the Identity's Traits JSON Schema, the data will be updated and
-the browser redirected to `url.profile_ui` for further steps.
 
 > This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
 
-More information can be found at [ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).
+More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 */
-func (a *Client) CompleteSelfServiceBrowserProfileManagementFlow(params *CompleteSelfServiceBrowserProfileManagementFlowParams) error {
+func (a *Client) CompleteSelfServiceBrowserSettingsOIDCSettingsFlow(params *CompleteSelfServiceBrowserSettingsOIDCSettingsFlowParams) error {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewCompleteSelfServiceBrowserProfileManagementFlowParams()
+		params = NewCompleteSelfServiceBrowserSettingsOIDCSettingsFlowParams()
 	}
 
 	_, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "completeSelfServiceBrowserProfileManagementFlow",
+		ID:                 "completeSelfServiceBrowserSettingsOIDCSettingsFlow",
 		Method:             "POST",
-		PathPattern:        "/self-service/browser/flows/profile/update",
+		PathPattern:        "/self-service/browser/flows/registration/strategies/oidc/settings/connections",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &CompleteSelfServiceBrowserProfileManagementFlowReader{formats: a.formats},
+		Reader:             &CompleteSelfServiceBrowserSettingsOIDCSettingsFlowReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
@@ -86,13 +87,84 @@ func (a *Client) CompleteSelfServiceBrowserProfileManagementFlow(params *Complet
 }
 
 /*
-  CompleteSelfServiceBrowserVerificationFlow completes the browser based profile management flows
+  CompleteSelfServiceBrowserSettingsPasswordStrategyFlow completes the browser based settings flow for the password strategy
 
-  This endpoint completes a browser-based profile management flow. This is usually achieved by POSTing data to this
+  This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this
+endpoint.
+
+> This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
+
+More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+*/
+func (a *Client) CompleteSelfServiceBrowserSettingsPasswordStrategyFlow(params *CompleteSelfServiceBrowserSettingsPasswordStrategyFlowParams) error {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewCompleteSelfServiceBrowserSettingsPasswordStrategyFlowParams()
+	}
+
+	_, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "completeSelfServiceBrowserSettingsPasswordStrategyFlow",
+		Method:             "POST",
+		PathPattern:        "/self-service/browser/flows/settings/strategies/password",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &CompleteSelfServiceBrowserSettingsPasswordStrategyFlowReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+/*
+  CompleteSelfServiceBrowserSettingsProfileStrategyFlow completes the browser based settings flow for profile data
+
+  This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this
 endpoint.
 
 If the provided profile data is valid against the Identity's Traits JSON Schema, the data will be updated and
-the browser redirected to `url.profile_ui` for further steps.
+the browser redirected to `url.settings_ui` for further steps.
+
+> This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
+
+More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+*/
+func (a *Client) CompleteSelfServiceBrowserSettingsProfileStrategyFlow(params *CompleteSelfServiceBrowserSettingsProfileStrategyFlowParams) error {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewCompleteSelfServiceBrowserSettingsProfileStrategyFlowParams()
+	}
+
+	_, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "completeSelfServiceBrowserSettingsProfileStrategyFlow",
+		Method:             "POST",
+		PathPattern:        "/self-service/browser/flows/settings/strategies/profile",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &CompleteSelfServiceBrowserSettingsProfileStrategyFlowReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+/*
+  CompleteSelfServiceBrowserVerificationFlow completes the browser based verification flows
+
+  This endpoint completes a browser-based verification flow. This is usually achieved by POSTing data to this
+endpoint.
+
+If the provided data is valid against the Identity's Traits JSON Schema, the data will be updated and
+the browser redirected to `url.settings_ui` for further steps.
 
 > This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
 
@@ -233,8 +305,8 @@ func (a *Client) InitializeSelfServiceBrowserRegistrationFlow(params *Initialize
 /*
   InitializeSelfServiceBrowserVerificationFlow initializes browser based verification flow
 
-  This endpoint initializes a browser-based profile management flow. Once initialized, the browser will be redirected to
-`urls.profile_ui` with the request ID set as a query parameter. If no valid user session exists, a login
+  This endpoint initializes a browser-based verification flow. Once initialized, the browser will be redirected to
+`urls.settings_ui` with the request ID set as a query parameter. If no valid user session exists, a login
 flow will be initialized.
 
 > This endpoint is NOT INTENDED for API clients and only works
@@ -267,32 +339,32 @@ func (a *Client) InitializeSelfServiceBrowserVerificationFlow(params *Initialize
 }
 
 /*
-  InitializeSelfServiceProfileManagementFlow initializes browser based profile management flow
+  InitializeSelfServiceSettingsFlow initializes browser based settings flow
 
-  This endpoint initializes a browser-based profile management flow. Once initialized, the browser will be redirected to
-`urls.profile_ui` with the request ID set as a query parameter. If no valid user session exists, a login
+  This endpoint initializes a browser-based settings flow. Once initialized, the browser will be redirected to
+`urls.settings_ui` with the request ID set as a query parameter. If no valid user session exists, a login
 flow will be initialized.
 
 > This endpoint is NOT INTENDED for API clients and only works
 with browsers (Chrome, Firefox, ...).
 
-More information can be found at [ORY Kratos Profile Management Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-profile-management).
+More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 */
-func (a *Client) InitializeSelfServiceProfileManagementFlow(params *InitializeSelfServiceProfileManagementFlowParams) error {
+func (a *Client) InitializeSelfServiceSettingsFlow(params *InitializeSelfServiceSettingsFlowParams) error {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewInitializeSelfServiceProfileManagementFlowParams()
+		params = NewInitializeSelfServiceSettingsFlowParams()
 	}
 
 	_, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "initializeSelfServiceProfileManagementFlow",
+		ID:                 "initializeSelfServiceSettingsFlow",
 		Method:             "GET",
-		PathPattern:        "/self-service/browser/flows/profile",
+		PathPattern:        "/self-service/browser/flows/settings",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &InitializeSelfServiceProfileManagementFlowReader{formats: a.formats},
+		Reader:             &InitializeSelfServiceSettingsFlowReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})

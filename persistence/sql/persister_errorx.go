@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	stderr "errors"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -13,7 +12,6 @@ import (
 	"github.com/ory/jsonschema/v3"
 
 	"github.com/ory/herodot"
-	"github.com/ory/x/errorsx"
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/selfservice/errorx"
@@ -66,25 +64,17 @@ func (p *Persister) Clear(ctx context.Context, olderThan time.Duration, force bo
 func (p *Persister) encodeSelfServiceErrors(errs []error) (*bytes.Buffer, error) {
 	es := make([]interface{}, len(errs))
 	for k, e := range errs {
-		e = errorsx.Cause(e)
-		if u := stderr.Unwrap(e); u != nil {
-			e = u
-		}
-
 		if e == nil {
 			return nil, errors.WithStack(herodot.ErrInternalServerError.WithDebug("A nil error was passed to the error manager which is most likely a code bug."))
 		}
 
-		// Convert to a default error if the error type is unknown. Helps to properly
-		// pass through system errors.
-		switch e.(type) {
-		case *herodot.DefaultError:
-		case *jsonschema.ValidationError:
-		default:
-			e = herodot.ToDefaultError(e, "")
+		if c := new(herodot.DefaultError); errors.As(e, &c) {
+			es[k] = c
+		} else if c := new(jsonschema.ValidationError); errors.As(e, &c) {
+			es[k] = c
+		} else {
+			es[k] = herodot.ToDefaultError(e, "")
 		}
-
-		es[k] = e
 	}
 
 	var b bytes.Buffer

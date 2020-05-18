@@ -10,6 +10,8 @@ import (
 	"github.com/tidwall/sjson"
 
 	"github.com/ory/x/decoderx"
+
+	"github.com/ory/kratos/identity"
 )
 
 func decoderRegistration(ref string) (decoderx.HTTPDecoderOption, error) {
@@ -28,9 +30,9 @@ func decoderRegistration(ref string) (decoderx.HTTPDecoderOption, error) {
 
 // merge merges the userFormValues (extracted from the initial POST request) prefixed with `traits` (encoded) with the
 // values coming from the OpenID Provider (openIDProviderValues).
-func merge(userFormValues string, openIDProviderValues json.RawMessage, option decoderx.HTTPDecoderOption) (json.RawMessage, error) {
+func merge(userFormValues string, openIDProviderValues json.RawMessage, option decoderx.HTTPDecoderOption) (identity.Traits, error) {
 	if userFormValues == "" {
-		return openIDProviderValues, nil
+		return identity.Traits(openIDProviderValues), nil
 	}
 
 	var decodedForm struct {

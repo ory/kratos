@@ -10,7 +10,10 @@ import (
 // SessionPersistValues adds values to the session store and persists the changes.
 func SessionPersistValues(w http.ResponseWriter, r *http.Request, s sessions.Store, id string, values map[string]interface{}) error {
 	// The error does not matter because in the worst case we're re-writing the session cookie.
-	cookie, _ := s.Get(r, id)
+	cookie, err := s.Get(r, id)
+	if err != nil {
+		cookie = sessions.NewSession(s, id)
+	}
 
 	for k, v := range values {
 		cookie.Values[k] = v
@@ -28,7 +31,7 @@ func SessionGetString(r *http.Request, s sessions.Store, id string, key interfac
 	}
 
 	if v, ok := cookie.Values[key]; !ok {
-		return "", errors.Errorf("key %s does not exist in cookie", key)
+		return "", errors.Errorf("key %s does not exist in cookie: %+v", key, cookie.Values)
 	} else if vv, ok := v.(string); !ok {
 		return "", errors.Errorf("value of key %s is not of type string in cookie", key)
 	} else {
@@ -44,4 +47,24 @@ func SessionGetStringOr(r *http.Request, s sessions.Store, id, key, fallback str
 		return fallback
 	}
 	return v
+}
+
+func SessionUnset(w http.ResponseWriter, r *http.Request, s sessions.Store, id string) error {
+	cookie, err := s.Get(r, id)
+	if err != nil {
+		return nil
+	}
+
+	cookie.Options.MaxAge = -1
+	return errors.WithStack(cookie.Save(r, w))
+}
+
+func SessionUnsetKey(w http.ResponseWriter, r *http.Request, s sessions.Store, id, key string) error {
+	cookie, err := s.Get(r, id)
+	if err != nil {
+		return nil
+	}
+
+	delete(cookie.Values, key)
+	return errors.WithStack(cookie.Save(r, w))
 }
