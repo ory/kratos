@@ -4,9 +4,10 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-05-15)](#unreleased-2020-05-15)
-- [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
+- [Unreleased (2020-05-18)](#unreleased-2020-05-18)
     - [Bug Fixes](#bug-fixes)
+- [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
+    - [Bug Fixes](#bug-fixes-1)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
     - [Features](#features)
@@ -15,18 +16,18 @@
   - [0.2.1-alpha.1 (2020-05-05)](#021-alpha1-2020-05-05)
     - [Documentation](#documentation-1)
 - [0.2.0-alpha.2 (2020-05-04)](#020-alpha2-2020-05-04)
-    - [Bug Fixes](#bug-fixes-1)
+    - [Bug Fixes](#bug-fixes-2)
     - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation-2)
     - [Features](#features-1)
     - [Unclassified](#unclassified-1)
     - [BREAKING CHANGES](#breaking-changes-1)
   - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
-    - [Bug Fixes](#bug-fixes-2)
+    - [Bug Fixes](#bug-fixes-3)
     - [Code Refactoring](#code-refactoring-2)
     - [Documentation](#documentation-3)
 - [0.1.0-alpha.6 (2020-02-16)](#010-alpha6-2020-02-16)
-    - [Bug Fixes](#bug-fixes-3)
+    - [Bug Fixes](#bug-fixes-4)
     - [Code Refactoring](#code-refactoring-3)
     - [Documentation](#documentation-4)
     - [Features](#features-2)
@@ -37,7 +38,7 @@
     - [Documentation](#documentation-6)
 - [0.1.0-alpha.3 (2020-02-06)](#010-alpha3-2020-02-06)
 - [0.1.0-alpha.2 (2020-02-03)](#010-alpha2-2020-02-03)
-    - [Bug Fixes](#bug-fixes-4)
+    - [Bug Fixes](#bug-fixes-5)
     - [Documentation](#documentation-7)
     - [Features](#features-4)
     - [Unclassified](#unclassified-2)
@@ -77,9 +78,13 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# Unreleased (2020-05-15)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...7eec38829449237cffe345d8bec67578764559be) (2020-05-18)
 
-No significant changes have been made for this release.
+
+### Bug Fixes
+
+* Clear error messages after updating settings successfully ([#421](https://github.com/ory/kratos/issues/421)) ([7eec388](https://github.com/ory/kratos/commit/7eec38829449237cffe345d8bec67578764559be)), closes [#420](https://github.com/ory/kratos/issues/420)
+
 
 
 # [0.3.0-alpha.1](https://github.com/ory/kratos/compare/v0.2.1-alpha.1...v0.3.0-alpha.1) (2020-05-15)
