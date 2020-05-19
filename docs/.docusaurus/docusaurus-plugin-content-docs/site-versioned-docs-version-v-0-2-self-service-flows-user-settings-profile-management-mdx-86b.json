@@ -1,0 +1,20 @@
+{
+  "id": "version-v0.2/self-service/flows/user-settings-profile-management",
+  "title": "User Settings and Profile Management",
+  "description": "ORY Kratos allows users to update their own settings and profile information",
+  "source": "@site/versioned_docs/version-v0.2/self-service/flows/user-settings-profile-management.mdx",
+  "permalink": "/kratos/docs/self-service/flows/user-settings-profile-management",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/versioned_docs/version-v0.2/self-service/flows/user-settings-profile-management.mdx",
+  "version": "v0.2",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "version-v0.2/docs",
+  "previous": {
+    "title": "User Logout",
+    "permalink": "/kratos/docs/self-service/flows/user-logout"
+  },
+  "next": {
+    "title": "Account Recovery",
+    "permalink": "/kratos/docs/self-service/flows/password-reset-account-recovery"
+  }
+}

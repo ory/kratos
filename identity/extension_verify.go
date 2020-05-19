@@ -36,7 +36,7 @@ func (r *SchemaExtensionVerify) Run(ctx jsonschema.ValidationContext, s schema.E
 			return err
 		}
 
-		if has := r.has(r.i.Addresses, address); has != nil {
+		if has := r.has(r.i.VerifiableAddresses, address); has != nil {
 			if r.has(r.v, address) == nil {
 				r.v = append(r.v, *has)
 			}
@@ -65,6 +65,6 @@ func (r *SchemaExtensionVerify) has(haystack []VerifiableAddress, needle *Verifi
 }
 
 func (r *SchemaExtensionVerify) Finish() error {
-	r.i.Addresses = r.v
+	r.i.VerifiableAddresses = r.v
 	return nil
 }

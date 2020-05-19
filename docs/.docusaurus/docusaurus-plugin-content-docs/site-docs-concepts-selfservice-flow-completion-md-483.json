@@ -1,0 +1,20 @@
+{
+  "id": "concepts/selfservice-flow-completion",
+  "title": "Self-Service Flow Completion",
+  "description": "Self-Service flows such as Login, Registration, Updating Settings support two",
+  "source": "@site/docs/concepts/selfservice-flow-completion.md",
+  "permalink": "/kratos/docs/next/concepts/selfservice-flow-completion",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/concepts/selfservice-flow-completion.md",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "docs",
+  "previous": {
+    "title": "Social Sign In, OpenID Connect, and OAuth2",
+    "permalink": "/kratos/docs/next/concepts/credentials/openid-connect-oidc-oauth2"
+  },
+  "next": {
+    "title": "Out-of-band communication via E-Mail and SMS",
+    "permalink": "/kratos/docs/next/concepts/email-sms"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "id": "install",
+  "title": "Installation",
+  "description": "Installing ORY Kratos on any system is straight forward. We provide pre-built",
+  "source": "@site/docs/install.md",
+  "permalink": "/kratos/docs/next/install",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/install.md",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "docs",
+  "previous": {
+    "title": "Quickstart",
+    "permalink": "/kratos/docs/next/quickstart"
+  },
+  "next": {
+    "title": "Overview",
+    "permalink": "/kratos/docs/next/concepts/index"
+  }
+}

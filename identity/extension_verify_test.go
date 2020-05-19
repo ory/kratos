@@ -178,7 +178,7 @@ func TestSchemaExtensionVerify(t *testing.T) {
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			id := &Identity{ID: iid, Addresses: tc.existing}
+			id := &Identity{ID: iid, VerifiableAddresses: tc.existing}
 			c := jsonschema.NewCompiler()
 			runner, err := schema.NewExtensionRunner(schema.ExtensionRunnerIdentityMetaSchema)
 			require.NoError(t, err)
@@ -195,7 +195,7 @@ func TestSchemaExtensionVerify(t *testing.T) {
 
 			require.NoError(t, e.Finish())
 
-			addresses := id.Addresses
+			addresses := id.VerifiableAddresses
 			require.Len(t, addresses, len(tc.expect))
 
 			for _, actual := range addresses {

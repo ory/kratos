@@ -1,0 +1,20 @@
+{
+  "id": "guides/sign-in-with-github-google-facebook-linkedin",
+  "title": "Sign in with GitHub, Google, Facebook, LinkedIn, ...",
+  "description": "In this document we will take a look at setting up \"Sign in with GitHub\" using",
+  "source": "@site/docs/guides/sign-in-with-github-google-facebook-linkedin.mdx",
+  "permalink": "/kratos/docs/next/guides/sign-in-with-github-google-facebook-linkedin",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/guides/sign-in-with-github-google-facebook-linkedin.mdx",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "docs",
+  "previous": {
+    "title": "Hooks",
+    "permalink": "/kratos/docs/next/self-service/hooks/index"
+  },
+  "next": {
+    "title": "Zero Trust with IAP Proxy",
+    "permalink": "/kratos/docs/next/guides/zero-trust-iap-proxy-identity-access-proxy"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "id": "self-service/strategies/profile",
+  "title": "profile",
+  "description": "The updated profile must be valid against the JSON Schema defined for its",
+  "source": "@site/docs/self-service/strategies/profile.md",
+  "permalink": "/kratos/docs/next/self-service/strategies/profile",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/self-service/strategies/profile.md",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055
+}

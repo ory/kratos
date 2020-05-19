@@ -1,0 +1,20 @@
+{
+  "id": "version-v0.1/reference/configuration",
+  "title": "Configuration",
+  "description": "<!-- THIS FILE IS BEING AUTO-GENERATED. DO NOT MODIFY IT AS ALL CHANGES WILL BE OVERWRITTEN.",
+  "source": "@site/versioned_docs/version-v0.1/reference/configuration.md",
+  "permalink": "/kratos/docs/v0.1/reference/configuration",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/versioned_docs/version-v0.1/reference/configuration.md",
+  "version": "v0.1",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "version-v0.1/docs",
+  "previous": {
+    "title": "After Jobs",
+    "permalink": "/kratos/docs/v0.1/self-service/workflows/jobs/after"
+  },
+  "next": {
+    "title": "JSON Schema and JSON Paths",
+    "permalink": "/kratos/docs/v0.1/reference/json-schema-json-paths"
+  }
+}

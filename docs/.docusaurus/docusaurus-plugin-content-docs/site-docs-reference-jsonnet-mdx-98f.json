@@ -1,0 +1,11 @@
+{
+  "id": "reference/jsonnet",
+  "title": "Data Mapping with Jsonnet",
+  "description": "Some modules like the",
+  "source": "@site/docs/reference/jsonnet.mdx",
+  "permalink": "/kratos/docs/next/reference/jsonnet",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/reference/jsonnet.mdx",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055
+}

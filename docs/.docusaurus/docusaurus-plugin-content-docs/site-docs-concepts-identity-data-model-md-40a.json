@@ -1,0 +1,20 @@
+{
+  "id": "concepts/identity-user-model",
+  "title": "Identity Data Model",
+  "description": "An identity (\"user\", \"user account\", \"account\", \"subject\") is the \"who\" of a",
+  "source": "@site/docs/concepts/identity-data-model.md",
+  "permalink": "/kratos/docs/next/concepts/identity-user-model",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/concepts/identity-data-model.md",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "docs",
+  "previous": {
+    "title": "User Interface",
+    "permalink": "/kratos/docs/next/concepts/ui-user-interface"
+  },
+  "next": {
+    "title": "Overview",
+    "permalink": "/kratos/docs/next/concepts/credentials"
+  }
+}

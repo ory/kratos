@@ -1,0 +1,20 @@
+{
+  "id": "self-service/hooks/index",
+  "title": "Hooks",
+  "description": "Hooks execute logic before or after a flow (login, registration, settings, ...):",
+  "source": "@site/docs/self-service/hooks/index.mdx",
+  "permalink": "/kratos/docs/next/self-service/hooks/index",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/self-service/hooks/index.mdx",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "docs",
+  "previous": {
+    "title": "MFA / 2FA",
+    "permalink": "/kratos/docs/next/self-service/flows/2fa-mfa-multi-factor-authentication"
+  },
+  "next": {
+    "title": "Sign in with GitHub, Google, Facebook, LinkedIn, ...",
+    "permalink": "/kratos/docs/next/guides/sign-in-with-github-google-facebook-linkedin"
+  }
+}

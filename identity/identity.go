@@ -54,7 +54,8 @@ type (
 		// required: true
 		Traits Traits `json:"traits" faker:"-" db:"traits"`
 
-		Addresses []VerifiableAddress `json:"addresses,omitempty" faker:"-" has_many:"identity_verifiable_addresses" fk_id:"identity_id"`
+		VerifiableAddresses []VerifiableAddress `json:"verifiable_addresses,omitempty" faker:"-" has_many:"identity_verifiable_addresses" fk_id:"identity_id"`
+		RecoveryAddresses   []RecoveryAddress   `json:"recovery_addresses,omitempty" faker:"-" has_many:"identity_recovery_addresses" fk_id:"identity_id"`
 
 		// CredentialsCollection is a helper struct field for gobuffalo.pop.
 		CredentialsCollection CredentialsCollection `json:"-" faker:"-" has_many:"identity_credentials" fk_id:"identity_id"`
@@ -153,11 +154,11 @@ func NewIdentity(traitsSchemaID string) *Identity {
 	}
 
 	return &Identity{
-		ID:             x.NewUUID(),
-		Credentials:    map[CredentialsType]Credentials{},
-		Traits:         Traits(json.RawMessage("{}")),
-		TraitsSchemaID: traitsSchemaID,
-		l:              new(sync.RWMutex),
-		Addresses:      []VerifiableAddress{},
+		ID:                  x.NewUUID(),
+		Credentials:         map[CredentialsType]Credentials{},
+		Traits:              Traits("{}"),
+		TraitsSchemaID:      traitsSchemaID,
+		VerifiableAddresses: []VerifiableAddress{},
+		l:                   new(sync.RWMutex),
 	}
 }

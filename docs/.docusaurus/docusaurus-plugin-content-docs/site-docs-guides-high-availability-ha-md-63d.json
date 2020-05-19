@@ -1,0 +1,20 @@
+{
+  "id": "guides/high-availability-ha",
+  "title": "High Availability",
+  "description": "ORY Kratos does not have any special requirements when it comes to High",
+  "source": "@site/docs/guides/high-availability-ha.md",
+  "permalink": "/kratos/docs/next/guides/high-availability-ha",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/guides/high-availability-ha.md",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "docs",
+  "previous": {
+    "title": "Multitenancy",
+    "permalink": "/kratos/docs/next/guides/multi-tenancy-multitenant"
+  },
+  "next": {
+    "title": "Configuration",
+    "permalink": "/kratos/docs/next/reference/configuration"
+  }
+}

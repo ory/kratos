@@ -1,0 +1,11 @@
+{
+  "id": "concepts/securing-applications",
+  "title": "Securing Applications",
+  "description": "This chapter will cover how to secure applications using ORY Kratos and ORY",
+  "source": "@site/docs/concepts/securing-applications.md",
+  "permalink": "/kratos/docs/next/concepts/securing-applications",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/concepts/securing-applications.md",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055
+}

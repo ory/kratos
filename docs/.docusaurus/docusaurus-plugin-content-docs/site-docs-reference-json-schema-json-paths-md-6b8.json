@@ -1,0 +1,20 @@
+{
+  "id": "reference/json-schema-json-paths",
+  "title": "JSON Schema and JSON Paths",
+  "description": "[JSON Schema](https://json-schema.org) is a vocabulary that allows you to",
+  "source": "@site/docs/reference/json-schema-json-paths.md",
+  "permalink": "/kratos/docs/next/reference/json-schema-json-paths",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/reference/json-schema-json-paths.md",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "docs",
+  "previous": {
+    "title": "Configuration",
+    "permalink": "/kratos/docs/next/reference/configuration"
+  },
+  "next": {
+    "title": "HTML Form Parser",
+    "permalink": "/kratos/docs/next/reference/html-forms"
+  }
+}

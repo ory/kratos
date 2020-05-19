@@ -147,7 +147,7 @@ func TestHandler(t *testing.T) {
 	stubIdentity.Traits = identity.Traits(`{"emails":["exists@ory.sh"]}`)
 	address, err := identity.NewVerifiableEmailAddress("exists@ory.sh", stubIdentity.ID, time.Minute)
 	require.NoError(t, err)
-	stubIdentity.Addresses = append(stubIdentity.Addresses, *address)
+	stubIdentity.VerifiableAddresses = append(stubIdentity.VerifiableAddresses, *address)
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &stubIdentity))
 
 	for name, tc := range map[string]struct {
@@ -231,10 +231,10 @@ func TestHandler(t *testing.T) {
 		hc := &http.Client{Jar: x.EasyCookieJar(t, nil)}
 		rid := string(x.EasyGetBody(t, hc, initURL))
 
-		vr, err := reg.VerificationPersister().GetVerifyRequest(context.Background(), x.ParseUUID(rid))
+		vr, err := reg.VerificationPersister().GetVerificationRequest(context.Background(), x.ParseUUID(rid))
 		require.NoError(t, err)
 		vr.ExpiresAt = time.Now().Add(-time.Minute)
-		require.NoError(t, reg.VerificationPersister().UpdateVerifyRequest(context.Background(), vr))
+		require.NoError(t, reg.VerificationPersister().UpdateVerificationRequest(context.Background(), vr))
 
 		svr, err := adminClient.Common.GetSelfServiceVerificationRequest(common.
 			NewGetSelfServiceVerificationRequestParams().WithRequest(rid))

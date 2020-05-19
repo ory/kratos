@@ -28,7 +28,7 @@ func TestManager(t *testing.T) {
 		address, err := identity.NewVerifiableEmailAddress("tracked@ory.sh", i.ID, time.Minute)
 		require.NoError(t, err)
 
-		i.Addresses = []identity.VerifiableAddress{*address}
+		i.VerifiableAddresses = []identity.VerifiableAddress{*address}
 		i.Traits = identity.Traits("{}")
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 
@@ -48,7 +48,7 @@ func TestManager(t *testing.T) {
 		assert.Contains(t, messages[0].Body, address.Code)
 		fromStore, err := reg.Persister().GetIdentity(context.Background(), i.ID)
 		require.NoError(t, err)
-		assert.Contains(t, messages[0].Body, fromStore.Addresses[0].Code)
+		assert.Contains(t, messages[0].Body, fromStore.VerifiableAddresses[0].Code)
 
 		assert.EqualValues(t, "not-tracked@ory.sh", messages[1].Recipient)
 		assert.Contains(t, messages[1].Subject, "tried to verify")

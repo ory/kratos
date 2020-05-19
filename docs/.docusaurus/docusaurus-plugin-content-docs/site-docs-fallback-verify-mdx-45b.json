@@ -1,0 +1,11 @@
+{
+  "id": "fallback/verify",
+  "title": "This should be the Verify UI",
+  "description": "You ended up here because you did not set the following configuration value:",
+  "source": "@site/docs/fallback/verify.mdx",
+  "permalink": "/kratos/docs/next/fallback/verify",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/fallback/verify.mdx",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055
+}

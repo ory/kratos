@@ -1,0 +1,20 @@
+{
+  "id": "version-v0.2/self-service/flows/user-logout",
+  "title": "User Logout",
+  "description": "ORY Kratos supports two logout flows:",
+  "source": "@site/versioned_docs/version-v0.2/self-service/flows/user-logout.md",
+  "permalink": "/kratos/docs/self-service/flows/user-logout",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/versioned_docs/version-v0.2/self-service/flows/user-logout.md",
+  "version": "v0.2",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "version-v0.2/docs",
+  "previous": {
+    "title": "User Login and User Registration",
+    "permalink": "/kratos/docs/self-service/flows/user-login-user-registration"
+  },
+  "next": {
+    "title": "User Settings and Profile Management",
+    "permalink": "/kratos/docs/self-service/flows/user-settings-profile-management"
+  }
+}

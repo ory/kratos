@@ -1,0 +1,20 @@
+{
+  "id": "version-v0.2/self-service/flows/user-facing-errors",
+  "title": "User-Facing Errors",
+  "description": "Because ORY Kratos does not render User Interfaces, we implemented a flow that",
+  "source": "@site/versioned_docs/version-v0.2/self-service/flows/user-facing-errors.md",
+  "permalink": "/kratos/docs/self-service/flows/user-facing-errors",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/versioned_docs/version-v0.2/self-service/flows/user-facing-errors.md",
+  "version": "v0.2",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "version-v0.2/docs",
+  "previous": {
+    "title": "Account Recovery",
+    "permalink": "/kratos/docs/self-service/flows/password-reset-account-recovery"
+  },
+  "next": {
+    "title": "Email and Phone Verification and Account Activation",
+    "permalink": "/kratos/docs/self-service/flows/verify-email-account-activation"
+  }
+}

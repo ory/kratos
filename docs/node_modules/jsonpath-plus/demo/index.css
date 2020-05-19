@@ -1,0 +1,19 @@
+#jsonpath {
+  width: 90%;
+  margin-bottom: 10px;
+}
+
+.container {
+  float: left;
+  width: 48%;
+}
+
+.container textarea {
+  margin: 2%;
+  width: 98%;
+  height: 565px;
+}
+
+#demoNode {
+  font-size: small;
+}

@@ -1,0 +1,20 @@
+{
+  "id": "version-v0.1/self-service/flows/user-login-user-registration",
+  "title": "User Login and User Registration",
+  "description": "ORY Kratos supports two type of login and registration flows:",
+  "source": "@site/versioned_docs/version-v0.1/self-service/flows/user-login-user-registration.md",
+  "permalink": "/kratos/docs/v0.1/self-service/flows/user-login-user-registration",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/versioned_docs/version-v0.1/self-service/flows/user-login-user-registration.md",
+  "version": "v0.1",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "version-v0.1/docs",
+  "previous": {
+    "title": "Overview",
+    "permalink": "/kratos/docs/v0.1/self-service/flows/index"
+  },
+  "next": {
+    "title": "User Logout",
+    "permalink": "/kratos/docs/v0.1/self-service/flows/user-logout"
+  }
+}

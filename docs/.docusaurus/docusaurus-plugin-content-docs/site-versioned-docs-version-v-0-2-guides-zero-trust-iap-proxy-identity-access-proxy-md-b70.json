@@ -1,0 +1,20 @@
+{
+  "id": "version-v0.2/guides/zero-trust-iap-proxy-identity-access-proxy",
+  "title": "Zero Trust with IAP Proxy",
+  "description": "import useBaseUrl from '@docusaurus/useBaseUrl'",
+  "source": "@site/versioned_docs/version-v0.2/guides/zero-trust-iap-proxy-identity-access-proxy.md",
+  "permalink": "/kratos/docs/guides/zero-trust-iap-proxy-identity-access-proxy",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/versioned_docs/version-v0.2/guides/zero-trust-iap-proxy-identity-access-proxy.md",
+  "version": "v0.2",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "version-v0.2/docs",
+  "previous": {
+    "title": "Hooks",
+    "permalink": "/kratos/docs/self-service/hooks/index"
+  },
+  "next": {
+    "title": "Multitenancy",
+    "permalink": "/kratos/docs/guides/multi-tenancy-multitenant"
+  }
+}

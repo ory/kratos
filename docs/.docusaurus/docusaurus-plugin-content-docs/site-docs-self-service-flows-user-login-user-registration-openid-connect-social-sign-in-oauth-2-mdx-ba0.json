@@ -1,0 +1,20 @@
+{
+  "id": "self-service/flows/user-login-user-registration/openid-connect-social-sign-in-oauth2",
+  "title": "Social Sign In with OpenID Connect and OAuth2",
+  "description": ":::tip Before you start",
+  "source": "@site/docs/self-service/flows/user-login-user-registration/openid-connect-social-sign-in-oauth2.mdx",
+  "permalink": "/kratos/docs/next/self-service/flows/user-login-user-registration/openid-connect-social-sign-in-oauth2",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/self-service/flows/user-login-user-registration/openid-connect-social-sign-in-oauth2.mdx",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "docs",
+  "previous": {
+    "title": "Username or Email and Password",
+    "permalink": "/kratos/docs/next/self-service/flows/user-login-user-registration/username-email-password"
+  },
+  "next": {
+    "title": "User Settings",
+    "permalink": "/kratos/docs/next/self-service/flows/user-settings"
+  }
+}

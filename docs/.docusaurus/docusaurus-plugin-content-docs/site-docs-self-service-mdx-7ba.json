@@ -1,0 +1,21 @@
+{
+  "id": "self-service",
+  "title": "Self-Service Flows",
+  "description": "ORY Kratos implements flows that users perform themselves as opposed to",
+  "source": "@site/docs/self-service.mdx",
+  "permalink": "/kratos/docs/next/self-service",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/self-service.mdx",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar_label": "Before you start reading",
+  "sidebar": "docs",
+  "previous": {
+    "title": "Threat Models and Security Profiles",
+    "permalink": "/kratos/docs/next/concepts/security"
+  },
+  "next": {
+    "title": "User Login And Registration",
+    "permalink": "/kratos/docs/next/self-service/flows/user-login-user-registration"
+  }
+}

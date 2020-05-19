@@ -64,7 +64,7 @@ type GetSelfServiceBrowserSettingsRequestParams struct {
 	  Request is the Login Request ID
 
 	The value for this parameter comes from `request` URL Query parameter sent to your
-	application (e.g. `/login?request=abcde`).
+	application (e.g. `/settingss?request=abcde`).
 
 	*/
 	Request string

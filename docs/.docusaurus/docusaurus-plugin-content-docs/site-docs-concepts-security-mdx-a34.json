@@ -1,0 +1,20 @@
+{
+  "id": "concepts/security",
+  "title": "Threat Models and Security Profiles",
+  "description": "Running any software that stores personal information exposes the",
+  "source": "@site/docs/concepts/security.mdx",
+  "permalink": "/kratos/docs/next/concepts/security",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/concepts/security.mdx",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "docs",
+  "previous": {
+    "title": "Federation",
+    "permalink": "/kratos/docs/next/concepts/federation"
+  },
+  "next": {
+    "title": "Self-Service Flows",
+    "permalink": "/kratos/docs/next/self-service"
+  }
+}

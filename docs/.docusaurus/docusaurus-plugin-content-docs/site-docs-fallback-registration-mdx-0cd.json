@@ -1,0 +1,11 @@
+{
+  "id": "fallback/registration",
+  "title": "This should be the Registration UI",
+  "description": "You ended up here because you did not set the following configuration value:",
+  "source": "@site/docs/fallback/registration.mdx",
+  "permalink": "/kratos/docs/next/fallback/registration",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/fallback/registration.mdx",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055
+}

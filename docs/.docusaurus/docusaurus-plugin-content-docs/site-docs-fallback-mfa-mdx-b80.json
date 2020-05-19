@@ -1,0 +1,11 @@
+{
+  "id": "fallback/mfa",
+  "title": "This should be the Mfa UI",
+  "description": "You ended up here because you did not set the following configuration value:",
+  "source": "@site/docs/fallback/mfa.mdx",
+  "permalink": "/kratos/docs/next/fallback/mfa",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/fallback/mfa.mdx",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055
+}

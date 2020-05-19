@@ -30,19 +30,10 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
 	router := x.NewRouterPublic()
-	reg.RegistrationHandler().RegisterPublicRoutes(router)
-	reg.RegistrationStrategies().RegisterPublicRoutes(router)
-	ts := httptest.NewServer(router)
-	defer ts.Close()
+	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 
-	redirTS := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, _ = w.Write([]byte("already authenticated"))
-	}))
-	defer redirTS.Close()
-
-	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, redirTS.URL)
-	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
+	testhelpers.NewRedirTS(t, "already authenticated")
+	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
 
 	t.Run("does redirect to default on authenticated request", func(t *testing.T) {
 		body, _ := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, x.NewTestHTTPRequest(t, "GET", ts.URL+registration.BrowserRegistrationPath, nil))

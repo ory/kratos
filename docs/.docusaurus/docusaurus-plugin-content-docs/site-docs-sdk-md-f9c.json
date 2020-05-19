@@ -1,0 +1,21 @@
+{
+  "id": "sdk",
+  "title": "SDKs",
+  "description": "All SDKs use automated code generation provided by",
+  "source": "@site/docs/sdk.md",
+  "permalink": "/kratos/docs/next/sdk",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/sdk.md",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar_label": "Overview",
+  "sidebar": "docs",
+  "previous": {
+    "title": "Common Cookie and CSRF Pitfalls",
+    "permalink": "/kratos/docs/next/debug/csrf"
+  },
+  "next": {
+    "title": "Comparison",
+    "permalink": "/kratos/docs/next/further-reading/comparison"
+  }
+}

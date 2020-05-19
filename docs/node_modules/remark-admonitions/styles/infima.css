@@ -1,0 +1,71 @@
+/* base admonitions variables of off infima variables */
+:root {
+  --ra-admonition-background-color: var(--ifm-alert-background-color);
+  --ra-admonition-border-width: var(--ifm-alert-border-width);
+  --ra-admonition-border-color: var(--ifm-alert-border-color);
+  --ra-admonition-border-radius: var(--ifm-alert-border-radius);
+  --ra-admonition-color: var(--ifm-alert-color);
+  --ra-admonition-padding-vertical: var(--ifm-alert-padding-vertical);
+  --ra-admonition-padding-horizontal: var(--ifm-alert-padding-horizontal);
+  --ra-color-note: var(--ifm-color-secondary);
+  --ra-color-important: var(--ifm-color-info);
+  --ra-color-tip: var(--ifm-color-success);
+  --ra-color-caution: var(--ifm-color-warning);
+  --ra-color-warning: var(--ifm-color-danger);
+  --ra-color-text-dark: var(--ifm-color-gray-900);
+}
+
+/* apply variables to admonitions */
+
+.admonition {
+  margin-bottom: 1em;
+}
+
+.admonition:not(.alert) {
+  background-color: var(--ra-admonition-background-color);
+  border: var(--ra-admonition-border-width) solid var(--ra-admonition-border-color);
+  border-radius: var(--ra-admonition-border-radius);
+  box-sizing: border-box;
+  color: var(--ra-admonition-color);
+  padding: var(--ra-admonition-padding-vertical) var(--ra-admonition-padding-horizontal);
+}
+
+.admonition:not(.alert) {
+  --ra-admonition-background-color: var(--ifm-color-primary)
+}
+
+.admonition h5 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.admonition-icon {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 0.2em;
+}
+
+.admonition-icon svg {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  stroke-width: 0;
+  fill: var(--ra-admonition-icon-color);
+  stroke: var(--ra-admonition-icon-color);
+}
+
+.admonition-content > :last-child {
+  margin-bottom: 0;
+}
+
+
+/* set variables based on admonition type */
+
+.admonition {
+  --ra-admonition-icon-color: var(--ra-admonition-color);
+}
+
+.admonition-note {
+  --ra-admonition-color: var(--ra-color-text-dark);
+}

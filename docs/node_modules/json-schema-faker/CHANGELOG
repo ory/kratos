@@ -1,0 +1,195 @@
+v0.5.0-rc16
+  date: 2018-10-01
+  changes:
+    - Upgrade build scripts
+    - Dropped cleanup() calls
+    - Dropped TypeScript from sources
+    - Fixed several fixes and added new options
+    - Deprecate `jsf()` calls, use `jsf.generate()`
+    - Add support for `$id` and `const` keywords
+    - Add few common formats from draft-06
+v0.5.0-rc15
+  date: 2018-04-07
+  changes:
+    - Introduced option: "optionalsProbability".
+v0.5.0-rc1
+  date: 2017-04-10
+  changes:
+    - Improve dist and sources; see #133
+    - Drop external generators' dependencies; see #164
+    - Use ES6 module syntax w/ Rollup for better bundles
+    - Try custom formats before built-in ones; fix #88
+    - Avoid extreme future dates for built-in datetime format; fix #180
+    - Apply common constraints, see #153
+    - Normalize general strategy for custom generators; see #251
+    - Rewrite container for handling keywords; fix #169
+    - Hack thunk() method for picking random oneOf/anyOf values; see #239
+    - Fast clean(); fixing prune strategy, see #238 #232 #227 #243
+    - Allow generation of numbers with fractional part. (#249)
+    - Allow for a fallback if format is not recognized. (#250)
+    - Use json-schema-ref-parser for dereferencing
+v0.4.0
+  date: ?
+  changes:
+    - dropped support for node.js: 0.10, 0.12, io.js
+    - added support for node.js: 5, 6, 7
+v0.3.7
+  date: 2016-10-31
+  changes:
+    - falsy defaults bugfix (thx to @AndreSteenveld)
+    - allow setting a maxLength and maxItems to limit generation
+    - improved number/object generation compliance with JSON Schema spec
+    - apply suggested max traversal depth implementation
+v0.3.6
+  date: 2016-08-01
+  changes:
+    - typecast to string bug fixed
+v0.3.5
+  date: 2016-08-01
+  changes:
+    - non-required attributes missing in objects bug fixed
+    - force typecast when external generator returns unexpected value
+    - unit tests added
+    - schema tests added
+    - dependency update
+v0.3.2
+  date: ?
+  changes:
+    - unit tests added
+v0.3.1
+  date: 2016-04-15
+  changes:
+    - several bugfixes
+    - brief architecture overview added
+v0.3.0
+  date: 2016-04-07
+  changes:
+    - codebase migrated to TypeScript
+    - huge refactoring
+    - inline code docs + module separation
+v0.2.16
+  date: 2016-04-06
+  changes:
+    - minor bugfixes
+    - dependency update
+v0.2.15
+  date: 2016-03-22
+  changes:
+    - faker.js 3.1.0 version bump
+v0.2.14
+  date: 2016-03-22
+  changes:
+    - support for faker.js 3.1.0
+v0.2.13
+  date: 2016-03-21
+  changes:
+    - quick-fix after 0.2.12 - rolling back faker & chance optional dependencies
+v0.2.12
+  date: 2016-03-21
+  changes:
+    - inline code docs + module separation
+    - lowering semver version range for faker.js and chance.js
+v0.2.11:
+  date: 2016-02-13
+  changes:
+    - dependency update
+v0.2.10:
+  date: 2016-02-04
+  changes:
+    - fixed faker/chance as dependencies (before next minor version)
+v0.2.9:
+  date: 2016-02-04
+  changes:
+    - jsf added to cdnjs (with locales)
+    - switching from grunt-parts to npm-scripts
+    - solve issues related with: recursion, bundling and dependencies
+v0.2.8:
+  date: 2016-01-29
+  changes:
+    - exporting `jsf` object inside distribution files
+v0.2.7:
+  date: 2016-01-28
+  changes:
+    - distribution files added (browserify)
+v0.2.6:
+  date: 2015-12-30
+  changes:
+    - dependency update
+v0.2.5:
+  date: 2015-11-26
+  changes:
+    - mixins should be arrays
+v0.2.4:
+  date: 2015-11-25
+  changes:
+    - Call reduce() on each resolved reference
+v0.2.3:
+  date: 2015-11-25
+  changes:
+    - references fixes
+    - minor fixes
+v0.2.2:
+  date: 2015-10-09
+  changes:
+    - linting
+    - dereferencing update
+v0.2.1:
+  date: 2015-09-12
+  changes:
+    - docs update
+    - logo added
+    - underscores allowed
+    - straight approach to sub-schema containers
+    - inferred types update
+v0.2.0:
+  date: 2015-07-15
+  changes:
+    - docs update
+v0.1.13:
+  date: 2015-06-25
+  changes:
+    - extending chance.js
+v0.1.12:
+  date: 2015-06-11
+  changes:
+    - max issues solved
+v0.1.11:
+  date: 2015-06-08
+  changes:
+    - docs update
+    - test specs
+    - contributing guidelines
+    - inferred types
+v0.1.10:
+  date: 2015-05-21
+  changes:
+    - missing attributes bug-fix
+v0.1.9:
+  date: 2015-05-14
+  changes:
+    - `customize` replaced with `extend`
+    - docs improved
+v0.1.8:
+  date: 2015-05-13
+  changes:
+    - extending jsf dependencies (faker, chance)
+    - max 5 items in array bug fixed
+v0.1.7:
+  date: 2015-05-12
+  changes:
+    - extending jsf dependencies (faker, chance)
+    - contribution guide added, readme extended
+v0.1.6:
+  date: 2015-05-05
+v0.1.5:
+  date: 2015-01-20
+v0.1.4:
+  date: 2015-01-17
+v0.1.3:
+  date: 2014-12-23
+v0.1.2:
+  date: 2014-12-15
+v0.1.1:
+  date: 2014-12-05
+v0.1.0:
+  date: 2014-11-28

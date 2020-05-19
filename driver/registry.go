@@ -12,6 +12,7 @@ import (
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verify"
 
@@ -112,6 +113,12 @@ type Registry interface {
 	verify.ErrorHandlerProvider
 	verify.SenderProvider
 	verify.HandlerProvider
+
+	recovery.RequestPersistenceProvider
+	recovery.ErrorHandlerProvider
+	recovery.StrategyProvider
+	recovery.HandlerProvider
+	recovery.StrategyProvider
 
 	x.CSRFTokenGeneratorProvider
 }
