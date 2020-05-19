@@ -130,13 +130,7 @@ selfservice:
       enabled: true
       config:
         providers:
-          - id: github # this is `<provider-id>` in the Authorization callback URL. DO NOT CHANGE IT ONCE SET!
-            provider: github
-            client_id: .... # Replace this with the OAuth2 Client ID provided by GitHub
-            client_secret: .... # Replace this with the OAuth2 Client Secret provided by GitHub
-            mapper_url: file:///etc/config/kratos/oidc.github.jsonnet
-            scope:
-              - user:email
+          # - id: github ...
           - id: google # this is `<provider-id>` in the Authorization callback URL. DO NOT CHANGE IT ONCE SET!
             provider: google
             client_id: .... # Replace this with the OAuth2 Client ID provided by Google
