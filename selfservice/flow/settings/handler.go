@@ -125,11 +125,11 @@ func (h *Handler) initUpdateSettings(w http.ResponseWriter, r *http.Request, ps 
 
 // nolint:deadcode,unused
 // swagger:parameters getSelfServiceBrowserSettingsRequest
-type getSelfServiceBrowserLoginRequestParameters struct {
+type getSelfServiceBrowserSettingsRequestParameters struct {
 	// Request is the Login Request ID
 	//
 	// The value for this parameter comes from `request` URL Query parameter sent to your
-	// application (e.g. `/login?request=abcde`).
+	// application (e.g. `/settingss?request=abcde`).
 	//
 	// required: true
 	// in: query

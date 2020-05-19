@@ -43,6 +43,8 @@ type ClientService interface {
 
 	InitializeSelfServiceBrowserVerificationFlow(params *InitializeSelfServiceBrowserVerificationFlowParams) error
 
+	InitializeSelfServiceRecoveryFlow(params *InitializeSelfServiceRecoveryFlowParams) error
+
 	InitializeSelfServiceSettingsFlow(params *InitializeSelfServiceSettingsFlowParams) error
 
 	SelfServiceBrowserVerify(params *SelfServiceBrowserVerifyParams) error
@@ -329,6 +331,42 @@ func (a *Client) InitializeSelfServiceBrowserVerificationFlow(params *Initialize
 		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &InitializeSelfServiceBrowserVerificationFlowReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+/*
+  InitializeSelfServiceRecoveryFlow initializes browser based account recovery flow
+
+  This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to
+`urls.recovery_ui` with the request ID set as a query parameter. If a valid user session exists, the request
+is aborted.
+
+> This endpoint is NOT INTENDED for API clients and only works
+with browsers (Chrome, Firefox, ...).
+
+More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).
+*/
+func (a *Client) InitializeSelfServiceRecoveryFlow(params *InitializeSelfServiceRecoveryFlowParams) error {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewInitializeSelfServiceRecoveryFlowParams()
+	}
+
+	_, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "initializeSelfServiceRecoveryFlow",
+		Method:             "GET",
+		PathPattern:        "/self-service/browser/flows/recovery",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &InitializeSelfServiceRecoveryFlowReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})

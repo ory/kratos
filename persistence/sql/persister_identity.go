@@ -11,6 +11,7 @@ import (
 	"github.com/ory/jsonschema/v3"
 
 	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/otp"
 
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
@@ -122,9 +123,19 @@ func createIdentityCredentials(ctx context.Context, tx *pop.Connection, i *ident
 }
 
 func createVerifiableAddresses(ctx context.Context, tx *pop.Connection, i *identity.Identity) error {
-	for k := range i.Addresses {
-		i.Addresses[k].IdentityID = i.ID
-		if err := tx.Create(&i.Addresses[k]); err != nil {
+	for k := range i.VerifiableAddresses {
+		i.VerifiableAddresses[k].IdentityID = i.ID
+		if err := tx.Create(&i.VerifiableAddresses[k]); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func createRecoveryAddresses(ctx context.Context, tx *pop.Connection, i *identity.Identity) error {
+	for k := range i.RecoveryAddresses {
+		i.RecoveryAddresses[k].IdentityID = i.ID
+		if err := tx.Create(&i.RecoveryAddresses[k]); err != nil {
 			return err
 		}
 	}
@@ -159,6 +170,10 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 			return err
 		}
 
+		if err := createRecoveryAddresses(ctx, tx, i); err != nil {
+			return err
+		}
+
 		return createIdentityCredentials(ctx, tx, i)
 	}))
 }
@@ -169,7 +184,7 @@ func (p *Persister) ListIdentities(ctx context.Context, limit, offset int) ([]id
 	/* #nosec G201 TableName is static */
 	if err := sqlcon.HandleError(p.GetConnection(ctx).
 		RawQuery(fmt.Sprintf("SELECT * FROM %s LIMIT ? OFFSET ?", new(identity.Identity).TableName()), limit, offset).
-		Eager("Addresses").All(&is)); err != nil {
+		Eager("VerifiableAddresses","RecoveryAddresses").All(&is)); err != nil {
 		return nil, err
 	}
 
@@ -205,11 +220,21 @@ func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) er
 			return err
 		}
 
+		// This is not required because it's cascading "ON DELETE":
+		//
+		// if err := tx.RawQuery(fmt.Sprintf(`DELETE FROM %s WHERE ...`, new(identity.RecoveryAddress).TableName()), i.ID).Exec(); err != nil {
+		// 	return err
+		// }
+
 		if err := tx.Update(i); err != nil {
 			return err
 		}
 
 		if err := createVerifiableAddresses(ctx, tx, i); err != nil {
+			return err
+		}
+
+		if err := createRecoveryAddresses(ctx, tx, i); err != nil {
 			return err
 		}
 
@@ -231,7 +256,7 @@ func (p *Persister) DeleteIdentity(ctx context.Context, id uuid.UUID) error {
 
 func (p *Persister) GetIdentity(ctx context.Context, id uuid.UUID) (*identity.Identity, error) {
 	var i identity.Identity
-	if err := p.GetConnection(ctx).Eager("Addresses").Find(&i, id); err != nil {
+	if err := p.GetConnection(ctx).Eager("VerifiableAddresses","RecoveryAddresses").Find(&i, id); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 	i.Credentials = nil
@@ -299,7 +324,7 @@ func (p *Persister) FindAddressByValue(ctx context.Context, via identity.Verifia
 }
 
 func (p *Persister) VerifyAddress(ctx context.Context, code string) error {
-	newCode, err := identity.NewVerifyCode()
+	newCode, err := otp.New()
 	if err != nil {
 		return err
 	}

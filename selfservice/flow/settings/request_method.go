@@ -41,9 +41,9 @@ func (u RequestMethod) TableName() string {
 }
 
 type RequestMethodsRaw []RequestMethod // workaround for https://github.com/gobuffalo/pop/pull/478
-type RequestForms map[string]*RequestMethod
+type RequestMethods map[string]*RequestMethod
 
-func (u RequestForms) TableName() string {
+func (u RequestMethods) TableName() string {
 	// This must be stay a value receiver, using a pointer receiver will cause issues with pop.
 	return "selfservice_settings_request_methods"
 }

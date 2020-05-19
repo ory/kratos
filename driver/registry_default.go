@@ -8,6 +8,7 @@ import (
 
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verify"
 	"github.com/ory/kratos/selfservice/hook"
@@ -106,6 +107,10 @@ type RegistryDefault struct {
 	selfserviceVerifyHandler      *verify.Handler
 	selfserviceVerifySender       *verify.Sender
 
+	selfserviceRecoveryErrorHandler *recovery.ErrorHandler
+	selfserviceRecoveryHandler      *recovery.Handler
+	selfserviceRecoverySender       *recovery.Sender
+
 	selfserviceLogoutHandler *logout.Handler
 
 	selfserviceStrategies              []interface{}
@@ -113,6 +118,7 @@ type RegistryDefault struct {
 	activeCredentialsCounterStrategies []identity.ActiveCredentialsCounter
 	registrationStrategies             []registration.Strategy
 	profileStrategies                  []settings.Strategy
+	recoveryStrategies                 []recovery.Strategy
 
 	buildVersion string
 	buildHash    string
@@ -133,6 +139,7 @@ func (m *RegistryDefault) RegisterPublicRoutes(router *x.RouterPublic) {
 	m.SelfServiceErrorHandler().RegisterPublicRoutes(router)
 	m.SchemaHandler().RegisterPublicRoutes(router)
 	m.VerificationHandler().RegisterPublicRoutes(router)
+	m.RecoveryHandler().RegisterPublicRoutes(router)
 	m.HealthHandler().SetRoutes(router.Router, false)
 }
 
@@ -145,6 +152,7 @@ func (m *RegistryDefault) RegisterAdminRoutes(router *x.RouterAdmin) {
 	m.IdentityHandler().RegisterAdminRoutes(router)
 	m.SessionHandler().RegisterAdminRoutes(router)
 	m.SelfServiceErrorHandler().RegisterAdminRoutes(router)
+	m.RecoveryHandler().RegisterAdminRoutes(router)
 	m.HealthHandler().SetRoutes(router.Router, true)
 }
 
@@ -179,20 +187,6 @@ func (m *RegistryDefault) BuildHash() string {
 func (m *RegistryDefault) WithLogger(l logrus.FieldLogger) Registry {
 	m.l = l
 	return m
-}
-
-func (m *RegistryDefault) SettingsHandler() *settings.Handler {
-	if m.selfserviceSettingsHandler == nil {
-		m.selfserviceSettingsHandler = settings.NewHandler(m, m.c)
-	}
-	return m.selfserviceSettingsHandler
-}
-
-func (m *RegistryDefault) SettingsRequestErrorHandler() *settings.ErrorHandler {
-	if m.selfserviceSettingsErrorHandler == nil {
-		m.selfserviceSettingsErrorHandler = settings.NewErrorHandler(m, m.c)
-	}
-	return m.selfserviceSettingsErrorHandler
 }
 
 func (m *RegistryDefault) LogoutHandler() *logout.Handler {
@@ -233,17 +227,6 @@ func (m *RegistryDefault) selfServiceStrategies() []interface{} {
 	}
 
 	return m.selfserviceStrategies
-}
-
-func (m *RegistryDefault) SettingsStrategies() settings.Strategies {
-	if len(m.profileStrategies) == 0 {
-		for _, strategy := range m.selfServiceStrategies() {
-			if s, ok := strategy.(settings.Strategy); ok {
-				m.profileStrategies = append(m.profileStrategies, s)
-			}
-		}
-	}
-	return m.profileStrategies
 }
 
 func (m *RegistryDefault) RegistrationStrategies() registration.Strategies {
@@ -469,6 +452,10 @@ func (m *RegistryDefault) PrivilegedIdentityPool() identity.PrivilegedPool {
 }
 
 func (m *RegistryDefault) RegistrationRequestPersister() registration.RequestPersister {
+	return m.persister
+}
+
+func (m *RegistryDefault) RecoveryRequestPersister() recovery.RequestPersister {
 	return m.persister
 }
 

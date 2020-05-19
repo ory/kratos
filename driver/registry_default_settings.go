@@ -25,3 +25,28 @@ func (m *RegistryDefault) SettingsHookExecutor() *settings.HookExecutor {
 	}
 	return m.selfserviceSettingsExecutor
 }
+
+func (m *RegistryDefault) SettingsHandler() *settings.Handler {
+	if m.selfserviceSettingsHandler == nil {
+		m.selfserviceSettingsHandler = settings.NewHandler(m, m.c)
+	}
+	return m.selfserviceSettingsHandler
+}
+
+func (m *RegistryDefault) SettingsRequestErrorHandler() *settings.ErrorHandler {
+	if m.selfserviceSettingsErrorHandler == nil {
+		m.selfserviceSettingsErrorHandler = settings.NewErrorHandler(m, m.c)
+	}
+	return m.selfserviceSettingsErrorHandler
+}
+
+func (m *RegistryDefault) SettingsStrategies() settings.Strategies {
+	if len(m.profileStrategies) == 0 {
+		for _, strategy := range m.selfServiceStrategies() {
+			if s, ok := strategy.(settings.Strategy); ok {
+				m.profileStrategies = append(m.profileStrategies, s)
+			}
+		}
+	}
+	return m.profileStrategies
+}

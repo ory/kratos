@@ -4,9 +4,8 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/pkg/errors"
 
-	"github.com/ory/x/randx"
+	"github.com/ory/kratos/otp"
 )
 
 const (
@@ -14,10 +13,6 @@ const (
 
 	VerifiableAddressStatusPending   VerifiableAddressStatus = "pending"
 	VerifiableAddressStatusCompleted VerifiableAddressStatus = "completed"
-
-	// codeEntropy sets the number of characters used for generating verification codes. This must not be
-	// changed to another value as we only have 32 characters available in the SQL schema.
-	codeEntropy = 32
 )
 
 type (
@@ -70,20 +65,12 @@ func (a VerifiableAddress) TableName() string {
 	return "identity_verifiable_addresses"
 }
 
-func NewVerifyCode() (string, error) {
-	code, err := randx.RuneSequence(codeEntropy, randx.AlphaNum)
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
-	return string(code), nil
-}
-
 func NewVerifiableEmailAddress(
 	value string,
 	identity uuid.UUID,
 	expiresIn time.Duration,
 ) (*VerifiableAddress, error) {
-	code, err := NewVerifyCode()
+	code, err := otp.New()
 	if err != nil {
 		return nil, err
 	}

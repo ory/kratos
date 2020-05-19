@@ -38,12 +38,12 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity) error {
 	// Ths is called after the identity has been created so we can safely assume that all addresses are available
 	// already.
 
-	for k, address := range i.Addresses {
+	for k, address := range i.VerifiableAddresses {
 		sent, err := e.r.VerificationSender().SendCode(r.Context(), address.Via, address.Value)
 		if err != nil {
 			return err
 		}
-		i.Addresses[k] = *sent
+		i.VerifiableAddresses[k] = *sent
 	}
 
 	return nil

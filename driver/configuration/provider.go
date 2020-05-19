@@ -65,12 +65,14 @@ type Provider interface {
 	VerificationURL() *url.URL
 	ErrorURL() *url.URL
 	MultiFactorURL() *url.URL
+	RecoveryURL() *url.URL
 
 	SessionLifespan() time.Duration
 	SelfServiceSettingsRequestLifespan() time.Duration
 	SelfServiceVerificationRequestLifespan() time.Duration
 	SelfServiceLoginRequestLifespan() time.Duration
 	SelfServiceRegistrationRequestLifespan() time.Duration
+	SelfServiceRecoveryRequestLifespan() time.Duration
 
 	SelfServiceStrategy(strategy string) *SelfServiceStrategy
 	SelfServiceLoginBeforeHooks() []SelfServiceHook
@@ -82,7 +84,7 @@ type Provider interface {
 	SelfServiceSettingsAfterHooks(strategy string) []SelfServiceHook
 	SelfServiceSettingsReturnTo(strategy string, defaultReturnTo *url.URL) *url.URL
 	SelfServiceLogoutRedirectURL() *url.URL
-	SelfServiceVerificationLinkLifespan() time.Duration
+
 	SelfServicePrivilegedSessionMaxAge() time.Duration
 	SelfServiceVerificationReturnTo() *url.URL
 

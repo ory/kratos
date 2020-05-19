@@ -56,7 +56,7 @@ type SettingsRequest struct {
 	// Required: true
 	RequestURL *string `json:"request_url"`
 
-	// UpdateSuccessful, if true, indicates that the settings request has been updated successfully with the provided data.
+	// Success, if true, indicates that the settings request has been updated successfully with the provided data.
 	// Done will stay true when repeatedly checking. If set to true, done will revert back to false only
 	// when a request with invalid (e.g. "please use a valid phone number") data was sent.
 	// Required: true

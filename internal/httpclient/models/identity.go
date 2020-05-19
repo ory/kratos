@@ -19,13 +19,13 @@ import (
 // swagger:model Identity
 type Identity struct {
 
-	// addresses
-	Addresses []*VerifiableAddress `json:"addresses"`
-
 	// id
 	// Required: true
 	// Format: uuid4
 	ID UUID `json:"id"`
+
+	// recovery addresses
+	RecoveryAddresses []*RecoveryAddress `json:"recovery_addresses"`
 
 	// traits
 	// Required: true
@@ -39,17 +39,20 @@ type Identity struct {
 	//
 	// format: url
 	TraitsSchemaURL string `json:"traits_schema_url,omitempty"`
+
+	// verifiable addresses
+	VerifiableAddresses []*VerifiableAddress `json:"verifiable_addresses"`
 }
 
 // Validate validates this identity
 func (m *Identity) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateAddresses(formats); err != nil {
+	if err := m.validateID(formats); err != nil {
 		res = append(res, err)
 	}
 
-	if err := m.validateID(formats); err != nil {
+	if err := m.validateRecoveryAddresses(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -61,34 +64,13 @@ func (m *Identity) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
+	if err := m.validateVerifiableAddresses(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *Identity) validateAddresses(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.Addresses) { // not required
-		return nil
-	}
-
-	for i := 0; i < len(m.Addresses); i++ {
-		if swag.IsZero(m.Addresses[i]) { // not required
-			continue
-		}
-
-		if m.Addresses[i] != nil {
-			if err := m.Addresses[i].Validate(formats); err != nil {
-				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("addresses" + "." + strconv.Itoa(i))
-				}
-				return err
-			}
-		}
-
-	}
-
 	return nil
 }
 
@@ -99,6 +81,31 @@ func (m *Identity) validateID(formats strfmt.Registry) error {
 			return ve.ValidateName("id")
 		}
 		return err
+	}
+
+	return nil
+}
+
+func (m *Identity) validateRecoveryAddresses(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.RecoveryAddresses) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.RecoveryAddresses); i++ {
+		if swag.IsZero(m.RecoveryAddresses[i]) { // not required
+			continue
+		}
+
+		if m.RecoveryAddresses[i] != nil {
+			if err := m.RecoveryAddresses[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("recovery_addresses" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
 	}
 
 	return nil
@@ -117,6 +124,31 @@ func (m *Identity) validateTraitsSchemaID(formats strfmt.Registry) error {
 
 	if err := validate.Required("traits_schema_id", "body", m.TraitsSchemaID); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (m *Identity) validateVerifiableAddresses(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.VerifiableAddresses) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.VerifiableAddresses); i++ {
+		if swag.IsZero(m.VerifiableAddresses[i]) { // not required
+			continue
+		}
+
+		if m.VerifiableAddresses[i] != nil {
+			if err := m.VerifiableAddresses[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("verifiable_addresses" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
 	}
 
 	return nil

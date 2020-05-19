@@ -30,7 +30,7 @@ type (
 	Pool interface {
 		ListIdentities(ctx context.Context, limit, offset int) ([]Identity, error)
 
-		// Get returns an identity by its id. Will return an error if the identity does not exist or backend
+		// GetIdentity returns an identity by its id. Will return an error if the identity does not exist or backend
 		// connectivity is broken.
 		GetIdentity(context.Context, uuid.UUID) (*Identity, error)
 
@@ -383,10 +383,10 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 				require.NoError(t, err)
 
 				address.ExpiresAt = address.ExpiresAt.Round(time.Minute) // prevent mysql time synchro issues
-				i.Addresses = append(i.Addresses, *address)
+				i.VerifiableAddresses = append(i.VerifiableAddresses, *address)
 
 				require.NoError(t, p.CreateIdentity(context.Background(), &i))
-				return i.Addresses[0]
+				return i.VerifiableAddresses[0]
 			}
 
 			t.Run("case=not found", func(t *testing.T) {

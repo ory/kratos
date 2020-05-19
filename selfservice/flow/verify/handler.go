@@ -109,7 +109,7 @@ func (h *Handler) init(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 		urlx.AppendPaths(h.c.SelfPublicURL(), strings.ReplaceAll(PublicVerificationCompletePath, ":via", string(via))), h.d.GenerateCSRFToken,
 	)
 
-	if err := h.d.VerificationPersister().CreateVerifyRequest(r.Context(), a); err != nil {
+	if err := h.d.VerificationPersister().CreateVerificationRequest(r.Context(), a); err != nil {
 		h.handleError(w, r, nil, err)
 		return
 	}
@@ -169,7 +169,7 @@ func (h *Handler) adminFetch(w http.ResponseWriter, r *http.Request, _ httproute
 
 func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, mustVerify bool) error {
 	rid := x.ParseUUID(r.URL.Query().Get("request"))
-	ar, err := h.d.VerificationPersister().GetVerifyRequest(r.Context(), rid)
+	ar, err := h.d.VerificationPersister().GetVerificationRequest(r.Context(), rid)
 	if err != nil {
 		return err
 	}
@@ -243,7 +243,7 @@ func (h *Handler) complete(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 	}
 
-	vr, err := h.d.VerificationPersister().GetVerifyRequest(r.Context(), x.ParseUUID(rid))
+	vr, err := h.d.VerificationPersister().GetVerificationRequest(r.Context(), x.ParseUUID(rid))
 	if err != nil {
 		h.handleError(w, r, vr, err)
 		return
@@ -285,7 +285,7 @@ func (h *Handler) completeViaEmail(w http.ResponseWriter, r *http.Request, vr *R
 
 	vr.Form = nil
 	vr.Success = true
-	if err := h.d.VerificationPersister().UpdateVerifyRequest(r.Context(), vr); err != nil {
+	if err := h.d.VerificationPersister().UpdateVerificationRequest(r.Context(), vr); err != nil {
 		h.handleError(w, r, vr, err)
 		return
 	}
@@ -343,7 +343,7 @@ func (h *Handler) verify(w http.ResponseWriter, r *http.Request, ps httprouter.P
 			)
 			a.Form.AddError(&form.Error{Message: "The verification code has expired or was otherwise invalid. Please request another code."})
 
-			if err := h.d.VerificationPersister().CreateVerifyRequest(r.Context(), a); err != nil {
+			if err := h.d.VerificationPersister().CreateVerificationRequest(r.Context(), a); err != nil {
 				h.handleError(w, r, nil, err)
 				return
 			}
