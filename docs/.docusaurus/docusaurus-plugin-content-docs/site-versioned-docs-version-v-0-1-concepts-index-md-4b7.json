@@ -1,0 +1,20 @@
+{
+  "id": "version-v0.1/concepts/index",
+  "title": "Overview",
+  "description": "ORY Kratos is a new software archetype **Identity Infrastructure Service**.",
+  "source": "@site/versioned_docs/version-v0.1/concepts/index.md",
+  "permalink": "/kratos/docs/v0.1/concepts/index",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/versioned_docs/version-v0.1/concepts/index.md",
+  "version": "v0.1",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "version-v0.1/docs",
+  "previous": {
+    "title": "Installation",
+    "permalink": "/kratos/docs/v0.1/install"
+  },
+  "next": {
+    "title": "User Interface",
+    "permalink": "/kratos/docs/v0.1/concepts/ui-user-interface"
+  }
+}

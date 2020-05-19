@@ -1,0 +1,12 @@
+{
+  "source": "_docs",
+  "output": "_site",
+  "permalink": "{{directory}}/{{filename}}",
+  "sitename": "Colorful",
+  "github": "https://github.com/lepture/colorful",
+  "google": "UA-21475122-5",
+  "writers": [
+    "nico.PageWriter",
+    "nico.StaticWriter"
+  ]
+}

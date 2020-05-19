@@ -387,22 +387,10 @@
           "properties": {
             "request_lifespan": {
               "title": "Self-Service Verification Request Lifespan",
-              "description": "Sets how long the verification request (for the UI interaction) is valid.",
+              "description": "Sets how long the verification request (both for the UI interaction as well as the verification code) is valid.",
               "type": "string",
               "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
               "default": "1h",
-              "examples": [
-                "1h",
-                "1m",
-                "1s"
-              ]
-            },
-            "link_lifespan": {
-              "title": "Self-Service Verification Link Lifespan",
-              "description": "Sets how long the verification link (e.g. the one sent via email) is valid for.",
-              "type": "string",
-              "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
-              "default": "24h",
               "examples": [
                 "1h",
                 "1m",

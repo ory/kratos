@@ -1,0 +1,20 @@
+{
+  "id": "self-service/flows/user-settings/user-profile-management",
+  "title": "User Profile Management",
+  "description": ":::tip Before you start",
+  "source": "@site/docs/self-service/flows/user-settings/user-profile-management.mdx",
+  "permalink": "/kratos/docs/next/self-service/flows/user-settings/user-profile-management",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/self-service/flows/user-settings/user-profile-management.mdx",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "docs",
+  "previous": {
+    "title": "User Settings",
+    "permalink": "/kratos/docs/next/self-service/flows/user-settings"
+  },
+  "next": {
+    "title": "Change Password",
+    "permalink": "/kratos/docs/next/self-service/flows/user-settings/change-password"
+  }
+}

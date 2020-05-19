@@ -1,0 +1,20 @@
+{
+  "id": "version-v0.2/self-service/hooks/index",
+  "title": "Hooks",
+  "description": "Hooks execute logic before or after a flow (login, registration, settings, ...):",
+  "source": "@site/versioned_docs/version-v0.2/self-service/hooks/index.mdx",
+  "permalink": "/kratos/docs/self-service/hooks/index",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/versioned_docs/version-v0.2/self-service/hooks/index.mdx",
+  "version": "v0.2",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "version-v0.2/docs",
+  "previous": {
+    "title": "User Profile",
+    "permalink": "/kratos/docs/self-service/strategies/user-settings-profile"
+  },
+  "next": {
+    "title": "Zero Trust with IAP Proxy",
+    "permalink": "/kratos/docs/guides/zero-trust-iap-proxy-identity-access-proxy"
+  }
+}

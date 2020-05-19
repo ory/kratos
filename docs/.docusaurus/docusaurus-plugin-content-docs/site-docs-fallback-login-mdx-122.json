@@ -1,0 +1,11 @@
+{
+  "id": "fallback/login",
+  "title": "This should be the Login UI",
+  "description": "You ended up here because you did not set the following configuration value:",
+  "source": "@site/docs/fallback/login.mdx",
+  "permalink": "/kratos/docs/next/fallback/login",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/fallback/login.mdx",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055
+}

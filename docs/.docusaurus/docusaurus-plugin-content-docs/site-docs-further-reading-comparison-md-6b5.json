@@ -1,0 +1,16 @@
+{
+  "id": "further-reading/comparison",
+  "title": "Comparison",
+  "description": "This document will provide you with an overview of how ORY Kratos compares to",
+  "source": "@site/docs/further-reading/comparison.md",
+  "permalink": "/kratos/docs/next/further-reading/comparison",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/further-reading/comparison.md",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "docs",
+  "previous": {
+    "title": "SDKs",
+    "permalink": "/kratos/docs/next/sdk"
+  }
+}

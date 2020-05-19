@@ -1,0 +1,20 @@
+{
+  "id": "self-service/workflows/jobs/before",
+  "title": "Before Jobs",
+  "description": "There are currently no jobs available for before workflows. Jobs will be added",
+  "source": "@site/docs/self-service/workflows/jobs/before.md",
+  "permalink": "/kratos/docs/next/self-service/workflows/jobs/before",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/self-service/workflows/jobs/before.md",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "docs",
+  "previous": {
+    "title": "Social Sign In with OpenID Connect and OAuth2",
+    "permalink": "/kratos/docs/next/self-service/strategies/openid-connect-social-sign-in-oauth2"
+  },
+  "next": {
+    "title": "After Jobs",
+    "permalink": "/kratos/docs/next/self-service/workflows/jobs/after"
+  }
+}

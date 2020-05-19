@@ -1,0 +1,20 @@
+{
+  "id": "version-v0.2/sdk/index",
+  "title": "Overview",
+  "description": "All SDKs use automated code generation provided by",
+  "source": "@site/versioned_docs/version-v0.2/sdk/index.md",
+  "permalink": "/kratos/docs/sdk/index",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/versioned_docs/version-v0.2/sdk/index.md",
+  "version": "v0.2",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "version-v0.2/docs",
+  "previous": {
+    "title": "Common Cookie and CSRF Pitfalls",
+    "permalink": "/kratos/docs/debug/csrf"
+  },
+  "next": {
+    "title": "Comparison",
+    "permalink": "/kratos/docs/further-reading/comparison"
+  }
+}

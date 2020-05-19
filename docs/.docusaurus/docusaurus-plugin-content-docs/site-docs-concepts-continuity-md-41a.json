@@ -1,0 +1,11 @@
+{
+  "id": "concepts/continuity",
+  "title": "Aborting and Resuming Requests",
+  "description": "",
+  "source": "@site/docs/concepts/continuity.md",
+  "permalink": "/kratos/docs/next/concepts/continuity",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/concepts/continuity.md",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055
+}

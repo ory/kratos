@@ -1,0 +1,29 @@
+{
+  "name": "prism-react-renderer-example",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [],
+  "main": "src/index.js",
+  "dependencies": {
+    "prism-react-renderer": "file:../",
+    "react": "16.8.3",
+    "react-dom": "16.8.3",
+    "react-scripts": "2.1.5",
+    "styled-components": "4.1.3"
+  },
+  "devDependencies": {
+    "cross-env": "^5.2.0"
+  },
+  "scripts": {
+    "start": "cross-env SKIP_PREFLIGHT_CHECK=true react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
+}

@@ -69,7 +69,7 @@ type Request struct {
 	// required: true
 	Identity *identity.Identity `json:"identity" faker:"identity" db:"-" belongs_to:"identities" fk_id:"IdentityID"`
 
-	// UpdateSuccessful, if true, indicates that the settings request has been updated successfully with the provided data.
+	// Success, if true, indicates that the settings request has been updated successfully with the provided data.
 	// Done will stay true when repeatedly checking. If set to true, done will revert back to false only
 	// when a request with invalid (e.g. "please use a valid phone number") data was sent.
 	//
@@ -131,7 +131,7 @@ func (r *Request) AfterSave(c *pop.Connection) error {
 }
 
 func (r *Request) AfterFind(_ *pop.Connection) error {
-	r.Methods = make(RequestForms)
+	r.Methods = make(RequestMethods)
 	for key := range r.MethodsRaw {
 		m := r.MethodsRaw[key] // required for pointer dereference
 		r.Methods[m.Method] = &m

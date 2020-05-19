@@ -1,12 +1,8 @@
 package login
 
 import (
-	"context"
 	"net/http"
-	"testing"
 	"time"
-
-	"github.com/stretchr/testify/require"
 
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
@@ -136,17 +132,4 @@ func (r *Request) GetID() uuid.UUID {
 
 func (r *Request) IsForced() bool {
 	return r.Forced
-}
-
-type testRequestHandlerDependencies interface {
-	RequestPersistenceProvider
-	x.WriterProvider
-}
-
-func TestRequestHandler(t *testing.T, reg testRequestHandlerDependencies) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		e, err := reg.LoginRequestPersister().GetLoginRequest(context.Background(), x.ParseUUID(r.URL.Query().Get("request")))
-		require.NoError(t, err)
-		reg.Writer().Write(w, r, e)
-	}
 }

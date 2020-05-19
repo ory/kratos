@@ -1,0 +1,21 @@
+{
+  "id": "self-service/flows/user-login-user-registration",
+  "title": "User Login And Registration",
+  "description": "ORY Kratos supports two type of login and registration flows:",
+  "source": "@site/docs/self-service/flows/user-login-user-registration.mdx",
+  "permalink": "/kratos/docs/next/self-service/flows/user-login-user-registration",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/self-service/flows/user-login-user-registration.mdx",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar_label": "Overview",
+  "sidebar": "docs",
+  "previous": {
+    "title": "Self-Service Flows",
+    "permalink": "/kratos/docs/next/self-service"
+  },
+  "next": {
+    "title": "Username or Email and Password",
+    "permalink": "/kratos/docs/next/self-service/flows/user-login-user-registration/username-email-password"
+  }
+}

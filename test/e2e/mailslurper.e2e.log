@@ -1,0 +1,11 @@
+time="2020-05-15T09:49:15Z" level=info msg="Starting MailSlurper Server v1.14.1" who=MailSlurper
+time="2020-05-15T09:49:15Z" level=info msg="Connecting to database" who=MailSlurper
+time="2020-05-15T09:49:15Z" level=info msg="Creating database tables..." who=MailSlurper
+time="2020-05-15T09:49:15Z" level=info msg="Created tables successfully." who=MailSlurper
+time="2020-05-15T09:49:15Z" level=info msg="Worker pool configured for 1000 workers" who="SMTP Server Pool"
+time="2020-05-15T09:49:15Z" level=info msg="SMTP listener running on SSL 0.0.0.0:1025" who="SMTP Listener"
+time="2020-05-15T09:49:15Z" level=info msg="HTTP admin listener running on 0.0.0.0:4436" who=MailSlurper
+time="2020-05-15T09:49:15Z" level=info msg="1 receiver(s) listening" who="SMTP Listener"
+⇨ http server started on [::]:4437
+⇨ http server started on [::]:4436
+time="2020-05-15T09:49:36Z" level=info msg="Mail collection page 1 retrieved" who=ServiceController

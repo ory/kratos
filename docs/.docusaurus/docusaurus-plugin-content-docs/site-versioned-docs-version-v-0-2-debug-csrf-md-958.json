@@ -1,0 +1,20 @@
+{
+  "id": "version-v0.2/debug/csrf",
+  "title": "Common Cookie and CSRF Pitfalls",
+  "description": "import useBaseUrl from '@docusaurus/useBaseUrl';",
+  "source": "@site/versioned_docs/version-v0.2/debug/csrf.md",
+  "permalink": "/kratos/docs/debug/csrf",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/versioned_docs/version-v0.2/debug/csrf.md",
+  "version": "v0.2",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "version-v0.2/docs",
+  "previous": {
+    "title": "REST API",
+    "permalink": "/kratos/docs/reference/api"
+  },
+  "next": {
+    "title": "Overview",
+    "permalink": "/kratos/docs/sdk/index"
+  }
+}

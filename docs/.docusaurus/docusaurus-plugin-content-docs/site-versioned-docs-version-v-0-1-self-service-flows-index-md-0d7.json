@@ -1,0 +1,20 @@
+{
+  "id": "version-v0.1/self-service/flows/index",
+  "title": "Overview",
+  "description": "ORY Kratos allows end-users to sign up, log in, log out, update profile",
+  "source": "@site/versioned_docs/version-v0.1/self-service/flows/index.md",
+  "permalink": "/kratos/docs/v0.1/self-service/flows/index",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/versioned_docs/version-v0.1/self-service/flows/index.md",
+  "version": "v0.1",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "version-v0.1/docs",
+  "previous": {
+    "title": "Threat Models and Security Profiles",
+    "permalink": "/kratos/docs/v0.1/concepts/security"
+  },
+  "next": {
+    "title": "User Login and User Registration",
+    "permalink": "/kratos/docs/v0.1/self-service/flows/user-login-user-registration"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "id": "version-v0.2/guides/multi-tenancy-multitenant",
+  "title": "Multitenancy",
+  "description": "ORY Kratos does not implement multi-tenancy in its application logic, but it is",
+  "source": "@site/versioned_docs/version-v0.2/guides/multi-tenancy-multitenant.md",
+  "permalink": "/kratos/docs/guides/multi-tenancy-multitenant",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/versioned_docs/version-v0.2/guides/multi-tenancy-multitenant.md",
+  "version": "v0.2",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "version-v0.2/docs",
+  "previous": {
+    "title": "Zero Trust with IAP Proxy",
+    "permalink": "/kratos/docs/guides/zero-trust-iap-proxy-identity-access-proxy"
+  },
+  "next": {
+    "title": "High Availability",
+    "permalink": "/kratos/docs/guides/high-availability-ha"
+  }
+}

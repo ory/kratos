@@ -1,0 +1,11 @@
+{
+  "id": "fallback/error",
+  "title": "This should be the Error UI",
+  "description": "You ended up here because you did not set the following configuration value:",
+  "source": "@site/docs/fallback/default_return_to.mdx",
+  "permalink": "/kratos/docs/next/fallback/error",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/fallback/default_return_to.mdx",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055
+}

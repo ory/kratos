@@ -1,0 +1,20 @@
+{
+  "id": "self-service/hooks/index",
+  "title": "Hooks",
+  "description": "Hooks execute logic before or after a flow (login, registration, settings, ...):",
+  "source": "@site/docs/self-service/hooks/index.md",
+  "permalink": "/kratos/docs/next/self-service/hooks/index",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/self-service/hooks/index.md",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "docs",
+  "previous": {
+    "title": "Social Sign In with OpenID Connect and OAuth2",
+    "permalink": "/kratos/docs/next/self-service/strategies/openid-connect-social-sign-in-oauth2"
+  },
+  "next": {
+    "title": "Zero Trust with IAP Proxy",
+    "permalink": "/kratos/docs/next/guides/zero-trust-iap-proxy-identity-access-proxy"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "id": "version-v0.2/quickstart",
+  "title": "Quickstart",
+  "description": "import useBaseUrl from '@docusaurus/useBaseUrl';",
+  "source": "@site/versioned_docs/version-v0.2/quickstart.mdx",
+  "permalink": "/kratos/docs/quickstart",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/versioned_docs/version-v0.2/quickstart.mdx",
+  "version": "v0.2",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "version-v0.2/docs",
+  "previous": {
+    "title": "Introduction",
+    "permalink": "/kratos/docs/index"
+  },
+  "next": {
+    "title": "Installation",
+    "permalink": "/kratos/docs/install"
+  }
+}

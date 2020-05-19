@@ -103,12 +103,7 @@ func NewTestCSRFHandler(router http.Handler, reg interface {
 	WithCSRFTokenGenerator(CSRFToken)
 }) *nosurf.CSRFHandler {
 	n := nosurf.New(router)
-	n.SetBaseCookie(http.Cookie{
-		MaxAge:   nosurf.MaxAge,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   false,
-	})
+	n.SetBaseCookie(http.Cookie{MaxAge: nosurf.MaxAge, Path: "/", HttpOnly: true, Secure: false})
 	reg.WithCSRFHandler(n)
 	reg.WithCSRFTokenGenerator(nosurf.Token)
 	return n

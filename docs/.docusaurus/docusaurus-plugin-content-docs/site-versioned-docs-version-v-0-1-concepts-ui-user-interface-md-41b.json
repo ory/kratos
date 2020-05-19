@@ -1,0 +1,20 @@
+{
+  "id": "version-v0.1/concepts/ui-user-interface",
+  "title": "User Interface",
+  "description": "ORY Kratos has no user interface included. Instead, it defines HTTP flows and",
+  "source": "@site/versioned_docs/version-v0.1/concepts/ui-user-interface.md",
+  "permalink": "/kratos/docs/v0.1/concepts/ui-user-interface",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/versioned_docs/version-v0.1/concepts/ui-user-interface.md",
+  "version": "v0.1",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "version-v0.1/docs",
+  "previous": {
+    "title": "Overview",
+    "permalink": "/kratos/docs/v0.1/concepts/index"
+  },
+  "next": {
+    "title": "Identity and User Model",
+    "permalink": "/kratos/docs/v0.1/concepts/identity-user-model"
+  }
+}

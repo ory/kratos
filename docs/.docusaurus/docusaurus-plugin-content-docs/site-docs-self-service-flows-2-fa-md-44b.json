@@ -1,0 +1,11 @@
+{
+  "id": "self-service/flows/2fa-mfa-multi-factor-authentication",
+  "title": "MFA / 2FA",
+  "description": "This feature is a work in progress.",
+  "source": "@site/docs/self-service/flows/2fa.md",
+  "permalink": "/kratos/docs/next/self-service/flows/2fa-mfa-multi-factor-authentication",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/self-service/flows/2fa.md",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055
+}

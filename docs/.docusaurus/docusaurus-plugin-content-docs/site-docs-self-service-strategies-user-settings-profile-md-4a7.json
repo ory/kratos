@@ -1,0 +1,20 @@
+{
+  "id": "self-service/strategies/user-settings-profile",
+  "title": "User Profile",
+  "description": "The `profile` strategy allows a user to change their identity traits",
+  "source": "@site/docs/self-service/strategies/user-settings-profile.md",
+  "permalink": "/kratos/docs/next/self-service/strategies/user-settings-profile",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/self-service/strategies/user-settings-profile.md",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "docs",
+  "previous": {
+    "title": "Social Sign In with OpenID Connect and OAuth2",
+    "permalink": "/kratos/docs/next/self-service/strategies/openid-connect-social-sign-in-oauth2"
+  },
+  "next": {
+    "title": "Hooks",
+    "permalink": "/kratos/docs/next/self-service/hooks/index"
+  }
+}

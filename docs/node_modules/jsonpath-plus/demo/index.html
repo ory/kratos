@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>JSONPath Demo</title>
+    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon" />
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
+    <h2>JSONPath Demo <i id="demoNode">(To demo on Node instead, see the <a href="https://npm.runkit.com/jsonpath-plus">library on Runkit</a>.)</i>
+</h2>
+    <form>
+      <div>
+        <label><b>JSONPath:</b>
+          <input id="jsonpath" placeholder="$.books" />
+        </label>
+      </div>
+      <div id="jsonSampleContainer" class="container">
+        <label><b>JSON sample:</b>
+          <textarea id="jsonSample" placeholder="{&quot;books&quot;: []}"></textarea>
+        </label>
+      </div>
+      <div id="resultContainer" class="container">
+        <label><b>Results:</b>
+          <textarea id="results"></textarea>
+        </label>
+      </div>
+    </form>
+    <script src="../dist/index-umd.js"></script>
+    <script src="index.js"></script>
+  </body>
+</html>

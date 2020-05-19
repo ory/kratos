@@ -1,0 +1,20 @@
+{
+  "id": "version-v0.1/concepts/email-sms",
+  "title": "Out-of-band communication via E-Mail and SMS",
+  "description": "ORY Kratos sends out-of-band messages via SMS or E-Mail. These messages are",
+  "source": "@site/versioned_docs/version-v0.1/concepts/email-sms.md",
+  "permalink": "/kratos/docs/v0.1/concepts/email-sms",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/versioned_docs/version-v0.1/concepts/email-sms.md",
+  "version": "v0.1",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "version-v0.1/docs",
+  "previous": {
+    "title": "Credentials",
+    "permalink": "/kratos/docs/v0.1/concepts/credentials"
+  },
+  "next": {
+    "title": "Federation",
+    "permalink": "/kratos/docs/v0.1/concepts/federation"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "target": "ES6",
+    "module": "commonjs",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "sourceMap": true,
+    "noImplicitAny": false,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "noEmitHelpers": true,
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "compileOnSave": true,
+  "buildOnSave": true,
+  "exclude": [
+    "**/*.spec.ts",
+    "bin",
+    "dist",
+    "node_modules"
+  ]
+}

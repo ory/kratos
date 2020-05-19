@@ -1,0 +1,20 @@
+{
+  "id": "self-service/flows/index",
+  "title": "Overview",
+  "description": "ORY Kratos allows end-users to sign up, log in, log out, update profile",
+  "source": "@site/docs/self-service/flows/index.md",
+  "permalink": "/kratos/docs/next/self-service/flows/index",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/self-service/flows/index.md",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "docs",
+  "previous": {
+    "title": "Before you start reading",
+    "permalink": "/kratos/docs/next/self-service/index"
+  },
+  "next": {
+    "title": "User Login and User Registration",
+    "permalink": "/kratos/docs/next/self-service/flows/user-login-user-registration"
+  }
+}

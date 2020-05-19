@@ -1,0 +1,20 @@
+{
+  "id": "concepts/federation",
+  "title": "Federation",
+  "description": "ORY Kratos does not support federation features itself, but it integrates with",
+  "source": "@site/docs/concepts/federation.md",
+  "permalink": "/kratos/docs/next/concepts/federation",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/concepts/federation.md",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "docs",
+  "previous": {
+    "title": "Out-of-band communication via E-Mail and SMS",
+    "permalink": "/kratos/docs/next/concepts/email-sms"
+  },
+  "next": {
+    "title": "Threat Models and Security Profiles",
+    "permalink": "/kratos/docs/next/concepts/security"
+  }
+}

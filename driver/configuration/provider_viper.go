@@ -48,6 +48,7 @@ const (
 	ViperKeyURLsLogin                      = "urls.login_ui"
 	ViperKeyURLsError                      = "urls.error_ui"
 	ViperKeyURLsVerification               = "urls.verify_ui"
+	ViperKeyURLsRecovery                   = "urls.recovery_ui"
 	ViperKeyURLsSettings                   = "urls.settings_ui"
 	ViperKeyURLsMFA                        = "urls.mfa_ui"
 	ViperKeyURLsRegistration               = "urls.registration_ui"
@@ -73,9 +74,10 @@ const (
 	ViperKeySelfServiceSettingsRequestLifespan       = "selfservice.settings.request_lifespan"
 	ViperKeySelfServicePrivilegedAuthenticationAfter = "selfservice.settings.privileged_session_max_age"
 
-	ViperKeySelfServiceLifespanLink                = "selfservice.verify.link_lifespan"
-	ViperKeySelfServiceLifespanVerificationRequest = "selfservice.verify.request_lifespan"
-	ViperKeySelfServiceVerifyReturnTo              = "selfservice.verify.return_to"
+	ViperKeySelfServiceLifespanRecoveryRequest = "selfservice.recovery.request_lifespan"
+
+	ViperKeySelfServiceLifespanVerificationRequest = "selfservice.verification.request_lifespan"
+	ViperKeySelfServiceVerifyReturnTo              = "selfservice.verification.return_to"
 
 	ViperKeyDefaultIdentityTraitsSchemaURL = "identity.traits.default_schema_url"
 	ViperKeyIdentityTraitsSchemas          = "identity.traits.schemas"
@@ -299,6 +301,10 @@ func (p *ViperProvider) RegisterURL() *url.URL {
 	return mustParseURLFromViper(p.l, ViperKeyURLsRegistration)
 }
 
+func (p *ViperProvider) RecoveryURL() *url.URL {
+	return mustParseURLFromViper(p.l, ViperKeyURLsRecovery)
+}
+
 func (p *ViperProvider) SessionLifespan() time.Duration {
 	return viperx.GetDuration(p.l, ViperKeyLifespanSession, time.Hour)
 }
@@ -375,18 +381,16 @@ func (p *ViperProvider) VerificationURL() *url.URL {
 	return mustParseURLFromViper(p.l, ViperKeyURLsVerification)
 }
 
-// SelfServiceVerificationRequestLifespan defines the lifespan of a verification request (the ui interaction). This
-// does not specify the lifespan of a verification code!
 func (p *ViperProvider) SelfServiceVerificationRequestLifespan() time.Duration {
 	return viperx.GetDuration(p.l, ViperKeySelfServiceLifespanVerificationRequest, time.Hour)
 }
 
-func (p *ViperProvider) SelfServiceVerificationLinkLifespan() time.Duration {
-	return viperx.GetDuration(p.l, ViperKeySelfServiceLifespanLink, time.Hour*24)
-}
-
 func (p *ViperProvider) SelfServiceVerificationReturnTo() *url.URL {
 	return mustParseURLFromViper(p.l, ViperKeySelfServiceVerifyReturnTo)
+}
+
+func (p *ViperProvider) SelfServiceRecoveryRequestLifespan() time.Duration {
+	return viperx.GetDuration(p.l, ViperKeySelfServiceLifespanRecoveryRequest, time.Hour)
 }
 
 func (p *ViperProvider) SelfServicePrivilegedSessionMaxAge() time.Duration {

@@ -1,0 +1,20 @@
+{
+  "id": "reference/configuration",
+  "title": "Configuration",
+  "description": "<!-- THIS FILE IS BEING AUTO-GENERATED. DO NOT MODIFY IT AS ALL CHANGES WILL BE OVERWRITTEN.",
+  "source": "@site/docs/reference/configuration.md",
+  "permalink": "/kratos/docs/next/reference/configuration",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/reference/configuration.md",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "docs",
+  "previous": {
+    "title": "High Availability",
+    "permalink": "/kratos/docs/next/guides/high-availability-ha"
+  },
+  "next": {
+    "title": "JSON Schema and JSON Paths",
+    "permalink": "/kratos/docs/next/reference/json-schema-json-paths"
+  }
+}

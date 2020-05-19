@@ -10,6 +10,9 @@ import (
 	"github.com/bmizerany/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/viper"
+
+	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/errorx"
@@ -33,11 +36,14 @@ func newReturnTs(t *testing.T, reg interface {
 	session.ManagementProvider
 	x.WriterProvider
 }) *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, sess)
 	}))
+	t.Cleanup(ts.Close)
+	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, ts.URL+"/return-ts")
+	return ts
 }
 
 func TestCountActiveCredentials(t *testing.T) {

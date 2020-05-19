@@ -1,0 +1,20 @@
+{
+  "id": "concepts/email-sms",
+  "title": "Out-of-band communication via E-Mail and SMS",
+  "description": "ORY Kratos sends out-of-band messages via SMS or E-Mail. These messages are",
+  "source": "@site/docs/concepts/email-sms.md",
+  "permalink": "/kratos/docs/next/concepts/email-sms",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/concepts/email-sms.md",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "docs",
+  "previous": {
+    "title": "Self-Service Flow Completion",
+    "permalink": "/kratos/docs/next/concepts/selfservice-flow-completion"
+  },
+  "next": {
+    "title": "Federation",
+    "permalink": "/kratos/docs/next/concepts/federation"
+  }
+}

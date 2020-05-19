@@ -1,0 +1,72 @@
+courier:
+  smtp:
+    connection_uri: smtps://test:test@127.0.0.1:1025/?skip_ssl_verify=true
+hashers:
+  argon2:
+    iterations: 1
+    key_length: 16
+    memory: 16384
+    parallelism: 1
+    salt_length: 16
+identity:
+  traits:
+    default_schema_url: file://test/e2e/profiles/oidc/identity.traits.schema.json
+log:
+  level: trace
+secrets:
+  session:
+  - PLEASE-CHANGE-ME-I-AM-VERY-INSECURE
+selfservice:
+  logout:
+    redirect_to: http://127.0.0.1:4455/auth/login
+  registration:
+    after:
+      oidc:
+        hooks:
+        - hook: session
+  settings:
+    privileged_session_max_age: 5000ms
+  strategies:
+    oidc:
+      config:
+        providers:
+        - client_id: kratos-client
+          client_secret: kratos-secret
+          id: hydra
+          issuer_url: http://127.0.0.1:4444/
+          mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
+          provider: generic
+          scope:
+          - offline
+        - client_id: google-client
+          client_secret: kratos-secret
+          id: google
+          issuer_url: http://127.0.0.1:4444/
+          mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
+          provider: generic
+          scope:
+          - offline
+        - client_id: github-client
+          client_secret: kratos-secret
+          id: github
+          issuer_url: http://127.0.0.1:4444/
+          mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
+          provider: generic
+          scope:
+          - offline
+      enabled: true
+    password:
+      enabled: true
+urls:
+  default_return_to: http://127.0.0.1:4455/
+  error_ui: http://127.0.0.1:4455/error
+  login_ui: http://127.0.0.1:4455/auth/login
+  mfa_ui: http://127.0.0.1:4455/
+  registration_ui: http://127.0.0.1:4455/auth/registration
+  self:
+    admin: http://kratos:4434/
+    public: http://127.0.0.1:4455/.ory/kratos/public/
+  settings_ui: http://127.0.0.1:4455/settings
+  verify_ui: http://127.0.0.1:4455/verify
+  whitelisted_return_to_urls:
+  - http://127.0.0.1:4455

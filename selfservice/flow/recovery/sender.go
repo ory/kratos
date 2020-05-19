@@ -27,7 +27,7 @@ type (
 		x.LoggingProvider
 	}
 	SenderProvider interface {
-		VerificationSender() *Sender
+		RecoverySender() *Sender
 	}
 	Sender struct {
 		r senderDependencies
@@ -39,7 +39,7 @@ func NewSender(r senderDependencies, c configuration.Provider) *Sender {
 	return &Sender{r: r, c: c}
 }
 
-func (m *Sender) IssueAndSendRecoveryToken(ctx context.Context, address string) (*identity.VerifiableAddress, error) {
+func (m *Sender) IssueAndSendRecoveryToken(ctx context.Context, address, via string) (*identity.VerifiableAddress, error) {
 	m.r.Logger().WithField("via", via).Debug("Sending out verification code.")
 
 	a, err := m.r.IdentityPool().FindAddressByValue(ctx, identity.VerifiableAddressTypeEmail, address)
@@ -73,7 +73,7 @@ func (m *Sender) sendToUnknownAddress(ctx context.Context, via identity.Verifiab
 }
 
 func (m *Sender) sendCodeToKnownAddress(ctx context.Context, address *identity.VerifiableAddress) error {
-	m.r.Logger().WithField("via", address.Via).Debug("Sending out recovery´message.")
+	m.r.Logger().WithField("via", address.Via).Debug("Sending out recovery message.")
 	return m.run(address.Via, func() error {
 		_, err := m.r.Courier().QueueEmail(ctx, templates.NewVerifyValid(m.c,
 			&templates.VerifyValidModel{
@@ -81,7 +81,7 @@ func (m *Sender) sendCodeToKnownAddress(ctx context.Context, address *identity.V
 				VerifyURL: urlx.AppendPaths(
 					m.c.SelfPublicURL(),
 					strings.ReplaceAll(
-						strings.ReplaceAll(PublicVerificationConfirmPath, ":via", string(address.Via)),
+						strings.ReplaceAll(PublicRecoveryConfirmPath, ":via", string(address.Via)),
 						":code", address.Code)).
 					String(),
 			},

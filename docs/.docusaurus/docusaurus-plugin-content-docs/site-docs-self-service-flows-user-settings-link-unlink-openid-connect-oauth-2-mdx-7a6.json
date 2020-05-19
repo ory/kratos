@@ -1,0 +1,20 @@
+{
+  "id": "self-service/flows/user-settings/link-unlink-openid-connect-oauth2",
+  "title": "Link and Unlink OpenID Connect and OAuth2 Connections",
+  "description": ":::tip Before you start",
+  "source": "@site/docs/self-service/flows/user-settings/link-unlink-openid-connect-oauth2.mdx",
+  "permalink": "/kratos/docs/next/self-service/flows/user-settings/link-unlink-openid-connect-oauth2",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/self-service/flows/user-settings/link-unlink-openid-connect-oauth2.mdx",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "docs",
+  "previous": {
+    "title": "Change Password",
+    "permalink": "/kratos/docs/next/self-service/flows/user-settings/change-password"
+  },
+  "next": {
+    "title": "User Logout",
+    "permalink": "/kratos/docs/next/self-service/flows/user-logout"
+  }
+}

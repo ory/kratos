@@ -1,0 +1,20 @@
+{
+  "id": "version-v0.2/self-service/strategies/openid-connect-social-sign-in-oauth2",
+  "title": "Social Sign In with OpenID Connect and OAuth2",
+  "description": ":::info",
+  "source": "@site/versioned_docs/version-v0.2/self-service/strategies/openid-connect-social-sign-in-oauth2.md",
+  "permalink": "/kratos/docs/self-service/strategies/openid-connect-social-sign-in-oauth2",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/versioned_docs/version-v0.2/self-service/strategies/openid-connect-social-sign-in-oauth2.md",
+  "version": "v0.2",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "version-v0.2/docs",
+  "previous": {
+    "title": "Username or Email and Password",
+    "permalink": "/kratos/docs/self-service/strategies/username-email-password"
+  },
+  "next": {
+    "title": "User Profile",
+    "permalink": "/kratos/docs/self-service/strategies/user-settings-profile"
+  }
+}

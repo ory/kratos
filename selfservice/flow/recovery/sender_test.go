@@ -17,7 +17,7 @@ import (
 )
 
 func TestManager(t *testing.T) {
-	_, reg := internal.NewRegistryDefault(t)
+	_, reg := internal.NewFastRegistryWithMocks(t)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/extension/schema.json")
 	viper.Set(configuration.ViperKeyURLsSelfPublic, "https://www.ory.sh/")
 	viper.Set(configuration.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
@@ -28,7 +28,7 @@ func TestManager(t *testing.T) {
 		address, err := identity.NewVerifiableEmailAddress("tracked@ory.sh", i.ID, time.Minute)
 		require.NoError(t, err)
 
-		i.Addresses = []identity.VerifiableAddress{*address}
+		i.VerifiableAddresses = []identity.VerifiableAddress{*address}
 		i.Traits = identity.Traits("{}")
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 
@@ -48,7 +48,8 @@ func TestManager(t *testing.T) {
 		assert.Contains(t, messages[0].Body, address.Code)
 		fromStore, err := reg.Persister().GetIdentity(context.Background(), i.ID)
 		require.NoError(t, err)
-		assert.Contains(t, messages[0].Body, fromStore.Addresses[0].Code)
+		require.Len(t, fromStore.RecoveryAddresses, 1)
+		assert.Contains(t, messages[0].Body, fromStore.RecoveryAddresses[0].Code)
 
 		assert.EqualValues(t, "not-tracked@ory.sh", messages[1].Recipient)
 		assert.Contains(t, messages[1].Subject, "tried to verify")

@@ -1,0 +1,11 @@
+{
+  "id": "version-v0.2/concepts/selfservice-flow-completion",
+  "title": "Self-Service Flow Completion",
+  "description": "Self-Service flows such as Login, Registration, Updating Settings support two",
+  "source": "@site/versioned_docs/version-v0.2/concepts/selfservice-flow-completion.md",
+  "permalink": "/kratos/docs/concepts/selfservice-flow-completion",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/versioned_docs/version-v0.2/concepts/selfservice-flow-completion.md",
+  "version": "v0.2",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055
+}

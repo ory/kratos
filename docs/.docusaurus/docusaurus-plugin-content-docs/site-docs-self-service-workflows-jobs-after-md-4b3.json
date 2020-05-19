@@ -1,0 +1,20 @@
+{
+  "id": "self-service/workflows/jobs/after",
+  "title": "After Jobs",
+  "description": "## User Login",
+  "source": "@site/docs/self-service/workflows/jobs/after.md",
+  "permalink": "/kratos/docs/next/self-service/workflows/jobs/after",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/self-service/workflows/jobs/after.md",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "docs",
+  "previous": {
+    "title": "Before Jobs",
+    "permalink": "/kratos/docs/next/self-service/workflows/jobs/before"
+  },
+  "next": {
+    "title": "Zero Trust with IAP Proxy",
+    "permalink": "/kratos/docs/next/guides/zero-trust-iap-proxy-identity-access-proxy"
+  }
+}

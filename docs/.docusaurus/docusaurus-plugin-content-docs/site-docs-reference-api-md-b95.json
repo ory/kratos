@@ -1,0 +1,20 @@
+{
+  "id": "reference/api",
+  "title": "REST API",
+  "description": "Welcome to the ORY Kratos HTTP API documentation!",
+  "source": "@site/docs/reference/api.md",
+  "permalink": "/kratos/docs/next/reference/api",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/reference/api.md",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "docs",
+  "previous": {
+    "title": "HTML Form Parser",
+    "permalink": "/kratos/docs/next/reference/html-forms"
+  },
+  "next": {
+    "title": "Common Cookie and CSRF Pitfalls",
+    "permalink": "/kratos/docs/next/debug/csrf"
+  }
+}

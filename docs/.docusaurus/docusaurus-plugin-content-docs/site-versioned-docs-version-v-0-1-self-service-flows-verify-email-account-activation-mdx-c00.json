@@ -1,0 +1,20 @@
+{
+  "id": "version-v0.1/self-service/flows/verify-email-account-activation",
+  "title": "Email and Phone Verification and Account Activation",
+  "description": "import useBaseUrl from '@docusaurus/useBaseUrl';",
+  "source": "@site/versioned_docs/version-v0.1/self-service/flows/verify-email-account-activation.mdx",
+  "permalink": "/kratos/docs/v0.1/self-service/flows/verify-email-account-activation",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/versioned_docs/version-v0.1/self-service/flows/verify-email-account-activation.mdx",
+  "version": "v0.1",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "version-v0.1/docs",
+  "previous": {
+    "title": "User-Facing Errors",
+    "permalink": "/kratos/docs/v0.1/self-service/flows/user-facing-errors"
+  },
+  "next": {
+    "title": "Overview",
+    "permalink": "/kratos/docs/v0.1/self-service/strategies/index"
+  }
+}

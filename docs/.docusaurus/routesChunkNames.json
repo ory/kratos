@@ -1,0 +1,512 @@
+{
+  "/kratos/docs/": {
+    "component": "component---site-src-pages-index-jsc-4-f-f99"
+  },
+  "/kratos/docs/versions": {
+    "component": "component---site-src-pages-versions-js-18-b-bfe"
+  },
+  "/kratos/docs/next/:route": {
+    "component": "component---theme-doc-page-1-be-9be",
+    "docsMetadata": "docsMetadata---kratos-docs-next-route-86-d-6c9"
+  },
+  "/kratos/docs/next/concepts/credentials": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-concepts-credentialsecd-680"
+  },
+  "/kratos/docs/next/concepts/credentials/openid-connect-oidc-oauth2": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-concepts-credentials-openid-connect-oidc-oauth-256-f-433"
+  },
+  "/kratos/docs/next/concepts/credentials/username-email-password": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-concepts-credentials-username-email-password-71-a-91b"
+  },
+  "/kratos/docs/next/concepts/email-sms": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-concepts-email-sms-3-f-9-d7d"
+  },
+  "/kratos/docs/next/concepts/federation": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-concepts-federation-821-6c2"
+  },
+  "/kratos/docs/next/concepts/identity-user-model": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-concepts-identity-user-model-40-a-45b"
+  },
+  "/kratos/docs/next/concepts/index": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-concepts-indexc-27-600"
+  },
+  "/kratos/docs/next/concepts/securing-applications": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-concepts-securing-applicationsb-05-50c"
+  },
+  "/kratos/docs/next/concepts/security": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-concepts-securitya-34-344"
+  },
+  "/kratos/docs/next/concepts/selfservice-flow-completion": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-concepts-selfservice-flow-completion-483-9bb"
+  },
+  "/kratos/docs/next/concepts/ui-user-interface": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-concepts-ui-user-interface-2-d-4-859"
+  },
+  "/kratos/docs/next/debug/csrf": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-debug-csrf-0-e-8-435"
+  },
+  "/kratos/docs/next/fallback/error": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-fallback-errorfd-1-35b"
+  },
+  "/kratos/docs/next/fallback/login": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-fallback-login-122-87b"
+  },
+  "/kratos/docs/next/fallback/mfa": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-fallback-mfab-80-d00"
+  },
+  "/kratos/docs/next/fallback/registration": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-fallback-registration-0-cd-07d"
+  },
+  "/kratos/docs/next/fallback/settings": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-fallback-settings-12-b-61f"
+  },
+  "/kratos/docs/next/fallback/verify": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-fallback-verify-45-b-e6f"
+  },
+  "/kratos/docs/next/further-reading/comparison": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-further-reading-comparison-6-b-5-045"
+  },
+  "/kratos/docs/next/further-reading/contrib": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-further-reading-contribd-52-cda"
+  },
+  "/kratos/docs/next/guides/high-availability-ha": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-guides-high-availability-ha-63-d-ce1"
+  },
+  "/kratos/docs/next/guides/multi-tenancy-multitenant": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-guides-multi-tenancy-multitenantfd-3-ef7"
+  },
+  "/kratos/docs/next/guides/sign-in-with-github-google-facebook-linkedin": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-guides-sign-in-with-github-google-facebook-linkedin-199-f1d"
+  },
+  "/kratos/docs/next/guides/zero-trust-iap-proxy-identity-access-proxy": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-guides-zero-trust-iap-proxy-identity-access-proxyc-4-f-008"
+  },
+  "/kratos/docs/next/index": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-indexc-37-0a1"
+  },
+  "/kratos/docs/next/install": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-installc-4-d-5e6"
+  },
+  "/kratos/docs/next/quickstart": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-quickstart-748-c36"
+  },
+  "/kratos/docs/next/reference/api": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-reference-apib-95-5a7"
+  },
+  "/kratos/docs/next/reference/configuration": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-reference-configuration-306-10d"
+  },
+  "/kratos/docs/next/reference/html-forms": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-reference-html-forms-590-e6e"
+  },
+  "/kratos/docs/next/reference/json-schema-json-paths": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-reference-json-schema-json-paths-6-b-8-88d"
+  },
+  "/kratos/docs/next/reference/jsonnet": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-reference-jsonnet-98-f-a26"
+  },
+  "/kratos/docs/next/sdk": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-sdkf-9-c-0b9"
+  },
+  "/kratos/docs/next/self-service": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-self-service-7-ba-632"
+  },
+  "/kratos/docs/next/self-service/flows/2fa-mfa-multi-factor-authentication": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-self-service-flows-2-fa-mfa-multi-factor-authentication-61-e-79a"
+  },
+  "/kratos/docs/next/self-service/flows/password-reset-account-recovery": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-self-service-flows-password-reset-account-recoverye-5-c-f28"
+  },
+  "/kratos/docs/next/self-service/flows/user-facing-errors": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-self-service-flows-user-facing-errors-955-e4b"
+  },
+  "/kratos/docs/next/self-service/flows/user-login-user-registration": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-self-service-flows-user-login-user-registration-2-e-6-821"
+  },
+  "/kratos/docs/next/self-service/flows/user-login-user-registration/openid-connect-social-sign-in-oauth2": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-self-service-flows-user-login-user-registration-openid-connect-social-sign-in-oauth-2-ba-0-ccb"
+  },
+  "/kratos/docs/next/self-service/flows/user-login-user-registration/username-email-password": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-self-service-flows-user-login-user-registration-username-email-passworda-29-3c1"
+  },
+  "/kratos/docs/next/self-service/flows/user-logout": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-self-service-flows-user-logoutad-5-2c3"
+  },
+  "/kratos/docs/next/self-service/flows/user-settings": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-self-service-flows-user-settings-5-e-8-fff"
+  },
+  "/kratos/docs/next/self-service/flows/user-settings/change-password": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-self-service-flows-user-settings-change-passwordd-91-1ef"
+  },
+  "/kratos/docs/next/self-service/flows/user-settings/link-unlink-openid-connect-oauth2": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-self-service-flows-user-settings-link-unlink-openid-connect-oauth-27-a-6-815"
+  },
+  "/kratos/docs/next/self-service/flows/user-settings/user-profile-management": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-self-service-flows-user-settings-user-profile-management-88-c-930"
+  },
+  "/kratos/docs/next/self-service/flows/verify-email-account-activation": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-self-service-flows-verify-email-account-activation-3-ba-7bf"
+  },
+  "/kratos/docs/next/self-service/hooks/index": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-next-self-service-hooks-indexbe-5-3a0"
+  },
+  "/kratos/docs/v0.1/:route": {
+    "component": "component---theme-doc-page-1-be-9be",
+    "docsMetadata": "docsMetadata---kratos-docs-v-0-1-route-15-b-624"
+  },
+  "/kratos/docs/v0.1/concepts/credentials": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-concepts-credentialsa-75-948"
+  },
+  "/kratos/docs/v0.1/concepts/email-sms": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-concepts-email-sms-02-e-845"
+  },
+  "/kratos/docs/v0.1/concepts/federation": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-concepts-federationb-4-e-7e6"
+  },
+  "/kratos/docs/v0.1/concepts/identity-user-model": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-concepts-identity-user-model-57-d-1e9"
+  },
+  "/kratos/docs/v0.1/concepts/index": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-concepts-index-4-b-7-2cf"
+  },
+  "/kratos/docs/v0.1/concepts/securing-applications": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-concepts-securing-applicationsbbe-6a6"
+  },
+  "/kratos/docs/v0.1/concepts/security": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-concepts-securityc-7-b-535"
+  },
+  "/kratos/docs/v0.1/concepts/ui-user-interface": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-concepts-ui-user-interface-41-b-59d"
+  },
+  "/kratos/docs/v0.1/further-reading/comparison": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-further-reading-comparison-832-c57"
+  },
+  "/kratos/docs/v0.1/further-reading/contrib": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-further-reading-contrib-4-c-2-9d6"
+  },
+  "/kratos/docs/v0.1/index": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-index-7-be-963"
+  },
+  "/kratos/docs/v0.1/install": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-installe-07-f48"
+  },
+  "/kratos/docs/v0.1/quickstart": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-quickstart-405-bab"
+  },
+  "/kratos/docs/v0.1/reference/api": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-reference-api-24-e-308"
+  },
+  "/kratos/docs/v0.1/reference/configuration": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-reference-configuration-30-b-98b"
+  },
+  "/kratos/docs/v0.1/reference/html-forms": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-reference-html-formsb-51-7dd"
+  },
+  "/kratos/docs/v0.1/reference/json-schema-json-paths": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-reference-json-schema-json-paths-089-035"
+  },
+  "/kratos/docs/v0.1/sdk/api": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-sdk-apia-39-216"
+  },
+  "/kratos/docs/v0.1/sdk/index": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-sdk-indexdc-9-d12"
+  },
+  "/kratos/docs/v0.1/self-service/flows/index": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-self-service-flows-index-0-d-7-cda"
+  },
+  "/kratos/docs/v0.1/self-service/flows/password-reset-account-recovery": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-self-service-flows-password-reset-account-recovery-5-b-7-0be"
+  },
+  "/kratos/docs/v0.1/self-service/flows/user-facing-errors": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-self-service-flows-user-facing-errorse-79-0cc"
+  },
+  "/kratos/docs/v0.1/self-service/flows/user-login-user-registration": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-self-service-flows-user-login-user-registration-780-cce"
+  },
+  "/kratos/docs/v0.1/self-service/flows/user-logout": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-self-service-flows-user-logoutfaf-50a"
+  },
+  "/kratos/docs/v0.1/self-service/flows/user-profile-management": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-self-service-flows-user-profile-management-75-e-62a"
+  },
+  "/kratos/docs/v0.1/self-service/flows/verify-email-account-activation": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-self-service-flows-verify-email-account-activationc-00-173"
+  },
+  "/kratos/docs/v0.1/self-service/strategies/index": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-self-service-strategies-indexba-5-32b"
+  },
+  "/kratos/docs/v0.1/self-service/strategies/openid-connect-social-sign-in-oauth2": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-self-service-strategies-openid-connect-social-sign-in-oauth-219-f-120"
+  },
+  "/kratos/docs/v0.1/self-service/strategies/username-email-password": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-self-service-strategies-username-email-password-90-c-0ce"
+  },
+  "/kratos/docs/v0.1/self-service/workflows/jobs/after": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-self-service-workflows-jobs-after-2-c-1-713"
+  },
+  "/kratos/docs/v0.1/self-service/workflows/jobs/before": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-v-0-1-self-service-workflows-jobs-before-726-99a"
+  },
+  "/kratos/docs/:route": {
+    "component": "component---theme-doc-page-1-be-9be",
+    "docsMetadata": "docsMetadata---kratos-docs-routea-7-f-18c"
+  },
+  "/kratos/docs/concepts/credentials": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-concepts-credentials-7-b-2-05a"
+  },
+  "/kratos/docs/concepts/credentials/openid-connect-oidc-oauth2": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-concepts-credentials-openid-connect-oidc-oauth-25-f-2-29d"
+  },
+  "/kratos/docs/concepts/credentials/username-email-password": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-concepts-credentials-username-email-password-1-f-7-374"
+  },
+  "/kratos/docs/concepts/email-sms": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-concepts-email-smsbeb-0b9"
+  },
+  "/kratos/docs/concepts/federation": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-concepts-federationd-9-b-717"
+  },
+  "/kratos/docs/concepts/identity-user-model": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-concepts-identity-user-model-68-a-6b8"
+  },
+  "/kratos/docs/concepts/index": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-concepts-index-125-1e3"
+  },
+  "/kratos/docs/concepts/securing-applications": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-concepts-securing-applications-495-91a"
+  },
+  "/kratos/docs/concepts/security": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-concepts-security-886-6fd"
+  },
+  "/kratos/docs/concepts/selfservice-flow-completion": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-concepts-selfservice-flow-completion-7-ab-171"
+  },
+  "/kratos/docs/concepts/ui-user-interface": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-concepts-ui-user-interface-531-cb1"
+  },
+  "/kratos/docs/debug/csrf": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-debug-csrf-958-5ba"
+  },
+  "/kratos/docs/fallback/error": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-fallback-error-0-b-5-2ea"
+  },
+  "/kratos/docs/fallback/login": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-fallback-login-1-b-6-c28"
+  },
+  "/kratos/docs/fallback/mfa": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-fallback-mfaf-6-d-dfc"
+  },
+  "/kratos/docs/fallback/registration": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-fallback-registration-2-aa-dec"
+  },
+  "/kratos/docs/fallback/settings": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-fallback-settings-327-5e5"
+  },
+  "/kratos/docs/fallback/verify": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-fallback-verifyab-8-dc5"
+  },
+  "/kratos/docs/further-reading/comparison": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-further-reading-comparisona-01-aba"
+  },
+  "/kratos/docs/further-reading/contrib": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-further-reading-contrib-7-fc-6ea"
+  },
+  "/kratos/docs/guides/high-availability-ha": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-guides-high-availability-ha-8-e-6-715"
+  },
+  "/kratos/docs/guides/multi-tenancy-multitenant": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-guides-multi-tenancy-multitenantd-66-398"
+  },
+  "/kratos/docs/guides/zero-trust-iap-proxy-identity-access-proxy": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-guides-zero-trust-iap-proxy-identity-access-proxyb-70-835"
+  },
+  "/kratos/docs/index": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-index-25-c-c77"
+  },
+  "/kratos/docs/install": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-install-14-f-b39"
+  },
+  "/kratos/docs/quickstart": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-quickstartf-47-ae1"
+  },
+  "/kratos/docs/reference/api": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-reference-api-1-f-8-1aa"
+  },
+  "/kratos/docs/reference/configuration": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-reference-configurationc-19-45b"
+  },
+  "/kratos/docs/reference/html-forms": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-reference-html-forms-199-8ef"
+  },
+  "/kratos/docs/reference/json-schema-json-paths": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-reference-json-schema-json-paths-68-a-e52"
+  },
+  "/kratos/docs/sdk/api": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-sdk-apif-9-b-105"
+  },
+  "/kratos/docs/sdk/index": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-sdk-indexe-63-362"
+  },
+  "/kratos/docs/self-service/flows/2fa-mfa-multi-factor-authentication": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-self-service-flows-2-fa-mfa-multi-factor-authentication-340-7ad"
+  },
+  "/kratos/docs/self-service/flows/index": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-self-service-flows-indexae-2-742"
+  },
+  "/kratos/docs/self-service/flows/password-reset-account-recovery": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-self-service-flows-password-reset-account-recovery-394-09e"
+  },
+  "/kratos/docs/self-service/flows/user-facing-errors": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-self-service-flows-user-facing-errorsdb-6-b3f"
+  },
+  "/kratos/docs/self-service/flows/user-login-user-registration": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-self-service-flows-user-login-user-registratione-91-f4f"
+  },
+  "/kratos/docs/self-service/flows/user-logout": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-self-service-flows-user-logoute-3-f-b89"
+  },
+  "/kratos/docs/self-service/flows/user-settings-profile-management": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-self-service-flows-user-settings-profile-management-86-b-c0a"
+  },
+  "/kratos/docs/self-service/flows/verify-email-account-activation": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-self-service-flows-verify-email-account-activation-268-2b4"
+  },
+  "/kratos/docs/self-service/hooks/index": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-self-service-hooks-indexa-08-35d"
+  },
+  "/kratos/docs/self-service/index": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-self-service-indexbd-9-20f"
+  },
+  "/kratos/docs/self-service/strategies/openid-connect-social-sign-in-oauth2": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-self-service-strategies-openid-connect-social-sign-in-oauth-2-eb-4-7b4"
+  },
+  "/kratos/docs/self-service/strategies/user-settings-profile": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-self-service-strategies-user-settings-profile-7-e-6-78b"
+  },
+  "/kratos/docs/self-service/strategies/username-email-password": {
+    "component": "component---theme-doc-item-178-a40",
+    "content": "content---kratos-docs-self-service-strategies-username-email-passwordd-78-aee"
+  }
+}

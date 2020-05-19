@@ -1,0 +1,11 @@
+{
+  "id": "reference/jsonnet",
+  "title": "Data Mapping with Jsonnet",
+  "description": "Some modules like the [OpenID Connect and OAuth2 Strategy](../concepts/credentials/openid-connect-oidc-oauth2.mdx)",
+  "source": "@site/docs/reference/jsonnet.md",
+  "permalink": "/kratos/docs/next/reference/jsonnet",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/reference/jsonnet.md",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055
+}

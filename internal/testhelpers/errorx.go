@@ -31,3 +31,16 @@ func NewErrorTestServer(t *testing.T, reg interface{ errorx.PersistenceProvider 
 	viper.Set(configuration.ViperKeyURLsError, ts.URL)
 	return ts
 }
+
+func NewRedirTS(t *testing.T, body string) *httptest.Server {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if len(body) == 0 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		_, _ = w.Write([]byte(body))
+	}))
+	t.Cleanup(ts.Close)
+	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, ts.URL)
+	return ts
+}

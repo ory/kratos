@@ -1,0 +1,11 @@
+{
+  "id": "version-v0.2/fallback/settings",
+  "title": "This should be the Settings UI",
+  "description": "You ended up here because you did not set the following configuration value:",
+  "source": "@site/versioned_docs/version-v0.2/fallback/settings.mdx",
+  "permalink": "/kratos/docs/fallback/settings",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/versioned_docs/version-v0.2/fallback/settings.mdx",
+  "version": "v0.2",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055
+}

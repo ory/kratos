@@ -48,9 +48,9 @@ func TestStrategyTraits(t *testing.T) {
 		Credentials: map[identity.CredentialsType]identity.Credentials{
 			"password": {Type: "password", Identifiers: []string{"john@doe.com"}, Config: json.RawMessage(`{"hashed_password":"foo"}`)},
 		},
-		Traits:         identity.Traits(`{"email":"john@doe.com","stringy":"foobar","booly":false,"numby":2.5,"should_long_string":"asdfasdfasdfasdfasfdasdfasdfasdf","should_big_number":2048}`),
-		TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
-		Addresses:      []identity.VerifiableAddress{{Value: "john@doe.com", Via: identity.VerifiableAddressTypeEmail}},
+		Traits:              identity.Traits(`{"email":"john@doe.com","stringy":"foobar","booly":false,"numby":2.5,"should_long_string":"asdfasdfasdfasdfasfdasdfasdfasdf","should_big_number":2048}`),
+		TraitsSchemaID:      configuration.DefaultIdentityTraitsSchemaID,
+		VerifiableAddresses: []identity.VerifiableAddress{{Value: "john@doe.com", Via: identity.VerifiableAddressTypeEmail}},
 	}
 	publicTS, adminTS, clients := testhelpers.NewSettingsAPIServer(t, reg, map[string]*identity.Identity{
 		"primary":   primaryIdentity,

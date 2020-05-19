@@ -1,0 +1,11 @@
+{
+  "id": "further-reading/contrib",
+  "title": "contrib",
+  "description": "This file is meant to collect community contributions (such as articles and how",
+  "source": "@site/docs/further-reading/contrib.md",
+  "permalink": "/kratos/docs/next/further-reading/contrib",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/further-reading/contrib.md",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055
+}

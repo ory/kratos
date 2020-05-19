@@ -1,0 +1,20 @@
+{
+  "id": "self-service/index",
+  "title": "Before you start reading",
+  "description": "ORY Kratos implements flows that users perform themselves as opposed to",
+  "source": "@site/docs/self-service/index.md",
+  "permalink": "/kratos/docs/next/self-service/index",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/self-service/index.md",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "docs",
+  "previous": {
+    "title": "Threat Models and Security Profiles",
+    "permalink": "/kratos/docs/next/concepts/security"
+  },
+  "next": {
+    "title": "Overview",
+    "permalink": "/kratos/docs/next/self-service/flows/index"
+  }
+}

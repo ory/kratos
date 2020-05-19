@@ -12,7 +12,7 @@ type (
 		m *RecoverValidModel
 	}
 	RecoverValidModel struct {
-		To string
+		RecoveryURL string
 	}
 )
 
@@ -21,7 +21,7 @@ func NewRecoverValid(c configuration.Provider, m *RecoverValidModel) *RecoverVal
 }
 
 func (t *RecoverValid) EmailRecipient() (string, error) {
-	return t.m.To, nil
+	return t.m.RecoveryURL, nil
 }
 
 func (t *RecoverValid) EmailSubject() (string, error) {

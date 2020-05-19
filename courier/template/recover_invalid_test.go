@@ -11,7 +11,7 @@ import (
 )
 
 func TestRecoverInvalid(t *testing.T) {
-	conf, _ := internal.NewRegistryDefault(t)
+	conf, _ := internal.NewFastRegistryWithMocks(t)
 	tpl := template.NewRecoverInvalid(conf, &template.RecoverInvalidModel{})
 
 	rendered, err := tpl.EmailBody()

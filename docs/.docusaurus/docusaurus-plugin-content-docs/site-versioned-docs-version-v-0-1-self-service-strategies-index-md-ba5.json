@@ -1,0 +1,20 @@
+{
+  "id": "version-v0.1/self-service/strategies/index",
+  "title": "Overview",
+  "description": "ORY Kratos implements several Self Service Strategies. These strategies",
+  "source": "@site/versioned_docs/version-v0.1/self-service/strategies/index.md",
+  "permalink": "/kratos/docs/v0.1/self-service/strategies/index",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/versioned_docs/version-v0.1/self-service/strategies/index.md",
+  "version": "v0.1",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "version-v0.1/docs",
+  "previous": {
+    "title": "Email and Phone Verification and Account Activation",
+    "permalink": "/kratos/docs/v0.1/self-service/flows/verify-email-account-activation"
+  },
+  "next": {
+    "title": "Username or Email and Password",
+    "permalink": "/kratos/docs/v0.1/self-service/strategies/username-email-password"
+  }
+}

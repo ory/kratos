@@ -1,0 +1,11 @@
+{
+  "id": "sdk/api",
+  "title": "REST API",
+  "description": "Welcome to the ORY Kratos HTTP API documentation!",
+  "source": "@site/docs/sdk/api.md",
+  "permalink": "/kratos/docs/next/sdk/api",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/sdk/api.md",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055
+}

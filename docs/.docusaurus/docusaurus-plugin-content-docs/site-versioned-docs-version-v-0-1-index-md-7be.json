@@ -1,0 +1,16 @@
+{
+  "id": "version-v0.1/index",
+  "title": "Introduction",
+  "description": "ORY Kratos is an API-first Identity and User Management system that is built",
+  "source": "@site/versioned_docs/version-v0.1/index.md",
+  "permalink": "/kratos/docs/v0.1/index",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/versioned_docs/version-v0.1/index.md",
+  "version": "v0.1",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "version-v0.1/docs",
+  "next": {
+    "title": "Quickstart",
+    "permalink": "/kratos/docs/v0.1/quickstart"
+  }
+}

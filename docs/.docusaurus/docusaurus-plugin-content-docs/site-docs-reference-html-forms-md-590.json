@@ -1,0 +1,20 @@
+{
+  "id": "reference/html-forms",
+  "title": "HTML Form Parser",
+  "description": "If you're using HTML Forms to sign users up or update profiles, ORY Kratos needs",
+  "source": "@site/docs/reference/html-forms.md",
+  "permalink": "/kratos/docs/next/reference/html-forms",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/reference/html-forms.md",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar": "docs",
+  "previous": {
+    "title": "JSON Schema and JSON Paths",
+    "permalink": "/kratos/docs/next/reference/json-schema-json-paths"
+  },
+  "next": {
+    "title": "REST API",
+    "permalink": "/kratos/docs/next/reference/api"
+  }
+}

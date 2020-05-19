@@ -1,0 +1,21 @@
+{
+  "id": "self-service/flows/user-settings",
+  "title": "User Settings",
+  "description": "ORY Kratos allows users to update their own settings and profile information",
+  "source": "@site/docs/self-service/flows/user-settings.mdx",
+  "permalink": "/kratos/docs/next/self-service/flows/user-settings",
+  "editUrl": "https://github.com/ory/kratos/edit/master/docs/docs/self-service/flows/user-settings.mdx",
+  "version": "next",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "sidebar_label": "Overview",
+  "sidebar": "docs",
+  "previous": {
+    "title": "Social Sign In with OpenID Connect and OAuth2",
+    "permalink": "/kratos/docs/next/self-service/flows/user-login-user-registration/openid-connect-social-sign-in-oauth2"
+  },
+  "next": {
+    "title": "User Profile Management",
+    "permalink": "/kratos/docs/next/self-service/flows/user-settings/user-profile-management"
+  }
+}
