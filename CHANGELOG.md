@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-05-20)](#unreleased-2020-05-20)
+- [Unreleased (2020-05-22)](#unreleased-2020-05-22)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
 - [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
@@ -79,12 +79,13 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...79019d1246b1517b3297996a207a3d2f517fab01) (2020-05-20)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...fd269b1afa784becac7ee79cd7a6f9d2bbe39121) (2020-05-22)
 
 
 ### Bug Fixes
 
 * Clear error messages after updating settings successfully ([#421](https://github.com/ory/kratos/issues/421)) ([7eec388](https://github.com/ory/kratos/commit/7eec38829449237cffe345d8bec67578764559be)), closes [#420](https://github.com/ory/kratos/issues/420)
+* Use correct brew replacements ([fd269b1](https://github.com/ory/kratos/commit/fd269b1afa784becac7ee79cd7a6f9d2bbe39121)), closes [#423](https://github.com/ory/kratos/issues/423)
 
 
 ### Documentation
