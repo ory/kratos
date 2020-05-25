@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-05-22)](#unreleased-2020-05-22)
+- [Unreleased (2020-05-25)](#unreleased-2020-05-25)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
 - [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
@@ -79,7 +79,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...fd269b1afa784becac7ee79cd7a6f9d2bbe39121) (2020-05-22)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...5c45b1653791cc3ab5d4e4694da98da7543e816d) (2020-05-25)
 
 
 ### Bug Fixes
@@ -90,6 +90,7 @@
 
 ### Documentation
 
+* Add guide for SSO via Google ([#424](https://github.com/ory/kratos/issues/424)) ([5c45b16](https://github.com/ory/kratos/commit/5c45b1653791cc3ab5d4e4694da98da7543e816d))
 * Correct claims.email in github guide ([#422](https://github.com/ory/kratos/issues/422)) ([052a622](https://github.com/ory/kratos/commit/052a622de79d34e32ccab9c7da12a1275c7be51b)):
 
     > There is no email_primary in claims, and the selfservice strategy is currently using claims.email.
