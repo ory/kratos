@@ -3,6 +3,7 @@ package oidc
 import (
 	"context"
 	"net/url"
+	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 
@@ -14,8 +15,7 @@ import (
 )
 
 type ProviderMicrosoft struct {
-	config *Configuration
-	public *url.URL
+	*ProviderGenericOIDC
 }
 
 func NewProviderMicrosoft(
@@ -23,16 +23,18 @@ func NewProviderMicrosoft(
 	public *url.URL,
 ) *ProviderMicrosoft {
 	return &ProviderMicrosoft{
-		config: config,
-		public: public,
+		ProviderGenericOIDC: &ProviderGenericOIDC{
+			config: config,
+			public: public,
+		},
 	}
 }
 
-func (m *ProviderMicrosoft) Config() *Configuration {
-	return m.config
-}
-
 func (m *ProviderMicrosoft) OAuth2(ctx context.Context) (*oauth2.Config, error) {
+	if len(strings.TrimSpace(m.config.Tenant)) == 0 {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("No Tenant specified for the `microsoft` oidc provider %s", m.config.ID))
+	}
+
 	endpointPrefix := "https://login.microsoftonline.com/" + m.config.Tenant
 	endpoint := oauth2.Endpoint{
 		AuthURL:  endpointPrefix + "/oauth2/v2.0/authorize",
@@ -51,10 +53,6 @@ func (m *ProviderMicrosoft) OAuth2(ctx context.Context) (*oauth2.Config, error) 
 		Scopes:       scope,
 		RedirectURL:  m.config.Redir(m.public),
 	}, nil
-}
-
-func (m *ProviderMicrosoft) AuthCodeURLOptions(r request) []oauth2.AuthCodeOption {
-	return []oauth2.AuthCodeOption{}
 }
 
 func (m *ProviderMicrosoft) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
