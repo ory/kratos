@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-05-26)](#unreleased-2020-05-26)
+- [Unreleased (2020-05-27)](#unreleased-2020-05-27)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
 - [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
@@ -79,7 +79,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...4c89834ce59195c5b59da5bc5b41db7ed03bf1c4) (2020-05-26)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...4c89834ce59195c5b59da5bc5b41db7ed03bf1c4) (2020-05-27)
 
 
 ### Bug Fixes
