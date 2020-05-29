@@ -34,12 +34,29 @@ context('Settings', () => {
 
   describe('password', () => {
     it('modifies the password with privileged session', () => {
+      // Once input weak password to test which error message is cleared after updating successfully
+      cy.get('#user-password input[name="password"]').clear().type('123')
+      cy.get('#user-password button[type="submit"]').click()
+      cy.get('.container').should(
+        'not.contain.text',
+        'Your changes have been saved!'
+      )
+      cy.get('.container').should(
+        'contain.text',
+        'the password does not fulfill the password policy because: password length must be at least 6 characters but only got 3'
+      )
+      cy.get('#user-password input[name="password"]').should('be.empty')
+
       password = up(password)
       cy.get('#user-password input[name="password"]').clear().type(password)
       cy.get('#user-password button[type="submit"]').click()
       cy.get('.container').should(
         'contain.text',
         'Your changes have been saved!'
+      )
+      cy.get('.container').should(
+        'not.contain.text',
+        'the password does not fulfill the password policy because: password length must be at least 6 characters but only got 3'
       )
       cy.get('#user-password input[name="password"]').should('be.empty')
     })

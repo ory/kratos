@@ -4,45 +4,47 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-05-15)](#unreleased-2020-05-15)
-- [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
+- [Unreleased (2020-05-29)](#unreleased-2020-05-29)
     - [Bug Fixes](#bug-fixes)
-    - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
+- [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
+    - [Bug Fixes](#bug-fixes-1)
+    - [Code Refactoring](#code-refactoring)
+    - [Documentation](#documentation-1)
     - [Features](#features)
     - [Unclassified](#unclassified)
     - [BREAKING CHANGES](#breaking-changes)
   - [0.2.1-alpha.1 (2020-05-05)](#021-alpha1-2020-05-05)
-    - [Documentation](#documentation-1)
-- [0.2.0-alpha.2 (2020-05-04)](#020-alpha2-2020-05-04)
-    - [Bug Fixes](#bug-fixes-1)
-    - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation-2)
+- [0.2.0-alpha.2 (2020-05-04)](#020-alpha2-2020-05-04)
+    - [Bug Fixes](#bug-fixes-2)
+    - [Code Refactoring](#code-refactoring-1)
+    - [Documentation](#documentation-3)
     - [Features](#features-1)
     - [Unclassified](#unclassified-1)
     - [BREAKING CHANGES](#breaking-changes-1)
   - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
-    - [Bug Fixes](#bug-fixes-2)
-    - [Code Refactoring](#code-refactoring-2)
-    - [Documentation](#documentation-3)
-- [0.1.0-alpha.6 (2020-02-16)](#010-alpha6-2020-02-16)
     - [Bug Fixes](#bug-fixes-3)
-    - [Code Refactoring](#code-refactoring-3)
+    - [Code Refactoring](#code-refactoring-2)
     - [Documentation](#documentation-4)
+- [0.1.0-alpha.6 (2020-02-16)](#010-alpha6-2020-02-16)
+    - [Bug Fixes](#bug-fixes-4)
+    - [Code Refactoring](#code-refactoring-3)
+    - [Documentation](#documentation-5)
     - [Features](#features-2)
 - [0.1.0-alpha.5 (2020-02-06)](#010-alpha5-2020-02-06)
-    - [Documentation](#documentation-5)
+    - [Documentation](#documentation-6)
     - [Features](#features-3)
 - [0.1.0-alpha.4 (2020-02-06)](#010-alpha4-2020-02-06)
-    - [Documentation](#documentation-6)
+    - [Documentation](#documentation-7)
 - [0.1.0-alpha.3 (2020-02-06)](#010-alpha3-2020-02-06)
 - [0.1.0-alpha.2 (2020-02-03)](#010-alpha2-2020-02-03)
-    - [Bug Fixes](#bug-fixes-4)
-    - [Documentation](#documentation-7)
+    - [Bug Fixes](#bug-fixes-5)
+    - [Documentation](#documentation-8)
     - [Features](#features-4)
     - [Unclassified](#unclassified-2)
 - [0.1.0-alpha.1 (2020-01-31)](#010-alpha1-2020-01-31)
-    - [Documentation](#documentation-8)
+    - [Documentation](#documentation-9)
   - [0.0.3-alpha.15 (2020-01-31)](#003-alpha15-2020-01-31)
     - [Unclassified](#unclassified-3)
   - [0.0.3-alpha.14 (2020-01-31)](#003-alpha14-2020-01-31)
@@ -72,14 +74,35 @@
   - [0.0.1-alpha.3 (2020-01-28)](#001-alpha3-2020-01-28)
   - [0.0.1-alpha.2 (2020-01-28)](#001-alpha2-2020-01-28)
   - [0.0.1-alpha.1 (2020-01-28)](#001-alpha1-2020-01-28)
-    - [Documentation](#documentation-9)
+    - [Documentation](#documentation-10)
     - [Unclassified](#unclassified-15)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# Unreleased (2020-05-15)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...b6d9244b5d683f5baf27e9af5970596261a4fd20) (2020-05-29)
 
-No significant changes have been made for this release.
+
+### Bug Fixes
+
+* Clear error messages after updating settings successfully ([#421](https://github.com/ory/kratos/issues/421)) ([7eec388](https://github.com/ory/kratos/commit/7eec38829449237cffe345d8bec67578764559be)), closes [#420](https://github.com/ory/kratos/issues/420)
+* Use correct brew replacements ([fd269b1](https://github.com/ory/kratos/commit/fd269b1afa784becac7ee79cd7a6f9d2bbe39121)), closes [#423](https://github.com/ory/kratos/issues/423)
+
+
+### Documentation
+
+* Add guide for SSO via Google ([#424](https://github.com/ory/kratos/issues/424)) ([5c45b16](https://github.com/ory/kratos/commit/5c45b1653791cc3ab5d4e4694da98da7543e816d))
+* Correct claims.email in github guide ([#422](https://github.com/ory/kratos/issues/422)) ([052a622](https://github.com/ory/kratos/commit/052a622de79d34e32ccab9c7da12a1275c7be51b)):
+
+    > There is no email_primary in claims, and the selfservice strategy is currently using claims.email.
+* Correct claims.email in github guide ([#422](https://github.com/ory/kratos/issues/422)) ([58f7e15](https://github.com/ory/kratos/commit/58f7e15093d2461d4322fe68adb0723ae244bed9)):
+
+    > There is no email_primary in claims, and the selfservice strategy is currently using claims.email.
+* Delete old redirect homepage ([b6d9244](https://github.com/ory/kratos/commit/b6d9244b5d683f5baf27e9af5970596261a4fd20))
+* Improve grammar, clarify sections, update images ([#419](https://github.com/ory/kratos/issues/419)) ([79019d1](https://github.com/ory/kratos/commit/79019d1246b1517b3297996a207a3d2f517fab01))
+* Make whitelisted_return_to_urls examples an array ([#426](https://github.com/ory/kratos/issues/426)) ([7ed5605](https://github.com/ory/kratos/commit/7ed56057f533f23ca18cab5a2614429554e877e2)), closes [#425](https://github.com/ory/kratos/issues/425)
+* Update repository templates ([4c89834](https://github.com/ory/kratos/commit/4c89834ce59195c5b59da5bc5b41db7ed03bf1c4))
+* Use central banner repo for README ([d1e8a82](https://github.com/ory/kratos/commit/d1e8a8272cd536b6e12326778258bfbe0b7e8af7))
+
 
 
 # [0.3.0-alpha.1](https://github.com/ory/kratos/compare/v0.2.1-alpha.1...v0.3.0-alpha.1) (2020-05-15)

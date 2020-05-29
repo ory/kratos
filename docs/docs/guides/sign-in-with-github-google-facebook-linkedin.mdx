@@ -3,7 +3,7 @@ id: sign-in-with-github-google-facebook-linkedin
 title: Sign in with GitHub, Google, Facebook, LinkedIn, ...
 ---
 
-In this document we will take a look at setting up "Sign in with GitHub" using
+In this document we will take a look at setting up "Sign in with GitHub/Google" using
 ORY Kratos.
 
 Run the [Quickstart](../quickstart.mdx) with Docker Compose:
@@ -69,7 +69,7 @@ local claims = {
       //
       // Therefore we only return the email if it (a) exists and (b) is marked verified
       // by GitHub.
-      [if "email_primary" in claims && claims.email_verified then "email" else null]: claims.email_primary,
+      [if "email" in claims && claims.email_verified then "email" else null]: claims.email,
     },
   },
 }
@@ -98,8 +98,55 @@ selfservice:
 Next, open the login endpoint of the SecureApp and you should see the GitHub
 Login option!
 
-## Google, LinkedIn, Facebook
+## Google
+
+Go to [Google's developer docs here](https://developers.google.com/identity/sign-in/web/sign-in) and configure a project:
+
+- Select "Web server" as a caller app.
+- Set "Authorized redirect URIs" to `http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/callback/google`.
+- Make sure to copy over the client id and secret to use in your configurations file.
+
+Your Jsonnet code snippet for the provider that only uses email address would look like this (you can place it in the same directory as your github one):
+
+```json title="contrib/quickstart/kratos/email-password/oidc.github.jsonnet"
+local claims = std.extVar('claims');
+
+{
+  identity: {
+    traits: {
+      // Allowing unverified email addresses enables account
+      // enumeration attacks, especially if the value is used for
+      // e.g. verification or as a password login identifier.
+      email: claims.email
+    },
+  },
+}
+```
+
+Your configurations file should look similar to this:
+
+```yaml title="contrib/quickstart/kratos/email-password/.kratos.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  strategies:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          # - id: github ...
+          - id: google # this is `<provider-id>` in the Authorization callback URL. DO NOT CHANGE IT ONCE SET!
+            provider: google
+            client_id: .... # Replace this with the OAuth2 Client ID provided by Google
+            client_secret: .... # Replace this with the OAuth2 Client Secret provided by Google
+            mapper_url: file:///etc/config/kratos/oidc.google.jsonnet
+            scope:
+              - email
+```
+
+That's it! Now open you SecureApp's login or registration page and you should see an optio for Google :tada:
+
+## LinkedIn, Facebook
 
 Connecting with other Social Sign In providers will be very similar to the
-GitHub flow. If you've managed to do it, write it down and make a PR against
+GitHub/Google flow. If you've managed to do it, write it down and make a PR against
 this document! :)

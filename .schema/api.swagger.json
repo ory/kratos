@@ -1282,9 +1282,7 @@
         },
         "details": {
           "type": "object",
-          "additionalProperties": {
-            "type": "object"
-          }
+          "additionalProperties": true
         },
         "message": {
           "type": "string"

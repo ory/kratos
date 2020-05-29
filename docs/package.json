@@ -3,18 +3,24 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "gen": "cd .. && node ./docs/scripts/fix-api.js ./docs/docs/reference/api.md && node ./docs/scripts/config.js docs/config.js",
+    "gen": "cd .. && node ./docs/scripts/fix-api.js ./docs/docs/reference/api.mdx && node ./docs/scripts/config.js docs/config.js",
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
     "build": "docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
-    "format": "prettier --write '{docs/**,docs,scripts,static,contrib}/*.{md,mdx,json,js,css,html}' || true"
+    "format": "prettier --write '{docs/**,docs,scripts,static,contrib}/*.{md,json,js,css,html}' --no-semi --single-quote --trailing-comma none || true"
   },
   "dependencies": {
-    "@docusaurus/core": "2.0.0-alpha.50",
-    "@docusaurus/preset-classic": "2.0.0-alpha.50",
+    "@docusaurus/core": "2.0.0-alpha.56",
+    "@docusaurus/plugin-content-docs": "2.0.0-alpha.56",
+    "@docusaurus/plugin-content-pages": "2.0.0-alpha.56",
+    "@docusaurus/plugin-google-analytics": "2.0.0-alpha.56",
+    "@docusaurus/theme-classic": "2.0.0-alpha.56",
+    "@docusaurus/theme-search-algolia": "2.0.0-alpha.56",
+    "@docusaurus/plugin-sitemap": "2.0.0-alpha.56",
     "classnames": "2.2.6",
+    "mermaid": "^8.5.1",
     "node-fetch": "2.6.0",
     "react": "16.8.4",
     "react-dom": "16.8.4"

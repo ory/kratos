@@ -653,8 +653,8 @@
             "format": "uri"
           },
           "examples": [
-            "https://app.my-app.com/dashboard",
-            "https://www.my-app.com/"
+            ["https://app.my-app.com/dashboard",
+            "https://www.my-app.com/"]
           ],
           "uniqueItems": true
         }

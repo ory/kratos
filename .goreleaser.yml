@@ -163,6 +163,9 @@ archives:
       - kratos-sqlite-darwin
     replacements:
       darwin: macos
+      386: 32bit
+      amd64: 64bit
+      arm: arm32
     files:
       - CHANGELOG.md
       - LICENSE

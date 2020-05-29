@@ -33,13 +33,13 @@ Kubernetes) most:
   (or use our example UIs) in the language and framework you feel most
   comfortable with.
 - The workflow engine allows you to fully customize your use experience. Whether
-  your users need to activate their account after registration, or have a multi-step
-  (progressive) registration - it's all possible!
-- One Identity Data Model does not fit all - you may have customers that need
-  a billing address, internal support staff that is assigned to a cost center,
-  and that smart fridge on floor 4. You can express the different data models
-  using [JSON Schema](https://json-schema.org/) and make the system work for
-  you - not the other way around.
+  your users need to activate their account after registration, or have a
+  multi-step (progressive) registration - it's all possible!
+- One Identity Data Model does not fit all - you may have customers that need a
+  billing address, internal support staff that is assigned to a cost center, and
+  that smart fridge on floor 4. You can express the different data models using
+  [JSON Schema](https://json-schema.org/) and make the system work for you - not
+  the other way around.
 
 To learn more about what's different and how ORY Kratos compares to other open
 source solutions, head over to [Concepts](./concepts/index.md) and
@@ -51,8 +51,8 @@ arm, etc.). The compiled binary has _no system or library or file dependencies_
 and can be run as a single, static binary on top of, for example, a raw Linux
 kernel. The binary and Docker image are each less than 20MB in size.
 
-ORY Kratos scales horizontally without effort. The only external dependency is an
-RDBMS - we currently support SQLite, PostgreSQL, MySQL, CockroachDB. You will
+ORY Kratos scales horizontally without effort. The only external dependency is
+an RDBMS - we currently support SQLite, PostgreSQL, MySQL, CockroachDB. You will
 not need memcached, etcd, or any other system to scale ORY Kratos.
 
 We believe in strong separation of concerns, which is a guiding principle in the
