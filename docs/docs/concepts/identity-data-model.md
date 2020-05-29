@@ -159,12 +159,12 @@ ORY Kratos' JSON Schema Vocabulary Extension can be used within a property:
       'ory.sh/kratos': {
         credentials: {
           password: {
-            identifier: true,
-          },
-        },
-      },
-    },
-  },
+            identifier: true
+          }
+        }
+      }
+    }
+  }
 }
 ```
 
@@ -181,10 +181,10 @@ and Login Flow:
   'ory.sh/kratos': {
     credentials: {
       password: {
-        identifier: true,
-      },
-    },
-  },
+        identifier: true
+      }
+    }
+  }
 }
 ```
 
@@ -220,31 +220,31 @@ password flow
       'ory.sh/kratos': {
         credentials: {
           password: {
-            identifier: true,
-          },
-        },
-      },
+            identifier: true
+          }
+        }
+      }
     },
     name: {
       type: 'object',
       properties: {
         first: {
-          type: 'string',
+          type: 'string'
         },
         last: {
-          type: 'string',
-        },
-      },
+          type: 'string'
+        }
+      }
     },
     favorite_animal: {
-      type: 'string',
+      type: 'string'
     },
     accepted_tos: {
-      type: 'string',
-    },
+      type: 'string'
+    }
   },
   required: ['email'],
-  additionalProperties: false,
+  additionalProperties: false
 }
 ```
 
