@@ -126,11 +126,19 @@ local claims = std.extVar('claims');
 {
   identity: {
     traits: {
+      // Allowing unverified email addresses enables account
+      // enumeration attacks, especially if the value is used for
+      // e.g. verification or as a password login identifier.
+      //
+      // If connecting only to your organization (one tenant), claims.email is safe to use if you have not actively disabled e-mail   
+      //verification during signup.
       email: claims.email
     },
   },
 }
 ```
+
+See https://docs.microsoft.com/en-us/azure/active-directory-b2c/user-flow-disable-email-verification for warnings.
 
 Enable the Microsoft Azure provider in the ORY Kratos config located at
 `<kratos-directory>/contrib/quickstart/kratos/email-password/.kratos.yml`.
