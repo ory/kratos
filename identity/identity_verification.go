@@ -25,7 +25,7 @@ type (
 	// swagger:model verifiableIdentityAddress
 	VerifiableAddress struct {
 		// required: true
-		ID uuid.UUID `json:"id" db:"id" faker:"uuid" rw:"r"`
+		ID uuid.UUID `json:"id" db:"id" faker:"-"`
 
 		// required: true
 		Value string `json:"value" db:"value"`

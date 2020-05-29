@@ -85,7 +85,7 @@ func (a *Client) GetSchema(params *GetSchemaParams) (*GetSchemaOK, error) {
 other information.
 
 When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent
-token scanning attacks, the public endpoint does not return 404 status codes to prevent scanning attacks.
+token scanning attacks, the public endpoint does not return 404 status codes.
 
 More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 */
@@ -167,7 +167,7 @@ func (a *Client) GetSelfServiceBrowserRecoveryRequest(params *GetSelfServiceBrow
 other information.
 
 When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent
-token scanning attacks, the public endpoint does not return 404 status codes to prevent scanning attacks.
+token scanning attacks, the public endpoint does not return 404 status codes.
 
 More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 */
@@ -248,7 +248,7 @@ func (a *Client) GetSelfServiceBrowserSettingsRequest(params *GetSelfServiceBrow
   This endpoint returns the error associated with a user-facing self service errors.
 
 When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent
-token scanning attacks, the public endpoint does not return 404 status codes to prevent scanning attacks.
+token scanning attacks, the public endpoint does not return 404 status codes.
 
 More information can be found at [ORY Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).
 */

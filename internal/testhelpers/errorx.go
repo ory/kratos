@@ -8,6 +8,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/x/logrusx"
+
 	"github.com/ory/viper"
 
 	"github.com/ory/herodot"
@@ -18,8 +20,7 @@ import (
 )
 
 func NewErrorTestServer(t *testing.T, reg interface{ errorx.PersistenceProvider }) *httptest.Server {
-	logger := logrus.New()
-	logger.Level = logrus.TraceLevel
+	logger := logrusx.New("", "", logrusx.ForceLevel(logrus.TraceLevel))
 	writer := herodot.NewJSONWriter(logger)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		e, err := reg.SelfServiceErrorPersister().Read(r.Context(), x.ParseUUID(r.URL.Query().Get("error")))

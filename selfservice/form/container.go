@@ -1,5 +1,16 @@
 package form
 
+type Form interface {
+	ErrorParser
+	FieldSetter
+	ValueSetter
+	FieldUnsetter
+	ErrorAdder
+	CSRFSetter
+	Resetter
+	FieldSorter
+}
+
 // ErrorParser is capable of parsing and processing errors.
 type ErrorParser interface {
 	// ParseError type asserts the given error and sets the forms's errors or a

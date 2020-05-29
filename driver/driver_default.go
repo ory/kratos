@@ -2,7 +2,6 @@ package driver
 
 import (
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 
 	"github.com/ory/x/logrusx"
 
@@ -14,9 +13,9 @@ type DefaultDriver struct {
 	r Registry
 }
 
-func NewDefaultDriver(l logrus.FieldLogger, version, build, date string, dev bool) (Driver, error) {
+func NewDefaultDriver(l *logrusx.Logger, version, build, date string, dev bool) (Driver, error) {
 	if l == nil {
-		l = logrusx.New()
+		l = logrusx.New("ORY Kratos", version)
 	}
 
 	c := configuration.NewViperProvider(l, dev)
@@ -39,7 +38,7 @@ func NewDefaultDriver(l logrus.FieldLogger, version, build, date string, dev boo
 	return &DefaultDriver{r: r, c: c}, nil
 }
 
-func MustNewDefaultDriver(l logrus.FieldLogger, version, build, date string, dev bool) Driver {
+func MustNewDefaultDriver(l *logrusx.Logger, version, build, date string, dev bool) Driver {
 	d, err := NewDefaultDriver(l, version, build, date, dev)
 	if err != nil {
 		l.WithError(err).Fatal("Unable to initialize driver.")
@@ -51,9 +50,9 @@ func (r *DefaultDriver) BuildInfo() *BuildInfo {
 	return &BuildInfo{}
 }
 
-func (r *DefaultDriver) Logger() logrus.FieldLogger {
+func (r *DefaultDriver) Logger() *logrusx.Logger {
 	if r.r == nil {
-		return logrusx.New()
+		return logrusx.New("ORY Kratos", r.BuildInfo().Version)
 	}
 	return r.r.Logger()
 }

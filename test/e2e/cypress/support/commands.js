@@ -25,8 +25,9 @@
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 import {
   APP_URL,
-  assertAddress,
+  assertVerifiableAddress,
   gen,
+  KRATOS_ADMIN,
   MAIL_API,
   parseHtml,
   pollInterval,
@@ -207,6 +208,18 @@ Cypress.Commands.add('noSession', () =>
       return request
     })
 )
+Cypress.Commands.add('getIdentityByEmail', ({ email }) =>
+  cy
+    .request({
+      method: 'GET',
+      url: `${KRATOS_ADMIN}/identities`,
+      failOnStatusCode: false,
+    })
+    .then((response) => {
+      expect(response.status).to.eq(200)
+      return response.body.find((identity) => identity.traits.email === email)
+    })
+)
 
 Cypress.Commands.add('verifyEmail', ({ expect: { email } = {} } = {}) =>
   cy.getMail().then((message) => {
@@ -221,7 +234,39 @@ Cypress.Commands.add('verifyEmail', ({ expect: { email } = {} } = {}) =>
 
     cy.visit(link.href)
     cy.location('pathname').should('not.contain', 'verify')
-    cy.session().should(assertAddress({ isVerified: true, email }))
+    cy.session().should(assertVerifiableAddress({ isVerified: true, email }))
+  })
+)
+
+// Uses the verification email but waits so that it expires
+Cypress.Commands.add(
+  'recoverEmailButExpired',
+  ({ expect: { email } = {} } = {}) =>
+    cy.getMail().then((message) => {
+      expect(message.subject.trim()).to.equal('Recover access to your account')
+      expect(message.toAddresses[0].trim()).to.equal(email)
+
+      const link = parseHtml(message.body).querySelector('a')
+      expect(link).to.not.be.null
+      expect(link.href).to.contain(APP_URL)
+
+      cy.wait(5000)
+      cy.visit(link.href)
+    })
+)
+
+Cypress.Commands.add('recoverEmail', ({ expect: { email } = {} } = {}) =>
+  cy.getMail().then((message) => {
+    expect(message.subject.trim()).to.equal('Recover access to your account')
+    expect(message.fromAddress.trim()).to.equal('no-reply@ory.kratos.sh')
+    expect(message.toAddresses).to.have.length(1)
+    expect(message.toAddresses[0].trim()).to.equal(email)
+
+    const link = parseHtml(message.body).querySelector('a')
+    expect(link).to.not.be.null
+    expect(link.href).to.contain(APP_URL)
+
+    cy.visit(link.href)
   })
 )
 
@@ -239,11 +284,11 @@ Cypress.Commands.add(
 
       const link = parseHtml(message.body).querySelector('a')
       cy.session().should((session) => {
-        assertAddress({ isVerified: false, email: email })(session)
+        assertVerifiableAddress({ isVerified: false, email: email })(session)
         cy.wait(
-          Cypress.moment(session.identity.addresses[0].expires_at).diff(
-            Cypress.moment()
-          ) + 100
+          Cypress.moment
+            .utc(session.identity.verifiable_addresses[0].expires_at)
+            .diff(Cypress.moment.utc()) + 100
         )
       })
 
@@ -252,7 +297,9 @@ Cypress.Commands.add(
       cy.location('search').should('not.be.empty', 'request')
       cy.get('.form-errors .message').should('contain.text', 'code has expired')
 
-      cy.session().should(assertAddress({ isVerified: false, email: email }))
+      cy.session().should(
+        assertVerifiableAddress({ isVerified: false, email: email })
+      )
     })
 )
 

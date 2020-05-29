@@ -4,8 +4,6 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-
-	"github.com/ory/kratos/otp"
 )
 
 const (
@@ -22,7 +20,7 @@ type (
 	// swagger:model recoveryIdentityAddress
 	RecoveryAddress struct {
 		// required: true
-		ID uuid.UUID `json:"id" db:"id" faker:"uuid" rw:"r"`
+		ID uuid.UUID `json:"id" db:"id" faker:"-"`
 
 		// required: true
 		Value string `json:"value" db:"value"`
@@ -30,17 +28,12 @@ type (
 		// required: true
 		Via RecoveryAddressType `json:"via" db:"via"`
 
-		// required: true
-		ExpiresAt time.Time `json:"expires_at" faker:"time_type" db:"expires_at"`
-
 		// IdentityID is a helper struct field for gobuffalo.pop.
 		IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
 		// CreatedAt is a helper struct field for gobuffalo.pop.
 		CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
 		// UpdatedAt is a helper struct field for gobuffalo.pop.
 		UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
-		// Code is the recovery code, never to be shared as JSON
-		Code string `json:"-" db:"code"`
 	}
 )
 
@@ -59,18 +52,10 @@ func (a RecoveryAddress) TableName() string {
 func NewRecoveryEmailAddress(
 	value string,
 	identity uuid.UUID,
-	expiresIn time.Duration,
-) (*RecoveryAddress, error) {
-	code, err := otp.New()
-	if err != nil {
-		return nil, err
-	}
-
+) *RecoveryAddress {
 	return &RecoveryAddress{
-		Code:       code,
 		Value:      value,
 		Via:        RecoveryAddressTypeEmail,
-		ExpiresAt:  time.Now().Add(expiresIn).UTC(),
 		IdentityID: identity,
-	}, nil
+	}
 }

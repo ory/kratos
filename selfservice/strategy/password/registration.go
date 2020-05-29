@@ -2,7 +2,6 @@ package password
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 
@@ -30,13 +29,15 @@ import (
 )
 
 const (
-	RegistrationPath = "/self-service/browser/flows/registration/strategies/password"
-
+	RegistrationPath              = "/self-service/browser/flows/registration/strategies/password"
 	registrationFormPayloadSchema = `{
   "$id": "https://schemas.ory.sh/kratos/selfservice/password/registration/config.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "required": ["password", "traits"],
+  "required": [
+    "password",
+    "traits"
+  ],
   "properties": {
     "password": {
       "type": "string",
@@ -137,7 +138,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 		p.Traits = json.RawMessage("{}")
 	}
 
-	hpw, err := s.d.PasswordHasher().Generate([]byte(p.Password))
+	hpw, err := s.d.Hasher().Generate([]byte(p.Password))
 	if err != nil {
 		s.handleRegistrationError(w, r, ar, &p, err)
 		return
@@ -151,11 +152,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 
 	i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
 	i.Traits = identity.Traits(p.Traits)
-	i.SetCredentials(s.ID(), identity.Credentials{
-		Type:        s.ID(),
-		Identifiers: []string{},
-		Config:      json.RawMessage(co),
-	})
+	i.SetCredentials(s.ID(), identity.Credentials{Type: s.ID(), Identifiers: []string{}, Config: co})
 
 	if err := s.validateCredentials(i, p.Password); err != nil {
 		s.handleRegistrationError(w, r, ar, &p, err)
@@ -176,7 +173,7 @@ func (s *Strategy) validateCredentials(i *identity.Identity, pw string) error {
 	c, ok := i.GetCredentials(identity.CredentialsTypePassword)
 	if !ok {
 		// This should never happen
-		panic(fmt.Sprintf("identity object did not provide the %s CredentialType unexpectedly", identity.CredentialsTypePassword))
+		return errors.WithStack(x.PseudoPanic.WithReasonf("identity object did not provide the %s CredentialType unexpectedly", identity.CredentialsTypePassword))
 	} else if len(c.Identifiers) == 0 {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("No login identifiers (e.g. email, phone number, username) were set. Contact an administrator, the identity schema is misconfigured."))
 	}

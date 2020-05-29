@@ -2,42 +2,21 @@ package recovery
 
 import (
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
+	"github.com/ory/x/urlx"
+
 	"github.com/ory/x/sqlxx"
 
-	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/selfservice/form"
+	"github.com/ory/kratos/selfservice/text"
 	"github.com/ory/kratos/x"
 )
-
-type State string
-
-const (
-	StateBlank     = ""
-	StatePending   = "pending"
-	StateSent      = "sent"
-	StateConfirmed = "confirmed"
-	StateSuccess   = "success"
-)
-
-func NextState(current State) State {
-	switch current {
-	case StateBlank:
-		return StatePending
-	case StatePending:
-		return StateSent
-	case StateSent:
-		return StateConfirmed
-	case StateConfirmed:
-		return StateSuccess
-	}
-	return StateBlank
-}
 
 // Request presents a recovery request
 //
@@ -53,7 +32,7 @@ type Request struct {
 	// required: true
 	// type: string
 	// format: uuid
-	ID uuid.UUID `json:"id" db:"id" faker:"uuid" rw:"r"`
+	ID uuid.UUID `json:"id" db:"id" faker:"-"`
 
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting,
 	// a new request has to be initiated.
@@ -74,7 +53,13 @@ type Request struct {
 
 	// Active, if set, contains the registration method that is being used. It is initially
 	// not set.
-	Active sqlxx.NullString `json:"active,omitempty" db:"active_method"`
+	Active sqlxx.NullString `json:"active,omitempty" faker:"-" db:"active_method"`
+
+	// Messages contains a list of messages to be displayed in the Recovery UI. Omitting these
+	// messages makes it significantly harder for users to figure out what is going on.
+	//
+	// More documentation on messages can be found in the [User Interface Documentation](https://www.ory.sh/kratos/docs/concepts/ui-user-interface/).
+	Messages text.Messages `json:"messages" faker:"-" db:"messages"`
 
 	// Methods contains context for all account recovery methods. If a registration request has been
 	// processed, but for example the password is incorrect, this will contain error messages.
@@ -85,15 +70,7 @@ type Request struct {
 	// MethodsRaw is a helper struct field for gobuffalo.pop.
 	MethodsRaw RequestMethodsRaw `json:"-" faker:"-" has_many:"selfservice_recovery_request_methods" fk_id:"selfservice_recovery_request_id"`
 
-	// RecoveryAddress links this request to a recovery address.
-	RecoveryAddress *identity.RecoveryAddress `json:"-" belongs_to:"identity_recovery_addresses" fk_id:"RecoveryAddressID"`
-
-	// State represents the state of this request. Can be one of:
-	//
-	// - pending
-	// - sent
-	// - confirmed
-	// - success
+	// State represents the state of this request.
 	//
 	// required: true
 	State State `json:"state" faker:"-" db:"state"`
@@ -103,33 +80,47 @@ type Request struct {
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
+
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
-	// RecoveryAddressID is a helper struct field for gobuffalo.pop.
-	RecoveryAddressID uuid.UUID `json:"-" faker:"-" db:"identity_recovery_address_id"`
+
+	// RecoveredIdentityID is a helper struct field for gobuffalo.pop.
+	RecoveredIdentityID uuid.NullUUID `json:"-" faker:"-" db:"recovered_identity_id"`
 }
 
-func NewRequest(exp time.Duration,csrf string, r *http.Request) *Request {
-	return &Request{
+func NewRequest(exp time.Duration, csrf string, r *http.Request, strategies Strategies) (*Request, error) {
+	req := &Request{
 		ID:         x.NewUUID(),
 		ExpiresAt:  time.Now().UTC().Add(exp),
 		IssuedAt:   time.Now().UTC(),
 		RequestURL: x.RequestURL(r).String(),
 		Methods:    map[string]*RequestMethod{},
-		State:      NextState(StateBlank),
+		State:      NextState(StateChooseMethod),
 		CSRFToken:  csrf,
 	}
+
+	for _, strategy := range strategies {
+		if err := strategy.PopulateRecoveryMethod(r, req); err != nil {
+			return nil, err
+		}
+	}
+
+	return req, nil
 }
 
 func (r *Request) TableName() string {
 	return "selfservice_recovery_requests"
 }
 
+func (r *Request) URL(recoveryURL *url.URL) *url.URL {
+	return urlx.CopyWithQuery(recoveryURL, url.Values{"request": {r.ID.String()}})
+}
+
 func (r *Request) GetID() uuid.UUID {
 	return r.ID
 }
 
-func (r *Request) Valid(s *session.Session) error {
+func (r *Request) Valid() error {
 	if r.ExpiresAt.Before(time.Now().UTC()) {
 		return errors.WithStack(ErrRequestExpired.
 			WithReasonf("The recovery request expired %.2f minutes ago, please try again.",
@@ -159,4 +150,20 @@ func (r *Request) AfterFind(_ *pop.Connection) error {
 	}
 	r.MethodsRaw = nil
 	return nil
+}
+
+func (r *Request) MethodToForm(id string) (form.Form, error) {
+	method, ok := r.Methods[id]
+	if !ok {
+		return nil, errors.WithStack(x.PseudoPanic.WithReasonf("Expected method %s to exist.", id))
+	}
+
+	config, ok := method.Config.RequestMethodConfigurator.(form.Form)
+	if !ok {
+		return nil, errors.WithStack(x.PseudoPanic.WithReasonf(
+			"Expected method config %s to be of type *form.HTMLForm but got: %T", id,
+			method.Config.RequestMethodConfigurator))
+	}
+
+	return config, nil
 }

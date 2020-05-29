@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/x"
@@ -42,7 +41,7 @@ func NewManager(d managerDependencies, c baseManagerConfiguration) *Manager {
 // error url, appending the error ID.
 func (m *Manager) Create(ctx context.Context, w http.ResponseWriter, r *http.Request, errs ...error) (string, error) {
 	for _, err := range errs {
-		herodot.DefaultErrorLogger(m.d.Logger(), err).Errorf("An error occurred and is being forwarded to the error user interface.")
+		m.d.Logger().WithError(err).WithRequest(r).Errorf("An error occurred and is being forwarded to the error user interface.")
 	}
 
 	id, emerr := m.d.SelfServiceErrorPersister().Add(ctx, m.d.GenerateCSRFToken(r), errs...)

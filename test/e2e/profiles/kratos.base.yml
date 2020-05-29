@@ -11,6 +11,7 @@ urls:
   error_ui: http://127.0.0.1:4455/error
   settings_ui: http://127.0.0.1:4455/settings
   verify_ui: http://127.0.0.1:4455/verify
+  recovery_ui: http://127.0.0.1:4455/recovery
 
   # These are undefined because not available in this demo
   mfa_ui: http://127.0.0.1:4455/

@@ -2,17 +2,21 @@ package settings
 
 import (
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
+	"github.com/ory/x/urlx"
+
 	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/text"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
@@ -32,7 +36,7 @@ type Request struct {
 	// required: true
 	// type: string
 	// format: uuid
-	ID uuid.UUID `json:"id" db:"id" faker:"uuid" rw:"r"`
+	ID uuid.UUID `json:"id" db:"id" faker:"-"`
 
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting,
 	// a new request has to be initiated.
@@ -54,6 +58,12 @@ type Request struct {
 	// Active, if set, contains the registration method that is being used. It is initially
 	// not set.
 	Active sqlxx.NullString `json:"active,omitempty" db:"active_method"`
+
+	// Messages contains a list of messages to be displayed in the Settings UI. Omitting these
+	// messages makes it significantly harder for users to figure out what is going on.
+	//
+	// More documentation on messages can be found in the [User Interface Documentation](https://www.ory.sh/kratos/docs/concepts/ui-user-interface/).
+	Messages text.Messages `json:"messages" db:"messages" faker:"-"`
 
 	// Methods contains context for all enabled registration methods. If a registration request has been
 	// processed, but for example the password is incorrect, this will contain error messages.
@@ -102,6 +112,10 @@ func (r *Request) TableName() string {
 
 func (r *Request) GetID() uuid.UUID {
 	return r.ID
+}
+
+func (r *Request) URL(settingsURL *url.URL) *url.URL {
+	return urlx.CopyWithQuery(settingsURL, url.Values{"request": {r.ID.String()}})
 }
 
 func (r *Request) Valid(s *session.Session) error {

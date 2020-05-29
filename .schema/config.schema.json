@@ -396,13 +396,18 @@
                 "1m",
                 "1s"
               ]
-            },
-            "link_lifespan": {
-              "title": "Self-Service Verification Link Lifespan",
-              "description": "Sets how long the verification link (e.g. the one sent via email) is valid for.",
+            }
+          }
+        },
+        "recovery": {
+          "type": "object",
+          "properties": {
+            "request_lifespan": {
+              "title": "Self-Service Verification Request Lifespan",
+              "description": "Sets how long the verification request (for the UI interaction) is valid.",
               "type": "string",
               "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
-              "default": "24h",
+              "default": "1h",
               "examples": [
                 "1h",
                 "1m",
@@ -643,6 +648,16 @@
             "https://my-app.com/verify"
           ],
           "default": "https://www.ory.sh/kratos/docs/fallback/verify"
+        },
+        "recovery_ui": {
+          "title": "Verify UI URL",
+          "description": "URL where the ORY Verify UI is hosted. This is the page where users activate and / or verify their email or telephone number. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
+          "type": "string",
+          "format": "uri",
+          "examples": [
+            "https://my-app.com/verify"
+          ],
+          "default": "https://www.ory.sh/kratos/docs/fallback/recovery"
         },
         "whitelisted_return_to_urls": {
           "title": "Whitelisted Return To URLs",

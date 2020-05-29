@@ -1,1 +1,1 @@
-ALTER TABLE identity_recovery_addresses MODIFY COLUMN code VARCHAR(32) BINARY;
+ALTER TABLE identity_recovery_tokens MODIFY COLUMN token VARCHAR(64) BINARY;

@@ -8,13 +8,21 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-type Strategy interface {
-	RecoveryStrategyID() string
-	RegisterRecoveryRoutes(*x.RouterPublic)
-	PopulateRecoveryMethod(*http.Request, *Request) error
-}
+const (
+	StrategyRecoveryTokenName = "token"
+)
 
-type Strategies []Strategy
+type (
+	Strategy interface {
+		RecoveryStrategyID() string
+		RegisterRecoveryRoutes(*x.RouterPublic)
+		PopulateRecoveryMethod(*http.Request, *Request) error
+	}
+	Strategies       []Strategy
+	StrategyProvider interface {
+		RecoveryStrategies() Strategies
+	}
+)
 
 func (s Strategies) Strategy(id string) (Strategy, error) {
 	ids := make([]string, len(s))
@@ -40,8 +48,4 @@ func (s Strategies) RegisterPublicRoutes(r *x.RouterPublic) {
 	for _, ss := range s {
 		ss.RegisterRecoveryRoutes(r)
 	}
-}
-
-type StrategyProvider interface {
-	RecoveryStrategies() Strategies
 }

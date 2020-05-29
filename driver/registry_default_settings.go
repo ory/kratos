@@ -10,6 +10,7 @@ func (m *RegistryDefault) PostSettingsPrePersistHooks(settingsType string) (b []
 	}
 	return
 }
+
 func (m *RegistryDefault) PostSettingsPostPersistHooks(settingsType string) (b []settings.PostHookPostPersistExecutor) {
 	for _, v := range m.getHooks(settingsType, m.c.SelfServiceSettingsAfterHooks(settingsType)) {
 		if hook, ok := v.(settings.PostHookPostPersistExecutor); ok {

@@ -20,14 +20,6 @@ func (m *RegistryDefault) RecoveryHandler() *recovery.Handler {
 	return m.selfserviceRecoveryHandler
 }
 
-func (m *RegistryDefault) RecoverySender() *recovery.Sender {
-	if m.selfserviceRecoverySender == nil {
-		m.selfserviceRecoverySender = recovery.NewSender(m, m.c)
-	}
-
-	return m.selfserviceRecoverySender
-}
-
 func (m *RegistryDefault) RecoveryStrategies() recovery.Strategies {
 	if len(m.recoveryStrategies) == 0 {
 		for _, strategy := range m.selfServiceStrategies() {

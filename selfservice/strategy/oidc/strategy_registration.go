@@ -54,7 +54,9 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		// not need additional consent/login.
 
 		// This is kinda hacky but the only way to ensure seamless login/registration flows when using OIDC.
-		s.d.Logger().WithField("provider", provider.Config().ID).WithField("subject", claims.Subject).Debug("Received successful OpenID Connect callback but user is already registered. Re-initializing login flow now.")
+		s.d.Logger().WithRequest(r).WithField("provider", provider.Config().ID).
+			WithField("subject", claims.Subject).
+			Debug("Received successful OpenID Connect callback but user is already registered. Re-initializing login flow now.")
 		ar, err := s.d.LoginHandler().NewLoginRequest(w, r)
 		if err != nil {
 			s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
@@ -88,22 +90,23 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 	} else if traits := gjson.Get(evaluated, "identity.traits"); !traits.IsObject() {
 		i.Traits = []byte{'{', '}'}
 		s.d.Logger().
+			WithRequest(r).
 			WithField("oidc_provider", provider.Config().ID).
-			WithField("oidc_claims", x.RedactInProd(s.c, claims)).
+			WithSensitiveField("oidc_claims", claims).
 			WithField("mapper_jsonnet_output", evaluated).
 			WithField("mapper_jsonnet_url", provider.Config().Mapper).
-			Warn("OpenID Connect Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!")
+			Error("OpenID Connect Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!")
 	} else {
 		i.Traits = []byte(traits.Raw)
 	}
-	if s.c.IsInsecureDevMode() {
-		s.d.Logger().
-			WithField("oidc_provider", provider.Config().ID).
-			WithField("oidc_claims", x.RedactInProd(s.c, claims)).
-			WithField("mapper_jsonnet_output", evaluated).
-			WithField("mapper_jsonnet_url", provider.Config().Mapper).
-			Debug("OpenID Connect Jsonnet mapper completed.")
-	}
+
+	s.d.Logger().
+		WithRequest(r).
+		WithField("oidc_provider", provider.Config().ID).
+		WithSensitiveField("oidc_claims", claims).
+		WithField("mapper_jsonnet_output", evaluated).
+		WithField("mapper_jsonnet_url", provider.Config().Mapper).
+		Debug("OpenID Connect Jsonnet mapper completed.")
 
 	option, err := decoderRegistration(s.c.DefaultIdentityTraitsSchemaURL().String())
 	if err != nil {

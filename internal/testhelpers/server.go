@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/gobuffalo/httptest"
+
 	"github.com/ory/viper"
 
 	"github.com/ory/kratos/driver"
@@ -13,7 +14,6 @@ import (
 
 func NewKratosServer(t *testing.T, reg driver.Registry) (public, admin *httptest.Server) {
 	return NewKratosServerWithRouters(t, reg, x.NewRouterPublic(), x.NewRouterAdmin())
-
 }
 
 func NewKratosServerWithCSRF(t *testing.T, reg driver.Registry) (public, admin *httptest.Server) {
@@ -21,7 +21,9 @@ func NewKratosServerWithCSRF(t *testing.T, reg driver.Registry) (public, admin *
 	public = httptest.NewServer(x.NewTestCSRFHandler(rp, reg))
 	admin = httptest.NewServer(ra)
 
-	viper.Set(configuration.ViperKeyURLsLogin, "http://NewKratosServerWithCSRF/i-am-a-mock-value")
+	if len(viper.GetString(configuration.ViperKeyURLsLogin)) == 0 {
+		viper.Set(configuration.ViperKeyURLsLogin, "http://NewKratosServerWithCSRF/you-forgot-to-set-me/login")
+	}
 	viper.Set(configuration.ViperKeyURLsSelfPublic, public.URL)
 	viper.Set(configuration.ViperKeyURLsSelfAdmin, admin.URL)
 
@@ -36,7 +38,9 @@ func NewKratosServerWithRouters(t *testing.T, reg driver.Registry, rp *x.RouterP
 	public = httptest.NewServer(rp)
 	admin = httptest.NewServer(ra)
 
-	viper.Set(configuration.ViperKeyURLsLogin, "http://NewKratosServerWithRouters/i-am-a-mock-value")
+	if len(viper.GetString(configuration.ViperKeyURLsLogin)) == 0 {
+		viper.Set(configuration.ViperKeyURLsLogin, "http://NewKratosServerWithRouters/you-forgot-to-set-me/login")
+	}
 	viper.Set(configuration.ViperKeyURLsSelfPublic, public.URL)
 	viper.Set(configuration.ViperKeyURLsSelfAdmin, admin.URL)
 

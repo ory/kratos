@@ -1,7 +1,6 @@
 package login
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 	"time"
@@ -70,11 +69,11 @@ func (s *ErrorHandler) HandleLoginError(
 	rr *Request,
 	err error,
 ) {
-	s.d.Logger().WithError(err).
-		WithField("details", fmt.Sprintf("%+v", err)).
-		WithField("credentials_type", ct).
+	s.d.Audit().
+		WithError(err).
+		WithRequest(r).
 		WithField("login_request", rr).
-		Warn("Encountered login error.")
+		Info("Encountered self-service login error.")
 
 	if _, ok := errorsx.Cause(err).(requestExpiredError); ok {
 		// create new request because the old one is not valid

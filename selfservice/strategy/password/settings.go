@@ -107,7 +107,7 @@ func (s *Strategy) continueSettingsFlow(
 		return
 	}
 
-	hpw, err := s.d.PasswordHasher().Generate([]byte(p.Password))
+	hpw, err := s.d.Hasher().Generate([]byte(p.Password))
 	if err != nil {
 		s.handleSettingsError(w, r, ctxUpdate, p, err)
 		return

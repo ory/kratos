@@ -27,6 +27,8 @@ type Client struct {
 
 // ClientService is the interface for Client methods
 type ClientService interface {
+	CompleteSelfServiceBrowserRecoveryLinkStrategyFlow(params *CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams) error
+
 	CompleteSelfServiceBrowserSettingsOIDCSettingsFlow(params *CompleteSelfServiceBrowserSettingsOIDCSettingsFlowParams) error
 
 	CompleteSelfServiceBrowserSettingsPasswordStrategyFlow(params *CompleteSelfServiceBrowserSettingsPasswordStrategyFlowParams) error
@@ -52,6 +54,37 @@ type ClientService interface {
 	Whoami(params *WhoamiParams) (*WhoamiOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
+}
+
+/*
+  CompleteSelfServiceBrowserRecoveryLinkStrategyFlow completes the browser based recovery flow using a recovery link
+
+  > This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
+
+More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).
+*/
+func (a *Client) CompleteSelfServiceBrowserRecoveryLinkStrategyFlow(params *CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams) error {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewCompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams()
+	}
+
+	_, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "completeSelfServiceBrowserRecoveryLinkStrategyFlow",
+		Method:             "POST",
+		PathPattern:        "/self-service/browser/flows/recovery/link",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &CompleteSelfServiceBrowserRecoveryLinkStrategyFlowReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 /*

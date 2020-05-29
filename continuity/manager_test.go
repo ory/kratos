@@ -45,7 +45,7 @@ func TestManager(t *testing.T) {
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 
 	var newServer = func(t *testing.T, p continuity.Manager, tc *persisterTestCase) *httptest.Server {
-		writer := herodot.NewJSONWriter(logrusx.New())
+		writer := herodot.NewJSONWriter(logrusx.New("", ""))
 		router := httprouter.New()
 		router.PUT("/:name", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 			if err := p.Pause(r.Context(), w, r, ps.ByName("name"), tc.ro...); err != nil {

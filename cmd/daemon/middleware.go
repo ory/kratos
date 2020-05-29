@@ -7,13 +7,15 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/negroni"
 
+	"github.com/ory/x/logrusx"
+
 	"github.com/ory/x/healthx"
 	"github.com/ory/x/reqlog"
 )
 
-func NewNegroniLoggerMiddleware(l logrus.FieldLogger, name string) *reqlog.Middleware {
-	n := reqlog.NewMiddlewareFromLogger(l.(*logrus.Logger), name).ExcludePaths(healthx.AliveCheckPath, healthx.ReadyCheckPath)
-	n.Before = func(entry *logrus.Entry, req *http.Request, remoteAddr string) *logrus.Entry {
+func NewNegroniLoggerMiddleware(l *logrusx.Logger, name string) *reqlog.Middleware {
+	n := reqlog.NewMiddlewareFromLogger(l, name).ExcludePaths(healthx.AliveCheckPath, healthx.ReadyCheckPath)
+	n.Before = func(entry *logrusx.Logger, req *http.Request, remoteAddr string) *logrusx.Logger {
 		return entry.WithFields(logrus.Fields{
 			"name":    name,
 			"request": req.RequestURI,
@@ -22,7 +24,7 @@ func NewNegroniLoggerMiddleware(l logrus.FieldLogger, name string) *reqlog.Middl
 		})
 	}
 
-	n.After = func(entry *logrus.Entry, res negroni.ResponseWriter, latency time.Duration, name string) *logrus.Entry {
+	n.After = func(entry *logrusx.Logger, req *http.Request, res negroni.ResponseWriter, latency time.Duration, name string) *logrusx.Logger {
 		return entry.WithFields(logrus.Fields{
 			"name":        name,
 			"status":      res.Status(),

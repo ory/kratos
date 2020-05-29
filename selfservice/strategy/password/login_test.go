@@ -76,7 +76,7 @@ func nlr(exp time.Duration) *login.Request {
 func TestLoginNew(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 
-	ts, _ := testhelpers.NewKratosServer(t,reg)
+	ts, _ := testhelpers.NewKratosServer(t, reg)
 
 	errTs := testhelpers.NewErrorTestServer(t, reg)
 	uiTs := testhelpers.NewLoginUIRequestEchoServer(t, reg)
@@ -142,7 +142,7 @@ func TestLoginNew(t *testing.T) {
 	}
 
 	createIdentity := func(identifier, password string) {
-		p, _ := reg.PasswordHasher().Generate([]byte(password))
+		p, _ := reg.Hasher().Generate([]byte(password))
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &identity.Identity{
 			ID:     x.NewUUID(),
 			Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),

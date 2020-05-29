@@ -29,7 +29,7 @@ func init() {
 func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
-	testhelpers.NewRecoveryTestServer(t)
+	testhelpers.NewRecoveryUITestServer(t)
 	redirTS := testhelpers.NewRedirTS(t, "already authenticated")
 	viper.Set(configuration.ViperKeyURLsLogin, redirTS.URL)
 
@@ -48,11 +48,11 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 func TestRecoveryHandler(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 
-	testhelpers.NewRedirTS(t,"")
-	testhelpers.NewLoginUIRequestEchoServer(t,reg)
+	testhelpers.NewRedirTS(t, "")
+	testhelpers.NewLoginUIRequestEchoServer(t, reg)
 	testhelpers.NewErrorTestServer(t, reg)
 
-	public, admin := testhelpers.NewKratosServerWithCSRF(t,reg)
+	public, admin := testhelpers.NewKratosServerWithCSRF(t, reg)
 	newRecoveryTS := func(t *testing.T, upstream string, c *http.Client) *httptest.Server {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if c == nil {

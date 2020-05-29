@@ -9,6 +9,7 @@ import (
 
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow/login"
@@ -31,7 +32,7 @@ type registrationStrategyDependencies interface {
 
 	errorx.ManagementProvider
 	ValidationProvider
-	HashProvider
+	hash.HashProvider
 
 	registration.HandlerProvider
 	registration.HooksProvider

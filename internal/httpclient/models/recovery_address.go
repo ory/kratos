@@ -17,23 +17,10 @@ import (
 // swagger:model RecoveryAddress
 type RecoveryAddress struct {
 
-	// expires at
-	// Required: true
-	// Format: date-time
-	ExpiresAt *strfmt.DateTime `json:"expires_at"`
-
 	// id
 	// Required: true
 	// Format: uuid4
 	ID UUID `json:"id"`
-
-	// recovered
-	// Required: true
-	Recovered *bool `json:"recovered"`
-
-	// recovered at
-	// Format: date-time
-	RecoveredAt strfmt.DateTime `json:"recovered_at,omitempty"`
 
 	// value
 	// Required: true
@@ -48,19 +35,7 @@ type RecoveryAddress struct {
 func (m *RecoveryAddress) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateExpiresAt(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validateID(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateRecovered(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateRecoveredAt(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -78,47 +53,12 @@ func (m *RecoveryAddress) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *RecoveryAddress) validateExpiresAt(formats strfmt.Registry) error {
-
-	if err := validate.Required("expires_at", "body", m.ExpiresAt); err != nil {
-		return err
-	}
-
-	if err := validate.FormatOf("expires_at", "body", "date-time", m.ExpiresAt.String(), formats); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (m *RecoveryAddress) validateID(formats strfmt.Registry) error {
 
 	if err := m.ID.Validate(formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
 			return ve.ValidateName("id")
 		}
-		return err
-	}
-
-	return nil
-}
-
-func (m *RecoveryAddress) validateRecovered(formats strfmt.Registry) error {
-
-	if err := validate.Required("recovered", "body", m.Recovered); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *RecoveryAddress) validateRecoveredAt(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.RecoveredAt) { // not required
-		return nil
-	}
-
-	if err := validate.FormatOf("recovered_at", "body", "date-time", m.RecoveredAt.String(), formats); err != nil {
 		return err
 	}
 

@@ -7,18 +7,19 @@ import (
 	"time"
 
 	"github.com/ory/kratos/continuity"
+	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verify"
 	"github.com/ory/kratos/selfservice/hook"
+	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/x"
 
 	"github.com/cenkalti/backoff"
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 
 	"github.com/ory/x/dbal"
 	"github.com/ory/x/healthx"
@@ -54,7 +55,8 @@ func init() {
 }
 
 type RegistryDefault struct {
-	l logrus.FieldLogger
+	l *logrusx.Logger
+	a *logrusx.Logger
 	c configuration.Provider
 
 	injectedSelfserviceHooks map[string]func(configuration.SelfServiceHook) interface{}
@@ -83,7 +85,7 @@ type RegistryDefault struct {
 	sessionsStore  *sessions.CookieStore
 	sessionManager session.Manager
 
-	passwordHasher    password2.Hasher
+	passwordHasher    hash.Hasher
 	passwordValidator password2.Validator
 
 	errorHandler *errorx.Handler
@@ -109,7 +111,6 @@ type RegistryDefault struct {
 
 	selfserviceRecoveryErrorHandler *recovery.ErrorHandler
 	selfserviceRecoveryHandler      *recovery.Handler
-	selfserviceRecoverySender       *recovery.Sender
 
 	selfserviceLogoutHandler *logout.Handler
 
@@ -127,6 +128,13 @@ type RegistryDefault struct {
 	csrfTokenGenerator x.CSRFToken
 }
 
+func (m *RegistryDefault) Audit() *logrusx.Logger {
+	if m.a == nil {
+		m.a = logrusx.NewAudit("ORY Kratos", m.BuildVersion())
+	}
+	return m.a
+}
+
 func (m *RegistryDefault) RegisterPublicRoutes(router *x.RouterPublic) {
 	m.LoginHandler().RegisterPublicRoutes(router)
 	m.RegistrationHandler().RegisterPublicRoutes(router)
@@ -135,6 +143,7 @@ func (m *RegistryDefault) RegisterPublicRoutes(router *x.RouterPublic) {
 	m.LoginStrategies().RegisterPublicRoutes(router)
 	m.SettingsStrategies().RegisterPublicRoutes(router)
 	m.RegistrationStrategies().RegisterPublicRoutes(router)
+	m.RecoveryStrategies().RegisterPublicRoutes(router)
 	m.SessionHandler().RegisterPublicRoutes(router)
 	m.SelfServiceErrorHandler().RegisterPublicRoutes(router)
 	m.SchemaHandler().RegisterPublicRoutes(router)
@@ -184,7 +193,7 @@ func (m *RegistryDefault) BuildHash() string {
 	return m.buildHash
 }
 
-func (m *RegistryDefault) WithLogger(l logrus.FieldLogger) Registry {
+func (m *RegistryDefault) WithLogger(l *logrusx.Logger) Registry {
 	m.l = l
 	return m
 }
@@ -198,9 +207,8 @@ func (m *RegistryDefault) LogoutHandler() *logout.Handler {
 
 func (m *RegistryDefault) HealthHandler() *healthx.Handler {
 	if m.healthxHandler == nil {
-		m.healthxHandler = healthx.NewHandler(m.Writer(), m.BuildVersion(), healthx.ReadyCheckers{
-			"database": m.Ping,
-		})
+		m.healthxHandler = healthx.NewHandler(m.Writer(), m.BuildVersion(),
+			healthx.ReadyCheckers{"database": m.Ping})
 	}
 
 	return m.healthxHandler
@@ -223,6 +231,7 @@ func (m *RegistryDefault) selfServiceStrategies() []interface{} {
 			password2.NewStrategy(m, m.c),
 			oidc.NewStrategy(m, m.c),
 			settings.NewStrategyTraits(m, m.c),
+			link.NewStrategyLink(m, m.c),
 		}
 	}
 
@@ -282,9 +291,9 @@ func (m *RegistryDefault) Writer() herodot.Writer {
 	return m.writer
 }
 
-func (m *RegistryDefault) Logger() logrus.FieldLogger {
+func (m *RegistryDefault) Logger() *logrusx.Logger {
 	if m.l == nil {
-		m.l = logrusx.New()
+		m.l = logrusx.New("ORY Kratos", m.BuildVersion())
 	}
 	return m.l
 }
@@ -310,9 +319,9 @@ func (m *RegistryDefault) SessionHandler() *session.Handler {
 	return m.sessionHandler
 }
 
-func (m *RegistryDefault) PasswordHasher() password2.Hasher {
+func (m *RegistryDefault) Hasher() hash.Hasher {
 	if m.passwordHasher == nil {
-		m.passwordHasher = password2.NewHasherArgon2(m.c)
+		m.passwordHasher = hash.NewHasherArgon2(m.c)
 	}
 	return m.passwordHasher
 }
@@ -477,6 +486,10 @@ func (m *RegistryDefault) SessionPersister() session.Persister {
 
 func (m *RegistryDefault) CourierPersister() courier.Persister {
 	return m.persister
+}
+
+func (m *RegistryDefault) RecoveryTokenPersister() link.Persister {
+	return m.Persister()
 }
 
 func (m *RegistryDefault) Persister() persistence.Persister {

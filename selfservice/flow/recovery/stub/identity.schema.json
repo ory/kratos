@@ -14,6 +14,9 @@
         },
         "verification": {
           "via": "email"
+        },
+        "recovery": {
+          "via": "email"
         }
       }
     },

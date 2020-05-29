@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/bxcodec/faker"
+	"github.com/bxcodec/faker/v3"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -15,6 +15,7 @@ import (
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/form"
+	"github.com/ory/kratos/selfservice/text"
 	"github.com/ory/kratos/x"
 )
 
@@ -72,10 +73,10 @@ func TestRequestPersister(p interface {
 			actual, err := p.GetRecoveryRequest(context.Background(), expected.ID)
 			require.NoError(t, err)
 
-			factual, _ := json.Marshal(actual.Methods[StrategyEmail].Config)
-			fexpected, _ := json.Marshal(expected.Methods[StrategyEmail].Config)
+			fexpected, _ := json.Marshal(expected.Methods[StrategyRecoveryTokenName].Config)
+			factual, _ := json.Marshal(actual.Methods[StrategyRecoveryTokenName].Config)
 
-			require.NotEmpty(t, actual.Methods[StrategyEmail].Config.RequestMethodConfigurator.(*form.HTMLForm).Action)
+			require.NotEmpty(t, actual.Methods[StrategyRecoveryTokenName].Config.RequestMethodConfigurator.(*form.HTMLForm).Action)
 			assert.EqualValues(t, expected.ID, actual.ID)
 			assert.JSONEq(t, string(fexpected), string(factual))
 			x.AssertEqualTime(t, expected.IssuedAt, actual.IssuedAt)
@@ -83,18 +84,10 @@ func TestRequestPersister(p interface {
 			assert.EqualValues(t, expected.RequestURL, actual.RequestURL)
 		})
 
-		t.Run("case=should fail to create if identity does not exist", func(t *testing.T) {
-			var expected Request
-			require.NoError(t, faker.FakeData(&expected))
-			clearids(&expected)
-			err := p.CreateRecoveryRequest(context.Background(), &expected)
-			require.Error(t, err)
-		})
-
 		t.Run("case=should create and update a recovery request", func(t *testing.T) {
 			expected := newRequest(t)
-			expected.Methods["oidc"] = &RequestMethod{
-				Method: "oidc", Config: &RequestMethodConfig{RequestMethodConfigurator: &form.HTMLForm{Fields: []form.Field{{
+			expected.Methods[StrategyRecoveryTokenName] = &RequestMethod{
+				Method: StrategyRecoveryTokenName, Config: &RequestMethodConfig{RequestMethodConfigurator: &form.HTMLForm{Fields: []form.Field{{
 					Name: "zab", Type: "bar", Pattern: "baz"}}}}}
 			expected.Methods["password"] = &RequestMethod{
 				Method: "password", Config: &RequestMethodConfig{RequestMethodConfigurator: &form.HTMLForm{Fields: []form.Field{{
@@ -102,21 +95,25 @@ func TestRequestPersister(p interface {
 			err := p.CreateRecoveryRequest(context.Background(), expected)
 			require.NoError(t, err)
 
-			expected.Methods[StrategyEmail].Config.RequestMethodConfigurator.(*form.HTMLForm).Action = "/new-action"
+			expected.Methods[StrategyRecoveryTokenName].Config.RequestMethodConfigurator.(*form.HTMLForm).Action = "/new-action"
 			expected.Methods["password"].Config.RequestMethodConfigurator.(*form.HTMLForm).Fields = []form.Field{{
 				Name: "zab", Type: "zab", Pattern: "zab"}}
 			expected.RequestURL = "/new-request-url"
+			expected.Active = StrategyRecoveryTokenName
+			expected.Messages.Add(text.NewRecoveryEmailSent())
 			require.NoError(t, p.UpdateRecoveryRequest(context.Background(), expected))
 
 			actual, err := p.GetRecoveryRequest(context.Background(), expected.ID)
 			require.NoError(t, err)
 
-			assert.Equal(t, "/new-action", actual.Methods[StrategyEmail].Config.RequestMethodConfigurator.(*form.HTMLForm).Action)
+			assert.Equal(t, "/new-action", actual.Methods[StrategyRecoveryTokenName].Config.RequestMethodConfigurator.(*form.HTMLForm).Action)
 			assert.Equal(t, "/new-request-url", actual.RequestURL)
+			assert.Equal(t, StrategyRecoveryTokenName, actual.Active.String())
+			assert.Equal(t, expected.Messages, actual.Messages)
 			assert.EqualValues(t, []form.Field{{Name: "zab", Type: "zab", Pattern: "zab"}}, actual.
 				Methods["password"].Config.RequestMethodConfigurator.(*form.HTMLForm).Fields)
 			assert.EqualValues(t, []form.Field{{Name: "zab", Type: "bar", Pattern: "baz"}}, actual.
-				Methods["oidc"].Config.RequestMethodConfigurator.(*form.HTMLForm).Fields)
+				Methods[StrategyRecoveryTokenName].Config.RequestMethodConfigurator.(*form.HTMLForm).Fields)
 		})
 	}
 }

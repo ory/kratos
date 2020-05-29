@@ -21,7 +21,6 @@ import (
 const (
 	PublicRecoveryInitPath    = "/self-service/browser/flows/recovery"
 	PublicRecoveryRequestPath = "/self-service/browser/flows/requests/recovery"
-	PublicRecoveryConfirmPath = "/self-service/browser/flows/recovery/:via/recover/:code"
 )
 
 type (
@@ -35,7 +34,6 @@ type (
 		session.HandlerProvider
 		StrategyProvider
 		RequestPersistenceProvider
-		SenderProvider
 		x.CSRFTokenGeneratorProvider
 		x.WriterProvider
 	}
@@ -78,21 +76,19 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //       302: emptyResponse
 //       500: genericError
 func (h *Handler) init(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	a := NewRequest(h.c.SelfServiceRecoveryRequestLifespan(), h.d.GenerateCSRFToken(r), r)
-	for _, strategy := range h.d.RecoveryStrategies() {
-		if err := strategy.PopulateRecoveryMethod(r, a); err != nil {
-			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
-			return
-		}
+	req, err := NewRequest(h.c.SelfServiceRecoveryRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies())
+	if err != nil {
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		return
 	}
 
-	if err := h.d.RecoveryRequestPersister().CreateRecoveryRequest(r.Context(), a); err != nil {
+	if err := h.d.RecoveryRequestPersister().CreateRecoveryRequest(r.Context(), req); err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
 	http.Redirect(w, r,
-		urlx.CopyWithQuery(h.c.RecoveryURL(), url.Values{"request": {a.ID.String()}}).String(),
+		urlx.CopyWithQuery(h.c.RecoveryURL(), url.Values{"request": {req.ID.String()}}).String(),
 		http.StatusFound,
 	)
 }

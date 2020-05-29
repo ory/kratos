@@ -2,7 +2,6 @@ package settings
 
 import (
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/ory/kratos/continuity"
@@ -99,28 +98,32 @@ func (h *Handler) initUpdateSettings(w http.ResponseWriter, r *http.Request, ps 
 		return
 	}
 
-	a := NewRequest(h.c.SelfServiceSettingsRequestLifespan(), r, s)
-	for _, strategy := range h.d.SettingsStrategies() {
-		if err := h.d.ContinuityManager().Abort(r.Context(), w, r, ContinuityKey(strategy.SettingsStrategyID())); err != nil {
-			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
-			return
-		}
+	req := NewRequest(h.c.SelfServiceSettingsRequestLifespan(), r, s)
 
-		if err := strategy.PopulateSettingsMethod(r, s, a); err != nil {
-			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
-			return
-		}
-	}
-
-	if err := h.d.SettingsRequestPersister().CreateSettingsRequest(r.Context(), a); err != nil {
+	if err := h.CreateRequest(w, r, s, req); err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
-	http.Redirect(w, r,
-		urlx.CopyWithQuery(h.c.SettingsURL(), url.Values{"request": {a.ID.String()}}).String(),
-		http.StatusFound,
-	)
+	http.Redirect(w, r, req.URL(h.c.SettingsURL()).String(), http.StatusFound)
+}
+
+func (h *Handler) CreateRequest(w http.ResponseWriter, r *http.Request, sess *session.Session, req *Request) error {
+	for _, strategy := range h.d.SettingsStrategies() {
+		if err := h.d.ContinuityManager().Abort(r.Context(), w, r, ContinuityKey(strategy.SettingsStrategyID())); err != nil {
+			return err
+		}
+
+		if err := strategy.PopulateSettingsMethod(r, sess, req); err != nil {
+			return err
+		}
+	}
+
+	if err := h.d.SettingsRequestPersister().CreateSettingsRequest(r.Context(), req); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // nolint:deadcode,unused

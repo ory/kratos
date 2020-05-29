@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/bmizerany/assert"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/viper"
@@ -50,7 +50,7 @@ func TestCountActiveCredentials(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	strategy := password.NewStrategy(reg, conf)
 
-	hash, err := reg.PasswordHasher().Generate([]byte("a password"))
+	hash, err := reg.Hasher().Generate([]byte("a password"))
 	require.NoError(t, err)
 
 	for k, tc := range []struct {

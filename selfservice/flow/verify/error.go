@@ -1,7 +1,6 @@
 package verify
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 
@@ -57,10 +56,11 @@ func (s *ErrorHandler) HandleVerificationError(
 	rr *Request,
 	err error,
 ) {
-	s.d.Logger().WithError(err).
-		WithField("details", fmt.Sprintf("%+v", err)).
+	s.d.Audit().
+		WithError(err).
+		WithRequest(r).
 		WithField("verify_request", rr).
-		Warn("Encountered self-service verification error.")
+		Info("Encountered self-service verification error.")
 
 	if rr == nil {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)

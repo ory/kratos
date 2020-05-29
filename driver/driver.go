@@ -1,7 +1,7 @@
 package driver
 
 import (
-	"github.com/sirupsen/logrus"
+	"github.com/ory/x/logrusx"
 
 	"github.com/ory/kratos/driver/configuration"
 )
@@ -13,7 +13,7 @@ type BuildInfo struct {
 }
 
 type Driver interface {
-	Logger() logrus.FieldLogger
+	Logger() *logrusx.Logger
 	Configuration() configuration.Provider
 	Registry() Registry
 }

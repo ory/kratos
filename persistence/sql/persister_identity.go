@@ -184,7 +184,7 @@ func (p *Persister) ListIdentities(ctx context.Context, limit, offset int) ([]id
 	/* #nosec G201 TableName is static */
 	if err := sqlcon.HandleError(p.GetConnection(ctx).
 		RawQuery(fmt.Sprintf("SELECT * FROM %s LIMIT ? OFFSET ?", new(identity.Identity).TableName()), limit, offset).
-		Eager("VerifiableAddresses","RecoveryAddresses").All(&is)); err != nil {
+		Eager("VerifiableAddresses", "RecoveryAddresses").All(&is)); err != nil {
 		return nil, err
 	}
 
@@ -210,21 +210,17 @@ func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) er
 			return sql.ErrNoRows
 		}
 
-		/* #nosec G201 TableName is static */
-		if err := tx.RawQuery(fmt.Sprintf(`DELETE FROM %s WHERE identity_id = ?`, new(identity.Credentials).TableName()), i.ID).Exec(); err != nil {
-			return err
+		for _, tn := range []string{
+			new(identity.Credentials).TableName(),
+			new(identity.VerifiableAddress).TableName(),
+			new(identity.RecoveryAddress).TableName(),
+		} {
+			/* #nosec G201 TableName is static */
+			if err := tx.RawQuery(fmt.Sprintf(
+				`DELETE FROM %s WHERE identity_id = ?`, tn), i.ID).Exec(); err != nil {
+				return err
+			}
 		}
-
-		/* #nosec G201 TableName is static */
-		if err := tx.RawQuery(fmt.Sprintf(`DELETE FROM %s WHERE identity_id = ?`, new(identity.VerifiableAddress).TableName()), i.ID).Exec(); err != nil {
-			return err
-		}
-
-		// This is not required because it's cascading "ON DELETE":
-		//
-		// if err := tx.RawQuery(fmt.Sprintf(`DELETE FROM %s WHERE ...`, new(identity.RecoveryAddress).TableName()), i.ID).Exec(); err != nil {
-		// 	return err
-		// }
 
 		if err := tx.Update(i); err != nil {
 			return err
@@ -256,7 +252,7 @@ func (p *Persister) DeleteIdentity(ctx context.Context, id uuid.UUID) error {
 
 func (p *Persister) GetIdentity(ctx context.Context, id uuid.UUID) (*identity.Identity, error) {
 	var i identity.Identity
-	if err := p.GetConnection(ctx).Eager("VerifiableAddresses","RecoveryAddresses").Find(&i, id); err != nil {
+	if err := p.GetConnection(ctx).Eager("VerifiableAddresses", "RecoveryAddresses").Find(&i, id); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 	i.Credentials = nil
@@ -305,17 +301,17 @@ func (p *Persister) GetIdentityConfidential(ctx context.Context, id uuid.UUID) (
 	return &i, nil
 }
 
-func (p *Persister) FindAddressByCode(ctx context.Context, code string) (*identity.VerifiableAddress, error) {
+func (p *Persister) FindVerifiableAddressByValue(ctx context.Context, via identity.VerifiableAddressType, value string) (*identity.VerifiableAddress, error) {
 	var address identity.VerifiableAddress
-	if err := p.GetConnection(ctx).Where("code = ?", code).First(&address); err != nil {
+	if err := p.GetConnection(ctx).Where("via = ? AND value = ?", via, value).First(&address); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
 	return &address, nil
 }
 
-func (p *Persister) FindAddressByValue(ctx context.Context, via identity.VerifiableAddressType, value string) (*identity.VerifiableAddress, error) {
-	var address identity.VerifiableAddress
+func (p *Persister) FindRecoveryAddressByValue(ctx context.Context, via identity.RecoveryAddressType, value string) (*identity.RecoveryAddress, error) {
+	var address identity.RecoveryAddress
 	if err := p.GetConnection(ctx).Where("via = ? AND value = ?", via, value).First(&address); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}

@@ -24,7 +24,7 @@ type Identity struct {
 	// Format: uuid4
 	ID UUID `json:"id"`
 
-	// recovery addresses
+	// RecoveryAddresses contains all the addresses that can be used to recover an identity.
 	RecoveryAddresses []*RecoveryAddress `json:"recovery_addresses"`
 
 	// traits
@@ -40,7 +40,7 @@ type Identity struct {
 	// format: url
 	TraitsSchemaURL string `json:"traits_schema_url,omitempty"`
 
-	// verifiable addresses
+	// VerifiableAddresses contains all the addresses that can be verified by the user.
 	VerifiableAddresses []*VerifiableAddress `json:"verifiable_addresses"`
 }
 

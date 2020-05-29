@@ -99,7 +99,7 @@ type Provider interface {
 
 	RegisterURL() *url.URL
 
-	HashersArgon2() *HasherArgon2Config
+	HasherArgon2() *HasherArgon2Config
 
 	TracingServiceName() string
 	TracingProvider() string

@@ -20,7 +20,7 @@ context('Registration', () => {
     cy.session().should((session) => {
       const { identity } = session
       expect(identity.id).to.not.be.empty
-      expect(identity.addresses).to.be.undefined
+      expect(identity.verifiable_addresses).to.be.undefined
       expect(identity.traits_schema_id).to.equal('default')
       expect(identity.traits_schema_url).to.equal(
         `${APP_URL}/.ory/kratos/public/schemas/default`

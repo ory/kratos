@@ -1,7 +1,6 @@
 package settings
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 
@@ -77,10 +76,11 @@ func (s *ErrorHandler) HandleSettingsError(
 	err error,
 	method string,
 ) {
-	s.d.Logger().WithError(err).
-		WithField("details", fmt.Sprintf("%+v", err)).
+	s.d.Audit().
+		WithError(err).
+		WithRequest(r).
 		WithField("settings_request", rr).
-		Warn("Encountered settings error.")
+		Info("Encountered self-service settings error.")
 
 	if rr == nil {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
@@ -101,7 +101,6 @@ func (s *ErrorHandler) HandleSettingsError(
 	}
 
 	rr.Active = sqlxx.NullString(method)
-
 	if err := rr.Methods[method].Config.ParseError(err); err != nil {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return

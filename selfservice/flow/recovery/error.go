@@ -1,7 +1,6 @@
 package recovery
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 
@@ -14,7 +13,6 @@ import (
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/selfservice/errorx"
-	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/x"
 )
 
@@ -50,26 +48,6 @@ func NewErrorHandler(d errorHandlerDependencies, c configuration.Provider) *Erro
 	}
 }
 
-func (s *ErrorHandler) reauthenticate(
-	w http.ResponseWriter,
-	r *http.Request,
-	rr *Request) {
-	if err := s.d.RecoveryRequestPersister().UpdateRecoveryRequest(r.Context(), rr); err != nil {
-		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
-		return
-	}
-
-	returnTo := urlx.CopyWithQuery(urlx.AppendPaths(s.c.SelfPublicURL(), r.URL.Path), r.URL.Query())
-	s.c.SelfPublicURL()
-	u := urlx.AppendPaths(
-		urlx.CopyWithQuery(s.c.SelfPublicURL(), url.Values{
-			"prompt":    {"login"},
-			"return_to": {returnTo.String()},
-		}), login.BrowserLoginPath)
-
-	http.Redirect(w, r, u.String(), http.StatusFound)
-}
-
 func (s *ErrorHandler) HandleRecoveryError(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -77,10 +55,11 @@ func (s *ErrorHandler) HandleRecoveryError(
 	err error,
 	method string,
 ) {
-	s.d.Logger().WithError(err).
-		WithField("details", fmt.Sprintf("%+v", err)).
+	s.d.Audit().
+		WithError(err).
+		WithRequest(r).
 		WithField("recovery_request", rr).
-		Warn("Encountered recovery error.")
+		Info("Encountered self-service recovery error.")
 
 	if rr == nil {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
@@ -90,18 +69,12 @@ func (s *ErrorHandler) HandleRecoveryError(
 		return
 	}
 
-	if errors.Is(err, ErrRequestNeedsReAuthentication) {
-		s.reauthenticate(w, r, rr)
-		return
-	}
-
 	if _, ok := rr.Methods[method]; !ok {
-		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected recovery method %s to exist.", method)))
+		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(x.PseudoPanic.WithReasonf("Expected recovery method %s to exist.", method)))
 		return
 	}
 
 	rr.Active = sqlxx.NullString(method)
-
 	if err := rr.Methods[method].Config.ParseError(err); err != nil {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return

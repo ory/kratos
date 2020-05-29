@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSchemaExtensionVerify(t *testing.T) {
+func TestSchemaExtensionVerification(t *testing.T) {
 	iid := x.NewUUID()
 	for k, tc := range []struct {
 		expectErr error
@@ -184,7 +184,7 @@ func TestSchemaExtensionVerify(t *testing.T) {
 			require.NoError(t, err)
 
 			const expiresAt = time.Minute
-			e := NewSchemaExtensionVerify(id, time.Minute)
+			e := NewSchemaExtensionVerification(id, time.Minute)
 			runner.AddRunner(e).Register(c)
 
 			err = c.MustCompile(tc.schema).Validate(bytes.NewBufferString(tc.doc))

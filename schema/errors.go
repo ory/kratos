@@ -8,6 +8,13 @@ import (
 	"github.com/ory/jsonschema/v3"
 )
 
+func NewMinLengthError(instancePtr string, expected, actual int) error {
+	return errors.WithStack(&jsonschema.ValidationError{
+		Message:     fmt.Sprintf("length must be >= %d, but got %d", expected, actual),
+		InstancePtr: instancePtr,
+	})
+}
+
 func NewRequiredError(instancePtr, missing string) error {
 	return errors.WithStack(&jsonschema.ValidationError{
 		Message:     fmt.Sprintf("missing properties: %s", missing),

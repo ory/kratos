@@ -28,6 +28,16 @@
               "enum": ["email"]
             }
           }
+        },
+        "recovery": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "via": {
+              "type": "string",
+              "enum": ["email"]
+            }
+          }
         }
       }
     }

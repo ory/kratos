@@ -160,7 +160,7 @@ func TestManager(t *testing.T) {
 		original.Traits = identity.Traits(`{"email":"verifyme@ory.sh"}`)
 		require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
 
-		address, err := reg.IdentityPool().FindAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "verifyme@ory.sh")
+		address, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "verifyme@ory.sh")
 		require.NoError(t, err)
 
 		pc := address.Code

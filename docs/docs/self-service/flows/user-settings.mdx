@@ -4,6 +4,8 @@ title: User Settings
 sidebar_label: Overview
 ---
 
+import Mermaid from '@theme/Mermaid'
+
 ORY Kratos allows users to update their own settings and profile information
 using two principal flows:
 
@@ -89,7 +91,29 @@ Each Settings Strategy ([Profile](user-settings/user-profile-management.mdx),
 Passwordless, ...) works a bit different but they all boil down to the same
 abstract sequence:
 
-[![Abstract Settings Flow](https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gIHBhcnRpY2lwYW50IEIgYXMgQnJvd3NlclxuICBwYXJ0aWNpcGFudCBLIGFzIE9SWSBLcmF0b3NcbiAgcGFydGljaXBhbnQgQSBhcyBZb3VyIEFwcGxpY2F0aW9uXG5cblxuICBCLT4-SzogSW5pdGlhdGUgTG9naW5cbiAgSy0-PkI6IFJlZGlyZWN0cyB0byB5b3VyIEFwcGxpY2F0aW9uJ3MgL3NldHRpbmdzX3VpIGVuZHBvaW50XG4gIEItPj5BOiBDYWxscyAvc2V0dGluZ3NfdWlcbiAgQS0tPj5LOiBGZXRjaGVzIGRhdGEgdG8gcmVuZGVyIGZvcm1zIGV0Y1xuICBCLS0-PkE6IEZpbGxzIG91dCBmb3JtcywgY2xpY2tzIGUuZy4gXCJTYXZlIENoYW5nZXNcIlxuICBCLT4-SzogUE9TVHMgZGF0YSB0b1xuICBLLS0-Pks6IFByb2Nlc3NlcyBTZXR0aW5ncyBJbmZvXG5cbiAgYWx0IFNldHRpbmdzIGRhdGEgdmFsaWRcbiAgICBLLS0-PkI6IFVwZGF0ZXMgSWRlbnRpdHkgU2V0dGluZ3NcbiAgICBLLT4-QjogUmVkaXJlY3RzIHRvIGUuZy4gRGFzaGJvYXJkXG4gIGVsc2UgU2V0aW5ncyBkYXRhIGludmFsaWRcbiAgICBLLS0-PkI6IFJlZGlyZWN0cyB0byB5b3VyIEFwcGxpY2FpdG9uJ3MgL3NldHRpbmdzX3VpIGVuZHBvaW50XG4gICAgQi0-PkE6IENhbGxzIC9zZXR0aW5nc191aVxuICAgIEEtLT4-SzogRmV0Y2hlcyBkYXRhIHRvIHJlbmRlciBmb3JtIGZpZWxkcyBhbmQgZXJyb3JzXG4gICAgQi0tPj5BOiBGaWxscyBvdXQgZm9ybXMgYWdhaW4sIGNvcnJlY3RzIGVycm9yc1xuICAgIEItPj5LOiBQT1NUcyBkYXRhIGFnYWluIC0gYW5kIHNvIG9uLi4uXG4gIGVuZFxuIiwibWVybWFpZCI6eyJ0aGVtZSI6Im5ldXRyYWwiLCJzZXF1ZW5jZURpYWdyYW0iOnsiZGlhZ3JhbU1hcmdpblgiOjE1LCJkaWFncmFtTWFyZ2luWSI6MTUsImJveFRleHRNYXJnaW4iOjAsIm5vdGVNYXJnaW4iOjE1LCJtZXNzYWdlTWFyZ2luIjo0NSwibWlycm9yQWN0b3JzIjp0cnVlfX0sInVwZGF0ZUVkaXRvciI6ZmFsc2V9)](https://mermaid-js.github.io/mermaid-live-editor/#/edit/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gIHBhcnRpY2lwYW50IEIgYXMgQnJvd3NlclxuICBwYXJ0aWNpcGFudCBLIGFzIE9SWSBLcmF0b3NcbiAgcGFydGljaXBhbnQgQSBhcyBZb3VyIEFwcGxpY2F0aW9uXG5cblxuICBCLT4-SzogSW5pdGlhdGUgTG9naW5cbiAgSy0-PkI6IFJlZGlyZWN0cyB0byB5b3VyIEFwcGxpY2F0aW9uJ3MgL3NldHRpbmdzX3VpIGVuZHBvaW50XG4gIEItPj5BOiBDYWxscyAvc2V0dGluZ3NfdWlcbiAgQS0tPj5LOiBGZXRjaGVzIGRhdGEgdG8gcmVuZGVyIGZvcm1zIGV0Y1xuICBCLS0-PkE6IEZpbGxzIG91dCBmb3JtcywgY2xpY2tzIGUuZy4gXCJTYXZlIENoYW5nZXNcIlxuICBCLT4-SzogUE9TVHMgZGF0YSB0b1xuICBLLS0-Pks6IFByb2Nlc3NlcyBTZXR0aW5ncyBJbmZvXG5cbiAgYWx0IFNldHRpbmdzIGRhdGEgdmFsaWRcbiAgICBLLS0-PkI6IFVwZGF0ZXMgSWRlbnRpdHkgU2V0dGluZ3NcbiAgICBLLT4-QjogUmVkaXJlY3RzIHRvIGUuZy4gRGFzaGJvYXJkXG4gIGVsc2UgU2V0aW5ncyBkYXRhIGludmFsaWRcbiAgICBLLS0-PkI6IFJlZGlyZWN0cyB0byB5b3VyIEFwcGxpY2FpdG9uJ3MgL3NldHRpbmdzX3VpIGVuZHBvaW50XG4gICAgQi0-PkE6IENhbGxzIC9zZXR0aW5nc191aVxuICAgIEEtLT4-SzogRmV0Y2hlcyBkYXRhIHRvIHJlbmRlciBmb3JtIGZpZWxkcyBhbmQgZXJyb3JzXG4gICAgQi0tPj5BOiBGaWxscyBvdXQgZm9ybXMgYWdhaW4sIGNvcnJlY3RzIGVycm9yc1xuICAgIEItPj5LOiBQT1NUcyBkYXRhIGFnYWluIC0gYW5kIHNvIG9uLi4uXG4gIGVuZFxuIiwibWVybWFpZCI6eyJ0aGVtZSI6Im5ldXRyYWwiLCJzZXF1ZW5jZURpYWdyYW0iOnsiZGlhZ3JhbU1hcmdpblgiOjE1LCJkaWFncmFtTWFyZ2luWSI6MTUsImJveFRleHRNYXJnaW4iOjAsIm5vdGVNYXJnaW4iOjE1LCJtZXNzYWdlTWFyZ2luIjo0NSwibWlycm9yQWN0b3JzIjp0cnVlfX0sInVwZGF0ZUVkaXRvciI6ZmFsc2V9)
+<Mermaid chart={`
+sequenceDiagram
+  participant B as Browser
+  participant K as ORY Kratos
+  participant A as Your Application
+  B->>K: Initiate Login
+  K->>B: Redirects to your Application's /settings_ui endpoint
+  B->>A: Calls /settings_ui
+  A-->>K: Fetches data to render forms etc
+  B-->>A: Fills out forms, clicks e.g. "Save Changes"
+  B->>K: POSTs data to
+  K-->>K: Processes Settings Info
+  alt Settings data valid
+    K-->>B: Updates Identity Settings
+    K->>B: Redirects to e.g. Dashboard
+  else Setings data invalid
+    K-->>B: Redirects to your Applicaiton's /settings_ui endpoint
+    B->>A: Calls /settings_ui
+    A-->>K: Fetches data to render form fields and errors
+    B-->>A: Fills out forms again, corrects errors
+    B->>K: POSTs data again - and so on...
+  end
+`}></Mermaid>
 
 ### Code
 
@@ -239,7 +263,23 @@ Nginx, Kong, Envoy, ORY Oathkeeper, or others.
 The User Settings Flow is composed of several high-level steps summarized in
 this state diagram:
 
-[![User Settings State Machine](https://mermaid.ink/img/eyJjb2RlIjoic3RhdGVEaWFncmFtXG4gIHMxOiBVc2VyIGJyb3dzZXMgYXBwXG4gIHMzOiBVc2VyIEludGVyZmFjZSBBcHBsaWNhdGlvbiByZW5kZXJzIFwiU2V0dGluZ3MgUmVxdWVzdFwiXG4gIHM0OiBFeGVjdXRlIFwiQWZ0ZXIgU2V0dGluZ3MgSG9vayhzKVwiXG4gIHM1OiBVcGRhdGUgXCJTZXR0aW5ncyBSZXF1ZXN0XCIgd2l0aCBFcnJvciBDb250ZXh0KHMpXG4gIHM2OiBTZXR0aW5ncyB1cGRhdGUgc3VjY2Vzc2Z1bFxuXG5cdFsqXSAtLT4gczFcbiAgczEgLS0-IHMzIDogVXNlciBjbGlja3MgXCJNYW5hZ2UgQWNjb3VudFwiIGFuZCBpcyByZWRpcmVjdGVkIHRvIFNldHRpbmdzIEluaXQgRW5kcG9pbnRcbiAgczMgLS0-IHM0IDogVXNlciBwcm92aWRlcyB2YWxpZCBwcm9maWxlIGRhdGFcbiAgczMgLS0-IHM1IDogVXNlciBwcm92aWRlcyBpbnZhbGlkIHByb2ZpbGUgZGF0YVxuICBzNSAtLT4gczMgOiBVc2VyIGlzIHJlZGlyZWN0ZWQgdG8gU2V0dGluZ3MgVUkgVVJMXG4gIHM0IC0tPiBFcnJvciA6IEEgSG9vayBmYWlsc1xuICBzNCAtLT4gczZcbiAgczYgLS0-IFsqXVxuXG4gIEVycm9yIC0tPiBbKl1cblxuXG4iLCJtZXJtYWlkIjp7InRoZW1lIjoiZGVmYXVsdCJ9LCJ1cGRhdGVFZGl0b3IiOmZhbHNlfQ)](https://mermaid-js.github.io/mermaid-live-editor/#/edit/eyJjb2RlIjoic3RhdGVEaWFncmFtXG4gIHMxOiBVc2VyIGJyb3dzZXMgYXBwXG4gIHMzOiBVc2VyIEludGVyZmFjZSBBcHBsaWNhdGlvbiByZW5kZXJzIFwiU2V0dGluZ3MgUmVxdWVzdFwiXG4gIHM0OiBFeGVjdXRlIFwiQWZ0ZXIgU2V0dGluZ3MgSG9vayhzKVwiXG4gIHM1OiBVcGRhdGUgXCJTZXR0aW5ncyBSZXF1ZXN0XCIgd2l0aCBFcnJvciBDb250ZXh0KHMpXG4gIHM2OiBTZXR0aW5ncyB1cGRhdGUgc3VjY2Vzc2Z1bFxuXG5cdFsqXSAtLT4gczFcbiAgczEgLS0-IHMzIDogVXNlciBjbGlja3MgXCJNYW5hZ2UgQWNjb3VudFwiIGFuZCBpcyByZWRpcmVjdGVkIHRvIFNldHRpbmdzIEluaXQgRW5kcG9pbnRcbiAgczMgLS0-IHM0IDogVXNlciBwcm92aWRlcyB2YWxpZCBwcm9maWxlIGRhdGFcbiAgczMgLS0-IHM1IDogVXNlciBwcm92aWRlcyBpbnZhbGlkIHByb2ZpbGUgZGF0YVxuICBzNSAtLT4gczMgOiBVc2VyIGlzIHJlZGlyZWN0ZWQgdG8gU2V0dGluZ3MgVUkgVVJMXG4gIHM0IC0tPiBFcnJvciA6IEEgSG9vayBmYWlsc1xuICBzNCAtLT4gczZcbiAgczYgLS0-IFsqXVxuXG4gIEVycm9yIC0tPiBbKl1cblxuXG4iLCJtZXJtYWlkIjp7InRoZW1lIjoiZGVmYXVsdCJ9LCJ1cGRhdGVFZGl0b3IiOmZhbHNlfQ)
+<Mermaid chart={`
+stateDiagram
+  s1: User browses app
+  s3: User Interface Application renders "Settings Request"
+  s4: Execute "After Settings Hook(s)"
+  s5: Update "Settings Request" with Error Context(s)
+  s6: Settings update successful
+	[*] --> s1
+  s1 --> s3 : User clicks "Manage Account" and is redirected to Settings Init Endpoint
+  s3 --> s4 : User provides valid profile data
+  s3 --> s5 : User provides invalid profile data
+  s5 --> s3 : User is redirected to Settings UI URL
+  s4 --> Error : A Hook fails
+  s4 --> s6
+  s6 --> [*]
+  Error --> [*]
+`}></Mermaid>
 
 1. The flow is initiated by directing the user's browser to
    `http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/settings`.
@@ -314,7 +354,36 @@ this state diagram:
    session and/or identity. For more information on this topic check
    [Self-Service Flow Completion](../../concepts/selfservice-flow-completion.md).
 
-[![User Settings Sequence Diagram for Server-Side Applications](https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gIHBhcnRpY2lwYW50IEIgYXMgQnJvd3NlclxuICBwYXJ0aWNpcGFudCBBIGFzIFlvdXIgU2VydmVyLVNpZGUgQXBwbGljYXRpb25cbiAgcGFydGljaXBhbnQgS1AgYXMgT1JZIEtyYXRvcyBQdWJsaWMgQVBJXG4gIHBhcnRpY2lwYW50IEtBIGFzIE9SWSBLcmF0b3MgQWRtaW4gQVBJXG5cbiAgQi0-PitBOiBHRVQgLy5vcnkva3JhdG9zL3B1YmxpYy9zZWxmLXNlcnZpY2UvYnJvd3Nlci9mbG93cy9zZXR0aW5nc1xuICBBLT4-K0tQOiBHRVQgL3NlbGYtc2VydmljZS9icm93c2VyL2Zsb3dzL3NldHRpbmdzXG4gIEtQLS0-Pi1BOiBIVFRQIDMwMiBGb3VuZCAvc2V0dGluZ3M_cmVxdWVzdD1hYmNkZVxuICBBLS0-Pi1COiBIVFRQIDMwMiBGb3VuZCAvc2V0dGluZ3M_cmVxdWVzdD1hYmNkZVxuXG4gIEItPj4rQTogR0VUIC9zZXR0aW5ncz9yZXF1ZXN0PWFiY2RlXG4gIEEtPj4rS0E6IEdFVCAvc2VsZi1zZXJ2aWNlL2Jyb3dzZXIvZmxvd3MvcmVxdWVzdHMvc2V0dGluZ3M_cmVxdWVzdD1hYmNkZVxuICBLQS0-Pi1BOiBTZW5kcyBTZXR0aW5ncyBSZXF1ZXN0IEpTT04gUGF5bG9hZFxuICBOb3RlIG92ZXIgQSxLQTogIHtcIm1ldGhvZHNcIjp7XCJwYXNzd29yZFwiOi4uLixcIm9pZGNcIjouLn19XG4gIEEtLT4-QTogR2VuZXJhdGUgYW5kIHJlbmRlciBIVE1MXG4gIEEtLT4-LUI6IFJldHVybiBIVE1MIChGb3JtLCAuLi4pXG5cbiAgQi0tPj5COiBGaWxsIG91dCBIVE1MXG5cbiAgQi0-PitLUDogUE9TVCBIVE1MIEZvcm1cbiAgS1AtLT4-S1A6IENoZWNrcyBwcm9maWxlIGRhdGFcblxuXG4gIGFsdCBTZXR0aW5nIHVwZGF0ZXMgYXJlIHZhbGlkXG4gICAgS1AtLT4-LUtQOiBFeGVjdXRlIEpvYnMgZGVmaW5lZCBpbiBcIkFmdGVyIFNldHRpbmdzIFdvcmtmbG93KHMpXCJcbiAgICBLUC0tPj5BOiBIVFRQIDMwMiBGb3VuZCAvZGFzaGJvYXJkXG4gIGVsc2UgU2V0dGluZyB1cGRhdGVzIHJlcXVpcmUgcmUtYXV0aGVudGljYXRpb25cbiAgICBOb3RlIG92ZXIgS1AsQjogVXNlciBpcyBhc2tlZCB0byBsb2dpbiBpbiBhZ2Fpbi4gSWYgdGhlIGxvZ2luIGlzIHZhbGlkLCB0aGUgZGF0YSBpcyB1cGRhdGVkLlxuICAgIEtQLS0-PkI6IEhUVFAgMzAyIEZvdW5kIC9zZXR0aW5ncz9yZXF1ZXN0PWFiY2RlXG4gIGVsc2UgU2V0dGluZyB1cGRhdGVzIGFyZSBpbnZhbGlkXG4gICAgTm90ZSBvdmVyIEtQLEI6IFVzZXIgcmV0cmllcyBzZXR0aW5ncyBmbG93XG4gICAgS1AtLT4-QjogSFRUUCAzMDIgRm91bmQgL3NldHRpbmdzP3JlcXVlc3Q9YWJjZGVcbiAgZW5kXG4gICIsIm1lcm1haWQiOnsidGhlbWUiOiJuZXV0cmFsIiwic2VxdWVuY2VEaWFncmFtIjp7ImRpYWdyYW1NYXJnaW5YIjoxNSwiZGlhZ3JhbU1hcmdpblkiOjE1LCJib3hUZXh0TWFyZ2luIjoxLCJub3RlTWFyZ2luIjoxMCwibWVzc2FnZU1hcmdpbiI6NTUsIm1pcnJvckFjdG9ycyI6dHJ1ZX19LCJ1cGRhdGVFZGl0b3IiOmZhbHNlfQ)](https://mermaid-js.github.io/mermaid-live-editor/#/edit/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gIHBhcnRpY2lwYW50IEIgYXMgQnJvd3NlclxuICBwYXJ0aWNpcGFudCBBIGFzIFlvdXIgU2VydmVyLVNpZGUgQXBwbGljYXRpb25cbiAgcGFydGljaXBhbnQgS1AgYXMgT1JZIEtyYXRvcyBQdWJsaWMgQVBJXG4gIHBhcnRpY2lwYW50IEtBIGFzIE9SWSBLcmF0b3MgQWRtaW4gQVBJXG5cbiAgQi0-PitBOiBHRVQgLy5vcnkva3JhdG9zL3B1YmxpYy9zZWxmLXNlcnZpY2UvYnJvd3Nlci9mbG93cy9zZXR0aW5nc1xuICBBLT4-K0tQOiBHRVQgL3NlbGYtc2VydmljZS9icm93c2VyL2Zsb3dzL3NldHRpbmdzXG4gIEtQLS0-Pi1BOiBIVFRQIDMwMiBGb3VuZCAvc2V0dGluZ3M_cmVxdWVzdD1hYmNkZVxuICBBLS0-Pi1COiBIVFRQIDMwMiBGb3VuZCAvc2V0dGluZ3M_cmVxdWVzdD1hYmNkZVxuXG4gIEItPj4rQTogR0VUIC9zZXR0aW5ncz9yZXF1ZXN0PWFiY2RlXG4gIEEtPj4rS0E6IEdFVCAvc2VsZi1zZXJ2aWNlL2Jyb3dzZXIvZmxvd3MvcmVxdWVzdHMvc2V0dGluZ3M_cmVxdWVzdD1hYmNkZVxuICBLQS0-Pi1BOiBTZW5kcyBTZXR0aW5ncyBSZXF1ZXN0IEpTT04gUGF5bG9hZFxuICBOb3RlIG92ZXIgQSxLQTogIHtcIm1ldGhvZHNcIjp7XCJwYXNzd29yZFwiOi4uLixcIm9pZGNcIjouLn19XG4gIEEtLT4-QTogR2VuZXJhdGUgYW5kIHJlbmRlciBIVE1MXG4gIEEtLT4-LUI6IFJldHVybiBIVE1MIChGb3JtLCAuLi4pXG5cbiAgQi0tPj5COiBGaWxsIG91dCBIVE1MXG5cbiAgQi0-PitLUDogUE9TVCBIVE1MIEZvcm1cbiAgS1AtLT4-S1A6IENoZWNrcyBwcm9maWxlIGRhdGFcblxuXG4gIGFsdCBTZXR0aW5nIHVwZGF0ZXMgYXJlIHZhbGlkXG4gICAgS1AtLT4-LUtQOiBFeGVjdXRlIEpvYnMgZGVmaW5lZCBpbiBcIkFmdGVyIFNldHRpbmdzIFdvcmtmbG93KHMpXCJcbiAgICBLUC0tPj5BOiBIVFRQIDMwMiBGb3VuZCAvZGFzaGJvYXJkXG4gIGVsc2UgU2V0dGluZyB1cGRhdGVzIHJlcXVpcmUgcmUtYXV0aGVudGljYXRpb25cbiAgICBOb3RlIG92ZXIgS1AsQjogVXNlciBpcyBhc2tlZCB0byBsb2dpbiBpbiBhZ2Fpbi4gSWYgdGhlIGxvZ2luIGlzIHZhbGlkLCB0aGUgZGF0YSBpcyB1cGRhdGVkLlxuICAgIEtQLS0-PkI6IEhUVFAgMzAyIEZvdW5kIC9zZXR0aW5ncz9yZXF1ZXN0PWFiY2RlXG4gIGVsc2UgU2V0dGluZyB1cGRhdGVzIGFyZSBpbnZhbGlkXG4gICAgTm90ZSBvdmVyIEtQLEI6IFVzZXIgcmV0cmllcyBzZXR0aW5ncyBmbG93XG4gICAgS1AtLT4-QjogSFRUUCAzMDIgRm91bmQgL3NldHRpbmdzP3JlcXVlc3Q9YWJjZGVcbiAgZW5kXG4gICIsIm1lcm1haWQiOnsidGhlbWUiOiJuZXV0cmFsIiwic2VxdWVuY2VEaWFncmFtIjp7ImRpYWdyYW1NYXJnaW5YIjoxNSwiZGlhZ3JhbU1hcmdpblkiOjE1LCJib3hUZXh0TWFyZ2luIjoxLCJub3RlTWFyZ2luIjoxMCwibWVzc2FnZU1hcmdpbiI6NTUsIm1pcnJvckFjdG9ycyI6dHJ1ZX19LCJ1cGRhdGVFZGl0b3IiOmZhbHNlfQ)
+<Mermaid chart={`
+sequenceDiagram
+  participant B as Browser
+  participant A as Your Server-Side Application
+  participant KP as ORY Kratos Public API
+  participant KA as ORY Kratos Admin API
+  B->>+A: GET /.ory/kratos/public/self-service/browser/flows/settings
+  A->>+KP: GET /self-service/browser/flows/settings
+  KP-->>-A: HTTP 302 Found /settings?request=abcde
+  A-->>-B: HTTP 302 Found /settings?request=abcde
+  B->>+A: GET /settings?request=abcde
+  A->>+KA: GET /self-service/browser/flows/requests/settings?request=abcde
+  KA->>-A: Sends Settings Request JSON Payload
+  Note over A,KA:  {"methods":{"password":...,"oidc":..}}
+  A-->>A: Generate and render HTML
+  A-->>-B: Return HTML (Form, ...)
+  B-->>B: Fill out HTML
+  B->>+KP: POST HTML Form
+  KP-->>KP: Checks profile data
+  alt Setting updates are valid
+    KP-->>-KP: Execute Jobs defined in "After Settings Workflow(s)"
+    KP-->>A: HTTP 302 Found /dashboard
+  else Setting updates require re-authentication
+    Note over KP,B: User is asked to login in again. If the login is valid, the data is updated.
+    KP-->>B: HTTP 302 Found /settings?request=abcde
+  else Setting updates are invalid
+    Note over KP,B: User retries settings flow
+    KP-->>B: HTTP 302 Found /settings?request=abcde
+  end
+`}></Mermaid>
 
 ### Client-Side Browser Applications
 

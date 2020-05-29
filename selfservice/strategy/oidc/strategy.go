@@ -23,15 +23,14 @@ import (
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/continuity"
-	"github.com/ory/kratos/selfservice/flow/login"
-	"github.com/ory/kratos/selfservice/flow/registration"
-	"github.com/ory/kratos/selfservice/flow/settings"
-	"github.com/ory/kratos/selfservice/form"
-
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/flow/settings"
+	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )

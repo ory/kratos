@@ -11,8 +11,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/stringsx"
 	"github.com/ory/x/tracing"
 
@@ -25,7 +25,7 @@ import (
 )
 
 type ViperProvider struct {
-	l   logrus.FieldLogger
+	l   *logrusx.Logger
 	ss  [][]byte
 	dev bool
 }
@@ -76,8 +76,8 @@ const (
 
 	ViperKeySelfServiceLifespanRecoveryRequest = "selfservice.recovery.request_lifespan"
 
-	ViperKeySelfServiceLifespanVerificationRequest = "selfservice.verification.request_lifespan"
-	ViperKeySelfServiceVerifyReturnTo              = "selfservice.verification.return_to"
+	ViperKeySelfServiceLifespanVerificationRequest = "selfservice.verify.request_lifespan"
+	ViperKeySelfServiceVerifyReturnTo              = "selfservice.verify.return_to"
 
 	ViperKeyDefaultIdentityTraitsSchemaURL = "identity.traits.default_schema_url"
 	ViperKeyIdentityTraitsSchemas          = "identity.traits.schemas"
@@ -93,14 +93,11 @@ func HookStrategyKey(key, strategy string) string {
 	return fmt.Sprintf("%s.%s.hooks", key, strategy)
 }
 
-func NewViperProvider(l logrus.FieldLogger, dev bool) *ViperProvider {
-	return &ViperProvider{
-		l:   l,
-		dev: dev,
-	}
+func NewViperProvider(l *logrusx.Logger, dev bool) *ViperProvider {
+	return &ViperProvider{l: l, dev: dev}
 }
 
-func (p *ViperProvider) HashersArgon2() *HasherArgon2Config {
+func (p *ViperProvider) HasherArgon2() *HasherArgon2Config {
 	return &HasherArgon2Config{
 		Memory:      uint32(viperx.GetInt(p.l, ViperKeyHasherArgon2ConfigMemory, 4*1024*1024)),
 		Iterations:  uint32(viperx.GetInt(p.l, ViperKeyHasherArgon2ConfigIterations, 4)),
@@ -344,10 +341,10 @@ func (p *ViperProvider) CourierTemplatesRoot() string {
 	return viperx.GetString(p.l, ViperKeyCourierTemplatesPath, "")
 }
 
-func mustParseURLFromViper(l logrus.FieldLogger, key string) *url.URL {
+func mustParseURLFromViper(l *logrusx.Logger, key string) *url.URL {
 	u, err := url.ParseRequestURI(viper.GetString(key))
 	if err != nil {
-		l.WithError(err).WithField("stack", fmt.Sprintf("%+v", errors.WithStack(err))).Fatalf("Configuration value from key %s is not a valid URL: %s", key, viper.GetString(key))
+		l.WithError(err).Fatalf("Configuration value from key %s is not a valid URL: %s", key, viper.GetString(key))
 	}
 	return u
 }

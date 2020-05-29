@@ -115,7 +115,7 @@ func TestHandlerSettingForced(t *testing.T) {
 
 func TestLoginHandler(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
-	public, admin := testhelpers.NewKratosServer(t, reg)
+	public, admin := testhelpers.NewKratosServerWithCSRF(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
 	_ = testhelpers.NewRedirTS(t, "")
 
