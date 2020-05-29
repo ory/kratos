@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-05-27)](#unreleased-2020-05-27)
+- [Unreleased (2020-05-29)](#unreleased-2020-05-29)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
 - [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
@@ -79,7 +79,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...4c89834ce59195c5b59da5bc5b41db7ed03bf1c4) (2020-05-27)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...b6d9244b5d683f5baf27e9af5970596261a4fd20) (2020-05-29)
 
 
 ### Bug Fixes
@@ -97,6 +97,7 @@
 * Correct claims.email in github guide ([#422](https://github.com/ory/kratos/issues/422)) ([58f7e15](https://github.com/ory/kratos/commit/58f7e15093d2461d4322fe68adb0723ae244bed9)):
 
     > There is no email_primary in claims, and the selfservice strategy is currently using claims.email.
+* Delete old redirect homepage ([b6d9244](https://github.com/ory/kratos/commit/b6d9244b5d683f5baf27e9af5970596261a4fd20))
 * Improve grammar, clarify sections, update images ([#419](https://github.com/ory/kratos/issues/419)) ([79019d1](https://github.com/ory/kratos/commit/79019d1246b1517b3297996a207a3d2f517fab01))
 * Make whitelisted_return_to_urls examples an array ([#426](https://github.com/ory/kratos/issues/426)) ([7ed5605](https://github.com/ory/kratos/commit/7ed56057f533f23ca18cab5a2614429554e877e2)), closes [#425](https://github.com/ory/kratos/issues/425)
 * Update repository templates ([4c89834](https://github.com/ory/kratos/commit/4c89834ce59195c5b59da5bc5b41db7ed03bf1c4))
