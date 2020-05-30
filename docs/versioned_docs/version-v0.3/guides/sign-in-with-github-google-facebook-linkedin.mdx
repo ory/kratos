@@ -1,6 +1,6 @@
 ---
 id: sign-in-with-github-google-facebook-linkedin
-title: Sign in with GitHub, Google, Facebook, LinkedIn, ...
+title: Sign in with GitHub, Google, Facebook, LinkedIn, Microsoft ...
 ---
 
 In this document we will take a look at setting up "Sign in with GitHub" using
@@ -98,6 +98,72 @@ selfservice:
 
 Next, open the login endpoint of the SecureApp and you should see the GitHub
 Login option!
+
+## Microsoft
+
+This will enable you to log in using any Azure AD directory - Multitenant and personal Microsoft accounts (e.g. Skype, Xbox) depending on the settings made when creating the application in Azure AD.
+
+To set up "Sign in with Microsoft" you must first register an application
+[Register an application with the Microsoft identity platform](https://docs.microsoft.com/en-us/azure/active-directory/develop/quickstart-register-app).
+
+It might be nessecary to enable the implicit grant flow for access tokens and ID tokens.
+
+Set the "Authorization callback URL" to:
+
+```
+https://public.server.fqdn.example.org/.ory/kratos/public/self-service/browser/flows/strategies/oidc/callback/azuread
+```
+
+The pattern of this URL is:
+
+```
+http(s)://<domain-of-ory-kratos>:<public-port>/self-service/browser/flows/strategies/oidc/callback/<provider-id>
+```
+
+```json title="contrib/quickstart/kratos/email-password/oidc.azuread.jsonnet"
+# claims contains all the data sent by the upstream.
+local claims = std.extVar('claims');
+{
+  identity: {
+    traits: {
+      // Allowing unverified email addresses enables account
+      // enumeration attacks, especially if the value is used for
+      // e.g. verification or as a password login identifier.
+      //
+      // If connecting only to your organization (one tenant), claims.email is safe to use if you have not actively disabled e-mail   
+      //verification during signup.
+      email: claims.email
+    },
+  },
+}
+```
+
+See https://docs.microsoft.com/en-us/azure/active-directory-b2c/user-flow-disable-email-verification for warnings.
+
+Enable the Microsoft Azure provider in the ORY Kratos config located at
+`<kratos-directory>/contrib/quickstart/kratos/email-password/.kratos.yml`.
+
+```yaml title="contrib/quickstart/kratos/email-password/.kratos.yml"
+selfservice:
+  strategies:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: azuread
+            provider: generic
+            auth_url: https://login.microsoftonline.com/{TENANTID}/oauth2/v2.0/authorize
+            token_url: https://login.microsoftonline.com/{TENANTID}/oauth2/v2.0/token
+            issuer_url: https://login.microsoftonline.com/{TENANTID}/v2.0
+            client_id: {CLIENTID_FROM_AZURE_PORTAL} (Application (client) ID)
+            client_secret:  {SECRET_FROM_AZURE_PORTAL} (from certificates & secrets)
+            mapper_url: file:///etc/config/kratos/oidc.azuread.jsonnet
+            scope:
+              - profile
+              - email
+```
+
+azuread is now an option to log in to kratos.
 
 ## Google, LinkedIn, Facebook
 
