@@ -7,12 +7,13 @@
 - [Unreleased (2020-06-01)](#unreleased-2020-06-01)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
+    - [Unclassified](#unclassified)
 - [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
     - [Bug Fixes](#bug-fixes-1)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation-1)
     - [Features](#features)
-    - [Unclassified](#unclassified)
+    - [Unclassified](#unclassified-1)
     - [BREAKING CHANGES](#breaking-changes)
   - [0.2.1-alpha.1 (2020-05-05)](#021-alpha1-2020-05-05)
     - [Documentation](#documentation-2)
@@ -21,7 +22,7 @@
     - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation-3)
     - [Features](#features-1)
-    - [Unclassified](#unclassified-1)
+    - [Unclassified](#unclassified-2)
     - [BREAKING CHANGES](#breaking-changes-1)
   - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
     - [Bug Fixes](#bug-fixes-3)
@@ -42,44 +43,44 @@
     - [Bug Fixes](#bug-fixes-5)
     - [Documentation](#documentation-8)
     - [Features](#features-4)
-    - [Unclassified](#unclassified-2)
+    - [Unclassified](#unclassified-3)
 - [0.1.0-alpha.1 (2020-01-31)](#010-alpha1-2020-01-31)
     - [Documentation](#documentation-9)
   - [0.0.3-alpha.15 (2020-01-31)](#003-alpha15-2020-01-31)
-    - [Unclassified](#unclassified-3)
-  - [0.0.3-alpha.14 (2020-01-31)](#003-alpha14-2020-01-31)
     - [Unclassified](#unclassified-4)
-  - [0.0.3-alpha.13 (2020-01-31)](#003-alpha13-2020-01-31)
+  - [0.0.3-alpha.14 (2020-01-31)](#003-alpha14-2020-01-31)
     - [Unclassified](#unclassified-5)
-  - [0.0.3-alpha.11 (2020-01-31)](#003-alpha11-2020-01-31)
+  - [0.0.3-alpha.13 (2020-01-31)](#003-alpha13-2020-01-31)
     - [Unclassified](#unclassified-6)
-  - [0.0.3-alpha.10 (2020-01-31)](#003-alpha10-2020-01-31)
+  - [0.0.3-alpha.11 (2020-01-31)](#003-alpha11-2020-01-31)
     - [Unclassified](#unclassified-7)
-  - [0.0.3-alpha.7 (2020-01-30)](#003-alpha7-2020-01-30)
+  - [0.0.3-alpha.10 (2020-01-31)](#003-alpha10-2020-01-31)
     - [Unclassified](#unclassified-8)
-  - [0.0.3-alpha.5 (2020-01-30)](#003-alpha5-2020-01-30)
+  - [0.0.3-alpha.7 (2020-01-30)](#003-alpha7-2020-01-30)
     - [Unclassified](#unclassified-9)
-  - [0.0.3-alpha.4 (2020-01-30)](#003-alpha4-2020-01-30)
+  - [0.0.3-alpha.5 (2020-01-30)](#003-alpha5-2020-01-30)
     - [Unclassified](#unclassified-10)
-  - [0.0.3-alpha.2 (2020-01-30)](#003-alpha2-2020-01-30)
+  - [0.0.3-alpha.4 (2020-01-30)](#003-alpha4-2020-01-30)
     - [Unclassified](#unclassified-11)
-  - [0.0.3-alpha.1 (2020-01-30)](#003-alpha1-2020-01-30)
+  - [0.0.3-alpha.2 (2020-01-30)](#003-alpha2-2020-01-30)
     - [Unclassified](#unclassified-12)
+  - [0.0.3-alpha.1 (2020-01-30)](#003-alpha1-2020-01-30)
+    - [Unclassified](#unclassified-13)
   - [0.0.1-alpha.9 (2020-01-29)](#001-alpha9-2020-01-29)
   - [0.0.2-alpha.1 (2020-01-29)](#002-alpha1-2020-01-29)
-    - [Unclassified](#unclassified-13)
+    - [Unclassified](#unclassified-14)
   - [0.0.1-alpha.6 (2020-01-29)](#001-alpha6-2020-01-29)
   - [0.0.1-alpha.5 (2020-01-29)](#001-alpha5-2020-01-29)
-    - [Unclassified](#unclassified-14)
+    - [Unclassified](#unclassified-15)
   - [0.0.1-alpha.3 (2020-01-28)](#001-alpha3-2020-01-28)
   - [0.0.1-alpha.2 (2020-01-28)](#001-alpha2-2020-01-28)
   - [0.0.1-alpha.1 (2020-01-28)](#001-alpha1-2020-01-28)
     - [Documentation](#documentation-10)
-    - [Unclassified](#unclassified-15)
+    - [Unclassified](#unclassified-16)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...a19adf30426ff8df03a3eb725ae0101ebb6c4ab1) (2020-06-01)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...ceacac30eda7d94cb24403c1fb988d4dd5fcd21f) (2020-06-01)
 
 
 ### Bug Fixes
@@ -100,11 +101,27 @@
 
     > There is no email_primary in claims, and the selfservice strategy is currently using claims.email.
 * Delete old redirect homepage ([b6d9244](https://github.com/ory/kratos/commit/b6d9244b5d683f5baf27e9af5970596261a4fd20))
+* Fixed broken link ([#452](https://github.com/ory/kratos/issues/452)) ([d1ddbd1](https://github.com/ory/kratos/commit/d1ddbd1ee465a7d3e29815fcfd9c75b5decbb5f9))
+* Fixed broken link ([#455](https://github.com/ory/kratos/issues/455)) ([4f3d179](https://github.com/ory/kratos/commit/4f3d17906f3fa2aea3a0b0505047da6aa54938e4))
+* Fixed broken link ([#456](https://github.com/ory/kratos/issues/456)) ([4b43e99](https://github.com/ory/kratos/commit/4b43e993df62d2bf54fa39624651f081eb75bbb0))
+* Fixed broken link ([#460](https://github.com/ory/kratos/issues/460)) ([7da304c](https://github.com/ory/kratos/commit/7da304caf0de93442f047872cdd30d7fc316218e))
+* Fixed broken link ([#461](https://github.com/ory/kratos/issues/461)) ([c248e4e](https://github.com/ory/kratos/commit/c248e4e2a48a409b53ed02644abfc27e3cebeb11))
+* Fixed broken link ([#462](https://github.com/ory/kratos/issues/462)) ([ceacac3](https://github.com/ory/kratos/commit/ceacac30eda7d94cb24403c1fb988d4dd5fcd21f))
+* Fixed broken links ([#451](https://github.com/ory/kratos/issues/451)) ([193a781](https://github.com/ory/kratos/commit/193a781576031818006d6e2b72418293cf94dda1)):
+
+    > Fixed a few broken links, .md in the url was the problem.
+* Fixed broken links ([#457](https://github.com/ory/kratos/issues/457)) ([00ec00d](https://github.com/ory/kratos/commit/00ec00d09ca5318c75832caff5e7a97d640ac083))
+* Fixed broken links ([#458](https://github.com/ory/kratos/issues/458)) ([f960887](https://github.com/ory/kratos/commit/f9608876e30dbdd7c67ee70dcf5d9a1985b80f0f))
 * Improve grammar and wording ([#448](https://github.com/ory/kratos/issues/448)) ([a19adf3](https://github.com/ory/kratos/commit/a19adf30426ff8df03a3eb725ae0101ebb6c4ab1))
 * Improve grammar, clarify sections, update images ([#419](https://github.com/ory/kratos/issues/419)) ([79019d1](https://github.com/ory/kratos/commit/79019d1246b1517b3297996a207a3d2f517fab01))
 * Make whitelisted_return_to_urls examples an array ([#426](https://github.com/ory/kratos/issues/426)) ([7ed5605](https://github.com/ory/kratos/commit/7ed56057f533f23ca18cab5a2614429554e877e2)), closes [#425](https://github.com/ory/kratos/issues/425)
 * Update repository templates ([4c89834](https://github.com/ory/kratos/commit/4c89834ce59195c5b59da5bc5b41db7ed03bf1c4))
 * Use central banner repo for README ([d1e8a82](https://github.com/ory/kratos/commit/d1e8a8272cd536b6e12326778258bfbe0b7e8af7))
+
+
+### Unclassified
+
+* docs:fixed broken link (#454) ([22720c6](https://github.com/ory/kratos/commit/22720c6c5e3d31acc175980223183e2336b3751d)), closes [#454](https://github.com/ory/kratos/issues/454)
 
 
 
