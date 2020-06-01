@@ -271,5 +271,5 @@ Open Source provides a base solution for many use cases. For example, ORY Kratos
 integrates with ORY Oathkeeper, a Reverse Proxy solution. Defining Access Rules
 is as easy as writing a few lines of JSON / JSON5 / YAML!
 
-Please consult the Quick Start documentation [Quickstart](../quickstart.md), for
+Please consult the Quick Start documentation [Quickstart](../quickstart.mdx), for
 further information.
