@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-05-29)](#unreleased-2020-05-29)
+- [Unreleased (2020-06-01)](#unreleased-2020-06-01)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
 - [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
@@ -79,7 +79,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...b6d9244b5d683f5baf27e9af5970596261a4fd20) (2020-05-29)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...a19adf30426ff8df03a3eb725ae0101ebb6c4ab1) (2020-06-01)
 
 
 ### Bug Fixes
@@ -90,7 +90,9 @@
 
 ### Documentation
 
+* Add azure to next docs ([e1dd3fa](https://github.com/ory/kratos/commit/e1dd3fad30a07be6f105201a8478642e9792df46))
 * Add guide for SSO via Google ([#424](https://github.com/ory/kratos/issues/424)) ([5c45b16](https://github.com/ory/kratos/commit/5c45b1653791cc3ab5d4e4694da98da7543e816d))
+* Connecting Kratos to AzureAD ([#433](https://github.com/ory/kratos/issues/433)) ([7660bcd](https://github.com/ory/kratos/commit/7660bcd2ba90d83c4ab0683a2f011e6841b2c810))
 * Correct claims.email in github guide ([#422](https://github.com/ory/kratos/issues/422)) ([052a622](https://github.com/ory/kratos/commit/052a622de79d34e32ccab9c7da12a1275c7be51b)):
 
     > There is no email_primary in claims, and the selfservice strategy is currently using claims.email.
@@ -98,6 +100,7 @@
 
     > There is no email_primary in claims, and the selfservice strategy is currently using claims.email.
 * Delete old redirect homepage ([b6d9244](https://github.com/ory/kratos/commit/b6d9244b5d683f5baf27e9af5970596261a4fd20))
+* Improve grammar and wording ([#448](https://github.com/ory/kratos/issues/448)) ([a19adf3](https://github.com/ory/kratos/commit/a19adf30426ff8df03a3eb725ae0101ebb6c4ab1))
 * Improve grammar, clarify sections, update images ([#419](https://github.com/ory/kratos/issues/419)) ([79019d1](https://github.com/ory/kratos/commit/79019d1246b1517b3297996a207a3d2f517fab01))
 * Make whitelisted_return_to_urls examples an array ([#426](https://github.com/ory/kratos/issues/426)) ([7ed5605](https://github.com/ory/kratos/commit/7ed56057f533f23ca18cab5a2614429554e877e2)), closes [#425](https://github.com/ory/kratos/issues/425)
 * Update repository templates ([4c89834](https://github.com/ory/kratos/commit/4c89834ce59195c5b59da5bc5b41db7ed03bf1c4))
