@@ -4,22 +4,23 @@ title: Identity Data Model
 ---
 
 An identity ("user", "user account", "account", "subject") is the "who" of a
-software system. It can be a customer, an employee, a user, a contractor, and
-even a programmatic identity such as an IoT device, an application, or some
+software system. It can be a customer, employee, user, contractor, or
+even a programmatic identity such as an IoT device, application, or some
 other type of "robot."
 
-In ORY Kratos' terminology we call all of them "Identity", and it is always
-exposed as `identity` in the API Endpoints, request and response payloads.
+In ORY Kratos' terminology we call all of them "identities", and it is always
+exposed as `identity` in the API endpoints, requests, and response payloads.
 
-The following examples uses YAML for improved readability. However, the API
+The following examples use YAML for improved readability. However, the API
 payload is usually in JSON format. An `identity` has the following properties:
 
-```yaml title="$ curl kratos-host-url/admin-endpoint/identities/9f425a8d-7efc-4768-8f23-7647a74fdf13"
-# A universally unique ID that is generated when the identity is created and that cannot be changed or updated
-# at a later stage.
+```yaml title="$ curl http://kratos/admin-endpoint/identities/9f425a8d-7efc-4768-8f23-7647a74fdf13"
+# A UUID that is generated when the identity is created and 
+# which cannot be changed or updated at a later stage.
 id: '9f425a8d-7efc-4768-8f23-7647a74fdf13'
 
-# This section represents all the credentials associated with this identity. It is further explained in section "Credentials".
+# This section represents all the credentials associated with this identity.
+# It is further explained in the "Credentials" section.
 credentials:
   password:
     id: password
@@ -39,10 +40,11 @@ credentials:
       - provider: facebook
         identifier: 83475891
 
-# This is the JSON Schema ID used for validating the identities's traits.
+# This is the JSON Schema ID used for validating the identities' traits.
+# `default` is a special keyword to set this to the schema set by
+# `default_schema_url`, but it can be any another schema as well.
+# e.g. customer, employee, employee-v2
 traits_schema_id: default
-# Could also be another schema:
-# traits_schema_id: customer
 
 # Traits represent information about the identity, such as the first or last name. The traits content is completely
 # up to you and will be validated using the JSON Schema at `traits_schema_url`.
