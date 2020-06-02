@@ -74,6 +74,7 @@ type (
 
 	// swagger:ignore
 	ActiveCredentialsCounter interface {
+		ID() CredentialsType
 		CountActiveCredentials(cc map[CredentialsType]Credentials) (int, error)
 	}
 
