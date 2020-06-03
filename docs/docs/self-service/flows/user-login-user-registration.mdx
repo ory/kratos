@@ -308,10 +308,9 @@ summarized in this state diagram:
 1. ORY Kratos executes Jobs defined in the **Before Login/Registration
    Workflow**. If a failure occurs, the whole flow is aborted.
 1. The user's browser is redirected to
-   `http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/requests/(login|registration)`
+   `http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/(login|registration)`
    (the notation `(login|registration)` expresses the two possibilities of
-   `../self-service/browser/flows/requests/login` or
-   `../self-service/browser/flows/requests/registration`).
+   `../self-service/browser/flows/login` or `../self-service/browser/flows/registration`).
 1. ORY Kratos does some internal processing (e.g. checks if a session cookie is
    set, generates payloads for form fields, sets CSRF token, ...) and redirects
    the user's browser to the Login UI URL which is defined using the
@@ -400,7 +399,7 @@ would be called via AJAX instead of making a request to
 To prevent brute force, guessing, session injection, and other attacks, it is
 required that cookies are working for this endpoint. The cookie set in the
 initial HTTP request made to
-`https://127.0.0.1:4455/.ory/kratos/public/self-service/browser/login` MUST be
+`https://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/login` MUST be
 set and available when calling this endpoint!
 
 :::info
