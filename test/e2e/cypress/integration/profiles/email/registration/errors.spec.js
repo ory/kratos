@@ -45,7 +45,7 @@ context('Registration', () => {
       cy.get('input[name="password"]').type(identity)
 
       cy.get('button[type="submit"]').click()
-      cy.get('.form-errors .message').should('contain.text', 'to similar')
+      cy.get('.form-errors .message').should('contain.text', 'too similar')
     })
 
     it('should show an error when the password is empty', () => {
