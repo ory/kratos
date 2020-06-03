@@ -34,7 +34,7 @@ type Field struct {
 	// Pattern is the equivalent of `<input pattern="{{.Pattern}}">`
 	Pattern string `json:"pattern,omitempty"`
 
-	// Disabled is the equivalent of `<input disabled>`
+	// Disabled is the equivalent of `<input disabled="{{.Disabled}}">`
 	Disabled bool `json:"disabled,omitempty"`
 
 	// Required is the equivalent of `<input required="{{.Required}}">`
