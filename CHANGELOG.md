@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-06-03)](#unreleased-2020-06-03)
+- [Unreleased (2020-06-04)](#unreleased-2020-06-04)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Unclassified](#unclassified)
@@ -80,12 +80,13 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...8d153079ee44f0765993640500bbe746dc0a34aa) (2020-06-03)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...27495964c7cd34e9bf914b19c83157e484c9cde4) (2020-06-04)
 
 
 ### Bug Fixes
 
 * Clear error messages after updating settings successfully ([#421](https://github.com/ory/kratos/issues/421)) ([7eec388](https://github.com/ory/kratos/commit/7eec38829449237cffe345d8bec67578764559be)), closes [#420](https://github.com/ory/kratos/issues/420)
+* Improve grammar of similar password error ([#471](https://github.com/ory/kratos/issues/471)) ([39873bf](https://github.com/ory/kratos/commit/39873bfad89a654fe12e101b54e9b0c2f95714ec))
 * Use correct brew replacements ([fd269b1](https://github.com/ory/kratos/commit/fd269b1afa784becac7ee79cd7a6f9d2bbe39121)), closes [#423](https://github.com/ory/kratos/issues/423)
 
 
@@ -110,8 +111,10 @@
 * Fixed broken links ([#451](https://github.com/ory/kratos/issues/451)) ([193a781](https://github.com/ory/kratos/commit/193a781576031818006d6e2b72418293cf94dda1)):
 
     > Fixed a few broken links, .md in the url was the problem.
+* Fixed broken links ([#453](https://github.com/ory/kratos/issues/453)) ([59d00eb](https://github.com/ory/kratos/commit/59d00ebb87564cc9ff9c5ae12bcd7d25fb0b26c9))
 * Fixed broken links ([#457](https://github.com/ory/kratos/issues/457)) ([00ec00d](https://github.com/ory/kratos/commit/00ec00d09ca5318c75832caff5e7a97d640ac083))
 * Fixed broken links ([#458](https://github.com/ory/kratos/issues/458)) ([f960887](https://github.com/ory/kratos/commit/f9608876e30dbdd7c67ee70dcf5d9a1985b80f0f))
+* Fixed broken links ([#459](https://github.com/ory/kratos/issues/459)) ([2749596](https://github.com/ory/kratos/commit/27495964c7cd34e9bf914b19c83157e484c9cde4))
 * Improve grammar and wording ([#448](https://github.com/ory/kratos/issues/448)) ([a19adf3](https://github.com/ory/kratos/commit/a19adf30426ff8df03a3eb725ae0101ebb6c4ab1))
 * Improve grammar, clarify sections, update images ([#419](https://github.com/ory/kratos/issues/419)) ([79019d1](https://github.com/ory/kratos/commit/79019d1246b1517b3297996a207a3d2f517fab01))
 * Make whitelisted_return_to_urls examples an array ([#426](https://github.com/ory/kratos/issues/426)) ([7ed5605](https://github.com/ory/kratos/commit/7ed56057f533f23ca18cab5a2614429554e877e2)), closes [#425](https://github.com/ory/kratos/issues/425)
