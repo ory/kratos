@@ -155,7 +155,7 @@ func (s *DefaultPasswordValidator) Validate(identifier, password string) error {
 
 	compIdentifier, compPassword := strings.ToLower(identifier), strings.ToLower(password)
 	if levenshtein.Distance(compIdentifier, compPassword) < s.minIdentifierPasswordDist || lcsLength(compIdentifier, compPassword) > s.maxIdentifierPasswordSubstr {
-		return errors.Errorf("the password is to similar to the user identifier")
+		return errors.Errorf("the password is too similar to the user identifier")
 	}
 
 	/* #nosec G401 sha1 is used for k-anonymity */

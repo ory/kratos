@@ -39,13 +39,13 @@ context('Registration', () => {
       cy.get('.form-errors .message').should('contain.text', 'data breaches')
     })
 
-    it('should show an error when the password is to similar', () => {
+    it('should show an error when the password is too similar', () => {
       cy.get('input[name="traits.website"]').type('https://www.ory.sh')
       cy.get('input[name="traits.email"]').type(identity)
       cy.get('input[name="password"]').type(identity)
 
       cy.get('button[type="submit"]').click()
-      cy.get('.form-errors .message').should('contain.text', 'to similar')
+      cy.get('.form-errors .message').should('contain.text', 'too similar')
     })
 
     it('should show an error when the password is empty', () => {
