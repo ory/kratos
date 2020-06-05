@@ -14,12 +14,13 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 )
 
 // NewInitializeSelfServiceBrowserLoginFlowParams creates a new InitializeSelfServiceBrowserLoginFlowParams object
 // with the default values initialized.
 func NewInitializeSelfServiceBrowserLoginFlowParams() *InitializeSelfServiceBrowserLoginFlowParams {
-
+	var ()
 	return &InitializeSelfServiceBrowserLoginFlowParams{
 
 		timeout: cr.DefaultTimeout,
@@ -29,7 +30,7 @@ func NewInitializeSelfServiceBrowserLoginFlowParams() *InitializeSelfServiceBrow
 // NewInitializeSelfServiceBrowserLoginFlowParamsWithTimeout creates a new InitializeSelfServiceBrowserLoginFlowParams object
 // with the default values initialized, and the ability to set a timeout on a request
 func NewInitializeSelfServiceBrowserLoginFlowParamsWithTimeout(timeout time.Duration) *InitializeSelfServiceBrowserLoginFlowParams {
-
+	var ()
 	return &InitializeSelfServiceBrowserLoginFlowParams{
 
 		timeout: timeout,
@@ -39,7 +40,7 @@ func NewInitializeSelfServiceBrowserLoginFlowParamsWithTimeout(timeout time.Dura
 // NewInitializeSelfServiceBrowserLoginFlowParamsWithContext creates a new InitializeSelfServiceBrowserLoginFlowParams object
 // with the default values initialized, and the ability to set a context for a request
 func NewInitializeSelfServiceBrowserLoginFlowParamsWithContext(ctx context.Context) *InitializeSelfServiceBrowserLoginFlowParams {
-
+	var ()
 	return &InitializeSelfServiceBrowserLoginFlowParams{
 
 		Context: ctx,
@@ -49,7 +50,7 @@ func NewInitializeSelfServiceBrowserLoginFlowParamsWithContext(ctx context.Conte
 // NewInitializeSelfServiceBrowserLoginFlowParamsWithHTTPClient creates a new InitializeSelfServiceBrowserLoginFlowParams object
 // with the default values initialized, and the ability to set a custom HTTPClient for a request
 func NewInitializeSelfServiceBrowserLoginFlowParamsWithHTTPClient(client *http.Client) *InitializeSelfServiceBrowserLoginFlowParams {
-
+	var ()
 	return &InitializeSelfServiceBrowserLoginFlowParams{
 		HTTPClient: client,
 	}
@@ -59,6 +60,17 @@ func NewInitializeSelfServiceBrowserLoginFlowParamsWithHTTPClient(client *http.C
 for the initialize self service browser login flow operation typically these are written to a http.Request
 */
 type InitializeSelfServiceBrowserLoginFlowParams struct {
+
+	/*Refresh
+	  Refresh a login session
+
+	If set to true, this will refresh an existing login session by
+	asking the user to sign in again. This will reset the
+	authenticated_at time of the session.
+
+	*/
+	Refresh *bool
+
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
@@ -97,6 +109,17 @@ func (o *InitializeSelfServiceBrowserLoginFlowParams) SetHTTPClient(client *http
 	o.HTTPClient = client
 }
 
+// WithRefresh adds the refresh to the initialize self service browser login flow params
+func (o *InitializeSelfServiceBrowserLoginFlowParams) WithRefresh(refresh *bool) *InitializeSelfServiceBrowserLoginFlowParams {
+	o.SetRefresh(refresh)
+	return o
+}
+
+// SetRefresh adds the refresh to the initialize self service browser login flow params
+func (o *InitializeSelfServiceBrowserLoginFlowParams) SetRefresh(refresh *bool) {
+	o.Refresh = refresh
+}
+
 // WriteToRequest writes these params to a swagger request
 func (o *InitializeSelfServiceBrowserLoginFlowParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -104,6 +127,22 @@ func (o *InitializeSelfServiceBrowserLoginFlowParams) WriteToRequest(r runtime.C
 		return err
 	}
 	var res []error
+
+	if o.Refresh != nil {
+
+		// query param refresh
+		var qrRefresh bool
+		if o.Refresh != nil {
+			qrRefresh = *o.Refresh
+		}
+		qRefresh := swag.FormatBool(qrRefresh)
+		if qRefresh != "" {
+			if err := r.SetQueryParam("refresh", qRefresh); err != nil {
+				return err
+			}
+		}
+
+	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)

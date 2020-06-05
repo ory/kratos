@@ -364,6 +364,14 @@
         ],
         "summary": "Initialize browser-based login user flow",
         "operationId": "initializeSelfServiceBrowserLoginFlow",
+        "parameters": [
+          {
+            "type": "boolean",
+            "description": "Refresh a login session\n\nIf set to true, this will refresh an existing login session by\nasking the user to sign in again. This will reset the\nauthenticated_at time of the session.",
+            "name": "refresh",
+            "in": "query"
+          }
+        ],
         "responses": {
           "302": {
             "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
@@ -1459,7 +1467,9 @@
         },
         "details": {
           "type": "object",
-          "additionalProperties": true
+          "additionalProperties": {
+            "type": "object"
+          }
         },
         "message": {
           "type": "string"
