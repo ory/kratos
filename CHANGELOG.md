@@ -6,13 +6,14 @@
 
 - [Unreleased (2020-06-05)](#unreleased-2020-06-05)
     - [Bug Fixes](#bug-fixes)
+    - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
     - [Features](#features)
     - [Unclassified](#unclassified)
     - [BREAKING CHANGES](#breaking-changes)
 - [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
     - [Bug Fixes](#bug-fixes-1)
-    - [Code Refactoring](#code-refactoring)
+    - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation-1)
     - [Features](#features-1)
     - [Unclassified](#unclassified-1)
@@ -21,18 +22,18 @@
     - [Documentation](#documentation-2)
 - [0.2.0-alpha.2 (2020-05-04)](#020-alpha2-2020-05-04)
     - [Bug Fixes](#bug-fixes-2)
-    - [Code Refactoring](#code-refactoring-1)
+    - [Code Refactoring](#code-refactoring-2)
     - [Documentation](#documentation-3)
     - [Features](#features-2)
     - [Unclassified](#unclassified-2)
     - [BREAKING CHANGES](#breaking-changes-2)
   - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
     - [Bug Fixes](#bug-fixes-3)
-    - [Code Refactoring](#code-refactoring-2)
+    - [Code Refactoring](#code-refactoring-3)
     - [Documentation](#documentation-4)
 - [0.1.0-alpha.6 (2020-02-16)](#010-alpha6-2020-02-16)
     - [Bug Fixes](#bug-fixes-4)
-    - [Code Refactoring](#code-refactoring-3)
+    - [Code Refactoring](#code-refactoring-4)
     - [Documentation](#documentation-5)
     - [Features](#features-3)
 - [0.1.0-alpha.5 (2020-02-06)](#010-alpha5-2020-02-06)
@@ -82,14 +83,20 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...e169a3e4079b1ef3a18564e0723baf81c44c38ec) (2020-06-05)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...6b949936725a6100a31851a5d879c877c2c76cbf) (2020-06-05)
 
 
 ### Bug Fixes
 
 * Clear error messages after updating settings successfully ([#421](https://github.com/ory/kratos/issues/421)) ([7eec388](https://github.com/ory/kratos/commit/7eec38829449237cffe345d8bec67578764559be)), closes [#420](https://github.com/ory/kratos/issues/420)
+* Document login refresh parameter in swagger ([#482](https://github.com/ory/kratos/issues/482)) ([6b94993](https://github.com/ory/kratos/commit/6b949936725a6100a31851a5d879c877c2c76cbf))
 * Improve grammar of similar password error ([#471](https://github.com/ory/kratos/issues/471)) ([39873bf](https://github.com/ory/kratos/commit/39873bfad89a654fe12e101b54e9b0c2f95714ec))
 * Use correct brew replacements ([fd269b1](https://github.com/ory/kratos/commit/fd269b1afa784becac7ee79cd7a6f9d2bbe39121)), closes [#423](https://github.com/ory/kratos/issues/423)
+
+
+### Code Refactoring
+
+* Rename prompt=login to refresh=true ([#478](https://github.com/ory/kratos/issues/478)) ([c04346e](https://github.com/ory/kratos/commit/c04346e0f01aa7ce5627c0b7135032b225e7faf9)), closes [#477](https://github.com/ory/kratos/issues/477)
 
 
 ### Documentation
@@ -103,7 +110,9 @@
 * Correct claims.email in github guide ([#422](https://github.com/ory/kratos/issues/422)) ([58f7e15](https://github.com/ory/kratos/commit/58f7e15093d2461d4322fe68adb0723ae244bed9)):
 
     > There is no email_primary in claims, and the selfservice strategy is currently using claims.email.
+* Correct SDK use in quickstart ([#480](https://github.com/ory/kratos/issues/480)) ([dfdf975](https://github.com/ory/kratos/commit/dfdf9751d9333994a49537d82a15b780ebd8bc76)), closes [#430](https://github.com/ory/kratos/issues/430)
 * Delete old redirect homepage ([b6d9244](https://github.com/ory/kratos/commit/b6d9244b5d683f5baf27e9af5970596261a4fd20))
+* Document refresh=true for login ([#479](https://github.com/ory/kratos/issues/479)) ([2ab5ead](https://github.com/ory/kratos/commit/2ab5ead77517ab5b750835195ab6673e219da71a)), closes [#464](https://github.com/ory/kratos/issues/464)
 * Fixed broken link ([#452](https://github.com/ory/kratos/issues/452)) ([d1ddbd1](https://github.com/ory/kratos/commit/d1ddbd1ee465a7d3e29815fcfd9c75b5decbb5f9))
 * Fixed broken link ([#455](https://github.com/ory/kratos/issues/455)) ([4f3d179](https://github.com/ory/kratos/commit/4f3d17906f3fa2aea3a0b0505047da6aa54938e4))
 * Fixed broken link ([#456](https://github.com/ory/kratos/issues/456)) ([4b43e99](https://github.com/ory/kratos/commit/4b43e993df62d2bf54fa39624651f081eb75bbb0))
@@ -117,6 +126,7 @@
 * Fixed broken links ([#457](https://github.com/ory/kratos/issues/457)) ([00ec00d](https://github.com/ory/kratos/commit/00ec00d09ca5318c75832caff5e7a97d640ac083))
 * Fixed broken links ([#458](https://github.com/ory/kratos/issues/458)) ([f960887](https://github.com/ory/kratos/commit/f9608876e30dbdd7c67ee70dcf5d9a1985b80f0f))
 * Fixed broken links ([#459](https://github.com/ory/kratos/issues/459)) ([2749596](https://github.com/ory/kratos/commit/27495964c7cd34e9bf914b19c83157e484c9cde4))
+* Fixed broken markdown ([#474](https://github.com/ory/kratos/issues/474)) ([22d5be1](https://github.com/ory/kratos/commit/22d5be16f91ed9df206310c6f04d843cd79328ca))
 * Improve grammar and wording ([#448](https://github.com/ory/kratos/issues/448)) ([a19adf3](https://github.com/ory/kratos/commit/a19adf30426ff8df03a3eb725ae0101ebb6c4ab1))
 * Improve grammar, clarify sections, update images ([#419](https://github.com/ory/kratos/issues/419)) ([79019d1](https://github.com/ory/kratos/commit/79019d1246b1517b3297996a207a3d2f517fab01))
 * Make whitelisted_return_to_urls examples an array ([#426](https://github.com/ory/kratos/issues/426)) ([7ed5605](https://github.com/ory/kratos/commit/7ed56057f533f23ca18cab5a2614429554e877e2)), closes [#425](https://github.com/ory/kratos/issues/425)
@@ -142,6 +152,7 @@
 
 ### BREAKING CHANGES
 
+* To refresh a login session it is now required to append `refresh=true` instead of `prompt=login` as the second has implications for revoking an existing issue and might be confusing when used in combination with OpenID Connect.
 * * Applying this patch requires running SQL Migrations.
 * The field `identity.addresses` has moved to `identity.verifiable_addresses`.
 * Configuration key `selfservice.verification.link_lifespan`
