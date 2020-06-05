@@ -107,6 +107,11 @@ func (h *Handler) initLoginRequest(w http.ResponseWriter, r *http.Request, ps ht
 	}
 
 	if a.Forced {
+		if err := h.d.SessionManager().PurgeFromRequest(r.Context(), w, r); err != nil {
+			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+			return
+		}
+
 		if err := h.d.LoginRequestPersister().MarkRequestForced(r.Context(), a.ID); err != nil {
 			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 			return

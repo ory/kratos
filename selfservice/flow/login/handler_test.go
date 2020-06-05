@@ -10,10 +10,13 @@ import (
 	"time"
 
 	"github.com/gobuffalo/httptest"
+	"github.com/google/uuid"
 	"github.com/justinas/nosurf"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/urlx"
 
 	"github.com/ory/viper"
 
@@ -21,6 +24,7 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
@@ -48,21 +52,12 @@ func TestHandlerSettingForced(t *testing.T) {
 
 	// make authenticated request
 	mar := func(t *testing.T, extQuery url.Values) (*http.Response, []byte) {
-		rid := x.NewUUID()
 		req := x.NewTestHTTPRequest(t, "GET", ts.URL+login.BrowserLoginPath, nil)
-		loginReq := login.NewRequest(time.Minute, x.FakeCSRFToken, req)
-		loginReq.ID = rid
-		for _, s := range reg.LoginStrategies() {
-			require.NoError(t, s.PopulateLoginMethod(req, loginReq))
-		}
-		require.NoError(t, reg.LoginRequestPersister().CreateLoginRequest(context.TODO(), loginReq), "%+v", loginReq)
-
-		q := url.Values{"request": {rid.String()}}
+		q := url.Values{}
 		for key := range extQuery {
 			q.Set(key, extQuery.Get(key))
 		}
 		req.URL.RawQuery = q.Encode()
-
 		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, req)
 		return res, body
 	}
@@ -109,6 +104,25 @@ func TestHandlerSettingForced(t *testing.T) {
 			"prompt": {"login"},
 		})
 		ab(body, true)
+		assert.Contains(t, res.Request.URL.String(), loginTS.URL)
+	})
+
+	t.Run("case=removes the existing session", func(t *testing.T) {
+		set := "/" + uuid.New().String() + "/set"
+		router.GET(set, testhelpers.MockSetSession(t, reg, conf))
+
+		client := testhelpers.NewClientWithCookies(t)
+		testhelpers.MockHydrateCookieClient(t, client, ts.URL+set)
+
+		cookies := client.Jar.Cookies(urlx.ParseOrPanic(ts.URL))
+		require.Len(t, cookies, 1)
+		assert.EqualValues(t, session.DefaultSessionCookieName, cookies[0].Name)
+		res, err := client.Get(ts.URL + login.BrowserLoginPath + "?prompt=login")
+		require.NoError(t, err)
+
+		cookies = client.Jar.Cookies(urlx.ParseOrPanic(ts.URL))
+		require.Len(t, cookies, 0)
+
 		assert.Contains(t, res.Request.URL.String(), loginTS.URL)
 	})
 }
