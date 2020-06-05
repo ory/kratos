@@ -72,7 +72,9 @@ oathkeeper_1                  | {"level":"info","msg":"Listening on http://:4455
   [are free](https://serverfault.com/questions/309052/check-if-port-is-open-or-closed-on-a-linux-server).
 - Make sure to always use `127.0.0.1` as the hostname, never use `localhost`!
   This is important because browsers treat these two as separate domains and
-  will therefore have issues with setting and using the right cookies. :::
+  will therefore have issues with setting and using the right cookies.
+
+:::
 
 ### Network Architecture
 
