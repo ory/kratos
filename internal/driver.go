@@ -32,7 +32,7 @@ func resetConfig() {
 func NewConfigurationWithDefaults() *configuration.ViperProvider {
 	viper.Reset()
 	resetConfig()
-	return configuration.NewViperProvider(logrusx.New(), true)
+	return configuration.NewViperProvider(logrusx.New("", ""), true)
 }
 
 // NewFastRegistryWithMocks returns a registry with several mocks and an SQLite in memory database that make testing
@@ -61,7 +61,7 @@ func NewRegistryDefaultWithDSN(t *testing.T, dsn string) (*configuration.ViperPr
 		viper.Set(configuration.ViperKeyDSN, dsn)
 	}
 
-	d, err := driver.NewDefaultDriver(logrusx.New(), "test", "test", "test", true)
+	d, err := driver.NewDefaultDriver(logrusx.New("", ""), "test", "test", "test", true)
 	require.NoError(t, err)
 	return d.Configuration().(*configuration.ViperProvider), d.Registry().(*driver.RegistryDefault)
 }

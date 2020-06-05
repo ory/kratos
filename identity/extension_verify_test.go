@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSchemaExtensionVerify(t *testing.T) {
+func TestSchemaExtensionVerification(t *testing.T) {
 	iid := x.NewUUID()
 	for k, tc := range []struct {
 		expectErr error
@@ -178,13 +178,13 @@ func TestSchemaExtensionVerify(t *testing.T) {
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			id := &Identity{ID: iid, Addresses: tc.existing}
+			id := &Identity{ID: iid, VerifiableAddresses: tc.existing}
 			c := jsonschema.NewCompiler()
 			runner, err := schema.NewExtensionRunner(schema.ExtensionRunnerIdentityMetaSchema)
 			require.NoError(t, err)
 
 			const expiresAt = time.Minute
-			e := NewSchemaExtensionVerify(id, time.Minute)
+			e := NewSchemaExtensionVerification(id, time.Minute)
 			runner.AddRunner(e).Register(c)
 
 			err = c.MustCompile(tc.schema).Validate(bytes.NewBufferString(tc.doc))
@@ -195,7 +195,7 @@ func TestSchemaExtensionVerify(t *testing.T) {
 
 			require.NoError(t, e.Finish())
 
-			addresses := id.Addresses
+			addresses := id.VerifiableAddresses
 			require.Len(t, addresses, len(tc.expect))
 
 			for _, actual := range addresses {

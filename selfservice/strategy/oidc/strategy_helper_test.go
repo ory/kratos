@@ -16,10 +16,11 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/phayes/freeport"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/logrusx"
 
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
@@ -35,7 +36,7 @@ import (
 )
 
 func createClient(t *testing.T, remote string, redir, id string) {
-	require.NoError(t, resilience.Retry(logrus.New(), time.Second*10, time.Minute*2, func() error {
+	require.NoError(t, resilience.Retry(logrusx.New("", ""), time.Second*10, time.Minute*2, func() error {
 		if req, err := http.NewRequest("DELETE", remote+"/clients/"+id, nil); err != nil {
 			return err
 		} else if _, err := http.DefaultClient.Do(req); err != nil {

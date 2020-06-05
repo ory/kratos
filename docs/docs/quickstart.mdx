@@ -3,7 +3,8 @@ id: quickstart
 title: Quickstart
 ---
 
-import useBaseUrl from '@docusaurus/useBaseUrl';
+import useBaseUrl from '@docusaurus/useBaseUrl'
+import Mermaid from '@theme/Mermaid'
 
 ORY Kratos has several moving parts and getting everything right from the
 beginning can be challenging. This getting started guide will help you install
@@ -73,7 +74,7 @@ const needsLogin = (req, res, next) => {
     });
 };
 
-// You can use `needsLogin` as a middleware for Express or any other web framework: 
+// You can use `needsLogin` as a middleware for Express or any other web framework:
 //   import express from 'express'
 //   const app = express()
 //
@@ -220,7 +221,26 @@ To better understand the application architecture, let's take a look at the netw
 configuration. This assumes that you have at least some understanding of how
 Docker networks work:
 
-[![User Login and Registration Network Topology](https://mermaid.ink/img/eyJjb2RlIjoiZ3JhcGggVERcblxuc3ViZ3JhcGggaG5bSG9zdCBOZXR3b3JrXVxuICAgIEJbQnJvd3Nlcl1cbiAgICBCLS0-fENhbiBhY2Nlc3MgVVJMcyB2aWEgMTI3LjAuMC4xOjQ0NTV8T0tQSE5cbiAgICBCLS0-fENhbiBhY2Nlc3MgVUkgdmlhIDEyNy4wLjAuMTo0NDM2fFNNVFBVSVxuICAgIE9LUEhOKFtTZWN1cmVBcHAgZXhwb3NlZCBhdCA6NDQ1NV0pXG4gICAgU01UUFVJKFtNYWlsU2x1cnBlciBVSSBleHBvc2VkIGF0IDo0NDM2XSlcbmVuZFxuXG5zdWJncmFwaCBkbltcIkludGVybmFsIERvY2tlciBOZXR3b3JrIChpbnRyYW5ldClcIl1cbiAgICBPS1BITi0uLT5TQVxuICAgIFNNVFBVSS0uLT5TTVRQXG4gICAgU0EtLT58UHJveGllcyBVUkxzIC8ub3J5L2tyYXRvcy9wdWJsaWMvKiB0b3xPS1xuICAgIFNBLS0-fFRhbGtzIHRvIGFuZCB2YWxpZGF0ZXMgbG9naW4gc2Vzc2lvbnMgdXNpbmd8T0tcbiAgICBPSy0tPnxTZW5kcyBtYWlsIHZpYXxTTVRQXG5cbiAgICBPS1tPUlkgS3JhdG9zXVxuICAgIFNBW1wiU2VjdXJlQXBwIChPUlkgS3JhdG9zIFNlbGZTZXJ2aWNlIFVJIE5vZGUgRXhhbXBsZSlcIl1cbiAgICBTTVRQW1wiU01UUCBTZXJ2ZXIgKE1haWxTbHVycGVyKVwiXVxuZW5kXG4iLCJtZXJtYWlkIjp7InRoZW1lIjoibmV1dHJhbCIsImZsb3djaGFydCI6eyJyYW5rU3BhY2luZyI6NjUsIm5vZGVTcGFjaW5nIjozMCwiY3VydmUiOiJiYXNpcyJ9fSwidXBkYXRlRWRpdG9yIjpmYWxzZX0)](https://mermaid-js.github.io/mermaid-live-editor/#/edit/eyJjb2RlIjoiZ3JhcGggVERcblxuc3ViZ3JhcGggaG5bSG9zdCBOZXR3b3JrXVxuICAgIEJbQnJvd3Nlcl1cbiAgICBCLS0-fENhbiBhY2Nlc3MgVVJMcyB2aWEgMTI3LjAuMC4xOjQ0NTV8T0tQSE5cbiAgICBCLS0-fENhbiBhY2Nlc3MgVUkgdmlhIDEyNy4wLjAuMTo0NDM2fFNNVFBVSVxuICAgIE9LUEhOKFtTZWN1cmVBcHAgZXhwb3NlZCBhdCA6NDQ1NV0pXG4gICAgU01UUFVJKFtNYWlsU2x1cnBlciBVSSBleHBvc2VkIGF0IDo0NDM2XSlcbmVuZFxuXG5zdWJncmFwaCBkbltcIkludGVybmFsIERvY2tlciBOZXR3b3JrIChpbnRyYW5ldClcIl1cbiAgICBPS1BITi0uLT5TQVxuICAgIFNNVFBVSS0uLT5TTVRQXG4gICAgU0EtLT58UHJveGllcyBVUkxzIC8ub3J5L2tyYXRvcy9wdWJsaWMvKiB0b3xPS1xuICAgIFNBLS0-fFRhbGtzIHRvIGFuZCB2YWxpZGF0ZXMgbG9naW4gc2Vzc2lvbnMgdXNpbmd8T0tcbiAgICBPSy0tPnxTZW5kcyBtYWlsIHZpYXxTTVRQXG5cbiAgICBPS1tPUlkgS3JhdG9zXVxuICAgIFNBW1wiU2VjdXJlQXBwIChPUlkgS3JhdG9zIFNlbGZTZXJ2aWNlIFVJIE5vZGUgRXhhbXBsZSlcIl1cbiAgICBTTVRQW1wiU01UUCBTZXJ2ZXIgKE1haWxTbHVycGVyKVwiXVxuZW5kXG4iLCJtZXJtYWlkIjp7InRoZW1lIjoibmV1dHJhbCIsImZsb3djaGFydCI6eyJyYW5rU3BhY2luZyI6NjUsIm5vZGVTcGFjaW5nIjozMCwiY3VydmUiOiJiYXNpcyJ9fSwidXBkYXRlRWRpdG9yIjpmYWxzZX0)
+<Mermaid chart={`
+graph TD
+subgraph hn[Host Network]
+    B[Browser]
+    B-->|Can access URLs via 127.0.0.1:4455|OKPHN
+    B-->|Can access UI via 127.0.0.1:4436|SMTPUI
+    OKPHN([SecureApp exposed at :4455])
+    SMTPUI([MailSlurper UI exposed at :4436])
+end
+subgraph dn["Internal Docker Network (intranet)"]
+    OKPHN-.->SA
+    SMTPUI-.->SMTP
+    SA-->|Proxies URLs /.ory/kratos/public/* to|OK
+    SA-->|Talks to and validates login sessions using|OK
+    OK-->|Sends mail via|SMTP
+    OK[ORY Kratos]
+    SA["SecureApp (ORY Kratos SelfService UI Node Example)"]
+    SMTP["SMTP Server (MailSlurper)"]
+end
+`}/>
 
 In order to avoid common cross-domain issues with cookies, we're proxying requests to ORY Kratos' Public API so that all requests come from the same
 hostname.

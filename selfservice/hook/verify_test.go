@@ -43,11 +43,11 @@ func TestVerifier(t *testing.T) {
 			h := hook.NewVerifier(reg)
 			require.NoError(t, hf(h, i))
 
-			actual, err := reg.IdentityPool().FindAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "foo@ory.sh")
+			actual, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "foo@ory.sh")
 			require.NoError(t, err)
 			assert.EqualValues(t, "foo@ory.sh", actual.Value)
 
-			actual, err = reg.IdentityPool().FindAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "bar@ory.sh")
+			actual, err = reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "bar@ory.sh")
 			require.NoError(t, err)
 			assert.EqualValues(t, "bar@ory.sh", actual.Value)
 

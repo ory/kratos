@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/sirupsen/logrus"
-
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/viperx"
 
 	"github.com/spf13/cobra"
 )
 
-var logger logrus.FieldLogger
+var logger *logrusx.Logger
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{

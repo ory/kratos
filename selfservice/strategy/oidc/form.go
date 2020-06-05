@@ -28,6 +28,15 @@ func decoderRegistration(ref string) (decoderx.HTTPDecoderOption, error) {
 	return o, nil
 }
 
+type decodedForm struct {
+	Traits   map[string]interface{}    `json:"traits"`
+	Recovery recoverySecurityQuestions `json:"recovery"`
+}
+
+type recoverySecurityQuestions struct {
+	SecurityQuestions map[string]string `json:"security_questions"`
+}
+
 // merge merges the userFormValues (extracted from the initial POST request) prefixed with `traits` (encoded) with the
 // values coming from the OpenID Provider (openIDProviderValues).
 func merge(userFormValues string, openIDProviderValues json.RawMessage, option decoderx.HTTPDecoderOption) (identity.Traits, error) {
@@ -35,9 +44,7 @@ func merge(userFormValues string, openIDProviderValues json.RawMessage, option d
 		return identity.Traits(openIDProviderValues), nil
 	}
 
-	var decodedForm struct {
-		Traits map[string]interface{} `json:"traits"`
-	}
+	var df decodedForm
 
 	req, err := http.NewRequest("POST", "/", bytes.NewBufferString(userFormValues))
 	if err != nil {
@@ -46,7 +53,7 @@ func merge(userFormValues string, openIDProviderValues json.RawMessage, option d
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	if err := decoderx.NewHTTP().Decode(
-		req, &decodedForm,
+		req, &df,
 		decoderx.HTTPFormDecoder(),
 		option,
 		decoderx.HTTPDecoderSetIgnoreParseErrorsStrategy(decoderx.ParseErrorIgnore),
@@ -61,7 +68,7 @@ func merge(userFormValues string, openIDProviderValues json.RawMessage, option d
 	}
 
 	// decoderForm (coming from POST request) overrides decodedTraits (coming from OP)
-	if err := mergo.Merge(&decodedTraits, decodedForm.Traits, mergo.WithOverride); err != nil {
+	if err := mergo.Merge(&decodedTraits, df.Traits, mergo.WithOverride); err != nil {
 		return nil, err
 	}
 

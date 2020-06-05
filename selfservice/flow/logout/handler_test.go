@@ -9,9 +9,10 @@ import (
 	"github.com/gobuffalo/httptest"
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/nosurf"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ory/x/logrusx"
 
 	"github.com/ory/viper"
 
@@ -33,7 +34,7 @@ func TestLogoutHandler(t *testing.T) {
 
 	router := x.NewRouterPublic()
 	handler.RegisterPublicRoutes(router)
-	reg.WithCSRFHandler(x.NewCSRFHandler(router, reg.Writer(), logrus.New(), "/", "", false))
+	reg.WithCSRFHandler(x.NewCSRFHandler(router, reg.Writer(), logrusx.New("", ""), "/", "", false))
 	ts := httptest.NewServer(reg.CSRFHandler())
 	defer ts.Close()
 
@@ -57,7 +58,7 @@ func TestLogoutHandler(t *testing.T) {
 	viper.Set(configuration.ViperKeySelfServiceLogoutRedirectURL, redirTS.URL)
 	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
 
-	client := testhelpers.MockCookieClient(t)
+	client := testhelpers.NewClientWithCookies(t)
 
 	t.Run("case=set initial session", func(t *testing.T) {
 		testhelpers.MockHydrateCookieClient(t, client, ts.URL+"/set")

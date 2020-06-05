@@ -10,7 +10,7 @@ import (
 
 // swagger:model errorContainer
 type ErrorContainer struct {
-	ID uuid.UUID `db:"id" rw:"r" json:"id"`
+	ID uuid.UUID `db:"id" json:"id"`
 
 	CSRFToken string `db:"csrf_token" json:"-"`
 

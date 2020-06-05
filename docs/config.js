@@ -10,7 +10,7 @@ module.exports = {
     {
       replacer: ({content, next}) => content.replace(/git checkout (v[0-9a-zA-Z\\.\\-]+)/gi, `git checkout ${next}`),
       files: [
-        'docs/docs/guides/zero-trust-iap-proxy-identity-access-proxy.md',
+        'docs/docs/guides/zero-trust-iap-proxy-identity-access-proxy.mdx',
         'docs/docs/quickstart.mdx',
       ]
     },

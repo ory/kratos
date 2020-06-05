@@ -8,8 +8,7 @@ require (
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0
 	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535 // indirect
-	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
-	github.com/bxcodec/faker v2.0.1+incompatible
+	github.com/bxcodec/faker/v3 v3.3.1
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/davidrjonas/semver-cli v0.0.0-20190116233701-ee19a9a0dda6
@@ -54,18 +53,18 @@ require (
 	github.com/ory/go-acc v0.1.0
 	github.com/ory/go-convenience v0.1.0
 	github.com/ory/graceful v0.1.1
-	github.com/ory/herodot v0.8.2
+	github.com/ory/herodot v0.9.0
 	github.com/ory/jsonschema/v3 v3.0.1
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/sdk/swagutil v0.0.0-20200528141631-666b43d19aa3
 	github.com/ory/viper v1.7.5
-	github.com/ory/x v0.0.122
+	github.com/ory/x v0.0.127
 	github.com/pelletier/go-toml v1.7.0 // indirect
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/shurcooL/go v0.0.0-20180423040247-9e1955d9fb6e
-	github.com/sirupsen/logrus v1.5.0
-	github.com/spf13/cobra v0.0.7
+	github.com/sirupsen/logrus v1.6.0
+	github.com/spf13/cobra v1.0.0
 	github.com/sqs/goreturns v0.0.0-20181028201513-538ac6014518
 	github.com/stretchr/testify v1.5.1
 	github.com/tidwall/gjson v1.3.5

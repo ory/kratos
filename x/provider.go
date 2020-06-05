@@ -2,13 +2,14 @@ package x
 
 import (
 	"github.com/gorilla/sessions"
-	"github.com/sirupsen/logrus"
 
 	"github.com/ory/herodot"
+	"github.com/ory/x/logrusx"
 )
 
 type LoggingProvider interface {
-	Logger() logrus.FieldLogger
+	Logger() *logrusx.Logger
+	Audit() *logrusx.Logger
 }
 
 type WriterProvider interface {

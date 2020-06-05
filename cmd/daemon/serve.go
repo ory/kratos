@@ -5,8 +5,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/ory/analytics-go/v4"
 
 	"github.com/ory/x/flagx"
@@ -43,7 +41,7 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 
 	router := x.NewRouterPublic()
 	r.RegisterPublicRoutes(router)
-	n.Use(NewNegroniLoggerMiddleware(l.(*logrus.Logger), "public#"+c.SelfPublicURL().String()))
+	n.Use(NewNegroniLoggerMiddleware(l, "public#"+c.SelfPublicURL().String()))
 	n.Use(sqa(cmd, d))
 
 	csrf := x.NewCSRFHandler(
@@ -79,7 +77,7 @@ func serveAdmin(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []
 
 	router := x.NewRouterAdmin()
 	r.RegisterAdminRoutes(router)
-	n.Use(NewNegroniLoggerMiddleware(l.(*logrus.Logger), "admin#"+c.SelfAdminURL().String()))
+	n.Use(NewNegroniLoggerMiddleware(l, "admin#"+c.SelfAdminURL().String()))
 	n.Use(sqa(cmd, d))
 
 	n.UseHandler(router)

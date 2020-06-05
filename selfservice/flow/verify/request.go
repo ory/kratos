@@ -28,7 +28,7 @@ type Request struct {
 	//
 	// type: string
 	// format: uuid
-	ID uuid.UUID `json:"id" db:"id" faker:"uuid" rw:"r"`
+	ID uuid.UUID `json:"id" db:"id" faker:"-"`
 
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address,
 	// a new request has to be initiated.

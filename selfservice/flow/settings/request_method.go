@@ -21,7 +21,7 @@ type RequestMethod struct {
 	Config *RequestMethodConfig `json:"config" db:"config"`
 
 	// ID is a helper struct field for gobuffalo.pop.
-	ID uuid.UUID `json:"-" db:"id" rw:"r"`
+	ID uuid.UUID `json:"-" db:"id"`
 
 	// RequestID is a helper struct field for gobuffalo.pop.
 	RequestID uuid.UUID `json:"-" db:"selfservice_settings_request_id"`
@@ -41,9 +41,9 @@ func (u RequestMethod) TableName() string {
 }
 
 type RequestMethodsRaw []RequestMethod // workaround for https://github.com/gobuffalo/pop/pull/478
-type RequestForms map[string]*RequestMethod
+type RequestMethods map[string]*RequestMethod
 
-func (u RequestForms) TableName() string {
+func (u RequestMethods) TableName() string {
 	// This must be stay a value receiver, using a pointer receiver will cause issues with pop.
 	return "selfservice_settings_request_methods"
 }

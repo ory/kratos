@@ -31,17 +31,17 @@ var (
 //
 // swagger:model form
 type HTMLForm struct {
-	sync.RWMutex
+	sync.RWMutex `faker:"-"`
 
 	// Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`.
 	//
 	// required: true
-	Action string `json:"action"`
+	Action string `json:"action" faker:"url"`
 
 	// Method is the form method (e.g. POST)
 	//
 	// required: true
-	Method string `json:"method"`
+	Method string `json:"method" faker:"http_method"`
 
 	// Fields contains the form fields.
 	//

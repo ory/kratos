@@ -4,11 +4,11 @@ const email = () =>
   Math.random().toString(36).substring(7)
 const password = () => Math.random().toString(36)
 
-const assertAddress = ({ isVerified, email }) => ({ identity }) => {
-  expect(identity).to.have.property('addresses')
-  expect(identity.addresses).to.have.length(1)
+const assertVerifiableAddress = ({ isVerified, email }) => ({ identity }) => {
+  expect(identity).to.have.property('verifiable_addresses')
+  expect(identity.verifiable_addresses).to.have.length(1)
 
-  const address = identity.addresses[0]
+  const address = identity.verifiable_addresses[0]
   expect(address.id).to.not.be.empty
   expect(address.verified).to.equal(isVerified)
   expect(address.value).to.equal(email)
@@ -20,6 +20,15 @@ const assertAddress = ({ isVerified, email }) => ({ identity }) => {
   }
 }
 
+const assertRecoveryAddress = ({ email }) => ({ identity }) => {
+  expect(identity).to.have.property('recovery_addresses')
+  expect(identity.recovery_addresses).to.have.length(1)
+
+  const address = identity.recovery_addresses[0]
+  expect(address.id).to.not.be.empty
+  expect(address.value).to.equal(email)
+}
+
 const parseHtml = (html) => new DOMParser().parseFromString(html, 'text/html')
 
 module.exports = {
@@ -27,6 +36,9 @@ module.exports = {
     /\/$/,
     ''
   ),
+  KRATOS_ADMIN: (Cypress.env('kratos_admin') || 'http://127.0.0.1:4434')
+    .replace()
+    .replace(/\/$/, ''),
   MAIL_API: (Cypress.env('mail_url') || 'http://127.0.0.1:4437').replace(
     /\/$/,
     ''
@@ -38,7 +50,8 @@ module.exports = {
     password,
     identity: () => ({ email: email(), password: password() }),
   },
-  assertAddress,
+  assertVerifiableAddress: assertVerifiableAddress,
+  assertRecoveryAddress: assertRecoveryAddress,
 
   // Format is
   //  http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/verification/email/confirm/OdTRmdMKe0DfF6ScaOFYgWJwoAprTxnA

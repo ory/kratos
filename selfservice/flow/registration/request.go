@@ -20,7 +20,7 @@ type Request struct {
 	// represents the id in the registration ui's query parameter: http://<urls.registration_ui>/?request=<id>
 	//
 	// required: true
-	ID uuid.UUID `json:"id" faker:"uuid" db:"id" rw:"r"`
+	ID uuid.UUID `json:"id" faker:"-" db:"id"`
 
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,
 	// a new request has to be initiated.
@@ -37,11 +37,11 @@ type Request struct {
 	// to forward information contained in the URL's path or query for example.
 	//
 	// required: true
-	RequestURL string `json:"request_url" db:"request_url"`
+	RequestURL string `json:"request_url" faker:"url" db:"request_url"`
 
 	// Active, if set, contains the registration method that is being used. It is initially
 	// not set.
-	Active identity.CredentialsType `json:"active,omitempty" db:"active_method"`
+	Active identity.CredentialsType `json:"active,omitempty" faker:"identity_credentials_type" db:"active_method"`
 
 	// Methods contains context for all enabled registration methods. If a registration request has been
 	// processed, but for example the password is incorrect, this will contain error messages.
@@ -53,10 +53,10 @@ type Request struct {
 	MethodsRaw RequestMethodsRaw `json:"-" faker:"-" has_many:"selfservice_registration_request_methods" fk_id:"selfservice_registration_request_id"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
-	CreatedAt time.Time `json:"-" db:"created_at"`
+	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
 
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
-	UpdatedAt time.Time `json:"-" db:"updated_at"`
+	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 
 	// CSRFToken contains the anti-csrf token associated with this request.
 	CSRFToken string `json:"-" db:"csrf_token"`

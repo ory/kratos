@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/bxcodec/faker"
+	"github.com/bxcodec/faker/v3"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -25,9 +25,9 @@ type (
 		VerificationPersister() Persister
 	}
 	Persister interface {
-		CreateVerifyRequest(context.Context, *Request) error
-		GetVerifyRequest(ctx context.Context, id uuid.UUID) (*Request, error)
-		UpdateVerifyRequest(context.Context, *Request) error
+		CreateVerificationRequest(context.Context, *Request) error
+		GetVerificationRequest(ctx context.Context, id uuid.UUID) (*Request, error)
+		UpdateVerificationRequest(context.Context, *Request) error
 	}
 )
 
@@ -39,7 +39,7 @@ func TestPersister(p interface {
 	return func(t *testing.T) {
 		t.Run("suite=request", func(t *testing.T) {
 			t.Run("case=should error when the verify does not exist", func(t *testing.T) {
-				_, err := p.GetVerifyRequest(context.Background(), x.NewUUID())
+				_, err := p.GetVerificationRequest(context.Background(), x.NewUUID())
 				require.Equal(t, errorsx.Cause(err), sqlcon.ErrNoRows)
 			})
 
@@ -58,9 +58,9 @@ func TestPersister(p interface {
 			t.Run("case=should create and fetch verify request", func(t *testing.T) {
 				expected := newRequest(t)
 				expected.Form = form.NewHTMLForm("some/action")
-				err := p.CreateVerifyRequest(context.Background(), expected)
+				err := p.CreateVerificationRequest(context.Background(), expected)
 				require.NoError(t, err, "%#v", err)
-				actual, err := p.GetVerifyRequest(context.Background(), expected.ID)
+				actual, err := p.GetVerificationRequest(context.Background(), expected.ID)
 				require.NoError(t, err)
 
 				factual, err := json.Marshal(actual.Form)
@@ -81,14 +81,14 @@ func TestPersister(p interface {
 			t.Run("case=should create and update a verify request", func(t *testing.T) {
 				expected := newRequest(t)
 				expected.Form = form.NewHTMLForm("some/action")
-				err := p.CreateVerifyRequest(context.Background(), expected)
+				err := p.CreateVerificationRequest(context.Background(), expected)
 				require.NoError(t, err)
 
 				expected.Form.Action = "/new-action"
 				expected.RequestURL = "/new-request-url"
-				require.NoError(t, p.UpdateVerifyRequest(context.Background(), expected))
+				require.NoError(t, p.UpdateVerificationRequest(context.Background(), expected))
 
-				actual, err := p.GetVerifyRequest(context.Background(), expected.ID)
+				actual, err := p.GetVerificationRequest(context.Background(), expected.ID)
 				require.NoError(t, err)
 
 				assert.Equal(t, "/new-action", actual.Form.Action)

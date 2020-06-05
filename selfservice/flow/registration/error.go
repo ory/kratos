@@ -2,7 +2,6 @@ package registration
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/url"
 	"time"
@@ -71,11 +70,11 @@ func (s *ErrorHandler) HandleRegistrationError(
 	rr *Request,
 	err error,
 ) {
-	s.d.Logger().WithError(err).
-		WithField("details", fmt.Sprintf("%+v", err)).
-		WithField("credentials_type", ct).
-		WithField("login_request", rr).
-		Warn("Encountered registration error.")
+	s.d.Audit().
+		WithError(err).
+		WithRequest(r).
+		WithField("registration_request", rr).
+		Info("Encountered self-service request error.")
 
 	if _, ok := errorsx.Cause(err).(requestExpiredError); ok {
 		// create new request because the old one is not valid
@@ -85,6 +84,7 @@ func (s *ErrorHandler) HandleRegistrationError(
 			s.HandleRegistrationError(w, r, ct, rr, err)
 			return
 		}
+
 		for name, method := range a.Methods {
 			method.Config.AddError(&form.Error{Message: "Your session expired, please try again."})
 			if err := s.d.RegistrationRequestPersister().UpdateRegistrationRequestMethod(context.TODO(), a.ID, name, method); err != nil {

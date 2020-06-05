@@ -10,18 +10,18 @@ import (
 	"github.com/ory/kratos/schema"
 )
 
-type SchemaExtensionVerify struct {
+type SchemaExtensionVerification struct {
 	lifespan time.Duration
 	l        sync.Mutex
 	v        []VerifiableAddress
 	i        *Identity
 }
 
-func NewSchemaExtensionVerify(i *Identity, lifespan time.Duration) *SchemaExtensionVerify {
-	return &SchemaExtensionVerify{i: i, lifespan: lifespan}
+func NewSchemaExtensionVerification(i *Identity, lifespan time.Duration) *SchemaExtensionVerification {
+	return &SchemaExtensionVerification{i: i, lifespan: lifespan}
 }
 
-func (r *SchemaExtensionVerify) Run(ctx jsonschema.ValidationContext, s schema.ExtensionConfig, value interface{}) error {
+func (r *SchemaExtensionVerification) Run(ctx jsonschema.ValidationContext, s schema.ExtensionConfig, value interface{}) error {
 	r.l.Lock()
 	defer r.l.Unlock()
 
@@ -36,7 +36,7 @@ func (r *SchemaExtensionVerify) Run(ctx jsonschema.ValidationContext, s schema.E
 			return err
 		}
 
-		if has := r.has(r.i.Addresses, address); has != nil {
+		if has := r.has(r.i.VerifiableAddresses, address); has != nil {
 			if r.has(r.v, address) == nil {
 				r.v = append(r.v, *has)
 			}
@@ -55,7 +55,7 @@ func (r *SchemaExtensionVerify) Run(ctx jsonschema.ValidationContext, s schema.E
 	return ctx.Error("", "verification.via has unknown value %q", s.Verification.Via)
 }
 
-func (r *SchemaExtensionVerify) has(haystack []VerifiableAddress, needle *VerifiableAddress) *VerifiableAddress {
+func (r *SchemaExtensionVerification) has(haystack []VerifiableAddress, needle *VerifiableAddress) *VerifiableAddress {
 	for _, has := range haystack {
 		if has.Value == needle.Value && has.Via == needle.Via {
 			return &has
@@ -64,7 +64,7 @@ func (r *SchemaExtensionVerify) has(haystack []VerifiableAddress, needle *Verifi
 	return nil
 }
 
-func (r *SchemaExtensionVerify) Finish() error {
-	r.i.Addresses = r.v
+func (r *SchemaExtensionVerification) Finish() error {
+	r.i.VerifiableAddresses = r.v
 	return nil
 }

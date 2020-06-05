@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bxcodec/faker"
+	"github.com/bxcodec/faker/v3"
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
@@ -57,7 +57,7 @@ func MockMakeAuthenticatedRequest(t *testing.T, reg mockDeps, conf configuration
 	set := "/" + uuid.New().String() + "/set"
 	router.GET(set, MockSetSession(t, reg, conf))
 
-	client := MockCookieClient(t)
+	client := NewClientWithCookies(t)
 	MockHydrateCookieClient(t, client, "http://"+req.URL.Host+set)
 
 	res, err := client.Do(req)
@@ -71,7 +71,7 @@ func MockMakeAuthenticatedRequest(t *testing.T, reg mockDeps, conf configuration
 	return body, res
 }
 
-func MockCookieClient(t *testing.T) *http.Client {
+func NewClientWithCookies(t *testing.T) *http.Client {
 	cj, err := cookiejar.New(&cookiejar.Options{})
 	require.NoError(t, err)
 	return &http.Client{Jar: cj}

@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/logrusx"
+
 	"github.com/ory/kratos/driver/configuration"
 
 	_ "github.com/ory/jsonschema/v3/fileloader"
@@ -24,11 +26,11 @@ func TestViperProvider(t *testing.T) {
 		viperx.InitializeConfig(
 			"kratos",
 			"./../../internal/",
-			logrus.New(),
+			logrusx.New("", ""),
 		)
 
 		require.NoError(t, viperx.ValidateFromURL("file://../../.schema/config.schema.json"))
-		p := configuration.NewViperProvider(logrus.New(), true)
+		p := configuration.NewViperProvider(logrusx.New("", ""), true)
 
 		t.Run("group=urls", func(t *testing.T) {
 			assert.Equal(t, "http://test.kratos.ory.sh/login", p.LoginURL().String())
@@ -217,7 +219,7 @@ func TestViperProvider(t *testing.T) {
 				Parallelism: 4,
 				SaltLength:  16,
 				KeyLength:   32,
-			}, p.HashersArgon2())
+			}, p.HasherArgon2())
 		})
 	})
 }
@@ -240,7 +242,7 @@ func TestViperProvider_DSN(t *testing.T) {
 		viper.Reset()
 		viper.Set(configuration.ViperKeyDSN, "memory")
 
-		l := logrus.New()
+		l := logrusx.New("", "")
 		p := configuration.NewViperProvider(l, false)
 
 		assert.Equal(t, "sqlite://mem.db?mode=memory&_fk=true&cache=shared", p.DSN())
@@ -251,7 +253,7 @@ func TestViperProvider_DSN(t *testing.T) {
 		viper.Reset()
 		viper.Set(configuration.ViperKeyDSN, dsn)
 
-		l := logrus.New()
+		l := logrusx.New("", "")
 		p := configuration.NewViperProvider(l, false)
 
 		assert.Equal(t, dsn, p.DSN())
@@ -262,15 +264,12 @@ func TestViperProvider_DSN(t *testing.T) {
 		viper.Reset()
 		viper.Set(configuration.ViperKeyDSN, dsn)
 
-		l := logrus.New()
+		var exitCode int
+		l := logrusx.New("", "", logrusx.WithExitFunc(func(i int) {
+			exitCode = i
+		}), logrusx.WithHook(InterceptHook{}))
 		p := configuration.NewViperProvider(l, false)
 
-		var exitCode int
-		l.ExitFunc = func(i int) {
-			exitCode = i
-		}
-		h := InterceptHook{}
-		l.AddHook(h)
 		assert.Equal(t, dsn, p.DSN())
 		assert.NotEqual(t, 0, exitCode)
 	})

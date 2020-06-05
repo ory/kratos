@@ -17,6 +17,8 @@ import (
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/persistence/sql"
 	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/x"
 
 	"github.com/gobuffalo/pop/v5"
@@ -151,9 +153,17 @@ func TestPersister(t *testing.T) {
 				pop.SetLogger(pl(t))
 				courier.TestPersister(p)(t)
 			})
-			t.Run("contract=verify.TestPersister", func(t *testing.T) {
+			t.Run("contract=verification.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
 				verify.TestPersister(p)(t)
+			})
+			t.Run("contract=recovery.TestRequestPersister", func(t *testing.T) {
+				pop.SetLogger(pl(t))
+				recovery.TestRequestPersister(p)(t)
+			})
+			t.Run("contract=recovery.TestPersister", func(t *testing.T) {
+				pop.SetLogger(pl(t))
+				link.TestPersister(p)(t)
 			})
 			t.Run("contract=continuity.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))

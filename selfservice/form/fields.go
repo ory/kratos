@@ -41,7 +41,7 @@ type Field struct {
 	Required bool `json:"required,omitempty"`
 
 	// Value is the equivalent of `<input value="{{.Value}}">`
-	Value interface{} `json:"value,omitempty" faker:"name"`
+	Value interface{} `json:"value,omitempty" faker:"string"`
 
 	// Errors contains all validation errors this particular field has caused.
 	Errors Errors `json:"errors,omitempty"`

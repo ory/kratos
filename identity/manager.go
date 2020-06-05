@@ -16,6 +16,7 @@ import (
 
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/otp"
 )
 
 var ErrProtectedFieldModified = herodot.ErrForbidden.
@@ -80,9 +81,9 @@ func (m *Manager) requiresPrivilegedAccess(_ context.Context, original, updated 
 			return errors.WithStack(ErrProtectedFieldModified)
 		}
 
-		if !reflect.DeepEqual(original.Addresses, updated.Addresses) &&
+		if !reflect.DeepEqual(original.VerifiableAddresses, updated.VerifiableAddresses) &&
 			/* prevent nil != []string{} */
-			len(original.Addresses)+len(updated.Addresses) != 0 {
+			len(original.VerifiableAddresses)+len(updated.VerifiableAddresses) != 0 {
 			// reset the identity
 			*updated = *original
 			return errors.WithStack(ErrProtectedFieldModified)
@@ -131,13 +132,13 @@ func (m *Manager) UpdateTraits(ctx context.Context, id uuid.UUID, traits Traits,
 }
 
 func (m *Manager) RefreshVerifyAddress(ctx context.Context, address *VerifiableAddress) error {
-	code, err := NewVerifyCode()
+	code, err := otp.New()
 	if err != nil {
 		return err
 	}
 
 	address.Code = code
-	address.ExpiresAt = time.Now().UTC().Add(m.c.SelfServiceVerificationLinkLifespan())
+	address.ExpiresAt = time.Now().UTC().Add(m.c.SelfServiceVerificationRequestLifespan())
 	return m.r.IdentityPool().(PrivilegedPool).UpdateVerifiableAddress(ctx, address)
 }
 

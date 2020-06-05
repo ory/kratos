@@ -6,20 +6,19 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
-
 	"github.com/julienschmidt/httprouter"
+	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
+
 	"github.com/ory/kratos/x"
 )
 
 type (
 	handlerDependencies interface {
 		x.WriterProvider
+		x.LoggingProvider
 		IdentityTraitsSchemas() Schemas
-		Logger() logrus.FieldLogger
 	}
 	Handler struct {
 		r handlerDependencies

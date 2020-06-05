@@ -12,7 +12,7 @@ import (
 // swagger:model session
 type Session struct {
 	// required: true
-	ID uuid.UUID `json:"sid" faker:"uuid" db:"id"`
+	ID uuid.UUID `json:"sid" faker:"-" db:"id"`
 
 	// required: true
 	ExpiresAt time.Time `json:"expires_at" db:"expires_at" faker:"time_type"`

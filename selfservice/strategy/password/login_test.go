@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
-	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
@@ -77,27 +76,18 @@ func nlr(exp time.Duration) *login.Request {
 func TestLoginNew(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 
-	router := x.NewRouterPublic()
-	admin := x.NewRouterAdmin()
+	ts, _ := testhelpers.NewKratosServer(t, reg)
 
-	reg.LoginHandler().RegisterPublicRoutes(router)
-	reg.LoginHandler().RegisterAdminRoutes(admin)
-	reg.LoginStrategies().MustStrategy(identity.CredentialsTypePassword).(*password.Strategy).RegisterLoginRoutes(router)
+	errTs := testhelpers.NewErrorTestServer(t, reg)
+	uiTs := testhelpers.NewLoginUIRequestEchoServer(t, reg)
+	newReturnTs(t, reg)
 
-	ts := httptest.NewServer(router)
-	defer ts.Close()
-
-	errTs, uiTs, returnTs := testhelpers.NewErrorTestServer(t, reg), httptest.NewServer(login.TestRequestHandler(t, reg)), newReturnTs(t, reg)
-	defer errTs.Close()
-	defer uiTs.Close()
-	defer returnTs.Close()
-
+	// Overwrite these two:
 	viper.Set(configuration.ViperKeyURLsError, errTs.URL+"/error-ts")
 	viper.Set(configuration.ViperKeyURLsLogin, uiTs.URL+"/login-ts")
-	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
+
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/login.schema.json")
 	viper.Set(configuration.ViperKeySecretsSession, []string{"not-a-secure-session-key"})
-	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, returnTs.URL+"/return-ts")
 
 	mr := func(t *testing.T, payload string, requestID string, c *http.Client) (*http.Response, []byte) {
 		res, err := c.Post(ts.URL+password.LoginPath+"?request="+requestID, "application/x-www-form-urlencoded", strings.NewReader(payload))
@@ -152,7 +142,7 @@ func TestLoginNew(t *testing.T) {
 	}
 
 	createIdentity := func(identifier, password string) {
-		p, _ := reg.PasswordHasher().Generate([]byte(password))
+		p, _ := reg.Hasher().Generate([]byte(password))
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &identity.Identity{
 			ID:     x.NewUUID(),
 			Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),

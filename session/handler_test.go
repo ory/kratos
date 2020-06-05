@@ -48,7 +48,7 @@ func TestSessionWhoAmI(t *testing.T) {
 
 		viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
 
-		client := testhelpers.MockCookieClient(t)
+		client := testhelpers.NewClientWithCookies(t)
 
 		// No cookie yet -> 401
 		res, err := client.Get(ts.URL + SessionsWhoamiPath)
@@ -86,7 +86,7 @@ func TestIsNotAuthenticatedSecurecookie(t *testing.T) {
 	defer ts.Close()
 	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
 
-	c := testhelpers.MockCookieClient(t)
+	c := testhelpers.NewClientWithCookies(t)
 	c.Jar.SetCookies(urlx.ParseOrPanic(ts.URL), []*http.Cookie{
 		{
 			Name: DefaultSessionCookieName,
@@ -119,7 +119,7 @@ func TestIsNotAuthenticated(t *testing.T) {
 	defer ts.Close()
 	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
 
-	sessionClient := testhelpers.MockCookieClient(t)
+	sessionClient := testhelpers.NewClientWithCookies(t)
 	testhelpers.MockHydrateCookieClient(t, sessionClient, ts.URL+"/set")
 
 	for k, tc := range []struct {
@@ -173,7 +173,7 @@ func TestIsAuthenticated(t *testing.T) {
 	defer ts.Close()
 	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
 
-	sessionClient := testhelpers.MockCookieClient(t)
+	sessionClient := testhelpers.NewClientWithCookies(t)
 	testhelpers.MockHydrateCookieClient(t, sessionClient, ts.URL+"/set")
 
 	for k, tc := range []struct {

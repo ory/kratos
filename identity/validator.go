@@ -34,10 +34,7 @@ func NewValidator(d validatorDependencies, c configuration.Provider) *Validator 
 }
 
 func (v *Validator) ValidateWithRunner(i *Identity, runners ...schema.Extension) error {
-	runner, err := schema.NewExtensionRunner(
-		schema.ExtensionRunnerIdentityMetaSchema,
-		runners...,
-	)
+	runner, err := schema.NewExtensionRunner(schema.ExtensionRunnerIdentityMetaSchema, runners...)
 	if err != nil {
 		return err
 	}
@@ -64,6 +61,7 @@ func (v *Validator) ValidateWithRunner(i *Identity, runners ...schema.Extension)
 func (v *Validator) Validate(i *Identity) error {
 	return v.ValidateWithRunner(i,
 		NewSchemaExtensionCredentials(i),
-		NewSchemaExtensionVerify(i, v.c.SelfServiceVerificationLinkLifespan()),
+		NewSchemaExtensionVerification(i, v.c.SelfServiceVerificationRequestLifespan()),
+		NewSchemaExtensionRecovery(i),
 	)
 }

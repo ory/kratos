@@ -16,25 +16,25 @@ import (
 // swagger:model registrationRequestMethod
 type RequestMethod struct {
 	// Method contains the request credentials type.
-	Method identity.CredentialsType `json:"method" db:"method"`
+	Method identity.CredentialsType `json:"method" faker:"string" db:"method"`
 
 	// Config is the credential type's config.
 	Config *RequestMethodConfig `json:"config" db:"config"`
 
 	// ID is a helper struct field for gobuffalo.pop.
-	ID uuid.UUID `json:"-" db:"id" rw:"r"`
+	ID uuid.UUID `json:"-" faker:"-" db:"id"`
 
 	// RequestID is a helper struct field for gobuffalo.pop.
-	RequestID uuid.UUID `json:"-" db:"selfservice_registration_request_id"`
+	RequestID uuid.UUID `json:"-" faker:"-" db:"selfservice_registration_request_id"`
 
 	// Request is a helper struct field for gobuffalo.pop.
-	Request *Request `json:"-" belongs_to:"selfservice_registration_request" fk_id:"RequestID"`
+	Request *Request `json:"-" faker:"-" belongs_to:"selfservice_registration_request" fk_id:"RequestID"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
-	CreatedAt time.Time `json:"-" db:"created_at"`
+	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
 
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
-	UpdatedAt time.Time `json:"-" db:"updated_at"`
+	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 }
 
 func (u RequestMethod) TableName() string {
@@ -80,7 +80,7 @@ type requestMethodConfigMock struct {
 	*form.HTMLForm
 
 	// Providers is set for the "oidc" request method.
-	Providers []form.Field `json:"providers"`
+	Providers []form.Field `json:"providers" faker:"len=3"`
 }
 
 func (c *RequestMethodConfig) Scan(value interface{}) error {

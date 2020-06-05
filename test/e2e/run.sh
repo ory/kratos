@@ -145,10 +145,10 @@ To run e2e tests in dev mode (useful for writing them), run:
 
   $0 --dev <database> <profile>
 
-  Supported profiles are 'email', 'verify':
+  Supported profiles are 'email', 'verification', 'oidc', 'recovery':
 
     $0 --dev <database> email
-    $0 --dev <database> verify
+    $0 --dev <database> verification
     ...
 
 If you are making changes to the kratos-selfservice-ui-node
@@ -193,6 +193,7 @@ if [[ $dev = "yes" ]]; then
   run "${db}" "$2"
 else
   run "${db}" email
-  run "${db}" verify
+  run "${db}" verification
   run "${db}" oidc
+  run "${db}" recovery
 fi

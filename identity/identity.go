@@ -32,7 +32,7 @@ type (
 		// or the email, as this field is immutable.
 		//
 		// required: true
-		ID uuid.UUID `json:"id" faker:"uuid" db:"id" rw:"r"`
+		ID uuid.UUID `json:"id" faker:"-" db:"id"`
 
 		// Credentials represents all credentials that can be used for authenticating this identity.
 		Credentials map[CredentialsType]Credentials `json:"-" faker:"-" db:"-"`
@@ -54,12 +54,18 @@ type (
 		// required: true
 		Traits Traits `json:"traits" faker:"-" db:"traits"`
 
-		Addresses []VerifiableAddress `json:"addresses,omitempty" faker:"-" has_many:"identity_verifiable_addresses" fk_id:"identity_id"`
+		// VerifiableAddresses contains all the addresses that can be verified by the user.
+		VerifiableAddresses []VerifiableAddress `json:"verifiable_addresses,omitempty" faker:"-" has_many:"identity_verifiable_addresses" fk_id:"identity_id"`
+
+		// RecoveryAddresses contains all the addresses that can be used to recover an identity.
+		RecoveryAddresses []RecoveryAddress `json:"recovery_addresses,omitempty" faker:"-" has_many:"identity_recovery_addresses" fk_id:"identity_id"`
 
 		// CredentialsCollection is a helper struct field for gobuffalo.pop.
 		CredentialsCollection CredentialsCollection `json:"-" faker:"-" has_many:"identity_credentials" fk_id:"identity_id"`
+
 		// CreatedAt is a helper struct field for gobuffalo.pop.
 		CreatedAt time.Time `json:"-" db:"created_at"`
+
 		// UpdatedAt is a helper struct field for gobuffalo.pop.
 		UpdatedAt time.Time `json:"-" db:"updated_at"`
 	}
@@ -103,6 +109,12 @@ func (i *Identity) lock() *sync.RWMutex {
 		i.l = new(sync.RWMutex)
 	}
 	return i.l
+}
+
+func (i *Identity) SetSecurityAnswers(answers map[string]string) {
+	i.lock().Lock()
+	defer i.lock().Unlock()
+
 }
 
 func (i *Identity) SetCredentials(t CredentialsType, c Credentials) {
@@ -153,11 +165,11 @@ func NewIdentity(traitsSchemaID string) *Identity {
 	}
 
 	return &Identity{
-		ID:             x.NewUUID(),
-		Credentials:    map[CredentialsType]Credentials{},
-		Traits:         Traits(json.RawMessage("{}")),
-		TraitsSchemaID: traitsSchemaID,
-		l:              new(sync.RWMutex),
-		Addresses:      []VerifiableAddress{},
+		ID:                  x.NewUUID(),
+		Credentials:         map[CredentialsType]Credentials{},
+		Traits:              Traits("{}"),
+		TraitsSchemaID:      traitsSchemaID,
+		VerifiableAddresses: []VerifiableAddress{},
+		l:                   new(sync.RWMutex),
 	}
 }

@@ -30,20 +30,12 @@ func init() {
 
 func TestHandlerSettingForced(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	reg.WithCSRFTokenGenerator(x.FakeCSRFTokenGenerator)
 
 	router := x.NewRouterPublic()
-	admin := x.NewRouterAdmin()
-	reg.LoginHandler().RegisterPublicRoutes(router)
-	reg.LoginHandler().RegisterAdminRoutes(admin)
-	reg.LoginStrategies().RegisterPublicRoutes(router)
-	ts := httptest.NewServer(router)
-	defer ts.Close()
+	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 
-	loginTS := httptest.NewServer(login.TestRequestHandler(t, reg))
+	loginTS := testhelpers.NewLoginUIRequestEchoServer(t, reg)
 
-	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
-	viper.Set(configuration.ViperKeyURLsLogin, loginTS.URL)
 	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, "https://www.ory.sh")
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/login.schema.json")
 
@@ -123,22 +115,9 @@ func TestHandlerSettingForced(t *testing.T) {
 
 func TestLoginHandler(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
-
-	public, admin := func() (*httptest.Server, *httptest.Server) {
-		public := x.NewRouterPublic()
-		admin := x.NewRouterAdmin()
-		reg.LoginHandler().RegisterPublicRoutes(public)
-		reg.LoginHandler().RegisterAdminRoutes(admin)
-		reg.LoginStrategies().RegisterPublicRoutes(public)
-		return httptest.NewServer(x.NewTestCSRFHandler(public, reg)), httptest.NewServer(admin)
-	}()
-	defer public.Close()
-	defer admin.Close()
-
-	redirTS := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNoContent)
-	}))
-	defer redirTS.Close()
+	public, admin := testhelpers.NewKratosServerWithCSRF(t, reg)
+	_ = testhelpers.NewErrorTestServer(t, reg)
+	_ = testhelpers.NewRedirTS(t, "")
 
 	newLoginTS := func(t *testing.T, upstream string, c *http.Client) *httptest.Server {
 		return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -173,12 +152,6 @@ func TestLoginHandler(t *testing.T) {
 			CSRFToken:  x.FakeCSRFToken,
 		}
 	}
-
-	errTS := testhelpers.NewErrorTestServer(t, reg)
-	defer errTS.Close()
-
-	viper.Set(configuration.ViperKeyURLsSelfPublic, public.URL)
-	viper.Set(configuration.ViperKeyURLsError, errTS.URL)
 
 	t.Run("daemon=admin", func(t *testing.T) {
 		loginTS := newLoginTS(t, admin.URL, nil)

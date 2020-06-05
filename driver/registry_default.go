@@ -7,17 +7,19 @@ import (
 	"time"
 
 	"github.com/ory/kratos/continuity"
+	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verify"
 	"github.com/ory/kratos/selfservice/hook"
+	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/x"
 
 	"github.com/cenkalti/backoff"
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 
 	"github.com/ory/x/dbal"
 	"github.com/ory/x/healthx"
@@ -53,7 +55,8 @@ func init() {
 }
 
 type RegistryDefault struct {
-	l logrus.FieldLogger
+	l *logrusx.Logger
+	a *logrusx.Logger
 	c configuration.Provider
 
 	injectedSelfserviceHooks map[string]func(configuration.SelfServiceHook) interface{}
@@ -82,7 +85,7 @@ type RegistryDefault struct {
 	sessionsStore  *sessions.CookieStore
 	sessionManager session.Manager
 
-	passwordHasher    password2.Hasher
+	passwordHasher    hash.Hasher
 	passwordValidator password2.Validator
 
 	errorHandler *errorx.Handler
@@ -106,6 +109,9 @@ type RegistryDefault struct {
 	selfserviceVerifyHandler      *verify.Handler
 	selfserviceVerifySender       *verify.Sender
 
+	selfserviceRecoveryErrorHandler *recovery.ErrorHandler
+	selfserviceRecoveryHandler      *recovery.Handler
+
 	selfserviceLogoutHandler *logout.Handler
 
 	selfserviceStrategies              []interface{}
@@ -113,12 +119,20 @@ type RegistryDefault struct {
 	activeCredentialsCounterStrategies []identity.ActiveCredentialsCounter
 	registrationStrategies             []registration.Strategy
 	profileStrategies                  []settings.Strategy
+	recoveryStrategies                 []recovery.Strategy
 
 	buildVersion string
 	buildHash    string
 	buildDate    string
 
 	csrfTokenGenerator x.CSRFToken
+}
+
+func (m *RegistryDefault) Audit() *logrusx.Logger {
+	if m.a == nil {
+		m.a = logrusx.NewAudit("ORY Kratos", m.BuildVersion())
+	}
+	return m.a
 }
 
 func (m *RegistryDefault) RegisterPublicRoutes(router *x.RouterPublic) {
@@ -129,10 +143,12 @@ func (m *RegistryDefault) RegisterPublicRoutes(router *x.RouterPublic) {
 	m.LoginStrategies().RegisterPublicRoutes(router)
 	m.SettingsStrategies().RegisterPublicRoutes(router)
 	m.RegistrationStrategies().RegisterPublicRoutes(router)
+	m.RecoveryStrategies().RegisterPublicRoutes(router)
 	m.SessionHandler().RegisterPublicRoutes(router)
 	m.SelfServiceErrorHandler().RegisterPublicRoutes(router)
 	m.SchemaHandler().RegisterPublicRoutes(router)
 	m.VerificationHandler().RegisterPublicRoutes(router)
+	m.RecoveryHandler().RegisterPublicRoutes(router)
 	m.HealthHandler().SetRoutes(router.Router, false)
 }
 
@@ -145,6 +161,7 @@ func (m *RegistryDefault) RegisterAdminRoutes(router *x.RouterAdmin) {
 	m.IdentityHandler().RegisterAdminRoutes(router)
 	m.SessionHandler().RegisterAdminRoutes(router)
 	m.SelfServiceErrorHandler().RegisterAdminRoutes(router)
+	m.RecoveryHandler().RegisterAdminRoutes(router)
 	m.HealthHandler().SetRoutes(router.Router, true)
 }
 
@@ -176,23 +193,9 @@ func (m *RegistryDefault) BuildHash() string {
 	return m.buildHash
 }
 
-func (m *RegistryDefault) WithLogger(l logrus.FieldLogger) Registry {
+func (m *RegistryDefault) WithLogger(l *logrusx.Logger) Registry {
 	m.l = l
 	return m
-}
-
-func (m *RegistryDefault) SettingsHandler() *settings.Handler {
-	if m.selfserviceSettingsHandler == nil {
-		m.selfserviceSettingsHandler = settings.NewHandler(m, m.c)
-	}
-	return m.selfserviceSettingsHandler
-}
-
-func (m *RegistryDefault) SettingsRequestErrorHandler() *settings.ErrorHandler {
-	if m.selfserviceSettingsErrorHandler == nil {
-		m.selfserviceSettingsErrorHandler = settings.NewErrorHandler(m, m.c)
-	}
-	return m.selfserviceSettingsErrorHandler
 }
 
 func (m *RegistryDefault) LogoutHandler() *logout.Handler {
@@ -204,9 +207,8 @@ func (m *RegistryDefault) LogoutHandler() *logout.Handler {
 
 func (m *RegistryDefault) HealthHandler() *healthx.Handler {
 	if m.healthxHandler == nil {
-		m.healthxHandler = healthx.NewHandler(m.Writer(), m.BuildVersion(), healthx.ReadyCheckers{
-			"database": m.Ping,
-		})
+		m.healthxHandler = healthx.NewHandler(m.Writer(), m.BuildVersion(),
+			healthx.ReadyCheckers{"database": m.Ping})
 	}
 
 	return m.healthxHandler
@@ -229,21 +231,11 @@ func (m *RegistryDefault) selfServiceStrategies() []interface{} {
 			password2.NewStrategy(m, m.c),
 			oidc.NewStrategy(m, m.c),
 			settings.NewStrategyTraits(m, m.c),
+			link.NewStrategyLink(m, m.c),
 		}
 	}
 
 	return m.selfserviceStrategies
-}
-
-func (m *RegistryDefault) SettingsStrategies() settings.Strategies {
-	if len(m.profileStrategies) == 0 {
-		for _, strategy := range m.selfServiceStrategies() {
-			if s, ok := strategy.(settings.Strategy); ok {
-				m.profileStrategies = append(m.profileStrategies, s)
-			}
-		}
-	}
-	return m.profileStrategies
 }
 
 func (m *RegistryDefault) RegistrationStrategies() registration.Strategies {
@@ -299,9 +291,9 @@ func (m *RegistryDefault) Writer() herodot.Writer {
 	return m.writer
 }
 
-func (m *RegistryDefault) Logger() logrus.FieldLogger {
+func (m *RegistryDefault) Logger() *logrusx.Logger {
 	if m.l == nil {
-		m.l = logrusx.New()
+		m.l = logrusx.New("ORY Kratos", m.BuildVersion())
 	}
 	return m.l
 }
@@ -327,9 +319,9 @@ func (m *RegistryDefault) SessionHandler() *session.Handler {
 	return m.sessionHandler
 }
 
-func (m *RegistryDefault) PasswordHasher() password2.Hasher {
+func (m *RegistryDefault) Hasher() hash.Hasher {
 	if m.passwordHasher == nil {
-		m.passwordHasher = password2.NewHasherArgon2(m.c)
+		m.passwordHasher = hash.NewHasherArgon2(m.c)
 	}
 	return m.passwordHasher
 }
@@ -472,6 +464,10 @@ func (m *RegistryDefault) RegistrationRequestPersister() registration.RequestPer
 	return m.persister
 }
 
+func (m *RegistryDefault) RecoveryRequestPersister() recovery.RequestPersister {
+	return m.persister
+}
+
 func (m *RegistryDefault) LoginRequestPersister() login.RequestPersister {
 	return m.persister
 }
@@ -490,6 +486,10 @@ func (m *RegistryDefault) SessionPersister() session.Persister {
 
 func (m *RegistryDefault) CourierPersister() courier.Persister {
 	return m.persister
+}
+
+func (m *RegistryDefault) RecoveryTokenPersister() link.Persister {
+	return m.Persister()
 }
 
 func (m *RegistryDefault) Persister() persistence.Persister {

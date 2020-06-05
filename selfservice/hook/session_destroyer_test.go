@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/bxcodec/faker"
+	"github.com/bxcodec/faker/v3"
 	"github.com/gobuffalo/httptest"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"

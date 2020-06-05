@@ -14,8 +14,7 @@ var box = packr.New("contrib", "contrib")
 
 const (
 	ExtensionRunnerIdentityMetaSchema ExtensionRunnerMetaSchema = "extension/identity.schema.json"
-	ExtensionRunnerOIDCMetaSchema     ExtensionRunnerMetaSchema = "extension/oidc.schema.json"
-	extensionName                                               = "ory.sh/kratos"
+	extensionName                     string                    = "ory.sh/kratos"
 )
 
 type (
@@ -29,6 +28,9 @@ type (
 		Verification struct {
 			Via string `json:"via"`
 		} `json:"verification"`
+		Recovery struct {
+			Via string `json:"via"`
+		} `json:"recovery"`
 		Mappings struct {
 			Identity struct {
 				Traits []struct {

@@ -30,9 +30,9 @@ func TestManager(t *testing.T) {
 
 	checkExtensionFields := func(i *identity.Identity, expected string) func(*testing.T) {
 		return func(t *testing.T) {
-			require.Len(t, i.Addresses, 1)
-			assert.EqualValues(t, expected, i.Addresses[0].Value)
-			assert.EqualValues(t, identity.VerifiableAddressTypeEmail, i.Addresses[0].Via)
+			require.Len(t, i.VerifiableAddresses, 1)
+			assert.EqualValues(t, expected, i.VerifiableAddresses[0].Value)
+			assert.EqualValues(t, identity.VerifiableAddressTypeEmail, i.VerifiableAddresses[0].Via)
 
 			require.NotNil(t, i.Credentials[identity.CredentialsTypePassword])
 			assert.Equal(t, []string{expected}, i.Credentials[identity.CredentialsTypePassword].Identifiers)
@@ -160,7 +160,7 @@ func TestManager(t *testing.T) {
 		original.Traits = identity.Traits(`{"email":"verifyme@ory.sh"}`)
 		require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
 
-		address, err := reg.IdentityPool().FindAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "verifyme@ory.sh")
+		address, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "verifyme@ory.sh")
 		require.NoError(t, err)
 
 		pc := address.Code
@@ -171,6 +171,6 @@ func TestManager(t *testing.T) {
 
 		fromStore, err := reg.IdentityPool().GetIdentity(context.Background(), original.ID)
 		require.NoError(t, err)
-		assert.NotEqual(t, pc, fromStore.Addresses[0].Code)
+		assert.NotEqual(t, pc, fromStore.VerifiableAddresses[0].Code)
 	})
 }

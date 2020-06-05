@@ -7,11 +7,14 @@ import (
 
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
+
+	"github.com/ory/x/logrusx"
 
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/courier"
+	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verify"
 
@@ -39,7 +42,7 @@ type Registry interface {
 	Init() error
 
 	WithConfig(c configuration.Provider) Registry
-	WithLogger(l logrus.FieldLogger) Registry
+	WithLogger(l *logrusx.Logger) Registry
 
 	BuildVersion() string
 	BuildDate() string
@@ -71,6 +74,8 @@ type Registry interface {
 	errorx.HandlerProvider
 	errorx.PersistenceProvider
 
+	hash.HashProvider
+
 	identity.HandlerProvider
 	identity.ValidationProvider
 	identity.PoolProvider
@@ -81,7 +86,6 @@ type Registry interface {
 	schema.HandlerProvider
 
 	password2.ValidationProvider
-	password2.HashProvider
 
 	session.HandlerProvider
 	session.ManagementProvider
@@ -112,6 +116,12 @@ type Registry interface {
 	verify.ErrorHandlerProvider
 	verify.SenderProvider
 	verify.HandlerProvider
+
+	recovery.RequestPersistenceProvider
+	recovery.ErrorHandlerProvider
+	recovery.StrategyProvider
+	recovery.HandlerProvider
+	recovery.StrategyProvider
 
 	x.CSRFTokenGeneratorProvider
 }

@@ -1,7 +1,6 @@
 package verify
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 
@@ -57,10 +56,11 @@ func (s *ErrorHandler) HandleVerificationError(
 	rr *Request,
 	err error,
 ) {
-	s.d.Logger().WithError(err).
-		WithField("details", fmt.Sprintf("%+v", err)).
+	s.d.Audit().
+		WithError(err).
+		WithRequest(r).
 		WithField("verify_request", rr).
-		Warn("Encountered self-service verification error.")
+		Info("Encountered self-service verification error.")
 
 	if rr == nil {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
@@ -77,7 +77,7 @@ func (s *ErrorHandler) HandleVerificationError(
 		)
 		a.Form.AddError(&form.Error{Message: e.ReasonField})
 
-		if err := s.d.VerificationPersister().CreateVerifyRequest(r.Context(), a); err != nil {
+		if err := s.d.VerificationPersister().CreateVerificationRequest(r.Context(), a); err != nil {
 			s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 			return
 		}
@@ -94,7 +94,7 @@ func (s *ErrorHandler) HandleVerificationError(
 		return
 	}
 
-	if err := s.d.VerificationPersister().UpdateVerifyRequest(r.Context(), rr); err != nil {
+	if err := s.d.VerificationPersister().UpdateVerificationRequest(r.Context(), rr); err != nil {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}

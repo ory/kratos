@@ -5,8 +5,8 @@ import (
 
 	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/stringsx"
 
 	"github.com/ory/herodot"
@@ -73,7 +73,7 @@ type CSRFHandler interface {
 func NewCSRFHandler(
 	router http.Handler,
 	writer herodot.Writer,
-	logger logrus.FieldLogger,
+	logger *logrusx.Logger,
 	path string,
 	domain string,
 	secure bool,
@@ -103,12 +103,7 @@ func NewTestCSRFHandler(router http.Handler, reg interface {
 	WithCSRFTokenGenerator(CSRFToken)
 }) *nosurf.CSRFHandler {
 	n := nosurf.New(router)
-	n.SetBaseCookie(http.Cookie{
-		MaxAge:   nosurf.MaxAge,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   false,
-	})
+	n.SetBaseCookie(http.Cookie{MaxAge: nosurf.MaxAge, Path: "/", HttpOnly: true, Secure: false})
 	reg.WithCSRFHandler(n)
 	reg.WithCSRFTokenGenerator(nosurf.Token)
 	return n

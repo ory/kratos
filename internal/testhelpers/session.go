@@ -6,7 +6,7 @@ import (
 )
 
 func NewSessionClient(t *testing.T, u string) *http.Client {
-	c := MockCookieClient(t)
+	c := NewClientWithCookies(t)
 	MockHydrateCookieClient(t, c, u)
 	return c
 }

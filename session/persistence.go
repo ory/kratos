@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/bxcodec/faker"
+	"github.com/bxcodec/faker/v3"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -51,13 +51,9 @@ func TestPersister(p interface {
 			require.NoError(t, faker.FakeData(&expected))
 			require.NoError(t, p.CreateIdentity(context.Background(), expected.Identity))
 
-			now := expected.ID
-			t.Logf("now: %s", now)
-			assert.NotEqual(t, uuid.Nil, expected.ID)
+			assert.Equal(t, uuid.Nil, expected.ID)
 			require.NoError(t, p.CreateSession(context.Background(), &expected))
 			assert.NotEqual(t, uuid.Nil, expected.ID)
-			later := expected.ID
-			t.Logf("later: %s", later)
 
 			actual, err := p.GetSession(context.Background(), expected.ID)
 			require.NoError(t, err)

@@ -46,6 +46,9 @@ type SettingsRequest struct {
 	// Format: date-time
 	IssuedAt *strfmt.DateTime `json:"issued_at"`
 
+	// messages
+	Messages Messages `json:"messages,omitempty"`
+
 	// Methods contains context for all enabled registration methods. If a registration request has been
 	// processed, but for example the password is incorrect, this will contain error messages.
 	// Required: true
@@ -56,7 +59,7 @@ type SettingsRequest struct {
 	// Required: true
 	RequestURL *string `json:"request_url"`
 
-	// UpdateSuccessful, if true, indicates that the settings request has been updated successfully with the provided data.
+	// Success, if true, indicates that the settings request has been updated successfully with the provided data.
 	// Done will stay true when repeatedly checking. If set to true, done will revert back to false only
 	// when a request with invalid (e.g. "please use a valid phone number") data was sent.
 	// Required: true
@@ -80,6 +83,10 @@ func (m *SettingsRequest) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateIssuedAt(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateMessages(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -151,6 +158,22 @@ func (m *SettingsRequest) validateIssuedAt(formats strfmt.Registry) error {
 	}
 
 	if err := validate.FormatOf("issued_at", "body", "date-time", m.IssuedAt.String(), formats); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *SettingsRequest) validateMessages(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Messages) { // not required
+		return nil
+	}
+
+	if err := m.Messages.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("messages")
+		}
 		return err
 	}
 

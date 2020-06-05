@@ -11,8 +11,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/stringsx"
 	"github.com/ory/x/tracing"
 
@@ -25,7 +25,7 @@ import (
 )
 
 type ViperProvider struct {
-	l   logrus.FieldLogger
+	l   *logrusx.Logger
 	ss  [][]byte
 	dev bool
 }
@@ -48,6 +48,7 @@ const (
 	ViperKeyURLsLogin                      = "urls.login_ui"
 	ViperKeyURLsError                      = "urls.error_ui"
 	ViperKeyURLsVerification               = "urls.verify_ui"
+	ViperKeyURLsRecovery                   = "urls.recovery_ui"
 	ViperKeyURLsSettings                   = "urls.settings_ui"
 	ViperKeyURLsMFA                        = "urls.mfa_ui"
 	ViperKeyURLsRegistration               = "urls.registration_ui"
@@ -73,7 +74,8 @@ const (
 	ViperKeySelfServiceSettingsRequestLifespan       = "selfservice.settings.request_lifespan"
 	ViperKeySelfServicePrivilegedAuthenticationAfter = "selfservice.settings.privileged_session_max_age"
 
-	ViperKeySelfServiceLifespanLink                = "selfservice.verify.link_lifespan"
+	ViperKeySelfServiceLifespanRecoveryRequest = "selfservice.recovery.request_lifespan"
+
 	ViperKeySelfServiceLifespanVerificationRequest = "selfservice.verify.request_lifespan"
 	ViperKeySelfServiceVerifyReturnTo              = "selfservice.verify.return_to"
 
@@ -91,14 +93,11 @@ func HookStrategyKey(key, strategy string) string {
 	return fmt.Sprintf("%s.%s.hooks", key, strategy)
 }
 
-func NewViperProvider(l logrus.FieldLogger, dev bool) *ViperProvider {
-	return &ViperProvider{
-		l:   l,
-		dev: dev,
-	}
+func NewViperProvider(l *logrusx.Logger, dev bool) *ViperProvider {
+	return &ViperProvider{l: l, dev: dev}
 }
 
-func (p *ViperProvider) HashersArgon2() *HasherArgon2Config {
+func (p *ViperProvider) HasherArgon2() *HasherArgon2Config {
 	return &HasherArgon2Config{
 		Memory:      uint32(viperx.GetInt(p.l, ViperKeyHasherArgon2ConfigMemory, 4*1024*1024)),
 		Iterations:  uint32(viperx.GetInt(p.l, ViperKeyHasherArgon2ConfigIterations, 4)),
@@ -299,6 +298,10 @@ func (p *ViperProvider) RegisterURL() *url.URL {
 	return mustParseURLFromViper(p.l, ViperKeyURLsRegistration)
 }
 
+func (p *ViperProvider) RecoveryURL() *url.URL {
+	return mustParseURLFromViper(p.l, ViperKeyURLsRecovery)
+}
+
 func (p *ViperProvider) SessionLifespan() time.Duration {
 	return viperx.GetDuration(p.l, ViperKeyLifespanSession, time.Hour)
 }
@@ -338,10 +341,10 @@ func (p *ViperProvider) CourierTemplatesRoot() string {
 	return viperx.GetString(p.l, ViperKeyCourierTemplatesPath, "")
 }
 
-func mustParseURLFromViper(l logrus.FieldLogger, key string) *url.URL {
+func mustParseURLFromViper(l *logrusx.Logger, key string) *url.URL {
 	u, err := url.ParseRequestURI(viper.GetString(key))
 	if err != nil {
-		l.WithError(err).WithField("stack", fmt.Sprintf("%+v", errors.WithStack(err))).Fatalf("Configuration value from key %s is not a valid URL: %s", key, viper.GetString(key))
+		l.WithError(err).Fatalf("Configuration value from key %s is not a valid URL: %s", key, viper.GetString(key))
 	}
 	return u
 }
@@ -375,18 +378,16 @@ func (p *ViperProvider) VerificationURL() *url.URL {
 	return mustParseURLFromViper(p.l, ViperKeyURLsVerification)
 }
 
-// SelfServiceVerificationRequestLifespan defines the lifespan of a verification request (the ui interaction). This
-// does not specify the lifespan of a verification code!
 func (p *ViperProvider) SelfServiceVerificationRequestLifespan() time.Duration {
 	return viperx.GetDuration(p.l, ViperKeySelfServiceLifespanVerificationRequest, time.Hour)
 }
 
-func (p *ViperProvider) SelfServiceVerificationLinkLifespan() time.Duration {
-	return viperx.GetDuration(p.l, ViperKeySelfServiceLifespanLink, time.Hour*24)
-}
-
 func (p *ViperProvider) SelfServiceVerificationReturnTo() *url.URL {
 	return mustParseURLFromViper(p.l, ViperKeySelfServiceVerifyReturnTo)
+}
+
+func (p *ViperProvider) SelfServiceRecoveryRequestLifespan() time.Duration {
+	return viperx.GetDuration(p.l, ViperKeySelfServiceLifespanRecoveryRequest, time.Hour)
 }
 
 func (p *ViperProvider) SelfServicePrivilegedSessionMaxAge() time.Duration {

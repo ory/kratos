@@ -19,7 +19,7 @@ At present, there is no Open Source AUI for ORY Kratos.
 ## Self-service User Interface (SSUI)
 
 The SSUI shows screens such as "login", "Registration", "Update your profile",
-"Recover your account", and others. The following provides more reference for
+"Recover access to your account", and others. The following provides more reference for
 SSUI at
 [github.com/ory/kratos-selfservice-ui-node](https://github.com/ory/kratos-selfservice-ui-node).
 
@@ -33,3 +33,7 @@ preventive measures built in.
 Chapter [Self-Service Flows](../self-service/flows/index) contains further
 information on APIs and flows related to the SSUI, and build self service
 applications.
+
+## Messages
+
+This section is a work-in-progress.

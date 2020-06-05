@@ -402,6 +402,60 @@
         }
       }
     },
+    "/self-service/browser/flows/recovery": {
+      "get": {
+        "description": "This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to\n`urls.recovery_ui` with the request ID set as a query parameter. If a valid user session exists, the request\nis aborted.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).",
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Initialize browser-based account recovery flow",
+        "operationId": "initializeSelfServiceRecoveryFlow",
+        "responses": {
+          "302": {
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
+    "/self-service/browser/flows/recovery/link": {
+      "post": {
+        "description": "\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).",
+        "consumes": [
+          "application/json",
+          "application/x-www-form-urlencoded"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Complete the browser-based recovery flow using a recovery link",
+        "operationId": "completeSelfServiceBrowserRecoveryLinkStrategyFlow",
+        "responses": {
+          "302": {
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
     "/self-service/browser/flows/registration": {
       "get": {
         "description": "This endpoint initializes a browser-based user registration flow. Once initialized, the browser will be redirected to\n`urls.registration_ui` with the request ID set as a query parameter. If a valid user session exists already, the browser will be\nredirected to `urls.default_redirect_url`.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
@@ -458,7 +512,7 @@
     },
     "/self-service/browser/flows/requests/login": {
       "get": {
-        "description": "This endpoint returns a login request's context with, for example, error details and\nother information.\n\nWhen accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent\ntoken scanning attacks, the public endpoint does not return 404 status codes to prevent scanning attacks.\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "description": "This endpoint returns a login request's context with, for example, error details and\nother information.\n\nWhen accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent\ntoken scanning attacks, the public endpoint does not return 404 status codes.\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
         "produces": [
           "application/json"
         ],
@@ -516,9 +570,69 @@
         }
       }
     },
+    "/self-service/browser/flows/requests/recovery": {
+      "get": {
+        "description": "When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required\nfor checking the auth session. To prevent scanning attacks, the public endpoint does not return 404 status codes\nbut instead 403 or 500.\n\nMore information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "common",
+          "public",
+          "admin"
+        ],
+        "summary": "Get the request context of browser-based recovery flows",
+        "operationId": "getSelfServiceBrowserRecoveryRequest",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Request is the Login Request ID\n\nThe value for this parameter comes from `request` URL Query parameter sent to your\napplication (e.g. `/recover?request=abcde`).",
+            "name": "request",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "recoveryRequest",
+            "schema": {
+              "$ref": "#/definitions/recoveryRequest"
+            }
+          },
+          "403": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "404": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "410": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
     "/self-service/browser/flows/requests/registration": {
       "get": {
-        "description": "This endpoint returns a registration request's context with, for example, error details and\nother information.\n\nWhen accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent\ntoken scanning attacks, the public endpoint does not return 404 status codes to prevent scanning attacks.\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "description": "This endpoint returns a registration request's context with, for example, error details and\nother information.\n\nWhen accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent\ntoken scanning attacks, the public endpoint does not return 404 status codes.\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
         "produces": [
           "application/json"
         ],
@@ -596,7 +710,7 @@
         "parameters": [
           {
             "type": "string",
-            "description": "Request is the Login Request ID\n\nThe value for this parameter comes from `request` URL Query parameter sent to your\napplication (e.g. `/login?request=abcde`).",
+            "description": "Request is the Login Request ID\n\nThe value for this parameter comes from `request` URL Query parameter sent to your\napplication (e.g. `/settingss?request=abcde`).",
             "name": "request",
             "in": "query",
             "required": true
@@ -915,7 +1029,7 @@
     },
     "/self-service/errors": {
       "get": {
-        "description": "This endpoint returns the error associated with a user-facing self service errors.\n\nWhen accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent\ntoken scanning attacks, the public endpoint does not return 404 status codes to prevent scanning attacks.\n\nMore information can be found at [ORY Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).",
+        "description": "This endpoint returns the error associated with a user-facing self service errors.\n\nWhen accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent\ntoken scanning attacks, the public endpoint does not return 404 status codes.\n\nMore information can be found at [ORY Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).",
         "produces": [
           "application/json"
         ],
@@ -1045,6 +1159,10 @@
         "$ref": "#/definitions/Error"
       }
     },
+    "ID": {
+      "type": "integer",
+      "format": "int64"
+    },
     "Identity": {
       "type": "object",
       "required": [
@@ -1053,14 +1171,15 @@
         "traits"
       ],
       "properties": {
-        "addresses": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/VerifiableAddress"
-          }
-        },
         "id": {
           "$ref": "#/definitions/UUID"
+        },
+        "recovery_addresses": {
+          "description": "RecoveryAddresses contains all the addresses that can be used to recover an identity.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RecoveryAddress"
+          }
         },
         "traits": {
           "$ref": "#/definitions/Traits"
@@ -1072,7 +1191,37 @@
         "traits_schema_url": {
           "description": "TraitsSchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.\n\nformat: url",
           "type": "string"
+        },
+        "verifiable_addresses": {
+          "description": "VerifiableAddresses contains all the addresses that can be verified by the user.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VerifiableAddress"
+          }
         }
+      }
+    },
+    "Message": {
+      "type": "object",
+      "properties": {
+        "context": {
+          "type": "object"
+        },
+        "id": {
+          "$ref": "#/definitions/ID"
+        },
+        "text": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/Type"
+        }
+      }
+    },
+    "Messages": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Message"
       }
     },
     "ProviderCredentialsConfig": {
@@ -1085,6 +1234,28 @@
           "type": "string"
         }
       }
+    },
+    "RecoveryAddress": {
+      "type": "object",
+      "required": [
+        "id",
+        "value",
+        "via"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/UUID"
+        },
+        "value": {
+          "type": "string"
+        },
+        "via": {
+          "$ref": "#/definitions/RecoveryAddressType"
+        }
+      }
+    },
+    "RecoveryAddressType": {
+      "type": "string"
     },
     "RequestMethodConfig": {
       "type": "object",
@@ -1114,8 +1285,14 @@
         }
       }
     },
+    "State": {
+      "type": "string"
+    },
     "Traits": {
       "type": "object"
+    },
+    "Type": {
+      "type": "string"
     },
     "UUID": {
       "type": "string",
@@ -1412,6 +1589,67 @@
         }
       }
     },
+    "recoveryRequest": {
+      "description": "This request is used when an identity wants to recover their account.\n\nWe recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)",
+      "type": "object",
+      "title": "Request presents a recovery request",
+      "required": [
+        "id",
+        "expires_at",
+        "issued_at",
+        "request_url",
+        "methods",
+        "state"
+      ],
+      "properties": {
+        "active": {
+          "description": "Active, if set, contains the registration method that is being used. It is initially\nnot set.",
+          "type": "string"
+        },
+        "expires_at": {
+          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting,\na new request has to be initiated.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "id": {
+          "$ref": "#/definitions/UUID"
+        },
+        "issued_at": {
+          "description": "IssuedAt is the time (UTC) when the request occurred.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "messages": {
+          "$ref": "#/definitions/Messages"
+        },
+        "methods": {
+          "description": "Methods contains context for all account recovery methods. If a registration request has been\nprocessed, but for example the password is incorrect, this will contain error messages.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/recoveryRequestMethod"
+          }
+        },
+        "request_url": {
+          "description": "RequestURL is the initial URL that was requested from ORY Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/definitions/State"
+        }
+      }
+    },
+    "recoveryRequestMethod": {
+      "type": "object",
+      "properties": {
+        "config": {
+          "$ref": "#/definitions/RequestMethodConfig"
+        },
+        "method": {
+          "description": "Method contains the request credentials type.",
+          "type": "string"
+        }
+      }
+    },
     "registrationRequest": {
       "type": "object",
       "required": [
@@ -1561,6 +1799,9 @@
           "type": "string",
           "format": "date-time"
         },
+        "messages": {
+          "$ref": "#/definitions/Messages"
+        },
         "methods": {
           "description": "Methods contains context for all enabled registration methods. If a registration request has been\nprocessed, but for example the password is incorrect, this will contain error messages.",
           "type": "object",
@@ -1573,7 +1814,7 @@
           "type": "string"
         },
         "update_successful": {
-          "description": "UpdateSuccessful, if true, indicates that the settings request has been updated successfully with the provided data.\nDone will stay true when repeatedly checking. If set to true, done will revert back to false only\nwhen a request with invalid (e.g. \"please use a valid phone number\") data was sent.",
+          "description": "Success, if true, indicates that the settings request has been updated successfully with the provided data.\nDone will stay true when repeatedly checking. If set to true, done will revert back to false only\nwhen a request with invalid (e.g. \"please use a valid phone number\") data was sent.",
           "type": "boolean"
         }
       }

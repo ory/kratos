@@ -6,12 +6,14 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/bxcodec/faker"
+	"github.com/bxcodec/faker/v3"
+	"github.com/pkg/errors"
 
 	"github.com/ory/x/randx"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/form"
@@ -19,6 +21,8 @@ import (
 )
 
 func RegisterFakes() {
+	_ = faker.SetRandomMapAndSliceSize(4)
+
 	if err := faker.AddProvider("birthdate", func(v reflect.Value) (interface{}, error) {
 		return time.Now().Add(time.Duration(rand.Int())).Round(time.Second).UTC(), nil
 	}); err != nil {
@@ -46,6 +50,26 @@ func RegisterFakes() {
 		}
 
 		return headers, nil
+	}); err != nil {
+		panic(err)
+	}
+
+	if err := faker.AddProvider("http_method", func(v reflect.Value) (interface{}, error) {
+		methods := []string{"POST", "PUT", "GET", "PATCH"}
+		return methods[rand.Intn(len(methods))], nil
+	}); err != nil {
+		panic(err)
+	}
+
+	if err := faker.AddProvider("identity_credentials_type", func(v reflect.Value) (interface{}, error) {
+		methods := []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypePassword}
+		return string(methods[rand.Intn(len(methods))]), nil
+	}); err != nil {
+		panic(err)
+	}
+
+	if err := faker.AddProvider("string", func(v reflect.Value) (interface{}, error) {
+		return randx.MustString(25, randx.AlphaNum), nil
 	}); err != nil {
 		panic(err)
 	}
@@ -79,7 +103,7 @@ func RegisterFakes() {
 		for _, ct := range []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeOIDC} {
 			var f form.HTMLForm
 			if err := faker.FakeData(&f); err != nil {
-				return nil, err
+				return nil, errors.WithStack(err)
 			}
 			methods[ct] = &registration.RequestMethod{
 				Method: ct,
@@ -101,6 +125,23 @@ func RegisterFakes() {
 			methods[ct] = &settings.RequestMethod{
 				Method: ct,
 				Config: &settings.RequestMethodConfig{RequestMethodConfigurator: &f},
+			}
+		}
+		return methods, nil
+	}); err != nil {
+		panic(err)
+	}
+
+	if err := faker.AddProvider("recovery_request_methods", func(v reflect.Value) (interface{}, error) {
+		var methods = make(map[string]*recovery.RequestMethod)
+		for _, ct := range []string{recovery.StrategyRecoveryTokenName} {
+			var f form.HTMLForm
+			if err := faker.FakeData(&f); err != nil {
+				return nil, err
+			}
+			methods[ct] = &recovery.RequestMethod{
+				Method: ct,
+				Config: &recovery.RequestMethodConfig{RequestMethodConfigurator: &f},
 			}
 		}
 		return methods, nil

@@ -1,12 +1,8 @@
 package login
 
 import (
-	"context"
 	"net/http"
-	"testing"
 	"time"
-
-	"github.com/stretchr/testify/require"
 
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
@@ -24,7 +20,7 @@ type Request struct {
 	// represents the id in the login ui's query parameter: http://<urls.login_ui>/?request=<id>
 	//
 	// required: true
-	ID uuid.UUID `json:"id" faker:"uuid" rw:"r" db:"id"`
+	ID uuid.UUID `json:"id" faker:"-" db:"id"`
 
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,
 	// a new request has to be initiated.
@@ -136,17 +132,4 @@ func (r *Request) GetID() uuid.UUID {
 
 func (r *Request) IsForced() bool {
 	return r.Forced
-}
-
-type testRequestHandlerDependencies interface {
-	RequestPersistenceProvider
-	x.WriterProvider
-}
-
-func TestRequestHandler(t *testing.T, reg testRequestHandlerDependencies) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		e, err := reg.LoginRequestPersister().GetLoginRequest(context.Background(), x.ParseUUID(r.URL.Query().Get("request")))
-		require.NoError(t, err)
-		reg.Writer().Write(w, r, e)
-	}
 }
