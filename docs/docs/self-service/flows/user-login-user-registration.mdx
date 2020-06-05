@@ -499,3 +499,17 @@ logins to IPs coming from your internal network or other logic.
 
 For more information about hooks please read the
 [Hook Documentation](../hooks/index.mdx).
+
+## Refreshing a Session
+
+In some cases it is required to refresh a login session. This is the case when
+updating one's password. Refreshing a session updates the `authenticated_at` time.
+
+:::info
+
+Refreshing a session will not log the user out, unless another user signs in.
+
+:::
+
+To refresh a session, append `?refresh=true` to `/self-service/browser/flows/login`, for example
+`http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/login?refresh=true`.
