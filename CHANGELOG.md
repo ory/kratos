@@ -7,23 +7,25 @@
 - [Unreleased (2020-06-05)](#unreleased-2020-06-05)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
+    - [Features](#features)
     - [Unclassified](#unclassified)
+    - [BREAKING CHANGES](#breaking-changes)
 - [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
     - [Bug Fixes](#bug-fixes-1)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation-1)
-    - [Features](#features)
+    - [Features](#features-1)
     - [Unclassified](#unclassified-1)
-    - [BREAKING CHANGES](#breaking-changes)
+    - [BREAKING CHANGES](#breaking-changes-1)
   - [0.2.1-alpha.1 (2020-05-05)](#021-alpha1-2020-05-05)
     - [Documentation](#documentation-2)
 - [0.2.0-alpha.2 (2020-05-04)](#020-alpha2-2020-05-04)
     - [Bug Fixes](#bug-fixes-2)
     - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation-3)
-    - [Features](#features-1)
+    - [Features](#features-2)
     - [Unclassified](#unclassified-2)
-    - [BREAKING CHANGES](#breaking-changes-1)
+    - [BREAKING CHANGES](#breaking-changes-2)
   - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
     - [Bug Fixes](#bug-fixes-3)
     - [Code Refactoring](#code-refactoring-2)
@@ -32,17 +34,17 @@
     - [Bug Fixes](#bug-fixes-4)
     - [Code Refactoring](#code-refactoring-3)
     - [Documentation](#documentation-5)
-    - [Features](#features-2)
+    - [Features](#features-3)
 - [0.1.0-alpha.5 (2020-02-06)](#010-alpha5-2020-02-06)
     - [Documentation](#documentation-6)
-    - [Features](#features-3)
+    - [Features](#features-4)
 - [0.1.0-alpha.4 (2020-02-06)](#010-alpha4-2020-02-06)
     - [Documentation](#documentation-7)
 - [0.1.0-alpha.3 (2020-02-06)](#010-alpha3-2020-02-06)
 - [0.1.0-alpha.2 (2020-02-03)](#010-alpha2-2020-02-03)
     - [Bug Fixes](#bug-fixes-5)
     - [Documentation](#documentation-8)
-    - [Features](#features-4)
+    - [Features](#features-5)
     - [Unclassified](#unclassified-3)
 - [0.1.0-alpha.1 (2020-01-31)](#010-alpha1-2020-01-31)
     - [Documentation](#documentation-9)
@@ -80,7 +82,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...31263b68ab8d81d264e0fa375a915f8f82d70bb3) (2020-06-05)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...e169a3e4079b1ef3a18564e0723baf81c44c38ec) (2020-06-05)
 
 
 ### Bug Fixes
@@ -123,10 +125,27 @@
 * Use central banner repo for README ([d1e8a82](https://github.com/ory/kratos/commit/d1e8a8272cd536b6e12326778258bfbe0b7e8af7))
 
 
+### Features
+
+* Implement account recovery ([#428](https://github.com/ory/kratos/issues/428)) ([e169a3e](https://github.com/ory/kratos/commit/e169a3e4079b1ef3a18564e0723baf81c44c38ec)), closes [#37](https://github.com/ory/kratos/issues/37):
+
+    > This patch implements the account recovery with endpoints such as "Init Account Recovery", a new config value `urls.recovery_ui` and so on. A new identity field has been added `identity.recovery_addresses` containing all recovery addresses.
+    > 
+    > Additionally, some refactoring was made to DRY code and make naming consistent. As part of dependency upgrades, structured logging has also improved and an audit trail prototype has been added (currently streams to stderr only).
+
+
 ### Unclassified
 
 * Fixed typo ([#472](https://github.com/ory/kratos/issues/472)) ([31263b6](https://github.com/ory/kratos/commit/31263b68ab8d81d264e0fa375a915f8f82d70bb3))
 * docs:fixed broken link (#454) ([22720c6](https://github.com/ory/kratos/commit/22720c6c5e3d31acc175980223183e2336b3751d)), closes [#454](https://github.com/ory/kratos/issues/454)
+
+
+### BREAKING CHANGES
+
+* * Applying this patch requires running SQL Migrations.
+* The field `identity.addresses` has moved to `identity.verifiable_addresses`.
+* Configuration key `selfservice.verification.link_lifespan`
+has been merged with  `selfservice.verification.request_lifespan`.
 
 
 
