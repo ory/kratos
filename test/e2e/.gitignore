@@ -1,2 +1,4 @@
 *.log
 kratos.generated.yml
+cypress/screenshots
+cypress/videos
