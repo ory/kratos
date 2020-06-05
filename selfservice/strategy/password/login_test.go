@@ -107,7 +107,7 @@ func TestLoginNew(t *testing.T) {
 
 		u := ts.URL + login.BrowserLoginPath
 		if force {
-			u = u + "?prompt=login"
+			u = u + "?refresh=true"
 		}
 
 		res, err := c.Get(u)
@@ -304,17 +304,17 @@ func TestLoginNew(t *testing.T) {
 		require.Contains(t, res.Request.URL.Path, "return-ts", "%s", res.Request.URL.String())
 		assert.Equal(t, identifier, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
 
-		t.Run("retry with different prompts", func(t *testing.T) {
+		t.Run("retry with different refresh", func(t *testing.T) {
 			c := &http.Client{Jar: jar}
 
-			t.Run("redirect to returnTS if prompt is missing", func(t *testing.T) {
+			t.Run("redirect to returnTS if refresh is missing", func(t *testing.T) {
 				res, err := c.Get(ts.URL + login.BrowserLoginPath)
 				require.NoError(t, err)
 				require.EqualValues(t, http.StatusOK, res.StatusCode)
 			})
 
 			t.Run("show UI and hint at username", func(t *testing.T) {
-				res, err := c.Get(ts.URL + login.BrowserLoginPath + "?prompt=login")
+				res, err := c.Get(ts.URL + login.BrowserLoginPath + "?refresh=true")
 				require.NoError(t, err)
 				require.EqualValues(t, http.StatusOK, res.StatusCode)
 

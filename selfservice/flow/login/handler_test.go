@@ -84,29 +84,29 @@ func TestHandlerSettingForced(t *testing.T) {
 		assert.Contains(t, res.Request.URL.String(), loginTS.URL)
 	})
 
-	t.Run("case=does not set forced flag on unauthenticated request with prompt=login", func(t *testing.T) {
+	t.Run("case=does not set forced flag on unauthenticated request with refresh=true", func(t *testing.T) {
 		res, body := mur(t, url.Values{
-			"prompt": {"login"},
+			"refresh": {"true"},
 		})
 		ab(body, true)
 		assert.Contains(t, res.Request.URL.String(), loginTS.URL)
 	})
 
-	t.Run("case=does not set forced flag on authenticated request without prompt=login", func(t *testing.T) {
+	t.Run("case=does not set forced flag on authenticated request without refresh=true", func(t *testing.T) {
 		res, _ := mar(t, url.Values{})
 		assert.Contains(t, res.Request.URL.String(), "https://www.ory.sh")
 	})
 
-	t.Run("case=does not set forced flag on authenticated request with prompt=false", func(t *testing.T) {
+	t.Run("case=does not set forced flag on authenticated request with refresh=false", func(t *testing.T) {
 		res, _ := mar(t, url.Values{
-			"prompt": {"false"},
+			"refresh": {"false"},
 		})
 		assert.Contains(t, res.Request.URL.String(), "https://www.ory.sh")
 	})
 
-	t.Run("case=does set forced flag on authenticated request with prompt=login", func(t *testing.T) {
+	t.Run("case=does set forced flag on authenticated request with refresh=true", func(t *testing.T) {
 		res, body := mar(t, url.Values{
-			"prompt": {"login"},
+			"refresh": {"true"},
 		})
 		ab(body, true)
 		assert.Contains(t, res.Request.URL.String(), loginTS.URL)
