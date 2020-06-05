@@ -62,7 +62,7 @@ func (s *ErrorHandler) reauthenticate(
 	s.c.SelfPublicURL()
 	u := urlx.AppendPaths(
 		urlx.CopyWithQuery(s.c.SelfPublicURL(), url.Values{
-			"refresh":    {"true"},
+			"refresh":   {"true"},
 			"return_to": {returnTo.String()},
 		}), login.BrowserLoginPath)
 
