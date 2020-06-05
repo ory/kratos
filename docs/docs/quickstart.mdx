@@ -60,10 +60,16 @@ To ensure that no one can access the dashboard without prior authentication
 ```js
 // Import the ORY Kratos SDK. SDKs are available for all popular programming
 // languages! We will add examples for other programming languages here soon.
-import { KratosPublicSDK } from '@oryd/kratos-client';
+import {
+  AdminApi,
+  PublicApi,
+} from '@oryd/kratos-client'
+
+const publicEndpoint = new PublicApi('https://public.ory-kratos')
+const adminEndpoint = new AdminApi('https://admin.ory-kratos')
 
 const needsLogin = (req, res, next) => {
-  new KratosPublicSDK('https://public.ory-kratos')
+  new publicEndpoint
     .whoami(req)
     .then(({ body }) => {
       req.user = { session: body };
