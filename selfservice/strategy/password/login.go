@@ -70,12 +70,12 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 	p.Password = r.PostForm.Get("password")
 
 	if len(p.Identifier) == 0 {
-		s.handleLoginError(w, r, ar, schema.NewRequiredError("#/", "identifier"))
+		s.handleLoginError(w, r, ar, schema.NewRequiredError("#/identifier", "identifier"))
 		return
 	}
 
 	if len(p.Password) == 0 {
-		s.handleLoginError(w, r, ar, schema.NewRequiredError("#/", "password"))
+		s.handleLoginError(w, r, ar, schema.NewRequiredError("#/password", "password"))
 		return
 	}
 

@@ -20,6 +20,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/text"
 )
 
 func newJSONRequest(t *testing.T, j string) *http.Request {
@@ -122,7 +123,7 @@ func TestContainer(t *testing.T) {
 				expect: &HTMLForm{
 					Fields: Fields{
 						Field{Name: "meal.chef", Type: "text", Value: "aeneas"},
-						Field{Name: "meal.name", Errors: []Error{{Message: "missing properties: \"name\""}}},
+						Field{Name: "meal.name", Messages: text.Messages{*text.NewValidationErrorRequired("name")}},
 					},
 				},
 			},
@@ -188,7 +189,7 @@ func TestContainer(t *testing.T) {
 				actual, err := NewHTMLFormFromJSONSchema("action", tc.ref, tc.prefix, nil)
 				require.NoError(t, err)
 				assert.Equal(t, "action", actual.Action)
-				assert.EqualValues(t, tc.expect.Errors, actual.Errors)
+				assert.EqualValues(t, tc.expect.Messages, actual.Messages)
 				assert.EqualValues(t, tc.expect.Fields, actual.Fields)
 			})
 		}
@@ -202,10 +203,10 @@ func TestContainer(t *testing.T) {
 		}{
 			{err: errors.New("foo"), expectErr: true},
 			{err: &herodot.ErrNotFound, expectErr: true},
-			{err: herodot.ErrBadRequest.WithReason("tests"), expect: HTMLForm{Fields: Fields{}, Errors: []Error{{Message: "tests"}}}},
-			{err: schema.NewInvalidCredentialsError(), expect: HTMLForm{Fields: Fields{}, Errors: []Error{{Message: "the provided credentials are invalid, check for spelling mistakes in your password or username, email address, or phone number"}}}},
-			{err: &jsonschema.ValidationError{Message: "test", InstancePtr: "#/foo/bar/baz"}, expect: HTMLForm{Fields: Fields{Field{Name: "foo.bar.baz", Type: "", Errors: []Error{{Message: "test"}}}}}},
-			{err: &jsonschema.ValidationError{Message: "test", InstancePtr: ""}, expect: HTMLForm{Fields: Fields{}, Errors: []Error{{Message: "test"}}}},
+			{err: herodot.ErrBadRequest.WithReason("tests"), expect: HTMLForm{Fields: Fields{}, Messages: text.Messages{*text.NewValidationErrorGeneric("tests")}}},
+			{err: schema.NewInvalidCredentialsError(), expect: HTMLForm{Fields: Fields{}, Messages: text.Messages{*text.NewErrorValidationInvalidCredentials()}}},
+			{err: &jsonschema.ValidationError{Message: "test", InstancePtr: "#/foo/bar/baz"}, expect: HTMLForm{Fields: Fields{Field{Name: "foo.bar.baz", Type: "", Messages: text.Messages{*text.NewValidationErrorGeneric("test")}}}}},
+			{err: &jsonschema.ValidationError{Message: "test", InstancePtr: ""}, expect: HTMLForm{Fields: Fields{}, Messages: text.Messages{*text.NewValidationErrorGeneric("test")}}},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				for _, in := range []error{tc.err, errors.WithStack(tc.err)} {
@@ -216,7 +217,7 @@ func TestContainer(t *testing.T) {
 						return
 					}
 					require.NoError(t, err)
-					assert.EqualValues(t, tc.expect.Errors, c.Errors)
+					assert.EqualValues(t, tc.expect.Messages, c.Messages)
 					assert.EqualValues(t, tc.expect.Fields, c.Fields)
 				}
 			})
@@ -261,46 +262,46 @@ func TestContainer(t *testing.T) {
 		)
 	})
 
-	t.Run("method=AddError", func(t *testing.T) {
+	t.Run("method=AddMessage", func(t *testing.T) {
 		c := HTMLForm{
 			Fields: Fields{
-				{Name: "1", Value: "foo", Errors: []Error{{Message: "foo"}}},
-				{Name: "2", Value: "", Errors: []Error{}},
+				{Name: "1", Value: "foo", Messages: text.Messages{{Text: "foo"}}},
+				{Name: "2", Value: "", Messages: text.Messages{}},
 			},
 		}
 		assert.Len(t, c.Fields, 2)
-		c.AddError(&Error{Message: "baz1"}, "1")
-		c.AddError(&Error{Message: "baz2"}, "2")
-		c.AddError(&Error{Message: "baz3"}, "3")
-		c.AddError(&Error{Message: "baz"}, "4", "5", "6")
-		c.AddError(&Error{Message: "rootbar"})
+		c.AddMessage(&text.Message{Text: "baz1"}, "1")
+		c.AddMessage(&text.Message{Text: "baz2"}, "2")
+		c.AddMessage(&text.Message{Text: "baz3"}, "3")
+		c.AddMessage(&text.Message{Text: "baz"}, "4", "5", "6")
+		c.AddMessage(&text.Message{Text: "rootbar"})
 
 		assert.Len(t, c.Fields, 6)
 		for _, k := range []string{"1", "2", "3"} {
-			assert.EqualValues(t, fmt.Sprintf("baz%s", k), c.getField(k).Errors[len(c.getField(k).Errors)-1].Message, "%+v", c)
+			assert.EqualValues(t, fmt.Sprintf("baz%s", k), c.getField(k).Messages[len(c.getField(k).Messages)-1].Text, "%+v", c)
 		}
 		for _, k := range []string{"4", "5", "6"} {
-			assert.EqualValues(t, "baz", c.getField(k).Errors[0].Message, "%+v", c)
+			assert.EqualValues(t, "baz", c.getField(k).Messages[0].Text, "%+v", c)
 		}
 
-		assert.Len(t, c.Errors, 1)
-		assert.Equal(t, "rootbar", c.Errors[0].Message)
+		assert.Len(t, c.Messages, 1)
+		assert.Equal(t, "rootbar", c.Messages[0].Text)
 	})
 
 	t.Run("method=Reset", func(t *testing.T) {
 		c := HTMLForm{
 			Fields: Fields{
-				{Name: "1", Value: "foo", Errors: []Error{{Message: "foo"}}},
-				{Name: "2", Value: "bar", Errors: []Error{{Message: "bar"}}},
+				{Name: "1", Value: "foo", Messages: text.Messages{{Text: "foo"}}},
+				{Name: "2", Value: "bar", Messages: text.Messages{{Text: "bar"}}},
 			},
-			Errors: []Error{{Message: ""}},
+			Messages: text.Messages{{Text: ""}},
 		}
 		c.Reset()
 
-		assert.Empty(t, c.Errors)
-		assert.Empty(t, c.getField("1").Errors)
+		assert.Empty(t, c.Messages)
+		assert.Empty(t, c.getField("1").Messages)
 		assert.Empty(t, c.getField("1").Value)
-		assert.Empty(t, c.getField("2").Errors)
+		assert.Empty(t, c.getField("2").Messages)
 		assert.Empty(t, c.getField("2").Value)
 	})
 }

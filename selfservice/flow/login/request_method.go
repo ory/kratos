@@ -63,9 +63,9 @@ type RequestMethodConfigurator interface {
 	form.ErrorParser
 	form.ValueSetter
 	form.Resetter
-	form.ErrorResetter
+	form.MessageResetter
 	form.CSRFSetter
-	form.ErrorAdder
+	form.MessageAdder
 }
 
 // swagger:model loginRequestMethodConfig

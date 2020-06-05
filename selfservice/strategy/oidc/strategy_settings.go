@@ -428,7 +428,7 @@ func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, c
 	}
 
 	if ctxUpdate.Request != nil {
-		ctxUpdate.Request.Methods[s.SettingsStrategyID()].Config.ResetErrors()
+		ctxUpdate.Request.Methods[s.SettingsStrategyID()].Config.ResetMessages()
 		ctxUpdate.Request.Methods[s.SettingsStrategyID()].Config.SetCSRF(s.d.GenerateCSRFToken(r))
 	}
 

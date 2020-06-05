@@ -71,7 +71,7 @@ func TestSettings(t *testing.T) {
 				assert.Equal(t, *form.Action, gjson.Get(actual, "methods.password.config.action").String(), "%s", actual)
 				assert.Empty(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).value").String(), "%s", actual)
 				assert.NotEmpty(t, gjson.Get(actual, "methods.password.config.fields.#(name==csrf_token).value").String(), "%s", actual)
-				assert.Contains(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).errors.0.message").String(), "the password does not fulfill the password policy because", "%s", actual)
+				assert.Contains(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).messages.0.text").String(), "password can not be used because", "%s", actual)
 			}
 
 			t.Run("session=with privileged session", run)
@@ -93,7 +93,7 @@ func TestSettings(t *testing.T) {
 
 			assert.Equal(t, true, gjson.Get(actual, "update_successful").Bool(), "%s", actual)
 			assert.Empty(t, gjson.Get(actual, "methods.password.fields.#(name==password).value").String(), "%s", actual)
-			assert.Empty(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).errors.0.message").String(), actual)
+			assert.Empty(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).messages.0.text").String(), actual)
 
 			actualIdentity, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), primaryIdentity.ID)
 			require.NoError(t, err)

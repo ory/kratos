@@ -130,7 +130,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 	}
 
 	if len(p.Password) == 0 {
-		s.handleRegistrationError(w, r, ar, &p, schema.NewRequiredError("#/", "password"))
+		s.handleRegistrationError(w, r, ar, &p, schema.NewRequiredError("#/password", "password"))
 		return
 	}
 

@@ -20,8 +20,8 @@ type FormField struct {
 	// Disabled is the equivalent of `<input disabled="{{.Disabled}}">`
 	Disabled bool `json:"disabled,omitempty"`
 
-	// errors
-	Errors Errors `json:"errors,omitempty"`
+	// messages
+	Messages Messages `json:"messages,omitempty"`
 
 	// Name is the equivalent of `<input name="{{.Name}}">`
 	// Required: true
@@ -45,7 +45,7 @@ type FormField struct {
 func (m *FormField) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateErrors(formats); err != nil {
+	if err := m.validateMessages(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -63,15 +63,15 @@ func (m *FormField) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *FormField) validateErrors(formats strfmt.Registry) error {
+func (m *FormField) validateMessages(formats strfmt.Registry) error {
 
-	if swag.IsZero(m.Errors) { // not required
+	if swag.IsZero(m.Messages) { // not required
 		return nil
 	}
 
-	if err := m.Errors.Validate(formats); err != nil {
+	if err := m.Messages.Validate(formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("errors")
+			return ve.ValidateName("messages")
 		}
 		return err
 	}

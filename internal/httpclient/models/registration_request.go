@@ -36,6 +36,9 @@ type RegistrationRequest struct {
 	// Format: date-time
 	IssuedAt *strfmt.DateTime `json:"issued_at"`
 
+	// messages
+	Messages Messages `json:"messages,omitempty"`
+
 	// Methods contains context for all enabled registration methods. If a registration request has been
 	// processed, but for example the password is incorrect, this will contain error messages.
 	// Required: true
@@ -64,6 +67,10 @@ func (m *RegistrationRequest) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateIssuedAt(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateMessages(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -129,6 +136,22 @@ func (m *RegistrationRequest) validateIssuedAt(formats strfmt.Registry) error {
 	}
 
 	if err := validate.FormatOf("issued_at", "body", "date-time", m.IssuedAt.String(), formats); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *RegistrationRequest) validateMessages(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Messages) { // not required
+		return nil
+	}
+
+	if err := m.Messages.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("messages")
+		}
 		return err
 	}
 

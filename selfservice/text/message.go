@@ -36,7 +36,7 @@ type Message struct {
 	ID      ID              `json:"id"`
 	Text    string          `json:"text"`
 	Type    Type            `json:"type"`
-	Context json.RawMessage `json:"context,omitempty"`
+	Context json.RawMessage `json:"context,omitempty" faker:"-"`
 }
 
 func (m *Message) Scan(value interface{}) error {
