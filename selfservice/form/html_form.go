@@ -3,20 +3,23 @@ package form
 import (
 	"database/sql/driver"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"sort"
+	"strings"
 	"sync"
 
 	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/jsonschema/v3"
 
-	"github.com/ory/x/errorsx"
-
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/jsonschemax"
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/stringslice"
+
+	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/text"
 )
 
 var (
@@ -48,8 +51,8 @@ type HTMLForm struct {
 	// required: true
 	Fields Fields `json:"fields"`
 
-	// Errors contains all form errors. These will be duplicates of the individual field errors.
-	Errors []Error `json:"errors,omitempty"`
+	// Messages contains all global form messages and errors.
+	Messages text.Messages `json:"messages,omitempty"`
 }
 
 // NewHTMLForm returns an empty container.
@@ -117,15 +120,15 @@ func (c *HTMLForm) SortFields(schemaRef, prefix string) error {
 }
 
 // Reset resets the container's errors as well as each field's value and errors.
-func (c *HTMLForm) ResetErrors(exclude ...string) {
+func (c *HTMLForm) ResetMessages(exclude ...string) {
 	c.defaults()
 	c.Lock()
 	defer c.Unlock()
 
-	c.Errors = nil
+	c.Messages = nil
 	for k, f := range c.Fields {
 		if !stringslice.Has(exclude, f.Name) {
-			f.Errors = nil
+			f.Messages = nil
 		}
 		c.Fields[k] = f
 	}
@@ -137,7 +140,7 @@ func (c *HTMLForm) Reset(exclude ...string) {
 	c.Lock()
 	defer c.Unlock()
 
-	c.Errors = nil
+	c.Messages = nil
 	for k, f := range c.Fields {
 		if !stringslice.Has(exclude, f.Name) {
 			f.Reset()
@@ -153,33 +156,34 @@ func (c *HTMLForm) Reset(exclude ...string) {
 // This method DOES NOT touch the values of the form fields, only its errors.
 func (c *HTMLForm) ParseError(err error) error {
 	c.defaults()
-	switch e := errorsx.Cause(err).(type) {
-	case richError:
+	if e := richError(nil); errors.As(err, &e) {
 		if e.StatusCode() == http.StatusBadRequest {
-			c.AddError(&Error{Message: e.Reason()})
+			c.AddMessage(text.NewValidationErrorGeneric(e.Reason()))
 			return nil
 		}
 		return err
-	case *jsonschema.ValidationError:
-		for _, err := range append([]*jsonschema.ValidationError{e}, e.Causes...) {
-			pointer, _ := jsonschemax.JSONPointerToDotNotation(err.InstancePtr)
-			if err.Context == nil {
+	} else if e := new(schema.ValidationError); errors.As(err, &e) {
+		pointer, _ := jsonschemax.JSONPointerToDotNotation(e.InstancePtr)
+		for _, message := range e.Messages {
+			c.AddMessage(&message, pointer)
+		}
+		return nil
+	} else if e := new(jsonschema.ValidationError); errors.As(err, &e) {
+		switch ctx := e.Context.(type) {
+		case *jsonschema.ValidationErrorContextRequired:
+			for _, required := range ctx.Missing {
 				// The pointer can be ignored because if there is an error, we'll just use
 				// the empty field (global error).
-				c.AddError(&Error{Message: err.Message}, pointer)
-				continue
+				pointer, _ := jsonschemax.JSONPointerToDotNotation(required)
+				segments := strings.Split(required, "/")
+				c.AddMessage(text.NewValidationErrorRequired(segments[len(segments)-1]), pointer)
 			}
-			switch ctx := err.Context.(type) {
-			case *jsonschema.ValidationErrorContextRequired:
-				for _, required := range ctx.Missing {
-					// The pointer can be ignored because if there is an error, we'll just use
-					// the empty field (global error).
-					pointer, _ := jsonschemax.JSONPointerToDotNotation(required)
-					c.AddError(&Error{Message: err.Message}, pointer)
-				}
-			default:
-				c.AddError(&Error{Message: err.Message}, pointer)
-				continue
+		default:
+			// The pointer can be ignored because if there is an error, we'll just use
+			// the empty field (global error).
+			for _, ee := range append([]*jsonschema.ValidationError{e}, e.Causes...) {
+				pointer, _ := jsonschemax.JSONPointerToDotNotation(ee.InstancePtr)
+				c.AddMessage(text.NewValidationErrorGeneric(ee.Message), pointer)
 			}
 		}
 		return nil
@@ -293,27 +297,27 @@ func (c *HTMLForm) SetValue(name string, value interface{}) {
 	})
 }
 
-// AddError adds the provided error, and if a non-empty names list is set,
+// AddMessage adds the provided error, and if a non-empty names list is set,
 // adds the error on the corresponding field.
-func (c *HTMLForm) AddError(err *Error, names ...string) {
+func (c *HTMLForm) AddMessage(err *text.Message, setForFields ...string) {
 	c.defaults()
 	c.Lock()
 	defer c.Unlock()
 
-	if len(stringslice.TrimSpaceEmptyFilter(names)) == 0 {
-		c.Errors = append(c.Errors, *err)
+	if len(stringslice.TrimSpaceEmptyFilter(setForFields)) == 0 {
+		c.Messages = append(c.Messages, *err)
 		return
 	}
 
-	for _, name := range names {
+	for _, name := range setForFields {
 		if ff := c.getField(name); ff != nil {
-			ff.Errors = append(ff.Errors, *err)
+			ff.Messages = append(ff.Messages, *err)
 			continue
 		}
 
 		c.Fields = append(c.Fields, Field{
-			Name:   name,
-			Errors: []Error{*err},
+			Name:     name,
+			Messages: text.Messages{*err},
 		})
 	}
 }

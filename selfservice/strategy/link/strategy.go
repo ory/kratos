@@ -168,10 +168,10 @@ func (s *StrategyLink) handleSubmit(w http.ResponseWriter, r *http.Request, ps h
 		return
 	case recovery.StatePassedChallenge:
 		// was already handled, do not allow retry
-		s.retryFlowWithMessage(w, r, text.NewErrorValidationRetrySuccess())
+		s.retryFlowWithMessage(w, r, text.NewErrorValidationRecoveryRetrySuccess())
 		return
 	default:
-		s.retryFlowWithMessage(w, r, text.NewErrorValidationUnexpectedState())
+		s.retryFlowWithMessage(w, r, text.NewErrorValidationRecoveryStateFailure())
 		return
 	}
 }
@@ -259,7 +259,7 @@ func (s *StrategyLink) retryFlowWithMessage(w http.ResponseWriter, r *http.Reque
 func (s *StrategyLink) issueAndSendRecoveryToken(w http.ResponseWriter, r *http.Request, req *recovery.Request) {
 	email := r.PostForm.Get("email")
 	if len(email) == 0 {
-		s.handleError(w, r, req, schema.NewRequiredError("#/", "email"))
+		s.handleError(w, r, req, schema.NewRequiredError("#/email", "email"))
 		return
 	}
 

@@ -103,7 +103,7 @@ func (s *Strategy) continueSettingsFlow(
 	}
 
 	if len(p.Password) == 0 {
-		s.handleSettingsError(w, r, ctxUpdate, p, schema.NewRequiredError("#/", "password"))
+		s.handleSettingsError(w, r, ctxUpdate, p, schema.NewRequiredError("#/password", "password"))
 		return
 	}
 

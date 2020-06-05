@@ -6,9 +6,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/ory/x/errorsx"
-
-	"github.com/ory/kratos/selfservice/form"
+	"github.com/ory/kratos/selfservice/text"
 
 	"github.com/pkg/errors"
 
@@ -44,15 +42,17 @@ type (
 
 	requestExpiredError struct {
 		*herodot.DefaultError
+		ago time.Duration
 	}
 )
 
-func newRequestExpiredError(since time.Duration) requestExpiredError {
-	return requestExpiredError{
-		herodot.ErrBadRequest.
+func newRequestExpiredError(ago time.Duration) *requestExpiredError {
+	return &requestExpiredError{
+		ago: ago,
+		DefaultError: herodot.ErrBadRequest.
 			WithError("registration request expired").
 			WithReasonf(`The registration request has expired. Please restart the flow.`).
-			WithReasonf("The registration request expired %.2f minutes ago, please try again.", since.Minutes()),
+			WithReasonf("The registration request expired %.2f minutes ago, please try again.", ago.Minutes()),
 	}
 }
 
@@ -76,7 +76,7 @@ func (s *ErrorHandler) HandleRegistrationError(
 		WithField("registration_request", rr).
 		Info("Encountered self-service request error.")
 
-	if _, ok := errorsx.Cause(err).(requestExpiredError); ok {
+	if e := new(requestExpiredError); errors.As(err, &e) {
 		// create new request because the old one is not valid
 		a, err := s.d.RegistrationHandler().NewRegistrationRequest(w, r)
 		if err != nil {
@@ -85,18 +85,15 @@ func (s *ErrorHandler) HandleRegistrationError(
 			return
 		}
 
-		for name, method := range a.Methods {
-			method.Config.AddError(&form.Error{Message: "Your session expired, please try again."})
-			if err := s.d.RegistrationRequestPersister().UpdateRegistrationRequestMethod(context.TODO(), a.ID, name, method); err != nil {
-				redirTo, err := s.d.SelfServiceErrorManager().Create(r.Context(), w, r, err)
-				if err != nil {
-					s.HandleRegistrationError(w, r, ct, rr, err)
-					return
-				}
-				http.Redirect(w, r, redirTo, http.StatusFound)
+		a.Messages.Add(text.NewErrorValidationRegistrationRequestExpired(e.ago))
+		if err := s.d.RegistrationRequestPersister().UpdateRegistrationRequest(context.TODO(), a); err != nil {
+			redirTo, err := s.d.SelfServiceErrorManager().Create(r.Context(), w, r, err)
+			if err != nil {
+				s.HandleRegistrationError(w, r, ct, rr, err)
 				return
 			}
-			a.Methods[name] = method
+			http.Redirect(w, r, redirTo, http.StatusFound)
+			return
 		}
 
 		http.Redirect(w, r, urlx.CopyWithQuery(s.c.RegisterURL(), url.Values{"request": {a.ID.String()}}).String(), http.StatusFound)
