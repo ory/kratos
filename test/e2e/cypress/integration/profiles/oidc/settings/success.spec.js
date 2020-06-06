@@ -15,9 +15,9 @@ context('Settings', () => {
     cy.get('input[name="traits.website"]').clear().type(website)
     cy.get('button[value="hydra"]').click()
 
-    cy.get('.form-errors .message').should(
+    cy.get('.messages .message').should(
       'contain.text',
-      'an account with the same identifier'
+      'An account with the same identifier'
     )
 
     cy.noSession()

@@ -20,9 +20,9 @@ context('Login', () => {
   describe('shows validation errors when invalid signup data is used', () => {
     it('should show an error when the identifier is missing', () => {
       cy.get('button[type="submit"]').click()
-      cy.get('.form-errors .message').should(
+      cy.get('.messages .message').should(
         'contain.text',
-        'missing properties: identifier'
+        'Property identifier is missing'
       )
     })
 
@@ -33,9 +33,9 @@ context('Login', () => {
         .should('have.value', identity)
 
       cy.get('button[type="submit"]').click()
-      cy.get('.form-errors .message').should(
+      cy.get('.messages .message').should(
         'contain.text',
-        'missing properties: password'
+        'Property password is missing'
       )
     })
 
@@ -44,7 +44,7 @@ context('Login', () => {
       cy.get('input[name="password"]').type('invalid-password')
 
       cy.get('button[type="submit"]').click()
-      cy.get('.form-errors .message').should(
+      cy.get('.messages .message').should(
         'contain.text',
         'credentials are invalid'
       )

@@ -18,7 +18,7 @@ context('Recovery', () => {
       cy.get('button[type="submit"]').click()
 
       cy.location('pathname').should('eq', '/recovery')
-      cy.get('.form-messages.global .info').should(
+      cy.get('.messages.global .info').should(
         'have.text',
         'An email containing a recovery link has been sent to the email address you provided.'
       )
@@ -37,9 +37,9 @@ context('Recovery', () => {
 
     it('should cause form errors', () => {
       cy.get('button[type="submit"]').click()
-      cy.get('.form-errors .message').should(
+      cy.get('.messages .message').should(
         'contain.text',
-        'missing properties: email'
+        'Property email is missing'
       )
     })
 
@@ -53,7 +53,7 @@ context('Recovery', () => {
 
       cy.recoverEmailButExpired({ expect: { email: identity.email } })
 
-      cy.get('.form-messages.global .error').should(
+      cy.get('.messages.global .error').should(
         'have.text',
         'The recovery token is invalid or has already been used. Please retry the flow.'
       )
@@ -72,7 +72,7 @@ context('Recovery', () => {
       cy.getMail().then((mail) => {
         const link = parseHtml(mail.body).querySelector('a')
         cy.visit(link.href + '-not') // add random stuff to the confirm challenge
-        cy.get('.form-messages.global .error').should(
+        cy.get('.messages.global .error').should(
           'have.text',
           'The recovery token is invalid or has already been used. Please retry the flow.'
         )
@@ -96,7 +96,7 @@ context('Recovery', () => {
         cy.logout()
 
         cy.visit(link.href)
-        cy.get('.form-messages.global .error').should(
+        cy.get('.messages.global .error').should(
           'have.text',
           'The recovery token is invalid or has already been used. Please retry the flow.'
         )

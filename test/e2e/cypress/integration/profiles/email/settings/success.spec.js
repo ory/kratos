@@ -43,7 +43,7 @@ context('Settings', () => {
       )
       cy.get('.container').should(
         'contain.text',
-        'the password does not fulfill the password policy because: password length must be at least 6 characters but only got 3'
+        'The password can not be used'
       )
       cy.get('#user-password input[name="password"]').should('be.empty')
 
@@ -56,7 +56,7 @@ context('Settings', () => {
       )
       cy.get('.container').should(
         'not.contain.text',
-        'the password does not fulfill the password policy because: password length must be at least 6 characters but only got 3'
+        'The password can not be used'
       )
       cy.get('#user-password input[name="password"]').should('be.empty')
     })

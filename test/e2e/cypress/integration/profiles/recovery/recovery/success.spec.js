@@ -24,7 +24,7 @@ context('Recovery', () => {
       cy.get('button[type="submit"]').click()
 
       cy.location('pathname').should('eq', '/recovery')
-      cy.get('.form-messages.global .info').should(
+      cy.get('.messages.global .info').should(
         'have.text',
         'An email containing a recovery link has been sent to the email address you provided.'
       )

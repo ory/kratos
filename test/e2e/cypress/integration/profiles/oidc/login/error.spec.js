@@ -11,7 +11,7 @@ context('Login', () => {
     cy.get('button[value="hydra"]').click()
     cy.get('#reject').click()
     cy.location('pathname').should('equal', '/auth/login')
-    cy.get('.form-errors .message').should(
+    cy.get('.messages .message').should(
       'contain.text',
       'login rejected request'
     )
@@ -25,7 +25,7 @@ context('Login', () => {
     cy.get('#accept').click()
     cy.get('#reject').click()
     cy.location('pathname').should('equal', '/auth/login')
-    cy.get('.form-errors .message').should(
+    cy.get('.messages .message').should(
       'contain.text',
       'consent rejected request'
     )
@@ -40,6 +40,6 @@ context('Login', () => {
     cy.get('#website').type(website)
     cy.get('#accept').click()
     cy.location('pathname').should('equal', '/auth/login')
-    cy.get('.form-errors .message').should('contain.text', 'no id_token')
+    cy.get('.messages .message').should('contain.text', 'no id_token')
   })
 })

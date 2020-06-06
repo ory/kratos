@@ -49,7 +49,7 @@ context('Settings', () => {
         .clear()
         .type('http://s')
       cy.get('#user-profile button[type="submit"]').click()
-      cy.get('#user-profile .form-errors .message').should(
+      cy.get('#user-profile .messages .message').should(
         'contain.text',
         'length must be >= 10'
       )
@@ -126,7 +126,7 @@ context('Settings', () => {
     it('fails if password policy is violated', () => {
       cy.get('#user-password input[name="password"]').clear().type('123456')
       cy.get('#user-password button[type="submit"]').click()
-      cy.get('#user-password .form-errors .message').should(
+      cy.get('#user-password .messages .message').should(
         'contain.text',
         'data breaches'
       )
