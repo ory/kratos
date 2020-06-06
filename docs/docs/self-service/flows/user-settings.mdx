@@ -330,9 +330,11 @@ stateDiagram
            method: 'password',
            config: {
              /* ... */
-             errors: [
+             messages: [
                {
-                 message: 'The provided credentials are invalid. Check for spelling mistakes in your password or username, email address, or phone number.',
+                 id: 4000006,
+                 text: 'The provided credentials are invalid. Check for spelling mistakes in your password or username, email address, or phone number.',
+                 type: 'error',
                },
              ],
            },

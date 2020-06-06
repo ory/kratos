@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/ory/kratos/selfservice/text"
+	"github.com/ory/kratos/text"
 
 	"github.com/pkg/errors"
 

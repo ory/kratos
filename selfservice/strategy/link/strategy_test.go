@@ -24,7 +24,7 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/strategy/link"
-	"github.com/ory/kratos/selfservice/text"
+	"github.com/ory/kratos/text"
 )
 
 func init() {

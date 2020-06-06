@@ -10,8 +10,8 @@ const (
 )
 
 const (
-	ErrorValidationLogin ID = 4010000 + iota
-	ErrorValidationLoginRequestExpired
+	ErrorValidationLogin               ID = 4010000 + iota // 4010000
+	ErrorValidationLoginRequestExpired                     // 4010001
 )
 
 func NewErrorValidationLoginRequestExpired(ago time.Duration) *Message {

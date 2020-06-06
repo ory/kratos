@@ -106,9 +106,10 @@ If the form validation fails, an error will bei included:
             type: 'text',
             required: false,
             value: 'http://s',
-            errors: [
+            messages: [
               {
-                message: 'length must be >= 10, but got 8',
+                /* id, type */
+                text: 'length must be >= 10, but got 8',
               },
             ],
           },

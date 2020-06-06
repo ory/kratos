@@ -12,7 +12,7 @@ import (
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/selfservice/errorx"
-	"github.com/ory/kratos/selfservice/text"
+	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
 

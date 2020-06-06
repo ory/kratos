@@ -11,7 +11,7 @@ import (
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/selfservice/text"
+	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
 

@@ -30,7 +30,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/selfservice/strategy/password"
-	"github.com/ory/kratos/selfservice/text"
+	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
 

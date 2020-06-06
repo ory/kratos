@@ -10,17 +10,17 @@ import (
 )
 
 const (
-	InfoSelfServiceRecovery ID = 1060000 + iota
-	InfoSelfServiceRecoverySuccessful
-	InfoSelfServiceRecoveryEmailSent
+	InfoSelfServiceRecovery           ID = 1060000 + iota // 1060000
+	InfoSelfServiceRecoverySuccessful                     // 1060001
+	InfoSelfServiceRecoveryEmailSent                      // 1060002
 )
 
 const (
-	ErrorValidationRecovery ID = 4060000 + iota
-	ErrorValidationRecoveryRetrySuccess
-	ErrorValidationRecoveryStateFailure
-	ErrorValidationRecoveryMissingRecoveryToken
-	ErrorValidationRecoveryRecoveryTokenInvalidOrAlreadyUsed
+	ErrorValidationRecovery                                  ID = 4060000 + iota // 4060000
+	ErrorValidationRecoveryRetrySuccess                                          // 4060001
+	ErrorValidationRecoveryStateFailure                                          // 4060002
+	ErrorValidationRecoveryMissingRecoveryToken                                  // 4060003
+	ErrorValidationRecoveryRecoveryTokenInvalidOrAlreadyUsed                     // 4060004
 )
 
 func NewRecoverySuccessful(privilegedSessionExpiresAt time.Time) *Message {

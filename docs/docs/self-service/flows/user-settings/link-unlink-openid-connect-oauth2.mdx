@@ -176,9 +176,10 @@ If an error occurs during the flow, it will be included in the form error:
       config: {
         action: 'http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/settings/connections?request=d88e67a6-7011-482b-b448-54629c434f6a',
         method: 'POST',
-        errors: [
+        messages: [
           {
-            message: 'Authentication failed because no id_token was returned. Please accept the "openid" permission and try again.',
+            /* id, type */
+            text: 'Authentication failed because no id_token was returned. Please accept the "openid" permission and try again.',
           },
         ],
         // fields
