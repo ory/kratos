@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-06-05)](#unreleased-2020-06-05)
+- [Unreleased (2020-06-06)](#unreleased-2020-06-06)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -83,7 +83,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...6b949936725a6100a31851a5d879c877c2c76cbf) (2020-06-05)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...81069514e5ef1d851f76d44bb45d6a896d4985a6) (2020-06-06)
 
 
 ### Bug Fixes
@@ -97,6 +97,9 @@
 ### Code Refactoring
 
 * Rename prompt=login to refresh=true ([#478](https://github.com/ory/kratos/issues/478)) ([c04346e](https://github.com/ory/kratos/commit/c04346e0f01aa7ce5627c0b7135032b225e7faf9)), closes [#477](https://github.com/ory/kratos/issues/477)
+* Text errors to text messages ([#476](https://github.com/ory/kratos/issues/476)) ([8106951](https://github.com/ory/kratos/commit/81069514e5ef1d851f76d44bb45d6a896d4985a6)), closes [#428](https://github.com/ory/kratos/issues/428):
+
+    > This patch implements a better way to deal with text messages by giving them a unique ID, a context, and a default message.
 
 
 ### Documentation
@@ -152,6 +155,7 @@
 
 ### BREAKING CHANGES
 
+* Flows, request methods, form fields have had a key errors to show e.g. validation errors such as ("not an email address", "incorrect username/password", and so on. The `errors` key is now called `messages`. Each message now has a `type` which can be `error` or `info`, an `id` which can be used to translate messages, a `text` (which was previously errors[*].message). This affects all login, request, settings, and recovery flows and methods.
 * To refresh a login session it is now required to append `refresh=true` instead of `prompt=login` as the second has implications for revoking an existing issue and might be confusing when used in combination with OpenID Connect.
 * * Applying this patch requires running SQL Migrations.
 * The field `identity.addresses` has moved to `identity.verifiable_addresses`.
