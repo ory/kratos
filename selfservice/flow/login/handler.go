@@ -74,6 +74,19 @@ func (h *Handler) NewLoginRequest(w http.ResponseWriter, r *http.Request) (*Requ
 	return a, nil
 }
 
+// nolint:deadcode,unused
+// swagger:parameters initializeSelfServiceBrowserLoginFlow
+type initializeSelfServiceBrowserLoginFlow struct {
+	// Refresh a login session
+	//
+	// If set to true, this will refresh an existing login session by
+	// asking the user to sign in again. This will reset the
+	// authenticated_at time of the session.
+	//
+	// in: query
+	Refresh bool `json:"refresh"`
+}
+
 // swagger:route GET /self-service/browser/flows/login public initializeSelfServiceBrowserLoginFlow
 //
 // Initialize browser-based login user flow

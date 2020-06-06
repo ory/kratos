@@ -90,7 +90,7 @@ func NewRequest(exp time.Duration, csrf string, r *http.Request) *Request {
 		RequestURL: source.String(),
 		Methods:    map[identity.CredentialsType]*RequestMethod{},
 		CSRFToken:  csrf,
-		Forced:     r.URL.Query().Get("prompt") == "login",
+		Forced:     r.URL.Query().Get("refresh") == "true",
 	}
 }
 
