@@ -183,8 +183,8 @@ func TestHandler(t *testing.T) {
 					NewGetSelfServiceVerificationRequestParams().WithRequest(string(x.MustReadAll(res.Body))))
 				require.NoError(t, err)
 
-				require.Len(t, svr.Payload.Form.Errors, 1)
-				assert.Equal(t, "The request was already completed successfully and can not be retried.", svr.Payload.Form.Errors[0].Message)
+				require.Len(t, svr.Payload.Form.Messages, 1)
+				assert.Equal(t, "The request was already completed successfully and can not be retried.", svr.Payload.Form.Messages[0].Text)
 			})
 		})
 	}
@@ -224,7 +224,7 @@ func TestHandler(t *testing.T) {
 
 		svr, err := adminClient.Common.GetSelfServiceVerificationRequest(common.NewGetSelfServiceVerificationRequestParams().WithRequest(rid))
 		require.NoError(t, err)
-		assert.Equal(t, "The verification code has expired or was otherwise invalid. Please request another code.", svr.Payload.Form.Errors[0].Message)
+		assert.Equal(t, "The verification code has expired or was otherwise invalid. Please request another code.", svr.Payload.Messages[0].Text)
 	})
 
 	t.Run("case=complete expired", func(t *testing.T) {
@@ -246,7 +246,7 @@ func TestHandler(t *testing.T) {
 		svr, err = adminClient.Common.GetSelfServiceVerificationRequest(common.
 			NewGetSelfServiceVerificationRequestParams().WithRequest(res.Request.URL.Query().Get("request")))
 		require.NoError(t, err)
-		require.Len(t, svr.Payload.Form.Errors, 1)
-		assert.Equal(t, "The verification request expired 1.00 minutes ago, please try again.", svr.Payload.Form.Errors[0].Message)
+		require.Len(t, svr.Payload.Form.Messages, 1)
+		assert.Equal(t, "The verification request expired 1.00 minutes ago, please try again.", svr.Payload.Form.Messages[0].Text)
 	})
 }

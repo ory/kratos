@@ -8,6 +8,7 @@ import (
 	"github.com/ory/x/jsonschemax"
 
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/text"
 )
 
 const DisableFormField = "disableFormField"
@@ -43,13 +44,13 @@ type Field struct {
 	// Value is the equivalent of `<input value="{{.Value}}">`
 	Value interface{} `json:"value,omitempty" faker:"string"`
 
-	// Errors contains all validation errors this particular field has caused.
-	Errors Errors `json:"errors,omitempty"`
+	// Messages contains a list of messages (e.g. validation errors) that affect this field.
+	Messages text.Messages `json:"messages,omitempty"`
 }
 
 // Reset resets a field's value and errors.
 func (f *Field) Reset() {
-	f.Errors = nil
+	f.Messages = nil
 	f.Value = nil
 }
 

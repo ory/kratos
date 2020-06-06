@@ -11,6 +11,7 @@ import (
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/form"
+	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
 
@@ -45,6 +46,12 @@ type Request struct {
 	Form *form.HTMLForm `json:"form" faker:"-" db:"form"`
 
 	Via identity.VerifiableAddressType `json:"via" db:"via"`
+
+	// Messages contains a list of messages to be displayed in the Verification UI. Omitting these
+	// messages makes it significantly harder for users to figure out what is going on.
+	//
+	// More documentation on messages can be found in the [User Interface Documentation](https://www.ory.sh/kratos/docs/concepts/ui-user-interface/).
+	Messages text.Messages `json:"messages" db:"messages" faker:"-"`
 
 	// CSRFToken contains the anti-csrf token associated with this request.
 	CSRFToken string `json:"-" db:"csrf_token"`
@@ -98,7 +105,7 @@ func NewRequest(
 
 func (r *Request) Valid() error {
 	if r.ExpiresAt.Before(time.Now()) {
-		return newErrRequestRequired(time.Since(r.ExpiresAt).Minutes())
+		return newErrRequestRequired(time.Since(r.ExpiresAt))
 	}
 	return nil
 }

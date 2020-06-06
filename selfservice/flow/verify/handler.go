@@ -20,7 +20,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
-	"github.com/ory/kratos/selfservice/form"
+	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
 
@@ -341,8 +341,8 @@ func (h *Handler) verify(w http.ResponseWriter, r *http.Request, ps httprouter.P
 				h.c.SelfServiceSettingsRequestLifespan(), r, via,
 				urlx.AppendPaths(h.c.SelfPublicURL(), strings.ReplaceAll(PublicVerificationCompletePath, ":via", string(via))), h.d.GenerateCSRFToken,
 			)
-			a.Form.AddError(&form.Error{Message: "The verification code has expired or was otherwise invalid. Please request another code."})
 
+			a.Messages.Add(text.NewErrorValidationVerificationTokenInvalidOrAlreadyUsed())
 			if err := h.d.VerificationPersister().CreateVerificationRequest(r.Context(), a); err != nil {
 				h.handleError(w, r, nil, err)
 				return

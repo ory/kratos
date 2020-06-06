@@ -295,7 +295,7 @@ Cypress.Commands.add(
       cy.visit(link.href)
       cy.location('pathname').should('include', 'verify')
       cy.location('search').should('not.be.empty', 'request')
-      cy.get('.form-errors .message').should('contain.text', 'code has expired')
+      cy.get('.messages .message').should('contain.text', 'code has expired')
 
       cy.session().should(
         assertVerifiableAddress({ isVerified: false, email: email })

@@ -279,7 +279,7 @@ func TestSettingsStrategy(t *testing.T) {
 				testhelpers.JSONEq(t, append(models.FormFields{csrfField}, expectedFields...),
 					json.RawMessage(gjson.GetBytes(body, `methods.oidc.config.fields`).Raw))
 
-				assert.Contains(t, gjson.GetBytes(body, `methods.oidc.config.errors.0.message`).String(),
+				assert.Contains(t, gjson.GetBytes(body, `methods.oidc.config.messages.0.text`).String(),
 					"can not unlink non-existing OpenID Connect")
 			}
 		}
@@ -366,7 +366,7 @@ func TestSettingsStrategy(t *testing.T) {
 				testhelpers.JSONEq(t, append(models.FormFields{csrfField}, expectedFields...),
 					json.RawMessage(gjson.GetBytes(body, `methods.oidc.config.fields`).Raw))
 
-				assert.Contains(t, gjson.GetBytes(body, `methods.oidc.config.errors.0.message`).String(),
+				assert.Contains(t, gjson.GetBytes(body, `methods.oidc.config.messages.0.text`).String(),
 					"can not link unknown or already existing OpenID Connect connection")
 			}
 		}
@@ -407,7 +407,7 @@ func TestSettingsStrategy(t *testing.T) {
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
 			t.Logf("%s", body)
-			assert.Contains(t, gjson.GetBytes(body, `methods.oidc.config.errors.0.message`).String(),
+			assert.Contains(t, gjson.GetBytes(body, `methods.oidc.config.messages.0.text`).String(),
 				"no id_token was returned")
 		})
 
@@ -421,7 +421,7 @@ func TestSettingsStrategy(t *testing.T) {
 			body, res, _ := link(t, agent, provider)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
-			assert.Contains(t, gjson.GetBytes(body, `methods.oidc.config.errors.0.message`).String(),
+			assert.Contains(t, gjson.GetBytes(body, `methods.oidc.config.messages.0.text`).String(),
 				"no id_token was returned")
 		})
 

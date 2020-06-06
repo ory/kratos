@@ -3,16 +3,16 @@ package verify
 import (
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
-	"github.com/ory/x/errorsx"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/selfservice/errorx"
-	"github.com/ory/kratos/selfservice/form"
+	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
 
@@ -34,13 +34,14 @@ type (
 
 	errRequestExpired struct {
 		*herodot.DefaultError
+		ago time.Duration
 	}
 )
 
-func newErrRequestRequired(when float64) error {
-	return errors.WithStack(&errRequestExpired{herodot.ErrBadRequest.
+func newErrRequestRequired(ago time.Duration) error {
+	return errors.WithStack(&errRequestExpired{ago: ago, DefaultError: herodot.ErrBadRequest.
 		WithError("verify request expired").
-		WithReasonf("The verification request expired %.2f minutes ago, please try again.", when)})
+		WithReasonf("The verification request expired %.2f minutes ago, please try again.", ago.Minutes())})
 }
 
 func NewErrorHandler(d errorHandlerDependencies, c configuration.Provider) *ErrorHandler {
@@ -70,13 +71,13 @@ func (s *ErrorHandler) HandleVerificationError(
 		return
 	}
 
-	if e, ok := errorsx.Cause(err).(*errRequestExpired); ok {
+	if e := new(errRequestExpired); errors.As(err, &e) {
 		a := NewRequest(
 			s.c.SelfServiceSettingsRequestLifespan(), r, rr.Via,
 			urlx.AppendPaths(s.c.SelfPublicURL(), PublicVerificationRequestPath), s.d.GenerateCSRFToken,
 		)
-		a.Form.AddError(&form.Error{Message: e.ReasonField})
 
+		a.Form.AddMessage(text.NewErrorValidationVerificationRequestExpired(e.ago))
 		if err := s.d.VerificationPersister().CreateVerificationRequest(r.Context(), a); err != nil {
 			s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 			return

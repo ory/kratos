@@ -36,7 +36,7 @@ context('Registration', () => {
         .should('have.value', '123456')
 
       cy.get('button[type="submit"]').click()
-      cy.get('.form-errors .message').should('contain.text', 'data breaches')
+      cy.get('.messages .message').should('contain.text', 'data breaches')
     })
 
     it('should show an error when the password is too similar', () => {
@@ -45,7 +45,7 @@ context('Registration', () => {
       cy.get('input[name="password"]').type(identity)
 
       cy.get('button[type="submit"]').click()
-      cy.get('.form-errors .message').should('contain.text', 'too similar')
+      cy.get('.messages .message').should('contain.text', 'too similar')
     })
 
     it('should show an error when the password is empty', () => {
@@ -53,7 +53,7 @@ context('Registration', () => {
       cy.get('input[name="traits.email"]').type(identity)
 
       cy.get('button[type="submit"]').click()
-      cy.get('.form-errors .message').should('contain.text', 'missing')
+      cy.get('.messages .message').should('contain.text', 'missing')
     })
 
     it('should show an error when the email is empty', () => {
@@ -61,7 +61,7 @@ context('Registration', () => {
       cy.get('input[name="password"]').type(password)
 
       cy.get('button[type="submit"]').click()
-      cy.get('.form-errors .message').should('contain.text', 'valid "email"')
+      cy.get('.messages .message').should('contain.text', 'valid "email"')
     })
 
     it('should show an error when the email is not an email', () => {
@@ -69,15 +69,12 @@ context('Registration', () => {
       cy.get('input[name="password"]').type('not-an-email')
 
       cy.get('button[type="submit"]').click()
-      cy.get('.form-errors .message').should('contain.text', 'valid "email"')
+      cy.get('.messages .message').should('contain.text', 'valid "email"')
     })
 
     it('should show a missing indicator if no fields are set', () => {
       cy.get('button[type="submit"]').click()
-      cy.get('.form-errors .message').should(
-        'contain.text',
-        'missing properties'
-      )
+      cy.get('.messages .message').should('contain.text', 'Property')
     })
 
     it('should show an error when the website is not a valid URI', () => {
@@ -95,7 +92,7 @@ context('Registration', () => {
       cy.get('input[name="password"]').type(password)
 
       cy.get('button[type="submit"]').click()
-      cy.get('.form-errors .message').should(
+      cy.get('.messages .message').should(
         'contain.text',
         'length must be >= 10'
       )

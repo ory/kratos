@@ -241,17 +241,23 @@ information you need for rendering the forms. The following example illustrates
 a generic form generator (we use handlebars here) that works with ORY Kratos:
 
 ```handlebars name="views/partials/form.hbs"
+{{~#each messages~}}
+    <!-- global messages for this flow -->
+    <div class="message {{type}}">{{text}}</div>
+{{~/each~}}
+
 <form action="{{form.action}}" method="{{form.method}}">
-    {{~#each form.errors~}}
-        <!-- global form validation errors -->
-        <div class="error">{{message}}</div>
+    {{~#each form.messages~}}
+        <!-- messages for this form -->
+        <div class="message {{type}}">{{text}}</div>
     {{~/each~}}
 
     {{#each form.fields}}
-        {{~#each errors~}}
-            <!-- validation errors for this specific field -->
-            <div class="error">{{message}}</div>
+        {{~#each messages~}}
+            <!-- messages for individual fields -->
+            <div class="message {{type}}">{{text}}</div>
         {{~/each~}}
+
         <input name="{{name}}" type="{{type}}" value="{{value}}" {{#if disabled}}disabled{{/if}}>
     {{/each}}
 
@@ -406,9 +412,11 @@ stateDiagram
            method: 'password',
            config: {
              /* ... */
-             errors: [
+             messages: [
                {
-                 message: 'The provided credentials are invalid. Check for spelling mistakes in your password or username, email address, or phone number.',
+                 id: 4000006,
+                 text: 'The provided credentials are invalid. Check for spelling mistakes in your password or username, email address, or phone number.',
+                 type: 'error',
                },
              ],
            },

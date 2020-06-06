@@ -248,9 +248,11 @@ actually use email addresses in `sub` fields and also does not include the
           {
             name: 'traits.website',
             type: '',
-            errors: [
+            messages: [
               {
-                message: 'missing properties: "website"', // <-- because "website" was not set, the user has to fill it out manually.
+                id: 4000002,
+                type: 'error',
+                text: 'Property website is missing.', // <-- because "website" was not set, the user has to fill it out manually.
               },
             ],
           },
@@ -334,9 +336,11 @@ apply for `provider: github`):
       config: {
         action: 'http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/auth/a1c78949-1436-44bd-93ae-a57836be01c7',
         method: 'POST',
-        errors: [
+        messages: [
           {
-            message: 'Authentication failed because no id_token was returned. Please accept the "openid" permission and try again.',
+            id: 4000000,
+            type: 'error',
+            text: 'Authentication failed because no id_token was returned. Please accept the "openid" permission and try again.',
           },
         ],
         fields: [

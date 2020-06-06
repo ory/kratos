@@ -155,7 +155,7 @@ func TestStrategy(t *testing.T) {
 	// assert ui error (redirect to login/registration ui endpoint)
 	var aue = func(t *testing.T, res *http.Response, body []byte, reason string) {
 		require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
-		assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.errors.0.message").String(), reason, "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.messages.0.text").String(), reason, "%s", body)
 	}
 
 	// assert identity (success)
@@ -225,7 +225,8 @@ func TestStrategy(t *testing.T) {
 		res, body := mr(t, "valid", action, url.Values{})
 
 		assert.NotEqual(t, r.ID, gjson.GetBytes(body, "id"))
-		aue(t, res, body, "session expired")
+		require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "messages.0.text").String(), "request expired", "%s", body)
 	})
 
 	t.Run("case=should fail because the registration request is expired", func(t *testing.T) {
@@ -234,7 +235,8 @@ func TestStrategy(t *testing.T) {
 		res, body := mr(t, "valid", action, url.Values{})
 
 		assert.NotEqual(t, r.ID, gjson.GetBytes(body, "id"))
-		aue(t, res, body, "session expired")
+		require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "messages.0.text").String(), "request expired", "%s", body)
 	})
 
 	t.Run("case=should fail registration because scope was not provided", func(t *testing.T) {
@@ -263,7 +265,7 @@ func TestStrategy(t *testing.T) {
 		res, body := mr(t, "valid", action, url.Values{})
 
 		require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
-		assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.fields.#(name==traits.subject).errors.0").String(), "is not valid", "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.fields.#(name==traits.subject).messages.0").String(), "is not valid", "%s", body)
 	})
 
 	t.Run("case=register and then login", func(t *testing.T) {
@@ -326,9 +328,9 @@ func TestStrategy(t *testing.T) {
 			res, body := mr(t, "valid", action, url.Values{"traits.name": {"i"}})
 			require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
 
-			assert.Equal(t, "length must be >= 2, but got 1", gjson.GetBytes(body, "methods.oidc.config.fields.#(name==traits.name).errors.0.message").String(), "%s", body) // make sure the field is being echoed
-			assert.Equal(t, "traits.name", gjson.GetBytes(body, "methods.oidc.config.fields.#(name==traits.name).name").String(), "%s", body)                                // make sure the field is being echoed
-			assert.Equal(t, "i", gjson.GetBytes(body, "methods.oidc.config.fields.#(name==traits.name).value").String(), "%s", body)                                         // make sure the field is being echoed
+			assert.Equal(t, "length must be >= 2, but got 1", gjson.GetBytes(body, "methods.oidc.config.fields.#(name==traits.name).messages.0.text").String(), "%s", body) // make sure the field is being echoed
+			assert.Equal(t, "traits.name", gjson.GetBytes(body, "methods.oidc.config.fields.#(name==traits.name).name").String(), "%s", body)                               // make sure the field is being echoed
+			assert.Equal(t, "i", gjson.GetBytes(body, "methods.oidc.config.fields.#(name==traits.name).value").String(), "%s", body)                                        // make sure the field is being echoed
 		})
 
 		t.Run("case=should pass registration with valid data", func(t *testing.T) {
@@ -357,14 +359,14 @@ func TestStrategy(t *testing.T) {
 			r := nrr(t, returnTS.URL, time.Minute)
 			action := afv(t, r.ID, "valid")
 			res, body := mr(t, "valid", action, url.Values{})
-			aue(t, res, body, "an account with the same identifier (email, phone, username, ...) exists already")
+			aue(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already.")
 		})
 
 		t.Run("case=should fail login", func(t *testing.T) {
 			r := nlr(t, returnTS.URL, time.Minute)
 			action := afv(t, r.ID, "valid")
 			res, body := mr(t, "valid", action, url.Values{})
-			aue(t, res, body, "an account with the same identifier (email, phone, username, ...) exists already")
+			aue(t, res, body, "An account with the same identifier (email, phone, username, ...) exists already.")
 		})
 	})
 

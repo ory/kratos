@@ -27,6 +27,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/selfservice/strategy/password"
+	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
 
@@ -129,7 +130,7 @@ func TestRegistration(t *testing.T) {
 			body, res := makeRequest(t, rr.ID, "14=)=!(%)$/ZP()GHIÖ", http.StatusOK)
 			assert.Contains(t, res.Request.URL.Path, "signup-ts")
 			assert.Equal(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
-			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.errors.0.message").String(), "invalid URL escape", "%s", body)
+			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.messages.0.text").String(), "invalid URL escape", "%s", body)
 		})
 
 		t.Run("case=should show the error ui because the request id is missing", func(t *testing.T) {
@@ -147,8 +148,7 @@ func TestRegistration(t *testing.T) {
 			body, res := makeRequest(t, rr.ID, "", http.StatusOK)
 			assert.Contains(t, res.Request.URL.Path, "signup-ts")
 			assert.NotEqual(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
-			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.errors.0.message").String(), "expired", "%s", body)
-			assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.errors.0.message").String(), "expired", "%s", body)
+			assert.Contains(t, gjson.GetBytes(body, "messages.0.text").String(), "expired", "%s", body)
 		})
 
 		t.Run("case=should return an error because the password failed validation", func(t *testing.T) {
@@ -162,7 +162,7 @@ func TestRegistration(t *testing.T) {
 			assert.Equal(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 			assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
 			checkFormContent(t, body, "password", "csrf_token", "traits.username", "traits.foobar")
-			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).errors.0").String(), "data breaches and must no longer be used.", "%s", body)
+			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).messages.0").String(), "data breaches and must no longer be used.", "%s", body)
 		})
 
 		t.Run("case=should return an error because not passing validation", func(t *testing.T) {
@@ -175,7 +175,7 @@ func TestRegistration(t *testing.T) {
 			assert.Equal(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 			assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
 			checkFormContent(t, body, "password", "csrf_token", "traits.username", "traits.foobar")
-			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==traits.foobar).errors.0").String(), `missing properties: \"foobar\"`, "%s", body)
+			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==traits.foobar).messages.0").String(), `Property foobar is missing`, "%s", body)
 		})
 
 		t.Run("case=should fail because schema did not specify an identifier", func(t *testing.T) {
@@ -231,7 +231,7 @@ func TestRegistration(t *testing.T) {
 				"traits.foobar":   {"bar"},
 			}.Encode(), http.StatusOK)
 			assert.Contains(t, res.Request.URL.Path, "signup-ts")
-			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.errors.0.message").String(), "an account with the same identifier (email, phone, username, ...) exists already", "%s", body)
+			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.messages.0.text").String(), "An account with the same identifier (email, phone, username, ...) exists already.", "%s", body)
 		})
 
 		t.Run("case=should return an error because not passing validation and reset previous errors and values", func(t *testing.T) {
@@ -246,13 +246,13 @@ func TestRegistration(t *testing.T) {
 						Config: &registration.RequestMethodConfig{
 							RequestMethodConfigurator: &password.RequestMethod{
 								HTMLForm: &form.HTMLForm{
-									Method: "POST",
-									Action: "/action",
-									Errors: []form.Error{{Message: "some error"}},
+									Method:   "POST",
+									Action:   "/action",
+									Messages: text.Messages{{Text: "some error"}},
 									Fields: form.Fields{
 										{
 											Name: "traits.foo", Value: "bar", Type: "text",
-											Errors: []form.Error{{Message: "bar"}},
+											Messages: text.Messages{{Text: "bar"}},
 										},
 										{Name: "password"},
 									},
@@ -276,7 +276,7 @@ func TestRegistration(t *testing.T) {
 			assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==traits.foo).value"), "%s", body)
 			assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==traits.foo).error"))
 			assert.Empty(t, gjson.GetBytes(body, "methods.password.config.error"))
-			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==traits.foobar).errors.0").String(), `missing properties: \"foobar\"`, "%s", body)
+			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==traits.foobar).messages.0").String(), `Property foobar is missing`, "%s", body)
 		})
 
 		t.Run("case=should work even if password is just numbers", func(t *testing.T) {

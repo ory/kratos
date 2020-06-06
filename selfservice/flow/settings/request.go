@@ -16,8 +16,8 @@ import (
 	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/selfservice/text"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
 

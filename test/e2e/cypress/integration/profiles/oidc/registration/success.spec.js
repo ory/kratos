@@ -32,9 +32,9 @@ context('Register', () => {
       'name',
       'provider'
     )
-    cy.get('.form-errors .message').should(
+    cy.get('.messages .message').should(
       'contain.text',
-      'missing properties: "website"'
+      'Property website is missing'
     )
     cy.get('button[name="provider"]').should('have.length', 1)
     cy.get('#registration-oidc input[name="traits.website"]').type('http://s')
@@ -51,10 +51,7 @@ context('Register', () => {
       'name',
       'provider'
     )
-    cy.get('.form-errors .message').should(
-      'contain.text',
-      'length must be >= 10'
-    )
+    cy.get('.messages .message').should('contain.text', 'length must be >= 10')
     cy.get('#registration-oidc input[name="traits.website"]')
       .should('have.value', 'http://s')
       .clear()
@@ -94,17 +91,14 @@ context('Register', () => {
     cy.get('#remember').click()
     cy.get('#accept').click()
 
-    cy.get('.form-errors .message').should(
+    cy.get('.messages .message').should(
       'contain.text',
-      'missing properties: "website"'
+      'Property website is missing'
     )
     cy.get('#registration-oidc input[name="traits.website"]').type('http://s')
     cy.get('button[value="hydra"]').click()
 
-    cy.get('.form-errors .message').should(
-      'contain.text',
-      'length must be >= 10'
-    )
+    cy.get('.messages .message').should('contain.text', 'length must be >= 10')
     cy.get('#registration-oidc input[name="traits.website"]')
       .should('have.value', 'http://s')
       .clear()

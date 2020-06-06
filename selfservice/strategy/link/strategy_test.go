@@ -24,7 +24,7 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/strategy/link"
-	"github.com/ory/kratos/selfservice/text"
+	"github.com/ory/kratos/text"
 )
 
 func init() {
@@ -65,7 +65,7 @@ func TestStrategy(t *testing.T) {
 			{Name: pointerx.String("email"), Required: true, Type: pointerx.String("email")},
 		}, method.Config.Fields)
 		assert.EqualValues(t, public.URL+link.PublicRecoveryLinkPath+"?request="+string(rs.Payload.ID), *method.Config.Action)
-		assert.Empty(t, method.Config.Errors)
+		assert.Empty(t, method.Config.Messages)
 		assert.Empty(t, rs.Payload.Messages)
 	})
 
@@ -81,7 +81,7 @@ func TestStrategy(t *testing.T) {
 		method := rs.Payload.Methods[recovery.StrategyRecoveryTokenName]
 		assert.EqualValues(t, models.FormFields{csrfField,
 			{Name: pointerx.String("email"), Required: true, Type: pointerx.String("email"), Value: "",
-				Errors: models.Errors{{Message: "missing properties: email"}}},
+				Messages: models.Messages{{ID: 4000002, Type: "error", Text: "Property email is missing.", Context: map[string]interface{}{"property": "email"}}}},
 		}, method.Config.Fields)
 	})
 

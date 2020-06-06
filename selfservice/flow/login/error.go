@@ -5,9 +5,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/ory/x/errorsx"
-
-	"github.com/ory/kratos/selfservice/form"
+	"github.com/ory/kratos/text"
 
 	"github.com/pkg/errors"
 
@@ -43,15 +41,17 @@ type (
 
 	requestExpiredError struct {
 		*herodot.DefaultError
+		ago time.Duration
 	}
 )
 
-func newRequestExpiredError(since time.Duration) requestExpiredError {
-	return requestExpiredError{
-		herodot.ErrBadRequest.
+func newRequestExpiredError(ago time.Duration) *requestExpiredError {
+	return &requestExpiredError{
+		ago: ago,
+		DefaultError: herodot.ErrBadRequest.
 			WithError("login request expired").
 			WithReasonf(`The login request has expired. Please restart the flow.`).
-			WithReasonf("The login request expired %.2f minutes ago, please try again.", since.Minutes()),
+			WithReasonf("The login request expired %.2f minutes ago, please try again.", ago.Minutes()),
 	}
 }
 
@@ -75,7 +75,7 @@ func (s *ErrorHandler) HandleLoginError(
 		WithField("login_request", rr).
 		Info("Encountered self-service login error.")
 
-	if _, ok := errorsx.Cause(err).(requestExpiredError); ok {
+	if e := new(requestExpiredError); errors.As(err, &e) {
 		// create new request because the old one is not valid
 		a, err := s.d.LoginHandler().NewLoginRequest(w, r)
 		if err != nil {
@@ -84,18 +84,15 @@ func (s *ErrorHandler) HandleLoginError(
 			return
 		}
 
-		for name, method := range a.Methods {
-			method.Config.AddError(&form.Error{Message: "Your session expired, please try again."})
-			if err := s.d.LoginRequestPersister().UpdateLoginRequestMethod(r.Context(), a.ID, name, method); err != nil {
-				redirTo, err := s.d.SelfServiceErrorManager().Create(r.Context(), w, r, err)
-				if err != nil {
-					s.HandleLoginError(w, r, ct, rr, err)
-					return
-				}
-				http.Redirect(w, r, redirTo, http.StatusFound)
+		a.Messages.Add(text.NewErrorValidationLoginRequestExpired(e.ago))
+		if err := s.d.LoginRequestPersister().UpdateLoginRequest(r.Context(), a); err != nil {
+			redirTo, err := s.d.SelfServiceErrorManager().Create(r.Context(), w, r, err)
+			if err != nil {
+				s.HandleLoginError(w, r, ct, rr, err)
 				return
 			}
-			a.Methods[name] = method
+			http.Redirect(w, r, redirTo, http.StatusFound)
+			return
 		}
 
 		http.Redirect(w, r, urlx.CopyWithQuery(s.c.LoginURL(), url.Values{"request": {a.ID.String()}}).String(), http.StatusFound)

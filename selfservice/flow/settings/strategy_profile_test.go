@@ -156,7 +156,7 @@ func TestStrategyTraits(t *testing.T) {
 			assert.Equal(t, "too-short", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_long_string).value").String(), "%s", actual)
 			assert.Equal(t, "bazbar", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.stringy).value").String(), "%s", actual)
 			assert.Equal(t, "2.5", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.numby).value").String(), "%s", actual)
-			assert.Equal(t, "length must be >= 25, but got 9", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_long_string).errors.0.message").String(), "%s", actual)
+			assert.Equal(t, "length must be >= 25, but got 9", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_long_string).messages.0.text").String(), "%s", actual)
 		})
 
 		t.Run("description=should update protected field with sudo mode", func(t *testing.T) {
@@ -222,7 +222,7 @@ func TestStrategyTraits(t *testing.T) {
 				assert.False(t, pointerx.BoolR(response.Payload.UpdateSuccessful), "%s", actual)
 
 				assert.Equal(t, "1", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_big_number).value").String(), "%s", actual)
-				assert.Equal(t, "must be >= 1200 but found 1", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_big_number).errors.0.message").String(), "%s", actual)
+				assert.Equal(t, "must be >= 1200 but found 1", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_big_number).messages.0.text").String(), "%s", actual)
 
 				assert.Equal(t, "foobar", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.stringy).value").String(), "%s", actual) // sanity check if original payload is still here
 			})
@@ -237,14 +237,14 @@ func TestStrategyTraits(t *testing.T) {
 				actual, response := testhelpers.SettingsSubmitForm(t, f, primaryUser, values)
 				assert.False(t, pointerx.BoolR(response.Payload.UpdateSuccessful), "%s", actual)
 
-				assert.Empty(t, gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_big_number).errors.0.message").String(), "%s", actual)
+				assert.Empty(t, gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_big_number).messages.0.text").String(), "%s", actual)
 				assert.Empty(t, gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_big_number).value").String(), "%s", actual)
 
 				assert.Equal(t, "short", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_long_string).value").String(), "%s", actual)
-				assert.Equal(t, "length must be >= 25, but got 5", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_long_string).errors.0.message").String(), "%s", actual)
+				assert.Equal(t, "length must be >= 25, but got 5", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_long_string).messages.0.text").String(), "%s", actual)
 
 				assert.Equal(t, "this-is-not-a-number", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.numby).value").String(), "%s", actual)
-				assert.Equal(t, "expected number, but got string", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.numby).errors.0.message").String(), "%s", actual)
+				assert.Equal(t, "expected number, but got string", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.numby).messages.0.text").String(), "%s", actual)
 
 				assert.Equal(t, "foobar", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.stringy).value").String(), "%s", actual) // sanity check if original payload is still here
 			})

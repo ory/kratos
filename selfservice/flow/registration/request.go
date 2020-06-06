@@ -11,6 +11,7 @@ import (
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
 
@@ -42,6 +43,12 @@ type Request struct {
 	// Active, if set, contains the registration method that is being used. It is initially
 	// not set.
 	Active identity.CredentialsType `json:"active,omitempty" faker:"identity_credentials_type" db:"active_method"`
+
+	// Messages contains a list of messages to be displayed in the Registration UI. Omitting these
+	// messages makes it significantly harder for users to figure out what is going on.
+	//
+	// More documentation on messages can be found in the [User Interface Documentation](https://www.ory.sh/kratos/docs/concepts/ui-user-interface/).
+	Messages text.Messages `json:"messages" db:"messages" faker:"-"`
 
 	// Methods contains context for all enabled registration methods. If a registration request has been
 	// processed, but for example the password is incorrect, this will contain error messages.

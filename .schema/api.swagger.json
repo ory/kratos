@@ -1152,21 +1152,6 @@
       "type": "string",
       "title": "CredentialsType  represents several different credential types, like password credentials, passwordless credentials,"
     },
-    "Error": {
-      "type": "object",
-      "properties": {
-        "message": {
-          "description": "Code    FormErrorCode `json:\"id,omitempty\"`",
-          "type": "string"
-        }
-      }
-    },
-    "Errors": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/Error"
-      }
-    },
     "ID": {
       "type": "integer",
       "format": "int64"
@@ -1277,15 +1262,11 @@
           "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
           "type": "string"
         },
-        "errors": {
-          "description": "Errors contains all form errors. These will be duplicates of the individual field errors.",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/Error"
-          }
-        },
         "fields": {
           "$ref": "#/definitions/formFields"
+        },
+        "messages": {
+          "$ref": "#/definitions/Messages"
         },
         "method": {
           "description": "Method is the form method (e.g. POST)",
@@ -1381,15 +1362,11 @@
           "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
           "type": "string"
         },
-        "errors": {
-          "description": "Errors contains all form errors. These will be duplicates of the individual field errors.",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/Error"
-          }
-        },
         "fields": {
           "$ref": "#/definitions/formFields"
+        },
+        "messages": {
+          "$ref": "#/definitions/Messages"
         },
         "method": {
           "description": "Method is the form method (e.g. POST)",
@@ -1409,8 +1386,8 @@
           "description": "Disabled is the equivalent of `\u003cinput disabled=\"{{.Disabled}}\"\u003e`",
           "type": "boolean"
         },
-        "errors": {
-          "$ref": "#/definitions/Errors"
+        "messages": {
+          "$ref": "#/definitions/Messages"
         },
         "name": {
           "description": "Name is the equivalent of `\u003cinput name=\"{{.Name}}\"\u003e`",
@@ -1534,6 +1511,9 @@
           "type": "string",
           "format": "date-time"
         },
+        "messages": {
+          "$ref": "#/definitions/Messages"
+        },
         "methods": {
           "description": "Methods contains context for all enabled login methods. If a login request has been\nprocessed, but for example the password is incorrect, this will contain error messages.",
           "type": "object",
@@ -1574,15 +1554,11 @@
           "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
           "type": "string"
         },
-        "errors": {
-          "description": "Errors contains all form errors. These will be duplicates of the individual field errors.",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/Error"
-          }
-        },
         "fields": {
           "$ref": "#/definitions/formFields"
+        },
+        "messages": {
+          "$ref": "#/definitions/Messages"
         },
         "method": {
           "description": "Method is the form method (e.g. POST)",
@@ -1684,6 +1660,9 @@
           "type": "string",
           "format": "date-time"
         },
+        "messages": {
+          "$ref": "#/definitions/Messages"
+        },
         "methods": {
           "description": "Methods contains context for all enabled registration methods. If a registration request has been\nprocessed, but for example the password is incorrect, this will contain error messages.",
           "type": "object",
@@ -1720,15 +1699,11 @@
           "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
           "type": "string"
         },
-        "errors": {
-          "description": "Errors contains all form errors. These will be duplicates of the individual field errors.",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/Error"
-          }
-        },
         "fields": {
           "$ref": "#/definitions/formFields"
+        },
+        "messages": {
+          "$ref": "#/definitions/Messages"
         },
         "method": {
           "description": "Method is the form method (e.g. POST)",
@@ -1859,6 +1834,9 @@
           "description": "IssuedAt is the time (UTC) when the request occurred.",
           "type": "string",
           "format": "date-time"
+        },
+        "messages": {
+          "$ref": "#/definitions/Messages"
         },
         "request_url": {
           "description": "RequestURL is the initial URL that was requested from ORY Kratos. It can be used\nto forward information contained in the URL's path or query for example.",

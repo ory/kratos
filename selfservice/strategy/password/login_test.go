@@ -12,7 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/jsonschema/v3"
 	"github.com/ory/x/errorsx"
 
 	"github.com/stretchr/testify/assert"
@@ -31,6 +30,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/selfservice/strategy/password"
+	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
 
@@ -163,7 +163,7 @@ func TestLoginNew(t *testing.T) {
 		require.Contains(t, res.Request.URL.Path, "login-ts", "%+v", res.Request)
 		assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 		assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
-		assert.Contains(t, gjson.GetBytes(body, "methods.password.config.errors.0.message").String(), `invalid URL escape`)
+		assert.Contains(t, gjson.GetBytes(body, "methods.password.config.messages.0.text").String(), `invalid URL escape`)
 	})
 
 	t.Run("should show the error ui because the request id missing", func(t *testing.T) {
@@ -198,8 +198,7 @@ func TestLoginNew(t *testing.T) {
 
 		require.Contains(t, res.Request.URL.Path, "login-ts")
 		assert.NotEqual(t, lr.ID, gjson.GetBytes(body, "id"))
-		assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.errors.0").String(), "expired", "%s", body)
-		assert.Contains(t, gjson.GetBytes(body, "methods.password.config.errors.0").String(), "expired", "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "messages.0").String(), "expired", "%s", body)
 	})
 
 	t.Run("should return an error because the credentials are invalid (user does not exist)", func(t *testing.T) {
@@ -212,7 +211,7 @@ func TestLoginNew(t *testing.T) {
 		require.Contains(t, res.Request.URL.Path, "login-ts")
 		assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 		assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
-		assert.Equal(t, `the provided credentials are invalid, check for spelling mistakes in your password or username, email address, or phone number`, gjson.GetBytes(body, "methods.password.config.errors.0.message").String())
+		assert.Equal(t, text.NewErrorValidationInvalidCredentials().Text, gjson.GetBytes(body, "methods.password.config.messages.0.text").String())
 	})
 
 	t.Run("should return an error because no identifier is set", func(t *testing.T) {
@@ -226,7 +225,7 @@ func TestLoginNew(t *testing.T) {
 		assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String())
 		assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
 		ensureFieldsExist(t, body)
-		assert.Equal(t, "missing properties: identifier", gjson.GetBytes(body, "methods.password.config.fields.#(name==identifier).errors.0.message").String(), "%s", body)
+		assert.Equal(t, "Property identifier is missing.", gjson.GetBytes(body, "methods.password.config.fields.#(name==identifier).messages.0.text").String(), "%s", body)
 
 		// The password value should not be returned!
 		assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).value").String())
@@ -243,7 +242,7 @@ func TestLoginNew(t *testing.T) {
 		assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String())
 		assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
 		ensureFieldsExist(t, body)
-		assert.Equal(t, "missing properties: password", gjson.GetBytes(body, "methods.password.config.fields.#(name==password).errors.0.message").String(), "%s", body)
+		assert.Equal(t, "Property password is missing.", gjson.GetBytes(body, "methods.password.config.fields.#(name==password).messages.0.text").String(), "%s", body)
 
 		assert.Equal(t, x.FakeCSRFToken, gjson.GetBytes(body, "methods.password.config.fields.#(name==csrf_token).value").String())
 		assert.Equal(t, "identifier", gjson.GetBytes(body, "methods.password.config.fields.#(name==identifier).value").String(), "%s", body)
@@ -268,8 +267,8 @@ func TestLoginNew(t *testing.T) {
 		assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
 		ensureFieldsExist(t, body)
 		assert.Equal(t,
-			errorsx.Cause(schema.NewInvalidCredentialsError()).(*jsonschema.ValidationError).Message,
-			gjson.GetBytes(body, "methods.password.config.errors.0.message").String(),
+			errorsx.Cause(schema.NewInvalidCredentialsError()).(*schema.ValidationError).Messages[0].Text,
+			gjson.GetBytes(body, "methods.password.config.messages.0.text").String(),
 			"%s", body,
 		)
 
@@ -344,19 +343,19 @@ func TestLoginNew(t *testing.T) {
 					Config: &login.RequestMethodConfig{
 						RequestMethodConfigurator: &password.RequestMethod{
 							HTMLForm: &form.HTMLForm{
-								Method: "POST",
-								Action: "/action",
-								Errors: []form.Error{{Message: "some error"}},
+								Method:   "POST",
+								Action:   "/action",
+								Messages: text.Messages{{Text: "some error"}},
 								Fields: form.Fields{
 									{
-										Value:  "baz",
-										Name:   "identifier",
-										Errors: []form.Error{{Message: "err"}},
+										Value:    "baz",
+										Name:     "identifier",
+										Messages: text.Messages{{Text: "err"}},
 									},
 									{
-										Value:  "bar",
-										Name:   "password",
-										Errors: []form.Error{{Message: "err"}},
+										Value:    "bar",
+										Name:     "password",
+										Messages: text.Messages{{Text: "err"}},
 									},
 								},
 							},
@@ -379,7 +378,7 @@ func TestLoginNew(t *testing.T) {
 		assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==identity).value"))
 		assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==identity).error"))
 		assert.Empty(t, gjson.GetBytes(body, "methods.password.config.error"))
-		assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).errors.0").String(), "missing properties: password", "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).messages.0").String(), "Property password is missing.", "%s", body)
 	})
 
 	t.Run("should be a new session with forced flag", func(t *testing.T) {
