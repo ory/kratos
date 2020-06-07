@@ -79,12 +79,15 @@ type Request struct {
 	// required: true
 	Identity *identity.Identity `json:"identity" faker:"identity" db:"-" belongs_to:"identities" fk_id:"IdentityID"`
 
-	// Success, if true, indicates that the settings request has been updated successfully with the provided data.
-	// Done will stay true when repeatedly checking. If set to true, done will revert back to false only
-	// when a request with invalid (e.g. "please use a valid phone number") data was sent.
+	// State represents the state of this request. It knows two states:
+	//
+	// - show_form: No user data has been collected, or it is invalid, and thus the form should be shown.
+	// - success: Indicates that the settings request has been updated successfully with the provided data.
+	//	   Done will stay true when repeatedly checking. If set to true, done will revert back to false only
+	//	   when a request with invalid (e.g. "please use a valid phone number") data was sent.
 	//
 	// required: true
-	UpdateSuccessful bool `json:"update_successful" faker:"-" db:"update_successful"`
+	State State `json:"state" faker:"-" db:"state"`
 
 	// IdentityID is a helper struct field for gobuffalo.pop.
 	IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
@@ -102,6 +105,7 @@ func NewRequest(exp time.Duration, r *http.Request, s *session.Session) *Request
 		RequestURL: x.RequestURL(r).String(),
 		IdentityID: s.Identity.ID,
 		Identity:   s.Identity,
+		State:      StateShowForm,
 		Methods:    map[string]*RequestMethod{},
 	}
 }
