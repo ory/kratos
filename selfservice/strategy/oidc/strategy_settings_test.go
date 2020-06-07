@@ -54,7 +54,7 @@ func TestSettingsStrategy(t *testing.T) {
 	remoteAdmin, remotePublic, _ := newHydra(t, &subject, &scope)
 	uiTS := newUI(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
-	publicTS, adminTS := testhelpers.NewKratosServer(t, reg)
+	publicTS, adminTS := testhelpers.NewKratosServers(t)
 	public := testhelpers.NewSDKClient(publicTS)
 	admin := testhelpers.NewSDKClient(adminTS)
 
@@ -63,6 +63,7 @@ func TestSettingsStrategy(t *testing.T) {
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "google", "google"),
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "github", "github"),
 	)
+	testhelpers.InitKratosServers(t, reg, publicTS, adminTS)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/settings.schema.json")
 	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, "https://www.ory.sh/kratos")
 
@@ -501,6 +502,8 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://stub/registration.schema.json")
 		viper.Set(configuration.ViperKeyURLsSelfPublic, "https://www.ory.sh/")
 
+		viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
+			"enabled": true})
 		viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC), map[string]interface{}{
 			"enabled": true,
 			"config":  conf})

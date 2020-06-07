@@ -18,6 +18,7 @@ import (
 	"github.com/ory/viper"
 
 	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/login"
@@ -157,6 +158,8 @@ func TestLoginHandler(t *testing.T) {
 		loginTS := newLoginTS(t, admin.URL, nil)
 		defer loginTS.Close()
 		viper.Set(configuration.ViperKeyURLsLogin, loginTS.URL)
+		viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
+			"enabled": true})
 
 		t.Run("case=valid", func(t *testing.T) {
 			assertRequestPayload(t, x.EasyGetBody(t, admin.Client(), public.URL+login.BrowserLoginPath))

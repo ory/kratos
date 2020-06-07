@@ -38,16 +38,28 @@ func NewKratosServerWithRouters(t *testing.T, reg driver.Registry, rp *x.RouterP
 	public = httptest.NewServer(rp)
 	admin = httptest.NewServer(ra)
 
+	InitKratosServers(t, reg, public, admin)
+
+	t.Cleanup(public.Close)
+	t.Cleanup(admin.Close)
+	return
+}
+
+func InitKratosServers(t *testing.T, reg driver.Registry, public, admin *httptest.Server) {
 	if len(viper.GetString(configuration.ViperKeyURLsLogin)) == 0 {
 		viper.Set(configuration.ViperKeyURLsLogin, "http://NewKratosServerWithRouters/you-forgot-to-set-me/login")
 	}
 	viper.Set(configuration.ViperKeyURLsSelfPublic, public.URL)
 	viper.Set(configuration.ViperKeyURLsSelfAdmin, admin.URL)
 
-	reg.RegisterRoutes(rp, ra)
+	reg.RegisterRoutes(public.Config.Handler.(*x.RouterPublic), admin.Config.Handler.(*x.RouterAdmin))
+}
+
+func NewKratosServers(t *testing.T) (public, admin *httptest.Server) {
+	public = httptest.NewServer(x.NewRouterPublic())
+	admin = httptest.NewServer(x.NewRouterAdmin())
 
 	t.Cleanup(public.Close)
 	t.Cleanup(admin.Close)
-
 	return
 }

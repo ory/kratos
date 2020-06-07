@@ -16,6 +16,7 @@ import (
 	"github.com/ory/viper"
 
 	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -99,6 +100,8 @@ func TestRegistrationHandler(t *testing.T) {
 	viper.Set(configuration.ViperKeyURLsSelfPublic, public.URL)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
 	viper.Set(configuration.ViperKeyURLsError, errTS.URL)
+	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
+		"enabled": true})
 
 	t.Run("daemon=admin", func(t *testing.T) {
 		regTS := newRegistrationTS(t, admin.URL, nil)
