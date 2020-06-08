@@ -319,7 +319,7 @@ func TestSettingsStrategy(t *testing.T) {
 					NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(agents[agent]).
 					WithRequest(string(req.ID)))
 				require.NoError(t, err)
-				require.EqualValues(t, false, *rs.Payload.UpdateSuccessful)
+				require.EqualValues(t, settings.StateShowForm, rs.Payload.State)
 
 				checkCredentials(t, true, users[agent].ID, provider, "hackerman+github+"+testID)
 
@@ -440,7 +440,7 @@ func TestSettingsStrategy(t *testing.T) {
 				NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(agents[agent]).
 				WithRequest(string(req.ID)))
 			require.NoError(t, err)
-			require.EqualValues(t, true, *rs.Payload.UpdateSuccessful)
+			require.EqualValues(t, settings.StateSuccess, rs.Payload.State)
 
 			testhelpers.JSONEq(t, append(models.FormFields{csrfField}, models.FormFields{
 				{Type: pointerx.String("submit"), Name: pointerx.String("unlink"), Value: "ory"},
@@ -466,7 +466,7 @@ func TestSettingsStrategy(t *testing.T) {
 					NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(agents[agent]).
 					WithRequest(string(req.ID)))
 				require.NoError(t, err)
-				require.EqualValues(t, false, *rs.Payload.UpdateSuccessful)
+				require.EqualValues(t, settings.StateShowForm, rs.Payload.State)
 
 				checkCredentials(t, false, users[agent].ID, provider, subject)
 

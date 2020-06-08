@@ -1444,7 +1444,9 @@
         },
         "details": {
           "type": "object",
-          "additionalProperties": true
+          "additionalProperties": {
+            "type": "object"
+          }
         },
         "message": {
           "type": "string"
@@ -1759,7 +1761,7 @@
         "request_url",
         "methods",
         "identity",
-        "update_successful"
+        "state"
       ],
       "properties": {
         "active": {
@@ -1796,9 +1798,8 @@
           "description": "RequestURL is the initial URL that was requested from ORY Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
           "type": "string"
         },
-        "update_successful": {
-          "description": "Success, if true, indicates that the settings request has been updated successfully with the provided data.\nDone will stay true when repeatedly checking. If set to true, done will revert back to false only\nwhen a request with invalid (e.g. \"please use a valid phone number\") data was sent.",
-          "type": "boolean"
+        "state": {
+          "$ref": "#/definitions/State"
         }
       }
     },

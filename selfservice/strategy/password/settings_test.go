@@ -91,7 +91,7 @@ func TestSettings(t *testing.T) {
 			values.Set("password", uuid.New().String())
 			actual, _ := testhelpers.SettingsSubmitForm(t, form, primaryUser, values)
 
-			assert.Equal(t, true, gjson.Get(actual, "update_successful").Bool(), "%s", actual)
+			assert.Equal(t, "success", gjson.Get(actual, "state").String(), "%s", actual)
 			assert.Empty(t, gjson.Get(actual, "methods.password.fields.#(name==password).value").String(), "%s", actual)
 			assert.Empty(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).messages.0.text").String(), actual)
 
@@ -111,7 +111,7 @@ func TestSettings(t *testing.T) {
 		values.Set("password", uuid.New().String())
 		actual, _ := testhelpers.SettingsSubmitForm(t, form, secondaryUser, values)
 
-		assert.Equal(t, true, gjson.Get(actual, "update_successful").Bool(), "%s", actual)
+		assert.Equal(t, "success", gjson.Get(actual, "state").String(), "%s", actual)
 		assert.Empty(t, gjson.Get(actual, "methods.password.fields.#(name==password).value").String(), "%s", actual)
 
 		actualIdentity, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), secondaryIdentity.ID)

@@ -114,8 +114,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 	}
 
 	ctxUpdate.Session.Identity = i
-	ctxUpdate.Request.UpdateSuccessful = true
-
+	ctxUpdate.Request.State = StateSuccess
 	if config.cb != nil {
 		if err := config.cb(ctxUpdate); err != nil {
 			return err

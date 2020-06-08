@@ -16,10 +16,10 @@ $ soda generate sql -e postgres -c ./contrib/sql/.soda.yml -p ./contrib/sql/migr
 $ soda generate sql -e cockroach -c ./contrib/sql/.soda.yml -p ./contrib/sql/migrations [name]
 ```
 
-or, alternative run 
+or, alternative run
 
 ```
-$ soda generate sql -c ./contrib/sql/.soda.yml -p ./contrib/sql/migrations 
+$ soda generate sql -c ./contrib/sql/.soda.yml -p ./contrib/sql/migrations
 ```
 
 and remove the `sqlite` part from the newly generated file to create a SQL migrations that works with all

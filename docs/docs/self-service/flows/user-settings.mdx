@@ -413,6 +413,22 @@ user's browser using e.g. `window.open` `location.href` or plain and simple old
 
 :::
 
+#### User Settings Request State
+
+The Settings Request contains a state with two possible values:
+
+- `show_form`: No user data has been collected, or it is invalid, and thus the form should be shown.
+- `successful`: Indicates that the settings request has been updated successfully with the provided data.
+               	The state will stay `successful` when repeatedly checking. If the form is still displayed and the user adds more data, the state will revert back to `show_form` on validation errors.
+
+<Mermaid chart={`stateDiagram-v2
+[*] --> show_form
+show_form --> show_form: Validation fails
+show_form --> success: Identity was updated
+success --> show_form: Validation fails
+success --> [*]
+`}></Mermaid>
+
 ## Self-Service User Settings for API Clients
 
 Will be addressed in a future release.
@@ -421,4 +437,4 @@ Will be addressed in a future release.
 
 ORY Kratos allows you to configure hooks that run before and after a profile
 update was successful. For more information about hooks please read the
-[Hook Documentation](../hooks/index.mdx).
+[Hook Documentation](../hooks/index).
