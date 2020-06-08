@@ -4,7 +4,7 @@ To create a new [fizz](https://gobuffalo.io/en/docs/db/fizz/) migration run in t
 
 ```
 $ name=
-$ soda generate fizz -c ./contrib/sql/.soda.yml -p ./persistence/sql/migrations $name
+$ soda generate fizz -c ./contrib/sql/.soda.yml -p ./persistence/sql/migrations $name $name
 ```
 
 To create SQL migrations, target each database individually and run
