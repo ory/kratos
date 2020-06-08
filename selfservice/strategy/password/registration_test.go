@@ -24,6 +24,7 @@ import (
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/selfservice/strategy/password"
@@ -61,10 +62,9 @@ func TestRegistration(t *testing.T) {
 
 		router := x.NewRouterPublic()
 		admin := x.NewRouterAdmin()
-		reg.RegistrationStrategies().RegisterPublicRoutes(router)
-		reg.RegistrationHandler().RegisterPublicRoutes(router)
-		reg.RegistrationHandler().RegisterAdminRoutes(admin)
-		ts := httptest.NewServer(router)
+		viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
+			"enabled": true})
+		ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, admin)
 		defer ts.Close()
 
 		errTs, uiTs, returnTs := newErrTs(t, reg), httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -313,6 +313,8 @@ func TestRegistration(t *testing.T) {
 
 		viper.Set(configuration.ViperKeyURLsSelfPublic, urlx.ParseOrPanic("https://foo/"))
 		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://stub/registration.schema.json")
+		viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
+			"enabled": true})
 
 		sr := registration.NewRequest(time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")})
 		require.NoError(t, reg.RegistrationStrategies().MustStrategy(identity.CredentialsTypePassword).(*password.Strategy).PopulateRegistrationMethod(&http.Request{}, sr))

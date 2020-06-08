@@ -76,6 +76,8 @@ func nlr(exp time.Duration) *login.Request {
 func TestLoginNew(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 
+	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
+		"enabled": true})
 	ts, _ := testhelpers.NewKratosServer(t, reg)
 
 	errTs := testhelpers.NewErrorTestServer(t, reg)

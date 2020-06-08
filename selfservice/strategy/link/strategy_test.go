@@ -42,6 +42,8 @@ func TestStrategy(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/default.schema.json")
 	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, "https://www.ory.sh")
+	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
+		"enabled": true})
 
 	_ = testhelpers.NewRecoveryUITestServer(t)
 	_ = testhelpers.NewLoginUIRequestEchoServer(t, reg)

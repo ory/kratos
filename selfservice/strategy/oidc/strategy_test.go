@@ -50,7 +50,7 @@ func TestStrategy(t *testing.T) {
 	returnTS := newReturnTs(t, reg)
 	uiTS := newUI(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
-	ts, _ := testhelpers.NewKratosServer(t, reg)
+	ts, tsA := testhelpers.NewKratosServers(t)
 
 	viperSetProviderConfig(
 		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid", "client"),
@@ -63,6 +63,7 @@ func TestStrategy(t *testing.T) {
 			Mapper:       "file://./stub/oidc.hydra.jsonnet",
 		},
 	)
+	testhelpers.InitKratosServers(t, reg, ts, tsA)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
 	viper.Set(configuration.HookStrategyKey(configuration.ViperKeySelfServiceRegistrationAfter,
 		identity.CredentialsTypeOIDC.String()), []configuration.SelfServiceHook{{Name: "session"}})
