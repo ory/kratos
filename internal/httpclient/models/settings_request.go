@@ -59,11 +59,9 @@ type SettingsRequest struct {
 	// Required: true
 	RequestURL *string `json:"request_url"`
 
-	// Success, if true, indicates that the settings request has been updated successfully with the provided data.
-	// Done will stay true when repeatedly checking. If set to true, done will revert back to false only
-	// when a request with invalid (e.g. "please use a valid phone number") data was sent.
+	// state
 	// Required: true
-	UpdateSuccessful *bool `json:"update_successful"`
+	State State `json:"state"`
 }
 
 // Validate validates this settings request
@@ -98,7 +96,7 @@ func (m *SettingsRequest) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
-	if err := m.validateUpdateSuccessful(formats); err != nil {
+	if err := m.validateState(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -207,9 +205,12 @@ func (m *SettingsRequest) validateRequestURL(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *SettingsRequest) validateUpdateSuccessful(formats strfmt.Registry) error {
+func (m *SettingsRequest) validateState(formats strfmt.Registry) error {
 
-	if err := validate.Required("update_successful", "body", m.UpdateSuccessful); err != nil {
+	if err := m.State.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("state")
+		}
 		return err
 	}
 
