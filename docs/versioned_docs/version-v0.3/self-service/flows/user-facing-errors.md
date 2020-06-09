@@ -31,7 +31,7 @@ Response contains a list of errors and their details, for example:
 ```
 
 We are working on documenting possible error messages and homogenize error
-layouts (tracked as ) In general, errors have the following keys defined:
+layouts. In general, errors have the following keys defined:
 
 ```json
 {
