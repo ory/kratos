@@ -56,7 +56,7 @@ jobs:
       - name: Push image
         run: |
           REPOSITORY=${{ github.repository }}
-          REPOSITORY="$(tr [A-Z] [a-z] <<< "$REPOSITORY")"
+          REPOSITORY=$(echo "$REPOSITORY" | tr '[:upper:]' '[:lower:]')
           IMAGE_ID=docker.pkg.github.com/$REPOSITORY/$IMAGE_NAME
 
           # Strip git ref prefix from version
