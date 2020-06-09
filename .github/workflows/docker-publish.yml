@@ -57,7 +57,7 @@ jobs:
         run: |
           REPOSITORY=${{ github.repository }}
           REPOSITORY="$(tr [A-Z] [a-z] <<< "$REPOSITORY")"
-          IMAGE_ID=docker.pkg.github.com/REPOSITORY/$IMAGE_NAME
+          IMAGE_ID=docker.pkg.github.com/$REPOSITORY/$IMAGE_NAME
 
           # Strip git ref prefix from version
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
