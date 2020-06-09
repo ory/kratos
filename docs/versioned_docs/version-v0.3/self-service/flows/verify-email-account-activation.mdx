@@ -29,7 +29,7 @@ already known. Depending on the result, one of the two flows will be executed:
     src={useBaseUrl('img/docs/email-verify-known.png')}
   />
 
-This prevents Account Enumeration Attacks at is not possible for a threat
+This prevents Account Enumeration Attacks as it is not possible for a threat
 agent to determine if an account exists or not based on the verification flow.
 
 The emails are using templates that can be customised as explained in
@@ -42,12 +42,12 @@ template IDs are:
 ## Account Activation
 
 Using this feature implements the so-called "account activation" with the
-difference that ORY Kratos does not provide a feature that prevents sign in into
+difference that ORY Kratos does not provide a feature that prevents signing into
 accounts without verified addresses. The reason being that verification is
 proving that the user controls the given address, but it is not an
 authentication mechanism.
 
-You may however chose to limit what an identity without verified addresses is
+You may however choose to limit what an identity without verified addresses is
 able to do in your application logic or API Gateways.
 
 ## Setting Email Verification
@@ -102,8 +102,8 @@ You can also combine this with the password strategy login identifier.
 }
 ```
 
-That way, the field `email` (or any field you define with these properties) will
-serve as both the login identifier as well as a verifiable email address.
+That way the field `email` (or any field you define with these properties) will
+serve as both the login identifier and as a verifiable email address.
 
 ### Verify Email on User Registration
 
@@ -132,7 +132,7 @@ selfservice:
 ## Self-Service Request or Resend Verification Link for Browser Applications
 
 A user might want to resend a verification link because the link expired or did
-not arrive in the inbox.
+not arrive in their respective inbox.
 
 The flow implementing this feature uses the already established
 [Network Flows for Browsers](index.md#network-flows-for-browsers).
@@ -153,11 +153,11 @@ follows for Email Verification:
 2. ORY Kratos redirects the browser to the URL set in `urls.verify_ui` and
    appends the `request` URL Query Parameter (e.g.
    `https://example.org/verify?request=abcde`).
-3. The Endpoint at `/profile` makes a HTTP GET Request to
+3. The Endpoint at `/profile` makes an HTTP GET Request to
    `https://ory-kratos-admin.example-org.vpc/self-service/browser/flows/requests/verification?request=abcde`
-   and fetches Verification Request JSON Payload that represent the individual
+   and fetches the Verification Request JSON Payload that represents the individual
    fields that can be updated.
-4. The user fills out the form and sends a HTTP POST request to
+4. The user fills out the form and sends an HTTP POST request to
    `https://example.org/.ory/kratos/public/self-service/browser/flows/verification/:via/complete?request=abcde`.
    Depending on whether the address is known or not, a `verify_valid` or
    `verify_invalid` message will be sent to the given address.
@@ -195,7 +195,7 @@ An exemplary payload for a verification request looks as follows:
 ### Client-Side Browser Applications
 
 Because Client-Side Browser Applications do not have access to ORY Kratos' Admin
-API, they must use the ORY Kratos Public API instead. The flow for a Client-Side
+API, they must instead use the ORY Kratos Public API. The flow for a Client-Side
 Browser Application is almost the exact same as the one for Server-Side
 Applications, with the small difference that
 `https://example.org/.ory/kratos/public/self-service/browser/flows/requests/verification?request=abcde`
