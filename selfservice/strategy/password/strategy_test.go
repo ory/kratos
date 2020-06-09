@@ -1,7 +1,6 @@
 package password_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -60,14 +59,14 @@ func TestCountActiveCredentials(t *testing.T) {
 		{
 			in: identity.CredentialsCollection{{
 				Type:   strategy.ID(),
-				Config: json.RawMessage{},
+				Config: []byte{},
 			}},
 			expected: 0,
 		},
 		{
 			in: identity.CredentialsCollection{{
 				Type:   strategy.ID(),
-				Config: json.RawMessage(`{"hashed_password": "` + string(hash) + `"}`),
+				Config: []byte(`{"hashed_password": "` + string(hash) + `"}`),
 			}},
 			expected: 0,
 		},
@@ -75,7 +74,7 @@ func TestCountActiveCredentials(t *testing.T) {
 			in: identity.CredentialsCollection{{
 				Type:        strategy.ID(),
 				Identifiers: []string{""},
-				Config:      json.RawMessage(`{"hashed_password": "` + string(hash) + `"}`),
+				Config:      []byte(`{"hashed_password": "` + string(hash) + `"}`),
 			}},
 			expected: 0,
 		},
@@ -83,21 +82,21 @@ func TestCountActiveCredentials(t *testing.T) {
 			in: identity.CredentialsCollection{{
 				Type:        strategy.ID(),
 				Identifiers: []string{"foo"},
-				Config:      json.RawMessage(`{"hashed_password": "` + string(hash) + `"}`),
+				Config:      []byte(`{"hashed_password": "` + string(hash) + `"}`),
 			}},
 			expected: 1,
 		},
 		{
 			in: identity.CredentialsCollection{{
 				Type:   strategy.ID(),
-				Config: json.RawMessage(`{"hashed_password": "asdf"}`),
+				Config: []byte(`{"hashed_password": "asdf"}`),
 			}},
 			expected: 0,
 		},
 		{
 			in: identity.CredentialsCollection{{
 				Type:   strategy.ID(),
-				Config: json.RawMessage(`{}`),
+				Config: []byte(`{}`),
 			}},
 			expected: 0,
 		},

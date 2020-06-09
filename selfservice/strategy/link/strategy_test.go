@@ -2,12 +2,12 @@ package link_test
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
 
+	"github.com/ory/x/sqlxx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -33,7 +33,7 @@ func init() {
 
 var identityToRecover = &identity.Identity{
 	Credentials: map[identity.CredentialsType]identity.Credentials{
-		"password": {Type: "password", Identifiers: []string{"recover@ory.sh"}, Config: json.RawMessage(`{"hashed_password":"foo"}`)}},
+		"password": {Type: "password", Identifiers: []string{"recover@ory.sh"}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)}},
 	Traits:         identity.Traits(`{"email":"recover@ory.sh"}`),
 	TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
 }

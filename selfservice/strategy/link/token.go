@@ -34,7 +34,7 @@ type Token struct {
 	// RecoveryAddressID is a helper struct field for gobuffalo.pop.
 	RecoveryAddressID uuid.UUID `json:"-" faker:"-" db:"identity_recovery_address_id"`
 	// RequestID is a helper struct field for gobuffalo.pop.
-	RequestID uuid.UUID `json:"-" faker:"-" db:"identity_recovery_request_id"`
+	RequestID uuid.UUID `json:"-" faker:"-" db:"selfservice_recovery_request_id"`
 }
 
 func (Token) TableName() string {

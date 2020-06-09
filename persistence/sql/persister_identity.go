@@ -3,12 +3,12 @@ package sql
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/ory/jsonschema/v3"
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/otp"
@@ -84,7 +84,7 @@ func createIdentityCredentials(ctx context.Context, tx *pop.Connection, i *ident
 	for k, cred := range i.Credentials {
 		cred.IdentityID = i.ID
 		if len(cred.Config) == 0 {
-			cred.Config = json.RawMessage("{}")
+			cred.Config = sqlxx.JSONRawMessage("{}")
 		}
 
 		ct, err := findOrCreateIdentityCredentialsType(ctx, tx, cred.Type)

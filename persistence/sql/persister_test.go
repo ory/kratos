@@ -15,6 +15,7 @@ import (
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/continuity"
+	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/persistence/sql"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow/recovery"
@@ -121,6 +122,13 @@ func TestPersister(t *testing.T) {
 			_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
 			p := reg.Persister()
 
+			_ = os.Remove("migrations/schema.sql")
+			testhelpers.CleanSQL(t, p.(*sql.Persister).Connection())
+			t.Cleanup(func() {
+				testhelpers.CleanSQL(t, p.(*sql.Persister).Connection())
+				_ = os.Remove("migrations/schema.sql")
+			})
+
 			pop.SetLogger(pl(t))
 			require.NoError(t, p.MigrationStatus(context.Background(), os.Stderr))
 			require.NoError(t, p.MigrateUp(context.Background()))
@@ -193,7 +201,7 @@ func TestPersister_Transaction(t *testing.T) {
 	t.Run("case=should not create identity because callback returned error", func(t *testing.T) {
 		i := &identity.Identity{
 			ID:     x.NewUUID(),
-			Traits: identity.Traits(""),
+			Traits: identity.Traits(`{}`),
 		}
 		errMessage := "failing because why not"
 		err := p.Transaction(context.Background(), func(connection *pop.Connection) error {

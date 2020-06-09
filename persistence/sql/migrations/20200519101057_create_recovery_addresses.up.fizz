@@ -44,8 +44,8 @@ create_table("identity_recovery_tokens") {
   t.Column("identity_recovery_address_id", "uuid")
   t.ForeignKey("identity_recovery_address_id", {"identity_recovery_addresses": ["id"]}, {"on_delete": "cascade"})
 
-  t.Column("identity_recovery_request_id", "uuid")
-  t.ForeignKey("identity_recovery_request_id", {"selfservice_recovery_requests": ["id"]}, {"on_delete": "cascade"})
+  t.Column("selfservice_recovery_request_id", "uuid")
+  t.ForeignKey("selfservice_recovery_request_id", {"selfservice_recovery_requests": ["id"]}, {"on_delete": "cascade"})
 }
 
 add_index("identity_recovery_tokens", ["token"], { "unique": true, "name": "identity_recovery_addresses_code_uq_idx" })

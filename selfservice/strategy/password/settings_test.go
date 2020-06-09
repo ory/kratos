@@ -2,7 +2,6 @@ package password_test
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -39,7 +38,7 @@ func TestSettings(t *testing.T) {
 	primaryIdentity := &identity.Identity{
 		ID: x.NewUUID(),
 		Credentials: map[identity.CredentialsType]identity.Credentials{
-			"password": {Type: "password", Identifiers: []string{"john@doe.com"}, Config: json.RawMessage(`{"hashed_password":"foo"}`)},
+			"password": {Type: "password", Identifiers: []string{"john@doe.com"}, Config: []byte(`{"hashed_password":"foo"}`)},
 		},
 		Traits:         identity.Traits(`{"email":"john@doe.com"}`),
 		TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,

@@ -2,7 +2,6 @@ package password_test
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -13,6 +12,7 @@ import (
 	"time"
 
 	"github.com/ory/x/errorsx"
+	"github.com/ory/x/sqlxx"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -152,7 +152,7 @@ func TestLoginNew(t *testing.T) {
 				identity.CredentialsTypePassword: {
 					Type:        identity.CredentialsTypePassword,
 					Identifiers: []string{identifier},
-					Config:      json.RawMessage(`{"hashed_password":"` + string(p) + `"}`),
+					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"` + string(p) + `"}`),
 				},
 			},
 		}))

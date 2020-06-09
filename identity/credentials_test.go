@@ -1,16 +1,17 @@
 package identity
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/mohae/deepcopy"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/ory/x/sqlxx"
 )
 
 func TestCredentialsEqual(t *testing.T) {
 	original := map[CredentialsType]Credentials{
-		"foo": {Type: "foo", Identifiers: []string{"bar"}, Config: json.RawMessage(`{"foo":"bar"}`)},
+		"foo": {Type: "foo", Identifiers: []string{"bar"}, Config: sqlxx.JSONRawMessage(`{"foo":"bar"}`)},
 	}
 
 	derived := deepcopy.Copy(original).(map[CredentialsType]Credentials)

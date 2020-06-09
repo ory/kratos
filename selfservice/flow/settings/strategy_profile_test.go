@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/ory/x/sqlxx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -46,7 +47,7 @@ func TestStrategyTraits(t *testing.T) {
 	primaryIdentity := &identity.Identity{
 		ID: x.NewUUID(),
 		Credentials: map[identity.CredentialsType]identity.Credentials{
-			"password": {Type: "password", Identifiers: []string{"john@doe.com"}, Config: json.RawMessage(`{"hashed_password":"foo"}`)},
+			"password": {Type: "password", Identifiers: []string{"john@doe.com"}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)},
 		},
 		Traits:              identity.Traits(`{"email":"john@doe.com","stringy":"foobar","booly":false,"numby":2.5,"should_long_string":"asdfasdfasdfasdfasfdasdfasdfasdf","should_big_number":2048}`),
 		TraitsSchemaID:      configuration.DefaultIdentityTraitsSchemaID,

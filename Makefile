@@ -5,10 +5,11 @@ K := $(foreach exec,$(EXECUTABLES),\
         $(if $(shell which $(exec)),some string,$(error "No $(exec) in PATH")))
 
 export GO111MODULE := on
-export PATH := $(pwd)/.bin:${PATH}
+export PATH := .bin:${PATH}
 
+.PHONY: deps
 deps:
-ifneq ("v0","$(shell cat .bin/.lock)")
+ifneq ("$(shell base64 Makefile))","$(shell cat .bin/.lock)")
 		curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b .bin/ v1.24.0
 		bash <(curl https://raw.githubusercontent.com/ory/hydra/master/install.sh) -b .bin/ v1.4.10
 		go build -o .bin/go-acc github.com/ory/go-acc
@@ -17,11 +18,11 @@ ifneq ("v0","$(shell cat .bin/.lock)")
 		go build -o .bin/mockgen github.com/golang/mock/mockgen
 		go build -o .bin/swagger github.com/go-swagger/go-swagger/cmd/swagger
 		go build -o .bin/goimports golang.org/x/tools/cmd/goimports
-		go build -o .bin/swagutil github.com/ory/sdk/swagutil
 		go build -o .bin/packr2 github.com/gobuffalo/packr/v2/packr2
 		go build -o .bin/yq github.com/mikefarah/yq
+		go build -o .bin/ory-dev github.com/ory/meta/tools/ory-dev
 		npm ci
-		echo "v0" > .bin/.lock
+		echo "$$(base64 Makefile)" > .bin/.lock
 endif
 
 .PHONY: docs
@@ -50,25 +51,17 @@ install: deps
 
 .PHONY: test-resetdb
 test-resetdb:
-		docker kill kratos_test_database_mysql || true
-		docker kill kratos_test_database_postgres || true
-		docker kill kratos_test_database_cockroach || true
-		docker rm -f kratos_test_database_mysql || true
-		docker rm -f kratos_test_database_postgres || true
-		docker rm -f kratos_test_database_cockroach || true
-		docker run --rm --name kratos_test_database_mysql -p 3444:3306 -e MYSQL_ROOT_PASSWORD=secret -d mysql:5.7
-		docker run --rm --name kratos_test_database_postgres -p 3445:5432 -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=postgres -d postgres:9.6
-		docker run --rm --name kratos_test_database_cockroach -p 3446:26257 -d cockroachdb/cockroach:v2.1.6 start --insecure
+		script/testenv.sh
 
 .PHONY: test
 test: test-resetdb
-		source script/test-envs.sh && go test -tags sqlite -count=1 ./...
+		source script/test-envs.sh && go test -p 1 -tags sqlite -count=1 ./...
 
-# Generates the SDKs
+# Generates the SDK
 .PHONY: sdk
 sdk: deps
 		swagger generate spec -m -o .schema/api.swagger.json -x internal/httpclient
-		swagutil sanitize ./.schema/api.swagger.json
+		ory-dev swagger sanitize ./.schema/api.swagger.json
 		swagger validate ./.schema/api.swagger.json
 		swagger flatten --with-flatten=remove-unused -o ./.schema/api.swagger.json ./.schema/api.swagger.json
 		swagger validate ./.schema/api.swagger.json
@@ -106,3 +99,7 @@ test-e2e: test-resetdb
 		test/e2e/run.sh postgres
 		test/e2e/run.sh cockroach
 		test/e2e/run.sh mysql
+
+.PHONX: migrations-sync
+migrations-sync:
+		ory-dev fizz migrations tests sync persistence/sql/migrations persistence/sql/migratest/testdata persistence/sql/migratest/fixtures

@@ -1,13 +1,13 @@
 package identity
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"sync"
 
 	"github.com/ory/go-convenience/stringslice"
 	"github.com/ory/jsonschema/v3"
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/schema"
 )
@@ -31,7 +31,7 @@ func (r *SchemaExtensionCredentials) Run(_ jsonschema.ValidationContext, s schem
 			cred = &Credentials{
 				Type:        CredentialsTypePassword,
 				Identifiers: []string{},
-				Config:      json.RawMessage{},
+				Config:      sqlxx.JSONRawMessage{},
 			}
 		}
 
