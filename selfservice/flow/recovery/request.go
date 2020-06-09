@@ -70,7 +70,11 @@ type Request struct {
 	// MethodsRaw is a helper struct field for gobuffalo.pop.
 	MethodsRaw RequestMethodsRaw `json:"-" faker:"-" has_many:"selfservice_recovery_request_methods" fk_id:"selfservice_recovery_request_id"`
 
-	// State represents the state of this request.
+	// State represents the state of this request:
+	//
+	// - choose_method: ask the user to choose a method (e.g. recover account via email)
+	// - sent_email: the email has been sent to the user
+	// - passed_challenge: the request was successful and the recovery challenge was passed.
 	//
 	// required: true
 	State State `json:"state" faker:"-" db:"state"`

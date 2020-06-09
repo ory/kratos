@@ -172,7 +172,7 @@ func TestStrategyTraits(t *testing.T) {
 			values := testhelpers.SDKFormFieldsToURLValues(config.Fields)
 			values.Set("traits.email", newEmail)
 			actual, response := testhelpers.SettingsSubmitForm(t, config, primaryUser, values)
-			assert.True(t, pointerx.BoolR(response.Payload.UpdateSuccessful), "%s", actual)
+			assert.EqualValues(t, settings.StateSuccess, response.Payload.State, "%s", actual)
 
 			assert.Empty(t, gjson.Get(actual, "methods.profile.config.fields.#(name==traits.numby).errors").Value(), "%s", actual)
 			assert.Empty(t, gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_big_number).errors").Value(), "%s", actual)
@@ -220,7 +220,7 @@ func TestStrategyTraits(t *testing.T) {
 				values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
 				values.Set("traits.should_big_number", "1")
 				actual, response := testhelpers.SettingsSubmitForm(t, f, primaryUser, values)
-				assert.False(t, pointerx.BoolR(response.Payload.UpdateSuccessful), "%s", actual)
+				assert.EqualValues(t, settings.StateShowForm, response.Payload.State, "%s", actual)
 
 				assert.Equal(t, "1", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_big_number).value").String(), "%s", actual)
 				assert.Equal(t, "must be >= 1200 but found 1", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_big_number).messages.0.text").String(), "%s", actual)
@@ -236,7 +236,7 @@ func TestStrategyTraits(t *testing.T) {
 				values.Set("traits.should_long_string", "short")
 				values.Set("traits.numby", "this-is-not-a-number")
 				actual, response := testhelpers.SettingsSubmitForm(t, f, primaryUser, values)
-				assert.False(t, pointerx.BoolR(response.Payload.UpdateSuccessful), "%s", actual)
+				assert.EqualValues(t, settings.StateShowForm, response.Payload.State, "%s", actual)
 
 				assert.Empty(t, gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_big_number).messages.0.text").String(), "%s", actual)
 				assert.Empty(t, gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_big_number).value").String(), "%s", actual)
@@ -260,7 +260,7 @@ func TestStrategyTraits(t *testing.T) {
 				values.Set("traits.should_big_number", "9001")
 				values.Set("traits.should_long_string", "this is such a long string, amazing stuff!")
 				actual, response := testhelpers.SettingsSubmitForm(t, f, primaryUser, values)
-				assert.True(t, pointerx.BoolR(response.Payload.UpdateSuccessful), "%s", actual)
+				assert.EqualValues(t, settings.StateSuccess, response.Payload.State, "%s", actual)
 
 				assert.Empty(t, gjson.Get(actual, "methods.profile.config.fields.#(name==traits.numby).errors").Value(), "%s", actual)
 				assert.Empty(t, gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_big_number).errors").Value(), "%s", actual)
@@ -279,7 +279,7 @@ func TestStrategyTraits(t *testing.T) {
 				values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
 				values.Set("traits.should_long_string", "short")
 				actual, response := testhelpers.SettingsSubmitForm(t, f, primaryUser, values)
-				assert.False(t, pointerx.BoolR(response.Payload.UpdateSuccessful), "%s", actual)
+				assert.EqualValues(t, settings.StateShowForm, response.Payload.State, "%s", actual)
 			})
 		})
 	})
@@ -327,7 +327,7 @@ func TestStrategyTraits(t *testing.T) {
 		values.Set("traits.email", newEmail)
 
 		actual, response := testhelpers.SettingsSubmitForm(t, config, primaryUser, values)
-		assert.True(t, pointerx.BoolR(response.Payload.UpdateSuccessful), "%s", actual)
+		assert.EqualValues(t, settings.StateSuccess, response.Payload.State, "%s", actual)
 		assert.Equal(t, newEmail, gjson.Get(actual, "methods.profile.config.fields.#(name==traits.email).value").Value(), "%s", actual)
 
 		m, err := reg.CourierPersister().LatestQueuedMessage(context.Background())

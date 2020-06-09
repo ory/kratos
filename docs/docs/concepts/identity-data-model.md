@@ -4,9 +4,9 @@ title: Identity Data Model
 ---
 
 An identity ("user", "user account", "account", "subject") is the "who" of a
-software system. It can be a customer, employee, user, contractor, or
-even a programmatic identity such as an IoT device, application, or some
-other type of "robot."
+software system. It can be a customer, employee, user, contractor, or even a
+programmatic identity such as an IoT device, application, or some other type of
+"robot."
 
 In ORY Kratos' terminology we call all of them "identities", and it is always
 exposed as `identity` in the API endpoints, requests, and response payloads.
@@ -15,7 +15,7 @@ The following examples use YAML for improved readability. However, the API
 payload is usually in JSON format. An `identity` has the following properties:
 
 ```yaml title="$ curl http://kratos/admin-endpoint/identities/9f425a8d-7efc-4768-8f23-7647a74fdf13"
-# A UUID that is generated when the identity is created and 
+# A UUID that is generated when the identity is created and
 # which cannot be changed or updated at a later stage.
 id: '9f425a8d-7efc-4768-8f23-7647a74fdf13'
 
