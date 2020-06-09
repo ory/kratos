@@ -12,18 +12,16 @@ Systems that have more than a few components often use Reverse Proxies such as
 Nginx, Envoy, Kong to route and authorize traffic to applications. ORY Kratos
 works very well in such a environment and the purpose of this guide is
 clarifying how one can use a reverse proxy with IAP (Identity and Access Proxy)
-capabilities to authorize incoming requests. In this tutorial, we will use ORY
-Oathkeeper to achieve this.
+capabilities to authorize incoming requests. In this tutorial we will be using [ORY Oathkeeper](https://github.com/ory/oathkeeper)to achieve this.
 
 This guide expects that you have familiarized yourself with ORY Kratos' concepts
 and that builds on the components and flows established in the
 [Quickstart](../quickstart.mdx).
 
 To ensure that no one can access the dashboard without prior authentication
-(login), we will use a reverse proxy
-([ORY Oathkeeper](https://github.com/ory/oathkeeper)) to deny all
-unauthenticated traffic to `http://secure-app/dashboard` and redirect the user
-to the login page at `http://secure-app/auth/login`. Further, we will configure
+(login), we are making use of a reverse proxy, denying all 
+unauthenticated traffic to `http://secure-app/dashboard` and redirecting the user
+to the login page at `http://secure-app/auth/login`. We will also configure
 access to `http://secure-app/auth/login` in such a way that access only works if
 one is not yet authenticated.
 
@@ -86,7 +84,7 @@ This demo makes use of several services / Docker Images:
    that implements the login, registration, logout, ..., and dashboard screen.
 3. A reverse proxy ([ORY Oathkeeper](https://github.com/ory/oathkeeper)) to
    protect the **SecureApp**.
-4. An SMTP server with which ORY Kratos can send E-Mails with. We will use
+4. An SMTP server with which ORY Kratos can sends E-Mails. We will use
    [MailHog](https://github.com/mailhog/MailHog), a minimalistic SMTP throaway
    server with an easy UI.
 
@@ -99,7 +97,7 @@ Docker (Compose) Networks work:
 As you can see, most requests are proxied through the Reverse Proxy
 ([ORY Oathkeeper](https://github.com/ory/oathkeeper)). The `quickstart.yml` file
 also defines additional ports such as `4434`, `4456`, and others. These ports
-are only there for debugging and playing around with and are not actually
+are for debugging purposes only. They also allow you to play around and are not actually
 required for the demo to work.
 
 The next diagram shows how we've configured the routes in our Reverse Proxy
@@ -113,7 +111,7 @@ same hostname. This avoids common cross-domain issues with cookies.
 
 ## Perform registration, logout, login
 
-Enough theory, it's time to get this thing going! Let's start by trying to open
+Enough theory, it's time to get things going! Let's start by opening
 the dashboard - **go to
 [127.0.0.1:4455/dashboard](http://127.0.0.1:4455/dashboard)**.
 
@@ -164,7 +162,7 @@ It's more or less doing what the `needsLogin` function does in the
 
 The
 [Anonymous Authenticator](https://www.ory.sh/docs/oathkeeper/pipeline/authn#anonymous)
-is useful for endpoints that do not need login, such as the registration screen:
+is useful for endpoints that do not need login, such as a registration screen:
 
 ```yaml title="contrib/quickstart/oathkeeper/.oathkeeper.yml"
 # ...
@@ -180,7 +178,7 @@ authenticators
 
 The
 [Allowed Authenticator](https://www.ory.sh/docs/oathkeeper/pipeline/authz#allowed)
-simply allows all users to access the URL. Since we don't have RBAC or ACL in
+simply allows all users to access the URL. Since we don't have Role-based access control (RBAC) or an Access Control list (ACL) in 
 place for this example, this will be enough.
 
 ```yaml title="contrib/quickstart/oathkeeper/.oathkeeper.yml"
@@ -199,7 +197,7 @@ takes all the available session information and puts it into a JSON Web Token
 (JWT). The protected SecureApp will now receive `Authorization: bearer <jwt...>`
 in the HTTP Header instead of `Cookie: ory_kratos_session=...`. The JWT is
 signed using a RS256 key. To verify the JWT we can use the public key provided
-by ORY Oathkeeper's JWKS API `http://127.0.0.1:4456/.well-known/jwks.json`. You
+by Oathkeeper's JWKS API `http://127.0.0.1:4456/.well-known/jwks.json`. You
 can generate the RS256 key yourself by running:
 `oathkeeper credentials generate --alg RS256 > id_token.jwks.json`.
 
