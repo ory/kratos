@@ -5,7 +5,7 @@ title: User Profile Management
 
 :::tip Before you start
 
-Please the [User Settings Documentation](../user-settings.mdx) first.
+Please read through the [User Settings Documentation](../user-settings.mdx) first.
 
 :::
 
@@ -36,7 +36,7 @@ This strategy does not implement any other flow.
 
 Redirecting the browser to the
 [Self-Service Settings Endpoint](../user-settings.mdx#user-settings-process-sequence)
-initiates the flow. The Settings Request Response Payload always include a
+initiates the flow. The Settings Request Response Payload always includes a
 `profile` method:
 
 ```json title="$ curl http://<kratos-admin>/self-service/browser/flows/requests/settings?request=9c6473d4-9ffd-44cd-9794-adb82cbe4009"
@@ -87,7 +87,7 @@ initiates the flow. The Settings Request Response Payload always include a
 }
 ```
 
-If the form validation fails, an error will bei included:
+If the form validation fails, an error will be included:
 
 ```json5 title="$ curl http://<kratos-admin>/self-service/browser/flows/requests/settings?request=9c6473d4-9ffd-44cd-9794-adb82cbe4009"
 {
