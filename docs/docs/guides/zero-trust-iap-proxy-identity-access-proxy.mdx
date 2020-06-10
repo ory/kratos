@@ -13,14 +13,13 @@ Systems that have more than a few components often use reverse proxies such as
 Nginx, Envoy, or Kong to route and authorize traffic to applications. ORY Kratos
 works very well in such environments. The purpose of this guide is
 to clarify how to use an IAP (Identity and Access Proxy) to authorize incoming
-requests. In this tutorial, we will use ORY Oathkeeper to achieve this.
+requests. In this tutorial we will be using [ORY Oathkeeper](https://github.com/ory/oathkeeper) to achieve this.
 
 This guide expects that you have familiarized yourself with ORY Kratos' concepts
 introduced in the [Quickstart](../quickstart.mdx).
 
-To ensure that no one can access the dashboard without prior authentication, we
-will use a reverse proxy ([ORY Oathkeeper](https://github.com/ory/oathkeeper)) to
-deny all unauthenticated traffic to `http://secure-app/dashboard` and redirect the user
+To ensure that no one can access the dashboard without prior authentication, we are making use
+of our reverse proxy ([ORY Oathkeeper](https://github.com/ory/oathkeeper)) denying all unauthenticated traffic to `http://secure-app/dashboard` and redirecting the user
 to the login page at `http://secure-app/auth/login`. Further, we will configure
 access to `http://secure-app/auth/login` in such a way that access only works if
 one is not yet authenticated.
@@ -85,7 +84,7 @@ This demo makes use of several services:
 - Reverse proxy (port 4455) - a reverse proxy to protect the **SecureApp**.
 - API (port 4456) - Oathkeeper's API. This is made public only so we can test via the CLI.
 4. [MailHog](https://github.com/mailhog/MailHog)
-- Public (port 4436) - a development SMTP server which ORY Kratos will use to send emails.
+- Public (port 4436) - a development SMTP server with which ORY Kratos sends emails.
 
 To better understand the application architecture, let's take a look at the network
 configuration. This assumes that you have at least some understanding of how
@@ -169,7 +168,7 @@ come from the same hostname.
 
 ## Perform Registration, Login, and Logout
 
-Enough theory! Let's start by trying to open
+Enough theory! Let's start by opening 
 the dashboard: go to [127.0.0.1:4455/dashboard](http://127.0.0.1:4455/dashboard).
 
 Check the [Quickstart](../quickstart.mdx) for the other flows!
@@ -237,7 +236,7 @@ authenticators
 
 The
 [Allowed Authenticator](https://www.ory.sh/docs/oathkeeper/pipeline/authz#allowed)
-simply allows all users to access the URL. Since we don't have RBAC or ACL in
+simply allows all users to access the URL. Since we don't have Role-based access control (RBAC) or an Access Control list (ACL) in 
 place for this example, this will be enough.
 
 ```yaml title="contrib/quickstart/oathkeeper/.oathkeeper.yml"
