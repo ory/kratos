@@ -14,7 +14,6 @@ import (
 var _ settings.RequestPersister = new(Persister)
 
 func (p *Persister) CreateSettingsRequest(ctx context.Context, r *settings.Request) error {
-	r.IdentityID = r.Identity.ID
 	return sqlcon.HandleError(p.GetConnection(ctx).Eager("MethodsRaw").Create(r))
 }
 

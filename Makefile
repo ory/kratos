@@ -55,7 +55,7 @@ test-resetdb:
 
 .PHONY: test
 test: test-resetdb
-		source script/test-envs.sh && go test -p 1 -tags sqlite -count=1 ./...
+		source script/test-envs.sh && go test -p 1 -tags sqlite -count=1 -failfast ./...
 
 # Generates the SDK
 .PHONY: sdk
@@ -102,4 +102,4 @@ test-e2e: test-resetdb
 
 .PHONX: migrations-sync
 migrations-sync:
-		ory-dev fizz migrations tests sync persistence/sql/migrations persistence/sql/migratest/testdata persistence/sql/migratest/fixtures
+		ory-dev fizz migrations tests sync persistence/sql/migrations persistence/sql/migratest/testdata

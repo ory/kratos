@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 	"testing"
 
@@ -53,7 +52,7 @@ func init() {
 func TestMain(m *testing.M) {
 	atexit := dockertest.NewOnExit()
 	atexit.Add(func() {
-		_ = os.Remove(strings.TrimPrefix(sqlite, "sqlite://"))
+		// _ = os.Remove(strings.TrimPrefix(sqlite, "sqlite://"))
 		dockertest.KillAllTestDatabases()
 	})
 	atexit.Exit(m.Run())
@@ -125,7 +124,7 @@ func TestPersister(t *testing.T) {
 			_ = os.Remove("migrations/schema.sql")
 			testhelpers.CleanSQL(t, p.(*sql.Persister).Connection())
 			t.Cleanup(func() {
-				testhelpers.CleanSQL(t, p.(*sql.Persister).Connection())
+				// testhelpers.CleanSQL(t, p.(*sql.Persister).Connection())
 				_ = os.Remove("migrations/schema.sql")
 			})
 

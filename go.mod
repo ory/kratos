@@ -26,7 +26,7 @@ require (
 	github.com/gobuffalo/httptest v1.0.2
 	github.com/gobuffalo/logger v1.0.3
 	github.com/gobuffalo/packr/v2 v2.8.0
-	github.com/gobuffalo/pop/v5 v5.1.3
+	github.com/gobuffalo/pop/v5 v5.0.11
 	github.com/gobuffalo/uuid v2.0.5+incompatible
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
