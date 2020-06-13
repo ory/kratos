@@ -24,7 +24,7 @@ func TestRedirector(t *testing.T) {
 	assert.Error(t, l.ExecuteLoginPreHook(nil, nil, nil))
 	assert.Error(t, l.ExecuteRegistrationPreHook(nil, nil, nil))
 
-	l = NewRedirector(json.RawMessage(`{"to":"https://www.ory.sh/"}`))
+	l = NewRedirector(json.RawMessage(`{"default_redirect_url":"https://www.ory.sh/"}`))
 	router := httprouter.New()
 	router.GET("/a", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		require.Error(t, l.ExecuteSettingsPrePersistHook(w, r, nil, nil), settings.ErrHookAbortRequest)

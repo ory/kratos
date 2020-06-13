@@ -75,9 +75,9 @@ func (e *Redirector) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request
 }
 
 func (e *Redirector) do(w http.ResponseWriter, r *http.Request) error {
-	rt := gjson.GetBytes(e.config, "to").String()
+	rt := gjson.GetBytes(e.config, "default_redirect_url").String()
 	if rt == "" {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("A redirector hook was configured without a redirect_to value set."))
+		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("A redirector hook was configured without a default_redirect_url value set."))
 	}
 
 	http.Redirect(w, r, rt, http.StatusFound)

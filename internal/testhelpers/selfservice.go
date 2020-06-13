@@ -64,7 +64,7 @@ func TestSelfServicePreHook(
 
 		t.Run("case=redirect", func(t *testing.T) {
 			t.Cleanup(SelfServiceHookConfigReset)
-			viper.Set(configKey, []configuration.SelfServiceHook{{Name: "redirect", Config: []byte(`{"to": "https://www.ory.sh/"}`)}})
+			viper.Set(configKey, []configuration.SelfServiceHook{{Name: "redirect", Config: []byte(`{"default_redirect_url": "https://www.ory.sh/"}`)}})
 
 			res, _ := makeRequestPre(t, newServer(t))
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
