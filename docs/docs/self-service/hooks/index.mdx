@@ -26,9 +26,10 @@ Self-Service Login Strategy in ORY Kratos' configuration file.
 selfservice:
   login:
     before:
-      - hook: redirect
-        config:
-          to: https://www.ory.sh/maintenance
+      hooks:
+        - hook: redirect
+          config:
+            default_redirect_url: https://www.ory.sh/maintenance
 ```
 
 #### `redirect`
@@ -41,9 +42,10 @@ when you want to disable any settings functionality (e.g. due to maintenance).
 selfservice:
   login:
     before:
-      - hook: redirect
-        config:
-          to: https://www.ory.sh/maintenance
+      hooks:
+        - hook: redirect
+          config:
+            default_redirect_url: https://www.ory.sh/maintenance
 ```
 
 
@@ -54,29 +56,11 @@ selfservice:
   login:
     after:
       oidc:
-        - hook: redirect
-          config:
-            to: https://www.ory.sh/
+        hooks:
+          - hook: revoke_active_sessions
       password:
-        - hook: revoke_active_sessions
-```
-
-#### `redirect`
-
-The `redirect` job sends HTTP 302 Found and redirects the client
-to the specified endpoint. This hook overrides the default redirection
-behaviour and enforces the specified redirect URL.
-
-Using this hook should be an exception.
-
-```yaml title="path/to/my/kratos.config.yml"
-selfservice:
-  login:
-    after:
-      <strategy>:
-        - hook: redirect
-          config:
-            to: https://url-to-redirect/to
+        hooks:
+          - hook: revoke_active_sessions
 ```
 
 #### `revoke_active_sessions`
@@ -89,8 +73,9 @@ selfservice:
   login:
     after:
       <strategy>:
-        - hook: revoke_active_sessions
-          # can not be configured
+        hooks:
+          - hook: revoke_active_sessions
+            # can not be configured
 ```
 
 ## Registration
@@ -104,9 +89,10 @@ Self-Service Registration Strategy in ORY Kratos' configuration file.
 selfservice:
   registration:
     before:
-    - hook: redirect
-      config:
-        to: https://www.ory.sh/maintenance
+      hooks:
+        - hook: redirect
+          config:
+            default_redirect_url: https://www.ory.sh/maintenance
 ```
 
 #### `redirect`
@@ -119,9 +105,10 @@ when you want to disable any settings functionality (e.g. due to maintenance).
 selfservice:
   registration:
     before:
-    - hook: redirect
-      config:
-        to: https://www.ory.sh/maintenance
+      hooks:
+        - hook: redirect
+          config:
+            default_redirect_url: https://www.ory.sh/maintenance
 ```
 
 ### After
@@ -131,9 +118,11 @@ selfservice:
   registration:
     after:
       oidc:
-        - hook: session
+        hooks:
+          - hook: session
       password:
-        - hook: session
+        hooks:
+          - hook: session
 ```
 
 #### `session`
@@ -171,8 +160,9 @@ selfservice:
   registration:
     after:
       <strategy>:
-        - hook: session
-          # can not be configured
+        hooks:
+          - hook: session
+            # can not be configured
 ```
 
 #### `redirect`
@@ -195,9 +185,10 @@ selfservice:
   registration:
     after:
       <strategy>:
-        - hook: redirect
-          config:
-            to: https://url-to-redirect/to
+        hooks:
+          - hook: redirect
+            config:
+              default_redirect_url: https://url-to-redirect/to
 ```
 
 ### `verify`
@@ -205,6 +196,15 @@ selfservice:
 The `verify` hook checks for verifiable email addresses and sends a verification / activation
 email. For more information,
 please read [User Verification and Account Activation](../flows/verify-email-account-activation.mdx).
+
+```yaml title="path/to/my/kratos.config.yml"
+selfservice:
+  registration:
+    after:
+      <strategy>:
+        hooks:
+          - hook: verify
+```
 
 ## Settings
 
@@ -221,29 +221,13 @@ Settings flows do not have before hooks.
 selfservice:
   settings:
     after:
-      - hook: redirect
-        config:
-         to: https://www.ory.sh/
+      <password|profile>:
+        hooks:
+          - hook: verify
 ```
 
-#### `redirect`
+### `verify`
 
-The `redirect` job sends HTTP 302 Found and redirects the client
-to the specified endpoint.
-
-Per default, the settings endpoint returns to the settings page
-with the original settings request ID. This is useful
-when you want to show e.g. a success message indicating
-that the data has successfully been saved.
-
-To override this behaviour, use this redirect hook.
-
-```yaml title="path/to/my/kratos.config.yml"
-selfservice:
-  settings:
-    after:
-      <strategy>:
-        - hook: redirect
-          config:
-            to: https://www.ory.sh/settings-updated
-```
+The `verify` hook checks for verifiable email addresses and sends a verification / activation
+email. For more information,
+please read [User Verification and Account Activation](../flows/verify-email-account-activation.mdx).
