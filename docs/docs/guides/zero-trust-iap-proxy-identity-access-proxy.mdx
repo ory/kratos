@@ -83,7 +83,7 @@ This demo makes use of several services:
 3. [ORY Oathkeeper](https://github.com/ory/oathkeeper)
 - Reverse proxy (port 4455) - a reverse proxy to protect the **SecureApp**.
 - API (port 4456) - Oathkeeper's API. This is made public only so we can test via the CLI.
-4. [MailHog](https://github.com/mailhog/MailHog)
+4. [MailSlurper](https://github.com/mailslurper)
 - Public (port 4436) - a development SMTP server with which ORY Kratos sends emails.
 
 To better understand the application architecture, let's take a look at the network
@@ -168,7 +168,7 @@ come from the same hostname.
 
 ## Perform Registration, Login, and Logout
 
-Enough theory! Let's start by opening 
+Enough theory! Let's start by opening
 the dashboard: go to [127.0.0.1:4455/dashboard](http://127.0.0.1:4455/dashboard).
 
 Check the [Quickstart](../quickstart.mdx) for the other flows!
@@ -236,7 +236,7 @@ authenticators
 
 The
 [Allowed Authenticator](https://www.ory.sh/docs/oathkeeper/pipeline/authz#allowed)
-simply allows all users to access the URL. Since we don't have Role-based access control (RBAC) or an Access Control list (ACL) in 
+simply allows all users to access the URL. Since we don't have Role-based access control (RBAC) or an Access Control list (ACL) in
 place for this example, this will be enough.
 
 ```yaml title="contrib/quickstart/oathkeeper/.oathkeeper.yml"
@@ -256,13 +256,13 @@ takes all the available session information and puts it into a JSON Web Token
 
 ```Authorization: bearer <jwt...>```
 
-in the HTTP Header instead of 
+in the HTTP Header instead of
 
 ```Cookie: ory_kratos_session=...```
 
 The JWT is
 signed using a RS256 key. To verify the JWT we can use the public key provided
-by ORY Oathkeeper's JWKS API: 
+by ORY Oathkeeper's JWKS API:
 
 ```http://127.0.0.1:4456/.well-known/jwks.json```
 
