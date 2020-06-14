@@ -163,9 +163,8 @@ Schema:
   "title": "Person",
   "type": "object",
   "properties": {
-    "email": {
+    "username": {
       "type": "string",
-      "format": "email",
       "ory.sh/kratos": {
         "credentials": {
           "password": {
