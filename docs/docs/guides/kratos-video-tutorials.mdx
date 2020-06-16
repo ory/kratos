@@ -1,0 +1,64 @@
+---
+id: krvidtut
+title: Kratos Video Tutorials
+---
+
+In this document we will gather video guides for ORY Kratos. 
+
+Below each video you will find a transcript of the video. If you think we can improve the video or should make any other changes, you can open an issue here. 
+
+<iframe width="560" height="315" src="https://www.youtube.com/watch?v=5t1Zr_zJc7E" frameborder="0" allowfullscreen></iframe
+<details><summary>Transcript Kratos Quickstart</summary>
+Welcome to the Quickstart Introduction of ORY Kratos on Windows.
+
+First of all you need Docker Desktop and Git to launch this quickstart.
+
+You will find download links for those in the description.
+
+I already have my git bash open here and I am starting Docker now. 
+
+Next I will open my browser to navigate to the Kratos Quickstart. 
+
+If you have not already read the whole quickstart, I really recommend it, but I will focus on the practical steps now.
+
+So scroll down a little bit and you will see the commands you have to put into your console to get Kratos running. 
+
+The first command here will clone the Kratos repository to your machine. 
+
+This will take a little bit depending on your internet speed. 
+
+Then you want to set your directory to your Kratos directory and lastly switch the branch to the 0.3.0alpha version, since this is the version this quickstart is tailored to.
+
+As I don't have make installed, I need to docker pull the latest SQL and the self service as well, that is our SecureApp.
+
+And now we have all the building parts ready and can use the docker-compose command to get this thing going. 
+
+So just copy the docker-compose command and cross your fingers that everything will work correctly. 
+
+This part can actually take a few minutes, but once the output has slowed down you can see the last two lines here indicate that everything has been set up and everything is working fine. 
+
+Now we can actually test our SecureApp login and registration.
+
+So I go back to the quickstart and scroll down where we find the URL to our SecureApp dashboard. 
+
+In this case I will just use my email to create an account and I will use a very secure password, which in this case actually "securepassword".
+
+But oh look, there is an error already since this password is not actually secure but has been found in more than 200 data leaks, so this is some basic security that is already set up in your SecureApp. 
+
+And I will try this again with an actually secure password now, I copied it down in my notepad here. And there we are, we are logged in, everything has worked correctly.
+
+Here you will see a bunch of information about your login. 
+
+Now I want to show you the email confirmation real quick. Since we actually didn't send an email to a real address, but are using Mailslurper as a testing environment, you can go back to the quickstart page and scroll down a little bit, there is the url.
+
+Just click on it and you will see there is our email. And there it is, we have confirmed our email. 
+
+Now I will logout once more and see if we can get back in. And it seems to work fine, very nice!
+
+This is the basic quickstart for Kratos on Windows and I hope this video will help to get you started.
+
+If you have any further questions, please leave a comment or visit our community forum or slack, the links are in the description. 
+
+Don't forget to star us on github and like/subscribe for more upcoming tutorials.
+
+<p>
