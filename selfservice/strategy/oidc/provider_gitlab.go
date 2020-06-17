@@ -3,7 +3,6 @@ package oidc
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -70,12 +69,10 @@ func (g *ProviderGitLab) Claims(ctx context.Context, exchange *oauth2.Token) (*C
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(string(body))
 	var claims Claims
 	err = json.Unmarshal(body, &claims)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(claims)
 	return &claims, nil
 }
