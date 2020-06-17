@@ -70,6 +70,8 @@ func (c ConfigurationCollection) Provider(id string, public *url.URL) (Provider,
 				return NewProviderGoogle(&p, public), nil
 			case "github":
 				return NewProviderGitHub(&p, public), nil
+			case "gitlab":
+				return NewProviderGitLab(&p, public), nil
 			}
 			return nil, errors.Errorf("provider type %s is not supported, supported are: %v", p.Provider, []string{"google"})
 		}

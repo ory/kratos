@@ -90,10 +90,11 @@
         },
         "provider": {
           "title": "Provider",
-          "description": "Can be one of github, generic, google.",
+          "description": "Can be one of github, gitlab, generic, google.",
           "type": "string",
           "enum": [
             "github",
+            "gitlab",
             "generic",
             "google"
           ],
@@ -410,9 +411,7 @@
               "default": "1h",
               "examples": [
                 "1h",
-                "1m",
-                "1s"
-              ]
+                "1m", "1s"]
             }
           }
         },
