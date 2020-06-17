@@ -14,7 +14,10 @@ import (
 
 var _ = glapi.ProjectClustersService{}
 
-var endpoint = oauth2.Endpoint{TokenURL: "https://gitlab.com/oauth/token", AuthURL: "https://gitlab.com/oauth/authorize"}
+var endpoint = oauth2.Endpoint{
+	TokenURL: "https://gitlab.com/oauth/token",
+	AuthURL:  "https://gitlab.com/oauth/authorize",
+}
 
 type ProviderGitLab struct {
 	config *Configuration
