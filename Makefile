@@ -20,7 +20,7 @@ ifneq ("$(shell base64 Makefile))","$(shell cat .bin/.lock)")
 		go build -o .bin/goimports golang.org/x/tools/cmd/goimports
 		go build -o .bin/packr2 github.com/gobuffalo/packr/v2/packr2
 		go build -o .bin/yq github.com/mikefarah/yq
-		go build -o .bin/ory-dev github.com/ory/meta/tools/ory-dev
+		go build -o .bin/ory github.com/ory/cli
 		npm ci
 		echo "$$(base64 Makefile)" > .bin/.lock
 endif
@@ -61,7 +61,7 @@ test: test-resetdb
 .PHONY: sdk
 sdk: deps
 		swagger generate spec -m -o .schema/api.swagger.json -x internal/httpclient
-		ory-dev swagger sanitize ./.schema/api.swagger.json
+		ory dev swagger sanitize ./.schema/api.swagger.json
 		swagger validate ./.schema/api.swagger.json
 		swagger flatten --with-flatten=remove-unused -o ./.schema/api.swagger.json ./.schema/api.swagger.json
 		swagger validate ./.schema/api.swagger.json
@@ -100,6 +100,10 @@ test-e2e: test-resetdb
 		test/e2e/run.sh cockroach
 		test/e2e/run.sh mysql
 
-.PHONX: migrations-sync
+.PHONY: migrations-sync
 migrations-sync:
-		ory-dev fizz migrations tests sync persistence/sql/migrations persistence/sql/migratest/testdata
+		ory dev pop migration sync persistence/sql/migrations/templates persistence/sql/migratest/testdata
+
+.PHONY: migrations-render
+migrations-sync:
+		ory dev pop migration render persistence/sql/migrations/templates persistence/sql/migrations/sql

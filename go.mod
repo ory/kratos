@@ -2,6 +2,9 @@ module github.com/ory/kratos
 
 go 1.14
 
+replace github.com/gobuffalo/pop/v5 => ../../gobuffalo/pop
+replace github.com/gobuffalo/fizz => ../../gobuffalo/fizz
+
 require (
 	github.com/Masterminds/sprig/v3 v3.0.0
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
@@ -26,7 +29,8 @@ require (
 	github.com/gobuffalo/httptest v1.0.2
 	github.com/gobuffalo/logger v1.0.3
 	github.com/gobuffalo/packr/v2 v2.8.0
-	github.com/gobuffalo/pop/v5 v5.0.11
+	github.com/gobuffalo/pop v4.13.1+incompatible
+	github.com/gobuffalo/pop/v5 v5.1.3
 	github.com/gobuffalo/uuid v2.0.5+incompatible
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2

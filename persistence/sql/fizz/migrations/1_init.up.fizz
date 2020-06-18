@@ -1,0 +1,10 @@
+create_table("aaa") {
+	t.Column("id", "uuid", {primary: true})
+}
+
+create_table("bbb") {
+	t.Column("id", "uuid", {primary: true})
+	t.Column("bbb", "string")
+	t.Column("aaa_id", "uuid")
+  t.ForeignKey("aaa_id", {"bbb": ["id"]}, {"on_delete": "cascade"})
+}

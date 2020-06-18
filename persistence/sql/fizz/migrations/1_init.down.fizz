@@ -1,0 +1,2 @@
+drop_table("aaa")
+drop_table("bbb")

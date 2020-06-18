@@ -16,7 +16,7 @@ import (
 )
 
 var _ persistence.Persister = new(Persister)
-var migrations = packr.New("migrations", "migrations")
+var migrations = packr.New("migrations", "migrations/sql")
 
 type (
 	persisterDependencies interface {

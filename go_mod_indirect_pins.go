@@ -20,5 +20,5 @@ import (
 
 	_ "github.com/davidrjonas/semver-cli"
 
-	_ "github.com/ory/meta/tools/ory-dev"
+	_ "github.com/ory/cli"
 )
