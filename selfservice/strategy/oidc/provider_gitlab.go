@@ -7,72 +7,55 @@ import (
 	"net/http"
 	"net/url"
 
-	glapi "github.com/xanzy/go-gitlab"
+	"github.com/ory/herodot"
+	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 )
 
-var _ = glapi.ProjectClustersService{}
-
-var endpoint = oauth2.Endpoint{
-	TokenURL: "https://gitlab.com/oauth/token",
-	AuthURL:  "https://gitlab.com/oauth/authorize",
-}
-
 type ProviderGitLab struct {
-	config *Configuration
-	public *url.URL
+	*ProviderGenericOIDC
 }
 
 func NewProviderGitLab(
 	config *Configuration,
 	public *url.URL,
 ) *ProviderGitLab {
-	return &ProviderGitLab{config: config, public: public}
-}
-
-func (g *ProviderGitLab) Config() *Configuration {
-	return g.config
-}
-
-func (g *ProviderGitLab) oauth2() *oauth2.Config {
-	return &oauth2.Config{
-		ClientID:     g.config.ClientID,
-		ClientSecret: g.config.ClientSecret,
-		Endpoint:     endpoint,
-		Scopes:       g.config.Scope,
-		RedirectURL:  g.config.Redir(g.public),
+	return &ProviderGitLab{
+		ProviderGenericOIDC: &ProviderGenericOIDC{
+			config: config,
+			public: public,
+		},
 	}
 }
 
-func (g *ProviderGitLab) OAuth2(ctx context.Context) (*oauth2.Config, error) {
-	return g.oauth2(), nil
-}
-
-func (g *ProviderGitLab) AuthCodeURLOptions(r request) []oauth2.AuthCodeOption {
-	return []oauth2.AuthCodeOption{}
-}
-
 func (g *ProviderGitLab) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
-	tokenSource := oauth2.StaticTokenSource(exchange)
-	client := oauth2.NewClient(ctx, tokenSource)
+	o, err := g.OAuth2(ctx)
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+	}
+
+	client := o.Client(ctx, exchange)
 	req, err := http.NewRequest("GET", "https://gitlab.com/oauth/userinfo", nil)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 	defer resp.Body.Close()
+
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
+
 	var claims Claims
 	err = json.Unmarshal(body, &claims)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
+
 	return &claims, nil
 }
