@@ -16,6 +16,7 @@ first.
 The Social Sign In Strategy enables you to use
 
 - [GitHub](http://github.com/);
+- [GitLab](https://docs.gitlab.com/ee/integration/openid_connect_provider.html);
 - [Apple](https://developer.apple.com/sign-in-with-apple/);
 - [Google](https://developers.google.com/identity/sign-in/web/sign-in);
 - [Facebook](https://developers.facebook.com/docs/facebook-login/);
@@ -75,6 +76,8 @@ selfservice:
             # provider, client_id, issuer_url, scope, ...
           - id: github
             # provider, client_id, issuer_url, scope, ...
+          - id: gitlab
+            # provider, client_id, issuer_url, scope, ...
 ```
 
 ## Registration
@@ -119,6 +122,11 @@ Provider configuration:
             name: 'provider',
             type: 'submit',
             value: 'github',
+          },
+          {
+            name: 'provider',
+            type: 'submit',
+            value: 'gitlab',
           },
         ],
       },
