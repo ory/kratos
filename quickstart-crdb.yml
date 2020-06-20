@@ -14,3 +14,5 @@ services:
     ports:
       - "26257:26257"
     command: start --insecure
+    networks:
+      - intranet
