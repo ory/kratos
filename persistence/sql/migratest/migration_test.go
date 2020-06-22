@@ -2,14 +2,20 @@ package migratest
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime/debug"
+	"strconv"
 	"testing"
 
 	"github.com/gobuffalo/packr/v2/plog"
+	"github.com/ory/x/sqlcon"
 	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/viper"
 	"github.com/ory/x/logrusx"
@@ -24,6 +30,10 @@ import (
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/x"
 )
 
@@ -63,7 +73,7 @@ func TestMigrations(t *testing.T) {
 			}()
 
 			t.Logf("Cleaning up before migrations")
-			_ = os.Remove("../migrations/schema.sql")
+			_ = os.Remove("../migrations/sql/schema.sql")
 			testhelpers.CleanSQL(t, c)
 
 			t.Cleanup(func() {
@@ -82,7 +92,7 @@ func TestMigrations(t *testing.T) {
 			}
 			t.Logf("URL: %s", url)
 
-			tm := popx.NewTestMigrator(t, c, "../migrations", "./testdata")
+			tm := popx.NewTestMigrator(t, c, "../migrations/sql", "./testdata")
 			require.NoError(t, tm.Up())
 
 			viper.Set(configuration.ViperKeyURLsSelfPublic, "https://www.ory.sh/")
@@ -92,17 +102,99 @@ func TestMigrations(t *testing.T) {
 			d, err := driver.NewDefaultDriver(l, "", "", "", true)
 			require.NoError(t, err)
 
-			ids, err := d.Registry().PrivilegedIdentityPool().ListIdentities(context.Background(), 100, 0)
-			require.NoError(t, err)
+			t.Run("suite=fixtures", func(t *testing.T) {
+				t.Run("case=identity", func(t *testing.T) {
+					ids, err := d.Registry().PrivilegedIdentityPool().ListIdentities(context.Background(), 100, 0)
+					require.NoError(t, err)
 
-			for _, id := range ids {
-				_, err = d.Registry().PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), id.ID)
+					for _, id := range ids {
+						actual, err := d.Registry().PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), id.ID)
+						require.NoError(t, err)
+						compareWithFixture(t, actual, "identity", id.ID.String())
+					}
+				})
+
+				t.Run("case=login", func(t *testing.T) {
+					var ids []login.Request
+					require.NoError(t, c.Select("id").All(&ids))
+
+					for _, id := range ids {
+						actual, err := d.Registry().LoginRequestPersister().GetLoginRequest(context.Background(), id.ID)
+						require.NoError(t, err)
+						compareWithFixture(t, actual, "login_request", id.ID.String())
+					}
+				})
+				t.Run("case=registration", func(t *testing.T) {
+					var ids []registration.Request
+					require.NoError(t, c.Select("id").All(&ids))
+
+					for _, id := range ids {
+						actual, err := d.Registry().RegistrationRequestPersister().GetRegistrationRequest(context.Background(), id.ID)
+						require.NoError(t, err)
+						compareWithFixture(t, actual, "registration_request", id.ID.String())
+					}
+				})
+				t.Run("case=settings_request", func(t *testing.T) {
+					var ids []settings.Request
+					require.NoError(t, c.Select("id").All(&ids))
+
+					for _, id := range ids {
+						actual, err := d.Registry().SettingsRequestPersister().GetSettingsRequest(context.Background(), id.ID)
+						require.NoError(t, err)
+						compareWithFixture(t, actual, "settings_request", id.ID.String())
+					}
+				})
+
+				t.Run("case=recovery_request", func(t *testing.T) {
+					var ids []recovery.Request
+					require.NoError(t, c.Select("id").All(&ids))
+
+					for _, id := range ids {
+						actual, err := d.Registry().RecoveryRequestPersister().GetRecoveryRequest(context.Background(), id.ID)
+						require.NoError(t, err)
+						compareWithFixture(t, actual, "recovery_request", id.ID.String())
+					}
+				})
+			})
+
+			t.Run("suite=constraints", func(t *testing.T) {
+				sr, err := d.Registry().SettingsRequestPersister().GetSettingsRequest(context.Background(), x.ParseUUID("a79bfcf1-68ae-49de-8b23-4f96921b8341"))
 				require.NoError(t, err)
-			}
+
+				require.NoError(t, d.Registry().PrivilegedIdentityPool().DeleteIdentity(context.Background(), sr.IdentityID))
+
+				_, err = d.Registry().SettingsRequestPersister().GetSettingsRequest(context.Background(), x.ParseUUID("a79bfcf1-68ae-49de-8b23-4f96921b8341"))
+				require.Error(t, err)
+				require.True(t, errors.Is(err, sqlcon.ErrNoRows))
+			})
+
+			require.NoError(t, tm.Down(-1))
 		}
 	}
 
 	for db, c := range connections {
 		t.Run(fmt.Sprintf("database=%s", db), test(db, c))
 	}
+}
+
+func compareWithFixture(t *testing.T, actual interface{}, prefix string, id string) {
+	location := filepath.Join("fixtures", prefix, id+".json")
+	expected, err := ioutil.ReadFile(location)
+	writeFixtureOnError(t, err, actual, location)
+
+	actualJSON, err := json.Marshal(actual)
+	require.NoError(t, err)
+
+	if !assert.JSONEq(t, string(expected), string(actualJSON)) {
+		writeFixtureOnError(t, nil, actual, location)
+	}
+}
+
+func writeFixtureOnError(t *testing.T, err error, actual interface{}, location string) {
+	if ok, _ := strconv.ParseBool(os.Getenv("REFRESH_FIXTURES")); ok {
+		content, err := json.MarshalIndent(actual, "", "  ")
+		require.NoError(t, err)
+		require.NoError(t, ioutil.WriteFile(location, content, 0666))
+	}
+	require.NoError(t, err)
 }

@@ -1,0 +1,18 @@
+{
+  "id": "77fe4fb3-2d4e-4532-b568-c44b0aece0aa",
+  "expires_at": "2013-10-07T08:23:19Z",
+  "issued_at": "2013-10-07T08:23:19Z",
+  "request_url": "http://kratos:4433/self-service/browser/flows/settings",
+  "active": "profile",
+  "messages": [],
+  "methods": {},
+  "identity": {
+    "id": "a251ebc2-880c-4f76-a8f3-38e6940eab0e",
+    "traits_schema_id": "default",
+    "traits_schema_url": "",
+    "traits": {
+      "email": "foobar@ory.sh"
+    }
+  },
+  "state": "show_form"
+}

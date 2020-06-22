@@ -110,7 +110,7 @@ func NewRequest(exp time.Duration, r *http.Request, s *session.Session) *Request
 	}
 }
 
-func (r *Request) TableName() string {
+func (r Request) TableName() string {
 	return "selfservice_settings_requests"
 }
 

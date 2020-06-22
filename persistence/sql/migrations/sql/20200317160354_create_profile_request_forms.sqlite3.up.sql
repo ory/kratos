@@ -18,7 +18,8 @@ CREATE TABLE "selfservice_profile_management_requests" (
 "identity_id" char(36) NOT NULL,
 "created_at" DATETIME NOT NULL,
 "updated_at" DATETIME NOT NULL,
-"active_method" TEXT
+"active_method" TEXT,
+FOREIGN KEY (identity_id) REFERENCES identities (id) ON UPDATE NO ACTION ON DELETE CASCADE
 );
 INSERT INTO "selfservice_profile_management_requests" (id, request_url, issued_at, expires_at, update_successful, identity_id, created_at, updated_at, active_method) SELECT id, request_url, issued_at, expires_at, update_successful, identity_id, created_at, updated_at, active_method FROM "_selfservice_profile_management_requests_tmp";
 DROP TABLE "_selfservice_profile_management_requests_tmp";

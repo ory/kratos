@@ -105,5 +105,5 @@ migrations-sync:
 		ory dev pop migration sync persistence/sql/migrations/templates persistence/sql/migratest/testdata
 
 .PHONY: migrations-render
-migrations-sync:
+migrations-render:
 		ory dev pop migration render persistence/sql/migrations/templates persistence/sql/migrations/sql

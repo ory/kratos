@@ -1,2 +1,0 @@
-drop_column("bbb", "bbb")
-rename_table("bbb","ccc")
