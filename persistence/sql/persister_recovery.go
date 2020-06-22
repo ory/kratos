@@ -2,6 +2,7 @@ package sql
 
 import (
 	"context"
+  "database/sql"
 	"errors"
 	"fmt"
 	"time"
@@ -85,17 +86,19 @@ func (p *Persister) UseRecoveryToken(ctx context.Context, token string) (*link.T
 	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
 		for _, secret := range p.cf.SessionSecrets() {
 			if err = tx.Eager().Where("token = ? AND NOT used", p.hmacValueWithSecret(token, secret)).First(rt); err != nil {
-				if !errors.Is(err, sqlcon.ErrNoRows) {
+				if !errors.Is(err, sql.ErrNoRows) {
 					return err
 				}
+			} else {
+				err = nil
+				break
 			}
 		}
 		if err != nil {
 			return err
 		}
-
 		/* #nosec G201 TableName is static */
-		return tx.RawQuery(fmt.Sprintf("UPDATE %s SET used=true, used_at=?", rt.TableName()), time.Now().UTC()).Exec()
+		return tx.RawQuery(fmt.Sprintf("UPDATE %s SET used=true, used_at=? WHERE id=?", rt.TableName()), time.Now().UTC(), rt.ID).Exec()
 	})); err != nil {
 		return nil, err
 	}
