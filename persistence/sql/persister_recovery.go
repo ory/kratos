@@ -2,7 +2,6 @@ package sql
 
 import (
 	"context"
-  "database/sql"
 	"errors"
 	"fmt"
 	"time"
