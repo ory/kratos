@@ -7,6 +7,7 @@ require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0
+	github.com/armon/go-metrics v0.3.3 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535 // indirect
 	github.com/bxcodec/faker/v3 v3.3.1
 	github.com/cenkalti/backoff v2.2.1+incompatible
@@ -37,7 +38,11 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/sessions v1.1.3
-	github.com/hashicorp/golang-lru v0.5.1
+	github.com/hashicorp/consul/api v1.5.0 // indirect
+	github.com/hashicorp/go-hclog v0.14.1 // indirect
+	github.com/hashicorp/go-immutable-radix v1.2.0 // indirect
+	github.com/hashicorp/golang-lru v0.5.4
+	github.com/hashicorp/serf v0.9.2 // indirect
 	github.com/imdario/mergo v0.3.7
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/julienschmidt/httprouter v1.2.0
@@ -46,7 +51,7 @@ require (
 	github.com/markbates/pkger v0.17.0
 	github.com/mattn/goveralls v0.0.5
 	github.com/mikefarah/yq v1.15.0
-	github.com/mitchellh/mapstructure v1.3.0 // indirect
+	github.com/mitchellh/mapstructure v1.3.2 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect
 	github.com/ory/analytics-go/v4 v4.0.0
@@ -78,7 +83,7 @@ require (
 	golang.org/x/mod v0.3.0 // indirect
 	golang.org/x/net v0.0.0-20200513185701-a91f0712d120 // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/sys v0.0.0-20200515095857-1151b9dac4a9 // indirect
+	golang.org/x/sys v0.0.0-20200622214017-ed371f2e16b4 // indirect
 	golang.org/x/tools v0.0.0-20200515010526-7d3b6ebf133d
 	gopkg.in/go-playground/validator.v9 v9.28.0
 	gopkg.in/ini.v1 v1.56.0 // indirect

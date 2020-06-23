@@ -95,6 +95,8 @@ func TestRequestPersister(p interface {
 			var expected Request
 			require.NoError(t, faker.FakeData(&expected))
 			clearids(&expected)
+			expected.Identity = nil
+			expected.IdentityID = uuid.Nil
 			err := p.CreateSettingsRequest(context.Background(), &expected)
 			require.Error(t, err, "%+s", expected)
 		})
