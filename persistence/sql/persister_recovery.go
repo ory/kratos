@@ -90,7 +90,6 @@ func (p *Persister) UseRecoveryToken(ctx context.Context, token string) (*link.T
 					return err
 				}
 			} else {
-				err = nil
 				break
 			}
 		}
