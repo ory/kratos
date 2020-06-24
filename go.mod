@@ -67,7 +67,7 @@ require (
 	github.com/ory/jsonschema/v3 v3.0.1
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/viper v1.7.5
-	github.com/ory/x v0.0.133
+	github.com/ory/x v0.0.134
 	github.com/pelletier/go-toml v1.7.0 // indirect
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
