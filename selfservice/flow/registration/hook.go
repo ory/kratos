@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ory/x/errorsx"
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/driver/configuration"
@@ -88,7 +87,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		// We're now creating the identity because any of the hooks could trigger a "redirect" or a "session" which
 		// would imply that the identity has to exist already.
 	} else if err := e.d.IdentityManager().Create(r.Context(), i); err != nil {
-		if errorsx.Cause(err) == sqlcon.ErrUniqueViolation {
+		if errors.Is(err, sqlcon.ErrUniqueViolation) {
 			return schema.NewDuplicateCredentialsError()
 		}
 		return err

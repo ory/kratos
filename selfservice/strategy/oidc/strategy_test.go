@@ -18,6 +18,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/x/sqlxx"
+
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/viper"
@@ -506,7 +508,7 @@ func TestCountActiveCredentials(t *testing.T) {
 		{
 			in: identity.CredentialsCollection{{
 				Type:   strategy.ID(),
-				Config: json.RawMessage{},
+				Config: sqlxx.JSONRawMessage{},
 			}},
 		},
 		{

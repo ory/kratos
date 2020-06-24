@@ -42,5 +42,5 @@ type Persister interface {
 	MigrateDown(c context.Context, steps int) error
 	MigrateUp(c context.Context) error
 	GetConnection(ctx context.Context) *pop.Connection
-	Transaction(ctx context.Context, callback func(connection *pop.Connection) error) error
+	Transaction(ctx context.Context, callback func(ctx context.Context, connection *pop.Connection) error) error
 }

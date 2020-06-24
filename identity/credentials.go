@@ -1,11 +1,12 @@
 package identity
 
 import (
-	"encoding/json"
 	"reflect"
 	"time"
 
 	"github.com/gofrs/uuid"
+
+	"github.com/ory/x/sqlxx"
 )
 
 // CredentialsType  represents several different credential types, like password credentials, passwordless credentials,
@@ -38,7 +39,7 @@ type (
 
 		// Config contains the concrete credential payload. This might contain the bcrypt-hashed password, or the email
 		// for passwordless authentication.
-		Config json.RawMessage `json:"config" db:"config"`
+		Config sqlxx.JSONRawMessage `json:"config" db:"config"`
 
 		IdentityID                     uuid.UUID                      `json:"-" faker:"-" db:"identity_id"`
 		CredentialIdentifierCollection CredentialIdentifierCollection `json:"-" faker:"-" has_many:"identity_credential_identifiers" fk_id:"identity_credential_id"`

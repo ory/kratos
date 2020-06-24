@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 	"testing"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/continuity"
+	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/persistence/sql"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow/recovery"
@@ -52,7 +52,7 @@ func init() {
 func TestMain(m *testing.M) {
 	atexit := dockertest.NewOnExit()
 	atexit.Add(func() {
-		_ = os.Remove(strings.TrimPrefix(sqlite, "sqlite://"))
+		// _ = os.Remove(strings.TrimPrefix(sqlite, "sqlite://"))
 		dockertest.KillAllTestDatabases()
 	})
 	atexit.Exit(m.Run())
@@ -89,15 +89,15 @@ func pl(t *testing.T) func(lvl logging.Level, s string, args ...interface{}) {
 
 func TestPersister(t *testing.T) {
 	conns := map[string]string{
-		"sqlite": sqlite,
+		// "sqlite": sqlite,
 	}
 
 	var l sync.Mutex
 	if !testing.Short() {
 		funcs := map[string]func(t *testing.T) string{
 			"postgres":  dockertest.RunTestPostgreSQL,
-			"mysql":     dockertest.RunTestMySQL,
-			"cockroach": dockertest.RunTestCockroachDB,
+			// "mysql":     dockertest.RunTestMySQL,
+			// "cockroach": dockertest.RunTestCockroachDB,
 		}
 
 		var wg sync.WaitGroup
@@ -120,6 +120,13 @@ func TestPersister(t *testing.T) {
 		t.Run(fmt.Sprintf("database=%s", name), func(t *testing.T) {
 			_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
 			p := reg.Persister()
+
+			_ = os.Remove("migrations/schema.sql")
+			testhelpers.CleanSQL(t, p.(*sql.Persister).Connection())
+			t.Cleanup(func() {
+				// testhelpers.CleanSQL(t, p.(*sql.Persister).Connection())
+				_ = os.Remove("migrations/schema.sql")
+			})
 
 			pop.SetLogger(pl(t))
 			require.NoError(t, p.MigrationStatus(context.Background(), os.Stderr))
@@ -193,15 +200,15 @@ func TestPersister_Transaction(t *testing.T) {
 	t.Run("case=should not create identity because callback returned error", func(t *testing.T) {
 		i := &identity.Identity{
 			ID:     x.NewUUID(),
-			Traits: identity.Traits(""),
+			Traits: identity.Traits(`{}`),
 		}
 		errMessage := "failing because why not"
-		err := p.Transaction(context.Background(), func(connection *pop.Connection) error {
+		err := p.Transaction(context.Background(), func(ctx context.Context, connection *pop.Connection) error {
 			require.NoError(t, connection.Create(i))
 			return errors.Errorf(errMessage)
 		})
 		require.Error(t, err)
-		assert.Equal(t, errMessage, err.Error())
+		assert.Contains(t, err.Error(), errMessage)
 		_, err = p.GetIdentity(context.Background(), i.ID)
 		require.Error(t, err)
 		assert.Equal(t, sqlcon.ErrNoRows.Error(), err.Error())
@@ -221,7 +228,7 @@ func TestPersister_Transaction(t *testing.T) {
 			return errors.Errorf(errMessage)
 		})
 		require.Error(t, err)
-		assert.Equal(t, errMessage, err.Error())
+		assert.Contains(t, err.Error(), errMessage)
 		_, err = p.GetLoginRequest(context.Background(), lr.ID)
 		require.Error(t, err)
 		assert.Equal(t, sqlcon.ErrNoRows.Error(), err.Error())

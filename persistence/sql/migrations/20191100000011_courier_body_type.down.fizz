@@ -1,1 +1,0 @@
-change_column("courier_messages", "body", "string", {})

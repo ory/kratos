@@ -2,13 +2,15 @@ package identity
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/bxcodec/faker/v3"
+
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/sqlcon"
@@ -103,7 +105,7 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			i := NewIdentity(schemaID)
 			i.SetCredentials(CredentialsTypePassword, Credentials{
 				Type: CredentialsTypePassword, Identifiers: []string{credentialsID},
-				Config: json.RawMessage(`{"foo":"bar"}`),
+				Config: sqlxx.JSONRawMessage(`{"foo":"bar"}`),
 			})
 			return i
 		}
@@ -112,7 +114,7 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			i := NewIdentity(schemaID)
 			i.SetCredentials(CredentialsTypeOIDC, Credentials{
 				Type: CredentialsTypeOIDC, Identifiers: []string{credentialsID},
-				Config: json.RawMessage(`{}`),
+				Config: sqlxx.JSONRawMessage(`{}`),
 			})
 			return i
 		}
@@ -127,7 +129,7 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			i := NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
 			i.SetCredentials(CredentialsTypeOIDC, Credentials{
 				Type: CredentialsTypeOIDC, Identifiers: []string{x.NewUUID().String()},
-				Config: json.RawMessage(`{}`),
+				Config: sqlxx.JSONRawMessage(`{}`),
 			})
 			i.ID = uuid.Nil
 			require.NoError(t, p.CreateIdentity(context.Background(), i))
@@ -195,9 +197,11 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 
 			for _, ids := range []string{"foo@bar.com", "fOo@bar.com", "FOO@bar.com", "foo@Bar.com"} {
 				expected := passwordIdentity("", ids)
-				require.Error(t, p.CreateIdentity(context.Background(), expected))
+				err := p.CreateIdentity(context.Background(), expected)
+				require.Error(t, err)
+				require.True(t, errors.Is(err, sqlcon.ErrUniqueViolation), "%+v", err)
 
-				_, err := p.GetIdentity(context.Background(), expected.ID)
+				_, err = p.GetIdentity(context.Background(), expected.ID)
 				require.Error(t, err)
 			}
 		})
@@ -230,7 +234,7 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			initial := oidcIdentity("", x.NewUUID().String())
 			initial.SetCredentials(CredentialsTypeOIDC, Credentials{
 				Type: CredentialsTypeOIDC, Identifiers: []string{"aylmao-oidc"},
-				Config: json.RawMessage(`{"ay":"lmao"}`),
+				Config: sqlxx.JSONRawMessage(`{"ay":"lmao"}`),
 			})
 			require.NoError(t, p.CreateIdentity(context.Background(), initial))
 			createdIDs = append(createdIDs, initial.ID)
@@ -253,7 +257,7 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			expected.SetCredentials(CredentialsTypePassword, Credentials{
 				Type:        CredentialsTypePassword,
 				Identifiers: []string{"ignore-me"},
-				Config:      json.RawMessage(`{"oh":"nono"}`),
+				Config:      sqlxx.JSONRawMessage(`{"oh":"nono"}`),
 			})
 			expected.Traits = Traits(`{"update":"me"}`)
 			expected.TraitsSchemaID = altSchema.ID
@@ -333,7 +337,7 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			expected.SetCredentials(CredentialsTypePassword, Credentials{
 				Type:        CredentialsTypePassword,
 				Identifiers: []string{"id-missing-creds-config"},
-				Config:      json.RawMessage(``),
+				Config:      sqlxx.JSONRawMessage(``),
 			})
 			require.NoError(t, p.CreateIdentity(context.Background(), expected))
 			createdIDs = append(createdIDs, expected.ID)

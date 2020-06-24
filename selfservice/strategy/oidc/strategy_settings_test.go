@@ -14,6 +14,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/x/sqlxx"
+
 	"github.com/ory/viper"
 	"github.com/ory/x/pointerx"
 
@@ -75,30 +77,30 @@ func TestSettingsStrategy(t *testing.T) {
 			Credentials: map[identity.CredentialsType]identity.Credentials{
 				"password": {Type: "password",
 					Identifiers: []string{"john+" + testID + "@doe.com"},
-					Config:      json.RawMessage(`{"hashed_password":"$argon2id$iammocked...."}`)}},
+					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$argon2id$iammocked...."}`)}},
 		},
 		"oryer": {ID: x.NewUUID(), Traits: identity.Traits(`{"email":"hackerman+` + testID + `@ory.sh"}`),
 			TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
 			Credentials: map[identity.CredentialsType]identity.Credentials{
 				identity.CredentialsTypeOIDC: {Type: identity.CredentialsTypeOIDC,
 					Identifiers: []string{"ory:hackerman+" + testID},
-					Config:      json.RawMessage(`{"providers":[{"provider":"ory","subject":"hackerman+` + testID + `"}]}`)}},
+					Config:      sqlxx.JSONRawMessage(`{"providers":[{"provider":"ory","subject":"hackerman+` + testID + `"}]}`)}},
 		},
 		"githuber": {ID: x.NewUUID(), Traits: identity.Traits(`{"email":"hackerman+github+` + testID + `@ory.sh"}`),
 			Credentials: map[identity.CredentialsType]identity.Credentials{
 				identity.CredentialsTypeOIDC: {Type: identity.CredentialsTypeOIDC,
 					Identifiers: []string{"ory:hackerman+github+" + testID, "github:hackerman+github+" + testID},
-					Config:      json.RawMessage(`{"providers":[{"provider":"ory","subject":"hackerman+github+` + testID + `"},{"provider":"github","subject":"hackerman+github+` + testID + `"}]}`)}},
+					Config:      sqlxx.JSONRawMessage(`{"providers":[{"provider":"ory","subject":"hackerman+github+` + testID + `"},{"provider":"github","subject":"hackerman+github+` + testID + `"}]}`)}},
 			TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
 		},
 		"multiuser": {ID: x.NewUUID(), Traits: identity.Traits(`{"email":"hackerman+multiuser+` + testID + `@ory.sh"}`),
 			Credentials: map[identity.CredentialsType]identity.Credentials{
 				"password": {Type: "password",
 					Identifiers: []string{"hackerman+multiuser+" + testID + "@ory.sh"},
-					Config:      json.RawMessage(`{"hashed_password":"$argon2id$iammocked...."}`)},
+					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$argon2id$iammocked...."}`)},
 				identity.CredentialsTypeOIDC: {Type: identity.CredentialsTypeOIDC,
 					Identifiers: []string{"ory:hackerman+multiuser+" + testID, "google:hackerman+multiuser+" + testID},
-					Config:      json.RawMessage(`{"providers":[{"provider":"ory","subject":"hackerman+multiuser+` + testID + `"},{"provider":"google","subject":"hackerman+multiuser+` + testID + `"}]}`)}},
+					Config:      sqlxx.JSONRawMessage(`{"providers":[{"provider":"ory","subject":"hackerman+multiuser+` + testID + `"},{"provider":"google","subject":"hackerman+multiuser+` + testID + `"}]}`)}},
 			TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
 		},
 	}
@@ -300,7 +302,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 			body, res, req := unlink(t, agent, provider)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?request="+string(req.ID))
-			require.True(t, gjson.GetBytes(body, "update_successful").Bool())
+			require.Equal(t, "success", gjson.GetBytes(body, "state").String(), "%s", body)
 
 			checkCredentials(t, false, users[agent].ID, provider, "hackerman+github+"+testID)
 		})
@@ -340,7 +342,7 @@ func TestSettingsStrategy(t *testing.T) {
 					&url.Values{"csrf_token": {"nosurf"}, "unlink": {provider}})
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?request="+string(req.ID))
 
-				assert.True(t, gjson.GetBytes(body, "update_successful").Bool())
+				assert.Equal(t, "success", gjson.GetBytes(body, "state").String())
 
 				checkCredentials(t, false, users[agent].ID, provider, "hackerman+github+"+testID)
 			})
@@ -487,7 +489,7 @@ func TestSettingsStrategy(t *testing.T) {
 					&url.Values{"csrf_token": {"nosurf"}, "unlink": {provider}})
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?request="+string(req.ID))
 
-				assert.True(t, gjson.GetBytes(body, "update_successful").Bool())
+				assert.Equal(t, "success", gjson.GetBytes(body, "state").String())
 
 				checkCredentials(t, true, users[agent].ID, provider, subject)
 			})

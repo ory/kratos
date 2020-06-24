@@ -1,0 +1,6 @@
+# HashiCorp Consul related CVEs
+# Consul is not used but instead an indirect dependency to the pf13/viper config backend which is not actively used.
+CVE-2020-7219
+CVE-2019-12291
+CVE-2020-7955
+# End HashiCorp Consul

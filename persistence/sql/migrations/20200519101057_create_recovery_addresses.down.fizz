@@ -1,4 +1,0 @@
-drop_table("recovery_addresses")
-drop_table("identity_recovery_tokens")
-drop_table("selfservice_recovery_requests")
-drop_table("selfservice_recovery_requests_methods")

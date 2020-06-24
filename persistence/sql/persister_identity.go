@@ -3,12 +3,12 @@ package sql
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/ory/jsonschema/v3"
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/otp"
@@ -66,17 +66,15 @@ WHERE ici.identifier = ?
 
 func findOrCreateIdentityCredentialsType(_ context.Context, tx *pop.Connection, ct identity.CredentialsType) (*identity.CredentialsTypeTable, error) {
 	var m identity.CredentialsTypeTable
-	if err := tx.Where("name = ?", ct).First(&m); err != nil {
-		if errors.Cause(err) == sql.ErrNoRows {
-			m.Name = ct
-			if err := sqlcon.HandleError(tx.Create(&m)); err != nil {
-				return nil, err
-			}
-			return &m, nil
+	if err := tx.Where("name = ?", ct).First(&m); errors.Is(err, sql.ErrNoRows) {
+		m.Name = ct
+		if err := sqlcon.HandleError(tx.Create(&m)); err != nil {
+			return nil, err
 		}
+		return &m, nil
+	} else if err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
-
 	return &m, nil
 }
 
@@ -84,7 +82,7 @@ func createIdentityCredentials(ctx context.Context, tx *pop.Connection, i *ident
 	for k, cred := range i.Credentials {
 		cred.IdentityID = i.ID
 		if len(cred.Config) == 0 {
-			cred.Config = json.RawMessage("{}")
+			cred.Config = sqlxx.JSONRawMessage("{}")
 		}
 
 		ct, err := findOrCreateIdentityCredentialsType(ctx, tx, cred.Type)
@@ -94,7 +92,7 @@ func createIdentityCredentials(ctx context.Context, tx *pop.Connection, i *ident
 
 		cred.CredentialTypeID = ct.ID
 		if err := tx.Create(&cred); err != nil {
-			return err
+			return sqlcon.HandleError(err)
 		}
 
 		for _, ids := range cred.Identifiers {
@@ -112,7 +110,7 @@ func createIdentityCredentials(ctx context.Context, tx *pop.Connection, i *ident
 				IdentityCredentialsID: cred.ID,
 			}
 			if err := tx.Create(ci); err != nil {
-				return err
+				return sqlcon.HandleError(err)
 			}
 		}
 
@@ -159,23 +157,21 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 		return err
 	}
 
-	return sqlcon.HandleError(p.Transaction(ctx, func(tx *pop.Connection) error {
-		ctx := WithTransaction(ctx, tx)
-
+	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 		if err := tx.Create(i); err != nil {
-			return err
+			return sqlcon.HandleError(err)
 		}
 
 		if err := createVerifiableAddresses(ctx, tx, i); err != nil {
-			return err
+			return sqlcon.HandleError(err)
 		}
 
 		if err := createRecoveryAddresses(ctx, tx, i); err != nil {
-			return err
+			return sqlcon.HandleError(err)
 		}
 
 		return createIdentityCredentials(ctx, tx, i)
-	}))
+	})
 }
 
 func (p *Persister) ListIdentities(ctx context.Context, limit, offset int) ([]identity.Identity, error) {
@@ -202,8 +198,8 @@ func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) er
 		return err
 	}
 
-	return sqlcon.HandleError(p.Transaction(ctx, func(tx *pop.Connection) error {
-		ctx := WithTransaction(ctx, tx)
+	return sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
+
 		if count, err := tx.Where("id = ?", i.ID).Count(i); err != nil {
 			return err
 		} else if count == 0 {

@@ -112,7 +112,7 @@ func NewRequest(exp time.Duration, csrf string, r *http.Request, strategies Stra
 	return req, nil
 }
 
-func (r *Request) TableName() string {
+func (r Request) TableName() string {
 	return "selfservice_recovery_requests"
 }
 

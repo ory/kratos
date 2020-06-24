@@ -76,9 +76,10 @@ func (t *Traits) Scan(value interface{}) error {
 	return sqlxx.JSONScan(t, value)
 }
 
-func (t *Traits) Value() (driver.Value, error) {
+func (t Traits) Value() (driver.Value, error) {
 	return sqlxx.JSONValue(t)
 }
+
 func (t *Traits) String() string {
 	return string(*t)
 }

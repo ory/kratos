@@ -431,7 +431,7 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 			}
 
 			if errSec := method.Config.ParseError(err); errSec != nil {
-				s.d.RegistrationRequestErrorHandler().HandleRegistrationError(w, r, s.ID(), rr, errors.Wrap(err, errSec.Error()))
+				s.d.RegistrationRequestErrorHandler().HandleRegistrationError(w, r, s.ID(), rr, errSec)
 				return
 			}
 			method.Config.ResetMessages()

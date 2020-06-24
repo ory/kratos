@@ -17,8 +17,8 @@ func (p *Persister) CreateRegistrationRequest(ctx context.Context, r *registrati
 }
 
 func (p *Persister) UpdateRegistrationRequest(ctx context.Context, r *registration.Request) error {
-	return p.Transaction(ctx, func(tx *pop.Connection) error {
-		ctx := WithTransaction(ctx, tx)
+	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
+
 		rr, err := p.GetRegistrationRequest(ctx, r.ID)
 		if err != nil {
 			return err
@@ -58,8 +58,8 @@ func (p *Persister) GetRegistrationRequest(ctx context.Context, id uuid.UUID) (*
 }
 
 func (p *Persister) UpdateRegistrationRequestMethod(ctx context.Context, id uuid.UUID, ct identity.CredentialsType, rm *registration.RequestMethod) error {
-	return p.Transaction(ctx, func(tx *pop.Connection) error {
-		ctx := WithTransaction(ctx, tx)
+	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
+
 		rr, err := p.GetRegistrationRequest(ctx, id)
 		if err != nil {
 			return err

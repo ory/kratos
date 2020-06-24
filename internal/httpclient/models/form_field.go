@@ -17,7 +17,7 @@ import (
 // swagger:model formField
 type FormField struct {
 
-	// Disabled is the equivalent of `<input disabled="{{.Disabled}}">`
+	// Disabled is the equivalent of `<input {{if .Disabled}}disabled{{end}}">`
 	Disabled bool `json:"disabled,omitempty"`
 
 	// messages

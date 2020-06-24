@@ -16,7 +16,7 @@ import (
 )
 
 var _ persistence.Persister = new(Persister)
-var migrations = packr.New("migrations", "migrations")
+var migrations = packr.New("migrations", "migrations/sql")
 
 type (
 	persisterDependencies interface {
@@ -39,6 +39,10 @@ func NewPersister(r persisterDependencies, conf configuration.Provider, c *pop.C
 	}
 
 	return &Persister{c: c, mb: m, cf: conf, r: r}, nil
+}
+
+func (p *Persister) Connection() *pop.Connection {
+	return p.c
 }
 
 func (p *Persister) MigrationStatus(ctx context.Context, w io.Writer) error {
