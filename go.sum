@@ -47,8 +47,8 @@ github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 h1:d+Bc7a5rLufV
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
 github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWXgklEdEo=
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
-github.com/aeneasr/pop/v5 v5.0.0-20200623215140-c2c0d107c98c h1:RAgcFlxW91X/1Wq6NXHt5g4FcbDpaUC1lPZR5jB4X6A=
-github.com/aeneasr/pop/v5 v5.0.0-20200623215140-c2c0d107c98c/go.mod h1:fzUpBhQE48+kPczDbuJIuOCSS7OMqChoaGR6wj2j7Nc=
+github.com/aeneasr/pop/v5 v5.0.0-20200624075855-1b397135855a h1:g5gubVslG1vn6u6Zwg/1cs2z75I5bylLFFmSZ4gz75s=
+github.com/aeneasr/pop/v5 v5.0.0-20200624075855-1b397135855a/go.mod h1:Hj586Cr7FoTFNmvzyNdUcajv3r0A+W+bkil4RIX/zKo=
 github.com/agnivade/levenshtein v1.0.1/go.mod h1:CURSv5d9Uaml+FovSIICkLbAUZ9S4RqaHDIsdSBg7lM=
 github.com/ajg/form v0.0.0-20160822230020-523a5da1a92f h1:zvClvFQwU++UpIUBGC8YmDlfhUrweEy1R1Fj1gu5iIM=
 github.com/ajg/form v0.0.0-20160822230020-523a5da1a92f/go.mod h1:uL1WgH+h2mgNtvBq0339dVnzXdBETtL2LeUXaIv25UY=
@@ -356,6 +356,7 @@ github.com/gobuffalo/events v1.3.1/go.mod h1:9JOkQVoyRtailYVE/JJ2ZQ/6i4gTjM5t2Hs
 github.com/gobuffalo/events v1.4.1/go.mod h1:SjXgWKpeSuvQDvGhgMz5IXx3Czu+IbL+XPLR41NvVQY=
 github.com/gobuffalo/fizz v1.0.12/go.mod h1:C0sltPxpYK8Ftvf64kbsQa2yiCZY4RZviurNxXdAKwc=
 github.com/gobuffalo/fizz v1.9.8/go.mod h1:w1FEn1yKNVCc49KnADGyYGRPH7jFON3ak4Bj1yUudHo=
+github.com/gobuffalo/fizz v1.10.0/go.mod h1:J2XGPO0AfJ1zKw7+2BA+6FEGAkyEsdCOLvN93WCT2WI=
 github.com/gobuffalo/fizz v1.11.0 h1:kJ+9sSSZpolHz4ULV1sF76AGmo74kEi6IztIc4HmshU=
 github.com/gobuffalo/fizz v1.11.0/go.mod h1:cXLjhE5p3iuIes6AGZ/9+dfyOkehlB2Vldj0Iw2Uu38=
 github.com/gobuffalo/flect v0.0.0-20180907193754-dc14d8acaf9f/go.mod h1:rCiQgmAE4axgBNl3jZWzS5rETRYTGOsrixTRaCPzNdA=
