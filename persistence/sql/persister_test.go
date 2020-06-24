@@ -203,12 +203,12 @@ func TestPersister_Transaction(t *testing.T) {
 			Traits: identity.Traits(`{}`),
 		}
 		errMessage := "failing because why not"
-		err := p.Transaction(context.Background(), func(connection *pop.Connection) error {
+		err := p.Transaction(context.Background(), func(ctx context.Context, connection *pop.Connection) error {
 			require.NoError(t, connection.Create(i))
 			return errors.Errorf(errMessage)
 		})
 		require.Error(t, err)
-		assert.Equal(t, errMessage, err.Error())
+		assert.Contains(t, err.Error(), errMessage)
 		_, err = p.GetIdentity(context.Background(), i.ID)
 		require.Error(t, err)
 		assert.Equal(t, sqlcon.ErrNoRows.Error(), err.Error())
@@ -228,7 +228,7 @@ func TestPersister_Transaction(t *testing.T) {
 			return errors.Errorf(errMessage)
 		})
 		require.Error(t, err)
-		assert.Equal(t, errMessage, err.Error())
+		assert.Contains(t, err.Error(), errMessage)
 		_, err = p.GetLoginRequest(context.Background(), lr.ID)
 		require.Error(t, err)
 		assert.Equal(t, sqlcon.ErrNoRows.Error(), err.Error())

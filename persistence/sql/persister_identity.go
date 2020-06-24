@@ -78,14 +78,14 @@ func findOrCreateIdentityCredentialsType(_ context.Context, tx *pop.Connection, 
 	return &m, nil
 }
 
-func createIdentityCredentials(ctx context.Context, conn, tx *pop.Connection, i *identity.Identity) error {
+func createIdentityCredentials(ctx context.Context, tx *pop.Connection, i *identity.Identity) error {
 	for k, cred := range i.Credentials {
 		cred.IdentityID = i.ID
 		if len(cred.Config) == 0 {
 			cred.Config = sqlxx.JSONRawMessage("{}")
 		}
 
-		ct, err := findOrCreateIdentityCredentialsType(ctx, conn, cred.Type)
+		ct, err := findOrCreateIdentityCredentialsType(ctx, tx, cred.Type)
 		if err != nil {
 			return err
 		}
@@ -170,7 +170,7 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 			return sqlcon.HandleError(err)
 		}
 
-		return createIdentityCredentials(ctx, p.c, tx, i)
+		return createIdentityCredentials(ctx, tx, i)
 	})
 }
 
@@ -230,7 +230,7 @@ func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) er
 			return err
 		}
 
-		return createIdentityCredentials(ctx, p.c, tx, i)
+		return createIdentityCredentials(ctx, tx, i)
 	}))
 }
 
