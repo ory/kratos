@@ -31,8 +31,8 @@ func (p *Persister) GetSettingsRequest(ctx context.Context, id uuid.UUID) (*sett
 }
 
 func (p *Persister) UpdateSettingsRequest(ctx context.Context, r *settings.Request) error {
-	return p.Transaction(ctx, func(tx *pop.Connection) error {
-		ctx := WithTransaction(ctx, tx)
+	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
+
 		rr, err := p.GetSettingsRequest(ctx, r.ID)
 		if err != nil {
 			return err

@@ -13,9 +13,10 @@ import (
 	"testing"
 
 	"github.com/gobuffalo/packr/v2/plog"
-	"github.com/ory/x/sqlcon"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/viper"
 	"github.com/ory/x/logrusx"

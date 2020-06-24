@@ -10,10 +10,11 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/ory/x/sqlxx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/viper"
 	"github.com/ory/x/pointerx"

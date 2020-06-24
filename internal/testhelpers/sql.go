@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/gobuffalo/pop/v5"
+
 	"github.com/ory/kratos/selfservice/errorx"
 
 	"github.com/ory/kratos/continuity"
@@ -48,4 +49,3 @@ func CleanSQL(t *testing.T, c *pop.Connection) {
 	}
 	t.Logf("Successfully cleaned up database: %s", c.Dialect.Name())
 }
-

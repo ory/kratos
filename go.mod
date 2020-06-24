@@ -2,9 +2,10 @@ module github.com/ory/kratos
 
 go 1.14
 
+replace github.com/gobuffalo/pop/v5 => github.com/aeneasr/pop/v5 v5.0.0-20200623215140-c2c0d107c98c
+
 require (
 	github.com/Masterminds/sprig/v3 v3.0.0
-	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0
 	github.com/armon/go-metrics v0.3.3 // indirect
@@ -38,12 +39,13 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/sessions v1.1.3
-	github.com/hashicorp/consul/api v1.5.0 // indirect
+	github.com/hashicorp/consul/api v1.5.0
 	github.com/hashicorp/go-hclog v0.14.1 // indirect
 	github.com/hashicorp/go-immutable-radix v1.2.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/hashicorp/serf v0.9.2 // indirect
 	github.com/imdario/mergo v0.3.7
+	github.com/jackc/pgconn v1.6.0 // indirect
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/justinas/nosurf v1.1.0

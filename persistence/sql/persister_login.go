@@ -20,8 +20,8 @@ func (p *Persister) CreateLoginRequest(ctx context.Context, r *login.Request) er
 }
 
 func (p *Persister) UpdateLoginRequest(ctx context.Context, r *login.Request) error {
-	return p.Transaction(ctx, func(tx *pop.Connection) error {
-		ctx := WithTransaction(ctx, tx)
+	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
+
 		rr, err := p.GetLoginRequest(ctx, r.ID)
 		if err != nil {
 			return err
@@ -62,8 +62,8 @@ func (p *Persister) GetLoginRequest(ctx context.Context, id uuid.UUID) (*login.R
 }
 
 func (p *Persister) MarkRequestForced(ctx context.Context, id uuid.UUID) error {
-	return p.Transaction(ctx, func(tx *pop.Connection) error {
-		ctx := WithTransaction(ctx, tx)
+	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
+
 		lr, err := p.GetLoginRequest(ctx, id)
 		if err != nil {
 			return err
@@ -75,8 +75,8 @@ func (p *Persister) MarkRequestForced(ctx context.Context, id uuid.UUID) error {
 }
 
 func (p *Persister) UpdateLoginRequestMethod(ctx context.Context, id uuid.UUID, ct identity.CredentialsType, rm *login.RequestMethod) error {
-	return p.Transaction(ctx, func(tx *pop.Connection) error {
-		ctx := WithTransaction(ctx, tx)
+	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
+
 		rr, err := p.GetLoginRequest(ctx, id)
 		if err != nil {
 			return err

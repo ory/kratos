@@ -12,10 +12,11 @@ import (
 	"testing"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/ory/x/sqlxx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/x/pointerx"
 

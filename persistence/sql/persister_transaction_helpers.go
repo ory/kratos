@@ -10,18 +10,17 @@ type transactionContextKey int
 
 const transactionKey transactionContextKey = 0
 
-func WithTransaction(ctx context.Context, tx *pop.Connection) context.Context {
-	return context.WithValue(ctx, transactionKey, tx)
-}
-
-func (p *Persister) Transaction(ctx context.Context, callback func(connection *pop.Connection) error) error {
+func (p *Persister) Transaction(ctx context.Context, callback func(ctx context.Context, connection *pop.Connection) error) error {
 	c := ctx.Value(transactionKey)
 	if c != nil {
 		if conn, ok := c.(*pop.Connection); ok {
-			return callback(conn)
+			return callback(ctx, conn)
 		}
 	}
-	return p.c.Transaction(callback)
+
+	return p.c.Transaction(func(tx *pop.Connection) error {
+		return callback(context.WithValue(ctx, transactionKey, tx), tx)
+	})
 }
 
 func (p *Persister) GetConnection(ctx context.Context) *pop.Connection {
