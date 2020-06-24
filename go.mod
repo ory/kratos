@@ -2,7 +2,7 @@ module github.com/ory/kratos
 
 go 1.14
 
-replace github.com/gobuffalo/pop/v5 => github.com/aeneasr/pop/v5 v5.0.0-20200624120402-e21f1e535e2e
+replace github.com/gobuffalo/pop/v5 => github.com/aeneasr/pop/v5 v5.0.0-20200624123405-3deef32aad23
 
 require (
 	github.com/Masterminds/sprig/v3 v3.0.0
