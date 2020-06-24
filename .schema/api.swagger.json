@@ -1383,7 +1383,7 @@
       ],
       "properties": {
         "disabled": {
-          "description": "Disabled is the equivalent of `\u003cinput disabled=\"{{.Disabled}}\"\u003e`",
+          "description": "Disabled is the equivalent of `\u003cinput {{if .Disabled}}disabled{{end}}\"\u003e`",
           "type": "boolean"
         },
         "messages": {
@@ -1444,9 +1444,7 @@
         },
         "details": {
           "type": "object",
-          "additionalProperties": {
-            "type": "object"
-          }
+          "additionalProperties": true
         },
         "message": {
           "type": "string"
