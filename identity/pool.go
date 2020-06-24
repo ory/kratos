@@ -2,6 +2,7 @@ package identity
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"testing"
@@ -196,9 +197,11 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 
 			for _, ids := range []string{"foo@bar.com", "fOo@bar.com", "FOO@bar.com", "foo@Bar.com"} {
 				expected := passwordIdentity("", ids)
-				require.Error(t, p.CreateIdentity(context.Background(), expected))
+				err := p.CreateIdentity(context.Background(), expected)
+				require.Error(t, err)
+				require.True(t, errors.Is(err, sqlcon.ErrUniqueViolation), "%+v", err)
 
-				_, err := p.GetIdentity(context.Background(), expected.ID)
+				_, err = p.GetIdentity(context.Background(), expected.ID)
 				require.Error(t, err)
 			}
 		})

@@ -89,15 +89,15 @@ func pl(t *testing.T) func(lvl logging.Level, s string, args ...interface{}) {
 
 func TestPersister(t *testing.T) {
 	conns := map[string]string{
-		"sqlite": sqlite,
+		// "sqlite": sqlite,
 	}
 
 	var l sync.Mutex
 	if !testing.Short() {
 		funcs := map[string]func(t *testing.T) string{
 			"postgres":  dockertest.RunTestPostgreSQL,
-			"mysql":     dockertest.RunTestMySQL,
-			"cockroach": dockertest.RunTestCockroachDB,
+			// "mysql":     dockertest.RunTestMySQL,
+			// "cockroach": dockertest.RunTestCockroachDB,
 		}
 
 		var wg sync.WaitGroup

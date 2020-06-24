@@ -2,7 +2,7 @@ module github.com/ory/kratos
 
 go 1.14
 
-replace github.com/gobuffalo/pop/v5 => github.com/aeneasr/pop/v5 v5.0.0-20200624075855-1b397135855a
+replace github.com/gobuffalo/pop/v5 => github.com/aeneasr/pop/v5 v5.0.0-20200624120402-e21f1e535e2e
 
 require (
 	github.com/Masterminds/sprig/v3 v3.0.0
@@ -45,6 +45,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/hashicorp/serf v0.9.2 // indirect
 	github.com/imdario/mergo v0.3.7
+	github.com/jackc/pgx/v4 v4.6.0
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/justinas/nosurf v1.1.0
