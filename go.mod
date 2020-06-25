@@ -10,6 +10,7 @@ require (
 	github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0
 	github.com/armon/go-metrics v0.3.3 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535 // indirect
+	github.com/bwmarrin/discordgo v0.21.1 // indirect
 	github.com/bxcodec/faker/v3 v3.3.1
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/coreos/go-oidc v2.2.1+incompatible

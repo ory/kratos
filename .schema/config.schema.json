@@ -95,7 +95,8 @@
           "enum": [
             "github",
             "generic",
-            "google"
+            "google",
+            "discord"
           ],
           "examples": [
             "google"
