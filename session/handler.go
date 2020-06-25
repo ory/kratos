@@ -82,7 +82,7 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	s.Identity = s.Identity.CopyWithoutCredentials()
 	
 	// Set userId as the X-Authenticated-User header.
-	w.Header().Set("X-Authenticated-User", s.Identity.ID.String())
+	w.Header().Set("X-Kratos-Authenticated-Identity-Id", s.Identity.ID.String())
 
 	h.r.Writer().Write(w, r, s)
 }
