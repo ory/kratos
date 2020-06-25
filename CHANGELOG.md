@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-06-24)](#unreleased-2020-06-24)
+- [Unreleased (2020-06-25)](#unreleased-2020-06-25)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -83,7 +83,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...d32413a1fcd0ce1a82d2529f18b5d4334a490a2a) (2020-06-24)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...b04d17815b5a28b5fe73a6a94ce1d907a63115e1) (2020-06-25)
 
 
 ### Bug Fixes
@@ -93,6 +93,7 @@
 * Embedded video link properly ([#514](https://github.com/ory/kratos/issues/514)) ([962bbc6](https://github.com/ory/kratos/commit/962bbc6e4af0797c190418b812f6298372dabdde))
 * Embedded video link properly ([#515](https://github.com/ory/kratos/issues/515)) ([821ca93](https://github.com/ory/kratos/commit/821ca93838a360551378e336e9ce10cfe13369ec))
 * Improve grammar of similar password error ([#471](https://github.com/ory/kratos/issues/471)) ([39873bf](https://github.com/ory/kratos/commit/39873bfad89a654fe12e101b54e9b0c2f95714ec))
+* Re-add all databases to persister ([#527](https://github.com/ory/kratos/issues/527)) ([b04d178](https://github.com/ory/kratos/commit/b04d17815b5a28b5fe73a6a94ce1d907a63115e1))
 * Respect self-service enabled flag ([#470](https://github.com/ory/kratos/issues/470)) ([b198faf](https://github.com/ory/kratos/commit/b198fafce9d96fbb644300243e6a757242fbbd06)), closes [#417](https://github.com/ory/kratos/issues/417):
 
     > Respects the `enabled` flag for self-service strategies.
