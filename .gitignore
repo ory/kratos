@@ -9,5 +9,6 @@ packrd/
 dist/
 node_modules
 .bin/*
-cypress/videos
-cypress/screenshots
+test/e2e/cypress/videos
+test/e2e/cypress/screenshots
+test/e2e/.bin
