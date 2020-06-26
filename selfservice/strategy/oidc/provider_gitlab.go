@@ -46,14 +46,8 @@ func (g *ProviderGitLab) Claims(ctx context.Context, exchange *oauth2.Token) (*C
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
-	}
-
 	var claims Claims
-	err = json.Unmarshal(body, &claims)
-	if err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&claims); err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
