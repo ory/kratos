@@ -66,7 +66,7 @@ func TestPersister(p interface {
 			assert.Equal(t, expected.RecoveryAddress.IdentityID, actual.RecoveryAddress.IdentityID)
 			assert.NotEqual(t, expected.Token, actual.Token)
       
-      _, err = p.UseRecoveryToken(context.Background(), expected.Token)
+			_, err = p.UseRecoveryToken(context.Background(), expected.Token)
 			require.Error(t, err)
 		})
 	}
