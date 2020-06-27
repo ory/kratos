@@ -23,6 +23,7 @@ func TestPersister(p interface {
 	identity.PrivilegedPool
 }) func(t *testing.T) {
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
+  viper.Set(configuration.ViperKeySecretsSession, []string{"secret-a", "secret-b"})
 	return func(t *testing.T) {
 		t.Run("case=should error when the recovery token does not exist", func(t *testing.T) {
 			_, err := p.UseRecoveryToken(context.Background(), "i-do-not-exist")
@@ -64,6 +65,9 @@ func TestPersister(p interface {
 			assertx.EqualAsJSON(t, expected.RecoveryAddress, actual.RecoveryAddress)
 			assert.Equal(t, expected.RecoveryAddress.IdentityID, actual.RecoveryAddress.IdentityID)
 			assert.NotEqual(t, expected.Token, actual.Token)
+      
+      _, err = p.UseRecoveryToken(context.Background(), expected.Token)
+			require.Error(t, err)
 		})
 	}
 }
