@@ -72,6 +72,7 @@ func TestSessionWhoAmI(t *testing.T) {
 				res, err = client.Do(req)
 				require.NoError(t, err)
 				assert.EqualValues(t, http.StatusOK, res.StatusCode)
+				assert.NotEmpty(t, res.Header.Get("X-Kratos-Authenticated-Identity-Id"))
 			})
 		}
 	})
