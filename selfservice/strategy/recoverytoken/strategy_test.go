@@ -1,4 +1,4 @@
-package link_test
+package recoverytoken_test
 
 import (
 	"context"
@@ -24,7 +24,7 @@ import (
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/recovery"
-	"github.com/ory/kratos/selfservice/strategy/link"
+	"github.com/ory/kratos/selfservice/strategy/recoverytoken"
 	"github.com/ory/kratos/text"
 )
 
@@ -43,8 +43,9 @@ func TestStrategy(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/default.schema.json")
 	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
-	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
-		map[string]interface{}{"enabled": true})
+	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+identity.CredentialsTypePassword.String()+".enabled", true)
+	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryTokenName+".enabled", true)
+	viper.Set(configuration.ViperKeySelfServiceRecoveryEnabled, true)
 
 	_ = testhelpers.NewRecoveryUITestServer(t)
 	_ = testhelpers.NewLoginUIRequestEchoServer(t, reg)
@@ -67,7 +68,7 @@ func TestStrategy(t *testing.T) {
 		assert.EqualValues(t, models.FormFields{csrfField,
 			{Name: pointerx.String("email"), Required: true, Type: pointerx.String("email")},
 		}, method.Config.Fields)
-		assert.EqualValues(t, public.URL+link.PublicRecoveryLinkPath+"?request="+string(rs.Payload.ID), *method.Config.Action)
+		assert.EqualValues(t, public.URL+recoverytoken.PublicRecoveryTokenPath+"?request="+string(rs.Payload.ID), *method.Config.Action)
 		assert.Empty(t, method.Config.Messages)
 		assert.Empty(t, rs.Payload.Messages)
 	})
@@ -131,7 +132,7 @@ func TestStrategy(t *testing.T) {
 
 		recoveryLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
 
-		assert.Contains(t, recoveryLink, public.URL+link.PublicRecoveryLinkPath)
+		assert.Contains(t, recoveryLink, public.URL+recoverytoken.PublicRecoveryTokenPath)
 		assert.Contains(t, recoveryLink, "token=")
 		res, err := c.Get(recoveryLink)
 		require.NoError(t, err)
@@ -151,7 +152,7 @@ func TestStrategy(t *testing.T) {
 
 	t.Run("description=should not be able to use an invalid link", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
-		res, err := c.Get(public.URL + link.PublicRecoveryLinkPath + "?token=i-do-not-exist")
+		res, err := c.Get(public.URL + recoverytoken.PublicRecoveryTokenPath + "?token=i-do-not-exist")
 		require.NoError(t, err)
 
 		assert.Equal(t, http.StatusNoContent, res.StatusCode)

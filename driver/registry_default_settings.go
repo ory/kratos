@@ -49,7 +49,9 @@ func (m *RegistryDefault) SettingsStrategies() settings.Strategies {
 	if len(m.profileStrategies) == 0 {
 		for _, strategy := range m.selfServiceStrategies() {
 			if s, ok := strategy.(settings.Strategy); ok {
-				m.profileStrategies = append(m.profileStrategies, s)
+				if m.c.SelfServiceStrategy(s.SettingsStrategyID()).Enabled {
+					m.profileStrategies = append(m.profileStrategies, s)
+				}
 			}
 		}
 	}

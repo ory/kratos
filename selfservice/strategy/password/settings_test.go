@@ -19,6 +19,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/x"
 )
 
@@ -30,6 +31,8 @@ func TestSettings(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/profile.schema.json")
+	testhelpers.StrategyEnable(identity.CredentialsTypePassword.String(), true)
+	testhelpers.StrategyEnable(settings.StrategyProfile, true)
 
 	_ = testhelpers.NewSettingsUITestServer(t)
 	_ = testhelpers.NewErrorTestServer(t, reg)

@@ -203,7 +203,7 @@ func TestViperProvider(t *testing.T) {
 				},
 				{
 					strategy: "profile",
-					hooks:    []configuration.SelfServiceHook{
+					hooks: []configuration.SelfServiceHook{
 						// {Name: "verify", Config: json.RawMessage(`{}`)},
 					},
 				},
@@ -284,6 +284,19 @@ func TestViperProvider_Secrets(t *testing.T) {
 	assert.NotEmpty(t, def)
 	assert.Equal(t, def, p.SecretsSession())
 	assert.Equal(t, def, p.SecretsDefault())
+}
+
+func TestViperProvider_Defaults(t *testing.T) {
+	viper.Reset()
+	l := logrusx.New("", "")
+	p := configuration.NewViperProvider(l, false)
+
+	assert.False(t, p.SelfServiceFlowRecoveryEnabled())
+	assert.False(t, p.SelfServiceFlowVerificationEnabled())
+	assert.True(t, p.SelfServiceStrategy("password").Enabled)
+	assert.True(t, p.SelfServiceStrategy("profile").Enabled)
+	assert.True(t, p.SelfServiceStrategy("recovery_token").Enabled)
+	assert.False(t, p.SelfServiceStrategy("oidc").Enabled)
 }
 
 func TestViperProvider_DSN(t *testing.T) {

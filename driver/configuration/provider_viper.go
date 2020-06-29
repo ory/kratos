@@ -251,6 +251,18 @@ func (p *ViperProvider) SelfServiceStrategy(strategy string) *SelfServiceStrateg
 		p.l.WithError(errors.WithStack(err)).WithField("configs", fmt.Sprintf("%s", configs)).WithField("config", fmt.Sprintf("%s", config)).Fatalf("Unable to decode values from configuration for strategy %s", strategy)
 	}
 
+	// FIXME The default value can for some reason not be set from the JSON Schema. This is a workaround
+	if viper.Get(fmt.Sprintf("%s.%s.enabled", ViperKeySelfServiceStrategyConfig, strategy)) == nil {
+		switch strategy {
+		case "password":
+			fallthrough
+		case "profile":
+			fallthrough
+		case "recovery_token":
+			s.Enabled = true
+		}
+	}
+
 	if len(s.Config) == 0 {
 		s.Config = json.RawMessage("{}")
 	}

@@ -39,6 +39,8 @@ func TestStrategyTraits(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
 	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
+	testhelpers.StrategyEnable(identity.CredentialsTypePassword.String(), true)
+	testhelpers.StrategyEnable(settings.StrategyProfile, true)
 
 	ui := testhelpers.NewSettingsUITestServer(t)
 	viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")

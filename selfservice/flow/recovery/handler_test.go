@@ -28,6 +28,7 @@ func init() {
 
 func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
+	testhelpers.RecoveryFlowEnable(true)
 
 	testhelpers.NewRecoveryUITestServer(t)
 	redirTS := testhelpers.NewRedirTS(t, "already authenticated")
@@ -47,6 +48,7 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 
 func TestRecoveryHandler(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
+	testhelpers.RecoveryFlowEnable(true)
 
 	testhelpers.NewRedirTS(t, "")
 	testhelpers.NewLoginUIRequestEchoServer(t, reg)

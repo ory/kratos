@@ -435,7 +435,7 @@
         }
       }
     },
-    "/self-service/browser/flows/recovery/link": {
+    "/self-service/browser/flows/recovery/token": {
       "post": {
         "description": "\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).",
         "consumes": [

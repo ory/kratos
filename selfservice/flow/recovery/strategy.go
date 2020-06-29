@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	StrategyRecoveryTokenName = "token"
+	StrategyRecoveryTokenName = "recovery_token"
 )
 
 type (

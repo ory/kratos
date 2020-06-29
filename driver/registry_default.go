@@ -13,7 +13,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verify"
 	"github.com/ory/kratos/selfservice/hook"
-	"github.com/ory/kratos/selfservice/strategy/link"
+	"github.com/ory/kratos/selfservice/strategy/recoverytoken"
 	"github.com/ory/kratos/x"
 
 	"github.com/cenkalti/backoff"
@@ -143,12 +143,19 @@ func (m *RegistryDefault) RegisterPublicRoutes(router *x.RouterPublic) {
 	m.LoginStrategies().RegisterPublicRoutes(router)
 	m.SettingsStrategies().RegisterPublicRoutes(router)
 	m.RegistrationStrategies().RegisterPublicRoutes(router)
-	m.RecoveryStrategies().RegisterPublicRoutes(router)
 	m.SessionHandler().RegisterPublicRoutes(router)
 	m.SelfServiceErrorHandler().RegisterPublicRoutes(router)
 	m.SchemaHandler().RegisterPublicRoutes(router)
-	m.VerificationHandler().RegisterPublicRoutes(router)
-	m.RecoveryHandler().RegisterPublicRoutes(router)
+
+	if m.c.SelfServiceFlowRecoveryEnabled() {
+		m.RecoveryStrategies().RegisterPublicRoutes(router)
+		m.RecoveryHandler().RegisterPublicRoutes(router)
+	}
+
+	if m.c.SelfServiceFlowVerificationEnabled() {
+		m.VerificationHandler().RegisterPublicRoutes(router)
+	}
+
 	m.HealthHandler().SetRoutes(router.Router, false)
 }
 
@@ -156,12 +163,19 @@ func (m *RegistryDefault) RegisterAdminRoutes(router *x.RouterAdmin) {
 	m.RegistrationHandler().RegisterAdminRoutes(router)
 	m.LoginHandler().RegisterAdminRoutes(router)
 	m.SchemaHandler().RegisterAdminRoutes(router)
-	m.VerificationHandler().RegisterAdminRoutes(router)
 	m.SettingsHandler().RegisterAdminRoutes(router)
 	m.IdentityHandler().RegisterAdminRoutes(router)
 	m.SessionHandler().RegisterAdminRoutes(router)
 	m.SelfServiceErrorHandler().RegisterAdminRoutes(router)
-	m.RecoveryHandler().RegisterAdminRoutes(router)
+
+	if m.c.SelfServiceFlowRecoveryEnabled() {
+		m.RecoveryHandler().RegisterAdminRoutes(router)
+	}
+
+	if m.c.SelfServiceFlowVerificationEnabled() {
+		m.VerificationHandler().RegisterAdminRoutes(router)
+	}
+
 	m.HealthHandler().SetRoutes(router.Router, true)
 }
 
@@ -231,7 +245,7 @@ func (m *RegistryDefault) selfServiceStrategies() []interface{} {
 			password2.NewStrategy(m, m.c),
 			oidc.NewStrategy(m, m.c),
 			settings.NewStrategyTraits(m, m.c),
-			link.NewStrategyLink(m, m.c),
+			recoverytoken.NewStrategyRecoveryToken(m, m.c),
 		}
 	}
 
@@ -494,7 +508,7 @@ func (m *RegistryDefault) CourierPersister() courier.Persister {
 	return m.persister
 }
 
-func (m *RegistryDefault) RecoveryTokenPersister() link.Persister {
+func (m *RegistryDefault) RecoveryTokenPersister() recoverytoken.Persister {
 	return m.Persister()
 }
 

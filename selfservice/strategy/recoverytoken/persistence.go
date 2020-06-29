@@ -1,4 +1,4 @@
-package link
+package recoverytoken
 
 import (
 	"context"
