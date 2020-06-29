@@ -64,7 +64,7 @@ func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
-	redirect := session.RedirectOnUnauthenticated(h.c.LoginURL().String())
+	redirect := session.RedirectOnUnauthenticated(h.c.SelfServiceFlowLoginUI().String())
 	public.GET(PublicPath, h.d.SessionHandler().IsAuthenticated(h.initUpdateSettings, redirect))
 	public.GET(PublicRequestPath, h.d.SessionHandler().IsAuthenticated(h.publicFetchUpdateSettingsRequest, redirect))
 }
@@ -98,14 +98,14 @@ func (h *Handler) initUpdateSettings(w http.ResponseWriter, r *http.Request, ps 
 		return
 	}
 
-	req := NewRequest(h.c.SelfServiceSettingsRequestLifespan(), r, s)
+	req := NewRequest(h.c.SelfServiceFlowSettingsRequestLifespan(), r, s)
 
 	if err := h.CreateRequest(w, r, s, req); err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
-	http.Redirect(w, r, req.URL(h.c.SettingsURL()).String(), http.StatusFound)
+	http.Redirect(w, r, req.URL(h.c.SelfServiceFlowSettingsUI()).String(), http.StatusFound)
 }
 
 func (h *Handler) CreateRequest(w http.ResponseWriter, r *http.Request, sess *session.Session, req *Request) error {

@@ -195,14 +195,14 @@ func (s *StrategyLink) issueSession(w http.ResponseWriter, r *http.Request, req 
 		return
 	}
 
-	sr := settings.NewRequest(s.c.SelfServiceSettingsRequestLifespan(), r, sess)
-	sr.Messages.Set(text.NewRecoverySuccessful(time.Now().Add(s.c.SelfServicePrivilegedSessionMaxAge())))
+	sr := settings.NewRequest(s.c.SelfServiceFlowSettingsRequestLifespan(), r, sess)
+	sr.Messages.Set(text.NewRecoverySuccessful(time.Now().Add(s.c.SelfServiceFlowSettingsPrivilegedSessionMaxAge())))
 	if err := s.d.SettingsHandler().CreateRequest(w, r, sess, sr); err != nil {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
-	http.Redirect(w, r, sr.URL(s.c.SettingsURL()).String(), http.StatusFound)
+	http.Redirect(w, r, sr.URL(s.c.SelfServiceFlowSettingsUI()).String(), http.StatusFound)
 }
 
 func (s *StrategyLink) verifyToken(w http.ResponseWriter, r *http.Request) {
@@ -220,7 +220,6 @@ func (s *StrategyLink) verifyToken(w http.ResponseWriter, r *http.Request) {
 	if err := token.Request.Valid(); err != nil {
 		s.handleError(w, r, token.Request, err)
 		return
-
 	}
 
 	req := token.Request
@@ -238,7 +237,7 @@ func (s *StrategyLink) verifyToken(w http.ResponseWriter, r *http.Request) {
 func (s *StrategyLink) retryFlowWithMessage(w http.ResponseWriter, r *http.Request, message *text.Message) {
 	s.d.Logger().WithRequest(r).WithField("message", message).Debug("A recovery flow is being retried because a validation error occurred.")
 
-	req, err := recovery.NewRequest(s.c.SelfServiceRecoveryRequestLifespan(), s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies())
+	req, err := recovery.NewRequest(s.c.SelfServiceFlowRecoveryRequestLifespan(), s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies())
 	if err != nil {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
@@ -251,7 +250,7 @@ func (s *StrategyLink) retryFlowWithMessage(w http.ResponseWriter, r *http.Reque
 	}
 
 	http.Redirect(w, r,
-		urlx.CopyWithQuery(s.c.RecoveryURL(), url.Values{"request": {req.ID.String()}}).String(),
+		urlx.CopyWithQuery(s.c.SelfServiceFlowRecoveryUI(), url.Values{"request": {req.ID.String()}}).String(),
 		http.StatusFound,
 	)
 }
@@ -302,7 +301,7 @@ func (s *StrategyLink) issueAndSendRecoveryToken(w http.ResponseWriter, r *http.
 		return
 	}
 
-	http.Redirect(w, r, req.URL(s.c.RecoveryURL()).String(), http.StatusFound)
+	http.Redirect(w, r, req.URL(s.c.SelfServiceFlowRecoveryUI()).String(), http.StatusFound)
 }
 
 func (s *StrategyLink) sendToUnknownAddress(ctx context.Context, address string) error {

@@ -32,7 +32,7 @@ func TestSettingsExecutor(t *testing.T) {
 		t.Run("strategy="+strategy, func(t *testing.T) {
 			conf, reg := internal.NewFastRegistryWithMocks(t)
 			viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
-			viper.Set(configuration.ViperKeyURLsDefaultReturnTo, "https://www.ory.sh/")
+			viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
 
 			reg.WithHooks(map[string]func(configuration.SelfServiceHook) interface{}{
 				"err": func(c configuration.SelfServiceHook) interface{} {
@@ -55,7 +55,7 @@ func TestSettingsExecutor(t *testing.T) {
 				})
 				ts := httptest.NewServer(router)
 				t.Cleanup(ts.Close)
-				viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
+				viper.Set(configuration.ViperKeyPublicBaseURL, ts.URL)
 				return ts
 			}
 
@@ -67,7 +67,7 @@ func TestSettingsExecutor(t *testing.T) {
 			uiTS := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 			t.Cleanup(uiTS.Close)
 			uiURL := uiTS.URL + "/user/settings"
-			viper.Set(configuration.ViperKeyURLsSettings, uiURL)
+			viper.Set(configuration.ViperKeySelfServiceSettingsURL, uiURL)
 
 			t.Run("method=PostSettingsHook", func(t *testing.T) {
 				t.Run("case=pass without hooks", func(t *testing.T) {

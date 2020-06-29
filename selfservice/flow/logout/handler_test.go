@@ -30,7 +30,7 @@ func TestLogoutHandler(t *testing.T) {
 	handler := reg.LogoutHandler()
 
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
-	viper.Set(configuration.ViperKeyURLsSelfPublic, "http://example.com")
+	viper.Set(configuration.ViperKeyPublicBaseURL, "http://example.com")
 
 	router := x.NewRouterPublic()
 	handler.RegisterPublicRoutes(router)
@@ -55,8 +55,8 @@ func TestLogoutHandler(t *testing.T) {
 	}))
 	defer redirTS.Close()
 
-	viper.Set(configuration.ViperKeySelfServiceLogoutRedirectURL, redirTS.URL)
-	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
+	viper.Set(configuration.ViperKeySelfServiceLogoutBrowserDefaultReturnTo, redirTS.URL)
+	viper.Set(configuration.ViperKeyPublicBaseURL, ts.URL)
 
 	client := testhelpers.NewClientWithCookies(t)
 

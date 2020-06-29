@@ -15,9 +15,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/x/fetcher"
-
 	"github.com/ory/x/jsonx"
+
+	"github.com/ory/x/fetcher"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
@@ -283,7 +283,7 @@ func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, 
 		if _, ok := req.(*settings.Request); ok {
 			// ignore this if it's a settings request
 		} else if !isForced(req) {
-			http.Redirect(w, r, s.c.DefaultReturnToURL().String(), http.StatusFound)
+			http.Redirect(w, r, s.c.SelfServiceBrowserDefaultReturnTo().String(), http.StatusFound)
 			return true
 		}
 	}

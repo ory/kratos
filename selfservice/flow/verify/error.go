@@ -73,7 +73,7 @@ func (s *ErrorHandler) HandleVerificationError(
 
 	if e := new(errRequestExpired); errors.As(err, &e) {
 		a := NewRequest(
-			s.c.SelfServiceSettingsRequestLifespan(), r, rr.Via,
+			s.c.SelfServiceFlowSettingsRequestLifespan(), r, rr.Via,
 			urlx.AppendPaths(s.c.SelfPublicURL(), PublicVerificationRequestPath), s.d.GenerateCSRFToken,
 		)
 
@@ -84,7 +84,7 @@ func (s *ErrorHandler) HandleVerificationError(
 		}
 
 		http.Redirect(w, r,
-			urlx.CopyWithQuery(s.c.VerificationURL(), url.Values{"request": {a.ID.String()}}).String(),
+			urlx.CopyWithQuery(s.c.SelfServiceFlowVerificationUI(), url.Values{"request": {a.ID.String()}}).String(),
 			http.StatusFound,
 		)
 		return
@@ -101,7 +101,7 @@ func (s *ErrorHandler) HandleVerificationError(
 	}
 
 	http.Redirect(w, r,
-		urlx.CopyWithQuery(s.c.VerificationURL(), url.Values{"request": {rr.ID.String()}}).String(),
+		urlx.CopyWithQuery(s.c.SelfServiceFlowVerificationUI(), url.Values{"request": {rr.ID.String()}}).String(),
 		http.StatusFound,
 	)
 }

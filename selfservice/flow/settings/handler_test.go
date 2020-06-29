@@ -37,7 +37,7 @@ func TestHandler(t *testing.T) {
 	_ = testhelpers.NewSettingsUITestServer(t)
 	_ = testhelpers.NewErrorTestServer(t, reg)
 
-	viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
+	viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
 	primaryIdentity := &identity.Identity{ID: x.NewUUID(), Traits: identity.Traits(`{}`)}
 	publicTS, adminTS, clients := testhelpers.NewSettingsAPIServer(t, reg, map[string]*identity.Identity{
 		"primary":   primaryIdentity,

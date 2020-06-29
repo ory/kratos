@@ -29,7 +29,7 @@ func TestLoginExecutor(t *testing.T) {
 		t.Run("strategy="+strategy, func(t *testing.T) {
 			_, reg := internal.NewFastRegistryWithMocks(t)
 			viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/login.schema.json")
-			viper.Set(configuration.ViperKeyURLsDefaultReturnTo, "https://www.ory.sh/")
+			viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
 
 			newServer := func(t *testing.T) *httptest.Server {
 				router := httprouter.New()
@@ -49,7 +49,7 @@ func TestLoginExecutor(t *testing.T) {
 
 				ts := httptest.NewServer(router)
 				t.Cleanup(ts.Close)
-				viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
+				viper.Set(configuration.ViperKeyPublicBaseURL, ts.URL)
 				return ts
 			}
 
@@ -101,7 +101,7 @@ func TestLoginExecutor(t *testing.T) {
 
 				t.Run("case=use nested config value", func(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset)
-					viper.Set(configuration.ViperKeySelfServiceLoginAfter+"."+configuration.ViperKeyDefaultReturnTo, "https://www.ory.sh/kratos")
+					viper.Set(configuration.ViperKeySelfServiceLoginAfter+"."+configuration.DefaultBrowserReturnURL, "https://www.ory.sh/kratos")
 
 					res, _ := makeRequestPost(t, newServer(t), false, url.Values{})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)

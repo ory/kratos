@@ -39,14 +39,14 @@ func (m *RegistryDefault) WithHooks(hooks map[string]func(configuration.SelfServ
 func (m *RegistryDefault) getHooks(credentialsType string, configs []configuration.SelfServiceHook) (i []interface{}) {
 	for _, h := range configs {
 		switch h.Name {
-		case hook.KeyVerify:
-			i = append(i, m.HookVerifier())
+		// case hook.KeyVerify:
+		// 	i = append(i, m.HookVerifier())
 		case hook.KeySessionIssuer:
 			i = append(i, m.HookSessionIssuer())
 		case hook.KeySessionDestroyer:
 			i = append(i, m.HookSessionDestroyer())
-		case hook.KeyRedirector:
-			i = append(i, m.HookRedirector(h.Config))
+		// case hook.KeyRedirector:
+		// 	i = append(i, m.HookRedirector(h.Config))
 		default:
 			var found bool
 			for name, m := range m.injectedSelfserviceHooks {

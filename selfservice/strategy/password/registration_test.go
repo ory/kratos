@@ -76,11 +76,11 @@ func TestRegistration(t *testing.T) {
 		defer uiTs.Close()
 		defer returnTs.Close()
 
-		viper.Set(configuration.ViperKeyURLsError, errTs.URL+"/error-ts")
-		viper.Set(configuration.ViperKeyURLsRegistration, uiTs.URL+"/signup-ts")
-		viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
-		viper.Set(configuration.ViperKeyURLsDefaultReturnTo, returnTs.URL+"/default-return-to")
-		viper.Set(configuration.ViperKeySelfServiceRegistrationAfter+"."+configuration.ViperKeyDefaultReturnTo, returnTs.URL+"/return-ts")
+		viper.Set(configuration.ViperKeySelfServiceErrorUI, errTs.URL+"/error-ts")
+		viper.Set(configuration.ViperKeySelfServiceRegistrationUI, uiTs.URL+"/signup-ts")
+		viper.Set(configuration.ViperKeyPublicBaseURL, ts.URL)
+		viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, returnTs.URL+"/default-return-to")
+		viper.Set(configuration.ViperKeySelfServiceRegistrationAfter+"."+configuration.DefaultBrowserReturnURL, returnTs.URL+"/return-ts")
 		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
 
 		var newRegistrationRequest = func(t *testing.T, exp time.Duration) *registration.Request {
@@ -311,7 +311,7 @@ func TestRegistration(t *testing.T) {
 	t.Run("method=PopulateSignUpMethod", func(t *testing.T) {
 		_, reg := internal.NewFastRegistryWithMocks(t)
 
-		viper.Set(configuration.ViperKeyURLsSelfPublic, urlx.ParseOrPanic("https://foo/"))
+		viper.Set(configuration.ViperKeyPublicBaseURL, urlx.ParseOrPanic("https://foo/"))
 		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://stub/registration.schema.json")
 		viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
 			"enabled": true})

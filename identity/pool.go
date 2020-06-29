@@ -82,7 +82,7 @@ type (
 func TestPool(p PrivilegedPool) func(t *testing.T) {
 	return func(t *testing.T) {
 		exampleServerURL := urlx.ParseOrPanic("http://example.com")
-		viper.Set(configuration.ViperKeyURLsSelfPublic, exampleServerURL)
+		viper.Set(configuration.ViperKeyPublicBaseURL, exampleServerURL)
 		defaultSchema := schema.Schema{
 			ID:     configuration.DefaultIdentityTraitsSchemaID,
 			URL:    urlx.ParseOrPanic("file://./stub/identity.schema.json"),

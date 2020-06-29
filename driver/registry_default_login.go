@@ -13,7 +13,7 @@ func (m *RegistryDefault) LoginHookExecutor() *login.HookExecutor {
 }
 
 func (m *RegistryDefault) PreLoginHooks() (b []login.PreHookExecutor) {
-	for _, v := range m.getHooks("", m.c.SelfServiceLoginBeforeHooks()) {
+	for _, v := range m.getHooks("", m.c.SelfServiceFlowLoginBeforeHooks()) {
 		if hook, ok := v.(login.PreHookExecutor); ok {
 			b = append(b, hook)
 		}
@@ -22,7 +22,7 @@ func (m *RegistryDefault) PreLoginHooks() (b []login.PreHookExecutor) {
 }
 
 func (m *RegistryDefault) PostLoginHooks(credentialsType identity.CredentialsType) (b []login.PostHookExecutor) {
-	for _, v := range m.getHooks(string(credentialsType), m.c.SelfServiceLoginAfterHooks(string(credentialsType))) {
+	for _, v := range m.getHooks(string(credentialsType), m.c.SelfServiceFlowLoginAfterHooks(string(credentialsType))) {
 		if hook, ok := v.(login.PostHookExecutor); ok {
 			b = append(b, hook)
 		}

@@ -1,9 +1,11 @@
 # serve controls the configuration for the http(s) daemon
 serve:
   admin:
+    base_url: http://admin.kratos.ory.sh
     port: 1234
     host: admin.kratos.ory.sh
   public:
+    base_url: http://public.kratos.ory.sh
     port: 1235
     host: public.kratos.ory.sh
 
@@ -15,21 +17,6 @@ log:
 courier:
   smtp:
     connection_uri: smtp://foo:bar@baz/
-
-urls:
-  default_return_to: http://return-to-3-test.ory.sh/
-  mfa_ui: http://test.kratos.ory.sh/mfa
-  login_ui: http://test.kratos.ory.sh/login
-  settings_ui: http://test.kratos.ory.sh/settings
-  verify_ui: http://test.kratos.ory.sh/verify
-  registration_ui: http://test.kratos.ory.sh/register
-  self:
-    public: http://public.kratos.ory.sh
-    admin: http://admin.kratos.ory.sh
-  error_ui: http://test.kratos.ory.sh/error
-  whitelisted_return_to_urls:
-    - http://return-to-1-test.ory.sh/
-    - http://return-to-2-test.ory.sh/
 
 identity:
   traits:
@@ -47,11 +34,15 @@ hashers:
     key_length: 32
 
 secrets:
-  session:
+  cookie:
     - session-key-7f8a9b77-1
     - session-key-7f8a9b77-2
 
 selfservice:
+  default_browser_return_url: http://return-to-3-test.ory.sh/
+  whitelisted_return_urls:
+    - http://return-to-1-test.ory.sh/
+    - http://return-to-2-test.ory.sh/
   strategies:
     password:
       enabled: true
@@ -64,74 +55,61 @@ selfservice:
             client_id: a
             client_secret: b
             mapper_url: http://test.kratos.ory.sh/default-identity.schema.json
-  logout:
-    redirect_to: http://test.kratos.ory.sh:4000/
+  flows:
+    error:
+      ui_url: http://test.kratos.ory.sh/error
 
-  settings:
-    request_lifespan: 99m
-    privileged_session_max_age: 5m
-    after:
-      default_return_to: https://self-service/settings/return_to
-      password:
-        default_return_to: https://self-service/settings/password/return_to
-      profile:
-        hooks:
-          -
-            hook: verify
-  login:
-    request_lifespan: 99m
-    before:
-      hooks:
-        - hook: redirect
-          config:
-            default_redirect_url: http://test.kratos.ory.sh:4000/
-            allow_user_defined_redirect: false
-    after:
-      default_return_to: https://self-service/login/return_to
-      password:
-        default_return_to: https://self-service/login/password/return_to
-        hooks:
-          -
-            hook: revoke_active_sessions
-      oidc:
-        hooks:
-          -
-            hook: revoke_active_sessions
-  registration:
-    request_lifespan: 98m
-    before:
-      hooks:
-        - hook: redirect
-          config:
-            default_redirect_url: http://test.kratos.ory.sh:4000/
-            allow_user_defined_redirect: false
-    after:
-      default_return_to: https://self-service/registration/return_to
-      password:
-        hooks:
-          -
-            hook: session
-          -
-            hook: verify
-          - hook: redirect
-            config:
-              default_redirect_url: http://test.kratos.ory.sh:4000/
-              allow_user_defined_redirect: false
-      oidc:
-        default_return_to: https://self-service/registration/oidc/return_to
-        hooks:
-          -
-            hook: verify
-          -
-            hook: session
-          - hook: redirect
-            config:
-              default_redirect_url: http://test.kratos.ory.sh:4000/
-              allow_user_defined_redirect: false
+    logout:
+      after:
+        default_browser_return_url: http://test.kratos.ory.sh:4000/
 
-#      - job: account_activation
-#        config:
-#          redirect:
-#            pending:
-#            success:
-#            invalidate_after: 10h
+    recovery:
+      enabled: true
+      ui_url: http://test.kratos.ory.sh/recovery
+      request_lifespan: 98m
+      after:
+        default_browser_return_url: http://test.kratos.ory.sh/dashboard
+
+    verification:
+      enabled: true
+      request_lifespan: 97m
+      ui_url: http://test.kratos.ory.sh/verification
+      after:
+        default_browser_return_url: http://test.kratos.ory.sh/dashboard
+
+    settings:
+      ui_url:  http://test.kratos.ory.sh/settings
+      request_lifespan: 99m
+      privileged_session_max_age: 5m
+      after:
+        default_browser_return_url: https://self-service/settings/return_to
+        password:
+          default_browser_return_url: https://self-service/settings/password/return_to
+    login:
+      ui_url: http://test.kratos.ory.sh/login
+      request_lifespan: 99m
+      after:
+        default_browser_return_url: https://self-service/login/return_to
+        password:
+          default_browser_return_url: https://self-service/login/password/return_to
+          hooks:
+            -
+              hook: revoke_active_sessions
+        oidc:
+          hooks:
+            -
+              hook: revoke_active_sessions
+    registration:
+      ui_url: http://test.kratos.ory.sh/register
+      request_lifespan: 98m
+      after:
+        default_browser_return_url: https://self-service/registration/return_to
+        password:
+          hooks:
+            -
+              hook: session
+        oidc:
+          default_browser_return_url: https://self-service/registration/oidc/return_to
+          hooks:
+            -
+              hook: session

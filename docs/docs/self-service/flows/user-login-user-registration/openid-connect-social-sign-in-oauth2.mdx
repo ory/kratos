@@ -51,11 +51,12 @@ session.
 ```yaml title="path/to/my/kratos/config.yml"
 # $ kratos -c path/to/my/kratos/config.yml serve
 selfservice:
-  registration:
-    after:
-      oidc:
-        hooks:
-          - hook: session
+  flows:
+    registration:
+      after:
+        oidc:
+          hooks:
+            - hook: session
 ```
 
 :::

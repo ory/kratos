@@ -3,27 +3,19 @@ selfservice:
     password:
       enabled: true
 
-  settings:
-    privileged_session_max_age: 1m
-    after:
-      profile:
-        hooks:
-          -
-            hook: verify
+  flows:
+    settings:
+      privileged_session_max_age: 1m
 
-  verify:
-    return_to: http://127.0.0.1:4455/
-    request_lifespan: 5s
+    verification:
+      enabled: true
+      request_lifespan: 5s
+      after:
+        default_browser_return_url: http://127.0.0.1:4455/
 
-  logout:
-    redirect_to: http://127.0.0.1:4455/auth/login
-
-  registration:
-    after:
-      password:
-        hooks:
-          -
-            hook: verify
+    logout:
+      after:
+        default_browser_return_url: http://127.0.0.1:4455/auth/login
 
 identity:
   traits:

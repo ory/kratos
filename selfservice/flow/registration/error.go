@@ -96,7 +96,7 @@ func (s *ErrorHandler) HandleRegistrationError(
 			return
 		}
 
-		http.Redirect(w, r, urlx.CopyWithQuery(s.c.RegisterURL(), url.Values{"request": {a.ID.String()}}).String(), http.StatusFound)
+		http.Redirect(w, r, urlx.CopyWithQuery(s.c.SelfServiceFlowRegisterUI(), url.Values{"request": {a.ID.String()}}).String(), http.StatusFound)
 		return
 	}
 
@@ -125,7 +125,7 @@ func (s *ErrorHandler) HandleRegistrationError(
 	}
 
 	http.Redirect(w, r,
-		urlx.CopyWithQuery(s.c.RegisterURL(), url.Values{"request": {rr.ID.String()}}).String(),
+		urlx.CopyWithQuery(s.c.SelfServiceFlowRegisterUI(), url.Values{"request": {rr.ID.String()}}).String(),
 		http.StatusFound,
 	)
 }

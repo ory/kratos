@@ -76,7 +76,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //       302: emptyResponse
 //       500: genericError
 func (h *Handler) init(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	req, err := NewRequest(h.c.SelfServiceRecoveryRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies())
+	req, err := NewRequest(h.c.SelfServiceFlowRecoveryRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies())
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
@@ -88,7 +88,7 @@ func (h *Handler) init(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	}
 
 	http.Redirect(w, r,
-		urlx.CopyWithQuery(h.c.RecoveryURL(), url.Values{"request": {req.ID.String()}}).String(),
+		urlx.CopyWithQuery(h.c.SelfServiceFlowRecoveryUI(), url.Values{"request": {req.ID.String()}}).String(),
 		http.StatusFound,
 	)
 }

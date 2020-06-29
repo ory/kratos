@@ -6,11 +6,13 @@ title: This should be the Mfa UI
 You ended up here because you did not set the following configuration value:
 
 ```yaml title="path/to/kratos/config.yml
-urls:
-  mfa_ui: http://my-app.com/mfa
+selfservice:
+  flows:
+    mfa:
+      ui_url: http://my-app.com/mfa
 ```
 
-You can set this configuration value using environment variable `URLS_MFA_UI` as
+You can set this configuration value using environment variable `SELFSERVICE_FLOWS_MFA_UI_URL` as
 well!
 
 If you don't know what that means, head over to our

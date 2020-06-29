@@ -348,7 +348,7 @@ func (m *RegistryDefault) SelfServiceErrorHandler() *errorx.Handler {
 
 func (m *RegistryDefault) CookieManager() sessions.Store {
 	if m.sessionsStore == nil {
-		cs := sessions.NewCookieStore(m.c.SessionSecrets()...)
+		cs := sessions.NewCookieStore(m.c.SecretsSession()...)
 		cs.Options.Secure = !m.c.IsInsecureDevMode()
 		cs.Options.HttpOnly = true
 		m.sessionsStore = cs

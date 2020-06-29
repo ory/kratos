@@ -19,7 +19,7 @@ import (
 func TestManager(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/manager.schema.json")
-	viper.Set(configuration.ViperKeyURLsSelfPublic, "https://www.ory.sh/")
+	viper.Set(configuration.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 	viper.Set(configuration.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
 
 	t.Run("case=should fail to create because validation fails", func(t *testing.T) {

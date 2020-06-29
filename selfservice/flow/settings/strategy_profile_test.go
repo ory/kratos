@@ -38,10 +38,10 @@ import (
 func TestStrategyTraits(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
-	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, "https://www.ory.sh/")
+	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
 
 	ui := testhelpers.NewSettingsUITestServer(t)
-	viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
+	viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
 
 	_ = testhelpers.NewErrorTestServer(t, reg)
 
@@ -162,10 +162,10 @@ func TestStrategyTraits(t *testing.T) {
 		})
 
 		t.Run("description=should update protected field with sudo mode", func(t *testing.T) {
-			viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "5m")
+			viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 			_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, adminClient)
 			t.Cleanup(func() {
-				viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
+				viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
 			})
 
 			config := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyProfile)
@@ -189,7 +189,7 @@ func TestStrategyTraits(t *testing.T) {
 				assert.Equal(t, r.URL.Path, "/login")
 				_, _ = w.Write([]byte("called login page"))
 			}))
-			viper.Set(configuration.ViperKeyURLsLogin, loginTS.URL+"/login")
+			viper.Set(configuration.ViperKeySelfServiceLoginUI, loginTS.URL+"/login")
 
 			var run = func(t *testing.T) {
 				f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyProfile)
@@ -313,12 +313,12 @@ func TestStrategyTraits(t *testing.T) {
 
 	t.Run("description=should send email with verifiable address", func(t *testing.T) {
 		_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, adminClient)
-		viper.Set(configuration.HookStrategyKey(configuration.ViperKeySelfServiceSettingsAfter, settings.StrategyProfile), []configuration.SelfServiceHook{{Name: "verify"}})
-		viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1h")
+		viper.Set(configuration.ViperKeySelfServiceVerificationEnabled, true)
+		viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1h")
 		viper.Set(configuration.ViperKeyCourierSMTPURL, "smtp://foo:bar@irrelevant.com/")
 
 		t.Cleanup(func() {
-			viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
+			viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
 			viper.Set(configuration.HookStrategyKey(configuration.ViperKeySelfServiceSettingsAfter, settings.StrategyProfile), nil)
 		})
 

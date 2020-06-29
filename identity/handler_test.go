@@ -39,9 +39,9 @@ func TestHandler(t *testing.T) {
 	}
 	defaultSchemaExternalURL := defaultSchema.SchemaURL(mockServerURL).String()
 
-	viper.Set(configuration.ViperKeyURLsSelfAdmin, ts.URL)
+	viper.Set(configuration.ViperKeyAdminBaseURL, ts.URL)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, defaultSchemaInternalURL.String())
-	viper.Set(configuration.ViperKeyURLsSelfPublic, mockServerURL.String())
+	viper.Set(configuration.ViperKeyPublicBaseURL, mockServerURL.String())
 
 	var get = func(t *testing.T, href string, expectCode int) gjson.Result {
 		res, err := ts.Client().Get(ts.URL + href)

@@ -111,22 +111,16 @@ To send an email after user registration, add the following sections to your ORY
 Kratos config file:
 
 ```yaml title="path/to/kratos.config.yml"
-# required
-urls:
-  # Similar to login_ui or profile_ui, this points to the user interface where the verificaiton
-  # user interface is implemented.
-  #
-  # For more information on this endpoint please head over to the next section
-  verify_ui: https://my-kratos-ui/verify
-
 selfservice:
-  registration:
-    after:
-      password:
-        hooks:
-          # ....
-          - hook: verify # This sends the verification email after successful registration
-          # ....
+  flows:
+    verification:
+      enabled: true
+
+      # Similar to login_ui or profile_ui, this points to the user interface where the verificaiton
+      # user interface is implemented.
+      #
+      # For more information on this endpoint please head over to the next section
+      ui_url: https://my-kratos-ui/verify
 ```
 
 ## Self-Service Request or Resend Verification Link for Browser Applications

@@ -89,7 +89,7 @@ func (s *StrategyTraits) SettingsStrategyID() string {
 }
 
 func (s *StrategyTraits) RegisterSettingsRoutes(public *x.RouterPublic) {
-	redirect := session.RedirectOnUnauthenticated(s.c.LoginURL().String())
+	redirect := session.RedirectOnUnauthenticated(s.c.SelfServiceFlowLoginUI().String())
 	public.POST(PublicSettingsProfilePath, s.d.SessionHandler().IsAuthenticated(s.handleSubmit, redirect))
 	public.GET(PublicSettingsProfilePath, s.d.SessionHandler().IsAuthenticated(s.handleSubmit, redirect))
 }

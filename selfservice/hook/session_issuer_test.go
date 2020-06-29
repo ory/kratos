@@ -22,7 +22,7 @@ import (
 
 func TestSessionIssuer(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
-	viper.Set(configuration.ViperKeyURLsSelfPublic, "http://localhost/")
+	viper.Set(configuration.ViperKeyPublicBaseURL, "http://localhost/")
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/stub.schema.json")
 
 	var r http.Request

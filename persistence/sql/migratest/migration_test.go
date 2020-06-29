@@ -96,7 +96,7 @@ func TestMigrations(t *testing.T) {
 			tm := popx.NewTestMigrator(t, c, "../migrations/sql", "./testdata")
 			require.NoError(t, tm.Up())
 
-			viper.Set(configuration.ViperKeyURLsSelfPublic, "https://www.ory.sh/")
+			viper.Set(configuration.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 			viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://stub/default.schema.json")
 			viper.Set(configuration.ViperKeyDSN, url)
 
