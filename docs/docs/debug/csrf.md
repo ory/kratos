@@ -23,7 +23,7 @@ them is protection against CSRF:
 To protect against CSRF, several endpoints are protected by Anti-CSRF measures.
 Typically, endpoints accepting `POST`, `DELTE`, `PUT` actions have Anti-CSRF
 measures. When rendering a form for example, a
-`<input type="hidden" name="csrf_token" value="...">` HTLM Input Element is
+`<input type="hidden" name="csrf_token" value="...">` HTML Input Element is
 added. ORY Kratos compares that value to the value set in the Anti-CSRF Cookie.
 If the values match, the request is allowed.
 
