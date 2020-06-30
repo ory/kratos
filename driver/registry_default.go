@@ -13,6 +13,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verify"
 	"github.com/ory/kratos/selfservice/hook"
+	"github.com/ory/kratos/selfservice/strategy/profile"
 	"github.com/ory/kratos/selfservice/strategy/recoverytoken"
 	"github.com/ory/kratos/x"
 
@@ -244,7 +245,7 @@ func (m *RegistryDefault) selfServiceStrategies() []interface{} {
 		m.selfserviceStrategies = []interface{}{
 			password2.NewStrategy(m, m.c),
 			oidc.NewStrategy(m, m.c),
-			settings.NewStrategyTraits(m, m.c),
+			profile.NewStrategy(m, m.c),
 			recoverytoken.NewStrategyRecoveryToken(m, m.c),
 		}
 	}

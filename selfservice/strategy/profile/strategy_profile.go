@@ -1,4 +1,4 @@
-package settings
+package profile
 
 import (
 	"context"
@@ -24,24 +24,18 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
 const (
-	StrategyProfile           = "profile"
 	PublicSettingsProfilePath = "/self-service/browser/flows/settings/strategies/profile"
-
-	ContinuityPrefix = "ory_kratos_settings"
 )
 
-func ContinuityKey(id string) string {
-	return ContinuityPrefix + "_" + id
-}
-
-var _ Strategy = new(StrategyTraits)
-var pkgName = reflect.TypeOf(StrategyTraits{}).PkgPath()
+var _ settings.Strategy = new(Strategy)
+var pkgName = reflect.TypeOf(Strategy{}).PkgPath()
 
 type (
 	strategyDependencies interface {
@@ -61,40 +55,40 @@ type (
 
 		errorx.ManagementProvider
 
-		HookExecutorProvider
-		ErrorHandlerProvider
-		RequestPersistenceProvider
-		StrategyProvider
-		HooksProvider
+		settings.HookExecutorProvider
+		settings.ErrorHandlerProvider
+		settings.RequestPersistenceProvider
+		settings.StrategyProvider
+		settings.HooksProvider
 
 		IdentityTraitsSchemas() schema.Schemas
 	}
-	StrategyTraits struct {
+	Strategy struct {
 		c configuration.Provider
 		d strategyDependencies
 	}
 )
 
-// swagger:model traitsFormConfig
-type TraitsRequestMethod struct {
+// swagger:model settingsProfileFormConfig
+type SettingsProfileRequestMethod struct {
 	*form.HTMLForm
 }
 
-func NewStrategyTraits(d strategyDependencies, c configuration.Provider) *StrategyTraits {
-	return &StrategyTraits{c: c, d: d}
+func NewStrategy(d strategyDependencies, c configuration.Provider) *Strategy {
+	return &Strategy{c: c, d: d}
 }
 
-func (s *StrategyTraits) SettingsStrategyID() string {
-	return StrategyProfile
+func (s *Strategy) SettingsStrategyID() string {
+	return settings.StrategyProfile
 }
 
-func (s *StrategyTraits) RegisterSettingsRoutes(public *x.RouterPublic) {
+func (s *Strategy) RegisterSettingsRoutes(public *x.RouterPublic) {
 	redirect := session.RedirectOnUnauthenticated(s.c.SelfServiceFlowLoginUI().String())
 	public.POST(PublicSettingsProfilePath, s.d.SessionHandler().IsAuthenticated(s.handleSubmit, redirect))
 	public.GET(PublicSettingsProfilePath, s.d.SessionHandler().IsAuthenticated(s.handleSubmit, redirect))
 }
 
-func (s *StrategyTraits) PopulateSettingsMethod(r *http.Request, ss *session.Session, pr *Request) error {
+func (s *Strategy) PopulateSettingsMethod(r *http.Request, ss *session.Session, pr *settings.Request) error {
 	traitsSchema, err := s.c.IdentityTraitsSchemas().FindSchemaByID(ss.Identity.TraitsSchemaID)
 	if err != nil {
 		return err
@@ -118,9 +112,9 @@ func (s *StrategyTraits) PopulateSettingsMethod(r *http.Request, ss *session.Ses
 		return err
 	}
 
-	pr.Methods[s.SettingsStrategyID()] = &RequestMethod{
+	pr.Methods[s.SettingsStrategyID()] = &settings.RequestMethod{
 		Method: s.SettingsStrategyID(),
-		Config: &RequestMethodConfig{RequestMethodConfigurator: &TraitsRequestMethod{HTMLForm: f}},
+		Config: &settings.RequestMethodConfig{RequestMethodConfigurator: &SettingsProfileRequestMethod{HTMLForm: f}},
 	}
 	return nil
 }
@@ -148,16 +142,16 @@ func (s *StrategyTraits) PopulateSettingsMethod(r *http.Request, ss *session.Ses
 //     Responses:
 //       302: emptyResponse
 //       500: genericError
-func (s *StrategyTraits) handleSubmit(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (s *Strategy) handleSubmit(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var p completeSelfServiceBrowserSettingsStrategyProfileFlowPayload
-	ctxUpdate, err := PrepareUpdate(s.d, w, r, ContinuityKey(s.SettingsStrategyID()), &p)
+	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	s.d.Logger().
 		WithField("err", fmt.Sprintf("%+v", err)).
 		WithField("ctxUpdate", fmt.Sprintf("%+v", ctxUpdate)).
 		WithField("package", pkgName).
 		WithField("stack_trace", fmt.Sprintf("%s", debug.Stack())).
 		Debug("handleSubmit: PrepareUpdate")
-	if errors.Is(err, ErrContinuePreviousAction) {
+	if errors.Is(err, settings.ErrContinuePreviousAction) {
 		s.continueFlow(w, r, ctxUpdate, &p)
 		return
 	} else if err != nil {
@@ -187,26 +181,26 @@ func (s *StrategyTraits) handleSubmit(w http.ResponseWriter, r *http.Request, ps
 	s.continueFlow(w, r, ctxUpdate, &p)
 }
 
-func (s *StrategyTraits) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdate *UpdateContext, p *completeSelfServiceBrowserSettingsStrategyProfileFlowPayload) {
+func (s *Strategy) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *completeSelfServiceBrowserSettingsStrategyProfileFlowPayload) {
 	if len(p.Traits) == 0 {
 		s.handleSettingsError(w, r, ctxUpdate, nil, p, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Did not receive any value changes.")))
 		return
 	}
 
 	if err := s.hydrateForm(r, ctxUpdate.Request, ctxUpdate.Session, p.Traits); err != nil {
-		s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, ctxUpdate.Request, err, StrategyProfile)
+		s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, ctxUpdate.Request, err, settings.StrategyProfile)
 		return
 	}
 
 	update, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), ctxUpdate.Session.Identity.ID)
 	if err != nil {
-		s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, ctxUpdate.Request, err, StrategyProfile)
+		s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, ctxUpdate.Request, err, settings.StrategyProfile)
 		return
 	}
 
 	update.Traits = identity.Traits(p.Traits)
 	if err := s.d.SettingsHookExecutor().PostSettingsHook(w, r,
-		StrategyProfile, ctxUpdate, update); err != nil {
+		settings.StrategyProfile, ctxUpdate, update); err != nil {
 		s.handleSettingsError(w, r, ctxUpdate, p.Traits, p, err)
 		return
 	}
@@ -255,26 +249,26 @@ func (p *completeSelfServiceBrowserSettingsStrategyProfileFlowPayload) SetReques
 	p.rid = rid
 }
 
-func (s *StrategyTraits) hydrateForm(r *http.Request, ar *Request, ss *session.Session, traits json.RawMessage) error {
+func (s *Strategy) hydrateForm(r *http.Request, ar *settings.Request, ss *session.Session, traits json.RawMessage) error {
 	action := urlx.CopyWithQuery(
 		urlx.AppendPaths(s.c.SelfPublicURL(), PublicSettingsProfilePath),
 		url.Values{"request": {ar.ID.String()}},
 	)
 
-	ar.Methods[StrategyProfile].Config.Reset()
+	ar.Methods[settings.StrategyProfile].Config.Reset()
 	if traits != nil {
 		for _, field := range form.NewHTMLFormFromJSON(action.String(), traits, "traits").Fields {
-			ar.Methods[StrategyProfile].Config.SetField(field)
+			ar.Methods[settings.StrategyProfile].Config.SetField(field)
 		}
 	}
-	ar.Methods[StrategyProfile].Config.SetCSRF(s.d.GenerateCSRFToken(r))
+	ar.Methods[settings.StrategyProfile].Config.SetCSRF(s.d.GenerateCSRFToken(r))
 
 	traitsSchema, err := s.c.IdentityTraitsSchemas().FindSchemaByID(ss.Identity.TraitsSchemaID)
 	if err != nil {
 		return err
 	}
 
-	if err = ar.Methods[StrategyProfile].Config.SortFields(traitsSchema.URL, "traits"); err != nil {
+	if err = ar.Methods[settings.StrategyProfile].Config.SortFields(traitsSchema.URL, "traits"); err != nil {
 		return err
 	}
 
@@ -283,18 +277,18 @@ func (s *StrategyTraits) hydrateForm(r *http.Request, ar *Request, ss *session.S
 
 // handleSettingsError is a convenience function for handling all types of errors that may occur (e.g. validation error)
 // during a settings request.
-func (s *StrategyTraits) handleSettingsError(w http.ResponseWriter, r *http.Request, puc *UpdateContext, traits json.RawMessage, p *completeSelfServiceBrowserSettingsStrategyProfileFlowPayload, err error) {
-	if errors.Is(err, ErrRequestNeedsReAuthentication) {
+func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, puc *settings.UpdateContext, traits json.RawMessage, p *completeSelfServiceBrowserSettingsStrategyProfileFlowPayload, err error) {
+	if errors.Is(err, settings.ErrRequestNeedsReAuthentication) {
 		s.d.Logger().
 			WithField("err", fmt.Sprintf("%+v", err)).
-			WithField("key", ContinuityKey(s.SettingsStrategyID())).
+			WithField("key", settings.ContinuityKey(s.SettingsStrategyID())).
 			WithField("package", pkgName).
 			WithField("stack_trace", fmt.Sprintf("%s", debug.Stack())).
 			Debug("handleSettingsError: Pause")
 
 		if err := s.d.ContinuityManager().Pause(r.Context(), w, r,
-			ContinuityKey(s.SettingsStrategyID()),
-			ContinuityOptions(p, puc.Session.Identity)...); err != nil {
+			settings.ContinuityKey(s.SettingsStrategyID()),
+			settings.ContinuityOptions(p, puc.Session.Identity)...); err != nil {
 			s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, puc.Request, err, s.SettingsStrategyID())
 			return
 		}
@@ -316,7 +310,7 @@ func (s *StrategyTraits) handleSettingsError(w http.ResponseWriter, r *http.Requ
 
 // newSettingsProfileDecoder returns a decoderx.HTTPDecoderOption with a JSON Schema for type assertion and
 // validation.
-func (s *StrategyTraits) newSettingsProfileDecoder(i *identity.Identity) (decoderx.HTTPDecoderOption, error) {
+func (s *Strategy) newSettingsProfileDecoder(i *identity.Identity) (decoderx.HTTPDecoderOption, error) {
 	const registrationFormPayloadSchema = `
 {
   "$id": "./selfservice/settings/decoder.schema.json",

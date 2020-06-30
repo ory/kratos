@@ -4,12 +4,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ory/kratos/continuity"
-	"github.com/ory/kratos/schema"
-
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
+
+	"github.com/ory/kratos/continuity"
+	"github.com/ory/kratos/schema"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
@@ -24,7 +24,13 @@ import (
 const (
 	PublicPath        = "/self-service/browser/flows/settings"
 	PublicRequestPath = "/self-service/browser/flows/requests/settings"
+
+	ContinuityPrefix = "ory_kratos_settings"
 )
+
+func ContinuityKey(id string) string {
+	return ContinuityPrefix + "_" + id
+}
 
 type (
 	handlerDependencies interface {

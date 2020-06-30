@@ -1,4 +1,4 @@
-package settings_test
+package profile_test
 
 import (
 	"context"
@@ -32,8 +32,13 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/form"
+	"github.com/ory/kratos/selfservice/strategy/profile"
 	"github.com/ory/kratos/x"
 )
+
+func init() {
+	internal.RegisterFakes()
+}
 
 func TestStrategyTraits(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
@@ -75,8 +80,8 @@ func TestStrategyTraits(t *testing.T) {
 		defer publicTS.Close()
 
 		for k, tc := range []*http.Request{
-			httpx.MustNewRequest("POST", publicTS.URL+settings.PublicSettingsProfilePath, strings.NewReader(url.Values{"foo": {"bar"}}.Encode()), "application/x-www-form-urlencoded"),
-			httpx.MustNewRequest("POST", publicTS.URL+settings.PublicSettingsProfilePath, strings.NewReader(`{"foo":"bar"}`), "application/json"),
+			httpx.MustNewRequest("POST", publicTS.URL+profile.PublicSettingsProfilePath, strings.NewReader(url.Values{"foo": {"bar"}}.Encode()), "application/x-www-form-urlencoded"),
+			httpx.MustNewRequest("POST", publicTS.URL+profile.PublicSettingsProfilePath, strings.NewReader(`{"foo":"bar"}`), "application/json"),
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				res, err := http.DefaultClient.Do(tc)
@@ -135,7 +140,7 @@ func TestStrategyTraits(t *testing.T) {
 			require.True(t, found)
 
 			assert.EqualValues(t, &models.Form{
-				Action: pointerx.String(publicTS.URL + settings.PublicSettingsProfilePath + "?request=" + rid),
+				Action: pointerx.String(publicTS.URL + profile.PublicSettingsProfilePath + "?request=" + rid),
 				Method: pointerx.String("POST"),
 				Fields: models.FormFields{
 					&models.FormField{Name: pointerx.String("traits.email"), Type: pointerx.String("text"), Value: "john@doe.com"},
