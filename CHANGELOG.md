@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-06-29)](#unreleased-2020-06-29)
+- [Unreleased (2020-06-30)](#unreleased-2020-06-30)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -83,7 +83,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...b16c2b80edfc78afca0c72fa8da7d73b51b3075a) (2020-06-29)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...c57d270758a97315c874df3fae867b0031300501) (2020-06-30)
 
 
 ### Bug Fixes
@@ -138,6 +138,7 @@
 
     > The rest api is no longer under sdk but under reference.
 * Fix iframe syntax ([#520](https://github.com/ory/kratos/issues/520)) ([0cb36ca](https://github.com/ory/kratos/commit/0cb36ca9d8459dc8027358190e6e8aa8764bffe4))
+* Fix typo ([#535](https://github.com/ory/kratos/issues/535)) ([c57d270](https://github.com/ory/kratos/commit/c57d270758a97315c874df3fae867b0031300501))
 * Fix typo in base docs ([#503](https://github.com/ory/kratos/issues/503)) ([6668048](https://github.com/ory/kratos/commit/666804812d707b1d50ea160877bdb3878ddfe6b0))
 * Fix typo in oauth sign in documentation ([#504](https://github.com/ory/kratos/issues/504)) ([886e24d](https://github.com/ory/kratos/commit/886e24d93a5eb233062b8c7d562c8208f7a4f48f))
 * Fix typos ([#489](https://github.com/ory/kratos/issues/489)) ([57a7bc8](https://github.com/ory/kratos/commit/57a7bc89961612fea0255202d3dd6a535921ef3c))
