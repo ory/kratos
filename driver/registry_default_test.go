@@ -103,11 +103,11 @@ func TestDriverDefault_Strategies(t *testing.T) {
 			expect []string
 		}{
 			{prep: func() {
-				viper.Set(configuration.ViperKeySelfServiceStrategyConfig+".token.enabled", false)
+				viper.Set(configuration.ViperKeySelfServiceStrategyConfig+".recovery_token.enabled", false)
 			}},
 			{prep: func() {
-				viper.Set(configuration.ViperKeySelfServiceStrategyConfig+".token.enabled", true)
-			}, expect: []string{"token"}},
+				viper.Set(configuration.ViperKeySelfServiceStrategyConfig+".recovery_token.enabled", true)
+			}, expect: []string{"recovery_token"}},
 		} {
 			t.Run(fmt.Sprintf("run=%d", k), func(t *testing.T) {
 				_, reg := internal.NewFastRegistryWithMocks(t)
