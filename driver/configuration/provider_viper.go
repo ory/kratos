@@ -27,7 +27,6 @@ import (
 
 type ViperProvider struct {
 	l   *logrusx.Logger
-	ss  [][]byte
 	dev bool
 }
 

@@ -32,7 +32,7 @@ import (
 )
 
 const (
-	PublicRecoveryTokenPath = "/self-service/browser/flows/recovery/token"
+	PublicRecoveryTokenPath = "/self-service/browser/flows/recovery/token" // #nosec G101
 )
 
 var _ recovery.Strategy = new(StrategyRecoveryToken)
