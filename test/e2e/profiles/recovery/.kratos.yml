@@ -7,8 +7,7 @@ selfservice:
     settings:
       privileged_session_max_age: 1m
 
-    recovery:
-      enabled: true
+    recovery_token:
       request_lifespan: 5s
 
     logout:

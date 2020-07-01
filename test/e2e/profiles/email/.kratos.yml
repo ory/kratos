@@ -1,8 +1,4 @@
 selfservice:
-  strategies:
-    password:
-      enabled: true
-
   flows:
     settings:
       privileged_session_max_age: 5000ms

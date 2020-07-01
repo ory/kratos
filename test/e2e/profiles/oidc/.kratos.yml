@@ -29,9 +29,6 @@ selfservice:
               - offline
             mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
 
-    password:
-      enabled: true
-
   flows:
     settings:
       privileged_session_max_age: 5000ms
@@ -44,8 +41,7 @@ selfservice:
       after:
         oidc:
           hooks:
-            -
-              hook: session
+            - hook: session
 
 identity:
   traits:

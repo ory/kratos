@@ -2,6 +2,7 @@ package configuration_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -287,16 +288,32 @@ func TestViperProvider_Secrets(t *testing.T) {
 }
 
 func TestViperProvider_Defaults(t *testing.T) {
-	viper.Reset()
 	l := logrusx.New("", "")
-	p := configuration.NewViperProvider(l, false)
 
-	assert.False(t, p.SelfServiceFlowRecoveryEnabled())
-	assert.False(t, p.SelfServiceFlowVerificationEnabled())
-	assert.True(t, p.SelfServiceStrategy("password").Enabled)
-	assert.True(t, p.SelfServiceStrategy("profile").Enabled)
-	assert.True(t, p.SelfServiceStrategy("recovery_token").Enabled)
-	assert.False(t, p.SelfServiceStrategy("oidc").Enabled)
+	for k, init := range []func() configuration.Provider{
+		func() configuration.Provider {
+			return configuration.NewViperProvider(l, false)
+		},
+		func() configuration.Provider {
+			viperx.InitializeConfig("defaults", "./stub", l)
+			return configuration.NewViperProvider(l, false)
+		},
+		func() configuration.Provider {
+			viperx.InitializeConfig("defaults-passwords", "./stub", l)
+			return configuration.NewViperProvider(l, false)
+		},
+	} {
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			viper.Reset()
+			p := init()
+			assert.False(t, p.SelfServiceFlowRecoveryEnabled())
+			assert.False(t, p.SelfServiceFlowVerificationEnabled())
+			assert.True(t, p.SelfServiceStrategy("password").Enabled)
+			assert.True(t, p.SelfServiceStrategy("profile").Enabled)
+			assert.True(t, p.SelfServiceStrategy("recovery_token").Enabled)
+			assert.False(t, p.SelfServiceStrategy("oidc").Enabled)
+		})
+	}
 }
 
 func TestViperProvider_DSN(t *testing.T) {
