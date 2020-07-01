@@ -18,6 +18,7 @@ type (
 	handlerDependencies interface {
 		ManagementProvider
 		x.WriterProvider
+		x.LoggingProvider
 	}
 	HandlerProvider interface {
 		SessionHandler() *Handler
@@ -73,9 +74,9 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
+		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")
 		h.r.Writer().WriteError(w, r,
-			errors.WithStack(herodot.ErrUnauthorized.WithReasonf("No valid session cookie found.").WithDebugf("%+v", err)),
-		)
+			errors.WithStack(herodot.ErrUnauthorized.WithReasonf("No valid session cookie found.")))
 		return
 	}
 
