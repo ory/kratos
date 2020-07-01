@@ -72,7 +72,7 @@ func (a *Client) CompleteSelfServiceBrowserRecoveryLinkStrategyFlow(params *Comp
 	_, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "completeSelfServiceBrowserRecoveryLinkStrategyFlow",
 		Method:             "POST",
-		PathPattern:        "/self-service/browser/flows/recovery/token",
+		PathPattern:        "/self-service/browser/flows/recovery/link",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},

@@ -32,18 +32,18 @@ import (
 )
 
 const (
-	PublicRecoveryTokenPath = "/self-service/browser/flows/recovery/token" // #nosec G101
+	PublicRecoveryTokenPath = "/self-service/browser/flows/recovery/link" // #nosec G101
 )
 
-var _ recovery.Strategy = new(StrategyRecoveryToken)
+var _ recovery.Strategy = new(Strategy)
 
 type (
-	// swagger:model strategyRecoveryTokenMethodConfig
-	StrategyLinkMethodConfig struct {
+	// swagger:model strategyRecoveryLinkMethodConfig
+	StrategyMethodConfig struct {
 		*form.HTMLForm
 	}
 
-	strategyEmailDependencies interface {
+	strategyDependencies interface {
 		x.CSRFProvider
 		x.CSRFTokenGeneratorProvider
 		x.WriterProvider
@@ -69,27 +69,27 @@ type (
 		IdentityTraitsSchemas() schema.Schemas
 	}
 
-	StrategyRecoveryToken struct {
+	Strategy struct {
 		c configuration.Provider
-		d strategyEmailDependencies
+		d strategyDependencies
 	}
 )
 
-func NewStrategyRecoveryToken(d strategyEmailDependencies, c configuration.Provider) *StrategyRecoveryToken {
-	return &StrategyRecoveryToken{c: c, d: d}
+func NewStrategy(d strategyDependencies, c configuration.Provider) *Strategy {
+	return &Strategy{c: c, d: d}
 }
 
-func (s *StrategyRecoveryToken) RecoveryStrategyID() string {
+func (s *Strategy) RecoveryStrategyID() string {
 	return recovery.StrategyRecoveryTokenName
 }
 
-func (s *StrategyRecoveryToken) RegisterRecoveryRoutes(public *x.RouterPublic) {
+func (s *Strategy) RegisterRecoveryRoutes(public *x.RouterPublic) {
 	redirect := session.RedirectOnAuthenticated(s.c)
 	public.GET(PublicRecoveryTokenPath, s.d.SessionHandler().IsNotAuthenticated(s.handleSubmit, redirect))
 	public.POST(PublicRecoveryTokenPath, s.d.SessionHandler().IsNotAuthenticated(s.handleSubmit, redirect))
 }
 
-func (s *StrategyRecoveryToken) PopulateRecoveryMethod(r *http.Request, req *recovery.Request) error {
+func (s *Strategy) PopulateRecoveryMethod(r *http.Request, req *recovery.Request) error {
 	f := form.NewHTMLForm(urlx.CopyWithQuery(
 		urlx.AppendPaths(s.c.SelfPublicURL(), PublicRecoveryTokenPath),
 		url.Values{"request": {req.ID.String()}},
@@ -100,7 +100,7 @@ func (s *StrategyRecoveryToken) PopulateRecoveryMethod(r *http.Request, req *rec
 
 	req.Methods[s.RecoveryStrategyID()] = &recovery.RequestMethod{
 		Method: s.RecoveryStrategyID(),
-		Config: &recovery.RequestMethodConfig{RequestMethodConfigurator: &StrategyLinkMethodConfig{HTMLForm: f}},
+		Config: &recovery.RequestMethodConfig{RequestMethodConfigurator: &StrategyMethodConfig{HTMLForm: f}},
 	}
 	return nil
 }
@@ -120,7 +120,7 @@ type completeSelfServiceBrowserRecoveryLinkStrategyFlowPayload struct {
 	RequestID string `json:"request_id"`
 }
 
-// swagger:route POST /self-service/browser/flows/recovery/token public completeSelfServiceBrowserRecoveryLinkStrategyFlow
+// swagger:route POST /self-service/browser/flows/recovery/link public completeSelfServiceBrowserRecoveryLinkStrategyFlow
 //
 // Complete the browser-based recovery flow using a recovery link
 //
@@ -137,7 +137,7 @@ type completeSelfServiceBrowserRecoveryLinkStrategyFlowPayload struct {
 //     Responses:
 //       302: emptyResponse
 //       500: genericError
-func (s *StrategyRecoveryToken) handleSubmit(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (s *Strategy) handleSubmit(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := r.ParseForm(); err != nil {
 		s.handleError(w, r, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to parse the request: %s", err)))
 		return
@@ -176,7 +176,7 @@ func (s *StrategyRecoveryToken) handleSubmit(w http.ResponseWriter, r *http.Requ
 	}
 }
 
-func (s *StrategyRecoveryToken) issueSession(w http.ResponseWriter, r *http.Request, req *recovery.Request) {
+func (s *Strategy) issueSession(w http.ResponseWriter, r *http.Request, req *recovery.Request) {
 	req.State = recovery.StatePassedChallenge
 	if err := s.d.RecoveryRequestPersister().UpdateRecoveryRequest(r.Context(), req); err != nil {
 		s.handleError(w, r, req, err)
@@ -205,7 +205,7 @@ func (s *StrategyRecoveryToken) issueSession(w http.ResponseWriter, r *http.Requ
 	http.Redirect(w, r, sr.URL(s.c.SelfServiceFlowSettingsUI()).String(), http.StatusFound)
 }
 
-func (s *StrategyRecoveryToken) verifyToken(w http.ResponseWriter, r *http.Request) {
+func (s *Strategy) verifyToken(w http.ResponseWriter, r *http.Request) {
 	token, err := s.d.RecoveryTokenPersister().UseRecoveryToken(r.Context(), r.Form.Get("token"))
 	if err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
@@ -234,7 +234,7 @@ func (s *StrategyRecoveryToken) verifyToken(w http.ResponseWriter, r *http.Reque
 	s.issueSession(w, r, req)
 }
 
-func (s *StrategyRecoveryToken) retryFlowWithMessage(w http.ResponseWriter, r *http.Request, message *text.Message) {
+func (s *Strategy) retryFlowWithMessage(w http.ResponseWriter, r *http.Request, message *text.Message) {
 	s.d.Logger().WithRequest(r).WithField("message", message).Debug("A recovery flow is being retried because a validation error occurred.")
 
 	req, err := recovery.NewRequest(s.c.SelfServiceFlowRecoveryRequestLifespan(), s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies())
@@ -255,7 +255,7 @@ func (s *StrategyRecoveryToken) retryFlowWithMessage(w http.ResponseWriter, r *h
 	)
 }
 
-func (s *StrategyRecoveryToken) issueAndSendRecoveryToken(w http.ResponseWriter, r *http.Request, req *recovery.Request) {
+func (s *Strategy) issueAndSendRecoveryToken(w http.ResponseWriter, r *http.Request, req *recovery.Request) {
 	email := r.PostForm.Get("email")
 	if len(email) == 0 {
 		s.handleError(w, r, req, schema.NewRequiredError("#/email", "email"))
@@ -304,7 +304,7 @@ func (s *StrategyRecoveryToken) issueAndSendRecoveryToken(w http.ResponseWriter,
 	http.Redirect(w, r, req.URL(s.c.SelfServiceFlowRecoveryUI()).String(), http.StatusFound)
 }
 
-func (s *StrategyRecoveryToken) sendToUnknownAddress(ctx context.Context, address string) error {
+func (s *Strategy) sendToUnknownAddress(ctx context.Context, address string) error {
 	s.d.Logger().
 		WithField("via", identity.RecoveryAddressTypeEmail).
 		WithSensitiveField("email_address", address).
@@ -316,7 +316,7 @@ func (s *StrategyRecoveryToken) sendToUnknownAddress(ctx context.Context, addres
 	})
 }
 
-func (s *StrategyRecoveryToken) sendCodeToKnownAddress(ctx context.Context, req *recovery.Request, address *identity.RecoveryAddress) error {
+func (s *Strategy) sendCodeToKnownAddress(ctx context.Context, req *recovery.Request, address *identity.RecoveryAddress) error {
 	token := randx.MustString(32, randx.AlphaNum)
 	if err := s.d.RecoveryTokenPersister().CreateRecoveryToken(ctx, NewToken(token, address, req)); err != nil {
 		return err
@@ -337,7 +337,7 @@ func (s *StrategyRecoveryToken) sendCodeToKnownAddress(ctx context.Context, req 
 	})
 }
 
-func (s *StrategyRecoveryToken) run(via identity.RecoveryAddressType, emailFunc func() error) error {
+func (s *Strategy) run(via identity.RecoveryAddressType, emailFunc func() error) error {
 	switch via {
 	case identity.RecoveryAddressTypeEmail:
 		return emailFunc()
@@ -346,7 +346,7 @@ func (s *StrategyRecoveryToken) run(via identity.RecoveryAddressType, emailFunc 
 	}
 }
 
-func (s *StrategyRecoveryToken) handleError(w http.ResponseWriter, r *http.Request, req *recovery.Request, err error) {
+func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, req *recovery.Request, err error) {
 	if errors.Is(err, recovery.ErrRequestExpired) {
 		s.retryFlowWithMessage(w, r, text.NewErrorValidationRecoveryRecoveryTokenInvalidOrAlreadyUsed())
 		return

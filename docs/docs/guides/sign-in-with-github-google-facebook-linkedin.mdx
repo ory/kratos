@@ -29,13 +29,13 @@ http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/o
 
 The pattern of this URL is:
 
-
 ```
 http(s)://<domain-of-ory-kratos>:<public-port>/self-service/browser/flows/strategies/oidc/callback/<provider-id>
 ```
 
 The provider ID must point to the provider's ID set in the ORY Kratos
-configuration file (explained in further detail at [OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx)).
+configuration file (explained in further detail at
+[OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx)).
 
 :::note
 
@@ -101,12 +101,15 @@ Login option!
 
 ## Microsoft
 
-This will enable you to log in using any Azure AD directory - Multitenant and personal Microsoft accounts (e.g. Skype, Xbox) depending on the settings made when creating the application in Azure AD.
+This will enable you to log in using any Azure AD directory - Multitenant and
+personal Microsoft accounts (e.g. Skype, Xbox) depending on the settings made
+when creating the application in Azure AD.
 
 To set up "Sign in with Microsoft" you must first register an application
 [Register an application with the Microsoft identity platform](https://docs.microsoft.com/en-us/azure/active-directory/develop/quickstart-register-app).
 
-It might be nessecary to enable the implicit grant flow for access tokens and ID tokens.
+It might be nessecary to enable the implicit grant flow for access tokens and ID
+tokens.
 
 Set the "Authorization callback URL" to:
 
@@ -130,7 +133,7 @@ local claims = std.extVar('claims');
       // enumeration attacks, especially if the value is used for
       // e.g. verification or as a password login identifier.
       //
-      // If connecting only to your organization (one tenant), claims.email is safe to use if you have not actively disabled e-mail   
+      // If connecting only to your organization (one tenant), claims.email is safe to use if you have not actively disabled e-mail
       //verification during signup.
       email: claims.email
     },
@@ -138,7 +141,8 @@ local claims = std.extVar('claims');
 }
 ```
 
-Also see ["Disable email verification during customer sign-up in Azure Active Directory B2C"] for warnings.
+Also see ["Disable email verification during customer sign-up in Azure Active
+Directory B2C"] for warnings.
 
 Enable the Microsoft Azure provider in the ORY Kratos config located at
 `<kratos-directory>/contrib/quickstart/kratos/email-password/.kratos.yml`.
@@ -168,4 +172,5 @@ Azure AD is now an option to log in to kratos.
 ## Google, LinkedIn, Facebook
 
 Connecting with other Social Sign In providers will be very similar to the
-GitHub flow. If you've managed to do it, add to this document by writing it down and making a PR! :)
+GitHub flow. If you've managed to do it, add to this document by writing it down
+and making a PR! :)

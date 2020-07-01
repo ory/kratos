@@ -11,11 +11,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
-
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/stringsx"
 	"github.com/ory/x/tracing"
+	"github.com/pkg/errors"
 
 	"github.com/ory/viper"
 
@@ -236,18 +235,9 @@ func (p *ViperProvider) SelfServiceFlowRegistrationAfterHooks(strategy string) [
 }
 
 func (p *ViperProvider) SelfServiceStrategy(strategy string) *SelfServiceStrategy {
-	configs := viper.GetStringMap(ViperKeySelfServiceStrategyConfig)
-	config, ok := configs[strategy]
-	if !ok || config == `null` || config == "" || config == nil {
-		config = map[string]interface{}{}
-	}
-
-	var b bytes.Buffer
 	var s SelfServiceStrategy
-	if err := json.NewEncoder(&b).Encode(config); err != nil {
-		p.l.WithError(errors.WithStack(err)).WithField("configs", fmt.Sprintf("%s", configs)).WithField("config", fmt.Sprintf("%s", config)).Fatalf("Unable to encode values from configuration for strategy %s", strategy)
-	} else if err := jsonx.NewStrictDecoder(&b).Decode(&s); err != nil {
-		p.l.WithError(errors.WithStack(err)).WithField("configs", fmt.Sprintf("%s", configs)).WithField("config", fmt.Sprintf("%s", config)).Fatalf("Unable to decode values from configuration for strategy %s", strategy)
+	if err := viperx.UnmarshalKey(ViperKeySelfServiceStrategyConfig + "." + strategy, &s); err != nil {
+		p.l.WithError(errors.WithStack(err)).Fatalf("Unable to encode values from configuration for strategy %s", strategy)
 	}
 
 	// FIXME The default value can for some reason not be set from the JSON Schema. This is a workaround
@@ -257,7 +247,7 @@ func (p *ViperProvider) SelfServiceStrategy(strategy string) *SelfServiceStrateg
 			fallthrough
 		case "profile":
 			fallthrough
-		case "recovery_token":
+		case "link":
 			s.Enabled = true
 		}
 	}

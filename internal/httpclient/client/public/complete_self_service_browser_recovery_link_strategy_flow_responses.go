@@ -55,7 +55,7 @@ type CompleteSelfServiceBrowserRecoveryLinkStrategyFlowFound struct {
 }
 
 func (o *CompleteSelfServiceBrowserRecoveryLinkStrategyFlowFound) Error() string {
-	return fmt.Sprintf("[POST /self-service/browser/flows/recovery/token][%d] completeSelfServiceBrowserRecoveryLinkStrategyFlowFound ", 302)
+	return fmt.Sprintf("[POST /self-service/browser/flows/recovery/link][%d] completeSelfServiceBrowserRecoveryLinkStrategyFlowFound ", 302)
 }
 
 func (o *CompleteSelfServiceBrowserRecoveryLinkStrategyFlowFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -77,7 +77,7 @@ type CompleteSelfServiceBrowserRecoveryLinkStrategyFlowInternalServerError struc
 }
 
 func (o *CompleteSelfServiceBrowserRecoveryLinkStrategyFlowInternalServerError) Error() string {
-	return fmt.Sprintf("[POST /self-service/browser/flows/recovery/token][%d] completeSelfServiceBrowserRecoveryLinkStrategyFlowInternalServerError  %+v", 500, o.Payload)
+	return fmt.Sprintf("[POST /self-service/browser/flows/recovery/link][%d] completeSelfServiceBrowserRecoveryLinkStrategyFlowInternalServerError  %+v", 500, o.Payload)
 }
 
 func (o *CompleteSelfServiceBrowserRecoveryLinkStrategyFlowInternalServerError) GetPayload() *models.GenericError {

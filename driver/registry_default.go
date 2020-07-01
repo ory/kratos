@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gobuffalo/pop/v5"
+
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/schema"
@@ -18,7 +20,6 @@ import (
 	"github.com/ory/kratos/x"
 
 	"github.com/cenkalti/backoff"
-	"github.com/gobuffalo/pop/v5"
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
 
@@ -246,7 +247,7 @@ func (m *RegistryDefault) selfServiceStrategies() []interface{} {
 			password2.NewStrategy(m, m.c),
 			oidc.NewStrategy(m, m.c),
 			profile.NewStrategy(m, m.c),
-			recoverytoken.NewStrategyRecoveryToken(m, m.c),
+			recoverytoken.NewStrategy(m, m.c),
 		}
 	}
 

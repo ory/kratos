@@ -386,11 +386,11 @@ func (s *Strategy) populateMethod(r *http.Request, request uuid.UUID) (*RequestM
 func (s *Strategy) Config() (*ConfigurationCollection, error) {
 	var c ConfigurationCollection
 
+	config := s.c.SelfServiceStrategy(string(s.ID())).Config
 	if err := jsonx.
-		NewStrictDecoder(
-			bytes.NewBuffer(s.c.SelfServiceStrategy(string(s.ID())).Config),
-		).
+		NewStrictDecoder(bytes.NewBuffer(config)).
 		Decode(&c); err != nil {
+			s.d.Logger().WithError(err).WithField("config", config)
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode OpenID Connect Provider configuration: %s", err))
 	}
 

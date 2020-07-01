@@ -7,9 +7,11 @@ selfservice:
     settings:
       privileged_session_max_age: 1m
 
-    recovery:
+    verification:
       enabled: true
       request_lifespan: 5s
+      after:
+        default_browser_return_url: http://127.0.0.1:4455/
 
     logout:
       after:
@@ -17,4 +19,4 @@ selfservice:
 
 identity:
   traits:
-    default_schema_url: file://test/e2e/profiles/recovery/identity.traits.schema.json
+    default_schema_url: file://test/e2e/profiles/verification/identity.traits.schema.json

@@ -533,8 +533,8 @@
               "additionalProperties": false,
               "properties": {
                 "enabled": {
-                  "title": "Enables OpenID Connect Strategy",
                   "type": "boolean",
+                  "title": "Enables OpenID Connect Strategy",
                   "default": false
                 },
                 "config": {

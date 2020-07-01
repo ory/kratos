@@ -504,8 +504,8 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://stub/registration.schema.json")
 		viper.Set(configuration.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 
-		viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
-			"enabled": true})
+		// Enabled per default:
+		// 		viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
 		viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC), map[string]interface{}{
 			"enabled": true,
 			"config":  conf})

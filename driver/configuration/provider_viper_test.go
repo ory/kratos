@@ -204,7 +204,7 @@ func TestViperProvider(t *testing.T) {
 				},
 				{
 					strategy: "profile",
-					hooks: []configuration.SelfServiceHook{
+					hooks:    []configuration.SelfServiceHook{
 						// {Name: "verify", Config: json.RawMessage(`{}`)},
 					},
 				},
@@ -290,27 +290,83 @@ func TestViperProvider_Secrets(t *testing.T) {
 func TestViperProvider_Defaults(t *testing.T) {
 	l := logrusx.New("", "")
 
-	for k, init := range []func() configuration.Provider{
-		func() configuration.Provider {
-			return configuration.NewViperProvider(l, false)
+	for k, tc := range []struct {
+		init   func() configuration.Provider
+		expect func(t *testing.T, p configuration.Provider)
+	}{
+		{
+			init: func() configuration.Provider {
+				return configuration.NewViperProvider(l, false)
+			},
 		},
-		func() configuration.Provider {
-			viperx.InitializeConfig("defaults", "./stub", l)
-			return configuration.NewViperProvider(l, false)
+		{
+			init: func() configuration.Provider {
+				viperx.InitializeConfig("defaults", "./stub", l)
+				return configuration.NewViperProvider(l, false)
+			},
 		},
-		func() configuration.Provider {
-			viperx.InitializeConfig("defaults-passwords", "./stub", l)
-			return configuration.NewViperProvider(l, false)
+		{
+			init: func() configuration.Provider {
+				viperx.InitializeConfig("defaults-password", "./stub", l)
+				return configuration.NewViperProvider(l, false)
+			},
+		},
+		{
+			init: func() configuration.Provider {
+				viperx.InitializeConfig("kratos", "../../test/e2e/profiles/recovery", l)
+				return configuration.NewViperProvider(l, false)
+			},
+			expect: func(t *testing.T, p configuration.Provider) {
+				assert.True(t, p.SelfServiceFlowRecoveryEnabled())
+				assert.False(t, p.SelfServiceFlowVerificationEnabled())
+				assert.True(t, p.SelfServiceStrategy("password").Enabled)
+				assert.True(t, p.SelfServiceStrategy("profile").Enabled)
+				assert.True(t, p.SelfServiceStrategy("link").Enabled)
+				assert.False(t, p.SelfServiceStrategy("oidc").Enabled)
+			},
+		},
+		{
+			init: func() configuration.Provider {
+				viperx.InitializeConfig("kratos", "../../test/e2e/profiles/verification", l)
+				return configuration.NewViperProvider(l, false)
+			},
+			expect: func(t *testing.T, p configuration.Provider) {
+				assert.False(t, p.SelfServiceFlowRecoveryEnabled())
+				assert.True(t, p.SelfServiceFlowVerificationEnabled())
+				assert.True(t, p.SelfServiceStrategy("password").Enabled)
+				assert.True(t, p.SelfServiceStrategy("profile").Enabled)
+				assert.True(t, p.SelfServiceStrategy("link").Enabled)
+				assert.False(t, p.SelfServiceStrategy("oidc").Enabled)
+			},
+		},
+		{
+			init: func() configuration.Provider {
+				viperx.InitializeConfig("kratos", "../../test/e2e/profiles/oidc", l)
+				return configuration.NewViperProvider(l, false)
+			},
+			expect: func(t *testing.T, p configuration.Provider) {
+				assert.False(t, p.SelfServiceFlowRecoveryEnabled())
+				assert.False(t, p.SelfServiceFlowVerificationEnabled())
+				assert.True(t, p.SelfServiceStrategy("password").Enabled)
+				assert.True(t, p.SelfServiceStrategy("profile").Enabled)
+				assert.True(t, p.SelfServiceStrategy("link").Enabled)
+				assert.True(t, p.SelfServiceStrategy("oidc").Enabled)
+			},
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			viper.Reset()
-			p := init()
+			p := tc.init()
+
+			if tc.expect != nil {
+				tc.expect(t, p)
+				return
+			}
 			assert.False(t, p.SelfServiceFlowRecoveryEnabled())
 			assert.False(t, p.SelfServiceFlowVerificationEnabled())
 			assert.True(t, p.SelfServiceStrategy("password").Enabled)
 			assert.True(t, p.SelfServiceStrategy("profile").Enabled)
-			assert.True(t, p.SelfServiceStrategy("recovery_token").Enabled)
+			assert.True(t, p.SelfServiceStrategy("link").Enabled)
 			assert.False(t, p.SelfServiceStrategy("oidc").Enabled)
 		})
 	}

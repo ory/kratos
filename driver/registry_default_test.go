@@ -7,6 +7,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/x/logrusx"
+	"github.com/ory/x/viperx"
+
 	"github.com/ory/viper"
 
 	"github.com/ory/kratos/driver/configuration"
@@ -103,11 +106,11 @@ func TestDriverDefault_Strategies(t *testing.T) {
 			expect []string
 		}{
 			{prep: func() {
-				viper.Set(configuration.ViperKeySelfServiceStrategyConfig+".recovery_token.enabled", false)
+				viper.Set(configuration.ViperKeySelfServiceStrategyConfig+".link.enabled", false)
 			}},
 			{prep: func() {
-				viper.Set(configuration.ViperKeySelfServiceStrategyConfig+".recovery_token.enabled", true)
-			}, expect: []string{"recovery_token"}},
+				viper.Set(configuration.ViperKeySelfServiceStrategyConfig+".link.enabled", true)
+			}, expect: []string{"link"}},
 		} {
 			t.Run(fmt.Sprintf("run=%d", k), func(t *testing.T) {
 				_, reg := internal.NewFastRegistryWithMocks(t)
@@ -123,6 +126,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 	})
 
 	t.Run("case=settings", func(t *testing.T) {
+		l := logrusx.New("", "")
 		for k, tc := range []struct {
 			prep   func()
 			expect []string
@@ -134,7 +138,11 @@ func TestDriverDefault_Strategies(t *testing.T) {
 			}},
 			{prep: func() {
 				viper.Set(configuration.ViperKeySelfServiceStrategyConfig+".profile.enabled", true)
-				viper.Set(configuration.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
+				viper.Set(configuration.ViperKeySelfServiceStrategyConfig+".password.enabled", false)
+			}, expect: []string{"profile"}},
+			{prep: func() {}, expect: []string{"password", "profile"}},
+			{prep: func() {
+				viperx.InitializeConfig("kratos", "../test/e2e/profiles/verification", l)
 			}, expect: []string{"password", "profile"}},
 		} {
 			t.Run(fmt.Sprintf("run=%d", k), func(t *testing.T) {

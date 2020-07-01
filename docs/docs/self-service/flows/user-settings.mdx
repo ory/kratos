@@ -93,7 +93,8 @@ Each Settings Strategy ([Profile](user-settings/user-profile-management.mdx),
 Passwordless, ...) works a bit different but they all boil down to the same
 abstract sequence:
 
-<Mermaid chart={`
+<Mermaid
+  chart={`
 sequenceDiagram
   participant B as Browser
   participant K as ORY Kratos
@@ -115,7 +116,8 @@ sequenceDiagram
     B-->>A: Fills out forms again, corrects errors
     B->>K: POSTs data again - and so on...
   end
-`}></Mermaid>
+`}
+></Mermaid>
 
 ### Code
 
@@ -135,15 +137,15 @@ You will notice that this endpoint is very similar to the one documented for
 // Uses the ORY Kratos NodeJS SDK - for more SDKs check:
 //
 //  https://www.ory.sh/kratos/docs/sdk/index
-const { CommonApi } = require('@oryd/kratos-client');
+const { CommonApi } = require('@oryd/kratos-client')
 
 // The browser config key is used to redirect the user. It reflects where ORY Kratos' Public API
 // is accessible from. Here, we're assuming traffic going to `http://example.org/.ory/kratos/public/`
 // will be forwarded to ORY Kratos' Public API.
-const kratosBrowserUrl = 'http://example.org/.ory/kratos/public/';
+const kratosBrowserUrl = 'http://example.org/.ory/kratos/public/'
 
 // Initializes the SDK with ORY Kratos' Admin API.
-const commonApi = new CommonApi('https://ory-kratos-admin.example-org.vpc/');
+const commonApi = new CommonApi('https://ory-kratos-admin.example-org.vpc/')
 
 // This route would be used like:
 //
@@ -152,31 +154,31 @@ const commonApi = new CommonApi('https://ory-kratos-admin.example-org.vpc/');
 export const settingsHandler = (req, res, next) => {
   // The request ID is used to identify the login and registraion request and
   // return data like the csrf_token and so on.
-  const request = req.query.request;
+  const request = req.query.request
   if (!request) {
-    console.log('No request found in URL, initializing flow.');
-    res.redirect(`${kratosBrowserUrl}/self-service/browser/flows/settings`);
-    return;
+    console.log('No request found in URL, initializing flow.')
+    res.redirect(`${kratosBrowserUrl}/self-service/browser/flows/settings`)
+    return
   }
 
   commonApi
     .getSelfServiceBrowserSettingsRequest(request)
     .then(({ body, response }) => {
       if (response.statusCode !== 200) {
-        res.redirect(`${kratosBrowserUrl}/self-service/browser/flows/settings`);
-        return;
+        res.redirect(`${kratosBrowserUrl}/self-service/browser/flows/settings`)
+        return
       }
 
       // "body" contains all the request data for this Registration request.
       // You can process that data here, if you want.
 
       // Lastly, you probably want to render the data using a view (e.g. Jade Template):
-      res.render('settings', body);
-    });
+      res.render('settings', body)
+    })
   // Handle errors using ExpressJS' next functionality:
   //
   //    .catch(next)
-};
+}
 ```
 
 #### Views
@@ -265,7 +267,8 @@ Nginx, Kong, Envoy, ORY Oathkeeper, or others.
 The User Settings Flow is composed of several high-level steps summarized in
 this state diagram:
 
-<Mermaid chart={`
+<Mermaid
+  chart={`
 stateDiagram
   s1: User browses app
   s3: User Interface Application renders "Settings Request"
@@ -281,7 +284,8 @@ stateDiagram
   s4 --> s6
   s6 --> [*]
   Error --> [*]
-`}></Mermaid>
+`}
+></Mermaid>
 
 1. The flow is initiated by directing the user's browser to
    `http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/settings`.
@@ -305,8 +309,8 @@ stateDiagram
      methods: {
        profile: { method: 'profile', config: { action: '...', fields: [] } },
        password: { method: 'password', config: { action: '...', fields: [] } },
-       oidc: { method: 'oidc', config: { action: '...', fields: [] } },
-     },
+       oidc: { method: 'oidc', config: { action: '...', fields: [] } }
+     }
    }
    ```
 1. Your Server-Side applications renders the data however you see fit. The User
@@ -326,7 +330,7 @@ stateDiagram
            method: 'oidc',
            config: {
              /* ... */
-           },
+           }
          },
          password: {
            method: 'password',
@@ -336,12 +340,12 @@ stateDiagram
                {
                  id: 4000006,
                  text: 'The provided credentials are invalid. Check for spelling mistakes in your password or username, email address, or phone number.',
-                 type: 'error',
-               },
-             ],
-           },
-         },
-       },
+                 type: 'error'
+               }
+             ]
+           }
+         }
+       }
      }
      ```
      and the user's Browser is redirected back to the Login UI:
@@ -358,7 +362,8 @@ stateDiagram
    session and/or identity. For more information on this topic check
    [Self-Service Flow Completion](../../concepts/selfservice-flow-completion.md).
 
-<Mermaid chart={`
+<Mermaid
+  chart={`
 sequenceDiagram
   participant B as Browser
   participant A as Your Server-Side Application
@@ -387,7 +392,8 @@ sequenceDiagram
     Note over KP,B: User retries settings flow
     KP-->>B: HTTP 302 Found /settings?request=abcde
   end
-`}></Mermaid>
+`}
+></Mermaid>
 
 ### Client-Side Browser Applications
 
@@ -419,17 +425,22 @@ user's browser using e.g. `window.open` `location.href` or plain and simple old
 
 The Settings Request contains a state with two possible values:
 
-- `show_form`: No user data has been collected, or it is invalid, and thus the form should be shown.
-- `successful`: Indicates that the settings request has been updated successfully with the provided data.
-               	The state will stay `successful` when repeatedly checking. If the form is still displayed and the user adds more data, the state will revert back to `show_form` on validation errors.
+- `show_form`: No user data has been collected, or it is invalid, and thus the
+  form should be shown.
+- `successful`: Indicates that the settings request has been updated
+  successfully with the provided data. The state will stay `successful` when
+  repeatedly checking. If the form is still displayed and the user adds more
+  data, the state will revert back to `show_form` on validation errors.
 
-<Mermaid chart={`stateDiagram-v2
+<Mermaid
+  chart={`stateDiagram-v2
 [*] --> show_form
 show_form --> show_form: Validation fails
 show_form --> success: Identity was updated
 success --> show_form: Validation fails
 success --> [*]
-`}></Mermaid>
+`}
+></Mermaid>
 
 ## Self-Service User Settings for API Clients
 

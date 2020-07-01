@@ -4,7 +4,8 @@ selfservice:
       enabled: true
       config:
         providers:
-          - id: hydra
+          -
+            id: hydra
             provider: generic
             client_id: kratos-client
             client_secret: kratos-secret
@@ -12,7 +13,8 @@ selfservice:
             scope:
               - offline
             mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
-          - id: google
+          -
+            id: google
             provider: generic
             client_id: google-client
             client_secret: kratos-secret
@@ -20,7 +22,8 @@ selfservice:
             scope:
               - offline
             mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
-          - id: github
+          -
+            id: github
             provider: generic
             client_id: github-client
             client_secret: kratos-secret
@@ -41,7 +44,8 @@ selfservice:
       after:
         oidc:
           hooks:
-            - hook: session
+            -
+              hook: session
 
 identity:
   traits:
