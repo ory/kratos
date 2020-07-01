@@ -83,7 +83,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...183b4d075a9ff50c1f9f53d108a48789e49a5138) (2020-07-01)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...8e7f9f5ec3ac6f5675584974e8d189247b539634) (2020-07-01)
 
 
 ### Bug Fixes
@@ -109,6 +109,7 @@
 
 ### Code Refactoring
 
+* Improve and simplify configuration ([#536](https://github.com/ory/kratos/issues/536)) ([8e7f9f5](https://github.com/ory/kratos/commit/8e7f9f5ec3ac6f5675584974e8d189247b539634)), closes [#432](https://github.com/ory/kratos/issues/432)
 * Rename prompt=login to refresh=true ([#478](https://github.com/ory/kratos/issues/478)) ([c04346e](https://github.com/ory/kratos/commit/c04346e0f01aa7ce5627c0b7135032b225e7faf9)), closes [#477](https://github.com/ory/kratos/issues/477)
 * Replace settings update_successful with state ([#488](https://github.com/ory/kratos/issues/488)) ([ca3b3f4](https://github.com/ory/kratos/commit/ca3b3f4dbdcd75ceb13c9a1b2c8dc991aba7c7e4)), closes [#449](https://github.com/ory/kratos/issues/449)
 * Text errors to text messages ([#476](https://github.com/ory/kratos/issues/476)) ([8106951](https://github.com/ory/kratos/commit/81069514e5ef1d851f76d44bb45d6a896d4985a6)), closes [#428](https://github.com/ory/kratos/issues/428):
@@ -192,6 +193,256 @@
 
 ### BREAKING CHANGES
 
+* To address these refactorings, the configuration had to be changed and with breaking changes
+as keys have moved or have been removed.
+
+Hook configuration has also changed. It is no longer required to include hooks such as `verification` to get
+verification working. Instead, verification is enabled globally (`selfservice.flows.verification.enabled`).
+Also, the `redirect` hook has been removed as it lead to confusion because there are already default redirect
+URLs configurable. You will find more information in the details below.
+
+**Session Management**
+
+```diff
+-ttl:
+-  session: 1h
+-security:
+-  session:
+-    cookie:
+-      same_site: Lax
++session:
++  lifespan: 1h
++  cookie_same_site: Lax
+```
+
+**Secrets**
+
+```diff
+-secrets:
+-  session:
+-    - secret-to-encrypt-session-cookies
+-    - old-session-cookie-secret-that-has-been-rotated
++secrets:
++  default:
++    # This secret is used as default and will also be used for encrypting e.g. cookies when a dedicated cookie secret (as shown below) is not defined.
++    - default-secret-to-encrypt-stuff
++  cookie:
++    - secret-to-encrypt-session-cookies
++    - old-session-cookie-secret-that-has-been-rotated
+```
+
+**URLs**
+
+The Base URL configuration has moved to `serve.public` and `serve.admin`. They are also no longer required and fall
+back to defaults based on the machine's hostname, port configuration, and other settings:
+
+```diff
+-urls:
+-  self:
+-    public: https://kratos.my-website.com/
+-    admin: https://admin.kratos.cluster.localnet/
++serve:
++  public:
++    base_url: https://kratos.my-website.com/
++  admin:
++    base_url: https://admin.kratos.cluster.localnet/
+```
+
+The UI URLs have moved from `urls` to their respective self-service flows:
+
+```diff
+-urls:
+-  login_ui: http://127.0.0.1:4455/auth/login
+-  registration_ui: http://127.0.0.1:4455/auth/registration
+-  settings_ui: http://127.0.0.1:4455/settings
+-  verify_ui: http://127.0.0.1:4455/verify
+-  error_ui: http://127.0.0.1:4455/error
++selfservice:
++  flows:
++    login:
++      ui_url: http://127.0.0.1:4455/auth/login
++    registration:
++      ui_url: http://127.0.0.1:4455/auth/registration
++    settings:
++      ui_url: http://127.0.0.1:4455/settings
++    # please note that `verify` has changed to `verification`!
++    verification:
++      ui_url: http://127.0.0.1:4455/verify
++    error:
++      ui_url: http://127.0.0.1:4455/error
+```
+
+The default redirect URL as well as whitelisted redirect URLs have also changed their location:
+
+```diff
+-urls:
+-  default_return_to: https://self-service/dashboard
+-  whitelisted_return_to_urls:
+-    - https://self-service/some-other-url
+-    - https://example.org/another-url
++selfservice:
++  default_browser_return_url: https://self-service/dashboard
+#  Please note that the `to` has been removed (`whitelisted_return_to_urls` -> `whitelisted_return_urls`)
++  whitelisted_return_urls:
++    - https://self-service/some-other-url
++    - https://example.org/another-url
+```
+
+**Self-Service Login**
+
+`selfservice.login` has moved to `selfservice.flow.login`:
+
+```diff
+ selfservice:
+-  login:
++  flows:
++    login:
+```
+
+On top of this change, a few keys under `login` have changed as well:
+
+```diff
+ selfservice
+   flows:
+     login:
++      ui_url: http://127.0.0.1:4455/auth/login
+       request_lifespan: 99m
+-      before:
+-        hooks:
+-          - hook: redirect
+-            config:
+-              default_redirect_url: http://test.kratos.ory.sh:4000/
+-              allow_user_defined_redirect: false
++      # The before hooks have been removed because there were no good use cases for them. If
++      # this is a problem for you feel free to open an issue!
+
+     after:
+-      default_return_to: https://self-service/login/return_to
++      default_browser_return_url: https://self-service/login/return_to
+       password:
+-         default_return_to: https://self-service/login/password/return_to
++         default_browser_return_url: https://self-service/login/password/return_to
+          hooks:
+            - hook: revoke_active_sessions
+       oidc:
+-         default_return_to: https://self-service/login/podc/return_to
++         default_browser_return_url: https://self-service/login/podc/return_to
+          hooks:
+            - hook: revoke_active_sessions
+```
+
+**Self-Service Registration**
+
+`selfservice.registration` has moved from to `selfservice.flow.registration`:
+
+```diff
+ selfservice:
+-  registration:
++  flows:
++    registration:
+```
+
+On top of this change, a few keys under `registration` have changed as well:
+
+```diff
+ selfservice
+   flows:
+     registration:
++      ui_url: http://127.0.0.1:4455/auth/registration
+       request_lifespan: 99m
+-      before:
+-        hooks:
+-          - hook: redirect
+-            config:
+-              default_redirect_url: http://test.kratos.ory.sh:4000/
+-              allow_user_defined_redirect: false
++      # The before hooks have been removed because there were no good use cases for them. If
++      # this is a problem for you feel free to open an issue!
+
+     after:
+-      default_return_to: https://self-service/registration/return_to
++      default_browser_return_url: https://self-service/registration/return_to
+       password:
+-        default_return_to: https://self-service/registration/password/return_to
++        default_browser_return_url: https://self-service/registration/password/return_to
+         hooks:
+           - hook: revoke_active_sessions
++          # The verify hook is now executed automatically when verification is turned on.
+-          - hook: verify
++          # The redirect hook was confusing as it aborts the registration flow and does not solve redirection on
++          # success. It has thus been removed.
+-          - hook: redirect
+       oidc:
+-        default_return_to: https://self-service/registration/podc/return_to
++        default_browser_return_url: https://self-service/registration/podc/return_to
+         hooks:
+           - hook: revoke_active_sessions
++          # The verify hook is now executed automatically when verification is turned on.
+-          - hook: verify
++          # The redirect hook was confusing as it aborts the registration flow and does not solve redirection on
++          # success. It has thus been removed.
+-          - hook: redirect
+```
+
+**Self-Service Settings**
+
+`selfservice.settings` has moved from to `selfservice.flow.settings`:
+
+```diff
+ selfservice:
+-  settings:
++  flows:
++    settings:
+```
+
+On top of this change, a few keys under `settings` have changed as well:
+
+```diff
+ selfservice
+   flows:
+     settings:
++      ui_url: http://127.0.0.1:4455/settings
+       request_lifespan: 99m
+       privileged_session_max_age: 99m
+-      default_return_to: https://self-service/settings/return_to
+       after:
++        default_browser_return_url: https://self-service/settings/return_to
++        # The profile/password after hooks have been removed as verification is now executed automatically
++        # when turned on.
+-        password:
+-          hooks:
+-            - hook: verify
+-        profile:
+-          hooks:
+-            - hook: verify
+```
+
+**Self-Service Verification**
+
+`selfservice.verify` has moved from to `selfservice.flow.verification`:
+
+```diff
+ selfservice:
+-  verify:
++  flows:
++    verification:
+```
+
+Instead of configuring verification with hooks and other components, it can now be enabled
+in a central place. If enabled, a SMTP server must be configured in the `courier` section.
+You are still required to mark a field as verifiable in your Identity JSON Schema.
+
+```diff
+ selfservice:
+   flows:
+     verification:
++      enabled: true # defaults to true
++      ui_url: http://127.0.0.1:4455/recovery
+       request_lifespan: 1m
+-      default_return_to: https://self-service/verification/return_to
+       after:
++        default_browser_return_url: https://self-service/verification/return_to
+```
 * Replaces the `update_successful` field of the settings request
 with a field called `state` which can be either `show_form` or `success`.
 * Flows, request methods, form fields have had a key errors to show e.g. validation errors such as ("not an email address", "incorrect username/password", and so on. The `errors` key is now called `messages`. Each message now has a `type` which can be `error` or `info`, an `id` which can be used to translate messages, a `text` (which was previously errors[*].message). This affects all login, request, settings, and recovery flows and methods.
