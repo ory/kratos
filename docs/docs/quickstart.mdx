@@ -14,7 +14,13 @@ Please be aware that this guide is not a replacement for studying the docs. You
 must understand core concepts and APIs to use ORY Kratos productively. This is
 merely a guide to get you set up with some examples.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/5t1Zr_zJc7E" frameborder="0" allowfullscreen></iframe>
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/5t1Zr_zJc7E"
+  frameborder="0"
+  allowfullscreen
+></iframe>
 
 ## Use Case: Application Login and Registration
 
@@ -34,7 +40,8 @@ you name it! We picked NodeJS + TypeScript because we believe it is the easiest
 to understand, and because JavaScript and NodeJS are universally understood and
 easy to install.
 
-We know that SecureApp will need to have some type of dashboard and that it needs users. Therefore, we need:
+We know that SecureApp will need to have some type of dashboard and that it
+needs users. Therefore, we need:
 
 - Login
 - Logout
@@ -53,8 +60,8 @@ and of course:
 ## Setup
 
 As you might already know, ORY Kratos is API-only; it does not have a UI or HTML
-templating engine. We will implement all the user-facing UIs like "dashboard", "login",
-and "registration" in our NodeJS SecureApp!
+templating engine. We will implement all the user-facing UIs like "dashboard",
+"login", and "registration" in our NodeJS SecureApp!
 
 To ensure that no one can access the dashboard without prior authentication
 (login), we can use a small piece of code (here ExpressJS) to do that:
@@ -62,25 +69,21 @@ To ensure that no one can access the dashboard without prior authentication
 ```js
 // Import the ORY Kratos SDK. SDKs are available for all popular programming
 // languages! We will add examples for other programming languages here soon.
-import {
-  AdminApi,
-  PublicApi,
-} from '@oryd/kratos-client'
+import { AdminApi, PublicApi } from '@oryd/kratos-client'
 
 const publicEndpoint = new PublicApi('https://public.ory-kratos')
 const adminEndpoint = new AdminApi('https://admin.ory-kratos')
 
 const needsLogin = (req, res, next) => {
-  new publicEndpoint
-    .whoami(req)
+  new publicEndpoint.whoami(req)
     .then(({ body }) => {
-      req.user = { session: body };
-      next();
+      req.user = { session: body }
+      next()
     })
     .catch(() => {
-      res.redirect('/login');
-    });
-};
+      res.redirect('/login')
+    })
+}
 
 // You can use `needsLogin` as a middleware for Express or any other web framework:
 //   import express from 'express'
@@ -98,8 +101,9 @@ and more so you don't have to.
 :::
 
 Because our SecureApp and ORY Kratos need to share cookies, in order for
-anti-CSRF tokens and login sessions to work, we will set up a path which forwards
-requests to ORY Kratos' Public API so that both SecureApp and ORY Kratos have the same hostname.
+anti-CSRF tokens and login sessions to work, we will set up a path which
+forwards requests to ORY Kratos' Public API so that both SecureApp and ORY
+Kratos have the same hostname.
 
 If an HTTP request is made to
 
@@ -116,17 +120,17 @@ https://public.ory-kratos/self-service/browser/flows/login
 and pipe the response back to the initial HTTP Request:
 
 ```js
-import express from 'express';
-import request from 'request';
-const app = express();
+import express from 'express'
+import request from 'request'
+const app = express()
 
-const pathPrefix = '/.ory/kratos/public';
+const pathPrefix = '/.ory/kratos/public'
 app.use(pathPrefix + '/', (req, res) => {
-  const url = 'https://public.ory-kratos' + req.url.replace(pathPrefix, '');
+  const url = 'https://public.ory-kratos' + req.url.replace(pathPrefix, '')
 
   // Uses the `request` library to forward the request to ORY Kratos
-  req.pipe(request(url, { followRedirect: false })).pipe(res);
-});
+  req.pipe(request(url, { followRedirect: false })).pipe(res)
+})
 
 // ...
 // app.get("/dashboard", needsLogin, dashboard)
@@ -143,8 +147,10 @@ SMTP server the demo uses to show how email verification works.
 ### Clone ORY Kratos and Run it in Docker
 
 To get this example working, you will need Git,
-[Docker](https://docs.docker.com/get-docker/), and [Docker Compose](https://docs.docker.com/compose/install/) installed on
-your system. No other dependencies are required. Before you start, make sure that Docker has enough disk space.
+[Docker](https://docs.docker.com/get-docker/), and
+[Docker Compose](https://docs.docker.com/compose/install/) installed on your
+system. No other dependencies are required. Before you start, make sure that
+Docker has enough disk space.
 
 :::tip
 
@@ -209,27 +215,35 @@ Future guides will explain how to set up a production system.
 This demo makes use of several services:
 
 1. [ORY Kratos](https://github.com/ory/kratos)
+
 - Public ("Browser") API (port 4433)
 - Admin API (port 4434) - This is only made public so we can test via the CLI.
+
 2. [SecureApp](http://github.com/ory/kratos-selfservice-ui-node)
-- Public (port 4455) - an example application written in NodeJS
-  that implements the login, registration, logout, dashboard, and other UIs.
+
+- Public (port 4455) - an example application written in NodeJS that implements
+  the login, registration, logout, dashboard, and other UIs.
+
 3. [MailSlurper](https://github.com/mailslurper)
-- Public (port 4436) - a development SMTP server which ORY Kratos will use to send emails.
+
+- Public (port 4436) - a development SMTP server which ORY Kratos will use to
+  send emails.
 
 :::note
 
-ORY Kratos' Public ("Browser") and Admin APIs are exactly the same, except the Public API will make use of extra
-browser-related security features. All requests from a web browser should use ORY Kratos' Public API, while everything
+ORY Kratos' Public ("Browser") and Admin APIs are exactly the same, except the
+Public API will make use of extra browser-related security features. All
+requests from a web browser should use ORY Kratos' Public API, while everything
 else should use the Admin API.
 
 :::
 
-To better understand the application architecture, let's take a look at the network
-configuration. This assumes that you have at least some understanding of how
-Docker networks work:
+To better understand the application architecture, let's take a look at the
+network configuration. This assumes that you have at least some understanding of
+how Docker networks work:
 
-<Mermaid chart={`
+<Mermaid
+  chart={`
 graph TD
 subgraph hn[Host Network]
     B[Browser]
@@ -248,9 +262,11 @@ subgraph dn["Internal Docker Network (intranet)"]
     SA["SecureApp (ORY Kratos SelfService UI Node Example)"]
     SMTP["SMTP Server (MailSlurper)"]
 end
-`}/>
+`}
+/>
 
-In order to avoid common cross-domain issues with cookies, we're proxying requests to ORY Kratos' Public API so that all requests come from the same
+In order to avoid common cross-domain issues with cookies, we're proxying
+requests to ORY Kratos' Public API so that all requests come from the same
 hostname.
 
 ## Perform Registration, Login, and Logout
@@ -259,7 +275,8 @@ Enough theory, it's time to get this thing going! Let's start by trying to open
 the dashboard - **go to
 [127.0.0.1:4455/dashboard](http://127.0.0.1:4455/dashboard)**.
 
-You should notice that you're ending up at the login endpoint instead of the dashboard:
+You should notice that you're ending up at the login endpoint instead of the
+dashboard:
 
 <p>
   <img
@@ -280,26 +297,40 @@ Looking at the network stack, you can see two redirects happening:
 Here's a play-by-play of what happened:
 
 1. SecureApp used the ORY Kratos JavaScript language client to
-[guard the `/dashboard`](https://github.com/ory/kratos-selfservice-ui-node/blob/v0.3.0-alpha.1/src/index.ts#L111) route.
-The ORY Kratos client checked the cookies from the request and saw you were not logged in.
-2. The route guard redirected you from `/dashboard` to `/auth/login`. ORY Kratos' browser API requires a `request-id` in order
-to log you in. It looked for this ID in the URL as a query parameter but [couldn't find it](https://github.com/ory/kratos-selfservice-ui-node/blob/2f097b519644d2663e277398213aaa1103b74cf9/src/routes/auth.ts#L26), so it decided to generate one for you.
-3. `/auth/login` redirected you to `/.ory/kratos/public/self-service/browser/flows/login`, which is one of ORY Kratos'
-APIs used for logging in browser-based applications. This route is just forwarded from SecureApp to ORY Kratos.
-4. ORY Kratos performed some security checks, prepared form data, created a `csrf_token`, and redirected the browser to `/auth/login?request=<request-id>`.
-5. SecureApp handled the `/auth/login` route, found the `request-id` in the URL query parameter, and used it to make
-an HTTP request to `http://kratos:4434/self-service/browser/flows/requests/login?request=<request-id>`. Notice the URI is `kratos:4434` because SecureApp
-is making a server-side HTTP request via Docker's private network to ORY Kratos' Admin API.
-6. ORY Kratos responded with data which SecureApp used to render the HTML login form.
+   [guard the `/dashboard`](https://github.com/ory/kratos-selfservice-ui-node/blob/v0.3.0-alpha.1/src/index.ts#L111)
+   route. The ORY Kratos client checked the cookies from the request and saw you
+   were not logged in.
+2. The route guard redirected you from `/dashboard` to `/auth/login`. ORY
+   Kratos' browser API requires a `request-id` in order to log you in. It looked
+   for this ID in the URL as a query parameter but
+   [couldn't find it](https://github.com/ory/kratos-selfservice-ui-node/blob/2f097b519644d2663e277398213aaa1103b74cf9/src/routes/auth.ts#L26),
+   so it decided to generate one for you.
+3. `/auth/login` redirected you to
+   `/.ory/kratos/public/self-service/browser/flows/login`, which is one of ORY
+   Kratos' APIs used for logging in browser-based applications. This route is
+   just forwarded from SecureApp to ORY Kratos.
+4. ORY Kratos performed some security checks, prepared form data, created a
+   `csrf_token`, and redirected the browser to
+   `/auth/login?request=<request-id>`.
+5. SecureApp handled the `/auth/login` route, found the `request-id` in the URL
+   query parameter, and used it to make an HTTP request to
+   `http://kratos:4434/self-service/browser/flows/requests/login?request=<request-id>`.
+   Notice the URI is `kratos:4434` because SecureApp is making a server-side
+   HTTP request via Docker's private network to ORY Kratos' Admin API.
+6. ORY Kratos responded with data which SecureApp used to render the HTML login
+   form.
 
 :::note
 
-Your rendered login form should be a standard HTML `<form>`. AJAX requests will not work!
+Your rendered login form should be a standard HTML `<form>`. AJAX requests will
+not work!
 
 :::
 
-Because we exposed ORY Kratos' Admin API on port `4434` of our host, we can use `curl` to see what ORY Kratos responds with.
-Try visiting `http://127.0.0.1:4455/auth/login`, copying the generated `request-id`, and making the request yourself:
+Because we exposed ORY Kratos' Admin API on port `4434` of our host, we can use
+`curl` to see what ORY Kratos responds with. Try visiting
+`http://127.0.0.1:4455/auth/login`, copying the generated `request-id`, and
+making the request yourself:
 
 ```shell script
 $ curl "http://127.0.0.1:4434/self-service/browser/flows/requests/login?request=<request-id>" | jq
@@ -355,9 +386,9 @@ $ curl "http://127.0.0.1:4434/self-service/browser/flows/requests/login?request=
 }
 ```
 
-This flow also works with Single Page Apps (SPA) and frameworks like Angular or ReactJS.
-For more details about the specific flows (login, registration, logout, etc.), head over to the
-[concept](concepts/index.md) chapter.
+This flow also works with Single Page Apps (SPA) and frameworks like Angular or
+ReactJS. For more details about the specific flows (login, registration, logout,
+etc.), head over to the [concept](concepts/index.md) chapter.
 
 Let's move on to the next flow - registration! Click on "Register new account",
 which initiates a flow similar to the one we just used:
@@ -458,13 +489,14 @@ redirected to the dashboard:
   />
 </p>
 
-By clicking the "logout" icon in the top right, you will be redirected to the login screen again
-where you will be able to use your credentials to log back in again. Exciting!
+By clicking the "logout" icon in the top right, you will be redirected to the
+login screen again where you will be able to use your credentials to log back in
+again. Exciting!
 
 ### Understanding How Login and Registration Works
 
-Head over to the [Self-Service Flows Chapter](self-service/flows/index.md) for an
-in-depth explanation of how each individual flow works.
+Head over to the [Self-Service Flows Chapter](self-service/flows/index.md) for
+an in-depth explanation of how each individual flow works.
 
 ### Email Verification
 
@@ -485,8 +517,8 @@ You should see something like this:
 If not, hard refresh the tab or click on the home icon in the menu bar.
 
 Next, click the verification link. You will end up at the dashboard, with a
-verified email address (check the `verified` and `verified_at` field in the
-JSON response):
+verified email address (check the `verified` and `verified_at` field in the JSON
+response):
 
 <p>
   <img
@@ -502,16 +534,23 @@ To re-request the verification email, fill out the form at
 
 You can find all configuration files used for this quickstart guide in
 [`./contrib/quickstart/kratos`](https://github.com/ory/kratos/tree/v0.3.0-alpha.1/contrib/quickstart/kratos/email-password)
-, [`./quickstart.yml`](https://github.com/ory/kratos/blob/v0.3.0-alpha.1/quickstart.yml),
-and [`./quickstart-standalone.yml`](https://github.com/ory/kratos/blob/v0.3.0-alpha.1/quickstart-standalone.yml).
-To understand what each of those configuration files does, consult the other chapters of
-this documentation.
+,
+[`./quickstart.yml`](https://github.com/ory/kratos/blob/v0.3.0-alpha.1/quickstart.yml),
+and
+[`./quickstart-standalone.yml`](https://github.com/ory/kratos/blob/v0.3.0-alpha.1/quickstart-standalone.yml).
+To understand what each of those configuration files does, consult the other
+chapters of this documentation.
 
 :::note
 
 To get a minimal version of ORY Kratos running, you need to set configuration
-values for [`identity.traits.default_schema_url`](https://github.com/ory/kratos/blob/v0.3.0-alpha.1/contrib/quickstart/kratos/email-password/.kratos.yml#L67) and [`DSN`](https://github.com/ory/kratos/blob/v0.3.0-alpha.1/quickstart.yml#L42). You should also configure
-[`urls.*_ui`](https://github.com/ory/kratos/blob/v0.3.0-alpha.1/contrib/quickstart/kratos/email-password/.kratos.yml#L40) or else Kratos will use fallback URLs.
+values for
+[`identity.traits.default_schema_url`](https://github.com/ory/kratos/blob/v0.3.0-alpha.1/contrib/quickstart/kratos/email-password/.kratos.yml#L67)
+and
+[`DSN`](https://github.com/ory/kratos/blob/v0.3.0-alpha.1/quickstart.yml#L42).
+You should also configure
+[`urls.*_ui`](https://github.com/ory/kratos/blob/v0.3.0-alpha.1/contrib/quickstart/kratos/email-password/.kratos.yml#L40)
+or else Kratos will use fallback URLs.
 
 :::
 

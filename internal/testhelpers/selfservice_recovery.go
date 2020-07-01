@@ -33,8 +33,8 @@ func NewRecoveryUITestServer(t *testing.T) *httptest.Server {
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)
 
-	viper.Set(configuration.ViperKeyURLsSettings, ts.URL+"/settings")
-	viper.Set(configuration.ViperKeyURLsRecovery, ts.URL+"/recovery")
+	viper.Set(configuration.ViperKeySelfServiceSettingsURL, ts.URL+"/settings")
+	viper.Set(configuration.ViperKeySelfServiceRecoveryUI, ts.URL+"/recovery")
 
 	return ts
 }
@@ -72,9 +72,9 @@ func RecoverySubmitForm(
 	require.NoError(t, err)
 	assert.EqualValues(t, http.StatusNoContent, res.StatusCode, "%s", b)
 
-	assert.Equal(t, viper.GetString(configuration.ViperKeyURLsRecovery), res.Request.URL.Scheme+"://"+res.Request.URL.Host+res.Request.URL.Path, "should end up at the settings URL, used: %s", pointerx.StringR(f.Action))
+	assert.Equal(t, viper.GetString(configuration.ViperKeySelfServiceRecoveryUI), res.Request.URL.Scheme+"://"+res.Request.URL.Host+res.Request.URL.Path, "should end up at the settings URL, used: %s", pointerx.StringR(f.Action))
 
-	rs, err := NewSDKClientFromURL(viper.GetString(configuration.ViperKeyURLsSelfPublic)).Common.GetSelfServiceBrowserRecoveryRequest(
+	rs, err := NewSDKClientFromURL(viper.GetString(configuration.ViperKeyPublicBaseURL)).Common.GetSelfServiceBrowserRecoveryRequest(
 		common.NewGetSelfServiceBrowserRecoveryRequestParams().WithHTTPClient(hc).
 			WithRequest(res.Request.URL.Query().Get("request")),
 	)

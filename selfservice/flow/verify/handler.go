@@ -105,7 +105,7 @@ func (h *Handler) init(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	}
 
 	a := NewRequest(
-		h.c.SelfServiceSettingsRequestLifespan(), r, via,
+		h.c.SelfServiceFlowSettingsRequestLifespan(), r, via,
 		urlx.AppendPaths(h.c.SelfPublicURL(), strings.ReplaceAll(PublicVerificationCompletePath, ":via", string(via))), h.d.GenerateCSRFToken,
 	)
 
@@ -115,7 +115,7 @@ func (h *Handler) init(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	}
 
 	http.Redirect(w, r,
-		urlx.CopyWithQuery(h.c.VerificationURL(), url.Values{"request": {a.ID.String()}}).String(),
+		urlx.CopyWithQuery(h.c.SelfServiceFlowVerificationUI(), url.Values{"request": {a.ID.String()}}).String(),
 		http.StatusFound,
 	)
 }
@@ -290,7 +290,7 @@ func (h *Handler) completeViaEmail(w http.ResponseWriter, r *http.Request, vr *R
 		return
 	}
 
-	http.Redirect(w, r, h.c.SelfServiceVerificationReturnTo().String(), http.StatusFound)
+	http.Redirect(w, r, h.c.SelfServiceFlowVerificationReturnTo().String(), http.StatusFound)
 }
 
 // nolint:deadcode,unused
@@ -338,7 +338,7 @@ func (h *Handler) verify(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	if err := h.d.PrivilegedIdentityPool().VerifyAddress(r.Context(), ps.ByName("code")); err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
 			a := NewRequest(
-				h.c.SelfServiceSettingsRequestLifespan(), r, via,
+				h.c.SelfServiceFlowSettingsRequestLifespan(), r, via,
 				urlx.AppendPaths(h.c.SelfPublicURL(), strings.ReplaceAll(PublicVerificationCompletePath, ":via", string(via))), h.d.GenerateCSRFToken,
 			)
 
@@ -349,7 +349,7 @@ func (h *Handler) verify(w http.ResponseWriter, r *http.Request, ps httprouter.P
 			}
 
 			http.Redirect(w, r,
-				urlx.CopyWithQuery(h.c.VerificationURL(), url.Values{"request": {a.ID.String()}}).String(),
+				urlx.CopyWithQuery(h.c.SelfServiceFlowVerificationUI(), url.Values{"request": {a.ID.String()}}).String(),
 				http.StatusFound,
 			)
 			return
@@ -359,7 +359,7 @@ func (h *Handler) verify(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		return
 	}
 
-	http.Redirect(w, r, h.c.SelfServiceVerificationReturnTo().String(), http.StatusFound)
+	http.Redirect(w, r, h.c.SelfServiceFlowVerificationReturnTo().String(), http.StatusFound)
 }
 
 // handleError is a convenience function for handling all types of errors that may occur (e.g. validation error).

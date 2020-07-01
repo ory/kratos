@@ -1,6 +1,7 @@
 package oidc_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"testing"
 
@@ -18,9 +19,12 @@ import (
 func TestConfig(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 
-	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC), json.RawMessage(`{"config":{"providers": [{"provider": "generic"}]}}`))
-	s := oidc.NewStrategy(reg, conf)
+	var c map[string]interface{}
+	require.NoError(t, json.NewDecoder(
+		bytes.NewBufferString(`{"config":{"providers": [{"provider": "generic"}]}}`)).Decode(&c))
+	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC), c)
 
+	s := oidc.NewStrategy(reg, conf)
 	collection, err := s.Config()
 	require.NoError(t, err)
 

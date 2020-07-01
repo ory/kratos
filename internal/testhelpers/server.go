@@ -21,11 +21,11 @@ func NewKratosServerWithCSRF(t *testing.T, reg driver.Registry) (public, admin *
 	public = httptest.NewServer(x.NewTestCSRFHandler(rp, reg))
 	admin = httptest.NewServer(ra)
 
-	if len(viper.GetString(configuration.ViperKeyURLsLogin)) == 0 {
-		viper.Set(configuration.ViperKeyURLsLogin, "http://NewKratosServerWithCSRF/you-forgot-to-set-me/login")
+	if len(viper.GetString(configuration.ViperKeySelfServiceLoginUI)) == 0 {
+		viper.Set(configuration.ViperKeySelfServiceLoginUI, "http://NewKratosServerWithCSRF/you-forgot-to-set-me/login")
 	}
-	viper.Set(configuration.ViperKeyURLsSelfPublic, public.URL)
-	viper.Set(configuration.ViperKeyURLsSelfAdmin, admin.URL)
+	viper.Set(configuration.ViperKeyPublicBaseURL, public.URL)
+	viper.Set(configuration.ViperKeyAdminBaseURL, admin.URL)
 
 	reg.RegisterRoutes(rp, ra)
 
@@ -46,11 +46,11 @@ func NewKratosServerWithRouters(t *testing.T, reg driver.Registry, rp *x.RouterP
 }
 
 func InitKratosServers(t *testing.T, reg driver.Registry, public, admin *httptest.Server) {
-	if len(viper.GetString(configuration.ViperKeyURLsLogin)) == 0 {
-		viper.Set(configuration.ViperKeyURLsLogin, "http://NewKratosServerWithRouters/you-forgot-to-set-me/login")
+	if len(viper.GetString(configuration.ViperKeySelfServiceLoginUI)) == 0 {
+		viper.Set(configuration.ViperKeySelfServiceLoginUI, "http://NewKratosServerWithRouters/you-forgot-to-set-me/login")
 	}
-	viper.Set(configuration.ViperKeyURLsSelfPublic, public.URL)
-	viper.Set(configuration.ViperKeyURLsSelfAdmin, admin.URL)
+	viper.Set(configuration.ViperKeyPublicBaseURL, public.URL)
+	viper.Set(configuration.ViperKeyAdminBaseURL, admin.URL)
 
 	reg.RegisterRoutes(public.Config.Handler.(*x.RouterPublic), admin.Config.Handler.(*x.RouterAdmin))
 }

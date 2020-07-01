@@ -28,10 +28,11 @@ func init() {
 
 func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
+	testhelpers.RecoveryFlowEnable(true)
 
 	testhelpers.NewRecoveryUITestServer(t)
 	redirTS := testhelpers.NewRedirTS(t, "already authenticated")
-	viper.Set(configuration.ViperKeyURLsLogin, redirTS.URL)
+	viper.Set(configuration.ViperKeySelfServiceLoginUI, redirTS.URL)
 
 	router := x.NewRouterPublic()
 	testhelpers.NewErrorTestServer(t, reg)
@@ -47,6 +48,7 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 
 func TestRecoveryHandler(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
+	testhelpers.RecoveryFlowEnable(true)
 
 	testhelpers.NewRedirTS(t, "")
 	testhelpers.NewLoginUIRequestEchoServer(t, reg)
@@ -60,7 +62,7 @@ func TestRecoveryHandler(t *testing.T) {
 			}
 			_, _ = w.Write(x.EasyGetBody(t, c, upstream+recovery.PublicRecoveryRequestPath+"?request="+r.URL.Query().Get("request")))
 		}))
-		viper.Set(configuration.ViperKeyURLsRecovery, ts.URL)
+		viper.Set(configuration.ViperKeySelfServiceRecoveryUI, ts.URL)
 		t.Cleanup(ts.Close)
 		return ts
 	}
@@ -94,7 +96,7 @@ func TestRecoveryHandler(t *testing.T) {
 	t.Run("daemon=admin", func(t *testing.T) {
 		regTS := newRecoveryTS(t, admin.URL, nil)
 		defer regTS.Close()
-		viper.Set(configuration.ViperKeyURLsRecovery, regTS.URL)
+		viper.Set(configuration.ViperKeySelfServiceRecoveryUI, regTS.URL)
 
 		t.Run("case=valid", func(t *testing.T) {
 			assertRequestPayload(t, x.EasyGetBody(t, public.Client(), public.URL+recovery.PublicRecoveryInitPath))

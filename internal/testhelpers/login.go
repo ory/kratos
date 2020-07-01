@@ -20,7 +20,7 @@ func NewLoginUIRequestEchoServer(t *testing.T, reg driver.Registry) *httptest.Se
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, e)
 	}))
-	viper.Set(configuration.ViperKeyURLsLogin, ts.URL+"/login-ts")
+	viper.Set(configuration.ViperKeySelfServiceLoginUI, ts.URL+"/login-ts")
 	t.Cleanup(ts.Close)
 	return ts
 }

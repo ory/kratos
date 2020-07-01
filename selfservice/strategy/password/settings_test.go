@@ -19,6 +19,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/x"
 )
 
@@ -28,12 +29,14 @@ func init() {
 
 func TestSettings(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
-	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, "https://www.ory.sh/")
+	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/profile.schema.json")
+	testhelpers.StrategyEnable(identity.CredentialsTypePassword.String(), true)
+	testhelpers.StrategyEnable(settings.StrategyProfile, true)
 
 	_ = testhelpers.NewSettingsUITestServer(t)
 	_ = testhelpers.NewErrorTestServer(t, reg)
-	viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1m")
+	viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
 
 	primaryIdentity := &identity.Identity{
 		ID: x.NewUUID(),
@@ -76,11 +79,11 @@ func TestSettings(t *testing.T) {
 			t.Run("session=with privileged session", run)
 
 			t.Run("session=needs reauthentication", func(t *testing.T) {
-				viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
+				viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
 
 				_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, adminClient)
 				t.Cleanup(func() {
-					viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "5m")
+					viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 				})
 				run(t)
 			})
@@ -130,7 +133,7 @@ func TestSettings(t *testing.T) {
 		rts := httptest.NewServer(router)
 		defer rts.Close()
 
-		viper.Set(configuration.ViperKeySelfServiceSettingsAfter+"."+configuration.ViperKeyDefaultReturnTo, rts.URL+"/return-ts")
+		viper.Set(configuration.ViperKeySelfServiceSettingsAfter+"."+configuration.DefaultBrowserReturnURL, rts.URL+"/return-ts")
 		t.Cleanup(func() {
 			viper.Set(configuration.ViperKeySelfServiceSettingsAfter, nil)
 		})

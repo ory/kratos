@@ -61,7 +61,7 @@ func (v *Validator) ValidateWithRunner(i *Identity, runners ...schema.Extension)
 func (v *Validator) Validate(i *Identity) error {
 	return v.ValidateWithRunner(i,
 		NewSchemaExtensionCredentials(i),
-		NewSchemaExtensionVerification(i, v.c.SelfServiceVerificationRequestLifespan()),
+		NewSchemaExtensionVerification(i, v.c.SelfServiceFlowVerificationRequestLifespan()),
 		NewSchemaExtensionRecovery(i),
 	)
 }

@@ -1,4 +1,4 @@
-package link_test
+package recoverytoken_test
 
 import (
 	"context"
@@ -24,7 +24,7 @@ import (
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/recovery"
-	"github.com/ory/kratos/selfservice/strategy/link"
+	"github.com/ory/kratos/selfservice/strategy/recoverytoken"
 	"github.com/ory/kratos/text"
 )
 
@@ -42,9 +42,10 @@ var identityToRecover = &identity.Identity{
 func TestStrategy(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/default.schema.json")
-	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, "https://www.ory.sh")
-	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
-		"enabled": true})
+	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
+	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+identity.CredentialsTypePassword.String()+".enabled", true)
+	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryTokenName+".enabled", true)
+	viper.Set(configuration.ViperKeySelfServiceRecoveryEnabled, true)
 
 	_ = testhelpers.NewRecoveryUITestServer(t)
 	_ = testhelpers.NewLoginUIRequestEchoServer(t, reg)
@@ -67,7 +68,7 @@ func TestStrategy(t *testing.T) {
 		assert.EqualValues(t, models.FormFields{csrfField,
 			{Name: pointerx.String("email"), Required: true, Type: pointerx.String("email")},
 		}, method.Config.Fields)
-		assert.EqualValues(t, public.URL+link.PublicRecoveryLinkPath+"?request="+string(rs.Payload.ID), *method.Config.Action)
+		assert.EqualValues(t, public.URL+recoverytoken.PublicRecoveryTokenPath+"?request="+string(rs.Payload.ID), *method.Config.Action)
 		assert.Empty(t, method.Config.Messages)
 		assert.Empty(t, rs.Payload.Messages)
 	})
@@ -131,12 +132,12 @@ func TestStrategy(t *testing.T) {
 
 		recoveryLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
 
-		assert.Contains(t, recoveryLink, public.URL+link.PublicRecoveryLinkPath)
+		assert.Contains(t, recoveryLink, public.URL+recoverytoken.PublicRecoveryTokenPath)
 		assert.Contains(t, recoveryLink, "token=")
 		res, err := c.Get(recoveryLink)
 		require.NoError(t, err)
 
-		assert.Contains(t, res.Request.URL.String(), conf.SettingsURL().String())
+		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowSettingsUI().String())
 		assert.Equal(t, http.StatusAccepted, res.StatusCode)
 
 		sr, err := sdk.Common.GetSelfServiceBrowserSettingsRequest(
@@ -151,11 +152,11 @@ func TestStrategy(t *testing.T) {
 
 	t.Run("description=should not be able to use an invalid link", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
-		res, err := c.Get(public.URL + link.PublicRecoveryLinkPath + "?token=i-do-not-exist")
+		res, err := c.Get(public.URL + recoverytoken.PublicRecoveryTokenPath + "?token=i-do-not-exist")
 		require.NoError(t, err)
 
 		assert.Equal(t, http.StatusNoContent, res.StatusCode)
-		assert.Contains(t, res.Request.URL.String(), conf.RecoveryURL().String()+"?request=")
+		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String()+"?request=")
 
 		sr, err := sdk.Common.GetSelfServiceBrowserRecoveryRequest(
 			common.NewGetSelfServiceBrowserRecoveryRequestParams().WithHTTPClient(c).
@@ -168,9 +169,9 @@ func TestStrategy(t *testing.T) {
 	})
 
 	t.Run("description=should not be able to use an outdated link", func(t *testing.T) {
-		viper.Set(configuration.ViperKeySelfServiceLifespanRecoveryRequest, time.Millisecond*200)
+		viper.Set(configuration.ViperKeySelfServiceRecoveryRequestLifespan, time.Millisecond*200)
 		t.Cleanup(func() {
-			viper.Set(configuration.ViperKeySelfServiceLifespanRecoveryRequest, time.Minute)
+			viper.Set(configuration.ViperKeySelfServiceRecoveryRequestLifespan, time.Minute)
 		})
 
 		c := testhelpers.NewClientWithCookies(t)
@@ -183,13 +184,13 @@ func TestStrategy(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, http.StatusNoContent, res.StatusCode)
 		assert.NotContains(t, res.Request.URL.String(), "request="+rs.Payload.ID)
-		assert.Contains(t, res.Request.URL.String(), conf.RecoveryURL().String())
+		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String())
 	})
 
 	t.Run("description=should not be able to use an outdated request", func(t *testing.T) {
-		viper.Set(configuration.ViperKeySelfServiceLifespanRecoveryRequest, time.Millisecond*200)
+		viper.Set(configuration.ViperKeySelfServiceRecoveryRequestLifespan, time.Millisecond*200)
 		t.Cleanup(func() {
-			viper.Set(configuration.ViperKeySelfServiceLifespanRecoveryRequest, time.Minute)
+			viper.Set(configuration.ViperKeySelfServiceRecoveryRequestLifespan, time.Minute)
 		})
 
 		c := testhelpers.NewClientWithCookies(t)
@@ -208,7 +209,7 @@ func TestStrategy(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.EqualValues(t, http.StatusNoContent, res.StatusCode)
-		assert.Contains(t, res.Request.URL.String(), conf.RecoveryURL().String())
+		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String())
 		assert.NotContains(t, res.Request.URL.String(), string(rs.Payload.ID))
 
 		sr, err := sdk.Common.GetSelfServiceBrowserRecoveryRequest(

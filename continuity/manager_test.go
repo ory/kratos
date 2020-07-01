@@ -40,7 +40,7 @@ func TestManager(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
-	viper.Set(configuration.ViperKeyURLsSelfPublic, "https://www.ory.sh")
+	viper.Set(configuration.ViperKeyPublicBaseURL, "https://www.ory.sh")
 	i := identity.NewIdentity("")
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 

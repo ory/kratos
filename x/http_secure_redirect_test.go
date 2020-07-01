@@ -41,8 +41,8 @@ func TestSecureContentNegotiationRedirection(t *testing.T) {
 	defer ts.Close()
 
 	defaultReturnTo := ts.URL + "/default-return-to"
-	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, defaultReturnTo)
-	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
+	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, defaultReturnTo)
+	viper.Set(configuration.ViperKeyPublicBaseURL, ts.URL)
 	viper.Set(configuration.ViperKeyURLsWhitelistedReturnToDomains, []string{ts.URL})
 
 	run := func(t *testing.T, href string, contentType string) (*http.Response, string) {

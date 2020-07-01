@@ -138,7 +138,7 @@ func (m *Manager) RefreshVerifyAddress(ctx context.Context, address *VerifiableA
 	}
 
 	address.Code = code
-	address.ExpiresAt = time.Now().UTC().Add(m.c.SelfServiceVerificationRequestLifespan())
+	address.ExpiresAt = time.Now().UTC().Add(m.c.SelfServiceFlowVerificationRequestLifespan())
 	return m.r.IdentityPool().(PrivilegedPool).UpdateVerifiableAddress(ctx, address)
 }
 

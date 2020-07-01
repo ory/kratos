@@ -24,7 +24,7 @@ type (
 	}
 	managerHTTPConfiguration interface {
 		SessionLifespan() time.Duration
-		SessionSecrets() [][]byte
+		SecretsSession() [][]byte
 	}
 	ManagerHTTP struct {
 		c          managerHTTPConfiguration

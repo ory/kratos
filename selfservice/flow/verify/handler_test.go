@@ -61,11 +61,11 @@ func TestHandler(t *testing.T) {
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	defer errTS.Close()
 
-	viper.Set(configuration.ViperKeyURLsSelfPublic, publicTS.URL)
+	viper.Set(configuration.ViperKeyPublicBaseURL, publicTS.URL)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/extension/schema.json")
-	viper.Set(configuration.ViperKeyURLsError, errTS.URL)
-	viper.Set(configuration.ViperKeyURLsVerification, verifyTS.URL)
-	viper.Set(configuration.ViperKeySelfServiceVerifyReturnTo, redirTS.URL)
+	viper.Set(configuration.ViperKeySelfServiceErrorUI, errTS.URL)
+	viper.Set(configuration.ViperKeySelfServiceVerificationUI, verifyTS.URL)
+	viper.Set(configuration.ViperKeySelfServiceVerificationBrowserDefaultReturnTo, redirTS.URL)
 	viper.Set(configuration.ViperKeyCourierSMTPURL, "smtp://foo:bar@stub/")
 
 	publicClient := client.NewHTTPClientWithConfig(nil,

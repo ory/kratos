@@ -5,42 +5,13 @@
   "type": "object",
   "definitions": {
     "defaultReturnTo": {
-      "title": "Default Return To URL",
-      "description": "ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. This value may be overridden by a `default_return_to` in a lower configuration level (`foo.bar.default_return_to` overrides `foo.default_return_to` overrides `default_return_to`) and by the `?return_to` query in certain cases.",
+      "title": "Redirect browsers to set URL per default",
+      "description": "ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/selfservice-flow-completion).",
       "type": "string",
       "format": "uri",
       "minLength": 6,
       "examples": [
         "https://my-app.com/dashboard"
-      ]
-    },
-    "selfServiceRedirectHook": {
-      "type": "object",
-      "properties": {
-        "hook": {
-          "const": "redirect"
-        },
-        "config": {
-          "type": "object",
-          "properties": {
-            "default_redirect_url": {
-              "type": "string",
-              "format": "uri"
-            },
-            "allow_user_defined_redirect": {
-              "type": "boolean"
-            }
-          },
-          "additionalProperties": false,
-          "required": [
-            "default_redirect_url"
-          ]
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "hook",
-        "config"
       ]
     },
     "selfServiceSessionRevokerHook": {
@@ -163,7 +134,7 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "default_return_to": {
+        "default_browser_return_url": {
           "$ref": "#/definitions/defaultReturnTo"
         },
         "hooks": {
@@ -184,7 +155,7 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "default_return_to": {
+        "default_browser_return_url": {
           "$ref": "#/definitions/defaultReturnTo"
         },
         "hooks": {
@@ -205,7 +176,7 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "default_return_to": {
+        "default_browser_return_url": {
           "$ref": "#/definitions/defaultReturnTo"
         },
         "hooks": {
@@ -213,13 +184,7 @@
           "items": {
             "anyOf": [
               {
-                "$ref": "#/definitions/selfServiceRedirectHook"
-              },
-              {
                 "$ref": "#/definitions/selfServiceSessionIssuerHook"
-              },
-              {
-                "$ref": "#/definitions/selfServiceVerifyHook"
               }
             ]
           },
@@ -232,7 +197,7 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "default_return_to": {
+        "default_browser_return_url": {
           "$ref": "#/definitions/defaultReturnTo"
         },
         "password": {
@@ -247,7 +212,7 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "default_return_to": {
+        "default_browser_return_url": {
           "$ref": "#/definitions/defaultReturnTo"
         },
         "password": {
@@ -262,7 +227,7 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "default_return_to": {
+        "default_browser_return_url": {
           "$ref": "#/definitions/defaultReturnTo"
         },
         "password": {
@@ -272,28 +237,6 @@
           "$ref": "#/definitions/selfServiceAfterRegistrationStrategy"
         }
       }
-    },
-    "selfServiceBefore": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "hooks": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/selfServiceRedirectHook"
-          },
-          "uniqueItems": true
-        }
-      }
-    },
-    "cookiesSameSite": {
-      "type": "string",
-      "enum": [
-        "Strict",
-        "Lax",
-        "None"
-      ],
-      "default": "Lax"
     }
   },
   "properties": {
@@ -301,16 +244,287 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "default_browser_return_url": {
+          "$ref": "#/definitions/defaultReturnTo"
+        },
+        "whitelisted_return_urls": {
+          "title": "Whitelisted Return To URLs",
+          "description": "List of URLs that are allowed to be redirected to. A redirection request is made by appending `?return_to=...` to Login, Registration, and other self-service flows.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          },
+          "examples": [
+            [
+              "https://app.my-app.com/dashboard",
+              "https://www.my-app.com/"
+            ]
+          ],
+          "uniqueItems": true
+        },
+        "flows": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "settings": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "ui_url": {
+                  "title": "URL of the Settings page.",
+                  "description": "URL where the Settings UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
+                  "type": "string",
+                  "format": "uri",
+                  "examples": [
+                    "https://my-app.com/user/settings"
+                  ],
+                  "default": "https://www.ory.sh/kratos/docs/fallback/settings"
+                },
+                "request_lifespan": {
+                  "type": "string",
+                  "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+                  "default": "1h",
+                  "examples": [
+                    "1h",
+                    "1m",
+                    "1s"
+                  ]
+                },
+                "privileged_session_max_age": {
+                  "type": "string",
+                  "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+                  "default": "1h",
+                  "examples": [
+                    "1h",
+                    "1m",
+                    "1s"
+                  ]
+                },
+                "after": {
+                  "$ref": "#/definitions/selfServiceAfterSettings"
+                }
+              }
+            },
+            "logout": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "after": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "default_browser_return_url": {
+                      "$ref": "#/definitions/defaultReturnTo"
+                    }
+                  }
+                }
+              }
+            },
+            "registration": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "default_browser_return_url": {
+                  "$ref": "#/definitions/defaultReturnTo"
+                },
+                "ui_url": {
+                  "title": "Registration UI URL",
+                  "description": "URL where the Registration UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
+                  "type": "string",
+                  "format": "uri",
+                  "examples": [
+                    "https://my-app.com/signup"
+                  ],
+                  "default": "https://www.ory.sh/kratos/docs/fallback/registration"
+                },
+                "request_lifespan": {
+                  "type": "string",
+                  "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+                  "default": "1h",
+                  "examples": [
+                    "1h",
+                    "1m",
+                    "1s"
+                  ]
+                },
+                "after": {
+                  "$ref": "#/definitions/selfServiceAfterRegistration"
+                }
+              }
+            },
+            "login": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "default_browser_return_url": {
+                  "$ref": "#/definitions/defaultReturnTo"
+                },
+                "ui_url": {
+                  "title": "Login UI URL",
+                  "description": "URL where the Login UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
+                  "type": "string",
+                  "format": "uri",
+                  "examples": [
+                    "https://my-app.com/login"
+                  ],
+                  "default": "https://www.ory.sh/kratos/docs/fallback/login"
+                },
+                "request_lifespan": {
+                  "type": "string",
+                  "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+                  "default": "1h",
+                  "examples": [
+                    "1h",
+                    "1m",
+                    "1s"
+                  ]
+                },
+                "after": {
+                  "$ref": "#/definitions/selfServiceAfterLogin"
+                }
+              }
+            },
+            "verification": {
+              "title": "Email and Phone Verification and Account Activation Configuration",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "title": "Enable Email/Phone Verification",
+                  "description": "If set to true will enable [Email and Phone Verification and Account Activation](https://www.ory.sh/kratos/docs/self-service/flows/verify-email-account-activation/).",
+                  "default": false
+                },
+                "ui_url": {
+                  "title": "Verify UI URL",
+                  "description": "URL where the ORY Verify UI is hosted. This is the page where users activate and / or verify their email or telephone number. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
+                  "type": "string",
+                  "format": "uri",
+                  "examples": [
+                    "https://my-app.com/verify"
+                  ],
+                  "default": "https://www.ory.sh/kratos/docs/fallback/verify"
+                },
+                "after": {
+                  "type": "object",
+                  "properties": {
+                    "default_browser_return_url": {
+                      "$ref": "#/definitions/defaultReturnTo"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "request_lifespan": {
+                  "title": "Self-Service Verification Request Lifespan",
+                  "description": "Sets how long the verification request (for the UI interaction) is valid.",
+                  "type": "string",
+                  "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+                  "default": "1h",
+                  "examples": [
+                    "1h",
+                    "1m",
+                    "1s"
+                  ]
+                }
+              }
+            },
+            "recovery": {
+              "title": "Account Recovery Configuration",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "title": "Enable Account Recovery",
+                  "description": "If set to true will enable [Account Recovery](https://www.ory.sh/kratos/docs/self-service/flows/password-reset-account-recovery/).",
+                  "default": false
+                },
+                "ui_url": {
+                  "title": "Recovery UI URL",
+                  "description": "URL where the ORY Recovery UI is hosted. This is the page where users request and complete account recovery. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
+                  "type": "string",
+                  "format": "uri",
+                  "examples": [
+                    "https://my-app.com/verify"
+                  ],
+                  "default": "https://www.ory.sh/kratos/docs/fallback/recovery"
+                },
+                "after": {
+                  "type": "object",
+                  "properties": {
+                    "default_browser_return_url": {
+                      "$ref": "#/definitions/defaultReturnTo"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "request_lifespan": {
+                  "title": "Self-Service Recovery Request Lifespan",
+                  "description": "Sets how long the recovery request is valid. If expired, the user has to redo the flow.",
+                  "type": "string",
+                  "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+                  "default": "1h",
+                  "examples": [
+                    "1h",
+                    "1m",
+                    "1s"
+                  ]
+                }
+              }
+            },
+            "error": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "ui_url": {
+                  "title": "ORY Kratos Error UI URL",
+                  "description": "URL where the ORY Kratos Error UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
+                  "type": "string",
+                  "format": "uri",
+                  "examples": [
+                    "https://my-app.com/kratos-error"
+                  ],
+                  "default": "https://www.ory.sh/kratos/docs/fallback/error"
+                }
+              }
+            }
+          }
+        },
         "strategies": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
+            "profile": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "title": "Enables Profile Management Strategy",
+                  "default": true
+                }
+              }
+            },
+            "recovery_token": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "title": "Enables Token-based Account Recovery Strategy",
+                  "default": true
+                }
+              }
+            },
             "password": {
               "type": "object",
               "additionalProperties": false,
               "properties": {
                 "enabled": {
-                  "type": "boolean"
+                  "type": "boolean",
+                  "title": "Enables Password Strategy",
+                  "default": true
                 }
               }
             },
@@ -319,7 +533,9 @@
               "additionalProperties": false,
               "properties": {
                 "enabled": {
-                  "type": "boolean"
+                  "type": "boolean",
+                  "title": "Enables OpenID Connect Strategy",
+                  "default": false
                 },
                 "config": {
                   "type": "object",
@@ -336,127 +552,6 @@
                   }
                 }
               }
-            }
-          }
-        },
-        "logout": {
-          "type": "object",
-          "properties": {
-            "redirect_to": {
-              "title": "Redirect to URL after logout",
-              "type": "string",
-              "format": "uri",
-              "examples": [
-                "https://www.myapp.com/home"
-              ]
-            }
-          },
-          "additionalProperties": false
-        },
-        "settings": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "request_lifespan": {
-              "type": "string",
-              "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
-              "default": "1h",
-              "examples": [
-                "1h",
-                "1m",
-                "1s"
-              ]
-            },
-            "privileged_session_max_age": {
-              "type": "string",
-              "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
-              "default": "1h",
-              "examples": [
-                "1h",
-                "1m",
-                "1s"
-              ]
-            },
-            "after": {
-              "$ref": "#/definitions/selfServiceAfterSettings"
-            }
-          }
-        },
-        "verify": {
-          "type": "object",
-          "properties": {
-            "request_lifespan": {
-              "title": "Self-Service Verification Request Lifespan",
-              "description": "Sets how long the verification request (for the UI interaction) is valid.",
-              "type": "string",
-              "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
-              "default": "1h",
-              "examples": [
-                "1h",
-                "1m",
-                "1s"
-              ]
-            }
-          }
-        },
-        "recovery": {
-          "type": "object",
-          "properties": {
-            "request_lifespan": {
-              "title": "Self-Service Verification Request Lifespan",
-              "description": "Sets how long the verification request (for the UI interaction) is valid.",
-              "type": "string",
-              "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
-              "default": "1h",
-              "examples": [
-                "1h",
-                "1m",
-                "1s"
-              ]
-            }
-          }
-        },
-        "login": {
-          "type": "object",
-          "properties": {
-            "request_lifespan": {
-              "type": "string",
-              "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
-              "default": "1h",
-              "examples": [
-                "1h",
-                "1m",
-                "1s"
-              ]
-            },
-            "before": {
-              "$ref": "#/definitions/selfServiceBefore"
-            },
-            "after": {
-              "$ref": "#/definitions/selfServiceAfterLogin"
-            }
-          },
-          "additionalProperties": false
-        },
-        "registration": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "request_lifespan": {
-              "type": "string",
-              "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
-              "default": "1h",
-              "examples": [
-                "1h",
-                "1m",
-                "1s"
-              ]
-            },
-            "before": {
-              "$ref": "#/definitions/selfServiceBefore"
-            },
-            "after": {
-              "$ref": "#/definitions/selfServiceAfterRegistration"
             }
           }
         }
@@ -525,6 +620,14 @@
         "admin": {
           "type": "object",
           "properties": {
+            "base_url": {
+              "title": "The URL where the admin endpoint is exposed at.",
+              "type": "string",
+              "format": "uri",
+              "examples": [
+                "https://kratos.private-network:4434/"
+              ]
+            },
             "host": {
               "type": "string",
               "default": "0.0.0.0"
@@ -544,6 +647,14 @@
         "public": {
           "type": "object",
           "properties": {
+            "base_url": {
+              "title": "The URL where the public endpoint is exposed at.",
+              "type": "string",
+              "format": "uri",
+              "examples": [
+                "https://my-app.com/.ory/kratos/public"
+              ]
+            },
             "host": {
               "type": "string",
               "default": "0.0.0.0"
@@ -561,120 +672,6 @@
           "additionalProperties": false
         }
       },
-      "additionalProperties": false
-    },
-    "urls": {
-      "type": "object",
-      "properties": {
-        "self": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "public": {
-              "type": "string",
-              "format": "uri",
-              "examples": [
-                "https://my-app.com/.ory/kratos/public"
-              ]
-            },
-            "admin": {
-              "type": "string",
-              "format": "uri",
-              "examples": [
-                "https://kratos.private-network:4434/"
-              ]
-            }
-          }
-        },
-        "mfa_ui": {
-          "title": "Multi-Factor UI URL",
-          "description": "URL where the Multi-Factor UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
-          "type": "string",
-          "format": "uri",
-          "examples": [
-            "https://my-app.com/login/mfa"
-          ],
-          "default": "https://www.ory.sh/kratos/docs/fallback/mfa"
-        },
-        "login_ui": {
-          "title": "Login UI URL",
-          "description": "URL where the Login UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
-          "type": "string",
-          "format": "uri",
-          "examples": [
-            "https://my-app.com/login"
-          ],
-          "default": "https://www.ory.sh/kratos/docs/fallback/login"
-        },
-        "settings_ui": {
-          "title": "Settings UI URL",
-          "description": "URL where the Settings UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
-          "type": "string",
-          "format": "uri",
-          "examples": [
-            "https://my-app.com/user/settings"
-          ],
-          "default": "https://www.ory.sh/kratos/docs/fallback/settings"
-        },
-        "default_return_to": {
-          "$ref": "#/definitions/defaultReturnTo"
-        },
-        "registration_ui": {
-          "title": "Registration UI URL",
-          "description": "URL where the Registration UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
-          "type": "string",
-          "format": "uri",
-          "examples": [
-            "https://my-app.com/signup"
-          ],
-          "default": "https://www.ory.sh/kratos/docs/fallback/registration"
-        },
-        "error_ui": {
-          "title": "ORY Kratos Error UI URL",
-          "description": "URL where the ORY Kratos Error UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
-          "type": "string",
-          "format": "uri",
-          "examples": [
-            "https://my-app.com/kratos-error"
-          ],
-          "default": "https://www.ory.sh/kratos/docs/fallback/error"
-        },
-        "verify_ui": {
-          "title": "Verify UI URL",
-          "description": "URL where the ORY Verify UI is hosted. This is the page where users activate and / or verify their email or telephone number. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
-          "type": "string",
-          "format": "uri",
-          "examples": [
-            "https://my-app.com/verify"
-          ],
-          "default": "https://www.ory.sh/kratos/docs/fallback/verify"
-        },
-        "recovery_ui": {
-          "title": "Verify UI URL",
-          "description": "URL where the ORY Verify UI is hosted. This is the page where users activate and / or verify their email or telephone number. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
-          "type": "string",
-          "format": "uri",
-          "examples": [
-            "https://my-app.com/verify"
-          ],
-          "default": "https://www.ory.sh/kratos/docs/fallback/recovery"
-        },
-        "whitelisted_return_to_urls": {
-          "title": "Whitelisted Return To URLs",
-          "description": "List of URLs that are allowed to be redirected to. A redirection request is made by appending `?return_to=...` to Login, Registration, and other self-service flows.",
-          "type": "array",
-          "items": {
-            "type": "string",
-            "format": "uri"
-          },
-          "examples": [
-            ["https://app.my-app.com/dashboard",
-            "https://www.my-app.com/"]
-          ],
-          "uniqueItems": true
-        }
-      },
-      "required": [],
       "additionalProperties": false
     },
     "log": {
@@ -784,8 +781,20 @@
     "secrets": {
       "type": "object",
       "properties": {
-        "session": {
+        "default": {
           "type": "array",
+          "title": "Default Encryption Signing Secrets",
+          "description": "The first secret in the array is used for singing and encrypting things while all other keys are used to verify and decrypt older things that were signed with that old secret.",
+          "items": {
+            "type": "string",
+            "minLength": 16
+          },
+          "uniqueItems": true
+        },
+        "cookie": {
+          "type": "array",
+          "title": "Singing Keys for Cookies",
+          "description": "The first secret in the array is used for encrypting cookies while all other keys are used to decrypt older cookies that were signed with that old secret.",
           "items": {
             "type": "string",
             "minLength": 16
@@ -796,9 +805,11 @@
       "additionalProperties": false
     },
     "hashers": {
+      "title": "Hashing Algorithm Configuration",
       "type": "object",
       "properties": {
         "argon2": {
+          "title": "Configuration for the Argon2id hasher.",
           "type": "object",
           "properties": {
             "memory": {
@@ -827,31 +838,108 @@
       },
       "additionalProperties": false
     },
-    "security": {
+    "session": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
-        "session": {
-          "type": "object",
-          "properties": {
-            "cookie": {
-              "type": "object",
-              "properties": {
-                "same_site": {
-                  "$ref": "#/definitions/cookiesSameSite"
-                }
-              },
-              "additionalProperties": false
-            }
-          },
-          "additionalProperties": false
+        "lifespan": {
+          "title": "Session Lifespan",
+          "description": "Defines how long a session is active. This value is ignored if the \"remember me\" feature is used.",
+          "type": "string",
+          "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+          "default": "1h",
+          "examples": [
+            "1h",
+            "1m",
+            "1s"
+          ]
+        },
+        "cookie_same_site": {
+          "title": "Cookie Same Site Configuration",
+          "type": "string",
+          "enum": [
+            "Strict",
+            "Lax",
+            "None"
+          ],
+          "default": "Lax"
         }
-      },
-      "additionalProperties": false
+      }
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "selfservice": {
+            "properties": {
+              "flows": {
+                "oneOf": [
+                  {
+                    "properties": {
+                      "verification": {
+                        "properties": {
+                          "enabled": {
+                            "const": true
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "properties": {
+                      "recovery": {
+                        "properties": {
+                          "enabled": {
+                            "const": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "courier"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "selfservice": {
+            "properties": {
+              "flows": {
+                "properties": {
+                  "verification": {
+                    "properties": {
+                      "enabled": {
+                        "const": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "courier"
+        ]
+      }
+    }
+  ],
   "required": [
+    "identity",
     "dsn",
-    "identity"
+    "selfservice"
   ],
   "additionalProperties": false
 }

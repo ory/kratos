@@ -92,7 +92,7 @@ func TestHandler(t *testing.T) {
 		}
 	}
 
-	viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
+	viper.Set(configuration.ViperKeyPublicBaseURL, ts.URL)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, getSchemaById(configuration.DefaultIdentityTraitsSchemaID).RawURL)
 	viper.Set(configuration.ViperKeyIdentityTraitsSchemas, schemasConfig)
 

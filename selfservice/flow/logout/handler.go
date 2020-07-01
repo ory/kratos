@@ -64,5 +64,5 @@ func (h *Handler) logout(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		return
 	}
 
-	http.Redirect(w, r, h.c.SelfServiceLogoutRedirectURL().String(), http.StatusFound)
+	http.Redirect(w, r, h.c.SelfServiceFlowLogoutRedirectURL().String(), http.StatusFound)
 }

@@ -5,7 +5,8 @@ title: User Profile Management
 
 :::tip Before you start
 
-Please read through the [User Settings Documentation](../user-settings.mdx) first.
+Please read through the [User Settings Documentation](../user-settings.mdx)
+first.
 
 :::
 
@@ -13,8 +14,8 @@ The `profile` strategy allows a user to change their identity traits
 ("profile").
 
 The updated traits must be valid against the JSON Schema defined for its
-[Identity Traits](../../../concepts/identity-user-model). If one or more
-fields do not validate (e.g. "Not an email"), the profile will not be updated.
+[Identity Traits](../../../concepts/identity-user-model). If one or more fields
+do not validate (e.g. "Not an email"), the profile will not be updated.
 
 ORY Kratos will prompt the user to re-authenticate if a privileged trait (e.g.
 email used to log in) is changed, similar to the
@@ -24,10 +25,11 @@ You can configure how long a session is "privileged" by setting:
 
 ```yaml title="path/to/kratos/config.yml"
 selfservice:
-  settings:
-    # Sessions older than a minute requires the user to sign in again before
-    # the password is changed.
-    privileged_session_max_age: 1m
+  flows:
+    settings:
+      # Sessions older than a minute requires the user to sign in again before
+      # the password is changed.
+      privileged_session_max_age: 1m
 ```
 
 This strategy does not implement any other flow.
@@ -109,16 +111,16 @@ If the form validation fails, an error will be included:
             messages: [
               {
                 /* id, type */
-                text: 'length must be >= 10, but got 8',
-              },
-            ],
-          },
-        ],
-      },
-    },
+                text: 'length must be >= 10, but got 8'
+              }
+            ]
+          }
+        ]
+      }
+    }
   },
   // identity, ...
-  update_successful: false,
+  update_successful: false
 }
 ```
 
@@ -128,7 +130,7 @@ A successful flow will be marked with:
 {
   id: '9c6473d4-9ffd-44cd-9794-adb82cbe4009',
   // expires_at, active, methods, ...
-  update_successful: true,
+  update_successful: true
 }
 ```
 

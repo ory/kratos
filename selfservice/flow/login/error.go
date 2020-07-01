@@ -95,7 +95,7 @@ func (s *ErrorHandler) HandleLoginError(
 			return
 		}
 
-		http.Redirect(w, r, urlx.CopyWithQuery(s.c.LoginURL(), url.Values{"request": {a.ID.String()}}).String(), http.StatusFound)
+		http.Redirect(w, r, urlx.CopyWithQuery(s.c.SelfServiceFlowLoginUI(), url.Values{"request": {a.ID.String()}}).String(), http.StatusFound)
 		return
 	}
 
@@ -124,7 +124,7 @@ func (s *ErrorHandler) HandleLoginError(
 	}
 
 	http.Redirect(w, r,
-		urlx.CopyWithQuery(s.c.LoginURL(), url.Values{"request": {rr.ID.String()}}).String(),
+		urlx.CopyWithQuery(s.c.SelfServiceFlowLoginUI(), url.Values{"request": {rr.ID.String()}}).String(),
 		http.StatusFound,
 	)
 }

@@ -31,10 +31,11 @@ You can configure how long a session is "privileged" by setting:
 
 ```yaml title="path/to/kratos/config.yml"
 selfservice:
-  settings:
-    # Sessions older than a minute requires the user to sign in again before
-    # the password is changed.
-    privileged_session_max_age: 1m
+  flows:
+    settings:
+      # Sessions older than a minute requires the user to sign in again before
+      # the password is changed.
+      privileged_session_max_age: 1m
 ```
 
 The provider's configured JSONNet is not used in this flow. This means that the
@@ -91,21 +92,21 @@ enabled, it can not be unlinked and is therefore hidden from the form:
             name: 'csrf_token',
             type: 'hidden',
             required: true,
-            value: 'a1CNYwJo3G603eaMLHcDyqPgJz9ArZu2cqJqE+tAvvUkGz63Y1G6WYuBc/EdjFHZM7mSjglbroNQyEAjuY21pw==',
+            value: 'a1CNYwJo3G603eaMLHcDyqPgJz9ArZu2cqJqE+tAvvUkGz63Y1G6WYuBc/EdjFHZM7mSjglbroNQyEAjuY21pw=='
           },
           {
             name: 'link',
             type: 'submit',
-            value: 'hydra',
+            value: 'hydra'
           },
           {
             name: 'link',
             type: 'submit',
-            value: 'github',
-          },
-        ],
-      },
-    },
+            value: 'github'
+          }
+        ]
+      }
+    }
   },
   identity: {
     id: 'dd8ce04e-c636-4488-bc92-b5debf73fd30',
@@ -113,10 +114,10 @@ enabled, it can not be unlinked and is therefore hidden from the form:
     traits_schema_url: '',
     traits: {
       email: 'superuser@ory.sh',
-      website: 'https://www.ory.sh',
-    },
+      website: 'https://www.ory.sh'
+    }
   },
-  update_successful: false,
+  update_successful: false
 }
 ```
 
@@ -179,13 +180,13 @@ If an error occurs during the flow, it will be included in the form error:
         messages: [
           {
             /* id, type */
-            text: 'Authentication failed because no id_token was returned. Please accept the "openid" permission and try again.',
-          },
-        ],
+            text: 'Authentication failed because no id_token was returned. Please accept the "openid" permission and try again.'
+          }
+        ]
         // fields
-      },
-    },
-  },
+      }
+    }
+  }
   // ...
 }
 ```

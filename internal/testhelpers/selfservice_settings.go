@@ -92,8 +92,8 @@ func NewSettingsUITestServer(t *testing.T) *httptest.Server {
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)
 
-	viper.Set(configuration.ViperKeyURLsSettings, ts.URL+"/settings")
-	viper.Set(configuration.ViperKeyURLsLogin, ts.URL+"/login")
+	viper.Set(configuration.ViperKeySelfServiceSettingsURL, ts.URL+"/settings")
+	viper.Set(configuration.ViperKeySelfServiceLoginUI, ts.URL+"/login")
 
 	return ts
 }
@@ -104,7 +104,7 @@ func NewSettingsLoginAcceptAPIServer(t *testing.T, adminClient *client.OryKratos
 		require.Equal(t, 0, called)
 		called++
 
-		viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "5m")
+		viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 
 		res, err := adminClient.Common.GetSelfServiceBrowserLoginRequest(common.NewGetSelfServiceBrowserLoginRequestParams().WithRequest(r.URL.Query().Get("request")))
 		require.NoError(t, err)
@@ -117,7 +117,7 @@ func NewSettingsLoginAcceptAPIServer(t *testing.T, adminClient *client.OryKratos
 	t.Cleanup(func() {
 		loginTS.Close()
 	})
-	viper.Set(configuration.ViperKeyURLsLogin, loginTS.URL+"/login")
+	viper.Set(configuration.ViperKeySelfServiceLoginUI, loginTS.URL+"/login")
 	return loginTS
 }
 
@@ -140,8 +140,8 @@ func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, ids map[str
 	t.Cleanup(tsp.Close)
 	t.Cleanup(tsa.Close)
 
-	viper.Set(configuration.ViperKeyURLsSelfPublic, tsp.URL)
-	viper.Set(configuration.ViperKeyURLsSelfAdmin, tsa.URL)
+	viper.Set(configuration.ViperKeyPublicBaseURL, tsp.URL)
+	viper.Set(configuration.ViperKeyAdminBaseURL, tsa.URL)
 	return tsp, tsa, AddAndLoginIdentities(t, reg, &httptest.Server{Config: &http.Server{Handler: public}, URL: tsp.URL}, ids)
 }
 
@@ -186,9 +186,9 @@ func SettingsSubmitForm(
 	require.NoError(t, err)
 	assert.EqualValues(t, http.StatusNoContent, res.StatusCode, "%s", b)
 
-	assert.Equal(t, viper.GetString(configuration.ViperKeyURLsSettings), res.Request.URL.Scheme+"://"+res.Request.URL.Host+res.Request.URL.Path, "should end up at the settings URL, used: %s", pointerx.StringR(f.Action))
+	assert.Equal(t, viper.GetString(configuration.ViperKeySelfServiceSettingsURL), res.Request.URL.Scheme+"://"+res.Request.URL.Host+res.Request.URL.Path, "should end up at the settings URL, used: %s", pointerx.StringR(f.Action))
 
-	rs, err := NewSDKClientFromURL(viper.GetString(configuration.ViperKeyURLsSelfPublic)).Common.GetSelfServiceBrowserSettingsRequest(
+	rs, err := NewSDKClientFromURL(viper.GetString(configuration.ViperKeyPublicBaseURL)).Common.GetSelfServiceBrowserSettingsRequest(
 		common.NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(hc).
 			WithRequest(res.Request.URL.Query().Get("request")),
 	)

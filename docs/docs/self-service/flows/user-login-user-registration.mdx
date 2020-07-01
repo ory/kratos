@@ -106,7 +106,8 @@ Each Login and Registration Strategy (e.g.
 Passwordless, ...) works a bit different but they all boil down to the same
 abstract sequence:
 
-<Mermaid chart={`
+<Mermaid
+  chart={`
 sequenceDiagram
   participant B as Browser
   participant K as ORY Kratos
@@ -128,7 +129,8 @@ sequenceDiagram
     B-->>A: Fills out forms again, corrects errors
     B->>K: POSTs data again - and so on...
   end
-`}></Mermaid>
+`}
+></Mermaid>
 
 The exact data being fetched and the step _"Processes Login / Registration
 Info"_ depend, of course, on the actual Strategy being used. But it is important
@@ -171,15 +173,15 @@ instead.
 // Uses the ORY Kratos NodeJS SDK - for more SDKs check:
 //
 //  https://www.ory.sh/kratos/docs/sdk/index
-const { AdminApi } = require('@oryd/kratos-client');
+const { AdminApi } = require('@oryd/kratos-client')
 
 // The browser config key is used to redirect the user. It reflects where ORY Kratos' Public API
 // is accessible from. Here, we're assuming traffic going to `http://example.org/.ory/kratos/public/`
 // will be forwarded to ORY Kratos' Public API.
-const kratosBrowserUrl = 'http://example.org/.ory/kratos/public/';
+const kratosBrowserUrl = 'http://example.org/.ory/kratos/public/'
 
 // Initializes the SDK with ORY Kratos' Admin API.
-const adminEndpoint = new AdminApi('https://ory-kratos-admin.example-org.vpc/');
+const adminEndpoint = new AdminApi('https://ory-kratos-admin.example-org.vpc/')
 
 // The parameter "flow" can be "login" and "registration".
 // You would register the two routes in express js like this:
@@ -190,48 +192,48 @@ const adminEndpoint = new AdminApi('https://ory-kratos-admin.example-org.vpc/');
 export const authHandler = (flow) => (req, res, next) => {
   // The request ID is used to identify the login and registraion request and
   // return data like the csrf_token and so on.
-  const request = req.query.request;
+  const request = req.query.request
   if (!request) {
-    console.log(`No request found in URL, initializing ${flow} flow.`);
-    res.redirect(`${kratosBrowserUrl}/self-service/browser/${flow}`);
-    return;
+    console.log(`No request found in URL, initializing ${flow} flow.`)
+    res.redirect(`${kratosBrowserUrl}/self-service/browser/${flow}`)
+    return
   }
 
   const authRequest =
     type === 'login'
       ? adminEndpoint.getSelfServiceBrowserLoginRequest(request)
-      : adminEndpoint.getSelfServiceBrowserRegistrationRequest(request);
+      : adminEndpoint.getSelfServiceBrowserRegistrationRequest(request)
 
   authRequest.then(({ body, response }) => {
     if (response.statusCode !== 200) {
       res.redirect(
         `${config.kratos.browser}/self-service/browser/flows/${type}`
-      );
-      return;
+      )
+      return
     }
 
     // "body" contains all the request data for this Registration request.
     // You can process that data here, if you want.
 
     // only show the form section that is "active" to avoid user confusion.
-    let password = body.methods.password.config;
-    let oidc = body.methods.oidc.config;
+    let password = body.methods.password.config
+    let oidc = body.methods.oidc.config
     switch (body.active) {
       case 'password':
-        oidc = undefined; // if password is active hide this
-        break;
+        oidc = undefined // if password is active hide this
+        break
       case 'oidc':
-        password = undefined; // if oidc is active hide this
-        break;
+        password = undefined // if oidc is active hide this
+        break
     }
 
     // Lastly, you probably want to render the data using a view (e.g. Jade Template):
-    res.render(flow, { oidc, password });
-  });
+    res.render(flow, { oidc, password })
+  })
   // Handle errors using ExpressJS' next functionality:
   //
   //    .catch(next)
-};
+}
 ```
 
 #### Views
@@ -331,7 +333,8 @@ Nginx, Kong, Envoy, ORY Oathkeeper, or others.
 The Login and Registration User Flow is composed of several high-level steps
 summarized in this state diagram:
 
-<Mermaid chart={`
+<Mermaid
+  chart={`
 stateDiagram
   s1: User browses app
   s2: Execute "Before Login/Registration Hook(s)"
@@ -350,8 +353,8 @@ stateDiagram
   s4 --> s6
   s6 --> [*]
   Error --> [*]
-`}></Mermaid>
-
+`}
+></Mermaid>
 
 1. The **Login/Registration User Flow** is initiated because a link was clicked
    or an action was performed that requires an active user session.
@@ -360,7 +363,8 @@ stateDiagram
 1. The user's browser is redirected to
    `http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/(login|registration)`
    (the notation `(login|registration)` expresses the two possibilities of
-   `../self-service/browser/flows/login` or `../self-service/browser/flows/registration`).
+   `../self-service/browser/flows/login` or
+   `../self-service/browser/flows/registration`).
 1. ORY Kratos does some internal processing (e.g. checks if a session cookie is
    set, generates payloads for form fields, sets CSRF token, ...) and redirects
    the user's browser to the Login UI URL which is defined using the
@@ -381,8 +385,8 @@ stateDiagram
      id: 'abcde',
      methods: {
        password: { method: 'password', config: { action: '...', fields: [] } },
-       oidc: { method: 'oidc', config: { action: '...', fields: [] } },
-     },
+       oidc: { method: 'oidc', config: { action: '...', fields: [] } }
+     }
    }
    ```
 1. Your Server-Side applications renders the data however you see fit. The User
@@ -406,7 +410,7 @@ stateDiagram
            method: 'oidc',
            config: {
              /* ... */
-           },
+           }
          },
          password: {
            method: 'password',
@@ -416,12 +420,12 @@ stateDiagram
                {
                  id: 4000006,
                  text: 'The provided credentials are invalid. Check for spelling mistakes in your password or username, email address, or phone number.',
-                 type: 'error',
-               },
-             ],
-           },
-         },
-       },
+                 type: 'error'
+               }
+             ]
+           }
+         }
+       }
      }
      ```
      and the user's Browser is redirected back to the Login UI:
@@ -436,7 +440,8 @@ stateDiagram
    session and/or identity. For more information on this topic check
    [Self-Service Flow Completion](../../concepts/selfservice-flow-completion.md).
 
-<Mermaid chart={`
+<Mermaid
+  chart={`
 sequenceDiagram
   participant B as Browser
   participant A as Your Server-Side Application
@@ -467,7 +472,8 @@ sequenceDiagram
     Note over KP,B: User retries login / registration
     KP-->>B: HTTP 302 Found /auth/(login|registration)?request=abcde
   end
-`}></Mermaid>
+`}
+></Mermaid>
 
 ### Client-Side Browser Applications
 
@@ -482,8 +488,8 @@ would be called via AJAX instead of making a request to
 To prevent brute force, guessing, session injection, and other attacks, it is
 required that cookies are working for this endpoint. The cookie set in the
 initial HTTP request made to
-`https://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/login` MUST be
-set and available when calling this endpoint!
+`https://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/login`
+MUST be set and available when calling this endpoint!
 
 :::info
 
@@ -511,7 +517,8 @@ For more information about hooks please read the
 ## Refreshing a Session
 
 In some cases it is required to refresh a login session. This is the case when
-updating one's password. Refreshing a session updates the `authenticated_at` time.
+updating one's password. Refreshing a session updates the `authenticated_at`
+time.
 
 :::info
 
@@ -519,5 +526,6 @@ Refreshing a session will not log the user out, unless another user signs in.
 
 :::
 
-To refresh a session, append `?refresh=true` to `/self-service/browser/flows/login`, for example
+To refresh a session, append `?refresh=true` to
+`/self-service/browser/flows/login`, for example
 `http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/login?refresh=true`.

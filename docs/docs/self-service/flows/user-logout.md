@@ -24,8 +24,10 @@ configuration file:
 
 ```
 selfservice:
-  logout:
-    redirect_to: http://test.kratos.ory.sh:4000/
+  flows:
+    logout:
+      after:
+        default_browser_return_url: http://test.kratos.ory.sh:4000/
 ```
 
 ## Self-Service User Logout for API Clients

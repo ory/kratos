@@ -1,4 +1,4 @@
-package settings_test
+package profile_test
 
 import (
 	"context"
@@ -32,16 +32,23 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/form"
+	"github.com/ory/kratos/selfservice/strategy/profile"
 	"github.com/ory/kratos/x"
 )
+
+func init() {
+	internal.RegisterFakes()
+}
 
 func TestStrategyTraits(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
-	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, "https://www.ory.sh/")
+	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
+	testhelpers.StrategyEnable(identity.CredentialsTypePassword.String(), true)
+	testhelpers.StrategyEnable(settings.StrategyProfile, true)
 
 	ui := testhelpers.NewSettingsUITestServer(t)
-	viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
+	viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
 
 	_ = testhelpers.NewErrorTestServer(t, reg)
 
@@ -73,8 +80,8 @@ func TestStrategyTraits(t *testing.T) {
 		defer publicTS.Close()
 
 		for k, tc := range []*http.Request{
-			httpx.MustNewRequest("POST", publicTS.URL+settings.PublicSettingsProfilePath, strings.NewReader(url.Values{"foo": {"bar"}}.Encode()), "application/x-www-form-urlencoded"),
-			httpx.MustNewRequest("POST", publicTS.URL+settings.PublicSettingsProfilePath, strings.NewReader(`{"foo":"bar"}`), "application/json"),
+			httpx.MustNewRequest("POST", publicTS.URL+profile.PublicSettingsProfilePath, strings.NewReader(url.Values{"foo": {"bar"}}.Encode()), "application/x-www-form-urlencoded"),
+			httpx.MustNewRequest("POST", publicTS.URL+profile.PublicSettingsProfilePath, strings.NewReader(`{"foo":"bar"}`), "application/json"),
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				res, err := http.DefaultClient.Do(tc)
@@ -133,7 +140,7 @@ func TestStrategyTraits(t *testing.T) {
 			require.True(t, found)
 
 			assert.EqualValues(t, &models.Form{
-				Action: pointerx.String(publicTS.URL + settings.PublicSettingsProfilePath + "?request=" + rid),
+				Action: pointerx.String(publicTS.URL + profile.PublicSettingsProfilePath + "?request=" + rid),
 				Method: pointerx.String("POST"),
 				Fields: models.FormFields{
 					&models.FormField{Name: pointerx.String("traits.email"), Type: pointerx.String("text"), Value: "john@doe.com"},
@@ -162,10 +169,10 @@ func TestStrategyTraits(t *testing.T) {
 		})
 
 		t.Run("description=should update protected field with sudo mode", func(t *testing.T) {
-			viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "5m")
+			viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 			_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, adminClient)
 			t.Cleanup(func() {
-				viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
+				viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
 			})
 
 			config := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyProfile)
@@ -189,7 +196,7 @@ func TestStrategyTraits(t *testing.T) {
 				assert.Equal(t, r.URL.Path, "/login")
 				_, _ = w.Write([]byte("called login page"))
 			}))
-			viper.Set(configuration.ViperKeyURLsLogin, loginTS.URL+"/login")
+			viper.Set(configuration.ViperKeySelfServiceLoginUI, loginTS.URL+"/login")
 
 			var run = func(t *testing.T) {
 				f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyProfile)
@@ -313,12 +320,12 @@ func TestStrategyTraits(t *testing.T) {
 
 	t.Run("description=should send email with verifiable address", func(t *testing.T) {
 		_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, adminClient)
-		viper.Set(configuration.HookStrategyKey(configuration.ViperKeySelfServiceSettingsAfter, settings.StrategyProfile), []configuration.SelfServiceHook{{Name: "verify"}})
-		viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1h")
+		viper.Set(configuration.ViperKeySelfServiceVerificationEnabled, true)
+		viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1h")
 		viper.Set(configuration.ViperKeyCourierSMTPURL, "smtp://foo:bar@irrelevant.com/")
 
 		t.Cleanup(func() {
-			viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
+			viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
 			viper.Set(configuration.HookStrategyKey(configuration.ViperKeySelfServiceSettingsAfter, settings.StrategyProfile), nil)
 		})
 

@@ -15,9 +15,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/x/fetcher"
-
 	"github.com/ory/x/jsonx"
+
+	"github.com/ory/x/fetcher"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
@@ -283,7 +283,7 @@ func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, 
 		if _, ok := req.(*settings.Request); ok {
 			// ignore this if it's a settings request
 		} else if !isForced(req) {
-			http.Redirect(w, r, s.c.DefaultReturnToURL().String(), http.StatusFound)
+			http.Redirect(w, r, s.c.SelfServiceBrowserDefaultReturnTo().String(), http.StatusFound)
 			return true
 		}
 	}
@@ -386,11 +386,11 @@ func (s *Strategy) populateMethod(r *http.Request, request uuid.UUID) (*RequestM
 func (s *Strategy) Config() (*ConfigurationCollection, error) {
 	var c ConfigurationCollection
 
+	config := s.c.SelfServiceStrategy(string(s.ID())).Config
 	if err := jsonx.
-		NewStrictDecoder(
-			bytes.NewBuffer(s.c.SelfServiceStrategy(string(s.ID())).Config),
-		).
+		NewStrictDecoder(bytes.NewBuffer(config)).
 		Decode(&c); err != nil {
+		s.d.Logger().WithError(err).WithField("config", config)
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode OpenID Connect Provider configuration: %s", err))
 	}
 

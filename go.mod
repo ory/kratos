@@ -2,8 +2,6 @@ module github.com/ory/kratos
 
 go 1.14
 
-replace github.com/gobuffalo/pop/v5 => github.com/aeneasr/pop/v5 v5.0.0-20200624123405-3deef32aad23
-
 require (
 	github.com/Masterminds/sprig/v3 v3.0.0
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
@@ -29,7 +27,7 @@ require (
 	github.com/gobuffalo/httptest v1.0.2
 	github.com/gobuffalo/logger v1.0.3
 	github.com/gobuffalo/packr/v2 v2.8.0
-	github.com/gobuffalo/pop/v5 v5.2.0
+	github.com/gobuffalo/pop/v5 v5.2.3
 	github.com/gobuffalo/uuid v2.0.5+incompatible
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
@@ -45,7 +43,6 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/hashicorp/serf v0.9.2 // indirect
 	github.com/imdario/mergo v0.3.7
-	github.com/jackc/pgx/v4 v4.6.0
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/justinas/nosurf v1.1.0
@@ -67,7 +64,7 @@ require (
 	github.com/ory/jsonschema/v3 v3.0.1
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/viper v1.7.5
-	github.com/ory/x v0.0.134
+	github.com/ory/x v0.0.135
 	github.com/pelletier/go-toml v1.7.0 // indirect
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1

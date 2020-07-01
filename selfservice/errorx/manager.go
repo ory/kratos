@@ -29,7 +29,7 @@ type (
 	}
 
 	baseManagerConfiguration interface {
-		ErrorURL() *url.URL
+		SelfServiceFlowErrorURL() *url.URL
 	}
 )
 
@@ -51,7 +51,7 @@ func (m *Manager) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 	q := url.Values{}
 	q.Set("error", id.String())
 
-	return urlx.CopyWithQuery(m.c.ErrorURL(), q).String(), nil
+	return urlx.CopyWithQuery(m.c.SelfServiceFlowErrorURL(), q).String(), nil
 }
 
 // Forward is a simple helper that saves all errors in the store and forwards the HTTP Request

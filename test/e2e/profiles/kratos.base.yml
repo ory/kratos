@@ -2,26 +2,32 @@ log:
   level: trace
 
 secrets:
-  session:
+  cookie:
     - PLEASE-CHANGE-ME-I-AM-VERY-INSECURE
 
-urls:
-  login_ui: http://127.0.0.1:4455/auth/login
-  registration_ui: http://127.0.0.1:4455/auth/registration
-  error_ui: http://127.0.0.1:4455/error
-  settings_ui: http://127.0.0.1:4455/settings
-  verify_ui: http://127.0.0.1:4455/verify
-  recovery_ui: http://127.0.0.1:4455/recovery
-
-  # These are undefined because not available in this demo
-  mfa_ui: http://127.0.0.1:4455/
-
-  self:
-    public: http://127.0.0.1:4455/.ory/kratos/public/
-    admin: http://kratos:4434/
-  default_return_to: http://127.0.0.1:4455/
-  whitelisted_return_to_urls:
+selfservice:
+  default_browser_return_url: http://127.0.0.1:4455/
+  whitelisted_return_urls:
     - http://127.0.0.1:4455
+  flows:
+    login:
+      ui_url: http://127.0.0.1:4455/auth/login
+    registration:
+      ui_url: http://127.0.0.1:4455/auth/registration
+    error:
+      ui_url: http://127.0.0.1:4455/error
+    settings:
+      ui_url: http://127.0.0.1:4455/settings
+    verification:
+      ui_url: http://127.0.0.1:4455/verify
+    recovery:
+      ui_url: http://127.0.0.1:4455/recovery
+
+serve:
+  public:
+    base_url: http://127.0.0.1:4455/.ory/kratos/public/
+  admin:
+    base_url: http://kratos:4434/
 
 hashers:
   argon2:

@@ -51,11 +51,12 @@ session.
 ```yaml title="path/to/my/kratos/config.yml"
 # $ kratos -c path/to/my/kratos/config.yml serve
 selfservice:
-  registration:
-    after:
-      oidc:
-        hooks:
-          - hook: session
+  flows:
+    registration:
+      after:
+        oidc:
+          hooks:
+            - hook: session
 ```
 
 :::
@@ -103,25 +104,25 @@ Provider configuration:
             name: 'csrf_token',
             type: 'hidden',
             required: true,
-            value: 'J9blMEwxnz6cL7rgcpu1vthggR13RH+7YMS77GBPn9yo7FqPNc9tTsvCQhu7Cu8AAREWXZF2FiaPia26SfrPBA==',
+            value: 'J9blMEwxnz6cL7rgcpu1vthggR13RH+7YMS77GBPn9yo7FqPNc9tTsvCQhu7Cu8AAREWXZF2FiaPia26SfrPBA=='
           },
           {
             name: 'provider',
             type: 'submit',
-            value: 'hydra',
+            value: 'hydra'
           },
           {
             name: 'provider',
             type: 'submit',
-            value: 'google',
+            value: 'google'
           },
           {
             name: 'provider',
             type: 'submit',
-            value: 'github',
-          },
-        ],
-      },
+            value: 'github'
+          }
+        ]
+      }
     },
     password: {
       method: 'password',
@@ -133,25 +134,25 @@ Provider configuration:
             name: 'csrf_token',
             type: 'hidden',
             required: true,
-            value: 'J9blMEwxnz6cL7rgcpu1vthggR13RH+7YMS77GBPn9yo7FqPNc9tTsvCQhu7Cu8AAREWXZF2FiaPia26SfrPBA==',
+            value: 'J9blMEwxnz6cL7rgcpu1vthggR13RH+7YMS77GBPn9yo7FqPNc9tTsvCQhu7Cu8AAREWXZF2FiaPia26SfrPBA=='
           },
           {
             name: 'password',
             type: 'password',
-            required: true,
+            required: true
           },
           {
             name: 'traits.email',
-            type: 'email',
+            type: 'email'
           },
           {
             name: 'traits.website',
-            type: 'url',
-          },
-        ],
-      },
-    },
-  },
+            type: 'url'
+          }
+        ]
+      }
+    }
+  }
 }
 ```
 
@@ -238,12 +239,12 @@ actually use email addresses in `sub` fields and also does not include the
             name: 'csrf_token',
             type: 'hidden',
             required: true,
-            value: 'A84oYSplXqtJTkhSipZc/2+tFXCN2gzWAfhmoK049FKM9JfeU5us2x6jsKlDBwZBttyCMGvoZUvutXD2hI2kig==',
+            value: 'A84oYSplXqtJTkhSipZc/2+tFXCN2gzWAfhmoK049FKM9JfeU5us2x6jsKlDBwZBttyCMGvoZUvutXD2hI2kig=='
           },
           {
             name: 'traits.email',
             type: 'text',
-            value: 'superuser@ory.sh',
+            value: 'superuser@ory.sh'
           },
           {
             name: 'traits.website',
@@ -252,19 +253,19 @@ actually use email addresses in `sub` fields and also does not include the
               {
                 id: 4000002,
                 type: 'error',
-                text: 'Property website is missing.', // <-- because "website" was not set, the user has to fill it out manually.
-              },
-            ],
+                text: 'Property website is missing.' // <-- because "website" was not set, the user has to fill it out manually.
+              }
+            ]
           },
           {
             name: 'provider',
             type: 'submit',
-            value: 'google',
-          },
-        ],
-      },
-    },
-  },
+            value: 'google'
+          }
+        ]
+      }
+    }
+  }
 }
 ```
 
@@ -295,28 +296,28 @@ configuration:
             name: 'csrf_token',
             type: 'hidden',
             required: true,
-            value: '/Q85ogDm+Hv7D+ca7DUXYBRqmkTdMiIzXrZxt8IXgFHd7rkc8+U1WoWNmScDfJ8/cEju/hUIko5N48GR3rMfag==',
+            value: '/Q85ogDm+Hv7D+ca7DUXYBRqmkTdMiIzXrZxt8IXgFHd7rkc8+U1WoWNmScDfJ8/cEju/hUIko5N48GR3rMfag=='
           },
           {
             name: 'provider',
             type: 'submit',
-            value: 'hydra',
+            value: 'hydra'
           },
           {
             name: 'provider',
             type: 'submit',
-            value: 'google',
+            value: 'google'
           },
           {
             name: 'provider',
             type: 'submit',
-            value: 'github',
-          },
-        ],
-      },
-    },
+            value: 'github'
+          }
+        ]
+      }
+    }
   },
-  forced: false,
+  forced: false
 }
 ```
 
@@ -340,36 +341,36 @@ apply for `provider: github`):
           {
             id: 4000000,
             type: 'error',
-            text: 'Authentication failed because no id_token was returned. Please accept the "openid" permission and try again.',
-          },
+            text: 'Authentication failed because no id_token was returned. Please accept the "openid" permission and try again.'
+          }
         ],
         fields: [
           {
             name: 'csrf_token',
             type: 'hidden',
             required: true,
-            value: 'viM0pQKXUIthwPklREm/86pdIg3d8CWJOzGOiHtrCW4xGYsae2mi+zYtAd6N2OVNcyy1TTvCTBTUfJjeUt5Ztg==',
+            value: 'viM0pQKXUIthwPklREm/86pdIg3d8CWJOzGOiHtrCW4xGYsae2mi+zYtAd6N2OVNcyy1TTvCTBTUfJjeUt5Ztg=='
           },
           {
             name: 'provider',
             type: 'submit',
-            value: 'hydra',
+            value: 'hydra'
           },
           {
             name: 'provider',
             type: 'submit',
-            value: 'google',
+            value: 'google'
           },
           {
             name: 'provider',
             type: 'submit',
-            value: 'github',
-          },
-        ],
-      },
-    },
+            value: 'github'
+          }
+        ]
+      }
+    }
   },
-  forced: false,
+  forced: false
 }
 ```
 

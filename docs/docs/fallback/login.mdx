@@ -6,12 +6,14 @@ title: This should be the Login UI
 You ended up here because you did not set the following configuration value:
 
 ```yaml title="path/to/kratos/config.yml
-urls:
-  login_ui: http://my-app.com/login
+selfservice:
+  flows:
+    login:
+      ui_url: http://my-app.com/login
 ```
 
-You can set this configuration value using environment variable `URLS_LOGIN_UI`
-as well!
+You can set this configuration value using environment variable
+`SELFSERVICE_FLOWS_LOGIN_UI_URL` as well!
 
 If you don't know what that means, head over to
 [User Login and Registration](../self-service/flows/user-login-user-registration.mdx)!

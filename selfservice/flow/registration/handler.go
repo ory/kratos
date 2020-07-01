@@ -56,7 +56,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 }
 
 func (h *Handler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request) (*Request, error) {
-	a := NewRequest(h.c.SelfServiceRegistrationRequestLifespan(), h.d.GenerateCSRFToken(r), r)
+	a := NewRequest(h.c.SelfServiceFlowRegistrationRequestLifespan(), h.d.GenerateCSRFToken(r), r)
 	for _, s := range h.d.RegistrationStrategies() {
 		if err := s.PopulateRegistrationMethod(r, a); err != nil {
 			return nil, err
@@ -99,9 +99,9 @@ func (h *Handler) initRegistrationRequest(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	redirTo := urlx.CopyWithQuery(h.c.RegisterURL(), url.Values{"request": {a.ID.String()}}).String()
+	redirTo := urlx.CopyWithQuery(h.c.SelfServiceFlowRegisterUI(), url.Values{"request": {a.ID.String()}}).String()
 	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
-		redirTo = h.c.DefaultReturnToURL().String()
+		redirTo = h.c.SelfServiceBrowserDefaultReturnTo().String()
 	}
 	http.Redirect(w, r, redirTo, http.StatusFound)
 }

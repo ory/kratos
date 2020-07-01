@@ -158,7 +158,7 @@ func newReturnTs(t *testing.T, reg driver.Registry) *httptest.Server {
 		require.Empty(t, sess.Identity.Credentials)
 		reg.Writer().Write(w, r, sess)
 	}))
-	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, ts.URL)
+	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL)
 	t.Cleanup(ts.Close)
 	return ts
 }
@@ -179,9 +179,9 @@ func newUI(t *testing.T, reg driver.Registry) *httptest.Server {
 		reg.Writer().Write(w, r, e)
 	}))
 	t.Cleanup(ts.Close)
-	viper.Set(configuration.ViperKeyURLsLogin, ts.URL+"/login")
-	viper.Set(configuration.ViperKeyURLsRegistration, ts.URL+"/registration")
-	viper.Set(configuration.ViperKeyURLsSettings, ts.URL+"/settings")
+	viper.Set(configuration.ViperKeySelfServiceLoginUI, ts.URL+"/login")
+	viper.Set(configuration.ViperKeySelfServiceRegistrationUI, ts.URL+"/registration")
+	viper.Set(configuration.ViperKeySelfServiceSettingsURL, ts.URL+"/settings")
 	return ts
 }
 

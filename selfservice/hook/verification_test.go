@@ -33,7 +33,7 @@ func TestVerifier(t *testing.T) {
 		t.Run("name="+k, func(t *testing.T) {
 			_, reg := internal.NewFastRegistryWithMocks(t)
 			viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/verify.schema.json")
-			viper.Set(configuration.ViperKeyURLsSelfPublic, "https://www.ory.sh/")
+			viper.Set(configuration.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 			viper.Set(configuration.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
 
 			i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)

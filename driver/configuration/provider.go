@@ -49,44 +49,56 @@ func (s SchemaConfigs) FindSchemaByID(id string) (*SchemaConfig, error) {
 const DefaultIdentityTraitsSchemaID = "default"
 
 type Provider interface {
-	AdminListenOn() string
-	PublicListenOn() string
+	IsInsecureDevMode() bool
+
 	DSN() string
 
-	SessionSecrets() [][]byte
+	AdminListenOn() string
+	PublicListenOn() string
+
+	SelfServiceBrowserDefaultReturnTo() *url.URL
+	SelfServiceBrowserWhitelistedReturnToDomains() []url.URL
 
 	SelfPublicURL() *url.URL
 	SelfAdminURL() *url.URL
 
-	DefaultReturnToURL() *url.URL
-
-	SettingsURL() *url.URL
-	LoginURL() *url.URL
-	VerificationURL() *url.URL
-	ErrorURL() *url.URL
-	MultiFactorURL() *url.URL
-	RecoveryURL() *url.URL
-
+	SecretsDefault() [][]byte
+	SecretsSession() [][]byte
 	SessionLifespan() time.Duration
-	SelfServiceSettingsRequestLifespan() time.Duration
-	SelfServiceVerificationRequestLifespan() time.Duration
-	SelfServiceLoginRequestLifespan() time.Duration
-	SelfServiceRegistrationRequestLifespan() time.Duration
-	SelfServiceRecoveryRequestLifespan() time.Duration
+	SessionSameSiteMode() http.SameSite
 
 	SelfServiceStrategy(strategy string) *SelfServiceStrategy
-	SelfServiceLoginBeforeHooks() []SelfServiceHook
-	SelfServiceRegistrationBeforeHooks() []SelfServiceHook
-	SelfServiceLoginAfterHooks(strategy string) []SelfServiceHook
-	SelfServiceLoginReturnTo(strategy string) *url.URL
-	SelfServiceRegistrationAfterHooks(strategy string) []SelfServiceHook
-	SelfServiceRegistrationReturnTo(strategy string) *url.URL
-	SelfServiceSettingsAfterHooks(strategy string) []SelfServiceHook
-	SelfServiceSettingsReturnTo(strategy string, defaultReturnTo *url.URL) *url.URL
-	SelfServiceLogoutRedirectURL() *url.URL
 
-	SelfServicePrivilegedSessionMaxAge() time.Duration
-	SelfServiceVerificationReturnTo() *url.URL
+	SelfServiceFlowLoginUI() *url.URL
+	SelfServiceFlowLoginBeforeHooks() []SelfServiceHook
+	SelfServiceFlowLoginAfterHooks(strategy string) []SelfServiceHook
+	SelfServiceFlowLoginReturnTo(strategy string) *url.URL
+	SelfServiceFlowLoginRequestLifespan() time.Duration
+
+	SelfServiceFlowRegisterUI() *url.URL
+	SelfServiceFlowRegistrationBeforeHooks() []SelfServiceHook
+	SelfServiceFlowRegistrationAfterHooks(strategy string) []SelfServiceHook
+	SelfServiceFlowRegistrationReturnTo(strategy string) *url.URL
+	SelfServiceFlowRegistrationRequestLifespan() time.Duration
+
+	SelfServiceFlowSettingsUI() *url.URL
+	SelfServiceFlowSettingsPrivilegedSessionMaxAge() time.Duration
+	SelfServiceFlowSettingsAfterHooks(strategy string) []SelfServiceHook
+	SelfServiceFlowSettingsReturnTo(strategy string, defaultReturnTo *url.URL) *url.URL
+	SelfServiceFlowSettingsRequestLifespan() time.Duration
+
+	SelfServiceFlowVerificationEnabled() bool
+	SelfServiceFlowVerificationUI() *url.URL
+	SelfServiceFlowVerificationReturnTo() *url.URL
+	SelfServiceFlowVerificationRequestLifespan() time.Duration
+
+	SelfServiceFlowRecoveryEnabled() bool
+	SelfServiceFlowRecoveryUI() *url.URL
+	SelfServiceFlowRecoveryRequestLifespan() time.Duration
+
+	SelfServiceFlowErrorURL() *url.URL
+
+	SelfServiceFlowLogoutRedirectURL() *url.URL
 
 	CourierSMTPFrom() string
 	CourierSMTPURL() *url.URL
@@ -95,17 +107,9 @@ type Provider interface {
 	DefaultIdentityTraitsSchemaURL() *url.URL
 	IdentityTraitsSchemas() SchemaConfigs
 
-	WhitelistedReturnToDomains() []url.URL
-
-	RegisterURL() *url.URL
-
 	HasherArgon2() *HasherArgon2Config
 
 	TracingServiceName() string
 	TracingProvider() string
 	TracingJaegerConfig() *tracing.JaegerConfig
-
-	IsInsecureDevMode() bool
-
-	SessionSameSiteMode() http.SameSite
 }
