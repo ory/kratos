@@ -397,20 +397,24 @@ Learn how identities work in
 
 Status Code **200**
 
-| Name                | Type                                                  | Required | Restrictions | Description                                                                                                    |
-| ------------------- | ----------------------------------------------------- | -------- | ------------ | -------------------------------------------------------------------------------------------------------------- |
-| _anonymous_         | [[Identity](#schemaidentity)]                         | false    | none         | none                                                                                                           |
-| » addresses         | [[VerifiableAddress](#schemaverifiableaddress)]       | false    | none         | none                                                                                                           |
-| »» expires_at       | string(date-time)                                     | true     | none         | none                                                                                                           |
-| »» id               | [UUID](#schemauuid)(uuid4)                            | true     | none         | none                                                                                                           |
-| »» value            | string                                                | true     | none         | none                                                                                                           |
-| »» verified         | boolean                                               | true     | none         | none                                                                                                           |
-| »» verified_at      | string(date-time)                                     | false    | none         | none                                                                                                           |
-| »» via              | [VerifiableAddressType](#schemaverifiableaddresstype) | true     | none         | none                                                                                                           |
-| » id                | [UUID](#schemauuid)(uuid4)                            | true     | none         | none                                                                                                           |
-| » traits            | [Traits](#schematraits)                               | true     | none         | none                                                                                                           |
-| » traits_schema_id  | string                                                | true     | none         | TraitsSchemaID is the ID of the JSON Schema to be used for validating the identity's traits.                   |
-| » traits_schema_url | string                                                | false    | none         | TraitsSchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from. format: url |
+| Name                   | Type                                                  | Required | Restrictions | Description                                                                                                    |
+| ---------------------- | ----------------------------------------------------- | -------- | ------------ | -------------------------------------------------------------------------------------------------------------- |
+| _anonymous_            | [[Identity](#schemaidentity)]                         | false    | none         | none                                                                                                           |
+| » id                   | [UUID](#schemauuid)(uuid4)                            | true     | none         | none                                                                                                           |
+| » recovery_addresses   | [[RecoveryAddress](#schemarecoveryaddress)]           | false    | none         | RecoveryAddresses contains all the addresses that can be used to recover an identity.                          |
+| »» id                  | [UUID](#schemauuid)(uuid4)                            | true     | none         | none                                                                                                           |
+| »» value               | string                                                | true     | none         | none                                                                                                           |
+| »» via                 | [RecoveryAddressType](#schemarecoveryaddresstype)     | true     | none         | none                                                                                                           |
+| » traits               | [Traits](#schematraits)                               | true     | none         | none                                                                                                           |
+| » traits_schema_id     | string                                                | true     | none         | TraitsSchemaID is the ID of the JSON Schema to be used for validating the identity's traits.                   |
+| » traits_schema_url    | string                                                | false    | none         | TraitsSchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from. format: url |
+| » verifiable_addresses | [[VerifiableAddress](#schemaverifiableaddress)]       | false    | none         | VerifiableAddresses contains all the addresses that can be verified by the user.                               |
+| »» expires_at          | string(date-time)                                     | true     | none         | none                                                                                                           |
+| »» id                  | [UUID](#schemauuid)(uuid4)                            | true     | none         | none                                                                                                           |
+| »» value               | string                                                | true     | none         | none                                                                                                           |
+| »» verified            | boolean                                               | true     | none         | none                                                                                                           |
+| »» verified_at         | string(date-time)                                     | false    | none         | none                                                                                                           |
+| »» via                 | [VerifiableAddressType](#schemaverifiableaddresstype) | true     | none         | none                                                                                                           |
 
 ##### Examples
 
@@ -419,20 +423,27 @@ Status Code **200**
 ```json
 [
   {
-    "addresses": [
+    "id": "string",
+    "recovery_addresses": [
       {
-        "expires_at": "2020-05-29T18:44:23Z",
         "id": "string",
         "value": "string",
-        "verified": true,
-        "verified_at": "2020-05-29T18:44:23Z",
         "via": "string"
       }
     ],
-    "id": "string",
     "traits": {},
     "traits_schema_id": "string",
-    "traits_schema_url": "string"
+    "traits_schema_url": "string",
+    "verifiable_addresses": [
+      {
+        "expires_at": "2019-08-24T14:15:22Z",
+        "id": "string",
+        "value": "string",
+        "verified": true,
+        "verified_at": "2019-08-24T14:15:22Z",
+        "via": "string"
+      }
+    ]
   }
 ]
 ```
@@ -585,20 +596,27 @@ Learn how identities work in
 
 ```json
 {
-  "addresses": [
+  "id": "string",
+  "recovery_addresses": [
     {
-      "expires_at": "2020-05-29T18:44:23Z",
       "id": "string",
       "value": "string",
-      "verified": true,
-      "verified_at": "2020-05-29T18:44:23Z",
       "via": "string"
     }
   ],
-  "id": "string",
   "traits": {},
   "traits_schema_id": "string",
-  "traits_schema_url": "string"
+  "traits_schema_url": "string",
+  "verifiable_addresses": [
+    {
+      "expires_at": "2019-08-24T14:15:22Z",
+      "id": "string",
+      "value": "string",
+      "verified": true,
+      "verified_at": "2019-08-24T14:15:22Z",
+      "via": "string"
+    }
+  ]
 }
 ```
 
@@ -628,20 +646,27 @@ Learn how identities work in
 
 ```json
 {
-  "addresses": [
+  "id": "string",
+  "recovery_addresses": [
     {
-      "expires_at": "2020-05-29T18:44:23Z",
       "id": "string",
       "value": "string",
-      "verified": true,
-      "verified_at": "2020-05-29T18:44:23Z",
       "via": "string"
     }
   ],
-  "id": "string",
   "traits": {},
   "traits_schema_id": "string",
-  "traits_schema_url": "string"
+  "traits_schema_url": "string",
+  "verifiable_addresses": [
+    {
+      "expires_at": "2019-08-24T14:15:22Z",
+      "id": "string",
+      "value": "string",
+      "verified": true,
+      "verified_at": "2019-08-24T14:15:22Z",
+      "via": "string"
+    }
+  ]
 }
 ```
 
@@ -694,20 +719,27 @@ func main() {
 ```javascript
 const fetch = require('node-fetch');
 const input = '{
-  "addresses": [
+  "id": "string",
+  "recovery_addresses": [
     {
-      "expires_at": "2020-05-29T18:44:23Z",
       "id": "string",
       "value": "string",
-      "verified": true,
-      "verified_at": "2020-05-29T18:44:23Z",
       "via": "string"
     }
   ],
-  "id": "string",
   "traits": {},
   "traits_schema_id": "string",
-  "traits_schema_url": "string"
+  "traits_schema_url": "string",
+  "verifiable_addresses": [
+    {
+      "expires_at": "2019-08-24T14:15:22Z",
+      "id": "string",
+      "value": "string",
+      "verified": true,
+      "verified_at": "2019-08-24T14:15:22Z",
+      "via": "string"
+    }
+  ]
 }';
 const headers = {
   'Content-Type': 'application/json',  'Accept': 'application/json'
@@ -829,20 +861,27 @@ Learn how identities work in
 
 ```json
 {
-  "addresses": [
+  "id": "string",
+  "recovery_addresses": [
     {
-      "expires_at": "2020-05-29T18:44:23Z",
       "id": "string",
       "value": "string",
-      "verified": true,
-      "verified_at": "2020-05-29T18:44:23Z",
       "via": "string"
     }
   ],
-  "id": "string",
   "traits": {},
   "traits_schema_id": "string",
-  "traits_schema_url": "string"
+  "traits_schema_url": "string",
+  "verifiable_addresses": [
+    {
+      "expires_at": "2019-08-24T14:15:22Z",
+      "id": "string",
+      "value": "string",
+      "verified": true,
+      "verified_at": "2019-08-24T14:15:22Z",
+      "via": "string"
+    }
+  ]
 }
 ```
 
@@ -997,20 +1036,27 @@ Learn how identities work in
 
 ```json
 {
-  "addresses": [
+  "id": "string",
+  "recovery_addresses": [
     {
-      "expires_at": "2020-05-29T18:44:23Z",
       "id": "string",
       "value": "string",
-      "verified": true,
-      "verified_at": "2020-05-29T18:44:23Z",
       "via": "string"
     }
   ],
-  "id": "string",
   "traits": {},
   "traits_schema_id": "string",
-  "traits_schema_url": "string"
+  "traits_schema_url": "string",
+  "verifiable_addresses": [
+    {
+      "expires_at": "2019-08-24T14:15:22Z",
+      "id": "string",
+      "value": "string",
+      "verified": true,
+      "verified_at": "2019-08-24T14:15:22Z",
+      "via": "string"
+    }
+  ]
 }
 ```
 
@@ -1042,20 +1088,27 @@ Learn how identities work in
 
 ```json
 {
-  "addresses": [
+  "id": "string",
+  "recovery_addresses": [
     {
-      "expires_at": "2020-05-29T18:44:23Z",
       "id": "string",
       "value": "string",
-      "verified": true,
-      "verified_at": "2020-05-29T18:44:23Z",
       "via": "string"
     }
   ],
-  "id": "string",
   "traits": {},
   "traits_schema_id": "string",
-  "traits_schema_url": "string"
+  "traits_schema_url": "string",
+  "verifiable_addresses": [
+    {
+      "expires_at": "2019-08-24T14:15:22Z",
+      "id": "string",
+      "value": "string",
+      "verified": true,
+      "verified_at": "2019-08-24T14:15:22Z",
+      "via": "string"
+    }
+  ]
 }
 ```
 
@@ -1108,20 +1161,27 @@ func main() {
 ```javascript
 const fetch = require('node-fetch');
 const input = '{
-  "addresses": [
+  "id": "string",
+  "recovery_addresses": [
     {
-      "expires_at": "2020-05-29T18:44:23Z",
       "id": "string",
       "value": "string",
-      "verified": true,
-      "verified_at": "2020-05-29T18:44:23Z",
       "via": "string"
     }
   ],
-  "id": "string",
   "traits": {},
   "traits_schema_id": "string",
-  "traits_schema_url": "string"
+  "traits_schema_url": "string",
+  "verifiable_addresses": [
+    {
+      "expires_at": "2019-08-24T14:15:22Z",
+      "id": "string",
+      "value": "string",
+      "verified": true,
+      "verified_at": "2019-08-24T14:15:22Z",
+      "via": "string"
+    }
+  ]
 }';
 const headers = {
   'Content-Type': 'application/json',  'Accept': 'application/json'
@@ -1572,8 +1632,7 @@ and other information.
 
 When accessing this endpoint through ORY Kratos' Public API, ensure that cookies
 are set as they are required for CSRF to work. To prevent token scanning
-attacks, the public endpoint does not return 404 status codes to prevent
-scanning attacks.
+attacks, the public endpoint does not return 404 status codes.
 
 More information can be found at
 [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
@@ -1614,25 +1673,31 @@ your application (e.g. `/login?request=abcde`).
 ```json
 {
   "active": "string",
-  "expires_at": "2020-05-29T18:44:23Z",
+  "expires_at": "2019-08-24T14:15:22Z",
   "forced": true,
   "id": "string",
-  "issued_at": "2020-05-29T18:44:23Z",
+  "issued_at": "2019-08-24T14:15:22Z",
+  "messages": [
+    {
+      "context": {},
+      "id": 0,
+      "text": "string",
+      "type": "string"
+    }
+  ],
   "methods": {
     "property1": {
       "config": {
         "action": "string",
-        "errors": [
-          {
-            "message": "string"
-          }
-        ],
         "fields": [
           {
             "disabled": true,
-            "errors": [
+            "messages": [
               {
-                "message": "string"
+                "context": {},
+                "id": 0,
+                "text": "string",
+                "type": "string"
               }
             ],
             "name": "string",
@@ -1642,13 +1707,24 @@ your application (e.g. `/login?request=abcde`).
             "value": {}
           }
         ],
+        "messages": [
+          {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          }
+        ],
         "method": "string",
         "providers": [
           {
             "disabled": true,
-            "errors": [
+            "messages": [
               {
-                "message": "string"
+                "context": {},
+                "id": 0,
+                "text": "string",
+                "type": "string"
               }
             ],
             "name": "string",
@@ -1664,17 +1740,15 @@ your application (e.g. `/login?request=abcde`).
     "property2": {
       "config": {
         "action": "string",
-        "errors": [
-          {
-            "message": "string"
-          }
-        ],
         "fields": [
           {
             "disabled": true,
-            "errors": [
+            "messages": [
               {
-                "message": "string"
+                "context": {},
+                "id": 0,
+                "text": "string",
+                "type": "string"
               }
             ],
             "name": "string",
@@ -1684,13 +1758,24 @@ your application (e.g. `/login?request=abcde`).
             "value": {}
           }
         ],
+        "messages": [
+          {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          }
+        ],
         "method": "string",
         "providers": [
           {
             "disabled": true,
-            "errors": [
+            "messages": [
               {
-                "message": "string"
+                "context": {},
+                "id": 0,
+                "text": "string",
+                "type": "string"
               }
             ],
             "name": "string",
@@ -1836,6 +1921,272 @@ p JSON.parse(result)
 </TabItem>
 </Tabs>
 
+<a id="opIdgetSelfServiceBrowserRecoveryRequest"></a>
+
+### Get the request context of browser-based recovery flows
+
+```
+GET /self-service/browser/flows/requests/recovery?request=string HTTP/1.1
+Accept: application/json
+
+```
+
+When accessing this endpoint through ORY Kratos' Public API, ensure that cookies
+are set as they are required for checking the auth session. To prevent scanning
+attacks, the public endpoint does not return 404 status codes but instead 403
+or 500.
+
+More information can be found at
+[ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).
+
+<a id="get-the-request-context-of-browser-based-recovery-flows-parameters"></a>
+
+#### Parameters
+
+| Parameter | In    | Type   | Required | Description                     |
+| --------- | ----- | ------ | -------- | ------------------------------- |
+| request   | query | string | true     | Request is the Login Request ID |
+
+##### Detailed descriptions
+
+**request**: Request is the Login Request ID
+
+The value for this parameter comes from `request` URL Query parameter sent to
+your application (e.g. `/recover?request=abcde`).
+
+#### Responses
+
+<a id="get-the-request-context-of-browser-based-recovery-flows-responses"></a>
+
+##### Overview
+
+| Status | Meaning                                                                    | Description     | Schema                                    |
+| ------ | -------------------------------------------------------------------------- | --------------- | ----------------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | recoveryRequest | [recoveryRequest](#schemarecoveryrequest) |
+| 403    | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | genericError    | [genericError](#schemagenericerror)       |
+| 404    | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError    | [genericError](#schemagenericerror)       |
+| 410    | [Gone](https://tools.ietf.org/html/rfc7231#section-6.5.9)                  | genericError    | [genericError](#schemagenericerror)       |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError    | [genericError](#schemagenericerror)       |
+
+##### Examples
+
+###### 200 response
+
+```json
+{
+  "active": "string",
+  "expires_at": "2019-08-24T14:15:22Z",
+  "id": "string",
+  "issued_at": "2019-08-24T14:15:22Z",
+  "messages": [
+    {
+      "context": {},
+      "id": 0,
+      "text": "string",
+      "type": "string"
+    }
+  ],
+  "methods": {
+    "property1": {
+      "config": {
+        "action": "string",
+        "fields": [
+          {
+            "disabled": true,
+            "messages": [
+              {
+                "context": {},
+                "id": 0,
+                "text": "string",
+                "type": "string"
+              }
+            ],
+            "name": "string",
+            "pattern": "string",
+            "required": true,
+            "type": "string",
+            "value": {}
+          }
+        ],
+        "messages": [
+          {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          }
+        ],
+        "method": "string"
+      },
+      "method": "string"
+    },
+    "property2": {
+      "config": {
+        "action": "string",
+        "fields": [
+          {
+            "disabled": true,
+            "messages": [
+              {
+                "context": {},
+                "id": 0,
+                "text": "string",
+                "type": "string"
+              }
+            ],
+            "name": "string",
+            "pattern": "string",
+            "required": true,
+            "type": "string",
+            "value": {}
+          }
+        ],
+        "messages": [
+          {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          }
+        ],
+        "method": "string"
+      },
+      "method": "string"
+    }
+  },
+  "request_url": "string",
+  "state": "string"
+}
+```
+
+<aside class="success">This operation does not require authentication</aside>
+
+#### Code samples
+
+<Tabs groupId="code-samples" defaultValue="shell"
+  values={[{label: 'Shell', value: 'shell'}, {label: 'Go', value: 'go'}, {label: 'Node', value: 'node'},
+    {label: 'Java', value: 'java'}, {label: 'Python', value: 'python'}, {label: 'Ruby', value: 'ruby'}]}>
+<TabItem value="shell">
+
+```shell
+curl -X GET /self-service/browser/flows/requests/recovery?request=string \
+  -H 'Accept: application/json'
+```
+
+</TabItem>
+<TabItem value="go">
+
+```go
+package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    var body []byte
+    // body = ...
+
+    req, err := http.NewRequest("GET", "/self-service/browser/flows/requests/recovery", bytes.NewBuffer(body))
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+```
+
+</TabItem>
+<TabItem value="node">
+
+```javascript
+const fetch = require('node-fetch')
+
+const headers = {
+  Accept: 'application/json'
+}
+
+fetch('/self-service/browser/flows/requests/recovery?request=string', {
+  method: 'GET',
+  headers
+})
+  .then((r) => r.json())
+  .then((body) => {
+    console.log(body)
+  })
+```
+
+</TabItem>
+<TabItem value="java">
+
+```java
+// This sample needs improvement.
+URL obj = new URL("/self-service/browser/flows/requests/recovery?request=string");
+
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+
+int responseCode = con.getResponseCode();
+
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream())
+);
+
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+
+System.out.println(response.toString());
+```
+
+</TabItem>
+<TabItem value="python">
+
+```python
+import requests
+
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get(
+  '/self-service/browser/flows/requests/recovery',
+  params={
+    'request': 'string'},
+  headers = headers)
+
+print r.json()
+```
+
+</TabItem>
+<TabItem value="ruby">
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get '/self-service/browser/flows/requests/recovery',
+  params: {
+    'request' => 'string'}, headers: headers
+
+p JSON.parse(result)
+```
+
+</TabItem>
+</Tabs>
+
 <a id="opIdgetSelfServiceBrowserRegistrationRequest"></a>
 
 ### Get the request context of browser-based registration user flows
@@ -1851,8 +2202,7 @@ details and other information.
 
 When accessing this endpoint through ORY Kratos' Public API, ensure that cookies
 are set as they are required for CSRF to work. To prevent token scanning
-attacks, the public endpoint does not return 404 status codes to prevent
-scanning attacks.
+attacks, the public endpoint does not return 404 status codes.
 
 More information can be found at
 [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
@@ -1893,24 +2243,30 @@ your application (e.g. `/registration?request=abcde`).
 ```json
 {
   "active": "string",
-  "expires_at": "2020-05-29T18:44:23Z",
+  "expires_at": "2019-08-24T14:15:22Z",
   "id": "string",
-  "issued_at": "2020-05-29T18:44:23Z",
+  "issued_at": "2019-08-24T14:15:22Z",
+  "messages": [
+    {
+      "context": {},
+      "id": 0,
+      "text": "string",
+      "type": "string"
+    }
+  ],
   "methods": {
     "property1": {
       "config": {
         "action": "string",
-        "errors": [
-          {
-            "message": "string"
-          }
-        ],
         "fields": [
           {
             "disabled": true,
-            "errors": [
+            "messages": [
               {
-                "message": "string"
+                "context": {},
+                "id": 0,
+                "text": "string",
+                "type": "string"
               }
             ],
             "name": "string",
@@ -1920,13 +2276,24 @@ your application (e.g. `/registration?request=abcde`).
             "value": {}
           }
         ],
+        "messages": [
+          {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          }
+        ],
         "method": "string",
         "providers": [
           {
             "disabled": true,
-            "errors": [
+            "messages": [
               {
-                "message": "string"
+                "context": {},
+                "id": 0,
+                "text": "string",
+                "type": "string"
               }
             ],
             "name": "string",
@@ -1942,17 +2309,15 @@ your application (e.g. `/registration?request=abcde`).
     "property2": {
       "config": {
         "action": "string",
-        "errors": [
-          {
-            "message": "string"
-          }
-        ],
         "fields": [
           {
             "disabled": true,
-            "errors": [
+            "messages": [
               {
-                "message": "string"
+                "context": {},
+                "id": 0,
+                "text": "string",
+                "type": "string"
               }
             ],
             "name": "string",
@@ -1962,13 +2327,24 @@ your application (e.g. `/registration?request=abcde`).
             "value": {}
           }
         ],
+        "messages": [
+          {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          }
+        ],
         "method": "string",
         "providers": [
           {
             "disabled": true,
-            "errors": [
+            "messages": [
               {
-                "message": "string"
+                "context": {},
+                "id": 0,
+                "text": "string",
+                "type": "string"
               }
             ],
             "name": "string",
@@ -2145,7 +2521,7 @@ More information can be found at
 **request**: Request is the Login Request ID
 
 The value for this parameter comes from `request` URL Query parameter sent to
-your application (e.g. `/login?request=abcde`).
+your application (e.g. `/settingss?request=abcde`).
 
 #### Responses
 
@@ -2168,40 +2544,53 @@ your application (e.g. `/login?request=abcde`).
 ```json
 {
   "active": "string",
-  "expires_at": "2020-05-29T18:44:23Z",
+  "expires_at": "2019-08-24T14:15:22Z",
   "id": "string",
   "identity": {
-    "addresses": [
+    "id": "string",
+    "recovery_addresses": [
       {
-        "expires_at": "2020-05-29T18:44:23Z",
         "id": "string",
         "value": "string",
-        "verified": true,
-        "verified_at": "2020-05-29T18:44:23Z",
         "via": "string"
       }
     ],
-    "id": "string",
     "traits": {},
     "traits_schema_id": "string",
-    "traits_schema_url": "string"
+    "traits_schema_url": "string",
+    "verifiable_addresses": [
+      {
+        "expires_at": "2019-08-24T14:15:22Z",
+        "id": "string",
+        "value": "string",
+        "verified": true,
+        "verified_at": "2019-08-24T14:15:22Z",
+        "via": "string"
+      }
+    ]
   },
-  "issued_at": "2020-05-29T18:44:23Z",
+  "issued_at": "2019-08-24T14:15:22Z",
+  "messages": [
+    {
+      "context": {},
+      "id": 0,
+      "text": "string",
+      "type": "string"
+    }
+  ],
   "methods": {
     "property1": {
       "config": {
         "action": "string",
-        "errors": [
-          {
-            "message": "string"
-          }
-        ],
         "fields": [
           {
             "disabled": true,
-            "errors": [
+            "messages": [
               {
-                "message": "string"
+                "context": {},
+                "id": 0,
+                "text": "string",
+                "type": "string"
               }
             ],
             "name": "string",
@@ -2209,6 +2598,14 @@ your application (e.g. `/login?request=abcde`).
             "required": true,
             "type": "string",
             "value": {}
+          }
+        ],
+        "messages": [
+          {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
           }
         ],
         "method": "string"
@@ -2218,17 +2615,15 @@ your application (e.g. `/login?request=abcde`).
     "property2": {
       "config": {
         "action": "string",
-        "errors": [
-          {
-            "message": "string"
-          }
-        ],
         "fields": [
           {
             "disabled": true,
-            "errors": [
+            "messages": [
               {
-                "message": "string"
+                "context": {},
+                "id": 0,
+                "text": "string",
+                "type": "string"
               }
             ],
             "name": "string",
@@ -2238,13 +2633,21 @@ your application (e.g. `/login?request=abcde`).
             "value": {}
           }
         ],
+        "messages": [
+          {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          }
+        ],
         "method": "string"
       },
       "method": "string"
     }
   },
   "request_url": "string",
-  "update_successful": true
+  "state": "string"
 }
 ```
 
@@ -2428,20 +2831,18 @@ your application (e.g. `/verify?request=abcde`).
 
 ```json
 {
-  "expires_at": "2020-05-29T18:44:23Z",
+  "expires_at": "2019-08-24T14:15:22Z",
   "form": {
     "action": "string",
-    "errors": [
-      {
-        "message": "string"
-      }
-    ],
     "fields": [
       {
         "disabled": true,
-        "errors": [
+        "messages": [
           {
-            "message": "string"
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
           }
         ],
         "name": "string",
@@ -2451,10 +2852,26 @@ your application (e.g. `/verify?request=abcde`).
         "value": {}
       }
     ],
+    "messages": [
+      {
+        "context": {},
+        "id": 0,
+        "text": "string",
+        "type": "string"
+      }
+    ],
     "method": "string"
   },
   "id": "string",
-  "issued_at": "2020-05-29T18:44:23Z",
+  "issued_at": "2019-08-24T14:15:22Z",
+  "messages": [
+    {
+      "context": {},
+      "id": 0,
+      "text": "string",
+      "type": "string"
+    }
+  ],
   "request_url": "string",
   "success": true,
   "via": "string"
@@ -2604,8 +3021,7 @@ errors.
 
 When accessing this endpoint through ORY Kratos' Public API, ensure that cookies
 are set as they are required for CSRF to work. To prevent token scanning
-attacks, the public endpoint does not return 404 status codes to prevent
-scanning attacks.
+attacks, the public endpoint does not return 404 status codes.
 
 More information can be found at
 [ORY Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).
@@ -2792,6 +3208,21 @@ redirected to `urls.default_redirect_url`.
 
 More information can be found at
 [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+
+<a id="initialize-browser-based-login-user-flow-parameters"></a>
+
+#### Parameters
+
+| Parameter | In    | Type    | Required | Description             |
+| --------- | ----- | ------- | -------- | ----------------------- |
+| refresh   | query | boolean | false    | Refresh a login session |
+
+##### Detailed descriptions
+
+**refresh**: Refresh a login session
+
+If set to true, this will refresh an existing login session by asking the user
+to sign in again. This will reset the authenticated_at time of the session.
 
 #### Responses
 
@@ -3118,6 +3549,355 @@ headers = {
 }
 
 result = RestClient.get '/self-service/browser/flows/logout',
+  params: {}, headers: headers
+
+p JSON.parse(result)
+```
+
+</TabItem>
+</Tabs>
+
+<a id="opIdinitializeSelfServiceRecoveryFlow"></a>
+
+### Initialize browser-based account recovery flow
+
+```
+GET /self-service/browser/flows/recovery HTTP/1.1
+Accept: application/json
+
+```
+
+This endpoint initializes a browser-based account recovery flow. Once
+initialized, the browser will be redirected to `urls.recovery_ui` with the
+request ID set as a query parameter. If a valid user session exists, the request
+is aborted.
+
+> This endpoint is NOT INTENDED for API clients and only works with browsers
+> (Chrome, Firefox, ...).
+
+More information can be found at
+[ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).
+
+#### Responses
+
+<a id="initialize-browser-based-account-recovery-flow-responses"></a>
+
+##### Overview
+
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
+
+##### Examples
+
+###### 500 response
+
+```json
+{
+  "error": {
+    "code": 404,
+    "debug": "The database adapter was unable to find the element",
+    "details": {},
+    "message": "string",
+    "reason": "string",
+    "request": "string",
+    "status": "string"
+  }
+}
+```
+
+<aside class="success">This operation does not require authentication</aside>
+
+#### Code samples
+
+<Tabs groupId="code-samples" defaultValue="shell"
+  values={[{label: 'Shell', value: 'shell'}, {label: 'Go', value: 'go'}, {label: 'Node', value: 'node'},
+    {label: 'Java', value: 'java'}, {label: 'Python', value: 'python'}, {label: 'Ruby', value: 'ruby'}]}>
+<TabItem value="shell">
+
+```shell
+curl -X GET /self-service/browser/flows/recovery \
+  -H 'Accept: application/json'
+```
+
+</TabItem>
+<TabItem value="go">
+
+```go
+package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    var body []byte
+    // body = ...
+
+    req, err := http.NewRequest("GET", "/self-service/browser/flows/recovery", bytes.NewBuffer(body))
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+```
+
+</TabItem>
+<TabItem value="node">
+
+```javascript
+const fetch = require('node-fetch')
+
+const headers = {
+  Accept: 'application/json'
+}
+
+fetch('/self-service/browser/flows/recovery', {
+  method: 'GET',
+  headers
+})
+  .then((r) => r.json())
+  .then((body) => {
+    console.log(body)
+  })
+```
+
+</TabItem>
+<TabItem value="java">
+
+```java
+// This sample needs improvement.
+URL obj = new URL("/self-service/browser/flows/recovery");
+
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+
+int responseCode = con.getResponseCode();
+
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream())
+);
+
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+
+System.out.println(response.toString());
+```
+
+</TabItem>
+<TabItem value="python">
+
+```python
+import requests
+
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get(
+  '/self-service/browser/flows/recovery',
+  params={},
+  headers = headers)
+
+print r.json()
+```
+
+</TabItem>
+<TabItem value="ruby">
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get '/self-service/browser/flows/recovery',
+  params: {}, headers: headers
+
+p JSON.parse(result)
+```
+
+</TabItem>
+</Tabs>
+
+<a id="opIdcompleteSelfServiceBrowserRecoveryLinkStrategyFlow"></a>
+
+### Complete the browser-based recovery flow using a recovery link
+
+```
+POST /self-service/browser/flows/recovery/link HTTP/1.1
+Accept: application/json
+
+```
+
+> This endpoint is NOT INTENDED for API clients and only works with browsers
+> (Chrome, Firefox, ...) and HTML Forms.
+
+More information can be found at
+[ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).
+
+#### Responses
+
+<a id="complete-the-browser-based-recovery-flow-using-a-recovery-link-responses"></a>
+
+##### Overview
+
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
+
+##### Examples
+
+###### 500 response
+
+```json
+{
+  "error": {
+    "code": 404,
+    "debug": "The database adapter was unable to find the element",
+    "details": {},
+    "message": "string",
+    "reason": "string",
+    "request": "string",
+    "status": "string"
+  }
+}
+```
+
+<aside class="success">This operation does not require authentication</aside>
+
+#### Code samples
+
+<Tabs groupId="code-samples" defaultValue="shell"
+  values={[{label: 'Shell', value: 'shell'}, {label: 'Go', value: 'go'}, {label: 'Node', value: 'node'},
+    {label: 'Java', value: 'java'}, {label: 'Python', value: 'python'}, {label: 'Ruby', value: 'ruby'}]}>
+<TabItem value="shell">
+
+```shell
+curl -X POST /self-service/browser/flows/recovery/link \
+  -H 'Accept: application/json'
+```
+
+</TabItem>
+<TabItem value="go">
+
+```go
+package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    var body []byte
+    // body = ...
+
+    req, err := http.NewRequest("POST", "/self-service/browser/flows/recovery/link", bytes.NewBuffer(body))
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+```
+
+</TabItem>
+<TabItem value="node">
+
+```javascript
+const fetch = require('node-fetch')
+
+const headers = {
+  Accept: 'application/json'
+}
+
+fetch('/self-service/browser/flows/recovery/link', {
+  method: 'POST',
+  headers
+})
+  .then((r) => r.json())
+  .then((body) => {
+    console.log(body)
+  })
+```
+
+</TabItem>
+<TabItem value="java">
+
+```java
+// This sample needs improvement.
+URL obj = new URL("/self-service/browser/flows/recovery/link");
+
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("POST");
+
+int responseCode = con.getResponseCode();
+
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream())
+);
+
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+
+System.out.println(response.toString());
+```
+
+</TabItem>
+<TabItem value="python">
+
+```python
+import requests
+
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.post(
+  '/self-service/browser/flows/recovery/link',
+  params={},
+  headers = headers)
+
+print r.json()
+```
+
+</TabItem>
+<TabItem value="ruby">
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.post '/self-service/browser/flows/recovery/link',
   params: {}, headers: headers
 
 p JSON.parse(result)
@@ -4436,8 +5216,10 @@ Accept: application/json
 ```
 
 Uses the HTTP Headers in the GET request to determine (e.g. by using checking
-the cookies) who is authenticated. Returns a session object or 401 if the
-credentials are invalid or no credentials were sent.
+the cookies) who is authenticated. Returns a session object in the body or 401
+if the credentials are invalid or no credentials were sent. Additionally when
+the request it successful it adds the user ID to the
+'X-Kratos-Authenticated-Identity-Id' header in the response.
 
 This endpoint is useful for reverse proxies and API Gateways.
 
@@ -4459,25 +5241,32 @@ This endpoint is useful for reverse proxies and API Gateways.
 
 ```json
 {
-  "authenticated_at": "2020-05-29T18:44:23Z",
-  "expires_at": "2020-05-29T18:44:23Z",
+  "authenticated_at": "2019-08-24T14:15:22Z",
+  "expires_at": "2019-08-24T14:15:22Z",
   "identity": {
-    "addresses": [
+    "id": "string",
+    "recovery_addresses": [
       {
-        "expires_at": "2020-05-29T18:44:23Z",
         "id": "string",
         "value": "string",
-        "verified": true,
-        "verified_at": "2020-05-29T18:44:23Z",
         "via": "string"
       }
     ],
-    "id": "string",
     "traits": {},
     "traits_schema_id": "string",
-    "traits_schema_url": "string"
+    "traits_schema_url": "string",
+    "verifiable_addresses": [
+      {
+        "expires_at": "2019-08-24T14:15:22Z",
+        "id": "string",
+        "value": "string",
+        "verified": true,
+        "verified_at": "2019-08-24T14:15:22Z",
+        "via": "string"
+      }
+    ]
   },
-  "issued_at": "2020-05-29T18:44:23Z",
+  "issued_at": "2019-08-24T14:15:22Z",
   "sid": "string"
 }
 ```
@@ -4797,41 +5586,20 @@ credentials, passwordless credentials,_
 | ------------------------------------------------------------------------------------------------------------------- | ------ | -------- | ------------ | ----------- |
 | CredentialsType represents several different credential types, like password credentials, passwordless credentials, | string | false    | none         | and so on.  |
 
-<a id="tocSerror">Error</a>
-#### Error
+<a id="tocSid">ID</a>
+#### ID
 
-<a id="schemaerror"></a>
+<a id="schemaid"></a>
 
 ```json
-{
-  "message": "string"
-}
+0
 ```
 
 #### Properties
 
-| Name    | Type   | Required | Restrictions | Description                              |
-| ------- | ------ | -------- | ------------ | ---------------------------------------- |
-| message | string | false    | none         | Code FormErrorCode `json:"id,omitempty"` |
-
-<a id="tocSerrors">Errors</a>
-#### Errors
-
-<a id="schemaerrors"></a>
-
-```json
-[
-  {
-    "message": "string"
-  }
-]
-```
-
-#### Properties
-
-| Name        | Type                    | Required | Restrictions | Description |
-| ----------- | ----------------------- | -------- | ------------ | ----------- |
-| _anonymous_ | [[Error](#schemaerror)] | false    | none         | none        |
+| Name        | Type           | Required | Restrictions | Description |
+| ----------- | -------------- | -------- | ------------ | ----------- |
+| _anonymous_ | integer(int64) | false    | none         | none        |
 
 <a id="tocSidentity">Identity</a>
 #### Identity
@@ -4840,32 +5608,85 @@ credentials, passwordless credentials,_
 
 ```json
 {
-  "addresses": [
+  "id": "string",
+  "recovery_addresses": [
     {
-      "expires_at": "2020-05-29T18:44:23Z",
       "id": "string",
       "value": "string",
-      "verified": true,
-      "verified_at": "2020-05-29T18:44:23Z",
       "via": "string"
     }
   ],
-  "id": "string",
   "traits": {},
   "traits_schema_id": "string",
-  "traits_schema_url": "string"
+  "traits_schema_url": "string",
+  "verifiable_addresses": [
+    {
+      "expires_at": "2019-08-24T14:15:22Z",
+      "id": "string",
+      "value": "string",
+      "verified": true,
+      "verified_at": "2019-08-24T14:15:22Z",
+      "via": "string"
+    }
+  ]
 }
 ```
 
 #### Properties
 
-| Name              | Type                                            | Required | Restrictions | Description                                                                                                    |
-| ----------------- | ----------------------------------------------- | -------- | ------------ | -------------------------------------------------------------------------------------------------------------- |
-| addresses         | [[VerifiableAddress](#schemaverifiableaddress)] | false    | none         | none                                                                                                           |
-| id                | [UUID](#schemauuid)                             | true     | none         | none                                                                                                           |
-| traits            | [Traits](#schematraits)                         | true     | none         | none                                                                                                           |
-| traits_schema_id  | string                                          | true     | none         | TraitsSchemaID is the ID of the JSON Schema to be used for validating the identity's traits.                   |
-| traits_schema_url | string                                          | false    | none         | TraitsSchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from. format: url |
+| Name                 | Type                                            | Required | Restrictions | Description                                                                                                    |
+| -------------------- | ----------------------------------------------- | -------- | ------------ | -------------------------------------------------------------------------------------------------------------- |
+| id                   | [UUID](#schemauuid)                             | true     | none         | none                                                                                                           |
+| recovery_addresses   | [[RecoveryAddress](#schemarecoveryaddress)]     | false    | none         | RecoveryAddresses contains all the addresses that can be used to recover an identity.                          |
+| traits               | [Traits](#schematraits)                         | true     | none         | none                                                                                                           |
+| traits_schema_id     | string                                          | true     | none         | TraitsSchemaID is the ID of the JSON Schema to be used for validating the identity's traits.                   |
+| traits_schema_url    | string                                          | false    | none         | TraitsSchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from. format: url |
+| verifiable_addresses | [[VerifiableAddress](#schemaverifiableaddress)] | false    | none         | VerifiableAddresses contains all the addresses that can be verified by the user.                               |
+
+<a id="tocSmessage">Message</a>
+#### Message
+
+<a id="schemamessage"></a>
+
+```json
+{
+  "context": {},
+  "id": 0,
+  "text": "string",
+  "type": "string"
+}
+```
+
+#### Properties
+
+| Name    | Type                | Required | Restrictions | Description |
+| ------- | ------------------- | -------- | ------------ | ----------- |
+| context | object              | false    | none         | none        |
+| id      | [ID](#schemaid)     | false    | none         | none        |
+| text    | string              | false    | none         | none        |
+| type    | [Type](#schematype) | false    | none         | none        |
+
+<a id="tocSmessages">Messages</a>
+#### Messages
+
+<a id="schemamessages"></a>
+
+```json
+[
+  {
+    "context": {},
+    "id": 0,
+    "text": "string",
+    "type": "string"
+  }
+]
+```
+
+#### Properties
+
+| Name        | Type                        | Required | Restrictions | Description |
+| ----------- | --------------------------- | -------- | ------------ | ----------- |
+| _anonymous_ | [[Message](#schemamessage)] | false    | none         | none        |
 
 <a id="tocSprovidercredentialsconfig">ProviderCredentialsConfig</a>
 #### ProviderCredentialsConfig
@@ -4886,6 +5707,42 @@ credentials, passwordless credentials,_
 | provider | string | false    | none         | none        |
 | subject  | string | false    | none         | none        |
 
+<a id="tocSrecoveryaddress">RecoveryAddress</a>
+#### RecoveryAddress
+
+<a id="schemarecoveryaddress"></a>
+
+```json
+{
+  "id": "string",
+  "value": "string",
+  "via": "string"
+}
+```
+
+#### Properties
+
+| Name  | Type                                              | Required | Restrictions | Description |
+| ----- | ------------------------------------------------- | -------- | ------------ | ----------- |
+| id    | [UUID](#schemauuid)                               | true     | none         | none        |
+| value | string                                            | true     | none         | none        |
+| via   | [RecoveryAddressType](#schemarecoveryaddresstype) | true     | none         | none        |
+
+<a id="tocSrecoveryaddresstype">RecoveryAddressType</a>
+#### RecoveryAddressType
+
+<a id="schemarecoveryaddresstype"></a>
+
+```json
+"string"
+```
+
+#### Properties
+
+| Name        | Type   | Required | Restrictions | Description |
+| ----------- | ------ | -------- | ------------ | ----------- |
+| _anonymous_ | string | false    | none         | none        |
+
 <a id="tocSrequestmethodconfig">RequestMethodConfig</a>
 #### RequestMethodConfig
 
@@ -4894,17 +5751,15 @@ credentials, passwordless credentials,_
 ```json
 {
   "action": "string",
-  "errors": [
-    {
-      "message": "string"
-    }
-  ],
   "fields": [
     {
       "disabled": true,
-      "errors": [
+      "messages": [
         {
-          "message": "string"
+          "context": {},
+          "id": 0,
+          "text": "string",
+          "type": "string"
         }
       ],
       "name": "string",
@@ -4914,18 +5769,41 @@ credentials, passwordless credentials,_
       "value": {}
     }
   ],
+  "messages": [
+    {
+      "context": {},
+      "id": 0,
+      "text": "string",
+      "type": "string"
+    }
+  ],
   "method": "string"
 }
 ```
 
 #### Properties
 
-| Name   | Type                            | Required | Restrictions | Description                                                                                 |
-| ------ | ------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------- |
-| action | string                          | true     | none         | Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`. |
-| errors | [[Error](#schemaerror)]         | false    | none         | Errors contains all form errors. These will be duplicates of the individual field errors.   |
-| fields | [formFields](#schemaformfields) | true     | none         | Fields contains multiple fields                                                             |
-| method | string                          | true     | none         | Method is the form method (e.g. POST)                                                       |
+| Name     | Type                            | Required | Restrictions | Description                                                                                 |
+| -------- | ------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------- |
+| action   | string                          | true     | none         | Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`. |
+| fields   | [formFields](#schemaformfields) | true     | none         | Fields contains multiple fields                                                             |
+| messages | [Messages](#schemamessages)     | false    | none         | none                                                                                        |
+| method   | string                          | true     | none         | Method is the form method (e.g. POST)                                                       |
+
+<a id="tocSstate">State</a>
+#### State
+
+<a id="schemastate"></a>
+
+```json
+"string"
+```
+
+#### Properties
+
+| Name        | Type   | Required | Restrictions | Description |
+| ----------- | ------ | -------- | ------------ | ----------- |
+| _anonymous_ | string | false    | none         | none        |
 
 <a id="tocStraits">Traits</a>
 #### Traits
@@ -4939,6 +5817,21 @@ credentials, passwordless credentials,_
 #### Properties
 
 _None_
+
+<a id="tocStype">Type</a>
+#### Type
+
+<a id="schematype"></a>
+
+```json
+"string"
+```
+
+#### Properties
+
+| Name        | Type   | Required | Restrictions | Description |
+| ----------- | ------ | -------- | ------------ | ----------- |
+| _anonymous_ | string | false    | none         | none        |
 
 <a id="tocSuuid">UUID</a>
 #### UUID
@@ -4962,11 +5855,11 @@ _None_
 
 ```json
 {
-  "expires_at": "2020-05-29T18:44:23Z",
+  "expires_at": "2019-08-24T14:15:22Z",
   "id": "string",
   "value": "string",
   "verified": true,
-  "verified_at": "2020-05-29T18:44:23Z",
+  "verified_at": "2019-08-24T14:15:22Z",
   "via": "string"
 }
 ```
@@ -5045,17 +5938,15 @@ _None_
 ```json
 {
   "action": "string",
-  "errors": [
-    {
-      "message": "string"
-    }
-  ],
   "fields": [
     {
       "disabled": true,
-      "errors": [
+      "messages": [
         {
-          "message": "string"
+          "context": {},
+          "id": 0,
+          "text": "string",
+          "type": "string"
         }
       ],
       "name": "string",
@@ -5063,6 +5954,14 @@ _None_
       "required": true,
       "type": "string",
       "value": {}
+    }
+  ],
+  "messages": [
+    {
+      "context": {},
+      "id": 0,
+      "text": "string",
+      "type": "string"
     }
   ],
   "method": "string"
@@ -5074,12 +5973,12 @@ JSON requests_
 
 #### Properties
 
-| Name   | Type                            | Required | Restrictions | Description                                                                                 |
-| ------ | ------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------- |
-| action | string                          | true     | none         | Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`. |
-| errors | [[Error](#schemaerror)]         | false    | none         | Errors contains all form errors. These will be duplicates of the individual field errors.   |
-| fields | [formFields](#schemaformfields) | true     | none         | Fields contains multiple fields                                                             |
-| method | string                          | true     | none         | Method is the form method (e.g. POST)                                                       |
+| Name     | Type                            | Required | Restrictions | Description                                                                                 |
+| -------- | ------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------- |
+| action   | string                          | true     | none         | Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`. |
+| fields   | [formFields](#schemaformfields) | true     | none         | Fields contains multiple fields                                                             |
+| messages | [Messages](#schemamessages)     | false    | none         | none                                                                                        |
+| method   | string                          | true     | none         | Method is the form method (e.g. POST)                                                       |
 
 <a id="tocSformfield">formField</a>
 #### formField
@@ -5089,9 +5988,12 @@ JSON requests_
 ```json
 {
   "disabled": true,
-  "errors": [
+  "messages": [
     {
-      "message": "string"
+      "context": {},
+      "id": 0,
+      "text": "string",
+      "type": "string"
     }
   ],
   "name": "string",
@@ -5106,15 +6008,15 @@ _Field represents a HTML Form Field_
 
 #### Properties
 
-| Name     | Type                    | Required | Restrictions | Description                                                      |
-| -------- | ----------------------- | -------- | ------------ | ---------------------------------------------------------------- |
-| disabled | boolean                 | false    | none         | Disabled is the equivalent of `<input disabled="{{.Disabled}}">` |
-| errors   | [Errors](#schemaerrors) | false    | none         | none                                                             |
-| name     | string                  | true     | none         | Name is the equivalent of `<input name="{{.Name}}">`             |
-| pattern  | string                  | false    | none         | Pattern is the equivalent of `<input pattern="{{.Pattern}}">`    |
-| required | boolean                 | false    | none         | Required is the equivalent of `<input required="{{.Required}}">` |
-| type     | string                  | true     | none         | Type is the equivalent of `<input type="{{.Type}}">`             |
-| value    | object                  | false    | none         | Value is the equivalent of `<input value="{{.Value}}">`          |
+| Name     | Type                        | Required | Restrictions | Description                                                              |
+| -------- | --------------------------- | -------- | ------------ | ------------------------------------------------------------------------ |
+| disabled | boolean                     | false    | none         | Disabled is the equivalent of `<input {{if .Disabled}}disabled{{end}}">` |
+| messages | [Messages](#schemamessages) | false    | none         | none                                                                     |
+| name     | string                      | true     | none         | Name is the equivalent of `<input name="{{.Name}}">`                     |
+| pattern  | string                      | false    | none         | Pattern is the equivalent of `<input pattern="{{.Pattern}}">`            |
+| required | boolean                     | false    | none         | Required is the equivalent of `<input required="{{.Required}}">`         |
+| type     | string                      | true     | none         | Type is the equivalent of `<input type="{{.Type}}">`                     |
+| value    | object                      | false    | none         | Value is the equivalent of `<input value="{{.Value}}">`                  |
 
 <a id="tocSformfields">formFields</a>
 #### formFields
@@ -5125,9 +6027,12 @@ _Field represents a HTML Form Field_
 [
   {
     "disabled": true,
-    "errors": [
+    "messages": [
       {
-        "message": "string"
+        "context": {},
+        "id": 0,
+        "text": "string",
+        "type": "string"
       }
     ],
     "name": "string",
@@ -5249,25 +6154,31 @@ _Error response_
 ```json
 {
   "active": "string",
-  "expires_at": "2020-05-29T18:44:23Z",
+  "expires_at": "2019-08-24T14:15:22Z",
   "forced": true,
   "id": "string",
-  "issued_at": "2020-05-29T18:44:23Z",
+  "issued_at": "2019-08-24T14:15:22Z",
+  "messages": [
+    {
+      "context": {},
+      "id": 0,
+      "text": "string",
+      "type": "string"
+    }
+  ],
   "methods": {
     "property1": {
       "config": {
         "action": "string",
-        "errors": [
-          {
-            "message": "string"
-          }
-        ],
         "fields": [
           {
             "disabled": true,
-            "errors": [
+            "messages": [
               {
-                "message": "string"
+                "context": {},
+                "id": 0,
+                "text": "string",
+                "type": "string"
               }
             ],
             "name": "string",
@@ -5277,13 +6188,24 @@ _Error response_
             "value": {}
           }
         ],
+        "messages": [
+          {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          }
+        ],
         "method": "string",
         "providers": [
           {
             "disabled": true,
-            "errors": [
+            "messages": [
               {
-                "message": "string"
+                "context": {},
+                "id": 0,
+                "text": "string",
+                "type": "string"
               }
             ],
             "name": "string",
@@ -5299,17 +6221,15 @@ _Error response_
     "property2": {
       "config": {
         "action": "string",
-        "errors": [
-          {
-            "message": "string"
-          }
-        ],
         "fields": [
           {
             "disabled": true,
-            "errors": [
+            "messages": [
               {
-                "message": "string"
+                "context": {},
+                "id": 0,
+                "text": "string",
+                "type": "string"
               }
             ],
             "name": "string",
@@ -5319,13 +6239,24 @@ _Error response_
             "value": {}
           }
         ],
+        "messages": [
+          {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          }
+        ],
         "method": "string",
         "providers": [
           {
             "disabled": true,
-            "errors": [
+            "messages": [
               {
-                "message": "string"
+                "context": {},
+                "id": 0,
+                "text": "string",
+                "type": "string"
               }
             ],
             "name": "string",
@@ -5352,6 +6283,7 @@ _Error response_
 | forced                     | boolean                                         | false    | none         | Forced stores whether this login request should enforce reauthentication.                                                                                                   |
 | id                         | [UUID](#schemauuid)                             | true     | none         | none                                                                                                                                                                        |
 | issued_at                  | string(date-time)                               | true     | none         | IssuedAt is the time (UTC) when the request occurred.                                                                                                                       |
+| messages                   | [Messages](#schemamessages)                     | false    | none         | none                                                                                                                                                                        |
 | methods                    | object                                          | true     | none         | Methods contains context for all enabled login methods. If a login request has been processed, but for example the password is incorrect, this will contain error messages. |
 | » **additionalProperties** | [loginRequestMethod](#schemaloginrequestmethod) | false    | none         | none                                                                                                                                                                        |
 | request_url                | string                                          | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.                   |
@@ -5365,17 +6297,15 @@ _Error response_
 {
   "config": {
     "action": "string",
-    "errors": [
-      {
-        "message": "string"
-      }
-    ],
     "fields": [
       {
         "disabled": true,
-        "errors": [
+        "messages": [
           {
-            "message": "string"
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
           }
         ],
         "name": "string",
@@ -5385,13 +6315,24 @@ _Error response_
         "value": {}
       }
     ],
+    "messages": [
+      {
+        "context": {},
+        "id": 0,
+        "text": "string",
+        "type": "string"
+      }
+    ],
     "method": "string",
     "providers": [
       {
         "disabled": true,
-        "errors": [
+        "messages": [
           {
-            "message": "string"
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
           }
         ],
         "name": "string",
@@ -5421,17 +6362,15 @@ _Error response_
 ```json
 {
   "action": "string",
-  "errors": [
-    {
-      "message": "string"
-    }
-  ],
   "fields": [
     {
       "disabled": true,
-      "errors": [
+      "messages": [
         {
-          "message": "string"
+          "context": {},
+          "id": 0,
+          "text": "string",
+          "type": "string"
         }
       ],
       "name": "string",
@@ -5441,13 +6380,24 @@ _Error response_
       "value": {}
     }
   ],
+  "messages": [
+    {
+      "context": {},
+      "id": 0,
+      "text": "string",
+      "type": "string"
+    }
+  ],
   "method": "string",
   "providers": [
     {
       "disabled": true,
-      "errors": [
+      "messages": [
         {
-          "message": "string"
+          "context": {},
+          "id": 0,
+          "text": "string",
+          "type": "string"
         }
       ],
       "name": "string",
@@ -5465,37 +6415,43 @@ _Error response_
 | Name      | Type                            | Required | Restrictions | Description                                                                                 |
 | --------- | ------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------- |
 | action    | string                          | true     | none         | Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`. |
-| errors    | [[Error](#schemaerror)]         | false    | none         | Errors contains all form errors. These will be duplicates of the individual field errors.   |
 | fields    | [formFields](#schemaformfields) | true     | none         | Fields contains multiple fields                                                             |
+| messages  | [Messages](#schemamessages)     | false    | none         | none                                                                                        |
 | method    | string                          | true     | none         | Method is the form method (e.g. POST)                                                       |
 | providers | [[formField](#schemaformfield)] | false    | none         | Providers is set for the "oidc" request method.                                             |
 
-<a id="tocSregistrationrequest">registrationRequest</a>
-#### registrationRequest
+<a id="tocSrecoveryrequest">recoveryRequest</a>
+#### recoveryRequest
 
-<a id="schemaregistrationrequest"></a>
+<a id="schemarecoveryrequest"></a>
 
 ```json
 {
   "active": "string",
-  "expires_at": "2020-05-29T18:44:23Z",
+  "expires_at": "2019-08-24T14:15:22Z",
   "id": "string",
-  "issued_at": "2020-05-29T18:44:23Z",
+  "issued_at": "2019-08-24T14:15:22Z",
+  "messages": [
+    {
+      "context": {},
+      "id": 0,
+      "text": "string",
+      "type": "string"
+    }
+  ],
   "methods": {
     "property1": {
       "config": {
         "action": "string",
-        "errors": [
-          {
-            "message": "string"
-          }
-        ],
         "fields": [
           {
             "disabled": true,
-            "errors": [
+            "messages": [
               {
-                "message": "string"
+                "context": {},
+                "id": 0,
+                "text": "string",
+                "type": "string"
               }
             ],
             "name": "string",
@@ -5505,13 +6461,180 @@ _Error response_
             "value": {}
           }
         ],
+        "messages": [
+          {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          }
+        ],
+        "method": "string"
+      },
+      "method": "string"
+    },
+    "property2": {
+      "config": {
+        "action": "string",
+        "fields": [
+          {
+            "disabled": true,
+            "messages": [
+              {
+                "context": {},
+                "id": 0,
+                "text": "string",
+                "type": "string"
+              }
+            ],
+            "name": "string",
+            "pattern": "string",
+            "required": true,
+            "type": "string",
+            "value": {}
+          }
+        ],
+        "messages": [
+          {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          }
+        ],
+        "method": "string"
+      },
+      "method": "string"
+    }
+  },
+  "request_url": "string",
+  "state": "string"
+}
+```
+
+_Request presents a recovery request_
+
+#### Properties
+
+| Name                       | Type                                                  | Required | Restrictions | Description                                                                                                                                                                           |
+| -------------------------- | ----------------------------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| active                     | string                                                | false    | none         | Active, if set, contains the registration method that is being used. It is initially not set.                                                                                         |
+| expires_at                 | string(date-time)                                     | true     | none         | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting, a new request has to be initiated.                                              |
+| id                         | [UUID](#schemauuid)                                   | true     | none         | none                                                                                                                                                                                  |
+| issued_at                  | string(date-time)                                     | true     | none         | IssuedAt is the time (UTC) when the request occurred.                                                                                                                                 |
+| messages                   | [Messages](#schemamessages)                           | false    | none         | none                                                                                                                                                                                  |
+| methods                    | object                                                | true     | none         | Methods contains context for all account recovery methods. If a registration request has been processed, but for example the password is incorrect, this will contain error messages. |
+| » **additionalProperties** | [recoveryRequestMethod](#schemarecoveryrequestmethod) | false    | none         | none                                                                                                                                                                                  |
+| request_url                | string                                                | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.                             |
+| state                      | [State](#schemastate)                                 | true     | none         | none                                                                                                                                                                                  |
+
+<a id="tocSrecoveryrequestmethod">recoveryRequestMethod</a>
+#### recoveryRequestMethod
+
+<a id="schemarecoveryrequestmethod"></a>
+
+```json
+{
+  "config": {
+    "action": "string",
+    "fields": [
+      {
+        "disabled": true,
+        "messages": [
+          {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          }
+        ],
+        "name": "string",
+        "pattern": "string",
+        "required": true,
+        "type": "string",
+        "value": {}
+      }
+    ],
+    "messages": [
+      {
+        "context": {},
+        "id": 0,
+        "text": "string",
+        "type": "string"
+      }
+    ],
+    "method": "string"
+  },
+  "method": "string"
+}
+```
+
+#### Properties
+
+| Name   | Type                                              | Required | Restrictions | Description                                   |
+| ------ | ------------------------------------------------- | -------- | ------------ | --------------------------------------------- |
+| config | [RequestMethodConfig](#schemarequestmethodconfig) | false    | none         | none                                          |
+| method | string                                            | false    | none         | Method contains the request credentials type. |
+
+<a id="tocSregistrationrequest">registrationRequest</a>
+#### registrationRequest
+
+<a id="schemaregistrationrequest"></a>
+
+```json
+{
+  "active": "string",
+  "expires_at": "2019-08-24T14:15:22Z",
+  "id": "string",
+  "issued_at": "2019-08-24T14:15:22Z",
+  "messages": [
+    {
+      "context": {},
+      "id": 0,
+      "text": "string",
+      "type": "string"
+    }
+  ],
+  "methods": {
+    "property1": {
+      "config": {
+        "action": "string",
+        "fields": [
+          {
+            "disabled": true,
+            "messages": [
+              {
+                "context": {},
+                "id": 0,
+                "text": "string",
+                "type": "string"
+              }
+            ],
+            "name": "string",
+            "pattern": "string",
+            "required": true,
+            "type": "string",
+            "value": {}
+          }
+        ],
+        "messages": [
+          {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          }
+        ],
         "method": "string",
         "providers": [
           {
             "disabled": true,
-            "errors": [
+            "messages": [
               {
-                "message": "string"
+                "context": {},
+                "id": 0,
+                "text": "string",
+                "type": "string"
               }
             ],
             "name": "string",
@@ -5527,17 +6650,15 @@ _Error response_
     "property2": {
       "config": {
         "action": "string",
-        "errors": [
-          {
-            "message": "string"
-          }
-        ],
         "fields": [
           {
             "disabled": true,
-            "errors": [
+            "messages": [
               {
-                "message": "string"
+                "context": {},
+                "id": 0,
+                "text": "string",
+                "type": "string"
               }
             ],
             "name": "string",
@@ -5547,13 +6668,24 @@ _Error response_
             "value": {}
           }
         ],
+        "messages": [
+          {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          }
+        ],
         "method": "string",
         "providers": [
           {
             "disabled": true,
-            "errors": [
+            "messages": [
               {
-                "message": "string"
+                "context": {},
+                "id": 0,
+                "text": "string",
+                "type": "string"
               }
             ],
             "name": "string",
@@ -5579,6 +6711,7 @@ _Error response_
 | expires_at                 | string(date-time)                                             | true     | none         | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in, a new request has to be initiated.                                                              |
 | id                         | [UUID](#schemauuid)                                           | true     | none         | none                                                                                                                                                                                      |
 | issued_at                  | string(date-time)                                             | true     | none         | IssuedAt is the time (UTC) when the request occurred.                                                                                                                                     |
+| messages                   | [Messages](#schemamessages)                                   | false    | none         | none                                                                                                                                                                                      |
 | methods                    | object                                                        | true     | none         | Methods contains context for all enabled registration methods. If a registration request has been processed, but for example the password is incorrect, this will contain error messages. |
 | » **additionalProperties** | [registrationRequestMethod](#schemaregistrationrequestmethod) | false    | none         | none                                                                                                                                                                                      |
 | request_url                | string                                                        | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.                                 |
@@ -5592,17 +6725,15 @@ _Error response_
 {
   "config": {
     "action": "string",
-    "errors": [
-      {
-        "message": "string"
-      }
-    ],
     "fields": [
       {
         "disabled": true,
-        "errors": [
+        "messages": [
           {
-            "message": "string"
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
           }
         ],
         "name": "string",
@@ -5612,13 +6743,24 @@ _Error response_
         "value": {}
       }
     ],
+    "messages": [
+      {
+        "context": {},
+        "id": 0,
+        "text": "string",
+        "type": "string"
+      }
+    ],
     "method": "string",
     "providers": [
       {
         "disabled": true,
-        "errors": [
+        "messages": [
           {
-            "message": "string"
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
           }
         ],
         "name": "string",
@@ -5648,17 +6790,15 @@ _Error response_
 ```json
 {
   "action": "string",
-  "errors": [
-    {
-      "message": "string"
-    }
-  ],
   "fields": [
     {
       "disabled": true,
-      "errors": [
+      "messages": [
         {
-          "message": "string"
+          "context": {},
+          "id": 0,
+          "text": "string",
+          "type": "string"
         }
       ],
       "name": "string",
@@ -5668,13 +6808,24 @@ _Error response_
       "value": {}
     }
   ],
+  "messages": [
+    {
+      "context": {},
+      "id": 0,
+      "text": "string",
+      "type": "string"
+    }
+  ],
   "method": "string",
   "providers": [
     {
       "disabled": true,
-      "errors": [
+      "messages": [
         {
-          "message": "string"
+          "context": {},
+          "id": 0,
+          "text": "string",
+          "type": "string"
         }
       ],
       "name": "string",
@@ -5692,8 +6843,8 @@ _Error response_
 | Name      | Type                            | Required | Restrictions | Description                                                                                 |
 | --------- | ------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------- |
 | action    | string                          | true     | none         | Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`. |
-| errors    | [[Error](#schemaerror)]         | false    | none         | Errors contains all form errors. These will be duplicates of the individual field errors.   |
 | fields    | [formFields](#schemaformfields) | true     | none         | Fields contains multiple fields                                                             |
+| messages  | [Messages](#schemamessages)     | false    | none         | none                                                                                        |
 | method    | string                          | true     | none         | Method is the form method (e.g. POST)                                                       |
 | providers | [[formField](#schemaformfield)] | false    | none         | Providers is set for the "oidc" request method.                                             |
 
@@ -5704,25 +6855,32 @@ _Error response_
 
 ```json
 {
-  "authenticated_at": "2020-05-29T18:44:23Z",
-  "expires_at": "2020-05-29T18:44:23Z",
+  "authenticated_at": "2019-08-24T14:15:22Z",
+  "expires_at": "2019-08-24T14:15:22Z",
   "identity": {
-    "addresses": [
+    "id": "string",
+    "recovery_addresses": [
       {
-        "expires_at": "2020-05-29T18:44:23Z",
         "id": "string",
         "value": "string",
-        "verified": true,
-        "verified_at": "2020-05-29T18:44:23Z",
         "via": "string"
       }
     ],
-    "id": "string",
     "traits": {},
     "traits_schema_id": "string",
-    "traits_schema_url": "string"
+    "traits_schema_url": "string",
+    "verifiable_addresses": [
+      {
+        "expires_at": "2019-08-24T14:15:22Z",
+        "id": "string",
+        "value": "string",
+        "verified": true,
+        "verified_at": "2019-08-24T14:15:22Z",
+        "via": "string"
+      }
+    ]
   },
-  "issued_at": "2020-05-29T18:44:23Z",
+  "issued_at": "2019-08-24T14:15:22Z",
   "sid": "string"
 }
 ```
@@ -5745,40 +6903,53 @@ _Error response_
 ```json
 {
   "active": "string",
-  "expires_at": "2020-05-29T18:44:23Z",
+  "expires_at": "2019-08-24T14:15:22Z",
   "id": "string",
   "identity": {
-    "addresses": [
+    "id": "string",
+    "recovery_addresses": [
       {
-        "expires_at": "2020-05-29T18:44:23Z",
         "id": "string",
         "value": "string",
-        "verified": true,
-        "verified_at": "2020-05-29T18:44:23Z",
         "via": "string"
       }
     ],
-    "id": "string",
     "traits": {},
     "traits_schema_id": "string",
-    "traits_schema_url": "string"
+    "traits_schema_url": "string",
+    "verifiable_addresses": [
+      {
+        "expires_at": "2019-08-24T14:15:22Z",
+        "id": "string",
+        "value": "string",
+        "verified": true,
+        "verified_at": "2019-08-24T14:15:22Z",
+        "via": "string"
+      }
+    ]
   },
-  "issued_at": "2020-05-29T18:44:23Z",
+  "issued_at": "2019-08-24T14:15:22Z",
+  "messages": [
+    {
+      "context": {},
+      "id": 0,
+      "text": "string",
+      "type": "string"
+    }
+  ],
   "methods": {
     "property1": {
       "config": {
         "action": "string",
-        "errors": [
-          {
-            "message": "string"
-          }
-        ],
         "fields": [
           {
             "disabled": true,
-            "errors": [
+            "messages": [
               {
-                "message": "string"
+                "context": {},
+                "id": 0,
+                "text": "string",
+                "type": "string"
               }
             ],
             "name": "string",
@@ -5786,6 +6957,14 @@ _Error response_
             "required": true,
             "type": "string",
             "value": {}
+          }
+        ],
+        "messages": [
+          {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
           }
         ],
         "method": "string"
@@ -5795,17 +6974,15 @@ _Error response_
     "property2": {
       "config": {
         "action": "string",
-        "errors": [
-          {
-            "message": "string"
-          }
-        ],
         "fields": [
           {
             "disabled": true,
-            "errors": [
+            "messages": [
               {
-                "message": "string"
+                "context": {},
+                "id": 0,
+                "text": "string",
+                "type": "string"
               }
             ],
             "name": "string",
@@ -5815,13 +6992,21 @@ _Error response_
             "value": {}
           }
         ],
+        "messages": [
+          {
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
+          }
+        ],
         "method": "string"
       },
       "method": "string"
     }
   },
   "request_url": "string",
-  "update_successful": true
+  "state": "string"
 }
 ```
 
@@ -5829,17 +7014,18 @@ _Request presents a settings request_
 
 #### Properties
 
-| Name                       | Type                                                  | Required | Restrictions | Description                                                                                                                                                                                                                                                                                                |
-| -------------------------- | ----------------------------------------------------- | -------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| active                     | string                                                | false    | none         | Active, if set, contains the registration method that is being used. It is initially not set.                                                                                                                                                                                                              |
-| expires_at                 | string(date-time)                                     | true     | none         | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting, a new request has to be initiated.                                                                                                                                                                   |
-| id                         | [UUID](#schemauuid)                                   | true     | none         | none                                                                                                                                                                                                                                                                                                       |
-| identity                   | [Identity](#schemaidentity)                           | true     | none         | none                                                                                                                                                                                                                                                                                                       |
-| issued_at                  | string(date-time)                                     | true     | none         | IssuedAt is the time (UTC) when the request occurred.                                                                                                                                                                                                                                                      |
-| methods                    | object                                                | true     | none         | Methods contains context for all enabled registration methods. If a registration request has been processed, but for example the password is incorrect, this will contain error messages.                                                                                                                  |
-| » **additionalProperties** | [settingsRequestMethod](#schemasettingsrequestmethod) | false    | none         | none                                                                                                                                                                                                                                                                                                       |
-| request_url                | string                                                | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.                                                                                                                                                  |
-| update_successful          | boolean                                               | true     | none         | UpdateSuccessful, if true, indicates that the settings request has been updated successfully with the provided data. Done will stay true when repeatedly checking. If set to true, done will revert back to false only when a request with invalid (e.g. "please use a valid phone number") data was sent. |
+| Name                       | Type                                                  | Required | Restrictions | Description                                                                                                                                                                               |
+| -------------------------- | ----------------------------------------------------- | -------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| active                     | string                                                | false    | none         | Active, if set, contains the registration method that is being used. It is initially not set.                                                                                             |
+| expires_at                 | string(date-time)                                     | true     | none         | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting, a new request has to be initiated.                                                  |
+| id                         | [UUID](#schemauuid)                                   | true     | none         | none                                                                                                                                                                                      |
+| identity                   | [Identity](#schemaidentity)                           | true     | none         | none                                                                                                                                                                                      |
+| issued_at                  | string(date-time)                                     | true     | none         | IssuedAt is the time (UTC) when the request occurred.                                                                                                                                     |
+| messages                   | [Messages](#schemamessages)                           | false    | none         | none                                                                                                                                                                                      |
+| methods                    | object                                                | true     | none         | Methods contains context for all enabled registration methods. If a registration request has been processed, but for example the password is incorrect, this will contain error messages. |
+| » **additionalProperties** | [settingsRequestMethod](#schemasettingsrequestmethod) | false    | none         | none                                                                                                                                                                                      |
+| request_url                | string                                                | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.                                 |
+| state                      | [State](#schemastate)                                 | true     | none         | none                                                                                                                                                                                      |
 
 <a id="tocSsettingsrequestmethod">settingsRequestMethod</a>
 #### settingsRequestMethod
@@ -5850,17 +7036,15 @@ _Request presents a settings request_
 {
   "config": {
     "action": "string",
-    "errors": [
-      {
-        "message": "string"
-      }
-    ],
     "fields": [
       {
         "disabled": true,
-        "errors": [
+        "messages": [
           {
-            "message": "string"
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
           }
         ],
         "name": "string",
@@ -5868,6 +7052,14 @@ _Request presents a settings request_
         "required": true,
         "type": "string",
         "value": {}
+      }
+    ],
+    "messages": [
+      {
+        "context": {},
+        "id": 0,
+        "text": "string",
+        "type": "string"
       }
     ],
     "method": "string"
@@ -5890,20 +7082,18 @@ _Request presents a settings request_
 
 ```json
 {
-  "expires_at": "2020-05-29T18:44:23Z",
+  "expires_at": "2019-08-24T14:15:22Z",
   "form": {
     "action": "string",
-    "errors": [
-      {
-        "message": "string"
-      }
-    ],
     "fields": [
       {
         "disabled": true,
-        "errors": [
+        "messages": [
           {
-            "message": "string"
+            "context": {},
+            "id": 0,
+            "text": "string",
+            "type": "string"
           }
         ],
         "name": "string",
@@ -5913,10 +7103,26 @@ _Request presents a settings request_
         "value": {}
       }
     ],
+    "messages": [
+      {
+        "context": {},
+        "id": 0,
+        "text": "string",
+        "type": "string"
+      }
+    ],
     "method": "string"
   },
   "id": "string",
-  "issued_at": "2020-05-29T18:44:23Z",
+  "issued_at": "2019-08-24T14:15:22Z",
+  "messages": [
+    {
+      "context": {},
+      "id": 0,
+      "text": "string",
+      "type": "string"
+    }
+  ],
   "request_url": "string",
   "success": true,
   "via": "string"
@@ -5933,6 +7139,7 @@ _Request presents a verification request_
 | form        | [form](#schemaform)                                   | false    | none         | HTMLForm represents a HTML Form. The container can work with both HTTP Form and JSON requests                                                             |
 | id          | [UUID](#schemauuid)                                   | false    | none         | none                                                                                                                                                      |
 | issued_at   | string(date-time)                                     | false    | none         | IssuedAt is the time (UTC) when the request occurred.                                                                                                     |
+| messages    | [Messages](#schemamessages)                           | false    | none         | none                                                                                                                                                      |
 | request_url | string                                                | false    | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example. |
 | success     | boolean                                               | false    | none         | Success, if true, implies that the request was completed successfully.                                                                                    |
 | via         | [VerifiableAddressType](#schemaverifiableaddresstype) | false    | none         | none                                                                                                                                                      |

@@ -47,7 +47,7 @@ identity:
     # - Windows Command Line (CMD):
     #    > set IDENTITY_TRAITS_DEFAULT_SCHEMA_URL=<value>
     #
-    default_schema_url: file://path/to/identity.traits.schema.json
+    default_schema_url: httpss://foo.bar.com/path/to/identity.traits.schema.json
 
     ## Additional JSON Schemas for Identity Traits ##
     #
@@ -167,7 +167,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_SETTINGS_REQUEST_LIFESPAN=<value>
       #
-      request_lifespan: 1h
+      request_lifespan: 1s
 
       ## privileged_session_max_age ##
       #
@@ -184,7 +184,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_SETTINGS_PRIVILEGED_SESSION_MAX_AGE=<value>
       #
-      privileged_session_max_age: 1s
+      privileged_session_max_age: 1h
 
       ## after ##
       #
@@ -444,7 +444,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_LOGIN_UI_URL=<value>
       #
-      ui_url: https://my-app.com/login
+      ui_url: https://www.ory.sh/kratos/docs/fallback/login
 
       ## request_lifespan ##
       #
@@ -461,7 +461,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_LOGIN_REQUEST_LIFESPAN=<value>
       #
-      request_lifespan: 1m
+      request_lifespan: 1h
 
       ## after ##
       #
@@ -554,7 +554,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_VERIFICATION_ENABLED=<value>
       #
-      enabled: false
+      enabled: true
 
       ## Verify UI URL ##
       #
@@ -608,7 +608,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_VERIFICATION_REQUEST_LIFESPAN=<value>
       #
-      request_lifespan: 1h
+      request_lifespan: 1m
 
     ## Account Recovery Configuration ##
     #
@@ -642,7 +642,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_RECOVERY_UI_URL=<value>
       #
-      ui_url: https://my-app.com/verify
+      ui_url: https://www.ory.sh/kratos/docs/fallback/recovery
 
       ## after ##
       #
@@ -679,7 +679,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_RECOVERY_REQUEST_LIFESPAN=<value>
       #
-      request_lifespan: 1h
+      request_lifespan: 1s
 
     ## error ##
     #
@@ -699,7 +699,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_ERROR_UI_URL=<value>
       #
-      ui_url: https://my-app.com/kratos-error
+      ui_url: https://www.ory.sh/kratos/docs/fallback/error
 
   ## strategies ##
   #
@@ -717,7 +717,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_STRATEGIES_PROFILE_ENABLED=<value>
       #
-      enabled: false
+      enabled: true
 
     ## recovery_token ##
     #
@@ -732,7 +732,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_STRATEGIES_RECOVERY_TOKEN_ENABLED=<value>
       #
-      enabled: true
+      enabled: false
 
     ## password ##
     #
@@ -780,19 +780,8 @@ selfservice:
         providers:
           - id: google
             provider: google
-            client_id: aliquip
-            client_secret: labore adipisicing commodo eu tempor
-            mapper_url: file://path/to/oidc.jsonnet
-            issuer_url: https://accounts.google.com
-            auth_url: https://accounts.google.com/o/oauth2/v2/auth
-            token_url: https://www.googleapis.com/oauth2/v4/token
-            scope:
-              - profile
-              - profile
-          - id: google
-            provider: google
-            client_id: dolore sunt
-            client_secret: esse in occaecat ullamco
+            client_id: dolor Duis
+            client_secret: irure Duis ad
             mapper_url: base64://bG9jYWwgc3ViamVjdCA9I...
             issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
@@ -800,17 +789,44 @@ selfservice:
             scope:
               - offline_access
               - profile
+              - profile
           - id: google
             provider: google
-            client_id: reprehenderit amet ea
-            client_secret: deserunt ut officia
-            mapper_url: base64://bG9jYWwgc3ViamVjdCA9I...
+            client_id: pariatur nulla Excepteur aliqua
+            client_secret: qui sint
+            mapper_url: https://foo.bar.com/path/to/oidc.jsonnet
             issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
             token_url: https://www.googleapis.com/oauth2/v4/token
             scope:
               - profile
               - offline_access
+              - profile
+              - offline_access
+              - offline_access
+          - id: google
+            provider: google
+            client_id: ea adipisicing dolore cillum laborum
+            client_secret: minim Lorem
+            mapper_url: https://foo.bar.com/path/to/oidc.jsonnet
+            issuer_url: https://accounts.google.com
+            auth_url: https://accounts.google.com/o/oauth2/v2/auth
+            token_url: https://www.googleapis.com/oauth2/v4/token
+            scope:
+              - offline_access
+              - offline_access
+              - profile
+              - offline_access
+              - offline_access
+          - id: google
+            provider: google
+            client_id: Lorem mollit consequat aliquip dolore
+            client_secret: ex officia laboris
+            mapper_url: base64://bG9jYWwgc3ViamVjdCA9I...
+            issuer_url: https://accounts.google.com
+            auth_url: https://accounts.google.com/o/oauth2/v2/auth
+            token_url: https://www.googleapis.com/oauth2/v4/token
+            scope:
               - offline_access
               - offline_access
 
@@ -851,7 +867,7 @@ courier:
     # - Windows Command Line (CMD):
     #    > set COURIER_SMTP_FROM_ADDRESS=<value>
     #
-    from_address: QyuGuDZZ@LsHfeUOqLRYBlwvLeMIxkTRIKgylr.bqq
+    from_address: dlAymtAw1-ssr@FjlSIssCaHSTCWPN.xt
 
   ## Override message templates ##
   #
@@ -897,7 +913,7 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_ADMIN_HOST=<value>
     #
-    host: do
+    host: proident
 
     ## port ##
     #
@@ -940,7 +956,7 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_PUBLIC_HOST=<value>
     #
-    host: amet sed
+    host: proident cillum
 
     ## port ##
     #
@@ -968,7 +984,7 @@ log:
   # - Windows Command Line (CMD):
   #    > set LOG_LEVEL=<value>
   #
-  level: debug
+  level: warning
 
   ## format ##
   #
@@ -978,7 +994,7 @@ log:
   # - Windows Command Line (CMD):
   #    > set LOG_FORMAT=<value>
   #
-  format: text
+  format: json
 
 ## secrets ##
 #
@@ -994,8 +1010,8 @@ secrets:
   #    > set SECRETS_DEFAULT=<value>
   #
   default:
-    - id eiusmodnostrud
-    - velit enim occaecat quis qui
+    - ut autelaborum Lorem
+    - nostrud aliqua reprehenderit eu
 
   ## Singing Keys for Cookies ##
   #
@@ -1008,7 +1024,9 @@ secrets:
   #    > set SECRETS_COOKIE=<value>
   #
   cookie:
-    - cillum in estLorem est non Duis
+    - incididunt fugiat anim ut ea
+    - et exercitation veniam in sit
+    - Duis ut incididunt
 
 ## Hashing Algorithm Configuration ##
 #
@@ -1024,7 +1042,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_MEMORY=<value>
     #
-    memory: 57305468
+    memory: 49478993
 
     ## iterations ##
     #
@@ -1034,7 +1052,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_ITERATIONS=<value>
     #
-    iterations: 3270034
+    iterations: 6289667
 
     ## parallelism ##
     #
@@ -1044,7 +1062,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_PARALLELISM=<value>
     #
-    parallelism: 40656912
+    parallelism: 20655506
 
     ## salt_length ##
     #
@@ -1054,7 +1072,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_SALT_LENGTH=<value>
     #
-    salt_length: 34527851
+    salt_length: 24272157
 
     ## key_length ##
     #
@@ -1064,7 +1082,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_KEY_LENGTH=<value>
     #
-    key_length: 53600745
+    key_length: 12784103
 
 ## session ##
 #
@@ -1098,5 +1116,5 @@ session:
   # - Windows Command Line (CMD):
   #    > set SESSION_COOKIE_SAME_SITE=<value>
   #
-  cookie_same_site: Strict
+  cookie_same_site: Lax
 ```
