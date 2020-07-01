@@ -1,0 +1,72 @@
+selfservice:
+  strategies:
+    password:
+      enabled: true
+
+  settings:
+    privileged_session_max_age: 1m
+    after:
+      profile:
+        hooks:
+          -
+            hook: verify
+
+  verify:
+    return_to: http://127.0.0.1:3000/
+
+  logout:
+    redirect_to: http://127.0.0.1:3000/auth/login
+
+  login:
+    request_lifespan: 10m
+
+  registration:
+    request_lifespan: 10m
+    after:
+      password:
+        hooks:
+          -
+            hook: session
+          -
+            hook: verify
+
+log:
+  level: debug
+
+secrets:
+  session:
+    - PLEASE-CHANGE-ME-I-AM-VERY-INSECURE
+
+urls:
+  login_ui: http://127.0.0.1:3000/auth/login
+  registration_ui: http://127.0.0.1:3000/auth/registration
+  error_ui: http://127.0.0.1:3000/error
+  settings_ui: http://127.0.0.1:3000/settings
+  verify_ui: http://127.0.0.1:3000/verify
+
+  # These are undefined because not available in this demo
+  mfa_ui: http://127.0.0.1:3000/
+
+  self:
+    public: http://127.0.0.1:3000/.ory/kratos/public/
+    admin: http://kratos:4434/
+  default_return_to: http://127.0.0.1:3000/
+  whitelisted_return_to_urls:
+    - http://127.0.0.1:3000/
+    - http://127.0.0.1:3000/auth/hydra/login
+
+hashers:
+  argon2:
+    parallelism: 1
+    memory: 131072
+    iterations: 2
+    salt_length: 16
+    key_length: 16
+
+identity:
+  traits:
+    default_schema_url: file:///etc/config/kratos/identity.traits.schema.json
+
+courier:
+  smtp:
+    connection_uri: smtps://test:test@mailslurper:1025/?skip_ssl_verify=true

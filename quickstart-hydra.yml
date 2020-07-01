@@ -1,0 +1,78 @@
+version: '3.7'
+
+services:
+  postgresd:
+    image: postgres:9.6
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=pguser
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_MULTIPLE_DATABASES=kratos,hydra
+    volumes:
+      - ./contrib/quickstart/oidc-provider/pg-init:/docker-entrypoint-initdb.d
+    networks:
+      - intranet
+
+  hydra-migrate:
+    image: oryd/hydra:1.4.8
+    depends_on:
+      - postgresd
+    environment:
+      - DSN=postgres://pguser:secret@postgresd:5432/hydra?sslmode=disable
+    command:
+      migrate sql -e --yes
+    restart: on-failure
+    networks:
+      - intranet
+
+  hydra:
+    image: oryd/hydra:1.4.8
+    depends_on:
+      - hydra-migrate
+    ports:
+      - "4444:4444" # Public port
+      - "4445:4445" # Admin port
+      - "5555:5555" # Port for hydra token user
+    command:
+      serve all --dangerous-force-http
+    restart: on-failure # TODO figure out why we need this (incorporate health check into hydra migrate command?)
+    environment:
+      - LOG_LEAK_SENSITIVE_VALUES=true
+      - URLS_SELF_ISSUER=http://127.0.0.1:4444
+      - URLS_SELF_PUBLIC=http://127.0.0.1:4444
+      - URLS_CONSENT=http://127.0.0.1:3000/auth/hydra/consent
+      - URLS_LOGIN=http://127.0.0.1:3000/auth/hydra/login
+      - URLS_LOGOUT=http://127.0.0.1:3000/logout
+      - SECRETS_SYSTEM=youReallyNeedToChangeThis
+      - OIDC_SUBJECT_IDENTIFIERS_SUPPORTED_TYPES=public,pairwise
+      - OIDC_SUBJECT_IDENTIFIERS_PAIRWISE_SALT=youReallyNeedToChangeThis
+      - DSN=postgres://pguser:secret@postgresd:5432/hydra?sslmode=disable
+    networks:
+      - intranet
+
+  kratos-migrate:
+    command:
+      -c /etc/config/kratos/.kratos.yml migrate sql -e --yes
+
+  kratos:
+    volumes:
+      -
+        type: bind
+        source: ./contrib/quickstart/oidc-provider/config/kratos/email-password
+        target: /etc/config/kratos
+
+  kratos-selfservice-ui-node:
+    # ToDo: change image back to ory-org (changed to make it testable)
+    image: k9ert/kratos-selfservice-ui-node:hydrakratos01
+    environment:
+      - HYDRA_ADMIN_URL=http://hydra:4445
+      - KRATOS_PUBLIC_URL=http://kratos:4433/
+      - KRATOS_ADMIN_URL=http://kratos:4434/
+      - SECURITY_MODE=standalone
+      - PORT=3000
+    ports:
+      - "3000:3000"
+
+networks:
+  intranet:
