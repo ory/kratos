@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-06-30)](#unreleased-2020-06-30)
+- [Unreleased (2020-07-01)](#unreleased-2020-07-01)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -83,7 +83,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...c57d270758a97315c874df3fae867b0031300501) (2020-06-30)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...183b4d075a9ff50c1f9f53d108a48789e49a5138) (2020-07-01)
 
 
 ### Bug Fixes
@@ -172,6 +172,7 @@
 
 ### Features
 
+* Add User ID to a header when calling whoami ([#530](https://github.com/ory/kratos/issues/530)) ([183b4d0](https://github.com/ory/kratos/commit/183b4d075a9ff50c1f9f53d108a48789e49a5138))
 * Implement account recovery ([#428](https://github.com/ory/kratos/issues/428)) ([e169a3e](https://github.com/ory/kratos/commit/e169a3e4079b1ef3a18564e0723baf81c44c38ec)), closes [#37](https://github.com/ory/kratos/issues/37):
 
     > This patch implements the account recovery with endpoints such as "Init Account Recovery", a new config value `urls.recovery_ui` and so on. A new identity field has been added `identity.recovery_addresses` containing all recovery addresses.
