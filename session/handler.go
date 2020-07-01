@@ -56,7 +56,8 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 // Check who the current HTTP session belongs to
 //
 // Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.
-// Returns a session object or 401 if the credentials are invalid or no credentials were sent.
+// Returns a session object in the body or 401 if the credentials are invalid or no credentials were sent.
+// Additionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header in the response.
 //
 // This endpoint is useful for reverse proxies and API Gateways.
 //
@@ -80,6 +81,9 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 
 	// s.Devices = nil
 	s.Identity = s.Identity.CopyWithoutCredentials()
+
+	// Set userId as the X-Kratos-Authenticated-Identity-Id header.
+	w.Header().Set("X-Kratos-Authenticated-Identity-Id", s.Identity.ID.String())
 
 	h.r.Writer().Write(w, r, s)
 }
