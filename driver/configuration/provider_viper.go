@@ -447,11 +447,21 @@ func (p *ViperProvider) SelfServiceFlowVerificationRequestLifespan() time.Durati
 }
 
 func (p *ViperProvider) SelfServiceFlowVerificationReturnTo() *url.URL {
-	return mustParseURLFromViper(p.l, ViperKeySelfServiceVerificationBrowserDefaultReturnTo)
+	redir, err := url.ParseRequestURI(
+		viperx.GetString(p.l, ViperKeySelfServiceVerificationBrowserDefaultReturnTo, ""))
+	if err != nil {
+		return p.SelfServiceBrowserDefaultReturnTo()
+	}
+	return redir
 }
 
 func (p *ViperProvider) SelfServiceFlowRecoveryReturnTo() *url.URL {
-	return mustParseURLFromViper(p.l, ViperKeySelfServiceRecoveryBrowserDefaultReturnTo)
+	redir, err := url.ParseRequestURI(
+		viperx.GetString(p.l, ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, ""))
+	if err != nil {
+		return p.SelfServiceBrowserDefaultReturnTo()
+	}
+	return redir
 }
 
 func (p *ViperProvider) SelfServiceFlowRecoveryRequestLifespan() time.Duration {

@@ -372,6 +372,22 @@ func TestViperProvider_Defaults(t *testing.T) {
 	}
 }
 
+func TestViperProvider_ReturnTo(t *testing.T) {
+	viper.Reset()
+	l := logrusx.New("", "")
+	p := configuration.NewViperProvider(l, false)
+
+	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
+	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowVerificationReturnTo().String())
+	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowRecoveryReturnTo().String())
+
+	viper.Set(configuration.ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, "https://www.ory.sh/recovery")
+	assert.Equal(t, "https://www.ory.sh/recovery", p.SelfServiceFlowRecoveryReturnTo().String())
+
+	viper.Set(configuration.ViperKeySelfServiceVerificationBrowserDefaultReturnTo, "https://www.ory.sh/verification")
+	assert.Equal(t, "https://www.ory.sh/verification", p.SelfServiceFlowVerificationReturnTo().String())
+}
+
 func TestViperProvider_DSN(t *testing.T) {
 	t.Run("case=dsn: memory", func(t *testing.T) {
 		viper.Reset()
