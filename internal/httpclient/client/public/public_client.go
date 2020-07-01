@@ -482,7 +482,8 @@ func (a *Client) SelfServiceBrowserVerify(params *SelfServiceBrowserVerifyParams
   Whoami checks who the current HTTP session belongs to
 
   Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.
-Returns a session object or 401 if the credentials are invalid or no credentials were sent.
+Returns a session object in the body or 401 if the credentials are invalid or no credentials were sent.
+Additionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header in the response.
 
 This endpoint is useful for reverse proxies and API Gateways.
 */
