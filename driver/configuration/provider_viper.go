@@ -11,10 +11,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
+
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/stringsx"
 	"github.com/ory/x/tracing"
-	"github.com/pkg/errors"
 
 	"github.com/ory/viper"
 
@@ -236,7 +237,7 @@ func (p *ViperProvider) SelfServiceFlowRegistrationAfterHooks(strategy string) [
 
 func (p *ViperProvider) SelfServiceStrategy(strategy string) *SelfServiceStrategy {
 	var s SelfServiceStrategy
-	if err := viperx.UnmarshalKey(ViperKeySelfServiceStrategyConfig + "." + strategy, &s); err != nil {
+	if err := viperx.UnmarshalKey(ViperKeySelfServiceStrategyConfig+"."+strategy, &s); err != nil {
 		p.l.WithError(errors.WithStack(err)).Fatalf("Unable to encode values from configuration for strategy %s", strategy)
 	}
 

@@ -390,7 +390,7 @@ func (s *Strategy) Config() (*ConfigurationCollection, error) {
 	if err := jsonx.
 		NewStrictDecoder(bytes.NewBuffer(config)).
 		Decode(&c); err != nil {
-			s.d.Logger().WithError(err).WithField("config", config)
+		s.d.Logger().WithError(err).WithField("config", config)
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode OpenID Connect Provider configuration: %s", err))
 	}
 
