@@ -149,7 +149,7 @@ const commonApi = new CommonApi('https://ory-kratos-admin.example-org.vpc/')
 
 // This route would be used like:
 //
-//    app.get('/user/settings', authHandler('registration'))
+//    app.get('/user/settings', settingsHandler)
 //
 export const settingsHandler = (req, res, next) => {
   // The request ID is used to identify the login and registraion request and
