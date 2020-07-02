@@ -21,6 +21,10 @@ selfservice:
       ui_url: http://127.0.0.1:4455/settings
       privileged_session_max_age: 1m
 
+    recovery:
+      enabled: true
+      ui_url: http://127.0.0.1:4455/recovery
+
     verification:
       enabled: true
       ui_url: http://127.0.0.1:4455/verify
