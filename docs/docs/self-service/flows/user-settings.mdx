@@ -152,7 +152,7 @@ const commonApi = new CommonApi('https://ory-kratos-admin.example-org.vpc/')
 //    app.get('/user/settings', settingsHandler)
 //
 export const settingsHandler = (req, res, next) => {
-  // The request ID is used to identify the login and registraion request and
+  // The request ID is used to identify User Settings Request and
   // return data like the csrf_token and so on.
   const request = req.query.request
   if (!request) {
@@ -169,7 +169,7 @@ export const settingsHandler = (req, res, next) => {
         return
       }
 
-      // "body" contains all the request data for this Registration request.
+      // "body" contains all the request data for this User Settings Request.
       // You can process that data here, if you want.
 
       // Lastly, you probably want to render the data using a view (e.g. Jade Template):
