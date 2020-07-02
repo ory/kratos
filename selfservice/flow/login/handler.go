@@ -92,7 +92,7 @@ type initializeSelfServiceBrowserLoginFlow struct {
 // Initialize browser-based login user flow
 //
 // This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to
-// `urls.login_ui` with the request ID set as a query parameter. If a valid user session exists already, the browser will be
+// `selfservice.flows.login.ui_url` with the request ID set as a query parameter. If a valid user session exists already, the browser will be
 // redirected to `urls.default_redirect_url`.
 //
 // > This endpoint is NOT INTENDED for API clients and only works

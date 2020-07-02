@@ -84,7 +84,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 // Initialize browser-based settings flow
 //
 // This endpoint initializes a browser-based settings flow. Once initialized, the browser will be redirected to
-// `urls.settings_ui` with the request ID set as a query parameter. If no valid user session exists, a login
+// `selfservice.flows.settings.ui_url` with the request ID set as a query parameter. If no valid user session exists, a login
 // flow will be initialized.
 //
 // > This endpoint is NOT INTENDED for API clients and only works

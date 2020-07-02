@@ -62,7 +62,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 // Initialize browser-based account recovery flow
 //
 // This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to
-// `urls.recovery_ui` with the request ID set as a query parameter. If a valid user session exists, the request
+// `selfservice.flows.recovery.ui_url` with the request ID set as a query parameter. If a valid user session exists, the request
 // is aborted.
 //
 // > This endpoint is NOT INTENDED for API clients and only works

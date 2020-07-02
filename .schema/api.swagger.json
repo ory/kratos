@@ -354,7 +354,7 @@
     },
     "/self-service/browser/flows/login": {
       "get": {
-        "description": "This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to\n`urls.login_ui` with the request ID set as a query parameter. If a valid user session exists already, the browser will be\nredirected to `urls.default_redirect_url`.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "description": "This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to\n`selfservice.flows.login.ui_url` with the request ID set as a query parameter. If a valid user session exists already, the browser will be\nredirected to `urls.default_redirect_url`.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
         "schemes": [
           "http",
           "https"
@@ -412,7 +412,7 @@
     },
     "/self-service/browser/flows/recovery": {
       "get": {
-        "description": "This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to\n`urls.recovery_ui` with the request ID set as a query parameter. If a valid user session exists, the request\nis aborted.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).",
+        "description": "This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to\n`selfservice.flows.recovery.ui_url` with the request ID set as a query parameter. If a valid user session exists, the request\nis aborted.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).",
         "schemes": [
           "http",
           "https"
@@ -466,7 +466,7 @@
     },
     "/self-service/browser/flows/registration": {
       "get": {
-        "description": "This endpoint initializes a browser-based user registration flow. Once initialized, the browser will be redirected to\n`urls.registration_ui` with the request ID set as a query parameter. If a valid user session exists already, the browser will be\nredirected to `urls.default_redirect_url`.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "description": "This endpoint initializes a browser-based user registration flow. Once initialized, the browser will be redirected to\n`selfservice.flows.registration.ui_url` with the request ID set as a query parameter. If a valid user session exists already, the browser will be\nredirected to `urls.default_redirect_url`.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
         "schemes": [
           "http",
           "https"
@@ -814,7 +814,7 @@
     },
     "/self-service/browser/flows/settings": {
       "get": {
-        "description": "This endpoint initializes a browser-based settings flow. Once initialized, the browser will be redirected to\n`urls.settings_ui` with the request ID set as a query parameter. If no valid user session exists, a login\nflow will be initialized.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
+        "description": "This endpoint initializes a browser-based settings flow. Once initialized, the browser will be redirected to\n`selfservice.flows.settings.ui_url` with the request ID set as a query parameter. If no valid user session exists, a login\nflow will be initialized.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
         "schemes": [
           "http",
           "https"
@@ -914,7 +914,7 @@
     },
     "/self-service/browser/flows/verification/init/{via}": {
       "get": {
-        "description": "This endpoint initializes a browser-based verification flow. Once initialized, the browser will be redirected to\n`urls.settings_ui` with the request ID set as a query parameter. If no valid user session exists, a login\nflow will be initialized.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
+        "description": "This endpoint initializes a browser-based verification flow. Once initialized, the browser will be redirected to\n`selfservice.flows.settings.ui_url` with the request ID set as a query parameter. If no valid user session exists, a login\nflow will be initialized.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).",
         "schemes": [
           "http",
           "https"

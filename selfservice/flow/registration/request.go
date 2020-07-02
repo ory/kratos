@@ -18,7 +18,7 @@ import (
 // swagger:model registrationRequest
 type Request struct {
 	// ID represents the request's unique ID. When performing the registration flow, this
-	// represents the id in the registration ui's query parameter: http://<urls.registration_ui>/?request=<id>
+	// represents the id in the registration ui's query parameter: http://<selfservice.flows.registration.ui_url>/?request=<id>
 	//
 	// required: true
 	ID uuid.UUID `json:"id" faker:"-" db:"id"`

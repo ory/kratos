@@ -209,7 +209,7 @@ a generic form generator (we use handlebars here) that works with ORY Kratos:
 In your main "Settings" view you would then consume this template for all the
 methods you want to support:
 
-```handlebars name="views/login_or_signup.hbs"
+```handlebars name="views/settings.hbs"
 <!-- Make profile changes form: -->
 {{#if methods.profile.config}}
     {{> form form=methods.profile.config}}
@@ -271,7 +271,7 @@ this state diagram:
   chart={`
 stateDiagram
   s1: User browses app
-  s3: User Interface Application renders "Settings Request"
+  s3: User ends up at settings_ui which renders the User Settings Form
   s4: Execute "After Settings Hook(s)"
   s5: Update "Settings Request" with Error Context(s)
   s6: Settings update successful
@@ -292,7 +292,7 @@ stateDiagram
 1. ORY Kratos does some internal processing (e.g. checks if a session cookie is
    set, generates payloads for form fields, sets CSRF token, ...) and redirects
    the user's browser to the Settings UI URL which is defined using the
-   `urls.settings_ui` config or `URLS_SETTINGS_UI` environment variable, which
+   `selfservice.flows.settings.ui_url` config or `SELFSERVICE_FLOWS_SETTINGS_UI_URL` environment variable, which
    is set to the ui endpoints - for example `https://127.0.0.1:4455/settings`.
    The user's browser is thus redirected to
    `https://127.0.0.1:4455/settings?request=abcde`. The `request` query

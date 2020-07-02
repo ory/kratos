@@ -25,7 +25,7 @@ import (
 // swagger:model verificationRequest
 type Request struct {
 	// ID represents the request's unique ID. When performing the verification flow, this
-	// represents the id in the verify ui's query parameter: http://<urls.verify_ui>?request=<id>
+	// represents the id in the verify ui's query parameter: http://<selfservice.flows.verification.ui_url>?request=<id>
 	//
 	// type: string
 	// format: uuid
