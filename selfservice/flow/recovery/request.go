@@ -99,7 +99,7 @@ func NewRequest(exp time.Duration, csrf string, r *http.Request, strategies Stra
 		IssuedAt:   time.Now().UTC(),
 		RequestURL: x.RequestURL(r).String(),
 		Methods:    map[string]*RequestMethod{},
-		State:      NextState(StateChooseMethod),
+		State:      StateChooseMethod,
 		CSRFToken:  csrf,
 	}
 

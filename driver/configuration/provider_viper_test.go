@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/markbates/pkger"
+
 	"github.com/ory/x/logrusx"
 
 	_ "github.com/ory/jsonschema/v3/fileloader"
