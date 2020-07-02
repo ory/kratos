@@ -3,15 +3,17 @@ package configuration_test
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"testing"
 	"time"
 
+	"github.com/markbates/pkger"
 	"github.com/ory/x/logrusx"
 
-	"github.com/ory/kratos/driver/configuration"
-
 	_ "github.com/ory/jsonschema/v3/fileloader"
+
+	"github.com/ory/kratos/driver/configuration"
 
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -21,6 +23,20 @@ import (
 
 	"github.com/ory/x/viperx"
 )
+
+var schema []byte
+
+func init() {
+	file, err := pkger.Open("/.schema/config.schema.json")
+	if err != nil {
+		panic("Unable to open configuration JSON Schema.")
+	}
+	defer file.Close()
+	schema, err = ioutil.ReadAll(file)
+	if err != nil {
+		panic("Unable to read configuration JSON Schema.")
+	}
+}
 
 func TestViperProvider(t *testing.T) {
 	t.Run("suite=loaders", func(t *testing.T) {
@@ -248,6 +264,7 @@ func (l InterceptHook) Fire(e *logrus.Entry) error {
 
 func TestViperProvider_BaseURLs(t *testing.T) {
 	viper.Reset()
+	require.NoError(t, viperx.BindEnvsToSchema(schema))
 
 	machineHostname, err := os.Hostname()
 	if err != nil {
@@ -278,8 +295,8 @@ func TestViperProvider_BaseURLs(t *testing.T) {
 
 func TestViperProvider_Secrets(t *testing.T) {
 	viper.Reset()
-	l := logrusx.New("", "")
-	p := configuration.NewViperProvider(l, false)
+	require.NoError(t, viperx.BindEnvsToSchema(schema))
+	p := configuration.NewViperProvider(logrusx.New("", ""), false)
 
 	def := p.SecretsDefault()
 	assert.NotEmpty(t, def)
@@ -356,6 +373,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			viper.Reset()
+			require.NoError(t, viperx.BindEnvsToSchema(schema))
 			p := tc.init()
 
 			if tc.expect != nil {
@@ -370,6 +388,17 @@ func TestViperProvider_Defaults(t *testing.T) {
 			assert.False(t, p.SelfServiceStrategy("oidc").Enabled)
 		})
 	}
+
+	t.Run("suite=ui_url", func(t *testing.T) {
+		viper.Reset()
+		require.NoError(t, viperx.BindEnvsToSchema(schema))
+		p := configuration.NewViperProvider(logrusx.New("", ""), false)
+		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/login", p.SelfServiceFlowLoginUI().String())
+		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/settings", p.SelfServiceFlowSettingsUI().String())
+		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/registration", p.SelfServiceFlowRegisterUI().String())
+		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/recovery", p.SelfServiceFlowRecoveryUI().String())
+		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/verification", p.SelfServiceFlowVerificationUI().String())
+	})
 }
 
 func TestViperProvider_ReturnTo(t *testing.T) {
