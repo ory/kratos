@@ -27,5 +27,6 @@ func main() {
 	defer profilex.Profile().Stop()
 
 	_ = pkger.Include("/courier/template/templates")
+	_ = pkger.Include("/.schema/config.schema.json")
 	cmd.Execute()
 }

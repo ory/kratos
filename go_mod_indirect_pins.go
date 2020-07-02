@@ -24,5 +24,7 @@ import (
 
 	_ "github.com/hashicorp/consul/api"
 
+	_ "github.com/markbates/pkger/cmd/pkger"
+
 	_ "github.com/ory/cli"
 )
