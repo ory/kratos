@@ -8,11 +8,12 @@ ADD go.mod go.mod
 ADD go.sum go.sum
 
 RUN go mod download
-RUN GO111MODULE=on go install github.com/gobuffalo/packr/v2/packr2
+RUN GO111MODULE=on go install github.com/gobuffalo/packr/v2/packr2 github.com/markbates/pkger/cmd/pkger
 
 ADD . .
 
 RUN packr2
+RUN pkger
 RUN CGO_ENABLED=1 go build -tags sqlite -a -o /usr/bin/kratos
 
 FROM alpine:3.11
