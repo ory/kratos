@@ -72,6 +72,7 @@ func TestRecoveryHandler(t *testing.T) {
 		// assert.NotEmpty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==csrf_token).value").String(), "%s", body)
 		assert.NotEmpty(t, gjson.GetBytes(body, "id").String(), "%s", body)
 		assert.Empty(t, gjson.GetBytes(body, "headers").Value(), "%s", body)
+		assert.Equal(t, "choose_method", gjson.GetBytes(body, "state").Value(), "%s", body)
 		// assert.Contains(t, gjson.GetBytes(body, "methods.password.config.action").String(), gjson.GetBytes(body, "id").String(), "%s", body)
 		// assert.Contains(t, gjson.GetBytes(body, "methods.password.config.action").String(), public.URL, "%s", body)
 	}
