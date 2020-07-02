@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-07-01)](#unreleased-2020-07-01)
+- [Unreleased (2020-07-02)](#unreleased-2020-07-02)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -83,18 +83,20 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...8e7f9f5ec3ac6f5675584974e8d189247b539634) (2020-07-01)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...a9ca8fd793347ed8e4404a4bd29e330a3f1ef684) (2020-07-02)
 
 
 ### Bug Fixes
 
 * Account recovery can't use recovery token ([#526](https://github.com/ory/kratos/issues/526)) ([379f24e](https://github.com/ory/kratos/commit/379f24e96e50a3e5c71b53a11195bdd84a8dc957)), closes [#525](https://github.com/ory/kratos/issues/525)
 * Clear error messages after updating settings successfully ([#421](https://github.com/ory/kratos/issues/421)) ([7eec388](https://github.com/ory/kratos/commit/7eec38829449237cffe345d8bec67578764559be)), closes [#420](https://github.com/ory/kratos/issues/420)
+* Do not send debug on session/whoami ([16d3670](https://github.com/ory/kratos/commit/16d3670070bf46170c4540203e8380ad81bfb4c3)), closes [#483](https://github.com/ory/kratos/issues/483)
 * Document login refresh parameter in swagger ([#482](https://github.com/ory/kratos/issues/482)) ([6b94993](https://github.com/ory/kratos/commit/6b949936725a6100a31851a5d879c877c2c76cbf))
 * Embedded video link properly ([#514](https://github.com/ory/kratos/issues/514)) ([962bbc6](https://github.com/ory/kratos/commit/962bbc6e4af0797c190418b812f6298372dabdde))
 * Embedded video link properly ([#515](https://github.com/ory/kratos/issues/515)) ([821ca93](https://github.com/ory/kratos/commit/821ca93838a360551378e336e9ce10cfe13369ec))
 * Improve grammar of similar password error ([#471](https://github.com/ory/kratos/issues/471)) ([39873bf](https://github.com/ory/kratos/commit/39873bfad89a654fe12e101b54e9b0c2f95714ec))
 * Re-add all databases to persister ([#527](https://github.com/ory/kratos/issues/527)) ([b04d178](https://github.com/ory/kratos/commit/b04d17815b5a28b5fe73a6a94ce1d907a63115e1))
+* Resolve broken redirect in verify flow ([a9ca8fd](https://github.com/ory/kratos/commit/a9ca8fd793347ed8e4404a4bd29e330a3f1ef684)), closes [#436](https://github.com/ory/kratos/issues/436)
 * Respect multiple secrets and fix used flag ([#526](https://github.com/ory/kratos/issues/526)) ([b16c2b8](https://github.com/ory/kratos/commit/b16c2b80edfc78afca0c72fa8da7d73b51b3075a)), closes [#525](https://github.com/ory/kratos/issues/525)
 * Respect self-service enabled flag ([#470](https://github.com/ory/kratos/issues/470)) ([b198faf](https://github.com/ory/kratos/commit/b198fafce9d96fbb644300243e6a757242fbbd06)), closes [#417](https://github.com/ory/kratos/issues/417):
 
