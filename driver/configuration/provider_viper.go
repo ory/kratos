@@ -241,7 +241,8 @@ func (p *ViperProvider) SelfServiceStrategy(strategy string) *SelfServiceStrateg
 		p.l.WithError(errors.WithStack(err)).Fatalf("Unable to encode values from configuration for strategy %s", strategy)
 	}
 
-	// FIXME The default value can for some reason not be set from the JSON Schema. This is a workaround
+	// FIXME The default value can for some reason not be set from the JSON Schema. This is a workaround.
+	// FIXME see https://github.com/ory/x/issues/169
 	if viper.Get(fmt.Sprintf("%s.%s.enabled", ViperKeySelfServiceStrategyConfig, strategy)) == nil {
 		switch strategy {
 		case "password":
