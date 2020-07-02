@@ -404,7 +404,7 @@
                   "examples": [
                     "https://my-app.com/verify"
                   ],
-                  "default": "https://www.ory.sh/kratos/docs/fallback/verify"
+                  "default": "https://www.ory.sh/kratos/docs/fallback/verification"
                 },
                 "after": {
                   "type": "object",
