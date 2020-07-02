@@ -31,7 +31,7 @@ import (
 // swagger:model settingsRequest
 type Request struct {
 	// ID represents the request's unique ID. When performing the settings flow, this
-	// represents the id in the settings ui's query parameter: http://<urls.settings_ui>?request=<id>
+	// represents the id in the settings ui's query parameter: http://<selfservice.flows.settings.ui_url>?request=<id>
 	//
 	// required: true
 	// type: string

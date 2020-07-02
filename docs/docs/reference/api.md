@@ -2937,7 +2937,7 @@ Accept: application/json
 ```
 
 This endpoint initializes a browser-based user login flow. Once initialized, the
-browser will be redirected to `urls.login_ui` with the request ID set as a query
+browser will be redirected to `selfservice.flows.login.ui_url` with the request ID set as a query
 parameter. If a valid user session exists already, the browser will be
 redirected to `urls.default_redirect_url`.
 
@@ -3321,7 +3321,7 @@ Accept: application/json
 ```
 
 This endpoint initializes a browser-based user registration flow. Once
-initialized, the browser will be redirected to `urls.registration_ui` with the
+initialized, the browser will be redirected to `selfservice.flows.registration.ui_url` with the
 request ID set as a query parameter. If a valid user session exists already, the
 browser will be redirected to `urls.default_redirect_url`.
 
@@ -3703,7 +3703,7 @@ Accept: application/json
 ```
 
 This endpoint initializes a browser-based settings flow. Once initialized, the
-browser will be redirected to `urls.settings_ui` with the request ID set as a
+browser will be redirected to `selfservice.flows.settings.ui_url` with the request ID set as a
 query parameter. If no valid user session exists, a login flow will be
 initialized.
 
@@ -4312,7 +4312,7 @@ Accept: application/json
 ```
 
 This endpoint initializes a browser-based verification flow. Once initialized,
-the browser will be redirected to `urls.settings_ui` with the request ID set as
+the browser will be redirected to `selfservice.flows.settings.ui_url` with the request ID set as
 a query parameter. If no valid user session exists, a login flow will be
 initialized.
 

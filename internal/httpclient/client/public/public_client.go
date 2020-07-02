@@ -233,7 +233,7 @@ func (a *Client) CompleteSelfServiceBrowserVerificationFlow(params *CompleteSelf
   InitializeSelfServiceBrowserLoginFlow initializes browser based login user flow
 
   This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to
-`urls.login_ui` with the request ID set as a query parameter. If a valid user session exists already, the browser will be
+`selfservice.flows.login.ui_url` with the request ID set as a query parameter. If a valid user session exists already, the browser will be
 redirected to `urls.default_redirect_url`.
 
 > This endpoint is NOT INTENDED for API clients and only works
@@ -305,7 +305,7 @@ func (a *Client) InitializeSelfServiceBrowserLogoutFlow(params *InitializeSelfSe
   InitializeSelfServiceBrowserRegistrationFlow initializes browser based registration user flow
 
   This endpoint initializes a browser-based user registration flow. Once initialized, the browser will be redirected to
-`urls.registration_ui` with the request ID set as a query parameter. If a valid user session exists already, the browser will be
+`selfservice.flows.registration.ui_url` with the request ID set as a query parameter. If a valid user session exists already, the browser will be
 redirected to `urls.default_redirect_url`.
 
 > This endpoint is NOT INTENDED for API clients and only works
@@ -341,7 +341,7 @@ func (a *Client) InitializeSelfServiceBrowserRegistrationFlow(params *Initialize
   InitializeSelfServiceBrowserVerificationFlow initializes browser based verification flow
 
   This endpoint initializes a browser-based verification flow. Once initialized, the browser will be redirected to
-`urls.settings_ui` with the request ID set as a query parameter. If no valid user session exists, a login
+`selfservice.flows.settings.ui_url` with the request ID set as a query parameter. If no valid user session exists, a login
 flow will be initialized.
 
 > This endpoint is NOT INTENDED for API clients and only works
@@ -377,7 +377,7 @@ func (a *Client) InitializeSelfServiceBrowserVerificationFlow(params *Initialize
   InitializeSelfServiceRecoveryFlow initializes browser based account recovery flow
 
   This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to
-`urls.recovery_ui` with the request ID set as a query parameter. If a valid user session exists, the request
+`selfservice.flows.recovery.ui_url` with the request ID set as a query parameter. If a valid user session exists, the request
 is aborted.
 
 > This endpoint is NOT INTENDED for API clients and only works
@@ -413,7 +413,7 @@ func (a *Client) InitializeSelfServiceRecoveryFlow(params *InitializeSelfService
   InitializeSelfServiceSettingsFlow initializes browser based settings flow
 
   This endpoint initializes a browser-based settings flow. Once initialized, the browser will be redirected to
-`urls.settings_ui` with the request ID set as a query parameter. If no valid user session exists, a login
+`selfservice.flows.settings.ui_url` with the request ID set as a query parameter. If no valid user session exists, a login
 flow will be initialized.
 
 > This endpoint is NOT INTENDED for API clients and only works

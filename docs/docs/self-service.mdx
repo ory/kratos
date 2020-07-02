@@ -65,7 +65,7 @@ template:
    `/auth/browser/login`);
 2. The initialization endpoint processes data and associates it with a request
    ID and redirects the browser to the flow's configured UI URL (e.g.
-   `urls.login_ui`), appending the request ID as the `request` URL Query
+   `selfservice.flows.login.ui_url`), appending the request ID as the `request` URL Query
    Parameter;
 3. The endpoint responsible for the UI URL uses the `request` URL Query
    Parameter (e.g. `http://my-app/auth/login?request=abcde`) to fetch the data

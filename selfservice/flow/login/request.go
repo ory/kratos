@@ -18,7 +18,7 @@ import (
 // swagger:model loginRequest
 type Request struct {
 	// ID represents the request's unique ID. When performing the login flow, this
-	// represents the id in the login ui's query parameter: http://<urls.login_ui>/?request=<id>
+	// represents the id in the login ui's query parameter: http://<selfservice.flows.login.ui_url>/?request=<id>
 	//
 	// required: true
 	ID uuid.UUID `json:"id" faker:"-" db:"id"`

@@ -79,7 +79,7 @@ func (h *Handler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request)
 // Initialize browser-based registration user flow
 //
 // This endpoint initializes a browser-based user registration flow. Once initialized, the browser will be redirected to
-// `urls.registration_ui` with the request ID set as a query parameter. If a valid user session exists already, the browser will be
+// `selfservice.flows.registration.ui_url` with the request ID set as a query parameter. If a valid user session exists already, the browser will be
 // redirected to `urls.default_redirect_url`.
 //
 // > This endpoint is NOT INTENDED for API clients and only works
