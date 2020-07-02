@@ -99,7 +99,7 @@ sequenceDiagram
   participant B as Browser
   participant K as ORY Kratos
   participant A as Your Application
-  B->>K: Initiate Login
+  B->>K: Initialize Settings Flow
   K->>B: Redirects to your Application's /settings_ui endpoint
   B->>A: Calls /settings_ui
   A-->>K: Fetches data to render forms etc
