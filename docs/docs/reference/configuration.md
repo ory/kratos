@@ -98,7 +98,7 @@ dsn: sqlite:///var/lib/sqlite/db.sqlite?_fk=true&mode=rwc
 selfservice:
   ## Redirect browsers to set URL per default ##
   #
-  # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/selfservice-flow-completion).
+  # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
   #
   # Examples:
   # - https://my-app.com/dashboard
@@ -191,7 +191,7 @@ selfservice:
       after:
         ## Redirect browsers to set URL per default ##
         #
-        # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/selfservice-flow-completion).
+        # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
         #
         # Examples:
         # - https://my-app.com/dashboard
@@ -209,7 +209,7 @@ selfservice:
         password:
           ## Redirect browsers to set URL per default ##
           #
-          # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/selfservice-flow-completion).
+          # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
           #
           # Examples:
           # - https://my-app.com/dashboard
@@ -238,7 +238,7 @@ selfservice:
         profile:
           ## Redirect browsers to set URL per default ##
           #
-          # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/selfservice-flow-completion).
+          # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
           #
           # Examples:
           # - https://my-app.com/dashboard
@@ -270,7 +270,7 @@ selfservice:
       after:
         ## Redirect browsers to set URL per default ##
         #
-        # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/selfservice-flow-completion).
+        # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
         #
         # Examples:
         # - https://my-app.com/dashboard
@@ -288,7 +288,7 @@ selfservice:
     registration:
       ## Redirect browsers to set URL per default ##
       #
-      # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/selfservice-flow-completion).
+      # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
       #
       # Examples:
       # - https://my-app.com/dashboard
@@ -340,7 +340,7 @@ selfservice:
       after:
         ## Redirect browsers to set URL per default ##
         #
-        # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/selfservice-flow-completion).
+        # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
         #
         # Examples:
         # - https://my-app.com/dashboard
@@ -358,7 +358,7 @@ selfservice:
         password:
           ## Redirect browsers to set URL per default ##
           #
-          # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/selfservice-flow-completion).
+          # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
           #
           # Examples:
           # - https://my-app.com/dashboard
@@ -387,7 +387,7 @@ selfservice:
         oidc:
           ## Redirect browsers to set URL per default ##
           #
-          # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/selfservice-flow-completion).
+          # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
           #
           # Examples:
           # - https://my-app.com/dashboard
@@ -416,7 +416,7 @@ selfservice:
     login:
       ## Redirect browsers to set URL per default ##
       #
-      # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/selfservice-flow-completion).
+      # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
       #
       # Examples:
       # - https://my-app.com/dashboard
@@ -468,7 +468,7 @@ selfservice:
       after:
         ## Redirect browsers to set URL per default ##
         #
-        # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/selfservice-flow-completion).
+        # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
         #
         # Examples:
         # - https://my-app.com/dashboard
@@ -486,7 +486,7 @@ selfservice:
         password:
           ## Redirect browsers to set URL per default ##
           #
-          # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/selfservice-flow-completion).
+          # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
           #
           # Examples:
           # - https://my-app.com/dashboard
@@ -515,7 +515,7 @@ selfservice:
         oidc:
           ## Redirect browsers to set URL per default ##
           #
-          # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/selfservice-flow-completion).
+          # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
           #
           # Examples:
           # - https://my-app.com/dashboard
@@ -578,7 +578,7 @@ selfservice:
       after:
         ## Redirect browsers to set URL per default ##
         #
-        # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/selfservice-flow-completion).
+        # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
         #
         # Examples:
         # - https://my-app.com/dashboard
@@ -649,7 +649,7 @@ selfservice:
       after:
         ## Redirect browsers to set URL per default ##
         #
-        # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/selfservice-flow-completion).
+        # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
         #
         # Examples:
         # - https://my-app.com/dashboard

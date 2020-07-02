@@ -15,7 +15,7 @@ module.exports = {
         "concepts/credentials/openid-connect-oidc-oauth2",
       ]
     },
-    "concepts/selfservice-flow-completion",
+    "concepts/browser-redirect-flow-completion",
     "concepts/email-sms",
     "concepts/federation",
     "concepts/security"
