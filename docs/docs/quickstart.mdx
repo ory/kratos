@@ -20,7 +20,7 @@ merely a guide to get you set up with some examples.
   src="https://www.youtube.com/embed/5t1Zr_zJc7E"
   frameborder="0"
   allowfullscreen
-></iframe>
+/>
 
 ## Use Case: Application Login and Registration
 
@@ -529,6 +529,52 @@ response):
 
 To re-request the verification email, fill out the form at
 [127.0.0.1:4455/verify](http://127.0.0.1:4455/verify).
+
+To learn more about verification recovery, head over to the
+[Email and Phone Verification and Account Activation Documentation](self-service/flows/verify-email-account-activation.mdx).
+
+### Account Recovery
+
+The quickstart has account recovery enabled. To recover an account, log out and
+click on "Recover account":
+
+<p>
+  <img
+    alt="Click on 'recover account'"
+    src={useBaseUrl('img/docs/quickstart-recover-i.png')}
+  />
+</p>
+
+The next screen shows a HTML form where you enter your email address:
+
+<p>
+  <img
+    alt="Enter your email address"
+    src={useBaseUrl('img/docs/quickstart-recover-ii.png')}
+  />
+</p>
+
+Hit "submit" and check the emails for the account recovery message:
+
+<p>
+  <img
+    alt="Check your email for the password reset email"
+    src={useBaseUrl('img/docs/quickstart-recover-iii.png')}
+  />
+</p>
+
+Click the link, and change your password:
+
+<p>
+  <img
+    alt="Change your password"
+    src={useBaseUrl('img/docs/quickstart-recover-iv.png')}
+  />
+</p>
+
+You are now able to sign in with the new password. To learn more about account
+recovery, head over to the
+[Account Recovery Documentation](self-service/flows/account-recovery.mdx).
 
 #### Configuration
 

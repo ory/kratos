@@ -19,7 +19,7 @@ selfservice:
 
     settings:
       ui_url: http://127.0.0.1:4455/settings
-      privileged_session_max_age: 1m
+      privileged_session_max_age: 15m
 
     recovery:
       enabled: true
