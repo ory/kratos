@@ -328,16 +328,15 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request,
 	} else if err != nil {
 		s.handleSettingsError(w, r, ctxUpdate, p, err)
 		return
-	}
-
-	creds.Identifiers = append(creds.Identifiers, uid(provider.Config().ID, claims.Subject))
-	conf.Providers = append(conf.Providers, ProviderCredentialsConfig{
-		Subject: claims.Subject, Provider: provider.Config().ID})
-
-	creds.Config, err = json.Marshal(conf)
-	if err != nil {
-		s.handleSettingsError(w, r, ctxUpdate, p, err)
-		return
+	} else {
+		creds.Identifiers = append(creds.Identifiers, uid(provider.Config().ID, claims.Subject))
+		conf.Providers = append(conf.Providers, ProviderCredentialsConfig{
+			Subject: claims.Subject, Provider: provider.Config().ID})
+		creds.Config, err = json.Marshal(conf)
+		if err != nil {
+			s.handleSettingsError(w, r, ctxUpdate, p, err)
+			return
+		}
 	}
 
 	i.Credentials[s.ID()] = *creds

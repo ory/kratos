@@ -453,6 +453,31 @@ func TestSettingsStrategy(t *testing.T) {
 			checkCredentials(t, true, users[agent].ID, provider, subject)
 		})
 
+		t.Run("case=should link a connection even if user does not have oidc credentials yet", func(t *testing.T) {
+			t.Cleanup(reset(t))
+
+			subject = "hackerman+new-connection-new-oidc+" + testID
+			scope = []string{"openid"}
+
+			agent, provider := "password", "google"
+			_, res, req := link(t, agent, provider)
+			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
+
+			rs, err := admin.Common.GetSelfServiceBrowserSettingsRequest(common.
+				NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(agents[agent]).
+				WithRequest(string(req.ID)))
+			require.NoError(t, err)
+			require.EqualValues(t, settings.StateSuccess, rs.Payload.State)
+
+			testhelpers.JSONEq(t, append(models.FormFields{csrfField}, models.FormFields{
+				{Type: pointerx.String("submit"), Name: pointerx.String("link"), Value: "ory"},
+				{Type: pointerx.String("submit"), Name: pointerx.String("link"), Value: "github"},
+				{Type: pointerx.String("submit"), Name: pointerx.String("unlink"), Value: "google"},
+			}...), rs.Payload.Methods[identity.CredentialsTypeOIDC.String()].Config.Fields)
+
+			checkCredentials(t, true, users[agent].ID, provider, subject)
+		})
+
 		t.Run("case=should not be able to link a connection without a privileged session", func(t *testing.T) {
 			agent, provider := "githuber", "google"
 			subject = "hackerman+new+google+" + testID
