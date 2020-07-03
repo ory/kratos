@@ -147,7 +147,7 @@ func TestStrategy(t *testing.T) {
 		require.NoError(t, err)
 
 		require.Len(t, sr.Payload.Messages, 1)
-		assert.Equal(t, "You successfully recovered your accent. Please change your password or set up an alternative login method (e.g. social sign in) within the next 60.00 minutes.", sr.Payload.Messages[0].Text)
+		assert.Equal(t, "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 60.00 minutes.", sr.Payload.Messages[0].Text)
 	})
 
 	t.Run("description=should not be able to use an invalid link", func(t *testing.T) {
