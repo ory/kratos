@@ -297,7 +297,7 @@ stateDiagram
    The user's browser is thus redirected to
    `https://127.0.0.1:4455/settings?request=abcde`. The `request` query
    parameter includes a unique ID which will be used to fetch contextual data
-   for this login request.
+   for this settings request.
 1. Your Server-Side Application makes a `GET` request to
    `http://kratos:4434/self-service/browser/flows/requests/settings?request=abcde`.
    ORY Kratos responds with a JSON Payload that contains data (form fields,
@@ -320,7 +320,7 @@ stateDiagram
    `http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/settings/strategies/profile?request=abcde`
    or `/self-service/browser/flows/settings/strategies/password?request=abcde`).
    ORY Kratos validates the data:
-   - If the form data is invalid, the Login Request's JSON Payload is updated -
+   - If the form data is invalid, the Settings Request's JSON Payload is updated -
      for example with
      ```json5
      {
@@ -348,11 +348,11 @@ stateDiagram
        }
      }
      ```
-     and the user's Browser is redirected back to the Login UI:
+     and the user's Browser is redirected back to the Settings UI:
      `https://127.0.0.1:4455/settings_ui?request=abcde`.
    - If the data is valid but the modifications require proof of identity (e.g.
-     because the primary email address or the password was changed), a login
-     flow is executed. Only after a successful login flow will the changed data
+     because the primary email address or the password was changed), a settings
+     flow is executed. Only after a successful settings flow will the changed data
      be stored!
    - If data is valid, ORY Kratos proceeds with the next step.
 1. ORY Kratos executes hooks defined in the **After Settings Hooks**. If a
