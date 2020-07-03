@@ -83,12 +83,13 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...d3ef5a0fe90f430999d0d94cb2f55acc8d628212) (2020-07-03)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...2b3f29913be844498a02b9869789c2b2d4aaacf8) (2020-07-03)
 
 
 ### Bug Fixes
 
 * Account recovery can't use recovery token ([#526](https://github.com/ory/kratos/issues/526)) ([379f24e](https://github.com/ory/kratos/commit/379f24e96e50a3e5c71b53a11195bdd84a8dc957)), closes [#525](https://github.com/ory/kratos/issues/525)
+* Add and document recovery to quickstart ([c229c54](https://github.com/ory/kratos/commit/c229c54603bdc3efb863fd76b64096ae599d1aac))
 * Add pkger to docker builds ([d3ef5a0](https://github.com/ory/kratos/commit/d3ef5a0fe90f430999d0d94cb2f55acc8d628212))
 * Clear error messages after updating settings successfully ([#421](https://github.com/ory/kratos/issues/421)) ([7eec388](https://github.com/ory/kratos/commit/7eec38829449237cffe345d8bec67578764559be)), closes [#420](https://github.com/ory/kratos/issues/420)
 * Do not send debug on session/whoami ([16d3670](https://github.com/ory/kratos/commit/16d3670070bf46170c4540203e8380ad81bfb4c3)), closes [#483](https://github.com/ory/kratos/issues/483)
@@ -97,6 +98,7 @@
 * Embedded video link properly ([#515](https://github.com/ory/kratos/issues/515)) ([821ca93](https://github.com/ory/kratos/commit/821ca93838a360551378e336e9ce10cfe13369ec))
 * Enable recovery for quickstart ([0ccc651](https://github.com/ory/kratos/commit/0ccc651f809b1e39dd6c41b88f1a10c67451eae2))
 * Improve grammar of similar password error ([#471](https://github.com/ory/kratos/issues/471)) ([39873bf](https://github.com/ory/kratos/commit/39873bfad89a654fe12e101b54e9b0c2f95714ec))
+* Initialize verification request with correct state ([3264ecf](https://github.com/ory/kratos/commit/3264ecfbb8f7b34d9dbb22237df8d9f591ac09f3)), closes [#543](https://github.com/ory/kratos/issues/543)
 * Re-add all databases to persister ([#527](https://github.com/ory/kratos/issues/527)) ([b04d178](https://github.com/ory/kratos/commit/b04d17815b5a28b5fe73a6a94ce1d907a63115e1))
 * Re-add redirect targets for quickstart ([3c48ad2](https://github.com/ory/kratos/commit/3c48ad26961560d6e10a627a64052e316d9ffdc7))
 * Reduce docker bloat by ignoring docs and others ([ecc555b](https://github.com/ory/kratos/commit/ecc555b5ad0fa888a8d5ba39cc09094fd251e655))
@@ -105,10 +107,11 @@
 * Respect self-service enabled flag ([#470](https://github.com/ory/kratos/issues/470)) ([b198faf](https://github.com/ory/kratos/commit/b198fafce9d96fbb644300243e6a757242fbbd06)), closes [#417](https://github.com/ory/kratos/issues/417):
 
     > Respects the `enabled` flag for self-service strategies.
-    >
+    > 
     > Also a new testhelper function was needed, to defer route registration
     > (because whether strategies are enabled or not is determined only once:
     > at route registration)
+* Typo accent -> account ([984d978](https://github.com/ory/kratos/commit/984d978cf44763d916a9329742d046e00f21577b))
 * Use correct brew replacements ([fd269b1](https://github.com/ory/kratos/commit/fd269b1afa784becac7ee79cd7a6f9d2bbe39121)), closes [#423](https://github.com/ory/kratos/issues/423)
 * Write migration tests ([#499](https://github.com/ory/kratos/issues/499)) ([d32413a](https://github.com/ory/kratos/commit/d32413a1fcd0ce1a82d2529f18b5d4334a490a2a)), closes [#481](https://github.com/ory/kratos/issues/481)
 
@@ -131,7 +134,10 @@
 * Add fixme note for viper workaround ([7e3eef6](https://github.com/ory/kratos/commit/7e3eef6d36dcbb1a06ce0a20e2de0874a7dc5d38)):
 
     > See https://github.com/ory/x/issues/169
+* Add guide for setting up account recovery ([bbf3762](https://github.com/ory/kratos/commit/bbf37620d5b47fd18cb754c8ed43856652ee33c0))
+* Add guide for setting up email verification ([1435cbc](https://github.com/ory/kratos/commit/1435cbcea5d45c9cde1a0eb7e5ebb66ce65c4b82))
 * Add guide for SSO via Google ([#424](https://github.com/ory/kratos/issues/424)) ([5c45b16](https://github.com/ory/kratos/commit/5c45b1653791cc3ab5d4e4694da98da7543e816d))
+* Add new guides to sidebar ([24c5cbc](https://github.com/ory/kratos/commit/24c5cbc129ad185ec02883c3451d7e573409b865))
 * Added video tutorials to guides ([#513](https://github.com/ory/kratos/issues/513)) ([956731d](https://github.com/ory/kratos/commit/956731d562f33f2849197b2e692a4f20b18279f9))
 * Added youtube manual ([#490](https://github.com/ory/kratos/issues/490)) ([ec232f7](https://github.com/ory/kratos/commit/ec232f72d7204b2cdf946874d51f7473a10a76a4))
 * Connecting Kratos to AzureAD ([#433](https://github.com/ory/kratos/issues/433)) ([7660bcd](https://github.com/ory/kratos/commit/7660bcd2ba90d83c4ab0683a2f011e6841b2c810))
@@ -141,22 +147,29 @@
 * Correct claims.email in github guide ([#422](https://github.com/ory/kratos/issues/422)) ([58f7e15](https://github.com/ory/kratos/commit/58f7e15093d2461d4322fe68adb0723ae244bed9)):
 
     > There is no email_primary in claims, and the selfservice strategy is currently using claims.email.
+* Correct link in user-settings ([d13317d](https://github.com/ory/kratos/commit/d13317d9bf71db775067a7c17f4c98cdbf1cc7e5))
 * Correct SDK use in quickstart ([#480](https://github.com/ory/kratos/issues/480)) ([dfdf975](https://github.com/ory/kratos/commit/dfdf9751d9333994a49537d82a15b780ebd8bc76)), closes [#430](https://github.com/ory/kratos/issues/430)
 * Correct stray dot ([e820f41](https://github.com/ory/kratos/commit/e820f41e63aff1a85094a9e14dfd968353ae6b1b))
 * Correct user settings render form ([197e246](https://github.com/ory/kratos/commit/197e24603fc67707131e54e52e1bfb52011ca839))
 * Delete old redirect homepage ([b6d9244](https://github.com/ory/kratos/commit/b6d9244b5d683f5baf27e9af5970596261a4fd20))
+* Document new account recovery feature ([2252a86](https://github.com/ory/kratos/commit/2252a8676e573b9ade85814acc40b212dcfd48c1)), closes [#436](https://github.com/ory/kratos/issues/436)
 * Document refresh=true for login ([#479](https://github.com/ory/kratos/issues/479)) ([2ab5ead](https://github.com/ory/kratos/commit/2ab5ead77517ab5b750835195ab6673e219da71a)), closes [#464](https://github.com/ory/kratos/issues/464)
 * Embedded quickstart video ([#491](https://github.com/ory/kratos/issues/491)) ([ee80346](https://github.com/ory/kratos/commit/ee80346a30ebc2c7b06292e58bd3578e002e242a))
 * Fix broken link ([aa9d3e6](https://github.com/ory/kratos/commit/aa9d3e6347375170a84ba53b2a9050c9544e7e2a))
 * Fix broken link ([#506](https://github.com/ory/kratos/issues/506)) ([dac8dfd](https://github.com/ory/kratos/commit/dac8dfd970255f8e79e7fc7811f563e6903f6fc9)):
 
     > The rest api is no longer under sdk but under reference.
+* Fix code sample comment ([781a76b](https://github.com/ory/kratos/commit/781a76bb6de20767d6150b1fcb5236f4f376edd7))
+* Fix copy paste errors in code docs ([e456a4e](https://github.com/ory/kratos/commit/e456a4e435265eade7026fd899c4bc7d2b28a5c9))
 * Fix iframe syntax ([#520](https://github.com/ory/kratos/issues/520)) ([0cb36ca](https://github.com/ory/kratos/commit/0cb36ca9d8459dc8027358190e6e8aa8764bffe4))
 * Fix typo ([#535](https://github.com/ory/kratos/issues/535)) ([c57d270](https://github.com/ory/kratos/commit/c57d270758a97315c874df3fae867b0031300501))
 * Fix typo in base docs ([#503](https://github.com/ory/kratos/issues/503)) ([6668048](https://github.com/ory/kratos/commit/666804812d707b1d50ea160877bdb3878ddfe6b0))
 * Fix typo in oauth sign in documentation ([#504](https://github.com/ory/kratos/issues/504)) ([886e24d](https://github.com/ory/kratos/commit/886e24d93a5eb233062b8c7d562c8208f7a4f48f))
+* Fix typos ([81903a5](https://github.com/ory/kratos/commit/81903a5137d87588531391623b92afde70abc3ea))
 * Fix typos ([#489](https://github.com/ory/kratos/issues/489)) ([57a7bc8](https://github.com/ory/kratos/commit/57a7bc89961612fea0255202d3dd6a535921ef3c))
+* Fix ui url keys everywhere ([b75debb](https://github.com/ory/kratos/commit/b75debb0ee4f87dd9910b30bd76d8c6ad382fb38))
 * Fix username example by renaming property and removing format ([#508](https://github.com/ory/kratos/issues/508)) ([4573426](https://github.com/ory/kratos/commit/45734260bcead3087aadcaaf3033cc1e89bc1844))
+* Fix wording in settings flow graph ([e2a0084](https://github.com/ory/kratos/commit/e2a00842cb5bd3cfbddd0e5117c7f3f968e9f2df))
 * Fixed broken link ([#452](https://github.com/ory/kratos/issues/452)) ([d1ddbd1](https://github.com/ory/kratos/commit/d1ddbd1ee465a7d3e29815fcfd9c75b5decbb5f9))
 * Fixed broken link ([#455](https://github.com/ory/kratos/issues/455)) ([4f3d179](https://github.com/ory/kratos/commit/4f3d17906f3fa2aea3a0b0505047da6aa54938e4))
 * Fixed broken link ([#456](https://github.com/ory/kratos/issues/456)) ([4b43e99](https://github.com/ory/kratos/commit/4b43e993df62d2bf54fa39624651f081eb75bbb0))
@@ -171,6 +184,7 @@
 * Fixed broken links ([#458](https://github.com/ory/kratos/issues/458)) ([f960887](https://github.com/ory/kratos/commit/f9608876e30dbdd7c67ee70dcf5d9a1985b80f0f))
 * Fixed broken links ([#459](https://github.com/ory/kratos/issues/459)) ([2749596](https://github.com/ory/kratos/commit/27495964c7cd34e9bf914b19c83157e484c9cde4))
 * Fixed broken markdown ([#474](https://github.com/ory/kratos/issues/474)) ([22d5be1](https://github.com/ory/kratos/commit/22d5be16f91ed9df206310c6f04d843cd79328ca))
+* Format guides ([407c70f](https://github.com/ory/kratos/commit/407c70f23d815380d98ee9252f263e07c1f0f4a9))
 * Improve grammar and wording ([#448](https://github.com/ory/kratos/issues/448)) ([a19adf3](https://github.com/ory/kratos/commit/a19adf30426ff8df03a3eb725ae0101ebb6c4ab1))
 * Improve grammar, clarify sections, update images ([#419](https://github.com/ory/kratos/issues/419)) ([79019d1](https://github.com/ory/kratos/commit/79019d1246b1517b3297996a207a3d2f517fab01))
 * Make whitelisted_return_to_urls examples an array ([#426](https://github.com/ory/kratos/issues/426)) ([7ed5605](https://github.com/ory/kratos/commit/7ed56057f533f23ca18cab5a2614429554e877e2)), closes [#425](https://github.com/ory/kratos/issues/425)
@@ -180,10 +194,12 @@
 * Remove rogue slash and fix closing tag ([#521](https://github.com/ory/kratos/issues/521)) ([3fd1076](https://github.com/ory/kratos/commit/3fd1076929eeecffb7e8aa8e906970774283daeb))
 * Rename redirect page to browser-redirect-flow-completion ([ae77d48](https://github.com/ory/kratos/commit/ae77d48a3435069556382b9403cb1ad45a9d7c07))
 * Replace mailhog references with mailslurper ([#509](https://github.com/ory/kratos/issues/509)) ([d0e5a0f](https://github.com/ory/kratos/commit/d0e5a0fa64e2d46437fb2abd17dc306bdec34a91))
+* Run format ([2b3f299](https://github.com/ory/kratos/commit/2b3f29913be844498a02b9869789c2b2d4aaacf8))
 * Typos and stale links ([29fb466](https://github.com/ory/kratos/commit/29fb466d9881b6574ee697d7e25e45785f07114b))
 * Typos and stale links ([#510](https://github.com/ory/kratos/issues/510)) ([7557ab8](https://github.com/ory/kratos/commit/7557ab85ddf8501935d70e2558682dff2024897b))
 * Update repository templates ([4c89834](https://github.com/ory/kratos/commit/4c89834ce59195c5b59da5bc5b41db7ed03bf1c4))
 * Use central banner repo for README ([d1e8a82](https://github.com/ory/kratos/commit/d1e8a8272cd536b6e12326778258bfbe0b7e8af7))
+* Use shorthand closing tag for Mermaid ([f9f2dbc](https://github.com/ory/kratos/commit/f9f2dbc063f82a852b540013ddff81501f7c1222))
 
 
 ### Features
@@ -192,8 +208,8 @@
 * Add User ID to a header when calling whoami ([#530](https://github.com/ory/kratos/issues/530)) ([183b4d0](https://github.com/ory/kratos/commit/183b4d075a9ff50c1f9f53d108a48789e49a5138))
 * Implement account recovery ([#428](https://github.com/ory/kratos/issues/428)) ([e169a3e](https://github.com/ory/kratos/commit/e169a3e4079b1ef3a18564e0723baf81c44c38ec)), closes [#37](https://github.com/ory/kratos/issues/37):
 
-    > This patch implements the account recovery with endpoints such as "Init Account Recovery", a new config value `selfservice.flows.recovery.ui_url` and so on. A new identity field has been added `identity.recovery_addresses` containing all recovery addresses.
-    >
+    > This patch implements the account recovery with endpoints such as "Init Account Recovery", a new config value `urls.recovery_ui` and so on. A new identity field has been added `identity.recovery_addresses` containing all recovery addresses.
+    > 
     > Additionally, some refactoring was made to DRY code and make naming consistent. As part of dependency upgrades, structured logging has also improved and an audit trail prototype has been added (currently streams to stderr only).
 
 
@@ -519,7 +535,7 @@ has been merged with  `selfservice.verification.request_lifespan`.
 * Improve social sign in guide ([#393](https://github.com/ory/kratos/issues/393)) ([647ced3](https://github.com/ory/kratos/commit/647ced3084d203e9954ca037afea34316f2080d8)), closes [#49](https://github.com/ory/kratos/issues/49):
 
     > This patch changes the social sign in guide to represent more use cases such as Google and Facebook. Additionally, the example has been updated to work with Jsonnet.
-    >
+    > 
     > This patch also documents limitations around merging user data from GitHub.
 * Improve the identity data model page ([#410](https://github.com/ory/kratos/issues/410)) ([2915b8f](https://github.com/ory/kratos/commit/2915b8faf3530fe7b9d252094c3aeb9fdbe9dd08))
 * Include redirect doc in nav ([5aaebff](https://github.com/ory/kratos/commit/5aaebffd8c03e613ec60735536b6ef38d4da39e3)), closes [#406](https://github.com/ory/kratos/issues/406)
@@ -573,10 +589,10 @@ has been merged with  `selfservice.verification.request_lifespan`.
 
     > Creates several docker compose examples which include various
     > scenarios of the quickstart.
-    >
+    > 
     > The regular quickstart guide now works without ORY Oathkeeper
     > and uses the standalone mode of the example app instead.
-    >
+    > 
     > Additionally, the Makefile was improved and now automatically pulls
     > required dependencies in the appropriate version.
 * Document Schema API and serve over admin endpoint ([#299](https://github.com/ory/kratos/issues/299)) ([4be417c](https://github.com/ory/kratos/commit/4be417c0ee18622247a15d2803f7f436cfe3c229)), closes [#287](https://github.com/ory/kratos/issues/287)
@@ -611,8 +627,8 @@ has been merged with  `selfservice.verification.request_lifespan`.
 * Verified_at field should not be required ([#353](https://github.com/ory/kratos/issues/353)) ([15d5e26](https://github.com/ory/kratos/commit/15d5e268d2ec397f0647d2407d86404c4ee8bfa3)):
 
     > Closes https://github.com/ory/sdk/issues/11
-    >
-    >
+    > 
+    > 
 * **config:** Rename config key stmp to smtp ([#278](https://github.com/ory/kratos/issues/278)) ([ef95811](https://github.com/ory/kratos/commit/ef95811bb891afe3a0ef3b19514f13a56a32ea3b))
 * **session:** Regenerate CSRF Token on principal change ([#290](https://github.com/ory/kratos/issues/290)) ([1527ef4](https://github.com/ory/kratos/commit/1527ef4209b937e2175b60d56efd019f17b33b04)), closes [#217](https://github.com/ory/kratos/issues/217)
 * **session:** Whoami endpoint now supports all HTTP methods ([#283](https://github.com/ory/kratos/issues/283)) ([4bf645b](https://github.com/ory/kratos/commit/4bf645b66c7a128182ff55e52fdad7f53d752ce7)), closes [#270](https://github.com/ory/kratos/issues/270)
@@ -631,21 +647,21 @@ has been merged with  `selfservice.verification.request_lifespan`.
 
     > This patch focuses on refactoring how self-service flows terminate and
     > changes how hooks behave and when they are executed.
-    >
+    > 
     > Before this patch, it was not clear whether hooks run before or
     > after an identity is persisted. This caused problems with multiple
     > writes on the HTTP ResponseWriter and other bugs.
-    >
+    > 
     > This patch removes certain hooks from after login, registration, and profile flows.
     > Per default, these flows now respond with an appropriate payload (
     > redirect for browsers, JSON for API clients) and deprecate
     > the `redirect` hook. This patch includes documentation which explains
     > how these hooks work now.
-    >
+    > 
     > Additionally, the documentation was updated. Especially the sections
     > about hooks have been refactored. The login and user registration docs
     > have been updated to reflect the latest changes as well.
-    >
+    > 
     > Also, some other minor, cosmetic, changes to the documentation have been made.
 
 
@@ -735,15 +751,15 @@ has been merged with  `selfservice.verification.request_lifespan`.
 
     > This patch adds a module which is capable of aborting a request, waiting for
     > another option to complete, and then resuming the request again.
-    >
+    > 
     > This feature makes use of a temporary cookie which keeps track of the
     > request state.
-    >
+    > 
     > This feature is required for several workflows that update privileged
     > fields such as passwords, 2fa recovery codes, email addresses.
-    >
+    > 
     > refactor: rename profile to settings flow
-    >
+    > 
     > Renames selfservice/profile to settings. The settings flow includes a strategy for managing profile information
 * **login:** Forced reauthentication ([#248](https://github.com/ory/kratos/issues/248)) ([344fc9c](https://github.com/ory/kratos/commit/344fc9cddccff958f13249b999a835d3e46a7771)), closes [#243](https://github.com/ory/kratos/issues/243)
 
@@ -923,12 +939,12 @@ No significant changes have been made for this release.
 * refactor!: Improve user-facing error APIs (#219) ([7d4054f](https://github.com/ory/kratos/commit/7d4054f4363da7bc0e943e7abfbd0c804eb7f0c1)), closes [#219](https://github.com/ory/kratos/issues/219) [#204](https://github.com/ory/kratos/issues/204):
 
     > This patch refactors user-facing error APIs:
-    >
+    > 
     > - The `/errors` endpoint moved to `/self-service/errors`
     > - The endpoint is now available at both the Admin and Public API. The Public API requires CSRF Token match or a 403 error will be returned.
     > - The Public API endpoint no longer returns 404 errors but 403 instead.
     > - The response payload changed. What was `[{"code": ...}]` is now `{"id": "...", "errors": [{"code": ...}]}`
-    >
+    > 
     > This patch requires running `kratos migrate sql` as a new column (`csrf_token`) has been added to the user-facing error store.
 * Update CHANGELOG [ci skip] ([c368a11](https://github.com/ory/kratos/commit/c368a11523a9bcb30a830d65c11e4f6d27417a78))
 
@@ -1147,21 +1163,21 @@ No significant changes have been made for this release.
 
     > This patch adds a message templates (with override capabilities)
     > and SMTP delivery.
-    >
+    > 
     > Integration tests using MailHog test fault resilience and e2e email
     > delivery.
-    >
+    > 
     > This system is designed to be extended for SMS and other use cases.
 * Replace DBAL layer with gobuffalo/pop (#130) ([21d08b8](https://github.com/ory/kratos/commit/21d08b84560230d8a063a418a74efcf53c146872)), closes [#130](https://github.com/ory/kratos/issues/130):
 
     > This is a major refactoring of the internal DBAL. After a successful proof of concept and evaluation of gobuffalo/pop, we believe this to be the best DBAL for Go at the moment. It abstracts a lot of boilerplate code away.
-    >
+    > 
     > As with all sophisticated DBALs, pop too has its quirks. There are several issues that have been discovered during testing and adoption: https://github.com/gobuffalo/pop/issues/136 https://github.com/gobuffalo/pop/issues/476 https://github.com/gobuffalo/pop/issues/473 https://github.com/gobuffalo/pop/issues/469 https://github.com/gobuffalo/pop/issues/466
-    >
+    > 
     > However, the upside of moving much of the hard database/sql plumbing into another library cleans up the code base significantly and reduces complexity.
-    >
+    > 
     > As part of this change, the "ephermal" DBAL ("in memory") will be removed and sqlite will be used instead. This further reduces complexity of the code base and code-duplication.
-    >
+    > 
     > To support sqlite, CGO is required, which means that we need to run tests with `go test -tags sqlite` on a machine that has g++ installed. This also means that we need a Docker Image with `alpine` as opposed to pure `scratch`. While this is certainly a downside, the upside of less maintenance and "free" support for SQLite, PostgreSQL, MySQL, and CockroachDB simply outweighs any downsides that come with CGO.
 * Replace local deps with remote ones ([8605e45](https://github.com/ory/kratos/commit/8605e454cf538e047c5a9c3479372892d6b3f483))
 * ss/profile: Improve success and error flows ([9e0015a](https://github.com/ory/kratos/commit/9e0015acec7f8d927498e48366b377e22ec768b7)), closes [#112](https://github.com/ory/kratos/issues/112):
@@ -1182,7 +1198,7 @@ No significant changes have been made for this release.
     > asserting types for the whole form. That caused passwords
     > containing only numbers to fail to unmarshal into a string
     > value.
-    >
+    > 
     > This patch resolves that issue by introducing a prefix
     > option to the BodyParser
 * Handle securecookie errors appropriately ([#101](https://github.com/ory/kratos/issues/101)) ([75bf6fe](https://github.com/ory/kratos/commit/75bf6fe3f79d025f2aaa79d06db39c26430dc3fc)), closes [#97](https://github.com/ory/kratos/issues/97):
@@ -1205,7 +1221,7 @@ No significant changes have been made for this release.
 * Resolve wrong column reference in sql ([#90](https://github.com/ory/kratos/issues/90)) ([0c0eb87](https://github.com/ory/kratos/commit/0c0eb87cd341bd3e73eb9adb303054b38c103ba9)):
 
     > Reference ic.method instead of ici.method.
-    >
+    > 
     > Added regression tests against this particular issue.
 * Update to ory/x 0.0.80 ([#110](https://github.com/ory/kratos/issues/110)) ([64de2f8](https://github.com/ory/kratos/commit/64de2f86540bf8715a1703d773fa95011603a854)):
 
