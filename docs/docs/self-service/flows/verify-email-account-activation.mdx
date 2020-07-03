@@ -144,9 +144,9 @@ follows for Email Verification:
 1. An initial HTTP Request is made to
    `/self-service/browser/flows/verification/:via`. Currently, only `email` is
    supported as `:via`.
-2. ORY Kratos redirects the browser to the URL set in `selfservice.flows.verification.ui_url` and
-   appends the `request` URL Query Parameter (e.g.
-   `https://example.org/verify?request=abcde`).
+2. ORY Kratos redirects the browser to the URL set in
+   `selfservice.flows.verification.ui_url` and appends the `request` URL Query
+   Parameter (e.g. `https://example.org/verify?request=abcde`).
 3. The Endpoint at `/profile` makes an HTTP GET Request to
    `https://ory-kratos-admin.example-org.vpc/self-service/browser/flows/requests/verification?request=abcde`
    and fetches the Verification Request JSON Payload that represents the

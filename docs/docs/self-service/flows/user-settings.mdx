@@ -292,9 +292,10 @@ stateDiagram
 1. ORY Kratos does some internal processing (e.g. checks if a session cookie is
    set, generates payloads for form fields, sets CSRF token, ...) and redirects
    the user's browser to the Settings UI URL which is defined using the
-   `selfservice.flows.settings.ui_url` config or `SELFSERVICE_FLOWS_SETTINGS_UI_URL` environment variable, which
-   is set to the ui endpoints - for example `https://127.0.0.1:4455/settings`.
-   The user's browser is thus redirected to
+   `selfservice.flows.settings.ui_url` config or
+   `SELFSERVICE_FLOWS_SETTINGS_UI_URL` environment variable, which is set to the
+   ui endpoints - for example `https://127.0.0.1:4455/settings`. The user's
+   browser is thus redirected to
    `https://127.0.0.1:4455/settings?request=abcde`. The `request` query
    parameter includes a unique ID which will be used to fetch contextual data
    for this settings request.
@@ -320,8 +321,8 @@ stateDiagram
    `http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/settings/strategies/profile?request=abcde`
    or `/self-service/browser/flows/settings/strategies/password?request=abcde`).
    ORY Kratos validates the data:
-   - If the form data is invalid, the Settings Request's JSON Payload is updated -
-     for example with
+   - If the form data is invalid, the Settings Request's JSON Payload is
+     updated - for example with
      ```json5
      {
        id: 'abcde',
@@ -352,8 +353,8 @@ stateDiagram
      `https://127.0.0.1:4455/settings_ui?request=abcde`.
    - If the data is valid but the modifications require proof of identity (e.g.
      because the primary email address or the password was changed), a settings
-     flow is executed. Only after a successful settings flow will the changed data
-     be stored!
+     flow is executed. Only after a successful settings flow will the changed
+     data be stored!
    - If data is valid, ORY Kratos proceeds with the next step.
 1. ORY Kratos executes hooks defined in the **After Settings Hooks**. If a
    failure occurs, the whole flow is aborted.
