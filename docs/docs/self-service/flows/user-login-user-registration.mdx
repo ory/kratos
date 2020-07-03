@@ -368,9 +368,10 @@ stateDiagram
 1. ORY Kratos does some internal processing (e.g. checks if a session cookie is
    set, generates payloads for form fields, sets CSRF token, ...) and redirects
    the user's browser to the Login UI URL which is defined using the
-   `selfservice.flows.login.ui_url` (or `selfservice.flows.registration.ui_url`) config or `SELFSERVICE_FLOWS_LOGIN_UI_URL` (or
-   `SELFSERVICE_FLOWS_REGISTRATION_UI_URL`) environment variable, which is set to the ui
-   endpoints - for example `https://127.0.0.1:4455/auth/login` and
+   `selfservice.flows.login.ui_url` (or `selfservice.flows.registration.ui_url`)
+   config or `SELFSERVICE_FLOWS_LOGIN_UI_URL` (or
+   `SELFSERVICE_FLOWS_REGISTRATION_UI_URL`) environment variable, which is set
+   to the ui endpoints - for example `https://127.0.0.1:4455/auth/login` and
    `https://127.0.0.1:4455/auth/registration`). The user's browser is thus
    redirected to
    `https://127.0.0.1:4455/auth/(login|registration)?request=abcde`. The
