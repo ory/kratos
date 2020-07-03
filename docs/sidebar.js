@@ -43,8 +43,16 @@ module.exports = {
           "self-service/flows/user-settings/link-unlink-openid-connect-oauth2",
         ]
     },
+    {
+      type: "category",
+      label: "Account Recovery",
+      items:
+        [
+          "self-service/flows/account-recovery",
+          "self-service/flows/account-recovery/password-reset-recovery-link",
+        ]
+    },
     "self-service/flows/user-logout",
-    "self-service/flows/password-reset-account-recovery",
     "self-service/flows/user-facing-errors",
     "self-service/flows/verify-email-account-activation",
     "self-service/flows/2fa-mfa-multi-factor-authentication",
@@ -53,6 +61,8 @@ module.exports = {
   Guides: [
     "guides/sign-in-with-github-google-facebook-linkedin",
     "guides/zero-trust-iap-proxy-identity-access-proxy",
+    "guides/account-recovery-password-reset",
+    "guides/account-activation-email-verification",
     "guides/multi-tenancy-multitenant",
     "guides/high-availability-ha"
   ],
