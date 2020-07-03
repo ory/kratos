@@ -2937,9 +2937,9 @@ Accept: application/json
 ```
 
 This endpoint initializes a browser-based user login flow. Once initialized, the
-browser will be redirected to `selfservice.flows.login.ui_url` with the request ID set as a query
-parameter. If a valid user session exists already, the browser will be
-redirected to `urls.default_redirect_url`.
+browser will be redirected to `selfservice.flows.login.ui_url` with the request
+ID set as a query parameter. If a valid user session exists already, the browser
+will be redirected to `urls.default_redirect_url`.
 
 > This endpoint is NOT INTENDED for API clients and only works with browsers
 > (Chrome, Firefox, ...).
@@ -3321,9 +3321,10 @@ Accept: application/json
 ```
 
 This endpoint initializes a browser-based user registration flow. Once
-initialized, the browser will be redirected to `selfservice.flows.registration.ui_url` with the
-request ID set as a query parameter. If a valid user session exists already, the
-browser will be redirected to `urls.default_redirect_url`.
+initialized, the browser will be redirected to
+`selfservice.flows.registration.ui_url` with the request ID set as a query
+parameter. If a valid user session exists already, the browser will be
+redirected to `urls.default_redirect_url`.
 
 > This endpoint is NOT INTENDED for API clients and only works with browsers
 > (Chrome, Firefox, ...).
@@ -3703,9 +3704,9 @@ Accept: application/json
 ```
 
 This endpoint initializes a browser-based settings flow. Once initialized, the
-browser will be redirected to `selfservice.flows.settings.ui_url` with the request ID set as a
-query parameter. If no valid user session exists, a login flow will be
-initialized.
+browser will be redirected to `selfservice.flows.settings.ui_url` with the
+request ID set as a query parameter. If no valid user session exists, a login
+flow will be initialized.
 
 > This endpoint is NOT INTENDED for API clients and only works with browsers
 > (Chrome, Firefox, ...).
@@ -4312,9 +4313,9 @@ Accept: application/json
 ```
 
 This endpoint initializes a browser-based verification flow. Once initialized,
-the browser will be redirected to `selfservice.flows.settings.ui_url` with the request ID set as
-a query parameter. If no valid user session exists, a login flow will be
-initialized.
+the browser will be redirected to `selfservice.flows.settings.ui_url` with the
+request ID set as a query parameter. If no valid user session exists, a login
+flow will be initialized.
 
 > This endpoint is NOT INTENDED for API clients and only works with browsers
 > (Chrome, Firefox, ...).
