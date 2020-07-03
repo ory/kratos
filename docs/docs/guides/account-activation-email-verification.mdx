@@ -3,8 +3,9 @@ id: account-activation-email-verification
 title: Setting up Account Activation and E-Mail Verification
 ---
 
-To set up email verification, your [Identity Schema](../concepts/identity-data-model.md) must have an email in its traits
-and add
+To set up email verification, your
+[Identity Schema](../concepts/identity-data-model.md) must have an email in its
+traits and add
 
 ```json
 {
@@ -40,8 +41,9 @@ to it, for example:
 }
 ```
 
-Email verification currently supports sending out a recovery link to an email address. For this to work, you must have
-the courier SMTP connection configured in your ORY Kratos Config File (`kratos serve -c /home/kratos/.kratos.yml`):
+Email verification currently supports sending out a recovery link to an email
+address. For this to work, you must have the courier SMTP connection configured
+in your ORY Kratos Config File (`kratos serve -c /home/kratos/.kratos.yml`):
 
 ```diff
  # ORY Kratos Config File
@@ -66,5 +68,6 @@ You also need to enable verification:
  # ...
 ```
 
-That all that's needed! For more information on implementing the UI and details about the payloads, head over
-to the [Email and Phone Verification and Account Activation Documentation](../self-service/flows/verify-email-account-activation.mdx)!
+That all that's needed! For more information on implementing the UI and details
+about the payloads, head over to the
+[Email and Phone Verification and Account Activation Documentation](../self-service/flows/verify-email-account-activation.mdx)!
