@@ -38,8 +38,9 @@ This strategy does not implement any other flow.
 
 Redirecting the browser to the
 [Self-Service Settings Endpoint](../user-settings.mdx#user-settings-process-sequence)
-initiates the flow. The Settings Request Response Payload always includes a
-`profile` method:
+initiates the flow.
+
+The Settings Request Response Payload always includes a `profile` method:
 
 ```json title="$ curl http://<kratos-admin>/self-service/browser/flows/requests/settings?request=9c6473d4-9ffd-44cd-9794-adb82cbe4009"
 {
