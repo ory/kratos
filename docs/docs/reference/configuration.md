@@ -47,7 +47,7 @@ identity:
     # - Windows Command Line (CMD):
     #    > set IDENTITY_TRAITS_DEFAULT_SCHEMA_URL=<value>
     #
-    default_schema_url: httpss://foo.bar.com/path/to/identity.traits.schema.json
+    default_schema_url: file://path/to/identity.traits.schema.json
 
     ## Additional JSON Schemas for Identity Traits ##
     #
@@ -91,7 +91,7 @@ identity:
 # - Windows Command Line (CMD):
 #    > set DSN=<value>
 #
-dsn: sqlite:///var/lib/sqlite/db.sqlite?_fk=true&mode=rwc
+dsn: mysql://user:secret@tcp(mysqld:3306)/database?max_conns=20&max_idle_conns=4
 
 ## selfservice ##
 #
@@ -150,7 +150,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_SETTINGS_UI_URL=<value>
       #
-      ui_url: https://my-app.com/user/settings
+      ui_url: https://www.ory.sh/kratos/docs/fallback/settings
 
       ## request_lifespan ##
       #
@@ -316,7 +316,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_REGISTRATION_UI_URL=<value>
       #
-      ui_url: https://www.ory.sh/kratos/docs/fallback/registration
+      ui_url: https://my-app.com/signup
 
       ## request_lifespan ##
       #
@@ -333,7 +333,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_REGISTRATION_REQUEST_LIFESPAN=<value>
       #
-      request_lifespan: 1m
+      request_lifespan: 1h
 
       ## after ##
       #
@@ -444,7 +444,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_LOGIN_UI_URL=<value>
       #
-      ui_url: https://www.ory.sh/kratos/docs/fallback/login
+      ui_url: https://my-app.com/login
 
       ## request_lifespan ##
       #
@@ -461,7 +461,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_LOGIN_REQUEST_LIFESPAN=<value>
       #
-      request_lifespan: 1h
+      request_lifespan: 1m
 
       ## after ##
       #
@@ -554,13 +554,13 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_VERIFICATION_ENABLED=<value>
       #
-      enabled: true
+      enabled: false
 
       ## Verify UI URL ##
       #
       # URL where the ORY Verify UI is hosted. This is the page where users activate and / or verify their email or telephone number. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
       #
-      # Default value: https://www.ory.sh/kratos/docs/fallback/verify
+      # Default value: https://www.ory.sh/kratos/docs/fallback/verification
       #
       # Examples:
       # - https://my-app.com/verify
@@ -571,7 +571,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_VERIFICATION_UI_URL=<value>
       #
-      ui_url: https://my-app.com/verify
+      ui_url: https://www.ory.sh/kratos/docs/fallback/verification
 
       ## after ##
       #
@@ -642,7 +642,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_RECOVERY_UI_URL=<value>
       #
-      ui_url: https://www.ory.sh/kratos/docs/fallback/recovery
+      ui_url: https://my-app.com/verify
 
       ## after ##
       #
@@ -679,7 +679,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_RECOVERY_REQUEST_LIFESPAN=<value>
       #
-      request_lifespan: 1s
+      request_lifespan: 1m
 
     ## error ##
     #
@@ -699,7 +699,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_ERROR_UI_URL=<value>
       #
-      ui_url: https://www.ory.sh/kratos/docs/fallback/error
+      ui_url: https://my-app.com/kratos-error
 
   ## strategies ##
   #
@@ -732,7 +732,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_STRATEGIES_RECOVERY_TOKEN_ENABLED=<value>
       #
-      enabled: false
+      enabled: true
 
     ## password ##
     #
@@ -762,7 +762,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_STRATEGIES_OIDC_ENABLED=<value>
       #
-      enabled: false
+      enabled: true
 
       ## config ##
       #
@@ -780,8 +780,21 @@ selfservice:
         providers:
           - id: google
             provider: google
-            client_id: dolor Duis
-            client_secret: irure Duis ad
+            client_id: pariatur
+            client_secret: ut occaecat
+            mapper_url: base64://bG9jYWwgc3ViamVjdCA9I...
+            issuer_url: https://accounts.google.com
+            auth_url: https://accounts.google.com/o/oauth2/v2/auth
+            token_url: https://www.googleapis.com/oauth2/v4/token
+            scope:
+              - profile
+              - profile
+              - profile
+              - offline_access
+          - id: google
+            provider: google
+            client_id: ex nostrud dolore
+            client_secret: anim elit ea
             mapper_url: base64://bG9jYWwgc3ViamVjdCA9I...
             issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
@@ -790,24 +803,12 @@ selfservice:
               - offline_access
               - profile
               - profile
-          - id: google
-            provider: google
-            client_id: pariatur nulla Excepteur aliqua
-            client_secret: qui sint
-            mapper_url: https://foo.bar.com/path/to/oidc.jsonnet
-            issuer_url: https://accounts.google.com
-            auth_url: https://accounts.google.com/o/oauth2/v2/auth
-            token_url: https://www.googleapis.com/oauth2/v4/token
-            scope:
-              - profile
               - offline_access
               - profile
-              - offline_access
-              - offline_access
           - id: google
             provider: google
-            client_id: ea adipisicing dolore cillum laborum
-            client_secret: minim Lorem
+            client_id: commodo sit officia deserunt incididunt
+            client_secret: dolore
             mapper_url: https://foo.bar.com/path/to/oidc.jsonnet
             issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
@@ -815,19 +816,30 @@ selfservice:
             scope:
               - offline_access
               - offline_access
-              - profile
+              - offline_access
               - offline_access
               - offline_access
           - id: google
             provider: google
-            client_id: Lorem mollit consequat aliquip dolore
-            client_secret: ex officia laboris
+            client_id: laborum enim
+            client_secret: fugiat quis Duis
             mapper_url: base64://bG9jYWwgc3ViamVjdCA9I...
             issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
             token_url: https://www.googleapis.com/oauth2/v4/token
             scope:
               - offline_access
+              - profile
+              - offline_access
+          - id: google
+            provider: google
+            client_id: in dolor
+            client_secret: mollit proident do enim
+            mapper_url: base64://bG9jYWwgc3ViamVjdCA9I...
+            issuer_url: https://accounts.google.com
+            auth_url: https://accounts.google.com/o/oauth2/v2/auth
+            token_url: https://www.googleapis.com/oauth2/v4/token
+            scope:
               - offline_access
 
 ## Courier configuration ##
@@ -867,7 +879,7 @@ courier:
     # - Windows Command Line (CMD):
     #    > set COURIER_SMTP_FROM_ADDRESS=<value>
     #
-    from_address: dlAymtAw1-ssr@FjlSIssCaHSTCWPN.xt
+    from_address: dA7UmJuYUHOUSby@cZdUuAdvxNfgHdShclLwTGIHKmTs.sm
 
   ## Override message templates ##
   #
@@ -913,7 +925,7 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_ADMIN_HOST=<value>
     #
-    host: proident
+    host: laboris
 
     ## port ##
     #
@@ -956,7 +968,7 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_PUBLIC_HOST=<value>
     #
-    host: proident cillum
+    host: ad eu est elit
 
     ## port ##
     #
@@ -984,7 +996,7 @@ log:
   # - Windows Command Line (CMD):
   #    > set LOG_LEVEL=<value>
   #
-  level: warning
+  level: debug
 
   ## format ##
   #
@@ -1010,8 +1022,8 @@ secrets:
   #    > set SECRETS_DEFAULT=<value>
   #
   default:
-    - ut autelaborum Lorem
-    - nostrud aliqua reprehenderit eu
+    - pariatur anim nulla laboris in
+    - aliquipveniam est
 
   ## Singing Keys for Cookies ##
   #
@@ -1024,9 +1036,8 @@ secrets:
   #    > set SECRETS_COOKIE=<value>
   #
   cookie:
-    - incididunt fugiat anim ut ea
-    - et exercitation veniam in sit
-    - Duis ut incididunt
+    - deserunt quis do veniam ipsum
+    - aute dolore pariatur
 
 ## Hashing Algorithm Configuration ##
 #
@@ -1042,7 +1053,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_MEMORY=<value>
     #
-    memory: 49478993
+    memory: 37189058
 
     ## iterations ##
     #
@@ -1052,7 +1063,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_ITERATIONS=<value>
     #
-    iterations: 6289667
+    iterations: 75227804
 
     ## parallelism ##
     #
@@ -1062,7 +1073,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_PARALLELISM=<value>
     #
-    parallelism: 20655506
+    parallelism: 58543790
 
     ## salt_length ##
     #
@@ -1072,7 +1083,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_SALT_LENGTH=<value>
     #
-    salt_length: 24272157
+    salt_length: 82793317
 
     ## key_length ##
     #
@@ -1082,7 +1093,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_KEY_LENGTH=<value>
     #
-    key_length: 12784103
+    key_length: 21408659
 
 ## session ##
 #
@@ -1116,5 +1127,5 @@ session:
   # - Windows Command Line (CMD):
   #    > set SESSION_COOKIE_SAME_SITE=<value>
   #
-  cookie_same_site: Lax
+  cookie_same_site: Strict
 ```
