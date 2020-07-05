@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gofrs/uuid"
 
 	gooidc "github.com/coreos/go-oidc"
 	"github.com/ory/herodot"
@@ -55,7 +56,12 @@ func (m *ProviderMicrosoft) Claims(ctx context.Context, exchange *oauth2.Token) 
 		return nil, err
 	}
 
-	p, err := gooidc.NewProvider(context.Background(), unverifiedClaims.Issuer)
+	if _, err := uuid.FromString(unverifiedClaims.TenantID); err != nil {
+		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("TenantID claim is not a valid UUID: %s", err))
+	}
+
+	issuer := "https://login.microsoftonline.com/" + unverifiedClaims.TenantID + "/v2.0"
+	p, err := gooidc.NewProvider(context.Background(), issuer)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initialize OpenID Connect Provider: %s", err))
 	}
@@ -78,7 +84,7 @@ func (m *ProviderMicrosoft) Claims(ctx context.Context, exchange *oauth2.Token) 
 }
 
 type microsoftUnverifiedClaims struct {
-	Issuer string `json:"iss,omitempty"`
+	TenantID string `json:"tid,omitempty"`
 }
 
 func (c *microsoftUnverifiedClaims) Valid() error {
