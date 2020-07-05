@@ -66,21 +66,7 @@ func (m *ProviderMicrosoft) Claims(ctx context.Context, exchange *oauth2.Token) 
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initialize OpenID Connect Provider: %s", err))
 	}
 
-	token, err := p.
-		Verifier(&gooidc.Config{
-			ClientID: m.config.ClientID,
-		}).
-		Verify(ctx, raw)
-	if err != nil {
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
-	}
-
-	var claims Claims
-	if err := token.Claims(&claims); err != nil {
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
-	}
-
-	return &claims, nil
+	return m.verifyAndDecodeClaimsWithProvider(ctx, p, raw)
 }
 
 type microsoftUnverifiedClaims struct {

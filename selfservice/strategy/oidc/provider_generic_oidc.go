@@ -81,18 +81,8 @@ func (g *ProviderGenericOIDC) AuthCodeURLOptions(r request) []oauth2.AuthCodeOpt
 	return []oauth2.AuthCodeOption{}
 }
 
-func (g *ProviderGenericOIDC) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
-	raw, ok := exchange.Extra("id_token").(string)
-	if !ok || len(raw) == 0 {
-		return nil, errors.WithStack(ErrIDTokenMissing)
-	}
-
-	p, err := g.provider(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	token, err := p.
+func (g *ProviderGenericOIDC) verifyAndDecodeClaimsWithProvider(ctx context.Context, provider *gooidc.Provider, raw string) (*Claims, error) {
+	token, err := provider.
 		Verifier(&gooidc.Config{
 			ClientID: g.config.ClientID,
 		}).
@@ -107,4 +97,18 @@ func (g *ProviderGenericOIDC) Claims(ctx context.Context, exchange *oauth2.Token
 	}
 
 	return &claims, nil
+}
+
+func (g *ProviderGenericOIDC) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
+	raw, ok := exchange.Extra("id_token").(string)
+	if !ok || len(raw) == 0 {
+		return nil, errors.WithStack(ErrIDTokenMissing)
+	}
+
+	p, err := g.provider(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return g.verifyAndDecodeClaimsWithProvider(ctx, p, raw)
 }
