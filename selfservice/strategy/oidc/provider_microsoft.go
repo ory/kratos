@@ -9,7 +9,6 @@ import (
 
 	gooidc "github.com/coreos/go-oidc"
 	"github.com/ory/herodot"
-	"github.com/ory/x/stringslice"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 )
@@ -41,18 +40,7 @@ func (m *ProviderMicrosoft) OAuth2(ctx context.Context) (*oauth2.Config, error) 
 		TokenURL: endpointPrefix + "/oauth2/v2.0/token",
 	}
 
-	scope := m.config.Scope
-	if !stringslice.Has(scope, gooidc.ScopeOpenID) {
-		scope = append(scope, gooidc.ScopeOpenID)
-	}
-
-	return &oauth2.Config{
-		ClientID:     m.config.ClientID,
-		ClientSecret: m.config.ClientSecret,
-		Endpoint:     endpoint,
-		Scopes:       scope,
-		RedirectURL:  m.config.Redir(m.public),
-	}, nil
+	return m.oauth2ConfigFromEndpoint(endpoint), nil
 }
 
 func (m *ProviderMicrosoft) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
