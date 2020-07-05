@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ory/herodot"
 	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/driver/configuration"
@@ -151,7 +152,7 @@ func (i *Identity) ParseCredentials(t CredentialsType, config interface{}) (*Cre
 		return &c, nil
 	}
 
-	return nil, errors.Errorf("identity does not have credential type %s", t)
+	return nil, herodot.ErrNotFound.WithReasonf("identity does not have credential type %s", t)
 }
 
 func (i *Identity) CopyWithoutCredentials() *Identity {
