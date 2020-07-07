@@ -50,7 +50,7 @@ and tried to create (or update) another identity with the same identifier
 (`john.doe@acme.com`), the system would reject the request with a 409 Conflict
 state.
 
-While credentials must be unique per type, the can be duplicates amongst
+While credentials must be unique per type, there can be duplicates amongst
 multiple types:
 
 ```yaml

@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-07-05)](#unreleased-2020-07-05)
+- [Unreleased (2020-07-06)](#unreleased-2020-07-06)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -83,7 +83,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...39c1234f8ff3f6c7b0923053c8a317677d6cb667) (2020-07-05)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...3b7e104c2bcba52326f89761c9e3da14b4f06d08) (2020-07-06)
 
 
 ### Bug Fixes
@@ -196,6 +196,7 @@
 * Rename redirect page to browser-redirect-flow-completion ([ae77d48](https://github.com/ory/kratos/commit/ae77d48a3435069556382b9403cb1ad45a9d7c07))
 * Replace mailhog references with mailslurper ([#509](https://github.com/ory/kratos/issues/509)) ([d0e5a0f](https://github.com/ory/kratos/commit/d0e5a0fa64e2d46437fb2abd17dc306bdec34a91))
 * Run format ([2b3f299](https://github.com/ory/kratos/commit/2b3f29913be844498a02b9869789c2b2d4aaacf8))
+* Typo correction in credentials.md ([#551](https://github.com/ory/kratos/issues/551)) ([3b7e104](https://github.com/ory/kratos/commit/3b7e104c2bcba52326f89761c9e3da14b4f06d08))
 * Typos and stale links ([29fb466](https://github.com/ory/kratos/commit/29fb466d9881b6574ee697d7e25e45785f07114b))
 * Typos and stale links ([#510](https://github.com/ory/kratos/issues/510)) ([7557ab8](https://github.com/ory/kratos/commit/7557ab85ddf8501935d70e2558682dff2024897b))
 * Update repository templates ([4c89834](https://github.com/ory/kratos/commit/4c89834ce59195c5b59da5bc5b41db7ed03bf1c4))

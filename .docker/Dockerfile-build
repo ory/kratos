@@ -19,10 +19,8 @@ RUN CGO_ENABLED=1 go build -tags sqlite -a -o /usr/bin/kratos
 FROM alpine:3.11
 
 RUN addgroup -S ory; \
-    adduser -S ory -G ory -D -H -s /bin/nologin
-
-EXPOSE 4433
-EXPOSE 4434
+    adduser -S ory -G ory -D  -h /home/ory -s /bin/nologin; \
+    chown -R ory:ory /home/ory
 
 COPY --from=builder /usr/bin/kratos /usr/bin/kratos
 
@@ -31,6 +29,13 @@ COPY --from=builder /usr/bin/kratos /usr/bin/kratos
 RUN mkdir -p /var/lib/sqlite
 RUN chown ory:ory /var/lib/sqlite
 VOLUME /var/lib/sqlite
+
+# Exposing the ory home directory to simplify passing in Kratos configuration (e.g. if the file $HOME/.kratos.yaml 
+# exists, it will be automatically used as the configuration file).
+VOLUME /home/ory
+
+# Declare the standard ports used by Kratos (4433 for public service endpoint, 4434 for admin service endpoint)
+EXPOSE 4433 4434
 
 USER ory
 
