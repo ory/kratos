@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-07-06)](#unreleased-2020-07-06)
+- [Unreleased (2020-07-07)](#unreleased-2020-07-07)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -83,7 +83,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...3b7e104c2bcba52326f89761c9e3da14b4f06d08) (2020-07-06)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...a8f117985217c753cfca52905e43b640e89a6bd1) (2020-07-07)
 
 
 ### Bug Fixes
@@ -99,6 +99,10 @@
 * Embedded video link properly ([#515](https://github.com/ory/kratos/issues/515)) ([821ca93](https://github.com/ory/kratos/commit/821ca93838a360551378e336e9ce10cfe13369ec))
 * Enable recovery for quickstart ([0ccc651](https://github.com/ory/kratos/commit/0ccc651f809b1e39dd6c41b88f1a10c67451eae2))
 * Improve grammar of similar password error ([#471](https://github.com/ory/kratos/issues/471)) ([39873bf](https://github.com/ory/kratos/commit/39873bfad89a654fe12e101b54e9b0c2f95714ec))
+* Improvements to Dockerfiles ([#552](https://github.com/ory/kratos/issues/552)) ([6023877](https://github.com/ory/kratos/commit/6023877184efeadd6ec27a050a6969b6d0dd6caa)):
+
+    > - expose ory home as volume to simplify passing in own config file
+    > - declare Kratos default ports in Dockerfile
 * Initialize verification request with correct state ([3264ecf](https://github.com/ory/kratos/commit/3264ecfbb8f7b34d9dbb22237df8d9f591ac09f3)), closes [#543](https://github.com/ory/kratos/issues/543)
 * Re-add all databases to persister ([#527](https://github.com/ory/kratos/issues/527)) ([b04d178](https://github.com/ory/kratos/commit/b04d17815b5a28b5fe73a6a94ce1d907a63115e1))
 * Re-add redirect targets for quickstart ([3c48ad2](https://github.com/ory/kratos/commit/3c48ad26961560d6e10a627a64052e316d9ffdc7))
@@ -122,6 +126,7 @@
 * Improve and simplify configuration ([#536](https://github.com/ory/kratos/issues/536)) ([8e7f9f5](https://github.com/ory/kratos/commit/8e7f9f5ec3ac6f5675584974e8d189247b539634)), closes [#432](https://github.com/ory/kratos/issues/432)
 * Move schema packing to pkger ([173f9d2](https://github.com/ory/kratos/commit/173f9d2b09d597376490b5d4588f7c0a4f525857))
 * Move verify fallback to verification ([1ce6469](https://github.com/ory/kratos/commit/1ce64695ec61c3a31e00875069d2847be502744b))
+* Rename identity traits schema to identity schema  ([#557](https://github.com/ory/kratos/issues/557)) ([949e743](https://github.com/ory/kratos/commit/949e743ef9ddbc6e711f0174593f59f4fa3a1171)), closes [#531](https://github.com/ory/kratos/issues/531)
 * Rename prompt=login to refresh=true ([#478](https://github.com/ory/kratos/issues/478)) ([c04346e](https://github.com/ory/kratos/commit/c04346e0f01aa7ce5627c0b7135032b225e7faf9)), closes [#477](https://github.com/ory/kratos/issues/477)
 * Replace settings update_successful with state ([#488](https://github.com/ory/kratos/issues/488)) ([ca3b3f4](https://github.com/ory/kratos/commit/ca3b3f4dbdcd75ceb13c9a1b2c8dc991aba7c7e4)), closes [#449](https://github.com/ory/kratos/issues/449)
 * Text errors to text messages ([#476](https://github.com/ory/kratos/issues/476)) ([8106951](https://github.com/ory/kratos/commit/81069514e5ef1d851f76d44bb45d6a896d4985a6)), closes [#428](https://github.com/ory/kratos/issues/428):
@@ -156,10 +161,12 @@
 * Document new account recovery feature ([2252a86](https://github.com/ory/kratos/commit/2252a8676e573b9ade85814acc40b212dcfd48c1)), closes [#436](https://github.com/ory/kratos/issues/436)
 * Document refresh=true for login ([#479](https://github.com/ory/kratos/issues/479)) ([2ab5ead](https://github.com/ory/kratos/commit/2ab5ead77517ab5b750835195ab6673e219da71a)), closes [#464](https://github.com/ory/kratos/issues/464)
 * Embedded quickstart video ([#491](https://github.com/ory/kratos/issues/491)) ([ee80346](https://github.com/ory/kratos/commit/ee80346a30ebc2c7b06292e58bd3578e002e242a))
+* Fix broken link ([d20816e](https://github.com/ory/kratos/commit/d20816e5335abb8bcde5c6d68b17eaabae5d01b0))
 * Fix broken link ([aa9d3e6](https://github.com/ory/kratos/commit/aa9d3e6347375170a84ba53b2a9050c9544e7e2a))
 * Fix broken link ([#506](https://github.com/ory/kratos/issues/506)) ([dac8dfd](https://github.com/ory/kratos/commit/dac8dfd970255f8e79e7fc7811f563e6903f6fc9)):
 
     > The rest api is no longer under sdk but under reference.
+* Fix broken link ([#554](https://github.com/ory/kratos/issues/554)) ([e80d691](https://github.com/ory/kratos/commit/e80d691e256326aacfa89b391583e0494d8a6872))
 * Fix code sample comment ([781a76b](https://github.com/ory/kratos/commit/781a76bb6de20767d6150b1fcb5236f4f376edd7))
 * Fix copy paste errors in code docs ([e456a4e](https://github.com/ory/kratos/commit/e456a4e435265eade7026fd899c4bc7d2b28a5c9))
 * Fix iframe syntax ([#520](https://github.com/ory/kratos/issues/520)) ([0cb36ca](https://github.com/ory/kratos/commit/0cb36ca9d8459dc8027358190e6e8aa8764bffe4))
@@ -206,6 +213,7 @@
 
 ### Features
 
+* Add support for Multitenant Azure AD as an OIDC provider ([#434](https://github.com/ory/kratos/issues/434)) ([a8f1179](https://github.com/ory/kratos/commit/a8f117985217c753cfca52905e43b640e89a6bd1))
 * Add tests for defaults ([a16fc51](https://github.com/ory/kratos/commit/a16fc5121b36353cf2e684190eda976a1ea53a8f))
 * Add User ID to a header when calling whoami ([#530](https://github.com/ory/kratos/issues/530)) ([183b4d0](https://github.com/ory/kratos/commit/183b4d075a9ff50c1f9f53d108a48789e49a5138))
 * Implement account recovery ([#428](https://github.com/ory/kratos/issues/428)) ([e169a3e](https://github.com/ory/kratos/commit/e169a3e4079b1ef3a18564e0723baf81c44c38ec)), closes [#37](https://github.com/ory/kratos/issues/37):
@@ -227,6 +235,115 @@
 
 ### BREAKING CHANGES
 
+* This patch renames the Identity Traits JSON Schema to Identity JSON Schema.
+
+The identity payload has changed from
+
+```
+ {
+-  "traits_schema_url": "...",
+-  "traits_schema_id": "...",
++  "schema_url": "...",
++  "schema_id": "...",
+ }
+```
+
+Additionally, it is now expected that your Identity JSON Schema includes a "traits" key at the
+root level.
+
+**Before (example)**
+
+```
+{
+  "$id": "https://schemas.ory.sh/presets/kratos/quickstart/email-password/identity.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Person",
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string",
+      "format": "email",
+      "title": "E-Mail",
+      "minLength": 3,
+      "ory.sh/kratos": {
+        "credentials": {
+          "password": {
+            "identifier": true
+          }
+        },
+        "verification": {
+          "via": "email"
+        },
+        "recovery": {
+          "via": "email"
+        }
+      }
+    }
+  },
+  "required": [
+    "email"
+  ],
+  "additionalProperties": false
+}
+```
+
+**After (example)**
+
+```
+{
+  "$id": "https://schemas.ory.sh/presets/kratos/quickstart/email-password/identity.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Person",
+  "type": "object",
+  "properties": {
+    "traits": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "title": "E-Mail",
+          "minLength": 3,
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
+              }
+            },
+            "verification": {
+              "via": "email"
+            },
+            "recovery": {
+              "via": "email"
+            }
+          }
+        }
+      },
+      "required": [
+        "email"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
+```
+
+You also need to remove the `traits` key from your ORY Kratos config like this:
+
+```
+ identity:
+-   traits:
+-     default_schema_url: http://test.kratos.ory.sh/default-identity.schema.json
+-     schemas:
+-       - id: other
+-         url: http://test.kratos.ory.sh/other-identity.schema.json
++   default_schema_url: http://test.kratos.ory.sh/default-identity.schema.json
++   schemas:
++     - id: other
++       url: http://test.kratos.ory.sh/other-identity.schema.json
+```
+
+Do not forget to also update environment variables for the Identity JSON Schema as well if set.
 * To address these refactorings, the configuration had to be changed and with breaking changes
 as keys have moved or have been removed.
 
