@@ -44,7 +44,7 @@ credentials:
 # `default` is a special keyword to set this to the schema set by
 # `default_schema_url`, but it can be any another schema as well.
 # e.g. customer, employee, employee-v2
-traits_schema_id: default
+schema_id: default
 
 # Traits represent information about the identity, such as the first or last name. The traits content is completely
 # up to you and will be validated using the JSON Schema at `traits_schema_url`.
@@ -65,13 +65,14 @@ according to your application's needs. They are also supposed to be modified by
 the identity itself e.g. as part of the registration or profile update process
 as well as anyone having access to ORY Krato's Admin API.
 
-To validate traits Ory Kratos uses
-[JSON Schema](https://json-schema.org/learn/getting-started-step-by-step.html)
-adding a small extension "Vocabulary" that allows you to tell ORY Kratos that a
+ORY Kratos uses [JSON Schema](https://json-schema.org/learn/getting-started-step-by-step.html)
+to validate Identity Traits.
+
+ORY Kratos defines JSON Schema extension "Vocabulary" that allows you to tell ORY Kratos that a
 specific trait adds some specific meaning to the standard JSON Schema (more on
 that later).
 
-Each identity can, theoretically, have a different Traits Schema. This is useful
+Each identity can, theoretically, have a different JSON Schema. This is useful
 in the following situations:
 
 - there is more than one type of identity in the system for instance customers,
@@ -97,22 +98,21 @@ ORY Kratos expects the JSON Schemas in its configuration file:
 
 ```yaml
 identity:
-  traits:
-    # This will be the default JSON Schema. If  `traits_schema_id` is empty when creating an identity using the
-    # Admin API, or a user signs up using a selfservice flow, this schema will be used.
-    #
-    # This is a required configuration field!
-    default_schema_url: http://foo.bar.com/person.schema.json
+  # This will be the default JSON Schema. If `schema_id` is empty when creating an identity using the
+  # Admin API, or a user signs up using a selfservice flow, this schema will be used.
+  #
+  # This is a required configuration field!
+  default_schema_url: http://foo.bar.com/person.schema.json
 
-    # Optionally define additional schemas here:
-    schemas:
-      # When creating an identity that uses this schema, `traits_schema_id: customer` would be set for that identity.
-      - id: customer
-        url: http://foo.bar.com/customer.schema.json
+  # Optionally define additional schemas here:
+  schemas:
+    # When creating an identity that uses this schema, `traits_schema_id: customer` would be set for that identity.
+    - id: customer
+      url: http://foo.bar.com/customer.schema.json
 ```
 
-ORY Kratos validates the traits against the corresponding schema on all writing
-operations like create or update. The employed business logic must be able to
+ORY Kratos validates the Identity Traits against the corresponding schema on all writing
+operations (create / update). The employed business logic must be able to
 distinguish these three types of identities. You might use a switch statement
 like in the following example:
 
@@ -120,7 +120,7 @@ like in the following example:
 // This is an example program that can deal with all three types of identities
 session, err := ory.SessionFromRequest(r)
 // some error handling
-switch (session.Identity.TraitsSchemaID) {
+switch (session.Identity.SchemaID) {
     case "customer":
         // ...
     case "employee":
@@ -151,17 +151,22 @@ ORY Kratos' JSON Schema Vocabulary Extension can be used within a property:
   title: 'A customer (v2)',
   type: 'object',
   properties: {
-    email: {
-      title: 'E-Mail',
-      type: 'string',
-      format: 'email',
+    traits: {
+      type: 'object',
+      properties: {
+        email: {
+          title: 'E-Mail',
+          type: 'string',
+          format: 'email',
 
-      // This tells ORY Kratos that the field should be used as the "username" for the username+password flow.
-      // It is an extension to the regular JSON Schema vocabulary.
-      'ory.sh/kratos': {
-        credentials: {
-          password: {
-            identifier: true
+          // This tells ORY Kratos that the field should be used as the "username" for the username+password flow.
+          // It is an extension to the regular JSON Schema vocabulary.
+          'ory.sh/kratos': {
+            credentials: {
+              password: {
+                identifier: true
+              }
+            }
           }
         }
       }
@@ -213,40 +218,45 @@ password flow
   title: 'A customer (v2)',
   type: 'object',
   properties: {
-    email: {
-      title: 'E-Mail',
-      type: 'string',
-      format: 'email',
-
-      // This tells ORY Kratos that the field should be used as the "username" for the Username and Password Flow.
-      'ory.sh/kratos': {
-        credentials: {
-          password: {
-            identifier: true
-          }
-        }
-      }
-    },
-    name: {
+    traits: {
       type: 'object',
       properties: {
-        first: {
+        email: {
+          title: 'E-Mail',
+          type: 'string',
+          format: 'email',
+
+          // This tells ORY Kratos that the field should be used as the "username" for the Username and Password Flow.
+          'ory.sh/kratos': {
+            credentials: {
+              password: {
+                identifier: true
+              }
+            }
+          }
+        },
+        name: {
+          type: 'object',
+          properties: {
+            first: {
+              type: 'string'
+            },
+            last: {
+              type: 'string'
+            }
+          }
+        },
+        favorite_animal: {
           type: 'string'
         },
-        last: {
+        accepted_tos: {
           type: 'string'
         }
-      }
-    },
-    favorite_animal: {
-      type: 'string'
-    },
-    accepted_tos: {
-      type: 'string'
+      },
+      required: ['email'],
+      additionalProperties: false
     }
-  },
-  required: ['email'],
-  additionalProperties: false
+  }
 }
 ```
 

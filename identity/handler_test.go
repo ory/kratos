@@ -40,7 +40,7 @@ func TestHandler(t *testing.T) {
 	defaultSchemaExternalURL := defaultSchema.SchemaURL(mockServerURL).String()
 
 	viper.Set(configuration.ViperKeyAdminBaseURL, ts.URL)
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, defaultSchemaInternalURL.String())
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, defaultSchemaInternalURL.String())
 	viper.Set(configuration.ViperKeyPublicBaseURL, mockServerURL.String())
 
 	var get = func(t *testing.T, href string, expectCode int) gjson.Result {
@@ -92,7 +92,7 @@ func TestHandler(t *testing.T) {
 
 	t.Run("case=should fail to create an identity because schema id does not exist", func(t *testing.T) {
 		var i identity.Identity
-		i.TraitsSchemaID = "does-not-exist"
+		i.SchemaID = "does-not-exist"
 		res := send(t, "POST", "/identities", http.StatusBadRequest, &i)
 		assert.Contains(t, res.Get("error.reason").String(), "does-not-exist", "%s", res)
 	})
@@ -101,12 +101,12 @@ func TestHandler(t *testing.T) {
 		var i identity.Identity
 		i.Traits = identity.Traits(`{"bar":123}`)
 		res := send(t, "POST", "/identities", http.StatusBadRequest, &i)
-		assert.Contains(t, res.Get("error.reason").String(), "I[#/traits/bar] S[#/properties/bar/type] expected string, but got number")
+		assert.Contains(t, res.Get("error.reason").String(), "I[#/traits/bar] S[#/properties/traits/properties/bar/type] expected string, but got number")
 	})
 
-	t.Run("case=should fail to create an entity with traits_schema_url set", func(t *testing.T) {
+	t.Run("case=should fail to create an entity with schema_url set", func(t *testing.T) {
 		var i identity.Identity
-		i.TraitsSchemaURL = "http://example.com"
+		i.SchemaURL = "http://example.com"
 		res := send(t, "POST", "/identities", http.StatusBadRequest, &i)
 		assert.Contains(t, res.Get("error.reason").String(), "set a traits schema")
 	})
@@ -130,16 +130,16 @@ func TestHandler(t *testing.T) {
 		i.ID = x.ParseUUID(res.Get("id").String())
 		assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
 		assert.Empty(t, res.Get("credentials").String(), "%s", res.Raw)
-		assert.EqualValues(t, defaultSchemaExternalURL, res.Get("traits_schema_url").String(), "%s", res.Raw)
-		assert.EqualValues(t, configuration.DefaultIdentityTraitsSchemaID, res.Get("traits_schema_id").String(), "%s", res.Raw)
+		assert.EqualValues(t, defaultSchemaExternalURL, res.Get("schema_url").String(), "%s", res.Raw)
+		assert.EqualValues(t, configuration.DefaultIdentityTraitsSchemaID, res.Get("schema_id").String(), "%s", res.Raw)
 	})
 
 	t.Run("case=should be able to get the identity", func(t *testing.T) {
 		res := get(t, "/identities/"+i.ID.String(), http.StatusOK)
 		assert.EqualValues(t, i.ID.String(), res.Get("id").String(), "%s", res.Raw)
 		assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
-		assert.EqualValues(t, defaultSchemaExternalURL, res.Get("traits_schema_url").String(), "%s", res.Raw)
-		assert.EqualValues(t, configuration.DefaultIdentityTraitsSchemaID, res.Get("traits_schema_id").String(), "%s", res.Raw)
+		assert.EqualValues(t, defaultSchemaExternalURL, res.Get("schema_url").String(), "%s", res.Raw)
+		assert.EqualValues(t, configuration.DefaultIdentityTraitsSchemaID, res.Get("schema_id").String(), "%s", res.Raw)
 		assert.Empty(t, res.Get("credentials").String(), "%s", res.Raw)
 	})
 

@@ -4,38 +4,46 @@
   "title": "Person",
   "type": "object",
   "properties": {
-    "email": {
-      "type": "string",
-      "format": "email",
-      "ory.sh/kratos": {
-        "credentials": {
-          "password": {
-            "identifier": true
-          }
-        }
-      }
-    },
-    "names": {
-      "type": "array",
-      "items": {
-        "type": "string",
-        "ory.sh/kratos": {
-          "credentials": {
-            "password": {
-              "identifier": true
+    "traits": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
+              }
             }
           }
+        },
+        "names": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "ory.sh/kratos": {
+              "credentials": {
+                "password": {
+                  "identifier": true
+                }
+              }
+            }
+          }
+        },
+        "age": {
+          "description": "Age in years which must be equal to or greater than zero.",
+          "type": "integer",
+          "minimum": 1
         }
-      }
-    },
-    "age": {
-      "description": "Age in years which must be equal to or greater than zero.",
-      "type": "integer",
-      "minimum": 1
+      },
+      "required": [
+        "email"
+      ]
     }
   },
   "required": [
-    "email"
+    "traits"
   ],
   "additionalProperties": false
 }

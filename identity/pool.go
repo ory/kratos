@@ -93,8 +93,8 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			URL:    urlx.ParseOrPanic("file://./stub/identity-2.schema.json"),
 			RawURL: "file://./stub/identity-2.schema.json",
 		}
-		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, defaultSchema.RawURL)
-		viper.Set(configuration.ViperKeyIdentityTraitsSchemas, []configuration.SchemaConfig{{
+		viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, defaultSchema.RawURL)
+		viper.Set(configuration.ViperKeyIdentitySchemas, []configuration.SchemaConfig{{
 			ID:  altSchema.ID,
 			URL: altSchema.RawURL,
 		}})
@@ -146,8 +146,8 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			require.NoError(t, err)
 
 			assert.Equal(t, expected.ID, actual.ID)
-			assert.Equal(t, configuration.DefaultIdentityTraitsSchemaID, actual.TraitsSchemaID)
-			assert.Equal(t, defaultSchema.SchemaURL(exampleServerURL).String(), actual.TraitsSchemaURL)
+			assert.Equal(t, configuration.DefaultIdentityTraitsSchemaID, actual.SchemaID)
+			assert.Equal(t, defaultSchema.SchemaURL(exampleServerURL).String(), actual.SchemaURL)
 			assertEqual(t, expected, actual)
 		})
 
@@ -169,8 +169,8 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 
 			actual, err := p.GetIdentity(context.Background(), expected.ID)
 			require.NoError(t, err)
-			assert.Equal(t, altSchema.ID, actual.TraitsSchemaID)
-			assert.Equal(t, altSchema.SchemaURL(exampleServerURL).String(), actual.TraitsSchemaURL)
+			assert.Equal(t, altSchema.ID, actual.SchemaID)
+			assert.Equal(t, altSchema.SchemaURL(exampleServerURL).String(), actual.SchemaURL)
 			assertEqual(t, expected, actual)
 
 			actual, err = p.GetIdentityConfidential(context.Background(), expected.ID)
@@ -250,8 +250,8 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			require.NoError(t, p.CreateIdentity(context.Background(), initial))
 			createdIDs = append(createdIDs, initial.ID)
 
-			assert.Equal(t, configuration.DefaultIdentityTraitsSchemaID, initial.TraitsSchemaID)
-			assert.Equal(t, defaultSchema.SchemaURL(exampleServerURL).String(), initial.TraitsSchemaURL)
+			assert.Equal(t, configuration.DefaultIdentityTraitsSchemaID, initial.SchemaID)
+			assert.Equal(t, defaultSchema.SchemaURL(exampleServerURL).String(), initial.SchemaURL)
 
 			expected := initial.CopyWithoutCredentials()
 			expected.SetCredentials(CredentialsTypePassword, Credentials{
@@ -260,13 +260,13 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 				Config:      sqlxx.JSONRawMessage(`{"oh":"nono"}`),
 			})
 			expected.Traits = Traits(`{"update":"me"}`)
-			expected.TraitsSchemaID = altSchema.ID
+			expected.SchemaID = altSchema.ID
 			require.NoError(t, p.UpdateIdentity(context.Background(), expected))
 
 			actual, err := p.GetIdentityConfidential(context.Background(), expected.ID)
 			require.NoError(t, err)
-			assert.Equal(t, altSchema.ID, actual.TraitsSchemaID)
-			assert.Equal(t, altSchema.SchemaURL(exampleServerURL).String(), actual.TraitsSchemaURL)
+			assert.Equal(t, altSchema.ID, actual.SchemaID)
+			assert.Equal(t, altSchema.SchemaURL(exampleServerURL).String(), actual.SchemaURL)
 			assert.NotEmpty(t, actual.Credentials[CredentialsTypePassword])
 			assert.Empty(t, actual.Credentials[CredentialsTypeOIDC])
 

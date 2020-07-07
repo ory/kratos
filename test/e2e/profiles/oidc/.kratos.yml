@@ -48,5 +48,4 @@ selfservice:
               hook: session
 
 identity:
-  traits:
-    default_schema_url: file://test/e2e/profiles/oidc/identity.traits.schema.json
+  default_schema_url: file://test/e2e/profiles/oidc/identity.traits.schema.json

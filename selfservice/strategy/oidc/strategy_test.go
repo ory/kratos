@@ -66,7 +66,7 @@ func TestStrategy(t *testing.T) {
 		},
 	)
 	testhelpers.InitKratosServers(t, reg, ts, tsA)
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
 	viper.Set(configuration.HookStrategyKey(configuration.ViperKeySelfServiceRegistrationAfter,
 		identity.CredentialsTypeOIDC.String()), []configuration.SelfServiceHook{{Name: "session"}})
 

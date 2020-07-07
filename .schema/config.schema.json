@@ -702,79 +702,70 @@
     "identity": {
       "type": "object",
       "properties": {
-        "traits": {
-          "type": "object",
-          "properties": {
-            "default_schema_url": {
-              "title": "JSON Schema URL for default identity traits",
-              "description": "Path to the JSON Schema which describes a default identity's traits.",
-              "type": "string",
-              "format": "uri",
-              "examples": [
-                "file://path/to/identity.traits.schema.json",
-                "httpss://foo.bar.com/path/to/identity.traits.schema.json"
-              ]
-            },
-            "schemas": {
-              "type": "array",
-              "title": "Additional JSON Schemas for Identity Traits",
-              "examples": [
-                [
-                  {
-                    "id": "customer",
-                    "url": "https://foo.bar.com/path/to/customer.traits.schema.json"
-                  },
-                  {
-                    "id": "employee",
-                    "url": "https://foo.bar.com/path/to/employee.traits.schema.json"
-                  },
-                  {
-                    "id": "employee-v2",
-                    "url": "https://foo.bar.com/path/to/employee.v2.traits.schema.json"
-                  }
-                ]
-              ],
-              "items": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "title": "The schema's ID.",
-                    "type": "string",
-                    "examples": [
-                      "employee"
-                    ]
-                  },
-                  "url": {
-                    "type": "string",
-                    "title": "Path to the JSON Schema",
-                    "format": "uri",
-                    "examples": [
-                      "file://path/to/identity.traits.schema.json",
-                      "https://foo.bar.com/path/to/identity.traits.schema.json"
-                    ]
-                  }
-                },
-                "not": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "string",
-                      "pattern": "^default$"
-                    }
-                  },
-                  "additionalProperties": true
-                }
+        "default_schema_url": {
+          "title": "JSON Schema URL for default identity traits",
+          "description": "Path to the JSON Schema which describes a default identity's traits.",
+          "type": "string",
+          "format": "uri",
+          "examples": [
+            "file://path/to/identity.traits.schema.json",
+            "httpss://foo.bar.com/path/to/identity.traits.schema.json"
+          ]
+        },
+        "schemas": {
+          "type": "array",
+          "title": "Additional JSON Schemas for Identity Traits",
+          "examples": [
+            [
+              {
+                "id": "customer",
+                "url": "https://foo.bar.com/path/to/customer.traits.schema.json"
+              },
+              {
+                "id": "employee",
+                "url": "https://foo.bar.com/path/to/employee.traits.schema.json"
+              },
+              {
+                "id": "employee-v2",
+                "url": "https://foo.bar.com/path/to/employee.v2.traits.schema.json"
               }
-            }
-          },
-          "required": [
-            "default_schema_url"
+            ]
           ],
-          "additionalProperties": false
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "title": "The schema's ID.",
+                "type": "string",
+                "examples": [
+                  "employee"
+                ]
+              },
+              "url": {
+                "type": "string",
+                "title": "Path to the JSON Schema",
+                "format": "uri",
+                "examples": [
+                  "file://path/to/identity.traits.schema.json",
+                  "https://foo.bar.com/path/to/identity.traits.schema.json"
+                ]
+              }
+            },
+            "not": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^default$"
+                }
+              },
+              "additionalProperties": true
+            }
+          }
         }
       },
       "required": [
-        "traits"
+        "default_schema_url"
       ],
       "additionalProperties": false
     },

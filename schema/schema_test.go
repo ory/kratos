@@ -74,9 +74,12 @@ func TestGetKeysInOrder(t *testing.T) {
 	for i, tc := range []struct {
 		schemaRef string
 		keys      []string
+		path      string
 	}{
 		{schemaRef: "file://./stub/identity.schema.json", keys: []string{"bar", "email"}},
-		{schemaRef: "file://./stub/complex.schema.json", keys: []string{"meal.name", "meal.chef", "fruits", "vegetables"}},
+		{schemaRef: "file://./stub/complex.schema.json", keys: []string{"meal.name", "meal.chef", "traits.email",
+			"traits.stringy", "traits.numby", "traits.booly", "traits.should_big_number", "traits.should_long_string",
+			"fruits", "vegetables"}},
 	} {
 		t.Run(fmt.Sprintf("case=%d schemaRef=%s", i, tc.schemaRef), func(t *testing.T) {
 			actual, err := GetKeysInOrder(tc.schemaRef)

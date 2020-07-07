@@ -38,19 +38,19 @@ type (
 		// Credentials represents all credentials that can be used for authenticating this identity.
 		Credentials map[CredentialsType]Credentials `json:"-" faker:"-" db:"-"`
 
-		// TraitsSchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
+		// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
 		//
 		// required: true
-		TraitsSchemaID string `json:"traits_schema_id" faker:"-" db:"traits_schema_id"`
+		SchemaID string `json:"schema_id" faker:"-" db:"schema_id"`
 
-		// TraitsSchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.
+		// SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.
 		//
 		// format: url
-		TraitsSchemaURL string `json:"traits_schema_url" faker:"-" db:"-"`
+		SchemaURL string `json:"schema_url" faker:"-" db:"-"`
 
 		// Traits represent an identity's traits. The identity is able to create, modify, and delete traits
 		// in a self-service manner. The input will always be validated against the JSON Schema defined
-		// in `traits_schema_url`.
+		// in `schema_url`.
 		//
 		// required: true
 		Traits Traits `json:"traits" faker:"-" db:"traits"`
@@ -170,7 +170,7 @@ func NewIdentity(traitsSchemaID string) *Identity {
 		ID:                  x.NewUUID(),
 		Credentials:         map[CredentialsType]Credentials{},
 		Traits:              Traits("{}"),
-		TraitsSchemaID:      traitsSchemaID,
+		SchemaID:            traitsSchemaID,
 		VerifiableAddresses: []VerifiableAddress{},
 		l:                   new(sync.RWMutex),
 	}

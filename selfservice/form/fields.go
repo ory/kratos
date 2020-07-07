@@ -65,7 +65,10 @@ func (ff *Fields) sortBySchema(schemaRef, prefix string) (func(i, j int) bool, e
 		"password",
 	}
 	for _, k := range schemaKeys {
-		keysInOrder = append(keysInOrder, fmt.Sprintf("%s.%s", prefix, k))
+		if prefix != "" {
+			k = fmt.Sprintf("%s.%s", prefix, k)
+		}
+		keysInOrder = append(keysInOrder, k)
 	}
 
 	getKeyPosition := func(name string) int {

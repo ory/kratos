@@ -66,21 +66,21 @@ func TestSettingsStrategy(t *testing.T) {
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "github", "github"),
 	)
 	testhelpers.InitKratosServers(t, reg, publicTS, adminTS)
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/settings.schema.json")
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/settings.schema.json")
 	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/kratos")
 
 	// Make test data for this test run unique
 	testID := x.NewUUID().String()
 	users := map[string]*identity.Identity{
 		"password": {ID: x.NewUUID(), Traits: identity.Traits(`{"email":"john` + testID + `@doe.com"}`),
-			TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
+			SchemaID: configuration.DefaultIdentityTraitsSchemaID,
 			Credentials: map[identity.CredentialsType]identity.Credentials{
 				"password": {Type: "password",
 					Identifiers: []string{"john+" + testID + "@doe.com"},
 					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$argon2id$iammocked...."}`)}},
 		},
 		"oryer": {ID: x.NewUUID(), Traits: identity.Traits(`{"email":"hackerman+` + testID + `@ory.sh"}`),
-			TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
+			SchemaID: configuration.DefaultIdentityTraitsSchemaID,
 			Credentials: map[identity.CredentialsType]identity.Credentials{
 				identity.CredentialsTypeOIDC: {Type: identity.CredentialsTypeOIDC,
 					Identifiers: []string{"ory:hackerman+" + testID},
@@ -91,7 +91,7 @@ func TestSettingsStrategy(t *testing.T) {
 				identity.CredentialsTypeOIDC: {Type: identity.CredentialsTypeOIDC,
 					Identifiers: []string{"ory:hackerman+github+" + testID, "github:hackerman+github+" + testID},
 					Config:      sqlxx.JSONRawMessage(`{"providers":[{"provider":"ory","subject":"hackerman+github+` + testID + `"},{"provider":"github","subject":"hackerman+github+` + testID + `"}]}`)}},
-			TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
+			SchemaID: configuration.DefaultIdentityTraitsSchemaID,
 		},
 		"multiuser": {ID: x.NewUUID(), Traits: identity.Traits(`{"email":"hackerman+multiuser+` + testID + `@ory.sh"}`),
 			Credentials: map[identity.CredentialsType]identity.Credentials{
@@ -101,7 +101,7 @@ func TestSettingsStrategy(t *testing.T) {
 				identity.CredentialsTypeOIDC: {Type: identity.CredentialsTypeOIDC,
 					Identifiers: []string{"ory:hackerman+multiuser+" + testID, "google:hackerman+multiuser+" + testID},
 					Config:      sqlxx.JSONRawMessage(`{"providers":[{"provider":"ory","subject":"hackerman+multiuser+` + testID + `"},{"provider":"google","subject":"hackerman+multiuser+` + testID + `"}]}`)}},
-			TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
+			SchemaID: configuration.DefaultIdentityTraitsSchemaID,
 		},
 	}
 	agents := testhelpers.AddAndLoginIdentities(t, reg, publicTS, users)
@@ -182,7 +182,7 @@ func TestSettingsStrategy(t *testing.T) {
 		assert.NotEmpty(t, req.IssuedAt)
 		assert.EqualValues(t, users["password"].ID, req.Identity.ID)
 		assert.EqualValues(t, users["password"].Traits, req.Identity.Traits)
-		assert.EqualValues(t, users["password"].TraitsSchemaID, req.Identity.TraitsSchemaID)
+		assert.EqualValues(t, users["password"].SchemaID, req.Identity.SchemaID)
 
 		assert.EqualValues(t, req.ID.String(), rs.Payload.ID)
 		assert.EqualValues(t, req.RequestURL, *rs.Payload.RequestURL)
@@ -526,7 +526,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 	nreg := func(t *testing.T, conf *oidc.ConfigurationCollection) *driver.RegistryDefault {
 		_, reg := internal.NewFastRegistryWithMocks(t)
 
-		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://stub/registration.schema.json")
+		viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://stub/registration.schema.json")
 		viper.Set(configuration.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 
 		// Enabled per default:

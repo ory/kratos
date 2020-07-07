@@ -8,8 +8,8 @@
   "methods": {},
   "identity": {
     "id": "a251ebc2-880c-4f76-a8f3-38e6940eab0e",
-    "traits_schema_id": "default",
-    "traits_schema_url": "",
+    "schema_id": "default",
+    "schema_url": "",
     "traits": {
       "email": "foobar@ory.sh"
     }

@@ -13,7 +13,7 @@ first.
 The `profile` strategy allows a user to change their identity traits
 ("profile").
 
-The updated traits must be valid against the JSON Schema defined for its
+The updated traits must be valid against the Identity JSON Schema defined for its
 [Identity Traits](../../../concepts/identity-user-model). If one or more fields
 do not validate (e.g. "Not an email"), the profile will not be updated.
 
@@ -80,7 +80,7 @@ The Settings Request Response Payload always includes a `profile` method:
   },
   "identity": {
     "id": "93548b1b-c8dc-4d3e-b19f-cfc6d812a8d0",
-    "traits_schema_id": "default",
+    "schema_id": "default",
     "traits": {
       "email": "xx0bdh@l7zkk8",
       "website": "http://github.com/aeneasr"

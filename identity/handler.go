@@ -165,9 +165,9 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		return
 	}
 
-	// Make sure the TraitsSchemaURL is only set by kratos
-	if i.TraitsSchemaURL != "" {
-		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithReason("Use the traits_schema_id to set a traits schema."))
+	// Make sure the SchemaURL is only set by kratos
+	if i.SchemaURL != "" {
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithReason("Use the schema_id to set a traits schema."))
 		return
 	}
 	// We do not allow setting credentials using this method

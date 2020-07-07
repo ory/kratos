@@ -18,7 +18,7 @@ import (
 
 func TestManager(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/manager.schema.json")
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/manager.schema.json")
 	viper.Set(configuration.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 	viper.Set(configuration.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
 

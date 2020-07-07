@@ -54,7 +54,7 @@ As explained in
 [OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx),
 you must also create a Jsonnet code snippet for the provider. Save the code in
 `<kratos-directory>/contrib/quickstart/kratos/email-password/oidc.github.jsonnet`.
-The following schema takes `email_primary` and maps it to `traits.email`:
+The following JsonNet takes `email_primary` and maps it to `traits.email`:
 
 ```json title="contrib/quickstart/kratos/email-password/oidc.github.jsonnet"
 local claims = {

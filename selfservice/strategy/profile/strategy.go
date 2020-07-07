@@ -89,7 +89,7 @@ func (s *Strategy) RegisterSettingsRoutes(public *x.RouterPublic) {
 }
 
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, ss *session.Session, pr *settings.Request) error {
-	traitsSchema, err := s.c.IdentityTraitsSchemas().FindSchemaByID(ss.Identity.TraitsSchemaID)
+	traitsSchema, err := s.c.IdentityTraitsSchemas().FindSchemaByID(ss.Identity.SchemaID)
 	if err != nil {
 		return err
 	}
@@ -100,7 +100,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, ss *session.Session, 
 	f, err := form.NewHTMLFormFromJSONSchema(urlx.CopyWithQuery(
 		urlx.AppendPaths(s.c.SelfPublicURL(), PublicSettingsProfilePath),
 		url.Values{"request": {pr.ID.String()}},
-	).String(), traitsSchema.URL, "traits", schemaCompiler)
+	).String(), traitsSchema.URL, "", schemaCompiler)
 	if err != nil {
 		return err
 	}
@@ -108,7 +108,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, ss *session.Session, 
 	f.SetValuesFromJSON(json.RawMessage(ss.Identity.Traits), "traits")
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 
-	if err := f.SortFields(traitsSchema.URL, "traits"); err != nil {
+	if err := f.SortFields(traitsSchema.URL); err != nil {
 		return err
 	}
 
@@ -263,12 +263,12 @@ func (s *Strategy) hydrateForm(r *http.Request, ar *settings.Request, ss *sessio
 	}
 	ar.Methods[settings.StrategyProfile].Config.SetCSRF(s.d.GenerateCSRFToken(r))
 
-	traitsSchema, err := s.c.IdentityTraitsSchemas().FindSchemaByID(ss.Identity.TraitsSchemaID)
+	traitsSchema, err := s.c.IdentityTraitsSchemas().FindSchemaByID(ss.Identity.SchemaID)
 	if err != nil {
 		return err
 	}
 
-	if err = ar.Methods[settings.StrategyProfile].Config.SortFields(traitsSchema.URL, "traits"); err != nil {
+	if err = ar.Methods[settings.StrategyProfile].Config.SortFields(traitsSchema.URL); err != nil {
 		return err
 	}
 
@@ -323,14 +323,14 @@ func (s *Strategy) newSettingsProfileDecoder(i *identity.Identity) (decoderx.HTT
 }
 `
 
-	ss, err := s.d.IdentityTraitsSchemas().GetByID(i.TraitsSchemaID)
+	ss, err := s.d.IdentityTraitsSchemas().GetByID(i.SchemaID)
 	if err != nil {
 		return nil, err
 	}
 	raw, err := sjson.SetBytes(
 		[]byte(registrationFormPayloadSchema),
 		"properties.traits.$ref",
-		ss.URL.String(),
+		ss.URL.String()+"#/properties/traits",
 	)
 	if err != nil {
 		return nil, errors.WithStack(err)

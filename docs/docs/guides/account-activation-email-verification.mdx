@@ -4,7 +4,7 @@ title: Setting up Account Activation and E-Mail Verification
 ---
 
 To set up email verification, your
-[Identity Schema](../concepts/identity-data-model.md) must have an email in its
+[Identity JSON Schema](../concepts/identity-data-model.md) must have an email in its
 traits and add
 
 ```json
@@ -26,18 +26,23 @@ to it, for example:
   "title": "Person",
   "type": "object",
   "properties": {
-    "email": {
-      "type": "string",
-      "format": "email",
-      "title": "E-Mail",
-      "minLength": 3,
-+     "ory.sh/kratos": {
-+       "verification": {
-+         "via": "email"
-+       }
-+     }
+    "traits": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "title": "E-Mail",
+          "minLength": 3,
++         "ory.sh/kratos": {
++           "verification": {
++             "via": "email"
++           }
++         }
+        }
+      }
     }
-  },
+  }
 }
 ```
 

@@ -25,8 +25,8 @@ func TestRegistryDefault_IdentityTraitsSchemas(t *testing.T) {
 		RawURL: "file://other.schema.json",
 	}
 
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, defaultSchema.RawURL)
-	viper.Set(configuration.ViperKeyIdentityTraitsSchemas, []configuration.SchemaConfig{{ID: altSchema.ID, URL: altSchema.RawURL}})
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, defaultSchema.RawURL)
+	viper.Set(configuration.ViperKeyIdentitySchemas, []configuration.SchemaConfig{{ID: altSchema.ID, URL: altSchema.RawURL}})
 
 	ss := reg.IdentityTraitsSchemas()
 	assert.Equal(t, 2, len(ss))

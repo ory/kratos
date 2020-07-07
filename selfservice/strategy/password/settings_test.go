@@ -30,7 +30,7 @@ func init() {
 func TestSettings(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/profile.schema.json")
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/profile.schema.json")
 	testhelpers.StrategyEnable(identity.CredentialsTypePassword.String(), true)
 	testhelpers.StrategyEnable(settings.StrategyProfile, true)
 
@@ -43,14 +43,14 @@ func TestSettings(t *testing.T) {
 		Credentials: map[identity.CredentialsType]identity.Credentials{
 			"password": {Type: "password", Identifiers: []string{"john@doe.com"}, Config: []byte(`{"hashed_password":"foo"}`)},
 		},
-		Traits:         identity.Traits(`{"email":"john@doe.com"}`),
-		TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
+		Traits:   identity.Traits(`{"email":"john@doe.com"}`),
+		SchemaID: configuration.DefaultIdentityTraitsSchemaID,
 	}
 	secondaryIdentity := &identity.Identity{
-		ID:             x.NewUUID(),
-		Credentials:    map[identity.CredentialsType]identity.Credentials{},
-		Traits:         identity.Traits(`{}`),
-		TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
+		ID:          x.NewUUID(),
+		Credentials: map[identity.CredentialsType]identity.Credentials{},
+		Traits:      identity.Traits(`{}`),
+		SchemaID:    configuration.DefaultIdentityTraitsSchemaID,
 	}
 	publicTS, adminTS, clients := testhelpers.NewSettingsAPIServer(t, reg, map[string]*identity.Identity{
 		"primary": primaryIdentity, "secondary": secondaryIdentity})

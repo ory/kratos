@@ -4,13 +4,7 @@
   "title": "Person",
   "type": "object",
   "properties": {
-    "stringy": {
-      "type": "string"
-    },
-    "numby": {
-      "type": "number"
-    },
-    "objy": {
+    "traits": {
       "type": "object",
       "properties": {
         "stringy": {
@@ -21,7 +15,18 @@
         },
         "objy": {
           "type": "object",
-          "properties": {}
+          "properties": {
+            "stringy": {
+              "type": "string"
+            },
+            "numby": {
+              "type": "number"
+            },
+            "objy": {
+              "type": "object",
+              "properties": {}
+            }
+          }
         }
       }
     }

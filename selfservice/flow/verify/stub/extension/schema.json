@@ -1,22 +1,29 @@
 {
+  "$id": "https://example.com/registration.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
-    "emails": {
-      "type": "array",
-      "items": {
-        "type": "string",
-        "ory.sh/kratos": {
-          "verification": {
-            "via": "email"
+    "traits": {
+      "type": "object",
+      "properties": {
+        "emails": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "ory.sh/kratos": {
+              "verification": {
+                "via": "email"
+              }
+            }
           }
-        }
-      }
-    },
-    "username": {
-      "type": "string",
-      "ory.sh/kratos": {
-        "verification": {
-          "via": "email"
+        },
+        "username": {
+          "type": "string",
+          "ory.sh/kratos": {
+            "verification": {
+              "via": "email"
+            }
+          }
         }
       }
     }

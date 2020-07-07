@@ -4,41 +4,46 @@
   "title": "Person",
   "type": "object",
   "properties": {
-    "email": {
-      "type": "string",
-      "format": "email",
-      "ory.sh/kratos": {
-        "mappings": {
-          "identity": {
-            "traits": [
-              {
-                "path": "email"
+    "traits": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "ory.sh/kratos": {
+            "mappings": {
+              "identity": {
+                "traits": [
+                  {
+                    "path": "email"
+                  }
+                ]
               }
-            ]
+            }
           }
-        }
-      }
-    },
-    "names": {
-      "type": "array",
-      "items": {
-        "type": "string",
-        "ory.sh/kratos": {
-          "mappings": {
-            "identity": {
-              "traits": [
-                {
-                  "path": "names.-1"
+        },
+        "names": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "ory.sh/kratos": {
+              "mappings": {
+                "identity": {
+                  "traits": [
+                    {
+                      "path": "names.-1"
+                    }
+                  ]
                 }
-              ]
+              }
             }
           }
         }
-      }
+      },
+      "required": [
+        "email"
+      ],
+      "additionalProperties": false
     }
-  },
-  "required": [
-    "email"
-  ],
-  "additionalProperties": false
+  }
 }

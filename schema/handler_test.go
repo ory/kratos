@@ -93,8 +93,8 @@ func TestHandler(t *testing.T) {
 	}
 
 	viper.Set(configuration.ViperKeyPublicBaseURL, ts.URL)
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, getSchemaById(configuration.DefaultIdentityTraitsSchemaID).RawURL)
-	viper.Set(configuration.ViperKeyIdentityTraitsSchemas, schemasConfig)
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, getSchemaById(configuration.DefaultIdentityTraitsSchemaID).RawURL)
+	viper.Set(configuration.ViperKeyIdentitySchemas, schemasConfig)
 
 	t.Run("case=get default schema", func(t *testing.T) {
 		server := getFromTS(configuration.DefaultIdentityTraitsSchemaID, http.StatusOK)

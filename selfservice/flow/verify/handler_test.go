@@ -62,7 +62,7 @@ func TestHandler(t *testing.T) {
 	defer errTS.Close()
 
 	viper.Set(configuration.ViperKeyPublicBaseURL, publicTS.URL)
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/extension/schema.json")
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/extension/schema.json")
 	viper.Set(configuration.ViperKeySelfServiceErrorUI, errTS.URL)
 	viper.Set(configuration.ViperKeySelfServiceVerificationUI, verifyTS.URL)
 	viper.Set(configuration.ViperKeySelfServiceVerificationBrowserDefaultReturnTo, redirTS.URL)

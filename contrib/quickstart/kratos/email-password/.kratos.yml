@@ -64,8 +64,7 @@ hashers:
     key_length: 16
 
 identity:
-  traits:
-    default_schema_url: file:///etc/config/kratos/identity.traits.schema.json
+  default_schema_url: file:///etc/config/kratos/identity.traits.schema.json
 
 courier:
   smtp:
