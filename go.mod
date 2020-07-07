@@ -2,8 +2,6 @@ module github.com/ory/kratos
 
 go 1.14
 
-replace github.com/ory/x => ../x
-
 require (
 	github.com/Masterminds/sprig/v3 v3.0.0
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
