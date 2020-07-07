@@ -61,12 +61,13 @@
         },
         "provider": {
           "title": "Provider",
-          "description": "Can be one of github, generic, google.",
+          "description": "Can be one of github, generic, google, microsoft.",
           "type": "string",
           "enum": [
             "github",
             "generic",
-            "google"
+            "google",
+            "microsoft"
           ],
           "examples": [
             "google"
@@ -119,6 +120,18 @@
               "profile"
             ]
           }
+        },
+        "tenant": {
+          "title": "Azure AD Tenant",
+          "description": "The Azure AD Tenant to use for authentication.",
+          "type": "string",
+          "examples": [
+            "common",
+            "organizations",
+            "consumers",
+            "8eaef023-2b34-4da1-9baa-8bc8c9d6a490",
+            "contoso.onmicrosoft.com"
+          ]
         }
       },
       "additionalProperties": false,

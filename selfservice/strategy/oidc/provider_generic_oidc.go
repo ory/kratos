@@ -46,14 +46,7 @@ func (g *ProviderGenericOIDC) provider(ctx context.Context) (*gooidc.Provider, e
 	return g.p, nil
 }
 
-func (g *ProviderGenericOIDC) OAuth2(ctx context.Context) (*oauth2.Config, error) {
-	p, err := g.provider(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	endpoint := p.Endpoint()
-
+func (g *ProviderGenericOIDC) oauth2ConfigFromEndpoint(endpoint oauth2.Endpoint) *oauth2.Config {
 	scope := g.config.Scope
 	if !stringslice.Has(scope, gooidc.ScopeOpenID) {
 		scope = append(scope, gooidc.ScopeOpenID)
@@ -65,7 +58,18 @@ func (g *ProviderGenericOIDC) OAuth2(ctx context.Context) (*oauth2.Config, error
 		Endpoint:     endpoint,
 		Scopes:       scope,
 		RedirectURL:  g.config.Redir(g.public),
-	}, nil
+	}
+}
+
+func (g *ProviderGenericOIDC) OAuth2(ctx context.Context) (*oauth2.Config, error) {
+	p, err := g.provider(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	endpoint := p.Endpoint()
+
+	return g.oauth2ConfigFromEndpoint(endpoint), nil
 }
 
 func (g *ProviderGenericOIDC) AuthCodeURLOptions(r request) []oauth2.AuthCodeOption {
@@ -77,18 +81,8 @@ func (g *ProviderGenericOIDC) AuthCodeURLOptions(r request) []oauth2.AuthCodeOpt
 	return []oauth2.AuthCodeOption{}
 }
 
-func (g *ProviderGenericOIDC) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
-	raw, ok := exchange.Extra("id_token").(string)
-	if !ok || len(raw) == 0 {
-		return nil, errors.WithStack(ErrIDTokenMissing)
-	}
-
-	p, err := g.provider(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	token, err := p.
+func (g *ProviderGenericOIDC) verifyAndDecodeClaimsWithProvider(ctx context.Context, provider *gooidc.Provider, raw string) (*Claims, error) {
+	token, err := provider.
 		Verifier(&gooidc.Config{
 			ClientID: g.config.ClientID,
 		}).
@@ -103,4 +97,18 @@ func (g *ProviderGenericOIDC) Claims(ctx context.Context, exchange *oauth2.Token
 	}
 
 	return &claims, nil
+}
+
+func (g *ProviderGenericOIDC) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
+	raw, ok := exchange.Extra("id_token").(string)
+	if !ok || len(raw) == 0 {
+		return nil, errors.WithStack(ErrIDTokenMissing)
+	}
+
+	p, err := g.provider(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return g.verifyAndDecodeClaimsWithProvider(ctx, p, raw)
 }
