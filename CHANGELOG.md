@@ -83,7 +83,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...a8f117985217c753cfca52905e43b640e89a6bd1) (2020-07-07)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...9e46ceabec8d5c1995321b62cbba9ac3900de446) (2020-07-07)
 
 
 ### Bug Fixes
@@ -92,6 +92,7 @@
 * Add and document recovery to quickstart ([c229c54](https://github.com/ory/kratos/commit/c229c54603bdc3efb863fd76b64096ae599d1aac))
 * Add pkger to docker builds ([d3ef5a0](https://github.com/ory/kratos/commit/d3ef5a0fe90f430999d0d94cb2f55acc8d628212))
 * Allow linking oidc credentials without existing oidc connection ([#548](https://github.com/ory/kratos/issues/548)) ([39c1234](https://github.com/ory/kratos/commit/39c1234f8ff3f6c7b0923053c8a317677d6cb667)), closes [#532](https://github.com/ory/kratos/issues/532)
+* Bump pop version ([#558](https://github.com/ory/kratos/issues/558)) ([9e46cea](https://github.com/ory/kratos/commit/9e46ceabec8d5c1995321b62cbba9ac3900de446)), closes [#556](https://github.com/ory/kratos/issues/556)
 * Clear error messages after updating settings successfully ([#421](https://github.com/ory/kratos/issues/421)) ([7eec388](https://github.com/ory/kratos/commit/7eec38829449237cffe345d8bec67578764559be)), closes [#420](https://github.com/ory/kratos/issues/420)
 * Do not send debug on session/whoami ([16d3670](https://github.com/ory/kratos/commit/16d3670070bf46170c4540203e8380ad81bfb4c3)), closes [#483](https://github.com/ory/kratos/issues/483)
 * Document login refresh parameter in swagger ([#482](https://github.com/ory/kratos/issues/482)) ([6b94993](https://github.com/ory/kratos/commit/6b949936725a6100a31851a5d879c877c2c76cbf))
