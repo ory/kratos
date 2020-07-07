@@ -4,8 +4,14 @@
   "title": "Person",
   "type": "object",
   "properties": {
-    "bar": {
-      "type": "string"
+    "traits": {
+      "type": "object",
+      "properties": {
+
+        "bar": {
+          "type": "string"
+        }
+      }
     }
   }
 }

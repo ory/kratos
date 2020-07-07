@@ -27,18 +27,18 @@ type Identity struct {
 	// RecoveryAddresses contains all the addresses that can be used to recover an identity.
 	RecoveryAddresses []*RecoveryAddress `json:"recovery_addresses"`
 
+	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
+	// Required: true
+	SchemaID *string `json:"schema_id"`
+
+	// SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.
+	//
+	// format: url
+	SchemaURL string `json:"schema_url,omitempty"`
+
 	// traits
 	// Required: true
 	Traits Traits `json:"traits"`
-
-	// TraitsSchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
-	// Required: true
-	TraitsSchemaID *string `json:"traits_schema_id"`
-
-	// TraitsSchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.
-	//
-	// format: url
-	TraitsSchemaURL string `json:"traits_schema_url,omitempty"`
 
 	// VerifiableAddresses contains all the addresses that can be verified by the user.
 	VerifiableAddresses []*VerifiableAddress `json:"verifiable_addresses"`
@@ -56,11 +56,11 @@ func (m *Identity) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
-	if err := m.validateTraits(formats); err != nil {
+	if err := m.validateSchemaID(formats); err != nil {
 		res = append(res, err)
 	}
 
-	if err := m.validateTraitsSchemaID(formats); err != nil {
+	if err := m.validateTraits(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -111,18 +111,18 @@ func (m *Identity) validateRecoveryAddresses(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *Identity) validateTraits(formats strfmt.Registry) error {
+func (m *Identity) validateSchemaID(formats strfmt.Registry) error {
 
-	if err := validate.Required("traits", "body", m.Traits); err != nil {
+	if err := validate.Required("schema_id", "body", m.SchemaID); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (m *Identity) validateTraitsSchemaID(formats strfmt.Registry) error {
+func (m *Identity) validateTraits(formats strfmt.Registry) error {
 
-	if err := validate.Required("traits_schema_id", "body", m.TraitsSchemaID); err != nil {
+	if err := validate.Required("traits", "body", m.Traits); err != nil {
 		return err
 	}
 

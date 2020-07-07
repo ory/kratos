@@ -35,7 +35,7 @@ func TestPersister(p interface {
 	Persister
 	identity.PrivilegedPool
 }) func(t *testing.T) {
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 	return func(t *testing.T) {
 		t.Run("suite=request", func(t *testing.T) {
 			t.Run("case=should error when the verify does not exist", func(t *testing.T) {

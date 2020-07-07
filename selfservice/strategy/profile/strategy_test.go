@@ -1,6 +1,7 @@
 package profile_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -42,7 +43,7 @@ func init() {
 
 func TestStrategyTraits(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
 	testhelpers.StrategyEnable(identity.CredentialsTypePassword.String(), true)
 	testhelpers.StrategyEnable(settings.StrategyProfile, true)
@@ -58,7 +59,7 @@ func TestStrategyTraits(t *testing.T) {
 			"password": {Type: "password", Identifiers: []string{"john@doe.com"}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)},
 		},
 		Traits:              identity.Traits(`{"email":"john@doe.com","stringy":"foobar","booly":false,"numby":2.5,"should_long_string":"asdfasdfasdfasdfasfdasdfasdfasdf","should_big_number":2048}`),
-		TraitsSchemaID:      configuration.DefaultIdentityTraitsSchemaID,
+		SchemaID:            configuration.DefaultIdentityTraitsSchemaID,
 		VerifiableAddresses: []identity.VerifiableAddress{{Value: "john@doe.com", Via: identity.VerifiableAddressTypeEmail}},
 	}
 	publicTS, adminTS, clients := testhelpers.NewSettingsAPIServer(t, reg, map[string]*identity.Identity{
@@ -121,7 +122,7 @@ func TestStrategyTraits(t *testing.T) {
 			assert.NotEmpty(t, pr.Payload.Identity)
 			assert.Equal(t, primaryIdentity.ID.String(), string(pr.Payload.Identity.ID))
 			assert.JSONEq(t, string(primaryIdentity.Traits), x.MustEncodeJSON(t, pr.Payload.Identity.Traits))
-			assert.Equal(t, primaryIdentity.TraitsSchemaID, pointerx.StringR(pr.Payload.Identity.TraitsSchemaID))
+			assert.Equal(t, primaryIdentity.SchemaID, pointerx.StringR(pr.Payload.Identity.SchemaID))
 			assert.Equal(t, publicTS.URL+settings.PublicPath, pointerx.StringR(pr.Payload.RequestURL))
 
 			found := false
@@ -139,6 +140,9 @@ func TestStrategyTraits(t *testing.T) {
 			}
 			require.True(t, found)
 
+			var b bytes.Buffer
+			require.NoError(t, json.NewEncoder(&b).Encode(f))
+
 			assert.EqualValues(t, &models.Form{
 				Action: pointerx.String(publicTS.URL + profile.PublicSettingsProfilePath + "?request=" + rid),
 				Method: pointerx.String("POST"),
@@ -150,7 +154,7 @@ func TestStrategyTraits(t *testing.T) {
 					&models.FormField{Name: pointerx.String("traits.should_big_number"), Type: pointerx.String("number"), Value: json.Number("2048")},
 					&models.FormField{Name: pointerx.String("traits.should_long_string"), Type: pointerx.String("text"), Value: "asdfasdfasdfasdfasfdasdfasdfasdf"},
 				},
-			}, f)
+			}, f, "%s", b.String())
 		})
 
 		t.Run("description=should come back with form errors if some profile data is invalid", func(t *testing.T) {

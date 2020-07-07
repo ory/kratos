@@ -16,6 +16,41 @@
         }
       }
     },
+    "traits": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
+              }
+            },
+            "verification": {
+              "via": "email"
+            }
+          }
+        },
+        "stringy": {
+          "type": "string"
+        },
+        "numby": {
+          "type": "number"
+        },
+        "booly": {
+          "type": "boolean"
+        },
+        "should_big_number": {
+          "type": "number",
+          "minimum": 1200
+        },
+        "should_long_string": {
+          "type": "string",
+          "minLength": 25
+        }
+      }
+    },
     "fruits": {
       "type": "array",
       "items": {

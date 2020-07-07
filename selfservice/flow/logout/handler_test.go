@@ -29,7 +29,7 @@ func TestLogoutHandler(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	handler := reg.LogoutHandler()
 
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
 	viper.Set(configuration.ViperKeyPublicBaseURL, "http://example.com")
 
 	router := x.NewRouterPublic()

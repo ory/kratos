@@ -88,8 +88,8 @@ const (
 	ViperKeySelfServiceVerificationRequestLifespan        = "selfservice.flows.verification.request_lifespan"
 	ViperKeySelfServiceVerificationBrowserDefaultReturnTo = "selfservice.flows.verification.after." + DefaultBrowserReturnURL
 
-	ViperKeyDefaultIdentityTraitsSchemaURL = "identity.traits.default_schema_url"
-	ViperKeyIdentityTraitsSchemas          = "identity.traits.schemas"
+	ViperKeyDefaultIdentitySchemaURL = "identity.default_schema_url"
+	ViperKeyIdentitySchemas          = "identity.schemas"
 
 	ViperKeyHasherArgon2ConfigMemory      = "hashers.argon2.memory"
 	ViperKeyHasherArgon2ConfigIterations  = "hashers.argon2.iterations"
@@ -131,7 +131,7 @@ func (p *ViperProvider) listenOn(key string) string {
 }
 
 func (p *ViperProvider) DefaultIdentityTraitsSchemaURL() *url.URL {
-	return mustParseURLFromViper(p.l, ViperKeyDefaultIdentityTraitsSchemaURL)
+	return mustParseURLFromViper(p.l, ViperKeyDefaultIdentitySchemaURL)
 }
 
 func (p *ViperProvider) IdentityTraitsSchemas() SchemaConfigs {
@@ -141,18 +141,18 @@ func (p *ViperProvider) IdentityTraitsSchemas() SchemaConfigs {
 	}
 	var b bytes.Buffer
 	var ss SchemaConfigs
-	raw := viper.Get(ViperKeyIdentityTraitsSchemas)
+	raw := viper.Get(ViperKeyIdentitySchemas)
 
 	if raw == nil {
 		return SchemaConfigs{ds}
 	}
 
 	if err := json.NewEncoder(&b).Encode(raw); err != nil {
-		p.l.WithError(err).Fatalf("Unable to encode values from %s.", ViperKeyIdentityTraitsSchemas)
+		p.l.WithError(err).Fatalf("Unable to encode values from %s.", ViperKeyIdentitySchemas)
 	}
 
 	if err := jsonx.NewStrictDecoder(&b).Decode(&ss); err != nil {
-		p.l.WithError(err).Fatalf("Unable to decode values from %s.", ViperKeyIdentityTraitsSchemas)
+		p.l.WithError(err).Fatalf("Unable to decode values from %s.", ViperKeyIdentitySchemas)
 	}
 
 	return append(ss, ds)

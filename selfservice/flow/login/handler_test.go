@@ -38,7 +38,7 @@ func TestHandlerSettingForced(t *testing.T) {
 	loginTS := testhelpers.NewLoginUIRequestEchoServer(t, reg)
 
 	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/login.schema.json")
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
 
 	// assert bool
 	ab := func(body []byte, exp bool) {

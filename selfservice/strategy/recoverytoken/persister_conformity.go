@@ -22,7 +22,7 @@ func TestPersister(p interface {
 	recovery.RequestPersister
 	identity.PrivilegedPool
 }) func(t *testing.T) {
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 	viper.Set(configuration.ViperKeySecretsDefault, []string{"secret-a", "secret-b"})
 	return func(t *testing.T) {
 		t.Run("case=should error when the recovery token does not exist", func(t *testing.T) {

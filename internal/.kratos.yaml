@@ -19,11 +19,10 @@ courier:
     connection_uri: smtp://foo:bar@baz/
 
 identity:
-  traits:
-    default_schema_url: http://test.kratos.ory.sh/default-identity.schema.json
-    schemas:
-      - id: other
-        url: http://test.kratos.ory.sh/other-identity.schema.json
+  default_schema_url: http://test.kratos.ory.sh/default-identity.schema.json
+  schemas:
+    - id: other
+      url: http://test.kratos.ory.sh/other-identity.schema.json
 
 hashers:
   argon2:

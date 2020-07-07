@@ -1160,7 +1160,7 @@
       "type": "object",
       "required": [
         "id",
-        "traits_schema_id",
+        "schema_id",
         "traits"
       ],
       "properties": {
@@ -1174,16 +1174,16 @@
             "$ref": "#/definitions/RecoveryAddress"
           }
         },
+        "schema_id": {
+          "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.",
+          "type": "string"
+        },
+        "schema_url": {
+          "description": "SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.\n\nformat: url",
+          "type": "string"
+        },
         "traits": {
           "$ref": "#/definitions/Traits"
-        },
-        "traits_schema_id": {
-          "description": "TraitsSchemaID is the ID of the JSON Schema to be used for validating the identity's traits.",
-          "type": "string"
-        },
-        "traits_schema_url": {
-          "description": "TraitsSchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.\n\nformat: url",
-          "type": "string"
         },
         "verifiable_addresses": {
           "description": "VerifiableAddresses contains all the addresses that can be verified by the user.",

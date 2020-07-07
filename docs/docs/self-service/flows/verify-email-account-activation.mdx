@@ -53,47 +53,57 @@ able to do in your application logic or API Gateways.
 ## Setting Email Verification
 
 You must define at least one Identity Traits field as a verification field. You
-can do so by defining the following section in your Identity Traits JSON Schema:
+can do so by defining the following section in your Identity JSON Schema:
 
-```json5 title="path/to/identity.traits.schema.json"
+```json5 title="path/to/identity.schema.json"
 {
   // ...
   properties: {
-    // This could also be an array or any other field name
-    email: {
-      type: 'string',
-      format: 'email',
-      'ory.sh/kratos': {
-        verification: {
-          // Currently, only email is supported
-          via: 'email'
+    traits: {
+      type: "object",
+      properties: {
+        // This could also be an array or any other field name
+        email: {
+          type: 'string',
+          format: 'email',
+          'ory.sh/kratos': {
+            verification: {
+              // Currently, only email is supported
+              via: 'email'
+            }
+          }
         }
       }
     }
-  }
+  },
   // ...
 }
 ```
 
 You can also combine this with the password strategy login identifier.
 
-```json5 title="path/to/identity.traits.schema.json"
+```json5 title="path/to/identity.schema.json"
 {
   // ...
   properties: {
-    // This could also be an array or any other field name
-    email: {
-      type: 'string',
-      format: 'email',
-      'ory.sh/kratos': {
-        credentials: {
-          password: {
-            identifier: true
+    traits: {
+      type: "object",
+      properties: {
+        // This could also be an array or any other field name
+        email: {
+          type: 'string',
+          format: 'email',
+          'ory.sh/kratos': {
+            credentials: {
+              password: {
+                identifier: true
+              }
+            },
+            verification: {
+              // Currently, only email is supported
+              via: 'email'
+            }
           }
-        },
-        verification: {
-          // Currently, only email is supported
-          via: 'email'
         }
       }
     }

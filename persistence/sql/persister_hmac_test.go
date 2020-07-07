@@ -3,6 +3,7 @@ package sql
 import (
 	"testing"
 
+	"github.com/gobuffalo/pop/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -14,7 +15,9 @@ import (
 
 func TestPersisterHMAC(t *testing.T) {
 	viper.Set(configuration.ViperKeySecretsDefault, []string{"foobarbaz"})
-	p, err := NewPersister(nil, configuration.NewViperProvider(logrusx.New("", ""), false), nil)
+	c, err := pop.NewConnection(&pop.ConnectionDetails{URL: "sqlite://foo?mode=memory"})
+	require.NoError(t, err)
+	p, err := NewPersister(nil, configuration.NewViperProvider(logrusx.New("", ""), false), c)
 	require.NoError(t, err)
 
 	assert.True(t, p.hmacConstantCompare("hashme", p.hmacValue("hashme")))

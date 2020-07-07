@@ -437,7 +437,7 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 			method.Config.ResetMessages()
 
 			method.Config.SetCSRF(s.d.GenerateCSRFToken(r))
-			if errSec := method.Config.SortFields(s.c.DefaultIdentityTraitsSchemaURL().String(), "traits"); errSec != nil {
+			if errSec := method.Config.SortFields(s.c.DefaultIdentityTraitsSchemaURL().String()); errSec != nil {
 				s.d.RegistrationRequestErrorHandler().HandleRegistrationError(w, r, s.ID(), rr, errors.Wrap(err, errSec.Error()))
 				return
 			}

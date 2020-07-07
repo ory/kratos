@@ -4,28 +4,33 @@
   "title": "Person",
   "type": "object",
   "properties": {
-    "email": {
-      "type": "string",
-      "format": "email",
-      "title": "E-Mail",
-      "minLength": 3,
-      "ory.sh/kratos": {
-        "credentials": {
-          "password": {
-            "identifier": true
+    "traits": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "title": "E-Mail",
+          "minLength": 3,
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
+              }
+            }
           }
+        },
+        "website": {
+          "type": "string",
+          "format": "uri",
+          "minLength": 10
         }
-      }
-    },
-    "website": {
-      "type": "string",
-      "format": "uri",
-      "minLength": 10
+      },
+      "required": [
+        "email",
+        "website"
+      ],
+      "additionalProperties": false
     }
-  },
-  "required": [
-    "email",
-    "website"
-  ],
-  "additionalProperties": false
+  }
 }

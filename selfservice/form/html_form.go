@@ -109,8 +109,8 @@ func NewHTMLFormFromJSONSchema(action, jsonSchemaRef, prefix string, compiler *j
 	return c, nil
 }
 
-func (c *HTMLForm) SortFields(schemaRef, prefix string) error {
-	sortFunc, err := c.Fields.sortBySchema(schemaRef, prefix)
+func (c *HTMLForm) SortFields(schemaRef string) error {
+	sortFunc, err := c.Fields.sortBySchema(schemaRef, "")
 	if err != nil {
 		return err
 	}

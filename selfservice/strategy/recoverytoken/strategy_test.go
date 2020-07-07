@@ -35,13 +35,13 @@ func init() {
 var identityToRecover = &identity.Identity{
 	Credentials: map[identity.CredentialsType]identity.Credentials{
 		"password": {Type: "password", Identifiers: []string{"recover@ory.sh"}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)}},
-	Traits:         identity.Traits(`{"email":"recover@ory.sh"}`),
-	TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
+	Traits:   identity.Traits(`{"email":"recover@ory.sh"}`),
+	SchemaID: configuration.DefaultIdentityTraitsSchemaID,
 }
 
 func TestStrategy(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/default.schema.json")
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/default.schema.json")
 	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
 	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+identity.CredentialsTypePassword.String()+".enabled", true)
 	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryTokenName+".enabled", true)

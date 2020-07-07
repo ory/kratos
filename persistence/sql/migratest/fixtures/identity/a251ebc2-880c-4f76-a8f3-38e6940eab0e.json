@@ -1,7 +1,7 @@
 {
   "id": "a251ebc2-880c-4f76-a8f3-38e6940eab0e",
-  "traits_schema_id": "default",
-  "traits_schema_url": "https://www.ory.sh/schemas/default",
+  "schema_id": "default",
+  "schema_url": "https://www.ory.sh/schemas/default",
   "traits": {
     "email": "foobar@ory.sh"
   },

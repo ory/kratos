@@ -4,15 +4,20 @@
   "title": "Person",
   "type": "object",
   "properties": {
-    "bar": {
-      "type": "string"
-    },
-    "email": {
-      "type": "string",
-      "ory.sh/kratos": {
-        "credentials": {
-          "password": {
-            "identifier": true
+    "traits": {
+      "type": "object",
+      "properties": {
+        "bar": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string",
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
+              }
+            }
           }
         }
       }

@@ -21,8 +21,8 @@ context('Registration', () => {
       const { identity } = session
       expect(identity.id).to.not.be.empty
       expect(identity.verifiable_addresses).to.be.undefined
-      expect(identity.traits_schema_id).to.equal('default')
-      expect(identity.traits_schema_url).to.equal(
+      expect(identity.schema_id).to.equal('default')
+      expect(identity.schema_url).to.equal(
         `${APP_URL}/.ory/kratos/public/schemas/default`
       )
       expect(identity.traits.website).to.equal(website)

@@ -32,7 +32,7 @@ func init() {
 
 func TestHandler(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 	testhelpers.StrategyEnable(identity.CredentialsTypePassword.String(), true)
 	testhelpers.StrategyEnable(settings.StrategyProfile, true)
 

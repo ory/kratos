@@ -100,8 +100,8 @@ func MockSessionCreateHandlerWithIdentity(t *testing.T, reg mockDeps, i *identit
 	sess.IssuedAt = time.Now().UTC()
 	sess.ExpiresAt = time.Now().UTC().Add(time.Hour * 24)
 
-	if viper.GetString(configuration.ViperKeyDefaultIdentityTraitsSchemaURL) == "" {
-		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/fake-session.schema.json")
+	if viper.GetString(configuration.ViperKeyDefaultIdentitySchemaURL) == "" {
+		viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/fake-session.schema.json")
 	}
 
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))

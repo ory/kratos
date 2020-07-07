@@ -141,8 +141,8 @@ func createRecoveryAddresses(ctx context.Context, tx *pop.Connection, i *identit
 }
 
 func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) error {
-	if i.TraitsSchemaID == "" {
-		i.TraitsSchemaID = configuration.DefaultIdentityTraitsSchemaID
+	if i.SchemaID == "" {
+		i.SchemaID = configuration.DefaultIdentityTraitsSchemaID
 	}
 
 	if len(i.Traits) == 0 {
@@ -360,11 +360,11 @@ func (p *Persister) validateIdentity(i *identity.Identity) error {
 }
 
 func (p *Persister) injectTraitsSchemaURL(i *identity.Identity) error {
-	s, err := p.r.IdentityTraitsSchemas().GetByID(i.TraitsSchemaID)
+	s, err := p.r.IdentityTraitsSchemas().GetByID(i.SchemaID)
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf(
-			`The JSON Schema "%s" for this identity's traits could not be found.`, i.TraitsSchemaID))
+			`The JSON Schema "%s" for this identity's traits could not be found.`, i.SchemaID))
 	}
-	i.TraitsSchemaURL = s.SchemaURL(p.cf.SelfPublicURL()).String()
+	i.SchemaURL = s.SchemaURL(p.cf.SelfPublicURL()).String()
 	return nil
 }

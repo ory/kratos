@@ -4,19 +4,24 @@
   "title": "Person",
   "type": "object",
   "properties": {
-    "email": {
-      "type": "string",
-      "ory.sh/kratos": {
-        "credentials": {
-          "password": {
-            "identifier": true
+    "traits": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
+              }
+            },
+            "verification": {
+              "via": "email"
+            },
+            "recovery": {
+              "via": "email"
+            }
           }
-        },
-        "verification": {
-          "via": "email"
-        },
-        "recovery": {
-          "via": "email"
         }
       }
     }

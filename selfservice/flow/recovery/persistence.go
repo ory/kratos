@@ -34,7 +34,7 @@ func TestRequestPersister(p interface {
 	RequestPersister
 	identity.PrivilegedPool
 }) func(t *testing.T) {
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 
 	var clearids = func(r *Request) {
 		r.ID = uuid.UUID{}

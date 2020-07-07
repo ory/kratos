@@ -29,19 +29,25 @@ func TestSchemaValidator(t *testing.T) {
   "title": "Person",
   "type": "object",
   "properties": {
-    "` + ps.ByName("name") + `": {
-      "type": "string",
-      "description": "The person's first name."
-    },
-    "lastName": {
-      "type": "string",
-      "description": "The person's last name."
-    },
-    "age": {
-      "description": "Age in years which must be equal to or greater than zero.",
-      "type": "integer",
-      "minimum": 1
-    }
+	"traits": {
+	  "type": "object",
+	  "properties": {
+        "` + ps.ByName("name") + `": {
+          "type": "string",
+          "description": "The person's first name."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The person's last name."
+        },
+        "age": {
+          "description": "Age in years which must be equal to or greater than zero.",
+          "type": "integer",
+          "minimum": 1
+        }
+	  },
+	  "additionalProperties": false
+	}
   },
   "additionalProperties": false
 }`))
@@ -51,8 +57,8 @@ func TestSchemaValidator(t *testing.T) {
 	defer ts.Close()
 
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, ts.URL+"/schema/firstName")
-	viper.Set(configuration.ViperKeyIdentityTraitsSchemas, []configuration.SchemaConfig{
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, ts.URL+"/schema/firstName")
+	viper.Set(configuration.ViperKeyIdentitySchemas, []configuration.SchemaConfig{
 		{ID: "whatever", URL: ts.URL + "/schema/whatever"},
 		{ID: "unreachable-url", URL: ts.URL + "/404-not-found"},
 	})
@@ -71,31 +77,31 @@ func TestSchemaValidator(t *testing.T) {
 			i: &Identity{
 				Traits: Traits(`{ "firstName": "first-name", "lastName": "last-name", "age": -1 }`),
 			},
-			err: "I[#/traits/age] S[#/properties/age/minimum] must be >= 1 but found -1",
+			err: "I[#/traits/age] S[#/properties/traits/properties/age/minimum] must be >= 1 but found -1",
 		},
 		{
 			i: &Identity{
 				Traits: Traits(`{ "whatever": "first-name", "lastName": "last-name", "age": 1 }`),
 			},
-			err: `I[#/traits] S[#/additionalProperties] additionalProperties "whatever" not allowed`,
+			err: `I[#/traits] S[#/properties/traits/additionalProperties] additionalProperties "whatever" not allowed`,
 		},
 		{
 			i: &Identity{
-				TraitsSchemaID: "whatever",
-				Traits:         Traits(`{ "whatever": "first-name", "lastName": "last-name", "age": 1 }`),
+				SchemaID: "whatever",
+				Traits:   Traits(`{ "whatever": "first-name", "lastName": "last-name", "age": 1 }`),
 			},
 		},
 		{
 			i: &Identity{
-				TraitsSchemaID: "whatever",
-				Traits:         Traits(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
+				SchemaID: "whatever",
+				Traits:   Traits(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
 			},
-			err: `I[#/traits] S[#/additionalProperties] additionalProperties "firstName" not allowed`,
+			err: `I[#/traits] S[#/properties/traits/additionalProperties] additionalProperties "firstName" not allowed`,
 		},
 		{
 			i: &Identity{
-				TraitsSchemaID: "unreachable-url",
-				Traits:         Traits(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
+				SchemaID: "unreachable-url",
+				Traits:   Traits(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
 			},
 			err: "An internal server error occurred, please contact the system administrator",
 		},

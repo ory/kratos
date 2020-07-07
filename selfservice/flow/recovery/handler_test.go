@@ -38,7 +38,7 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 	testhelpers.NewErrorTestServer(t, reg)
 	public, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 
 	t.Run("does redirect to default on authenticated request", func(t *testing.T) {
 		body, _ := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, x.NewTestHTTPRequest(t, "GET", public.URL+recovery.PublicRecoveryInitPath, nil))
@@ -92,7 +92,7 @@ func TestRecoveryHandler(t *testing.T) {
 		}
 	}
 
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/recovery.schema.json")
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/recovery.schema.json")
 
 	t.Run("daemon=admin", func(t *testing.T) {
 		regTS := newRecoveryTS(t, admin.URL, nil)
