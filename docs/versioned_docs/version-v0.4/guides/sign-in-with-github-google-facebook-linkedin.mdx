@@ -105,10 +105,10 @@ This will enable you to log in using any Azure AD directory - Multitenant and
 personal Microsoft accounts (e.g. Skype, Xbox) depending on the settings made
 when creating the application in Azure AD.
 
-
 #### Creating an Application in Azure AD
-To set up "Sign in with Microsoft" you must first [register an application with
-the Microsoft identity platform](https://docs.microsoft.com/en-us/azure/active-directory/develop/quickstart-register-app).
+
+To set up "Sign in with Microsoft" you must first
+[register an application with the Microsoft identity platform](https://docs.microsoft.com/en-us/azure/active-directory/develop/quickstart-register-app).
 
 Select "Web" as the "Redirect URI" type, and set the URI to:
 
@@ -122,6 +122,7 @@ navigate to "Certificates & secrets" and click "+ New client secret". Remember
 to copy the secret value as it will only be shown once.
 
 #### Configuring Kratos
+
 Create a Jsonnet claims mapper as described in
 [OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx).
 Save the code in
@@ -170,17 +171,18 @@ selfservice:
 Azure AD is now an option to log in to kratos.
 
 ##### Choosing Tenant
+
 There are two ways to use the `microsoft` provider for authentication:
 
-1. For authenticating users in a single Azure AD Directory (organisation),
-set the `tenant` value to either the `Directory ID` from the "App Registration"
-page, or the organisation domain. E.g. `8eaef023-2b34-4da1-9baa-8bc8c9d6a490`
-or `contoso.onmicrosoft.com`.
+1. For authenticating users in a single Azure AD Directory (organisation), set
+   the `tenant` value to either the `Directory ID` from the "App Registration"
+   page, or the organisation domain. E.g. `8eaef023-2b34-4da1-9baa-8bc8c9d6a490`
+   or `contoso.onmicrosoft.com`.
 2. For authenticating any user in the Microsoft identity platform, set the
-`tenant` value to either:
-   * `organizations` to allow users with work or school accounts, or
-   * `consumers` to allow users with personal accounts, or
-   * `common` to allow both kind of accounts.
+   `tenant` value to either:
+   - `organizations` to allow users with work or school accounts, or
+   - `consumers` to allow users with personal accounts, or
+   - `common` to allow both kind of accounts.
 
 ## Google, LinkedIn, Facebook
 
