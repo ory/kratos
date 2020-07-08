@@ -106,7 +106,6 @@ archives:
       - kratos-sqlite-windows
       - kratos-sqlite-darwin
       - kratos-sqlite-linux
-      - kratos-sqlite-linux-libmusl
     replacements:
       darwin: macos
       386: 32bit
@@ -159,20 +158,6 @@ archives:
       - README.md
       - SECURITY.md
 
-  - id: kratos-brew
-    builds:
-      - kratos-sqlite-darwin
-    replacements:
-      darwin: macos
-      386: 32bit
-      amd64: 64bit
-      arm: arm32
-    files:
-      - CHANGELOG.md
-      - LICENSE
-      - README.md
-      - SECURITY.md
-
 snapshot:
   name_template: "{{ .Tag }}-next"
 
@@ -189,7 +174,7 @@ brews:
       owner: ory
       name: homebrew-kratos
     ids:
-    - kratos-brew
+    - kratos-sqlite
     homepage:  https://www.ory.sh
     commit_author:
       name: ory
