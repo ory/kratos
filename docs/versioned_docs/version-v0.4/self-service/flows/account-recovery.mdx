@@ -1,0 +1,396 @@
+---
+id: account-recovery
+title: Account Recovery
+sidebar_title: Overview
+---
+
+import useBaseUrl from '@docusaurus/useBaseUrl'
+import Mermaid from '@theme/Mermaid'
+
+Account Recovery must be performed if access to an account needs to be
+recovered. Common use cases include:
+
+- "Forgot password" flows
+- "Lost MFA device" flows
+- ...
+
+To recover an account, two principal flows are supported:
+
+- Browser-based (easy): This flow works for all applications running on top of a
+  browser. Websites, single-page apps, Cordova/Ionic, and so on.
+- API-based (advanced): This flow works for native applications like iOS
+  (Swift), Android (Java), Microsoft (.NET), React Native, Electron, and others.
+
+The flow described here is implemented by the
+[link](user-settings/password-reset-recovery-link.mdx) strategy.
+
+## Self-Service Account Recovery for Browser Applications
+
+ORY Kratos supports browser applications that run on server-side (e.g. Java,
+NodeJS, PHP) as well as client-side (e.g. JQuery, ReactJS, AngularJS, ...).
+
+Browser-based account recovery makes use of three core HTTP technologies:
+
+- HTTP Redirects
+- HTTP POST (`application/json`, `application/x-www-urlencoded`) and RESTful GET
+  requests.
+- HTTP Cookies to prevent CSRF and Session Hijaking attack vectors.
+
+The browser flow is the easiest and most secure to set up and integrated with.
+ORY Kratos takes care of all required session and CSRF cookies and ensures that
+all security requirements are fulfilled.
+
+This flow is not suitable for scenarios where you use purely programmatic
+clients that do not work well with HTTP Cookies and HTTP Redirects.
+
+### The Account Recovery User Interface
+
+The Account Recovery User Interface is a route (page / site) in your application
+that renders the account recovery User Interface / HTML Form.
+
+```html
+<!-- Recover account by sending recovery link to specified email -->
+<form action="..." method="POST">
+  <input type="hidden" name="csrf_token" value="cdef..." />
+  <input type="email" name="email" />
+  <input type="submit" />
+</form>
+```
+
+Reference these UI endpoints your ORY Kratos config file:
+
+```yaml title="path/to/kratos/config.yml"
+selfservice:
+  flows:
+    recovery:
+      ui_url: https://.../recovery
+```
+
+You should also configure how long a session is privileged. The user will only
+be able to update his/her password (or any other credential) for the specified
+amount of time after completing the recovery flow.
+
+```yaml title="path/to/kratos/config.yml"
+selfservice:
+  flows:
+    settings:
+      privileged_session_max_age: 15m
+```
+
+<p>
+  <figure>
+    <img
+      alt="Recovery email sent to unknown address"
+      src={useBaseUrl('img/docs/secureapp-recovery-change.png')}
+    />
+    <figcaption>
+      The user is instructed to update her/his password or set up credentials
+      such as Social Sign In.
+    </figcaption>
+  </figure>
+</p>
+
+In stark contrast to other Identity Systems, ORY Kratos does not render this
+HTML. Instead, you need to implement the HTML code in your application (e.g.
+NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
+flexibility and customizability in your user interface flows and designs.
+
+Each Recovery Strategy
+([Recovery Link](account-recovery/password-reset-recovery-link.mdx), ...) is
+different, but they all boil down to the same abstract sequence:
+
+<Mermaid
+  chart={`
+sequenceDiagram
+  participant B as Browser
+  participant K as ORY Kratos
+  participant A as Your Application
+  B->>K: Initiate Account Recovery
+  K->>B: Redirects to your Application's /recovery_ui endpoint
+  B->>A: Calls /recovery_ui
+  A-->>K: Fetches data to render forms etc
+  B-->>A: Fills out forms (e.g. email), clicks "recover account"
+  B->>K: POSTs data to
+  K-->>K: Processes Account Recovery Info
+  alt Data is valid
+    K-->>+B: Issues recovery challenge (e.g. send email)
+    K->>B: Shows in the UI that the user must e.g. click link in email
+    B->>-K: Completes challenge and recovers account(e.g. GET .../recover?token=abc)
+    K->>B: Redirects to Settings page to update e.g. password
+  else Post data is invalid
+    K-->>B: Redirects to your Applicaiton's /recovery_ui endpoint
+    B->>A: Calls /recovery_ui
+    A-->>K: Fetches data to render form fields and errors
+    B-->>A: Fills out forms again, corrects errors
+    B->>K: POSTs data again - and so on...
+  end
+`}
+/>
+
+### Code
+
+The code example used here is universal and does not use an SDK because we want
+you to understand the fundamentals of how this flow works.
+
+While this example assumes a Server-Side Application, a Client-Side (e.g.
+ReactJS) Application would work the same, but use ORY Kratos' Public API
+instead.
+
+#### Server-side route
+
+You will notice that this endpoint is very similar to the one documented for
+[User Settings](user-settings.mdx).
+
+```js
+// Uses the ORY Kratos NodeJS SDK - for more SDKs check:
+//
+//  https://www.ory.sh/kratos/docs/sdk/index
+const { CommonApi } = require('@oryd/kratos-client')
+
+// The browser config key is used to redirect the user. It reflects where ORY Kratos' Public API
+// is accessible from. Here, we're assuming traffic going to `http://example.org/.ory/kratos/public/`
+// will be forwarded to ORY Kratos' Public API.
+const kratosBrowserUrl = 'http://example.org/.ory/kratos/public/'
+
+// Initializes the SDK with ORY Kratos' Admin API.
+const commonApi = new CommonApi('https://ory-kratos-admin.example-org.vpc/')
+
+// This route would be used like:
+//
+//    app.get('/recover', recoveryHandler)
+//
+export const recoveryHandler = (req, res, next) => {
+  // The request ID is used to identify the Account Recovery Request and
+  // return data like the csrf_token and so on.
+  const request = req.query.request
+  if (!request) {
+    console.log('No request found in URL, initializing flow.')
+    res.redirect(`${kratosBrowserUrl}/self-service/browser/flows/recovery`)
+    return
+  }
+
+  commonApi
+    .getSelfServiceBrowserRecoveryRequest(request)
+    .then(({ body, response }) => {
+      if (response.statusCode !== 200) {
+        res.redirect(`${kratosBrowserUrl}/self-service/browser/flows/recovery`)
+        return
+      }
+
+      // "body" contains all the request data for this Recovery request.
+      // You can process that data here, if you want.
+
+      // Lastly, you probably want to render the data using a view (e.g. Jade Template):
+      res.render('recovery', body)
+    })
+  // Handle errors using ExpressJS' next functionality:
+  //
+  //    .catch(next)
+}
+```
+
+#### Views
+
+Implementing the view is simple as ORY Kratos provides you with all the
+information you need for rendering the forms. The following example illustrates
+a generic form generator (we use handlebars here) that works with ORY Kratos:
+
+```handlebars name="views/partials/form.hbs"
+<form action="{{form.action}}" method="{{form.method}}">
+    {{~#each form.errors~}}
+        <!-- global form validation errors -->
+        <div class="error">{{message}}</div>
+    {{~/each~}}
+
+    {{#each form.fields}}
+        {{~#each errors~}}
+            <!-- validation errors for this specific field -->
+            <div class="error">{{message}}</div>
+        {{~/each~}}
+        <input name="{{name}}" type="{{type}}" value="{{value}}" {{#if disabled}}disabled{{/if}}>
+    {{/each}}
+
+    <button type="submit">Save</button>
+</form>
+```
+
+In your main "Recovery" view you would then consume this template for all the
+methods you want to support:
+
+```handlebars name="views/recovery.hbs"
+<!-- Make profile changes form: -->
+{{#if methods.link.config}}
+    {{> form form=methods.profile.config}}
+{{/if}}
+
+<!-- ... form: -->
+<!-- ... -->
+```
+
+For details on payloads and potential HTML snippets consult the individual
+Self-Service Strategies for:
+
+- [Recovery Link](account-recovery/password-reset-recovery-link.mdx)
+
+### Server-Side Browser Applications
+
+Let's take a look at the concrete network topologies, calls, and payloads. Here,
+we're assuming that you're running a server-side browser application (written in
+e.g. PHP, Java, NodeJS) to render the recovery screen on the server and make all
+API calls from that server code. The counterpart to this would be a client-side
+browser application (written in e.g. Vanilla JavaScript, JQuery, ReactJS,
+AngularJS, ...) that uses AJAX requests to fetch data. For these type of
+applications, read this section first and go to section
+[Client-Side Browser Applications](#client-side-browser-applications) next.
+
+#### Network Architecture
+
+We recommend checking out the
+[Quickstart Network Architecture](../../quickstart.mdx#network-architecture) for
+a high-level, exemplary, overview of the network. In summary:
+
+1. The SecureApp (your application) is exposed at http://127.0.0.1:4455 and
+   proxies requests matching path `./ory/kratos/public/*` to ORY Krato's Public
+   API Port.
+1. ORY Kratos exposes (for debugging only!!) the Public API at
+   http://127.0.0.1:4433 and Admin API at http://127.0.0.1:4434.
+1. Within the "intranet" or "private network", ORY Kratos is exposed at
+   http://kratos:4433 and http://kratos:4434. These URLs are be used by the
+   SecureApp to communicate with ORY Kratos.
+
+Keep in mind that his architecture is just one of many possible network
+architectures. It is however one of the simplest as well and it works locally.
+For production deployments you would probably use an Reverse Proxy such as
+Nginx, Kong, Envoy, ORY Oathkeeper, or others.
+
+#### Account Recovery Process Sequence
+
+The Account Recovery Flow is composed of several high-level steps summarized in
+this state diagram:
+
+<Mermaid
+  chart={`
+stateDiagram
+  s1: User tries to log in but forgot e.g. password
+  s3: User ends up at recovery_ui which renders the Account Recovery Form
+  s4: Recovery over secondary channel (e.g. email) is initiated
+  s5: Update "Account Recovery Request" with Error Context(s)
+  s6: Settings update successful
+	[*] --> s1
+  s1 --> s3 : User clicks "Recover Account" and is redirected to Recovery Init Endpoint
+  s3 --> s4 : User provides valid form data
+  s3 --> s5 : User provides invalid form data (e.g. not an email)
+  s5 --> s3 : User is redirected to Settings UI URL
+  s4 --> s6
+  s6 --> [*]
+  Error --> [*]
+`}
+/>
+
+First, the flow is initiated by directing the user's browser to
+`http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/recovery`.
+This is called the "Account Recovery Init Endpoint".
+
+Next, ORY Kratos does some internal processing (e.g. checks if a session cookie
+is set, generates payloads for form fields, sets CSRF token, ...) and redirects
+the user's browser to the Recovery UI URL which is defined using the
+`selfservice.flows.recovery.ui_url` config or
+`SELFSERVICE_FLOWS_RECOVERY_UI_URL` environment variable, which is set to the ui
+endpoints - for example `https://127.0.0.1:4455/recovery`.
+
+The user's browser is thus redirected to
+`https://127.0.0.1:4455/recovery?request=abcde`. The `request` query parameter
+includes a unique ID which will be used to fetch contextual data for this
+recovery request.
+
+Your Server-Side Application makes a `GET` request to
+`http://kratos:4434/self-service/browser/flows/requests/recovery?request=abcde`.
+ORY Kratos responds with a JSON Payload that contains data (form fields, error
+messages, ...) for all enabled Account Recovery Strategies:
+
+```json5
+{
+  id: '4f49fd6b-fd13-4de2-ac66-adeffa5e5fe3',
+  expires_at: '2020-07-02T15:41:22.1559315Z',
+  issued_at: '2020-07-02T14:41:22.1559545Z',
+  request_url: 'http://kratos:4433/self-service/browser/flows/recovery',
+  methods: {
+    link: {
+      /* ... */
+    }
+  },
+  state: 'sent_email'
+}
+```
+
+Once the strategy is completed successfully (e.g. an email has been entered into
+the form and the user clicked submit), the user will be signed in and sent to
+the [User Settings](user-settings.mdx) page with a privileged session, meaning
+that he/she is able to change the password in the next e.g. 15 minutes.
+
+<Mermaid
+  chart={`
+sequenceDiagram
+  participant U as User
+  participant B as Browser
+  participant A as Your Server-Side Application
+  participant KP as ORY Kratos Public API
+  participant KA as ORY Kratos Admin API
+  B->>+A: GET /.ory/kratos/public/self-service/browser/flows/recovery
+  A->>+KP: GET /self-service/browser/flows/recovery
+  KP->>-A: HTTP 302 Found /recovery?request=abcde
+  A->>-B: HTTP 302 Found /recovery?request=abcde
+  B->>+A: GET /recovery?request=abcde
+  A->>+KA: GET /self-service/browser/flows/requests/recovery?request=abcde
+  KA->>-A: Sends Recovery Request JSON Payload
+  Note over A,KA:  {"methods":{"link":{...},...}, ...}
+  A->>A: Generate and render HTML
+  A->>-B: Return HTML (Form, ...)
+  B->>B: Fill out HTML
+  B->>+KP: POST HTML Form
+  KP-->>KP: Check form data
+  alt Form data is valid
+    KP-->>-U: Issue recovery challenge (e.g. send email)
+    KP->>A: HTTP 302 Found /recovery?request=abcde
+    Note over KP,A: State changes e.g. {"state": "email_sent", ...}
+    alt Recovery successful
+      U->>KP: Pass recovery challenge (e.g. click .../recover?token=abc)
+      KP->>B: HTTP 302 Found /settings
+      Note over KP,B: User is now logged in with privileged session and should be change the password before the privileged session expires.
+    end
+  else Form data is invalid
+    Note over KP,B: User must retry settings flow because of validation error
+    KP->>B: HTTP 302 Found /recovery?request=abcde
+  end
+`}
+/>
+
+### Client-Side Browser Applications
+
+Because Client-Side Browser Applications do not have access to ORY Kratos' Admin
+API, they must use the ORY Kratos Public API instead. The flow for a Client-Side
+Browser Application is almost the exact same as the one for Server-Side
+Applications, with the small difference that
+`https://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/requests/recovery?request=abcde`
+would be called via AJAX instead of making a request to
+`https://kratos:4434/self-service/browser/flows/requests/recovery?request=abcde`.
+
+To prevent brute force, guessing, session injection, and other attacks, it is
+required that cookies are working for this endpoint. The cookie set in the
+initial HTTP request made to
+`https://127.0.0.1:4455/.ory/kratos/public/self-service/browser/recovery` MUST
+be set and available when calling this endpoint!
+
+:::info
+
+The initialization request
+(`http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/recovery`)
+**cannot** be made via AJAX or API requests. You **must** open that URL in the
+user's browser using e.g. `window.open` `location.href` or plain and simple old
+`<a href=...>`.
+
+:::
+
+## Self-Service Account Recovery for API Clients
+
+Will be addressed in a future release.

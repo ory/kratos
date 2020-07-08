@@ -1,0 +1,454 @@
+---
+id: user-settings
+title: User Settings
+sidebar_label: Overview
+---
+
+import Mermaid from '@theme/Mermaid'
+
+ORY Kratos allows users to update their own settings and profile information
+using two principal flows:
+
+- Browser-based (easy): This flow works for all applications running on top of a
+  browser. Websites, single-page apps, Cordova/Ionic, and so on.
+- API-based (advanced): This flow works for native applications like iOS
+  (Swift), Android (Java), Microsoft (.NET), React Native, Electron, and others.
+
+The flow described here is implemented by the
+[profile](user-settings/user-profile-management.mdx),
+[password](user-login-user-registration/username-email-password.mdx), and
+[oidc](user-login-user-registration/openid-connect-social-sign-in-oauth2.mdx)
+strategy.
+
+## Self-Service User Settings for Browser Applications
+
+ORY Kratos supports browser applications that run on server-side (e.g. Java,
+NodeJS, PHP) as well as client-side (e.g. JQuery, ReactJS, AngularJS, ...).
+
+Browser-based user settings management makes use of three core HTTP
+technologies:
+
+- HTTP Redirects
+- HTTP POST (`application/json`, `application/x-www-urlencoded`) and RESTful GET
+  requests.
+- HTTP Cookies to prevent CSRF and Session Hijaking attack vectors.
+
+The browser flow is the easiest and most secure to set up and integrated with.
+ORY Kratos takes care of all required session and CSRF cookies and ensures that
+all security requirements are fulfilled.
+
+This flow is not suitable for scenarios where you use purely programmatic
+clients that do not work well with HTTP Cookies and HTTP Redirects.
+
+### The Settings User Interface
+
+The Settings User Interface is a route (page / site) in your application that
+renders the user settings / profile management User Interface / HTML Form:
+
+```html
+<!-- Profile management -->
+<form action="..." method="POST">
+  <input type="hidden" name="csrf_token" value="cdef..." />
+  <input type="string" name="first_name" />
+  <input type="string" name="last_name" />
+  <input type="string" name="address" />
+  <input type="..." name="..." />
+  <input type="submit" />
+</form>
+
+<!-- Password management -->
+<form action="..." method="POST">
+  <input type="hidden" name="csrf_token" value="cdef..." />
+  <input
+    type="password"
+    name="password"
+    placeholder="Enter your new password here"
+  />
+</form>
+
+<!-- Social Sign in  management -->
+<form action="..." method="POST">
+  <input type="hidden" name="csrf_token" value="cdef..." />
+  <!-- ... -->
+</form>
+```
+
+Reference these UI endpoints your ORY Kratos config file:
+
+```yaml title="path/to/kratos/config.yml"
+selfservice:
+  flows:
+    settings:
+      ui_url: https://.../settings
+```
+
+In stark contrast to other Identity Systems, ORY Kratos does not render this
+HTML. Instead, you need to implement the HTML code in your application (e.g.
+NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
+flexibility and customizability in your user interface flows and designs.
+
+Each Settings Strategy ([Profile](user-settings/user-profile-management.mdx),
+[Username and Password](user-login-user-registration/username-email-password.mdx),
+[Social Sign In](user-login-user-registration/openid-connect-social-sign-in-oauth2.mdx),
+Passwordless, ...) works a bit different but they all boil down to the same
+abstract sequence:
+
+<Mermaid
+  chart={`
+sequenceDiagram
+  participant B as Browser
+  participant K as ORY Kratos
+  participant A as Your Application
+  B->>K: Initialize Settings Flow
+  K->>B: Redirects to your Application's /settings_ui endpoint
+  B->>A: Calls /settings_ui
+  A-->>K: Fetches data to render forms etc
+  B-->>A: Fills out forms, clicks e.g. "Save Changes"
+  B->>K: POSTs data to
+  K-->>K: Processes Settings Info
+  alt Settings data valid
+    K-->>B: Updates Identity Settings
+    K->>B: Redirects to e.g. Dashboard
+  else Setings data invalid
+    K-->>B: Redirects to your Applicaiton's /settings_ui endpoint
+    B->>A: Calls /settings_ui
+    A-->>K: Fetches data to render form fields and errors
+    B-->>A: Fills out forms again, corrects errors
+    B->>K: POSTs data again - and so on...
+  end
+`}
+/>
+
+### Code
+
+The code example used here is universal and does not use an SDK because we want
+you to understand the fundamentals of how this flow works.
+
+While this example assumes a Server-Side Application, a Client-Side (e.g.
+ReactJS) Application would work the same, but use ORY Kratos' Public API
+instead.
+
+#### Server-side route
+
+You will notice that this endpoint is very similar to the one documented for
+[User Login and Registration](user-login-user-registration.mdx).
+
+```js
+// Uses the ORY Kratos NodeJS SDK - for more SDKs check:
+//
+//  https://www.ory.sh/kratos/docs/sdk/index
+const { CommonApi } = require('@oryd/kratos-client')
+
+// The browser config key is used to redirect the user. It reflects where ORY Kratos' Public API
+// is accessible from. Here, we're assuming traffic going to `http://example.org/.ory/kratos/public/`
+// will be forwarded to ORY Kratos' Public API.
+const kratosBrowserUrl = 'http://example.org/.ory/kratos/public/'
+
+// Initializes the SDK with ORY Kratos' Admin API.
+const commonApi = new CommonApi('https://ory-kratos-admin.example-org.vpc/')
+
+// This route would be used like:
+//
+//    app.get('/user/settings', settingsHandler)
+//
+export const settingsHandler = (req, res, next) => {
+  // The request ID is used to identify User Settings Request and
+  // return data like the csrf_token and so on.
+  const request = req.query.request
+  if (!request) {
+    console.log('No request found in URL, initializing flow.')
+    res.redirect(`${kratosBrowserUrl}/self-service/browser/flows/settings`)
+    return
+  }
+
+  commonApi
+    .getSelfServiceBrowserSettingsRequest(request)
+    .then(({ body, response }) => {
+      if (response.statusCode !== 200) {
+        res.redirect(`${kratosBrowserUrl}/self-service/browser/flows/settings`)
+        return
+      }
+
+      // "body" contains all the request data for this User Settings Request.
+      // You can process that data here, if you want.
+
+      // Lastly, you probably want to render the data using a view (e.g. Jade Template):
+      res.render('settings', body)
+    })
+  // Handle errors using ExpressJS' next functionality:
+  //
+  //    .catch(next)
+}
+```
+
+#### Views
+
+Implementing the view is simple as ORY Kratos provides you with all the
+information you need for rendering the forms. The following example illustrates
+a generic form generator (we use handlebars here) that works with ORY Kratos:
+
+```handlebars name="views/partials/form.hbs"
+<form action="{{form.action}}" method="{{form.method}}">
+    {{~#each form.errors~}}
+        <!-- global form validation errors -->
+        <div class="error">{{message}}</div>
+    {{~/each~}}
+
+    {{#each form.fields}}
+        {{~#each errors~}}
+            <!-- validation errors for this specific field -->
+            <div class="error">{{message}}</div>
+        {{~/each~}}
+        <input name="{{name}}" type="{{type}}" value="{{value}}" {{#if disabled}}disabled{{/if}}>
+    {{/each}}
+
+    <button type="submit">Save</button>
+</form>
+```
+
+In your main "Settings" view you would then consume this template for all the
+methods you want to support:
+
+```handlebars name="views/settings.hbs"
+<!-- Make profile changes form: -->
+{{#if methods.profile.config}}
+    {{> form form=methods.profile.config}}
+{{/if}}
+
+<!-- Change passowrd form: -->
+{{#if methods.password.config}}
+    {{> form form=methods.password.config}}
+{{/if}}
+
+<!-- ... form: -->
+<!-- ... -->
+```
+
+For details on payloads and potential HTML snippets consult the individual
+Self-Service Strategies for:
+
+- [Username and Password Strategy](user-login-user-registration/username-email-password.mdx)
+- [Social Sign In Strategy](user-login-user-registration/openid-connect-social-sign-in-oauth2.mdx)
+- [Profile](user-settings/user-profile-management.mdx)
+
+### Server-Side Browser Applications
+
+Let's take a look at the concrete network topologies, calls, and payloads. Here,
+we're assuming that you're running a server-side browser application (written in
+e.g. PHP, Java, NodeJS) to render the settings screen on the server and make all
+API calls from that server code. The counterpart to this would be a client-side
+browser application (written in e.g. Vanilla JavaScript, JQuery, ReactJS,
+AngularJS, ...) that uses AJAX requests to fetch data. For these type of
+applications, read this section first and go to section
+[Client-Side Browser Applications](#client-side-browser-applications) next.
+
+#### Network Architecture
+
+We recommend checking out the
+[Quickstart Network Architecture](../../quickstart.mdx#network-architecture) for
+a high-level, exemplary, overview of the network. In summary:
+
+1. The SecureApp (your application) is exposed at http://127.0.0.1:4455 and
+   proxies requests matching path `./ory/kratos/public/*` to ORY Krato's Public
+   API Port.
+1. ORY Kratos exposes (for debugging only!!) the Public API at
+   http://127.0.0.1:4433 and Admin API at http://127.0.0.1:4434.
+1. Within the "intranet" or "private network", ORY Kratos is exposed at
+   http://kratos:4433 and http://kratos:4434. These URLs are be used by the
+   SecureApp to communicate with ORY Kratos.
+
+Keep in mind that his architecture is just one of many possible network
+architectures. It is however one of the simplest as well and it works locally.
+For production deployments you would probably use an Reverse Proxy such as
+Nginx, Kong, Envoy, ORY Oathkeeper, or others.
+
+#### User Settings Process Sequence
+
+The User Settings Flow is composed of several high-level steps summarized in
+this state diagram:
+
+<Mermaid
+  chart={`
+stateDiagram
+  s1: User browses app
+  s3: User ends up at settings_ui which renders the User Settings Form
+  s4: Execute "After Settings Hook(s)"
+  s5: Update "Settings Request" with Error Context(s)
+  s6: Settings update successful
+	[*] --> s1
+  s1 --> s3 : User clicks "Manage Account" and is redirected to Settings Init Endpoint
+  s3 --> s4 : User provides valid profile data
+  s3 --> s5 : User provides invalid profile data
+  s5 --> s3 : User is redirected to Settings UI URL
+  s4 --> Error : A Hook fails
+  s4 --> s6
+  s6 --> [*]
+  Error --> [*]
+`}
+/>
+
+1. The flow is initiated by directing the user's browser to
+   `http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/settings`.
+1. ORY Kratos does some internal processing (e.g. checks if a session cookie is
+   set, generates payloads for form fields, sets CSRF token, ...) and redirects
+   the user's browser to the Settings UI URL which is defined using the
+   `selfservice.flows.settings.ui_url` config or
+   `SELFSERVICE_FLOWS_SETTINGS_UI_URL` environment variable, which is set to the
+   ui endpoints - for example `https://127.0.0.1:4455/settings`. The user's
+   browser is thus redirected to
+   `https://127.0.0.1:4455/settings?request=abcde`. The `request` query
+   parameter includes a unique ID which will be used to fetch contextual data
+   for this settings request.
+1. Your Server-Side Application makes a `GET` request to
+   `http://kratos:4434/self-service/browser/flows/requests/settings?request=abcde`.
+   ORY Kratos responds with a JSON Payload that contains data (form fields,
+   error messages, ...) for all enabled User Profile Strategies:
+   ```json5
+   {
+     id: 'abcde',
+     request_url: '...',
+     methods: {
+       profile: { method: 'profile', config: { action: '...', fields: [] } },
+       password: { method: 'password', config: { action: '...', fields: [] } },
+       oidc: { method: 'oidc', config: { action: '...', fields: [] } }
+     }
+   }
+   ```
+1. Your Server-Side applications renders the data however you see fit. The User
+   interacts with it and completes the flow by e.g. updating the password or
+   some other profile data.
+1. The User's browser makes a request to one of ORY Kratos' Strategy URLs (e.g.
+   `http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/settings/strategies/profile?request=abcde`
+   or `/self-service/browser/flows/settings/strategies/password?request=abcde`).
+   ORY Kratos validates the data:
+   - If the form data is invalid, the Settings Request's JSON Payload is
+     updated - for example with
+     ```json5
+     {
+       id: 'abcde',
+       methods: {
+         oidc: {
+           method: 'oidc',
+           config: {
+             /* ... */
+           }
+         },
+         password: {
+           method: 'password',
+           config: {
+             /* ... */
+             messages: [
+               {
+                 id: 4000006,
+                 text: 'The provided credentials are invalid. Check for spelling mistakes in your password or username, email address, or phone number.',
+                 type: 'error'
+               }
+             ]
+           }
+         }
+       }
+     }
+     ```
+     and the user's Browser is redirected back to the Settings UI:
+     `https://127.0.0.1:4455/settings_ui?request=abcde`.
+   - If the data is valid but the modifications require proof of identity (e.g.
+     because the primary email address or the password was changed), a settings
+     flow is executed. Only after a successful settings flow will the changed
+     data be stored!
+   - If data is valid, ORY Kratos proceeds with the next step.
+1. ORY Kratos executes hooks defined in the **After Settings Hooks**. If a
+   failure occurs, the whole flow is aborted.
+1. The client receives the expected response. For browsers, this is a HTTP
+   Redirection, for API clients it will be a JSON response containing the
+   session and/or identity. For more information on this topic check
+   [Self-Service Flow Completion](../../concepts/browser-redirect-flow-completion.mdx).
+
+<Mermaid
+  chart={`
+sequenceDiagram
+  participant B as Browser
+  participant A as Your Server-Side Application
+  participant KP as ORY Kratos Public API
+  participant KA as ORY Kratos Admin API
+  B->>+A: GET /.ory/kratos/public/self-service/browser/flows/settings
+  A->>+KP: GET /self-service/browser/flows/settings
+  KP-->>-A: HTTP 302 Found /settings?request=abcde
+  A-->>-B: HTTP 302 Found /settings?request=abcde
+  B->>+A: GET /settings?request=abcde
+  A->>+KA: GET /self-service/browser/flows/requests/settings?request=abcde
+  KA->>-A: Sends Settings Request JSON Payload
+  Note over A,KA:  {"methods":{"password":...,"oidc":..}}
+  A-->>A: Generate and render HTML
+  A-->>-B: Return HTML (Form, ...)
+  B-->>B: Fill out HTML
+  B->>+KP: POST HTML Form
+  KP-->>KP: Checks profile data
+  alt Setting updates are valid
+    KP-->>-KP: Execute Jobs defined in "After Settings Workflow(s)"
+    KP-->>A: HTTP 302 Found /dashboard
+  else Setting updates require re-authentication
+    Note over KP,B: User is asked to login in again. If the login is valid, the data is updated.
+    KP-->>B: HTTP 302 Found /settings?request=abcde
+  else Setting updates are invalid
+    Note over KP,B: User retries settings flow
+    KP-->>B: HTTP 302 Found /settings?request=abcde
+  end
+`}
+/>
+
+### Client-Side Browser Applications
+
+Because Client-Side Browser Applications do not have access to ORY Kratos' Admin
+API, they must use the ORY Kratos Public API instead. The flow for a Client-Side
+Browser Application is almost the exact same as the one for Server-Side
+Applications, with the small difference that
+`https://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/requests/settings?request=abcde`
+would be called via AJAX instead of making a request to
+`https://kratos:4434/self-service/browser/flows/requests/settings?request=abcde`.
+
+To prevent brute force, guessing, session injection, and other attacks, it is
+required that cookies are working for this endpoint. The cookie set in the
+initial HTTP request made to
+`https://127.0.0.1:4455/.ory/kratos/public/self-service/browser/settings` MUST
+be set and available when calling this endpoint!
+
+:::info
+
+The initialization request
+(`http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/settings`)
+**cannot** be made via AJAX or API requests. You **must** open that URL in the
+user's browser using e.g. `window.open` `location.href` or plain and simple old
+`<a href=...>`.
+
+:::
+
+#### User Settings Request State
+
+The Settings Request contains a state with two possible values:
+
+- `show_form`: No user data has been collected, or it is invalid, and thus the
+  form should be shown.
+- `successful`: Indicates that the settings request has been updated
+  successfully with the provided data. The state will stay `successful` when
+  repeatedly checking. If the form is still displayed and the user adds more
+  data, the state will revert back to `show_form` on validation errors.
+
+<Mermaid
+  chart={`stateDiagram-v2
+[*] --> show_form
+show_form --> show_form: Validation fails
+show_form --> success: Identity was updated
+success --> show_form: Validation fails
+success --> [*]
+`}
+/>
+
+## Self-Service User Settings for API Clients
+
+Will be addressed in a future release.
+
+## Hooks
+
+ORY Kratos allows you to configure hooks that run before and after a profile
+update was successful. For more information about hooks please read the
+[Hook Documentation](../hooks/index).

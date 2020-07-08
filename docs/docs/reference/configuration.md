@@ -30,48 +30,45 @@ section.
 ## identity ##
 #
 identity:
-  ## traits ##
+  ## JSON Schema URL for default identity traits ##
   #
-  traits:
-    ## JSON Schema URL for default identity traits ##
-    #
-    # Path to the JSON Schema which describes a default identity's traits.
-    #
-    # Examples:
-    # - file://path/to/identity.traits.schema.json
-    # - httpss://foo.bar.com/path/to/identity.traits.schema.json
-    #
-    # Set this value using environment variables on
-    # - Linux/macOS:
-    #    $ export IDENTITY_TRAITS_DEFAULT_SCHEMA_URL=<value>
-    # - Windows Command Line (CMD):
-    #    > set IDENTITY_TRAITS_DEFAULT_SCHEMA_URL=<value>
-    #
-    default_schema_url: file://path/to/identity.traits.schema.json
+  # Path to the JSON Schema which describes a default identity's traits.
+  #
+  # Examples:
+  # - file://path/to/identity.traits.schema.json
+  # - httpss://foo.bar.com/path/to/identity.traits.schema.json
+  #
+  # Set this value using environment variables on
+  # - Linux/macOS:
+  #    $ export IDENTITY_DEFAULT_SCHEMA_URL=<value>
+  # - Windows Command Line (CMD):
+  #    > set IDENTITY_DEFAULT_SCHEMA_URL=<value>
+  #
+  default_schema_url: file://path/to/identity.traits.schema.json
 
-    ## Additional JSON Schemas for Identity Traits ##
-    #
-    # Examples:
-    # - - id: customer
-    #     url: https://foo.bar.com/path/to/customer.traits.schema.json
-    #   - id: employee
-    #     url: https://foo.bar.com/path/to/employee.traits.schema.json
-    #   - id: employee-v2
-    #     url: https://foo.bar.com/path/to/employee.v2.traits.schema.json
-    #
-    # Set this value using environment variables on
-    # - Linux/macOS:
-    #    $ export IDENTITY_TRAITS_SCHEMAS=<value>
-    # - Windows Command Line (CMD):
-    #    > set IDENTITY_TRAITS_SCHEMAS=<value>
-    #
-    schemas:
-      - id: customer
-        url: https://foo.bar.com/path/to/customer.traits.schema.json
-      - id: employee
-        url: https://foo.bar.com/path/to/employee.traits.schema.json
-      - id: employee-v2
-        url: https://foo.bar.com/path/to/employee.v2.traits.schema.json
+  ## Additional JSON Schemas for Identity Traits ##
+  #
+  # Examples:
+  # - - id: customer
+  #     url: https://foo.bar.com/path/to/customer.traits.schema.json
+  #   - id: employee
+  #     url: https://foo.bar.com/path/to/employee.traits.schema.json
+  #   - id: employee-v2
+  #     url: https://foo.bar.com/path/to/employee.v2.traits.schema.json
+  #
+  # Set this value using environment variables on
+  # - Linux/macOS:
+  #    $ export IDENTITY_SCHEMAS=<value>
+  # - Windows Command Line (CMD):
+  #    > set IDENTITY_SCHEMAS=<value>
+  #
+  schemas:
+    - id: customer
+      url: https://foo.bar.com/path/to/customer.traits.schema.json
+    - id: employee
+      url: https://foo.bar.com/path/to/employee.traits.schema.json
+    - id: employee-v2
+      url: https://foo.bar.com/path/to/employee.v2.traits.schema.json
 
 ## Data Source Name ##
 #
@@ -461,7 +458,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_LOGIN_REQUEST_LIFESPAN=<value>
       #
-      request_lifespan: 1m
+      request_lifespan: 1s
 
       ## after ##
       #
@@ -554,7 +551,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_VERIFICATION_ENABLED=<value>
       #
-      enabled: false
+      enabled: true
 
       ## Verify UI URL ##
       #
@@ -571,7 +568,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_VERIFICATION_UI_URL=<value>
       #
-      ui_url: https://www.ory.sh/kratos/docs/fallback/verification
+      ui_url: https://my-app.com/verify
 
       ## after ##
       #
@@ -608,7 +605,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_VERIFICATION_REQUEST_LIFESPAN=<value>
       #
-      request_lifespan: 1m
+      request_lifespan: 1h
 
     ## Account Recovery Configuration ##
     #
@@ -625,7 +622,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_RECOVERY_ENABLED=<value>
       #
-      enabled: true
+      enabled: false
 
       ## Recovery UI URL ##
       #
@@ -642,7 +639,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_RECOVERY_UI_URL=<value>
       #
-      ui_url: https://my-app.com/verify
+      ui_url: https://www.ory.sh/kratos/docs/fallback/recovery
 
       ## after ##
       #
@@ -679,7 +676,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_RECOVERY_REQUEST_LIFESPAN=<value>
       #
-      request_lifespan: 1m
+      request_lifespan: 1h
 
     ## error ##
     #
@@ -699,7 +696,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_ERROR_UI_URL=<value>
       #
-      ui_url: https://my-app.com/kratos-error
+      ui_url: https://www.ory.sh/kratos/docs/fallback/error
 
   ## strategies ##
   #
@@ -717,7 +714,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_STRATEGIES_PROFILE_ENABLED=<value>
       #
-      enabled: true
+      enabled: false
 
     ## recovery_token ##
     #
@@ -732,7 +729,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_STRATEGIES_RECOVERY_TOKEN_ENABLED=<value>
       #
-      enabled: true
+      enabled: false
 
     ## password ##
     #
@@ -780,8 +777,21 @@ selfservice:
         providers:
           - id: google
             provider: google
-            client_id: pariatur
-            client_secret: ut occaecat
+            client_id: quis
+            client_secret: non cillum do
+            mapper_url: file://path/to/oidc.jsonnet
+            issuer_url: https://accounts.google.com
+            auth_url: https://accounts.google.com/o/oauth2/v2/auth
+            token_url: https://www.googleapis.com/oauth2/v4/token
+            scope:
+              - offline_access
+              - profile
+              - offline_access
+            tenant: consumers
+          - id: google
+            provider: google
+            client_id: commodo veniam occaecat
+            client_secret: nostrud
             mapper_url: base64://bG9jYWwgc3ViamVjdCA9I...
             issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
@@ -789,26 +799,14 @@ selfservice:
             scope:
               - profile
               - profile
-              - profile
               - offline_access
+              - offline_access
+              - offline_access
+            tenant: consumers
           - id: google
             provider: google
-            client_id: ex nostrud dolore
-            client_secret: anim elit ea
-            mapper_url: base64://bG9jYWwgc3ViamVjdCA9I...
-            issuer_url: https://accounts.google.com
-            auth_url: https://accounts.google.com/o/oauth2/v2/auth
-            token_url: https://www.googleapis.com/oauth2/v4/token
-            scope:
-              - offline_access
-              - profile
-              - profile
-              - offline_access
-              - profile
-          - id: google
-            provider: google
-            client_id: commodo sit officia deserunt incididunt
-            client_secret: dolore
+            client_id: deserunt commodo in elit non
+            client_secret: veniam irure in
             mapper_url: https://foo.bar.com/path/to/oidc.jsonnet
             issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
@@ -818,29 +816,20 @@ selfservice:
               - offline_access
               - offline_access
               - offline_access
-              - offline_access
-          - id: google
-            provider: google
-            client_id: laborum enim
-            client_secret: fugiat quis Duis
-            mapper_url: base64://bG9jYWwgc3ViamVjdCA9I...
-            issuer_url: https://accounts.google.com
-            auth_url: https://accounts.google.com/o/oauth2/v2/auth
-            token_url: https://www.googleapis.com/oauth2/v4/token
-            scope:
-              - offline_access
               - profile
-              - offline_access
+            tenant: common
           - id: google
             provider: google
-            client_id: in dolor
-            client_secret: mollit proident do enim
+            client_id: aute consectetur voluptate laborum in
+            client_secret: velit
             mapper_url: base64://bG9jYWwgc3ViamVjdCA9I...
             issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
             token_url: https://www.googleapis.com/oauth2/v4/token
             scope:
               - offline_access
+              - offline_access
+            tenant: contoso.onmicrosoft.com
 
 ## Courier configuration ##
 #
@@ -879,7 +868,7 @@ courier:
     # - Windows Command Line (CMD):
     #    > set COURIER_SMTP_FROM_ADDRESS=<value>
     #
-    from_address: dA7UmJuYUHOUSby@cZdUuAdvxNfgHdShclLwTGIHKmTs.sm
+    from_address: mKByqDcH@qnOrpmNcGvaLblhtexJz.fv
 
   ## Override message templates ##
   #
@@ -925,7 +914,7 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_ADMIN_HOST=<value>
     #
-    host: laboris
+    host: sit anim
 
     ## port ##
     #
@@ -968,7 +957,7 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_PUBLIC_HOST=<value>
     #
-    host: ad eu est elit
+    host: aliquip dolore in Excepteur
 
     ## port ##
     #
@@ -996,7 +985,7 @@ log:
   # - Windows Command Line (CMD):
   #    > set LOG_LEVEL=<value>
   #
-  level: debug
+  level: error
 
   ## format ##
   #
@@ -1022,8 +1011,10 @@ secrets:
   #    > set SECRETS_DEFAULT=<value>
   #
   default:
-    - pariatur anim nulla laboris in
-    - aliquipveniam est
+    - occaecat idsednisi
+    - voluptate aliquip irure
+    - aliqua ea Duis irure eu
+    - ex et laboruminut occaecat qui dolor
 
   ## Singing Keys for Cookies ##
   #
@@ -1036,8 +1027,8 @@ secrets:
   #    > set SECRETS_COOKIE=<value>
   #
   cookie:
-    - deserunt quis do veniam ipsum
-    - aute dolore pariatur
+    - pariatur fugiat dolore
+    - aliquipExcepteur Lorem
 
 ## Hashing Algorithm Configuration ##
 #
@@ -1053,7 +1044,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_MEMORY=<value>
     #
-    memory: 37189058
+    memory: 60948918
 
     ## iterations ##
     #
@@ -1063,7 +1054,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_ITERATIONS=<value>
     #
-    iterations: 75227804
+    iterations: 1484326
 
     ## parallelism ##
     #
@@ -1073,7 +1064,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_PARALLELISM=<value>
     #
-    parallelism: 58543790
+    parallelism: 72642841
 
     ## salt_length ##
     #
@@ -1083,7 +1074,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_SALT_LENGTH=<value>
     #
-    salt_length: 82793317
+    salt_length: 69612306
 
     ## key_length ##
     #
@@ -1093,7 +1084,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_KEY_LENGTH=<value>
     #
-    key_length: 21408659
+    key_length: 52102568
 
 ## session ##
 #
@@ -1115,7 +1106,7 @@ session:
   # - Windows Command Line (CMD):
   #    > set SESSION_LIFESPAN=<value>
   #
-  lifespan: 1h
+  lifespan: 1m
 
   ## Cookie Same Site Configuration ##
   #

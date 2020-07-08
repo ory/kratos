@@ -65,12 +65,13 @@ according to your application's needs. They are also supposed to be modified by
 the identity itself e.g. as part of the registration or profile update process
 as well as anyone having access to ORY Krato's Admin API.
 
-ORY Kratos uses [JSON Schema](https://json-schema.org/learn/getting-started-step-by-step.html)
+ORY Kratos uses
+[JSON Schema](https://json-schema.org/learn/getting-started-step-by-step.html)
 to validate Identity Traits.
 
-ORY Kratos defines JSON Schema extension "Vocabulary" that allows you to tell ORY Kratos that a
-specific trait adds some specific meaning to the standard JSON Schema (more on
-that later).
+ORY Kratos defines JSON Schema extension "Vocabulary" that allows you to tell
+ORY Kratos that a specific trait adds some specific meaning to the standard JSON
+Schema (more on that later).
 
 Each identity can, theoretically, have a different JSON Schema. This is useful
 in the following situations:
@@ -111,9 +112,9 @@ identity:
       url: http://foo.bar.com/customer.schema.json
 ```
 
-ORY Kratos validates the Identity Traits against the corresponding schema on all writing
-operations (create / update). The employed business logic must be able to
-distinguish these three types of identities. You might use a switch statement
+ORY Kratos validates the Identity Traits against the corresponding schema on all
+writing operations (create / update). The employed business logic must be able
+to distinguish these three types of identities. You might use a switch statement
 like in the following example:
 
 ```go

@@ -1,0 +1,423 @@
+---
+id: openid-connect-social-sign-in-oauth2
+title: Social Sign In with OpenID Connect and OAuth2
+---
+
+:::tip Before you start
+
+Please read the
+[OpenID Connect / OAuth2 Credentials Documentation](../../../concepts/credentials/openid-connect-oidc-oauth2.mdx)
+and
+[identity Login and Registration Documentation](../identity-login-identity-registration.mdx)
+first.
+
+:::
+
+The Social Sign In Strategy enables you to use
+
+- [GitHub](http://github.com/);
+- [Apple](https://developer.apple.com/sign-in-with-apple/);
+- [Google](https://developers.google.com/identity/sign-in/web/sign-in);
+- [Facebook](https://developers.facebook.com/docs/facebook-login/);
+- [ORY Hydra](https://www.ory.sh/hydra);
+- [Keycloak](https://www.keycloak.org);
+- and every other OpenID Connect Certified Provider
+
+as the Identity Provider. It implements several flows, specifically
+[identity Login and identity Registration](../identity-login-identity-registration.mdx)
+and [identity Settings](../identity-settings.mdx).
+
+Because OAuth2 and OpenID Connect (OIDC) require the identity to interact with a
+browser, this strategy does not work with API-only flows. You cannot log in or
+sign up a identity using this strategy
+
+- with REST API or AJAX requests only;
+- without a browser.
+
+This document summarizes exemplary request payloads for performing "Sign in with
+..." flows using the identity login and registration flow with the `oidc`
+strategy.
+
+ORY Kratos automatically converts registration to login flows and vice versa. A
+user that's already signed up with his/her Google account will be logged in even
+if you initiate a registration request.
+
+:::info
+
+It is very important to add the "session" hook to the after oidc registration
+hooks. Otherwise your users need to use the login flow again to be able to get a
+session.
+
+```yaml title="path/to/my/kratos/config.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  flows:
+    registration:
+      after:
+        oidc:
+          hooks:
+            - hook: session
+```
+
+:::
+
+Here we use a configuration with 3 providers:
+
+```yaml title="path/to/my/kratos/config.yml"
+selfservice:
+  strategies:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: hydra
+          # provider, client_id, issuer_url, scope, ...
+          - id: google
+            # provider, client_id, issuer_url, scope, ...
+          - id: github
+            # provider, client_id, issuer_url, scope, ...
+```
+
+## Registration
+
+Redirecting the browser to the
+[Self-Service Login and Registration Endpoint](../user-login-user-registration.mdx#user-login-and-user-registration-process-sequence)
+initiates the flow. If the `oidc` strategy is enabled and at least one provider
+is configued, the Registration Request Response Payload will include an `oidc`
+method. The method contains different providers, based on your OpenID Connect
+Provider configuration:
+
+```json5 title="$ curl http://<kratos-admin>/self-service/browser/flows/requests/registration?request=54a9f113-3a7b-4cb8-a553-f072aa4e1622"
+{
+  id: '54a9f113-3a7b-4cb8-a553-f072aa4e1622',
+  expires_at: '2020-05-15T11:04:09.342537Z',
+  issued_at: '2020-05-15T10:04:09.342537Z',
+  request_url: 'http://127.0.0.1:4433/self-service/browser/flows/registration',
+  methods: {
+    oidc: {
+      method: 'oidc',
+      config: {
+        action: 'http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/auth/54a9f113-3a7b-4cb8-a553-f072aa4e1622',
+        method: 'POST',
+        fields: [
+          {
+            name: 'csrf_token',
+            type: 'hidden',
+            required: true,
+            value: 'J9blMEwxnz6cL7rgcpu1vthggR13RH+7YMS77GBPn9yo7FqPNc9tTsvCQhu7Cu8AAREWXZF2FiaPia26SfrPBA=='
+          },
+          {
+            name: 'provider',
+            type: 'submit',
+            value: 'hydra'
+          },
+          {
+            name: 'provider',
+            type: 'submit',
+            value: 'google'
+          },
+          {
+            name: 'provider',
+            type: 'submit',
+            value: 'github'
+          }
+        ]
+      }
+    },
+    password: {
+      method: 'password',
+      config: {
+        action: 'http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/registration/strategies/password?request=54a9f113-3a7b-4cb8-a553-f072aa4e1622',
+        method: 'POST',
+        fields: [
+          {
+            name: 'csrf_token',
+            type: 'hidden',
+            required: true,
+            value: 'J9blMEwxnz6cL7rgcpu1vthggR13RH+7YMS77GBPn9yo7FqPNc9tTsvCQhu7Cu8AAREWXZF2FiaPia26SfrPBA=='
+          },
+          {
+            name: 'password',
+            type: 'password',
+            required: true
+          },
+          {
+            name: 'traits.email',
+            type: 'email'
+          },
+          {
+            name: 'traits.website',
+            type: 'url'
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+The next step depends on your Identity JSON Schema and your JsonNet code.
+We're using the following in this example:
+
+```json title="path/to/identity.traits.json.schema
+{
+  "$id": "https://schemas.ory.sh/presets/kratos/quickstart/email-password/identity.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Person",
+  "type": "object",
+  "properties": {
+    "traits": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "title": "E-Mail",
+          "minLength": 3,
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
+              }
+            }
+          }
+        },
+        "website": {
+          "type": "string",
+          "format": "uri",
+          "minLength": 10
+        }
+      },
+      "required": [
+        "email",
+        "website"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
+```
+
+```jsonnet title="path/to/google.jsonnet
+local claims = std.extVar('claims');
+
+if std.length(claims.sub) == 0 then
+  error 'claim sub not set'
+else
+  {
+    identity: {
+      traits: {
+        email: claims.sub,
+        [if "website" in claims then "website" else null]: claims.website,
+      },
+    },
+  }
+```
+
+This implies that the identity has a required attributes `email` and `website`.
+When singing in using Google, we take the `sub` and `website` claim are used to
+hydrate these fields. If they're missing or invalid (because e.g. not an email,
+the user returns to the registration form with additional fields that need to be
+filled out. Please note that these claims are just examples, Google doesn't
+actually use email addresses in `sub` fields and also does not include the
+`website` claim:
+
+```json5 title="$ curl http://<kratos-admin>/self-service/browser/flows/requests/registration?request=54a9f113-3a7b-4cb8-a553-f072aa4e1622"
+{
+  id: '54a9f113-3a7b-4cb8-a553-f072aa4e1622',
+  // ...
+  active: 'oidc', // <-- this is now set
+  methods: {
+    oidc: {
+      method: 'oidc',
+      config: {
+        action: 'http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/auth/54a9f113-3a7b-4cb8-a553-f072aa4e1622',
+        method: 'POST',
+        // Errors can be included here, for example:
+        // "errors": [
+        //     {
+        //         "message": "Authentication failed because no id_token was returned. Please accept the \"openid\" permission and try again."
+        //     }
+        // ]
+        fields: [
+          {
+            name: 'csrf_token',
+            type: 'hidden',
+            required: true,
+            value: 'A84oYSplXqtJTkhSipZc/2+tFXCN2gzWAfhmoK049FKM9JfeU5us2x6jsKlDBwZBttyCMGvoZUvutXD2hI2kig=='
+          },
+          {
+            name: 'traits.email',
+            type: 'text',
+            value: 'superuser@ory.sh'
+          },
+          {
+            name: 'traits.website',
+            type: '',
+            messages: [
+              {
+                id: 4000002,
+                type: 'error',
+                text: 'Property website is missing.' // <-- because "website" was not set, the user has to fill it out manually.
+              }
+            ]
+          },
+          {
+            name: 'provider',
+            type: 'submit',
+            value: 'google'
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+## Login
+
+Redirecting the browser to the
+[Self-Service Login and Registration Endpoint](../user-login-user-registration.mdx#user-login-and-user-registration-process-sequence)
+initiates the flow. If the `oidc` strategy is enabled and at least one provider
+is configued, the Login Request Response Payload will include an `oidc` method.
+The method contains different providers, based on your OpenID Connect Provider
+configuration:
+
+```json5 title="$ curl http://<kratos-admin>/self-service/browser/flows/requests/login?request=a1c78949-1436-44bd-93ae-a57836be01c7"
+{
+  id: 'a1c78949-1436-44bd-93ae-a57836be01c7',
+  expires_at: '2020-05-15T10:49:58.770828Z',
+  issued_at: '2020-05-15T09:49:58.770829Z',
+  request_url: 'http://127.0.0.1:4433/self-service/browser/flows/login',
+  methods: {
+    // password: ...
+    oidc: {
+      method: 'oidc',
+      config: {
+        action: 'http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/auth/a1c78949-1436-44bd-93ae-a57836be01c7',
+        method: 'POST',
+        fields: [
+          {
+            name: 'csrf_token',
+            type: 'hidden',
+            required: true,
+            value: '/Q85ogDm+Hv7D+ca7DUXYBRqmkTdMiIzXrZxt8IXgFHd7rkc8+U1WoWNmScDfJ8/cEju/hUIko5N48GR3rMfag=='
+          },
+          {
+            name: 'provider',
+            type: 'submit',
+            value: 'hydra'
+          },
+          {
+            name: 'provider',
+            type: 'submit',
+            value: 'google'
+          },
+          {
+            name: 'provider',
+            type: 'submit',
+            value: 'github'
+          }
+        ]
+      }
+    }
+  },
+  forced: false
+}
+```
+
+The only form validation error that can happen during this flow is that the ID
+Token is missing because the user did not authorize the `openid` grant (does not
+apply for `provider: github`):
+
+```json5 title="$ curl http://<kratos-admin>/self-service/browser/flows/requests/login?request=a1c78949-1436-44bd-93ae-a57836be01c7"
+{
+  id: 'a1c78949-1436-44bd-93ae-a57836be01c7',
+  // expires_at, ...
+  active: 'oidc', // <- this is now set!
+  methods: {
+    // password: ...
+    oidc: {
+      method: 'oidc',
+      config: {
+        action: 'http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/auth/a1c78949-1436-44bd-93ae-a57836be01c7',
+        method: 'POST',
+        messages: [
+          {
+            id: 4000000,
+            type: 'error',
+            text: 'Authentication failed because no id_token was returned. Please accept the "openid" permission and try again.'
+          }
+        ],
+        fields: [
+          {
+            name: 'csrf_token',
+            type: 'hidden',
+            required: true,
+            value: 'viM0pQKXUIthwPklREm/86pdIg3d8CWJOzGOiHtrCW4xGYsae2mi+zYtAd6N2OVNcyy1TTvCTBTUfJjeUt5Ztg=='
+          },
+          {
+            name: 'provider',
+            type: 'submit',
+            value: 'hydra'
+          },
+          {
+            name: 'provider',
+            type: 'submit',
+            value: 'google'
+          },
+          {
+            name: 'provider',
+            type: 'submit',
+            value: 'github'
+          }
+        ]
+      }
+    }
+  },
+  forced: false
+}
+```
+
+The flow completes otherwise.
+
+## Security and Defenses
+
+### Account Enumeration
+
+Scenario: In some cases you might want to use the email address returned by e.g.
+the GitHub profile to be added to your identity's account. You might also want
+to use it as an email + password identifier so that the identity is able to log
+in with a password as well. An attacker is able to exploit that by creating a
+social profile on another site (e.g. Google) and use the victims email address
+to set it up (this only works when the victim does not yet have an account with
+that email at Google). The attacker can then use that "spoofed" social profile
+to try and sign up with your ORY Kratos installation. Because the victim's email
+address is already known to ORY Kratos, the attacker might be able to observe
+the behavior (e.g. seeing an error page) and come to the conclusion that the
+victim already has an account at the website.
+
+Mitigation: This attack surface is rather small and requires a lot of effort,
+including forging an e.g. Google profile, and can fail at several stages. To
+completely mitigate any chance of that happening, only accept email addresses
+that are marked as verified in your Jsonnet code:
+
+```json title="contrib/quickstart/kratos/email-password/oidc.github.jsonnet"
+local claims = {
+  email_verified: false
+} + std.extVar('claims');
+
+{
+  identity: {
+    traits: {
+      // Allowing unverified email addresses enables account
+      // enumeration attacks, especially if the value is used for
+      // e.g. verification or as a password login identifier.
+      //
+      // Therefore we only return the email if it (a) exists and (b) is marked verified
+      // by GitHub.
+      [if "email_primary" in claims && claims.email_verified then "email" else null]: claims.email_primary,
+    },
+  },
+}
+```
