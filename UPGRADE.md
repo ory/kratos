@@ -10,6 +10,10 @@ before finalizing the upgrade process.
 These changes have not yet been released and this area's purpose is to keep
 track of future changes.
 
+## v0.4.4-alpha.1
+
+Please head over to the [CHANGELOG](https://github.com/ory/kratos/blob/master/CHANGELOG.md#040-alpha1-2020-07-08)
+
 ## v0.3.0-alpha.1
 
 This release finalizes the OpenID Connect and OAuth2 login, registration, and settings strategy with JsonNet data transformation! From now on, "Sign in with Google, Github, ..." is officially supported! It's also possible to link and unlink these connections using the Self-Service Settings Flow! The documentation has been updated to reflect those changes and includes guides to setting up "Sign in with GitHub" in under 5 Minutes! Please be aware that existing OpenID Connect connections will stop working. Check out the "Breaking Changes" section for more info! Want to learn more? Check [out the docs](https://www.ory.sh/kratos/docs/concepts/credentials/openid-connect-oidc-oauth2)!
