@@ -12,3 +12,4 @@ node_modules
 test/e2e/cypress/videos
 test/e2e/cypress/screenshots
 test/e2e/.bin
+pkged.go
