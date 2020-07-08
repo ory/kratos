@@ -44,7 +44,7 @@ identity:
   # - Windows Command Line (CMD):
   #    > set IDENTITY_DEFAULT_SCHEMA_URL=<value>
   #
-  default_schema_url: httpss://foo.bar.com/path/to/identity.traits.schema.json
+  default_schema_url: file://path/to/identity.traits.schema.json
 
   ## Additional JSON Schemas for Identity Traits ##
   #
@@ -88,7 +88,7 @@ identity:
 # - Windows Command Line (CMD):
 #    > set DSN=<value>
 #
-dsn: sqlite:///var/lib/sqlite/db.sqlite?_fk=true&mode=rwc
+dsn: cockroach://user@cockroachdb:26257/database?sslmode=disable&max_conns=20&max_idle_conns=4
 
 ## selfservice ##
 #
@@ -147,7 +147,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_SETTINGS_UI_URL=<value>
       #
-      ui_url: https://my-app.com/user/settings
+      ui_url: https://www.ory.sh/kratos/docs/fallback/settings
 
       ## request_lifespan ##
       #
@@ -164,7 +164,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_SETTINGS_REQUEST_LIFESPAN=<value>
       #
-      request_lifespan: 1h
+      request_lifespan: 1m
 
       ## privileged_session_max_age ##
       #
@@ -181,7 +181,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_SETTINGS_PRIVILEGED_SESSION_MAX_AGE=<value>
       #
-      privileged_session_max_age: 1m
+      privileged_session_max_age: 1h
 
       ## after ##
       #
@@ -330,7 +330,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_REGISTRATION_REQUEST_LIFESPAN=<value>
       #
-      request_lifespan: 1h
+      request_lifespan: 1s
 
       ## after ##
       #
@@ -458,7 +458,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_LOGIN_REQUEST_LIFESPAN=<value>
       #
-      request_lifespan: 1s
+      request_lifespan: 1h
 
       ## after ##
       #
@@ -551,7 +551,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_VERIFICATION_ENABLED=<value>
       #
-      enabled: false
+      enabled: true
 
       ## Verify UI URL ##
       #
@@ -639,7 +639,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_RECOVERY_UI_URL=<value>
       #
-      ui_url: https://my-app.com/verify
+      ui_url: https://www.ory.sh/kratos/docs/fallback/recovery
 
       ## after ##
       #
@@ -696,7 +696,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_ERROR_UI_URL=<value>
       #
-      ui_url: https://www.ory.sh/kratos/docs/fallback/error
+      ui_url: https://my-app.com/kratos-error
 
   ## strategies ##
   #
@@ -714,7 +714,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_STRATEGIES_PROFILE_ENABLED=<value>
       #
-      enabled: true
+      enabled: false
 
     ## recovery_token ##
     #
@@ -759,7 +759,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_STRATEGIES_OIDC_ENABLED=<value>
       #
-      enabled: true
+      enabled: false
 
       ## config ##
       #
@@ -777,19 +777,45 @@ selfservice:
         providers:
           - id: google
             provider: google
-            client_id: deserunt do non
-            client_secret: nisi
-            mapper_url: file://path/to/oidc.jsonnet
+            client_id: proident aute in reprehenderit minim
+            client_secret: qui et
+            mapper_url: https://foo.bar.com/path/to/oidc.jsonnet
             issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
             token_url: https://www.googleapis.com/oauth2/v4/token
             scope:
+              - profile
               - offline_access
+              - profile
+              - offline_access
+            tenant: common
+          - id: google
+            provider: google
+            client_id: do Duis
+            client_secret: incididunt ipsum
+            mapper_url: https://foo.bar.com/path/to/oidc.jsonnet
+            issuer_url: https://accounts.google.com
+            auth_url: https://accounts.google.com/o/oauth2/v2/auth
+            token_url: https://www.googleapis.com/oauth2/v4/token
+            scope:
+              - profile
+              - profile
+              - offline_access
+            tenant: common
+          - id: google
+            provider: google
+            client_id: do veniam in
+            client_secret: veniam elit sed cillum
+            mapper_url: https://foo.bar.com/path/to/oidc.jsonnet
+            issuer_url: https://accounts.google.com
+            auth_url: https://accounts.google.com/o/oauth2/v2/auth
+            token_url: https://www.googleapis.com/oauth2/v4/token
+            scope:
+              - profile
               - offline_access
               - profile
-              - profile
-              - profile
-            tenant: contoso.onmicrosoft.com
+              - offline_access
+            tenant: consumers
 
 ## Courier configuration ##
 #
@@ -828,7 +854,7 @@ courier:
     # - Windows Command Line (CMD):
     #    > set COURIER_SMTP_FROM_ADDRESS=<value>
     #
-    from_address: B9fSR@QeYhJeaGmCfzbCSElWvwtoJNOyon.blry
+    from_address: Irmht4@XyJUOAbPGxWQsozGdAbNiQosZGl.oc
 
   ## Override message templates ##
   #
@@ -874,7 +900,7 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_ADMIN_HOST=<value>
     #
-    host: eiusmod sunt adipisicing
+    host: et
 
     ## port ##
     #
@@ -917,7 +943,7 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_PUBLIC_HOST=<value>
     #
-    host: aute
+    host: quis Excepteur anim
 
     ## port ##
     #
@@ -945,7 +971,7 @@ log:
   # - Windows Command Line (CMD):
   #    > set LOG_LEVEL=<value>
   #
-  level: fatal
+  level: debug
 
   ## format ##
   #
@@ -971,11 +997,10 @@ secrets:
   #    > set SECRETS_DEFAULT=<value>
   #
   default:
-    - minimLorem aliqua ipsum Duis sint
-    - nonsit nullaelit id voluptate
-    - in labore pariatur
-    - magna consectetur dolor quis pariatur
-    - anim mollitest minim ut
+    - mollit ex incididunt
+    - culpa do labore id magna
+    - do proident aliqua ut
+    - incididunt Ut tempor eiusmod
 
   ## Singing Keys for Cookies ##
   #
@@ -988,10 +1013,9 @@ secrets:
   #    > set SECRETS_COOKIE=<value>
   #
   cookie:
-    - exercitationnon minim enim mollit sit
-    - sunt dolor utlaborum
-    - anim exercitation
-    - sed exercitation
+    - velit labore magna
+    - Excepteur fugiat do enim
+    - deserunt adsint elit in
 
 ## Hashing Algorithm Configuration ##
 #
@@ -1007,7 +1031,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_MEMORY=<value>
     #
-    memory: 77240822
+    memory: 38558091
 
     ## iterations ##
     #
@@ -1017,7 +1041,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_ITERATIONS=<value>
     #
-    iterations: 93764876
+    iterations: 30382800
 
     ## parallelism ##
     #
@@ -1027,7 +1051,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_PARALLELISM=<value>
     #
-    parallelism: 74622495
+    parallelism: 33260662
 
     ## salt_length ##
     #
@@ -1037,7 +1061,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_SALT_LENGTH=<value>
     #
-    salt_length: 37600088
+    salt_length: 44554986
 
     ## key_length ##
     #
@@ -1047,7 +1071,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_KEY_LENGTH=<value>
     #
-    key_length: 49682418
+    key_length: 17104270
 
 ## session ##
 #
@@ -1069,7 +1093,7 @@ session:
   # - Windows Command Line (CMD):
   #    > set SESSION_LIFESPAN=<value>
   #
-  lifespan: 1h
+  lifespan: 1s
 
   ## Cookie Same Site Configuration ##
   #
