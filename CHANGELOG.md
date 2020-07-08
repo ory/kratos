@@ -5,15 +5,17 @@
 **Table of Contents**
 
 - [Unreleased (2020-07-08)](#unreleased-2020-07-08)
-- [0.4.0-alpha.1 (2020-07-08)](#040-alpha1-2020-07-08)
+  - [0.4.2-alpha.1 (2020-07-08)](#042-alpha1-2020-07-08)
     - [Bug Fixes](#bug-fixes)
+- [0.4.0-alpha.1 (2020-07-08)](#040-alpha1-2020-07-08)
+    - [Bug Fixes](#bug-fixes-1)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
     - [Features](#features)
     - [Unclassified](#unclassified)
     - [BREAKING CHANGES](#breaking-changes)
 - [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
-    - [Bug Fixes](#bug-fixes-1)
+    - [Bug Fixes](#bug-fixes-2)
     - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation-1)
     - [Features](#features-1)
@@ -22,18 +24,18 @@
   - [0.2.1-alpha.1 (2020-05-05)](#021-alpha1-2020-05-05)
     - [Documentation](#documentation-2)
 - [0.2.0-alpha.2 (2020-05-04)](#020-alpha2-2020-05-04)
-    - [Bug Fixes](#bug-fixes-2)
+    - [Bug Fixes](#bug-fixes-3)
     - [Code Refactoring](#code-refactoring-2)
     - [Documentation](#documentation-3)
     - [Features](#features-2)
     - [Unclassified](#unclassified-2)
     - [BREAKING CHANGES](#breaking-changes-2)
   - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
-    - [Bug Fixes](#bug-fixes-3)
+    - [Bug Fixes](#bug-fixes-4)
     - [Code Refactoring](#code-refactoring-3)
     - [Documentation](#documentation-4)
 - [0.1.0-alpha.6 (2020-02-16)](#010-alpha6-2020-02-16)
-    - [Bug Fixes](#bug-fixes-4)
+    - [Bug Fixes](#bug-fixes-5)
     - [Code Refactoring](#code-refactoring-4)
     - [Documentation](#documentation-5)
     - [Features](#features-3)
@@ -44,7 +46,7 @@
     - [Documentation](#documentation-7)
 - [0.1.0-alpha.3 (2020-02-06)](#010-alpha3-2020-02-06)
 - [0.1.0-alpha.2 (2020-02-03)](#010-alpha2-2020-02-03)
-    - [Bug Fixes](#bug-fixes-5)
+    - [Bug Fixes](#bug-fixes-6)
     - [Documentation](#documentation-8)
     - [Features](#features-5)
     - [Unclassified](#unclassified-3)
@@ -87,6 +89,15 @@
 # Unreleased (2020-07-08)
 
 No significant changes have been made for this release.
+
+
+## [0.4.2-alpha.1](https://github.com/ory/kratos/compare/v0.4.0-alpha.1...v0.4.2-alpha.1) (2020-07-08)
+
+
+### Bug Fixes
+
+* Ignore pkged generated files ([1d385e4](https://github.com/ory/kratos/commit/1d385e4d1a004405099242c3003006d1713a24c6))
+
 
 
 # [0.4.0-alpha.1](https://github.com/ory/kratos/compare/v0.3.0-alpha.1...v0.4.0-alpha.1) (2020-07-08)
