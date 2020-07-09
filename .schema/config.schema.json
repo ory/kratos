@@ -634,7 +634,8 @@
           "type": "object",
           "properties": {
             "base_url": {
-              "title": "The URL where the admin endpoint is exposed at.",
+              "title": "Admin Base URL",
+              "description": "The URL where the admin endpoint is exposed at.",
               "type": "string",
               "format": "uri",
               "examples": [
@@ -642,10 +643,14 @@
               ]
             },
             "host": {
+              "title": "Admin Host",
+              "description": "The host (interface) kratos' admin endpoint listens on.",
               "type": "string",
               "default": "0.0.0.0"
             },
             "port": {
+              "title": "Admin Port",
+              "description": "The port kratos' admin endpoint listens on.",
               "type": "integer",
               "minimum": 1,
               "maximum": 65535,
@@ -661,7 +666,8 @@
           "type": "object",
           "properties": {
             "base_url": {
-              "title": "The URL where the public endpoint is exposed at.",
+              "title": "Public Base URL",
+              "description": "The URL where the public endpoint is exposed at.",
               "type": "string",
               "format": "uri",
               "examples": [
@@ -669,10 +675,14 @@
               ]
             },
             "host": {
+              "title": "Public Host",
+              "description": "The host (interface) kratos' public endpoint listens on.",
               "type": "string",
               "default": "0.0.0.0"
             },
             "port": {
+              "title": "Public Port",
+              "description": "The port kratos' public endpoint listens on.",
               "type": "integer",
               "minimum": 1,
               "maximum": 65535,
@@ -722,7 +732,7 @@
           "format": "uri",
           "examples": [
             "file://path/to/identity.traits.schema.json",
-            "httpss://foo.bar.com/path/to/identity.traits.schema.json"
+            "https://foo.bar.com/path/to/identity.traits.schema.json"
           ]
         },
         "schemas": {
