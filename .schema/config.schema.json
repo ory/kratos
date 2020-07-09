@@ -732,7 +732,7 @@
           "format": "uri",
           "examples": [
             "file://path/to/identity.traits.schema.json",
-            "httpss://foo.bar.com/path/to/identity.traits.schema.json"
+            "https://foo.bar.com/path/to/identity.traits.schema.json"
           ]
         },
         "schemas": {
