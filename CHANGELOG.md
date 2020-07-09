@@ -4,21 +4,22 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-07-08)](#unreleased-2020-07-08)
+- [Unreleased (2020-07-09)](#unreleased-2020-07-09)
+    - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
   - [0.4.3-alpha.1 (2020-07-08)](#043-alpha1-2020-07-08)
-    - [Bug Fixes](#bug-fixes)
-  - [0.4.2-alpha.1 (2020-07-08)](#042-alpha1-2020-07-08)
     - [Bug Fixes](#bug-fixes-1)
-- [0.4.0-alpha.1 (2020-07-08)](#040-alpha1-2020-07-08)
+  - [0.4.2-alpha.1 (2020-07-08)](#042-alpha1-2020-07-08)
     - [Bug Fixes](#bug-fixes-2)
+- [0.4.0-alpha.1 (2020-07-08)](#040-alpha1-2020-07-08)
+    - [Bug Fixes](#bug-fixes-3)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation-1)
     - [Features](#features)
     - [Unclassified](#unclassified)
     - [BREAKING CHANGES](#breaking-changes)
 - [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
-    - [Bug Fixes](#bug-fixes-3)
+    - [Bug Fixes](#bug-fixes-4)
     - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation-2)
     - [Features](#features-1)
@@ -27,18 +28,18 @@
   - [0.2.1-alpha.1 (2020-05-05)](#021-alpha1-2020-05-05)
     - [Documentation](#documentation-3)
 - [0.2.0-alpha.2 (2020-05-04)](#020-alpha2-2020-05-04)
-    - [Bug Fixes](#bug-fixes-4)
+    - [Bug Fixes](#bug-fixes-5)
     - [Code Refactoring](#code-refactoring-2)
     - [Documentation](#documentation-4)
     - [Features](#features-2)
     - [Unclassified](#unclassified-2)
     - [BREAKING CHANGES](#breaking-changes-2)
   - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
-    - [Bug Fixes](#bug-fixes-5)
+    - [Bug Fixes](#bug-fixes-6)
     - [Code Refactoring](#code-refactoring-3)
     - [Documentation](#documentation-5)
 - [0.1.0-alpha.6 (2020-02-16)](#010-alpha6-2020-02-16)
-    - [Bug Fixes](#bug-fixes-6)
+    - [Bug Fixes](#bug-fixes-7)
     - [Code Refactoring](#code-refactoring-4)
     - [Documentation](#documentation-6)
     - [Features](#features-3)
@@ -49,7 +50,7 @@
     - [Documentation](#documentation-8)
 - [0.1.0-alpha.3 (2020-02-06)](#010-alpha3-2020-02-06)
 - [0.1.0-alpha.2 (2020-02-03)](#010-alpha2-2020-02-03)
-    - [Bug Fixes](#bug-fixes-7)
+    - [Bug Fixes](#bug-fixes-8)
     - [Documentation](#documentation-9)
     - [Features](#features-5)
     - [Unclassified](#unclassified-3)
@@ -89,11 +90,17 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.3-alpha.1...a40b1ec18e7801f2862aad4e37becb7ce8f99c37) (2020-07-08)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.3-alpha.1...deae005a259747872f678d355b49cca21904e565) (2020-07-09)
+
+
+### Bug Fixes
+
+* Improve goreleaser config ([0f8a0d8](https://github.com/ory/kratos/commit/0f8a0d8afa6489383800d3eff1b7b1da01fbef08))
 
 
 ### Documentation
 
+* Add description for subkeys of serve ([#562](https://github.com/ory/kratos/issues/562)) ([deae005](https://github.com/ory/kratos/commit/deae005a259747872f678d355b49cca21904e565))
 * Update upgrade guide ([a40b1ec](https://github.com/ory/kratos/commit/a40b1ec18e7801f2862aad4e37becb7ce8f99c37))
 
 
