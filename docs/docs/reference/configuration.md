@@ -44,7 +44,7 @@ identity:
   # - Windows Command Line (CMD):
   #    > set IDENTITY_DEFAULT_SCHEMA_URL=<value>
   #
-  default_schema_url: file://path/to/identity.traits.schema.json
+  default_schema_url: httpss://foo.bar.com/path/to/identity.traits.schema.json
 
   ## Additional JSON Schemas for Identity Traits ##
   #
@@ -88,7 +88,9 @@ identity:
 # - Windows Command Line (CMD):
 #    > set DSN=<value>
 #
-dsn: cockroach://user@cockroachdb:26257/database?sslmode=disable&max_conns=20&max_idle_conns=4
+dsn: "postgres://user:
+  password@postgresd:5432/database?sslmode=disable&max_conns=20&max_idle_conns=\
+  4"
 
 ## selfservice ##
 #
@@ -164,7 +166,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_SETTINGS_REQUEST_LIFESPAN=<value>
       #
-      request_lifespan: 1m
+      request_lifespan: 1h
 
       ## privileged_session_max_age ##
       #
@@ -330,7 +332,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_REGISTRATION_REQUEST_LIFESPAN=<value>
       #
-      request_lifespan: 1s
+      request_lifespan: 1h
 
       ## after ##
       #
@@ -568,7 +570,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_VERIFICATION_UI_URL=<value>
       #
-      ui_url: https://my-app.com/verify
+      ui_url: https://www.ory.sh/kratos/docs/fallback/verification
 
       ## after ##
       #
@@ -605,7 +607,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_VERIFICATION_REQUEST_LIFESPAN=<value>
       #
-      request_lifespan: 1h
+      request_lifespan: 1s
 
     ## Account Recovery Configuration ##
     #
@@ -639,7 +641,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_RECOVERY_UI_URL=<value>
       #
-      ui_url: https://www.ory.sh/kratos/docs/fallback/recovery
+      ui_url: https://my-app.com/verify
 
       ## after ##
       #
@@ -696,7 +698,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_ERROR_UI_URL=<value>
       #
-      ui_url: https://my-app.com/kratos-error
+      ui_url: https://www.ory.sh/kratos/docs/fallback/error
 
   ## strategies ##
   #
@@ -744,7 +746,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_STRATEGIES_PASSWORD_ENABLED=<value>
       #
-      enabled: true
+      enabled: false
 
     ## oidc ##
     #
@@ -777,8 +779,8 @@ selfservice:
         providers:
           - id: google
             provider: google
-            client_id: proident aute in reprehenderit minim
-            client_secret: qui et
+            client_id: cupidatat ut veniam nisi culpa
+            client_secret: quis
             mapper_url: https://foo.bar.com/path/to/oidc.jsonnet
             issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
@@ -786,26 +788,36 @@ selfservice:
             scope:
               - profile
               - offline_access
-              - profile
               - offline_access
-            tenant: common
+            tenant: organizations
           - id: google
             provider: google
-            client_id: do Duis
-            client_secret: incididunt ipsum
-            mapper_url: https://foo.bar.com/path/to/oidc.jsonnet
+            client_id: nisi ullamco et qui
+            client_secret: Ut
+            mapper_url: file://path/to/oidc.jsonnet
             issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
             token_url: https://www.googleapis.com/oauth2/v4/token
             scope:
               - profile
               - profile
-              - offline_access
-            tenant: common
+            tenant: 8eaef023-2b34-4da1-9baa-8bc8c9d6a490
           - id: google
             provider: google
-            client_id: do veniam in
-            client_secret: veniam elit sed cillum
+            client_id: culpa sint in
+            client_secret: adipisicing
+            mapper_url: file://path/to/oidc.jsonnet
+            issuer_url: https://accounts.google.com
+            auth_url: https://accounts.google.com/o/oauth2/v2/auth
+            token_url: https://www.googleapis.com/oauth2/v4/token
+            scope:
+              - offline_access
+              - profile
+            tenant: organizations
+          - id: google
+            provider: google
+            client_id: sed do Ut est
+            client_secret: incididunt in sed voluptate amet
             mapper_url: https://foo.bar.com/path/to/oidc.jsonnet
             issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
@@ -814,7 +826,6 @@ selfservice:
               - profile
               - offline_access
               - profile
-              - offline_access
             tenant: consumers
 
 ## Courier configuration ##
@@ -854,7 +865,7 @@ courier:
     # - Windows Command Line (CMD):
     #    > set COURIER_SMTP_FROM_ADDRESS=<value>
     #
-    from_address: Irmht4@XyJUOAbPGxWQsozGdAbNiQosZGl.oc
+    from_address: GtpaV@qsXslKIIaWvvDnzy.sj
 
   ## Override message templates ##
   #
@@ -877,7 +888,9 @@ serve:
   ## admin ##
   #
   admin:
-    ## The URL where the admin endpoint is exposed at. ##
+    ## Admin Base URL ##
+    #
+    # The URL where the admin endpoint is exposed at.
     #
     # Examples:
     # - https://kratos.private-network:4434/
@@ -890,7 +903,9 @@ serve:
     #
     base_url: https://kratos.private-network:4434/
 
-    ## host ##
+    ## Admin Host ##
+    #
+    # The host (interface) kratos' admin endpoint listens on.
     #
     # Default value: 0.0.0.0
     #
@@ -900,9 +915,11 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_ADMIN_HOST=<value>
     #
-    host: et
+    host: adipisicing
 
-    ## port ##
+    ## Admin Port ##
+    #
+    # The port kratos' admin endpoint listens on.
     #
     # Default value: 4434
     #
@@ -920,7 +937,9 @@ serve:
   ## public ##
   #
   public:
-    ## The URL where the public endpoint is exposed at. ##
+    ## Public Base URL ##
+    #
+    # The URL where the public endpoint is exposed at.
     #
     # Examples:
     # - https://my-app.com/.ory/kratos/public
@@ -933,7 +952,9 @@ serve:
     #
     base_url: https://my-app.com/.ory/kratos/public
 
-    ## host ##
+    ## Public Host ##
+    #
+    # The host (interface) kratos' public endpoint listens on.
     #
     # Default value: 0.0.0.0
     #
@@ -943,9 +964,11 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_PUBLIC_HOST=<value>
     #
-    host: quis Excepteur anim
+    host: in ipsum sit velit
 
-    ## port ##
+    ## Public Port ##
+    #
+    # The port kratos' public endpoint listens on.
     #
     # Default value: 4433
     #
@@ -971,7 +994,7 @@ log:
   # - Windows Command Line (CMD):
   #    > set LOG_LEVEL=<value>
   #
-  level: debug
+  level: panic
 
   ## format ##
   #
@@ -997,10 +1020,8 @@ secrets:
   #    > set SECRETS_DEFAULT=<value>
   #
   default:
-    - mollit ex incididunt
-    - culpa do labore id magna
-    - do proident aliqua ut
-    - incididunt Ut tempor eiusmod
+    - Excepteur fugiat voluptate nisi
+    - exercitation nulla
 
   ## Singing Keys for Cookies ##
   #
@@ -1013,9 +1034,10 @@ secrets:
   #    > set SECRETS_COOKIE=<value>
   #
   cookie:
-    - velit labore magna
-    - Excepteur fugiat do enim
-    - deserunt adsint elit in
+    - autesuntaliquacupidatat Duis consectetur in
+    - mollit deserunt aute do elit
+    - sed dolore esse fugiat incididunt
+    - anim nulla laborum
 
 ## Hashing Algorithm Configuration ##
 #
@@ -1031,7 +1053,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_MEMORY=<value>
     #
-    memory: 38558091
+    memory: 57892695
 
     ## iterations ##
     #
@@ -1041,7 +1063,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_ITERATIONS=<value>
     #
-    iterations: 30382800
+    iterations: 21532182
 
     ## parallelism ##
     #
@@ -1051,7 +1073,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_PARALLELISM=<value>
     #
-    parallelism: 33260662
+    parallelism: 51041045
 
     ## salt_length ##
     #
@@ -1061,7 +1083,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_SALT_LENGTH=<value>
     #
-    salt_length: 44554986
+    salt_length: 9536038
 
     ## key_length ##
     #
@@ -1071,7 +1093,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_KEY_LENGTH=<value>
     #
-    key_length: 17104270
+    key_length: 34270318
 
 ## session ##
 #
@@ -1105,5 +1127,5 @@ session:
   # - Windows Command Line (CMD):
   #    > set SESSION_COOKIE_SAME_SITE=<value>
   #
-  cookie_same_site: None
+  cookie_same_site: Strict
 ```
