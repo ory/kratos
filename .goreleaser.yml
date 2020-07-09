@@ -21,7 +21,7 @@ builds:
     ldflags:
       - -s -w -X github.com/ory/kratos/cmd.BuildVersion={{.Tag}} -X github.com/ory/kratos/cmd.BuildGitHash={{.FullCommit}} -X github.com/ory/kratos/cmd.BuildTime={{.Date}}
       # - "-extldflags '-static'"
-    binary: kratos-sqlite
+    binary: kratos
     env:
       - CGO_ENABLED=1
       - CC=o64-clang
@@ -38,7 +38,7 @@ builds:
       - sqlite
     ldflags:
       - -s -w -X github.com/ory/kratos/cmd.BuildVersion={{.Tag}} -X github.com/ory/kratos/cmd.BuildGitHash={{.FullCommit}} -X github.com/ory/kratos/cmd.BuildTime={{.Date}}
-    binary: kratos-sqlite
+    binary: kratos
     env:
       - CGO_ENABLED=1
     goarch:
@@ -52,7 +52,7 @@ builds:
       - sqlite
     ldflags:
       - -s -w -X github.com/ory/kratos/cmd.BuildVersion={{.Tag}} -X github.com/ory/kratos/cmd.BuildGitHash={{.FullCommit}} -X github.com/ory/kratos/cmd.BuildTime={{.Date}}
-    binary: kratos-sqlite-libmusl
+    binary: kratos
     env:
       - CGO_ENABLED=1
       - CC=musl-gcc
@@ -68,7 +68,7 @@ builds:
     ldflags:
       - -s -w -X github.com/ory/kratos/cmd.BuildVersion={{.Tag}} -X github.com/ory/kratos/cmd.BuildGitHash={{.FullCommit}} -X github.com/ory/kratos/cmd.BuildTime={{.Date}}
       - "-extldflags '-static'"
-    binary: kratos-sqlite
+    binary: kratos
     env:
       - CGO_ENABLED=1
       - CC=x86_64-w64-mingw32-gcc
@@ -197,7 +197,7 @@ dockers:
     builds:
       - kratos-sqlite-linux-libmusl
     binaries:
-      - kratos-sqlite-libmusl
+      - kratos
     image_templates:
       - "oryd/kratos:v{{ .Major }}-sqlite"
       - "oryd/kratos:v{{ .Major }}.{{ .Minor }}-sqlite"
