@@ -6,20 +6,22 @@
 
 - [Unreleased (2020-07-10)](#unreleased-2020-07-10)
     - [Bug Fixes](#bug-fixes)
+  - [0.4.4-alpha.1 (2020-07-10)](#044-alpha1-2020-07-10)
+    - [Bug Fixes](#bug-fixes-1)
     - [Documentation](#documentation)
   - [0.4.3-alpha.1 (2020-07-08)](#043-alpha1-2020-07-08)
-    - [Bug Fixes](#bug-fixes-1)
-  - [0.4.2-alpha.1 (2020-07-08)](#042-alpha1-2020-07-08)
     - [Bug Fixes](#bug-fixes-2)
-- [0.4.0-alpha.1 (2020-07-08)](#040-alpha1-2020-07-08)
+  - [0.4.2-alpha.1 (2020-07-08)](#042-alpha1-2020-07-08)
     - [Bug Fixes](#bug-fixes-3)
+- [0.4.0-alpha.1 (2020-07-08)](#040-alpha1-2020-07-08)
+    - [Bug Fixes](#bug-fixes-4)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation-1)
     - [Features](#features)
     - [Unclassified](#unclassified)
     - [BREAKING CHANGES](#breaking-changes)
 - [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
-    - [Bug Fixes](#bug-fixes-4)
+    - [Bug Fixes](#bug-fixes-5)
     - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation-2)
     - [Features](#features-1)
@@ -28,18 +30,18 @@
   - [0.2.1-alpha.1 (2020-05-05)](#021-alpha1-2020-05-05)
     - [Documentation](#documentation-3)
 - [0.2.0-alpha.2 (2020-05-04)](#020-alpha2-2020-05-04)
-    - [Bug Fixes](#bug-fixes-5)
+    - [Bug Fixes](#bug-fixes-6)
     - [Code Refactoring](#code-refactoring-2)
     - [Documentation](#documentation-4)
     - [Features](#features-2)
     - [Unclassified](#unclassified-2)
     - [BREAKING CHANGES](#breaking-changes-2)
   - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
-    - [Bug Fixes](#bug-fixes-6)
+    - [Bug Fixes](#bug-fixes-7)
     - [Code Refactoring](#code-refactoring-3)
     - [Documentation](#documentation-5)
 - [0.1.0-alpha.6 (2020-02-16)](#010-alpha6-2020-02-16)
-    - [Bug Fixes](#bug-fixes-7)
+    - [Bug Fixes](#bug-fixes-8)
     - [Code Refactoring](#code-refactoring-4)
     - [Documentation](#documentation-6)
     - [Features](#features-3)
@@ -50,7 +52,7 @@
     - [Documentation](#documentation-8)
 - [0.1.0-alpha.3 (2020-02-06)](#010-alpha3-2020-02-06)
 - [0.1.0-alpha.2 (2020-02-03)](#010-alpha2-2020-02-03)
-    - [Bug Fixes](#bug-fixes-8)
+    - [Bug Fixes](#bug-fixes-9)
     - [Documentation](#documentation-9)
     - [Features](#features-5)
     - [Unclassified](#unclassified-3)
@@ -90,7 +92,17 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.3-alpha.1...605cd579895f3b765d398074cfdb37fa3eae0c4e) (2020-07-10)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.4-alpha.1...af2af7d35ba8b10dcd6d7636b044b0f7761a719d) (2020-07-10)
+
+
+### Bug Fixes
+
+* Ensure default_browser_return_url for flows is configured in after ([#570](https://github.com/ory/kratos/issues/570)) ([cf9753c](https://github.com/ory/kratos/commit/cf9753c690c67e6401be52d2c1ce69f168aae6e8)), closes [#569](https://github.com/ory/kratos/issues/569)
+* Require selfservice.default_browser_return_url to be set in config ([#571](https://github.com/ory/kratos/issues/571)) ([af2af7d](https://github.com/ory/kratos/commit/af2af7d35ba8b10dcd6d7636b044b0f7761a719d))
+
+
+
+## [0.4.4-alpha.1](https://github.com/ory/kratos/compare/v0.4.3-alpha.1...v0.4.4-alpha.1) (2020-07-10)
 
 
 ### Bug Fixes
