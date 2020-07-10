@@ -150,9 +150,7 @@ func NewRegistry(c configuration.Provider) (Registry, error) {
 	}
 
 	// if dsn is memory we have to run the migrations on every start
-	isSQLiteMemoryMode := IsSQLiteMemoryMode(dsn)
-
-	if isSQLiteMemoryMode {
+	if IsSQLiteMemoryMode(dsn) {
 		registry.Logger().Print("Kratos is running migrations on every startup as DSN is memory.\n")
 		registry.Logger().Print("This means your data is lost when Kratos terminates.\n")
 		if err := registry.Persister().MigrateUp(context.Background()); err != nil {
