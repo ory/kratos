@@ -338,9 +338,6 @@
               "type": "object",
               "additionalProperties": false,
               "properties": {
-                "default_browser_return_url": {
-                  "$ref": "#/definitions/defaultReturnTo"
-                },
                 "ui_url": {
                   "title": "Registration UI URL",
                   "description": "URL where the Registration UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
@@ -370,9 +367,6 @@
               "type": "object",
               "additionalProperties": false,
               "properties": {
-                "default_browser_return_url": {
-                  "$ref": "#/definitions/defaultReturnTo"
-                },
                 "ui_url": {
                   "title": "Login UI URL",
                   "description": "URL where the Login UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
