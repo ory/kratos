@@ -256,6 +256,9 @@
     "selfservice": {
       "type": "object",
       "additionalProperties": false,
+      "required": [
+        "default_browser_return_url"
+      ],
       "properties": {
         "default_browser_return_url": {
           "$ref": "#/definitions/defaultReturnTo"
