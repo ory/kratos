@@ -115,7 +115,7 @@ them implementing terrible and insecure patterns such as:
 - Not allowing special characters in passwords.
 - Not allowing the use of password managers by disabling the "paste"
   functionality in password fields.
-- Requiring you to rotate your password every month.
+- Requiring you to rotate your password every month (passwords expire).
 - ...
 
 Troy Hunt has written an
@@ -125,9 +125,10 @@ and why they recently changed and how.
 ORY Kratos implements a password policy that:
 
 - Checks if a password has previously been leaked using the
-  [HIBP API](https://haveibeenpwned.com/API/v2); and
+  [HIBP API](https://haveibeenpwned.com/API/v2),
 - Checks if a password is too similar to one of the identifiers (in a future
-  release [kratos#184](https://github.com/ory/kratos/issues/184)).
+  release [kratos#184](https://github.com/ory/kratos/issues/184)),
+- Makes passwords not expire.
 
 This is a rundown of all the practices ORY Kratos implements and why. **Some
 things need to be implemented by yourself** as they must be implemented in the
@@ -221,3 +222,15 @@ Allow the user to show the secret in the UI:
 > that is accessible to an unauthenticated claimant.
 >
 > [NIST Digital Identity Guidelines - 5.1.1.2 Memorized Secret Verifiers](https://pages.nist.gov/800-63-3/sp800-63b.html)
+
+#### Password Expiry
+
+> Forcing password expiry carries no real benefits because:
+>
+> - the user is likely to choose new passwords that are only minor variations of the old
+> - stolen passwords are generally exploited immediately
+> - resetting the password gives you no information about whether a compromise has occurred
+> - an attacker with access to the account will probably also receive the request to reset the password
+> - if compromised via insecure storage, the attacker will be able to find the new password in the same place
+>
+> [NSCS Password administration for system owners](https://www.ncsc.gov.uk/collection/passwords/updating-your-approach)

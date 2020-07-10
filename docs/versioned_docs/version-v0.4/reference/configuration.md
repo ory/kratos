@@ -34,7 +34,7 @@ identity:
   #
   # Examples:
   # - file://path/to/identity.traits.schema.json
-  # - httpss://foo.bar.com/path/to/identity.traits.schema.json
+  # - https://foo.bar.com/path/to/identity.traits.schema.json
   # 
   # Set this value using environment variables on
   # - Linux/macOS:
@@ -148,7 +148,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_SETTINGS_UI_URL=<value>
       #
-      ui_url: https://www.ory.sh/kratos/docs/fallback/settings
+      ui_url: https://my-app.com/user/settings
 
       ## request_lifespan ##
       #
@@ -165,7 +165,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_SETTINGS_REQUEST_LIFESPAN=<value>
       #
-      request_lifespan: 1m
+      request_lifespan: 1h
 
       ## privileged_session_max_age ##
       #
@@ -320,7 +320,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_REGISTRATION_UI_URL=<value>
       #
-      ui_url: https://www.ory.sh/kratos/docs/fallback/registration
+      ui_url: https://my-app.com/signup
 
       ## request_lifespan ##
       #
@@ -452,7 +452,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_LOGIN_UI_URL=<value>
       #
-      ui_url: https://www.ory.sh/kratos/docs/fallback/login
+      ui_url: https://my-app.com/login
 
       ## request_lifespan ##
       #
@@ -566,7 +566,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_VERIFICATION_ENABLED=<value>
       #
-      enabled: true
+      enabled: false
 
       ## Verify UI URL ##
       #
@@ -621,7 +621,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_VERIFICATION_REQUEST_LIFESPAN=<value>
       #
-      request_lifespan: 1h
+      request_lifespan: 1m
 
     ## Account Recovery Configuration ##
     #
@@ -639,7 +639,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_RECOVERY_ENABLED=<value>
       #
-      enabled: true
+      enabled: false
 
       ## Recovery UI URL ##
       #
@@ -694,7 +694,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_RECOVERY_REQUEST_LIFESPAN=<value>
       #
-      request_lifespan: 1m
+      request_lifespan: 1h
 
     ## error ##
     #
@@ -751,7 +751,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_STRATEGIES_RECOVERY_TOKEN_ENABLED=<value>
       #
-      enabled: false
+      enabled: true
 
     ## password ##
     #
@@ -783,7 +783,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_STRATEGIES_OIDC_ENABLED=<value>
       #
-      enabled: false
+      enabled: true
 
       ## config ##
       #
@@ -802,45 +802,69 @@ selfservice:
         providers:
           - id: google
             provider: google
-            client_id: proident aute in reprehenderit minim
-            client_secret: qui et
-            mapper_url: https://foo.bar.com/path/to/oidc.jsonnet
+            client_id: tempor Lorem aute enim
+            client_secret: voluptate veniam
+            mapper_url: base64://bG9jYWwgc3ViamVjdCA9I...
             issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
             token_url: https://www.googleapis.com/oauth2/v4/token
             scope:
-              - profile
+              - offline_access
               - offline_access
               - profile
               - offline_access
-            tenant: common
+              - offline_access
+            tenant: consumers
           - id: google
             provider: google
-            client_id: do Duis
-            client_secret: incididunt ipsum
-            mapper_url: https://foo.bar.com/path/to/oidc.jsonnet
+            client_id: dolore voluptate magna
+            client_secret: est sint occaecat exercitation
+            mapper_url: base64://bG9jYWwgc3ViamVjdCA9I...
             issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
             token_url: https://www.googleapis.com/oauth2/v4/token
             scope:
               - profile
-              - profile
-              - offline_access
-            tenant: common
+            tenant: contoso.onmicrosoft.com
           - id: google
             provider: google
-            client_id: do veniam in
-            client_secret: veniam elit sed cillum
-            mapper_url: https://foo.bar.com/path/to/oidc.jsonnet
+            client_id: anim incididunt eiusmod
+            client_secret: et consequat
+            mapper_url: file://path/to/oidc.jsonnet
             issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
             token_url: https://www.googleapis.com/oauth2/v4/token
             scope:
-              - profile
+              - offline_access
+              - offline_access
+            tenant: consumers
+          - id: google
+            provider: google
+            client_id: officia ad tempor Excepteur anim
+            client_secret: anim sit
+            mapper_url: base64://bG9jYWwgc3ViamVjdCA9I...
+            issuer_url: https://accounts.google.com
+            auth_url: https://accounts.google.com/o/oauth2/v2/auth
+            token_url: https://www.googleapis.com/oauth2/v4/token
+            scope:
               - offline_access
               - profile
               - offline_access
             tenant: consumers
+          - id: google
+            provider: google
+            client_id: esse dolor exercitation in
+            client_secret: dolor sunt
+            mapper_url: https://foo.bar.com/path/to/oidc.jsonnet
+            issuer_url: https://accounts.google.com
+            auth_url: https://accounts.google.com/o/oauth2/v2/auth
+            token_url: https://www.googleapis.com/oauth2/v4/token
+            scope:
+              - offline_access
+              - profile
+              - profile
+              - profile
+            tenant: 8eaef023-2b34-4da1-9baa-8bc8c9d6a490
 
 ## Courier configuration ##
 #
@@ -881,7 +905,7 @@ courier:
     # - Windows Command Line (CMD):
     #    > set COURIER_SMTP_FROM_ADDRESS=<value>
     #
-    from_address: Irmht4@XyJUOAbPGxWQsozGdAbNiQosZGl.oc
+    from_address: wtVe@gdr.oq
 
   ## Override message templates ##
   #
@@ -906,7 +930,9 @@ serve:
   #
   admin:
     
-    ## The URL where the admin endpoint is exposed at. ##
+    ## Admin Base URL ##
+    #
+    # The URL where the admin endpoint is exposed at.
     #
     # Examples:
     # - https://kratos.private-network:4434/
@@ -919,7 +945,9 @@ serve:
     #
     base_url: https://kratos.private-network:4434/
 
-    ## host ##
+    ## Admin Host ##
+    #
+    # The host (interface) kratos' admin endpoint listens on.
     #
     # Default value: 0.0.0.0
     #
@@ -929,11 +957,17 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_ADMIN_HOST=<value>
     #
-    host: et
+    host: ipsum dolore cillum esse
 
-    ## port ##
+    ## Admin Port ##
+    #
+    # The port kratos' admin endpoint listens on.
     #
     # Default value: 4434
+    #
+    # Minimum value: 1
+    #
+    # Maximum value: 65535
     #
     # Examples:
     # - 4434
@@ -950,7 +984,9 @@ serve:
   #
   public:
     
-    ## The URL where the public endpoint is exposed at. ##
+    ## Public Base URL ##
+    #
+    # The URL where the public endpoint is exposed at.
     #
     # Examples:
     # - https://my-app.com/.ory/kratos/public
@@ -963,7 +999,9 @@ serve:
     #
     base_url: https://my-app.com/.ory/kratos/public
 
-    ## host ##
+    ## Public Host ##
+    #
+    # The host (interface) kratos' public endpoint listens on.
     #
     # Default value: 0.0.0.0
     #
@@ -973,11 +1011,17 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_PUBLIC_HOST=<value>
     #
-    host: quis Excepteur anim
+    host: ipsum ullamco adipisicing voluptate ex
 
-    ## port ##
+    ## Public Port ##
+    #
+    # The port kratos' public endpoint listens on.
     #
     # Default value: 4433
+    #
+    # Minimum value: 1
+    #
+    # Maximum value: 65535
     #
     # Examples:
     # - 4433
@@ -996,16 +1040,29 @@ log:
   
   ## level ##
   #
+  # One of:
+  # - trace
+  # - debug
+  # - info
+  # - warning
+  # - error
+  # - fatal
+  # - panic
+  # 
   # Set this value using environment variables on
   # - Linux/macOS:
   #    $ export LOG_LEVEL=<value>
   # - Windows Command Line (CMD):
   #    > set LOG_LEVEL=<value>
   #
-  level: debug
+  level: info
 
   ## format ##
   #
+  # One of:
+  # - json
+  # - text
+  # 
   # Set this value using environment variables on
   # - Linux/macOS:
   #    $ export LOG_FORMAT=<value>
@@ -1029,10 +1086,7 @@ secrets:
   #    > set SECRETS_DEFAULT=<value>
   #
   default:
-    - mollit ex incididunt
-    - culpa do labore id magna
-    - do proident aliqua ut
-    - incididunt Ut tempor eiusmod
+    - dolor et dofugiat voluptate veniam
 
   ## Singing Keys for Cookies ##
   #
@@ -1045,9 +1099,8 @@ secrets:
   #    > set SECRETS_COOKIE=<value>
   #
   cookie:
-    - velit labore magna
-    - Excepteur fugiat do enim
-    - deserunt adsint elit in
+    - velit dolore euamet
+    - consectetur exercitation pariatur eu
 
 ## Hashing Algorithm Configuration ##
 #
@@ -1059,15 +1112,19 @@ hashers:
     
     ## memory ##
     #
+    # Minimum value: 16384
+    #
     # Set this value using environment variables on
     # - Linux/macOS:
     #    $ export HASHERS_ARGON2_MEMORY=<value>
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_MEMORY=<value>
     #
-    memory: 38558091
+    memory: 56923091
 
     ## iterations ##
+    #
+    # Minimum value: 1
     #
     # Set this value using environment variables on
     # - Linux/macOS:
@@ -1075,9 +1132,11 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_ITERATIONS=<value>
     #
-    iterations: 30382800
+    iterations: 71725038
 
     ## parallelism ##
+    #
+    # Minimum value: 1
     #
     # Set this value using environment variables on
     # - Linux/macOS:
@@ -1085,9 +1144,11 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_PARALLELISM=<value>
     #
-    parallelism: 33260662
+    parallelism: 43677620
 
     ## salt_length ##
+    #
+    # Minimum value: 16
     #
     # Set this value using environment variables on
     # - Linux/macOS:
@@ -1095,9 +1156,11 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_SALT_LENGTH=<value>
     #
-    salt_length: 44554986
+    salt_length: 5404032
 
     ## key_length ##
+    #
+    # Minimum value: 16
     #
     # Set this value using environment variables on
     # - Linux/macOS:
@@ -1105,7 +1168,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_KEY_LENGTH=<value>
     #
-    key_length: 17104270
+    key_length: 98849293
 
 ## session ##
 #
@@ -1134,12 +1197,17 @@ session:
   #
   # Default value: Lax
   #
+  # One of:
+  # - Strict
+  # - Lax
+  # - None
+  # 
   # Set this value using environment variables on
   # - Linux/macOS:
   #    $ export SESSION_COOKIE_SAME_SITE=<value>
   # - Windows Command Line (CMD):
   #    > set SESSION_COOKIE_SAME_SITE=<value>
   #
-  cookie_same_site: None
+  cookie_same_site: Lax
 
 ```

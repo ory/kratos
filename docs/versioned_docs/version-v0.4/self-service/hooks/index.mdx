@@ -77,7 +77,8 @@ response.
 
 It sends  a `Set-Cookie` header which contains the session
 cookie. To use it, you must first define one or more (for secret rotation)
-session secrets and then use it in one of the `after` work flows:
+secrets. You can either choose to use the "default" secrets or the more specific "cookie" secrets.
+The other required config is setting the hook in `after` work flows:
 
 ```yaml title="path/to/my/kratos.config.yml"
 secrets:
