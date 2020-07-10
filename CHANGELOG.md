@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-07-09)](#unreleased-2020-07-09)
+- [Unreleased (2020-07-10)](#unreleased-2020-07-10)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
   - [0.4.3-alpha.1 (2020-07-08)](#043-alpha1-2020-07-08)
@@ -90,17 +90,20 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.3-alpha.1...deae005a259747872f678d355b49cca21904e565) (2020-07-09)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.3-alpha.1...605cd579895f3b765d398074cfdb37fa3eae0c4e) (2020-07-10)
 
 
 ### Bug Fixes
 
+* Detection of SQLite memory mode ([#564](https://github.com/ory/kratos/issues/564)) ([605cd57](https://github.com/ory/kratos/commit/605cd579895f3b765d398074cfdb37fa3eae0c4e))
 * Improve goreleaser config ([0f8a0d8](https://github.com/ory/kratos/commit/0f8a0d8afa6489383800d3eff1b7b1da01fbef08))
 
 
 ### Documentation
 
 * Add description for subkeys of serve ([#562](https://github.com/ory/kratos/issues/562)) ([deae005](https://github.com/ory/kratos/commit/deae005a259747872f678d355b49cca21904e565))
+* Add section about password expiry ([19c2414](https://github.com/ory/kratos/commit/19c2414c3defe79fe6e80e50dd0e85026ecd60e6))
+* Specify the use of secrets ([#565](https://github.com/ory/kratos/issues/565)) ([7680450](https://github.com/ory/kratos/commit/7680450cfa44049759b27ec09d5bebc236b19a29))
 * Update upgrade guide ([a40b1ec](https://github.com/ory/kratos/commit/a40b1ec18e7801f2862aad4e37becb7ce8f99c37))
 
 
