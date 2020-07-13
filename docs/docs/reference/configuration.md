@@ -44,7 +44,7 @@ identity:
   # - Windows Command Line (CMD):
   #    > set IDENTITY_DEFAULT_SCHEMA_URL=<value>
   #
-  default_schema_url: file://path/to/identity.traits.schema.json
+  default_schema_url: https://foo.bar.com/path/to/identity.traits.schema.json
 
   ## Additional JSON Schemas for Identity Traits ##
   #
@@ -88,7 +88,9 @@ identity:
 # - Windows Command Line (CMD):
 #    > set DSN=<value>
 #
-dsn: cockroach://user@cockroachdb:26257/database?sslmode=disable&max_conns=20&max_idle_conns=4
+dsn: "postgres://user:
+  password@postgresd:5432/database?sslmode=disable&max_conns=20&max_idle_conns=\
+  4"
 
 ## selfservice ##
 #
@@ -147,7 +149,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_SETTINGS_UI_URL=<value>
       #
-      ui_url: https://my-app.com/user/settings
+      ui_url: https://www.ory.sh/kratos/docs/fallback/settings
 
       ## request_lifespan ##
       #
@@ -283,21 +285,6 @@ selfservice:
     ## registration ##
     #
     registration:
-      ## Redirect browsers to set URL per default ##
-      #
-      # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
-      #
-      # Examples:
-      # - https://my-app.com/dashboard
-      #
-      # Set this value using environment variables on
-      # - Linux/macOS:
-      #    $ export SELFSERVICE_FLOWS_REGISTRATION_DEFAULT_BROWSER_RETURN_URL=<value>
-      # - Windows Command Line (CMD):
-      #    > set SELFSERVICE_FLOWS_REGISTRATION_DEFAULT_BROWSER_RETURN_URL=<value>
-      #
-      default_browser_return_url: https://my-app.com/dashboard
-
       ## Registration UI URL ##
       #
       # URL where the Registration UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
@@ -313,7 +300,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_REGISTRATION_UI_URL=<value>
       #
-      ui_url: https://my-app.com/signup
+      ui_url: https://www.ory.sh/kratos/docs/fallback/registration
 
       ## request_lifespan ##
       #
@@ -330,7 +317,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_REGISTRATION_REQUEST_LIFESPAN=<value>
       #
-      request_lifespan: 1s
+      request_lifespan: 1m
 
       ## after ##
       #
@@ -411,21 +398,6 @@ selfservice:
     ## login ##
     #
     login:
-      ## Redirect browsers to set URL per default ##
-      #
-      # ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
-      #
-      # Examples:
-      # - https://my-app.com/dashboard
-      #
-      # Set this value using environment variables on
-      # - Linux/macOS:
-      #    $ export SELFSERVICE_FLOWS_LOGIN_DEFAULT_BROWSER_RETURN_URL=<value>
-      # - Windows Command Line (CMD):
-      #    > set SELFSERVICE_FLOWS_LOGIN_DEFAULT_BROWSER_RETURN_URL=<value>
-      #
-      default_browser_return_url: https://my-app.com/dashboard
-
       ## Login UI URL ##
       #
       # URL where the Login UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
@@ -551,7 +523,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_VERIFICATION_ENABLED=<value>
       #
-      enabled: false
+      enabled: true
 
       ## Verify UI URL ##
       #
@@ -676,7 +648,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_RECOVERY_REQUEST_LIFESPAN=<value>
       #
-      request_lifespan: 1h
+      request_lifespan: 1s
 
     ## error ##
     #
@@ -729,7 +701,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_STRATEGIES_RECOVERY_TOKEN_ENABLED=<value>
       #
-      enabled: true
+      enabled: false
 
     ## password ##
     #
@@ -744,7 +716,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_STRATEGIES_PASSWORD_ENABLED=<value>
       #
-      enabled: true
+      enabled: false
 
     ## oidc ##
     #
@@ -759,7 +731,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_STRATEGIES_OIDC_ENABLED=<value>
       #
-      enabled: true
+      enabled: false
 
       ## config ##
       #
@@ -777,23 +749,8 @@ selfservice:
         providers:
           - id: google
             provider: google
-            client_id: tempor Lorem aute enim
-            client_secret: voluptate veniam
-            mapper_url: base64://bG9jYWwgc3ViamVjdCA9I...
-            issuer_url: https://accounts.google.com
-            auth_url: https://accounts.google.com/o/oauth2/v2/auth
-            token_url: https://www.googleapis.com/oauth2/v4/token
-            scope:
-              - offline_access
-              - offline_access
-              - profile
-              - offline_access
-              - offline_access
-            tenant: consumers
-          - id: google
-            provider: google
-            client_id: dolore voluptate magna
-            client_secret: est sint occaecat exercitation
+            client_id: sit
+            client_secret: adipisicing ut in sit
             mapper_url: base64://bG9jYWwgc3ViamVjdCA9I...
             issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
@@ -803,43 +760,15 @@ selfservice:
             tenant: contoso.onmicrosoft.com
           - id: google
             provider: google
-            client_id: anim incididunt eiusmod
-            client_secret: et consequat
-            mapper_url: file://path/to/oidc.jsonnet
-            issuer_url: https://accounts.google.com
-            auth_url: https://accounts.google.com/o/oauth2/v2/auth
-            token_url: https://www.googleapis.com/oauth2/v4/token
-            scope:
-              - offline_access
-              - offline_access
-            tenant: consumers
-          - id: google
-            provider: google
-            client_id: officia ad tempor Excepteur anim
-            client_secret: anim sit
-            mapper_url: base64://bG9jYWwgc3ViamVjdCA9I...
-            issuer_url: https://accounts.google.com
-            auth_url: https://accounts.google.com/o/oauth2/v2/auth
-            token_url: https://www.googleapis.com/oauth2/v4/token
-            scope:
-              - offline_access
-              - profile
-              - offline_access
-            tenant: consumers
-          - id: google
-            provider: google
-            client_id: esse dolor exercitation in
-            client_secret: dolor sunt
+            client_id: id velit sit
+            client_secret: ad cupidatat laboris sunt
             mapper_url: https://foo.bar.com/path/to/oidc.jsonnet
             issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
             token_url: https://www.googleapis.com/oauth2/v4/token
             scope:
               - offline_access
-              - profile
-              - profile
-              - profile
-            tenant: 8eaef023-2b34-4da1-9baa-8bc8c9d6a490
+            tenant: contoso.onmicrosoft.com
 
 ## Courier configuration ##
 #
@@ -878,7 +807,7 @@ courier:
     # - Windows Command Line (CMD):
     #    > set COURIER_SMTP_FROM_ADDRESS=<value>
     #
-    from_address: wtVe@gdr.oq
+    from_address: V7cf2ygb0H@dgtERYRNqoqpVwWZSvoSvpnX.hn
 
   ## Override message templates ##
   #
@@ -928,7 +857,7 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_ADMIN_HOST=<value>
     #
-    host: ipsum dolore cillum esse
+    host: dolore dolor consequat officia cupidatat
 
     ## Admin Port ##
     #
@@ -981,7 +910,7 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_PUBLIC_HOST=<value>
     #
-    host: ipsum ullamco adipisicing voluptate ex
+    host: et
 
     ## Public Port ##
     #
@@ -1024,7 +953,7 @@ log:
   # - Windows Command Line (CMD):
   #    > set LOG_LEVEL=<value>
   #
-  level: info
+  level: warning
 
   ## format ##
   #
@@ -1054,7 +983,10 @@ secrets:
   #    > set SECRETS_DEFAULT=<value>
   #
   default:
-    - dolor et dofugiat voluptate veniam
+    - mollit voluptate
+    - magnaaute irure voluptate aliqua dolor
+    - et voluptate qui ipsum
+    - nulla voluptate non
 
   ## Singing Keys for Cookies ##
   #
@@ -1067,8 +999,11 @@ secrets:
   #    > set SECRETS_COOKIE=<value>
   #
   cookie:
-    - velit dolore euamet
-    - consectetur exercitation pariatur eu
+    - dolor consequat in commodo ut
+    - culpa enim incididunt
+    - non eiusmod amet
+    - Excepteur aliquip in nostrud
+    - veniam cupidatat reprehenderit
 
 ## Hashing Algorithm Configuration ##
 #
@@ -1086,7 +1021,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_MEMORY=<value>
     #
-    memory: 56923091
+    memory: 9923292
 
     ## iterations ##
     #
@@ -1098,7 +1033,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_ITERATIONS=<value>
     #
-    iterations: 71725038
+    iterations: 93455383
 
     ## parallelism ##
     #
@@ -1110,7 +1045,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_PARALLELISM=<value>
     #
-    parallelism: 43677620
+    parallelism: 57113235
 
     ## salt_length ##
     #
@@ -1122,7 +1057,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_SALT_LENGTH=<value>
     #
-    salt_length: 5404032
+    salt_length: 87632070
 
     ## key_length ##
     #
@@ -1134,7 +1069,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_KEY_LENGTH=<value>
     #
-    key_length: 98849293
+    key_length: 3894910
 
 ## session ##
 #
@@ -1156,7 +1091,7 @@ session:
   # - Windows Command Line (CMD):
   #    > set SESSION_LIFESPAN=<value>
   #
-  lifespan: 1s
+  lifespan: 1h
 
   ## Cookie Same Site Configuration ##
   #

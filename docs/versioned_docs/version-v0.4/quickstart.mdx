@@ -175,7 +175,7 @@ Let's clone ORY Kratos and run `docker-compose`:
 ```shell script
 git clone https://github.com/ory/kratos.git
 cd kratos
-git checkout v0.4.4-alpha.1
+git checkout v0.4.6-alpha.1
 
 docker pull oryd/kratos:latest-sqlite
 docker pull oryd/kratos-selfservice-ui-node:latest
@@ -297,7 +297,7 @@ Looking at the network stack, you can see two redirects happening:
 Here's a play-by-play of what happened:
 
 1. SecureApp used the ORY Kratos JavaScript language client to
-   [guard the `/dashboard`](https://github.com/ory/kratos-selfservice-ui-node/blob/v0.4.2-alpha.1/src/index.ts#L111)
+   [guard the `/dashboard`](https://github.com/ory/kratos-selfservice-ui-node/blob/v0.4.6-alpha.1/src/index.ts#L111)
    route. The ORY Kratos client checked the cookies from the request and saw you
    were not logged in.
 2. The route guard redirected you from `/dashboard` to `/auth/login`. ORY
@@ -579,11 +579,11 @@ recovery, head over to the
 #### Configuration
 
 You can find all configuration files used for this quickstart guide in
-[`./contrib/quickstart/kratos`](https://github.com/ory/kratos/tree/v0.4.2-alpha.1/contrib/quickstart/kratos/email-password)
+[`./contrib/quickstart/kratos`](https://github.com/ory/kratos/tree/v0.4.6-alpha.1/contrib/quickstart/kratos/email-password)
 ,
-[`./quickstart.yml`](https://github.com/ory/kratos/blob/v0.4.2-alpha.1/quickstart.yml),
+[`./quickstart.yml`](https://github.com/ory/kratos/blob/v0.4.6-alpha.1/quickstart.yml),
 and
-[`./quickstart-standalone.yml`](https://github.com/ory/kratos/blob/v0.4.2-alpha.1/quickstart-standalone.yml).
+[`./quickstart-standalone.yml`](https://github.com/ory/kratos/blob/v0.4.6-alpha.1/quickstart-standalone.yml).
 To understand what each of those configuration files does, consult the other
 chapters of this documentation.
 
@@ -591,11 +591,11 @@ chapters of this documentation.
 
 To get a minimal version of ORY Kratos running, you need to set configuration
 values for
-[`identity.default_schema_url`](https://github.com/ory/kratos/blob/v0.4.2-alpha.1/contrib/quickstart/kratos/email-password/.kratos.yml#L67)
+[`identity.default_schema_url`](https://github.com/ory/kratos/blob/v0.4.6-alpha.1/contrib/quickstart/kratos/email-password/.kratos.yml#L67)
 and
-[`DSN`](https://github.com/ory/kratos/blob/v0.4.2-alpha.1/quickstart.yml#L42).
+[`DSN`](https://github.com/ory/kratos/blob/v0.4.6-alpha.1/quickstart.yml#L42).
 You should also configure
-[`selfservice.flows.*.ui_url`](https://github.com/ory/kratos/blob/v0.4.2-alpha.1/contrib/quickstart/kratos/email-password/.kratos.yml#L40)
+[`selfservice.flows.*.ui_url`](https://github.com/ory/kratos/blob/v0.4.6-alpha.1/contrib/quickstart/kratos/email-password/.kratos.yml#L40)
 or else Kratos will use fallback URLs.
 
 :::
