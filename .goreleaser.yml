@@ -177,8 +177,8 @@ brews:
     - kratos-sqlite
     homepage:  https://www.ory.sh
     commit_author:
-      name: ory
-      email: hi@ory.sh
+      name: aeneasr
+      email: 3372410+aeneasr@users.noreply.github.com
 
 scoop:
   bucket:
@@ -186,8 +186,8 @@ scoop:
     name: scoop-kratos
   homepage:  https://www.ory.sh
   commit_author:
-    name: ory
-    email: hi@ory.sh
+    name: aeneasr
+    email: 3372410+aeneasr@users.noreply.github.com
 
 checksum:
   algorithm: sha256
