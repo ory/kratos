@@ -24,7 +24,7 @@ This environment variable allows you to specify the database source name. As the
 
 
 #### `SECRETS_DEFAULT`
-This environment variable allows you to specify the .....
+This environment variable allows you to specify the secret used to sign and verify signatures and encrypt things:
 
 **Example:** 
 
@@ -58,4 +58,3 @@ COPY contrib/quickstart/kratos/email-password/.kratos.yml /ory/home
 
 ### Examples
 Below you find different examples how to use the official Kratos Docker images.
-
