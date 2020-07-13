@@ -6,10 +6,10 @@ title: Docker Images
 * [`latest`, `v0.4.3-alpha.1`, `v0.4.3`, `v0.4`, `v0`](https://github.com/ory/kratos/blob/v0.4.3-alpha.1/.docker/Dockerfile)
 * [`latest-sqlite`, `v0.4.3-alpha.1-sqlite`, `v0.4.3-sqlite`, `v0.4-sqlite`, `v0-sqlite`](https://github.com/ory/kratos/blob/v0.4.3-alpha.1/.docker/Dockerfile-sqlite)
 
-## Different Docker image types
-We provide two different types of Docker images for Kratos, one with and one without SQLite support. All Docker images with the postfix `-sqlite` in the tag are compiled with embed SQLite support and uses libmusl. All other Docker images are compiled without SQLite support and therefore also don't require libmusl. 
+## Image Variants
+The `Kratos` Docker images come in two different falvors, one with and one without SQLite support. All Docker images with the postfix `kratos:<version>-sqlite` in the tag are compiled with embed SQLite support and uses libmusl. All Docker images (`kratos:<version>`) without the postfix `-sqlite` are compiled without SQLite support and therefore also don't include libmusl. 
 
-If you make use of the embedded SQLite support we recommend to use the Docker images without SQLite support (without `-sqlite`in the tag), as they are smaller in size and include fewer libraries and therefore have a smaller attack surface. 
+If you don't make use of the embedded SQLite support we recommend to use the Docker images without SQLite support as they are smaller in size, include fewer libraries and therefore have a smaller attack surface. 
 
 ## How to use these images
 In order to make the provided Docker images as useful as possible they can be configured through a set of supported Environment variables. In addition the default configuration directoy can be bound to a directory of choice to make it simple to pass in your own configuration files.
