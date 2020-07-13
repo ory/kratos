@@ -28,7 +28,7 @@ This environment variable allows you to specify the secret used to sign and veri
 
 **Example:** 
 
-`docker run -e SECRETS_DEFAULT="supersecretkey" oryd/kratos:latest`
+`docker run -e SECRETS_DEFAULT="CHANGE-ME" oryd/kratos:v0.4.3-alpha.1`
 
 
 ### Volumes
