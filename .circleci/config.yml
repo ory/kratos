@@ -137,6 +137,12 @@ workflows:
             tags:
               only: /.*/
       - test-e2e:
+          name: test-e2e-memory
+          flavor: memory
+          filters:
+            tags:
+              only: /.*/
+      - test-e2e:
           name: test-e2e-postgres
           flavor: postgres
           filters:
@@ -164,6 +170,7 @@ workflows:
           requires:
             - test
             - test-e2e-sqlite
+            - test-e2e-memory
             - test-e2e-postgres
             - test-e2e-mysql
             - test-e2e-cockroach
@@ -177,6 +184,7 @@ workflows:
           requires:
             - test
             - test-e2e-sqlite
+            - test-e2e-memory
             - test-e2e-postgres
             - test-e2e-mysql
             - test-e2e-cockroach
@@ -190,6 +198,7 @@ workflows:
           requires:
             - test
             - test-e2e-sqlite
+            - test-e2e-memory
             - test-e2e-postgres
             - test-e2e-mysql
             - test-e2e-cockroach
@@ -205,6 +214,7 @@ workflows:
           requires:
             - test
             - test-e2e-sqlite
+            - test-e2e-memory
             - test-e2e-postgres
             - test-e2e-mysql
             - test-e2e-cockroach
@@ -225,6 +235,7 @@ workflows:
             - goreleaser/test
             - test
             - test-e2e-sqlite
+            - test-e2e-memory
             - test-e2e-postgres
             - test-e2e-mysql
             - test-e2e-cockroach
