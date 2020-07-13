@@ -1,6 +1,10 @@
 package driver
 
 import (
+	"context"
+	"net/url"
+	"strings"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/logrusx"
@@ -11,6 +15,17 @@ import (
 type DefaultDriver struct {
 	c configuration.Provider
 	r Registry
+}
+
+// IsSQLiteMemoryMode returns true if SQLite if configured to use memory mode
+func IsSQLiteMemoryMode(dsn string) bool {
+	if urlParts := strings.SplitN(dsn, "?", 2); len(urlParts) == 2 && strings.HasPrefix(dsn, "sqlite://") {
+		queryVals, err := url.ParseQuery(urlParts[1])
+		if err == nil && queryVals.Get("mode") == "memory" {
+			return true
+		}
+	}
+	return false
 }
 
 func NewDefaultDriver(l *logrusx.Logger, version, build, date string, dev bool) (Driver, error) {
@@ -33,6 +48,16 @@ func NewDefaultDriver(l *logrusx.Logger, version, build, date string, dev bool) 
 	// Init forces the driver to initialize and circumvent lazy loading issues.
 	if err = r.Init(); err != nil {
 		return nil, errors.Wrap(err, "unable to initialize service registry")
+	}
+
+	dsn := c.DSN()
+	// if dsn is memory we have to run the migrations on every start
+	if IsSQLiteMemoryMode(dsn) {
+		r.Logger().Print("Kratos is running migrations on every startup as DSN is memory.\n")
+		r.Logger().Print("This means your data is lost when Kratos terminates.\n")
+		if err := r.Persister().MigrateUp(context.Background()); err != nil {
+			return nil, err
+		}
 	}
 
 	return &DefaultDriver{r: r, c: c}, nil

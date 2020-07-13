@@ -1,10 +1,6 @@
 package driver
 
 import (
-	"context"
-	"net/url"
-	"strings"
-
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
 
@@ -126,17 +122,6 @@ type Registry interface {
 	x.CSRFTokenGeneratorProvider
 }
 
-// IsSQLiteMemoryMode returns true if SQLite if configured to use memory mode
-func IsSQLiteMemoryMode(dsn string) bool {
-	if urlParts := strings.SplitN(dsn, "?", 2); len(urlParts) == 2 && strings.HasPrefix(dsn, "sqlite://") {
-		queryVals, err := url.ParseQuery(urlParts[1])
-		if err == nil && queryVals.Get("mode") == "memory" {
-			return true
-		}
-	}
-	return false
-}
-
 func NewRegistry(c configuration.Provider) (Registry, error) {
 	dsn := c.DSN()
 	driver, err := dbal.GetDriverFor(dsn)
@@ -149,13 +134,5 @@ func NewRegistry(c configuration.Provider) (Registry, error) {
 		return nil, errors.Errorf("driver of type %T does not implement interface Registry", driver)
 	}
 
-	// if dsn is memory we have to run the migrations on every start
-	if IsSQLiteMemoryMode(dsn) {
-		registry.Logger().Print("Kratos is running migrations on every startup as DSN is memory.\n")
-		registry.Logger().Print("This means your data is lost when Kratos terminates.\n")
-		if err := registry.Persister().MigrateUp(context.Background()); err != nil {
-			return nil, err
-		}
-	}
 	return registry, nil
 }

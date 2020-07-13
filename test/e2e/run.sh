@@ -18,6 +18,8 @@ if [ -z ${TEST_DATABASE_POSTGRESQL+x} ]; then
   export TEST_DATABASE_MYSQL="mysql://root:secret@(127.0.0.1:3444)/mysql?parseTime=true&multiStatements=true"
   export TEST_DATABASE_POSTGRESQL="postgres://postgres:secret@127.0.0.1:3445/postgres?sslmode=disable"
   export TEST_DATABASE_COCKROACHDB="cockroach://root@127.0.0.1:3446/defaultdb?sslmode=disable"
+  export TEST_DATABASE_MEMORY="memory"
+
 fi
 
 ! nc -zv 127.0.0.1 4434
@@ -109,7 +111,7 @@ run() {
 
   yq merge test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.generated.yml
   ($kratos serve --dev -c test/e2e/kratos.generated.yml > "${base}/test/e2e/kratos.${profile}.e2e.log" 2>&1 &)
-
+  
   npm run wait-on -- -t 10000 http-get://127.0.0.1:4434/health/ready \
     http-get://127.0.0.1:4455/health \
     http-get://127.0.0.1:4445/health/ready \
@@ -179,9 +181,14 @@ if [[ $dev = "yes" ]]; then
 fi
 
 export TEST_DATABASE_SQLITE="sqlite:///$(mktemp -d -t ci-XXXXXXXXXX)/db.sqlite?_fk=true"
+
 case "$1" in
         sqlite)
           db="${TEST_DATABASE_SQLITE}"
+          ;;
+
+        memory)
+          db="${TEST_DATABASE_MEMORY}"
           ;;
 
         mysql)
