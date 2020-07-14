@@ -15,12 +15,9 @@ type DefaultDriver struct {
 	r Registry
 }
 
-// IsSQLiteMemoryMode returns true if SQLite if configured to use memory mode
+// IsSQLiteMemoryMode returns true if SQLite if configured to use inmemory mode
 func IsSQLiteMemoryMode(dsn string) bool {
-	if dsn == configuration.DefaultSQLiteMemoryDSN {
-		return true
-	}
-	return false
+	return dsn == configuration.DefaultSQLiteMemoryDSN
 }
 
 func NewDefaultDriver(l *logrusx.Logger, version, build, date string, dev bool) (Driver, error) {
