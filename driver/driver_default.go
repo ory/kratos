@@ -17,16 +17,6 @@ type DefaultDriver struct {
 
 // IsSQLiteMemoryMode returns true if SQLite if configured to use memory mode
 func IsSQLiteMemoryMode(dsn string) bool {
-	/*
-		if urlParts := strings.SplitN(dsn, "?", 2); len(urlParts) == 2 && strings.HasPrefix(dsn, "sqlite") {
-			queryVals, err := url.ParseQuery(urlParts[1])
-			fmt.Println("2>>>>>> " + urlParts[1])
-			if err == nil && queryVals.Get("mode") == "memory" {
-				return true
-			}
-		}
-		return false
-	*/
 	if dsn == configuration.DefaultSQLiteMemoryDSN {
 		return true
 	}

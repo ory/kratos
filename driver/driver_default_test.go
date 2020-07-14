@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	driver "github.com/ory/kratos/driver"
+	"github.com/ory/kratos/driver/configuration"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,7 +15,7 @@ func TestDriverDefault_SQLiteMemoryMode(t *testing.T) {
 			dsn string
 			boo bool
 		}{
-			{dsn: "sqlite://mem.db?mode=memory&_fk=true&cache=shared", boo: true},
+			{dsn: configuration.DefaultSQLiteMemoryDSN, boo: true},
 			{dsn: "sqlite://mem.db?mode=asd&_fk=true&cache=shared", boo: false},
 			{dsn: "invalidurl", boo: false},
 		} {
