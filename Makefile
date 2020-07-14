@@ -91,7 +91,7 @@ format: deps
 # Runs tests in short mode, without database adapters
 .PHONY: docker
 docker:
-		docker build -f .docker/Dockerfile-build -t oryd/mykratos:latest-sqlite .
+		docker build -f .docker/Dockerfile-build -t oryd/kratos:latest-sqlite .
 
 .PHONY: test-e2e
 test-e2e: test-resetdb
