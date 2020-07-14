@@ -107,7 +107,9 @@ run() {
     PORT=4446 HYDRA_ADMIN_URL=http://127.0.0.1:4445 ./hydra-login-consent > "${base}/test/e2e/hydra-ui.e2e.log" 2>&1 &)
 
   export DSN=${1}
-  $kratos migrate sql -e --yes
+  if [ "$DSN" != "memory" ]; then
+    $kratos migrate sql -e --yes
+  fi
 
   yq merge test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.generated.yml
   ($kratos serve --dev -c test/e2e/kratos.generated.yml > "${base}/test/e2e/kratos.${profile}.e2e.log" 2>&1 &)

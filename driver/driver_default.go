@@ -2,8 +2,6 @@ package driver
 
 import (
 	"context"
-	"net/url"
-	"strings"
 
 	"github.com/pkg/errors"
 
@@ -19,11 +17,18 @@ type DefaultDriver struct {
 
 // IsSQLiteMemoryMode returns true if SQLite if configured to use memory mode
 func IsSQLiteMemoryMode(dsn string) bool {
-	if urlParts := strings.SplitN(dsn, "?", 2); len(urlParts) == 2 && strings.HasPrefix(dsn, "sqlite://") {
-		queryVals, err := url.ParseQuery(urlParts[1])
-		if err == nil && queryVals.Get("mode") == "memory" {
-			return true
+	/*
+		if urlParts := strings.SplitN(dsn, "?", 2); len(urlParts) == 2 && strings.HasPrefix(dsn, "sqlite") {
+			queryVals, err := url.ParseQuery(urlParts[1])
+			fmt.Println("2>>>>>> " + urlParts[1])
+			if err == nil && queryVals.Get("mode") == "memory" {
+				return true
+			}
 		}
+		return false
+	*/
+	if dsn == configuration.DefaultSQLiteMemoryDSN {
+		return true
 	}
 	return false
 }
@@ -39,7 +44,6 @@ func NewDefaultDriver(l *logrusx.Logger, version, build, date string, dev bool) 
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to instantiate service registry")
 	}
-
 	r.
 		WithConfig(c).
 		WithLogger(l).
@@ -53,13 +57,12 @@ func NewDefaultDriver(l *logrusx.Logger, version, build, date string, dev bool) 
 	dsn := c.DSN()
 	// if dsn is memory we have to run the migrations on every start
 	if IsSQLiteMemoryMode(dsn) {
-		r.Logger().Print("Kratos is running migrations on every startup as DSN is memory.\n")
-		r.Logger().Print("This means your data is lost when Kratos terminates.\n")
+		l.Print("Kratos is running migrations on every startup as DSN is memory.\n")
+		l.Print("This means your data is lost when Kratos terminates.\n")
 		if err := r.Persister().MigrateUp(context.Background()); err != nil {
 			return nil, err
 		}
 	}
-
 	return &DefaultDriver{r: r, c: c}, nil
 }
 

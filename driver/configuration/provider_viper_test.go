@@ -426,7 +426,7 @@ func TestViperProvider_DSN(t *testing.T) {
 		l := logrusx.New("", "")
 		p := configuration.NewViperProvider(l, false)
 
-		assert.Equal(t, "sqlite://mem.db?mode=memory&_fk=true&cache=shared", p.DSN())
+		assert.Equal(t, configuration.DefaultSQLiteMemoryDSN, p.DSN())
 	})
 
 	t.Run("case=dsn: not memory", func(t *testing.T) {

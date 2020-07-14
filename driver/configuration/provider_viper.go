@@ -34,6 +34,8 @@ var _ Provider = new(ViperProvider)
 
 const DefaultBrowserReturnURL = "default_browser_return_url"
 
+const DefaultSQLiteMemoryDSN = "sqlite://:memory:?_fk=true"
+
 const (
 	ViperKeyDSN = "dsn"
 
@@ -170,7 +172,7 @@ func (p *ViperProvider) DSN() string {
 	dsn := viperx.GetString(p.l, ViperKeyDSN, "")
 
 	if dsn == "memory" {
-		return "sqlite://mem.db?mode=memory&_fk=true&cache=shared"
+		return DefaultSQLiteMemoryDSN
 	}
 
 	if len(dsn) > 0 {
