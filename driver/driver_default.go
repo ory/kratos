@@ -1,6 +1,8 @@
 package driver
 
 import (
+	"context"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/logrusx"
@@ -11,6 +13,11 @@ import (
 type DefaultDriver struct {
 	c configuration.Provider
 	r Registry
+}
+
+// IsSQLiteMemoryMode returns true if SQLite if configured to use inmemory mode
+func IsSQLiteMemoryMode(dsn string) bool {
+	return dsn == configuration.DefaultSQLiteMemoryDSN
 }
 
 func NewDefaultDriver(l *logrusx.Logger, version, build, date string, dev bool) (Driver, error) {
@@ -24,7 +31,6 @@ func NewDefaultDriver(l *logrusx.Logger, version, build, date string, dev bool) 
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to instantiate service registry")
 	}
-
 	r.
 		WithConfig(c).
 		WithLogger(l).
@@ -35,6 +41,15 @@ func NewDefaultDriver(l *logrusx.Logger, version, build, date string, dev bool) 
 		return nil, errors.Wrap(err, "unable to initialize service registry")
 	}
 
+	dsn := c.DSN()
+	// if dsn is memory we have to run the migrations on every start
+	if IsSQLiteMemoryMode(dsn) {
+		l.Print("Kratos is running migrations on every startup as DSN is memory.\n")
+		l.Print("This means your data is lost when Kratos terminates.\n")
+		if err := r.Persister().MigrateUp(context.Background()); err != nil {
+			return nil, err
+		}
+	}
 	return &DefaultDriver{r: r, c: c}, nil
 }
 
