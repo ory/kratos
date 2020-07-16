@@ -877,19 +877,19 @@
               "description": "Sets the session cookie path. Use with care!",
               "type": "string",
               "default": "/"
+            },
+            "same_site": {
+              "title": "Cookie Same Site Configuration",
+              "type": "string",
+              "enum": [
+                "Strict",
+                "Lax",
+                "None"
+              ],
+              "default": "Lax"
             }
           },
           "additionalProperties": false,
-        },
-        "cookie_same_site": {
-          "title": "Cookie Same Site Configuration",
-          "type": "string",
-          "enum": [
-            "Strict",
-            "Lax",
-            "None"
-          ],
-          "default": "Lax"
         }
       }
     }

@@ -50,3 +50,12 @@ session:
   cookie:
     path: /some/sub-directory
 ```
+
+You can also modify the new [HTTP Cookie SameSite Attribute](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite)
+using:
+
+```yaml title="path/to/kratos/config.yml
+session:
+  cookie:
+    same_site: Lax
+```
