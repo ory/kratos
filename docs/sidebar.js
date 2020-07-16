@@ -64,7 +64,8 @@ module.exports = {
     "guides/account-recovery-password-reset",
     "guides/account-activation-email-verification",
     "guides/multi-tenancy-multitenant",
-    "guides/high-availability-ha", 
+    "guides/secret-key-rotation",
+    "guides/high-availability-ha",
     "guides/docker"
   ],
   "Reference": [
