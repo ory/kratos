@@ -66,6 +66,8 @@ type Provider interface {
 	SecretsSession() [][]byte
 	SessionLifespan() time.Duration
 	SessionSameSiteMode() http.SameSite
+	SessionDomain() string
+	SessionPath() string
 
 	SelfServiceStrategy(strategy string) *SelfServiceStrategy
 

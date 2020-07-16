@@ -55,6 +55,8 @@ const (
 
 	ViperKeySessionLifespan = "session.lifespan"
 	ViperKeySessionSameSite = "session.cookie_same_site"
+	ViperKeySessionDomain   = "session.cookie.domain"
+	ViperKeySessionPath     = "session.cookie.path"
 
 	ViperKeySelfServiceStrategyConfig = "selfservice.strategies"
 
@@ -106,6 +108,14 @@ func HookStrategyKey(key, strategy string) string {
 
 func NewViperProvider(l *logrusx.Logger, dev bool) *ViperProvider {
 	return &ViperProvider{l: l, dev: dev}
+}
+
+func (p *ViperProvider) SessionDomain() string {
+	return viperx.GetString(p.l, ViperKeySessionDomain, "")
+}
+
+func (p *ViperProvider) SessionPath() string {
+	return viperx.GetString(p.l, ViperKeySessionPath, "")
 }
 
 func (p *ViperProvider) HasherArgon2() *HasherArgon2Config {

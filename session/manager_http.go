@@ -25,6 +25,9 @@ type (
 	managerHTTPConfiguration interface {
 		SessionLifespan() time.Duration
 		SecretsSession() [][]byte
+		SessionSameSiteMode() http.SameSite
+		SessionDomain() string
+		SessionPath() string
 	}
 	ManagerHTTP struct {
 		c          managerHTTPConfiguration
@@ -59,6 +62,9 @@ func (s *ManagerHTTP) CreateToRequest(ctx context.Context, w http.ResponseWriter
 func (s *ManagerHTTP) SaveToRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, session *Session) error {
 	_ = s.r.CSRFHandler().RegenerateToken(w, r)
 	cookie, _ := s.r.CookieManager().Get(r, s.cookieName)
+	cookie.Options.Domain = s.c.SessionDomain()
+	cookie.Options.Path = s.c.SessionPath()
+	cookie.Options.SameSite = s.c.SessionSameSiteMode()
 	cookie.Values["sid"] = session.ID.String()
 	if err := cookie.Save(r, w); err != nil {
 		return errors.WithStack(err)
