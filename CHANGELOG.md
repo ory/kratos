@@ -98,11 +98,12 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...29979e6c4934b71c7fb158cfa5b85e97be3ea8fc) (2020-07-16)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...c42d936ef51d2ffb48b491b99988d048442e3b8b) (2020-07-16)
 
 
 ### Bug Fixes
 
+* Resolve flaky passwort setting tests ([#582](https://github.com/ory/kratos/issues/582)) ([c42d936](https://github.com/ory/kratos/commit/c42d936ef51d2ffb48b491b99988d048442e3b8b)), closes [#581](https://github.com/ory/kratos/issues/581) [#577](https://github.com/ory/kratos/issues/577)
 * Resolve panic when DSN="memory" ([#574](https://github.com/ory/kratos/issues/574)) ([05e55f3](https://github.com/ory/kratos/commit/05e55f3584e20ae5d39cfda6e542d4da40d718e4)):
 
     > Executing the migration logic in registry.go cause a panic as the registry is not initalized at that point. Therefore we decided to move the handling to driver_default.go, after the registry has been initialized.

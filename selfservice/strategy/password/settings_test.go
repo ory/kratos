@@ -12,6 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/x/randx"
+
 	"github.com/ory/viper"
 	"github.com/ory/x/pointerx"
 
@@ -110,7 +112,7 @@ func TestSettings(t *testing.T) {
 
 		form := rs.Payload.Methods[string(identity.CredentialsTypePassword)].Config
 		values := testhelpers.SDKFormFieldsToURLValues(form.Fields)
-		values.Set("password", uuid.New().String())
+		values.Set("password", randx.MustString(16, randx.AlphaNum))
 		actual, _ := testhelpers.SettingsSubmitForm(t, form, secondaryUser, values)
 
 		assert.Equal(t, "success", gjson.Get(actual, "state").String(), "%s", actual)
@@ -142,7 +144,7 @@ func TestSettings(t *testing.T) {
 
 		form := rs.Payload.Methods[string(identity.CredentialsTypePassword)].Config
 		values := testhelpers.SDKFormFieldsToURLValues(form.Fields)
-		values.Set("password", uuid.New().String())
+		values.Set("password", randx.MustString(16, randx.AlphaNum))
 
 		res, err := primaryUser.PostForm(pointerx.StringR(form.Action), values)
 		require.NoError(t, err)
