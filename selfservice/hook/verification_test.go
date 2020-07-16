@@ -37,11 +37,8 @@ func TestVerifier(t *testing.T) {
 			viper.Set(configuration.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
 
 			i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
-			i.Traits = identity.Traits(`{"emails":["foo@ory.sh","bar@ory.sh"]}`)
+			i.Traits = identity.Traits(`{"emails":["foo@ory.sh","bar@ory.sh","baz@ory.sh"]}`)
 			require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
-
-			h := hook.NewVerifier(reg)
-			require.NoError(t, hf(h, i))
 
 			actual, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "foo@ory.sh")
 			require.NoError(t, err)
@@ -51,12 +48,24 @@ func TestVerifier(t *testing.T) {
 			require.NoError(t, err)
 			assert.EqualValues(t, "bar@ory.sh", actual.Value)
 
+			actual, err = reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "baz@ory.sh")
+			require.NoError(t, err)
+			assert.EqualValues(t, "baz@ory.sh", actual.Value)
+			require.NoError(t, reg.PrivilegedIdentityPool().VerifyAddress(context.Background(), actual.Code))
+
+			i, err = reg.IdentityPool().GetIdentity(context.Background(), i.ID)
+			require.NoError(t, err)
+
+			h := hook.NewVerifier(reg)
+			require.NoError(t, hf(h, i))
+
 			messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
 			require.NoError(t, err)
 			require.Len(t, messages, 2)
 
 			assert.EqualValues(t, "foo@ory.sh", messages[0].Recipient)
 			assert.EqualValues(t, "bar@ory.sh", messages[1].Recipient)
+			// Email to baz@ory.sh is skipped because it is verified already.
 		})
 	}
 }
