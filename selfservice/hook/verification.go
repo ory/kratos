@@ -39,6 +39,10 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity) error {
 	// already.
 
 	for k, address := range i.VerifiableAddresses {
+		if address.Verified {
+			continue
+		}
+
 		sent, err := e.r.VerificationSender().SendCode(r.Context(), address.Via, address.Value)
 		if err != nil {
 			return err
