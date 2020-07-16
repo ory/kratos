@@ -12,6 +12,7 @@ import (
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/otp"
+	"github.com/ory/kratos/x"
 
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
@@ -26,6 +27,22 @@ import (
 
 var _ identity.Pool = new(Persister)
 var _ identity.PrivilegedPool = new(Persister)
+
+func (p *Persister) ListVerifiableAddresses(ctx context.Context, page, itemsPerPage int) (a []identity.VerifiableAddress, err error) {
+	if err := p.GetConnection(ctx).Order("id desc").Paginate(page, x.MaxItemsPerPage(itemsPerPage)).All(&a); err != nil {
+		return nil, sqlcon.HandleError(err)
+	}
+
+	return a, err
+}
+
+func (p *Persister) ListRecoveryAddresses(ctx context.Context, page, itemsPerPage int) (a []identity.RecoveryAddress, err error) {
+	if err := p.GetConnection(ctx).Order("id desc").Paginate(page, x.MaxItemsPerPage(itemsPerPage)).All(&a); err != nil {
+		return nil, sqlcon.HandleError(err)
+	}
+
+	return a, err
+}
 
 func (p *Persister) FindByCredentialsIdentifier(ctx context.Context, ct identity.CredentialsType, match string) (*identity.Identity, *identity.Credentials, error) {
 	var cts []identity.CredentialsTypeTable

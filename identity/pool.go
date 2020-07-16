@@ -74,8 +74,15 @@ type (
 		// UpdateIdentity updates an identity including its confidential / privileged / protected data.
 		UpdateIdentity(context.Context, *Identity) error
 
-		// GetClassified returns the identity including it's raw credentials. This should only be used internally.
+		// GetIdentityConfidential returns the identity including it's raw credentials. This should only be used internally.
 		GetIdentityConfidential(context.Context, uuid.UUID) (*Identity, error)
+
+		// ListVerifiableAddresses lists all tracked verifiable addresses, regardless of whether they are already verified
+		// or not.
+		ListVerifiableAddresses(ctx context.Context, page, itemsPerPage int) ([]VerifiableAddress, error)
+
+		// ListRecoveryAddresses lists all tracked recovery addresses.
+		ListRecoveryAddresses(ctx context.Context, page, itemsPerPage int) ([]RecoveryAddress, error)
 	}
 )
 
