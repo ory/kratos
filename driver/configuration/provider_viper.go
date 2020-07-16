@@ -54,7 +54,7 @@ const (
 	ViperKeyAdminHost     = "serve.admin.host"
 
 	ViperKeySessionLifespan = "session.lifespan"
-	ViperKeySessionSameSite = "session.cookie_same_site"
+	ViperKeySessionSameSite = "session.cookie.same_site"
 	ViperKeySessionDomain   = "session.cookie.domain"
 	ViperKeySessionPath     = "session.cookie.path"
 
