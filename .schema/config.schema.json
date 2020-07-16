@@ -889,7 +889,7 @@
               "default": "Lax"
             }
           },
-          "additionalProperties": false,
+          "additionalProperties": false
         }
       }
     }
