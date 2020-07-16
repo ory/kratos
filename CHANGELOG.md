@@ -4,61 +4,63 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-07-14)](#unreleased-2020-07-14)
-    - [Documentation](#documentation)
-  - [0.4.6-alpha.1 (2020-07-13)](#046-alpha1-2020-07-13)
+- [Unreleased (2020-07-16)](#unreleased-2020-07-16)
     - [Bug Fixes](#bug-fixes)
-  - [0.4.5-alpha.1 (2020-07-13)](#045-alpha1-2020-07-13)
+    - [Documentation](#documentation)
+    - [Features](#features)
+  - [0.4.6-alpha.1 (2020-07-13)](#046-alpha1-2020-07-13)
     - [Bug Fixes](#bug-fixes-1)
-  - [0.4.4-alpha.1 (2020-07-10)](#044-alpha1-2020-07-10)
+  - [0.4.5-alpha.1 (2020-07-13)](#045-alpha1-2020-07-13)
     - [Bug Fixes](#bug-fixes-2)
+  - [0.4.4-alpha.1 (2020-07-10)](#044-alpha1-2020-07-10)
+    - [Bug Fixes](#bug-fixes-3)
     - [Documentation](#documentation-1)
   - [0.4.3-alpha.1 (2020-07-08)](#043-alpha1-2020-07-08)
-    - [Bug Fixes](#bug-fixes-3)
-  - [0.4.2-alpha.1 (2020-07-08)](#042-alpha1-2020-07-08)
     - [Bug Fixes](#bug-fixes-4)
-- [0.4.0-alpha.1 (2020-07-08)](#040-alpha1-2020-07-08)
+  - [0.4.2-alpha.1 (2020-07-08)](#042-alpha1-2020-07-08)
     - [Bug Fixes](#bug-fixes-5)
+- [0.4.0-alpha.1 (2020-07-08)](#040-alpha1-2020-07-08)
+    - [Bug Fixes](#bug-fixes-6)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation-2)
-    - [Features](#features)
+    - [Features](#features-1)
     - [Unclassified](#unclassified)
     - [BREAKING CHANGES](#breaking-changes)
 - [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
-    - [Bug Fixes](#bug-fixes-6)
+    - [Bug Fixes](#bug-fixes-7)
     - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation-3)
-    - [Features](#features-1)
+    - [Features](#features-2)
     - [Unclassified](#unclassified-1)
     - [BREAKING CHANGES](#breaking-changes-1)
   - [0.2.1-alpha.1 (2020-05-05)](#021-alpha1-2020-05-05)
     - [Documentation](#documentation-4)
 - [0.2.0-alpha.2 (2020-05-04)](#020-alpha2-2020-05-04)
-    - [Bug Fixes](#bug-fixes-7)
+    - [Bug Fixes](#bug-fixes-8)
     - [Code Refactoring](#code-refactoring-2)
     - [Documentation](#documentation-5)
-    - [Features](#features-2)
+    - [Features](#features-3)
     - [Unclassified](#unclassified-2)
     - [BREAKING CHANGES](#breaking-changes-2)
   - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
-    - [Bug Fixes](#bug-fixes-8)
+    - [Bug Fixes](#bug-fixes-9)
     - [Code Refactoring](#code-refactoring-3)
     - [Documentation](#documentation-6)
 - [0.1.0-alpha.6 (2020-02-16)](#010-alpha6-2020-02-16)
-    - [Bug Fixes](#bug-fixes-9)
+    - [Bug Fixes](#bug-fixes-10)
     - [Code Refactoring](#code-refactoring-4)
     - [Documentation](#documentation-7)
-    - [Features](#features-3)
+    - [Features](#features-4)
 - [0.1.0-alpha.5 (2020-02-06)](#010-alpha5-2020-02-06)
     - [Documentation](#documentation-8)
-    - [Features](#features-4)
+    - [Features](#features-5)
 - [0.1.0-alpha.4 (2020-02-06)](#010-alpha4-2020-02-06)
     - [Documentation](#documentation-9)
 - [0.1.0-alpha.3 (2020-02-06)](#010-alpha3-2020-02-06)
 - [0.1.0-alpha.2 (2020-02-03)](#010-alpha2-2020-02-03)
-    - [Bug Fixes](#bug-fixes-10)
+    - [Bug Fixes](#bug-fixes-11)
     - [Documentation](#documentation-10)
-    - [Features](#features-5)
+    - [Features](#features-6)
     - [Unclassified](#unclassified-3)
 - [0.1.0-alpha.1 (2020-01-31)](#010-alpha1-2020-01-31)
     - [Documentation](#documentation-11)
@@ -96,12 +98,24 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...bfe032e2b6bfd8b9415d466011bdd7e36efa4146) (2020-07-14)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...29979e6c4934b71c7fb158cfa5b85e97be3ea8fc) (2020-07-16)
+
+
+### Bug Fixes
+
+* Resolve panic when DSN="memory" ([#574](https://github.com/ory/kratos/issues/574)) ([05e55f3](https://github.com/ory/kratos/commit/05e55f3584e20ae5d39cfda6e542d4da40d718e4)):
+
+    > Executing the migration logic in registry.go cause a panic as the registry is not initalized at that point. Therefore we decided to move the handling to driver_default.go, after the registry has been initialized.
 
 
 ### Documentation
 
 * Docker image documentation ([#573](https://github.com/ory/kratos/issues/573)) ([bfe032e](https://github.com/ory/kratos/commit/bfe032e2b6bfd8b9415d466011bdd7e36efa4146))
+
+
+### Features
+
+* Add tests and helpers to test recovery/verifiable addresses ([#579](https://github.com/ory/kratos/issues/579)) ([29979e6](https://github.com/ory/kratos/commit/29979e6c4934b71c7fb158cfa5b85e97be3ea8fc)), closes [#576](https://github.com/ory/kratos/issues/576)
 
 
 
