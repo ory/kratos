@@ -865,6 +865,22 @@
             "1s"
           ]
         },
+        "cookie": {
+          "type": "object",
+          "properties": {
+            "domain": {
+              "title": "Session Cookie Domain",
+              "description": "Sets the session cookie domain. Useful when dealing with subdomains. Use with care!"
+            },
+            "path": {
+              "title": "Session Cookie Path",
+              "description": "Sets the session cookie path. Use with care!",
+              "type": "string",
+              "default": "/"
+            }
+          },
+          "additionalProperties": false,
+        },
         "cookie_same_site": {
           "title": "Cookie Same Site Configuration",
           "type": "string",

@@ -369,7 +369,6 @@ func (m *RegistryDefault) CookieManager() sessions.Store {
 		cs.Options.HttpOnly = true
 		m.sessionsStore = cs
 	}
-	m.sessionsStore.Options.SameSite = m.c.SessionSameSiteMode()
 	return m.sessionsStore
 }
 
