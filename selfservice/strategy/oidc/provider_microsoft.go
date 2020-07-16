@@ -9,9 +9,10 @@ import (
 	"github.com/gofrs/uuid"
 
 	gooidc "github.com/coreos/go-oidc"
-	"github.com/ory/herodot"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
+
+	"github.com/ory/herodot"
 )
 
 type ProviderMicrosoft struct {

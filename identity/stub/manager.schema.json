@@ -15,9 +15,6 @@
               "password": {
                 "identifier": true
               }
-            },
-            "verification": {
-              "via": "email"
             }
           }
         },
@@ -37,6 +34,15 @@
           "format": "email",
           "ory.sh/kratos": {
             "verification": {
+              "via": "email"
+            }
+          }
+        },
+        "email_recovery": {
+          "type": "string",
+          "format": "email",
+          "ory.sh/kratos": {
+            "recovery": {
               "via": "email"
             }
           }

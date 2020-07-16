@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	driver "github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/configuration"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestDriverDefault_SQLiteMemoryMode(t *testing.T) {
