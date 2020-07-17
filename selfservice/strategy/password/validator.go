@@ -78,7 +78,7 @@ func b20(src []byte) string {
 }
 
 // code inspired by https://rosettacode.org/wiki/Longest_Common_Substring#Go
-func lcsLength(a, b string) float32 {
+func lcsLength(a, b string) int {
 	lengths := make([]int, len(a)*len(b))
 	greatestLength := 0
 	for i, x := range a {
@@ -96,7 +96,7 @@ func lcsLength(a, b string) float32 {
 			}
 		}
 	}
-	return float32(greatestLength)
+	return greatestLength
 }
 
 func (s *DefaultPasswordValidator) fetch(hpw []byte) error {
@@ -155,7 +155,7 @@ func (s *DefaultPasswordValidator) Validate(identifier, password string) error {
 
 	compIdentifier, compPassword := strings.ToLower(identifier), strings.ToLower(password)
 	dist := levenshtein.Distance(compIdentifier, compPassword)
-	lcs := lcsLength(compIdentifier, compPassword) / float32(len(compPassword))
+	lcs := float32(lcsLength(compIdentifier, compPassword)) / float32(len(compPassword))
 	if dist < s.minIdentifierPasswordDist || lcs > s.maxIdentifierPasswordSubstrThreshold {
 		return errors.Errorf("the password is too similar to the user identifier")
 	}
