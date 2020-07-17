@@ -2,11 +2,9 @@
 package identity
 
 import (
+	"encoding/json"
 	"net/http"
 
-	"github.com/ory/herodot"
-
-	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
@@ -23,6 +21,7 @@ const IdentitiesPath = "/identities"
 type (
 	handlerDependencies interface {
 		PoolProvider
+		PrivilegedPoolProvider
 		ManagementProvider
 		x.WriterProvider
 	}
@@ -137,6 +136,28 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 	h.r.Writer().Write(w, r, i)
 }
 
+// swagger:parameters createIdentity
+type createIdentityRequest struct {
+	// in: body
+	Body CreateIdentityRequestPayload
+}
+
+type CreateIdentityRequestPayload struct {
+	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
+	//
+	// required: true
+	// in: body
+	SchemaID string `json:"schema_id"`
+
+	// Traits represent an identity's traits. The identity is able to create, modify, and delete traits
+	// in a self-service manner. The input will always be validated against the JSON Schema defined
+	// in `schema_url`.
+	//
+	// required: true
+	// in: body
+	Traits json.RawMessage `json:"traits"`
+}
+
 // swagger:route POST /identities admin createIdentity
 //
 // Create an identity
@@ -158,25 +179,15 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 //       201: identityResponse
 //       400: genericError
 //       500: genericError
-func (h *Handler) create(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var i Identity
-	if err := errors.WithStack(jsonx.NewStrictDecoder(r.Body).Decode(&i)); err != nil {
-		h.r.Writer().WriteError(w, r, err)
+func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	var cr CreateIdentityRequestPayload
+	if err := jsonx.NewStrictDecoder(r.Body).Decode(&cr); err != nil {
+		h.r.Writer().WriteErrorCode(w, r, http.StatusBadRequest, errors.WithStack(err))
 		return
 	}
 
-	// Make sure the SchemaURL is only set by kratos
-	if i.SchemaURL != "" {
-		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithReason("Use the schema_id to set a traits schema."))
-		return
-	}
-	// We do not allow setting credentials using this method
-	i.Credentials = nil
-	// We do not allow setting the ID using this method
-	i.ID = uuid.Nil
-
-	err := h.r.IdentityManager().Create(r.Context(), &i)
-	if err != nil {
+	i := &Identity{SchemaID: cr.SchemaID, Traits: []byte(cr.Traits)}
+	if err := h.r.IdentityManager().Create(r.Context(), i); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
@@ -187,8 +198,27 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, ps httprouter.P
 			"identities",
 			i.ID.String(),
 		).String(),
-		&i,
+		i,
 	)
+}
+
+// swagger:parameters updateIdentity
+type updateIdentityRequest struct {
+	// in: body
+	Body UpdateIdentityRequestPayload
+}
+
+type UpdateIdentityRequestPayload struct {
+	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set
+	// will update the Identity's SchemaID.
+	SchemaID string `json:"schema_id"`
+
+	// Traits represent an identity's traits. The identity is able to create, modify, and delete traits
+	// in a self-service manner. The input will always be validated against the JSON Schema defined
+	// in `schema_id`.
+	//
+	// required: true
+	Traits json.RawMessage `json:"traits"`
 }
 
 // swagger:route PUT /identities/{id} admin updateIdentity
@@ -216,19 +246,34 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, ps httprouter.P
 //       404: genericError
 //       500: genericError
 func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var i Identity
-	if err := errors.WithStack(jsonx.NewStrictDecoder(r.Body).Decode(&i)); err != nil {
+	var ur UpdateIdentityRequestPayload
+	if err := errors.WithStack(jsonx.NewStrictDecoder(r.Body).Decode(&ur)); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
-	i.ID = x.ParseUUID(ps.ByName("id"))
-	if err := h.r.IdentityManager().Update(r.Context(), &i); err != nil {
+	id := x.ParseUUID(ps.ByName("id"))
+	identity, err := h.r.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), id)
+	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
-	h.r.Writer().Write(w, r, i)
+	if ur.SchemaID != "" {
+		identity.SchemaID = ur.SchemaID
+	}
+
+	identity.Traits = []byte(ur.Traits)
+	if err := h.r.IdentityManager().Update(
+		r.Context(),
+		identity,
+		ManagerAllowWriteProtectedTraits,
+	); err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	h.r.Writer().Write(w, r, identity)
 }
 
 // swagger:route DELETE /identities/{id} admin deleteIdentity

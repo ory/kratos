@@ -67,7 +67,7 @@ func TestManager(t *testing.T) {
 		t.Run("case=should expose validation errors with option", func(t *testing.T) {
 			original := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
 			original.Traits = identity.Traits(`{"email":"not an email"}`)
-			err := reg.IdentityManager().Create(context.Background(), original, identity.ManagerExposeValidationErrors)
+			err := reg.IdentityManager().Create(context.Background(), original, identity.ManagerExposeValidationErrorsForInternalTypeAssertion)
 			require.Error(t, err)
 			assert.Contains(t, err.Error(), "\"not an email\" is not valid \"email\"")
 		})
