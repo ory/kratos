@@ -52,18 +52,18 @@ type DefaultPasswordValidator struct {
 	maxBreachesThreshold int64
 	ignoreNetworkErrors  bool
 
-	minIdentifierPasswordDist   int
-	maxIdentifierPasswordSubstr int
+	minIdentifierPasswordDist            int
+	maxIdentifierPasswordSubstrThreshold float32
 }
 
 func NewDefaultPasswordValidatorStrategy() *DefaultPasswordValidator {
 	return &DefaultPasswordValidator{
-		c:                           httpx.NewResilientClientLatencyToleranceMedium(nil),
-		maxBreachesThreshold:        0,
-		hashes:                      map[string]int64{},
-		ignoreNetworkErrors:         true,
-		minIdentifierPasswordDist:   5,
-		maxIdentifierPasswordSubstr: 3,
+		c:                                    httpx.NewResilientClientLatencyToleranceMedium(nil),
+		maxBreachesThreshold:                 0,
+		hashes:                               map[string]int64{},
+		ignoreNetworkErrors:                  true,
+		minIdentifierPasswordDist:            5,
+		maxIdentifierPasswordSubstrThreshold: 0.5,
 	}
 }
 
@@ -78,7 +78,7 @@ func b20(src []byte) string {
 }
 
 // code inspired by https://rosettacode.org/wiki/Longest_Common_Substring#Go
-func lcsLength(a, b string) int {
+func lcsLength(a, b string) float32 {
 	lengths := make([]int, len(a)*len(b))
 	greatestLength := 0
 	for i, x := range a {
@@ -96,7 +96,7 @@ func lcsLength(a, b string) int {
 			}
 		}
 	}
-	return greatestLength
+	return float32(greatestLength)
 }
 
 func (s *DefaultPasswordValidator) fetch(hpw []byte) error {
@@ -154,7 +154,9 @@ func (s *DefaultPasswordValidator) Validate(identifier, password string) error {
 	}
 
 	compIdentifier, compPassword := strings.ToLower(identifier), strings.ToLower(password)
-	if levenshtein.Distance(compIdentifier, compPassword) < s.minIdentifierPasswordDist || lcsLength(compIdentifier, compPassword) > s.maxIdentifierPasswordSubstr {
+	dist := levenshtein.Distance(compIdentifier, compPassword)
+	lcs := lcsLength(compIdentifier, compPassword) / float32(len(compPassword))
+	if dist < s.minIdentifierPasswordDist || lcs > s.maxIdentifierPasswordSubstrThreshold {
 		return errors.Errorf("the password is too similar to the user identifier")
 	}
 
