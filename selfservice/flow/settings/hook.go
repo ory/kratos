@@ -99,7 +99,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		}
 	}
 
-	options := []identity.ManagerOption{identity.ManagerExposeValidationErrors}
+	options := []identity.ManagerOption{identity.ManagerExposeValidationErrorsForInternalTypeAssertion}
 	ttl := e.c.SelfServiceFlowSettingsPrivilegedSessionMaxAge()
 	if ctxUpdate.Session.AuthenticatedAt.Add(ttl).After(time.Now()) {
 		options = append(options, identity.ManagerAllowWriteProtectedTraits)
