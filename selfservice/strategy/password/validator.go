@@ -99,23 +99,17 @@ func lcsLength(a, b string) int {
 	return greatestLength
 }
 
-func (s *DefaultPasswordValidator) fetch(hpw []byte) error {
+func (s *DefaultPasswordValidator) fetch(hpw []byte) (bool, error) {
 	prefix := fmt.Sprintf("%X", hpw)[0:5]
 	loc := fmt.Sprintf("https://api.pwnedpasswords.com/range/%s", prefix)
 	res, err := s.c.Get(loc)
 	if err != nil {
-		if s.ignoreNetworkErrors {
-			return nil
-		}
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to check if password has been breached before: %s", err))
+		return s.ignoreNetworkErrors, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to check if password has been breached before: %s", err))
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		if s.ignoreNetworkErrors {
-			return nil
-		}
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to check if password has been breached before, expected status code 200 but got %d", res.StatusCode))
+		return s.ignoreNetworkErrors, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to check if password has been breached before, expected status code 200 but got %d", res.StatusCode))
 	}
 
 	s.Lock()
@@ -128,12 +122,12 @@ func (s *DefaultPasswordValidator) fetch(hpw []byte) error {
 		result := stringsx.Splitx(strings.TrimSpace(row), ":")
 
 		if len(result) != 2 {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected password hash from remote to contain two parts separated by a double dot but got: %v (%s)", result, row))
+			return false, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected password hash from remote to contain two parts separated by a double dot but got: %v (%s)", result, row))
 		}
 
 		count, err := strconv.ParseInt(result[1], 10, 64)
 		if err != nil {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected password hash to contain a count formatted as int but got: %s", result[1]))
+			return false, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected password hash to contain a count formatted as int but got: %s", result[1]))
 		}
 
 		s.Lock()
@@ -142,10 +136,10 @@ func (s *DefaultPasswordValidator) fetch(hpw []byte) error {
 	}
 
 	if err := sc.Err(); err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initialize string scanner: %s", err))
+		return false, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initialize string scanner: %s", err))
 	}
 
-	return nil
+	return false, nil
 }
 
 func (s *DefaultPasswordValidator) Validate(identifier, password string) error {
@@ -172,7 +166,10 @@ func (s *DefaultPasswordValidator) Validate(identifier, password string) error {
 	s.RUnlock()
 
 	if !ok {
-		if err := s.fetch(hpw); err != nil {
+		if shouldIgnore, err := s.fetch(hpw); err != nil {
+			if shouldIgnore {
+				return nil
+			}
 			return err
 		}
 
