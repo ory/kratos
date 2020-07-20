@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-07-17)](#unreleased-2020-07-17)
+- [Unreleased (2020-07-20)](#unreleased-2020-07-20)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -100,7 +100,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...feef8a7d4454c1b343c34a96fa4dadd56149b0cd) (2020-07-17)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...9fcaac4048e05500d0456eb3cd9cd11cc123e370) (2020-07-20)
 
 
 ### Bug Fixes
@@ -127,6 +127,7 @@
 * Add documentation for configuring cookies ([e3dbc8a](https://github.com/ory/kratos/commit/e3dbc8acc055f6e2d78bc959be7356f9a66ac90f)), closes [#516](https://github.com/ory/kratos/issues/516)
 * Add secret key rotation guide ([3d6e21a](https://github.com/ory/kratos/commit/3d6e21af2f726944468299c326600a8ab0e4e885))
 * Docker image documentation ([#573](https://github.com/ory/kratos/issues/573)) ([bfe032e](https://github.com/ory/kratos/commit/bfe032e2b6bfd8b9415d466011bdd7e36efa4146))
+* Use correct path in 0.4 docs ([9fcaac4](https://github.com/ory/kratos/commit/9fcaac4048e05500d0456eb3cd9cd11cc123e370)), closes [#588](https://github.com/ory/kratos/issues/588)
 
 
 ### Features
