@@ -191,16 +191,16 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 	})
 }
 
-func (p *Persister) ListIdentities(ctx context.Context, limit, offset int) ([]identity.Identity, error) {
+func (p *Persister) ListIdentities(ctx context.Context, page, limit int) ([]identity.Identity, error) {
 	is := make([]identity.Identity, 0)
 
 	/* #nosec G201 TableName is static */
 	if err := sqlcon.HandleError(p.GetConnection(ctx).
-		RawQuery(fmt.Sprintf("SELECT * FROM %s LIMIT ? OFFSET ?", new(identity.Identity).TableName()), limit, offset).
-		Eager("VerifiableAddresses", "RecoveryAddresses").All(&is)); err != nil {
+		Paginate(page, limit).Order("id DESC").
+		Eager("VerifiableAddresses", "RecoveryAddresses").
+		All(&is)); err != nil {
 		return nil, err
 	}
-
 	for i := range is {
 		if err := p.injectTraitsSchemaURL(&(is[i])); err != nil {
 			return nil, err

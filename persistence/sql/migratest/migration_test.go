@@ -114,7 +114,7 @@ func TestMigrations(t *testing.T) {
 
 			t.Run("suite=fixtures", func(t *testing.T) {
 				t.Run("case=identity", func(t *testing.T) {
-					ids, err := d.Registry().PrivilegedIdentityPool().ListIdentities(context.Background(), 100, 0)
+					ids, err := d.Registry().PrivilegedIdentityPool().ListIdentities(context.Background(), 0, 1000)
 					require.NoError(t, err)
 
 					for _, id := range ids {

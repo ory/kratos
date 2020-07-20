@@ -82,7 +82,9 @@ func (a *Client) CreateIdentity(params *CreateIdentityParams) (*CreateIdentityCr
 /*
   DeleteIdentity deletes an identity
 
-  This endpoint deletes an identity. This can not be undone.
+  Calling this endpoint irrecoverably and permanently deletes the identity given its ID. This action can not be undone.
+This endpoint returns 204 when the identity was deleted or when the identity was not found, in which case it is
+assumed that is has been deleted already.
 
 Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 */
@@ -154,10 +156,9 @@ func (a *Client) GetIdentity(params *GetIdentityParams) (*GetIdentityOK, error) 
 }
 
 /*
-  ListIdentities lists all identities in the system
+  ListIdentities lists identities
 
-  This endpoint returns a login request's context with, for example, error details and
-other information.
+  Lists all identities. Does not support search at the moment.
 
 Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 */

@@ -74,7 +74,7 @@
     },
     "/identities": {
       "get": {
-        "description": "This endpoint returns a login request's context with, for example, error details and\nother information.\n\nLearn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
+        "description": "Lists all identities. Does not support search at the moment.\n\nLearn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
         "produces": [
           "application/json"
         ],
@@ -85,8 +85,29 @@
         "tags": [
           "admin"
         ],
-        "summary": "List all identities in the system",
+        "summary": "List Identities",
         "operationId": "listIdentities",
+        "parameters": [
+          {
+            "maximum": 500,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "default": 100,
+            "description": "Pagination Limit\n\nThis is the number of items per page.",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "minimum": 0,
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "description": "Pagination Page",
+            "name": "page",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "A list of identities.",
@@ -120,7 +141,7 @@
         "tags": [
           "admin"
         ],
-        "summary": "Create an identity",
+        "summary": "Create an Identity",
         "operationId": "createIdentity",
         "parameters": [
           {
@@ -170,7 +191,7 @@
         "tags": [
           "admin"
         ],
-        "summary": "Get an identity",
+        "summary": "Get an Identity",
         "operationId": "getIdentity",
         "parameters": [
           {
@@ -217,7 +238,7 @@
         "tags": [
           "admin"
         ],
-        "summary": "Update an identity",
+        "summary": "Update an Identity",
         "operationId": "updateIdentity",
         "parameters": [
           {
@@ -264,7 +285,7 @@
         }
       },
       "delete": {
-        "description": "This endpoint deletes an identity. This can not be undone.\n\nLearn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
+        "description": "Calling this endpoint irrecoverably and permanently deletes the identity given its ID. This action can not be undone.\nThis endpoint returns 204 when the identity was deleted or when the identity was not found, in which case it is\nassumed that is has been deleted already.\n\nLearn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).",
         "produces": [
           "application/json"
         ],
@@ -275,7 +296,7 @@
         "tags": [
           "admin"
         ],
-        "summary": "Delete an identity",
+        "summary": "Delete an Identity",
         "operationId": "deleteIdentity",
         "parameters": [
           {
@@ -289,12 +310,6 @@
         "responses": {
           "204": {
             "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
-          },
-          "404": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
           },
           "500": {
             "description": "genericError",
