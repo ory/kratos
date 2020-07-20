@@ -11,8 +11,6 @@ import (
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/x/pagination"
-
 	"github.com/ory/kratos/x"
 )
 
@@ -71,12 +69,33 @@ type identitiesListResponse struct {
 	Body []Identity
 }
 
+// swagger:parameters listIdentities
+type listIdentityParameters struct {
+	// Pagination Limit
+	//
+	// This is the number of items per page.
+	//
+	// required: false
+	// in: query
+	// default: 100
+	// min: 1
+	// max: 500
+	Limit int `json:"limit"`
+
+	// Pagination Page
+	//
+	// required: false
+	// in: query
+	// default: 0
+	// min: 0
+	Page int `json:"page"`
+}
+
 // swagger:route GET /identities admin listIdentities
 //
-// List all identities in the system
+// List Identities
 //
-// This endpoint returns a login request's context with, for example, error details and
-// other information.
+// Lists all identities. Does not support search at the moment.
 //
 // Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 //
@@ -88,9 +107,9 @@ type identitiesListResponse struct {
 //     Responses:
 //       200: identityList
 //       500: genericError
-func (h *Handler) list(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	limit, offset := pagination.Parse(r, 100, 0, 500)
-	is, err := h.r.IdentityPool().ListIdentities(r.Context(), limit, offset)
+func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	page, limit := x.ParsePagination(r)
+	is, err := h.r.IdentityPool().ListIdentities(r.Context(), page, limit)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -110,7 +129,7 @@ type getIdentityParameters struct {
 
 // swagger:route GET /identities/{id} admin getIdentity
 //
-// Get an identity
+// Get an Identity
 //
 // Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 //
@@ -160,7 +179,7 @@ type CreateIdentityRequestPayload struct {
 
 // swagger:route POST /identities admin createIdentity
 //
-// Create an identity
+// Create an Identity
 //
 // This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)
 // using this method! A way to achieve that will be introduced in the future.
@@ -223,7 +242,7 @@ type UpdateIdentityRequestPayload struct {
 
 // swagger:route PUT /identities/{id} admin updateIdentity
 //
-// Update an identity
+// Update an Identity
 //
 // This endpoint updates an identity. It is NOT possible to set an identity's credentials (password, ...)
 // using this method! A way to achieve that will be introduced in the future.
@@ -278,9 +297,11 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 
 // swagger:route DELETE /identities/{id} admin deleteIdentity
 //
-// Delete an identity
+// Delete an Identity
 //
-// This endpoint deletes an identity. This can not be undone.
+// Calling this endpoint irrecoverably and permanently deletes the identity given its ID. This action can not be undone.
+// This endpoint returns 204 when the identity was deleted or when the identity was not found, in which case it is
+// assumed that is has been deleted already.
 //
 // Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 //
@@ -291,7 +312,6 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 //
 //     Responses:
 //       204: emptyResponse
-//       404: genericError
 //       500: genericError
 func (h *Handler) delete(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := h.r.IdentityPool().(PrivilegedPool).DeleteIdentity(r.Context(), x.ParseUUID(ps.ByName("id"))); err != nil {

@@ -30,7 +30,7 @@ import (
 
 type (
 	Pool interface {
-		ListIdentities(ctx context.Context, limit, offset int) ([]Identity, error)
+		ListIdentities(ctx context.Context, page, limit int) ([]Identity, error)
 
 		// GetIdentity returns an identity by its id. Will return an error if the identity does not exist or backend
 		// connectivity is broken.
@@ -351,7 +351,7 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 		})
 
 		t.Run("case=list", func(t *testing.T) {
-			is, err := p.ListIdentities(context.Background(), 25, 0)
+			is, err := p.ListIdentities(context.Background(), 0, 25)
 			require.NoError(t, err)
 			assert.Len(t, is, len(createdIDs))
 			for _, id := range createdIDs {
