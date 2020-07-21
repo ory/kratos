@@ -407,7 +407,12 @@ func (p *ViperProvider) SelfServiceFlowRegistrationRequestLifespan() time.Durati
 }
 
 func (p *ViperProvider) SelfServiceFlowLogoutRedirectURL() *url.URL {
-	return mustParseURLFromViper(p.l, ViperKeySelfServiceLogoutBrowserDefaultReturnTo)
+	redir, err := url.ParseRequestURI(
+		viperx.GetString(p.l, ViperKeySelfServiceLogoutBrowserDefaultReturnTo, ""))
+	if err != nil {
+		return p.SelfServiceBrowserDefaultReturnTo()
+	}
+	return redir
 }
 
 func (p *ViperProvider) CourierSMTPFrom() string {

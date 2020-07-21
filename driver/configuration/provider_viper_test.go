@@ -79,6 +79,10 @@ func TestViperProvider(t *testing.T) {
 
 			assert.Equal(t, "https://self-service/settings/password/return_to", p.SelfServiceFlowSettingsReturnTo("password", p.SelfServiceBrowserDefaultReturnTo()).String())
 			assert.Equal(t, "https://self-service/settings/return_to", p.SelfServiceFlowSettingsReturnTo("profile", p.SelfServiceBrowserDefaultReturnTo()).String())
+
+			assert.Equal(t, "http://test.kratos.ory.sh:4000/", p.SelfServiceFlowLogoutRedirectURL().String())
+			viper.Set(configuration.ViperKeySelfServiceLogoutBrowserDefaultReturnTo, "")
+			assert.Equal(t, "http://return-to-3-test.ory.sh/", p.SelfServiceFlowLogoutRedirectURL().String())
 		})
 
 		t.Run("group=identity", func(t *testing.T) {
