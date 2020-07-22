@@ -94,8 +94,8 @@
             "type": "integer",
             "format": "int64",
             "default": 100,
-            "description": "Pagination Limit\n\nThis is the number of items per page.",
-            "name": "limit",
+            "description": "Items per Page\n\nThis is the number of items per page.",
+            "name": "per_page",
             "in": "query"
           },
           {

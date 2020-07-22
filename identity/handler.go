@@ -71,7 +71,7 @@ type identitiesListResponse struct {
 
 // swagger:parameters listIdentities
 type listIdentityParameters struct {
-	// Pagination Limit
+	// Items per Page
 	//
 	// This is the number of items per page.
 	//
@@ -80,7 +80,7 @@ type listIdentityParameters struct {
 	// default: 100
 	// min: 1
 	// max: 500
-	Limit int `json:"limit"`
+	ItemsPerPage int `json:"per_page"`
 
 	// Pagination Page
 	//
@@ -108,13 +108,20 @@ type listIdentityParameters struct {
 //       200: identityList
 //       500: genericError
 func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	page, limit := x.ParsePagination(r)
-	is, err := h.r.IdentityPool().ListIdentities(r.Context(), page, limit)
+	page, itemsPerPage := x.ParsePagination(r)
+	is, err := h.r.IdentityPool().ListIdentities(r.Context(), page, itemsPerPage)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
+	total, err := h.r.IdentityPool().CountIdentities(r.Context())
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	x.PaginationHeader(w, urlx.AppendPaths(h.c.SelfAdminURL(), IdentitiesPath), total, page, itemsPerPage)
 	h.r.Writer().Write(w, r, is)
 }
 

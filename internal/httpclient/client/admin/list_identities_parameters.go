@@ -21,12 +21,12 @@ import (
 // with the default values initialized.
 func NewListIdentitiesParams() *ListIdentitiesParams {
 	var (
-		limitDefault = int64(100)
-		pageDefault  = int64(0)
+		pageDefault    = int64(0)
+		perPageDefault = int64(100)
 	)
 	return &ListIdentitiesParams{
-		Limit: &limitDefault,
-		Page:  &pageDefault,
+		Page:    &pageDefault,
+		PerPage: &perPageDefault,
 
 		timeout: cr.DefaultTimeout,
 	}
@@ -36,12 +36,12 @@ func NewListIdentitiesParams() *ListIdentitiesParams {
 // with the default values initialized, and the ability to set a timeout on a request
 func NewListIdentitiesParamsWithTimeout(timeout time.Duration) *ListIdentitiesParams {
 	var (
-		limitDefault = int64(100)
-		pageDefault  = int64(0)
+		pageDefault    = int64(0)
+		perPageDefault = int64(100)
 	)
 	return &ListIdentitiesParams{
-		Limit: &limitDefault,
-		Page:  &pageDefault,
+		Page:    &pageDefault,
+		PerPage: &perPageDefault,
 
 		timeout: timeout,
 	}
@@ -51,12 +51,12 @@ func NewListIdentitiesParamsWithTimeout(timeout time.Duration) *ListIdentitiesPa
 // with the default values initialized, and the ability to set a context for a request
 func NewListIdentitiesParamsWithContext(ctx context.Context) *ListIdentitiesParams {
 	var (
-		limitDefault = int64(100)
-		pageDefault  = int64(0)
+		pageDefault    = int64(0)
+		perPageDefault = int64(100)
 	)
 	return &ListIdentitiesParams{
-		Limit: &limitDefault,
-		Page:  &pageDefault,
+		Page:    &pageDefault,
+		PerPage: &perPageDefault,
 
 		Context: ctx,
 	}
@@ -66,12 +66,12 @@ func NewListIdentitiesParamsWithContext(ctx context.Context) *ListIdentitiesPara
 // with the default values initialized, and the ability to set a custom HTTPClient for a request
 func NewListIdentitiesParamsWithHTTPClient(client *http.Client) *ListIdentitiesParams {
 	var (
-		limitDefault = int64(100)
-		pageDefault  = int64(0)
+		pageDefault    = int64(0)
+		perPageDefault = int64(100)
 	)
 	return &ListIdentitiesParams{
-		Limit:      &limitDefault,
 		Page:       &pageDefault,
+		PerPage:    &perPageDefault,
 		HTTPClient: client,
 	}
 }
@@ -81,18 +81,18 @@ for the list identities operation typically these are written to a http.Request
 */
 type ListIdentitiesParams struct {
 
-	/*Limit
-	  Pagination Limit
-
-	This is the number of items per page.
-
-	*/
-	Limit *int64
 	/*Page
 	  Pagination Page
 
 	*/
 	Page *int64
+	/*PerPage
+	  Items per Page
+
+	This is the number of items per page.
+
+	*/
+	PerPage *int64
 
 	timeout    time.Duration
 	Context    context.Context
@@ -132,17 +132,6 @@ func (o *ListIdentitiesParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithLimit adds the limit to the list identities params
-func (o *ListIdentitiesParams) WithLimit(limit *int64) *ListIdentitiesParams {
-	o.SetLimit(limit)
-	return o
-}
-
-// SetLimit adds the limit to the list identities params
-func (o *ListIdentitiesParams) SetLimit(limit *int64) {
-	o.Limit = limit
-}
-
 // WithPage adds the page to the list identities params
 func (o *ListIdentitiesParams) WithPage(page *int64) *ListIdentitiesParams {
 	o.SetPage(page)
@@ -154,6 +143,17 @@ func (o *ListIdentitiesParams) SetPage(page *int64) {
 	o.Page = page
 }
 
+// WithPerPage adds the perPage to the list identities params
+func (o *ListIdentitiesParams) WithPerPage(perPage *int64) *ListIdentitiesParams {
+	o.SetPerPage(perPage)
+	return o
+}
+
+// SetPerPage adds the perPage to the list identities params
+func (o *ListIdentitiesParams) SetPerPage(perPage *int64) {
+	o.PerPage = perPage
+}
+
 // WriteToRequest writes these params to a swagger request
 func (o *ListIdentitiesParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -161,22 +161,6 @@ func (o *ListIdentitiesParams) WriteToRequest(r runtime.ClientRequest, reg strfm
 		return err
 	}
 	var res []error
-
-	if o.Limit != nil {
-
-		// query param limit
-		var qrLimit int64
-		if o.Limit != nil {
-			qrLimit = *o.Limit
-		}
-		qLimit := swag.FormatInt64(qrLimit)
-		if qLimit != "" {
-			if err := r.SetQueryParam("limit", qLimit); err != nil {
-				return err
-			}
-		}
-
-	}
 
 	if o.Page != nil {
 
@@ -188,6 +172,22 @@ func (o *ListIdentitiesParams) WriteToRequest(r runtime.ClientRequest, reg strfm
 		qPage := swag.FormatInt64(qrPage)
 		if qPage != "" {
 			if err := r.SetQueryParam("page", qPage); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	if o.PerPage != nil {
+
+		// query param per_page
+		var qrPerPage int64
+		if o.PerPage != nil {
+			qrPerPage = *o.PerPage
+		}
+		qPerPage := swag.FormatInt64(qrPerPage)
+		if qPerPage != "" {
+			if err := r.SetQueryParam("per_page", qPerPage); err != nil {
 				return err
 			}
 		}

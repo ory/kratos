@@ -30,7 +30,11 @@ import (
 
 type (
 	Pool interface {
-		ListIdentities(ctx context.Context, page, limit int) ([]Identity, error)
+		// ListIdentities lists all identities in the store given the page and itemsPerPage.
+		ListIdentities(ctx context.Context, page, itemsPerPage int) ([]Identity, error)
+
+		// CountIdentities counts the number of identities in the store.
+		CountIdentities(ctx context.Context) (int64, error)
 
 		// GetIdentity returns an identity by its id. Will return an error if the identity does not exist or backend
 		// connectivity is broken.
@@ -142,6 +146,10 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			require.NoError(t, p.CreateIdentity(context.Background(), i))
 			assert.NotEqual(t, uuid.Nil, i.ID)
 			createdIDs = append(createdIDs, i.ID)
+
+			count, err := p.CountIdentities(context.Background())
+			require.NoError(t, err)
+			assert.EqualValues(t, 1, count)
 		})
 
 		t.Run("case=create with default values", func(t *testing.T) {
@@ -156,6 +164,10 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			assert.Equal(t, configuration.DefaultIdentityTraitsSchemaID, actual.SchemaID)
 			assert.Equal(t, defaultSchema.SchemaURL(exampleServerURL).String(), actual.SchemaURL)
 			assertEqual(t, expected, actual)
+
+			count, err := p.CountIdentities(context.Background())
+			require.NoError(t, err)
+			assert.EqualValues(t, 2, count)
 		})
 
 		t.Run("case=should error when the identity ID does not exist", func(t *testing.T) {
