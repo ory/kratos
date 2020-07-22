@@ -237,7 +237,7 @@ func TestHandler(t *testing.T) {
 	t.Run("case=should list all identities", func(t *testing.T) {
 		res := get(t, "/identities", http.StatusOK)
 		assert.Empty(t, res.Get("0.credentials").String(), "%s", res.Raw)
-		assert.EqualValues(t, "baz", res.Get("0.traits.bar").String(), "%s", res.Raw)
+		assert.EqualValues(t, "baz", res.Get(`#(traits.bar=="baz").traits.bar`).String(), "%s", res.Raw)
 	})
 
 	t.Run("case=should not be able to update an identity that does not exist yet", func(t *testing.T) {

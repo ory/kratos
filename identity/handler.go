@@ -80,7 +80,7 @@ type listIdentityParameters struct {
 	// default: 100
 	// min: 1
 	// max: 500
-	ItemsPerPage int `json:"per_page"`
+	PerPage int `json:"per_page"`
 
 	// Pagination Page
 	//
