@@ -157,6 +157,14 @@ func createRecoveryAddresses(ctx context.Context, tx *pop.Connection, i *identit
 	return nil
 }
 
+func (p *Persister) CountIdentities(ctx context.Context) (int64, error) {
+	count, err := p.c.WithContext(ctx).Count(new(identity.Identity))
+	if err != nil {
+		return 0, sqlcon.HandleError(err)
+	}
+	return int64(count), nil
+}
+
 func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) error {
 	if i.SchemaID == "" {
 		i.SchemaID = configuration.DefaultIdentityTraitsSchemaID
