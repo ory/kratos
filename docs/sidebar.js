@@ -17,6 +17,7 @@ module.exports = {
     },
     "concepts/browser-redirect-flow-completion",
     "concepts/email-sms",
+    "concepts/rest-api",
     "concepts/federation",
     "concepts/security"
   ],
