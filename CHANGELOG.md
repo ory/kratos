@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-07-20)](#unreleased-2020-07-20)
+- [Unreleased (2020-07-22)](#unreleased-2020-07-22)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -100,12 +100,13 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...9fcaac4048e05500d0456eb3cd9cd11cc123e370) (2020-07-20)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...7edd367dc64a01dbe252ca0ab8cf4d3926a35014) (2020-07-22)
 
 
 ### Bug Fixes
 
 * Don't resend verification emails once verified ([#583](https://github.com/ory/kratos/issues/583)) ([a4d9969](https://github.com/ory/kratos/commit/a4d99694525e65b58d49197c96324b27fb8c31c2)), closes [#578](https://github.com/ory/kratos/issues/578)
+* Fallback to default return url if logout after url is not defined ([#594](https://github.com/ory/kratos/issues/594)) ([7edd367](https://github.com/ory/kratos/commit/7edd367dc64a01dbe252ca0ab8cf4d3926a35014))
 * Resolve cookie issues ([6e2b6d2](https://github.com/ory/kratos/commit/6e2b6d2f0ce2fb6df7d3e26d6cc8e755e6593a81))
 * Resolve flaky passwort setting tests ([#582](https://github.com/ory/kratos/issues/582)) ([c42d936](https://github.com/ory/kratos/commit/c42d936ef51d2ffb48b491b99988d048442e3b8b)), closes [#581](https://github.com/ory/kratos/issues/581) [#577](https://github.com/ory/kratos/issues/577)
 * Resolve identity admin api issues ([#586](https://github.com/ory/kratos/issues/586)) ([feef8a7](https://github.com/ory/kratos/commit/feef8a7d4454c1b343c34a96fa4dadd56149b0cd)), closes [#435](https://github.com/ory/kratos/issues/435) [#500](https://github.com/ory/kratos/issues/500):
@@ -127,6 +128,7 @@
 * Add documentation for configuring cookies ([e3dbc8a](https://github.com/ory/kratos/commit/e3dbc8acc055f6e2d78bc959be7356f9a66ac90f)), closes [#516](https://github.com/ory/kratos/issues/516)
 * Add secret key rotation guide ([3d6e21a](https://github.com/ory/kratos/commit/3d6e21af2f726944468299c326600a8ab0e4e885))
 * Docker image documentation ([#573](https://github.com/ory/kratos/issues/573)) ([bfe032e](https://github.com/ory/kratos/commit/bfe032e2b6bfd8b9415d466011bdd7e36efa4146))
+* Fix logout url ([#593](https://github.com/ory/kratos/issues/593)) ([f0971d4](https://github.com/ory/kratos/commit/f0971d44a911caed8a6071358fa6b7ebc0fcf145))
 * Use correct path in 0.4 docs ([9fcaac4](https://github.com/ory/kratos/commit/9fcaac4048e05500d0456eb3cd9cd11cc123e370)), closes [#588](https://github.com/ory/kratos/issues/588)
 
 
