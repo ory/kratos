@@ -10,7 +10,6 @@ import (
 
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/kratos/internal/httpclient/client"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/schema"
 
