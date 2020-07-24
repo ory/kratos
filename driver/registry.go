@@ -12,7 +12,7 @@ import (
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/settings"
-	"github.com/ory/kratos/selfservice/flow/verify"
+	"github.com/ory/kratos/selfservice/flow/verification"
 
 	"github.com/ory/x/healthx"
 
@@ -108,10 +108,10 @@ type Registry interface {
 	registration.HandlerProvider
 	registration.StrategyProvider
 
-	verify.PersistenceProvider
-	verify.ErrorHandlerProvider
-	verify.SenderProvider
-	verify.HandlerProvider
+	verification.PersistenceProvider
+	verification.ErrorHandlerProvider
+	verification.SenderProvider
+	verification.HandlerProvider
 
 	recovery.RequestPersistenceProvider
 	recovery.ErrorHandlerProvider

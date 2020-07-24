@@ -1,4 +1,4 @@
-package verify_test
+package verification_test
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/selfservice/flow/verify"
+	"github.com/ory/kratos/selfservice/flow/verification"
 )
 
 func TestManager(t *testing.T) {
@@ -36,7 +36,7 @@ func TestManager(t *testing.T) {
 		require.NoError(t, err)
 
 		_, err = reg.VerificationSender().SendCode(context.Background(), address.Via, "not-tracked@ory.sh")
-		require.EqualError(t, err, verify.ErrUnknownAddress.Error())
+		require.EqualError(t, err, verification.ErrUnknownAddress.Error())
 
 		messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
 		require.NoError(t, err)

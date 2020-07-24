@@ -1,4 +1,4 @@
-package verify_test
+package verification_test
 
 import (
 	"context"
@@ -27,7 +27,7 @@ import (
 	"github.com/ory/kratos/internal/httpclient/client"
 	"github.com/ory/kratos/internal/httpclient/client/common"
 	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/kratos/selfservice/flow/verify"
+	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/x"
 )
 
@@ -90,12 +90,12 @@ func TestHandler(t *testing.T) {
 	t.Run("case=request verification for unknown via", func(t *testing.T) {
 		res, body := x.EasyGet(t,
 			&http.Client{Jar: x.EasyCookieJar(t, nil)},
-			publicTS.URL+strings.Replace(verify.PublicVerificationInitPath, ":via", "notemail", 1))
+			publicTS.URL+strings.Replace(verification.PublicVerificationInitPath, ":via", "notemail", 1))
 		assert.Contains(t, res.Request.URL.String(), errTS.URL)
 		assert.EqualValues(t, http.StatusBadRequest, gjson.GetBytes(body, "0.code").Int())
 	})
 
-	initURL := publicTS.URL + strings.Replace(verify.PublicVerificationInitPath, ":via", "email", 1)
+	initURL := publicTS.URL + strings.Replace(verification.PublicVerificationInitPath, ":via", "email", 1)
 
 	t.Run("case=init and validate request payload", func(t *testing.T) {
 		hc := &http.Client{Jar: x.EasyCookieJar(t, nil)}
@@ -113,7 +113,7 @@ func TestHandler(t *testing.T) {
 		assert.True(t, time.Time(svr.Payload.ExpiresAt).After(time.Now()))
 		assert.Contains(t, svr.Payload.RequestURL, initURL)
 		assert.Contains(t, svr.Payload.ID, rid)
-		assert.Equal(t, publicTS.URL+strings.Replace(verify.PublicVerificationCompletePath, ":via", "email", 1)+"?request="+rid, *svr.Payload.Form.Action)
+		assert.Equal(t, publicTS.URL+strings.Replace(verification.PublicVerificationCompletePath, ":via", "email", 1)+"?request="+rid, *svr.Payload.Form.Action)
 		assert.Contains(t, "csrf_token", *svr.Payload.Form.Fields[0].Name)
 		assert.Contains(t, "to_verify", *svr.Payload.Form.Fields[1].Name)
 		assert.Contains(t, "email", *svr.Payload.Form.Fields[1].Type)
@@ -215,7 +215,7 @@ func TestHandler(t *testing.T) {
 		hc := &http.Client{Jar: x.EasyCookieJar(t, nil)}
 		res, _ := x.EasyGet(t, hc,
 			publicTS.URL+strings.ReplaceAll(
-				strings.ReplaceAll(verify.PublicVerificationConfirmPath, ":code", "unknown-code"),
+				strings.ReplaceAll(verification.PublicVerificationConfirmPath, ":code", "unknown-code"),
 				":via", "email"))
 		assert.Contains(t, res.Request.URL.String(), verifyTS.URL)
 

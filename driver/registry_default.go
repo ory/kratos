@@ -13,7 +13,7 @@ import (
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/settings"
-	"github.com/ory/kratos/selfservice/flow/verify"
+	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/selfservice/strategy/profile"
 	"github.com/ory/kratos/selfservice/strategy/recoverytoken"
@@ -106,10 +106,10 @@ type RegistryDefault struct {
 	selfserviceSettingsErrorHandler *settings.ErrorHandler
 	selfserviceSettingsExecutor     *settings.HookExecutor
 
-	selfserviceVerifyErrorHandler *verify.ErrorHandler
+	selfserviceVerifyErrorHandler *verification.ErrorHandler
 	selfserviceVerifyManager      *identity.Manager
-	selfserviceVerifyHandler      *verify.Handler
-	selfserviceVerifySender       *verify.Sender
+	selfserviceVerifyHandler      *verification.Handler
+	selfserviceVerifySender       *verification.Sender
 
 	selfserviceRecoveryErrorHandler *recovery.ErrorHandler
 	selfserviceRecoveryHandler      *recovery.Handler

@@ -1,4 +1,4 @@
-package verify
+package verification
 
 import (
 	"crypto/tls"

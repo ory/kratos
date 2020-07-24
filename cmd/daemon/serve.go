@@ -24,7 +24,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/logout"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
-	"github.com/ory/kratos/selfservice/flow/verify"
+	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/selfservice/strategy/profile"
@@ -131,10 +131,10 @@ func sqa(cmd *cobra.Command, d driver.Driver) *metricsx.Service {
 				settings.PublicPath,
 				settings.PublicRequestPath,
 				profile.PublicSettingsProfilePath,
-				verify.PublicVerificationCompletePath,
-				strings.ReplaceAll(strings.ReplaceAll(verify.PublicVerificationConfirmPath, ":via", "email"), ":code", ""),
-				strings.ReplaceAll(verify.PublicVerificationInitPath, ":via", "email"),
-				verify.PublicVerificationRequestPath,
+				verification.PublicVerificationCompletePath,
+				strings.ReplaceAll(strings.ReplaceAll(verification.PublicVerificationConfirmPath, ":via", "email"), ":code", ""),
+				strings.ReplaceAll(verification.PublicVerificationInitPath, ":via", "email"),
+				verification.PublicVerificationRequestPath,
 				errorx.ErrorsPath,
 			},
 			BuildVersion: d.Registry().BuildVersion(),
