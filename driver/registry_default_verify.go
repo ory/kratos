@@ -2,7 +2,7 @@ package driver
 
 import (
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/selfservice/flow/verify"
+	"github.com/ory/kratos/selfservice/flow/verification"
 )
 
 func (m *RegistryDefault) VerificationPersister() verification.Persister {

@@ -27,7 +27,7 @@ import (
 	"github.com/ory/kratos/internal/httpclient/client"
 	"github.com/ory/kratos/internal/httpclient/client/common"
 	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/kratos/selfservice/flow/verify"
+	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/x"
 )
 

@@ -13,7 +13,7 @@ import (
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/selfservice/flow/verify"
+	"github.com/ory/kratos/selfservice/flow/verification"
 )
 
 func TestManager(t *testing.T) {

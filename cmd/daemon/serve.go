@@ -24,7 +24,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/logout"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
-	"github.com/ory/kratos/selfservice/flow/verify"
+	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/selfservice/strategy/profile"

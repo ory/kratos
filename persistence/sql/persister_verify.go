@@ -7,7 +7,7 @@ import (
 
 	"github.com/ory/x/sqlcon"
 
-	"github.com/ory/kratos/selfservice/flow/verify"
+	"github.com/ory/kratos/selfservice/flow/verification"
 )
 
 var _ verification.Persister = new(Persister)
