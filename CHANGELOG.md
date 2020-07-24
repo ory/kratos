@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-07-22)](#unreleased-2020-07-22)
+- [Unreleased (2020-07-24)](#unreleased-2020-07-24)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -100,13 +100,14 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...7edd367dc64a01dbe252ca0ab8cf4d3926a35014) (2020-07-22)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...0ecd69a60f741fc334c9b060b6aeaafc39e048b1) (2020-07-24)
 
 
 ### Bug Fixes
 
 * Don't resend verification emails once verified ([#583](https://github.com/ory/kratos/issues/583)) ([a4d9969](https://github.com/ory/kratos/commit/a4d99694525e65b58d49197c96324b27fb8c31c2)), closes [#578](https://github.com/ory/kratos/issues/578)
 * Fallback to default return url if logout after url is not defined ([#594](https://github.com/ory/kratos/issues/594)) ([7edd367](https://github.com/ory/kratos/commit/7edd367dc64a01dbe252ca0ab8cf4d3926a35014))
+* Improve pagination when listing identities ([c60bf44](https://github.com/ory/kratos/commit/c60bf440b9c85b4f2e871237e3d7725571151efe))
 * Resolve cookie issues ([6e2b6d2](https://github.com/ory/kratos/commit/6e2b6d2f0ce2fb6df7d3e26d6cc8e755e6593a81))
 * Resolve flaky passwort setting tests ([#582](https://github.com/ory/kratos/issues/582)) ([c42d936](https://github.com/ory/kratos/commit/c42d936ef51d2ffb48b491b99988d048442e3b8b)), closes [#581](https://github.com/ory/kratos/issues/581) [#577](https://github.com/ory/kratos/issues/577)
 * Resolve identity admin api issues ([#586](https://github.com/ory/kratos/issues/586)) ([feef8a7](https://github.com/ory/kratos/commit/feef8a7d4454c1b343c34a96fa4dadd56149b0cd)), closes [#435](https://github.com/ory/kratos/issues/435) [#500](https://github.com/ory/kratos/issues/500):
@@ -115,17 +116,20 @@
 * Resolve panic when DSN="memory" ([#574](https://github.com/ory/kratos/issues/574)) ([05e55f3](https://github.com/ory/kratos/commit/05e55f3584e20ae5d39cfda6e542d4da40d718e4)):
 
     > Executing the migration logic in registry.go cause a panic as the registry is not initalized at that point. Therefore we decided to move the handling to driver_default.go, after the registry has been initialized.
+* Use params per_page and page for pagination ([5dfb6e3](https://github.com/ory/kratos/commit/5dfb6e32c44420ed49d652733b9099a41c9347f2))
 * Use relative threshold to judge longest common substring in password policy ([#585](https://github.com/ory/kratos/issues/585)) ([3e9f8cc](https://github.com/ory/kratos/commit/3e9f8cce4b058b05d69c73fff514f3b8e46c2be3)), closes [#581](https://github.com/ory/kratos/issues/581)
 
 
 ### Code Refactoring
 
 * Move samesite config to cookie parent-key ([753eb86](https://github.com/ory/kratos/commit/753eb86c904c4af9e7d91e46ff4c836dcce35807))
+* Rename verify to verificaiton ([#597](https://github.com/ory/kratos/issues/597)) ([0ecd69a](https://github.com/ory/kratos/commit/0ecd69a60f741fc334c9b060b6aeaafc39e048b1))
 
 
 ### Documentation
 
 * Add documentation for configuring cookies ([e3dbc8a](https://github.com/ory/kratos/commit/e3dbc8acc055f6e2d78bc959be7356f9a66ac90f)), closes [#516](https://github.com/ory/kratos/issues/516)
+* Add pagination docs ([7fe0901](https://github.com/ory/kratos/commit/7fe0901ee5d0e829e110bd0c4fdecb24bfc27768))
 * Add secret key rotation guide ([3d6e21a](https://github.com/ory/kratos/commit/3d6e21af2f726944468299c326600a8ab0e4e885))
 * Docker image documentation ([#573](https://github.com/ory/kratos/issues/573)) ([bfe032e](https://github.com/ory/kratos/commit/bfe032e2b6bfd8b9415d466011bdd7e36efa4146))
 * Fix logout url ([#593](https://github.com/ory/kratos/issues/593)) ([f0971d4](https://github.com/ory/kratos/commit/f0971d44a911caed8a6071358fa6b7ebc0fcf145))
@@ -135,6 +139,7 @@
 ### Features
 
 * Add ability to configure session cookie domain/path ([faeb332](https://github.com/ory/kratos/commit/faeb3328dab343c6ef3974065ba0c5c590a8817e)), closes [#516](https://github.com/ory/kratos/issues/516)
+* Add pagination tests ([e3aa81b](https://github.com/ory/kratos/commit/e3aa81b7da55108f43ea6e16c817c97e2f8a1d50))
 * Add tests and helpers to test recovery/verifiable addresses ([#579](https://github.com/ory/kratos/issues/579)) ([29979e6](https://github.com/ory/kratos/commit/29979e6c4934b71c7fb158cfa5b85e97be3ea8fc)), closes [#576](https://github.com/ory/kratos/issues/576)
 
 
