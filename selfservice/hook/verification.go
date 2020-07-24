@@ -15,7 +15,7 @@ var _ settings.PostHookPostPersistExecutor = new(Verifier)
 
 type (
 	verifierDependencies interface {
-		verify.SenderProvider
+		verification.SenderProvider
 	}
 	Verifier struct {
 		r verifierDependencies

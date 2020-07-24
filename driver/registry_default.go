@@ -106,10 +106,10 @@ type RegistryDefault struct {
 	selfserviceSettingsErrorHandler *settings.ErrorHandler
 	selfserviceSettingsExecutor     *settings.HookExecutor
 
-	selfserviceVerifyErrorHandler *verify.ErrorHandler
+	selfserviceVerifyErrorHandler *verification.ErrorHandler
 	selfserviceVerifyManager      *identity.Manager
-	selfserviceVerifyHandler      *verify.Handler
-	selfserviceVerifySender       *verify.Sender
+	selfserviceVerifyHandler      *verification.Handler
+	selfserviceVerifySender       *verification.Sender
 
 	selfserviceRecoveryErrorHandler *recovery.ErrorHandler
 	selfserviceRecoveryHandler      *recovery.Handler

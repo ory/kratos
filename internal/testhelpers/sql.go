@@ -32,7 +32,7 @@ func CleanSQL(t *testing.T, c *pop.Connection) {
 		new(recoverytoken.Token).TableName(),
 		new(recovery.RequestMethods).TableName(),
 		new(recovery.Request).TableName(),
-		new(verify.Request).TableName(),
+		new(verification.Request).TableName(),
 		new(session.Session).TableName(),
 		new(identity.CredentialIdentifierCollection).TableName(),
 		new(identity.CredentialsCollection).TableName(),

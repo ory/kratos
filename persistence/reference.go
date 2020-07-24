@@ -32,7 +32,7 @@ type Persister interface {
 	courier.Persister
 	session.Persister
 	errorx.Persister
-	verify.Persister
+	verification.Persister
 	recovery.RequestPersister
 	recoverytoken.Persister
 

@@ -108,10 +108,10 @@ type Registry interface {
 	registration.HandlerProvider
 	registration.StrategyProvider
 
-	verify.PersistenceProvider
-	verify.ErrorHandlerProvider
-	verify.SenderProvider
-	verify.HandlerProvider
+	verification.PersistenceProvider
+	verification.ErrorHandlerProvider
+	verification.SenderProvider
+	verification.HandlerProvider
 
 	recovery.RequestPersistenceProvider
 	recovery.ErrorHandlerProvider
