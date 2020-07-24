@@ -4,6 +4,7 @@ module.exports = {
   ],
   Concepts: [
     "concepts/index",
+    "concepts/terminology",
     "concepts/ui-user-interface",
     "concepts/identity-user-model",
     {
