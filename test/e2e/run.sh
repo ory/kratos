@@ -112,7 +112,7 @@ run() {
 
   yq merge test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.generated.yml
   ($kratos serve --dev -c test/e2e/kratos.generated.yml > "${base}/test/e2e/kratos.${profile}.e2e.log" 2>&1 &)
-  
+
   npm run wait-on -- -t 10000 http-get://127.0.0.1:4434/health/ready \
     http-get://127.0.0.1:4455/health \
     http-get://127.0.0.1:4445/health/ready \
@@ -187,10 +187,6 @@ export TEST_DATABASE_MEMORY="memory"
 case "$1" in
         sqlite)
           db="${TEST_DATABASE_SQLITE}"
-          ;;
-
-        memory)
-          db="${TEST_DATABASE_MEMORY}"
           ;;
 
         mysql)

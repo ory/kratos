@@ -1,10 +1,15 @@
 package driver_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/ory/viper"
+	"github.com/ory/x/logrusx"
 
 	driver "github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/configuration"
@@ -26,4 +31,13 @@ func TestDriverDefault_SQLiteMemoryMode(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestDriverNew(t *testing.T) {
+	viper.Set("dsn", "memory")
+	d, err := driver.NewDefaultDriver(logrusx.New("", ""),
+		"", "", "", true)
+	require.NoError(t, err)
+	assert.EqualValues(t, configuration.DefaultSQLiteMemoryDSN, d.Configuration().DSN())
+	require.NoError(t, d.Registry().Persister().Ping(context.Background()))
 }
