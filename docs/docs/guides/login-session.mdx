@@ -3,21 +3,32 @@ id: login-session
 title: Login Sessions
 ---
 
-A login session is created when a user signs in. The session is either stored as a cookie or as a token, depending
-on the interaction type.
-
-You can set the cookie's `max-age` value - which effectively sets how long the session is active - by changing
-the ORY Kratos configuration file:
+A login session is created when a user signs in. The session is stored as a cookie or as a token, depending
+on the interaction type. A session is valid for the session lifespan you specify in the ORY Kratos config:
 
 ```yaml title="path/to/kratos/config.yml
 session:
   lifespan: 720h # 30 days
 ```
 
-Once the lifespan is reached, the user needs to sign in again. If `lifespan` is not set, then the cookie's `max-age`
-will also not be set. Please be aware of how `max-age` behaves:
+Per default the session cookie has the `max-age` parameter set to the specified session lifespan.
+You may disable this behavior by setting:
 
-- The browser interprets the cookie to be removed when the session ends (e.g. the browser window is closed) if
-`max-age` is not set as part of the `Set-Cookie` header. Please be aware that this behavior is not consistent across
-browsers.
+```yaml title="path/to/kratos/config.yml
+session:
+  cookie:
+    persistent: false
+```
+
+:::note
+
+The cookie `max-age` parameter behaves as follows:
+
+- The browser interprets the cookie to be removed when the session ends if
+`max-age` is not set as part of the `Set-Cookie` header. A session ends if the browser is terminated due to
+a reboot or when shutting down the browser.
 - The browser keeps the cookie until `max-age` is reached otherwise.
+
+:::
+
+Once the lifespan is reached, the user needs to sign in again.

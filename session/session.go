@@ -39,16 +39,11 @@ func (s Session) TableName() string {
 }
 
 func NewSession(i *identity.Identity, c interface {
-	SessionLifespan() *time.Duration
+	SessionLifespan() time.Duration
 }, authenticatedAt time.Time) *Session {
-	ttl := time.Hour * 6
-	if c.SessionLifespan() != nil {
-		ttl = *c.SessionLifespan()
-	}
-
 	return &Session{
 		ID:              x.NewUUID(),
-		ExpiresAt:       authenticatedAt.Add(ttl),
+		ExpiresAt:       authenticatedAt.Add(c.SessionLifespan()),
 		AuthenticatedAt: authenticatedAt,
 		IssuedAt:        time.Now().UTC(),
 		Identity:        i,

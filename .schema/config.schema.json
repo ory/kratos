@@ -855,9 +855,10 @@
       "properties": {
         "lifespan": {
           "title": "Session Lifespan",
-          "description": "Defines how long a session is active. This value is ignored if the \"remember me\" feature is used. If unset (default), the cookie's `Max-Age` will not be set.",
+          "description": "Defines how long a session is active. Once that lifespan has been reached, the user needs to sign in again.",
           "type": "string",
           "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+          "default": "24h",
           "examples": [
             "1h",
             "1m",
@@ -870,6 +871,12 @@
             "domain": {
               "title": "Session Cookie Domain",
               "description": "Sets the session cookie domain. Useful when dealing with subdomains. Use with care!"
+            },
+            "persistent": {
+              "title": "Make Session Cookie Persistent",
+              "description": "If set to true will persist the cookie in the end-user's browser using the `max-age` parameter which is set to the `session.lifespan` value. Persistent cookies are not deleted when the browser is closed (e.g. on reboot or alt+f4).",
+              "type": "boolean",
+              "default": true
             },
             "path": {
               "title": "Session Cookie Path",

@@ -64,7 +64,8 @@ type Provider interface {
 
 	SecretsDefault() [][]byte
 	SecretsSession() [][]byte
-	SessionLifespan() *time.Duration
+	SessionLifespan() time.Duration
+	SessionPersistentCookie() bool
 	SessionSameSiteMode() http.SameSite
 	SessionDomain() string
 	SessionPath() string
