@@ -34,6 +34,8 @@ type ValidationProvider interface {
 }
 
 var _ Validator = new(DefaultPasswordValidator)
+var ErrNetworkFailure = errors.New("unable to check if password has been leaked because an unexpected network error occurred")
+var ErrUnexpectedStatusCode = errors.New("unexpected status code")
 
 // DefaultPasswordValidator implements Validator. It is based on best
 // practices as defined in the following blog posts:
@@ -104,18 +106,12 @@ func (s *DefaultPasswordValidator) fetch(hpw []byte) error {
 	loc := fmt.Sprintf("https://api.pwnedpasswords.com/range/%s", prefix)
 	res, err := s.c.Get(loc)
 	if err != nil {
-		if s.ignoreNetworkErrors {
-			return nil
-		}
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to check if password has been breached before: %s", err))
+		return errors.Wrapf(ErrNetworkFailure, "%s", err)
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		if s.ignoreNetworkErrors {
-			return nil
-		}
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to check if password has been breached before, expected status code 200 but got %d", res.StatusCode))
+		return errors.Wrapf(ErrUnexpectedStatusCode, "%d", res.StatusCode)
 	}
 
 	s.Lock()
@@ -172,7 +168,10 @@ func (s *DefaultPasswordValidator) Validate(identifier, password string) error {
 	s.RUnlock()
 
 	if !ok {
-		if err := s.fetch(hpw); err != nil {
+		err := s.fetch(hpw)
+		if (errors.Is(err, ErrNetworkFailure) || errors.Is(err, ErrUnexpectedStatusCode)) && s.ignoreNetworkErrors {
+			return nil
+		} else if err != nil {
 			return err
 		}
 
