@@ -101,7 +101,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...52bd839ea9fe8de1aac4663b9dc0a88ae18a5765) (2020-07-27)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...b4d5a42346510e40222b8eb59b455b585f0a05cf) (2020-07-27)
 
 
 ### Bug Fixes
@@ -109,6 +109,9 @@
 * Don't resend verification emails once verified ([#583](https://github.com/ory/kratos/issues/583)) ([a4d9969](https://github.com/ory/kratos/commit/a4d99694525e65b58d49197c96324b27fb8c31c2)), closes [#578](https://github.com/ory/kratos/issues/578)
 * Fallback to default return url if logout after url is not defined ([#594](https://github.com/ory/kratos/issues/594)) ([7edd367](https://github.com/ory/kratos/commit/7edd367dc64a01dbe252ca0ab8cf4d3926a35014))
 * Improve pagination when listing identities ([c60bf44](https://github.com/ory/kratos/commit/c60bf440b9c85b4f2e871237e3d7725571151efe))
+* Recursive loop on network errors in password validator ([#589](https://github.com/ory/kratos/issues/589)) ([b4d5a42](https://github.com/ory/kratos/commit/b4d5a42346510e40222b8eb59b455b585f0a05cf)), closes [#316](https://github.com/ory/kratos/issues/316):
+
+    > The old code no error when ignoreNetworkErrors was set to true, but did not set a hash result which caused an infinite loop.
 * Resolve cookie issues ([6e2b6d2](https://github.com/ory/kratos/commit/6e2b6d2f0ce2fb6df7d3e26d6cc8e755e6593a81))
 * Resolve flaky passwort setting tests ([#582](https://github.com/ory/kratos/issues/582)) ([c42d936](https://github.com/ory/kratos/commit/c42d936ef51d2ffb48b491b99988d048442e3b8b)), closes [#581](https://github.com/ory/kratos/issues/581) [#577](https://github.com/ory/kratos/issues/577)
 * Resolve identity admin api issues ([#586](https://github.com/ory/kratos/issues/586)) ([feef8a7](https://github.com/ory/kratos/commit/feef8a7d4454c1b343c34a96fa4dadd56149b0cd)), closes [#435](https://github.com/ory/kratos/issues/435) [#500](https://github.com/ory/kratos/issues/500):
