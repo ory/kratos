@@ -101,7 +101,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...064b305ab31dc003ccb5992eb1ed2804f85085b9) (2020-07-27)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...52bd839ea9fe8de1aac4663b9dc0a88ae18a5765) (2020-07-27)
 
 
 ### Bug Fixes
@@ -157,7 +157,9 @@
 
 ### Tests
 
+* Add handler update tests ([aea1fb8](https://github.com/ory/kratos/commit/aea1fb807a16acd8406b94a72c3b39be8c3e1280)), closes [#325](https://github.com/ory/kratos/issues/325)
 * Add test for no-cache on public router ([b8aa63b](https://github.com/ory/kratos/commit/b8aa63b7ebd269a87578e8a5c6b2df27e18f9efa))
+* Replace e2e-memory with unit test ([52bd839](https://github.com/ory/kratos/commit/52bd839ea9fe8de1aac4663b9dc0a88ae18a5765)), closes [#580](https://github.com/ory/kratos/issues/580)
 
 
 ### BREAKING CHANGES
