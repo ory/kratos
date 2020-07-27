@@ -379,8 +379,14 @@ func (p *ViperProvider) SelfServiceFlowRecoveryUI() *url.URL {
 	return mustParseURLFromViper(p.l, ViperKeySelfServiceRecoveryUI)
 }
 
-func (p *ViperProvider) SessionLifespan() time.Duration {
-	return viperx.GetDuration(p.l, ViperKeySessionLifespan, time.Hour)
+// SessionLifespan returns nil when the value is not set.
+func (p *ViperProvider) SessionLifespan() *time.Duration {
+	if viper.Get(ViperKeySessionLifespan) == nil {
+		return nil
+	}
+
+	d := viper.GetDuration(ViperKeySessionLifespan)
+	return &d
 }
 
 func (p *ViperProvider) SelfServiceBrowserWhitelistedReturnToDomains() (us []url.URL) {

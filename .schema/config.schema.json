@@ -855,10 +855,9 @@
       "properties": {
         "lifespan": {
           "title": "Session Lifespan",
-          "description": "Defines how long a session is active. This value is ignored if the \"remember me\" feature is used.",
+          "description": "Defines how long a session is active. This value is ignored if the \"remember me\" feature is used. If unset (default), the cookie's `Max-Age` will not be set.",
           "type": "string",
           "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
-          "default": "1h",
           "examples": [
             "1h",
             "1m",
