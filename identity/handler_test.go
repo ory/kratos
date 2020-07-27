@@ -234,6 +234,26 @@ func TestHandler(t *testing.T) {
 		assert.EqualValues(t, "ory street", res.Get("traits.address").String(), "%s", res.Raw)
 	})
 
+	t.Run("case=should be able to update multiple identities", func(t *testing.T) {
+		for i := 0; i <= 5; i++ {
+			var cr identity.CreateIdentityRequestPayload
+			cr.SchemaID = "employee"
+			cr.Traits = []byte(`{"department": "ory"}`)
+			res := send(t, "POST", "/identities", http.StatusCreated, &cr)
+
+			id := res.Get("id").String()
+			res = send(t, "PUT", "/identities/"+id, http.StatusOK, &identity.UpdateIdentityRequestPayload{
+				SchemaID: "employee",
+				Traits:   []byte(`{"email":"` + x.NewUUID().String() + `@ory.sh"}`),
+			})
+
+			res = send(t, "PUT", "/identities/"+id, http.StatusOK, &identity.UpdateIdentityRequestPayload{
+				SchemaID: "employee",
+				Traits:   []byte(`{}`),
+			})
+		}
+	})
+
 	t.Run("case=should list all identities", func(t *testing.T) {
 		res := get(t, "/identities", http.StatusOK)
 		assert.Empty(t, res.Get("0.credentials").String(), "%s", res.Raw)

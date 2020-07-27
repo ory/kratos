@@ -17,7 +17,7 @@ func JSONEq(t *testing.T, expected, actual interface{}, messageAndArgs ...interf
 }
 
 func LogJSON(t *testing.T, v interface{}) {
-	out, err := json.MarshalIndent(v,"","  ")
-	require.NoError(t,err)
-	t.Logf("\n%s\n---",out)
+	out, err := json.MarshalIndent(v, "", "  ")
+	require.NoError(t, err)
+	t.Logf("\n%s\n---", out)
 }
