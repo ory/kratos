@@ -70,6 +70,7 @@ module.exports = {
     "guides/account-activation-email-verification",
     "guides/multi-tenancy-multitenant",
     "guides/configuring-cookies",
+    "guides/login-session",
     "guides/secret-key-rotation",
     "guides/high-availability-ha",
     "guides/docker"
