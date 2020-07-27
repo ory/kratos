@@ -53,10 +53,11 @@ const (
 	ViperKeyAdminPort     = "serve.admin.port"
 	ViperKeyAdminHost     = "serve.admin.host"
 
-	ViperKeySessionLifespan = "session.lifespan"
-	ViperKeySessionSameSite = "session.cookie.same_site"
-	ViperKeySessionDomain   = "session.cookie.domain"
-	ViperKeySessionPath     = "session.cookie.path"
+	ViperKeySessionLifespan         = "session.lifespan"
+	ViperKeySessionSameSite         = "session.cookie.same_site"
+	ViperKeySessionDomain           = "session.cookie.domain"
+	ViperKeySessionPath             = "session.cookie.path"
+	ViperKeySessionPersistentCookie = "session.cookie.persistent"
 
 	ViperKeySelfServiceStrategyConfig = "selfservice.strategies"
 
@@ -380,13 +381,12 @@ func (p *ViperProvider) SelfServiceFlowRecoveryUI() *url.URL {
 }
 
 // SessionLifespan returns nil when the value is not set.
-func (p *ViperProvider) SessionLifespan() *time.Duration {
-	if viper.Get(ViperKeySessionLifespan) == nil {
-		return nil
-	}
+func (p *ViperProvider) SessionLifespan() time.Duration {
+	return viperx.GetDuration(p.l, ViperKeySessionLifespan, time.Hour*24)
+}
 
-	d := viper.GetDuration(ViperKeySessionLifespan)
-	return &d
+func (p *ViperProvider) SessionPersistentCookie() bool {
+	return viper.GetBool(ViperKeySessionPersistentCookie)
 }
 
 func (p *ViperProvider) SelfServiceBrowserWhitelistedReturnToDomains() (us []url.URL) {
