@@ -29,6 +29,8 @@ type Client struct {
 type ClientService interface {
 	CreateIdentity(params *CreateIdentityParams) (*CreateIdentityCreated, error)
 
+	CreateRecoveryLink(params *CreateRecoveryLinkParams) (*CreateRecoveryLinkOK, error)
+
 	DeleteIdentity(params *DeleteIdentityParams) (*DeleteIdentityNoContent, error)
 
 	GetIdentity(params *GetIdentityParams) (*GetIdentityOK, error)
@@ -76,6 +78,43 @@ func (a *Client) CreateIdentity(params *CreateIdentityParams) (*CreateIdentityCr
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for createIdentity: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  CreateRecoveryLink creates a recovery link
+
+  This endpoint creates a recovery link which should be given to the user in order for them to recover
+(or activate) their account.
+*/
+func (a *Client) CreateRecoveryLink(params *CreateRecoveryLinkParams) (*CreateRecoveryLinkOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewCreateRecoveryLinkParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "createRecoveryLink",
+		Method:             "POST",
+		PathPattern:        "/recovery/link",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &CreateRecoveryLinkReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*CreateRecoveryLinkOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for createRecoveryLink: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

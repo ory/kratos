@@ -74,7 +74,7 @@ func (a *Client) CompleteSelfServiceBrowserRecoveryLinkStrategyFlow(params *Comp
 		Method:             "POST",
 		PathPattern:        "/self-service/browser/flows/recovery/link",
 		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		ConsumesMediaTypes: []string{"application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &CompleteSelfServiceBrowserRecoveryLinkStrategyFlowReader{formats: a.formats},

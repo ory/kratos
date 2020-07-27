@@ -4,6 +4,7 @@ module.exports = {
   ],
   Concepts: [
     "concepts/index",
+    "concepts/terminology",
     "concepts/ui-user-interface",
     "concepts/identity-user-model",
     {
@@ -21,7 +22,7 @@ module.exports = {
     "concepts/federation",
     "concepts/security"
   ],
-  "Self Service": [
+  "Self Service (End-User)": [
     "self-service",
     {
       type: "category",
@@ -58,6 +59,9 @@ module.exports = {
     "self-service/flows/verify-email-account-activation",
     "self-service/flows/2fa-mfa-multi-factor-authentication",
     "self-service/hooks/index",
+  ],
+  "Administration": [
+    "admin/managing-users-identities",
   ],
   Guides: [
     "guides/sign-in-with-github-google-facebook-linkedin",

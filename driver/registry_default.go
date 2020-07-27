@@ -172,6 +172,7 @@ func (m *RegistryDefault) RegisterAdminRoutes(router *x.RouterAdmin) {
 
 	if m.c.SelfServiceFlowRecoveryEnabled() {
 		m.RecoveryHandler().RegisterAdminRoutes(router)
+		m.RecoveryStrategies().RegisterAdminRoutes(router)
 	}
 
 	if m.c.SelfServiceFlowVerificationEnabled() {

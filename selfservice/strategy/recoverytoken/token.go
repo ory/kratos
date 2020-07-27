@@ -5,6 +5,8 @@ import (
 
 	"github.com/gofrs/uuid"
 
+	"github.com/ory/x/randx"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/x"
@@ -41,10 +43,10 @@ func (Token) TableName() string {
 	return "identity_recovery_tokens"
 }
 
-func NewToken(token string, ra *identity.RecoveryAddress, req *recovery.Request) *Token {
+func NewToken(ra *identity.RecoveryAddress, req *recovery.Request) *Token {
 	return &Token{
 		ID:              x.NewUUID(),
-		Token:           token,
+		Token:           randx.MustString(32, randx.AlphaNum),
 		RecoveryAddress: ra,
 		Request:         req,
 	}
