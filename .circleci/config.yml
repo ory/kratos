@@ -144,7 +144,7 @@ workflows:
           name: test-e2e-postgres
           flavor: postgres
           requires:
-            - test-e2e-postgres
+            - test-e2e-sqlite
           filters:
             tags:
               only: /.*/
@@ -152,7 +152,7 @@ workflows:
           name: test-e2e-mysql
           flavor: mysql
           requires:
-            - test-e2e-mysql
+            - test-e2e-sqlite
           filters:
             tags:
               only: /.*/
@@ -160,7 +160,7 @@ workflows:
           name: test-e2e-cockroach
           flavor: cockroach
           requires:
-            - test-e2e-cockroach
+            - test-e2e-sqlite
           filters:
             tags:
               only: /.*/
