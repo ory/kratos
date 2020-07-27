@@ -320,6 +320,74 @@
         }
       }
     },
+    "/recovery/link": {
+      "post": {
+        "description": "This endpoint creates a recovery link which should be given to the user in order for them to recover\n(or activate) their account.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "admin"
+        ],
+        "summary": "Create a Recovery Link",
+        "operationId": "createRecoveryLink",
+        "parameters": [
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "required": [
+                "identity_id"
+              ],
+              "properties": {
+                "expires_in": {
+                  "description": "Link Expires In\n\nThe recovery link will expire at that point in time. Defaults to the configuration value of\n`selfservice.flows.recovery.request_lifespan`.",
+                  "type": "string",
+                  "pattern": "^[0-9]+(ns|us|ms|s|m|h)$"
+                },
+                "identity_id": {
+                  "$ref": "#/definitions/UUID"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "createRecoveryLinkResponse",
+            "schema": {
+              "$ref": "#/definitions/createRecoveryLinkResponse"
+            }
+          },
+          "400": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "404": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
     "/schemas/{id}": {
       "get": {
         "description": "Get a traits schema definition",
@@ -454,7 +522,6 @@
       "post": {
         "description": "\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).",
         "consumes": [
-          "application/json",
           "application/x-www-form-urlencoded"
         ],
         "schemes": [
@@ -466,6 +533,28 @@
         ],
         "summary": "Complete the browser-based recovery flow using a recovery link",
         "operationId": "completeSelfServiceBrowserRecoveryLinkStrategyFlow",
+        "parameters": [
+          {
+            "description": "Email to Recover\n\nNeeds to be set when initiating the flow. If the email is a registered\nrecovery email, a recovery link will be sent. If the email is not known,\na email with details on what happened will be sent instead.",
+            "name": "email",
+            "in": "body",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "type": "string",
+            "description": "Recovery Token\n\nThe recovery token which completes the recovery request. If the token\nis invalid (e.g. expired) an error will be shown to the end-user.",
+            "name": "token",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Recovery Request ID",
+            "name": "request",
+            "in": "query"
+          }
+        ],
         "responses": {
           "302": {
             "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
@@ -1350,6 +1439,23 @@
         "traits": {
           "description": "Traits contains all of the identity's traits.\n\ntype: string\nformat: binary",
           "type": "object"
+        }
+      }
+    },
+    "createRecoveryLinkResponse": {
+      "type": "object",
+      "required": [
+        "recovery_link"
+      ],
+      "properties": {
+        "expires_at": {
+          "description": "Recovery Link Expires At\n\nThe timestamp when the recovery link expires.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "recovery_link": {
+          "description": "Recovery Link\n\nThis link can be used to recover the account.",
+          "type": "string"
         }
       }
     },

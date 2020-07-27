@@ -15,8 +15,13 @@ const (
 type (
 	Strategy interface {
 		RecoveryStrategyID() string
-		RegisterRecoveryRoutes(*x.RouterPublic)
 		PopulateRecoveryMethod(*http.Request, *Request) error
+	}
+	AdminHandler interface {
+		RegisterAdminRecoveryRoutes(admin *x.RouterAdmin)
+	}
+	PublicHandler interface {
+		RegisterPublicRecoveryRoutes(public *x.RouterPublic)
 	}
 	Strategies       []Strategy
 	StrategyProvider interface {
@@ -46,6 +51,16 @@ func (s Strategies) MustStrategy(id string) Strategy {
 
 func (s Strategies) RegisterPublicRoutes(r *x.RouterPublic) {
 	for _, ss := range s {
-		ss.RegisterRecoveryRoutes(r)
+		if h, ok := ss.(PublicHandler); ok {
+			h.RegisterPublicRecoveryRoutes(r)
+		}
+	}
+}
+
+func (s Strategies) RegisterAdminRoutes(r *x.RouterAdmin) {
+	for _, ss := range s {
+		if h, ok := ss.(AdminHandler); ok {
+			h.RegisterAdminRecoveryRoutes(r)
+		}
 	}
 }

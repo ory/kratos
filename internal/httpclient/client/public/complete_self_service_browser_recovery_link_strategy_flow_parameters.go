@@ -19,7 +19,7 @@ import (
 // NewCompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams creates a new CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams object
 // with the default values initialized.
 func NewCompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams() *CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams {
-
+	var ()
 	return &CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams{
 
 		timeout: cr.DefaultTimeout,
@@ -29,7 +29,7 @@ func NewCompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams() *CompleteSelf
 // NewCompleteSelfServiceBrowserRecoveryLinkStrategyFlowParamsWithTimeout creates a new CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams object
 // with the default values initialized, and the ability to set a timeout on a request
 func NewCompleteSelfServiceBrowserRecoveryLinkStrategyFlowParamsWithTimeout(timeout time.Duration) *CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams {
-
+	var ()
 	return &CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams{
 
 		timeout: timeout,
@@ -39,7 +39,7 @@ func NewCompleteSelfServiceBrowserRecoveryLinkStrategyFlowParamsWithTimeout(time
 // NewCompleteSelfServiceBrowserRecoveryLinkStrategyFlowParamsWithContext creates a new CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams object
 // with the default values initialized, and the ability to set a context for a request
 func NewCompleteSelfServiceBrowserRecoveryLinkStrategyFlowParamsWithContext(ctx context.Context) *CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams {
-
+	var ()
 	return &CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams{
 
 		Context: ctx,
@@ -49,7 +49,7 @@ func NewCompleteSelfServiceBrowserRecoveryLinkStrategyFlowParamsWithContext(ctx 
 // NewCompleteSelfServiceBrowserRecoveryLinkStrategyFlowParamsWithHTTPClient creates a new CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams object
 // with the default values initialized, and the ability to set a custom HTTPClient for a request
 func NewCompleteSelfServiceBrowserRecoveryLinkStrategyFlowParamsWithHTTPClient(client *http.Client) *CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams {
-
+	var ()
 	return &CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams{
 		HTTPClient: client,
 	}
@@ -59,6 +59,30 @@ func NewCompleteSelfServiceBrowserRecoveryLinkStrategyFlowParamsWithHTTPClient(c
 for the complete self service browser recovery link strategy flow operation typically these are written to a http.Request
 */
 type CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams struct {
+
+	/*Email
+	  Email to Recover
+
+	Needs to be set when initiating the flow. If the email is a registered
+	recovery email, a recovery link will be sent. If the email is not known,
+	a email with details on what happened will be sent instead.
+
+	*/
+	Email string
+	/*Request
+	  Recovery Request ID
+
+	*/
+	Request *string
+	/*Token
+	  Recovery Token
+
+	The recovery token which completes the recovery request. If the token
+	is invalid (e.g. expired) an error will be shown to the end-user.
+
+	*/
+	Token *string
+
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
@@ -97,6 +121,39 @@ func (o *CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams) SetHTTPClient
 	o.HTTPClient = client
 }
 
+// WithEmail adds the email to the complete self service browser recovery link strategy flow params
+func (o *CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams) WithEmail(email string) *CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams {
+	o.SetEmail(email)
+	return o
+}
+
+// SetEmail adds the email to the complete self service browser recovery link strategy flow params
+func (o *CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams) SetEmail(email string) {
+	o.Email = email
+}
+
+// WithRequest adds the request to the complete self service browser recovery link strategy flow params
+func (o *CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams) WithRequest(request *string) *CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams {
+	o.SetRequest(request)
+	return o
+}
+
+// SetRequest adds the request to the complete self service browser recovery link strategy flow params
+func (o *CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams) SetRequest(request *string) {
+	o.Request = request
+}
+
+// WithToken adds the token to the complete self service browser recovery link strategy flow params
+func (o *CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams) WithToken(token *string) *CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams {
+	o.SetToken(token)
+	return o
+}
+
+// SetToken adds the token to the complete self service browser recovery link strategy flow params
+func (o *CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams) SetToken(token *string) {
+	o.Token = token
+}
+
 // WriteToRequest writes these params to a swagger request
 func (o *CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -104,6 +161,42 @@ func (o *CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams) WriteToReques
 		return err
 	}
 	var res []error
+
+	if err := r.SetBodyParam(o.Email); err != nil {
+		return err
+	}
+
+	if o.Request != nil {
+
+		// query param request
+		var qrRequest string
+		if o.Request != nil {
+			qrRequest = *o.Request
+		}
+		qRequest := qrRequest
+		if qRequest != "" {
+			if err := r.SetQueryParam("request", qRequest); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	if o.Token != nil {
+
+		// query param token
+		var qrToken string
+		if o.Token != nil {
+			qrToken = *o.Token
+		}
+		qToken := qrToken
+		if qToken != "" {
+			if err := r.SetQueryParam("token", qToken); err != nil {
+				return err
+			}
+		}
+
+	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)

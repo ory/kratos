@@ -10,10 +10,11 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
+	"github.com/ory/x/decoderx"
+
 	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/herodot"
-	"github.com/ory/x/randx"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/urlx"
 
@@ -32,10 +33,13 @@ import (
 )
 
 const (
-	PublicRecoveryTokenPath = "/self-service/browser/flows/recovery/link" // #nosec G101
+	PublicPath = "/self-service/browser/flows/recovery/link" // #nosec G101
+	AdminPath  = "/recovery/link"
 )
 
 var _ recovery.Strategy = new(Strategy)
+var _ recovery.AdminHandler = new(Strategy)
+var _ recovery.PublicHandler = new(Strategy)
 
 type (
 	// swagger:model strategyRecoveryLinkMethodConfig
@@ -70,28 +74,33 @@ type (
 	}
 
 	Strategy struct {
-		c configuration.Provider
-		d strategyDependencies
+		c  configuration.Provider
+		d  strategyDependencies
+		dx *decoderx.HTTP
 	}
 )
 
 func NewStrategy(d strategyDependencies, c configuration.Provider) *Strategy {
-	return &Strategy{c: c, d: d}
+	return &Strategy{c: c, d: d, dx: decoderx.NewHTTP()}
 }
 
 func (s *Strategy) RecoveryStrategyID() string {
 	return recovery.StrategyRecoveryTokenName
 }
 
-func (s *Strategy) RegisterRecoveryRoutes(public *x.RouterPublic) {
+func (s *Strategy) RegisterPublicRecoveryRoutes(public *x.RouterPublic) {
 	redirect := session.RedirectOnAuthenticated(s.c)
-	public.GET(PublicRecoveryTokenPath, s.d.SessionHandler().IsNotAuthenticated(s.handleSubmit, redirect))
-	public.POST(PublicRecoveryTokenPath, s.d.SessionHandler().IsNotAuthenticated(s.handleSubmit, redirect))
+	public.GET(PublicPath, s.d.SessionHandler().IsNotAuthenticated(s.handleSubmit, redirect))
+	public.POST(PublicPath, s.d.SessionHandler().IsNotAuthenticated(s.handleSubmit, redirect))
+}
+
+func (s *Strategy) RegisterAdminRecoveryRoutes(admin *x.RouterAdmin) {
+	admin.POST(AdminPath, s.createRecoveryLink)
 }
 
 func (s *Strategy) PopulateRecoveryMethod(r *http.Request, req *recovery.Request) error {
 	f := form.NewHTMLForm(urlx.CopyWithQuery(
-		urlx.AppendPaths(s.c.SelfPublicURL(), PublicRecoveryTokenPath),
+		urlx.AppendPaths(s.c.SelfPublicURL(), PublicPath),
 		url.Values{"request": {req.ID.String()}},
 	).String())
 
@@ -105,19 +114,165 @@ func (s *Strategy) PopulateRecoveryMethod(r *http.Request, req *recovery.Request
 	return nil
 }
 
-// swagger:model completeSelfServiceBrowserRecoveryLinkStrategyFlowPayload
+// swagger:parameters createRecoveryLink
 //
 // nolint
-type completeSelfServiceBrowserRecoveryLinkStrategyFlowPayload struct {
-	// Email
+type createRecoveryLinkParams struct {
+	// in: body
+	Body struct {
+		// Identity to Recover
+		//
+		// The identity's ID you wish to recover.
+		//
+		// required: true
+		IdentityID uuid.UUID `json:"identity_id"`
+
+		// Link Expires In
+		//
+		// The recovery link will expire at that point in time. Defaults to the configuration value of
+		// `selfservice.flows.recovery.request_lifespan`.
+		//
+		//
+		// pattern: ^[0-9]+(ns|us|ms|s|m|h)$
+		// example:
+		//	- 1h
+		//	- 1m
+		//	- 1s
+		ExpiresIn string `json:"expires_in"`
+	}
+}
+
+// swagger:model createRecoveryLinkResponse
+//
+// nolint
+type createRecoveryLinkResponse struct {
+	// Recovery Link
+	//
+	// This link can be used to recover the account.
+	//
+	// required: true
+	// format: uri
+	RecoveryLink string `json:"recovery_link"`
+
+	// Recovery Link Expires At
+	//
+	// The timestamp when the recovery link expires.
+	ExpiresAt time.Time `json:"expires_at"`
+}
+
+// swagger:route POST /recovery/link admin createRecoveryLink
+//
+// Create a Recovery Link
+//
+// This endpoint creates a recovery link which should be given to the user in order for them to recover
+// (or activate) their account.
+//
+//     Consumes:
+//     - application/json
+//
+//     Produces:
+//     - application/json
+//
+//     Schemes: http, https
+//
+//     Responses:
+//       200: createRecoveryLinkResponse
+//       404: genericError
+//       400: genericError
+//       500: genericError
+func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	var p createRecoveryLinkParams
+	if err := s.dx.Decode(r, &p.Body, decoderx.HTTPJSONDecoder()); err != nil {
+		s.d.Writer().WriteError(w, r, err)
+		return
+	}
+
+	expiresIn := s.c.SelfServiceFlowRecoveryRequestLifespan()
+	if len(p.Body.ExpiresIn) > 0 {
+		var err error
+		expiresIn, err = time.ParseDuration(p.Body.ExpiresIn)
+		if err != nil {
+			s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to parse "expires_in" whose format should match "[0-9]+(ns|us|ms|s|m|h)" but did not: %s`, p.Body.ExpiresIn)))
+			return
+		}
+	}
+
+	if time.Now().Add(expiresIn).Before(time.Now()) {
+		s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Value from "expires_in" must be result to a future time: %s`, p.Body.ExpiresIn)))
+		return
+	}
+
+	req, err := recovery.NewRequest(expiresIn, "", r, nil)
+	if err != nil {
+		s.d.Writer().WriteError(w, r, err)
+		return
+	}
+
+	if err := s.d.RecoveryRequestPersister().CreateRecoveryRequest(r.Context(), req); err != nil {
+		s.d.Writer().WriteError(w, r, err)
+		return
+	}
+
+	id, err := s.d.IdentityPool().GetIdentity(r.Context(), p.Body.IdentityID)
+	if err != nil {
+		s.d.Writer().WriteError(w, r, err)
+		return
+	}
+
+	if len(id.RecoveryAddresses) == 0 {
+		s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The identity does not have any recovery addresses set.")))
+		return
+	}
+
+	address := id.RecoveryAddresses[0]
+	token := NewToken(&address, req)
+	if err := s.d.RecoveryTokenPersister().CreateRecoveryToken(r.Context(), token); err != nil {
+		s.d.Writer().WriteError(w, r, err)
+		return
+	}
+
+	s.d.Audit().
+		WithField("via", address.Via).
+		WithField("identity_id", address.IdentityID).
+		WithSensitiveField("email_address", address.Value).
+		WithSensitiveField("recovery_link_token", token).
+		Info("A recovery link has been created.")
+
+	s.d.Writer().Write(w, r, &createRecoveryLinkResponse{
+		ExpiresAt: req.ExpiresAt.UTC(),
+		RecoveryLink: urlx.CopyWithQuery(
+			urlx.AppendPaths(s.c.SelfPublicURL(), PublicPath),
+			url.Values{
+				"token":   {token.Token},
+				"request": {req.ID.String()},
+			}).String()})
+}
+
+// swagger:parameters completeSelfServiceBrowserRecoveryLinkStrategyFlow
+//
+// nolint
+type completeSelfServiceBrowserRecoveryLinkStrategyFlowParams struct {
+	// Email to Recover
+	//
+	// Needs to be set when initiating the flow. If the email is a registered
+	// recovery email, a recovery link will be sent. If the email is not known,
+	// a email with details on what happened will be sent instead.
 	//
 	// in: body
 	Email string `json:"email"`
 
-	// RequestID is request ID.
+	// Recovery Token
+	//
+	// The recovery token which completes the recovery request. If the token
+	// is invalid (e.g. expired) an error will be shown to the end-user.
 	//
 	// in: query
-	RequestID string `json:"request_id"`
+	Token string `json:"token"`
+
+	// Recovery Request ID
+	//
+	// in: query
+	Request string `json:"request"`
 }
 
 // swagger:route POST /self-service/browser/flows/recovery/link public completeSelfServiceBrowserRecoveryLinkStrategyFlow
@@ -129,7 +284,6 @@ type completeSelfServiceBrowserRecoveryLinkStrategyFlowPayload struct {
 // More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).
 //
 //     Consumes:
-//     - application/json
 //     - application/x-www-form-urlencoded
 //
 //     Schemes: http, https
@@ -262,10 +416,10 @@ func (s *Strategy) issueAndSendRecoveryToken(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	s.d.Logger().
+	s.d.Audit().
 		WithField("via", identity.RecoveryAddressTypeEmail).
 		WithSensitiveField("address", email).
-		Debug("Preparing account recovery token.")
+		Info("Preparing account recovery token.")
 
 	a, err := s.d.IdentityPool().FindRecoveryAddressByValue(r.Context(), identity.RecoveryAddressTypeEmail, email)
 	if err != nil {
@@ -305,10 +459,10 @@ func (s *Strategy) issueAndSendRecoveryToken(w http.ResponseWriter, r *http.Requ
 }
 
 func (s *Strategy) sendToUnknownAddress(ctx context.Context, address string) error {
-	s.d.Logger().
+	s.d.Audit().
 		WithField("via", identity.RecoveryAddressTypeEmail).
 		WithSensitiveField("email_address", address).
-		Debug("Sending out stub recovery email because address is not linked to any account.")
+		Info("Sending out stub recovery email because address is not linked to any account.")
 	return s.run(identity.RecoveryAddressTypeEmail, func() error {
 		_, err := s.d.Courier().QueueEmail(ctx,
 			templates.NewRecoveryInvalid(s.c, &templates.RecoveryInvalidModel{To: address}))
@@ -317,22 +471,23 @@ func (s *Strategy) sendToUnknownAddress(ctx context.Context, address string) err
 }
 
 func (s *Strategy) sendCodeToKnownAddress(ctx context.Context, req *recovery.Request, address *identity.RecoveryAddress) error {
-	token := randx.MustString(32, randx.AlphaNum)
-	if err := s.d.RecoveryTokenPersister().CreateRecoveryToken(ctx, NewToken(token, address, req)); err != nil {
+	token := NewToken(address, req)
+	if err := s.d.RecoveryTokenPersister().CreateRecoveryToken(ctx, token); err != nil {
 		return err
 	}
 
-	s.d.Logger().
+	s.d.Audit().
 		WithField("via", address.Via).
 		WithField("identity_id", address.IdentityID).
+		WithField("recovery_link_id", token.ID).
 		WithSensitiveField("email_address", address.Value).
-		WithSensitiveField("token", token).
-		Debug("Sending out recovery email with recovery link.")
+		WithSensitiveField("recovery_link_token", token.Token).
+		Info("Sending out recovery email with recovery link.")
 	return s.run(address.Via, func() error {
 		_, err := s.d.Courier().QueueEmail(ctx, templates.NewRecoveryValid(s.c,
 			&templates.RecoveryValidModel{To: address.Value, RecoveryURL: urlx.CopyWithQuery(
-				urlx.AppendPaths(s.c.SelfPublicURL(), PublicRecoveryTokenPath),
-				url.Values{"token": {token}}).String()}))
+				urlx.AppendPaths(s.c.SelfPublicURL(), PublicPath),
+				url.Values{"token": {token.Token}}).String()}))
 		return err
 	})
 }
