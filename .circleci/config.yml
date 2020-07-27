@@ -133,30 +133,34 @@ workflows:
       - test-e2e:
           name: test-e2e-sqlite
           flavor: sqlite
-          filters:
-            tags:
-              only: /.*/
-      - test-e2e:
-          name: test-e2e-memory
-          flavor: memory
+          requires:
+            - test
+            - nancy/test
+            - gloangci/lint
           filters:
             tags:
               only: /.*/
       - test-e2e:
           name: test-e2e-postgres
           flavor: postgres
+          requires:
+            - test-e2e-postgres
           filters:
             tags:
               only: /.*/
       - test-e2e:
           name: test-e2e-mysql
           flavor: mysql
+          requires:
+            - test-e2e-mysql
           filters:
             tags:
               only: /.*/
       - test-e2e:
           name: test-e2e-cockroach
           flavor: cockroach
+          requires:
+            - test-e2e-cockroach
           filters:
             tags:
               only: /.*/
@@ -170,7 +174,6 @@ workflows:
           requires:
             - test
             - test-e2e-sqlite
-            - test-e2e-memory
             - test-e2e-postgres
             - test-e2e-mysql
             - test-e2e-cockroach
@@ -184,7 +187,6 @@ workflows:
           requires:
             - test
             - test-e2e-sqlite
-            - test-e2e-memory
             - test-e2e-postgres
             - test-e2e-mysql
             - test-e2e-cockroach
@@ -198,7 +200,6 @@ workflows:
           requires:
             - test
             - test-e2e-sqlite
-            - test-e2e-memory
             - test-e2e-postgres
             - test-e2e-mysql
             - test-e2e-cockroach
@@ -214,7 +215,6 @@ workflows:
           requires:
             - test
             - test-e2e-sqlite
-            - test-e2e-memory
             - test-e2e-postgres
             - test-e2e-mysql
             - test-e2e-cockroach
@@ -235,7 +235,6 @@ workflows:
             - goreleaser/test
             - test
             - test-e2e-sqlite
-            - test-e2e-memory
             - test-e2e-postgres
             - test-e2e-mysql
             - test-e2e-cockroach
