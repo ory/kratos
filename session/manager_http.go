@@ -23,7 +23,7 @@ type (
 		x.CSRFProvider
 	}
 	managerHTTPConfiguration interface {
-		SessionLifespan() time.Duration
+		SessionLifespan() *time.Duration
 		SecretsSession() [][]byte
 		SessionSameSiteMode() http.SameSite
 		SessionDomain() string
@@ -71,6 +71,11 @@ func (s *ManagerHTTP) SaveToRequest(ctx context.Context, w http.ResponseWriter, 
 	if s.c.SessionSameSiteMode() != 0 {
 		cookie.Options.SameSite = s.c.SessionSameSiteMode()
 	}
+
+	if s.c.SessionLifespan() != nil {
+		cookie.Options.MaxAge = int(s.c.SessionLifespan().Seconds())
+	}
+
 	cookie.Values["sid"] = session.ID.String()
 	if err := cookie.Save(r, w); err != nil {
 		return errors.WithStack(err)
