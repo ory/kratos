@@ -136,7 +136,7 @@ workflows:
           requires:
             - test
             - nancy/test
-            - gloangci/lint
+            - golangci/lint
           filters:
             tags:
               only: /.*/
