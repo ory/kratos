@@ -27,7 +27,6 @@ func NewKratosServerWithCSRF(t *testing.T, reg driver.Registry) (public, admin *
 	viper.Set(configuration.ViperKeyPublicBaseURL, public.URL)
 	viper.Set(configuration.ViperKeyAdminBaseURL, admin.URL)
 
-	panic("asdf")
 	reg.RegisterRoutes(rp, ra)
 
 	t.Cleanup(public.Close)
