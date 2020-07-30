@@ -1,6 +1,8 @@
 package driver
 
 import (
+	"github.com/ory/x/tracing"
+
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
 
@@ -54,6 +56,7 @@ type Registry interface {
 	RegisterRoutes(public *x.RouterPublic, admin *x.RouterAdmin)
 	RegisterPublicRoutes(public *x.RouterPublic)
 	RegisterAdminRoutes(admin *x.RouterAdmin)
+	Tracer() *tracing.Tracer
 
 	x.CSRFProvider
 	x.WriterProvider
@@ -115,7 +118,6 @@ type Registry interface {
 
 	recovery.RequestPersistenceProvider
 	recovery.ErrorHandlerProvider
-	recovery.StrategyProvider
 	recovery.HandlerProvider
 	recovery.StrategyProvider
 

@@ -45,6 +45,10 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 	n.Use(NewNegroniLoggerMiddleware(l, "public#"+c.SelfPublicURL().String()))
 	n.Use(sqa(cmd, d))
 
+	if tracer := d.Registry().Tracer(); tracer.IsLoaded() {
+		n.Use(tracer)
+	}
+
 	csrf := x.NewCSRFHandler(
 		router,
 		r.Writer(),
