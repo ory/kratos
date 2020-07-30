@@ -99,11 +99,15 @@ func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (*S
 	}
 
 	se, err := s.r.SessionPersister().GetSession(ctx, x.ParseUUID(sid))
-	if err != nil && (err.Error() == herodot.ErrNotFound.Error() ||
-		err.Error() == sqlcon.ErrNoRows.Error()) {
-		return nil, errors.WithStack(ErrNoActiveSessionFound)
-	} else if err != nil {
+	if err != nil {
+		if errors.Is(err, herodot.ErrNotFound) || errors.Is(err, sqlcon.ErrNoRows) {
+			return nil, errors.WithStack(ErrNoActiveSessionFound)
+		}
 		return nil, err
+	}
+
+	if se.ExpiresAt.Before(time.Now()) {
+		return nil, errors.WithStack(ErrNoActiveSessionFound)
 	}
 
 	se.Identity = se.Identity.CopyWithoutCredentials()
