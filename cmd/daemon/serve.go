@@ -85,6 +85,10 @@ func serveAdmin(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []
 	n.Use(NewNegroniLoggerMiddleware(l, "admin#"+c.SelfAdminURL().String()))
 	n.Use(sqa(cmd, d))
 
+	if tracer := d.Registry().Tracer(); tracer.IsLoaded() {
+		n.Use(tracer)
+	}
+
 	n.UseHandler(router)
 	server := graceful.WithDefaults(&http.Server{
 		Addr:    c.AdminListenOn(),
