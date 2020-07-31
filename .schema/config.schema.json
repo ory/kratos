@@ -296,7 +296,7 @@
                   "title": "URL of the Settings page.",
                   "description": "URL where the Settings UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
                   "type": "string",
-                  "format": "uri",
+                  "format": "uri-reference",
                   "examples": [
                     "https://my-app.com/user/settings"
                   ],
@@ -350,7 +350,7 @@
                   "title": "Registration UI URL",
                   "description": "URL where the Registration UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
                   "type": "string",
-                  "format": "uri",
+                  "format": "uri-reference",
                   "examples": [
                     "https://my-app.com/signup"
                   ],
@@ -379,7 +379,7 @@
                   "title": "Login UI URL",
                   "description": "URL where the Login UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
                   "type": "string",
-                  "format": "uri",
+                  "format": "uri-reference",
                   "examples": [
                     "https://my-app.com/login"
                   ],
@@ -415,7 +415,7 @@
                   "title": "Verify UI URL",
                   "description": "URL where the ORY Verify UI is hosted. This is the page where users activate and / or verify their email or telephone number. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
                   "type": "string",
-                  "format": "uri",
+                  "format": "uri-reference",
                   "examples": [
                     "https://my-app.com/verify"
                   ],
@@ -459,7 +459,7 @@
                   "title": "Recovery UI URL",
                   "description": "URL where the ORY Recovery UI is hosted. This is the page where users request and complete account recovery. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
                   "type": "string",
-                  "format": "uri",
+                  "format": "uri-reference",
                   "examples": [
                     "https://my-app.com/verify"
                   ],
@@ -496,7 +496,7 @@
                   "title": "ORY Kratos Error UI URL",
                   "description": "URL where the ORY Kratos Error UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
                   "type": "string",
-                  "format": "uri",
+                  "format": "uri-reference",
                   "examples": [
                     "https://my-app.com/kratos-error"
                   ],

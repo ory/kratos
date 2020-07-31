@@ -40,7 +40,7 @@ selfservice:
         default_browser_return_url: http://127.0.0.1:4455/auth/login
 
     login:
-      ui_url: http://127.0.0.1:4455/auth/login
+      ui_url: /auth/login
       request_lifespan: 10m
 
     registration:
