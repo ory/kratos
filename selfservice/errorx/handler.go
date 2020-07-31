@@ -1,16 +1,21 @@
 package errorx
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
 
+	"github.com/ory/herodot"
+
 	"github.com/ory/kratos/x"
 )
 
 const ErrorsPath = "/self-service/errors"
+
+var stub500, _ = json.Marshal([]interface{}{herodot.ErrInternalServerError.WithReasonf("This is a stub error.")})
 
 type (
 	handlerDependencies interface {
@@ -69,6 +74,10 @@ type errorContainerParameters struct {
 // When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent
 // token scanning attacks, the public endpoint does not return 404 status codes.
 //
+// This endpoint supports stub values to help you implement the error UI:
+//
+// - `?error=stub:500` - returns a stub 500 (Internal Server Error) error.
+//
 // More information can be found at [ORY Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).
 //
 //     Produces:
@@ -96,7 +105,14 @@ func (h *Handler) adminFetchError(w http.ResponseWriter, r *http.Request, ps htt
 }
 
 func (h *Handler) fetchError(w http.ResponseWriter, r *http.Request, mustVerify bool) error {
-	es, err := h.r.SelfServiceErrorPersister().Read(r.Context(), x.ParseUUID(r.URL.Query().Get("error")))
+	id := r.URL.Query().Get("error")
+	switch id {
+	case "stub:500":
+		h.r.Writer().Write(w, r, &ErrorContainer{ID: x.NewUUID(), Errors: stub500})
+		return nil
+	}
+
+	es, err := h.r.SelfServiceErrorPersister().Read(r.Context(), x.ParseUUID(id))
 	if err != nil {
 		return err
 	}
