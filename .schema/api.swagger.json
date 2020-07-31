@@ -1141,7 +1141,7 @@
     },
     "/self-service/errors": {
       "get": {
-        "description": "This endpoint returns the error associated with a user-facing self service errors.\n\nWhen accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent\ntoken scanning attacks, the public endpoint does not return 404 status codes.\n\nMore information can be found at [ORY Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).",
+        "description": "This endpoint returns the error associated with a user-facing self service errors.\n\nWhen accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent\ntoken scanning attacks, the public endpoint does not return 404 status codes.\n\nThis endpoint supports stub values to help you implement the error UI:\n\n`?error=stub:500` - returns a stub 500 (Internal Server Error) error.\n\nMore information can be found at [ORY Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).",
         "produces": [
           "application/json"
         ],
