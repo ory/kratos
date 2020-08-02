@@ -1,0 +1,33 @@
+{
+  "$id": "https://example.com/customer.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Person",
+  "type": "object",
+  "properties": {
+    "traits": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string",
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
+              }
+            },
+            "verification": {
+              "email": true
+            },
+            "recovery": {
+              "email": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -25,10 +25,11 @@ type (
 		x.LoggingProvider
 	}
 	Persister struct {
-		c  *pop.Connection
-		mb pop.MigrationBox
-		r  persisterDependencies
-		cf configuration.Provider
+		c        *pop.Connection
+		mb       pop.MigrationBox
+		r        persisterDependencies
+		cf       configuration.Provider
+		isSQLite bool
 	}
 )
 
@@ -38,7 +39,7 @@ func NewPersister(r persisterDependencies, conf configuration.Provider, c *pop.C
 		return nil, errors.WithStack(err)
 	}
 
-	return &Persister{c: c, mb: m, cf: conf, r: r}, nil
+	return &Persister{c: c, mb: m, cf: conf, r: r, isSQLite: c.Dialect.Name() == "sqlite3"}, nil
 }
 
 func (p *Persister) Connection() *pop.Connection {
@@ -50,10 +51,36 @@ func (p *Persister) MigrationStatus(ctx context.Context, w io.Writer) error {
 }
 
 func (p *Persister) MigrateDown(ctx context.Context, steps int) error {
+	// FIXME https://github.com/gobuffalo/pop/issues/574
+	if p.isSQLite {
+		if err := p.c.RawQuery(`PRAGMA legacy_alter_table=on; PRAGMA foreign_keys=off;`).Exec(); err != nil {
+			return errors.WithStack(err)
+		}
+
+		if err := p.mb.Down(steps); err != nil {
+			return errors.WithStack(err)
+		}
+
+		return p.c.RawQuery(`PRAGMA legacy_alter_table=off; PRAGMA foreign_keys=on;`).Exec()
+	}
+
 	return errors.WithStack(p.mb.Down(steps))
 }
 
 func (p *Persister) MigrateUp(ctx context.Context) error {
+	// FIXME https://github.com/gobuffalo/pop/issues/574
+	if p.isSQLite {
+		if err := p.c.RawQuery(`PRAGMA legacy_alter_table=on; PRAGMA foreign_keys=off;`).Exec(); err != nil {
+			return errors.WithStack(err)
+		}
+
+		if err := p.mb.Up(); err != nil {
+			return errors.WithStack(err)
+		}
+
+		return p.c.RawQuery(`PRAGMA legacy_alter_table=off; PRAGMA foreign_keys=on;`).Exec()
+	}
+
 	return errors.WithStack(p.mb.Up())
 }
 

@@ -28,7 +28,7 @@ func NewRecoverySuccessful(privilegedSessionExpiresAt time.Time) *Message {
 	return &Message{
 		ID:   InfoSelfServiceRecoverySuccessful,
 		Type: Info,
-		Text: fmt.Sprintf("You successfully recovered your accent. Please change your password or set up an alternative login method (e.g. social sign in) within the next %.2f minutes.", hasLeft.Minutes()),
+		Text: fmt.Sprintf("You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next %.2f minutes.", hasLeft.Minutes()),
 		Context: context(map[string]interface{}{
 			"privilegedSessionExpiresAt": privilegedSessionExpiresAt,
 		}),

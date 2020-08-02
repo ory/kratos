@@ -66,21 +66,21 @@ func TestSettingsStrategy(t *testing.T) {
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "github", "github"),
 	)
 	testhelpers.InitKratosServers(t, reg, publicTS, adminTS)
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/settings.schema.json")
-	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, "https://www.ory.sh/kratos")
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/settings.schema.json")
+	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/kratos")
 
 	// Make test data for this test run unique
 	testID := x.NewUUID().String()
 	users := map[string]*identity.Identity{
 		"password": {ID: x.NewUUID(), Traits: identity.Traits(`{"email":"john` + testID + `@doe.com"}`),
-			TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
+			SchemaID: configuration.DefaultIdentityTraitsSchemaID,
 			Credentials: map[identity.CredentialsType]identity.Credentials{
 				"password": {Type: "password",
 					Identifiers: []string{"john+" + testID + "@doe.com"},
 					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$argon2id$iammocked...."}`)}},
 		},
 		"oryer": {ID: x.NewUUID(), Traits: identity.Traits(`{"email":"hackerman+` + testID + `@ory.sh"}`),
-			TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
+			SchemaID: configuration.DefaultIdentityTraitsSchemaID,
 			Credentials: map[identity.CredentialsType]identity.Credentials{
 				identity.CredentialsTypeOIDC: {Type: identity.CredentialsTypeOIDC,
 					Identifiers: []string{"ory:hackerman+" + testID},
@@ -91,7 +91,7 @@ func TestSettingsStrategy(t *testing.T) {
 				identity.CredentialsTypeOIDC: {Type: identity.CredentialsTypeOIDC,
 					Identifiers: []string{"ory:hackerman+github+" + testID, "github:hackerman+github+" + testID},
 					Config:      sqlxx.JSONRawMessage(`{"providers":[{"provider":"ory","subject":"hackerman+github+` + testID + `"},{"provider":"github","subject":"hackerman+github+` + testID + `"}]}`)}},
-			TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
+			SchemaID: configuration.DefaultIdentityTraitsSchemaID,
 		},
 		"multiuser": {ID: x.NewUUID(), Traits: identity.Traits(`{"email":"hackerman+multiuser+` + testID + `@ory.sh"}`),
 			Credentials: map[identity.CredentialsType]identity.Credentials{
@@ -101,7 +101,7 @@ func TestSettingsStrategy(t *testing.T) {
 				identity.CredentialsTypeOIDC: {Type: identity.CredentialsTypeOIDC,
 					Identifiers: []string{"ory:hackerman+multiuser+" + testID, "google:hackerman+multiuser+" + testID},
 					Config:      sqlxx.JSONRawMessage(`{"providers":[{"provider":"ory","subject":"hackerman+multiuser+` + testID + `"},{"provider":"google","subject":"hackerman+multiuser+` + testID + `"}]}`)}},
-			TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
+			SchemaID: configuration.DefaultIdentityTraitsSchemaID,
 		},
 	}
 	agents := testhelpers.AddAndLoginIdentities(t, reg, publicTS, users)
@@ -182,7 +182,7 @@ func TestSettingsStrategy(t *testing.T) {
 		assert.NotEmpty(t, req.IssuedAt)
 		assert.EqualValues(t, users["password"].ID, req.Identity.ID)
 		assert.EqualValues(t, users["password"].Traits, req.Identity.Traits)
-		assert.EqualValues(t, users["password"].TraitsSchemaID, req.Identity.TraitsSchemaID)
+		assert.EqualValues(t, users["password"].SchemaID, req.Identity.SchemaID)
 
 		assert.EqualValues(t, req.ID.String(), rs.Payload.ID)
 		assert.EqualValues(t, req.RequestURL, *rs.Payload.RequestURL)
@@ -257,7 +257,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 	var reset = func(t *testing.T) func() {
 		return func() {
-			viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, time.Minute*5)
+			viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
 			agents = testhelpers.AddAndLoginIdentities(t, reg, publicTS, users)
 		}
 	}
@@ -311,7 +311,7 @@ func TestSettingsStrategy(t *testing.T) {
 			agent, provider := "githuber", "github"
 
 			var runUnauthed = func(t *testing.T) *models.SettingsRequest {
-				viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, time.Millisecond)
+				viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
 				time.Sleep(time.Millisecond)
 				t.Cleanup(reset(t))
 				_, res, req := unlink(t, agent, provider)
@@ -336,7 +336,7 @@ func TestSettingsStrategy(t *testing.T) {
 				req := runUnauthed(t)
 
 				// fake login by allowing longer sessions...
-				viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, time.Minute*5)
+				viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
 
 				body, res := testhelpers.HTTPPostForm(t, agents[agent], action(req),
 					&url.Values{"csrf_token": {"nosurf"}, "unlink": {provider}})
@@ -453,12 +453,37 @@ func TestSettingsStrategy(t *testing.T) {
 			checkCredentials(t, true, users[agent].ID, provider, subject)
 		})
 
+		t.Run("case=should link a connection even if user does not have oidc credentials yet", func(t *testing.T) {
+			t.Cleanup(reset(t))
+
+			subject = "hackerman+new-connection-new-oidc+" + testID
+			scope = []string{"openid"}
+
+			agent, provider := "password", "google"
+			_, res, req := link(t, agent, provider)
+			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
+
+			rs, err := admin.Common.GetSelfServiceBrowserSettingsRequest(common.
+				NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(agents[agent]).
+				WithRequest(string(req.ID)))
+			require.NoError(t, err)
+			require.EqualValues(t, settings.StateSuccess, rs.Payload.State)
+
+			testhelpers.JSONEq(t, append(models.FormFields{csrfField}, models.FormFields{
+				{Type: pointerx.String("submit"), Name: pointerx.String("link"), Value: "ory"},
+				{Type: pointerx.String("submit"), Name: pointerx.String("link"), Value: "github"},
+				{Type: pointerx.String("submit"), Name: pointerx.String("unlink"), Value: "google"},
+			}...), rs.Payload.Methods[identity.CredentialsTypeOIDC.String()].Config.Fields)
+
+			checkCredentials(t, true, users[agent].ID, provider, subject)
+		})
+
 		t.Run("case=should not be able to link a connection without a privileged session", func(t *testing.T) {
 			agent, provider := "githuber", "google"
 			subject = "hackerman+new+google+" + testID
 
 			var runUnauthed = func(t *testing.T) *models.SettingsRequest {
-				viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, time.Millisecond)
+				viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
 				time.Sleep(time.Millisecond)
 				t.Cleanup(reset(t))
 				_, res, req := link(t, agent, provider)
@@ -483,7 +508,7 @@ func TestSettingsStrategy(t *testing.T) {
 				req := runUnauthed(t)
 
 				// fake login by allowing longer sessions...
-				viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, time.Minute*5)
+				viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
 
 				body, res := testhelpers.HTTPPostForm(t, agents[agent], action(req),
 					&url.Values{"csrf_token": {"nosurf"}, "unlink": {provider}})
@@ -501,11 +526,11 @@ func TestPopulateSettingsMethod(t *testing.T) {
 	nreg := func(t *testing.T, conf *oidc.ConfigurationCollection) *driver.RegistryDefault {
 		_, reg := internal.NewFastRegistryWithMocks(t)
 
-		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://stub/registration.schema.json")
-		viper.Set(configuration.ViperKeyURLsSelfPublic, "https://www.ory.sh/")
+		viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://stub/registration.schema.json")
+		viper.Set(configuration.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 
-		viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
-			"enabled": true})
+		// Enabled per default:
+		// 		viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
 		viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC), map[string]interface{}{
 			"enabled": true,
 			"config":  conf})

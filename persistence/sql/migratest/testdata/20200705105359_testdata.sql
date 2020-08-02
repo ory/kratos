@@ -1,0 +1,1 @@
+INSERT INTO identities (id, schema_id, traits, created_at, updated_at) VALUES ('d7b9addb-ac15-4bc2-9fa5-562e0bf48755', 'default', '{"email":"d7b9@ory.sh"}', '2013-10-07 08:23:19', '2013-10-07 08:23:19');

@@ -2,12 +2,19 @@ package settings
 
 import (
 	"net/http"
+	"reflect"
 
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
+
+const (
+	StrategyProfile = "profile"
+)
+
+var pkgName = reflect.TypeOf(Strategies{}).PkgPath()
 
 type Strategy interface {
 	SettingsStrategyID() string

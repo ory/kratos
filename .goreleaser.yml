@@ -8,8 +8,9 @@ env:
 before:
   hooks:
     - go mod download
-    - go install github.com/gobuffalo/packr/v2/packr2
+    - go install github.com/gobuffalo/packr/v2/packr2 github.com/markbates/pkger/cmd/pkger
     - packr2
+    - pkger
 
 builds:
   -
@@ -20,7 +21,7 @@ builds:
     ldflags:
       - -s -w -X github.com/ory/kratos/cmd.BuildVersion={{.Tag}} -X github.com/ory/kratos/cmd.BuildGitHash={{.FullCommit}} -X github.com/ory/kratos/cmd.BuildTime={{.Date}}
       # - "-extldflags '-static'"
-    binary: kratos-sqlite
+    binary: kratos
     env:
       - CGO_ENABLED=1
       - CC=o64-clang
@@ -37,7 +38,7 @@ builds:
       - sqlite
     ldflags:
       - -s -w -X github.com/ory/kratos/cmd.BuildVersion={{.Tag}} -X github.com/ory/kratos/cmd.BuildGitHash={{.FullCommit}} -X github.com/ory/kratos/cmd.BuildTime={{.Date}}
-    binary: kratos-sqlite
+    binary: kratos
     env:
       - CGO_ENABLED=1
     goarch:
@@ -51,7 +52,7 @@ builds:
       - sqlite
     ldflags:
       - -s -w -X github.com/ory/kratos/cmd.BuildVersion={{.Tag}} -X github.com/ory/kratos/cmd.BuildGitHash={{.FullCommit}} -X github.com/ory/kratos/cmd.BuildTime={{.Date}}
-    binary: kratos-sqlite-libmusl
+    binary: kratos
     env:
       - CGO_ENABLED=1
       - CC=musl-gcc
@@ -67,7 +68,7 @@ builds:
     ldflags:
       - -s -w -X github.com/ory/kratos/cmd.BuildVersion={{.Tag}} -X github.com/ory/kratos/cmd.BuildGitHash={{.FullCommit}} -X github.com/ory/kratos/cmd.BuildTime={{.Date}}
       - "-extldflags '-static'"
-    binary: kratos-sqlite
+    binary: kratos
     env:
       - CGO_ENABLED=1
       - CC=x86_64-w64-mingw32-gcc
@@ -105,7 +106,6 @@ archives:
       - kratos-sqlite-windows
       - kratos-sqlite-darwin
       - kratos-sqlite-linux
-      - kratos-sqlite-linux-libmusl
     replacements:
       darwin: macos
       386: 32bit
@@ -158,20 +158,6 @@ archives:
       - README.md
       - SECURITY.md
 
-  - id: kratos-brew
-    builds:
-      - kratos-sqlite-darwin
-    replacements:
-      darwin: macos
-      386: 32bit
-      amd64: 64bit
-      arm: arm32
-    files:
-      - CHANGELOG.md
-      - LICENSE
-      - README.md
-      - SECURITY.md
-
 snapshot:
   name_template: "{{ .Tag }}-next"
 
@@ -188,11 +174,11 @@ brews:
       owner: ory
       name: homebrew-kratos
     ids:
-    - kratos-brew
+    - kratos-sqlite
     homepage:  https://www.ory.sh
     commit_author:
-      name: ory
-      email: hi@ory.sh
+      name: aeneasr
+      email: 3372410+aeneasr@users.noreply.github.com
 
 scoop:
   bucket:
@@ -200,8 +186,8 @@ scoop:
     name: scoop-kratos
   homepage:  https://www.ory.sh
   commit_author:
-    name: ory
-    email: hi@ory.sh
+    name: aeneasr
+    email: 3372410+aeneasr@users.noreply.github.com
 
 checksum:
   algorithm: sha256
@@ -211,7 +197,7 @@ dockers:
     builds:
       - kratos-sqlite-linux-libmusl
     binaries:
-      - kratos-sqlite-libmusl
+      - kratos
     image_templates:
       - "oryd/kratos:v{{ .Major }}-sqlite"
       - "oryd/kratos:v{{ .Major }}.{{ .Minor }}-sqlite"

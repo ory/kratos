@@ -1,21 +1,18 @@
 selfservice:
-  strategies:
-    password:
-      enabled: true
+  flows:
+    settings:
+      privileged_session_max_age: 5000ms
 
-  settings:
-    privileged_session_max_age: 5000ms
+    logout:
+      after:
+        default_browser_return_url: http://127.0.0.1:4455/auth/login
 
-  logout:
-    redirect_to: http://127.0.0.1:4455/auth/login
-
-  registration:
-    after:
-      password:
-        hooks:
-          -
-            hook: session
+    registration:
+      after:
+        password:
+          hooks:
+            -
+              hook: session
 
 identity:
-  traits:
-    default_schema_url: file://test/e2e/profiles/email/identity.traits.schema.json
+  default_schema_url: file://test/e2e/profiles/email/identity.traits.schema.json

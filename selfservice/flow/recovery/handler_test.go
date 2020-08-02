@@ -28,16 +28,17 @@ func init() {
 
 func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
+	testhelpers.RecoveryFlowEnable(true)
 
 	testhelpers.NewRecoveryUITestServer(t)
 	redirTS := testhelpers.NewRedirTS(t, "already authenticated")
-	viper.Set(configuration.ViperKeyURLsLogin, redirTS.URL)
+	viper.Set(configuration.ViperKeySelfServiceLoginUI, redirTS.URL)
 
 	router := x.NewRouterPublic()
 	testhelpers.NewErrorTestServer(t, reg)
 	public, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 
 	t.Run("does redirect to default on authenticated request", func(t *testing.T) {
 		body, _ := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, x.NewTestHTTPRequest(t, "GET", public.URL+recovery.PublicRecoveryInitPath, nil))
@@ -47,6 +48,7 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 
 func TestRecoveryHandler(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
+	testhelpers.RecoveryFlowEnable(true)
 
 	testhelpers.NewRedirTS(t, "")
 	testhelpers.NewLoginUIRequestEchoServer(t, reg)
@@ -60,7 +62,7 @@ func TestRecoveryHandler(t *testing.T) {
 			}
 			_, _ = w.Write(x.EasyGetBody(t, c, upstream+recovery.PublicRecoveryRequestPath+"?request="+r.URL.Query().Get("request")))
 		}))
-		viper.Set(configuration.ViperKeyURLsRecovery, ts.URL)
+		viper.Set(configuration.ViperKeySelfServiceRecoveryUI, ts.URL)
 		t.Cleanup(ts.Close)
 		return ts
 	}
@@ -70,6 +72,7 @@ func TestRecoveryHandler(t *testing.T) {
 		// assert.NotEmpty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==csrf_token).value").String(), "%s", body)
 		assert.NotEmpty(t, gjson.GetBytes(body, "id").String(), "%s", body)
 		assert.Empty(t, gjson.GetBytes(body, "headers").Value(), "%s", body)
+		assert.Equal(t, "choose_method", gjson.GetBytes(body, "state").Value(), "%s", body)
 		// assert.Contains(t, gjson.GetBytes(body, "methods.password.config.action").String(), gjson.GetBytes(body, "id").String(), "%s", body)
 		// assert.Contains(t, gjson.GetBytes(body, "methods.password.config.action").String(), public.URL, "%s", body)
 	}
@@ -89,12 +92,12 @@ func TestRecoveryHandler(t *testing.T) {
 		}
 	}
 
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/recovery.schema.json")
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/recovery.schema.json")
 
 	t.Run("daemon=admin", func(t *testing.T) {
 		regTS := newRecoveryTS(t, admin.URL, nil)
 		defer regTS.Close()
-		viper.Set(configuration.ViperKeyURLsRecovery, regTS.URL)
+		viper.Set(configuration.ViperKeySelfServiceRecoveryUI, regTS.URL)
 
 		t.Run("case=valid", func(t *testing.T) {
 			assertRequestPayload(t, x.EasyGetBody(t, public.Client(), public.URL+recovery.PublicRecoveryInitPath))

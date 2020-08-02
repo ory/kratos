@@ -1,4 +1,4 @@
-docs/adopters
+docs
 .releaser
 .github
 .circleci
@@ -11,3 +11,5 @@ contrib/quickstart
 node_modules/
 ./quickstart.yml
 ./quickstart-*.yml
+.bin/
+test/

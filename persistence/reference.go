@@ -14,8 +14,8 @@ import (
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
-	"github.com/ory/kratos/selfservice/flow/verify"
-	"github.com/ory/kratos/selfservice/strategy/link"
+	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/ory/kratos/selfservice/strategy/recoverytoken"
 	"github.com/ory/kratos/session"
 )
 
@@ -32,9 +32,9 @@ type Persister interface {
 	courier.Persister
 	session.Persister
 	errorx.Persister
-	verify.Persister
+	verification.Persister
 	recovery.RequestPersister
-	link.Persister
+	recoverytoken.Persister
 
 	Close(context.Context) error
 	Ping(context.Context) error

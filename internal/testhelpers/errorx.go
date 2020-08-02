@@ -29,7 +29,7 @@ func NewErrorTestServer(t *testing.T, reg interface{ errorx.PersistenceProvider 
 		writer.Write(w, r, e.Errors)
 	}))
 	t.Cleanup(ts.Close)
-	viper.Set(configuration.ViperKeyURLsError, ts.URL)
+	viper.Set(configuration.ViperKeySelfServiceErrorUI, ts.URL)
 	return ts
 }
 
@@ -42,6 +42,6 @@ func NewRedirTS(t *testing.T, body string) *httptest.Server {
 		_, _ = w.Write([]byte(body))
 	}))
 	t.Cleanup(ts.Close)
-	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, ts.URL)
+	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL)
 	return ts
 }

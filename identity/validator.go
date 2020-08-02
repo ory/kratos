@@ -1,11 +1,7 @@
 package identity
 
 import (
-	"encoding/json"
-
-	"github.com/ory/jsonschema/v3"
-
-	"github.com/ory/x/errorsx"
+	"github.com/tidwall/sjson"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/schema"
@@ -39,29 +35,23 @@ func (v *Validator) ValidateWithRunner(i *Identity, runners ...schema.Extension)
 		return err
 	}
 
-	s, err := v.d.IdentityTraitsSchemas().GetByID(i.TraitsSchemaID)
+	s, err := v.d.IdentityTraitsSchemas().GetByID(i.SchemaID)
 	if err != nil {
 		return err
 	}
 
-	err = v.v.Validate(
-		s.URL.String(),
-		json.RawMessage(i.Traits),
-		schema.WithExtensionRunner(runner),
-	)
-
-	switch e := errorsx.Cause(err).(type) {
-	case *jsonschema.ValidationError:
-		return schema.ContextSetRoot(e, "traits")
+	traits, err := sjson.SetRawBytes([]byte(`{}`), "traits", i.Traits)
+	if err != nil {
+		return err
 	}
 
-	return err
+	return v.v.Validate(s.URL.String(), traits, schema.WithExtensionRunner(runner))
 }
 
 func (v *Validator) Validate(i *Identity) error {
 	return v.ValidateWithRunner(i,
 		NewSchemaExtensionCredentials(i),
-		NewSchemaExtensionVerification(i, v.c.SelfServiceVerificationRequestLifespan()),
+		NewSchemaExtensionVerification(i, v.c.SelfServiceFlowVerificationRequestLifespan()),
 		NewSchemaExtensionRecovery(i),
 	)
 }

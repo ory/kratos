@@ -85,11 +85,11 @@ func TestLoginNew(t *testing.T) {
 	newReturnTs(t, reg)
 
 	// Overwrite these two:
-	viper.Set(configuration.ViperKeyURLsError, errTs.URL+"/error-ts")
-	viper.Set(configuration.ViperKeyURLsLogin, uiTs.URL+"/login-ts")
+	viper.Set(configuration.ViperKeySelfServiceErrorUI, errTs.URL+"/error-ts")
+	viper.Set(configuration.ViperKeySelfServiceLoginUI, uiTs.URL+"/login-ts")
 
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/login.schema.json")
-	viper.Set(configuration.ViperKeySecretsSession, []string{"not-a-secure-session-key"})
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
+	viper.Set(configuration.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	mr := func(t *testing.T, payload string, requestID string, c *http.Client) (*http.Response, []byte) {
 		res, err := c.Post(ts.URL+password.LoginPath+"?request="+requestID, "application/x-www-form-urlencoded", strings.NewReader(payload))

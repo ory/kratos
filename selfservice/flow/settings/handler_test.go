@@ -32,12 +32,14 @@ func init() {
 
 func TestHandler(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+	testhelpers.StrategyEnable(identity.CredentialsTypePassword.String(), true)
+	testhelpers.StrategyEnable(settings.StrategyProfile, true)
 
 	_ = testhelpers.NewSettingsUITestServer(t)
 	_ = testhelpers.NewErrorTestServer(t, reg)
 
-	viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
+	viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
 	primaryIdentity := &identity.Identity{ID: x.NewUUID(), Traits: identity.Traits(`{}`)}
 	publicTS, adminTS, clients := testhelpers.NewSettingsAPIServer(t, reg, map[string]*identity.Identity{
 		"primary":   primaryIdentity,

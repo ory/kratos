@@ -1,9 +1,7 @@
 package driver
 
 import (
-	"context"
-	"net/url"
-	"strings"
+	"github.com/ory/x/tracing"
 
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
@@ -16,7 +14,7 @@ import (
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/settings"
-	"github.com/ory/kratos/selfservice/flow/verify"
+	"github.com/ory/kratos/selfservice/flow/verification"
 
 	"github.com/ory/x/healthx"
 
@@ -58,6 +56,7 @@ type Registry interface {
 	RegisterRoutes(public *x.RouterPublic, admin *x.RouterAdmin)
 	RegisterPublicRoutes(public *x.RouterPublic)
 	RegisterAdminRoutes(admin *x.RouterAdmin)
+	Tracer() *tracing.Tracer
 
 	x.CSRFProvider
 	x.WriterProvider
@@ -112,14 +111,13 @@ type Registry interface {
 	registration.HandlerProvider
 	registration.StrategyProvider
 
-	verify.PersistenceProvider
-	verify.ErrorHandlerProvider
-	verify.SenderProvider
-	verify.HandlerProvider
+	verification.PersistenceProvider
+	verification.ErrorHandlerProvider
+	verification.SenderProvider
+	verification.HandlerProvider
 
 	recovery.RequestPersistenceProvider
 	recovery.ErrorHandlerProvider
-	recovery.StrategyProvider
 	recovery.HandlerProvider
 	recovery.StrategyProvider
 
@@ -138,19 +136,5 @@ func NewRegistry(c configuration.Provider) (Registry, error) {
 		return nil, errors.Errorf("driver of type %T does not implement interface Registry", driver)
 	}
 
-	// if dsn is memory we have to run the migrations on every start
-	if urlParts := strings.SplitN(dsn, "?", 1); len(urlParts) == 2 && strings.HasPrefix(dsn, "sqlite://") {
-		queryVals, err := url.ParseQuery(urlParts[1])
-		if err != nil {
-			return nil, errors.WithMessage(errors.WithStack(err), "unable to parse the DSN url")
-		}
-		if queryVals.Get("mode") == "memory" {
-			registry.Logger().Print("Kratos is running migrations on every startup as DSN is memory.\n")
-			registry.Logger().Print("This means your data is lost when Kratos terminates.\n")
-			if err := registry.Persister().MigrateUp(context.Background()); err != nil {
-				return nil, err
-			}
-		}
-	}
 	return registry, nil
 }

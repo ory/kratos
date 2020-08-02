@@ -1,0 +1,8 @@
+{
+  "id": "d7b9addb-ac15-4bc2-9fa5-562e0bf48755",
+  "schema_id": "default",
+  "schema_url": "https://www.ory.sh/schemas/default",
+  "traits": {
+    "email": "d7b9@ory.sh"
+  }
+}

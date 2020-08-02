@@ -48,7 +48,7 @@ func NewManager(r managerDependencies, c configuration.Provider) *Manager {
 	return &Manager{r: r, c: c}
 }
 
-func ManagerExposeValidationErrors(options *managerOptions) {
+func ManagerExposeValidationErrorsForInternalTypeAssertion(options *managerOptions) {
 	options.ExposeValidationErrors = true
 }
 
@@ -110,6 +110,25 @@ func (m *Manager) Update(ctx context.Context, updated *Identity, opts ...Manager
 	return m.r.IdentityPool().(PrivilegedPool).UpdateIdentity(ctx, updated)
 }
 
+func (m *Manager) UpdateSchemaID(ctx context.Context, id uuid.UUID, schemaID string, opts ...ManagerOption) error {
+	o := newManagerOptions(opts)
+	original, err := m.r.IdentityPool().(PrivilegedPool).GetIdentityConfidential(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	if !o.AllowWriteProtectedTraits && original.SchemaID != schemaID {
+		return errors.WithStack(ErrProtectedFieldModified)
+	}
+
+	original.SchemaID = schemaID
+	if err := m.validate(original, o); err != nil {
+		return err
+	}
+
+	return m.r.IdentityPool().(PrivilegedPool).UpdateIdentity(ctx, original)
+}
+
 func (m *Manager) UpdateTraits(ctx context.Context, id uuid.UUID, traits Traits, opts ...ManagerOption) error {
 	o := newManagerOptions(opts)
 	original, err := m.r.IdentityPool().(PrivilegedPool).GetIdentityConfidential(ctx, id)
@@ -138,7 +157,7 @@ func (m *Manager) RefreshVerifyAddress(ctx context.Context, address *VerifiableA
 	}
 
 	address.Code = code
-	address.ExpiresAt = time.Now().UTC().Add(m.c.SelfServiceVerificationRequestLifespan())
+	address.ExpiresAt = time.Now().UTC().Add(m.c.SelfServiceFlowVerificationRequestLifespan())
 	return m.r.IdentityPool().(PrivilegedPool).UpdateVerifiableAddress(ctx, address)
 }
 

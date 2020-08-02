@@ -20,14 +20,13 @@ import (
 
 	"github.com/ory/x/viperx"
 
-	"github.com/gobuffalo/packr/v2"
-
 	"github.com/spf13/cobra"
 
 	"github.com/ory/x/flagx"
 
 	"github.com/ory/kratos/cmd/daemon"
 	"github.com/ory/kratos/driver"
+	"github.com/ory/kratos/x"
 )
 
 // serveCmd represents the serve command
@@ -48,12 +47,10 @@ DON'T DO THIS IN PRODUCTION!
 `)
 		}
 
-		watchAndValidateViper()
+		x.WatchAndValidateViper(logger)
 		daemon.ServeAll(driver.MustNewDefaultDriver(logger, BuildVersion, BuildTime, BuildGitHash, dev))(cmd, args)
 	},
 }
-
-var schemas = packr.New("schemas", "../.schema")
 
 func init() {
 	rootCmd.AddCommand(serveCmd)

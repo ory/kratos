@@ -70,7 +70,7 @@ func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Reques
 
 			method.Config.SetCSRF(s.d.GenerateCSRFToken(r))
 			rr.Methods[identity.CredentialsTypePassword] = method
-			if errSec := method.Config.SortFields(s.c.DefaultIdentityTraitsSchemaURL().String(), "traits"); errSec != nil {
+			if errSec := method.Config.SortFields(s.c.DefaultIdentityTraitsSchemaURL().String()); errSec != nil {
 				s.d.RegistrationRequestErrorHandler().HandleRegistrationError(w, r, identity.CredentialsTypePassword, rr, errors.Wrap(err, errSec.Error()))
 				return
 			}
@@ -81,7 +81,7 @@ func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Reques
 }
 
 func (s *Strategy) decoderRegistration() (decoderx.HTTPDecoderOption, error) {
-	raw, err := sjson.SetBytes([]byte(registrationFormPayloadSchema), "properties.traits.$ref", s.c.DefaultIdentityTraitsSchemaURL().String())
+	raw, err := sjson.SetBytes([]byte(registrationFormPayloadSchema), "properties.traits.$ref", s.c.DefaultIdentityTraitsSchemaURL().String()+"#/properties/traits")
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -196,7 +196,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.
 		url.Values{"request": {sr.ID.String()}},
 	)
 
-	htmlf, err := form.NewHTMLFormFromJSONSchema(action.String(), s.c.DefaultIdentityTraitsSchemaURL().String(), "traits", nil)
+	htmlf, err := form.NewHTMLFormFromJSONSchema(action.String(), s.c.DefaultIdentityTraitsSchemaURL().String(), "", nil)
 	if err != nil {
 		return err
 	}
@@ -205,7 +205,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.
 	htmlf.SetCSRF(s.d.GenerateCSRFToken(r))
 	htmlf.SetField(form.Field{Name: "password", Type: "password", Required: true})
 
-	if err := htmlf.SortFields(s.c.DefaultIdentityTraitsSchemaURL().String(), "traits"); err != nil {
+	if err := htmlf.SortFields(s.c.DefaultIdentityTraitsSchemaURL().String()); err != nil {
 		return err
 	}
 

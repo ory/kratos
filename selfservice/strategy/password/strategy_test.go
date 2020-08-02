@@ -41,7 +41,7 @@ func newReturnTs(t *testing.T, reg interface {
 		reg.Writer().Write(w, r, sess)
 	}))
 	t.Cleanup(ts.Close)
-	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, ts.URL+"/return-ts")
+	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL+"/return-ts")
 	return ts
 }
 

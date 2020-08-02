@@ -8,7 +8,7 @@ import (
 )
 
 func (p *Persister) hmacValue(value string) string {
-	return p.hmacValueWithSecret(value, p.cf.SessionSecrets()[0])
+	return p.hmacValueWithSecret(value, p.cf.SecretsSession()[0])
 }
 
 func (p *Persister) hmacValueWithSecret(value string, secret []byte) string {
@@ -18,7 +18,7 @@ func (p *Persister) hmacValueWithSecret(value string, secret []byte) string {
 }
 
 func (p *Persister) hmacConstantCompare(value, hash string) bool {
-	for _, secret := range p.cf.SessionSecrets() {
+	for _, secret := range p.cf.SecretsSession() {
 		if subtle.ConstantTimeCompare([]byte(p.hmacValueWithSecret(value, secret)), []byte(hash)) == 1 {
 			return true
 		}

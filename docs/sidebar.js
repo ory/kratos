@@ -1,9 +1,10 @@
 module.exports = {
   Introduction: [
-    "index", "quickstart", "install",
+    "index", "quickstart", "install"
   ],
   Concepts: [
     "concepts/index",
+    "concepts/terminology",
     "concepts/ui-user-interface",
     "concepts/identity-user-model",
     {
@@ -15,12 +16,13 @@ module.exports = {
         "concepts/credentials/openid-connect-oidc-oauth2",
       ]
     },
-    "concepts/selfservice-flow-completion",
+    "concepts/browser-redirect-flow-completion",
     "concepts/email-sms",
+    "concepts/rest-api",
     "concepts/federation",
     "concepts/security"
   ],
-  "Self Service": [
+  "Self Service (End-User)": [
     "self-service",
     {
       type: "category",
@@ -43,18 +45,35 @@ module.exports = {
           "self-service/flows/user-settings/link-unlink-openid-connect-oauth2",
         ]
     },
+    {
+      type: "category",
+      label: "Account Recovery",
+      items:
+        [
+          "self-service/flows/account-recovery",
+          "self-service/flows/account-recovery/password-reset-recovery-link",
+        ]
+    },
     "self-service/flows/user-logout",
-    "self-service/flows/password-reset-account-recovery",
     "self-service/flows/user-facing-errors",
     "self-service/flows/verify-email-account-activation",
     "self-service/flows/2fa-mfa-multi-factor-authentication",
     "self-service/hooks/index",
   ],
+  "Administration": [
+    "admin/managing-users-identities",
+  ],
   Guides: [
     "guides/sign-in-with-github-google-facebook-linkedin",
     "guides/zero-trust-iap-proxy-identity-access-proxy",
+    "guides/account-recovery-password-reset",
+    "guides/account-activation-email-verification",
     "guides/multi-tenancy-multitenant",
-    "guides/high-availability-ha"
+    "guides/configuring-cookies",
+    "guides/login-session",
+    "guides/secret-key-rotation",
+    "guides/high-availability-ha",
+    "guides/docker"
   ],
   "Reference": [
     "reference/configuration",

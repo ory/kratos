@@ -29,11 +29,3 @@ func Execute() {
 func init() {
 	viperx.RegisterConfigFlag(rootCmd, "kratos")
 }
-
-func watchAndValidateViper() {
-	schema, err := schemas.Find("config.schema.json")
-	if err != nil {
-		logger.WithError(err).Fatal("Unable to open configuration JSON Schema.")
-	}
-	viperx.WatchAndValidateViper(logger, schema, "ORY Kratos", []string{"serve", "profiling", "log"})
-}

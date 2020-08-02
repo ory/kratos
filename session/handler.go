@@ -18,6 +18,7 @@ type (
 	handlerDependencies interface {
 		ManagementProvider
 		x.WriterProvider
+		x.LoggingProvider
 	}
 	HandlerProvider interface {
 		SessionHandler() *Handler
@@ -56,7 +57,8 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 // Check who the current HTTP session belongs to
 //
 // Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.
-// Returns a session object or 401 if the credentials are invalid or no credentials were sent.
+// Returns a session object in the body or 401 if the credentials are invalid or no credentials were sent.
+// Additionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header in the response.
 //
 // This endpoint is useful for reverse proxies and API Gateways.
 //
@@ -72,14 +74,17 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
+		h.r.Audit().WithRequest(r).WithError(err).Info("No valid session cookie found.")
 		h.r.Writer().WriteError(w, r,
-			errors.WithStack(herodot.ErrUnauthorized.WithReasonf("No valid session cookie found.").WithDebugf("%+v", err)),
-		)
+			errors.WithStack(herodot.ErrUnauthorized.WithReasonf("No valid session cookie found.")))
 		return
 	}
 
 	// s.Devices = nil
 	s.Identity = s.Identity.CopyWithoutCredentials()
+
+	// Set userId as the X-Kratos-Authenticated-Identity-Id header.
+	w.Header().Set("X-Kratos-Authenticated-Identity-Id", s.Identity.ID.String())
 
 	h.r.Writer().Write(w, r, s)
 }
@@ -126,9 +131,9 @@ func (h *Handler) IsNotAuthenticated(wrap httprouter.Handle, onAuthenticated htt
 
 func RedirectOnAuthenticated(c configuration.Provider) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		returnTo, err := x.SecureRedirectTo(r, c.DefaultReturnToURL(), x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL()))
+		returnTo, err := x.SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(), x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL()))
 		if err != nil {
-			http.Redirect(w, r, c.DefaultReturnToURL().String(), http.StatusFound)
+			http.Redirect(w, r, c.SelfServiceBrowserDefaultReturnTo().String(), http.StatusFound)
 			return
 		}
 

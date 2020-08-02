@@ -12,6 +12,7 @@ import (
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/otp"
+	"github.com/ory/kratos/x"
 
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
@@ -26,6 +27,22 @@ import (
 
 var _ identity.Pool = new(Persister)
 var _ identity.PrivilegedPool = new(Persister)
+
+func (p *Persister) ListVerifiableAddresses(ctx context.Context, page, itemsPerPage int) (a []identity.VerifiableAddress, err error) {
+	if err := p.GetConnection(ctx).Order("id desc").Paginate(page, x.MaxItemsPerPage(itemsPerPage)).All(&a); err != nil {
+		return nil, sqlcon.HandleError(err)
+	}
+
+	return a, err
+}
+
+func (p *Persister) ListRecoveryAddresses(ctx context.Context, page, itemsPerPage int) (a []identity.RecoveryAddress, err error) {
+	if err := p.GetConnection(ctx).Order("id desc").Paginate(page, x.MaxItemsPerPage(itemsPerPage)).All(&a); err != nil {
+		return nil, sqlcon.HandleError(err)
+	}
+
+	return a, err
+}
 
 func (p *Persister) FindByCredentialsIdentifier(ctx context.Context, ct identity.CredentialsType, match string) (*identity.Identity, *identity.Credentials, error) {
 	var cts []identity.CredentialsTypeTable
@@ -140,9 +157,17 @@ func createRecoveryAddresses(ctx context.Context, tx *pop.Connection, i *identit
 	return nil
 }
 
+func (p *Persister) CountIdentities(ctx context.Context) (int64, error) {
+	count, err := p.c.WithContext(ctx).Count(new(identity.Identity))
+	if err != nil {
+		return 0, sqlcon.HandleError(err)
+	}
+	return int64(count), nil
+}
+
 func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) error {
-	if i.TraitsSchemaID == "" {
-		i.TraitsSchemaID = configuration.DefaultIdentityTraitsSchemaID
+	if i.SchemaID == "" {
+		i.SchemaID = configuration.DefaultIdentityTraitsSchemaID
 	}
 
 	if len(i.Traits) == 0 {
@@ -174,12 +199,11 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 	})
 }
 
-func (p *Persister) ListIdentities(ctx context.Context, limit, offset int) ([]identity.Identity, error) {
+func (p *Persister) ListIdentities(ctx context.Context, page, perPage int) ([]identity.Identity, error) {
 	is := make([]identity.Identity, 0)
 
 	/* #nosec G201 TableName is static */
-	if err := sqlcon.HandleError(p.GetConnection(ctx).
-		RawQuery(fmt.Sprintf("SELECT * FROM %s LIMIT ? OFFSET ?", new(identity.Identity).TableName()), limit, offset).
+	if err := sqlcon.HandleError(p.GetConnection(ctx).Paginate(page, perPage).Order("id DESC").
 		Eager("VerifiableAddresses", "RecoveryAddresses").All(&is)); err != nil {
 		return nil, err
 	}
@@ -360,11 +384,11 @@ func (p *Persister) validateIdentity(i *identity.Identity) error {
 }
 
 func (p *Persister) injectTraitsSchemaURL(i *identity.Identity) error {
-	s, err := p.r.IdentityTraitsSchemas().GetByID(i.TraitsSchemaID)
+	s, err := p.r.IdentityTraitsSchemas().GetByID(i.SchemaID)
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf(
-			`The JSON Schema "%s" for this identity's traits could not be found.`, i.TraitsSchemaID))
+			`The JSON Schema "%s" for this identity's traits could not be found.`, i.SchemaID))
 	}
-	i.TraitsSchemaURL = s.SchemaURL(p.cf.SelfPublicURL()).String()
+	i.SchemaURL = s.SchemaURL(p.cf.SelfPublicURL()).String()
 	return nil
 }

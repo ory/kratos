@@ -12,11 +12,11 @@ import (
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/selfservice/flow/recovery"
-	"github.com/ory/kratos/selfservice/strategy/link"
+	"github.com/ory/kratos/selfservice/strategy/recoverytoken"
 )
 
 var _ recovery.RequestPersister = new(Persister)
-var _ link.Persister = new(Persister)
+var _ recoverytoken.Persister = new(Persister)
 
 func (p Persister) CreateRecoveryRequest(ctx context.Context, r *recovery.Request) error {
 	return p.GetConnection(ctx).Eager("MethodsRaw").Create(r)
@@ -67,7 +67,7 @@ func (p Persister) UpdateRecoveryRequest(ctx context.Context, r *recovery.Reques
 	})
 }
 
-func (p *Persister) CreateRecoveryToken(ctx context.Context, token *link.Token) error {
+func (p *Persister) CreateRecoveryToken(ctx context.Context, token *recoverytoken.Token) error {
 	t := token.Token
 	token.Token = p.hmacValue(t)
 
@@ -80,22 +80,23 @@ func (p *Persister) CreateRecoveryToken(ctx context.Context, token *link.Token) 
 	return nil
 }
 
-func (p *Persister) UseRecoveryToken(ctx context.Context, token string) (*link.Token, error) {
-	rt := new(link.Token)
+func (p *Persister) UseRecoveryToken(ctx context.Context, token string) (*recoverytoken.Token, error) {
+	rt := new(recoverytoken.Token)
 	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
-		for _, secret := range p.cf.SessionSecrets() {
+		for _, secret := range p.cf.SecretsSession() {
 			if err = tx.Eager().Where("token = ? AND NOT used", p.hmacValueWithSecret(token, secret)).First(rt); err != nil {
-				if !errors.Is(err, sqlcon.ErrNoRows) {
+				if !errors.Is(sqlcon.HandleError(err), sqlcon.ErrNoRows) {
 					return err
 				}
+			} else {
+				break
 			}
 		}
 		if err != nil {
 			return err
 		}
-
 		/* #nosec G201 TableName is static */
-		return tx.RawQuery(fmt.Sprintf("UPDATE %s SET used=true, used_at=?", rt.TableName()), time.Now().UTC()).Exec()
+		return tx.RawQuery(fmt.Sprintf("UPDATE %s SET used=true, used_at=? WHERE id=?", rt.TableName()), time.Now().UTC(), rt.ID).Exec()
 	})); err != nil {
 		return nil, err
 	}
@@ -104,5 +105,5 @@ func (p *Persister) UseRecoveryToken(ctx context.Context, token string) (*link.T
 
 func (p *Persister) DeleteRecoveryToken(ctx context.Context, token string) error {
 	/* #nosec G201 TableName is static */
-	return p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE token=?", new(link.Token).TableName()), token).Exec()
+	return p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE token=?", new(recoverytoken.Token).TableName()), token).Exec()
 }

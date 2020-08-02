@@ -1,0 +1,22 @@
+selfservice:
+  strategies:
+    password:
+      enabled: true
+
+  flows:
+    settings:
+      privileged_session_max_age: 1m
+
+    verification:
+      enabled: true
+      request_lifespan: 5s
+      after:
+        default_browser_return_url: http://127.0.0.1:4455/
+
+    logout:
+      after:
+        default_browser_return_url: http://127.0.0.1:4455/auth/login
+
+identity:
+  traits:
+    default_schema_url: file://test/e2e/profiles/verification/identity.traits.schema.json

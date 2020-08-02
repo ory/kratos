@@ -4,12 +4,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ory/kratos/continuity"
-	"github.com/ory/kratos/schema"
-
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
+
+	"github.com/ory/kratos/continuity"
+	"github.com/ory/kratos/schema"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
@@ -24,7 +24,13 @@ import (
 const (
 	PublicPath        = "/self-service/browser/flows/settings"
 	PublicRequestPath = "/self-service/browser/flows/requests/settings"
+
+	ContinuityPrefix = "ory_kratos_settings"
 )
+
+func ContinuityKey(id string) string {
+	return ContinuityPrefix + "_" + id
+}
 
 type (
 	handlerDependencies interface {
@@ -64,7 +70,7 @@ func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
-	redirect := session.RedirectOnUnauthenticated(h.c.LoginURL().String())
+	redirect := session.RedirectOnUnauthenticated(h.c.SelfServiceFlowLoginUI().String())
 	public.GET(PublicPath, h.d.SessionHandler().IsAuthenticated(h.initUpdateSettings, redirect))
 	public.GET(PublicRequestPath, h.d.SessionHandler().IsAuthenticated(h.publicFetchUpdateSettingsRequest, redirect))
 }
@@ -78,7 +84,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 // Initialize browser-based settings flow
 //
 // This endpoint initializes a browser-based settings flow. Once initialized, the browser will be redirected to
-// `urls.settings_ui` with the request ID set as a query parameter. If no valid user session exists, a login
+// `selfservice.flows.settings.ui_url` with the request ID set as a query parameter. If no valid user session exists, a login
 // flow will be initialized.
 //
 // > This endpoint is NOT INTENDED for API clients and only works
@@ -98,14 +104,14 @@ func (h *Handler) initUpdateSettings(w http.ResponseWriter, r *http.Request, ps 
 		return
 	}
 
-	req := NewRequest(h.c.SelfServiceSettingsRequestLifespan(), r, s)
+	req := NewRequest(h.c.SelfServiceFlowSettingsRequestLifespan(), r, s)
 
 	if err := h.CreateRequest(w, r, s, req); err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
-	http.Redirect(w, r, req.URL(h.c.SettingsURL()).String(), http.StatusFound)
+	http.Redirect(w, r, req.URL(h.c.SelfServiceFlowSettingsUI()).String(), http.StatusFound)
 }
 
 func (h *Handler) CreateRequest(w http.ResponseWriter, r *http.Request, sess *session.Session, req *Request) error {

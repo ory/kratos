@@ -37,8 +37,8 @@ func TestHandlerSettingForced(t *testing.T) {
 
 	loginTS := testhelpers.NewLoginUIRequestEchoServer(t, reg)
 
-	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, "https://www.ory.sh")
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/login.schema.json")
+	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
 
 	// assert bool
 	ab := func(body []byte, exp bool) {
@@ -157,7 +157,7 @@ func TestLoginHandler(t *testing.T) {
 	t.Run("daemon=admin", func(t *testing.T) {
 		loginTS := newLoginTS(t, admin.URL, nil)
 		defer loginTS.Close()
-		viper.Set(configuration.ViperKeyURLsLogin, loginTS.URL)
+		viper.Set(configuration.ViperKeySelfServiceLoginUI, loginTS.URL)
 		viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
 			"enabled": true})
 
@@ -181,7 +181,7 @@ func TestLoginHandler(t *testing.T) {
 		t.Run("case=with_csrf", func(t *testing.T) {
 			loginTS := newLoginTS(t, public.URL, hc)
 			defer loginTS.Close()
-			viper.Set(configuration.ViperKeyURLsLogin, loginTS.URL)
+			viper.Set(configuration.ViperKeySelfServiceLoginUI, loginTS.URL)
 
 			assertRequestPayload(t, x.EasyGetBody(t, hc, public.URL+login.BrowserLoginPath))
 		})
@@ -191,7 +191,7 @@ func TestLoginHandler(t *testing.T) {
 				// using a different client because it doesn't have access to the cookie jar
 				new(http.Client))
 			defer loginTS.Close()
-			viper.Set(configuration.ViperKeyURLsLogin, loginTS.URL)
+			viper.Set(configuration.ViperKeySelfServiceLoginUI, loginTS.URL)
 
 			body := x.EasyGetBody(t, hc, public.URL+login.BrowserLoginPath)
 			assert.Contains(t, gjson.GetBytes(body, "error").String(), "csrf_token", "%s", body)

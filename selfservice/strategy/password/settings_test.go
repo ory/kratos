@@ -12,6 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/x/randx"
+
 	"github.com/ory/viper"
 	"github.com/ory/x/pointerx"
 
@@ -19,6 +21,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/x"
 )
 
@@ -28,26 +31,28 @@ func init() {
 
 func TestSettings(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
-	viper.Set(configuration.ViperKeyURLsDefaultReturnTo, "https://www.ory.sh/")
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/profile.schema.json")
+	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/profile.schema.json")
+	testhelpers.StrategyEnable(identity.CredentialsTypePassword.String(), true)
+	testhelpers.StrategyEnable(settings.StrategyProfile, true)
 
 	_ = testhelpers.NewSettingsUITestServer(t)
 	_ = testhelpers.NewErrorTestServer(t, reg)
-	viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1m")
+	viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
 
 	primaryIdentity := &identity.Identity{
 		ID: x.NewUUID(),
 		Credentials: map[identity.CredentialsType]identity.Credentials{
 			"password": {Type: "password", Identifiers: []string{"john@doe.com"}, Config: []byte(`{"hashed_password":"foo"}`)},
 		},
-		Traits:         identity.Traits(`{"email":"john@doe.com"}`),
-		TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
+		Traits:   identity.Traits(`{"email":"john@doe.com"}`),
+		SchemaID: configuration.DefaultIdentityTraitsSchemaID,
 	}
 	secondaryIdentity := &identity.Identity{
-		ID:             x.NewUUID(),
-		Credentials:    map[identity.CredentialsType]identity.Credentials{},
-		Traits:         identity.Traits(`{}`),
-		TraitsSchemaID: configuration.DefaultIdentityTraitsSchemaID,
+		ID:          x.NewUUID(),
+		Credentials: map[identity.CredentialsType]identity.Credentials{},
+		Traits:      identity.Traits(`{}`),
+		SchemaID:    configuration.DefaultIdentityTraitsSchemaID,
 	}
 	publicTS, adminTS, clients := testhelpers.NewSettingsAPIServer(t, reg, map[string]*identity.Identity{
 		"primary": primaryIdentity, "secondary": secondaryIdentity})
@@ -76,11 +81,11 @@ func TestSettings(t *testing.T) {
 			t.Run("session=with privileged session", run)
 
 			t.Run("session=needs reauthentication", func(t *testing.T) {
-				viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "1ns")
+				viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
 
 				_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, adminClient)
 				t.Cleanup(func() {
-					viper.Set(configuration.ViperKeySelfServicePrivilegedAuthenticationAfter, "5m")
+					viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 				})
 				run(t)
 			})
@@ -107,7 +112,7 @@ func TestSettings(t *testing.T) {
 
 		form := rs.Payload.Methods[string(identity.CredentialsTypePassword)].Config
 		values := testhelpers.SDKFormFieldsToURLValues(form.Fields)
-		values.Set("password", uuid.New().String())
+		values.Set("password", randx.MustString(16, randx.AlphaNum))
 		actual, _ := testhelpers.SettingsSubmitForm(t, form, secondaryUser, values)
 
 		assert.Equal(t, "success", gjson.Get(actual, "state").String(), "%s", actual)
@@ -130,7 +135,7 @@ func TestSettings(t *testing.T) {
 		rts := httptest.NewServer(router)
 		defer rts.Close()
 
-		viper.Set(configuration.ViperKeySelfServiceSettingsAfter+"."+configuration.ViperKeyDefaultReturnTo, rts.URL+"/return-ts")
+		viper.Set(configuration.ViperKeySelfServiceSettingsAfter+"."+configuration.DefaultBrowserReturnURL, rts.URL+"/return-ts")
 		t.Cleanup(func() {
 			viper.Set(configuration.ViperKeySelfServiceSettingsAfter, nil)
 		})
@@ -139,7 +144,7 @@ func TestSettings(t *testing.T) {
 
 		form := rs.Payload.Methods[string(identity.CredentialsTypePassword)].Config
 		values := testhelpers.SDKFormFieldsToURLValues(form.Fields)
-		values.Set("password", uuid.New().String())
+		values.Set("password", randx.MustString(16, randx.AlphaNum))
 
 		res, err := primaryUser.PostForm(pointerx.StringR(form.Action), values)
 		require.NoError(t, err)

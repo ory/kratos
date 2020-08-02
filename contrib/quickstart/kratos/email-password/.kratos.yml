@@ -1,58 +1,59 @@
+serve:
+  public:
+    base_url: http://127.0.0.1:4455/.ory/kratos/public/
+  admin:
+    base_url: http://kratos:4434/
+
 selfservice:
+  default_browser_return_url: http://127.0.0.1:4455/
+  whitelisted_return_urls:
+    - http://127.0.0.1:4455
+
   strategies:
     password:
       enabled: true
 
-  settings:
-    privileged_session_max_age: 1m
-    after:
-      profile:
-        hooks:
-          -
-            hook: verify
+  flows:
+    error:
+      ui_url: http://127.0.0.1:4455/error
 
-  verify:
-    return_to: http://127.0.0.1:4455/
+    settings:
+      ui_url: http://127.0.0.1:4455/settings
+      privileged_session_max_age: 15m
 
-  logout:
-    redirect_to: http://127.0.0.1:4455/auth/login
+    recovery:
+      enabled: true
+      ui_url: http://127.0.0.1:4455/recovery
 
-  login:
-    request_lifespan: 10m
+    verification:
+      enabled: true
+      ui_url: http://127.0.0.1:4455/verify
+      after:
+        default_browser_return_url: http://127.0.0.1:4455/
 
-  registration:
-    request_lifespan: 10m
-    after:
-      password:
-        hooks:
-          -
-            hook: session
-          -
-            hook: verify
+    logout:
+      after:
+        default_browser_return_url: http://127.0.0.1:4455/auth/login
+
+    login:
+      ui_url: http://127.0.0.1:4455/auth/login
+      request_lifespan: 10m
+
+    registration:
+      request_lifespan: 10m
+      ui_url: http://127.0.0.1:4455/auth/registration
+      after:
+        password:
+          hooks:
+            -
+              hook: session
 
 log:
   level: debug
 
 secrets:
-  session:
+  cookie:
     - PLEASE-CHANGE-ME-I-AM-VERY-INSECURE
-
-urls:
-  login_ui: http://127.0.0.1:4455/auth/login
-  registration_ui: http://127.0.0.1:4455/auth/registration
-  error_ui: http://127.0.0.1:4455/error
-  settings_ui: http://127.0.0.1:4455/settings
-  verify_ui: http://127.0.0.1:4455/verify
-
-  # These are undefined because not available in this demo
-  mfa_ui: http://127.0.0.1:4455/
-
-  self:
-    public: http://127.0.0.1:4455/.ory/kratos/public/
-    admin: http://kratos:4434/
-  default_return_to: http://127.0.0.1:4455/
-  whitelisted_return_to_urls:
-    - http://127.0.0.1:4455
 
 hashers:
   argon2:
@@ -63,8 +64,7 @@ hashers:
     key_length: 16
 
 identity:
-  traits:
-    default_schema_url: file:///etc/config/kratos/identity.traits.schema.json
+  default_schema_url: file:///etc/config/kratos/identity.traits.schema.json
 
 courier:
   smtp:

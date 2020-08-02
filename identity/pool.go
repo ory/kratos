@@ -30,7 +30,11 @@ import (
 
 type (
 	Pool interface {
-		ListIdentities(ctx context.Context, limit, offset int) ([]Identity, error)
+		// ListIdentities lists all identities in the store given the page and itemsPerPage.
+		ListIdentities(ctx context.Context, page, itemsPerPage int) ([]Identity, error)
+
+		// CountIdentities counts the number of identities in the store.
+		CountIdentities(ctx context.Context) (int64, error)
 
 		// GetIdentity returns an identity by its id. Will return an error if the identity does not exist or backend
 		// connectivity is broken.
@@ -74,15 +78,22 @@ type (
 		// UpdateIdentity updates an identity including its confidential / privileged / protected data.
 		UpdateIdentity(context.Context, *Identity) error
 
-		// GetClassified returns the identity including it's raw credentials. This should only be used internally.
+		// GetIdentityConfidential returns the identity including it's raw credentials. This should only be used internally.
 		GetIdentityConfidential(context.Context, uuid.UUID) (*Identity, error)
+
+		// ListVerifiableAddresses lists all tracked verifiable addresses, regardless of whether they are already verified
+		// or not.
+		ListVerifiableAddresses(ctx context.Context, page, itemsPerPage int) ([]VerifiableAddress, error)
+
+		// ListRecoveryAddresses lists all tracked recovery addresses.
+		ListRecoveryAddresses(ctx context.Context, page, itemsPerPage int) ([]RecoveryAddress, error)
 	}
 )
 
 func TestPool(p PrivilegedPool) func(t *testing.T) {
 	return func(t *testing.T) {
 		exampleServerURL := urlx.ParseOrPanic("http://example.com")
-		viper.Set(configuration.ViperKeyURLsSelfPublic, exampleServerURL)
+		viper.Set(configuration.ViperKeyPublicBaseURL, exampleServerURL)
 		defaultSchema := schema.Schema{
 			ID:     configuration.DefaultIdentityTraitsSchemaID,
 			URL:    urlx.ParseOrPanic("file://./stub/identity.schema.json"),
@@ -93,8 +104,8 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			URL:    urlx.ParseOrPanic("file://./stub/identity-2.schema.json"),
 			RawURL: "file://./stub/identity-2.schema.json",
 		}
-		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, defaultSchema.RawURL)
-		viper.Set(configuration.ViperKeyIdentityTraitsSchemas, []configuration.SchemaConfig{{
+		viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, defaultSchema.RawURL)
+		viper.Set(configuration.ViperKeyIdentitySchemas, []configuration.SchemaConfig{{
 			ID:  altSchema.ID,
 			URL: altSchema.RawURL,
 		}})
@@ -135,6 +146,10 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			require.NoError(t, p.CreateIdentity(context.Background(), i))
 			assert.NotEqual(t, uuid.Nil, i.ID)
 			createdIDs = append(createdIDs, i.ID)
+
+			count, err := p.CountIdentities(context.Background())
+			require.NoError(t, err)
+			assert.EqualValues(t, 1, count)
 		})
 
 		t.Run("case=create with default values", func(t *testing.T) {
@@ -146,9 +161,13 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			require.NoError(t, err)
 
 			assert.Equal(t, expected.ID, actual.ID)
-			assert.Equal(t, configuration.DefaultIdentityTraitsSchemaID, actual.TraitsSchemaID)
-			assert.Equal(t, defaultSchema.SchemaURL(exampleServerURL).String(), actual.TraitsSchemaURL)
+			assert.Equal(t, configuration.DefaultIdentityTraitsSchemaID, actual.SchemaID)
+			assert.Equal(t, defaultSchema.SchemaURL(exampleServerURL).String(), actual.SchemaURL)
 			assertEqual(t, expected, actual)
+
+			count, err := p.CountIdentities(context.Background())
+			require.NoError(t, err)
+			assert.EqualValues(t, 2, count)
 		})
 
 		t.Run("case=should error when the identity ID does not exist", func(t *testing.T) {
@@ -169,8 +188,8 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 
 			actual, err := p.GetIdentity(context.Background(), expected.ID)
 			require.NoError(t, err)
-			assert.Equal(t, altSchema.ID, actual.TraitsSchemaID)
-			assert.Equal(t, altSchema.SchemaURL(exampleServerURL).String(), actual.TraitsSchemaURL)
+			assert.Equal(t, altSchema.ID, actual.SchemaID)
+			assert.Equal(t, altSchema.SchemaURL(exampleServerURL).String(), actual.SchemaURL)
 			assertEqual(t, expected, actual)
 
 			actual, err = p.GetIdentityConfidential(context.Background(), expected.ID)
@@ -250,8 +269,8 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			require.NoError(t, p.CreateIdentity(context.Background(), initial))
 			createdIDs = append(createdIDs, initial.ID)
 
-			assert.Equal(t, configuration.DefaultIdentityTraitsSchemaID, initial.TraitsSchemaID)
-			assert.Equal(t, defaultSchema.SchemaURL(exampleServerURL).String(), initial.TraitsSchemaURL)
+			assert.Equal(t, configuration.DefaultIdentityTraitsSchemaID, initial.SchemaID)
+			assert.Equal(t, defaultSchema.SchemaURL(exampleServerURL).String(), initial.SchemaURL)
 
 			expected := initial.CopyWithoutCredentials()
 			expected.SetCredentials(CredentialsTypePassword, Credentials{
@@ -260,13 +279,13 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 				Config:      sqlxx.JSONRawMessage(`{"oh":"nono"}`),
 			})
 			expected.Traits = Traits(`{"update":"me"}`)
-			expected.TraitsSchemaID = altSchema.ID
+			expected.SchemaID = altSchema.ID
 			require.NoError(t, p.UpdateIdentity(context.Background(), expected))
 
 			actual, err := p.GetIdentityConfidential(context.Background(), expected.ID)
 			require.NoError(t, err)
-			assert.Equal(t, altSchema.ID, actual.TraitsSchemaID)
-			assert.Equal(t, altSchema.SchemaURL(exampleServerURL).String(), actual.TraitsSchemaURL)
+			assert.Equal(t, altSchema.ID, actual.SchemaID)
+			assert.Equal(t, altSchema.SchemaURL(exampleServerURL).String(), actual.SchemaURL)
 			assert.NotEmpty(t, actual.Credentials[CredentialsTypePassword])
 			assert.Empty(t, actual.Credentials[CredentialsTypeOIDC])
 
@@ -344,7 +363,7 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 		})
 
 		t.Run("case=list", func(t *testing.T) {
-			is, err := p.ListIdentities(context.Background(), 25, 0)
+			is, err := p.ListIdentities(context.Background(), 0, 25)
 			require.NoError(t, err)
 			assert.Len(t, is, len(createdIDs))
 			for _, id := range createdIDs {

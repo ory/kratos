@@ -4,46 +4,57 @@
   "title": "Person",
   "type": "object",
   "properties": {
-    "email": {
-      "type": "string",
-      "format": "email",
-      "ory.sh/kratos": {
-        "credentials": {
-          "password": {
-            "identifier": true
+    "traits": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
+              }
+            }
           }
         },
-        "verification": {
-          "via": "email"
-        }
-      }
-    },
-    "email_creds": {
-      "type": "string",
-      "format": "email",
-      "ory.sh/kratos": {
-        "credentials": {
-          "password": {
-            "identifier": true
+        "email_creds": {
+          "type": "string",
+          "format": "email",
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
+              }
+            }
           }
+        },
+        "email_verify": {
+          "type": "string",
+          "format": "email",
+          "ory.sh/kratos": {
+            "verification": {
+              "via": "email"
+            }
+          }
+        },
+        "email_recovery": {
+          "type": "string",
+          "format": "email",
+          "ory.sh/kratos": {
+            "recovery": {
+              "via": "email"
+            }
+          }
+        },
+        "unprotected": {
+          "type": "string"
         }
-      }
-    },
-    "email_verify": {
-      "type": "string",
-      "format": "email",
-      "ory.sh/kratos": {
-        "verification": {
-          "via": "email"
-        }
-      }
-    },
-    "unprotected": {
-      "type": "string"
+      },
+      "required": [
+        "email"
+      ]
     }
   },
-  "required": [
-    "email"
-  ],
   "additionalProperties": false
 }

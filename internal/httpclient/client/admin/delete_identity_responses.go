@@ -29,12 +29,6 @@ func (o *DeleteIdentityReader) ReadResponse(response runtime.ClientResponse, con
 			return nil, err
 		}
 		return result, nil
-	case 404:
-		result := NewDeleteIdentityNotFound()
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		return nil, result
 	case 500:
 		result := NewDeleteIdentityInternalServerError()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
@@ -43,7 +37,7 @@ func (o *DeleteIdentityReader) ReadResponse(response runtime.ClientResponse, con
 		return nil, result
 
 	default:
-		return nil, runtime.NewAPIError("unknown error", response, response.Code())
+		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
 }
 
@@ -65,39 +59,6 @@ func (o *DeleteIdentityNoContent) Error() string {
 }
 
 func (o *DeleteIdentityNoContent) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	return nil
-}
-
-// NewDeleteIdentityNotFound creates a DeleteIdentityNotFound with default headers values
-func NewDeleteIdentityNotFound() *DeleteIdentityNotFound {
-	return &DeleteIdentityNotFound{}
-}
-
-/*DeleteIdentityNotFound handles this case with default header values.
-
-genericError
-*/
-type DeleteIdentityNotFound struct {
-	Payload *models.GenericError
-}
-
-func (o *DeleteIdentityNotFound) Error() string {
-	return fmt.Sprintf("[DELETE /identities/{id}][%d] deleteIdentityNotFound  %+v", 404, o.Payload)
-}
-
-func (o *DeleteIdentityNotFound) GetPayload() *models.GenericError {
-	return o.Payload
-}
-
-func (o *DeleteIdentityNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.GenericError)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
 
 	return nil
 }

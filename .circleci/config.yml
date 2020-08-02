@@ -133,24 +133,34 @@ workflows:
       - test-e2e:
           name: test-e2e-sqlite
           flavor: sqlite
+          requires:
+            - test
+            - nancy/test
+            - golangci/lint
           filters:
             tags:
               only: /.*/
       - test-e2e:
           name: test-e2e-postgres
           flavor: postgres
+          requires:
+            - test-e2e-sqlite
           filters:
             tags:
               only: /.*/
       - test-e2e:
           name: test-e2e-mysql
           flavor: mysql
+          requires:
+            - test-e2e-sqlite
           filters:
             tags:
               only: /.*/
       - test-e2e:
           name: test-e2e-cockroach
           flavor: cockroach
+          requires:
+            - test-e2e-sqlite
           filters:
             tags:
               only: /.*/

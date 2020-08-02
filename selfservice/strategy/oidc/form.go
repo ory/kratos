@@ -15,7 +15,7 @@ import (
 )
 
 func decoderRegistration(ref string) (decoderx.HTTPDecoderOption, error) {
-	raw, err := sjson.SetBytes([]byte(registrationFormPayloadSchema), "properties.traits.$ref", ref)
+	raw, err := sjson.SetBytes([]byte(registrationFormPayloadSchema), "properties.traits.$ref", ref+"#/properties/traits")
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

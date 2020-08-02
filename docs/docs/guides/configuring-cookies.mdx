@@ -1,0 +1,61 @@
+---
+id: configuring-cookies
+title: Configuring Cookies
+---
+
+When working with cookies, keep the following in mind:
+
+1. HTTP Cookies **are not port specific**. If a cookie is set on `https://mydomain.com:1234` it is also valid for
+`https://mydomain.com:4321` and `https://mydomain.com`.
+2. Unless `--dev` is set, ORY Kratos' cookies are only sent over HTTPS.
+3. Cookies in ORY Kratos are always `httpOnly`.
+4. It is possible to set a cookie for `mydomain.com` when the original request was made to `subdomain.mydomain.com`.
+It is however not possible to set a cookie for `anotherdomain.com` when the original request was made to `mydomain.com`.
+See also [this answer] on [SackOverflow](https://stackoverflow.com/questions/18492576/share-cookie-between-subdomain-and-domain).
+
+:::note
+
+ORY Kratos uses pass-by-value cookies whose values are encrypted using the `secrets.default` / `secrets.cookie` secrets.
+If these secrets are changed without doing proper [secret / key rotation](secret-key-rotation), all cookies will be invalid
+which will cause users to be signed out, and other side effects.
+
+:::
+
+## Session Cookies
+
+CloudRun, Heroku, and other "serverless" solutions commonly expose services directly to the public,
+and do not allow for fronting by a gateway or reverse proxy. In those cases, your application architecture
+may separate services by subdomain (e.g. `service1.myproduct.com`, `service2.myproduct.com`,
+`service3.myproduct.com`, ...).
+
+If that is the case you can change the session [cookie domain](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies)
+and path using the following configuration keys in your ORY Kratos configuration:
+
+```yaml title="path/to/kratos/config.yml
+session:
+  cookie:
+    domain: myproduct.com
+```
+
+It is also possible to restrict the [cookie path](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies):
+
+:::note
+
+It is very unlikely that you need to change this!
+
+:::
+
+```yaml title="path/to/kratos/config.yml
+session:
+  cookie:
+    path: /some/sub-directory
+```
+
+You can also modify the new [HTTP Cookie SameSite Attribute](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite)
+using:
+
+```yaml title="path/to/kratos/config.yml
+session:
+  cookie:
+    same_site: Lax
+```

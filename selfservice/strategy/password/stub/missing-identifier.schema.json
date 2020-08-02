@@ -4,17 +4,22 @@
   "title": "Person",
   "type": "object",
   "properties": {
-    "foobar": {
-      "type": "string",
-      "minLength": 2
-    },
-    "username": {
-      "type": "string"
+    "traits": {
+      "type": "object",
+      "properties": {
+        "foobar": {
+          "type": "string",
+          "minLength": 2
+        },
+        "username": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "foobar",
+        "username"
+      ]
     }
   },
-  "required": [
-    "foobar",
-    "username"
-  ],
   "additionalProperties": false
 }

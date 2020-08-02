@@ -2,18 +2,14 @@
 package identity
 
 import (
+	"encoding/json"
 	"net/http"
 
-	"github.com/ory/herodot"
-
-	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/urlx"
-
-	"github.com/ory/x/pagination"
 
 	"github.com/ory/kratos/x"
 )
@@ -23,6 +19,7 @@ const IdentitiesPath = "/identities"
 type (
 	handlerDependencies interface {
 		PoolProvider
+		PrivilegedPoolProvider
 		ManagementProvider
 		x.WriterProvider
 	}
@@ -72,12 +69,33 @@ type identitiesListResponse struct {
 	Body []Identity
 }
 
+// swagger:parameters listIdentities
+type listIdentityParameters struct {
+	// Items per Page
+	//
+	// This is the number of items per page.
+	//
+	// required: false
+	// in: query
+	// default: 100
+	// min: 1
+	// max: 500
+	PerPage int `json:"per_page"`
+
+	// Pagination Page
+	//
+	// required: false
+	// in: query
+	// default: 0
+	// min: 0
+	Page int `json:"page"`
+}
+
 // swagger:route GET /identities admin listIdentities
 //
-// List all identities in the system
+// List Identities
 //
-// This endpoint returns a login request's context with, for example, error details and
-// other information.
+// Lists all identities. Does not support search at the moment.
 //
 // Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 //
@@ -89,14 +107,21 @@ type identitiesListResponse struct {
 //     Responses:
 //       200: identityList
 //       500: genericError
-func (h *Handler) list(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	limit, offset := pagination.Parse(r, 100, 0, 500)
-	is, err := h.r.IdentityPool().ListIdentities(r.Context(), limit, offset)
+func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	page, itemsPerPage := x.ParsePagination(r)
+	is, err := h.r.IdentityPool().ListIdentities(r.Context(), page, itemsPerPage)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
+	total, err := h.r.IdentityPool().CountIdentities(r.Context())
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	x.PaginationHeader(w, urlx.AppendPaths(h.c.SelfAdminURL(), IdentitiesPath), total, page, itemsPerPage)
 	h.r.Writer().Write(w, r, is)
 }
 
@@ -111,7 +136,7 @@ type getIdentityParameters struct {
 
 // swagger:route GET /identities/{id} admin getIdentity
 //
-// Get an identity
+// Get an Identity
 //
 // Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 //
@@ -137,9 +162,31 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 	h.r.Writer().Write(w, r, i)
 }
 
+// swagger:parameters createIdentity
+type createIdentityRequest struct {
+	// in: body
+	Body CreateIdentityRequestPayload
+}
+
+type CreateIdentityRequestPayload struct {
+	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
+	//
+	// required: true
+	// in: body
+	SchemaID string `json:"schema_id"`
+
+	// Traits represent an identity's traits. The identity is able to create, modify, and delete traits
+	// in a self-service manner. The input will always be validated against the JSON Schema defined
+	// in `schema_url`.
+	//
+	// required: true
+	// in: body
+	Traits json.RawMessage `json:"traits"`
+}
+
 // swagger:route POST /identities admin createIdentity
 //
-// Create an identity
+// Create an Identity
 //
 // This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)
 // using this method! A way to achieve that will be introduced in the future.
@@ -158,25 +205,15 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 //       201: identityResponse
 //       400: genericError
 //       500: genericError
-func (h *Handler) create(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var i Identity
-	if err := errors.WithStack(jsonx.NewStrictDecoder(r.Body).Decode(&i)); err != nil {
-		h.r.Writer().WriteError(w, r, err)
+func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	var cr CreateIdentityRequestPayload
+	if err := jsonx.NewStrictDecoder(r.Body).Decode(&cr); err != nil {
+		h.r.Writer().WriteErrorCode(w, r, http.StatusBadRequest, errors.WithStack(err))
 		return
 	}
 
-	// Make sure the TraitsSchemaURL is only set by kratos
-	if i.TraitsSchemaURL != "" {
-		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithReason("Use the traits_schema_id to set a traits schema."))
-		return
-	}
-	// We do not allow setting credentials using this method
-	i.Credentials = nil
-	// We do not allow setting the ID using this method
-	i.ID = uuid.Nil
-
-	err := h.r.IdentityManager().Create(r.Context(), &i)
-	if err != nil {
+	i := &Identity{SchemaID: cr.SchemaID, Traits: []byte(cr.Traits)}
+	if err := h.r.IdentityManager().Create(r.Context(), i); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
@@ -187,13 +224,32 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, ps httprouter.P
 			"identities",
 			i.ID.String(),
 		).String(),
-		&i,
+		i,
 	)
+}
+
+// swagger:parameters updateIdentity
+type updateIdentityRequest struct {
+	// in: body
+	Body UpdateIdentityRequestPayload
+}
+
+type UpdateIdentityRequestPayload struct {
+	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set
+	// will update the Identity's SchemaID.
+	SchemaID string `json:"schema_id"`
+
+	// Traits represent an identity's traits. The identity is able to create, modify, and delete traits
+	// in a self-service manner. The input will always be validated against the JSON Schema defined
+	// in `schema_id`.
+	//
+	// required: true
+	Traits json.RawMessage `json:"traits"`
 }
 
 // swagger:route PUT /identities/{id} admin updateIdentity
 //
-// Update an identity
+// Update an Identity
 //
 // This endpoint updates an identity. It is NOT possible to set an identity's credentials (password, ...)
 // using this method! A way to achieve that will be introduced in the future.
@@ -216,26 +272,43 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, ps httprouter.P
 //       404: genericError
 //       500: genericError
 func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var i Identity
-	if err := errors.WithStack(jsonx.NewStrictDecoder(r.Body).Decode(&i)); err != nil {
+	var ur UpdateIdentityRequestPayload
+	if err := errors.WithStack(jsonx.NewStrictDecoder(r.Body).Decode(&ur)); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
-	i.ID = x.ParseUUID(ps.ByName("id"))
-	if err := h.r.IdentityManager().Update(r.Context(), &i); err != nil {
+	id := x.ParseUUID(ps.ByName("id"))
+	identity, err := h.r.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), id)
+	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
-	h.r.Writer().Write(w, r, i)
+	if ur.SchemaID != "" {
+		identity.SchemaID = ur.SchemaID
+	}
+
+	identity.Traits = []byte(ur.Traits)
+	if err := h.r.IdentityManager().Update(
+		r.Context(),
+		identity,
+		ManagerAllowWriteProtectedTraits,
+	); err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	h.r.Writer().Write(w, r, identity)
 }
 
 // swagger:route DELETE /identities/{id} admin deleteIdentity
 //
-// Delete an identity
+// Delete an Identity
 //
-// This endpoint deletes an identity. This can not be undone.
+// Calling this endpoint irrecoverably and permanently deletes the identity given its ID. This action can not be undone.
+// This endpoint returns 204 when the identity was deleted or when the identity was not found, in which case it is
+// assumed that is has been deleted already.
 //
 // Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 //
@@ -246,7 +319,6 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 //
 //     Responses:
 //       204: emptyResponse
-//       404: genericError
 //       500: genericError
 func (h *Handler) delete(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := h.r.IdentityPool().(PrivilegedPool).DeleteIdentity(r.Context(), x.ParseUUID(ps.ByName("id"))); err != nil {

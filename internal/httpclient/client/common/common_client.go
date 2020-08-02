@@ -250,6 +250,10 @@ func (a *Client) GetSelfServiceBrowserSettingsRequest(params *GetSelfServiceBrow
 When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent
 token scanning attacks, the public endpoint does not return 404 status codes.
 
+This endpoint supports stub values to help you implement the error UI:
+
+`?error=stub:500` - returns a stub 500 (Internal Server Error) error.
+
 More information can be found at [ORY Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).
 */
 func (a *Client) GetSelfServiceError(params *GetSelfServiceErrorParams) (*GetSelfServiceErrorOK, error) {

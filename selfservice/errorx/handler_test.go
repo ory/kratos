@@ -85,6 +85,22 @@ func TestHandler(t *testing.T) {
 		})
 	})
 
+	t.Run("case=stubs", func(t *testing.T) {
+		router := x.NewRouterAdmin()
+		h.RegisterAdminRoutes(router)
+		ts := httptest.NewServer(router)
+		defer ts.Close()
+
+		res, err := ts.Client().Get(ts.URL + errorx.ErrorsPath + "?error=stub:500")
+		require.NoError(t, err)
+		require.EqualValues(t, http.StatusOK, res.StatusCode)
+
+		actual, err := ioutil.ReadAll(res.Body)
+		require.NoError(t, err)
+
+		assert.EqualValues(t, "This is a stub error.", gjson.GetBytes(actual, "errors.0.reason").String())
+	})
+
 	t.Run("case=errors types", func(t *testing.T) {
 		router := x.NewRouterAdmin()
 		h.RegisterAdminRoutes(router)

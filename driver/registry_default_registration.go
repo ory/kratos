@@ -6,7 +6,7 @@ import (
 )
 
 func (m *RegistryDefault) PostRegistrationPrePersistHooks(credentialsType identity.CredentialsType) (b []registration.PostHookPrePersistExecutor) {
-	for _, v := range m.getHooks(string(credentialsType), m.c.SelfServiceRegistrationAfterHooks(string(credentialsType))) {
+	for _, v := range m.getHooks(string(credentialsType), m.c.SelfServiceFlowRegistrationAfterHooks(string(credentialsType))) {
 		if hook, ok := v.(registration.PostHookPrePersistExecutor); ok {
 			b = append(b, hook)
 		}
@@ -15,7 +15,11 @@ func (m *RegistryDefault) PostRegistrationPrePersistHooks(credentialsType identi
 }
 
 func (m *RegistryDefault) PostRegistrationPostPersistHooks(credentialsType identity.CredentialsType) (b []registration.PostHookPostPersistExecutor) {
-	for _, v := range m.getHooks(string(credentialsType), m.c.SelfServiceRegistrationAfterHooks(string(credentialsType))) {
+	if m.c.SelfServiceFlowVerificationEnabled() {
+		b = append(b, m.HookVerifier())
+	}
+
+	for _, v := range m.getHooks(string(credentialsType), m.c.SelfServiceFlowRegistrationAfterHooks(string(credentialsType))) {
 		if hook, ok := v.(registration.PostHookPostPersistExecutor); ok {
 			b = append(b, hook)
 		}
@@ -24,7 +28,7 @@ func (m *RegistryDefault) PostRegistrationPostPersistHooks(credentialsType ident
 }
 
 func (m *RegistryDefault) PreRegistrationHooks() (b []registration.PreHookExecutor) {
-	for _, v := range m.getHooks("", m.c.SelfServiceRegistrationBeforeHooks()) {
+	for _, v := range m.getHooks("", m.c.SelfServiceFlowRegistrationBeforeHooks()) {
 		if hook, ok := v.(registration.PreHookExecutor); ok {
 			b = append(b, hook)
 		}

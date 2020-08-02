@@ -62,7 +62,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 // Initialize browser-based account recovery flow
 //
 // This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to
-// `urls.recovery_ui` with the request ID set as a query parameter. If a valid user session exists, the request
+// `selfservice.flows.recovery.ui_url` with the request ID set as a query parameter. If a valid user session exists, the request
 // is aborted.
 //
 // > This endpoint is NOT INTENDED for API clients and only works
@@ -76,7 +76,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //       302: emptyResponse
 //       500: genericError
 func (h *Handler) init(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	req, err := NewRequest(h.c.SelfServiceRecoveryRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies())
+	req, err := NewRequest(h.c.SelfServiceFlowRecoveryRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies())
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
@@ -88,7 +88,7 @@ func (h *Handler) init(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	}
 
 	http.Redirect(w, r,
-		urlx.CopyWithQuery(h.c.RecoveryURL(), url.Values{"request": {req.ID.String()}}).String(),
+		urlx.CopyWithQuery(h.c.SelfServiceFlowRecoveryUI(), url.Values{"request": {req.ID.String()}}).String(),
 		http.StatusFound,
 	)
 }

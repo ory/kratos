@@ -1,0 +1,142 @@
+---
+id: managing-users-identities
+title: Managing Users and Identities
+---
+
+import Tabs from '@theme/Tabs'
+import TabItem from '@theme/TabItem'
+
+This document walks you through the administrative identity management in ORY Kratos. You should already
+be familiar with the [Identity Data Model](../concepts/identity-data-model) before reading this guide.
+
+## Creating an Identity
+
+There are three principal flows supported for creating identities as an administrator:
+
+1. Inviting users - e.g. inviting a new employee to your organization IT.
+2. Importing existing users - e.g. when migrating from another system to ORY Kratos.
+3. Creating machine users - e.g. creating Service Accounts.
+
+:::note
+
+Similar to other guides, we assume that ORY Kratos runs on 127.0.0.1:4433 (public endpoint) and
+127.0.0.1:4434 (admin endpoint) in this guide, which is the default when running the quickstart.
+
+:::
+
+### Invite a User
+
+The goal of this flow is to create an identity and provide the end-user with a way
+of signing into the identity (account) and setting their password (or any other type of credential)
+for future logins. To achieve this, first create the identity and set its traits and schema:
+
+```shell script
+$ curl --request POST -sL \
+    --header "Content-Type: application/json" \
+    --request POST \
+    --data '{
+  "schema_id": "default",
+  "traits": {
+    "email": "foo@ory.sh"
+  }
+}' \
+    http://127.0.0.1:4434/identities
+
+{
+  "id": "954f7f59-16a5-4152-8ce7-ad7c73bb124a",
+  "schema_id": "default",
+  "traits":{
+    "email": "foo@ory.sh"
+  }
+}
+```
+
+Keep in mind that you can change the `schema_id` to reflect the schema you want to use for this user. Similarly,
+the trait key/values depend on your schema as well. The command shown does not create a password for the identity
+or any other type of credential. Instead, we will use another REST call to create a recovery link (here "invite link" is
+probably more appropriate, but the flow uses an account recovery link).
+
+To create the account recovery link, use:
+
+<Tabs
+  defaultValue="curl"
+  values={[
+    {label: 'curl', value: 'curl'},
+    {label: 'GoLang', value: 'go'},
+  ]}>
+<TabItem value="curl">
+
+```shell script
+$ curl --request POST -sL \
+    --header "Content-Type: application/json" \
+    --request POST \
+    --data '{
+  "expires_in": "12h",
+  "identity_id": "954f7f59-16a5-4152-8ce7-ad7c73bb124a"
+}' \
+    http://127.0.0.1:4434/flows/recovery/link
+
+{
+  "expires_at": "2020-07-27T10:47:45.806Z",
+  "recovery_link": "http://127.0.0.1:4433/self-service/browser/flows/recovery/link?request=8b6fd3e4-1de2-49bf-aa88-1a26634bf062\u0026token=b1tGmHf64cYDeHB9wKiuCF1FfycMJEyf"
+}
+```
+
+</TabItem>
+<TabItem value="go">
+
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/ory/kratos-client-go/client"
+	"github.com/ory/kratos-client-go/client/admin"
+	"github.com/ory/kratos-client-go/models"
+)
+
+func main() {
+	c := client.New(nil, &client.TransportConfig{
+        Host: "127.0.0.1:4434",
+        BasePath: "/",
+        Schemes: []string{"http"},
+    })
+
+	res, err := c.Admin.CreateRecoveryLink(admin.NewCreateRecoveryLinkParams().WithBody(admin.CreateRecoveryLinkBody{
+		IdentityID: models.UUID("the-uuid"),
+	}))
+	if err != nil {
+		// ...
+	}
+
+	fmt.Printf("Use link: %s", *res.Payload.RecoveryLink)
+}
+```
+
+The response contains a `recovery_link` value which is the link the user should use to set up his or her credentials
+(e.g. connect to a Social Sign In Provider, set up a password, ...). The user has only a limited amount of time to do
+so - the amount of time is specified in the ORY Kratos config:
+
+```yaml title="path/to/kratos/config.yml"
+selfservice:
+  flows:
+    settings:
+      privileged_session_max_age: 30m
+```
+
+If the user fails to set up his / her credentials in time, another recovery link needs to be issued and the user
+needs to re-do the flow.
+
+It is currently not possible to send the recovery link directly to a user's email, this feature is tracked as
+[#595](https://github.com/ory/kratos/issues/595).
+
+</TabItem>
+</Tabs>
+
+### Import a User Identity
+
+This feature is not implemented yet.
+
+### Creating a Machine Identity
+
+This feature is not implemented yet.

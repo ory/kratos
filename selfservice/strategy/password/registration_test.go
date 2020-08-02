@@ -76,12 +76,12 @@ func TestRegistration(t *testing.T) {
 		defer uiTs.Close()
 		defer returnTs.Close()
 
-		viper.Set(configuration.ViperKeyURLsError, errTs.URL+"/error-ts")
-		viper.Set(configuration.ViperKeyURLsRegistration, uiTs.URL+"/signup-ts")
-		viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
-		viper.Set(configuration.ViperKeyURLsDefaultReturnTo, returnTs.URL+"/default-return-to")
-		viper.Set(configuration.ViperKeySelfServiceRegistrationAfter+"."+configuration.ViperKeyDefaultReturnTo, returnTs.URL+"/return-ts")
-		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
+		viper.Set(configuration.ViperKeySelfServiceErrorUI, errTs.URL+"/error-ts")
+		viper.Set(configuration.ViperKeySelfServiceRegistrationUI, uiTs.URL+"/signup-ts")
+		viper.Set(configuration.ViperKeyPublicBaseURL, ts.URL)
+		viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, returnTs.URL+"/default-return-to")
+		viper.Set(configuration.ViperKeySelfServiceRegistrationAfter+"."+configuration.DefaultBrowserReturnURL, returnTs.URL+"/return-ts")
+		viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
 
 		var newRegistrationRequest = func(t *testing.T, exp time.Duration) *registration.Request {
 			rr := &registration.Request{
@@ -179,7 +179,7 @@ func TestRegistration(t *testing.T) {
 		})
 
 		t.Run("case=should fail because schema did not specify an identifier", func(t *testing.T) {
-			viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/missing-identifier.schema.json")
+			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/missing-identifier.schema.json")
 			rr := newRegistrationRequest(t, time.Minute)
 			body, res := makeRequest(t, rr.ID, url.Values{
 				"traits.username": {"registration-identifier-6"},
@@ -193,7 +193,7 @@ func TestRegistration(t *testing.T) {
 		})
 
 		t.Run("case=should fail because schema does not exist", func(t *testing.T) {
-			viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/i-do-not-exist.schema.json")
+			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/i-do-not-exist.schema.json")
 			rr := newRegistrationRequest(t, time.Minute)
 			body, res := makeRequest(t, rr.ID, url.Values{
 				"traits.username": {"registration-identifier-7"},
@@ -207,7 +207,7 @@ func TestRegistration(t *testing.T) {
 		})
 
 		t.Run("case=should pass and set up a session", func(t *testing.T) {
-			viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
+			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
 			viper.Set(
 				configuration.HookStrategyKey(configuration.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()),
 				[]configuration.SelfServiceHook{{Name: "session"}})
@@ -223,7 +223,7 @@ func TestRegistration(t *testing.T) {
 		})
 
 		t.Run("case=should fail to register the same user again", func(t *testing.T) {
-			viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
+			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
 			rr := newRegistrationRequest(t, time.Minute)
 			body, res := makeRequest(t, rr.ID, url.Values{
 				"traits.username": {"registration-identifier-8"},
@@ -235,7 +235,7 @@ func TestRegistration(t *testing.T) {
 		})
 
 		t.Run("case=should return an error because not passing validation and reset previous errors and values", func(t *testing.T) {
-			viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
+			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
 
 			rr := &registration.Request{
 				ID:        x.NewUUID(),
@@ -280,7 +280,7 @@ func TestRegistration(t *testing.T) {
 		})
 
 		t.Run("case=should work even if password is just numbers", func(t *testing.T) {
-			viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://stub/registration.schema.json")
+			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://stub/registration.schema.json")
 			rr := newRegistrationRequest(t, time.Minute)
 			body, res := makeRequest(t, rr.ID, url.Values{
 				"traits.username": {"registration-identifier-10"},
@@ -311,8 +311,8 @@ func TestRegistration(t *testing.T) {
 	t.Run("method=PopulateSignUpMethod", func(t *testing.T) {
 		_, reg := internal.NewFastRegistryWithMocks(t)
 
-		viper.Set(configuration.ViperKeyURLsSelfPublic, urlx.ParseOrPanic("https://foo/"))
-		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://stub/registration.schema.json")
+		viper.Set(configuration.ViperKeyPublicBaseURL, urlx.ParseOrPanic("https://foo/"))
+		viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://stub/registration.schema.json")
 		viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
 			"enabled": true})
 

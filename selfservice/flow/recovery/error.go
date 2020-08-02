@@ -86,7 +86,7 @@ func (s *ErrorHandler) HandleRecoveryError(
 	}
 
 	http.Redirect(w, r,
-		urlx.CopyWithQuery(s.c.RecoveryURL(), url.Values{"request": {rr.ID.String()}}).String(),
+		urlx.CopyWithQuery(s.c.SelfServiceFlowRecoveryUI(), url.Values{"request": {rr.ID.String()}}).String(),
 		http.StatusFound,
 	)
 }

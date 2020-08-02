@@ -10,15 +10,16 @@ allows you to implement the error page in any way you want.
 
 When a user-facing error occurs (e.g. during Self Service User Login), ORY
 Kratos will store error message and context and redirect the User's Browser to
-the Error UI URL set by the `urls.error_ui` configuration or `URLS_ERROR_UI`
-environment variable.
+the Error UI URL set by the `selfservice.flows.error.ui_url` configuration or
+`SELFSERVICE_FLOWS_ERROR_UI_URL` environment variable.
 
-Assuming `urls.error_ui` is set to `https://example.org/errors`, ORY Kratos will
-redirect the User's Browser to `https://example.org/errors?error=abcde`.
+Assuming `selfservice.flows.error.ui_url` is set to
+`https://example.org/errors`, ORY Kratos will redirect the User's Browser to
+`https://example.org/errors?error=abcde`.
 
 The route matching `https://example.org/errors` uses the `error` URL Query
 parameter value `abcde` to make a request to ORY Kratos' Public or Admin API
-`https://kratos-<public|admin/self-service/errors?error=abcde`. The JSON
+`https://kratos-<public|admin>/self-service/errors?error=abcde`. The JSON
 Response contains a list of errors and their details, for example:
 
 ```json
@@ -47,3 +48,16 @@ layouts. In general, errors have the following keys defined:
 When a user-facing error occurs and the HTTP client is an API Client (e.g.
 Mobile App), the error will be returned as the HTTP Response. No additional
 steps are required.
+
+## Using Stub Errors
+
+The error endpoint supports stub errors which can be used to implement your
+Error UI:
+
+- `?error=stub:500` - returns a stub 500 (Internal Server Error) error.
+
+To call a stub error, simply do:
+
+```shell script
+$ curl 'https://kratos-<public|admin>/self-service/errors?error=stub:500'
+```

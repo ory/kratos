@@ -34,7 +34,7 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 
 	testhelpers.NewRedirTS(t, "already authenticated")
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 
 	t.Run("does redirect to default on authenticated request", func(t *testing.T) {
 		body, _ := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, x.NewTestHTTPRequest(t, "GET", ts.URL+registration.BrowserRegistrationPath, nil))
@@ -97,16 +97,16 @@ func TestRegistrationHandler(t *testing.T) {
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	defer errTS.Close()
 
-	viper.Set(configuration.ViperKeyURLsSelfPublic, public.URL)
-	viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
-	viper.Set(configuration.ViperKeyURLsError, errTS.URL)
+	viper.Set(configuration.ViperKeyPublicBaseURL, public.URL)
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+	viper.Set(configuration.ViperKeySelfServiceErrorUI, errTS.URL)
 	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
 		"enabled": true})
 
 	t.Run("daemon=admin", func(t *testing.T) {
 		regTS := newRegistrationTS(t, admin.URL, nil)
 		defer regTS.Close()
-		viper.Set(configuration.ViperKeyURLsRegistration, regTS.URL)
+		viper.Set(configuration.ViperKeySelfServiceRegistrationUI, regTS.URL)
 
 		t.Run("case=valid", func(t *testing.T) {
 			assertRequestPayload(t, x.EasyGetBody(t, public.Client(), public.URL+registration.BrowserRegistrationPath))
@@ -128,7 +128,7 @@ func TestRegistrationHandler(t *testing.T) {
 
 			regTS := newRegistrationTS(t, public.URL, hc)
 			defer regTS.Close()
-			viper.Set(configuration.ViperKeyURLsRegistration, regTS.URL)
+			viper.Set(configuration.ViperKeySelfServiceRegistrationUI, regTS.URL)
 
 			body := x.EasyGetBody(t, hc, public.URL+registration.BrowserRegistrationPath)
 			assertRequestPayload(t, body)
@@ -139,7 +139,7 @@ func TestRegistrationHandler(t *testing.T) {
 				// using a different client because it doesn't have access to the cookie jar
 				new(http.Client))
 			defer regTS.Close()
-			viper.Set(configuration.ViperKeyURLsRegistration, regTS.URL)
+			viper.Set(configuration.ViperKeySelfServiceRegistrationUI, regTS.URL)
 
 			body := x.EasyGetBody(t, new(http.Client), public.URL+registration.BrowserRegistrationPath)
 			assert.Contains(t, gjson.GetBytes(body, "error").String(), "csrf_token", "%s", body)

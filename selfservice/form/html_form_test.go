@@ -304,4 +304,25 @@ func TestContainer(t *testing.T) {
 		assert.Empty(t, c.getField("2").Messages)
 		assert.Empty(t, c.getField("2").Value)
 	})
+
+	t.Run("method=SortFields", func(t *testing.T) {
+		// use a schema compiler that disables identifiers
+		schemaCompiler := jsonschema.NewCompiler()
+		schemaPath := "stub/identity.schema.json"
+
+		f, err := NewHTMLFormFromJSONSchema("/foo", schemaPath, "", schemaCompiler)
+		require.NoError(t, err)
+
+		f.SetValuesFromJSON(json.RawMessage(`{}`), "traits")
+		f.SetCSRF("csrf_token")
+
+		require.NoError(t, f.SortFields(schemaPath))
+
+		var names []string
+		for _, f := range f.Fields {
+			names = append(names, f.Name)
+		}
+
+		assert.EqualValues(t, []string{"csrf_token", "traits.email", "traits.stringy", "traits.numby", "traits.booly", "traits.should_big_number", "traits.should_long_string"}, names, "%+v", f.Fields)
+	})
 }

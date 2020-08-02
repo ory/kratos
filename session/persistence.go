@@ -39,7 +39,7 @@ func TestPersister(p interface {
 	identity.PrivilegedPool
 }) func(t *testing.T) {
 	return func(t *testing.T) {
-		viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/identity.schema.json")
+		viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 
 		t.Run("case=not found", func(t *testing.T) {
 			_, err := p.GetSession(context.Background(), x.NewUUID())
@@ -58,8 +58,8 @@ func TestPersister(p interface {
 			actual, err := p.GetSession(context.Background(), expected.ID)
 			require.NoError(t, err)
 			assert.Equal(t, expected.Identity.ID, actual.Identity.ID)
-			assert.NotEmpty(t, actual.Identity.TraitsSchemaURL)
-			assert.NotEmpty(t, actual.Identity.TraitsSchemaID)
+			assert.NotEmpty(t, actual.Identity.SchemaURL)
+			assert.NotEmpty(t, actual.Identity.SchemaID)
 			assert.Equal(t, expected.ID, actual.ID)
 			assert.EqualValues(t, expected.ExpiresAt.Unix(), actual.ExpiresAt.Unix())
 			assert.Equal(t, expected.AuthenticatedAt.Unix(), actual.AuthenticatedAt.Unix())

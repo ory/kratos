@@ -15,3 +15,9 @@ func JSONEq(t *testing.T, expected, actual interface{}, messageAndArgs ...interf
 	require.NoError(t, json.NewEncoder(&ab).Encode(actual))
 	assert.JSONEq(t, eb.String(), ab.String(), messageAndArgs...)
 }
+
+func LogJSON(t *testing.T, v interface{}) {
+	out, err := json.MarshalIndent(v, "", "  ")
+	require.NoError(t, err)
+	t.Logf("\n%s\n---", out)
+}

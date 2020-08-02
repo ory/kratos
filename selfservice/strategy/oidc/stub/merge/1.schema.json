@@ -3,17 +3,22 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
-    "foo": {
-      "type": "string"
-    },
-    "baz": {
-      "type": "string"
-    },
-    "bool": {
-      "type": "boolean"
-    },
-    "opv": {
-      "type": "string"
+    "traits": {
+      "type": "object",
+      "properties": {
+        "foo": {
+          "type": "string"
+        },
+        "baz": {
+          "type": "string"
+        },
+        "bool": {
+          "type": "boolean"
+        },
+        "opv": {
+          "type": "string"
+        }
+      }
     }
   }
 }

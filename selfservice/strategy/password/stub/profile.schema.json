@@ -4,6 +4,9 @@
   "title": "Person",
   "type": "object",
   "properties": {
+    "traits": {
+      "type": "object",
+      "properties": {
     "email": {
       "type": "string",
       "ory.sh/kratos": {
@@ -13,6 +16,8 @@
           }
         }
       }
+    }
+    }
     }
   },
   "additionalProperties": false

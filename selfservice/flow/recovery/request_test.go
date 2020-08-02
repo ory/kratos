@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/x/urlx"
@@ -37,4 +38,7 @@ func TestRequest(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
+
+	assert.EqualValues(t, recovery.StateChooseMethod,
+		must(recovery.NewRequest(time.Hour, "", u, nil)).State)
 }

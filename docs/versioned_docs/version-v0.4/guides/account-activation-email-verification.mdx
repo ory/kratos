@@ -1,0 +1,78 @@
+---
+id: account-activation-email-verification
+title: Setting up Account Activation and E-Mail Verification
+---
+
+To set up email verification, your
+[Identity JSON Schema](../concepts/identity-data-model.md) must have an email in
+its traits and add
+
+```json
+{
+  "ory.sh/kratos": {
+    "verification": {
+      "via": "email"
+    }
+  }
+}
+```
+
+to it, for example:
+
+```diff
+{
+  "$id": "https://schemas.ory.sh/presets/kratos/quickstart/email-password/identity.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Person",
+  "type": "object",
+  "properties": {
+    "traits": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "title": "E-Mail",
+          "minLength": 3,
++         "ory.sh/kratos": {
++           "verification": {
++             "via": "email"
++           }
++         }
+        }
+      }
+    }
+  }
+}
+```
+
+Email verification currently supports sending out a recovery link to an email
+address. For this to work, you must have the courier SMTP connection configured
+in your ORY Kratos Config File (`kratos serve -c /home/kratos/.kratos.yml`):
+
+```diff
+ # ORY Kratos Config File
++courier:
++  smtp:
++    connection_uri: smtps://username:password@smtp-server:1234/
+ # ...
+```
+
+You also need to enable verification:
+
+```diff
+ selfservice:
+   flows:
+     # login ...
+     # registration...
+
++    verification:
++      enabled: true
++      ui_url: http://127.0.0.1:4455/verify
+
+ # ...
+```
+
+That all that's needed! For more information on implementing the UI and details
+about the payloads, head over to the
+[Email and Phone Verification and Account Activation Documentation](../self-service/flows/verify-email-account-activation.mdx)!

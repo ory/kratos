@@ -14,13 +14,19 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 )
 
 // NewListIdentitiesParams creates a new ListIdentitiesParams object
 // with the default values initialized.
 func NewListIdentitiesParams() *ListIdentitiesParams {
-
+	var (
+		pageDefault    = int64(0)
+		perPageDefault = int64(100)
+	)
 	return &ListIdentitiesParams{
+		Page:    &pageDefault,
+		PerPage: &perPageDefault,
 
 		timeout: cr.DefaultTimeout,
 	}
@@ -29,8 +35,13 @@ func NewListIdentitiesParams() *ListIdentitiesParams {
 // NewListIdentitiesParamsWithTimeout creates a new ListIdentitiesParams object
 // with the default values initialized, and the ability to set a timeout on a request
 func NewListIdentitiesParamsWithTimeout(timeout time.Duration) *ListIdentitiesParams {
-
+	var (
+		pageDefault    = int64(0)
+		perPageDefault = int64(100)
+	)
 	return &ListIdentitiesParams{
+		Page:    &pageDefault,
+		PerPage: &perPageDefault,
 
 		timeout: timeout,
 	}
@@ -39,8 +50,13 @@ func NewListIdentitiesParamsWithTimeout(timeout time.Duration) *ListIdentitiesPa
 // NewListIdentitiesParamsWithContext creates a new ListIdentitiesParams object
 // with the default values initialized, and the ability to set a context for a request
 func NewListIdentitiesParamsWithContext(ctx context.Context) *ListIdentitiesParams {
-
+	var (
+		pageDefault    = int64(0)
+		perPageDefault = int64(100)
+	)
 	return &ListIdentitiesParams{
+		Page:    &pageDefault,
+		PerPage: &perPageDefault,
 
 		Context: ctx,
 	}
@@ -49,8 +65,13 @@ func NewListIdentitiesParamsWithContext(ctx context.Context) *ListIdentitiesPara
 // NewListIdentitiesParamsWithHTTPClient creates a new ListIdentitiesParams object
 // with the default values initialized, and the ability to set a custom HTTPClient for a request
 func NewListIdentitiesParamsWithHTTPClient(client *http.Client) *ListIdentitiesParams {
-
+	var (
+		pageDefault    = int64(0)
+		perPageDefault = int64(100)
+	)
 	return &ListIdentitiesParams{
+		Page:       &pageDefault,
+		PerPage:    &perPageDefault,
 		HTTPClient: client,
 	}
 }
@@ -59,6 +80,20 @@ func NewListIdentitiesParamsWithHTTPClient(client *http.Client) *ListIdentitiesP
 for the list identities operation typically these are written to a http.Request
 */
 type ListIdentitiesParams struct {
+
+	/*Page
+	  Pagination Page
+
+	*/
+	Page *int64
+	/*PerPage
+	  Items per Page
+
+	This is the number of items per page.
+
+	*/
+	PerPage *int64
+
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
@@ -97,6 +132,28 @@ func (o *ListIdentitiesParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithPage adds the page to the list identities params
+func (o *ListIdentitiesParams) WithPage(page *int64) *ListIdentitiesParams {
+	o.SetPage(page)
+	return o
+}
+
+// SetPage adds the page to the list identities params
+func (o *ListIdentitiesParams) SetPage(page *int64) {
+	o.Page = page
+}
+
+// WithPerPage adds the perPage to the list identities params
+func (o *ListIdentitiesParams) WithPerPage(perPage *int64) *ListIdentitiesParams {
+	o.SetPerPage(perPage)
+	return o
+}
+
+// SetPerPage adds the perPage to the list identities params
+func (o *ListIdentitiesParams) SetPerPage(perPage *int64) {
+	o.PerPage = perPage
+}
+
 // WriteToRequest writes these params to a swagger request
 func (o *ListIdentitiesParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -104,6 +161,38 @@ func (o *ListIdentitiesParams) WriteToRequest(r runtime.ClientRequest, reg strfm
 		return err
 	}
 	var res []error
+
+	if o.Page != nil {
+
+		// query param page
+		var qrPage int64
+		if o.Page != nil {
+			qrPage = *o.Page
+		}
+		qPage := swag.FormatInt64(qrPage)
+		if qPage != "" {
+			if err := r.SetQueryParam("page", qPage); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	if o.PerPage != nil {
+
+		// query param per_page
+		var qrPerPage int64
+		if o.PerPage != nil {
+			qrPerPage = *o.PerPage
+		}
+		qPerPage := swag.FormatInt64(qrPerPage)
+		if qPerPage != "" {
+			if err := r.SetQueryParam("per_page", qPerPage); err != nil {
+				return err
+			}
+		}
+
+	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)

@@ -58,5 +58,5 @@ type MessageResetter interface {
 }
 
 type FieldSorter interface {
-	SortFields(schemaRef string, prefix string) error
+	SortFields(schemaRef string) error
 }

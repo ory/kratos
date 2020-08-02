@@ -30,8 +30,8 @@ func TestRegistrationExecutor(t *testing.T) {
 	} {
 		t.Run("strategy="+strategy, func(t *testing.T) {
 			_, reg := internal.NewFastRegistryWithMocks(t)
-			viper.Set(configuration.ViperKeyDefaultIdentityTraitsSchemaURL, "file://./stub/registration.schema.json")
-			viper.Set(configuration.ViperKeyURLsDefaultReturnTo, "https://www.ory.sh/")
+			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+			viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
 
 			newServer := func(t *testing.T, i *identity.Identity) *httptest.Server {
 				router := httprouter.New()
@@ -53,7 +53,7 @@ func TestRegistrationExecutor(t *testing.T) {
 
 				ts := httptest.NewServer(router)
 				t.Cleanup(ts.Close)
-				viper.Set(configuration.ViperKeyURLsSelfPublic, ts.URL)
+				viper.Set(configuration.ViperKeyPublicBaseURL, ts.URL)
 				return ts
 			}
 

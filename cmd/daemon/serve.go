@@ -24,9 +24,10 @@ import (
 	"github.com/ory/kratos/selfservice/flow/logout"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
-	"github.com/ory/kratos/selfservice/flow/verify"
+	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/selfservice/strategy/password"
+	"github.com/ory/kratos/selfservice/strategy/profile"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
@@ -43,6 +44,10 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 	r.RegisterPublicRoutes(router)
 	n.Use(NewNegroniLoggerMiddleware(l, "public#"+c.SelfPublicURL().String()))
 	n.Use(sqa(cmd, d))
+
+	if tracer := d.Registry().Tracer(); tracer.IsLoaded() {
+		n.Use(tracer)
+	}
 
 	csrf := x.NewCSRFHandler(
 		router,
@@ -79,6 +84,10 @@ func serveAdmin(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []
 	r.RegisterAdminRoutes(router)
 	n.Use(NewNegroniLoggerMiddleware(l, "admin#"+c.SelfAdminURL().String()))
 	n.Use(sqa(cmd, d))
+
+	if tracer := d.Registry().Tracer(); tracer.IsLoaded() {
+		n.Use(tracer)
+	}
 
 	n.UseHandler(router)
 	server := graceful.WithDefaults(&http.Server{
@@ -126,14 +135,14 @@ func sqa(cmd *cobra.Command, d driver.Driver) *metricsx.Service {
 				registration.BrowserRegistrationRequestsPath,
 				session.SessionsWhoamiPath,
 				identity.IdentitiesPath,
-				settings.PublicSettingsProfilePath,
+				profile.PublicSettingsProfilePath,
 				settings.PublicPath,
 				settings.PublicRequestPath,
-				settings.PublicSettingsProfilePath,
-				verify.PublicVerificationCompletePath,
-				strings.ReplaceAll(strings.ReplaceAll(verify.PublicVerificationConfirmPath, ":via", "email"), ":code", ""),
-				strings.ReplaceAll(verify.PublicVerificationInitPath, ":via", "email"),
-				verify.PublicVerificationRequestPath,
+				profile.PublicSettingsProfilePath,
+				verification.PublicVerificationCompletePath,
+				strings.ReplaceAll(strings.ReplaceAll(verification.PublicVerificationConfirmPath, ":via", "email"), ":code", ""),
+				strings.ReplaceAll(verification.PublicVerificationInitPath, ":via", "email"),
+				verification.PublicVerificationRequestPath,
 				errorx.ErrorsPath,
 			},
 			BuildVersion: d.Registry().BuildVersion(),

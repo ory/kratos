@@ -40,6 +40,11 @@ type Configuration struct {
 	// `provider` is set to `generic`.
 	TokenURL string `json:"token_url"`
 
+	// Tenant is the Azure AD Tenant to use for authentication, and must be set when `provider` is set to `microsoft`.
+	// Can be either `common`, `organizations`, `consumers` for a multitenant application or a specific tenant like
+	// `8eaef023-2b34-4da1-9baa-8bc8c9d6a490` or `contoso.onmicrosoft.com`.
+	Tenant string `json:"tenant"`
+
 	// Scope specifies optional requested permissions.
 	Scope []string `json:"scope"`
 
@@ -72,8 +77,10 @@ func (c ConfigurationCollection) Provider(id string, public *url.URL) (Provider,
 				return NewProviderGitHub(&p, public), nil
 			case "gitlab":
 				return NewProviderGitLab(&p, public), nil
+			case "microsoft":
+				return NewProviderMicrosoft(&p, public), nil
 			}
-			return nil, errors.Errorf("provider type %s is not supported, supported are: %v", p.Provider, []string{"google"})
+			return nil, errors.Errorf("provider type %s is not supported, supported are: %v", p.Provider, []string{"generic", "google", "github", "microsoft"})
 		}
 	}
 	return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf(`OpenID Connect Provider "%s" is unknown or has not been configured`, id))

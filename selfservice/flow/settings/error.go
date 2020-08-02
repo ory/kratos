@@ -112,7 +112,7 @@ func (s *ErrorHandler) HandleSettingsError(
 	}
 
 	http.Redirect(w, r,
-		urlx.CopyWithQuery(s.c.SettingsURL(), url.Values{"request": {rr.ID.String()}}).String(),
+		urlx.CopyWithQuery(s.c.SelfServiceFlowSettingsUI(), url.Values{"request": {rr.ID.String()}}).String(),
 		http.StatusFound,
 	)
 }

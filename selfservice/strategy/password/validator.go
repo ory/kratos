@@ -34,6 +34,8 @@ type ValidationProvider interface {
 }
 
 var _ Validator = new(DefaultPasswordValidator)
+var ErrNetworkFailure = errors.New("unable to check if password has been leaked because an unexpected network error occurred")
+var ErrUnexpectedStatusCode = errors.New("unexpected status code")
 
 // DefaultPasswordValidator implements Validator. It is based on best
 // practices as defined in the following blog posts:
@@ -52,18 +54,18 @@ type DefaultPasswordValidator struct {
 	maxBreachesThreshold int64
 	ignoreNetworkErrors  bool
 
-	minIdentifierPasswordDist   int
-	maxIdentifierPasswordSubstr int
+	minIdentifierPasswordDist            int
+	maxIdentifierPasswordSubstrThreshold float32
 }
 
 func NewDefaultPasswordValidatorStrategy() *DefaultPasswordValidator {
 	return &DefaultPasswordValidator{
-		c:                           httpx.NewResilientClientLatencyToleranceMedium(nil),
-		maxBreachesThreshold:        0,
-		hashes:                      map[string]int64{},
-		ignoreNetworkErrors:         true,
-		minIdentifierPasswordDist:   5,
-		maxIdentifierPasswordSubstr: 3,
+		c:                                    httpx.NewResilientClientLatencyToleranceMedium(nil),
+		maxBreachesThreshold:                 0,
+		hashes:                               map[string]int64{},
+		ignoreNetworkErrors:                  true,
+		minIdentifierPasswordDist:            5,
+		maxIdentifierPasswordSubstrThreshold: 0.5,
 	}
 }
 
@@ -104,18 +106,12 @@ func (s *DefaultPasswordValidator) fetch(hpw []byte) error {
 	loc := fmt.Sprintf("https://api.pwnedpasswords.com/range/%s", prefix)
 	res, err := s.c.Get(loc)
 	if err != nil {
-		if s.ignoreNetworkErrors {
-			return nil
-		}
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to check if password has been breached before: %s", err))
+		return errors.Wrapf(ErrNetworkFailure, "%s", err)
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		if s.ignoreNetworkErrors {
-			return nil
-		}
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to check if password has been breached before, expected status code 200 but got %d", res.StatusCode))
+		return errors.Wrapf(ErrUnexpectedStatusCode, "%d", res.StatusCode)
 	}
 
 	s.Lock()
@@ -154,7 +150,9 @@ func (s *DefaultPasswordValidator) Validate(identifier, password string) error {
 	}
 
 	compIdentifier, compPassword := strings.ToLower(identifier), strings.ToLower(password)
-	if levenshtein.Distance(compIdentifier, compPassword) < s.minIdentifierPasswordDist || lcsLength(compIdentifier, compPassword) > s.maxIdentifierPasswordSubstr {
+	dist := levenshtein.Distance(compIdentifier, compPassword)
+	lcs := float32(lcsLength(compIdentifier, compPassword)) / float32(len(compPassword))
+	if dist < s.minIdentifierPasswordDist || lcs > s.maxIdentifierPasswordSubstrThreshold {
 		return errors.Errorf("the password is too similar to the user identifier")
 	}
 
@@ -170,7 +168,10 @@ func (s *DefaultPasswordValidator) Validate(identifier, password string) error {
 	s.RUnlock()
 
 	if !ok {
-		if err := s.fetch(hpw); err != nil {
+		err := s.fetch(hpw)
+		if (errors.Is(err, ErrNetworkFailure) || errors.Is(err, ErrUnexpectedStatusCode)) && s.ignoreNetworkErrors {
+			return nil
+		} else if err != nil {
 			return err
 		}
 

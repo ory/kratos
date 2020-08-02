@@ -63,6 +63,8 @@ func TestSelfServicePreHook(
 		})
 
 		t.Run("case=redirect", func(t *testing.T) {
+			t.Skipf("Skipped because pre-redirect is no longer supported")
+
 			t.Cleanup(SelfServiceHookConfigReset)
 			viper.Set(configKey, []configuration.SelfServiceHook{{Name: "redirect", Config: []byte(`{"to": "https://www.ory.sh/"}`)}})
 
@@ -95,26 +97,26 @@ func SelfServiceHookConfigReset() {
 }
 
 func SelfServiceHookSettingsSetDefaultRedirectTo(value string) {
-	viper.Set(configuration.ViperKeySelfServiceSettingsAfter+"."+configuration.ViperKeyDefaultReturnTo, value)
+	viper.Set(configuration.ViperKeySelfServiceSettingsAfter+"."+configuration.DefaultBrowserReturnURL, value)
 }
 
 func SelfServiceHookSettingsSetDefaultRedirectToStrategy(strategy, value string) {
-	viper.Set(configuration.ViperKeySelfServiceSettingsAfter+"."+strategy+"."+configuration.ViperKeyDefaultReturnTo, value)
+	viper.Set(configuration.ViperKeySelfServiceSettingsAfter+"."+strategy+"."+configuration.DefaultBrowserReturnURL, value)
 }
 func SelfServiceHookLoginSetDefaultRedirectTo(value string) {
-	viper.Set(configuration.ViperKeySelfServiceLoginAfter+"."+configuration.ViperKeyDefaultReturnTo, value)
+	viper.Set(configuration.ViperKeySelfServiceLoginAfter+"."+configuration.DefaultBrowserReturnURL, value)
 }
 
 func SelfServiceHookLoginSetDefaultRedirectToStrategy(strategy, value string) {
-	viper.Set(configuration.ViperKeySelfServiceLoginAfter+"."+strategy+"."+configuration.ViperKeyDefaultReturnTo, value)
+	viper.Set(configuration.ViperKeySelfServiceLoginAfter+"."+strategy+"."+configuration.DefaultBrowserReturnURL, value)
 }
 
 func SelfServiceHookRegistrationSetDefaultRedirectTo(value string) {
-	viper.Set(configuration.ViperKeySelfServiceRegistrationAfter+"."+configuration.ViperKeyDefaultReturnTo, value)
+	viper.Set(configuration.ViperKeySelfServiceRegistrationAfter+"."+configuration.DefaultBrowserReturnURL, value)
 }
 
 func SelfServiceHookRegistrationSetDefaultRedirectToStrategy(strategy, value string) {
-	viper.Set(configuration.ViperKeySelfServiceRegistrationAfter+"."+strategy+"."+configuration.ViperKeyDefaultReturnTo, value)
+	viper.Set(configuration.ViperKeySelfServiceRegistrationAfter+"."+strategy+"."+configuration.DefaultBrowserReturnURL, value)
 }
 
 func SelfServiceHookLoginViperSetPost(strategy string, c []configuration.SelfServiceHook) {

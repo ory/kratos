@@ -55,7 +55,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 
 	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
 		if !ar.Forced {
-			http.Redirect(w, r, s.c.DefaultReturnToURL().String(), http.StatusFound)
+			http.Redirect(w, r, s.c.SelfServiceBrowserDefaultReturnTo().String(), http.StatusFound)
 			return
 		}
 	}

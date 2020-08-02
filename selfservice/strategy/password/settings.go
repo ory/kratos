@@ -97,7 +97,7 @@ func (s *Strategy) continueSettingsFlow(
 	w http.ResponseWriter, r *http.Request,
 	ctxUpdate *settings.UpdateContext, p *completeSelfServiceBrowserSettingsPasswordFlowPayload,
 ) {
-	if ctxUpdate.Session.AuthenticatedAt.Add(s.c.SelfServicePrivilegedSessionMaxAge()).Before(time.Now()) {
+	if ctxUpdate.Session.AuthenticatedAt.Add(s.c.SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
 		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.ErrRequestNeedsReAuthentication))
 		return
 	}

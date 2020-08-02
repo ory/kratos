@@ -56,7 +56,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 }
 
 func (h *Handler) NewLoginRequest(w http.ResponseWriter, r *http.Request) (*Request, error) {
-	a := NewRequest(h.c.SelfServiceLoginRequestLifespan(), h.d.GenerateCSRFToken(r), r)
+	a := NewRequest(h.c.SelfServiceFlowLoginRequestLifespan(), h.d.GenerateCSRFToken(r), r)
 	for _, s := range h.d.LoginStrategies() {
 		if err := s.PopulateLoginMethod(r, a); err != nil {
 			return nil, err
@@ -92,7 +92,7 @@ type initializeSelfServiceBrowserLoginFlow struct {
 // Initialize browser-based login user flow
 //
 // This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to
-// `urls.login_ui` with the request ID set as a query parameter. If a valid user session exists already, the browser will be
+// `selfservice.flows.login.ui_url` with the request ID set as a query parameter. If a valid user session exists already, the browser will be
 // redirected to `urls.default_redirect_url`.
 //
 // > This endpoint is NOT INTENDED for API clients and only works
@@ -115,7 +115,7 @@ func (h *Handler) initLoginRequest(w http.ResponseWriter, r *http.Request, ps ht
 
 	// we assume an error means the user has no session
 	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err != nil {
-		http.Redirect(w, r, urlx.CopyWithQuery(h.c.LoginURL(), url.Values{"request": {a.ID.String()}}).String(), http.StatusFound)
+		http.Redirect(w, r, urlx.CopyWithQuery(h.c.SelfServiceFlowLoginUI(), url.Values{"request": {a.ID.String()}}).String(), http.StatusFound)
 		return
 	}
 
@@ -124,13 +124,13 @@ func (h *Handler) initLoginRequest(w http.ResponseWriter, r *http.Request, ps ht
 			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 			return
 		}
-		http.Redirect(w, r, urlx.CopyWithQuery(h.c.LoginURL(), url.Values{"request": {a.ID.String()}}).String(), http.StatusFound)
+		http.Redirect(w, r, urlx.CopyWithQuery(h.c.SelfServiceFlowLoginUI(), url.Values{"request": {a.ID.String()}}).String(), http.StatusFound)
 		return
 	}
 
-	returnTo, err := x.SecureRedirectTo(r, h.c.DefaultReturnToURL(),
+	returnTo, err := x.SecureRedirectTo(r, h.c.SelfServiceBrowserDefaultReturnTo(),
 		x.SecureRedirectAllowSelfServiceURLs(h.c.SelfPublicURL()),
-		x.SecureRedirectAllowURLs(h.c.WhitelistedReturnToDomains()),
+		x.SecureRedirectAllowURLs(h.c.SelfServiceBrowserWhitelistedReturnToDomains()),
 	)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)

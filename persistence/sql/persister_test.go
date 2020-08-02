@@ -18,7 +18,7 @@ import (
 	"github.com/ory/kratos/persistence/sql"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow/recovery"
-	"github.com/ory/kratos/selfservice/strategy/link"
+	"github.com/ory/kratos/selfservice/strategy/recoverytoken"
 	"github.com/ory/kratos/x"
 
 	"github.com/gobuffalo/pop/v5"
@@ -36,7 +36,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
-	"github.com/ory/kratos/selfservice/flow/verify"
+	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/session"
 )
 
@@ -93,7 +93,7 @@ func TestPersister(t *testing.T) {
 	}
 
 	var l sync.Mutex
-	if !testing.Short() {
+	if !testing.Short() && false {
 		funcs := map[string]func(t *testing.T) string{
 			"postgres":  dockertest.RunTestPostgreSQL,
 			"mysql":     dockertest.RunTestMySQL,
@@ -162,7 +162,7 @@ func TestPersister(t *testing.T) {
 			})
 			t.Run("contract=verification.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				verify.TestPersister(p)(t)
+				verification.TestPersister(p)(t)
 			})
 			t.Run("contract=recovery.TestRequestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
@@ -170,7 +170,7 @@ func TestPersister(t *testing.T) {
 			})
 			t.Run("contract=recovery.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				link.TestPersister(p)(t)
+				recoverytoken.TestPersister(p)(t)
 			})
 			t.Run("contract=continuity.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))

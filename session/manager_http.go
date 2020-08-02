@@ -23,8 +23,12 @@ type (
 		x.CSRFProvider
 	}
 	managerHTTPConfiguration interface {
+		SessionPersistentCookie() bool
 		SessionLifespan() time.Duration
-		SessionSecrets() [][]byte
+		SecretsSession() [][]byte
+		SessionSameSiteMode() http.SameSite
+		SessionDomain() string
+		SessionPath() string
 	}
 	ManagerHTTP struct {
 		c          managerHTTPConfiguration
@@ -59,6 +63,23 @@ func (s *ManagerHTTP) CreateToRequest(ctx context.Context, w http.ResponseWriter
 func (s *ManagerHTTP) SaveToRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, session *Session) error {
 	_ = s.r.CSRFHandler().RegenerateToken(w, r)
 	cookie, _ := s.r.CookieManager().Get(r, s.cookieName)
+	if s.c.SessionDomain() != "" {
+		cookie.Options.Domain = s.c.SessionDomain()
+	}
+
+	if s.c.SessionPath() != "" {
+		cookie.Options.Path = s.c.SessionPath()
+	}
+
+	if s.c.SessionSameSiteMode() != 0 {
+		cookie.Options.SameSite = s.c.SessionSameSiteMode()
+	}
+
+	cookie.Options.MaxAge = 0
+	if s.c.SessionPersistentCookie() {
+		cookie.Options.MaxAge = int(s.c.SessionLifespan().Seconds())
+	}
+
 	cookie.Values["sid"] = session.ID.String()
 	if err := cookie.Save(r, w); err != nil {
 		return errors.WithStack(err)
@@ -78,11 +99,15 @@ func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (*S
 	}
 
 	se, err := s.r.SessionPersister().GetSession(ctx, x.ParseUUID(sid))
-	if err != nil && (err.Error() == herodot.ErrNotFound.Error() ||
-		err.Error() == sqlcon.ErrNoRows.Error()) {
-		return nil, errors.WithStack(ErrNoActiveSessionFound)
-	} else if err != nil {
+	if err != nil {
+		if errors.Is(err, herodot.ErrNotFound) || errors.Is(err, sqlcon.ErrNoRows) {
+			return nil, errors.WithStack(ErrNoActiveSessionFound)
+		}
 		return nil, err
+	}
+
+	if se.ExpiresAt.Before(time.Now()) {
+		return nil, errors.WithStack(ErrNoActiveSessionFound)
 	}
 
 	se.Identity = se.Identity.CopyWithoutCredentials()

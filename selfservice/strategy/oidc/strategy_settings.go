@@ -292,7 +292,7 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 		return
 	}
 
-	if ctxUpdate.Session.AuthenticatedAt.Add(s.c.SelfServicePrivilegedSessionMaxAge()).Before(time.Now()) {
+	if ctxUpdate.Session.AuthenticatedAt.Add(s.c.SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
 		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.ErrRequestNeedsReAuthentication))
 		return
 	}
@@ -306,7 +306,7 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request,
 	ctxUpdate *settings.UpdateContext, claims *Claims, provider Provider) {
 	p := &completeSelfServiceBrowserSettingsOIDCFlowPayload{
 		Link: provider.Config().ID, RequestID: ctxUpdate.Request.ID.String()}
-	if ctxUpdate.Session.AuthenticatedAt.Add(s.c.SelfServicePrivilegedSessionMaxAge()).Before(time.Now()) {
+	if ctxUpdate.Session.AuthenticatedAt.Add(s.c.SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
 		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.ErrRequestNeedsReAuthentication))
 		return
 	}
@@ -328,16 +328,15 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request,
 	} else if err != nil {
 		s.handleSettingsError(w, r, ctxUpdate, p, err)
 		return
-	}
-
-	creds.Identifiers = append(creds.Identifiers, uid(provider.Config().ID, claims.Subject))
-	conf.Providers = append(conf.Providers, ProviderCredentialsConfig{
-		Subject: claims.Subject, Provider: provider.Config().ID})
-
-	creds.Config, err = json.Marshal(conf)
-	if err != nil {
-		s.handleSettingsError(w, r, ctxUpdate, p, err)
-		return
+	} else {
+		creds.Identifiers = append(creds.Identifiers, uid(provider.Config().ID, claims.Subject))
+		conf.Providers = append(conf.Providers, ProviderCredentialsConfig{
+			Subject: claims.Subject, Provider: provider.Config().ID})
+		creds.Config, err = json.Marshal(conf)
+		if err != nil {
+			s.handleSettingsError(w, r, ctxUpdate, p, err)
+			return
+		}
 	}
 
 	i.Credentials[s.ID()] = *creds
@@ -351,7 +350,7 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request,
 
 func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request,
 	ctxUpdate *settings.UpdateContext, p *completeSelfServiceBrowserSettingsOIDCFlowPayload) {
-	if ctxUpdate.Session.AuthenticatedAt.Add(s.c.SelfServicePrivilegedSessionMaxAge()).Before(time.Now()) {
+	if ctxUpdate.Session.AuthenticatedAt.Add(s.c.SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
 		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.ErrRequestNeedsReAuthentication))
 		return
 	}

@@ -99,8 +99,8 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		}
 	}
 
-	options := []identity.ManagerOption{identity.ManagerExposeValidationErrors}
-	ttl := e.c.SelfServicePrivilegedSessionMaxAge()
+	options := []identity.ManagerOption{identity.ManagerExposeValidationErrorsForInternalTypeAssertion}
+	ttl := e.c.SelfServiceFlowSettingsPrivilegedSessionMaxAge()
 	if ctxUpdate.Session.AuthenticatedAt.Add(ttl).After(time.Now()) {
 		options = append(options, identity.ManagerAllowWriteProtectedTraits)
 	}
@@ -144,8 +144,8 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 
 	return x.SecureContentNegotiationRedirection(w, r, ctxUpdate.Session.Declassify(), ctxUpdate.Request.RequestURL, e.d.Writer(), e.c,
 		x.SecureRedirectOverrideDefaultReturnTo(
-			e.c.SelfServiceSettingsReturnTo(settingsType,
+			e.c.SelfServiceFlowSettingsReturnTo(settingsType,
 				urlx.CopyWithQuery(
-					e.c.SettingsURL(),
+					e.c.SelfServiceFlowSettingsUI(),
 					url.Values{"request": {ctxUpdate.Request.ID.String()}}))))
 }
