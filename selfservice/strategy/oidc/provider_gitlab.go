@@ -3,7 +3,6 @@ package oidc
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 
