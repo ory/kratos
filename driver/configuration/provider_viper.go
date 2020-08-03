@@ -438,7 +438,7 @@ func mustParseURLFromViper(l *logrusx.Logger, key string) *url.URL {
 }
 
 func (p *ViperProvider) TracingServiceName() string {
-	return viperx.GetString(p.l, "tracing.service_name", "ORY Hydra")
+	return viperx.GetString(p.l, "tracing.service_name", "ORY Kratos")
 }
 
 func (p *ViperProvider) TracingProvider() string {

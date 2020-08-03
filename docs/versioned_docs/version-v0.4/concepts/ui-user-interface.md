@@ -73,7 +73,7 @@ The message ID is a 7-digit number (`xyyzzzz`) where
   - `01` for login messages (e.g. `1010000`)
   - `02` for logout messages (e.g. `1020000`)
   - `03` for multi-factor authentication messages (e.g. `1030000`)
-  - `04` for registration messages (e.g. `1030000`)
+  - `04` for registration messages (e.g. `1040000`)
   - `05` for settings messages (e.g. `1050000`)
   - `06` for account recovery messages (e.g. `1060000`)
   - `07` for email/phone verification messages (e.g. `1070000`)
