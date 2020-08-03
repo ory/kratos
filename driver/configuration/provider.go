@@ -115,4 +115,6 @@ type Provider interface {
 	TracingServiceName() string
 	TracingProvider() string
 	TracingJaegerConfig() *tracing.JaegerConfig
+
+	ConfigVersion() string
 }

@@ -987,8 +987,7 @@
   "required": [
     "identity",
     "dsn",
-    "selfservice",
-    "version"
+    "selfservice"
   ],
   "additionalProperties": false
 }
