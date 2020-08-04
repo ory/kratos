@@ -101,7 +101,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...c4fc75f7dca59fa8f31d068f57179f49bf798b6a) (2020-08-04)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...1bbed390ffedd811afdb5fcfe69047554419d8ce) (2020-08-04)
 
 
 ### Bug Fixes
@@ -137,12 +137,15 @@
 
 * Add administrative user management guide ([b97e0c6](https://github.com/ory/kratos/commit/b97e0c69bb1115bdec88b218e8cdda34f137d798))
 * Add documentation for configuring cookies ([e3dbc8a](https://github.com/ory/kratos/commit/e3dbc8acc055f6e2d78bc959be7356f9a66ac90f)), closes [#516](https://github.com/ory/kratos/issues/516)
+* Add github video tutorial ([#622](https://github.com/ory/kratos/issues/622)) ([0c4222c](https://github.com/ory/kratos/commit/0c4222c0d12df4e971fd7e5099006484e0bcb317))
 * Add guide for dealing with login sessions ([4e2718c](https://github.com/ory/kratos/commit/4e2718c779031c0e3b877e9df1747ccb2371927b))
 * Add identity state ([fb4aedb](https://github.com/ory/kratos/commit/fb4aedb9a95367e25080491b54aab11de491d819))
 * Add login session to navbar ([b212d64](https://github.com/ory/kratos/commit/b212d6484e40c9f2cce10f2ba4aaf4e2a72f03a1))
 * Add pagination docs ([7fe0901](https://github.com/ory/kratos/commit/7fe0901ee5d0e829e110bd0c4fdecb24bfc27768))
 * Add secret key rotation guide ([3d6e21a](https://github.com/ory/kratos/commit/3d6e21af2f726944468299c326600a8ab0e4e885))
+* Add session hook to ssi guide ([#623](https://github.com/ory/kratos/issues/623)) ([1bbed39](https://github.com/ory/kratos/commit/1bbed390ffedd811afdb5fcfe69047554419d8ce))
 * Add terminology section ([29b81a7](https://github.com/ory/kratos/commit/29b81a78fcf880cd6d9d3b2cbb03f955b701ffbd))
+* Add video to OIDC guide ([#619](https://github.com/ory/kratos/issues/619)) ([f286980](https://github.com/ory/kratos/commit/f286980c29ce8460ba550e5d74b8dee23602e920))
 * Clarify kratos config snippet ([e7732f3](https://github.com/ory/kratos/commit/e7732f3283d82a1678076cd2463ef5ff33dd30ea))
 * Docker image documentation ([#573](https://github.com/ory/kratos/issues/573)) ([bfe032e](https://github.com/ory/kratos/commit/bfe032e2b6bfd8b9415d466011bdd7e36efa4146))
 * Fix logout url ([#593](https://github.com/ory/kratos/issues/593)) ([f0971d4](https://github.com/ory/kratos/commit/f0971d44a911caed8a6071358fa6b7ebc0fcf145))
