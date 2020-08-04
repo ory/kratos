@@ -101,7 +101,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...d218662388ef4fb7ea3bfee7b29c5cc8d34f1c8c) (2020-08-04)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...c4fc75f7dca59fa8f31d068f57179f49bf798b6a) (2020-08-04)
 
 
 ### Bug Fixes
@@ -149,6 +149,7 @@
 * Fixed typos/readability ([#620](https://github.com/ory/kratos/issues/620)) ([7fd3ce0](https://github.com/ory/kratos/commit/7fd3ce0d8c52346ba3504ce5777321937baf8d1e)):
 
     > Fixed a few typos, and moved some sentences around to improve readability.
+* Fixed typos/readability ([#621](https://github.com/ory/kratos/issues/621)) ([c4fc75f](https://github.com/ory/kratos/commit/c4fc75f7dca59fa8f31d068f57179f49bf798b6a))
 * Rename self service and add admin section ([639c424](https://github.com/ory/kratos/commit/639c424d3bde0557f7edd7edc489a476f1aa60b3))
 * Resolve typo in message IDs ([562cfc4](https://github.com/ory/kratos/commit/562cfc4392ba1c9c1fb8854ea0ac85bd44d0fac9))
 * Resolve typo in message IDs ([#607](https://github.com/ory/kratos/issues/607)) ([f7688f0](https://github.com/ory/kratos/commit/f7688f0ab07b579a375ce4cc25361b360e82dd88))
