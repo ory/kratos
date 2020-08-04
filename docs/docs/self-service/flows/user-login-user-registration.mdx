@@ -76,10 +76,14 @@ Once implemented (using e.g. our
 [reference implementation](https://github.com/ory/kratos-selfservice-ui-node))
 you reference these routes in your ORY Kratos config file:
 
-```yaml title="path/to/kratos/config.yml"
+```yaml title="path/to/config/kratos.yml"
+# ...
+
 urls:
   login_ui: https://.../login
   registration_ui: https://.../registration
+  
+# ...
 ```
 
 Depending on the type of login flows you want to support, you may a also add a
