@@ -36,6 +36,8 @@ const DefaultBrowserReturnURL = "default_browser_return_url"
 
 const DefaultSQLiteMemoryDSN = "sqlite://:memory:?_fk=true"
 
+const UnknownVersion = "unknown version"
+
 const (
 	ViperKeyDSN = "dsn"
 
@@ -101,6 +103,8 @@ const (
 	ViperKeyHasherArgon2ConfigParallelism = "hashers.argon2.parallelism"
 	ViperKeyHasherArgon2ConfigSaltLength  = "hashers.argon2.salt_length"
 	ViperKeyHasherArgon2ConfigKeyLength   = "hashers.argon2.key_length"
+
+	ViperKeyVersion = "version"
 )
 
 func HookStrategyKey(key, strategy string) string {
@@ -533,4 +537,8 @@ func (p *ViperProvider) selfServiceReturnTo(key string, strategy string) *url.UR
 		return p.SelfServiceBrowserDefaultReturnTo()
 	}
 	return redir
+}
+
+func (p *ViperProvider) ConfigVersion() string {
+	return viperx.GetString(p.l, ViperKeyVersion, UnknownVersion)
 }

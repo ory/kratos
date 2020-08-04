@@ -4,6 +4,11 @@
   "title": "ORY Kratos Configuration",
   "type": "object",
   "definitions": {
+    "version": {
+      "type": "string",
+      "description": "SemVer according to https://semver.org/ prefixed with `v` as in our releases.",
+      "pattern": "^v(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+    },
     "defaultReturnTo": {
       "title": "Redirect browsers to set URL per default",
       "description": "ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).",
@@ -898,6 +903,16 @@
           "additionalProperties": false
         }
       }
+    },
+    "version": {
+      "allOf": [
+        {
+          "title": "The kratos version this config is written for."
+        },
+        {
+          "$ref": "#/definitions/version"
+        }
+      ]
     }
   },
   "allOf": [
