@@ -117,16 +117,12 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Request) error
 	if !sr.IsForced() {
 		// do nothing
 	} else if sess, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err != nil {
-		print("sm")
 		// do nothing
 	} else if id, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), sess.IdentityID); err != nil {
-		print("confidential")
 		// do nothing
 	} else if creds, ok := id.GetCredentials(s.ID()); !ok {
-		print("nocreds")
 		// do nothing
 	} else if len(creds.Identifiers) == 0 {
-		print("noids")
 		// do nothing
 	} else {
 		identifier = creds.Identifiers[0]
