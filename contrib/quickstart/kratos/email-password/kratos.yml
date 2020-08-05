@@ -4,7 +4,7 @@ dsn: memory
 
 serve:
   public:
-    base_url: http://127.0.0.1:4455/.ory/kratos/public/
+    base_url: /.ory/kratos/public/
   admin:
     base_url: http://kratos:4434/
 
@@ -49,8 +49,7 @@ selfservice:
       after:
         password:
           hooks:
-            -
-              hook: session
+            - hook: session
 
 log:
   level: debug
