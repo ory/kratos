@@ -101,7 +101,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...8e1d69a024414196b39eb3d419f4850cd547e3b5) (2020-08-05)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...cec7f1fc4955b02d21d772e748ec791f31bad24e) (2020-08-05)
 
 
 ### Bug Fixes
@@ -137,6 +137,7 @@
 ### Documentation
 
 * Add administrative user management guide ([b97e0c6](https://github.com/ory/kratos/commit/b97e0c69bb1115bdec88b218e8cdda34f137d798))
+* Add configuring introduction ([#630](https://github.com/ory/kratos/issues/630)) ([b8cfb35](https://github.com/ory/kratos/commit/b8cfb351c2dca783e355f39d25ce17b65fef7dd4))
 * Add documentation for configuring cookies ([e3dbc8a](https://github.com/ory/kratos/commit/e3dbc8acc055f6e2d78bc959be7356f9a66ac90f)), closes [#516](https://github.com/ory/kratos/issues/516)
 * Add github video tutorial ([#622](https://github.com/ory/kratos/issues/622)) ([0c4222c](https://github.com/ory/kratos/commit/0c4222c0d12df4e971fd7e5099006484e0bcb317))
 * Add guide for dealing with login sessions ([4e2718c](https://github.com/ory/kratos/commit/4e2718c779031c0e3b877e9df1747ccb2371927b))
@@ -147,9 +148,14 @@
 * Add session hook to ssi guide ([#623](https://github.com/ory/kratos/issues/623)) ([1bbed39](https://github.com/ory/kratos/commit/1bbed390ffedd811afdb5fcfe69047554419d8ce))
 * Add terminology section ([29b81a7](https://github.com/ory/kratos/commit/29b81a78fcf880cd6d9d3b2cbb03f955b701ffbd))
 * Add video to OIDC guide ([#619](https://github.com/ory/kratos/issues/619)) ([f286980](https://github.com/ory/kratos/commit/f286980c29ce8460ba550e5d74b8dee23602e920))
+* Added transcript ([#627](https://github.com/ory/kratos/issues/627)) ([cec7f1f](https://github.com/ory/kratos/commit/cec7f1fc4955b02d21d772e748ec791f31bad24e)):
+
+    > Added Login with Github Transcript
 * Clarify kratos config snippet ([e7732f3](https://github.com/ory/kratos/commit/e7732f3283d82a1678076cd2463ef5ff33dd30ea))
 * Docker image documentation ([#573](https://github.com/ory/kratos/issues/573)) ([bfe032e](https://github.com/ory/kratos/commit/bfe032e2b6bfd8b9415d466011bdd7e36efa4146))
 * Fix logout url ([#593](https://github.com/ory/kratos/issues/593)) ([f0971d4](https://github.com/ory/kratos/commit/f0971d44a911caed8a6071358fa6b7ebc0fcf145))
+* Fixed link ([c2aebbd](https://github.com/ory/kratos/commit/c2aebbd898f38388d849954938d56212c88d280f))
+* Fixed link ([#629](https://github.com/ory/kratos/issues/629)) ([ad1276f](https://github.com/ory/kratos/commit/ad1276f2b2cf3cbbecba4dee1d6d433999286946))
 * Fixed typos/readability ([#620](https://github.com/ory/kratos/issues/620)) ([7fd3ce0](https://github.com/ory/kratos/commit/7fd3ce0d8c52346ba3504ce5777321937baf8d1e)):
 
     > Fixed a few typos, and moved some sentences around to improve readability.
