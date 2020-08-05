@@ -15,7 +15,7 @@ jobs:
       -
         image: circleci/golang:1.14
         environment:
-          GO111MODULE: on
+          GO111MODULE: "on"
           TEST_MAILHOG_SMTP: smtp://test:test@127.0.0.1:1025
           TEST_MAILHOG_API: http://127.0.0.1:8025
           TEST_SELFSERVICE_OIDC_HYDRA_ADMIN: http://127.0.0.1:4445
@@ -79,7 +79,7 @@ jobs:
     docker:
       - image: oryd/e2e-env:latest
         environment:
-          GO111MODULE: on
+          GO111MODULE: "on"
           TEST_DATABASE_MYSQL: mysql://root:test@(localhost:3306)/mysql?parseTime=true&multiStatements=true
           TEST_DATABASE_COCKROACHDB: cockroach://root@localhost:26257/defaultdb?sslmode=disable
           TEST_DATABASE_POSTGRESQL: postgres://test:test@localhost:5432/kratos?sslmode=disable
