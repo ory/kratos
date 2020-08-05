@@ -4,10 +4,12 @@ set -euxo pipefail
 
 cd "$( dirname "${BASH_SOURCE[0]}" )/../.."
 
+make .bin/hydra
+make .bin/yq
+
 export PATH=.bin:$PATH
 export KRATOS_PUBLIC_URL=http://127.0.0.1:4433/
 export KRATOS_ADMIN_URL=http://127.0.0.1:4434/
-
 
 if [ -z ${TEST_DATABASE_POSTGRESQL+x} ]; then
   docker rm -f kratos_test_database_mysql kratos_test_database_postgres kratos_test_database_cockroach || true
@@ -18,7 +20,6 @@ if [ -z ${TEST_DATABASE_POSTGRESQL+x} ]; then
   export TEST_DATABASE_MYSQL="mysql://root:secret@(127.0.0.1:3444)/mysql?parseTime=true&multiStatements=true"
   export TEST_DATABASE_POSTGRESQL="postgres://postgres:secret@127.0.0.1:3445/postgres?sslmode=disable"
   export TEST_DATABASE_COCKROACHDB="cockroach://root@127.0.0.1:3446/defaultdb?sslmode=disable"
-
 fi
 
 ! nc -zv 127.0.0.1 4434

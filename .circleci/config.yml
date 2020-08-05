@@ -118,7 +118,6 @@ jobs:
           key: go-mod-v1-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
-      - run: make deps
       - run: ./test/e2e/run.sh << parameters.flavor >>
 
 workflows:
