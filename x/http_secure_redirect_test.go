@@ -142,7 +142,7 @@ func TestSecureRedirectTo(t *testing.T) {
 	})
 
 	t.Run("case=return to a fully qualified domain is forbidden if whitelist is relative", func(t *testing.T) {
-		s := newServer(t, false true,, true, func(ts *httptest.Server) []x.SecureRedirectOption {
+		s := newServer(t, false, true, true, func(ts *httptest.Server) []x.SecureRedirectOption {
 			return []x.SecureRedirectOption{x.SecureRedirectAllowURLs([]url.URL{*urlx.ParseOrPanic("/foo")})}
 		})
 		_, body := makeRequest(t, s, "?return_to=https://www.ory.sh/foo/kratos")
@@ -158,7 +158,7 @@ func TestSecureRedirectTo(t *testing.T) {
 	})
 
 	t.Run("case=return to another domain fails if host mismatches", func(t *testing.T) {
-		s := newServer(t, false false,, true, func(ts *httptest.Server) []x.SecureRedirectOption {
+		s := newServer(t, false, false, true, func(ts *httptest.Server) []x.SecureRedirectOption {
 			return []x.SecureRedirectOption{x.SecureRedirectAllowURLs([]url.URL{*urlx.ParseOrPanic("https://www.not-ory.sh/")})}
 		})
 		_, body := makeRequest(t, s, "?return_to=https://www.ory.sh/kratos")
