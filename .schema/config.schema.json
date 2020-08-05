@@ -13,10 +13,11 @@
       "title": "Redirect browsers to set URL per default",
       "description": "ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).",
       "type": "string",
-      "format": "uri",
+      "format": "uri-reference",
       "minLength": 6,
       "examples": [
-        "https://my-app.com/dashboard"
+        "https://my-app.com/dashboard",
+        "/dashboard"
       ]
     },
     "selfServiceSessionRevokerHook": {
