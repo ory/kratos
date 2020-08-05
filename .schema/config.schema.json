@@ -275,11 +275,12 @@
           "type": "array",
           "items": {
             "type": "string",
-            "format": "uri"
+            "format": "uri-reference"
           },
           "examples": [
             [
               "https://app.my-app.com/dashboard",
+              "/dashboard",
               "https://www.my-app.com/"
             ]
           ],
