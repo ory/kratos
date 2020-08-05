@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-08-04)](#unreleased-2020-08-04)
+- [Unreleased (2020-08-05)](#unreleased-2020-08-05)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -101,13 +101,14 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...1bbed390ffedd811afdb5fcfe69047554419d8ce) (2020-08-04)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...8e1d69a024414196b39eb3d419f4850cd547e3b5) (2020-08-05)
 
 
 ### Bug Fixes
 
 * Don't resend verification emails once verified ([#583](https://github.com/ory/kratos/issues/583)) ([a4d9969](https://github.com/ory/kratos/commit/a4d99694525e65b58d49197c96324b27fb8c31c2)), closes [#578](https://github.com/ory/kratos/issues/578)
 * Fallback to default return url if logout after url is not defined ([#594](https://github.com/ory/kratos/issues/594)) ([7edd367](https://github.com/ory/kratos/commit/7edd367dc64a01dbe252ca0ab8cf4d3926a35014))
+* Improve makefile dependency building ([8e1d69a](https://github.com/ory/kratos/commit/8e1d69a024414196b39eb3d419f4850cd547e3b5))
 * Improve pagination when listing identities ([c60bf44](https://github.com/ory/kratos/commit/c60bf440b9c85b4f2e871237e3d7725571151efe))
 * Improve session max-age behavior ([65189fe](https://github.com/ory/kratos/commit/65189fe4a2f84f832240cd67366400e44bb7f09a)), closes [#42](https://github.com/ory/kratos/issues/42)
 * Recursive loop on network errors in password validator ([#589](https://github.com/ory/kratos/issues/589)) ([b4d5a42](https://github.com/ory/kratos/commit/b4d5a42346510e40222b8eb59b455b585f0a05cf)), closes [#316](https://github.com/ory/kratos/issues/316):
@@ -165,6 +166,9 @@
 * Add config version schema ([#608](https://github.com/ory/kratos/issues/608)) ([d218662](https://github.com/ory/kratos/commit/d218662388ef4fb7ea3bfee7b29c5cc8d34f1c8c)), closes [#590](https://github.com/ory/kratos/issues/590)
 * Add nocache helpers ([54dcc4d](https://github.com/ory/kratos/commit/54dcc4da2ff22bdb17e53dd6eac1c0bd54a20390))
 * Add pagination tests ([e3aa81b](https://github.com/ory/kratos/commit/e3aa81b7da55108f43ea6e16c817c97e2f8a1d50))
+* Add session token security definition ([d36c26f](https://github.com/ory/kratos/commit/d36c26f2edd66ddbd8338de4901957a9b9b7342e)):
+
+    > Adds the new Session Token as a Swagger security definition to allow setting the session token as a Bearer token when calling `/sessions/whoami`.
 * Add stub errors to errorx ([5d452bb](https://github.com/ory/kratos/commit/5d452bb582e6a9e3b893424ec135d0cbdf875659)), closes [#610](https://github.com/ory/kratos/issues/610)
 * Add tests and helpers to test recovery/verifiable addresses ([#579](https://github.com/ory/kratos/issues/579)) ([29979e6](https://github.com/ory/kratos/commit/29979e6c4934b71c7fb158cfa5b85e97be3ea8fc)), closes [#576](https://github.com/ory/kratos/issues/576)
 * Add the already declared (and settable) tracer as a middleware ([#614](https://github.com/ory/kratos/issues/614)) ([e24fffe](https://github.com/ory/kratos/commit/e24fffe3f13c353e3c07214c1e056a849533a9f6))
