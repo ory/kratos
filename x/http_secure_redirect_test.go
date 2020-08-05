@@ -166,7 +166,7 @@ func TestSecureRedirectTo(t *testing.T) {
 	})
 
 	t.Run("case=return to another domain fails if path mismatches", func(t *testing.T) {
-		s := newServer(t, false false,, true, func(ts *httptest.Server) []x.SecureRedirectOption {
+		s := newServer(t, false, false, true, func(ts *httptest.Server) []x.SecureRedirectOption {
 			return []x.SecureRedirectOption{x.SecureRedirectAllowURLs([]url.URL{*urlx.ParseOrPanic("https://www.ory.sh/not-kratos")})}
 		})
 		_, body := makeRequest(t, s, "?return_to=https://www.ory.sh/kratos")
@@ -174,7 +174,7 @@ func TestSecureRedirectTo(t *testing.T) {
 	})
 
 	t.Run("case=return to another domain fails if scheme mismatches", func(t *testing.T) {
-		s := newServer(t, false false,, true, func(ts *httptest.Server) []x.SecureRedirectOption {
+		s := newServer(t, false, false, true, func(ts *httptest.Server) []x.SecureRedirectOption {
 			return []x.SecureRedirectOption{x.SecureRedirectAllowURLs([]url.URL{*urlx.ParseOrPanic("http://www.ory.sh/")})}
 		})
 		_, body := makeRequest(t, s, "?return_to=https://www.ory.sh/kratos")
