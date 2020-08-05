@@ -67,6 +67,9 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //
 //     Schemes: http, https
 //
+//     Security:
+//     - sessionToken
+//
 //     Responses:
 //       200: session
 //       403: genericError
