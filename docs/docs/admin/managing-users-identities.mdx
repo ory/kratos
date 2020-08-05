@@ -6,29 +6,35 @@ title: Managing Users and Identities
 import Tabs from '@theme/Tabs'
 import TabItem from '@theme/TabItem'
 
-This document walks you through the administrative identity management in ORY Kratos. You should already
-be familiar with the [Identity Data Model](../concepts/identity-data-model) before reading this guide.
+This document walks you through the administrative identity management in ORY
+Kratos. You should already be familiar with the
+[Identity Data Model](../concepts/identity-data-model) before reading this
+guide.
 
 ## Creating an Identity
 
-There are three principal flows supported for creating identities as an administrator:
+There are three principal flows supported for creating identities as an
+administrator:
 
 1. Inviting users - e.g. inviting a new employee to your organization IT.
-2. Importing existing users - e.g. when migrating from another system to ORY Kratos.
+2. Importing existing users - e.g. when migrating from another system to ORY
+   Kratos.
 3. Creating machine users - e.g. creating Service Accounts.
 
 :::note
 
-Similar to other guides, we assume that ORY Kratos runs on 127.0.0.1:4433 (public endpoint) and
-127.0.0.1:4434 (admin endpoint) in this guide, which is the default when running the quickstart.
+Similar to other guides, we assume that ORY Kratos runs on 127.0.0.1:4433
+(public endpoint) and 127.0.0.1:4434 (admin endpoint) in this guide, which is
+the default when running the quickstart.
 
 :::
 
 ### Invite a User
 
-The goal of this flow is to create an identity and provide the end-user with a way
-of signing into the identity (account) and setting their password (or any other type of credential)
-for future logins. To achieve this, first create the identity and set its traits and schema:
+The goal of this flow is to create an identity and provide the end-user with a
+way of signing into the identity (account) and setting their password (or any
+other type of credential) for future logins. To achieve this, first create the
+identity and set its traits and schema:
 
 ```shell script
 $ curl --request POST -sL \
@@ -51,10 +57,12 @@ $ curl --request POST -sL \
 }
 ```
 
-Keep in mind that you can change the `schema_id` to reflect the schema you want to use for this user. Similarly,
-the trait key/values depend on your schema as well. The command shown does not create a password for the identity
-or any other type of credential. Instead, we will use another REST call to create a recovery link (here "invite link" is
-probably more appropriate, but the flow uses an account recovery link).
+Keep in mind that you can change the `schema_id` to reflect the schema you want
+to use for this user. Similarly, the trait key/values depend on your schema as
+well. The command shown does not create a password for the identity or any other
+type of credential. Instead, we will use another REST call to create a recovery
+link (here "invite link" is probably more appropriate, but the flow uses an
+account recovery link).
 
 To create the account recovery link, use:
 
@@ -113,9 +121,10 @@ func main() {
 }
 ```
 
-The response contains a `recovery_link` value which is the link the user should use to set up his or her credentials
-(e.g. connect to a Social Sign In Provider, set up a password, ...). The user has only a limited amount of time to do
-so - the amount of time is specified in the ORY Kratos config:
+The response contains a `recovery_link` value which is the link the user should
+use to set up his or her credentials (e.g. connect to a Social Sign In Provider,
+set up a password, ...). The user has only a limited amount of time to do so -
+the amount of time is specified in the ORY Kratos config:
 
 ```yaml title="path/to/kratos/config.yml"
 selfservice:
@@ -124,10 +133,11 @@ selfservice:
       privileged_session_max_age: 30m
 ```
 
-If the user fails to set up his / her credentials in time, another recovery link needs to be issued and the user
-needs to re-do the flow.
+If the user fails to set up his / her credentials in time, another recovery link
+needs to be issued and the user needs to re-do the flow.
 
-It is currently not possible to send the recovery link directly to a user's email, this feature is tracked as
+It is currently not possible to send the recovery link directly to a user's
+email, this feature is tracked as
 [#595](https://github.com/ory/kratos/issues/595).
 
 </TabItem>
