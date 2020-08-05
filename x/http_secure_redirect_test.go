@@ -75,9 +75,8 @@ func TestSecureContentNegotiationRedirection(t *testing.T) {
 }
 
 func TestSecureRedirectTo(t *testing.T) {
-	const defaultReturnTo = "/default-return-to"
 
-	var newServer = func(t *testing.T, isTLS bool, expectErr bool, opts func(ts *httptest.Server) []x.SecureRedirectOption) *httptest.Server {
+	var newServer = func(t *testing.T, isTLS bool, isRelative bool, expectErr bool, opts func(ts *httptest.Server) []x.SecureRedirectOption) *httptest.Server {
 		var ts *httptest.Server
 		f := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if opts == nil {
@@ -85,7 +84,11 @@ func TestSecureRedirectTo(t *testing.T) {
 					return nil
 				}
 			}
-			ru, err := x.SecureRedirectTo(r, urlx.ParseOrPanic(ts.URL+defaultReturnTo), opts(ts)...)
+			defaultReturnTo := "/default-return-to"
+			if !isRelative {
+				defaultReturnTo = ts.URL+defaultReturnTo
+			}
+			ru, err := x.SecureRedirectTo(r, urlx.ParseOrPanic(defaultReturnTo), opts(ts)...)
 			if expectErr {
 				require.Error(t, err)
 				_, _ = w.Write([]byte("error"))
@@ -117,21 +120,37 @@ func TestSecureRedirectTo(t *testing.T) {
 	}
 
 	t.Run("case=return to default URL if nothing is allowed", func(t *testing.T) {
-		s := newServer(t, false, false, nil)
+		s := newServer(t, false, false, false, nil)
 		_, body := makeRequest(t, s, "?return_to=/foo")
 		assert.EqualValues(t, body, s.URL+"/default-return-to")
 	})
 
 	t.Run("case=return to foo with server baseURL if allowed", func(t *testing.T) {
-		s := newServer(t, false, false, func(ts *httptest.Server) []x.SecureRedirectOption {
+		s := newServer(t, false, false, false, func(ts *httptest.Server) []x.SecureRedirectOption {
 			return []x.SecureRedirectOption{x.SecureRedirectAllowURLs([]url.URL{*urlx.ParseOrPanic(ts.URL)})}
 		})
 		_, body := makeRequest(t, s, "?return_to=/foo")
 		assert.Equal(t, body, s.URL+"/foo")
 	})
 
+	t.Run("case=return to a relative path works", func(t *testing.T) {
+		s := newServer(t, false, true, false, func(ts *httptest.Server) []x.SecureRedirectOption {
+			return []x.SecureRedirectOption{x.SecureRedirectAllowURLs([]url.URL{*urlx.ParseOrPanic("/foo")})}
+		})
+		_, body := makeRequest(t, s, "?return_to=/foo/kratos")
+		assert.Equal(t, body, "/foo/kratos")
+	})
+
+	t.Run("case=return to a fully qualified domain is forbidden if whitelist is relative", func(t *testing.T) {
+		s := newServer(t, false true,, true, func(ts *httptest.Server) []x.SecureRedirectOption {
+			return []x.SecureRedirectOption{x.SecureRedirectAllowURLs([]url.URL{*urlx.ParseOrPanic("/foo")})}
+		})
+		_, body := makeRequest(t, s, "?return_to=https://www.ory.sh/foo/kratos")
+		assert.Equal(t, body, "error")
+	})
+
 	t.Run("case=return to another domain works", func(t *testing.T) {
-		s := newServer(t, false, false, func(ts *httptest.Server) []x.SecureRedirectOption {
+		s := newServer(t, false, false, false, func(ts *httptest.Server) []x.SecureRedirectOption {
 			return []x.SecureRedirectOption{x.SecureRedirectAllowURLs([]url.URL{*urlx.ParseOrPanic("https://www.ory.sh/foo")})}
 		})
 		_, body := makeRequest(t, s, "?return_to=https://www.ory.sh/foo/kratos")
@@ -139,7 +158,7 @@ func TestSecureRedirectTo(t *testing.T) {
 	})
 
 	t.Run("case=return to another domain fails if host mismatches", func(t *testing.T) {
-		s := newServer(t, false, true, func(ts *httptest.Server) []x.SecureRedirectOption {
+		s := newServer(t, false false,, true, func(ts *httptest.Server) []x.SecureRedirectOption {
 			return []x.SecureRedirectOption{x.SecureRedirectAllowURLs([]url.URL{*urlx.ParseOrPanic("https://www.not-ory.sh/")})}
 		})
 		_, body := makeRequest(t, s, "?return_to=https://www.ory.sh/kratos")
@@ -147,7 +166,7 @@ func TestSecureRedirectTo(t *testing.T) {
 	})
 
 	t.Run("case=return to another domain fails if path mismatches", func(t *testing.T) {
-		s := newServer(t, false, true, func(ts *httptest.Server) []x.SecureRedirectOption {
+		s := newServer(t, false false,, true, func(ts *httptest.Server) []x.SecureRedirectOption {
 			return []x.SecureRedirectOption{x.SecureRedirectAllowURLs([]url.URL{*urlx.ParseOrPanic("https://www.ory.sh/not-kratos")})}
 		})
 		_, body := makeRequest(t, s, "?return_to=https://www.ory.sh/kratos")
@@ -155,7 +174,7 @@ func TestSecureRedirectTo(t *testing.T) {
 	})
 
 	t.Run("case=return to another domain fails if scheme mismatches", func(t *testing.T) {
-		s := newServer(t, false, true, func(ts *httptest.Server) []x.SecureRedirectOption {
+		s := newServer(t, false false,, true, func(ts *httptest.Server) []x.SecureRedirectOption {
 			return []x.SecureRedirectOption{x.SecureRedirectAllowURLs([]url.URL{*urlx.ParseOrPanic("http://www.ory.sh/")})}
 		})
 		_, body := makeRequest(t, s, "?return_to=https://www.ory.sh/kratos")
@@ -163,7 +182,7 @@ func TestSecureRedirectTo(t *testing.T) {
 	})
 
 	t.Run("case=should work with self-service modifier", func(t *testing.T) {
-		s := newServer(t, false, false, func(ts *httptest.Server) []x.SecureRedirectOption {
+		s := newServer(t, false, false, false, func(ts *httptest.Server) []x.SecureRedirectOption {
 			return []x.SecureRedirectOption{x.SecureRedirectAllowSelfServiceURLs(urlx.ParseOrPanic(ts.URL))}
 		})
 		_, body := makeRequest(t, s, "?return_to=/self-service/foo")
@@ -171,7 +190,7 @@ func TestSecureRedirectTo(t *testing.T) {
 	})
 
 	t.Run("case=should work with default return to", func(t *testing.T) {
-		s := newServer(t, false, false, func(ts *httptest.Server) []x.SecureRedirectOption {
+		s := newServer(t, false, false, false, func(ts *httptest.Server) []x.SecureRedirectOption {
 			return []x.SecureRedirectOption{x.SecureRedirectOverrideDefaultReturnTo(urlx.ParseOrPanic(ts.URL + "/another-default"))}
 		})
 		_, body := makeRequest(t, s, "")
@@ -179,7 +198,7 @@ func TestSecureRedirectTo(t *testing.T) {
 	})
 
 	t.Run("case=should override return_to", func(t *testing.T) {
-		s := newServer(t, false, false, func(ts *httptest.Server) []x.SecureRedirectOption {
+		s := newServer(t, false, false, false, func(ts *httptest.Server) []x.SecureRedirectOption {
 			return []x.SecureRedirectOption{
 				x.SecureRedirectAllowURLs([]url.URL{*urlx.ParseOrPanic(ts.URL)}),
 				x.SecureRedirectUseSourceURL("https://foo/bar?return_to=/override"),
