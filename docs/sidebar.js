@@ -73,7 +73,8 @@ module.exports = {
     "guides/login-session",
     "guides/secret-key-rotation",
     "guides/high-availability-ha",
-    "guides/docker"
+    "guides/docker",
+    "guides/kratos-video-tutorials"
   ],
   "Reference": [
     "reference/configuration",
