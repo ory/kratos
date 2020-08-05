@@ -1,6 +1,6 @@
 module.exports = {
   Introduction: [
-    "index", "quickstart", "install"
+    "index", "quickstart", "install", "configuring"
   ],
   Concepts: [
     "concepts/index",
