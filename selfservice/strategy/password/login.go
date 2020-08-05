@@ -113,6 +113,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Request) error
 		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to decode POST body: %s", err))
 	}
 
+	// This block adds the identifier to the method when the request is forced - as a hint for the user.
 	var identifier string
 	if !sr.IsForced() {
 		// do nothing
