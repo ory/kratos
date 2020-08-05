@@ -18,9 +18,9 @@ ORY Kratos supports two logout flows:
 > as [kratos#142](https://github.com/ory/kratos/issues/142).
 
 To log a user out, all you have to do is to direct the browser to
-`http://ory-kratos-public/self-service/browser/flows/logout`. After successful logout, the
-browser will be redirected to the `redirect_to` value set in ORY Krato's
-configuration file:
+`http://ory-kratos-public/self-service/browser/flows/logout`. After successful
+logout, the browser will be redirected to the `redirect_to` value set in ORY
+Krato's configuration file:
 
 ```
 selfservice:

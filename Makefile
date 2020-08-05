@@ -98,6 +98,7 @@ quickstart-dev:
 .PHONY: format
 format: .bin/goreturns
 		goreturns -w -local github.com/ory $$(listx .)
+		cd docs; npm run format
 		npm run format
 
 # Runs tests in short mode, without database adapters
