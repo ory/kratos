@@ -100,11 +100,10 @@ jobs:
       # core node_modules cache
       - restore_cache:
           keys:
-            - v1-deps-{{ checksum "package-lock.json" }}
-            - v1-deps
+            - ory-kratos-e2e-{{ checksum "package-lock.json" }}
       - run: npm ci
       - save_cache:
-          key: v1-deps-{{ checksum "package-lock.json" }}
+          key: ory-kratos-e2e-{{ checksum "package-lock.json" }}
           # cache NPM modules and the folder with the Cypress binary
           paths:
             - ~/.npm
