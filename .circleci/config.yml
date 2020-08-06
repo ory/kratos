@@ -10,6 +10,15 @@ orbs:
   golangci: ory/golangci@0.0.4
 
 jobs:
+  test-version-render:
+    docker:
+      - image: oryd/xgoreleaser:1.14.6-0.140.1
+        environment:
+          CIRCLE_TAG: master
+    steps:
+      - checkout
+      - goreleaser/render-version-schema
+      - command: cat ./.schema/version.schema.json
   test:
     docker:
       -
@@ -122,6 +131,7 @@ jobs:
 workflows:
   tbr:
     jobs:
+      - test-version-render
       - nancy/test
       -
         golangci/lint:
