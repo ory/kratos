@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/ory/x/decoderx"
 	"github.com/pkg/errors"
 	"gopkg.in/go-playground/validator.v9"
 
@@ -59,9 +60,10 @@ type registrationStrategyDependencies interface {
 }
 
 type Strategy struct {
-	c configuration.Provider
-	d registrationStrategyDependencies
-	v *validator.Validate
+	c  configuration.Provider
+	d  registrationStrategyDependencies
+	v  *validator.Validate
+	hd *decoderx.HTTP
 }
 
 func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
@@ -86,9 +88,10 @@ func NewStrategy(
 	c configuration.Provider,
 ) *Strategy {
 	return &Strategy{
-		c: c,
-		d: d,
-		v: validator.New(),
+		c:  c,
+		d:  d,
+		v:  validator.New(),
+		hd: decoderx.NewHTTP(),
 	}
 }
 

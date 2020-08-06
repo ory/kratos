@@ -7,6 +7,7 @@ import (
 	"net/url"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/ory/x/decoderx"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -61,13 +62,14 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	var p LoginFormPayload
-	if err := r.ParseForm(); err != nil {
+	if err := s.hd.Decode(r, &p,
+		decoderx.HTTPFormDecoder(), decoderx.HTTPJSONDecoder(),
+		decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema),
+		decoderx.HTTPDecoderSetIgnoreParseErrorsStrategy(decoderx.ParseErrorIgnore),
+	); err != nil {
 		s.handleLoginError(w, r, ar, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
 		return
 	}
-
-	p.Identifier = r.PostForm.Get("identifier")
-	p.Password = r.PostForm.Get("password")
 
 	if len(p.Identifier) == 0 {
 		s.handleLoginError(w, r, ar, schema.NewRequiredError("#/identifier", "identifier"))
@@ -131,8 +133,8 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Request) error
 
 	action := urlx.CopyWithQuery(
 		urlx.AppendPaths(s.c.SelfPublicURL(), LoginPath),
-		url.Values{"request": {sr.ID.String()}},
-	)
+		url.Values{"request": {sr.ID.String()}})
+
 	f := &form.HTMLForm{
 		Action: action.String(),
 		Method: "POST",

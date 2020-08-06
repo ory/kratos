@@ -107,7 +107,7 @@ func TestLoginNew(t *testing.T) {
 			c.Jar, _ = cookiejar.New(&cookiejar.Options{})
 		}
 
-		u := ts.URL + login.BrowserLoginPath
+		u := ts.URL + login.BrowserInitPath
 		if force {
 			u = u + "?refresh=true"
 		}
@@ -309,20 +309,20 @@ func TestLoginNew(t *testing.T) {
 			c := &http.Client{Jar: jar}
 
 			t.Run("redirect to returnTS if refresh is missing", func(t *testing.T) {
-				res, err := c.Get(ts.URL + login.BrowserLoginPath)
+				res, err := c.Get(ts.URL + login.BrowserInitPath)
 				require.NoError(t, err)
 				require.EqualValues(t, http.StatusOK, res.StatusCode)
 			})
 
 			t.Run("show UI and hint at username", func(t *testing.T) {
-				res, err := c.Get(ts.URL + login.BrowserLoginPath + "?refresh=true")
+				res, err := c.Get(ts.URL + login.BrowserInitPath + "?refresh=true")
 				require.NoError(t, err)
 				require.EqualValues(t, http.StatusOK, res.StatusCode)
 
 				rid := res.Request.URL.Query().Get("request")
 				assert.NotEmpty(t, rid, "%s", res.Request.URL)
 
-				res, err = c.Get(ts.URL + login.BrowserLoginRequestsPath + "?request=" + rid)
+				res, err = c.Get(ts.URL + login.BrowserRequestsPath + "?request=" + rid)
 				require.NoError(t, err)
 				require.EqualValues(t, http.StatusOK, res.StatusCode)
 
