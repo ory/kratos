@@ -109,9 +109,13 @@ func TestRegistration(t *testing.T) {
 			return rr
 		}
 
-		var makeRequestWithCookieJar = func(t *testing.T, rid uuid.UUID, body string, expectedStatusCode int, jar *cookiejar.Jar) ([]byte, *http.Response) {
+		var makeRequestWithCookieJar = func(t *testing.T, rid uuid.UUID, isAPI bool, body string, expectedStatusCode int, jar *cookiejar.Jar) ([]byte, *http.Response) {
+			contentType := "application/x-www-form-urlencoded"
+			if isAPI {
+				contentType = "application/json"
+			}
 			client := http.Client{Jar: jar}
-			res, err := client.Post(ts.URL+password.RegistrationPath+"?request="+rid.String(), "application/x-www-form-urlencoded", strings.NewReader(body))
+			res, err := client.Post(ts.URL+password.RegistrationPath+"?request="+rid.String(), contentType, strings.NewReader(body))
 			require.NoError(t, err)
 			result, err := ioutil.ReadAll(res.Body)
 			require.NoError(t, res.Body.Close())
@@ -120,14 +124,14 @@ func TestRegistration(t *testing.T) {
 			return result, res
 		}
 
-		var makeRequest = func(t *testing.T, rid uuid.UUID, body string, expectedStatusCode int) ([]byte, *http.Response) {
+		var makeRequest = func(t *testing.T, rid uuid.UUID, isAPI bool, body string, expectedStatusCode int) ([]byte, *http.Response) {
 			jar, _ := cookiejar.New(&cookiejar.Options{})
-			return makeRequestWithCookieJar(t, rid, body, expectedStatusCode, jar)
+			return makeRequestWithCookieJar(t, rid,isAPI, body, expectedStatusCode, jar)
 		}
 
 		t.Run("case=should show the error ui because the request payload is malformed", func(t *testing.T) {
 			rr := newRegistrationRequest(t, time.Minute)
-			body, res := makeRequest(t, rr.ID, "14=)=!(%)$/ZP()GHIÖ", http.StatusOK)
+			body, res := makeRequest(t, rr.ID, false, "14=)=!(%)$/ZP()GHIÖ", http.StatusOK)
 			assert.Contains(t, res.Request.URL.Path, "signup-ts")
 			assert.Equal(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.messages.0.text").String(), "invalid URL escape", "%s", body)
@@ -136,7 +140,7 @@ func TestRegistration(t *testing.T) {
 		t.Run("case=should show the error ui because the request id is missing", func(t *testing.T) {
 			_ = newRegistrationRequest(t, time.Minute)
 			uuidDesNotExistInStore := x.NewUUID()
-			body, res := makeRequest(t, uuidDesNotExistInStore, "", http.StatusOK)
+			body, res := makeRequest(t, uuidDesNotExistInStore, false, "", http.StatusOK)
 			assert.Contains(t, res.Request.URL.Path, "error-ts")
 			assert.Equal(t, int64(http.StatusNotFound), gjson.GetBytes(body, "0.code").Int(), "%s", body)
 			assert.Equal(t, "Not Found", gjson.GetBytes(body, "0.status").String(), "%s", body)
@@ -145,7 +149,7 @@ func TestRegistration(t *testing.T) {
 
 		t.Run("case=should return an error because the request is expired", func(t *testing.T) {
 			rr := newRegistrationRequest(t, -time.Minute)
-			body, res := makeRequest(t, rr.ID, "", http.StatusOK)
+			body, res := makeRequest(t, rr.ID, false, "", http.StatusOK)
 			assert.Contains(t, res.Request.URL.Path, "signup-ts")
 			assert.NotEqual(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 			assert.Contains(t, gjson.GetBytes(body, "messages.0.text").String(), "expired", "%s", body)
@@ -153,7 +157,7 @@ func TestRegistration(t *testing.T) {
 
 		t.Run("case=should return an error because the password failed validation", func(t *testing.T) {
 			rr := newRegistrationRequest(t, time.Minute)
-			body, res := makeRequest(t, rr.ID, url.Values{
+			body, res := makeRequest(t, rr.ID, false, url.Values{
 				"traits.username": {"registration-identifier-4"},
 				"password":        {"password"},
 				"traits.foobar":   {"bar"},
@@ -167,7 +171,7 @@ func TestRegistration(t *testing.T) {
 
 		t.Run("case=should return an error because not passing validation", func(t *testing.T) {
 			rr := newRegistrationRequest(t, time.Minute)
-			body, res := makeRequest(t, rr.ID, url.Values{
+			body, res := makeRequest(t, rr.ID, false, url.Values{
 				"traits.username": {"registration-identifier-5"},
 				"password":        {x.NewUUID().String()},
 			}.Encode(), http.StatusOK)
@@ -181,7 +185,7 @@ func TestRegistration(t *testing.T) {
 		t.Run("case=should fail because schema did not specify an identifier", func(t *testing.T) {
 			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/missing-identifier.schema.json")
 			rr := newRegistrationRequest(t, time.Minute)
-			body, res := makeRequest(t, rr.ID, url.Values{
+			body, res := makeRequest(t, rr.ID, false, url.Values{
 				"traits.username": {"registration-identifier-6"},
 				"password":        {x.NewUUID().String()},
 				"traits.foobar":   {"bar"},
@@ -195,7 +199,7 @@ func TestRegistration(t *testing.T) {
 		t.Run("case=should fail because schema does not exist", func(t *testing.T) {
 			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/i-do-not-exist.schema.json")
 			rr := newRegistrationRequest(t, time.Minute)
-			body, res := makeRequest(t, rr.ID, url.Values{
+			body, res := makeRequest(t, rr.ID, false, url.Values{
 				"traits.username": {"registration-identifier-7"},
 				"password":        {x.NewUUID().String()},
 				"traits.foobar":   {"bar"},
@@ -213,7 +217,7 @@ func TestRegistration(t *testing.T) {
 				[]configuration.SelfServiceHook{{Name: "session"}})
 
 			rr := newRegistrationRequest(t, time.Minute)
-			body, res := makeRequest(t, rr.ID, url.Values{
+			body, res := makeRequest(t, rr.ID, false, url.Values{
 				"traits.username": {"registration-identifier-8"},
 				"password":        {x.NewUUID().String()},
 				"traits.foobar":   {"bar"},
@@ -225,7 +229,7 @@ func TestRegistration(t *testing.T) {
 		t.Run("case=should fail to register the same user again", func(t *testing.T) {
 			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
 			rr := newRegistrationRequest(t, time.Minute)
-			body, res := makeRequest(t, rr.ID, url.Values{
+			body, res := makeRequest(t, rr.ID, false, url.Values{
 				"traits.username": {"registration-identifier-8"},
 				"password":        {x.NewUUID().String()},
 				"traits.foobar":   {"bar"},
@@ -264,7 +268,7 @@ func TestRegistration(t *testing.T) {
 			}
 
 			require.NoError(t, reg.RegistrationRequestPersister().CreateRegistrationRequest(context.Background(), rr))
-			body, res := makeRequest(t, rr.ID, url.Values{
+			body, res := makeRequest(t, rr.ID, false, url.Values{
 				"traits.username": {"registration-identifier-9"},
 				"password":        {x.NewUUID().String()},
 			}.Encode(), http.StatusOK)
@@ -282,7 +286,7 @@ func TestRegistration(t *testing.T) {
 		t.Run("case=should work even if password is just numbers", func(t *testing.T) {
 			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://stub/registration.schema.json")
 			rr := newRegistrationRequest(t, time.Minute)
-			body, res := makeRequest(t, rr.ID, url.Values{
+			body, res := makeRequest(t, rr.ID, false, url.Values{
 				"traits.username": {"registration-identifier-10"},
 				"password":        {"93172388957812344432"},
 				"traits.foobar":   {"bar"},
@@ -299,10 +303,10 @@ func TestRegistration(t *testing.T) {
 				"traits.foobar":   {"bar"},
 			}.Encode()
 			rr1 := newRegistrationRequest(t, time.Minute)
-			body1, res1 := makeRequestWithCookieJar(t, rr1.ID, formValues, http.StatusOK, jar)
+			body1, res1 := makeRequestWithCookieJar(t, rr1.ID, false, formValues, http.StatusOK, jar)
 			assert.Contains(t, res1.Request.URL.Path, "return-ts")
 			rr2 := newRegistrationRequest(t, time.Minute)
-			body2, res2 := makeRequestWithCookieJar(t, rr2.ID, formValues, http.StatusOK, jar)
+			body2, res2 := makeRequestWithCookieJar(t, rr2.ID, false, formValues, http.StatusOK, jar)
 			assert.Contains(t, res2.Request.URL.Path, "default-return-to")
 			assert.Equal(t, body1, body2)
 		})
