@@ -63,21 +63,10 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 
 	var p LoginFormPayload
 	if err := s.hd.Decode(r, &p,
-		decoderx.HTTPFormDecoder(), decoderx.HTTPJSONDecoder(),
 		decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema),
 		decoderx.HTTPDecoderSetIgnoreParseErrorsStrategy(decoderx.ParseErrorIgnore),
 	); err != nil {
-		s.handleLoginError(w, r, ar, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
-		return
-	}
-
-	if len(p.Identifier) == 0 {
-		s.handleLoginError(w, r, ar, schema.NewRequiredError("#/identifier", "identifier"))
-		return
-	}
-
-	if len(p.Password) == 0 {
-		s.handleLoginError(w, r, ar, schema.NewRequiredError("#/password", "password"))
+		s.handleLoginError(w, r, ar, err)
 		return
 	}
 

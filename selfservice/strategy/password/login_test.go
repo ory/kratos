@@ -76,8 +76,8 @@ func nlr(exp time.Duration) *login.Request {
 func TestLoginNew(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 
-	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
-		"enabled": true})
+	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
+		map[string]interface{}{"enabled": true})
 	ts, _ := testhelpers.NewKratosServer(t, reg)
 
 	errTs := testhelpers.NewErrorTestServer(t, reg)
@@ -91,8 +91,12 @@ func TestLoginNew(t *testing.T) {
 	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
 	viper.Set(configuration.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
-	mr := func(t *testing.T, payload string, requestID string, c *http.Client) (*http.Response, []byte) {
-		res, err := c.Post(ts.URL+password.LoginPath+"?request="+requestID, "application/x-www-form-urlencoded", strings.NewReader(payload))
+	mr := func(t *testing.T, isAPI bool, payload string, requestID string, c *http.Client) (*http.Response, []byte) {
+		contentType := "application/x-www-form-urlencoded"
+		if isAPI {
+			contentType = "application/json"
+		}
+		res, err := c.Post(ts.URL+password.LoginPath+"?request="+requestID, contentType, strings.NewReader(payload))
 		require.NoError(t, err)
 		defer res.Body.Close()
 		require.EqualValues(t, http.StatusOK, res.StatusCode, "Request: %+v\n\t\tResponse: %s", res.Request, res)
@@ -101,7 +105,7 @@ func TestLoginNew(t *testing.T) {
 		return res, body
 	}
 
-	makeRequest := func(t *testing.T, payload string, jar *cookiejar.Jar, force bool) (*http.Response, []byte) {
+	makeRequest := func(t *testing.T, isAPI bool, payload string, jar *cookiejar.Jar, force bool) (*http.Response, []byte) {
 		c := &http.Client{Jar: jar}
 		if jar == nil {
 			c.Jar, _ = cookiejar.New(&cookiejar.Options{})
@@ -117,10 +121,10 @@ func TestLoginNew(t *testing.T) {
 		require.EqualValues(t, http.StatusOK, res.StatusCode, "Request: %+v\n\t\tResponse: %s", res.Request, res)
 		assert.NotEmpty(t, res.Request.URL.Query().Get("request"))
 
-		return mr(t, payload, res.Request.URL.Query().Get("request"), c)
+		return mr(t, isAPI, payload, res.Request.URL.Query().Get("request"), c)
 	}
 
-	fakeRequest := func(t *testing.T, lr *login.Request, payload string, forceRequestID *string, jar *cookiejar.Jar) (*http.Response, []byte) {
+	fakeRequest := func(t *testing.T, lr *login.Request, isAPI bool, payload string, forceRequestID *string, jar *cookiejar.Jar) (*http.Response, []byte) {
 		lr.RequestURL = ts.URL
 		require.NoError(t, reg.LoginRequestPersister().CreateLoginRequest(context.TODO(), lr))
 
@@ -134,7 +138,7 @@ func TestLoginNew(t *testing.T) {
 			c.Jar, _ = cookiejar.New(&cookiejar.Options{})
 		}
 
-		return mr(t, payload, requestID, c)
+		return mr(t, isAPI, payload, requestID, c)
 	}
 
 	ensureFieldsExist := func(t *testing.T, body []byte) {
@@ -160,7 +164,7 @@ func TestLoginNew(t *testing.T) {
 
 	t.Run("should show the error ui because the request is malformed", func(t *testing.T) {
 		lr := nlr(0)
-		res, body := fakeRequest(t, lr, "14=)=!(%)$/ZP()GHIÖ", nil, nil)
+		res, body := fakeRequest(t, lr, false, "14=)=!(%)$/ZP()GHIÖ", nil, nil)
 
 		require.Contains(t, res.Request.URL.Path, "login-ts", "%+v", res.Request)
 		assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
@@ -170,7 +174,7 @@ func TestLoginNew(t *testing.T) {
 
 	t.Run("should show the error ui because the request id missing", func(t *testing.T) {
 		lr := nlr(time.Minute)
-		res, body := fakeRequest(t, lr, url.Values{}.Encode(), pointerx.String(""), nil)
+		res, body := fakeRequest(t, lr, false, url.Values{}.Encode(), pointerx.String(""), nil)
 
 		require.Contains(t, res.Request.URL.Path, "error-ts")
 		assert.Equal(t, int64(http.StatusBadRequest), gjson.GetBytes(body, "0.code").Int(), "%s", body)
@@ -180,7 +184,7 @@ func TestLoginNew(t *testing.T) {
 
 	t.Run("should return an error because the request does not exist", func(t *testing.T) {
 		lr := nlr(0)
-		res, body := fakeRequest(t, lr, url.Values{
+		res, body := fakeRequest(t, lr, false, url.Values{
 			"identifier": {"identifier"},
 			"password":   {"password"},
 		}.Encode(), pointerx.String(x.NewUUID().String()), nil)
@@ -193,7 +197,7 @@ func TestLoginNew(t *testing.T) {
 
 	t.Run("should redirect to login init because the request is expired", func(t *testing.T) {
 		lr := nlr(-time.Hour)
-		res, body := fakeRequest(t, lr, url.Values{
+		res, body := fakeRequest(t, lr, false, url.Values{
 			"identifier": {"identifier"},
 			"password":   {"password"},
 		}.Encode(), nil, nil)
@@ -205,7 +209,7 @@ func TestLoginNew(t *testing.T) {
 
 	t.Run("should return an error because the credentials are invalid (user does not exist)", func(t *testing.T) {
 		lr := nlr(time.Hour)
-		res, body := fakeRequest(t, lr, url.Values{
+		res, body := fakeRequest(t, lr, false, url.Values{
 			"identifier": {"identifier"},
 			"password":   {"password"},
 		}.Encode(), nil, nil)
@@ -218,7 +222,7 @@ func TestLoginNew(t *testing.T) {
 
 	t.Run("should return an error because no identifier is set", func(t *testing.T) {
 		lr := nlr(time.Hour)
-		res, body := fakeRequest(t, lr, url.Values{
+		res, body := fakeRequest(t, lr, false, url.Values{
 			"password": {"password"},
 		}.Encode(), nil, nil)
 
@@ -235,7 +239,7 @@ func TestLoginNew(t *testing.T) {
 
 	t.Run("should return an error because no password is set", func(t *testing.T) {
 		lr := nlr(time.Hour)
-		res, body := fakeRequest(t, lr, url.Values{
+		res, body := fakeRequest(t, lr, false, url.Values{
 			"identifier": {"identifier"},
 		}.Encode(), nil, nil)
 
@@ -258,7 +262,7 @@ func TestLoginNew(t *testing.T) {
 		createIdentity(identifier, pwd)
 
 		lr := nlr(time.Hour)
-		res, body := fakeRequest(t, lr, url.Values{
+		res, body := fakeRequest(t, lr, false, url.Values{
 			"identifier": {identifier},
 			"password":   {"not-password"},
 		}.Encode(), nil, nil)
@@ -283,7 +287,7 @@ func TestLoginNew(t *testing.T) {
 		createIdentity(identifier, pwd)
 
 		lr := nlr(time.Hour)
-		res, body := fakeRequest(t, lr, url.Values{
+		res, body := fakeRequest(t, lr, false, url.Values{
 			"identifier": {identifier},
 			"password":   {pwd},
 		}.Encode(), nil, nil)
@@ -297,7 +301,7 @@ func TestLoginNew(t *testing.T) {
 		createIdentity(identifier, pwd)
 
 		jar, _ := cookiejar.New(nil)
-		res, body := makeRequest(t, url.Values{
+		res, body := makeRequest(t, false, url.Values{
 			"identifier": {identifier},
 			"password":   {pwd},
 		}.Encode(), jar, true)
@@ -367,7 +371,7 @@ func TestLoginNew(t *testing.T) {
 			},
 		}
 
-		res, body := fakeRequest(t, lr, url.Values{
+		res, body := fakeRequest(t, lr, false, url.Values{
 			"identifier": {"registration-identifier-9"},
 			// "password": {uuid.New().String()},
 		}.Encode(), nil, nil)
@@ -389,14 +393,14 @@ func TestLoginNew(t *testing.T) {
 
 		jar, err := cookiejar.New(&cookiejar.Options{})
 		require.NoError(t, err)
-		_, body1 := fakeRequest(t, nlr(time.Hour), url.Values{
+		_, body1 := fakeRequest(t, nlr(time.Hour), false, url.Values{
 			"identifier": {identifier},
 			"password":   {pwd},
 		}.Encode(), nil, jar)
 
 		lr2 := nlr(time.Hour)
 		lr2.Forced = true
-		res, body2 := fakeRequest(t, lr2, url.Values{
+		res, body2 := fakeRequest(t, lr2, false, url.Values{
 			"identifier": {identifier},
 			"password":   {pwd},
 		}.Encode(), nil, jar)
@@ -412,13 +416,13 @@ func TestLoginNew(t *testing.T) {
 
 		jar, err := cookiejar.New(&cookiejar.Options{})
 		require.NoError(t, err)
-		_, body1 := fakeRequest(t, nlr(time.Hour), url.Values{
+		_, body1 := fakeRequest(t, nlr(time.Hour), false, url.Values{
 			"identifier": {identifier},
 			"password":   {pwd},
 		}.Encode(), nil, jar)
 
 		lr2 := nlr(time.Hour)
-		res, body2 := fakeRequest(t, lr2, url.Values{
+		res, body2 := fakeRequest(t, lr2, false, url.Values{
 			"identifier": {identifier},
 			"password":   {pwd},
 		}.Encode(), nil, jar)
