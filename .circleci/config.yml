@@ -10,6 +10,16 @@ orbs:
   golangci: ory/golangci@0.0.4
 
 jobs:
+  render-version-schema:
+    docker:
+      - image: oryd/xgoreleaser:1.14.6-0.140.1
+        environment:
+          GO111MODULE: "on"
+    working_directory: ~/kratos
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run: "bash <(curl -sL https://raw.githubusercontent.com/ory/ci/master/src/scripts/releaser/render-version-schema.sh)"
   test:
     docker:
       -
@@ -123,7 +133,7 @@ jobs:
 workflows:
   tbr:
     jobs:
-      - goreleaser/render-version-schema
+      - render-version-schema
       - nancy/test
       -
         golangci/lint:
