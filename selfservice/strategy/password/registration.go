@@ -103,7 +103,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	if err := decoderx.NewHTTP().Decode(r, &p,
+	if err := s.hd.Decode(r, &p,
 		decoderx.HTTPFormDecoder(),
 		option,
 		decoderx.HTTPDecoderSetIgnoreParseErrorsStrategy(decoderx.ParseErrorIgnore),
