@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-08-05)](#unreleased-2020-08-05)
+- [Unreleased (2020-08-06)](#unreleased-2020-08-06)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -101,7 +101,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...cec7f1fc4955b02d21d772e748ec791f31bad24e) (2020-08-05)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...b724038a67e84ca71b146bf4b9b044be2dc8c0b4) (2020-08-06)
 
 
 ### Bug Fixes
@@ -124,6 +124,7 @@
 
     > Executing the migration logic in registry.go cause a panic as the registry is not initalized at that point. Therefore we decided to move the handling to driver_default.go, after the registry has been initialized.
 * Resolves a bug that prevents sessions from expiring ([#612](https://github.com/ory/kratos/issues/612)) ([86b281a](https://github.com/ory/kratos/commit/86b281a46b676d80c8f70bfc42c91d988997c21c)), closes [#611](https://github.com/ory/kratos/issues/611)
+* Tell tls what the smtps server name is ([#634](https://github.com/ory/kratos/issues/634)) ([b724038](https://github.com/ory/kratos/commit/b724038a67e84ca71b146bf4b9b044be2dc8c0b4))
 * Use params per_page and page for pagination ([5dfb6e3](https://github.com/ory/kratos/commit/5dfb6e32c44420ed49d652733b9099a41c9347f2))
 * Use relative threshold to judge longest common substring in password policy ([#585](https://github.com/ory/kratos/issues/585)) ([3e9f8cc](https://github.com/ory/kratos/commit/3e9f8cce4b058b05d69c73fff514f3b8e46c2be3)), closes [#581](https://github.com/ory/kratos/issues/581)
 
@@ -160,6 +161,7 @@
 
     > Fixed a few typos, and moved some sentences around to improve readability.
 * Fixed typos/readability ([#621](https://github.com/ory/kratos/issues/621)) ([c4fc75f](https://github.com/ory/kratos/commit/c4fc75f7dca59fa8f31d068f57179f49bf798b6a))
+* Move to json sidebar ([504af3b](https://github.com/ory/kratos/commit/504af3b89d728eb11bf42f4a2037c78b3b7cb788))
 * Rename self service and add admin section ([639c424](https://github.com/ory/kratos/commit/639c424d3bde0557f7edd7edc489a476f1aa60b3))
 * Resolve typo in message IDs ([562cfc4](https://github.com/ory/kratos/commit/562cfc4392ba1c9c1fb8854ea0ac85bd44d0fac9))
 * Resolve typo in message IDs ([#607](https://github.com/ory/kratos/issues/607)) ([f7688f0](https://github.com/ory/kratos/commit/f7688f0ab07b579a375ce4cc25361b360e82dd88))
