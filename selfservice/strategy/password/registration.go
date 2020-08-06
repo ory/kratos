@@ -30,22 +30,6 @@ import (
 
 const (
 	RegistrationPath              = "/self-service/browser/flows/registration/strategies/password"
-	registrationFormPayloadSchema = `{
-  "$id": "https://schemas.ory.sh/kratos/selfservice/password/registration/config.schema.json",
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "type": "object",
-  "required": [
-    "password",
-    "traits"
-  ],
-  "properties": {
-    "password": {
-      "type": "string",
-      "minLength": 1
-    },
-    "traits": {}
-  }
-}`
 )
 
 type RegistrationFormPayload struct {
@@ -81,7 +65,7 @@ func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Reques
 }
 
 func (s *Strategy) decoderRegistration() (decoderx.HTTPDecoderOption, error) {
-	raw, err := sjson.SetBytes([]byte(registrationFormPayloadSchema), "properties.traits.$ref", s.c.DefaultIdentityTraitsSchemaURL().String()+"#/properties/traits")
+	raw, err := sjson.SetBytes(registrationSchema, "properties.traits.$ref", s.c.DefaultIdentityTraitsSchemaURL().String()+"#/properties/traits")
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

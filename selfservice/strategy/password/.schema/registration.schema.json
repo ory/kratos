@@ -1,0 +1,16 @@
+{
+  "$id": "https://schemas.ory.sh/kratos/selfservice/strategy/password/registration.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "password",
+    "traits"
+  ],
+  "properties": {
+    "password": {
+      "type": "string",
+      "minLength": 1
+    },
+    "traits": {}
+  }
+}
