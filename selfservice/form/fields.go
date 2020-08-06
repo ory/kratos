@@ -29,6 +29,16 @@ type Field struct {
 
 	// Type is the equivalent of `<input type="{{.Type}}">`
 	//
+	// enum:
+	// - hidden
+	// - email
+	// - password
+	// - date
+	// - url
+	// - text
+	// - datetime-local
+	// - number
+	// - submit
 	// required: true
 	Type string `json:"type"`
 
