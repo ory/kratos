@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-08-06)](#unreleased-2020-08-06)
+- [Unreleased (2020-08-07)](#unreleased-2020-08-07)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -101,7 +101,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...b724038a67e84ca71b146bf4b9b044be2dc8c0b4) (2020-08-06)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...857476112d12b8ab79ef49054452a950ff81bc23) (2020-08-07)
 
 
 ### Bug Fixes
@@ -149,9 +149,15 @@
 * Add session hook to ssi guide ([#623](https://github.com/ory/kratos/issues/623)) ([1bbed39](https://github.com/ory/kratos/commit/1bbed390ffedd811afdb5fcfe69047554419d8ce))
 * Add terminology section ([29b81a7](https://github.com/ory/kratos/commit/29b81a78fcf880cd6d9d3b2cbb03f955b701ffbd))
 * Add video to OIDC guide ([#619](https://github.com/ory/kratos/issues/619)) ([f286980](https://github.com/ory/kratos/commit/f286980c29ce8460ba550e5d74b8dee23602e920))
+* Added sidebar item ([#639](https://github.com/ory/kratos/issues/639)) ([8574761](https://github.com/ory/kratos/commit/857476112d12b8ab79ef49054452a950ff81bc23)):
+
+    > Added Kratos Video Tutorial Transcripts document to sidebar.
 * Added transcript ([#627](https://github.com/ory/kratos/issues/627)) ([cec7f1f](https://github.com/ory/kratos/commit/cec7f1fc4955b02d21d772e748ec791f31bad24e)):
 
     > Added Login with Github Transcript
+* Changed transcript location ([#642](https://github.com/ory/kratos/issues/642)) ([c52764d](https://github.com/ory/kratos/commit/c52764d4394181b24dffbf8301418530ba5dbcc2)):
+
+    > Changed the location so it is in the right place.
 * Clarify kratos config snippet ([e7732f3](https://github.com/ory/kratos/commit/e7732f3283d82a1678076cd2463ef5ff33dd30ea))
 * Docker image documentation ([#573](https://github.com/ory/kratos/issues/573)) ([bfe032e](https://github.com/ory/kratos/commit/bfe032e2b6bfd8b9415d466011bdd7e36efa4146))
 * Fix logout url ([#593](https://github.com/ory/kratos/issues/593)) ([f0971d4](https://github.com/ory/kratos/commit/f0971d44a911caed8a6071358fa6b7ebc0fcf145))
