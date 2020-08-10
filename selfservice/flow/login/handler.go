@@ -2,11 +2,9 @@ package login
 
 import (
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -15,16 +13,16 @@ import (
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
 const (
-	BrowserInitPath     = "/self-service/browser/flows/login"
-	BrowserRequestsPath = "/self-service/browser/flows/requests/login"
+	RouteInitBrowserFlow = "/self-service/login/browser"
+	RouteInitAPIFlow     = "/self-service/login/api"
 
-	APIInitPath    = "/self-service/api/flows/login"
-	APIRequestPath = "/self-service/api/flows/requests/login"
+	RouteGetFlow = "/self-service/login/flows"
 )
 
 type (
@@ -52,16 +50,17 @@ func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
-	public.GET(BrowserInitPath, h.initLoginRequest)
-	public.GET(BrowserRequestsPath, h.publicFetchLoginRequest)
+	public.GET(RouteInitBrowserFlow, h.initBrowserFlow)
+	public.GET(RouteInitAPIFlow, h.initAPIFlow)
+	public.GET(RouteGetFlow, h.publicFetchLoginRequest)
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(BrowserRequestsPath, h.adminFetchLoginRequest)
+	admin.GET(RouteGetFlow, h.adminFetchLoginRequest)
 }
 
-func (h *Handler) NewLoginRequest(w http.ResponseWriter, r *http.Request) (*Request, error) {
-	a := NewRequest(h.c.SelfServiceFlowLoginRequestLifespan(), h.d.GenerateCSRFToken(r), r)
+func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, flow flow.Type) (*Flow, error) {
+	a := NewFlow(h.c.SelfServiceFlowLoginRequestLifespan(), h.d.GenerateCSRFToken(r), r, flow)
 	for _, s := range h.d.LoginStrategies() {
 		if err := s.PopulateLoginMethod(r, a); err != nil {
 			return nil, err
@@ -75,12 +74,11 @@ func (h *Handler) NewLoginRequest(w http.ResponseWriter, r *http.Request) (*Requ
 	if err := h.d.LoginRequestPersister().CreateLoginRequest(r.Context(), a); err != nil {
 		return nil, err
 	}
-
 	return a, nil
 }
 
 // nolint:deadcode,unused
-// swagger:parameters initializeSelfServiceBrowserLoginFlow initializeSelfServiceAPILoginFlow
+// swagger:parameters initializeSelfServiceBrowserLoginFlow initializeSelfServiceLoginViaAPIFlow
 type initializeSelfServiceBrowserLoginFlow struct {
 	// Refresh a login session
 	//
@@ -92,19 +90,23 @@ type initializeSelfServiceBrowserLoginFlow struct {
 	Refresh bool `json:"refresh"`
 }
 
-// swagger:route GET /self-service/api/flows/login common public admin initializeSelfServiceAPILoginFlow
+// swagger:route GET /self-service/login/api common public admin initializeSelfServiceLoginViaAPIFlow
 //
-// Initialize API Login Request
+// Initialize Login Flow for API clients
 //
-// This endpoint initiates a login flow by creating and returning a login request which includes
-// things such as required form fields and their values and errors.
+// This endpoint initiates a login flow for API clients such as mobile devices, smart TVs, and so on.
 //
 // If a valid provided session cookie or session token is provided, a 400 Bad Request error
 // will be returned unless the URL query parameter `?refresh=true` is set.
 //
-// To fetch an existing login request, call `/self-service/flows/requests/login`.
+// To fetch an existing login flow call `/self-service/login/flows?flow=<flow_id>`.
 //
-// > This endpoint is NOT INTENDED for Browsers (Chrome, Firefox, ...).
+// :::note
+//
+// This endpoint is NOT INTENDED for browser applications (Chrome, Firefox, ...). We recommend using this endpoint
+// for server-side browser applications and single page apps (SPA).
+//
+// :::
 //
 // More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 //
@@ -114,11 +116,11 @@ type initializeSelfServiceBrowserLoginFlow struct {
 //     - sessionToken
 //
 //     Responses:
-//       200: loginRequest
+//       200: loginFlow
 //       500: genericError
 //       400: genericError
-func (h *Handler) initAPILoginRequest(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	a, err := h.NewLoginRequest(w, r)
+func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	a, err := h.NewLoginFlow(w, r, flow.TypeAPI)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
@@ -142,16 +144,20 @@ func (h *Handler) initAPILoginRequest(w http.ResponseWriter, r *http.Request, _ 
 	h.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("A valid session was detected and thus login is not possible. Did you forget to set `?refresh=true`?")))
 }
 
-// swagger:route GET /self-service/browser/flows/login public initializeSelfServiceBrowserLoginFlow
+// swagger:route GET /self-service/login/browser public initializeSelfServiceLoginViaBrowserFlow
 //
-// Initialize browser-based login user flow
+//  Initialize Login Flow for browsers
 //
 // This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to
-// `selfservice.flows.login.ui_url` with the request ID set as a query parameter. If a valid user session exists already, the browser will be
-// redirected to `urls.default_redirect_url`.
+// `selfservice.flows.login.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
+// exists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter
+// `?refresh=true` was set.
 //
-// > This endpoint is NOT INTENDED for API clients and only works
-// with browsers (Chrome, Firefox, ...).
+// :::note
+//
+// This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+//
+// :::
 //
 // More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 //
@@ -163,8 +169,8 @@ func (h *Handler) initAPILoginRequest(w http.ResponseWriter, r *http.Request, _ 
 //     Responses:
 //       302: emptyResponse
 //       500: genericError
-func (h *Handler) initLoginRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	a, err := h.NewLoginRequest(w, r)
+func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	a, err := h.NewLoginFlow(w, r, flow.TypeBrowser)
 
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
@@ -173,7 +179,7 @@ func (h *Handler) initLoginRequest(w http.ResponseWriter, r *http.Request, ps ht
 
 	// we assume an error means the user has no session
 	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err != nil {
-		http.Redirect(w, r, urlx.CopyWithQuery(h.c.SelfServiceFlowLoginUI(), url.Values{"request": {a.ID.String()}}).String(), http.StatusFound)
+		http.Redirect(w, r, a.AppendTo(h.c.SelfServiceFlowLoginUI()).String(), http.StatusFound)
 		return
 	}
 
@@ -182,7 +188,7 @@ func (h *Handler) initLoginRequest(w http.ResponseWriter, r *http.Request, ps ht
 			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 			return
 		}
-		http.Redirect(w, r, urlx.CopyWithQuery(h.c.SelfServiceFlowLoginUI(), url.Values{"request": {a.ID.String()}}).String(), http.StatusFound)
+		http.Redirect(w, r, a.AppendTo(h.c.SelfServiceFlowLoginUI()).String(), http.StatusFound)
 		return
 	}
 
@@ -199,27 +205,23 @@ func (h *Handler) initLoginRequest(w http.ResponseWriter, r *http.Request, ps ht
 }
 
 // nolint:deadcode,unused
-// swagger:parameters getSelfServiceBrowserLoginRequest
+// swagger:parameters getSelfServiceLoginFlow
 type getSelfServiceBrowserLoginRequestParameters struct {
-	// Request is the Login Request ID
+	// The Login Flow ID
 	//
-	// The value for this parameter comes from `request` URL Query parameter sent to your
-	// application (e.g. `/login?request=abcde`).
+	// The value for this parameter comes from `flow` URL Query parameter sent to your
+	// application (e.g. `/login?flow=abcde`).
 	//
 	// required: true
 	// in: query
-	Request string `json:"request"`
+	ID string `json:"id"`
 }
 
-// swagger:route GET /self-service/browser/flows/requests/login common public admin getSelfServiceBrowserLoginRequest
+// swagger:route GET /self-service/login/flows common public admin getSelfServiceLoginFlow
 //
-// Get the request context of browser-based login user flows
+// Get information about a login flow
 //
-// This endpoint returns a login request's context with, for example, error details and
-// other information.
-//
-// When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent
-// token scanning attacks, the public endpoint does not return 404 status codes.
+// This endpoint returns a login flow's context with, for example, error details and other information.
 //
 // More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 //
@@ -229,44 +231,35 @@ type getSelfServiceBrowserLoginRequestParameters struct {
 //     Schemes: http, https
 //
 //     Responses:
-//       200: loginRequest
+//       200: loginFlow
 //       403: genericError
 //       404: genericError
 //       410: genericError
 //       500: genericError
 func (h *Handler) publicFetchLoginRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.fetchLoginRequest(w, r, true); err != nil {
+	if err := h.fetchLoginRequest(w, r); err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 }
 
 func (h *Handler) adminFetchLoginRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.fetchLoginRequest(w, r, false); err != nil {
+	if err := h.fetchLoginRequest(w, r); err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 }
 
-func (h *Handler) fetchLoginRequest(w http.ResponseWriter, r *http.Request, isPublic bool) error {
-	ar, err := h.d.LoginRequestPersister().GetLoginRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
+func (h *Handler) fetchLoginRequest(w http.ResponseWriter, r *http.Request) error {
+	ar, err := h.d.LoginRequestPersister().GetLoginRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("id")))
 	if err != nil {
-		if isPublic {
-			return errors.WithStack(x.ErrInvalidCSRFToken.WithTrace(err).WithDebugf("%s", err))
-		}
 		return err
-	}
-
-	if isPublic {
-		if !nosurf.VerifyToken(h.d.GenerateCSRFToken(r), ar.CSRFToken) {
-			return errors.WithStack(x.ErrInvalidCSRFToken)
-		}
 	}
 
 	if ar.ExpiresAt.Before(time.Now()) {
 		return errors.WithStack(x.ErrGone.
-			WithReason("The login request has expired. Redirect the user to the login endpoint to initialize a new session.").
-			WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), BrowserInitPath).String()))
+			WithReason("The login flow has expired. Redirect the user to the login endpoint for browsers or use the API to initialize a new login flow.").
+			WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), RouteInitBrowserFlow).String()))
 	}
 
 	h.d.Writer().Write(w, r, ar)

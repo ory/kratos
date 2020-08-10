@@ -23,8 +23,8 @@ func CleanSQL(t *testing.T, c *pop.Connection) {
 	for _, table := range []string{
 		new(continuity.Container).TableName(),
 		new(courier.Message).TableName(),
-		new(login.RequestMethods).TableName(),
-		new(login.Request).TableName(),
+		new(login.FlowMethods).TableName(),
+		new(login.Flow).TableName(),
 		new(registration.RequestMethods).TableName(),
 		new(registration.Request).TableName(),
 		new(settings.RequestMethods).TableName(),

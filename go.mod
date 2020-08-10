@@ -22,11 +22,11 @@ require (
 	github.com/go-playground/locales v0.12.1 // indirect
 	github.com/go-playground/universal-translator v0.16.0 // indirect
 	github.com/go-swagger/go-swagger v0.25.0
-	github.com/gobuffalo/fizz v1.11.0
+	github.com/gobuffalo/fizz v1.11.1-0.20200706214517-4e9fb9ced4ce
 	github.com/gobuffalo/httptest v1.0.2
 	github.com/gobuffalo/logger v1.0.3
 	github.com/gobuffalo/packr/v2 v2.8.0
-	github.com/gobuffalo/pop/v5 v5.2.4-0.20200707154617-81b8a32a605f
+	github.com/gobuffalo/pop/v5 v5.2.4-0.20200706214017-1dd950510b30
 	github.com/gobuffalo/uuid v2.0.5+incompatible
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2

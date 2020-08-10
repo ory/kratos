@@ -69,7 +69,7 @@ func (p *Persister) MigrateDown(ctx context.Context, steps int) error {
 
 func (p *Persister) MigrateUp(ctx context.Context) error {
 	// FIXME https://github.com/gobuffalo/pop/issues/574
-	if p.isSQLite {
+	if p.isSQLite && false {
 		if err := p.c.RawQuery(`PRAGMA legacy_alter_table=on; PRAGMA foreign_keys=off;`).Exec(); err != nil {
 			return errors.WithStack(err)
 		}

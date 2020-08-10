@@ -12,22 +12,22 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// LoginRequestMethod login request method
+// LoginFlowMethod login flow method
 //
-// swagger:model loginRequestMethod
-type LoginRequestMethod struct {
+// swagger:model loginFlowMethod
+type LoginFlowMethod struct {
 
 	// config
 	// Required: true
-	Config *LoginRequestMethodConfig `json:"config"`
+	Config *LoginFlowMethodConfig `json:"config"`
 
 	// method
 	// Required: true
 	Method CredentialsType `json:"method"`
 }
 
-// Validate validates this login request method
-func (m *LoginRequestMethod) Validate(formats strfmt.Registry) error {
+// Validate validates this login flow method
+func (m *LoginFlowMethod) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateConfig(formats); err != nil {
@@ -44,7 +44,7 @@ func (m *LoginRequestMethod) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *LoginRequestMethod) validateConfig(formats strfmt.Registry) error {
+func (m *LoginFlowMethod) validateConfig(formats strfmt.Registry) error {
 
 	if err := validate.Required("config", "body", m.Config); err != nil {
 		return err
@@ -62,7 +62,7 @@ func (m *LoginRequestMethod) validateConfig(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *LoginRequestMethod) validateMethod(formats strfmt.Registry) error {
+func (m *LoginFlowMethod) validateMethod(formats strfmt.Registry) error {
 
 	if err := m.Method.Validate(formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
@@ -75,7 +75,7 @@ func (m *LoginRequestMethod) validateMethod(formats strfmt.Registry) error {
 }
 
 // MarshalBinary interface implementation
-func (m *LoginRequestMethod) MarshalBinary() ([]byte, error) {
+func (m *LoginFlowMethod) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -83,8 +83,8 @@ func (m *LoginRequestMethod) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *LoginRequestMethod) UnmarshalBinary(b []byte) error {
-	var res LoginRequestMethod
+func (m *LoginFlowMethod) UnmarshalBinary(b []byte) error {
+	var res LoginFlowMethod
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

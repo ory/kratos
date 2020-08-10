@@ -39,7 +39,7 @@ func (e *Redirector) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *ht
 	return errors.WithStack(settings.ErrHookAbortRequest)
 }
 
-func (e *Redirector) ExecuteLoginPreHook(w http.ResponseWriter, r *http.Request, _ *login.Request) error {
+func (e *Redirector) ExecuteLoginPreHook(w http.ResponseWriter, r *http.Request, _ *login.Flow) error {
 	if err := e.do(w, r); err != nil {
 		return err
 	}
@@ -67,7 +67,7 @@ func (e *Redirector) ExecuteSettingsPrePersistHook(w http.ResponseWriter, r *htt
 	return errors.WithStack(settings.ErrHookAbortRequest)
 }
 
-func (e *Redirector) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, _ *login.Request, _ *session.Session) error {
+func (e *Redirector) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, _ *login.Flow, _ *session.Session) error {
 	if err := e.do(w, r); err != nil {
 		return err
 	}

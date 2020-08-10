@@ -39,7 +39,7 @@ func (e *SessionIssuer) ExecutePostRegistrationPostPersistHook(w http.ResponseWr
 	return e.r.SessionManager().SaveToRequest(r.Context(), w, r, s)
 }
 
-func (e *SessionIssuer) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, a *login.Request, s *session.Session) error {
+func (e *SessionIssuer) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, a *login.Flow, s *session.Session) error {
 	s.AuthenticatedAt = time.Now().UTC()
 	if err := e.r.SessionPersister().CreateSession(r.Context(), s); err != nil {
 		return err

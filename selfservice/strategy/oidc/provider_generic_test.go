@@ -12,7 +12,7 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-func makeAuthCodeURL(t *testing.T, r *login.Request) string {
+func makeAuthCodeURL(t *testing.T, r *login.Flow) string {
 	public, err := url.Parse("https://ory.sh")
 	require.NoError(t, err)
 	p := NewProviderGenericOIDC(&Configuration{
@@ -30,7 +30,7 @@ func makeAuthCodeURL(t *testing.T, r *login.Request) string {
 
 func TestProviderGenericOIDC_AddAuthCodeURLOptions(t *testing.T) {
 	t.Run("case=expect prompt to be login with forced flag", func(t *testing.T) {
-		r := &login.Request{
+		r := &login.Flow{
 			ID:     x.NewUUID(),
 			Forced: true,
 		}
@@ -38,7 +38,7 @@ func TestProviderGenericOIDC_AddAuthCodeURLOptions(t *testing.T) {
 	})
 
 	t.Run("case=expect prompt to not be login without forced flag", func(t *testing.T) {
-		r := &login.Request{
+		r := &login.Flow{
 			ID: x.NewUUID(),
 		}
 		assert.NotContains(t, makeAuthCodeURL(t, r), "prompt=login")

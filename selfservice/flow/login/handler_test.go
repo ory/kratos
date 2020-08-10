@@ -4,13 +4,11 @@ import (
 	"context"
 	"io/ioutil"
 	"net/http"
-	"net/http/cookiejar"
 	"net/url"
 	"testing"
 	"time"
 
 	"github.com/gobuffalo/httptest"
-	"github.com/justinas/nosurf"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -21,6 +19,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/x"
 )
@@ -49,16 +48,16 @@ func TestHandlerSettingForced(t *testing.T) {
 
 	// make authenticated request
 	mar := func(t *testing.T, extQuery url.Values) (*http.Response, []byte) {
-		rid := x.NewUUID()
-		req := x.NewTestHTTPRequest(t, "GET", ts.URL+login.BrowserInitPath, nil)
-		loginReq := login.NewRequest(time.Minute, x.FakeCSRFToken, req)
-		loginReq.ID = rid
+		flowID := x.NewUUID()
+		req := x.NewTestHTTPRequest(t, "GET", ts.URL+login.RouteInitBrowserFlow, nil)
+		loginFlow := login.NewFlow(time.Minute, x.FakeCSRFToken, req, flow.TypeBrowser)
+		loginFlow.ID = flowID
 		for _, s := range reg.LoginStrategies() {
-			require.NoError(t, s.PopulateLoginMethod(req, loginReq))
+			require.NoError(t, s.PopulateLoginMethod(req, loginFlow))
 		}
-		require.NoError(t, reg.LoginRequestPersister().CreateLoginRequest(context.TODO(), loginReq), "%+v", loginReq)
+		require.NoError(t, reg.LoginRequestPersister().CreateLoginRequest(context.TODO(), loginFlow), "%+v", loginFlow)
 
-		q := url.Values{"request": {rid.String()}}
+		q := url.Values{"id": {flowID.String()}}
 		for key := range extQuery {
 			q.Set(key, extQuery.Get(key))
 		}
@@ -71,7 +70,7 @@ func TestHandlerSettingForced(t *testing.T) {
 	// make unauthenticated request
 	mur := func(t *testing.T, query url.Values) (*http.Response, []byte) {
 		c := ts.Client()
-		res, err := c.Get(ts.URL + login.BrowserInitPath + "?" + query.Encode())
+		res, err := c.Get(ts.URL + login.RouteInitBrowserFlow + "?" + query.Encode())
 		require.NoError(t, err)
 		defer res.Body.Close()
 		body, err := ioutil.ReadAll(res.Body)
@@ -86,9 +85,7 @@ func TestHandlerSettingForced(t *testing.T) {
 	})
 
 	t.Run("case=does not set forced flag on unauthenticated request with refresh=true", func(t *testing.T) {
-		res, body := mur(t, url.Values{
-			"refresh": {"true"},
-		})
+		res, body := mur(t, url.Values{"refresh": {"true"}})
 		ab(body, true)
 		assert.Contains(t, res.Request.URL.String(), loginTS.URL)
 	})
@@ -125,7 +122,7 @@ func TestLoginHandler(t *testing.T) {
 			if c == nil {
 				c = http.DefaultClient
 			}
-			_, err := w.Write(x.EasyGetBody(t, c, upstream+login.BrowserRequestsPath+"?request="+r.URL.Query().Get("request")))
+			_, err := w.Write(x.EasyGetBody(t, c, upstream+login.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
 			require.NoError(t, err)
 		}))
 	}
@@ -141,75 +138,43 @@ func TestLoginHandler(t *testing.T) {
 
 	assertExpiredPayload := func(t *testing.T, res *http.Response, body []byte) {
 		assert.EqualValues(t, http.StatusGone, res.StatusCode)
-		assert.Equal(t, public.URL+login.BrowserInitPath, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
+		assert.Equal(t, public.URL+login.RouteInitBrowserFlow, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
 	}
 
-	newExpiredRequest := func() *login.Request {
-		return &login.Request{
+	newExpiredRequest := func() *login.Flow {
+		return &login.Flow{
 			ID:         x.NewUUID(),
 			ExpiresAt:  time.Now().Add(-time.Minute),
 			IssuedAt:   time.Now().Add(-time.Minute * 2),
-			RequestURL: public.URL + login.BrowserInitPath,
+			RequestURL: public.URL + login.RouteInitBrowserFlow,
 			CSRFToken:  x.FakeCSRFToken,
 		}
 	}
 
-	t.Run("daemon=admin", func(t *testing.T) {
-		loginTS := newLoginTS(t, admin.URL, nil)
+	run := func(t *testing.T, endpoint *httptest.Server) {
+		loginTS := newLoginTS(t, endpoint.URL, nil)
 		defer loginTS.Close()
 		viper.Set(configuration.ViperKeySelfServiceLoginUI, loginTS.URL)
 		viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
 			"enabled": true})
 
 		t.Run("case=valid", func(t *testing.T) {
-			assertRequestPayload(t, x.EasyGetBody(t, admin.Client(), public.URL+login.BrowserInitPath))
+			assertRequestPayload(t, x.EasyGetBody(t, endpoint.Client(), public.URL+login.RouteInitBrowserFlow))
 		})
 
 		t.Run("case=expired", func(t *testing.T) {
 			lr := newExpiredRequest()
 			require.NoError(t, reg.LoginRequestPersister().CreateLoginRequest(context.Background(), lr))
-			res, body := x.EasyGet(t, admin.Client(), admin.URL+login.BrowserRequestsPath+"?request="+lr.ID.String())
+			res, body := x.EasyGet(t, admin.Client(), endpoint.URL+login.RouteGetFlow+"?id="+lr.ID.String())
 			assertExpiredPayload(t, res, body)
 		})
+	}
+
+	t.Run("daemon=admin", func(t *testing.T) {
+		run(t, admin)
 	})
 
 	t.Run("daemon=public", func(t *testing.T) {
-		j, err := cookiejar.New(nil)
-		require.NoError(t, err)
-		hc := &http.Client{Jar: j}
-
-		t.Run("case=with_csrf", func(t *testing.T) {
-			loginTS := newLoginTS(t, public.URL, hc)
-			defer loginTS.Close()
-			viper.Set(configuration.ViperKeySelfServiceLoginUI, loginTS.URL)
-
-			assertRequestPayload(t, x.EasyGetBody(t, hc, public.URL+login.BrowserInitPath))
-		})
-
-		t.Run("case=without_csrf", func(t *testing.T) {
-			loginTS := newLoginTS(t, public.URL,
-				// using a different client because it doesn't have access to the cookie jar
-				new(http.Client))
-			defer loginTS.Close()
-			viper.Set(configuration.ViperKeySelfServiceLoginUI, loginTS.URL)
-
-			body := x.EasyGetBody(t, hc, public.URL+login.BrowserInitPath)
-			assert.Contains(t, gjson.GetBytes(body, "error").String(), "csrf_token", "%s", body)
-		})
-
-		t.Run("case=expired", func(t *testing.T) {
-			reg.WithCSRFTokenGenerator(x.FakeCSRFTokenGenerator)
-			t.Cleanup(func() {
-				reg.WithCSRFTokenGenerator(nosurf.Token)
-			})
-
-			loginTS := newLoginTS(t, public.URL, hc)
-			defer loginTS.Close()
-
-			lr := newExpiredRequest()
-			require.NoError(t, reg.LoginRequestPersister().CreateLoginRequest(context.Background(), lr))
-			res, body := x.EasyGet(t, admin.Client(), admin.URL+login.BrowserRequestsPath+"?request="+lr.ID.String())
-			assertExpiredPayload(t, res, body)
-		})
+		run(t, public)
 	})
 }

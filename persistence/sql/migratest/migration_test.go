@@ -125,7 +125,7 @@ func TestMigrations(t *testing.T) {
 				})
 
 				t.Run("case=login", func(t *testing.T) {
-					var ids []login.Request
+					var ids []login.Flow
 					require.NoError(t, c.Select("id").All(&ids))
 
 					for _, id := range ids {

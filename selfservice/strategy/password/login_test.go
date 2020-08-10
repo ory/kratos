@@ -34,18 +34,18 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-func nlr(exp time.Duration) *login.Request {
+func nlr(exp time.Duration) *login.Flow {
 	id := x.NewUUID()
-	return &login.Request{
+	return &login.Flow{
 		ID:         id,
 		IssuedAt:   time.Now().UTC(),
 		ExpiresAt:  time.Now().UTC().Add(exp),
 		RequestURL: "remove-this-if-test-fails",
-		Methods: map[identity.CredentialsType]*login.RequestMethod{
+		Methods: map[identity.CredentialsType]*login.FlowMethod{
 			identity.CredentialsTypePassword: {
 				Method: identity.CredentialsTypePassword,
-				Config: &login.RequestMethodConfig{
-					RequestMethodConfigurator: &form.HTMLForm{
+				Config: &login.FlowMethodConfig{
+					FlowMethodConfigurator: &form.HTMLForm{
 						Method: "POST",
 						Action: "/action",
 						Fields: form.Fields{
@@ -111,7 +111,7 @@ func TestLoginNew(t *testing.T) {
 			c.Jar, _ = cookiejar.New(&cookiejar.Options{})
 		}
 
-		u := ts.URL + login.BrowserInitPath
+		u := ts.URL + login.RouteInitBrowserFlow
 		if force {
 			u = u + "?refresh=true"
 		}
@@ -124,7 +124,7 @@ func TestLoginNew(t *testing.T) {
 		return mr(t, isAPI, payload, res.Request.URL.Query().Get("request"), c)
 	}
 
-	fakeRequest := func(t *testing.T, lr *login.Request, isAPI bool, payload string, forceRequestID *string, jar *cookiejar.Jar) (*http.Response, []byte) {
+	fakeRequest := func(t *testing.T, lr *login.Flow, isAPI bool, payload string, forceRequestID *string, jar *cookiejar.Jar) (*http.Response, []byte) {
 		lr.RequestURL = ts.URL
 		require.NoError(t, reg.LoginRequestPersister().CreateLoginRequest(context.TODO(), lr))
 
@@ -386,20 +386,20 @@ func TestLoginNew(t *testing.T) {
 					c := &http.Client{Jar: jar}
 
 					t.Run("redirect to returnTS if refresh is missing", func(t *testing.T) {
-						res, err := c.Get(ts.URL + login.BrowserInitPath)
+						res, err := c.Get(ts.URL + login.RouteInitBrowserFlow)
 						require.NoError(t, err)
 						require.EqualValues(t, http.StatusOK, res.StatusCode)
 					})
 
 					t.Run("show UI and hint at username", func(t *testing.T) {
-						res, err := c.Get(ts.URL + login.BrowserInitPath + "?refresh=true")
+						res, err := c.Get(ts.URL + login.RouteInitBrowserFlow + "?refresh=true")
 						require.NoError(t, err)
 						require.EqualValues(t, http.StatusOK, res.StatusCode)
 
 						rid := res.Request.URL.Query().Get("request")
 						assert.NotEmpty(t, rid, "%s", res.Request.URL)
 
-						res, err = c.Get(ts.URL + login.BrowserRequestsPath + "?request=" + rid)
+						res, err = c.Get(ts.URL + login.RouteGetFlow + "?request=" + rid)
 						require.NoError(t, err)
 						require.EqualValues(t, http.StatusOK, res.StatusCode)
 
@@ -420,14 +420,14 @@ func TestLoginNew(t *testing.T) {
 	t.Run("should return an error because not passing validation and reset previous errors and values", func(t *testing.T) {
 		run := func(isAPI bool) func(t *testing.T) {
 			return func(t *testing.T) {
-				lr := &login.Request{
+				lr := &login.Flow{
 					ID:        x.NewUUID(),
 					ExpiresAt: time.Now().Add(time.Minute),
-					Methods: map[identity.CredentialsType]*login.RequestMethod{
+					Methods: map[identity.CredentialsType]*login.FlowMethod{
 						identity.CredentialsTypePassword: {
 							Method: identity.CredentialsTypePassword,
-							Config: &login.RequestMethodConfig{
-								RequestMethodConfigurator: &password.RequestMethod{
+							Config: &login.FlowMethodConfig{
+								FlowMethodConfigurator: &password.RequestMethod{
 									HTMLForm: &form.HTMLForm{
 										Method:   "POST",
 										Action:   "/action",

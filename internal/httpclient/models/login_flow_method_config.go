@@ -14,10 +14,10 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// LoginRequestMethodConfig login request method config
+// LoginFlowMethodConfig login flow method config
 //
-// swagger:model loginRequestMethodConfig
-type LoginRequestMethodConfig struct {
+// swagger:model loginFlowMethodConfig
+type LoginFlowMethodConfig struct {
 
 	// Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`.
 	// Required: true
@@ -34,12 +34,12 @@ type LoginRequestMethodConfig struct {
 	// Required: true
 	Method *string `json:"method"`
 
-	// Providers is set for the "oidc" request method.
+	// Providers is set for the "oidc" flow method.
 	Providers []*FormField `json:"providers"`
 }
 
-// Validate validates this login request method config
-func (m *LoginRequestMethodConfig) Validate(formats strfmt.Registry) error {
+// Validate validates this login flow method config
+func (m *LoginFlowMethodConfig) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateAction(formats); err != nil {
@@ -68,7 +68,7 @@ func (m *LoginRequestMethodConfig) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *LoginRequestMethodConfig) validateAction(formats strfmt.Registry) error {
+func (m *LoginFlowMethodConfig) validateAction(formats strfmt.Registry) error {
 
 	if err := validate.Required("action", "body", m.Action); err != nil {
 		return err
@@ -77,7 +77,7 @@ func (m *LoginRequestMethodConfig) validateAction(formats strfmt.Registry) error
 	return nil
 }
 
-func (m *LoginRequestMethodConfig) validateFields(formats strfmt.Registry) error {
+func (m *LoginFlowMethodConfig) validateFields(formats strfmt.Registry) error {
 
 	if err := validate.Required("fields", "body", m.Fields); err != nil {
 		return err
@@ -93,7 +93,7 @@ func (m *LoginRequestMethodConfig) validateFields(formats strfmt.Registry) error
 	return nil
 }
 
-func (m *LoginRequestMethodConfig) validateMessages(formats strfmt.Registry) error {
+func (m *LoginFlowMethodConfig) validateMessages(formats strfmt.Registry) error {
 
 	if swag.IsZero(m.Messages) { // not required
 		return nil
@@ -109,7 +109,7 @@ func (m *LoginRequestMethodConfig) validateMessages(formats strfmt.Registry) err
 	return nil
 }
 
-func (m *LoginRequestMethodConfig) validateMethod(formats strfmt.Registry) error {
+func (m *LoginFlowMethodConfig) validateMethod(formats strfmt.Registry) error {
 
 	if err := validate.Required("method", "body", m.Method); err != nil {
 		return err
@@ -118,7 +118,7 @@ func (m *LoginRequestMethodConfig) validateMethod(formats strfmt.Registry) error
 	return nil
 }
 
-func (m *LoginRequestMethodConfig) validateProviders(formats strfmt.Registry) error {
+func (m *LoginFlowMethodConfig) validateProviders(formats strfmt.Registry) error {
 
 	if swag.IsZero(m.Providers) { // not required
 		return nil
@@ -144,7 +144,7 @@ func (m *LoginRequestMethodConfig) validateProviders(formats strfmt.Registry) er
 }
 
 // MarshalBinary interface implementation
-func (m *LoginRequestMethodConfig) MarshalBinary() ([]byte, error) {
+func (m *LoginFlowMethodConfig) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -152,8 +152,8 @@ func (m *LoginRequestMethodConfig) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *LoginRequestMethodConfig) UnmarshalBinary(b []byte) error {
-	var res LoginRequestMethodConfig
+func (m *LoginFlowMethodConfig) UnmarshalBinary(b []byte) error {
+	var res LoginFlowMethodConfig
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

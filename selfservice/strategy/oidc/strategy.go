@@ -336,7 +336,7 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	}
 
 	switch a := req.(type) {
-	case *login.Request:
+	case *login.Flow:
 		s.processLogin(w, r, a, claims, provider, container)
 		return
 	case *registration.Request:

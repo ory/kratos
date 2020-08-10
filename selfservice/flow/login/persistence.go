@@ -17,10 +17,10 @@ import (
 
 type (
 	RequestPersister interface {
-		UpdateLoginRequest(context.Context, *Request) error
-		CreateLoginRequest(context.Context, *Request) error
-		GetLoginRequest(context.Context, uuid.UUID) (*Request, error)
-		UpdateLoginRequestMethod(context.Context, uuid.UUID, identity.CredentialsType, *RequestMethod) error
+		UpdateLoginRequest(context.Context, *Flow) error
+		CreateLoginRequest(context.Context, *Flow) error
+		GetLoginRequest(context.Context, uuid.UUID) (*Flow, error)
+		UpdateLoginRequestMethod(context.Context, uuid.UUID, identity.CredentialsType, *FlowMethod) error
 		MarkRequestForced(ctx context.Context, id uuid.UUID) error
 	}
 	RequestPersistenceProvider interface {
@@ -29,7 +29,7 @@ type (
 )
 
 func TestRequestPersister(p RequestPersister) func(t *testing.T) {
-	var clearids = func(r *Request) {
+	var clearids = func(r *Flow) {
 		r.ID = uuid.UUID{}
 		for k := range r.Methods {
 			r.Methods[k].ID = uuid.UUID{}
@@ -37,13 +37,13 @@ func TestRequestPersister(p RequestPersister) func(t *testing.T) {
 	}
 
 	return func(t *testing.T) {
-		t.Run("case=should error when the login request does not exist", func(t *testing.T) {
+		t.Run("case=should error when the login flow does not exist", func(t *testing.T) {
 			_, err := p.GetLoginRequest(context.Background(), x.NewUUID())
 			require.Error(t, err)
 		})
 
-		var newRequest = func(t *testing.T) *Request {
-			var r Request
+		var newRequest = func(t *testing.T) *Flow {
+			var r Flow
 			require.NoError(t, faker.FakeData(&r))
 			clearids(&r)
 
@@ -54,12 +54,12 @@ func TestRequestPersister(p RequestPersister) func(t *testing.T) {
 		}
 
 		t.Run("case=should create with set ids", func(t *testing.T) {
-			var r Request
+			var r Flow
 			require.NoError(t, faker.FakeData(&r))
 			require.NoError(t, p.CreateLoginRequest(context.Background(), &r))
 		})
 
-		t.Run("case=should create a new login request and properly set IDs", func(t *testing.T) {
+		t.Run("case=should create a new login flow and properly set IDs", func(t *testing.T) {
 			r := newRequest(t)
 			methods := len(r.Methods)
 			err := p.CreateLoginRequest(context.Background(), r)
@@ -73,7 +73,7 @@ func TestRequestPersister(p RequestPersister) func(t *testing.T) {
 			assert.Len(t, r.Methods, methods)
 		})
 
-		t.Run("case=should create and fetch a login request", func(t *testing.T) {
+		t.Run("case=should create and fetch a login flow", func(t *testing.T) {
 			expected := newRequest(t)
 			err := p.CreateLoginRequest(context.Background(), expected)
 			require.NoError(t, err)
@@ -94,14 +94,14 @@ func TestRequestPersister(p RequestPersister) func(t *testing.T) {
 			expected := newRequest(t)
 			expected.Forced = true
 			expected.Type = flow.TypeAPI
-			expected.Methods = map[identity.CredentialsType]*RequestMethod{
+			expected.Methods = map[identity.CredentialsType]*FlowMethod{
 				identity.CredentialsTypeOIDC: {
 					Method: identity.CredentialsTypeOIDC,
-					Config: &RequestMethodConfig{RequestMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypeOIDC))},
+					Config: &FlowMethodConfig{FlowMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypeOIDC))},
 				},
 				identity.CredentialsTypePassword: {
 					Method: identity.CredentialsTypePassword,
-					Config: &RequestMethodConfig{RequestMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypePassword))},
+					Config: &FlowMethodConfig{FlowMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypePassword))},
 				},
 			}
 			err := p.CreateLoginRequest(context.Background(), expected)
@@ -111,9 +111,9 @@ func TestRequestPersister(p RequestPersister) func(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, flow.TypeAPI, actual.Type)
 
-			actual.Methods = map[identity.CredentialsType]*RequestMethod{identity.CredentialsTypeOIDC: {
+			actual.Methods = map[identity.CredentialsType]*FlowMethod{identity.CredentialsTypeOIDC: {
 				Method: identity.CredentialsTypeOIDC,
-				Config: &RequestMethodConfig{RequestMethodConfigurator: form.NewHTMLForm("asdf")},
+				Config: &FlowMethodConfig{FlowMethodConfigurator: form.NewHTMLForm("ory-sh")},
 			}}
 			actual.Type = flow.TypeBrowser
 			actual.Forced = true
@@ -125,9 +125,9 @@ func TestRequestPersister(p RequestPersister) func(t *testing.T) {
 			assert.Equal(t, flow.TypeBrowser, actual.Type)
 			assert.True(t, actual.Forced)
 			require.Len(t, actual.Methods, 1)
-			assert.Equal(t, "asdf",
+			assert.Equal(t, "ory-sh",
 				actual.Methods[identity.CredentialsTypeOIDC].Config.
-					RequestMethodConfigurator.(*form.HTMLForm).Action)
+					FlowMethodConfigurator.(*form.HTMLForm).Action)
 		})
 
 		t.Run("case=should properly update a flow", func(t *testing.T) {
@@ -141,7 +141,7 @@ func TestRequestPersister(p RequestPersister) func(t *testing.T) {
 			assert.Equal(t, flow.TypeAPI, actual.Type)
 		})
 
-		t.Run("case=should update a login request", func(t *testing.T) {
+		t.Run("case=should update a login flow", func(t *testing.T) {
 			expected := newRequest(t)
 			delete(expected.Methods, identity.CredentialsTypeOIDC)
 			err := p.CreateLoginRequest(context.Background(), expected)
@@ -151,14 +151,14 @@ func TestRequestPersister(p RequestPersister) func(t *testing.T) {
 			require.NoError(t, err)
 			assert.Len(t, actual.Methods, 1)
 
-			require.NoError(t, p.UpdateLoginRequestMethod(context.Background(), expected.ID, identity.CredentialsTypeOIDC, &RequestMethod{
+			require.NoError(t, p.UpdateLoginRequestMethod(context.Background(), expected.ID, identity.CredentialsTypeOIDC, &FlowMethod{
 				Method: identity.CredentialsTypeOIDC,
-				Config: &RequestMethodConfig{RequestMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypeOIDC))},
+				Config: &FlowMethodConfig{FlowMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypeOIDC))},
 			}))
 
-			require.NoError(t, p.UpdateLoginRequestMethod(context.Background(), expected.ID, identity.CredentialsTypePassword, &RequestMethod{
+			require.NoError(t, p.UpdateLoginRequestMethod(context.Background(), expected.ID, identity.CredentialsTypePassword, &FlowMethod{
 				Method: identity.CredentialsTypePassword,
-				Config: &RequestMethodConfig{RequestMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypePassword))},
+				Config: &FlowMethodConfig{FlowMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypePassword))},
 			}))
 
 			actual, err = p.GetLoginRequest(context.Background(), expected.ID)
@@ -166,8 +166,8 @@ func TestRequestPersister(p RequestPersister) func(t *testing.T) {
 			require.Len(t, actual.Methods, 2)
 			assert.EqualValues(t, identity.CredentialsTypePassword, actual.Active)
 
-			assert.Equal(t, string(identity.CredentialsTypePassword), actual.Methods[identity.CredentialsTypePassword].Config.RequestMethodConfigurator.(*form.HTMLForm).Action)
-			assert.Equal(t, string(identity.CredentialsTypeOIDC), actual.Methods[identity.CredentialsTypeOIDC].Config.RequestMethodConfigurator.(*form.HTMLForm).Action)
+			assert.Equal(t, string(identity.CredentialsTypePassword), actual.Methods[identity.CredentialsTypePassword].Config.FlowMethodConfigurator.(*form.HTMLForm).Action)
+			assert.Equal(t, string(identity.CredentialsTypeOIDC), actual.Methods[identity.CredentialsTypeOIDC].Config.FlowMethodConfigurator.(*form.HTMLForm).Action)
 		})
 	}
 }

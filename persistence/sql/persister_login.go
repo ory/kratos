@@ -15,11 +15,11 @@ import (
 
 var _ login.RequestPersister = new(Persister)
 
-func (p *Persister) CreateLoginRequest(ctx context.Context, r *login.Request) error {
+func (p *Persister) CreateLoginRequest(ctx context.Context, r *login.Flow) error {
 	return p.GetConnection(ctx).Eager().Create(r)
 }
 
-func (p *Persister) UpdateLoginRequest(ctx context.Context, r *login.Request) error {
+func (p *Persister) UpdateLoginRequest(ctx context.Context, r *login.Flow) error {
 	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 
 		rr, err := p.GetLoginRequest(ctx, r.ID)
@@ -34,7 +34,7 @@ func (p *Persister) UpdateLoginRequest(ctx context.Context, r *login.Request) er
 		}
 
 		for _, of := range r.Methods {
-			of.RequestID = r.ID
+			of.FlowID = r.ID
 			if err := tx.Save(of); err != nil {
 				return sqlcon.HandleError(err)
 			}
@@ -44,9 +44,9 @@ func (p *Persister) UpdateLoginRequest(ctx context.Context, r *login.Request) er
 	})
 }
 
-func (p *Persister) GetLoginRequest(ctx context.Context, id uuid.UUID) (*login.Request, error) {
+func (p *Persister) GetLoginRequest(ctx context.Context, id uuid.UUID) (*login.Flow, error) {
 	conn := p.GetConnection(ctx)
-	var r login.Request
+	var r login.Flow
 	if err := conn.Eager().Find(&r, id); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
@@ -71,7 +71,7 @@ func (p *Persister) MarkRequestForced(ctx context.Context, id uuid.UUID) error {
 	})
 }
 
-func (p *Persister) UpdateLoginRequestMethod(ctx context.Context, id uuid.UUID, ct identity.CredentialsType, rm *login.RequestMethod) error {
+func (p *Persister) UpdateLoginRequestMethod(ctx context.Context, id uuid.UUID, ct identity.CredentialsType, rm *login.FlowMethod) error {
 	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 
 		rr, err := p.GetLoginRequest(ctx, id)
@@ -81,7 +81,7 @@ func (p *Persister) UpdateLoginRequestMethod(ctx context.Context, id uuid.UUID, 
 
 		method, ok := rr.Methods[ct]
 		if !ok {
-			rm.RequestID = rr.ID
+			rm.FlowID = rr.ID
 			rm.Method = ct
 			return tx.Save(rm)
 		}

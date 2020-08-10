@@ -12,21 +12,26 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// LoginRequest login request
+// LoginFlow Login Flow
 //
-// swagger:model loginRequest
-type LoginRequest struct {
+// This object represents a login flow. A login flow is initiated at the "Initiate Login API / Browser Flow"
+// endpoint by a client.
+//
+// Once a login flow is completed successfully, a session cookie or session token will be issued.
+//
+// swagger:model loginFlow
+type LoginFlow struct {
 
 	// active
 	Active CredentialsType `json:"active,omitempty"`
 
-	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,
-	// a new request has to be initiated.
+	// ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in,
+	// a new flow has to be initiated.
 	// Required: true
 	// Format: date-time
 	ExpiresAt *strfmt.DateTime `json:"expires_at"`
 
-	// Forced stores whether this login request should enforce reauthentication.
+	// Forced stores whether this login flow should enforce re-authentication.
 	Forced bool `json:"forced,omitempty"`
 
 	// id
@@ -34,7 +39,7 @@ type LoginRequest struct {
 	// Format: uuid4
 	ID UUID `json:"id"`
 
-	// IssuedAt is the time (UTC) when the request occurred.
+	// IssuedAt is the time (UTC) when the flow started.
 	// Required: true
 	// Format: date-time
 	IssuedAt *strfmt.DateTime `json:"issued_at"`
@@ -42,19 +47,24 @@ type LoginRequest struct {
 	// messages
 	Messages Messages `json:"messages,omitempty"`
 
-	// Methods contains context for all enabled login methods. If a login request has been
-	// processed, but for example the password is incorrect, this will contain error messages.
+	// List of login methods
+	//
+	// This is the list of available login methods with their required form fields, such as `identifier` and `password`
+	// for the password login method. This will also contain error messages such as "password can not be empty".
 	// Required: true
-	Methods map[string]LoginRequestMethod `json:"methods"`
+	Methods map[string]LoginFlowMethod `json:"methods"`
 
 	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used
 	// to forward information contained in the URL's path or query for example.
 	// Required: true
 	RequestURL *string `json:"request_url"`
+
+	// type
+	Type Type `json:"type,omitempty"`
 }
 
-// Validate validates this login request
-func (m *LoginRequest) Validate(formats strfmt.Registry) error {
+// Validate validates this login flow
+func (m *LoginFlow) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateActive(formats); err != nil {
@@ -85,13 +95,17 @@ func (m *LoginRequest) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
+	if err := m.validateType(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
 	return nil
 }
 
-func (m *LoginRequest) validateActive(formats strfmt.Registry) error {
+func (m *LoginFlow) validateActive(formats strfmt.Registry) error {
 
 	if swag.IsZero(m.Active) { // not required
 		return nil
@@ -107,7 +121,7 @@ func (m *LoginRequest) validateActive(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *LoginRequest) validateExpiresAt(formats strfmt.Registry) error {
+func (m *LoginFlow) validateExpiresAt(formats strfmt.Registry) error {
 
 	if err := validate.Required("expires_at", "body", m.ExpiresAt); err != nil {
 		return err
@@ -120,7 +134,7 @@ func (m *LoginRequest) validateExpiresAt(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *LoginRequest) validateID(formats strfmt.Registry) error {
+func (m *LoginFlow) validateID(formats strfmt.Registry) error {
 
 	if err := m.ID.Validate(formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
@@ -132,7 +146,7 @@ func (m *LoginRequest) validateID(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *LoginRequest) validateIssuedAt(formats strfmt.Registry) error {
+func (m *LoginFlow) validateIssuedAt(formats strfmt.Registry) error {
 
 	if err := validate.Required("issued_at", "body", m.IssuedAt); err != nil {
 		return err
@@ -145,7 +159,7 @@ func (m *LoginRequest) validateIssuedAt(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *LoginRequest) validateMessages(formats strfmt.Registry) error {
+func (m *LoginFlow) validateMessages(formats strfmt.Registry) error {
 
 	if swag.IsZero(m.Messages) { // not required
 		return nil
@@ -161,7 +175,7 @@ func (m *LoginRequest) validateMessages(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *LoginRequest) validateMethods(formats strfmt.Registry) error {
+func (m *LoginFlow) validateMethods(formats strfmt.Registry) error {
 
 	for k := range m.Methods {
 
@@ -179,7 +193,7 @@ func (m *LoginRequest) validateMethods(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *LoginRequest) validateRequestURL(formats strfmt.Registry) error {
+func (m *LoginFlow) validateRequestURL(formats strfmt.Registry) error {
 
 	if err := validate.Required("request_url", "body", m.RequestURL); err != nil {
 		return err
@@ -188,8 +202,24 @@ func (m *LoginRequest) validateRequestURL(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *LoginFlow) validateType(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Type) { // not required
+		return nil
+	}
+
+	if err := m.Type.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("type")
+		}
+		return err
+	}
+
+	return nil
+}
+
 // MarshalBinary interface implementation
-func (m *LoginRequest) MarshalBinary() ([]byte, error) {
+func (m *LoginFlow) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -197,8 +227,8 @@ func (m *LoginRequest) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *LoginRequest) UnmarshalBinary(b []byte) error {
-	var res LoginRequest
+func (m *LoginFlow) UnmarshalBinary(b []byte) error {
+	var res LoginFlow
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

@@ -1,0 +1,2 @@
+rename_table("selfservice_login_flows", "selfservice_login_requests")
+rename_table("selfservice_login_flow_methods", "selfservice_login_request_methods")

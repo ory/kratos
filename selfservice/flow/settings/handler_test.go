@@ -49,7 +49,7 @@ func TestHandler(t *testing.T) {
 	publicClient, adminClient := testhelpers.NewSDKClient(publicTS), testhelpers.NewSDKClient(adminTS)
 	newExpiredRequest := func() *settings.Request {
 		return settings.NewRequest(-time.Minute,
-			&http.Request{URL: urlx.ParseOrPanic(publicTS.URL + login.BrowserInitPath)},
+			&http.Request{URL: urlx.ParseOrPanic(publicTS.URL + login.RouteInitBrowserFlow)},
 			&session.Session{Identity: primaryIdentity})
 	}
 

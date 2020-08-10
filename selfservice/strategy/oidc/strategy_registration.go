@@ -10,6 +10,7 @@ import (
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/x"
 )
@@ -57,7 +58,9 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		s.d.Logger().WithRequest(r).WithField("provider", provider.Config().ID).
 			WithField("subject", claims.Subject).
 			Debug("Received successful OpenID Connect callback but user is already registered. Re-initializing login flow now.")
-		ar, err := s.d.LoginHandler().NewLoginRequest(w, r)
+
+		// This endpoint only handles browser requests at the moment.
+		ar, err := s.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser)
 		if err != nil {
 			s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
 			return
