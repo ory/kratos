@@ -1,0 +1,1 @@
+add_column("selfservice_login_requests", "type", "string", {"default": "browser", "size": 16})

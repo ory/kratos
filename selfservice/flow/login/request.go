@@ -11,6 +11,7 @@ import (
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
@@ -70,6 +71,9 @@ type Request struct {
 
 	// Forced stores whether this login request should enforce reauthentication.
 	Forced bool `json:"forced" db:"forced"`
+
+	// Type represents the flow's type which can be either "api" or "browser", depending on the flow interaction.
+	Type flow.Type `json:"type" db:"type" faker:"flow_type"`
 }
 
 func NewRequest(exp time.Duration, csrf string, r *http.Request) *Request {

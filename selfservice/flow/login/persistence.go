@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/x"
 )
@@ -87,6 +88,57 @@ func TestRequestPersister(p RequestPersister) func(t *testing.T) {
 			assert.EqualValues(t, expected.RequestURL, actual.RequestURL)
 			assert.EqualValues(t, expected.Active, actual.Active)
 			require.Equal(t, len(expected.Methods), len(actual.Methods), "expected:\t%s\nactual:\t%s", expected.Methods, actual.Methods)
+		})
+
+		t.Run("case=should properly set the flow type", func(t *testing.T) {
+			expected := newRequest(t)
+			expected.Forced = true
+			expected.Type = flow.TypeAPI
+			expected.Methods = map[identity.CredentialsType]*RequestMethod{
+				identity.CredentialsTypeOIDC: {
+					Method: identity.CredentialsTypeOIDC,
+					Config: &RequestMethodConfig{RequestMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypeOIDC))},
+				},
+				identity.CredentialsTypePassword: {
+					Method: identity.CredentialsTypePassword,
+					Config: &RequestMethodConfig{RequestMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypePassword))},
+				},
+			}
+			err := p.CreateLoginRequest(context.Background(), expected)
+			require.NoError(t, err)
+
+			actual, err := p.GetLoginRequest(context.Background(), expected.ID)
+			require.NoError(t, err)
+			assert.Equal(t, flow.TypeAPI, actual.Type)
+
+			actual.Methods = map[identity.CredentialsType]*RequestMethod{identity.CredentialsTypeOIDC: {
+				Method: identity.CredentialsTypeOIDC,
+				Config: &RequestMethodConfig{RequestMethodConfigurator: form.NewHTMLForm("asdf")},
+			}}
+			actual.Type = flow.TypeBrowser
+			actual.Forced = true
+
+			require.NoError(t, p.UpdateLoginRequest(context.Background(), actual))
+
+			actual, err = p.GetLoginRequest(context.Background(), actual.ID)
+			require.NoError(t, err)
+			assert.Equal(t, flow.TypeBrowser, actual.Type)
+			assert.True(t, actual.Forced)
+			require.Len(t, actual.Methods, 1)
+			assert.Equal(t, "asdf",
+				actual.Methods[identity.CredentialsTypeOIDC].Config.
+					RequestMethodConfigurator.(*form.HTMLForm).Action)
+		})
+
+		t.Run("case=should properly update a flow", func(t *testing.T) {
+			expected := newRequest(t)
+			expected.Type = flow.TypeAPI
+			err := p.CreateLoginRequest(context.Background(), expected)
+			require.NoError(t, err)
+
+			actual, err := p.GetLoginRequest(context.Background(), expected.ID)
+			require.NoError(t, err)
+			assert.Equal(t, flow.TypeAPI, actual.Type)
 		})
 
 		t.Run("case=should update a login request", func(t *testing.T) {

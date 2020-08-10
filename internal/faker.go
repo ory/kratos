@@ -12,6 +12,7 @@ import (
 	"github.com/ory/x/randx"
 
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -158,6 +159,15 @@ func RegisterFakes() {
 	if err := faker.AddProvider("identity", func(v reflect.Value) (interface{}, error) {
 		var i identity.Identity
 		return &i, faker.FakeData(&i)
+	}); err != nil {
+		panic(err)
+	}
+
+	if err := faker.AddProvider("flow_type", func(v reflect.Value) (interface{}, error) {
+		if rand.Intn(2) == 0 {
+			return flow.TypeAPI, nil
+		}
+		return flow.TypeBrowser, nil
 	}); err != nil {
 		panic(err)
 	}

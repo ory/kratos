@@ -1,0 +1,1 @@
+ALTER TABLE "selfservice_login_requests" DROP COLUMN "type";COMMIT TRANSACTION;BEGIN TRANSACTION;

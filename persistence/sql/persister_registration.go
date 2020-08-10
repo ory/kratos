@@ -24,17 +24,14 @@ func (p *Persister) UpdateRegistrationRequest(ctx context.Context, r *registrati
 			return err
 		}
 
-		for id, form := range r.Methods {
-			for oid := range rr.Methods {
-				if oid == id {
-					rr.Methods[id].Config = form.Config
-					break
-				}
+		for _, dbc := range rr.Methods {
+			if err := tx.Destroy(dbc); err != nil {
+				return sqlcon.HandleError(err)
 			}
-			rr.Methods[id] = form
 		}
 
-		for _, of := range rr.Methods {
+		for _, of := range r.Methods {
+			of.RequestID = r.ID
 			if err := tx.Save(of); err != nil {
 				return sqlcon.HandleError(err)
 			}
