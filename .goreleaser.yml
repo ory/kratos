@@ -170,7 +170,7 @@ changelog:
       - Merge branch
 
 brews:
-  - github:
+  - tap:
       owner: ory
       name: homebrew-kratos
     ids:
