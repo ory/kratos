@@ -50,7 +50,7 @@ func TestHandlerSettingForced(t *testing.T) {
 	// make authenticated request
 	mar := func(t *testing.T, extQuery url.Values) (*http.Response, []byte) {
 		rid := x.NewUUID()
-		req := x.NewTestHTTPRequest(t, "GET", ts.URL+login.BrowserLoginPath, nil)
+		req := x.NewTestHTTPRequest(t, "GET", ts.URL+login.BrowserInitPath, nil)
 		loginReq := login.NewRequest(time.Minute, x.FakeCSRFToken, req)
 		loginReq.ID = rid
 		for _, s := range reg.LoginStrategies() {
@@ -71,7 +71,7 @@ func TestHandlerSettingForced(t *testing.T) {
 	// make unauthenticated request
 	mur := func(t *testing.T, query url.Values) (*http.Response, []byte) {
 		c := ts.Client()
-		res, err := c.Get(ts.URL + login.BrowserLoginPath + "?" + query.Encode())
+		res, err := c.Get(ts.URL + login.BrowserInitPath + "?" + query.Encode())
 		require.NoError(t, err)
 		defer res.Body.Close()
 		body, err := ioutil.ReadAll(res.Body)
@@ -125,7 +125,7 @@ func TestLoginHandler(t *testing.T) {
 			if c == nil {
 				c = http.DefaultClient
 			}
-			_, err := w.Write(x.EasyGetBody(t, c, upstream+login.BrowserLoginRequestsPath+"?request="+r.URL.Query().Get("request")))
+			_, err := w.Write(x.EasyGetBody(t, c, upstream+login.BrowserRequestsPath+"?request="+r.URL.Query().Get("request")))
 			require.NoError(t, err)
 		}))
 	}
@@ -141,7 +141,7 @@ func TestLoginHandler(t *testing.T) {
 
 	assertExpiredPayload := func(t *testing.T, res *http.Response, body []byte) {
 		assert.EqualValues(t, http.StatusGone, res.StatusCode)
-		assert.Equal(t, public.URL+login.BrowserLoginPath, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
+		assert.Equal(t, public.URL+login.BrowserInitPath, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
 	}
 
 	newExpiredRequest := func() *login.Request {
@@ -149,7 +149,7 @@ func TestLoginHandler(t *testing.T) {
 			ID:         x.NewUUID(),
 			ExpiresAt:  time.Now().Add(-time.Minute),
 			IssuedAt:   time.Now().Add(-time.Minute * 2),
-			RequestURL: public.URL + login.BrowserLoginPath,
+			RequestURL: public.URL + login.BrowserInitPath,
 			CSRFToken:  x.FakeCSRFToken,
 		}
 	}
@@ -162,13 +162,13 @@ func TestLoginHandler(t *testing.T) {
 			"enabled": true})
 
 		t.Run("case=valid", func(t *testing.T) {
-			assertRequestPayload(t, x.EasyGetBody(t, admin.Client(), public.URL+login.BrowserLoginPath))
+			assertRequestPayload(t, x.EasyGetBody(t, admin.Client(), public.URL+login.BrowserInitPath))
 		})
 
 		t.Run("case=expired", func(t *testing.T) {
 			lr := newExpiredRequest()
 			require.NoError(t, reg.LoginRequestPersister().CreateLoginRequest(context.Background(), lr))
-			res, body := x.EasyGet(t, admin.Client(), admin.URL+login.BrowserLoginRequestsPath+"?request="+lr.ID.String())
+			res, body := x.EasyGet(t, admin.Client(), admin.URL+login.BrowserRequestsPath+"?request="+lr.ID.String())
 			assertExpiredPayload(t, res, body)
 		})
 	})
@@ -183,7 +183,7 @@ func TestLoginHandler(t *testing.T) {
 			defer loginTS.Close()
 			viper.Set(configuration.ViperKeySelfServiceLoginUI, loginTS.URL)
 
-			assertRequestPayload(t, x.EasyGetBody(t, hc, public.URL+login.BrowserLoginPath))
+			assertRequestPayload(t, x.EasyGetBody(t, hc, public.URL+login.BrowserInitPath))
 		})
 
 		t.Run("case=without_csrf", func(t *testing.T) {
@@ -193,7 +193,7 @@ func TestLoginHandler(t *testing.T) {
 			defer loginTS.Close()
 			viper.Set(configuration.ViperKeySelfServiceLoginUI, loginTS.URL)
 
-			body := x.EasyGetBody(t, hc, public.URL+login.BrowserLoginPath)
+			body := x.EasyGetBody(t, hc, public.URL+login.BrowserInitPath)
 			assert.Contains(t, gjson.GetBytes(body, "error").String(), "csrf_token", "%s", body)
 		})
 
@@ -208,7 +208,7 @@ func TestLoginHandler(t *testing.T) {
 
 			lr := newExpiredRequest()
 			require.NoError(t, reg.LoginRequestPersister().CreateLoginRequest(context.Background(), lr))
-			res, body := x.EasyGet(t, admin.Client(), admin.URL+login.BrowserLoginRequestsPath+"?request="+lr.ID.String())
+			res, body := x.EasyGet(t, admin.Client(), admin.URL+login.BrowserRequestsPath+"?request="+lr.ID.String())
 			assertExpiredPayload(t, res, body)
 		})
 	})

@@ -9,6 +9,8 @@ import (
 	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
 
+	"github.com/ory/herodot"
+
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/configuration"
@@ -18,8 +20,11 @@ import (
 )
 
 const (
-	BrowserLoginPath         = "/self-service/browser/flows/login"
-	BrowserLoginRequestsPath = "/self-service/browser/flows/requests/login"
+	BrowserInitPath     = "/self-service/browser/flows/login"
+	BrowserRequestsPath = "/self-service/browser/flows/requests/login"
+
+	APIInitPath    = "/self-service/api/flows/login"
+	APIRequestPath = "/self-service/api/flows/requests/login"
 )
 
 type (
@@ -47,12 +52,12 @@ func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
-	public.GET(BrowserLoginPath, h.initLoginRequest)
-	public.GET(BrowserLoginRequestsPath, h.publicFetchLoginRequest)
+	public.GET(BrowserInitPath, h.initLoginRequest)
+	public.GET(BrowserRequestsPath, h.publicFetchLoginRequest)
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(BrowserLoginRequestsPath, h.adminFetchLoginRequest)
+	admin.GET(BrowserRequestsPath, h.adminFetchLoginRequest)
 }
 
 func (h *Handler) NewLoginRequest(w http.ResponseWriter, r *http.Request) (*Request, error) {
@@ -75,7 +80,7 @@ func (h *Handler) NewLoginRequest(w http.ResponseWriter, r *http.Request) (*Requ
 }
 
 // nolint:deadcode,unused
-// swagger:parameters initializeSelfServiceBrowserLoginFlow
+// swagger:parameters initializeSelfServiceBrowserLoginFlow initializeSelfServiceAPILoginFlow
 type initializeSelfServiceBrowserLoginFlow struct {
 	// Refresh a login session
 	//
@@ -85,6 +90,56 @@ type initializeSelfServiceBrowserLoginFlow struct {
 	//
 	// in: query
 	Refresh bool `json:"refresh"`
+}
+
+// swagger:route GET /self-service/api/flows/login common public admin initializeSelfServiceAPILoginFlow
+//
+// Initialize API Login Request
+//
+// This endpoint initiates a login flow by creating and returning a login request which includes
+// things such as required form fields and their values and errors.
+//
+// If a valid provided session cookie or session token is provided, a 400 Bad Request error
+// will be returned unless the URL query parameter `?refresh=true` is set.
+//
+// To fetch an existing login request, call `/self-service/flows/requests/login`.
+//
+// > This endpoint is NOT INTENDED for Browsers (Chrome, Firefox, ...).
+//
+// More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+//
+//     Schemes: http, https
+//
+//     Security:
+//     - sessionToken
+//
+//     Responses:
+//       200: loginRequest
+//       500: genericError
+//       400: genericError
+func (h *Handler) initAPILoginRequest(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	a, err := h.NewLoginRequest(w, r)
+	if err != nil {
+		h.d.Writer().WriteError(w, r, err)
+		return
+	}
+
+	// we assume an error means the user has no session
+	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err != nil {
+		h.d.Writer().Write(w, r, a)
+		return
+	}
+
+	if a.Forced {
+		if err := h.d.LoginRequestPersister().MarkRequestForced(r.Context(), a.ID); err != nil {
+			h.d.Writer().WriteError(w, r, err)
+			return
+		}
+		h.d.Writer().Write(w, r, a)
+		return
+	}
+
+	h.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("A valid session was detected and thus login is not possible. Did you forget to set `?refresh=true`?")))
 }
 
 // swagger:route GET /self-service/browser/flows/login public initializeSelfServiceBrowserLoginFlow
@@ -101,6 +156,9 @@ type initializeSelfServiceBrowserLoginFlow struct {
 // More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 //
 //     Schemes: http, https
+//
+//     Security:
+//     - sessionToken
 //
 //     Responses:
 //       302: emptyResponse
@@ -208,7 +266,7 @@ func (h *Handler) fetchLoginRequest(w http.ResponseWriter, r *http.Request, isPu
 	if ar.ExpiresAt.Before(time.Now()) {
 		return errors.WithStack(x.ErrGone.
 			WithReason("The login request has expired. Redirect the user to the login endpoint to initialize a new session.").
-			WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), BrowserLoginPath).String()))
+			WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), BrowserInitPath).String()))
 	}
 
 	h.d.Writer().Write(w, r, ar)

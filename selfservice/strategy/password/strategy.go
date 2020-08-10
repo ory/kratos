@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/ory/x/decoderx"
 	"github.com/pkg/errors"
 	"gopkg.in/go-playground/validator.v9"
+
+	"github.com/ory/x/decoderx"
 
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/driver/configuration"

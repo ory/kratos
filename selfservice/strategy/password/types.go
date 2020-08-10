@@ -11,8 +11,8 @@ type (
 
 	// LoginFormPayload is used to decode the login form payload.
 	LoginFormPayload struct {
-		Password   string `form:"password" json:"password"`
-		Identifier string `form:"identifier" json:"identifier"`
+		Password   string `form:"password" json:"password,omitempty"`
+		Identifier string `form:"identifier" json:"identifier,omitempty"`
 	}
 )
 

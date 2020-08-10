@@ -7,8 +7,9 @@ import (
 	"net/url"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/ory/x/decoderx"
 	"github.com/pkg/errors"
+
+	"github.com/ory/x/decoderx"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
@@ -28,11 +29,11 @@ func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 	r.POST(LoginPath, s.handleLogin)
 }
 
-func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *login.Request, err error) {
+func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *login.Request, payload *LoginFormPayload, err error) {
 	if rr != nil {
 		if method, ok := rr.Methods[identity.CredentialsTypePassword]; ok {
 			method.Config.Reset()
-			method.Config.SetValue("identifier", r.PostForm.Get("identifier"))
+			method.Config.SetValue("identifier", payload.Identifier)
 			method.Config.SetCSRF(s.d.GenerateCSRFToken(r))
 			rr.Methods[identity.CredentialsTypePassword] = method
 		}
@@ -41,16 +42,59 @@ func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *
 	s.d.LoginRequestErrorHandler().HandleLoginError(w, r, identity.CredentialsTypePassword, rr, err)
 }
 
+// nolint:deadcode,unused
+// swagger:parameters completeSelfServiceLoginFlowWithPassword
+type completeSelfServiceLoginFlowWithPassword struct {
+	// in: body
+	LoginFormPayload
+}
+
+// swagger:response completeSelfServiceLoginFlowWithPasswordResponse
+type completeSelfServiceLoginFlowWithPasswordResponse struct {
+	SessionToken string `json:"session_token"`
+}
+
+// swagger:route GET /self-service/browser/flows/login/strategies/password public completeSelfServiceLoginFlowWithPassword
+//
+// Complete Login Flow with Password Strategy
+//
+// Use this endpoint to complete a login flow by sending an identity's identifier and password. This endpoint
+// behaves differently for API and browser flows.
+//
+// API flows expect `application/json` to be sent in the body and responds with
+//   - HTTP 200 and a application/json body with the session token on success;
+//   - HTTP 400 on form validation errors.
+//
+// Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
+//   - a HTTP 302 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;
+//   - a HTTP 302 redirect to the login UI URL with the flow ID containing the validation errors otherwise.
+//
+// More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+//
+//     Schemes: http, https
+//
+//     Consumes:
+//     - application/json
+//     - application/x-www-form-urlencoded
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: completeSelfServiceLoginFlowWithPasswordResponse
+//       302: emptyResponse
+//       400: genericError
+//       500: genericError
 func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	rid := x.ParseUUID(r.URL.Query().Get("request"))
 	if x.IsZeroUUID(rid) {
-		s.handleLoginError(w, r, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request query parameter is missing or invalid.")))
+		s.handleLoginError(w, r, nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request query parameter is missing or invalid.")))
 		return
 	}
 
 	ar, err := s.d.LoginRequestPersister().GetLoginRequest(r.Context(), rid)
 	if err != nil {
-		s.handleLoginError(w, r, nil, err)
+		s.handleLoginError(w, r, nil, nil, err)
 		return
 	}
 
@@ -66,18 +110,18 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 		decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema),
 		decoderx.HTTPDecoderSetIgnoreParseErrorsStrategy(decoderx.ParseErrorIgnore),
 	); err != nil {
-		s.handleLoginError(w, r, ar, err)
+		s.handleLoginError(w, r, ar, &p, err)
 		return
 	}
 
 	if err := ar.Valid(); err != nil {
-		s.handleLoginError(w, r, ar, err)
+		s.handleLoginError(w, r, ar, &p, err)
 		return
 	}
 
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), s.ID(), p.Identifier)
 	if err != nil {
-		s.handleLoginError(w, r, ar, errors.WithStack(schema.NewInvalidCredentialsError()))
+		s.handleLoginError(w, r, ar, &p, errors.WithStack(schema.NewInvalidCredentialsError()))
 		return
 	}
 
@@ -89,7 +133,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	if err := s.d.Hasher().Compare([]byte(p.Password), []byte(o.HashedPassword)); err != nil {
-		s.handleLoginError(w, r, ar, errors.WithStack(schema.NewInvalidCredentialsError()))
+		s.handleLoginError(w, r, ar, &p, errors.WithStack(schema.NewInvalidCredentialsError()))
 		return
 	}
 
@@ -138,9 +182,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Request) error
 				Name:     "password",
 				Type:     "password",
 				Required: true,
-			},
-		},
-	}
+			}}}
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 
 	sr.Methods[identity.CredentialsTypePassword] = &login.RequestMethod{

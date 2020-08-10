@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	RegistrationPath              = "/self-service/browser/flows/registration/strategies/password"
+	RegistrationPath = "/self-service/browser/flows/registration/strategies/password"
 )
 
 type RegistrationFormPayload struct {

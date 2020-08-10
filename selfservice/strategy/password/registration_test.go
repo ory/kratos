@@ -126,7 +126,7 @@ func TestRegistration(t *testing.T) {
 
 		var makeRequest = func(t *testing.T, rid uuid.UUID, isAPI bool, body string, expectedStatusCode int) ([]byte, *http.Response) {
 			jar, _ := cookiejar.New(&cookiejar.Options{})
-			return makeRequestWithCookieJar(t, rid,isAPI, body, expectedStatusCode, jar)
+			return makeRequestWithCookieJar(t, rid, isAPI, body, expectedStatusCode, jar)
 		}
 
 		t.Run("case=should show the error ui because the request payload is malformed", func(t *testing.T) {

@@ -41,6 +41,8 @@ type ClientService interface {
 
 	GetSelfServiceVerificationRequest(params *GetSelfServiceVerificationRequestParams) (*GetSelfServiceVerificationRequestOK, error)
 
+	InitializeSelfServiceAPILoginFlow(params *InitializeSelfServiceAPILoginFlowParams) (*InitializeSelfServiceAPILoginFlowOK, error)
+
 	SetTransport(transport runtime.ClientTransport)
 }
 
@@ -324,6 +326,49 @@ func (a *Client) GetSelfServiceVerificationRequest(params *GetSelfServiceVerific
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for getSelfServiceVerificationRequest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  InitializeSelfServiceAPILoginFlow initializes API login user flow
+
+  This endpoint initializes an API user login flow and returns a new login request. This endpoint
+ignores any authentication (cookie, session token) and will always create a new login request.
+
+To fetch an existing login request, call `/self-service/api/flows/requests/login`.
+
+> This endpoint is NOT INTENDED for Browsers (Chrome, Firefox, ...).
+
+More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+*/
+func (a *Client) InitializeSelfServiceAPILoginFlow(params *InitializeSelfServiceAPILoginFlowParams) (*InitializeSelfServiceAPILoginFlowOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewInitializeSelfServiceAPILoginFlowParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "initializeSelfServiceAPILoginFlow",
+		Method:             "GET",
+		PathPattern:        "/self-service/api/flows/login",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &InitializeSelfServiceAPILoginFlowReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*InitializeSelfServiceAPILoginFlowOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for initializeSelfServiceAPILoginFlow: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

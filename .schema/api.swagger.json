@@ -435,6 +435,39 @@
         }
       }
     },
+    "/self-service/api/flows/login": {
+      "get": {
+        "description": "This endpoint initializes an API user login flow and returns a new login request. This endpoint\nignores any authentication (cookie, session token) and will always create a new login request.\n\nTo fetch an existing login request, call `/self-service/api/flows/requests/login`.\n\n\u003e This endpoint is NOT INTENDED for Browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "common",
+          "public",
+          "admin"
+        ],
+        "summary": "Initialize API login user flow",
+        "operationId": "initializeSelfServiceAPILoginFlow",
+        "responses": {
+          "200": {
+            "description": "loginRequest",
+            "schema": {
+              "$ref": "#/definitions/loginRequest"
+            }
+          },
+          "302": {
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
     "/self-service/browser/flows/login": {
       "get": {
         "description": "This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to\n`selfservice.flows.login.ui_url` with the request ID set as a query parameter. If a valid user session exists already, the browser will be\nredirected to `urls.default_redirect_url`.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",

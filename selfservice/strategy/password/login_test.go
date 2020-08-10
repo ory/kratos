@@ -163,228 +163,316 @@ func TestLoginNew(t *testing.T) {
 	}
 
 	t.Run("should show the error ui because the request is malformed", func(t *testing.T) {
-		lr := nlr(0)
-		res, body := fakeRequest(t, lr, false, "14=)=!(%)$/ZP()GHIÖ", nil, nil)
+		run := func(t *testing.T, isAPI bool) string {
+			lr := nlr(0)
+			res, body := fakeRequest(t, lr, isAPI, "14=)=!(%)$/ZP()GHIÖ", nil, nil)
 
-		require.Contains(t, res.Request.URL.Path, "login-ts", "%+v", res.Request)
-		assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
-		assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
-		assert.Contains(t, gjson.GetBytes(body, "methods.password.config.messages.0.text").String(), `invalid URL escape`)
-	})
+			require.Contains(t, res.Request.URL.Path, "login-ts", "%+v", res.Request)
+			assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
+			assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
+			return gjson.GetBytes(body, "methods.password.config.messages.0.text").String()
+		}
 
-	t.Run("should show the error ui because the request id missing", func(t *testing.T) {
-		lr := nlr(time.Minute)
-		res, body := fakeRequest(t, lr, false, url.Values{}.Encode(), pointerx.String(""), nil)
+		t.Run("type=browser", func(t *testing.T) {
+			assert.Contains(t, run(t, false), `invalid URL escape`)
+		})
 
-		require.Contains(t, res.Request.URL.Path, "error-ts")
-		assert.Equal(t, int64(http.StatusBadRequest), gjson.GetBytes(body, "0.code").Int(), "%s", body)
-		assert.Equal(t, "Bad Request", gjson.GetBytes(body, "0.status").String(), "%s", body)
-		assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "request query parameter is missing or invalid", "%s", body)
-	})
-
-	t.Run("should return an error because the request does not exist", func(t *testing.T) {
-		lr := nlr(0)
-		res, body := fakeRequest(t, lr, false, url.Values{
-			"identifier": {"identifier"},
-			"password":   {"password"},
-		}.Encode(), pointerx.String(x.NewUUID().String()), nil)
-
-		require.Contains(t, res.Request.URL.Path, "error-ts")
-		assert.Equal(t, int64(http.StatusNotFound), gjson.GetBytes(body, "0.code").Int(), "%s", body)
-		assert.Equal(t, "Not Found", gjson.GetBytes(body, "0.status").String(), "%s", body)
-		assert.Contains(t, gjson.GetBytes(body, "0.message").String(), "Unable to locate the resource", "%s", body)
-	})
-
-	t.Run("should redirect to login init because the request is expired", func(t *testing.T) {
-		lr := nlr(-time.Hour)
-		res, body := fakeRequest(t, lr, false, url.Values{
-			"identifier": {"identifier"},
-			"password":   {"password"},
-		}.Encode(), nil, nil)
-
-		require.Contains(t, res.Request.URL.Path, "login-ts")
-		assert.NotEqual(t, lr.ID, gjson.GetBytes(body, "id"))
-		assert.Contains(t, gjson.GetBytes(body, "messages.0").String(), "expired", "%s", body)
-	})
-
-	t.Run("should return an error because the credentials are invalid (user does not exist)", func(t *testing.T) {
-		lr := nlr(time.Hour)
-		res, body := fakeRequest(t, lr, false, url.Values{
-			"identifier": {"identifier"},
-			"password":   {"password"},
-		}.Encode(), nil, nil)
-
-		require.Contains(t, res.Request.URL.Path, "login-ts")
-		assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
-		assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
-		assert.Equal(t, text.NewErrorValidationInvalidCredentials().Text, gjson.GetBytes(body, "methods.password.config.messages.0.text").String())
-	})
-
-	t.Run("should return an error because no identifier is set", func(t *testing.T) {
-		lr := nlr(time.Hour)
-		res, body := fakeRequest(t, lr, false, url.Values{
-			"password": {"password"},
-		}.Encode(), nil, nil)
-
-		require.Contains(t, res.Request.URL.Path, "login-ts")
-		// Let's ensure that the payload is being propagated properly.
-		assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String())
-		assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
-		ensureFieldsExist(t, body)
-		assert.Equal(t, "Property identifier is missing.", gjson.GetBytes(body, "methods.password.config.fields.#(name==identifier).messages.0.text").String(), "%s", body)
-
-		// The password value should not be returned!
-		assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).value").String())
-	})
-
-	t.Run("should return an error because no password is set", func(t *testing.T) {
-		lr := nlr(time.Hour)
-		res, body := fakeRequest(t, lr, false, url.Values{
-			"identifier": {"identifier"},
-		}.Encode(), nil, nil)
-
-		require.Contains(t, res.Request.URL.Path, "login-ts")
-		// Let's ensure that the payload is being propagated properly.
-		assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String())
-		assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
-		ensureFieldsExist(t, body)
-		assert.Equal(t, "Property password is missing.", gjson.GetBytes(body, "methods.password.config.fields.#(name==password).messages.0.text").String(), "%s", body)
-
-		assert.Equal(t, x.FakeCSRFToken, gjson.GetBytes(body, "methods.password.config.fields.#(name==csrf_token).value").String())
-		assert.Equal(t, "identifier", gjson.GetBytes(body, "methods.password.config.fields.#(name==identifier).value").String(), "%s", body)
-
-		// This must not include the password!
-		assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).value").String())
-	})
-
-	t.Run("should return an error because the credentials are invalid (password not correct)", func(t *testing.T) {
-		identifier, pwd := "login-identifier-6", "password"
-		createIdentity(identifier, pwd)
-
-		lr := nlr(time.Hour)
-		res, body := fakeRequest(t, lr, false, url.Values{
-			"identifier": {identifier},
-			"password":   {"not-password"},
-		}.Encode(), nil, nil)
-
-		require.Contains(t, res.Request.URL.Path, "login-ts")
-
-		assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String())
-		assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
-		ensureFieldsExist(t, body)
-		assert.Equal(t,
-			errorsx.Cause(schema.NewInvalidCredentialsError()).(*schema.ValidationError).Messages[0].Text,
-			gjson.GetBytes(body, "methods.password.config.messages.0.text").String(),
-			"%s", body,
-		)
-
-		// This must not include the password!
-		assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).value").String())
-	})
-
-	t.Run("should pass because with fake request", func(t *testing.T) {
-		identifier, pwd := "login-identifier-7", "password"
-		createIdentity(identifier, pwd)
-
-		lr := nlr(time.Hour)
-		res, body := fakeRequest(t, lr, false, url.Values{
-			"identifier": {identifier},
-			"password":   {pwd},
-		}.Encode(), nil, nil)
-
-		require.Contains(t, res.Request.URL.Path, "return-ts", "%s", res.Request.URL.String())
-		assert.Equal(t, identifier, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
-	})
-
-	t.Run("should pass with real request", func(t *testing.T) {
-		identifier, pwd := "login-identifier-8", "password"
-		createIdentity(identifier, pwd)
-
-		jar, _ := cookiejar.New(nil)
-		res, body := makeRequest(t, false, url.Values{
-			"identifier": {identifier},
-			"password":   {pwd},
-		}.Encode(), jar, true)
-
-		require.Contains(t, res.Request.URL.Path, "return-ts", "%s", res.Request.URL.String())
-		assert.Equal(t, identifier, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
-
-		t.Run("retry with different refresh", func(t *testing.T) {
-			c := &http.Client{Jar: jar}
-
-			t.Run("redirect to returnTS if refresh is missing", func(t *testing.T) {
-				res, err := c.Get(ts.URL + login.BrowserInitPath)
-				require.NoError(t, err)
-				require.EqualValues(t, http.StatusOK, res.StatusCode)
-			})
-
-			t.Run("show UI and hint at username", func(t *testing.T) {
-				res, err := c.Get(ts.URL + login.BrowserInitPath + "?refresh=true")
-				require.NoError(t, err)
-				require.EqualValues(t, http.StatusOK, res.StatusCode)
-
-				rid := res.Request.URL.Query().Get("request")
-				assert.NotEmpty(t, rid, "%s", res.Request.URL)
-
-				res, err = c.Get(ts.URL + login.BrowserRequestsPath + "?request=" + rid)
-				require.NoError(t, err)
-				require.EqualValues(t, http.StatusOK, res.StatusCode)
-
-				body, err := ioutil.ReadAll(res.Body)
-				require.NoError(t, err)
-				assert.True(t, gjson.GetBytes(body, "forced").Bool())
-				assert.Equal(t, identifier, gjson.GetBytes(body, "methods.password.config.fields.#(name==identifier).value").String(), "%s", body)
-				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).value").String(), "%s", body)
-			})
+		t.Run("type=api", func(t *testing.T) {
+			assert.Contains(t, run(t, true), `cannot unmarshal number`)
 		})
 	})
 
+	t.Run("should show the error ui because the request id missing", func(t *testing.T) {
+		run := func(isAPI bool) func(t *testing.T) {
+			return func(t *testing.T) {
+				lr := nlr(time.Minute)
+				res, body := fakeRequest(t, lr, isAPI, url.Values{}.Encode(), pointerx.String(""), nil)
+
+				require.Contains(t, res.Request.URL.Path, "error-ts")
+				assert.Equal(t, int64(http.StatusBadRequest), gjson.GetBytes(body, "0.code").Int(), "%s", body)
+				assert.Equal(t, "Bad Request", gjson.GetBytes(body, "0.status").String(), "%s", body)
+				assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "request query parameter is missing or invalid", "%s", body)
+			}
+		}
+
+		t.Run("type=browser", run(false))
+		t.Run("type=api", run(true))
+	})
+
+	t.Run("should return an error because the request does not exist", func(t *testing.T) {
+		run := func(isAPI bool, payload string) func(t *testing.T) {
+			return func(t *testing.T) {
+				lr := nlr(0)
+				res, body := fakeRequest(t, lr, isAPI, payload, pointerx.String(x.NewUUID().String()), nil)
+
+				require.Contains(t, res.Request.URL.Path, "error-ts")
+				assert.Equal(t, int64(http.StatusNotFound), gjson.GetBytes(body, "0.code").Int(), "%s", body)
+				assert.Equal(t, "Not Found", gjson.GetBytes(body, "0.status").String(), "%s", body)
+				assert.Contains(t, gjson.GetBytes(body, "0.message").String(), "Unable to locate the resource", "%s", body)
+			}
+		}
+
+		t.Run("type=browser", run(false, url.Values{
+			"identifier": {"identifier"}, "password": {"password"}}.Encode()))
+
+		t.Run("type=api", run(true, x.MustEncodeJSON(t, &password.LoginFormPayload{
+			Identifier: "identifier", Password: "password"})))
+	})
+
+	t.Run("should redirect to login init because the request is expired", func(t *testing.T) {
+		run := func(isAPI bool, payload string) func(t *testing.T) {
+			return func(t *testing.T) {
+				lr := nlr(-time.Hour)
+				res, body := fakeRequest(t, lr, isAPI, payload, nil, nil)
+
+				require.Contains(t, res.Request.URL.Path, "login-ts")
+				assert.NotEqual(t, lr.ID, gjson.GetBytes(body, "id"))
+				assert.Contains(t, gjson.GetBytes(body, "messages.0").String(), "expired", "%s", body)
+			}
+		}
+
+		t.Run("type=browser", run(false, url.Values{"identifier": {"identifier"},
+			"password": {"password"}}.Encode()))
+
+		t.Run("type=api", run(true, x.MustEncodeJSON(t, &password.LoginFormPayload{Identifier: "identifier",
+			Password: "password"})))
+	})
+
+	t.Run("should return an error because the credentials are invalid (user does not exist)", func(t *testing.T) {
+		run := func(isAPI bool, payload string) func(t *testing.T) {
+			return func(t *testing.T) {
+				lr := nlr(time.Hour)
+				res, body := fakeRequest(t, lr, isAPI, payload, nil, nil)
+
+				require.Contains(t, res.Request.URL.Path, "login-ts")
+				assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
+				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
+				assert.Equal(t, text.NewErrorValidationInvalidCredentials().Text, gjson.GetBytes(body, "methods.password.config.messages.0.text").String())
+			}
+		}
+
+		t.Run("type=browser", run(false, url.Values{
+			"identifier": {"identifier"}, "password": {"password"}}.Encode()))
+
+		t.Run("type=api", run(true, x.MustEncodeJSON(t, &password.LoginFormPayload{
+			Identifier: "identifier", Password: "password"})))
+	})
+
+	t.Run("should return an error because no identifier is set", func(t *testing.T) {
+		run := func(isAPI bool, payload string) func(t *testing.T) {
+			return func(t *testing.T) {
+				lr := nlr(time.Hour)
+				res, body := fakeRequest(t, lr, isAPI, payload, nil, nil)
+
+				require.Contains(t, res.Request.URL.Path, "login-ts")
+				// Let's ensure that the payload is being propagated properly.
+				assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String())
+				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
+				ensureFieldsExist(t, body)
+				assert.Equal(t, "Property identifier is missing.", gjson.GetBytes(body, "methods.password.config.fields.#(name==identifier).messages.0.text").String(), "%s", body)
+
+				// The password value should not be returned!
+				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).value").String())
+			}
+		}
+
+		t.Run("type=browser", run(false, url.Values{"password": {"password"}}.Encode()))
+		t.Run("type=api", run(true, x.MustEncodeJSON(t, &password.LoginFormPayload{Password: "password"})))
+	})
+
+	t.Run("should return an error because no password is set", func(t *testing.T) {
+		run := func(isAPI bool, payload string) func(t *testing.T) {
+			return func(t *testing.T) {
+				lr := nlr(time.Hour)
+				res, body := fakeRequest(t, lr, isAPI, payload, nil, nil)
+
+				require.Contains(t, res.Request.URL.Path, "login-ts")
+				// Let's ensure that the payload is being propagated properly.
+				assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String())
+				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
+				ensureFieldsExist(t, body)
+				assert.Equal(t, "Property password is missing.", gjson.GetBytes(body, "methods.password.config.fields.#(name==password).messages.0.text").String(), "%s", body)
+
+				assert.Equal(t, x.FakeCSRFToken, gjson.GetBytes(body, "methods.password.config.fields.#(name==csrf_token).value").String())
+				assert.Equal(t, "identifier", gjson.GetBytes(body, "methods.password.config.fields.#(name==identifier).value").String(), "%s", body)
+
+				// This must not include the password!
+				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).value").String())
+			}
+		}
+
+		t.Run("type=browser", run(false, url.Values{"identifier": {"identifier"}}.Encode()))
+		t.Run("type=api", run(true, x.MustEncodeJSON(t, &password.LoginFormPayload{Identifier: "identifier"})))
+	})
+
+	t.Run("should return an error because the credentials are invalid (password not correct)", func(t *testing.T) {
+		run := func(isAPI bool) func(t *testing.T) {
+			return func(t *testing.T) {
+				identifier, pwd := fmt.Sprintf("login-identifier-6-%v", isAPI), "password"
+				createIdentity(identifier, pwd)
+
+				payload := url.Values{"identifier": {identifier}, "password": {"not-password"}}.Encode()
+				if isAPI {
+					payload = x.MustEncodeJSON(t, &password.LoginFormPayload{
+						Identifier: identifier, Password: "not-password"})
+				}
+
+				lr := nlr(time.Hour)
+				res, body := fakeRequest(t, lr, isAPI, payload, nil, nil)
+
+				require.Contains(t, res.Request.URL.Path, "login-ts")
+
+				assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String())
+				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
+				ensureFieldsExist(t, body)
+				assert.Equal(t,
+					errorsx.Cause(schema.NewInvalidCredentialsError()).(*schema.ValidationError).Messages[0].Text,
+					gjson.GetBytes(body, "methods.password.config.messages.0.text").String(),
+					"%s", body,
+				)
+
+				// This must not include the password!
+				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).value").String())
+			}
+		}
+
+		t.Run("type=browser", run(false))
+		t.Run("type=api", run(true))
+	})
+
+	t.Run("should pass with fake request", func(t *testing.T) {
+		run := func(isAPI bool) func(t *testing.T) {
+			return func(t *testing.T) {
+				identifier, pwd := fmt.Sprintf("login-identifier-7-%v", isAPI), "password"
+				createIdentity(identifier, pwd)
+
+				payload := url.Values{"identifier": {identifier}, "password": {pwd}}.Encode()
+				if isAPI {
+					payload = x.MustEncodeJSON(t, &password.LoginFormPayload{
+						Identifier: identifier, Password: pwd})
+				}
+
+				lr := nlr(time.Hour)
+				res, body := fakeRequest(t, lr, isAPI, payload, nil, nil)
+
+				require.Contains(t, res.Request.URL.Path, "return-ts", "%s", res.Request.URL.String())
+				assert.Equal(t, identifier, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
+			}
+		}
+
+		t.Run("type=browser", run(false))
+		t.Run("type=api", run(true))
+	})
+
+	t.Run("should pass with real request", func(t *testing.T) {
+		run := func(isAPI bool) func(t *testing.T) {
+			return func(t *testing.T) {
+				identifier, pwd := fmt.Sprintf("login-identifier-8-%v", isAPI), "password"
+				createIdentity(identifier, pwd)
+
+				payload := url.Values{"identifier": {identifier}, "password": {pwd}}.Encode()
+				if isAPI {
+					payload = x.MustEncodeJSON(t, &password.LoginFormPayload{
+						Identifier: identifier, Password: pwd})
+				}
+
+				jar, _ := cookiejar.New(nil)
+				res, body := makeRequest(t, isAPI, payload, jar, true)
+
+				require.Contains(t, res.Request.URL.Path, "return-ts", "%s", res.Request.URL.String())
+				assert.Equal(t, identifier, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
+
+				t.Run("retry with different refresh", func(t *testing.T) {
+					c := &http.Client{Jar: jar}
+
+					t.Run("redirect to returnTS if refresh is missing", func(t *testing.T) {
+						res, err := c.Get(ts.URL + login.BrowserInitPath)
+						require.NoError(t, err)
+						require.EqualValues(t, http.StatusOK, res.StatusCode)
+					})
+
+					t.Run("show UI and hint at username", func(t *testing.T) {
+						res, err := c.Get(ts.URL + login.BrowserInitPath + "?refresh=true")
+						require.NoError(t, err)
+						require.EqualValues(t, http.StatusOK, res.StatusCode)
+
+						rid := res.Request.URL.Query().Get("request")
+						assert.NotEmpty(t, rid, "%s", res.Request.URL)
+
+						res, err = c.Get(ts.URL + login.BrowserRequestsPath + "?request=" + rid)
+						require.NoError(t, err)
+						require.EqualValues(t, http.StatusOK, res.StatusCode)
+
+						body, err := ioutil.ReadAll(res.Body)
+						require.NoError(t, err)
+						assert.True(t, gjson.GetBytes(body, "forced").Bool())
+						assert.Equal(t, identifier, gjson.GetBytes(body, "methods.password.config.fields.#(name==identifier).value").String(), "%s", body)
+						assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).value").String(), "%s", body)
+					})
+				})
+			}
+		}
+
+		t.Run("type=browser", run(false))
+		t.Run("type=api", run(true))
+	})
+
 	t.Run("should return an error because not passing validation and reset previous errors and values", func(t *testing.T) {
-		lr := &login.Request{
-			ID:        x.NewUUID(),
-			ExpiresAt: time.Now().Add(time.Minute),
-			Methods: map[identity.CredentialsType]*login.RequestMethod{
-				identity.CredentialsTypePassword: {
-					Method: identity.CredentialsTypePassword,
-					Config: &login.RequestMethodConfig{
-						RequestMethodConfigurator: &password.RequestMethod{
-							HTMLForm: &form.HTMLForm{
-								Method:   "POST",
-								Action:   "/action",
-								Messages: text.Messages{{Text: "some error"}},
-								Fields: form.Fields{
-									{
-										Value:    "baz",
-										Name:     "identifier",
-										Messages: text.Messages{{Text: "err"}},
-									},
-									{
-										Value:    "bar",
-										Name:     "password",
-										Messages: text.Messages{{Text: "err"}},
+		run := func(isAPI bool) func(t *testing.T) {
+			return func(t *testing.T) {
+				lr := &login.Request{
+					ID:        x.NewUUID(),
+					ExpiresAt: time.Now().Add(time.Minute),
+					Methods: map[identity.CredentialsType]*login.RequestMethod{
+						identity.CredentialsTypePassword: {
+							Method: identity.CredentialsTypePassword,
+							Config: &login.RequestMethodConfig{
+								RequestMethodConfigurator: &password.RequestMethod{
+									HTMLForm: &form.HTMLForm{
+										Method:   "POST",
+										Action:   "/action",
+										Messages: text.Messages{{Text: "some error"}},
+										Fields: form.Fields{
+											{
+												Value:    "baz",
+												Name:     "identifier",
+												Messages: text.Messages{{Text: "err"}},
+											},
+											{
+												Value:    "bar",
+												Name:     "password",
+												Messages: text.Messages{{Text: "err"}},
+											},
+										},
 									},
 								},
 							},
 						},
 					},
-				},
-			},
+				}
+
+				payload := url.Values{"identifier": {"registration-identifier-9"}}.Encode()
+				if isAPI {
+					payload = x.MustEncodeJSON(t, &password.LoginFormPayload{
+						Identifier: "registration-identifier-9"})
+				}
+
+				res, body := fakeRequest(t, lr, isAPI, payload, nil, nil)
+
+				require.Contains(t, res.Request.URL.Path, "login-ts")
+				assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String())
+				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
+				ensureFieldsExist(t, body)
+
+				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==identity).value"))
+				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==identity).error"))
+				assert.Empty(t, gjson.GetBytes(body, "methods.password.config.error"))
+				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).messages.0").String(), "Property password is missing.", "%s", body)
+			}
 		}
 
-		res, body := fakeRequest(t, lr, false, url.Values{
-			"identifier": {"registration-identifier-9"},
-			// "password": {uuid.New().String()},
-		}.Encode(), nil, nil)
-
-		require.Contains(t, res.Request.URL.Path, "login-ts")
-		assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String())
-		assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
-		ensureFieldsExist(t, body)
-
-		assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==identity).value"))
-		assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==identity).error"))
-		assert.Empty(t, gjson.GetBytes(body, "methods.password.config.error"))
-		assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).messages.0").String(), "Property password is missing.", "%s", body)
+		t.Run("type=browser", run(false))
+		t.Run("type=api", run(true))
 	})
 
 	t.Run("should be a new session with forced flag", func(t *testing.T) {
@@ -423,9 +511,7 @@ func TestLoginNew(t *testing.T) {
 
 		lr2 := nlr(time.Hour)
 		res, body2 := fakeRequest(t, lr2, false, url.Values{
-			"identifier": {identifier},
-			"password":   {pwd},
-		}.Encode(), nil, jar)
+			"identifier": {identifier}, "password": {pwd}}.Encode(), nil, jar)
 
 		require.Contains(t, res.Request.URL.Path, "return-ts", "%s", res.Request.URL.String())
 		assert.Equal(t, identifier, gjson.GetBytes(body2, "identity.traits.subject").String(), "%s", body2)
