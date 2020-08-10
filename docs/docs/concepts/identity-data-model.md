@@ -11,11 +11,10 @@ programmatic identity such as an IoT device, application, or some other type of
 :::info
 
 In ORY Kratos' terminology we call all of them "identities", and it is always
-exposed as `identity` in the API endpoints, requests, and response payloads.
-In the documentation however, we mix these words as "account recovery" or "account activation"
-is a widely accepted and understood terminology and user flow,
-while "identity recovery" or "identity activation" is not.
-:::
+exposed as `identity` in the API endpoints, requests, and response payloads. In
+the documentation however, we mix these words as "account recovery" or "account
+activation" is a widely accepted and understood terminology and user flow, while
+"identity recovery" or "identity activation" is not. :::
 
 The following examples use YAML for improved readability. However, the API
 payload is usually in JSON format. An `identity` has the following properties:
@@ -70,20 +69,16 @@ Identities are
 
 - `created` - via API or self-service registration);
 - `updated` - via API or self-serfice settings, account recovery, ...;
-- `disabled` - not yet implemented, see [#598](https://github.com/ory/kratos/issues/598);
-- `deleted` - via API or with a self-service flow (not yet implemented see [#596](https://github.com/ory/kratos/issues/596)).
+- `disabled` - not yet implemented, see
+  [#598](https://github.com/ory/kratos/issues/598);
+- `deleted` - via API or with a self-service flow (not yet implemented see
+  [#596](https://github.com/ory/kratos/issues/596)).
 
-The identity state is therefore `active` or `disabled` (not yet implemented see [#598](https://github.com/ory/kratos/issues/598):
+The identity state is therefore `active` or `disabled` (not yet implemented see
+[#598](https://github.com/ory/kratos/issues/598):
 
 <Mermaid
-  chart={`
-stateDiagram-v2
-	[*] --> Active: create
-    Active --> Active: update
-	Active --> Disabled: disable
-	Disabled --> [*]: delete
-    Disabled --> Active: enable
-`}
+chart={`stateDiagram-v2 [*] --> Active: create Active --> Active: update Active --> Disabled: disable Disabled --> [*]: delete Disabled --> Active: enable`}
 />
 
 ## Identity Traits and JSON Schemas

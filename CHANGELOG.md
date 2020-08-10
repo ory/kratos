@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-07-30)](#unreleased-2020-07-30)
+- [Unreleased (2020-08-10)](#unreleased-2020-08-10)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -101,13 +101,14 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...86b281a46b676d80c8f70bfc42c91d988997c21c) (2020-07-30)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...2dba4503266436a615f4c1c18e07aa36ec713498) (2020-08-10)
 
 
 ### Bug Fixes
 
 * Don't resend verification emails once verified ([#583](https://github.com/ory/kratos/issues/583)) ([a4d9969](https://github.com/ory/kratos/commit/a4d99694525e65b58d49197c96324b27fb8c31c2)), closes [#578](https://github.com/ory/kratos/issues/578)
 * Fallback to default return url if logout after url is not defined ([#594](https://github.com/ory/kratos/issues/594)) ([7edd367](https://github.com/ory/kratos/commit/7edd367dc64a01dbe252ca0ab8cf4d3926a35014))
+* Improve makefile dependency building ([8e1d69a](https://github.com/ory/kratos/commit/8e1d69a024414196b39eb3d419f4850cd547e3b5))
 * Improve pagination when listing identities ([c60bf44](https://github.com/ory/kratos/commit/c60bf440b9c85b4f2e871237e3d7725571151efe))
 * Improve session max-age behavior ([65189fe](https://github.com/ory/kratos/commit/65189fe4a2f84f832240cd67366400e44bb7f09a)), closes [#42](https://github.com/ory/kratos/issues/42)
 * Recursive loop on network errors in password validator ([#589](https://github.com/ory/kratos/issues/589)) ([b4d5a42](https://github.com/ory/kratos/commit/b4d5a42346510e40222b8eb59b455b585f0a05cf)), closes [#316](https://github.com/ory/kratos/issues/316):
@@ -123,6 +124,7 @@
 
     > Executing the migration logic in registry.go cause a panic as the registry is not initalized at that point. Therefore we decided to move the handling to driver_default.go, after the registry has been initialized.
 * Resolves a bug that prevents sessions from expiring ([#612](https://github.com/ory/kratos/issues/612)) ([86b281a](https://github.com/ory/kratos/commit/86b281a46b676d80c8f70bfc42c91d988997c21c)), closes [#611](https://github.com/ory/kratos/issues/611)
+* Tell tls what the smtps server name is ([#634](https://github.com/ory/kratos/issues/634)) ([b724038](https://github.com/ory/kratos/commit/b724038a67e84ca71b146bf4b9b044be2dc8c0b4))
 * Use params per_page and page for pagination ([5dfb6e3](https://github.com/ory/kratos/commit/5dfb6e32c44420ed49d652733b9099a41c9347f2))
 * Use relative threshold to judge longest common substring in password policy ([#585](https://github.com/ory/kratos/issues/585)) ([3e9f8cc](https://github.com/ory/kratos/commit/3e9f8cce4b058b05d69c73fff514f3b8e46c2be3)), closes [#581](https://github.com/ory/kratos/issues/581)
 
@@ -136,15 +138,36 @@
 ### Documentation
 
 * Add administrative user management guide ([b97e0c6](https://github.com/ory/kratos/commit/b97e0c69bb1115bdec88b218e8cdda34f137d798))
+* Add configuring introduction ([#630](https://github.com/ory/kratos/issues/630)) ([b8cfb35](https://github.com/ory/kratos/commit/b8cfb351c2dca783e355f39d25ce17b65fef7dd4))
 * Add documentation for configuring cookies ([e3dbc8a](https://github.com/ory/kratos/commit/e3dbc8acc055f6e2d78bc959be7356f9a66ac90f)), closes [#516](https://github.com/ory/kratos/issues/516)
+* Add github video tutorial ([#622](https://github.com/ory/kratos/issues/622)) ([0c4222c](https://github.com/ory/kratos/commit/0c4222c0d12df4e971fd7e5099006484e0bcb317))
 * Add guide for dealing with login sessions ([4e2718c](https://github.com/ory/kratos/commit/4e2718c779031c0e3b877e9df1747ccb2371927b))
 * Add identity state ([fb4aedb](https://github.com/ory/kratos/commit/fb4aedb9a95367e25080491b54aab11de491d819))
 * Add login session to navbar ([b212d64](https://github.com/ory/kratos/commit/b212d6484e40c9f2cce10f2ba4aaf4e2a72f03a1))
 * Add pagination docs ([7fe0901](https://github.com/ory/kratos/commit/7fe0901ee5d0e829e110bd0c4fdecb24bfc27768))
 * Add secret key rotation guide ([3d6e21a](https://github.com/ory/kratos/commit/3d6e21af2f726944468299c326600a8ab0e4e885))
+* Add session hook to ssi guide ([#623](https://github.com/ory/kratos/issues/623)) ([1bbed39](https://github.com/ory/kratos/commit/1bbed390ffedd811afdb5fcfe69047554419d8ce))
 * Add terminology section ([29b81a7](https://github.com/ory/kratos/commit/29b81a78fcf880cd6d9d3b2cbb03f955b701ffbd))
+* Add video to OIDC guide ([#619](https://github.com/ory/kratos/issues/619)) ([f286980](https://github.com/ory/kratos/commit/f286980c29ce8460ba550e5d74b8dee23602e920))
+* Added sidebar item ([#639](https://github.com/ory/kratos/issues/639)) ([8574761](https://github.com/ory/kratos/commit/857476112d12b8ab79ef49054452a950ff81bc23)):
+
+    > Added Kratos Video Tutorial Transcripts document to sidebar.
+* Added transcript ([#627](https://github.com/ory/kratos/issues/627)) ([cec7f1f](https://github.com/ory/kratos/commit/cec7f1fc4955b02d21d772e748ec791f31bad24e)):
+
+    > Added Login with Github Transcript
+* Changed transcript location ([#642](https://github.com/ory/kratos/issues/642)) ([c52764d](https://github.com/ory/kratos/commit/c52764d4394181b24dffbf8301418530ba5dbcc2)):
+
+    > Changed the location so it is in the right place.
+* Clarify kratos config snippet ([e7732f3](https://github.com/ory/kratos/commit/e7732f3283d82a1678076cd2463ef5ff33dd30ea))
 * Docker image documentation ([#573](https://github.com/ory/kratos/issues/573)) ([bfe032e](https://github.com/ory/kratos/commit/bfe032e2b6bfd8b9415d466011bdd7e36efa4146))
 * Fix logout url ([#593](https://github.com/ory/kratos/issues/593)) ([f0971d4](https://github.com/ory/kratos/commit/f0971d44a911caed8a6071358fa6b7ebc0fcf145))
+* Fixed link ([c2aebbd](https://github.com/ory/kratos/commit/c2aebbd898f38388d849954938d56212c88d280f))
+* Fixed link ([#629](https://github.com/ory/kratos/issues/629)) ([ad1276f](https://github.com/ory/kratos/commit/ad1276f2b2cf3cbbecba4dee1d6d433999286946))
+* Fixed typos/readability ([#620](https://github.com/ory/kratos/issues/620)) ([7fd3ce0](https://github.com/ory/kratos/commit/7fd3ce0d8c52346ba3504ce5777321937baf8d1e)):
+
+    > Fixed a few typos, and moved some sentences around to improve readability.
+* Fixed typos/readability ([#621](https://github.com/ory/kratos/issues/621)) ([c4fc75f](https://github.com/ory/kratos/commit/c4fc75f7dca59fa8f31d068f57179f49bf798b6a))
+* Move to json sidebar ([504af3b](https://github.com/ory/kratos/commit/504af3b89d728eb11bf42f4a2037c78b3b7cb788))
 * Rename self service and add admin section ([639c424](https://github.com/ory/kratos/commit/639c424d3bde0557f7edd7edc489a476f1aa60b3))
 * Resolve typo in message IDs ([562cfc4](https://github.com/ory/kratos/commit/562cfc4392ba1c9c1fb8854ea0ac85bd44d0fac9))
 * Resolve typo in message IDs ([#607](https://github.com/ory/kratos/issues/607)) ([f7688f0](https://github.com/ory/kratos/commit/f7688f0ab07b579a375ce4cc25361b360e82dd88))
@@ -154,12 +177,19 @@
 ### Features
 
 * Add ability to configure session cookie domain/path ([faeb332](https://github.com/ory/kratos/commit/faeb3328dab343c6ef3974065ba0c5c590a8817e)), closes [#516](https://github.com/ory/kratos/issues/516)
+* Add config version schema ([#608](https://github.com/ory/kratos/issues/608)) ([d218662](https://github.com/ory/kratos/commit/d218662388ef4fb7ea3bfee7b29c5cc8d34f1c8c)), closes [#590](https://github.com/ory/kratos/issues/590)
 * Add nocache helpers ([54dcc4d](https://github.com/ory/kratos/commit/54dcc4da2ff22bdb17e53dd6eac1c0bd54a20390))
 * Add pagination tests ([e3aa81b](https://github.com/ory/kratos/commit/e3aa81b7da55108f43ea6e16c817c97e2f8a1d50))
+* Add session token security definition ([d36c26f](https://github.com/ory/kratos/commit/d36c26f2edd66ddbd8338de4901957a9b9b7342e)):
+
+    > Adds the new Session Token as a Swagger security definition to allow setting the session token as a Bearer token when calling `/sessions/whoami`.
+* Add stub errors to errorx ([5d452bb](https://github.com/ory/kratos/commit/5d452bb582e6a9e3b893424ec135d0cbdf875659)), closes [#610](https://github.com/ory/kratos/issues/610)
 * Add tests and helpers to test recovery/verifiable addresses ([#579](https://github.com/ory/kratos/issues/579)) ([29979e6](https://github.com/ory/kratos/commit/29979e6c4934b71c7fb158cfa5b85e97be3ea8fc)), closes [#576](https://github.com/ory/kratos/issues/576)
+* Add the already declared (and settable) tracer as a middleware ([#614](https://github.com/ory/kratos/issues/614)) ([e24fffe](https://github.com/ory/kratos/commit/e24fffe3f13c353e3c07214c1e056a849533a9f6))
 * Implement administrative account recovery ([f5f9c43](https://github.com/ory/kratos/commit/f5f9c43e10dd3a9547e87776164d2d4a171f35ce))
 * Implement max-age for session cookie ([2e642ff](https://github.com/ory/kratos/commit/2e642ff13c59a7e23babe9209c1a114ef0163bad)), closes [#326](https://github.com/ory/kratos/issues/326)
 * Reply with cache-control: 0 for browser-facing APIs ([1a45b53](https://github.com/ory/kratos/commit/1a45b5341e0ab4580208bfb6a505859d1e5d2faf)), closes [#360](https://github.com/ory/kratos/issues/360)
+* Use uri-reference for ui_url etc. to allow relative urls ([#617](https://github.com/ory/kratos/issues/617)) ([2dba450](https://github.com/ory/kratos/commit/2dba4503266436a615f4c1c18e07aa36ec713498))
 
 
 ### Tests

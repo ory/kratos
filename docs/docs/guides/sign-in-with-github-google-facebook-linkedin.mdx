@@ -16,7 +16,34 @@ Run the [Quickstart](../quickstart.mdx) with Docker Compose:
 $ make quickstart
 ```
 
+:::info
+
+It is very important to add the "session" hook to the after oidc registration
+hooks. Otherwise your users need to use the login flow again to be able to get a
+session.
+
+```yaml title="path/to/my/kratos/config.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  flows:
+    registration:
+      after:
+        oidc:
+          hooks:
+            - hook: session
+```
+
+:::
+
 ## GitHub
+
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/Hz_dP5c_qvc"
+  frameborder="0"
+  allowfullscreen
+/>
 
 To set up "Sign in with GitHub" you must create a
 [GitHub OAuth2 Client](https://developer.github.com/apps/building-oauth-apps/creating-an-oauth-app/).

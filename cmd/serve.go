@@ -18,6 +18,8 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/ory/kratos/driver/configuration"
+
 	"github.com/ory/x/viperx"
 
 	"github.com/spf13/cobra"
@@ -48,7 +50,17 @@ DON'T DO THIS IN PRODUCTION!
 		}
 
 		x.WatchAndValidateViper(logger)
-		daemon.ServeAll(driver.MustNewDefaultDriver(logger, BuildVersion, BuildTime, BuildGitHash, dev))(cmd, args)
+		d := driver.MustNewDefaultDriver(logger, BuildVersion, BuildTime, BuildGitHash, dev)
+
+		configVersion := d.Configuration().ConfigVersion()
+		if configVersion == configuration.UnknownVersion {
+			d.Logger().Warn("The config has no version specified. Add the version to improve your development experience.")
+		} else if BuildVersion != "" &&
+			configVersion != BuildVersion {
+			d.Logger().Warnf("Config version is '%s' but kratos runs on version '%s'", configVersion, BuildVersion)
+		}
+
+		daemon.ServeAll(d)(cmd, args)
 	},
 }
 

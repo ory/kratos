@@ -1981,6 +1981,13 @@
       }
     }
   },
+  "securityDefinitions": {
+    "sessionToken": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    }
+  },
   "x-forwarded-proto": "string",
   "x-request-id": "string"
 }

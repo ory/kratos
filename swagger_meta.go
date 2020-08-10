@@ -14,6 +14,12 @@
 //     Produces:
 //     - application/json
 //
+//     SecurityDefinitions:
+//     sessionToken:
+//          type: apiKey
+//          name: Authorization
+//          in: header
+//
 //     Extensions:
 //     ---
 //     x-request-id: string
