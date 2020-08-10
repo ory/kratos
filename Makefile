@@ -13,21 +13,22 @@ GO_DEPENDENCIES = github.com/ory/go-acc \
 				  github.com/golang/mock/mockgen \
 				  github.com/go-swagger/go-swagger/cmd/swagger \
 				  golang.org/x/tools/cmd/goimports \
-				  github.com/ory/cli \
 				  github.com/mikefarah/yq \
 				  github.com/markbates/pkger/cmd/pkger \
 				  github.com/gobuffalo/packr/v2/packr2
 
 define make-go-dependency
   # go install is responsible for not re-building when the code hasn't changed
-  .PHONY: .bin/$(notdir $1)
-  .bin/$(notdir $1):
+  .bin/$(notdir $1): go.mod go.sum Makefile
 		GOBIN=$(PWD)/.bin/ go install $1
 endef
 $(foreach dep, $(GO_DEPENDENCIES), $(eval $(call make-go-dependency, $(dep))))
 $(call make-lint-dependency)
 
-node_modules: package.json
+.bin/cli: go.mod go.sum Makefile
+		go build -o .bin/cli -tags sqlite github.com/ory/cli
+
+node_modules: package.json Makefile
 		npm ci
 
 docs/node_modules: docs/package.json
