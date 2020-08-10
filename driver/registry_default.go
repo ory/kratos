@@ -368,6 +368,22 @@ func (m *RegistryDefault) CookieManager() sessions.Store {
 		cs := sessions.NewCookieStore(m.c.SecretsSession()...)
 		cs.Options.Secure = !m.c.IsInsecureDevMode()
 		cs.Options.HttpOnly = true
+		if m.c.SessionDomain() != "" {
+			cs.Options.Domain = m.c.SessionDomain()
+		}
+
+		if m.c.SessionPath() != "" {
+			cs.Options.Path = m.c.SessionPath()
+		}
+
+		if m.c.SessionSameSiteMode() != 0 {
+			cs.Options.SameSite = m.c.SessionSameSiteMode()
+		}
+
+		cs.Options.MaxAge = 0
+		if m.c.SessionPersistentCookie() {
+			cs.Options.MaxAge = int(m.c.SessionLifespan().Seconds())
+		}
 		m.sessionsStore = cs
 	}
 	return m.sessionsStore
