@@ -350,6 +350,8 @@ github.com/gobuffalo/fizz v1.9.8/go.mod h1:w1FEn1yKNVCc49KnADGyYGRPH7jFON3ak4Bj1
 github.com/gobuffalo/fizz v1.10.0/go.mod h1:J2XGPO0AfJ1zKw7+2BA+6FEGAkyEsdCOLvN93WCT2WI=
 github.com/gobuffalo/fizz v1.11.0 h1:kJ+9sSSZpolHz4ULV1sF76AGmo74kEi6IztIc4HmshU=
 github.com/gobuffalo/fizz v1.11.0/go.mod h1:cXLjhE5p3iuIes6AGZ/9+dfyOkehlB2Vldj0Iw2Uu38=
+github.com/gobuffalo/fizz v1.11.1-0.20200706214517-4e9fb9ced4ce h1:Y0QAYLDJp9VJUOefsaHZFEDSILz6nRKZxcToDhcSKZY=
+github.com/gobuffalo/fizz v1.11.1-0.20200706214517-4e9fb9ced4ce/go.mod h1:cXLjhE5p3iuIes6AGZ/9+dfyOkehlB2Vldj0Iw2Uu38=
 github.com/gobuffalo/flect v0.0.0-20180907193754-dc14d8acaf9f/go.mod h1:rCiQgmAE4axgBNl3jZWzS5rETRYTGOsrixTRaCPzNdA=
 github.com/gobuffalo/flect v0.0.0-20181002182613-4571df4b1daf/go.mod h1:rCiQgmAE4axgBNl3jZWzS5rETRYTGOsrixTRaCPzNdA=
 github.com/gobuffalo/flect v0.0.0-20181007231023-ae7ed6bfe683/go.mod h1:rCiQgmAE4axgBNl3jZWzS5rETRYTGOsrixTRaCPzNdA=
@@ -547,8 +549,8 @@ github.com/gobuffalo/pop v4.13.1+incompatible h1:AhbqPxNOBN/DBb2DBaiBqzOXIBQXxEY
 github.com/gobuffalo/pop v4.13.1+incompatible/go.mod h1:DwBz3SD5SsHpTZiTubcsFWcVDpJWGsxjVjMPnkiThWg=
 github.com/gobuffalo/pop/v5 v5.0.11/go.mod h1:mZJHJbA3cy2V18abXYuVop2ldEJ8UZ2DK6qOekC5u5g=
 github.com/gobuffalo/pop/v5 v5.2.0/go.mod h1:Hj586Cr7FoTFNmvzyNdUcajv3r0A+W+bkil4RIX/zKo=
-github.com/gobuffalo/pop/v5 v5.2.4-0.20200707154617-81b8a32a605f h1:YtZ18YgopG9edqCaGaqDlGjd7WdWusyDcNWIhf+Sj5k=
-github.com/gobuffalo/pop/v5 v5.2.4-0.20200707154617-81b8a32a605f/go.mod h1:4mYDlrcXTnG2n9rG8p+c10X1QnfMc4YIRVmiC8ihMAI=
+github.com/gobuffalo/pop/v5 v5.2.4-0.20200706214017-1dd950510b30 h1:X/MkpfklOlyXqudnUMX01xSXTxtVaq9aEc/aCFN+0TY=
+github.com/gobuffalo/pop/v5 v5.2.4-0.20200706214017-1dd950510b30/go.mod h1:4mYDlrcXTnG2n9rG8p+c10X1QnfMc4YIRVmiC8ihMAI=
 github.com/gobuffalo/release v1.0.35/go.mod h1:VtHFAKs61vO3wboCec5xr9JPTjYyWYcvaM3lclkc4x4=
 github.com/gobuffalo/release v1.0.38/go.mod h1:VtHFAKs61vO3wboCec5xr9JPTjYyWYcvaM3lclkc4x4=
 github.com/gobuffalo/release v1.0.42/go.mod h1:RPs7EtafH4oylgetOJpGP0yCZZUiO4vqHfTHJjSdpug=

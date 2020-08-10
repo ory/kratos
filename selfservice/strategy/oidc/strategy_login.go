@@ -20,17 +20,17 @@ func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 	s.setRoutes(r)
 }
 
-func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Request) error {
+func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Flow) error {
 	config, err := s.populateMethod(r, sr.ID)
 	if err != nil {
 		return err
 	}
-	sr.Methods[s.ID()] = &login.RequestMethod{Method: s.ID(),
-		Config: &login.RequestMethodConfig{RequestMethodConfigurator: config}}
+	sr.Methods[s.ID()] = &login.FlowMethod{Method: s.ID(),
+		Config: &login.FlowMethodConfig{FlowMethodConfigurator: config}}
 	return nil
 }
 
-func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Request, claims *Claims, provider Provider, container *authCodeContainer) {
+func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Flow, claims *Claims, provider Provider, container *authCodeContainer) {
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject))
 	if err != nil {
 		if errors.Is(err, herodot.ErrNotFound) {

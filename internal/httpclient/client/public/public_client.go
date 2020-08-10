@@ -37,13 +37,15 @@ type ClientService interface {
 
 	CompleteSelfServiceBrowserVerificationFlow(params *CompleteSelfServiceBrowserVerificationFlowParams) error
 
-	InitializeSelfServiceBrowserLoginFlow(params *InitializeSelfServiceBrowserLoginFlowParams) error
+	CompleteSelfServiceLoginFlowWithPassword(params *CompleteSelfServiceLoginFlowWithPasswordParams) (*CompleteSelfServiceLoginFlowWithPasswordOK, error)
 
 	InitializeSelfServiceBrowserLogoutFlow(params *InitializeSelfServiceBrowserLogoutFlowParams) error
 
 	InitializeSelfServiceBrowserRegistrationFlow(params *InitializeSelfServiceBrowserRegistrationFlowParams) error
 
 	InitializeSelfServiceBrowserVerificationFlow(params *InitializeSelfServiceBrowserVerificationFlowParams) error
+
+	InitializeSelfServiceLoginViaBrowserFlow(params *InitializeSelfServiceLoginViaBrowserFlowParams) error
 
 	InitializeSelfServiceRecoveryFlow(params *InitializeSelfServiceRecoveryFlowParams) error
 
@@ -230,39 +232,50 @@ func (a *Client) CompleteSelfServiceBrowserVerificationFlow(params *CompleteSelf
 }
 
 /*
-  InitializeSelfServiceBrowserLoginFlow initializes browser based login user flow
+  CompleteSelfServiceLoginFlowWithPassword completes login flow with password strategy
 
-  This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to
-`selfservice.flows.login.ui_url` with the request ID set as a query parameter. If a valid user session exists already, the browser will be
-redirected to `urls.default_redirect_url`.
+  Use this endpoint to complete a login flow by sending an identity's identifier and password. This endpoint
+behaves differently for API and browser flows.
 
-> This endpoint is NOT INTENDED for API clients and only works
-with browsers (Chrome, Firefox, ...).
+API flows expect `application/json` to be sent in the body and responds with
+HTTP 200 and a application/json body with the session token on success;
+HTTP 400 on form validation errors.
+
+Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
+a HTTP 302 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;
+a HTTP 302 redirect to the login UI URL with the flow ID containing the validation errors otherwise.
 
 More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 */
-func (a *Client) InitializeSelfServiceBrowserLoginFlow(params *InitializeSelfServiceBrowserLoginFlowParams) error {
+func (a *Client) CompleteSelfServiceLoginFlowWithPassword(params *CompleteSelfServiceLoginFlowWithPasswordParams) (*CompleteSelfServiceLoginFlowWithPasswordOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewInitializeSelfServiceBrowserLoginFlowParams()
+		params = NewCompleteSelfServiceLoginFlowWithPasswordParams()
 	}
 
-	_, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "initializeSelfServiceBrowserLoginFlow",
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "completeSelfServiceLoginFlowWithPassword",
 		Method:             "GET",
-		PathPattern:        "/self-service/browser/flows/login",
+		PathPattern:        "/self-service/browser/flows/login/strategies/password",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &InitializeSelfServiceBrowserLoginFlowReader{formats: a.formats},
+		Reader:             &CompleteSelfServiceLoginFlowWithPasswordReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	success, ok := result.(*CompleteSelfServiceLoginFlowWithPasswordOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for completeSelfServiceLoginFlowWithPassword: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -364,6 +377,46 @@ func (a *Client) InitializeSelfServiceBrowserVerificationFlow(params *Initialize
 		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &InitializeSelfServiceBrowserVerificationFlowReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+/*
+  InitializeSelfServiceLoginViaBrowserFlow initializes login flow for browsers
+
+  This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to
+`selfservice.flows.login.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
+exists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter
+`?refresh=true` was set.
+
+:::note
+
+This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+
+:::
+
+More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+*/
+func (a *Client) InitializeSelfServiceLoginViaBrowserFlow(params *InitializeSelfServiceLoginViaBrowserFlowParams) error {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewInitializeSelfServiceLoginViaBrowserFlowParams()
+	}
+
+	_, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "initializeSelfServiceLoginViaBrowserFlow",
+		Method:             "GET",
+		PathPattern:        "/self-service/login/browser",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &InitializeSelfServiceLoginViaBrowserFlowReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})

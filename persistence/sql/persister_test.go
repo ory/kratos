@@ -93,7 +93,7 @@ func TestPersister(t *testing.T) {
 	}
 
 	var l sync.Mutex
-	if !testing.Short() && false {
+	if !testing.Short() {
 		funcs := map[string]func(t *testing.T) string{
 			"postgres":  dockertest.RunTestPostgreSQL,
 			"mysql":     dockertest.RunTestMySQL,
@@ -115,6 +115,8 @@ func TestPersister(t *testing.T) {
 
 		wg.Wait()
 	}
+
+	t.Logf("sqlite: %s", sqlite)
 
 	for name, dsn := range conns {
 		t.Run(fmt.Sprintf("database=%s", name), func(t *testing.T) {
@@ -217,13 +219,13 @@ func TestPersister_Transaction(t *testing.T) {
 	t.Run("case=functions should use the context connection", func(t *testing.T) {
 		c := p.GetConnection(context.Background())
 		errMessage := "some stupid error you can't debug"
-		lr := &login.Request{
+		lr := &login.Flow{
 			ID: x.NewUUID(),
 		}
 		err := c.Transaction(func(tx *pop.Connection) error {
 			ctx := sql.WithTransaction(context.Background(), tx)
 			require.NoError(t, p.CreateLoginRequest(ctx, lr), "%+v", lr)
-			require.NoError(t, p.UpdateLoginRequestMethod(ctx, lr.ID, identity.CredentialsTypePassword, &login.RequestMethod{}))
+			require.NoError(t, p.UpdateLoginRequestMethod(ctx, lr.ID, identity.CredentialsTypePassword, &login.FlowMethod{}))
 			require.NoError(t, getErr(p.GetLoginRequest(ctx, lr.ID)), "%+v", lr)
 			return errors.Errorf(errMessage)
 		})

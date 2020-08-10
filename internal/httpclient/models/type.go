@@ -9,7 +9,9 @@ import (
 	"github.com/go-openapi/strfmt"
 )
 
-// Type type
+// Type Type is the flow type.
+//
+// The flow type can either be `api` or `browser`.
 //
 // swagger:model Type
 type Type string

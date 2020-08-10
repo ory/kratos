@@ -48,11 +48,11 @@ func (e Error) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Req
 	return e.err("ExecuteSettingsPostPersistHook", settings.ErrHookAbortRequest)
 }
 
-func (e Error) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, a *login.Request, s *session.Session) error {
+func (e Error) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, a *login.Flow, s *session.Session) error {
 	return e.err("ExecuteLoginPostHook", login.ErrHookAbortRequest)
 }
 
-func (e Error) ExecuteLoginPreHook(w http.ResponseWriter, r *http.Request, a *login.Request) error {
+func (e Error) ExecuteLoginPreHook(w http.ResponseWriter, r *http.Request, a *login.Flow) error {
 	return e.err("ExecuteLoginPreHook", login.ErrHookAbortRequest)
 }
 

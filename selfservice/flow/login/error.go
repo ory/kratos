@@ -2,7 +2,6 @@ package login
 
 import (
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/ory/kratos/text"
@@ -10,7 +9,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
-	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
@@ -39,19 +37,19 @@ type (
 		c configuration.Provider
 	}
 
-	requestExpiredError struct {
+	flowExpiredError struct {
 		*herodot.DefaultError
 		ago time.Duration
 	}
 )
 
-func newRequestExpiredError(ago time.Duration) *requestExpiredError {
-	return &requestExpiredError{
+func newRequestExpiredError(ago time.Duration) *flowExpiredError {
+	return &flowExpiredError{
 		ago: ago,
 		DefaultError: herodot.ErrBadRequest.
-			WithError("login request expired").
-			WithReasonf(`The login request has expired. Please restart the flow.`).
-			WithReasonf("The login request expired %.2f minutes ago, please try again.", ago.Minutes()),
+			WithError("login flow expired").
+			WithReasonf(`The login flow has expired. Please restart the flow.`).
+			WithReasonf("The login flow expired %.2f minutes ago, please try again.", ago.Minutes()),
 	}
 }
 
@@ -66,18 +64,18 @@ func (s *ErrorHandler) HandleLoginError(
 	w http.ResponseWriter,
 	r *http.Request,
 	ct identity.CredentialsType,
-	rr *Request,
+	rr *Flow,
 	err error,
 ) {
 	s.d.Audit().
 		WithError(err).
 		WithRequest(r).
-		WithField("login_request", rr).
+		WithField("login_flow", rr).
 		Info("Encountered self-service login error.")
 
-	if e := new(requestExpiredError); errors.As(err, &e) {
-		// create new request because the old one is not valid
-		a, err := s.d.LoginHandler().NewLoginRequest(w, r)
+	if e := new(flowExpiredError); errors.As(err, &e) {
+		// create new flow because the old one is not valid
+		a, err := s.d.LoginHandler().NewLoginFlow(w, r, rr.Type)
 		if err != nil {
 			// failed to create a new session and redirect to it, handle that error as a new one
 			s.HandleLoginError(w, r, ct, rr, err)
@@ -95,7 +93,7 @@ func (s *ErrorHandler) HandleLoginError(
 			return
 		}
 
-		http.Redirect(w, r, urlx.CopyWithQuery(s.c.SelfServiceFlowLoginUI(), url.Values{"request": {a.ID.String()}}).String(), http.StatusFound)
+		http.Redirect(w, r, a.AppendTo(s.c.SelfServiceFlowLoginUI()).String(), http.StatusFound)
 		return
 	}
 
@@ -123,8 +121,5 @@ func (s *ErrorHandler) HandleLoginError(
 		return
 	}
 
-	http.Redirect(w, r,
-		urlx.CopyWithQuery(s.c.SelfServiceFlowLoginUI(), url.Values{"request": {rr.ID.String()}}).String(),
-		http.StatusFound,
-	)
+	http.Redirect(w, r, rr.AppendTo(s.c.SelfServiceFlowLoginUI()).String(), http.StatusFound)
 }

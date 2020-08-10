@@ -82,11 +82,11 @@ you reference these routes in your ORY Kratos config file:
 urls:
   login_ui: https://.../login
   registration_ui: https://.../registration
-  
+
 # ...
 ```
 
-Depending on the type of login flows you want to support, you may a also add a
+Depending on the type of login flows you want to support, you may also add a
 "Sign up/in with GitHub" flow:
 
 ```html
@@ -104,7 +104,7 @@ HTML. Instead, you need to implement the HTML code in your application (e.g.
 NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
 flexibility and customizability in your user interface flows and designs.
 
-Each Login and Registration Strategy (e.g.
+Each Login and Registration Method (e.g.
 [Username and Password](user-login-user-registration/username-email-password.mdx),
 [Social Sign In](user-login-user-registration/openid-connect-social-sign-in-oauth2.mdx),
 Passwordless, ...) works a bit different but they all boil down to the same
@@ -116,10 +116,10 @@ sequenceDiagram
   participant B as Browser
   participant K as ORY Kratos
   participant A as Your Application
-  B->>K: Initiate Login
-  K->>B: Redirects to your Application's /login endpoint
-  B->>A: Calls /login
-  A-->>K: Fetches data to render forms etc
+  B->>K: Initiate Login Flow
+  K->>B: Redirects to your Application's /login?flow=<flow-id> endpoint
+  B->>A: Calls /login?flow=<flow-id>
+  A-->>K: Fetches data to render forms using ?flow=<flow-id>
   B-->>A: Fills out forms, clicks e.g. "Submit Login"
   B->>K: POSTs data to
   K-->>K: Processes Login Info
@@ -137,7 +137,7 @@ sequenceDiagram
 />
 
 The exact data being fetched and the step _"Processes Login / Registration
-Info"_ depend, of course, on the actual Strategy being used. But it is important
+Info"_ depend, of course, on the actual Login / Registration Method being used. But it is important
 to understand that **"Your Application"** is responsible for rendering the
 actual Login and Registration HTML Forms. You can of course implement one app
 for rendering all the Login, Registration, ... screens, and another app (think
@@ -196,22 +196,22 @@ const adminEndpoint = new AdminApi('https://ory-kratos-admin.example-org.vpc/')
 export const authHandler = (flow) => (req, res, next) => {
   // The request ID is used to identify the login and registraion request and
   // return data like the csrf_token and so on.
-  const request = req.query.request
-  if (!request) {
+  const flowId = req.query.flow
+  if (!flowId) {
     console.log(`No request found in URL, initializing ${flow} flow.`)
-    res.redirect(`${kratosBrowserUrl}/self-service/browser/${flow}`)
+    res.redirect(`${kratosBrowserUrl}/self-service/${flow}/browser`)
     return
   }
 
   const authRequest =
-    type === 'login'
-      ? adminEndpoint.getSelfServiceBrowserLoginRequest(request)
-      : adminEndpoint.getSelfServiceBrowserRegistrationRequest(request)
+    flow === 'login'
+      ? adminEndpoint.getSelfServiceLoginFlow(flowId)
+      : adminEndpoint.getSelfServiceRegistrationFlow(flowId)
 
   authRequest.then(({ body, response }) => {
     if (response.statusCode !== 200) {
       res.redirect(
-        `${config.kratos.browser}/self-service/browser/flows/${type}`
+        `${config.kratos.browser}/self-service/browser/flows/${flow}`
       )
       return
     }
@@ -342,9 +342,9 @@ summarized in this state diagram:
 stateDiagram
   s1: User browses app
   s2: Execute "Before Login/Registration Hook(s)"
-  s3: User Interface Application renders "Login/Registration Request"
+  s3: User Interface Application renders "Login/Registration Flow"
   s4: Execute "After Login/Registration Hook(s)"
-  s5: Update "Login/Registration Request" with Error Context(s)
+  s5: Update "Login/Registration Flow" with Error Context(s)
   s6: Login/Registration successful
 	[*] --> s1
   s1 --> s2 : User clicks "Log in / Sign up"
@@ -367,7 +367,7 @@ stateDiagram
 1. The user's browser is redirected to
    `http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/(login|registration)`
    (the notation `(login|registration)` expresses the two possibilities of
-   `../self-service/browser/flows/login` or
+   `../self-service/login/browser` or
    `../self-service/browser/flows/registration`).
 1. ORY Kratos does some internal processing (e.g. checks if a session cookie is
    set, generates payloads for form fields, sets CSRF token, ...) and redirects
@@ -378,11 +378,11 @@ stateDiagram
    to the ui endpoints - for example `https://127.0.0.1:4455/auth/login` and
    `https://127.0.0.1:4455/auth/registration`). The user's browser is thus
    redirected to
-   `https://127.0.0.1:4455/auth/(login|registration)?request=abcde`. The
+   `https://127.0.0.1:4455/auth/(login|registration)?flow=abcde`. The
    `request` query parameter includes a unique ID which will be used to fetch
    contextual data for this login request.
 1. Your Server-Side Application makes a `GET` request to
-   `http://kratos:4434/self-service/browser/flows/requests/(login|registration)?request=abcde`.
+   `http://kratos:4434/self-service/browser/flows/requests/(login|registration)?flow=abcde`.
    ORY Kratos responds with a JSON Payload that contains data (form fields,
    error messages, ...) for all enabled User Login Strategies:
    ```json5
@@ -434,9 +434,9 @@ stateDiagram
      }
      ```
      and the user's Browser is redirected back to the Login UI:
-     `https://127.0.0.1:4455/auth/(login|registration)?request=abcde`.
+     `https://127.0.0.1:4455/auth/(login|registration)?flow=abcde`.
    - If credentials / data is valid, ORY Kratos proceeds with the next step.
-   - If the flow is a registration request and the registration data is valid,
+   - If the flow is a registration flow and the registration data is valid,
      the identity is created.
 1. ORY Kratos executes hooks defined in the **After Login/Registration Hooks**.
    If a failure occurs, the whole flow is aborted.
@@ -453,13 +453,13 @@ sequenceDiagram
   participant KP as ORY Kratos Public API
   participant KA as ORY Kratos Admin API
   B->>+A: GET /.ory/kratos/public/self-service/browser/flows/(login|registration)
-  A->>+KP: GET /self-service/browser/flows/login(login|registration)
+  A->>+KP: GET /self-service/login/browser(login|registration)
   KP-->>KP: Execute Hooks defined in "Before Login/Registration"
-  KP-->>-A: HTTP 302 Found /auth/(login|registration)?request=abcde
-  A-->>-B: HTTP 302 Found /auth/(login|registration)?request=abcde
-  B->>+A: GET /auth/(login|registration)?request=abcde
-  A->>+KA: GET/self-service/browser/flows/requests/(login|registration)?request=abcde
-  KA->>-A: Sends Login/Registration Request JSON Payload
+  KP-->>-A: HTTP 302 Found /auth/(login|registration)?flow=abcde
+  A-->>-B: HTTP 302 Found /auth/(login|registration)?flow=abcde
+  B->>+A: GET /auth/(login|registration)?flow=abcde
+  A->>+KA: GET/self-service/browser/(login|registration)/flows?id=abcde
+  KA->>-A: Sends Login/Registration Flow JSON Payload
   Note over A,KA:  {"methods":{"password":...,"oidc":..}}
   A-->>A: Generate and render HTML
   A-->>-B: Return HTML (Form, ...)
@@ -475,7 +475,7 @@ sequenceDiagram
     A->>-B: Send Dashboard Response
   else Login data is invalid
     Note over KP,B: User retries login / registration
-    KP-->>B: HTTP 302 Found /auth/(login|registration)?request=abcde
+    KP-->>B: HTTP 302 Found /auth/(login|registration)?flow=abcde
   end
 `}
 />
@@ -486,20 +486,20 @@ Because Client-Side Browser Applications do not have access to ORY Kratos' Admin
 API, they must use the ORY Kratos Public API instead. The flow for a Client-Side
 Browser Application is almost the exact same as the one for Server-Side
 Applications, with the small difference that
-`https://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/requests/login?request=abcde`
+`https://127.0.0.1:4455/.ory/kratos/public/self-service/login/flows?id=abcde`
 would be called via AJAX instead of making a request to
-`https://kratos:4434/self-service/browser/flows/requests/login?request=abcde`.
+`https://kratos:4434/self-service/login/flows?id=abcde`.
 
 To prevent brute force, guessing, session injection, and other attacks, it is
 required that cookies are working for this endpoint. The cookie set in the
 initial HTTP request made to
-`https://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/login`
+`https://127.0.0.1:4455/.ory/kratos/public/self-service/login/browser`
 MUST be set and available when calling this endpoint!
 
 :::info
 
 The initialization request
-(`http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/(login|registration)`)
+(`http://127.0.0.1:4455/.ory/kratos/public/self-service/(login|registration)/browser`)
 **cannot** be made via AJAX or API requests. You **must** open that URL in the
 user's browser using e.g. `window.open` `location.href` or plain and simple old
 `<a href=...>`.
@@ -532,5 +532,5 @@ Refreshing a session will not log the user out, unless another user signs in.
 :::
 
 To refresh a session, append `?refresh=true` to
-`/self-service/browser/flows/login`, for example
-`http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/login?refresh=true`.
+`/self-service/login/browser`, for example
+`http://127.0.0.1:4455/.ory/kratos/public/self-service/login/browser?refresh=true`.

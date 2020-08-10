@@ -28,6 +28,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/form"
@@ -93,7 +94,7 @@ func TestStrategy(t *testing.T) {
 			require.EqualValues(t, req.ID, request)
 			method := req.Methods[identity.CredentialsTypeOIDC]
 			require.NotNil(t, method)
-			config = method.Config.RequestMethodConfigurator.(*form.HTMLForm)
+			config = method.Config.FlowMethodConfigurator.(*form.HTMLForm)
 			require.NotNil(t, config)
 		} else {
 			require.NoError(t, err)
@@ -168,10 +169,10 @@ func TestStrategy(t *testing.T) {
 	}
 
 	// new login request
-	var nlr = func(t *testing.T, redirectTo string, exp time.Duration) (req *login.Request) {
-		// Use NewLoginRequest to instantiate the request but change the things we need to control a copy of it.
-		req, err := reg.LoginHandler().NewLoginRequest(httptest.NewRecorder(),
-			&http.Request{URL: urlx.ParseOrPanic(redirectTo)})
+	var nlr = func(t *testing.T, redirectTo string, exp time.Duration) (req *login.Flow) {
+		// Use NewLoginFlow to instantiate the request but change the things we need to control a copy of it.
+		req, err := reg.LoginHandler().NewLoginFlow(httptest.NewRecorder(),
+			&http.Request{URL: urlx.ParseOrPanic(redirectTo)}, flow.TypeBrowser)
 		require.NoError(t, err)
 		req.RequestURL = redirectTo
 		req.ExpiresAt = time.Now().Add(exp)
@@ -187,7 +188,7 @@ func TestStrategy(t *testing.T) {
 
 	// new registration request
 	var nrr = func(t *testing.T, redirectTo string, exp time.Duration) *registration.Request {
-		// Use NewLoginRequest to instantiate the request but change the things we need to control a copy of it.
+		// Use NewLoginFlow to instantiate the request but change the things we need to control a copy of it.
 		req, err := reg.RegistrationHandler().NewRegistrationRequest(httptest.NewRecorder(),
 			&http.Request{URL: urlx.ParseOrPanic(redirectTo)})
 		require.NoError(t, err)
@@ -453,13 +454,13 @@ func TestStrategy(t *testing.T) {
 	t.Run("method=TestPopulateLoginMethod", func(t *testing.T) {
 		viper.Set(configuration.ViperKeyPublicBaseURL, urlx.ParseOrPanic("https://foo/"))
 
-		sr := login.NewRequest(time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")})
+		sr := login.NewFlow(time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
 		require.NoError(t, reg.LoginStrategies().MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateLoginMethod(&http.Request{}, sr))
 
-		expected := &login.RequestMethod{
+		expected := &login.FlowMethod{
 			Method: identity.CredentialsTypeOIDC,
-			Config: &login.RequestMethodConfig{
-				RequestMethodConfigurator: &oidc.RequestMethod{
+			Config: &login.FlowMethodConfig{
+				FlowMethodConfigurator: &oidc.RequestMethod{
 					HTMLForm: &form.HTMLForm{
 						Action: "https://foo" + strings.ReplaceAll(oidc.AuthPath, ":request", sr.ID.String()),
 						Method: "POST",
@@ -487,7 +488,7 @@ func TestStrategy(t *testing.T) {
 		}
 
 		actual := sr.Methods[identity.CredentialsTypeOIDC]
-		assert.EqualValues(t, expected.Config.RequestMethodConfigurator.(*oidc.RequestMethod).HTMLForm, actual.Config.RequestMethodConfigurator.(*oidc.RequestMethod).HTMLForm)
+		assert.EqualValues(t, expected.Config.FlowMethodConfigurator.(*oidc.RequestMethod).HTMLForm, actual.Config.FlowMethodConfigurator.(*oidc.RequestMethod).HTMLForm)
 	})
 }
 

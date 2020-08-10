@@ -64,7 +64,7 @@ func (s *ErrorHandler) reauthenticate(
 		urlx.CopyWithQuery(s.c.SelfPublicURL(), url.Values{
 			"refresh":   {"true"},
 			"return_to": {returnTo.String()},
-		}), login.BrowserInitPath)
+		}), login.RouteInitBrowserFlow)
 
 	http.Redirect(w, r, u.String(), http.StatusFound)
 }

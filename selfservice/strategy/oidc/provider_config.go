@@ -12,7 +12,7 @@ import (
 )
 
 type Configuration struct {
-	// RequestID is the provider RequestID
+	// ID is the provider's ID
 	ID string `json:"id"`
 
 	// Provider is either "generic" for a generic OAuth 2.0 / OpenID Connect Provider or one of:
@@ -20,7 +20,7 @@ type Configuration struct {
 	// - google
 	Provider string `json:"provider"`
 
-	// ClientID is the application's RequestID.
+	// ClientID is the application's Client ID.
 	ClientID string `json:"client_id"`
 
 	// ClientSecret is the application's secret.

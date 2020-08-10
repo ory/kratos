@@ -14,11 +14,11 @@ import (
 
 type (
 	PreHookExecutor interface {
-		ExecuteLoginPreHook(w http.ResponseWriter, r *http.Request, a *Request) error
+		ExecuteLoginPreHook(w http.ResponseWriter, r *http.Request, a *Flow) error
 	}
 
 	PostHookExecutor interface {
-		ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, a *Request, s *session.Session) error
+		ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error
 	}
 
 	HooksProvider interface {
@@ -50,7 +50,7 @@ func NewHookExecutor(d executorDependencies, c configuration.Provider) *HookExec
 	}
 }
 
-func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, a *Request, i *identity.Identity) error {
+func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, a *Flow, i *identity.Identity) error {
 	s := session.NewSession(i, e.c, time.Now().UTC()).Declassify()
 
 	for _, executor := range e.d.PostLoginHooks(ct) {
@@ -71,7 +71,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct 
 		e.d.Writer(), e.c, x.SecureRedirectOverrideDefaultReturnTo(e.c.SelfServiceFlowLoginReturnTo(ct.String())))
 }
 
-func (e *HookExecutor) PreLoginHook(w http.ResponseWriter, r *http.Request, a *Request) error {
+func (e *HookExecutor) PreLoginHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
 	for _, executor := range e.d.PreLoginHooks() {
 		if err := executor.ExecuteLoginPreHook(w, r, a); err != nil {
 			return err

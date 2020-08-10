@@ -29,7 +29,7 @@ func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 	r.POST(LoginPath, s.handleLogin)
 }
 
-func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *login.Request, payload *LoginFormPayload, err error) {
+func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *login.Flow, payload *LoginFormPayload, err error) {
 	if rr != nil {
 		if method, ok := rr.Methods[identity.CredentialsTypePassword]; ok {
 			method.Config.Reset()
@@ -49,8 +49,18 @@ type completeSelfServiceLoginFlowWithPassword struct {
 	LoginFormPayload
 }
 
+// Login Flow for API Clients Response
+//
 // swagger:response completeSelfServiceLoginFlowWithPasswordResponse
 type completeSelfServiceLoginFlowWithPasswordResponse struct {
+	// SessionToken
+	//
+	// A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization
+	// Header:
+	//
+	// 		Authorization: bearer <session-token>
+	//
+	// required: true
 	SessionToken string `json:"session_token"`
 }
 
@@ -143,7 +153,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 }
 
-func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Request) error {
+func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Flow) error {
 	if err := r.ParseForm(); err != nil {
 		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to decode POST body: %s", err))
 	}
@@ -185,9 +195,9 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Request) error
 			}}}
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 
-	sr.Methods[identity.CredentialsTypePassword] = &login.RequestMethod{
+	sr.Methods[identity.CredentialsTypePassword] = &login.FlowMethod{
 		Method: identity.CredentialsTypePassword,
-		Config: &login.RequestMethodConfig{RequestMethodConfigurator: &RequestMethod{HTMLForm: f}},
+		Config: &login.FlowMethodConfig{FlowMethodConfigurator: &RequestMethod{HTMLForm: f}},
 	}
 	return nil
 }
