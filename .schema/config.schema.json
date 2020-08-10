@@ -13,10 +13,11 @@
       "title": "Redirect browsers to set URL per default",
       "description": "ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).",
       "type": "string",
-      "format": "uri",
-      "minLength": 6,
+      "format": "uri-reference",
+      "minLength": 1,
       "examples": [
-        "https://my-app.com/dashboard"
+        "https://my-app.com/dashboard",
+        "/dashboard"
       ]
     },
     "selfServiceSessionRevokerHook": {
@@ -274,11 +275,12 @@
           "type": "array",
           "items": {
             "type": "string",
-            "format": "uri"
+            "format": "uri-reference"
           },
           "examples": [
             [
               "https://app.my-app.com/dashboard",
+              "/dashboard",
               "https://www.my-app.com/"
             ]
           ],
@@ -296,7 +298,7 @@
                   "title": "URL of the Settings page.",
                   "description": "URL where the Settings UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
                   "type": "string",
-                  "format": "uri",
+                  "format": "uri-reference",
                   "examples": [
                     "https://my-app.com/user/settings"
                   ],
@@ -350,7 +352,7 @@
                   "title": "Registration UI URL",
                   "description": "URL where the Registration UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
                   "type": "string",
-                  "format": "uri",
+                  "format": "uri-reference",
                   "examples": [
                     "https://my-app.com/signup"
                   ],
@@ -379,7 +381,7 @@
                   "title": "Login UI URL",
                   "description": "URL where the Login UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
                   "type": "string",
-                  "format": "uri",
+                  "format": "uri-reference",
                   "examples": [
                     "https://my-app.com/login"
                   ],
@@ -415,7 +417,7 @@
                   "title": "Verify UI URL",
                   "description": "URL where the ORY Verify UI is hosted. This is the page where users activate and / or verify their email or telephone number. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
                   "type": "string",
-                  "format": "uri",
+                  "format": "uri-reference",
                   "examples": [
                     "https://my-app.com/verify"
                   ],
@@ -459,7 +461,7 @@
                   "title": "Recovery UI URL",
                   "description": "URL where the ORY Recovery UI is hosted. This is the page where users request and complete account recovery. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
                   "type": "string",
-                  "format": "uri",
+                  "format": "uri-reference",
                   "examples": [
                     "https://my-app.com/verify"
                   ],
@@ -496,7 +498,7 @@
                   "title": "ORY Kratos Error UI URL",
                   "description": "URL where the ORY Kratos Error UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).",
                   "type": "string",
-                  "format": "uri",
+                  "format": "uri-reference",
                   "examples": [
                     "https://my-app.com/kratos-error"
                   ],
@@ -671,9 +673,10 @@
               "title": "Public Base URL",
               "description": "The URL where the public endpoint is exposed at.",
               "type": "string",
-              "format": "uri",
+              "format": "uri-reference",
               "examples": [
-                "https://my-app.com/.ory/kratos/public"
+                "https://my-app.com/.ory/kratos/public",
+                "/.ory/kratos/public/"
               ]
             },
             "host": {
