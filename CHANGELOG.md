@@ -101,7 +101,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...857476112d12b8ab79ef49054452a950ff81bc23) (2020-08-10)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...2dba4503266436a615f4c1c18e07aa36ec713498) (2020-08-10)
 
 
 ### Bug Fixes
@@ -189,6 +189,7 @@
 * Implement administrative account recovery ([f5f9c43](https://github.com/ory/kratos/commit/f5f9c43e10dd3a9547e87776164d2d4a171f35ce))
 * Implement max-age for session cookie ([2e642ff](https://github.com/ory/kratos/commit/2e642ff13c59a7e23babe9209c1a114ef0163bad)), closes [#326](https://github.com/ory/kratos/issues/326)
 * Reply with cache-control: 0 for browser-facing APIs ([1a45b53](https://github.com/ory/kratos/commit/1a45b5341e0ab4580208bfb6a505859d1e5d2faf)), closes [#360](https://github.com/ory/kratos/issues/360)
+* Use uri-reference for ui_url etc. to allow relative urls ([#617](https://github.com/ory/kratos/issues/617)) ([2dba450](https://github.com/ory/kratos/commit/2dba4503266436a615f4c1c18e07aa36ec713498))
 
 
 ### Tests
