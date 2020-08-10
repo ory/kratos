@@ -1,12 +1,16 @@
 package registration_test
 
 import (
+	"crypto/tls"
+	"net/http"
 	"testing"
 	"time"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/x"
@@ -26,6 +30,34 @@ func TestFakeRequestData(t *testing.T) {
 		assert.NotEmpty(t, m.Method)
 		assert.NotEmpty(t, m.Config)
 	}
+}
+
+func TestNewRequest(t *testing.T) {
+	t.Run("case=0", func(t *testing.T) {
+		r := registration.NewRequest(0, "csrf", &http.Request{
+			URL:  urlx.ParseOrPanic("/"),
+			Host: "ory.sh", TLS: &tls.ConnectionState{},
+		})
+		assert.Equal(t, r.IssuedAt, r.ExpiresAt)
+		// assert.Equal(t, flow.TypeBrowser, r.Type)
+		assert.Equal(t, "https://ory.sh/", r.RequestURL)
+	})
+
+	t.Run("case=1", func(t *testing.T) {
+		r := registration.NewRequest(0, "csrf", &http.Request{
+			URL:  urlx.ParseOrPanic("/"),
+			Host: "ory.sh"})
+		assert.Equal(t, r.IssuedAt, r.ExpiresAt)
+		// assert.Equal(t, flow.TypeBrowser, r.Type)
+		assert.Equal(t, "http://ory.sh/", r.RequestURL)
+	})
+
+	t.Run("case=2", func(t *testing.T) {
+		r := registration.NewRequest(0, "csrf", &http.Request{
+			URL:  urlx.ParseOrPanic("https://ory.sh/"),
+			Host: "ory.sh"})
+		assert.Equal(t, "http://ory.sh/", r.RequestURL)
+	})
 }
 
 func TestRequest(t *testing.T) {

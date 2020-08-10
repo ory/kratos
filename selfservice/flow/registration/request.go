@@ -73,11 +73,9 @@ func NewRequest(exp time.Duration, csrf string, r *http.Request) *Request {
 	source := urlx.Copy(r.URL)
 	source.Host = r.Host
 
-	if len(source.Scheme) == 0 {
-		source.Scheme = "http"
-		if r.TLS != nil {
-			source.Scheme = "https"
-		}
+	source.Scheme = "http"
+	if r.TLS != nil {
+		source.Scheme = "https"
 	}
 
 	return &Request{
