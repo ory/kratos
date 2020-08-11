@@ -79,7 +79,8 @@ type RegistryDefault struct {
 	identityValidator *identity.Validator
 	identityManager   *identity.Manager
 
-	continuityManager continuity.Manager
+	continuityManager      continuity.Manager
+	continuitySessionStore *sessions.CookieStore
 
 	schemaHandler *schema.Handler
 
@@ -387,6 +388,16 @@ func (m *RegistryDefault) CookieManager() sessions.Store {
 		m.sessionsStore = cs
 	}
 	return m.sessionsStore
+}
+
+func (m *RegistryDefault) ContinuityCookieManager() sessions.Store {
+	if m.continuitySessionStore == nil {
+		cs := sessions.NewCookieStore(m.c.SecretsSession()...)
+		cs.Options.Secure = !m.c.IsInsecureDevMode()
+		cs.Options.HttpOnly = true
+		m.continuitySessionStore = cs
+	}
+	return m.continuitySessionStore
 }
 
 func (m *RegistryDefault) Tracer() *tracing.Tracer {
