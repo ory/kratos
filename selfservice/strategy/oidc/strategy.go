@@ -219,7 +219,7 @@ func (s *Strategy) validateRequest(ctx context.Context, r *http.Request, rid uui
 		return ar, nil
 	}
 
-	if ar, err := s.d.LoginRequestPersister().GetLoginRequest(ctx, rid); err == nil {
+	if ar, err := s.d.LoginFlowPersister().GetLoginFlow(ctx, rid); err == nil {
 		if err := ar.Valid(); err != nil {
 			return ar, err
 		}
@@ -413,8 +413,8 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 		return
 	}
 
-	if lr, rerr := s.d.LoginRequestPersister().GetLoginRequest(r.Context(), rid); rerr == nil {
-		s.d.LoginRequestErrorHandler().HandleLoginError(w, r, s.ID(), lr, err)
+	if lr, rerr := s.d.LoginFlowPersister().GetLoginFlow(r.Context(), rid); rerr == nil {
+		s.d.LoginRequestErrorHandler().WriteFlowError(w, r, s.ID(), lr, err)
 		return
 	} else if sr, rerr := s.d.SettingsRequestPersister().GetSettingsRequest(r.Context(), rid); rerr == nil {
 		s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, sr, err, s.SettingsStrategyID())

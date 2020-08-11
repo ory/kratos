@@ -126,7 +126,7 @@ func TestLoginNew(t *testing.T) {
 
 	fakeRequest := func(t *testing.T, lr *login.Flow, isAPI bool, payload string, forceRequestID *string, jar *cookiejar.Jar) (*http.Response, []byte) {
 		lr.RequestURL = ts.URL
-		require.NoError(t, reg.LoginRequestPersister().CreateLoginRequest(context.TODO(), lr))
+		require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.TODO(), lr))
 
 		requestID := lr.ID.String()
 		if forceRequestID != nil {

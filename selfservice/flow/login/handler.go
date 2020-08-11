@@ -71,7 +71,7 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, flow flow
 		return nil, err
 	}
 
-	if err := h.d.LoginRequestPersister().CreateLoginRequest(r.Context(), a); err != nil {
+	if err := h.d.LoginFlowPersister().CreateLoginFlow(r.Context(), a); err != nil {
 		return nil, err
 	}
 	return a, nil
@@ -133,7 +133,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 	}
 
 	if a.Forced {
-		if err := h.d.LoginRequestPersister().MarkRequestForced(r.Context(), a.ID); err != nil {
+		if err := h.d.LoginFlowPersister().ForceLoginFlow(r.Context(), a.ID); err != nil {
 			h.d.Writer().WriteError(w, r, err)
 			return
 		}
@@ -184,7 +184,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 	}
 
 	if a.Forced {
-		if err := h.d.LoginRequestPersister().MarkRequestForced(r.Context(), a.ID); err != nil {
+		if err := h.d.LoginFlowPersister().ForceLoginFlow(r.Context(), a.ID); err != nil {
 			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 			return
 		}
@@ -251,7 +251,7 @@ func (h *Handler) adminFetchLoginRequest(w http.ResponseWriter, r *http.Request,
 }
 
 func (h *Handler) fetchLoginRequest(w http.ResponseWriter, r *http.Request) error {
-	ar, err := h.d.LoginRequestPersister().GetLoginRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("id")))
+	ar, err := h.d.LoginFlowPersister().GetLoginFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("id")))
 	if err != nil {
 		return err
 	}

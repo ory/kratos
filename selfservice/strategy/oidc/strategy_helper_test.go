@@ -168,7 +168,7 @@ func newUI(t *testing.T, reg driver.Registry) *httptest.Server {
 		var e interface{}
 		var err error
 		if r.URL.Path == "/login" {
-			e, err = reg.LoginRequestPersister().GetLoginRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
+			e, err = reg.LoginFlowPersister().GetLoginFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
 		} else if r.URL.Path == "/registration" {
 			e, err = reg.RegistrationRequestPersister().GetRegistrationRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
 		} else if r.URL.Path == "/settings" {

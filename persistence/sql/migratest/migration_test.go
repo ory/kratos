@@ -129,7 +129,7 @@ func TestMigrations(t *testing.T) {
 					require.NoError(t, c.Select("id").All(&ids))
 
 					for _, id := range ids {
-						actual, err := d.Registry().LoginRequestPersister().GetLoginRequest(context.Background(), id.ID)
+						actual, err := d.Registry().LoginFlowPersister().GetLoginFlow(context.Background(), id.ID)
 						require.NoError(t, err)
 						compareWithFixture(t, actual, "login_request", id.ID.String())
 					}

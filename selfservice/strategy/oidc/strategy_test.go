@@ -90,7 +90,7 @@ func TestStrategy(t *testing.T) {
 			require.NotNil(t, method)
 			config = method.Config.RequestMethodConfigurator.(*form.HTMLForm)
 			require.NotNil(t, config)
-		} else if req, err := reg.LoginRequestPersister().GetLoginRequest(context.Background(), request); err == nil {
+		} else if req, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), request); err == nil {
 			require.EqualValues(t, req.ID, request)
 			method := req.Methods[identity.CredentialsTypeOIDC]
 			require.NotNil(t, method)
@@ -176,10 +176,10 @@ func TestStrategy(t *testing.T) {
 		require.NoError(t, err)
 		req.RequestURL = redirectTo
 		req.ExpiresAt = time.Now().Add(exp)
-		require.NoError(t, reg.LoginRequestPersister().UpdateLoginRequest(context.Background(), req))
+		require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(context.Background(), req))
 
 		// sanity check
-		got, err := reg.LoginRequestPersister().GetLoginRequest(context.Background(), req.ID)
+		got, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), req.ID)
 		require.NoError(t, err)
 		require.Len(t, got.Methods, len(req.Methods))
 
@@ -399,7 +399,7 @@ func TestStrategy(t *testing.T) {
 		res1, body1 := mrj(t, "valid", afv(t, r1.ID, "valid"), fv, jar)
 		ai(t, res1, body1)
 		r2 := nlr(t, returnTS.URL, time.Minute)
-		require.NoError(t, reg.LoginRequestPersister().MarkRequestForced(context.Background(), r2.ID))
+		require.NoError(t, reg.LoginFlowPersister().ForceLoginFlow(context.Background(), r2.ID))
 		res2, body2 := mrj(t, "valid", afv(t, r2.ID, "valid"), fv, jar)
 		ai(t, res2, body2)
 		assert.NotEqual(t, gjson.GetBytes(body1, "sid"), gjson.GetBytes(body2, "sid"))

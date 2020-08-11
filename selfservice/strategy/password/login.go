@@ -39,7 +39,7 @@ func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *
 		}
 	}
 
-	s.d.LoginRequestErrorHandler().HandleLoginError(w, r, identity.CredentialsTypePassword, rr, err)
+	s.d.LoginRequestErrorHandler().WriteFlowError(w, r, identity.CredentialsTypePassword, rr, err)
 }
 
 // nolint:deadcode,unused
@@ -102,7 +102,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
-	ar, err := s.d.LoginRequestPersister().GetLoginRequest(r.Context(), rid)
+	ar, err := s.d.LoginFlowPersister().GetLoginFlow(r.Context(), rid)
 	if err != nil {
 		s.handleLoginError(w, r, nil, nil, err)
 		return

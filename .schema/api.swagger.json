@@ -1125,8 +1125,10 @@
         "parameters": [
           {
             "type": "string",
+            "description": "Error is the container's ID",
             "name": "error",
-            "in": "query"
+            "in": "query",
+            "required": true
           }
         ],
         "responses": {
@@ -1558,8 +1560,13 @@
     },
     "errorContainer": {
       "type": "object",
+      "required": [
+        "id",
+        "errors"
+      ],
       "properties": {
         "errors": {
+          "description": "Errors in the container",
           "type": "object"
         },
         "id": {

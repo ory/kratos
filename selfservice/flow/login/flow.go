@@ -143,7 +143,7 @@ func (f Flow) TableName() string {
 
 func (f *Flow) Valid() error {
 	if f.ExpiresAt.Before(time.Now()) {
-		return errors.WithStack(newRequestExpiredError(time.Since(f.ExpiresAt)))
+		return errors.WithStack(NewRequestExpiredError(time.Since(f.ExpiresAt)))
 	}
 	return nil
 }
