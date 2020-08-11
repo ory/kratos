@@ -5,10 +5,15 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"path"
 
 	"github.com/ory/herodot"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
+)
+
+const (
+	defaultEndpoint = "https://gitlab.com"
 )
 
 type ProviderGitLab struct {
@@ -34,7 +39,13 @@ func (g *ProviderGitLab) Claims(ctx context.Context, exchange *oauth2.Token) (*C
 	}
 
 	client := o.Client(ctx, exchange)
-	req, err := http.NewRequest("GET", "https://gitlab.com/oauth/userinfo", nil)
+
+	u, err := g.endpoint()
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+	}
+	u.Path = path.Join(u.Path, "/oauth/userinfo")
+	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
@@ -51,4 +62,12 @@ func (g *ProviderGitLab) Claims(ctx context.Context, exchange *oauth2.Token) (*C
 	}
 
 	return &claims, nil
+}
+
+func (g *ProviderGitLab) endpoint() (*url.URL, error) {
+	var e = defaultEndpoint
+	if len(g.config.IssuerURL) > 0 {
+		e = g.config.IssuerURL
+	}
+	return url.Parse(e)
 }
