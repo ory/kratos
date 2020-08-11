@@ -10,10 +10,16 @@ import (
 
 // swagger:model errorContainer
 type ErrorContainer struct {
+	// ID of the error container.
+	//
+	// required: true
 	ID uuid.UUID `db:"id" json:"id"`
 
 	CSRFToken string `db:"csrf_token" json:"-"`
 
+	// Errors in the container
+	//
+	// required: true
 	Errors json.RawMessage `json:"errors" db:"errors"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.

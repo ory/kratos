@@ -138,7 +138,7 @@ func TestPersister(t *testing.T) {
 				pop.SetLogger(pl(t))
 				identity.TestPool(p.(identity.PrivilegedPool))(t)
 			})
-			t.Run("contract=registration.TestRequestPersister", func(t *testing.T) {
+			t.Run("contract=registration.TestFlowPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
 				registration.TestRequestPersister(p)(t)
 			})
@@ -146,15 +146,15 @@ func TestPersister(t *testing.T) {
 				pop.SetLogger(pl(t))
 				errorx.TestPersister(p)(t)
 			})
-			t.Run("contract=login.TestRequestPersister", func(t *testing.T) {
+			t.Run("contract=login.TestFlowPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				login.TestRequestPersister(p)(t)
+				login.TestFlowPersister(p)(t)
 			})
-			t.Run("contract=settings.TestRequestPersister", func(t *testing.T) {
+			t.Run("contract=settings.TestFlowPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
 				settings.TestRequestPersister(p)(t)
 			})
-			t.Run("contract=session.TestRequestPersister", func(t *testing.T) {
+			t.Run("contract=session.TestFlowPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
 				session.TestPersister(p)(t)
 			})
@@ -166,7 +166,7 @@ func TestPersister(t *testing.T) {
 				pop.SetLogger(pl(t))
 				verification.TestPersister(p)(t)
 			})
-			t.Run("contract=recovery.TestRequestPersister", func(t *testing.T) {
+			t.Run("contract=recovery.TestFlowPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
 				recovery.TestRequestPersister(p)(t)
 			})
@@ -224,14 +224,14 @@ func TestPersister_Transaction(t *testing.T) {
 		}
 		err := c.Transaction(func(tx *pop.Connection) error {
 			ctx := sql.WithTransaction(context.Background(), tx)
-			require.NoError(t, p.CreateLoginRequest(ctx, lr), "%+v", lr)
-			require.NoError(t, p.UpdateLoginRequestMethod(ctx, lr.ID, identity.CredentialsTypePassword, &login.FlowMethod{}))
-			require.NoError(t, getErr(p.GetLoginRequest(ctx, lr.ID)), "%+v", lr)
+			require.NoError(t, p.CreateLoginFlow(ctx, lr), "%+v", lr)
+			require.NoError(t, p.UpdateLoginFlowMethod(ctx, lr.ID, identity.CredentialsTypePassword, &login.FlowMethod{}))
+			require.NoError(t, getErr(p.GetLoginFlow(ctx, lr.ID)), "%+v", lr)
 			return errors.Errorf(errMessage)
 		})
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), errMessage)
-		_, err = p.GetLoginRequest(context.Background(), lr.ID)
+		_, err = p.GetLoginFlow(context.Background(), lr.ID)
 		require.Error(t, err)
 		assert.Equal(t, sqlcon.ErrNoRows.Error(), err.Error())
 	})

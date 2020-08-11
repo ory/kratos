@@ -13,16 +13,16 @@ import (
 	"github.com/ory/kratos/selfservice/flow/login"
 )
 
-var _ login.RequestPersister = new(Persister)
+var _ login.FlowPersister = new(Persister)
 
-func (p *Persister) CreateLoginRequest(ctx context.Context, r *login.Flow) error {
+func (p *Persister) CreateLoginFlow(ctx context.Context, r *login.Flow) error {
 	return p.GetConnection(ctx).Eager().Create(r)
 }
 
-func (p *Persister) UpdateLoginRequest(ctx context.Context, r *login.Flow) error {
+func (p *Persister) UpdateLoginFlow(ctx context.Context, r *login.Flow) error {
 	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 
-		rr, err := p.GetLoginRequest(ctx, r.ID)
+		rr, err := p.GetLoginFlow(ctx, r.ID)
 		if err != nil {
 			return err
 		}
@@ -44,7 +44,7 @@ func (p *Persister) UpdateLoginRequest(ctx context.Context, r *login.Flow) error
 	})
 }
 
-func (p *Persister) GetLoginRequest(ctx context.Context, id uuid.UUID) (*login.Flow, error) {
+func (p *Persister) GetLoginFlow(ctx context.Context, id uuid.UUID) (*login.Flow, error) {
 	conn := p.GetConnection(ctx)
 	var r login.Flow
 	if err := conn.Eager().Find(&r, id); err != nil {
@@ -58,10 +58,10 @@ func (p *Persister) GetLoginRequest(ctx context.Context, id uuid.UUID) (*login.F
 	return &r, nil
 }
 
-func (p *Persister) MarkRequestForced(ctx context.Context, id uuid.UUID) error {
+func (p *Persister) ForceLoginFlow(ctx context.Context, id uuid.UUID) error {
 	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 
-		lr, err := p.GetLoginRequest(ctx, id)
+		lr, err := p.GetLoginFlow(ctx, id)
 		if err != nil {
 			return err
 		}
@@ -71,10 +71,10 @@ func (p *Persister) MarkRequestForced(ctx context.Context, id uuid.UUID) error {
 	})
 }
 
-func (p *Persister) UpdateLoginRequestMethod(ctx context.Context, id uuid.UUID, ct identity.CredentialsType, rm *login.FlowMethod) error {
+func (p *Persister) UpdateLoginFlowMethod(ctx context.Context, id uuid.UUID, ct identity.CredentialsType, rm *login.FlowMethod) error {
 	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 
-		rr, err := p.GetLoginRequest(ctx, id)
+		rr, err := p.GetLoginFlow(ctx, id)
 		if err != nil {
 			return err
 		}

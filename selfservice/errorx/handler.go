@@ -61,7 +61,10 @@ type errorContainerResponse struct {
 // nolint:deadcode,unused
 // swagger:parameters getSelfServiceError
 type errorContainerParameters struct {
+	// Error is the container's ID
+	//
 	// in: query
+	// required: true
 	Error string `json:"error"`
 }
 

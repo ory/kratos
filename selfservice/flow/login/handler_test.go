@@ -55,7 +55,7 @@ func TestHandlerSettingForced(t *testing.T) {
 		for _, s := range reg.LoginStrategies() {
 			require.NoError(t, s.PopulateLoginMethod(req, loginFlow))
 		}
-		require.NoError(t, reg.LoginRequestPersister().CreateLoginRequest(context.TODO(), loginFlow), "%+v", loginFlow)
+		require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.TODO(), loginFlow), "%+v", loginFlow)
 
 		q := url.Values{"id": {flowID.String()}}
 		for key := range extQuery {
@@ -164,7 +164,7 @@ func TestLoginHandler(t *testing.T) {
 
 		t.Run("case=expired", func(t *testing.T) {
 			lr := newExpiredRequest()
-			require.NoError(t, reg.LoginRequestPersister().CreateLoginRequest(context.Background(), lr))
+			require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.Background(), lr))
 			res, body := x.EasyGet(t, admin.Client(), endpoint.URL+login.RouteGetFlow+"?id="+lr.ID.String())
 			assertExpiredPayload(t, res, body)
 		})

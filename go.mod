@@ -7,6 +7,7 @@ require (
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0
 	github.com/armon/go-metrics v0.3.3 // indirect
+	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/bxcodec/faker/v3 v3.3.1
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/coreos/go-oidc v2.2.1+incompatible

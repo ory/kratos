@@ -490,7 +490,7 @@ func (m *RegistryDefault) RecoveryRequestPersister() recovery.RequestPersister {
 	return m.persister
 }
 
-func (m *RegistryDefault) LoginRequestPersister() login.RequestPersister {
+func (m *RegistryDefault) LoginFlowPersister() login.FlowPersister {
 	return m.persister
 }
 

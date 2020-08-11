@@ -16,19 +16,19 @@ import (
 )
 
 type (
-	RequestPersister interface {
-		UpdateLoginRequest(context.Context, *Flow) error
-		CreateLoginRequest(context.Context, *Flow) error
-		GetLoginRequest(context.Context, uuid.UUID) (*Flow, error)
-		UpdateLoginRequestMethod(context.Context, uuid.UUID, identity.CredentialsType, *FlowMethod) error
-		MarkRequestForced(ctx context.Context, id uuid.UUID) error
+	FlowPersister interface {
+		UpdateLoginFlow(context.Context, *Flow) error
+		CreateLoginFlow(context.Context, *Flow) error
+		GetLoginFlow(context.Context, uuid.UUID) (*Flow, error)
+		UpdateLoginFlowMethod(context.Context, uuid.UUID, identity.CredentialsType, *FlowMethod) error
+		ForceLoginFlow(ctx context.Context, id uuid.UUID) error
 	}
 	RequestPersistenceProvider interface {
-		LoginRequestPersister() RequestPersister
+		LoginFlowPersister() FlowPersister
 	}
 )
 
-func TestRequestPersister(p RequestPersister) func(t *testing.T) {
+func TestFlowPersister(p FlowPersister) func(t *testing.T) {
 	var clearids = func(r *Flow) {
 		r.ID = uuid.UUID{}
 		for k := range r.Methods {
@@ -38,7 +38,7 @@ func TestRequestPersister(p RequestPersister) func(t *testing.T) {
 
 	return func(t *testing.T) {
 		t.Run("case=should error when the login flow does not exist", func(t *testing.T) {
-			_, err := p.GetLoginRequest(context.Background(), x.NewUUID())
+			_, err := p.GetLoginFlow(context.Background(), x.NewUUID())
 			require.Error(t, err)
 		})
 
@@ -56,13 +56,13 @@ func TestRequestPersister(p RequestPersister) func(t *testing.T) {
 		t.Run("case=should create with set ids", func(t *testing.T) {
 			var r Flow
 			require.NoError(t, faker.FakeData(&r))
-			require.NoError(t, p.CreateLoginRequest(context.Background(), &r))
+			require.NoError(t, p.CreateLoginFlow(context.Background(), &r))
 		})
 
 		t.Run("case=should create a new login flow and properly set IDs", func(t *testing.T) {
 			r := newRequest(t)
 			methods := len(r.Methods)
-			err := p.CreateLoginRequest(context.Background(), r)
+			err := p.CreateLoginFlow(context.Background(), r)
 			require.NoError(t, err, "%#v", err)
 
 			assert.Nil(t, r.MethodsRaw)
@@ -75,10 +75,10 @@ func TestRequestPersister(p RequestPersister) func(t *testing.T) {
 
 		t.Run("case=should create and fetch a login flow", func(t *testing.T) {
 			expected := newRequest(t)
-			err := p.CreateLoginRequest(context.Background(), expected)
+			err := p.CreateLoginFlow(context.Background(), expected)
 			require.NoError(t, err)
 
-			actual, err := p.GetLoginRequest(context.Background(), expected.ID)
+			actual, err := p.GetLoginFlow(context.Background(), expected.ID)
 			require.NoError(t, err)
 			assert.Empty(t, actual.MethodsRaw)
 
@@ -104,10 +104,10 @@ func TestRequestPersister(p RequestPersister) func(t *testing.T) {
 					Config: &FlowMethodConfig{FlowMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypePassword))},
 				},
 			}
-			err := p.CreateLoginRequest(context.Background(), expected)
+			err := p.CreateLoginFlow(context.Background(), expected)
 			require.NoError(t, err)
 
-			actual, err := p.GetLoginRequest(context.Background(), expected.ID)
+			actual, err := p.GetLoginFlow(context.Background(), expected.ID)
 			require.NoError(t, err)
 			assert.Equal(t, flow.TypeAPI, actual.Type)
 
@@ -118,9 +118,9 @@ func TestRequestPersister(p RequestPersister) func(t *testing.T) {
 			actual.Type = flow.TypeBrowser
 			actual.Forced = true
 
-			require.NoError(t, p.UpdateLoginRequest(context.Background(), actual))
+			require.NoError(t, p.UpdateLoginFlow(context.Background(), actual))
 
-			actual, err = p.GetLoginRequest(context.Background(), actual.ID)
+			actual, err = p.GetLoginFlow(context.Background(), actual.ID)
 			require.NoError(t, err)
 			assert.Equal(t, flow.TypeBrowser, actual.Type)
 			assert.True(t, actual.Forced)
@@ -133,10 +133,10 @@ func TestRequestPersister(p RequestPersister) func(t *testing.T) {
 		t.Run("case=should properly update a flow", func(t *testing.T) {
 			expected := newRequest(t)
 			expected.Type = flow.TypeAPI
-			err := p.CreateLoginRequest(context.Background(), expected)
+			err := p.CreateLoginFlow(context.Background(), expected)
 			require.NoError(t, err)
 
-			actual, err := p.GetLoginRequest(context.Background(), expected.ID)
+			actual, err := p.GetLoginFlow(context.Background(), expected.ID)
 			require.NoError(t, err)
 			assert.Equal(t, flow.TypeAPI, actual.Type)
 		})
@@ -144,24 +144,24 @@ func TestRequestPersister(p RequestPersister) func(t *testing.T) {
 		t.Run("case=should update a login flow", func(t *testing.T) {
 			expected := newRequest(t)
 			delete(expected.Methods, identity.CredentialsTypeOIDC)
-			err := p.CreateLoginRequest(context.Background(), expected)
+			err := p.CreateLoginFlow(context.Background(), expected)
 			require.NoError(t, err)
 
-			actual, err := p.GetLoginRequest(context.Background(), expected.ID)
+			actual, err := p.GetLoginFlow(context.Background(), expected.ID)
 			require.NoError(t, err)
 			assert.Len(t, actual.Methods, 1)
 
-			require.NoError(t, p.UpdateLoginRequestMethod(context.Background(), expected.ID, identity.CredentialsTypeOIDC, &FlowMethod{
+			require.NoError(t, p.UpdateLoginFlowMethod(context.Background(), expected.ID, identity.CredentialsTypeOIDC, &FlowMethod{
 				Method: identity.CredentialsTypeOIDC,
 				Config: &FlowMethodConfig{FlowMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypeOIDC))},
 			}))
 
-			require.NoError(t, p.UpdateLoginRequestMethod(context.Background(), expected.ID, identity.CredentialsTypePassword, &FlowMethod{
+			require.NoError(t, p.UpdateLoginFlowMethod(context.Background(), expected.ID, identity.CredentialsTypePassword, &FlowMethod{
 				Method: identity.CredentialsTypePassword,
 				Config: &FlowMethodConfig{FlowMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypePassword))},
 			}))
 
-			actual, err = p.GetLoginRequest(context.Background(), expected.ID)
+			actual, err = p.GetLoginFlow(context.Background(), expected.ID)
 			require.NoError(t, err)
 			require.Len(t, actual.Methods, 2)
 			assert.EqualValues(t, identity.CredentialsTypePassword, actual.Active)
