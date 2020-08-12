@@ -67,6 +67,7 @@ type completeSelfServiceLoginFlowWithPasswordMethod struct {
 //
 // API flows expect `application/json` to be sent in the body and responds with
 //   - HTTP 200 and a application/json body with the session token on success;
+//   - HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 //   - HTTP 400 on form validation errors.
 //
 // Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
@@ -85,7 +86,7 @@ type completeSelfServiceLoginFlowWithPasswordMethod struct {
 //     - application/json
 //
 //     Responses:
-//       200: selfserviceLoginSessionContainer
+//       200: sessionTokenContainer
 //       302: emptyResponse
 //       400: genericError
 //       500: genericError
