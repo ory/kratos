@@ -41,7 +41,7 @@ func TestHandleError(t *testing.T) {
 	testhelpers.NewLoginUIRequestEchoServer(t, reg)
 	testhelpers.NewErrorTestServer(t, reg)
 
-	h := reg.LoginRequestErrorHandler()
+	h := reg.LoginFlowErrorHandler()
 	sdk := testhelpers.NewSDKClient(admin)
 
 	var loginFlow *login.Flow

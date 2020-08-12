@@ -414,7 +414,7 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 	}
 
 	if lr, rerr := s.d.LoginFlowPersister().GetLoginFlow(r.Context(), rid); rerr == nil {
-		s.d.LoginRequestErrorHandler().WriteFlowError(w, r, s.ID(), lr, err)
+		s.d.LoginFlowErrorHandler().WriteFlowError(w, r, s.ID(), lr, err)
 		return
 	} else if sr, rerr := s.d.SettingsRequestPersister().GetSettingsRequest(r.Context(), rid); rerr == nil {
 		s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, sr, err, s.SettingsStrategyID())
