@@ -34,7 +34,7 @@ type (
 		HandlerProvider
 	}
 
-	ErrorHandlerProvider interface{ LoginRequestErrorHandler() *ErrorHandler }
+	ErrorHandlerProvider interface{ LoginFlowErrorHandler() *ErrorHandler }
 
 	ErrorHandler struct {
 		d errorHandlerDependencies

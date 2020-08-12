@@ -38,7 +38,7 @@ func (m *RegistryDefault) LoginHandler() *login.Handler {
 	return m.selfserviceLoginHandler
 }
 
-func (m *RegistryDefault) LoginRequestErrorHandler() *login.ErrorHandler {
+func (m *RegistryDefault) LoginFlowErrorHandler() *login.ErrorHandler {
 	if m.selfserviceLoginRequestErrorHandler == nil {
 		m.selfserviceLoginRequestErrorHandler = login.NewFlowErrorHandler(m, m.c)
 	}
