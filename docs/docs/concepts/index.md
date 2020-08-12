@@ -25,21 +25,24 @@ to use tokens for "Single Page Apps" or apps running on the client-side browser,
 there is no real difference between these two approaches as both represent a set
 of credentials valid for a certain domain or a number of domains.
 
-Still there is a vast solution set available for OAuth2 and OpenID Connect. The
+Still, many identity systems primarily rely on OAuth2 and OpenID Connect. The
 reasons for this would perhaps include the following:
 
-- Assumption - companies offer complexity as security (In ORY's view pretty
-  bad);
+- Assumption - it is certifiable;
+- Assumption - it offloads complexity to developers who need to interact with
+  and figure out e.g. `AppAuth`, `PassportJS`, and similar OAuth2 and OpenID
+  Connect SDKs developed by open source communities;
+- Assumption - selling complexity as security;
 - Assumption - the nature of closed source does not allow for new, open and
   de-facto standards to emerge and instead uses a consenus driven feature set,
   even if it doesn't fit the use case 100%.
 
-ORY Kratos tackles both assumptions as follows:
+While ORY Kratos is currently not certifiable, it tackles these topics as
+follows:
 
 - With inspiration from the approach taken in the Kubernetes Project, ORY
   provides an open source project that hopefully becomes an open standard in the
   future.
-
 - Prioritise simplicity and ease of use for developers. ORY Kratos integrates
   critical security components without relying on complex flows and protocols.
 
@@ -49,6 +52,10 @@ create an OAuth2 and OpenID Connect Provider by combining ORY Kratos with
 
 With a primary developer audience, ORY designs, secures, and tests critical
 network flows, system architectures, user flows, protocols, and business logic.
+
+## Today's Landscape
+
+Let's take a look at different approaches and software systems today.
 
 ### Full-stack Identity and Access Management (IAM)
 
@@ -65,7 +72,8 @@ feature sets that include:
 
 - theming to customize the user experience, and to constrain the anticipated
   theming use case;
-- HTML Template Engines specific to the language used, such as Java Server Pages or
+- HTML Template Engines specific to the language used, such as Java Server Pages
+  or
   [Apache FreeMarker™](https://www.keycloak.org/docs/latest/server_development/#html-templates);
 - plugin loaders and APIs to add custom logic or even custom API endpoints,
   specific to the language used by the project; and
@@ -92,8 +100,8 @@ great, and it covers a lot of ground, but it also comes with drawbacks:
   data, sometimes even as plain key/value pairs;
 - Complex build pipelines when using modern frontend frameworks like React or
   Angular in the HTML Rendering engine;
-- The user model stays the same, even when differentiating between customers
-  and employees in your system; and
+- The user model stays the same, even when differentiating between customers and
+  employees in your system; and
 - API consumption is usually an after-thought because most flows are built
   around the user doing something in the browser. All of the above leads to
   added complexity in application development and deployment due to session
@@ -106,7 +114,8 @@ In today's market, with many proprietary SAAS companies offering Identity as a
 Service, it seems easy to make sign-on cumbersome for both developers and users.
 Even with delegated third party login processes such as "Login with Google,"
 where OAuth2 and OpenID Connect are often the primary protocols, the challenge
-is making a secure and simple login without any extra overhead, for instance, with Oauth2 and OpenID.
+is making a secure and simple login without any extra overhead, for instance,
+with Oauth2 and OpenID.
 
 ORY's focus is on simplicity, user experience, and above all, using the right
 tools and technologies for the target application. Feedback from ORY's user
@@ -118,12 +127,13 @@ implementation scenario.
 
 The main point is that OAuth2 and OpenID Connect protocols solve identity
 federation. For instance, when the target application authenticates an identity
-or authorizes access by using a system outside of the
-application's control, for example within an enterprise, company domain or another third party service. These protocols don't solve processes like updating a
-user's profile, adding a secondary recovery email, solving 2FA, storing and
-managing sessions, or solving global logout. These processes are the developer's
-responsibility and while the OAuth2 and OpenID Connect protocols offer a way
-to securely solve identity federation over the browser, they do not solve:
+or authorizes access by using a system outside of the application's control, for
+example within an enterprise, company domain or another third party service.
+These protocols don't solve processes like updating a user's profile, adding a
+secondary recovery email, solving 2FA, storing and managing sessions, or solving
+global logout. These processes are the developer's responsibility and while the
+OAuth2 and OpenID Connect protocols offer a way to securely solve identity
+federation over the browser, they do not solve:
 
 - Storage and management of all these tokens. These would often end up in the
   localStore making them vulnerable to XSS attacks. Or in a cookie issued by an
@@ -147,13 +157,14 @@ infrastructure, ORY Kratos embraced a polyglot design. In other words ORY Kratos
 provides Software Development Kits (SDK) and libraries for the main programming
 languages.
 
-As software development teams grow, product requirements change. During a development lifecycle different parts, for instance humans, servers, and
-code, need to scale to size. Over time, the original product splits into
-smaller, more manageable chunks. The libraries chosen at the outset will need to
-run on the newest version of the programming language. Sometimes even the
-programming language or implementation framework are subject to change as a
-whole. Still, the identity system is often so interlinked with all of the source
-code, middlewares, annotations, shared state, etc., that it becomes an absolute
+As software development teams grow, product requirements change. During a
+development lifecycle different parts, for instance humans, servers, and code,
+need to scale to size. Over time, the original product splits into smaller, more
+manageable chunks. The libraries chosen at the outset will need to run on the
+newest version of the programming language. Sometimes even the programming
+language or implementation framework are subject to change as a whole. Still,
+the identity system is often so interlinked with all of the source code,
+middlewares, annotations, shared state, etc., that it becomes an absolute
 nightmare to decouple.
 
 ### Roll your own
@@ -177,19 +188,20 @@ considerations and challenges in ORY's efforts:
   friendliness;
 - To prevent security threats for example
   [account enumeration attacks](<https://wiki.owasp.org/index.php/Testing_for_User_Enumeration_and_Guessable_User_Account_(OWASP-AT-002)>);
-- To implement two factor authentication (2FA). When the user
-  loses access to a registered and approved device, there should be a
-  fallback phone number for SMS or offline security codes;
+- To implement two factor authentication (2FA). When the user loses access to a
+  registered and approved device, there should be a fallback phone number for
+  SMS or offline security codes;
 - To understand and use all of the important rules such as activation, welcome,
   etc., around sending emails that don't alert spam filters;
-- To support a broad ecosystem of products and services. For example in the event
-  that a target application needs to notify Stripe when a new customer signs up.
+- To support a broad ecosystem of products and services. For example in the
+  event that a target application needs to notify Stripe when a new customer
+  signs up.
 
 The list above is purposely kept short. There are very many things to consider
-when building Kratos in concert with the other products ORY Keto, ORY Hydra,
-and ORY Oathkeeper. The list is really, really long.
+when building Kratos in concert with the other products ORY Keto, ORY Hydra, and
+ORY Oathkeeper. The list is really, really long.
 
-## ORY Kratos
+## Introducing ORY Kratos
 
 Considering all of the information above, there would be enough context to
 understand why and how ORY Kratos started, and why it's different from other
@@ -222,8 +234,8 @@ ORY's
 document, explains the architectural beliefs and framework behind the ORY
 Products in particular:
 
-- Small runtime footprint with an about five (5) MB binary running on all operating
-  systems without any system, library, or VM dependencies;
+- Small runtime footprint with an about five (5) MB binary running on all
+  operating systems without any system, library, or VM dependencies;
 - Fully virtualised in a fifteen (15) MB Docker image;
 - Easy to manage with exactly one binary for the server and the cli;
 - Run-time orchestration using the latest Kubernetes providing fast and easy to
@@ -268,5 +280,5 @@ Open Source provides a base solution for many use cases. For example, ORY Kratos
 integrates with ORY Oathkeeper, a Reverse Proxy solution. Defining Access Rules
 is as easy as writing a few lines of JSON / JSON5 / YAML!
 
-Please consult the [Quickstart documentation](../quickstart), for
-further information.
+Please consult the [Quickstart documentation](../quickstart), for further
+information.
