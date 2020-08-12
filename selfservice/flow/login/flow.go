@@ -32,6 +32,9 @@ type Flow struct {
 	// required: true
 	ID uuid.UUID `json:"id" faker:"-" db:"id"`
 
+	// Type represents the flow's type which can be either "api" or "browser", depending on the flow interaction.
+	Type flow.Type `json:"type" db:"type" faker:"flow_type"`
+
 	// ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in,
 	// a new flow has to be initiated.
 	//
@@ -82,9 +85,6 @@ type Flow struct {
 
 	// Forced stores whether this login flow should enforce re-authentication.
 	Forced bool `json:"forced" db:"forced"`
-
-	// Type represents the flow's type which can be either "api" or "browser", depending on the flow interaction.
-	Type flow.Type `json:"type" db:"type" faker:"flow_type"`
 }
 
 func NewFlow(exp time.Duration, csrf string, r *http.Request, flowType flow.Type) *Flow {
