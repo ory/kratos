@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/ory/x/randx"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/x"
@@ -32,6 +33,8 @@ type Session struct {
 	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
+
+	Token string `json:"-" db:"token"`
 }
 
 func (s Session) TableName() string {
@@ -48,6 +51,7 @@ func NewSession(i *identity.Identity, c interface {
 		IssuedAt:        time.Now().UTC(),
 		Identity:        i,
 		IdentityID:      i.ID,
+		Token:           randx.MustString(32, randx.AlphaNum),
 	}
 }
 

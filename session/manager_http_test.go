@@ -40,7 +40,7 @@ func TestManagerHTTP(t *testing.T) {
 		mock := new(mockCSRFHandler)
 		reg.WithCSRFHandler(mock)
 
-		require.NoError(t, reg.SessionManager().SaveToRequest(context.Background(), httptest.NewRecorder(), new(http.Request), new(session.Session)))
+		require.NoError(t, reg.SessionManager().IssueCookie(context.Background(), httptest.NewRecorder(), new(http.Request), new(session.Session)))
 		assert.Equal(t, 1, mock.c)
 	})
 
@@ -53,7 +53,7 @@ func TestManagerHTTP(t *testing.T) {
 		var s *session.Session
 		rp := x.NewRouterPublic()
 		rp.GET("/session/set", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-			require.NoError(t, reg.SessionManager().CreateToRequest(r.Context(), w, r, s))
+			require.NoError(t, reg.SessionManager().CreateAndIssueCookie(r.Context(), w, r, s))
 			w.WriteHeader(http.StatusOK)
 		})
 

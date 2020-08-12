@@ -344,7 +344,7 @@ func (s *Strategy) issueSession(w http.ResponseWriter, r *http.Request, req *rec
 	}
 
 	sess := session.NewSession(recovered, s.c, time.Now().UTC())
-	if err := s.d.SessionManager().CreateToRequest(r.Context(), w, r, sess); err != nil {
+	if err := s.d.SessionManager().CreateAndIssueCookie(r.Context(), w, r, sess); err != nil {
 		s.handleError(w, r, req, err)
 		return
 	}

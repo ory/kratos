@@ -58,24 +58,6 @@ type completeSelfServiceLoginFlowWithPasswordMethod struct {
 	LoginFormPayload
 }
 
-// Completed Login Flow with Username/Password Method for API Clients Response
-//
-// swagger:response completeSelfServiceLoginFlowWithPasswordMethodResponse
-type completeSelfServiceLoginFlowWithPasswordResponse struct {
-	// The Session Token
-	//
-	// A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization
-	// Header:
-	//
-	// 		Authorization: bearer <session-token>
-	//
-	// The session token is only issued for API flows, not for Browser flows!
-	//
-	// in: body
-	// required: true
-	SessionToken string `json:"session_token"`
-}
-
 // swagger:route GET /self-service/login/methods/password public completeSelfServiceLoginFlowWithPasswordMethod
 //
 // Complete Login Flow with Username/Email Password Method
@@ -103,7 +85,7 @@ type completeSelfServiceLoginFlowWithPasswordResponse struct {
 //     - application/json
 //
 //     Responses:
-//       200: completeSelfServiceLoginFlowWithPasswordMethodResponse
+//       200: selfserviceLoginSessionContainer
 //       302: emptyResponse
 //       400: genericError
 //       500: genericError

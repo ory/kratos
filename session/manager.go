@@ -17,10 +17,15 @@ var (
 
 // Manager handles identity sessions.
 type Manager interface {
-	CreateToRequest(context.Context, http.ResponseWriter, *http.Request, *Session) error
+	// CreateAndIssueCookie stores a session in the database and issues a cookie by calling IssueCookie.
+	//
+	// Also regenerates CSRF tokens due to assumed principal change.
+	CreateAndIssueCookie(context.Context, http.ResponseWriter, *http.Request, *Session) error
 
-	// SaveToRequest creates an HTTP session using cookies.
-	SaveToRequest(context.Context, http.ResponseWriter, *http.Request, *Session) error
+	// IssueCookie issues a cookie for the given session.
+	//
+	// Also regenerates CSRF tokens due to assumed principal change.
+	IssueCookie(context.Context, http.ResponseWriter, *http.Request, *Session) error
 
 	// FetchFromRequest creates an HTTP session using cookies.
 	FetchFromRequest(context.Context, *http.Request) (*Session, error)

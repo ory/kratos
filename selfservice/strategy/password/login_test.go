@@ -406,7 +406,7 @@ func TestCompleteLogin(t *testing.T) {
 			}
 
 			lr := nlr(time.Hour, isAPI)
-			return fakeRequest(t, lr, isAPI, payload, nil, nil, expectStatusCode(isAPI, http.StatusBadRequest))
+			return fakeRequest(t, lr, isAPI, payload, nil, nil, expectStatusCode(isAPI, http.StatusOK))
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
@@ -417,8 +417,9 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("type=api", func(t *testing.T) {
 			res, body := run(t, true)
-			require.Contains(t, res.Request.URL.Path, "return-ts", "%s", res.Request.URL.String())
-			assert.Equal(t, identifier, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
+			require.Contains(t, res.Request.URL.Path, password.RouteLogin, "%s", res.Request.URL.String())
+			assert.Equal(t, identifier, gjson.GetBytes(body, "session.identity.traits.subject").String(), "%s", body)
+			assert.NotEmpty(t, gjson.GetBytes(body, "session_token").String(), "%s", body)
 		})
 	})
 

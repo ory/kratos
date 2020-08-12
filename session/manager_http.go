@@ -48,19 +48,19 @@ func NewManagerHTTP(
 	}
 }
 
-func (s *ManagerHTTP) CreateToRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, ss *Session) error {
+func (s *ManagerHTTP) CreateAndIssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, ss *Session) error {
 	if err := s.r.SessionPersister().CreateSession(ctx, ss); err != nil {
 		return err
 	}
 
-	if err := s.SaveToRequest(ctx, w, r, ss); err != nil {
+	if err := s.IssueCookie(ctx, w, r, ss); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (s *ManagerHTTP) SaveToRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, session *Session) error {
+func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, session *Session) error {
 	_ = s.r.CSRFHandler().RegenerateToken(w, r)
 	cookie, _ := s.r.CookieManager().Get(r, s.cookieName)
 	if s.c.SessionDomain() != "" {
