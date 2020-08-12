@@ -82,7 +82,6 @@ you reference these routes in your ORY Kratos config file:
 urls:
   login_ui: https://.../login
   registration_ui: https://.../registration
-
 # ...
 ```
 
@@ -137,12 +136,13 @@ sequenceDiagram
 />
 
 The exact data being fetched and the step _"Processes Login / Registration
-Info"_ depend, of course, on the actual Login / Registration Method being used. But it is important
-to understand that **"Your Application"** is responsible for rendering the
-actual Login and Registration HTML Forms. You can of course implement one app
-for rendering all the Login, Registration, ... screens, and another app (think
-"Service Oriented Architecture", "Micro-Services" or "Service Mesh") is
-responsible for rendering your Dashboards, Management Screens, and so on.
+Info"_ depend, of course, on the actual Login / Registration Method being used.
+But it is important to understand that **"Your Application"** is responsible for
+rendering the actual Login and Registration HTML Forms. You can of course
+implement one app for rendering all the Login, Registration, ... screens, and
+another app (think "Service Oriented Architecture", "Micro-Services" or "Service
+Mesh") is responsible for rendering your Dashboards, Management Screens, and so
+on.
 
 :::note
 
@@ -377,10 +377,9 @@ stateDiagram
    `SELFSERVICE_FLOWS_REGISTRATION_UI_URL`) environment variable, which is set
    to the ui endpoints - for example `https://127.0.0.1:4455/auth/login` and
    `https://127.0.0.1:4455/auth/registration`). The user's browser is thus
-   redirected to
-   `https://127.0.0.1:4455/auth/(login|registration)?flow=abcde`. The
-   `request` query parameter includes a unique ID which will be used to fetch
-   contextual data for this login request.
+   redirected to `https://127.0.0.1:4455/auth/(login|registration)?flow=abcde`.
+   The `request` query parameter includes a unique ID which will be used to
+   fetch contextual data for this login request.
 1. Your Server-Side Application makes a `GET` request to
    `http://kratos:4434/self-service/browser/flows/requests/(login|registration)?flow=abcde`.
    ORY Kratos responds with a JSON Payload that contains data (form fields,
@@ -436,8 +435,8 @@ stateDiagram
      and the user's Browser is redirected back to the Login UI:
      `https://127.0.0.1:4455/auth/(login|registration)?flow=abcde`.
    - If credentials / data is valid, ORY Kratos proceeds with the next step.
-   - If the flow is a registration flow and the registration data is valid,
-     the identity is created.
+   - If the flow is a registration flow and the registration data is valid, the
+     identity is created.
 1. ORY Kratos executes hooks defined in the **After Login/Registration Hooks**.
    If a failure occurs, the whole flow is aborted.
 1. The client receives the expected response. For browsers, this is a HTTP
@@ -493,8 +492,8 @@ would be called via AJAX instead of making a request to
 To prevent brute force, guessing, session injection, and other attacks, it is
 required that cookies are working for this endpoint. The cookie set in the
 initial HTTP request made to
-`https://127.0.0.1:4455/.ory/kratos/public/self-service/login/browser`
-MUST be set and available when calling this endpoint!
+`https://127.0.0.1:4455/.ory/kratos/public/self-service/login/browser` MUST be
+set and available when calling this endpoint!
 
 :::info
 
@@ -531,6 +530,6 @@ Refreshing a session will not log the user out, unless another user signs in.
 
 :::
 
-To refresh a session, append `?refresh=true` to
-`/self-service/login/browser`, for example
+To refresh a session, append `?refresh=true` to `/self-service/login/browser`,
+for example
 `http://127.0.0.1:4455/.ory/kratos/public/self-service/login/browser?refresh=true`.

@@ -15,7 +15,8 @@ $ docker pull oryd/kratos:v0.4.6-alpha.1
 $ docker run --rm -it oryd/kratos help
 ```
 
-You can find more detailed information on the official Kratos docker images [here](guides/docker).
+You can find more detailed information on the official Kratos docker images
+[here](guides/docker).
 
 ## macOS
 
