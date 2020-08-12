@@ -57,7 +57,7 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 		c.SelfPublicURL().Hostname(),
 		!flagx.MustGetBool(cmd, "dev"),
 	)
-	csrf.ExemptPath(session.SessionsWhoamiPath)
+	csrf.ExemptPath(session.RouteWhoami)
 	r.WithCSRFHandler(csrf)
 	n.UseHandler(r.CSRFHandler())
 	server := graceful.WithDefaults(&http.Server{
@@ -133,7 +133,7 @@ func sqa(cmd *cobra.Command, d driver.Driver) *metricsx.Service {
 				logout.BrowserLogoutPath,
 				registration.BrowserRegistrationPath,
 				registration.BrowserRegistrationRequestsPath,
-				session.SessionsWhoamiPath,
+				session.RouteWhoami,
 				identity.IdentitiesPath,
 				profile.PublicSettingsProfilePath,
 				settings.PublicPath,

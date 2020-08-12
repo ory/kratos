@@ -16,19 +16,19 @@ func TestBearerTokenFromRequest(t *testing.T) {
 	}{
 		{
 			h: http.Header{"Authorization": {"Bearer token"}},
-			t: "token", f : true,
+			t: "token", f: true,
 		},
 		{
 			h: http.Header{"Authorization": {"bearer token"}},
-			t: "token", f : true,
+			t: "token", f: true,
 		},
 		{
 			h: http.Header{"Authorization": {"beaRer token"}},
-			t: "token", f : true,
+			t: "token", f: true,
 		},
 		{
 			h: http.Header{"Authorization": {"BEARER token"}},
-			t: "token", f : true,
+			t: "token", f: true,
 		},
 		{
 			h: http.Header{"Authorization": {"notbearer token"}},

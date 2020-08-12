@@ -78,7 +78,7 @@ func NewHookExecutor(d executorDependencies, c configuration.Provider) *HookExec
 }
 
 func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, a *Flow, i *identity.Identity) error {
-	s := session.NewSession(i, e.c, time.Now().UTC()).Declassify()
+	s := session.NewActiveSession(i, e.c, time.Now().UTC()).Declassify()
 
 	for _, executor := range e.d.PostLoginHooks(ct) {
 		if err := executor.ExecuteLoginPostHook(w, r, a, s); err != nil {

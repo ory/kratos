@@ -11,12 +11,22 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func NewHTTPGetRequestJSON(t *testing.T, url string) *http.Request {
+func NewHTTPGetJSONRequest(t *testing.T, url string) *http.Request {
 	req, err := http.NewRequest("GET", url, nil)
 	require.NoError(t, err)
 
 	// req.Header.Set("Content-Type", "application/json;charset=utf-8")
 	req.Header.Set("Accept", "application/json")
+	return req
+}
+
+func NewHTTPDeleteJSONRequest(t *testing.T, url string, in interface{}) *http.Request {
+	var body bytes.Buffer
+	require.NoError(t, json.NewEncoder(&body).Encode(in))
+	req, err := http.NewRequest("DELETE", url, &body)
+	require.NoError(t, err)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
 	return req
 }
 

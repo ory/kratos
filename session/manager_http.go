@@ -87,18 +87,31 @@ func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r 
 	return nil
 }
 
-func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (*Session, error) {
+func (s *ManagerHTTP) extractToken(r *http.Request) string {
+	if token, ok := bearerTokenFromRequest(r); ok {
+		return token
+	}
+
 	cookie, err := s.r.CookieManager().Get(r, s.cookieName)
 	if err != nil {
-		return nil, errors.WithStack(ErrNoActiveSessionFound.WithWrap(err).WithDebugf("%s", err))
+		return ""
 	}
 
 	token, ok := cookie.Values["session_token"].(string)
-	if !ok {
+	if ok {
+		return token
+	}
+
+	return ""
+}
+
+func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (*Session, error) {
+	token := s.extractToken(r)
+	if token == "" {
 		return nil, errors.WithStack(ErrNoActiveSessionFound)
 	}
 
-	se, err := s.r.SessionPersister().GetSessionFromToken(ctx, token)
+	se, err := s.r.SessionPersister().GetSessionByToken(ctx, token)
 	if err != nil {
 		if errors.Is(err, herodot.ErrNotFound) || errors.Is(err, sqlcon.ErrNoRows) {
 			return nil, errors.WithStack(ErrNoActiveSessionFound)
@@ -106,7 +119,7 @@ func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (*S
 		return nil, err
 	}
 
-	if se.ExpiresAt.Before(time.Now()) {
+	if !se.IsActive() {
 		return nil, errors.WithStack(ErrNoActiveSessionFound)
 	}
 
@@ -115,7 +128,20 @@ func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (*S
 }
 
 func (s *ManagerHTTP) PurgeFromRequest(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	if token, ok := bearerTokenFromRequest(r); ok {
+		return errors.WithStack(s.r.SessionPersister().RevokeSessionByToken(ctx, token))
+	}
+
 	cookie, _ := s.r.CookieManager().Get(r, s.cookieName)
+	token, ok := cookie.Values["session_token"].(string)
+	if !ok {
+		return nil
+	}
+
+	if err := s.r.SessionPersister().RevokeSessionByToken(ctx, token); err != nil {
+		return errors.WithStack(err)
+	}
+
 	cookie.Options.MaxAge = -1
 	if err := cookie.Save(r, w); err != nil {
 		return errors.WithStack(err)

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+
 	"github.com/ory/x/randx"
 
 	"github.com/ory/kratos/identity"
@@ -14,6 +15,8 @@ import (
 type Session struct {
 	// required: true
 	ID uuid.UUID `json:"sid" faker:"-" db:"id"`
+
+	Active bool `json:"active" db:"active"`
 
 	// required: true
 	ExpiresAt time.Time `json:"expires_at" db:"expires_at" faker:"time_type"`
@@ -41,7 +44,7 @@ func (s Session) TableName() string {
 	return "sessions"
 }
 
-func NewSession(i *identity.Identity, c interface {
+func NewActiveSession(i *identity.Identity, c interface {
 	SessionLifespan() time.Duration
 }, authenticatedAt time.Time) *Session {
 	return &Session{
@@ -52,6 +55,7 @@ func NewSession(i *identity.Identity, c interface {
 		Identity:        i,
 		IdentityID:      i.ID,
 		Token:           randx.MustString(32, randx.AlphaNum),
+		Active:          true,
 	}
 }
 
@@ -63,4 +67,8 @@ type Device struct {
 func (s *Session) Declassify() *Session {
 	s.Identity = s.Identity.CopyWithoutCredentials()
 	return s
+}
+
+func (s *Session) IsActive() bool {
+	return s.Active && s.ExpiresAt.After(time.Now())
 }
