@@ -17,6 +17,9 @@ import (
 // swagger:model session
 type Session struct {
 
+	// active
+	Active bool `json:"active,omitempty"`
+
 	// authenticated at
 	// Required: true
 	// Format: date-time

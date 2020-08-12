@@ -97,7 +97,7 @@ func TestHandleError(t *testing.T) {
 		flowError = herodot.ErrInternalServerError.WithReason("system error")
 		ct = identity.CredentialsTypePassword
 
-		res, err := ts.Client().Do(testhelpers.NewHTTPGetRequestJSON(t, ts.URL+"/error"))
+		res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 		require.NoError(t, err)
 		defer res.Body.Close()
 		assert.Equal(t, "application/json; charset=utf-8", res.Header.Get("Content-Type"))
@@ -116,7 +116,7 @@ func TestHandleError(t *testing.T) {
 			flowError = login.NewRequestExpiredError(time.Hour)
 			ct = identity.CredentialsTypePassword
 
-			res, err := ts.Client().Do(testhelpers.NewHTTPGetRequestJSON(t, ts.URL+"/error"))
+			res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 			require.NoError(t, err)
 			defer res.Body.Close()
 			require.Contains(t, res.Request.URL.String(), public.URL+login.RouteGetFlow)
@@ -135,7 +135,7 @@ func TestHandleError(t *testing.T) {
 			flowError = schema.NewInvalidCredentialsError()
 			ct = identity.CredentialsTypePassword
 
-			res, err := ts.Client().Do(testhelpers.NewHTTPGetRequestJSON(t, ts.URL+"/error"))
+			res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 			require.NoError(t, err)
 			defer res.Body.Close()
 			require.Equal(t, http.StatusBadRequest, res.StatusCode)
@@ -153,7 +153,7 @@ func TestHandleError(t *testing.T) {
 			flowError = herodot.ErrInternalServerError.WithReason("system error")
 			ct = identity.CredentialsTypePassword
 
-			res, err := ts.Client().Do(testhelpers.NewHTTPGetRequestJSON(t, ts.URL+"/error"))
+			res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 			require.NoError(t, err)
 			defer res.Body.Close()
 			require.Equal(t, http.StatusInternalServerError, res.StatusCode)
@@ -170,7 +170,7 @@ func TestHandleError(t *testing.T) {
 			flowError = herodot.ErrInternalServerError.WithReason("system error")
 			ct = "invalid-method"
 
-			res, err := ts.Client().Do(testhelpers.NewHTTPGetRequestJSON(t, ts.URL+"/error"))
+			res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 			require.NoError(t, err)
 			defer res.Body.Close()
 			require.Equal(t, http.StatusInternalServerError, res.StatusCode)

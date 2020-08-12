@@ -37,7 +37,7 @@ type ClientService interface {
 
 	CompleteSelfServiceBrowserVerificationFlow(params *CompleteSelfServiceBrowserVerificationFlowParams) error
 
-	CompleteSelfServiceLoginFlowWithPassword(params *CompleteSelfServiceLoginFlowWithPasswordParams) (*CompleteSelfServiceLoginFlowWithPasswordOK, error)
+	CompleteSelfServiceLoginFlowWithPasswordMethod(params *CompleteSelfServiceLoginFlowWithPasswordMethodParams) (*CompleteSelfServiceLoginFlowWithPasswordMethodOK, error)
 
 	InitializeSelfServiceBrowserLogoutFlow(params *InitializeSelfServiceBrowserLogoutFlowParams) error
 
@@ -50,6 +50,8 @@ type ClientService interface {
 	InitializeSelfServiceRecoveryFlow(params *InitializeSelfServiceRecoveryFlowParams) error
 
 	InitializeSelfServiceSettingsFlow(params *InitializeSelfServiceSettingsFlowParams) error
+
+	RevokeSession(params *RevokeSessionParams) (*RevokeSessionNoContent, error)
 
 	SelfServiceBrowserVerify(params *SelfServiceBrowserVerifyParams) error
 
@@ -232,7 +234,7 @@ func (a *Client) CompleteSelfServiceBrowserVerificationFlow(params *CompleteSelf
 }
 
 /*
-  CompleteSelfServiceLoginFlowWithPassword completes login flow with password strategy
+  CompleteSelfServiceLoginFlowWithPasswordMethod completes login flow with username email password method
 
   Use this endpoint to complete a login flow by sending an identity's identifier and password. This endpoint
 behaves differently for API and browser flows.
@@ -247,34 +249,34 @@ a HTTP 302 redirect to the login UI URL with the flow ID containing the validati
 
 More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 */
-func (a *Client) CompleteSelfServiceLoginFlowWithPassword(params *CompleteSelfServiceLoginFlowWithPasswordParams) (*CompleteSelfServiceLoginFlowWithPasswordOK, error) {
+func (a *Client) CompleteSelfServiceLoginFlowWithPasswordMethod(params *CompleteSelfServiceLoginFlowWithPasswordMethodParams) (*CompleteSelfServiceLoginFlowWithPasswordMethodOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewCompleteSelfServiceLoginFlowWithPasswordParams()
+		params = NewCompleteSelfServiceLoginFlowWithPasswordMethodParams()
 	}
 
 	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "completeSelfServiceLoginFlowWithPassword",
+		ID:                 "completeSelfServiceLoginFlowWithPasswordMethod",
 		Method:             "GET",
-		PathPattern:        "/self-service/browser/flows/login/strategies/password",
+		PathPattern:        "/self-service/login/methods/password",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &CompleteSelfServiceLoginFlowWithPasswordReader{formats: a.formats},
+		Reader:             &CompleteSelfServiceLoginFlowWithPasswordMethodReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*CompleteSelfServiceLoginFlowWithPasswordOK)
+	success, ok := result.(*CompleteSelfServiceLoginFlowWithPasswordMethodOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for completeSelfServiceLoginFlowWithPassword: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for completeSelfServiceLoginFlowWithPasswordMethod: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -496,6 +498,45 @@ func (a *Client) InitializeSelfServiceSettingsFlow(params *InitializeSelfService
 		return err
 	}
 	return nil
+}
+
+/*
+  RevokeSession revokes and invalidate a session
+
+  Use this endpoint to revoke a session using its token. This endpoint is particularly useful for API clients
+such as mobile apps to log the user out of the system and invalidate the session.
+
+This endpoint does not remove any HTTP Cookies - use the Self-Service Logout Flow instead.
+*/
+func (a *Client) RevokeSession(params *RevokeSessionParams) (*RevokeSessionNoContent, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewRevokeSessionParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "revokeSession",
+		Method:             "DELETE",
+		PathPattern:        "/sessions",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &RevokeSessionReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*RevokeSessionNoContent)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for revokeSession: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*

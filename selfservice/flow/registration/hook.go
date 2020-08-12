@@ -97,7 +97,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		WithField("identity_id", i.ID).
 		Debug("A new identity has registered using self-service registration. Running post execution hooks.")
 
-	s := session.NewSession(i, e.c, time.Now().UTC())
+	s := session.NewActiveSession(i, e.c, time.Now().UTC())
 	for _, executor := range e.d.PostRegistrationPostPersistHooks(ct) {
 		if err := executor.ExecutePostRegistrationPostPersistHook(w, r, a, s); err != nil {
 			if errors.Is(err, ErrHookAbortRequest) {
