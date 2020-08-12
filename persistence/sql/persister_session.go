@@ -14,9 +14,17 @@ var _ session.Persister = new(Persister)
 
 func (p *Persister) GetSession(ctx context.Context, sid uuid.UUID) (*session.Session, error) {
 	var s session.Session
-	if err := p.GetConnection(ctx).Eager("Identity").Find(&s, sid); err != nil {
+	if err := p.GetConnection(ctx).Find(&s, sid); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
+
+	// This is needed because of how identities are fetched from the store (if we use eager not all fields are
+	// available!).
+	i, err := p.GetIdentity(ctx, s.IdentityID)
+	if err != nil {
+		return nil, err
+	}
+	s.Identity = i
 	return &s, nil
 }
 
@@ -37,9 +45,17 @@ func (p *Persister) DeleteSessionsFor(ctx context.Context, identityID uuid.UUID)
 
 func (p *Persister) GetSessionFromToken(ctx context.Context, token string) (*session.Session, error) {
 	var s session.Session
-	if err := p.GetConnection(ctx).Eager("Identity").Where("token = ?", token).First(&s); err != nil {
+	if err := p.GetConnection(ctx).Where("token = ?", token).First(&s); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
+
+	// This is needed because of how identities are fetched from the store (if we use eager not all fields are
+	// available!).
+	i, err := p.GetIdentity(ctx, s.IdentityID)
+	if err != nil {
+		return nil, err
+	}
+	s.Identity = i
 	return &s, nil
 }
 
