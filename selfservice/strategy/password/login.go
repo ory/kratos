@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
-	"net/url"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
@@ -16,17 +15,18 @@ import (
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/x"
 )
 
 const (
-	LoginPath = "/self-service/browser/flows/login/strategies/password"
+	RouteLogin = "/self-service/login/methods/password"
 )
 
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
-	r.POST(LoginPath, s.handleLogin)
+	r.POST(RouteLogin, s.handleLogin)
 }
 
 func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *login.Flow, payload *LoginFormPayload, err error) {
@@ -34,7 +34,10 @@ func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *
 		if method, ok := rr.Methods[identity.CredentialsTypePassword]; ok {
 			method.Config.Reset()
 			method.Config.SetValue("identifier", payload.Identifier)
-			method.Config.SetCSRF(s.d.GenerateCSRFToken(r))
+			if rr.Type == flow.TypeBrowser {
+				method.Config.SetCSRF(s.d.GenerateCSRFToken(r))
+			}
+
 			rr.Methods[identity.CredentialsTypePassword] = method
 		}
 	}
@@ -43,30 +46,39 @@ func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *
 }
 
 // nolint:deadcode,unused
-// swagger:parameters completeSelfServiceLoginFlowWithPassword
-type completeSelfServiceLoginFlowWithPassword struct {
+// swagger:parameters completeSelfServiceLoginFlowWithPasswordMethod
+type completeSelfServiceLoginFlowWithPasswordMethod struct {
+	// The Flow ID
+	//
+	// required: true
+	// in: query
+	Flow string `json:"flow"`
+
 	// in: body
 	LoginFormPayload
 }
 
-// Login Flow for API Clients Response
+// Completed Login Flow with Username/Password Method for API Clients Response
 //
-// swagger:response completeSelfServiceLoginFlowWithPasswordResponse
+// swagger:response completeSelfServiceLoginFlowWithPasswordMethodResponse
 type completeSelfServiceLoginFlowWithPasswordResponse struct {
-	// SessionToken
+	// The Session Token
 	//
 	// A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization
 	// Header:
 	//
 	// 		Authorization: bearer <session-token>
 	//
+	// The session token is only issued for API flows, not for Browser flows!
+	//
+	// in: body
 	// required: true
 	SessionToken string `json:"session_token"`
 }
 
-// swagger:route GET /self-service/browser/flows/login/strategies/password public completeSelfServiceLoginFlowWithPassword
+// swagger:route GET /self-service/login/methods/password public completeSelfServiceLoginFlowWithPasswordMethod
 //
-// Complete Login Flow with Password Strategy
+// Complete Login Flow with Username/Email Password Method
 //
 // Use this endpoint to complete a login flow by sending an identity's identifier and password. This endpoint
 // behaves differently for API and browser flows.
@@ -91,12 +103,12 @@ type completeSelfServiceLoginFlowWithPasswordResponse struct {
 //     - application/json
 //
 //     Responses:
-//       200: completeSelfServiceLoginFlowWithPasswordResponse
+//       200: completeSelfServiceLoginFlowWithPasswordMethodResponse
 //       302: emptyResponse
 //       400: genericError
 //       500: genericError
 func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	rid := x.ParseUUID(r.URL.Query().Get("request"))
+	rid := x.ParseUUID(r.URL.Query().Get("flow"))
 	if x.IsZeroUUID(rid) {
 		s.handleLoginError(w, r, nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request query parameter is missing or invalid.")))
 		return
@@ -108,11 +120,14 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
-	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
-		if !ar.Forced {
+	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil && !ar.Forced {
+		if ar.Type == flow.TypeBrowser {
 			http.Redirect(w, r, s.c.SelfServiceBrowserDefaultReturnTo().String(), http.StatusFound)
 			return
 		}
+
+		s.d.Writer().WriteError(w, r, errors.WithStack(login.ErrAlreadyLoggedIn))
+		return
 	}
 
 	var p LoginFormPayload
@@ -154,10 +169,6 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 }
 
 func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Flow) error {
-	if err := r.ParseForm(); err != nil {
-		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to decode POST body: %s", err))
-	}
-
 	// This block adds the identifier to the method when the request is forced - as a hint for the user.
 	var identifier string
 	if !sr.IsForced() {
@@ -174,30 +185,23 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Flow) error {
 		identifier = creds.Identifiers[0]
 	}
 
-	action := urlx.CopyWithQuery(
-		urlx.AppendPaths(s.c.SelfPublicURL(), LoginPath),
-		url.Values{"request": {sr.ID.String()}})
-
 	f := &form.HTMLForm{
-		Action: action.String(),
+		Action: sr.AppendTo(urlx.AppendPaths(s.c.SelfPublicURL(), RouteLogin)).String(),
 		Method: "POST",
-		Fields: form.Fields{
-			{
-				Name:     "identifier",
-				Type:     "text",
-				Value:    identifier,
-				Required: true,
-			},
-			{
-				Name:     "password",
-				Type:     "password",
-				Required: true,
-			}}}
+		Fields: form.Fields{{
+			Name:     "identifier",
+			Type:     "text",
+			Value:    identifier,
+			Required: true,
+		}, {
+			Name:     "password",
+			Type:     "password",
+			Required: true,
+		}}}
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 
 	sr.Methods[identity.CredentialsTypePassword] = &login.FlowMethod{
 		Method: identity.CredentialsTypePassword,
-		Config: &login.FlowMethodConfig{FlowMethodConfigurator: &RequestMethod{HTMLForm: f}},
-	}
+		Config: &login.FlowMethodConfig{FlowMethodConfigurator: &RequestMethod{HTMLForm: f}}}
 	return nil
 }

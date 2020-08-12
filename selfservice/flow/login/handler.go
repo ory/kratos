@@ -7,8 +7,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
-	"github.com/ory/herodot"
-
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/configuration"
@@ -141,7 +139,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 		return
 	}
 
-	h.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("A valid session was detected and thus login is not possible. Did you forget to set `?refresh=true`?")))
+	h.d.Writer().WriteError(w, r, errors.WithStack(ErrAlreadyLoggedIn))
 }
 
 // swagger:route GET /self-service/login/browser public initializeSelfServiceLoginViaBrowserFlow
