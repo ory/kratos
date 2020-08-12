@@ -19,7 +19,6 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/x"
 )
@@ -28,49 +27,44 @@ func init() {
 	internal.RegisterFakes()
 }
 
-func TestHandlerSettingForced(t *testing.T) {
+func TestInitFlow(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-
 	router := x.NewRouterPublic()
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
-
 	loginTS := testhelpers.NewLoginUIRequestEchoServer(t, reg)
 
 	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
 	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
 
-	// assert bool
-	ab := func(body []byte, exp bool) {
+	assertion := func(body []byte, isForced, isApi bool) {
 		r := gjson.GetBytes(body, "forced")
 		assert.True(t, r.Exists(), "%s", body)
-		assert.Equal(t, exp, r.Bool(), "%s", body)
+		assert.Equal(t, isForced, r.Bool(), "%s", body)
+		if isApi {
+			assert.Equal(t, "api", gjson.GetBytes(body, "type").String())
+		} else {
+			assert.Equal(t, "browser", gjson.GetBytes(body, "type").String())
+		}
 	}
 
-	// make authenticated request
-	mar := func(t *testing.T, extQuery url.Values) (*http.Response, []byte) {
-		flowID := x.NewUUID()
-		req := x.NewTestHTTPRequest(t, "GET", ts.URL+login.RouteInitBrowserFlow, nil)
-		loginFlow := login.NewFlow(time.Minute, x.FakeCSRFToken, req, flow.TypeBrowser)
-		loginFlow.ID = flowID
-		for _, s := range reg.LoginStrategies() {
-			require.NoError(t, s.PopulateLoginMethod(req, loginFlow))
+	initAuthenticatedFlow := func(t *testing.T, extQuery url.Values, isAPI bool) (*http.Response, []byte) {
+		route := login.RouteInitBrowserFlow
+		if isAPI {
+			route = login.RouteInitAPIFlow
 		}
-		require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.TODO(), loginFlow), "%+v", loginFlow)
-
-		q := url.Values{"id": {flowID.String()}}
-		for key := range extQuery {
-			q.Set(key, extQuery.Get(key))
-		}
-		req.URL.RawQuery = q.Encode()
-
+		req := x.NewTestHTTPRequest(t, "GET", ts.URL+route, nil)
+		req.URL.RawQuery = extQuery.Encode()
 		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, req)
 		return res, body
 	}
 
-	// make unauthenticated request
-	mur := func(t *testing.T, query url.Values) (*http.Response, []byte) {
+	initFlow := func(t *testing.T, query url.Values, isAPI bool) (*http.Response, []byte) {
+		route := login.RouteInitBrowserFlow
+		if isAPI {
+			route = login.RouteInitAPIFlow
+		}
 		c := ts.Client()
-		res, err := c.Get(ts.URL + login.RouteInitBrowserFlow + "?" + query.Encode())
+		res, err := c.Get(ts.URL + route + "?" + query.Encode())
 		require.NoError(t, err)
 		defer res.Body.Close()
 		body, err := ioutil.ReadAll(res.Body)
@@ -78,40 +72,70 @@ func TestHandlerSettingForced(t *testing.T) {
 		return res, body
 	}
 
-	t.Run("case=does not set forced flag on unauthenticated request", func(t *testing.T) {
-		res, body := mur(t, url.Values{})
-		ab(body, false)
-		assert.Contains(t, res.Request.URL.String(), loginTS.URL)
-	})
-
-	t.Run("case=does not set forced flag on unauthenticated request with refresh=true", func(t *testing.T) {
-		res, body := mur(t, url.Values{"refresh": {"true"}})
-		ab(body, true)
-		assert.Contains(t, res.Request.URL.String(), loginTS.URL)
-	})
-
-	t.Run("case=does not set forced flag on authenticated request without refresh=true", func(t *testing.T) {
-		res, _ := mar(t, url.Values{})
-		assert.Contains(t, res.Request.URL.String(), "https://www.ory.sh")
-	})
-
-	t.Run("case=does not set forced flag on authenticated request with refresh=false", func(t *testing.T) {
-		res, _ := mar(t, url.Values{
-			"refresh": {"false"},
+	t.Run("flow=api", func(t *testing.T) {
+		t.Run("case=does not set forced flag on unauthenticated request", func(t *testing.T) {
+			res, body := initFlow(t, url.Values{}, true)
+			assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
+			assertion(body, false, true)
 		})
-		assert.Contains(t, res.Request.URL.String(), "https://www.ory.sh")
+
+		t.Run("case=does not set forced flag on unauthenticated request with refresh=true", func(t *testing.T) {
+			res, body := initFlow(t, url.Values{"refresh": {"true"}}, true)
+			assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
+			assertion(body, true, true)
+		})
+
+		t.Run("case=does not set forced flag on authenticated request without refresh=true", func(t *testing.T) {
+			res, body := initAuthenticatedFlow(t, url.Values{}, true)
+			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+			assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), "valid session was detected", "%s", body)
+		})
+
+		t.Run("case=does not set forced flag on authenticated request with refresh=false", func(t *testing.T) {
+			res, body := initAuthenticatedFlow(t, url.Values{"refresh": {"false"}}, true)
+			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+			assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), "valid session was detected", "%s", body)
+		})
+
+		t.Run("case=does set forced flag on authenticated request with refresh=true", func(t *testing.T) {
+			res, body := initAuthenticatedFlow(t, url.Values{"refresh": {"true"}}, true)
+			assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
+			assertion(body, true, true)
+		})
 	})
 
-	t.Run("case=does set forced flag on authenticated request with refresh=true", func(t *testing.T) {
-		res, body := mar(t, url.Values{
-			"refresh": {"true"},
+	t.Run("flow=browser", func(t *testing.T) {
+		t.Run("case=does not set forced flag on unauthenticated request", func(t *testing.T) {
+			res, body := initFlow(t, url.Values{}, false)
+			assertion(body, false, false)
+			assert.Contains(t, res.Request.URL.String(), loginTS.URL)
 		})
-		ab(body, true)
-		assert.Contains(t, res.Request.URL.String(), loginTS.URL)
+
+		t.Run("case=does not set forced flag on unauthenticated request with refresh=true", func(t *testing.T) {
+			res, body := initFlow(t, url.Values{"refresh": {"true"}}, false)
+			assertion(body, true, false)
+			assert.Contains(t, res.Request.URL.String(), loginTS.URL)
+		})
+
+		t.Run("case=does not set forced flag on authenticated request without refresh=true", func(t *testing.T) {
+			res, _ := initAuthenticatedFlow(t, url.Values{}, false)
+			assert.Contains(t, res.Request.URL.String(), "https://www.ory.sh")
+		})
+
+		t.Run("case=does not set forced flag on authenticated request with refresh=false", func(t *testing.T) {
+			res, _ := initAuthenticatedFlow(t, url.Values{"refresh": {"false"}}, false)
+			assert.Contains(t, res.Request.URL.String(), "https://www.ory.sh")
+		})
+
+		t.Run("case=does set forced flag on authenticated request with refresh=true", func(t *testing.T) {
+			res, body := initAuthenticatedFlow(t, url.Values{"refresh": {"true"}}, false)
+			assertion(body, true, false)
+			assert.Contains(t, res.Request.URL.String(), loginTS.URL)
+		})
 	})
 }
 
-func TestLoginHandler(t *testing.T) {
+func TestGetFlow(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	public, admin := testhelpers.NewKratosServerWithCSRF(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
