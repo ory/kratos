@@ -80,7 +80,7 @@ func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r 
 		cookie.Options.MaxAge = int(s.c.SessionLifespan().Seconds())
 	}
 
-	cookie.Values["sid"] = session.ID.String()
+	cookie.Values["session_token"] = session.Token
 	if err := cookie.Save(r, w); err != nil {
 		return errors.WithStack(err)
 	}
@@ -93,12 +93,12 @@ func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (*S
 		return nil, errors.WithStack(ErrNoActiveSessionFound.WithWrap(err).WithDebugf("%s", err))
 	}
 
-	sid, ok := cookie.Values["sid"].(string)
+	token, ok := cookie.Values["session_token"].(string)
 	if !ok {
 		return nil, errors.WithStack(ErrNoActiveSessionFound)
 	}
 
-	se, err := s.r.SessionPersister().GetSession(ctx, x.ParseUUID(sid))
+	se, err := s.r.SessionPersister().GetSessionFromToken(ctx, token)
 	if err != nil {
 		if errors.Is(err, herodot.ErrNotFound) || errors.Is(err, sqlcon.ErrNoRows) {
 			return nil, errors.WithStack(ErrNoActiveSessionFound)
@@ -111,7 +111,6 @@ func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (*S
 	}
 
 	se.Identity = se.Identity.CopyWithoutCredentials()
-
 	return se, nil
 }
 
