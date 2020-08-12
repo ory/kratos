@@ -21,17 +21,29 @@ type PersistenceProvider interface {
 }
 
 type Persister interface {
-	// Get retrieves a session from the store.
+	// GetSession retrieves a session from the store.
 	GetSession(ctx context.Context, sid uuid.UUID) (*Session, error)
 
-	// Create adds a session to the store.
+	// CreateSession adds a session to the store.
 	CreateSession(ctx context.Context, s *Session) error
 
-	// Delete removes a session from the store
-	DeleteSession(ctx context.Context, sid uuid.UUID) error
+	// DeleteSession removes a session from the store
+	DeleteSession(ctx context.Context, id uuid.UUID) error
 
 	// DeleteSessionsFor removes all active session from the store for the given identity.
-	DeleteSessionsFor(ctx context.Context, sid uuid.UUID) error
+	DeleteSessionsFor(ctx context.Context, identity uuid.UUID) error
+
+	// GetSessionFromToken gets the session associated with the given token.
+	//
+	// Functionality is similar to GetSession but accepts a session token
+	// instead of a session ID.
+	GetSessionFromToken(context.Context, string) (*Session, error)
+
+	// DeleteSessionFromToken deletes a session associated with the given token.
+	//
+	// Functionality is similar to DeleteSession but accepts a session token
+	// instead of a session ID.
+	DeleteSessionFromToken(context.Context, string) error
 }
 
 func TestPersister(p interface {
@@ -55,15 +67,25 @@ func TestPersister(p interface {
 			require.NoError(t, p.CreateSession(context.Background(), &expected))
 			assert.NotEqual(t, uuid.Nil, expected.ID)
 
-			actual, err := p.GetSession(context.Background(), expected.ID)
-			require.NoError(t, err)
-			assert.Equal(t, expected.Identity.ID, actual.Identity.ID)
-			assert.NotEmpty(t, actual.Identity.SchemaURL)
-			assert.NotEmpty(t, actual.Identity.SchemaID)
-			assert.Equal(t, expected.ID, actual.ID)
-			assert.EqualValues(t, expected.ExpiresAt.Unix(), actual.ExpiresAt.Unix())
-			assert.Equal(t, expected.AuthenticatedAt.Unix(), actual.AuthenticatedAt.Unix())
-			assert.Equal(t, expected.IssuedAt.Unix(), actual.IssuedAt.Unix())
+			check := func(actual *Session, err error) {
+				require.NoError(t, err)
+				assert.Equal(t, expected.Identity.ID, actual.Identity.ID)
+				assert.NotEmpty(t, actual.Identity.SchemaURL)
+				assert.NotEmpty(t, actual.Identity.SchemaID)
+				assert.Equal(t, expected.ID, actual.ID)
+				assert.Equal(t, expected.Token, actual.Token)
+				assert.EqualValues(t, expected.ExpiresAt.Unix(), actual.ExpiresAt.Unix())
+				assert.Equal(t, expected.AuthenticatedAt.Unix(), actual.AuthenticatedAt.Unix())
+				assert.Equal(t, expected.IssuedAt.Unix(), actual.IssuedAt.Unix())
+			}
+
+			t.Run("method=get by id", func(t *testing.T) {
+				check(p.GetSession(context.Background(), expected.ID))
+			})
+
+			t.Run("method=get by token", func(t *testing.T) {
+				check(p.GetSessionFromToken(context.Background(), expected.Token))
+			})
 		})
 
 		t.Run("case=delete session", func(t *testing.T) {
@@ -73,6 +95,17 @@ func TestPersister(p interface {
 			require.NoError(t, p.CreateSession(context.Background(), &expected))
 
 			require.NoError(t, p.DeleteSession(context.Background(), expected.ID))
+			_, err := p.GetSession(context.Background(), expected.ID)
+			require.Error(t, err)
+		})
+
+		t.Run("case=delete session from token", func(t *testing.T) {
+			var expected Session
+			require.NoError(t, faker.FakeData(&expected))
+			require.NoError(t, p.CreateIdentity(context.Background(), expected.Identity))
+			require.NoError(t, p.CreateSession(context.Background(), &expected))
+
+			require.NoError(t, p.DeleteSessionFromToken(context.Background(), expected.Token))
 			_, err := p.GetSession(context.Background(), expected.ID)
 			require.Error(t, err)
 		})

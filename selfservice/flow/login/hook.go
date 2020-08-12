@@ -8,6 +8,7 @@ import (
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
@@ -31,6 +32,7 @@ type (
 	executorDependencies interface {
 		HooksProvider
 		session.ManagementProvider
+		session.PersistenceProvider
 		x.WriterProvider
 		x.LoggingProvider
 	}
@@ -42,6 +44,31 @@ type (
 		LoginHookExecutor() *HookExecutor
 	}
 )
+
+// Contains the Session and Session Token for API Based Authentication
+//
+// swagger:model sessionTokenContainer
+type SessionTokenContainer struct {
+	// The Session Token
+	//
+	// A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization
+	// Header:
+	//
+	// 		Authorization: bearer <session-token>
+	//
+	// The session token is only issued for API flows, not for Browser flows!
+	//
+	// required: true
+	Token string `json:"session_token"`
+
+	// The Session
+	//
+	// The session contains information about the user, the session device, and so on.
+	// This is only available for API flows, not for Browser flows!
+	//
+	// required: true
+	Session *session.Session `json:"session"`
+}
 
 func NewHookExecutor(d executorDependencies, c configuration.Provider) *HookExecutor {
 	return &HookExecutor{
@@ -63,7 +90,16 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct 
 		}
 	}
 
-	if err := e.d.SessionManager().CreateToRequest(r.Context(), w, r, s); err != nil {
+	if a.Type == flow.TypeAPI {
+		if err := e.d.SessionPersister().CreateSession(r.Context(), s); err != nil {
+			return errors.WithStack(err)
+		}
+
+		e.d.Writer().Write(w, r, &SessionTokenContainer{Session: s, Token: s.Token})
+		return nil
+	}
+
+	if err := e.d.SessionManager().CreateAndIssueCookie(r.Context(), w, r, s); err != nil {
 		return errors.WithStack(err)
 	}
 

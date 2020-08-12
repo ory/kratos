@@ -36,7 +36,7 @@ func (e *SessionIssuer) ExecutePostRegistrationPostPersistHook(w http.ResponseWr
 	if err := e.r.SessionPersister().CreateSession(r.Context(), s); err != nil {
 		return err
 	}
-	return e.r.SessionManager().SaveToRequest(r.Context(), w, r, s)
+	return e.r.SessionManager().IssueCookie(r.Context(), w, r, s)
 }
 
 func (e *SessionIssuer) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, a *login.Flow, s *session.Session) error {
@@ -44,5 +44,5 @@ func (e *SessionIssuer) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Requ
 	if err := e.r.SessionPersister().CreateSession(r.Context(), s); err != nil {
 		return err
 	}
-	return e.r.SessionManager().SaveToRequest(r.Context(), w, r, s)
+	return e.r.SessionManager().IssueCookie(r.Context(), w, r, s)
 }

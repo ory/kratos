@@ -121,3 +121,7 @@ migrations-sync: .bin/cli
 .PHONY: migrations-render
 migrations-render: .bin/cli
 		cli dev pop migration render persistence/sql/migrations/templates persistence/sql/migrations/sql
+
+.PHONY: migrations-render-replace
+migrations-render-replace: .bin/cli
+		cli dev pop migration render -r persistence/sql/migrations/templates persistence/sql/migrations/sql
