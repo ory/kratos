@@ -106,7 +106,7 @@ func NewSettingsLoginAcceptAPIServer(t *testing.T, adminClient *client.OryKratos
 
 		viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 
-		res, err := adminClient.Common.GetSelfServiceLoginFlow(common.NewGetSelfServiceLoginFlowParams().WithID(r.URL.Query().Get("id")))
+		res, err := adminClient.Common.GetSelfServiceLoginFlow(common.NewGetSelfServiceLoginFlowParams().WithID(r.URL.Query().Get("flow")))
 
 		require.NoError(t, err)
 		require.NotEmpty(t, res.Payload.RequestURL)
