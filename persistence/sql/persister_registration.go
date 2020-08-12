@@ -12,11 +12,11 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 )
 
-func (p *Persister) CreateRegistrationRequest(ctx context.Context, r *registration.Request) error {
+func (p *Persister) CreateRegistrationRequest(ctx context.Context, r *registration.Flow) error {
 	return p.GetConnection(ctx).Eager().Create(r)
 }
 
-func (p *Persister) UpdateRegistrationRequest(ctx context.Context, r *registration.Request) error {
+func (p *Persister) UpdateRegistrationRequest(ctx context.Context, r *registration.Flow) error {
 	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 
 		rr, err := p.GetRegistrationRequest(ctx, r.ID)
@@ -41,8 +41,8 @@ func (p *Persister) UpdateRegistrationRequest(ctx context.Context, r *registrati
 	})
 }
 
-func (p *Persister) GetRegistrationRequest(ctx context.Context, id uuid.UUID) (*registration.Request, error) {
-	var r registration.Request
+func (p *Persister) GetRegistrationRequest(ctx context.Context, id uuid.UUID) (*registration.Flow, error) {
+	var r registration.Flow
 	if err := p.GetConnection(ctx).Eager().Find(&r, id); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
