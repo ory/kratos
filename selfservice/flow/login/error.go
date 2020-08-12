@@ -22,6 +22,7 @@ import (
 
 var (
 	ErrHookAbortRequest = errors.New("aborted login hook execution")
+	ErrAlreadyLoggedIn = herodot.ErrBadRequest.WithReason("A valid session was detected and thus login is not possible. Did you forget to set `?refresh=true`?")
 )
 
 type (
@@ -130,7 +131,7 @@ func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, ct
 func (s *ErrorHandler) forward(w http.ResponseWriter, r *http.Request, rr *Flow, err error) {
 	if rr == nil {
 		if x.IsJSONRequest(r) {
-			s.d.Writer().Write(w, r, err)
+			s.d.Writer().WriteError(w, r, err)
 			return
 		}
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)

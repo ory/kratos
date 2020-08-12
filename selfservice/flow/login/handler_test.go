@@ -2,6 +2,7 @@ package login_test
 
 import (
 	"context"
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gobuffalo/httptest"
+	"github.com/ory/x/assertx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -88,13 +90,13 @@ func TestInitFlow(t *testing.T) {
 		t.Run("case=does not set forced flag on authenticated request without refresh=true", func(t *testing.T) {
 			res, body := initAuthenticatedFlow(t, url.Values{}, true)
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-			assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), "valid session was detected", "%s", body)
+			assertx.EqualAsJSON(t, login.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw),  "%s", body)
 		})
 
 		t.Run("case=does not set forced flag on authenticated request with refresh=false", func(t *testing.T) {
 			res, body := initAuthenticatedFlow(t, url.Values{"refresh": {"false"}}, true)
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-			assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), "valid session was detected", "%s", body)
+			assertx.EqualAsJSON(t, login.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw),  "%s", body)
 		})
 
 		t.Run("case=does set forced flag on authenticated request with refresh=true", func(t *testing.T) {

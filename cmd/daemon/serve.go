@@ -126,7 +126,7 @@ func sqa(cmd *cobra.Command, d driver.Driver) *metricsx.Service {
 				healthx.VersionPath,
 				"/auth/methods/oidc/",
 				password.RegistrationPath,
-				password.LoginPath,
+				password.RouteLogin,
 				oidc.BasePath,
 				login.RouteInitBrowserFlow,
 				login.RouteGetFlow,
