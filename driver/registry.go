@@ -104,7 +104,7 @@ type Registry interface {
 
 	logout.HandlerProvider
 
-	registration.RequestPersistenceProvider
+	registration.FlowPersistenceProvider
 	registration.ErrorHandlerProvider
 	registration.HooksProvider
 	registration.HookExecutorProvider

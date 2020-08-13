@@ -12,7 +12,7 @@ import (
 type Strategy interface {
 	ID() identity.CredentialsType
 	RegisterRegistrationRoutes(*x.RouterPublic)
-	PopulateRegistrationMethod(r *http.Request, sr *Request) error
+	PopulateRegistrationMethod(r *http.Request, sr *Flow) error
 }
 
 type Strategies []Strategy

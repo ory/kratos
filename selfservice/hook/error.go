@@ -56,14 +56,14 @@ func (e Error) ExecuteLoginPreHook(w http.ResponseWriter, r *http.Request, a *lo
 	return e.err("ExecuteLoginPreHook", login.ErrHookAbortRequest)
 }
 
-func (e Error) ExecuteRegistrationPreHook(w http.ResponseWriter, r *http.Request, a *registration.Request) error {
+func (e Error) ExecuteRegistrationPreHook(w http.ResponseWriter, r *http.Request, a *registration.Flow) error {
 	return e.err("ExecuteRegistrationPreHook", registration.ErrHookAbortRequest)
 }
 
-func (e Error) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, a *registration.Request, s *session.Session) error {
+func (e Error) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, a *registration.Flow, s *session.Session) error {
 	return e.err("ExecutePostRegistrationPostPersistHook", registration.ErrHookAbortRequest)
 }
 
-func (e Error) ExecutePostRegistrationPrePersistHook(w http.ResponseWriter, r *http.Request, a *registration.Request, i *identity.Identity) error {
+func (e Error) ExecutePostRegistrationPrePersistHook(w http.ResponseWriter, r *http.Request, a *registration.Flow, i *identity.Identity) error {
 	return e.err("ExecutePostRegistrationPrePersistHook", registration.ErrHookAbortRequest)
 }

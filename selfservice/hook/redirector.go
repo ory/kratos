@@ -46,14 +46,14 @@ func (e *Redirector) ExecuteLoginPreHook(w http.ResponseWriter, r *http.Request,
 	return errors.WithStack(login.ErrHookAbortRequest)
 }
 
-func (e *Redirector) ExecuteRegistrationPreHook(w http.ResponseWriter, r *http.Request, _ *registration.Request) error {
+func (e *Redirector) ExecuteRegistrationPreHook(w http.ResponseWriter, r *http.Request, _ *registration.Flow) error {
 	if err := e.do(w, r); err != nil {
 		return err
 	}
 	return errors.WithStack(registration.ErrHookAbortRequest)
 }
 
-func (e *Redirector) ExecutePostRegistrationPrePersistHook(w http.ResponseWriter, r *http.Request, _ *registration.Request, _ *identity.Identity) error {
+func (e *Redirector) ExecutePostRegistrationPrePersistHook(w http.ResponseWriter, r *http.Request, _ *registration.Flow, _ *identity.Identity) error {
 	if err := e.do(w, r); err != nil {
 		return err
 	}

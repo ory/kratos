@@ -39,7 +39,7 @@ func TestNewFlow(t *testing.T) {
 			URL:  urlx.ParseOrPanic("/"),
 			Host: "ory.sh", TLS: &tls.ConnectionState{},
 		}, flow.TypeBrowser)
-		assert.Equal(t, r.IssuedAt, r.ExpiresAt)
+		assert.EqualValues(t, r.IssuedAt, r.ExpiresAt)
 		assert.Equal(t, flow.TypeBrowser, r.Type)
 		assert.False(t, r.Forced)
 		assert.Equal(t, "https://ory.sh/", r.RequestURL)

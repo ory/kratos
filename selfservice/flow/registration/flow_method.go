@@ -24,11 +24,11 @@ type RequestMethod struct {
 	// ID is a helper struct field for gobuffalo.pop.
 	ID uuid.UUID `json:"-" faker:"-" db:"id"`
 
-	// RequestID is a helper struct field for gobuffalo.pop.
-	RequestID uuid.UUID `json:"-" faker:"-" db:"selfservice_registration_request_id"`
+	// FlowID is a helper struct field for gobuffalo.pop.
+	FlowID uuid.UUID `json:"-" faker:"-" db:"selfservice_registration_flow_id"`
 
-	// Request is a helper struct field for gobuffalo.pop.
-	Request *Request `json:"-" faker:"-" belongs_to:"selfservice_registration_request" fk_id:"RequestID"`
+	// Flow is a helper struct field for gobuffalo.pop.
+	Flow *Flow `json:"-" faker:"-" belongs_to:"selfservice_registration_flow" fk_id:"FlowID"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
@@ -38,7 +38,7 @@ type RequestMethod struct {
 }
 
 func (u RequestMethod) TableName() string {
-	return "selfservice_registration_request_methods"
+	return "selfservice_registration_flow_methods"
 }
 
 type RequestMethodsRaw []RequestMethod // workaround for https://github.com/gobuffalo/pop/pull/478
@@ -46,12 +46,12 @@ type RequestMethods map[identity.CredentialsType]*RequestMethod
 
 func (u RequestMethods) TableName() string {
 	// This must be stay a value receiver, using a pointer receiver will cause issues with pop.
-	return "selfservice_registration_request_methods"
+	return "selfservice_registration_flow_methods"
 }
 
 func (u RequestMethodsRaw) TableName() string {
 	// This must be stay a value receiver, using a pointer receiver will cause issues with pop.
-	return "selfservice_registration_request_methods"
+	return "selfservice_registration_flow_methods"
 }
 
 // swagger:ignore

@@ -31,7 +31,7 @@ func NewSessionIssuer(r sessionIssuerDependencies) *SessionIssuer {
 	return &SessionIssuer{r: r}
 }
 
-func (e *SessionIssuer) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, a *registration.Request, s *session.Session) error {
+func (e *SessionIssuer) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, a *registration.Flow, s *session.Session) error {
 	s.AuthenticatedAt = time.Now().UTC()
 	if err := e.r.SessionPersister().CreateSession(r.Context(), s); err != nil {
 		return err

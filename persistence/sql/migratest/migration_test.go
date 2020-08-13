@@ -135,11 +135,11 @@ func TestMigrations(t *testing.T) {
 					}
 				})
 				t.Run("case=registration", func(t *testing.T) {
-					var ids []registration.Request
+					var ids []registration.Flow
 					require.NoError(t, c.Select("id").All(&ids))
 
 					for _, id := range ids {
-						actual, err := d.Registry().RegistrationRequestPersister().GetRegistrationRequest(context.Background(), id.ID)
+						actual, err := d.Registry().RegistrationFlowPersister().GetRegistrationFlow(context.Background(), id.ID)
 						require.NoError(t, err)
 						compareWithFixture(t, actual, "registration_request", id.ID.String())
 					}

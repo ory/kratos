@@ -31,7 +31,7 @@ type FlowMethod struct {
 	// FlowID is a helper struct field for gobuffalo.pop.
 	FlowID uuid.UUID `json:"-" db:"selfservice_login_flow_id"`
 
-	// Request is a helper struct field for gobuffalo.pop.
+	// Flow is a helper struct field for gobuffalo.pop.
 	Flow *Flow `json:"-" belongs_to:"selfservice_login_flow" fk_id:"FlowID"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.

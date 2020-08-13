@@ -482,7 +482,7 @@ func (m *RegistryDefault) PrivilegedIdentityPool() identity.PrivilegedPool {
 	return m.persister
 }
 
-func (m *RegistryDefault) RegistrationRequestPersister() registration.RequestPersister {
+func (m *RegistryDefault) RegistrationFlowPersister() registration.FlowPersister {
 	return m.persister
 }
 

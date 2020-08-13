@@ -19,6 +19,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/x"
 )
@@ -37,7 +38,7 @@ func TestRegistrationExecutor(t *testing.T) {
 				router := httprouter.New()
 				handleErr := testhelpers.SelfServiceHookRegistrationErrorHandler
 				router.GET("/registration/pre", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-					if handleErr(t, w, r, reg.RegistrationHookExecutor().PreRegistrationHook(w, r, registration.NewRequest(time.Minute, x.FakeCSRFToken, r))) {
+					if handleErr(t, w, r, reg.RegistrationHookExecutor().PreRegistrationHook(w, r, registration.NewFlow(time.Minute, x.FakeCSRFToken, r, flow.TypeBrowser))) {
 						w.Write([]byte("ok"))
 					}
 				})
@@ -46,7 +47,7 @@ func TestRegistrationExecutor(t *testing.T) {
 					if i == nil {
 						i = testhelpers.SelfServiceHookFakeIdentity(t)
 					}
-					a := registration.NewRequest(time.Minute, x.FakeCSRFToken, r)
+					a := registration.NewFlow(time.Minute, x.FakeCSRFToken, r, flow.TypeBrowser)
 					a.RequestURL = x.RequestURL(r).String()
 					_ = handleErr(t, w, r, reg.RegistrationHookExecutor().PostRegistrationHook(w, r, identity.CredentialsType(strategy), a, i))
 				})

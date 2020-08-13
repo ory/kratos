@@ -25,6 +25,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/selfservice/strategy/password"
@@ -68,7 +69,7 @@ func TestRegistration(t *testing.T) {
 		defer ts.Close()
 
 		errTs, uiTs, returnTs := newErrTs(t, reg), httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			e, err := reg.RegistrationRequestPersister().GetRegistrationRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
+			e, err := reg.RegistrationFlowPersister().GetRegistrationFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
 			require.NoError(t, err)
 			reg.Writer().Write(w, r, e)
 		})), newReturnTs(t, reg)
@@ -83,9 +84,10 @@ func TestRegistration(t *testing.T) {
 		viper.Set(configuration.ViperKeySelfServiceRegistrationAfter+"."+configuration.DefaultBrowserReturnURL, returnTs.URL+"/return-ts")
 		viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
 
-		var newRegistrationRequest = func(t *testing.T, exp time.Duration) *registration.Request {
-			rr := &registration.Request{
+		var newRegistrationRequest = func(t *testing.T, exp time.Duration) *registration.Flow {
+			rr := &registration.Flow{
 				ID:       x.NewUUID(),
+				Type: flow.TypeBrowser,
 				IssuedAt: time.Now().UTC(), ExpiresAt: time.Now().UTC().Add(exp), RequestURL: ts.URL,
 				Methods: map[identity.CredentialsType]*registration.RequestMethod{
 					identity.CredentialsTypePassword: {
@@ -105,7 +107,7 @@ func TestRegistration(t *testing.T) {
 					},
 				},
 			}
-			require.NoError(t, reg.RegistrationRequestPersister().CreateRegistrationRequest(context.Background(), rr))
+			require.NoError(t, reg.RegistrationFlowPersister().CreateRegistrationFlow(context.Background(), rr))
 			return rr
 		}
 
@@ -241,7 +243,7 @@ func TestRegistration(t *testing.T) {
 		t.Run("case=should return an error because not passing validation and reset previous errors and values", func(t *testing.T) {
 			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
 
-			rr := &registration.Request{
+			rr := &registration.Flow{
 				ID:        x.NewUUID(),
 				ExpiresAt: time.Now().Add(time.Minute),
 				Methods: map[identity.CredentialsType]*registration.RequestMethod{
@@ -267,7 +269,7 @@ func TestRegistration(t *testing.T) {
 				},
 			}
 
-			require.NoError(t, reg.RegistrationRequestPersister().CreateRegistrationRequest(context.Background(), rr))
+			require.NoError(t, reg.RegistrationFlowPersister().CreateRegistrationFlow(context.Background(), rr))
 			body, res := makeRequest(t, rr.ID, false, url.Values{
 				"traits.username": {"registration-identifier-9"},
 				"password":        {x.NewUUID().String()},
@@ -320,7 +322,7 @@ func TestRegistration(t *testing.T) {
 		viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
 			"enabled": true})
 
-		sr := registration.NewRequest(time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")})
+		sr := registration.NewFlow(time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
 		require.NoError(t, reg.RegistrationStrategies().MustStrategy(identity.CredentialsTypePassword).(*password.Strategy).PopulateRegistrationMethod(&http.Request{}, sr))
 
 		expected := &registration.RequestMethod{

@@ -99,7 +99,7 @@ func RegisterFakes() {
 		panic(err)
 	}
 
-	if err := faker.AddProvider("registration_request_methods", func(v reflect.Value) (interface{}, error) {
+	if err := faker.AddProvider("registration_flow_methods", func(v reflect.Value) (interface{}, error) {
 		var methods = make(map[identity.CredentialsType]*registration.RequestMethod)
 		for _, ct := range []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeOIDC} {
 			var f form.HTMLForm

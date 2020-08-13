@@ -40,7 +40,7 @@ type registrationStrategyDependencies interface {
 	registration.HooksProvider
 	registration.ErrorHandlerProvider
 	registration.HookExecutorProvider
-	registration.RequestPersistenceProvider
+	registration.FlowPersistenceProvider
 
 	login.HooksProvider
 	login.ErrorHandlerProvider

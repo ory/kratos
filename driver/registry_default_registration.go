@@ -65,7 +65,7 @@ func (m *RegistryDefault) RegistrationHandler() *registration.Handler {
 	return m.selfserviceRegistrationHandler
 }
 
-func (m *RegistryDefault) RegistrationRequestErrorHandler() *registration.ErrorHandler {
+func (m *RegistryDefault) RegistrationFlowErrorHandler() *registration.ErrorHandler {
 	if m.selfserviceRegistrationRequestErrorHandler == nil {
 		m.selfserviceRegistrationRequestErrorHandler = registration.NewErrorHandler(m, m.c)
 	}

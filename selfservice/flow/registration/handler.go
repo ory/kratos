@@ -13,13 +13,14 @@ import (
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
 const (
-	BrowserRegistrationPath         = "/self-service/browser/flows/registration"
-	BrowserRegistrationRequestsPath = "/self-service/browser/flows/requests/registration"
+	RouteInitBrowserFlow = "/self-service/browser/flows/registration"
+	RouteGetFlow         = "/self-service/browser/flows/requests/registration"
 )
 
 type (
@@ -31,7 +32,7 @@ type (
 		x.WriterProvider
 		x.CSRFTokenGeneratorProvider
 		HookExecutorProvider
-		RequestPersistenceProvider
+		FlowPersistenceProvider
 	}
 	HandlerProvider interface {
 		RegistrationHandler() *Handler
@@ -47,16 +48,16 @@ func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
-	public.GET(BrowserRegistrationPath, h.d.SessionHandler().IsNotAuthenticated(h.initRegistrationRequest, session.RedirectOnAuthenticated(h.c)))
-	public.GET(BrowserRegistrationRequestsPath, h.publicFetchRegistrationRequest)
+	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsNotAuthenticated(h.initBrowserFlow, session.RedirectOnAuthenticated(h.c)))
+	public.GET(RouteGetFlow, h.publicFetchRegistrationRequest)
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(BrowserRegistrationRequestsPath, h.adminFetchRegistrationRequest)
+	admin.GET(RouteGetFlow, h.adminFetchRegistrationRequest)
 }
 
-func (h *Handler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request) (*Request, error) {
-	a := NewRequest(h.c.SelfServiceFlowRegistrationRequestLifespan(), h.d.GenerateCSRFToken(r), r)
+func (h *Handler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request) (*Flow, error) {
+	a := NewFlow(h.c.SelfServiceFlowRegistrationRequestLifespan(), h.d.GenerateCSRFToken(r), r, flow.TypeBrowser)
 	for _, s := range h.d.RegistrationStrategies() {
 		if err := s.PopulateRegistrationMethod(r, a); err != nil {
 			return nil, err
@@ -67,7 +68,7 @@ func (h *Handler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request)
 		return nil, err
 	}
 
-	if err := h.d.RegistrationRequestPersister().CreateRegistrationRequest(r.Context(), a); err != nil {
+	if err := h.d.RegistrationFlowPersister().CreateRegistrationFlow(r.Context(), a); err != nil {
 		return nil, err
 	}
 
@@ -92,7 +93,7 @@ func (h *Handler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request)
 //     Responses:
 //       302: emptyResponse
 //       500: genericError
-func (h *Handler) initRegistrationRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	a, err := h.NewRegistrationRequest(w, r)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
@@ -158,7 +159,7 @@ func (h *Handler) adminFetchRegistrationRequest(w http.ResponseWriter, r *http.R
 }
 
 func (h *Handler) fetchRegistrationRequest(w http.ResponseWriter, r *http.Request, isPublic bool) error {
-	ar, err := h.d.RegistrationRequestPersister().GetRegistrationRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
+	ar, err := h.d.RegistrationFlowPersister().GetRegistrationFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
 	if err != nil {
 		if isPublic {
 			return errors.WithStack(x.ErrInvalidCSRFToken.WithTrace(err).WithDebugf("%s", err))
@@ -173,7 +174,7 @@ func (h *Handler) fetchRegistrationRequest(w http.ResponseWriter, r *http.Reques
 	if ar.ExpiresAt.Before(time.Now()) {
 		return errors.WithStack(x.ErrGone.
 			WithReason("The registration request has expired. Redirect the user to the login endpoint to initialize a new session.").
-			WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), BrowserRegistrationPath).String()))
+			WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), RouteInitBrowserFlow).String()))
 	}
 
 	h.d.Writer().Write(w, r, ar)
