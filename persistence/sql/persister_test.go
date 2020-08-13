@@ -140,7 +140,7 @@ func TestPersister(t *testing.T) {
 			})
 			t.Run("contract=registration.TestFlowPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				registration.TestRequestPersister(p)(t)
+				registration.TestFlowPersister(p)(t)
 			})
 			t.Run("contract=errorx.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))

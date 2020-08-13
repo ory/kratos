@@ -84,7 +84,7 @@ func TestStrategy(t *testing.T) {
 	// assert form values
 	var afv = func(t *testing.T, request uuid.UUID, provider string) (action string) {
 		var config *form.HTMLForm
-		if req, err := reg.RegistrationRequestPersister().GetRegistrationRequest(context.Background(), request); err == nil {
+		if req, err := reg.RegistrationFlowPersister().GetRegistrationFlow(context.Background(), request); err == nil {
 			require.EqualValues(t, req.ID, request)
 			method := req.Methods[identity.CredentialsTypeOIDC]
 			require.NotNil(t, method)
@@ -187,17 +187,17 @@ func TestStrategy(t *testing.T) {
 	}
 
 	// new registration request
-	var nrr = func(t *testing.T, redirectTo string, exp time.Duration) *registration.Request {
+	var nrr = func(t *testing.T, redirectTo string, exp time.Duration) *registration.Flow {
 		// Use NewLoginFlow to instantiate the request but change the things we need to control a copy of it.
 		req, err := reg.RegistrationHandler().NewRegistrationRequest(httptest.NewRecorder(),
 			&http.Request{URL: urlx.ParseOrPanic(redirectTo)})
 		require.NoError(t, err)
 		req.RequestURL = redirectTo
 		req.ExpiresAt = time.Now().Add(exp)
-		require.NoError(t, reg.RegistrationRequestPersister().UpdateRegistrationRequest(context.Background(), req))
+		require.NoError(t, reg.RegistrationFlowPersister().UpdateRegistrationFlow(context.Background(), req))
 
 		// sanity check
-		got, err := reg.RegistrationRequestPersister().GetRegistrationRequest(context.Background(), req.ID)
+		got, err := reg.RegistrationFlowPersister().GetRegistrationFlow(context.Background(), req.ID)
 		require.NoError(t, err)
 		require.Len(t, got.Methods, len(req.Methods))
 
@@ -414,7 +414,7 @@ func TestStrategy(t *testing.T) {
 	t.Run("method=TestPopulateSignUpMethod", func(t *testing.T) {
 		viper.Set(configuration.ViperKeyPublicBaseURL, urlx.ParseOrPanic("https://foo/"))
 
-		sr := registration.NewRequest(time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")})
+		sr := registration.NewFlow(time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
 		require.NoError(t, reg.RegistrationStrategies().MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateRegistrationMethod(&http.Request{}, sr))
 
 		expected := &registration.RequestMethod{

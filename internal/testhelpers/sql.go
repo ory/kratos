@@ -26,7 +26,7 @@ func CleanSQL(t *testing.T, c *pop.Connection) {
 		new(login.FlowMethods).TableName(),
 		new(login.Flow).TableName(),
 		new(registration.RequestMethods).TableName(),
-		new(registration.Request).TableName(),
+		new(registration.Flow).TableName(),
 		new(settings.RequestMethods).TableName(),
 		new(settings.Request).TableName(),
 		new(recoverytoken.Token).TableName(),

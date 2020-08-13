@@ -11,17 +11,21 @@ import (
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
 
 // swagger:model registrationRequest
-type Request struct {
+type Flow struct {
 	// ID represents the request's unique ID. When performing the registration flow, this
 	// represents the id in the registration ui's query parameter: http://<selfservice.flows.registration.ui_url>/?request=<id>
 	//
 	// required: true
 	ID uuid.UUID `json:"id" faker:"-" db:"id"`
+
+	// Type represents the flow's type which can be either "api" or "browser", depending on the flow interaction.
+	Type flow.Type `json:"type" db:"type" faker:"flow_type"`
 
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,
 	// a new request has to be initiated.
@@ -54,10 +58,10 @@ type Request struct {
 	// processed, but for example the password is incorrect, this will contain error messages.
 	//
 	// required: true
-	Methods map[identity.CredentialsType]*RequestMethod `json:"methods" faker:"registration_request_methods" db:"-"`
+	Methods map[identity.CredentialsType]*RequestMethod `json:"methods" faker:"registration_flow_methods" db:"-"`
 
 	// MethodsRaw is a helper struct field for gobuffalo.pop.
-	MethodsRaw RequestMethodsRaw `json:"-" faker:"-" has_many:"selfservice_registration_request_methods" fk_id:"selfservice_registration_request_id"`
+	MethodsRaw RequestMethodsRaw `json:"-" faker:"-" has_many:"selfservice_registration_flow_methods" fk_id:"selfservice_registration_flow_id"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
@@ -69,7 +73,7 @@ type Request struct {
 	CSRFToken string `json:"-" db:"csrf_token"`
 }
 
-func NewRequest(exp time.Duration, csrf string, r *http.Request) *Request {
+func NewFlow(exp time.Duration, csrf string, r *http.Request, ft flow.Type) *Flow {
 	source := urlx.Copy(r.URL)
 	source.Host = r.Host
 
@@ -78,17 +82,18 @@ func NewRequest(exp time.Duration, csrf string, r *http.Request) *Request {
 		source.Scheme = "https"
 	}
 
-	return &Request{
+	return &Flow{
 		ID:         x.NewUUID(),
 		ExpiresAt:  time.Now().UTC().Add(exp),
 		IssuedAt:   time.Now().UTC(),
 		RequestURL: source.String(),
 		Methods:    map[identity.CredentialsType]*RequestMethod{},
 		CSRFToken:  csrf,
+		Type:       ft,
 	}
 }
 
-func (r *Request) BeforeSave(_ *pop.Connection) error {
+func (r *Flow) BeforeSave(_ *pop.Connection) error {
 	r.MethodsRaw = make([]RequestMethod, 0, len(r.Methods))
 	for _, m := range r.Methods {
 		r.MethodsRaw = append(r.MethodsRaw, *m)
@@ -97,15 +102,15 @@ func (r *Request) BeforeSave(_ *pop.Connection) error {
 	return nil
 }
 
-func (r *Request) AfterCreate(c *pop.Connection) error {
+func (r *Flow) AfterCreate(c *pop.Connection) error {
 	return r.AfterFind(c)
 }
 
-func (r *Request) AfterUpdate(c *pop.Connection) error {
+func (r *Flow) AfterUpdate(c *pop.Connection) error {
 	return r.AfterFind(c)
 }
 
-func (r *Request) AfterFind(_ *pop.Connection) error {
+func (r *Flow) AfterFind(_ *pop.Connection) error {
 	r.Methods = make(RequestMethods)
 	for key := range r.MethodsRaw {
 		m := r.MethodsRaw[key] // required for pointer dereference
@@ -115,18 +120,18 @@ func (r *Request) AfterFind(_ *pop.Connection) error {
 	return nil
 }
 
-func (r Request) TableName() string {
+func (r Flow) TableName() string {
 	// This must be stay a value receiver, using a pointer receiver will cause issues with pop.
-	return "selfservice_registration_requests"
+	return "selfservice_registration_flows"
 }
 
-func (r *Request) GetID() uuid.UUID {
+func (r *Flow) GetID() uuid.UUID {
 	return r.ID
 }
 
-func (r *Request) Valid() error {
+func (r *Flow) Valid() error {
 	if r.ExpiresAt.Before(time.Now()) {
-		return errors.WithStack(newRequestExpiredError(time.Since(r.ExpiresAt)))
+		return errors.WithStack(NewFlowExpiredError(time.Since(r.ExpiresAt)))
 	}
 	return nil
 }

@@ -12,14 +12,14 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 )
 
-func (p *Persister) CreateRegistrationRequest(ctx context.Context, r *registration.Flow) error {
+func (p *Persister) CreateRegistrationFlow(ctx context.Context, r *registration.Flow) error {
 	return p.GetConnection(ctx).Eager().Create(r)
 }
 
-func (p *Persister) UpdateRegistrationRequest(ctx context.Context, r *registration.Flow) error {
+func (p *Persister) UpdateRegistrationFlow(ctx context.Context, r *registration.Flow) error {
 	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 
-		rr, err := p.GetRegistrationRequest(ctx, r.ID)
+		rr, err := p.GetRegistrationFlow(ctx, r.ID)
 		if err != nil {
 			return err
 		}
@@ -31,7 +31,7 @@ func (p *Persister) UpdateRegistrationRequest(ctx context.Context, r *registrati
 		}
 
 		for _, of := range r.Methods {
-			of.RequestID = r.ID
+			of.FlowID = r.ID
 			if err := tx.Save(of); err != nil {
 				return sqlcon.HandleError(err)
 			}
@@ -41,7 +41,7 @@ func (p *Persister) UpdateRegistrationRequest(ctx context.Context, r *registrati
 	})
 }
 
-func (p *Persister) GetRegistrationRequest(ctx context.Context, id uuid.UUID) (*registration.Flow, error) {
+func (p *Persister) GetRegistrationFlow(ctx context.Context, id uuid.UUID) (*registration.Flow, error) {
 	var r registration.Flow
 	if err := p.GetConnection(ctx).Eager().Find(&r, id); err != nil {
 		return nil, sqlcon.HandleError(err)
@@ -54,17 +54,17 @@ func (p *Persister) GetRegistrationRequest(ctx context.Context, id uuid.UUID) (*
 	return &r, nil
 }
 
-func (p *Persister) UpdateRegistrationRequestMethod(ctx context.Context, id uuid.UUID, ct identity.CredentialsType, rm *registration.RequestMethod) error {
+func (p *Persister) UpdateRegistrationFlowMethod(ctx context.Context, id uuid.UUID, ct identity.CredentialsType, rm *registration.RequestMethod) error {
 	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 
-		rr, err := p.GetRegistrationRequest(ctx, id)
+		rr, err := p.GetRegistrationFlow(ctx, id)
 		if err != nil {
 			return err
 		}
 
 		method, ok := rr.Methods[ct]
 		if !ok {
-			rm.RequestID = rr.ID
+			rm.FlowID = rr.ID
 			rm.Method = ct
 			return tx.Save(rm)
 		}

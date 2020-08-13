@@ -12,12 +12,13 @@ import (
 
 	"github.com/ory/x/urlx"
 
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/x"
 )
 
-func TestFakeRequestData(t *testing.T) {
-	var r registration.Request
+func TestFakeFlow(t *testing.T) {
+	var r registration.Flow
 	require.NoError(t, faker.FakeData(&r))
 
 	assert.NotEmpty(t, r.ID)
@@ -32,48 +33,48 @@ func TestFakeRequestData(t *testing.T) {
 	}
 }
 
-func TestNewRequest(t *testing.T) {
+func TestNewFlow(t *testing.T) {
 	t.Run("case=0", func(t *testing.T) {
-		r := registration.NewRequest(0, "csrf", &http.Request{
+		r := registration.NewFlow(0, "csrf", &http.Request{
 			URL:  urlx.ParseOrPanic("/"),
 			Host: "ory.sh", TLS: &tls.ConnectionState{},
-		})
+		}, flow.TypeBrowser)
 		assert.Equal(t, r.IssuedAt, r.ExpiresAt)
-		// assert.Equal(t, flow.TypeBrowser, r.Type)
+		assert.Equal(t, flow.TypeBrowser, r.Type)
 		assert.Equal(t, "https://ory.sh/", r.RequestURL)
 	})
 
 	t.Run("case=1", func(t *testing.T) {
-		r := registration.NewRequest(0, "csrf", &http.Request{
-			URL:  urlx.ParseOrPanic("/"),
-			Host: "ory.sh"})
+		r := registration.NewFlow(0, "csrf", &http.Request{
+			URL:  urlx.ParseOrPanic("/?refresh=true"),
+			Host: "ory.sh"}, flow.TypeAPI)
 		assert.Equal(t, r.IssuedAt, r.ExpiresAt)
-		// assert.Equal(t, flow.TypeBrowser, r.Type)
-		assert.Equal(t, "http://ory.sh/", r.RequestURL)
+		assert.Equal(t, flow.TypeAPI, r.Type)
+		assert.Equal(t, "http://ory.sh/?refresh=true", r.RequestURL)
 	})
 
 	t.Run("case=2", func(t *testing.T) {
-		r := registration.NewRequest(0, "csrf", &http.Request{
+		r := registration.NewFlow(0, "csrf", &http.Request{
 			URL:  urlx.ParseOrPanic("https://ory.sh/"),
-			Host: "ory.sh"})
+			Host: "ory.sh"}, flow.TypeBrowser)
 		assert.Equal(t, "http://ory.sh/", r.RequestURL)
 	})
 }
 
-func TestRequest(t *testing.T) {
-	r := &registration.Request{ID: x.NewUUID()}
+func TestFlow(t *testing.T) {
+	r := &registration.Flow{ID: x.NewUUID()}
 	assert.Equal(t, r.ID, r.GetID())
 
 	t.Run("case=expired", func(t *testing.T) {
 		for _, tc := range []struct {
-			r     *registration.Request
+			r     *registration.Flow
 			valid bool
 		}{
 			{
-				r:     &registration.Request{ExpiresAt: time.Now().Add(time.Hour), IssuedAt: time.Now().Add(-time.Minute)},
+				r:     &registration.Flow{ExpiresAt: time.Now().Add(time.Hour), IssuedAt: time.Now().Add(-time.Minute)},
 				valid: true,
 			},
-			{r: &registration.Request{ExpiresAt: time.Now().Add(-time.Hour), IssuedAt: time.Now().Add(-time.Minute)}},
+			{r: &registration.Flow{ExpiresAt: time.Now().Add(-time.Hour), IssuedAt: time.Now().Add(-time.Minute)}},
 		} {
 			if tc.valid {
 				require.NoError(t, tc.r.Valid())

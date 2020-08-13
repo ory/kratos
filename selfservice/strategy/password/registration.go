@@ -41,7 +41,7 @@ func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
 	r.POST(RegistrationPath, s.d.SessionHandler().IsNotAuthenticated(s.handleRegistration, session.RedirectOnAuthenticated(s.c)))
 }
 
-func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Request, rr *registration.Request, p *RegistrationFormPayload, err error) {
+func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Request, rr *registration.Flow, p *RegistrationFormPayload, err error) {
 	if rr != nil {
 		if method, ok := rr.Methods[identity.CredentialsTypePassword]; ok {
 			method.Config.Reset()
@@ -55,13 +55,13 @@ func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Reques
 			method.Config.SetCSRF(s.d.GenerateCSRFToken(r))
 			rr.Methods[identity.CredentialsTypePassword] = method
 			if errSec := method.Config.SortFields(s.c.DefaultIdentityTraitsSchemaURL().String()); errSec != nil {
-				s.d.RegistrationRequestErrorHandler().HandleRegistrationError(w, r, identity.CredentialsTypePassword, rr, errors.Wrap(err, errSec.Error()))
+				s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, identity.CredentialsTypePassword, rr, errors.Wrap(err, errSec.Error()))
 				return
 			}
 		}
 	}
 
-	s.d.RegistrationRequestErrorHandler().HandleRegistrationError(w, r, identity.CredentialsTypePassword, rr, err)
+	s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, identity.CredentialsTypePassword, rr, err)
 }
 
 func (s *Strategy) decoderRegistration() (decoderx.HTTPDecoderOption, error) {
@@ -85,7 +85,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	ar, err := s.d.RegistrationRequestPersister().GetRegistrationRequest(r.Context(), rid)
+	ar, err := s.d.RegistrationFlowPersister().GetRegistrationFlow(r.Context(), rid)
 	if err != nil {
 		s.handleRegistrationError(w, r, nil, nil, err)
 		return
@@ -173,7 +173,7 @@ func (s *Strategy) validateCredentials(i *identity.Identity, pw string) error {
 	return nil
 }
 
-func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.Request) error {
+func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.Flow) error {
 	action := urlx.CopyWithQuery(
 		urlx.AppendPaths(s.c.SelfPublicURL(), RegistrationPath),
 		url.Values{"request": {sr.ID.String()}},

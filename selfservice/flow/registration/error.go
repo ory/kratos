@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/text"
 
 	"github.com/pkg/errors"
@@ -29,25 +30,25 @@ type (
 		x.WriterProvider
 		x.LoggingProvider
 
-		RequestPersistenceProvider
+		FlowPersistenceProvider
 		HandlerProvider
 	}
 
-	ErrorHandlerProvider interface{ RegistrationRequestErrorHandler() *ErrorHandler }
+	ErrorHandlerProvider interface{ RegistrationFlowErrorHandler() *ErrorHandler }
 
 	ErrorHandler struct {
 		d errorHandlerDependencies
 		c configuration.Provider
 	}
 
-	requestExpiredError struct {
+	FlowExpiredError struct {
 		*herodot.DefaultError
 		ago time.Duration
 	}
 )
 
-func newRequestExpiredError(ago time.Duration) *requestExpiredError {
-	return &requestExpiredError{
+func NewFlowExpiredError(ago time.Duration) *FlowExpiredError {
+	return &FlowExpiredError{
 		ago: ago,
 		DefaultError: herodot.ErrBadRequest.
 			WithError("registration request expired").
@@ -63,11 +64,11 @@ func NewErrorHandler(d errorHandlerDependencies, c configuration.Provider) *Erro
 	}
 }
 
-func (s *ErrorHandler) HandleRegistrationError(
+func (s *ErrorHandler) WriteFlowError(
 	w http.ResponseWriter,
 	r *http.Request,
 	ct identity.CredentialsType,
-	rr *Request,
+	rr *Flow,
 	err error,
 ) {
 	s.d.Audit().
@@ -76,20 +77,20 @@ func (s *ErrorHandler) HandleRegistrationError(
 		WithField("registration_request", rr).
 		Info("Encountered self-service request error.")
 
-	if e := new(requestExpiredError); errors.As(err, &e) {
+	if e := new(FlowExpiredError); errors.As(err, &e) {
 		// create new request because the old one is not valid
 		a, err := s.d.RegistrationHandler().NewRegistrationRequest(w, r)
 		if err != nil {
 			// failed to create a new session and redirect to it, handle that error as a new one
-			s.HandleRegistrationError(w, r, ct, rr, err)
+			s.WriteFlowError(w, r, ct, rr, err)
 			return
 		}
 
 		a.Messages.Add(text.NewErrorValidationRegistrationRequestExpired(e.ago))
-		if err := s.d.RegistrationRequestPersister().UpdateRegistrationRequest(context.TODO(), a); err != nil {
+		if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(context.TODO(), a); err != nil {
 			redirTo, err := s.d.SelfServiceErrorManager().Create(r.Context(), w, r, err)
 			if err != nil {
-				s.HandleRegistrationError(w, r, ct, rr, err)
+				s.WriteFlowError(w, r, ct, rr, err)
 				return
 			}
 			http.Redirect(w, r, redirTo, http.StatusFound)
@@ -119,7 +120,7 @@ func (s *ErrorHandler) HandleRegistrationError(
 		return
 	}
 
-	if err := s.d.RegistrationRequestPersister().UpdateRegistrationRequestMethod(r.Context(), rr.ID, ct, method); err != nil {
+	if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlowMethod(r.Context(), rr.ID, ct, method); err != nil {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
@@ -129,3 +130,21 @@ func (s *ErrorHandler) HandleRegistrationError(
 		http.StatusFound,
 	)
 }
+
+func (s *ErrorHandler) forward(w http.ResponseWriter, r *http.Request, rr *Flow, err error) {
+	if rr == nil {
+		if x.IsJSONRequest(r) {
+			s.d.Writer().WriteError(w, r, err)
+			return
+		}
+		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		return
+	}
+
+	if rr.Type == flow.TypeAPI {
+		s.d.Writer().WriteErrorCode(w, r, x.RecoverStatusCode(err, http.StatusBadRequest), err)
+	} else {
+		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+	}
+}
+

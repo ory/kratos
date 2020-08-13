@@ -37,7 +37,7 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 
 	t.Run("does redirect to default on authenticated request", func(t *testing.T) {
-		body, _ := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, x.NewTestHTTPRequest(t, "GET", ts.URL+registration.BrowserRegistrationPath, nil))
+		body, _ := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, x.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitBrowserFlow, nil))
 		assert.EqualValues(t, "already authenticated", string(body))
 	})
 }
@@ -66,7 +66,7 @@ func TestRegistrationHandler(t *testing.T) {
 			if c == nil {
 				c = http.DefaultClient
 			}
-			_, _ = w.Write(x.EasyGetBody(t, c, upstream+registration.BrowserRegistrationRequestsPath+"?request="+r.URL.Query().Get("request")))
+			_, _ = w.Write(x.EasyGetBody(t, c, upstream+registration.RouteGetFlow+"?request="+r.URL.Query().Get("request")))
 		}))
 	}
 
@@ -81,15 +81,15 @@ func TestRegistrationHandler(t *testing.T) {
 
 	assertExpiredPayload := func(t *testing.T, res *http.Response, body []byte) {
 		assert.EqualValues(t, http.StatusGone, res.StatusCode)
-		assert.Equal(t, public.URL+registration.BrowserRegistrationPath, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
+		assert.Equal(t, public.URL+registration.RouteInitBrowserFlow, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
 	}
 
-	newExpiredRequest := func() *registration.Request {
-		return &registration.Request{
+	newExpiredRequest := func() *registration.Flow {
+		return &registration.Flow{
 			ID:         x.NewUUID(),
 			ExpiresAt:  time.Now().Add(-time.Minute),
 			IssuedAt:   time.Now().Add(-time.Minute * 2),
-			RequestURL: public.URL + registration.BrowserRegistrationPath,
+			RequestURL: public.URL + registration.RouteInitBrowserFlow,
 			CSRFToken:  x.FakeCSRFToken,
 		}
 	}
@@ -109,13 +109,13 @@ func TestRegistrationHandler(t *testing.T) {
 		viper.Set(configuration.ViperKeySelfServiceRegistrationUI, regTS.URL)
 
 		t.Run("case=valid", func(t *testing.T) {
-			assertRequestPayload(t, x.EasyGetBody(t, public.Client(), public.URL+registration.BrowserRegistrationPath))
+			assertRequestPayload(t, x.EasyGetBody(t, public.Client(), public.URL+registration.RouteInitBrowserFlow))
 		})
 
 		t.Run("case=expired", func(t *testing.T) {
 			rr := newExpiredRequest()
-			require.NoError(t, reg.RegistrationRequestPersister().CreateRegistrationRequest(context.Background(), rr))
-			res, body := x.EasyGet(t, admin.Client(), admin.URL+registration.BrowserRegistrationRequestsPath+"?request="+rr.ID.String())
+			require.NoError(t, reg.RegistrationFlowPersister().CreateRegistrationFlow(context.Background(), rr))
+			res, body := x.EasyGet(t, admin.Client(), admin.URL+registration.RouteGetFlow+"?request="+rr.ID.String())
 			assertExpiredPayload(t, res, body)
 		})
 	})
@@ -130,7 +130,7 @@ func TestRegistrationHandler(t *testing.T) {
 			defer regTS.Close()
 			viper.Set(configuration.ViperKeySelfServiceRegistrationUI, regTS.URL)
 
-			body := x.EasyGetBody(t, hc, public.URL+registration.BrowserRegistrationPath)
+			body := x.EasyGetBody(t, hc, public.URL+registration.RouteInitBrowserFlow)
 			assertRequestPayload(t, body)
 		})
 
@@ -141,7 +141,7 @@ func TestRegistrationHandler(t *testing.T) {
 			defer regTS.Close()
 			viper.Set(configuration.ViperKeySelfServiceRegistrationUI, regTS.URL)
 
-			body := x.EasyGetBody(t, new(http.Client), public.URL+registration.BrowserRegistrationPath)
+			body := x.EasyGetBody(t, new(http.Client), public.URL+registration.RouteInitBrowserFlow)
 			assert.Contains(t, gjson.GetBytes(body, "error").String(), "csrf_token", "%s", body)
 		})
 
@@ -159,8 +159,8 @@ func TestRegistrationHandler(t *testing.T) {
 			defer regTS.Close()
 
 			rr := newExpiredRequest()
-			require.NoError(t, reg.RegistrationRequestPersister().CreateRegistrationRequest(context.Background(), rr))
-			res, body := x.EasyGet(t, admin.Client(), admin.URL+registration.BrowserRegistrationRequestsPath+"?request="+rr.ID.String())
+			require.NoError(t, reg.RegistrationFlowPersister().CreateRegistrationFlow(context.Background(), rr))
+			res, body := x.EasyGet(t, admin.Client(), admin.URL+registration.RouteGetFlow+"?request="+rr.ID.String())
 			assertExpiredPayload(t, res, body)
 		})
 	})

@@ -32,7 +32,7 @@ func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
 	s.setRoutes(r)
 }
 
-func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.Request) error {
+func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.Flow) error {
 	config, err := s.populateMethod(r, sr.ID)
 	if err != nil {
 		return err
@@ -44,7 +44,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.
 	return nil
 }
 
-func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Request, claims *Claims, provider Provider, container *authCodeContainer) {
+func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a *registration.Flow, claims *Claims, provider Provider, container *authCodeContainer) {
 	if _, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject)); err == nil {
 		// If the identity already exists, we should perform the login flow instead.
 
