@@ -49,14 +49,14 @@ func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsNotAuthenticated(h.initBrowserFlow, session.RedirectOnAuthenticated(h.c)))
-	public.GET(RouteGetFlow, h.publicFetchRegistrationRequest)
+	public.GET(RouteGetFlow, h.publicFetchRegistrationFlow)
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(RouteGetFlow, h.adminFetchRegistrationRequest)
+	admin.GET(RouteGetFlow, h.adminFetchRegistrationFlow)
 }
 
-func (h *Handler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request) (*Flow, error) {
+func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request) (*Flow, error) {
 	a := NewFlow(h.c.SelfServiceFlowRegistrationRequestLifespan(), h.d.GenerateCSRFToken(r), r, flow.TypeBrowser)
 	for _, s := range h.d.RegistrationStrategies() {
 		if err := s.PopulateRegistrationMethod(r, a); err != nil {
@@ -80,7 +80,7 @@ func (h *Handler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request)
 // Initialize browser-based registration user flow
 //
 // This endpoint initializes a browser-based user registration flow. Once initialized, the browser will be redirected to
-// `selfservice.flows.registration.ui_url` with the request ID set as a query parameter. If a valid user session exists already, the browser will be
+// `selfservice.flows.registration.ui_url` with the flow ID set as a query parameter. If a valid user session exists already, the browser will be
 // redirected to `urls.default_redirect_url`.
 //
 // > This endpoint is NOT INTENDED for API clients and only works
@@ -94,7 +94,7 @@ func (h *Handler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request)
 //       302: emptyResponse
 //       500: genericError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	a, err := h.NewRegistrationRequest(w, r)
+	a, err := h.NewRegistrationFlow(w, r)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
@@ -143,22 +143,22 @@ type getSelfServiceBrowserRegistrationRequestParameters struct {
 //       404: genericError
 //       410: genericError
 //       500: genericError
-func (h *Handler) publicFetchRegistrationRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.fetchRegistrationRequest(w, r, true); err != nil {
+func (h *Handler) publicFetchRegistrationFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if err := h.fetchRegistrationFlow(w, r, true); err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 
 }
 
-func (h *Handler) adminFetchRegistrationRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.fetchRegistrationRequest(w, r, false); err != nil {
+func (h *Handler) adminFetchRegistrationFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if err := h.fetchRegistrationFlow(w, r, false); err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 }
 
-func (h *Handler) fetchRegistrationRequest(w http.ResponseWriter, r *http.Request, isPublic bool) error {
+func (h *Handler) fetchRegistrationFlow(w http.ResponseWriter, r *http.Request, isPublic bool) error {
 	ar, err := h.d.RegistrationFlowPersister().GetRegistrationFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
 	if err != nil {
 		if isPublic {

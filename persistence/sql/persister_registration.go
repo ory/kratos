@@ -54,7 +54,7 @@ func (p *Persister) GetRegistrationFlow(ctx context.Context, id uuid.UUID) (*reg
 	return &r, nil
 }
 
-func (p *Persister) UpdateRegistrationFlowMethod(ctx context.Context, id uuid.UUID, ct identity.CredentialsType, rm *registration.RequestMethod) error {
+func (p *Persister) UpdateRegistrationFlowMethod(ctx context.Context, id uuid.UUID, ct identity.CredentialsType, rm *registration.FlowMethod) error {
 	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 
 		rr, err := p.GetRegistrationFlow(ctx, id)

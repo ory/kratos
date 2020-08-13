@@ -14,12 +14,12 @@ import (
 )
 
 // swagger:model registrationRequestMethod
-type RequestMethod struct {
-	// Method contains the request credentials type.
+type FlowMethod struct {
+	// Method contains the flow method's credentials type.
 	Method identity.CredentialsType `json:"method" faker:"string" db:"method"`
 
 	// Config is the credential type's config.
-	Config *RequestMethodConfig `json:"config" db:"config"`
+	Config *FlowMethodConfig `json:"config" db:"config"`
 
 	// ID is a helper struct field for gobuffalo.pop.
 	ID uuid.UUID `json:"-" faker:"-" db:"id"`
@@ -37,25 +37,25 @@ type RequestMethod struct {
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 }
 
-func (u RequestMethod) TableName() string {
+func (u FlowMethod) TableName() string {
 	return "selfservice_registration_flow_methods"
 }
 
-type RequestMethodsRaw []RequestMethod // workaround for https://github.com/gobuffalo/pop/pull/478
-type RequestMethods map[identity.CredentialsType]*RequestMethod
+type FlowMethodsRaw []FlowMethod // workaround for https://github.com/gobuffalo/pop/pull/478
+type FlowMethods map[identity.CredentialsType]*FlowMethod
 
-func (u RequestMethods) TableName() string {
+func (u FlowMethods) TableName() string {
 	// This must be stay a value receiver, using a pointer receiver will cause issues with pop.
 	return "selfservice_registration_flow_methods"
 }
 
-func (u RequestMethodsRaw) TableName() string {
+func (u FlowMethodsRaw) TableName() string {
 	// This must be stay a value receiver, using a pointer receiver will cause issues with pop.
 	return "selfservice_registration_flow_methods"
 }
 
 // swagger:ignore
-type RequestMethodConfigurator interface {
+type FlowMethodConfigurator interface {
 	form.ErrorParser
 	form.FieldSetter
 	form.FieldUnsetter
@@ -68,34 +68,34 @@ type RequestMethodConfigurator interface {
 }
 
 // swagger:model registrationRequestMethodConfig
-type RequestMethodConfig struct {
+type FlowMethodConfig struct {
 	// swagger:ignore
-	RequestMethodConfigurator
+	FlowMethodConfigurator
 
-	requestMethodConfigMock
+	flowMethodConfigMock
 }
 
 // swagger:model registrationRequestMethodConfigPayload
-type requestMethodConfigMock struct {
+type flowMethodConfigMock struct {
 	*form.HTMLForm
 
-	// Providers is set for the "oidc" request method.
+	// Providers is set for the "oidc" registration method.
 	Providers []form.Field `json:"providers" faker:"len=3"`
 }
 
-func (c *RequestMethodConfig) Scan(value interface{}) error {
+func (c *FlowMethodConfig) Scan(value interface{}) error {
 	return sqlxx.JSONScan(c, value)
 }
 
-func (c *RequestMethodConfig) Value() (driver.Value, error) {
+func (c *FlowMethodConfig) Value() (driver.Value, error) {
 	return sqlxx.JSONValue(c)
 }
 
-func (c *RequestMethodConfig) UnmarshalJSON(data []byte) error {
-	c.RequestMethodConfigurator = form.NewHTMLForm("")
-	return json.Unmarshal(data, c.RequestMethodConfigurator)
+func (c *FlowMethodConfig) UnmarshalJSON(data []byte) error {
+	c.FlowMethodConfigurator = form.NewHTMLForm("")
+	return json.Unmarshal(data, c.FlowMethodConfigurator)
 }
 
-func (c *RequestMethodConfig) MarshalJSON() ([]byte, error) {
-	return json.Marshal(c.RequestMethodConfigurator)
+func (c *FlowMethodConfig) MarshalJSON() ([]byte, error) {
+	return json.Marshal(c.FlowMethodConfigurator)
 }

@@ -192,9 +192,9 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.
 		return err
 	}
 
-	sr.Methods[identity.CredentialsTypePassword] = &registration.RequestMethod{
+	sr.Methods[identity.CredentialsTypePassword] = &registration.FlowMethod{
 		Method: identity.CredentialsTypePassword,
-		Config: &registration.RequestMethodConfig{RequestMethodConfigurator: &RequestMethod{HTMLForm: htmlf}},
+		Config: &registration.FlowMethodConfig{FlowMethodConfigurator: &RequestMethod{HTMLForm: htmlf}},
 	}
 
 	return nil
