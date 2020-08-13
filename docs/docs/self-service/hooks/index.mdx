@@ -75,8 +75,7 @@ response.
 
 :::
 
-It sends  a `Set-Cookie` header which contains the session
-cookie. To use it, you must first define one or more (for secret rotation)
+To use this hook, you must first define one or more (for secret rotation)
 secrets. You can either choose to use the "default" secrets or the more specific "cookie" secrets.
 The other required config is setting the hook in `after` work flows:
 
@@ -99,6 +98,43 @@ selfservice:
           - hook: session
             # can not be configured
 ```
+
+Depending on the registration flow type the behavior changes.
+
+### Registration Flow via Browser
+
+When performing a registration flow with a Browser, this hook sends a
+`Set-Cookie` HTTP header which contains the session cookie.
+
+Therefore, the user is logged in immediately.
+
+### Registration Flow via API
+
+When performing a registration flow with an API client (e.g. mobile apo), this hook
+creates a session and returns the session token and the session itself in the
+response body as application/json:
+
+```json
+{
+  "session": {
+    "id": "..."
+    // ...
+  },
+  "session_token": "...",
+  "identity": {
+    "id": "..."
+    // ...
+  }
+}
+```
+
+:::info
+
+Because the HTTP reply is handled by the hook itself, no other hooks can be executed because the HTTP
+reply can not be modified further (e.g. HTTP Status Code was already sent as 200 and cannot be changed to 301).
+You must ensure that the session hook is the last hook in your configuration!
+
+:::
 
 ## Settings
 
