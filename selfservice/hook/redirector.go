@@ -43,7 +43,7 @@ func (e *Redirector) ExecuteLoginPreHook(w http.ResponseWriter, r *http.Request,
 	if err := e.do(w, r); err != nil {
 		return err
 	}
-	return errors.WithStack(login.ErrHookAbortRequest)
+	return errors.WithStack(login.ErrHookAbortFlow)
 }
 
 func (e *Redirector) ExecuteRegistrationPreHook(w http.ResponseWriter, r *http.Request, _ *registration.Flow) error {
@@ -71,7 +71,7 @@ func (e *Redirector) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request
 	if err := e.do(w, r); err != nil {
 		return err
 	}
-	return errors.WithStack(login.ErrHookAbortRequest)
+	return errors.WithStack(login.ErrHookAbortFlow)
 }
 
 func (e *Redirector) do(w http.ResponseWriter, r *http.Request) error {

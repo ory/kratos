@@ -23,7 +23,7 @@ type (
 		UpdateLoginFlowMethod(context.Context, uuid.UUID, identity.CredentialsType, *FlowMethod) error
 		ForceLoginFlow(ctx context.Context, id uuid.UUID) error
 	}
-	RequestPersistenceProvider interface {
+	FlowPersistenceProvider interface {
 		LoginFlowPersister() FlowPersister
 	}
 )
@@ -42,7 +42,7 @@ func TestFlowPersister(p FlowPersister) func(t *testing.T) {
 			require.Error(t, err)
 		})
 
-		var newRequest = func(t *testing.T) *Flow {
+		var newFlow = func(t *testing.T) *Flow {
 			var r Flow
 			require.NoError(t, faker.FakeData(&r))
 			clearids(&r)
@@ -60,7 +60,7 @@ func TestFlowPersister(p FlowPersister) func(t *testing.T) {
 		})
 
 		t.Run("case=should create a new login flow and properly set IDs", func(t *testing.T) {
-			r := newRequest(t)
+			r := newFlow(t)
 			methods := len(r.Methods)
 			err := p.CreateLoginFlow(context.Background(), r)
 			require.NoError(t, err, "%#v", err)
@@ -74,7 +74,7 @@ func TestFlowPersister(p FlowPersister) func(t *testing.T) {
 		})
 
 		t.Run("case=should create and fetch a login flow", func(t *testing.T) {
-			expected := newRequest(t)
+			expected := newFlow(t)
 			err := p.CreateLoginFlow(context.Background(), expected)
 			require.NoError(t, err)
 
@@ -91,7 +91,7 @@ func TestFlowPersister(p FlowPersister) func(t *testing.T) {
 		})
 
 		t.Run("case=should properly set the flow type", func(t *testing.T) {
-			expected := newRequest(t)
+			expected := newFlow(t)
 			expected.Forced = true
 			expected.Type = flow.TypeAPI
 			expected.Methods = map[identity.CredentialsType]*FlowMethod{
@@ -131,7 +131,7 @@ func TestFlowPersister(p FlowPersister) func(t *testing.T) {
 		})
 
 		t.Run("case=should properly update a flow", func(t *testing.T) {
-			expected := newRequest(t)
+			expected := newFlow(t)
 			expected.Type = flow.TypeAPI
 			err := p.CreateLoginFlow(context.Background(), expected)
 			require.NoError(t, err)
@@ -142,7 +142,7 @@ func TestFlowPersister(p FlowPersister) func(t *testing.T) {
 		})
 
 		t.Run("case=should update a login flow", func(t *testing.T) {
-			expected := newRequest(t)
+			expected := newFlow(t)
 			delete(expected.Methods, identity.CredentialsTypeOIDC)
 			err := p.CreateLoginFlow(context.Background(), expected)
 			require.NoError(t, err)

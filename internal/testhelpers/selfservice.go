@@ -128,7 +128,7 @@ func SelfServiceHookRegistrationViperSetPost(strategy string, c []configuration.
 }
 
 func SelfServiceHookLoginErrorHandler(t *testing.T, w http.ResponseWriter, r *http.Request, err error) bool {
-	return selfServiceHookErrorHandler(t, w, r, login.ErrHookAbortRequest, err)
+	return selfServiceHookErrorHandler(t, w, r, login.ErrHookAbortFlow, err)
 }
 
 func SelfServiceHookRegistrationErrorHandler(t *testing.T, w http.ResponseWriter, r *http.Request, err error) bool {

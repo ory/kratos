@@ -49,11 +49,11 @@ func (e Error) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Req
 }
 
 func (e Error) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, a *login.Flow, s *session.Session) error {
-	return e.err("ExecuteLoginPostHook", login.ErrHookAbortRequest)
+	return e.err("ExecuteLoginPostHook", login.ErrHookAbortFlow)
 }
 
 func (e Error) ExecuteLoginPreHook(w http.ResponseWriter, r *http.Request, a *login.Flow) error {
-	return e.err("ExecuteLoginPreHook", login.ErrHookAbortRequest)
+	return e.err("ExecuteLoginPreHook", login.ErrHookAbortFlow)
 }
 
 func (e Error) ExecuteRegistrationPreHook(w http.ResponseWriter, r *http.Request, a *registration.Flow) error {

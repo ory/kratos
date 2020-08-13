@@ -45,7 +45,7 @@ type registrationStrategyDependencies interface {
 	login.HooksProvider
 	login.ErrorHandlerProvider
 	login.HookExecutorProvider
-	login.RequestPersistenceProvider
+	login.FlowPersistenceProvider
 	login.HandlerProvider
 
 	settings.RequestPersistenceProvider

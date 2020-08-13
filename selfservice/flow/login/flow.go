@@ -80,7 +80,7 @@ type Flow struct {
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"-" db:"updated_at"`
 
-	// CSRFToken contains the anti-csrf token associated with this flow.
+	// CSRFToken contains the anti-csrf token associated with this flow. Only set for browser flows.
 	CSRFToken string `json:"-" db:"csrf_token"`
 
 	// Forced stores whether this login flow should enforce re-authentication.
@@ -143,7 +143,7 @@ func (f Flow) TableName() string {
 
 func (f *Flow) Valid() error {
 	if f.ExpiresAt.Before(time.Now()) {
-		return errors.WithStack(NewRequestExpiredError(time.Since(f.ExpiresAt)))
+		return errors.WithStack(NewFlowExpiredError(time.Since(f.ExpiresAt)))
 	}
 	return nil
 }

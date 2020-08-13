@@ -95,7 +95,7 @@ type Registry interface {
 	settings.RequestPersistenceProvider
 	settings.StrategyProvider
 
-	login.RequestPersistenceProvider
+	login.FlowPersistenceProvider
 	login.ErrorHandlerProvider
 	login.HooksProvider
 	login.HookExecutorProvider

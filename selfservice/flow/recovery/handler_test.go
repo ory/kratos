@@ -51,7 +51,7 @@ func TestRecoveryHandler(t *testing.T) {
 	testhelpers.RecoveryFlowEnable(true)
 
 	testhelpers.NewRedirTS(t, "")
-	testhelpers.NewLoginUIRequestEchoServer(t, reg)
+	testhelpers.NewLoginUIFlowEchoServer(t, reg)
 	testhelpers.NewErrorTestServer(t, reg)
 
 	public, admin := testhelpers.NewKratosServerWithCSRF(t, reg)

@@ -89,7 +89,7 @@ func TestCompleteLogin(t *testing.T) {
 	ts, _ := testhelpers.NewKratosServer(t, reg)
 
 	errTs := testhelpers.NewErrorTestServer(t, reg)
-	uiTs := testhelpers.NewLoginUIRequestEchoServer(t, reg)
+	uiTs := testhelpers.NewLoginUIFlowEchoServer(t, reg)
 	newReturnTs(t, reg)
 
 	// Overwrite these two:
