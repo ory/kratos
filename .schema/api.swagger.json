@@ -1289,7 +1289,7 @@
           {
             "type": "string",
             "description": "The Registration Flow ID\n\nThe value for this parameter comes from `flow` URL Query parameter sent to your\napplication (e.g. `/registration?flow=abcde`).",
-            "name": "flow",
+            "name": "id",
             "in": "query",
             "required": true
           }

@@ -1,7 +1,6 @@
 package registration
 
 import (
-	"context"
 	"net/http"
 	"net/url"
 	"time"
@@ -69,67 +68,72 @@ func (s *ErrorHandler) WriteFlowError(
 	w http.ResponseWriter,
 	r *http.Request,
 	ct identity.CredentialsType,
-	rr *Flow,
+	f *Flow,
 	err error,
 ) {
 	s.d.Audit().
 		WithError(err).
 		WithRequest(r).
-		WithField("registration_flow", rr).
+		WithField("registration_flow", f).
 		Info("Encountered self-service flow error.")
+
+	if f == nil {
+		s.forward(w, r, nil, err)
+		return
+	}
 
 	if e := new(FlowExpiredError); errors.As(err, &e) {
 		// create new flow because the old one is not valid
-		a, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, rr.Type)
+		a, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, f.Type)
 		if err != nil {
 			// failed to create a new session and redirect to it, handle that error as a new one
-			s.WriteFlowError(w, r, ct, rr, err)
+			s.WriteFlowError(w, r, ct, f, err)
 			return
 		}
 
 		a.Messages.Add(text.NewErrorValidationRegistrationFlowExpired(e.ago))
-		if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(context.TODO(), a); err != nil {
-			redirTo, err := s.d.SelfServiceErrorManager().Create(r.Context(), w, r, err)
-			if err != nil {
-				s.WriteFlowError(w, r, ct, rr, err)
-				return
-			}
-			http.Redirect(w, r, redirTo, http.StatusFound)
+		if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(r.Context(), a); err != nil {
+			s.forward(w, r, a, err)
 			return
 		}
 
-		http.Redirect(w, r, urlx.CopyWithQuery(s.c.SelfServiceFlowRegisterUI(), url.Values{"request": {a.ID.String()}}).String(), http.StatusFound)
+		if f.Type == flow.TypeAPI {
+			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.c.SelfPublicURL(),
+				RouteGetFlow), url.Values{"id": {a.ID.String()}}).String(), http.StatusFound)
+		} else {
+			http.Redirect(w, r, a.AppendTo(s.c.SelfServiceFlowRegistrationUI()).String(), http.StatusFound)
+		}
 		return
 	}
 
-	if rr == nil {
-		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
-		return
-	} else if x.IsJSONRequest(r) {
-		s.d.Writer().WriteError(w, r, err)
-		return
-	}
-
-	method, ok := rr.Methods[ct]
+	method, ok := f.Methods[ct]
 	if !ok {
-		s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithDebugf("Methods: %+v", rr.Methods).WithErrorf(`Expected registration method "%s" to exist in request. This is a bug in the code and should be reported on GitHub.`, ct)))
+		s.forward(w, r, f, errors.WithStack(herodot.ErrInternalServerError.
+			WithErrorf(`Expected registration method "%s" to exist in flow. This is a bug in the code and should be reported on GitHub.`, ct)))
 		return
 	}
 
 	if err := method.Config.ParseError(err); err != nil {
-		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		s.forward(w, r, f, err)
 		return
 	}
 
-	if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlowMethod(r.Context(), rr.ID, ct, method); err != nil {
-		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+	if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlowMethod(r.Context(), f.ID, ct, method); err != nil {
+		s.forward(w, r, f, err)
 		return
 	}
 
-	http.Redirect(w, r,
-		urlx.CopyWithQuery(s.c.SelfServiceFlowRegisterUI(), url.Values{"request": {rr.ID.String()}}).String(),
-		http.StatusFound,
-	)
+	if f.Type == flow.TypeBrowser {
+		http.Redirect(w, r, f.AppendTo(s.c.SelfServiceFlowRegistrationUI()).String(), http.StatusFound)
+		return
+	}
+
+	innerRegistrationFlow, innerErr := s.d.RegistrationFlowPersister().GetRegistrationFlow(r.Context(), f.ID)
+	if innerErr != nil {
+		s.forward(w, r, innerRegistrationFlow, innerErr)
+	}
+
+	s.d.Writer().WriteCode(w, r, x.RecoverStatusCode(err, http.StatusBadRequest), innerRegistrationFlow)
 }
 
 func (s *ErrorHandler) forward(w http.ResponseWriter, r *http.Request, rr *Flow, err error) {

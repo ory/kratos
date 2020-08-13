@@ -149,7 +149,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	redirTo := a.AppendTo(h.c.SelfServiceFlowRegisterUI()).String()
+	redirTo := a.AppendTo(h.c.SelfServiceFlowRegistrationUI()).String()
 	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
 		redirTo = h.c.SelfServiceBrowserDefaultReturnTo().String()
 	}

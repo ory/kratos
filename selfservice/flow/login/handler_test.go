@@ -176,7 +176,7 @@ func TestGetFlow(t *testing.T) {
 			IssuedAt:   time.Now().Add(-time.Minute * 2),
 			RequestURL: public.URL + login.RouteInitBrowserFlow,
 			CSRFToken:  x.FakeCSRFToken,
-			Type: flow.TypeBrowser,
+			Type:       flow.TypeBrowser,
 		}
 	}
 
