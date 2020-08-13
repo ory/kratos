@@ -2,7 +2,6 @@ package registration
 
 import (
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/julienschmidt/httprouter"
@@ -150,7 +149,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	redirTo := urlx.CopyWithQuery(h.c.SelfServiceFlowRegisterUI(), url.Values{"request": {a.ID.String()}}).String()
+	redirTo := a.AppendTo(h.c.SelfServiceFlowRegisterUI()).String()
 	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
 		redirTo = h.c.SelfServiceBrowserDefaultReturnTo().String()
 	}
@@ -167,7 +166,7 @@ type getSelfServiceRegistrationFlow struct {
 	//
 	// required: true
 	// in: query
-	Flow string `json:"flow"`
+	ID string `json:"id"`
 }
 
 // swagger:route GET /self-service/registration/flows common public admin getSelfServiceRegistrationFlow
@@ -190,7 +189,7 @@ type getSelfServiceRegistrationFlow struct {
 //       410: genericError
 //       500: genericError
 func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	ar, err := h.d.RegistrationFlowPersister().GetRegistrationFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("flow")))
+	ar, err := h.d.RegistrationFlowPersister().GetRegistrationFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("id")))
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
