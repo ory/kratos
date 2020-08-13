@@ -204,7 +204,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 
 // nolint:deadcode,unused
 // swagger:parameters getSelfServiceLoginFlow
-type getSelfServiceLoginFlowParameters struct {
+type getSelfServiceLoginFlow struct {
 	// The Login Flow ID
 	//
 	// The value for this parameter comes from `flow` URL Query parameter sent to your
@@ -243,7 +243,7 @@ func (h *Handler) fetchLoginFlow(w http.ResponseWriter, r *http.Request, _ httpr
 
 	if ar.ExpiresAt.Before(time.Now()) {
 		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
-			WithReason("The login flow has expired. Redirect the user to the login endpoint for browsers or use the API to initialize a new login flow.").
+			WithReason("The login flow has expired. Redirect the user to the login flow init endpoint to initialize a new login flow.").
 			WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), RouteInitBrowserFlow).String())))
 		return
 	}
