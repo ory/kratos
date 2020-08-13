@@ -57,13 +57,13 @@ func (e Error) ExecuteLoginPreHook(w http.ResponseWriter, r *http.Request, a *lo
 }
 
 func (e Error) ExecuteRegistrationPreHook(w http.ResponseWriter, r *http.Request, a *registration.Flow) error {
-	return e.err("ExecuteRegistrationPreHook", registration.ErrHookAbortRequest)
+	return e.err("ExecuteRegistrationPreHook", registration.ErrHookAbortFlow)
 }
 
 func (e Error) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, a *registration.Flow, s *session.Session) error {
-	return e.err("ExecutePostRegistrationPostPersistHook", registration.ErrHookAbortRequest)
+	return e.err("ExecutePostRegistrationPostPersistHook", registration.ErrHookAbortFlow)
 }
 
 func (e Error) ExecutePostRegistrationPrePersistHook(w http.ResponseWriter, r *http.Request, a *registration.Flow, i *identity.Identity) error {
-	return e.err("ExecutePostRegistrationPrePersistHook", registration.ErrHookAbortRequest)
+	return e.err("ExecutePostRegistrationPrePersistHook", registration.ErrHookAbortFlow)
 }

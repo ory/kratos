@@ -16,7 +16,7 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-// swagger:model registrationRequest
+// swagger:model registrationFlow
 type Flow struct {
 	// ID represents the flow's unique ID. When performing the registration flow, this
 	// represents the id in the registration ui's query parameter: http://<selfservice.flows.registration.ui_url>/?flow=<id>
@@ -70,7 +70,7 @@ type Flow struct {
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 
 	// CSRFToken contains the anti-csrf token associated with this flow. Only set for browser flows.
-	CSRFToken string `json:"-" db:"csrf_token,omitempty"`
+	CSRFToken string `json:"-" db:"csrf_token"`
 }
 
 func NewFlow(exp time.Duration, csrf string, r *http.Request, ft flow.Type) *Flow {

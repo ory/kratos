@@ -34,7 +34,7 @@ type RegistrationRequestMethodConfig struct {
 	// Required: true
 	Method *string `json:"method"`
 
-	// Providers is set for the "oidc" request method.
+	// Providers is set for the "oidc" registration method.
 	Providers []*FormField `json:"providers"`
 }
 

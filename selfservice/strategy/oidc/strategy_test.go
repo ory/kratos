@@ -190,7 +190,7 @@ func TestStrategy(t *testing.T) {
 	var nrr = func(t *testing.T, redirectTo string, exp time.Duration) *registration.Flow {
 		// Use NewLoginFlow to instantiate the request but change the things we need to control a copy of it.
 		req, err := reg.RegistrationHandler().NewRegistrationFlow(httptest.NewRecorder(),
-			&http.Request{URL: urlx.ParseOrPanic(redirectTo)})
+			&http.Request{URL: urlx.ParseOrPanic(redirectTo)}, flow.TypeBrowser)
 		require.NoError(t, err)
 		req.RequestURL = redirectTo
 		req.ExpiresAt = time.Now().Add(exp)
