@@ -82,8 +82,8 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct 
 
 	for _, executor := range e.d.PostLoginHooks(ct) {
 		if err := executor.ExecuteLoginPostHook(w, r, a, s); err != nil {
-			if errors.Is(err, ErrHookAbortRequest) {
-				e.d.Logger().Warn("A successful login attempt was aborted because a hook returned ErrHookAbortRequest.")
+			if errors.Is(err, ErrHookAbortFlow) {
+				e.d.Logger().Warn("A successful login attempt was aborted because a hook returned ErrHookAbortFlow.")
 				return nil
 			}
 			return err

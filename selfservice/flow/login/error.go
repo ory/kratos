@@ -21,8 +21,8 @@ import (
 )
 
 var (
-	ErrHookAbortRequest = errors.New("aborted login hook execution")
-	ErrAlreadyLoggedIn  = herodot.ErrBadRequest.WithReason("A valid session was detected and thus login is not possible. Did you forget to set `?refresh=true`?")
+	ErrHookAbortFlow   = errors.New("aborted login hook execution")
+	ErrAlreadyLoggedIn = herodot.ErrBadRequest.WithReason("A valid session was detected and thus login is not possible. Did you forget to set `?refresh=true`?")
 )
 
 type (
@@ -31,7 +31,7 @@ type (
 		x.WriterProvider
 		x.LoggingProvider
 
-		RequestPersistenceProvider
+		FlowPersistenceProvider
 		HandlerProvider
 	}
 
@@ -42,14 +42,14 @@ type (
 		c configuration.Provider
 	}
 
-	flowExpiredError struct {
+	FlowExpiredError struct {
 		*herodot.DefaultError
 		ago time.Duration
 	}
 )
 
-func NewRequestExpiredError(ago time.Duration) *flowExpiredError {
-	return &flowExpiredError{
+func NewFlowExpiredError(ago time.Duration) *FlowExpiredError {
+	return &FlowExpiredError{
 		ago: ago,
 		DefaultError: herodot.ErrBadRequest.
 			WithError("login flow expired").
@@ -74,7 +74,7 @@ func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, ct
 		return
 	}
 
-	if e := new(flowExpiredError); errors.As(err, &e) {
+	if e := new(FlowExpiredError); errors.As(err, &e) {
 		// create new flow because the old one is not valid
 		a, err := s.d.LoginHandler().NewLoginFlow(w, r, f.Type)
 		if err != nil {
@@ -83,7 +83,7 @@ func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, ct
 			return
 		}
 
-		a.Messages.Add(text.NewErrorValidationLoginRequestExpired(e.ago))
+		a.Messages.Add(text.NewErrorValidationLoginFlowExpired(e.ago))
 		if err := s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), a); err != nil {
 			s.forward(w, r, a, err)
 			return

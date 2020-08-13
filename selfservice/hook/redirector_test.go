@@ -30,7 +30,7 @@ func TestRedirector(t *testing.T) {
 		require.Error(t, l.ExecuteSettingsPrePersistHook(w, r, nil, nil), settings.ErrHookAbortRequest)
 	})
 	router.GET("/b", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		require.Error(t, l.ExecuteLoginPostHook(w, r, nil, nil), login.ErrHookAbortRequest)
+		require.Error(t, l.ExecuteLoginPostHook(w, r, nil, nil), login.ErrHookAbortFlow)
 	})
 	router.GET("/c", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		require.Error(t, l.ExecutePostRegistrationPrePersistHook(w, r, nil, nil), registration.ErrHookAbortRequest)
@@ -42,7 +42,7 @@ func TestRedirector(t *testing.T) {
 		require.Error(t, l.ExecutePostRegistrationPrePersistHook(w, r, nil, nil), registration.ErrHookAbortRequest)
 	})
 	router.GET("/f", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		require.Error(t, l.ExecuteLoginPreHook(w, r, nil), login.ErrHookAbortRequest)
+		require.Error(t, l.ExecuteLoginPreHook(w, r, nil), login.ErrHookAbortFlow)
 	})
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)

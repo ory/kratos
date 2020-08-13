@@ -38,7 +38,7 @@ func TestHandleError(t *testing.T) {
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)
 
-	testhelpers.NewLoginUIRequestEchoServer(t, reg)
+	testhelpers.NewLoginUIFlowEchoServer(t, reg)
 	testhelpers.NewErrorTestServer(t, reg)
 
 	h := reg.LoginFlowErrorHandler()
@@ -100,7 +100,7 @@ func TestHandleError(t *testing.T) {
 		res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 		require.NoError(t, err)
 		defer res.Body.Close()
-		assert.Equal(t, "application/json; charset=utf-8", res.Header.Get("Content-Type"))
+		assert.Contains(t, res.Header.Get("Content-Type"), "application/json")
 		assert.NotContains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL().String()+"?error=")
 
 		body, err := ioutil.ReadAll(res.Body)
@@ -113,7 +113,7 @@ func TestHandleError(t *testing.T) {
 			t.Cleanup(reset)
 
 			loginFlow = newFlow(t, time.Minute, flow.TypeAPI)
-			flowError = login.NewRequestExpiredError(time.Hour)
+			flowError = login.NewFlowExpiredError(time.Hour)
 			ct = identity.CredentialsTypePassword
 
 			res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
@@ -124,7 +124,7 @@ func TestHandleError(t *testing.T) {
 
 			body, err := ioutil.ReadAll(res.Body)
 			require.NoError(t, err)
-			assert.Equal(t, int(text.ErrorValidationLoginRequestExpired), int(gjson.GetBytes(body, "messages.0.id").Int()))
+			assert.Equal(t, int(text.ErrorValidationLoginFlowExpired), int(gjson.GetBytes(body, "messages.0.id").Int()))
 			assert.NotEqual(t, loginFlow.ID.String(), gjson.GetBytes(body, "id").String())
 		})
 
@@ -198,12 +198,12 @@ func TestHandleError(t *testing.T) {
 			t.Cleanup(reset)
 
 			loginFlow = &login.Flow{Type: flow.TypeBrowser}
-			flowError = login.NewRequestExpiredError(time.Hour)
+			flowError = login.NewFlowExpiredError(time.Hour)
 			ct = identity.CredentialsTypePassword
 
 			lf, _ := expectLoginUI(t)
 			require.Len(t, lf.Messages, 1)
-			assert.Equal(t, int(text.ErrorValidationLoginRequestExpired), int(lf.Messages[0].ID))
+			assert.Equal(t, int(text.ErrorValidationLoginFlowExpired), int(lf.Messages[0].ID))
 		})
 
 		t.Run("case=validation error", func(t *testing.T) {

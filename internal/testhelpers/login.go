@@ -14,7 +14,7 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-func NewLoginUIRequestEchoServer(t *testing.T, reg driver.Registry) *httptest.Server {
+func NewLoginUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Server {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		e, err := reg.LoginFlowPersister().GetLoginFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("flow")))
 		require.NoError(t, err)

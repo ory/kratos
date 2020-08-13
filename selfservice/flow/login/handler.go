@@ -50,11 +50,11 @@ func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.GET(RouteInitBrowserFlow, h.initBrowserFlow)
 	public.GET(RouteInitAPIFlow, h.initAPIFlow)
-	public.GET(RouteGetFlow, h.fetchLoginRequest)
+	public.GET(RouteGetFlow, h.fetchLoginFlow)
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(RouteGetFlow, h.fetchLoginRequest)
+	admin.GET(RouteGetFlow, h.fetchLoginFlow)
 }
 
 func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, flow flow.Type) (*Flow, error) {
@@ -204,7 +204,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 
 // nolint:deadcode,unused
 // swagger:parameters getSelfServiceLoginFlow
-type getSelfServiceBrowserLoginRequestParameters struct {
+type getSelfServiceLoginFlowParameters struct {
 	// The Login Flow ID
 	//
 	// The value for this parameter comes from `flow` URL Query parameter sent to your
@@ -234,7 +234,7 @@ type getSelfServiceBrowserLoginRequestParameters struct {
 //       404: genericError
 //       410: genericError
 //       500: genericError
-func (h *Handler) fetchLoginRequest(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) fetchLoginFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	ar, err := h.d.LoginFlowPersister().GetLoginFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("id")))
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)

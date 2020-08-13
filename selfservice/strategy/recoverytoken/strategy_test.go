@@ -56,7 +56,7 @@ func TestAdminStrategy(t *testing.T) {
 	initViper()
 
 	_ = testhelpers.NewRecoveryUITestServer(t)
-	_ = testhelpers.NewLoginUIRequestEchoServer(t, reg)
+	_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
 
 	publicTS, adminTS := testhelpers.NewKratosServer(t, reg)
@@ -143,7 +143,7 @@ func TestStrategy(t *testing.T) {
 	initViper()
 
 	_ = testhelpers.NewRecoveryUITestServer(t)
-	_ = testhelpers.NewLoginUIRequestEchoServer(t, reg)
+	_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
 
 	public, _ := testhelpers.NewKratosServer(t, reg)

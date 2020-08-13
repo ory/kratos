@@ -58,7 +58,7 @@ type dependencies interface {
 	session.HandlerProvider
 
 	login.HookExecutorProvider
-	login.RequestPersistenceProvider
+	login.FlowPersistenceProvider
 	login.HooksProvider
 	login.StrategyProvider
 	login.HandlerProvider

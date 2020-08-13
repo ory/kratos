@@ -34,7 +34,7 @@ func TestInitFlow(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	router := x.NewRouterPublic()
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
-	loginTS := testhelpers.NewLoginUIRequestEchoServer(t, reg)
+	loginTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
 
 	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
 	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
@@ -154,7 +154,7 @@ func TestGetFlow(t *testing.T) {
 		}))
 	}
 
-	assertRequestPayload := func(t *testing.T, body []byte) {
+	assertFlowPayload := func(t *testing.T, body []byte) {
 		assert.Equal(t, "password", gjson.GetBytes(body, "methods.password.method").String(), "%s", body)
 		assert.NotEmpty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==csrf_token).value").String(), "%s", body)
 		assert.NotEmpty(t, gjson.GetBytes(body, "id").String(), "%s", body)
@@ -168,7 +168,7 @@ func TestGetFlow(t *testing.T) {
 		assert.Equal(t, public.URL+login.RouteInitBrowserFlow, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
 	}
 
-	newExpiredRequest := func() *login.Flow {
+	newExpiredFlow := func() *login.Flow {
 		return &login.Flow{
 			ID:         x.NewUUID(),
 			ExpiresAt:  time.Now().Add(-time.Minute),
@@ -186,11 +186,11 @@ func TestGetFlow(t *testing.T) {
 			"enabled": true})
 
 		t.Run("case=valid", func(t *testing.T) {
-			assertRequestPayload(t, x.EasyGetBody(t, endpoint.Client(), public.URL+login.RouteInitBrowserFlow))
+			assertFlowPayload(t, x.EasyGetBody(t, endpoint.Client(), public.URL+login.RouteInitBrowserFlow))
 		})
 
 		t.Run("case=expired", func(t *testing.T) {
-			lr := newExpiredRequest()
+			lr := newExpiredFlow()
 			require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.Background(), lr))
 			res, body := x.EasyGet(t, admin.Client(), endpoint.URL+login.RouteGetFlow+"?id="+lr.ID.String())
 			assertExpiredPayload(t, res, body)
