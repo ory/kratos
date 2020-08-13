@@ -51,9 +51,9 @@ func NewFlowExpiredError(ago time.Duration) *FlowExpiredError {
 	return &FlowExpiredError{
 		ago: ago,
 		DefaultError: herodot.ErrBadRequest.
-			WithError("registration request expired").
-			WithReasonf(`The registration request has expired. Please restart the flow.`).
-			WithReasonf("The registration request expired %.2f minutes ago, please try again.", ago.Minutes()),
+			WithError("registration flow expired").
+			WithReasonf(`The registration flow has expired. Please restart the flow.`).
+			WithReasonf("The registration flow expired %.2f minutes ago, please try again.", ago.Minutes()),
 	}
 }
 
@@ -74,19 +74,19 @@ func (s *ErrorHandler) WriteFlowError(
 	s.d.Audit().
 		WithError(err).
 		WithRequest(r).
-		WithField("registration_request", rr).
-		Info("Encountered self-service request error.")
+		WithField("registration_flow", rr).
+		Info("Encountered self-service flow error.")
 
 	if e := new(FlowExpiredError); errors.As(err, &e) {
-		// create new request because the old one is not valid
-		a, err := s.d.RegistrationHandler().NewRegistrationRequest(w, r)
+		// create new flow because the old one is not valid
+		a, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r)
 		if err != nil {
 			// failed to create a new session and redirect to it, handle that error as a new one
 			s.WriteFlowError(w, r, ct, rr, err)
 			return
 		}
 
-		a.Messages.Add(text.NewErrorValidationRegistrationRequestExpired(e.ago))
+		a.Messages.Add(text.NewErrorValidationRegistrationFlowExpired(e.ago))
 		if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(context.TODO(), a); err != nil {
 			redirTo, err := s.d.SelfServiceErrorManager().Create(r.Context(), w, r, err)
 			if err != nil {

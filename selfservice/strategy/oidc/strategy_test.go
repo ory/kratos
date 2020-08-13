@@ -88,7 +88,7 @@ func TestStrategy(t *testing.T) {
 			require.EqualValues(t, req.ID, request)
 			method := req.Methods[identity.CredentialsTypeOIDC]
 			require.NotNil(t, method)
-			config = method.Config.RequestMethodConfigurator.(*form.HTMLForm)
+			config = method.Config.FlowMethodConfigurator.(*form.HTMLForm)
 			require.NotNil(t, config)
 		} else if req, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), request); err == nil {
 			require.EqualValues(t, req.ID, request)
@@ -189,7 +189,7 @@ func TestStrategy(t *testing.T) {
 	// new registration request
 	var nrr = func(t *testing.T, redirectTo string, exp time.Duration) *registration.Flow {
 		// Use NewLoginFlow to instantiate the request but change the things we need to control a copy of it.
-		req, err := reg.RegistrationHandler().NewRegistrationRequest(httptest.NewRecorder(),
+		req, err := reg.RegistrationHandler().NewRegistrationFlow(httptest.NewRecorder(),
 			&http.Request{URL: urlx.ParseOrPanic(redirectTo)})
 		require.NoError(t, err)
 		req.RequestURL = redirectTo
@@ -417,10 +417,10 @@ func TestStrategy(t *testing.T) {
 		sr := registration.NewFlow(time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
 		require.NoError(t, reg.RegistrationStrategies().MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateRegistrationMethod(&http.Request{}, sr))
 
-		expected := &registration.RequestMethod{
+		expected := &registration.FlowMethod{
 			Method: identity.CredentialsTypeOIDC,
-			Config: &registration.RequestMethodConfig{
-				RequestMethodConfigurator: &oidc.RequestMethod{
+			Config: &registration.FlowMethodConfig{
+				FlowMethodConfigurator: &oidc.RequestMethod{
 					HTMLForm: &form.HTMLForm{
 						Action: "https://foo" + strings.ReplaceAll(oidc.AuthPath, ":request", sr.ID.String()),
 						Method: "POST",
@@ -448,7 +448,7 @@ func TestStrategy(t *testing.T) {
 		}
 
 		actual := sr.Methods[identity.CredentialsTypeOIDC]
-		assert.EqualValues(t, expected.Config.RequestMethodConfigurator.(*oidc.RequestMethod).HTMLForm, actual.Config.RequestMethodConfigurator.(*oidc.RequestMethod).HTMLForm)
+		assert.EqualValues(t, expected.Config.FlowMethodConfigurator.(*oidc.RequestMethod).HTMLForm, actual.Config.FlowMethodConfigurator.(*oidc.RequestMethod).HTMLForm)
 	})
 
 	t.Run("method=TestPopulateLoginMethod", func(t *testing.T) {

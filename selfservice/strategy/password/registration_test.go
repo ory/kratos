@@ -89,11 +89,11 @@ func TestRegistration(t *testing.T) {
 				ID:       x.NewUUID(),
 				Type: flow.TypeBrowser,
 				IssuedAt: time.Now().UTC(), ExpiresAt: time.Now().UTC().Add(exp), RequestURL: ts.URL,
-				Methods: map[identity.CredentialsType]*registration.RequestMethod{
+				Methods: map[identity.CredentialsType]*registration.FlowMethod{
 					identity.CredentialsTypePassword: {
 						Method: identity.CredentialsTypePassword,
-						Config: &registration.RequestMethodConfig{
-							RequestMethodConfigurator: password.RequestMethod{
+						Config: &registration.FlowMethodConfig{
+							FlowMethodConfigurator: password.RequestMethod{
 								HTMLForm: &form.HTMLForm{
 									Method: "POST",
 									Action: "/action",
@@ -246,11 +246,11 @@ func TestRegistration(t *testing.T) {
 			rr := &registration.Flow{
 				ID:        x.NewUUID(),
 				ExpiresAt: time.Now().Add(time.Minute),
-				Methods: map[identity.CredentialsType]*registration.RequestMethod{
+				Methods: map[identity.CredentialsType]*registration.FlowMethod{
 					identity.CredentialsTypePassword: {
 						Method: identity.CredentialsTypePassword,
-						Config: &registration.RequestMethodConfig{
-							RequestMethodConfigurator: &password.RequestMethod{
+						Config: &registration.FlowMethodConfig{
+							FlowMethodConfigurator: &password.RequestMethod{
 								HTMLForm: &form.HTMLForm{
 									Method:   "POST",
 									Action:   "/action",
@@ -325,10 +325,10 @@ func TestRegistration(t *testing.T) {
 		sr := registration.NewFlow(time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
 		require.NoError(t, reg.RegistrationStrategies().MustStrategy(identity.CredentialsTypePassword).(*password.Strategy).PopulateRegistrationMethod(&http.Request{}, sr))
 
-		expected := &registration.RequestMethod{
+		expected := &registration.FlowMethod{
 			Method: identity.CredentialsTypePassword,
-			Config: &registration.RequestMethodConfig{
-				RequestMethodConfigurator: &password.RequestMethod{
+			Config: &registration.FlowMethodConfig{
+				FlowMethodConfigurator: &password.RequestMethod{
 					HTMLForm: &form.HTMLForm{
 						Action: "https://foo" + password.RegistrationPath + "?request=" + sr.ID.String(),
 						Method: "POST",
@@ -359,6 +359,6 @@ func TestRegistration(t *testing.T) {
 		}
 
 		actual := sr.Methods[identity.CredentialsTypePassword]
-		assert.EqualValues(t, expected.Config.RequestMethodConfigurator.(*password.RequestMethod).HTMLForm, actual.Config.RequestMethodConfigurator.(*password.RequestMethod).HTMLForm)
+		assert.EqualValues(t, expected.Config.FlowMethodConfigurator.(*password.RequestMethod).HTMLForm, actual.Config.FlowMethodConfigurator.(*password.RequestMethod).HTMLForm)
 	})
 }

@@ -37,9 +37,9 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.
 	if err != nil {
 		return err
 	}
-	sr.Methods[s.ID()] = &registration.RequestMethod{
+	sr.Methods[s.ID()] = &registration.FlowMethod{
 		Method: s.ID(),
-		Config: &registration.RequestMethodConfig{RequestMethodConfigurator: config},
+		Config: &registration.FlowMethodConfig{FlowMethodConfigurator: config},
 	}
 	return nil
 }

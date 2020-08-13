@@ -100,15 +100,15 @@ func RegisterFakes() {
 	}
 
 	if err := faker.AddProvider("registration_flow_methods", func(v reflect.Value) (interface{}, error) {
-		var methods = make(map[identity.CredentialsType]*registration.RequestMethod)
+		var methods = make(map[identity.CredentialsType]*registration.FlowMethod)
 		for _, ct := range []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeOIDC} {
 			var f form.HTMLForm
 			if err := faker.FakeData(&f); err != nil {
 				return nil, errors.WithStack(err)
 			}
-			methods[ct] = &registration.RequestMethod{
+			methods[ct] = &registration.FlowMethod{
 				Method: ct,
-				Config: &registration.RequestMethodConfig{RequestMethodConfigurator: &f},
+				Config: &registration.FlowMethodConfig{FlowMethodConfigurator: &f},
 			}
 		}
 		return methods, nil

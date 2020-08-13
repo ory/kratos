@@ -19,7 +19,7 @@ type FlowPersister interface {
 	UpdateRegistrationFlow(context.Context, *Flow) error
 	CreateRegistrationFlow(context.Context, *Flow) error
 	GetRegistrationFlow(context.Context, uuid.UUID) (*Flow, error)
-	UpdateRegistrationFlowMethod(context.Context, uuid.UUID, identity.CredentialsType, *RequestMethod) error
+	UpdateRegistrationFlowMethod(context.Context, uuid.UUID, identity.CredentialsType, *FlowMethod) error
 }
 
 type FlowPersistenceProvider interface {
@@ -35,12 +35,12 @@ func TestFlowPersister(p FlowPersister) func(t *testing.T) {
 	}
 
 	return func(t *testing.T) {
-		t.Run("case=should error when the registration request does not exist", func(t *testing.T) {
+		t.Run("case=should error when the registration flow does not exist", func(t *testing.T) {
 			_, err := p.GetRegistrationFlow(context.Background(), x.NewUUID())
 			require.Error(t, err)
 		})
 
-		var newRequest = func(t *testing.T) *Flow {
+		var newFlow = func(t *testing.T) *Flow {
 			var r Flow
 			require.NoError(t, faker.FakeData(&r))
 			clearids(&r)
@@ -51,8 +51,8 @@ func TestFlowPersister(p FlowPersister) func(t *testing.T) {
 			return &r
 		}
 
-		t.Run("case=should create a new registration request and properly set IDs", func(t *testing.T) {
-			r := newRequest(t)
+		t.Run("case=should create a new registration flow and properly set IDs", func(t *testing.T) {
+			r := newFlow(t)
 			methods := len(r.Methods)
 			err := p.CreateRegistrationFlow(context.Background(), r)
 			require.NoError(t, err, "%#v", err)
@@ -71,8 +71,8 @@ func TestFlowPersister(p FlowPersister) func(t *testing.T) {
 			require.NoError(t, p.CreateRegistrationFlow(context.Background(), &r))
 		})
 
-		t.Run("case=should create and fetch a registration request", func(t *testing.T) {
-			expected := newRequest(t)
+		t.Run("case=should create and fetch a registration flow", func(t *testing.T) {
+			expected := newFlow(t)
 			err := p.CreateRegistrationFlow(context.Background(), expected)
 			require.NoError(t, err)
 
@@ -88,8 +88,8 @@ func TestFlowPersister(p FlowPersister) func(t *testing.T) {
 			require.Equal(t, len(expected.Methods), len(actual.Methods), "expected:\t%s\nactual:\t%s", expected.Methods, actual.Methods)
 		})
 
-		t.Run("case=should update a registration request", func(t *testing.T) {
-			expected := newRequest(t)
+		t.Run("case=should update a registration flow", func(t *testing.T) {
+			expected := newFlow(t)
 			delete(expected.Methods, identity.CredentialsTypeOIDC)
 			err := p.CreateRegistrationFlow(context.Background(), expected)
 			require.NoError(t, err)
@@ -98,14 +98,14 @@ func TestFlowPersister(p FlowPersister) func(t *testing.T) {
 			require.NoError(t, err)
 			assert.Len(t, actual.Methods, 1)
 
-			require.NoError(t, p.UpdateRegistrationFlowMethod(context.Background(), expected.ID, identity.CredentialsTypeOIDC, &RequestMethod{
+			require.NoError(t, p.UpdateRegistrationFlowMethod(context.Background(), expected.ID, identity.CredentialsTypeOIDC, &FlowMethod{
 				Method: identity.CredentialsTypeOIDC,
-				Config: &RequestMethodConfig{RequestMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypeOIDC))},
+				Config: &FlowMethodConfig{FlowMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypeOIDC))},
 			}))
 
-			require.NoError(t, p.UpdateRegistrationFlowMethod(context.Background(), expected.ID, identity.CredentialsTypePassword, &RequestMethod{
+			require.NoError(t, p.UpdateRegistrationFlowMethod(context.Background(), expected.ID, identity.CredentialsTypePassword, &FlowMethod{
 				Method: identity.CredentialsTypePassword,
-				Config: &RequestMethodConfig{RequestMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypePassword))},
+				Config: &FlowMethodConfig{FlowMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypePassword))},
 			}))
 
 			actual, err = p.GetRegistrationFlow(context.Background(), expected.ID)
@@ -114,8 +114,8 @@ func TestFlowPersister(p FlowPersister) func(t *testing.T) {
 			assert.EqualValues(t, identity.CredentialsTypePassword, actual.Active)
 
 			js, _ := json.Marshal(actual.Methods)
-			assert.Equal(t, string(identity.CredentialsTypePassword), actual.Methods[identity.CredentialsTypePassword].Config.RequestMethodConfigurator.(*form.HTMLForm).Action, "%s", js)
-			assert.Equal(t, string(identity.CredentialsTypeOIDC), actual.Methods[identity.CredentialsTypeOIDC].Config.RequestMethodConfigurator.(*form.HTMLForm).Action)
+			assert.Equal(t, string(identity.CredentialsTypePassword), actual.Methods[identity.CredentialsTypePassword].Config.FlowMethodConfigurator.(*form.HTMLForm).Action, "%s", js)
+			assert.Equal(t, string(identity.CredentialsTypeOIDC), actual.Methods[identity.CredentialsTypeOIDC].Config.FlowMethodConfigurator.(*form.HTMLForm).Action)
 		})
 	}
 }

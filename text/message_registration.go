@@ -14,7 +14,7 @@ const (
 	ErrorValidationRegistrationRequestExpired
 )
 
-func NewErrorValidationRegistrationRequestExpired(ago time.Duration) *Message {
+func NewErrorValidationRegistrationFlowExpired(ago time.Duration) *Message {
 	return &Message{
 		ID:   ErrorValidationRegistrationRequestExpired,
 		Text: fmt.Sprintf("The registration request expired %.2f minutes ago, please try again.", ago.Minutes()),

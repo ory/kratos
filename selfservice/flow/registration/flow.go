@@ -18,8 +18,8 @@ import (
 
 // swagger:model registrationRequest
 type Flow struct {
-	// ID represents the request's unique ID. When performing the registration flow, this
-	// represents the id in the registration ui's query parameter: http://<selfservice.flows.registration.ui_url>/?request=<id>
+	// ID represents the flow's unique ID. When performing the registration flow, this
+	// represents the id in the registration ui's query parameter: http://<selfservice.flows.registration.ui_url>/?flow=<id>
 	//
 	// required: true
 	ID uuid.UUID `json:"id" faker:"-" db:"id"`
@@ -27,13 +27,13 @@ type Flow struct {
 	// Type represents the flow's type which can be either "api" or "browser", depending on the flow interaction.
 	Type flow.Type `json:"type" db:"type" faker:"flow_type"`
 
-	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,
-	// a new request has to be initiated.
+	// ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in,
+	// a new flow has to be initiated.
 	//
 	// required: true
 	ExpiresAt time.Time `json:"expires_at" faker:"time_type" db:"expires_at"`
 
-	// IssuedAt is the time (UTC) when the request occurred.
+	// IssuedAt is the time (UTC) when the flow occurred.
 	//
 	// required: true
 	IssuedAt time.Time `json:"issued_at" faker:"time_type" db:"issued_at"`
@@ -54,14 +54,14 @@ type Flow struct {
 	// More documentation on messages can be found in the [User Interface Documentation](https://www.ory.sh/kratos/docs/concepts/ui-user-interface/).
 	Messages text.Messages `json:"messages" db:"messages" faker:"-"`
 
-	// Methods contains context for all enabled registration methods. If a registration request has been
+	// Methods contains context for all enabled registration methods. If a registration flow has been
 	// processed, but for example the password is incorrect, this will contain error messages.
 	//
 	// required: true
-	Methods map[identity.CredentialsType]*RequestMethod `json:"methods" faker:"registration_flow_methods" db:"-"`
+	Methods map[identity.CredentialsType]*FlowMethod `json:"methods" faker:"registration_flow_methods" db:"-"`
 
 	// MethodsRaw is a helper struct field for gobuffalo.pop.
-	MethodsRaw RequestMethodsRaw `json:"-" faker:"-" has_many:"selfservice_registration_flow_methods" fk_id:"selfservice_registration_flow_id"`
+	MethodsRaw FlowMethodsRaw `json:"-" faker:"-" has_many:"selfservice_registration_flow_methods" fk_id:"selfservice_registration_flow_id"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
@@ -69,8 +69,8 @@ type Flow struct {
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 
-	// CSRFToken contains the anti-csrf token associated with this request.
-	CSRFToken string `json:"-" db:"csrf_token"`
+	// CSRFToken contains the anti-csrf token associated with this flow. Only set for browser flows.
+	CSRFToken string `json:"-" db:"csrf_token,omitempty"`
 }
 
 func NewFlow(exp time.Duration, csrf string, r *http.Request, ft flow.Type) *Flow {
@@ -87,14 +87,14 @@ func NewFlow(exp time.Duration, csrf string, r *http.Request, ft flow.Type) *Flo
 		ExpiresAt:  time.Now().UTC().Add(exp),
 		IssuedAt:   time.Now().UTC(),
 		RequestURL: source.String(),
-		Methods:    map[identity.CredentialsType]*RequestMethod{},
+		Methods:    map[identity.CredentialsType]*FlowMethod{},
 		CSRFToken:  csrf,
 		Type:       ft,
 	}
 }
 
 func (r *Flow) BeforeSave(_ *pop.Connection) error {
-	r.MethodsRaw = make([]RequestMethod, 0, len(r.Methods))
+	r.MethodsRaw = make([]FlowMethod, 0, len(r.Methods))
 	for _, m := range r.Methods {
 		r.MethodsRaw = append(r.MethodsRaw, *m)
 	}
@@ -111,7 +111,7 @@ func (r *Flow) AfterUpdate(c *pop.Connection) error {
 }
 
 func (r *Flow) AfterFind(_ *pop.Connection) error {
-	r.Methods = make(RequestMethods)
+	r.Methods = make(FlowMethods)
 	for key := range r.MethodsRaw {
 		m := r.MethodsRaw[key] // required for pointer dereference
 		r.Methods[m.Method] = &m

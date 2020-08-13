@@ -70,7 +70,7 @@ func TestRegistrationHandler(t *testing.T) {
 		}))
 	}
 
-	assertRequestPayload := func(t *testing.T, body []byte) {
+	assertFlowPayload := func(t *testing.T, body []byte) {
 		assert.Equal(t, "password", gjson.GetBytes(body, "methods.password.method").String(), "%s", body)
 		assert.NotEmpty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==csrf_token).value").String(), "%s", body)
 		assert.NotEmpty(t, gjson.GetBytes(body, "id").String(), "%s", body)
@@ -84,7 +84,7 @@ func TestRegistrationHandler(t *testing.T) {
 		assert.Equal(t, public.URL+registration.RouteInitBrowserFlow, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
 	}
 
-	newExpiredRequest := func() *registration.Flow {
+	newExpiredFLow := func() *registration.Flow {
 		return &registration.Flow{
 			ID:         x.NewUUID(),
 			ExpiresAt:  time.Now().Add(-time.Minute),
@@ -109,11 +109,11 @@ func TestRegistrationHandler(t *testing.T) {
 		viper.Set(configuration.ViperKeySelfServiceRegistrationUI, regTS.URL)
 
 		t.Run("case=valid", func(t *testing.T) {
-			assertRequestPayload(t, x.EasyGetBody(t, public.Client(), public.URL+registration.RouteInitBrowserFlow))
+			assertFlowPayload(t, x.EasyGetBody(t, public.Client(), public.URL+registration.RouteInitBrowserFlow))
 		})
 
 		t.Run("case=expired", func(t *testing.T) {
-			rr := newExpiredRequest()
+			rr := newExpiredFLow()
 			require.NoError(t, reg.RegistrationFlowPersister().CreateRegistrationFlow(context.Background(), rr))
 			res, body := x.EasyGet(t, admin.Client(), admin.URL+registration.RouteGetFlow+"?request="+rr.ID.String())
 			assertExpiredPayload(t, res, body)
@@ -131,7 +131,7 @@ func TestRegistrationHandler(t *testing.T) {
 			viper.Set(configuration.ViperKeySelfServiceRegistrationUI, regTS.URL)
 
 			body := x.EasyGetBody(t, hc, public.URL+registration.RouteInitBrowserFlow)
-			assertRequestPayload(t, body)
+			assertFlowPayload(t, body)
 		})
 
 		t.Run("case=without_csrf", func(t *testing.T) {
@@ -158,7 +158,7 @@ func TestRegistrationHandler(t *testing.T) {
 			regTS := newRegistrationTS(t, public.URL, hc)
 			defer regTS.Close()
 
-			rr := newExpiredRequest()
+			rr := newExpiredFLow()
 			require.NoError(t, reg.RegistrationFlowPersister().CreateRegistrationFlow(context.Background(), rr))
 			res, body := x.EasyGet(t, admin.Client(), admin.URL+registration.RouteGetFlow+"?request="+rr.ID.String())
 			assertExpiredPayload(t, res, body)
