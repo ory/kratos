@@ -1,6 +1,7 @@
 package login
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -45,29 +46,12 @@ type (
 	}
 )
 
-// Contains the Session and Session Token for API Based Authentication
-//
-// swagger:model sessionTokenContainer
-type SessionTokenContainer struct {
-	// The Session Token
-	//
-	// A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization
-	// Header:
-	//
-	// 		Authorization: bearer <session-token>
-	//
-	// The session token is only issued for API flows, not for Browser flows!
-	//
-	// required: true
-	Token string `json:"session_token"`
-
-	// The Session
-	//
-	// The session contains information about the user, the session device, and so on.
-	// This is only available for API flows, not for Browser flows!
-	//
-	// required: true
-	Session *session.Session `json:"session"`
+func PostHookExecutorNames(e []PostHookExecutor) []string {
+	names := make([]string, len(e))
+	for k, ee := range e {
+		names[k] = fmt.Sprintf("%T", ee)
+	}
+	return names
 }
 
 func NewHookExecutor(d executorDependencies, c configuration.Provider) *HookExecutor {
@@ -80,10 +64,16 @@ func NewHookExecutor(d executorDependencies, c configuration.Provider) *HookExec
 func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, a *Flow, i *identity.Identity) error {
 	s := session.NewActiveSession(i, e.c, time.Now().UTC()).Declassify()
 
-	for _, executor := range e.d.PostLoginHooks(ct) {
+	for k, executor := range e.d.PostLoginHooks(ct) {
 		if err := executor.ExecuteLoginPostHook(w, r, a, s); err != nil {
 			if errors.Is(err, ErrHookAbortFlow) {
-				e.d.Logger().Warn("A successful login attempt was aborted because a hook returned ErrHookAbortFlow.")
+				e.d.Logger().
+					WithRequest(r).
+					WithField("executor", fmt.Sprintf("%T", executor)).
+					WithField("executor_position", k).
+					WithField("executors", PostHookExecutorNames(e.d.PostLoginHooks(ct))).
+					WithField("identity_id", i.ID).
+					Debug("Post registration execution hooks aborted early.")
 				return nil
 			}
 			return err
@@ -95,7 +85,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct 
 			return errors.WithStack(err)
 		}
 
-		e.d.Writer().Write(w, r, &SessionTokenContainer{Session: s, Token: s.Token})
+		e.d.Writer().Write(w, r, &APIFlowResponse{Session: s, Token: s.Token})
 		return nil
 	}
 
