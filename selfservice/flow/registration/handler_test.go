@@ -9,10 +9,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/x/assertx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/assertx"
 
 	"github.com/ory/viper"
 
@@ -97,7 +98,7 @@ func TestInitFlow(t *testing.T) {
 
 	t.Run("flow=api", func(t *testing.T) {
 		t.Run("case=creates a new flow on unauthenticated request", func(t *testing.T) {
-			res, body := initFlow(t,true)
+			res, body := initFlow(t, true)
 			assert.Contains(t, res.Request.URL.String(), registration.RouteInitAPIFlow)
 			assertion(body, false, true)
 		})

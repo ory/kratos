@@ -60,14 +60,14 @@ for the get self service registration flow operation typically these are written
 */
 type GetSelfServiceRegistrationFlowParams struct {
 
-	/*Flow
+	/*ID
 	  The Registration Flow ID
 
 	The value for this parameter comes from `flow` URL Query parameter sent to your
 	application (e.g. `/registration?flow=abcde`).
 
 	*/
-	Flow string
+	ID string
 
 	timeout    time.Duration
 	Context    context.Context
@@ -107,15 +107,15 @@ func (o *GetSelfServiceRegistrationFlowParams) SetHTTPClient(client *http.Client
 	o.HTTPClient = client
 }
 
-// WithFlow adds the flow to the get self service registration flow params
-func (o *GetSelfServiceRegistrationFlowParams) WithFlow(flow string) *GetSelfServiceRegistrationFlowParams {
-	o.SetFlow(flow)
+// WithID adds the id to the get self service registration flow params
+func (o *GetSelfServiceRegistrationFlowParams) WithID(id string) *GetSelfServiceRegistrationFlowParams {
+	o.SetID(id)
 	return o
 }
 
-// SetFlow adds the flow to the get self service registration flow params
-func (o *GetSelfServiceRegistrationFlowParams) SetFlow(flow string) {
-	o.Flow = flow
+// SetID adds the id to the get self service registration flow params
+func (o *GetSelfServiceRegistrationFlowParams) SetID(id string) {
+	o.ID = id
 }
 
 // WriteToRequest writes these params to a swagger request
@@ -126,11 +126,11 @@ func (o *GetSelfServiceRegistrationFlowParams) WriteToRequest(r runtime.ClientRe
 	}
 	var res []error
 
-	// query param flow
-	qrFlow := o.Flow
-	qFlow := qrFlow
-	if qFlow != "" {
-		if err := r.SetQueryParam("flow", qFlow); err != nil {
+	// query param id
+	qrID := o.ID
+	qID := qrID
+	if qID != "" {
+		if err := r.SetQueryParam("id", qID); err != nil {
 			return err
 		}
 	}

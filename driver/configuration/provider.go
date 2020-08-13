@@ -78,7 +78,7 @@ type Provider interface {
 	SelfServiceFlowLoginReturnTo(strategy string) *url.URL
 	SelfServiceFlowLoginRequestLifespan() time.Duration
 
-	SelfServiceFlowRegisterUI() *url.URL
+	SelfServiceFlowRegistrationUI() *url.URL
 	SelfServiceFlowRegistrationBeforeHooks() []SelfServiceHook
 	SelfServiceFlowRegistrationAfterHooks(strategy string) []SelfServiceHook
 	SelfServiceFlowRegistrationReturnTo(strategy string) *url.URL

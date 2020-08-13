@@ -376,7 +376,7 @@ func (p *ViperProvider) SelfServiceFlowErrorURL() *url.URL {
 	return mustParseURLFromViper(p.l, ViperKeySelfServiceErrorUI)
 }
 
-func (p *ViperProvider) SelfServiceFlowRegisterUI() *url.URL {
+func (p *ViperProvider) SelfServiceFlowRegistrationUI() *url.URL {
 	return mustParseURLFromViper(p.l, ViperKeySelfServiceRegistrationUI)
 }
 
