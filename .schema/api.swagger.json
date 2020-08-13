@@ -535,31 +535,6 @@
         }
       }
     },
-    "/self-service/browser/flows/registration": {
-      "get": {
-        "description": "This endpoint initializes a browser-based user registration flow. Once initialized, the browser will be redirected to\n`selfservice.flows.registration.ui_url` with the request ID set as a query parameter. If a valid user session exists already, the browser will be\nredirected to `urls.default_redirect_url`.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "tags": [
-          "public"
-        ],
-        "summary": "Initialize browser-based registration user flow",
-        "operationId": "initializeSelfServiceBrowserRegistrationFlow",
-        "responses": {
-          "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
-          },
-          "500": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          }
-        }
-      }
-    },
     "/self-service/browser/flows/registration/strategies/oidc/settings/connections": {
       "post": {
         "description": "This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this\nendpoint.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
@@ -620,66 +595,6 @@
             "description": "recoveryRequest",
             "schema": {
               "$ref": "#/definitions/recoveryRequest"
-            }
-          },
-          "403": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          },
-          "404": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          },
-          "410": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          },
-          "500": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          }
-        }
-      }
-    },
-    "/self-service/browser/flows/requests/registration": {
-      "get": {
-        "description": "This endpoint returns a registration request's context with, for example, error details and\nother information.\n\nWhen accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent\ntoken scanning attacks, the public endpoint does not return 404 status codes.\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "tags": [
-          "common",
-          "public",
-          "admin"
-        ],
-        "summary": "Get the request context of browser-based registration user flows",
-        "operationId": "getSelfServiceBrowserRegistrationRequest",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "Request is the Registration Request ID\n\nThe value for this parameter comes from `request` URL Query parameter sent to your\napplication (e.g. `/registration?request=abcde`).",
-            "name": "request",
-            "in": "query",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "registrationRequest",
-            "schema": {
-              "$ref": "#/definitions/registrationRequest"
             }
           },
           "403": {
@@ -1231,7 +1146,7 @@
     },
     "/self-service/login/methods/password": {
       "get": {
-        "description": "Use this endpoint to complete a login flow by sending an identity's identifier and password. This endpoint\nbehaves differently for API and browser flows.\n\nAPI flows expect `application/json` to be sent in the body and responds with\nHTTP 200 and a application/json body with the session token on success;\nHTTP 400 on form validation errors.\n\nBrowser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with\na HTTP 302 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;\na HTTP 302 redirect to the login UI URL with the flow ID containing the validation errors otherwise.\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "description": "Use this endpoint to complete a login flow by sending an identity's identifier and password. This endpoint\nbehaves differently for API and browser flows.\n\nAPI flows expect `application/json` to be sent in the body and responds with\nHTTP 200 and a application/json body with the session token on success;\nHTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nBrowser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with\na HTTP 302 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;\na HTTP 302 redirect to the login UI URL with the flow ID containing the validation errors otherwise.\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
         "consumes": [
           "application/json",
           "application/x-www-form-urlencoded"
@@ -1278,6 +1193,127 @@
             "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
           },
           "400": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
+    "/self-service/registration/api": {
+      "get": {
+        "description": "This endpoint initiates a registration flow for API clients such as mobile devices, smart TVs, and so on.\n\nIf a valid provided session cookie or session token is provided, a 400 Bad Request error\nwill be returned unless the URL query parameter `?refresh=true` is set.\n\nTo fetch an existing registration flow call `/self-service/registration/flows?flow=\u003cflow_id\u003e`.\n\n:::note\n\nThis endpoint is NOT INTENDED for browser applications (Chrome, Firefox, ...). We recommend using this endpoint\nfor server-side browser applications and single page apps (SPA).\n\n:::\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "common",
+          "public",
+          "admin"
+        ],
+        "summary": "Initialize Registration Flow for API clients",
+        "operationId": "initializeSelfServiceRegistrationViaAPIFlow",
+        "responses": {
+          "200": {
+            "description": "registrationFlow",
+            "schema": {
+              "$ref": "#/definitions/registrationFlow"
+            }
+          },
+          "400": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
+    "/self-service/registration/browser": {
+      "get": {
+        "description": "This endpoint initializes a browser-based user registration flow. Once initialized, the browser will be redirected to\n`selfservice.flows.registration.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session\nexists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter\n`?refresh=true` was set.\n\n:::note\n\nThis endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).\n\n:::\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Initialize Registration Flow for browsers",
+        "operationId": "initializeSelfServiceRegistrationViaBrowserFlow",
+        "responses": {
+          "302": {
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
+    "/self-service/registration/flows": {
+      "get": {
+        "description": "This endpoint returns a registration flow's context with, for example, error details and other information.\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "common",
+          "public",
+          "admin"
+        ],
+        "summary": "Get information about a registration flow",
+        "operationId": "getSelfServiceRegistrationFlow",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The Registration Flow ID\n\nThe value for this parameter comes from `flow` URL Query parameter sent to your\napplication (e.g. `/registration?flow=abcde`).",
+            "name": "flow",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "registrationFlow",
+            "schema": {
+              "$ref": "#/definitions/registrationFlow"
+            }
+          },
+          "403": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "404": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "410": {
             "description": "genericError",
             "schema": {
               "$ref": "#/definitions/genericError"
@@ -1916,7 +1952,7 @@
         }
       }
     },
-    "registrationRequest": {
+    "registrationFlow": {
       "type": "object",
       "required": [
         "id",
@@ -1930,7 +1966,7 @@
           "$ref": "#/definitions/CredentialsType"
         },
         "expires_at": {
-          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to log in,\na new request has to be initiated.",
+          "description": "ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in,\na new flow has to be initiated.",
           "type": "string",
           "format": "date-time"
         },
@@ -1938,7 +1974,7 @@
           "$ref": "#/definitions/UUID"
         },
         "issued_at": {
-          "description": "IssuedAt is the time (UTC) when the request occurred.",
+          "description": "IssuedAt is the time (UTC) when the flow occurred.",
           "type": "string",
           "format": "date-time"
         },
@@ -1946,7 +1982,7 @@
           "$ref": "#/definitions/Messages"
         },
         "methods": {
-          "description": "Methods contains context for all enabled registration methods. If a registration request has been\nprocessed, but for example the password is incorrect, this will contain error messages.",
+          "description": "Methods contains context for all enabled registration methods. If a registration flow has been\nprocessed, but for example the password is incorrect, this will contain error messages.",
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/registrationRequestMethod"
@@ -1955,6 +1991,9 @@
         "request_url": {
           "description": "RequestURL is the initial URL that was requested from ORY Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
           "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/Type"
         }
       }
     },
@@ -1992,7 +2031,7 @@
           "type": "string"
         },
         "providers": {
-          "description": "Providers is set for the \"oidc\" request method.",
+          "description": "Providers is set for the \"oidc\" registration method.",
           "type": "array",
           "items": {
             "$ref": "#/definitions/formField"

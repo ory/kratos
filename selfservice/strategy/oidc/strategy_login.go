@@ -10,6 +10,7 @@ import (
 	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/x"
 )
@@ -46,7 +47,9 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 			// This is kinda hacky but the only way to ensure seamless login/registration flows when using OIDC.
 
 			s.d.Logger().WithField("provider", provider.Config().ID).WithField("subject", claims.Subject).Debug("Received successful OpenID Connect callback but user is not registered. Re-initializing registration flow now.")
-			aa, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r)
+
+			// This flow only works for browsers anyways.
+			aa, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, flow.TypeBrowser)
 			if err != nil {
 				s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
 				return

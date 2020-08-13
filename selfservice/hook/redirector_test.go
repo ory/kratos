@@ -33,13 +33,13 @@ func TestRedirector(t *testing.T) {
 		require.Error(t, l.ExecuteLoginPostHook(w, r, nil, nil), login.ErrHookAbortFlow)
 	})
 	router.GET("/c", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		require.Error(t, l.ExecutePostRegistrationPrePersistHook(w, r, nil, nil), registration.ErrHookAbortRequest)
+		require.Error(t, l.ExecutePostRegistrationPrePersistHook(w, r, nil, nil), registration.ErrHookAbortFlow)
 	})
 	router.GET("/d", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		require.Error(t, l.ExecuteSettingsPostPersistHook(w, r, nil, nil), settings.ErrHookAbortRequest)
 	})
 	router.GET("/e", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		require.Error(t, l.ExecutePostRegistrationPrePersistHook(w, r, nil, nil), registration.ErrHookAbortRequest)
+		require.Error(t, l.ExecutePostRegistrationPrePersistHook(w, r, nil, nil), registration.ErrHookAbortFlow)
 	})
 	router.GET("/f", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		require.Error(t, l.ExecuteLoginPreHook(w, r, nil), login.ErrHookAbortFlow)

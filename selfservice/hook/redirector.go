@@ -50,14 +50,14 @@ func (e *Redirector) ExecuteRegistrationPreHook(w http.ResponseWriter, r *http.R
 	if err := e.do(w, r); err != nil {
 		return err
 	}
-	return errors.WithStack(registration.ErrHookAbortRequest)
+	return errors.WithStack(registration.ErrHookAbortFlow)
 }
 
 func (e *Redirector) ExecutePostRegistrationPrePersistHook(w http.ResponseWriter, r *http.Request, _ *registration.Flow, _ *identity.Identity) error {
 	if err := e.do(w, r); err != nil {
 		return err
 	}
-	return errors.WithStack(registration.ErrHookAbortRequest)
+	return errors.WithStack(registration.ErrHookAbortFlow)
 }
 
 func (e *Redirector) ExecuteSettingsPrePersistHook(w http.ResponseWriter, r *http.Request, _ *settings.Request, _ *identity.Identity) error {

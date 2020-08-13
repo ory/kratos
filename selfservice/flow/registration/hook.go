@@ -74,7 +74,7 @@ func NewHookExecutor(d executorDependencies, c configuration.Provider) *HookExec
 func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, a *Flow, i *identity.Identity) error {
 	for _, executor := range e.d.PostRegistrationPrePersistHooks(ct) {
 		if err := executor.ExecutePostRegistrationPrePersistHook(w, r, a, i); err != nil {
-			if errors.Is(err, ErrHookAbortRequest) {
+			if errors.Is(err, ErrHookAbortFlow) {
 				return nil
 			}
 			return err
@@ -100,7 +100,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 	s := session.NewActiveSession(i, e.c, time.Now().UTC())
 	for _, executor := range e.d.PostRegistrationPostPersistHooks(ct) {
 		if err := executor.ExecutePostRegistrationPostPersistHook(w, r, a, s); err != nil {
-			if errors.Is(err, ErrHookAbortRequest) {
+			if errors.Is(err, ErrHookAbortFlow) {
 				return nil
 			}
 			return err

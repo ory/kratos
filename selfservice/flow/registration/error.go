@@ -21,7 +21,8 @@ import (
 )
 
 var (
-	ErrHookAbortRequest = errors.New("aborted registration hook execution")
+	ErrHookAbortFlow   = errors.New("aborted registration hook execution")
+	ErrAlreadyLoggedIn = herodot.ErrBadRequest.WithReason("A valid session was detected and thus registration is not possible.")
 )
 
 type (
@@ -79,7 +80,7 @@ func (s *ErrorHandler) WriteFlowError(
 
 	if e := new(FlowExpiredError); errors.As(err, &e) {
 		// create new flow because the old one is not valid
-		a, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r)
+		a, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, rr.Type)
 		if err != nil {
 			// failed to create a new session and redirect to it, handle that error as a new one
 			s.WriteFlowError(w, r, ct, rr, err)
@@ -147,4 +148,3 @@ func (s *ErrorHandler) forward(w http.ResponseWriter, r *http.Request, rr *Flow,
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 	}
 }
-

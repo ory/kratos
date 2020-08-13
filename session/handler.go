@@ -200,3 +200,9 @@ func RedirectOnUnauthenticated(to string) httprouter.Handle {
 		http.Redirect(w, r, to, http.StatusFound)
 	}
 }
+
+func RespondWithJSONErrorOnAuthenticated(h herodot.Writer, err error) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		h.WriteError(w, r, err)
+	}
+}

@@ -87,7 +87,7 @@ func TestRegistration(t *testing.T) {
 		var newRegistrationRequest = func(t *testing.T, exp time.Duration) *registration.Flow {
 			rr := &registration.Flow{
 				ID:       x.NewUUID(),
-				Type: flow.TypeBrowser,
+				Type:     flow.TypeBrowser,
 				IssuedAt: time.Now().UTC(), ExpiresAt: time.Now().UTC().Add(exp), RequestURL: ts.URL,
 				Methods: map[identity.CredentialsType]*registration.FlowMethod{
 					identity.CredentialsTypePassword: {

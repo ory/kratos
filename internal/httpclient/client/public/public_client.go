@@ -41,13 +41,13 @@ type ClientService interface {
 
 	InitializeSelfServiceBrowserLogoutFlow(params *InitializeSelfServiceBrowserLogoutFlowParams) error
 
-	InitializeSelfServiceBrowserRegistrationFlow(params *InitializeSelfServiceBrowserRegistrationFlowParams) error
-
 	InitializeSelfServiceBrowserVerificationFlow(params *InitializeSelfServiceBrowserVerificationFlowParams) error
 
 	InitializeSelfServiceLoginViaBrowserFlow(params *InitializeSelfServiceLoginViaBrowserFlowParams) error
 
 	InitializeSelfServiceRecoveryFlow(params *InitializeSelfServiceRecoveryFlowParams) error
+
+	InitializeSelfServiceRegistrationViaBrowserFlow(params *InitializeSelfServiceRegistrationViaBrowserFlowParams) error
 
 	InitializeSelfServiceSettingsFlow(params *InitializeSelfServiceSettingsFlowParams) error
 
@@ -241,6 +241,7 @@ behaves differently for API and browser flows.
 
 API flows expect `application/json` to be sent in the body and responds with
 HTTP 200 and a application/json body with the session token on success;
+HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
 HTTP 400 on form validation errors.
 
 Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
@@ -307,42 +308,6 @@ func (a *Client) InitializeSelfServiceBrowserLogoutFlow(params *InitializeSelfSe
 		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &InitializeSelfServiceBrowserLogoutFlowReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-/*
-  InitializeSelfServiceBrowserRegistrationFlow initializes browser based registration user flow
-
-  This endpoint initializes a browser-based user registration flow. Once initialized, the browser will be redirected to
-`selfservice.flows.registration.ui_url` with the request ID set as a query parameter. If a valid user session exists already, the browser will be
-redirected to `urls.default_redirect_url`.
-
-> This endpoint is NOT INTENDED for API clients and only works
-with browsers (Chrome, Firefox, ...).
-
-More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
-*/
-func (a *Client) InitializeSelfServiceBrowserRegistrationFlow(params *InitializeSelfServiceBrowserRegistrationFlowParams) error {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewInitializeSelfServiceBrowserRegistrationFlowParams()
-	}
-
-	_, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "initializeSelfServiceBrowserRegistrationFlow",
-		Method:             "GET",
-		PathPattern:        "/self-service/browser/flows/registration",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
-		Schemes:            []string{"http", "https"},
-		Params:             params,
-		Reader:             &InitializeSelfServiceBrowserRegistrationFlowReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
@@ -455,6 +420,46 @@ func (a *Client) InitializeSelfServiceRecoveryFlow(params *InitializeSelfService
 		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &InitializeSelfServiceRecoveryFlowReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+/*
+  InitializeSelfServiceRegistrationViaBrowserFlow initializes registration flow for browsers
+
+  This endpoint initializes a browser-based user registration flow. Once initialized, the browser will be redirected to
+`selfservice.flows.registration.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
+exists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter
+`?refresh=true` was set.
+
+:::note
+
+This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+
+:::
+
+More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+*/
+func (a *Client) InitializeSelfServiceRegistrationViaBrowserFlow(params *InitializeSelfServiceRegistrationViaBrowserFlowParams) error {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewInitializeSelfServiceRegistrationViaBrowserFlowParams()
+	}
+
+	_, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "initializeSelfServiceRegistrationViaBrowserFlow",
+		Method:             "GET",
+		PathPattern:        "/self-service/registration/browser",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &InitializeSelfServiceRegistrationViaBrowserFlowReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
