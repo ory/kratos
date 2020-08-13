@@ -22,6 +22,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/x"
 )
@@ -175,6 +176,7 @@ func TestGetFlow(t *testing.T) {
 			IssuedAt:   time.Now().Add(-time.Minute * 2),
 			RequestURL: public.URL + login.RouteInitBrowserFlow,
 			CSRFToken:  x.FakeCSRFToken,
+			Type: flow.TypeBrowser,
 		}
 	}
 

@@ -2,6 +2,7 @@ package registration
 
 import (
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/gobuffalo/pop/v5"
@@ -134,4 +135,8 @@ func (r *Flow) Valid() error {
 		return errors.WithStack(NewFlowExpiredError(time.Since(r.ExpiresAt)))
 	}
 	return nil
+}
+
+func (f *Flow) AppendTo(src *url.URL) *url.URL {
+	return urlx.CopyWithQuery(src, url.Values{"flow": {f.ID.String()}})
 }
