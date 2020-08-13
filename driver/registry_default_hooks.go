@@ -1,8 +1,6 @@
 package driver
 
 import (
-	"encoding/json"
-
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/selfservice/hook"
 )
@@ -26,10 +24,6 @@ func (m *RegistryDefault) HookSessionDestroyer() *hook.SessionDestroyer {
 		m.hookSessionDestroyer = hook.NewSessionDestroyer(m)
 	}
 	return m.hookSessionDestroyer
-}
-
-func (m *RegistryDefault) HookRedirector(config json.RawMessage) *hook.Redirector {
-	return hook.NewRedirector(config)
 }
 
 func (m *RegistryDefault) WithHooks(hooks map[string]func(configuration.SelfServiceHook) interface{}) {
