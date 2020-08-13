@@ -94,45 +94,45 @@ func NewFlow(exp time.Duration, csrf string, r *http.Request, ft flow.Type) *Flo
 	}
 }
 
-func (r *Flow) BeforeSave(_ *pop.Connection) error {
-	r.MethodsRaw = make([]FlowMethod, 0, len(r.Methods))
-	for _, m := range r.Methods {
-		r.MethodsRaw = append(r.MethodsRaw, *m)
+func (f *Flow) BeforeSave(_ *pop.Connection) error {
+	f.MethodsRaw = make([]FlowMethod, 0, len(f.Methods))
+	for _, m := range f.Methods {
+		f.MethodsRaw = append(f.MethodsRaw, *m)
 	}
-	r.Methods = nil
+	f.Methods = nil
 	return nil
 }
 
-func (r *Flow) AfterCreate(c *pop.Connection) error {
-	return r.AfterFind(c)
+func (f *Flow) AfterCreate(c *pop.Connection) error {
+	return f.AfterFind(c)
 }
 
-func (r *Flow) AfterUpdate(c *pop.Connection) error {
-	return r.AfterFind(c)
+func (f *Flow) AfterUpdate(c *pop.Connection) error {
+	return f.AfterFind(c)
 }
 
-func (r *Flow) AfterFind(_ *pop.Connection) error {
-	r.Methods = make(FlowMethods)
-	for key := range r.MethodsRaw {
-		m := r.MethodsRaw[key] // required for pointer dereference
-		r.Methods[m.Method] = &m
+func (f *Flow) AfterFind(_ *pop.Connection) error {
+	f.Methods = make(FlowMethods)
+	for key := range f.MethodsRaw {
+		m := f.MethodsRaw[key] // required for pointer dereference
+		f.Methods[m.Method] = &m
 	}
-	r.MethodsRaw = nil
+	f.MethodsRaw = nil
 	return nil
 }
 
-func (r Flow) TableName() string {
+func (f Flow) TableName() string {
 	// This must be stay a value receiver, using a pointer receiver will cause issues with pop.
 	return "selfservice_registration_flows"
 }
 
-func (r *Flow) GetID() uuid.UUID {
-	return r.ID
+func (f *Flow) GetID() uuid.UUID {
+	return f.ID
 }
 
-func (r *Flow) Valid() error {
-	if r.ExpiresAt.Before(time.Now()) {
-		return errors.WithStack(NewFlowExpiredError(time.Since(r.ExpiresAt)))
+func (f *Flow) Valid() error {
+	if f.ExpiresAt.Before(time.Now()) {
+		return errors.WithStack(NewFlowExpiredError(time.Since(f.ExpiresAt)))
 	}
 	return nil
 }
