@@ -26,7 +26,7 @@ const (
 type (
 	handlerDependencies interface {
 		HookExecutorProvider
-		RequestPersistenceProvider
+		FlowPersistenceProvider
 		errorx.ManagementProvider
 		StrategyProvider
 		session.HandlerProvider
@@ -50,11 +50,11 @@ func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.GET(RouteInitBrowserFlow, h.initBrowserFlow)
 	public.GET(RouteInitAPIFlow, h.initAPIFlow)
-	public.GET(RouteGetFlow, h.publicFetchLoginRequest)
+	public.GET(RouteGetFlow, h.fetchLoginRequest)
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(RouteGetFlow, h.adminFetchLoginRequest)
+	admin.GET(RouteGetFlow, h.fetchLoginRequest)
 }
 
 func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, flow flow.Type) (*Flow, error) {
@@ -234,32 +234,19 @@ type getSelfServiceBrowserLoginRequestParameters struct {
 //       404: genericError
 //       410: genericError
 //       500: genericError
-func (h *Handler) publicFetchLoginRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.fetchLoginRequest(w, r); err != nil {
-		h.d.Writer().WriteError(w, r, err)
-		return
-	}
-}
-
-func (h *Handler) adminFetchLoginRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.fetchLoginRequest(w, r); err != nil {
-		h.d.Writer().WriteError(w, r, err)
-		return
-	}
-}
-
-func (h *Handler) fetchLoginRequest(w http.ResponseWriter, r *http.Request) error {
+func (h *Handler) fetchLoginRequest(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	ar, err := h.d.LoginFlowPersister().GetLoginFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("id")))
 	if err != nil {
-		return err
+		h.d.Writer().WriteError(w, r, err)
+		return
 	}
 
 	if ar.ExpiresAt.Before(time.Now()) {
-		return errors.WithStack(x.ErrGone.
+		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 			WithReason("The login flow has expired. Redirect the user to the login endpoint for browsers or use the API to initialize a new login flow.").
-			WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), RouteInitBrowserFlow).String()))
+			WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), RouteInitBrowserFlow).String())))
+		return
 	}
 
 	h.d.Writer().Write(w, r, ar)
-	return nil
 }
