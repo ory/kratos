@@ -1184,9 +1184,9 @@
         ],
         "responses": {
           "200": {
-            "description": "sessionTokenContainer",
+            "description": "loginViaApiResponse",
             "schema": {
-              "$ref": "#/definitions/sessionTokenContainer"
+              "$ref": "#/definitions/loginViaApiResponse"
             }
           },
           "302": {
@@ -1891,6 +1891,23 @@
         }
       }
     },
+    "loginViaApiResponse": {
+      "description": "The Response for Login Flows via API",
+      "type": "object",
+      "required": [
+        "session_token",
+        "session"
+      ],
+      "properties": {
+        "session": {
+          "$ref": "#/definitions/session"
+        },
+        "session_token": {
+          "description": "The Session Token\n\nA session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization\nHeader:\n\nAuthorization: bearer \u003csession-token\u003e\n\nThe session token is only issued for API flows, not for Browser flows!",
+          "type": "string"
+        }
+      }
+    },
     "recoveryRequest": {
       "description": "This request is used when an identity wants to recover their account.\n\nWe recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)",
       "type": "object",
@@ -2072,23 +2089,6 @@
         }
       }
     },
-    "sessionTokenContainer": {
-      "description": "Contains the Session and Session Token for API Based Authentication",
-      "type": "object",
-      "required": [
-        "session_token",
-        "session"
-      ],
-      "properties": {
-        "session": {
-          "$ref": "#/definitions/session"
-        },
-        "session_token": {
-          "description": "The Session Token\n\nA session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization\nHeader:\n\nAuthorization: bearer \u003csession-token\u003e\n\nThe session token is only issued for API flows, not for Browser flows!",
-          "type": "string"
-        }
-      }
-    },
     "settingsRequest": {
       "description": "This request is used when an identity wants to update settings\n(e.g. profile data, passwords, ...) in a selfservice manner.\n\nWe recommend reading the [User Settings Documentation](../self-service/flows/user-settings)",
       "type": "object",
@@ -2139,6 +2139,9 @@
         },
         "state": {
           "$ref": "#/definitions/State"
+        },
+        "type": {
+          "$ref": "#/definitions/Type"
         }
       }
     },

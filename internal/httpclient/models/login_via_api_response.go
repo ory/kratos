@@ -12,10 +12,10 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// SessionTokenContainer Contains the Session and Session Token for API Based Authentication
+// LoginViaAPIResponse The Response for Login Flows via API
 //
-// swagger:model sessionTokenContainer
-type SessionTokenContainer struct {
+// swagger:model loginViaApiResponse
+type LoginViaAPIResponse struct {
 
 	// session
 	// Required: true
@@ -33,8 +33,8 @@ type SessionTokenContainer struct {
 	SessionToken *string `json:"session_token"`
 }
 
-// Validate validates this session token container
-func (m *SessionTokenContainer) Validate(formats strfmt.Registry) error {
+// Validate validates this login via Api response
+func (m *LoginViaAPIResponse) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateSession(formats); err != nil {
@@ -51,7 +51,7 @@ func (m *SessionTokenContainer) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *SessionTokenContainer) validateSession(formats strfmt.Registry) error {
+func (m *LoginViaAPIResponse) validateSession(formats strfmt.Registry) error {
 
 	if err := validate.Required("session", "body", m.Session); err != nil {
 		return err
@@ -69,7 +69,7 @@ func (m *SessionTokenContainer) validateSession(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *SessionTokenContainer) validateSessionToken(formats strfmt.Registry) error {
+func (m *LoginViaAPIResponse) validateSessionToken(formats strfmt.Registry) error {
 
 	if err := validate.Required("session_token", "body", m.SessionToken); err != nil {
 		return err
@@ -79,7 +79,7 @@ func (m *SessionTokenContainer) validateSessionToken(formats strfmt.Registry) er
 }
 
 // MarshalBinary interface implementation
-func (m *SessionTokenContainer) MarshalBinary() ([]byte, error) {
+func (m *LoginViaAPIResponse) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -87,8 +87,8 @@ func (m *SessionTokenContainer) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *SessionTokenContainer) UnmarshalBinary(b []byte) error {
-	var res SessionTokenContainer
+func (m *LoginViaAPIResponse) UnmarshalBinary(b []byte) error {
+	var res LoginViaAPIResponse
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}
