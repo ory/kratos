@@ -125,6 +125,13 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 			}
 			return err
 		}
+
+		e.d.Logger().WithRequest(r).
+			WithField("executor", fmt.Sprintf("%T", executor)).
+			WithField("executor_position", k).
+			WithField("executors", PostHookPostPersistExecutorNames(e.d.PostRegistrationPostPersistHooks(ct))).
+			WithField("identity_id", i.ID).
+			Debug("Successfully ran post registration executor.")
 	}
 
 	e.d.Logger().
