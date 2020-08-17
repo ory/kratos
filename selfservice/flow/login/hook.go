@@ -78,6 +78,13 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct 
 			}
 			return err
 		}
+
+		e.d.Logger().WithRequest(r).
+			WithField("executor", fmt.Sprintf("%T", executor)).
+			WithField("executor_position", k).
+			WithField("executors", PostHookExecutorNames(e.d.PostLoginHooks(ct))).
+			WithField("identity_id", i.ID).
+			Debug("Successfully ran post login executor.")
 	}
 
 	if a.Type == flow.TypeAPI {
