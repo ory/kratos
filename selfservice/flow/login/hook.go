@@ -73,7 +73,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct 
 					WithField("executor_position", k).
 					WithField("executors", PostHookExecutorNames(e.d.PostLoginHooks(ct))).
 					WithField("identity_id", i.ID).
-					Debug("Post registration execution hooks aborted early.")
+					Debug("Post login execution hooks aborted early.")
 				return nil
 			}
 			return err
