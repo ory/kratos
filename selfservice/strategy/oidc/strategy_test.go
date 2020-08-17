@@ -402,7 +402,7 @@ func TestStrategy(t *testing.T) {
 		require.NoError(t, reg.LoginFlowPersister().ForceLoginFlow(context.Background(), r2.ID))
 		res2, body2 := mrj(t, "valid", afv(t, r2.ID, "valid"), fv, jar)
 		ai(t, res2, body2)
-		assert.NotEqual(t, gjson.GetBytes(body1, "sid"), gjson.GetBytes(body2, "sid"))
+		assert.NotEqual(t, gjson.GetBytes(body1, "id"), gjson.GetBytes(body2, "id"))
 		authAt1, err := time.Parse(time.RFC3339, gjson.GetBytes(body1, "authenticated_at").String())
 		require.NoError(t, err)
 		authAt2, err := time.Parse(time.RFC3339, gjson.GetBytes(body2, "authenticated_at").String())

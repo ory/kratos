@@ -14,7 +14,7 @@ import (
 // swagger:model session
 type Session struct {
 	// required: true
-	ID uuid.UUID `json:"sid" faker:"-" db:"id"`
+	ID uuid.UUID `json:"id" faker:"-" db:"id"`
 
 	Active bool `json:"active" db:"active"`
 

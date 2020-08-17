@@ -345,7 +345,7 @@ func TestRegistration(t *testing.T) {
 				assert.Contains(t, res.Request.URL.String(), publicTS.URL+password.RouteRegistration)
 				assert.Equal(t, `registration-identifier-8-api`, gjson.GetBytes(body, "identity.traits.username").String(), "%s", body)
 				assert.NotEmpty(t, gjson.GetBytes(body, "session_token").String(), "%s", body)
-				assert.NotEmpty(t, gjson.GetBytes(body, "session.sid").String(), "%s", body)
+				assert.NotEmpty(t, gjson.GetBytes(body, "session.id").String(), "%s", body)
 			})
 
 			t.Run("type=browser", func(t *testing.T) {

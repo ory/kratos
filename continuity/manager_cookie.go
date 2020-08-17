@@ -97,7 +97,7 @@ func (m *ManagerCookie) sid(ctx context.Context, r *http.Request, name string) (
 	if s, err := x.SessionGetString(r, m.d.CookieManager(), cookieName, name); err != nil {
 		return sid, errors.WithStack(ErrNotResumable.WithDebugf("%+v", err))
 	} else if sid = x.ParseUUID(s); sid == uuid.Nil {
-		return sid, errors.WithStack(ErrNotResumable.WithDebug("sid is not a valid uuid"))
+		return sid, errors.WithStack(ErrNotResumable.WithDebug("session id is not a valid uuid"))
 	}
 
 	return sid, nil

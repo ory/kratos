@@ -640,7 +640,7 @@ func TestCompleteLogin(t *testing.T) {
 
 		require.Contains(t, res.Request.URL.Path, "return-ts", "%s", res.Request.URL.String())
 		assert.Equal(t, identifier, gjson.GetBytes(body2, "identity.traits.subject").String(), "%s", body2)
-		assert.NotEqual(t, gjson.GetBytes(body1, "sid").String(), gjson.GetBytes(body2, "sid").String(), "%s\n\n%s\n", body1, body2)
+		assert.NotEqual(t, gjson.GetBytes(body1, "id").String(), gjson.GetBytes(body2, "id").String(), "%s\n\n%s\n", body1, body2)
 	})
 
 	t.Run("should be the same session without forced flag", func(t *testing.T) {
@@ -660,6 +660,6 @@ func TestCompleteLogin(t *testing.T) {
 
 		require.Contains(t, res.Request.URL.Path, "return-ts", "%s", res.Request.URL.String())
 		assert.Equal(t, identifier, gjson.GetBytes(body2, "identity.traits.subject").String(), "%s", body2)
-		assert.Equal(t, gjson.GetBytes(body1, "sid").String(), gjson.GetBytes(body2, "sid").String(), "%s\n\n%s\n", body1, body2)
+		assert.Equal(t, gjson.GetBytes(body1, "id").String(), gjson.GetBytes(body2, "id").String(), "%s\n\n%s\n", body1, body2)
 	})
 }
