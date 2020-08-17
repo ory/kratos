@@ -14,7 +14,6 @@ GO_DEPENDENCIES = github.com/ory/go-acc \
 				  github.com/go-swagger/go-swagger/cmd/swagger \
 				  golang.org/x/tools/cmd/goimports \
 				  github.com/mikefarah/yq \
-				  github.com/markbates/pkger/cmd/pkger \
 				  github.com/gobuffalo/packr/v2/packr2
 
 define make-go-dependency

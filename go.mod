@@ -46,7 +46,6 @@ require (
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/justinas/nosurf v1.1.0
 	github.com/leodido/go-urn v1.1.0 // indirect
-	github.com/markbates/pkger v0.17.0
 	github.com/mattn/goveralls v0.0.5
 	github.com/mikefarah/yq v1.15.0
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
