@@ -6,6 +6,7 @@ sidebar_label: Concepts and Overview
 
 import Tabs from '@theme/Tabs'
 import TabItem from '@theme/TabItem'
+import Mermaid from '@theme/Mermaid'
 
 ORY Kratos implements flows that users perform themselves as opposed to
 administrative intervention. Facebook and Google both provide self-service
@@ -89,7 +90,41 @@ including Login and other CSRF attacks.
 
 :::
 
-### Browser Flows
+## Browser Flows
+
+The browser flow has three stages:
+
+- Initialization and redirect to UI;
+- Form rendering;
+- Form submission and payload validation.
+
+The high-level sequence diagram for browser flows looks as follows:
+
+<Mermaid
+  chart={`sequenceDiagram
+  participant B as Browser
+  participant K as ORY Kratos
+  participant A as Flow UI
+  B->>K: Follow link to /self-service/<login|settings|registration|...>/browser
+  K-->>K: Create and store new login flow
+  K->>B: HTTP 302 Found <selfservice.flows.<login|...>.ui_url>?flow=<flow-id>
+  B->>A: Opens <selfservice.flows.<login|...>.ui_url>?flow=<flow-id>
+  A-->>K: Fetches data to render forms using /selfservice/<login|...>/flows?id=<flow-id>
+  B-->>A: Fills out forms, clicks e.g. "Log in", "Sign Up", "Update Email", ...
+  B->>K: Submits form
+  K-->>K: Validates and processes form payloads
+  alt Form payload is valid valid
+    K->>B: Perform flow-specific action (e.g. create user, set session cookie, ...)
+  else Login data invalid
+    K-->>K: Update and store flow (e.g. add form validation errors)
+    K-->>B: HTTP 302 Found <selfservice.flows.<login|...>.ui_url>?flow=<flow-id>
+    B->>A: Opens <selfservice.flows.<login|...>.ui_url>?flow=<flow-id>
+    A-->>K: Fetches data to render form fields and errors
+    B->>K: Repeat flow with input data, submit, validate, ...
+  end`}
+/>
+
+### Initialization and Redirect to UI
 
 First, the Browser opens the flow's initialization endpoint (e.g.`/self-service/login/browser`,
 `/self-service/registration/browser`, ...):
@@ -177,6 +212,8 @@ $ curl -s -v -X GET \
 < Content-Length: 97
 ```
 
+### Form Rendering
+
 The Browser opens the URL which renders the HTML form that, for example, shows the "username and password" field,
 the "Update your email address" field, or other flow forms. This HTML form is rendered be the [Self-Service UI](concepts/ui-user-interface#self-service-user-interface-ssui)
 which you fully control.
@@ -250,6 +287,8 @@ the example above, a suitable HTML Form would look along the lines of:
 </form>
 ```
 
+### Form Submission and Payload Validation
+
 The user completes the flow by submitting the form. The form action always points to ORY Kratos directly.
 The business logic for the flow method will then validate the form payload and return to the UI URL on
 validation errors. The UI then fetches the information about the flow again
@@ -307,7 +346,7 @@ the login flow for example redirects the user to a specified redirect URL and se
 registration flow also redirects to a specified redirect URL but only creates the user in the database and might
 issue a session cookie if configured to do so.
 
-### API Flows
+## API Flows
 
 :::warning
 
@@ -317,6 +356,37 @@ Using API flows in Single-Page-Apps as well as server-side apps opens up several
 including Login and other CSRF attacks.
 
 :::
+
+API flows have three stages:
+
+- Initialization **without redirect**
+- Form rendering using e.g. native iOS, Android, ... components
+- Form submission as `application/json` and payload validation
+
+The high-level sequence diagram for API flows looks as follows:
+
+<Mermaid
+  chart={`sequenceDiagram
+  participant B as API Client
+  participant K as ORY Kratos
+  B->>K: REST GET /self-service/<login|settings|registration|...>/api
+  K-->>K: Create and store new login flow
+  K->>B: HTTP 200 OK with flow as application/json payload
+  B-->>B: Render form using e.g. Native iOS UI Elements
+  B-->>B: User fills out forms, clicks e.g. "Log in", "Sign Up", "Update Email", ...
+  B->>K: REST POST to e.g. /self-service/login/methods/password
+  K-->>K: Validates and processes payload
+  alt Form payload is valid valid
+    K->>B: Perform flow-specific action (e.g. create user, return session cookie, ...)
+  else Login data invalid
+    K-->>K: Update and store flow (e.g. add form validation errors)
+    K->>B: Respond with e.g. HTTP 400 Bad Request and updated flow as payload
+    B-->>B: Render form and validation errors using e.g. Native iOS UI Elements
+    B-->>K: Repeat flow with input data, submit, validate, ...
+  end`}
+/>
+
+### Initialization
 
 The client (e.g. mobile application) makes a request to the flow's initialization endpoint (e.g.`/self-service/login/api`,
 `/self-service/registration/api`, ...):
@@ -394,6 +464,8 @@ database. The flow object has an ID and contains additional information about
 the flow such as the login methods (e.g. "username/password" and "Sign in
 with Google") and their form data.
 
+### Form Rendering
+
 While the Browser flow redirects the client and uses cookies to protect against CSRF and session hijacking
 attacks, the API flow answers with a fresh flow formatted as `application/json` right away. The client
 would then use that information to render the UI. In React Native, this may look like the following
@@ -454,6 +526,8 @@ curl -s -X GET \
     "type": "api",
   # ...
 ```
+
+### Form Submission and Payload Validation
 
 The request is then completed by sending the form formatted as `application/json` to the action endpoint
 
