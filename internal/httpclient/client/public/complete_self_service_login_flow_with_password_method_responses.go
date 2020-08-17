@@ -60,23 +60,23 @@ func NewCompleteSelfServiceLoginFlowWithPasswordMethodOK() *CompleteSelfServiceL
 
 /*CompleteSelfServiceLoginFlowWithPasswordMethodOK handles this case with default header values.
 
-sessionTokenContainer
+loginViaApiResponse
 */
 type CompleteSelfServiceLoginFlowWithPasswordMethodOK struct {
-	Payload *models.SessionTokenContainer
+	Payload *models.LoginViaAPIResponse
 }
 
 func (o *CompleteSelfServiceLoginFlowWithPasswordMethodOK) Error() string {
 	return fmt.Sprintf("[GET /self-service/login/methods/password][%d] completeSelfServiceLoginFlowWithPasswordMethodOK  %+v", 200, o.Payload)
 }
 
-func (o *CompleteSelfServiceLoginFlowWithPasswordMethodOK) GetPayload() *models.SessionTokenContainer {
+func (o *CompleteSelfServiceLoginFlowWithPasswordMethodOK) GetPayload() *models.LoginViaAPIResponse {
 	return o.Payload
 }
 
 func (o *CompleteSelfServiceLoginFlowWithPasswordMethodOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.SessionTokenContainer)
+	o.Payload = new(models.LoginViaAPIResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

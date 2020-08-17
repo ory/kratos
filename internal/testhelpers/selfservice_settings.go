@@ -2,10 +2,8 @@
 package testhelpers
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -31,28 +29,6 @@ import (
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/x"
 )
-
-func HookConfigRedirectTo(t *testing.T, u string) (m []map[string]interface{}) {
-	var b bytes.Buffer
-	_, err := fmt.Fprintf(&b, `[
-	{
-		"hook": "redirect",
-		"config": {
-          "default_redirect_url": "%s",
-          "allow_user_defined_redirect": true
-		}
-	}
-]`, u)
-	require.NoError(t, err)
-	require.NoError(t, json.NewDecoder(&b).Decode(&m))
-
-	return m
-}
-
-func HookVerify(t *testing.T) (m []map[string]interface{}) {
-	require.NoError(t, json.NewDecoder(bytes.NewBufferString(`[{"job": "verify"}]`)).Decode(&m))
-	return m
-}
 
 func GetSettingsRequest(t *testing.T, primaryUser *http.Client, ts *httptest.Server) *common.GetSelfServiceBrowserSettingsRequestOK {
 	publicClient := NewSDKClient(ts)
