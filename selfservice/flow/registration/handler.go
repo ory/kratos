@@ -89,10 +89,13 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 //
 // To fetch an existing registration flow call `/self-service/registration/flows?flow=<flow_id>`.
 //
-// :::note
+// :::warning
 //
-// This endpoint is NOT INTENDED for browser applications (Chrome, Firefox, ...). We recommend using this endpoint
-// for server-side browser applications and single page apps (SPA).
+// You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
+// Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
+// you vulnerable to a variety of CSRF attacks.
+//
+// This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 //
 // :::
 //

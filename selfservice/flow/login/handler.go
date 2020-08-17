@@ -99,10 +99,13 @@ type initializeSelfServiceBrowserLoginFlow struct {
 //
 // To fetch an existing login flow call `/self-service/login/flows?flow=<flow_id>`.
 //
-// :::note
+// :::warning
 //
-// This endpoint is NOT INTENDED for browser applications (Chrome, Firefox, ...). We recommend using this endpoint
-// for server-side browser applications and single page apps (SPA).
+// You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
+// Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
+// you vulnerable to a variety of CSRF attacks, including CSRF login attacks.
+//
+// This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 //
 // :::
 //
@@ -151,11 +154,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 // exists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter
 // `?refresh=true` was set.
 //
-// :::note
-//
 // This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
-//
-// :::
 //
 // More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 //
