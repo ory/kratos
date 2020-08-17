@@ -65,10 +65,10 @@ type Request struct {
 	// processed, but for example the password is incorrect, this will contain error messages.
 	//
 	// required: true
-	Methods map[string]*RequestMethod `json:"methods" faker:"recovery_request_methods" db:"-"`
+	Methods map[string]*RequestMethod `json:"methods" faker:"recovery_flow_methods" db:"-"`
 
 	// MethodsRaw is a helper struct field for gobuffalo.pop.
-	MethodsRaw RequestMethodsRaw `json:"-" faker:"-" has_many:"selfservice_recovery_request_methods" fk_id:"selfservice_recovery_request_id"`
+	MethodsRaw RequestMethodsRaw `json:"-" faker:"-" has_many:"selfservice_recovery_flow_methods" fk_id:"selfservice_recovery_flow_id"`
 
 	// State represents the state of this request:
 	//
@@ -113,7 +113,7 @@ func NewRequest(exp time.Duration, csrf string, r *http.Request, strategies Stra
 }
 
 func (r Request) TableName() string {
-	return "selfservice_recovery_requests"
+	return "selfservice_recovery_flows"
 }
 
 func (r *Request) URL(recoveryURL *url.URL) *url.URL {

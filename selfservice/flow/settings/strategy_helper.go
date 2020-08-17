@@ -76,7 +76,7 @@ func PrepareUpdate(d interface {
 			WithField("stack_trace", fmt.Sprintf("%s", debug.Stack())).
 			WithField("expected_request_id", payload.GetRequestID()).
 			WithField("actual_request_id", rid).
-			Debug("Request ID from continuity manager does not match Request ID from request.")
+			Debug("Flow ID from continuity manager does not match Flow ID from request.")
 		return c, nil
 	} else if !errors.Is(err, &continuity.ErrNotResumable) {
 		return new(UpdateContext), err

@@ -116,7 +116,7 @@ func RegisterFakes() {
 		panic(err)
 	}
 
-	if err := faker.AddProvider("settings_request_methods", func(v reflect.Value) (interface{}, error) {
+	if err := faker.AddProvider("settings_flow_methods", func(v reflect.Value) (interface{}, error) {
 		var methods = make(map[string]*settings.RequestMethod)
 		for _, ct := range []string{settings.StrategyProfile, string(identity.CredentialsTypePassword), string(identity.CredentialsTypeOIDC)} {
 			var f form.HTMLForm
@@ -133,7 +133,7 @@ func RegisterFakes() {
 		panic(err)
 	}
 
-	if err := faker.AddProvider("recovery_request_methods", func(v reflect.Value) (interface{}, error) {
+	if err := faker.AddProvider("recovery_flow_methods", func(v reflect.Value) (interface{}, error) {
 		var methods = make(map[string]*recovery.RequestMethod)
 		for _, ct := range []string{recovery.StrategyRecoveryTokenName} {
 			var f form.HTMLForm

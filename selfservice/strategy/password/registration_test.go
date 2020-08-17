@@ -124,7 +124,7 @@ func TestRegistration(t *testing.T) {
 			require.NoError(t, res.Body.Close())
 			require.NoError(t, err)
 
-			require.EqualValues(t, expectedStatusCode, res.StatusCode, "Request: %+v\n\t\tResponse: %+v\n\t\tResponse Headers: %+v\n\t\tBody: %s", res.Request, res, res.Header, result)
+			require.EqualValues(t, expectedStatusCode, res.StatusCode, "Flow: %+v\n\t\tResponse: %+v\n\t\tResponse Headers: %+v\n\t\tBody: %s", res.Request, res, res.Header, result)
 			return result, res
 		}
 

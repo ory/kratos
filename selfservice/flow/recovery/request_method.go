@@ -23,11 +23,11 @@ type RequestMethod struct {
 	// ID is a helper struct field for gobuffalo.pop.
 	ID uuid.UUID `json:"-" db:"id"`
 
-	// RequestID is a helper struct field for gobuffalo.pop.
-	RequestID uuid.UUID `json:"-" db:"selfservice_recovery_request_id"`
+	// FlowID is a helper struct field for gobuffalo.pop.
+	FlowID uuid.UUID `json:"-" db:"selfservice_flow_request_id"`
 
-	// Request is a helper struct field for gobuffalo.pop.
-	Request *Request `json:"-" belongs_to:"selfservice_recovery_request" fk_id:"RequestID"`
+	// Flow is a helper struct field for gobuffalo.pop.
+	Flow *Request `json:"-" belongs_to:"selfservice_flow_request" fk_id:"FlowID"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"-" db:"created_at"`
@@ -45,12 +45,12 @@ type RequestMethods map[string]*RequestMethod
 
 func (u RequestMethods) TableName() string {
 	// This must be stay a value receiver, using a pointer receiver will cause issues with pop.
-	return "selfservice_recovery_request_methods"
+	return "selfservice_recovery_flow_methods"
 }
 
 func (u RequestMethodsRaw) TableName() string {
 	// This must be stay a value receiver, using a pointer receiver will cause issues with pop.
-	return "selfservice_recovery_request_methods"
+	return "selfservice_recovery_flow_methods"
 }
 
 // swagger:ignore

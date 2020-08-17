@@ -112,7 +112,7 @@ func TestCompleteLogin(t *testing.T) {
 		res, err := c.Do(req)
 		require.NoError(t, err)
 		defer res.Body.Close()
-		require.EqualValues(t, esc, res.StatusCode, "Request: %+v\n\t\tResponse: %s", res.Request, res)
+		require.EqualValues(t, esc, res.StatusCode, "Flow: %+v\n\t\tResponse: %s", res.Request, res)
 		body, err := ioutil.ReadAll(res.Body)
 		require.NoError(t, err)
 		return res, body
@@ -131,7 +131,7 @@ func TestCompleteLogin(t *testing.T) {
 
 		res, err := c.Get(u)
 		require.NoError(t, err)
-		require.EqualValues(t, http.StatusOK, res.StatusCode, "Request: %+v\n\t\tResponse: %s", res.Request, res)
+		require.EqualValues(t, http.StatusOK, res.StatusCode, "Flow: %+v\n\t\tResponse: %s", res.Request, res)
 		assert.NotEmpty(t, res.Request.URL.Query().Get("flow"))
 
 		return makeRequestRaw(t, false, payload, res.Request.URL.Query().Get("flow"), c, esc)
@@ -229,7 +229,7 @@ func TestCompleteLogin(t *testing.T) {
 			res, body := run(t, false)
 			require.Contains(t, res.Request.URL.Path, "error-ts")
 			assert.Equal(t, int64(http.StatusBadRequest), gjson.GetBytes(body, "0.code").Int(), "%s", body)
-			assert.Equal(t, "Bad Request", gjson.GetBytes(body, "0.status").String(), "%s", body)
+			assert.Equal(t, "Bad Flow", gjson.GetBytes(body, "0.status").String(), "%s", body)
 			assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "request query parameter is missing or invalid", "%s", body)
 		})
 
@@ -237,7 +237,7 @@ func TestCompleteLogin(t *testing.T) {
 			res, body := run(t, true)
 			require.Contains(t, res.Request.URL.Path, password.RouteLogin, res.Request.URL)
 			assert.Equal(t, int64(http.StatusBadRequest), gjson.GetBytes(body, "error.code").Int(), "%s", body)
-			assert.Equal(t, "Bad Request", gjson.GetBytes(body, "error.status").String(), "%s", body)
+			assert.Equal(t, "Bad Flow", gjson.GetBytes(body, "error.status").String(), "%s", body)
 			assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), "request query parameter is missing or invalid", "%s", body)
 		})
 	})
