@@ -86,7 +86,7 @@ type completeSelfServiceLoginFlowWithPasswordMethod struct {
 //     - application/json
 //
 //     Responses:
-//       200: sessionTokenContainer
+//       200: loginViaApiResponse
 //       302: emptyResponse
 //       400: genericError
 //       500: genericError
@@ -114,10 +114,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	var p LoginFormPayload
-	if err := s.hd.Decode(r, &p,
-		decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema),
-		decoderx.HTTPDecoderSetIgnoreParseErrorsStrategy(decoderx.ParseErrorIgnore),
-	); err != nil {
+	if err := s.hd.Decode(r, &p, decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema)); err != nil {
 		s.handleLoginError(w, r, ar, &p, err)
 		return
 	}

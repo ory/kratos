@@ -196,13 +196,6 @@ func TestCompleteLogin(t *testing.T) {
 		}))
 	}
 
-	expectStatusCode := func(isAPI bool, apiExpect int) int {
-		if isAPI {
-			return apiExpect
-		}
-		return http.StatusOK
-	}
-
 	t.Run("should show the error ui because the request is malformed", func(t *testing.T) {
 		run := func(t *testing.T, isAPI bool) (string, *http.Response) {
 			lr := nlr(0, isAPI)

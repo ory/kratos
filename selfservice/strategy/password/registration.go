@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	RegistrationPath = "/self-service/browser/flows/registration/strategies/password"
+	RouteRegistration = "/self-service/registration/methods/password"
 )
 
 type RegistrationFormPayload struct {
@@ -37,8 +37,15 @@ type RegistrationFormPayload struct {
 	Traits   json.RawMessage `json:"traits"`
 }
 
-func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
-	r.POST(RegistrationPath, s.d.SessionHandler().IsNotAuthenticated(s.handleRegistration, session.RedirectOnAuthenticated(s.c)))
+func (s *Strategy) RegisterRegistrationRoutes(public *x.RouterPublic) {
+	public.POST(RouteRegistration, s.d.SessionHandler().IsNotAuthenticated(s.handleRegistration, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		handler := session.RedirectOnAuthenticated(s.c)
+		if x.IsJSONRequest(r) {
+			handler = session.RespondWithJSONErrorOnAuthenticated(s.d.Writer(), registration.ErrAlreadyLoggedIn)
+		}
+
+		handler(w, r, ps)
+	}))
 }
 
 func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Request, rr *registration.Flow, p *RegistrationFormPayload, err error) {
@@ -78,10 +85,43 @@ func (s *Strategy) decoderRegistration() (decoderx.HTTPDecoderOption, error) {
 	return o, nil
 }
 
+// swagger:route GET /self-service/registration/methods/password public completeSelfServiceRegistrationFlowWithPasswordMethod
+//
+// Complete Registration Flow with Username/Email Password Method
+//
+// Use this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint
+// behaves differently for API and browser flows.
+//
+// API flows expect `application/json` to be sent in the body and responds with
+//   - HTTP 200 and a application/json body with the created identity success - if the session hook is configured the
+//     `session` and `session_token` will also be included;
+//   - HTTP 302 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;
+//   - HTTP 400 on form validation errors.
+//
+// Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
+//   - a HTTP 302 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;
+//   - a HTTP 302 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.
+//
+// More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+//
+//     Schemes: http, https
+//
+//     Consumes:
+//     - application/json
+//     - application/x-www-form-urlencoded
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: registrationViaApiResponse
+//       302: emptyResponse
+//       400: genericError
+//       500: genericError
 func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	rid := x.ParseUUID(r.URL.Query().Get("request"))
+	rid := x.ParseUUID(r.URL.Query().Get("flow"))
 	if x.IsZeroUUID(rid) {
-		s.handleRegistrationError(w, r, nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request Code is missing.")))
+		s.handleRegistrationError(w, r, nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The flow query parameter is missing.")))
 		return
 	}
 
@@ -103,11 +143,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	if err := s.hd.Decode(r, &p,
-		option,
-		decoderx.HTTPDecoderSetIgnoreParseErrorsStrategy(decoderx.ParseErrorIgnore),
-		decoderx.HTTPDecoderSetValidatePayloads(false),
-	); err != nil {
+	if err := s.hd.Decode(r, &p, option, decoderx.HTTPDecoderSetValidatePayloads(false)); err != nil {
 		s.handleRegistrationError(w, r, ar, &p, err)
 		return
 	}
@@ -175,7 +211,7 @@ func (s *Strategy) validateCredentials(i *identity.Identity, pw string) error {
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.Flow) error {
 	action := urlx.CopyWithQuery(
-		urlx.AppendPaths(s.c.SelfPublicURL(), RegistrationPath),
+		urlx.AppendPaths(s.c.SelfPublicURL(), RouteRegistration),
 		url.Values{"request": {sr.ID.String()}},
 	)
 

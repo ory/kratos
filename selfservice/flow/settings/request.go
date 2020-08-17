@@ -16,6 +16,7 @@ import (
 	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
@@ -37,6 +38,9 @@ type Request struct {
 	// type: string
 	// format: uuid
 	ID uuid.UUID `json:"id" db:"id" faker:"-"`
+
+	// Type represents the flow's type which can be either "api" or "browser", depending on the flow interaction.
+	Type flow.Type `json:"type" db:"type" faker:"flow_type"`
 
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting,
 	// a new request has to be initiated.
@@ -69,10 +73,10 @@ type Request struct {
 	// processed, but for example the password is incorrect, this will contain error messages.
 	//
 	// required: true
-	Methods map[string]*RequestMethod `json:"methods" faker:"settings_request_methods" db:"-"`
+	Methods map[string]*RequestMethod `json:"methods" faker:"settings_flow_methods" db:"-"`
 
 	// MethodsRaw is a helper struct field for gobuffalo.pop.
-	MethodsRaw RequestMethodsRaw `json:"-" faker:"-" has_many:"selfservice_settings_request_methods" fk_id:"selfservice_settings_request_id"`
+	MethodsRaw RequestMethodsRaw `json:"-" faker:"-" has_many:"selfservice_settings_flow_methods" fk_id:"selfservice_settings_flow_id"`
 
 	// Identity contains all of the identity's data in raw form.
 	//
@@ -111,7 +115,7 @@ func NewRequest(exp time.Duration, r *http.Request, s *session.Session) *Request
 }
 
 func (r Request) TableName() string {
-	return "selfservice_settings_requests"
+	return "selfservice_settings_flows"
 }
 
 func (r *Request) GetID() uuid.UUID {

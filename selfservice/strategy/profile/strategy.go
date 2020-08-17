@@ -165,12 +165,7 @@ func (s *Strategy) handleSubmit(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
-	if err := decoderx.NewHTTP().Decode(r, &p,
-		decoderx.HTTPFormDecoder(),
-		option,
-		decoderx.HTTPDecoderSetValidatePayloads(false),
-		decoderx.HTTPDecoderSetIgnoreParseErrorsStrategy(decoderx.ParseErrorIgnore),
-	); err != nil {
+	if err := decoderx.NewHTTP().Decode(r, &p, decoderx.HTTPFormDecoder(), option, decoderx.HTTPDecoderSetValidatePayloads(false)); err != nil {
 		s.handleSettingsError(w, r, ctxUpdate, nil, &p, err)
 		return
 	}
