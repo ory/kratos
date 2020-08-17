@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/decoderx"
@@ -26,6 +27,7 @@ const (
 )
 
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
+	s.d.CSRFHandler().ExemptPath(RouteLogin)
 	r.POST(RouteLogin, s.handleLogin)
 }
 
@@ -103,6 +105,17 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
+	var p LoginFormPayload
+	if err := s.hd.Decode(r, &p, decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema)); err != nil {
+		s.handleLoginError(w, r, ar, &p, err)
+		return
+	}
+
+	if ar.Type == flow.TypeBrowser && !nosurf.VerifyToken(s.d.GenerateCSRFToken(r), p.CSRFToken) {
+		s.handleLoginError(w, r, ar, &p, x.ErrInvalidCSRFToken)
+		return
+	}
+
 	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil && !ar.Forced {
 		if ar.Type == flow.TypeBrowser {
 			http.Redirect(w, r, s.c.SelfServiceBrowserDefaultReturnTo().String(), http.StatusFound)
@@ -110,12 +123,6 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 		}
 
 		s.d.Writer().WriteError(w, r, errors.WithStack(login.ErrAlreadyLoggedIn))
-		return
-	}
-
-	var p LoginFormPayload
-	if err := s.hd.Decode(r, &p, decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema)); err != nil {
-		s.handleLoginError(w, r, ar, &p, err)
 		return
 	}
 

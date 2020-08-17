@@ -1,9 +1,11 @@
 package x
 
 import (
+	"encoding/base64"
 	"net/http"
 
 	"github.com/justinas/nosurf"
+	"github.com/ory/x/randx"
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/logrusx"
@@ -34,7 +36,7 @@ func DefaultCSRFToken(r *http.Request) string {
 	return nosurf.Token(r)
 }
 
-const FakeCSRFToken = "nosurf"
+var FakeCSRFToken = base64.StdEncoding.EncodeToString([]byte(randx.MustString(32, randx.AlphaLowerNum)))
 
 func FakeCSRFTokenGenerator(r *http.Request) string {
 	return FakeCSRFToken
@@ -46,12 +48,17 @@ func FakeCSRFTokenGeneratorWithToken(token string) func(r *http.Request) string 
 	}
 }
 
+var _ CSRFHandler = new(FakeCSRFHandler)
+
 type FakeCSRFHandler struct{ name string }
 
 func NewFakeCSRFHandler(name string) *FakeCSRFHandler {
 	return &FakeCSRFHandler{
 		name: name,
 	}
+}
+
+func (f *FakeCSRFHandler) ExemptPath(s string) {
 }
 
 func (f *FakeCSRFHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -68,6 +75,7 @@ type CSRFProvider interface {
 type CSRFHandler interface {
 	http.Handler
 	RegenerateToken(w http.ResponseWriter, r *http.Request) string
+	ExemptPath(string)
 }
 
 func NewCSRFHandler(
@@ -101,9 +109,10 @@ func NewCSRFHandler(
 func NewTestCSRFHandler(router http.Handler, reg interface {
 	WithCSRFHandler(CSRFHandler)
 	WithCSRFTokenGenerator(CSRFToken)
+	WriterProvider
+	LoggingProvider
 }) *nosurf.CSRFHandler {
-	n := nosurf.New(router)
-	n.SetBaseCookie(http.Cookie{MaxAge: nosurf.MaxAge, Path: "/", HttpOnly: true, Secure: false})
+	n := NewCSRFHandler(router, reg.Writer(), reg.Logger(), "/", "", false)
 	reg.WithCSRFHandler(n)
 	reg.WithCSRFTokenGenerator(nosurf.Token)
 	return n

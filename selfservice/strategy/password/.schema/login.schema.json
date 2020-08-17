@@ -11,6 +11,9 @@
       "type": "string",
       "minLength": 1
     },
+    "csrf_token": {
+      "type": "string"
+    },
     "identifier": {
       "type": "string",
       "minLength": 1

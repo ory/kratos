@@ -22,6 +22,7 @@ type (
 		PersistenceProvider
 		x.WriterProvider
 		x.LoggingProvider
+		x.CSRFProvider
 	}
 	HandlerProvider interface {
 		SessionHandler() *Handler
@@ -48,6 +49,8 @@ const (
 )
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
+	h.r.CSRFHandler().ExemptPath(RouteWhoami)
+
 	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch,
 		http.MethodDelete, http.MethodConnect, http.MethodOptions, http.MethodTrace} {
 		public.Handle(m, RouteWhoami, h.whoami)

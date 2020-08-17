@@ -8,8 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/markbates/pkger"
-
 	"github.com/ory/x/logrusx"
 
 	_ "github.com/ory/jsonschema/v3/fileloader"
@@ -28,14 +26,10 @@ import (
 var schema []byte
 
 func init() {
-	file, err := pkger.Open("/.schema/config.schema.json")
+	var err error
+	schema, err = ioutil.ReadFile("../../.schema/config.schema.json")
 	if err != nil {
 		panic("Unable to open configuration JSON Schema.")
-	}
-	defer file.Close()
-	schema, err = ioutil.ReadAll(file)
-	if err != nil {
-		panic("Unable to read configuration JSON Schema.")
 	}
 }
 

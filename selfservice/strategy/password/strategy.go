@@ -29,6 +29,7 @@ type registrationStrategyDependencies interface {
 	x.LoggingProvider
 	x.WriterProvider
 	x.CSRFTokenGeneratorProvider
+	x.CSRFProvider
 
 	continuity.ManagementProvider
 

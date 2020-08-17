@@ -22,8 +22,13 @@ import (
 	"github.com/ory/kratos/x"
 )
 
+var _ x.CSRFHandler = new(mockCSRFHandler)
+
 type mockCSRFHandler struct {
 	c int
+}
+
+func (f *mockCSRFHandler) ExemptPath(s string) {
 }
 
 func (f *mockCSRFHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {

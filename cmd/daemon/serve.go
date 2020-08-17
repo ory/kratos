@@ -57,7 +57,6 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 		c.SelfPublicURL().Hostname(),
 		!flagx.MustGetBool(cmd, "dev"),
 	)
-	csrf.ExemptPath(session.RouteWhoami)
 	r.WithCSRFHandler(csrf)
 	n.UseHandler(r.CSRFHandler())
 	server := graceful.WithDefaults(&http.Server{

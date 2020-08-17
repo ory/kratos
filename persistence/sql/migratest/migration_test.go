@@ -51,7 +51,7 @@ func TestMigrations(t *testing.T) {
 	l := logrusx.New("", "", logrusx.ForceLevel(logrus.TraceLevel))
 	plog.Logger = gobuffalologger.Logrus{FieldLogger: l.Entry}
 
-	if !testing.Short() && false {
+	if !testing.Short() {
 		dockertest.Parallel([]func(){
 			func() {
 				connections["postgres"] = dockertest.ConnectToTestPostgreSQLPop(t)

@@ -38,6 +38,7 @@ type RegistrationFormPayload struct {
 }
 
 func (s *Strategy) RegisterRegistrationRoutes(public *x.RouterPublic) {
+	s.d.CSRFHandler().ExemptPath(RouteRegistration)
 	public.POST(RouteRegistration, s.d.SessionHandler().IsNotAuthenticated(s.handleRegistration, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		handler := session.RedirectOnAuthenticated(s.c)
 		if x.IsJSONRequest(r) {
