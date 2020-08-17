@@ -80,6 +80,15 @@ All Self-Service Flows
 [Email or Phone verification](self-service/flows/verify-email-account-activation))
 support these two flow types and use the same data models but do use different API endpoints.
 
+:::warning
+
+**Never use API flows to implement Browser applications!**
+
+Using API flows in Single-Page-Apps as well as server-side apps opens up several potential attack vectors, including
+including Login and other CSRF attacks.
+
+:::
+
 ### Browser Flows
 
 First, the Browser opens the flow's initialization endpoint (e.g.`/self-service/login/browser`,
@@ -95,11 +104,18 @@ First, the Browser opens the flow's initialization endpoint (e.g.`/self-service/
   ]}>
 <TabItem value="curl">
 
-This CURL request emulates a browser request:
+This curl -s request emulates a browser request:
 
 ```
-$ curl -x GET
- -H "Accept: text/html" http://127.0.0.1:4433/self-service/login/browser
+$ curl -s -v -X GET \
+  -H "Accept: text/html" \
+  http://127.0.0.1:4433/self-service/login/browser
+
+# Request Headers
+> GET /self-service/login/browser HTTP/1.1
+> Host: 127.0.0.1:4433
+> User-Agent: curl/7.64.1
+> Accept: text/html
 ```
 
 </TabItem>
@@ -146,10 +162,19 @@ Query Parameter. The initialization endpoint (e.g. `http://127.0.0.1:4433/self-s
 responsds with:
 
 ```
-GET http(s)://public.my-kratos/self-service/login/browser
+$ curl -s -v -X GET \
+  -H "Accept: text/html" \
+  http://127.0.0.1:4433/self-service/login/browser
 
-HTTP 302 Found
-Location:
+# Response Headers
+< HTTP/1.1 302 Found
+< Cache-Control: 0
+< Content-Type: text/html; charset=utf-8
+< Location: http://127.0.0.1:4455/auth/login?flow=dd5be6df-a293-4749-aab6-209348829e09
+< Set-Cookie: csrf_token=qhMCbVX6iDyw1x/701zlINVFFqfkZrq1t/Z27Z1uFDw=; Path=/.ory/kratos/public/; Domain=127.0.0.1; Max-Age=31536000; HttpOnly
+< Vary: Cookie
+< Date: Mon, 17 Aug 2020 13:54:52 GMT
+< Content-Length: 97
 ```
 
 The Browser opens the URL which renders the HTML form that, for example, shows the "username and password" field,
@@ -166,24 +191,113 @@ make a request along the lines of:
 
 ```
 # The endpoint uses ORY Kratos' REST API to fetch information about the request
-$ curl -x GET \
- -H "Accept: application/json" \
- http://127.0.0.1:4433/self-service/login/browser?request=...
+$ curl -s -X GET \
+    -H "Accept: application/json" \
+    "http://127.0.0.1:4433/self-service/login/flows?id=dd5be6df-a293-4749-aab6-209348829e09" | jq
 ```
 
 The result includes login methods, their fields, and additional information about the flow:
 
+```json
+{
+  "id": "dd5be6df-a293-4749-aab6-209348829e09",
+  "type": "browser",
+  "expires_at": "2020-08-17T14:04:52.2276396Z",
+  "issued_at": "2020-08-17T13:54:52.2276396Z",
+  "request_url": "http://127.0.0.1:4433/self-service/login/browser",
+  "messages": null,
+  "methods": {
+    "password": {
+      "method": "password",
+      "config": {
+        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/login/methods/password?flow=dd5be6df-a293-4749-aab6-209348829e09",
+        "method": "POST",
+        "fields": [
+          {
+            "name": "identifier",
+            "type": "text",
+            "required": true,
+            "value": ""
+          },
+          {
+            "name": "password",
+            "type": "password",
+            "required": true
+          },
+          {
+            "name": "csrf_token",
+            "type": "hidden",
+            "required": true,
+            "value": "pW6qLAS39HaXruAooEa7phFCKXoFWUkzIGe4FK+BlmcPfahBUU18Sid5/9NzGl6GxAc/3eE/84aXkc75Mu+CWw=="
+          }
+        ]
+      }
+    }
+  },
+  "forced": false
+}
 ```
 
-```
+For more details, check out the individual flow documentation. The flow UI then renders the given methods. For
+the example above, a suitable HTML Form would look along the lines of:
 
-For more details, check out the individual flow documentation.
+```html
+<form action="http://127.0.0.1:4455/.ory/kratos/public/self-service/login/methods/password?flow=dd5be6df-a293-4749-aab6-209348829e09">
+    <input type="hidden" name="csrf_token" value="pW6qLAS39HaXruAooEa7phFCKXoFWUkzIGe4FK" />
+    <input type="text" name="identifier" placeholder="Enter your username or email address" />
+    <input type="password" name="password" />
+    <input type="submit" value="Log in" />
+</form>
+```
 
 The user completes the flow by submitting the form. The form action always points to ORY Kratos directly.
 The business logic for the flow method will then validate the form payload and return to the UI URL on
-validation errors
+validation errors. The UI then fetches the information about the flow again
 
-and include the validation errors.
+```
+# The endpoint uses ORY Kratos' REST API to fetch information about the request
+$ curl -s -X GET \
+    -H "Accept: application/json" \
+    "http://127.0.0.1:4433/self-service/login/flows?id=dd5be6df-a293-4749-aab6-209348829e09" | jq
+```
+
+which now includes validation errors and other potential messages:
+
+```json
+{
+  "id": "dd5be6df-a293-4749-aab6-209348829e09",
+  "type": "browser",
+  "expires_at": "2020-08-17T14:04:52.2276396Z",
+  "issued_at": "2020-08-17T13:54:52.2276396Z",
+  "request_url": "http://127.0.0.1:4433/self-service/login/browser",
+  "messages": null,
+  "methods": {
+    "password": {
+      "method": "password",
+      "config": {
+        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/login/methods/password?flow=dd5be6df-a293-4749-aab6-209348829e09",
+        "method": "POST",
+        "fields": [
+          /* ... */
+          {
+            name: 'password',
+            type: 'text',
+            value: '',
+            messages: [
+              {
+                /* id, type, ... */
+                text: "password: Value can not be empty"
+              }
+            ]
+          }
+          /* ... */
+        ]
+      }
+    }
+  },
+  "forced": false
+}
+```
 
 If a system error (e.g. broken configuration file) occurs, the browser is redirected to the
 [Error UI](self-service/flows/user-facing-errors).
@@ -195,23 +309,68 @@ issue a session cookie if configured to do so.
 
 ### API Flows
 
-The client (e.g. mobile application) makes a request to the flow's initialization endpoint
+:::warning
 
+**Never use API flows to implement Browser applications!**
 
-First, the Browser opens the flow's initialization endpoint (e.g.`/self-service/login/browser`,
-`/self-service/registration/browser`, ...):
+Using API flows in Single-Page-Apps as well as server-side apps opens up several potential attack vectors, including
+including Login and other CSRF attacks.
+
+:::
+
+The client (e.g. mobile application) makes a request to the flow's initialization endpoint (e.g.`/self-service/login/api`,
+`/self-service/registration/api`, ...):
 
 <Tabs
   defaultValue="curl"
   values={[
-    {label: 'CURL', value: 'curl'},
+    {label: 'curl', value: 'curl'},
     {label: 'NodeJS', value: 'nodejs'},
   ]}>
 <TabItem value="curl">
+
 ```
-$ curl -x GET \
+$ curl -s -X GET \
   -H "Accept: application/json" \
-  http://127.0.0.1:4433/self-service/login/api
+  http://127.0.0.1:4433/self-service/login/api | jq
+
+{
+  "id": "57374fa5-336a-4381-b471-92d7de939859",
+  "type": "api",
+  "expires_at": "2020-08-17T14:10:34.9952023Z",
+  "issued_at": "2020-08-17T14:00:34.9952023Z",
+  "request_url": "http://127.0.0.1:4433/self-service/login/api",
+  "messages": null,
+  "methods": {
+    "password": {
+      "method": "password",
+      "config": {
+        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/login/methods/password?flow=57374fa5-336a-4381-b471-92d7de939859",
+        "method": "POST",
+        "fields": [
+          {
+            "name": "identifier",
+            "type": "text",
+            "required": true,
+            "value": ""
+          },
+          {
+            "name": "password",
+            "type": "password",
+            "required": true
+          },
+          {
+            "name": "csrf_token",
+            "type": "hidden",
+            "required": true,
+            "value": "YAgEhbVEWRHV4F+B0gGyIdUgusvZRCHyjBUhvbIgRuyRh2DdFRE90FLcQYy5LwEE245Aml0L+OF4qqPjZismiQ=="
+          }
+        ]
+      }
+    }
+  },
+  "forced": false
+}
 ```
 
 </TabItem>
@@ -230,19 +389,135 @@ fetch.get('http://127.0.0.1:4433/self-service/login/api', {
 </TabItem>
 </Tabs>
 
-2. The initialization endpoint creates a flow object and stores it in the
-   database. The flow object has an ID and contains additional information about
-   the flow such as the login methods (e.g. "username/password" and "Sign in
-   with Google") and their form data. Once stored, the flow data is directly
-   returned as `application/json` without redirects.
+The initialization endpoint creates a flow object and stores it in the
+database. The flow object has an ID and contains additional information about
+the flow such as the login methods (e.g. "username/password" and "Sign in
+with Google") and their form data.
 
-3. The client uses the flow data to render the UI - so for example the login
-   form and any validation errors.
+While the Browser flow redirects the client and uses cookies to protect against CSRF and session hijacking
+attacks, the API flow answers with a fresh flow formatted as `application/json` right away. The client
+would then use that information to render the UI. In React Native, this may look like the following
+snippet:
 
-4. The client completes the flow by e.g. making another `application/json`
-   request.
+```jsx
+// import React from ...
+import { PublicApi } from "@oryd/kratos-client"
 
-5. If needed, the client can re-request the flow information (e.g. because the
-   form completed with validation errors) by calling the flow information
-   endpoint (e.g. `/self-service/login/flows?id=abcde`). This endpoint is
-   available at both ORY Kratos's Public and Admin Endpoints.
+const kratos = new PublicApi('http://127.0.0.1:4433')
+
+const Login = () => {
+  const [config, setConfig] = useState<LoginRequest | undefined>(undefined)
+
+  useEffect(() => {
+    kratos.initializeSelfServiceAPILoginFlow().then(({body: flow}) => {
+      setConfig(flow.methods.password.config)
+    })
+  }, [])
+
+  // This is a non-functional, code example. It is missing state management and so on.
+  // The idea is to show how initializing such a flow would look like in an API scenario.
+  return (
+    <View>
+      <Text>Login</Text>
+
+      <TextInput
+        value={/*...*/}
+        onChangeText={/*...*/}
+        placeholder="Email or username"/>
+
+      <TextInput
+        value={/*...*/}
+        onChangeText={/*...*/}
+        secureTextEntry={true}
+        autoCompleteType="password"
+        textContentType="password"
+        placeholder="Email or username"/>
+
+      <Button
+        title={"Log in"}
+        onPress={/* ... */}
+      />
+    </View>
+  )
+}
+```
+
+If needed, the client can re-request the flow using the same HTTP Request as the browser flow:
+
+```shell script
+curl -s -X GET \
+    -H "Accept: application/json" \
+    "http://127.0.0.1:4433/self-service/login/flows?id=57374fa5-336a-4381-b471-92d7de939859" | jq
+
+  {
+    "id": "57374fa5-336a-4381-b471-92d7de939859",
+    "type": "api",
+  # ...
+```
+
+The request is then completed by sending the form formatted as `application/json` to the action endpoint
+
+```shell script
+flow=$(curl -s -X GET -H "Accept: application/json" "http://127.0.0.1:4433/self-service/login/api")
+actionUrl=$(echo $flow | jq -r '.methods.password.config.action')
+
+echo $actionUrl
+# http://127.0.0.1:4455/.ory/kratos/public/self-service/login/methods/password?flow=d6e0dd24-f5c6-4926-a526-616a9afeed9d
+
+curl -s -X POST -H  "Accept: application/json" -H "Content-Type: application/json" \
+    -d '{"identifier": "i-do-not-exist@user.org", "password": "the-wrong-password"}' \
+    "$actionUrl" | jq
+```
+
+which in this case fails with a 400 Bad Request error and the following payload:
+
+```json
+{
+  "id": "f895fafb-bf76-4f13-83a2-241b2dfd09dd",
+  "type": "api",
+  "expires_at": "2020-08-17T20:58:51.9056258Z",
+  "issued_at": "2020-08-17T20:48:51.9056258Z",
+  "request_url": "http://127.0.0.1:4433/self-service/login/api",
+  "active": "password",
+  "messages": null,
+  "methods": {
+    "password": {
+      "method": "password",
+      "config": {
+        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/login/methods/password?flow=f895fafb-bf76-4f13-83a2-241b2dfd09dd",
+        "method": "POST",
+        "fields": [
+          {
+            "name": "identifier",
+            "type": "text",
+            "required": true,
+            "value": "i-do-not-exist@user.org"
+          },
+          {
+            "name": "password",
+            "type": "password",
+            "required": true
+          },
+          {
+            "name": "csrf_token",
+            "type": "hidden",
+            "required": true
+          }
+        ],
+        "messages": [
+          {
+            "id": 4000006,
+            "text": "The provided credentials are invalid, check for spelling mistakes in your password or username, email address, or phone number.",
+            "type": "error",
+            "context": {}
+          }
+        ]
+      }
+    }
+  },
+  "forced": false
+}
+```
+
+On success, that endpoint would typically return a HTTP 200 Status OK response with the success `application/json` response
+paylaod in the body.
