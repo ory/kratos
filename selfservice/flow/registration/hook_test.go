@@ -39,7 +39,7 @@ func TestRegistrationExecutor(t *testing.T) {
 				handleErr := testhelpers.SelfServiceHookRegistrationErrorHandler
 				router.GET("/registration/pre", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 					if handleErr(t, w, r, reg.RegistrationHookExecutor().PreRegistrationHook(w, r, registration.NewFlow(time.Minute, x.FakeCSRFToken, r, flow.TypeBrowser))) {
-						w.Write([]byte("ok"))
+						_, _ = w.Write([]byte("ok"))
 					}
 				})
 
