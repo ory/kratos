@@ -2,6 +2,8 @@ module github.com/ory/kratos
 
 go 1.14
 
+replace github.com/justinas/nosurf => github.com/aeneasr/nosurf v1.1.1-0.20200817183017-ee7691f82e7d
+
 require (
 	github.com/Masterminds/sprig/v3 v3.0.0
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
