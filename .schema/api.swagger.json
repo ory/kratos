@@ -1328,6 +1328,50 @@
         }
       }
     },
+    "/self-service/registration/methods/password": {
+      "get": {
+        "description": "Use this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint\nbehaves differently for API and browser flows.\n\nAPI flows expect `application/json` to be sent in the body and responds with\nHTTP 200 and a application/json body with the created identity success - if the session hook is configured the\n`session` and `session_token` will also be included;\nHTTP 302 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nBrowser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with\na HTTP 302 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;\na HTTP 302 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "consumes": [
+          "application/json",
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Complete Registration Flow with Username/Email Password Method",
+        "operationId": "completeSelfServiceRegistrationFlowWithPasswordMethod",
+        "responses": {
+          "200": {
+            "description": "registrationViaApiResponse",
+            "schema": {
+              "$ref": "#/definitions/registrationViaApiResponse"
+            }
+          },
+          "302": {
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+          },
+          "400": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
     "/sessions": {
       "delete": {
         "description": "Use this endpoint to revoke a session using its token. This endpoint is particularly useful for API clients\nsuch as mobile apps to log the user out of the system and invalidate the session.\n\nThis endpoint does not remove any HTTP Cookies - use the Self-Service Logout Flow instead.",
@@ -2056,10 +2100,30 @@
         }
       }
     },
+    "registrationViaApiResponse": {
+      "description": "The Response for Registration Flows via API",
+      "type": "object",
+      "required": [
+        "session_token",
+        "identity"
+      ],
+      "properties": {
+        "identity": {
+          "$ref": "#/definitions/Identity"
+        },
+        "session": {
+          "$ref": "#/definitions/session"
+        },
+        "session_token": {
+          "description": "The Session Token\n\nThis field is only set when the session hook is configured as a post-registration hook.\n\nA session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization\nHeader:\n\nAuthorization: bearer \u003csession-token\u003e\n\nThe session token is only issued for API flows, not for Browser flows!",
+          "type": "string"
+        }
+      }
+    },
     "session": {
       "type": "object",
       "required": [
-        "sid",
+        "id",
         "expires_at",
         "authenticated_at",
         "issued_at",
@@ -2077,15 +2141,15 @@
           "type": "string",
           "format": "date-time"
         },
+        "id": {
+          "$ref": "#/definitions/UUID"
+        },
         "identity": {
           "$ref": "#/definitions/Identity"
         },
         "issued_at": {
           "type": "string",
           "format": "date-time"
-        },
-        "sid": {
-          "$ref": "#/definitions/UUID"
         }
       }
     },

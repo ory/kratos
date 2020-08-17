@@ -30,6 +30,11 @@ type Session struct {
 	// Format: date-time
 	ExpiresAt *strfmt.DateTime `json:"expires_at"`
 
+	// id
+	// Required: true
+	// Format: uuid4
+	ID UUID `json:"id"`
+
 	// identity
 	// Required: true
 	Identity *Identity `json:"identity"`
@@ -38,11 +43,6 @@ type Session struct {
 	// Required: true
 	// Format: date-time
 	IssuedAt *strfmt.DateTime `json:"issued_at"`
-
-	// sid
-	// Required: true
-	// Format: uuid4
-	Sid UUID `json:"sid"`
 }
 
 // Validate validates this session
@@ -57,15 +57,15 @@ func (m *Session) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
+	if err := m.validateID(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateIdentity(formats); err != nil {
 		res = append(res, err)
 	}
 
 	if err := m.validateIssuedAt(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateSid(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -101,6 +101,18 @@ func (m *Session) validateExpiresAt(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *Session) validateID(formats strfmt.Registry) error {
+
+	if err := m.ID.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("id")
+		}
+		return err
+	}
+
+	return nil
+}
+
 func (m *Session) validateIdentity(formats strfmt.Registry) error {
 
 	if err := validate.Required("identity", "body", m.Identity); err != nil {
@@ -126,18 +138,6 @@ func (m *Session) validateIssuedAt(formats strfmt.Registry) error {
 	}
 
 	if err := validate.FormatOf("issued_at", "body", "date-time", m.IssuedAt.String(), formats); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *Session) validateSid(formats strfmt.Registry) error {
-
-	if err := m.Sid.Validate(formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("sid")
-		}
 		return err
 	}
 
