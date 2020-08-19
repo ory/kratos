@@ -236,7 +236,7 @@ Affects the broadcast system
 
 #### Pull Requests
 
-### [Label Cloud/m1](https://github.com/ory/kratos/labels/cloud%2Fm1)
+### [Label Cloud/M2](https://github.com/ory/kratos/labels/cloud%2FM2)
 
 #### Issues
 
@@ -272,7 +272,7 @@ New feature or request
 * [ ] Feature Request: Webhooks ([kratos#271](https://github.com/ory/kratos/issues/271))
 * [ ] Support email verification paswordless login ([kratos#286](https://github.com/ory/kratos/issues/286))
 * [ ] Support remote argon2 execution ([kratos#357](https://github.com/ory/kratos/issues/357)) - [@hackerman](https://github.com/aeneasr)
-* [ ] Implement identity state and disabling identities ([kratos#598](https://github.com/ory/kratos/issues/598)) - [@hackerman](https://github.com/aeneasr)
+* [ ] Implement identity state and administrative deactivation, deletion of identities ([kratos#598](https://github.com/ory/kratos/issues/598)) - [@hackerman](https://github.com/aeneasr)
 * [ ] SMTP Error spams the server logs ([kratos#402](https://github.com/ory/kratos/issues/402))
 * [ ] Gracefully handle CSRF errors ([kratos#91](https://github.com/ory/kratos/issues/91)) - [@hackerman](https://github.com/aeneasr)
 * [ ] How to sign in with Twitter ([kratos#517](https://github.com/ory/kratos/issues/517))
@@ -538,7 +538,7 @@ Affects the broadcast system
 
 #### Pull Requests
 
-### [Label Cloud/m1](https://github.com/ory/kratos/labels/cloud%2Fm1)
+### [Label Cloud/M2](https://github.com/ory/kratos/labels/cloud%2FM2)
 
 #### Issues
 
@@ -822,7 +822,7 @@ Affects the broadcast system
 
 #### Pull Requests
 
-### [Label Cloud/m1](https://github.com/ory/kratos/labels/cloud%2Fm1)
+### [Label Cloud/M2](https://github.com/ory/kratos/labels/cloud%2FM2)
 
 #### Issues
 
@@ -1120,7 +1120,7 @@ Affects the broadcast system
 
 #### Pull Requests
 
-### [Label Cloud/m1](https://github.com/ory/kratos/labels/cloud%2Fm1)
+### [Label Cloud/M2](https://github.com/ory/kratos/labels/cloud%2FM2)
 
 #### Issues
 
