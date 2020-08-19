@@ -279,6 +279,7 @@ New feature or request
 * [ ] Add ability to import user credentials ([kratos#605](https://github.com/ory/kratos/issues/605)) - [@hackerman](https://github.com/aeneasr)
 * [ ] Throttling repeated login requests ([kratos#654](https://github.com/ory/kratos/issues/654))
 * [ ] Admin/Selfservice session management ([kratos#655](https://github.com/ory/kratos/issues/655))
+* [ ] Require identity deactivation before administrative deletion ([kratos#657](https://github.com/ory/kratos/issues/657))
 
 #### Pull Requests
 
