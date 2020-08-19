@@ -21,6 +21,7 @@ New feature or request
 
 * [ ] Selfservice account deletion  ([kratos#596](https://github.com/ory/kratos/issues/596))
 * [ ] Implement Hydra integration ([kratos#273](https://github.com/ory/kratos/issues/273))
+* [ ] Self-service GDPR identity export ([kratos#658](https://github.com/ory/kratos/issues/658))
 
 #### Pull Requests
 
