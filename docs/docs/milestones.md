@@ -236,6 +236,14 @@ Affects the broadcast system
 
 #### Pull Requests
 
+### [Label Cloud/m1](https://github.com/ory/kratos/labels/cloud%2Fm1)
+
+#### Issues
+
+* [ ] Implement Hydra integration ([kratos#273](https://github.com/ory/kratos/issues/273))
+
+#### Pull Requests
+
 ## [v0.6.0-alpha.1](https://github.com/ory/kratos/milestone/8)
 
 ### [Label Bug](https://github.com/ory/kratos/labels/bug)
@@ -530,6 +538,12 @@ Affects the broadcast system
 
 #### Pull Requests
 
+### [Label Cloud/m1](https://github.com/ory/kratos/labels/cloud%2Fm1)
+
+#### Issues
+
+#### Pull Requests
+
 ## [v0.5.0-alpha.1](https://github.com/ory/kratos/milestone/5)
 
 This release focuses on Admin API capabilities
@@ -803,6 +817,12 @@ Affects the broadcast system
 #### Pull Requests
 
 ### [Label Response-pending](https://github.com/ory/kratos/labels/response-pending)
+
+#### Issues
+
+#### Pull Requests
+
+### [Label Cloud/m1](https://github.com/ory/kratos/labels/cloud%2Fm1)
 
 #### Issues
 
@@ -1095,6 +1115,12 @@ Affects the broadcast system
 #### Pull Requests
 
 ### [Label Response-pending](https://github.com/ory/kratos/labels/response-pending)
+
+#### Issues
+
+#### Pull Requests
+
+### [Label Cloud/m1](https://github.com/ory/kratos/labels/cloud%2Fm1)
 
 #### Issues
 
