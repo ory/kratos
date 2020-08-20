@@ -75,9 +75,6 @@
     "guides/high-availability-ha",
     "guides/docker"
   ],
-  "Development": [
-    "milestones"
-  ],
   "Reference": [
     "reference/configuration",
     "reference/json-schema-json-paths",
@@ -89,6 +86,9 @@
   ],
   "SDKs": [
     "sdk"
+  ],
+  "Development": [
+    "milestones"
   ],
   "Further Reading": [
     "further-reading/comparison"
