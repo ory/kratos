@@ -75,6 +75,9 @@
     "guides/high-availability-ha",
     "guides/docker"
   ],
+  "Development": [
+    "milestones"
+  ],
   "Reference": [
     "reference/configuration",
     "reference/json-schema-json-paths",
