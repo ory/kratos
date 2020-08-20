@@ -77,6 +77,11 @@
     ]
   },
   {
+    "name": "package/selfservice/recovery",
+    "color": "0A28FD",
+    "aliases": []
+  },
+  {
     "name": "package/session",
     "color": "0A28FD",
     "aliases": [
