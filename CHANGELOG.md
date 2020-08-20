@@ -4,12 +4,13 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-08-12)](#unreleased-2020-08-12)
+- [Unreleased (2020-08-20)](#unreleased-2020-08-20)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
     - [Features](#features)
     - [Tests](#tests)
+    - [Unclassified](#unclassified)
     - [BREAKING CHANGES](#breaking-changes)
   - [0.4.6-alpha.1 (2020-07-13)](#046-alpha1-2020-07-13)
     - [Bug Fixes](#bug-fixes-1)
@@ -27,14 +28,14 @@
     - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation-2)
     - [Features](#features-1)
-    - [Unclassified](#unclassified)
+    - [Unclassified](#unclassified-1)
     - [BREAKING CHANGES](#breaking-changes-1)
 - [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
     - [Bug Fixes](#bug-fixes-7)
     - [Code Refactoring](#code-refactoring-2)
     - [Documentation](#documentation-3)
     - [Features](#features-2)
-    - [Unclassified](#unclassified-1)
+    - [Unclassified](#unclassified-2)
     - [BREAKING CHANGES](#breaking-changes-2)
   - [0.2.1-alpha.1 (2020-05-05)](#021-alpha1-2020-05-05)
     - [Documentation](#documentation-4)
@@ -43,7 +44,7 @@
     - [Code Refactoring](#code-refactoring-3)
     - [Documentation](#documentation-5)
     - [Features](#features-3)
-    - [Unclassified](#unclassified-2)
+    - [Unclassified](#unclassified-3)
     - [BREAKING CHANGES](#breaking-changes-3)
   - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
     - [Bug Fixes](#bug-fixes-9)
@@ -64,44 +65,44 @@
     - [Bug Fixes](#bug-fixes-11)
     - [Documentation](#documentation-10)
     - [Features](#features-6)
-    - [Unclassified](#unclassified-3)
+    - [Unclassified](#unclassified-4)
 - [0.1.0-alpha.1 (2020-01-31)](#010-alpha1-2020-01-31)
     - [Documentation](#documentation-11)
   - [0.0.3-alpha.15 (2020-01-31)](#003-alpha15-2020-01-31)
-    - [Unclassified](#unclassified-4)
-  - [0.0.3-alpha.14 (2020-01-31)](#003-alpha14-2020-01-31)
     - [Unclassified](#unclassified-5)
-  - [0.0.3-alpha.13 (2020-01-31)](#003-alpha13-2020-01-31)
+  - [0.0.3-alpha.14 (2020-01-31)](#003-alpha14-2020-01-31)
     - [Unclassified](#unclassified-6)
-  - [0.0.3-alpha.11 (2020-01-31)](#003-alpha11-2020-01-31)
+  - [0.0.3-alpha.13 (2020-01-31)](#003-alpha13-2020-01-31)
     - [Unclassified](#unclassified-7)
-  - [0.0.3-alpha.10 (2020-01-31)](#003-alpha10-2020-01-31)
+  - [0.0.3-alpha.11 (2020-01-31)](#003-alpha11-2020-01-31)
     - [Unclassified](#unclassified-8)
-  - [0.0.3-alpha.7 (2020-01-30)](#003-alpha7-2020-01-30)
+  - [0.0.3-alpha.10 (2020-01-31)](#003-alpha10-2020-01-31)
     - [Unclassified](#unclassified-9)
-  - [0.0.3-alpha.5 (2020-01-30)](#003-alpha5-2020-01-30)
+  - [0.0.3-alpha.7 (2020-01-30)](#003-alpha7-2020-01-30)
     - [Unclassified](#unclassified-10)
-  - [0.0.3-alpha.4 (2020-01-30)](#003-alpha4-2020-01-30)
+  - [0.0.3-alpha.5 (2020-01-30)](#003-alpha5-2020-01-30)
     - [Unclassified](#unclassified-11)
-  - [0.0.3-alpha.2 (2020-01-30)](#003-alpha2-2020-01-30)
+  - [0.0.3-alpha.4 (2020-01-30)](#003-alpha4-2020-01-30)
     - [Unclassified](#unclassified-12)
-  - [0.0.3-alpha.1 (2020-01-30)](#003-alpha1-2020-01-30)
+  - [0.0.3-alpha.2 (2020-01-30)](#003-alpha2-2020-01-30)
     - [Unclassified](#unclassified-13)
+  - [0.0.3-alpha.1 (2020-01-30)](#003-alpha1-2020-01-30)
+    - [Unclassified](#unclassified-14)
   - [0.0.1-alpha.9 (2020-01-29)](#001-alpha9-2020-01-29)
   - [0.0.2-alpha.1 (2020-01-29)](#002-alpha1-2020-01-29)
-    - [Unclassified](#unclassified-14)
+    - [Unclassified](#unclassified-15)
   - [0.0.1-alpha.6 (2020-01-29)](#001-alpha6-2020-01-29)
   - [0.0.1-alpha.5 (2020-01-29)](#001-alpha5-2020-01-29)
-    - [Unclassified](#unclassified-15)
+    - [Unclassified](#unclassified-16)
   - [0.0.1-alpha.3 (2020-01-28)](#001-alpha3-2020-01-28)
   - [0.0.1-alpha.2 (2020-01-28)](#001-alpha2-2020-01-28)
   - [0.0.1-alpha.1 (2020-01-28)](#001-alpha1-2020-01-28)
     - [Documentation](#documentation-12)
-    - [Unclassified](#unclassified-16)
+    - [Unclassified](#unclassified-17)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...e68c7cbdc2191565570d0ee6812318ac9ad3421d) (2020-08-12)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...d90123ae31edbae6a39a1f039cc9362f9acdfdcb) (2020-08-20)
 
 
 ### Bug Fixes
@@ -144,6 +145,7 @@
 * Add guide for dealing with login sessions ([4e2718c](https://github.com/ory/kratos/commit/4e2718c779031c0e3b877e9df1747ccb2371927b))
 * Add identity state ([fb4aedb](https://github.com/ory/kratos/commit/fb4aedb9a95367e25080491b54aab11de491d819))
 * Add login session to navbar ([b212d64](https://github.com/ory/kratos/commit/b212d6484e40c9f2cce10f2ba4aaf4e2a72f03a1))
+* Add milestones to sidebar ([aae13ec](https://github.com/ory/kratos/commit/aae13ec141a2c315aff1a53aa005bb9465efcdc0))
 * Add pagination docs ([7fe0901](https://github.com/ory/kratos/commit/7fe0901ee5d0e829e110bd0c4fdecb24bfc27768))
 * Add secret key rotation guide ([3d6e21a](https://github.com/ory/kratos/commit/3d6e21af2f726944468299c326600a8ab0e4e885))
 * Add session hook to ssi guide ([#623](https://github.com/ory/kratos/issues/623)) ([1bbed39](https://github.com/ory/kratos/commit/1bbed390ffedd811afdb5fcfe69047554419d8ce))
@@ -161,6 +163,7 @@
 * Clarify kratos config snippet ([e7732f3](https://github.com/ory/kratos/commit/e7732f3283d82a1678076cd2463ef5ff33dd30ea))
 * Docker image documentation ([#573](https://github.com/ory/kratos/issues/573)) ([bfe032e](https://github.com/ory/kratos/commit/bfe032e2b6bfd8b9415d466011bdd7e36efa4146))
 * Fix logout url ([#593](https://github.com/ory/kratos/issues/593)) ([f0971d4](https://github.com/ory/kratos/commit/f0971d44a911caed8a6071358fa6b7ebc0fcf145))
+* Fix sidebar missing comment ([d90123a](https://github.com/ory/kratos/commit/d90123ae31edbae6a39a1f039cc9362f9acdfdcb))
 * Fix url of admin-api /recovery/link ([#650](https://github.com/ory/kratos/issues/650)) ([e68c7cb](https://github.com/ory/kratos/commit/e68c7cbdc2191565570d0ee6812318ac9ad3421d))
 * Fixed link ([c2aebbd](https://github.com/ory/kratos/commit/c2aebbd898f38388d849954938d56212c88d280f))
 * Fixed link ([#629](https://github.com/ory/kratos/issues/629)) ([ad1276f](https://github.com/ory/kratos/commit/ad1276f2b2cf3cbbecba4dee1d6d433999286946))
@@ -168,10 +171,12 @@
 
     > Fixed a few typos, and moved some sentences around to improve readability.
 * Fixed typos/readability ([#621](https://github.com/ory/kratos/issues/621)) ([c4fc75f](https://github.com/ory/kratos/commit/c4fc75f7dca59fa8f31d068f57179f49bf798b6a))
+* Move development section ([2e6f643](https://github.com/ory/kratos/commit/2e6f6430f88105efd5618482043809c6d643216b))
 * Move to json sidebar ([504af3b](https://github.com/ory/kratos/commit/504af3b89d728eb11bf42f4a2037c78b3b7cb788))
 * Rename self service and add admin section ([639c424](https://github.com/ory/kratos/commit/639c424d3bde0557f7edd7edc489a476f1aa60b3))
 * Resolve typo in message IDs ([562cfc4](https://github.com/ory/kratos/commit/562cfc4392ba1c9c1fb8854ea0ac85bd44d0fac9))
 * Resolve typo in message IDs ([#607](https://github.com/ory/kratos/issues/607)) ([f7688f0](https://github.com/ory/kratos/commit/f7688f0ab07b579a375ce4cc25361b360e82dd88))
+* Update repository templates ([f422485](https://github.com/ory/kratos/commit/f4224852ceeb054405251b21895efa493e1abc9c))
 * Use correct path in 0.4 docs ([9fcaac4](https://github.com/ory/kratos/commit/9fcaac4048e05500d0456eb3cd9cd11cc123e370)), closes [#588](https://github.com/ory/kratos/issues/588)
 
 
@@ -198,6 +203,11 @@
 * Add handler update tests ([aea1fb8](https://github.com/ory/kratos/commit/aea1fb807a16acd8406b94a72c3b39be8c3e1280)), closes [#325](https://github.com/ory/kratos/issues/325)
 * Add test for no-cache on public router ([b8aa63b](https://github.com/ory/kratos/commit/b8aa63b7ebd269a87578e8a5c6b2df27e18f9efa))
 * Replace e2e-memory with unit test ([52bd839](https://github.com/ory/kratos/commit/52bd839ea9fe8de1aac4663b9dc0a88ae18a5765)), closes [#580](https://github.com/ory/kratos/issues/580)
+
+
+### Unclassified
+
+* Create labels.json ([68b1f6f](https://github.com/ory/kratos/commit/68b1f6f5a35c66cc71f74f1473796fa16a852366))
 
 
 ### BREAKING CHANGES
