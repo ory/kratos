@@ -1,0 +1,86 @@
+[
+  {
+    "name": "package/2fa",
+    "color": "0A28FD",
+    "aliases": [
+      "module:2fa"
+    ]
+  },
+  {
+    "name": "package/cli",
+    "color": "0A28FD",
+    "aliases": [
+      "module:cli"
+    ]
+  },
+  {
+    "name": "package/courier",
+    "color": "0A28FD",
+    "aliases": [
+      "module:courier"
+    ]
+  },
+  {
+    "name": "package/courier",
+    "color": "0A28FD",
+    "aliases": [
+      "module:docs"
+    ]
+  },
+  {
+    "name": "package/selfservice/errorx",
+    "color": "0A28FD",
+    "aliases": [
+      "module:errorx"
+    ]
+  },
+  {
+    "name": "package/identity",
+    "color": "0A28FD",
+    "aliases": [
+      "module:identity"
+    ]
+  },
+  {
+    "name": "package/persistence/sql",
+    "color": "0A28FD",
+    "aliases": [
+      "module:migrations"
+    ]
+  },
+  {
+    "name": "package/selfservice",
+    "color": "0A28FD",
+    "aliases": [
+      "module:selfservice"
+    ]
+  },
+  {
+    "name": "package/selfservice/oidc",
+    "color": "0A28FD",
+    "aliases": [
+      "module:ss/oidc"
+    ]
+  },
+  {
+    "name": "package/selfservice/password",
+    "color": "0A28FD",
+    "aliases": [
+      "module:ss/password"
+    ]
+  },
+  {
+    "name": "package/selfservice/verification",
+    "color": "0A28FD",
+    "aliases": [
+      "module:verification"
+    ]
+  },
+  {
+    "name": "package/session",
+    "color": "0A28FD",
+    "aliases": [
+      "module:session"
+    ]
+  }
+]
