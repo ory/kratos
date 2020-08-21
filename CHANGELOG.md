@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-08-20)](#unreleased-2020-08-20)
+- [Unreleased (2020-08-21)](#unreleased-2020-08-21)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -102,7 +102,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...d90123ae31edbae6a39a1f039cc9362f9acdfdcb) (2020-08-20)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...907add5edb526adb4de57d35da16929ac08041e1) (2020-08-21)
 
 
 ### Bug Fixes
@@ -164,6 +164,8 @@
 * Docker image documentation ([#573](https://github.com/ory/kratos/issues/573)) ([bfe032e](https://github.com/ory/kratos/commit/bfe032e2b6bfd8b9415d466011bdd7e36efa4146))
 * Fix logout url ([#593](https://github.com/ory/kratos/issues/593)) ([f0971d4](https://github.com/ory/kratos/commit/f0971d44a911caed8a6071358fa6b7ebc0fcf145))
 * Fix sidebar missing comment ([d90123a](https://github.com/ory/kratos/commit/d90123ae31edbae6a39a1f039cc9362f9acdfdcb))
+* Fix typo ([c2f94da](https://github.com/ory/kratos/commit/c2f94daa4143a70c13426ccd5366ec891182e4d0))
+* Fix typo on index page ([#656](https://github.com/ory/kratos/issues/656)) ([907add5](https://github.com/ory/kratos/commit/907add5edb526adb4de57d35da16929ac08041e1))
 * Fix url of admin-api /recovery/link ([#650](https://github.com/ory/kratos/issues/650)) ([e68c7cb](https://github.com/ory/kratos/commit/e68c7cbdc2191565570d0ee6812318ac9ad3421d))
 * Fixed link ([c2aebbd](https://github.com/ory/kratos/commit/c2aebbd898f38388d849954938d56212c88d280f))
 * Fixed link ([#629](https://github.com/ory/kratos/issues/629)) ([ad1276f](https://github.com/ory/kratos/commit/ad1276f2b2cf3cbbecba4dee1d6d433999286946))
