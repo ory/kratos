@@ -7,9 +7,9 @@ title: Milestones and Roadmap
 
 *This milestone does not have a description.*
 
-### [Enhancement](https://github.com/ory/kratos/labels/enhancement)
+### [Feat](https://github.com/ory/kratos/labels/feat)
 
-New feature or request
+New feature or request.
 
 #### Issues
 
@@ -24,7 +24,7 @@ New feature or request
 
 ### [Bug](https://github.com/ory/kratos/labels/bug)
 
-Something isn't working
+Something is not working.
 
 #### Issues
 
@@ -32,9 +32,9 @@ Something isn't working
 * [ ] Unmable to use Auth0 as a generic OIDC provider ([kratos#609](https://github.com/ory/kratos/issues/609))
 * [ ] Password reset emails sent twice by each of the two kratos pods in my cluster ([kratos#652](https://github.com/ory/kratos/issues/652))
 
-### [Enhancement](https://github.com/ory/kratos/labels/enhancement)
+### [Feat](https://github.com/ory/kratos/labels/feat)
 
-New feature or request
+New feature or request.
 
 #### Issues
 
@@ -54,13 +54,40 @@ New feature or request
 * [ ] Throttling repeated login requests ([kratos#654](https://github.com/ory/kratos/issues/654))
 * [ ] Require identity deactivation before administrative deletion ([kratos#657](https://github.com/ory/kratos/issues/657))
 
+### [Help wanted](https://github.com/ory/kratos/labels/help%20wanted)
+
+We are looking for help on this one.
+
+#### Issues
+
+* [ ] Document that identity information (traits, etc) are available to token holders and backend systems ([kratos#43](https://github.com/ory/kratos/issues/43)) - [@hackerman](https://github.com/aeneasr)
+* [ ] Feature Request: Webhooks ([kratos#271](https://github.com/ory/kratos/issues/271))
+
+### [Docs](https://github.com/ory/kratos/labels/docs)
+
+Affects documentation.
+
+#### Issues
+
+* [ ] Document that identity information (traits, etc) are available to token holders and backend systems ([kratos#43](https://github.com/ory/kratos/issues/43)) - [@hackerman](https://github.com/aeneasr)
+* [ ] Config JSON Schema needs example values ([kratos#179](https://github.com/ory/kratos/issues/179)) - [@hackerman](https://github.com/aeneasr)
+* [ ] Elaborate on security practices against DoS and Brute Force ([kratos#134](https://github.com/ory/kratos/issues/134))
+
+### [Rfc](https://github.com/ory/kratos/labels/rfc)
+
+A request for comments to discuss and share ideas.
+
+#### Issues
+
+* [ ] Introduce prevent extension in Identity JSON schema ([kratos#47](https://github.com/ory/kratos/issues/47))
+
 ## [v0.5.0-alpha.1](https://github.com/ory/kratos/milestone/5)
 
 This release focuses on Admin API capabilities
 
 ### [Bug](https://github.com/ory/kratos/labels/bug)
 
-Something isn't working
+Something is not working.
 
 #### Issues
 
@@ -72,9 +99,9 @@ Something isn't working
 * [x] Verification email is sent after password recovery ([kratos#578](https://github.com/ory/kratos/issues/578)) - [@hackerman](https://github.com/aeneasr)
 * [x] Do not return expired sessions in `/sessions/whoami` ([kratos#611](https://github.com/ory/kratos/issues/611)) - [@hackerman](https://github.com/aeneasr)
 
-### [Enhancement](https://github.com/ory/kratos/labels/enhancement)
+### [Feat](https://github.com/ory/kratos/labels/feat)
 
-New feature or request
+New feature or request.
 
 #### Issues
 
@@ -94,7 +121,33 @@ New feature or request
 * [ ] feat: implement API-based self-service flows ([kratos#624](https://github.com/ory/kratos/pull/624)) - [@hackerman](https://github.com/aeneasr)
 * [x] fix: resolve identity admin api issues  ([kratos#586](https://github.com/ory/kratos/pull/586)) - [@hackerman](https://github.com/aeneasr)
 
-### [Blocker](https://github.com/ory/kratos/labels/blocker)
+### [Docs](https://github.com/ory/kratos/labels/docs)
+
+Affects documentation.
+
+#### Issues
+
+* [x] Document multi-tenant set up ([kratos#370](https://github.com/ory/kratos/issues/370))
+
+### [Rfc](https://github.com/ory/kratos/labels/rfc)
+
+A request for comments to discuss and share ideas.
+
+#### Issues
+
+* [ ] Rename login/registration/recovery/... request to flow ([kratos#635](https://github.com/ory/kratos/issues/635)) - [@hackerman](https://github.com/aeneasr)
+
+### [Blocking](https://github.com/ory/kratos/labels/blocking)
+
+Blocks milestones or other issues or pulls.
+
+#### Pull Requests
+
+* [ ] feat: implement API-based self-service flows ([kratos#624](https://github.com/ory/kratos/pull/624)) - [@hackerman](https://github.com/aeneasr)
+
+### [Breaking change](https://github.com/ory/kratos/labels/breaking%20change)
+
+Changes behavior in a breaking manner.
 
 #### Pull Requests
 
