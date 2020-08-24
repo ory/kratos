@@ -60,10 +60,9 @@ business logic:
 - The `link` strategy implements the
   ["click this link to reset your password" account recovery method](self-service/flows/user-settings/user-profile-management).
 
-Some flows additionally implement the ability
-[to run hooks](self-service/hooks) which allow users to be immediately
-signed in after registration, notify another system on successful registration
-(e.g. Mailchimp), and so on.
+Some flows additionally implement the ability [to run hooks](self-service/hooks)
+which allow users to be immediately signed in after registration, notify another
+system on successful registration (e.g. Mailchimp), and so on.
 
 ## Performing Login, Registration, Settings, ... Flows
 
@@ -79,14 +78,15 @@ All Self-Service Flows
 [Profile Management](self-service/flows/user-settings),
 [Account Recovery](self-service/flows/account-recovery),
 [Email or Phone verification](self-service/flows/verify-email-account-activation))
-support these two flow types and use the same data models but do use different API endpoints.
+support these two flow types and use the same data models but do use different
+API endpoints.
 
 :::warning
 
 **Never use API flows to implement Browser applications!**
 
-Using API flows in Single-Page-Apps as well as server-side apps opens up several potential attack vectors, including
-including Login and other CSRF attacks.
+Using API flows in Single-Page-Apps as well as server-side apps opens up several
+potential attack vectors, including including Login and other CSRF attacks.
 
 :::
 
@@ -100,8 +100,9 @@ The browser flow has three stages:
 
 :::note
 
-The payloads, examples, ports, and IPs shown here are the ones used if you run the [Quickstart](quickstart). If you
-have not checked it out yet, please do so before reading this document.
+The payloads, examples, ports, and IPs shown here are the ones used if you run
+the [Quickstart](quickstart). If you have not checked it out yet, please do so
+before reading this document.
 
 :::
 
@@ -131,8 +132,8 @@ have not checked it out yet, please do so before reading this document.
 
 ### Initialization and Redirect to UI
 
-First, the Browser opens the flow's initialization endpoint (e.g.`/self-service/login/browser`,
-`/self-service/registration/browser`, ...):
+First, the Browser opens the flow's initialization endpoint
+(e.g.`/self-service/login/browser`, `/self-service/registration/browser`, ...):
 
 <Tabs
   defaultValue="curl"
@@ -172,9 +173,9 @@ $ curl -s -v -X GET \
 
 ```html
 <script>
-const initLogin = () => {
-  window.location.href = 'http://127.0.0.1:4433/self-service/login/browser'
-}
+  const initLogin = () => {
+    window.location.href = 'http://127.0.0.1:4433/self-service/login/browser'
+  }
 </script>
 
 <a onClick="initLogin">Sign in</a>
@@ -186,7 +187,9 @@ const initLogin = () => {
 ```jsx
 import React from 'react'
 
-const MyComponent = () => <a href="http://127.0.0.1:4433/self-service/login/browser">Sign in</a>
+const MyComponent = () => (
+  <a href="http://127.0.0.1:4433/self-service/login/browser">Sign in</a>
+)
 ```
 
 </TabItem>
@@ -208,14 +211,15 @@ express.get('/login', function (req, res) {
 </TabItem>
 </Tabs>
 
-The initialization endpoint creates a flow object and stores it in the
-database. The flow object has an ID and contains additional information about
-the flow such as the login methods (e.g. "username/password" and "Sign in
-with Google") and their form data.
+The initialization endpoint creates a flow object and stores it in the database.
+The flow object has an ID and contains additional information about the flow
+such as the login methods (e.g. "username/password" and "Sign in with Google")
+and their form data.
 
-Once stored, the Browser is HTTP 302 redirected to the flow's configured UI URL (e.g.
-`selfservice.flows.login.ui_url`), appending the flow ID as the `flow` URL
-Query Parameter. Also included will be might be some cookies such as Anti-CSRF cookies.
+Once stored, the Browser is HTTP 302 redirected to the flow's configured UI URL
+(e.g. `selfservice.flows.login.ui_url`), appending the flow ID as the `flow` URL
+Query Parameter. Also included will be might be some cookies such as Anti-CSRF
+cookies.
 
 The response will look along the lines of:
 
@@ -237,17 +241,22 @@ $ curl -s -v -X GET \
 
 ### Form Rendering
 
-The Browser opens the URL (here `http://127.0.0.1:4455/auth/login?flow=dd5be6df-a293-4749-aab6-209348829e09`) which renders the HTML form whhich for example shows the "username and password" field,
-the "Update your email address" field, or other flow forms. This HTML form is rendered be the [Self-Service UI](concepts/ui-user-interface#self-service-user-interface-ssui)
+The Browser opens the URL (here
+`http://127.0.0.1:4455/auth/login?flow=dd5be6df-a293-4749-aab6-209348829e09`)
+which renders the HTML form whhich for example shows the "username and password"
+field, the "Update your email address" field, or other flow forms. This HTML
+form is rendered be the
+[Self-Service UI](concepts/ui-user-interface#self-service-user-interface-ssui)
 which you fully control.
 
 The endpoint responsible for the UI URL uses the `flow` URL Query Parameter
-(here `...?flow=dd5be6df-a293-4749-aab6-209348829e09`) to call the flow information
-endpoint (e.g. `http://127.0.0.1:4434/self-service/login/flows?id=dd5be6df-a293-4749-aab6-209348829e09`) and fetch the flow
-data - so for example the login form and any validation errors. This endpoint
-is available at both ORY Kratos's Public and Admin Endpoints. For example,
-the Self-Service UI responsible for rendering the Login HTML Form would
-make a request along the lines of:
+(here `...?flow=dd5be6df-a293-4749-aab6-209348829e09`) to call the flow
+information endpoint (e.g.
+`http://127.0.0.1:4434/self-service/login/flows?id=dd5be6df-a293-4749-aab6-209348829e09`)
+and fetch the flow data - so for example the login form and any validation
+errors. This endpoint is available at both ORY Kratos's Public and Admin
+Endpoints. For example, the Self-Service UI responsible for rendering the Login
+HTML Form would make a request along the lines of:
 
 ```
 # The endpoint uses ORY Kratos' REST API to fetch information about the request
@@ -256,7 +265,8 @@ $ curl -s -X GET \
     "http://127.0.0.1:4434/self-service/login/flows?id=dd5be6df-a293-4749-aab6-209348829e09" | jq
 ```
 
-The result includes login methods, their fields, and additional information about the flow:
+The result includes login methods, their fields, and additional information
+about the flow:
 
 ```json
 {
@@ -300,23 +310,34 @@ The result includes login methods, their fields, and additional information abou
 
 For more details, check out the individual flow documentation.
 
-The flow UI then renders the given methods. For
-the example above, a suitable HTML Form would look along the lines of:
+The flow UI then renders the given methods. For the example above, a suitable
+HTML Form would look along the lines of:
 
 ```html
-<form action="http://127.0.0.1:4433/self-service/login/methods/password?flow=dd5be6df-a293-4749-aab6-209348829e09">
-    <input type="hidden" name="csrf_token" value="pW6qLAS39HaXruAooEa7phFCKXoFWUkzIGe4FK" />
-    <input type="text" name="identifier" placeholder="Enter your username or email address" />
-    <input type="password" name="password" />
-    <input type="submit" value="Log in" />
+<form
+  action="http://127.0.0.1:4433/self-service/login/methods/password?flow=dd5be6df-a293-4749-aab6-209348829e09"
+>
+  <input
+    type="hidden"
+    name="csrf_token"
+    value="pW6qLAS39HaXruAooEa7phFCKXoFWUkzIGe4FK"
+  />
+  <input
+    type="text"
+    name="identifier"
+    placeholder="Enter your username or email address"
+  />
+  <input type="password" name="password" />
+  <input type="submit" value="Log in" />
 </form>
 ```
 
 ### Form Submission and Payload Validation
 
-The user completes the flow by submitting the form. The form action always points to ORY Kratos directly.
-The business logic for the flow method will then validate the form payload and return to the UI URL on
-validation errors. The UI then fetches the information about the flow again
+The user completes the flow by submitting the form. The form action always
+points to ORY Kratos directly. The business logic for the flow method will then
+validate the form payload and return to the UI URL on validation errors. The UI
+then fetches the information about the flow again
 
 ```
 # The endpoint uses ORY Kratos' REST API to fetch information about the request
@@ -344,13 +365,13 @@ which now includes validation errors and other potential messages:
         "fields": [
           /* ... */
           {
-            name: 'password',
-            type: 'text',
-            value: '',
-            messages: [
+            "name": "password",
+            "type": "text",
+            "value": "",
+            "messages": [
               {
                 /* id, type, ... */
-                text: "password: Value can not be empty"
+                "text": "password: Value can not be empty"
               }
             ]
           }
@@ -363,13 +384,14 @@ which now includes validation errors and other potential messages:
 }
 ```
 
-If a system error (e.g. broken configuration file) occurs, the browser is redirected to the
-[Error UI](self-service/flows/user-facing-errors).
+If a system error (e.g. broken configuration file) occurs, the browser is
+redirected to the [Error UI](self-service/flows/user-facing-errors).
 
-If the form payload is valid, the flow completes with a success. The result here depends on the flow itself -
-the login flow for example redirects the user to a specified redirect URL and sets a session cookie. The
-registration flow also redirects to a specified redirect URL but only creates the user in the database and might
-issue a session cookie if configured to do so.
+If the form payload is valid, the flow completes with a success. The result here
+depends on the flow itself - the login flow for example redirects the user to a
+specified redirect URL and sets a session cookie. The registration flow also
+redirects to a specified redirect URL but only creates the user in the database
+and might issue a session cookie if configured to do so.
 
 ## API Flows
 
@@ -377,8 +399,8 @@ issue a session cookie if configured to do so.
 
 **Never use API flows to implement Browser applications!**
 
-Using API flows in Single-Page-Apps as well as server-side apps opens up several potential attack vectors, including
-including Login and other CSRF attacks.
+Using API flows in Single-Page-Apps as well as server-side apps opens up several
+potential attack vectors, including including Login and other CSRF attacks.
 
 :::
 
@@ -413,7 +435,8 @@ The high-level sequence diagram for API flows looks as follows:
 
 ### Initialization
 
-The client (e.g. mobile application) makes a request to the flow's initialization endpoint (e.g.`/self-service/login/api`,
+The client (e.g. mobile application) makes a request to the flow's
+initialization endpoint (e.g.`/self-service/login/api`,
 `/self-service/registration/api`, ...):
 
 <Tabs
@@ -474,39 +497,42 @@ $ curl -s -X GET \
 ```js
 const fetch = require('node-fetch')
 
-fetch.get('http://127.0.0.1:4433/self-service/login/api', {
-  headers: { Accept: 'text/html' }
-})
-  .then(res=>res.json())
+fetch
+  .get('http://127.0.0.1:4433/self-service/login/api', {
+    headers: { Accept: 'text/html' }
+  })
+  .then((res) => res.json())
   .then((flow) => console.log(flow))
 ```
 
 </TabItem>
 </Tabs>
 
-The initialization endpoint creates a flow object and stores it in the
-database. The flow object has an ID and contains additional information about
-the flow such as the login methods (e.g. "username/password" and "Sign in
-with Google") and their form data.
+The initialization endpoint creates a flow object and stores it in the database.
+The flow object has an ID and contains additional information about the flow
+such as the login methods (e.g. "username/password" and "Sign in with Google")
+and their form data.
 
 ### Form Rendering
 
-While the Browser flow redirects the client and uses cookies to protect against CSRF and session hijacking
-attacks, the API flow answers with a fresh flow formatted as `application/json` right away. The client
-would then use that information to render the UI. In React Native, this may look like the following
+While the Browser flow redirects the client and uses cookies to protect against
+CSRF and session hijacking attacks, the API flow answers with a fresh flow
+formatted as `application/json` right away. The client would then use that
+information to render the UI. In React Native, this may look like the following
 snippet:
 
 ```jsx
 // import React from ...
-import { PublicApi } from "@oryd/kratos-client"
+import { PublicApi } from '@oryd/kratos-client'
 
 const kratos = new PublicApi('http://127.0.0.1:4455/.ory/kratos/public')
 
 const Login = () => {
-  const [config, setConfig] = useState<LoginRequest | undefined>(undefined)
+  const [config, setConfig] =
+    (useState < LoginRequest) | (undefined > undefined)
 
   useEffect(() => {
-    kratos.initializeSelfServiceAPILoginFlow().then(({body: flow}) => {
+    kratos.initializeSelfServiceAPILoginFlow().then(({ body: flow }) => {
       setConfig(flow.methods.password.config)
     })
   }, [])
@@ -520,7 +546,8 @@ const Login = () => {
       <TextInput
         value={/*...*/}
         onChangeText={/*...*/}
-        placeholder="Email or username"/>
+        placeholder="Email or username"
+      />
 
       <TextInput
         value={/*...*/}
@@ -528,19 +555,17 @@ const Login = () => {
         secureTextEntry={true}
         autoCompleteType="password"
         textContentType="password"
-        placeholder="Email or username"/>
-
-      <Button
-        title={"Log in"}
-        onPress={/* ... */}
+        placeholder="Email or username"
       />
+
+      <Button title={'Log in'} onPress={/* ... */} />
     </View>
   )
 }
 ```
 
-If needed, the client can re-request the flow using the same HTTP Request as the browser flow at the Admin API
-endpoint:
+If needed, the client can re-request the flow using the same HTTP Request as the
+browser flow at the Admin API endpoint:
 
 ```shell script
 curl -s -X GET \
@@ -568,7 +593,8 @@ curl -s -X GET \
 
 ### Form Submission and Payload Validation
 
-The request is then completed by sending the form formatted as `application/json` to the action endpoint
+The request is then completed by sending the form formatted as
+`application/json` to the action endpoint
 
 ```shell script
 flow=$(curl -s -X GET -H "Accept: application/json" "http://127.0.0.1:4433/self-service/login/api")
@@ -632,5 +658,5 @@ which in this case fails with a 400 Bad Request error and the following payload:
 }
 ```
 
-On success, that endpoint would typically return a HTTP 200 Status OK response with the success `application/json` response
-paylaod in the body.
+On success, that endpoint would typically return a HTTP 200 Status OK response
+with the success `application/json` response paylaod in the body.
