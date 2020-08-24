@@ -47,7 +47,7 @@ Research, Troy Hunt, ...) and implements the following flows:
 Some flows break down into "flow methods" which implement some of the flow's
 business logic:
 
-- The `password` strategy implement the
+- The `password` strategy implements the
   [login and registration with "email or/and username and password" method](self-service/flows/user-login-user-registration/username-email-password),
   and
   ["change your password" user settings method](self-service/flows/user-settings/change-password).
@@ -61,7 +61,7 @@ business logic:
   ["click this link to reset your password" account recovery method](self-service/flows/user-settings/user-profile-management).
 
 Some flows additionally implement the ability
-[to run hooks](self-service/hooks/index) which allow users to be immediately
+[to run hooks](self-service/hooks) which allow users to be immediately
 signed in after registration, notify another system on successful registration
 (e.g. Mailchimp), and so on.
 
@@ -98,7 +98,12 @@ The browser flow has three stages:
 - Form rendering;
 - Form submission and payload validation.
 
-The high-level sequence diagram for browser flows looks as follows:
+:::note
+
+The payloads, examples, ports, and IPs shown here are the ones used if you run the [Quickstart](quickstart). If you
+have not checked it out yet, please do so before reading this document.
+
+:::
 
 <Mermaid
   chart={`sequenceDiagram
@@ -135,11 +140,13 @@ First, the Browser opens the flow's initialization endpoint (e.g.`/self-service/
     {label: 'CURL', value: 'curl'},
     {label: 'HTML', value: 'html'},
     {label: 'Javascript', value: 'js'},
+    {label: 'ReactJS', value: 'reactjs'},
+    {label: 'AngularJS', value: 'angular'},
     {label: 'ExpressJS', value: 'nodejs'},
   ]}>
 <TabItem value="curl">
 
-This curl -s request emulates a browser request:
+This `curl -s` request emulates a browser request:
 
 ```
 $ curl -s -v -X GET \
@@ -174,13 +181,28 @@ const initLogin = () => {
 ```
 
 </TabItem>
+<TabItem value="reactjs">
+
+```jsx
+import React from 'react'
+
+const MyComponent = () => <a href="http://127.0.0.1:4433/self-service/login/browser">Sign in</a>
+```
+
+</TabItem>
+<TabItem value="angular">
+
+```html
+<a href="http://127.0.0.1:4433/self-service/login/browser">Sign in</a>
+```
+
+</TabItem>
 <TabItem value="nodejs">
 
 ```js
 express.get('/login', function (req, res) {
   res.redirect(302, 'http://127.0.0.1:4433/')
 })
-
 ```
 
 </TabItem>
@@ -193,8 +215,9 @@ with Google") and their form data.
 
 Once stored, the Browser is HTTP 302 redirected to the flow's configured UI URL (e.g.
 `selfservice.flows.login.ui_url`), appending the flow ID as the `flow` URL
-Query Parameter. The initialization endpoint (e.g. `http://127.0.0.1:4433/self-service/login/browser`)
-responsds with:
+Query Parameter. Also included will be might be some cookies such as Anti-CSRF cookies.
+
+The response will look along the lines of:
 
 ```
 $ curl -s -v -X GET \
@@ -214,13 +237,13 @@ $ curl -s -v -X GET \
 
 ### Form Rendering
 
-The Browser opens the URL which renders the HTML form that, for example, shows the "username and password" field,
+The Browser opens the URL (here `http://127.0.0.1:4455/auth/login?flow=dd5be6df-a293-4749-aab6-209348829e09`) which renders the HTML form whhich for example shows the "username and password" field,
 the "Update your email address" field, or other flow forms. This HTML form is rendered be the [Self-Service UI](concepts/ui-user-interface#self-service-user-interface-ssui)
 which you fully control.
 
 The endpoint responsible for the UI URL uses the `flow` URL Query Parameter
-(e.g. `http://my-app/auth/login?flow=abcde`) to call the flow information
-endpoint (e.g. `/self-service/login/flows?id=abcde`) and fetch the flow
+(here `...?flow=dd5be6df-a293-4749-aab6-209348829e09`) to call the flow information
+endpoint (e.g. `http://127.0.0.1:4434/self-service/login/flows?id=dd5be6df-a293-4749-aab6-209348829e09`) and fetch the flow
 data - so for example the login form and any validation errors. This endpoint
 is available at both ORY Kratos's Public and Admin Endpoints. For example,
 the Self-Service UI responsible for rendering the Login HTML Form would
@@ -230,7 +253,7 @@ make a request along the lines of:
 # The endpoint uses ORY Kratos' REST API to fetch information about the request
 $ curl -s -X GET \
     -H "Accept: application/json" \
-    "http://127.0.0.1:4433/self-service/login/flows?id=dd5be6df-a293-4749-aab6-209348829e09" | jq
+    "http://127.0.0.1:4434/self-service/login/flows?id=dd5be6df-a293-4749-aab6-209348829e09" | jq
 ```
 
 The result includes login methods, their fields, and additional information about the flow:
@@ -247,7 +270,7 @@ The result includes login methods, their fields, and additional information abou
     "password": {
       "method": "password",
       "config": {
-        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/login/methods/password?flow=dd5be6df-a293-4749-aab6-209348829e09",
+        "action": "http://127.0.0.1:4433/self-service/login/methods/password?flow=dd5be6df-a293-4749-aab6-209348829e09",
         "method": "POST",
         "fields": [
           {
@@ -275,11 +298,13 @@ The result includes login methods, their fields, and additional information abou
 }
 ```
 
-For more details, check out the individual flow documentation. The flow UI then renders the given methods. For
+For more details, check out the individual flow documentation.
+
+The flow UI then renders the given methods. For
 the example above, a suitable HTML Form would look along the lines of:
 
 ```html
-<form action="http://127.0.0.1:4455/.ory/kratos/public/self-service/login/methods/password?flow=dd5be6df-a293-4749-aab6-209348829e09">
+<form action="http://127.0.0.1:4433/self-service/login/methods/password?flow=dd5be6df-a293-4749-aab6-209348829e09">
     <input type="hidden" name="csrf_token" value="pW6qLAS39HaXruAooEa7phFCKXoFWUkzIGe4FK" />
     <input type="text" name="identifier" placeholder="Enter your username or email address" />
     <input type="password" name="password" />
@@ -314,7 +339,7 @@ which now includes validation errors and other potential messages:
     "password": {
       "method": "password",
       "config": {
-        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/login/methods/password?flow=dd5be6df-a293-4749-aab6-209348829e09",
+        "action": "http://127.0.0.1:4433/self-service/login/methods/password?flow=dd5be6df-a293-4749-aab6-209348829e09",
         "method": "POST",
         "fields": [
           /* ... */
@@ -415,7 +440,7 @@ $ curl -s -X GET \
     "password": {
       "method": "password",
       "config": {
-        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/login/methods/password?flow=57374fa5-336a-4381-b471-92d7de939859",
+        "action": "http://127.0.0.1:4433/self-service/login/methods/password?flow=57374fa5-336a-4381-b471-92d7de939859",
         "method": "POST",
         "fields": [
           {
@@ -475,7 +500,7 @@ snippet:
 // import React from ...
 import { PublicApi } from "@oryd/kratos-client"
 
-const kratos = new PublicApi('http://127.0.0.1:4433')
+const kratos = new PublicApi('http://127.0.0.1:4455/.ory/kratos/public')
 
 const Login = () => {
   const [config, setConfig] = useState<LoginRequest | undefined>(undefined)
@@ -514,7 +539,21 @@ const Login = () => {
 }
 ```
 
-If needed, the client can re-request the flow using the same HTTP Request as the browser flow:
+If needed, the client can re-request the flow using the same HTTP Request as the browser flow at the Admin API
+endpoint:
+
+```shell script
+curl -s -X GET \
+    -H "Accept: application/json" \
+    "http://127.0.0.1:4434/self-service/login/flows?id=57374fa5-336a-4381-b471-92d7de939859" | jq
+
+  {
+    "id": "57374fa5-336a-4381-b471-92d7de939859",
+    "type": "api",
+  # ...
+```
+
+Or the Public API Endpoint:
 
 ```shell script
 curl -s -X GET \
@@ -536,7 +575,7 @@ flow=$(curl -s -X GET -H "Accept: application/json" "http://127.0.0.1:4433/self-
 actionUrl=$(echo $flow | jq -r '.methods.password.config.action')
 
 echo $actionUrl
-# http://127.0.0.1:4455/.ory/kratos/public/self-service/login/methods/password?flow=d6e0dd24-f5c6-4926-a526-616a9afeed9d
+# http://127.0.0.1:4433/self-service/login/methods/password?flow=d6e0dd24-f5c6-4926-a526-616a9afeed9d
 
 curl -s -X POST -H  "Accept: application/json" -H "Content-Type: application/json" \
     -d '{"identifier": "i-do-not-exist@user.org", "password": "the-wrong-password"}' \
@@ -558,7 +597,7 @@ which in this case fails with a 400 Bad Request error and the following payload:
     "password": {
       "method": "password",
       "config": {
-        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/login/methods/password?flow=f895fafb-bf76-4f13-83a2-241b2dfd09dd",
+        "action": "http://127.0.0.1:4433/self-service/login/methods/password?flow=f895fafb-bf76-4f13-83a2-241b2dfd09dd",
         "method": "POST",
         "fields": [
           {
