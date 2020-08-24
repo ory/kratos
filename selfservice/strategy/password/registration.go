@@ -3,7 +3,6 @@ package password
 import (
 	"encoding/json"
 	"net/http"
-	"net/url"
 
 	"github.com/ory/kratos/driver/configuration"
 
@@ -211,10 +210,7 @@ func (s *Strategy) validateCredentials(i *identity.Identity, pw string) error {
 }
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.Flow) error {
-	action := urlx.CopyWithQuery(
-		urlx.AppendPaths(s.c.SelfPublicURL(), RouteRegistration),
-		url.Values{"request": {sr.ID.String()}},
-	)
+	action := sr.AppendTo(urlx.AppendPaths(s.c.SelfPublicURL(), RouteRegistration))
 
 	htmlf, err := form.NewHTMLFormFromJSONSchema(action.String(), s.c.DefaultIdentityTraitsSchemaURL().String(), "", nil)
 	if err != nil {

@@ -95,7 +95,7 @@ type completeSelfServiceLoginFlowWithPasswordMethod struct {
 func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	rid := x.ParseUUID(r.URL.Query().Get("flow"))
 	if x.IsZeroUUID(rid) {
-		s.handleLoginError(w, r, nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The request query parameter is missing or invalid.")))
+		s.handleLoginError(w, r, nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The flow query parameter is missing or invalid.")))
 		return
 	}
 

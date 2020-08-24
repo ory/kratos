@@ -258,8 +258,8 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("type=browser", func(t *testing.T) {
 			lr, res, body := run(t, false, url.Values{"identifier": {"identifier"},
-				"csrf_token":{x.FakeCSRFToken},
-				"password": {"password"}}.Encode())
+				"csrf_token": {x.FakeCSRFToken},
+				"password":   {"password"}}.Encode())
 			require.Contains(t, res.Request.URL.Path, "login-ts")
 			assert.NotEqual(t, lr.ID, gjson.GetBytes(body, "id"))
 			assert.Contains(t, gjson.GetBytes(body, "messages.0").String(), "expired", "%s", body)
@@ -286,7 +286,7 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("type=browser", func(t *testing.T) {
 			require.Contains(t, run(t, false, url.Values{
-				"csrf_token":{x.FakeCSRFToken},
+				"csrf_token": {x.FakeCSRFToken},
 				"identifier": {"identifier"}, "password": {"password"}}.Encode()).Request.URL.Path, "login-ts")
 		})
 
@@ -380,7 +380,7 @@ func TestCompleteLogin(t *testing.T) {
 			createIdentity(identifier, pwd)
 
 			payload := url.Values{"identifier": {identifier},
-				"csrf_token":{x.FakeCSRFToken},"password": {"not-password"}}.Encode()
+				"csrf_token": {x.FakeCSRFToken}, "password": {"not-password"}}.Encode()
 			if isAPI {
 				payload = x.MustEncodeJSON(t, &password.LoginFormPayload{
 					Identifier: identifier, Password: "not-password"})
@@ -419,7 +419,7 @@ func TestCompleteLogin(t *testing.T) {
 			createIdentity(identifier, pwd)
 
 			payload := url.Values{"identifier": {identifier},
-				"csrf_token":{x.FakeCSRFToken}, "password": {pwd}}.Encode()
+				"csrf_token": {x.FakeCSRFToken}, "password": {pwd}}.Encode()
 			if isAPI {
 				payload = x.MustEncodeJSON(t, &password.LoginFormPayload{
 					Identifier: identifier, Password: pwd})
@@ -449,8 +449,8 @@ func TestCompleteLogin(t *testing.T) {
 			createIdentity(identifier, pwd)
 			payload := url.Values{
 				"identifier": {identifier},
-				"password": {pwd},
-				"csrf_token":{x.FakeCSRFToken},
+				"password":   {pwd},
+				"csrf_token": {x.FakeCSRFToken},
 			}.Encode()
 
 			jar, _ := cookiejar.New(nil)
@@ -614,7 +614,7 @@ func TestCompleteLogin(t *testing.T) {
 		_, body1 := fakeRequest(t, nlr(time.Hour, false), false, url.Values{
 			"identifier": {identifier},
 			"password":   {pwd},
-			"csrf_token":{x.FakeCSRFToken},
+			"csrf_token": {x.FakeCSRFToken},
 		}.Encode(), nil, jar, http.StatusOK)
 
 		lr2 := nlr(time.Hour, false)
@@ -622,7 +622,7 @@ func TestCompleteLogin(t *testing.T) {
 		res, body2 := fakeRequest(t, lr2, false, url.Values{
 			"identifier": {identifier},
 			"password":   {pwd},
-			"csrf_token":{x.FakeCSRFToken},
+			"csrf_token": {x.FakeCSRFToken},
 		}.Encode(), nil, jar, http.StatusOK)
 
 		require.Contains(t, res.Request.URL.Path, "return-ts", "%s", res.Request.URL.String())
@@ -638,13 +638,13 @@ func TestCompleteLogin(t *testing.T) {
 		require.NoError(t, err)
 		_, body1 := fakeRequest(t, nlr(time.Hour, false), false, url.Values{
 			"identifier": {identifier},
-			"csrf_token":{x.FakeCSRFToken},
+			"csrf_token": {x.FakeCSRFToken},
 			"password":   {pwd},
 		}.Encode(), nil, jar, http.StatusOK)
 
 		lr2 := nlr(time.Hour, false)
 		res, body2 := fakeRequest(t, lr2, false, url.Values{
-			"csrf_token":{x.FakeCSRFToken},
+			"csrf_token": {x.FakeCSRFToken},
 			"identifier": {identifier}, "password": {pwd}}.Encode(), nil, jar, http.StatusOK)
 
 		require.Contains(t, res.Request.URL.Path, "return-ts", "%s", res.Request.URL.String())
