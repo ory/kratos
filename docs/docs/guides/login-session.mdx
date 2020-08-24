@@ -3,6 +3,9 @@ id: login-session
 title: Configuring And Checking for Login Sessions
 ---
 
+import Tabs from '@theme/Tabs'
+import TabItem from '@theme/TabItem'
+
 A login session is created when a user signs in. The session is stored as a
 cookie or as a token, depending on the interaction type.
 
@@ -93,6 +96,41 @@ A typical session payload will look like this:
   }
 }
 ```
+
+#### Code Examples
+
+<Tabs
+  defaultValue="nodejs"
+  values={[
+    {label: 'ExpressJS', value: 'nodejs'},
+  ]}>
+<TabItem value="nodejs">
+
+```js
+import { PublicApi } from '@oryd/kratos-client'
+
+const publicEndpoint = new PublicApi(config.kratos.public)
+const protect = (req: Request, res: Response, next: NextFunction) => {
+  req.headers['host'] = config.kratos.public.split('/')[2]
+  publicEndpoint
+    .whoami(req)
+    .then(({ body, response }) => {
+      req.user = { session: body }
+      next()
+    })
+    .catch(() => {
+      // Redirect to login if not logged in
+      res.redirect('/auth/login')
+    })
+
+// const app = expres()
+// ...
+
+app.get('/', protect, dashboard)
+```
+
+</TabItem>
+</Tabs>
 
 ### API Client
 
