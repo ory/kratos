@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/ory/kratos/driver/configuration"
-
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"github.com/tidwall/sjson"
+
+	"github.com/ory/kratos/driver/configuration"
 
 	"github.com/ory/x/errorsx"
 
@@ -69,6 +69,15 @@ func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Reques
 	}
 
 	s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, identity.CredentialsTypePassword, rr, err)
+}
+
+func (s *Strategy) decode(p *RegistrationFormPayload, r *http.Request) error {
+	option, err := s.decoderRegistration()
+	if err != nil {
+		return err
+	}
+
+	return s.hd.Decode(r, p, option, decoderx.HTTPDecoderSetValidatePayloads(false), decoderx.HTTPDecoderJSONFollowsFormFormat())
 }
 
 func (s *Strategy) decoderRegistration() (decoderx.HTTPDecoderOption, error) {
@@ -137,13 +146,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 	}
 
 	var p RegistrationFormPayload
-	option, err := s.decoderRegistration()
-	if err != nil {
-		s.handleRegistrationError(w, r, ar, nil, err)
-		return
-	}
-
-	if err := s.hd.Decode(r, &p, option, decoderx.HTTPDecoderSetValidatePayloads(false)); err != nil {
+	if err := s.decode(&p, r); err != nil {
 		s.handleRegistrationError(w, r, ar, &p, err)
 		return
 	}

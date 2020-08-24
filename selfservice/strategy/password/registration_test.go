@@ -151,7 +151,7 @@ func TestRegistration(t *testing.T) {
 				rr, body, res := run(t, true)
 				assert.Contains(t, res.Request.URL.String(), publicTS.URL+password.RouteRegistration)
 				assert.Equal(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
-				assert.Contains(t, string(body), `cannot unmarshal number`)
+				assert.Contains(t, string(body), `Expected JSON sent in request body to be an object but got: Number`)
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
@@ -216,11 +216,9 @@ func TestRegistration(t *testing.T) {
 				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).messages.0").String(), "data breaches and must no longer be used.", "%s", body)
 				return res
 			}
+
 			t.Run("type=api", func(t *testing.T) {
-				res := run(t, true, x.MustEncodeJSON(t, &password.RegistrationFormPayload{
-					Password: "password",
-					Traits:   []byte(`{"foobar":"bar","username":"registration-identifier-4"}`),
-				}))
+				res := run(t, true, `{"password":"password","traits.foobar":"bar","traits.username":"registration-identifier-4"}`)
 				assert.Contains(t, res.Request.URL.String(), publicTS.URL+password.RouteRegistration)
 			})
 
@@ -246,10 +244,7 @@ func TestRegistration(t *testing.T) {
 			}
 
 			t.Run("type=api", func(t *testing.T) {
-				res := run(t, true, x.MustEncodeJSON(t, &password.RegistrationFormPayload{
-					Password: x.NewUUID().String(),
-					Traits:   []byte(`{"username":"registration-identifier-5"}`),
-				}))
+				res := run(t, true, `{"password":"c0a5af7a-fa32-4fe1-85b9-3beb4a127164","traits.username":"registration-identifier-5"}`)
 				assert.Contains(t, res.Request.URL.String(), publicTS.URL+password.RouteRegistration)
 			})
 
@@ -270,10 +265,7 @@ func TestRegistration(t *testing.T) {
 			}
 
 			t.Run("type=api", func(t *testing.T) {
-				body, res := run(t, true, x.MustEncodeJSON(t, &password.RegistrationFormPayload{
-					Password: x.NewUUID().String(),
-					Traits:   []byte(`{"username":"registration-identifier-6","foobar":"bar"}`),
-				}))
+				body, res := run(t, true, `{"password":"c0a5af7a-fa32-4fe1-85b9-3beb4a127164","traits.username":"registration-identifier-6","traits.foobar":"bar"}`)
 				assert.Contains(t, res.Request.URL.String(), publicTS.URL+password.RouteRegistration)
 				assert.Equal(t, int64(http.StatusInternalServerError), gjson.GetBytes(body, "error.code").Int(), "%s", body)
 				assert.Equal(t, "Internal Server Error", gjson.GetBytes(body, "error.status").String(), "%s", body)
@@ -301,11 +293,9 @@ func TestRegistration(t *testing.T) {
 				body, res := makeRequest(t, rr.ID, isAPI, payload, expectStatusCode(isAPI, http.StatusInternalServerError))
 				return body, res
 			}
+
 			t.Run("type=api", func(t *testing.T) {
-				body, res := run(t, true, x.MustEncodeJSON(t, &password.RegistrationFormPayload{
-					Password: x.NewUUID().String(),
-					Traits:   []byte(`{"username":"registration-identifier-7","foobar":"bar"}`),
-				}))
+				body, res := run(t, true, `{"password":"c0a5af7a-fa32-4fe1-85b9-3beb4a127164","traits.username":"registration-identifier-7","traits.foobar":"bar"}`)
 				assert.Contains(t, res.Request.URL.String(), publicTS.URL+password.RouteRegistration)
 				assert.Equal(t, int64(http.StatusInternalServerError), gjson.GetBytes(body, "error.code").Int(), "%s", body)
 				assert.Equal(t, "Internal Server Error", gjson.GetBytes(body, "error.status").String(), "%s", body)
@@ -338,10 +328,7 @@ func TestRegistration(t *testing.T) {
 			}
 
 			t.Run("type=api", func(t *testing.T) {
-				body, res := run(t, true, x.MustEncodeJSON(t, &password.RegistrationFormPayload{
-					Password: x.NewUUID().String(),
-					Traits:   []byte(`{"username":"registration-identifier-8-api","foobar":"bar"}`),
-				}))
+				body, res := run(t, true, `{"password":"c0a5af7a-fa32-4fe1-85b9-3beb4a127164","traits.username":"registration-identifier-8-api","traits.foobar":"bar"}`)
 				assert.Contains(t, res.Request.URL.String(), publicTS.URL+password.RouteRegistration)
 				assert.Equal(t, `registration-identifier-8-api`, gjson.GetBytes(body, "identity.traits.username").String(), "%s", body)
 				assert.NotEmpty(t, gjson.GetBytes(body, "session_token").String(), "%s", body)
@@ -368,15 +355,9 @@ func TestRegistration(t *testing.T) {
 			}
 
 			t.Run("type=api", func(t *testing.T) {
-				_, _ = run(t, true, x.MustEncodeJSON(t, &password.RegistrationFormPayload{
-					Password: x.NewUUID().String(),
-					Traits:   []byte(`{"username":"registration-identifier-8-api-duplicate","foobar":"bar"}`),
-				}), http.StatusOK)
+				_, _ = run(t, true, `{"password":"c0a5af7a-fa32-4fe1-85b9-3beb4a127164","traits.username":"registration-identifier-8-api-duplicate","traits.foobar":"bar"}`,http.StatusOK)
 
-				body, res := run(t, true, x.MustEncodeJSON(t, &password.RegistrationFormPayload{
-					Password: x.NewUUID().String(),
-					Traits:   []byte(`{"username":"registration-identifier-8-api-duplicate","foobar":"bar"}`),
-				}), http.StatusBadRequest)
+				body, res := run(t, true, `{"password":"c0a5af7a-fa32-4fe1-85b9-3beb4a127164","traits.username":"registration-identifier-8-api-duplicate","traits.foobar":"bar"}`,http.StatusBadRequest)
 				assert.Contains(t, res.Request.URL.String(), publicTS.URL+password.RouteRegistration)
 				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.messages.0.text").String(), "An account with the same identifier (email, phone, username, ...) exists already.", "%s", body)
 			})
@@ -448,10 +429,7 @@ func TestRegistration(t *testing.T) {
 			}
 
 			t.Run("type=api", func(t *testing.T) {
-				res := run(t, true, x.MustEncodeJSON(t, &password.RegistrationFormPayload{
-					Password: x.NewUUID().String(),
-					Traits:   []byte(`{"username":"registration-identifier-9"}`),
-				}))
+				res := run(t, true, `{"password":"c0a5af7a-fa32-4fe1-85b9-3beb4a127164","traits.username":"registration-identifier-9"}`)
 				assert.Contains(t, res.Request.URL.String(), publicTS.URL+password.RouteRegistration)
 			})
 
@@ -476,10 +454,7 @@ func TestRegistration(t *testing.T) {
 			}
 
 			t.Run("type=api", func(t *testing.T) {
-				body, res := run(t, true, x.MustEncodeJSON(t, &password.RegistrationFormPayload{
-					Password: "93172388957812344432",
-					Traits:   []byte(`{"username":"registration-identifier-10-api","foobar":"bar"}`),
-				}))
+				body, res := run(t, true, `{"password":"93172388957812344432","traits.username":"registration-identifier-10-api","traits.foobar":"bar"}`)
 				assert.Contains(t, res.Request.URL.String(), publicTS.URL+password.RouteRegistration)
 				assert.Equal(t, `registration-identifier-10-api`, gjson.GetBytes(body, "identity.traits.username").String(), "%s", body)
 			})
@@ -502,10 +477,7 @@ func TestRegistration(t *testing.T) {
 				[]configuration.SelfServiceHook{{Name: "session"}})
 
 			t.Run("type=api", func(t *testing.T) {
-				payload := x.MustEncodeJSON(t, &password.RegistrationFormPayload{
-					Password: "O(lf<ys87LÖ:(h<dsjfl",
-					Traits:   []byte(`{"username":"registration-identifier-11-api","foobar":"bar"}`),
-				})
+				payload := `{"password":"O(lf<ys87LÖ:(h<dsjfl","traits.username":"registration-identifier-11","traits.foobar":"bar"}`
 
 				body1, res1 := makeRequest(t, newRegistrationRequest(t, time.Minute, true).ID,
 					true, payload, http.StatusOK)
@@ -562,7 +534,7 @@ func TestRegistration(t *testing.T) {
 			Config: &registration.FlowMethodConfig{
 				FlowMethodConfigurator: &password.RequestMethod{
 					HTMLForm: &form.HTMLForm{
-						Action: "https://foo" + password.RouteRegistration + "?request=" + sr.ID.String(),
+						Action: "https://foo" + password.RouteRegistration + "?flow=" + sr.ID.String(),
 						Method: "POST",
 						Fields: form.Fields{
 							{
