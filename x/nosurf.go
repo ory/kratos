@@ -5,8 +5,9 @@ import (
 	"net/http"
 
 	"github.com/justinas/nosurf"
-	"github.com/ory/x/randx"
 	"github.com/pkg/errors"
+
+	"github.com/ory/x/randx"
 
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/stringsx"

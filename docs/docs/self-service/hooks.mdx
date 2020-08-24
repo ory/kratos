@@ -5,13 +5,13 @@ title: Hooks
 
 Hooks execute logic after a flow (login, registration, settings, ...):
 
-- *After login:* is executed after a login was successful.
-- *After registration:* is executed when a registration was successful:
-  - *Before persisting:* runs before the identity is saved in the database.
-  - *After persisting:* runs after the identity was saved in the database.
-- *After settings:* is executed when a settings was successful:
-  - *Before persisting:* runs before the identity is saved in the database.
-  - *After persisting:* runs after the identity was saved in the database.
+- _After login:_ is executed after a login was successful.
+- _After registration:_ is executed when a registration was successful:
+  - _Before persisting:_ runs before the identity is saved in the database.
+  - _After persisting:_ runs after the identity was saved in the database.
+- _After settings:_ is executed when a settings was successful:
+  - _Before persisting:_ runs before the identity is saved in the database.
+  - _After persisting:_ runs after the identity was saved in the database.
 
 ## Login
 
@@ -43,8 +43,8 @@ selfservice:
 
 ## Registration
 
-Hooks running after successful user registration are defined per
-Self-Service Registration Strategy in ORY Kratos' configuration file.
+Hooks running after successful user registration are defined per Self-Service
+Registration Strategy in ORY Kratos' configuration file.
 
 ### After
 
@@ -61,8 +61,8 @@ selfservice:
 
 #### `session`
 
-Adding the `session` hook signs the user immediately in once the account has been created.
-It runs after the identity has been saved to the database.
+Adding the `session` hook signs the user immediately in once the account has
+been created. It runs after the identity has been saved to the database.
 
 :::info
 
@@ -76,8 +76,9 @@ response.
 :::
 
 To use this hook, you must first define one or more (for secret rotation)
-secrets. You can either choose to use the "default" secrets or the more specific "cookie" secrets.
-The other required config is setting the hook in `after` work flows:
+secrets. You can either choose to use the "default" secrets or the more specific
+"cookie" secrets. The other required config is setting the hook in `after` work
+flows:
 
 ```yaml title="path/to/my/kratos.config.yml"
 secrets:
@@ -110,9 +111,9 @@ Therefore, the user is logged in immediately.
 
 ### Registration Flow via API
 
-When performing a registration flow with an API client (e.g. mobile apo), this hook
-creates a session and returns the session token and the session itself in the
-response body as application/json:
+When performing a registration flow with an API client (e.g. mobile apo), this
+hook creates a session and returns the session token and the session itself in
+the response body as application/json:
 
 ```json
 {
@@ -130,9 +131,10 @@ response body as application/json:
 
 :::info
 
-Because the HTTP reply is handled by the hook itself, no other hooks can be executed because the HTTP
-reply can not be modified further (e.g. HTTP Status Code was already sent as 200 and cannot be changed to 301).
-You must ensure that the session hook is the last hook in your configuration!
+Because the HTTP reply is handled by the hook itself, no other hooks can be
+executed because the HTTP reply can not be modified further (e.g. HTTP Status
+Code was already sent as 200 and cannot be changed to 301). You must ensure that
+the session hook is the last hook in your configuration!
 
 :::
 

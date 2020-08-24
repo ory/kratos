@@ -2,6 +2,7 @@ package x
 
 import (
 	"github.com/gobuffalo/packr/v2"
+
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/viperx"
 )
