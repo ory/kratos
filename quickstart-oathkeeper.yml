@@ -1,6 +1,9 @@
 version: '3.7'
 
 services:
+  kratos:
+    environment:
+      - SERVE_PUBLIC_BASE_URL=http://127.0.0.1:4433/.ory/kratos/public/
 
   kratos-selfservice-ui-node:
     environment:
