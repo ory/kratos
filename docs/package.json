@@ -21,7 +21,7 @@
     "@docusaurus/theme-search-algolia": "2.0.0-alpha.58",
     "classnames": "2.2.6",
     "mermaid": "8.5.2",
-    "node-fetch": "2.6.0",
+    "node-fetch": "^2.6.0",
     "react": "16.8.4",
     "react-dom": "16.8.4"
   },

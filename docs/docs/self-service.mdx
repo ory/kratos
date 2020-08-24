@@ -4,14 +4,16 @@ title: Self-Service Flows
 sidebar_label: Concepts and Overview
 ---
 
-import Tabs from '@theme/Tabs'
-import TabItem from '@theme/TabItem'
-import Mermaid from '@theme/Mermaid'
-
 ORY Kratos implements flows that users perform themselves as opposed to
 administrative intervention. Facebook and Google both provide self-service
 registration and profile management features as you are able to make changes to
 your profile and sign up yourself.
+
+import Tabs from '@theme/Tabs'
+import TabItem from '@theme/TabItem'
+import Mermaid from '@theme/Mermaid'
+import SelfServiceBrowserFlow from '@theme/SelfServiceBrowserFlow'
+import SelfServiceAPIFlow from '@theme/SelfServiceAPIFlow'
 
 Most believe that user management systems are easy to implement because picking
 the right password hashing algorithm and sending an account verification code is
@@ -92,6 +94,16 @@ potential attack vectors, including including Login and other CSRF attacks.
 
 ## Browser Flows
 
+Browser-based flows make use of three core HTTP technologies:
+
+- HTTP Redirects
+- HTTP POST (`application/x-www-urlencoded`) and REST GET requests.
+- HTTP Cookies to prevent CSRF and Session Hijaking attack vectors.
+
+The browser flow is the easiest and most secure to set up and integrated with.
+ORY Kratos takes care of all required session and CSRF cookies and ensures that
+all security requirements are fulfilled.
+
 The browser flow has three stages:
 
 - Initialization and redirect to UI;
@@ -106,29 +118,7 @@ before reading this document.
 
 :::
 
-<Mermaid
-  chart={`sequenceDiagram
-  participant B as Browser
-  participant K as ORY Kratos
-  participant A as Flow UI
-  B->>K: Follow link to /self-service/<login|settings|registration|...>/browser
-  K-->>K: Create and store new login flow
-  K->>B: HTTP 302 Found <selfservice.flows.<login|...>.ui_url>?flow=<flow-id>
-  B->>A: Opens <selfservice.flows.<login|...>.ui_url>?flow=<flow-id>
-  A-->>K: Fetches data to render forms using /selfservice/<login|...>/flows?id=<flow-id>
-  B-->>A: Fills out forms, clicks e.g. "Log in", "Sign Up", "Update Email", ...
-  B->>K: Submits form
-  K-->>K: Validates and processes form payloads
-  alt Form payload is valid valid
-    K->>B: Perform flow-specific action (e.g. create user, set session cookie, ...)
-  else Login data invalid
-    K-->>K: Update and store flow (e.g. add form validation errors)
-    K-->>B: HTTP 302 Found <selfservice.flows.<login|...>.ui_url>?flow=<flow-id>
-    B->>A: Opens <selfservice.flows.<login|...>.ui_url>?flow=<flow-id>
-    A-->>K: Fetches data to render form fields and errors
-    B->>K: Repeat flow with input data, submit, validate, ...
-  end`}
-/>
+<SelfServiceBrowserFlow flows={['login', 'settings', '...']} />
 
 ### Initialization and Redirect to UI
 
@@ -412,26 +402,7 @@ API flows have three stages:
 
 The high-level sequence diagram for API flows looks as follows:
 
-<Mermaid
-  chart={`sequenceDiagram
-  participant B as API Client
-  participant K as ORY Kratos
-  B->>K: REST GET /self-service/<login|settings|registration|...>/api
-  K-->>K: Create and store new login flow
-  K->>B: HTTP 200 OK with flow as application/json payload
-  B-->>B: Render form using e.g. Native iOS UI Elements
-  B-->>B: User fills out forms, clicks e.g. "Log in", "Sign Up", "Update Email", ...
-  B->>K: REST POST to e.g. /self-service/login/methods/password
-  K-->>K: Validates and processes payload
-  alt Form payload is valid valid
-    K->>B: Perform flow-specific action (e.g. create user, return session cookie, ...)
-  else Login data invalid
-    K-->>K: Update and store flow (e.g. add form validation errors)
-    K->>B: Respond with e.g. HTTP 400 Bad Request and updated flow as payload
-    B-->>B: Render form and validation errors using e.g. Native iOS UI Elements
-    B-->>K: Repeat flow with input data, submit, validate, ...
-  end`}
-/>
+<SelfServiceAPIFlow />
 
 ### Initialization
 
@@ -565,20 +536,7 @@ const Login = () => {
 ```
 
 If needed, the client can re-request the flow using the same HTTP Request as the
-browser flow at the Admin API endpoint:
-
-```shell script
-curl -s -X GET \
-    -H "Accept: application/json" \
-    "http://127.0.0.1:4434/self-service/login/flows?id=57374fa5-336a-4381-b471-92d7de939859" | jq
-
-  {
-    "id": "57374fa5-336a-4381-b471-92d7de939859",
-    "type": "api",
-  # ...
-```
-
-Or the Public API Endpoint:
+browser flow at the Public API endpoint:
 
 ```shell script
 curl -s -X GET \
