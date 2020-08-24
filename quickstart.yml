@@ -40,6 +40,7 @@ services:
     restart: unless-stopped
     environment:
       - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true
+      - LOG_LEVEL=trace
     command:
       serve -c /etc/config/kratos/.kratos.yml --dev
     volumes:
