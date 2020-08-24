@@ -1,0 +1,29 @@
+---
+id: login-session
+title: Getting Cookies to Work on Multi-Domains
+---
+
+ORY Kratos' browser features rely heavily on HTTP Cookies to mitigate common
+attack vectors and make the integration as easy as possible to use. Therefore it
+is important to know that
+
+1. [HTTP Cookies ignore ports](https://stackoverflow.com/questions/1612177/are-http-cookies-port-specific),
+   meaning the browser will send a cookie it received for
+   `http://my-domain.com:1234` to `http://my-domain.com:4321` as well.
+2. [Subdomains can set HTTP Cookies for parent domains](https://stackoverflow.com/questions/18492576/share-cookie-between-subdomain-and-domain),
+   meaning a HTTP Cookie specifying `domain=my-domain.com` will be allowed to
+   set even if the URL is `http://sub.my-domain.com` or
+   `http://sub.sub.my-domain.com`.
+
+You can adjust the session cookie's domain using:
+
+```yaml title="path/to/kratos/config.yml
+session:
+  cookie:
+    domain: my-domain.com
+```
+
+What **is not** currently possible is to set up ORY Kratos in a way where you
+get session cookies running on two separate top level domains (e.g.
+`my-domain.com` and `another-domain.com`). This is tracked as
+[kratos#662](https://github.com/ory/kratos/issues/662).

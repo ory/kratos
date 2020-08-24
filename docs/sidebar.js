@@ -72,6 +72,7 @@ module.exports = {
     "guides/configuring-cookies",
     "guides/login-session",
     "guides/secret-key-rotation",
+    "guides/multi-domain-cookies",
     "guides/high-availability-ha",
     "guides/docker"
   ],
