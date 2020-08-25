@@ -20,10 +20,10 @@ import (
 )
 
 func expectStatusCodeBrowserOKOr(isAPI bool, apiExpect int) int {
-	return expectStatusCodeBetter(isAPI, apiExpect, http.StatusOK)
+	return expectStatusCode(isAPI, apiExpect, http.StatusOK)
 }
 
-func expectStatusCodeBetter(isAPI bool, api, browser int) int {
+func expectStatusCode(isAPI bool, api, browser int) int {
 	if isAPI {
 		return api
 	}
