@@ -128,12 +128,12 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	innerRegistrationFlow, innerErr := s.d.RegistrationFlowPersister().GetRegistrationFlow(r.Context(), f.ID)
+	updatedFlow, innerErr := s.d.RegistrationFlowPersister().GetRegistrationFlow(r.Context(), f.ID)
 	if innerErr != nil {
-		s.forward(w, r, innerRegistrationFlow, innerErr)
+		s.forward(w, r, updatedFlow, innerErr)
 	}
 
-	s.d.Writer().WriteCode(w, r, x.RecoverStatusCode(err, http.StatusBadRequest), innerRegistrationFlow)
+	s.d.Writer().WriteCode(w, r, x.RecoverStatusCode(err, http.StatusBadRequest), updatedFlow)
 }
 
 func (s *ErrorHandler) forward(w http.ResponseWriter, r *http.Request, rr *Flow, err error) {
