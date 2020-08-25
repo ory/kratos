@@ -64,6 +64,11 @@ func NewHookExecutor(d executorDependencies, c configuration.Provider) *HookExec
 func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, a *Flow, i *identity.Identity) error {
 	s := session.NewActiveSession(i, e.c, time.Now().UTC()).Declassify()
 
+	e.d.Logger().
+		WithRequest(r).
+		WithField("identity_id", i.ID).
+		WithField("flow_method",ct).
+		Debug("Running ExecuteLoginPostHook.")
 	for k, executor := range e.d.PostLoginHooks(ct) {
 		if err := executor.ExecuteLoginPostHook(w, r, a, s); err != nil {
 			if errors.Is(err, ErrHookAbortFlow) {
@@ -73,24 +78,32 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct 
 					WithField("executor_position", k).
 					WithField("executors", PostHookExecutorNames(e.d.PostLoginHooks(ct))).
 					WithField("identity_id", i.ID).
-					Debug("Post login execution hooks aborted early.")
+					WithField("flow_method",ct).
+					Debug("A ExecuteLoginPostHook hook aborted early.")
 				return nil
 			}
 			return err
 		}
 
-		e.d.Logger().WithRequest(r).
+		e.d.Logger().
+			WithRequest(r).
 			WithField("executor", fmt.Sprintf("%T", executor)).
 			WithField("executor_position", k).
 			WithField("executors", PostHookExecutorNames(e.d.PostLoginHooks(ct))).
 			WithField("identity_id", i.ID).
-			Debug("Successfully ran post login executor.")
+			WithField("flow_method",ct).
+			Debug("ExecuteLoginPostHook completed successfully.")
 	}
 
 	if a.Type == flow.TypeAPI {
 		if err := e.d.SessionPersister().CreateSession(r.Context(), s); err != nil {
 			return errors.WithStack(err)
 		}
+		e.d.Audit().
+			WithRequest(r).
+			WithField("session_id", s.ID).
+			WithField("identity_id", i.ID).
+			Info("Identity authenticated successfully and was issued an ORY Kratos Session Token.")
 
 		e.d.Writer().Write(w, r, &APIFlowResponse{Session: s, Token: s.Token})
 		return nil
@@ -100,6 +113,11 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct 
 		return errors.WithStack(err)
 	}
 
+	e.d.Audit().
+		WithRequest(r).
+		WithField("identity_id", i.ID).
+		WithField("session_id", s.ID).
+		Info("Identity authenticated successfully and was issued an ORY Kratos Session Cookie.")
 	return x.SecureContentNegotiationRedirection(w, r, s.Declassify(), a.RequestURL,
 		e.d.Writer(), e.c, x.SecureRedirectOverrideDefaultReturnTo(e.c.SelfServiceFlowLoginReturnTo(ct.String())))
 }
