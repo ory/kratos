@@ -48,7 +48,8 @@ type (
 	}
 )
 
-func NewFlowExpiredError(ago time.Duration) *FlowExpiredError {
+func NewFlowExpiredError(at time.Time) *FlowExpiredError {
+	ago := time.Since(at)
 	return &FlowExpiredError{
 		ago: ago,
 		DefaultError: herodot.ErrBadRequest.

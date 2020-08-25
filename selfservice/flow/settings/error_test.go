@@ -1,4 +1,4 @@
-package login_test
+package settings_test
 
 import (
 	"context"
@@ -7,17 +7,21 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bxcodec/faker/v3"
 	"github.com/gobuffalo/httptest"
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/viper"
+
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/herodot"
 
+	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/httpclient/client/common"
@@ -25,46 +29,54 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
-	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/flow/settings"
+	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
 
 func TestHandleError(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+
 	public, admin := testhelpers.NewKratosServer(t, reg)
 
 	router := httprouter.New()
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)
 
-	testhelpers.NewLoginUIFlowEchoServer(t, reg)
+	testhelpers.NewSettingsUIFlowEchoServer(t, reg)
 	testhelpers.NewErrorTestServer(t, reg)
+	testhelpers.NewLoginUIFlowEchoServer(t, reg)
 
-	h := reg.LoginFlowErrorHandler()
+	h := reg.SettingsFlowErrorHandler()
 	sdk := testhelpers.NewSDKClient(admin)
 
-	var loginFlow *login.Flow
+	var settingsFlow *settings.Flow
 	var flowError error
-	var ct identity.CredentialsType
+	var flowMethod string
+	var id identity.Identity
+	require.NoError(t, faker.FakeData(&id))
+	id.SchemaID = "default"
+
 	router.GET("/error", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		h.WriteFlowError(w, r, ct, loginFlow, flowError)
+		h.WriteFlowError(w, r, flowMethod, settingsFlow, &id, flowError)
 	})
 
 	reset := func() {
-		loginFlow = nil
+		settingsFlow = nil
 		flowError = nil
-		ct = ""
+		flowMethod = ""
 	}
 
-	newFlow := func(t *testing.T, ttl time.Duration, ft flow.Type) *login.Flow {
+	newFlow := func(t *testing.T, ttl time.Duration, ft flow.Type) *settings.Flow {
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
-		f := login.NewFlow(ttl, "csrf_token", req, ft)
-		for _, s := range reg.LoginStrategies() {
-			require.NoError(t, s.PopulateLoginMethod(req, f))
+		f := settings.NewFlow(ttl, req, &id, ft)
+		for _, s := range reg.SettingsStrategies() {
+			require.NoError(t, s.PopulateSettingsMethod(req, &id, f))
 		}
 
-		require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.Background(), f))
+		require.NoError(t, reg.SettingsFlowPersister().CreateSettingsFlow(context.Background(), f))
 		return f
 	}
 
@@ -81,13 +93,13 @@ func TestHandleError(t *testing.T) {
 		return sse.Payload.Errors, nil
 	}
 
-	anHourAgo := time.Now().Add(-time.Hour)
+	expiredAnHourAgo := time.Now().Add(-time.Hour)
 
 	t.Run("case=error with nil flow defaults to error ui redirect", func(t *testing.T) {
 		t.Cleanup(reset)
 
 		flowError = herodot.ErrInternalServerError.WithReason("system error")
-		ct = identity.CredentialsTypePassword
+		flowMethod = settings.StrategyProfile
 
 		sse, _ := expectErrorUI(t)
 		assertx.EqualAsJSON(t, []interface{}{flowError}, sse)
@@ -97,7 +109,7 @@ func TestHandleError(t *testing.T) {
 		t.Cleanup(reset)
 
 		flowError = herodot.ErrInternalServerError.WithReason("system error")
-		ct = identity.CredentialsTypePassword
+		flowMethod = settings.StrategyProfile
 
 		res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 		require.NoError(t, err)
@@ -114,28 +126,33 @@ func TestHandleError(t *testing.T) {
 		t.Run("case=expired error", func(t *testing.T) {
 			t.Cleanup(reset)
 
-			loginFlow = newFlow(t, time.Minute, flow.TypeAPI)
-			flowError = login.NewFlowExpiredError(anHourAgo)
-			ct = identity.CredentialsTypePassword
+			// This needs an authenticated client in order to call the RouteGetFlow endpoint
+			c := testhelpers.NewHTTPClientWithSessionToken(t, reg, session.NewActiveSession(&id,
+				testhelpers.NewSessionLifespanProvider(time.Hour), time.Now()))
 
-			res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
+			settingsFlow = newFlow(t, time.Minute, flow.TypeAPI)
+			flowError = settings.NewFlowExpiredError(expiredAnHourAgo)
+			flowMethod = settings.StrategyProfile
+
+			res, err := c.Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 			require.NoError(t, err)
 			defer res.Body.Close()
-			require.Contains(t, res.Request.URL.String(), public.URL+login.RouteGetFlow)
-			require.Equal(t, http.StatusOK, res.StatusCode)
+			require.Contains(t, res.Request.URL.String(), public.URL+settings.RouteGetFlow)
 
 			body, err := ioutil.ReadAll(res.Body)
 			require.NoError(t, err)
-			assert.Equal(t, int(text.ErrorValidationLoginFlowExpired), int(gjson.GetBytes(body, "messages.0.id").Int()))
-			assert.NotEqual(t, loginFlow.ID.String(), gjson.GetBytes(body, "id").String())
+			require.Equal(t, http.StatusOK, res.StatusCode, "%+v\n\t%s", res.Request, body)
+
+			assert.Equal(t, int(text.ErrorValidationSettingsFlowExpired), int(gjson.GetBytes(body, "messages.0.id").Int()))
+			assert.NotEqual(t, settingsFlow.ID.String(), gjson.GetBytes(body, "id").String())
 		})
 
 		t.Run("case=validation error", func(t *testing.T) {
 			t.Cleanup(reset)
 
-			loginFlow = newFlow(t, time.Minute, flow.TypeAPI)
+			settingsFlow = newFlow(t, time.Minute, flow.TypeAPI)
 			flowError = schema.NewInvalidCredentialsError()
-			ct = identity.CredentialsTypePassword
+			flowMethod = settings.StrategyProfile
 
 			res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 			require.NoError(t, err)
@@ -144,16 +161,16 @@ func TestHandleError(t *testing.T) {
 
 			body, err := ioutil.ReadAll(res.Body)
 			require.NoError(t, err)
-			assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(gjson.GetBytes(body, "methods.password.config.messages.0.id").Int()), "%s", body)
-			assert.Equal(t, loginFlow.ID.String(), gjson.GetBytes(body, "id").String())
+			assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(gjson.GetBytes(body, "methods.profile.config.messages.0.id").Int()), "%s", body)
+			assert.Equal(t, settingsFlow.ID.String(), gjson.GetBytes(body, "id").String())
 		})
 
 		t.Run("case=generic error", func(t *testing.T) {
 			t.Cleanup(reset)
 
-			loginFlow = newFlow(t, time.Minute, flow.TypeAPI)
+			settingsFlow = newFlow(t, time.Minute, flow.TypeAPI)
 			flowError = herodot.ErrInternalServerError.WithReason("system error")
-			ct = identity.CredentialsTypePassword
+			flowMethod = settings.StrategyProfile
 
 			res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 			require.NoError(t, err)
@@ -168,9 +185,9 @@ func TestHandleError(t *testing.T) {
 		t.Run("case=method is unknown", func(t *testing.T) {
 			t.Cleanup(reset)
 
-			loginFlow = newFlow(t, time.Minute, flow.TypeAPI)
+			settingsFlow = newFlow(t, time.Minute, flow.TypeAPI)
 			flowError = herodot.ErrInternalServerError.WithReason("system error")
-			ct = "invalid-method"
+			flowMethod = "invalid-method"
 
 			res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 			require.NoError(t, err)
@@ -184,13 +201,13 @@ func TestHandleError(t *testing.T) {
 	})
 
 	t.Run("flow=browser", func(t *testing.T) {
-		expectLoginUI := func(t *testing.T) (*models.LoginFlow, *http.Response) {
+		expectSettingsUI := func(t *testing.T) (*models.SettingsFlow, *http.Response) {
 			res, err := ts.Client().Get(ts.URL + "/error")
 			require.NoError(t, err)
 			defer res.Body.Close()
-			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowLoginUI().String()+"?flow=")
+			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowSettingsUI().String()+"?flow=")
 
-			lf, err := sdk.Common.GetSelfServiceLoginFlow(common.NewGetSelfServiceLoginFlowParams().
+			lf, err := sdk.Common.GetSelfServiceSettingsFlow(common.NewGetSelfServiceSettingsFlowParams().
 				WithID(res.Request.URL.Query().Get("flow")))
 			require.NoError(t, err)
 			return lf.Payload, res
@@ -199,34 +216,47 @@ func TestHandleError(t *testing.T) {
 		t.Run("case=expired error", func(t *testing.T) {
 			t.Cleanup(reset)
 
-			loginFlow = &login.Flow{Type: flow.TypeBrowser}
-			flowError = login.NewFlowExpiredError(anHourAgo)
-			ct = identity.CredentialsTypePassword
+			settingsFlow = &settings.Flow{Type: flow.TypeBrowser}
+			flowError = settings.NewFlowExpiredError(expiredAnHourAgo)
+			flowMethod = settings.StrategyProfile
 
-			lf, _ := expectLoginUI(t)
+			lf, _ := expectSettingsUI(t)
 			require.Len(t, lf.Messages, 1)
-			assert.Equal(t, int(text.ErrorValidationLoginFlowExpired), int(lf.Messages[0].ID))
+			assert.Equal(t, int(text.ErrorValidationSettingsFlowExpired), int(lf.Messages[0].ID))
+		})
+
+		t.Run("case=session old error", func(t *testing.T) {
+			t.Cleanup(reset)
+
+			settingsFlow = &settings.Flow{Type: flow.TypeBrowser}
+			flowError = settings.ErrRequestNeedsReAuthentication
+			flowMethod = settings.StrategyProfile
+
+			res, err := ts.Client().Get(ts.URL + "/error")
+			require.NoError(t, err)
+			defer res.Body.Close()
+			require.Contains(t, res.Request.URL.String(), viper.Get(configuration.ViperKeySelfServiceLoginUI))
 		})
 
 		t.Run("case=validation error", func(t *testing.T) {
 			t.Cleanup(reset)
 
-			loginFlow = newFlow(t, time.Minute, flow.TypeBrowser)
+			settingsFlow = newFlow(t, time.Minute, flow.TypeBrowser)
 			flowError = schema.NewInvalidCredentialsError()
-			ct = identity.CredentialsTypePassword
+			flowMethod = settings.StrategyProfile
 
-			lf, _ := expectLoginUI(t)
-			require.NotEmpty(t, lf.Methods[string(ct)], x.MustEncodeJSON(t, lf))
-			require.Len(t, lf.Methods[string(ct)].Config.Messages, 1, x.MustEncodeJSON(t, lf))
-			assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(lf.Methods[string(ct)].Config.Messages[0].ID), x.MustEncodeJSON(t, lf))
+			lf, _ := expectSettingsUI(t)
+			require.NotEmpty(t, lf.Methods[flowMethod], x.MustEncodeJSON(t, lf))
+			require.Len(t, lf.Methods[flowMethod].Config.Messages, 1, x.MustEncodeJSON(t, lf))
+			assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(lf.Methods[flowMethod].Config.Messages[0].ID), x.MustEncodeJSON(t, lf))
 		})
 
 		t.Run("case=generic error", func(t *testing.T) {
 			t.Cleanup(reset)
 
-			loginFlow = newFlow(t, time.Minute, flow.TypeBrowser)
+			settingsFlow = newFlow(t, time.Minute, flow.TypeBrowser)
 			flowError = herodot.ErrInternalServerError.WithReason("system error")
-			ct = identity.CredentialsTypePassword
+			flowMethod = settings.StrategyProfile
 
 			sse, _ := expectErrorUI(t)
 			assertx.EqualAsJSON(t, []interface{}{flowError}, sse)
@@ -235,9 +265,9 @@ func TestHandleError(t *testing.T) {
 		t.Run("case=method is unknown", func(t *testing.T) {
 			t.Cleanup(reset)
 
-			loginFlow = newFlow(t, time.Minute, flow.TypeBrowser)
+			settingsFlow = newFlow(t, time.Minute, flow.TypeBrowser)
 			flowError = herodot.ErrInternalServerError.WithReason("system error")
-			ct = "invalid-method"
+			flowMethod = "invalid-method"
 
 			sse, _ := expectErrorUI(t)
 			body := x.MustEncodeJSON(t, sse)
