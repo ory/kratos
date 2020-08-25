@@ -120,12 +120,12 @@ func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, ct
 		return
 	}
 
-	innerLoginFlow, innerErr := s.d.LoginFlowPersister().GetLoginFlow(r.Context(), f.ID)
+	updatedFlow, innerErr := s.d.LoginFlowPersister().GetLoginFlow(r.Context(), f.ID)
 	if innerErr != nil {
-		s.forward(w, r, innerLoginFlow, innerErr)
+		s.forward(w, r, updatedFlow, innerErr)
 	}
 
-	s.d.Writer().WriteCode(w, r, x.RecoverStatusCode(err, http.StatusBadRequest), innerLoginFlow)
+	s.d.Writer().WriteCode(w, r, x.RecoverStatusCode(err, http.StatusBadRequest), updatedFlow)
 }
 
 func (s *ErrorHandler) forward(w http.ResponseWriter, r *http.Request, rr *Flow, err error) {
