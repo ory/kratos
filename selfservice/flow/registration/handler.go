@@ -5,8 +5,9 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/ory/x/urlx"
 	"github.com/pkg/errors"
+
+	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/selfservice/errorx"

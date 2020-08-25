@@ -86,6 +86,8 @@ func TestHandleError(t *testing.T) {
 		return sse.Payload.Errors, nil
 	}
 
+	anHourAgo := time.Now().Add(-time.Hour)
+
 	t.Run("case=error with nil flow defaults to error ui redirect", func(t *testing.T) {
 		t.Cleanup(reset)
 
@@ -118,7 +120,7 @@ func TestHandleError(t *testing.T) {
 			t.Cleanup(reset)
 
 			registrationFlow = newFlow(t, time.Minute, flow.TypeAPI)
-			flowError = registration.NewFlowExpiredError(time.Hour)
+			flowError = registration.NewFlowExpiredError(anHourAgo)
 			ct = identity.CredentialsTypePassword
 
 			res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
@@ -203,7 +205,7 @@ func TestHandleError(t *testing.T) {
 			t.Cleanup(reset)
 
 			registrationFlow = &registration.Flow{Type: flow.TypeBrowser}
-			flowError = registration.NewFlowExpiredError(time.Hour)
+			flowError = registration.NewFlowExpiredError(anHourAgo)
 			ct = identity.CredentialsTypePassword
 
 			lf, _ := expectRegistrationUI(t)
