@@ -5,7 +5,7 @@ import (
 )
 
 var schemas = packr.New(".schema", ".schema")
-var loginSchema, registrationSchema []byte
+var loginSchema, registrationSchema, settingsSchema []byte
 
 func init() {
 	var err error
@@ -15,6 +15,11 @@ func init() {
 	}
 
 	registrationSchema, err = schemas.Find("registration.schema.json")
+	if err != nil {
+		panic(err)
+	}
+
+	settingsSchema, err = schemas.Find("settings.schema.json")
 	if err != nil {
 		panic(err)
 	}

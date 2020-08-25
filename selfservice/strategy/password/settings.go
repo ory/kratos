@@ -8,33 +8,34 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
-	"github.com/pkg/errors"
-
 	"github.com/ory/herodot"
+	"github.com/ory/x/decoderx"
 	"github.com/ory/x/urlx"
+	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/x"
 )
 
 const (
-	SettingsPath = "/self-service/browser/flows/settings/strategies/password"
+	RouteSettings = "/self-service/settings/methods/password"
 )
 
 func (s *Strategy) RegisterSettingsRoutes(router *x.RouterPublic) {
-	router.POST(SettingsPath, s.submitSettingsFlow)
-	router.GET(SettingsPath, s.submitSettingsFlow)
+	router.POST(RouteSettings, s.submitSettingsFlow)
+	router.GET(RouteSettings, s.submitSettingsFlow)
 }
 
 func (s *Strategy) SettingsStrategyID() string {
 	return identity.CredentialsTypePassword.String()
 }
 
-// swagger:model completeSelfServiceBrowserSettingsPasswordFlowPayload
-type completeSelfServiceBrowserSettingsPasswordFlowPayload struct {
+// swagger:parameters completeSelfServiceSettingsFlowWithPasswordMethod
+type completeSelfServiceSettingsFlowWithPasswordMethod struct {
 	// Password is the updated password
 	//
 	// type: string
@@ -42,21 +43,21 @@ type completeSelfServiceBrowserSettingsPasswordFlowPayload struct {
 	// required: true
 	Password string `json:"password"`
 
-	// RequestID is request ID.
+	// Flow is flow ID.
 	//
 	// in: query
-	RequestID string `json:"request_id"`
+	Flow string `json:"flow"`
 }
 
-func (p *completeSelfServiceBrowserSettingsPasswordFlowPayload) GetRequestID() uuid.UUID {
-	return x.ParseUUID(p.RequestID)
+func (p *completeSelfServiceSettingsFlowWithPasswordMethod) GetFlowID() uuid.UUID {
+	return x.ParseUUID(p.Flow)
 }
 
-func (p *completeSelfServiceBrowserSettingsPasswordFlowPayload) SetRequestID(rid uuid.UUID) {
-	p.RequestID = rid.String()
+func (p *completeSelfServiceSettingsFlowWithPasswordMethod) SetFlowID(rid uuid.UUID) {
+	p.Flow = rid.String()
 }
 
-// swagger:route POST /self-service/browser/flows/settings/strategies/password public completeSelfServiceSettingsFlowWithPasswordMethod
+// swagger:route POST /self-service/settings/methods/password public completeSelfServiceSettingsFlowWithPasswordMethod
 //
 // Complete the browser-based settings flow for the password strategy
 //
@@ -77,7 +78,7 @@ func (p *completeSelfServiceBrowserSettingsPasswordFlowPayload) SetRequestID(rid
 //       302: emptyResponse
 //       500: genericError
 func (s *Strategy) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var p completeSelfServiceBrowserSettingsPasswordFlowPayload
+	var p completeSelfServiceSettingsFlowWithPasswordMethod
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
 		s.continueSettingsFlow(w, r, ctxUpdate, &p)
@@ -87,14 +88,31 @@ func (s *Strategy) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps
 		return
 	}
 
-	p.RequestID = ctxUpdate.Flow.ID.String()
-	p.Password = r.PostFormValue("password")
+	if err := s.decodeSettingsFlow(r, &p); err != nil {
+		s.handleSettingsError(w, r, ctxUpdate, &p, err)
+		return
+	}
+
+	// This does not come from the payload!
+	p.Flow = ctxUpdate.Flow.ID.String()
 	s.continueSettingsFlow(w, r, ctxUpdate, &p)
+}
+
+func (s *Strategy) decodeSettingsFlow(r *http.Request, dest interface{}) error {
+	compiler, err := decoderx.HTTPRawJSONSchemaCompiler(settingsSchema)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	return decoderx.NewHTTP().Decode(r, dest, compiler,
+		decoderx.HTTPDecoderSetValidatePayloads(false),
+		decoderx.HTTPDecoderJSONFollowsFormFormat(),
+	)
 }
 
 func (s *Strategy) continueSettingsFlow(
 	w http.ResponseWriter, r *http.Request,
-	ctxUpdate *settings.UpdateContext, p *completeSelfServiceBrowserSettingsPasswordFlowPayload,
+	ctxUpdate *settings.UpdateContext, p *completeSelfServiceSettingsFlowWithPasswordMethod,
 ) {
 	if ctxUpdate.Session.AuthenticatedAt.Add(s.c.SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
 		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.ErrRequestNeedsReAuthentication))
@@ -146,12 +164,9 @@ func (s *Strategy) continueSettingsFlow(
 }
 
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, _ *identity.Identity, f *settings.Flow) error {
-	hf := &form.HTMLForm{
-		Action: urlx.CopyWithQuery(urlx.AppendPaths(s.c.SelfPublicURL(), SettingsPath),
-			url.Values{"flow": {f.ID.String()}},
-		).String(),
-		Fields: form.Fields{{Name: "password", Type: "password", Required: true}}, Method: "POST",
-	}
+	hf := &form.HTMLForm{Action: urlx.CopyWithQuery(urlx.AppendPaths(s.c.SelfPublicURL(), RouteSettings),
+		url.Values{"flow": {f.ID.String()}}).String(), Fields: form.Fields{{Name: "password",
+			Type: "password", Required: true}}, Method: "POST"}
 	hf.SetCSRF(s.d.GenerateCSRFToken(r))
 
 	f.Methods[string(s.ID())] = &settings.FlowMethod{
@@ -161,8 +176,9 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, _ *identity.Identity,
 	return nil
 }
 
-func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *completeSelfServiceBrowserSettingsPasswordFlowPayload, err error) {
-	if errors.Is(err, settings.ErrRequestNeedsReAuthentication) {
+func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *completeSelfServiceSettingsFlowWithPasswordMethod, err error) {
+	// Do not pause flow if the flow type is an API flow as we can't save cookies in those flows.
+	if errors.Is(err, settings.ErrRequestNeedsReAuthentication) && ctxUpdate.Flow != nil && ctxUpdate.Flow.Type == flow.TypeBrowser {
 		if err := s.d.ContinuityManager().Pause(r.Context(), w, r,
 			settings.ContinuityKey(s.SettingsStrategyID()), settings.ContinuityOptions(p, ctxUpdate.Session.Identity)...); err != nil {
 			s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.SettingsStrategyID(), ctxUpdate.Flow, ctxUpdate.Session.Identity, err)
@@ -170,10 +186,12 @@ func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, c
 		}
 	}
 
+	var id *identity.Identity
 	if ctxUpdate.Flow != nil {
 		ctxUpdate.Flow.Methods[s.SettingsStrategyID()].Config.Reset()
 		ctxUpdate.Flow.Methods[s.SettingsStrategyID()].Config.SetCSRF(s.d.GenerateCSRFToken(r))
+		id = ctxUpdate.Session.Identity
 	}
 
-	s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.SettingsStrategyID(), ctxUpdate.Flow, ctxUpdate.Session.Identity, err)
+	s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.SettingsStrategyID(), ctxUpdate.Flow, id, err)
 }
