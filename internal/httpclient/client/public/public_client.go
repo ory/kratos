@@ -31,15 +31,15 @@ type ClientService interface {
 
 	CompleteSelfServiceBrowserSettingsOIDCSettingsFlow(params *CompleteSelfServiceBrowserSettingsOIDCSettingsFlowParams) error
 
-	CompleteSelfServiceBrowserSettingsPasswordStrategyFlow(params *CompleteSelfServiceBrowserSettingsPasswordStrategyFlowParams) error
-
-	CompleteSelfServiceBrowserSettingsProfileStrategyFlow(params *CompleteSelfServiceBrowserSettingsProfileStrategyFlowParams) (*CompleteSelfServiceBrowserSettingsProfileStrategyFlowOK, error)
-
 	CompleteSelfServiceBrowserVerificationFlow(params *CompleteSelfServiceBrowserVerificationFlowParams) error
 
 	CompleteSelfServiceLoginFlowWithPasswordMethod(params *CompleteSelfServiceLoginFlowWithPasswordMethodParams) (*CompleteSelfServiceLoginFlowWithPasswordMethodOK, error)
 
 	CompleteSelfServiceRegistrationFlowWithPasswordMethod(params *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams) (*CompleteSelfServiceRegistrationFlowWithPasswordMethodOK, error)
+
+	CompleteSelfServiceSettingsFlowWithPasswordMethod(params *CompleteSelfServiceSettingsFlowWithPasswordMethodParams) error
+
+	CompleteSelfServiceSettingsFlowWithProfileMethod(params *CompleteSelfServiceSettingsFlowWithProfileMethodParams) (*CompleteSelfServiceSettingsFlowWithProfileMethodOK, error)
 
 	InitializeSelfServiceBrowserLogoutFlow(params *InitializeSelfServiceBrowserLogoutFlowParams) error
 
@@ -125,84 +125,6 @@ func (a *Client) CompleteSelfServiceBrowserSettingsOIDCSettingsFlow(params *Comp
 		return err
 	}
 	return nil
-}
-
-/*
-  CompleteSelfServiceBrowserSettingsPasswordStrategyFlow completes the browser based settings flow for the password strategy
-
-  This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this
-endpoint.
-
-> This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
-
-More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
-*/
-func (a *Client) CompleteSelfServiceBrowserSettingsPasswordStrategyFlow(params *CompleteSelfServiceBrowserSettingsPasswordStrategyFlowParams) error {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewCompleteSelfServiceBrowserSettingsPasswordStrategyFlowParams()
-	}
-
-	_, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "completeSelfServiceBrowserSettingsPasswordStrategyFlow",
-		Method:             "POST",
-		PathPattern:        "/self-service/browser/flows/settings/strategies/password",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
-		Schemes:            []string{"http", "https"},
-		Params:             params,
-		Reader:             &CompleteSelfServiceBrowserSettingsPasswordStrategyFlowReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-/*
-  CompleteSelfServiceBrowserSettingsProfileStrategyFlow completes the browser based settings flow for profile data
-
-  This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this
-endpoint.
-
-If the provided profile data is valid against the Identity's Traits JSON Schema, the data will be updated and
-the browser redirected to `url.settings_ui` for further steps.
-
-> This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
-
-More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
-*/
-func (a *Client) CompleteSelfServiceBrowserSettingsProfileStrategyFlow(params *CompleteSelfServiceBrowserSettingsProfileStrategyFlowParams) (*CompleteSelfServiceBrowserSettingsProfileStrategyFlowOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewCompleteSelfServiceBrowserSettingsProfileStrategyFlowParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "completeSelfServiceBrowserSettingsProfileStrategyFlow",
-		Method:             "POST",
-		PathPattern:        "/self-service/browser/flows/settings/strategies/profile",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
-		Schemes:            []string{"http", "https"},
-		Params:             params,
-		Reader:             &CompleteSelfServiceBrowserSettingsProfileStrategyFlowReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*CompleteSelfServiceBrowserSettingsProfileStrategyFlowOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for completeSelfServiceBrowserSettingsProfileStrategyFlow: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
 }
 
 /*
@@ -336,6 +258,84 @@ func (a *Client) CompleteSelfServiceRegistrationFlowWithPasswordMethod(params *C
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for completeSelfServiceRegistrationFlowWithPasswordMethod: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  CompleteSelfServiceSettingsFlowWithPasswordMethod completes the browser based settings flow for the password strategy
+
+  This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this
+endpoint.
+
+> This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
+
+More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+*/
+func (a *Client) CompleteSelfServiceSettingsFlowWithPasswordMethod(params *CompleteSelfServiceSettingsFlowWithPasswordMethodParams) error {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewCompleteSelfServiceSettingsFlowWithPasswordMethodParams()
+	}
+
+	_, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "completeSelfServiceSettingsFlowWithPasswordMethod",
+		Method:             "POST",
+		PathPattern:        "/self-service/browser/flows/settings/strategies/password",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &CompleteSelfServiceSettingsFlowWithPasswordMethodReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+/*
+  CompleteSelfServiceSettingsFlowWithProfileMethod completes the browser based settings flow for profile data
+
+  This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this
+endpoint.
+
+If the provided profile data is valid against the Identity's Traits JSON Schema, the data will be updated and
+the browser redirected to `url.settings_ui` for further steps.
+
+> This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
+
+More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+*/
+func (a *Client) CompleteSelfServiceSettingsFlowWithProfileMethod(params *CompleteSelfServiceSettingsFlowWithProfileMethodParams) (*CompleteSelfServiceSettingsFlowWithProfileMethodOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewCompleteSelfServiceSettingsFlowWithProfileMethodParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "completeSelfServiceSettingsFlowWithProfileMethod",
+		Method:             "POST",
+		PathPattern:        "/self-service/settings/methods/profile",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &CompleteSelfServiceSettingsFlowWithProfileMethodReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*CompleteSelfServiceSettingsFlowWithProfileMethodOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for completeSelfServiceSettingsFlowWithProfileMethod: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

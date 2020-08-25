@@ -693,60 +693,8 @@
           "public"
         ],
         "summary": "Complete the browser-based settings flow for the password strategy",
-        "operationId": "completeSelfServiceBrowserSettingsPasswordStrategyFlow",
+        "operationId": "completeSelfServiceSettingsFlowWithPasswordMethod",
         "responses": {
-          "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
-          },
-          "500": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          }
-        }
-      }
-    },
-    "/self-service/browser/flows/settings/strategies/profile": {
-      "post": {
-        "description": "This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this\nendpoint.\n\nIf the provided profile data is valid against the Identity's Traits JSON Schema, the data will be updated and\nthe browser redirected to `url.settings_ui` for further steps.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
-        "consumes": [
-          "application/json",
-          "application/x-www-form-urlencoded"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "tags": [
-          "public"
-        ],
-        "summary": "Complete the browser-based settings flow for profile data",
-        "operationId": "completeSelfServiceBrowserSettingsProfileStrategyFlow",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "Request is the request ID.",
-            "name": "request",
-            "in": "query",
-            "required": true
-          },
-          {
-            "name": "Body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/completeSelfServiceBrowserSettingsStrategyProfileFlowPayload"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "settingsViaApiResponse",
-            "schema": {
-              "$ref": "#/definitions/settingsViaApiResponse"
-            }
-          },
           "302": {
             "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
           },
@@ -1422,6 +1370,41 @@
         }
       }
     },
+    "/self-service/settings/methods/profile": {
+      "post": {
+        "description": "This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this\nendpoint.\n\nIf the provided profile data is valid against the Identity's Traits JSON Schema, the data will be updated and\nthe browser redirected to `url.settings_ui` for further steps.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
+        "consumes": [
+          "application/json",
+          "application/x-www-form-urlencoded"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Complete the browser-based settings flow for profile data",
+        "operationId": "completeSelfServiceSettingsFlowWithProfileMethod",
+        "responses": {
+          "200": {
+            "description": "settingsViaApiResponse",
+            "schema": {
+              "$ref": "#/definitions/settingsViaApiResponse"
+            }
+          },
+          "302": {
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
     "/sessions": {
       "delete": {
         "description": "Use this endpoint to revoke a session using its token. This endpoint is particularly useful for API clients\nsuch as mobile apps to log the user out of the system and invalidate the session.\n\nThis endpoint does not remove any HTTP Cookies - use the Self-Service Logout Flow instead.",
@@ -1730,22 +1713,6 @@
     },
     "VerifiableAddressType": {
       "type": "string"
-    },
-    "completeSelfServiceBrowserSettingsStrategyProfileFlowPayload": {
-      "type": "object",
-      "required": [
-        "traits"
-      ],
-      "properties": {
-        "request_id": {
-          "description": "RequestID is request ID.\n\nin: query",
-          "type": "string"
-        },
-        "traits": {
-          "description": "Traits contains all of the identity's traits.\n\ntype: string\nformat: binary",
-          "type": "object"
-        }
-      }
     },
     "createRecoveryLinkResponse": {
       "type": "object",
