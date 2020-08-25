@@ -2,11 +2,10 @@
 package testhelpers
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
-	"net/url"
 	"testing"
 
 	"github.com/gobuffalo/httptest"
@@ -27,18 +26,19 @@ import (
 	"github.com/ory/kratos/internal/httpclient/client/common"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/selfservice/flow/settings"
+	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/x"
 )
 
-func GetSettingsFlow(t *testing.T, primaryUser *http.Client, ts *httptest.Server) *common.GetSelfServiceSettingsFlowOK {
+func InitializeSettingsFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server) *common.GetSelfServiceSettingsFlowOK {
 	publicClient := NewSDKClient(ts)
 
-	res, err := primaryUser.Get(ts.URL + settings.RouteInitBrowserFlow)
+	res, err := client.Get(ts.URL + settings.RouteInitBrowserFlow)
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
 
 	rs, err := publicClient.Common.GetSelfServiceSettingsFlow(
-		common.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(primaryUser).
+		common.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(client).
 			WithID(res.Request.URL.Query().Get("flow")),
 	)
 	require.NoError(t, err)
@@ -47,8 +47,19 @@ func GetSettingsFlow(t *testing.T, primaryUser *http.Client, ts *httptest.Server
 	return rs
 }
 
+func InitializeSettingsFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *common.InitializeSelfServiceSettingsViaAPIFlowOK {
+	publicClient := NewSDKClient(ts)
+
+	rs, err := publicClient.Common.InitializeSelfServiceSettingsViaAPIFlow(common.
+		NewInitializeSelfServiceSettingsViaAPIFlowParams().WithHTTPClient(client))
+	require.NoError(t, err)
+	assert.Empty(t, rs.Payload.Active)
+
+	return rs
+}
+
 func GetSettingsMethodConfig(t *testing.T, primaryUser *http.Client, ts *httptest.Server, id string) *models.FlowMethodConfig {
-	rs := GetSettingsFlow(t, primaryUser, ts)
+	rs := InitializeSettingsFlowViaBrowser(t, primaryUser, ts)
 
 	require.NotEmpty(t, rs.Payload.Methods[id])
 	require.NotEmpty(t, rs.Payload.Methods[id].Config)
@@ -149,25 +160,40 @@ func AddAndLoginIdentities(t *testing.T, reg *driver.RegistryDefault, public *ht
 
 func SettingsSubmitForm(
 	t *testing.T,
-	f *models.RequestMethodConfig,
+	isAPI bool,
+	f *models.FlowMethodConfig,
 	hc *http.Client,
-	values url.Values,
+	values string,
+	expectedStatusCode int,
 ) (string, *common.GetSelfServiceSettingsFlowOK) {
 	require.NotEmpty(t, f.Action)
 
-	res, err := hc.PostForm(pointerx.StringR(f.Action), values)
+	req, err := http.NewRequest("POST", pointerx.StringR(f.Action), bytes.NewBufferString(values))
+	require.NoError(t, err)
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Accept", "text/html")
+	if isAPI {
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Accept", "application/json")
+	}
+
+	res, err := hc.Do(req)
 	require.NoError(t, err)
 	defer res.Body.Close()
 
-	b, err := ioutil.ReadAll(res.Body)
-	require.NoError(t, err)
-	assert.EqualValues(t, http.StatusNoContent, res.StatusCode, "%s", b)
+	b := x.MustReadAll(res.Body)
+	assert.EqualValues(t, expectedStatusCode, res.StatusCode, "%s", b)
 
-	assert.Equal(t, viper.GetString(configuration.ViperKeySelfServiceSettingsURL), res.Request.URL.Scheme+"://"+res.Request.URL.Host+res.Request.URL.Path, "should end up at the settings URL, used: %s", pointerx.StringR(f.Action))
+	expectURL := viper.GetString(configuration.ViperKeySelfServiceSettingsURL)
+	if isAPI {
+		expectURL = password.RouteSettings
+	}
+	assert.Contains(t, res.Request.URL.String(), expectURL, "should end up at the settings URL, used: %s\n\t%s", pointerx.StringR(f.Action), b)
 
 	rs, err := NewSDKClientFromURL(viper.GetString(configuration.ViperKeyPublicBaseURL)).Common.GetSelfServiceSettingsFlow(
 		common.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(hc).
-			WithID(res.Request.URL.Query().Get("id")),
+			WithID(res.Request.URL.Query().Get("flow")),
 	)
 	require.NoError(t, err)
 	body, err := json.Marshal(rs.Payload)
