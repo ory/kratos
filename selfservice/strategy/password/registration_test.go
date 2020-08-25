@@ -285,6 +285,29 @@ func TestRegistration(t *testing.T) {
 			})
 		})
 
+		t.Run("case=should fail because of missing CSRF token/type=browser", func(t *testing.T) {
+			rr := newRegistrationRequest(t, time.Minute, false)
+			body, _ := makeRequest(t, rr.ID, false, url.Values{
+				"csrf_token":      {"invalid_token"},
+				"traits.username": {"registration-identifier-csrf-browser"},
+				"password":        {x.NewUUID().String()},
+				"traits.foobar":   {"bar"},
+			}.Encode(), http.StatusOK)
+			assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken,
+				json.RawMessage(gjson.GetBytes(body, "0").Raw), "%s", body)
+		})
+
+		t.Run("case=should pass even without CSRF token/type=api", func(t *testing.T) {
+			rr := newRegistrationRequest(t, time.Minute, true)
+			body, _ := makeRequest(t, rr.ID, true, `{
+  "csrf_token": "invalid_token",
+  "traits.username": "registration-identifier-csrf-api",
+  "traits.foobar": "bar",
+  "password": "5216f2ef-f14b-4c92-bd91-08c2c2fe1448"
+}`, http.StatusOK)
+			assert.NotEmpty(t, gjson.GetBytes(body, "identity.id").Raw, "%s", body) // registration successful
+		})
+
 		t.Run("case=should fail because schema does not exist", func(t *testing.T) {
 			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/i-do-not-exist.schema.json")
 

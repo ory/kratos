@@ -210,7 +210,7 @@ func TestCompleteLogin(t *testing.T) {
 			require.Contains(t, res.Request.URL.Path, "error-ts")
 			assert.Equal(t, int64(http.StatusBadRequest), gjson.GetBytes(body, "0.code").Int(), "%s", body)
 			assert.Equal(t, "Bad Request", gjson.GetBytes(body, "0.status").String(), "%s", body)
-			assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "request query parameter is missing or invalid", "%s", body)
+			assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "flow query parameter is missing or invalid", "%s", body)
 		})
 
 		t.Run("type=api", func(t *testing.T) {
@@ -218,7 +218,7 @@ func TestCompleteLogin(t *testing.T) {
 			require.Contains(t, res.Request.URL.Path, password.RouteLogin, res.Request.URL)
 			assert.Equal(t, int64(http.StatusBadRequest), gjson.GetBytes(body, "error.code").Int(), "%s", body)
 			assert.Equal(t, "Bad Request", gjson.GetBytes(body, "error.status").String(), "%s", body)
-			assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), "request query parameter is missing or invalid", "%s", body)
+			assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), "flow query parameter is missing or invalid", "%s", body)
 		})
 	})
 

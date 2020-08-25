@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/decoderx"
@@ -111,7 +110,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
-	if ar.Type == flow.TypeBrowser && !nosurf.VerifyToken(s.d.GenerateCSRFToken(r), p.CSRFToken) {
+	if err := flow.VerifyRequest(r,ar.Type,s.d.GenerateCSRFToken,p.CSRFToken); err != nil {
 		s.handleLoginError(w, r, ar, &p, x.ErrInvalidCSRFToken)
 		return
 	}

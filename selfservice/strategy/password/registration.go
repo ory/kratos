@@ -8,13 +8,14 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tidwall/sjson"
 
-	"github.com/ory/kratos/driver/configuration"
-
 	"github.com/ory/x/errorsx"
 
 	_ "github.com/ory/jsonschema/v3/fileloader"
 	_ "github.com/ory/jsonschema/v3/httploader"
 	"github.com/ory/x/decoderx"
+
+	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/selfservice/flow"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
@@ -32,8 +33,9 @@ const (
 )
 
 type RegistrationFormPayload struct {
-	Password string          `json:"password"`
-	Traits   json.RawMessage `json:"traits"`
+	Password  string          `json:"password"`
+	Traits    json.RawMessage `json:"traits"`
+	CSRFToken string `json:"csrf_token"`
 }
 
 func (s *Strategy) RegisterRegistrationRoutes(public *x.RouterPublic) {
@@ -93,7 +95,6 @@ func (s *Strategy) decoderRegistration() (decoderx.HTTPDecoderOption, error) {
 
 	return o, nil
 }
-
 
 // swagger:parameters completeSelfServiceRegistrationFlowWithPasswordMethod
 type completeSelfServiceRegistrationFlowWithPasswordMethod struct {
@@ -159,6 +160,11 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 
 	var p RegistrationFormPayload
 	if err := s.decode(&p, r); err != nil {
+		s.handleRegistrationError(w, r, ar, &p, err)
+		return
+	}
+
+	if err := flow.VerifyRequest(r,ar.Type,s.d.GenerateCSRFToken,p.CSRFToken); err != nil {
 		s.handleRegistrationError(w, r, ar, &p, err)
 		return
 	}
