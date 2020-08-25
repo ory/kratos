@@ -88,20 +88,12 @@ type Flow struct {
 }
 
 func NewFlow(exp time.Duration, csrf string, r *http.Request, flowType flow.Type) *Flow {
-	source := urlx.Copy(r.URL)
-	source.Host = r.Host
-
-	source.Scheme = "http"
-	if r.TLS != nil {
-		source.Scheme = "https"
-	}
-
 	now := time.Now().UTC()
 	return &Flow{
 		ID:         x.NewUUID(),
 		ExpiresAt:  now.Add(exp),
 		IssuedAt:   now,
-		RequestURL: source.String(),
+		RequestURL: x.RequestURL(r).String(),
 		Methods:    map[identity.CredentialsType]*FlowMethod{},
 		CSRFToken:  csrf,
 		Type:       flowType,
