@@ -88,7 +88,7 @@ type Provider interface {
 	SelfServiceFlowSettingsPrivilegedSessionMaxAge() time.Duration
 	SelfServiceFlowSettingsAfterHooks(strategy string) []SelfServiceHook
 	SelfServiceFlowSettingsReturnTo(strategy string, defaultReturnTo *url.URL) *url.URL
-	SelfServiceFlowSettingsRequestLifespan() time.Duration
+	SelfServiceFlowSettingsFlowLifespan() time.Duration
 
 	SelfServiceFlowVerificationEnabled() bool
 	SelfServiceFlowVerificationUI() *url.URL

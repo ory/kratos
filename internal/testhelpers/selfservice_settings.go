@@ -30,16 +30,16 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-func GetSettingsRequest(t *testing.T, primaryUser *http.Client, ts *httptest.Server) *common.GetSelfServiceBrowserSettingsRequestOK {
+func GetSettingsFlow(t *testing.T, primaryUser *http.Client, ts *httptest.Server) *common.GetSelfServiceSettingsFlowOK {
 	publicClient := NewSDKClient(ts)
 
-	res, err := primaryUser.Get(ts.URL + settings.PublicPath)
+	res, err := primaryUser.Get(ts.URL + settings.RouteInitBrowserFlow)
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
 
-	rs, err := publicClient.Common.GetSelfServiceBrowserSettingsRequest(
-		common.NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(primaryUser).
-			WithRequest(res.Request.URL.Query().Get("request")),
+	rs, err := publicClient.Common.GetSelfServiceSettingsFlow(
+		common.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(primaryUser).
+			WithID(res.Request.URL.Query().Get("flow")),
 	)
 	require.NoError(t, err)
 	assert.Empty(t, rs.Payload.Active)
@@ -47,8 +47,8 @@ func GetSettingsRequest(t *testing.T, primaryUser *http.Client, ts *httptest.Ser
 	return rs
 }
 
-func GetSettingsMethodConfig(t *testing.T, primaryUser *http.Client, ts *httptest.Server, id string) *models.RequestMethodConfig {
-	rs := GetSettingsRequest(t, primaryUser, ts)
+func GetSettingsMethodConfig(t *testing.T, primaryUser *http.Client, ts *httptest.Server, id string) *models.FlowMethodConfig {
+	rs := GetSettingsFlow(t, primaryUser, ts)
 
 	require.NotEmpty(t, rs.Payload.Methods[id])
 	require.NotEmpty(t, rs.Payload.Methods[id].Config)
@@ -152,7 +152,7 @@ func SettingsSubmitForm(
 	f *models.RequestMethodConfig,
 	hc *http.Client,
 	values url.Values,
-) (string, *common.GetSelfServiceBrowserSettingsRequestOK) {
+) (string, *common.GetSelfServiceSettingsFlowOK) {
 	require.NotEmpty(t, f.Action)
 
 	res, err := hc.PostForm(pointerx.StringR(f.Action), values)
@@ -165,9 +165,9 @@ func SettingsSubmitForm(
 
 	assert.Equal(t, viper.GetString(configuration.ViperKeySelfServiceSettingsURL), res.Request.URL.Scheme+"://"+res.Request.URL.Host+res.Request.URL.Path, "should end up at the settings URL, used: %s", pointerx.StringR(f.Action))
 
-	rs, err := NewSDKClientFromURL(viper.GetString(configuration.ViperKeyPublicBaseURL)).Common.GetSelfServiceBrowserSettingsRequest(
-		common.NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(hc).
-			WithRequest(res.Request.URL.Query().Get("request")),
+	rs, err := NewSDKClientFromURL(viper.GetString(configuration.ViperKeyPublicBaseURL)).Common.GetSelfServiceSettingsFlow(
+		common.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(hc).
+			WithID(res.Request.URL.Query().Get("id")),
 	)
 	require.NoError(t, err)
 	body, err := json.Marshal(rs.Payload)

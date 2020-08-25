@@ -18,7 +18,6 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/form"
-	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
@@ -114,13 +113,13 @@ func (s *Strategy) linkableProviders(conf *ConfigurationCollection, confidential
 	return result, nil
 }
 
-func (s *Strategy) PopulateSettingsMethod(r *http.Request, ss *session.Session, sr *settings.Request) error {
+func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity, sr *settings.Flow) error {
 	conf, err := s.Config()
 	if err != nil {
 		return err
 	}
 
-	confidential, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), ss.IdentityID)
+	confidential, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), id.ID)
 	if err != nil {
 		return err
 	}
@@ -136,7 +135,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, ss *session.Session, 
 	}
 
 	f := form.NewHTMLForm(urlx.CopyWithQuery(urlx.AppendPaths(
-		s.c.SelfPublicURL(), SettingsPath), url.Values{"request": {sr.ID.String()}}).String())
+		s.c.SelfPublicURL(), SettingsPath), url.Values{"flow": {sr.ID.String()}}).String())
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 
 	for _, l := range linkable {
@@ -155,9 +154,9 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, ss *session.Session, 
 		})
 	}
 
-	sr.Methods[s.SettingsStrategyID()] = &settings.RequestMethod{
+	sr.Methods[s.SettingsStrategyID()] = &settings.FlowMethod{
 		Method: s.SettingsStrategyID(),
-		Config: &settings.RequestMethodConfig{RequestMethodConfigurator: NewRequestMethodConfig(f)},
+		Config: &settings.FlowMethodConfig{FlowMethodConfigurator: NewRequestMethodConfig(f)},
 	}
 
 	return nil
@@ -305,7 +304,7 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request,
 	ctxUpdate *settings.UpdateContext, claims *Claims, provider Provider) {
 	p := &completeSelfServiceBrowserSettingsOIDCFlowPayload{
-		Link: provider.Config().ID, RequestID: ctxUpdate.Request.ID.String()}
+		Link: provider.Config().ID, RequestID: ctxUpdate.Flow.ID.String()}
 	if ctxUpdate.Session.AuthenticatedAt.Add(s.c.SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
 		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.ErrRequestNeedsReAuthentication))
 		return
@@ -341,7 +340,7 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request,
 
 	i.Credentials[s.ID()] = *creds
 	if err := s.d.SettingsHookExecutor().PostSettingsHook(w, r, s.SettingsStrategyID(), ctxUpdate, i, settings.WithCallback(func(ctxUpdate *settings.UpdateContext) error {
-		return s.PopulateSettingsMethod(r, ctxUpdate.Session, ctxUpdate.Request)
+		return s.PopulateSettingsMethod(r, ctxUpdate.Session.Identity, ctxUpdate.Flow)
 	})); err != nil {
 		s.handleSettingsError(w, r, ctxUpdate, p, err)
 		return
@@ -410,7 +409,7 @@ func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request,
 
 	i.Credentials[s.ID()] = *creds
 	if err := s.d.SettingsHookExecutor().PostSettingsHook(w, r, s.SettingsStrategyID(), ctxUpdate, i, settings.WithCallback(func(ctxUpdate *settings.UpdateContext) error {
-		return s.PopulateSettingsMethod(r, ctxUpdate.Session, ctxUpdate.Request)
+		return s.PopulateSettingsMethod(r, ctxUpdate.Session.Identity, ctxUpdate.Flow)
 	})); err != nil {
 		s.handleSettingsError(w, r, ctxUpdate, p, err)
 		return
@@ -421,15 +420,15 @@ func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, c
 	if errors.Is(err, settings.ErrRequestNeedsReAuthentication) {
 		if err := s.d.ContinuityManager().Pause(r.Context(), w, r,
 			settings.ContinuityKey(s.SettingsStrategyID()), settings.ContinuityOptions(p, ctxUpdate.Session.Identity)...); err != nil {
-			s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, ctxUpdate.Request, err, s.SettingsStrategyID())
+			s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.SettingsStrategyID(), ctxUpdate.Flow, ctxUpdate.Session.Identity, err)
 			return
 		}
 	}
 
-	if ctxUpdate.Request != nil {
-		ctxUpdate.Request.Methods[s.SettingsStrategyID()].Config.ResetMessages()
-		ctxUpdate.Request.Methods[s.SettingsStrategyID()].Config.SetCSRF(s.d.GenerateCSRFToken(r))
+	if ctxUpdate.Flow != nil {
+		ctxUpdate.Flow.Methods[s.SettingsStrategyID()].Config.ResetMessages()
+		ctxUpdate.Flow.Methods[s.SettingsStrategyID()].Config.SetCSRF(s.d.GenerateCSRFToken(r))
 	}
 
-	s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, ctxUpdate.Request, err, s.SettingsStrategyID())
+	s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.SettingsStrategyID(), ctxUpdate.Flow, ctxUpdate.Session.Identity, err)
 }

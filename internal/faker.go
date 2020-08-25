@@ -117,15 +117,15 @@ func RegisterFakes() {
 	}
 
 	if err := faker.AddProvider("settings_flow_methods", func(v reflect.Value) (interface{}, error) {
-		var methods = make(map[string]*settings.RequestMethod)
+		var methods = make(map[string]*settings.FlowMethod)
 		for _, ct := range []string{settings.StrategyProfile, string(identity.CredentialsTypePassword), string(identity.CredentialsTypeOIDC)} {
 			var f form.HTMLForm
 			if err := faker.FakeData(&f); err != nil {
 				return nil, err
 			}
-			methods[ct] = &settings.RequestMethod{
+			methods[ct] = &settings.FlowMethod{
 				Method: ct,
-				Config: &settings.RequestMethodConfig{RequestMethodConfigurator: &f},
+				Config: &settings.FlowMethodConfig{FlowMethodConfigurator: &f},
 			}
 		}
 		return methods, nil

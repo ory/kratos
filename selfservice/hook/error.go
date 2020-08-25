@@ -40,11 +40,11 @@ func (e Error) err(path string, abort error) error {
 	return nil
 }
 
-func (e Error) ExecuteSettingsPrePersistHook(w http.ResponseWriter, r *http.Request, a *settings.Request, s *identity.Identity) error {
+func (e Error) ExecuteSettingsPrePersistHook(w http.ResponseWriter, r *http.Request, a *settings.Flow, s *identity.Identity) error {
 	return e.err("ExecuteSettingsPrePersistHook", settings.ErrHookAbortRequest)
 }
 
-func (e Error) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, a *settings.Request, s *identity.Identity) error {
+func (e Error) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, a *settings.Flow, s *identity.Identity) error {
 	return e.err("ExecuteSettingsPostPersistHook", settings.ErrHookAbortRequest)
 }
 

@@ -547,7 +547,7 @@ func TestCompleteLogin(t *testing.T) {
 					identity.CredentialsTypePassword: {
 						Method: identity.CredentialsTypePassword,
 						Config: &login.FlowMethodConfig{
-							FlowMethodConfigurator: &password.RequestMethod{
+							FlowMethodConfigurator: &password.FlowMethod{
 								HTMLForm: &form.HTMLForm{
 									Method:   "POST",
 									Action:   "/action",

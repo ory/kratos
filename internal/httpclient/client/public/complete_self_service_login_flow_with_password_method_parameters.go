@@ -60,14 +60,25 @@ for the complete self service login flow with password method operation typicall
 */
 type CompleteSelfServiceLoginFlowWithPasswordMethodParams struct {
 
+	/*CsrfToken
+	  Sending the anti-csrf token is only required for browser login flows.
+
+	*/
+	CsrfToken *string
 	/*Flow
 	  The Flow ID
 
 	*/
 	Flow string
-	/*Identifier*/
+	/*Identifier
+	  Identifier is the email or username of the user trying to log in.
+
+	*/
 	Identifier *string
-	/*Password*/
+	/*Password
+	  The user's password.
+
+	*/
 	Password *string
 
 	timeout    time.Duration
@@ -106,6 +117,17 @@ func (o *CompleteSelfServiceLoginFlowWithPasswordMethodParams) WithHTTPClient(cl
 // SetHTTPClient adds the HTTPClient to the complete self service login flow with password method params
 func (o *CompleteSelfServiceLoginFlowWithPasswordMethodParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
+}
+
+// WithCsrfToken adds the csrfToken to the complete self service login flow with password method params
+func (o *CompleteSelfServiceLoginFlowWithPasswordMethodParams) WithCsrfToken(csrfToken *string) *CompleteSelfServiceLoginFlowWithPasswordMethodParams {
+	o.SetCsrfToken(csrfToken)
+	return o
+}
+
+// SetCsrfToken adds the csrfToken to the complete self service login flow with password method params
+func (o *CompleteSelfServiceLoginFlowWithPasswordMethodParams) SetCsrfToken(csrfToken *string) {
+	o.CsrfToken = csrfToken
 }
 
 // WithFlow adds the flow to the complete self service login flow with password method params
@@ -148,6 +170,22 @@ func (o *CompleteSelfServiceLoginFlowWithPasswordMethodParams) WriteToRequest(r 
 		return err
 	}
 	var res []error
+
+	if o.CsrfToken != nil {
+
+		// query param csrf_token
+		var qrCsrfToken string
+		if o.CsrfToken != nil {
+			qrCsrfToken = *o.CsrfToken
+		}
+		qCsrfToken := qrCsrfToken
+		if qCsrfToken != "" {
+			if err := r.SetQueryParam("csrf_token", qCsrfToken); err != nil {
+				return err
+			}
+		}
+
+	}
 
 	// query param flow
 	qrFlow := o.Flow

@@ -49,7 +49,7 @@ type registrationStrategyDependencies interface {
 	login.FlowPersistenceProvider
 	login.HandlerProvider
 
-	settings.RequestPersistenceProvider
+	settings.FlowPersistenceProvider
 	settings.HookExecutorProvider
 	settings.HooksProvider
 	settings.ErrorHandlerProvider

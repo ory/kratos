@@ -199,7 +199,7 @@ func TestViperProvider(t *testing.T) {
 		})
 
 		t.Run("method=settings", func(t *testing.T) {
-			assert.Equal(t, time.Minute*99, p.SelfServiceFlowSettingsRequestLifespan())
+			assert.Equal(t, time.Minute*99, p.SelfServiceFlowSettingsFlowLifespan())
 			assert.Equal(t, time.Minute*5, p.SelfServiceFlowSettingsPrivilegedSessionMaxAge())
 
 			t.Run("hook=before", func(t *testing.T) {

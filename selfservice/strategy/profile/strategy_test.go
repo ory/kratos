@@ -104,7 +104,7 @@ func TestStrategyTraits(t *testing.T) {
 		})
 
 		t.Run("description=should redirect to settings management ui and /settings/requests?request=... should come back with the right information", func(t *testing.T) {
-			res, err := primaryUser.Get(publicTS.URL + settings.PublicPath)
+			res, err := primaryUser.Get(publicTS.URL + settings.RouteInitBrowserFlow)
 			require.NoError(t, err)
 
 			assert.Equal(t, ui.URL, res.Request.URL.Scheme+"://"+res.Request.URL.Host)
@@ -123,7 +123,7 @@ func TestStrategyTraits(t *testing.T) {
 			assert.Equal(t, primaryIdentity.ID.String(), string(pr.Payload.Identity.ID))
 			assert.JSONEq(t, string(primaryIdentity.Traits), x.MustEncodeJSON(t, pr.Payload.Identity.Traits))
 			assert.Equal(t, primaryIdentity.SchemaID, pointerx.StringR(pr.Payload.Identity.SchemaID))
-			assert.Equal(t, publicTS.URL+settings.PublicPath, pointerx.StringR(pr.Payload.RequestURL))
+			assert.Equal(t, publicTS.URL+settings.RouteInitBrowserFlow, pointerx.StringR(pr.Payload.RequestURL))
 
 			found := false
 

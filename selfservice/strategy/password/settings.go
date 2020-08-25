@@ -17,7 +17,6 @@ import (
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/form"
-	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
@@ -57,7 +56,7 @@ func (p *completeSelfServiceBrowserSettingsPasswordFlowPayload) SetRequestID(rid
 	p.RequestID = rid.String()
 }
 
-// swagger:route POST /self-service/browser/flows/settings/strategies/password public completeSelfServiceBrowserSettingsPasswordStrategyFlow
+// swagger:route POST /self-service/browser/flows/settings/strategies/password public completeSelfServiceSettingsFlowWithPasswordMethod
 //
 // Complete the browser-based settings flow for the password strategy
 //
@@ -88,7 +87,7 @@ func (s *Strategy) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps
 		return
 	}
 
-	p.RequestID = ctxUpdate.Request.ID.String()
+	p.RequestID = ctxUpdate.Flow.ID.String()
 	p.Password = r.PostFormValue("password")
 	s.continueSettingsFlow(w, r, ctxUpdate, &p)
 }
@@ -146,18 +145,18 @@ func (s *Strategy) continueSettingsFlow(
 	}
 }
 
-func (s *Strategy) PopulateSettingsMethod(r *http.Request, ss *session.Session, pr *settings.Request) error {
-	f := &form.HTMLForm{
+func (s *Strategy) PopulateSettingsMethod(r *http.Request, _ *identity.Identity, f *settings.Flow) error {
+	hf := &form.HTMLForm{
 		Action: urlx.CopyWithQuery(urlx.AppendPaths(s.c.SelfPublicURL(), SettingsPath),
-			url.Values{"request": {pr.ID.String()}},
+			url.Values{"flow": {f.ID.String()}},
 		).String(),
 		Fields: form.Fields{{Name: "password", Type: "password", Required: true}}, Method: "POST",
 	}
-	f.SetCSRF(s.d.GenerateCSRFToken(r))
+	hf.SetCSRF(s.d.GenerateCSRFToken(r))
 
-	pr.Methods[string(s.ID())] = &settings.RequestMethod{
+	f.Methods[string(s.ID())] = &settings.FlowMethod{
 		Method: string(s.ID()),
-		Config: &settings.RequestMethodConfig{RequestMethodConfigurator: &RequestMethod{HTMLForm: f}},
+		Config: &settings.FlowMethodConfig{FlowMethodConfigurator: &FlowMethod{HTMLForm: hf}},
 	}
 	return nil
 }
@@ -166,15 +165,15 @@ func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, c
 	if errors.Is(err, settings.ErrRequestNeedsReAuthentication) {
 		if err := s.d.ContinuityManager().Pause(r.Context(), w, r,
 			settings.ContinuityKey(s.SettingsStrategyID()), settings.ContinuityOptions(p, ctxUpdate.Session.Identity)...); err != nil {
-			s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, ctxUpdate.Request, err, s.SettingsStrategyID())
+			s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.SettingsStrategyID(), ctxUpdate.Flow, ctxUpdate.Session.Identity, err)
 			return
 		}
 	}
 
-	if ctxUpdate.Request != nil {
-		ctxUpdate.Request.Methods[s.SettingsStrategyID()].Config.Reset()
-		ctxUpdate.Request.Methods[s.SettingsStrategyID()].Config.SetCSRF(s.d.GenerateCSRFToken(r))
+	if ctxUpdate.Flow != nil {
+		ctxUpdate.Flow.Methods[s.SettingsStrategyID()].Config.Reset()
+		ctxUpdate.Flow.Methods[s.SettingsStrategyID()].Config.SetCSRF(s.d.GenerateCSRFToken(r))
 	}
 
-	s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, ctxUpdate.Request, err, s.SettingsStrategyID())
+	s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.SettingsStrategyID(), ctxUpdate.Flow, ctxUpdate.Session.Identity, err)
 }

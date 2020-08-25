@@ -105,7 +105,7 @@ func (h *Handler) init(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	}
 
 	a := NewRequest(
-		h.c.SelfServiceFlowSettingsRequestLifespan(), r, via,
+		h.c.SelfServiceFlowSettingsFlowLifespan(), r, via,
 		urlx.AppendPaths(h.c.SelfPublicURL(), strings.ReplaceAll(PublicVerificationCompletePath, ":via", string(via))), h.d.GenerateCSRFToken,
 	)
 
@@ -338,7 +338,7 @@ func (h *Handler) verify(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	if err := h.d.PrivilegedIdentityPool().VerifyAddress(r.Context(), ps.ByName("code")); err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
 			a := NewRequest(
-				h.c.SelfServiceFlowSettingsRequestLifespan(), r, via,
+				h.c.SelfServiceFlowSettingsFlowLifespan(), r, via,
 				urlx.AppendPaths(h.c.SelfPublicURL(), strings.ReplaceAll(PublicVerificationCompletePath, ":via", string(via))), h.d.GenerateCSRFToken,
 			)
 

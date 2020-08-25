@@ -101,6 +101,23 @@ type Flow struct {
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 }
 
+// The Response for Settings Flows via API
+//
+// swagger:model settingsViaApiResponse
+type APIFlowResponse struct {
+	// The Flow
+	//
+	// required: true
+	Flow *Flow `json:"flow"`
+
+	// The Identity
+	//
+	// The updated identity
+	//
+	// required: true
+	Identity *identity.Identity `json:"identity"`
+}
+
 func NewFlow(exp time.Duration, r *http.Request, i *identity.Identity, ft flow.Type) *Flow {
 	now := time.Now().UTC()
 	return &Flow{

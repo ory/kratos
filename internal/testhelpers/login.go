@@ -35,3 +35,14 @@ func NewRegistrationUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptes
 	t.Cleanup(ts.Close)
 	return ts
 }
+
+func NewSettingsUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Server {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		e, err := reg.SettingsFlowPersister().GetSettingsFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("flow")))
+		require.NoError(t, err)
+		reg.Writer().Write(w, r, e)
+	}))
+	viper.Set(configuration.ViperKeySelfServiceSettingsURL, ts.URL+"/settings-ts")
+	t.Cleanup(ts.Close)
+	return ts
+}

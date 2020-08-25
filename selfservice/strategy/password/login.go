@@ -189,6 +189,6 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Flow) error {
 
 	sr.Methods[identity.CredentialsTypePassword] = &login.FlowMethod{
 		Method: identity.CredentialsTypePassword,
-		Config: &login.FlowMethodConfig{FlowMethodConfigurator: &RequestMethod{HTMLForm: f}}}
+		Config: &login.FlowMethodConfig{FlowMethodConfigurator: &FlowMethod{HTMLForm: f}}}
 	return nil
 }

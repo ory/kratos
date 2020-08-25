@@ -22,7 +22,7 @@ type (
 	}
 )
 
-// RequestMethod contains the configuration for this selfservice strategy.
-type RequestMethod struct {
+// FlowMethod contains the configuration for this selfservice strategy.
+type FlowMethod struct {
 	*form.HTMLForm
 }

@@ -72,7 +72,7 @@ type dependencies interface {
 	registration.ErrorHandlerProvider
 
 	settings.ErrorHandlerProvider
-	settings.RequestPersistenceProvider
+	settings.FlowPersistenceProvider
 	settings.HookExecutorProvider
 
 	continuity.ManagementProvider
@@ -226,7 +226,7 @@ func (s *Strategy) validateRequest(ctx context.Context, r *http.Request, rid uui
 		return ar, nil
 	}
 
-	ar, err := s.d.SettingsRequestPersister().GetSettingsRequest(ctx, rid)
+	ar, err := s.d.SettingsFlowPersister().GetSettingsFlow(ctx, rid)
 	if err == nil {
 		sess, err := s.d.SessionManager().FetchFromRequest(ctx, r)
 		if err != nil {
@@ -280,7 +280,7 @@ func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (req
 func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, req interface{}) bool {
 	// we assume an error means the user has no session
 	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
-		if _, ok := req.(*settings.Request); ok {
+		if _, ok := req.(*settings.Flow); ok {
 			// ignore this if it's a settings request
 		} else if !isForced(req) {
 			http.Redirect(w, r, s.c.SelfServiceBrowserDefaultReturnTo().String(), http.StatusFound)
@@ -342,13 +342,13 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 	case *registration.Flow:
 		s.processRegistration(w, r, a, claims, provider, container)
 		return
-	case *settings.Request:
+	case *settings.Flow:
 		sess, err := s.d.SessionManager().FetchFromRequest(r.Context(), r)
 		if err != nil {
 			s.handleError(w, r, req.GetID(), pid, nil, err)
 			return
 		}
-		s.linkProvider(w, r, &settings.UpdateContext{Session: sess, Request: a}, claims, provider)
+		s.linkProvider(w, r, &settings.UpdateContext{Session: sess, Flow: a}, claims, provider)
 		return
 	default:
 		s.handleError(w, r, req.GetID(), pid, nil, errors.WithStack(x.PseudoPanic.
@@ -416,8 +416,14 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 	if lr, rerr := s.d.LoginFlowPersister().GetLoginFlow(r.Context(), rid); rerr == nil {
 		s.d.LoginFlowErrorHandler().WriteFlowError(w, r, s.ID(), lr, err)
 		return
-	} else if sr, rerr := s.d.SettingsRequestPersister().GetSettingsRequest(r.Context(), rid); rerr == nil {
-		s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, sr, err, s.SettingsStrategyID())
+	} else if sr, rerr := s.d.SettingsFlowPersister().GetSettingsFlow(r.Context(), rid); rerr == nil {
+		sess, err := s.d.SessionManager().FetchFromRequest(r.Context(), r)
+		if err != nil {
+			s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+			return
+		}
+
+		s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.SettingsStrategyID(), sr, sess.Identity, err)
 		return
 	} else if rr, rerr := s.d.RegistrationFlowPersister().GetRegistrationFlow(r.Context(), rid); rerr == nil {
 		if method, ok := rr.Methods[s.ID()]; ok {

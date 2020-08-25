@@ -5,6 +5,7 @@ import (
 
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
+
 	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/x/sqlcon"

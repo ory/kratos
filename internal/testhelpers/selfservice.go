@@ -178,6 +178,7 @@ func selfServiceMakeHookRequest(t *testing.T, ts *httptest.Server, suffix string
 	}
 	req, err := http.NewRequest("GET", ts.URL+suffix, nil)
 	require.NoError(t, err)
+	req.Header.Set("Accept", "text/html")
 	if asAPI {
 		req.Header.Set("Accept", "application/json")
 	}

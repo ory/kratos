@@ -92,7 +92,7 @@ type Registry interface {
 
 	settings.HandlerProvider
 	settings.ErrorHandlerProvider
-	settings.RequestPersistenceProvider
+	settings.FlowPersistenceProvider
 	settings.StrategyProvider
 
 	login.FlowPersistenceProvider

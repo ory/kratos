@@ -92,7 +92,7 @@ func TestRegistration(t *testing.T) {
 					identity.CredentialsTypePassword: {
 						Method: identity.CredentialsTypePassword,
 						Config: &registration.FlowMethodConfig{
-							FlowMethodConfigurator: password.RequestMethod{
+							FlowMethodConfigurator: password.FlowMethod{
 								HTMLForm: &form.HTMLForm{
 									Method: "POST",
 									Action: "/action",
@@ -355,9 +355,9 @@ func TestRegistration(t *testing.T) {
 			}
 
 			t.Run("type=api", func(t *testing.T) {
-				_, _ = run(t, true, `{"password":"c0a5af7a-fa32-4fe1-85b9-3beb4a127164","traits.username":"registration-identifier-8-api-duplicate","traits.foobar":"bar"}`,http.StatusOK)
+				_, _ = run(t, true, `{"password":"c0a5af7a-fa32-4fe1-85b9-3beb4a127164","traits.username":"registration-identifier-8-api-duplicate","traits.foobar":"bar"}`, http.StatusOK)
 
-				body, res := run(t, true, `{"password":"c0a5af7a-fa32-4fe1-85b9-3beb4a127164","traits.username":"registration-identifier-8-api-duplicate","traits.foobar":"bar"}`,http.StatusBadRequest)
+				body, res := run(t, true, `{"password":"c0a5af7a-fa32-4fe1-85b9-3beb4a127164","traits.username":"registration-identifier-8-api-duplicate","traits.foobar":"bar"}`, http.StatusBadRequest)
 				assert.Contains(t, res.Request.URL.String(), publicTS.URL+password.RouteRegistration)
 				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.messages.0.text").String(), "An account with the same identifier (email, phone, username, ...) exists already.", "%s", body)
 			})
@@ -394,7 +394,7 @@ func TestRegistration(t *testing.T) {
 						identity.CredentialsTypePassword: {
 							Method: identity.CredentialsTypePassword,
 							Config: &registration.FlowMethodConfig{
-								FlowMethodConfigurator: &password.RequestMethod{
+								FlowMethodConfigurator: &password.FlowMethod{
 									HTMLForm: &form.HTMLForm{
 										Method:   "POST",
 										Action:   "/action",
@@ -532,7 +532,7 @@ func TestRegistration(t *testing.T) {
 		expected := &registration.FlowMethod{
 			Method: identity.CredentialsTypePassword,
 			Config: &registration.FlowMethodConfig{
-				FlowMethodConfigurator: &password.RequestMethod{
+				FlowMethodConfigurator: &password.FlowMethod{
 					HTMLForm: &form.HTMLForm{
 						Action: "https://foo" + password.RouteRegistration + "?flow=" + sr.ID.String(),
 						Method: "POST",
@@ -563,6 +563,6 @@ func TestRegistration(t *testing.T) {
 		}
 
 		actual := sr.Methods[identity.CredentialsTypePassword]
-		assert.EqualValues(t, expected.Config.FlowMethodConfigurator.(*password.RequestMethod).HTMLForm, actual.Config.FlowMethodConfigurator.(*password.RequestMethod).HTMLForm)
+		assert.EqualValues(t, expected.Config.FlowMethodConfigurator.(*password.FlowMethod).HTMLForm, actual.Config.FlowMethodConfigurator.(*password.FlowMethod).HTMLForm)
 	})
 }

@@ -107,9 +107,9 @@ func TestSettingsStrategy(t *testing.T) {
 	agents := testhelpers.AddAndLoginIdentities(t, reg, publicTS, users)
 
 	// new profile request
-	var npr = func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *settings.Request {
-		req, err := reg.SettingsRequestPersister().GetSettingsRequest(context.Background(),
-			x.ParseUUID(string(testhelpers.GetSettingsRequest(t, client, publicTS).Payload.ID)))
+	var npr = func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *settings.Flow {
+		req, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(),
+			x.ParseUUID(string(testhelpers.GetSettingsFlow(t, client, publicTS).Payload.ID)))
 		require.NoError(t, err)
 		assert.Empty(t, req.Active)
 
@@ -117,10 +117,10 @@ func TestSettingsStrategy(t *testing.T) {
 			req.RequestURL = redirectTo
 		}
 		req.ExpiresAt = time.Now().Add(exp)
-		require.NoError(t, reg.SettingsRequestPersister().UpdateSettingsRequest(context.Background(), req))
+		require.NoError(t, reg.SettingsFlowPersister().UpdateSettingsFlow(context.Background(), req))
 
 		// sanity check
-		got, err := reg.SettingsRequestPersister().GetSettingsRequest(context.Background(), req.ID)
+		got, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), req.ID)
 		require.NoError(t, err)
 		require.Len(t, got.Methods, len(req.Methods))
 
@@ -543,18 +543,18 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		return ss.(*oidc.Strategy)
 	}
 
-	nr := func() *settings.Request {
-		return &settings.Request{ID: x.NewUUID(), Methods: map[string]*settings.RequestMethod{}}
+	nr := func() *settings.Flow {
+		return &settings.Flow{ID: x.NewUUID(), Methods: map[string]*settings.FlowMethod{}}
 	}
 
-	populate := func(t *testing.T, reg *driver.RegistryDefault, i *identity.Identity, req *settings.Request) *form.HTMLForm {
+	populate := func(t *testing.T, reg *driver.RegistryDefault, i *identity.Identity, req *settings.Flow) *form.HTMLForm {
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 		require.NoError(t, ns(t, reg).PopulateSettingsMethod(new(http.Request), &session.Session{Identity: i, IdentityID: i.ID}, req))
 		require.NotNil(t, req.Methods[identity.CredentialsTypeOIDC.String()])
 		require.NotNil(t, req.Methods[identity.CredentialsTypeOIDC.String()].Config)
-		require.NotNil(t, req.Methods[identity.CredentialsTypeOIDC.String()].Config.RequestMethodConfigurator)
+		require.NotNil(t, req.Methods[identity.CredentialsTypeOIDC.String()].Config.FlowMethodConfigurator)
 		require.Equal(t, identity.CredentialsTypeOIDC.String(), req.Methods[identity.CredentialsTypeOIDC.String()].Method)
-		f := req.Methods[identity.CredentialsTypeOIDC.String()].Config.RequestMethodConfigurator.(*oidc.RequestMethod).HTMLForm
+		f := req.Methods[identity.CredentialsTypeOIDC.String()].Config.FlowMethodConfigurator.(*oidc.RequestMethod).HTMLForm
 		assert.Equal(t, "https://www.ory.sh"+oidc.SettingsPath+"?request="+req.ID.String(), f.Action)
 		assert.Equal(t, "POST", f.Method)
 		return f

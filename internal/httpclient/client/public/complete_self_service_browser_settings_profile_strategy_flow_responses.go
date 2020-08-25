@@ -23,6 +23,12 @@ type CompleteSelfServiceBrowserSettingsProfileStrategyFlowReader struct {
 // ReadResponse reads a server response into the received o.
 func (o *CompleteSelfServiceBrowserSettingsProfileStrategyFlowReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (interface{}, error) {
 	switch response.Code() {
+	case 200:
+		result := NewCompleteSelfServiceBrowserSettingsProfileStrategyFlowOK()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return result, nil
 	case 302:
 		result := NewCompleteSelfServiceBrowserSettingsProfileStrategyFlowFound()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
@@ -39,6 +45,39 @@ func (o *CompleteSelfServiceBrowserSettingsProfileStrategyFlowReader) ReadRespon
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
+}
+
+// NewCompleteSelfServiceBrowserSettingsProfileStrategyFlowOK creates a CompleteSelfServiceBrowserSettingsProfileStrategyFlowOK with default headers values
+func NewCompleteSelfServiceBrowserSettingsProfileStrategyFlowOK() *CompleteSelfServiceBrowserSettingsProfileStrategyFlowOK {
+	return &CompleteSelfServiceBrowserSettingsProfileStrategyFlowOK{}
+}
+
+/*CompleteSelfServiceBrowserSettingsProfileStrategyFlowOK handles this case with default header values.
+
+settingsViaApiResponse
+*/
+type CompleteSelfServiceBrowserSettingsProfileStrategyFlowOK struct {
+	Payload *models.SettingsViaAPIResponse
+}
+
+func (o *CompleteSelfServiceBrowserSettingsProfileStrategyFlowOK) Error() string {
+	return fmt.Sprintf("[POST /self-service/browser/flows/settings/strategies/profile][%d] completeSelfServiceBrowserSettingsProfileStrategyFlowOK  %+v", 200, o.Payload)
+}
+
+func (o *CompleteSelfServiceBrowserSettingsProfileStrategyFlowOK) GetPayload() *models.SettingsViaAPIResponse {
+	return o.Payload
+}
+
+func (o *CompleteSelfServiceBrowserSettingsProfileStrategyFlowOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.SettingsViaAPIResponse)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+		return err
+	}
+
+	return nil
 }
 
 // NewCompleteSelfServiceBrowserSettingsProfileStrategyFlowFound creates a CompleteSelfServiceBrowserSettingsProfileStrategyFlowFound with default headers values

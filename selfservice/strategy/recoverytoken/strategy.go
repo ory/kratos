@@ -24,6 +24,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/form"
@@ -349,14 +350,14 @@ func (s *Strategy) issueSession(w http.ResponseWriter, r *http.Request, req *rec
 		return
 	}
 
-	sr := settings.NewRequest(s.c.SelfServiceFlowSettingsRequestLifespan(), r, sess)
+	sr := settings.NewFlow(s.c.SelfServiceFlowSettingsFlowLifespan(), r, sess.Identity, flow.TypeBrowser)
 	sr.Messages.Set(text.NewRecoverySuccessful(time.Now().Add(s.c.SelfServiceFlowSettingsPrivilegedSessionMaxAge())))
-	if err := s.d.SettingsHandler().CreateRequest(w, r, sess, sr); err != nil {
+	if _, err := s.d.SettingsHandler().NewFlow(w, r, sess.Identity, flow.TypeBrowser); err != nil {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
-	http.Redirect(w, r, sr.URL(s.c.SelfServiceFlowSettingsUI()).String(), http.StatusFound)
+	http.Redirect(w, r, sr.AppendTo(s.c.SelfServiceFlowSettingsUI()).String(), http.StatusFound)
 }
 
 func (s *Strategy) verifyToken(w http.ResponseWriter, r *http.Request) {

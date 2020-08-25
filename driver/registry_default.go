@@ -494,7 +494,7 @@ func (m *RegistryDefault) LoginFlowPersister() login.FlowPersister {
 	return m.persister
 }
 
-func (m *RegistryDefault) SettingsRequestPersister() settings.RequestPersister {
+func (m *RegistryDefault) SettingsFlowPersister() settings.FlowPersister {
 	return m.persister
 }
 

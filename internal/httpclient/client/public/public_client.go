@@ -33,7 +33,7 @@ type ClientService interface {
 
 	CompleteSelfServiceBrowserSettingsPasswordStrategyFlow(params *CompleteSelfServiceBrowserSettingsPasswordStrategyFlowParams) error
 
-	CompleteSelfServiceBrowserSettingsProfileStrategyFlow(params *CompleteSelfServiceBrowserSettingsProfileStrategyFlowParams) error
+	CompleteSelfServiceBrowserSettingsProfileStrategyFlow(params *CompleteSelfServiceBrowserSettingsProfileStrategyFlowParams) (*CompleteSelfServiceBrowserSettingsProfileStrategyFlowOK, error)
 
 	CompleteSelfServiceBrowserVerificationFlow(params *CompleteSelfServiceBrowserVerificationFlowParams) error
 
@@ -51,7 +51,7 @@ type ClientService interface {
 
 	InitializeSelfServiceRegistrationViaBrowserFlow(params *InitializeSelfServiceRegistrationViaBrowserFlowParams) error
 
-	InitializeSelfServiceSettingsFlow(params *InitializeSelfServiceSettingsFlowParams) error
+	InitializeSelfServiceSettingsViaBrowserFlow(params *InitializeSelfServiceSettingsViaBrowserFlowParams) error
 
 	RevokeSession(params *RevokeSessionParams) (*RevokeSessionNoContent, error)
 
@@ -174,13 +174,13 @@ the browser redirected to `url.settings_ui` for further steps.
 
 More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 */
-func (a *Client) CompleteSelfServiceBrowserSettingsProfileStrategyFlow(params *CompleteSelfServiceBrowserSettingsProfileStrategyFlowParams) error {
+func (a *Client) CompleteSelfServiceBrowserSettingsProfileStrategyFlow(params *CompleteSelfServiceBrowserSettingsProfileStrategyFlowParams) (*CompleteSelfServiceBrowserSettingsProfileStrategyFlowOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewCompleteSelfServiceBrowserSettingsProfileStrategyFlowParams()
 	}
 
-	_, err := a.transport.Submit(&runtime.ClientOperation{
+	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "completeSelfServiceBrowserSettingsProfileStrategyFlow",
 		Method:             "POST",
 		PathPattern:        "/self-service/browser/flows/settings/strategies/profile",
@@ -193,9 +193,16 @@ func (a *Client) CompleteSelfServiceBrowserSettingsProfileStrategyFlow(params *C
 		Client:             params.HTTPClient,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	success, ok := result.(*CompleteSelfServiceBrowserSettingsProfileStrategyFlowOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for completeSelfServiceBrowserSettingsProfileStrategyFlow: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -412,11 +419,7 @@ func (a *Client) InitializeSelfServiceBrowserVerificationFlow(params *Initialize
 exists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter
 `?refresh=true` was set.
 
-:::note
-
 This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
-
-:::
 
 More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 */
@@ -521,32 +524,35 @@ func (a *Client) InitializeSelfServiceRegistrationViaBrowserFlow(params *Initial
 }
 
 /*
-  InitializeSelfServiceSettingsFlow initializes browser based settings flow
+  InitializeSelfServiceSettingsViaBrowserFlow initializes settings flow for browsers
 
-  This endpoint initializes a browser-based settings flow. Once initialized, the browser will be redirected to
-`selfservice.flows.settings.ui_url` with the request ID set as a query parameter. If no valid user session exists, a login
-flow will be initialized.
+  This endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to
+`selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid
+ORY Kratos Session Cookie is included in the request, a login flow will be initialized.
 
-> This endpoint is NOT INTENDED for API clients and only works
-with browsers (Chrome, Firefox, ...).
+:::note
+
+This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+
+:::
 
 More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 */
-func (a *Client) InitializeSelfServiceSettingsFlow(params *InitializeSelfServiceSettingsFlowParams) error {
+func (a *Client) InitializeSelfServiceSettingsViaBrowserFlow(params *InitializeSelfServiceSettingsViaBrowserFlowParams) error {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewInitializeSelfServiceSettingsFlowParams()
+		params = NewInitializeSelfServiceSettingsViaBrowserFlowParams()
 	}
 
 	_, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "initializeSelfServiceSettingsFlow",
+		ID:                 "initializeSelfServiceSettingsViaBrowserFlow",
 		Method:             "GET",
-		PathPattern:        "/self-service/browser/flows/settings",
+		PathPattern:        "/self-service/settings/browser/flows",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &InitializeSelfServiceSettingsFlowReader{formats: a.formats},
+		Reader:             &InitializeSelfServiceSettingsViaBrowserFlowReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})

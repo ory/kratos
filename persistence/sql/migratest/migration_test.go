@@ -145,11 +145,11 @@ func TestMigrations(t *testing.T) {
 					}
 				})
 				t.Run("case=settings_request", func(t *testing.T) {
-					var ids []settings.Request
+					var ids []settings.Flow
 					require.NoError(t, c.Select("id").All(&ids))
 
 					for _, id := range ids {
-						actual, err := d.Registry().SettingsRequestPersister().GetSettingsRequest(context.Background(), id.ID)
+						actual, err := d.Registry().SettingsFlowPersister().GetSettingsFlow(context.Background(), id.ID)
 						require.NoError(t, err)
 						compareWithFixture(t, actual, "settings_request", id.ID.String())
 					}
@@ -168,12 +168,12 @@ func TestMigrations(t *testing.T) {
 			})
 
 			t.Run("suite=constraints", func(t *testing.T) {
-				sr, err := d.Registry().SettingsRequestPersister().GetSettingsRequest(context.Background(), x.ParseUUID("a79bfcf1-68ae-49de-8b23-4f96921b8341"))
+				sr, err := d.Registry().SettingsFlowPersister().GetSettingsFlow(context.Background(), x.ParseUUID("a79bfcf1-68ae-49de-8b23-4f96921b8341"))
 				require.NoError(t, err)
 
 				require.NoError(t, d.Registry().PrivilegedIdentityPool().DeleteIdentity(context.Background(), sr.IdentityID))
 
-				_, err = d.Registry().SettingsRequestPersister().GetSettingsRequest(context.Background(), x.ParseUUID("a79bfcf1-68ae-49de-8b23-4f96921b8341"))
+				_, err = d.Registry().SettingsFlowPersister().GetSettingsFlow(context.Background(), x.ParseUUID("a79bfcf1-68ae-49de-8b23-4f96921b8341"))
 				require.Error(t, err)
 				require.True(t, errors.Is(err, sqlcon.ErrNoRows))
 			})

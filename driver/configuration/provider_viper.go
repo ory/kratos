@@ -408,7 +408,7 @@ func (p *ViperProvider) SelfServiceFlowLoginRequestLifespan() time.Duration {
 	return viperx.GetDuration(p.l, ViperKeySelfServiceLoginRequestLifespan, time.Hour)
 }
 
-func (p *ViperProvider) SelfServiceFlowSettingsRequestLifespan() time.Duration {
+func (p *ViperProvider) SelfServiceFlowSettingsFlowLifespan() time.Duration {
 	return viperx.GetDuration(p.l, ViperKeySelfServiceSettingsRequestLifespan, time.Hour)
 }
 

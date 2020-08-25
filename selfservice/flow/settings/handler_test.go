@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
 
 	"github.com/ory/x/pointerx"
 
@@ -20,9 +21,9 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/httpclient/client/common"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/settings"
-	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
@@ -47,74 +48,95 @@ func TestHandler(t *testing.T) {
 
 	primaryUser, otherUser := clients["primary"], clients["secondary"]
 	publicClient, adminClient := testhelpers.NewSDKClient(publicTS), testhelpers.NewSDKClient(adminTS)
-	newExpiredRequest := func() *settings.Request {
-		return settings.NewRequest(-time.Minute,
+	newExpiredFlow := func() *settings.Flow {
+		return settings.NewFlow(-time.Minute,
 			&http.Request{URL: urlx.ParseOrPanic(publicTS.URL + login.RouteInitBrowserFlow)},
-			&session.Session{Identity: primaryIdentity})
+			primaryIdentity, flow.TypeBrowser)
 	}
 
 	t.Run("daemon=admin", func(t *testing.T) {
-		t.Run("description=fetching a non-existent request should return a 404 error", func(t *testing.T) {
-			_, err := adminClient.Common.GetSelfServiceBrowserSettingsRequest(
-				common.NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(otherUser).WithRequest("i-do-not-exist"),
+		t.Run("description=fetching a non-existent flow should return a 404 error", func(t *testing.T) {
+			_, err := adminClient.Common.GetSelfServiceSettingsFlow(
+				common.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(otherUser).WithID("i-do-not-exist"),
 			)
 			require.Error(t, err)
 
-			require.IsType(t, &common.GetSelfServiceBrowserSettingsRequestNotFound{}, err)
-			assert.Equal(t, int64(http.StatusNotFound), err.(*common.GetSelfServiceBrowserSettingsRequestNotFound).Payload.Error.Code)
+			require.IsType(t, &common.GetSelfServiceSettingsFlowNotFound{}, err)
+			assert.Equal(t, int64(http.StatusNotFound), err.(*common.GetSelfServiceSettingsFlowNotFound).Payload.Error.Code)
 		})
 
-		t.Run("description=fetching an expired request returns 410", func(t *testing.T) {
-			pr := newExpiredRequest()
-			require.NoError(t, reg.SettingsRequestPersister().CreateSettingsRequest(context.Background(), pr))
+		t.Run("description=fetching an expired flow returns 410", func(t *testing.T) {
+			pr := newExpiredFlow()
+			require.NoError(t, reg.SettingsFlowPersister().CreateSettingsFlow(context.Background(), pr))
 
-			_, err := adminClient.Common.GetSelfServiceBrowserSettingsRequest(
-				common.NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(primaryUser).WithRequest(pr.ID.String()),
+			_, err := adminClient.Common.GetSelfServiceSettingsFlow(
+				common.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(primaryUser).WithID(pr.ID.String()),
 			)
 			require.Error(t, err)
 
-			require.IsType(t, &common.GetSelfServiceBrowserSettingsRequestGone{}, err, "%+v", err)
-			assert.Equal(t, int64(http.StatusGone), err.(*common.GetSelfServiceBrowserSettingsRequestGone).Payload.Error.Code)
+			require.IsType(t, &common.GetSelfServiceSettingsFlowGone{}, err, "%+v", err)
+			assert.Equal(t, int64(http.StatusGone), err.(*common.GetSelfServiceSettingsFlowGone).Payload.Error.Code)
 		})
 	})
 
 	t.Run("daemon=public", func(t *testing.T) {
-		t.Run("description=fetching a non-existent request should return a 403 error", func(t *testing.T) {
-			_, err := publicClient.Common.GetSelfServiceBrowserSettingsRequest(
-				common.NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(otherUser).WithRequest("i-do-not-exist"),
+		t.Run("description=fetching a non-existent flow should return a 403 error", func(t *testing.T) {
+			_, err := publicClient.Common.GetSelfServiceSettingsFlow(
+				common.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(otherUser).WithID("i-do-not-exist"),
 			)
 			require.Error(t, err)
 
-			require.IsType(t, &common.GetSelfServiceBrowserSettingsRequestForbidden{}, err)
-			assert.Equal(t, int64(http.StatusForbidden), err.(*common.GetSelfServiceBrowserSettingsRequestForbidden).Payload.Error.Code)
+			require.IsType(t, &common.GetSelfServiceSettingsFlowForbidden{}, err)
+			assert.Equal(t, int64(http.StatusForbidden), err.(*common.GetSelfServiceSettingsFlowForbidden).Payload.Error.Code)
 		})
 
-		t.Run("description=fetching an expired request returns 410", func(t *testing.T) {
-			pr := newExpiredRequest()
-			require.NoError(t, reg.SettingsRequestPersister().CreateSettingsRequest(context.Background(), pr))
+		t.Run("description=fetching an expired flow returns 410", func(t *testing.T) {
+			pr := newExpiredFlow()
+			require.NoError(t, reg.SettingsFlowPersister().CreateSettingsFlow(context.Background(), pr))
 
-			_, err := publicClient.Common.GetSelfServiceBrowserSettingsRequest(
-				common.NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(primaryUser).WithRequest(pr.ID.String()),
+			_, err := publicClient.Common.GetSelfServiceSettingsFlow(
+				common.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(primaryUser).WithID(pr.ID.String()),
 			)
 			require.Error(t, err)
 
-			require.IsType(t, &common.GetSelfServiceBrowserSettingsRequestGone{}, err)
-			assert.Equal(t, int64(http.StatusGone), err.(*common.GetSelfServiceBrowserSettingsRequestGone).Payload.Error.Code)
+			require.IsType(t, &common.GetSelfServiceSettingsFlowGone{}, err)
+			assert.Equal(t, int64(http.StatusGone), err.(*common.GetSelfServiceSettingsFlowGone).Payload.Error.Code)
 		})
 
 		t.Run("description=should fail to fetch request if identity changed", func(t *testing.T) {
-			res, err := primaryUser.Get(publicTS.URL + settings.PublicPath)
-			require.NoError(t, err)
+			t.Run("type=api", func(t *testing.T) {
+				user1 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
+				user2 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
 
-			rid := res.Request.URL.Query().Get("request")
-			require.NotEmpty(t, rid)
+				res, err := user1.Get(publicTS.URL + settings.RouteInitAPIFlow)
+				require.NoError(t, err)
+				defer res.Body.Close()
+				body := x.MustReadAll(res.Body)
+				id := gjson.GetBytes(body, "id")
+				require.NotEmpty(t, id)
 
-			_, err = publicClient.Common.GetSelfServiceBrowserSettingsRequest(
-				common.NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(otherUser).WithRequest(rid),
-			)
-			require.Error(t, err)
-			require.IsType(t, &common.GetSelfServiceBrowserSettingsRequestForbidden{}, err)
-			assert.EqualValues(t, int64(http.StatusForbidden), err.(*common.GetSelfServiceBrowserSettingsRequestForbidden).Payload.Error.Code, "should return a 403 error because the identities from the cookies do not match")
+				res, err = user2.Get(publicTS.URL + settings.RouteGetFlow)
+				require.NoError(t, err)
+				defer res.Body.Close()
+				require.EqualValues(t, res.StatusCode, http.StatusForbidden)
+				body = x.MustReadAll(res.Body)
+				assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), "Access privileges are missing", "%s", body)
+			})
+
+			t.Run("type=browser", func(t *testing.T) {
+				res, err := primaryUser.Get(publicTS.URL + settings.RouteInitBrowserFlow)
+				require.NoError(t, err)
+
+				rid := res.Request.URL.Query().Get("flow")
+				require.NotEmpty(t, rid)
+
+				_, err = publicClient.Common.GetSelfServiceSettingsFlow(
+					common.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(otherUser).WithID(rid),
+				)
+				require.Error(t, err)
+				require.IsType(t, &common.GetSelfServiceSettingsFlowForbidden{}, err)
+				assert.EqualValues(t, int64(http.StatusForbidden), err.(*common.GetSelfServiceSettingsFlowForbidden).Payload.Error.Code, "should return a 403 error because the identities from the cookies do not match")
+			})
 		})
 
 		t.Run("description=should fail to post data if CSRF is missing", func(t *testing.T) {

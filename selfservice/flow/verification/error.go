@@ -73,7 +73,7 @@ func (s *ErrorHandler) HandleVerificationError(
 
 	if e := new(errRequestExpired); errors.As(err, &e) {
 		a := NewRequest(
-			s.c.SelfServiceFlowSettingsRequestLifespan(), r, rr.Via,
+			s.c.SelfServiceFlowSettingsFlowLifespan(), r, rr.Via,
 			urlx.AppendPaths(s.c.SelfPublicURL(), PublicVerificationRequestPath), s.d.GenerateCSRFToken,
 		)
 

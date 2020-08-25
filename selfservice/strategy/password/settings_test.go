@@ -62,7 +62,7 @@ func TestSettings(t *testing.T) {
 	adminClient := testhelpers.NewSDKClient(adminTS)
 
 	t.Run("description=should update the password and clear errors after input error occurred", func(t *testing.T) {
-		rs := testhelpers.GetSettingsRequest(t, primaryUser, publicTS)
+		rs := testhelpers.GetSettingsFlow(t, primaryUser, publicTS)
 
 		form := rs.Payload.Methods[string(identity.CredentialsTypePassword)].Config
 		values := testhelpers.SDKFormFieldsToURLValues(form.Fields)
@@ -108,7 +108,7 @@ func TestSettings(t *testing.T) {
 	})
 
 	t.Run("description=should update the password even if no password was set before", func(t *testing.T) {
-		rs := testhelpers.GetSettingsRequest(t, secondaryUser, publicTS)
+		rs := testhelpers.GetSettingsFlow(t, secondaryUser, publicTS)
 
 		form := rs.Payload.Methods[string(identity.CredentialsTypePassword)].Config
 		values := testhelpers.SDKFormFieldsToURLValues(form.Fields)
@@ -140,7 +140,7 @@ func TestSettings(t *testing.T) {
 			viper.Set(configuration.ViperKeySelfServiceSettingsAfter, nil)
 		})
 
-		rs := testhelpers.GetSettingsRequest(t, primaryUser, publicTS)
+		rs := testhelpers.GetSettingsFlow(t, primaryUser, publicTS)
 
 		form := rs.Payload.Methods[string(identity.CredentialsTypePassword)].Config
 		values := testhelpers.SDKFormFieldsToURLValues(form.Fields)
