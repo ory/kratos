@@ -28,7 +28,7 @@ type Persister interface {
 	identity.PrivilegedPool
 	registration.FlowPersister
 	login.FlowPersister
-	settings.RequestPersister
+	settings.FlowPersister
 	courier.Persister
 	session.Persister
 	errorx.Persister
