@@ -57,7 +57,7 @@ func TestNewFlow(t *testing.T) {
 		r := registration.NewFlow(0, "csrf", &http.Request{
 			URL:  urlx.ParseOrPanic("https://ory.sh/"),
 			Host: "ory.sh"}, flow.TypeBrowser)
-		assert.Equal(t, "http://ory.sh/", r.RequestURL)
+		assert.Equal(t, "https://ory.sh/", r.RequestURL)
 	})
 }
 
