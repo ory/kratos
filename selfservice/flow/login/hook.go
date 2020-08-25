@@ -67,7 +67,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct 
 	e.d.Logger().
 		WithRequest(r).
 		WithField("identity_id", i.ID).
-		WithField("flow_method",ct).
+		WithField("flow_method", ct).
 		Debug("Running ExecuteLoginPostHook.")
 	for k, executor := range e.d.PostLoginHooks(ct) {
 		if err := executor.ExecuteLoginPostHook(w, r, a, s); err != nil {
@@ -78,7 +78,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct 
 					WithField("executor_position", k).
 					WithField("executors", PostHookExecutorNames(e.d.PostLoginHooks(ct))).
 					WithField("identity_id", i.ID).
-					WithField("flow_method",ct).
+					WithField("flow_method", ct).
 					Debug("A ExecuteLoginPostHook hook aborted early.")
 				return nil
 			}
@@ -91,7 +91,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct 
 			WithField("executor_position", k).
 			WithField("executors", PostHookExecutorNames(e.d.PostLoginHooks(ct))).
 			WithField("identity_id", i.ID).
-			WithField("flow_method",ct).
+			WithField("flow_method", ct).
 			Debug("ExecuteLoginPostHook completed successfully.")
 	}
 
