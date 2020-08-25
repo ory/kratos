@@ -11,11 +11,6 @@ const (
 )
 
 const (
-	InfoSelfServiceSettings ID = 1050000 + iota
-	InfoSelfServiceSettingsUpdateSuccess
-)
-
-const (
 	ErrorSystem ID = 5000000 + iota
 	ErrorSystemGeneric
 )

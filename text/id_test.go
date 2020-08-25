@@ -34,6 +34,9 @@ func TestIDs(t *testing.T) {
 	assert.Equal(t, 4040000, int(ErrorValidationRegistration))
 	assert.Equal(t, 4040001, int(ErrorValidationRegistrationFlowExpired))
 
+	assert.Equal(t, 4050000, int(ErrorValidationSettings))
+	assert.Equal(t, 4050001, int(ErrorValidationSettingsFlowExpired))
+
 	assert.Equal(t, 4060000, int(ErrorValidationRecovery))
 	assert.Equal(t, 4060001, int(ErrorValidationRecoveryRetrySuccess))
 	assert.Equal(t, 4060002, int(ErrorValidationRecoveryStateFailure))
