@@ -105,6 +105,7 @@ New feature or request.
 
 #### Issues
 
+* [ ] Design of the client cli ([kratos#663](https://github.com/ory/kratos/issues/663)) - [@Patrik](https://github.com/zepatrik)
 * [x] Implement JSON capabilities in ErrorHandler ([kratos#61](https://github.com/ory/kratos/issues/61)) - [@hackerman](https://github.com/aeneasr)
 * [x] Allow attaching credentials to identities in CRUD create ([kratos#200](https://github.com/ory/kratos/issues/200))
 * [x] Move away from UUID-based challenges and responses ([kratos#241](https://github.com/ory/kratos/issues/241)) - [@hackerman](https://github.com/aeneasr)
@@ -121,12 +122,21 @@ New feature or request.
 * [ ] feat: implement API-based self-service flows ([kratos#624](https://github.com/ory/kratos/pull/624)) - [@hackerman](https://github.com/aeneasr)
 * [x] fix: resolve identity admin api issues  ([kratos#586](https://github.com/ory/kratos/pull/586)) - [@hackerman](https://github.com/aeneasr)
 
+### [Help wanted](https://github.com/ory/kratos/labels/help%20wanted)
+
+We are looking for help on this one.
+
+#### Issues
+
+* [ ] Design of the client cli ([kratos#663](https://github.com/ory/kratos/issues/663)) - [@Patrik](https://github.com/zepatrik)
+
 ### [Docs](https://github.com/ory/kratos/labels/docs)
 
 Affects documentation.
 
 #### Issues
 
+* [ ] Remove reverse proxy from node example and rely on port and the domain parameter ([kratos#661](https://github.com/ory/kratos/issues/661)) - [@hackerman](https://github.com/aeneasr)
 * [x] Document multi-tenant set up ([kratos#370](https://github.com/ory/kratos/issues/370))
 
 ### [Rfc](https://github.com/ory/kratos/labels/rfc)
@@ -140,6 +150,10 @@ A request for comments to discuss and share ideas.
 ### [Blocking](https://github.com/ory/kratos/labels/blocking)
 
 Blocks milestones or other issues or pulls.
+
+#### Issues
+
+* [ ] Remove reverse proxy from node example and rely on port and the domain parameter ([kratos#661](https://github.com/ory/kratos/issues/661)) - [@hackerman](https://github.com/aeneasr)
 
 #### Pull Requests
 
