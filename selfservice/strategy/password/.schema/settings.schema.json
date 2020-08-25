@@ -6,6 +6,9 @@
     "password"
   ],
   "properties": {
+    "csrf_token": {
+      "type": "string"
+    },
     "password": {
       "type": "string",
       "minLength": 1

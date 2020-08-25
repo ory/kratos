@@ -179,7 +179,7 @@ func TestCompleteLogin(t *testing.T) {
 	t.Run("should show the error ui because the request is malformed", func(t *testing.T) {
 		run := func(t *testing.T, isAPI bool) (string, *http.Response) {
 			lr := nlr(0, isAPI)
-			res, body := fakeRequest(t, lr, isAPI, "14=)=!(%)$/ZP()GHIÖ", nil, nil, expectStatusCode(isAPI, http.StatusBadRequest))
+			res, body := fakeRequest(t, lr, isAPI, "14=)=!(%)$/ZP()GHIÖ", nil, nil, expectStatusCodeBrowserOKOr(isAPI, http.StatusBadRequest))
 
 			assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 			assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
@@ -202,7 +202,7 @@ func TestCompleteLogin(t *testing.T) {
 	t.Run("should show the error ui because the request id missing", func(t *testing.T) {
 		run := func(t *testing.T, isAPI bool) (*http.Response, []byte) {
 			lr := nlr(time.Minute, isAPI)
-			return fakeRequest(t, lr, isAPI, url.Values{}.Encode(), pointerx.String(""), nil, expectStatusCode(isAPI, http.StatusBadRequest))
+			return fakeRequest(t, lr, isAPI, url.Values{}.Encode(), pointerx.String(""), nil, expectStatusCodeBrowserOKOr(isAPI, http.StatusBadRequest))
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
@@ -225,7 +225,7 @@ func TestCompleteLogin(t *testing.T) {
 	t.Run("should return an error because the request does not exist", func(t *testing.T) {
 		run := func(t *testing.T, isAPI bool, payload string) (*http.Response, []byte) {
 			lr := nlr(0, isAPI)
-			return fakeRequest(t, lr, isAPI, payload, pointerx.String(x.NewUUID().String()), nil, expectStatusCode(isAPI, http.StatusNotFound))
+			return fakeRequest(t, lr, isAPI, payload, pointerx.String(x.NewUUID().String()), nil, expectStatusCodeBrowserOKOr(isAPI, http.StatusNotFound))
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
@@ -277,7 +277,7 @@ func TestCompleteLogin(t *testing.T) {
 	t.Run("should return an error because the credentials are invalid (user does not exist)", func(t *testing.T) {
 		run := func(t *testing.T, isAPI bool, payload string) *http.Response {
 			lr := nlr(time.Hour, isAPI)
-			res, body := fakeRequest(t, lr, isAPI, payload, nil, nil, expectStatusCode(isAPI, http.StatusBadRequest))
+			res, body := fakeRequest(t, lr, isAPI, payload, nil, nil, expectStatusCodeBrowserOKOr(isAPI, http.StatusBadRequest))
 			assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 			assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
 			assert.Equal(t, text.NewErrorValidationInvalidCredentials().Text, gjson.GetBytes(body, "methods.password.config.messages.0.text").String())
@@ -317,7 +317,7 @@ func TestCompleteLogin(t *testing.T) {
 	t.Run("should return an error because no identifier is set", func(t *testing.T) {
 		run := func(t *testing.T, isAPI bool, payload string) *http.Response {
 			lr := nlr(time.Hour, isAPI)
-			res, body := fakeRequest(t, lr, isAPI, payload, nil, nil, expectStatusCode(isAPI, http.StatusBadRequest))
+			res, body := fakeRequest(t, lr, isAPI, payload, nil, nil, expectStatusCodeBrowserOKOr(isAPI, http.StatusBadRequest))
 
 			// Let's ensure that the payload is being propagated properly.
 			assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String())
@@ -345,7 +345,7 @@ func TestCompleteLogin(t *testing.T) {
 	t.Run("should return an error because no password is set", func(t *testing.T) {
 		run := func(t *testing.T, isAPI bool, payload string) *http.Response {
 			lr := nlr(time.Hour, isAPI)
-			res, body := fakeRequest(t, lr, isAPI, payload, nil, nil, expectStatusCode(isAPI, http.StatusBadRequest))
+			res, body := fakeRequest(t, lr, isAPI, payload, nil, nil, expectStatusCodeBrowserOKOr(isAPI, http.StatusBadRequest))
 
 			// Let's ensure that the payload is being propagated properly.
 			assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String())
@@ -387,7 +387,7 @@ func TestCompleteLogin(t *testing.T) {
 			}
 
 			lr := nlr(time.Hour, isAPI)
-			res, body := fakeRequest(t, lr, isAPI, payload, nil, nil, expectStatusCode(isAPI, http.StatusBadRequest))
+			res, body := fakeRequest(t, lr, isAPI, payload, nil, nil, expectStatusCodeBrowserOKOr(isAPI, http.StatusBadRequest))
 
 			assert.Equal(t, lr.ID.String(), gjson.GetBytes(body, "id").String())
 			assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String())
@@ -426,7 +426,7 @@ func TestCompleteLogin(t *testing.T) {
 			}
 
 			lr := nlr(time.Hour, isAPI)
-			return fakeRequest(t, lr, isAPI, payload, nil, nil, expectStatusCode(isAPI, http.StatusOK))
+			return fakeRequest(t, lr, isAPI, payload, nil, nil, expectStatusCodeBrowserOKOr(isAPI, http.StatusOK))
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
@@ -578,7 +578,7 @@ func TestCompleteLogin(t *testing.T) {
 					Identifier: identifier})
 			}
 
-			res, body := fakeRequest(t, lr, isAPI, payload, nil, nil, expectStatusCode(isAPI, http.StatusBadRequest))
+			res, body := fakeRequest(t, lr, isAPI, payload, nil, nil, expectStatusCodeBrowserOKOr(isAPI, http.StatusBadRequest))
 			if isAPI {
 				require.Contains(t, res.Request.URL.Path, password.RouteLogin)
 				checkFormContent(t, body, "identifier", "password")

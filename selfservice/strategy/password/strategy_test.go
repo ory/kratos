@@ -19,11 +19,15 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-func expectStatusCode(isAPI bool, apiExpect int) int {
+func expectStatusCodeBrowserOKOr(isAPI bool, apiExpect int) int {
+	return expectStatusCodeBetter(isAPI, apiExpect, http.StatusOK)
+}
+
+func expectStatusCodeBetter(isAPI bool, api, browser int) int {
 	if isAPI {
-		return apiExpect
+		return api
 	}
-	return http.StatusOK
+	return browser
 }
 
 func newReturnTs(t *testing.T, reg interface {

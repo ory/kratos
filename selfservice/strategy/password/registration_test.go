@@ -143,7 +143,7 @@ func TestRegistration(t *testing.T) {
 		t.Run("case=should show the error ui because the request payload is malformed", func(t *testing.T) {
 			run := func(t *testing.T, isAPI bool) (*registration.Flow, []byte, *http.Response) {
 				rr := newRegistrationRequest(t, time.Minute, isAPI)
-				body, res := makeRequest(t, rr.ID, isAPI, "14=)=!(%)$/ZP()GHIÖ", expectStatusCode(isAPI, http.StatusBadRequest))
+				body, res := makeRequest(t, rr.ID, isAPI, "14=)=!(%)$/ZP()GHIÖ", expectStatusCodeBrowserOKOr(isAPI, http.StatusBadRequest))
 				return rr, body, res
 			}
 
@@ -166,7 +166,7 @@ func TestRegistration(t *testing.T) {
 			run := func(t *testing.T, isAPI bool) ([]byte, *http.Response) {
 				_ = newRegistrationRequest(t, time.Minute, isAPI)
 				uuidDesNotExistInStore := x.NewUUID()
-				return makeRequest(t, uuidDesNotExistInStore, isAPI, "", expectStatusCode(isAPI, http.StatusNotFound))
+				return makeRequest(t, uuidDesNotExistInStore, isAPI, "", expectStatusCodeBrowserOKOr(isAPI, http.StatusNotFound))
 			}
 
 			t.Run("type=api", func(t *testing.T) {
@@ -209,7 +209,7 @@ func TestRegistration(t *testing.T) {
 		t.Run("case=should return an error because the password failed validation", func(t *testing.T) {
 			run := func(t *testing.T, isAPI bool, payload string) *http.Response {
 				rr := newRegistrationRequest(t, time.Minute, isAPI)
-				body, res := makeRequest(t, rr.ID, isAPI, payload, expectStatusCode(isAPI, http.StatusBadRequest))
+				body, res := makeRequest(t, rr.ID, isAPI, payload, expectStatusCodeBrowserOKOr(isAPI, http.StatusBadRequest))
 				assert.Equal(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
 				checkFormContent(t, body, "password", "csrf_token", "traits.username", "traits.foobar")
@@ -235,7 +235,7 @@ func TestRegistration(t *testing.T) {
 		t.Run("case=should return an error because not passing validation", func(t *testing.T) {
 			run := func(t *testing.T, isAPI bool, payload string) *http.Response {
 				rr := newRegistrationRequest(t, time.Minute, isAPI)
-				body, res := makeRequest(t, rr.ID, isAPI, payload, expectStatusCode(isAPI, http.StatusBadRequest))
+				body, res := makeRequest(t, rr.ID, isAPI, payload, expectStatusCodeBrowserOKOr(isAPI, http.StatusBadRequest))
 				assert.Equal(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
 				checkFormContent(t, body, "password", "csrf_token", "traits.username", "traits.foobar")
@@ -261,7 +261,7 @@ func TestRegistration(t *testing.T) {
 			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/missing-identifier.schema.json")
 			run := func(t *testing.T, isAPI bool, payload string) ([]byte, *http.Response) {
 				rr := newRegistrationRequest(t, time.Minute, isAPI)
-				return makeRequest(t, rr.ID, isAPI, payload, expectStatusCode(isAPI, http.StatusInternalServerError))
+				return makeRequest(t, rr.ID, isAPI, payload, expectStatusCodeBrowserOKOr(isAPI, http.StatusInternalServerError))
 			}
 
 			t.Run("type=api", func(t *testing.T) {
@@ -313,7 +313,7 @@ func TestRegistration(t *testing.T) {
 
 			run := func(t *testing.T, isAPI bool, payload string) ([]byte, *http.Response) {
 				rr := newRegistrationRequest(t, time.Minute, isAPI)
-				body, res := makeRequest(t, rr.ID, isAPI, payload, expectStatusCode(isAPI, http.StatusInternalServerError))
+				body, res := makeRequest(t, rr.ID, isAPI, payload, expectStatusCodeBrowserOKOr(isAPI, http.StatusInternalServerError))
 				return body, res
 			}
 
@@ -437,7 +437,7 @@ func TestRegistration(t *testing.T) {
 				}
 
 				require.NoError(t, reg.RegistrationFlowPersister().CreateRegistrationFlow(context.Background(), rr))
-				body, res := makeRequest(t, rr.ID, isAPI, payload, expectStatusCode(isAPI, http.StatusBadRequest))
+				body, res := makeRequest(t, rr.ID, isAPI, payload, expectStatusCodeBrowserOKOr(isAPI, http.StatusBadRequest))
 
 				assert.Equal(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
 				assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
@@ -532,7 +532,7 @@ func TestRegistration(t *testing.T) {
 					false, payload, http.StatusOK, jar)
 
 				body2, res2 := makeRequestWithCookieJar(t, newRegistrationRequest(t, time.Minute, false).ID,
-					false, payload, expectStatusCode(false, http.StatusBadRequest), jar)
+					false, payload, expectStatusCodeBrowserOKOr(false, http.StatusBadRequest), jar)
 
 				assert.Contains(t, res1.Request.URL.String(), redirTS.URL+"/registration-return-ts")
 				assert.Contains(t, res2.Request.URL.String(), redirTS.URL+"/default-return-to")
