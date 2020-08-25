@@ -158,14 +158,13 @@ func AddAndLoginIdentities(t *testing.T, reg *driver.RegistryDefault, public *ht
 	return result
 }
 
-func SettingsSubmitForm(
+func SettingsMakeRequest(
 	t *testing.T,
 	isAPI bool,
 	f *models.FlowMethodConfig,
 	hc *http.Client,
 	values string,
-	expectedStatusCode int,
-) (string, *common.GetSelfServiceSettingsFlowOK) {
+) (string, *http.Response) {
 	require.NotEmpty(t, f.Action)
 
 	req, err := http.NewRequest("POST", pointerx.StringR(f.Action), bytes.NewBufferString(values))
@@ -182,7 +181,18 @@ func SettingsSubmitForm(
 	require.NoError(t, err)
 	defer res.Body.Close()
 
-	b := x.MustReadAll(res.Body)
+	return string(x.MustReadAll(res.Body)), res
+}
+
+func SettingsSubmitForm(
+	t *testing.T,
+	isAPI bool,
+	f *models.FlowMethodConfig,
+	hc *http.Client,
+	values string,
+	expectedStatusCode int,
+) (string, *common.GetSelfServiceSettingsFlowOK) {
+	b, res := SettingsMakeRequest(t,isAPI,f,hc,values)
 	assert.EqualValues(t, expectedStatusCode, res.StatusCode, "%s", b)
 
 	expectURL := viper.GetString(configuration.ViperKeySelfServiceSettingsURL)
