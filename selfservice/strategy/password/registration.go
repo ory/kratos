@@ -94,7 +94,19 @@ func (s *Strategy) decoderRegistration() (decoderx.HTTPDecoderOption, error) {
 	return o, nil
 }
 
-// swagger:route GET /self-service/registration/methods/password public completeSelfServiceRegistrationFlowWithPasswordMethod
+
+// swagger:parameters completeSelfServiceRegistrationFlowWithPasswordMethod
+type completeSelfServiceRegistrationFlowWithPasswordMethod struct {
+	// Flow is flow ID.
+	//
+	// in: query
+	Flow string `json:"flow"`
+
+	// in: body
+	Payload map[string]interface{}
+}
+
+// swagger:route POST /self-service/registration/methods/password public completeSelfServiceRegistrationFlowWithPasswordMethod
 //
 // Complete Registration Flow with Username/Email Password Method
 //
