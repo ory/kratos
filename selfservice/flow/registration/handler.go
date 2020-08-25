@@ -5,9 +5,8 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/pkg/errors"
-
 	"github.com/ory/x/urlx"
+	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/selfservice/errorx"
@@ -113,7 +112,7 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	a, err := h.NewRegistrationFlow(w, r, flow.TypeAPI)
 	if err != nil {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 
@@ -199,9 +198,15 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, ps httproute
 	}
 
 	if ar.ExpiresAt.Before(time.Now()) {
+		if ar.Type == flow.TypeBrowser {
+			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
+				WithReason("The registration flow has expired. Redirect the user to the registration flow init endpoint to initialize a new registration flow.").
+				WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), RouteInitBrowserFlow).String())))
+			return
+		}
 		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
-			WithReason("The registration flow has expired. Redirect the user to the registration flow init endpoint to initialize a new registration flow.").
-			WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), RouteInitBrowserFlow).String())))
+			WithReason("The registration flow has expired. Call the registration flow init API endpoint to initialize a new registration flow.").
+			WithDetail("api", urlx.AppendPaths(h.c.SelfPublicURL(), RouteInitAPIFlow).String())))
 		return
 	}
 

@@ -5,9 +5,8 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/pkg/errors"
-
 	"github.com/ory/x/urlx"
+	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/selfservice/errorx"
@@ -50,11 +49,11 @@ func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.GET(RouteInitBrowserFlow, h.initBrowserFlow)
 	public.GET(RouteInitAPIFlow, h.initAPIFlow)
-	public.GET(RouteGetFlow, h.fetchLoginFlow)
+	public.GET(RouteGetFlow, h.fetchFlow)
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(RouteGetFlow, h.fetchLoginFlow)
+	admin.GET(RouteGetFlow, h.fetchFlow)
 }
 
 func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, flow flow.Type) (*Flow, error) {
@@ -233,7 +232,7 @@ type getSelfServiceLoginFlow struct {
 //       404: genericError
 //       410: genericError
 //       500: genericError
-func (h *Handler) fetchLoginFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	ar, err := h.d.LoginFlowPersister().GetLoginFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("id")))
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
@@ -241,9 +240,15 @@ func (h *Handler) fetchLoginFlow(w http.ResponseWriter, r *http.Request, _ httpr
 	}
 
 	if ar.ExpiresAt.Before(time.Now()) {
+		if ar.Type == flow.TypeBrowser {
+			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
+				WithReason("The login flow has expired. Redirect the user to the login flow init endpoint to initialize a new login flow.").
+				WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), RouteInitBrowserFlow).String())))
+			return
+		}
 		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
-			WithReason("The login flow has expired. Redirect the user to the login flow init endpoint to initialize a new login flow.").
-			WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), RouteInitBrowserFlow).String())))
+			WithReason("The login flow has expired. Call the login flow init API endpoint to initialize a new login flow.").
+			WithDetail("api", urlx.AppendPaths(h.c.SelfPublicURL(), RouteInitAPIFlow).String())))
 		return
 	}
 
