@@ -1,6 +1,14 @@
+name: Closed Reference Notifier
+
 on:
   schedule:
     - cron: '0 7 * * *'
+  workflow_dispatch:
+    inputs:
+      issueLimit:
+        description: Max. number of issues to create
+        required: true
+        default: '5'
 
 jobs:
   find_closed_references:
@@ -8,9 +16,9 @@ jobs:
     name: Find closed references
     steps:
       - uses: actions/checkout@v2
-      - uses: ory/closed-reference-notifier@v1
+      - uses: ory/closed-reference-notifier@v1.1.4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          ignore: .git,**/node_modules,docs,CHANGELOG.md,.bin
+          ignore: '.git,**/node_modules,docs,CHANGELOG.md,.bin'
           issueLabels: upstream
-          issueLimit: 5
+          issueLimit: ${{ github.event.inputs.issueLimit || '5' }}
