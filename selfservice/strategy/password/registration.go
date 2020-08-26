@@ -16,7 +16,7 @@ import (
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/selfservice/flow"
-	"github.com/ory/kratos/selfservice/flow/settings"
+	"github.com/ory/kratos/session"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
@@ -40,7 +40,14 @@ type RegistrationFormPayload struct {
 
 func (s *Strategy) RegisterRegistrationRoutes(public *x.RouterPublic) {
 	s.d.CSRFHandler().ExemptPath(RouteRegistration)
-	public.POST(RouteRegistration, s.d.SessionHandler().IsNotAuthenticated(s.handleRegistration, settings.OnUnauthenticated(s.c, s.d)))
+	public.POST(RouteRegistration, s.d.SessionHandler().IsNotAuthenticated(s.handleRegistration, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		handler := session.RedirectOnAuthenticated(s.c)
+		if x.IsJSONRequest(r) {
+			handler = session.RespondWithJSONErrorOnAuthenticated(s.d.Writer(), registration.ErrAlreadyLoggedIn)
+		}
+
+		handler(w, r, ps)
+	}))
 }
 
 func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Request, rr *registration.Flow, p *RegistrationFormPayload, err error) {
