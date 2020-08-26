@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package sql
+package migrate
 
 import (
 	"github.com/spf13/cobra"
@@ -50,10 +50,6 @@ Before running this command on an existing database, create a back up!
 
 		client.NewMigrateHandler().MigrateSQL(cmd, args)
 	},
-}
-
-func RegisterCommandRecursive(parent *cobra.Command) {
-	parent.AddCommand(migrateSqlCmd)
 }
 
 func init() {
