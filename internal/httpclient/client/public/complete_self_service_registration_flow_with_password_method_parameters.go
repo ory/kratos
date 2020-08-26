@@ -19,7 +19,7 @@ import (
 // NewCompleteSelfServiceRegistrationFlowWithPasswordMethodParams creates a new CompleteSelfServiceRegistrationFlowWithPasswordMethodParams object
 // with the default values initialized.
 func NewCompleteSelfServiceRegistrationFlowWithPasswordMethodParams() *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams {
-
+	var ()
 	return &CompleteSelfServiceRegistrationFlowWithPasswordMethodParams{
 
 		timeout: cr.DefaultTimeout,
@@ -29,7 +29,7 @@ func NewCompleteSelfServiceRegistrationFlowWithPasswordMethodParams() *CompleteS
 // NewCompleteSelfServiceRegistrationFlowWithPasswordMethodParamsWithTimeout creates a new CompleteSelfServiceRegistrationFlowWithPasswordMethodParams object
 // with the default values initialized, and the ability to set a timeout on a request
 func NewCompleteSelfServiceRegistrationFlowWithPasswordMethodParamsWithTimeout(timeout time.Duration) *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams {
-
+	var ()
 	return &CompleteSelfServiceRegistrationFlowWithPasswordMethodParams{
 
 		timeout: timeout,
@@ -39,7 +39,7 @@ func NewCompleteSelfServiceRegistrationFlowWithPasswordMethodParamsWithTimeout(t
 // NewCompleteSelfServiceRegistrationFlowWithPasswordMethodParamsWithContext creates a new CompleteSelfServiceRegistrationFlowWithPasswordMethodParams object
 // with the default values initialized, and the ability to set a context for a request
 func NewCompleteSelfServiceRegistrationFlowWithPasswordMethodParamsWithContext(ctx context.Context) *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams {
-
+	var ()
 	return &CompleteSelfServiceRegistrationFlowWithPasswordMethodParams{
 
 		Context: ctx,
@@ -49,7 +49,7 @@ func NewCompleteSelfServiceRegistrationFlowWithPasswordMethodParamsWithContext(c
 // NewCompleteSelfServiceRegistrationFlowWithPasswordMethodParamsWithHTTPClient creates a new CompleteSelfServiceRegistrationFlowWithPasswordMethodParams object
 // with the default values initialized, and the ability to set a custom HTTPClient for a request
 func NewCompleteSelfServiceRegistrationFlowWithPasswordMethodParamsWithHTTPClient(client *http.Client) *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams {
-
+	var ()
 	return &CompleteSelfServiceRegistrationFlowWithPasswordMethodParams{
 		HTTPClient: client,
 	}
@@ -59,6 +59,15 @@ func NewCompleteSelfServiceRegistrationFlowWithPasswordMethodParamsWithHTTPClien
 for the complete self service registration flow with password method operation typically these are written to a http.Request
 */
 type CompleteSelfServiceRegistrationFlowWithPasswordMethodParams struct {
+
+	/*Payload*/
+	Payload interface{}
+	/*Flow
+	  Flow is flow ID.
+
+	*/
+	Flow *string
+
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
@@ -97,6 +106,28 @@ func (o *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams) SetHTTPCli
 	o.HTTPClient = client
 }
 
+// WithPayload adds the payload to the complete self service registration flow with password method params
+func (o *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams) WithPayload(payload interface{}) *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams {
+	o.SetPayload(payload)
+	return o
+}
+
+// SetPayload adds the payload to the complete self service registration flow with password method params
+func (o *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams) SetPayload(payload interface{}) {
+	o.Payload = payload
+}
+
+// WithFlow adds the flow to the complete self service registration flow with password method params
+func (o *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams) WithFlow(flow *string) *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams {
+	o.SetFlow(flow)
+	return o
+}
+
+// SetFlow adds the flow to the complete self service registration flow with password method params
+func (o *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams) SetFlow(flow *string) {
+	o.Flow = flow
+}
+
 // WriteToRequest writes these params to a swagger request
 func (o *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -104,6 +135,28 @@ func (o *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams) WriteToReq
 		return err
 	}
 	var res []error
+
+	if o.Payload != nil {
+		if err := r.SetBodyParam(o.Payload); err != nil {
+			return err
+		}
+	}
+
+	if o.Flow != nil {
+
+		// query param flow
+		var qrFlow string
+		if o.Flow != nil {
+			qrFlow = *o.Flow
+		}
+		qFlow := qrFlow
+		if qFlow != "" {
+			if err := r.SetQueryParam("flow", qFlow); err != nil {
+				return err
+			}
+		}
+
+	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)

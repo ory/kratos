@@ -238,7 +238,7 @@ func (a *Client) CompleteSelfServiceRegistrationFlowWithPasswordMethod(params *C
 
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "completeSelfServiceRegistrationFlowWithPasswordMethod",
-		Method:             "GET",
+		Method:             "POST",
 		PathPattern:        "/self-service/registration/methods/password",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
@@ -280,7 +280,7 @@ func (a *Client) CompleteSelfServiceSettingsFlowWithPasswordMethod(params *Compl
 	_, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "completeSelfServiceSettingsFlowWithPasswordMethod",
 		Method:             "POST",
-		PathPattern:        "/self-service/browser/flows/settings/strategies/password",
+		PathPattern:        "/self-service/settings/methods/password",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},

@@ -55,7 +55,7 @@ type CompleteSelfServiceSettingsFlowWithPasswordMethodFound struct {
 }
 
 func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodFound) Error() string {
-	return fmt.Sprintf("[POST /self-service/browser/flows/settings/strategies/password][%d] completeSelfServiceSettingsFlowWithPasswordMethodFound ", 302)
+	return fmt.Sprintf("[POST /self-service/settings/methods/password][%d] completeSelfServiceSettingsFlowWithPasswordMethodFound ", 302)
 }
 
 func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -77,7 +77,7 @@ type CompleteSelfServiceSettingsFlowWithPasswordMethodInternalServerError struct
 }
 
 func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodInternalServerError) Error() string {
-	return fmt.Sprintf("[POST /self-service/browser/flows/settings/strategies/password][%d] completeSelfServiceSettingsFlowWithPasswordMethodInternalServerError  %+v", 500, o.Payload)
+	return fmt.Sprintf("[POST /self-service/settings/methods/password][%d] completeSelfServiceSettingsFlowWithPasswordMethodInternalServerError  %+v", 500, o.Payload)
 }
 
 func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodInternalServerError) GetPayload() *models.GenericError {

@@ -42,7 +42,7 @@ type RegistrationFlow struct {
 	// Methods contains context for all enabled registration methods. If a registration flow has been
 	// processed, but for example the password is incorrect, this will contain error messages.
 	// Required: true
-	Methods map[string]RegistrationRequestMethod `json:"methods"`
+	Methods map[string]RegistrationFlowMethod `json:"methods"`
 
 	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used
 	// to forward information contained in the URL's path or query for example.

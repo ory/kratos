@@ -67,7 +67,7 @@ type CompleteSelfServiceRegistrationFlowWithPasswordMethodOK struct {
 }
 
 func (o *CompleteSelfServiceRegistrationFlowWithPasswordMethodOK) Error() string {
-	return fmt.Sprintf("[GET /self-service/registration/methods/password][%d] completeSelfServiceRegistrationFlowWithPasswordMethodOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[POST /self-service/registration/methods/password][%d] completeSelfServiceRegistrationFlowWithPasswordMethodOK  %+v", 200, o.Payload)
 }
 
 func (o *CompleteSelfServiceRegistrationFlowWithPasswordMethodOK) GetPayload() *models.RegistrationViaAPIResponse {
@@ -100,7 +100,7 @@ type CompleteSelfServiceRegistrationFlowWithPasswordMethodFound struct {
 }
 
 func (o *CompleteSelfServiceRegistrationFlowWithPasswordMethodFound) Error() string {
-	return fmt.Sprintf("[GET /self-service/registration/methods/password][%d] completeSelfServiceRegistrationFlowWithPasswordMethodFound ", 302)
+	return fmt.Sprintf("[POST /self-service/registration/methods/password][%d] completeSelfServiceRegistrationFlowWithPasswordMethodFound ", 302)
 }
 
 func (o *CompleteSelfServiceRegistrationFlowWithPasswordMethodFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -122,7 +122,7 @@ type CompleteSelfServiceRegistrationFlowWithPasswordMethodBadRequest struct {
 }
 
 func (o *CompleteSelfServiceRegistrationFlowWithPasswordMethodBadRequest) Error() string {
-	return fmt.Sprintf("[GET /self-service/registration/methods/password][%d] completeSelfServiceRegistrationFlowWithPasswordMethodBadRequest  %+v", 400, o.Payload)
+	return fmt.Sprintf("[POST /self-service/registration/methods/password][%d] completeSelfServiceRegistrationFlowWithPasswordMethodBadRequest  %+v", 400, o.Payload)
 }
 
 func (o *CompleteSelfServiceRegistrationFlowWithPasswordMethodBadRequest) GetPayload() *models.GenericError {
@@ -155,7 +155,7 @@ type CompleteSelfServiceRegistrationFlowWithPasswordMethodInternalServerError st
 }
 
 func (o *CompleteSelfServiceRegistrationFlowWithPasswordMethodInternalServerError) Error() string {
-	return fmt.Sprintf("[GET /self-service/registration/methods/password][%d] completeSelfServiceRegistrationFlowWithPasswordMethodInternalServerError  %+v", 500, o.Payload)
+	return fmt.Sprintf("[POST /self-service/registration/methods/password][%d] completeSelfServiceRegistrationFlowWithPasswordMethodInternalServerError  %+v", 500, o.Payload)
 }
 
 func (o *CompleteSelfServiceRegistrationFlowWithPasswordMethodInternalServerError) GetPayload() *models.GenericError {

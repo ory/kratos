@@ -14,12 +14,14 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+
+	"github.com/ory/kratos/internal/httpclient/models"
 )
 
 // NewCompleteSelfServiceSettingsFlowWithPasswordMethodParams creates a new CompleteSelfServiceSettingsFlowWithPasswordMethodParams object
 // with the default values initialized.
 func NewCompleteSelfServiceSettingsFlowWithPasswordMethodParams() *CompleteSelfServiceSettingsFlowWithPasswordMethodParams {
-
+	var ()
 	return &CompleteSelfServiceSettingsFlowWithPasswordMethodParams{
 
 		timeout: cr.DefaultTimeout,
@@ -29,7 +31,7 @@ func NewCompleteSelfServiceSettingsFlowWithPasswordMethodParams() *CompleteSelfS
 // NewCompleteSelfServiceSettingsFlowWithPasswordMethodParamsWithTimeout creates a new CompleteSelfServiceSettingsFlowWithPasswordMethodParams object
 // with the default values initialized, and the ability to set a timeout on a request
 func NewCompleteSelfServiceSettingsFlowWithPasswordMethodParamsWithTimeout(timeout time.Duration) *CompleteSelfServiceSettingsFlowWithPasswordMethodParams {
-
+	var ()
 	return &CompleteSelfServiceSettingsFlowWithPasswordMethodParams{
 
 		timeout: timeout,
@@ -39,7 +41,7 @@ func NewCompleteSelfServiceSettingsFlowWithPasswordMethodParamsWithTimeout(timeo
 // NewCompleteSelfServiceSettingsFlowWithPasswordMethodParamsWithContext creates a new CompleteSelfServiceSettingsFlowWithPasswordMethodParams object
 // with the default values initialized, and the ability to set a context for a request
 func NewCompleteSelfServiceSettingsFlowWithPasswordMethodParamsWithContext(ctx context.Context) *CompleteSelfServiceSettingsFlowWithPasswordMethodParams {
-
+	var ()
 	return &CompleteSelfServiceSettingsFlowWithPasswordMethodParams{
 
 		Context: ctx,
@@ -49,7 +51,7 @@ func NewCompleteSelfServiceSettingsFlowWithPasswordMethodParamsWithContext(ctx c
 // NewCompleteSelfServiceSettingsFlowWithPasswordMethodParamsWithHTTPClient creates a new CompleteSelfServiceSettingsFlowWithPasswordMethodParams object
 // with the default values initialized, and the ability to set a custom HTTPClient for a request
 func NewCompleteSelfServiceSettingsFlowWithPasswordMethodParamsWithHTTPClient(client *http.Client) *CompleteSelfServiceSettingsFlowWithPasswordMethodParams {
-
+	var ()
 	return &CompleteSelfServiceSettingsFlowWithPasswordMethodParams{
 		HTTPClient: client,
 	}
@@ -59,6 +61,15 @@ func NewCompleteSelfServiceSettingsFlowWithPasswordMethodParamsWithHTTPClient(cl
 for the complete self service settings flow with password method operation typically these are written to a http.Request
 */
 type CompleteSelfServiceSettingsFlowWithPasswordMethodParams struct {
+
+	/*Payload*/
+	Payload *models.SettingsFlowPayload
+	/*Flow
+	  Flow is flow ID.
+
+	*/
+	Flow *string
+
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
@@ -97,6 +108,28 @@ func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodParams) SetHTTPClient(
 	o.HTTPClient = client
 }
 
+// WithPayload adds the payload to the complete self service settings flow with password method params
+func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodParams) WithPayload(payload *models.SettingsFlowPayload) *CompleteSelfServiceSettingsFlowWithPasswordMethodParams {
+	o.SetPayload(payload)
+	return o
+}
+
+// SetPayload adds the payload to the complete self service settings flow with password method params
+func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodParams) SetPayload(payload *models.SettingsFlowPayload) {
+	o.Payload = payload
+}
+
+// WithFlow adds the flow to the complete self service settings flow with password method params
+func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodParams) WithFlow(flow *string) *CompleteSelfServiceSettingsFlowWithPasswordMethodParams {
+	o.SetFlow(flow)
+	return o
+}
+
+// SetFlow adds the flow to the complete self service settings flow with password method params
+func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodParams) SetFlow(flow *string) {
+	o.Flow = flow
+}
+
 // WriteToRequest writes these params to a swagger request
 func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -104,6 +137,28 @@ func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodParams) WriteToRequest
 		return err
 	}
 	var res []error
+
+	if o.Payload != nil {
+		if err := r.SetBodyParam(o.Payload); err != nil {
+			return err
+		}
+	}
+
+	if o.Flow != nil {
+
+		// query param flow
+		var qrFlow string
+		if o.Flow != nil {
+			qrFlow = *o.Flow
+		}
+		qFlow := qrFlow
+		if qFlow != "" {
+			if err := r.SetQueryParam("flow", qFlow); err != nil {
+				return err
+			}
+		}
+
+	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
