@@ -1,4 +1,4 @@
-package lint
+package jsonnet
 
 import (
 	"fmt"
@@ -43,8 +43,4 @@ var jsonnetLintCmd = &cobra.Command{
 			}
 		}
 	},
-}
-
-func RegisterCommandRecursive(parent *cobra.Command) {
-	parent.AddCommand(jsonnetLintCmd)
 }

@@ -2,8 +2,6 @@ package identities
 
 import (
 	"github.com/spf13/cobra"
-
-	"github.com/ory/kratos/cmd/identities/port"
 )
 
 // identitiesCmd represents the identity command
@@ -14,7 +12,7 @@ var identitiesCmd = &cobra.Command{
 func RegisterCommandRecursive(parent *cobra.Command) {
 	parent.AddCommand(identitiesCmd)
 
-	port.RegisterCommandRecursive(identitiesCmd)
+	identitiesCmd.AddCommand(importCmd)
 }
 
 func init() {

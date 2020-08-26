@@ -1,4 +1,4 @@
-package port
+package identities
 
 import (
 	"github.com/spf13/cobra"
@@ -10,8 +10,4 @@ import (
 var importCmd = &cobra.Command{
 	Use: "import <file.json [file-2.json [file-3.json] ...]>",
 	Run: client.NewIdentityClient().Import,
-}
-
-func RegisterCommandRecursive(parent *cobra.Command) {
-	parent.AddCommand(importCmd)
 }
