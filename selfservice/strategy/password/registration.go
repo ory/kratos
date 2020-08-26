@@ -35,7 +35,7 @@ const (
 type RegistrationFormPayload struct {
 	Password  string          `json:"password"`
 	Traits    json.RawMessage `json:"traits"`
-	CSRFToken string `json:"csrf_token"`
+	CSRFToken string          `json:"csrf_token"`
 }
 
 func (s *Strategy) RegisterRegistrationRoutes(public *x.RouterPublic) {
@@ -164,7 +164,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	if err := flow.VerifyRequest(r,ar.Type,s.d.GenerateCSRFToken,p.CSRFToken); err != nil {
+	if err := flow.VerifyRequest(r, ar.Type, s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		s.handleRegistrationError(w, r, ar, &p, err)
 		return
 	}

@@ -189,7 +189,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		Debug("Completed all PostSettingsPrePersistHooks and PostSettingsPostPersistHooks.")
 
 	if ctxUpdate.Flow.Type == flow.TypeAPI {
-		updatedFlow, err := e.d.SettingsFlowPersister().GetSettingsFlow(r.Context(),ctxUpdate.Flow.ID)
+		updatedFlow, err := e.d.SettingsFlowPersister().GetSettingsFlow(r.Context(), ctxUpdate.Flow.ID)
 		if err != nil {
 			return err
 		}

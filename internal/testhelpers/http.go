@@ -11,6 +11,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func NewDebugClient(t *testing.T) *http.Client {
+	return &http.Client{Transport: NewTransportWithLogger(http.DefaultTransport, t)}
+}
+
 func NewHTTPGetJSONRequest(t *testing.T, url string) *http.Request {
 	req, err := http.NewRequest("GET", url, nil)
 	require.NoError(t, err)

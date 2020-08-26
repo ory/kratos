@@ -8,10 +8,11 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
+	"github.com/pkg/errors"
+
 	"github.com/ory/herodot"
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/urlx"
-	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
@@ -129,7 +130,7 @@ func (s *Strategy) continueSettingsFlow(
 	w http.ResponseWriter, r *http.Request,
 	ctxUpdate *settings.UpdateContext, p *SettingsFlowPayload,
 ) {
-	if err := flow.VerifyRequest(r,ctxUpdate.Flow.Type,s.d.GenerateCSRFToken,p.CSRFToken); err != nil {
+	if err := flow.VerifyRequest(r, ctxUpdate.Flow.Type, s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		s.handleSettingsError(w, r, ctxUpdate, p, err)
 		return
 	}
@@ -186,7 +187,7 @@ func (s *Strategy) continueSettingsFlow(
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, _ *identity.Identity, f *settings.Flow) error {
 	hf := &form.HTMLForm{Action: urlx.CopyWithQuery(urlx.AppendPaths(s.c.SelfPublicURL(), RouteSettings),
 		url.Values{"flow": {f.ID.String()}}).String(), Fields: form.Fields{{Name: "password",
-			Type: "password", Required: true}}, Method: "POST"}
+		Type: "password", Required: true}}, Method: "POST"}
 	hf.SetCSRF(s.d.GenerateCSRFToken(r))
 
 	f.Methods[string(s.ID())] = &settings.FlowMethod{

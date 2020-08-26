@@ -16,7 +16,7 @@ func MustPkgerRead(f pkging.File, err error) []byte {
 
 func PkgerRead(f pkging.File, err error) ([]byte, error) {
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	defer f.Close()
 	return ioutil.ReadAll(f)

@@ -64,7 +64,7 @@ func NewHTTPClientWithSessionCookie(t *testing.T, reg *driver.RegistryDefault, s
 func NewTransportWithLogger(parent http.RoundTripper, t *testing.T) *TransportWithLogger {
 	return &TransportWithLogger{
 		RoundTripper: parent,
-		t:t,
+		t:            t,
 	}
 }
 
@@ -80,7 +80,6 @@ func (ct *TransportWithLogger) RoundTrip(req *http.Request) (*http.Response, err
 	}
 	return ct.RoundTripper.RoundTrip(req)
 }
-
 
 func NewHTTPClientWithSessionToken(t *testing.T, reg *driver.RegistryDefault, sess *session.Session) *http.Client {
 	maybePersistSession(t, reg, sess)

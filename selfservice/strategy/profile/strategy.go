@@ -65,8 +65,8 @@ type (
 		IdentityTraitsSchemas() schema.Schemas
 	}
 	Strategy struct {
-		c configuration.Provider
-		d strategyDependencies
+		c  configuration.Provider
+		d  strategyDependencies
 		dc *decoderx.HTTP
 	}
 )
@@ -182,8 +182,8 @@ func (s *Strategy) handleSubmit(w http.ResponseWriter, r *http.Request, ps httpr
 }
 
 func (s *Strategy) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *SettingsFlowPayload) {
-	if err := flow.VerifyRequest(r,ctxUpdate.Flow.Type,s.d.GenerateCSRFToken,p.CSRFToken); err != nil {
-		s.handleSettingsError(w, r, ctxUpdate,nil, p, err)
+	if err := flow.VerifyRequest(r, ctxUpdate.Flow.Type, s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+		s.handleSettingsError(w, r, ctxUpdate, nil, p, err)
 		return
 	}
 
@@ -244,7 +244,6 @@ type SettingsFlowPayload struct {
 	// This token is only required when performing browser flows.
 	CSRFToken string `json:"csrf_token"`
 }
-
 
 func (p *SettingsFlowPayload) GetFlowID() uuid.UUID {
 	return x.ParseUUID(p.FlowID)

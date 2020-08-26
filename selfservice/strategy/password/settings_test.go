@@ -8,12 +8,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ory/x/assertx"
-	"github.com/ory/x/httpx"
-	"github.com/ory/x/randx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/assertx"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/randx"
 
 	"github.com/ory/viper"
 
@@ -261,7 +262,7 @@ func TestSettings(t *testing.T) {
 			values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
 			values.Set("password", randx.MustString(16, randx.AlphaNum))
 			_, res := testhelpers.SettingsMakeRequest(t, isAPI, f, c, testhelpers.EncodeFormAsJSON(t, isAPI, values))
-			require.EqualValues(t,rts.URL+"/return-ts", res.Request.URL.String())
+			require.EqualValues(t, rts.URL+"/return-ts", res.Request.URL.String())
 
 			actualIdentity, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), browserIdentity1.ID)
 			require.NoError(t, err)

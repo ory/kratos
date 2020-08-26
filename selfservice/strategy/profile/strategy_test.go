@@ -12,10 +12,11 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/ory/x/assertx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/assertx"
 
 	"github.com/ory/x/sqlxx"
 

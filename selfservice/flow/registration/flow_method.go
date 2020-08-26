@@ -13,7 +13,7 @@ import (
 	"github.com/ory/kratos/selfservice/form"
 )
 
-// swagger:model registrationRequestMethod
+// swagger:model registrationFlowMethod
 type FlowMethod struct {
 	// Method contains the flow method's credentials type.
 	Method identity.CredentialsType `json:"method" faker:"string" db:"method"`
@@ -67,7 +67,7 @@ type FlowMethodConfigurator interface {
 	form.MessageAdder
 }
 
-// swagger:model registrationRequestMethodConfig
+// swagger:model registrationFlowMethodConfig
 type FlowMethodConfig struct {
 	// swagger:ignore
 	FlowMethodConfigurator
@@ -75,7 +75,7 @@ type FlowMethodConfig struct {
 	flowMethodConfigMock
 }
 
-// swagger:model registrationRequestMethodConfigPayload
+// swagger:model registrationFlowMethodConfigPayload
 type flowMethodConfigMock struct {
 	*form.HTMLForm
 

@@ -247,7 +247,7 @@ func SubmitSettingsForm(
 	method string,
 	expectedStatusCode int,
 ) string {
-	hc.Transport = NewTransportWithLogger(hc.Transport , t)
+	hc.Transport = NewTransportWithLogger(hc.Transport, t)
 	var payload *models.SettingsFlow
 	if isAPI {
 		payload = InitializeSettingsFlowViaAPI(t, hc, publicTS).Payload

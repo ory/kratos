@@ -4,8 +4,9 @@ import (
 	"net/http"
 
 	"github.com/justinas/nosurf"
-	"github.com/ory/herodot"
 	"github.com/pkg/errors"
+
+	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/x"
 )
