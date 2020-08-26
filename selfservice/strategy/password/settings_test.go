@@ -6,11 +6,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
-	"time"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/httpx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -27,12 +28,35 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/strategy/password"
-	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/selfservice/strategy/profile"
 	"github.com/ory/kratos/x"
 )
 
 func init() {
 	internal.RegisterFakes()
+}
+
+func newIdentityWithPassword(email string) *identity.Identity {
+	return &identity.Identity{
+		ID: x.NewUUID(),
+		Credentials: map[identity.CredentialsType]identity.Credentials{
+			"password": {
+				Type:        "password",
+				Identifiers: []string{email},
+				Config:      []byte(`{"hashed_password":"foo"}`),
+			},
+		},
+		Traits:   identity.Traits(`{"email":"` + email + `"}`),
+		SchemaID: configuration.DefaultIdentityTraitsSchemaID,
+	}
+}
+
+func newEmptyIdentity() *identity.Identity {
+	return &identity.Identity{
+		ID:       x.NewUUID(),
+		Traits:   identity.Traits(`{}`),
+		SchemaID: configuration.DefaultIdentityTraitsSchemaID,
+	}
 }
 
 func TestSettings(t *testing.T) {
@@ -46,29 +70,17 @@ func TestSettings(t *testing.T) {
 	_ = testhelpers.NewErrorTestServer(t, reg)
 	viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
 
-	browserIdentity1 := &identity.Identity{
-		ID: x.NewUUID(), Credentials: map[identity.CredentialsType]identity.Credentials{
-			"password": {Type: "password", Identifiers: []string{"john-browser@doe.com"}, Config:
-			[]byte(`{"hashed_password":"foo"}`)}},
-		Traits: identity.Traits(`{"email":"john-browser@doe.com"}`), SchemaID: configuration.DefaultIdentityTraitsSchemaID}
-	apiIdentity1 := &identity.Identity{
-		ID: x.NewUUID(), Credentials: map[identity.CredentialsType]identity.Credentials{
-			"password": {Type: "password", Identifiers: []string{"john-api@doe.com"}, Config:
-			[]byte(`{"hashed_password":"foo"}`)}},
-		Traits: identity.Traits(`{"email":"john-api@doe.com"}`), SchemaID: configuration.DefaultIdentityTraitsSchemaID}
-	browserIdentity2 := &identity.Identity{
-		ID: x.NewUUID(), Credentials: map[identity.CredentialsType]identity.Credentials{},
-		Traits: identity.Traits(`{}`), SchemaID: configuration.DefaultIdentityTraitsSchemaID}
-	apiIdentity2 := &identity.Identity{
-		ID: x.NewUUID(), Credentials: map[identity.CredentialsType]identity.Credentials{},
-		Traits: identity.Traits(`{}`), SchemaID: configuration.DefaultIdentityTraitsSchemaID}
+	browserIdentity1 := newIdentityWithPassword("john-browser@doe.com")
+	apiIdentity1 := newIdentityWithPassword("john-api@doe.com")
+	browserIdentity2 := newEmptyIdentity()
+	apiIdentity2 := newEmptyIdentity()
 
 	publicTS, adminTS := testhelpers.NewKratosServer(t, reg)
 
-	browserUser1 := testhelpers.NewHTTPClientWithSessionCookie(t, reg, session.NewActiveSession(browserIdentity1, testhelpers.NewSessionLifespanProvider(time.Hour), time.Now()))
-	browserUser2 := testhelpers.NewHTTPClientWithSessionCookie(t, reg, session.NewActiveSession(browserIdentity2, testhelpers.NewSessionLifespanProvider(time.Hour), time.Now()))
-	apiUser1 := testhelpers.NewHTTPClientWithSessionToken(t, reg, session.NewActiveSession(apiIdentity1, testhelpers.NewSessionLifespanProvider(time.Hour), time.Now()))
-	apiUser2 := testhelpers.NewHTTPClientWithSessionToken(t, reg, session.NewActiveSession(apiIdentity2, testhelpers.NewSessionLifespanProvider(time.Hour), time.Now()))
+	browserUser1 := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, browserIdentity1)
+	browserUser2 := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, reg, browserIdentity2)
+	apiUser1 := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, apiIdentity1)
+	apiUser2 := testhelpers.NewHTTPClientWithIdentitySessionToken(t, reg, apiIdentity2)
 
 	adminClient := testhelpers.NewSDKClient(adminTS)
 
@@ -84,6 +96,23 @@ func TestSettings(t *testing.T) {
 		}
 		return payload
 	}
+
+	t.Run("description=not authorized to call endpoints without a session", func(t *testing.T) {
+		t.Run("type=browser", func(t *testing.T) {
+			res, err := http.DefaultClient.Do(httpx.MustNewRequest("POST", publicTS.URL+profile.RouteSettings, strings.NewReader(url.Values{"foo": {"bar"}}.Encode()), "application/x-www-form-urlencoded"))
+			require.NoError(t, err)
+			defer res.Body.Close()
+			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode, "%+v", res.Request)
+			assert.Contains(t, res.Request.URL.String(), viper.GetString(configuration.ViperKeySelfServiceLoginUI))
+		})
+
+		t.Run("type=api", func(t *testing.T) {
+			res, err := http.DefaultClient.Do(httpx.MustNewRequest("POST", publicTS.URL+profile.RouteSettings, strings.NewReader(`{"foo":"bar"}`), "application/json"))
+			require.NoError(t, err)
+			defer res.Body.Close()
+			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode)
+		})
+	})
 
 	t.Run("description=should update the password and clear errors after input error occurred", func(t *testing.T) {
 		t.Run("description=should fail if password violates policy", func(t *testing.T) {
