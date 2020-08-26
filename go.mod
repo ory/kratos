@@ -4,6 +4,9 @@ go 1.14
 
 replace github.com/justinas/nosurf => github.com/aeneasr/nosurf v1.1.1-0.20200817183017-ee7691f82e7d
 
+// See https://github.com/markbates/pkger/pull/112
+replace github.com/markbates/pkger => github.com/falafeljan/pkger v0.17.1-0.20200722132747-95726f5b9b9b
+
 require (
 	github.com/Masterminds/sprig/v3 v3.0.0
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
@@ -26,8 +29,7 @@ require (
 	github.com/go-swagger/go-swagger v0.25.0
 	github.com/gobuffalo/fizz v1.11.1-0.20200706214517-4e9fb9ced4ce
 	github.com/gobuffalo/httptest v1.0.2
-	github.com/gobuffalo/logger v1.0.3
-	github.com/gobuffalo/packr/v2 v2.8.0
+	github.com/gobuffalo/packr/v2 v2.8.0 // indirect
 	github.com/gobuffalo/pop/v5 v5.2.4-0.20200706214017-1dd950510b30
 	github.com/gobuffalo/uuid v2.0.5+incompatible
 	github.com/gofrs/uuid v3.2.0+incompatible
@@ -48,6 +50,7 @@ require (
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/justinas/nosurf v1.1.0
 	github.com/leodido/go-urn v1.1.0 // indirect
+	github.com/markbates/pkger v0.17.0
 	github.com/mattn/goveralls v0.0.5
 	github.com/mikefarah/yq v1.15.0
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826

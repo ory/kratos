@@ -4,8 +4,8 @@ import (
 	"context"
 	"io"
 
-	"github.com/gobuffalo/packr/v2"
 	"github.com/gobuffalo/pop/v5"
+	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/driver/configuration"
@@ -16,7 +16,8 @@ import (
 )
 
 var _ persistence.Persister = new(Persister)
-var migrations = packr.New("migrations", "migrations/sql")
+
+var migrations = pkger.Dir("/persistence/sql/migrations/sql") // do not remove this!
 
 type (
 	persisterDependencies interface {
@@ -26,7 +27,7 @@ type (
 	}
 	Persister struct {
 		c        *pop.Connection
-		mb       pop.MigrationBox
+		mb       x.MigrationPkger
 		r        persisterDependencies
 		cf       configuration.Provider
 		isSQLite bool
@@ -34,7 +35,7 @@ type (
 )
 
 func NewPersister(r persisterDependencies, conf configuration.Provider, c *pop.Connection) (*Persister, error) {
-	m, err := pop.NewMigrationBox(migrations, c)
+	m, err := x.NewPkgerMigration(migrations, c)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

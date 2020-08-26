@@ -1,19 +1,14 @@
 package x
 
 import (
-	"github.com/gobuffalo/packr/v2"
+	"github.com/markbates/pkger"
 
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/viperx"
 )
 
-var schemas = packr.New("schemas", "../.schema")
+var schema = MustPkgerRead(pkger.Open("/.schema/config.schema.json"))
 
 func WatchAndValidateViper(log *logrusx.Logger) {
-	schema, err := schemas.Find("config.schema.json")
-	if err != nil {
-		log.WithError(err).Fatal("Unable to open configuration JSON Schema.")
-	}
-
 	viperx.WatchAndValidateViper(log, schema, "ORY Kratos", []string{"serve", "profiling", "log"}, "")
 }

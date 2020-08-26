@@ -12,7 +12,6 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/gobuffalo/packr/v2/plog"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
@@ -25,8 +24,6 @@ import (
 
 	"github.com/gobuffalo/pop/v5"
 	"github.com/stretchr/testify/require"
-
-	gobuffalologger "github.com/gobuffalo/logger"
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/configuration"
@@ -49,7 +46,6 @@ func TestMigrations(t *testing.T) {
 		"sqlite": sqlite,
 	}
 	l := logrusx.New("", "", logrusx.ForceLevel(logrus.TraceLevel))
-	plog.Logger = gobuffalologger.Logrus{FieldLogger: l.Entry}
 
 	if !testing.Short() {
 		dockertest.Parallel([]func(){

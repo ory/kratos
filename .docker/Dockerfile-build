@@ -1,6 +1,6 @@
 FROM golang:1.14-alpine AS builder
 
-RUN apk -U --no-cache add build-base git gcc
+RUN apk -U --no-cache add build-base git gcc bash
 
 WORKDIR /go/src/github.com/ory/kratos
 
@@ -11,11 +11,10 @@ ENV GO111MODULE on
 ENV CGO_ENABLED 1
 
 RUN go mod download
-RUN go install github.com/gobuffalo/packr/v2/packr2
 
 ADD . .
 
-RUN packr2
+RUN make pack
 RUN go build -tags sqlite -a -o /usr/bin/kratos
 
 FROM alpine:3.11

@@ -1,8 +1,8 @@
 SHELL=/bin/bash -o pipefail
 
-EXECUTABLES = docker-compose docker node npm go
-K := $(foreach exec,$(EXECUTABLES),\
-        $(if $(shell which $(exec)),some string,$(error "No $(exec) in PATH")))
+#  EXECUTABLES = docker-compose docker node npm go
+#  K := $(foreach exec,$(EXECUTABLES),\
+#          $(if $(shell which $(exec)),some string,$(error "No $(exec) in PATH")))
 
 export GO111MODULE := on
 export PATH := .bin:${PATH}
@@ -10,11 +10,11 @@ export PATH := .bin:${PATH}
 GO_DEPENDENCIES = github.com/ory/go-acc \
 				  github.com/sqs/goreturns \
 				  github.com/ory/x/tools/listx \
+				  github.com/markbates/pkger/cmd/pkger \
 				  github.com/golang/mock/mockgen \
 				  github.com/go-swagger/go-swagger/cmd/swagger \
 				  golang.org/x/tools/cmd/goimports \
-				  github.com/mikefarah/yq \
-				  github.com/gobuffalo/packr/v2/packr2
+				  github.com/mikefarah/yq
 
 define make-go-dependency
   # go install is responsible for not re-building when the code hasn't changed
@@ -57,8 +57,8 @@ mocks: .bin/mockgen
 		mockgen -mock_names Manager=MockLoginExecutorDependencies -package internal -destination internal/hook_login_executor_dependencies.go github.com/ory/kratos/selfservice loginExecutorDependencies
 
 .PHONY: install
-install: .bin/packr2
-		packr2
+install: .bin/packr2 .bin/pack
+		make pack
 		GO111MODULE=on go install -tags sqlite .
 		packr2 clean
 
@@ -124,3 +124,7 @@ migrations-render: .bin/cli
 .PHONY: migrations-render-replace
 migrations-render-replace: .bin/cli
 		cli dev pop migration render -r persistence/sql/migrations/templates persistence/sql/migrations/sql
+
+.PHONY: pack
+pack: .bin/pkger
+		pkger -exclude node_modules -exclude docs -exclude .bin -exclude test -exclude script -exclude contrib
