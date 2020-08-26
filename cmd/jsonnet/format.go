@@ -20,8 +20,6 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/ory/kratos/internal/clihelpers"
-
 	"github.com/google/go-jsonnet/formatter"
 	"github.com/spf13/cobra"
 
@@ -36,7 +34,7 @@ var jsonnetFormatCmd = &cobra.Command{
 
 Use -w or --write to write output back to files instead of stdout.
 
-` + clihelpers.JsonnetGlobHelp,
+` + GlobHelp,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, pattern := range args {
