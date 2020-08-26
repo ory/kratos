@@ -13,12 +13,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package cmd
+package format
 
 import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+
+	"github.com/ory/kratos/internal/clihelpers"
 
 	"github.com/google/go-jsonnet/formatter"
 	"github.com/spf13/cobra"
@@ -34,7 +36,7 @@ var jsonnetFormatCmd = &cobra.Command{
 
 Use -w or --write to write output back to files instead of stdout.
 
-` + globHelp,
+` + clihelpers.JsonnetGlobHelp,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, pattern := range args {
@@ -60,7 +62,10 @@ Use -w or --write to write output back to files instead of stdout.
 	},
 }
 
+func RegisterCommandRecursive(parent *cobra.Command) {
+	parent.AddCommand(jsonnetFormatCmd)
+}
+
 func init() {
-	jsonnetCmd.AddCommand(jsonnetFormatCmd)
 	jsonnetFormatCmd.Flags().BoolP("write", "w", false, "Write formatted output back to file.")
 }

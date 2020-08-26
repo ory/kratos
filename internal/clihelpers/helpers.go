@@ -1,10 +1,6 @@
-package cmd
+package clihelpers
 
-import (
-	"github.com/spf13/cobra"
-)
-
-const globHelp = `Glob Syntax:
+const JsonnetGlobHelp = `Glob Syntax:
 
     pattern:
         { term }
@@ -29,12 +25,8 @@ const globHelp = `Glob Syntax:
         pattern { ',' pattern }
                     comma-separated (without spaces) patterns`
 
-// jsonnetCmd represents the jsonnet command
-var jsonnetCmd = &cobra.Command{
-	Use:   "jsonnet",
-	Short: "Helpers for linting and formatting JSONNet code",
-}
-
-func init() {
-	rootCmd.AddCommand(jsonnetCmd)
-}
+var (
+	BuildVersion = ""
+	BuildTime    = ""
+	BuildGitHash = ""
+)

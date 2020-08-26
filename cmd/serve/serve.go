@@ -12,11 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmd
+package serve
 
 import (
 	"os"
 	"strconv"
+
+	"github.com/ory/kratos/internal/clihelpers"
+	"github.com/ory/x/logrusx"
 
 	"github.com/ory/kratos/driver/configuration"
 
@@ -30,6 +33,8 @@ import (
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/x"
 )
+
+var logger *logrusx.Logger
 
 // serveCmd represents the serve command
 var serveCmd = &cobra.Command{
@@ -50,23 +55,25 @@ DON'T DO THIS IN PRODUCTION!
 		}
 
 		x.WatchAndValidateViper(logger)
-		d := driver.MustNewDefaultDriver(logger, BuildVersion, BuildTime, BuildGitHash, dev)
+		d := driver.MustNewDefaultDriver(logger, clihelpers.BuildVersion, clihelpers.BuildTime, clihelpers.BuildGitHash, dev)
 
 		configVersion := d.Configuration().ConfigVersion()
 		if configVersion == configuration.UnknownVersion {
 			d.Logger().Warn("The config has no version specified. Add the version to improve your development experience.")
-		} else if BuildVersion != "" &&
-			configVersion != BuildVersion {
-			d.Logger().Warnf("Config version is '%s' but kratos runs on version '%s'", configVersion, BuildVersion)
+		} else if clihelpers.BuildVersion != "" &&
+			configVersion != clihelpers.BuildVersion {
+			d.Logger().Warnf("Config version is '%s' but kratos runs on version '%s'", configVersion, clihelpers.BuildVersion)
 		}
 
 		daemon.ServeAll(d)(cmd, args)
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(serveCmd)
+func RegisterCommandRecursive(parent *cobra.Command) {
+	parent.AddCommand(serveCmd)
+}
 
+func init() {
 	disableTelemetryEnv, _ := strconv.ParseBool(os.Getenv("DISABLE_TELEMETRY"))
 	serveCmd.PersistentFlags().Bool("disable-telemetry", disableTelemetryEnv, "Disable anonymized telemetry reports - for more information please visit https://www.ory.sh/docs/ecosystem/sqa")
 	serveCmd.PersistentFlags().Bool("dev", false, "Disables critical security features to make development easier")
