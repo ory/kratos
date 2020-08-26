@@ -93,6 +93,7 @@ Something is not working.
 
 * [ ] Logout does not use new cookie domain setting ([kratos#645](https://github.com/ory/kratos/issues/645))
 * [ ] Refresh Sessions Without Having to Log In Again ([kratos#615](https://github.com/ory/kratos/issues/615)) - [@hackerman](https://github.com/aeneasr)
+* [ ] Email field type changes on second request for request context during registration flow  ([kratos#670](https://github.com/ory/kratos/issues/670))
 * [x] Generate a new UUID/token after every interaction ([kratos#236](https://github.com/ory/kratos/issues/236)) - [@hackerman](https://github.com/aeneasr)
 * [x] UNIQUE constraint failure when updating identities via Admin API ([kratos#325](https://github.com/ory/kratos/issues/325)) - [@hackerman](https://github.com/aeneasr)
 * [x] Can not update an identity using PUT /identities/{id} ([kratos#435](https://github.com/ory/kratos/issues/435))
@@ -106,6 +107,9 @@ New feature or request.
 #### Issues
 
 * [ ] Design of the client cli ([kratos#663](https://github.com/ory/kratos/issues/663)) - [@Patrik](https://github.com/zepatrik)
+* [ ] Rename `request_lifespan` to `lifespan` ([kratos#666](https://github.com/ory/kratos/issues/666)) - [@hackerman](https://github.com/aeneasr)
+* [ ] Implement React SPA sample app ([kratos#668](https://github.com/ory/kratos/issues/668)) - [@hackerman](https://github.com/aeneasr)
+* [ ] Implement React Native sample application consuming API ([kratos#667](https://github.com/ory/kratos/issues/667)) - [@hackerman](https://github.com/aeneasr)
 * [x] Implement JSON capabilities in ErrorHandler ([kratos#61](https://github.com/ory/kratos/issues/61)) - [@hackerman](https://github.com/aeneasr)
 * [x] Allow attaching credentials to identities in CRUD create ([kratos#200](https://github.com/ory/kratos/issues/200))
 * [x] Move away from UUID-based challenges and responses ([kratos#241](https://github.com/ory/kratos/issues/241)) - [@hackerman](https://github.com/aeneasr)
@@ -129,6 +133,7 @@ We are looking for help on this one.
 #### Issues
 
 * [ ] Design of the client cli ([kratos#663](https://github.com/ory/kratos/issues/663)) - [@Patrik](https://github.com/zepatrik)
+* [ ] Email field type changes on second request for request context during registration flow  ([kratos#670](https://github.com/ory/kratos/issues/670))
 
 ### [Docs](https://github.com/ory/kratos/labels/docs)
 
@@ -154,6 +159,7 @@ Blocks milestones or other issues or pulls.
 #### Issues
 
 * [ ] Remove reverse proxy from node example and rely on port and the domain parameter ([kratos#661](https://github.com/ory/kratos/issues/661)) - [@hackerman](https://github.com/aeneasr)
+* [ ] Rename `request_lifespan` to `lifespan` ([kratos#666](https://github.com/ory/kratos/issues/666)) - [@hackerman](https://github.com/aeneasr)
 
 #### Pull Requests
 
@@ -162,6 +168,10 @@ Blocks milestones or other issues or pulls.
 ### [Breaking change](https://github.com/ory/kratos/labels/breaking%20change)
 
 Changes behavior in a breaking manner.
+
+#### Issues
+
+* [ ] Rename `request_lifespan` to `lifespan` ([kratos#666](https://github.com/ory/kratos/issues/666)) - [@hackerman](https://github.com/aeneasr)
 
 #### Pull Requests
 
