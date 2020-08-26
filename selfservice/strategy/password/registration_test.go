@@ -227,6 +227,7 @@ func TestRegistration(t *testing.T) {
 					"traits.username": {"registration-identifier-4"},
 					"password":        {"password"},
 					"traits.foobar":   {"bar"},
+					"csrf_token":{x.FakeCSRFToken},
 				}.Encode())
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/registration-ts")
 			})
@@ -252,36 +253,9 @@ func TestRegistration(t *testing.T) {
 				res := run(t, false, url.Values{
 					"traits.username": {"registration-identifier-5"},
 					"password":        {x.NewUUID().String()},
+					"csrf_token":{x.FakeCSRFToken},
 				}.Encode())
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/registration-ts")
-			})
-		})
-
-		t.Run("case=should fail because schema did not specify an identifier", func(t *testing.T) {
-			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/missing-identifier.schema.json")
-			run := func(t *testing.T, isAPI bool, payload string) ([]byte, *http.Response) {
-				rr := newRegistrationRequest(t, time.Minute, isAPI)
-				return makeRequest(t, rr.ID, isAPI, payload, expectStatusCodeBrowserOKOr(isAPI, http.StatusInternalServerError))
-			}
-
-			t.Run("type=api", func(t *testing.T) {
-				body, res := run(t, true, `{"password":"c0a5af7a-fa32-4fe1-85b9-3beb4a127164","traits.username":"registration-identifier-6","traits.foobar":"bar"}`)
-				assert.Contains(t, res.Request.URL.String(), publicTS.URL+password.RouteRegistration)
-				assert.Equal(t, int64(http.StatusInternalServerError), gjson.GetBytes(body, "error.code").Int(), "%s", body)
-				assert.Equal(t, "Internal Server Error", gjson.GetBytes(body, "error.status").String(), "%s", body)
-				assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), "No login identifiers", "%s", body)
-			})
-
-			t.Run("type=browser", func(t *testing.T) {
-				body, res := run(t, false, url.Values{
-					"traits.username": {"registration-identifier-6"},
-					"password":        {x.NewUUID().String()},
-					"traits.foobar":   {"bar"},
-				}.Encode())
-				assert.Contains(t, res.Request.URL.String(), errTS.URL)
-				assert.Equal(t, int64(http.StatusInternalServerError), gjson.GetBytes(body, "0.code").Int(), "%s", body)
-				assert.Equal(t, "Internal Server Error", gjson.GetBytes(body, "0.status").String(), "%s", body)
-				assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "No login identifiers", "%s", body)
 			})
 		})
 
@@ -308,6 +282,35 @@ func TestRegistration(t *testing.T) {
 			assert.NotEmpty(t, gjson.GetBytes(body, "identity.id").Raw, "%s", body) // registration successful
 		})
 
+		t.Run("case=should fail because schema did not specify an identifier", func(t *testing.T) {
+			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/missing-identifier.schema.json")
+			run := func(t *testing.T, isAPI bool, payload string) ([]byte, *http.Response) {
+				rr := newRegistrationRequest(t, time.Minute, isAPI)
+				return makeRequest(t, rr.ID, isAPI, payload, expectStatusCodeBrowserOKOr(isAPI, http.StatusInternalServerError))
+			}
+
+			t.Run("type=api", func(t *testing.T) {
+				body, res := run(t, true, `{"password":"c0a5af7a-fa32-4fe1-85b9-3beb4a127164","traits.username":"registration-identifier-6","traits.foobar":"bar"}`)
+				assert.Contains(t, res.Request.URL.String(), publicTS.URL+password.RouteRegistration)
+				assert.Equal(t, int64(http.StatusInternalServerError), gjson.GetBytes(body, "error.code").Int(), "%s", body)
+				assert.Equal(t, "Internal Server Error", gjson.GetBytes(body, "error.status").String(), "%s", body)
+				assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), "No login identifiers", "%s", body)
+			})
+
+			t.Run("type=browser", func(t *testing.T) {
+				body, res := run(t, false, url.Values{
+					"traits.username": {"registration-identifier-6"},
+					"password":        {x.NewUUID().String()},
+					"traits.foobar":   {"bar"},
+					"csrf_token":{x.FakeCSRFToken},
+				}.Encode())
+				assert.Contains(t, res.Request.URL.String(), errTS.URL)
+				assert.Equal(t, int64(http.StatusInternalServerError), gjson.GetBytes(body, "0.code").Int(), "%s", body)
+				assert.Equal(t, "Internal Server Error", gjson.GetBytes(body, "0.status").String(), "%s", body)
+				assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "No login identifiers", "%s", body)
+			})
+		})
+
 		t.Run("case=should fail because schema does not exist", func(t *testing.T) {
 			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/i-do-not-exist.schema.json")
 
@@ -330,6 +333,7 @@ func TestRegistration(t *testing.T) {
 					"traits.username": {"registration-identifier-7"},
 					"password":        {x.NewUUID().String()},
 					"traits.foobar":   {"bar"},
+					"csrf_token":{x.FakeCSRFToken},
 				}.Encode())
 				assert.Contains(t, res.Request.URL.String(), errTS.URL)
 				assert.Equal(t, int64(http.StatusInternalServerError), gjson.GetBytes(body, "0.code").Int(), "%s", body)
@@ -363,6 +367,7 @@ func TestRegistration(t *testing.T) {
 					"traits.username": {"registration-identifier-8-browser"},
 					"password":        {x.NewUUID().String()},
 					"traits.foobar":   {"bar"},
+					"csrf_token":{x.FakeCSRFToken},
 				}.Encode())
 				assert.Contains(t, res.Request.URL.String(), redirTS.URL+"/registration-return-ts")
 				assert.Equal(t, `registration-identifier-8-browser`, gjson.GetBytes(body, "identity.traits.username").String(), "%s", body)
@@ -390,12 +395,14 @@ func TestRegistration(t *testing.T) {
 					"traits.username": {"registration-identifier-8-browser-duplicate"},
 					"password":        {x.NewUUID().String()},
 					"traits.foobar":   {"bar"},
+					"csrf_token":{x.FakeCSRFToken},
 				}.Encode(), http.StatusOK)
 
 				body, res := run(t, false, url.Values{
 					"traits.username": {"registration-identifier-8-browser-duplicate"},
 					"password":        {x.NewUUID().String()},
 					"traits.foobar":   {"bar"},
+					"csrf_token":{x.FakeCSRFToken},
 				}.Encode(), http.StatusOK)
 				assert.Contains(t, res.Request.URL.Path, "registration-ts")
 				assert.Contains(t, gjson.GetBytes(body, "methods.password.config.messages.0.text").String(), "An account with the same identifier (email, phone, username, ...) exists already.", "%s", body)
@@ -412,6 +419,7 @@ func TestRegistration(t *testing.T) {
 				rr := &registration.Flow{
 					ID:        x.NewUUID(),
 					ExpiresAt: time.Now().Add(time.Minute),
+					CSRFToken: x.FakeCSRFToken,
 					Type:      ft,
 					Methods: map[identity.CredentialsType]*registration.FlowMethod{
 						identity.CredentialsTypePassword: {
@@ -460,6 +468,7 @@ func TestRegistration(t *testing.T) {
 				res := run(t, false, url.Values{
 					"traits.username": {"registration-identifier-9"},
 					"password":        {x.NewUUID().String()},
+					"csrf_token":{x.FakeCSRFToken},
 				}.Encode())
 				assert.Contains(t, res.Request.URL.Path, "registration-ts")
 			})
@@ -487,6 +496,7 @@ func TestRegistration(t *testing.T) {
 					"traits.username": {"registration-identifier-10-browser"},
 					"password":        {"93172388957812344432"},
 					"traits.foobar":   {"bar"},
+					"csrf_token":{x.FakeCSRFToken},
 				}.Encode())
 				assert.Equal(t, res.Request.URL.String(), redirTS.URL+"/registration-return-ts")
 				assert.Equal(t, `registration-identifier-10-browser`, gjson.GetBytes(body, "identity.traits.username").String(), "%s", body)
@@ -526,6 +536,7 @@ func TestRegistration(t *testing.T) {
 					"traits.username": {"registration-identifier-11-browser"},
 					"password":        {"O(lf<ys87LÖ:(h<dsjfl"},
 					"traits.foobar":   {"bar"},
+					"csrf_token":{x.FakeCSRFToken},
 				}.Encode()
 
 				body1, res1 := makeRequestWithCookieJar(t, newRegistrationRequest(t, time.Minute, false).ID,
