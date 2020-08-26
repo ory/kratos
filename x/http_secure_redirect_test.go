@@ -86,7 +86,7 @@ func TestSecureRedirectTo(t *testing.T) {
 			}
 			defaultReturnTo := "/default-return-to"
 			if !isRelative {
-				defaultReturnTo = ts.URL+defaultReturnTo
+				defaultReturnTo = ts.URL + defaultReturnTo
 			}
 			ru, err := x.SecureRedirectTo(r, urlx.ParseOrPanic(defaultReturnTo), opts(ts)...)
 			if expectErr {

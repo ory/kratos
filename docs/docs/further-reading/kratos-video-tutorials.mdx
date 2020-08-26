@@ -88,51 +88,69 @@ tutorials.
 
 </details>
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/Hz_dP5c_qvc" frameborder="0" allowfullscreen></iframe>
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/Hz_dP5c_qvc"
+  frameborder="0"
+  allowfullscreen
+></iframe>
 
 <details><summary>Transcript Kratos Sign in with Github</summary>
 
-Welcome to the Sign in with Github Tutorial for ORY Kratos. 
+Welcome to the Sign in with Github Tutorial for ORY Kratos.
 
-This continues where we left off with the Quickstart Tutorial for Kratos, so if you haven’t done the Quickstart already, check that out. 
+This continues where we left off with the Quickstart Tutorial for Kratos, so if
+you haven’t done the Quickstart already, check that out.
 
-To be able to offer “Sign in with github” you have to create a GitHub OAuth2 Client.
+To be able to offer “Sign in with github” you have to create a GitHub OAuth2
+Client.
 
-So you go to your settings page on your github profile, then developer settings, then OAuth apps, then register a new application. 
+So you go to your settings page on your github profile, then developer settings,
+then OAuth apps, then register a new application.
 
-You can pick any name that suits you, then put the Kratos login in the homepage url, that is the port 4455 on your localhost.
+You can pick any name that suits you, then put the Kratos login in the homepage
+url, that is the port 4455 on your localhost.
 
-You use this port in the quickstart for our SecureApp.
- If you are not familiar with this self service app, check the links in the description.
+You use this port in the quickstart for our SecureApp. If you are not familiar
+with this self service app, check the links in the description.
 
-Next you put in the Authorization callback URL.
-This URL is built really simple, so first you have the kratos domain and the port and just at the end you put in the OIDC provider ID, in this case github. 
+Next you put in the Authorization callback URL. This URL is built really simple,
+so first you have the kratos domain and the port and just at the end you put in
+the OIDC provider ID, in this case github.
 
-This provider ID  must point to the provider's ID set in the ORY Kratos configuration file.
+This provider ID must point to the provider's ID set in the ORY Kratos
+configuration file.
 
-I’ll link a document in the description, that explains this in more detail, also how you can implement any other OIDC provider.
+I’ll link a document in the description, that explains this in more detail, also
+how you can implement any other OIDC provider.
 
 Now navigate to the Kratos directory and create a new file.
 
-If you are unsure where your kratos directory is (in my case it is my Git folder) you can look it up on docker. 
+If you are unsure where your kratos directory is (in my case it is my Git
+folder) you can look it up on docker.
 
-Now you have to create a JSONNNET code for the provider in this case github.
-so you just copy this code, create a new file called  O ID C dot github dot jsonnet and save
+Now you have to create a JSONNNET code for the provider in this case github. so
+you just copy this code, create a new file called O ID C dot github dot jsonnet
+and save
 
-Next you enable the OIDC provider in the Kratos configuration located in the same directory. 
-Just copy this part of the code, this is basically what Kratos needs to understand your OIDC provider. 
-Just copy it in your configuration file and save. 
+Next you enable the OIDC provider in the Kratos configuration located in the
+same directory. Just copy this part of the code, this is basically what Kratos
+needs to understand your OIDC provider. Just copy it in your configuration file
+and save.
 
-The final step to get this working is to get the client id and the client secret .
-Those are provided to you by the Github oauth app.
-You input those into your kratos yaml and now it should be ready to go!
+The final step to get this working is to get the client id and the client secret
+. Those are provided to you by the Github oauth app. You input those into your
+kratos yaml and now it should be ready to go!
 
-Now navigate to the login of your selfservice app and you should see “login with github”.
+Now navigate to the login of your selfservice app and you should see “login with
+github”.
 
-Once your account is authorized you will be redirected to the login page and you can login with github now.
+Once your account is authorized you will be redirected to the login page and you
+can login with github now.
 
-That was it for this tutorial, if you like to know more check the links in the description,
-if you have any feedback leave me a message in the comment section.
+That was it for this tutorial, if you like to know more check the links in the
+description, if you have any feedback leave me a message in the comment section.
 and I'm looking forward to seeing you in the next one!
 
 </details>

@@ -1,10 +1,12 @@
-package cmd
+package lint
 
 import (
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/ory/kratos/internal/clihelpers"
 
 	"github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/linter"
@@ -18,7 +20,7 @@ var jsonnetLintCmd = &cobra.Command{
 	Use: "lint path/to/files/*.jsonnet [more/files.jsonnet, [supports/**/{foo,bar}.jsonnet]]",
 	Long: `Lints JSONNet files using the official JSONNet linter and exits with a status code of 1 when issues are detected.
 
-` + globHelp,
+` + clihelpers.JsonnetGlobHelp,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, pattern := range args {
@@ -43,6 +45,6 @@ var jsonnetLintCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	jsonnetCmd.AddCommand(jsonnetLintCmd)
+func RegisterCommandRecursive(parent *cobra.Command) {
+	parent.AddCommand(jsonnetLintCmd)
 }

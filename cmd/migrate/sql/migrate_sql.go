@@ -13,15 +13,19 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package cmd
+package sql
 
 import (
 	"github.com/spf13/cobra"
+
+	"github.com/ory/x/logrusx"
 
 	"github.com/ory/x/viperx"
 
 	"github.com/ory/kratos/cmd/client"
 )
+
+var logger *logrusx.Logger
 
 // migrateSqlCmd represents the sql command
 var migrateSqlCmd = &cobra.Command{
@@ -48,9 +52,11 @@ Before running this command on an existing database, create a back up!
 	},
 }
 
-func init() {
-	migrateCmd.AddCommand(migrateSqlCmd)
+func RegisterCommandRecursive(parent *cobra.Command) {
+	parent.AddCommand(migrateSqlCmd)
+}
 
+func init() {
 	migrateSqlCmd.Flags().BoolP("read-from-env", "e", false, "If set, reads the database connection string from the environment variable DSN or config file key dsn.")
 	migrateSqlCmd.Flags().BoolP("yes", "y", false, "If set all confirmation requests are accepted without user interaction.")
 }
