@@ -430,7 +430,7 @@ func (p *ViperProvider) CourierSMTPFrom() string {
 }
 
 func (p *ViperProvider) CourierTemplatesRoot() string {
-	return viperx.GetString(p.l, ViperKeyCourierTemplatesPath, "")
+	return viperx.GetString(p.l, ViperKeyCourierTemplatesPath, "/courier/template/templates")
 }
 
 func mustParseURLFromViper(l *logrusx.Logger, key string) *url.URL {
