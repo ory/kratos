@@ -61,6 +61,27 @@ func NewHTTPClientWithSessionCookie(t *testing.T, reg *driver.RegistryDefault, s
 	return c
 }
 
+func NewTransportWithLogger(parent http.RoundTripper, t *testing.T) *TransportWithLogger {
+	return &TransportWithLogger{
+		RoundTripper: parent,
+		t:t,
+	}
+}
+
+type TransportWithLogger struct {
+	http.RoundTripper
+	t *testing.T
+}
+
+func (ct *TransportWithLogger) RoundTrip(req *http.Request) (*http.Response, error) {
+	ct.t.Logf("Made request to: %s", req.URL.String())
+	if ct.RoundTripper == nil {
+		return http.DefaultTransport.RoundTrip(req)
+	}
+	return ct.RoundTripper.RoundTrip(req)
+}
+
+
 func NewHTTPClientWithSessionToken(t *testing.T, reg *driver.RegistryDefault, sess *session.Session) *http.Client {
 	maybePersistSession(t, reg, sess)
 
@@ -85,4 +106,14 @@ func NewHTTPClientWithArbitrarySessionCookie(t *testing.T, reg *driver.RegistryD
 		NewSessionLifespanProvider(time.Hour),
 		time.Now(),
 	))
+}
+
+func NewHTTPClientWithIdentitySessionCookie(t *testing.T, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
+	return NewHTTPClientWithSessionCookie(t, reg,
+		session.NewActiveSession(id, NewSessionLifespanProvider(time.Hour), time.Now()))
+}
+
+func NewHTTPClientWithIdentitySessionToken(t *testing.T, reg *driver.RegistryDefault, id *identity.Identity) *http.Client {
+	return NewHTTPClientWithSessionToken(t, reg,
+		session.NewActiveSession(id, NewSessionLifespanProvider(time.Hour), time.Now()))
 }

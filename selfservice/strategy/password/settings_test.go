@@ -4,20 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/httpx"
+	"github.com/ory/x/randx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
-	"github.com/tidwall/sjson"
-
-	"github.com/ory/x/randx"
 
 	"github.com/ory/viper"
 
@@ -84,19 +80,6 @@ func TestSettings(t *testing.T) {
 
 	adminClient := testhelpers.NewSDKClient(adminTS)
 
-	var encodeForm = func(t *testing.T, isApi bool, values url.Values) (payload string) {
-		if !isApi {
-			return values.Encode()
-		}
-		payload = "{}"
-		for k := range values {
-			var err error
-			payload, err = sjson.Set(payload, k, values.Get(k))
-			require.NoError(t, err)
-		}
-		return payload
-	}
-
 	t.Run("description=not authorized to call endpoints without a session", func(t *testing.T) {
 		t.Run("type=browser", func(t *testing.T) {
 			res, err := http.DefaultClient.Do(httpx.MustNewRequest("POST", publicTS.URL+profile.RouteSettings, strings.NewReader(url.Values{"foo": {"bar"}}.Encode()), "application/x-www-form-urlencoded"))
@@ -114,66 +97,53 @@ func TestSettings(t *testing.T) {
 		})
 	})
 
-	t.Run("description=should update the password and clear errors after input error occurred", func(t *testing.T) {
-		t.Run("description=should fail if password violates policy", func(t *testing.T) {
-			var run = func(t *testing.T, isAPI bool, client *http.Client, ec int) string {
-				var form *models.FlowMethodConfig
-				if isAPI {
-					rs := testhelpers.InitializeSettingsFlowViaAPI(t, client, publicTS)
-					form = rs.Payload.Methods[string(identity.CredentialsTypePassword)].Config
-				} else {
-					rs := testhelpers.InitializeSettingsFlowViaBrowser(t, client, publicTS)
-					form = rs.Payload.Methods[string(identity.CredentialsTypePassword)].Config
-				}
+	t.Run("description=should fail if password violates policy", func(t *testing.T) {
+		t.Run("session=with privileged session", func(t *testing.T) {
+			viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 
-				values := testhelpers.SDKFormFieldsToURLValues(form.Fields)
-				values.Set("password", "123456")
+			var check = func(t *testing.T, actual string) {
+				assert.Empty(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).value").String(), "%s", actual)
+				assert.NotEmpty(t, gjson.Get(actual, "methods.password.config.fields.#(name==csrf_token).value").String(), "%s", actual)
+				assert.Contains(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).messages.0.text").String(), "password can not be used because", "%s", actual)
+			}
 
-				actual, _ := testhelpers.SettingsSubmitForm(t, isAPI, form, client, encodeForm(t, isAPI, values), ec)
-				assert.Equal(t, *form.Action, gjson.Get(actual, "methods.password.config.action").String(), "%s", actual)
-				return actual
+			var payload = func(v url.Values) url.Values {
+				v.Set("password", "123456")
+				return v
 			}
 
 			t.Run("type=api", func(t *testing.T) {
-				t.Run("session=with privileged session", func(t *testing.T) {
-					viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
-
-					actual := run(t, true, apiUser1, http.StatusBadRequest)
-					assert.Empty(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).value").String(), "%s", actual)
-					assert.NotEmpty(t, gjson.Get(actual, "methods.password.config.fields.#(name==csrf_token).value").String(), "%s", actual)
-					assert.Contains(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).messages.0.text").String(), "password can not be used because", "%s", actual)
-				})
-
-				t.Run("session=needs reauthentication", func(t *testing.T) {
-					viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
-					_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, adminClient)
-					defer viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
-
-					actual := run(t, true, apiUser1, http.StatusForbidden)
-					assert.Empty(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).value").String(), "%s", actual)
-				})
+				check(t, testhelpers.SubmitSettingsForm(t, true, apiUser1, publicTS, payload,
+					identity.CredentialsTypePassword.String(), http.StatusBadRequest))
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
-				var runInner = func(t *testing.T) {
-					actual := run(t, false, browserUser1, http.StatusNoContent)
-					assert.Empty(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).value").String(), "%s", actual)
-					assert.NotEmpty(t, gjson.Get(actual, "methods.password.config.fields.#(name==csrf_token).value").String(), "%s", actual)
-					assert.Contains(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).messages.0.text").String(), "password can not be used because", "%s", actual)
-				}
+				check(t, testhelpers.SubmitSettingsForm(t, false, browserUser1, publicTS, payload,
+					identity.CredentialsTypePassword.String(), http.StatusNoContent))
+			})
+		})
 
-				t.Run("session=with privileged session", func(t *testing.T) {
-					viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
-					runInner(t)
-				})
+		t.Run("session=needs reauthentication", func(t *testing.T) {
+			viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
+			_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, adminClient)
+			defer viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 
-				t.Run("session=needs reauthentication", func(t *testing.T) {
-					viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
-					_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, adminClient)
-					defer viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
+			var payload = func(v url.Values) url.Values {
+				v.Set("password", "123456")
+				return v
+			}
 
-					runInner(t)
-				})
+			t.Run("type=api", func(t *testing.T) {
+				actual := testhelpers.SubmitSettingsForm(t, true, apiUser1, publicTS, payload,
+					identity.CredentialsTypePassword.String(), http.StatusForbidden)
+				assertx.EqualAsJSON(t, settings.NewFlowNeedsReAuth(), json.RawMessage(gjson.Get(actual, "error").Raw))
+			})
+
+			t.Run("type=browser", func(t *testing.T) {
+				actual := testhelpers.SubmitSettingsForm(t, false, browserUser1, publicTS, payload,
+					identity.CredentialsTypePassword.String(), http.StatusNoContent)
+				assert.EqualValues(t, settings.StateShowForm, gjson.Get(actual, "state").String(), "%s", actual)
+				assert.Empty(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).value").String(), "%s", actual)
 			})
 		})
 	})
@@ -181,17 +151,17 @@ func TestSettings(t *testing.T) {
 	t.Run("description=should not be able to make requests for another user", func(t *testing.T) {
 		t.Run("type=api", func(t *testing.T) {
 			rs := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
-			f := rs.Payload.Methods[string(identity.CredentialsTypePassword)].Config
+			f := testhelpers.GetSettingsFlowMethodConfig(t, rs.Payload, identity.CredentialsTypePassword.String())
 			values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
 			values.Set("password", x.NewUUID().String())
-			actual, res := testhelpers.SettingsMakeRequest(t, true, f, apiUser2, encodeForm(t, true, values))
+			actual, res := testhelpers.SettingsMakeRequest(t, true, f, apiUser2, testhelpers.EncodeFormAsJSON(t, true, values))
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 			assert.Contains(t, gjson.Get(actual, "error.reason").String(), "initiated by another person", "%s", actual)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
 			rs := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, publicTS)
-			f := rs.Payload.Methods[string(identity.CredentialsTypePassword)].Config
+			f := testhelpers.GetSettingsFlowMethodConfig(t, rs.Payload, identity.CredentialsTypePassword.String())
 			values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
 			values.Set("password", x.NewUUID().String())
 			actual, res := testhelpers.SettingsMakeRequest(t, false, f, browserUser2, values.Encode())
@@ -201,36 +171,32 @@ func TestSettings(t *testing.T) {
 	})
 
 	t.Run("description=should update the password and clear errors if everything is ok", func(t *testing.T) {
-		var run = func(t *testing.T, f *models.FlowMethodConfig, isAPI bool, c *http.Client, id *identity.Identity) {
-			values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
-			values.Set("password", x.NewUUID().String())
-			actual, _ := testhelpers.SettingsSubmitForm(t, isAPI, f, c, encodeForm(t, isAPI, values), expectStatusCode(isAPI, http.StatusOK, http.StatusNoContent))
-
+		var check = func(t *testing.T, actual string) {
 			assert.Equal(t, "success", gjson.Get(actual, "state").String(), "%s", actual)
 			assert.Empty(t, gjson.Get(actual, "methods.password.fields.#(name==password).value").String(), "%s", actual)
 			assert.Empty(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).messages.0.text").String(), actual)
+		}
 
-			actualIdentity, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), id.ID)
-			require.NoError(t, err)
-			assert.NotEqualValues(t, browserIdentity1.Credentials[identity.CredentialsTypePassword].Config, actualIdentity.Credentials[identity.CredentialsTypePassword].Config)
+		var payload = func(v url.Values) url.Values {
+			v.Set("password", x.NewUUID().String())
+			return v
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			rs := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
-			f := rs.Payload.Methods[string(identity.CredentialsTypePassword)].Config
-			run(t, f, true, apiUser1, apiIdentity1)
+			check(t,
+				gjson.Get(testhelpers.SubmitSettingsForm(t, true, apiUser1, publicTS, payload,
+					identity.CredentialsTypePassword.String(), http.StatusOK), "flow").Raw)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			rs := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, publicTS)
-			f := rs.Payload.Methods[string(identity.CredentialsTypePassword)].Config
-			run(t, f, false, browserUser1, browserIdentity1)
+			check(t, testhelpers.SubmitSettingsForm(t, false, browserUser1, publicTS, payload,
+				identity.CredentialsTypePassword.String(), http.StatusNoContent))
 		})
 	})
 
 	t.Run("case=should fail because of missing CSRF token/type=browser", func(t *testing.T) {
 		rs := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, publicTS)
-		f := rs.Payload.Methods[string(identity.CredentialsTypePassword)].Config
+		f := testhelpers.GetSettingsFlowMethodConfig(t, rs.Payload, identity.CredentialsTypePassword.String())
 		values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
 		values.Set("password", x.NewUUID().String())
 		values.Set("csrf_token", "invalid_token")
@@ -244,11 +210,11 @@ func TestSettings(t *testing.T) {
 
 	t.Run("case=should pass even without CSRF token/type=api", func(t *testing.T) {
 		rs := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
-		f := rs.Payload.Methods[string(identity.CredentialsTypePassword)].Config
+		f := testhelpers.GetSettingsFlowMethodConfig(t, rs.Payload, identity.CredentialsTypePassword.String())
 		values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
 		values.Set("password", x.NewUUID().String())
 		values.Set("csrf_token", "invalid_token")
-		actual, res := testhelpers.SettingsMakeRequest(t, true, f, apiUser1, encodeForm(t, true, values))
+		actual, res := testhelpers.SettingsMakeRequest(t, true, f, apiUser1, testhelpers.EncodeFormAsJSON(t, true, values))
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 
 		assert.Contains(t, res.Request.URL.String(), publicTS.URL+password.RouteSettings)
@@ -256,12 +222,7 @@ func TestSettings(t *testing.T) {
 	})
 
 	t.Run("description=should update the password even if no password was set before", func(t *testing.T) {
-		var run = func(t *testing.T, f *models.FlowMethodConfig, isAPI bool, c *http.Client, id *identity.Identity) {
-			values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
-			values.Set("password", randx.MustString(16, randx.AlphaNum))
-			actual, _ := testhelpers.SettingsSubmitForm(t, isAPI, f, c, encodeForm(t, isAPI, values),
-				expectStatusCode(isAPI, http.StatusOK, http.StatusNoContent))
-
+		var check = func(t *testing.T, actual string, id *identity.Identity) {
 			assert.Equal(t, "success", gjson.Get(actual, "state").String(), "%s", actual)
 			assert.Empty(t, gjson.Get(actual, "methods.password.fields.#(name==password).value").String(), "%s", actual)
 
@@ -273,43 +234,38 @@ func TestSettings(t *testing.T) {
 			assert.Contains(t, actualIdentity.Credentials[identity.CredentialsTypePassword].Identifiers[0], "-4")
 		}
 
+		var payload = func(v url.Values) url.Values {
+			v.Set("password", randx.MustString(16, randx.AlphaNum))
+			return v
+		}
+
 		t.Run("type=api", func(t *testing.T) {
-			rs := testhelpers.InitializeSettingsFlowViaBrowser(t, apiUser2, publicTS)
-			f := rs.Payload.Methods[string(identity.CredentialsTypePassword)].Config
-			run(t, f, true, apiUser2, apiIdentity2)
+			actual := testhelpers.SubmitSettingsForm(t, true, apiUser2, publicTS, payload,
+				identity.CredentialsTypePassword.String(), http.StatusOK)
+			check(t, gjson.Get(actual, "flow").Raw, apiIdentity2)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			rs := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser2, publicTS)
-			f := rs.Payload.Methods[string(identity.CredentialsTypePassword)].Config
-			run(t, f, false, browserUser2, browserIdentity2)
+			actual := testhelpers.SubmitSettingsForm(t, false, browserUser2, publicTS, payload,
+				identity.CredentialsTypePassword.String(), http.StatusNoContent)
+			check(t, actual, browserIdentity2)
 		})
 	})
 
-	t.Run("description=should update the password and execute hooks", func(t *testing.T) {
-		var returned bool
-		router := httprouter.New()
-		router.GET("/return-ts", func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-			returned = true
-		})
-		rts := httptest.NewServer(router)
-		defer rts.Close()
-
+	t.Run("description=should update the password and perform the correct redirection", func(t *testing.T) {
+		rts := testhelpers.NewRedirTS(t, "")
 		viper.Set(configuration.ViperKeySelfServiceSettingsAfter+"."+configuration.DefaultBrowserReturnURL, rts.URL+"/return-ts")
-		t.Cleanup(func() {
-			viper.Set(configuration.ViperKeySelfServiceSettingsAfter, nil)
-		})
+		defer viper.Set(configuration.ViperKeySelfServiceSettingsAfter, nil)
 
 		var run = func(t *testing.T, f *models.FlowMethodConfig, isAPI bool, c *http.Client, id *identity.Identity) {
-			returned = false
-
 			values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
 			values.Set("password", randx.MustString(16, randx.AlphaNum))
-			_, _ = testhelpers.SettingsMakeRequest(t, isAPI, f, c, encodeForm(t, isAPI, values))
+			_, res := testhelpers.SettingsMakeRequest(t, isAPI, f, c, testhelpers.EncodeFormAsJSON(t, isAPI, values))
+			require.EqualValues(t,rts.URL+"/return-ts", res.Request.URL.String())
 
-			assert.True(t, returned)
 			actualIdentity, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), browserIdentity1.ID)
 			require.NoError(t, err)
+
 			cfg := string(actualIdentity.Credentials[identity.CredentialsTypePassword].Config)
 			assert.NotContains(t, cfg, "foo")
 			assert.NotEqual(t, `{"hashed_password":"foo"}`, cfg)
