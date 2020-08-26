@@ -390,7 +390,7 @@
     },
     "/schemas/{id}": {
       "get": {
-        "description": "Get a traits schema definition",
+        "description": "Get a Traits Schema Definition",
         "produces": [
           "application/json"
         ],
@@ -445,7 +445,7 @@
         "tags": [
           "public"
         ],
-        "summary": "Initialize browser-based login user flow",
+        "summary": "Initialize Browser-Based Login User Flow",
         "operationId": "initializeSelfServiceBrowserLoginFlow",
         "parameters": [
           {
@@ -503,7 +503,7 @@
         "tags": [
           "public"
         ],
-        "summary": "Initialize browser-based account recovery flow",
+        "summary": "Initialize Browser-Based Account Recovery Flow",
         "operationId": "initializeSelfServiceRecoveryFlow",
         "responses": {
           "302": {
@@ -531,7 +531,7 @@
         "tags": [
           "public"
         ],
-        "summary": "Complete the browser-based recovery flow using a recovery link",
+        "summary": "Complete the Browser-Based Recovery Flow Using a Recovery Link",
         "operationId": "completeSelfServiceBrowserRecoveryLinkStrategyFlow",
         "parameters": [
           {
@@ -578,7 +578,7 @@
         "tags": [
           "public"
         ],
-        "summary": "Initialize browser-based registration user flow",
+        "summary": "Initialize Browser-Based Registration User Flow",
         "operationId": "initializeSelfServiceBrowserRegistrationFlow",
         "responses": {
           "302": {
@@ -607,7 +607,7 @@
         "tags": [
           "public"
         ],
-        "summary": "Complete the browser-based settings flow for the OpenID Connect strategy",
+        "summary": "Complete the Browser-Based Settings Flow for the OpenID Connect Strategy",
         "operationId": "completeSelfServiceBrowserSettingsOIDCSettingsFlow",
         "responses": {
           "302": {
@@ -637,7 +637,7 @@
           "public",
           "admin"
         ],
-        "summary": "Get the request context of browser-based login user flows",
+        "summary": "Get the Request Context Browser-Based Login User Flows",
         "operationId": "getSelfServiceBrowserLoginRequest",
         "parameters": [
           {
@@ -697,7 +697,7 @@
           "public",
           "admin"
         ],
-        "summary": "Get the request context of browser-based recovery flows",
+        "summary": "Get the Request Context of Browser-Based Recovery Flows",
         "operationId": "getSelfServiceBrowserRecoveryRequest",
         "parameters": [
           {
@@ -757,7 +757,7 @@
           "public",
           "admin"
         ],
-        "summary": "Get the request context of browser-based registration user flows",
+        "summary": "Get the Request Context of Browser-Based Registration User Flows",
         "operationId": "getSelfServiceBrowserRegistrationRequest",
         "parameters": [
           {
@@ -817,7 +817,7 @@
           "public",
           "admin"
         ],
-        "summary": "Get the request context of browser-based settings flows",
+        "summary": "Get the Request Context of Browser-Based Settings Flows",
         "operationId": "getSelfServiceBrowserSettingsRequest",
         "parameters": [
           {
@@ -877,7 +877,7 @@
           "public",
           "admin"
         ],
-        "summary": "Get the request context of browser-based verification flows",
+        "summary": "Get the Request Context of Browser-Based Verification Flows",
         "operationId": "getSelfServiceVerificationRequest",
         "parameters": [
           {
@@ -926,7 +926,7 @@
         "tags": [
           "public"
         ],
-        "summary": "Initialize browser-based settings flow",
+        "summary": "Initialize Browser-Based Settings Flow",
         "operationId": "initializeSelfServiceSettingsFlow",
         "responses": {
           "302": {
@@ -955,7 +955,7 @@
         "tags": [
           "public"
         ],
-        "summary": "Complete the browser-based settings flow for the password strategy",
+        "summary": "Complete the Browser-Based Settings Flow for the Password Strategy",
         "operationId": "completeSelfServiceBrowserSettingsPasswordStrategyFlow",
         "responses": {
           "302": {
@@ -984,7 +984,7 @@
         "tags": [
           "public"
         ],
-        "summary": "Complete the browser-based settings flow for profile data",
+        "summary": "Complete the Browser-Based Settings Flow for Profile Data",
         "operationId": "completeSelfServiceBrowserSettingsProfileStrategyFlow",
         "parameters": [
           {
@@ -1026,7 +1026,7 @@
         "tags": [
           "public"
         ],
-        "summary": "Initialize browser-based verification flow",
+        "summary": "Initialize Browser-Based Verification Flow",
         "operationId": "initializeSelfServiceBrowserVerificationFlow",
         "parameters": [
           {
@@ -1064,7 +1064,7 @@
         "tags": [
           "public"
         ],
-        "summary": "Complete the browser-based verification flows",
+        "summary": "Complete the Browser-Based Verification Flows",
         "operationId": "completeSelfServiceBrowserVerificationFlow",
         "parameters": [
           {
@@ -1109,7 +1109,7 @@
         "tags": [
           "public"
         ],
-        "summary": "Complete the browser-based verification flows",
+        "summary": "Complete the Browser-Based Verification Flows",
         "operationId": "selfServiceBrowserVerify",
         "parameters": [
           {
@@ -1154,7 +1154,7 @@
           "public",
           "admin"
         ],
-        "summary": "Get user-facing self-service errors",
+        "summary": "Get User-Facing Self-Service Errors",
         "operationId": "getSelfServiceError",
         "parameters": [
           {
@@ -1204,7 +1204,7 @@
         "tags": [
           "public"
         ],
-        "summary": "Check who the current HTTP session belongs to",
+        "summary": "Check Who the Current HTTP Session Belongs To",
         "operationId": "whoami",
         "responses": {
           "200": {

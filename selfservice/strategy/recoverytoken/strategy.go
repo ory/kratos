@@ -277,7 +277,7 @@ type completeSelfServiceBrowserRecoveryLinkStrategyFlowParams struct {
 
 // swagger:route POST /self-service/browser/flows/recovery/link public completeSelfServiceBrowserRecoveryLinkStrategyFlow
 //
-// Complete the browser-based recovery flow using a recovery link
+// Complete the Browser-Based Recovery Flow Using a Recovery Link
 //
 // > This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
 //

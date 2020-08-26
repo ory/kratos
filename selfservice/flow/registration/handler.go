@@ -76,7 +76,7 @@ func (h *Handler) NewRegistrationRequest(w http.ResponseWriter, r *http.Request)
 
 // swagger:route GET /self-service/browser/flows/registration public initializeSelfServiceBrowserRegistrationFlow
 //
-// Initialize browser-based registration user flow
+// Initialize Browser-Based Registration User Flow
 //
 // This endpoint initializes a browser-based user registration flow. Once initialized, the browser will be redirected to
 // `selfservice.flows.registration.ui_url` with the request ID set as a query parameter. If a valid user session exists already, the browser will be
@@ -121,7 +121,7 @@ type getSelfServiceBrowserRegistrationRequestParameters struct {
 
 // swagger:route GET /self-service/browser/flows/requests/registration common public admin getSelfServiceBrowserRegistrationRequest
 //
-// Get the request context of browser-based registration user flows
+// Get the Request Context of Browser-Based Registration User Flows
 //
 // This endpoint returns a registration request's context with, for example, error details and
 // other information.
