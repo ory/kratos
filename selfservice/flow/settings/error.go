@@ -21,7 +21,6 @@ import (
 
 var (
 	ErrHookAbortRequest             = errors.New("aborted settings hook execution")
-	ErrRequestNeedsReAuthentication = herodot.ErrForbidden.WithReasonf("The login session is too old and thus not allowed to update these fields. Please re-authenticate.")
 )
 
 type (
@@ -45,7 +44,16 @@ type (
 		*herodot.DefaultError
 		ago time.Duration
 	}
+
+	FlowNeedsReAuth struct {
+		*herodot.DefaultError
+	}
 )
+
+func NewFlowNeedsReAuth() *FlowNeedsReAuth {
+	return &FlowNeedsReAuth{DefaultError: herodot.ErrForbidden.
+		WithReasonf("The login session is too old and thus not allowed to update these fields. Please re-authenticate.")}
+}
 
 func NewFlowExpiredError(at time.Time) *FlowExpiredError {
 	ago := time.Since(at)
@@ -127,7 +135,7 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	if errors.Is(err, ErrRequestNeedsReAuthentication) {
+	if e := new(FlowNeedsReAuth); errors.As(err, &e) {
 		s.reauthenticate(w, r, f, err)
 		return
 	}

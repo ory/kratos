@@ -229,7 +229,7 @@ func TestHandleError(t *testing.T) {
 			t.Cleanup(reset)
 
 			settingsFlow = &settings.Flow{Type: flow.TypeBrowser}
-			flowError = settings.ErrRequestNeedsReAuthentication
+			flowError = settings.NewFlowNeedsReAuth()
 			flowMethod = settings.StrategyProfile
 
 			res, err := ts.Client().Get(ts.URL + "/error")

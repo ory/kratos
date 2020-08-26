@@ -77,7 +77,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsAuthenticated(h.initBrowserFlow, redirect))
 	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsAuthenticated(h.initApiFlow, nil))
 
-	public.GET(RouteGetFlow, h.d.SessionHandler().IsAuthenticated(h.fetchPublicFLow, nil))
+	public.GET(RouteGetFlow, h.d.SessionHandler().IsAuthenticated(h.fetchPublicFLow, OnUnauthenticated(h.c, h.d)))
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {

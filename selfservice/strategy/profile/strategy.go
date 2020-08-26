@@ -24,6 +24,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/session"
@@ -31,7 +32,7 @@ import (
 )
 
 const (
-	PublicSettingsProfilePath = "/self-service/settings/methods/profile"
+	RouteSettings = "/self-service/settings/methods/profile"
 )
 
 var _ settings.Strategy = new(Strategy)
@@ -66,6 +67,7 @@ type (
 	Strategy struct {
 		c configuration.Provider
 		d strategyDependencies
+		dc *decoderx.HTTP
 	}
 )
 
@@ -75,7 +77,7 @@ type SettingsProfileRequestMethod struct {
 }
 
 func NewStrategy(d strategyDependencies, c configuration.Provider) *Strategy {
-	return &Strategy{c: c, d: d}
+	return &Strategy{c: c, d: d, dc: decoderx.NewHTTP()}
 }
 
 func (s *Strategy) SettingsStrategyID() string {
@@ -83,9 +85,8 @@ func (s *Strategy) SettingsStrategyID() string {
 }
 
 func (s *Strategy) RegisterSettingsRoutes(public *x.RouterPublic) {
-	redirect := session.RedirectOnUnauthenticated(s.c.SelfServiceFlowLoginUI().String())
-	public.POST(PublicSettingsProfilePath, s.d.SessionHandler().IsAuthenticated(s.handleSubmit, redirect))
-	public.GET(PublicSettingsProfilePath, s.d.SessionHandler().IsAuthenticated(s.handleSubmit, redirect))
+	public.POST(RouteSettings, s.d.SessionHandler().IsAuthenticated(s.handleSubmit, settings.OnUnauthenticated(s.c, s.d)))
+	public.GET(RouteSettings, s.d.SessionHandler().IsAuthenticated(s.handleSubmit, settings.OnUnauthenticated(s.c, s.d)))
 }
 
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity, pr *settings.Flow) error {
@@ -98,7 +99,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 	schemaCompiler := jsonschema.NewCompiler()
 
 	f, err := form.NewHTMLFormFromJSONSchema(urlx.CopyWithQuery(
-		urlx.AppendPaths(s.c.SelfPublicURL(), PublicSettingsProfilePath),
+		urlx.AppendPaths(s.c.SelfPublicURL(), RouteSettings),
 		url.Values{"flow": {pr.ID.String()}},
 	).String(), traitsSchema.URL, "", schemaCompiler)
 	if err != nil {
@@ -144,7 +145,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 //       302: emptyResponse
 //       500: genericError
 func (s *Strategy) handleSubmit(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var p completeSelfServiceBrowserSettingsStrategyProfileFlowPayload
+	var p SettingsFlowPayload
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	s.d.Logger().
 		WithField("err", fmt.Sprintf("%+v", err)).
@@ -166,18 +167,26 @@ func (s *Strategy) handleSubmit(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
-	if err := decoderx.NewHTTP().Decode(r, &p, decoderx.HTTPFormDecoder(), option, decoderx.HTTPDecoderSetValidatePayloads(false)); err != nil {
+	if err := s.dc.Decode(r, &p, option,
+		decoderx.HTTPDecoderSetValidatePayloads(false),
+		decoderx.HTTPDecoderJSONFollowsFormFormat(),
+	); err != nil {
 		s.handleSettingsError(w, r, ctxUpdate, nil, &p, err)
 		return
 	}
 
 	// Reset after decoding form
-	p.SetRequestID(ctxUpdate.Flow.ID)
+	p.SetFlowID(ctxUpdate.Flow.ID)
 
 	s.continueFlow(w, r, ctxUpdate, &p)
 }
 
-func (s *Strategy) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *completeSelfServiceBrowserSettingsStrategyProfileFlowPayload) {
+func (s *Strategy) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *SettingsFlowPayload) {
+	if err := flow.VerifyRequest(r,ctxUpdate.Flow.Type,s.d.GenerateCSRFToken,p.CSRFToken); err != nil {
+		s.handleSettingsError(w, r, ctxUpdate,nil, p, err)
+		return
+	}
+
 	if len(p.Traits) == 0 {
 		s.handleSettingsError(w, r, ctxUpdate, nil, p, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Did not receive any value changes.")))
 		return
@@ -212,44 +221,42 @@ type completeSelfServiceBrowserSettingsProfileStrategyFlow struct {
 	// required: true
 	// in: query
 	// format: uuid
-	Request string `json:"request"`
+	Flow string `json:"flow"`
 
 	// in: body
 	// required: true
-	Body completeSelfServiceBrowserSettingsStrategyProfileFlowPayload
+	Body SettingsFlowPayload
 }
 
-// swagger:model completeSelfServiceBrowserSettingsStrategyProfileFlowPayload
+// swagger:model SettingsFlowPayload
 // nolint:deadcode,unused
-type completeSelfServiceBrowserSettingsStrategyProfileFlowPayload struct {
+type SettingsFlowPayload struct {
 	// Traits contains all of the identity's traits.
-	//
-	// type: string
-	// format: binary
-	// required: true
 	Traits json.RawMessage `json:"traits"`
 
-	// RequestID is request ID.
+	// FlowIDRequestID is the flow ID.
 	//
-	// in: query
-	RequestID string `json:"request_id"`
+	// swagger:ignore
+	FlowID string `json:"flow"`
 
-	rid uuid.UUID
+	// The Anti-CSRF Token
+	//
+	// This token is only required when performing browser flows.
+	CSRFToken string `json:"csrf_token"`
 }
 
-func (p *completeSelfServiceBrowserSettingsStrategyProfileFlowPayload) GetRequestID() uuid.UUID {
-	return p.rid
+
+func (p *SettingsFlowPayload) GetFlowID() uuid.UUID {
+	return x.ParseUUID(p.FlowID)
 }
 
-func (p *completeSelfServiceBrowserSettingsStrategyProfileFlowPayload) SetRequestID(rid uuid.UUID) {
-	p.rid = rid
+func (p *SettingsFlowPayload) SetFlowID(rid uuid.UUID) {
+	p.FlowID = rid.String()
 }
 
 func (s *Strategy) hydrateForm(r *http.Request, ar *settings.Flow, ss *session.Session, traits json.RawMessage) error {
-	action := urlx.CopyWithQuery(
-		urlx.AppendPaths(s.c.SelfPublicURL(), PublicSettingsProfilePath),
-		url.Values{"request": {ar.ID.String()}},
-	)
+	action := urlx.CopyWithQuery(urlx.AppendPaths(s.c.SelfPublicURL(), RouteSettings),
+		url.Values{"flow": {ar.ID.String()}})
 
 	ar.Methods[settings.StrategyProfile].Config.Reset()
 	if traits != nil {
@@ -273,15 +280,8 @@ func (s *Strategy) hydrateForm(r *http.Request, ar *settings.Flow, ss *session.S
 
 // handleSettingsError is a convenience function for handling all types of errors that may occur (e.g. validation error)
 // during a settings request.
-func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, puc *settings.UpdateContext, traits json.RawMessage, p *completeSelfServiceBrowserSettingsStrategyProfileFlowPayload, err error) {
-	if errors.Is(err, settings.ErrRequestNeedsReAuthentication) {
-		s.d.Logger().
-			WithField("err", fmt.Sprintf("%+v", err)).
-			WithField("key", settings.ContinuityKey(s.SettingsStrategyID())).
-			WithField("package", pkgName).
-			WithField("stack_trace", fmt.Sprintf("%s", debug.Stack())).
-			Debug("handleSettingsError: Pause")
-
+func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, puc *settings.UpdateContext, traits json.RawMessage, p *SettingsFlowPayload, err error) {
+	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) {
 		if err := s.d.ContinuityManager().Pause(r.Context(), w, r,
 			settings.ContinuityKey(s.SettingsStrategyID()),
 			settings.ContinuityOptions(p, puc.Session.Identity)...); err != nil {
@@ -292,42 +292,26 @@ func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, p
 
 	if puc.Flow != nil {
 		if traits == nil {
-			traits = json.RawMessage(puc.Session.Identity.Traits)
+			traits = json.RawMessage(puc.GetSessionIdentity().Traits)
 		}
 
 		if err := s.hydrateForm(r, puc.Flow, puc.Session, traits); err != nil {
-			s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.SettingsStrategyID(), puc.Flow, puc.Session.Identity, err)
+			s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.SettingsStrategyID(), puc.Flow, puc.GetSessionIdentity(), err)
 			return
 		}
 	}
 
-	s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.SettingsStrategyID(), puc.Flow, puc.Session.Identity, err)
+	s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.SettingsStrategyID(), puc.Flow, puc.GetSessionIdentity(), err)
 }
 
 // newSettingsProfileDecoder returns a decoderx.HTTPDecoderOption with a JSON Schema for type assertion and
 // validation.
 func (s *Strategy) newSettingsProfileDecoder(i *identity.Identity) (decoderx.HTTPDecoderOption, error) {
-	const registrationFormPayloadSchema = `
-{
-  "$id": "./selfservice/settings/decoder.schema.json",
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "type": "object",
-  "required": ["traits"],
-  "properties": {
-    "traits": {}
-  }
-}
-`
-
 	ss, err := s.d.IdentityTraitsSchemas().GetByID(i.SchemaID)
 	if err != nil {
 		return nil, err
 	}
-	raw, err := sjson.SetBytes(
-		[]byte(registrationFormPayloadSchema),
-		"properties.traits.$ref",
-		ss.URL.String()+"#/properties/traits",
-	)
+	raw, err := sjson.SetBytes(settingsSchema, "properties.traits.$ref", ss.URL.String()+"#/properties/traits")
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

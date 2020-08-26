@@ -132,7 +132,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 	if err := e.d.IdentityManager().Update(r.Context(), i, options...); err != nil {
 		if errors.Is(err, identity.ErrProtectedFieldModified) {
 			e.d.Logger().WithError(err).Debug("Modifying protected field requires re-authentication.")
-			return errors.WithStack(ErrRequestNeedsReAuthentication)
+			return errors.WithStack(NewFlowNeedsReAuth())
 		}
 		return err
 	}
@@ -189,7 +189,12 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		Debug("Completed all PostSettingsPrePersistHooks and PostSettingsPostPersistHooks.")
 
 	if ctxUpdate.Flow.Type == flow.TypeAPI {
-		e.d.Writer().Write(w, r, &APIFlowResponse{Flow: ctxUpdate.Flow, Identity: i})
+		updatedFlow, err := e.d.SettingsFlowPersister().GetSettingsFlow(r.Context(),ctxUpdate.Flow.ID)
+		if err != nil {
+			return err
+		}
+
+		e.d.Writer().Write(w, r, &APIFlowResponse{Flow: updatedFlow, Identity: i})
 		return nil
 	}
 

@@ -140,7 +140,7 @@ func TestHandler(t *testing.T) {
 		})
 
 		t.Run("description=should fail to post data if CSRF is missing", func(t *testing.T) {
-			f := testhelpers.GetSettingsMethodConfig(t, primaryUser, publicTS, settings.StrategyProfile)
+			f := testhelpers.GetSettingsFlowMethodConfigDeprecated(t, primaryUser, publicTS, settings.StrategyProfile)
 			res, err := primaryUser.PostForm(pointerx.StringR(f.Action), url.Values{})
 			require.NoError(t, err)
 			assert.EqualValues(t, 400, res.StatusCode, "should return a 400 error because CSRF token is not set")
