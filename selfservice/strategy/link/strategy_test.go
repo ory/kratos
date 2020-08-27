@@ -1,4 +1,4 @@
-package recoverytoken_test
+package link_test
 
 import (
 	"context"
@@ -27,7 +27,7 @@ import (
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/recovery"
-	"github.com/ory/kratos/selfservice/strategy/recoverytoken"
+	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
@@ -63,7 +63,7 @@ func TestAdminStrategy(t *testing.T) {
 	adminSDK := testhelpers.NewSDKClient(adminTS)
 
 	checkLink := func(t *testing.T, link *admin.CreateRecoveryLinkOK, isBefore time.Time) {
-		require.Contains(t, *link.Payload.RecoveryLink, publicTS.URL+recoverytoken.PublicPath)
+		require.Contains(t, *link.Payload.RecoveryLink, publicTS.URL+link.PublicPath)
 		rl := urlx.ParseOrPanic(*link.Payload.RecoveryLink)
 		assert.NotEmpty(t, rl.Query().Get("token"))
 		assert.NotEmpty(t, rl.Query().Get("request"))
@@ -164,7 +164,7 @@ func TestStrategy(t *testing.T) {
 		assert.EqualValues(t, models.FormFields{csrfField,
 			{Name: pointerx.String("email"), Required: true, Type: pointerx.String("email")},
 		}, method.Config.Fields)
-		assert.EqualValues(t, public.URL+recoverytoken.PublicPath+"?request="+string(rs.Payload.ID), *method.Config.Action)
+		assert.EqualValues(t, public.URL+link.PublicPath+"?request="+string(rs.Payload.ID), *method.Config.Action)
 		assert.Empty(t, method.Config.Messages)
 		assert.Empty(t, rs.Payload.Messages)
 	})
@@ -228,7 +228,7 @@ func TestStrategy(t *testing.T) {
 
 		recoveryLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
 
-		assert.Contains(t, recoveryLink, public.URL+recoverytoken.PublicPath)
+		assert.Contains(t, recoveryLink, public.URL+link.PublicPath)
 		assert.Contains(t, recoveryLink, "token=")
 		res, err := c.Get(recoveryLink)
 		require.NoError(t, err)
@@ -248,7 +248,7 @@ func TestStrategy(t *testing.T) {
 
 	t.Run("description=should not be able to use an invalid link", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
-		res, err := c.Get(public.URL + recoverytoken.PublicPath + "?token=i-do-not-exist")
+		res, err := c.Get(public.URL + link.PublicPath + "?token=i-do-not-exist")
 		require.NoError(t, err)
 
 		assert.Equal(t, http.StatusNoContent, res.StatusCode)

@@ -16,7 +16,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/selfservice/strategy/profile"
-	"github.com/ory/kratos/selfservice/strategy/recoverytoken"
+	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/x"
 
 	"github.com/cenkalti/backoff"
@@ -248,7 +248,7 @@ func (m *RegistryDefault) selfServiceStrategies() []interface{} {
 			password2.NewStrategy(m, m.c),
 			oidc.NewStrategy(m, m.c),
 			profile.NewStrategy(m, m.c),
-			recoverytoken.NewStrategy(m, m.c),
+			link.NewStrategy(m, m.c),
 		}
 	}
 
@@ -510,7 +510,7 @@ func (m *RegistryDefault) CourierPersister() courier.Persister {
 	return m.persister
 }
 
-func (m *RegistryDefault) RecoveryTokenPersister() recoverytoken.Persister {
+func (m *RegistryDefault) RecoveryTokenPersister() link.Persister {
 	return m.Persister()
 }
 

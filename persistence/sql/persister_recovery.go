@@ -12,11 +12,11 @@ import (
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/selfservice/flow/recovery"
-	"github.com/ory/kratos/selfservice/strategy/recoverytoken"
+	"github.com/ory/kratos/selfservice/strategy/link"
 )
 
 var _ recovery.FlowPersister = new(Persister)
-var _ recoverytoken.Persister = new(Persister)
+var _ link.Persister = new(Persister)
 
 func (p Persister) CreateRecoveryFlow(ctx context.Context, r *recovery.Flow) error {
 	return p.GetConnection(ctx).Eager("MethodsRaw").Create(r)
@@ -62,7 +62,7 @@ func (p Persister) UpdateRecoveryFlow(ctx context.Context, r *recovery.Flow) err
 	})
 }
 
-func (p *Persister) CreateRecoveryToken(ctx context.Context, token *recoverytoken.Token) error {
+func (p *Persister) CreateRecoveryToken(ctx context.Context, token *link.Token) error {
 	t := token.Token
 	token.Token = p.hmacValue(t)
 
@@ -75,8 +75,8 @@ func (p *Persister) CreateRecoveryToken(ctx context.Context, token *recoverytoke
 	return nil
 }
 
-func (p *Persister) UseRecoveryToken(ctx context.Context, token string) (*recoverytoken.Token, error) {
-	rt := new(recoverytoken.Token)
+func (p *Persister) UseRecoveryToken(ctx context.Context, token string) (*link.Token, error) {
+	rt := new(link.Token)
 	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
 		for _, secret := range p.cf.SecretsSession() {
 			if err = tx.Eager().Where("token = ? AND NOT used", p.hmacValueWithSecret(token, secret)).First(rt); err != nil {
@@ -100,5 +100,5 @@ func (p *Persister) UseRecoveryToken(ctx context.Context, token string) (*recove
 
 func (p *Persister) DeleteRecoveryToken(ctx context.Context, token string) error {
 	/* #nosec G201 TableName is static */
-	return p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE token=?", new(recoverytoken.Token).TableName()), token).Exec()
+	return p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE token=?", new(link.Token).TableName()), token).Exec()
 }

@@ -1,4 +1,4 @@
-package recoverytoken
+package link
 
 import (
 	"time"
