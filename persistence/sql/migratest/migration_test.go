@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime/debug"
-	"strconv"
 	"testing"
 
 	"github.com/sirupsen/logrus"
@@ -127,7 +126,7 @@ func TestMigrations(t *testing.T) {
 					for _, id := range ids {
 						actual, err := d.Registry().LoginFlowPersister().GetLoginFlow(context.Background(), id.ID)
 						require.NoError(t, err)
-						compareWithFixture(t, actual, "login_request", id.ID.String())
+						compareWithFixture(t, actual, "login_flow", id.ID.String())
 					}
 				})
 				t.Run("case=registration", func(t *testing.T) {
@@ -137,28 +136,28 @@ func TestMigrations(t *testing.T) {
 					for _, id := range ids {
 						actual, err := d.Registry().RegistrationFlowPersister().GetRegistrationFlow(context.Background(), id.ID)
 						require.NoError(t, err)
-						compareWithFixture(t, actual, "registration_request", id.ID.String())
+						compareWithFixture(t, actual, "registration_flow", id.ID.String())
 					}
 				})
-				t.Run("case=settings_request", func(t *testing.T) {
+				t.Run("case=settings_flow", func(t *testing.T) {
 					var ids []settings.Flow
 					require.NoError(t, c.Select("id").All(&ids))
 
 					for _, id := range ids {
 						actual, err := d.Registry().SettingsFlowPersister().GetSettingsFlow(context.Background(), id.ID)
 						require.NoError(t, err)
-						compareWithFixture(t, actual, "settings_request", id.ID.String())
+						compareWithFixture(t, actual, "settings_flow", id.ID.String())
 					}
 				})
 
-				t.Run("case=recovery_request", func(t *testing.T) {
+				t.Run("case=recovery_flow", func(t *testing.T) {
 					var ids []recovery.Flow
 					require.NoError(t, c.Select("id").All(&ids))
 
 					for _, id := range ids {
 						actual, err := d.Registry().RecoveryFlowPersister().GetRecoveryFlow(context.Background(), id.ID)
 						require.NoError(t, err)
-						compareWithFixture(t, actual, "recovery_request", id.ID.String())
+						compareWithFixture(t, actual, "recovery_flow", id.ID.String())
 					}
 				})
 			})
@@ -194,13 +193,4 @@ func compareWithFixture(t *testing.T, actual interface{}, prefix string, id stri
 	if !assert.JSONEq(t, string(expected), string(actualJSON)) {
 		writeFixtureOnError(t, nil, actual, location)
 	}
-}
-
-func writeFixtureOnError(t *testing.T, err error, actual interface{}, location string) {
-	if ok, _ := strconv.ParseBool(os.Getenv("REFRESH_FIXTURES")); ok {
-		content, err := json.MarshalIndent(actual, "", "  ")
-		require.NoError(t, err)
-		require.NoError(t, ioutil.WriteFile(location, content, 0666))
-	}
-	require.NoError(t, err)
 }

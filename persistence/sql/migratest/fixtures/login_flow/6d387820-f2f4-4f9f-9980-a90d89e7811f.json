@@ -1,5 +1,6 @@
 {
-  "id": "202c1981-1e25-47f0-8764-75ad506c2bec",
+  "id": "6d387820-f2f4-4f9f-9980-a90d89e7811f",
+  "type": "browser",
   "expires_at": "2013-10-07T08:23:19Z",
   "issued_at": "2013-10-07T08:23:19Z",
   "request_url": "http://kratos:4433/self-service/browser/flows/login",
@@ -8,14 +9,14 @@
     "oidc": {
       "method": "oidc",
       "config": {
-        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/auth/202c1981-1e25-47f0-8764-75ad506c2bec",
+        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/auth/6d387820-f2f4-4f9f-9980-a90d89e7811f",
         "method": "POST",
         "fields": [
           {
             "name": "csrf_token",
             "type": "hidden",
             "required": true,
-            "value": "7esV9o+i9BJCvpBz3HXWxBPI2802lrGtt3+dBIwBZ/1M4vmqBPVBlHT3qY2xBijmLcUcXuqlNi4o7cPtbBUtYQ=="
+            "value": "Nrq+T0uNsSL8ztjmnbIB2V6NodqifoG+HZ4q6NSAnnWXs1ITwNoEpMqH4Rjwwf/7YIBmSX5NBj2CDHQBNJTU6Q=="
           }
         ]
       }
@@ -23,7 +24,7 @@
     "password": {
       "method": "password",
       "config": {
-        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/login/strategies/password?request=202c1981-1e25-47f0-8764-75ad506c2bec",
+        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/login/strategies/password?request=6d387820-f2f4-4f9f-9980-a90d89e7811f",
         "method": "POST",
         "fields": [
           {
@@ -41,7 +42,7 @@
             "name": "csrf_token",
             "type": "hidden",
             "required": true,
-            "value": "7esV9o+i9BJCvpBz3HXWxBPI2802lrGtt3+dBIwBZ/1M4vmqBPVBlHT3qY2xBijmLcUcXuqlNi4o7cPtbBUtYQ=="
+            "value": "Nrq+T0uNsSL8ztjmnbIB2V6NodqifoG+HZ4q6NSAnnWXs1ITwNoEpMqH4Rjwwf/7YIBmSX5NBj2CDHQBNJTU6Q=="
           }
         ]
       }

@@ -1,5 +1,6 @@
 {
   "id": "3a9ea34f-0f12-469b-9417-3ae5795a7baa",
+  "type": "browser",
   "expires_at": "2013-10-07T08:23:19Z",
   "issued_at": "2013-10-07T08:23:19Z",
   "request_url": "http://kratos:4433/self-service/browser/flows/login",

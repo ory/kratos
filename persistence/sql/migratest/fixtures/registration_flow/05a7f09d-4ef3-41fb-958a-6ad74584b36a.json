@@ -1,5 +1,6 @@
 {
   "id": "05a7f09d-4ef3-41fb-958a-6ad74584b36a",
+  "type": "browser",
   "expires_at": "2013-10-07T08:23:19Z",
   "issued_at": "2013-10-07T08:23:19Z",
   "request_url": "http://kratos:4433/self-service/browser/flows/registration",
