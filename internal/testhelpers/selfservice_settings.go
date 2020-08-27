@@ -35,6 +35,17 @@ import (
 	"github.com/ory/kratos/x"
 )
 
+func NewSettingsUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Server {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		e, err := reg.SettingsFlowPersister().GetSettingsFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("flow")))
+		require.NoError(t, err)
+		reg.Writer().Write(w, r, e)
+	}))
+	viper.Set(configuration.ViperKeySelfServiceSettingsURL, ts.URL+"/settings-ts")
+	t.Cleanup(ts.Close)
+	return ts
+}
+
 func InitializeSettingsFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server) *common.GetSelfServiceSettingsFlowOK {
 	publicClient := NewSDKClient(ts)
 
@@ -219,17 +230,7 @@ func SettingsMakeRequest(
 ) (string, *http.Response) {
 	require.NotEmpty(t, f.Action)
 
-	req, err := http.NewRequest("POST", pointerx.StringR(f.Action), bytes.NewBufferString(values))
-	require.NoError(t, err)
-
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Accept", "text/html")
-	if isAPI {
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Accept", "application/json")
-	}
-
-	res, err := hc.Do(req)
+	res, err := hc.Do(NewRequest(t,isAPI,"POST", pointerx.StringR(f.Action), bytes.NewBufferString(values)))
 	require.NoError(t, err)
 	defer res.Body.Close()
 

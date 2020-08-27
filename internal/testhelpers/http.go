@@ -3,6 +3,7 @@ package testhelpers
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -13,6 +14,20 @@ import (
 
 func NewDebugClient(t *testing.T) *http.Client {
 	return &http.Client{Transport: NewTransportWithLogger(http.DefaultTransport, t)}
+}
+
+func NewRequest(t *testing.T, isAPI bool, method string, url string, payload io.Reader) *http.Request {
+	req, err := http.NewRequest("POST", url,payload)
+	require.NoError(t, err)
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Accept", "text/html")
+	if isAPI {
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Accept", "application/json")
+	}
+
+	return req
 }
 
 func NewHTTPGetJSONRequest(t *testing.T, url string) *http.Request {

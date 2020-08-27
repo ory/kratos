@@ -15,6 +15,7 @@ import (
 	"github.com/ory/viper"
 	"github.com/ory/x/pointerx"
 
+	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal/httpclient/client/common"
@@ -23,6 +24,17 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/x"
 )
+
+func NewRegistrationUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Server {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		e, err := reg.RegistrationFlowPersister().GetRegistrationFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("flow")))
+		require.NoError(t, err)
+		reg.Writer().Write(w, r, e)
+	}))
+	viper.Set(configuration.ViperKeySelfServiceRegistrationUI, ts.URL+"/registration-ts")
+	t.Cleanup(ts.Close)
+	return ts
+}
 
 func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server) *common.GetSelfServiceRegistrationFlowOK {
 	res, err := client.Get(ts.URL + registration.RouteInitBrowserFlow)
@@ -63,17 +75,7 @@ func RegistrationMakeRequest(
 ) (string, *http.Response) {
 	require.NotEmpty(t, f.Action)
 
-	req, err := http.NewRequest("POST", pointerx.StringR(f.Action), bytes.NewBufferString(values))
-	require.NoError(t, err)
-
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Accept", "text/html")
-	if isAPI {
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Accept", "application/json")
-	}
-
-	res, err := hc.Do(req)
+	res, err := hc.Do(NewRequest(t,isAPI,"POST", pointerx.StringR(f.Action), bytes.NewBufferString(values)))
 	require.NoError(t, err)
 	defer res.Body.Close()
 

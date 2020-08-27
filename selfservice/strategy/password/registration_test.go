@@ -9,11 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/x/httpx"
-	"github.com/ory/x/pointerx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/pointerx"
 
 	"github.com/ory/x/assertx"
 
@@ -98,7 +99,7 @@ func TestRegistration(t *testing.T) {
 					Do(httpx.MustNewRequest("POST", publicTS.URL+password.RouteRegistration, strings.NewReader(testhelpers.EncodeFormAsJSON(t, true, values)), "application/json"))
 				require.NoError(t, err)
 				defer res.Body.Close()
-				assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(x.MustReadAll(res.Body),"error").Raw))
+				assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(x.MustReadAll(res.Body), "error").Raw))
 			})
 		})
 
@@ -163,11 +164,12 @@ func TestRegistration(t *testing.T) {
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
-				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, apiClient, publicTS)
+				browserClient := testhelpers.NewClientWithCookies(t)
+				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS)
 				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
 
 				time.Sleep(time.Millisecond * 20)
-				actual, res := testhelpers.RegistrationMakeRequest(t, true, c, apiClient, "")
+				actual, res := testhelpers.RegistrationMakeRequest(t, false, c, browserClient, "")
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/registration-ts")
 				assert.NotEqual(t, f.Payload.ID, gjson.Get(actual, "id").String(), "%s", actual)
 				assert.Contains(t, gjson.Get(actual, "messages.0.text").String(), "expired", "%s", actual)
@@ -228,34 +230,32 @@ func TestRegistration(t *testing.T) {
 			})
 		})
 
-		t.Run("case=should fail because of missing CSRF token/type=browser", func(t *testing.T) {
-			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS)
-			c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
-
-			actual, res := testhelpers.RegistrationMakeRequest(t, false, c, apiClient, url.Values{
+		t.Run("case=should have correct CSRF behavior", func(t *testing.T) {
+			var values = url.Values{
 				"csrf_token":      {"invalid_token"},
 				"traits.username": {"registration-identifier-csrf-browser"},
 				"password":        {x.NewUUID().String()},
 				"traits.foobar":   {"bar"},
-			}.Encode())
-			assert.EqualValues(t, http.StatusOK, res.StatusCode)
-			assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken,
-				json.RawMessage(gjson.Get(actual, "0").Raw), "%s", actual)
-		})
+			}
+			t.Run("case=should fail because of missing CSRF token/type=browser", func(t *testing.T) {
+				browserClient := testhelpers.NewClientWithCookies(t)
+				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS)
+				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
 
-		t.Run("case=should pass even without CSRF token/type=api", func(t *testing.T) {
-			f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
-			c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+				actual, res := testhelpers.RegistrationMakeRequest(t, false, c, browserClient, values.Encode())
+				assert.EqualValues(t, http.StatusOK, res.StatusCode)
+				assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken,
+					json.RawMessage(gjson.Get(actual, "0").Raw), "%s", actual)
+			})
 
-			actual, res := testhelpers.RegistrationMakeRequest(t, false, c, apiClient, url.Values{
-				"csrf_token":      {"invalid_token"},
-				"traits.username": {"registration-identifier-csrf-browser"},
-				"password":        {x.NewUUID().String()},
-				"traits.foobar":   {"bar"},
-			}.Encode())
-			assert.EqualValues(t, http.StatusOK, res.StatusCode)
-			assert.NotEmpty(t, gjson.Get(actual, "identity.id").Raw, "%s", actual) // registration successful
+			t.Run("case=should pass even without CSRF token/type=api", func(t *testing.T) {
+				f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
+				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+
+				actual, res := testhelpers.RegistrationMakeRequest(t, true, c, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
+				assert.EqualValues(t, http.StatusOK, res.StatusCode)
+				assert.NotEmpty(t, gjson.Get(actual, "identity.id").Raw, "%s", actual) // registration successful
+			})
 		})
 
 		t.Run("case=should fail because schema did not specify an identifier", func(t *testing.T) {
