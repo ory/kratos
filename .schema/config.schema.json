@@ -304,7 +304,7 @@
                   ],
                   "default": "https://www.ory.sh/kratos/docs/fallback/settings"
                 },
-                "request_lifespan": {
+                "lifespan": {
                   "type": "string",
                   "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
                   "default": "1h",
@@ -358,7 +358,7 @@
                   ],
                   "default": "https://www.ory.sh/kratos/docs/fallback/registration"
                 },
-                "request_lifespan": {
+                "lifespan": {
                   "type": "string",
                   "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
                   "default": "1h",
@@ -387,7 +387,7 @@
                   ],
                   "default": "https://www.ory.sh/kratos/docs/fallback/login"
                 },
-                "request_lifespan": {
+                "lifespan": {
                   "type": "string",
                   "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
                   "default": "1h",
@@ -432,7 +432,7 @@
                   },
                   "additionalProperties": false
                 },
-                "request_lifespan": {
+                "lifespan": {
                   "title": "Self-Service Verification Request Lifespan",
                   "description": "Sets how long the verification request (for the UI interaction) is valid.",
                   "type": "string",
@@ -476,7 +476,7 @@
                   },
                   "additionalProperties": false
                 },
-                "request_lifespan": {
+                "lifespan": {
                   "title": "Self-Service Recovery Request Lifespan",
                   "description": "Sets how long the recovery request is valid. If expired, the user has to redo the flow.",
                   "type": "string",

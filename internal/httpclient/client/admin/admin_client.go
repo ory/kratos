@@ -240,7 +240,7 @@ func (a *Client) ListIdentities(params *ListIdentitiesParams) (*ListIdentitiesOK
   ```
 metadata:
 annotations:
-prometheus.io/port: "4445"
+prometheus.io/port: "4434"
 prometheus.io/path: "/metrics/prometheus"
 ```
 */
