@@ -26,6 +26,7 @@ import (
 	"github.com/ory/kratos/internal/httpclient/client/common"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
@@ -37,7 +38,7 @@ func init() {
 }
 
 var (
-	csrfField = &models.FormField{Name: pointerx.String("csrf_token"), Value: "nosurf",
+	csrfField = &models.FormField{Name: pointerx.String("csrf_token"), Value: x.FakeCSRFToken,
 		Required: true, Type: pointerx.String("hidden")}
 )
 
@@ -264,7 +265,7 @@ func TestSettingsStrategy(t *testing.T) {
 		var unlink = func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *models.SettingsFlow) {
 			req = nprSDK(t, agents[agent], "", time.Hour)
 			body, res = testhelpers.HTTPPostForm(t, agents[agent], action(req),
-				&url.Values{"csrf_token": {"nosurf"}, "unlink": {provider}})
+				&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
 			return
 		}
 
@@ -337,7 +338,7 @@ func TestSettingsStrategy(t *testing.T) {
 				viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
 
 				body, res := testhelpers.HTTPPostForm(t, agents[agent], action(req),
-					&url.Values{"csrf_token": {"nosurf"}, "unlink": {provider}})
+					&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(req.ID))
 
 				assert.Equal(t, "success", gjson.GetBytes(body, "state").String())
@@ -351,7 +352,7 @@ func TestSettingsStrategy(t *testing.T) {
 		var link = func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *models.SettingsFlow) {
 			req = nprSDK(t, agents[agent], "", time.Hour)
 			body, res = testhelpers.HTTPPostForm(t, agents[agent], action(req),
-				&url.Values{"csrf_token": {"nosurf"}, "link": {provider}})
+				&url.Values{"csrf_token": {x.FakeCSRFToken}, "link": {provider}})
 			return
 		}
 
@@ -509,7 +510,7 @@ func TestSettingsStrategy(t *testing.T) {
 				viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
 
 				body, res := testhelpers.HTTPPostForm(t, agents[agent], action(req),
-					&url.Values{"csrf_token": {"nosurf"}, "unlink": {provider}})
+					&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(req.ID))
 
 				assert.Equal(t, "success", gjson.GetBytes(body, "state").String())
@@ -542,7 +543,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 	}
 
 	nr := func() *settings.Flow {
-		return &settings.Flow{ID: x.NewUUID(), Methods: map[string]*settings.FlowMethod{}}
+		return &settings.Flow{Type: flow.TypeBrowser, ID: x.NewUUID(), Methods: map[string]*settings.FlowMethod{}}
 	}
 
 	populate := func(t *testing.T, reg *driver.RegistryDefault, i *identity.Identity, req *settings.Flow) *form.HTMLForm {
@@ -564,6 +565,15 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		{Provider: "generic", ID: "github"},
 	}
 
+	t.Run("case=should not populate non-browser flow", func(t *testing.T) {
+		reg := nreg(t, &oidc.ConfigurationCollection{Providers: []oidc.Configuration{{Provider: "generic", ID: "github"}}})
+		i := &identity.Identity{Traits: []byte(`{"subject":"foo@bar.com"}`)}
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+		req :=  &settings.Flow{Type: flow.TypeAPI, ID: x.NewUUID(), Methods: map[string]*settings.FlowMethod{}}
+		require.NoError(t, ns(t, reg).PopulateSettingsMethod(new(http.Request), i, req))
+		require.Nil(t, req.Methods[identity.CredentialsTypeOIDC.String()])
+	})
+
 	for k, tc := range []struct {
 		c      []oidc.Configuration
 		i      identity.Credentials
@@ -573,7 +583,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		{
 			c: []oidc.Configuration{},
 			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: "nosurf"},
+				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
 			},
 		},
 		{
@@ -581,14 +591,14 @@ func TestPopulateSettingsMethod(t *testing.T) {
 				{Provider: "generic", ID: "github"},
 			},
 			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: "nosurf"},
+				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
 				{Name: "link", Type: "submit", Value: "github"},
 			},
 		},
 		{
 			c: defaultConfig,
 			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: "nosurf"},
+				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
 				{Name: "link", Type: "submit", Value: "facebook"},
 				{Name: "link", Type: "submit", Value: "google"},
 				{Name: "link", Type: "submit", Value: "github"},
@@ -597,7 +607,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		{
 			c: defaultConfig,
 			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: "nosurf"},
+				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
 				{Name: "link", Type: "submit", Value: "facebook"},
 				{Name: "link", Type: "submit", Value: "google"},
 				{Name: "link", Type: "submit", Value: "github"},
@@ -607,7 +617,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		{
 			c: defaultConfig,
 			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: "nosurf"},
+				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
 				{Name: "link", Type: "submit", Value: "facebook"},
 				{Name: "link", Type: "submit", Value: "github"},
 			},
@@ -618,7 +628,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		{
 			c: defaultConfig,
 			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: "nosurf"},
+				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
 				{Name: "link", Type: "submit", Value: "facebook"},
 				{Name: "link", Type: "submit", Value: "github"},
 				{Name: "unlink", Type: "submit", Value: "google"},
@@ -632,7 +642,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		{
 			c: defaultConfig,
 			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: "nosurf"},
+				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
 				{Name: "link", Type: "submit", Value: "github"},
 				{Name: "unlink", Type: "submit", Value: "google"},
 				{Name: "unlink", Type: "submit", Value: "facebook"},

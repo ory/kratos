@@ -93,7 +93,7 @@ func TestPersister(t *testing.T) {
 	}
 
 	var l sync.Mutex
-	if !testing.Short() && false {
+	if !testing.Short() {
 		funcs := map[string]func(t *testing.T) string{
 			"postgres":  dockertest.RunTestPostgreSQL,
 			"mysql":     dockertest.RunTestMySQL,

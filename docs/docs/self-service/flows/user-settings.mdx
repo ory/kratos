@@ -22,23 +22,7 @@ strategy.
 
 ## Self-Service User Settings for Browser Applications
 
-ORY Kratos supports browser applications that run on server-side (e.g. Java,
-NodeJS, PHP) as well as client-side (e.g. JQuery, ReactJS, AngularJS, ...).
-
-Browser-based user settings management makes use of three core HTTP
-technologies:
-
-- HTTP Redirects
-- HTTP POST (`application/json`, `application/x-www-urlencoded`) and RESTful GET
-  requests.
-- HTTP Cookies to prevent CSRF and Session Hijaking attack vectors.
-
-The browser flow is the easiest and most secure to set up and integrated with.
-ORY Kratos takes care of all required session and CSRF cookies and ensures that
-all security requirements are fulfilled.
-
-This flow is not suitable for scenarios where you use purely programmatic
-clients that do not work well with HTTP Cookies and HTTP Redirects.
+This flow follows the already established [Browser Flow](../../self-service#browser-flows).
 
 ### The Settings User Interface
 
@@ -451,4 +435,4 @@ Will be addressed in a future release.
 
 ORY Kratos allows you to configure hooks that run before and after a profile
 update was successful. For more information about hooks please read the
-[Hook Documentation](../hooks/index).
+[Hook Documentation](../hooks).

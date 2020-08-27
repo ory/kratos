@@ -78,7 +78,9 @@ selfservice:
             # provider, client_id, issuer_url, scope, ...
 ```
 
-## Registration
+## Browser Clients
+
+### Registration
 
 Redirecting the browser to the
 [Self-Service Login and Registration Endpoint](../user-login-user-registration.mdx#user-login-and-user-registration-process-sequence)
@@ -87,7 +89,9 @@ is configued, the Registration Request Response Payload will include an `oidc`
 method. The method contains different providers, based on your OpenID Connect
 Provider configuration:
 
-```json5 title="$ curl http://<kratos-admin>/self-service/browser/flows/requests/registration?request=54a9f113-3a7b-4cb8-a553-f072aa4e1622"
+```
+curl http://<kratos-admin>/self-service/browser/flows/requests/registration?request=54a9f113-3a7b-4cb8-a553-f072aa4e1622
+
 {
   id: '54a9f113-3a7b-4cb8-a553-f072aa4e1622',
   expires_at: '2020-05-15T11:04:09.342537Z',
@@ -219,7 +223,9 @@ filled out. Please note that these claims are just examples, Google doesn't
 actually use email addresses in `sub` fields and also does not include the
 `website` claim:
 
-```json5 title="$ curl http://<kratos-admin>/self-service/browser/flows/requests/registration?request=54a9f113-3a7b-4cb8-a553-f072aa4e1622"
+```shell script
+$ curl http://<kratos-admin>/self-service/browser/flows/requests/registration?request=54a9f113-3a7b-4cb8-a553-f072aa4e1622"
+
 {
   id: '54a9f113-3a7b-4cb8-a553-f072aa4e1622',
   // ...
@@ -271,7 +277,12 @@ actually use email addresses in `sub` fields and also does not include the
 }
 ```
 
-## Login
+If the form is valid, ORY Kratos will create the user and respond with a HTTP 302 redirect
+to the configured redirect URL.
+
+Unless the `session` hook is configured, no session cookie will be included in the `Set-Cookie` HTTP header.
+
+### Login
 
 Redirecting the browser to the
 [Self-Service Login and Registration Endpoint](../user-login-user-registration.mdx#user-login-and-user-registration-process-sequence)
@@ -376,7 +387,13 @@ apply for `provider: github`):
 }
 ```
 
-The flow completes otherwise.
+If the form is valid (the user exists and the password is correct), ORY Kratos will respond with a HTTP 302 redirect
+to the configured redirect URL and set a session cookie using the `Set-Cookie` HTTP Header.
+
+## API Clients
+
+Social Sign In is currently not possible for API Clients. It will be possible in a future version, which is
+partially tracked as [kratos#273](https://github.com/ory/kratos/issues/273)
 
 ## Security and Defenses
 
