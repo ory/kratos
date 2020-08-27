@@ -125,6 +125,10 @@ migrations-render: .bin/cli
 migrations-render-replace: .bin/cli
 		cli dev pop migration render -r persistence/sql/migrations/templates persistence/sql/migrations/sql
 
+.PHONY: migratest-refresh
+migratest-refresh:
+		cd persistence/sql/migratest; go test -tags sqlite,refresh -short .
+
 .PHONY: pack
 pack: .bin/pkger
 		pkger -exclude node_modules -exclude docs -exclude .bin -exclude test -exclude script -exclude contrib

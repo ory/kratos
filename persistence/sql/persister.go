@@ -52,36 +52,10 @@ func (p *Persister) MigrationStatus(ctx context.Context, w io.Writer) error {
 }
 
 func (p *Persister) MigrateDown(ctx context.Context, steps int) error {
-	// FIXME https://github.com/gobuffalo/pop/issues/574
-	if p.isSQLite {
-		if err := p.c.RawQuery(`PRAGMA legacy_alter_table=on; PRAGMA foreign_keys=off;`).Exec(); err != nil {
-			return errors.WithStack(err)
-		}
-
-		if err := p.mb.Down(steps); err != nil {
-			return errors.WithStack(err)
-		}
-
-		return p.c.RawQuery(`PRAGMA legacy_alter_table=off; PRAGMA foreign_keys=on;`).Exec()
-	}
-
 	return errors.WithStack(p.mb.Down(steps))
 }
 
 func (p *Persister) MigrateUp(ctx context.Context) error {
-	// FIXME https://github.com/gobuffalo/pop/issues/574
-	if p.isSQLite && false {
-		if err := p.c.RawQuery(`PRAGMA legacy_alter_table=on; PRAGMA foreign_keys=off;`).Exec(); err != nil {
-			return errors.WithStack(err)
-		}
-
-		if err := p.mb.Up(); err != nil {
-			return errors.WithStack(err)
-		}
-
-		return p.c.RawQuery(`PRAGMA legacy_alter_table=off; PRAGMA foreign_keys=on;`).Exec()
-	}
-
 	return errors.WithStack(p.mb.Up())
 }
 

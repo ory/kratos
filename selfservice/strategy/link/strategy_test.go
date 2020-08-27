@@ -62,12 +62,12 @@ func TestAdminStrategy(t *testing.T) {
 	publicTS, adminTS := testhelpers.NewKratosServer(t, reg)
 	adminSDK := testhelpers.NewSDKClient(adminTS)
 
-	checkLink := func(t *testing.T, link *admin.CreateRecoveryLinkOK, isBefore time.Time) {
-		require.Contains(t, *link.Payload.RecoveryLink, publicTS.URL+link.PublicPath)
-		rl := urlx.ParseOrPanic(*link.Payload.RecoveryLink)
+	checkLink := func(t *testing.T, l *admin.CreateRecoveryLinkOK, isBefore time.Time) {
+		require.Contains(t, *l.Payload.RecoveryLink, publicTS.URL+link.PublicPath)
+		rl := urlx.ParseOrPanic(*l.Payload.RecoveryLink)
 		assert.NotEmpty(t, rl.Query().Get("token"))
 		assert.NotEmpty(t, rl.Query().Get("request"))
-		require.True(t, time.Time(link.Payload.ExpiresAt).Before(isBefore))
+		require.True(t, time.Time(l.Payload.ExpiresAt).Before(isBefore))
 	}
 
 	t.Run("description=should not be able to recover an account that does not exist", func(t *testing.T) {
@@ -128,9 +128,9 @@ func TestAdminStrategy(t *testing.T) {
 		assert.Equal(t, http.StatusAccepted, res.StatusCode)
 		testhelpers.LogJSON(t, link.Payload)
 
-		sr, err := adminSDK.Common.GetSelfServiceBrowserSettingsRequest(
-			common.NewGetSelfServiceBrowserSettingsRequestParams().
-				WithRequest(res.Request.URL.Query().Get("request")))
+		sr, err := adminSDK.Common.GetSelfServiceSettingsFlow(
+			common.NewGetSelfServiceSettingsFlowParams().
+				WithID(res.Request.URL.Query().Get("flow")))
 		require.NoError(t, err)
 
 		require.Len(t, sr.Payload.Messages, 1)
@@ -236,9 +236,9 @@ func TestStrategy(t *testing.T) {
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowSettingsUI().String())
 		assert.Equal(t, http.StatusAccepted, res.StatusCode)
 
-		sr, err := sdk.Common.GetSelfServiceBrowserSettingsRequest(
-			common.NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(c).
-				WithRequest(res.Request.URL.Query().Get("request")),
+		sr, err := sdk.Common.GetSelfServiceSettingsFlow(
+			common.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(c).
+				WithID(res.Request.URL.Query().Get("flow")),
 		)
 		require.NoError(t, err)
 
@@ -254,9 +254,9 @@ func TestStrategy(t *testing.T) {
 		assert.Equal(t, http.StatusNoContent, res.StatusCode)
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String()+"?request=")
 
-		sr, err := sdk.Common.GetSelfServiceBrowserRecoveryRequest(
-			common.NewGetSelfServiceBrowserRecoveryRequestParams().WithHTTPClient(c).
-				WithRequest(res.Request.URL.Query().Get("request")),
+		sr, err := sdk.Common.GetSelfServiceRecoveryFlow(
+			common.NewGetSelfServiceRecoveryFlowParams().WithHTTPClient(c).
+				WithID(res.Request.URL.Query().Get("flow")),
 		)
 		require.NoError(t, err)
 
@@ -308,9 +308,9 @@ func TestStrategy(t *testing.T) {
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String())
 		assert.NotContains(t, res.Request.URL.String(), string(rs.Payload.ID))
 
-		sr, err := sdk.Common.GetSelfServiceBrowserRecoveryRequest(
-			common.NewGetSelfServiceBrowserRecoveryRequestParams().WithHTTPClient(c).
-				WithRequest(res.Request.URL.Query().Get("request")),
+		sr, err := sdk.Common.GetSelfServiceRecoveryFlow(
+			common.NewGetSelfServiceRecoveryFlowParams().WithHTTPClient(c).
+				WithID(res.Request.URL.Query().Get("flow")),
 		)
 		require.NoError(t, err)
 

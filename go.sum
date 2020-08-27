@@ -352,10 +352,8 @@ github.com/gobuffalo/events v1.4.1/go.mod h1:SjXgWKpeSuvQDvGhgMz5IXx3Czu+IbL+XPL
 github.com/gobuffalo/fizz v1.0.12/go.mod h1:C0sltPxpYK8Ftvf64kbsQa2yiCZY4RZviurNxXdAKwc=
 github.com/gobuffalo/fizz v1.9.8/go.mod h1:w1FEn1yKNVCc49KnADGyYGRPH7jFON3ak4Bj1yUudHo=
 github.com/gobuffalo/fizz v1.10.0/go.mod h1:J2XGPO0AfJ1zKw7+2BA+6FEGAkyEsdCOLvN93WCT2WI=
-github.com/gobuffalo/fizz v1.11.0 h1:kJ+9sSSZpolHz4ULV1sF76AGmo74kEi6IztIc4HmshU=
-github.com/gobuffalo/fizz v1.11.0/go.mod h1:cXLjhE5p3iuIes6AGZ/9+dfyOkehlB2Vldj0Iw2Uu38=
-github.com/gobuffalo/fizz v1.11.1-0.20200706214517-4e9fb9ced4ce h1:Y0QAYLDJp9VJUOefsaHZFEDSILz6nRKZxcToDhcSKZY=
-github.com/gobuffalo/fizz v1.11.1-0.20200706214517-4e9fb9ced4ce/go.mod h1:cXLjhE5p3iuIes6AGZ/9+dfyOkehlB2Vldj0Iw2Uu38=
+github.com/gobuffalo/fizz v1.11.1-0.20200827214106-ed1b75c3b6ff h1:YKQJAc2WkWJ0isE5VIwxcSZXNaS+2ngXinfbr+hZnzY=
+github.com/gobuffalo/fizz v1.11.1-0.20200827214106-ed1b75c3b6ff/go.mod h1:cXLjhE5p3iuIes6AGZ/9+dfyOkehlB2Vldj0Iw2Uu38=
 github.com/gobuffalo/flect v0.0.0-20180907193754-dc14d8acaf9f/go.mod h1:rCiQgmAE4axgBNl3jZWzS5rETRYTGOsrixTRaCPzNdA=
 github.com/gobuffalo/flect v0.0.0-20181002182613-4571df4b1daf/go.mod h1:rCiQgmAE4axgBNl3jZWzS5rETRYTGOsrixTRaCPzNdA=
 github.com/gobuffalo/flect v0.0.0-20181007231023-ae7ed6bfe683/go.mod h1:rCiQgmAE4axgBNl3jZWzS5rETRYTGOsrixTRaCPzNdA=
@@ -1043,8 +1041,8 @@ github.com/openzipkin/zipkin-go v0.2.2 h1:nY8Hti+WKaP0cRsSeQ026wU03QsM762XBeCXBb
 github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/ory/analytics-go/v4 v4.0.0 h1:KQ2P00j9dbj4lDC/Albw/zn/scK67041RhqeW5ptsbw=
 github.com/ory/analytics-go/v4 v4.0.0/go.mod h1:FMx9cLRD9xN+XevPvZ5FDMfignpmcqPP6FUKnJ9/MmE=
-github.com/ory/cli v0.0.24 h1:lPKxJIA45KcCRyt6H/B+gB64UsN/t40Wnte1VJR3WCE=
-github.com/ory/cli v0.0.24/go.mod h1:xHQzktVXHdLzLHUZ36PQ0PU67OQgDYfenLQhbfU4KzM=
+github.com/ory/cli v0.0.25-0.20200827222409-9207e62c455a h1:UZBzAFt103fILKINZoODh3j1Wmsumh6eoH4bMruFcok=
+github.com/ory/cli v0.0.25-0.20200827222409-9207e62c455a/go.mod h1:9AA94/MP63p9v5fvOoaGucHaWMOejKhqYPHhUQwEHNE=
 github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4Emza6EbVUUGA=
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
 github.com/ory/dockertest/v3 v3.5.4 h1:rYijlJuraj8D4OgC1DpYpCV8SGXrkviT3RVrjFy7OFc=

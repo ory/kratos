@@ -15,8 +15,8 @@ import (
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/hook"
-	"github.com/ory/kratos/selfservice/strategy/profile"
 	"github.com/ory/kratos/selfservice/strategy/link"
+	"github.com/ory/kratos/selfservice/strategy/profile"
 	"github.com/ory/kratos/x"
 
 	"github.com/cenkalti/backoff"

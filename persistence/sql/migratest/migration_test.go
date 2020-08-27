@@ -31,6 +31,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
+	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
@@ -88,18 +89,8 @@ func TestMigrations(t *testing.T) {
 			}
 			t.Logf("URL: %s", url)
 
-			var isSQLite = c.Dialect.Name() == "sqlite3"
-
 			tm := popx.NewTestMigrator(t, c, "../migrations/sql", "./testdata")
-
-			if isSQLite {
-				require.NoError(t, c.RawQuery(`PRAGMA legacy_alter_table=on; PRAGMA foreign_keys=off;`).Exec())
-			}
 			require.NoError(t, tm.Up())
-			if isSQLite {
-				require.NoError(t, c.RawQuery(`PRAGMA legacy_alter_table=off; PRAGMA foreign_keys=on;`).Exec())
-			}
-
 			viper.Set(configuration.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://stub/default.schema.json")
 			viper.Set(configuration.ViperKeyDSN, url)
@@ -116,6 +107,16 @@ func TestMigrations(t *testing.T) {
 						actual, err := d.Registry().PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), id.ID)
 						require.NoError(t, err)
 						compareWithFixture(t, actual, "identity", id.ID.String())
+					}
+				})
+				t.Run("case=session", func(t *testing.T) {
+					var ids []session.Session
+					require.NoError(t, c.Select("id").All(&ids))
+
+					for _, id := range ids {
+						actual, err := d.Registry().SessionPersister().GetSession(context.Background(), id.ID)
+						require.NoError(t, err)
+						compareWithFixture(t, actual, "session", id.ID.String())
 					}
 				})
 

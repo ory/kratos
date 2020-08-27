@@ -1,5 +1,4 @@
-ALTER TABLE "selfservice_verification_requests" RENAME TO "_selfservice_verification_requests_tmp";
-CREATE TABLE "selfservice_verification_requests" (
+CREATE TABLE "_selfservice_verification_requests_tmp" (
 "id" TEXT PRIMARY KEY,
 "request_url" TEXT NOT NULL,
 "issued_at" DATETIME NOT NULL DEFAULT 'CURRENT_TIMESTAMP',
@@ -11,10 +10,11 @@ CREATE TABLE "selfservice_verification_requests" (
 "created_at" DATETIME NOT NULL,
 "updated_at" DATETIME NOT NULL
 );
-INSERT INTO "selfservice_verification_requests" (id, request_url, issued_at, expires_at, form, via, csrf_token, success, created_at, updated_at) SELECT id, request_url, issued_at, expires_at, form, via, csrf_token, success, created_at, updated_at FROM "_selfservice_verification_requests_tmp";
-DROP TABLE "_selfservice_verification_requests_tmp";
-ALTER TABLE "selfservice_login_requests" RENAME TO "_selfservice_login_requests_tmp";
-CREATE TABLE "selfservice_login_requests" (
+INSERT INTO "_selfservice_verification_requests_tmp" (id, request_url, issued_at, expires_at, form, via, csrf_token, success, created_at, updated_at) SELECT id, request_url, issued_at, expires_at, form, via, csrf_token, success, created_at, updated_at FROM "selfservice_verification_requests";
+
+DROP TABLE "selfservice_verification_requests";
+ALTER TABLE "_selfservice_verification_requests_tmp" RENAME TO "selfservice_verification_requests";
+CREATE TABLE "_selfservice_login_requests_tmp" (
 "id" TEXT PRIMARY KEY,
 "request_url" TEXT NOT NULL,
 "issued_at" DATETIME NOT NULL DEFAULT 'CURRENT_TIMESTAMP',
@@ -25,10 +25,11 @@ CREATE TABLE "selfservice_login_requests" (
 "updated_at" DATETIME NOT NULL,
 "forced" bool NOT NULL DEFAULT 'false'
 );
-INSERT INTO "selfservice_login_requests" (id, request_url, issued_at, expires_at, active_method, csrf_token, created_at, updated_at, forced) SELECT id, request_url, issued_at, expires_at, active_method, csrf_token, created_at, updated_at, forced FROM "_selfservice_login_requests_tmp";
-DROP TABLE "_selfservice_login_requests_tmp";
-ALTER TABLE "selfservice_registration_requests" RENAME TO "_selfservice_registration_requests_tmp";
-CREATE TABLE "selfservice_registration_requests" (
+INSERT INTO "_selfservice_login_requests_tmp" (id, request_url, issued_at, expires_at, active_method, csrf_token, created_at, updated_at, forced) SELECT id, request_url, issued_at, expires_at, active_method, csrf_token, created_at, updated_at, forced FROM "selfservice_login_requests";
+
+DROP TABLE "selfservice_login_requests";
+ALTER TABLE "_selfservice_login_requests_tmp" RENAME TO "selfservice_login_requests";
+CREATE TABLE "_selfservice_registration_requests_tmp" (
 "id" TEXT PRIMARY KEY,
 "request_url" TEXT NOT NULL,
 "issued_at" DATETIME NOT NULL DEFAULT 'CURRENT_TIMESTAMP',
@@ -38,5 +39,7 @@ CREATE TABLE "selfservice_registration_requests" (
 "created_at" DATETIME NOT NULL,
 "updated_at" DATETIME NOT NULL
 );
-INSERT INTO "selfservice_registration_requests" (id, request_url, issued_at, expires_at, active_method, csrf_token, created_at, updated_at) SELECT id, request_url, issued_at, expires_at, active_method, csrf_token, created_at, updated_at FROM "_selfservice_registration_requests_tmp";
-DROP TABLE "_selfservice_registration_requests_tmp";
+INSERT INTO "_selfservice_registration_requests_tmp" (id, request_url, issued_at, expires_at, active_method, csrf_token, created_at, updated_at) SELECT id, request_url, issued_at, expires_at, active_method, csrf_token, created_at, updated_at FROM "selfservice_registration_requests";
+
+DROP TABLE "selfservice_registration_requests";
+ALTER TABLE "_selfservice_registration_requests_tmp" RENAME TO "selfservice_registration_requests";
