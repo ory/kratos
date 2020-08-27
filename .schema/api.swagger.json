@@ -320,6 +320,24 @@
         }
       }
     },
+    "/metrics/prometheus": {
+      "get": {
+        "description": "```\nmetadata:\nannotations:\nprometheus.io/port: \"4445\"\nprometheus.io/path: \"/metrics/prometheus\"\n```",
+        "produces": [
+          "plain/text"
+        ],
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get snapshot metrics from the Hydra service. If you're using k8s, you can then add annotations to\nyour deployment like so:",
+        "operationId": "prometheus",
+        "responses": {
+          "200": {
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+          }
+        }
+      }
+    },
     "/recovery/link": {
       "post": {
         "description": "This endpoint creates a recovery link which should be given to the user in order for them to recover\n(or activate) their account.",

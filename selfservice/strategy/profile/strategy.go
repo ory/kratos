@@ -169,7 +169,7 @@ func (s *Strategy) handleSubmit(w http.ResponseWriter, r *http.Request, ps httpr
 		decoderx.HTTPFormDecoder(),
 		option,
 		decoderx.HTTPDecoderSetValidatePayloads(false),
-		decoderx.HTTPDecoderSetIgnoreParseErrorsStrategy(decoderx.ParseErrorIgnore),
+		decoderx.HTTPDecoderSetIgnoreParseErrorsStrategy(decoderx.ParseErrorIgnoreConversionErrors),
 	); err != nil {
 		s.handleSettingsError(w, r, ctxUpdate, nil, &p, err)
 		return

@@ -70,7 +70,7 @@ func NewHTMLFormFromRequestBody(r *http.Request, action string, compiler decoder
 	c := NewHTMLForm(action)
 	raw := json.RawMessage(`{}`)
 	if err := decoder.Decode(r, &raw, compiler,
-		decoderx.HTTPDecoderSetIgnoreParseErrorsStrategy(decoderx.ParseErrorIgnore),
+		decoderx.HTTPDecoderSetIgnoreParseErrorsStrategy(decoderx.ParseErrorIgnoreConversionErrors),
 	); err != nil {
 		if err := c.ParseError(err); err != nil {
 			return nil, err
