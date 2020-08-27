@@ -16,6 +16,7 @@ import (
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/x"
@@ -114,6 +115,10 @@ func (s *Strategy) linkableProviders(conf *ConfigurationCollection, confidential
 }
 
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity, sr *settings.Flow) error {
+	if sr.Type != flow.TypeBrowser {
+		return nil
+	}
+
 	conf, err := s.Config()
 	if err != nil {
 		return err
@@ -156,7 +161,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 
 	sr.Methods[s.SettingsStrategyID()] = &settings.FlowMethod{
 		Method: s.SettingsStrategyID(),
-		Config: &settings.FlowMethodConfig{FlowMethodConfigurator: NewRequestMethodConfig(f)},
+		Config: &settings.FlowMethodConfig{FlowMethodConfigurator: NewFlowMethod(f)},
 	}
 
 	return nil
@@ -180,18 +185,18 @@ type completeSelfServiceBrowserSettingsOIDCFlowPayload struct {
 	// in: body
 	Unlink string `json:"unlink"`
 
-	// RequestID is request ID.
+	// Flow ID is the flow's ID.
 	//
 	// in: query
-	RequestID string `json:"request_id"`
+	FlowID string `json:"flow"`
 }
 
-func (p *completeSelfServiceBrowserSettingsOIDCFlowPayload) GetRequestID() uuid.UUID {
-	return x.ParseUUID(p.RequestID)
+func (p *completeSelfServiceBrowserSettingsOIDCFlowPayload) GetFlowID() uuid.UUID {
+	return x.ParseUUID(p.FlowID)
 }
 
-func (p *completeSelfServiceBrowserSettingsOIDCFlowPayload) SetRequestID(rid uuid.UUID) {
-	p.RequestID = rid.String()
+func (p *completeSelfServiceBrowserSettingsOIDCFlowPayload) SetFlowID(rid uuid.UUID) {
+	p.FlowID = rid.String()
 }
 
 // swagger:route POST /self-service/browser/flows/registration/strategies/oidc/settings/connections public completeSelfServiceBrowserSettingsOIDCSettingsFlow
@@ -231,6 +236,10 @@ func (s *Strategy) completeSettingsFlow(w http.ResponseWriter, r *http.Request, 
 	} else if err != nil {
 		s.handleSettingsError(w, r, ctxUpdate, &p, err)
 		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		s.handleSettingsError(w, r, ctxUpdate, &p, err)
 	}
 
 	p.Link = r.Form.Get("link")
@@ -292,21 +301,21 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 	}
 
 	if ctxUpdate.Session.AuthenticatedAt.Add(s.c.SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
-		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.ErrRequestNeedsReAuthentication))
+		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 		return
 	}
 
 	http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.c.SelfPublicURL(),
-		strings.Replace(AuthPath, ":request", p.RequestID, 1)),
+		strings.Replace(AuthPath, ":flow", p.FlowID, 1)),
 		url.Values{"provider": {p.Link}}).String(), http.StatusFound)
 }
 
 func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request,
 	ctxUpdate *settings.UpdateContext, claims *Claims, provider Provider) {
 	p := &completeSelfServiceBrowserSettingsOIDCFlowPayload{
-		Link: provider.Config().ID, RequestID: ctxUpdate.Flow.ID.String()}
+		Link: provider.Config().ID, FlowID: ctxUpdate.Flow.ID.String()}
 	if ctxUpdate.Session.AuthenticatedAt.Add(s.c.SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
-		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.ErrRequestNeedsReAuthentication))
+		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 		return
 	}
 
@@ -350,7 +359,7 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request,
 func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request,
 	ctxUpdate *settings.UpdateContext, p *completeSelfServiceBrowserSettingsOIDCFlowPayload) {
 	if ctxUpdate.Session.AuthenticatedAt.Add(s.c.SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
-		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.ErrRequestNeedsReAuthentication))
+		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 		return
 	}
 
@@ -417,7 +426,7 @@ func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request,
 }
 
 func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *completeSelfServiceBrowserSettingsOIDCFlowPayload, err error) {
-	if errors.Is(err, settings.ErrRequestNeedsReAuthentication) {
+	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) {
 		if err := s.d.ContinuityManager().Pause(r.Context(), w, r,
 			settings.ContinuityKey(s.SettingsStrategyID()), settings.ContinuityOptions(p, ctxUpdate.Session.Identity)...); err != nil {
 			s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.SettingsStrategyID(), ctxUpdate.Flow, ctxUpdate.Session.Identity, err)

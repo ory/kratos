@@ -22,6 +22,10 @@ func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 }
 
 func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Flow) error {
+	if sr.Type != flow.TypeBrowser {
+		return nil
+	}
+
 	config, err := s.populateMethod(r, sr.ID)
 	if err != nil {
 		return err
@@ -35,13 +39,13 @@ func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject))
 	if err != nil {
 		if errors.Is(err, herodot.ErrNotFound) {
-			// If no account was found we're "manually" creating a new registration request and redirecting the browser
+			// If no account was found we're "manually" creating a new registration flow and redirecting the browser
 			// to that endpoint.
 
 			// That will execute the "pre registration" hook which allows to e.g. disallow this request. The registration
 			// ui however will NOT be shown, instead the user is directly redirected to the auth path. That should then
 			// do a silent re-request. While this might be a bit excessive from a network perspective it should usually
-			// happen without any downsides to user experience as the request has already been authorized and should
+			// happen without any downsides to user experience as the flow has already been authorized and should
 			// not need additional consent/login.
 
 			// This is kinda hacky but the only way to ensure seamless login/registration flows when using OIDC.

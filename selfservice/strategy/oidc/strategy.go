@@ -27,6 +27,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
@@ -36,9 +37,9 @@ import (
 )
 
 const (
-	BasePath = "/self-service/browser/flows/strategies/oidc"
+	BasePath = "/self-service/methods/oidc"
 
-	AuthPath     = BasePath + "/auth/:request"
+	AuthPath     = BasePath + "/auth/:flow"
 	CallbackPath = BasePath + "/callback/:provider"
 )
 
@@ -97,9 +98,9 @@ type Strategy struct {
 }
 
 type authCodeContainer struct {
-	RequestID string     `json:"request_id"`
-	State     string     `json:"state"`
-	Form      url.Values `json:"form"`
+	FlowID string     `json:"flow_id"`
+	State  string     `json:"state"`
+	Form   url.Values `json:"form"`
 }
 
 func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
@@ -158,7 +159,7 @@ func (s *Strategy) ID() identity.CredentialsType {
 }
 
 func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	rid := x.ParseUUID(ps.ByName("request"))
+	rid := x.ParseUUID(ps.ByName("flow"))
 	if err := r.ParseForm(); err != nil {
 		s.handleError(w, r, rid, "", nil, errors.WithStack(herodot.ErrBadRequest.WithDebug(err.Error()).WithReasonf("Unable to parse HTTP form request: %s", err.Error())))
 		return
@@ -182,7 +183,7 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	req, err := s.validateRequest(r.Context(), r, rid)
+	req, err := s.validateFlow(r.Context(), r, rid)
 	if err != nil {
 		s.handleError(w, r, rid, pid, nil, err)
 		return
@@ -195,9 +196,9 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 	state := x.NewUUID().String()
 	if err := s.d.ContinuityManager().Pause(r.Context(), w, r, sessionName,
 		continuity.WithPayload(&authCodeContainer{
-			State:     state,
-			RequestID: rid.String(),
-			Form:      r.PostForm,
+			State:  state,
+			FlowID: rid.String(),
+			Form:   r.PostForm,
 		}),
 		continuity.WithLifespan(time.Minute*30)); err != nil {
 		s.handleError(w, r, rid, pid, nil, err)
@@ -207,12 +208,16 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 	http.Redirect(w, r, config.AuthCodeURL(state, provider.AuthCodeURLOptions(req)...), http.StatusFound)
 }
 
-func (s *Strategy) validateRequest(ctx context.Context, r *http.Request, rid uuid.UUID) (request, error) {
+func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.UUID) (ider, error) {
 	if x.IsZeroUUID(rid) {
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithReason("The session cookie contains invalid values and the request could not be executed. Please try again."))
+		return nil, errors.WithStack(herodot.ErrBadRequest.WithReason("The session cookie contains invalid values and the flow could not be executed. Please try again."))
 	}
 
 	if ar, err := s.d.RegistrationFlowPersister().GetRegistrationFlow(ctx, rid); err == nil {
+		if ar.Type != flow.TypeBrowser {
+			return ar, ErrAPIFlowNotSupported
+		}
+
 		if err := ar.Valid(); err != nil {
 			return ar, err
 		}
@@ -220,6 +225,10 @@ func (s *Strategy) validateRequest(ctx context.Context, r *http.Request, rid uui
 	}
 
 	if ar, err := s.d.LoginFlowPersister().GetLoginFlow(ctx, rid); err == nil {
+		if ar.Type != flow.TypeBrowser {
+			return ar, ErrAPIFlowNotSupported
+		}
+
 		if err := ar.Valid(); err != nil {
 			return ar, err
 		}
@@ -228,6 +237,10 @@ func (s *Strategy) validateRequest(ctx context.Context, r *http.Request, rid uui
 
 	ar, err := s.d.SettingsFlowPersister().GetSettingsFlow(ctx, rid)
 	if err == nil {
+		if ar.Type != flow.TypeBrowser {
+			return ar, ErrAPIFlowNotSupported
+		}
+
 		sess, err := s.d.SessionManager().FetchFromRequest(ctx, r)
 		if err != nil {
 			return ar, err
@@ -242,7 +255,7 @@ func (s *Strategy) validateRequest(ctx context.Context, r *http.Request, rid uui
 	return ar, err // this must return the error
 }
 
-func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (request, *authCodeContainer, error) {
+func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (ider, *authCodeContainer, error) {
 	var (
 		code  = r.URL.Query().Get("code")
 		state = r.URL.Query().Get("state")
@@ -261,7 +274,7 @@ func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (req
 		return nil, &container, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the session cookie.`))
 	}
 
-	req, err := s.validateRequest(r.Context(), r, x.ParseUUID(container.RequestID))
+	req, err := s.validateFlow(r.Context(), r, x.ParseUUID(container.FlowID))
 	if err != nil {
 		return nil, &container, err
 	}
@@ -281,7 +294,7 @@ func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, 
 	// we assume an error means the user has no session
 	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
 		if _, ok := req.(*settings.Flow); ok {
-			// ignore this if it's a settings request
+			// ignore this if it's a settings flow
 		} else if !isForced(req) {
 			http.Redirect(w, r, s.c.SelfServiceBrowserDefaultReturnTo().String(), http.StatusFound)
 			return true
@@ -361,26 +374,26 @@ func uid(provider, subject string) string {
 	return fmt.Sprintf("%s:%s", provider, subject)
 }
 
-func (s *Strategy) authURL(request uuid.UUID) string {
+func (s *Strategy) authURL(flowID uuid.UUID) string {
 	return urlx.AppendPaths(
 		urlx.Copy(s.c.SelfPublicURL()),
 		strings.Replace(
-			AuthPath, ":request", request.String(), 1,
+			AuthPath, ":flow", flowID.String(), 1,
 		),
 	).String()
 }
 
-func (s *Strategy) populateMethod(r *http.Request, request uuid.UUID) (*RequestMethod, error) {
+func (s *Strategy) populateMethod(r *http.Request, flowID uuid.UUID) (*FlowMethod, error) {
 	conf, err := s.Config()
 	if err != nil {
 		return nil, err
 	}
 
-	f := form.NewHTMLForm(s.authURL(request))
+	f := form.NewHTMLForm(s.authURL(flowID))
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 	// does not need sorting because there is only one field
 
-	return NewRequestMethodConfig(f).AddProviders(conf.Providers), nil
+	return NewFlowMethod(f).AddProviders(conf.Providers), nil
 }
 
 func (s *Strategy) Config() (*ConfigurationCollection, error) {

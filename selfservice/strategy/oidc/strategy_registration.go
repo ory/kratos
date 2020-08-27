@@ -33,6 +33,10 @@ func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
 }
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.Flow) error {
+	if sr.Type != flow.TypeBrowser {
+		return nil
+	}
+
 	config, err := s.populateMethod(r, sr.ID)
 	if err != nil {
 		return err
@@ -48,7 +52,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 	if _, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject)); err == nil {
 		// If the identity already exists, we should perform the login flow instead.
 
-		// That will execute the "pre login" hook which allows to e.g. disallow this request. The login
+		// That will execute the "pre registration" hook which allows to e.g. disallow this flow. The registration
 		// ui however will NOT be shown, instead the user is directly redirected to the auth path. That should then
 		// do a silent re-request. While this might be a bit excessive from a network perspective it should usually
 		// happen without any downsides to user experience as the request has already been authorized and should
@@ -59,7 +63,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 			WithField("subject", claims.Subject).
 			Debug("Received successful OpenID Connect callback but user is already registered. Re-initializing login flow now.")
 
-		// This endpoint only handles browser requests at the moment.
+		// This endpoint only handles browser flow at the moment.
 		ar, err := s.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser)
 		if err != nil {
 			s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
