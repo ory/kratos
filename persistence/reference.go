@@ -33,7 +33,7 @@ type Persister interface {
 	session.Persister
 	errorx.Persister
 	verification.Persister
-	recovery.RequestPersister
+	recovery.FlowPersister
 	recoverytoken.Persister
 
 	Close(context.Context) error

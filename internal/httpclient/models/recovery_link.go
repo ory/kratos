@@ -12,10 +12,10 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// CreateRecoveryLinkResponse create recovery link response
+// RecoveryLink recovery link
 //
-// swagger:model createRecoveryLinkResponse
-type CreateRecoveryLinkResponse struct {
+// swagger:model recoveryLink
+type RecoveryLink struct {
 
 	// Recovery Link Expires At
 	//
@@ -30,8 +30,8 @@ type CreateRecoveryLinkResponse struct {
 	RecoveryLink *string `json:"recovery_link"`
 }
 
-// Validate validates this create recovery link response
-func (m *CreateRecoveryLinkResponse) Validate(formats strfmt.Registry) error {
+// Validate validates this recovery link
+func (m *RecoveryLink) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateExpiresAt(formats); err != nil {
@@ -48,7 +48,7 @@ func (m *CreateRecoveryLinkResponse) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *CreateRecoveryLinkResponse) validateExpiresAt(formats strfmt.Registry) error {
+func (m *RecoveryLink) validateExpiresAt(formats strfmt.Registry) error {
 
 	if swag.IsZero(m.ExpiresAt) { // not required
 		return nil
@@ -61,7 +61,7 @@ func (m *CreateRecoveryLinkResponse) validateExpiresAt(formats strfmt.Registry) 
 	return nil
 }
 
-func (m *CreateRecoveryLinkResponse) validateRecoveryLink(formats strfmt.Registry) error {
+func (m *RecoveryLink) validateRecoveryLink(formats strfmt.Registry) error {
 
 	if err := validate.Required("recovery_link", "body", m.RecoveryLink); err != nil {
 		return err
@@ -71,7 +71,7 @@ func (m *CreateRecoveryLinkResponse) validateRecoveryLink(formats strfmt.Registr
 }
 
 // MarshalBinary interface implementation
-func (m *CreateRecoveryLinkResponse) MarshalBinary() ([]byte, error) {
+func (m *RecoveryLink) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -79,8 +79,8 @@ func (m *CreateRecoveryLinkResponse) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *CreateRecoveryLinkResponse) UnmarshalBinary(b []byte) error {
-	var res CreateRecoveryLinkResponse
+func (m *RecoveryLink) UnmarshalBinary(b []byte) error {
+	var res RecoveryLink
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

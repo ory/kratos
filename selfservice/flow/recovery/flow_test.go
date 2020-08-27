@@ -11,6 +11,7 @@ import (
 
 	"github.com/ory/x/urlx"
 
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 )
 
@@ -25,8 +26,8 @@ func TestRequest(t *testing.T) {
 		r         *recovery.Flow
 		expectErr bool
 	}{
-		{r: must(recovery.NewRequest(time.Hour, "", u, nil))},
-		{r: must(recovery.NewRequest(-time.Hour, "", u, nil)), expectErr: true},
+		{r: must(recovery.NewFlow(time.Hour, "", u, nil, flow.TypeBrowser))},
+		{r: must(recovery.NewFlow(-time.Hour, "", u, nil, flow.TypeBrowser)), expectErr: true},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			err := tc.r.Valid()
@@ -40,5 +41,5 @@ func TestRequest(t *testing.T) {
 	}
 
 	assert.EqualValues(t, recovery.StateChooseMethod,
-		must(recovery.NewRequest(time.Hour, "", u, nil)).State)
+		must(recovery.NewFlow(time.Hour, "", u, nil, flow.TypeBrowser)).State)
 }

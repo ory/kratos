@@ -486,7 +486,7 @@ func (m *RegistryDefault) RegistrationFlowPersister() registration.FlowPersister
 	return m.persister
 }
 
-func (m *RegistryDefault) RecoveryRequestPersister() recovery.RequestPersister {
+func (m *RegistryDefault) RecoveryFlowPersister() recovery.FlowPersister {
 	return m.persister
 }
 

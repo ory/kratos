@@ -17,7 +17,7 @@ import (
 type RecoveryFlowMethod struct {
 
 	// config
-	Config *RequestMethodConfig `json:"config,omitempty"`
+	Config *LoginFlowMethodConfig `json:"config,omitempty"`
 
 	// Method contains the request credentials type.
 	Method string `json:"method,omitempty"`

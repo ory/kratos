@@ -34,7 +34,7 @@ import (
 )
 
 const (
-	PublicPath = "/self-service/browser/flows/recovery/link" // #nosec G101
+	PublicPath = "/self-service/recovery/methods/link" // #nosec G101
 	AdminPath  = "/recovery/link"
 )
 
@@ -110,7 +110,7 @@ func (s *Strategy) PopulateRecoveryMethod(r *http.Request, req *recovery.Flow) e
 
 	req.Methods[s.RecoveryStrategyID()] = &recovery.FlowMethod{
 		Method: s.RecoveryStrategyID(),
-		Config: &recovery.RequestMethodConfig{RequestMethodConfigurator: &StrategyMethodConfig{HTMLForm: f}},
+		Config: &recovery.FlowMethodConfig{FlowMethodConfigurator: &StrategyMethodConfig{HTMLForm: f}},
 	}
 	return nil
 }
@@ -143,10 +143,10 @@ type createRecoveryLinkParams struct {
 	}
 }
 
-// swagger:model createRecoveryLinkResponse
+// swagger:model recoveryLink
 //
 // nolint
-type createRecoveryLinkResponse struct {
+type recoveryLink struct {
 	// Recovery Link
 	//
 	// This link can be used to recover the account.
@@ -177,7 +177,7 @@ type createRecoveryLinkResponse struct {
 //     Schemes: http, https
 //
 //     Responses:
-//       200: createRecoveryLinkResponse
+//       200: recoveryLink
 //       404: genericError
 //       400: genericError
 //       500: genericError
@@ -203,13 +203,13 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	req, err := recovery.NewRequest(expiresIn, "", r, nil)
+	req, err := recovery.NewFlow(expiresIn, "", r, nil, flow.TypeBrowser)
 	if err != nil {
 		s.d.Writer().WriteError(w, r, err)
 		return
 	}
 
-	if err := s.d.RecoveryRequestPersister().CreateRecoveryRequest(r.Context(), req); err != nil {
+	if err := s.d.RecoveryFlowPersister().CreateRecoveryFlow(r.Context(), req); err != nil {
 		s.d.Writer().WriteError(w, r, err)
 		return
 	}
@@ -239,7 +239,7 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 		WithSensitiveField("recovery_link_token", token).
 		Info("A recovery link has been created.")
 
-	s.d.Writer().Write(w, r, &createRecoveryLinkResponse{
+	s.d.Writer().Write(w, r, &recoveryLink{
 		ExpiresAt: req.ExpiresAt.UTC(),
 		RecoveryLink: urlx.CopyWithQuery(
 			urlx.AppendPaths(s.c.SelfPublicURL(), PublicPath),
@@ -249,10 +249,10 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 			}).String()})
 }
 
-// swagger:parameters completeSelfServiceBrowserRecoveryLinkStrategyFlow
+// swagger:parameters completeSelfServiceRecoveryFlowWithLinkMethod
 //
 // nolint
-type completeSelfServiceBrowserRecoveryLinkStrategyFlowParams struct {
+type completeSelfServiceRecoveryFlowWithLinkMethod struct {
 	// Email to Recover
 	//
 	// Needs to be set when initiating the flow. If the email is a registered
@@ -270,13 +270,13 @@ type completeSelfServiceBrowserRecoveryLinkStrategyFlowParams struct {
 	// in: query
 	Token string `json:"token"`
 
-	// Recovery Request ID
+	// The Flow ID
 	//
 	// in: query
-	Request string `json:"request"`
+	Flow string `json:"flow"`
 }
 
-// swagger:route POST /self-service/browser/flows/recovery/link public completeSelfServiceBrowserRecoveryLinkStrategyFlow
+// swagger:route POST /self-service/recovery/methods/link public completeSelfServiceRecoveryFlowWithLinkMethod
 //
 // Complete the browser-based recovery flow using a recovery link
 //
@@ -304,7 +304,7 @@ func (s *Strategy) handleSubmit(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 
 	rid := r.URL.Query().Get("request")
-	req, err := s.d.RecoveryRequestPersister().GetRecoveryRequest(r.Context(), x.ParseUUID(rid))
+	req, err := s.d.RecoveryFlowPersister().GetRecoveryFlow(r.Context(), x.ParseUUID(rid))
 	if err != nil {
 		s.handleError(w, r, req, err)
 		return
@@ -333,7 +333,7 @@ func (s *Strategy) handleSubmit(w http.ResponseWriter, r *http.Request, ps httpr
 
 func (s *Strategy) issueSession(w http.ResponseWriter, r *http.Request, req *recovery.Flow) {
 	req.State = recovery.StatePassedChallenge
-	if err := s.d.RecoveryRequestPersister().UpdateRecoveryRequest(r.Context(), req); err != nil {
+	if err := s.d.RecoveryFlowPersister().UpdateRecoveryFlow(r.Context(), req); err != nil {
 		s.handleError(w, r, req, err)
 		return
 	}
@@ -381,7 +381,7 @@ func (s *Strategy) verifyToken(w http.ResponseWriter, r *http.Request) {
 	req.Messages.Clear()
 	req.State = recovery.StatePassedChallenge
 	req.RecoveredIdentityID = uuid.NullUUID{UUID: token.RecoveryAddress.IdentityID, Valid: true}
-	if err := s.d.RecoveryRequestPersister().UpdateRecoveryRequest(r.Context(), req); err != nil {
+	if err := s.d.RecoveryFlowPersister().UpdateRecoveryFlow(r.Context(), req); err != nil {
 		s.handleError(w, r, req, err)
 		return
 	}
@@ -392,14 +392,14 @@ func (s *Strategy) verifyToken(w http.ResponseWriter, r *http.Request) {
 func (s *Strategy) retryFlowWithMessage(w http.ResponseWriter, r *http.Request, message *text.Message) {
 	s.d.Logger().WithRequest(r).WithField("message", message).Debug("A recovery flow is being retried because a validation error occurred.")
 
-	req, err := recovery.NewRequest(s.c.SelfServiceFlowRecoveryRequestLifespan(), s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies())
+	req, err := recovery.NewFlow(s.c.SelfServiceFlowRecoveryRequestLifespan(), s.d.GenerateCSRFToken(r), r, s.d.RecoveryStrategies(), flow.TypeBrowser)
 	if err != nil {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
 	req.Messages.Add(message)
-	if err := s.d.RecoveryRequestPersister().CreateRecoveryRequest(r.Context(), req); err != nil {
+	if err := s.d.RecoveryFlowPersister().CreateRecoveryFlow(r.Context(), req); err != nil {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
@@ -451,7 +451,7 @@ func (s *Strategy) issueAndSendRecoveryToken(w http.ResponseWriter, r *http.Requ
 	req.Active = sqlxx.NullString(s.RecoveryStrategyID())
 	req.State = recovery.StateEmailSent
 	req.Messages.Set(text.NewRecoveryEmailSent())
-	if err := s.d.RecoveryRequestPersister().UpdateRecoveryRequest(r.Context(), req); err != nil {
+	if err := s.d.RecoveryFlowPersister().UpdateRecoveryFlow(r.Context(), req); err != nil {
 		s.handleError(w, r, req, err)
 		return
 	}
@@ -503,7 +503,7 @@ func (s *Strategy) run(via identity.RecoveryAddressType, emailFunc func() error)
 }
 
 func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, req *recovery.Flow, err error) {
-	if errors.Is(err, recovery.ErrRequestExpired) {
+	if e := new(recovery.FlowExpiredError); errors.As(err, &e) {
 		s.retryFlowWithMessage(w, r, text.NewErrorValidationRecoveryRecoveryTokenInvalidOrAlreadyUsed())
 		return
 	}
@@ -511,7 +511,7 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, req *reco
 	if req != nil {
 		config, err := req.MethodToForm(s.RecoveryStrategyID())
 		if err != nil {
-			s.d.RecoveryRequestErrorHandler().HandleRecoveryError(w, r, req, err, s.RecoveryStrategyID())
+			s.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, s.RecoveryStrategyID(), req, err)
 			return
 		}
 
@@ -520,5 +520,5 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, req *reco
 		config.SetField(form.Field{Name: "email", Type: "email", Required: true, Value: r.PostForm.Get("email")})
 	}
 
-	s.d.RecoveryRequestErrorHandler().HandleRecoveryError(w, r, req, err, s.RecoveryStrategyID())
+	s.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, s.RecoveryStrategyID(), req, err)
 }

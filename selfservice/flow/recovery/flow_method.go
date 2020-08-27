@@ -18,7 +18,7 @@ type FlowMethod struct {
 	Method string `json:"method" db:"method"`
 
 	// Config is the credential type's config.
-	Config *RequestMethodConfig `json:"config" db:"config"`
+	Config *FlowMethodConfig `json:"config" db:"config"`
 
 	// ID is a helper struct field for gobuffalo.pop.
 	ID uuid.UUID `json:"-" db:"id"`
@@ -54,7 +54,7 @@ func (u RequestMethodsRaw) TableName() string {
 }
 
 // swagger:ignore
-type RequestMethodConfigurator interface {
+type FlowMethodConfigurator interface {
 	form.ErrorParser
 	form.FieldSetter
 	form.FieldUnsetter
@@ -66,33 +66,33 @@ type RequestMethodConfigurator interface {
 	form.MessageAdder
 }
 
-// swagger:type recoveryRequestConfigPayload
-type RequestMethodConfig struct {
+// swagger:model loginFlowMethodConfig
+type FlowMethodConfig struct {
 	// swagger:ignore
-	RequestMethodConfigurator
+	FlowMethodConfigurator
 
-	swaggerRequestMethodConfig
+	FlowMethodConfigMock
 }
 
-// swagger:model recoveryRequestConfigPayload
-type swaggerRequestMethodConfig struct {
+// swagger:model loginFlowMethodConfigPayload
+type FlowMethodConfigMock struct {
 	*form.HTMLForm
 }
 
-func (c *RequestMethodConfig) Scan(value interface{}) error {
+func (c *FlowMethodConfig) Scan(value interface{}) error {
 	return sqlxx.JSONScan(c, value)
 }
 
-func (c *RequestMethodConfig) Value() (driver.Value, error) {
+func (c *FlowMethodConfig) Value() (driver.Value, error) {
 	return sqlxx.JSONValue(c)
 }
 
-func (c *RequestMethodConfig) UnmarshalJSON(data []byte) error {
-	c.RequestMethodConfigurator = form.NewHTMLForm("")
-	return json.Unmarshal(data, c.RequestMethodConfigurator)
+func (c *FlowMethodConfig) UnmarshalJSON(data []byte) error {
+	c.FlowMethodConfigurator = form.NewHTMLForm("")
+	return json.Unmarshal(data, c.FlowMethodConfigurator)
 }
 
-func (c *RequestMethodConfig) MarshalJSON() ([]byte, error) {
-	out, err := json.Marshal(c.RequestMethodConfigurator)
+func (c *FlowMethodConfig) MarshalJSON() ([]byte, error) {
+	out, err := json.Marshal(c.FlowMethodConfigurator)
 	return out, err
 }

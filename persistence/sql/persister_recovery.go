@@ -15,14 +15,14 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/recoverytoken"
 )
 
-var _ recovery.RequestPersister = new(Persister)
+var _ recovery.FlowPersister = new(Persister)
 var _ recoverytoken.Persister = new(Persister)
 
-func (p Persister) CreateRecoveryRequest(ctx context.Context, r *recovery.Flow) error {
+func (p Persister) CreateRecoveryFlow(ctx context.Context, r *recovery.Flow) error {
 	return p.GetConnection(ctx).Eager("MethodsRaw").Create(r)
 }
 
-func (p Persister) GetRecoveryRequest(ctx context.Context, id uuid.UUID) (*recovery.Flow, error) {
+func (p Persister) GetRecoveryFlow(ctx context.Context, id uuid.UUID) (*recovery.Flow, error) {
 	var r recovery.Flow
 	if err := p.GetConnection(ctx).Eager().Find(&r, id); err != nil {
 		return nil, sqlcon.HandleError(err)
@@ -35,10 +35,10 @@ func (p Persister) GetRecoveryRequest(ctx context.Context, id uuid.UUID) (*recov
 	return &r, nil
 }
 
-func (p Persister) UpdateRecoveryRequest(ctx context.Context, r *recovery.Flow) error {
+func (p Persister) UpdateRecoveryFlow(ctx context.Context, r *recovery.Flow) error {
 	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 
-		rr, err := p.GetRecoveryRequest(ctx, r.ID)
+		rr, err := p.GetRecoveryFlow(ctx, r.ID)
 		if err != nil {
 			return err
 		}

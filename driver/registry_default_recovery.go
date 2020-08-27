@@ -4,7 +4,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/recovery"
 )
 
-func (m *RegistryDefault) RecoveryRequestErrorHandler() *recovery.ErrorHandler {
+func (m *RegistryDefault) RecoveryFlowErrorHandler() *recovery.ErrorHandler {
 	if m.selfserviceRecoveryErrorHandler == nil {
 		m.selfserviceRecoveryErrorHandler = recovery.NewErrorHandler(m, m.c)
 	}

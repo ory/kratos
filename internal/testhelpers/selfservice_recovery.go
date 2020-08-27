@@ -16,10 +16,12 @@ import (
 	"github.com/ory/viper"
 	"github.com/ory/x/pointerx"
 
+	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/internal/httpclient/client/common"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/x"
 )
 
 func NewRecoveryUITestServer(t *testing.T) *httptest.Server {
@@ -39,16 +41,27 @@ func NewRecoveryUITestServer(t *testing.T) *httptest.Server {
 	return ts
 }
 
-func GetRecoveryRequest(t *testing.T, client *http.Client, ts *httptest.Server) *common.GetSelfServiceBrowserRecoveryRequestOK {
+func NewRecoveryUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Server {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		e, err := reg.RecoveryFlowPersister().GetRecoveryFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("flow")))
+		require.NoError(t, err)
+		reg.Writer().Write(w, r, e)
+	}))
+	viper.Set(configuration.ViperKeySelfServiceRecoveryUI, ts.URL+"/recovery-ts")
+	t.Cleanup(ts.Close)
+	return ts
+}
+
+func GetRecoveryRequest(t *testing.T, client *http.Client, ts *httptest.Server) *common.GetSelfServiceRecoveryFlowOK {
 	publicClient := NewSDKClient(ts)
 
-	res, err := client.Get(ts.URL + recovery.PublicRecoveryInitPath)
+	res, err := client.Get(ts.URL + recovery.RouteInitBrowserFlow)
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
 
-	rs, err := publicClient.Common.GetSelfServiceBrowserRecoveryRequest(
-		common.NewGetSelfServiceBrowserRecoveryRequestParams().WithHTTPClient(client).
-			WithRequest(res.Request.URL.Query().Get("request")),
+	rs, err := publicClient.Common.GetSelfServiceRecoveryFlow(
+		common.NewGetSelfServiceRecoveryFlowParams().WithHTTPClient(client).
+			WithID(res.Request.URL.Query().Get("flow")),
 	)
 	require.NoError(t, err, "%s", res.Request.URL.String())
 	assert.Empty(t, rs.Payload.Active)
@@ -58,10 +71,10 @@ func GetRecoveryRequest(t *testing.T, client *http.Client, ts *httptest.Server) 
 
 func RecoverySubmitForm(
 	t *testing.T,
-	f *models.RequestMethodConfig,
+	f *models.FlowMethodConfig,
 	hc *http.Client,
 	values url.Values,
-) (string, *common.GetSelfServiceBrowserRecoveryRequestOK) {
+) (string, *common.GetSelfServiceRecoveryFlowOK) {
 	require.NotEmpty(t, f.Action)
 
 	res, err := hc.PostForm(pointerx.StringR(f.Action), values)
@@ -74,9 +87,9 @@ func RecoverySubmitForm(
 
 	assert.Equal(t, viper.GetString(configuration.ViperKeySelfServiceRecoveryUI), res.Request.URL.Scheme+"://"+res.Request.URL.Host+res.Request.URL.Path, "should end up at the settings URL, used: %s", pointerx.StringR(f.Action))
 
-	rs, err := NewSDKClientFromURL(viper.GetString(configuration.ViperKeyPublicBaseURL)).Common.GetSelfServiceBrowserRecoveryRequest(
-		common.NewGetSelfServiceBrowserRecoveryRequestParams().WithHTTPClient(hc).
-			WithRequest(res.Request.URL.Query().Get("request")),
+	rs, err := NewSDKClientFromURL(viper.GetString(configuration.ViperKeyPublicBaseURL)).Common.GetSelfServiceRecoveryFlow(
+		common.NewGetSelfServiceRecoveryFlowParams().WithHTTPClient(hc).
+			WithID(res.Request.URL.Query().Get("flow")),
 	)
 	require.NoError(t, err)
 	body, err := json.Marshal(rs.Payload)

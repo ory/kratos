@@ -27,13 +27,13 @@ type Client struct {
 
 // ClientService is the interface for Client methods
 type ClientService interface {
-	CompleteSelfServiceBrowserRecoveryLinkStrategyFlow(params *CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams) error
-
 	CompleteSelfServiceBrowserSettingsOIDCSettingsFlow(params *CompleteSelfServiceBrowserSettingsOIDCSettingsFlowParams) error
 
 	CompleteSelfServiceBrowserVerificationFlow(params *CompleteSelfServiceBrowserVerificationFlowParams) error
 
 	CompleteSelfServiceLoginFlowWithPasswordMethod(params *CompleteSelfServiceLoginFlowWithPasswordMethodParams) (*CompleteSelfServiceLoginFlowWithPasswordMethodOK, error)
+
+	CompleteSelfServiceRecoveryFlowWithLinkMethod(params *CompleteSelfServiceRecoveryFlowWithLinkMethodParams) error
 
 	CompleteSelfServiceRegistrationFlowWithPasswordMethod(params *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams) (*CompleteSelfServiceRegistrationFlowWithPasswordMethodOK, error)
 
@@ -47,7 +47,9 @@ type ClientService interface {
 
 	InitializeSelfServiceLoginViaBrowserFlow(params *InitializeSelfServiceLoginViaBrowserFlowParams) error
 
-	InitializeSelfServiceRecoveryFlow(params *InitializeSelfServiceRecoveryFlowParams) error
+	InitializeSelfServiceRecoveryViaAPIFlow(params *InitializeSelfServiceRecoveryViaAPIFlowParams) (*InitializeSelfServiceRecoveryViaAPIFlowOK, error)
+
+	InitializeSelfServiceRecoveryViaBrowserFlow(params *InitializeSelfServiceRecoveryViaBrowserFlowParams) error
 
 	InitializeSelfServiceRegistrationViaBrowserFlow(params *InitializeSelfServiceRegistrationViaBrowserFlowParams) error
 
@@ -60,37 +62,6 @@ type ClientService interface {
 	Whoami(params *WhoamiParams) (*WhoamiOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
-}
-
-/*
-  CompleteSelfServiceBrowserRecoveryLinkStrategyFlow completes the browser based recovery flow using a recovery link
-
-  > This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
-
-More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).
-*/
-func (a *Client) CompleteSelfServiceBrowserRecoveryLinkStrategyFlow(params *CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams) error {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewCompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams()
-	}
-
-	_, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "completeSelfServiceBrowserRecoveryLinkStrategyFlow",
-		Method:             "POST",
-		PathPattern:        "/self-service/browser/flows/recovery/link",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/x-www-form-urlencoded"},
-		Schemes:            []string{"http", "https"},
-		Params:             params,
-		Reader:             &CompleteSelfServiceBrowserRecoveryLinkStrategyFlowReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 /*
@@ -210,6 +181,37 @@ func (a *Client) CompleteSelfServiceLoginFlowWithPasswordMethod(params *Complete
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for completeSelfServiceLoginFlowWithPasswordMethod: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
+}
+
+/*
+  CompleteSelfServiceRecoveryFlowWithLinkMethod completes the browser based recovery flow using a recovery link
+
+  > This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
+
+More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).
+*/
+func (a *Client) CompleteSelfServiceRecoveryFlowWithLinkMethod(params *CompleteSelfServiceRecoveryFlowWithLinkMethodParams) error {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewCompleteSelfServiceRecoveryFlowWithLinkMethodParams()
+	}
+
+	_, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "completeSelfServiceRecoveryFlowWithLinkMethod",
+		Method:             "POST",
+		PathPattern:        "/self-service/recovery/methods/link",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &CompleteSelfServiceRecoveryFlowWithLinkMethodReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 /*
@@ -448,32 +450,83 @@ func (a *Client) InitializeSelfServiceLoginViaBrowserFlow(params *InitializeSelf
 }
 
 /*
-  InitializeSelfServiceRecoveryFlow initializes browser based account recovery flow
+  InitializeSelfServiceRecoveryViaAPIFlow initializes login flow for API clients
 
-  This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to
-`selfservice.flows.recovery.ui_url` with the request ID set as a query parameter. If a valid user session exists, the request
-is aborted.
+  This endpoint initiates a recovery flow for API clients such as mobile devices, smart TVs, and so on.
 
-> This endpoint is NOT INTENDED for API clients and only works
-with browsers (Chrome, Firefox, ...).
+If a valid provided session cookie or session token is provided, a 400 Bad Request error.
+
+To fetch an existing recovery flow call `/self-service/recovery/flows?flow=<flow_id>`.
+
+:::warning
+
+You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
+Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
+you vulnerable to a variety of CSRF attacks.
+
+This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
+
+:::
 
 More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).
 */
-func (a *Client) InitializeSelfServiceRecoveryFlow(params *InitializeSelfServiceRecoveryFlowParams) error {
+func (a *Client) InitializeSelfServiceRecoveryViaAPIFlow(params *InitializeSelfServiceRecoveryViaAPIFlowParams) (*InitializeSelfServiceRecoveryViaAPIFlowOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewInitializeSelfServiceRecoveryFlowParams()
+		params = NewInitializeSelfServiceRecoveryViaAPIFlowParams()
 	}
 
-	_, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "initializeSelfServiceRecoveryFlow",
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "initializeSelfServiceRecoveryViaAPIFlow",
 		Method:             "GET",
-		PathPattern:        "/self-service/browser/flows/recovery",
+		PathPattern:        "/self-service/recovery/api",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &InitializeSelfServiceRecoveryFlowReader{formats: a.formats},
+		Reader:             &InitializeSelfServiceRecoveryViaAPIFlowReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*InitializeSelfServiceRecoveryViaAPIFlowOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for initializeSelfServiceRecoveryViaAPIFlow: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  InitializeSelfServiceRecoveryViaBrowserFlow initializes recovery flow for browser clients
+
+  This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to
+`selfservice.flows.recovery.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
+exists, the browser is returned to the configured return URL.
+
+This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+
+More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).
+*/
+func (a *Client) InitializeSelfServiceRecoveryViaBrowserFlow(params *InitializeSelfServiceRecoveryViaBrowserFlowParams) error {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewInitializeSelfServiceRecoveryViaBrowserFlowParams()
+	}
+
+	_, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "initializeSelfServiceRecoveryViaBrowserFlow",
+		Method:             "GET",
+		PathPattern:        "/self-service/recovery/browser",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &InitializeSelfServiceRecoveryViaBrowserFlowReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})

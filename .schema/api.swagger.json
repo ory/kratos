@@ -362,9 +362,9 @@
         ],
         "responses": {
           "200": {
-            "description": "createRecoveryLinkResponse",
+            "description": "recoveryLink",
             "schema": {
-              "$ref": "#/definitions/createRecoveryLinkResponse"
+              "$ref": "#/definitions/recoveryLink"
             }
           },
           "400": {
@@ -460,81 +460,6 @@
         }
       }
     },
-    "/self-service/browser/flows/recovery": {
-      "get": {
-        "description": "This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to\n`selfservice.flows.recovery.ui_url` with the request ID set as a query parameter. If a valid user session exists, the request\nis aborted.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works\nwith browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).",
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "tags": [
-          "public"
-        ],
-        "summary": "Initialize browser-based account recovery flow",
-        "operationId": "initializeSelfServiceRecoveryFlow",
-        "responses": {
-          "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
-          },
-          "500": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          }
-        }
-      }
-    },
-    "/self-service/browser/flows/recovery/link": {
-      "post": {
-        "description": "\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).",
-        "consumes": [
-          "application/x-www-form-urlencoded"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "tags": [
-          "public"
-        ],
-        "summary": "Complete the browser-based recovery flow using a recovery link",
-        "operationId": "completeSelfServiceBrowserRecoveryLinkStrategyFlow",
-        "parameters": [
-          {
-            "description": "Email to Recover\n\nNeeds to be set when initiating the flow. If the email is a registered\nrecovery email, a recovery link will be sent. If the email is not known,\na email with details on what happened will be sent instead.",
-            "name": "email",
-            "in": "body",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "type": "string",
-            "description": "Recovery Token\n\nThe recovery token which completes the recovery request. If the token\nis invalid (e.g. expired) an error will be shown to the end-user.",
-            "name": "token",
-            "in": "query"
-          },
-          {
-            "type": "string",
-            "description": "Recovery Request ID",
-            "name": "request",
-            "in": "query"
-          }
-        ],
-        "responses": {
-          "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
-          },
-          "500": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          }
-        }
-      }
-    },
     "/self-service/browser/flows/registration/strategies/oidc/settings/connections": {
       "post": {
         "description": "This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this\nendpoint.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
@@ -554,66 +479,6 @@
         "responses": {
           "302": {
             "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
-          },
-          "500": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          }
-        }
-      }
-    },
-    "/self-service/browser/flows/requests/recovery": {
-      "get": {
-        "description": "When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required\nfor checking the auth session. To prevent scanning attacks, the public endpoint does not return 404 status codes\nbut instead 403 or 500.\n\nMore information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).",
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "tags": [
-          "common",
-          "public",
-          "admin"
-        ],
-        "summary": "Get the request context of browser-based recovery flows",
-        "operationId": "getSelfServiceBrowserRecoveryRequest",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "Request is the Login Request ID\n\nThe value for this parameter comes from `request` URL Query parameter sent to your\napplication (e.g. `/recover?request=abcde`).",
-            "name": "request",
-            "in": "query",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "recoveryFlow",
-            "schema": {
-              "$ref": "#/definitions/recoveryFlow"
-            }
-          },
-          "403": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          },
-          "404": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
-          },
-          "410": {
-            "description": "genericError",
-            "schema": {
-              "$ref": "#/definitions/genericError"
-            }
           },
           "500": {
             "description": "genericError",
@@ -1045,6 +910,169 @@
             "schema": {
               "$ref": "#/definitions/genericError"
             }
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
+    "/self-service/recovery/api": {
+      "get": {
+        "description": "This endpoint initiates a recovery flow for API clients such as mobile devices, smart TVs, and so on.\n\nIf a valid provided session cookie or session token is provided, a 400 Bad Request error.\n\nTo fetch an existing recovery flow call `/self-service/recovery/flows?flow=\u003cflow_id\u003e`.\n\n:::warning\n\nYou MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server\nPages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make\nyou vulnerable to a variety of CSRF attacks.\n\nThis endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).\n\n:::\n\nMore information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).",
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Initialize Login Flow for API Clients",
+        "operationId": "initializeSelfServiceRecoveryViaAPIFlow",
+        "responses": {
+          "200": {
+            "description": "loginFlow",
+            "schema": {
+              "$ref": "#/definitions/loginFlow"
+            }
+          },
+          "400": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
+    "/self-service/recovery/browser": {
+      "get": {
+        "description": "This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to\n`selfservice.flows.recovery.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session\nexists, the browser is returned to the configured return URL.\n\nThis endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).\n\nMore information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).",
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Initialize Recovery Flow for Browser Clients",
+        "operationId": "initializeSelfServiceRecoveryViaBrowserFlow",
+        "responses": {
+          "302": {
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
+    "/self-service/recovery/flows": {
+      "get": {
+        "description": "This endpoint returns a recovery flow's context with, for example, error details and other information.\n\nMore information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "common",
+          "public",
+          "admin"
+        ],
+        "summary": "Get information about a recovery flow",
+        "operationId": "getSelfServiceRecoveryFlow",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The Flow ID\n\nThe value for this parameter comes from `request` URL Query parameter sent to your\napplication (e.g. `/recovery?flow=abcde`).",
+            "name": "id",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "recoveryFlow",
+            "schema": {
+              "$ref": "#/definitions/recoveryFlow"
+            }
+          },
+          "404": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "410": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "500": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          }
+        }
+      }
+    },
+    "/self-service/recovery/methods/link": {
+      "post": {
+        "description": "\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).",
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "public"
+        ],
+        "summary": "Complete the browser-based recovery flow using a recovery link",
+        "operationId": "completeSelfServiceRecoveryFlowWithLinkMethod",
+        "parameters": [
+          {
+            "description": "Email to Recover\n\nNeeds to be set when initiating the flow. If the email is a registered\nrecovery email, a recovery link will be sent. If the email is not known,\na email with details on what happened will be sent instead.",
+            "name": "email",
+            "in": "body",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "type": "string",
+            "description": "Recovery Token\n\nThe recovery token which completes the recovery request. If the token\nis invalid (e.g. expired) an error will be shown to the end-user.",
+            "name": "token",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The Flow ID",
+            "name": "flow",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
           },
           "500": {
             "description": "genericError",
@@ -1660,30 +1688,6 @@
     "RecoveryAddressType": {
       "type": "string"
     },
-    "RequestMethodConfig": {
-      "type": "object",
-      "required": [
-        "action",
-        "method",
-        "fields"
-      ],
-      "properties": {
-        "action": {
-          "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
-          "type": "string"
-        },
-        "fields": {
-          "$ref": "#/definitions/formFields"
-        },
-        "messages": {
-          "$ref": "#/definitions/Messages"
-        },
-        "method": {
-          "description": "Method is the form method (e.g. POST)",
-          "type": "string"
-        }
-      }
-    },
     "SettingsFlowPayload": {
       "type": "object",
       "properties": {
@@ -1746,23 +1750,6 @@
     },
     "VerifiableAddressType": {
       "type": "string"
-    },
-    "createRecoveryLinkResponse": {
-      "type": "object",
-      "required": [
-        "recovery_link"
-      ],
-      "properties": {
-        "expires_at": {
-          "description": "Recovery Link Expires At\n\nThe timestamp when the recovery link expires.",
-          "type": "string",
-          "format": "date-time"
-        },
-        "recovery_link": {
-          "description": "Recovery Link\n\nThis link can be used to recover the account.",
-          "type": "string"
-        }
-      }
     },
     "errorContainer": {
       "type": "object",
@@ -2072,6 +2059,9 @@
         },
         "state": {
           "$ref": "#/definitions/State"
+        },
+        "type": {
+          "$ref": "#/definitions/Type"
         }
       }
     },
@@ -2079,10 +2069,27 @@
       "type": "object",
       "properties": {
         "config": {
-          "$ref": "#/definitions/RequestMethodConfig"
+          "$ref": "#/definitions/loginFlowMethodConfig"
         },
         "method": {
           "description": "Method contains the request credentials type.",
+          "type": "string"
+        }
+      }
+    },
+    "recoveryLink": {
+      "type": "object",
+      "required": [
+        "recovery_link"
+      ],
+      "properties": {
+        "expires_at": {
+          "description": "Recovery Link Expires At\n\nThe timestamp when the recovery link expires.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "recovery_link": {
+          "description": "Recovery Link\n\nThis link can be used to recover the account.",
           "type": "string"
         }
       }

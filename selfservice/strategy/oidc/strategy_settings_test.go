@@ -569,7 +569,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		reg := nreg(t, &oidc.ConfigurationCollection{Providers: []oidc.Configuration{{Provider: "generic", ID: "github"}}})
 		i := &identity.Identity{Traits: []byte(`{"subject":"foo@bar.com"}`)}
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
-		req :=  &settings.Flow{Type: flow.TypeAPI, ID: x.NewUUID(), Methods: map[string]*settings.FlowMethod{}}
+		req := &settings.Flow{Type: flow.TypeAPI, ID: x.NewUUID(), Methods: map[string]*settings.FlowMethod{}}
 		require.NoError(t, ns(t, reg).PopulateSettingsMethod(new(http.Request), i, req))
 		require.Nil(t, req.Methods[identity.CredentialsTypeOIDC.String()])
 	})

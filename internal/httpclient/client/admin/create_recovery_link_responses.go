@@ -63,23 +63,23 @@ func NewCreateRecoveryLinkOK() *CreateRecoveryLinkOK {
 
 /*CreateRecoveryLinkOK handles this case with default header values.
 
-createRecoveryLinkResponse
+recoveryLink
 */
 type CreateRecoveryLinkOK struct {
-	Payload *models.CreateRecoveryLinkResponse
+	Payload *models.RecoveryLink
 }
 
 func (o *CreateRecoveryLinkOK) Error() string {
 	return fmt.Sprintf("[POST /recovery/link][%d] createRecoveryLinkOK  %+v", 200, o.Payload)
 }
 
-func (o *CreateRecoveryLinkOK) GetPayload() *models.CreateRecoveryLinkResponse {
+func (o *CreateRecoveryLinkOK) GetPayload() *models.RecoveryLink {
 	return o.Payload
 }
 
 func (o *CreateRecoveryLinkOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.CreateRecoveryLinkResponse)
+	o.Payload = new(models.RecoveryLink)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

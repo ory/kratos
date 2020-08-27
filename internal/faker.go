@@ -142,7 +142,7 @@ func RegisterFakes() {
 			}
 			methods[ct] = &recovery.FlowMethod{
 				Method: ct,
-				Config: &recovery.RequestMethodConfig{RequestMethodConfigurator: &f},
+				Config: &recovery.FlowMethodConfig{FlowMethodConfigurator: &f},
 			}
 		}
 		return methods, nil

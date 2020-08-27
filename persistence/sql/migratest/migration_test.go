@@ -156,7 +156,7 @@ func TestMigrations(t *testing.T) {
 					require.NoError(t, c.Select("id").All(&ids))
 
 					for _, id := range ids {
-						actual, err := d.Registry().RecoveryRequestPersister().GetRecoveryRequest(context.Background(), id.ID)
+						actual, err := d.Registry().RecoveryFlowPersister().GetRecoveryFlow(context.Background(), id.ID)
 						require.NoError(t, err)
 						compareWithFixture(t, actual, "recovery_request", id.ID.String())
 					}

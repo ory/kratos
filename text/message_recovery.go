@@ -21,14 +21,26 @@ const (
 	ErrorValidationRecoveryStateFailure                                          // 4060002
 	ErrorValidationRecoveryMissingRecoveryToken                                  // 4060003
 	ErrorValidationRecoveryRecoveryTokenInvalidOrAlreadyUsed                     // 4060004
+	ErrorValidationRecoveryFlowExpired                                           // 4060005
 )
+
+func NewErrorValidationRecoveryFlowExpired(ago time.Duration) *Message {
+	return &Message{
+		ID:   ErrorValidationRecoveryFlowExpired,
+		Text: fmt.Sprintf("The recovery flow expired %.2f minutes ago, please try again.", ago.Minutes()),
+		Type: Error,
+		Context: context(map[string]interface{}{
+			"expired_at": time.Now().Add(ago),
+		}),
+	}
+}
 
 func NewRecoverySuccessful(privilegedSessionExpiresAt time.Time) *Message {
 	hasLeft := time.Until(privilegedSessionExpiresAt)
 	return &Message{
 		ID:   InfoSelfServiceRecoverySuccessful,
 		Type: Info,
-		Text: fmt.Sprintf("You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next %.2f minutes.", hasLeft.Minutes()),
+		Text: fmt.Sprintf("You successfully recovered your account. Please change your password or set up an alternative recovery method (e.g. social sign in) within the next %.2f minutes.", hasLeft.Minutes()),
 		Context: context(map[string]interface{}{
 			"privilegedSessionExpiresAt": privilegedSessionExpiresAt,
 		}),

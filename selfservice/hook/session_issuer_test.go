@@ -8,10 +8,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/x/randx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/randx"
 
 	"github.com/ory/viper"
 

@@ -19,7 +19,7 @@ import (
 
 func TestPersister(p interface {
 	Persister
-	recovery.RequestPersister
+	recovery.FlowPersister
 	identity.PrivilegedPool
 }) func(t *testing.T) {
 	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
@@ -33,7 +33,7 @@ func TestPersister(p interface {
 		newRecoveryToken := func(t *testing.T, email string) *Token {
 			var req recovery.Flow
 			require.NoError(t, faker.FakeData(&req))
-			require.NoError(t, p.CreateRecoveryRequest(context.Background(), &req))
+			require.NoError(t, p.CreateRecoveryFlow(context.Background(), &req))
 
 			var i identity.Identity
 			require.NoError(t, faker.FakeData(&i))

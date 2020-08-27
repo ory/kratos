@@ -13,6 +13,7 @@ import (
 
 	"github.com/ory/x/sqlxx"
 
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
@@ -33,6 +34,9 @@ type Flow struct {
 	// type: string
 	// format: uuid
 	ID uuid.UUID `json:"id" db:"id" faker:"-"`
+
+	// Type represents the flow's type which can be either "api" or "browser", depending on the flow interaction.
+	Type flow.Type `json:"type" db:"type" faker:"flow_type"`
 
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting,
 	// a new request has to be initiated.
@@ -92,15 +96,13 @@ type Flow struct {
 	RecoveredIdentityID uuid.NullUUID `json:"-" faker:"-" db:"recovered_identity_id"`
 }
 
-func NewRequest(exp time.Duration, csrf string, r *http.Request, strategies Strategies) (*Flow, error) {
-	req := &Flow{
-		ID:         x.NewUUID(),
-		ExpiresAt:  time.Now().UTC().Add(exp),
-		IssuedAt:   time.Now().UTC(),
+func NewFlow(exp time.Duration, csrf string, r *http.Request, strategies Strategies, ft flow.Type) (*Flow, error) {
+	now := time.Now().UTC()
+	req := &Flow{ID: x.NewUUID(),
+		ExpiresAt: now.Add(exp), IssuedAt: now,
 		RequestURL: x.RequestURL(r).String(),
 		Methods:    map[string]*FlowMethod{},
-		State:      StateChooseMethod,
-		CSRFToken:  csrf,
+		State:      StateChooseMethod, CSRFToken: csrf, Type: ft,
 	}
 
 	for _, strategy := range strategies {
@@ -112,62 +114,64 @@ func NewRequest(exp time.Duration, csrf string, r *http.Request, strategies Stra
 	return req, nil
 }
 
-func (r Flow) TableName() string {
+func (f Flow) TableName() string {
 	return "selfservice_recovery_flows"
 }
 
-func (r *Flow) URL(recoveryURL *url.URL) *url.URL {
-	return urlx.CopyWithQuery(recoveryURL, url.Values{"request": {r.ID.String()}})
+func (f *Flow) URL(recoveryURL *url.URL) *url.URL {
+	return urlx.CopyWithQuery(recoveryURL, url.Values{"request": {f.ID.String()}})
 }
 
-func (r *Flow) GetID() uuid.UUID {
-	return r.ID
+func (f *Flow) GetID() uuid.UUID {
+	return f.ID
 }
 
-func (r *Flow) Valid() error {
-	if r.ExpiresAt.Before(time.Now().UTC()) {
-		return errors.WithStack(ErrRequestExpired.
-			WithReasonf("The recovery request expired %.2f minutes ago, please try again.",
-				-time.Since(r.ExpiresAt).Minutes()))
+func (f *Flow) Valid() error {
+	if f.ExpiresAt.Before(time.Now().UTC()) {
+		return errors.WithStack(NewFlowExpiredError(f.ExpiresAt))
 	}
 	return nil
 }
 
-func (r *Flow) BeforeSave(_ *pop.Connection) error {
-	r.MethodsRaw = make([]FlowMethod, 0, len(r.Methods))
-	for _, m := range r.Methods {
-		r.MethodsRaw = append(r.MethodsRaw, *m)
+func (f *Flow) BeforeSave(_ *pop.Connection) error {
+	f.MethodsRaw = make([]FlowMethod, 0, len(f.Methods))
+	for _, m := range f.Methods {
+		f.MethodsRaw = append(f.MethodsRaw, *m)
 	}
-	r.Methods = nil
+	f.Methods = nil
 	return nil
 }
 
-func (r *Flow) AfterSave(c *pop.Connection) error {
-	return r.AfterFind(c)
+func (f *Flow) AfterSave(c *pop.Connection) error {
+	return f.AfterFind(c)
 }
 
-func (r *Flow) AfterFind(_ *pop.Connection) error {
-	r.Methods = make(RequestMethods)
-	for key := range r.MethodsRaw {
-		m := r.MethodsRaw[key] // required for pointer dereference
-		r.Methods[m.Method] = &m
+func (f *Flow) AfterFind(_ *pop.Connection) error {
+	f.Methods = make(RequestMethods)
+	for key := range f.MethodsRaw {
+		m := f.MethodsRaw[key] // required for pointer dereference
+		f.Methods[m.Method] = &m
 	}
-	r.MethodsRaw = nil
+	f.MethodsRaw = nil
 	return nil
 }
 
-func (r *Flow) MethodToForm(id string) (form.Form, error) {
-	method, ok := r.Methods[id]
+func (f *Flow) MethodToForm(id string) (form.Form, error) {
+	method, ok := f.Methods[id]
 	if !ok {
 		return nil, errors.WithStack(x.PseudoPanic.WithReasonf("Expected method %s to exist.", id))
 	}
 
-	config, ok := method.Config.RequestMethodConfigurator.(form.Form)
+	config, ok := method.Config.FlowMethodConfigurator.(form.Form)
 	if !ok {
 		return nil, errors.WithStack(x.PseudoPanic.WithReasonf(
 			"Expected method config %s to be of type *form.HTMLForm but got: %T", id,
-			method.Config.RequestMethodConfigurator))
+			method.Config.FlowMethodConfigurator))
 	}
 
 	return config, nil
+}
+
+func (f *Flow) AppendTo(src *url.URL) *url.URL {
+	return urlx.CopyWithQuery(src, url.Values{"flow": {f.ID.String()}})
 }

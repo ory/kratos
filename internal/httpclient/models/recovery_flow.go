@@ -57,6 +57,9 @@ type RecoveryFlow struct {
 	// state
 	// Required: true
 	State State `json:"state"`
+
+	// type
+	Type Type `json:"type,omitempty"`
 }
 
 // Validate validates this recovery flow
@@ -88,6 +91,10 @@ func (m *RecoveryFlow) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateState(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateType(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -183,6 +190,22 @@ func (m *RecoveryFlow) validateState(formats strfmt.Registry) error {
 	if err := m.State.Validate(formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
 			return ve.ValidateName("state")
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (m *RecoveryFlow) validateType(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Type) { // not required
+		return nil
+	}
+
+	if err := m.Type.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("type")
 		}
 		return err
 	}
