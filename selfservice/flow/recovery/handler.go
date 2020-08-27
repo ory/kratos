@@ -59,7 +59,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 
 // swagger:route GET /self-service/browser/flows/recovery public initializeSelfServiceRecoveryFlow
 //
-// Initialize browser-based account recovery flow
+// Initialize Browser-Based Account Recovery Flow
 //
 // This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to
 // `selfservice.flows.recovery.ui_url` with the request ID set as a query parameter. If a valid user session exists, the request
@@ -108,7 +108,7 @@ type getSelfServiceBrowserRecoveryRequestParameters struct {
 
 // swagger:route GET /self-service/browser/flows/requests/recovery common public admin getSelfServiceBrowserRecoveryRequest
 //
-// Get the request context of browser-based recovery flows
+// Get the Request Context of Browser-Based Recovery Flows
 //
 // When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required
 // for checking the auth session. To prevent scanning attacks, the public endpoint does not return 404 status codes

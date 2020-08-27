@@ -45,7 +45,7 @@ type ClientService interface {
 }
 
 /*
-  GetSchema Get a traits schema definition
+  GetSchema Get a Traits Schema Definition
 */
 func (a *Client) GetSchema(params *GetSchemaParams) (*GetSchemaOK, error) {
 	// TODO: Validate the params before sending
@@ -79,7 +79,7 @@ func (a *Client) GetSchema(params *GetSchemaParams) (*GetSchemaOK, error) {
 }
 
 /*
-  GetSelfServiceBrowserLoginRequest gets the request context of browser based login user flows
+  GetSelfServiceBrowserLoginRequest gets the request context browser based login user flows
 
   This endpoint returns a login request's context with, for example, error details and
 other information.

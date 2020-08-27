@@ -121,7 +121,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, ss *session.Session, 
 
 // swagger:route POST /self-service/browser/flows/settings/strategies/profile public completeSelfServiceBrowserSettingsProfileStrategyFlow
 //
-// Complete the browser-based settings flow for profile data
+// Complete the Browser-Based Settings Flow for Profile Data
 //
 // This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this
 // endpoint.

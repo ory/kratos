@@ -197,7 +197,7 @@ func (p *completeSelfServiceBrowserSettingsOIDCFlowPayload) SetRequestID(rid uui
 
 // swagger:route POST /self-service/browser/flows/registration/strategies/oidc/settings/connections public completeSelfServiceBrowserSettingsOIDCSettingsFlow
 //
-// Complete the browser-based settings flow for the OpenID Connect strategy
+// Complete the Browser-Based Settings Flow for the OpenID Connect Strategy
 //
 // This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this
 // endpoint.

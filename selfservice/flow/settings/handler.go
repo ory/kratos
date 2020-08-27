@@ -81,7 +81,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 
 // swagger:route GET /self-service/browser/flows/settings public initializeSelfServiceSettingsFlow
 //
-// Initialize browser-based settings flow
+// Initialize Browser-Based Settings Flow
 //
 // This endpoint initializes a browser-based settings flow. Once initialized, the browser will be redirected to
 // `selfservice.flows.settings.ui_url` with the request ID set as a query parameter. If no valid user session exists, a login
@@ -147,7 +147,7 @@ type getSelfServiceBrowserSettingsRequestParameters struct {
 
 // swagger:route GET /self-service/browser/flows/requests/settings common public admin getSelfServiceBrowserSettingsRequest
 //
-// Get the request context of browser-based settings flows
+// Get the Request Context of Browser-Based Settings Flows
 //
 // When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required
 // for checking the auth session. To prevent scanning attacks, the public endpoint does not return 404 status codes
