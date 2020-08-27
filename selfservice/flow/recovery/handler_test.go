@@ -82,8 +82,8 @@ func TestRecoveryHandler(t *testing.T) {
 		assert.Equal(t, public.URL+recovery.PublicRecoveryInitPath, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
 	}
 
-	newExpiredRequest := func() *recovery.Request {
-		return &recovery.Request{
+	newExpiredRequest := func() *recovery.Flow {
+		return &recovery.Flow{
 			ID:         x.NewUUID(),
 			ExpiresAt:  time.Now().Add(-time.Minute),
 			IssuedAt:   time.Now().Add(-time.Minute * 2),

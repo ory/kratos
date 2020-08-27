@@ -15,14 +15,14 @@ import (
 )
 
 func TestRequest(t *testing.T) {
-	must := func(r *recovery.Request, err error) *recovery.Request {
+	must := func(r *recovery.Flow, err error) *recovery.Flow {
 		require.NoError(t, err)
 		return r
 	}
 
 	u := &http.Request{URL: urlx.ParseOrPanic("http://foo/bar/baz"), Host: "foo"}
 	for k, tc := range []struct {
-		r         *recovery.Request
+		r         *recovery.Flow
 		expectErr bool
 	}{
 		{r: must(recovery.NewRequest(time.Hour, "", u, nil))},

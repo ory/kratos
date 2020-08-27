@@ -31,7 +31,7 @@ func TestPersister(p interface {
 		})
 
 		newRecoveryToken := func(t *testing.T, email string) *Token {
-			var req recovery.Request
+			var req recovery.Flow
 			require.NoError(t, faker.FakeData(&req))
 			require.NoError(t, p.CreateRecoveryRequest(context.Background(), &req))
 

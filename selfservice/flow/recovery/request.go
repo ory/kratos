@@ -18,14 +18,14 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-// Request presents a recovery request
+// A Recovery Flow
 //
 // This request is used when an identity wants to recover their account.
 //
 // We recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)
 //
-// swagger:model recoveryRequest
-type Request struct {
+// swagger:model recoveryFlow
+type Flow struct {
 	// ID represents the request's unique ID. When performing the recovery flow, this
 	// represents the id in the recovery ui's query parameter: http://<selfservice.flows.recovery.ui_url>?request=<id>
 	//
@@ -65,7 +65,7 @@ type Request struct {
 	// processed, but for example the password is incorrect, this will contain error messages.
 	//
 	// required: true
-	Methods map[string]*RequestMethod `json:"methods" faker:"recovery_flow_methods" db:"-"`
+	Methods map[string]*FlowMethod `json:"methods" faker:"recovery_flow_methods" db:"-"`
 
 	// MethodsRaw is a helper struct field for gobuffalo.pop.
 	MethodsRaw RequestMethodsRaw `json:"-" faker:"-" has_many:"selfservice_recovery_flow_methods" fk_id:"selfservice_recovery_flow_id"`
@@ -92,13 +92,13 @@ type Request struct {
 	RecoveredIdentityID uuid.NullUUID `json:"-" faker:"-" db:"recovered_identity_id"`
 }
 
-func NewRequest(exp time.Duration, csrf string, r *http.Request, strategies Strategies) (*Request, error) {
-	req := &Request{
+func NewRequest(exp time.Duration, csrf string, r *http.Request, strategies Strategies) (*Flow, error) {
+	req := &Flow{
 		ID:         x.NewUUID(),
 		ExpiresAt:  time.Now().UTC().Add(exp),
 		IssuedAt:   time.Now().UTC(),
 		RequestURL: x.RequestURL(r).String(),
-		Methods:    map[string]*RequestMethod{},
+		Methods:    map[string]*FlowMethod{},
 		State:      StateChooseMethod,
 		CSRFToken:  csrf,
 	}
@@ -112,19 +112,19 @@ func NewRequest(exp time.Duration, csrf string, r *http.Request, strategies Stra
 	return req, nil
 }
 
-func (r Request) TableName() string {
+func (r Flow) TableName() string {
 	return "selfservice_recovery_flows"
 }
 
-func (r *Request) URL(recoveryURL *url.URL) *url.URL {
+func (r *Flow) URL(recoveryURL *url.URL) *url.URL {
 	return urlx.CopyWithQuery(recoveryURL, url.Values{"request": {r.ID.String()}})
 }
 
-func (r *Request) GetID() uuid.UUID {
+func (r *Flow) GetID() uuid.UUID {
 	return r.ID
 }
 
-func (r *Request) Valid() error {
+func (r *Flow) Valid() error {
 	if r.ExpiresAt.Before(time.Now().UTC()) {
 		return errors.WithStack(ErrRequestExpired.
 			WithReasonf("The recovery request expired %.2f minutes ago, please try again.",
@@ -133,8 +133,8 @@ func (r *Request) Valid() error {
 	return nil
 }
 
-func (r *Request) BeforeSave(_ *pop.Connection) error {
-	r.MethodsRaw = make([]RequestMethod, 0, len(r.Methods))
+func (r *Flow) BeforeSave(_ *pop.Connection) error {
+	r.MethodsRaw = make([]FlowMethod, 0, len(r.Methods))
 	for _, m := range r.Methods {
 		r.MethodsRaw = append(r.MethodsRaw, *m)
 	}
@@ -142,11 +142,11 @@ func (r *Request) BeforeSave(_ *pop.Connection) error {
 	return nil
 }
 
-func (r *Request) AfterSave(c *pop.Connection) error {
+func (r *Flow) AfterSave(c *pop.Connection) error {
 	return r.AfterFind(c)
 }
 
-func (r *Request) AfterFind(_ *pop.Connection) error {
+func (r *Flow) AfterFind(_ *pop.Connection) error {
 	r.Methods = make(RequestMethods)
 	for key := range r.MethodsRaw {
 		m := r.MethodsRaw[key] // required for pointer dereference
@@ -156,7 +156,7 @@ func (r *Request) AfterFind(_ *pop.Connection) error {
 	return nil
 }
 
-func (r *Request) MethodToForm(id string) (form.Form, error) {
+func (r *Flow) MethodToForm(id string) (form.Form, error) {
 	method, ok := r.Methods[id]
 	if !ok {
 		return nil, errors.WithStack(x.PseudoPanic.WithReasonf("Expected method %s to exist.", id))

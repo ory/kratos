@@ -21,9 +21,9 @@ import (
 
 type (
 	RequestPersister interface {
-		CreateRecoveryRequest(context.Context, *Request) error
-		GetRecoveryRequest(ctx context.Context, id uuid.UUID) (*Request, error)
-		UpdateRecoveryRequest(context.Context, *Request) error
+		CreateRecoveryRequest(context.Context, *Flow) error
+		GetRecoveryRequest(ctx context.Context, id uuid.UUID) (*Flow, error)
+		UpdateRecoveryRequest(context.Context, *Flow) error
 	}
 	RequestPersistenceProvider interface {
 		RecoveryRequestPersister() RequestPersister
@@ -36,7 +36,7 @@ func TestRequestPersister(p interface {
 }) func(t *testing.T) {
 	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 
-	var clearids = func(r *Request) {
+	var clearids = func(r *Flow) {
 		r.ID = uuid.UUID{}
 	}
 
@@ -46,8 +46,8 @@ func TestRequestPersister(p interface {
 			require.Error(t, err)
 		})
 
-		var newRequest = func(t *testing.T) *Request {
-			var r Request
+		var newRequest = func(t *testing.T) *Flow {
+			var r Flow
 			require.NoError(t, faker.FakeData(&r))
 			clearids(&r)
 			return &r
@@ -60,7 +60,7 @@ func TestRequestPersister(p interface {
 		})
 
 		t.Run("case=should create with set ids", func(t *testing.T) {
-			var r Request
+			var r Flow
 			require.NoError(t, faker.FakeData(&r))
 			require.NoError(t, p.CreateRecoveryRequest(context.Background(), &r))
 		})
@@ -86,10 +86,10 @@ func TestRequestPersister(p interface {
 
 		t.Run("case=should create and update a recovery request", func(t *testing.T) {
 			expected := newRequest(t)
-			expected.Methods[StrategyRecoveryTokenName] = &RequestMethod{
+			expected.Methods[StrategyRecoveryTokenName] = &FlowMethod{
 				Method: StrategyRecoveryTokenName, Config: &RequestMethodConfig{RequestMethodConfigurator: &form.HTMLForm{Fields: []form.Field{{
 					Name: "zab", Type: "bar", Pattern: "baz"}}}}}
-			expected.Methods["password"] = &RequestMethod{
+			expected.Methods["password"] = &FlowMethod{
 				Method: "password", Config: &RequestMethodConfig{RequestMethodConfigurator: &form.HTMLForm{Fields: []form.Field{{
 					Name: "foo", Type: "bar", Pattern: "baz"}}}}}
 			err := p.CreateRecoveryRequest(context.Background(), expected)
@@ -114,6 +114,30 @@ func TestRequestPersister(p interface {
 				Methods["password"].Config.RequestMethodConfigurator.(*form.HTMLForm).Fields)
 			assert.EqualValues(t, []form.Field{{Name: "zab", Type: "bar", Pattern: "baz"}}, actual.
 				Methods[StrategyRecoveryTokenName].Config.RequestMethodConfigurator.(*form.HTMLForm).Fields)
+		})
+
+		t.Run("case=should not cause data loss when updating a request without changes", func(t *testing.T) {
+			t.Logf("Needs implementation")
+			t.FailNow()
+			// expected := newFlow(t)
+			// delete(expected.Methods, identity.CredentialsTypeOIDC)
+			// err := p.CreateLoginFlow(context.Background(), expected)
+			// require.NoError(t, err)
+			//
+			// actual, err := p.GetLoginFlow(context.Background(), expected.ID)
+			// require.NoError(t, err)
+			// assert.Len(t, actual.Methods, 1)
+			//
+			// require.NoError(t, p.UpdateLoginFlow(context.Background(), actual))
+			//
+			// actual, err = p.GetLoginFlow(context.Background(), expected.ID)
+			// require.NoError(t, err)
+			// require.Len(t, actual.Methods, 2)
+			// assert.EqualValues(t, identity.CredentialsTypePassword, actual.Active)
+			//
+			// js, _ := json.Marshal(actual.Methods)
+			// assert.Equal(t, string(identity.CredentialsTypePassword), actual.Methods[identity.CredentialsTypePassword].Config.FlowMethodConfigurator.(*form.HTMLForm).Action, "%s", js)
+			// assert.Equal(t, string(identity.CredentialsTypeOIDC), actual.Methods[identity.CredentialsTypeOIDC].Config.FlowMethodConfigurator.(*form.HTMLForm).Action)
 		})
 	}
 }

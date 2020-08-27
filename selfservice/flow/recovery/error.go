@@ -51,7 +51,7 @@ func NewErrorHandler(d errorHandlerDependencies, c configuration.Provider) *Erro
 func (s *ErrorHandler) HandleRecoveryError(
 	w http.ResponseWriter,
 	r *http.Request,
-	rr *Request,
+	rr *Flow,
 	err error,
 	method string,
 ) {

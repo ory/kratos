@@ -66,7 +66,7 @@ type Request struct {
 }
 
 func (r Request) TableName() string {
-	return "selfservice_verification_requests"
+	return "selfservice_verification_flows"
 }
 
 func NewRequest(

@@ -134,13 +134,13 @@ func RegisterFakes() {
 	}
 
 	if err := faker.AddProvider("recovery_flow_methods", func(v reflect.Value) (interface{}, error) {
-		var methods = make(map[string]*recovery.RequestMethod)
+		var methods = make(map[string]*recovery.FlowMethod)
 		for _, ct := range []string{recovery.StrategyRecoveryTokenName} {
 			var f form.HTMLForm
 			if err := faker.FakeData(&f); err != nil {
 				return nil, err
 			}
-			methods[ct] = &recovery.RequestMethod{
+			methods[ct] = &recovery.FlowMethod{
 				Method: ct,
 				Config: &recovery.RequestMethodConfig{RequestMethodConfigurator: &f},
 			}

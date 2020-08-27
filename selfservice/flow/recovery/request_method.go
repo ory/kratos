@@ -12,8 +12,8 @@ import (
 	"github.com/ory/kratos/selfservice/form"
 )
 
-// swagger:model recoveryRequestMethod
-type RequestMethod struct {
+// swagger:model recoveryFlowMethod
+type FlowMethod struct {
 	// Method contains the request credentials type.
 	Method string `json:"method" db:"method"`
 
@@ -24,10 +24,10 @@ type RequestMethod struct {
 	ID uuid.UUID `json:"-" db:"id"`
 
 	// FlowID is a helper struct field for gobuffalo.pop.
-	FlowID uuid.UUID `json:"-" db:"selfservice_flow_request_id"`
+	FlowID uuid.UUID `json:"-" db:"selfservice_recovery_flow_id"`
 
 	// Flow is a helper struct field for gobuffalo.pop.
-	Flow *Request `json:"-" belongs_to:"selfservice_flow_request" fk_id:"FlowID"`
+	Flow *Flow `json:"-" belongs_to:"selfservice_flow_request" fk_id:"FlowID"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"-" db:"created_at"`
@@ -36,12 +36,12 @@ type RequestMethod struct {
 	UpdatedAt time.Time `json:"-" db:"updated_at"`
 }
 
-func (u RequestMethod) TableName() string {
-	return "selfservice_recovery_request_methods"
+func (u FlowMethod) TableName() string {
+	return "selfservice_recovery_flow_methods"
 }
 
-type RequestMethodsRaw []RequestMethod // workaround for https://github.com/gobuffalo/pop/pull/478
-type RequestMethods map[string]*RequestMethod
+type RequestMethodsRaw []FlowMethod // workaround for https://github.com/gobuffalo/pop/pull/478
+type RequestMethods map[string]*FlowMethod
 
 func (u RequestMethods) TableName() string {
 	// This must be stay a value receiver, using a pointer receiver will cause issues with pop.

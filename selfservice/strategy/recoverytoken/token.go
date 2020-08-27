@@ -27,7 +27,7 @@ type Token struct {
 	RecoveryAddress *identity.RecoveryAddress `json:"recovery_address" belongs_to:"identity_recovery_addresses" fk_id:"RecoveryAddressID"`
 
 	// RecoveryAddress links this token to a recovery request.
-	Request *recovery.Request `json:"request" belongs_to:"identity_recovery_requests" fk_id:"FlowID"`
+	Request *recovery.Flow `json:"request" belongs_to:"identity_recovery_requests" fk_id:"FlowID"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
@@ -43,7 +43,7 @@ func (Token) TableName() string {
 	return "identity_recovery_tokens"
 }
 
-func NewToken(ra *identity.RecoveryAddress, req *recovery.Request) *Token {
+func NewToken(ra *identity.RecoveryAddress, req *recovery.Flow) *Token {
 	return &Token{
 		ID:              x.NewUUID(),
 		Token:           randx.MustString(32, randx.AlphaNum),
