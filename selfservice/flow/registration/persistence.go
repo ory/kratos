@@ -117,5 +117,26 @@ func TestFlowPersister(p FlowPersister) func(t *testing.T) {
 			assert.Equal(t, string(identity.CredentialsTypePassword), actual.Methods[identity.CredentialsTypePassword].Config.FlowMethodConfigurator.(*form.HTMLForm).Action, "%s", js)
 			assert.Equal(t, string(identity.CredentialsTypeOIDC), actual.Methods[identity.CredentialsTypeOIDC].Config.FlowMethodConfigurator.(*form.HTMLForm).Action)
 		})
+
+		t.Run("case=should not cause data loss when updating a request without changes", func(t *testing.T) {
+			expected := newFlow(t)
+			err := p.CreateRegistrationFlow(context.Background(), expected)
+			require.NoError(t, err)
+
+			actual, err := p.GetRegistrationFlow(context.Background(), expected.ID)
+			require.NoError(t, err)
+			assert.Len(t, actual.Methods, 2)
+
+			require.NoError(t, p.UpdateRegistrationFlow(context.Background(), actual))
+
+			actual, err = p.GetRegistrationFlow(context.Background(), expected.ID)
+			require.NoError(t, err)
+			require.Len(t, actual.Methods, 2)
+			assert.EqualValues(t, identity.CredentialsTypePassword, actual.Active)
+
+			js, _ := json.Marshal(actual.Methods)
+			assert.Equal(t, string(identity.CredentialsTypePassword), actual.Methods[identity.CredentialsTypePassword].Config.FlowMethodConfigurator.(*form.HTMLForm).Action, "%s", js)
+			assert.Equal(t, string(identity.CredentialsTypeOIDC), actual.Methods[identity.CredentialsTypeOIDC].Config.FlowMethodConfigurator.(*form.HTMLForm).Action)
+		})
 	}
 }

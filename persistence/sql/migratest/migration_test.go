@@ -152,7 +152,7 @@ func TestMigrations(t *testing.T) {
 				})
 
 				t.Run("case=recovery_request", func(t *testing.T) {
-					var ids []recovery.Request
+					var ids []recovery.Flow
 					require.NoError(t, c.Select("id").All(&ids))
 
 					for _, id := range ids {

@@ -18,12 +18,12 @@ import (
 var _ recovery.RequestPersister = new(Persister)
 var _ recoverytoken.Persister = new(Persister)
 
-func (p Persister) CreateRecoveryRequest(ctx context.Context, r *recovery.Request) error {
+func (p Persister) CreateRecoveryRequest(ctx context.Context, r *recovery.Flow) error {
 	return p.GetConnection(ctx).Eager("MethodsRaw").Create(r)
 }
 
-func (p Persister) GetRecoveryRequest(ctx context.Context, id uuid.UUID) (*recovery.Request, error) {
-	var r recovery.Request
+func (p Persister) GetRecoveryRequest(ctx context.Context, id uuid.UUID) (*recovery.Flow, error) {
+	var r recovery.Flow
 	if err := p.GetConnection(ctx).Eager().Find(&r, id); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
@@ -35,7 +35,7 @@ func (p Persister) GetRecoveryRequest(ctx context.Context, id uuid.UUID) (*recov
 	return &r, nil
 }
 
-func (p Persister) UpdateRecoveryRequest(ctx context.Context, r *recovery.Request) error {
+func (p Persister) UpdateRecoveryRequest(ctx context.Context, r *recovery.Flow) error {
 	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 
 		rr, err := p.GetRecoveryRequest(ctx, r.ID)
@@ -43,21 +43,16 @@ func (p Persister) UpdateRecoveryRequest(ctx context.Context, r *recovery.Reques
 			return err
 		}
 
-		for id, form := range r.Methods {
-			var found bool
-			for oid := range rr.Methods {
-				if oid == id {
-					rr.Methods[id].Config = form.Config
-					found = true
-					break
-				}
-			}
-			if !found {
-				rr.Methods[id] = form
+		for _, dbc := range rr.Methods {
+			if err := tx.Destroy(dbc); err != nil {
+				return sqlcon.HandleError(err)
 			}
 		}
 
-		for _, of := range rr.Methods {
+		for _, of := range r.Methods {
+			of.ID = uuid.UUID{}
+			of.Flow = rr
+			of.FlowID = rr.ID
 			if err := tx.Save(of); err != nil {
 				return sqlcon.HandleError(err)
 			}

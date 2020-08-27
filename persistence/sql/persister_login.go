@@ -34,7 +34,9 @@ func (p *Persister) UpdateLoginFlow(ctx context.Context, r *login.Flow) error {
 		}
 
 		for _, of := range r.Methods {
-			of.FlowID = r.ID
+			of.ID = uuid.UUID{}
+			of.Flow = rr
+			of.FlowID = rr.ID
 			if err := tx.Save(of); err != nil {
 				return sqlcon.HandleError(err)
 			}
