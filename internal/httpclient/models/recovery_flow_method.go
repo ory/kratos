@@ -11,10 +11,10 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// RecoveryRequestMethod recovery request method
+// RecoveryFlowMethod recovery flow method
 //
-// swagger:model recoveryRequestMethod
-type RecoveryRequestMethod struct {
+// swagger:model recoveryFlowMethod
+type RecoveryFlowMethod struct {
 
 	// config
 	Config *RequestMethodConfig `json:"config,omitempty"`
@@ -23,8 +23,8 @@ type RecoveryRequestMethod struct {
 	Method string `json:"method,omitempty"`
 }
 
-// Validate validates this recovery request method
-func (m *RecoveryRequestMethod) Validate(formats strfmt.Registry) error {
+// Validate validates this recovery flow method
+func (m *RecoveryFlowMethod) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateConfig(formats); err != nil {
@@ -37,7 +37,7 @@ func (m *RecoveryRequestMethod) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *RecoveryRequestMethod) validateConfig(formats strfmt.Registry) error {
+func (m *RecoveryFlowMethod) validateConfig(formats strfmt.Registry) error {
 
 	if swag.IsZero(m.Config) { // not required
 		return nil
@@ -56,7 +56,7 @@ func (m *RecoveryRequestMethod) validateConfig(formats strfmt.Registry) error {
 }
 
 // MarshalBinary interface implementation
-func (m *RecoveryRequestMethod) MarshalBinary() ([]byte, error) {
+func (m *RecoveryFlowMethod) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -64,8 +64,8 @@ func (m *RecoveryRequestMethod) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *RecoveryRequestMethod) UnmarshalBinary(b []byte) error {
-	var res RecoveryRequestMethod
+func (m *RecoveryFlowMethod) UnmarshalBinary(b []byte) error {
+	var res RecoveryFlowMethod
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

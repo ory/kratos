@@ -66,23 +66,23 @@ func NewGetSelfServiceBrowserRecoveryRequestOK() *GetSelfServiceBrowserRecoveryR
 
 /*GetSelfServiceBrowserRecoveryRequestOK handles this case with default header values.
 
-recoveryRequest
+recoveryFlow
 */
 type GetSelfServiceBrowserRecoveryRequestOK struct {
-	Payload *models.RecoveryRequest
+	Payload *models.RecoveryFlow
 }
 
 func (o *GetSelfServiceBrowserRecoveryRequestOK) Error() string {
 	return fmt.Sprintf("[GET /self-service/browser/flows/requests/recovery][%d] getSelfServiceBrowserRecoveryRequestOK  %+v", 200, o.Payload)
 }
 
-func (o *GetSelfServiceBrowserRecoveryRequestOK) GetPayload() *models.RecoveryRequest {
+func (o *GetSelfServiceBrowserRecoveryRequestOK) GetPayload() *models.RecoveryFlow {
 	return o.Payload
 }
 
 func (o *GetSelfServiceBrowserRecoveryRequestOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.RecoveryRequest)
+	o.Payload = new(models.RecoveryFlow)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

@@ -122,7 +122,7 @@ type getSelfServiceBrowserRecoveryRequestParameters struct {
 //     Schemes: http, https
 //
 //     Responses:
-//       200: recoveryRequest
+//       200: recoveryFlow
 //       403: genericError
 //       404: genericError
 //       410: genericError

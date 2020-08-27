@@ -9,9 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/x/pointerx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ory/x/pointerx"
 
 	"github.com/ory/viper"
 
@@ -107,9 +108,9 @@ func SubmitLoginFormAndExpectValidationError(
 	hc.Transport = NewTransportWithLogger(hc.Transport, t)
 	var payload *models.LoginFlow
 	if isAPI {
-		payload = InitializeLoginFlowViaAPI(t, hc, publicTS,forced).Payload
+		payload = InitializeLoginFlowViaAPI(t, hc, publicTS, forced).Payload
 	} else {
-		payload = InitializeLoginFlowViaBrowser(t, hc, publicTS,forced).Payload
+		payload = InitializeLoginFlowViaBrowser(t, hc, publicTS, forced).Payload
 	}
 
 	time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.

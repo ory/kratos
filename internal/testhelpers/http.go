@@ -17,7 +17,7 @@ func NewDebugClient(t *testing.T) *http.Client {
 }
 
 func NewRequest(t *testing.T, isAPI bool, method string, url string, payload io.Reader) *http.Request {
-	req, err := http.NewRequest("POST", url,payload)
+	req, err := http.NewRequest("POST", url, payload)
 	require.NoError(t, err)
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")

@@ -592,9 +592,9 @@
         ],
         "responses": {
           "200": {
-            "description": "recoveryRequest",
+            "description": "recoveryFlow",
             "schema": {
-              "$ref": "#/definitions/recoveryRequest"
+              "$ref": "#/definitions/recoveryFlow"
             }
           },
           "403": {
@@ -2026,10 +2026,10 @@
         }
       }
     },
-    "recoveryRequest": {
+    "recoveryFlow": {
       "description": "This request is used when an identity wants to recover their account.\n\nWe recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)",
       "type": "object",
-      "title": "Request presents a recovery request",
+      "title": "A Recovery Flow",
       "required": [
         "id",
         "expires_at",
@@ -2063,7 +2063,7 @@
           "description": "Methods contains context for all account recovery methods. If a registration request has been\nprocessed, but for example the password is incorrect, this will contain error messages.",
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/definitions/recoveryRequestMethod"
+            "$ref": "#/definitions/recoveryFlowMethod"
           }
         },
         "request_url": {
@@ -2075,7 +2075,7 @@
         }
       }
     },
-    "recoveryRequestMethod": {
+    "recoveryFlowMethod": {
       "type": "object",
       "properties": {
         "config": {

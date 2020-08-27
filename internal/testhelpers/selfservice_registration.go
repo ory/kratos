@@ -75,7 +75,7 @@ func RegistrationMakeRequest(
 ) (string, *http.Response) {
 	require.NotEmpty(t, f.Action)
 
-	res, err := hc.Do(NewRequest(t,isAPI,"POST", pointerx.StringR(f.Action), bytes.NewBufferString(values)))
+	res, err := hc.Do(NewRequest(t, isAPI, "POST", pointerx.StringR(f.Action), bytes.NewBufferString(values)))
 	require.NoError(t, err)
 	defer res.Body.Close()
 

@@ -12,14 +12,14 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// RecoveryRequest Request presents a recovery request
+// RecoveryFlow A Recovery Flow
 //
 // This request is used when an identity wants to recover their account.
 //
 // We recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)
 //
-// swagger:model recoveryRequest
-type RecoveryRequest struct {
+// swagger:model recoveryFlow
+type RecoveryFlow struct {
 
 	// Active, if set, contains the registration method that is being used. It is initially
 	// not set.
@@ -47,7 +47,7 @@ type RecoveryRequest struct {
 	// Methods contains context for all account recovery methods. If a registration request has been
 	// processed, but for example the password is incorrect, this will contain error messages.
 	// Required: true
-	Methods map[string]RecoveryRequestMethod `json:"methods"`
+	Methods map[string]RecoveryFlowMethod `json:"methods"`
 
 	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used
 	// to forward information contained in the URL's path or query for example.
@@ -59,8 +59,8 @@ type RecoveryRequest struct {
 	State State `json:"state"`
 }
 
-// Validate validates this recovery request
-func (m *RecoveryRequest) Validate(formats strfmt.Registry) error {
+// Validate validates this recovery flow
+func (m *RecoveryFlow) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateExpiresAt(formats); err != nil {
@@ -97,7 +97,7 @@ func (m *RecoveryRequest) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *RecoveryRequest) validateExpiresAt(formats strfmt.Registry) error {
+func (m *RecoveryFlow) validateExpiresAt(formats strfmt.Registry) error {
 
 	if err := validate.Required("expires_at", "body", m.ExpiresAt); err != nil {
 		return err
@@ -110,7 +110,7 @@ func (m *RecoveryRequest) validateExpiresAt(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *RecoveryRequest) validateID(formats strfmt.Registry) error {
+func (m *RecoveryFlow) validateID(formats strfmt.Registry) error {
 
 	if err := m.ID.Validate(formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
@@ -122,7 +122,7 @@ func (m *RecoveryRequest) validateID(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *RecoveryRequest) validateIssuedAt(formats strfmt.Registry) error {
+func (m *RecoveryFlow) validateIssuedAt(formats strfmt.Registry) error {
 
 	if err := validate.Required("issued_at", "body", m.IssuedAt); err != nil {
 		return err
@@ -135,7 +135,7 @@ func (m *RecoveryRequest) validateIssuedAt(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *RecoveryRequest) validateMessages(formats strfmt.Registry) error {
+func (m *RecoveryFlow) validateMessages(formats strfmt.Registry) error {
 
 	if swag.IsZero(m.Messages) { // not required
 		return nil
@@ -151,7 +151,7 @@ func (m *RecoveryRequest) validateMessages(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *RecoveryRequest) validateMethods(formats strfmt.Registry) error {
+func (m *RecoveryFlow) validateMethods(formats strfmt.Registry) error {
 
 	for k := range m.Methods {
 
@@ -169,7 +169,7 @@ func (m *RecoveryRequest) validateMethods(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *RecoveryRequest) validateRequestURL(formats strfmt.Registry) error {
+func (m *RecoveryFlow) validateRequestURL(formats strfmt.Registry) error {
 
 	if err := validate.Required("request_url", "body", m.RequestURL); err != nil {
 		return err
@@ -178,7 +178,7 @@ func (m *RecoveryRequest) validateRequestURL(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *RecoveryRequest) validateState(formats strfmt.Registry) error {
+func (m *RecoveryFlow) validateState(formats strfmt.Registry) error {
 
 	if err := m.State.Validate(formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
@@ -191,7 +191,7 @@ func (m *RecoveryRequest) validateState(formats strfmt.Registry) error {
 }
 
 // MarshalBinary interface implementation
-func (m *RecoveryRequest) MarshalBinary() ([]byte, error) {
+func (m *RecoveryFlow) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -199,8 +199,8 @@ func (m *RecoveryRequest) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *RecoveryRequest) UnmarshalBinary(b []byte) error {
-	var res RecoveryRequest
+func (m *RecoveryFlow) UnmarshalBinary(b []byte) error {
+	var res RecoveryFlow
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}
