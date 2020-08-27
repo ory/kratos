@@ -2069,10 +2069,34 @@
       "type": "object",
       "properties": {
         "config": {
-          "$ref": "#/definitions/loginFlowMethodConfig"
+          "$ref": "#/definitions/recoveryFlowMethodConfig"
         },
         "method": {
           "description": "Method contains the request credentials type.",
+          "type": "string"
+        }
+      }
+    },
+    "recoveryFlowMethodConfig": {
+      "type": "object",
+      "required": [
+        "action",
+        "method",
+        "fields"
+      ],
+      "properties": {
+        "action": {
+          "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
+          "type": "string"
+        },
+        "fields": {
+          "$ref": "#/definitions/formFields"
+        },
+        "messages": {
+          "$ref": "#/definitions/Messages"
+        },
+        "method": {
+          "description": "Method is the form method (e.g. POST)",
           "type": "string"
         }
       }

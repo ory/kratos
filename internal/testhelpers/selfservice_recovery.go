@@ -71,7 +71,7 @@ func GetRecoveryRequest(t *testing.T, client *http.Client, ts *httptest.Server) 
 
 func RecoverySubmitForm(
 	t *testing.T,
-	f *models.FlowMethodConfig,
+	f *models.RecoveryFlowMethodConfig,
 	hc *http.Client,
 	values url.Values,
 ) (string, *common.GetSelfServiceRecoveryFlowOK) {

@@ -66,7 +66,7 @@ type FlowMethodConfigurator interface {
 	form.MessageAdder
 }
 
-// swagger:model loginFlowMethodConfig
+// swagger:model recoveryFlowMethodConfig
 type FlowMethodConfig struct {
 	// swagger:ignore
 	FlowMethodConfigurator
@@ -74,7 +74,7 @@ type FlowMethodConfig struct {
 	FlowMethodConfigMock
 }
 
-// swagger:model loginFlowMethodConfigPayload
+// swagger:model recoveryFlowMethodConfigPayload
 type FlowMethodConfigMock struct {
 	*form.HTMLForm
 }
