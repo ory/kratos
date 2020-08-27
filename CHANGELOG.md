@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-08-25)](#unreleased-2020-08-25)
+- [Unreleased (2020-08-27)](#unreleased-2020-08-27)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -102,7 +102,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...907add5edb526adb4de57d35da16929ac08041e1) (2020-08-25)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...be8b9e5f1ca70b1aa06b77bb2ca35644d8cd3c00) (2020-08-27)
 
 
 ### Bug Fixes
@@ -115,6 +115,7 @@
 * Recursive loop on network errors in password validator ([#589](https://github.com/ory/kratos/issues/589)) ([b4d5a42](https://github.com/ory/kratos/commit/b4d5a42346510e40222b8eb59b455b585f0a05cf)), closes [#316](https://github.com/ory/kratos/issues/316):
 
     > The old code no error when ignoreNetworkErrors was set to true, but did not set a hash result which caused an infinite loop.
+* Rename quickstart config files and path ([#671](https://github.com/ory/kratos/issues/671)) ([be8b9e5](https://github.com/ory/kratos/commit/be8b9e5f1ca70b1aa06b77bb2ca35644d8cd3c00))
 * Resolve cookie issues ([6e2b6d2](https://github.com/ory/kratos/commit/6e2b6d2f0ce2fb6df7d3e26d6cc8e755e6593a81))
 * Resolve flaky passwort setting tests ([#582](https://github.com/ory/kratos/issues/582)) ([c42d936](https://github.com/ory/kratos/commit/c42d936ef51d2ffb48b491b99988d048442e3b8b)), closes [#581](https://github.com/ory/kratos/issues/581) [#577](https://github.com/ory/kratos/issues/577)
 * Resolve identity admin api issues ([#586](https://github.com/ory/kratos/issues/586)) ([feef8a7](https://github.com/ory/kratos/commit/feef8a7d4454c1b343c34a96fa4dadd56149b0cd)), closes [#435](https://github.com/ory/kratos/issues/435) [#500](https://github.com/ory/kratos/issues/500):
@@ -180,12 +181,16 @@
 * Resolve typo in message IDs ([#607](https://github.com/ory/kratos/issues/607)) ([f7688f0](https://github.com/ory/kratos/commit/f7688f0ab07b579a375ce4cc25361b360e82dd88))
 * Update repository templates ([f422485](https://github.com/ory/kratos/commit/f4224852ceeb054405251b21895efa493e1abc9c))
 * Use correct path in 0.4 docs ([9fcaac4](https://github.com/ory/kratos/commit/9fcaac4048e05500d0456eb3cd9cd11cc123e370)), closes [#588](https://github.com/ory/kratos/issues/588)
+* Use NYT Capitalization for all Swagger headlines ([#675](https://github.com/ory/kratos/issues/675)) ([6c96429](https://github.com/ory/kratos/commit/6c9642959dab8cf042ad227711609d5726328394)), closes [#664](https://github.com/ory/kratos/issues/664)
 
 
 ### Features
 
 * Add ability to configure session cookie domain/path ([faeb332](https://github.com/ory/kratos/commit/faeb3328dab343c6ef3974065ba0c5c590a8817e)), closes [#516](https://github.com/ory/kratos/issues/516)
 * Add config version schema ([#608](https://github.com/ory/kratos/issues/608)) ([d218662](https://github.com/ory/kratos/commit/d218662388ef4fb7ea3bfee7b29c5cc8d34f1c8c)), closes [#590](https://github.com/ory/kratos/issues/590)
+* Add new prometheus metrics endpoint [#672](https://github.com/ory/kratos/issues/672) ([#673](https://github.com/ory/kratos/issues/673)) ([0f5c436](https://github.com/ory/kratos/commit/0f5c436ce6e4aa78ca52ae63e58812e6703a1ab7)):
+
+    > Adds endpoint `/metrics` for prometheus metrics collection to the Admin API Endpoint.
 * Add nocache helpers ([54dcc4d](https://github.com/ory/kratos/commit/54dcc4da2ff22bdb17e53dd6eac1c0bd54a20390))
 * Add pagination tests ([e3aa81b](https://github.com/ory/kratos/commit/e3aa81b7da55108f43ea6e16c817c97e2f8a1d50))
 * Add session token security definition ([d36c26f](https://github.com/ory/kratos/commit/d36c26f2edd66ddbd8338de4901957a9b9b7342e)):
