@@ -2,7 +2,7 @@ module github.com/ory/kratos
 
 go 1.14
 
-replace github.com/justinas/nosurf => github.com/aeneasr/nosurf v1.1.1-0.20200817183017-ee7691f82e7d
+replace github.com/justinas/nosurf => github.com/aeneasr/nosurf v1.1.1-0.20200827112707-0bc5e56a715e
 
 // See https://github.com/markbates/pkger/pull/112
 replace github.com/markbates/pkger => github.com/falafeljan/pkger v0.17.1-0.20200722132747-95726f5b9b9b
