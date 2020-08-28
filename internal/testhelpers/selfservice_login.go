@@ -2,7 +2,6 @@ package testhelpers
 
 import (
 	"bytes"
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -22,7 +21,6 @@ import (
 	"github.com/ory/kratos/internal/httpclient/client/common"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/selfservice/flow/login"
-	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/x"
 )
 
@@ -93,56 +91,44 @@ func LoginMakeRequest(
 	return string(x.MustReadAll(res.Body)), res
 }
 
-// SubmitLoginFormAndExpectValidationError initiates a login flow (for Browser and API!), fills out the form and modifies
-// the form values with `withValues`, and submits the form. If completed, it will return the flow as JSON.
-func SubmitLoginFormAndExpectValidationError(
+// SubmitLoginForm initiates a login flow (for Browser and API!), fills out the form and modifies
+// the form values with `withValues`, and submits the form. Returns the body and checks for expectedStatusCode and
+// expectedURL on completion
+func SubmitLoginForm(
 	t *testing.T,
 	isAPI bool,
 	hc *http.Client,
 	publicTS *httptest.Server,
-	withValues func(v url.Values) url.Values,
+	withValues func(v url.Values),
 	method identity.CredentialsType,
 	forced bool,
 	expectedStatusCode int,
+	expectedURL string,
 ) string {
+	if hc == nil {
+		hc = new(http.Client)
+		if !isAPI {
+			hc = NewClientWithCookies(t)
+		}
+	}
+
 	hc.Transport = NewTransportWithLogger(hc.Transport, t)
-	var payload *models.LoginFlow
+	var f *models.LoginFlow
 	if isAPI {
-		payload = InitializeLoginFlowViaAPI(t, hc, publicTS, forced).Payload
+		f = InitializeLoginFlowViaAPI(t, hc, publicTS, forced).Payload
 	} else {
-		payload = InitializeLoginFlowViaBrowser(t, hc, publicTS, forced).Payload
+		f = InitializeLoginFlowViaBrowser(t, hc, publicTS, forced).Payload
 	}
 
 	time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
 
-	config := GetLoginFlowMethodConfig(t, payload, method.String())
+	config := GetLoginFlowMethodConfig(t, f, method.String())
 
-	b, res := LoginMakeRequest(t, isAPI, config, hc, EncodeFormAsJSON(t, isAPI,
-		withValues(SDKFormFieldsToURLValues(config.Fields))))
+	payload := SDKFormFieldsToURLValues(config.Fields)
+	withValues(payload)
+	b, res := LoginMakeRequest(t, isAPI, config, hc, EncodeFormAsJSON(t, isAPI, payload))
 	assert.EqualValues(t, expectedStatusCode, res.StatusCode, "%s", b)
+	assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, b)
 
-	expectURL := viper.GetString(configuration.ViperKeySelfServiceLoginUI)
-	if isAPI {
-		switch method {
-		case identity.CredentialsTypePassword:
-			expectURL = password.RouteLogin
-		default:
-			t.Logf("Expected method to be profile ior password but got: %s", method)
-			t.FailNow()
-		}
-	}
-
-	assert.Contains(t, res.Request.URL.String(), expectURL, "%+v\n\t%s", res.Request, b)
-
-	if isAPI {
-		return b
-	}
-
-	rs, err := NewSDKClientFromURL(viper.GetString(configuration.ViperKeyPublicBaseURL)).Common.GetSelfServiceLoginFlow(
-		common.NewGetSelfServiceLoginFlowParams().WithHTTPClient(hc).WithID(res.Request.URL.Query().Get("flow")))
-	require.NoError(t, err)
-
-	body, err := json.Marshal(rs.Payload)
-	require.NoError(t, err)
-	return string(body)
+	return b
 }

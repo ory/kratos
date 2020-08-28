@@ -35,7 +35,7 @@ import (
 )
 
 func TestCompleteLogin(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := internal.NewFastRegistryWithMocks(t)
 
 	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
 		map[string]interface{}{"enabled": true})
@@ -43,7 +43,7 @@ func TestCompleteLogin(t *testing.T) {
 
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	uiTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
-	newReturnTs(t, reg)
+	redirTS := newReturnTs(t, reg)
 
 	// Overwrite these two:
 	viper.Set(configuration.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
@@ -181,6 +181,13 @@ func TestCompleteLogin(t *testing.T) {
 		})
 	})
 
+	var expectValidationError = func(t *testing.T, isAPI, forced bool, values func(url.Values)) string {
+		return testhelpers.SubmitLoginForm(t, isAPI, nil, publicTS, values,
+			identity.CredentialsTypePassword, forced,
+			testhelpers.ExpectStatusCode(isAPI, http.StatusBadRequest, http.StatusOK),
+			testhelpers.ExpectURL(isAPI, publicTS.URL+password.RouteLogin, conf.SelfServiceFlowLoginUI().String()))
+	}
+
 	t.Run("should return an error because the credentials are invalid (user does not exist)", func(t *testing.T) {
 		var check = func(t *testing.T, body string) {
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
@@ -188,21 +195,17 @@ func TestCompleteLogin(t *testing.T) {
 			assert.Equal(t, text.NewErrorValidationInvalidCredentials().Text, gjson.Get(body, "methods.password.config.messages.0.text").String())
 		}
 
-		var values = func(v url.Values) url.Values {
+		var values = func(v url.Values) {
 			v.Set("identifier", "identifier")
 			v.Set("password", "password")
-			return v
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
-			browserClient := testhelpers.NewClientWithCookies(t)
-			actual := testhelpers.SubmitLoginFormAndExpectValidationError(t, false, browserClient, publicTS, values, identity.CredentialsTypePassword, false, http.StatusOK)
-			check(t, actual)
+			check(t, expectValidationError(t, false, false, values))
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			actual := testhelpers.SubmitLoginFormAndExpectValidationError(t, true, apiClient, publicTS, values, identity.CredentialsTypePassword, false, http.StatusBadRequest)
-			check(t, actual)
+			check(t, expectValidationError(t, true, false, values))
 		})
 	})
 
@@ -218,21 +221,17 @@ func TestCompleteLogin(t *testing.T) {
 			assert.Empty(t, gjson.Get(body, "methods.password.config.fields.#(name==password).value").String())
 		}
 
-		var values = func(v url.Values) url.Values {
+		var values = func(v url.Values) {
 			v.Del("identifier")
 			v.Set("password", "password")
-			return v
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
-			browserClient := testhelpers.NewClientWithCookies(t)
-			actual := testhelpers.SubmitLoginFormAndExpectValidationError(t, false, browserClient, publicTS, values, identity.CredentialsTypePassword, false, http.StatusOK)
-			check(t, actual)
+			check(t, expectValidationError(t, false, false, values))
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			actual := testhelpers.SubmitLoginFormAndExpectValidationError(t, true, apiClient, publicTS, values, identity.CredentialsTypePassword, false, http.StatusBadRequest)
-			check(t, actual)
+			check(t, expectValidationError(t, true, false, values))
 		})
 	})
 
@@ -249,21 +248,17 @@ func TestCompleteLogin(t *testing.T) {
 			assert.Empty(t, gjson.Get(body, "methods.password.config.fields.#(name==password).value").String())
 		}
 
-		var values = func(v url.Values) url.Values {
+		var values = func(v url.Values) {
 			v.Set("identifier", "identifier")
 			v.Del("password")
-			return v
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
-			browserClient := testhelpers.NewClientWithCookies(t)
-			actual := testhelpers.SubmitLoginFormAndExpectValidationError(t, false, browserClient, publicTS, values, identity.CredentialsTypePassword, false, http.StatusOK)
-			check(t, actual)
+			check(t, expectValidationError(t, false, false, values))
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			actual := testhelpers.SubmitLoginFormAndExpectValidationError(t, true, apiClient, publicTS, values, identity.CredentialsTypePassword, false, http.StatusBadRequest)
-			check(t, actual)
+			check(t, expectValidationError(t, true, false, values))
 		})
 	})
 
@@ -286,21 +281,17 @@ func TestCompleteLogin(t *testing.T) {
 		identifier, pwd := x.NewUUID().String(), "password"
 		createIdentity(identifier, pwd)
 
-		var values = func(v url.Values) url.Values {
+		var values = func(v url.Values) {
 			v.Set("identifier", identifier)
 			v.Set("password", "not-password")
-			return v
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
-			browserClient := testhelpers.NewClientWithCookies(t)
-			actual := testhelpers.SubmitLoginFormAndExpectValidationError(t, false, browserClient, publicTS, values, identity.CredentialsTypePassword, false, http.StatusOK)
-			check(t, actual)
+			check(t, expectValidationError(t, false, false, values))
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			actual := testhelpers.SubmitLoginFormAndExpectValidationError(t, true, apiClient, publicTS, values, identity.CredentialsTypePassword, false, http.StatusBadRequest)
-			check(t, actual)
+			check(t, expectValidationError(t, true, false, values))
 		})
 	})
 
@@ -308,20 +299,17 @@ func TestCompleteLogin(t *testing.T) {
 		identifier, pwd := x.NewUUID().String(), "password"
 		createIdentity(identifier, pwd)
 
-		var values = func(v url.Values) url.Values {
+		var values = func(v url.Values) {
 			v.Set("identifier", identifier)
 			v.Set("password", pwd)
-			return v
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false)
-			c := testhelpers.GetLoginFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
 
-			body, res := testhelpers.LoginMakeRequest(t, false, c, browserClient, values(testhelpers.SDKFormFieldsToURLValues(c.Fields)).Encode())
-			require.EqualValues(t, http.StatusOK, res.StatusCode)
-			require.Contains(t, res.Request.URL.Path, "return-ts", "%s", res.Request.URL.String())
+			body := testhelpers.SubmitLoginForm(t, false, browserClient, publicTS, values,
+				identity.CredentialsTypePassword, false, http.StatusOK, redirTS.URL)
+
 			assert.Equal(t, identifier, gjson.Get(body, "identity.traits.subject").String(), "%s", body)
 
 			t.Run("retry with different refresh", func(t *testing.T) {
@@ -353,7 +341,9 @@ func TestCompleteLogin(t *testing.T) {
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			body := testhelpers.SubmitLoginFormAndExpectValidationError(t, true, apiClient, publicTS, values, identity.CredentialsTypePassword, false, http.StatusOK)
+			body := testhelpers.SubmitLoginForm(t, true, nil, publicTS, values,
+				identity.CredentialsTypePassword, false, http.StatusOK, publicTS.URL+password.RouteLogin)
+
 			assert.Equal(t, identifier, gjson.Get(body, "session.identity.traits.subject").String(), "%s", body)
 			st := gjson.Get(body, "session_token").String()
 			assert.NotEmpty(t, st, "%s", body)

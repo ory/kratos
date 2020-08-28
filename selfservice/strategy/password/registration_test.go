@@ -60,7 +60,7 @@ func formMethodIsPOST(t *testing.T, body []byte) {
 
 func TestRegistration(t *testing.T) {
 	t.Run("case=registration", func(t *testing.T) {
-		_, reg := internal.NewFastRegistryWithMocks(t)
+		conf, reg := internal.NewFastRegistryWithMocks(t)
 
 		router := x.NewRouterPublic()
 		admin := x.NewRouterAdmin()
@@ -176,6 +176,13 @@ func TestRegistration(t *testing.T) {
 			})
 		})
 
+		var expectValidationError = func(t *testing.T, isAPI bool, values func(url.Values)) string {
+			return testhelpers.SubmitRegistrationForm(t, isAPI, nil, publicTS, values,
+				identity.CredentialsTypePassword,
+				testhelpers.ExpectStatusCode(isAPI, http.StatusBadRequest, http.StatusOK),
+				testhelpers.ExpectURL(isAPI, publicTS.URL+password.RouteRegistration, conf.SelfServiceFlowRegistrationUI().String()))
+		}
+
 		t.Run("case=should return an error because the password failed validation", func(t *testing.T) {
 			var check = func(t *testing.T, actual string) {
 				assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)
@@ -184,22 +191,18 @@ func TestRegistration(t *testing.T) {
 				assert.Contains(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).messages.0").String(), "data breaches and must no longer be used.", "%s", actual)
 			}
 
-			var values = func(v url.Values) url.Values {
+			var values = func(v url.Values) {
 				v.Set("traits.username", "registration-identifier-4")
 				v.Set("password", "password")
 				v.Set("traits.foobar", "bar")
-				return v
 			}
 
 			t.Run("type=api", func(t *testing.T) {
-				res := testhelpers.SubmitRegistrationFormAndExpectValidationError(t, true, apiClient, publicTS, values, identity.CredentialsTypePassword, http.StatusBadRequest)
-				check(t, res)
+				check(t, expectValidationError(t, true, values))
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
-				browserClient := testhelpers.NewClientWithCookies(t)
-				res := testhelpers.SubmitRegistrationFormAndExpectValidationError(t, false, browserClient, publicTS, values, identity.CredentialsTypePassword, http.StatusOK)
-				check(t, res)
+				check(t, expectValidationError(t, false, values))
 			})
 		})
 
@@ -211,22 +214,18 @@ func TestRegistration(t *testing.T) {
 				assert.Contains(t, gjson.Get(actual, "methods.password.config.fields.#(name==traits.foobar).messages.0").String(), `Property foobar is missing`, "%s", actual)
 			}
 
-			var values = func(v url.Values) url.Values {
+			var values = func(v url.Values) {
 				v.Set("traits.username", "registration-identifier-5")
 				v.Set("password", x.NewUUID().String())
 				v.Del("traits.foobar")
-				return v
 			}
 
 			t.Run("type=api", func(t *testing.T) {
-				res := testhelpers.SubmitRegistrationFormAndExpectValidationError(t, true, apiClient, publicTS, values, identity.CredentialsTypePassword, http.StatusBadRequest)
-				check(t, res)
+				check(t, expectValidationError(t, true, values))
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
-				browserClient := testhelpers.NewClientWithCookies(t)
-				res := testhelpers.SubmitRegistrationFormAndExpectValidationError(t, false, browserClient, publicTS, values, identity.CredentialsTypePassword, http.StatusOK)
-				check(t, res)
+				check(t, expectValidationError(t, false, values))
 			})
 		})
 
@@ -334,38 +333,47 @@ func TestRegistration(t *testing.T) {
 			})
 		})
 
+		var expectSuccessfulLogin = func(t *testing.T, isAPI bool, hc *http.Client, values func(url.Values)) string {
+			if isAPI {
+				return testhelpers.SubmitRegistrationForm(t, isAPI, hc, publicTS, values,
+					identity.CredentialsTypePassword, http.StatusOK,
+					publicTS.URL+password.RouteRegistration)
+			}
+
+			if hc == nil {
+				hc = testhelpers.NewClientWithCookies(t)
+			}
+
+			return testhelpers.SubmitRegistrationForm(t, isAPI, hc, publicTS, values,
+				identity.CredentialsTypePassword, http.StatusOK,
+				redirTS.URL+"/registration-return-ts")
+		}
+
 		t.Run("case=should pass and set up a session", func(t *testing.T) {
 			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
 			viper.Set(configuration.HookStrategyKey(configuration.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []configuration.SelfServiceHook{{Name: "session"}})
 			defer viper.Set(configuration.HookStrategyKey(configuration.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
 
-			var values = func(isAPI bool) func(v url.Values) url.Values {
-				return func(v url.Values) url.Values {
+			var values = func(isAPI bool) func(v url.Values) {
+				return func(v url.Values) {
 					v.Set("traits.username", "registration-identifier-8-browser")
 					if isAPI {
 						v.Set("traits.username", "registration-identifier-8-api")
 					}
 					v.Set("password", x.NewUUID().String())
 					v.Set("traits.foobar", "bar")
-					return v
 				}
 			}
 
 			t.Run("type=api", func(t *testing.T) {
-				body := testhelpers.SubmitRegistrationFormAndExpectValidationError(t, true, apiClient, publicTS, values(true), identity.CredentialsTypePassword, http.StatusOK)
-
+				body := expectSuccessfulLogin(t, true, nil, values(true))
 				assert.Equal(t, `registration-identifier-8-api`, gjson.Get(body, "identity.traits.username").String(), "%s", body)
 				assert.NotEmpty(t, gjson.Get(body, "session_token").String(), "%s", body)
 				assert.NotEmpty(t, gjson.Get(body, "session.id").String(), "%s", body)
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
-				browserClient := testhelpers.NewClientWithCookies(t)
-				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS)
-				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
-
-				body, res := testhelpers.RegistrationMakeRequest(t, false, c, browserClient, values(false)(testhelpers.SDKFormFieldsToURLValues(c.Fields)).Encode())
-				assert.Contains(t, res.Request.URL.String(), redirTS.URL+"/registration-return-ts")
+				body := expectSuccessfulLogin(t, false, nil, values(false))
 				assert.Equal(t, `registration-identifier-8-browser`, gjson.Get(body, "identity.traits.username").String(), "%s", body)
 			})
 		})
@@ -375,33 +383,29 @@ func TestRegistration(t *testing.T) {
 			viper.Set(configuration.HookStrategyKey(configuration.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []configuration.SelfServiceHook{{Name: "session"}})
 			defer viper.Set(configuration.HookStrategyKey(configuration.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
 
-			var values = func(isAPI bool) func(v url.Values) url.Values {
-				return func(v url.Values) url.Values {
+			var values = func(isAPI bool) func(v url.Values) {
+				return func(v url.Values) {
 					v.Set("traits.username", "registration-identifier-8-browser-duplicate")
 					if isAPI {
 						v.Set("traits.username", "registration-identifier-8-api-duplicate")
 					}
 					v.Set("password", x.NewUUID().String())
 					v.Set("traits.foobar", "bar")
-					return v
 				}
 			}
 
 			t.Run("type=api", func(t *testing.T) {
-				_ = testhelpers.SubmitRegistrationFormAndExpectValidationError(t, true, apiClient, publicTS, values(true), identity.CredentialsTypePassword, http.StatusOK)
-				body := testhelpers.SubmitRegistrationFormAndExpectValidationError(t, true, apiClient, publicTS, values(true), identity.CredentialsTypePassword, http.StatusBadRequest)
+				_ = expectSuccessfulLogin(t, true, apiClient, values(true))
+				body := testhelpers.SubmitRegistrationForm(t, true, apiClient, publicTS, values(true),
+					identity.CredentialsTypePassword, http.StatusBadRequest,
+					publicTS.URL+password.RouteRegistration)
+
 				assert.Contains(t, gjson.Get(body, "methods.password.config.messages.0.text").String(), "An account with the same identifier (email, phone, username, ...) exists already.", "%s", body)
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
-				browserClient := testhelpers.NewClientWithCookies(t)
-				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS)
-				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
-				_, _ = testhelpers.RegistrationMakeRequest(t, false, c, browserClient, values(false)(testhelpers.SDKFormFieldsToURLValues(c.Fields)).Encode())
-
-				// Create identity another time
-				otherBrowser := testhelpers.NewClientWithCookies(t)
-				body := testhelpers.SubmitRegistrationFormAndExpectValidationError(t, false, otherBrowser, publicTS, values(false), identity.CredentialsTypePassword, http.StatusOK)
+				_ = expectSuccessfulLogin(t, false, nil, values(false))
+				body := expectValidationError(t, false, values(false))
 				assert.Contains(t, gjson.Get(body, "methods.password.config.messages.0.text").String(), "An account with the same identifier (email, phone, username, ...) exists already.", "%s", body)
 			})
 		})
@@ -469,32 +473,24 @@ func TestRegistration(t *testing.T) {
 			viper.Set(configuration.HookStrategyKey(configuration.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []configuration.SelfServiceHook{{Name: "session"}})
 			defer viper.Set(configuration.HookStrategyKey(configuration.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
 
-			var values = func(isAPI bool) func(v url.Values) url.Values {
-				return func(v url.Values) url.Values {
+			var values = func(isAPI bool) func(v url.Values) {
+				return func(v url.Values) {
 					v.Set("traits.username", "registration-identifier-10-browser")
 					if isAPI {
 						v.Set("traits.username", "registration-identifier-10-api")
 					}
 					v.Set("password", x.NewUUID().String())
 					v.Set("traits.foobar", "bar")
-					return v
 				}
 			}
 
 			t.Run("type=api", func(t *testing.T) {
-				actual := testhelpers.SubmitRegistrationFormAndExpectValidationError(t, true, apiClient, publicTS, values(true), identity.CredentialsTypePassword, http.StatusOK)
-				assert.NotEmpty(t, gjson.Get(actual, "session_token").String(), "%s", actual)
-				assert.NotEmpty(t, gjson.Get(actual, "session.id").String(), "%s", actual)
+				actual := expectSuccessfulLogin(t, true, nil, values(true))
 				assert.Equal(t, `registration-identifier-10-api`, gjson.Get(actual, "identity.traits.username").String(), "%s", actual)
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
-				browserClient := testhelpers.NewClientWithCookies(t)
-				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS)
-				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
-
-				actual, res := testhelpers.RegistrationMakeRequest(t, false, c, browserClient, values(false)(testhelpers.SDKFormFieldsToURLValues(c.Fields)).Encode())
-				assert.Equal(t, res.Request.URL.String(), redirTS.URL+"/registration-return-ts")
+				actual := expectSuccessfulLogin(t, false, nil, values(false))
 				assert.Equal(t, `registration-identifier-10-browser`, gjson.Get(actual, "identity.traits.username").String(), "%s", actual)
 			})
 		})

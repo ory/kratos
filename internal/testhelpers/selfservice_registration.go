@@ -2,7 +2,6 @@ package testhelpers
 
 import (
 	"bytes"
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -21,7 +20,6 @@ import (
 	"github.com/ory/kratos/internal/httpclient/client/common"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/selfservice/flow/registration"
-	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/x"
 )
 
@@ -82,17 +80,23 @@ func RegistrationMakeRequest(
 	return string(x.MustReadAll(res.Body)), res
 }
 
-// SubmitRegistrationFormAndExpectValidationError initiates a registration flow (for Browser and API!), fills out the form and modifies
-// the form values with `withValues`, and submits the form. If completed, it will return the flow as JSON.
-func SubmitRegistrationFormAndExpectValidationError(
+// SubmitRegistrationForm (for Browser and API!), fills out the form and modifies
+// // the form values with `withValues`, and submits the form. Returns the body and checks for expectedStatusCode and
+// // expectedURL on completion
+func SubmitRegistrationForm(
 	t *testing.T,
 	isAPI bool,
 	hc *http.Client,
 	publicTS *httptest.Server,
-	withValues func(v url.Values) url.Values,
+	withValues func(v url.Values),
 	method identity.CredentialsType,
 	expectedStatusCode int,
+	expectedURL string,
 ) string {
+	if hc == nil {
+		hc = new(http.Client)
+	}
+
 	hc.Transport = NewTransportWithLogger(hc.Transport, t)
 	var payload *models.RegistrationFlow
 	if isAPI {
@@ -104,33 +108,10 @@ func SubmitRegistrationFormAndExpectValidationError(
 	time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
 
 	config := GetRegistrationFlowMethodConfig(t, payload, method.String())
-
-	b, res := RegistrationMakeRequest(t, isAPI, config, hc, EncodeFormAsJSON(t, isAPI,
-		withValues(SDKFormFieldsToURLValues(config.Fields))))
+	values := SDKFormFieldsToURLValues(config.Fields)
+	withValues(values)
+	b, res := RegistrationMakeRequest(t, isAPI, config, hc, EncodeFormAsJSON(t, isAPI, values))
 	assert.EqualValues(t, expectedStatusCode, res.StatusCode, "%s", b)
-
-	expectURL := viper.GetString(configuration.ViperKeySelfServiceRegistrationUI)
-	if isAPI {
-		switch method {
-		case identity.CredentialsTypePassword:
-			expectURL = password.RouteRegistration
-		default:
-			t.Logf("Expected method to be profile ior password but got: %s", method)
-			t.FailNow()
-		}
-	}
-
-	assert.Contains(t, res.Request.URL.String(), expectURL, "%+v\n\t%s", res.Request, b)
-
-	if isAPI {
-		return b
-	}
-
-	rs, err := NewSDKClientFromURL(viper.GetString(configuration.ViperKeyPublicBaseURL)).Common.GetSelfServiceRegistrationFlow(
-		common.NewGetSelfServiceRegistrationFlowParams().WithHTTPClient(hc).WithID(res.Request.URL.Query().Get("flow")))
-	require.NoError(t, err)
-
-	body, err := json.Marshal(rs.Payload)
-	require.NoError(t, err)
-	return string(body)
+	assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, b)
+	return b
 }

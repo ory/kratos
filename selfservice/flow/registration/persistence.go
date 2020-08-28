@@ -120,6 +120,7 @@ func TestFlowPersister(p FlowPersister) func(t *testing.T) {
 
 		t.Run("case=should not cause data loss when updating a request without changes", func(t *testing.T) {
 			expected := newFlow(t)
+			expected.Active = ""
 			err := p.CreateRegistrationFlow(context.Background(), expected)
 			require.NoError(t, err)
 
@@ -132,7 +133,6 @@ func TestFlowPersister(p FlowPersister) func(t *testing.T) {
 			actual, err = p.GetRegistrationFlow(context.Background(), expected.ID)
 			require.NoError(t, err)
 			require.Len(t, actual.Methods, 2)
-			assert.EqualValues(t, identity.CredentialsTypePassword, actual.Active)
 
 			assert.Equal(t,
 				expected.Methods[identity.CredentialsTypePassword].Config.FlowMethodConfigurator.(*form.HTMLForm).Action,
