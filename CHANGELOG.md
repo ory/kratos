@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-08-27)](#unreleased-2020-08-27)
+- [Unreleased (2020-08-28)](#unreleased-2020-08-28)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -102,7 +102,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...be8b9e5f1ca70b1aa06b77bb2ca35644d8cd3c00) (2020-08-27)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...3c8d5e02b04686a1e0bfbd28caa0bc536e3414e4) (2020-08-28)
 
 
 ### Bug Fixes
@@ -134,6 +134,7 @@
 ### Code Refactoring
 
 * Move samesite config to cookie parent-key ([753eb86](https://github.com/ory/kratos/commit/753eb86c904c4af9e7d91e46ff4c836dcce35807))
+* Rename request_lifespan to lifespan ([#677](https://github.com/ory/kratos/issues/677)) ([3c8d5e0](https://github.com/ory/kratos/commit/3c8d5e02b04686a1e0bfbd28caa0bc536e3414e4)), closes [#666](https://github.com/ory/kratos/issues/666)
 * Rename verify to verificaiton ([#597](https://github.com/ory/kratos/issues/597)) ([0ecd69a](https://github.com/ory/kratos/commit/0ecd69a60f741fc334c9b060b6aeaafc39e048b1))
 
 
@@ -219,6 +220,7 @@
 
 ### BREAKING CHANGES
 
+* Configuration items `selfservice.flows.<name>.request_lifespan` have been renamed to `selfservice.flows.<name>.lifespan` to match the new flow semantics.
 * Configuraiton value `session.cookie_same_site` has moved to `session.cookie.same_site`. There was no functional change.
 
 
