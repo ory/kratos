@@ -27,6 +27,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal/httpclient/client"
 	"github.com/ory/kratos/internal/httpclient/client/common"
+	"github.com/ory/kratos/internal/httpclient/client/public"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/x"
@@ -60,10 +61,10 @@ func InitializeSettingsFlowViaBrowser(t *testing.T, client *http.Client, ts *htt
 	return rs
 }
 
-func InitializeSettingsFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *common.InitializeSelfServiceSettingsViaAPIFlowOK {
+func InitializeSettingsFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *public.InitializeSelfServiceSettingsViaAPIFlowOK {
 	publicClient := NewSDKClient(ts)
 
-	rs, err := publicClient.Common.InitializeSelfServiceSettingsViaAPIFlow(common.
+	rs, err := publicClient.Public.InitializeSelfServiceSettingsViaAPIFlow(public.
 		NewInitializeSelfServiceSettingsViaAPIFlowParams().WithHTTPClient(client))
 	require.NoError(t, err)
 	assert.Empty(t, rs.Payload.Active)

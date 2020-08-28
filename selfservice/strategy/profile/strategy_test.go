@@ -30,6 +30,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/httpclient/client/common"
+	"github.com/ory/kratos/internal/httpclient/client/public"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/settings"
@@ -145,8 +146,8 @@ func TestStrategyTraits(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			pr, err := publicClient.Common.InitializeSelfServiceSettingsViaAPIFlow(
-				common.NewInitializeSelfServiceSettingsViaAPIFlowParams().WithHTTPClient(apiUser1))
+			pr, err := publicClient.Public.InitializeSelfServiceSettingsViaAPIFlow(
+				public.NewInitializeSelfServiceSettingsViaAPIFlowParams().WithHTTPClient(apiUser1))
 			require.NoError(t, err)
 			run(t, apiIdentity1, pr.Payload, settings.RouteInitAPIFlow)
 		})

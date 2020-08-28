@@ -19,6 +19,7 @@ import (
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal/httpclient/client/common"
+	"github.com/ory/kratos/internal/httpclient/client/public"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/x"
@@ -66,10 +67,10 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 	return rs
 }
 
-func InitializeLoginFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server, forced bool) *common.InitializeSelfServiceLoginViaAPIFlowOK {
+func InitializeLoginFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server, forced bool) *public.InitializeSelfServiceLoginViaAPIFlowOK {
 	publicClient := NewSDKClient(ts)
 
-	rs, err := publicClient.Common.InitializeSelfServiceLoginViaAPIFlow(common.
+	rs, err := publicClient.Public.InitializeSelfServiceLoginViaAPIFlow(public.
 		NewInitializeSelfServiceLoginViaAPIFlowParams().WithHTTPClient(client).WithRefresh(pointerx.Bool(forced)))
 	require.NoError(t, err)
 	assert.Empty(t, rs.Payload.Active)

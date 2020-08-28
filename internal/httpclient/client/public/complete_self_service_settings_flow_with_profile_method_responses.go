@@ -35,6 +35,24 @@ func (o *CompleteSelfServiceSettingsFlowWithProfileMethodReader) ReadResponse(re
 			return nil, err
 		}
 		return nil, result
+	case 400:
+		result := NewCompleteSelfServiceSettingsFlowWithProfileMethodBadRequest()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 401:
+		result := NewCompleteSelfServiceSettingsFlowWithProfileMethodUnauthorized()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 403:
+		result := NewCompleteSelfServiceSettingsFlowWithProfileMethodForbidden()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	case 500:
 		result := NewCompleteSelfServiceSettingsFlowWithProfileMethodInternalServerError()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
@@ -54,23 +72,23 @@ func NewCompleteSelfServiceSettingsFlowWithProfileMethodOK() *CompleteSelfServic
 
 /*CompleteSelfServiceSettingsFlowWithProfileMethodOK handles this case with default header values.
 
-settingsViaApiResponse
+settingsFlow
 */
 type CompleteSelfServiceSettingsFlowWithProfileMethodOK struct {
-	Payload *models.SettingsViaAPIResponse
+	Payload *models.SettingsFlow
 }
 
 func (o *CompleteSelfServiceSettingsFlowWithProfileMethodOK) Error() string {
 	return fmt.Sprintf("[POST /self-service/settings/methods/profile][%d] completeSelfServiceSettingsFlowWithProfileMethodOK  %+v", 200, o.Payload)
 }
 
-func (o *CompleteSelfServiceSettingsFlowWithProfileMethodOK) GetPayload() *models.SettingsViaAPIResponse {
+func (o *CompleteSelfServiceSettingsFlowWithProfileMethodOK) GetPayload() *models.SettingsFlow {
 	return o.Payload
 }
 
 func (o *CompleteSelfServiceSettingsFlowWithProfileMethodOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.SettingsViaAPIResponse)
+	o.Payload = new(models.SettingsFlow)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
@@ -98,6 +116,105 @@ func (o *CompleteSelfServiceSettingsFlowWithProfileMethodFound) Error() string {
 }
 
 func (o *CompleteSelfServiceSettingsFlowWithProfileMethodFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	return nil
+}
+
+// NewCompleteSelfServiceSettingsFlowWithProfileMethodBadRequest creates a CompleteSelfServiceSettingsFlowWithProfileMethodBadRequest with default headers values
+func NewCompleteSelfServiceSettingsFlowWithProfileMethodBadRequest() *CompleteSelfServiceSettingsFlowWithProfileMethodBadRequest {
+	return &CompleteSelfServiceSettingsFlowWithProfileMethodBadRequest{}
+}
+
+/*CompleteSelfServiceSettingsFlowWithProfileMethodBadRequest handles this case with default header values.
+
+settingsFlow
+*/
+type CompleteSelfServiceSettingsFlowWithProfileMethodBadRequest struct {
+	Payload *models.SettingsFlow
+}
+
+func (o *CompleteSelfServiceSettingsFlowWithProfileMethodBadRequest) Error() string {
+	return fmt.Sprintf("[POST /self-service/settings/methods/profile][%d] completeSelfServiceSettingsFlowWithProfileMethodBadRequest  %+v", 400, o.Payload)
+}
+
+func (o *CompleteSelfServiceSettingsFlowWithProfileMethodBadRequest) GetPayload() *models.SettingsFlow {
+	return o.Payload
+}
+
+func (o *CompleteSelfServiceSettingsFlowWithProfileMethodBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.SettingsFlow)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+		return err
+	}
+
+	return nil
+}
+
+// NewCompleteSelfServiceSettingsFlowWithProfileMethodUnauthorized creates a CompleteSelfServiceSettingsFlowWithProfileMethodUnauthorized with default headers values
+func NewCompleteSelfServiceSettingsFlowWithProfileMethodUnauthorized() *CompleteSelfServiceSettingsFlowWithProfileMethodUnauthorized {
+	return &CompleteSelfServiceSettingsFlowWithProfileMethodUnauthorized{}
+}
+
+/*CompleteSelfServiceSettingsFlowWithProfileMethodUnauthorized handles this case with default header values.
+
+genericError
+*/
+type CompleteSelfServiceSettingsFlowWithProfileMethodUnauthorized struct {
+	Payload *models.GenericError
+}
+
+func (o *CompleteSelfServiceSettingsFlowWithProfileMethodUnauthorized) Error() string {
+	return fmt.Sprintf("[POST /self-service/settings/methods/profile][%d] completeSelfServiceSettingsFlowWithProfileMethodUnauthorized  %+v", 401, o.Payload)
+}
+
+func (o *CompleteSelfServiceSettingsFlowWithProfileMethodUnauthorized) GetPayload() *models.GenericError {
+	return o.Payload
+}
+
+func (o *CompleteSelfServiceSettingsFlowWithProfileMethodUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.GenericError)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+		return err
+	}
+
+	return nil
+}
+
+// NewCompleteSelfServiceSettingsFlowWithProfileMethodForbidden creates a CompleteSelfServiceSettingsFlowWithProfileMethodForbidden with default headers values
+func NewCompleteSelfServiceSettingsFlowWithProfileMethodForbidden() *CompleteSelfServiceSettingsFlowWithProfileMethodForbidden {
+	return &CompleteSelfServiceSettingsFlowWithProfileMethodForbidden{}
+}
+
+/*CompleteSelfServiceSettingsFlowWithProfileMethodForbidden handles this case with default header values.
+
+genericError
+*/
+type CompleteSelfServiceSettingsFlowWithProfileMethodForbidden struct {
+	Payload *models.GenericError
+}
+
+func (o *CompleteSelfServiceSettingsFlowWithProfileMethodForbidden) Error() string {
+	return fmt.Sprintf("[POST /self-service/settings/methods/profile][%d] completeSelfServiceSettingsFlowWithProfileMethodForbidden  %+v", 403, o.Payload)
+}
+
+func (o *CompleteSelfServiceSettingsFlowWithProfileMethodForbidden) GetPayload() *models.GenericError {
+	return o.Payload
+}
+
+func (o *CompleteSelfServiceSettingsFlowWithProfileMethodForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.GenericError)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+		return err
+	}
 
 	return nil
 }

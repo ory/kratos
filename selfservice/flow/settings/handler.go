@@ -103,7 +103,7 @@ func (h *Handler) NewFlow(w http.ResponseWriter, r *http.Request, i *identity.Id
 	return f, nil
 }
 
-// swagger:route GET /self-service/settings/api common public admin initializeSelfServiceSettingsViaAPIFlow
+// swagger:route GET /self-service/settings/api public initializeSelfServiceSettingsViaAPIFlow
 //
 // Initialize Settings Flow for API Clients
 //

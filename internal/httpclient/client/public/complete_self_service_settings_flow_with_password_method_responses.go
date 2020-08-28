@@ -23,8 +23,32 @@ type CompleteSelfServiceSettingsFlowWithPasswordMethodReader struct {
 // ReadResponse reads a server response into the received o.
 func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (interface{}, error) {
 	switch response.Code() {
+	case 200:
+		result := NewCompleteSelfServiceSettingsFlowWithPasswordMethodOK()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return result, nil
 	case 302:
 		result := NewCompleteSelfServiceSettingsFlowWithPasswordMethodFound()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 400:
+		result := NewCompleteSelfServiceSettingsFlowWithPasswordMethodBadRequest()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 401:
+		result := NewCompleteSelfServiceSettingsFlowWithPasswordMethodUnauthorized()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 403:
+		result := NewCompleteSelfServiceSettingsFlowWithPasswordMethodForbidden()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
@@ -39,6 +63,39 @@ func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodReader) ReadResponse(r
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
+}
+
+// NewCompleteSelfServiceSettingsFlowWithPasswordMethodOK creates a CompleteSelfServiceSettingsFlowWithPasswordMethodOK with default headers values
+func NewCompleteSelfServiceSettingsFlowWithPasswordMethodOK() *CompleteSelfServiceSettingsFlowWithPasswordMethodOK {
+	return &CompleteSelfServiceSettingsFlowWithPasswordMethodOK{}
+}
+
+/*CompleteSelfServiceSettingsFlowWithPasswordMethodOK handles this case with default header values.
+
+settingsViaApiResponse
+*/
+type CompleteSelfServiceSettingsFlowWithPasswordMethodOK struct {
+	Payload *models.SettingsViaAPIResponse
+}
+
+func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodOK) Error() string {
+	return fmt.Sprintf("[POST /self-service/settings/methods/password][%d] completeSelfServiceSettingsFlowWithPasswordMethodOK  %+v", 200, o.Payload)
+}
+
+func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodOK) GetPayload() *models.SettingsViaAPIResponse {
+	return o.Payload
+}
+
+func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.SettingsViaAPIResponse)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+		return err
+	}
+
+	return nil
 }
 
 // NewCompleteSelfServiceSettingsFlowWithPasswordMethodFound creates a CompleteSelfServiceSettingsFlowWithPasswordMethodFound with default headers values
@@ -59,6 +116,105 @@ func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodFound) Error() string 
 }
 
 func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	return nil
+}
+
+// NewCompleteSelfServiceSettingsFlowWithPasswordMethodBadRequest creates a CompleteSelfServiceSettingsFlowWithPasswordMethodBadRequest with default headers values
+func NewCompleteSelfServiceSettingsFlowWithPasswordMethodBadRequest() *CompleteSelfServiceSettingsFlowWithPasswordMethodBadRequest {
+	return &CompleteSelfServiceSettingsFlowWithPasswordMethodBadRequest{}
+}
+
+/*CompleteSelfServiceSettingsFlowWithPasswordMethodBadRequest handles this case with default header values.
+
+settingsFlow
+*/
+type CompleteSelfServiceSettingsFlowWithPasswordMethodBadRequest struct {
+	Payload *models.SettingsFlow
+}
+
+func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodBadRequest) Error() string {
+	return fmt.Sprintf("[POST /self-service/settings/methods/password][%d] completeSelfServiceSettingsFlowWithPasswordMethodBadRequest  %+v", 400, o.Payload)
+}
+
+func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodBadRequest) GetPayload() *models.SettingsFlow {
+	return o.Payload
+}
+
+func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.SettingsFlow)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+		return err
+	}
+
+	return nil
+}
+
+// NewCompleteSelfServiceSettingsFlowWithPasswordMethodUnauthorized creates a CompleteSelfServiceSettingsFlowWithPasswordMethodUnauthorized with default headers values
+func NewCompleteSelfServiceSettingsFlowWithPasswordMethodUnauthorized() *CompleteSelfServiceSettingsFlowWithPasswordMethodUnauthorized {
+	return &CompleteSelfServiceSettingsFlowWithPasswordMethodUnauthorized{}
+}
+
+/*CompleteSelfServiceSettingsFlowWithPasswordMethodUnauthorized handles this case with default header values.
+
+genericError
+*/
+type CompleteSelfServiceSettingsFlowWithPasswordMethodUnauthorized struct {
+	Payload *models.GenericError
+}
+
+func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodUnauthorized) Error() string {
+	return fmt.Sprintf("[POST /self-service/settings/methods/password][%d] completeSelfServiceSettingsFlowWithPasswordMethodUnauthorized  %+v", 401, o.Payload)
+}
+
+func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodUnauthorized) GetPayload() *models.GenericError {
+	return o.Payload
+}
+
+func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.GenericError)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+		return err
+	}
+
+	return nil
+}
+
+// NewCompleteSelfServiceSettingsFlowWithPasswordMethodForbidden creates a CompleteSelfServiceSettingsFlowWithPasswordMethodForbidden with default headers values
+func NewCompleteSelfServiceSettingsFlowWithPasswordMethodForbidden() *CompleteSelfServiceSettingsFlowWithPasswordMethodForbidden {
+	return &CompleteSelfServiceSettingsFlowWithPasswordMethodForbidden{}
+}
+
+/*CompleteSelfServiceSettingsFlowWithPasswordMethodForbidden handles this case with default header values.
+
+genericError
+*/
+type CompleteSelfServiceSettingsFlowWithPasswordMethodForbidden struct {
+	Payload *models.GenericError
+}
+
+func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodForbidden) Error() string {
+	return fmt.Sprintf("[POST /self-service/settings/methods/password][%d] completeSelfServiceSettingsFlowWithPasswordMethodForbidden  %+v", 403, o.Payload)
+}
+
+func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodForbidden) GetPayload() *models.GenericError {
+	return o.Payload
+}
+
+func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.GenericError)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+		return err
+	}
 
 	return nil
 }

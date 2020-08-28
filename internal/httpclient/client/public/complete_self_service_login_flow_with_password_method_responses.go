@@ -115,23 +115,23 @@ func NewCompleteSelfServiceLoginFlowWithPasswordMethodBadRequest() *CompleteSelf
 
 /*CompleteSelfServiceLoginFlowWithPasswordMethodBadRequest handles this case with default header values.
 
-genericError
+loginFlow
 */
 type CompleteSelfServiceLoginFlowWithPasswordMethodBadRequest struct {
-	Payload *models.GenericError
+	Payload *models.LoginFlow
 }
 
 func (o *CompleteSelfServiceLoginFlowWithPasswordMethodBadRequest) Error() string {
 	return fmt.Sprintf("[GET /self-service/login/methods/password][%d] completeSelfServiceLoginFlowWithPasswordMethodBadRequest  %+v", 400, o.Payload)
 }
 
-func (o *CompleteSelfServiceLoginFlowWithPasswordMethodBadRequest) GetPayload() *models.GenericError {
+func (o *CompleteSelfServiceLoginFlowWithPasswordMethodBadRequest) GetPayload() *models.LoginFlow {
 	return o.Payload
 }
 
 func (o *CompleteSelfServiceLoginFlowWithPasswordMethodBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GenericError)
+	o.Payload = new(models.LoginFlow)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

@@ -54,23 +54,23 @@ func NewInitializeSelfServiceRecoveryViaAPIFlowOK() *InitializeSelfServiceRecove
 
 /*InitializeSelfServiceRecoveryViaAPIFlowOK handles this case with default header values.
 
-loginFlow
+recoveryFlow
 */
 type InitializeSelfServiceRecoveryViaAPIFlowOK struct {
-	Payload *models.LoginFlow
+	Payload *models.RecoveryFlow
 }
 
 func (o *InitializeSelfServiceRecoveryViaAPIFlowOK) Error() string {
 	return fmt.Sprintf("[GET /self-service/recovery/api][%d] initializeSelfServiceRecoveryViaApiFlowOK  %+v", 200, o.Payload)
 }
 
-func (o *InitializeSelfServiceRecoveryViaAPIFlowOK) GetPayload() *models.LoginFlow {
+func (o *InitializeSelfServiceRecoveryViaAPIFlowOK) GetPayload() *models.RecoveryFlow {
 	return o.Payload
 }
 
 func (o *InitializeSelfServiceRecoveryViaAPIFlowOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.LoginFlow)
+	o.Payload = new(models.RecoveryFlow)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

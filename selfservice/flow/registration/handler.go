@@ -78,7 +78,7 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 	return a, nil
 }
 
-// swagger:route GET /self-service/registration/api common public admin initializeSelfServiceRegistrationViaAPIFlow
+// swagger:route GET /self-service/registration/api public initializeSelfServiceRegistrationViaAPIFlow
 //
 // Initialize Registration Flow for API clients
 //

@@ -728,9 +728,7 @@
           "https"
         ],
         "tags": [
-          "common",
-          "public",
-          "admin"
+          "public"
         ],
         "summary": "Initialize Login Flow for API clients",
         "operationId": "initializeSelfServiceLoginViaAPIFlow",
@@ -906,9 +904,9 @@
             "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
           },
           "400": {
-            "description": "genericError",
+            "description": "loginFlow",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/loginFlow"
             }
           },
           "500": {
@@ -930,13 +928,13 @@
         "tags": [
           "public"
         ],
-        "summary": "Initialize Login Flow for API Clients",
+        "summary": "Initialize Recovery Flow for API Clients",
         "operationId": "initializeSelfServiceRecoveryViaAPIFlow",
         "responses": {
           "200": {
-            "description": "loginFlow",
+            "description": "recoveryFlow",
             "schema": {
-              "$ref": "#/definitions/loginFlow"
+              "$ref": "#/definitions/recoveryFlow"
             }
           },
           "400": {
@@ -1035,9 +1033,13 @@
     },
     "/self-service/recovery/methods/link": {
       "post": {
-        "description": "\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).",
+        "description": "Use this endpoint to complete a recovery flow using the link method. This endpoint\nbehaves differently for API and browser flows and has several states:\n\n`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent\nand works with API- and Browser-initiated flows.\nFor API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid\nand a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).\nFor Browser clients it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.\n`sent_email` is the success state after `choose_method` and allows the user to request another recovery email. It\nworks for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.\n`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow (\"sending a recovery link\")\ndoes not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL\n(if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with\na new Recovery Flow ID which contains an error message that the recovery link was invalid.\n\nMore information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).",
         "consumes": [
+          "application/json",
           "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -1046,15 +1048,14 @@
         "tags": [
           "public"
         ],
-        "summary": "Complete the browser-based recovery flow using a recovery link",
+        "summary": "Complete Recovery Flow with Link Method",
         "operationId": "completeSelfServiceRecoveryFlowWithLinkMethod",
         "parameters": [
           {
-            "description": "Email to Recover\n\nNeeds to be set when initiating the flow. If the email is a registered\nrecovery email, a recovery link will be sent. If the email is not known,\na email with details on what happened will be sent instead.",
-            "name": "email",
+            "name": "Body",
             "in": "body",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/completeSelfServiceRecoveryFlowWithLinkMethodBody"
             }
           },
           {
@@ -1065,14 +1066,26 @@
           },
           {
             "type": "string",
-            "description": "The Flow ID",
+            "description": "The Flow ID\n\nformat: uuid",
             "name": "flow",
             "in": "query"
           }
         ],
         "responses": {
+          "200": {
+            "description": "recoveryFlow",
+            "schema": {
+              "$ref": "#/definitions/recoveryFlow"
+            }
+          },
           "302": {
             "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+          },
+          "400": {
+            "description": "recoveryFlow",
+            "schema": {
+              "$ref": "#/definitions/recoveryFlow"
+            }
           },
           "500": {
             "description": "genericError",
@@ -1091,9 +1104,7 @@
           "https"
         ],
         "tags": [
-          "common",
-          "public",
-          "admin"
+          "public"
         ],
         "summary": "Initialize Registration Flow for API clients",
         "operationId": "initializeSelfServiceRegistrationViaAPIFlow",
@@ -1206,7 +1217,7 @@
     },
     "/self-service/registration/methods/password": {
       "post": {
-        "description": "Use this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint\nbehaves differently for API and browser flows.\n\nAPI flows expect `application/json` to be sent in the body and responds with\nHTTP 200 and a application/json body with the created identity success - if the session hook is configured the\n`session` and `session_token` will also be included;\nHTTP 302 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nBrowser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with\na HTTP 302 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;\na HTTP 302 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
+        "description": "Use this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint\nbehaves differently for API and browser flows.\n\nAPI flows expect `application/json` to be sent in the body and respond with\nHTTP 200 and a application/json body with the created identity success - if the session hook is configured the\n`session` and `session_token` will also be included;\nHTTP 302 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\n\nBrowser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with\na HTTP 302 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;\na HTTP 302 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.\n\nMore information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).",
         "consumes": [
           "application/json",
           "application/x-www-form-urlencoded"
@@ -1250,9 +1261,9 @@
             "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
           },
           "400": {
-            "description": "genericError",
+            "description": "registrationFlow",
             "schema": {
-              "$ref": "#/definitions/genericError"
+              "$ref": "#/definitions/registrationFlow"
             }
           },
           "500": {
@@ -1272,9 +1283,7 @@
           "https"
         ],
         "tags": [
-          "common",
-          "public",
-          "admin"
+          "public"
         ],
         "summary": "Initialize Settings Flow for API Clients",
         "operationId": "initializeSelfServiceSettingsViaAPIFlow",
@@ -1387,10 +1396,13 @@
     },
     "/self-service/settings/methods/password": {
       "post": {
-        "description": "This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this\nendpoint.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
+        "description": "Use this endpoint to complete a settings flow by sending an identity's updated password. This endpoint\nbehaves differently for API and browser flows.\n\nAPI-initiated flows expect `application/json` to be sent in the body and respond with\nHTTP 200 and an application/json body with the session token on success;\nHTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\nHTTP 401 when the endpoint is called without a valid session token.\nHTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached.\nImplies that the user needs to re-authenticate.\n\nBrowser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with\na HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;\na HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.\na HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
         "consumes": [
           "application/json",
           "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -1399,7 +1411,7 @@
         "tags": [
           "public"
         ],
-        "summary": "Complete the browser-based settings flow for the password strategy",
+        "summary": "Complete Settings Flow with Username/Email Password Method",
         "operationId": "completeSelfServiceSettingsFlowWithPasswordMethod",
         "parameters": [
           {
@@ -1417,8 +1429,32 @@
           }
         ],
         "responses": {
+          "200": {
+            "description": "settingsViaApiResponse",
+            "schema": {
+              "$ref": "#/definitions/settingsViaApiResponse"
+            }
+          },
           "302": {
             "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+          },
+          "400": {
+            "description": "settingsFlow",
+            "schema": {
+              "$ref": "#/definitions/settingsFlow"
+            }
+          },
+          "401": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "403": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
           },
           "500": {
             "description": "genericError",
@@ -1431,10 +1467,13 @@
     },
     "/self-service/settings/methods/profile": {
       "post": {
-        "description": "This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this\nendpoint.\n\nIf the provided profile data is valid against the Identity's Traits JSON Schema, the data will be updated and\nthe browser redirected to `url.settings_ui` for further steps.\n\n\u003e This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
+        "description": "Use this endpoint to complete a settings flow by sending an identity's updated traits. This endpoint\nbehaves differently for API and browser flows.\n\nAPI-initiated flows expect `application/json` to be sent in the body and respond with\nHTTP 200 and an application/json body with the session token on success;\nHTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;\nHTTP 400 on form validation errors.\nHTTP 401 when the endpoint is called without a valid session token.\nHTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached and a sensitive field was\nupdated (e.g. recovery email). Implies that the user needs to re-authenticate.\n\nBrowser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with\na HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;\na HTTP 302 redirect to the settings UI URL with the flow ID containing the validation errors otherwise.\na HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.\n\nMore information can be found at [ORY Kratos User Settings \u0026 Profile Management Documentation](../self-service/flows/user-settings).",
         "consumes": [
           "application/json",
           "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -1443,17 +1482,35 @@
         "tags": [
           "public"
         ],
-        "summary": "Complete the browser-based settings flow for profile data",
+        "summary": "Complete Settings Flow with Profile Method",
         "operationId": "completeSelfServiceSettingsFlowWithProfileMethod",
         "responses": {
           "200": {
-            "description": "settingsViaApiResponse",
+            "description": "settingsFlow",
             "schema": {
-              "$ref": "#/definitions/settingsViaApiResponse"
+              "$ref": "#/definitions/settingsFlow"
             }
           },
           "302": {
             "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+          },
+          "400": {
+            "description": "settingsFlow",
+            "schema": {
+              "$ref": "#/definitions/settingsFlow"
+            }
+          },
+          "401": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
+          },
+          "403": {
+            "description": "genericError",
+            "schema": {
+              "$ref": "#/definitions/genericError"
+            }
           },
           "500": {
             "description": "genericError",
@@ -1750,6 +1807,19 @@
     },
     "VerifiableAddressType": {
       "type": "string"
+    },
+    "completeSelfServiceRecoveryFlowWithLinkMethodBody": {
+      "type": "object",
+      "properties": {
+        "csrf_token": {
+          "description": "Sending the anti-csrf token is only required for browser login flows.",
+          "type": "string"
+        },
+        "email": {
+          "description": "Email to Recover\n\nNeeds to be set when initiating the flow. If the email is a registered\nrecovery email, a recovery link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email\nin: body",
+          "type": "string"
+        }
+      }
     },
     "errorContainer": {
       "type": "object",

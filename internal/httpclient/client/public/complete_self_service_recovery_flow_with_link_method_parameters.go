@@ -14,6 +14,8 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+
+	"github.com/ory/kratos/internal/httpclient/models"
 )
 
 // NewCompleteSelfServiceRecoveryFlowWithLinkMethodParams creates a new CompleteSelfServiceRecoveryFlowWithLinkMethodParams object
@@ -60,17 +62,12 @@ for the complete self service recovery flow with link method operation typically
 */
 type CompleteSelfServiceRecoveryFlowWithLinkMethodParams struct {
 
-	/*Email
-	  Email to Recover
-
-	Needs to be set when initiating the flow. If the email is a registered
-	recovery email, a recovery link will be sent. If the email is not known,
-	a email with details on what happened will be sent instead.
-
-	*/
-	Email string
+	/*Body*/
+	Body *models.CompleteSelfServiceRecoveryFlowWithLinkMethodBody
 	/*Flow
 	  The Flow ID
+
+	format: uuid
 
 	*/
 	Flow *string
@@ -121,15 +118,15 @@ func (o *CompleteSelfServiceRecoveryFlowWithLinkMethodParams) SetHTTPClient(clie
 	o.HTTPClient = client
 }
 
-// WithEmail adds the email to the complete self service recovery flow with link method params
-func (o *CompleteSelfServiceRecoveryFlowWithLinkMethodParams) WithEmail(email string) *CompleteSelfServiceRecoveryFlowWithLinkMethodParams {
-	o.SetEmail(email)
+// WithBody adds the body to the complete self service recovery flow with link method params
+func (o *CompleteSelfServiceRecoveryFlowWithLinkMethodParams) WithBody(body *models.CompleteSelfServiceRecoveryFlowWithLinkMethodBody) *CompleteSelfServiceRecoveryFlowWithLinkMethodParams {
+	o.SetBody(body)
 	return o
 }
 
-// SetEmail adds the email to the complete self service recovery flow with link method params
-func (o *CompleteSelfServiceRecoveryFlowWithLinkMethodParams) SetEmail(email string) {
-	o.Email = email
+// SetBody adds the body to the complete self service recovery flow with link method params
+func (o *CompleteSelfServiceRecoveryFlowWithLinkMethodParams) SetBody(body *models.CompleteSelfServiceRecoveryFlowWithLinkMethodBody) {
+	o.Body = body
 }
 
 // WithFlow adds the flow to the complete self service recovery flow with link method params
@@ -162,8 +159,10 @@ func (o *CompleteSelfServiceRecoveryFlowWithLinkMethodParams) WriteToRequest(r r
 	}
 	var res []error
 
-	if err := r.SetBodyParam(o.Email); err != nil {
-		return err
+	if o.Body != nil {
+		if err := r.SetBodyParam(o.Body); err != nil {
+			return err
+		}
 	}
 
 	if o.Flow != nil {

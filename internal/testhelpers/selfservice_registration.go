@@ -18,6 +18,7 @@ import (
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal/httpclient/client/common"
+	"github.com/ory/kratos/internal/httpclient/client/public"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/x"
@@ -48,8 +49,8 @@ func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts 
 	return rs
 }
 
-func InitializeRegistrationFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *common.InitializeSelfServiceRegistrationViaAPIFlowOK {
-	rs, err := NewSDKClient(ts).Common.InitializeSelfServiceRegistrationViaAPIFlow(common.
+func InitializeRegistrationFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *public.InitializeSelfServiceRegistrationViaAPIFlowOK {
+	rs, err := NewSDKClient(ts).Public.InitializeSelfServiceRegistrationViaAPIFlow(public.
 		NewInitializeSelfServiceRegistrationViaAPIFlowParams().WithHTTPClient(client))
 	require.NoError(t, err)
 	assert.Empty(t, rs.Payload.Active)

@@ -22,6 +22,7 @@ import (
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal/httpclient/client/common"
+	"github.com/ory/kratos/internal/httpclient/client/public"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/x"
@@ -86,7 +87,7 @@ func RecoverySubmitForm(
 
 	b, err := ioutil.ReadAll(res.Body)
 	require.NoError(t, err)
-	assert.EqualValues(t, http.StatusNoContent, res.StatusCode, "%s", b)
+	assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", b)
 
 	assert.Equal(t, viper.GetString(configuration.ViperKeySelfServiceRecoveryUI), res.Request.URL.Scheme+"://"+res.Request.URL.Host+res.Request.URL.Path, "should end up at the settings URL, used: %s", pointerx.StringR(f.Action))
 
@@ -116,16 +117,16 @@ func InitializeRecoveryFlowViaBrowser(t *testing.T, client *http.Client, ts *htt
 	return rs
 }
 
-// func InitializeRecoveryFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *common.InitializeSelfServiceRecoveryViaAPIFlowOK {
-// 	publicClient := NewSDKClient(ts)
-//
-// 	rs, err := publicClient.Common.InitializeSelfServiceRecoveryViaAPIFlow(common.
-// 		NewInitializeSelfServiceRecoveryViaAPIFlowParams().WithHTTPClient(client).WithRefresh(pointerx.Bool(forced)))
-// 	require.NoError(t, err)
-// 	assert.Empty(t, rs.Payload.Active)
-//
-// 	return rs
-// }
+func InitializeRecoveryFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *public.InitializeSelfServiceRecoveryViaAPIFlowOK {
+	publicClient := NewSDKClient(ts)
+
+	rs, err := publicClient.Public.InitializeSelfServiceRecoveryViaAPIFlow(public.
+		NewInitializeSelfServiceRecoveryViaAPIFlowParams().WithHTTPClient(client))
+	require.NoError(t, err)
+	assert.Empty(t, rs.Payload.Active)
+
+	return rs
+}
 
 func GetRecoveryFlowMethodConfig(t *testing.T, rs *models.RecoveryFlow, id string) *models.RecoveryFlowMethodConfig {
 	require.NotEmpty(t, rs.Methods[id])
@@ -165,8 +166,7 @@ func SubmitRecoveryForm(
 	hc.Transport = NewTransportWithLogger(hc.Transport, t)
 	var f *models.RecoveryFlow
 	if isAPI {
-		// f = InitializeRecoveryFlowViaAPI(t, hc, publicTS).Payload
-		panic("asdf")
+		f = InitializeRecoveryFlowViaAPI(t, hc, publicTS).Payload
 	} else {
 		f = InitializeRecoveryFlowViaBrowser(t, hc, publicTS).Payload
 	}

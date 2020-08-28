@@ -61,7 +61,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 
 // swagger:route GET /self-service/recovery/api public initializeSelfServiceRecoveryViaAPIFlow
 //
-// Initialize Login Flow for API Clients
+// Initialize Recovery Flow for API Clients
 //
 // This endpoint initiates a recovery flow for API clients such as mobile devices, smart TVs, and so on.
 //
@@ -87,7 +87,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //     - sessionToken
 //
 //     Responses:
-//       200: loginFlow
+//       200: recoveryFlow
 //       500: genericError
 //       400: genericError
 func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

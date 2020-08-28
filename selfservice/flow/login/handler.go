@@ -88,7 +88,7 @@ type initializeSelfServiceBrowserLoginFlow struct {
 	Refresh bool `json:"refresh"`
 }
 
-// swagger:route GET /self-service/login/api common public admin initializeSelfServiceLoginViaAPIFlow
+// swagger:route GET /self-service/login/api public initializeSelfServiceLoginViaAPIFlow
 //
 // Initialize Login Flow for API clients
 //
