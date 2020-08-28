@@ -41,10 +41,10 @@ selfservice:
 
     login:
       ui_url: http://127.0.0.1:4455/auth/login
-      request_lifespan: 10m
+      lifespan: 10m
 
     registration:
-      request_lifespan: 10m
+      lifespan: 10m
       ui_url: http://127.0.0.1:4455/auth/registration
       after:
         password:

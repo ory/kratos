@@ -322,7 +322,7 @@
     },
     "/metrics/prometheus": {
       "get": {
-        "description": "```\nmetadata:\nannotations:\nprometheus.io/port: \"4445\"\nprometheus.io/path: \"/metrics/prometheus\"\n```",
+        "description": "```\nmetadata:\nannotations:\nprometheus.io/port: \"4434\"\nprometheus.io/path: \"/metrics/prometheus\"\n```",
         "produces": [
           "plain/text"
         ],
@@ -367,7 +367,7 @@
               ],
               "properties": {
                 "expires_in": {
-                  "description": "Link Expires In\n\nThe recovery link will expire at that point in time. Defaults to the configuration value of\n`selfservice.flows.recovery.request_lifespan`.",
+                  "description": "Link Expires In\n\nThe recovery link will expire at that point in time. Defaults to the configuration value of\n`selfservice.flows.recovery.lifespan`.",
                   "type": "string",
                   "pattern": "^[0-9]+(ns|us|ms|s|m|h)$"
                 },
