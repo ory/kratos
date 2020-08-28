@@ -76,8 +76,9 @@ func (p *Persister) CreateRecoveryToken(ctx context.Context, token *link.Token) 
 }
 
 func (p *Persister) UseRecoveryToken(ctx context.Context, token string) (*link.Token, error) {
+	var err error
 	rt := new(link.Token)
-	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
+	if err = sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
 		for _, secret := range p.cf.SecretsSession() {
 			if err = tx.Eager().Where("token = ? AND NOT used", p.hmacValueWithSecret(token, secret)).First(rt); err != nil {
 				if !errors.Is(sqlcon.HandleError(err), sqlcon.ErrNoRows) {
@@ -95,6 +96,11 @@ func (p *Persister) UseRecoveryToken(ctx context.Context, token string) (*link.T
 	})); err != nil {
 		return nil, err
 	}
+
+	if rt.Request, err = p.GetRecoveryFlow(ctx, rt.RequestID); err != nil {
+		return nil, err
+	}
+
 	return rt, nil
 }
 

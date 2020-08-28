@@ -130,7 +130,6 @@ func TestRequestPersister(p interface {
 			actual, err = p.GetRecoveryFlow(context.Background(), expected.ID)
 			require.NoError(t, err)
 			require.Len(t, actual.Methods, 1)
-			assert.EqualValues(t, StrategyRecoveryTokenName, actual.Active)
 
 			js, _ := json.Marshal(actual.Methods)
 			assert.Equal(t, expected.Methods[StrategyRecoveryTokenName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action,

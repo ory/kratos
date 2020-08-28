@@ -170,7 +170,7 @@ func TestPersister(t *testing.T) {
 				pop.SetLogger(pl(t))
 				recovery.TestRequestPersister(p)(t)
 			})
-			t.Run("contract=recovery.TestPersister", func(t *testing.T) {
+			t.Run("contract=link.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
 				link.TestPersister(p)(t)
 			})

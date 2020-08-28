@@ -184,7 +184,6 @@ func TestFlowPersister(p FlowPersister) func(t *testing.T) {
 			actual, err = p.GetLoginFlow(context.Background(), expected.ID)
 			require.NoError(t, err)
 			require.Len(t, actual.Methods, 2)
-			assert.EqualValues(t, identity.CredentialsTypePassword, actual.Active)
 
 			assert.Equal(t,
 				expected.Methods[identity.CredentialsTypePassword].Config.FlowMethodConfigurator.(*form.HTMLForm).Action,

@@ -94,6 +94,13 @@ func ExpectStatusCode(isAPI bool, api, browser int) int {
 	return browser
 }
 
+func ExpectURL(isAPI bool, api, browser string) string {
+	if isAPI {
+		return api
+	}
+	return browser
+}
+
 func GetSettingsFlowMethodConfig(t *testing.T, rs *models.SettingsFlow, id string) *models.FlowMethodConfig {
 	require.NotEmpty(t, rs.Methods[id])
 	require.NotEmpty(t, rs.Methods[id].Config)
