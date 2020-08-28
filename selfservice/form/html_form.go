@@ -162,8 +162,8 @@ func (c *HTMLForm) ParseError(err error) error {
 		return err
 	} else if e := new(schema.ValidationError); errors.As(err, &e) {
 		pointer, _ := jsonschemax.JSONPointerToDotNotation(e.InstancePtr)
-		for _, message := range e.Messages {
-			c.AddMessage(&message, pointer)
+		for i := range e.Messages {
+			c.AddMessage(&e.Messages[i], pointer)
 		}
 		return nil
 	} else if e := new(jsonschema.ValidationError); errors.As(err, &e) {

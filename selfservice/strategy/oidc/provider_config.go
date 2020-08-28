@@ -66,7 +66,8 @@ type ConfigurationCollection struct {
 }
 
 func (c ConfigurationCollection) Provider(id string, public *url.URL) (Provider, error) {
-	for _, p := range c.Providers {
+	for k := range c.Providers {
+		p := c.Providers[k]
 		if p.ID == id {
 			switch p.Provider {
 			case "generic":

@@ -50,7 +50,7 @@ Use -w or --write to write output back to files instead of stdout.
 				cmdx.Must(err, `JSONNet file "%s" could not be formatted: %s`, file, err)
 
 				if shouldWrite {
-					err := ioutil.WriteFile(file, []byte(output), 0644)
+					err := ioutil.WriteFile(file, []byte(output), 0644) // #nosec
 					cmdx.Must(err, `Could not write to file "%s" because: %s`, file, err)
 				} else {
 					fmt.Println(output)

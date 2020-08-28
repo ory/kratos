@@ -89,7 +89,7 @@ type completeSelfServiceLoginFlowWithPasswordMethod struct {
 //     Responses:
 //       200: loginViaApiResponse
 //       302: emptyResponse
-//       400: genericError
+//       400: loginFlow
 //       500: genericError
 func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	rid := x.ParseUUID(r.URL.Query().Get("flow"))

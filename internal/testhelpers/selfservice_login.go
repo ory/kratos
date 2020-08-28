@@ -35,6 +35,15 @@ func NewLoginUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Serve
 	return ts
 }
 
+func NewLoginUIWith401Response(t *testing.T) *httptest.Server {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusUnauthorized)
+	}))
+	viper.Set(configuration.ViperKeySelfServiceLoginUI, ts.URL+"/login-ts")
+	t.Cleanup(ts.Close)
+	return ts
+}
+
 func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, forced bool) *common.GetSelfServiceLoginFlowOK {
 	publicClient := NewSDKClient(ts)
 

@@ -122,15 +122,23 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 
 // swagger:route POST /self-service/settings/methods/profile public completeSelfServiceSettingsFlowWithProfileMethod
 //
-// Complete the browser-based settings flow for profile data
+// Complete Settings Flow with Profile Method
 //
-// This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this
-// endpoint.
+// Use this endpoint to complete a settings flow by sending an identity's updated traits. This endpoint
+// behaves differently for API and browser flows.
 //
-// If the provided profile data is valid against the Identity's Traits JSON Schema, the data will be updated and
-// the browser redirected to `url.settings_ui` for further steps.
+// API-initiated flows expect `application/json` to be sent in the body and respond with
+//   - HTTP 200 and an application/json body with the session token on success;
+//   - HTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
+//   - HTTP 400 on form validation errors.
+//   - HTTP 401 when the endpoint is called without a valid session token.
+//   - HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached and a sensitive field was
+// 	   updated (e.g. recovery email). Implies that the user needs to re-authenticate.
 //
-// > This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
+// Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
+//   - a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
+//   - a HTTP 302 redirect to the settings UI URL with the flow ID containing the validation errors otherwise.
+//   - a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.
 //
 // More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
@@ -138,11 +146,21 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 //     - application/json
 //     - application/x-www-form-urlencoded
 //
+//     Produces:
+//     - application/json
+//
+//     Security:
+//     - sessionToken
+//
 //     Schemes: http, https
 //
 //     Responses:
 //       200: settingsViaApiResponse
+//       200: settingsFlow
 //       302: emptyResponse
+//       400: settingsFlow
+//       401: genericError
+//       403: genericError
 //       500: genericError
 func (s *Strategy) handleSubmit(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var p SettingsFlowPayload

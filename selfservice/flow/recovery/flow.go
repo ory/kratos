@@ -118,10 +118,6 @@ func (f Flow) TableName() string {
 	return "selfservice_recovery_flows"
 }
 
-func (f *Flow) URL(recoveryURL *url.URL) *url.URL {
-	return urlx.CopyWithQuery(recoveryURL, url.Values{"request": {f.ID.String()}})
-}
-
 func (f *Flow) GetID() uuid.UUID {
 	return f.ID
 }

@@ -36,6 +36,7 @@ func (s *Strategy) SettingsStrategyID() string {
 	return identity.CredentialsTypePassword.String()
 }
 
+// nolint:deadcode,unused
 // swagger:parameters completeSelfServiceSettingsFlowWithPasswordMethod
 type completeSelfServiceSettingsFlowWithPasswordMethod struct {
 	// in: body
@@ -75,12 +76,23 @@ func (p *SettingsFlowPayload) SetFlowID(rid uuid.UUID) {
 
 // swagger:route POST /self-service/settings/methods/password public completeSelfServiceSettingsFlowWithPasswordMethod
 //
-// Complete the browser-based settings flow for the password strategy
+// Complete Settings Flow with Username/Email Password Method
 //
-// This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this
-// endpoint.
+// Use this endpoint to complete a settings flow by sending an identity's updated password. This endpoint
+// behaves differently for API and browser flows.
 //
-// > This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
+// API-initiated flows expect `application/json` to be sent in the body and respond with
+//   - HTTP 200 and an application/json body with the session token on success;
+//   - HTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
+//   - HTTP 400 on form validation errors.
+//   - HTTP 401 when the endpoint is called without a valid session token.
+//   - HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached.
+//     Implies that the user needs to re-authenticate.
+//
+// Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
+//   - a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
+//   - a HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
+//   - a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.
 //
 // More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
@@ -88,10 +100,20 @@ func (p *SettingsFlowPayload) SetFlowID(rid uuid.UUID) {
 //     - application/json
 //     - application/x-www-form-urlencoded
 //
+//     Produces:
+//     - application/json
+//
+//     Security:
+//     - sessionToken
+//
 //     Schemes: http, https
 //
 //     Responses:
+//       200: settingsViaApiResponse
 //       302: emptyResponse
+//       400: settingsFlow
+//       401: genericError
+//       403: genericError
 //       500: genericError
 func (s *Strategy) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var p SettingsFlowPayload

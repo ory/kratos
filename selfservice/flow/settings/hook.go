@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
@@ -64,6 +65,14 @@ func PostHookPostPersistExecutorNames(e []PostHookPostPersistExecutor) []string 
 	return names
 }
 
+func PostHookPrePersistExecutorNames(e []PostHookPrePersistExecutor) []string {
+	names := make([]string, len(e))
+	for k, ee := range e {
+		names[k] = fmt.Sprintf("%T", ee)
+	}
+	return names
+}
+
 func NewHookExecutor(
 	d executorDependencies,
 	c configuration.Provider,
@@ -99,28 +108,24 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 	}
 
 	for k, executor := range e.d.PostSettingsPrePersistHooks(settingsType) {
+		logFields := logrus.Fields{
+			"executor":          fmt.Sprintf("%T", executor),
+			"executor_position": k,
+			"executors":         PostHookPrePersistExecutorNames(e.d.PostSettingsPrePersistHooks(settingsType)),
+			"identity_id":       i.ID,
+			"flow_method":       settingsType,
+		}
+
 		if err := executor.ExecuteSettingsPrePersistHook(w, r, ctxUpdate.Flow, i); err != nil {
 			if errors.Is(err, ErrHookAbortRequest) {
-				e.d.Logger().
-					WithRequest(r).
-					WithField("executor", fmt.Sprintf("%T", executor)).
-					WithField("executor_position", k).
-					WithField("executors", PostHookPostPersistExecutorNames(e.d.PostSettingsPostPersistHooks(settingsType))).
-					WithField("identity_id", i.ID).
-					WithField("flow_method", settingsType).
+				e.d.Logger().WithRequest(r).WithFields(logFields).
 					Debug("A ExecuteSettingsPrePersistHook hook aborted early.")
 				return nil
 			}
 			return err
 		}
 
-		e.d.Logger().WithRequest(r).
-			WithField("executor", fmt.Sprintf("%T", executor)).
-			WithField("executor_position", k).
-			WithField("executors", PostHookPostPersistExecutorNames(e.d.PostSettingsPostPersistHooks(settingsType))).
-			WithField("identity_id", i.ID).
-			WithField("flow_method", settingsType).
-			Debug("ExecuteSettingsPrePersistHook completed successfully.")
+		e.d.Logger().WithRequest(r).WithFields(logFields).Debug("ExecuteSettingsPrePersistHook completed successfully.")
 	}
 
 	options := []identity.ManagerOption{identity.ManagerExposeValidationErrorsForInternalTypeAssertion}

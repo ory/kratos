@@ -58,7 +58,7 @@ func newIdentityWithPassword(email string) *identity.Identity {
 }
 
 func TestStrategyTraits(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := internal.NewFastRegistryWithMocks(t)
 	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
 	viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
@@ -168,6 +168,13 @@ func TestStrategyTraits(t *testing.T) {
 		})
 	})
 
+	var expectValidationError = func(t *testing.T, isAPI bool, hc *http.Client, values func(url.Values)) string {
+		return testhelpers.SubmitSettingsForm(t, isAPI, hc, publicTS, values,
+			settings.StrategyProfile,
+			testhelpers.ExpectStatusCode(isAPI, http.StatusBadRequest, http.StatusOK),
+			testhelpers.ExpectURL(isAPI, publicTS.URL+profile.RouteSettings, conf.SelfServiceFlowSettingsUI().String()))
+	}
+
 	t.Run("description=should come back with form errors if some profile data is invalid", func(t *testing.T) {
 		var check = func(t *testing.T, actual string) {
 			assert.NotEmpty(t, gjson.Get(actual, "methods.profile.config.fields.#(name==csrf_token).value").String(), "%s", actual)
@@ -177,20 +184,17 @@ func TestStrategyTraits(t *testing.T) {
 			assert.Equal(t, "length must be >= 25, but got 9", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_long_string).messages.0.text").String(), "%s", actual)
 		}
 
-		var payload = func(v url.Values) url.Values {
+		var payload = func(v url.Values) {
 			v.Set("traits.should_long_string", "too-short")
 			v.Set("traits.stringy", "bazbar")
-			return v
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			check(t, testhelpers.SubmitSettingsForm(t, true, apiUser1, publicTS, payload,
-				settings.StrategyProfile, http.StatusBadRequest))
+			check(t, expectValidationError(t, true, apiUser1, payload))
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			check(t, testhelpers.SubmitSettingsForm(t, false, browserUser1, publicTS, payload,
-				settings.StrategyProfile, http.StatusOK))
+			check(t, expectValidationError(t, false, browserUser1, payload))
 		})
 	})
 
@@ -252,21 +256,16 @@ func TestStrategyTraits(t *testing.T) {
 			assert.Equal(t, "foobar", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.stringy).value").String(), "%s", actual) // sanity check if original payload is still here
 		}
 
-		var payload = func(v url.Values) url.Values {
+		var payload = func(v url.Values) {
 			v.Set("traits.should_big_number", "1")
-			return v
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			actual := testhelpers.SubmitSettingsForm(t, true, apiUser1, publicTS, payload,
-				settings.StrategyProfile, http.StatusBadRequest)
-			check(t, actual)
+			check(t, expectValidationError(t, true, apiUser1, payload))
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			actual := testhelpers.SubmitSettingsForm(t, false, browserUser1, publicTS, payload,
-				settings.StrategyProfile, http.StatusOK)
-			check(t, actual)
+			check(t, expectValidationError(t, false, browserUser1, payload))
 		})
 	})
 
@@ -286,25 +285,26 @@ func TestStrategyTraits(t *testing.T) {
 			assert.Equal(t, "foobar", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.stringy).value").String(), "%s", actual) // sanity check if original payload is still here
 		}
 
-		var payload = func(v url.Values) url.Values {
+		var payload = func(v url.Values) {
 			v.Del("traits.should_big_number")
 			v.Set("traits.should_long_string", "short")
 			v.Set("traits.numby", "this-is-not-a-number")
-			return v
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			actual := testhelpers.SubmitSettingsForm(t, true, apiUser1, publicTS, payload,
-				settings.StrategyProfile, http.StatusBadRequest)
-			check(t, actual)
+			check(t, expectValidationError(t, true, apiUser1, payload))
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			actual := testhelpers.SubmitSettingsForm(t, false, browserUser1, publicTS, payload,
-				settings.StrategyProfile, http.StatusOK)
-			check(t, actual)
+			check(t, expectValidationError(t, false, browserUser1, payload))
 		})
 	})
+
+	var expectSuccess = func(t *testing.T, isAPI bool, hc *http.Client, values func(url.Values)) string {
+		return testhelpers.SubmitSettingsForm(t, isAPI, hc, publicTS, values,
+			settings.StrategyProfile, http.StatusOK,
+			testhelpers.ExpectURL(isAPI, publicTS.URL+profile.RouteSettings, conf.SelfServiceFlowSettingsUI().String()))
+	}
 
 	t.Run("flow=succeed with final request", func(t *testing.T) {
 		viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1h")
@@ -322,26 +322,22 @@ func TestStrategyTraits(t *testing.T) {
 			assert.Equal(t, "this is such a long string, amazing stuff!", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.should_long_string).value").Value(), "%s", actual)
 		}
 
-		var payload = func(newEmail string) func(v url.Values) url.Values {
-			return func(v url.Values) url.Values {
+		var payload = func(newEmail string) func(v url.Values) {
+			return func(v url.Values) {
 				v.Set("traits.email", newEmail)
 				v.Set("traits.numby", "15")
 				v.Set("traits.should_big_number", "9001")
 				v.Set("traits.should_long_string", "this is such a long string, amazing stuff!")
-				return v
 			}
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			actual := testhelpers.SubmitSettingsForm(t, true, apiUser1, publicTS, payload("not-john-doe-api@mail.com"),
-				settings.StrategyProfile, http.StatusOK)
+			actual := expectSuccess(t, true, apiUser1, payload("not-john-doe-api@mail.com"))
 			check(t, gjson.Get(actual, "flow").Raw)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			actual := testhelpers.SubmitSettingsForm(t, false, browserUser1, publicTS, payload("not-john-doe-browser@mail.com"),
-				settings.StrategyProfile, http.StatusOK)
-			check(t, actual)
+			check(t, expectSuccess(t, false, browserUser1, payload("not-john-doe-browser@mail.com")))
 		})
 	})
 
@@ -350,21 +346,16 @@ func TestStrategyTraits(t *testing.T) {
 			assert.EqualValues(t, settings.StateShowForm, gjson.Get(actual, "state").String(), "%s", actual)
 		}
 
-		var payload = func(v url.Values) url.Values {
+		var payload = func(v url.Values) {
 			v.Set("traits.should_long_string", "short")
-			return v
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			actual := testhelpers.SubmitSettingsForm(t, true, apiUser1, publicTS, payload,
-				settings.StrategyProfile, http.StatusBadRequest)
-			check(t, actual)
+			check(t, expectValidationError(t, true, apiUser1, payload))
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			actual := testhelpers.SubmitSettingsForm(t, false, browserUser1, publicTS, payload,
-				settings.StrategyProfile, http.StatusOK)
-			check(t, actual)
+			check(t, expectValidationError(t, false, browserUser1, payload))
 		})
 	})
 
@@ -413,24 +404,21 @@ func TestStrategyTraits(t *testing.T) {
 			assert.Contains(t, m.Subject, "verify your email address")
 		}
 
-		var payload = func(newEmail string) func(v url.Values) url.Values {
-			return func(v url.Values) url.Values {
+		var payload = func(newEmail string) func(v url.Values) {
+			return func(v url.Values) {
 				v.Set("traits.email", newEmail)
-				return v
 			}
 		}
 
 		t.Run("type=api", func(t *testing.T) {
 			newEmail := "update-verify-api@mail.com"
-			actual := testhelpers.SubmitSettingsForm(t, true, apiUser1, publicTS, payload(newEmail),
-				settings.StrategyProfile, http.StatusOK)
+			actual := expectSuccess(t, true, apiUser1, payload(newEmail))
 			check(t, gjson.Get(actual, "flow").String(), newEmail)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
 			newEmail := "update-verify-browser@mail.com"
-			actual := testhelpers.SubmitSettingsForm(t, false, browserUser1, publicTS, payload(newEmail),
-				settings.StrategyProfile, http.StatusOK)
+			actual := expectSuccess(t, false, browserUser1, payload(newEmail))
 			check(t, actual, newEmail)
 		})
 	})
@@ -448,24 +436,21 @@ func TestStrategyTraits(t *testing.T) {
 			assert.Equal(t, "foobar", gjson.Get(actual, "methods.profile.config.fields.#(name==traits.stringy).value").String(), "%s", actual) // sanity check if original payload is still here
 		}
 
-		var payload = func(email string) func(v url.Values) url.Values {
-			return func(v url.Values) url.Values {
+		var payload = func(email string) func(v url.Values) {
+			return func(v url.Values) {
 				v.Set("traits.email", email)
-				return v
 			}
 		}
 
 		t.Run("type=api", func(t *testing.T) {
 			email := "not-john-doe-api@mail.com"
-			actual := testhelpers.SubmitSettingsForm(t, true, apiUser1, publicTS, payload(email),
-				settings.StrategyProfile, http.StatusOK)
+			actual := expectSuccess(t, true, apiUser1, payload(email))
 			check(t, email, gjson.Get(actual, "flow").Raw)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
 			email := "not-john-doe-browser@mail.com"
-			actual := testhelpers.SubmitSettingsForm(t, false, browserUser1, publicTS, payload(email),
-				settings.StrategyProfile, http.StatusOK)
+			actual := expectSuccess(t, false, browserUser1, payload(email))
 			check(t, email, actual)
 		})
 	})

@@ -74,28 +74,20 @@ func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Reques
 }
 
 func (s *Strategy) decode(p *RegistrationFormPayload, r *http.Request) error {
-	option, err := s.decoderRegistration()
-	if err != nil {
-		return err
-	}
-
-	return s.hd.Decode(r, p, option, decoderx.HTTPDecoderSetValidatePayloads(false), decoderx.HTTPDecoderJSONFollowsFormFormat())
-}
-
-func (s *Strategy) decoderRegistration() (decoderx.HTTPDecoderOption, error) {
 	raw, err := sjson.SetBytes(registrationSchema, "properties.traits.$ref", s.c.DefaultIdentityTraitsSchemaURL().String()+"#/properties/traits")
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return errors.WithStack(err)
 	}
 
-	o, err := decoderx.HTTPRawJSONSchemaCompiler(raw)
+	compiler, err := decoderx.HTTPRawJSONSchemaCompiler(raw)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return errors.WithStack(err)
 	}
 
-	return o, nil
+	return s.hd.Decode(r, p, compiler, decoderx.HTTPDecoderSetValidatePayloads(false), decoderx.HTTPDecoderJSONFollowsFormFormat())
 }
 
+// nolint:deadcode,unused
 // swagger:parameters completeSelfServiceRegistrationFlowWithPasswordMethod
 type completeSelfServiceRegistrationFlowWithPasswordMethod struct {
 	// Flow is flow ID.
@@ -114,7 +106,7 @@ type completeSelfServiceRegistrationFlowWithPasswordMethod struct {
 // Use this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint
 // behaves differently for API and browser flows.
 //
-// API flows expect `application/json` to be sent in the body and responds with
+// API flows expect `application/json` to be sent in the body and respond with
 //   - HTTP 200 and a application/json body with the created identity success - if the session hook is configured the
 //     `session` and `session_token` will also be included;
 //   - HTTP 302 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;
@@ -138,7 +130,7 @@ type completeSelfServiceRegistrationFlowWithPasswordMethod struct {
 //     Responses:
 //       200: registrationViaApiResponse
 //       302: emptyResponse
-//       400: genericError
+//       400: registrationFlow
 //       500: genericError
 func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	rid := x.ParseUUID(r.URL.Query().Get("flow"))

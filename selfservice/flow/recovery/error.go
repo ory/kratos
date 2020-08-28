@@ -7,6 +7,8 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/ory/x/sqlxx"
+
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
 
@@ -119,6 +121,7 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
+	f.Active = sqlxx.NullString(methodName)
 	if err := s.d.RecoveryFlowPersister().UpdateRecoveryFlow(r.Context(), f); err != nil {
 		s.forward(w, r, f, err)
 		return

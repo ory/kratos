@@ -57,14 +57,15 @@ func newEmptyIdentity() *identity.Identity {
 }
 
 func TestSettings(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := internal.NewFastRegistryWithMocks(t)
 	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
 	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/profile.schema.json")
 	testhelpers.StrategyEnable(identity.CredentialsTypePassword.String(), true)
 	testhelpers.StrategyEnable(settings.StrategyProfile, true)
 
-	_ = testhelpers.NewSettingsUITestServer(t)
+	_ = testhelpers.NewSettingsUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
+	_ = testhelpers.NewLoginUIWith401Response(t)
 	viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
 
 	browserIdentity1 := newIdentityWithPassword("john-browser@doe.com")
@@ -82,8 +83,9 @@ func TestSettings(t *testing.T) {
 	adminClient := testhelpers.NewSDKClient(adminTS)
 
 	t.Run("description=not authorized to call endpoints without a session", func(t *testing.T) {
+		c := testhelpers.NewDebugClient(t)
 		t.Run("type=browser", func(t *testing.T) {
-			res, err := http.DefaultClient.Do(httpx.MustNewRequest("POST", publicTS.URL+profile.RouteSettings, strings.NewReader(url.Values{"foo": {"bar"}}.Encode()), "application/x-www-form-urlencoded"))
+			res, err := c.Do(httpx.MustNewRequest("POST", publicTS.URL+profile.RouteSettings, strings.NewReader(url.Values{"foo": {"bar"}}.Encode()), "application/x-www-form-urlencoded"))
 			require.NoError(t, err)
 			defer res.Body.Close()
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode, "%+v", res.Request)
@@ -91,60 +93,61 @@ func TestSettings(t *testing.T) {
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			res, err := http.DefaultClient.Do(httpx.MustNewRequest("POST", publicTS.URL+profile.RouteSettings, strings.NewReader(`{"foo":"bar"}`), "application/json"))
+			res, err := c.Do(httpx.MustNewRequest("POST", publicTS.URL+profile.RouteSettings, strings.NewReader(`{"foo":"bar"}`), "application/json"))
 			require.NoError(t, err)
 			defer res.Body.Close()
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode)
 		})
 	})
 
+	var expectValidationError = func(t *testing.T, isAPI bool, hc *http.Client, values func(url.Values)) string {
+		return testhelpers.SubmitSettingsForm(t, isAPI, hc, publicTS, values,
+			identity.CredentialsTypePassword.String(),
+			testhelpers.ExpectStatusCode(isAPI, http.StatusBadRequest, http.StatusOK),
+			testhelpers.ExpectURL(isAPI, publicTS.URL+password.RouteSettings, conf.SelfServiceFlowSettingsUI().String()))
+	}
+
 	t.Run("description=should fail if password violates policy", func(t *testing.T) {
+		var check = func(t *testing.T, actual string) {
+			assert.Empty(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).value").String(), "%s", actual)
+			assert.NotEmpty(t, gjson.Get(actual, "methods.password.config.fields.#(name==csrf_token).value").String(), "%s", actual)
+			assert.Contains(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).messages.0.text").String(), "password can not be used because", "%s", actual)
+		}
+
 		t.Run("session=with privileged session", func(t *testing.T) {
 			viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 
-			var check = func(t *testing.T, actual string) {
-				assert.Empty(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).value").String(), "%s", actual)
-				assert.NotEmpty(t, gjson.Get(actual, "methods.password.config.fields.#(name==csrf_token).value").String(), "%s", actual)
-				assert.Contains(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).messages.0.text").String(), "password can not be used because", "%s", actual)
-			}
-
-			var payload = func(v url.Values) url.Values {
+			var payload = func(v url.Values) {
 				v.Set("password", "123456")
-				return v
 			}
 
 			t.Run("type=api", func(t *testing.T) {
-				check(t, testhelpers.SubmitSettingsForm(t, true, apiUser1, publicTS, payload,
-					identity.CredentialsTypePassword.String(), http.StatusBadRequest))
+				check(t, expectValidationError(t, true, apiUser1, payload))
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
-				check(t, testhelpers.SubmitSettingsForm(t, false, browserUser1, publicTS, payload,
-					identity.CredentialsTypePassword.String(), http.StatusNoContent))
+				check(t, expectValidationError(t, false, browserUser1, payload))
 			})
 		})
 
 		t.Run("session=needs reauthentication", func(t *testing.T) {
 			viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
 			_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, adminClient)
+			defer testhelpers.NewLoginUIWith401Response(t)
 			defer viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 
-			var payload = func(v url.Values) url.Values {
+			var payload = func(v url.Values) {
 				v.Set("password", "123456")
-				return v
 			}
 
-			t.Run("type=api", func(t *testing.T) {
+			t.Run("type=api/expected=an error because reauth can not be initialized for API clients", func(t *testing.T) {
 				actual := testhelpers.SubmitSettingsForm(t, true, apiUser1, publicTS, payload,
-					identity.CredentialsTypePassword.String(), http.StatusForbidden)
+					identity.CredentialsTypePassword.String(), http.StatusForbidden, publicTS.URL+password.RouteSettings)
 				assertx.EqualAsJSON(t, settings.NewFlowNeedsReAuth(), json.RawMessage(gjson.Get(actual, "error").Raw))
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
-				actual := testhelpers.SubmitSettingsForm(t, false, browserUser1, publicTS, payload,
-					identity.CredentialsTypePassword.String(), http.StatusNoContent)
-				assert.EqualValues(t, settings.StateShowForm, gjson.Get(actual, "state").String(), "%s", actual)
-				assert.Empty(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).value").String(), "%s", actual)
+				check(t, expectValidationError(t, false, browserUser1, payload))
 			})
 		})
 	})
@@ -178,20 +181,19 @@ func TestSettings(t *testing.T) {
 			assert.Empty(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).messages.0.text").String(), actual)
 		}
 
-		var payload = func(v url.Values) url.Values {
+		var payload = func(v url.Values) {
 			v.Set("password", x.NewUUID().String())
-			return v
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			check(t,
-				gjson.Get(testhelpers.SubmitSettingsForm(t, true, apiUser1, publicTS, payload,
-					identity.CredentialsTypePassword.String(), http.StatusOK), "flow").Raw)
+			actual := testhelpers.SubmitSettingsForm(t, true, apiUser1, publicTS, payload,
+				identity.CredentialsTypePassword.String(), http.StatusOK, publicTS.URL+password.RouteSettings)
+			check(t, gjson.Get(actual, "flow").Raw)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
 			check(t, testhelpers.SubmitSettingsForm(t, false, browserUser1, publicTS, payload,
-				identity.CredentialsTypePassword.String(), http.StatusNoContent))
+				identity.CredentialsTypePassword.String(), http.StatusOK, conf.SelfServiceFlowSettingsUI().String()))
 		})
 	})
 
@@ -222,6 +224,12 @@ func TestSettings(t *testing.T) {
 		assert.NotEmpty(t, gjson.Get(actual, "identity.id").String(), "%s", actual)
 	})
 
+	var expectSuccess = func(t *testing.T, isAPI bool, hc *http.Client, values func(url.Values)) string {
+		return testhelpers.SubmitSettingsForm(t, isAPI, hc, publicTS, values,
+			identity.CredentialsTypePassword.String(), http.StatusOK,
+			testhelpers.ExpectURL(isAPI, publicTS.URL+password.RouteSettings, conf.SelfServiceFlowSettingsUI().String()))
+	}
+
 	t.Run("description=should update the password even if no password was set before", func(t *testing.T) {
 		var check = func(t *testing.T, actual string, id *identity.Identity) {
 			assert.Equal(t, "success", gjson.Get(actual, "state").String(), "%s", actual)
@@ -235,20 +243,17 @@ func TestSettings(t *testing.T) {
 			assert.Contains(t, actualIdentity.Credentials[identity.CredentialsTypePassword].Identifiers[0], "-4")
 		}
 
-		var payload = func(v url.Values) url.Values {
+		var payload = func(v url.Values) {
 			v.Set("password", randx.MustString(16, randx.AlphaNum))
-			return v
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			actual := testhelpers.SubmitSettingsForm(t, true, apiUser2, publicTS, payload,
-				identity.CredentialsTypePassword.String(), http.StatusOK)
+			actual := expectSuccess(t, true, apiUser2, payload)
 			check(t, gjson.Get(actual, "flow").Raw, apiIdentity2)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			actual := testhelpers.SubmitSettingsForm(t, false, browserUser2, publicTS, payload,
-				identity.CredentialsTypePassword.String(), http.StatusNoContent)
+			actual := expectSuccess(t, false, browserUser2, payload)
 			check(t, actual, browserIdentity2)
 		})
 	})

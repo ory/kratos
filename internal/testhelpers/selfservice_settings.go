@@ -4,7 +4,6 @@ package testhelpers
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"strings"
@@ -30,8 +29,6 @@ import (
 	"github.com/ory/kratos/internal/httpclient/client/common"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/selfservice/flow/settings"
-	"github.com/ory/kratos/selfservice/strategy/password"
-	"github.com/ory/kratos/selfservice/strategy/profile"
 	"github.com/ory/kratos/x"
 )
 
@@ -251,10 +248,18 @@ func SubmitSettingsForm(
 	isAPI bool,
 	hc *http.Client,
 	publicTS *httptest.Server,
-	withValues func(v url.Values) url.Values,
+	withValues func(v url.Values),
 	method string,
 	expectedStatusCode int,
+	expectedURL string,
 ) string {
+	if hc == nil {
+		hc = new(http.Client)
+		if !isAPI {
+			hc = NewClientWithCookies(t)
+		}
+	}
+
 	hc.Transport = NewTransportWithLogger(hc.Transport, t)
 	var payload *models.SettingsFlow
 	if isAPI {
@@ -263,38 +268,15 @@ func SubmitSettingsForm(
 		payload = InitializeSettingsFlowViaBrowser(t, hc, publicTS).Payload
 	}
 
-	time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
+	time.Sleep(time.Millisecond * 10) // add a bit of delay to allow `1ns` to time out.
 
 	config := GetSettingsFlowMethodConfig(t, payload, method)
+	values := SDKFormFieldsToURLValues(config.Fields)
+	withValues(values)
 
-	b, res := SettingsMakeRequest(t, isAPI, config, hc, EncodeFormAsJSON(t, isAPI,
-		withValues(SDKFormFieldsToURLValues(config.Fields))))
+	b, res := SettingsMakeRequest(t, isAPI, config, hc, EncodeFormAsJSON(t, isAPI, values))
 	assert.EqualValues(t, expectedStatusCode, res.StatusCode, "%s", b)
+	assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, b)
 
-	expectURL := viper.GetString(configuration.ViperKeySelfServiceSettingsURL)
-	if isAPI {
-		switch method {
-		case string(identity.CredentialsTypePassword):
-			expectURL = password.RouteSettings
-		case settings.StrategyProfile:
-			expectURL = profile.RouteSettings
-		default:
-			t.Logf("Expected method to be profile ior password but got: %s", method)
-			t.FailNow()
-		}
-	}
-
-	assert.Contains(t, res.Request.URL.String(), expectURL, "%+v\n\t%s", res.Request, b)
-
-	if isAPI {
-		return b
-	}
-
-	rs, err := NewSDKClientFromURL(viper.GetString(configuration.ViperKeyPublicBaseURL)).Common.GetSelfServiceSettingsFlow(
-		common.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(hc).WithID(res.Request.URL.Query().Get("flow")))
-	require.NoError(t, err)
-
-	body, err := json.Marshal(rs.Payload)
-	require.NoError(t, err)
-	return string(body)
+	return b
 }
