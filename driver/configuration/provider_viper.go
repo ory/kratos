@@ -436,7 +436,8 @@ func (p *ViperProvider) CourierTemplatesRoot() string {
 func mustParseURLFromViper(l *logrusx.Logger, key string) *url.URL {
 	u, err := url.ParseRequestURI(viper.GetString(key))
 	if err != nil {
-		l.WithError(err).Fatalf("Configuration value from key %s is not a valid URL: %s", key, viper.GetString(key))
+		l.WithError(errors.WithStack(err)).
+			Fatalf("Configuration value from key %s is not a valid URL: %s", key, viper.GetString(key))
 	}
 	return u
 }

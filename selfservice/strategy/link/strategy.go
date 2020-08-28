@@ -116,29 +116,31 @@ func (s *Strategy) PopulateRecoveryMethod(r *http.Request, req *recovery.Flow) e
 // swagger:parameters createRecoveryLink
 //
 // nolint
-type createRecoveryLink struct {
+type createRecoveryLinkParameters struct {
 	// in: body
-	Body struct {
-		// Identity to Recover
-		//
-		// The identity's ID you wish to recover.
-		//
-		// required: true
-		IdentityID uuid.UUID `json:"identity_id"`
+	Body CreateRecoveryLink
+}
 
-		// Link Expires In
-		//
-		// The recovery link will expire at that point in time. Defaults to the configuration value of
-		// `selfservice.flows.recovery.request_lifespan`.
-		//
-		//
-		// pattern: ^[0-9]+(ns|us|ms|s|m|h)$
-		// example:
-		//	- 1h
-		//	- 1m
-		//	- 1s
-		ExpiresIn string `json:"expires_in"`
-	}
+type CreateRecoveryLink struct {
+	// Identity to Recover
+	//
+	// The identity's ID you wish to recover.
+	//
+	// required: true
+	IdentityID uuid.UUID `json:"identity_id"`
+
+	// Link Expires In
+	//
+	// The recovery link will expire at that point in time. Defaults to the configuration value of
+	// `selfservice.flows.recovery.request_lifespan`.
+	//
+	//
+	// pattern: ^[0-9]+(ns|us|ms|s|m|h)$
+	// example:
+	//	- 1h
+	//	- 1m
+	//	- 1s
+	ExpiresIn string `json:"expires_in"`
 }
 
 // swagger:model recoveryLink
@@ -180,24 +182,24 @@ type recoveryLink struct {
 //       400: genericError
 //       500: genericError
 func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	var p createRecoveryLink
-	if err := s.dx.Decode(r, &p.Body, decoderx.HTTPJSONDecoder()); err != nil {
+	var p CreateRecoveryLink
+	if err := s.dx.Decode(r, &p, decoderx.HTTPJSONDecoder()); err != nil {
 		s.d.Writer().WriteError(w, r, err)
 		return
 	}
 
 	expiresIn := s.c.SelfServiceFlowRecoveryRequestLifespan()
-	if len(p.Body.ExpiresIn) > 0 {
+	if len(p.ExpiresIn) > 0 {
 		var err error
-		expiresIn, err = time.ParseDuration(p.Body.ExpiresIn)
+		expiresIn, err = time.ParseDuration(p.ExpiresIn)
 		if err != nil {
-			s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to parse "expires_in" whose format should match "[0-9]+(ns|us|ms|s|m|h)" but did not: %s`, p.Body.ExpiresIn)))
+			s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to parse "expires_in" whose format should match "[0-9]+(ns|us|ms|s|m|h)" but did not: %s`, p.ExpiresIn)))
 			return
 		}
 	}
 
 	if time.Now().Add(expiresIn).Before(time.Now()) {
-		s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Value from "expires_in" must be result to a future time: %s`, p.Body.ExpiresIn)))
+		s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Value from "expires_in" must be result to a future time: %s`, p.ExpiresIn)))
 		return
 	}
 
@@ -212,7 +214,7 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	id, err := s.d.IdentityPool().GetIdentity(r.Context(), p.Body.IdentityID)
+	id, err := s.d.IdentityPool().GetIdentity(r.Context(), p.IdentityID)
 	if err != nil {
 		s.d.Writer().WriteError(w, r, err)
 		return
@@ -248,11 +250,9 @@ func (s *Strategy) createRecoveryLink(w http.ResponseWriter, r *http.Request, _ 
 }
 
 // swagger:parameters completeSelfServiceRecoveryFlowWithLinkMethod
-//
-// nolint
-type completeSelfServiceRecoveryFlowWithLinkMethod struct {
+type completeSelfServiceRecoveryFlowWithLinkMethodParameters struct {
 	// in: body
-	Body completeSelfServiceRecoveryFlowWithLinkMethodBody
+	Body completeSelfServiceRecoveryFlowWithLinkMethod
 
 	// Recovery Token
 	//
@@ -269,11 +269,11 @@ type completeSelfServiceRecoveryFlowWithLinkMethod struct {
 	Flow string `json:"flow"`
 }
 
-func (m *completeSelfServiceRecoveryFlowWithLinkMethod) GetFlow() uuid.UUID {
+func (m *completeSelfServiceRecoveryFlowWithLinkMethodParameters) GetFlow() uuid.UUID {
 	return x.ParseUUID(m.Flow)
 }
 
-type completeSelfServiceRecoveryFlowWithLinkMethodBody struct {
+type completeSelfServiceRecoveryFlowWithLinkMethod struct {
 	// Email to Recover
 	//
 	// Needs to be set when initiating the flow. If the email is a registered
@@ -396,7 +396,7 @@ func (s *Strategy) issueSession(w http.ResponseWriter, r *http.Request, req *rec
 	http.Redirect(w, r, sf.AppendTo(s.c.SelfServiceFlowSettingsUI()).String(), http.StatusFound)
 }
 
-func (s *Strategy) verifyToken(w http.ResponseWriter, r *http.Request, body *completeSelfServiceRecoveryFlowWithLinkMethod) {
+func (s *Strategy) verifyToken(w http.ResponseWriter, r *http.Request, body *completeSelfServiceRecoveryFlowWithLinkMethodParameters) {
 	token, err := s.d.RecoveryTokenPersister().UseRecoveryToken(r.Context(), body.Token)
 	if err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
@@ -450,7 +450,7 @@ func (s *Strategy) retryFlowWithMessage(w http.ResponseWriter, r *http.Request, 
 }
 
 func (s *Strategy) issueAndSendRecoveryToken(w http.ResponseWriter, r *http.Request, req *recovery.Flow) {
-	var body = new(completeSelfServiceRecoveryFlowWithLinkMethod)
+	var body = new(completeSelfServiceRecoveryFlowWithLinkMethodParameters)
 	body, err := s.decode(r, true)
 	if err != nil {
 		s.handleError(w, r, req, body, err)
@@ -563,7 +563,7 @@ func (s *Strategy) run(via identity.RecoveryAddressType, emailFunc func() error)
 	}
 }
 
-func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, req *recovery.Flow, body *completeSelfServiceRecoveryFlowWithLinkMethod, err error) {
+func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, req *recovery.Flow, body *completeSelfServiceRecoveryFlowWithLinkMethodParameters, err error) {
 	if req != nil {
 		config, err := req.MethodToForm(s.RecoveryStrategyID())
 		if err != nil {
@@ -579,8 +579,8 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, req *reco
 	s.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, s.RecoveryStrategyID(), req, err)
 }
 
-func (s *Strategy) decode(r *http.Request, decodeBody bool) (*completeSelfServiceRecoveryFlowWithLinkMethod, error) {
-	var body completeSelfServiceRecoveryFlowWithLinkMethodBody
+func (s *Strategy) decode(r *http.Request, decodeBody bool) (*completeSelfServiceRecoveryFlowWithLinkMethodParameters, error) {
+	var body completeSelfServiceRecoveryFlowWithLinkMethod
 
 	if decodeBody {
 		if err := s.dx.Decode(r, &body,
@@ -592,7 +592,7 @@ func (s *Strategy) decode(r *http.Request, decodeBody bool) (*completeSelfServic
 	}
 
 	q := r.URL.Query()
-	return &completeSelfServiceRecoveryFlowWithLinkMethod{
+	return &completeSelfServiceRecoveryFlowWithLinkMethodParameters{
 		Flow:  q.Get("flow"),
 		Token: q.Get("token"),
 		Body:  body,

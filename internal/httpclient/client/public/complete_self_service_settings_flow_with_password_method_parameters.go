@@ -62,8 +62,8 @@ for the complete self service settings flow with password method operation typic
 */
 type CompleteSelfServiceSettingsFlowWithPasswordMethodParams struct {
 
-	/*Payload*/
-	Payload *models.SettingsFlowPayload
+	/*Body*/
+	Body *models.CompleteSelfServiceSettingsFlowWithPasswordMethod
 	/*Flow
 	  Flow is flow ID.
 
@@ -108,15 +108,15 @@ func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodParams) SetHTTPClient(
 	o.HTTPClient = client
 }
 
-// WithPayload adds the payload to the complete self service settings flow with password method params
-func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodParams) WithPayload(payload *models.SettingsFlowPayload) *CompleteSelfServiceSettingsFlowWithPasswordMethodParams {
-	o.SetPayload(payload)
+// WithBody adds the body to the complete self service settings flow with password method params
+func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodParams) WithBody(body *models.CompleteSelfServiceSettingsFlowWithPasswordMethod) *CompleteSelfServiceSettingsFlowWithPasswordMethodParams {
+	o.SetBody(body)
 	return o
 }
 
-// SetPayload adds the payload to the complete self service settings flow with password method params
-func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodParams) SetPayload(payload *models.SettingsFlowPayload) {
-	o.Payload = payload
+// SetBody adds the body to the complete self service settings flow with password method params
+func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodParams) SetBody(body *models.CompleteSelfServiceSettingsFlowWithPasswordMethod) {
+	o.Body = body
 }
 
 // WithFlow adds the flow to the complete self service settings flow with password method params
@@ -138,8 +138,8 @@ func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodParams) WriteToRequest
 	}
 	var res []error
 
-	if o.Payload != nil {
-		if err := r.SetBodyParam(o.Payload); err != nil {
+	if o.Body != nil {
+		if err := r.SetBodyParam(o.Body); err != nil {
 			return err
 		}
 	}

@@ -163,7 +163,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 //       403: genericError
 //       500: genericError
 func (s *Strategy) handleSubmit(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var p SettingsFlowPayload
+	var p CompleteSelfServiceBrowserSettingsProfileStrategyFlow
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	s.d.Logger().
 		WithField("err", fmt.Sprintf("%+v", err)).
@@ -199,7 +199,7 @@ func (s *Strategy) handleSubmit(w http.ResponseWriter, r *http.Request, ps httpr
 	s.continueFlow(w, r, ctxUpdate, &p)
 }
 
-func (s *Strategy) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *SettingsFlowPayload) {
+func (s *Strategy) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) {
 	if err := flow.VerifyRequest(r, ctxUpdate.Flow.Type, s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		s.handleSettingsError(w, r, ctxUpdate, nil, p, err)
 		return
@@ -233,7 +233,7 @@ func (s *Strategy) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdat
 //
 // swagger:parameters completeSelfServiceBrowserSettingsProfileStrategyFlow
 // nolint:deadcode,unused
-type completeSelfServiceBrowserSettingsProfileStrategyFlow struct {
+type completeSelfServiceBrowserSettingsProfileStrategyFlowParameters struct {
 	// Request is the request ID.
 	//
 	// required: true
@@ -243,12 +243,11 @@ type completeSelfServiceBrowserSettingsProfileStrategyFlow struct {
 
 	// in: body
 	// required: true
-	Body SettingsFlowPayload
+	Body CompleteSelfServiceBrowserSettingsProfileStrategyFlow
 }
 
-// swagger:model SettingsFlowPayload
 // nolint:deadcode,unused
-type SettingsFlowPayload struct {
+type CompleteSelfServiceBrowserSettingsProfileStrategyFlow struct {
 	// Traits contains all of the identity's traits.
 	Traits json.RawMessage `json:"traits"`
 
@@ -263,11 +262,11 @@ type SettingsFlowPayload struct {
 	CSRFToken string `json:"csrf_token"`
 }
 
-func (p *SettingsFlowPayload) GetFlowID() uuid.UUID {
+func (p *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) GetFlowID() uuid.UUID {
 	return x.ParseUUID(p.FlowID)
 }
 
-func (p *SettingsFlowPayload) SetFlowID(rid uuid.UUID) {
+func (p *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) SetFlowID(rid uuid.UUID) {
 	p.FlowID = rid.String()
 }
 
@@ -297,7 +296,7 @@ func (s *Strategy) hydrateForm(r *http.Request, ar *settings.Flow, ss *session.S
 
 // handleSettingsError is a convenience function for handling all types of errors that may occur (e.g. validation error)
 // during a settings request.
-func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, puc *settings.UpdateContext, traits json.RawMessage, p *SettingsFlowPayload, err error) {
+func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, puc *settings.UpdateContext, traits json.RawMessage, p *CompleteSelfServiceBrowserSettingsProfileStrategyFlow, err error) {
 	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) {
 		if err := s.d.ContinuityManager().Pause(r.Context(), w, r,
 			settings.ContinuityKey(s.SettingsStrategyID()),

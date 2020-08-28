@@ -63,7 +63,7 @@ for the complete self service recovery flow with link method operation typically
 type CompleteSelfServiceRecoveryFlowWithLinkMethodParams struct {
 
 	/*Body*/
-	Body *models.CompleteSelfServiceRecoveryFlowWithLinkMethodBody
+	Body *models.CompleteSelfServiceRecoveryFlowWithLinkMethod
 	/*Flow
 	  The Flow ID
 
@@ -119,13 +119,13 @@ func (o *CompleteSelfServiceRecoveryFlowWithLinkMethodParams) SetHTTPClient(clie
 }
 
 // WithBody adds the body to the complete self service recovery flow with link method params
-func (o *CompleteSelfServiceRecoveryFlowWithLinkMethodParams) WithBody(body *models.CompleteSelfServiceRecoveryFlowWithLinkMethodBody) *CompleteSelfServiceRecoveryFlowWithLinkMethodParams {
+func (o *CompleteSelfServiceRecoveryFlowWithLinkMethodParams) WithBody(body *models.CompleteSelfServiceRecoveryFlowWithLinkMethod) *CompleteSelfServiceRecoveryFlowWithLinkMethodParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the complete self service recovery flow with link method params
-func (o *CompleteSelfServiceRecoveryFlowWithLinkMethodParams) SetBody(body *models.CompleteSelfServiceRecoveryFlowWithLinkMethodBody) {
+func (o *CompleteSelfServiceRecoveryFlowWithLinkMethodParams) SetBody(body *models.CompleteSelfServiceRecoveryFlowWithLinkMethod) {
 	o.Body = body
 }
 

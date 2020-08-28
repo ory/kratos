@@ -10,10 +10,10 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// CompleteSelfServiceRecoveryFlowWithLinkMethodBody complete self service recovery flow with link method body
+// CompleteSelfServiceRecoveryFlowWithLinkMethod complete self service recovery flow with link method
 //
-// swagger:model completeSelfServiceRecoveryFlowWithLinkMethodBody
-type CompleteSelfServiceRecoveryFlowWithLinkMethodBody struct {
+// swagger:model completeSelfServiceRecoveryFlowWithLinkMethod
+type CompleteSelfServiceRecoveryFlowWithLinkMethod struct {
 
 	// Sending the anti-csrf token is only required for browser login flows.
 	CsrfToken string `json:"csrf_token,omitempty"`
@@ -29,13 +29,13 @@ type CompleteSelfServiceRecoveryFlowWithLinkMethodBody struct {
 	Email string `json:"email,omitempty"`
 }
 
-// Validate validates this complete self service recovery flow with link method body
-func (m *CompleteSelfServiceRecoveryFlowWithLinkMethodBody) Validate(formats strfmt.Registry) error {
+// Validate validates this complete self service recovery flow with link method
+func (m *CompleteSelfServiceRecoveryFlowWithLinkMethod) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (m *CompleteSelfServiceRecoveryFlowWithLinkMethodBody) MarshalBinary() ([]byte, error) {
+func (m *CompleteSelfServiceRecoveryFlowWithLinkMethod) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -43,8 +43,8 @@ func (m *CompleteSelfServiceRecoveryFlowWithLinkMethodBody) MarshalBinary() ([]b
 }
 
 // UnmarshalBinary interface implementation
-func (m *CompleteSelfServiceRecoveryFlowWithLinkMethodBody) UnmarshalBinary(b []byte) error {
-	var res CompleteSelfServiceRecoveryFlowWithLinkMethodBody
+func (m *CompleteSelfServiceRecoveryFlowWithLinkMethod) UnmarshalBinary(b []byte) error {
+	var res CompleteSelfServiceRecoveryFlowWithLinkMethod
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

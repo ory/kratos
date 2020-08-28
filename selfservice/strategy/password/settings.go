@@ -40,7 +40,7 @@ func (s *Strategy) SettingsStrategyID() string {
 // swagger:parameters completeSelfServiceSettingsFlowWithPasswordMethod
 type completeSelfServiceSettingsFlowWithPasswordMethod struct {
 	// in: body
-	Payload SettingsFlowPayload
+	Body CompleteSelfServiceSettingsFlowWithPasswordMethod
 
 	// Flow is flow ID.
 	//
@@ -48,7 +48,7 @@ type completeSelfServiceSettingsFlowWithPasswordMethod struct {
 	Flow string `json:"flow"`
 }
 
-type SettingsFlowPayload struct {
+type CompleteSelfServiceSettingsFlowWithPasswordMethod struct {
 	// Password is the updated password
 	//
 	// type: string
@@ -66,11 +66,11 @@ type SettingsFlowPayload struct {
 	Flow string `json:"flow"`
 }
 
-func (p *SettingsFlowPayload) GetFlowID() uuid.UUID {
+func (p *CompleteSelfServiceSettingsFlowWithPasswordMethod) GetFlowID() uuid.UUID {
 	return x.ParseUUID(p.Flow)
 }
 
-func (p *SettingsFlowPayload) SetFlowID(rid uuid.UUID) {
+func (p *CompleteSelfServiceSettingsFlowWithPasswordMethod) SetFlowID(rid uuid.UUID) {
 	p.Flow = rid.String()
 }
 
@@ -116,7 +116,7 @@ func (p *SettingsFlowPayload) SetFlowID(rid uuid.UUID) {
 //       403: genericError
 //       500: genericError
 func (s *Strategy) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var p SettingsFlowPayload
+	var p CompleteSelfServiceSettingsFlowWithPasswordMethod
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
 		s.continueSettingsFlow(w, r, ctxUpdate, &p)
@@ -150,7 +150,7 @@ func (s *Strategy) decodeSettingsFlow(r *http.Request, dest interface{}) error {
 
 func (s *Strategy) continueSettingsFlow(
 	w http.ResponseWriter, r *http.Request,
-	ctxUpdate *settings.UpdateContext, p *SettingsFlowPayload,
+	ctxUpdate *settings.UpdateContext, p *CompleteSelfServiceSettingsFlowWithPasswordMethod,
 ) {
 	if err := flow.VerifyRequest(r, ctxUpdate.Flow.Type, s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		s.handleSettingsError(w, r, ctxUpdate, p, err)
@@ -219,7 +219,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, _ *identity.Identity,
 	return nil
 }
 
-func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *SettingsFlowPayload, err error) {
+func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *CompleteSelfServiceSettingsFlowWithPasswordMethod, err error) {
 	// Do not pause flow if the flow type is an API flow as we can't save cookies in those flows.
 	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) && ctxUpdate.Flow != nil && ctxUpdate.Flow.Type == flow.TypeBrowser {
 		if err := s.d.ContinuityManager().Pause(r.Context(), w, r,

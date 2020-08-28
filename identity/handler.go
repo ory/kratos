@@ -1,4 +1,3 @@
-// nolint:deadcode,unused
 package identity
 
 import (
@@ -54,6 +53,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 // A single identity.
 //
 // swagger:response identityResponse
+// nolint:deadcode,unused
 type identityResponse struct {
 	// required: true
 	// in: body
@@ -62,6 +62,7 @@ type identityResponse struct {
 
 // A list of identities.
 // swagger:response identityList
+// nolint:deadcode,unused
 type identitiesListResponse struct {
 	// in: body
 	// required: true
@@ -70,6 +71,7 @@ type identitiesListResponse struct {
 }
 
 // swagger:parameters listIdentities
+// nolint:deadcode,unused
 type listIdentityParameters struct {
 	// Items per Page
 	//
@@ -126,6 +128,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 }
 
 // swagger:parameters getIdentity
+// nolint:deadcode,unused
 type getIdentityParameters struct {
 	// ID must be set to the ID of identity you want to get
 	//
@@ -163,12 +166,12 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 }
 
 // swagger:parameters createIdentity
-type createIdentityRequest struct {
+type createIdentityParameters struct {
 	// in: body
-	Body CreateIdentityRequestPayload
+	Body CreateIdentity
 }
 
-type CreateIdentityRequestPayload struct {
+type CreateIdentity struct {
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
 	//
 	// required: true
@@ -206,7 +209,7 @@ type CreateIdentityRequestPayload struct {
 //       400: genericError
 //       500: genericError
 func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	var cr CreateIdentityRequestPayload
+	var cr CreateIdentity
 	if err := jsonx.NewStrictDecoder(r.Body).Decode(&cr); err != nil {
 		h.r.Writer().WriteErrorCode(w, r, http.StatusBadRequest, errors.WithStack(err))
 		return
@@ -229,12 +232,18 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 }
 
 // swagger:parameters updateIdentity
-type updateIdentityRequest struct {
+type updateIdentityParameters struct {
+	// ID must be set to the ID of identity you want to update
+	//
+	// required: true
+	// in: path
+	ID string `json:"id"`
+
 	// in: body
-	Body UpdateIdentityRequestPayload
+	Body UpdateIdentity
 }
 
-type UpdateIdentityRequestPayload struct {
+type UpdateIdentity struct {
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set
 	// will update the Identity's SchemaID.
 	SchemaID string `json:"schema_id"`
@@ -272,7 +281,7 @@ type UpdateIdentityRequestPayload struct {
 //       404: genericError
 //       500: genericError
 func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var ur UpdateIdentityRequestPayload
+	var ur UpdateIdentity
 	if err := errors.WithStack(jsonx.NewStrictDecoder(r.Body).Decode(&ur)); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
@@ -300,6 +309,15 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	}
 
 	h.r.Writer().Write(w, r, identity)
+}
+
+// swagger:parameters deleteIdentity
+type deleteIdentityParameters struct {
+	// ID is the identity's ID.
+	//
+	// required: true
+	// in: path
+	ID string `json:"id"`
 }
 
 // swagger:route DELETE /identities/{id} admin deleteIdentity

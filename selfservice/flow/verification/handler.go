@@ -69,7 +69,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 
 // nolint:deadcode,unused
 // swagger:parameters initializeSelfServiceBrowserVerificationFlow
-type initializeSelfServiceVerificationFlowParameters struct {
+type initializeSelfServiceBrowserVerificationFlowParameters struct {
 	// What to verify
 	//
 	// Currently only "email" is supported.

@@ -89,7 +89,7 @@ func (s *Strategy) decode(p *RegistrationFormPayload, r *http.Request) error {
 
 // nolint:deadcode,unused
 // swagger:parameters completeSelfServiceRegistrationFlowWithPasswordMethod
-type completeSelfServiceRegistrationFlowWithPasswordMethod struct {
+type completeSelfServiceRegistrationFlowWithPasswordMethodParameters struct {
 	// Flow is flow ID.
 	//
 	// in: query

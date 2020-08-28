@@ -37,13 +37,14 @@ import (
 func init() {
 	internal.RegisterFakes()
 }
+
 var identityToRecover = &identity.Identity{
 	Credentials: map[identity.CredentialsType]identity.Credentials{
 		"password": {Type: "password", Identifiers: []string{"recoverme@ory.sh"}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)}},
 	Traits:   identity.Traits(`{"email":"recoverme@ory.sh"}`),
 	SchemaID: configuration.DefaultIdentityTraitsSchemaID,
 }
-var recoveryEmail = gjson.GetBytes(identityToRecover.Traits,"email").String()
+var recoveryEmail = gjson.GetBytes(identityToRecover.Traits, "email").String()
 
 func initViper() {
 	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/default.schema.json")
@@ -75,7 +76,7 @@ func TestAdminStrategy(t *testing.T) {
 
 	t.Run("description=should not be able to recover an account that does not exist", func(t *testing.T) {
 		_, err := adminSDK.Admin.CreateRecoveryLink(admin.NewCreateRecoveryLinkParams().WithBody(
-			admin.CreateRecoveryLinkBody{IdentityID: models.UUID(x.NewUUID().String())}))
+			&models.CreateRecoveryLink{IdentityID: models.UUID(x.NewUUID().String())}))
 		require.IsType(t, err, new(admin.CreateRecoveryLinkNotFound), "%T", err)
 	})
 
@@ -85,7 +86,7 @@ func TestAdminStrategy(t *testing.T) {
 			&id, identity.ManagerAllowWriteProtectedTraits))
 
 		_, err := adminSDK.Admin.CreateRecoveryLink(admin.NewCreateRecoveryLinkParams().WithBody(
-			admin.CreateRecoveryLinkBody{IdentityID: models.UUID(id.ID.String())}))
+			&models.CreateRecoveryLink{IdentityID: models.UUID(id.ID.String())}))
 		require.IsType(t, err, new(admin.CreateRecoveryLinkBadRequest), "%T", err)
 	})
 
@@ -96,7 +97,7 @@ func TestAdminStrategy(t *testing.T) {
 			&id, identity.ManagerAllowWriteProtectedTraits))
 
 		rl, err := adminSDK.Admin.CreateRecoveryLink(admin.NewCreateRecoveryLinkParams().
-			WithBody(admin.CreateRecoveryLinkBody{
+			WithBody(&models.CreateRecoveryLink{
 				IdentityID: models.UUID(id.ID.String()),
 				ExpiresIn:  "100ms",
 			}))
@@ -114,13 +115,13 @@ func TestAdminStrategy(t *testing.T) {
 	})
 
 	t.Run("description=should create a valid recovery link and set the expiry time as well and recover the account", func(t *testing.T) {
-		id := identity.Identity{Traits: identity.Traits(`{"email":"`+recoveryEmail+`"}`)}
+		id := identity.Identity{Traits: identity.Traits(`{"email":"` + recoveryEmail + `"}`)}
 
 		require.NoError(t, reg.IdentityManager().Create(context.Background(),
 			&id, identity.ManagerAllowWriteProtectedTraits))
 
 		rl, err := adminSDK.Admin.CreateRecoveryLink(admin.NewCreateRecoveryLinkParams().
-			WithBody(admin.CreateRecoveryLinkBody{IdentityID: models.UUID(id.ID.String())}))
+			WithBody(&models.CreateRecoveryLink{IdentityID: models.UUID(id.ID.String())}))
 		require.NoError(t, err)
 
 		checkLink(t, rl, time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan()+time.Second))
@@ -144,8 +145,6 @@ func TestAdminStrategy(t *testing.T) {
 func TestStrategy(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	initViper()
-
-
 
 	_ = testhelpers.NewRecoveryUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)
@@ -263,7 +262,7 @@ func TestStrategy(t *testing.T) {
 
 			body := x.MustReadAll(res.Body)
 			assert.Equal(t, text.NewRecoverySuccessful(time.Now().Add(time.Hour)).Text,
-				gjson.GetBytes(body,"messages.0.text").String())
+				gjson.GetBytes(body, "messages.0.text").String())
 		}
 
 		var values = func(v url.Values) {
@@ -321,7 +320,7 @@ func TestStrategy(t *testing.T) {
 		})
 
 		body := expectSuccess(t, false, func(v url.Values) {
-			v.Set("email",recoveryEmail)
+			v.Set("email", recoveryEmail)
 		})
 
 		message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
@@ -337,7 +336,7 @@ func TestStrategy(t *testing.T) {
 
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String())
-		assert.NotContains(t, res.Request.URL.String(), gjson.Get(body,"id").String())
+		assert.NotContains(t, res.Request.URL.String(), gjson.Get(body, "id").String())
 
 		sr, err := sdk.Common.GetSelfServiceRecoveryFlow(
 			common.NewGetSelfServiceRecoveryFlowParams().WithHTTPClient(c).

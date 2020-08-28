@@ -9,8 +9,8 @@ type (
 		HashedPassword string `json:"hashed_password"`
 	}
 
-	// LoginFormPayload is used to decode the login form payload.
-	LoginFormPayload struct {
+	// CompleteSelfServiceLoginFlowWithPasswordMethod is used to decode the login form payload.
+	CompleteSelfServiceLoginFlowWithPasswordMethod struct {
 		// The user's password.
 		Password string `form:"password" json:"password,omitempty"`
 

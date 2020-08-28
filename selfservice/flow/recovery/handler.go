@@ -142,7 +142,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, _ http
 
 // nolint:deadcode,unused
 // swagger:parameters getSelfServiceRecoveryFlow
-type getSelfServiceRecoveryFlow struct {
+type getSelfServiceRecoveryFlowParameters struct {
 	// The Flow ID
 	//
 	// The value for this parameter comes from `request` URL Query parameter sent to your

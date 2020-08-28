@@ -14,6 +14,8 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+
+	"github.com/ory/kratos/internal/httpclient/models"
 )
 
 // NewRevokeSessionParams creates a new RevokeSessionParams object
@@ -60,13 +62,8 @@ for the revoke session operation typically these are written to a http.Request
 */
 type RevokeSessionParams struct {
 
-	/*SessionToken
-	  The Session Token
-
-	Invalidate this session token.
-
-	*/
-	SessionToken string
+	/*Body*/
+	Body *models.RevokeSession
 
 	timeout    time.Duration
 	Context    context.Context
@@ -106,15 +103,15 @@ func (o *RevokeSessionParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithSessionToken adds the sessionToken to the revoke session params
-func (o *RevokeSessionParams) WithSessionToken(sessionToken string) *RevokeSessionParams {
-	o.SetSessionToken(sessionToken)
+// WithBody adds the body to the revoke session params
+func (o *RevokeSessionParams) WithBody(body *models.RevokeSession) *RevokeSessionParams {
+	o.SetBody(body)
 	return o
 }
 
-// SetSessionToken adds the sessionToken to the revoke session params
-func (o *RevokeSessionParams) SetSessionToken(sessionToken string) {
-	o.SessionToken = sessionToken
+// SetBody adds the body to the revoke session params
+func (o *RevokeSessionParams) SetBody(body *models.RevokeSession) {
+	o.Body = body
 }
 
 // WriteToRequest writes these params to a swagger request
@@ -125,8 +122,10 @@ func (o *RevokeSessionParams) WriteToRequest(r runtime.ClientRequest, reg strfmt
 	}
 	var res []error
 
-	if err := r.SetBodyParam(o.SessionToken); err != nil {
-		return err
+	if o.Body != nil {
+		if err := r.SetBodyParam(o.Body); err != nil {
+			return err
+		}
 	}
 
 	if len(res) > 0 {

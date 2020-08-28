@@ -30,7 +30,7 @@ func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 	r.POST(RouteLogin, s.handleLogin)
 }
 
-func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *login.Flow, payload *LoginFormPayload, err error) {
+func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *login.Flow, payload *CompleteSelfServiceLoginFlowWithPasswordMethod, err error) {
 	if rr != nil {
 		if method, ok := rr.Methods[identity.CredentialsTypePassword]; ok {
 			method.Config.Reset()
@@ -48,7 +48,7 @@ func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *
 
 // nolint:deadcode,unused
 // swagger:parameters completeSelfServiceLoginFlowWithPasswordMethod
-type completeSelfServiceLoginFlowWithPasswordMethod struct {
+type completeSelfServiceLoginFlowWithPasswordMethodParameters struct {
 	// The Flow ID
 	//
 	// required: true
@@ -56,7 +56,7 @@ type completeSelfServiceLoginFlowWithPasswordMethod struct {
 	Flow string `json:"flow"`
 
 	// in: body
-	LoginFormPayload
+	CompleteSelfServiceLoginFlowWithPasswordMethod
 }
 
 // swagger:route GET /self-service/login/methods/password public completeSelfServiceLoginFlowWithPasswordMethod
@@ -104,7 +104,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
-	var p LoginFormPayload
+	var p CompleteSelfServiceLoginFlowWithPasswordMethod
 	if err := s.hd.Decode(r, &p, decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema)); err != nil {
 		s.handleLoginError(w, r, ar, &p, err)
 		return

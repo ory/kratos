@@ -53,14 +53,14 @@ func (h *Handler) RegisterAdminRoutes(public *x.RouterAdmin) {
 //
 // swagger:response errorContainer
 // nolint:deadcode,unused
-type errorContainerResponse struct {
+type getSelfServiceErrorResponse struct {
 	// in: body
 	Body ErrorContainer `json:"error"`
 }
 
 // nolint:deadcode,unused
 // swagger:parameters getSelfServiceError
-type errorContainerParameters struct {
+type getSelfServiceErrorParameters struct {
 	// Error is the container's ID
 	//
 	// in: query

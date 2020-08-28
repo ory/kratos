@@ -147,9 +147,8 @@
           {
             "name": "Body",
             "in": "body",
-            "required": true,
             "schema": {
-              "$ref": "#/definitions/Identity"
+              "$ref": "#/definitions/CreateIdentity"
             }
           }
         ],
@@ -251,9 +250,8 @@
           {
             "name": "Body",
             "in": "body",
-            "required": true,
             "schema": {
-              "$ref": "#/definitions/Identity"
+              "$ref": "#/definitions/UpdateIdentity"
             }
           }
         ],
@@ -343,20 +341,7 @@
             "name": "Body",
             "in": "body",
             "schema": {
-              "type": "object",
-              "required": [
-                "identity_id"
-              ],
-              "properties": {
-                "expires_in": {
-                  "description": "Link Expires In\n\nThe recovery link will expire at that point in time. Defaults to the configuration value of\n`selfservice.flows.recovery.request_lifespan`.",
-                  "type": "string",
-                  "pattern": "^[0-9]+(ns|us|ms|s|m|h)$"
-                },
-                "identity_id": {
-                  "$ref": "#/definitions/UUID"
-                }
-              }
+              "$ref": "#/definitions/CreateRecoveryLink"
             }
           }
         ],
@@ -1055,7 +1040,7 @@
             "name": "Body",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/completeSelfServiceRecoveryFlowWithLinkMethodBody"
+              "$ref": "#/definitions/completeSelfServiceRecoveryFlowWithLinkMethod"
             }
           },
           {
@@ -1415,10 +1400,10 @@
         "operationId": "completeSelfServiceSettingsFlowWithPasswordMethod",
         "parameters": [
           {
-            "name": "Payload",
+            "name": "Body",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/SettingsFlowPayload"
+              "$ref": "#/definitions/CompleteSelfServiceSettingsFlowWithPasswordMethod"
             }
           },
           {
@@ -1541,12 +1526,11 @@
         "operationId": "revokeSession",
         "parameters": [
           {
-            "description": "The Session Token\n\nInvalidate this session token.",
-            "name": "session_token",
+            "name": "Body",
             "in": "body",
             "required": true,
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/revokeSession"
             }
           }
         ],
@@ -1629,6 +1613,55 @@
     }
   },
   "definitions": {
+    "CompleteSelfServiceSettingsFlowWithPasswordMethod": {
+      "type": "object",
+      "required": [
+        "password"
+      ],
+      "properties": {
+        "csrf_token": {
+          "description": "CSRFToken is the anti-CSRF token\n\ntype: string",
+          "type": "string"
+        },
+        "password": {
+          "description": "Password is the updated password\n\ntype: string",
+          "type": "string"
+        }
+      }
+    },
+    "CreateIdentity": {
+      "type": "object",
+      "required": [
+        "schema_id",
+        "traits"
+      ],
+      "properties": {
+        "schema_id": {
+          "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.",
+          "type": "string"
+        },
+        "traits": {
+          "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_url`.",
+          "type": "object"
+        }
+      }
+    },
+    "CreateRecoveryLink": {
+      "type": "object",
+      "required": [
+        "identity_id"
+      ],
+      "properties": {
+        "expires_in": {
+          "description": "Link Expires In\n\nThe recovery link will expire at that point in time. Defaults to the configuration value of\n`selfservice.flows.recovery.request_lifespan`.",
+          "type": "string",
+          "pattern": "^[0-9]+(ns|us|ms|s|m|h)$"
+        },
+        "identity_id": {
+          "$ref": "#/definitions/UUID"
+        }
+      }
+    },
     "CredentialsType": {
       "description": "and so on.",
       "type": "string",
@@ -1745,19 +1778,6 @@
     "RecoveryAddressType": {
       "type": "string"
     },
-    "SettingsFlowPayload": {
-      "type": "object",
-      "properties": {
-        "csrf_token": {
-          "description": "The Anti-CSRF Token\n\nThis token is only required when performing browser flows.",
-          "type": "string"
-        },
-        "traits": {
-          "description": "Traits contains all of the identity's traits.",
-          "type": "object"
-        }
-      }
-    },
     "State": {
       "type": "string"
     },
@@ -1772,6 +1792,22 @@
     "UUID": {
       "type": "string",
       "format": "uuid4"
+    },
+    "UpdateIdentity": {
+      "type": "object",
+      "required": [
+        "traits"
+      ],
+      "properties": {
+        "schema_id": {
+          "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set\nwill update the Identity's SchemaID.",
+          "type": "string"
+        },
+        "traits": {
+          "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_id`.",
+          "type": "object"
+        }
+      }
     },
     "VerifiableAddress": {
       "type": "object",
@@ -1808,7 +1844,7 @@
     "VerifiableAddressType": {
       "type": "string"
     },
-    "completeSelfServiceRecoveryFlowWithLinkMethodBody": {
+    "completeSelfServiceRecoveryFlowWithLinkMethod": {
       "type": "object",
       "properties": {
         "csrf_token": {
@@ -2291,6 +2327,18 @@
         },
         "session_token": {
           "description": "The Session Token\n\nThis field is only set when the session hook is configured as a post-registration hook.\n\nA session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization\nHeader:\n\nAuthorization: bearer \u003csession-token\u003e\n\nThe session token is only issued for API flows, not for Browser flows!",
+          "type": "string"
+        }
+      }
+    },
+    "revokeSession": {
+      "type": "object",
+      "required": [
+        "session_token"
+      ],
+      "properties": {
+        "session_token": {
+          "description": "The Session Token\n\nInvalidate this session token.",
           "type": "string"
         }
       }

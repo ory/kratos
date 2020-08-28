@@ -12,6 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/x/pointerx"
+
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/viper"
@@ -20,6 +22,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/httpclient/client/public"
+	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/internal/testhelpers"
 	. "github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
@@ -84,13 +87,15 @@ func TestSessionWhoAmI(t *testing.T) {
 func TestSessionRevoke(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	publicTS, _ := testhelpers.NewKratosServer(t, reg)
+	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://stub/identity.schema.json")
 	i := &identity.Identity{Traits: identity.Traits(`{"baz":"bar"}`)}
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 	sess := NewActiveSession(i, conf, time.Now())
 	require.NoError(t, reg.SessionPersister().CreateSession(context.Background(), sess))
 
 	sdk := testhelpers.NewSDKClient(publicTS)
-	_, err := sdk.Public.RevokeSession(public.NewRevokeSessionParams().WithSessionToken(sess.Token))
+	_, err := sdk.Public.RevokeSession(public.NewRevokeSessionParams().WithBody(&models.RevokeSession{
+		SessionToken: pointerx.String(sess.Token)}))
 	require.NoError(t, err)
 
 	actual, err := reg.SessionPersister().GetSession(context.Background(), sess.ID)

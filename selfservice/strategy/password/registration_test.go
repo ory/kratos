@@ -149,14 +149,14 @@ func TestRegistration(t *testing.T) {
 		})
 
 		t.Run("case=should return an error because the request is expired", func(t *testing.T) {
-			viper.Set(configuration.ViperKeySelfServiceRegistrationRequestLifespan, "10ms")
+			viper.Set(configuration.ViperKeySelfServiceRegistrationRequestLifespan, "100ms")
 			defer viper.Set(configuration.ViperKeySelfServiceRegistrationRequestLifespan, "10m")
 
 			t.Run("type=api", func(t *testing.T) {
 				f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
 				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
 
-				time.Sleep(time.Millisecond * 20)
+				time.Sleep(time.Millisecond * 200)
 				actual, res := testhelpers.RegistrationMakeRequest(t, true, c, apiClient, "{}")
 				assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteGetFlow)
 				assert.NotEqual(t, f.Payload.ID, gjson.Get(actual, "id").String(), "%s", actual)
@@ -168,7 +168,7 @@ func TestRegistration(t *testing.T) {
 				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS)
 				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
 
-				time.Sleep(time.Millisecond * 20)
+				time.Sleep(time.Millisecond * 200)
 				actual, res := testhelpers.RegistrationMakeRequest(t, false, c, browserClient, "")
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/registration-ts")
 				assert.NotEqual(t, f.Payload.ID, gjson.Get(actual, "id").String(), "%s", actual)

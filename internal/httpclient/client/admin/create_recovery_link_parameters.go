@@ -14,6 +14,8 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+
+	"github.com/ory/kratos/internal/httpclient/models"
 )
 
 // NewCreateRecoveryLinkParams creates a new CreateRecoveryLinkParams object
@@ -61,7 +63,7 @@ for the create recovery link operation typically these are written to a http.Req
 type CreateRecoveryLinkParams struct {
 
 	/*Body*/
-	Body CreateRecoveryLinkBody
+	Body *models.CreateRecoveryLink
 
 	timeout    time.Duration
 	Context    context.Context
@@ -102,13 +104,13 @@ func (o *CreateRecoveryLinkParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithBody adds the body to the create recovery link params
-func (o *CreateRecoveryLinkParams) WithBody(body CreateRecoveryLinkBody) *CreateRecoveryLinkParams {
+func (o *CreateRecoveryLinkParams) WithBody(body *models.CreateRecoveryLink) *CreateRecoveryLinkParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the create recovery link params
-func (o *CreateRecoveryLinkParams) SetBody(body CreateRecoveryLinkBody) {
+func (o *CreateRecoveryLinkParams) SetBody(body *models.CreateRecoveryLink) {
 	o.Body = body
 }
 
@@ -120,8 +122,10 @@ func (o *CreateRecoveryLinkParams) WriteToRequest(r runtime.ClientRequest, reg s
 	}
 	var res []error
 
-	if err := r.SetBodyParam(o.Body); err != nil {
-		return err
+	if o.Body != nil {
+		if err := r.SetBodyParam(o.Body); err != nil {
+			return err
+		}
 	}
 
 	if len(res) > 0 {

@@ -64,13 +64,18 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 }
 
 // swagger:parameters revokeSession
-type RevokeSessionParams struct {
+type revokeSessionParameters struct {
+	// in: body
+	// required: true
+	Body revokeSession
+}
+
+type revokeSession struct {
 	// The Session Token
 	//
 	// Invalidate this session token.
 	//
 	// required: true
-	// in: body
 	SessionToken string `json:"session_token"`
 }
 
@@ -95,9 +100,11 @@ type RevokeSessionParams struct {
 //       204: emptyResponse
 //       400: genericError
 //       500: genericError
-func (h *Handler) revoke(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var p RevokeSessionParams
-	if err := h.dx.Decode(r, &p, decoderx.HTTPJSONDecoder()); err != nil {
+func (h *Handler) revoke(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	var p revokeSession
+	if err := h.dx.Decode(r, &p,
+		decoderx.HTTPJSONDecoder(),
+		decoderx.HTTPDecoderAllowedMethods("DELETE")); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
