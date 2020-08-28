@@ -2,6 +2,7 @@ package link_test
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"testing"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
 
 	"github.com/ory/x/urlx"
 
@@ -35,13 +37,13 @@ import (
 func init() {
 	internal.RegisterFakes()
 }
-
 var identityToRecover = &identity.Identity{
 	Credentials: map[identity.CredentialsType]identity.Credentials{
-		"password": {Type: "password", Identifiers: []string{"recover@ory.sh"}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)}},
-	Traits:   identity.Traits(`{"email":"recover@ory.sh"}`),
+		"password": {Type: "password", Identifiers: []string{"recoverme@ory.sh"}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)}},
+	Traits:   identity.Traits(`{"email":"recoverme@ory.sh"}`),
 	SchemaID: configuration.DefaultIdentityTraitsSchemaID,
 }
+var recoveryEmail = gjson.GetBytes(identityToRecover.Traits,"email").String()
 
 func initViper() {
 	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/default.schema.json")
@@ -55,7 +57,8 @@ func TestAdminStrategy(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	initViper()
 
-	_ = testhelpers.NewRecoveryUITestServer(t)
+	_ = testhelpers.NewRecoveryUIFlowEchoServer(t, reg)
+	_ = testhelpers.NewSettingsUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
 
@@ -66,7 +69,7 @@ func TestAdminStrategy(t *testing.T) {
 		require.Contains(t, *l.Payload.RecoveryLink, publicTS.URL+link.PublicPath)
 		rl := urlx.ParseOrPanic(*l.Payload.RecoveryLink)
 		assert.NotEmpty(t, rl.Query().Get("token"))
-		assert.NotEmpty(t, rl.Query().Get("request"))
+		assert.NotEmpty(t, rl.Query().Get("flow"))
 		require.True(t, time.Time(l.Payload.ExpiresAt).Before(isBefore))
 	}
 
@@ -86,13 +89,13 @@ func TestAdminStrategy(t *testing.T) {
 		require.IsType(t, err, new(admin.CreateRecoveryLinkBadRequest), "%T", err)
 	})
 
-	t.Run("description=should create a valid recovery link and set the expiry time and not e able to recover the account", func(t *testing.T) {
+	t.Run("description=should create a valid recovery link and set the expiry time and not be able to recover the account", func(t *testing.T) {
 		id := identity.Identity{Traits: identity.Traits(`{"email":"recover.expired@ory.sh"}`)}
 
 		require.NoError(t, reg.IdentityManager().Create(context.Background(),
 			&id, identity.ManagerAllowWriteProtectedTraits))
 
-		link, err := adminSDK.Admin.CreateRecoveryLink(admin.NewCreateRecoveryLinkParams().
+		rl, err := adminSDK.Admin.CreateRecoveryLink(admin.NewCreateRecoveryLinkParams().
 			WithBody(admin.CreateRecoveryLinkBody{
 				IdentityID: models.UUID(id.ID.String()),
 				ExpiresIn:  "100ms",
@@ -100,38 +103,38 @@ func TestAdminStrategy(t *testing.T) {
 		require.NoError(t, err)
 
 		time.Sleep(time.Millisecond * 100)
-		checkLink(t, link, time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan()))
-		res, err := publicTS.Client().Get(*link.Payload.RecoveryLink)
+		checkLink(t, rl, time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan()))
+		res, err := publicTS.Client().Get(*rl.Payload.RecoveryLink)
 		require.NoError(t, err)
 
-		require.Equal(t, http.StatusNoContent, res.StatusCode)
+		require.Equal(t, http.StatusOK, res.StatusCode)
 
 		// We end up here because the link is expired.
 		assert.Contains(t, res.Request.URL.Path, "/recover")
 	})
 
 	t.Run("description=should create a valid recovery link and set the expiry time as well and recover the account", func(t *testing.T) {
-		id := identity.Identity{Traits: identity.Traits(`{"email":"recover@ory.sh"}`)}
+		id := identity.Identity{Traits: identity.Traits(`{"email":"`+recoveryEmail+`"}`)}
 
 		require.NoError(t, reg.IdentityManager().Create(context.Background(),
 			&id, identity.ManagerAllowWriteProtectedTraits))
 
-		link, err := adminSDK.Admin.CreateRecoveryLink(admin.NewCreateRecoveryLinkParams().
+		rl, err := adminSDK.Admin.CreateRecoveryLink(admin.NewCreateRecoveryLinkParams().
 			WithBody(admin.CreateRecoveryLinkBody{IdentityID: models.UUID(id.ID.String())}))
 		require.NoError(t, err)
 
-		checkLink(t, link, time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan()+time.Second))
-		res, err := publicTS.Client().Get(*link.Payload.RecoveryLink)
+		checkLink(t, rl, time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan()+time.Second))
+		res, err := publicTS.Client().Get(*rl.Payload.RecoveryLink)
 		require.NoError(t, err)
 
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowSettingsUI().String())
-		assert.Equal(t, http.StatusAccepted, res.StatusCode)
-		testhelpers.LogJSON(t, link.Payload)
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+		testhelpers.LogJSON(t, rl.Payload)
 
 		sr, err := adminSDK.Common.GetSelfServiceSettingsFlow(
 			common.NewGetSelfServiceSettingsFlowParams().
 				WithID(res.Request.URL.Query().Get("flow")))
-		require.NoError(t, err)
+		require.NoError(t, err, "%s", res.Request.URL.String())
 
 		require.Len(t, sr.Payload.Messages, 1)
 		assert.Equal(t, "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 60.00 minutes.", sr.Payload.Messages[0].Text)
@@ -142,8 +145,11 @@ func TestStrategy(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	initViper()
 
-	_ = testhelpers.NewRecoveryUITestServer(t)
+
+
+	_ = testhelpers.NewRecoveryUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)
+	_ = testhelpers.NewSettingsUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
 
 	public, _ := testhelpers.NewKratosServer(t, reg)
@@ -153,7 +159,24 @@ func TestStrategy(t *testing.T) {
 		identity.ManagerAllowWriteProtectedTraits))
 
 	var csrfField = &models.FormField{Name: pointerx.String("csrf_token"), Required: true,
-		Type: pointerx.String("hidden"), Value: "nosurf"}
+		Type: pointerx.String("hidden"), Value: x.FakeCSRFToken}
+
+	var expect = func(t *testing.T, isAPI bool, values func(url.Values), c int) string {
+		hc := testhelpers.NewDebugClient(t)
+		if !isAPI {
+			hc = testhelpers.NewDebugClient(t)
+		}
+		return testhelpers.SubmitRecoveryForm(t, isAPI, hc, public, values, recovery.StrategyRecoveryTokenName, c,
+			testhelpers.ExpectURL(isAPI, public.URL+link.PublicPath, conf.SelfServiceFlowRecoveryUI().String()))
+	}
+
+	var expectValidationError = func(t *testing.T, isAPI bool, values func(url.Values)) string {
+		return expect(t, isAPI, values, testhelpers.ExpectStatusCode(isAPI, http.StatusBadRequest, http.StatusOK))
+	}
+
+	var expectSuccess = func(t *testing.T, isAPI bool, values func(url.Values)) string {
+		return expect(t, isAPI, values, http.StatusOK)
+	}
 
 	t.Run("description=should set all the correct recovery payloads", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
@@ -164,100 +187,108 @@ func TestStrategy(t *testing.T) {
 		assert.EqualValues(t, models.FormFields{csrfField,
 			{Name: pointerx.String("email"), Required: true, Type: pointerx.String("email")},
 		}, method.Config.Fields)
-		assert.EqualValues(t, public.URL+link.PublicPath+"?request="+string(rs.Payload.ID), *method.Config.Action)
+		assert.EqualValues(t, public.URL+link.PublicPath+"?flow="+string(rs.Payload.ID), *method.Config.Action)
 		assert.Empty(t, method.Config.Messages)
 		assert.Empty(t, rs.Payload.Messages)
 	})
 
 	t.Run("description=should require an email to be sent", func(t *testing.T) {
-		c := testhelpers.NewClientWithCookies(t)
-		rs := testhelpers.GetRecoveryRequest(t, c, public)
+		var check = func(t *testing.T, actual string) {
+			assert.EqualValues(t, recovery.StrategyRecoveryTokenName, gjson.Get(actual, "active").String(), "%s", actual)
+			assert.EqualValues(t, "Property email is missing.",
+				gjson.Get(actual, "methods.link.config.fields.#(name==email).messages.0.text").String(),
+				"%s", actual)
+		}
 
-		f := rs.Payload.Methods[recovery.StrategyRecoveryTokenName].Config
+		var values = func(v url.Values) {
+			v.Del("email")
+		}
 
-		_, rs = testhelpers.RecoverySubmitForm(t, f, c, url.Values{"email": {""}})
-		assert.EqualValues(t, recovery.StrategyRecoveryTokenName, rs.Payload.Active)
-		assert.Contains(t, rs.Payload.Methods, recovery.StrategyRecoveryTokenName)
-		method := rs.Payload.Methods[recovery.StrategyRecoveryTokenName]
-		assert.EqualValues(t, models.FormFields{csrfField,
-			{Name: pointerx.String("email"), Required: true, Type: pointerx.String("email"), Value: "",
-				Messages: models.Messages{{ID: 4000002, Type: "error", Text: "Property email is missing.", Context: map[string]interface{}{"property": "email"}}}},
-		}, method.Config.Fields)
+		t.Run("type=browser", func(t *testing.T) {
+			check(t, expectValidationError(t, false, values))
+		})
+
+		t.Run("type=api", func(t *testing.T) {
+			check(t, expectValidationError(t, true, values))
+		})
 	})
 
 	t.Run("description=should try to recover an email that does not exist", func(t *testing.T) {
-		c := testhelpers.NewClientWithCookies(t)
-		rs := testhelpers.GetRecoveryRequest(t, c, public)
+		var email string
+		var check = func(t *testing.T, actual string) {
+			assert.EqualValues(t, recovery.StrategyRecoveryTokenName, gjson.Get(actual, "active").String(), "%s", actual)
+			assert.EqualValues(t, email, gjson.Get(actual, "methods.link.config.fields.#(name==email).value").String(), "%s", actual)
+			assertx.EqualAsJSON(t, text.NewRecoveryEmailSent(), json.RawMessage(gjson.Get(actual, "messages.0").Raw))
 
-		f := rs.Payload.Methods[recovery.StrategyRecoveryTokenName].Config
+			message := testhelpers.CourierExpectMessage(t, reg, email, "Account access attempted")
+			assert.Contains(t, message.Body, "If this was you, check if you signed up using a different address.")
+		}
 
-		_, rs = testhelpers.RecoverySubmitForm(t, f, c, url.Values{"email": {"i-do-not-exist@ory.sh"}})
-		assert.EqualValues(t, recovery.StrategyRecoveryTokenName, rs.Payload.Active)
-		assert.Contains(t, rs.Payload.Methods, recovery.StrategyRecoveryTokenName)
-		method := rs.Payload.Methods[recovery.StrategyRecoveryTokenName]
+		var values = func(v url.Values) {
+			v.Set("email", email)
+		}
 
-		assert.EqualValues(t, models.FormFields{csrfField, {
-			Name: pointerx.String("email"), Required: true, Type: pointerx.String("email"),
-			Value: "i-do-not-exist@ory.sh",
-		}}, method.Config.Fields)
-		assertx.EqualAsJSON(t, text.Messages{*text.NewRecoveryEmailSent()}, rs.Payload.Messages)
+		t.Run("type=browser", func(t *testing.T) {
+			email = x.NewUUID().String() + "@ory.sh"
+			check(t, expectSuccess(t, false, values))
+		})
 
-		message := testhelpers.CourierExpectMessage(t, reg, "i-do-not-exist@ory.sh", "Account access attempted")
-		assert.Contains(t, message.Body, "If this was you, check if you signed up using a different address.")
+		t.Run("type=api", func(t *testing.T) {
+			email = x.NewUUID().String() + "@ory.sh"
+			check(t, expectSuccess(t, true, values))
+		})
 	})
 
 	t.Run("description=should recover an account", func(t *testing.T) {
-		c := testhelpers.NewClientWithCookies(t)
-		rs := testhelpers.GetRecoveryRequest(t, c, public)
 
-		f := rs.Payload.Methods[recovery.StrategyRecoveryTokenName].Config
+		var check = func(t *testing.T, actual string) {
+			assert.EqualValues(t, recovery.StrategyRecoveryTokenName, gjson.Get(actual, "active").String(), "%s", actual)
+			assert.EqualValues(t, recoveryEmail, gjson.Get(actual, "methods.link.config.fields.#(name==email).value").String(), "%s", actual)
+			assertx.EqualAsJSON(t, text.NewRecoveryEmailSent(), json.RawMessage(gjson.Get(actual, "messages.0").Raw))
 
-		_, rs = testhelpers.RecoverySubmitForm(t, f, c, url.Values{"email": {"recover@ory.sh"}})
+			message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
+			assert.Contains(t, message.Body, "please recover access to your account by clicking the following link")
 
-		assert.EqualValues(t, recovery.StrategyRecoveryTokenName, rs.Payload.Active)
-		assert.Contains(t, rs.Payload.Methods, recovery.StrategyRecoveryTokenName)
-		method := rs.Payload.Methods[recovery.StrategyRecoveryTokenName]
-		assert.EqualValues(t, models.FormFields{csrfField, {
-			Name: pointerx.String("email"), Required: true, Type: pointerx.String("email"),
-			Value: "recover@ory.sh",
-		}}, method.Config.Fields)
-		assertx.EqualAsJSON(t, text.Messages{*text.NewRecoveryEmailSent()}, rs.Payload.Messages)
+			recoveryLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
 
-		message := testhelpers.CourierExpectMessage(t, reg, "recover@ory.sh", "Recover access to your account")
-		assert.Contains(t, message.Body, "please recover access to your account by clicking the following link")
+			assert.Contains(t, recoveryLink, public.URL+link.PublicPath)
+			assert.Contains(t, recoveryLink, "token=")
 
-		recoveryLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
+			cl := testhelpers.NewClientWithCookies(t)
+			res, err := cl.Get(recoveryLink)
+			require.NoError(t, err)
 
-		assert.Contains(t, recoveryLink, public.URL+link.PublicPath)
-		assert.Contains(t, recoveryLink, "token=")
-		res, err := c.Get(recoveryLink)
-		require.NoError(t, err)
+			assert.Equal(t, http.StatusOK, res.StatusCode)
+			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowSettingsUI().String())
 
-		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowSettingsUI().String())
-		assert.Equal(t, http.StatusAccepted, res.StatusCode)
+			body := x.MustReadAll(res.Body)
+			assert.Equal(t, text.NewRecoverySuccessful(time.Now().Add(time.Hour)).Text,
+				gjson.GetBytes(body,"messages.0.text").String())
+		}
 
-		sr, err := sdk.Common.GetSelfServiceSettingsFlow(
-			common.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(c).
-				WithID(res.Request.URL.Query().Get("flow")),
-		)
-		require.NoError(t, err)
+		var values = func(v url.Values) {
+			v.Set("email", recoveryEmail)
+		}
 
-		require.Len(t, sr.Payload.Messages, 1)
-		assert.Equal(t, "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 60.00 minutes.", sr.Payload.Messages[0].Text)
+		t.Run("type=browser", func(t *testing.T) {
+			check(t, expectSuccess(t, false, values))
+		})
+
+		t.Run("type=api", func(t *testing.T) {
+			check(t, expectSuccess(t, true, values))
+		})
 	})
 
 	t.Run("description=should not be able to use an invalid link", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 		res, err := c.Get(public.URL + link.PublicPath + "?token=i-do-not-exist")
 		require.NoError(t, err)
-
-		assert.Equal(t, http.StatusNoContent, res.StatusCode)
-		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String()+"?request=")
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String()+"?flow=")
 
 		sr, err := sdk.Common.GetSelfServiceRecoveryFlow(
 			common.NewGetSelfServiceRecoveryFlowParams().WithHTTPClient(c).
-				WithID(res.Request.URL.Query().Get("flow")),
-		)
+				WithID(res.Request.URL.Query().Get("flow")))
 		require.NoError(t, err)
 
 		require.Len(t, sr.Payload.Messages, 1)
@@ -276,10 +307,10 @@ func TestStrategy(t *testing.T) {
 
 		time.Sleep(time.Millisecond * 201)
 
-		res, err := c.PostForm(pointerx.StringR(method.Action), url.Values{"email": {"recovery@ory.sh"}})
+		res, err := c.PostForm(pointerx.StringR(method.Action), url.Values{"email": {recoveryEmail}})
 		require.NoError(t, err)
-		assert.EqualValues(t, http.StatusNoContent, res.StatusCode)
-		assert.NotContains(t, res.Request.URL.String(), "request="+rs.Payload.ID)
+		assert.EqualValues(t, http.StatusOK, res.StatusCode)
+		assert.NotContains(t, res.Request.URL.String(), "flow="+rs.Payload.ID)
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String())
 	})
 
@@ -289,32 +320,31 @@ func TestStrategy(t *testing.T) {
 			viper.Set(configuration.ViperKeySelfServiceRecoveryRequestLifespan, time.Minute)
 		})
 
-		c := testhelpers.NewClientWithCookies(t)
-		rs := testhelpers.GetRecoveryRequest(t, c, public)
-		_, rs = testhelpers.RecoverySubmitForm(t, rs.Payload.Methods[recovery.StrategyRecoveryTokenName].Config,
-			c, url.Values{"email": {"recover@ory.sh"}})
+		body := expectSuccess(t, false, func(v url.Values) {
+			v.Set("email",recoveryEmail)
+		})
 
-		message := testhelpers.CourierExpectMessage(t, reg, "recover@ory.sh", "Recover access to your account")
+		message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
 		assert.Contains(t, message.Body, "please recover access to your account by clicking the following link")
 
 		recoveryLink := testhelpers.CourierExpectLinkInMessage(t, message, 1)
 
 		time.Sleep(time.Millisecond * 201)
 
+		c := testhelpers.NewClientWithCookies(t)
 		res, err := c.Get(recoveryLink)
 		require.NoError(t, err)
 
-		assert.EqualValues(t, http.StatusNoContent, res.StatusCode)
+		assert.EqualValues(t, http.StatusOK, res.StatusCode)
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String())
-		assert.NotContains(t, res.Request.URL.String(), string(rs.Payload.ID))
+		assert.NotContains(t, res.Request.URL.String(), gjson.Get(body,"id").String())
 
 		sr, err := sdk.Common.GetSelfServiceRecoveryFlow(
 			common.NewGetSelfServiceRecoveryFlowParams().WithHTTPClient(c).
-				WithID(res.Request.URL.Query().Get("flow")),
-		)
+				WithID(res.Request.URL.Query().Get("flow")))
 		require.NoError(t, err)
 
 		require.Len(t, sr.Payload.Messages, 1)
-		assert.Equal(t, "The recovery token is invalid or has already been used. Please retry the flow.", sr.Payload.Messages[0].Text)
+		assert.Equal(t, "The recovery flow expired 0.00 minutes ago, please try again.", sr.Payload.Messages[0].Text)
 	})
 }
