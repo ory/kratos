@@ -107,7 +107,6 @@ New feature or request.
 #### Issues
 
 * [ ] Design of the client cli ([kratos#663](https://github.com/ory/kratos/issues/663)) - [@Patrik](https://github.com/zepatrik)
-* [ ] Rename `request_lifespan` to `lifespan` ([kratos#666](https://github.com/ory/kratos/issues/666)) - [@hackerman](https://github.com/aeneasr)
 * [ ] Implement React SPA sample app ([kratos#668](https://github.com/ory/kratos/issues/668)) - [@hackerman](https://github.com/aeneasr)
 * [ ] Implement React Native sample application consuming API ([kratos#667](https://github.com/ory/kratos/issues/667)) - [@hackerman](https://github.com/aeneasr)
 * [x] Implement JSON capabilities in ErrorHandler ([kratos#61](https://github.com/ory/kratos/issues/61)) - [@hackerman](https://github.com/aeneasr)
@@ -120,6 +119,7 @@ New feature or request.
 * [x] Remove one of in-memory/on-disk SQLite e2e runners and replace with faster test ([kratos#580](https://github.com/ory/kratos/issues/580)) - [@Andreas Bucksteeg](https://github.com/tricky42)
 * [x] Password similarity policy is too strict ([kratos#581](https://github.com/ory/kratos/issues/581)) - [@Patrik](https://github.com/zepatrik)
 * [x] Implement a test-error for implementing the Error UI ([kratos#610](https://github.com/ory/kratos/issues/610))
+* [x] Rename `request_lifespan` to `lifespan` ([kratos#666](https://github.com/ory/kratos/issues/666)) - [@hackerman](https://github.com/aeneasr)
 
 #### Pull Requests
 
@@ -159,7 +159,7 @@ Blocks milestones or other issues or pulls.
 #### Issues
 
 * [ ] Remove reverse proxy from node example and rely on port and the domain parameter ([kratos#661](https://github.com/ory/kratos/issues/661)) - [@hackerman](https://github.com/aeneasr)
-* [ ] Rename `request_lifespan` to `lifespan` ([kratos#666](https://github.com/ory/kratos/issues/666)) - [@hackerman](https://github.com/aeneasr)
+* [x] Rename `request_lifespan` to `lifespan` ([kratos#666](https://github.com/ory/kratos/issues/666)) - [@hackerman](https://github.com/aeneasr)
 
 #### Pull Requests
 
@@ -171,7 +171,7 @@ Changes behavior in a breaking manner.
 
 #### Issues
 
-* [ ] Rename `request_lifespan` to `lifespan` ([kratos#666](https://github.com/ory/kratos/issues/666)) - [@hackerman](https://github.com/aeneasr)
+* [x] Rename `request_lifespan` to `lifespan` ([kratos#666](https://github.com/ory/kratos/issues/666)) - [@hackerman](https://github.com/aeneasr)
 
 #### Pull Requests
 
