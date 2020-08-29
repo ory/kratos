@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-08-28)](#unreleased-2020-08-28)
+- [Unreleased (2020-08-29)](#unreleased-2020-08-29)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -102,7 +102,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...3c8d5e02b04686a1e0bfbd28caa0bc536e3414e4) (2020-08-28)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...bdb6875e55aed454cda061969e1dd4f712e09bb5) (2020-08-29)
 
 
 ### Bug Fixes
@@ -181,6 +181,7 @@
 * Resolve typo in message IDs ([562cfc4](https://github.com/ory/kratos/commit/562cfc4392ba1c9c1fb8854ea0ac85bd44d0fac9))
 * Resolve typo in message IDs ([#607](https://github.com/ory/kratos/issues/607)) ([f7688f0](https://github.com/ory/kratos/commit/f7688f0ab07b579a375ce4cc25361b360e82dd88))
 * Update repository templates ([f422485](https://github.com/ory/kratos/commit/f4224852ceeb054405251b21895efa493e1abc9c))
+* Update repository templates ([#678](https://github.com/ory/kratos/issues/678)) ([bdb6875](https://github.com/ory/kratos/commit/bdb6875e55aed454cda061969e1dd4f712e09bb5))
 * Use correct path in 0.4 docs ([9fcaac4](https://github.com/ory/kratos/commit/9fcaac4048e05500d0456eb3cd9cd11cc123e370)), closes [#588](https://github.com/ory/kratos/issues/588)
 * Use NYT Capitalization for all Swagger headlines ([#675](https://github.com/ory/kratos/issues/675)) ([6c96429](https://github.com/ory/kratos/commit/6c9642959dab8cf042ad227711609d5726328394)), closes [#664](https://github.com/ory/kratos/issues/664)
 
