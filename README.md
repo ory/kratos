@@ -96,7 +96,7 @@ been able to achieve this without each and everyone of you!
 The following list represents companies that have accompanied us along the way
 and that have made outstanding contributions to our ecosystem. _If you think
 that your company deserves a spot here, reach out to
-<a href="mailto:hi@ory.sh">hi@ory.sh</a> now_!
+<a href="mailto:office@ory.sh">office@ory.sh</a> now_!
 
 **Please consider giving back by becoming a sponsor of our open source work on
 <a href="https://www.patreon.com/_ory">Patreon</a> or
@@ -211,6 +211,7 @@ TheCrealm.
 
 
 
+
 ## Getting Started
 
 To get started, head over to the [ORY Kratos Documentation](https://www.ory.sh/kratos/docs).
@@ -274,6 +275,7 @@ determine whether a subject (user, application, service, car, ...) is authorized
 to perform a certain action on a resource.
 
 <!--END ECOSYSTEM-->
+
 
 
 
