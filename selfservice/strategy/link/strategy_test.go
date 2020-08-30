@@ -344,6 +344,6 @@ func TestStrategy(t *testing.T) {
 		require.NoError(t, err)
 
 		require.Len(t, sr.Payload.Messages, 1)
-		assert.Equal(t, "The recovery flow expired 0.00 minutes ago, please try again.", sr.Payload.Messages[0].Text)
+		assert.Contains(t, sr.Payload.Messages[0].Text, "The recovery flow expired")
 	})
 }

@@ -43,7 +43,7 @@ func TestPersister(p interface {
 
 			require.NoError(t, p.CreateIdentity(context.Background(), &i))
 
-			return &Token{Token: x.NewUUID().String(), Request: &req, RecoveryAddress: &i.RecoveryAddresses[0]}
+			return &Token{Token: x.NewUUID().String(), Flow: &req, RecoveryAddress: &i.RecoveryAddresses[0]}
 		}
 
 		t.Run("case=should error when the recovery token does not exist", func(t *testing.T) {
@@ -65,10 +65,10 @@ func TestPersister(p interface {
 			assertx.EqualAsJSON(t, expected.RecoveryAddress, actual.RecoveryAddress)
 			assert.Equal(t, expected.RecoveryAddress.IdentityID, actual.RecoveryAddress.IdentityID)
 			assert.NotEqual(t, expected.Token, actual.Token)
-			assert.EqualValues(t, expected.Request.ID, actual.Request.ID)
-			assert.NotEmpty(t, actual.Request.Methods)
-			assert.NotEmpty(t, expected.Request.Methods)
-			assert.Len(t, actual.Request.Methods, len(expected.Request.Methods))
+			assert.EqualValues(t, expected.Flow.ID, actual.Flow.ID)
+			assert.NotEmpty(t, actual.Flow.Methods)
+			assert.NotEmpty(t, expected.Flow.Methods)
+			assert.Len(t, actual.Flow.Methods, len(expected.Flow.Methods))
 
 			_, err = p.UseRecoveryToken(context.Background(), expected.Token)
 			require.Error(t, err)

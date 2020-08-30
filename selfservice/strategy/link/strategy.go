@@ -408,12 +408,12 @@ func (s *Strategy) verifyToken(w http.ResponseWriter, r *http.Request, body *com
 		return
 	}
 
-	if err := token.Request.Valid(); err != nil {
-		s.handleError(w, r, token.Request, body, err)
+	if err := token.Flow.Valid(); err != nil {
+		s.handleError(w, r, token.Flow, body, err)
 		return
 	}
 
-	req := token.Request
+	req := token.Flow
 	req.Messages.Clear()
 	req.State = recovery.StatePassedChallenge
 	req.RecoveredIdentityID = uuid.NullUUID{UUID: token.RecoveryAddress.IdentityID, Valid: true}

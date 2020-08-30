@@ -27,7 +27,7 @@ type Token struct {
 	RecoveryAddress *identity.RecoveryAddress `json:"recovery_address" belongs_to:"identity_recovery_addresses" fk_id:"RecoveryAddressID"`
 
 	// RecoveryAddress links this token to a recovery request.
-	Request *recovery.Flow `json:"request" belongs_to:"identity_recovery_requests" fk_id:"FlowID"`
+	Flow *recovery.Flow `json:"flow" belongs_to:"selfservice_recovery_flows" fk_id:"FlowID"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
@@ -35,8 +35,8 @@ type Token struct {
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 	// RecoveryAddressID is a helper struct field for gobuffalo.pop.
 	RecoveryAddressID uuid.UUID `json:"-" faker:"-" db:"identity_recovery_address_id"`
-	// RequestID is a helper struct field for gobuffalo.pop.
-	RequestID uuid.UUID `json:"-" faker:"-" db:"selfservice_recovery_request_id"`
+	// FlowID is a helper struct field for gobuffalo.pop.
+	FlowID uuid.UUID `json:"-" faker:"-" db:"selfservice_recovery_flow_id"`
 }
 
 func (Token) TableName() string {
@@ -48,6 +48,6 @@ func NewToken(ra *identity.RecoveryAddress, req *recovery.Flow) *Token {
 		ID:              x.NewUUID(),
 		Token:           randx.MustString(32, randx.AlphaNum),
 		RecoveryAddress: ra,
-		Request:         req,
+		Flow:            req,
 	}
 }

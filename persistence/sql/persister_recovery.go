@@ -97,7 +97,7 @@ func (p *Persister) UseRecoveryToken(ctx context.Context, token string) (*link.T
 		return nil, err
 	}
 
-	if rt.Request, err = p.GetRecoveryFlow(ctx, rt.RequestID); err != nil {
+	if rt.Flow, err = p.GetRecoveryFlow(ctx, rt.FlowID); err != nil {
 		return nil, err
 	}
 
