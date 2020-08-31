@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	SettingsPath = BasePath + "/settings/connections"
+	SettingsPath = RouteBase + "/settings/connections"
 )
 
 var _ settings.Strategy = new(Strategy)
@@ -306,7 +306,7 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 	}
 
 	http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.c.SelfPublicURL(),
-		strings.Replace(AuthPath, ":flow", p.FlowID, 1)),
+		strings.Replace(RouteAuth, ":flow", p.FlowID, 1)),
 		url.Values{"provider": {p.Link}}).String(), http.StatusFound)
 }
 

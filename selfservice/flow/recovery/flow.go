@@ -102,7 +102,9 @@ func NewFlow(exp time.Duration, csrf string, r *http.Request, strategies Strateg
 		ExpiresAt: now.Add(exp), IssuedAt: now,
 		RequestURL: x.RequestURL(r).String(),
 		Methods:    map[string]*FlowMethod{},
-		State:      StateChooseMethod, CSRFToken: csrf, Type: ft,
+		State:      StateChooseMethod,
+		CSRFToken:  csrf,
+		Type:       ft,
 	}
 
 	for _, strategy := range strategies {

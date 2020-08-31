@@ -5,9 +5,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/viper"
 
@@ -31,7 +34,7 @@ func TestVerifier(t *testing.T) {
 		},
 	} {
 		t.Run("name="+k, func(t *testing.T) {
-			_, reg := internal.NewFastRegistryWithMocks(t)
+			conf, reg := internal.NewFastRegistryWithMocks(t)
 			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/verify.schema.json")
 			viper.Set(configuration.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 			viper.Set(configuration.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
@@ -51,12 +54,15 @@ func TestVerifier(t *testing.T) {
 			actual, err = reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "baz@ory.sh")
 			require.NoError(t, err)
 			assert.EqualValues(t, "baz@ory.sh", actual.Value)
-			require.NoError(t, reg.PrivilegedIdentityPool().VerifyAddress(context.Background(), actual.Code))
+			actual.Status = identity.VerifiableAddressStatusCompleted
+			actual.Verified = true
+			actual.VerifiedAt = sqlxx.NullTime(time.Now())
+			require.NoError(t, reg.PrivilegedIdentityPool().UpdateVerifiableAddress(context.Background(), actual))
 
 			i, err = reg.IdentityPool().GetIdentity(context.Background(), i.ID)
 			require.NoError(t, err)
 
-			h := hook.NewVerifier(reg)
+			h := hook.NewVerifier(reg, conf)
 			require.NoError(t, hf(h, i))
 
 			messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)

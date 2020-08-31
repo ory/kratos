@@ -57,7 +57,7 @@ type Configuration struct {
 
 func (p Configuration) Redir(public *url.URL) string {
 	return urlx.AppendPaths(public,
-		strings.Replace(CallbackPath, ":provider", p.ID, 1),
+		strings.Replace(RouteCallback, ":provider", p.ID, 1),
 	).String()
 }
 

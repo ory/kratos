@@ -13,7 +13,7 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-const IdentitiesPath = "/identities"
+const RouteBase = "/identities"
 
 type (
 	handlerDependencies interface {
@@ -42,12 +42,12 @@ func NewHandler(
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(IdentitiesPath, h.list)
-	admin.GET(IdentitiesPath+"/:id", h.get)
-	admin.DELETE(IdentitiesPath+"/:id", h.delete)
+	admin.GET(RouteBase, h.list)
+	admin.GET(RouteBase+"/:id", h.get)
+	admin.DELETE(RouteBase+"/:id", h.delete)
 
-	admin.POST(IdentitiesPath, h.create)
-	admin.PUT(IdentitiesPath+"/:id", h.update)
+	admin.POST(RouteBase, h.create)
+	admin.PUT(RouteBase+"/:id", h.update)
 }
 
 // A single identity.
@@ -123,7 +123,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 		return
 	}
 
-	x.PaginationHeader(w, urlx.AppendPaths(h.c.SelfAdminURL(), IdentitiesPath), total, page, itemsPerPage)
+	x.PaginationHeader(w, urlx.AppendPaths(h.c.SelfAdminURL(), RouteBase), total, page, itemsPerPage)
 	h.r.Writer().Write(w, r, is)
 }
 
@@ -166,6 +166,7 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 }
 
 // swagger:parameters createIdentity
+// nolint:deadcode,unused
 type createIdentityParameters struct {
 	// in: body
 	Body CreateIdentity
@@ -232,6 +233,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 }
 
 // swagger:parameters updateIdentity
+// nolint:deadcode,unused
 type updateIdentityParameters struct {
 	// ID must be set to the ID of identity you want to update
 	//
@@ -312,6 +314,7 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 }
 
 // swagger:parameters deleteIdentity
+// nolint:deadcode,unused
 type deleteIdentityParameters struct {
 	// ID is the identity's ID.
 	//

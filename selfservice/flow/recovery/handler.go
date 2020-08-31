@@ -33,7 +33,7 @@ type (
 		identity.PrivilegedPoolProvider
 		session.HandlerProvider
 		StrategyProvider
-		RequestPersistenceProvider
+		FlowPersistenceProvider
 		x.CSRFTokenGeneratorProvider
 		x.WriterProvider
 	}
@@ -52,11 +52,11 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsNotAuthenticated(h.initBrowserFlow, redirect))
 	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsNotAuthenticated(h.initAPIFlow,
 		session.RespondWithJSONErrorOnAuthenticated(h.d.Writer(), ErrAlreadyLoggedIn)))
-	public.GET(RouteGetFlow, h.fetchRequest)
+	public.GET(RouteGetFlow, h.fetch)
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(RouteGetFlow, h.fetchRequest)
+	admin.GET(RouteGetFlow, h.fetch)
 }
 
 // swagger:route GET /self-service/recovery/api public initializeSelfServiceRecoveryViaAPIFlow
@@ -171,7 +171,7 @@ type getSelfServiceRecoveryFlowParameters struct {
 //       404: genericError
 //       410: genericError
 //       500: genericError
-func (h *Handler) fetchRequest(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	rid := x.ParseUUID(r.URL.Query().Get("id"))
 	req, err := h.d.RecoveryFlowPersister().GetRecoveryFlow(r.Context(), rid)
 	if err != nil {

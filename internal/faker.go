@@ -17,6 +17,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
+	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/x"
 )
@@ -135,7 +136,7 @@ func RegisterFakes() {
 
 	if err := faker.AddProvider("recovery_flow_methods", func(v reflect.Value) (interface{}, error) {
 		var methods = make(map[string]*recovery.FlowMethod)
-		for _, ct := range []string{recovery.StrategyRecoveryTokenName} {
+		for _, ct := range []string{recovery.StrategyRecoveryLinkName} {
 			var f form.HTMLForm
 			if err := faker.FakeData(&f); err != nil {
 				return nil, err
@@ -143,6 +144,23 @@ func RegisterFakes() {
 			methods[ct] = &recovery.FlowMethod{
 				Method: ct,
 				Config: &recovery.FlowMethodConfig{FlowMethodConfigurator: &f},
+			}
+		}
+		return methods, nil
+	}); err != nil {
+		panic(err)
+	}
+
+	if err := faker.AddProvider("verification_flow_methods", func(v reflect.Value) (interface{}, error) {
+		var methods = make(map[string]*verification.FlowMethod)
+		for _, ct := range []string{verification.StrategyVerificationLinkName} {
+			var f form.HTMLForm
+			if err := faker.FakeData(&f); err != nil {
+				return nil, err
+			}
+			methods[ct] = &verification.FlowMethod{
+				Method: ct,
+				Config: &verification.FlowMethodConfig{FlowMethodConfigurator: &f},
 			}
 		}
 		return methods, nil

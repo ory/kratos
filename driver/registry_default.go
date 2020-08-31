@@ -109,7 +109,8 @@ type RegistryDefault struct {
 	selfserviceVerifyErrorHandler *verification.ErrorHandler
 	selfserviceVerifyManager      *identity.Manager
 	selfserviceVerifyHandler      *verification.Handler
-	selfserviceVerifySender       *verification.Sender
+
+	selfserviceLinkSender *link.Sender
 
 	selfserviceRecoveryErrorHandler *recovery.ErrorHandler
 	selfserviceRecoveryHandler      *recovery.Handler
@@ -122,6 +123,7 @@ type RegistryDefault struct {
 	registrationStrategies             []registration.Strategy
 	profileStrategies                  []settings.Strategy
 	recoveryStrategies                 []recovery.Strategy
+	verificationStrategies             []verification.Strategy
 
 	buildVersion string
 	buildHash    string
@@ -156,6 +158,7 @@ func (m *RegistryDefault) RegisterPublicRoutes(router *x.RouterPublic) {
 
 	if m.c.SelfServiceFlowVerificationEnabled() {
 		m.VerificationHandler().RegisterPublicRoutes(router)
+		m.VerificationStrategies().RegisterPublicRoutes(router)
 	}
 
 	m.HealthHandler().SetRoutes(router.Router, false)
@@ -177,6 +180,7 @@ func (m *RegistryDefault) RegisterAdminRoutes(router *x.RouterAdmin) {
 
 	if m.c.SelfServiceFlowVerificationEnabled() {
 		m.VerificationHandler().RegisterAdminRoutes(router)
+		m.VerificationStrategies().RegisterAdminRoutes(router)
 	}
 
 	m.HealthHandler().SetRoutes(router.Router, true)
@@ -279,6 +283,19 @@ func (m *RegistryDefault) LoginStrategies() login.Strategies {
 		}
 	}
 	return m.loginStrategies
+}
+
+func (m *RegistryDefault) VerificationStrategies() verification.Strategies {
+	if len(m.verificationStrategies) == 0 {
+		for _, strategy := range m.selfServiceStrategies() {
+			if s, ok := strategy.(verification.Strategy); ok {
+				if m.c.SelfServiceStrategy(s.VerificationStrategyID()).Enabled {
+					m.verificationStrategies = append(m.verificationStrategies, s)
+				}
+			}
+		}
+	}
+	return m.verificationStrategies
 }
 
 func (m *RegistryDefault) ActiveCredentialsCounterStrategies() []identity.ActiveCredentialsCounter {
@@ -510,7 +527,11 @@ func (m *RegistryDefault) CourierPersister() courier.Persister {
 	return m.persister
 }
 
-func (m *RegistryDefault) RecoveryTokenPersister() link.Persister {
+func (m *RegistryDefault) RecoveryTokenPersister() link.RecoveryTokenPersister {
+	return m.Persister()
+}
+
+func (m *RegistryDefault) VerificationTokenPersister() link.VerificationTokenPersister {
 	return m.Persister()
 }
 

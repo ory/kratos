@@ -164,11 +164,11 @@ func TestPersister(t *testing.T) {
 			})
 			t.Run("contract=verification.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				verification.TestPersister(p)(t)
+				verification.TestFlowPersister(p)(t)
 			})
 			t.Run("contract=recovery.TestFlowPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				recovery.TestRequestPersister(p)(t)
+				recovery.TestFlowPersister(p)(t)
 			})
 			t.Run("contract=link.TestPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))

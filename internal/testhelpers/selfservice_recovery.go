@@ -11,7 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -24,47 +23,30 @@ import (
 	"github.com/ory/kratos/internal/httpclient/client/common"
 	"github.com/ory/kratos/internal/httpclient/client/public"
 	"github.com/ory/kratos/internal/httpclient/models"
-	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/x"
 )
 
-func NewRecoveryUITestServer(t *testing.T) *httptest.Server {
-	router := httprouter.New()
-	router.GET("/recovery", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		w.WriteHeader(http.StatusNoContent)
-	})
-	router.GET("/settings", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		w.WriteHeader(http.StatusAccepted)
-	})
-	ts := httptest.NewServer(router)
-	t.Cleanup(ts.Close)
-
-	viper.Set(configuration.ViperKeySelfServiceSettingsURL, ts.URL+"/settings")
-	viper.Set(configuration.ViperKeySelfServiceRecoveryUI, ts.URL+"/recovery")
-
-	return ts
-}
-
-func NewRecoveryUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Server {
+func NewVerificationUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Server {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		e, err := reg.RecoveryFlowPersister().GetRecoveryFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("flow")))
+		e, err := reg.VerificationFlowPersister().GetVerificationFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("flow")))
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, e)
 	}))
-	viper.Set(configuration.ViperKeySelfServiceRecoveryUI, ts.URL+"/recovery-ts")
+	viper.Set(configuration.ViperKeySelfServiceVerificationUI, ts.URL+"/verification-ts")
 	t.Cleanup(ts.Close)
 	return ts
 }
 
-func GetRecoveryRequest(t *testing.T, client *http.Client, ts *httptest.Server) *common.GetSelfServiceRecoveryFlowOK {
+func GetVerificationFlow(t *testing.T, client *http.Client, ts *httptest.Server) *common.GetSelfServiceVerificationFlowOK {
 	publicClient := NewSDKClient(ts)
 
-	res, err := client.Get(ts.URL + recovery.RouteInitBrowserFlow)
+	res, err := client.Get(ts.URL + verification.RouteInitBrowserFlow)
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
 
-	rs, err := publicClient.Common.GetSelfServiceRecoveryFlow(
-		common.NewGetSelfServiceRecoveryFlowParams().WithHTTPClient(client).
+	rs, err := publicClient.Common.GetSelfServiceVerificationFlow(
+		common.NewGetSelfServiceVerificationFlowParams().WithHTTPClient(client).
 			WithID(res.Request.URL.Query().Get("flow")),
 	)
 	require.NoError(t, err, "%s", res.Request.URL.String())
@@ -73,12 +55,12 @@ func GetRecoveryRequest(t *testing.T, client *http.Client, ts *httptest.Server) 
 	return rs
 }
 
-func RecoverySubmitForm(
+func VerificationSubmitForm(
 	t *testing.T,
-	f *models.RecoveryFlowMethodConfig,
+	f *models.VerificationFlowMethodConfig,
 	hc *http.Client,
 	values url.Values,
-) (string, *common.GetSelfServiceRecoveryFlowOK) {
+) (string, *common.GetSelfServiceVerificationFlowOK) {
 	require.NotEmpty(t, f.Action)
 
 	res, err := hc.PostForm(pointerx.StringR(f.Action), values)
@@ -89,10 +71,10 @@ func RecoverySubmitForm(
 	require.NoError(t, err)
 	assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", b)
 
-	assert.Equal(t, viper.GetString(configuration.ViperKeySelfServiceRecoveryUI), res.Request.URL.Scheme+"://"+res.Request.URL.Host+res.Request.URL.Path, "should end up at the settings URL, used: %s", pointerx.StringR(f.Action))
+	assert.Equal(t, viper.GetString(configuration.ViperKeySelfServiceVerificationUI), res.Request.URL.Scheme+"://"+res.Request.URL.Host+res.Request.URL.Path, "should end up at the settings URL, used: %s", pointerx.StringR(f.Action))
 
-	rs, err := NewSDKClientFromURL(viper.GetString(configuration.ViperKeyPublicBaseURL)).Common.GetSelfServiceRecoveryFlow(
-		common.NewGetSelfServiceRecoveryFlowParams().WithHTTPClient(hc).
+	rs, err := NewSDKClientFromURL(viper.GetString(configuration.ViperKeyPublicBaseURL)).Common.GetSelfServiceVerificationFlow(
+		common.NewGetSelfServiceVerificationFlowParams().WithHTTPClient(hc).
 			WithID(res.Request.URL.Query().Get("flow")),
 	)
 	require.NoError(t, err)
@@ -101,14 +83,14 @@ func RecoverySubmitForm(
 	return string(body), rs
 }
 
-func InitializeRecoveryFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server) *common.GetSelfServiceRecoveryFlowOK {
+func InitializeVerificationFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server) *common.GetSelfServiceVerificationFlowOK {
 	publicClient := NewSDKClient(ts)
-	res, err := client.Get(ts.URL + recovery.RouteInitBrowserFlow)
+	res, err := client.Get(ts.URL + verification.RouteInitBrowserFlow)
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
 
-	rs, err := publicClient.Common.GetSelfServiceRecoveryFlow(
-		common.NewGetSelfServiceRecoveryFlowParams().WithHTTPClient(client).
+	rs, err := publicClient.Common.GetSelfServiceVerificationFlow(
+		common.NewGetSelfServiceVerificationFlowParams().WithHTTPClient(client).
 			WithID(res.Request.URL.Query().Get("flow")),
 	)
 	require.NoError(t, err)
@@ -117,28 +99,28 @@ func InitializeRecoveryFlowViaBrowser(t *testing.T, client *http.Client, ts *htt
 	return rs
 }
 
-func InitializeRecoveryFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *public.InitializeSelfServiceRecoveryViaAPIFlowOK {
+func InitializeVerificationFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *public.InitializeSelfServiceVerificationViaAPIFlowOK {
 	publicClient := NewSDKClient(ts)
 
-	rs, err := publicClient.Public.InitializeSelfServiceRecoveryViaAPIFlow(public.
-		NewInitializeSelfServiceRecoveryViaAPIFlowParams().WithHTTPClient(client))
+	rs, err := publicClient.Public.InitializeSelfServiceVerificationViaAPIFlow(public.
+		NewInitializeSelfServiceVerificationViaAPIFlowParams().WithHTTPClient(client))
 	require.NoError(t, err)
 	assert.Empty(t, rs.Payload.Active)
 
 	return rs
 }
 
-func GetRecoveryFlowMethodConfig(t *testing.T, rs *models.RecoveryFlow, id string) *models.RecoveryFlowMethodConfig {
+func GetVerificationFlowMethodConfig(t *testing.T, rs *models.VerificationFlow, id string) *models.VerificationFlowMethodConfig {
 	require.NotEmpty(t, rs.Methods[id])
 	require.NotEmpty(t, rs.Methods[id].Config)
 	require.NotEmpty(t, rs.Methods[id].Config.Action)
 	return rs.Methods[id].Config
 }
 
-func RecoveryMakeRequest(
+func VerificationMakeRequest(
 	t *testing.T,
 	isAPI bool,
-	f *models.RecoveryFlowMethodConfig,
+	f *models.VerificationFlowMethodConfig,
 	hc *http.Client,
 	values string,
 ) (string, *http.Response) {
@@ -151,9 +133,9 @@ func RecoveryMakeRequest(
 	return string(x.MustReadAll(res.Body)), res
 }
 
-// SubmitRecoveryForm initiates a registration flow (for Browser and API!), fills out the form and modifies
+// SubmitVerificationForm initiates a registration flow (for Browser and API!), fills out the form and modifies
 // the form values with `withValues`, and submits the form. If completed, it will return the flow as JSON.
-func SubmitRecoveryForm(
+func SubmitVerificationForm(
 	t *testing.T,
 	isAPI bool,
 	hc *http.Client,
@@ -164,20 +146,20 @@ func SubmitRecoveryForm(
 	expectedURL string,
 ) string {
 	hc.Transport = NewTransportWithLogger(hc.Transport, t)
-	var f *models.RecoveryFlow
+	var f *models.VerificationFlow
 	if isAPI {
-		f = InitializeRecoveryFlowViaAPI(t, hc, publicTS).Payload
+		f = InitializeVerificationFlowViaAPI(t, hc, publicTS).Payload
 	} else {
-		f = InitializeRecoveryFlowViaBrowser(t, hc, publicTS).Payload
+		f = InitializeVerificationFlowViaBrowser(t, hc, publicTS).Payload
 	}
 
 	time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
 
-	config := GetRecoveryFlowMethodConfig(t, f, method.String())
+	config := GetVerificationFlowMethodConfig(t, f, method.String())
 	formPayload := SDKFormFieldsToURLValues(config.Fields)
 	withValues(formPayload)
 
-	b, res := RecoveryMakeRequest(t, isAPI, config, hc, EncodeFormAsJSON(t, isAPI, formPayload))
+	b, res := VerificationMakeRequest(t, isAPI, config, hc, EncodeFormAsJSON(t, isAPI, formPayload))
 	assert.EqualValues(t, expectedStatusCode, res.StatusCode, "%s", b)
 	assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, b)
 

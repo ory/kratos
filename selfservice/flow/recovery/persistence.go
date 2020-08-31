@@ -25,12 +25,12 @@ type (
 		GetRecoveryFlow(ctx context.Context, id uuid.UUID) (*Flow, error)
 		UpdateRecoveryFlow(context.Context, *Flow) error
 	}
-	RequestPersistenceProvider interface {
+	FlowPersistenceProvider interface {
 		RecoveryFlowPersister() FlowPersister
 	}
 )
 
-func TestRequestPersister(p interface {
+func TestFlowPersister(p interface {
 	FlowPersister
 	identity.PrivilegedPool
 }) func(t *testing.T) {
@@ -73,10 +73,10 @@ func TestRequestPersister(p interface {
 			actual, err := p.GetRecoveryFlow(context.Background(), expected.ID)
 			require.NoError(t, err)
 
-			fexpected, _ := json.Marshal(expected.Methods[StrategyRecoveryTokenName].Config)
-			factual, _ := json.Marshal(actual.Methods[StrategyRecoveryTokenName].Config)
+			fexpected, _ := json.Marshal(expected.Methods[StrategyRecoveryLinkName].Config)
+			factual, _ := json.Marshal(actual.Methods[StrategyRecoveryLinkName].Config)
 
-			require.NotEmpty(t, actual.Methods[StrategyRecoveryTokenName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action)
+			require.NotEmpty(t, actual.Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action)
 			assert.EqualValues(t, expected.ID, actual.ID)
 			assert.JSONEq(t, string(fexpected), string(factual))
 			x.AssertEqualTime(t, expected.IssuedAt, actual.IssuedAt)
@@ -86,8 +86,8 @@ func TestRequestPersister(p interface {
 
 		t.Run("case=should create and update a recovery request", func(t *testing.T) {
 			expected := newFlow(t)
-			expected.Methods[StrategyRecoveryTokenName] = &FlowMethod{
-				Method: StrategyRecoveryTokenName, Config: &FlowMethodConfig{FlowMethodConfigurator: &form.HTMLForm{Fields: []form.Field{{
+			expected.Methods[StrategyRecoveryLinkName] = &FlowMethod{
+				Method: StrategyRecoveryLinkName, Config: &FlowMethodConfig{FlowMethodConfigurator: &form.HTMLForm{Fields: []form.Field{{
 					Name: "zab", Type: "bar", Pattern: "baz"}}}}}
 			expected.Methods["password"] = &FlowMethod{
 				Method: "password", Config: &FlowMethodConfig{FlowMethodConfigurator: &form.HTMLForm{Fields: []form.Field{{
@@ -95,25 +95,25 @@ func TestRequestPersister(p interface {
 			err := p.CreateRecoveryFlow(context.Background(), expected)
 			require.NoError(t, err)
 
-			expected.Methods[StrategyRecoveryTokenName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action = "/new-action"
+			expected.Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action = "/new-action"
 			expected.Methods["password"].Config.FlowMethodConfigurator.(*form.HTMLForm).Fields = []form.Field{{
 				Name: "zab", Type: "zab", Pattern: "zab"}}
 			expected.RequestURL = "/new-request-url"
-			expected.Active = StrategyRecoveryTokenName
+			expected.Active = StrategyRecoveryLinkName
 			expected.Messages.Add(text.NewRecoveryEmailSent())
 			require.NoError(t, p.UpdateRecoveryFlow(context.Background(), expected))
 
 			actual, err := p.GetRecoveryFlow(context.Background(), expected.ID)
 			require.NoError(t, err)
 
-			assert.Equal(t, "/new-action", actual.Methods[StrategyRecoveryTokenName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action)
+			assert.Equal(t, "/new-action", actual.Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action)
 			assert.Equal(t, "/new-request-url", actual.RequestURL)
-			assert.Equal(t, StrategyRecoveryTokenName, actual.Active.String())
+			assert.Equal(t, StrategyRecoveryLinkName, actual.Active.String())
 			assert.Equal(t, expected.Messages, actual.Messages)
 			assert.EqualValues(t, []form.Field{{Name: "zab", Type: "zab", Pattern: "zab"}}, actual.
 				Methods["password"].Config.FlowMethodConfigurator.(*form.HTMLForm).Fields)
 			assert.EqualValues(t, []form.Field{{Name: "zab", Type: "bar", Pattern: "baz"}}, actual.
-				Methods[StrategyRecoveryTokenName].Config.FlowMethodConfigurator.(*form.HTMLForm).Fields)
+				Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Fields)
 		})
 
 		t.Run("case=should not cause data loss when updating a request without changes", func(t *testing.T) {
@@ -132,8 +132,8 @@ func TestRequestPersister(p interface {
 			require.Len(t, actual.Methods, 1)
 
 			js, _ := json.Marshal(actual.Methods)
-			assert.Equal(t, expected.Methods[StrategyRecoveryTokenName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action,
-				actual.Methods[StrategyRecoveryTokenName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action, "%s", js)
+			assert.Equal(t, expected.Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action,
+				actual.Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action, "%s", js)
 		})
 	}
 }

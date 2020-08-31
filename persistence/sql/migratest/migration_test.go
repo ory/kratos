@@ -31,6 +31,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
+	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
@@ -159,6 +160,17 @@ func TestMigrations(t *testing.T) {
 						actual, err := d.Registry().RecoveryFlowPersister().GetRecoveryFlow(context.Background(), id.ID)
 						require.NoError(t, err)
 						compareWithFixture(t, actual, "recovery_flow", id.ID.String())
+					}
+				})
+
+				t.Run("case=verification_flow", func(t *testing.T) {
+					var ids []verification.Flow
+					require.NoError(t, c.Select("id").All(&ids))
+
+					for _, id := range ids {
+						actual, err := d.Registry().VerificationFlowPersister().GetVerificationFlow(context.Background(), id.ID)
+						require.NoError(t, err)
+						compareWithFixture(t, actual, "verification_flow", id.ID.String())
 					}
 				})
 			})

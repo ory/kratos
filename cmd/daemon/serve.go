@@ -25,6 +25,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/selfservice/strategy/profile"
@@ -124,26 +125,41 @@ func sqa(cmd *cobra.Command, d driver.Driver) *metricsx.Service {
 				healthx.AliveCheckPath,
 				healthx.ReadyCheckPath,
 				healthx.VersionPath,
-				"/auth/methods/oidc/",
+
 				password.RouteRegistration,
 				password.RouteLogin,
-				oidc.BasePath,
+				password.RouteSettings,
+
+				oidc.RouteBase,
+
 				login.RouteInitBrowserFlow,
+				login.RouteInitAPIFlow,
 				login.RouteGetFlow,
-				logout.BrowserLogoutPath,
+
+				logout.RouteBrowser,
+
 				registration.RouteInitBrowserFlow,
+				registration.RouteInitAPIFlow,
 				registration.RouteGetFlow,
+
 				session.RouteWhoami,
-				identity.IdentitiesPath,
-				profile.RouteSettings,
+				identity.RouteBase,
+
 				settings.RouteInitBrowserFlow,
+				settings.RouteInitAPIFlow,
 				settings.RouteGetFlow,
+
+				verification.RouteInitAPIFlow,
+				verification.RouteInitBrowserFlow,
+				verification.RouteGetFlow,
+
 				profile.RouteSettings,
-				verification.PublicVerificationCompletePath,
-				strings.ReplaceAll(strings.ReplaceAll(verification.PublicVerificationConfirmPath, ":via", "email"), ":code", ""),
-				strings.ReplaceAll(verification.PublicVerificationInitPath, ":via", "email"),
-				verification.PublicVerificationRequestPath,
-				errorx.ErrorsPath,
+
+				link.RouteAdminCreateRecoveryLink,
+				link.RouteRecovery,
+				link.RouteVerification,
+
+				errorx.RouteGet,
 			},
 			BuildVersion: d.Registry().BuildVersion(),
 			BuildHash:    d.Registry().BuildHash(),

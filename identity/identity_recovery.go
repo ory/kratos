@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	RecoveryAddressTypeEmail RecoveryAddressType = "email"
+	RecoveryAddressTypeEmail RecoveryAddressType = AddressTypeEmail
 )
 
 type (

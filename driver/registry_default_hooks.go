@@ -7,7 +7,7 @@ import (
 
 func (m *RegistryDefault) HookVerifier() *hook.Verifier {
 	if m.hookVerifier == nil {
-		m.hookVerifier = hook.NewVerifier(m)
+		m.hookVerifier = hook.NewVerifier(m, m.c)
 	}
 	return m.hookVerifier
 }

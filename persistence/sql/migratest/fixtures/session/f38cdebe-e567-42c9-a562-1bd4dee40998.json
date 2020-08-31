@@ -17,7 +17,8 @@
         "value": "foo@ory.sh",
         "verified": false,
         "via": "email",
-        "verified_at": null,
+        "status": "pending",
+        "verified_at": "0001-01-01T00:00:00Z",
         "expires_at": "2013-10-07T08:23:19Z"
       }
     ]

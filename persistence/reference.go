@@ -32,9 +32,10 @@ type Persister interface {
 	courier.Persister
 	session.Persister
 	errorx.Persister
-	verification.Persister
+	verification.FlowPersister
 	recovery.FlowPersister
-	link.Persister
+	link.RecoveryTokenPersister
+	link.VerificationTokenPersister
 
 	Close(context.Context) error
 	Ping(context.Context) error

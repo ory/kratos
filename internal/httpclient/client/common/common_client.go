@@ -39,7 +39,7 @@ type ClientService interface {
 
 	GetSelfServiceSettingsFlow(params *GetSelfServiceSettingsFlowParams) (*GetSelfServiceSettingsFlowOK, error)
 
-	GetSelfServiceVerificationRequest(params *GetSelfServiceVerificationRequestParams) (*GetSelfServiceVerificationRequestOK, error)
+	GetSelfServiceVerificationFlow(params *GetSelfServiceVerificationFlowParams) (*GetSelfServiceVerificationFlowOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
 }
@@ -280,42 +280,40 @@ func (a *Client) GetSelfServiceSettingsFlow(params *GetSelfServiceSettingsFlowPa
 }
 
 /*
-  GetSelfServiceVerificationRequest gets the request context of browser based verification flows
+  GetSelfServiceVerificationFlow gets information about a verification flow
 
-  When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required
-for checking the auth session. To prevent scanning attacks, the public endpoint does not return 404 status codes
-but instead 403 or 500.
+  This endpoint returns a verification flow's context with, for example, error details and other information.
 
 More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 */
-func (a *Client) GetSelfServiceVerificationRequest(params *GetSelfServiceVerificationRequestParams) (*GetSelfServiceVerificationRequestOK, error) {
+func (a *Client) GetSelfServiceVerificationFlow(params *GetSelfServiceVerificationFlowParams) (*GetSelfServiceVerificationFlowOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewGetSelfServiceVerificationRequestParams()
+		params = NewGetSelfServiceVerificationFlowParams()
 	}
 
 	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "getSelfServiceVerificationRequest",
+		ID:                 "getSelfServiceVerificationFlow",
 		Method:             "GET",
-		PathPattern:        "/self-service/browser/flows/requests/verification",
+		PathPattern:        "/self-service/verification/flows",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &GetSelfServiceVerificationRequestReader{formats: a.formats},
+		Reader:             &GetSelfServiceVerificationFlowReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*GetSelfServiceVerificationRequestOK)
+	success, ok := result.(*GetSelfServiceVerificationFlowOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for getSelfServiceVerificationRequest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getSelfServiceVerificationFlow: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

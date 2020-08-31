@@ -16,12 +16,12 @@ const (
 )
 
 const (
-	ErrorValidationRecovery                                  ID = 4060000 + iota // 4060000
-	ErrorValidationRecoveryRetrySuccess                                          // 4060001
-	ErrorValidationRecoveryStateFailure                                          // 4060002
-	ErrorValidationRecoveryMissingRecoveryToken                                  // 4060003
-	ErrorValidationRecoveryRecoveryTokenInvalidOrAlreadyUsed                     // 4060004
-	ErrorValidationRecoveryFlowExpired                                           // 4060005
+	ErrorValidationRecovery                          ID = 4060000 + iota // 4060000
+	ErrorValidationRecoveryRetrySuccess                                  // 4060001
+	ErrorValidationRecoveryStateFailure                                  // 4060002
+	ErrorValidationRecoveryMissingRecoveryToken                          // 4060003
+	ErrorValidationRecoveryTokenInvalidOrAlreadyUsed                     // 4060004
+	ErrorValidationRecoveryFlowExpired                                   // 4060005
 )
 
 func NewErrorValidationRecoveryFlowExpired(ago time.Duration) *Message {
@@ -63,9 +63,9 @@ func NewErrorValidationRecoveryMissingRecoveryToken() error {
 		WithReason("A recovery request was made but no recovery token was included in the request, please retry the flow."))
 }
 
-func NewErrorValidationRecoveryRecoveryTokenInvalidOrAlreadyUsed() *Message {
+func NewErrorValidationRecoveryTokenInvalidOrAlreadyUsed() *Message {
 	return &Message{
-		ID:      ErrorValidationRecoveryRecoveryTokenInvalidOrAlreadyUsed,
+		ID:      ErrorValidationRecoveryTokenInvalidOrAlreadyUsed,
 		Text:    "The recovery token is invalid or has already been used. Please retry the flow.",
 		Type:    Error,
 		Context: context(nil),

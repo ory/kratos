@@ -37,10 +37,10 @@ import (
 )
 
 const (
-	BasePath = "/self-service/methods/oidc"
+	RouteBase = "/self-service/methods/oidc"
 
-	AuthPath     = BasePath + "/auth/:flow"
-	CallbackPath = BasePath + "/callback/:provider"
+	RouteAuth     = RouteBase + "/auth/:flow"
+	RouteCallback = RouteBase + "/callback/:provider"
 )
 
 var _ identity.ActiveCredentialsCounter = new(Strategy)
@@ -129,16 +129,16 @@ func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identi
 }
 
 func (s *Strategy) setRoutes(r *x.RouterPublic) {
-	if handle, _, _ := r.Lookup("GET", CallbackPath); handle == nil {
-		r.GET(CallbackPath, s.handleCallback)
+	if handle, _, _ := r.Lookup("GET", RouteCallback); handle == nil {
+		r.GET(RouteCallback, s.handleCallback)
 	}
 
-	if handle, _, _ := r.Lookup("POST", AuthPath); handle == nil {
-		r.POST(AuthPath, s.handleAuth)
+	if handle, _, _ := r.Lookup("POST", RouteAuth); handle == nil {
+		r.POST(RouteAuth, s.handleAuth)
 	}
 
-	if handle, _, _ := r.Lookup("GET", AuthPath); handle == nil {
-		r.GET(AuthPath, s.handleAuth)
+	if handle, _, _ := r.Lookup("GET", RouteAuth); handle == nil {
+		r.GET(RouteAuth, s.handleAuth)
 	}
 }
 
@@ -378,7 +378,7 @@ func (s *Strategy) authURL(flowID uuid.UUID) string {
 	return urlx.AppendPaths(
 		urlx.Copy(s.c.SelfPublicURL()),
 		strings.Replace(
-			AuthPath, ":flow", flowID.String(), 1,
+			RouteAuth, ":flow", flowID.String(), 1,
 		),
 	).String()
 }

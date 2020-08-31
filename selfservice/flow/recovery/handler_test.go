@@ -56,7 +56,7 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 func TestInitFlow(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	viper.Set(configuration.ViperKeySelfServiceRecoveryEnabled, true)
-	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryTokenName,
+	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName,
 		map[string]interface{}{"enabled": true})
 
 	router := x.NewRouterPublic()
@@ -128,7 +128,7 @@ func TestInitFlow(t *testing.T) {
 func TestGetFlow(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	viper.Set(configuration.ViperKeySelfServiceRecoveryEnabled, true)
-	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryTokenName,
+	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName,
 		map[string]interface{}{"enabled": true})
 	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 

@@ -13,7 +13,7 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-const ErrorsPath = "/self-service/errors"
+const RouteGet = "/self-service/errors"
 
 var stub500, _ = json.Marshal([]interface{}{herodot.ErrInternalServerError.WithReasonf("This is a stub error.")})
 
@@ -42,11 +42,11 @@ func (h *Handler) WithTokenGenerator(f func(r *http.Request) string) {
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
-	public.GET(ErrorsPath, h.publicFetchError)
+	public.GET(RouteGet, h.publicFetchError)
 }
 
 func (h *Handler) RegisterAdminRoutes(public *x.RouterAdmin) {
-	public.GET(ErrorsPath, h.adminFetchError)
+	public.GET(RouteGet, h.adminFetchError)
 }
 
 // User-facing error response

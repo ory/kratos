@@ -90,7 +90,7 @@ func TestHandleError(t *testing.T) {
 		t.Cleanup(reset)
 
 		flowError = herodot.ErrInternalServerError.WithReason("system error")
-		methodName = recovery.StrategyRecoveryTokenName
+		methodName = recovery.StrategyRecoveryLinkName
 
 		sse, _ := expectErrorUI(t)
 		assertx.EqualAsJSON(t, []interface{}{flowError}, sse)
@@ -100,7 +100,7 @@ func TestHandleError(t *testing.T) {
 		t.Cleanup(reset)
 
 		flowError = herodot.ErrInternalServerError.WithReason("system error")
-		methodName = recovery.StrategyRecoveryTokenName
+		methodName = recovery.StrategyRecoveryLinkName
 
 		res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 		require.NoError(t, err)
@@ -119,7 +119,7 @@ func TestHandleError(t *testing.T) {
 
 			recoveryFlow = newFlow(t, time.Minute, flow.TypeAPI)
 			flowError = recovery.NewFlowExpiredError(anHourAgo)
-			methodName = recovery.StrategyRecoveryTokenName
+			methodName = recovery.StrategyRecoveryLinkName
 
 			res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 			require.NoError(t, err)
@@ -138,7 +138,7 @@ func TestHandleError(t *testing.T) {
 
 			recoveryFlow = newFlow(t, time.Minute, flow.TypeAPI)
 			flowError = schema.NewInvalidCredentialsError()
-			methodName = recovery.StrategyRecoveryTokenName
+			methodName = recovery.StrategyRecoveryLinkName
 
 			res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 			require.NoError(t, err)
@@ -156,7 +156,7 @@ func TestHandleError(t *testing.T) {
 
 			recoveryFlow = newFlow(t, time.Minute, flow.TypeAPI)
 			flowError = herodot.ErrInternalServerError.WithReason("system error")
-			methodName = recovery.StrategyRecoveryTokenName
+			methodName = recovery.StrategyRecoveryLinkName
 
 			res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 			require.NoError(t, err)
@@ -204,7 +204,7 @@ func TestHandleError(t *testing.T) {
 
 			recoveryFlow = &recovery.Flow{Type: flow.TypeBrowser}
 			flowError = recovery.NewFlowExpiredError(anHourAgo)
-			methodName = recovery.StrategyRecoveryTokenName
+			methodName = recovery.StrategyRecoveryLinkName
 
 			lf, _ := expectRecoveryUI(t)
 			require.Len(t, lf.Messages, 1)
@@ -216,7 +216,7 @@ func TestHandleError(t *testing.T) {
 
 			recoveryFlow = newFlow(t, time.Minute, flow.TypeBrowser)
 			flowError = schema.NewInvalidCredentialsError()
-			methodName = recovery.StrategyRecoveryTokenName
+			methodName = recovery.StrategyRecoveryLinkName
 
 			lf, _ := expectRecoveryUI(t)
 			require.NotEmpty(t, lf.Methods[string(methodName)], x.MustEncodeJSON(t, lf))
@@ -229,7 +229,7 @@ func TestHandleError(t *testing.T) {
 
 			recoveryFlow = newFlow(t, time.Minute, flow.TypeBrowser)
 			flowError = herodot.ErrInternalServerError.WithReason("system error")
-			methodName = recovery.StrategyRecoveryTokenName
+			methodName = recovery.StrategyRecoveryLinkName
 
 			sse, _ := expectErrorUI(t)
 			assertx.EqualAsJSON(t, []interface{}{flowError}, sse)

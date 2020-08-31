@@ -69,15 +69,14 @@ CREATE TABLE "_selfservice_verification_requests_tmp" (
 "request_url" TEXT NOT NULL,
 "issued_at" DATETIME NOT NULL DEFAULT 'CURRENT_TIMESTAMP',
 "expires_at" DATETIME NOT NULL,
-"form" TEXT NOT NULL,
-"via" TEXT NOT NULL,
 "csrf_token" TEXT NOT NULL,
-"success" bool NOT NULL,
 "created_at" DATETIME NOT NULL,
 "updated_at" DATETIME NOT NULL,
-"messages" TEXT
+"messages" TEXT,
+"via" TEXT NOT NULL DEFAULT 'email',
+"success" bool NOT NULL DEFAULT 'FALSE'
 );
-INSERT INTO "_selfservice_verification_requests_tmp" (id, request_url, issued_at, expires_at, form, via, csrf_token, success, created_at, updated_at, messages) SELECT id, request_url, issued_at, expires_at, form, via, csrf_token, success, created_at, updated_at, messages FROM "selfservice_verification_requests";
+INSERT INTO "_selfservice_verification_requests_tmp" (id, request_url, issued_at, expires_at, csrf_token, created_at, updated_at, messages, via, success) SELECT id, request_url, issued_at, expires_at, csrf_token, created_at, updated_at, messages, via, success FROM "selfservice_verification_requests";
 
 DROP TABLE "selfservice_verification_requests";
 ALTER TABLE "_selfservice_verification_requests_tmp" RENAME TO "selfservice_verification_requests";

@@ -116,7 +116,7 @@ func TestStrategy(t *testing.T) {
 	}
 
 	var requestAction = func(flowID uuid.UUID) string {
-		return ts.URL + oidc.BasePath + "/auth/" + flowID.String()
+		return ts.URL + oidc.RouteBase + "/auth/" + flowID.String()
 	}
 
 	var makeRequestWithCookieJar = func(t *testing.T, provider string, action string, fv url.Values, jar *cookiejar.Jar) (*http.Response, []byte) {
@@ -416,7 +416,7 @@ func TestStrategy(t *testing.T) {
 			Config: &registration.FlowMethodConfig{
 				FlowMethodConfigurator: &oidc.FlowMethod{
 					HTMLForm: &form.HTMLForm{
-						Action: "https://foo" + strings.ReplaceAll(oidc.AuthPath, ":flow", sr.ID.String()),
+						Action: "https://foo" + strings.ReplaceAll(oidc.RouteAuth, ":flow", sr.ID.String()),
 						Method: "POST",
 						Fields: form.Fields{
 							{
@@ -456,7 +456,7 @@ func TestStrategy(t *testing.T) {
 			Config: &login.FlowMethodConfig{
 				FlowMethodConfigurator: &oidc.FlowMethod{
 					HTMLForm: &form.HTMLForm{
-						Action: "https://foo" + strings.ReplaceAll(oidc.AuthPath, ":flow", sr.ID.String()),
+						Action: "https://foo" + strings.ReplaceAll(oidc.RouteAuth, ":flow", sr.ID.String()),
 						Method: "POST",
 						Fields: form.Fields{
 							{

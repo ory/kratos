@@ -5,11 +5,11 @@ import (
 
 	"github.com/gofrs/uuid"
 
-	"github.com/ory/kratos/otp"
+	"github.com/ory/x/sqlxx"
 )
 
 const (
-	VerifiableAddressTypeEmail VerifiableAddressType = "email"
+	VerifiableAddressTypeEmail VerifiableAddressType = AddressTypeEmail
 
 	VerifiableAddressStatusPending   VerifiableAddressStatus = "pending"
 	VerifiableAddressStatusCompleted VerifiableAddressStatus = "completed"
@@ -36,7 +36,10 @@ type (
 		// required: true
 		Via VerifiableAddressType `json:"via" db:"via"`
 
-		VerifiedAt *time.Time `json:"verified_at" faker:"-" db:"verified_at"`
+		// required: true
+		Status VerifiableAddressStatus `json:"status" db:"status"`
+
+		VerifiedAt sqlxx.NullTime `json:"verified_at" faker:"-" db:"verified_at"`
 
 		// required: true
 		ExpiresAt time.Time `json:"expires_at" faker:"time_type" db:"expires_at"`
@@ -47,9 +50,6 @@ type (
 		CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
 		// UpdatedAt is a helper struct field for gobuffalo.pop.
 		UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
-		// Code is the verification code, never to be shared as JSON
-		Code   string                  `json:"-" db:"code"`
-		Status VerifiableAddressStatus `json:"-" db:"status"`
 	}
 )
 
@@ -69,19 +69,13 @@ func NewVerifiableEmailAddress(
 	value string,
 	identity uuid.UUID,
 	expiresIn time.Duration,
-) (*VerifiableAddress, error) {
-	code, err := otp.New()
-	if err != nil {
-		return nil, err
-	}
-
+) *VerifiableAddress {
 	return &VerifiableAddress{
-		Code:       code,
 		Value:      value,
 		Verified:   false,
 		Status:     VerifiableAddressStatusPending,
 		Via:        VerifiableAddressTypeEmail,
 		ExpiresAt:  time.Now().Add(expiresIn).UTC(),
 		IdentityID: identity,
-	}, nil
+	}
 }

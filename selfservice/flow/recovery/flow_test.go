@@ -15,7 +15,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/recovery"
 )
 
-func TestRequest(t *testing.T) {
+func TestFlow(t *testing.T) {
 	must := func(r *recovery.Flow, err error) *recovery.Flow {
 		require.NoError(t, err)
 		return r

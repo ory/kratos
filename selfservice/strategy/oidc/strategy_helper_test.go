@@ -241,7 +241,7 @@ func newOIDCProvider(
 	hydraAdmin string,
 	id, clientID string,
 ) oidc.Configuration {
-	createClient(t, hydraAdmin, kratos.URL+oidc.BasePath+"/callback/"+id, clientID)
+	createClient(t, hydraAdmin, kratos.URL+oidc.RouteBase+"/callback/"+id, clientID)
 
 	return oidc.Configuration{
 		Provider:     "generic",

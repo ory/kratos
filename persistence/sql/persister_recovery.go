@@ -16,7 +16,7 @@ import (
 )
 
 var _ recovery.FlowPersister = new(Persister)
-var _ link.Persister = new(Persister)
+var _ link.RecoveryTokenPersister = new(Persister)
 
 func (p Persister) CreateRecoveryFlow(ctx context.Context, r *recovery.Flow) error {
 	return p.GetConnection(ctx).Eager("MethodsRaw").Create(r)
@@ -62,7 +62,7 @@ func (p Persister) UpdateRecoveryFlow(ctx context.Context, r *recovery.Flow) err
 	})
 }
 
-func (p *Persister) CreateRecoveryToken(ctx context.Context, token *link.Token) error {
+func (p *Persister) CreateRecoveryToken(ctx context.Context, token *link.RecoveryToken) error {
 	t := token.Token
 	token.Token = p.hmacValue(t)
 
@@ -75,9 +75,9 @@ func (p *Persister) CreateRecoveryToken(ctx context.Context, token *link.Token) 
 	return nil
 }
 
-func (p *Persister) UseRecoveryToken(ctx context.Context, token string) (*link.Token, error) {
+func (p *Persister) UseRecoveryToken(ctx context.Context, token string) (*link.RecoveryToken, error) {
 	var err error
-	rt := new(link.Token)
+	rt := new(link.RecoveryToken)
 	if err = sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
 		for _, secret := range p.cf.SecretsSession() {
 			if err = tx.Eager().Where("token = ? AND NOT used", p.hmacValueWithSecret(token, secret)).First(rt); err != nil {
@@ -97,14 +97,10 @@ func (p *Persister) UseRecoveryToken(ctx context.Context, token string) (*link.T
 		return nil, err
 	}
 
-	if rt.Flow, err = p.GetRecoveryFlow(ctx, rt.FlowID); err != nil {
-		return nil, err
-	}
-
 	return rt, nil
 }
 
 func (p *Persister) DeleteRecoveryToken(ctx context.Context, token string) error {
 	/* #nosec G201 TableName is static */
-	return p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE token=?", new(link.Token).TableName()), token).Exec()
+	return p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE token=?", new(link.RecoveryToken).TableName()), token).Exec()
 }

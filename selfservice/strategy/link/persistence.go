@@ -5,13 +5,23 @@ import (
 )
 
 type (
-	Persister interface {
-		CreateRecoveryToken(ctx context.Context, token *Token) error
-		UseRecoveryToken(ctx context.Context, token string) (*Token, error)
+	RecoveryTokenPersister interface {
+		CreateRecoveryToken(ctx context.Context, token *RecoveryToken) error
+		UseRecoveryToken(ctx context.Context, token string) (*RecoveryToken, error)
 		DeleteRecoveryToken(ctx context.Context, token string) error
 	}
 
-	PersistenceProvider interface {
-		RecoveryTokenPersister() Persister
+	RecoveryTokenPersistenceProvider interface {
+		RecoveryTokenPersister() RecoveryTokenPersister
+	}
+
+	VerificationTokenPersister interface {
+		CreateVerificationToken(ctx context.Context, token *VerificationToken) error
+		UseVerificationToken(ctx context.Context, token string) (*VerificationToken, error)
+		DeleteVerificationToken(ctx context.Context, token string) error
+	}
+
+	VerificationTokenPersistenceProvider interface {
+		VerificationTokenPersister() VerificationTokenPersister
 	}
 )

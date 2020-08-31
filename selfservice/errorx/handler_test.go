@@ -63,17 +63,17 @@ func TestHandler(t *testing.T) {
 			jar, _ := cookiejar.New(nil)
 			hc := &http.Client{Jar: jar}
 			id := getBody(t, hc, "/set-error", http.StatusOK)
-			actual := getBody(t, hc, errorx.ErrorsPath+"?error="+string(id), http.StatusOK)
+			actual := getBody(t, hc, errorx.RouteGet+"?error="+string(id), http.StatusOK)
 			assert.JSONEq(t, expectedError, gjson.GetBytes(actual, "errors").Raw, "%s", actual)
 
 			// We expect a forbid error if the error is not found, regardless of CSRF
-			_ = getBody(t, hc, errorx.ErrorsPath+"?error=does-not-exist", http.StatusForbidden)
+			_ = getBody(t, hc, errorx.RouteGet+"?error=does-not-exist", http.StatusForbidden)
 		})
 
 		t.Run("call without any cookies", func(t *testing.T) {
 			hc := &http.Client{}
 			id := getBody(t, hc, "/set-error", http.StatusOK)
-			_ = getBody(t, hc, errorx.ErrorsPath+"?error="+string(id), http.StatusForbidden)
+			_ = getBody(t, hc, errorx.RouteGet+"?error="+string(id), http.StatusForbidden)
 		})
 
 		t.Run("call with different csrf cookie", func(t *testing.T) {
@@ -81,7 +81,7 @@ func TestHandler(t *testing.T) {
 			hc := &http.Client{Jar: jar}
 			id := getBody(t, hc, "/set-error", http.StatusOK)
 			_ = getBody(t, hc, "/regen", http.StatusNoContent)
-			_ = getBody(t, hc, errorx.ErrorsPath+"?error="+string(id), http.StatusForbidden)
+			_ = getBody(t, hc, errorx.RouteGet+"?error="+string(id), http.StatusForbidden)
 		})
 	})
 
@@ -91,7 +91,7 @@ func TestHandler(t *testing.T) {
 		ts := httptest.NewServer(router)
 		defer ts.Close()
 
-		res, err := ts.Client().Get(ts.URL + errorx.ErrorsPath + "?error=stub:500")
+		res, err := ts.Client().Get(ts.URL + errorx.RouteGet + "?error=stub:500")
 		require.NoError(t, err)
 		require.EqualValues(t, http.StatusOK, res.StatusCode)
 
@@ -142,7 +142,7 @@ func TestHandler(t *testing.T) {
 				id, err := reg.SelfServiceErrorPersister().Add(context.Background(), csrf.String(), tc.gave...)
 				require.NoError(t, err)
 
-				res, err := ts.Client().Get(ts.URL + errorx.ErrorsPath + "?error=" + id.String())
+				res, err := ts.Client().Get(ts.URL + errorx.RouteGet + "?error=" + id.String())
 				require.NoError(t, err)
 				defer res.Body.Close()
 				assert.EqualValues(t, http.StatusOK, res.StatusCode)

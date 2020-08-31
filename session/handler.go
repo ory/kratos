@@ -64,6 +64,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 }
 
 // swagger:parameters revokeSession
+// nolint:deadcode,unused
 type revokeSessionParameters struct {
 	// in: body
 	// required: true

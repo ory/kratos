@@ -47,7 +47,7 @@ type (
 		x.CSRFTokenGeneratorProvider
 		StrategyProvider
 
-		RequestPersistenceProvider
+		FlowPersistenceProvider
 	}
 
 	ErrorHandlerProvider interface {

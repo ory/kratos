@@ -49,11 +49,9 @@ func newIdentityWithPassword(email string) *identity.Identity {
 		Credentials: map[identity.CredentialsType]identity.Credentials{
 			"password": {Type: "password", Identifiers: []string{email}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)},
 		},
-		Traits:   identity.Traits(`{"email":"` + email + `","stringy":"foobar","booly":false,"numby":2.5,"should_long_string":"asdfasdfasdfasdfasfdasdfasdfasdf","should_big_number":2048}`),
-		SchemaID: configuration.DefaultIdentityTraitsSchemaID,
-		VerifiableAddresses: []identity.VerifiableAddress{
-			{Value: email, Via: identity.VerifiableAddressTypeEmail, Code: x.NewUUID().String()},
-		},
+		Traits:              identity.Traits(`{"email":"` + email + `","stringy":"foobar","booly":false,"numby":2.5,"should_long_string":"asdfasdfasdfasdfasfdasdfasdfasdf","should_big_number":2048}`),
+		SchemaID:            configuration.DefaultIdentityTraitsSchemaID,
+		VerifiableAddresses: []identity.VerifiableAddress{{Value: email, Via: identity.VerifiableAddressTypeEmail}},
 		// TO ADD - RECOVERY EMAIL,
 	}
 }
@@ -130,7 +128,7 @@ func TestStrategyTraits(t *testing.T) {
 
 			f := testhelpers.GetSettingsFlowMethodConfig(t, payload, settings.StrategyProfile)
 
-			assertx.EqualAsJSON(t, &models.Form{
+			assertx.EqualAsJSON(t, &models.FlowMethodConfig{
 				Action: pointerx.String(publicTS.URL + profile.RouteSettings + "?flow=" + string(payload.ID)),
 				Method: pointerx.String("POST"),
 				Fields: models.FormFields{

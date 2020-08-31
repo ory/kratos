@@ -27,6 +27,10 @@ type VerifiableAddress struct {
 	// Format: uuid4
 	ID UUID `json:"id"`
 
+	// status
+	// Required: true
+	Status VerifiableAddressStatus `json:"status"`
+
 	// value
 	// Required: true
 	Value *string `json:"value"`
@@ -37,7 +41,7 @@ type VerifiableAddress struct {
 
 	// verified at
 	// Format: date-time
-	VerifiedAt strfmt.DateTime `json:"verified_at,omitempty"`
+	VerifiedAt NullTime `json:"verified_at,omitempty"`
 
 	// via
 	// Required: true
@@ -53,6 +57,10 @@ func (m *VerifiableAddress) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateID(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateStatus(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -103,6 +111,18 @@ func (m *VerifiableAddress) validateID(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *VerifiableAddress) validateStatus(formats strfmt.Registry) error {
+
+	if err := m.Status.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("status")
+		}
+		return err
+	}
+
+	return nil
+}
+
 func (m *VerifiableAddress) validateValue(formats strfmt.Registry) error {
 
 	if err := validate.Required("value", "body", m.Value); err != nil {
@@ -127,7 +147,10 @@ func (m *VerifiableAddress) validateVerifiedAt(formats strfmt.Registry) error {
 		return nil
 	}
 
-	if err := validate.FormatOf("verified_at", "body", "date-time", m.VerifiedAt.String(), formats); err != nil {
+	if err := m.VerifiedAt.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("verified_at")
+		}
 		return err
 	}
 
