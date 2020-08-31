@@ -19,5 +19,5 @@ func WatchAndValidateViper(log *logrusx.Logger) {
 	if err != nil {
 		log.WithError(err).Fatal("Unable to read configuration JSON Schema.")
 	}
-	viperx.WatchAndValidateViper(log, schema, "ORY Kratos", []string{"serve", "profiling", "log"})
+	viperx.WatchAndValidateViper(log, schema, "ORY Kratos", []string{"serve", "profiling", "log"}, "")
 }

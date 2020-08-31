@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"github.com/ory/kratos/metrics/prometheus"
 	"github.com/ory/x/tracing"
 
 	"github.com/gorilla/sessions"
@@ -57,6 +58,7 @@ type Registry interface {
 	RegisterRoutes(public *x.RouterPublic, admin *x.RouterAdmin)
 	RegisterPublicRoutes(public *x.RouterPublic)
 	RegisterAdminRoutes(admin *x.RouterAdmin)
+	PrometheusManager() *prometheus.MetricsManager
 	Tracer() *tracing.Tracer
 
 	x.CSRFProvider

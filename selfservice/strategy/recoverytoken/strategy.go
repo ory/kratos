@@ -130,7 +130,7 @@ type createRecoveryLinkParams struct {
 		// Link Expires In
 		//
 		// The recovery link will expire at that point in time. Defaults to the configuration value of
-		// `selfservice.flows.recovery.request_lifespan`.
+		// `selfservice.flows.recovery.lifespan`.
 		//
 		//
 		// pattern: ^[0-9]+(ns|us|ms|s|m|h)$
@@ -277,7 +277,7 @@ type completeSelfServiceBrowserRecoveryLinkStrategyFlowParams struct {
 
 // swagger:route POST /self-service/browser/flows/recovery/link public completeSelfServiceBrowserRecoveryLinkStrategyFlow
 //
-// Complete the browser-based recovery flow using a recovery link
+// Complete the Browser-Based Recovery Flow Using a Recovery Link
 //
 // > This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
 //

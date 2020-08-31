@@ -87,8 +87,11 @@
   "SDKs": [
     "sdk"
   ],
+  "Development": [
+    "milestones"
+  ],
   "Further Reading": [
-    "further-reading/comparison"
+    "further-reading/comparison",
     "further-reading/kratos-video-tutorials"
   ]
 }

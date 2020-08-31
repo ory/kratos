@@ -196,7 +196,7 @@ type CreateRecoveryLinkBody struct {
 	// Link Expires In
 	//
 	// The recovery link will expire at that point in time. Defaults to the configuration value of
-	// `selfservice.flows.recovery.request_lifespan`.
+	// `selfservice.flows.recovery.lifespan`.
 	// Pattern: ^[0-9]+(ns|us|ms|s|m|h)$
 	ExpiresIn string `json:"expires_in,omitempty"`
 

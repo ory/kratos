@@ -65,20 +65,20 @@ selfservice:
     recovery:
       enabled: true
       ui_url: http://test.kratos.ory.sh/recovery
-      request_lifespan: 98m
+      lifespan: 98m
       after:
         default_browser_return_url: http://test.kratos.ory.sh/dashboard
 
     verification:
       enabled: true
-      request_lifespan: 97m
+      lifespan: 97m
       ui_url: http://test.kratos.ory.sh/verification
       after:
         default_browser_return_url: http://test.kratos.ory.sh/dashboard
 
     settings:
       ui_url:  http://test.kratos.ory.sh/settings
-      request_lifespan: 99m
+      lifespan: 99m
       privileged_session_max_age: 5m
       after:
         default_browser_return_url: https://self-service/settings/return_to
@@ -86,7 +86,7 @@ selfservice:
           default_browser_return_url: https://self-service/settings/password/return_to
     login:
       ui_url: http://test.kratos.ory.sh/login
-      request_lifespan: 99m
+      lifespan: 99m
       after:
         default_browser_return_url: https://self-service/login/return_to
         password:
@@ -100,7 +100,7 @@ selfservice:
               hook: revoke_active_sessions
     registration:
       ui_url: http://test.kratos.ory.sh/register
-      request_lifespan: 98m
+      lifespan: 98m
       after:
         default_browser_return_url: https://self-service/registration/return_to
         password:

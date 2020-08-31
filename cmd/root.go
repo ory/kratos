@@ -4,13 +4,17 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ory/x/logrusx"
+	"github.com/ory/kratos/cmd/identities"
+	"github.com/ory/kratos/cmd/jsonnet"
+	"github.com/ory/kratos/cmd/migrate"
+	"github.com/ory/kratos/cmd/serve"
+	"github.com/ory/kratos/internal/clihelpers"
+	"github.com/ory/x/cmdx"
+
 	"github.com/ory/x/viperx"
 
 	"github.com/spf13/cobra"
 )
-
-var logger *logrusx.Logger
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -28,4 +32,11 @@ func Execute() {
 
 func init() {
 	viperx.RegisterConfigFlag(rootCmd, "kratos")
+
+	identities.RegisterCommandRecursive(rootCmd)
+	jsonnet.RegisterCommandRecursive(rootCmd)
+	serve.RegisterCommandRecursive(rootCmd)
+	migrate.RegisterCommandRecursive(rootCmd)
+
+	rootCmd.AddCommand(cmdx.Version(&clihelpers.BuildVersion, &clihelpers.BuildGitHash, &clihelpers.BuildTime))
 }

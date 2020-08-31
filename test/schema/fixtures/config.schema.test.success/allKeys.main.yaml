@@ -13,7 +13,7 @@ selfservice:
     redirect_to: https://example.com
 
   profile:
-    request_lifespan: 10m
+    lifespan: 10m
     after:
       profile:
         hooks: "#/definitions/selfServiceAfterLoginStrategy"
@@ -21,7 +21,7 @@ selfservice:
         hooks: "#/definitions/selfServiceAfterLoginStrategy"
 
   login:
-    request_lifespan: 10m
+    lifespan: 10m
     before:
       hooks: "#/definitions/selfServiceBefore"
     after:
@@ -31,7 +31,7 @@ selfservice:
         hooks: "#/definitions/selfServiceAfterLoginStrategy"
 
   registration:
-    request_lifespan: 10m
+    lifespan: 10m
     before:
       hooks: "#/definitions/selfServiceBefore"
     after:

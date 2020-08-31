@@ -151,7 +151,7 @@ selfservice:
       #
       ui_url: https://www.ory.sh/kratos/docs/fallback/settings
 
-      ## request_lifespan ##
+      ## lifespan ##
       #
       # Default value: 1h
       #
@@ -162,11 +162,11 @@ selfservice:
       #
       # Set this value using environment variables on
       # - Linux/macOS:
-      #    $ export SELFSERVICE_FLOWS_SETTINGS_REQUEST_LIFESPAN=<value>
+      #    $ export SELFSERVICE_FLOWS_SETTINGS_LIFESPAN=<value>
       # - Windows Command Line (CMD):
-      #    > set SELFSERVICE_FLOWS_SETTINGS_REQUEST_LIFESPAN=<value>
+      #    > set SELFSERVICE_FLOWS_SETTINGS_LIFESPAN=<value>
       #
-      request_lifespan: 1h
+      lifespan: 1h
 
       ## privileged_session_max_age ##
       #
@@ -302,7 +302,7 @@ selfservice:
       #
       ui_url: https://www.ory.sh/kratos/docs/fallback/registration
 
-      ## request_lifespan ##
+      ## lifespan ##
       #
       # Default value: 1h
       #
@@ -313,11 +313,11 @@ selfservice:
       #
       # Set this value using environment variables on
       # - Linux/macOS:
-      #    $ export SELFSERVICE_FLOWS_REGISTRATION_REQUEST_LIFESPAN=<value>
+      #    $ export SELFSERVICE_FLOWS_REGISTRATION_LIFESPAN=<value>
       # - Windows Command Line (CMD):
-      #    > set SELFSERVICE_FLOWS_REGISTRATION_REQUEST_LIFESPAN=<value>
+      #    > set SELFSERVICE_FLOWS_REGISTRATION_LIFESPAN=<value>
       #
-      request_lifespan: 1m
+      lifespan: 1m
 
       ## after ##
       #
@@ -415,7 +415,7 @@ selfservice:
       #
       ui_url: https://my-app.com/login
 
-      ## request_lifespan ##
+      ## lifespan ##
       #
       # Default value: 1h
       #
@@ -426,11 +426,11 @@ selfservice:
       #
       # Set this value using environment variables on
       # - Linux/macOS:
-      #    $ export SELFSERVICE_FLOWS_LOGIN_REQUEST_LIFESPAN=<value>
+      #    $ export SELFSERVICE_FLOWS_LOGIN_LIFESPAN=<value>
       # - Windows Command Line (CMD):
-      #    > set SELFSERVICE_FLOWS_LOGIN_REQUEST_LIFESPAN=<value>
+      #    > set SELFSERVICE_FLOWS_LOGIN_LIFESPAN=<value>
       #
-      request_lifespan: 1h
+      lifespan: 1h
 
       ## after ##
       #
@@ -573,11 +573,11 @@ selfservice:
       #
       # Set this value using environment variables on
       # - Linux/macOS:
-      #    $ export SELFSERVICE_FLOWS_VERIFICATION_REQUEST_LIFESPAN=<value>
+      #    $ export SELFSERVICE_FLOWS_VERIFICATION_LIFESPAN=<value>
       # - Windows Command Line (CMD):
-      #    > set SELFSERVICE_FLOWS_VERIFICATION_REQUEST_LIFESPAN=<value>
+      #    > set SELFSERVICE_FLOWS_VERIFICATION_LIFESPAN=<value>
       #
-      request_lifespan: 1m
+      lifespan: 1m
 
     ## Account Recovery Configuration ##
     #
@@ -644,11 +644,11 @@ selfservice:
       #
       # Set this value using environment variables on
       # - Linux/macOS:
-      #    $ export SELFSERVICE_FLOWS_RECOVERY_REQUEST_LIFESPAN=<value>
+      #    $ export SELFSERVICE_FLOWS_RECOVERY_LIFESPAN=<value>
       # - Windows Command Line (CMD):
-      #    > set SELFSERVICE_FLOWS_RECOVERY_REQUEST_LIFESPAN=<value>
+      #    > set SELFSERVICE_FLOWS_RECOVERY_LIFESPAN=<value>
       #
-      request_lifespan: 1s
+      lifespan: 1s
 
     ## error ##
     #

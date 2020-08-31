@@ -9,7 +9,7 @@ selfservice:
 
     recovery:
       enabled: true
-      request_lifespan: 5s
+      lifespan: 5s
 
     logout:
       after:

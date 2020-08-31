@@ -1,10 +1,10 @@
-package cmd
+package jsonnet
 
 import (
 	"github.com/spf13/cobra"
 )
 
-const globHelp = `Glob Syntax:
+const GlobHelp = `Glob Syntax:
 
     pattern:
         { term }
@@ -35,6 +35,9 @@ var jsonnetCmd = &cobra.Command{
 	Short: "Helpers for linting and formatting JSONNet code",
 }
 
-func init() {
-	rootCmd.AddCommand(jsonnetCmd)
+func RegisterCommandRecursive(parent *cobra.Command) {
+	parent.AddCommand(jsonnetCmd)
+
+	jsonnetCmd.AddCommand(jsonnetFormatCmd)
+	jsonnetCmd.AddCommand(jsonnetLintCmd)
 }

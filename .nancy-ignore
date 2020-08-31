@@ -7,3 +7,9 @@ CVE-2020-12797
 CVE-2020-13250
 CVE-2020-13170
 # End HashiCorp Consul
+
+# etcd issues - can be ignored because etcd is not used.
+CVE-2020-15114
+CVE-2020-15136
+CVE-2020-15115
+# end

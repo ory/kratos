@@ -1,4 +1,4 @@
-package cmd
+package migrate
 
 import (
 	"github.com/spf13/cobra"
@@ -10,6 +10,8 @@ var migrateCmd = &cobra.Command{
 	Short: "Various migration helpers",
 }
 
-func init() {
-	rootCmd.AddCommand(migrateCmd)
+func RegisterCommandRecursive(parent *cobra.Command) {
+	parent.AddCommand(migrateCmd)
+
+	migrateCmd.AddCommand(migrateSqlCmd)
 }

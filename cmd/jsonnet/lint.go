@@ -1,4 +1,4 @@
-package cmd
+package jsonnet
 
 import (
 	"fmt"
@@ -18,7 +18,7 @@ var jsonnetLintCmd = &cobra.Command{
 	Use: "lint path/to/files/*.jsonnet [more/files.jsonnet, [supports/**/{foo,bar}.jsonnet]]",
 	Long: `Lints JSONNet files using the official JSONNet linter and exits with a status code of 1 when issues are detected.
 
-` + globHelp,
+` + GlobHelp,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, pattern := range args {
@@ -41,8 +41,4 @@ var jsonnetLintCmd = &cobra.Command{
 			}
 		}
 	},
-}
-
-func init() {
-	jsonnetCmd.AddCommand(jsonnetLintCmd)
 }

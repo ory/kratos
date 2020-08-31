@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package cmd
+package jsonnet
 
 import (
 	"fmt"
@@ -34,7 +34,7 @@ var jsonnetFormatCmd = &cobra.Command{
 
 Use -w or --write to write output back to files instead of stdout.
 
-` + globHelp,
+` + GlobHelp,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, pattern := range args {
@@ -61,6 +61,5 @@ Use -w or --write to write output back to files instead of stdout.
 }
 
 func init() {
-	jsonnetCmd.AddCommand(jsonnetFormatCmd)
 	jsonnetFormatCmd.Flags().BoolP("write", "w", false, "Write formatted output back to file.")
 }

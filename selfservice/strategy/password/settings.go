@@ -59,7 +59,7 @@ func (p *completeSelfServiceBrowserSettingsPasswordFlowPayload) SetRequestID(rid
 
 // swagger:route POST /self-service/browser/flows/settings/strategies/password public completeSelfServiceBrowserSettingsPasswordStrategyFlow
 //
-// Complete the browser-based settings flow for the password strategy
+// Complete the Browser-Based Settings Flow for the Password Strategy
 //
 // This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this
 // endpoint.

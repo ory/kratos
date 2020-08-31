@@ -121,7 +121,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, ss *session.Session, 
 
 // swagger:route POST /self-service/browser/flows/settings/strategies/profile public completeSelfServiceBrowserSettingsProfileStrategyFlow
 //
-// Complete the browser-based settings flow for profile data
+// Complete the Browser-Based Settings Flow for Profile Data
 //
 // This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this
 // endpoint.
@@ -169,7 +169,7 @@ func (s *Strategy) handleSubmit(w http.ResponseWriter, r *http.Request, ps httpr
 		decoderx.HTTPFormDecoder(),
 		option,
 		decoderx.HTTPDecoderSetValidatePayloads(false),
-		decoderx.HTTPDecoderSetIgnoreParseErrorsStrategy(decoderx.ParseErrorIgnore),
+		decoderx.HTTPDecoderSetIgnoreParseErrorsStrategy(decoderx.ParseErrorIgnoreConversionErrors),
 	); err != nil {
 		s.handleSettingsError(w, r, ctxUpdate, nil, &p, err)
 		return

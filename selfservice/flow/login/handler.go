@@ -89,7 +89,7 @@ type initializeSelfServiceBrowserLoginFlow struct {
 
 // swagger:route GET /self-service/browser/flows/login public initializeSelfServiceBrowserLoginFlow
 //
-// Initialize browser-based login user flow
+// Initialize Browser-Based Login User Flow
 //
 // This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to
 // `selfservice.flows.login.ui_url` with the request ID set as a query parameter. If a valid user session exists already, the browser will be
@@ -155,7 +155,7 @@ type getSelfServiceBrowserLoginRequestParameters struct {
 
 // swagger:route GET /self-service/browser/flows/requests/login common public admin getSelfServiceBrowserLoginRequest
 //
-// Get the request context of browser-based login user flows
+// Get the Request Context Browser-Based Login User Flows
 //
 // This endpoint returns a login request's context with, for example, error details and
 // other information.

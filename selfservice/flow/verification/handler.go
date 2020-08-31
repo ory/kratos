@@ -81,7 +81,7 @@ type initializeSelfServiceVerificationFlowParameters struct {
 
 // swagger:route GET /self-service/browser/flows/verification/init/{via} public initializeSelfServiceBrowserVerificationFlow
 //
-// Initialize browser-based verification flow
+// Initialize Browser-Based Verification Flow
 //
 // This endpoint initializes a browser-based verification flow. Once initialized, the browser will be redirected to
 // `selfservice.flows.settings.ui_url` with the request ID set as a query parameter. If no valid user session exists, a login
@@ -135,7 +135,7 @@ type getSelfServiceVerificationRequestParameters struct {
 
 // swagger:route GET /self-service/browser/flows/requests/verification common public admin getSelfServiceVerificationRequest
 //
-// Get the request context of browser-based verification flows
+// Get the Request Context of Browser-Based Verification Flows
 //
 // When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required
 // for checking the auth session. To prevent scanning attacks, the public endpoint does not return 404 status codes
@@ -205,7 +205,7 @@ type completeSelfServiceBrowserVerificationFlowParameters struct {
 
 // swagger:route POST /self-service/browser/flows/verification/{via}/complete public completeSelfServiceBrowserVerificationFlow
 //
-// Complete the browser-based verification flows
+// Complete the Browser-Based Verification Flows
 //
 // This endpoint completes a browser-based verification flow. This is usually achieved by POSTing data to this
 // endpoint.
@@ -311,7 +311,7 @@ type selfServiceBrowserVerifyParameters struct {
 
 // swagger:route GET /self-service/browser/flows/verification/{via}/confirm/{code} public selfServiceBrowserVerify
 //
-// Complete the browser-based verification flows
+// Complete the Browser-Based Verification Flows
 //
 // This endpoint completes a browser-based verification flow.
 //
