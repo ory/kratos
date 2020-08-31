@@ -395,6 +395,7 @@ func (m *RegistryDefault) ContinuityCookieManager() sessions.Store {
 		cs := sessions.NewCookieStore(m.c.SecretsSession()...)
 		cs.Options.Secure = !m.c.IsInsecureDevMode()
 		cs.Options.HttpOnly = true
+		cs.Options.SameSite = http.SameSiteLaxMode
 		m.continuitySessionStore = cs
 	}
 	return m.continuitySessionStore
