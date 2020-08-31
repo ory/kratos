@@ -11,7 +11,7 @@ import (
 
 func TestNewVerifiableEmailAddress(t *testing.T) {
 	iid := x.NewUUID()
-	a := NewVerifiableEmailAddress("foo@ory.sh", iid, time.Minute)
+	a := NewVerifiableEmailAddress("foo@ory.sh", iid)
 
 	assert.Equal(t, a.Value, "foo@ory.sh")
 	assert.Equal(t, a.Via, VerifiableAddressTypeEmail)

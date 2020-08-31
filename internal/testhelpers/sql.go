@@ -23,23 +23,33 @@ func CleanSQL(t *testing.T, c *pop.Connection) {
 	for _, table := range []string{
 		new(continuity.Container).TableName(),
 		new(courier.Message).TableName(),
+
 		new(login.FlowMethods).TableName(),
 		new(login.Flow).TableName(),
+
 		new(registration.FlowMethods).TableName(),
 		new(registration.Flow).TableName(),
+
 		new(settings.FlowMethods).TableName(),
 		new(settings.Flow).TableName(),
+
 		new(link.RecoveryToken).TableName(),
-		new(recovery.RequestMethods).TableName(),
+		new(link.VerificationToken).TableName(),
+
+		new(recovery.FlowMethods).TableName(),
 		new(recovery.Flow).TableName(),
+
 		new(verification.Flow).TableName(),
+		new(verification.FlowMethods).TableName(),
+
+		new(errorx.ErrorContainer).TableName(),
+
 		new(session.Session).TableName(),
 		new(identity.CredentialIdentifierCollection).TableName(),
 		new(identity.CredentialsCollection).TableName(),
 		new(identity.VerifiableAddress).TableName(),
 		new(identity.RecoveryAddress).TableName(),
 		new(identity.Identity).TableName(),
-		new(errorx.ErrorContainer).TableName(),
 		new(identity.CredentialsTypeTable).TableName(),
 		"schema_migration",
 	} {

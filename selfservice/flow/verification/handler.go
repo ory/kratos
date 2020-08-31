@@ -20,7 +20,6 @@ const (
 	RouteInitBrowserFlow          = "/self-service/verification/browser"
 	RouteInitAPIFlow              = "/self-service/verification/api"
 	RouteGetFlow                  = "/self-service/verification/flows"
-	PublicVerificationConfirmPath = "/self-service/browser/flows/verification/:via/confirm/:code"
 )
 
 type (

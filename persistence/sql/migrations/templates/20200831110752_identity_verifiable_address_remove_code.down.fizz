@@ -21,3 +21,5 @@ change_column("identity_verifiable_addresses", "code", "string", {"size": 32})
 
 add_index("identity_verifiable_addresses", ["code"], { "unique": true, "name": "identity_verifiable_addresses_code_uq_idx" })
 add_index("identity_verifiable_addresses", ["code"], { "name": "identity_verifiable_addresses_code_idx" })
+
+add_column("identity_verifiable_addresses", "expires_at", "timestamp", { "default_raw": "CURRENT_TIMESTAMP" })

@@ -126,7 +126,7 @@ func TestPersister(t *testing.T) {
 			_ = os.Remove("migrations/schema.sql")
 			testhelpers.CleanSQL(t, p.(*sql.Persister).Connection())
 			t.Cleanup(func() {
-				// testhelpers.CleanSQL(t, p.(*sql.Persister).Connection())
+				testhelpers.CleanSQL(t, p.(*sql.Persister).Connection())
 				_ = os.Remove("migrations/schema.sql")
 			})
 

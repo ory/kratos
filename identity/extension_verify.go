@@ -31,7 +31,7 @@ func (r *SchemaExtensionVerification) Run(ctx jsonschema.ValidationContext, s sc
 			return ctx.Error("format", "%q is not valid %q", value, "email")
 		}
 
-		address := NewVerifiableEmailAddress(fmt.Sprintf("%s", value), r.i.ID, r.lifespan)
+		address := NewVerifiableEmailAddress(fmt.Sprintf("%s", value), r.i.ID)
 
 		if has := r.has(r.i.VerifiableAddresses, address); has != nil {
 			if r.has(r.v, address) == nil {

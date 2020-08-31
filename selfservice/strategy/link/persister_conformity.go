@@ -3,6 +3,7 @@ package link
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/gofrs/uuid"
@@ -50,7 +51,10 @@ func TestPersister(p interface {
 				require.NoError(t, p.CreateIdentity(context.Background(), &i))
 
 				return &RecoveryToken{Token: x.NewUUID().String(), FlowID: uuid.NullUUID{UUID: req.ID, Valid: true},
-					RecoveryAddress: &i.RecoveryAddresses[0]}
+					RecoveryAddress: &i.RecoveryAddresses[0],
+					ExpiresAt:       time.Now(),
+					IssuedAt:        time.Now(),
+				}
 			}
 
 			t.Run("case=should error when the recovery token does not exist", func(t *testing.T) {
@@ -99,8 +103,13 @@ func TestPersister(p interface {
 
 				require.NoError(t, p.CreateIdentity(context.Background(), &i))
 
-				return &VerificationToken{Token: x.NewUUID().String(), FlowID: uuid.NullUUID{UUID: req.ID, Valid: true},
-					VerifiableAddress: &i.VerifiableAddresses[0]}
+				return &VerificationToken{
+					Token:             x.NewUUID().String(),
+					FlowID:            uuid.NullUUID{UUID: req.ID, Valid: true},
+					VerifiableAddress: &i.VerifiableAddresses[0],
+					ExpiresAt:         time.Now(),
+					IssuedAt:          time.Now(),
+				}
 			}
 
 			t.Run("case=should error when the verification token does not exist", func(t *testing.T) {

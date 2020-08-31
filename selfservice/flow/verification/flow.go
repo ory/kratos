@@ -65,7 +65,7 @@ type Flow struct {
 	Methods map[string]*FlowMethod `json:"methods" faker:"verification_flow_methods" db:"-"`
 
 	// MethodsRaw is a helper struct field for gobuffalo.pop.
-	MethodsRaw RequestMethodsRaw `json:"-" faker:"-" has_many:"selfservice_verification_flow_methods" fk_id:"selfservice_verification_flow_id"`
+	MethodsRaw FlowMethodsRaw `json:"-" faker:"-" has_many:"selfservice_verification_flow_methods" fk_id:"selfservice_verification_flow_id"`
 
 	// State represents the state of this request:
 	//
@@ -152,7 +152,7 @@ func (f *Flow) AfterSave(c *pop.Connection) error {
 }
 
 func (f *Flow) AfterFind(_ *pop.Connection) error {
-	f.Methods = make(RequestMethods)
+	f.Methods = make(FlowMethods)
 	for key := range f.MethodsRaw {
 		m := f.MethodsRaw[key] // required for pointer dereference
 		f.Methods[m.Method] = &m

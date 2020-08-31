@@ -59,7 +59,6 @@ func TestSchemaExtensionVerification(t *testing.T) {
 					Status:     VerifiableAddressStatusPending,
 					Via:        VerifiableAddressTypeEmail,
 					IdentityID: iid,
-					ExpiresAt:  time.Now().Add(time.Minute),
 				},
 			},
 		},
@@ -89,7 +88,6 @@ func TestSchemaExtensionVerification(t *testing.T) {
 					Status:     VerifiableAddressStatusCompleted,
 					Via:        VerifiableAddressTypeEmail,
 					IdentityID: iid,
-					ExpiresAt:  time.Now().Add(time.Minute),
 				},
 				{
 					Value:      "bar@ory.sh",
@@ -97,7 +95,6 @@ func TestSchemaExtensionVerification(t *testing.T) {
 					Status:     VerifiableAddressStatusCompleted,
 					Via:        VerifiableAddressTypeEmail,
 					IdentityID: iid,
-					ExpiresAt:  time.Now().Add(time.Minute),
 				},
 			},
 		},
@@ -127,7 +124,6 @@ func TestSchemaExtensionVerification(t *testing.T) {
 					Status:     VerifiableAddressStatusCompleted,
 					Via:        VerifiableAddressTypeEmail,
 					IdentityID: iid,
-					ExpiresAt:  time.Now().Add(time.Minute),
 				},
 				{
 					Value:      "bar@ory.sh",
@@ -135,7 +131,6 @@ func TestSchemaExtensionVerification(t *testing.T) {
 					Status:     VerifiableAddressStatusCompleted,
 					Via:        VerifiableAddressTypeEmail,
 					IdentityID: iid,
-					ExpiresAt:  time.Now().Add(time.Minute),
 				},
 			},
 		},
@@ -194,10 +189,6 @@ func TestSchemaExtensionVerification(t *testing.T) {
 			require.Len(t, addresses, len(tc.expect))
 
 			for _, actual := range addresses {
-				// Prevent time synchro issues
-				assert.True(t, actual.ExpiresAt.After(time.Now().Add(expiresAt-time.Second)))
-				actual.ExpiresAt = time.Time{}
-
 				var found bool
 				for _, expect := range tc.expect {
 					if reflect.DeepEqual(actual, expect) {

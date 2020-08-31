@@ -10,7 +10,7 @@ PRIMARY KEY(`id`),
 `updated_at` DATETIME NOT NULL
 ) ENGINE=InnoDB;
 ALTER TABLE `selfservice_verification_flows` ADD COLUMN `active_method` VARCHAR (32);
-INSERT INTO selfservice_verification_flow_methods (id, method, selfservice_verification_flow_id, config) SELECT id, 'link', id, form FROM selfservice_verification_flows;
+INSERT INTO selfservice_verification_flow_methods (id, method, selfservice_verification_flow_id, config, created_at, updated_at) SELECT id, 'link', id, form, created_at, updated_at FROM selfservice_verification_flows;
 ALTER TABLE `selfservice_verification_flows` DROP COLUMN `form`;
 ALTER TABLE `selfservice_verification_flows` DROP COLUMN `via`;
 ALTER TABLE `selfservice_verification_flows` DROP COLUMN `success`;

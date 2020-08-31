@@ -41,9 +41,6 @@ type (
 
 		VerifiedAt sqlxx.NullTime `json:"verified_at" faker:"-" db:"verified_at"`
 
-		// required: true
-		ExpiresAt time.Time `json:"expires_at" faker:"time_type" db:"expires_at"`
-
 		// IdentityID is a helper struct field for gobuffalo.pop.
 		IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
 		// CreatedAt is a helper struct field for gobuffalo.pop.
@@ -68,14 +65,12 @@ func (a VerifiableAddress) TableName() string {
 func NewVerifiableEmailAddress(
 	value string,
 	identity uuid.UUID,
-	expiresIn time.Duration,
 ) *VerifiableAddress {
 	return &VerifiableAddress{
 		Value:      value,
 		Verified:   false,
 		Status:     VerifiableAddressStatusPending,
 		Via:        VerifiableAddressTypeEmail,
-		ExpiresAt:  time.Now().Add(expiresIn).UTC(),
 		IdentityID: identity,
 	}
 }
