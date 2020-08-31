@@ -102,7 +102,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...bdb6875e55aed454cda061969e1dd4f712e09bb5) (2020-08-31)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...ee9dd0d58a4146a0e131f6a7b74943bb39d26c0b) (2020-08-31)
 
 
 ### Bug Fixes
@@ -177,6 +177,9 @@
 * Fixed typos/readability ([#621](https://github.com/ory/kratos/issues/621)) ([c4fc75f](https://github.com/ory/kratos/commit/c4fc75f7dca59fa8f31d068f57179f49bf798b6a))
 * Move development section ([2e6f643](https://github.com/ory/kratos/commit/2e6f6430f88105efd5618482043809c6d643216b))
 * Move to json sidebar ([504af3b](https://github.com/ory/kratos/commit/504af3b89d728eb11bf42f4a2037c78b3b7cb788))
+* Quickstart next steps ([#676](https://github.com/ory/kratos/issues/676)) ([ee9dd0d](https://github.com/ory/kratos/commit/ee9dd0d58a4146a0e131f6a7b74943bb39d26c0b)):
+
+    > Added a section outlining some easy config changes, that users can apply to the quickstart to test out different scenarios and configurations.
 * Rename self service and add admin section ([639c424](https://github.com/ory/kratos/commit/639c424d3bde0557f7edd7edc489a476f1aa60b3))
 * Resolve typo in message IDs ([562cfc4](https://github.com/ory/kratos/commit/562cfc4392ba1c9c1fb8854ea0ac85bd44d0fac9))
 * Resolve typo in message IDs ([#607](https://github.com/ory/kratos/issues/607)) ([f7688f0](https://github.com/ory/kratos/commit/f7688f0ab07b579a375ce4cc25361b360e82dd88))
