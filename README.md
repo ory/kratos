@@ -213,6 +213,7 @@ TheCrealm.
 
 
 
+
 ## Getting Started
 
 To get started, head over to the [ORY Kratos Documentation](https://www.ory.sh/kratos/docs).
@@ -276,6 +277,7 @@ determine whether a subject (user, application, service, car, ...) is authorized
 to perform a certain action on a resource.
 
 <!--END ECOSYSTEM-->
+
 
 
 
