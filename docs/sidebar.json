@@ -58,7 +58,7 @@
     "self-service/flows/user-facing-errors",
     "self-service/flows/verify-email-account-activation",
     "self-service/flows/2fa-mfa-multi-factor-authentication",
-    "self-service/hooks/index"
+    "self-service/hooks"
   ],
   "Administration": [
     "admin/managing-users-identities"
