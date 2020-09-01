@@ -14,5 +14,4 @@ func writeFixtureOnError(t *testing.T, err error, actual interface{}, location s
 	content, err := json.MarshalIndent(actual, "", "  ")
 	require.NoError(t, err)
 	require.NoError(t, ioutil.WriteFile(location, content, 0666))
-
 }

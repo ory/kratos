@@ -44,17 +44,17 @@ func TestMigrations(t *testing.T) {
 	require.NoError(t, sqlite.Open())
 
 	connections := map[string]*pop.Connection{
-		// "sqlite": sqlite,
+		"sqlite": sqlite,
 	}
 	l := logrusx.New("", "", logrusx.ForceLevel(logrus.TraceLevel))
 
 	if !testing.Short() {
 		dockertest.Parallel([]func(){
 			func() {
-				// connections["postgres"] = dockertest.ConnectToTestPostgreSQLPop(t)
+				connections["postgres"] = dockertest.ConnectToTestPostgreSQLPop(t)
 			},
 			func() {
-				// connections["mysql"] = dockertest.ConnectToTestMySQLPop(t)
+				connections["mysql"] = dockertest.ConnectToTestMySQLPop(t)
 			},
 			func() {
 				connections["cockroach"] = dockertest.ConnectToTestCockroachDBPop(t)
@@ -109,8 +109,13 @@ func TestMigrations(t *testing.T) {
 						actual, err := d.Registry().PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), id.ID)
 						require.NoError(t, err)
 
-						compareWithFixture(t, actual.VerifiableAddresses, "identity_verification_address", id.ID.String())
-						compareWithFixture(t, actual.RecoveryAddresses, "identity_recovery_address", id.ID.String())
+						for _, a := range actual.VerifiableAddresses {
+							compareWithFixture(t, a, "identity_verification_address", a.ID.String())
+						}
+
+						for _, a := range actual.RecoveryAddresses {
+							compareWithFixture(t, a, "identity_recovery_address", a.ID.String())
+						}
 
 						// Prevents ordering to get in the way.
 						actual.VerifiableAddresses = nil
