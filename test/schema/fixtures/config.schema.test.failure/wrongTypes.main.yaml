@@ -13,15 +13,15 @@ selfservice:
     redirect_to: 0
 
   profile:
-    request_lifespan: 10
+    lifespan: 10
 
   login:
-    request_lifespan: 10
+    lifespan: 10
     before: foo
     after: foo
 
   registration:
-    request_lifespan: 10
+    lifespan: 10
     before:
       - foo
     after: foo

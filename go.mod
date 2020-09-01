@@ -67,6 +67,8 @@ require (
 	github.com/ory/x v0.0.148
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
+	github.com/prometheus/client_golang v1.4.0
+	github.com/prometheus/common v0.9.1
 	github.com/shurcooL/go v0.0.0-20180423040247-9e1955d9fb6e
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/cobra v1.0.0

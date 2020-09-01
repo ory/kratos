@@ -120,7 +120,7 @@ func (h *Handler) revoke(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 
 // swagger:route GET /sessions/whoami public whoami
 //
-// Check who the current HTTP session belongs to
+// Check Who the Current HTTP Session Belongs To
 //
 // Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.
 // Returns a session object in the body or 401 if the credentials are invalid or no credentials were sent.

@@ -144,7 +144,7 @@ type getSelfServiceVerificationFlowParameters struct {
 
 // swagger:route GET /self-service/verification/flows common public admin getSelfServiceVerificationFlow
 //
-// Get information about a verification flow
+// Get Information About a Verification Flow
 //
 // This endpoint returns a verification flow's context with, for example, error details and other information.
 //

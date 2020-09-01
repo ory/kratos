@@ -70,7 +70,7 @@ type getSelfServiceErrorParameters struct {
 
 // swagger:route GET /self-service/errors common public admin getSelfServiceError
 //
-// Get user-facing self-service errors
+// Get User-Facing Self-Service Errors
 //
 // This endpoint returns the error associated with a user-facing self service errors.
 //

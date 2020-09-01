@@ -16,7 +16,7 @@ services:
         source: ./contrib/quickstart/kratos/email-password
         target: /etc/config/kratos
     command:
-      -c /etc/config/kratos/.kratos.yml migrate sql -e --yes
+      -c /etc/config/kratos/kratos.yml migrate sql -e --yes
     restart: on-failure
     networks:
       - intranet
@@ -42,7 +42,7 @@ services:
       - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true
       - LOG_LEVEL=trace
     command:
-      serve -c /etc/config/kratos/.kratos.yml --dev
+      serve -c /etc/config/kratos/kratos.yml --dev
     volumes:
       -
         type: volume

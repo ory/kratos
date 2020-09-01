@@ -20,7 +20,7 @@ services:
       - 4455:4455
       - 4456:4456
     command:
-      serve proxy -c "/etc/config/oathkeeper/.oathkeeper.yml"
+      serve proxy -c "/etc/config/oathkeeper/oathkeeper.yml"
     environment:
       - LOG_LEVEL=debug
     restart: on-failure

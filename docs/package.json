@@ -3,27 +3,28 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "gen": "cd .. && node ./docs/scripts/fix-api.js ./docs/docs/reference/api.mdx && node ./docs/scripts/config.js docs/config.js",
+    "gen": "npm run widdershins && cd .. && node ./docs/scripts/fix-api.js ./docs/docs/reference/api.mdx && node ./docs/scripts/config.js docs/config.js",
     "docusaurus": "docusaurus",
+    "widdershins": "widdershins -u .widdershins/templates -e .widdershins/config.json ../.schema/api.swagger.json -o ./docs/reference/api.mdx",
     "start": "docusaurus start",
     "build": "docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
-    "format": "prettier --write '{docs/**,docs,scripts,static,contrib}/*.{md,mdx,json,js,css,html}' --no-semi --single-quote --trailing-comma none || true"
+    "format": "prettier --write '{docs/**,docs,scripts,static,contrib}/*.{md,mdx,json,js,css,html}|*.{js,md}' --no-semi --single-quote --trailing-comma none || true"
   },
   "dependencies": {
-    "@docusaurus/core": "2.0.0-alpha.58",
-    "@docusaurus/plugin-content-docs": "2.0.0-alpha.58",
-    "@docusaurus/plugin-content-pages": "2.0.0-alpha.58",
-    "@docusaurus/plugin-google-analytics": "2.0.0-alpha.58",
-    "@docusaurus/plugin-sitemap": "2.0.0-alpha.58",
-    "@docusaurus/theme-classic": "2.0.0-alpha.58",
-    "@docusaurus/theme-search-algolia": "2.0.0-alpha.58",
+    "@docusaurus/core": "2.0.0-alpha.61",
+    "@docusaurus/plugin-content-docs": "2.0.0-alpha.61",
+    "@docusaurus/plugin-content-pages": "2.0.0-alpha.61",
+    "@docusaurus/plugin-google-analytics": "2.0.0-alpha.61",
+    "@docusaurus/plugin-sitemap": "2.0.0-alpha.61",
+    "@docusaurus/theme-classic": "2.0.0-alpha.61",
+    "@docusaurus/theme-search-algolia": "2.0.0-alpha.61",
     "classnames": "2.2.6",
-    "mermaid": "8.5.2",
+    "mermaid": "8.6.4",
     "node-fetch": "^2.6.0",
-    "react": "16.8.4",
-    "react-dom": "16.8.4"
+    "react": "16.13.1",
+    "react-dom": "16.13.1"
   },
   "browserslist": {
     "production": [
@@ -43,6 +44,7 @@
     "prettier": "2.0.2",
     "ramda": "0.27.0",
     "remark-admonitions": "1.2.1",
-    "yaml": "1.8.3"
+    "yaml": "1.8.3",
+    "widdershins": "3.6.7"
   }
 }

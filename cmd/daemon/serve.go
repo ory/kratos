@@ -5,6 +5,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/ory/kratos/metrics/prometheus"
+
 	"github.com/ory/analytics-go/v4"
 
 	"github.com/ory/x/flagx"
@@ -85,6 +87,7 @@ func serveAdmin(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []
 	r.RegisterAdminRoutes(router)
 	n.Use(NewNegroniLoggerMiddleware(l, "admin#"+c.SelfAdminURL().String()))
 	n.Use(sqa(cmd, d))
+	n.Use(d.Registry().PrometheusManager())
 
 	if tracer := d.Registry().Tracer(); tracer.IsLoaded() {
 		n.Use(tracer)
@@ -160,6 +163,7 @@ func sqa(cmd *cobra.Command, d driver.Driver) *metricsx.Service {
 				link.RouteVerification,
 
 				errorx.RouteGet,
+				prometheus.MetricsPrometheusPath,
 			},
 			BuildVersion: d.Registry().BuildVersion(),
 			BuildHash:    d.Registry().BuildHash(),

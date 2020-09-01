@@ -67,12 +67,12 @@ const (
 	ViperKeyURLsWhitelistedReturnToDomains    = "selfservice.whitelisted_return_urls"
 
 	ViperKeySelfServiceRegistrationUI              = "selfservice.flows.registration.ui_url"
-	ViperKeySelfServiceRegistrationRequestLifespan = "selfservice.flows.registration.request_lifespan"
+	ViperKeySelfServiceRegistrationRequestLifespan = "selfservice.flows.registration.lifespan"
 	ViperKeySelfServiceRegistrationAfter           = "selfservice.flows.registration.after"
 	ViperKeySelfServiceRegistrationBeforeHooks     = "selfservice.flows.registration.before.hooks"
 
 	ViperKeySelfServiceLoginUI              = "selfservice.flows.login.ui_url"
-	ViperKeySelfServiceLoginRequestLifespan = "selfservice.flows.login.request_lifespan"
+	ViperKeySelfServiceLoginRequestLifespan = "selfservice.flows.login.lifespan"
 	ViperKeySelfServiceLoginAfter           = "selfservice.flows.login.after"
 	ViperKeySelfServiceLoginBeforeHooks     = "selfservice.flows.login.before.hooks"
 
@@ -82,17 +82,17 @@ const (
 
 	ViperKeySelfServiceSettingsURL                           = "selfservice.flows.settings.ui_url"
 	ViperKeySelfServiceSettingsAfter                         = "selfservice.flows.settings.after"
-	ViperKeySelfServiceSettingsRequestLifespan               = "selfservice.flows.settings.request_lifespan"
+	ViperKeySelfServiceSettingsRequestLifespan               = "selfservice.flows.settings.lifespan"
 	ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter = "selfservice.flows.settings.privileged_session_max_age"
 
 	ViperKeySelfServiceRecoveryEnabled                = "selfservice.flows.recovery.enabled"
 	ViperKeySelfServiceRecoveryUI                     = "selfservice.flows.recovery.ui_url"
-	ViperKeySelfServiceRecoveryRequestLifespan        = "selfservice.flows.recovery.request_lifespan"
+	ViperKeySelfServiceRecoveryRequestLifespan        = "selfservice.flows.recovery.lifespan"
 	ViperKeySelfServiceRecoveryBrowserDefaultReturnTo = "selfservice.flows.recovery.after." + DefaultBrowserReturnURL
 
 	ViperKeySelfServiceVerificationEnabled                = "selfservice.flows.verification.enabled"
 	ViperKeySelfServiceVerificationUI                     = "selfservice.flows.verification.ui_url"
-	ViperKeySelfServiceVerificationRequestLifespan        = "selfservice.flows.verification.request_lifespan"
+	ViperKeySelfServiceVerificationRequestLifespan        = "selfservice.flows.verification.lifespan"
 	ViperKeySelfServiceVerificationBrowserDefaultReturnTo = "selfservice.flows.verification.after." + DefaultBrowserReturnURL
 
 	ViperKeyDefaultIdentitySchemaURL = "identity.default_schema_url"
