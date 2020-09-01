@@ -8,7 +8,6 @@
   },
   "devDependencies": {
     "cypress": "4.5.0",
-    "node-fetch": "^2.6.0",
     "openapi-generator": "^0.1.36",
     "prettier": "2.0.4",
     "wait-on": "4.0.2"
