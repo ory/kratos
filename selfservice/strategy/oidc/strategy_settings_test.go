@@ -176,7 +176,7 @@ func TestSettingsStrategy(t *testing.T) {
 		require.NoError(t, err)
 
 		// Check our sanity. Does the SDK relay the same info that we expect and got from the store?
-		assert.Equal(t, publicTS.URL+"/self-service/browser/flows/settings", req.RequestURL)
+		assert.Equal(t, publicTS.URL+"/self-service/settings/browser", req.RequestURL)
 		assert.Empty(t, req.Active)
 		assert.NotEmpty(t, req.IssuedAt)
 		assert.EqualValues(t, users["password"].ID, req.Identity.ID)

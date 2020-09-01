@@ -13,7 +13,7 @@ selfservice:
   whitelisted_return_urls:
     - http://127.0.0.1:4455
 
-  strategies:
+  methods:
     password:
       enabled: true
 
