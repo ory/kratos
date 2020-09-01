@@ -3,11 +3,9 @@ package profile
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"reflect"
-	"runtime/debug"
 
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
@@ -165,12 +163,6 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 func (s *Strategy) handleSubmit(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var p CompleteSelfServiceBrowserSettingsProfileStrategyFlow
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, settings.ContinuityKey(s.SettingsStrategyID()), &p)
-	s.d.Logger().
-		WithField("err", fmt.Sprintf("%+v", err)).
-		WithField("ctxUpdate", fmt.Sprintf("%+v", ctxUpdate)).
-		WithField("package", pkgName).
-		WithField("stack_trace", fmt.Sprintf("%s", debug.Stack())).
-		Debug("handleSubmit: PrepareUpdate")
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
 		s.continueFlow(w, r, ctxUpdate, &p)
 		return

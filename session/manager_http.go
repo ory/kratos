@@ -61,10 +61,18 @@ func (s *ManagerHTTP) CreateAndIssueCookie(ctx context.Context, w http.ResponseW
 }
 
 func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, session *Session) error {
-	_ = s.r.CSRFHandler().RegenerateToken(w, r)
 	cookie, _ := s.r.CookieManager().Get(r, s.cookieName)
 	if s.c.SessionDomain() != "" {
 		cookie.Options.Domain = s.c.SessionDomain()
+	}
+
+	old, err := s.FetchFromRequest(context.Background(), r)
+	if err != nil {
+		// No session was set prior -> regenerate anti-csrf token
+		_ = s.r.CSRFHandler().RegenerateToken(w, r)
+	} else if old.Identity.ID != session.Identity.ID {
+		// No session was set prior -> regenerate anti-csrf token
+		_ = s.r.CSRFHandler().RegenerateToken(w, r)
 	}
 
 	if s.c.SessionPath() != "" {

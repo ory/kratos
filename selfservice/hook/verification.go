@@ -17,6 +17,7 @@ var _ settings.PostHookPostPersistExecutor = new(Verifier)
 type (
 	verifierDependencies interface {
 		link.SenderProvider
+		link.VerificationTokenPersistenceProvider
 	}
 	Verifier struct {
 		r verifierDependencies
@@ -46,10 +47,12 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity) error {
 			continue
 		}
 
-		if err := e.r.LinkSender().SendVerificationTokenTo(r.Context(),
-			address,
-			link.NewVerificationToken(address, e.c.SelfServiceFlowVerificationRequestLifespan()),
-		); err != nil {
+		token := link.NewVerificationToken(address, e.c.SelfServiceFlowVerificationRequestLifespan())
+		if err := e.r.VerificationTokenPersister().CreateVerificationToken(r.Context(),token); err != nil {
+			return err
+		}
+
+		if err := e.r.LinkSender().SendVerificationTokenTo(r.Context(), address, token); err != nil {
 			return err
 		}
 	}

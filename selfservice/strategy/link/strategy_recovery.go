@@ -260,7 +260,6 @@ type completeSelfServiceRecoveryFlowWithLinkMethod struct {
 //     Schemes: http, https
 //
 //     Responses:
-//       200: recoveryFlow
 //       400: recoveryFlow
 //       302: emptyResponse
 //       500: genericError

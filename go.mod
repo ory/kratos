@@ -64,7 +64,7 @@ require (
 	github.com/ory/jsonschema/v3 v3.0.1
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/viper v1.7.5
-	github.com/ory/x v0.0.147
+	github.com/ory/x v0.0.148
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/shurcooL/go v0.0.0-20180423040247-9e1955d9fb6e
@@ -74,9 +74,11 @@ require (
 	github.com/stretchr/testify v1.6.1
 	github.com/tidwall/gjson v1.3.5
 	github.com/tidwall/sjson v1.0.4
+	github.com/uber/jaeger-lib v2.2.0+incompatible // indirect
 	github.com/urfave/negroni v1.0.0
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/tools v0.0.0-20200717024301-6ddee64345a6
 	gopkg.in/go-playground/validator.v9 v9.28.0
+	gopkg.in/gorp.v1 v1.7.2 // indirect
 )

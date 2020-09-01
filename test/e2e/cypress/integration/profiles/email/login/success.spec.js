@@ -1,6 +1,6 @@
 import { APP_URL, gen, password, website } from '../../../../helpers'
 
-context('Login', () => {
+context('Login Flow Success', () => {
   const email = gen.email()
   const password = gen.password()
 
@@ -23,7 +23,7 @@ context('Login', () => {
       expect(identity.id).to.not.be.empty
       expect(identity.schema_id).to.equal('default')
       expect(identity.schema_url).to.equal(
-        `${APP_URL}/.ory/kratos/public/schemas/default`
+        `${APP_URL}/schemas/default`
       )
       expect(identity.traits.website).to.equal(website)
       expect(identity.traits.email).to.equal(email)

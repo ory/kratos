@@ -430,9 +430,9 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 		s.d.LoginFlowErrorHandler().WriteFlowError(w, r, s.ID(), lr, err)
 		return
 	} else if sr, rerr := s.d.SettingsFlowPersister().GetSettingsFlow(r.Context(), rid); rerr == nil {
-		sess, err := s.d.SessionManager().FetchFromRequest(r.Context(), r)
-		if err != nil {
-			s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		sess, sessErr := s.d.SessionManager().FetchFromRequest(r.Context(), r)
+		if sessErr != nil {
+			s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, sessErr)
 			return
 		}
 

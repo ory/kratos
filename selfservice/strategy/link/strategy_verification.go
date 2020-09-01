@@ -159,7 +159,6 @@ type completeSelfServiceVerificationFlowWithLinkMethod struct {
 //     Schemes: http, https
 //
 //     Responses:
-//       200: verificationFlow
 //       400: verificationFlow
 //       302: emptyResponse
 //       500: genericError

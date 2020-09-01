@@ -24,6 +24,10 @@ endef
 $(foreach dep, $(GO_DEPENDENCIES), $(eval $(call make-go-dependency, $(dep))))
 $(call make-lint-dependency)
 
+.bin/traefik:
+		https://github.com/containous/traefik/releases/download/v2.3.0-rc4/traefik_v2.3.0-rc4_linux_amd64.tar.gz \
+			tar -zxvf traefik_${traefik_version}_linux_${arch}.tar.gz
+
 .bin/cli: go.mod go.sum Makefile
 		go build -o .bin/cli -tags sqlite github.com/ory/cli
 
@@ -37,7 +41,7 @@ docs/node_modules: docs/package.json
 		curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b .bin v1.28.3
 
 .bin/hydra: Makefile
-		bash <(curl https://raw.githubusercontent.com/ory/hydra/master/install.sh) -b .bin v1.6.0
+		bash <(curl https://raw.githubusercontent.com/ory/hydra/master/install.sh) -b .bin v1.7.4
 
 .PHONY: docs
 docs: docs/node_modules

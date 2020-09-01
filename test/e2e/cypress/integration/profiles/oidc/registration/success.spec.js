@@ -11,7 +11,7 @@ context('Register', () => {
     expect(identity.id).to.not.be.empty
     expect(identity.schema_id).to.equal('default')
     expect(identity.schema_url).to.equal(
-      `${APP_URL}/.ory/kratos/public/schemas/default`
+      `${APP_URL}/schemas/default`
     )
     expect(identity.traits.website).to.equal(website)
     expect(identity.traits.email).to.equal(email)

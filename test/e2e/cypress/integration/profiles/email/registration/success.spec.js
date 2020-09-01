@@ -1,6 +1,6 @@
 import { APP_URL, gen } from '../../../../helpers'
 
-context('Registration', () => {
+context('Registration Flow Success', () => {
   beforeEach(() => {
     cy.visit(APP_URL + '/auth/registration')
   })
@@ -18,12 +18,12 @@ context('Registration', () => {
     cy.get('.greeting').should('contain.text', 'Welcome back')
 
     cy.session().should((session) => {
-      const { identity } = session
+      const {identity} = session
       expect(identity.id).to.not.be.empty
       expect(identity.verifiable_addresses).to.be.undefined
       expect(identity.schema_id).to.equal('default')
       expect(identity.schema_url).to.equal(
-        `${APP_URL}/.ory/kratos/public/schemas/default`
+        `${APP_URL}/schemas/default`
       )
       expect(identity.traits.website).to.equal(website)
       expect(identity.traits.email).to.equal(email)
