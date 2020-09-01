@@ -22,7 +22,7 @@ To recover an account, two principal flows are supported:
   (Swift), Android (Java), Microsoft (.NET), React Native, Electron, and others.
 
 The flow described here is implemented by the
-[link](account-recovery/password-reset-recovery-link) strategy.
+[link](account-recovery/password-reset-recovery-link) method.
 
 ## Self-Service Account Recovery for Browser Applications
 
@@ -95,7 +95,7 @@ HTML. Instead, you need to implement the HTML code in your application (e.g.
 NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
 flexibility and customizability in your user interface flows and designs.
 
-Each Recovery Strategy
+Each Recovery Method
 ([Recovery Link](account-recovery/password-reset-recovery-link.mdx), ...) is
 different, but they all boil down to the same abstract sequence:
 
@@ -228,7 +228,7 @@ methods you want to support:
 ```
 
 For details on payloads and potential HTML snippets consult the individual
-Self-Service Strategies for:
+Self-Service Methods for:
 
 - [Recovery Link](account-recovery/password-reset-recovery-link.mdx)
 
@@ -306,7 +306,7 @@ recovery request.
 Your Server-Side Application makes a `GET` request to
 `http://kratos:4434/self-service/browser/flows/requests/recovery?request=abcde`.
 ORY Kratos responds with a JSON Payload that contains data (form fields, error
-messages, ...) for all enabled Account Recovery Strategies:
+messages, ...) for all enabled Account Recovery Methods:
 
 ```json5
 {
@@ -323,7 +323,7 @@ messages, ...) for all enabled Account Recovery Strategies:
 }
 ```
 
-Once the strategy is completed successfully (e.g. an email has been entered into
+Once the method is completed successfully (e.g. an email has been entered into
 the form and the user clicked submit), the user will be signed in and sent to
 the [User Settings](user-settings.mdx) page with a privileged session, meaning
 that he/she is able to change the password in the next e.g. 15 minutes.

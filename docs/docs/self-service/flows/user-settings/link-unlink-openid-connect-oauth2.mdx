@@ -13,15 +13,15 @@ and [User Settings Documentation](../user-settings.mdx) first.
 :::
 
 Because OAuth2 and OpenID Connect (OIDC) require the user to interact with a
-browser, this strategy does not work with API-only flows. You cannot log in or
-sign up a user using this strategy
+browser, this method does not work with API-only flows. You cannot log in or
+sign up a user using this method
 
 - with REST API or AJAX requests only;
 - without a browser.
 
 This document summarizes exemplary request payloads for performing "link /
 unlink your account from Google, Github, ..." flows using the user settings flow
-with the `oidc` strategy.
+with the `oidc` method.
 
 ORY Kratos will prompt the user to re-authenticate before the password is
 changed, similar to the
@@ -63,7 +63,7 @@ selfservice:
 
 Redirecting the browser to the
 [Self-Service Settings Endpoint](../user-settings.mdx#user-settings-process-sequence)
-initiates the flow. If the `oidc` strategy is enabled, the Settings Request
+initiates the flow. If the `oidc` method is enabled, the Settings Request
 Response Payload will include a `oidc` method.
 
 A provider can be unlinked if there is at least one other method (credential) of

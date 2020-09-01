@@ -18,7 +18,7 @@ The flow described here is implemented by the
 [profile](user-settings/user-profile-management.mdx),
 [password](user-login-user-registration/username-email-password.mdx), and
 [oidc](user-login-user-registration/openid-connect-social-sign-in-oauth2.mdx)
-strategy.
+method.
 
 ## Self-Service User Settings for Browser Applications
 
@@ -72,7 +72,7 @@ HTML. Instead, you need to implement the HTML code in your application (e.g.
 NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
 flexibility and customizability in your user interface flows and designs.
 
-Each Settings Strategy ([Profile](user-settings/user-profile-management.mdx),
+Each Settings Method ([Profile](user-settings/user-profile-management.mdx),
 [Username and Password](user-login-user-registration/username-email-password.mdx),
 [Social Sign In](user-login-user-registration/openid-connect-social-sign-in-oauth2.mdx),
 Passwordless, ...) works a bit different but they all boil down to the same
@@ -210,11 +210,11 @@ methods you want to support:
 ```
 
 For details on payloads and potential HTML snippets consult the individual
-Self-Service Strategies for:
+Self-Service Method for:
 
-- [Username and Password Strategy](user-login-user-registration/username-email-password.mdx)
-- [Social Sign In Strategy](user-login-user-registration/openid-connect-social-sign-in-oauth2.mdx)
-- [Profile](user-settings/user-profile-management.mdx)
+- [Username and Password Method](user-login-user-registration/username-email-password.mdx)
+- [Social Sign In Method](user-login-user-registration/openid-connect-social-sign-in-oauth2.mdx)
+- [User Profile Method](user-settings/user-profile-management.mdx)
 
 ### Server-Side Browser Applications
 
@@ -287,7 +287,7 @@ stateDiagram
 1. Your Server-Side Application makes a `GET` request to
    `http://kratos:4434/self-service/browser/flows/requests/settings?request=abcde`.
    ORY Kratos responds with a JSON Payload that contains data (form fields,
-   error messages, ...) for all enabled User Profile Strategies:
+   error messages, ...) for all enabled User Profile Method:
    ```json5
    {
      id: 'abcde',
@@ -302,7 +302,7 @@ stateDiagram
 1. Your Server-Side applications renders the data however you see fit. The User
    interacts with it and completes the flow by e.g. updating the password or
    some other profile data.
-1. The User's browser makes a request to one of ORY Kratos' Strategy URLs (e.g.
+1. The User's browser makes a request to one of ORY Kratos' Method URLs (e.g.
    `http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/settings/strategies/profile?request=abcde`
    or `/self-service/browser/flows/settings/strategies/password?request=abcde`).
    ORY Kratos validates the data:

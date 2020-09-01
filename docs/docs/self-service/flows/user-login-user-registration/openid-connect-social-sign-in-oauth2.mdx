@@ -13,7 +13,7 @@ first.
 
 :::
 
-The Social Sign In Strategy enables you to use
+The Social Sign In Method enables you to use
 
 - [GitHub](http://github.com/);
 - [Apple](https://developer.apple.com/sign-in-with-apple/);
@@ -28,15 +28,15 @@ as the Identity Provider. It implements several flows, specifically
 and [identity Settings](../identity-settings.mdx).
 
 Because OAuth2 and OpenID Connect (OIDC) require the identity to interact with a
-browser, this strategy does not work with API-only flows. You cannot log in or
-sign up a identity using this strategy
+browser, this method does not work with API-only flows. You cannot log in or
+sign up a identity using this method
 
 - with REST API or AJAX requests only;
 - without a browser.
 
 This document summarizes exemplary request payloads for performing "Sign in with
 ..." flows using the identity login and registration flow with the `oidc`
-strategy.
+method.
 
 ORY Kratos automatically converts registration to login flows and vice versa. A
 user that's already signed up with his/her Google account will be logged in even
@@ -65,7 +65,7 @@ Here we use a configuration with 3 providers:
 
 ```yaml title="path/to/my/kratos/config.yml"
 selfservice:
-  strategies:
+  methods:
     oidc:
       enabled: true
       config:
@@ -84,7 +84,7 @@ selfservice:
 
 Redirecting the browser to the
 [Self-Service Login and Registration Endpoint](../user-login-user-registration.mdx#user-login-and-user-registration-process-sequence)
-initiates the flow. If the `oidc` strategy is enabled and at least one provider
+initiates the flow. If the `oidc` method is enabled and at least one provider
 is configued, the Registration Request Response Payload will include an `oidc`
 method. The method contains different providers, based on your OpenID Connect
 Provider configuration:
@@ -287,7 +287,7 @@ the `Set-Cookie` HTTP header.
 
 Redirecting the browser to the
 [Self-Service Login and Registration Endpoint](../user-login-user-registration.mdx#user-login-and-user-registration-process-sequence)
-initiates the flow. If the `oidc` strategy is enabled and at least one provider
+initiates the flow. If the `oidc` method is enabled and at least one provider
 is configued, the Login Request Response Payload will include an `oidc` method.
 The method contains different providers, based on your OpenID Connect Provider
 configuration:

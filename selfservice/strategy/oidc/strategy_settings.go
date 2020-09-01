@@ -434,10 +434,15 @@ func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, c
 		}
 	}
 
+	var i *identity.Identity
 	if ctxUpdate.Flow != nil {
 		ctxUpdate.Flow.Methods[s.SettingsStrategyID()].Config.ResetMessages()
 		ctxUpdate.Flow.Methods[s.SettingsStrategyID()].Config.SetCSRF(s.d.GenerateCSRFToken(r))
 	}
 
-	s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.SettingsStrategyID(), ctxUpdate.Flow, ctxUpdate.Session.Identity, err)
+	if ctxUpdate.Session != nil {
+		i = ctxUpdate.Session.Identity
+	}
+
+	s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.SettingsStrategyID(), ctxUpdate.Flow, i, err)
 }

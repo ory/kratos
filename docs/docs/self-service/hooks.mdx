@@ -36,7 +36,7 @@ selfservice:
   flows:
     login:
       after:
-        <strategy>:
+        <method>:
           - hook: revoke_active_sessions
             # can not be configured
 ```
@@ -44,7 +44,7 @@ selfservice:
 ## Registration
 
 Hooks running after successful user registration are defined per Self-Service
-Registration Strategy in ORY Kratos' configuration file.
+Registration Method in ORY Kratos' configuration file.
 
 ### After
 
@@ -95,7 +95,7 @@ selfservice:
   flows:
     registration:
       after:
-        <strategy>:
+        <method>:
           - hook: session
             # can not be configured
 ```
@@ -141,7 +141,7 @@ the session hook is the last hook in your configuration!
 ## Settings
 
 Hooks running after successfully updating user settings and are defined per
-Self-Service Settings Strategy in ORY Kratos' configuration file.
+Self-Service Settings Method in ORY Kratos' configuration file.
 
 ### After
 

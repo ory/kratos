@@ -49,17 +49,17 @@ Research, Troy Hunt, ...) and implements the following flows:
 Some flows break down into "flow methods" which implement some of the flow's
 business logic:
 
-- The `password` strategy implements the
+- The `password` method implements the
   [login and registration with "email or/and username and password" method](self-service/flows/user-login-user-registration/username-email-password),
   and
   ["change your password" user settings method](self-service/flows/user-settings/change-password).
-- The `oidc` (OpenID Connect, OAuth2, Social Sign In) strategy implements
+- The `oidc` (OpenID Connect, OAuth2, Social Sign In) method implements
   ["Sign in with ..." login and registration method](self-service/flows/user-login-user-registration/openid-connect-social-sign-in-oauth2)
   and
   ["un/link another social account" user settings method](self-service/flows/user-settings/link-unlink-openid-connect-oauth2).
-- The `profile` strategy implements the
+- The `profile` method implements the
   ["update your profile", "change your first/last name, ..." user settings method)](self-service/flows/user-settings/user-profile-management).
-- The `link` strategy implements the
+- The `link` method implements the
   ["click this link to reset your password" account recovery method](self-service/flows/user-settings/user-profile-management).
 
 Some flows additionally implement the ability [to run hooks](self-service/hooks)

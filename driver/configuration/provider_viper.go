@@ -61,7 +61,7 @@ const (
 	ViperKeySessionPath             = "session.cookie.path"
 	ViperKeySessionPersistentCookie = "session.cookie.persistent"
 
-	ViperKeySelfServiceStrategyConfig = "selfservice.strategies"
+	ViperKeySelfServiceStrategyConfig = "selfservice.methods"
 
 	ViperKeySelfServiceBrowserDefaultReturnTo = "selfservice." + DefaultBrowserReturnURL
 	ViperKeyURLsWhitelistedReturnToDomains    = "selfservice.whitelisted_return_urls"

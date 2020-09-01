@@ -111,7 +111,7 @@ func TestViperProvider(t *testing.T) {
 			}, p.SecretsSession())
 		})
 
-		t.Run("group=strategies", func(t *testing.T) {
+		t.Run("group=methods", func(t *testing.T) {
 			for _, tc := range []struct {
 				id      string
 				config  string
