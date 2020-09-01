@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-08-31)](#unreleased-2020-08-31)
+- [Unreleased (2020-09-01)](#unreleased-2020-09-01)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -102,11 +102,12 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...ee9dd0d58a4146a0e131f6a7b74943bb39d26c0b) (2020-08-31)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...6d77e043ce3bec0864b8abdee371a101f68e4335) (2020-09-01)
 
 
 ### Bug Fixes
 
+* Correct cookie domain on logout ([#646](https://github.com/ory/kratos/issues/646)) ([6d77e04](https://github.com/ory/kratos/commit/6d77e043ce3bec0864b8abdee371a101f68e4335)), closes [#645](https://github.com/ory/kratos/issues/645)
 * Don't resend verification emails once verified ([#583](https://github.com/ory/kratos/issues/583)) ([a4d9969](https://github.com/ory/kratos/commit/a4d99694525e65b58d49197c96324b27fb8c31c2)), closes [#578](https://github.com/ory/kratos/issues/578)
 * Fallback to default return url if logout after url is not defined ([#594](https://github.com/ory/kratos/issues/594)) ([7edd367](https://github.com/ory/kratos/commit/7edd367dc64a01dbe252ca0ab8cf4d3926a35014))
 * Improve makefile dependency building ([8e1d69a](https://github.com/ory/kratos/commit/8e1d69a024414196b39eb3d419f4850cd547e3b5))
