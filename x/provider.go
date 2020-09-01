@@ -18,4 +18,5 @@ type WriterProvider interface {
 
 type CookieProvider interface {
 	CookieManager() sessions.Store
+	ContinuityCookieManager() sessions.Store
 }
