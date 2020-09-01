@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
-	"reflect"
 
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
@@ -34,7 +33,6 @@ const (
 )
 
 var _ settings.Strategy = new(Strategy)
-var pkgName = reflect.TypeOf(Strategy{}).PkgPath()
 
 type (
 	strategyDependencies interface {
