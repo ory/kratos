@@ -11,10 +11,9 @@ import (
 	"runtime/debug"
 	"testing"
 
+	"github.com/ory/x/sqlcon"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/viper"
 	"github.com/ory/x/logrusx"
@@ -32,6 +31,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
@@ -107,6 +107,13 @@ func TestMigrations(t *testing.T) {
 					for _, id := range ids {
 						actual, err := d.Registry().PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), id.ID)
 						require.NoError(t, err)
+
+						compareWithFixture(t, actual.VerifiableAddresses, "identity_verification_address", id.ID.String())
+						compareWithFixture(t, actual.RecoveryAddresses, "identity_recovery_address", id.ID.String())
+
+						// Prevents ordering to get in the way.
+						actual.VerifiableAddresses = nil
+						actual.RecoveryAddresses = nil
 						compareWithFixture(t, actual, "identity", id.ID.String())
 					}
 				})
@@ -171,6 +178,28 @@ func TestMigrations(t *testing.T) {
 						actual, err := d.Registry().VerificationFlowPersister().GetVerificationFlow(context.Background(), id.ID)
 						require.NoError(t, err)
 						compareWithFixture(t, actual, "verification_flow", id.ID.String())
+					}
+				})
+
+				t.Run("case=verification_token", func(t *testing.T) {
+					var ids []link.VerificationToken
+					require.NoError(t, c.Select("token").All(&ids))
+
+					for _, id := range ids {
+						actual, err := d.Registry().VerificationTokenPersister().UseVerificationToken(context.Background(), id.Token)
+						require.NoError(t, err)
+						compareWithFixture(t, actual, "verification_token", id.ID.String())
+					}
+				})
+
+				t.Run("case=recovery_token", func(t *testing.T) {
+					var ids []link.VerificationToken
+					require.NoError(t, c.Select("token").All(&ids))
+
+					for _, id := range ids {
+						actual, err := d.Registry().VerificationTokenPersister().UseVerificationToken(context.Background(), id.Token)
+						require.NoError(t, err)
+						compareWithFixture(t, actual, "recovery_token", id.ID.String())
 					}
 				})
 			})

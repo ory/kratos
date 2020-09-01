@@ -4,15 +4,5 @@
   "schema_url": "https://www.ory.sh/schemas/default",
   "traits": {
     "email": "bazbar@ory.sh"
-  },
-  "verifiable_addresses": [
-    {
-      "id": "45e867e9-2745-4f16-8dd4-84334a252b61",
-      "value": "foo@ory.sh",
-      "verified": false,
-      "via": "email",
-      "status": "pending",
-      "verified_at": null
-    }
-  ]
+  }
 }
