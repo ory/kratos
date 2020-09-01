@@ -17,9 +17,9 @@ import (
 )
 
 const (
-	RouteInitBrowserFlow          = "/self-service/verification/browser"
-	RouteInitAPIFlow              = "/self-service/verification/api"
-	RouteGetFlow                  = "/self-service/verification/flows"
+	RouteInitBrowserFlow = "/self-service/verification/browser"
+	RouteInitAPIFlow     = "/self-service/verification/api"
+	RouteGetFlow         = "/self-service/verification/flows"
 )
 
 type (
@@ -144,7 +144,7 @@ type getSelfServiceVerificationFlowParameters struct {
 
 // swagger:route GET /self-service/verification/flows common public admin getSelfServiceVerificationFlow
 //
-// Get Information About a Verification Flow
+// Get Verification Flow
 //
 // This endpoint returns a verification flow's context with, for example, error details and other information.
 //

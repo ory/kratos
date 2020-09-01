@@ -23,12 +23,6 @@ type CompleteSelfServiceRecoveryFlowWithLinkMethodReader struct {
 // ReadResponse reads a server response into the received o.
 func (o *CompleteSelfServiceRecoveryFlowWithLinkMethodReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (interface{}, error) {
 	switch response.Code() {
-	case 200:
-		result := NewCompleteSelfServiceRecoveryFlowWithLinkMethodOK()
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		return result, nil
 	case 302:
 		result := NewCompleteSelfServiceRecoveryFlowWithLinkMethodFound()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
@@ -51,39 +45,6 @@ func (o *CompleteSelfServiceRecoveryFlowWithLinkMethodReader) ReadResponse(respo
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
-}
-
-// NewCompleteSelfServiceRecoveryFlowWithLinkMethodOK creates a CompleteSelfServiceRecoveryFlowWithLinkMethodOK with default headers values
-func NewCompleteSelfServiceRecoveryFlowWithLinkMethodOK() *CompleteSelfServiceRecoveryFlowWithLinkMethodOK {
-	return &CompleteSelfServiceRecoveryFlowWithLinkMethodOK{}
-}
-
-/*CompleteSelfServiceRecoveryFlowWithLinkMethodOK handles this case with default header values.
-
-recoveryFlow
-*/
-type CompleteSelfServiceRecoveryFlowWithLinkMethodOK struct {
-	Payload *models.RecoveryFlow
-}
-
-func (o *CompleteSelfServiceRecoveryFlowWithLinkMethodOK) Error() string {
-	return fmt.Sprintf("[POST /self-service/recovery/methods/link][%d] completeSelfServiceRecoveryFlowWithLinkMethodOK  %+v", 200, o.Payload)
-}
-
-func (o *CompleteSelfServiceRecoveryFlowWithLinkMethodOK) GetPayload() *models.RecoveryFlow {
-	return o.Payload
-}
-
-func (o *CompleteSelfServiceRecoveryFlowWithLinkMethodOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RecoveryFlow)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
 }
 
 // NewCompleteSelfServiceRecoveryFlowWithLinkMethodFound creates a CompleteSelfServiceRecoveryFlowWithLinkMethodFound with default headers values

@@ -1,12 +1,12 @@
-import {APP_URL, gen, website} from '../../../../helpers'
+import { APP_URL, gen, website } from '../../../../helpers'
 
 context('Logout Flow Success', () => {
   const email = gen.email()
   const password = gen.password()
 
   before(() => {
-    cy.register({email, password, fields: {'traits.website': website}})
-    cy.login({email, password})
+    cy.register({ email, password, fields: { 'traits.website': website } })
+    cy.login({ email, password })
   })
 
   beforeEach(() => {

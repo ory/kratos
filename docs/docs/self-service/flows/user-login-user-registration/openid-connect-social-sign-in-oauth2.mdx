@@ -277,10 +277,11 @@ $ curl http://<kratos-admin>/self-service/browser/flows/requests/registration?re
 }
 ```
 
-If the form is valid, ORY Kratos will create the user and respond with a HTTP 302 redirect
-to the configured redirect URL.
+If the form is valid, ORY Kratos will create the user and respond with a HTTP
+302 redirect to the configured redirect URL.
 
-Unless the `session` hook is configured, no session cookie will be included in the `Set-Cookie` HTTP header.
+Unless the `session` hook is configured, no session cookie will be included in
+the `Set-Cookie` HTTP header.
 
 ### Login
 
@@ -387,13 +388,15 @@ apply for `provider: github`):
 }
 ```
 
-If the form is valid (the user exists and the password is correct), ORY Kratos will respond with a HTTP 302 redirect
-to the configured redirect URL and set a session cookie using the `Set-Cookie` HTTP Header.
+If the form is valid (the user exists and the password is correct), ORY Kratos
+will respond with a HTTP 302 redirect to the configured redirect URL and set a
+session cookie using the `Set-Cookie` HTTP Header.
 
 ## API Clients
 
-Social Sign In is currently not possible for API Clients. It will be possible in a future version, which is
-partially tracked as [kratos#273](https://github.com/ory/kratos/issues/273)
+Social Sign In is currently not possible for API Clients. It will be possible in
+a future version, which is partially tracked as
+[kratos#273](https://github.com/ory/kratos/issues/273)
 
 ## Security and Defenses
 

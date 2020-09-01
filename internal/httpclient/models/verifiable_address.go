@@ -17,11 +17,6 @@ import (
 // swagger:model VerifiableAddress
 type VerifiableAddress struct {
 
-	// expires at
-	// Required: true
-	// Format: date-time
-	ExpiresAt *strfmt.DateTime `json:"expires_at"`
-
 	// id
 	// Required: true
 	// Format: uuid4
@@ -52,10 +47,6 @@ type VerifiableAddress struct {
 func (m *VerifiableAddress) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateExpiresAt(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validateID(formats); err != nil {
 		res = append(res, err)
 	}
@@ -83,19 +74,6 @@ func (m *VerifiableAddress) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *VerifiableAddress) validateExpiresAt(formats strfmt.Registry) error {
-
-	if err := validate.Required("expires_at", "body", m.ExpiresAt); err != nil {
-		return err
-	}
-
-	if err := validate.FormatOf("expires_at", "body", "date-time", m.ExpiresAt.String(), formats); err != nil {
-		return err
-	}
-
 	return nil
 }
 

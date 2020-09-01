@@ -21,7 +21,10 @@ context('Verify', () => {
       cy.get('input[name="email"]').type(identity.email)
       cy.get('button[type="submit"]').click()
 
-      cy.get('.messages .message').should('contain.text', 'An email containing a verification')
+      cy.get('.messages .message').should(
+        'contain.text',
+        'An email containing a verification'
+      )
 
       cy.verifyEmail({ expect: { email: identity.email } })
 
@@ -33,7 +36,10 @@ context('Verify', () => {
       cy.get('input[name="email"]').type(email)
       cy.get('button[type="submit"]').click()
 
-      cy.get('.messages .message').should('contain.text', 'An email containing a verification')
+      cy.get('.messages .message').should(
+        'contain.text',
+        'An email containing a verification'
+      )
 
       cy.getMail().should((message) => {
         expect(message.subject.trim()).to.equal(

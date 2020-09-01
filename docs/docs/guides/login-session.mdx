@@ -11,8 +11,8 @@ cookie or as a token, depending on the interaction type.
 
 ## Login Session Configuration
 
-A session is valid for
-the session lifespan you specify in the ORY Kratos config:
+A session is valid for the session lifespan you specify in the ORY Kratos
+config:
 
 ```yaml title="path/to/kratos/config.yml
 session:
@@ -45,14 +45,17 @@ Once the lifespan is reached, the user needs to sign in again.
 
 ### Browser Client
 
-The easiest way to check if a user is signed in is to call the `http(s)://<kratos-public/sessions/whoami` endpoint
-which will return either a 401 Unauthorized or HTTP 200 OK with the session.
+The easiest way to check if a user is signed in is to call the
+`http(s)://<kratos-public/sessions/whoami` endpoint which will return either a
+401 Unauthorized or HTTP 200 OK with the session.
 
 :::note
 
-Make sure to include the ORY Kratos Session Cookie when calling this endpoint. If you are calling this endpoint
-from a proxy or middleware, make sure to forward the cookies sent to the proxy/middleware. If you are
-calling this endpoint as an AJAX call, make sure to include credentials and configure CORS properly.
+Make sure to include the ORY Kratos Session Cookie when calling this endpoint.
+If you are calling this endpoint from a proxy or middleware, make sure to
+forward the cookies sent to the proxy/middleware. If you are calling this
+endpoint as an AJAX call, make sure to include credentials and configure CORS
+properly.
 
 :::
 
@@ -134,8 +137,9 @@ app.get('/', protect, dashboard)
 
 ### API Client
 
-API clients receive and use ORY Kratos Session Tokens which can be checked by calling the `/sessions/whoami` endpoint
-and including the ORY Kratos Session Token as a bearer token in the HTTP Authorization Header:
+API clients receive and use ORY Kratos Session Tokens which can be checked by
+calling the `/sessions/whoami` endpoint and including the ORY Kratos Session
+Token as a bearer token in the HTTP Authorization Header:
 
 ```shell script
 $ sessionToken=oFZzgLpsacUpUy2cvQPtrGa2046WcXCR

@@ -22,9 +22,7 @@ context('Login Flow Success', () => {
       const { identity } = session
       expect(identity.id).to.not.be.empty
       expect(identity.schema_id).to.equal('default')
-      expect(identity.schema_url).to.equal(
-        `${APP_URL}/schemas/default`
-      )
+      expect(identity.schema_url).to.equal(`${APP_URL}/schemas/default`)
       expect(identity.traits.website).to.equal(website)
       expect(identity.traits.email).to.equal(email)
     })

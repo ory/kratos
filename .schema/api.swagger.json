@@ -318,6 +318,24 @@
         }
       }
     },
+    "/metrics/prometheus": {
+      "get": {
+        "description": "```\nmetadata:\nannotations:\nprometheus.io/port: \"4434\"\nprometheus.io/path: \"/metrics/prometheus\"\n```",
+        "produces": [
+          "plain/text"
+        ],
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get snapshot metrics from the Hydra service. If you're using k8s, you can then add annotations to\nyour deployment like so:",
+        "operationId": "prometheus",
+        "responses": {
+          "200": {
+            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+          }
+        }
+      }
+    },
     "/recovery/link": {
       "post": {
         "description": "This endpoint creates a recovery link which should be given to the user in order for them to recover\n(or activate) their account.",
@@ -375,7 +393,7 @@
     },
     "/schemas/{id}": {
       "get": {
-        "description": "Get a traits schema definition",
+        "description": "Get a Traits Schema Definition",
         "produces": [
           "application/json"
         ],
@@ -459,7 +477,7 @@
         "tags": [
           "public"
         ],
-        "summary": "Complete the browser-based settings flow for the OpenID Connect strategy",
+        "summary": "Complete the Browser-Based Settings Flow for the OpenID Connect Strategy",
         "operationId": "completeSelfServiceBrowserSettingsOIDCSettingsFlow",
         "responses": {
           "302": {
@@ -489,7 +507,7 @@
           "public",
           "admin"
         ],
-        "summary": "Get user-facing self-service errors",
+        "summary": "Get User-Facing Self-Service Errors",
         "operationId": "getSelfServiceError",
         "parameters": [
           {
@@ -610,7 +628,7 @@
           "public",
           "admin"
         ],
-        "summary": "Get information about a login flow",
+        "summary": "Get Login Flow",
         "operationId": "getSelfServiceLoginFlow",
         "parameters": [
           {
@@ -880,12 +898,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "recoveryFlow",
-            "schema": {
-              "$ref": "#/definitions/recoveryFlow"
-            }
-          },
           "302": {
             "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
           },
@@ -978,7 +990,7 @@
           "public",
           "admin"
         ],
-        "summary": "Get information about a registration flow",
+        "summary": "Get Registration Flow",
         "operationId": "getSelfServiceRegistrationFlow",
         "parameters": [
           {
@@ -1157,7 +1169,7 @@
           "public",
           "admin"
         ],
-        "summary": "Get Information About a Settings Flow",
+        "summary": "Get Settings Flow",
         "operationId": "getSelfServiceSettingsFlow",
         "parameters": [
           {
@@ -1403,7 +1415,7 @@
           "public",
           "admin"
         ],
-        "summary": "Get information about a verification flow",
+        "summary": "Get Verification Flow",
         "operationId": "getSelfServiceVerificationFlow",
         "parameters": [
           {
@@ -1483,12 +1495,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "verificationFlow",
-            "schema": {
-              "$ref": "#/definitions/verificationFlow"
-            }
-          },
           "302": {
             "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
           },
@@ -1567,7 +1573,7 @@
         "tags": [
           "public"
         ],
-        "summary": "Check who the current HTTP session belongs to",
+        "summary": "Check Who the Current HTTP Session Belongs To",
         "operationId": "whoami",
         "responses": {
           "200": {
@@ -1822,14 +1828,9 @@
         "value",
         "verified",
         "via",
-        "status",
-        "expires_at"
+        "status"
       ],
       "properties": {
-        "expires_at": {
-          "type": "string",
-          "format": "date-time"
-        },
         "id": {
           "$ref": "#/definitions/UUID"
         },

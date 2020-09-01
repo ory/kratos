@@ -48,7 +48,7 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity) error {
 		}
 
 		token := link.NewVerificationToken(address, e.c.SelfServiceFlowVerificationRequestLifespan())
-		if err := e.r.VerificationTokenPersister().CreateVerificationToken(r.Context(),token); err != nil {
+		if err := e.r.VerificationTokenPersister().CreateVerificationToken(r.Context(), token); err != nil {
 			return err
 		}
 

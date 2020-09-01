@@ -122,7 +122,7 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, ps httprou
 
 // swagger:route GET /self-service/registration/browser public initializeSelfServiceRegistrationViaBrowserFlow
 //
-//  Initialize Registration Flow for browsers
+// Initialize Registration Flow for browsers
 //
 // This endpoint initializes a browser-based user registration flow. Once initialized, the browser will be redirected to
 // `selfservice.flows.registration.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
@@ -174,7 +174,7 @@ type getSelfServiceRegistrationFlowParameters struct {
 
 // swagger:route GET /self-service/registration/flows common public admin getSelfServiceRegistrationFlow
 //
-// Get information about a registration flow
+// Get Registration Flow
 //
 // This endpoint returns a registration flow's context with, for example, error details and other information.
 //

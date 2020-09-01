@@ -31,7 +31,7 @@ type ClientService interface {
 
 	CompleteSelfServiceLoginFlowWithPasswordMethod(params *CompleteSelfServiceLoginFlowWithPasswordMethodParams) (*CompleteSelfServiceLoginFlowWithPasswordMethodOK, error)
 
-	CompleteSelfServiceRecoveryFlowWithLinkMethod(params *CompleteSelfServiceRecoveryFlowWithLinkMethodParams) (*CompleteSelfServiceRecoveryFlowWithLinkMethodOK, error)
+	CompleteSelfServiceRecoveryFlowWithLinkMethod(params *CompleteSelfServiceRecoveryFlowWithLinkMethodParams) error
 
 	CompleteSelfServiceRegistrationFlowWithPasswordMethod(params *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams) (*CompleteSelfServiceRegistrationFlowWithPasswordMethodOK, error)
 
@@ -39,7 +39,7 @@ type ClientService interface {
 
 	CompleteSelfServiceSettingsFlowWithProfileMethod(params *CompleteSelfServiceSettingsFlowWithProfileMethodParams) (*CompleteSelfServiceSettingsFlowWithProfileMethodOK, error)
 
-	CompleteSelfServiceVerificationFlowWithLinkMethod(params *CompleteSelfServiceVerificationFlowWithLinkMethodParams) (*CompleteSelfServiceVerificationFlowWithLinkMethodOK, error)
+	CompleteSelfServiceVerificationFlowWithLinkMethod(params *CompleteSelfServiceVerificationFlowWithLinkMethodParams) error
 
 	InitializeSelfServiceBrowserLogoutFlow(params *InitializeSelfServiceBrowserLogoutFlowParams) error
 
@@ -172,13 +172,13 @@ a new Recovery Flow ID which contains an error message that the recovery link wa
 
 More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).
 */
-func (a *Client) CompleteSelfServiceRecoveryFlowWithLinkMethod(params *CompleteSelfServiceRecoveryFlowWithLinkMethodParams) (*CompleteSelfServiceRecoveryFlowWithLinkMethodOK, error) {
+func (a *Client) CompleteSelfServiceRecoveryFlowWithLinkMethod(params *CompleteSelfServiceRecoveryFlowWithLinkMethodParams) error {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewCompleteSelfServiceRecoveryFlowWithLinkMethodParams()
 	}
 
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	_, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "completeSelfServiceRecoveryFlowWithLinkMethod",
 		Method:             "POST",
 		PathPattern:        "/self-service/recovery/methods/link",
@@ -191,16 +191,9 @@ func (a *Client) CompleteSelfServiceRecoveryFlowWithLinkMethod(params *CompleteS
 		Client:             params.HTTPClient,
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
-	success, ok := result.(*CompleteSelfServiceRecoveryFlowWithLinkMethodOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for completeSelfServiceRecoveryFlowWithLinkMethod: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
+	return nil
 }
 
 /*
@@ -376,13 +369,13 @@ a new Verification Flow ID which contains an error message that the verification
 
 More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 */
-func (a *Client) CompleteSelfServiceVerificationFlowWithLinkMethod(params *CompleteSelfServiceVerificationFlowWithLinkMethodParams) (*CompleteSelfServiceVerificationFlowWithLinkMethodOK, error) {
+func (a *Client) CompleteSelfServiceVerificationFlowWithLinkMethod(params *CompleteSelfServiceVerificationFlowWithLinkMethodParams) error {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewCompleteSelfServiceVerificationFlowWithLinkMethodParams()
 	}
 
-	result, err := a.transport.Submit(&runtime.ClientOperation{
+	_, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "completeSelfServiceVerificationFlowWithLinkMethod",
 		Method:             "POST",
 		PathPattern:        "/self-service/verification/methods/link",
@@ -395,16 +388,9 @@ func (a *Client) CompleteSelfServiceVerificationFlowWithLinkMethod(params *Compl
 		Client:             params.HTTPClient,
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
-	success, ok := result.(*CompleteSelfServiceVerificationFlowWithLinkMethodOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for completeSelfServiceVerificationFlowWithLinkMethod: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
+	return nil
 }
 
 /*

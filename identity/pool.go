@@ -414,7 +414,7 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			t.Run("case=create and find", func(t *testing.T) {
 				addresses := make([]VerifiableAddress, 15)
 				for k := range addresses {
-					addresses[k] = createIdentityWithAddresses(t,  "recovery.TestPersister.Create"+strconv.Itoa(k)+"@ory.sh")
+					addresses[k] = createIdentityWithAddresses(t, "recovery.TestPersister.Create"+strconv.Itoa(k)+"@ory.sh")
 					require.NotEmpty(t, addresses[k].ID)
 				}
 
@@ -438,7 +438,7 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			})
 
 			t.Run("case=update", func(t *testing.T) {
-				address := createIdentityWithAddresses(t,  "verification.TestPersister.Update@ory.sh")
+				address := createIdentityWithAddresses(t, "verification.TestPersister.Update@ory.sh")
 
 				address.Value = "new-code"
 				require.NoError(t, p.UpdateVerifiableAddress(context.Background(), &address))

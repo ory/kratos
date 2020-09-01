@@ -23,12 +23,6 @@ type CompleteSelfServiceVerificationFlowWithLinkMethodReader struct {
 // ReadResponse reads a server response into the received o.
 func (o *CompleteSelfServiceVerificationFlowWithLinkMethodReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (interface{}, error) {
 	switch response.Code() {
-	case 200:
-		result := NewCompleteSelfServiceVerificationFlowWithLinkMethodOK()
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		return result, nil
 	case 302:
 		result := NewCompleteSelfServiceVerificationFlowWithLinkMethodFound()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
@@ -51,39 +45,6 @@ func (o *CompleteSelfServiceVerificationFlowWithLinkMethodReader) ReadResponse(r
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
-}
-
-// NewCompleteSelfServiceVerificationFlowWithLinkMethodOK creates a CompleteSelfServiceVerificationFlowWithLinkMethodOK with default headers values
-func NewCompleteSelfServiceVerificationFlowWithLinkMethodOK() *CompleteSelfServiceVerificationFlowWithLinkMethodOK {
-	return &CompleteSelfServiceVerificationFlowWithLinkMethodOK{}
-}
-
-/*CompleteSelfServiceVerificationFlowWithLinkMethodOK handles this case with default header values.
-
-verificationFlow
-*/
-type CompleteSelfServiceVerificationFlowWithLinkMethodOK struct {
-	Payload *models.VerificationFlow
-}
-
-func (o *CompleteSelfServiceVerificationFlowWithLinkMethodOK) Error() string {
-	return fmt.Sprintf("[POST /self-service/verification/methods/link][%d] completeSelfServiceVerificationFlowWithLinkMethodOK  %+v", 200, o.Payload)
-}
-
-func (o *CompleteSelfServiceVerificationFlowWithLinkMethodOK) GetPayload() *models.VerificationFlow {
-	return o.Payload
-}
-
-func (o *CompleteSelfServiceVerificationFlowWithLinkMethodOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.VerificationFlow)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
 }
 
 // NewCompleteSelfServiceVerificationFlowWithLinkMethodFound creates a CompleteSelfServiceVerificationFlowWithLinkMethodFound with default headers values

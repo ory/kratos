@@ -1,8 +1,11 @@
-const {APP_URL, gen} = require("../../../../helpers");
+const { APP_URL, gen } = require('../../../../helpers')
 context('Settings Flow UI', () => {
   beforeEach(() => {
     const identity = gen.identity()
-    cy.register({...identity, fields: {'traits.website': 'https://www.ory.sh/'}})
+    cy.register({
+      ...identity,
+      fields: { 'traits.website': 'https://www.ory.sh/' },
+    })
     cy.login(identity)
     cy.visit(APP_URL)
   })

@@ -204,7 +204,7 @@ type getSelfServiceSettingsFlowParameters struct {
 
 // swagger:route GET /self-service/settings/flows common public admin getSelfServiceSettingsFlow
 //
-// Get Information About a Settings Flow
+// Get Settings Flow
 //
 // When accessing this endpoint through ORY Kratos' Public API you must ensure that either the ORY Kratos Session Cookie
 // or the ORY Kratos Session Token are set. The public endpoint does not return 404 status codes

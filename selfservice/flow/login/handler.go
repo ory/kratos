@@ -147,7 +147,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 
 // swagger:route GET /self-service/login/browser public initializeSelfServiceLoginViaBrowserFlow
 //
-//  Initialize Login Flow for browsers
+// Initialize Login Flow for browsers
 //
 // This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to
 // `selfservice.flows.login.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
@@ -216,7 +216,7 @@ type getSelfServiceLoginFlow struct {
 
 // swagger:route GET /self-service/login/flows common public admin getSelfServiceLoginFlow
 //
-// Get information about a login flow
+// Get Login Flow
 //
 // This endpoint returns a login flow's context with, for example, error details and other information.
 //

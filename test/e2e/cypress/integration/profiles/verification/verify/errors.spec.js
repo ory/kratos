@@ -26,7 +26,10 @@ context('Verify', () => {
       cy.get('input[name="email"]').type(identity.email)
       cy.get('button[type="submit"]').click()
 
-      cy.get('.messages .message').should('contain.text', 'An email containing a verification')
+      cy.get('.messages .message').should(
+        'contain.text',
+        'An email containing a verification'
+      )
 
       cy.verifyEmailButExpired({ expect: { email: identity.email } })
     })
@@ -35,7 +38,10 @@ context('Verify', () => {
       cy.get('input[name="email"]').type(identity.email)
       cy.get('button[type="submit"]').click()
 
-      cy.get('.messages .message').should('contain.text', 'An email containing a verification')
+      cy.get('.messages .message').should(
+        'contain.text',
+        'An email containing a verification'
+      )
 
       cy.getMail().then((mail) => {
         const link = parseHtml(mail.body).querySelector('a')
