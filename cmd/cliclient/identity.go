@@ -1,4 +1,4 @@
-package client
+package cliclient
 
 import (
 	"github.com/spf13/cobra"

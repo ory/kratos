@@ -1175,6 +1175,7 @@ github.com/segmentio/backo-go v0.0.0-20200129164019-23eae7c10bd3 h1:ZuhckGJ10ula
 github.com/segmentio/backo-go v0.0.0-20200129164019-23eae7c10bd3/go.mod h1:9/Rh6yILuLysoQnZ2oNooD2g7aBnvM7r/fNVxRNWfBc=
 github.com/segmentio/conf v1.2.0/go.mod h1:Y3B9O/PqqWqjyxyWWseyj/quPEtMu1zDp/kVbSWWaB0=
 github.com/segmentio/go-snakecase v1.1.0/go.mod h1:jk1miR5MS7Na32PZUykG89Arm+1BUSYhuGR6b7+hJto=
+github.com/segmentio/objconv v1.0.1 h1:QjfLzwriJj40JibCV3MGSEiAoXixbp4ybhwfTB8RXOM=
 github.com/segmentio/objconv v1.0.1/go.mod h1:auayaH5k3137Cl4SoXTgrzQcuQDmvuVtZgS0fb1Ahys=
 github.com/serenize/snaker v0.0.0-20171204205717-a683aaf2d516 h1:ofR1ZdrNSkiWcMsRrubK9tb2/SlZVWttAfqUjJi6QYc=
 github.com/serenize/snaker v0.0.0-20171204205717-a683aaf2d516/go.mod h1:Yow6lPLSAXx2ifx470yD/nUe22Dv5vBvxK/UK9UUTVs=

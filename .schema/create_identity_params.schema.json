@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "definitions": {
+    "verifiable_address": {
+      "type": "object",
+      "required": ["id", "value", "verified", "via", "expires_at"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "value": {
+          "type": "string"
+        },
+        "verified": {
+          "type": "boolean"
+        },
+        "via": {
+          "type": "string",
+          "enum": [
+            "email"
+          ]
+        },
+        "verified_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "recovery_address": {
+      "type": "object",
+      "required": ["id", "value", "via"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "value": {
+          "type": "string"
+        },
+        "via": {
+          "type": "string",
+          "enum": [
+            "email"
+          ]
+        }
+      }
+    }
+  },
+  "required": ["id", "schema_id", "traits"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "schema_id": {
+      "type": "string"
+    },
+    "schema_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "traits": {
+      "description": "The traits have to be validated according to \"schema_url\"."
+    },
+    "verifiable_addresses": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/verifiable_address"
+      }
+    },
+    "recovery_addresses": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/recovery_address"
+      }
+    }
+  }
+}

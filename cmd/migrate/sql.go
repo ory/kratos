@@ -18,11 +18,11 @@ package migrate
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/ory/kratos/cmd/cliclient"
+
 	"github.com/ory/x/logrusx"
 
 	"github.com/ory/x/viperx"
-
-	"github.com/ory/kratos/cmd/client"
 )
 
 var logger *logrusx.Logger
@@ -48,7 +48,7 @@ Before running this command on an existing database, create a back up!
 		logger = viperx.InitializeConfig("kratos", "", logger)
 		// plog.Logger = gbl.Logrus{FieldLogger: logger}
 
-		client.NewMigrateHandler().MigrateSQL(cmd, args)
+		cliclient.NewMigrateHandler().MigrateSQL(cmd, args)
 	},
 }
 

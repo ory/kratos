@@ -616,33 +616,45 @@ docker-compose -f quickstart.yml rm -fsv
 
 ## Next Steps
 
-Here is some information if you want to modify the quickstart to test ORY Kratos in with different settings.
+Here is some information if you want to modify the quickstart to test ORY Kratos
+in with different settings.
 
-__Using different databases__
+**Using different databases**
 
-If you want to run the quickstart with PostgreSQL, run the following docker-compose:
+If you want to run the quickstart with PostgreSQL, run the following
+docker-compose:
 `docker-compose -f quickstart.yml -f quickstart-standalone.yml -f quickstart-postgres.yml up --build --force-recreate`
 
-If you want to run the quickstart with CockroachDB, run the following docker-compose:
+If you want to run the quickstart with CockroachDB, run the following
+docker-compose:
 `docker-compose -f quickstart.yml -f quickstart-standalone.yml -f quickstart-crdb.yml up --build --force-recreate`
 
 If you want to run the quickstart with MySQL, run the following docker-compose:
 `docker-compose -f quickstart.yml -f quickstart-standalone.yml -f quickstart-mysql.yml up --build --force-recreate`
 
-__Changing ports__
+**Changing ports**
 
-If you want to change ports for the SelfService-UI, you need to change them in `quickstart.yml` as well as in the `contrib/quickstart/kratos/email-password/.kratos.yml` accordingly. 
+If you want to change ports for the SelfService-UI, you need to change them in
+`quickstart.yml` as well as in the
+`contrib/quickstart/kratos/email-password/.kratos.yml` accordingly.
 
-Note that you also need to change the ports for flows (error, settings, recovery, verification, logout, login, registration).
+Note that you also need to change the ports for flows (error, settings,
+recovery, verification, logout, login, registration).
 
-The same procedure applies if you want to change ports for the Public UI/Admin UI or the Mailslurper.
+The same procedure applies if you want to change ports for the Public UI/Admin
+UI or the Mailslurper.
 
-__Hooks__
+**Hooks**
 
-If you want to change the redirects happening after registration,login or a settings change, take a look at this document: [Hooks](self-service/hooks/index).
+If you want to change the redirects happening after registration,login or a
+settings change, take a look at this document:
+[Hooks](self-service/hooks/index).
 
-If you delete the `session` hook from `kratos.yml`, the user will _not_ be immediately signed in after registration. 
+If you delete the `session` hook from `kratos.yml`, the user will _not_ be
+immediately signed in after registration.
 
-__OIDC__ 
+**OIDC**
 
-If you want to test ORY Kratos integration with different OIDC providers, you will find more information in this document: [OIDC](guides/sign-in-with-github-google-facebook-linkedin)
+If you want to test ORY Kratos integration with different OIDC providers, you
+will find more information in this document:
+[OIDC](guides/sign-in-with-github-google-facebook-linkedin)

@@ -1,0 +1,7 @@
+{
+  "id": "840ea128-df0e-45a7-8c18-8d1e57082862",
+  "schema_id": "default",
+  "traits": {
+    "email": "foo@bar.com"
+  }
+}
