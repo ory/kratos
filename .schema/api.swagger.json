@@ -147,9 +147,8 @@
           {
             "name": "Body",
             "in": "body",
-            "required": true,
             "schema": {
-              "$ref": "#/definitions/Identity"
+              "$ref": "#/definitions/CreateIdentityRequestPayload"
             }
           }
         ],
@@ -251,9 +250,8 @@
           {
             "name": "Body",
             "in": "body",
-            "required": true,
             "schema": {
-              "$ref": "#/definitions/Identity"
+              "$ref": "#/definitions/UpdateIdentityRequestPayload"
             }
           }
         ],
@@ -1269,6 +1267,23 @@
     }
   },
   "definitions": {
+    "CreateIdentityRequestPayload": {
+      "type": "object",
+      "required": [
+        "schema_id",
+        "traits"
+      ],
+      "properties": {
+        "schema_id": {
+          "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.",
+          "type": "string"
+        },
+        "traits": {
+          "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_url`.",
+          "type": "object"
+        }
+      }
+    },
     "CredentialsType": {
       "description": "and so on.",
       "type": "string",
@@ -1408,6 +1423,22 @@
     "UUID": {
       "type": "string",
       "format": "uuid4"
+    },
+    "UpdateIdentityRequestPayload": {
+      "type": "object",
+      "required": [
+        "traits"
+      ],
+      "properties": {
+        "schema_id": {
+          "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set\nwill update the Identity's SchemaID.",
+          "type": "string"
+        },
+        "traits": {
+          "description": "Traits represent an identity's traits. The identity is able to create, modify, and delete traits\nin a self-service manner. The input will always be validated against the JSON Schema defined\nin `schema_id`.",
+          "type": "object"
+        }
+      }
     },
     "VerifiableAddress": {
       "type": "object",
