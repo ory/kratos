@@ -51,13 +51,13 @@ To set up "Sign in with GitHub" you must create a
 Set the "Authorization callback URL" to:
 
 ```
-http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/callback/github
+http://127.0.0.1:4433/self-service/methods/oidc/callback/github
 ```
 
 The pattern of this URL is:
 
 ```
-http(s)://<domain-of-ory-kratos>:<public-port>/self-service/browser/flows/strategies/oidc/callback/<provider-id>
+http(s)://<domain-of-ory-kratos>:<public-port>//self-service/methods/oidc/callback/<provider-id>
 ```
 
 The provider ID must point to the provider's ID set in the ORY Kratos
@@ -140,7 +140,7 @@ To set up "Sign in with Microsoft" you must first
 Select "Web" as the "Redirect URI" type, and set the URI to:
 
 ```
-http(s)://<domain-of-ory-kratos>:<public-port>/self-service/browser/flows/strategies/oidc/callback/<provider-id>
+http(s)://<domain-of-ory-kratos>:<public-port>//self-service/methods/oidc/callback/<provider-id>
 ```
 
 After the "App Registration" is created, make note of the `Application ID` and
