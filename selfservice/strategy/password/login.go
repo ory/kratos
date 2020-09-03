@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/decoderx"
@@ -105,7 +106,8 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	var p CompleteSelfServiceLoginFlowWithPasswordMethod
-	if err := s.hd.Decode(r, &p, decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema)); err != nil {
+	if err := s.hd.Decode(r, &p, decoderx.MustHTTPRawJSONSchemaCompiler(x.MustPkgerRead(
+		pkger.Open("/selfservice/strategy/password/.schema/login.schema.json")))); err != nil {
 		s.handleLoginError(w, r, ar, &p, err)
 		return
 	}

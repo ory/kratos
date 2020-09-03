@@ -8,6 +8,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
+	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -137,7 +138,7 @@ func (s *Strategy) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps
 }
 
 func (s *Strategy) decodeSettingsFlow(r *http.Request, dest interface{}) error {
-	compiler, err := decoderx.HTTPRawJSONSchemaCompiler(settingsSchema)
+	compiler, err := decoderx.HTTPRawJSONSchemaCompiler( x.MustPkgerRead(pkger.Open("/selfservice/strategy/password/.schema/settings.schema.json")))
 	if err != nil {
 		return errors.WithStack(err)
 	}

@@ -1,4 +1,4 @@
-FROM golang:1.14-alpine AS builder
+FROM golang:1.15-alpine AS builder
 
 RUN apk -U --no-cache add build-base git gcc bash
 
@@ -14,10 +14,9 @@ RUN go mod download
 
 ADD . .
 
-RUN make pack
-RUN go build -tags sqlite -a -o /usr/bin/kratos
+RUN make pack && go build -tags sqlite -o /usr/bin/kratos
 
-FROM alpine:3.11
+FROM alpine:3.12
 
 RUN addgroup -S ory; \
     adduser -S ory -G ory -D  -h /home/ory -s /bin/nologin; \

@@ -136,4 +136,4 @@ migratest-refresh:
 
 .PHONY: pack
 pack: .bin/pkger
-		pkger -exclude node_modules -exclude docs -exclude .bin -exclude test -exclude script -exclude contrib
+		pkger -exclude node_modules -exclude docs -exclude .git -exclude .github -exclude .bin -exclude test -exclude script -exclude contrib

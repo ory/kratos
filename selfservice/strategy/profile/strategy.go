@@ -8,6 +8,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
+	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
 	"github.com/tidwall/sjson"
 
@@ -317,7 +318,9 @@ func (s *Strategy) newSettingsProfileDecoder(i *identity.Identity) (decoderx.HTT
 	if err != nil {
 		return nil, err
 	}
-	raw, err := sjson.SetBytes(settingsSchema, "properties.traits.$ref", ss.URL.String()+"#/properties/traits")
+	raw, err := sjson.SetBytes(x.MustPkgerRead(pkger.Open(
+		"/selfservice/strategy/password/.schema/settings.schema.json")),
+		"properties.traits.$ref", ss.URL.String()+"#/properties/traits")
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

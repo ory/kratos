@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
 	"github.com/tidwall/sjson"
 
@@ -74,7 +75,8 @@ func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Reques
 }
 
 func (s *Strategy) decode(p *RegistrationFormPayload, r *http.Request) error {
-	raw, err := sjson.SetBytes(registrationSchema, "properties.traits.$ref", s.c.DefaultIdentityTraitsSchemaURL().String()+"#/properties/traits")
+	raw, err := sjson.SetBytes(x.MustPkgerRead(pkger.Open("/selfservice/strategy/password/.schema/registration.schema.json")),
+		"properties.traits.$ref", s.c.DefaultIdentityTraitsSchemaURL().String()+"#/properties/traits")
 	if err != nil {
 		return errors.WithStack(err)
 	}
