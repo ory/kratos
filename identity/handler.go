@@ -163,7 +163,7 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 }
 
 // swagger:parameters createIdentity
-type createIdentityRequest struct {
+type createIdentityParameters struct {
 	// in: body
 	Body CreateIdentityRequestPayload
 }
@@ -229,7 +229,13 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 }
 
 // swagger:parameters updateIdentity
-type updateIdentityRequest struct {
+type updateIdentityParameters struct {
+	// ID must be set to the ID of identity you want to update
+	//
+	// required: true
+	// in: path
+	ID string `json:"id"`
+
 	// in: body
 	Body UpdateIdentityRequestPayload
 }
@@ -300,6 +306,15 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	}
 
 	h.r.Writer().Write(w, r, identity)
+}
+
+// swagger:parameters deleteIdentity
+type deleteIdentityParameters struct {
+	// ID is the identity's ID.
+	//
+	// required: true
+	// in: path
+	ID string `json:"id"`
 }
 
 // swagger:route DELETE /identities/{id} admin deleteIdentity

@@ -1,12 +1,14 @@
 package prometheus_test
 
 import (
-	"github.com/ory/kratos/metrics/prometheus"
-	"github.com/prometheus/common/expfmt"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/prometheus/common/expfmt"
+	"github.com/stretchr/testify/require"
+
+	"github.com/ory/kratos/metrics/prometheus"
 
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/x"
