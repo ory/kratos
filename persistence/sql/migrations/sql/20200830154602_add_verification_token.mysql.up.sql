@@ -15,3 +15,5 @@ FOREIGN KEY (`selfservice_verification_flow_id`) REFERENCES `selfservice_verific
 ) ENGINE=InnoDB;
 CREATE UNIQUE INDEX `identity_verification_tokens_token_uq_idx` ON `identity_verification_tokens` (`token`);
 CREATE INDEX `identity_verification_tokens_token_idx` ON `identity_verification_tokens` (`token`);
+CREATE INDEX `identity_verification_tokens_verifiable_address_id_idx` ON `identity_verification_tokens` (`identity_verifiable_address_id`);
+CREATE INDEX `identity_verification_tokens_verification_flow_id_idx` ON `identity_verification_tokens` (`selfservice_verification_flow_id`);

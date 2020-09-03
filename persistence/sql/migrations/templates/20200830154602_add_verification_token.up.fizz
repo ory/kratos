@@ -16,3 +16,6 @@ create_table("identity_verification_tokens") {
 
 add_index("identity_verification_tokens", ["token"], { "unique": true, "name": "identity_verification_tokens_token_uq_idx" })
 add_index("identity_verification_tokens", ["token"], { "name": "identity_verification_tokens_token_idx" })
+
+add_index("identity_verification_tokens", ["identity_verifiable_address_id"], { "name": "identity_verification_tokens_verifiable_address_id_idx" })
+add_index("identity_verification_tokens", ["selfservice_verification_flow_id"], { "name": "identity_verification_tokens_verification_flow_id_idx" })

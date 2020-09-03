@@ -11,9 +11,10 @@ import (
 	"runtime/debug"
 	"testing"
 
-	"github.com/ory/x/sqlcon"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/viper"
 	"github.com/ory/x/logrusx"
@@ -44,17 +45,17 @@ func TestMigrations(t *testing.T) {
 	require.NoError(t, sqlite.Open())
 
 	connections := map[string]*pop.Connection{
-		"sqlite": sqlite,
+		// "sqlite": sqlite,
 	}
 	l := logrusx.New("", "", logrusx.ForceLevel(logrus.TraceLevel))
 
 	if !testing.Short() {
 		dockertest.Parallel([]func(){
 			func() {
-				connections["postgres"] = dockertest.ConnectToTestPostgreSQLPop(t)
+				// connections["postgres"] = dockertest.ConnectToTestPostgreSQLPop(t)
 			},
 			func() {
-				connections["mysql"] = dockertest.ConnectToTestMySQLPop(t)
+				// connections["mysql"] = dockertest.ConnectToTestMySQLPop(t)
 			},
 			func() {
 				connections["cockroach"] = dockertest.ConnectToTestCockroachDBPop(t)

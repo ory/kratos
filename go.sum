@@ -354,6 +354,8 @@ github.com/gobuffalo/fizz v1.9.8/go.mod h1:w1FEn1yKNVCc49KnADGyYGRPH7jFON3ak4Bj1
 github.com/gobuffalo/fizz v1.10.0/go.mod h1:J2XGPO0AfJ1zKw7+2BA+6FEGAkyEsdCOLvN93WCT2WI=
 github.com/gobuffalo/fizz v1.13.0 h1:XzcBh8DLZH2BgEH77p6q+EKbd8FZyyUXgokUmKXk5ow=
 github.com/gobuffalo/fizz v1.13.0/go.mod h1:cXLjhE5p3iuIes6AGZ/9+dfyOkehlB2Vldj0Iw2Uu38=
+github.com/gobuffalo/fizz v1.13.1-0.20200903094245-046abeb7de46 h1:lkv+5YiQOlOhXaYyD2PtN/E0BT87G/I0iCL7gqxTKBg=
+github.com/gobuffalo/fizz v1.13.1-0.20200903094245-046abeb7de46/go.mod h1:cXLjhE5p3iuIes6AGZ/9+dfyOkehlB2Vldj0Iw2Uu38=
 github.com/gobuffalo/flect v0.0.0-20180907193754-dc14d8acaf9f/go.mod h1:rCiQgmAE4axgBNl3jZWzS5rETRYTGOsrixTRaCPzNdA=
 github.com/gobuffalo/flect v0.0.0-20181002182613-4571df4b1daf/go.mod h1:rCiQgmAE4axgBNl3jZWzS5rETRYTGOsrixTRaCPzNdA=
 github.com/gobuffalo/flect v0.0.0-20181007231023-ae7ed6bfe683/go.mod h1:rCiQgmAE4axgBNl3jZWzS5rETRYTGOsrixTRaCPzNdA=
@@ -1046,6 +1048,8 @@ github.com/ory/analytics-go/v4 v4.0.0 h1:KQ2P00j9dbj4lDC/Albw/zn/scK67041RhqeW5p
 github.com/ory/analytics-go/v4 v4.0.0/go.mod h1:FMx9cLRD9xN+XevPvZ5FDMfignpmcqPP6FUKnJ9/MmE=
 github.com/ory/cli v0.0.27 h1:4dfDDqSzIGUcR/LXzmqI6bnMa/c0Ao0S4Uw3PI2ACWw=
 github.com/ory/cli v0.0.27/go.mod h1:DrhqIZ67p55fetGyczTpU+amx3WGIMKOj75mSSbYJ+U=
+github.com/ory/cli v0.0.28-0.20200903094455-e203529bf12b h1:YY/QfVyxo4RB1/J5BTC+XJ/LPI70+246XnGlH930fE8=
+github.com/ory/cli v0.0.28-0.20200903094455-e203529bf12b/go.mod h1:PqijULTsktU0v2STwzZRXTEYRK5ZEJb0NGkdXLFy/BE=
 github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4Emza6EbVUUGA=
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
 github.com/ory/dockertest/v3 v3.5.4 h1:rYijlJuraj8D4OgC1DpYpCV8SGXrkviT3RVrjFy7OFc=
