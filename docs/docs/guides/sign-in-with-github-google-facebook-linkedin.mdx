@@ -213,6 +213,18 @@ There are two ways to use the `microsoft` provider for authentication:
 
 ## Google, LinkedIn, Facebook
 
+Enable the Google provider in the ORY Kratos config located at
+`<kratos-directory>/contrib/quickstart/kratos/email-password/.kratos.yml`.
+
+ - id: google
+            provider: google
+            client_id: 587409727174-bo0uf2vacrlmg0dqcs9dnui04isnshvh.apps.googleusercontent.com
+            client_secret: epyxZaFryaxV2NFbxu1cWuGx
+            mapper_url: file:///etc/config/kratos/oidc.google.jsonnet
+            scope:
+              - openid
+
 Connecting with other Social Sign In providers will be very similar to the
 GitHub flow. If you've managed to do it, add to this document by writing it down
 and making a PR! :)
+
