@@ -94,12 +94,14 @@ Something is not working.
 * [ ] Refresh Sessions Without Having to Log In Again ([kratos#615](https://github.com/ory/kratos/issues/615)) - [@hackerman](https://github.com/aeneasr)
 * [ ] Email field type changes on second request for request context during registration flow  ([kratos#670](https://github.com/ory/kratos/issues/670))
 * [ ] Segmentation fault when running kratos ([kratos#685](https://github.com/ory/kratos/issues/685))
+* [ ] Fetching a settings request after error is missing identity data ([kratos#689](https://github.com/ory/kratos/issues/689)) - [@hackerman](https://github.com/aeneasr)
 * [x] Generate a new UUID/token after every interaction ([kratos#236](https://github.com/ory/kratos/issues/236)) - [@hackerman](https://github.com/aeneasr)
 * [x] UNIQUE constraint failure when updating identities via Admin API ([kratos#325](https://github.com/ory/kratos/issues/325)) - [@hackerman](https://github.com/aeneasr)
 * [x] Can not update an identity using PUT /identities/{id} ([kratos#435](https://github.com/ory/kratos/issues/435))
 * [x] Verification email is sent after password recovery ([kratos#578](https://github.com/ory/kratos/issues/578)) - [@hackerman](https://github.com/aeneasr)
 * [x] Do not return expired sessions in `/sessions/whoami` ([kratos#611](https://github.com/ory/kratos/issues/611)) - [@hackerman](https://github.com/aeneasr)
 * [x] Logout does not use new cookie domain setting ([kratos#645](https://github.com/ory/kratos/issues/645))
+* [x] Endpoint whoami returns valid session after user logout ([kratos#686](https://github.com/ory/kratos/issues/686)) - [@hackerman](https://github.com/aeneasr)
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)
 
