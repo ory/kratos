@@ -12,8 +12,12 @@ your profile and sign up yourself.
 import Tabs from '@theme/Tabs'
 import TabItem from '@theme/TabItem'
 import Mermaid from '@theme/Mermaid'
+
+import CodeTabs from '@theme/Code/CodeTabs'
+import { initBrowserFlow, initApiFlow } from './self-service/flows/code/login'
+
 import SelfServiceBrowserFlow from '@theme/SelfServiceBrowserFlow'
-import SelfServiceAPIFlow from '@theme/SelfServiceAPIFlow'
+import SelfServiceApiFlow from '@theme/SelfServiceApiFlow'
 
 Most believe that user management systems are easy to implement because picking
 the right password hashing algorithm and sending an account verification code is
@@ -125,81 +129,7 @@ before reading this document.
 First, the Browser opens the flow's initialization endpoint
 (e.g.`/self-service/login/browser`, `/self-service/registration/browser`, ...):
 
-<Tabs
-  defaultValue="curl"
-  values={[
-    {label: 'CURL', value: 'curl'},
-    {label: 'HTML', value: 'html'},
-    {label: 'Javascript', value: 'js'},
-    {label: 'ReactJS', value: 'reactjs'},
-    {label: 'AngularJS', value: 'angular'},
-    {label: 'ExpressJS', value: 'nodejs'},
-  ]}>
-<TabItem value="curl">
-
-This `curl -s` request emulates a browser request:
-
-```
-$ curl -s -v -X GET \
-  -H "Accept: text/html" \
-  http://127.0.0.1:4433/self-service/login/browser
-
-# Request Headers
-> GET /self-service/login/browser HTTP/1.1
-> Host: 127.0.0.1:4433
-> User-Agent: curl/7.64.1
-> Accept: text/html
-```
-
-</TabItem>
-<TabItem value="html">
-
-```html
-<a href="http://127.0.0.1:4433/self-service/login/browser">Sign in</a>
-```
-
-</TabItem>
-<TabItem value="js">
-
-```html
-<script>
-  const initLogin = () => {
-    window.location.href = 'http://127.0.0.1:4433/self-service/login/browser'
-  }
-</script>
-
-<a onClick="initLogin">Sign in</a>
-```
-
-</TabItem>
-<TabItem value="reactjs">
-
-```jsx
-import React from 'react'
-
-const MyComponent = () => (
-  <a href="http://127.0.0.1:4433/self-service/login/browser">Sign in</a>
-)
-```
-
-</TabItem>
-<TabItem value="angular">
-
-```html
-<a href="http://127.0.0.1:4433/self-service/login/browser">Sign in</a>
-```
-
-</TabItem>
-<TabItem value="nodejs">
-
-```js
-express.get('/login', function (req, res) {
-  res.redirect(302, 'http://127.0.0.1:4433/')
-})
-```
-
-</TabItem>
-</Tabs>
+<CodeTabs items={initBrowserFlow} />
 
 The initialization endpoint creates a flow object and stores it in the database.
 The flow object has an ID and contains additional information about the flow
@@ -402,7 +332,7 @@ API flows have three stages:
 
 The high-level sequence diagram for API flows looks as follows:
 
-<SelfServiceAPIFlow />
+<SelfServiceApiFlow />
 
 ### Initialization
 
@@ -410,74 +340,7 @@ The client (e.g. mobile application) makes a request to the flow's
 initialization endpoint (e.g.`/self-service/login/api`,
 `/self-service/registration/api`, ...):
 
-<Tabs
-  defaultValue="curl"
-  values={[
-    {label: 'curl', value: 'curl'},
-    {label: 'NodeJS', value: 'nodejs'},
-  ]}>
-<TabItem value="curl">
-
-```
-$ curl -s -X GET \
-  -H "Accept: application/json" \
-  http://127.0.0.1:4433/self-service/login/api | jq
-
-{
-  "id": "57374fa5-336a-4381-b471-92d7de939859",
-  "type": "api",
-  "expires_at": "2020-08-17T14:10:34.9952023Z",
-  "issued_at": "2020-08-17T14:00:34.9952023Z",
-  "request_url": "http://127.0.0.1:4433/self-service/login/api",
-  "messages": null,
-  "methods": {
-    "password": {
-      "method": "password",
-      "config": {
-        "action": "http://127.0.0.1:4433/self-service/login/methods/password?flow=57374fa5-336a-4381-b471-92d7de939859",
-        "method": "POST",
-        "fields": [
-          {
-            "name": "identifier",
-            "type": "text",
-            "required": true,
-            "value": ""
-          },
-          {
-            "name": "password",
-            "type": "password",
-            "required": true
-          },
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "YAgEhbVEWRHV4F+B0gGyIdUgusvZRCHyjBUhvbIgRuyRh2DdFRE90FLcQYy5LwEE245Aml0L+OF4qqPjZismiQ=="
-          }
-        ]
-      }
-    }
-  },
-  "forced": false
-}
-```
-
-</TabItem>
-<TabItem value="nodejs">
-
-```js
-const fetch = require('node-fetch')
-
-fetch
-  .get('http://127.0.0.1:4433/self-service/login/api', {
-    headers: { Accept: 'text/html' }
-  })
-  .then((res) => res.json())
-  .then((flow) => console.log(flow))
-```
-
-</TabItem>
-</Tabs>
+<CodeTabs items={initApiFlow} />
 
 The initialization endpoint creates a flow object and stores it in the database.
 The flow object has an ID and contains additional information about the flow

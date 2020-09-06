@@ -27,6 +27,8 @@
   ],
   "Self Service (End-User)": [
     "self-service",
+    "self-service/flows/user-registration",
+    "self-service/flows/user-login",
     {
       "type": "category",
       "label": "User Login and User Registration",

@@ -6,17 +6,19 @@ const chart = ({
   methods = ['password', 'oidc', '...'],
   interactions = ['"Log in"', '"Sign Up"', '"Update Email"', '...'],
   success = 'Perform flow-specific action (e.g. create user, set session cookie, ...)'
-}) => `
+}) => {
+  const components = flows.length > 1 ? `<${flows.join('|')}>` : `${flows.join('|')}`
+  return `
 sequenceDiagram
   participant B as API Client
   participant K as ORY Kratos
 
-  B->>K: REST GET /self-service/<${flows.join('|')}>/api
+  B->>K: REST GET /self-service/${components}/api
   K-->>K: Create and store new ${flows.join(', ')} flow
   K->>B: HTTP 200 OK with flow as application/json payload
   B-->>B: Render form using e.g. Native iOS UI Elements
   B-->>B: User fills out forms, clicks e.g. ${interactions}
-  B->>K: REST POST to e.g. /self-service/<${flows.join('|')}>/methods/<${methods.join('|')}>
+  B->>K: REST POST to e.g. /self-service/${components}/methods/<${methods.join('|')}>
   K-->>K: Validates and processes payload
   alt Form payload is valid valid
     K->>B: ${success}
@@ -27,7 +29,8 @@ sequenceDiagram
     B-->>K: Repeat flow with input data, submit, validate, ...
   end
 `
+}
 
-const SelfServiceAPIFlow = (props) => <Mermaid chart={chart(props)}/>
+const SelfServiceApiFlow = (props) => <Mermaid chart={chart(props)}/>
 
-export default SelfServiceAPIFlow
+export default SelfServiceApiFlow

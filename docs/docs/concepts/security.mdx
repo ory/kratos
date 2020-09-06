@@ -3,6 +3,13 @@ id: security
 title: Threat Models and Security Profiles
 ---
 
+:::warning
+
+Please be aware that this chapter is still work in progress. Not all mitigation
+strategies have been implemented yet in ORY Kratos!
+
+:::
+
 Running any software that stores personal information exposes the
 developer/company to risks. Analyzing which threat agents pose a risk,
 understanding the possible motivations for an attack, or why an agent is a
@@ -13,18 +20,16 @@ This documentation can not substitute a thorough and serious threat model, yet
 it will provide some guidelines to help configure ORY Kratos in a way that makes
 it best suited for any risk assessment.
 
+## Account Enumeration Attacks
+
 :::warning
 
-Please be aware that this chapter is still work in progress. Not all mitigation
-strategies have been implemented yet in ORY Kratos!
+This feature is a work in progress and is tracked as
+[kratos#133](https://github.com/ory/kratos/issues/133).
+
+It does not yet work as documented!
 
 :::
-
-## Understanding Threats
-
-This section examines several threat vectors in systems that manage identities.
-
-### Account Enumeration Attacks
 
 > "Often, web applications reveal when a username exists on system, either as a
 > consequence of a misconfiguration or as a design decision. For example,
@@ -37,8 +42,6 @@ This section examines several threat vectors in systems that manage identities.
 >
 > [Source](<https://wiki.owasp.org/index.php/Testing_for_User_Enumeration_and_Guessable_User_Account_(OWASP-AT-002)>)
 
-#### Scenarios
-
 Considering the above, an example would be for example an adult website. A
 threat agent wants to blackmail a well known politician by checking if someone
 can sign up at that website using the `well-known-politician@email.com` email.
@@ -50,37 +53,139 @@ the agent is able to proceed with some type of blackmail scheme.
 [OWASP defines several Black-Box tests](<https://wiki.owasp.org/index.php/Testing_for_User_Enumeration_and_Guessable_User_Account_(OWASP-AT-002)#Black_Box_testing_and_example>)
 that cover Account Enumeration Scenarios.
 
-#### Mitigation
+This attack usually makes only sense if an email address or a phone number is
+collected during registration. For chosen usernames, this attack is much more
+difficult, as the attacker has to know what usernames the victim is using.
 
-ORY Kratos can be configured to send an out-of-band message to the email used
-for login, registration, account recovery, etc.:
+There are three common ways an attacker can figure out if a user is signed up at
+a service:
 
-- If an application or user tries to sign in using an unknown email address, an
-  email will be sent to that address reading "You tried to sign in at X but you
-  do not have an account yet, did you mean to sign up instead?"
-- ...
+- During login: "No user with this email address was found"
+- During registration or email update: "A user with this email address exists already"
+- During password reset: "No user with this email address was found"
 
-### Bruteforce Attacks
+To mitigate this attack, the following methods need to be deployed:
 
-Will be addressed in a future release.
+- The login form should return the same message regardless of whether the
+  password is wrong or the email/username does not exist: "The provided
+  credentials are invalid."
+- The password reset form should always return a success message and send out an
+  email. If the email address is registered, a normal password reset email is
+  sent. If the email address is not registered, an email is sent to the address
+  indicating that no account is set up with that email address. This is helpful
+  to users that have multiple email addresses and are using the wrong email
+  address for the password reset.
+- The registration form should also always return a success message and send out
+  an email. If the email address is not yet registered, a regular "account
+  activation" email is sent out. If the email address is registered already, a
+  email is sent out telling the user that the account is already set up, and
+  link to the login screen.
 
-### Phishing Attacks
+:::important
 
-Will be addressed in a future release.
+If you wish to mitigate account enumeration attacks, it is important to note
+that you cannot sign in users directly after sign up! Depending on the type of
+service you provide, you might not care about this specific attack in which case
+direct login after sign up would be ok.
 
-### Social Engineering Attacks
+:::
 
-Will be addressed in a future release.
+### Enabling Account Enumeration Defenses
 
-### SMS Spoofing Attacks
+Assuming you wish to enable account enumeration defenses, you need to configure
+ORY Kratos as follows:
 
-Will be addressed in a future release.
+- Collect one or more email addresses during sign up and enable email
+  verification.
+- **Do not** enable the `session` post-registration workflow.
 
-## Choosing the right Security Profile and Configuration
+```yaml
+selfservice:
+  flows:
+    verification:
+      enabled: true
+```
 
-Will be addressed in a future release.
+#### Defending Against Account Enumeration when using OpenID Connect
 
-### Argon2
+Scenario: In some cases you might want to use the email address returned by e.g.
+the GitHub profile to be added to your identity's account. You might also want
+to use it as an email + password identifier so that the identity is able to log
+in with a password as well. An attacker is able to exploit that by creating a
+social profile on another site (e.g. Google) and use the victims email address
+to set it up (this only works when the victim does not yet have an account with
+that email at Google). The attacker can then use that "spoofed" social profile
+to try and sign up with your ORY Kratos installation. Because the victim's email
+address is already known to ORY Kratos, the attacker might be able to observe
+the behavior (e.g. seeing an error page) and come to the conclusion that the
+victim already has an account at the website.
+
+Mitigation: This attack surface is rather small and requires a lot of effort,
+including forging an e.g. Google profile, and can fail at several stages. To
+completely mitigate any chance of that happening, only accept email addresses
+that are marked as verified in your Jsonnet code:
+
+```json title="contrib/quickstart/kratos/email-password/oidc.github.jsonnet"
+local claims = {
+  email_verified: false
+} + std.extVar('claims');
+
+{
+  identity: {
+    traits: {
+      // Allowing unverified email addresses enables account
+      // enumeration attacks, especially if the value is used for
+      // e.g. verification or as a password login identifier.
+      //
+      // Therefore we only return the email if it (a) exists and (b) is marked verified
+      // by GitHub.
+      [if "email_primary" in claims && claims.email_verified then "email" else null]: claims.email_primary,
+    },
+  },
+}
+```
+
+### Disabling Account Enumeration Defenses
+
+Enforcing email verification, which requires an email round trip and disrupts
+the sign up process, is not always feasible. In these cases, you might want to
+disable account enumeration defenses.
+
+If you enable the `session` post-registration workflow - signing the user in
+directly after registration - disables account enumeration defenses:
+
+```yaml
+selfservice:
+  flows:
+    registration:
+      after:
+        password:
+          - hook: session
+```
+
+## Account Takeover Defenses
+
+The Settings Flow implements account takeover defenses as it is not possible to
+change the password without knowing the existing password. A good example of
+this flow is the
+[GitHub sudo mode](https://help.github.com/en/github/authenticating-to-github/sudo-mode).
+
+## Passwords
+
+Password-based authentication flows are subject to frequent abuse through
+
+- Social Engineering Attacks;
+- Password Guessing Attacks;
+- Phishing Attacks.
+
+:::info
+
+Further improvements are work in progress and are tracked on
+[GitHub](https://github.com/ory/kratos/issues?q=is%3Aopen+label%3Amodule%3Ass%2Fpassword+)
+
+:::
+
+### Expensive Hashing with Argon2
 
 ORY Kratos uses Argon2 for password hashing. Argon2 is the official winner of
 the PHC 2017. You can tweak the Argon2 configuration in your ORY Kratos
@@ -96,17 +201,23 @@ hashers:
     key_length: 32
 ```
 
-## Digital Identity Guidelines
-
-There is no one standard to digital identity. ORY Kratos closely follows
-emerging frameworks and guidelines such as:
-[Digital Identity Guidelines established by the National Institute of Standards and Technology (NIST)](https://pages.nist.gov/800-63-3/)
-(and a follow-up [FAQ](https://pages.nist.gov/800-63-3/)) .
-
-As ORY Kratos grows, this document will continue to expand and add sections
-covering individual security recommendations established by NIST.
-
 ### Password Policy
+
+To prevent weak passwords ORY Kratos implements different measures. Users often
+choose passwords similar to their traits. To prevent this ORY Kratos ensures
+there is a sufficient
+[Levenshtein-Distance](https://en.wikipedia.org/wiki/Levenshtein_distance) (aka
+"Edit-Distance") between the identifier and the password. It also makes sure
+that the identifier and password have a small enough longest common substring.
+
+Furthermore the `password` method comes with a build-in check against the
+["Have I been pwned"](https://haveibeenpwned.com) breach database. This way ORY
+Kratos makes sure your users cannot use passwords like "password", "123456" or
+any other commonly used one. To protect the value of the password the
+[range API](https://haveibeenpwned.com/API/v3#SearchingPwnedPasswordsByRange) is
+being used.
+
+#### Password Policy Best Practices
 
 Almost every service with a login offers some type of registration using a
 password. Therefore, there are many strategies floating around, with many of
@@ -135,7 +246,7 @@ things need to be implemented by yourself** as they must be implemented in the
 User Interface that interfaces with ORY Kratos. You can find these in section
 [User Interface Guidelines](#user-interface-guidelines).
 
-#### Password Complexity
+##### Password Complexity
 
 This outline and quotes are defined in the
 [NIST Digital Identity Guidelines - 5.1.1.2 Memorized Secret Verifiers](https://pages.nist.gov/800-63-3/sp800-63b.html).
@@ -193,7 +304,7 @@ Do not require mixtures of characters types or prohibiting repeated characters:
 > changed arbitrarily (e.g., periodically). However, verifiers SHALL force a
 > change if there is evidence of compromise of the authenticator.
 
-#### User Interface Guidelines
+##### User Interface Guidelines
 
 These best practices need to be implemented in your User Interface and can not
 be handled by ORY Kratos. All ORY-built reference and demo applications
@@ -216,14 +327,14 @@ Allow the user to show the secret in the UI:
 > individual entered characters for a short time after each character is typed
 > to verify correct entry. This is particularly applicable on mobile devices.
 
-#### Password Hints
+##### Password Hints
 
 > Memorized secret verifiers SHALL NOT permit the subscriber to store a “hint”
 > that is accessible to an unauthenticated claimant.
 >
 > [NIST Digital Identity Guidelines - 5.1.1.2 Memorized Secret Verifiers](https://pages.nist.gov/800-63-3/sp800-63b.html)
 
-#### Password Expiry
+##### Password Expiry
 
 > Forcing password expiry carries no real benefits because:
 >
@@ -238,3 +349,66 @@ Allow the user to show the secret in the UI:
 >   new password in the same place
 >
 > [NSCS Password administration for system owners](https://www.ncsc.gov.uk/collection/passwords/updating-your-approach)
+
+## Anti-Automation
+
+:::warning
+
+This feature is a work in progress and is tracked as
+[kratos#133](https://github.com/ory/kratos/issues/138).
+
+:::
+
+Actions that cause out-of-band communications, such as sending an activation
+link via email or an activation code via SMS, can be abused by automated
+systems. The goal of such an attack is to send out so many emails or SMS, that
+your reputation worsens (spam filters) or you're faced with massive costs
+(carrier fees).
+
+CAPTCHA renders these attacks either very difficult or impossible. ORY Kratos
+has CAPTCHA support built-in. ORY Kratos will prompt the user to complete a
+CAPTCHA in the following scenarios:
+
+- The user tries to register more than one account within 72 hours.
+- The user failed provide valid credentials for the third time within 12 hours.
+- The user tries to recover their account for the second time within 72 hours.
+
+For integration guidelines, please check the individual flow's (registration,
+login, account recovery) integration documentation.
+
+## Bruteforce Attacks
+
+Will be addressed in a future release.
+
+## Phishing Attacks
+
+Will be addressed in a future release.
+
+## Social Engineering Attacks
+
+Will be addressed in a future release.
+
+## SMS Spoofing Attacks
+
+Will be addressed in a future release.
+
+## Account Enumeration
+
+:::warning
+
+This feature is a work in progress and is tracked as
+[kratos#133](https://github.com/ory/kratos/issues/133).
+
+It does not yet work as documented!
+
+:::
+
+## Digital Identity Guidelines
+
+There is no one standard to digital identity. ORY Kratos closely follows
+emerging frameworks and guidelines such as:
+[Digital Identity Guidelines established by the National Institute of Standards and Technology (NIST)](https://pages.nist.gov/800-63-3/)
+(and a follow-up [FAQ](https://pages.nist.gov/800-63-3/)) .
+
+As ORY Kratos grows, this document will continue to expand and add sections
+covering individual security recommendations established by NIST.

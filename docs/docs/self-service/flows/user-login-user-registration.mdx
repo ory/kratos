@@ -7,6 +7,8 @@ sidebar_label: Overview
 import Mermaid from '@theme/Mermaid'
 import Tabs from '@theme/Tabs'
 import TabItem from '@theme/TabItem'
+
+// import InitBrowserFlow from '@theme/Code/Login/InitBrowserFlow'
 import SelfServiceBrowserFlow from '@theme/SelfServiceBrowserFlow'
 import SelfServiceAPIFlow from '@theme/SelfServiceAPIFlow'
 import CodeFromRemote from '@theme/CodeFromRemote'
@@ -29,26 +31,23 @@ continuing with this document.
 
 :::
 
-The Login and Registration User Flow is composed of several high-level steps
-summarized in this state diagram:
-
 <Mermaid
   chart={`
 stateDiagram
-  s1: User browses app
-  s2: Execute "Before Login/Registration Hook(s)"
-  s3: User Interface Application renders "Login/Registration Flow"
-  s4: Execute "After Login/Registration Hook(s)"
-  s5: Update "Login/Registration Flow" with Error Context(s)
+  s1: Flow is initialized
+  s2: Execute Before Login/Registration Hook(s)
+  s3: User Interface renders Login/Registration Flow Forms
+  s4: Execute After Login/Registration Hook(s)
+  s5: Update Login/Registration Flow with Error Context(s)
   s6: Login/Registration successful
-	[*] --> s1
-  s1 --> s2 : User clicks "Log in / Sign up"
+	[*] --> s1 : User clicks "Log in / Sign up"
+  s1 --> s2
   s2 --> Error : A hook fails
-  s2 --> s3 : User is redirected to Login/Registration UI URL
+  s2 --> s3
   s3 --> s4 : User provides valid credentials/registration data
   s3 --> s5 : User provides invalid credentials/registration data
-  s5 --> s3 : User is redirected to Login/Registration UI URL
-  s4 --> Error : A Hook fails
+  s5 --> s3
+  s4 --> Error : A hook fails
   s4 --> s6
   s6 --> [*]
   Error --> [*]
@@ -81,18 +80,24 @@ rendering all the Login, Registration, ... screens, and another app (think
 "Service Oriented Architecture", "Micro-Services" or "Service Mesh") is
 responsible for rendering your Dashboards, Management Screens, and so on.
 
-Let us look at the three steps such a flow performs:
-
-1. Initialization and redirect to UI;
-2. Login and Registration Form Rendering;
-3. Form submission and payload validation.
-
 ### Initialization and Redirect to UI
 
-The Browser
-[calls the initialization endpoint](../../self-service#initialization-and-redirect-to-ui)
+To initialize the Login or Registration flow, point the Browser to
+[the initialization endpoint](../../self-service#initialization-and-redirect-to-ui):
+
+<Tabs
+  defaultValue="curl"
+  values={[
+    {label: 'curl', value: 'curl'},
+    {label: 'NodeJS', value: 'nodejs'},
+  ]}>
+  <TabItem value="curl">
+  <InitBrowserFlow />
+</TabItem>
+</Tabs>
+
 for login (`/self-service/login/browser`) or registration
-(`/self-service/login/browser`) and is redirected to the UI configured at
+(`/self-service/registration/browser`) and is redirected to the UI configured at
 
 ```yaml title="path/to/config/kratos.yml"
 selfservice:
@@ -288,12 +293,6 @@ The flow payload and the form data the browser sends depend on the concrete flow
 ([Username and Password](user-login-user-registration/username-email-password.mdx),
 [Social Sign In](user-login-user-registration/openid-connect-social-sign-in-oauth2.mdx)).
 
-Let us look at the three steps such a flow performs:
-
-1. Initialization;
-2. Login and Registration Form Rendering;
-3. Form submission and payload validation.
-
 ### Initialization
 
 The client
@@ -313,8 +312,6 @@ To submit the form, follow
 [API flow form submission and payload validation](../../self-service#form-submission-and-payload-validation-1).
 
 ### Code Examples
-
-To be included soon.
 
 <Tabs
   defaultValue="login-rn"

@@ -10,8 +10,7 @@ first.
 
 :::
 
-The `profile` method allows a user to change their identity traits
-("profile").
+The `profile` method allows a user to change their identity traits ("profile").
 
 The updated traits must be valid against the Identity JSON Schema defined for
 its [Identity Traits](../../../concepts/identity-user-model). If one or more
@@ -34,15 +33,54 @@ selfservice:
 
 This method does not implement any other flow.
 
+## Create A User
+
+Before we start with the examples below, let's create a user using the API Flows. This will yield a session token
+which then use to perform the profile update flows:
+
+```shell script
+username=foo-user@ory.sh
+password=sBdHzGp9hAx2Hf2m
+
+actionUrl=$(curl -s -H "Accept: application/json" \
+  'http://127.0.0.1:4433/self-service/registration/api' | jq -r '.methods.password.config.action'))
+
+session=$(curl -s  -X POST -H "Accept: application/json" -H "Content-Type: application/json" \
+  --data '{ "traits.email": "'$username'", "password": "'$password'" }' \
+  "$actionUrl"
+
+session_token=$(echo $session | jq -r '.session_token')
+echo $session_token
+```
+
 ## Browser Clients
 
 Redirecting the browser to the
 [Self-Service Settings Endpoint](../user-settings.mdx#user-settings-process-sequence)
-initiates the flow.
+initiates the flow:
+
+```shell script
+$ curl -s -D - -X GET -H "Authorization: bearer $session_token" \
+  --cookie cookie.txt --cookie-jar cookie.txt \
+  http://127.0.0.1:4433/self-service/settings/browser
+
+HTTP/1.1 302 Found
+Cache-Control: 0
+Content-Type: text/html; charset=utf-8
+Location: http://127.0.0.1:4455/settings?flow=c3625ca1-7e15-4e4c-82fb-f25e0d48ad48
+Vary: Cookie
+Date: Thu, 03 Sep 2020 16:11:51 GMT
+Content-Length: 95
+
+<a href="http://127.0.0.1:4455/settings?flow=c3625ca1-7e15-4e4c-82fb-f25e0d48ad48">Found</a>.
+```
 
 The Settings Request Response Payload always includes a `profile` method:
 
-```json title="$ curl http://<kratos-admin>/self-service/browser/flows/requests/settings?request=9c6473d4-9ffd-44cd-9794-adb82cbe4009"
+```shell script
+$ curl -s -H "Authorization: bearer $session_token" -H "Accept: application/json" \
+  'http://127.0.0.1:4433/self-service/settings/flows?id=c3625ca1-7e15-4e4c-82fb-f25e0d48ad48' | jq
+
 {
   "id": "9c6473d4-9ffd-44cd-9794-adb82cbe4009",
   "expires_at": "2020-05-02T16:06:08.131598Z",
@@ -137,8 +175,8 @@ A successful flow will be marked with:
 
 ## API Clients
 
-API-based login and registration using this method will be addressed in a
-future release of ORY Kratos.
+API-based login and registration using this method will be addressed in a future
+release of ORY Kratos.
 
 ## Security
 

@@ -43,8 +43,9 @@
     "json-schema-ref-parser": "8.0.0",
     "prettier": "2.0.2",
     "ramda": "0.27.0",
+    "raw-loader": "^4.0.1",
     "remark-admonitions": "1.2.1",
-    "yaml": "1.8.3",
-    "widdershins": "3.6.7"
+    "widdershins": "3.6.7",
+    "yaml": "1.8.3"
   }
 }
