@@ -26,6 +26,12 @@ func NewClient(cmd *cobra.Command) *client.OryKratos {
 		endpoint = os.Getenv(envKeyEndpoint)
 	}
 
+	if endpoint == "" {
+		// no endpoint is set
+		fmt.Fprintln(os.Stderr, "You have to set the remote endpoint, try --help for details.")
+		os.Exit(1)
+	}
+
 	u, err := url.Parse(endpoint)
 	cmdx.Must(err, `Could not parse the endpoint URL "%s".`, endpoint)
 
