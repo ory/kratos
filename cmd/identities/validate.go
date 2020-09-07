@@ -44,6 +44,8 @@ func validateIdentityFile(fn string, c *client.OryKratos) []byte {
 
 func validateIdentity(src string, fc []byte, c *client.OryKratos) {
 	swaggerSchema, err := pkger.Open("/.schema/api.swagger.json")
+	cmdx.Must(err, "Could not open swagger schema: %s", err)
+
 	schemaCompiler := jsonschema.NewCompiler()
 	err = schemaCompiler.AddResource("api.swagger.json", swaggerSchema)
 	cmdx.Must(err, "Could not get swagger schema: %s", err)
