@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/ory/kratos/internal/clihelpers"
+
 	"github.com/spf13/cobra"
 
 	"github.com/ory/kratos/cmd/cliclient"
@@ -22,28 +24,30 @@ var listCmd = &cobra.Command{
 		return nil
 	},
 	Aliases: []string{"ls"},
-	Run: func(cmd *cobra.Command, args []string) {
-		c := cliclient.NewClient()
+	Run:     listIdentities,
+}
 
-		params := &admin.ListIdentitiesParams{
-			Context: context.Background(),
-		}
+func listIdentities(cmd *cobra.Command, args []string) {
+	c := cliclient.NewClient(cmd)
 
-		if len(args) == 2 {
-			page, err := strconv.ParseInt(args[0], 0, 64)
-			cmdx.Must(err, "Could not parse page argument\"%s\": %s", args[0], err)
-			params.Page = &page
+	params := &admin.ListIdentitiesParams{
+		Context: context.Background(),
+	}
 
-			perPage, err := strconv.ParseInt(args[1], 0, 64)
-			cmdx.Must(err, "Could not parse per-page argument\"%s\": %s", args[1], err)
-			params.PerPage = &perPage
-		}
+	if len(args) == 2 {
+		page, err := strconv.ParseInt(args[0], 0, 64)
+		cmdx.Must(err, "Could not parse page argument\"%s\": %s", args[0], err)
+		params.Page = &page
 
-		resp, err := c.Admin.ListIdentities(params)
-		cmdx.Must(err, "Could not get the identities: %s", err)
+		perPage, err := strconv.ParseInt(args[1], 0, 64)
+		cmdx.Must(err, "Could not parse per-page argument\"%s\": %s", args[1], err)
+		params.PerPage = &perPage
+	}
 
-		for _, i := range resp.Payload {
-			fmt.Println(i.ID)
-		}
-	},
+	resp, err := c.Admin.ListIdentities(params)
+	cmdx.Must(err, "Could not get the identities: %s", err)
+
+	clihelpers.PrintCollection(cmd, &outputIdentityCollection{
+		identities: resp.Payload,
+	})
 }

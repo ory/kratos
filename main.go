@@ -28,6 +28,5 @@ func main() {
 
 	_ = pkger.Include("/courier/template/templates")
 	_ = pkger.Include("/.schema/config.schema.json")
-	_ = pkger.Include("/.schema/identity.schema.json")
 	cmd.Execute()
 }

@@ -204,6 +204,7 @@ type CreateIdentityRequestPayload struct {
 //     Responses:
 //       201: identityResponse
 //       400: genericError
+//		 409: genericError
 //       500: genericError
 func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var cr CreateIdentityRequestPayload
@@ -334,6 +335,7 @@ type deleteIdentityParameters struct {
 //
 //     Responses:
 //       204: emptyResponse
+//		 404: genericError
 //       500: genericError
 func (h *Handler) delete(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := h.r.IdentityPool().(PrivilegedPool).DeleteIdentity(r.Context(), x.ParseUUID(ps.ByName("id"))); err != nil {

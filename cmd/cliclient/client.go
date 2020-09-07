@@ -5,6 +5,8 @@ import (
 	"net/url"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/spf13/pflag"
 
 	"github.com/ory/kratos/internal/httpclient/client"
@@ -13,11 +15,13 @@ import (
 
 const (
 	envKeyEndpoint = "KRATOS_ADMIN_ENDPOINT"
+	flagEndpoint   = "endpoint"
 )
 
-var endpoint string
+func NewClient(cmd *cobra.Command) *client.OryKratos {
+	endpoint, err := cmd.Flags().GetString(flagEndpoint)
+	cmdx.Must(err, "flag access error: %s", err)
 
-func NewClient() *client.OryKratos {
 	if endpoint == "" {
 		endpoint = os.Getenv(envKeyEndpoint)
 	}
@@ -33,5 +37,5 @@ func NewClient() *client.OryKratos {
 }
 
 func RegisterClientFlags(flags *pflag.FlagSet) {
-	flags.StringVarP(&endpoint, "endpoint", "e", "", fmt.Sprintf("The upstream admin endpoint URL. Alternatively set using the %s environmental variable.", envKeyEndpoint))
+	flags.StringP(flagEndpoint, flagEndpoint[:1], "", fmt.Sprintf("The upstream admin endpoint URL. Alternatively set using the %s environmental variable.", envKeyEndpoint))
 }

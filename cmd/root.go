@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/ory/kratos/cmd/remote"
+
 	"github.com/ory/kratos/cmd/identities"
 	"github.com/ory/kratos/cmd/jsonnet"
 	"github.com/ory/kratos/cmd/migrate"
@@ -37,6 +39,7 @@ func init() {
 	jsonnet.RegisterCommandRecursive(rootCmd)
 	serve.RegisterCommandRecursive(rootCmd)
 	migrate.RegisterCommandRecursive(rootCmd)
+	remote.RegisterCommandRecursive(rootCmd)
 
 	rootCmd.AddCommand(cmdx.Version(&clihelpers.BuildVersion, &clihelpers.BuildGitHash, &clihelpers.BuildTime))
 }

@@ -24,7 +24,7 @@ var validateCmd = &cobra.Command{
 	Use:  "validate  <file.json [file-2.json [file-3.json] ...]>",
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := cliclient.NewClient()
+		c := cliclient.NewClient(cmd)
 
 		for _, fn := range args {
 			validateIdentityFile(fn, c)
@@ -38,41 +38,49 @@ func validateIdentityFile(fn string, c *client.OryKratos) []byte {
 	fc, err := ioutil.ReadFile(fn)
 	cmdx.Must(err, `%s: Could not open identity file: %s`, fn, err)
 
+	validateIdentity(fn, fc, c)
+	return fc
+}
+
+func validateIdentity(src string, fc []byte, c *client.OryKratos) {
+	swaggerSchema, err := pkger.Open("/.schema/api.swagger.json")
+	schemaCompiler := jsonschema.NewCompiler()
+	err = schemaCompiler.AddResource("api.swagger.json", swaggerSchema)
+	cmdx.Must(err, "Could not get swagger schema: %s", err)
+
 	sid := gjson.GetBytes(fc, "schema_id")
 	if !sid.Exists() {
-		_, _ = fmt.Fprintf(os.Stderr, "%s: Expected key \"schema_id\" to be defined.\n", fn)
+		_, _ = fmt.Fprintf(os.Stderr, "%s: Expected key \"schema_id\" to be defined.\n", src)
 		os.Exit(1)
 	}
 
-	f, err := pkger.Open("/.schema/identity.schema.json")
-	cmdx.Must(err, "%s: Could not open the identity schema: %s", fn, err)
+	cmdx.Must(err, "%s: Could not open the identity schema: %s", src, err)
 
-	identitySchema, err := ioutil.ReadAll(f)
-	cmdx.Must(err, "%s: Could not read the identity schema: %s", fn, err)
-
-	s, err := jsonschema.CompileString("identity.schema.json", string(identitySchema))
-	cmdx.Must(err, "%s: Could not compile the identity schema: %s", fn, err)
+	s, err := schemaCompiler.Compile("api.swagger.json#/definitions/CreateIdentityRequestPayload")
+	cmdx.Must(err, "%s: Could not compile the identity schema: %s", src, err)
+	// force additional properties to false because swagger does not render this key
+	s.AdditionalProperties = false
 
 	var foundValidationErrors bool
 	err = s.Validate(bytes.NewBuffer(fc))
 	if err != nil {
-		fmt.Printf("%s: not valid\n", fn)
+		fmt.Printf("%s: not valid\n", src)
 		viperx.PrintHumanReadableValidationErrors(os.Stderr, err)
 		foundValidationErrors = true
 	}
 
 	ts, err := c.Common.GetSchema(&common.GetSchemaParams{ID: sid.String(), Context: context.Background()})
-	cmdx.Must(err, `%s: Could not fetch schema with ID "%s": %s`, fn, sid.String(), err)
+	cmdx.Must(err, `%s: Could not fetch schema with ID "%s": %s`, src, sid.String(), err)
 
 	traitsSchema, err := json.Marshal(ts.Payload)
-	cmdx.Must(err, "%s: Could not marshal the traits schema: %s", fn, err)
+	cmdx.Must(err, "%s: Could not marshal the traits schema: %s", src, err)
 
 	s, err = jsonschema.CompileString("identity_traits.schema.json", string(traitsSchema))
-	cmdx.Must(err, "%s: Could not compile the traits schema: %s", fn, err)
+	cmdx.Must(err, "%s: Could not compile the traits schema: %s", src, err)
 
 	err = s.Validate(bytes.NewBuffer(fc))
 	if err != nil {
-		fmt.Printf("%s: not valid\n", fn)
+		fmt.Printf("%s: not valid\n", src)
 		viperx.PrintHumanReadableValidationErrors(os.Stderr, err)
 		foundValidationErrors = true
 	}
@@ -80,6 +88,4 @@ func validateIdentityFile(fn string, c *client.OryKratos) []byte {
 	if foundValidationErrors {
 		os.Exit(1)
 	}
-
-	return fc
 }
