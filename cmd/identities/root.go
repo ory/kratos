@@ -16,11 +16,12 @@ var identitiesCmd = &cobra.Command{
 func RegisterCommandRecursive(parent *cobra.Command) {
 	parent.AddCommand(identitiesCmd)
 
-	identitiesCmd.AddCommand(importCmd)
+	identitiesCmd.AddCommand(putCmd)
 	identitiesCmd.AddCommand(validateCmd)
 	identitiesCmd.AddCommand(listCmd)
 	identitiesCmd.AddCommand(getCmd)
 	identitiesCmd.AddCommand(deleteCmd)
+	identitiesCmd.AddCommand(patchCmd)
 }
 
 func init() {

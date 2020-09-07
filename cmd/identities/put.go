@@ -17,8 +17,8 @@ import (
 	"github.com/ory/x/cmdx"
 )
 
-// importCmd represents the import command
-var importCmd = &cobra.Command{
+// putCmd represents the import command
+var putCmd = &cobra.Command{
 	Use: "import <file.json [file-2.json [file-3.json] ...]>",
 	Run: importIdentities,
 }
