@@ -76,7 +76,7 @@ sdk: .bin/swagger .bin/cli
 		swagger generate spec -m -o .schema/api.swagger.json -x internal/httpclient
 		cli dev swagger sanitize ./.schema/api.swagger.json
 		swagger validate ./.schema/api.swagger.json
-#		swagger flatten --with-flatten=remove-unused -o ./.schema/api.swagger.json ./.schema/api.swagger.json
+		swagger flatten --with-flatten=remove-unused -o ./.schema/api.swagger.json ./.schema/api.swagger.json
 		swagger validate ./.schema/api.swagger.json
 		rm -rf internal/httpclient
 		mkdir -p internal/httpclient
