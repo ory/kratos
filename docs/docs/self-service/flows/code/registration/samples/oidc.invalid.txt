@@ -1,0 +1,40 @@
+curl -H "Accept: application/json" -s \
+    'http://127.0.0.1:4433/self-service/registration/flows?id=f71b24aa-92d4-49a7-957b-72eea1c4c39d' \
+    | jq -r '.methods.oidc.config'
+
+{
+  "action": "http://127.0.0.1:4433/self-service/methods/oidc/auth/f71b24aa-92d4-49a7-957b-72eea1c4c39d",
+  "method": "POST",
+  "fields": [
+    {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "value": "oc9VAZ5c/nvHYkb7G/z+FSn2o5kKzylFSnje6bsSANrn6+bTiE7v7+PA+U2CFSK3f8ZwGIRrjQOAt4duG2XYSQ=="
+    },
+    {
+      "name": "traits.email",
+      "type": "text",
+      "value": "aeneas@ory.sh"
+    },
+    {
+      "name": "traits.website",
+      "type": "",
+      "messages": [
+        {
+          "id": 4000002,
+          "text": "Property website is missing.",
+          "type": "error",
+          "context": {
+            "property": "website"
+          }
+        }
+      ]
+    },
+    {
+      "name": "provider",
+      "type": "submit",
+      "value": "github"
+    }
+  ]
+}

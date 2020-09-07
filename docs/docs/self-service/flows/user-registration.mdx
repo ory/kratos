@@ -9,7 +9,8 @@ import SelfServiceBrowserFlow from '@theme/SelfServiceBrowserFlow'
 import SelfServiceApiFlow from '@theme/SelfServiceApiFlow'
 
 import CodeTabs from '@theme/Code/CodeTabs'
-import { initBrowserFlow, initApiFlow, getFlow } from './code/registration'
+import { initBrowserFlow, initApiFlow, getFlow, getFlowMethodPasswordWithErrors, getFlowMethodOidcWithErrors, getFlowMethodOidcWithCompletion } from './code/registration'
+import RenderFlow from '@theme/Code/RenderFlow'
 
 :::information
 
@@ -195,8 +196,6 @@ $ curl -H "Accept: application/json" -s \
 
 ### Registration with Google, GitHub, ..., OpenID Connect / OAuth 2.0
 
-
-
 :::tip Before you start
 
 Check out the
@@ -287,6 +286,341 @@ The form payloads are then submitted to ORY Kratos which follows up with:
 
 ### Registration with Username/Email and Password
 
+To complete the registration process, the end-user fills out the form which
+must include a field marked as the identifier (`ory.sh/kratos.credentials.password.identifier: true`) in the Identity JSON Schema, for
+example:
+
+```json
+{
+  "$id": "https://schemas.ory.sh/presets/kratos/quickstart/email-password/identity.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Person",
+  "type": "object",
+  "properties": {
+    "traits": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
+              }
+            }
+          }
+        }
+      },
+      "required": [
+        "email"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
+```
+
+If the registration payload is invalid (e.g. the password does
+not match the password policy, the email is missing, ...), the
+password method includes the validation errors:
+
+<CodeTabs items={getFlowMethodPasswordWithErrors} />
+
+When validation errors happen, browser clients receive a HTTP 302 Found redirect to the Registration Flow UI, containing the Registration Flow ID which includes the error payloads.
+
+For API Clients, the server typically responds with HTTP 400 Bad Request and the Registration Flow in the response payload as JSON.
+
 ### Registration with Google, GitHub, ..., OpenID Connect / OAuth 2.0
 
+Completing the `oidc` method requires the user to go through an OAuth 2.0 or OpenID Connect flow which
+involves logging into the upstream identity provider (e.g. Google) and giving consent.
+
+:::note
+
+If the user has already sign up with the given provider before, the user will simply be logged in
+and no new ORY Kratos Identity will be created.
+
+:::
+
+A possible validation error is a missing ID Token:
+
+<CodeTabs items={getFlowMethodOidcWithErrors} />
+
+What may also happen is that the ORY Kratos Identity Schema JSON includes a field which is required but
+was not provided by the upstream identity provider (e.g. Google). In those cases, the end-user's browser
+is returned to the registration screen with the form validation errors.
+
+Let's assume the ORY Kratos Identity Schema JSON requires a `website` trait
+
+```
+{
+  "$id": "https://schemas.ory.sh/presets/kratos/quickstart/email-password/identity.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Person",
+  "type": "object",
+  "properties": {
+    "traits": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
+              }
+            }
+          }
+        },
+        "website": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "email",
+        "website"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
+```
+
+which was not provided by the upstream identity provider. This can happen when the user refuses to accept a
+certain scope (e.g. "Allow ORY Kratos access to my website") or if the provider simply does not have this data (e.g. the upstream
+identity provider does not collect the user's website).
+
+In that case the end-user ends up at the registration screen and is prompted to provide the missing or invalid fields:
+
+<CodeTabs items={getFlowMethodOidcWithCompletion} />
+
 ## Successful Registration
+
+Completing the registration behaves differently for Browser and API Clients. The registration flow
+does not issue a ORY Kratos Login Session automatically which prevents Account Enumeration Attacks.
+If these types of attacks are not your concern, you can add the session hook which will issue
+a session after successful registration:
+
+```yaml title="path/to/my/kratos/config.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  flows:
+    registration:
+      after:
+        password:
+          hooks:
+            - hook: session
+        oidc:
+          hooks:
+            - hook: session # Always enable this for oidc flows or the user experience suffers significantly!
+```
+
+:::important
+
+It is very important to add the "session" hook to the after `oidc` registration
+hooks. Otherwise your users need to use the login flow again to be able to get a
+session. Account Enumeration Attacks with OpenID Connect sign in flows are
+typically not an issue if you follow the guidelines in the
+[Sign in with GitHub, Google, Facebook, LinkedIn, Microsoft ... Guide](../../guides/sign-in-with-github-google-facebook-linkedin)!
+
+:::
+
+### Browser Clients
+
+When the registration is completed successfully, ORY Kratos responds with a HTTP 302 Redirect to the
+[configured redirect URL](../../concepts/browser-redirect-flow-completion).
+
+#### With Auto-Login on Registration
+
+If the `session` after hook is enabled, a `Set-Cookie` HTTP Header is set alongside the HTTP 302 redirect
+which contains the ORY Kratos Login Session Cookie:
+
+```
+HTTP/1.1 302 Found
+Cache-Control: 0
+Location: http://127.0.0.1:4455/
+Set-Cookie: csrf_token=b8OebRPTPr5ow23mA5gIZmFNLeuMbv8pZz1jT1Ex7ys=; Path=/; Domain=127.0.0.1; Max-Age=31536000; HttpOnly
+Set-Cookie: ory_kratos_session=MTU5OTE2ODc2N3xEdi1CQkFFQ180SUFBUkFCRUFBQVJfLUNBQUVHYzNSeWFXNW5EQThBRFhObGMzTnBiMjVmZEc5clpXNEdjM1J5YVc1bkRDSUFJR055VlROMGRteHhSakJrUzBkbmRUUjBlVFY1V0RCRWFVTnJXVmR6V25oaHx2DICsB6IMbaHSQwnYITUZqr7Qx7CxUlnaneJWH495wQ==; Path=/; Expires=Fri, 04 Sep 2020 21:32:47 GMT; Max-Age=86400; HttpOnly; SameSite=Lax
+Vary: Cookie
+Date: Thu, 03 Sep 2020 21:32:47 GMT
+Content-Length: 0
+```
+
+Now, whenever the browser is making a request (with cookies) to the `http://127.0.0.1/sessions/whoami` endpoint,
+the session will be returned:
+
+```shell script
+curl -s -H "Cookie: ory_kratos_session=MTU5OTE2ODc2N3xEdi1CQkFFQ180SUFBUkFCRUFBQVJfLUNBQUVHYzNSeWFXNW5EQThBRFhObGMzTnBiMjVmZEc5clpXNEdjM1J5YVc1bkRDSUFJR055VlROMGRteHhSakJrUzBkbmRUUjBlVFY1V0RCRWFVTnJXVmR6V25oaHx2DICsB6IMbaHSQwnYITUZqr7Qx7CxUlnaneJWH495wQ==" \
+  http://127.0.0.1:4433/sessions/whoami | jq
+
+{
+  "id": "ede90ce6-2420-435a-a745-3d8ab1a9636c",
+  "active": true,
+  "expires_at": "2020-09-04T21:32:47.5642404Z",
+  "authenticated_at": "2020-09-03T21:32:47.5881038Z",
+  "issued_at": "2020-09-03T21:32:47.5642688Z",
+  "identity": {
+    "id": "d96e86d9-bc33-4aa5-b865-4ade8a3974b3",
+    "schema_id": "default",
+    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "traits": {
+      "email": "foouser@ory.sh",
+      "name": {
+        "first": "foo",
+        "last": "user"
+      }
+    },
+    "verifiable_addresses": [
+      {
+        "id": "81bbdeae-6333-42f2-877e-26c78acb6ea5",
+        "value": "foouser@ory.sh",
+        "verified": false,
+        "via": "email",
+        "status": "pending",
+        "verified_at": null
+      }
+    ],
+    "recovery_addresses": [
+      {
+        "id": "596c1db4-ccaa-4f4e-9623-cb7e768026ad",
+        "value": "foouser@ory.sh",
+        "via": "email"
+      }
+    ]
+  }
+}
+```
+
+### API Clients
+
+For API Clients, ORY Kratos responds with a JSON payload which includes the identity which
+just authenticated, the session, and the ORY Kratos Session Token:
+
+```shell script
+# Inits a registration flow
+$ actionUrl=$(\
+  curl -s -X GET -H "Accept: application/json" \
+    "http://127.0.0.1:4433/self-service/registration/api" \
+    | jq -r '.methods.password.config.action'\
+)
+
+# Complete registration flow with password method
+$ curl -s -X POST -H  "Accept: application/json" -H "Content-Type: application/json" \
+    -d '{"traits.email": "registration-api@user.org", "password": "fhAzi860a"}' \
+    "$actionUrl" | jq
+
+{
+  "identity": {
+    "id": "d8baf63b-7ce6-4275-82b9-9ac6d97e5037",
+    "schema_id": "default",
+    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "traits": {
+      "email": "registration-api@user.org"
+    },
+    "verifiable_addresses": [
+      {
+        "id": "87defb49-ad69-461c-b5f6-56c1ec39dd39",
+        "value": "registration-api@user.org",
+        "verified": false,
+        "via": "email",
+        "status": "pending",
+        "verified_at": null
+      }
+    ],
+    "recovery_addresses": [
+      {
+        "id": "232793b8-8d60-427d-89e6-d0a97a7a172c",
+        "value": "registration-api@user.org",
+        "via": "email"
+      }
+    ]
+  }
+}
+```
+
+#### With Auto-Login on Registration
+
+If the `session` after hook is enabled, the ORY Kratos Login Session and ORY Kratos Login Session Token
+are included in the response:
+
+```shell script
+$ actionUrl=$(\
+  curl -s -X GET -H "Accept: application/json" \
+    "http://127.0.0.1:4433/self-service/registration/api" \
+    | jq -r '.methods.password.config.action'\
+)
+
+$ curl -s -X POST -H  "Accept: application/json" -H "Content-Type: application/json" \
+    -d '{"traits.email": "registration-session-api@user.org", "password": "fhAzi860a"}' \
+    "$actionUrl" | jq
+
+{
+  "session_token": "9kmrgslvw8ZCyEtSZqOmxEtnfBJIvB31",
+  "session": {
+    "id": "6d5ef6f4-ea54-4310-a762-473499835a48",
+    "active": true,
+    "expires_at": "2020-09-08T10:12:34.792802227Z",
+    "authenticated_at": "2020-09-07T10:12:34.797538934Z",
+    "issued_at": "2020-09-07T10:12:34.792813032Z",
+    "identity": {
+      "id": "8a7755df-1aac-4477-a53c-3f16fa059113",
+      "schema_id": "default",
+      "schema_url": "http://127.0.0.1:4433/schemas/default",
+      "traits": {
+        "email": "registration-session-api@user.org"
+      },
+      "verifiable_addresses": [
+        {
+          "id": "95139fe8-3360-4b08-adf6-4cc9b4555d86",
+          "value": "registration-session-api@user.org",
+          "verified": false,
+          "via": "email",
+          "status": "pending",
+          "verified_at": null
+        }
+      ],
+      "recovery_addresses": [
+        {
+          "id": "e6987729-b6fa-48d5-aa15-c0a57edfdfc4",
+          "value": "registration-session-api@user.org",
+          "via": "email"
+        }
+      ]
+    }
+  },
+  "identity": {
+    "id": "8a7755df-1aac-4477-a53c-3f16fa059113",
+    "schema_id": "default",
+    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "traits": {
+      "email": "registration-session-api@user.org"
+    },
+    "verifiable_addresses": [
+      {
+        "id": "95139fe8-3360-4b08-adf6-4cc9b4555d86",
+        "value": "registration-session-api@user.org",
+        "verified": false,
+        "via": "email",
+        "status": "pending",
+        "verified_at": null
+      }
+    ],
+    "recovery_addresses": [
+      {
+        "id": "e6987729-b6fa-48d5-aa15-c0a57edfdfc4",
+        "value": "registration-session-api@user.org",
+        "via": "email"
+      }
+    ]
+  }
+}
+```
+
+## Hooks
+
+ORY Kratos allows you to configure hooks that run before and after a Registration Flow.
+This may be helpful if you'd like to restrict registration to IPs coming from your internal network or other logic.
+
+For more information about hooks please read the [Hook Documentation](../hooks).
