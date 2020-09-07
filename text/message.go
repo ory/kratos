@@ -33,10 +33,12 @@ func (h *Messages) Clear() Messages {
 }
 
 type Message struct {
-	ID      ID              `json:"id"`
-	Text    string          `json:"text"`
-	Type    Type            `json:"type"`
-	Context json.RawMessage `json:"context,omitempty" faker:"-"`
+	ID       ID              `json:"id"`
+	Text     string          `json:"text"`
+	Type     Type            `json:"type"`
+	Context  json.RawMessage `json:"context,omitempty" faker:"-"`
+	I18nText string          `json:"i18nText"`
+	I18nData json.RawMessage `json:"i18nData"`
 }
 
 func (m *Message) Scan(value interface{}) error {

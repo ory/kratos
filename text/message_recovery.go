@@ -32,15 +32,21 @@ func NewRecoverySuccessful(privilegedSessionExpiresAt time.Time) *Message {
 		Context: context(map[string]interface{}{
 			"privilegedSessionExpiresAt": privilegedSessionExpiresAt,
 		}),
+		I18nText: "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next {hasLeft} minutes.",
+		I18nData: context(map[string]interface{}{
+			"hasLeft": hasLeft.Minutes(),
+		}),
 	}
 }
 
 func NewRecoveryEmailSent() *Message {
 	return &Message{
-		ID:      InfoSelfServiceRecoveryEmailSent,
-		Type:    Info,
-		Text:    "An email containing a recovery link has been sent to the email address you provided.",
-		Context: context(nil),
+		ID:       InfoSelfServiceRecoveryEmailSent,
+		Type:     Info,
+		Text:     "An email containing a recovery link has been sent to the email address you provided.",
+		Context:  context(nil),
+		I18nText: "An email containing a recovery link has been sent to the email address you provided.",
+		I18nData: context(nil),
 	}
 }
 
@@ -53,27 +59,33 @@ func NewErrorValidationRecoveryMissingRecoveryToken() error {
 
 func NewErrorValidationRecoveryRecoveryTokenInvalidOrAlreadyUsed() *Message {
 	return &Message{
-		ID:      ErrorValidationRecoveryRecoveryTokenInvalidOrAlreadyUsed,
-		Text:    "The recovery token is invalid or has already been used. Please retry the flow.",
-		Type:    Error,
-		Context: context(nil),
+		ID:       ErrorValidationRecoveryRecoveryTokenInvalidOrAlreadyUsed,
+		Text:     "The recovery token is invalid or has already been used. Please retry the flow.",
+		Type:     Error,
+		Context:  context(nil),
+		I18nText: "The recovery token is invalid or has already been used. Please retry the flow.",
+		I18nData: context(nil),
 	}
 }
 
 func NewErrorValidationRecoveryRetrySuccess() *Message {
 	return &Message{
-		ID:      ErrorValidationRecoveryRetrySuccess,
-		Text:    "The request was already completed successfully and can not be retried.",
-		Type:    Error,
-		Context: context(nil),
+		ID:       ErrorValidationRecoveryRetrySuccess,
+		Text:     "The request was already completed successfully and can not be retried.",
+		Type:     Error,
+		Context:  context(nil),
+		I18nText: "The request was already completed successfully and can not be retried.",
+		I18nData: context(nil),
 	}
 }
 
 func NewErrorValidationRecoveryStateFailure() *Message {
 	return &Message{
-		ID:      ErrorValidationRecoveryStateFailure,
-		Text:    "The recovery flow reached a failure state and must be retried.",
-		Type:    Error,
-		Context: context(nil),
+		ID:       ErrorValidationRecoveryStateFailure,
+		Text:     "The recovery flow reached a failure state and must be retried.",
+		Type:     Error,
+		Context:  context(nil),
+		I18nText: "The recovery flow reached a failure state and must be retried.",
+		I18nData: context(nil),
 	}
 }

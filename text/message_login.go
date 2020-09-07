@@ -22,5 +22,9 @@ func NewErrorValidationLoginRequestExpired(ago time.Duration) *Message {
 		Context: context(map[string]interface{}{
 			"expired_at": time.Now().Add(ago),
 		}),
+		I18nText: "The login request expired {ago} minutes ago, please try again.",
+		I18nData: context(map[string]interface{}{
+			"ago": ago.Minutes(),
+		}),
 	}
 }
