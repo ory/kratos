@@ -13,7 +13,7 @@ jobs:
   test:
     docker:
       -
-        image: circleci/golang:1.14
+        image: circleci/golang:1.15
         environment:
           - GO111MODULE=on
           - TEST_MAILHOG_SMTP=smtp://test:test@127.0.0.1:1025
