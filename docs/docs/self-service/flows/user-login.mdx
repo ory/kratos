@@ -19,13 +19,13 @@ continuing with this document.
 
 :::
 
-There are two login flow types supported in ORY Kratos:
+There are two Login Flow types supported in ORY Kratos:
 
 - Flows where the user sits in front of the Browser (e.g. website, single page
   app, ...)
 - Flows where API interaction is required (e.g. mobile app, Smart TV, ...)
 
-The login flow can be summarized as the following state machine:
+The Login Flow can be summarized as the following state machine:
 
 <Mermaid
   chart={`
@@ -69,12 +69,12 @@ selfservice:
 
 ## Initialize Login Flow
 
-The first step is to initialize the login flow. This allows pre-login hooks to run, set up Anti-CSRF tokens,
+The first step is to initialize the Login Flow. This allows pre-login hooks to run, set up Anti-CSRF tokens,
 and more.
 
 ### Login for Browser Clients
 
-The login flow for browser clients relies on HTTP redirects between ORY Kratos, your Login UI, and the end-user's
+The Login Flow for browser clients relies on HTTP redirects between ORY Kratos, your Login UI, and the end-user's
 browser:
 
 <SelfServiceBrowserFlow
@@ -83,7 +83,7 @@ browser:
   interactions={['"Log in"']}
 />
 
-To initialize the Login flow, point the Browser to
+To initialize the Login Flow, point the Browser to
 [the initialization endpoint](../../self-service#initialization-and-redirect-to-ui):
 
 <CodeTabs items={initBrowserFlow} />
@@ -96,14 +96,14 @@ selfservice:
   flows:
     login:
       # becomes http://127.0.0.1:4455/auth/login?flow=df607aa1-d555-4b2a-b3e4-0f5a1d2fe6f3
-      ui_url:  http://127.0.0.1:4455/auth/login
+      ui_url: http://127.0.0.1:4455/auth/login
 ```
 
 ### Login for API Clients
 
 <ApiWarning />
 
-The login flow for API clients does not use HTTP Redirects and can be summarized as follows:
+The Login Flow for API clients does not use HTTP Redirects and can be summarized as follows:
 
 <SelfServiceApiFlow
   flows={['login']}
@@ -118,8 +118,8 @@ which returns a JSON response:
 
 ## Login Flow Payloads
 
-Fetching the login flow ([REST API Reference](../reference/api#get-login-flow)) is usually only required for browser clients but also works
-for login flows initializied by API clients. All you need is a valid flow ID:
+Fetching the Login Flow ([REST API Reference](../reference/api#get-login-flow)) is usually only required for browser clients but also works
+for Login Flows initializied by API clients. All you need is a valid flow ID:
 
 <CodeTabs items={getFlow} />
 
@@ -181,7 +181,7 @@ $ curl -H "Accept: application/json" -s \
 }
 ```
 
-### Login with Google, GitHub, ..., OpenID Connect / OAuth 2.0
+### Login with Google, Facebook, GitHub, ..., OpenID Connect / OAuth 2.0
 
 :::tip Before you start
 
@@ -285,7 +285,7 @@ Login Flow UI, containing the Login Flow ID which includes the error payloads.
 For API Clients, the server typically responds with HTTP 400 Bad Request and the
 Login Flow in the response payload as JSON.
 
-### Login with Google, GitHub, ..., OpenID Connect / OAuth 2.0
+### Login with Google, Facebook, GitHub, ..., OpenID Connect / OAuth 2.0
 
 Completing the `oidc` method requires the user to go through an OAuth 2.0
 or OpenID Connect flow which involves logging into the upstream identity
@@ -375,14 +375,14 @@ For API Clients, ORY Kratos responds with a JSON payload which includes the iden
 just authenticated, the session, and the ORY Kratos Session Token:
 
 ```shell script
-# Inits a login flow
+# Inits a Login Flow
 $ actionUrl=$(\
   curl -s -X GET -H "Accept: application/json" \
     "http://127.0.0.1:4433/self-service/login/api" \
     | jq -r '.methods.password.config.action'\
 )
 
-# Complete login flow with password method
+# Complete Login Flow with password method
 $ curl -s -X POST -H  "Accept: application/json" -H "Content-Type: application/json" \
     -d '{"identifier": "api@user.org", "password": "iohuasf0897zAJHf"}' \
     "$actionUrl" | jq

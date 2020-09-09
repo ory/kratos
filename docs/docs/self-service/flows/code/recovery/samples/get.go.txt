@@ -1,0 +1,24 @@
+package samples
+
+import (
+  "fmt"
+
+  "github.com/ory/kratos-client-go/client/public"
+  "github.com/ory/kratos-client-go/client"
+
+  "github.com/ory/kratos/internal/httpclient/client/common"
+)
+
+func main() {
+  c := client.NewHTTPClientWithConfig(nil,
+    &client.TransportConfig{Host: "127.0.0.1:4433", BasePath: "/", Schemes: []string{"http"}})
+
+  flowID := "" // Usually something like: res.Request.URL.Query().Get("flow")
+
+  rs, err := c.Common.GetSelfServiceRecoveryFlow(
+    common.NewGetSelfServiceRecoveryFlowParams().
+      WithID(flowID),
+  )
+
+  fmt.Printf("%+v", rs.Payload) //
+}

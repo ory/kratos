@@ -1,5 +1,5 @@
 $ curl -s -H "Accept: application/json" \
-  'http://127.0.0.1:4433/self-service/login/flows?id=2e87577f-1209-407c-b523-4727d7bbdbd4' \
+  'http://127.0.0.1:4433/self-service/registration/flows?id=2e87577f-1209-407c-b523-4727d7bbdbd4' \
   | jq -r 'methods.oidc.config'
 
 {

@@ -12,7 +12,7 @@ func main() {
     &client.TransportConfig{Host: "127.0.0.1:4433", BasePath: "/", Schemes: []string{"http"}})
 
   rs, _ := c.Public.InitializeSelfServiceRegistrationViaAPIFlow(public.
-    NewInitializeSelfServiceRegistrationViaAPIFlowParams().)
+    NewInitializeSelfServiceRegistrationViaAPIFlowParams())
 
-  fmt.Printf("%+v", rs.Payload) //
+  fmt.Printf("%+v", rs.Payload)
 }

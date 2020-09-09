@@ -1,15 +1,23 @@
 ---
 id: user-settings
-title: User Settings
-sidebar_label: Overview
+title: User Settings and Profile Updates
 ---
 
 import Mermaid from '@theme/Mermaid'
-import Tabs from '@theme/Tabs'
-import TabItem from '@theme/TabItem'
+import ApiWarning from '@theme/ApiWarning'
 import SelfServiceBrowserFlow from '@theme/SelfServiceBrowserFlow'
 import SelfServiceApiFlow from '@theme/SelfServiceApiFlow'
-import CodeFromRemote from '@theme/CodeFromRemote'
+
+import CodeTabs from '@theme/Code/CodeTabs'
+import { initBrowserFlow, initApiFlow, getFlow, getFlowMethodPasswordWithErrors, getFlowMethodProfileWithErrors, getFlowMethodOidcWithErrors, privilegedVideo } from './code/settings'
+import RenderFlow from '@theme/Code/RenderFlow'
+
+:::information
+
+Please read the [Self-Service Flows](../../self-service) overview before
+continuing with this document.
+
+:::
 
 ORY Kratos allows users to update their own settings and profile information
 using two principal flows:
@@ -17,19 +25,6 @@ using two principal flows:
 - Flows where the user sits in front of the Browser (e.g. website, single page
   app, ...)
 - Flows where API interaction is required (e.g. mobile app, Smart TV, ...)
-
-The Settings Flow described here is implemented by the
-[profile](user-settings/user-profile-management.mdx),
-[password](user-login-user-registration/username-email-password.mdx), and
-[oidc](user-login-user-registration/openid-connect-social-sign-in-oauth2.mdx)
-methods.
-
-:::note
-
-Please read the [Self-Service Flows](../../self-service) overview before
-continuing with this document.
-
-:::
 
 The Settings Flow is composed of several high-level steps
 summarized in this state diagram:
@@ -45,12 +40,12 @@ stateDiagram
   s7: Execute After Settings Hook(s)
   s5: Update Settings Flow with error context(s)
   s6: Settings update successful
-	[*] --> s1 : User clicks "Update my profile"
+	[*] --> s1 : User clicks "Save changes"
   s1 --> s2
   s2 --> Error : A hook fails
   s2 --> s3
-  s3 --> s4 : User provides valid credentials/registration data
-  s3 --> s5 : User provides invalid credentials/registration data
+  s3 --> s4 : User provides valid form data
+  s3 --> s5 : User provides invalid form data
   s5 --> s3
   s7 --> Error : A hook fails
   s4 --> s8: yes
@@ -62,101 +57,38 @@ stateDiagram
 `}
 />
 
-## Self-Service User Settings for Browser Applications
+Currently, three settings methods are supported:
 
-Each Settings Method works a bit different but they all boil down to the same
-abstract sequence. This sequence was already established in the
-[Self-Service Browser Flow Documentation](../../self-service#browser-flows).
+- `password` for updating the password used to sign in;
+- `oidc` for un-/linking from social sign in providers such as Google or Facebook;
+- `profile` for updating an identity's traits (e.g. change the first name). The updated traits must be valid against the Identity JSON Schema defined for
+its [Identity Traits](../../concepts/identity-user-model).
 
-<SelfServiceBrowserFlow
-  flows={['settings']}
-  success="Update Identity"
-  interactions={['"Save Profile Changes"']}
-/>
+These methods are dis/enabled in the ORY Kratos config:
 
-The _Flow UI_ (**your application!**) is responsible for rendering the actual
-Settings HTML Forms. You can of course implement one app for
-rendering all the Settings, Login, Registration, ... screens, and another app (think
-"Service Oriented Architecture", "Micro-Services" or "Service Mesh") is
-responsible for rendering your Dashboards, Management Screens, and so on.
-
-### Initialization and Redirect to UI
-
-The Browser
-[calls the initialization endpoint](../../self-service#initialization-and-redirect-to-ui)
-for settings flows (`/self-service/settings/browser`) and is redirected to the UI configured at
-
-```yaml title="path/to/config/kratos.yml"
+```yaml title="path/to/my/kratos/config.yml"
 selfservice:
-  flows:
-    settings:
-      ui_url: http://...
+  methods:
+    password:
+      enabled: true
+    oidc:
+      enabled: true
+    profile:
+      enabled: true
 ```
-
-### Settings Form Rendering
-
-The Settings User Interface is a route (page / site) in your application that
-renders the user settings / profile management User Interface / HTML Form:
-
-```html
-<!-- Profile management -->
-<form action="..." method="POST">
-  <input type="hidden" name="csrf_token" value="cdef..." />
-  <input type="string" name="traits.first_name" />
-  <input type="string" name="traits.last_name" />
-  <input type="string" name="traits.address" />
-  <input type="..." name="..." />
-  <input type="submit" />
-</form>
-
-<!-- Password management -->
-<form action="..." method="POST">
-  <input type="hidden" name="csrf_token" value="cdef..." />
-  <input
-    type="password"
-    name="password"
-    placeholder="Enter your new password here"
-  />
-</form>
-
-<!-- Social Sign in  management -->
-<form action="..." method="POST">
-  <input type="hidden" name="csrf_token" value="cdef..." />
-  <!-- ... -->
-</form>
-```
-
-In stark contrast to other Identity Systems, ORY Kratos does not render this
-HTML. Instead, you need to implement the HTML code in your application (e.g.
-NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
-flexibility and customizability in your user interface flows and designs.
-
-### User Settings Request State
-
-The Settings Request contains a state with two possible values:
-
-- `show_form`: No user data has been collected, or it is invalid, and thus the
-  form should be shown.
-- `successful`: Indicates that the settings request has been updated
-  successfully with the provided data. The state will stay `successful` when
-  repeatedly checking. If the form is still displayed and the user adds more
-  data, the state will revert back to `show_form` on validation errors.
-
-<Mermaid
-  chart={`stateDiagram-v2
-[*] --> show_form
-show_form --> show_form: Validation fails
-show_form --> success: Identity was updated
-success --> show_form: Validation fails
-success --> [*]
-`}
-/>
 
 ### Updating Privileged Fields
 
-When certain traits or fields such as the password, the recovery email, the login identifier, or other
-privileged traits are updated, the user is required to have a session which is no older than
-the lifetime specified in:
+Most Settings Flow Methods allow the user to update fields which are considered protected:
+
+- The `password` method allows updating the password, which is a protected field;
+- The `profile` method allows updating protected fields such as
+  - the username or email address used to sign in;
+  - the recovery email address;
+- The `oidc` method allows linking and unlinking from Google, Facebook, Github, ... which is considered a privileged action.
+
+If any of these fields are changed, the ORY Kratos Login Session must not be older than the configured `privileged_session_max_age`
+value:
 
 ```yaml title="path/to/kratos/config.yml"
 selfservice:
@@ -167,79 +99,88 @@ selfservice:
       privileged_session_max_age: 1m
 ```
 
-When this happens, the browser is redirected to the login endpoint, and once the login was completed
-successfully, the data is updated and the user returns to the settings page or the configured
-redirect URL.
+If the ORY Kratos Login Session is older than the specified amount, the user is prompted to re-authenticate similar to the
+[GitHub sudo mode](https://help.github.com/en/github/authenticating-to-github/sudo-mode):
 
-### Code Examples
+<video controls width="100%">
+    <source src={privilegedVideo.webm} type="video/webm" />
+    <source src={privilegedVideo.mp4} type="video/mp4" />
+    Sorry, your browser doesn't support embedded videos.
+</video>
 
-A functioning example of the code and approach used here can
-be found on
-[github.com/ory/kratos-selfservice-ui-node](https://github.com/ory/kratos-selfservice-ui-node).
+This end-user experience currently works only for Browser-based Settings Flows. API-based flows will simply return
+a 403 Forbidden status message which require you to request a new ORY Kratos Login session using the [API-based Flow](user-login).
 
-<Tabs
-  defaultValue="express"
-  values={[
-    {label: 'ExpressJS & Handlebars', value: 'express'},
-    {label: 'ReactJS', value: 'react'},
-  ]}>
-<TabItem value="express">
+## Initialize Settings Flow
 
-<CodeFromRemote
-  link="https://github.com/ory/kratos-selfservice-ui-node/blob/master/src/routes/settings.ts"
-  src="https://raw.githubusercontent.com/ory/kratos-selfservice-ui-node/master/src/routes/settings.ts"
+The first step is to initialize the settings flow. This allows pre-settings hooks to run, set up Anti-CSRF tokens,
+and more.
+
+Each Settings Flow also has a `state` field which can either be `success` or `show_form`:
+
+<Mermaid
+  chart={`
+stateDiagram
+  [*] --> show_form
+  show_form --> show_form : Form payload is not valid
+  show_form --> success : Form payload is valid
+  success --> [*]
+`}
 />
 
-The views can be rather simple, as ORY Kratos provides you with all the
-information you need for rendering the forms.
+Keep in mind that initializing a Settings Flow requires a valid ORY Kratos Login Session Token (for API-based flows)
+or ORY Kratos Login Session Cookie (for Browser-based flows)!
 
-The following examples use Handlebars and a generic form generator to render the
-Flow:
+Before we start with the examples below, let's create a user using the API-based Registration Flow. This will yield a session token
+which then use to perform the Settings Flow on this page:
 
-<Tabs
-  defaultValue="settings"
-  values={[
-    {label: 'Settings View', value: 'settings'},
-    {label: 'Generic Form View', value: 'generic-form'},
-  ]}>
+```shell script
+username=foo-user@ory.sh
+password=sBdHzGp9hAx2Hf2m
 
-<TabItem value="settings">
+actionUrl=$(curl -s -H "Accept: application/json" \
+  'http://127.0.0.1:4433/self-service/registration/api' | jq -r '.methods.password.config.action')
 
-<CodeFromRemote
-  link="https://github.com/ory/kratos-selfservice-ui-node/blob/master/views/settings.hbs"
-  src="https://raw.githubusercontent.com/ory/kratos-selfservice-ui-node/master/views/settings.hbs"
+session=$(curl -s  -X POST -H "Accept: application/json" -H "Content-Type: application/json" \
+  --data '{ "traits.email": "'$username'", "password": "'$password'" }' \
+  "$actionUrl")
+
+sessionToken=$(echo $session | jq -r '.session_token')
+echo $sessionToken
+```
+
+### Profile Updates for Browser Clients
+
+The settings flow for browser clients relies on HTTP redirects between ORY Kratos, your Settings UI, and the end-user's
+browser:
+
+<SelfServiceBrowserFlow
+  flows={['settings']}
+  success="Update Identity"
+  interactions={['"Save Profile Changes"']}
 />
 
-</TabItem>
+To initialize the Settings Flow, point the Browser to
+[the initialization endpoint](../../self-service#initialization-and-redirect-to-ui):
 
-<TabItem value="generic-form">
+<CodeTabs items={initBrowserFlow} />
 
-<CodeFromRemote
-  link="https://github.com/ory/kratos-selfservice-ui-node/blob/master/views/partials/form.hbs"
-  src="https://raw.githubusercontent.com/ory/kratos-selfservice-ui-node/master/views/partials/form.hbs"
-/>
+The server responds with a HTTP 302 redirect to the Settings UI, appending the `?flow=<flow-id>` query
+paremeter (see the curl example) to the URL configured here:
 
-</TabItem>
-</Tabs>
+```yaml title="path/to/config/kratos.yml"
+selfservice:
+  flows:
+    settings:
+      # becomes http://127.0.0.1:4455/auth/settings?flow=df607aa1-d555-4b2a-b3e4-0f5a1d2fe6f3
+      ui_url: http://127.0.0.1:4455/auth/settings
+```
 
-The rest of the form partials can be found
-[here](https://github.com/ory/kratos-selfservice-ui-node/tree/master/views/partials).
+### Settings for API Clients
 
-</TabItem>
-<TabItem value="react">
+<ApiWarning />
 
-A react example is currently in the making.
-
-</TabItem>
-</Tabs>
-
-For details on payloads consult the individual Self-Service Settings Methods:
-
-- [Username and Password Method](user-login-user-registration/username-email-password.mdx)
-- [Social Sign In Method](user-login-user-registration/openid-connect-social-sign-in-oauth2.mdx)
-- [User Profile Method](user-settings/user-profile-management.mdx)
-
-## Self-Service User Settings for API Clients
+The Settings Flow for API clients does not use HTTP Redirects and can be summarized as follows:
 
 <SelfServiceApiFlow
   flows={['settings']}
@@ -247,37 +188,299 @@ For details on payloads consult the individual Self-Service Settings Methods:
   interactions={['"Save Profile Changes"']}
 />
 
-### Initialization
+To initialize the API flow ([REST API Reference](../reference/api#getSelfServiceSettingsFlow)), the client [calls the API-flow initialization endpoint](../../self-service#initialization)
+which returns a JSON response:
 
-The client
-[calls the API-flow initialization endpoint](../../self-service#initialization)
-for settings (`/self-service/settings/api`). The response is a JSON payload containing
-information about the flow.
+<CodeTabs items={initApiFlow} />
 
-### Settings Form Rendering
+## Settings Flow Payloads
 
-The form is rendered as established in the
-[API flow form rendering documentation](../../self-service#form-rendering-1).
+Fetching the Settings Flow ([REST API Reference](../reference/api#get-settings-flow)) is usually only required for browser clients but also works
+for Settings Flows initializied by API clients. All you need is a valid flow ID:
 
-### Form Submission
+<CodeTabs items={getFlow} />
 
-To submit the form, follow
-[API flow form submission and payload validation](../../self-service#form-submission-and-payload-validation-1).
+### Update Profile
 
-### Code Examples
+When the `profile` method is enabled, it will be part of the `methods` payload in the Settings Flow:
 
-<Tabs
-  defaultValue="login-rn"
-  values={[
-    {label: 'Settings React Native', value: 'login-rn'},
-  ]}>
-<TabItem value="login-rn">
+```shell script
+curl -s -X GET \
+  -H "Authorization: Bearer $sessionToken"  \
+  -H "Accept: application/json"  \
+  http://127.0.0.1:4433/self-service/settings/api | jq -r '.methods.profile.config'
 
-Code samples will follow soon
+{
+  "action": "http://127.0.0.1:4433/self-service/settings/methods/profile?flow=572148bf-4774-4a0d-9e7e-881d920a1600",
+  "method": "POST",
+  "fields": [
+    {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "value": "P9Wg2GLCfJqfx+o9zmaxVVs1Y/Q0f6BdkbTCJTrgpttMz4+jFDpBluBHPfWsK1GKrwmiWEgDgPnHjB1DjjbFkQ=="
+    },
+    {
+      "name": "traits.email",
+      "type": "text",
+      "value": "api@user.org"
+    },
+    {
+      "name": "traits.name.first",
+      "type": "text",
+      "value": "API"
+    },
+    {
+      "name": "traits.name.last",
+      "type": "text",
+      "value": "User"
+    }
+  ]
+}
+```
 
-</TabItem>
+The form fields depend on the [Identity's Schema JSON](../../concepts/identity-user-model).
 
-</Tabs>
+### Update Password
+
+:::tip Before you start
+
+Please read the
+[Username / Email & Password Credentials Documentation](../../concepts/credentials/username-email-password) first.
+
+:::
+
+When the `password` method is enabled, it will be part of the `methods` payload in the Settings Flow:
+
+```shell script
+$ curl -s -X GET \
+  -H "Authorization: Bearer $sessionToken"  \
+  -H "Accept: application/json"  \
+  http://127.0.0.1:4433/self-service/settings/api | jq -r '.methods.password.config'
+
+{
+  "action": "http://127.0.0.1:4433/self-service/settings/methods/password?flow=653b0f9c-eab3-47da-b956-d2f495dde5b2",
+  "method": "POST",
+  "fields": [
+    {
+      "name": "password",
+      "type": "password",
+      "required": true
+    },
+    {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "value": "bQmJ5wzYW5Qio0um7TxAirwt30SG1y/ahy8z6DjaBCBCv3PZ4HbvBBB9zypIUHA0p8Z0FFWQ8XPvy0cb3csJyQ=="
+    }
+  ]
+}
+```
+
+### Link and Unlink from Google, Facebook, GitHub, ..., OpenID Connect / OAuth 2.0
+
+:::tip Before you start
+
+Check out the
+[Sign in with GitHub, Google, ... Guide](../../guides/sign-in-with-github-google-facebook-linkedin.mdx) and learn how
+to set up this method!
+
+:::
+
+When the `oidc` method is enabled, it will be part of the `methods` payload in the Settings Flow:
+
+```shell script
+curl -s -X GET \
+  -H "Authorization: Bearer $sessionToken"  \
+  -H "Accept: application/json"  \
+  'http://127.0.0.1:4433/self-service/settings/flows?id=938da8c6-e98d-4381-87a5-b9265b1854eb' | jq -r '.methods.oidc.config'
+
+{
+  "action": "http://127.0.0.1:4433/self-service/methods/oidc/settings/connections?flow=938da8c6-e98d-4381-87a5-b9265b1854eb",
+  "method": "POST",
+  "fields": [
+    {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "value": "Fj7nOKsFQtBXywzKiPaZzYUL+x6XHMU3HFL2/go94YxjnYm/UGofxKoXJX5JJ0FTJ/e04GqVfxpkJ1jCc8DF5A=="
+    },
+    {
+      "name": "link",
+      "type": "submit",
+      "value": "github"
+    }
+  ]
+}
+```
+
+:::warning
+
+Social Sign In is currently not possible for API Clients. It will be possible in
+a future version, which is partially tracked as
+[kratos#273](https://github.com/ory/kratos/issues/273)
+
+:::
+
+## Settings Flow Form Rendering
+
+The Settings User Interface is a route (page / site) in your
+application (server, native app, single page app) that should render
+a settings form.
+
+In stark contrast to other Identity Systems, ORY Kratos does not render this
+HTML. Instead, you need to implement the HTML code in your application (e.g.
+NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
+flexibility and customizability in your user interface flows and designs.
+
+You will use the Settings Flow JSON response to render the settings form UI,
+which could looks as follows depending on your
+programming language and web framework:
+
+<RenderFlow flow="settings" />
+
+## Settings Form Validation
+
+The form payloads are then submitted to ORY Kratos which follows up with:
+
+- An HTTP 302 Found redirect pointing to the Settings UI for Browser Clients.
+- An `application/json` response for API Clients.
+
+When validation errors happen, browser clients receive a HTTP 302 Found redirect to the
+Settings Flow UI, containing the Settings Flow ID which includes the error payloads. For API Clients, the server typically responds with HTTP 400 Bad Request `application/json` and the
+Settings Flow in the response payload as JSON.
+
+### Update Profile
+
+To complete the profile update, the end-user fills out the presented profile
+form (e.g. updates their first name or email address). Possible validation
+errors include JSON Schema validation errors (e.g. `"format": "email"` not respected):
+
+<CodeTabs items={getFlowMethodProfileWithErrors} />
+
+### Update Password
+
+To change the password, the end-user fills out the presented form and provides
+a new password. Possible validation errors include not providing the password
+or providing a password which does not match the password policy:
+
+<CodeTabs items={getFlowMethodPasswordWithErrors} />
+
+### Un-/Linking from/with Google, Facebook, GitHub, ..., OpenID Connect / OAuth 2.0
+
+To link or unlink from an OpenID Connect or OAuth2 provider such as Google, GitHub, Facebook,
+the user either clicks the unlink or link button depending on the interaction.
+
+There are no expected validation errors except for an error where the profile (e.g. Google) to be linked
+is already linked with another identity in the system. This will currently result in a system error
+but will be a validation error in the future (tracked as [kratos#694](https://github.com/ory/kratos/issues/694)).
+
+## Successful Settings Update
+
+Completing the settings update behaves differently for Browser and API Clients.
+
+### Browser Clients
+
+When the login is completed successfully, ORY Kratos responds with a HTTP 302 Redirect to the
+Settings UI which now contains the success state (`state: success`) as well as the udpated identity:
+
+```shell script
+$ curl -s -X GET \
+  -H "Authorization: Bearer $sessionToken"  \
+  -H "Accept: application/json"  \
+  'http://127.0.0.1:4433/self-service/settings/flows?id=2c0e9349-3ddc-4f17-9f8e-6a6e37989c91' | jq
+
+{
+  "id": "2c0e9349-3ddc-4f17-9f8e-6a6e37989c91",
+  "type": "browser",
+  "expires_at": "2020-09-08T13:21:58.8900756Z",
+  "issued_at": "2020-09-08T12:21:58.8900756Z",
+  "request_url": "http://127.0.0.1:4433/self-service/settings/browser",
+  "methods": {
+    // ...
+  },
+  "identity": {
+    "id": "c4d50e89-4206-45e7-be94-7896f5b1c735",
+    "schema_id": "default",
+    "schema_url": "",
+    "traits": {
+      "name": {
+        "last": "User",
+        "first": "Foo"
+      },
+      "email": "foo-user-new@ory.sh"
+    }
+  },
+  "state": "success"
+}
+```
+
+You may also [configure a redirect URL](../../concepts/browser-redirect-flow-completion) instead which would
+send the end-user to that configured URL.
+
+### API Clients
+
+For API Clients, ORY Kratos responds with a JSON payload which includes the updated identity:
+
+```shell script
+$ password=ByS8NWuFSkDgMjbe
+
+$ actionUrl=$(curl -s -H "Accept: application/json" \
+  -H "Authorization: bearer $sessionToken" \
+  'http://127.0.0.1:4433/self-service/settings/api' | jq -r '.methods.password.config.action')
+
+$ curl -s -X POST -H "Accept: application/json" -H "Content-Type: application/json" \
+    -H "Authorization: bearer $sessionToken" \
+    -d '{"password": "'$password'"}' \
+    "$actionUrl" | jq
+
+{
+  "flow": {
+    "id": "f5924169-4295-4949-8e2b-5e3a54edb09a",
+    "type": "api",
+    "expires_at": "2020-09-08T13:28:13.8845963Z",
+    "issued_at": "2020-09-08T12:28:13.8845963Z",
+    "request_url": "http://127.0.0.1:4433/self-service/settings/api",
+    "methods": {
+      // ..
+    },
+    "identity": {
+      "id": "ce284065-5748-4da8-8fea-d79186ae0687",
+      "schema_id": "default",
+      "schema_url": "",
+      "traits": {
+        "email": "foo-user-bar@ory.sh"
+      }
+    },
+    "state": "success"
+  },
+  "identity": {
+    "id": "ce284065-5748-4da8-8fea-d79186ae0687",
+    "schema_id": "default",
+    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "traits": {
+      "email": "foo-user@ory.sh"
+    },
+    "verifiable_addresses": [
+      {
+        "id": "dceccb41-f744-44d6-b7a8-94085ea8f9cb",
+        "value": "foo-user@ory.sh",
+        "verified": false,
+        "via": "email",
+        "status": "pending",
+        "verified_at": null
+      }
+    ],
+    "recovery_addresses": [
+      {
+        "id": "6300eb7a-774e-4423-9819-3588901aea2e",
+        "value": "foo-user-@ory.sh",
+        "via": "email"
+      }
+    ]
+  }
+}
+```
 
 ## Hooks
 

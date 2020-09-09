@@ -11,8 +11,8 @@ func main() {
   c := client.NewHTTPClientWithConfig(nil,
     &client.TransportConfig{Host: "127.0.0.1:4433", BasePath: "/", Schemes: []string{"http"}})
 
-  rs, _ := c.Public.InitializeSelfServiceLoginViaAPIFlow(public.
-    NewInitializeSelfServiceLoginViaAPIFlowParams())
+  rs, _ := c.Public.InitializeSelfServiceRecoveryViaAPIFlow(public.
+    NewInitializeSelfServiceRecoveryViaAPIFlowParams())
 
   fmt.Printf("%+v", rs.Payload)
 }

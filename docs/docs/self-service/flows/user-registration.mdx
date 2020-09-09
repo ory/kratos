@@ -19,13 +19,13 @@ continuing with this document.
 
 :::
 
-There are two registration flow types supported in ORY Kratos:
+There are two Registration Flow types supported in ORY Kratos:
 
 - Flows where the user sits in front of the Browser (e.g. website, single page
   app, ...)
 - Flows where API interaction is required (e.g. mobile app, Smart TV, ...)
 
-The registration flow can be summarized as the following state machine:
+The Registration Flow can be summarized as the following state machine:
 
 <Mermaid
   chart={`
@@ -69,12 +69,12 @@ selfservice:
 
 ## Initialize Registration Flow
 
-The first step is to initialize the registration flow. This allows pre-registration hooks to run, set up Anti-CSRF tokens,
+The first step is to initialize the Registration Flow. This allows pre-registration hooks to run, set up Anti-CSRF tokens,
 and more.
 
 ### Registration for Browser Clients
 
-The registration flow for browser clients relies on HTTP redirects between ORY Kratos, your Registration UI, and the end-user's
+The Registration Flow for browser clients relies on HTTP redirects between ORY Kratos, your Registration UI, and the end-user's
 browser:
 
 <SelfServiceBrowserFlow
@@ -83,7 +83,7 @@ browser:
   interactions={['"Sign up"']}
 />
 
-To initialize the Registration flow, point the Browser to
+To initialize the Registration Flow, point the Browser to
 [the initialization endpoint](../../self-service#initialization-and-redirect-to-ui):
 
 <CodeTabs items={initBrowserFlow} />
@@ -103,7 +103,7 @@ selfservice:
 
 <ApiWarning />
 
-The registration flow for API clients does not use HTTP Redirects and can be summarized as follows:
+The Registration Flow for API clients does not use HTTP Redirects and can be summarized as follows:
 
 <SelfServiceApiFlow
   flows={['registration']}
@@ -118,8 +118,8 @@ which returns a JSON response:
 
 ## Registration Form Payloads
 
-Fetching the registration flow ([REST API Reference](../reference/api#get-registration-flow)) is usually only required for browser clients but also works
-for registration flows initializied by API clients. All you need is a valid flow ID:
+Fetching the Registration Flow ([REST API Reference](../reference/api#get-registration-flow)) is usually only required for browser clients but also works
+for Registration Flows initializied by API clients. All you need is a valid flow ID:
 
 <CodeTabs items={getFlow} />
 
@@ -194,7 +194,7 @@ $ curl -H "Accept: application/json" -s \
 }
 ```
 
-### Registration with Google, GitHub, ..., OpenID Connect / OAuth 2.0
+### Registration with Google, Facebook, GitHub, ..., OpenID Connect / OAuth 2.0
 
 :::tip Before you start
 
@@ -331,7 +331,7 @@ When validation errors happen, browser clients receive a HTTP 302 Found redirect
 
 For API Clients, the server typically responds with HTTP 400 Bad Request and the Registration Flow in the response payload as JSON.
 
-### Registration with Google, GitHub, ..., OpenID Connect / OAuth 2.0
+### Registration with Google, Facebook, GitHub, ..., OpenID Connect / OAuth 2.0
 
 Completing the `oidc` method requires the user to go through an OAuth 2.0 or OpenID Connect flow which
 involves logging into the upstream identity provider (e.g. Google) and giving consent.
@@ -398,7 +398,7 @@ In that case the end-user ends up at the registration screen and is prompted to 
 
 ## Successful Registration
 
-Completing the registration behaves differently for Browser and API Clients. The registration flow
+Completing the registration behaves differently for Browser and API Clients. The Registration Flow
 does not issue a ORY Kratos Login Session automatically which prevents Account Enumeration Attacks.
 If these types of attacks are not your concern, you can add the session hook which will issue
 a session after successful registration:
@@ -499,14 +499,14 @@ For API Clients, ORY Kratos responds with a JSON payload which includes the iden
 just authenticated, the session, and the ORY Kratos Session Token:
 
 ```shell script
-# Inits a registration flow
+# Inits a Registration Flow
 $ actionUrl=$(\
   curl -s -X GET -H "Accept: application/json" \
     "http://127.0.0.1:4433/self-service/registration/api" \
     | jq -r '.methods.password.config.action'\
 )
 
-# Complete registration flow with password method
+# Complete Registration Flow with password method
 $ curl -s -X POST -H  "Accept: application/json" -H "Content-Type: application/json" \
     -d '{"traits.email": "registration-api@user.org", "password": "fhAzi860a"}' \
     "$actionUrl" | jq

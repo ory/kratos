@@ -1,0 +1,43 @@
+$ curl -H "Accept: application/json" -s \
+    'http://127.0.0.1:4434/self-service/recovery/flows?id=73fcb010-da5c-4eb9-b329-3ed677a6897b' | jq
+
+{
+  "id": "73fcb010-da5c-4eb9-b329-3ed677a6897b",
+  "type": "browser",
+  "expires_at": "2020-09-09T08:05:45.7589062Z",
+  "issued_at": "2020-09-09T07:05:45.7589062Z",
+  "request_url": "http://127.0.0.1:4433/self-service/recovery/browser",
+  "active": "link",
+  "messages": [
+    {
+      "id": 1060002,
+      "text": "An email containing a recovery link has been sent to the email address you provided.",
+      "type": "info",
+      "context": {}
+    }
+  ],
+  "methods": {
+    "link": {
+      "method": "link",
+      "config": {
+        "action": "http://127.0.0.1:4433/self-service/recovery/methods/link?flow=73fcb010-da5c-4eb9-b329-3ed677a6897b",
+        "method": "POST",
+        "fields": [
+          {
+            "name": "csrf_token",
+            "type": "hidden",
+            "required": true,
+            "value": "LQwF8fph9hU3gzAcrG9ENsg0Ee7Cks+1L5om09nGSqDE1WMOK6thGRy8ObMcK1ucl3x5oWAENDc45n7j95Q7tA=="
+          },
+          {
+            "name": "email",
+            "type": "email",
+            "required": true,
+            "value": "foo@ory.sh"
+          }
+        ]
+      }
+    }
+  },
+  "state": "sent_email"
+}

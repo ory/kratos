@@ -1,0 +1,31 @@
+$ curl -H "Accept: application/json" -s \
+    'http://127.0.0.1:4434/self-service/recovery/flows?id=73fcb010-da5c-4eb9-b329-3ed677a6897b' | jq -r '.methods.link.config'
+
+{
+  "action": "http://127.0.0.1:4433/self-service/recovery/methods/link?flow=73fcb010-da5c-4eb9-b329-3ed677a6897b",
+  "method": "POST",
+  "fields": [
+    {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "value": "xU9NtXUeGKKmLS95hXejOTo947GsndDzStKyxUUzjX4slitKpNSPro0SJtY1M7yTZXWL/g4LK3Fdrur1a2H8ag=="
+    },
+    {
+      "name": "email",
+      "type": "email",
+      "required": true,
+      "value": "",
+      "messages": [
+        {
+          "id": 4000002,
+          "text": "Property email is missing.",
+          "type": "error",
+          "context": {
+            "property": "email"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+$ curl -H "Accept: application/json" -s \
+    'http://127.0.0.1:4434/self-service/recovery/flows?id=3f1ba761-89dc-4c84-8d13-1c976ab968b2' | jq
+
+{
+  "id": "3f1ba761-89dc-4c84-8d13-1c976ab968b2",
+  "type": "browser",
+  "expires_at": "2020-09-09T08:17:49.0329601Z",
+  "issued_at": "2020-09-09T07:17:49.0329601Z",
+  "request_url": "http://127.0.0.1:4433/self-service/recovery/methods/link?token=asdf",
+  "messages": [
+    {
+      "id": 4060004,
+      "text": "The recovery token is invalid or has already been used. Please retry the flow.",
+      "type": "error",
+      "context": {}
+    }
+  ],
+  "methods": {
+    "link": {
+      "method": "link",
+      "config": {
+        "action": "http://127.0.0.1:4433/self-service/recovery/methods/link?flow=3f1ba761-89dc-4c84-8d13-1c976ab968b2",
+        "method": "POST",
+        "fields": [
+          {
+            "name": "csrf_token",
+            "type": "hidden",
+            "required": true,
+            "value": "nRmx/wHkAdU5mM+uJ2HwtIqdXSEq0xvSFVoiz6fwfcB0wNcA0C6W2RKnxgGXJe8e1dU1bohF4FACJnr/iaIM1A=="
+          },
+          {
+            "name": "email",
+            "type": "email",
+            "required": true
+          }
+        ]
+      }
+    }
+  },
+  "state": "choose_method"
+}

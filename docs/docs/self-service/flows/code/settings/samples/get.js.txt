@@ -1,0 +1,10 @@
+import {CommonApi} from '@oryd/kratos-client'
+
+const kratos = new CommonApi('http://127.0.0.1:4433/')
+
+const flowId = '' // usually something like: req.query.flow
+
+kratos.getSelfServiceSettingsFlow(flowId)
+  .then(({body}) => {
+    console.log(body) // see the Raw HTTP tab for the payload
+  })

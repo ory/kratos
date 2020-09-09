@@ -3,8 +3,10 @@ import TabItem from '@theme/TabItem'
 import React from "react";
 import CodeFromRemote from '../CodeFromRemote'
 
-import loginBrowser from './Login/images/browser.png'
-import registrationBrowser from './Registration/images/browser.png'
+import loginBrowser from './images/login/browser.png'
+import settingsBrowser from './images/settings/browser.png'
+import registrationBrowser from './images/registration/browser.png'
+import recoveryBrowser from './images/recovery/browser.png'
 
 const ucfirst = (name) => name.charAt(0).toUpperCase() + name.slice(1)
 
@@ -16,6 +18,12 @@ const RenderFlow = ({flow}) => {
       break
     case 'login':
       image = <img src={loginBrowser} alt="User Login HTML Form" />
+      break
+    case 'settings':
+      image = <img src={settingsBrowser} alt="Profile Settings HTML Form" />
+      break
+    case 'recovery':
+      image = <img src={recoveryBrowser} alt="Account Recovery HTML Form" />
       break
   }
 

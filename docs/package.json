@@ -21,10 +21,12 @@
     "@docusaurus/theme-classic": "2.0.0-alpha.61",
     "@docusaurus/theme-search-algolia": "2.0.0-alpha.61",
     "classnames": "2.2.6",
+    "file-loader": "^6.1.0",
     "mermaid": "8.6.4",
     "node-fetch": "^2.6.0",
     "react": "16.13.1",
-    "react-dom": "16.13.1"
+    "react-dom": "16.13.1",
+    "url-loader": "^4.1.0"
   },
   "browserslist": {
     "production": [
