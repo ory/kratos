@@ -7,6 +7,14 @@ title: Milestones and Roadmap
 
 _This milestone does not have a description._
 
+### [Bug](https://github.com/ory/kratos/labels/bug)
+
+Something is not working.
+
+#### Issues
+
+- [ ] Do not create system errors on duplicate credentials when linking oidc providers ([kratos#694](https://github.com/ory/kratos/issues/694))
+
 ### [Feat](https://github.com/ory/kratos/labels/feat)
 
 New feature or request.
