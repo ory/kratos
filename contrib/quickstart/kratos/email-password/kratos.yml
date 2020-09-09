@@ -55,6 +55,7 @@ selfservice:
 log:
   level: debug
   format: text
+  leak_sensitive_values: true
 
 secrets:
   cookie:
