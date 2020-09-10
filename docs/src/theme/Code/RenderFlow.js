@@ -25,6 +25,9 @@ const RenderFlow = ({flow}) => {
     case 'recovery':
       image = <img src={recoveryBrowser} alt="Account Recovery HTML Form" />
       break
+    case 'verification':
+      image = <img src={recoveryBrowser} alt="Email Verification HTML Form" />
+      break
   }
 
   return (

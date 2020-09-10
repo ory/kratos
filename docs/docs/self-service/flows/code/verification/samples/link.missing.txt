@@ -1,15 +1,15 @@
 $ curl -H "Accept: application/json" -s \
-    'http://127.0.0.1:4433/self-service/verification/flows?id=ba0f508a-f2fb-435d-b5e2-0307db00d75d' | jq -r '.methods.link.config'
+    'http://127.0.0.1:4433/self-service/recovery/flows?id=73fcb010-da5c-4eb9-b329-3ed677a6897b' | jq -r '.methods.link.config'
 
 {
-  "action": "http://127.0.0.1:4433/self-service/verification/methods/link?flow=ba0f508a-f2fb-435d-b5e2-0307db00d75d",
+  "action": "http://127.0.0.1:4433/self-service/recovery/methods/link?flow=73fcb010-da5c-4eb9-b329-3ed677a6897b",
   "method": "POST",
   "fields": [
     {
       "name": "csrf_token",
       "type": "hidden",
       "required": true,
-      "value": "ZmifOn0KaTicicQ0NServtpnOWPD8pga5gzG028fq/4+Atwx/Yr69v/28O83GeSJB/55PTNxJHCmKW9rWX27VQ=="
+      "value": "xU9NtXUeGKKmLS95hXejOTo947GsndDzStKyxUUzjX4slitKpNSPro0SJtY1M7yTZXWL/g4LK3Fdrur1a2H8ag=="
     },
     {
       "name": "email",
@@ -29,4 +29,3 @@ $ curl -H "Accept: application/json" -s \
     }
   ]
 }
-foo

@@ -39,7 +39,7 @@ The Recovery Flow can be summarized as the following state machine:
   chart={`
 stateDiagram
   s1: Flow is initialized
-  s2: User Interface renders Login Flow Forms
+  s2: User Interface renders Recovery Flow Forms
   s3: Update Recovery Flow with Error Context(s)
   s4: Recovery challenge initiated (e.g. link via email)
   s5: Recovery completed, user logged in
@@ -54,12 +54,29 @@ stateDiagram
 `}
 />
 
+To enable recovery flows, make the following adjustments to your ORY Kratos
+configuration:
+
+```yaml title="path/to/config/kratos.yml"
+selfservice:
+  methods:
+    link:
+      enabled: true
+  flows:
+    recovery:
+      enabled: true
+```
+
+## Methods
+
 Currently, one recovery method is supported:
 
-- `link` method performs account recovery (also known as password reset) by
+- The `link` method performs account recovery (also known as password reset) by
 sending an email containing a recovery link to the user.
 
-Methods are dis/enabled in the ORY Kratos config:
+### Recovery `link` Method
+
+The `link` method is dis/enabled in the ORY Kratos config:
 
 ```yaml title="path/to/my/kratos/config.yml"
 selfservice:
@@ -67,6 +84,88 @@ selfservice:
     link:
       enabled: true
       # ...
+```
+
+There are two email types sent by this method:
+
+<p>
+  <figure>
+    <img
+      alt="Recovery email sent to unknown address"
+      src={useBaseUrl('img/docs/mailslurper-recovery-unknown.png')}
+    />
+    <figcaption>
+      If the requested email address is a known recovery address, a recovery
+      link is sent to that email address.
+    </figcaption>
+  </figure>
+</p>
+
+<p>
+  <figure>
+    <img
+      alt="Recovery email sent to unknown address"
+      src={useBaseUrl('img/docs/mailslurper-recovery-unknown.png')}
+    />
+    <figcaption>
+      If the requested email address is a known recovery address, a recovery
+      link is sent to that email address.
+    </figcaption>
+  </figure>
+</p>
+
+This prevents account enumeration attacks as explained in this
+[brilliant blog post by Troy Hunt](https://www.troyhunt.com/website-enumeration-insanity-how-our-personal-data-is-leaked/).
+
+The emails are using templates that can be customised as explained in
+[Customizing E-Mail Templates](../../concepts/email-sms#templates). The
+template IDs are:
+
+- Unknown email address: `recovery_invalid`
+- Known email address: `recovery_valid`
+
+You should also configure how long a session is privileged. The user will only
+be able to update his/her password (or any other credential) for the specified
+amount of time after clicking on the recovery link:
+
+```yaml title="path/to/kratos/config.yml"
+selfservice:
+  flows:
+    settings:
+      privileged_session_max_age: 15m
+```
+
+To specify that an identity's trait is a recovery email, use the following Identity JSON Schema:
+
+```diff
+ {
+   "$id": "https://schemas.ory.sh/presets/kratos/quickstart/email-password/identity.schema.json",
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "title": "Person",
+   "type": "object",
+   "properties": {
+     "traits": {
+       "type": "object",
+       "properties": {
+         "email": {
+           "type": "string",
+           "format": "email",
+           "ory.sh/kratos": {
+             "credentials": {
+               "password": {
+                 "identifier": true
+               }
+             },
++            "recovery": {
++              "via": "email"
++            }
+           }
+         }
+       }
+       "additionalProperties": false
+     }
+   }
+ }
 ```
 
 ## Initialize Recovery Flow
@@ -113,7 +212,7 @@ To initialize the Recovery Flow, point the Browser to
 <CodeTabs items={initBrowserFlow} />
 
 The server responds with a HTTP 302 redirect to the Recovery UI, appending the `?flow=<flow-id>` query
-paremeter (see the curl example) to the URL configured here:
+parameter (see the curl example) to the URL configured here:
 
 ```yaml title="path/to/config/kratos.yml"
 selfservice:
@@ -213,84 +312,9 @@ Recovery Flow in the response payload as JSON.
 
 #### Successful Submission
 
-On successful submission, an email will be sent to the provided address.
+On successful submission, an email will be sent to the provided address:
 
 <CodeTabs items={getFlowMethodLinkSuccess} />
-
-There are two email types sent by this method:
-
-<p>
-  <figure>
-    <img
-      alt="Recovery email sent to unknown address"
-      src={useBaseUrl('img/docs/mailslurper-recovery-unknown.png')}
-    />
-    <figcaption>
-      If the requested email address is a known recovery address, a recovery
-      link is sent to that email address.
-    </figcaption>
-  </figure>
-</p>
-
-<p>
-  <figure>
-    <img
-      alt="Recovery email sent to unknown address"
-      src={useBaseUrl('img/docs/mailslurper-recovery-unknown.png')}
-    />
-    <figcaption>
-      If the requested email address is a known recovery address, a recovery
-      link is sent to that email address.
-    </figcaption>
-  </figure>
-</p>
-
-This prevents account enumeration attacks as explained in this
-[brilliant blog post by Troy Hunt](https://www.troyhunt.com/website-enumeration-insanity-how-our-personal-data-is-leaked/).
-
-You should also configure how long a session is privileged. The user will only
-be able to update his/her password (or any other credential) for the specified
-amount of time after clicking on the recovery link:
-
-```yaml title="path/to/kratos/config.yml"
-selfservice:
-  flows:
-    settings:
-      privileged_session_max_age: 15m
-```
-
-To specify that an identity's trait is a recovery email, use the following Identity JSON Schema:
-
-```diff
- {
-   "$id": "https://schemas.ory.sh/presets/kratos/quickstart/email-password/identity.schema.json",
-   "$schema": "http://json-schema.org/draft-07/schema#",
-   "title": "Person",
-   "type": "object",
-   "properties": {
-     "traits": {
-       "type": "object",
-       "properties": {
-         "email": {
-           "type": "string",
-           "format": "email",
-           "ory.sh/kratos": {
-             "credentials": {
-               "password": {
-                 "identifier": true
-               }
-             },
-+            "recovery": {
-+              "via": "email"
-+            }
-           }
-         }
-       }
-       "additionalProperties": false
-     }
-   }
- }
-```
 
 ## Unsuccessful Recovery
 

@@ -1,5 +1,5 @@
 $ curl -H "Accept: application/json" -s \
-    'http://127.0.0.1:4434/self-service/recovery/flows?id=3f1ba761-89dc-4c84-8d13-1c976ab968b2' | jq
+    'http://127.0.0.1:4433/self-service/recovery/flows?id=3f1ba761-89dc-4c84-8d13-1c976ab968b2' | jq
 
 {
   "id": "3f1ba761-89dc-4c84-8d13-1c976ab968b2",

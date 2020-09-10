@@ -1,0 +1,43 @@
+$ curl -H "Accept: application/json" -s \
+    'http://127.0.0.1:4433/self-service/verification/flows?id=ba0f508a-f2fb-435d-b5e2-0307db00d75d' | jq
+
+{
+  "id": "ba0f508a-f2fb-435d-b5e2-0307db00d75d",
+  "type": "browser",
+  "expires_at": "2020-09-10T07:42:32.3468704Z",
+  "issued_at": "2020-09-10T06:42:32.3468704Z",
+  "request_url": "http://127.0.0.1:4433/self-service/verification/browser",
+  "active": "link",
+  "messages": [
+    {
+      "id": 1070002,
+      "text": "An email containing a verification link has been sent to the email address you provided.",
+      "type": "info",
+      "context": {}
+    }
+  ],
+  "methods": {
+    "link": {
+      "method": "link",
+      "config": {
+        "action": "http://127.0.0.1:4433/self-service/verification/methods/link?flow=ba0f508a-f2fb-435d-b5e2-0307db00d75d",
+        "method": "POST",
+        "fields": [
+          {
+            "name": "csrf_token",
+            "type": "hidden",
+            "required": true,
+            "value": "47dbOMg+HHU22BQuag9GpQLPE+ZceRgilVlZgyb/SbC73RgzSL6Pu1WnIPVoMQmS31ZTuKz6pEjVfPA7EJ1ZGw=="
+          },
+          {
+            "name": "email",
+            "type": "email",
+            "required": true,
+            "value": "aeneas@ory.sh"
+          }
+        ]
+      }
+    }
+  },
+  "state": "sent_email"
+}
