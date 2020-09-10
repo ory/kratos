@@ -92,7 +92,7 @@ type Provider interface {
 
 	SelfServiceFlowVerificationEnabled() bool
 	SelfServiceFlowVerificationUI() *url.URL
-	SelfServiceFlowVerificationReturnTo() *url.URL
+	SelfServiceFlowVerificationReturnTo(defaultReturnTo *url.URL) *url.URL
 	SelfServiceFlowVerificationRequestLifespan() time.Duration
 
 	SelfServiceFlowRecoveryEnabled() bool

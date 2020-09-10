@@ -323,7 +323,8 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
-	http.Redirect(w, r, s.c.SelfServiceFlowVerificationReturnTo().String(), http.StatusFound)
+	http.Redirect(w, r, s.c.SelfServiceFlowVerificationReturnTo(f.
+		AppendTo(s.c.SelfServiceFlowVerificationUI())).String(), http.StatusFound)
 }
 
 func (s *Strategy) retryVerificationFlowWithMessage(w http.ResponseWriter, r *http.Request, ft flow.Type, message *text.Message) {

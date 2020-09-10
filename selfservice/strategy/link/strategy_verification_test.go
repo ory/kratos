@@ -223,8 +223,9 @@ func TestVerification(t *testing.T) {
 			defer res.Body.Close()
 
 			assert.Equal(t, http.StatusOK, res.StatusCode)
-			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationReturnTo().String())
-			assert.EqualValues(t, "returned", string(x.MustReadAll(res.Body)))
+			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI().String())
+			body :=string(x.MustReadAll(res.Body))
+			assert.EqualValues(t, "passed_challenge", gjson.Get(body,"state").String())
 
 			id, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), identityToVerify.ID)
 			require.NoError(t, err)
