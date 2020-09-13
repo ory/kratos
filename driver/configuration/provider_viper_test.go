@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/ory/x/logrusx"
+	"github.com/ory/x/urlx"
 
 	_ "github.com/ory/jsonschema/v3/fileloader"
 
@@ -406,14 +407,14 @@ func TestViperProvider_ReturnTo(t *testing.T) {
 	p := configuration.NewViperProvider(l, false)
 
 	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
-	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowVerificationReturnTo().String())
+	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowVerificationReturnTo(urlx.ParseOrPanic("https://www.ory.sh/")).String())
 	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowRecoveryReturnTo().String())
 
 	viper.Set(configuration.ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, "https://www.ory.sh/recovery")
 	assert.Equal(t, "https://www.ory.sh/recovery", p.SelfServiceFlowRecoveryReturnTo().String())
 
 	viper.Set(configuration.ViperKeySelfServiceVerificationBrowserDefaultReturnTo, "https://www.ory.sh/verification")
-	assert.Equal(t, "https://www.ory.sh/verification", p.SelfServiceFlowVerificationReturnTo().String())
+	assert.Equal(t, "https://www.ory.sh/verification", p.SelfServiceFlowVerificationReturnTo(urlx.ParseOrPanic("https://www.ory.sh/")).String())
 }
 
 func TestViperProvider_DSN(t *testing.T) {

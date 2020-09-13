@@ -476,7 +476,7 @@ func (p *ViperProvider) SelfServiceFlowVerificationRequestLifespan() time.Durati
 }
 
 func (p *ViperProvider) SelfServiceFlowVerificationReturnTo(defaultReturnTo *url.URL) *url.URL {
-	redir, err := url.ParseRequestURI(viperx.GetString(p.l, ViperKeySelfServiceSettingsAfter+"."+DefaultBrowserReturnURL, ""))
+	redir, err := url.ParseRequestURI(viperx.GetString(p.l, ViperKeySelfServiceVerificationBrowserDefaultReturnTo, ""))
 	if err != nil {
 		return defaultReturnTo
 	}

@@ -487,7 +487,7 @@ func (s *Strategy) decodeRecovery(r *http.Request, decodeBody bool) (*completeSe
 		if err := s.dx.Decode(r, &body,
 			decoderx.MustHTTPRawJSONSchemaCompiler(
 				x.MustPkgerRead(pkger.Open("/selfservice/strategy/link/.schema/email.schema.json")),
-				),
+			),
 			decoderx.HTTPDecoderSetValidatePayloads(false),
 			decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
 			return nil, err
