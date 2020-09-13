@@ -22,6 +22,7 @@ import (
 
 var validateCmd = &cobra.Command{
 	Use:  "validate  <file.json [file-2.json [file-3.json] ...]>",
+	Short: "Validate local identity files",
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c := cliclient.NewClient(cmd)

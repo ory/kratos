@@ -13,6 +13,7 @@ import (
 
 var getCmd = &cobra.Command{
 	Use:  "get <id>",
+	Short: "Get an identity by ID",
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c := cliclient.NewClient(cmd)

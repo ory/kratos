@@ -13,6 +13,7 @@ import (
 
 var deleteCmd = &cobra.Command{
 	Use:  "delete",
+	Short: "Delete identities by ID",
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c := cliclient.NewClient(cmd)

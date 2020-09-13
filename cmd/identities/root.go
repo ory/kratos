@@ -11,6 +11,7 @@ import (
 // identitiesCmd represents the identity command
 var identitiesCmd = &cobra.Command{
 	Use: "identities",
+	Short: "Tools to interact with remote identities",
 }
 
 func RegisterCommandRecursive(parent *cobra.Command) {

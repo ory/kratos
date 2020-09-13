@@ -20,6 +20,8 @@ import (
 // putCmd represents the import command
 var putCmd = &cobra.Command{
 	Use: "import <file.json [file-2.json [file-3.json] ...]>",
+	Short: "Import identities from files or STD_IN",
+	Long: "Import identities from files or STD_IN. Files are expected to each contain a single identity. The validity of files can be tested beforehand using the `validate` command.",
 	Run: importIdentities,
 }
 
