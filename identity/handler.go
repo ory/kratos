@@ -240,7 +240,6 @@ type updateIdentityParameters struct {
 	// required: true
 	// in: path
 	ID string `json:"id"`
-
 	// in: body
 	Body UpdateIdentity
 }
