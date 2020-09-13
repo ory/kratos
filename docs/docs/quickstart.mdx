@@ -54,7 +54,9 @@ needs users. Therefore, we need:
 
 and of course:
 
-- A dashboard that shows `Hello {{ traits.name.first }} {{ traits.name.last }}}!` which is only visible when the user is signed in.
+- A dashboard that shows
+  `Hello {{ traits.name.first }} {{ traits.name.last }}}!` which is only visible
+  when the user is signed in.
 
 ## Setup
 
@@ -78,11 +80,12 @@ and more so you don't have to.
 
 :::
 
-The SecureApp and ORY Kratos need to share cookies in order for anti-CSRF tokens and
-login sessions to work. Because the quickstart runs on different ports on `127.0.0.1`
-there is nothing we need to do to get this all working. In environments where you have
-multiple sub-domains or reverse proxies, the set up will be a bit more sophisticated.
-You can find more information about the different set up possibilities in the
+The SecureApp and ORY Kratos need to share cookies in order for anti-CSRF tokens
+and login sessions to work. Because the quickstart runs on different ports on
+`127.0.0.1` there is nothing we need to do to get this all working. In
+environments where you have multiple sub-domains or reverse proxies, the set up
+will be a bit more sophisticated. You can find more information about the
+different set up possibilities in the
 [Getting Cookies to Work on Multi-Domains Guide](guides/multi-domain-cookies.mdx).
 
 ORY Kratos does not ship with an administrative user interface. You must
@@ -164,13 +167,14 @@ This demo makes use of several services:
 
 1. [ORY Kratos](https://github.com/ory/kratos)
    - Public ("Browser") API (port 4433)
-   - Admin API (port 4434) - This is only made public so we can test via the CLI.
+   - Admin API (port 4434) - This is only made public so we can test via the
+     CLI.
 2. [SecureApp](http://github.com/ory/kratos-selfservice-ui-node)
-   - Public (port 4455) - an example application written in NodeJS that implements
-   the login, registration, logout, dashboard, and other UIs.
+   - Public (port 4455) - an example application written in NodeJS that
+     implements the login, registration, logout, dashboard, and other UIs.
 3. [MailSlurper](https://github.com/mailslurper)
    - Public (port 4436) - a development SMTP server which ORY Kratos will use to
-   send emails.
+     send emails.
 
 To better understand the application architecture, let's take a look at the
 network configuration. This assumes that you have at least some understanding of
@@ -218,23 +222,22 @@ Looking at the network stack, you can see two redirects happening:
 
 Here's a play-by-play of what happened:
 
-1. SecureApp used the ORY Kratos JavaScript language client to
-   guard the `/dashboard` route. The ORY Kratos client checked the cookies from the request and saw you   were not logged in.
+1. SecureApp used the ORY Kratos JavaScript language client to guard the
+   `/dashboard` route. The ORY Kratos client checked the cookies from the
+   request and saw you were not logged in.
 2. The route guard redirected you from `/dashboard` to `/auth/login`. ORY
    Kratos' browser API requires a `<flow_id>` in order to log you in. It looked
-   for this ID in the URL as a query parameter but
-   couldn't find it.
+   for this ID in the URL as a query parameter but couldn't find it.
 3. `/auth/login` redirected you to
    `http://127.0.0.1:4433/self-service/login/browser`, which is one of ORY
    Kratos' APIs used for logging in browser-based applications.
 4. ORY Kratos performed some security checks, prepared form data, created a
-   `csrf_token`, and redirected the browser to
-   `/auth/login?flow=<flow_id>`.
+   `csrf_token`, and redirected the browser to `/auth/login?flow=<flow_id>`.
 5. SecureApp handled the `/auth/login` route, found the `<flow_id>` in the URL
    query parameter, and used it to make an HTTP request to
-   `http://kratos:4434/self-service/login/flows?id=<flow_id>`.
-   Notice the URI is `kratos:4434` because SecureApp is making a server-side
-   HTTP request via Docker's private network to ORY Kratos' Admin API.
+   `http://kratos:4434/self-service/login/flows?id=<flow_id>`. Notice the URI is
+   `kratos:4434` because SecureApp is making a server-side HTTP request via
+   Docker's private network to ORY Kratos' Admin API.
 6. ORY Kratos responded with data which SecureApp used to render the HTML login
    form.
 
@@ -386,8 +389,8 @@ again. Exciting!
 
 ### Understanding How Login and Registration Works
 
-Head over to the [Self-Service Flows Chapter](self-service.mdx) for
-an in-depth explanation of how each individual flow works.
+Head over to the [Self-Service Flows Chapter](self-service.mdx) for an in-depth
+explanation of how each individual flow works.
 
 ### Email Verification
 

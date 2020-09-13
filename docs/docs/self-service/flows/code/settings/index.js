@@ -101,4 +101,4 @@ export const getFlowMethodPasswordWithErrors = {
   }
 }
 
-export const privilegedVideo = {mp4, webm}
+export const privilegedVideo = { mp4, webm }

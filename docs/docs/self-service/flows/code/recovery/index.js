@@ -59,7 +59,7 @@ export const initApiFlow = {
     label: 'Go',
     language: 'go',
     code: require('raw-loader!./samples/api/init.go.txt').default
-  },
+  }
 }
 
 export const getFlowMethodLinkWithErrors = {

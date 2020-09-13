@@ -77,7 +77,7 @@ export const getFlowMethodPasswordWithErrors = {
     label: 'Wrong Credentials',
     language: 'shell',
     code: require('raw-loader!./samples/password.wrong.txt').default
-  },
+  }
 }
 
 export const getFlowMethodOidcWithErrors = {
@@ -85,5 +85,5 @@ export const getFlowMethodOidcWithErrors = {
     label: 'Missing ID Token',
     language: 'shell',
     code: require('raw-loader!./samples/oidc.missing.txt').default
-  },
+  }
 }

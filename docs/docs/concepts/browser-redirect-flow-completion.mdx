@@ -102,8 +102,8 @@ selfservice:
 
 Post-settings redirection **does not use** the `urls.default_redirect_to`
 configuration key. Instead the redirect ends at the same Settings UI with the
-same Settings Request ID and key `state` set to `success`. If the
-listed keys are set, the redirection will end up at the specified values:
+same Settings Request ID and key `state` set to `success`. If the listed keys
+are set, the redirection will end up at the specified values:
 
 ```yaml file="path/to/my/kratos.config.yml"
 selfservice:
@@ -119,9 +119,9 @@ selfservice:
 ### Post-Verification Redirection
 
 Post-verification redirection **does not use** the `urls.default_redirect_to`
-configuration key. Instead the redirect ends at the same Verification UI with the
-same Verification Request ID and key `state` set to `passed_challenge`. If the
-listed keys are set, the redirection will end up at the specified values:
+configuration key. Instead the redirect ends at the same Verification UI with
+the same Verification Request ID and key `state` set to `passed_challenge`. If
+the listed keys are set, the redirection will end up at the specified values:
 
 ```yaml file="path/to/my/kratos.config.yml"
 selfservice:

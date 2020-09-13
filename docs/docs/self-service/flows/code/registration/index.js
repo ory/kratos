@@ -77,20 +77,21 @@ export const getFlowMethodPasswordWithErrors = {
     label: 'Password Policy Violation',
     language: 'shell',
     code: require('raw-loader!./samples/password.policy.txt').default
-  },
+  }
 }
 
 export const getFlowMethodOidcWithCompletion = {
   browser: {
     label: 'Browser UI',
     image: require('./images/browser-oidc-invalid.png').default,
-    alt: 'User Registration HTML Form with missing or invalid fields when performing an OpenID Connect flow'
+    alt:
+      'User Registration HTML Form with missing or invalid fields when performing an OpenID Connect flow'
   },
   missing: {
     label: 'Missing Website',
     language: 'shell',
     code: require('raw-loader!./samples/oidc.invalid.txt').default
-  },
+  }
 }
 
 export const getFlowMethodOidcWithErrors = {
@@ -98,5 +99,5 @@ export const getFlowMethodOidcWithErrors = {
     label: 'Missing ID Token',
     language: 'shell',
     code: require('raw-loader!./samples/oidc.missing.txt').default
-  },
+  }
 }

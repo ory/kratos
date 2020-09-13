@@ -10,14 +10,22 @@ import SelfServiceBrowserFlow from '@theme/SelfServiceBrowserFlow'
 import SelfServiceApiFlow from '@theme/SelfServiceApiFlow'
 
 import CodeTabs from '@theme/Code/CodeTabs'
-import { initBrowserFlow, initApiFlow, getFlow, getFlowMethodPasswordWithErrors, getFlowMethodOidcWithErrors, getFlowMethodOidcWithCompletion } from './code/registration'
+import {
+  initBrowserFlow,
+  initApiFlow,
+  getFlow,
+  getFlowMethodPasswordWithErrors,
+  getFlowMethodOidcWithErrors,
+  getFlowMethodOidcWithCompletion
+} from './code/registration'
 import RenderFlow from '@theme/Code/RenderFlow'
 
 :::information
 
 Please read the [Self-Service Flows](../../self-service.mdx) overview before
-continuing with this document. It is also advised to run the [quickstart](../../quickstart.mdx) locally
-as example URLs and payloads have been generated with it.
+continuing with this document. It is also advised to run the
+[quickstart](../../quickstart.mdx) locally as example URLs and payloads have
+been generated with it.
 
 :::
 
@@ -55,7 +63,9 @@ stateDiagram
 Currently, two registration methods are supported:
 
 - `password` for signing up with an email / username and password;
-- `oidc` for signing up using a social sign in provider such as Google or Facebook (check out the [set up guide](../../guides/sign-in-with-github-google-facebook-linkedin.mdx)).
+- `oidc` for signing up using a social sign in provider such as Google or
+  Facebook (check out the
+  [set up guide](../../guides/sign-in-with-github-google-facebook-linkedin.mdx)).
 
 Both are dis/enabled in the ORY Kratos config:
 
@@ -71,13 +81,13 @@ selfservice:
 
 ## Initialize Registration Flow
 
-The first step is to initialize the Registration Flow. This allows pre-registration hooks to run, set up Anti-CSRF tokens,
-and more.
+The first step is to initialize the Registration Flow. This allows
+pre-registration hooks to run, set up Anti-CSRF tokens, and more.
 
 ### Registration for Browser Clients
 
-The Registration Flow for browser clients relies on HTTP redirects between ORY Kratos, your Registration UI, and the end-user's
-browser:
+The Registration Flow for browser clients relies on HTTP redirects between ORY
+Kratos, your Registration UI, and the end-user's browser:
 
 <SelfServiceBrowserFlow
   flows={['registration']}
@@ -85,12 +95,14 @@ browser:
   interactions={['"Sign up"']}
 />
 
-To initialize the Registration Flow, point the Browser to the initialization endpoint:
+To initialize the Registration Flow, point the Browser to the initialization
+endpoint:
 
 <CodeTabs items={initBrowserFlow} />
 
-The server responds with a HTTP 302 redirect to the Registration UI, appending the `?flow=<flow-id>` query
-paremeter (see the curl example) to the URL configured here:
+The server responds with a HTTP 302 redirect to the Registration UI, appending
+the `?flow=<flow-id>` query paremeter (see the curl example) to the URL
+configured here:
 
 ```yaml title="path/to/config/kratos.yml"
 selfservice:
@@ -104,7 +116,8 @@ selfservice:
 
 <ApiWarning />
 
-The Registration Flow for API clients does not use HTTP Redirects and can be summarized as follows:
+The Registration Flow for API clients does not use HTTP Redirects and can be
+summarized as follows:
 
 <SelfServiceApiFlow
   flows={['registration']}
@@ -112,16 +125,19 @@ The Registration Flow for API clients does not use HTTP Redirects and can be sum
   interactions={['"Sign in"']}
 />
 
-To initialize the API flow, the client calls the API-flow initialization endpoint ([REST API Reference](../../reference/api.mdx#initialize-registration-flow-for-api-clients))
+To initialize the API flow, the client calls the API-flow initialization
+endpoint
+([REST API Reference](../../reference/api.mdx#initialize-registration-flow-for-api-clients))
 which returns a JSON response:
 
 <CodeTabs items={initApiFlow} />
 
 ## Registration Form Payloads
 
-Fetching the Registration Flow ([REST API Reference](../../reference/api.mdx#get-registration-flow)) is usually only
-required for browser clients but also works
-for Registration Flows initializied by API clients. All you need is a valid Registration Flow ID:
+Fetching the Registration Flow
+([REST API Reference](../../reference/api.mdx#get-registration-flow)) is usually
+only required for browser clients but also works for Registration Flows
+initializied by API clients. All you need is a valid Registration Flow ID:
 
 <CodeTabs items={getFlow} />
 
@@ -130,15 +146,16 @@ for Registration Flows initializied by API clients. All you need is a valid Regi
 :::tip Before you start
 
 Please read the
-[Username / Email & Password Credentials Documentation](../../concepts/credentials/username-email-password.mdx) first.
+[Username / Email & Password Credentials Documentation](../../concepts/credentials/username-email-password.mdx)
+first.
 
 :::
 
-When the `password` method is enabled, it will be part of the `methods` payload in the Registration Flow.
-ORY Kratos uses the Identity JSON Schema defined in
+When the `password` method is enabled, it will be part of the `methods` payload
+in the Registration Flow. ORY Kratos uses the Identity JSON Schema defined in
 `identity.default_schema_url` to generate a list of form fields and add it to
-the Registration Flow.
-Assuming we are using the Identity JSON Schema from the Quickstart
+the Registration Flow. Assuming we are using the Identity JSON Schema from the
+Quickstart
 
 <CodeFromRemote
   language="json"
@@ -200,8 +217,8 @@ $ curl -H "Accept: application/json" -s \
 :::tip Before you start
 
 Check out the
-[Sign in with GitHub, Google, ... Guide](../../guides/sign-in-with-github-google-facebook-linkedin.mdx) and learn how
-to set up this method!
+[Sign in with GitHub, Google, ... Guide](../../guides/sign-in-with-github-google-facebook-linkedin.mdx)
+and learn how to set up this method!
 
 :::
 
@@ -223,8 +240,8 @@ a future version, which is partially tracked as
 
 :::
 
-If enabled, the method contains an `oidc` key with the
-configured sign in providers as submit fields:
+If enabled, the method contains an `oidc` key with the configured sign in
+providers as submit fields:
 
 ```shell script
 $ curl -H "Accept: application/json" -s \
@@ -263,18 +280,17 @@ $ curl -H "Accept: application/json" -s \
 
 ## Registration Flow Form Rendering
 
-The Registration User Interface is a route (page / site) in your
-application (server, native app, single page app) that should render
-a registration form.
+The Registration User Interface is a route (page / site) in your application
+(server, native app, single page app) that should render a registration form.
 
 In stark contrast to other Identity Systems, ORY Kratos does not render this
 HTML. Instead, you need to implement the HTML code in your application (e.g.
 NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
 flexibility and customizability in your user interface flows and designs.
 
-You will use the Registration Flow JSON response to render the registration form UI,
-which could looks as follows depending on your
-programming language and web framework:
+You will use the Registration Flow JSON response to render the registration form
+UI, which could looks as follows depending on your programming language and web
+framework:
 
 <RenderFlow flow="registration" />
 
@@ -282,14 +298,16 @@ programming language and web framework:
 
 The form payloads are then submitted to ORY Kratos which follows up with:
 
-- An HTTP 302 Found redirect pointing to the Registration UI for Browser Clients.
+- An HTTP 302 Found redirect pointing to the Registration UI for Browser
+  Clients.
 - An `application/json` response for API Clients.
 
 ### Registration with Username/Email and Password
 
-To complete the registration process, the end-user fills out the form which
-must include a field marked as the identifier (`ory.sh/kratos.credentials.password.identifier: true`) in the Identity JSON Schema, for
-example:
+To complete the registration process, the end-user fills out the form which must
+include a field marked as the identifier
+(`ory.sh/kratos.credentials.password.identifier: true`) in the Identity JSON
+Schema, for example:
 
 ```diff
  {
@@ -322,25 +340,29 @@ example:
  }
 ```
 
-If the registration payload is invalid (e.g. the password does
-not match the password policy, the email is missing, ...), the
-password method includes the validation errors:
+If the registration payload is invalid (e.g. the password does not match the
+password policy, the email is missing, ...), the password method includes the
+validation errors:
 
 <CodeTabs items={getFlowMethodPasswordWithErrors} />
 
-When validation errors happen, browser clients receive a HTTP 302 Found redirect to the Registration Flow UI, containing the Registration Flow ID which includes the error payloads.
+When validation errors happen, browser clients receive a HTTP 302 Found redirect
+to the Registration Flow UI, containing the Registration Flow ID which includes
+the error payloads.
 
-For API Clients, the server typically responds with HTTP 400 Bad Request and the Registration Flow in the response payload as JSON.
+For API Clients, the server typically responds with HTTP 400 Bad Request and the
+Registration Flow in the response payload as JSON.
 
 ### Registration with Google, Facebook, GitHub, ..., OpenID Connect / OAuth 2.0
 
-Completing the `oidc` method requires the user to go through an OAuth 2.0 or OpenID Connect flow which
-involves logging into the upstream identity provider (e.g. Google) and giving consent.
+Completing the `oidc` method requires the user to go through an OAuth 2.0 or
+OpenID Connect flow which involves logging into the upstream identity provider
+(e.g. Google) and giving consent.
 
 :::note
 
-If the user has already sign up with the given provider before, the user will simply be logged in
-and no new ORY Kratos Identity will be created.
+If the user has already sign up with the given provider before, the user will
+simply be logged in and no new ORY Kratos Identity will be created.
 
 :::
 
@@ -348,9 +370,10 @@ A possible validation error is a missing ID Token:
 
 <CodeTabs items={getFlowMethodOidcWithErrors} />
 
-What may also happen is that the ORY Kratos Identity Schema JSON includes a field which is required but
-was not provided by the upstream identity provider (e.g. Google). In those cases, the end-user's browser
-is returned to the registration screen with the form validation errors.
+What may also happen is that the ORY Kratos Identity Schema JSON includes a
+field which is required but was not provided by the upstream identity provider
+(e.g. Google). In those cases, the end-user's browser is returned to the
+registration screen with the form validation errors.
 
 Let's assume the ORY Kratos Identity Schema JSON requires a `website` trait
 
@@ -389,20 +412,23 @@ Let's assume the ORY Kratos Identity Schema JSON requires a `website` trait
  }
 ```
 
-which was not provided by the upstream identity provider. This can happen when the user refuses to accept a
-certain scope (e.g. "Allow ORY Kratos access to my website") or if the provider simply does not have this data (e.g. the upstream
+which was not provided by the upstream identity provider. This can happen when
+the user refuses to accept a certain scope (e.g. "Allow ORY Kratos access to my
+website") or if the provider simply does not have this data (e.g. the upstream
 identity provider does not collect the user's website).
 
-In that case the end-user ends up at the registration screen and is prompted to provide the missing or invalid fields:
+In that case the end-user ends up at the registration screen and is prompted to
+provide the missing or invalid fields:
 
 <CodeTabs items={getFlowMethodOidcWithCompletion} />
 
 ## Successful Registration
 
-Completing the registration behaves differently for Browser and API Clients. The Registration Flow
-does not issue a ORY Kratos Login Session automatically which prevents Account Enumeration Attacks.
-If these types of attacks are not your concern, you can add the session hook which will issue
-a session after successful registration:
+Completing the registration behaves differently for Browser and API Clients. The
+Registration Flow does not issue a ORY Kratos Login Session automatically which
+prevents Account Enumeration Attacks. If these types of attacks are not your
+concern, you can add the session hook which will issue a session after
+successful registration:
 
 ```yaml title="path/to/my/config/kratos.yml"
 # $ kratos -c path/to/my/config/kratos.yml serve
@@ -430,13 +456,15 @@ typically not an issue if you follow the guidelines in the
 
 ### Browser Clients
 
-When the registration is completed successfully, ORY Kratos responds with a HTTP 302 Redirect to the
+When the registration is completed successfully, ORY Kratos responds with a HTTP
+302 Redirect to the
 [configured redirect URL](../../concepts/browser-redirect-flow-completion).
 
 #### With Auto-Login on Registration
 
-If the `session` after hook is enabled, a `Set-Cookie` HTTP Header is set alongside the HTTP 302 redirect
-which contains the ORY Kratos Login Session Cookie:
+If the `session` after hook is enabled, a `Set-Cookie` HTTP Header is set
+alongside the HTTP 302 redirect which contains the ORY Kratos Login Session
+Cookie:
 
 ```
 HTTP/1.1 302 Found
@@ -449,8 +477,8 @@ Date: Thu, 03 Sep 2020 21:32:47 GMT
 Content-Length: 0
 ```
 
-Now, whenever the browser is making a request (with cookies) to the `http://127.0.0.1/sessions/whoami` endpoint,
-the session will be returned:
+Now, whenever the browser is making a request (with cookies) to the
+`http://127.0.0.1/sessions/whoami` endpoint, the session will be returned:
 
 ```shell script
 curl -s -H "Cookie: ory_kratos_session=MTU5OTE2ODc2N3xEdi1CQkFFQ180SUFBUkFCRUFBQVJfLUNBQUVHYzNSeWFXNW5EQThBRFhObGMzTnBiMjVmZEc5clpXNEdjM1J5YVc1bkRDSUFJR055VlROMGRteHhSakJrUzBkbmRUUjBlVFY1V0RCRWFVTnJXVmR6V25oaHx2DICsB6IMbaHSQwnYITUZqr7Qx7CxUlnaneJWH495wQ==" \
@@ -496,7 +524,8 @@ curl -s -H "Cookie: ory_kratos_session=MTU5OTE2ODc2N3xEdi1CQkFFQ180SUFBUkFCRUFBQ
 
 ### API Clients
 
-For API Clients, ORY Kratos responds with a JSON payload which includes the signed up identity:
+For API Clients, ORY Kratos responds with a JSON payload which includes the
+signed up identity:
 
 ```shell script
 # Inits a Registration Flow
@@ -542,8 +571,8 @@ $ curl -s -X POST -H  "Accept: application/json" -H "Content-Type: application/j
 
 #### With Auto-Login on Registration
 
-If the `session` after hook is enabled, the ORY Kratos Login Session and ORY Kratos Login Session Token
-are included in the response:
+If the `session` after hook is enabled, the ORY Kratos Login Session and ORY
+Kratos Login Session Token are included in the response:
 
 ```shell script
 $ actionUrl=$(\
@@ -620,7 +649,9 @@ $ curl -s -X POST -H  "Accept: application/json" -H "Content-Type: application/j
 
 ## Hooks
 
-ORY Kratos allows you to configure hooks that run before and after a Registration Flow.
-This may be helpful if you'd like to restrict registration to IPs coming from your internal network or other logic.
+ORY Kratos allows you to configure hooks that run before and after a
+Registration Flow. This may be helpful if you'd like to restrict registration to
+IPs coming from your internal network or other logic.
 
-For more information about hooks please read the [Hook Documentation](../hooks.mdx).
+For more information about hooks please read the
+[Hook Documentation](../hooks.mdx).
