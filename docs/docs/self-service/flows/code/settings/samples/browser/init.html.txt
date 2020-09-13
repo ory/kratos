@@ -1,4 +1,4 @@
-<a href="http://127.0.0.1:4433/self-service/settings/browser">Log in</a>
+<a href="http://127.0.0.1:4433/self-service/settings/browser">Update Profile</a>
 
 <!-- or -->
 

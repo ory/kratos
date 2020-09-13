@@ -1,8 +1,9 @@
 import React, {useEffect, useState} from 'react'
 import fetch from 'node-fetch'
 import CodeBlock from '@theme/CodeBlock'
+import styles from './CodeFromRemote.module.css';
 
-const CodeFromRemote = ({src,link}) => {
+const CodeFromRemote = ({src, link, lang}) => {
   const [content, setContent] = useState('')
 
   useEffect(() => {
@@ -10,9 +11,9 @@ const CodeFromRemote = ({src,link}) => {
   }, [])
 
   return (
-    <>
-      <CodeBlock metastring={link && `title="${link}"`} className={"language-typescript"} children={content}/>
-    </>
+    <div className={styles.container}>
+      <CodeBlock metastring={link && `title="${link}"`} className={lang && `language-${lang}`} children={content}/>
+    </div>
   )
 }
 

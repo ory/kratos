@@ -1,4 +1,5 @@
-curl -s -v -X GET \
+# Simulates a browser request
+$ curl -s -v -X GET \
   -H "Accept: text/html"  \
   http://127.0.0.1:4433/self-service/registration/browser
 

@@ -31,7 +31,6 @@
     "self-service/flows/user-login",
     "self-service/flows/user-settings",
     "self-service/flows/account-recovery",
-    "self-service/flows/account-recovery/password-reset-recovery-link",
     "self-service/flows/verify-email-account-activation",
     "self-service/flows/user-logout",
     "self-service/flows/user-facing-errors",

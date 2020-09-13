@@ -5,6 +5,7 @@ title: User Registration
 
 import Mermaid from '@theme/Mermaid'
 import ApiWarning from '@theme/ApiWarning'
+import CodeFromRemote from '@theme/CodeFromRemote'
 import SelfServiceBrowserFlow from '@theme/SelfServiceBrowserFlow'
 import SelfServiceApiFlow from '@theme/SelfServiceApiFlow'
 
@@ -14,8 +15,9 @@ import RenderFlow from '@theme/Code/RenderFlow'
 
 :::information
 
-Please read the [Self-Service Flows](../../self-service) overview before
-continuing with this document.
+Please read the [Self-Service Flows](../../self-service.mdx) overview before
+continuing with this document. It is also advised to run the [quickstart](../../quickstart.mdx) locally
+as example URLs and payloads have been generated with it.
 
 :::
 
@@ -53,7 +55,7 @@ stateDiagram
 Currently, two registration methods are supported:
 
 - `password` for signing up with an email / username and password;
-- `oidc` for signing up using a social sign in provider such as Google or Facebook.
+- `oidc` for signing up using a social sign in provider such as Google or Facebook (check out the [set up guide](../../guides/sign-in-with-github-google-facebook-linkedin.mdx)).
 
 Both are dis/enabled in the ORY Kratos config:
 
@@ -79,12 +81,11 @@ browser:
 
 <SelfServiceBrowserFlow
   flows={['registration']}
-  success="Create user"
+  success="User created and successful HTTP 302 redirect"
   interactions={['"Sign up"']}
 />
 
-To initialize the Registration Flow, point the Browser to
-[the initialization endpoint](../../self-service#initialization-and-redirect-to-ui):
+To initialize the Registration Flow, point the Browser to the initialization endpoint:
 
 <CodeTabs items={initBrowserFlow} />
 
@@ -96,7 +97,7 @@ selfservice:
   flows:
     registration:
       # becomes http://127.0.0.1:4455/auth/registration?flow=df607aa1-d555-4b2a-b3e4-0f5a1d2fe6f3
-      ui_url:  http://127.0.0.1:4455/auth/registration
+      ui_url: http://127.0.0.1:4455/auth/registration
 ```
 
 ### Registration for API Clients
@@ -107,19 +108,20 @@ The Registration Flow for API clients does not use HTTP Redirects and can be sum
 
 <SelfServiceApiFlow
   flows={['registration']}
-  success="Return registration session token"
+  success="User created and HTTP 200 OK response"
   interactions={['"Sign in"']}
 />
 
-To initialize the API flow ([REST API Reference](../reference/api#getSelfServiceRegistrationFlow)), the client [calls the API-flow initialization endpoint](../../self-service#initialization)
+To initialize the API flow, the client calls the API-flow initialization endpoint ([REST API Reference](../../reference/api.mdx#initialize-registration-flow-for-api-clients))
 which returns a JSON response:
 
 <CodeTabs items={initApiFlow} />
 
 ## Registration Form Payloads
 
-Fetching the Registration Flow ([REST API Reference](../reference/api#get-registration-flow)) is usually only required for browser clients but also works
-for Registration Flows initializied by API clients. All you need is a valid flow ID:
+Fetching the Registration Flow ([REST API Reference](../../reference/api.mdx#get-registration-flow)) is usually only
+required for browser clients but also works
+for Registration Flows initializied by API clients. All you need is a valid Registration Flow ID:
 
 <CodeTabs items={getFlow} />
 
@@ -128,21 +130,20 @@ for Registration Flows initializied by API clients. All you need is a valid flow
 :::tip Before you start
 
 Please read the
-[Username / Email & Password Credentials Documentation](../../concepts/credentials/username-email-password) first.
+[Username / Email & Password Credentials Documentation](../../concepts/credentials/username-email-password.mdx) first.
 
 :::
 
 When the `password` method is enabled, it will be part of the `methods` payload in the Registration Flow.
-
 ORY Kratos uses the Identity JSON Schema defined in
 `identity.default_schema_url` to generate a list of form fields and add it to
 the Registration Flow.
-
 Assuming we are using the Identity JSON Schema from the Quickstart
 
 <CodeFromRemote
-  link="https://github.com/ory/kratos/blob/master/contrib/quickstart/kratos/email-password/identity.traits.schema.json"
-  src="https://raw.githubusercontent.com/ory/kratos/master/contrib/quickstart/kratos/email-password/identity.traits.schema.json"
+  language="json"
+  link="https://github.com/ory/kratos/blob/master/contrib/quickstart/kratos/email-password/identity.schema.json"
+  src="https://raw.githubusercontent.com/ory/kratos/master/contrib/quickstart/kratos/email-password/identity.schema.json"
 />
 
 the response would look as such:
@@ -290,35 +291,35 @@ To complete the registration process, the end-user fills out the form which
 must include a field marked as the identifier (`ory.sh/kratos.credentials.password.identifier: true`) in the Identity JSON Schema, for
 example:
 
-```json
-{
-  "$id": "https://schemas.ory.sh/presets/kratos/quickstart/email-password/identity.schema.json",
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Person",
-  "type": "object",
-  "properties": {
-    "traits": {
-      "type": "object",
-      "properties": {
-        "email": {
-          "type": "string",
-          "format": "email",
-          "ory.sh/kratos": {
-            "credentials": {
-              "password": {
-                "identifier": true
-              }
-            }
-          }
-        }
-      },
-      "required": [
-        "email"
-      ],
-      "additionalProperties": false
-    }
-  }
-}
+```diff
+ {
+   "$id": "https://schemas.ory.sh/presets/kratos/quickstart/email-password/identity.schema.json",
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "title": "Person",
+   "type": "object",
+   "properties": {
+     "traits": {
+       "type": "object",
+       "properties": {
+         "email": {
+           "type": "string",
+           "format": "email",
++          "ory.sh/kratos": {
++            "credentials": {
++              "password": {
++                "identifier": true
++              }
++            }
++          }
+         }
+       },
+       "required": [
+         "email"
+       ],
+       "additionalProperties": false
+     }
+   }
+ }
 ```
 
 If the registration payload is invalid (e.g. the password does
@@ -353,39 +354,39 @@ is returned to the registration screen with the form validation errors.
 
 Let's assume the ORY Kratos Identity Schema JSON requires a `website` trait
 
-```
-{
-  "$id": "https://schemas.ory.sh/presets/kratos/quickstart/email-password/identity.schema.json",
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Person",
-  "type": "object",
-  "properties": {
-    "traits": {
-      "type": "object",
-      "properties": {
-        "email": {
-          "type": "string",
-          "format": "email",
-          "ory.sh/kratos": {
-            "credentials": {
-              "password": {
-                "identifier": true
-              }
-            }
-          }
-        },
-        "website": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "email",
-        "website"
-      ],
-      "additionalProperties": false
-    }
-  }
-}
+```diff
+ {
+   "$id": "https://schemas.ory.sh/presets/kratos/quickstart/email-password/identity.schema.json",
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "title": "Person",
+   "type": "object",
+   "properties": {
+     "traits": {
+       "type": "object",
+       "properties": {
+         "email": {
+           "type": "string",
+           "format": "email",
+           "ory.sh/kratos": {
+             "credentials": {
+               "password": {
+                 "identifier": true
+               }
+             }
+           }
+         },
++        "website": {
++          "type": "string"
++        }
+       },
+       "required": [
+         "email",
++        "website"
+       ],
+       "additionalProperties": false
+     }
+   }
+ }
 ```
 
 which was not provided by the upstream identity provider. This can happen when the user refuses to accept a
@@ -403,8 +404,8 @@ does not issue a ORY Kratos Login Session automatically which prevents Account E
 If these types of attacks are not your concern, you can add the session hook which will issue
 a session after successful registration:
 
-```yaml title="path/to/my/kratos/config.yml"
-# $ kratos -c path/to/my/kratos/config.yml serve
+```yaml title="path/to/my/config/kratos.yml"
+# $ kratos -c path/to/my/config/kratos.yml serve
 selfservice:
   flows:
     registration:
@@ -495,8 +496,7 @@ curl -s -H "Cookie: ory_kratos_session=MTU5OTE2ODc2N3xEdi1CQkFFQ180SUFBUkFCRUFBQ
 
 ### API Clients
 
-For API Clients, ORY Kratos responds with a JSON payload which includes the identity which
-just authenticated, the session, and the ORY Kratos Session Token:
+For API Clients, ORY Kratos responds with a JSON payload which includes the signed up identity:
 
 ```shell script
 # Inits a Registration Flow
@@ -553,8 +553,8 @@ $ actionUrl=$(\
 )
 
 $ curl -s -X POST -H  "Accept: application/json" -H "Content-Type: application/json" \
-    -d '{"traits.email": "registration-session-api@user.org", "password": "fhAzi860a"}' \
-    "$actionUrl" | jq
+  -d '{"traits.email": "registration-session-api@user.org", "password": "fhAzi860a"}' \
+  "$actionUrl" | jq
 
 {
   "session_token": "9kmrgslvw8ZCyEtSZqOmxEtnfBJIvB31",
@@ -623,4 +623,4 @@ $ curl -s -X POST -H  "Accept: application/json" -H "Content-Type: application/j
 ORY Kratos allows you to configure hooks that run before and after a Registration Flow.
 This may be helpful if you'd like to restrict registration to IPs coming from your internal network or other logic.
 
-For more information about hooks please read the [Hook Documentation](../hooks).
+For more information about hooks please read the [Hook Documentation](../hooks.mdx).

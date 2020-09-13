@@ -1,4 +1,4 @@
-<a href="http://127.0.0.1:4433/self-service/registration/browser">sign up</a>
+<a href="http://127.0.0.1:4433/self-service/registration/browser">Sign up</a>
 
 <!-- or -->
 

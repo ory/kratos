@@ -14,7 +14,7 @@ import RenderFlow from '@theme/Code/RenderFlow'
 
 :::information
 
-Please read the [Self-Service Flows](../../self-service) overview before
+Please read the [Self-Service Flows](../../self-service.mdx) overview before
 continuing with this document.
 
 :::
@@ -62,7 +62,7 @@ Currently, three settings methods are supported:
 - `password` for updating the password used to sign in;
 - `oidc` for un-/linking from social sign in providers such as Google or Facebook;
 - `profile` for updating an identity's traits (e.g. change the first name). The updated traits must be valid against the Identity JSON Schema defined for
-its [Identity Traits](../../concepts/identity-user-model).
+its [Identity Traits](../../concepts/identity-data-model.md).
 
 These methods are dis/enabled in the ORY Kratos config:
 
@@ -85,7 +85,7 @@ Most Settings Flow Methods allow the user to update fields which are considered 
 - The `profile` method allows updating protected fields such as
   - the username or email address used to sign in;
   - the recovery email address;
-- The `oidc` method allows linking and unlinking from Google, Facebook, Github, ... which is considered a privileged action.
+- The `oidc` method allows linking and unlinking from Google, Facebook, Github, ... which is considered a privileged action (check out the [set up guide](../../guides/sign-in-with-github-google-facebook-linkedin.mdx)).
 
 If any of these fields are changed, the ORY Kratos Login Session must not be older than the configured `privileged_session_max_age`
 value:
@@ -109,14 +109,12 @@ If the ORY Kratos Login Session is older than the specified amount, the user is 
 </video>
 
 This end-user experience currently works only for Browser-based Settings Flows. API-based flows will simply return
-a 403 Forbidden status message which require you to request a new ORY Kratos Login session using the [API-based Flow](user-login).
+a 403 Forbidden status message which require you to request a new ORY Kratos Login session using the [API-based Login Flow](user-login.mdx).
 
 ## Initialize Settings Flow
 
 The first step is to initialize the settings flow. This allows pre-settings hooks to run, set up Anti-CSRF tokens,
-and more.
-
-Each Settings Flow also has a `state` field which can either be `success` or `show_form`:
+and more. Each Settings Flow also has a `state` field which can either be `success` or `show_form`:
 
 <Mermaid
   chart={`
@@ -156,7 +154,7 @@ browser:
 
 <SelfServiceBrowserFlow
   flows={['settings']}
-  success="Update Identity"
+  success="Identity Updated and HTTP 302 redirect to Success Flow"
   interactions={['"Save Profile Changes"']}
 />
 
@@ -172,8 +170,8 @@ paremeter (see the curl example) to the URL configured here:
 selfservice:
   flows:
     settings:
-      # becomes http://127.0.0.1:4455/auth/settings?flow=df607aa1-d555-4b2a-b3e4-0f5a1d2fe6f3
-      ui_url: http://127.0.0.1:4455/auth/settings
+      # becomes http://127.0.0.1:4455/settings?flow=df607aa1-d555-4b2a-b3e4-0f5a1d2fe6f3
+      ui_url: http://127.0.0.1:4455/settings
 ```
 
 ### Settings for API Clients
@@ -184,11 +182,11 @@ The Settings Flow for API clients does not use HTTP Redirects and can be summari
 
 <SelfServiceApiFlow
   flows={['settings']}
-  success="Update Identity"
+  success="Identity Updated and HTTP 200 OK"
   interactions={['"Save Profile Changes"']}
 />
 
-To initialize the API flow ([REST API Reference](../reference/api#getSelfServiceSettingsFlow)), the client [calls the API-flow initialization endpoint](../../self-service#initialization)
+To initialize the API flow, the client calls the API-flow initialization endpoint ([REST API Reference](../../reference/api.mdx#initialize-settings-flow-for-api-clients))
 which returns a JSON response:
 
 <CodeTabs items={initApiFlow} />
@@ -381,7 +379,7 @@ Completing the settings update behaves differently for Browser and API Clients.
 
 ### Browser Clients
 
-When the login is completed successfully, ORY Kratos responds with a HTTP 302 Redirect to the
+When the profile update is completed successfully, ORY Kratos responds with a HTTP 302 Redirect to the
 Settings UI which now contains the success state (`state: success`) as well as the udpated identity:
 
 ```shell script
@@ -486,4 +484,4 @@ $ curl -s -X POST -H "Accept: application/json" -H "Content-Type: application/js
 
 ORY Kratos allows you to configure hooks that run before and after a profile
 update was successful. For more information about hooks please read the
-[Hook Documentation](../hooks).
+[Hook Documentation](../hooks.mdx).

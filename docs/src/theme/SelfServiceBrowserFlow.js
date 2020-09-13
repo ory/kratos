@@ -24,9 +24,9 @@ sequenceDiagram
   B->>K: Submits form
   K-->>K: Validates and processes form payloads
 
-  alt Form payload is valid valid
+  alt Form payload is valid
     K->>B: ${success}
-  else Login data invalid
+  else Form payload invalid
     K-->>K: Update and store flow (e.g. add form validation errors)
     K-->>B: HTTP 302 Found <selfservice.flows.${components}.ui_url>?flow=<flow-id>
     B->>A: Opens <selfservice.flows.${components}?flow=<flow-id>

@@ -1,8 +1,8 @@
 $ curl -H "Accept: application/json" -s \
-    'http://127.0.0.1:4433/self-service/recovery/flows?id=73fcb010-da5c-4eb9-b329-3ed677a6897b' | jq -r '.methods.link.config'
+    'http://127.0.0.1:4433/self-service/verification/flows?id=73fcb010-da5c-4eb9-b329-3ed677a6897b' | jq -r '.methods.link.config'
 
 {
-  "action": "http://127.0.0.1:4433/self-service/recovery/methods/link?flow=73fcb010-da5c-4eb9-b329-3ed677a6897b",
+  "action": "http://127.0.0.1:4433/self-service/verification/methods/link?flow=73fcb010-da5c-4eb9-b329-3ed677a6897b",
   "method": "POST",
   "fields": [
     {

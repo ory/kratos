@@ -1,6 +1,6 @@
-curl -H "Accept: application/json" -s \
-    'http://127.0.0.1:4433/self-service/registration/flows?id=f71b24aa-92d4-49a7-957b-72eea1c4c39d' \
-    | jq -r '.methods.oidc.config'
+$ curl -H "Accept: application/json" -s \
+  'http://127.0.0.1:4433/self-service/registration/flows?id=f71b24aa-92d4-49a7-957b-72eea1c4c39d' \
+  | jq -r '.methods.oidc.config'
 
 {
   "action": "http://127.0.0.1:4433/self-service/methods/oidc/auth/f71b24aa-92d4-49a7-957b-72eea1c4c39d",

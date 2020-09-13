@@ -20,9 +20,9 @@ sequenceDiagram
   B-->>B: User fills out forms, clicks e.g. ${interactions}
   B->>K: REST POST to e.g. /self-service/${components}/methods/<${methods.join('|')}>
   K-->>K: Validates and processes payload
-  alt Form payload is valid valid
+  alt Form payload is valid
     K->>B: ${success}
-  else Login data invalid
+  else Form payload invalid
     K-->>K: Update and store flow (e.g. add form validation errors)
     K->>B: Respond with e.g. HTTP 400 Bad Request and updated flow as payload
     B-->>B: Render form and validation errors using e.g. Native iOS UI Elements

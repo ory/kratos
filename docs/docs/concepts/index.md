@@ -230,7 +230,7 @@ ORY has numerous products that support the protocols OAuth2 or OpenID Connect in
 ### Software Architecture
 
 ORY's
-[Software Architecture and Philosophy](../../ecosystem/software-architecture-philosophy)
+[Software Architecture and Philosophy](https://www.ory.sh/docs/ecosystem/software-architecture-philosophy)
 document, explains the architectural beliefs and framework behind the ORY
 Products in particular:
 
@@ -258,7 +258,7 @@ very easy to get started there is a reference implementation
 [github.com/ory/kratos-selfservice-ui-node](https://github.com/ory/kratos-selfservice-ui-node).
 
 For more details about each individual flow, consult the
-[Self-Service Flows Chapter](../self-service/flows/index).
+[Self-Service Flows Chapter](../self-service.mdx).
 
 ### Bring your own Identity Model(s)
 

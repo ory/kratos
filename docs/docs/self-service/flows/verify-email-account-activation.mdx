@@ -32,7 +32,7 @@ There are two Verification Flow types supported in ORY Kratos:
   app, ...)
 - Flows where API interaction is required (e.g. mobile app, Smart TV, ...)
 
-The Recovery Flow can be summarized as the following state machine:
+The Verification Flow can be summarized as the following state machine:
 
 <Mermaid
   chart={`
@@ -163,8 +163,7 @@ You can also combine this with the password method login identifier (see example
 That way, the field `email` (or any field you define with these properties) will
 serve as both the login identifier and as a verifiable email address.
 
-
-## Initialize Recovery Flow to Request or Resend Verification Challenge
+## Initialize Verification Flow to Request or Resend Verification Challenge
 
 The first step is to initialize the Verification Flow. This sets up Anti-CSRF tokens and more.
 Each verification flow has a `state` parameter which follows the state machine:
@@ -188,7 +187,7 @@ where
 - `choose_method` indicates that the user has not chosen a verification method yet.
   This is useful when `link` is not the only verification method active.
 - `sent_email` implies that the verification email has been sent out.
-- `passwed_challenge` is set when the user has clicked the verification link and
+- `passed_challenge` is set when the user has clicked the verification link and
   completed the account verification.
 
 ### Verification for Browser Clients
@@ -198,7 +197,7 @@ browser:
 
 <SelfServiceBrowserFlow
   flows={['verification']}
-  success="Set verified flag to true"
+  success="Set verified flag and redirect to successful Verification Flow"
   interactions={['"Verify Email"']}
 />
 
@@ -214,10 +213,11 @@ parameter (see the curl example) to the URL configured here:
 selfservice:
   flows:
     verification:
-      # becomes http://127.0.0.1:4455/auth/verification?flow=df607aa1-d555-4b2a-b3e4-0f5a1d2fe6f3
-      ui_url: http://127.0.0.1:4455/auth/verification
+      # becomes http://127.0.0.1:4455/verification?flow=df607aa1-d555-4b2a-b3e4-0f5a1d2fe6f3
+      ui_url: http://127.0.0.1:4455/verification
 ```
-### Recovery for API Clients
+
+### Verification for API Clients
 
 <ApiWarning />
 
@@ -229,7 +229,7 @@ The Verification Flow for API clients does not use HTTP Redirects and can be sum
   interactions={['"Verify Email"']}
 />
 
-To initialize the API flow ([REST API Reference](../reference/api#getSelfServiceVerificationFlow)), the client [calls the API-flow initialization endpoint](../../self-service#initialization)
+To initialize the API flow, the client calls the API-flow initialization endpoint ([REST API Reference](../../reference/api.mdx#initialize-verification-flow-for-api-clients))
 which returns a JSON response:
 
 <CodeTabs items={initApiFlow} />
@@ -242,6 +242,13 @@ for Verification Flows initializied by API clients. All you need is a valid flow
 <CodeTabs items={getFlow} />
 
 ### Send Verification Link to Email
+
+:::note
+
+The `link` verification mode will always open a link in the browser, even if it was initiated by an API client.
+This is because the user clicks the link in his/her email client, which opens the browser.
+
+:::
 
 When the `link` method is enabled, it will be part of the `methods` payload in the Verification Flow:
 
@@ -336,12 +343,7 @@ Please keep in mind that this part of the flow always involves a Browser!
 If the verification challenge is completed (e.g. the sent verification link was clicked), the end-user's Browser
 is redirected to the Verification UI with a Verification Flow that has now the `state` of `passed_challenge`:
 
-```shell script
-$ curl -H "Accept: application/json" -s \
-    'http://127.0.0.1:4434/self-service/verification/flows?id=eb2aa29b-a726-4477-8635-9d5830f543fc' | jq -r '.state'
-
-passed_challenge
-```
+<CodeTabs items={getFlowMethodLinkChallengeDone} />
 
 You may also [configure a redirect URL](../../concepts/browser-redirect-flow-completion) instead which would
 send the end-user to that configured URL.

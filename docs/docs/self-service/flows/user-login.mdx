@@ -53,7 +53,7 @@ stateDiagram
 Currently, two login methods are supported:
 
 - `password` for signing in with an email / username and password;
-- `oidc` for signing in using a social sign in provider such as Google or Facebook.
+- `oidc` for signing in using a social sign in provider such as Google or Facebook (check out the [set up guide](../../guides/sign-in-with-github-google-facebook-linkedin.mdx)).
 
 Both are dis/enabled in the ORY Kratos config:
 
@@ -83,8 +83,7 @@ browser:
   interactions={['"Log in"']}
 />
 
-To initialize the Login Flow, point the Browser to
-[the initialization endpoint](../../self-service#initialization-and-redirect-to-ui):
+To initialize the Login Flow, point the Browser to the initialization endpoint:
 
 <CodeTabs items={initBrowserFlow} />
 
@@ -111,14 +110,14 @@ The Login Flow for API clients does not use HTTP Redirects and can be summarized
   interactions={['"Log in"']}
 />
 
-To initialize the API flow ([REST API Reference](../reference/api#getSelfServiceLoginFlow)), the client [calls the API-flow initialization endpoint](../../self-service#initialization)
+To initialize the API flow, the client calls the API-flow initialization endpoint ([REST API Reference](../../reference/api.mdx#initialize-login-flow-for-api-clients))
 which returns a JSON response:
 
 <CodeTabs items={initApiFlow} />
 
 ## Login Flow Payloads
 
-Fetching the Login Flow ([REST API Reference](../reference/api#get-login-flow)) is usually only required for browser clients but also works
+Fetching the Login Flow ([REST API Reference](../../reference/api.mdx#get-login-flow)) is usually only required for browser clients but also works
 for Login Flows initializied by API clients. All you need is a valid flow ID:
 
 <CodeTabs items={getFlow} />
@@ -136,48 +135,31 @@ When the `password` method is enabled, it will be part of the `methods` payload 
 
 ```shell script
 $ curl -H "Accept: application/json" -s \
-  'http://127.0.0.1:4434/self-service/login/flows?id=2e41015e-3b05-4e6a-8bc5-cdecf808d52e' | jq
+  'http://127.0.0.1:4434/self-service/login/flows?id=26ac2d66-eeb7-42f3-8ba8-5fe70925d6a3' \
+  | jq -r '.methods.password.config'
 
 {
-  "id": "d5c78fd6-17e7-45e2-9465-0200c76bf83a",
-  "type": "browser",
-  "expires_at": "2020-08-24T11:58:06.0780652Z",
-  "issued_at": "2020-08-24T11:48:06.0780828Z",
-  "request_url": "http://127.0.0.1:4433/self-service/registration/browser",
-  "methods": {
-    "password": {
-      "method": "password",
-      "config": {
-        "action": "http://127.0.0.1:4433/self-service/registration/methods/password?flow=d5c78fd6-17e7-45e2-9465-0200c76bf83a",
-        "method": "POST",
-        "fields": [
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "NeScRZ0rccVGilfS2dvlSjDnYk/EvhpozPKW3TBeAnpCArwCFt2La1xbxeFFnmFycdg1LngGTeA13HJ1XCccQA=="
-          },
-          {
-            "name": "password",
-            "type": "password",
-            "required": true
-          },
-          {
-            "name": "traits.email",
-            "type": "email"
-          },
-          {
-            "name": "traits.name.first",
-            "type": "text"
-          },
-          {
-            "name": "traits.name.last",
-            "type": "text"
-          }
-        ]
-      }
+  "action": "http://127.0.0.1:4433/self-service/login/methods/password?flow=26ac2d66-eeb7-42f3-8ba8-5fe70925d6a3",
+  "method": "POST",
+  "fields": [
+    {
+      "name": "identifier",
+      "type": "text",
+      "required": true,
+      "value": ""
+    },
+    {
+      "name": "password",
+      "type": "password",
+      "required": true
+    },
+    {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "value": "Bo72oeXYFnjZj2B9Ple+GZBkn5oqQZDACcYvGeUi8J48R9+yRk1KBagov/nJ/jbfBgugsMUzYMf4VpGNThkjgw=="
     }
-  }
+  ]
 }
 ```
 
@@ -214,37 +196,25 @@ configured sign in providers as submit fields:
 
 ```shell script
 $ curl -H "Accept: application/json" -s \
-  'http://127.0.0.1:4433/self-service/registration/flows?id=7430f336-0be0-47d1-b1fc-5cc6fcc3f228' | jq
+  'http://127.0.0.1:4434/self-service/login/flows?id=26ac2d66-eeb7-42f3-8ba8-5fe70925d6a3' \
+  | jq -r '.methods.oidc.config'
 
 {
-  "id": "7430f336-0be0-47d1-b1fc-5cc6fcc3f228",
-  "type": "browser",
-  "expires_at": "2020-09-03T14:32:44.060729362Z",
-  "issued_at": "2020-09-03T14:22:44.060729362Z",
-  "request_url": "http://127.0.0.1:4433/self-service/registration/browser",
-  "messages": null,
-  "methods": {
-    "oidc": {
-      "method": "oidc",
-      "config": {
-        "action": "http://127.0.0.1:4433/self-service/methods/oidc/auth/7430f336-0be0-47d1-b1fc-5cc6fcc3f228",
-        "method": "POST",
-        "fields": [
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "LJ3o59zXjukFs1004vyn3QrWDrfutW2e0Iaqo/9Ck6srYAceydRr59GEZJNFY6Walnell+r10/DlXUy/Eq6sXQ=="
-          },
-          {
-            "name": "provider",
-            "type": "submit",
-            "value": "github"
-          }
-        ]
-      }
+  "action": "http://127.0.0.1:4433/self-service/methods/oidc/auth/7430f336-0be0-47d1-b1fc-5cc6fcc3f228",
+  "method": "POST",
+  "fields": [
+    {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "value": "LJ3o59zXjukFs1004vyn3QrWDrfutW2e0Iaqo/9Ck6srYAceydRr59GEZJNFY6Walnell+r10/DlXUy/Eq6sXQ=="
+    },
+    {
+      "name": "provider",
+      "type": "submit",
+      "value": "github"
     }
-  }
+  ]
 }
 ```
 

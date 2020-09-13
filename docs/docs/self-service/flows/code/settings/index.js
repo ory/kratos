@@ -90,7 +90,7 @@ export const getFlowMethodPasswordWithErrors = {
     alt: 'User Registration HTML Form with validation errors'
   },
   missing: {
-    label: 'Missing Email',
+    label: 'Missing Password',
     language: 'shell',
     code: require('raw-loader!./samples/password.missing.txt').default
   },

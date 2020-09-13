@@ -56,6 +56,7 @@ if (fs.existsSync('./versions.json')) {
 }
 
 module.exports = {
+  onBrokenLinks: 'warn',
   title: config.projectName,
   tagline: config.projectTagLine,
   url: `https://www.ory.sh/`,
