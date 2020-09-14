@@ -166,7 +166,7 @@ func (a *Client) GetSelfServiceLoginFlow(params *GetSelfServiceLoginFlowParams) 
 
   This endpoint returns a recovery flow's context with, for example, error details and other information.
 
-More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).
+More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 */
 func (a *Client) GetSelfServiceRecoveryFlow(params *GetSelfServiceRecoveryFlowParams) (*GetSelfServiceRecoveryFlowOK, error) {
 	// TODO: Validate the params before sending

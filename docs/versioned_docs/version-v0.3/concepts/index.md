@@ -220,8 +220,8 @@ Ory has numerous products that support the protocols OAuth2 or OpenID Connect in
 ### Software Architecture
 
 ORY's
-[Software Architecture and Philosophy](../../ecosystem/software-architecture-philosophy)
-document, explains the architectural beliefs and framework behind the ORY 
+[Software Architecture and Philosophy](https://www.ory.sh/docs/ecosystem/software-architecture-philosophy)
+document, explains the architectural beliefs and framework behind the ORY
 Products in particular:
 
 - Small runtime footprint with about five (5) MB binary running on all operating
@@ -248,7 +248,7 @@ very easy to get started there is a reference implementation
 [github.com/ory/kratos-selfservice-ui-node](https://github.com/ory/kratos-selfservice-ui-node).
 
 For more details about each individual flow, consult the
-[Self-Service Flows Chapter](../self-service/flows/index).
+[Self-Service Flows Chapter](../self-service.mdx).
 
 ### Bring your own Identity Model(s)
 
@@ -261,7 +261,7 @@ system:
   attached to the profile.
 
 ORY Kratos implements both scenarios by using
-[JSON Schemas for Identity Traits](./identity-user-model)
+[JSON Schemas for Identity Traits](identity-data-model.md)
 
 ### Forget passport-js, oidc-client, ...
 
@@ -270,5 +270,5 @@ Open Source provides a base solution for many use cases. For example, ORY Kratos
 integrates with ORY Oathkeeper, a Reverse Proxy solution. Defining Access Rules
 is as easy as writing a few lines of JSON / JSON5 / YAML!
 
-Please consult the Quick Start documentation [Quickstart](../quickstart), for
+Please consult the Quick Start documentation [Quickstart](../quickstart.mdx), for
 further information.

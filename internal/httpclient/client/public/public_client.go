@@ -170,7 +170,7 @@ does not have any API capabilities. The server responds with a HTTP 302 Found re
 (if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
 a new Recovery Flow ID which contains an error message that the recovery link was invalid.
 
-More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).
+More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 */
 func (a *Client) CompleteSelfServiceRecoveryFlowWithLinkMethod(params *CompleteSelfServiceRecoveryFlowWithLinkMethodParams) error {
 	// TODO: Validate the params before sending
@@ -537,7 +537,7 @@ This endpoint MUST ONLY be used in scenarios such as native mobile apps (React N
 
 :::
 
-More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).
+More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 */
 func (a *Client) InitializeSelfServiceRecoveryViaAPIFlow(params *InitializeSelfServiceRecoveryViaAPIFlowParams) (*InitializeSelfServiceRecoveryViaAPIFlowOK, error) {
 	// TODO: Validate the params before sending
@@ -579,7 +579,7 @@ exists, the browser is returned to the configured return URL.
 
 This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 
-More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).
+More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 */
 func (a *Client) InitializeSelfServiceRecoveryViaBrowserFlow(params *InitializeSelfServiceRecoveryViaBrowserFlowParams) error {
 	// TODO: Validate the params before sending

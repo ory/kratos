@@ -252,9 +252,9 @@ which returns a JSON response:
 ## Verification Flow Payloads
 
 Fetching the Verification Flow
-([REST API Reference](../reference/api#get-verification-flow)) is usually only
-required for browser clients but also works for Verification Flows initializied
-by API clients. All you need is a valid flow ID:
+([REST API Reference](../../reference/api.mdx#get-verification-flow)) is usually
+only required for browser clients but also works for Verification Flows
+initializied by API clients. All you need is a valid flow ID:
 
 <CodeTabs items={getFlow} />
 
@@ -366,5 +366,5 @@ Verification Flow that has now the `state` of `passed_challenge`:
 <CodeTabs items={getFlowMethodLinkChallengeDone} />
 
 You may also
-[configure a redirect URL](../../concepts/browser-redirect-flow-completion)
+[configure a redirect URL](../../concepts/browser-redirect-flow-completion.mdx)
 instead which would send the end-user to that configured URL.

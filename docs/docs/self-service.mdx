@@ -42,33 +42,33 @@ ORY Kratos applies best practices established by experts (National Institute of
 Sciences NIST, Internet Engineering Task Force IETF, Microsoft Research, Google
 Research, Troy Hunt, ...) and implements the following flows:
 
-- [Login and Registration](self-service/flows/user-login-user-registration)
-- [Logout](self-service/flows/user-logout)
-- [User Settings](self-service/flows/user-settings)
-- [Account Recovery](self-service/flows/account-recovery)
-- [Address Verification](self-service/flows/verify-email-account-activation)
-- [User-Facing Error](self-service/flows/user-facing-errors)
-- [2FA / MFA](self-service/flows/2fa-mfa-multi-factor-authentication)
+- [Registration](self-service/flows/user-registration.mdx)
+- [Login](self-service/flows/user-login.mdx)
+- [Logout](self-service/flows/user-logout.md)
+- [User Settings](self-service/flows/user-settings.mdx)
+- [Account Recovery](self-service/flows/account-recovery.mdx)
+- [Address Verification](self-service/flows/verify-email-account-activation.mdx)
+- [User-Facing Error](self-service/flows/user-facing-errors.md)
+- [2FA / MFA](self-service/flows/2fa-mfa-multi-factor-authentication.md)
 
 Some flows break down into "flow methods" which implement some of the flow's
 business logic:
 
-- The `password` method implements the
-  [login and registration with "email or/and username and password" method](self-service/flows/user-login-user-registration/username-email-password),
-  and
-  ["change your password" user settings method](self-service/flows/user-settings/change-password).
-- The `oidc` (OpenID Connect, OAuth2, Social Sign In) method implements
-  ["Sign in with ..." login and registration method](self-service/flows/user-login-user-registration/openid-connect-social-sign-in-oauth2)
-  and
-  ["un/link another social account" user settings method](self-service/flows/user-settings/link-unlink-openid-connect-oauth2).
-- The `profile` method implements the
-  ["update your profile", "change your first/last name, ..." user settings method)](self-service/flows/user-settings/user-profile-management).
-- The `link` method implements the
-  ["click this link to reset your password" account recovery method](self-service/flows/user-settings/user-profile-management).
+- The `password` method implements the login and registration with "email or/and
+  username and password" method, and "change your password" user settings
+  method.
+- The `oidc` (OpenID Connect, OAuth2, Social Sign In) method implements "Sign in
+  with ..." login and registration method and "un/link another social account"
+  user settings method.
+- The `profile` method implements the "update your profile", "change your
+  first/last name, ..." user settings method).
+- The `link` method implements the "click this link to reset your password"
+  account recovery method.
 
-Some flows additionally implement the ability [to run hooks](self-service/hooks)
-which allow users to be immediately signed in after registration, notify another
-system on successful registration (e.g. Mailchimp), and so on.
+Some flows additionally implement the ability
+[to run hooks](self-service/hooks.mdx) which allow users to be immediately
+signed in after registration, notify another system on successful registration
+(e.g. Mailchimp), and so on.
 
 ## Performing Login, Registration, Settings, ... Flows
 
@@ -78,12 +78,11 @@ There are two flow types supported in ORY Kratos:
   app, ...)
 - Flows where API interaction is required (e.g. mobile app, Smart TV, ...)
 
-All Self-Service Flows
-([User Login](self-service/flows/user-login-user-registration),
-[User Registration](self-service/flows/user-login-user-registration),
-[Profile Management](self-service/flows/user-settings),
-[Account Recovery](self-service/flows/account-recovery),
-[Email or Phone verification](self-service/flows/verify-email-account-activation))
+All Self-Service Flows ([User Login](self-service/flows/user-login.mdx),
+[User Registration](self-service/flows/user-registration.mdx),
+[Profile Management](self-service/flows/user-settings.mdx),
+[Account Recovery](self-service/flows/account-recovery.mdx),
+[Email or Phone verification](self-service/flows/verify-email-account-activation.mdx))
 support these two flow types and use the same data models but do use different
 API endpoints.
 
@@ -117,8 +116,8 @@ The browser flow has three stages:
 :::note
 
 The payloads, examples, ports, and IPs shown here are the ones used if you run
-the [Quickstart](quickstart). If you have not checked it out yet, please do so
-before reading this document.
+the [Quickstart](quickstart.mdx). If you have not checked it out yet, please do
+so before reading this document.
 
 :::
 
@@ -166,7 +165,7 @@ The Browser opens the URL (here
 which renders the HTML form whhich for example shows the "username and password"
 field, the "Update your email address" field, or other flow forms. This HTML
 form is rendered be the
-[Self-Service UI](concepts/ui-user-interface#self-service-user-interface-ssui)
+[Self-Service UI](concepts/ui-user-interface.md#self-service-user-interface-ssui)
 which you fully control.
 
 The endpoint responsible for the UI URL uses the `flow` URL Query Parameter
@@ -305,7 +304,7 @@ which now includes validation errors and other potential messages:
 ```
 
 If a system error (e.g. broken configuration file) occurs, the browser is
-redirected to the [Error UI](self-service/flows/user-facing-errors).
+redirected to the [Error UI](self-service/flows/user-facing-errors.md).
 
 If the form payload is valid, the flow completes with a success. The result here
 depends on the flow itself - the login flow for example redirects the user to a

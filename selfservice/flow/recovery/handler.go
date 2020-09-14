@@ -79,7 +79,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //
 // :::
 //
-// More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).
+// More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 //
 //     Schemes: http, https
 //
@@ -115,7 +115,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //
 // This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 //
-// More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).
+// More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 //
 //     Schemes: http, https
 //
@@ -159,7 +159,7 @@ type getSelfServiceRecoveryFlowParameters struct {
 //
 // This endpoint returns a recovery flow's context with, for example, error details and other information.
 //
-// More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).
+// More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 //
 //     Produces:
 //     - application/json

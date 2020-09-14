@@ -44,9 +44,9 @@ business logic:
   [OpenID Connect Strategy](strategies/openid-connect-social-sign-in-oauth2.md)
   implements login and registration flows (with email/username and password),
   and user settings flows ("un/link another social account").
-- The [Profile Strategy](strategies/profile.md) implement the settings flow
+- The [Profile Strategy](strategies/user-settings-profile.md) implement the settings flow
   ("change your first/last name, ...").
 
-Some flows additionally implement the ability [to run hooks]() which allow users
+Some flows additionally implement the ability [to run hooks](hooks/index.mdx) which allow users
 to be immediately signed in after registration, notify another system on
 successful registration (e.g. Mailchimp).
