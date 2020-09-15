@@ -45,10 +45,9 @@ func TestPersister(p Persister) func(t *testing.T) {
 
 		messages := make([]Message, 5)
 		t.Run("case=add messages to the queue", func(t *testing.T) {
-			for k, m := range messages {
-				require.NoError(t, faker.FakeData(&m))
-				require.NoError(t, p.AddMessage(context.Background(), &m))
-				messages[k] = m
+			for k := range messages {
+				require.NoError(t, faker.FakeData(&messages[k]))
+				require.NoError(t, p.AddMessage(context.Background(), &messages[k]))
 				time.Sleep(time.Second) // wait a bit so that the timestamp ordering works in MySQL.
 			}
 		})

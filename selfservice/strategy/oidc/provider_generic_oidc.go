@@ -72,7 +72,7 @@ func (g *ProviderGenericOIDC) OAuth2(ctx context.Context) (*oauth2.Config, error
 	return g.oauth2ConfigFromEndpoint(endpoint), nil
 }
 
-func (g *ProviderGenericOIDC) AuthCodeURLOptions(r request) []oauth2.AuthCodeOption {
+func (g *ProviderGenericOIDC) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 	if isForced(r) {
 		return []oauth2.AuthCodeOption{
 			oauth2.SetAuthURLParam("prompt", "login"),

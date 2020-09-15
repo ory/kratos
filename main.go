@@ -16,8 +16,6 @@
 package main
 
 import (
-	"github.com/markbates/pkger"
-
 	"github.com/ory/x/profilex"
 
 	"github.com/ory/kratos/cmd"
@@ -26,7 +24,5 @@ import (
 func main() {
 	defer profilex.Profile().Stop()
 
-	_ = pkger.Include("/courier/template/templates")
-	_ = pkger.Include("/.schema/config.schema.json")
 	cmd.Execute()
 }

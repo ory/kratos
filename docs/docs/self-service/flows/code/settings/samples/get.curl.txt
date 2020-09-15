@@ -1,0 +1,45 @@
+$ curl -s -X GET \
+  -H "Authorization: Bearer $sessionToken"  \
+  -H "Accept: application/json"  \
+  'http://127.0.0.1:4433/self-service/settings/flows?id=e22d67a9-3407-40c0-a3da-85922b05ace9'
+
+{
+  "id": "cff22c09-d1a0-4d2e-b325-2c8eeaabfbdd",
+  "type": "api",
+  "expires_at": "2020-09-08T12:08:07.2667985Z",
+  "issued_at": "2020-09-08T11:08:07.2667985Z",
+  "request_url": "http://127.0.0.1:4433/self-service/settings/api",
+  "methods": {
+    // ...
+  },
+  "identity": {
+    "id": "9ee8fb81-9d5c-47a7-9cee-28a0f64dccbb",
+    "schema_id": "default",
+    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "traits": {
+      "email": "api@user.org",
+      "name": {
+        "first": "API",
+        "last": "User"
+      }
+    },
+    "verifiable_addresses": [
+      {
+        "id": "3ba119c6-4e9a-466c-8910-40b238229aa6",
+        "value": "api@user.org",
+        "verified": false,
+        "via": "email",
+        "status": "pending",
+        "verified_at": null
+      }
+    ],
+    "recovery_addresses": [
+      {
+        "id": "9dec10d0-1079-4a5d-b1be-cd15418c640a",
+        "value": "api@user.org",
+        "via": "email"
+      }
+    ]
+  },
+  "state": "show_form"
+}

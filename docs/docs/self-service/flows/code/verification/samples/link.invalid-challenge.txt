@@ -1,0 +1,41 @@
+$ curl -H "Accept: application/json" -s \
+    'http://127.0.0.1:4434/self-service/verification/flows?id=4eb06fb8-c7ef-4870-a842-44210b9ca15d' | jq
+
+{
+  "id": "4eb06fb8-c7ef-4870-a842-44210b9ca15d",
+  "type": "browser",
+  "expires_at": "2020-09-10T07:48:26.0939369Z",
+  "issued_at": "2020-09-10T06:48:26.0939369Z",
+  "request_url": "http://127.0.0.1:4433/self-service/verification/methods/link?token=asdf",
+  "messages": [
+    {
+      "id": 4070001,
+      "text": "The verification token is invalid or has already been used. Please retry the flow.",
+      "type": "error",
+      "context": {}
+    }
+  ],
+  "methods": {
+    "link": {
+      "method": "link",
+      "config": {
+        "action": "http://127.0.0.1:4433/self-service/verification/methods/link?flow=4eb06fb8-c7ef-4870-a842-44210b9ca15d",
+        "method": "POST",
+        "fields": [
+          {
+            "name": "csrf_token",
+            "type": "hidden",
+            "required": true,
+            "value": "Cd0dy7E6OpYE9NfSyVJQcAPMmvdHbuDbmCQUe46bCyxRt17AMbqpWGeL4wnLbB9H3lXaqbftXLHYAb3DuPkbhw=="
+          },
+          {
+            "name": "email",
+            "type": "email",
+            "required": true
+          }
+        ]
+      }
+    }
+  },
+  "state": "choose_method"
+}

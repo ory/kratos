@@ -6,19 +6,21 @@ import (
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
 
+	"github.com/ory/x/sqlxx"
+
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/selfservice/flow/settings"
 )
 
-var _ settings.RequestPersister = new(Persister)
+var _ settings.FlowPersister = new(Persister)
 
-func (p *Persister) CreateSettingsRequest(ctx context.Context, r *settings.Request) error {
+func (p *Persister) CreateSettingsFlow(ctx context.Context, r *settings.Flow) error {
 	return sqlcon.HandleError(p.GetConnection(ctx).Eager("MethodsRaw").Create(r))
 }
 
-func (p *Persister) GetSettingsRequest(ctx context.Context, id uuid.UUID) (*settings.Request, error) {
-	var r settings.Request
+func (p *Persister) GetSettingsFlow(ctx context.Context, id uuid.UUID) (*settings.Flow, error) {
+	var r settings.Flow
 	if err := p.GetConnection(ctx).Eager().Find(&r, id); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
@@ -30,10 +32,10 @@ func (p *Persister) GetSettingsRequest(ctx context.Context, id uuid.UUID) (*sett
 	return &r, nil
 }
 
-func (p *Persister) UpdateSettingsRequest(ctx context.Context, r *settings.Request) error {
+func (p *Persister) UpdateSettingsFlow(ctx context.Context, r *settings.Flow) error {
 	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 
-		rr, err := p.GetSettingsRequest(ctx, r.ID)
+		rr, err := p.GetSettingsFlow(ctx, r.ID)
 		if err != nil {
 			return err
 		}
@@ -59,5 +61,29 @@ func (p *Persister) UpdateSettingsRequest(ctx context.Context, r *settings.Reque
 		}
 
 		return tx.Save(r)
+	})
+}
+
+func (p *Persister) UpdateSettingsFlowMethod(ctx context.Context, id uuid.UUID, method string, fm *settings.FlowMethod) error {
+	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
+		rr, err := p.GetSettingsFlow(ctx, id)
+		if err != nil {
+			return err
+		}
+
+		m, ok := rr.Methods[method]
+		if !ok {
+			fm.FlowID = rr.ID
+			fm.Method = method
+			return tx.Save(fm)
+		}
+
+		m.Config = fm.Config
+		if err := tx.Save(m); err != nil {
+			return err
+		}
+
+		rr.Active = sqlxx.NullString(method)
+		return tx.Save(rr)
 	})
 }

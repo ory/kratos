@@ -8,11 +8,11 @@ linters:
     - structcheck
     - typecheck
     - unused
-    - dupl
     - gosec
     - varcheck
   disable:
     - ineffassign
+    - dupl # https://github.com/ory/kratos/issues/680
     - godox
     - bodyclose # too many false negatives
 

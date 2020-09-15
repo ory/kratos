@@ -1,0 +1,18 @@
+package api
+
+import (
+  "fmt"
+
+  "github.com/ory/kratos-client-go/client/public"
+  "github.com/ory/kratos-client-go/client"
+)
+
+func main() {
+  c := client.NewHTTPClientWithConfig(nil,
+    &client.TransportConfig{Host: "127.0.0.1:4433", BasePath: "/", Schemes: []string{"http"}})
+
+  rs, _ := c.Public.InitializeSelfServiceLoginViaAPIFlow(public.
+    NewInitializeSelfServiceLoginViaAPIFlowParams())
+
+  fmt.Printf("%+v", rs.Payload)
+}

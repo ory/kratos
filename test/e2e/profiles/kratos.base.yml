@@ -1,5 +1,6 @@
 log:
   level: trace
+  leak_sensitive_values: true
 
 secrets:
   cookie:
@@ -25,7 +26,7 @@ selfservice:
 
 serve:
   public:
-    base_url: http://127.0.0.1:4455/.ory/kratos/public/
+    base_url: http://127.0.0.1:4455/
   admin:
     base_url: http://kratos:4434/
 

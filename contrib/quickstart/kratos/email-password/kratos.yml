@@ -4,7 +4,7 @@ dsn: memory
 
 serve:
   public:
-    base_url: http://127.0.0.1:4455/.ory/kratos/public/
+    base_url: http://127.0.0.1:4433/
   admin:
     base_url: http://kratos:4434/
 
@@ -13,7 +13,7 @@ selfservice:
   whitelisted_return_urls:
     - http://127.0.0.1:4455
 
-  strategies:
+  methods:
     password:
       enabled: true
 
@@ -55,6 +55,7 @@ selfservice:
 log:
   level: debug
   format: text
+  leak_sensitive_values: true
 
 secrets:
   cookie:
@@ -69,7 +70,7 @@ hashers:
     key_length: 16
 
 identity:
-  default_schema_url: file:///etc/config/kratos/identity.traits.schema.json
+  default_schema_url: file:///etc/config/kratos/identity.schema.json
 
 courier:
   smtp:

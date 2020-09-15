@@ -26,10 +26,10 @@ import (
 	"github.com/ory/kratos/internal/httpclient/client/common"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
-	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
@@ -38,7 +38,7 @@ func init() {
 }
 
 var (
-	csrfField = &models.FormField{Name: pointerx.String("csrf_token"), Value: "nosurf",
+	csrfField = &models.FormField{Name: pointerx.String("csrf_token"), Value: x.FakeCSRFToken,
 		Required: true, Type: pointerx.String("hidden")}
 )
 
@@ -106,10 +106,9 @@ func TestSettingsStrategy(t *testing.T) {
 	}
 	agents := testhelpers.AddAndLoginIdentities(t, reg, publicTS, users)
 
-	// new profile request
-	var npr = func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *settings.Request {
-		req, err := reg.SettingsRequestPersister().GetSettingsRequest(context.Background(),
-			x.ParseUUID(string(testhelpers.GetSettingsRequest(t, client, publicTS).Payload.ID)))
+	var newProfileFlow = func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *settings.Flow {
+		req, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(),
+			x.ParseUUID(string(testhelpers.InitializeSettingsFlowViaBrowser(t, client, publicTS).Payload.ID)))
 		require.NoError(t, err)
 		assert.Empty(t, req.Active)
 
@@ -117,10 +116,10 @@ func TestSettingsStrategy(t *testing.T) {
 			req.RequestURL = redirectTo
 		}
 		req.ExpiresAt = time.Now().Add(exp)
-		require.NoError(t, reg.SettingsRequestPersister().UpdateSettingsRequest(context.Background(), req))
+		require.NoError(t, reg.SettingsFlowPersister().UpdateSettingsFlow(context.Background(), req))
 
 		// sanity check
-		got, err := reg.SettingsRequestPersister().GetSettingsRequest(context.Background(), req.ID)
+		got, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), req.ID)
 		require.NoError(t, err)
 		require.Len(t, got.Methods, len(req.Methods))
 
@@ -128,17 +127,17 @@ func TestSettingsStrategy(t *testing.T) {
 	}
 
 	// does the same as new profile request but uses the SDK
-	var nprSDK = func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *models.SettingsRequest {
-		req := npr(t, client, redirectTo, exp)
-		rs, err := admin.Common.GetSelfServiceBrowserSettingsRequest(common.
-			NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(client).
-			WithRequest(req.ID.String()))
+	var nprSDK = func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *models.SettingsFlow {
+		req := newProfileFlow(t, client, redirectTo, exp)
+		rs, err := admin.Common.GetSelfServiceSettingsFlow(common.
+			NewGetSelfServiceSettingsFlowParams().WithHTTPClient(client).
+			WithID(req.ID.String()))
 		require.NoError(t, err)
 		return rs.Payload
 	}
 
 	t.Run("case=should not be able to continue a flow with a malformed ID", func(t *testing.T) {
-		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+oidc.SettingsPath+"?request=i-am-not-a-uuid", nil)
+		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+oidc.SettingsPath+"?flow=i-am-not-a-uuid", nil)
 		AssertSystemError(t, errTS, res, body, 400, "malformed")
 	})
 
@@ -148,36 +147,36 @@ func TestSettingsStrategy(t *testing.T) {
 	})
 
 	t.Run("case=should not be able to continue a flow with a non-existing ID", func(t *testing.T) {
-		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+oidc.SettingsPath+"?request="+x.NewUUID().String(), nil)
+		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+oidc.SettingsPath+"?flow="+x.NewUUID().String(), nil)
 		AssertSystemError(t, errTS, res, body, 404, "not be found")
 	})
 
 	t.Run("case=should not be able to continue a flow that is expired", func(t *testing.T) {
-		req := npr(t, agents["password"], "", -time.Hour)
-		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+oidc.SettingsPath+"?request="+req.ID.String(), nil)
+		req := newProfileFlow(t, agents["password"], "", -time.Hour)
+		body, res := testhelpers.HTTPPostForm(t, agents["password"], publicTS.URL+oidc.SettingsPath+"?flow="+req.ID.String(), nil)
 		AssertSystemError(t, errTS, res, body, 400, "expired")
 	})
 
 	t.Run("case=should not be able to fetch another user's data", func(t *testing.T) {
-		req := npr(t, agents["password"], "", time.Hour)
+		req := newProfileFlow(t, agents["password"], "", time.Hour)
 
-		_, err := public.Common.GetSelfServiceBrowserSettingsRequest(common.
-			NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(agents["oryer"]).
-			WithRequest(req.ID.String()))
+		_, err := public.Common.GetSelfServiceSettingsFlow(common.
+			NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents["oryer"]).
+			WithID(req.ID.String()))
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "403")
 	})
 
 	t.Run("case=should fetch the settings request and expect data to be set appropriately", func(t *testing.T) {
-		req := npr(t, agents["password"], "", time.Hour)
+		req := newProfileFlow(t, agents["password"], "", time.Hour)
 
-		rs, err := admin.Common.GetSelfServiceBrowserSettingsRequest(common.
-			NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(agents["password"]).
-			WithRequest(req.ID.String()))
+		rs, err := admin.Common.GetSelfServiceSettingsFlow(common.
+			NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents["password"]).
+			WithID(req.ID.String()))
 		require.NoError(t, err)
 
 		// Check our sanity. Does the SDK relay the same info that we expect and got from the store?
-		assert.Equal(t, publicTS.URL+"/self-service/browser/flows/settings", req.RequestURL)
+		assert.Equal(t, publicTS.URL+"/self-service/settings/browser", req.RequestURL)
 		assert.Empty(t, req.Active)
 		assert.NotEmpty(t, req.IssuedAt)
 		assert.EqualValues(t, users["password"].ID, req.Identity.ID)
@@ -191,7 +190,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 		require.NotNil(t, identity.CredentialsTypeOIDC.String(), rs.Payload.Methods[identity.CredentialsTypeOIDC.String()])
 		require.EqualValues(t, identity.CredentialsTypeOIDC.String(), rs.Payload.Methods[identity.CredentialsTypeOIDC.String()].Method)
-		require.EqualValues(t, publicTS.URL+oidc.SettingsPath+"?request="+req.ID.String(),
+		require.EqualValues(t, publicTS.URL+oidc.SettingsPath+"?flow="+req.ID.String(),
 			*rs.Payload.Methods[identity.CredentialsTypeOIDC.String()].Config.Action)
 	})
 
@@ -226,7 +225,7 @@ func TestSettingsStrategy(t *testing.T) {
 		}
 	})
 
-	var action = func(req *models.SettingsRequest) string {
+	var action = func(req *models.SettingsFlow) string {
 		return *req.Methods[identity.CredentialsTypeOIDC.String()].Config.Action
 	}
 
@@ -263,20 +262,20 @@ func TestSettingsStrategy(t *testing.T) {
 	}
 
 	t.Run("suite=unlink", func(t *testing.T) {
-		var unlink = func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *models.SettingsRequest) {
+		var unlink = func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *models.SettingsFlow) {
 			req = nprSDK(t, agents[agent], "", time.Hour)
 			body, res = testhelpers.HTTPPostForm(t, agents[agent], action(req),
-				&url.Values{"csrf_token": {"nosurf"}, "unlink": {provider}})
+				&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
 			return
 		}
 
 		var unlinkInvalid = func(agent, provider string, expectedFields models.FormFields) func(t *testing.T) {
 			return func(t *testing.T) {
 				body, res, req := unlink(t, agent, provider)
-				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?request="+string(req.ID))
+				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(req.ID))
 
 				assert.EqualValues(t, identity.CredentialsTypeOIDC.String(), gjson.GetBytes(body, "active").String())
-				assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.action").String(), publicTS.URL+oidc.SettingsPath+"?request=")
+				assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.action").String(), publicTS.URL+oidc.SettingsPath+"?flow=")
 
 				// The original options to link google and github are still there
 				testhelpers.JSONEq(t, append(models.FormFields{csrfField}, expectedFields...),
@@ -301,7 +300,7 @@ func TestSettingsStrategy(t *testing.T) {
 			t.Cleanup(reset(t))
 
 			body, res, req := unlink(t, agent, provider)
-			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?request="+string(req.ID))
+			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(req.ID))
 			require.Equal(t, "success", gjson.GetBytes(body, "state").String(), "%s", body)
 
 			checkCredentials(t, false, users[agent].ID, provider, "hackerman+github+"+testID)
@@ -310,16 +309,16 @@ func TestSettingsStrategy(t *testing.T) {
 		t.Run("case=should not be able to unlink a connection without a privileged session", func(t *testing.T) {
 			agent, provider := "githuber", "github"
 
-			var runUnauthed = func(t *testing.T) *models.SettingsRequest {
+			var runUnauthed = func(t *testing.T) *models.SettingsFlow {
 				viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
 				time.Sleep(time.Millisecond)
 				t.Cleanup(reset(t))
 				_, res, req := unlink(t, agent, provider)
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login")
 
-				rs, err := admin.Common.GetSelfServiceBrowserSettingsRequest(common.
-					NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(agents[agent]).
-					WithRequest(string(req.ID)))
+				rs, err := admin.Common.GetSelfServiceSettingsFlow(common.
+					NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents[agent]).
+					WithID(string(req.ID)))
 				require.NoError(t, err)
 				require.EqualValues(t, settings.StateShowForm, rs.Payload.State)
 
@@ -339,8 +338,8 @@ func TestSettingsStrategy(t *testing.T) {
 				viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
 
 				body, res := testhelpers.HTTPPostForm(t, agents[agent], action(req),
-					&url.Values{"csrf_token": {"nosurf"}, "unlink": {provider}})
-				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?request="+string(req.ID))
+					&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
+				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(req.ID))
 
 				assert.Equal(t, "success", gjson.GetBytes(body, "state").String())
 
@@ -350,20 +349,20 @@ func TestSettingsStrategy(t *testing.T) {
 	})
 
 	t.Run("suite=link", func(t *testing.T) {
-		var link = func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *models.SettingsRequest) {
+		var link = func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *models.SettingsFlow) {
 			req = nprSDK(t, agents[agent], "", time.Hour)
 			body, res = testhelpers.HTTPPostForm(t, agents[agent], action(req),
-				&url.Values{"csrf_token": {"nosurf"}, "link": {provider}})
+				&url.Values{"csrf_token": {x.FakeCSRFToken}, "link": {provider}})
 			return
 		}
 
 		var linkInvalid = func(agent, provider string, expectedFields models.FormFields) func(t *testing.T) {
 			return func(t *testing.T) {
 				body, res, req := link(t, agent, provider)
-				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?request="+string(req.ID))
+				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(req.ID))
 
 				assert.EqualValues(t, identity.CredentialsTypeOIDC.String(), gjson.GetBytes(body, "active").String())
-				assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.action").String(), publicTS.URL+oidc.SettingsPath+"?request=")
+				assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.action").String(), publicTS.URL+oidc.SettingsPath+"?flow=")
 
 				// The original options to link google and github are still there
 				testhelpers.JSONEq(t, append(models.FormFields{csrfField}, expectedFields...),
@@ -438,9 +437,9 @@ func TestSettingsStrategy(t *testing.T) {
 			_, res, req := link(t, agent, provider)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
-			rs, err := admin.Common.GetSelfServiceBrowserSettingsRequest(common.
-				NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(agents[agent]).
-				WithRequest(string(req.ID)))
+			rs, err := admin.Common.GetSelfServiceSettingsFlow(common.
+				NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents[agent]).
+				WithID(string(req.ID)))
 			require.NoError(t, err)
 			require.EqualValues(t, settings.StateSuccess, rs.Payload.State)
 
@@ -463,9 +462,9 @@ func TestSettingsStrategy(t *testing.T) {
 			_, res, req := link(t, agent, provider)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
-			rs, err := admin.Common.GetSelfServiceBrowserSettingsRequest(common.
-				NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(agents[agent]).
-				WithRequest(string(req.ID)))
+			rs, err := admin.Common.GetSelfServiceSettingsFlow(common.
+				NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents[agent]).
+				WithID(string(req.ID)))
 			require.NoError(t, err)
 			require.EqualValues(t, settings.StateSuccess, rs.Payload.State)
 
@@ -482,16 +481,16 @@ func TestSettingsStrategy(t *testing.T) {
 			agent, provider := "githuber", "google"
 			subject = "hackerman+new+google+" + testID
 
-			var runUnauthed = func(t *testing.T) *models.SettingsRequest {
+			var runUnauthed = func(t *testing.T) *models.SettingsFlow {
 				viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
 				time.Sleep(time.Millisecond)
 				t.Cleanup(reset(t))
 				_, res, req := link(t, agent, provider)
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login")
 
-				rs, err := admin.Common.GetSelfServiceBrowserSettingsRequest(common.
-					NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(agents[agent]).
-					WithRequest(string(req.ID)))
+				rs, err := admin.Common.GetSelfServiceSettingsFlow(common.
+					NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents[agent]).
+					WithID(string(req.ID)))
 				require.NoError(t, err)
 				require.EqualValues(t, settings.StateShowForm, rs.Payload.State)
 
@@ -511,8 +510,8 @@ func TestSettingsStrategy(t *testing.T) {
 				viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
 
 				body, res := testhelpers.HTTPPostForm(t, agents[agent], action(req),
-					&url.Values{"csrf_token": {"nosurf"}, "unlink": {provider}})
-				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?request="+string(req.ID))
+					&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
+				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(req.ID))
 
 				assert.Equal(t, "success", gjson.GetBytes(body, "state").String())
 
@@ -543,19 +542,19 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		return ss.(*oidc.Strategy)
 	}
 
-	nr := func() *settings.Request {
-		return &settings.Request{ID: x.NewUUID(), Methods: map[string]*settings.RequestMethod{}}
+	nr := func() *settings.Flow {
+		return &settings.Flow{Type: flow.TypeBrowser, ID: x.NewUUID(), Methods: map[string]*settings.FlowMethod{}}
 	}
 
-	populate := func(t *testing.T, reg *driver.RegistryDefault, i *identity.Identity, req *settings.Request) *form.HTMLForm {
+	populate := func(t *testing.T, reg *driver.RegistryDefault, i *identity.Identity, req *settings.Flow) *form.HTMLForm {
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
-		require.NoError(t, ns(t, reg).PopulateSettingsMethod(new(http.Request), &session.Session{Identity: i, IdentityID: i.ID}, req))
+		require.NoError(t, ns(t, reg).PopulateSettingsMethod(new(http.Request), i, req))
 		require.NotNil(t, req.Methods[identity.CredentialsTypeOIDC.String()])
 		require.NotNil(t, req.Methods[identity.CredentialsTypeOIDC.String()].Config)
-		require.NotNil(t, req.Methods[identity.CredentialsTypeOIDC.String()].Config.RequestMethodConfigurator)
+		require.NotNil(t, req.Methods[identity.CredentialsTypeOIDC.String()].Config.FlowMethodConfigurator)
 		require.Equal(t, identity.CredentialsTypeOIDC.String(), req.Methods[identity.CredentialsTypeOIDC.String()].Method)
-		f := req.Methods[identity.CredentialsTypeOIDC.String()].Config.RequestMethodConfigurator.(*oidc.RequestMethod).HTMLForm
-		assert.Equal(t, "https://www.ory.sh"+oidc.SettingsPath+"?request="+req.ID.String(), f.Action)
+		f := req.Methods[identity.CredentialsTypeOIDC.String()].Config.FlowMethodConfigurator.(*oidc.FlowMethod).HTMLForm
+		assert.Equal(t, "https://www.ory.sh"+oidc.SettingsPath+"?flow="+req.ID.String(), f.Action)
 		assert.Equal(t, "POST", f.Method)
 		return f
 	}
@@ -566,6 +565,15 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		{Provider: "generic", ID: "github"},
 	}
 
+	t.Run("case=should not populate non-browser flow", func(t *testing.T) {
+		reg := nreg(t, &oidc.ConfigurationCollection{Providers: []oidc.Configuration{{Provider: "generic", ID: "github"}}})
+		i := &identity.Identity{Traits: []byte(`{"subject":"foo@bar.com"}`)}
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+		req := &settings.Flow{Type: flow.TypeAPI, ID: x.NewUUID(), Methods: map[string]*settings.FlowMethod{}}
+		require.NoError(t, ns(t, reg).PopulateSettingsMethod(new(http.Request), i, req))
+		require.Nil(t, req.Methods[identity.CredentialsTypeOIDC.String()])
+	})
+
 	for k, tc := range []struct {
 		c      []oidc.Configuration
 		i      identity.Credentials
@@ -575,7 +583,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		{
 			c: []oidc.Configuration{},
 			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: "nosurf"},
+				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
 			},
 		},
 		{
@@ -583,14 +591,14 @@ func TestPopulateSettingsMethod(t *testing.T) {
 				{Provider: "generic", ID: "github"},
 			},
 			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: "nosurf"},
+				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
 				{Name: "link", Type: "submit", Value: "github"},
 			},
 		},
 		{
 			c: defaultConfig,
 			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: "nosurf"},
+				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
 				{Name: "link", Type: "submit", Value: "facebook"},
 				{Name: "link", Type: "submit", Value: "google"},
 				{Name: "link", Type: "submit", Value: "github"},
@@ -599,7 +607,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		{
 			c: defaultConfig,
 			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: "nosurf"},
+				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
 				{Name: "link", Type: "submit", Value: "facebook"},
 				{Name: "link", Type: "submit", Value: "google"},
 				{Name: "link", Type: "submit", Value: "github"},
@@ -609,7 +617,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		{
 			c: defaultConfig,
 			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: "nosurf"},
+				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
 				{Name: "link", Type: "submit", Value: "facebook"},
 				{Name: "link", Type: "submit", Value: "github"},
 			},
@@ -620,7 +628,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		{
 			c: defaultConfig,
 			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: "nosurf"},
+				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
 				{Name: "link", Type: "submit", Value: "facebook"},
 				{Name: "link", Type: "submit", Value: "github"},
 				{Name: "unlink", Type: "submit", Value: "google"},
@@ -634,7 +642,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		{
 			c: defaultConfig,
 			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: "nosurf"},
+				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
 				{Name: "link", Type: "submit", Value: "github"},
 				{Name: "unlink", Type: "submit", Value: "google"},
 				{Name: "unlink", Type: "submit", Value: "facebook"},

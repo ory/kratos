@@ -1,0 +1,44 @@
+$ curl -s -X GET \
+  -H "Authorization: Bearer $sessionToken"  \
+  -H "Accept: application/json"  \
+  'http://127.0.0.1:4433/self-service/settings/flows?id=e8a40b7a-efea-47db-81d0-98d500a4c455' | jq -r '.methods.profile.config'
+
+{
+  "action": "http://127.0.0.1:4433/self-service/settings/methods/profile?flow=e8a40b7a-efea-47db-81d0-98d500a4c455",
+  "method": "POST",
+  "fields": [
+    {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "value": "JEKOPtSaot2a6C3p/bW9qc7fmQhz8ljmL66HEhsC8wKU4/jXh+BphGi6OrI7fGjuQyBGdMsHdL6DIDHZvvwSUw=="
+    },
+    {
+      "name": "traits.email",
+      "type": "text",
+      "value": "foo-user",
+      "messages": [
+        {
+          "id": 4000001,
+          "text": "validation failed",
+          "type": "error"
+        },
+        {
+          "id": 4000001,
+          "text": "\"foo-user\" is not valid \"email\"",
+          "type": "error"
+        }
+      ]
+    },
+    {
+      "name": "traits.name.first",
+      "type": "text",
+      "value": ""
+    },
+    {
+      "name": "traits.name.last",
+      "type": "text",
+      "value": ""
+    }
+  ]
+}

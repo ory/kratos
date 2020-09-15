@@ -14,21 +14,20 @@ import (
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
-func newErrTs(t *testing.T, reg interface {
-	errorx.PersistenceProvider
-	x.WriterProvider
-}) *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		e, err := reg.SelfServiceErrorPersister().Read(r.Context(), x.ParseUUID(r.URL.Query().Get("error")))
-		require.NoError(t, err)
-		reg.Writer().Write(w, r, e.Errors)
-	}))
+func expectStatusCodeBrowserOKOr(isAPI bool, apiExpect int) int {
+	return expectStatusCode(isAPI, apiExpect, http.StatusOK)
+}
+
+func expectStatusCode(isAPI bool, api, browser int) int {
+	if isAPI {
+		return api
+	}
+	return browser
 }
 
 func newReturnTs(t *testing.T, reg interface {

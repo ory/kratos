@@ -54,8 +54,8 @@ context('Recovery', () => {
       cy.recoverEmailButExpired({ expect: { email: identity.email } })
 
       cy.get('.messages.global .error').should(
-        'have.text',
-        'The recovery token is invalid or has already been used. Please retry the flow.'
+        'contain.text',
+        'The recovery flow expired'
       )
 
       cy.noSession()

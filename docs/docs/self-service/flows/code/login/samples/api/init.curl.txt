@@ -1,0 +1,17 @@
+$ curl -s -X GET \
+  -H "Accept: application/json"  \
+  http://127.0.0.1:4433/self-service/login/api | jq
+
+{
+  "id": "6bb7f2a2-a2f2-44cd-9d14-ee7ca876d60b",
+  "type": "api",
+  "expires_at": "2020-09-03T20:04:57.37098805Z",
+  "issued_at": "2020-09-03T19:54:57.37098805Z",
+  "request_url": "http://127.0.0.1:4433/self-service/login/api",
+  "methods": {
+    // password,
+    // oidc,
+    // ...
+  },
+  "forced": false
+}

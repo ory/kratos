@@ -9,13 +9,13 @@ import (
 )
 
 const (
-	StrategyRecoveryTokenName = "link"
+	StrategyRecoveryLinkName = "link"
 )
 
 type (
 	Strategy interface {
 		RecoveryStrategyID() string
-		PopulateRecoveryMethod(*http.Request, *Request) error
+		PopulateRecoveryMethod(*http.Request, *Flow) error
 	}
 	AdminHandler interface {
 		RegisterAdminRecoveryRoutes(admin *x.RouterAdmin)

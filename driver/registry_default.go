@@ -17,8 +17,8 @@ import (
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/hook"
+	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/selfservice/strategy/profile"
-	"github.com/ory/kratos/selfservice/strategy/recoverytoken"
 	"github.com/ory/kratos/x"
 
 	"github.com/cenkalti/backoff"
@@ -114,7 +114,8 @@ type RegistryDefault struct {
 	selfserviceVerifyErrorHandler *verification.ErrorHandler
 	selfserviceVerifyManager      *identity.Manager
 	selfserviceVerifyHandler      *verification.Handler
-	selfserviceVerifySender       *verification.Sender
+
+	selfserviceLinkSender *link.Sender
 
 	selfserviceRecoveryErrorHandler *recovery.ErrorHandler
 	selfserviceRecoveryHandler      *recovery.Handler
@@ -127,6 +128,7 @@ type RegistryDefault struct {
 	registrationStrategies             []registration.Strategy
 	profileStrategies                  []settings.Strategy
 	recoveryStrategies                 []recovery.Strategy
+	verificationStrategies             []verification.Strategy
 
 	buildVersion string
 	buildHash    string
@@ -161,6 +163,7 @@ func (m *RegistryDefault) RegisterPublicRoutes(router *x.RouterPublic) {
 
 	if m.c.SelfServiceFlowVerificationEnabled() {
 		m.VerificationHandler().RegisterPublicRoutes(router)
+		m.VerificationStrategies().RegisterPublicRoutes(router)
 	}
 
 	m.HealthHandler().SetRoutes(router.Router, false)
@@ -182,6 +185,7 @@ func (m *RegistryDefault) RegisterAdminRoutes(router *x.RouterAdmin) {
 
 	if m.c.SelfServiceFlowVerificationEnabled() {
 		m.VerificationHandler().RegisterAdminRoutes(router)
+		m.VerificationStrategies().RegisterAdminRoutes(router)
 	}
 
 	m.HealthHandler().SetRoutes(router.Router, true)
@@ -262,7 +266,7 @@ func (m *RegistryDefault) selfServiceStrategies() []interface{} {
 			password2.NewStrategy(m, m.c),
 			oidc.NewStrategy(m, m.c),
 			profile.NewStrategy(m, m.c),
-			recoverytoken.NewStrategy(m, m.c),
+			link.NewStrategy(m, m.c),
 		}
 	}
 
@@ -293,6 +297,19 @@ func (m *RegistryDefault) LoginStrategies() login.Strategies {
 		}
 	}
 	return m.loginStrategies
+}
+
+func (m *RegistryDefault) VerificationStrategies() verification.Strategies {
+	if len(m.verificationStrategies) == 0 {
+		for _, strategy := range m.selfServiceStrategies() {
+			if s, ok := strategy.(verification.Strategy); ok {
+				if m.c.SelfServiceStrategy(s.VerificationStrategyID()).Enabled {
+					m.verificationStrategies = append(m.verificationStrategies, s)
+				}
+			}
+		}
+	}
+	return m.verificationStrategies
 }
 
 func (m *RegistryDefault) ActiveCredentialsCounterStrategies() []identity.ActiveCredentialsCounter {
@@ -523,19 +540,19 @@ func (m *RegistryDefault) PrivilegedIdentityPool() identity.PrivilegedPool {
 	return m.persister
 }
 
-func (m *RegistryDefault) RegistrationRequestPersister() registration.RequestPersister {
+func (m *RegistryDefault) RegistrationFlowPersister() registration.FlowPersister {
 	return m.persister
 }
 
-func (m *RegistryDefault) RecoveryRequestPersister() recovery.RequestPersister {
+func (m *RegistryDefault) RecoveryFlowPersister() recovery.FlowPersister {
 	return m.persister
 }
 
-func (m *RegistryDefault) LoginRequestPersister() login.RequestPersister {
+func (m *RegistryDefault) LoginFlowPersister() login.FlowPersister {
 	return m.persister
 }
 
-func (m *RegistryDefault) SettingsRequestPersister() settings.RequestPersister {
+func (m *RegistryDefault) SettingsFlowPersister() settings.FlowPersister {
 	return m.persister
 }
 
@@ -551,7 +568,11 @@ func (m *RegistryDefault) CourierPersister() courier.Persister {
 	return m.persister
 }
 
-func (m *RegistryDefault) RecoveryTokenPersister() recoverytoken.Persister {
+func (m *RegistryDefault) RecoveryTokenPersister() link.RecoveryTokenPersister {
+	return m.Persister()
+}
+
+func (m *RegistryDefault) VerificationTokenPersister() link.VerificationTokenPersister {
 	return m.Persister()
 }
 

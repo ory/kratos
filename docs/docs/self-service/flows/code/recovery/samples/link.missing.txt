@@ -1,0 +1,32 @@
+$ curl -H "Accept: application/json" -s \
+    'http://127.0.0.1:4433/self-service/verification/flows?id=ba0f508a-f2fb-435d-b5e2-0307db00d75d' | jq -r '.methods.link.config'
+
+{
+  "action": "http://127.0.0.1:4433/self-service/verification/methods/link?flow=ba0f508a-f2fb-435d-b5e2-0307db00d75d",
+  "method": "POST",
+  "fields": [
+    {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "value": "ZmifOn0KaTicicQ0NServtpnOWPD8pga5gzG028fq/4+Atwx/Yr69v/28O83GeSJB/55PTNxJHCmKW9rWX27VQ=="
+    },
+    {
+      "name": "email",
+      "type": "email",
+      "required": true,
+      "value": "",
+      "messages": [
+        {
+          "id": 4000002,
+          "text": "Property email is missing.",
+          "type": "error",
+          "context": {
+            "property": "email"
+          }
+        }
+      ]
+    }
+  ]
+}
+foo

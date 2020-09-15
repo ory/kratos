@@ -76,7 +76,7 @@ func TestLogoutHandler(t *testing.T) {
 	})
 
 	t.Run("case=log out", func(t *testing.T) {
-		res, err := client.Get(ts.URL + logout.BrowserLogoutPath)
+		res, err := client.Get(ts.URL + logout.RouteBrowser)
 		require.NoError(t, err)
 
 		var found bool

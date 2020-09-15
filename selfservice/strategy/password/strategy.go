@@ -7,6 +7,8 @@ import (
 	"github.com/pkg/errors"
 	"gopkg.in/go-playground/validator.v9"
 
+	"github.com/ory/x/decoderx"
+
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/hash"
@@ -27,6 +29,7 @@ type registrationStrategyDependencies interface {
 	x.LoggingProvider
 	x.WriterProvider
 	x.CSRFTokenGeneratorProvider
+	x.CSRFProvider
 
 	continuity.ManagementProvider
 
@@ -38,15 +41,15 @@ type registrationStrategyDependencies interface {
 	registration.HooksProvider
 	registration.ErrorHandlerProvider
 	registration.HookExecutorProvider
-	registration.RequestPersistenceProvider
+	registration.FlowPersistenceProvider
 
 	login.HooksProvider
 	login.ErrorHandlerProvider
 	login.HookExecutorProvider
-	login.RequestPersistenceProvider
+	login.FlowPersistenceProvider
 	login.HandlerProvider
 
-	settings.RequestPersistenceProvider
+	settings.FlowPersistenceProvider
 	settings.HookExecutorProvider
 	settings.HooksProvider
 	settings.ErrorHandlerProvider
@@ -59,9 +62,10 @@ type registrationStrategyDependencies interface {
 }
 
 type Strategy struct {
-	c configuration.Provider
-	d registrationStrategyDependencies
-	v *validator.Validate
+	c  configuration.Provider
+	d  registrationStrategyDependencies
+	v  *validator.Validate
+	hd *decoderx.HTTP
 }
 
 func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
@@ -86,9 +90,10 @@ func NewStrategy(
 	c configuration.Provider,
 ) *Strategy {
 	return &Strategy{
-		c: c,
-		d: d,
-		v: validator.New(),
+		c:  c,
+		d:  d,
+		v:  validator.New(),
+		hd: decoderx.NewHTTP(),
 	}
 }
 

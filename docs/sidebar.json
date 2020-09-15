@@ -27,38 +27,15 @@
   ],
   "Self Service (End-User)": [
     "self-service",
-    {
-      "type": "category",
-      "label": "User Login and User Registration",
-      "items": [
-        "self-service/flows/user-login-user-registration",
-        "self-service/flows/user-login-user-registration/username-email-password",
-        "self-service/flows/user-login-user-registration/openid-connect-social-sign-in-oauth2"
-      ]
-    },
-    {
-      "type": "category",
-      "label": "User Settings",
-      "items": [
-        "self-service/flows/user-settings",
-        "self-service/flows/user-settings/user-profile-management",
-        "self-service/flows/user-settings/change-password",
-        "self-service/flows/user-settings/link-unlink-openid-connect-oauth2"
-      ]
-    },
-    {
-      "type": "category",
-      "label": "Account Recovery",
-      "items": [
-        "self-service/flows/account-recovery",
-        "self-service/flows/account-recovery/password-reset-recovery-link"
-      ]
-    },
+    "self-service/flows/user-registration",
+    "self-service/flows/user-login",
+    "self-service/flows/user-settings",
+    "self-service/flows/account-recovery",
+    "self-service/flows/verify-email-account-activation",
     "self-service/flows/user-logout",
     "self-service/flows/user-facing-errors",
-    "self-service/flows/verify-email-account-activation",
     "self-service/flows/2fa-mfa-multi-factor-authentication",
-    "self-service/hooks/index"
+    "self-service/hooks"
   ],
   "Administration": [
     "admin/managing-users-identities"

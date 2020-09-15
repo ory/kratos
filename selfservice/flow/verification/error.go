@@ -7,11 +7,14 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/ory/x/sqlxx"
+
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
@@ -22,26 +25,34 @@ type (
 		x.WriterProvider
 		x.LoggingProvider
 		x.CSRFTokenGeneratorProvider
-		PersistenceProvider
+		FlowPersistenceProvider
+		StrategyProvider
 	}
 
-	ErrorHandlerProvider interface{ VerificationRequestErrorHandler() *ErrorHandler }
+	ErrorHandlerProvider interface {
+		VerificationFlowErrorHandler() *ErrorHandler
+	}
 
 	ErrorHandler struct {
 		d errorHandlerDependencies
 		c configuration.Provider
 	}
 
-	errRequestExpired struct {
+	FlowExpiredError struct {
 		*herodot.DefaultError
 		ago time.Duration
 	}
 )
 
-func newErrRequestRequired(ago time.Duration) error {
-	return errors.WithStack(&errRequestExpired{ago: ago, DefaultError: herodot.ErrBadRequest.
-		WithError("verify request expired").
-		WithReasonf("The verification request expired %.2f minutes ago, please try again.", ago.Minutes())})
+func NewFlowExpiredError(at time.Time) *FlowExpiredError {
+	ago := time.Since(at)
+	return &FlowExpiredError{
+		ago: ago,
+		DefaultError: herodot.ErrBadRequest.
+			WithError("verification flow expired").
+			WithReasonf(`The verification flow has expired. Please restart the flow.`).
+			WithReasonf("The verification flow expired %.2f minutes ago, please try again.", ago.Minutes()),
+	}
 }
 
 func NewErrorHandler(d errorHandlerDependencies, c configuration.Provider) *ErrorHandler {
@@ -51,57 +62,92 @@ func NewErrorHandler(d errorHandlerDependencies, c configuration.Provider) *Erro
 	}
 }
 
-func (s *ErrorHandler) HandleVerificationError(
+func (s *ErrorHandler) WriteFlowError(
 	w http.ResponseWriter,
 	r *http.Request,
-	rr *Request,
+	methodName string,
+	f *Flow,
 	err error,
 ) {
 	s.d.Audit().
 		WithError(err).
 		WithRequest(r).
-		WithField("verify_request", rr).
+		WithField("verification_flow", f).
 		Info("Encountered self-service verification error.")
 
-	if rr == nil {
-		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
-		return
-	} else if x.IsJSONRequest(r) {
-		s.d.Writer().WriteError(w, r, err)
+	if f == nil {
+		s.forward(w, r, nil, err)
 		return
 	}
 
-	if e := new(errRequestExpired); errors.As(err, &e) {
-		a := NewRequest(
-			s.c.SelfServiceFlowSettingsRequestLifespan(), r, rr.Via,
-			urlx.AppendPaths(s.c.SelfPublicURL(), PublicVerificationRequestPath), s.d.GenerateCSRFToken,
-		)
-
-		a.Form.AddMessage(text.NewErrorValidationVerificationRequestExpired(e.ago))
-		if err := s.d.VerificationPersister().CreateVerificationRequest(r.Context(), a); err != nil {
-			s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+	if e := new(FlowExpiredError); errors.As(err, &e) {
+		// create new flow because the old one is not valid
+		a, err := NewFlow(s.c.SelfServiceFlowVerificationRequestLifespan(), s.d.GenerateCSRFToken(r), r, s.d.VerificationStrategies(), f.Type)
+		if err != nil {
+			// failed to create a new session and redirect to it, handle that error as a new one
+			s.WriteFlowError(w, r, methodName, f, err)
 			return
 		}
 
-		http.Redirect(w, r,
-			urlx.CopyWithQuery(s.c.SelfServiceFlowVerificationUI(), url.Values{"request": {a.ID.String()}}).String(),
-			http.StatusFound,
-		)
+		a.Messages.Add(text.NewErrorValidationVerificationFlowExpired(e.ago))
+		if err := s.d.VerificationFlowPersister().CreateVerificationFlow(r.Context(), a); err != nil {
+			s.forward(w, r, a, err)
+			return
+		}
+
+		if f.Type == flow.TypeAPI {
+			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.c.SelfPublicURL(),
+				RouteGetFlow), url.Values{"id": {a.ID.String()}}).String(), http.StatusFound)
+		} else {
+			http.Redirect(w, r, a.AppendTo(s.c.SelfServiceFlowVerificationUI()).String(), http.StatusFound)
+		}
 		return
 	}
 
-	if err := rr.Form.ParseError(err); err != nil {
+	method, ok := f.Methods[methodName]
+	if !ok {
+		s.forward(w, r, f, errors.WithStack(herodot.ErrInternalServerError.
+			WithErrorf(`Expected verification method "%s" to exist in flow. This is a bug in the code and should be reported on GitHub.`, methodName)))
+		return
+	}
+
+	if err := method.Config.ParseError(err); err != nil {
+		s.forward(w, r, f, err)
+		return
+	}
+
+	f.Active = sqlxx.NullString(methodName)
+	if err := s.d.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), f); err != nil {
+		s.forward(w, r, f, err)
+		return
+	}
+
+	if f.Type == flow.TypeBrowser {
+		http.Redirect(w, r, f.AppendTo(s.c.SelfServiceFlowVerificationUI()).String(), http.StatusFound)
+		return
+	}
+
+	updatedFlow, innerErr := s.d.VerificationFlowPersister().GetVerificationFlow(r.Context(), f.ID)
+	if innerErr != nil {
+		s.forward(w, r, updatedFlow, innerErr)
+	}
+
+	s.d.Writer().WriteCode(w, r, x.RecoverStatusCode(err, http.StatusBadRequest), updatedFlow)
+}
+
+func (s *ErrorHandler) forward(w http.ResponseWriter, r *http.Request, rr *Flow, err error) {
+	if rr == nil {
+		if x.IsJSONRequest(r) {
+			s.d.Writer().WriteError(w, r, err)
+			return
+		}
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
-	if err := s.d.VerificationPersister().UpdateVerificationRequest(r.Context(), rr); err != nil {
+	if rr.Type == flow.TypeAPI {
+		s.d.Writer().WriteErrorCode(w, r, x.RecoverStatusCode(err, http.StatusBadRequest), err)
+	} else {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
-		return
 	}
-
-	http.Redirect(w, r,
-		urlx.CopyWithQuery(s.c.SelfServiceFlowVerificationUI(), url.Values{"request": {rr.ID.String()}}).String(),
-		http.StatusFound,
-	)
 }

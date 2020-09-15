@@ -11,7 +11,7 @@ func TestTidyForm(t *testing.T) {
 	assert.EqualValues(t, url.Values{"foobar": {"foo"}}, tidyForm(url.Values{
 		"password":   {"some-value"},
 		"csrf_token": {"some-value"},
-		"request":    {"some-value"},
+		"flow":       {"some-value"},
 		"foobar":     {"foo"},
 	}))
 }

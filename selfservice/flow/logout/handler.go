@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	BrowserLogoutPath = "/self-service/browser/flows/logout"
+	RouteBrowser = "/self-service/browser/flows/logout"
 )
 
 type (
@@ -35,7 +35,7 @@ func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
 }
 
 func (h *Handler) RegisterPublicRoutes(router *x.RouterPublic) {
-	router.GET(BrowserLogoutPath, h.logout)
+	router.GET(RouteBrowser, h.logout)
 }
 
 // swagger:route GET /self-service/browser/flows/logout public initializeSelfServiceBrowserLogoutFlow

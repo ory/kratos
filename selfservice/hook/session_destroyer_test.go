@@ -32,7 +32,7 @@ func TestSessionDestroyer(t *testing.T) {
 	viper.Set(configuration.ViperKeyPublicBaseURL, "http://localhost/")
 	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/stub.schema.json")
 
-	h := hook.NewSessionIssuer(reg)
+	h := hook.NewSessionDestroyer(reg)
 
 	t.Run("method=ExecuteLoginPostHook", func(t *testing.T) {
 		var i identity.Identity

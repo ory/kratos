@@ -205,23 +205,4 @@ func TestManager(t *testing.T) {
 			checkExtensionFields(fromStore, "email-updatetraits-1@ory.sh")(t)
 		})
 	})
-
-	t.Run("method=RefreshVerifyAddress", func(t *testing.T) {
-		original := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
-		original.Traits = newTraits("verifyme@ory.sh", "")
-		require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
-
-		address, err := reg.IdentityPool().FindVerifiableAddressByValue(context.Background(), identity.VerifiableAddressTypeEmail, "verifyme@ory.sh")
-		require.NoError(t, err)
-
-		pc := address.Code
-		ea := address.ExpiresAt
-		require.NoError(t, reg.IdentityManager().RefreshVerifyAddress(context.Background(), address))
-		assert.NotEqual(t, pc, address.Code)
-		assert.NotEqual(t, ea, address.ExpiresAt)
-
-		fromStore, err := reg.IdentityPool().GetIdentity(context.Background(), original.ID)
-		require.NoError(t, err)
-		assert.NotEqual(t, pc, fromStore.VerifiableAddresses[0].Code)
-	})
 }

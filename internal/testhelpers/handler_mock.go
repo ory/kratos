@@ -35,7 +35,7 @@ func MockSetSession(t *testing.T, reg mockDeps, conf configuration.Provider) htt
 		i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 
-		require.NoError(t, reg.SessionManager().CreateToRequest(context.Background(), w, r, session.NewSession(i, conf, time.Now().UTC())))
+		require.NoError(t, reg.SessionManager().CreateAndIssueCookie(context.Background(), w, r, session.NewActiveSession(i, conf, time.Now().UTC())))
 
 		w.WriteHeader(http.StatusOK)
 	}
@@ -99,6 +99,7 @@ func MockSessionCreateHandlerWithIdentity(t *testing.T, reg mockDeps, i *identit
 	sess.AuthenticatedAt = time.Now().UTC()
 	sess.IssuedAt = time.Now().UTC()
 	sess.ExpiresAt = time.Now().UTC().Add(time.Hour * 24)
+	sess.Active = true
 
 	if viper.GetString(configuration.ViperKeyDefaultIdentitySchemaURL) == "" {
 		viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/fake-session.schema.json")
@@ -114,7 +115,7 @@ func MockSessionCreateHandlerWithIdentity(t *testing.T, reg mockDeps, i *identit
 	require.Len(t, inserted.Credentials, len(i.Credentials))
 
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		require.NoError(t, reg.SessionManager().SaveToRequest(context.Background(), w, r, &sess))
+		require.NoError(t, reg.SessionManager().IssueCookie(context.Background(), w, r, &sess))
 	}, &sess
 }
 

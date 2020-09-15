@@ -4,22 +4,5 @@
   "schema_url": "https://www.ory.sh/schemas/default",
   "traits": {
     "email": "foobar@ory.sh"
-  },
-  "verifiable_addresses": [
-    {
-      "id": "c2427b6d-312b-46d9-9285-536db7ae11fd",
-      "value": "foobar@ory.sh",
-      "verified": false,
-      "via": "email",
-      "verified_at": null,
-      "expires_at": "2013-10-07T08:23:19Z"
-    }
-  ],
-  "recovery_addresses": [
-    {
-      "id": "b8293f1c-010f-45d9-b809-f3fc5365ba80",
-      "value": "foobar@ory.sh",
-      "via": "email"
-    }
-  ]
+  }
 }

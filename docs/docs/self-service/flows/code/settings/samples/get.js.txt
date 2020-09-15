@@ -1,0 +1,11 @@
+import {CommonApi} from '@oryd/kratos-client'
+
+// We are using the ORY Kratos Admin API (:4434) to avoid having to set the session cookie / session token:
+const kratos = new CommonApi('http://127.0.0.1:4434/')
+
+const flowId = '' // usually something like: req.query.flow
+
+kratos.getSelfServiceSettingsFlow(flowId)
+  .then(({body}) => {
+    console.log(body) // see the Raw HTTP tab for the payload
+  })

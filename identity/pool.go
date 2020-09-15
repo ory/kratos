@@ -65,9 +65,6 @@ type (
 		// if identity exists, backend connectivity is broken, or trait validation fails.
 		DeleteIdentity(context.Context, uuid.UUID) error
 
-		// VerifyAddress verifies an address by the given code.
-		VerifyAddress(ctx context.Context, code string) error
-
 		// UpdateVerifiableAddress
 		UpdateVerifiableAddress(ctx context.Context, address *VerifiableAddress) error
 
@@ -398,14 +395,11 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 		})
 
 		t.Run("suite=verifiable-address", func(t *testing.T) {
-			createIdentityWithAddresses := func(t *testing.T, expiry time.Duration, email string) VerifiableAddress {
+			createIdentityWithAddresses := func(t *testing.T, email string) VerifiableAddress {
 				var i Identity
 				require.NoError(t, faker.FakeData(&i))
 
-				address, err := NewVerifiableEmailAddress(email, i.ID, expiry)
-				require.NoError(t, err)
-
-				address.ExpiresAt = address.ExpiresAt.Round(time.Minute) // prevent mysql time synchro issues
+				address := NewVerifiableEmailAddress(email, i.ID)
 				i.VerifiableAddresses = append(i.VerifiableAddresses, *address)
 
 				require.NoError(t, p.CreateIdentity(context.Background(), &i))
@@ -420,17 +414,15 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			t.Run("case=create and find", func(t *testing.T) {
 				addresses := make([]VerifiableAddress, 15)
 				for k := range addresses {
-					addresses[k] = createIdentityWithAddresses(t, time.Minute, "recovery.TestPersister.Create"+strconv.Itoa(k)+"@ory.sh")
+					addresses[k] = createIdentityWithAddresses(t, "recovery.TestPersister.Create"+strconv.Itoa(k)+"@ory.sh")
 					require.NotEmpty(t, addresses[k].ID)
 				}
 
 				compare := func(t *testing.T, expected, actual VerifiableAddress) {
 					actual.CreatedAt = actual.CreatedAt.UTC().Truncate(time.Hour * 24)
 					actual.UpdatedAt = actual.UpdatedAt.UTC().Truncate(time.Hour * 24)
-					actual.ExpiresAt = actual.ExpiresAt.UTC().Truncate(time.Hour * 24)
 					expected.CreatedAt = expected.CreatedAt.UTC().Truncate(time.Hour * 24)
 					expected.UpdatedAt = expected.UpdatedAt.UTC().Truncate(time.Hour * 24)
-					expected.ExpiresAt = expected.ExpiresAt.UTC().Truncate(time.Hour * 24)
 					assert.EqualValues(t, expected, actual)
 				}
 
@@ -445,52 +437,29 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 				}
 			})
 
-			t.Run("case=verify expired should not work", func(t *testing.T) {
-				address := createIdentityWithAddresses(t, -time.Minute, "verification.TestPersister.VerifyAddress.expired@ory.sh")
-				require.EqualError(t, errorsx.Cause(p.VerifyAddress(context.Background(), address.Code)), sqlcon.ErrNoRows.Error())
-			})
-
-			t.Run("case=create and verify", func(t *testing.T) {
-				require.EqualError(t, errorsx.Cause(p.VerifyAddress(context.Background(), "i-do-not-exist")), sqlcon.ErrNoRows.Error())
-			})
-
-			t.Run("case=create and verify", func(t *testing.T) {
-				address := createIdentityWithAddresses(t, time.Minute, "verification.TestPersister.VerifyAddress.valid@ory.sh")
-				require.NoError(t, p.VerifyAddress(context.Background(), address.Code))
-
-				actual, err := p.FindVerifiableAddressByValue(context.Background(), address.Via, address.Value)
-				require.NoError(t, err)
-				assert.NotEqual(t, address.Code, actual.Code)
-				assert.True(t, actual.Verified)
-				assert.EqualValues(t, VerifiableAddressStatusCompleted, actual.Status)
-				assert.NotEmpty(t, actual.VerifiedAt)
-			})
-
 			t.Run("case=update", func(t *testing.T) {
-				address := createIdentityWithAddresses(t, time.Minute, "verification.TestPersister.Update@ory.sh")
+				address := createIdentityWithAddresses(t, "verification.TestPersister.Update@ory.sh")
 
-				address.Code = "new-code"
+				address.Value = "new-code"
 				require.NoError(t, p.UpdateVerifiableAddress(context.Background(), &address))
 
 				actual, err := p.FindVerifiableAddressByValue(context.Background(), address.Via, address.Value)
 				require.NoError(t, err)
-				assert.Equal(t, "new-code", actual.Code)
+				assert.Equal(t, "new-code", actual.Value)
 			})
 
 			t.Run("case=create and update and find", func(t *testing.T) {
 				var i Identity
 				require.NoError(t, faker.FakeData(&i))
 
-				address, err := NewVerifiableEmailAddress("verification.TestPersister.Update-Identity@ory.sh", i.ID, time.Hour)
-				require.NoError(t, err)
+				address := NewVerifiableEmailAddress("verification.TestPersister.Update-Identity@ory.sh", i.ID)
 				i.VerifiableAddresses = append(i.VerifiableAddresses, *address)
 				require.NoError(t, p.CreateIdentity(context.Background(), &i))
 
-				_, err = p.FindVerifiableAddressByValue(context.Background(), VerifiableAddressTypeEmail, "verification.TestPersister.Update-Identity@ory.sh")
+				_, err := p.FindVerifiableAddressByValue(context.Background(), VerifiableAddressTypeEmail, "verification.TestPersister.Update-Identity@ory.sh")
 				require.NoError(t, err)
 
-				address, err = NewVerifiableEmailAddress("verification.TestPersister.Update-Identity-next@ory.sh", i.ID, time.Hour)
-				require.NoError(t, err)
+				address = NewVerifiableEmailAddress("verification.TestPersister.Update-Identity-next@ory.sh", i.ID)
 				i.VerifiableAddresses = []VerifiableAddress{*address}
 				require.NoError(t, p.UpdateIdentity(context.Background(), &i))
 

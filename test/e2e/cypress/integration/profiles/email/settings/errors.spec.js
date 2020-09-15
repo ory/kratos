@@ -8,7 +8,7 @@ import {
   website,
 } from '../../../../helpers'
 
-context('Settings', () => {
+context('Settings Flow Errors', () => {
   let email = gen.email()
   let password = gen.password()
 
@@ -19,6 +19,7 @@ context('Settings', () => {
   const down = (value) => value.replace(/not-/, '')
 
   before(() => {
+    console.log('before')
     cy.register({
       email: emailSecond,
       password: passwordSecond,
@@ -29,6 +30,7 @@ context('Settings', () => {
   })
 
   beforeEach(() => {
+    console.log('beforeAll')
     cy.clearCookies()
     cy.login({ email, password })
     cy.visit(APP_URL + '/settings')

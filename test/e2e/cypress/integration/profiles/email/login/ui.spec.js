@@ -1,6 +1,6 @@
 import { APP_URL } from '../../../../helpers'
 
-context('Login', () => {
+context('Login Flow UI', () => {
   beforeEach(() => {
     cy.visit(APP_URL + '/auth/login')
   })

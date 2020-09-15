@@ -69,9 +69,7 @@ func NewHTMLForm(action string) *HTMLForm {
 func NewHTMLFormFromRequestBody(r *http.Request, action string, compiler decoderx.HTTPDecoderOption) (*HTMLForm, error) {
 	c := NewHTMLForm(action)
 	raw := json.RawMessage(`{}`)
-	if err := decoder.Decode(r, &raw, compiler,
-		decoderx.HTTPDecoderSetIgnoreParseErrorsStrategy(decoderx.ParseErrorIgnoreConversionErrors),
-	); err != nil {
+	if err := decoder.Decode(r, &raw, compiler); err != nil {
 		if err := c.ParseError(err); err != nil {
 			return nil, err
 		}
@@ -164,8 +162,8 @@ func (c *HTMLForm) ParseError(err error) error {
 		return err
 	} else if e := new(schema.ValidationError); errors.As(err, &e) {
 		pointer, _ := jsonschemax.JSONPointerToDotNotation(e.InstancePtr)
-		for _, message := range e.Messages {
-			c.AddMessage(&message, pointer)
+		for i := range e.Messages {
+			c.AddMessage(&e.Messages[i], pointer)
 		}
 		return nil
 	} else if e := new(jsonschema.ValidationError); errors.As(err, &e) {

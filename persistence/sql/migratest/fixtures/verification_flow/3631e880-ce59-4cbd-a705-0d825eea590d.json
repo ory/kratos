@@ -1,0 +1,15 @@
+{
+  "id": "3631e880-ce59-4cbd-a705-0d825eea590d",
+  "type": "api",
+  "expires_at": "2013-10-07T08:23:19Z",
+  "issued_at": "2013-10-07T08:23:19Z",
+  "request_url": "http://kratos:4433/self-service/browser/flows/verification/email",
+  "messages": [],
+  "methods": {
+    "link": {
+      "method": "link",
+      "config": null
+    }
+  },
+  "state": "passed_challenge"
+}

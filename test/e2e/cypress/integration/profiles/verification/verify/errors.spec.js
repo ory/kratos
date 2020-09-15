@@ -23,19 +23,25 @@ context('Verify', () => {
     })
 
     it('is unable to verify the email address if the code is expired', () => {
-      cy.get('input[name="to_verify"]').type(identity.email)
+      cy.get('input[name="email"]').type(identity.email)
       cy.get('button[type="submit"]').click()
 
-      cy.location('pathname').should('eq', '/')
+      cy.get('.messages .message').should(
+        'contain.text',
+        'An email containing a verification'
+      )
 
       cy.verifyEmailButExpired({ expect: { email: identity.email } })
     })
 
     it('is unable to verify the email address if the code is incorrect', () => {
-      cy.get('input[name="to_verify"]').type(identity.email)
+      cy.get('input[name="email"]').type(identity.email)
       cy.get('button[type="submit"]').click()
 
-      cy.location('pathname').should('eq', '/')
+      cy.get('.messages .message').should(
+        'contain.text',
+        'An email containing a verification'
+      )
 
       cy.getMail().then((mail) => {
         const link = parseHtml(mail.body).querySelector('a')

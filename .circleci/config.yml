@@ -13,7 +13,7 @@ jobs:
   test:
     docker:
       -
-        image: circleci/golang:1.14
+        image: circleci/golang:1.15
         environment:
           - GO111MODULE=on
           - TEST_MAILHOG_SMTP=smtp://test:test@127.0.0.1:1025
@@ -38,7 +38,7 @@ jobs:
         environment:
           - MYSQL_ROOT_PASSWORD=test
       -
-        image: cockroachdb/cockroach:v19.2.0
+        image: cockroachdb/cockroach:v20.1.1
         command: start --insecure
       -
         image: oryd/hydra:v1.4.10
@@ -88,7 +88,7 @@ jobs:
           - POSTGRES_USER=test
           - POSTGRES_PASSWORD=test
           - POSTGRES_DB=kratos
-      - image: cockroachdb/cockroach:v2.1.6
+      - image: cockroachdb/cockroach:v20.1.1
         command: start --insecure
       - image: mysql:5.7
         environment:

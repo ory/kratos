@@ -1,0 +1,3 @@
+express.get('/settings', function (req, res) {
+  res.redirect(302, 'http://127.0.0.1:4433/self-service/settings/browser')
+})

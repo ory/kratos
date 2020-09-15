@@ -10,14 +10,14 @@ const (
 )
 
 const (
-	ErrorValidationLogin               ID = 4010000 + iota // 4010000
-	ErrorValidationLoginRequestExpired                     // 4010001
+	ErrorValidationLogin            ID = 4010000 + iota // 4010000
+	ErrorValidationLoginFlowExpired                     // 4010001
 )
 
-func NewErrorValidationLoginRequestExpired(ago time.Duration) *Message {
+func NewErrorValidationLoginFlowExpired(ago time.Duration) *Message {
 	return &Message{
-		ID:   ErrorValidationLoginRequestExpired,
-		Text: fmt.Sprintf("The login request expired %.2f minutes ago, please try again.", ago.Minutes()),
+		ID:   ErrorValidationLoginFlowExpired,
+		Text: fmt.Sprintf("The login flow expired %.2f minutes ago, please try again.", ago.Minutes()),
 		Type: Error,
 		Context: context(map[string]interface{}{
 			"expired_at": time.Now().Add(ago),

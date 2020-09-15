@@ -27,64 +27,47 @@ type Client struct {
 
 // ClientService is the interface for Client methods
 type ClientService interface {
-	CompleteSelfServiceBrowserRecoveryLinkStrategyFlow(params *CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams) error
-
 	CompleteSelfServiceBrowserSettingsOIDCSettingsFlow(params *CompleteSelfServiceBrowserSettingsOIDCSettingsFlowParams) error
 
-	CompleteSelfServiceBrowserSettingsPasswordStrategyFlow(params *CompleteSelfServiceBrowserSettingsPasswordStrategyFlowParams) error
+	CompleteSelfServiceLoginFlowWithPasswordMethod(params *CompleteSelfServiceLoginFlowWithPasswordMethodParams) (*CompleteSelfServiceLoginFlowWithPasswordMethodOK, error)
 
-	CompleteSelfServiceBrowserSettingsProfileStrategyFlow(params *CompleteSelfServiceBrowserSettingsProfileStrategyFlowParams) error
+	CompleteSelfServiceRecoveryFlowWithLinkMethod(params *CompleteSelfServiceRecoveryFlowWithLinkMethodParams) error
 
-	CompleteSelfServiceBrowserVerificationFlow(params *CompleteSelfServiceBrowserVerificationFlowParams) error
+	CompleteSelfServiceRegistrationFlowWithPasswordMethod(params *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams) (*CompleteSelfServiceRegistrationFlowWithPasswordMethodOK, error)
 
-	InitializeSelfServiceBrowserLoginFlow(params *InitializeSelfServiceBrowserLoginFlowParams) error
+	CompleteSelfServiceSettingsFlowWithPasswordMethod(params *CompleteSelfServiceSettingsFlowWithPasswordMethodParams) (*CompleteSelfServiceSettingsFlowWithPasswordMethodOK, error)
+
+	CompleteSelfServiceSettingsFlowWithProfileMethod(params *CompleteSelfServiceSettingsFlowWithProfileMethodParams) (*CompleteSelfServiceSettingsFlowWithProfileMethodOK, error)
+
+	CompleteSelfServiceVerificationFlowWithLinkMethod(params *CompleteSelfServiceVerificationFlowWithLinkMethodParams) error
 
 	InitializeSelfServiceBrowserLogoutFlow(params *InitializeSelfServiceBrowserLogoutFlowParams) error
 
-	InitializeSelfServiceBrowserRegistrationFlow(params *InitializeSelfServiceBrowserRegistrationFlowParams) error
+	InitializeSelfServiceLoginViaAPIFlow(params *InitializeSelfServiceLoginViaAPIFlowParams) (*InitializeSelfServiceLoginViaAPIFlowOK, error)
 
-	InitializeSelfServiceBrowserVerificationFlow(params *InitializeSelfServiceBrowserVerificationFlowParams) error
+	InitializeSelfServiceLoginViaBrowserFlow(params *InitializeSelfServiceLoginViaBrowserFlowParams) error
 
-	InitializeSelfServiceRecoveryFlow(params *InitializeSelfServiceRecoveryFlowParams) error
+	InitializeSelfServiceRecoveryViaAPIFlow(params *InitializeSelfServiceRecoveryViaAPIFlowParams) (*InitializeSelfServiceRecoveryViaAPIFlowOK, error)
 
-	InitializeSelfServiceSettingsFlow(params *InitializeSelfServiceSettingsFlowParams) error
+	InitializeSelfServiceRecoveryViaBrowserFlow(params *InitializeSelfServiceRecoveryViaBrowserFlowParams) error
 
-	SelfServiceBrowserVerify(params *SelfServiceBrowserVerifyParams) error
+	InitializeSelfServiceRegistrationViaAPIFlow(params *InitializeSelfServiceRegistrationViaAPIFlowParams) (*InitializeSelfServiceRegistrationViaAPIFlowOK, error)
+
+	InitializeSelfServiceRegistrationViaBrowserFlow(params *InitializeSelfServiceRegistrationViaBrowserFlowParams) error
+
+	InitializeSelfServiceSettingsViaAPIFlow(params *InitializeSelfServiceSettingsViaAPIFlowParams) (*InitializeSelfServiceSettingsViaAPIFlowOK, error)
+
+	InitializeSelfServiceSettingsViaBrowserFlow(params *InitializeSelfServiceSettingsViaBrowserFlowParams) error
+
+	InitializeSelfServiceVerificationViaAPIFlow(params *InitializeSelfServiceVerificationViaAPIFlowParams) (*InitializeSelfServiceVerificationViaAPIFlowOK, error)
+
+	InitializeSelfServiceVerificationViaBrowserFlow(params *InitializeSelfServiceVerificationViaBrowserFlowParams) error
+
+	RevokeSession(params *RevokeSessionParams) (*RevokeSessionNoContent, error)
 
 	Whoami(params *WhoamiParams) (*WhoamiOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
-}
-
-/*
-  CompleteSelfServiceBrowserRecoveryLinkStrategyFlow completes the browser based recovery flow using a recovery link
-
-  > This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
-
-More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).
-*/
-func (a *Client) CompleteSelfServiceBrowserRecoveryLinkStrategyFlow(params *CompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams) error {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewCompleteSelfServiceBrowserRecoveryLinkStrategyFlowParams()
-	}
-
-	_, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "completeSelfServiceBrowserRecoveryLinkStrategyFlow",
-		Method:             "POST",
-		PathPattern:        "/self-service/browser/flows/recovery/link",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/x-www-form-urlencoded"},
-		Schemes:            []string{"http", "https"},
-		Params:             params,
-		Reader:             &CompleteSelfServiceBrowserRecoveryLinkStrategyFlowReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 /*
@@ -122,140 +105,285 @@ func (a *Client) CompleteSelfServiceBrowserSettingsOIDCSettingsFlow(params *Comp
 }
 
 /*
-  CompleteSelfServiceBrowserSettingsPasswordStrategyFlow completes the browser based settings flow for the password strategy
+  CompleteSelfServiceLoginFlowWithPasswordMethod completes login flow with username email password method
 
-  This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this
-endpoint.
+  Use this endpoint to complete a login flow by sending an identity's identifier and password. This endpoint
+behaves differently for API and browser flows.
 
-> This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
+API flows expect `application/json` to be sent in the body and responds with
+HTTP 200 and a application/json body with the session token on success;
+HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
+HTTP 400 on form validation errors.
 
-More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
-*/
-func (a *Client) CompleteSelfServiceBrowserSettingsPasswordStrategyFlow(params *CompleteSelfServiceBrowserSettingsPasswordStrategyFlowParams) error {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewCompleteSelfServiceBrowserSettingsPasswordStrategyFlowParams()
-	}
-
-	_, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "completeSelfServiceBrowserSettingsPasswordStrategyFlow",
-		Method:             "POST",
-		PathPattern:        "/self-service/browser/flows/settings/strategies/password",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
-		Schemes:            []string{"http", "https"},
-		Params:             params,
-		Reader:             &CompleteSelfServiceBrowserSettingsPasswordStrategyFlowReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-/*
-  CompleteSelfServiceBrowserSettingsProfileStrategyFlow completes the browser based settings flow for profile data
-
-  This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this
-endpoint.
-
-If the provided profile data is valid against the Identity's Traits JSON Schema, the data will be updated and
-the browser redirected to `url.settings_ui` for further steps.
-
-> This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
-
-More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
-*/
-func (a *Client) CompleteSelfServiceBrowserSettingsProfileStrategyFlow(params *CompleteSelfServiceBrowserSettingsProfileStrategyFlowParams) error {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewCompleteSelfServiceBrowserSettingsProfileStrategyFlowParams()
-	}
-
-	_, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "completeSelfServiceBrowserSettingsProfileStrategyFlow",
-		Method:             "POST",
-		PathPattern:        "/self-service/browser/flows/settings/strategies/profile",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
-		Schemes:            []string{"http", "https"},
-		Params:             params,
-		Reader:             &CompleteSelfServiceBrowserSettingsProfileStrategyFlowReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-/*
-  CompleteSelfServiceBrowserVerificationFlow completes the browser based verification flows
-
-  This endpoint completes a browser-based verification flow. This is usually achieved by POSTing data to this
-endpoint.
-
-If the provided data is valid against the Identity's Traits JSON Schema, the data will be updated and
-the browser redirected to `url.settings_ui` for further steps.
-
-> This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
-
-More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
-*/
-func (a *Client) CompleteSelfServiceBrowserVerificationFlow(params *CompleteSelfServiceBrowserVerificationFlowParams) error {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewCompleteSelfServiceBrowserVerificationFlowParams()
-	}
-
-	_, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "completeSelfServiceBrowserVerificationFlow",
-		Method:             "POST",
-		PathPattern:        "/self-service/browser/flows/verification/{via}/complete",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
-		Schemes:            []string{"http", "https"},
-		Params:             params,
-		Reader:             &CompleteSelfServiceBrowserVerificationFlowReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-/*
-  InitializeSelfServiceBrowserLoginFlow initializes browser based login user flow
-
-  This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to
-`selfservice.flows.login.ui_url` with the request ID set as a query parameter. If a valid user session exists already, the browser will be
-redirected to `urls.default_redirect_url`.
-
-> This endpoint is NOT INTENDED for API clients and only works
-with browsers (Chrome, Firefox, ...).
+Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
+a HTTP 302 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;
+a HTTP 302 redirect to the login UI URL with the flow ID containing the validation errors otherwise.
 
 More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 */
-func (a *Client) InitializeSelfServiceBrowserLoginFlow(params *InitializeSelfServiceBrowserLoginFlowParams) error {
+func (a *Client) CompleteSelfServiceLoginFlowWithPasswordMethod(params *CompleteSelfServiceLoginFlowWithPasswordMethodParams) (*CompleteSelfServiceLoginFlowWithPasswordMethodOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewInitializeSelfServiceBrowserLoginFlowParams()
+		params = NewCompleteSelfServiceLoginFlowWithPasswordMethodParams()
 	}
 
-	_, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "initializeSelfServiceBrowserLoginFlow",
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "completeSelfServiceLoginFlowWithPasswordMethod",
 		Method:             "GET",
-		PathPattern:        "/self-service/browser/flows/login",
+		PathPattern:        "/self-service/login/methods/password",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &InitializeSelfServiceBrowserLoginFlowReader{formats: a.formats},
+		Reader:             &CompleteSelfServiceLoginFlowWithPasswordMethodReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*CompleteSelfServiceLoginFlowWithPasswordMethodOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for completeSelfServiceLoginFlowWithPasswordMethod: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  CompleteSelfServiceRecoveryFlowWithLinkMethod completes recovery flow with link method
+
+  Use this endpoint to complete a recovery flow using the link method. This endpoint
+behaves differently for API and browser flows and has several states:
+
+`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
+and works with API- and Browser-initiated flows.
+For API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
+and a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
+For Browser clients it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.
+`sent_email` is the success state after `choose_method` and allows the user to request another recovery email. It
+works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
+`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a recovery link")
+does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
+(if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
+a new Recovery Flow ID which contains an error message that the recovery link was invalid.
+
+More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+*/
+func (a *Client) CompleteSelfServiceRecoveryFlowWithLinkMethod(params *CompleteSelfServiceRecoveryFlowWithLinkMethodParams) error {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewCompleteSelfServiceRecoveryFlowWithLinkMethodParams()
+	}
+
+	_, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "completeSelfServiceRecoveryFlowWithLinkMethod",
+		Method:             "POST",
+		PathPattern:        "/self-service/recovery/methods/link",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &CompleteSelfServiceRecoveryFlowWithLinkMethodReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+/*
+  CompleteSelfServiceRegistrationFlowWithPasswordMethod completes registration flow with username email password method
+
+  Use this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint
+behaves differently for API and browser flows.
+
+API flows expect `application/json` to be sent in the body and respond with
+HTTP 200 and a application/json body with the created identity success - if the session hook is configured the
+`session` and `session_token` will also be included;
+HTTP 302 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;
+HTTP 400 on form validation errors.
+
+Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
+a HTTP 302 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;
+a HTTP 302 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.
+
+More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+*/
+func (a *Client) CompleteSelfServiceRegistrationFlowWithPasswordMethod(params *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams) (*CompleteSelfServiceRegistrationFlowWithPasswordMethodOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewCompleteSelfServiceRegistrationFlowWithPasswordMethodParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "completeSelfServiceRegistrationFlowWithPasswordMethod",
+		Method:             "POST",
+		PathPattern:        "/self-service/registration/methods/password",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &CompleteSelfServiceRegistrationFlowWithPasswordMethodReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*CompleteSelfServiceRegistrationFlowWithPasswordMethodOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for completeSelfServiceRegistrationFlowWithPasswordMethod: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  CompleteSelfServiceSettingsFlowWithPasswordMethod completes settings flow with username email password method
+
+  Use this endpoint to complete a settings flow by sending an identity's updated password. This endpoint
+behaves differently for API and browser flows.
+
+API-initiated flows expect `application/json` to be sent in the body and respond with
+HTTP 200 and an application/json body with the session token on success;
+HTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
+HTTP 400 on form validation errors.
+HTTP 401 when the endpoint is called without a valid session token.
+HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached.
+Implies that the user needs to re-authenticate.
+
+Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
+a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
+a HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
+a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.
+
+More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+*/
+func (a *Client) CompleteSelfServiceSettingsFlowWithPasswordMethod(params *CompleteSelfServiceSettingsFlowWithPasswordMethodParams) (*CompleteSelfServiceSettingsFlowWithPasswordMethodOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewCompleteSelfServiceSettingsFlowWithPasswordMethodParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "completeSelfServiceSettingsFlowWithPasswordMethod",
+		Method:             "POST",
+		PathPattern:        "/self-service/settings/methods/password",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &CompleteSelfServiceSettingsFlowWithPasswordMethodReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*CompleteSelfServiceSettingsFlowWithPasswordMethodOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for completeSelfServiceSettingsFlowWithPasswordMethod: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  CompleteSelfServiceSettingsFlowWithProfileMethod completes settings flow with profile method
+
+  Use this endpoint to complete a settings flow by sending an identity's updated traits. This endpoint
+behaves differently for API and browser flows.
+
+API-initiated flows expect `application/json` to be sent in the body and respond with
+HTTP 200 and an application/json body with the session token on success;
+HTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
+HTTP 400 on form validation errors.
+HTTP 401 when the endpoint is called without a valid session token.
+HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached and a sensitive field was
+updated (e.g. recovery email). Implies that the user needs to re-authenticate.
+
+Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
+a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
+a HTTP 302 redirect to the settings UI URL with the flow ID containing the validation errors otherwise.
+a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.
+
+More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+*/
+func (a *Client) CompleteSelfServiceSettingsFlowWithProfileMethod(params *CompleteSelfServiceSettingsFlowWithProfileMethodParams) (*CompleteSelfServiceSettingsFlowWithProfileMethodOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewCompleteSelfServiceSettingsFlowWithProfileMethodParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "completeSelfServiceSettingsFlowWithProfileMethod",
+		Method:             "POST",
+		PathPattern:        "/self-service/settings/methods/profile",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &CompleteSelfServiceSettingsFlowWithProfileMethodReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*CompleteSelfServiceSettingsFlowWithProfileMethodOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for completeSelfServiceSettingsFlowWithProfileMethod: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  CompleteSelfServiceVerificationFlowWithLinkMethod completes verification flow with link method
+
+  Use this endpoint to complete a verification flow using the link method. This endpoint
+behaves differently for API and browser flows and has several states:
+
+`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
+and works with API- and Browser-initiated flows.
+For API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
+and a HTTP 302 Found redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).
+For Browser clients it returns a HTTP 302 Found redirect to the Verification UI URL with the Verification Flow ID appended.
+`sent_email` is the success state after `choose_method` and allows the user to request another verification email. It
+works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
+`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a verification link")
+does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
+(if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
+a new Verification Flow ID which contains an error message that the verification link was invalid.
+
+More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+*/
+func (a *Client) CompleteSelfServiceVerificationFlowWithLinkMethod(params *CompleteSelfServiceVerificationFlowWithLinkMethodParams) error {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewCompleteSelfServiceVerificationFlowWithLinkMethodParams()
+	}
+
+	_, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "completeSelfServiceVerificationFlowWithLinkMethod",
+		Method:             "POST",
+		PathPattern:        "/self-service/verification/methods/link",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &CompleteSelfServiceVerificationFlowWithLinkMethodReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
@@ -302,68 +430,85 @@ func (a *Client) InitializeSelfServiceBrowserLogoutFlow(params *InitializeSelfSe
 }
 
 /*
-  InitializeSelfServiceBrowserRegistrationFlow initializes browser based registration user flow
+  InitializeSelfServiceLoginViaAPIFlow initializes login flow for API clients
 
-  This endpoint initializes a browser-based user registration flow. Once initialized, the browser will be redirected to
-`selfservice.flows.registration.ui_url` with the request ID set as a query parameter. If a valid user session exists already, the browser will be
-redirected to `urls.default_redirect_url`.
+  This endpoint initiates a login flow for API clients such as mobile devices, smart TVs, and so on.
 
-> This endpoint is NOT INTENDED for API clients and only works
-with browsers (Chrome, Firefox, ...).
+If a valid provided session cookie or session token is provided, a 400 Bad Request error
+will be returned unless the URL query parameter `?refresh=true` is set.
+
+To fetch an existing login flow call `/self-service/login/flows?flow=<flow_id>`.
+
+:::warning
+
+You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
+Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
+you vulnerable to a variety of CSRF attacks, including CSRF login attacks.
+
+This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
+
+:::
 
 More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 */
-func (a *Client) InitializeSelfServiceBrowserRegistrationFlow(params *InitializeSelfServiceBrowserRegistrationFlowParams) error {
+func (a *Client) InitializeSelfServiceLoginViaAPIFlow(params *InitializeSelfServiceLoginViaAPIFlowParams) (*InitializeSelfServiceLoginViaAPIFlowOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewInitializeSelfServiceBrowserRegistrationFlowParams()
+		params = NewInitializeSelfServiceLoginViaAPIFlowParams()
 	}
 
-	_, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "initializeSelfServiceBrowserRegistrationFlow",
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "initializeSelfServiceLoginViaAPIFlow",
 		Method:             "GET",
-		PathPattern:        "/self-service/browser/flows/registration",
+		PathPattern:        "/self-service/login/api",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &InitializeSelfServiceBrowserRegistrationFlowReader{formats: a.formats},
+		Reader:             &InitializeSelfServiceLoginViaAPIFlowReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	success, ok := result.(*InitializeSelfServiceLoginViaAPIFlowOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for initializeSelfServiceLoginViaAPIFlow: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
-  InitializeSelfServiceBrowserVerificationFlow initializes browser based verification flow
+  InitializeSelfServiceLoginViaBrowserFlow initializes login flow for browsers
 
-  This endpoint initializes a browser-based verification flow. Once initialized, the browser will be redirected to
-`selfservice.flows.settings.ui_url` with the request ID set as a query parameter. If no valid user session exists, a login
-flow will be initialized.
+  This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to
+`selfservice.flows.login.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
+exists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter
+`?refresh=true` was set.
 
-> This endpoint is NOT INTENDED for API clients and only works
-with browsers (Chrome, Firefox, ...).
+This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 
-More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 */
-func (a *Client) InitializeSelfServiceBrowserVerificationFlow(params *InitializeSelfServiceBrowserVerificationFlowParams) error {
+func (a *Client) InitializeSelfServiceLoginViaBrowserFlow(params *InitializeSelfServiceLoginViaBrowserFlowParams) error {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewInitializeSelfServiceBrowserVerificationFlowParams()
+		params = NewInitializeSelfServiceLoginViaBrowserFlowParams()
 	}
 
 	_, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "initializeSelfServiceBrowserVerificationFlow",
+		ID:                 "initializeSelfServiceLoginViaBrowserFlow",
 		Method:             "GET",
-		PathPattern:        "/self-service/browser/flows/verification/init/{via}",
+		PathPattern:        "/self-service/login/browser",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &InitializeSelfServiceBrowserVerificationFlowReader{formats: a.formats},
+		Reader:             &InitializeSelfServiceLoginViaBrowserFlowReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
@@ -374,32 +519,83 @@ func (a *Client) InitializeSelfServiceBrowserVerificationFlow(params *Initialize
 }
 
 /*
-  InitializeSelfServiceRecoveryFlow initializes browser based account recovery flow
+  InitializeSelfServiceRecoveryViaAPIFlow initializes recovery flow for API clients
+
+  This endpoint initiates a recovery flow for API clients such as mobile devices, smart TVs, and so on.
+
+If a valid provided session cookie or session token is provided, a 400 Bad Request error.
+
+To fetch an existing recovery flow call `/self-service/recovery/flows?flow=<flow_id>`.
+
+:::warning
+
+You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
+Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
+you vulnerable to a variety of CSRF attacks.
+
+This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
+
+:::
+
+More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+*/
+func (a *Client) InitializeSelfServiceRecoveryViaAPIFlow(params *InitializeSelfServiceRecoveryViaAPIFlowParams) (*InitializeSelfServiceRecoveryViaAPIFlowOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewInitializeSelfServiceRecoveryViaAPIFlowParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "initializeSelfServiceRecoveryViaAPIFlow",
+		Method:             "GET",
+		PathPattern:        "/self-service/recovery/api",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &InitializeSelfServiceRecoveryViaAPIFlowReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*InitializeSelfServiceRecoveryViaAPIFlowOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for initializeSelfServiceRecoveryViaAPIFlow: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  InitializeSelfServiceRecoveryViaBrowserFlow initializes recovery flow for browser clients
 
   This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to
-`selfservice.flows.recovery.ui_url` with the request ID set as a query parameter. If a valid user session exists, the request
-is aborted.
+`selfservice.flows.recovery.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
+exists, the browser is returned to the configured return URL.
 
-> This endpoint is NOT INTENDED for API clients and only works
-with browsers (Chrome, Firefox, ...).
+This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 
-More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).
+More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 */
-func (a *Client) InitializeSelfServiceRecoveryFlow(params *InitializeSelfServiceRecoveryFlowParams) error {
+func (a *Client) InitializeSelfServiceRecoveryViaBrowserFlow(params *InitializeSelfServiceRecoveryViaBrowserFlowParams) error {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewInitializeSelfServiceRecoveryFlowParams()
+		params = NewInitializeSelfServiceRecoveryViaBrowserFlowParams()
 	}
 
 	_, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "initializeSelfServiceRecoveryFlow",
+		ID:                 "initializeSelfServiceRecoveryViaBrowserFlow",
 		Method:             "GET",
-		PathPattern:        "/self-service/browser/flows/recovery",
+		PathPattern:        "/self-service/recovery/browser",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &InitializeSelfServiceRecoveryFlowReader{formats: a.formats},
+		Reader:             &InitializeSelfServiceRecoveryViaBrowserFlowReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
@@ -410,32 +606,179 @@ func (a *Client) InitializeSelfServiceRecoveryFlow(params *InitializeSelfService
 }
 
 /*
-  InitializeSelfServiceSettingsFlow initializes browser based settings flow
+  InitializeSelfServiceRegistrationViaAPIFlow initializes registration flow for API clients
 
-  This endpoint initializes a browser-based settings flow. Once initialized, the browser will be redirected to
-`selfservice.flows.settings.ui_url` with the request ID set as a query parameter. If no valid user session exists, a login
-flow will be initialized.
+  This endpoint initiates a registration flow for API clients such as mobile devices, smart TVs, and so on.
 
-> This endpoint is NOT INTENDED for API clients and only works
-with browsers (Chrome, Firefox, ...).
+If a valid provided session cookie or session token is provided, a 400 Bad Request error
+will be returned unless the URL query parameter `?refresh=true` is set.
+
+To fetch an existing registration flow call `/self-service/registration/flows?flow=<flow_id>`.
+
+:::warning
+
+You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
+Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
+you vulnerable to a variety of CSRF attacks.
+
+This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
+
+:::
+
+More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+*/
+func (a *Client) InitializeSelfServiceRegistrationViaAPIFlow(params *InitializeSelfServiceRegistrationViaAPIFlowParams) (*InitializeSelfServiceRegistrationViaAPIFlowOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewInitializeSelfServiceRegistrationViaAPIFlowParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "initializeSelfServiceRegistrationViaAPIFlow",
+		Method:             "GET",
+		PathPattern:        "/self-service/registration/api",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &InitializeSelfServiceRegistrationViaAPIFlowReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*InitializeSelfServiceRegistrationViaAPIFlowOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for initializeSelfServiceRegistrationViaAPIFlow: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  InitializeSelfServiceRegistrationViaBrowserFlow initializes registration flow for browsers
+
+  This endpoint initializes a browser-based user registration flow. Once initialized, the browser will be redirected to
+`selfservice.flows.registration.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
+exists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter
+`?refresh=true` was set.
+
+:::note
+
+This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+
+:::
+
+More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+*/
+func (a *Client) InitializeSelfServiceRegistrationViaBrowserFlow(params *InitializeSelfServiceRegistrationViaBrowserFlowParams) error {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewInitializeSelfServiceRegistrationViaBrowserFlowParams()
+	}
+
+	_, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "initializeSelfServiceRegistrationViaBrowserFlow",
+		Method:             "GET",
+		PathPattern:        "/self-service/registration/browser",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &InitializeSelfServiceRegistrationViaBrowserFlowReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+/*
+  InitializeSelfServiceSettingsViaAPIFlow initializes settings flow for API clients
+
+  This endpoint initiates a settings flow for API clients such as mobile devices, smart TVs, and so on.
+You must provide a valid ORY Kratos Session Token for this endpoint to respond with HTTP 200 OK.
+
+To fetch an existing settings flow call `/self-service/settings/flows?flow=<flow_id>`.
+
+:::warning
+
+You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
+Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
+you vulnerable to a variety of CSRF attacks.
+
+This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
+
+:::
 
 More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 */
-func (a *Client) InitializeSelfServiceSettingsFlow(params *InitializeSelfServiceSettingsFlowParams) error {
+func (a *Client) InitializeSelfServiceSettingsViaAPIFlow(params *InitializeSelfServiceSettingsViaAPIFlowParams) (*InitializeSelfServiceSettingsViaAPIFlowOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewInitializeSelfServiceSettingsFlowParams()
+		params = NewInitializeSelfServiceSettingsViaAPIFlowParams()
 	}
 
-	_, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "initializeSelfServiceSettingsFlow",
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "initializeSelfServiceSettingsViaAPIFlow",
 		Method:             "GET",
-		PathPattern:        "/self-service/browser/flows/settings",
+		PathPattern:        "/self-service/settings/api",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &InitializeSelfServiceSettingsFlowReader{formats: a.formats},
+		Reader:             &InitializeSelfServiceSettingsViaAPIFlowReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*InitializeSelfServiceSettingsViaAPIFlowOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for initializeSelfServiceSettingsViaAPIFlow: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  InitializeSelfServiceSettingsViaBrowserFlow initializes settings flow for browsers
+
+  This endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to
+`selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid
+ORY Kratos Session Cookie is included in the request, a login flow will be initialized.
+
+:::note
+
+This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+
+:::
+
+More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+*/
+func (a *Client) InitializeSelfServiceSettingsViaBrowserFlow(params *InitializeSelfServiceSettingsViaBrowserFlowParams) error {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewInitializeSelfServiceSettingsViaBrowserFlowParams()
+	}
+
+	_, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "initializeSelfServiceSettingsViaBrowserFlow",
+		Method:             "GET",
+		PathPattern:        "/self-service/settings/browser/flows",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &InitializeSelfServiceSettingsViaBrowserFlowReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
@@ -446,29 +789,80 @@ func (a *Client) InitializeSelfServiceSettingsFlow(params *InitializeSelfService
 }
 
 /*
-  SelfServiceBrowserVerify completes the browser based verification flows
+  InitializeSelfServiceVerificationViaAPIFlow initializes verification flow for API clients
 
-  This endpoint completes a browser-based verification flow.
+  This endpoint initiates a verification flow for API clients such as mobile devices, smart TVs, and so on.
 
-> This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
+To fetch an existing verification flow call `/self-service/verification/flows?flow=<flow_id>`.
+
+:::warning
+
+You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
+Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
+you vulnerable to a variety of CSRF attacks.
+
+This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
+
+:::
 
 More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 */
-func (a *Client) SelfServiceBrowserVerify(params *SelfServiceBrowserVerifyParams) error {
+func (a *Client) InitializeSelfServiceVerificationViaAPIFlow(params *InitializeSelfServiceVerificationViaAPIFlowParams) (*InitializeSelfServiceVerificationViaAPIFlowOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewSelfServiceBrowserVerifyParams()
+		params = NewInitializeSelfServiceVerificationViaAPIFlowParams()
 	}
 
-	_, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "selfServiceBrowserVerify",
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "initializeSelfServiceVerificationViaAPIFlow",
 		Method:             "GET",
-		PathPattern:        "/self-service/browser/flows/verification/{via}/confirm/{code}",
+		PathPattern:        "/self-service/verification/api",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &SelfServiceBrowserVerifyReader{formats: a.formats},
+		Reader:             &InitializeSelfServiceVerificationViaAPIFlowReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*InitializeSelfServiceVerificationViaAPIFlowOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for initializeSelfServiceVerificationViaAPIFlow: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  InitializeSelfServiceVerificationViaBrowserFlow initializes verification flow for browser clients
+
+  This endpoint initializes a browser-based account verification flow. Once initialized, the browser will be redirected to
+`selfservice.flows.verification.ui_url` with the flow ID set as the query parameter `?flow=`.
+
+This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+
+More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+*/
+func (a *Client) InitializeSelfServiceVerificationViaBrowserFlow(params *InitializeSelfServiceVerificationViaBrowserFlowParams) error {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewInitializeSelfServiceVerificationViaBrowserFlowParams()
+	}
+
+	_, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "initializeSelfServiceVerificationViaBrowserFlow",
+		Method:             "GET",
+		PathPattern:        "/self-service/verification/browser",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &InitializeSelfServiceVerificationViaBrowserFlowReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
@@ -476,6 +870,45 @@ func (a *Client) SelfServiceBrowserVerify(params *SelfServiceBrowserVerifyParams
 		return err
 	}
 	return nil
+}
+
+/*
+  RevokeSession revokes and invalidate a session
+
+  Use this endpoint to revoke a session using its token. This endpoint is particularly useful for API clients
+such as mobile apps to log the user out of the system and invalidate the session.
+
+This endpoint does not remove any HTTP Cookies - use the Self-Service Logout Flow instead.
+*/
+func (a *Client) RevokeSession(params *RevokeSessionParams) (*RevokeSessionNoContent, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewRevokeSessionParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "revokeSession",
+		Method:             "DELETE",
+		PathPattern:        "/sessions",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &RevokeSessionReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*RevokeSessionNoContent)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for revokeSession: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*

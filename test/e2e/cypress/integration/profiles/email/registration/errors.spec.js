@@ -1,6 +1,6 @@
 import { APP_URL, gen } from '../../../../helpers'
 
-context('Registration', () => {
+context('Registration Flow Errors', () => {
   beforeEach(() => {
     cy.visit(APP_URL + '/auth/registration')
   })
@@ -22,7 +22,7 @@ context('Registration', () => {
     cy.get('button[type="submit"]').click()
 
     // FIXME https://github.com/ory/kratos/issues/91
-    cy.get('html').should('contain.text', 'CSRF token is missing or invalid')
+    cy.get('html').should('contain.text', 'missing or invalid csrf_token value')
   })
 
   describe('show errors when invalid signup data is used', () => {

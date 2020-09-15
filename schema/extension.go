@@ -3,14 +3,17 @@ package schema
 import (
 	"bytes"
 	"encoding/json"
+	"path"
 
-	"github.com/gobuffalo/packr/v2"
+	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
 
 	"github.com/ory/jsonschema/v3"
+
+	"github.com/ory/kratos/x"
 )
 
-var box = packr.New("contrib", "contrib")
+var schemas = pkger.Dir("/schema/.schema")
 
 const (
 	ExtensionRunnerIdentityMetaSchema ExtensionRunnerMetaSchema = "extension/identity.schema.json"
@@ -56,13 +59,13 @@ type (
 
 func NewExtensionRunner(meta ExtensionRunnerMetaSchema, runners ...Extension) (*ExtensionRunner, error) {
 	var err error
-	schema, err := box.FindString(string(meta))
+	schema, err := x.PkgerRead(pkger.Open(path.Join(string(schemas), string(meta))))
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
 	r := new(ExtensionRunner)
-	r.meta, err = jsonschema.CompileString(string(meta), schema)
+	r.meta, err = jsonschema.CompileString(string(meta), string(schema))
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

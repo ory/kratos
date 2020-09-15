@@ -6,4 +6,5 @@ services:
       - "4455:4455"
     environment:
       - PORT=4455
-      - SECURITY_MODE=cookie
+      - SECURITY_MODE=
+      - KRATOS_BROWSER_URL=http://127.0.0.1:4433/
