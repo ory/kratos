@@ -29,17 +29,17 @@ type Client struct {
 type ClientService interface {
 	GetSchema(params *GetSchemaParams) (*GetSchemaOK, error)
 
-	GetSelfServiceBrowserLoginRequest(params *GetSelfServiceBrowserLoginRequestParams) (*GetSelfServiceBrowserLoginRequestOK, error)
-
-	GetSelfServiceBrowserRecoveryRequest(params *GetSelfServiceBrowserRecoveryRequestParams) (*GetSelfServiceBrowserRecoveryRequestOK, error)
-
-	GetSelfServiceBrowserRegistrationRequest(params *GetSelfServiceBrowserRegistrationRequestParams) (*GetSelfServiceBrowserRegistrationRequestOK, error)
-
-	GetSelfServiceBrowserSettingsRequest(params *GetSelfServiceBrowserSettingsRequestParams) (*GetSelfServiceBrowserSettingsRequestOK, error)
-
 	GetSelfServiceError(params *GetSelfServiceErrorParams) (*GetSelfServiceErrorOK, error)
 
-	GetSelfServiceVerificationRequest(params *GetSelfServiceVerificationRequestParams) (*GetSelfServiceVerificationRequestOK, error)
+	GetSelfServiceLoginFlow(params *GetSelfServiceLoginFlowParams) (*GetSelfServiceLoginFlowOK, error)
+
+	GetSelfServiceRecoveryFlow(params *GetSelfServiceRecoveryFlowParams) (*GetSelfServiceRecoveryFlowOK, error)
+
+	GetSelfServiceRegistrationFlow(params *GetSelfServiceRegistrationFlowParams) (*GetSelfServiceRegistrationFlowOK, error)
+
+	GetSelfServiceSettingsFlow(params *GetSelfServiceSettingsFlowParams) (*GetSelfServiceSettingsFlowOK, error)
+
+	GetSelfServiceVerificationFlow(params *GetSelfServiceVerificationFlowParams) (*GetSelfServiceVerificationFlowOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
 }
@@ -75,170 +75,6 @@ func (a *Client) GetSchema(params *GetSchemaParams) (*GetSchemaOK, error) {
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for getSchema: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
-  GetSelfServiceBrowserLoginRequest gets the request context browser based login user flows
-
-  This endpoint returns a login request's context with, for example, error details and
-other information.
-
-When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent
-token scanning attacks, the public endpoint does not return 404 status codes.
-
-More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
-*/
-func (a *Client) GetSelfServiceBrowserLoginRequest(params *GetSelfServiceBrowserLoginRequestParams) (*GetSelfServiceBrowserLoginRequestOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewGetSelfServiceBrowserLoginRequestParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "getSelfServiceBrowserLoginRequest",
-		Method:             "GET",
-		PathPattern:        "/self-service/browser/flows/requests/login",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
-		Schemes:            []string{"http", "https"},
-		Params:             params,
-		Reader:             &GetSelfServiceBrowserLoginRequestReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*GetSelfServiceBrowserLoginRequestOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for getSelfServiceBrowserLoginRequest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
-  GetSelfServiceBrowserRecoveryRequest gets the request context of browser based recovery flows
-
-  When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required
-for checking the auth session. To prevent scanning attacks, the public endpoint does not return 404 status codes
-but instead 403 or 500.
-
-More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/password-reset-account-recovery).
-*/
-func (a *Client) GetSelfServiceBrowserRecoveryRequest(params *GetSelfServiceBrowserRecoveryRequestParams) (*GetSelfServiceBrowserRecoveryRequestOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewGetSelfServiceBrowserRecoveryRequestParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "getSelfServiceBrowserRecoveryRequest",
-		Method:             "GET",
-		PathPattern:        "/self-service/browser/flows/requests/recovery",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
-		Schemes:            []string{"http", "https"},
-		Params:             params,
-		Reader:             &GetSelfServiceBrowserRecoveryRequestReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*GetSelfServiceBrowserRecoveryRequestOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for getSelfServiceBrowserRecoveryRequest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
-  GetSelfServiceBrowserRegistrationRequest gets the request context of browser based registration user flows
-
-  This endpoint returns a registration request's context with, for example, error details and
-other information.
-
-When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required for CSRF to work. To prevent
-token scanning attacks, the public endpoint does not return 404 status codes.
-
-More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
-*/
-func (a *Client) GetSelfServiceBrowserRegistrationRequest(params *GetSelfServiceBrowserRegistrationRequestParams) (*GetSelfServiceBrowserRegistrationRequestOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewGetSelfServiceBrowserRegistrationRequestParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "getSelfServiceBrowserRegistrationRequest",
-		Method:             "GET",
-		PathPattern:        "/self-service/browser/flows/requests/registration",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
-		Schemes:            []string{"http", "https"},
-		Params:             params,
-		Reader:             &GetSelfServiceBrowserRegistrationRequestReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*GetSelfServiceBrowserRegistrationRequestOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for getSelfServiceBrowserRegistrationRequest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
-  GetSelfServiceBrowserSettingsRequest gets the request context of browser based settings flows
-
-  When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required
-for checking the auth session. To prevent scanning attacks, the public endpoint does not return 404 status codes
-but instead 403 or 500.
-
-More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
-*/
-func (a *Client) GetSelfServiceBrowserSettingsRequest(params *GetSelfServiceBrowserSettingsRequestParams) (*GetSelfServiceBrowserSettingsRequestOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewGetSelfServiceBrowserSettingsRequestParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "getSelfServiceBrowserSettingsRequest",
-		Method:             "GET",
-		PathPattern:        "/self-service/browser/flows/requests/settings",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
-		Schemes:            []string{"http", "https"},
-		Params:             params,
-		Reader:             &GetSelfServiceBrowserSettingsRequestReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*GetSelfServiceBrowserSettingsRequestOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for getSelfServiceBrowserSettingsRequest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -288,42 +124,196 @@ func (a *Client) GetSelfServiceError(params *GetSelfServiceErrorParams) (*GetSel
 }
 
 /*
-  GetSelfServiceVerificationRequest gets the request context of browser based verification flows
+  GetSelfServiceLoginFlow gets login flow
 
-  When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required
-for checking the auth session. To prevent scanning attacks, the public endpoint does not return 404 status codes
-but instead 403 or 500.
+  This endpoint returns a login flow's context with, for example, error details and other information.
 
-More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 */
-func (a *Client) GetSelfServiceVerificationRequest(params *GetSelfServiceVerificationRequestParams) (*GetSelfServiceVerificationRequestOK, error) {
+func (a *Client) GetSelfServiceLoginFlow(params *GetSelfServiceLoginFlowParams) (*GetSelfServiceLoginFlowOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewGetSelfServiceVerificationRequestParams()
+		params = NewGetSelfServiceLoginFlowParams()
 	}
 
 	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "getSelfServiceVerificationRequest",
+		ID:                 "getSelfServiceLoginFlow",
 		Method:             "GET",
-		PathPattern:        "/self-service/browser/flows/requests/verification",
+		PathPattern:        "/self-service/login/flows",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &GetSelfServiceVerificationRequestReader{formats: a.formats},
+		Reader:             &GetSelfServiceLoginFlowReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*GetSelfServiceVerificationRequestOK)
+	success, ok := result.(*GetSelfServiceLoginFlowOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for getSelfServiceVerificationRequest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getSelfServiceLoginFlow: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  GetSelfServiceRecoveryFlow gets information about a recovery flow
+
+  This endpoint returns a recovery flow's context with, for example, error details and other information.
+
+More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+*/
+func (a *Client) GetSelfServiceRecoveryFlow(params *GetSelfServiceRecoveryFlowParams) (*GetSelfServiceRecoveryFlowOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetSelfServiceRecoveryFlowParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "getSelfServiceRecoveryFlow",
+		Method:             "GET",
+		PathPattern:        "/self-service/recovery/flows",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &GetSelfServiceRecoveryFlowReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetSelfServiceRecoveryFlowOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getSelfServiceRecoveryFlow: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  GetSelfServiceRegistrationFlow gets registration flow
+
+  This endpoint returns a registration flow's context with, for example, error details and other information.
+
+More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+*/
+func (a *Client) GetSelfServiceRegistrationFlow(params *GetSelfServiceRegistrationFlowParams) (*GetSelfServiceRegistrationFlowOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetSelfServiceRegistrationFlowParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "getSelfServiceRegistrationFlow",
+		Method:             "GET",
+		PathPattern:        "/self-service/registration/flows",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &GetSelfServiceRegistrationFlowReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetSelfServiceRegistrationFlowOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getSelfServiceRegistrationFlow: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  GetSelfServiceSettingsFlow gets settings flow
+
+  When accessing this endpoint through ORY Kratos' Public API you must ensure that either the ORY Kratos Session Cookie
+or the ORY Kratos Session Token are set. The public endpoint does not return 404 status codes
+but instead 403 or 500 to improve data privacy.
+
+You can access this endpoint without credentials when using ORY Kratos' Admin API.
+
+More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+*/
+func (a *Client) GetSelfServiceSettingsFlow(params *GetSelfServiceSettingsFlowParams) (*GetSelfServiceSettingsFlowOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetSelfServiceSettingsFlowParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "getSelfServiceSettingsFlow",
+		Method:             "GET",
+		PathPattern:        "/self-service/settings/flows",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &GetSelfServiceSettingsFlowReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetSelfServiceSettingsFlowOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getSelfServiceSettingsFlow: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  GetSelfServiceVerificationFlow gets verification flow
+
+  This endpoint returns a verification flow's context with, for example, error details and other information.
+
+More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+*/
+func (a *Client) GetSelfServiceVerificationFlow(params *GetSelfServiceVerificationFlowParams) (*GetSelfServiceVerificationFlowOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetSelfServiceVerificationFlowParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "getSelfServiceVerificationFlow",
+		Method:             "GET",
+		PathPattern:        "/self-service/verification/flows",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &GetSelfServiceVerificationFlowReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetSelfServiceVerificationFlowOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getSelfServiceVerificationFlow: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

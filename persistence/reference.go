@@ -15,7 +15,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
-	"github.com/ory/kratos/selfservice/strategy/recoverytoken"
+	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/session"
 )
 
@@ -26,15 +26,16 @@ type Provider interface {
 type Persister interface {
 	continuity.Persister
 	identity.PrivilegedPool
-	registration.RequestPersister
-	login.RequestPersister
-	settings.RequestPersister
+	registration.FlowPersister
+	login.FlowPersister
+	settings.FlowPersister
 	courier.Persister
 	session.Persister
 	errorx.Persister
-	verification.Persister
-	recovery.RequestPersister
-	recoverytoken.Persister
+	verification.FlowPersister
+	recovery.FlowPersister
+	link.RecoveryTokenPersister
+	link.VerificationTokenPersister
 
 	Close(context.Context) error
 	Ping(context.Context) error

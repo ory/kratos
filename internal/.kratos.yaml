@@ -42,7 +42,7 @@ selfservice:
   whitelisted_return_urls:
     - http://return-to-1-test.ory.sh/
     - http://return-to-2-test.ory.sh/
-  strategies:
+  methods:
     password:
       enabled: true
     oidc:

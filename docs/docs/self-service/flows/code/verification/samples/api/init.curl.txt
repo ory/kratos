@@ -1,0 +1,15 @@
+$ curl -s -X GET \
+  -H "Accept: application/json"  \
+  http://127.0.0.1:4433/self-service/verification/api | jq
+
+{
+  "id": "4fd52be5-5f80-4493-ab5c-90cb9bd331d2",
+  "type": "api",
+  "expires_at": "2020-09-10T07:39:10.9503284Z",
+  "issued_at": "2020-09-10T06:39:10.9503284Z",
+  "request_url": "http://127.0.0.1:4433/self-service/verification/api",
+  "methods": {
+    // ...
+  },
+  "state": "choose_method"
+}

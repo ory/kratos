@@ -15,7 +15,6 @@ import (
 	_ "github.com/ory/go-acc"
 	_ "github.com/ory/x/tools/listx"
 
-	_ "github.com/gobuffalo/packr/v2"
 	_ "github.com/jteeuwen/go-bindata"
 
 	_ "github.com/mikefarah/yq"
@@ -23,8 +22,6 @@ import (
 	_ "github.com/davidrjonas/semver-cli"
 
 	_ "github.com/hashicorp/consul/api"
-
-	_ "github.com/markbates/pkger/cmd/pkger"
 
 	_ "github.com/ory/cli"
 )

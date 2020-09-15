@@ -60,8 +60,11 @@ for the get self service error operation typically these are written to a http.R
 */
 type GetSelfServiceErrorParams struct {
 
-	/*Error*/
-	Error *string
+	/*Error
+	  Error is the container's ID
+
+	*/
+	Error string
 
 	timeout    time.Duration
 	Context    context.Context
@@ -102,13 +105,13 @@ func (o *GetSelfServiceErrorParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithError adds the error to the get self service error params
-func (o *GetSelfServiceErrorParams) WithError(error *string) *GetSelfServiceErrorParams {
+func (o *GetSelfServiceErrorParams) WithError(error string) *GetSelfServiceErrorParams {
 	o.SetError(error)
 	return o
 }
 
 // SetError adds the error to the get self service error params
-func (o *GetSelfServiceErrorParams) SetError(error *string) {
+func (o *GetSelfServiceErrorParams) SetError(error string) {
 	o.Error = error
 }
 
@@ -120,20 +123,13 @@ func (o *GetSelfServiceErrorParams) WriteToRequest(r runtime.ClientRequest, reg 
 	}
 	var res []error
 
-	if o.Error != nil {
-
-		// query param error
-		var qrError string
-		if o.Error != nil {
-			qrError = *o.Error
+	// query param error
+	qrError := o.Error
+	qError := qrError
+	if qError != "" {
+		if err := r.SetQueryParam("error", qError); err != nil {
+			return err
 		}
-		qError := qrError
-		if qError != "" {
-			if err := r.SetQueryParam("error", qError); err != nil {
-				return err
-			}
-		}
-
 	}
 
 	if len(res) > 0 {

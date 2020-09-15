@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/x"
 )
 
@@ -19,7 +19,7 @@ var pkgName = reflect.TypeOf(Strategies{}).PkgPath()
 type Strategy interface {
 	SettingsStrategyID() string
 	RegisterSettingsRoutes(*x.RouterPublic)
-	PopulateSettingsMethod(*http.Request, *session.Session, *Request) error
+	PopulateSettingsMethod(*http.Request, *identity.Identity, *Flow) error
 }
 
 type Strategies []Strategy

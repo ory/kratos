@@ -36,10 +36,10 @@ hashers:
 ```
 
 For a complete reference, defaults, and description please check the
-[Configuration Reference](../reference/configuration.md).
+[Configuration Reference](../../reference/configuration.md).
 
 For a better understanding of security implications imposed by Argon2
-Configuration, head over to [Argon2 Security](./security.md#argon2).
+Configuration, head over to [Argon2 Security](../security.mdx#argon2).
 
 ## JSON Schema
 
@@ -175,7 +175,7 @@ Assuming your traits schema is as follows:
 
 And an identity registers with the following JSON payload (more on registration
 in
-[Selfservice Registration](../self-service/flows/user-login-user-registration.md)):
+[Selfservice Registration](../../self-service/flows/user-login-user-registration.mdx)):
 
 ```json
 {

@@ -26,7 +26,7 @@ urls:
 ## Self-Service User Profile Management for Browser Applications
 
 This flow is similar to
-[User Login and User Registration](user-login-user-registration.mdx) but does not
+[User Login and User Registration](user-login-user-registration.md) but does not
 support before/after work flows or individual strategies. It uses the already
 established [Network Flows for Browsers](index.md#network-flows-for-browsers).
 

@@ -13,3 +13,4 @@ node_modules/
 ./quickstart-*.yml
 .bin/
 test/
+pgked.go

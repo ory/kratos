@@ -10,4 +10,7 @@ var (
 	ErrIDTokenMissing = herodot.ErrBadRequest.
 				WithError("authentication failed because id_token is missing").
 				WithReasonf(`Authentication failed because no id_token was returned. Please accept the "openid" permission and try again.`)
+
+	ErrAPIFlowNotSupported = herodot.ErrBadRequest.WithError("API-based flows are not supported for this method").
+				WithReasonf("Social Sign In and OpenID Connect are only supported for flows initiated using the Browser endpoint.")
 )

@@ -6,6 +6,8 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
+	"github.com/ory/x/decoderx"
+
 	"github.com/ory/x/errorsx"
 
 	"github.com/ory/herodot"
@@ -17,14 +19,17 @@ import (
 type (
 	handlerDependencies interface {
 		ManagementProvider
+		PersistenceProvider
 		x.WriterProvider
 		x.LoggingProvider
+		x.CSRFProvider
 	}
 	HandlerProvider interface {
 		SessionHandler() *Handler
 	}
 	Handler struct {
-		r handlerDependencies
+		r  handlerDependencies
+		dx *decoderx.HTTP
 	}
 )
 
@@ -32,24 +37,85 @@ func NewHandler(
 	r handlerDependencies,
 ) *Handler {
 	return &Handler{
-		r: r,
+		r:  r,
+		dx: decoderx.NewHTTP(),
 	}
 }
 
 const (
-	SessionsWhoamiPath = "/sessions/whoami"
+	RouteWhoami = "/sessions/whoami"
+	RouteRevoke = "/sessions"
 	// SessionsWhoisPath  = "/sessions/whois"
 )
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
+	h.r.CSRFHandler().ExemptPath(RouteWhoami)
+
 	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch,
 		http.MethodDelete, http.MethodConnect, http.MethodOptions, http.MethodTrace} {
-		public.Handle(m, SessionsWhoamiPath, h.whoami)
+		public.Handle(m, RouteWhoami, h.whoami)
 	}
+
+	public.DELETE(RouteRevoke, h.revoke)
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	// admin.GET(SessionsWhoisPath, h.fromPath)
+}
+
+// swagger:parameters revokeSession
+// nolint:deadcode,unused
+type revokeSessionParameters struct {
+	// in: body
+	// required: true
+	Body revokeSession
+}
+
+type revokeSession struct {
+	// The Session Token
+	//
+	// Invalidate this session token.
+	//
+	// required: true
+	SessionToken string `json:"session_token"`
+}
+
+// swagger:route DELETE /sessions public revokeSession
+//
+// Revoke and Invalidate a Session
+//
+// Use this endpoint to revoke a session using its token. This endpoint is particularly useful for API clients
+// such as mobile apps to log the user out of the system and invalidate the session.
+//
+// This endpoint does not remove any HTTP Cookies - use the Self-Service Logout Flow instead.
+//
+//     Consumes:
+//     - application/json
+//
+//     Produces:
+//     - application/json
+//
+//     Schemes: http, https
+//
+//     Responses:
+//       204: emptyResponse
+//       400: genericError
+//       500: genericError
+func (h *Handler) revoke(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	var p revokeSession
+	if err := h.dx.Decode(r, &p,
+		decoderx.HTTPJSONDecoder(),
+		decoderx.HTTPDecoderAllowedMethods("DELETE")); err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	if err := h.r.SessionPersister().RevokeSessionByToken(r.Context(), p.SessionToken); err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // swagger:route GET /sessions/whoami public whoami
@@ -91,10 +157,6 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.P
 
 	h.r.Writer().Write(w, r, s)
 }
-
-// func (h *Handler) fromPath(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-// 	w.WriteHeader(505)
-// }
 
 func (h *Handler) IsAuthenticated(wrap httprouter.Handle, onUnauthenticated httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -147,5 +209,11 @@ func RedirectOnAuthenticated(c configuration.Provider) httprouter.Handle {
 func RedirectOnUnauthenticated(to string) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		http.Redirect(w, r, to, http.StatusFound)
+	}
+}
+
+func RespondWithJSONErrorOnAuthenticated(h herodot.Writer, err error) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		h.WriteError(w, r, err)
 	}
 }

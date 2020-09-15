@@ -1,6 +1,6 @@
 import { APP_URL, gen, website } from '../../../../helpers'
 
-context('Settings', () => {
+context('Settings Flow Success', () => {
   let email = gen.email()
   let password = gen.password()
 

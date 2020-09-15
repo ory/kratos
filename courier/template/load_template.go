@@ -7,12 +7,13 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/gobuffalo/packr/v2"
 	lru "github.com/hashicorp/golang-lru"
+	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
 )
 
-var box = packr.New("templates", "templates")
+var _ = pkger.Dir("/courier/template/templates")
+
 var cache, _ = lru.New(16)
 
 func loadTextTemplate(path string, model interface{}) (string, error) {
@@ -26,7 +27,7 @@ func loadTextTemplate(path string, model interface{}) (string, error) {
 		return tb.String(), nil
 	}
 
-	if file, err := box.Open(path); err == nil {
+	if file, err := pkger.Open(path); err == nil {
 		defer file.Close()
 		if _, err := io.Copy(&b, file); err != nil {
 			return "", errors.WithStack(err)

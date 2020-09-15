@@ -1,0 +1,11 @@
+{
+  "id": "87e871e1-a45f-4ed0-ba4e-a03063c774dc",
+  "type": "api",
+  "expires_at": "2013-10-07T08:23:19Z",
+  "issued_at": "2013-10-07T08:23:19Z",
+  "request_url": "http://kratos:4433/self-service/browser/flows/registration",
+  "active": "link",
+  "messages": [],
+  "methods": {},
+  "state": "choose_method"
+}

@@ -38,7 +38,7 @@ func (m *RegistryDefault) SettingsHandler() *settings.Handler {
 	return m.selfserviceSettingsHandler
 }
 
-func (m *RegistryDefault) SettingsRequestErrorHandler() *settings.ErrorHandler {
+func (m *RegistryDefault) SettingsFlowErrorHandler() *settings.ErrorHandler {
 	if m.selfserviceSettingsErrorHandler == nil {
 		m.selfserviceSettingsErrorHandler = settings.NewErrorHandler(m, m.c)
 	}

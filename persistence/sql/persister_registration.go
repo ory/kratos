@@ -12,29 +12,28 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 )
 
-func (p *Persister) CreateRegistrationRequest(ctx context.Context, r *registration.Request) error {
+func (p *Persister) CreateRegistrationFlow(ctx context.Context, r *registration.Flow) error {
 	return p.GetConnection(ctx).Eager().Create(r)
 }
 
-func (p *Persister) UpdateRegistrationRequest(ctx context.Context, r *registration.Request) error {
+func (p *Persister) UpdateRegistrationFlow(ctx context.Context, r *registration.Flow) error {
 	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 
-		rr, err := p.GetRegistrationRequest(ctx, r.ID)
+		rr, err := p.GetRegistrationFlow(ctx, r.ID)
 		if err != nil {
 			return err
 		}
 
-		for id, form := range r.Methods {
-			for oid := range rr.Methods {
-				if oid == id {
-					rr.Methods[id].Config = form.Config
-					break
-				}
+		for _, dbc := range rr.Methods {
+			if err := tx.Destroy(dbc); err != nil {
+				return sqlcon.HandleError(err)
 			}
-			rr.Methods[id] = form
 		}
 
-		for _, of := range rr.Methods {
+		for _, of := range r.Methods {
+			of.ID = uuid.UUID{}
+			of.Flow = rr
+			of.FlowID = rr.ID
 			if err := tx.Save(of); err != nil {
 				return sqlcon.HandleError(err)
 			}
@@ -44,8 +43,8 @@ func (p *Persister) UpdateRegistrationRequest(ctx context.Context, r *registrati
 	})
 }
 
-func (p *Persister) GetRegistrationRequest(ctx context.Context, id uuid.UUID) (*registration.Request, error) {
-	var r registration.Request
+func (p *Persister) GetRegistrationFlow(ctx context.Context, id uuid.UUID) (*registration.Flow, error) {
+	var r registration.Flow
 	if err := p.GetConnection(ctx).Eager().Find(&r, id); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
@@ -57,17 +56,17 @@ func (p *Persister) GetRegistrationRequest(ctx context.Context, id uuid.UUID) (*
 	return &r, nil
 }
 
-func (p *Persister) UpdateRegistrationRequestMethod(ctx context.Context, id uuid.UUID, ct identity.CredentialsType, rm *registration.RequestMethod) error {
+func (p *Persister) UpdateRegistrationFlowMethod(ctx context.Context, id uuid.UUID, ct identity.CredentialsType, rm *registration.FlowMethod) error {
 	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 
-		rr, err := p.GetRegistrationRequest(ctx, id)
+		rr, err := p.GetRegistrationFlow(ctx, id)
 		if err != nil {
 			return err
 		}
 
 		method, ok := rr.Methods[ct]
 		if !ok {
-			rm.RequestID = rr.ID
+			rm.FlowID = rr.ID
 			rm.Method = ct
 			return tx.Save(rm)
 		}

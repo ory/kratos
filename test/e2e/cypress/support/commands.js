@@ -28,23 +28,65 @@ import {
   assertVerifiableAddress,
   gen,
   KRATOS_ADMIN,
+  KRATOS_PUBLIC,
   MAIL_API,
   parseHtml,
   pollInterval,
   privilegedLifespan,
 } from '../helpers'
 
+const mergeFields = (form, fields) => {
+  const result = {}
+  form.fields.forEach(({ name, value }) => {
+    result[name] = value
+  })
+
+  return { ...result, ...fields }
+}
+
 Cypress.Commands.add(
   'register',
   ({ email = gen.email(), password = gen.password(), fields = {} } = {}) => {
-    cy.visit(APP_URL + '/auth/registration')
-    cy.get('input[name="traits.email"]').type(email)
-    cy.get('input[name="password"]').type(password)
-    Object.keys(fields).forEach((key) => {
-      const value = fields[key]
-      cy.get(`input[name="${key}"]`).clear().type(value)
+    console.log('Creating user account: ', { email, password })
+
+    // see https://github.com/cypress-io/cypress/issues/408
+    cy.visit(APP_URL)
+    cy.clearCookies()
+
+    cy.request({
+      url: APP_URL + '/self-service/registration/browser',
+      followRedirect: false,
     })
-    cy.get('button[type="submit"]').click()
+      .then(({ redirectedToUrl }) => {
+        expect(redirectedToUrl).to.contain(APP_URL + '/auth/registration?flow=')
+        const flow = redirectedToUrl.replace(
+          APP_URL + '/auth/registration?flow=',
+          ''
+        )
+        return cy.request(
+          APP_URL + '/self-service/registration/flows?id=' + flow
+        )
+      })
+      .then(({ body, status }) => {
+        expect(status).to.eq(200)
+        const form = body.methods.password.config
+        return cy.request({
+          method: form.method,
+          body: mergeFields(form, {
+            ...fields,
+            'traits.email': email,
+            password,
+          }),
+          url: form.action,
+          followRedirect: false,
+        })
+      })
+      .then((res) => {
+        console.log('Registration sequence completed: ', { email, password })
+        expect(res.redirectedToUrl).to.not.contain(
+          APP_URL + '/auth/registration?flow='
+        )
+      })
   }
 )
 
@@ -114,15 +156,47 @@ Cypress.Commands.add('loginOidc', ({ expectSession = true }) => {
 })
 
 Cypress.Commands.add('login', ({ email, password, expectSession = true }) => {
-  cy.visit(APP_URL + '/auth/login')
-  cy.get('input[name="identifier"]').clear().type(email)
-  cy.get('input[name="password"]').clear().type(password)
-  cy.get('button[type="submit"]').click()
   if (expectSession) {
-    cy.session()
+    console.log('Singing in user: ', { email, password })
   } else {
-    cy.noSession()
+    console.log('Attempting user sign in: ', { email, password })
   }
+
+  // see https://github.com/cypress-io/cypress/issues/408
+  cy.visit(APP_URL)
+  cy.clearCookies()
+
+  cy.request({
+    url: APP_URL + '/self-service/login/browser',
+    followRedirect: false,
+  })
+    .then(({ redirectedToUrl }) => {
+      expect(redirectedToUrl).to.contain(APP_URL + '/auth/login?flow=')
+      const flow = redirectedToUrl.replace(APP_URL + '/auth/login?flow=', '')
+      return cy.request(APP_URL + '/self-service/login/flows?id=' + flow)
+    })
+    .then(({ body, status }) => {
+      expect(status).to.eq(200)
+      const form = body.methods.password.config
+      return cy.request({
+        method: form.method,
+        body: mergeFields(form, { identifier: email, password }),
+        url: form.action,
+        followRedirect: false,
+      })
+    })
+    .then((res) => {
+      console.log('Login sequence compelted: ', { email, password })
+      if (expectSession) {
+        expect(res.redirectedToUrl).to.not.contain(
+          APP_URL + '/auth/login?flow='
+        )
+        return cy.session()
+      } else {
+        expect(res.redirectedToUrl).to.contain(APP_URL + '/auth/login?flow=')
+        return cy.noSession()
+      }
+    })
 })
 
 Cypress.Commands.add('logout', () => {
@@ -172,35 +246,32 @@ Cypress.Commands.add('deleteMail', ({ atLeast = 0 } = {}) => {
 })
 
 Cypress.Commands.add('session', () =>
-  cy
-    .request('GET', `${APP_URL}/.ory/kratos/public/sessions/whoami`)
-    .then((response) => {
-      expect(response.body.sid).to.not.be.empty
-      expect(
-        Cypress.moment().isBefore(Cypress.moment(response.body.expires_at))
-      ).to.be.true
+  cy.request('GET', `${KRATOS_PUBLIC}/sessions/whoami`).then((response) => {
+    expect(response.body.id).to.not.be.empty
+    expect(Cypress.moment().isBefore(Cypress.moment(response.body.expires_at)))
+      .to.be.true
 
-      // Add a grace second for MySQL which does not support millisecs.
-      expect(
-        Cypress.moment().isAfter(
-          Cypress.moment(response.body.issued_at).subtract(1, 's')
-        )
-      ).to.be.true
-      expect(
-        Cypress.moment().isAfter(
-          Cypress.moment(response.body.authenticated_at).subtract(1, 's')
-        )
-      ).to.be.true
-      expect(response.body.identity).to.exist
-      return response.body
-    })
+    // Add a grace second for MySQL which does not support millisecs.
+    expect(
+      Cypress.moment().isAfter(
+        Cypress.moment(response.body.issued_at).subtract(1, 's')
+      )
+    ).to.be.true
+    expect(
+      Cypress.moment().isAfter(
+        Cypress.moment(response.body.authenticated_at).subtract(1, 's')
+      )
+    ).to.be.true
+    expect(response.body.identity).to.exist
+    return response.body
+  })
 )
 
 Cypress.Commands.add('noSession', () =>
   cy
     .request({
       method: 'GET',
-      url: `${APP_URL}/.ory/kratos/public/sessions/whoami`,
+      url: `${KRATOS_PUBLIC}/sessions/whoami`,
       failOnStatusCode: false,
     })
     .then((request) => {
@@ -285,17 +356,16 @@ Cypress.Commands.add(
       const link = parseHtml(message.body).querySelector('a')
       cy.session().should((session) => {
         assertVerifiableAddress({ isVerified: false, email: email })(session)
-        cy.wait(
-          Cypress.moment
-            .utc(session.identity.verifiable_addresses[0].expires_at)
-            .diff(Cypress.moment.utc()) + 100
-        )
+        cy.wait(5000) // specified in base...
       })
 
       cy.visit(link.href)
       cy.location('pathname').should('include', 'verify')
       cy.location('search').should('not.be.empty', 'request')
-      cy.get('.messages .message').should('contain.text', 'code has expired')
+      cy.get('.messages .message').should(
+        'contain.text',
+        'verification flow expired'
+      )
 
       cy.session().should(
         assertVerifiableAddress({ isVerified: false, email: email })

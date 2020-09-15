@@ -2,18 +2,19 @@ package login_test
 
 import (
 	"context"
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"net/http/cookiejar"
 	"net/url"
 	"testing"
 	"time"
 
 	"github.com/gobuffalo/httptest"
-	"github.com/justinas/nosurf"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/assertx"
 
 	"github.com/ory/viper"
 
@@ -21,6 +22,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/x"
 )
@@ -29,49 +31,44 @@ func init() {
 	internal.RegisterFakes()
 }
 
-func TestHandlerSettingForced(t *testing.T) {
+func TestInitFlow(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-
 	router := x.NewRouterPublic()
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
-
-	loginTS := testhelpers.NewLoginUIRequestEchoServer(t, reg)
+	loginTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
 
 	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
 	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
 
-	// assert bool
-	ab := func(body []byte, exp bool) {
+	assertion := func(body []byte, isForced, isApi bool) {
 		r := gjson.GetBytes(body, "forced")
 		assert.True(t, r.Exists(), "%s", body)
-		assert.Equal(t, exp, r.Bool(), "%s", body)
+		assert.Equal(t, isForced, r.Bool(), "%s", body)
+		if isApi {
+			assert.Equal(t, "api", gjson.GetBytes(body, "type").String())
+		} else {
+			assert.Equal(t, "browser", gjson.GetBytes(body, "type").String())
+		}
 	}
 
-	// make authenticated request
-	mar := func(t *testing.T, extQuery url.Values) (*http.Response, []byte) {
-		rid := x.NewUUID()
-		req := x.NewTestHTTPRequest(t, "GET", ts.URL+login.BrowserLoginPath, nil)
-		loginReq := login.NewRequest(time.Minute, x.FakeCSRFToken, req)
-		loginReq.ID = rid
-		for _, s := range reg.LoginStrategies() {
-			require.NoError(t, s.PopulateLoginMethod(req, loginReq))
+	initAuthenticatedFlow := func(t *testing.T, extQuery url.Values, isAPI bool) (*http.Response, []byte) {
+		route := login.RouteInitBrowserFlow
+		if isAPI {
+			route = login.RouteInitAPIFlow
 		}
-		require.NoError(t, reg.LoginRequestPersister().CreateLoginRequest(context.TODO(), loginReq), "%+v", loginReq)
-
-		q := url.Values{"request": {rid.String()}}
-		for key := range extQuery {
-			q.Set(key, extQuery.Get(key))
-		}
-		req.URL.RawQuery = q.Encode()
-
+		req := x.NewTestHTTPRequest(t, "GET", ts.URL+route, nil)
+		req.URL.RawQuery = extQuery.Encode()
 		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, req)
 		return res, body
 	}
 
-	// make unauthenticated request
-	mur := func(t *testing.T, query url.Values) (*http.Response, []byte) {
+	initFlow := func(t *testing.T, query url.Values, isAPI bool) (*http.Response, []byte) {
+		route := login.RouteInitBrowserFlow
+		if isAPI {
+			route = login.RouteInitAPIFlow
+		}
 		c := ts.Client()
-		res, err := c.Get(ts.URL + login.BrowserLoginPath + "?" + query.Encode())
+		res, err := c.Get(ts.URL + route + "?" + query.Encode())
 		require.NoError(t, err)
 		defer res.Body.Close()
 		body, err := ioutil.ReadAll(res.Body)
@@ -79,42 +76,70 @@ func TestHandlerSettingForced(t *testing.T) {
 		return res, body
 	}
 
-	t.Run("case=does not set forced flag on unauthenticated request", func(t *testing.T) {
-		res, body := mur(t, url.Values{})
-		ab(body, false)
-		assert.Contains(t, res.Request.URL.String(), loginTS.URL)
-	})
-
-	t.Run("case=does not set forced flag on unauthenticated request with refresh=true", func(t *testing.T) {
-		res, body := mur(t, url.Values{
-			"refresh": {"true"},
+	t.Run("flow=api", func(t *testing.T) {
+		t.Run("case=does not set forced flag on unauthenticated request", func(t *testing.T) {
+			res, body := initFlow(t, url.Values{}, true)
+			assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
+			assertion(body, false, true)
 		})
-		ab(body, true)
-		assert.Contains(t, res.Request.URL.String(), loginTS.URL)
-	})
 
-	t.Run("case=does not set forced flag on authenticated request without refresh=true", func(t *testing.T) {
-		res, _ := mar(t, url.Values{})
-		assert.Contains(t, res.Request.URL.String(), "https://www.ory.sh")
-	})
-
-	t.Run("case=does not set forced flag on authenticated request with refresh=false", func(t *testing.T) {
-		res, _ := mar(t, url.Values{
-			"refresh": {"false"},
+		t.Run("case=does not set forced flag on unauthenticated request with refresh=true", func(t *testing.T) {
+			res, body := initFlow(t, url.Values{"refresh": {"true"}}, true)
+			assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
+			assertion(body, true, true)
 		})
-		assert.Contains(t, res.Request.URL.String(), "https://www.ory.sh")
+
+		t.Run("case=does not set forced flag on authenticated request without refresh=true", func(t *testing.T) {
+			res, body := initAuthenticatedFlow(t, url.Values{}, true)
+			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+			assertx.EqualAsJSON(t, login.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
+		})
+
+		t.Run("case=does not set forced flag on authenticated request with refresh=false", func(t *testing.T) {
+			res, body := initAuthenticatedFlow(t, url.Values{"refresh": {"false"}}, true)
+			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+			assertx.EqualAsJSON(t, login.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
+		})
+
+		t.Run("case=does set forced flag on authenticated request with refresh=true", func(t *testing.T) {
+			res, body := initAuthenticatedFlow(t, url.Values{"refresh": {"true"}}, true)
+			assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
+			assertion(body, true, true)
+		})
 	})
 
-	t.Run("case=does set forced flag on authenticated request with refresh=true", func(t *testing.T) {
-		res, body := mar(t, url.Values{
-			"refresh": {"true"},
+	t.Run("flow=browser", func(t *testing.T) {
+		t.Run("case=does not set forced flag on unauthenticated request", func(t *testing.T) {
+			res, body := initFlow(t, url.Values{}, false)
+			assertion(body, false, false)
+			assert.Contains(t, res.Request.URL.String(), loginTS.URL)
 		})
-		ab(body, true)
-		assert.Contains(t, res.Request.URL.String(), loginTS.URL)
+
+		t.Run("case=does not set forced flag on unauthenticated request with refresh=true", func(t *testing.T) {
+			res, body := initFlow(t, url.Values{"refresh": {"true"}}, false)
+			assertion(body, true, false)
+			assert.Contains(t, res.Request.URL.String(), loginTS.URL)
+		})
+
+		t.Run("case=does not set forced flag on authenticated request without refresh=true", func(t *testing.T) {
+			res, _ := initAuthenticatedFlow(t, url.Values{}, false)
+			assert.Contains(t, res.Request.URL.String(), "https://www.ory.sh")
+		})
+
+		t.Run("case=does not set forced flag on authenticated request with refresh=false", func(t *testing.T) {
+			res, _ := initAuthenticatedFlow(t, url.Values{"refresh": {"false"}}, false)
+			assert.Contains(t, res.Request.URL.String(), "https://www.ory.sh")
+		})
+
+		t.Run("case=does set forced flag on authenticated request with refresh=true", func(t *testing.T) {
+			res, body := initAuthenticatedFlow(t, url.Values{"refresh": {"true"}}, false)
+			assertion(body, true, false)
+			assert.Contains(t, res.Request.URL.String(), loginTS.URL)
+		})
 	})
 }
 
-func TestLoginHandler(t *testing.T) {
+func TestGetFlow(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	public, admin := testhelpers.NewKratosServerWithCSRF(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
@@ -125,12 +150,12 @@ func TestLoginHandler(t *testing.T) {
 			if c == nil {
 				c = http.DefaultClient
 			}
-			_, err := w.Write(x.EasyGetBody(t, c, upstream+login.BrowserLoginRequestsPath+"?request="+r.URL.Query().Get("request")))
+			_, err := w.Write(x.EasyGetBody(t, c, upstream+login.RouteGetFlow+"?id="+r.URL.Query().Get("flow")))
 			require.NoError(t, err)
 		}))
 	}
 
-	assertRequestPayload := func(t *testing.T, body []byte) {
+	assertFlowPayload := func(t *testing.T, body []byte) {
 		assert.Equal(t, "password", gjson.GetBytes(body, "methods.password.method").String(), "%s", body)
 		assert.NotEmpty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==csrf_token).value").String(), "%s", body)
 		assert.NotEmpty(t, gjson.GetBytes(body, "id").String(), "%s", body)
@@ -141,75 +166,44 @@ func TestLoginHandler(t *testing.T) {
 
 	assertExpiredPayload := func(t *testing.T, res *http.Response, body []byte) {
 		assert.EqualValues(t, http.StatusGone, res.StatusCode)
-		assert.Equal(t, public.URL+login.BrowserLoginPath, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
+		assert.Equal(t, public.URL+login.RouteInitBrowserFlow, gjson.GetBytes(body, "error.details.redirect_to").String(), "%s", body)
 	}
 
-	newExpiredRequest := func() *login.Request {
-		return &login.Request{
+	newExpiredFlow := func() *login.Flow {
+		return &login.Flow{
 			ID:         x.NewUUID(),
 			ExpiresAt:  time.Now().Add(-time.Minute),
 			IssuedAt:   time.Now().Add(-time.Minute * 2),
-			RequestURL: public.URL + login.BrowserLoginPath,
+			RequestURL: public.URL + login.RouteInitBrowserFlow,
 			CSRFToken:  x.FakeCSRFToken,
+			Type:       flow.TypeBrowser,
 		}
 	}
 
-	t.Run("daemon=admin", func(t *testing.T) {
-		loginTS := newLoginTS(t, admin.URL, nil)
+	run := func(t *testing.T, endpoint *httptest.Server) {
+		loginTS := newLoginTS(t, endpoint.URL, nil)
 		defer loginTS.Close()
 		viper.Set(configuration.ViperKeySelfServiceLoginUI, loginTS.URL)
 		viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
 			"enabled": true})
 
 		t.Run("case=valid", func(t *testing.T) {
-			assertRequestPayload(t, x.EasyGetBody(t, admin.Client(), public.URL+login.BrowserLoginPath))
+			assertFlowPayload(t, x.EasyGetBody(t, endpoint.Client(), public.URL+login.RouteInitBrowserFlow))
 		})
 
 		t.Run("case=expired", func(t *testing.T) {
-			lr := newExpiredRequest()
-			require.NoError(t, reg.LoginRequestPersister().CreateLoginRequest(context.Background(), lr))
-			res, body := x.EasyGet(t, admin.Client(), admin.URL+login.BrowserLoginRequestsPath+"?request="+lr.ID.String())
+			lr := newExpiredFlow()
+			require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.Background(), lr))
+			res, body := x.EasyGet(t, admin.Client(), endpoint.URL+login.RouteGetFlow+"?id="+lr.ID.String())
 			assertExpiredPayload(t, res, body)
 		})
+	}
+
+	t.Run("daemon=admin", func(t *testing.T) {
+		run(t, admin)
 	})
 
 	t.Run("daemon=public", func(t *testing.T) {
-		j, err := cookiejar.New(nil)
-		require.NoError(t, err)
-		hc := &http.Client{Jar: j}
-
-		t.Run("case=with_csrf", func(t *testing.T) {
-			loginTS := newLoginTS(t, public.URL, hc)
-			defer loginTS.Close()
-			viper.Set(configuration.ViperKeySelfServiceLoginUI, loginTS.URL)
-
-			assertRequestPayload(t, x.EasyGetBody(t, hc, public.URL+login.BrowserLoginPath))
-		})
-
-		t.Run("case=without_csrf", func(t *testing.T) {
-			loginTS := newLoginTS(t, public.URL,
-				// using a different client because it doesn't have access to the cookie jar
-				new(http.Client))
-			defer loginTS.Close()
-			viper.Set(configuration.ViperKeySelfServiceLoginUI, loginTS.URL)
-
-			body := x.EasyGetBody(t, hc, public.URL+login.BrowserLoginPath)
-			assert.Contains(t, gjson.GetBytes(body, "error").String(), "csrf_token", "%s", body)
-		})
-
-		t.Run("case=expired", func(t *testing.T) {
-			reg.WithCSRFTokenGenerator(x.FakeCSRFTokenGenerator)
-			t.Cleanup(func() {
-				reg.WithCSRFTokenGenerator(nosurf.Token)
-			})
-
-			loginTS := newLoginTS(t, public.URL, hc)
-			defer loginTS.Close()
-
-			lr := newExpiredRequest()
-			require.NoError(t, reg.LoginRequestPersister().CreateLoginRequest(context.Background(), lr))
-			res, body := x.EasyGet(t, admin.Client(), admin.URL+login.BrowserLoginRequestsPath+"?request="+lr.ID.String())
-			assertExpiredPayload(t, res, body)
-		})
+		run(t, public)
 	})
 }

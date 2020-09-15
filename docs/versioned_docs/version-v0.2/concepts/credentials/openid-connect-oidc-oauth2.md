@@ -86,7 +86,7 @@ flow will fail.
 
 You will also need to project data coming from the provider onto your own data
 model. You can express this using a JSON Path
-([learn more about the syntax](../reference/json-schema-json-paths.md)) in your
+([learn more about the syntax](../../reference/json-schema-json-paths.md)) in your
 JSON Schema. Let's assume you want to map field `username` from the provider to
 field `traits.name` in your identity:
 

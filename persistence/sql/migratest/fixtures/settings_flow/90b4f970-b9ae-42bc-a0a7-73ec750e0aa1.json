@@ -1,0 +1,40 @@
+{
+  "id": "90b4f970-b9ae-42bc-a0a7-73ec750e0aa1",
+  "type": "browser",
+  "expires_at": "2013-10-07T08:23:19Z",
+  "issued_at": "2013-10-07T08:23:19Z",
+  "request_url": "http://kratos:4433/self-service/browser/flows/settings",
+  "active": "profile",
+  "messages": [],
+  "methods": {
+    "profile": {
+      "method": "profile",
+      "config": {
+        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/settings/strategies/profile?request=21c5f714-3089-49d2-b387-f244d4dd9e00",
+        "method": "POST",
+        "fields": [
+          {
+            "name": "csrf_token",
+            "type": "hidden",
+            "required": true,
+            "value": "yDwSg0quCmc4kBl7lBqYwGh4W8awrc+TpeWiigZs3iemRCwqeDhGdrW3sIv8T7u742pN+Kryx/NrdRpEXcT9qA=="
+          },
+          {
+            "name": "traits.email",
+            "type": "text",
+            "value": "foo"
+          }
+        ]
+      }
+    }
+  },
+  "identity": {
+    "id": "a251ebc2-880c-4f76-a8f3-38e6940eab0e",
+    "schema_id": "default",
+    "schema_url": "",
+    "traits": {
+      "email": "foobar@ory.sh"
+    }
+  },
+  "state": "show_form"
+}

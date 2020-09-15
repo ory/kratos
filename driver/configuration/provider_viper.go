@@ -61,7 +61,7 @@ const (
 	ViperKeySessionPath             = "session.cookie.path"
 	ViperKeySessionPersistentCookie = "session.cookie.persistent"
 
-	ViperKeySelfServiceStrategyConfig = "selfservice.strategies"
+	ViperKeySelfServiceStrategyConfig = "selfservice.methods"
 
 	ViperKeySelfServiceBrowserDefaultReturnTo = "selfservice." + DefaultBrowserReturnURL
 	ViperKeyURLsWhitelistedReturnToDomains    = "selfservice.whitelisted_return_urls"
@@ -376,7 +376,7 @@ func (p *ViperProvider) SelfServiceFlowErrorURL() *url.URL {
 	return mustParseURLFromViper(p.l, ViperKeySelfServiceErrorUI)
 }
 
-func (p *ViperProvider) SelfServiceFlowRegisterUI() *url.URL {
+func (p *ViperProvider) SelfServiceFlowRegistrationUI() *url.URL {
 	return mustParseURLFromViper(p.l, ViperKeySelfServiceRegistrationUI)
 }
 
@@ -408,7 +408,7 @@ func (p *ViperProvider) SelfServiceFlowLoginRequestLifespan() time.Duration {
 	return viperx.GetDuration(p.l, ViperKeySelfServiceLoginRequestLifespan, time.Hour)
 }
 
-func (p *ViperProvider) SelfServiceFlowSettingsRequestLifespan() time.Duration {
+func (p *ViperProvider) SelfServiceFlowSettingsFlowLifespan() time.Duration {
 	return viperx.GetDuration(p.l, ViperKeySelfServiceSettingsRequestLifespan, time.Hour)
 }
 
@@ -430,13 +430,14 @@ func (p *ViperProvider) CourierSMTPFrom() string {
 }
 
 func (p *ViperProvider) CourierTemplatesRoot() string {
-	return viperx.GetString(p.l, ViperKeyCourierTemplatesPath, "")
+	return viperx.GetString(p.l, ViperKeyCourierTemplatesPath, "/courier/template/templates")
 }
 
 func mustParseURLFromViper(l *logrusx.Logger, key string) *url.URL {
 	u, err := url.ParseRequestURI(viper.GetString(key))
 	if err != nil {
-		l.WithError(err).Fatalf("Configuration value from key %s is not a valid URL: %s", key, viper.GetString(key))
+		l.WithError(errors.WithStack(err)).
+			Fatalf("Configuration value from key %s is not a valid URL: %s", key, viper.GetString(key))
 	}
 	return u
 }
@@ -474,11 +475,10 @@ func (p *ViperProvider) SelfServiceFlowVerificationRequestLifespan() time.Durati
 	return viperx.GetDuration(p.l, ViperKeySelfServiceVerificationRequestLifespan, time.Hour)
 }
 
-func (p *ViperProvider) SelfServiceFlowVerificationReturnTo() *url.URL {
-	redir, err := url.ParseRequestURI(
-		viperx.GetString(p.l, ViperKeySelfServiceVerificationBrowserDefaultReturnTo, ""))
+func (p *ViperProvider) SelfServiceFlowVerificationReturnTo(defaultReturnTo *url.URL) *url.URL {
+	redir, err := url.ParseRequestURI(viperx.GetString(p.l, ViperKeySelfServiceVerificationBrowserDefaultReturnTo, ""))
 	if err != nil {
-		return p.SelfServiceBrowserDefaultReturnTo()
+		return defaultReturnTo
 	}
 	return redir
 }

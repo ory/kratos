@@ -4,22 +4,19 @@ To create a new [fizz](https://gobuffalo.io/en/docs/db/fizz/) migration run in t
 
 ```
 $ name=
-$ soda generate fizz -c ./persistence/sql/.soda.yml -p ./persistence/sql/migrations/templates $name $name
+$ ory dev pop migration create ./persistence/sql/migrations/templates $name
 ```
 
 To create SQL migrations, target each database individually and run
 
 ```
+$ dialect=mysql  # or postgres|cockroach|sqlite
+$ name=
+$ ory dev pop migration create -d=$dialect ./persistence/sql/migrations/templates $name
 $ soda generate sql -e mysql -c ./persistence/sql/.soda.yml -p ./persistence/sql/migrations/templates [name]
 $ soda generate sql -e sqlite -c ./persistence/sql/.soda.yml -p ./persistence/sql/migrations/templates [name]
 $ soda generate sql -e postgres -c ./persistence/sql/.soda.yml -p ./persistence/sql/migrations/templates [name]
 $ soda generate sql -e cockroach -c ./persistence/sql/.soda.yml -p ./persistence/sql/migrations/templates [name]
-```
-
-or, alternative run
-
-```
-$ soda generate sql -c ./persistence/sql/.soda.yml -p ./persistence/sql/migrations/templates
 ```
 
 and remove the `sqlite` part from the newly generated file to create a SQL migrations that works with all

@@ -12,7 +12,6 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-// swagger:model oidcStrategyCredentialsConfig
 type CredentialsConfig struct {
 	Providers []ProviderCredentialsConfig `json:"providers"`
 }
@@ -38,22 +37,21 @@ type ProviderCredentialsConfig struct {
 	Provider string `json:"provider"`
 }
 
-// swagger:model oidcRequestMethodConfig
-type RequestMethod struct {
+type FlowMethod struct {
 	*form.HTMLForm
 }
 
-func (r *RequestMethod) AddProviders(providers []Configuration) *RequestMethod {
+func (r *FlowMethod) AddProviders(providers []Configuration) *FlowMethod {
 	for _, p := range providers {
 		r.Fields = append(r.Fields, form.Field{Name: "provider", Type: "submit", Value: p.ID})
 	}
 	return r
 }
 
-func NewRequestMethodConfig(f *form.HTMLForm) *RequestMethod {
-	return &RequestMethod{HTMLForm: f}
+func NewFlowMethod(f *form.HTMLForm) *FlowMethod {
+	return &FlowMethod{HTMLForm: f}
 }
 
-type request interface {
+type ider interface {
 	GetID() uuid.UUID
 }

@@ -1,6 +1,6 @@
 import { APP_URL, gen } from '../../../../helpers'
 
-context('Login', () => {
+context('Login Flow Error', () => {
   beforeEach(() => {
     cy.visit(APP_URL + '/auth/login')
   })
@@ -14,7 +14,7 @@ context('Login', () => {
     cy.get('button[type="submit"]').click()
 
     // FIXME https://github.com/ory/kratos/issues/91
-    cy.get('html').should('contain.text', 'CSRF token is missing or invalid')
+    cy.get('html').should('contain.text', 'missing or invalid csrf_token value')
   })
 
   describe('shows validation errors when invalid signup data is used', () => {
@@ -22,7 +22,7 @@ context('Login', () => {
       cy.get('button[type="submit"]').click()
       cy.get('.messages .message').should(
         'contain.text',
-        'Property identifier is missing'
+        'length must be >= 1, but got 0'
       )
     })
 
@@ -35,7 +35,7 @@ context('Login', () => {
       cy.get('button[type="submit"]').click()
       cy.get('.messages .message').should(
         'contain.text',
-        'Property password is missing'
+        'length must be >= 1, but got 0'
       )
     })
 

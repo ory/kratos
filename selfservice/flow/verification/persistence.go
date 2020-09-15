@@ -11,90 +11,130 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/viper"
-	"github.com/ory/x/errorsx"
-	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/form"
+	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
 
 type (
-	PersistenceProvider interface {
-		VerificationPersister() Persister
+	FlowPersistenceProvider interface {
+		VerificationFlowPersister() FlowPersister
 	}
-	Persister interface {
-		CreateVerificationRequest(context.Context, *Request) error
-		GetVerificationRequest(ctx context.Context, id uuid.UUID) (*Request, error)
-		UpdateVerificationRequest(context.Context, *Request) error
+	FlowPersister interface {
+		CreateVerificationFlow(context.Context, *Flow) error
+		GetVerificationFlow(ctx context.Context, id uuid.UUID) (*Flow, error)
+		UpdateVerificationFlow(context.Context, *Flow) error
 	}
 )
 
-func TestPersister(p interface {
-	Persister
+func TestFlowPersister(p interface {
+	FlowPersister
 	identity.PrivilegedPool
 }) func(t *testing.T) {
 	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+
+	var clearids = func(r *Flow) {
+		r.ID = uuid.UUID{}
+	}
+
 	return func(t *testing.T) {
-		t.Run("suite=request", func(t *testing.T) {
-			t.Run("case=should error when the verify does not exist", func(t *testing.T) {
-				_, err := p.GetVerificationRequest(context.Background(), x.NewUUID())
-				require.Equal(t, errorsx.Cause(err), sqlcon.ErrNoRows)
-			})
+		t.Run("case=should error when the verification request does not exist", func(t *testing.T) {
+			_, err := p.GetVerificationFlow(context.Background(), x.NewUUID())
+			require.Error(t, err)
+		})
 
-			var clearids = func(r *Request) {
-				r.ID = uuid.UUID{}
-			}
+		var newFlow = func(t *testing.T) *Flow {
+			var r Flow
+			require.NoError(t, faker.FakeData(&r))
+			clearids(&r)
+			require.Len(t, r.Methods, 1)
+			return &r
+		}
 
-			var newRequest = func(t *testing.T) *Request {
-				var r Request
-				require.NoError(t, faker.FakeData(&r))
-				r.Via = identity.VerifiableAddressTypeEmail
-				clearids(&r)
-				return &r
-			}
+		t.Run("case=should create a new verification flow", func(t *testing.T) {
+			r := newFlow(t)
+			err := p.CreateVerificationFlow(context.Background(), r)
+			require.NoError(t, err, "%#v", err)
+		})
 
-			t.Run("case=should create and fetch verify request", func(t *testing.T) {
-				expected := newRequest(t)
-				expected.Form = form.NewHTMLForm("some/action")
-				err := p.CreateVerificationRequest(context.Background(), expected)
-				require.NoError(t, err, "%#v", err)
-				actual, err := p.GetVerificationRequest(context.Background(), expected.ID)
-				require.NoError(t, err)
+		t.Run("case=should create with set ids", func(t *testing.T) {
+			var r Flow
+			require.NoError(t, faker.FakeData(&r))
+			require.NoError(t, p.CreateVerificationFlow(context.Background(), &r))
+		})
 
-				factual, err := json.Marshal(actual.Form)
-				require.NoError(t, err)
-				fexpected, err := json.Marshal(expected.Form)
-				require.NoError(t, err)
+		t.Run("case=should create and fetch a verification request", func(t *testing.T) {
+			expected := newFlow(t)
+			err := p.CreateVerificationFlow(context.Background(), expected)
+			require.NoError(t, err)
 
-				assert.NotEmpty(t, actual.Form.Action)
-				assert.EqualValues(t, expected.ID, actual.ID)
-				assert.JSONEq(t, string(fexpected), string(factual))
-				x.AssertEqualTime(t, expected.IssuedAt, actual.IssuedAt)
-				x.AssertEqualTime(t, expected.ExpiresAt, actual.ExpiresAt)
-				assert.EqualValues(t, expected.RequestURL, actual.RequestURL)
-				assert.EqualValues(t, expected.Via, actual.Via)
-				assert.EqualValues(t, expected.CSRFToken, actual.CSRFToken)
-			})
+			actual, err := p.GetVerificationFlow(context.Background(), expected.ID)
+			require.NoError(t, err)
 
-			t.Run("case=should create and update a verify request", func(t *testing.T) {
-				expected := newRequest(t)
-				expected.Form = form.NewHTMLForm("some/action")
-				err := p.CreateVerificationRequest(context.Background(), expected)
-				require.NoError(t, err)
+			fexpected, _ := json.Marshal(expected.Methods[StrategyVerificationLinkName].Config)
+			factual, _ := json.Marshal(actual.Methods[StrategyVerificationLinkName].Config)
 
-				expected.Form.Action = "/new-action"
-				expected.RequestURL = "/new-request-url"
-				require.NoError(t, p.UpdateVerificationRequest(context.Background(), expected))
+			require.NotEmpty(t, actual.Methods[StrategyVerificationLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action)
+			assert.EqualValues(t, expected.ID, actual.ID)
+			assert.JSONEq(t, string(fexpected), string(factual))
+			x.AssertEqualTime(t, expected.IssuedAt, actual.IssuedAt)
+			x.AssertEqualTime(t, expected.ExpiresAt, actual.ExpiresAt)
+			assert.EqualValues(t, expected.RequestURL, actual.RequestURL)
+		})
 
-				actual, err := p.GetVerificationRequest(context.Background(), expected.ID)
-				require.NoError(t, err)
+		t.Run("case=should create and update a verification request", func(t *testing.T) {
+			expected := newFlow(t)
+			expected.Methods[StrategyVerificationLinkName] = &FlowMethod{
+				Method: StrategyVerificationLinkName, Config: &FlowMethodConfig{FlowMethodConfigurator: &form.HTMLForm{Fields: []form.Field{{
+					Name: "zab", Type: "bar", Pattern: "baz"}}}}}
+			expected.Methods["password"] = &FlowMethod{
+				Method: "password", Config: &FlowMethodConfig{FlowMethodConfigurator: &form.HTMLForm{Fields: []form.Field{{
+					Name: "foo", Type: "bar", Pattern: "baz"}}}}}
+			err := p.CreateVerificationFlow(context.Background(), expected)
+			require.NoError(t, err)
 
-				assert.Equal(t, "/new-action", actual.Form.Action)
-				assert.Equal(t, "/new-request-url", actual.RequestURL)
-			})
+			expected.Methods[StrategyVerificationLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action = "/new-action"
+			expected.Methods["password"].Config.FlowMethodConfigurator.(*form.HTMLForm).Fields = []form.Field{{
+				Name: "zab", Type: "zab", Pattern: "zab"}}
+			expected.RequestURL = "/new-request-url"
+			expected.Active = StrategyVerificationLinkName
+			expected.Messages.Add(text.NewVerificationEmailSent())
+			require.NoError(t, p.UpdateVerificationFlow(context.Background(), expected))
 
+			actual, err := p.GetVerificationFlow(context.Background(), expected.ID)
+			require.NoError(t, err)
+
+			assert.Equal(t, "/new-action", actual.Methods[StrategyVerificationLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action)
+			assert.Equal(t, "/new-request-url", actual.RequestURL)
+			assert.Equal(t, StrategyVerificationLinkName, actual.Active.String())
+			assert.Equal(t, expected.Messages, actual.Messages)
+			assert.EqualValues(t, []form.Field{{Name: "zab", Type: "zab", Pattern: "zab"}}, actual.
+				Methods["password"].Config.FlowMethodConfigurator.(*form.HTMLForm).Fields)
+			assert.EqualValues(t, []form.Field{{Name: "zab", Type: "bar", Pattern: "baz"}}, actual.
+				Methods[StrategyVerificationLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Fields)
+		})
+
+		t.Run("case=should not cause data loss when updating a request without changes", func(t *testing.T) {
+			expected := newFlow(t)
+			err := p.CreateVerificationFlow(context.Background(), expected)
+			require.NoError(t, err)
+
+			actual, err := p.GetVerificationFlow(context.Background(), expected.ID)
+			require.NoError(t, err)
+			assert.Len(t, actual.Methods, 1)
+
+			require.NoError(t, p.UpdateVerificationFlow(context.Background(), actual))
+
+			actual, err = p.GetVerificationFlow(context.Background(), expected.ID)
+			require.NoError(t, err)
+			require.Len(t, actual.Methods, 1)
+
+			js, _ := json.Marshal(actual.Methods)
+			assert.Equal(t, expected.Methods[StrategyVerificationLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action,
+				actual.Methods[StrategyVerificationLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action, "%s", js)
 		})
 	}
 }

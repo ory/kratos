@@ -149,7 +149,7 @@
         "mapper_url"
       ]
     },
-    "selfServiceAfterSettingsStrategy": {
+    "selfServiceAfterSettingsMethod": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -170,7 +170,7 @@
         }
       }
     },
-    "selfServiceAfterLoginStrategy": {
+    "selfServiceAfterLoginMethod": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -191,7 +191,7 @@
         }
       }
     },
-    "selfServiceAfterRegistrationStrategy": {
+    "selfServiceAfterRegistrationMethod": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -220,10 +220,10 @@
           "$ref": "#/definitions/defaultReturnTo"
         },
         "password": {
-          "$ref": "#/definitions/selfServiceAfterSettingsStrategy"
+          "$ref": "#/definitions/selfServiceAfterSettingsMethod"
         },
         "profile": {
-          "$ref": "#/definitions/selfServiceAfterSettingsStrategy"
+          "$ref": "#/definitions/selfServiceAfterSettingsMethod"
         }
       }
     },
@@ -235,10 +235,10 @@
           "$ref": "#/definitions/defaultReturnTo"
         },
         "password": {
-          "$ref": "#/definitions/selfServiceAfterLoginStrategy"
+          "$ref": "#/definitions/selfServiceAfterLoginMethod"
         },
         "oidc": {
-          "$ref": "#/definitions/selfServiceAfterLoginStrategy"
+          "$ref": "#/definitions/selfServiceAfterLoginMethod"
         }
       }
     },
@@ -250,10 +250,10 @@
           "$ref": "#/definitions/defaultReturnTo"
         },
         "password": {
-          "$ref": "#/definitions/selfServiceAfterRegistrationStrategy"
+          "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
         },
         "oidc": {
-          "$ref": "#/definitions/selfServiceAfterRegistrationStrategy"
+          "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
         }
       }
     }
@@ -508,7 +508,7 @@
             }
           }
         },
-        "strategies": {
+        "methods": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
@@ -518,7 +518,7 @@
               "properties": {
                 "enabled": {
                   "type": "boolean",
-                  "title": "Enables Profile Management Strategy",
+                  "title": "Enables Profile Management Method",
                   "default": true
                 }
               }
@@ -529,7 +529,7 @@
               "properties": {
                 "enabled": {
                   "type": "boolean",
-                  "title": "Enables Token-based Account Recovery Strategy",
+                  "title": "Enables Token-based Account Recovery Method",
                   "default": true
                 }
               }
@@ -540,7 +540,7 @@
               "properties": {
                 "enabled": {
                   "type": "boolean",
-                  "title": "Enables Password Strategy",
+                  "title": "Enables Username/Email and Password Method",
                   "default": true
                 }
               }
@@ -551,7 +551,7 @@
               "properties": {
                 "enabled": {
                   "type": "boolean",
-                  "title": "Enables OpenID Connect Strategy",
+                  "title": "Enables OpenID Connect Method",
                   "default": false
                 },
                 "config": {
@@ -716,6 +716,11 @@
             "fatal",
             "panic"
           ]
+        },
+        "leak_sensitive_values": {
+          "type": "boolean",
+          "title": "Leak Sensitive Log Values",
+          "description": "If set will leak sensitive values (e.g. emails) in the logs."
         },
         "format": {
           "type": "string",

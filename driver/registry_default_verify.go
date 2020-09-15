@@ -3,13 +3,14 @@ package driver
 import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/ory/kratos/selfservice/strategy/link"
 )
 
-func (m *RegistryDefault) VerificationPersister() verification.Persister {
+func (m *RegistryDefault) VerificationFlowPersister() verification.FlowPersister {
 	return m.persister
 }
 
-func (m *RegistryDefault) VerificationRequestErrorHandler() *verification.ErrorHandler {
+func (m *RegistryDefault) VerificationFlowErrorHandler() *verification.ErrorHandler {
 	if m.selfserviceVerifyErrorHandler == nil {
 		m.selfserviceVerifyErrorHandler = verification.NewErrorHandler(m, m.c)
 	}
@@ -33,10 +34,10 @@ func (m *RegistryDefault) VerificationHandler() *verification.Handler {
 	return m.selfserviceVerifyHandler
 }
 
-func (m *RegistryDefault) VerificationSender() *verification.Sender {
-	if m.selfserviceVerifySender == nil {
-		m.selfserviceVerifySender = verification.NewSender(m, m.c)
+func (m *RegistryDefault) LinkSender() *link.Sender {
+	if m.selfserviceLinkSender == nil {
+		m.selfserviceLinkSender = link.NewSender(m, m.c)
 	}
 
-	return m.selfserviceVerifySender
+	return m.selfserviceLinkSender
 }

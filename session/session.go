@@ -5,6 +5,8 @@ import (
 
 	"github.com/gofrs/uuid"
 
+	"github.com/ory/x/randx"
+
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/x"
 )
@@ -12,7 +14,9 @@ import (
 // swagger:model session
 type Session struct {
 	// required: true
-	ID uuid.UUID `json:"sid" faker:"-" db:"id"`
+	ID uuid.UUID `json:"id" faker:"-" db:"id"`
+
+	Active bool `json:"active" db:"active"`
 
 	// required: true
 	ExpiresAt time.Time `json:"expires_at" db:"expires_at" faker:"time_type"`
@@ -32,13 +36,15 @@ type Session struct {
 	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
+
+	Token string `json:"-" db:"token"`
 }
 
 func (s Session) TableName() string {
 	return "sessions"
 }
 
-func NewSession(i *identity.Identity, c interface {
+func NewActiveSession(i *identity.Identity, c interface {
 	SessionLifespan() time.Duration
 }, authenticatedAt time.Time) *Session {
 	return &Session{
@@ -48,6 +54,8 @@ func NewSession(i *identity.Identity, c interface {
 		IssuedAt:        time.Now().UTC(),
 		Identity:        i,
 		IdentityID:      i.ID,
+		Token:           randx.MustString(32, randx.AlphaNum),
+		Active:          true,
 	}
 }
 
@@ -59,4 +67,8 @@ type Device struct {
 func (s *Session) Declassify() *Session {
 	s.Identity = s.Identity.CopyWithoutCredentials()
 	return s
+}
+
+func (s *Session) IsActive() bool {
+	return s.Active && s.ExpiresAt.After(time.Now())
 }

@@ -8,11 +8,13 @@ import (
 	"github.com/justinas/nosurf"
 	"github.com/pkg/errors"
 
-	"github.com/ory/kratos/continuity"
-	"github.com/ory/kratos/schema"
+	"github.com/ory/x/urlx"
 
 	"github.com/ory/herodot"
-	"github.com/ory/x/urlx"
+
+	"github.com/ory/kratos/continuity"
+	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/flow"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
@@ -22,8 +24,9 @@ import (
 )
 
 const (
-	PublicPath        = "/self-service/browser/flows/settings"
-	PublicRequestPath = "/self-service/browser/flows/requests/settings"
+	RouteInitBrowserFlow = "/self-service/settings/browser"
+	RouteInitAPIFlow     = "/self-service/settings/api"
+	RouteGetFlow         = "/self-service/settings/flows"
 
 	ContinuityPrefix = "ory_kratos_settings"
 )
@@ -50,7 +53,7 @@ type (
 		errorx.ManagementProvider
 
 		ErrorHandlerProvider
-		RequestPersistenceProvider
+		FlowPersistenceProvider
 		StrategyProvider
 
 		IdentityTraitsSchemas() schema.Schemas
@@ -71,87 +74,143 @@ func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	redirect := session.RedirectOnUnauthenticated(h.c.SelfServiceFlowLoginUI().String())
-	public.GET(PublicPath, h.d.SessionHandler().IsAuthenticated(h.initUpdateSettings, redirect))
-	public.GET(PublicRequestPath, h.d.SessionHandler().IsAuthenticated(h.publicFetchUpdateSettingsRequest, redirect))
+	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsAuthenticated(h.initBrowserFlow, redirect))
+	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsAuthenticated(h.initApiFlow, nil))
+
+	public.GET(RouteGetFlow, h.d.SessionHandler().IsAuthenticated(h.fetchPublicFLow, OnUnauthenticated(h.c, h.d)))
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
-	admin.GET(PublicRequestPath, h.adminFetchUpdateSettingsRequest)
+	admin.GET(RouteGetFlow, h.fetchAdminFlow)
 }
 
-// swagger:route GET /self-service/browser/flows/settings public initializeSelfServiceSettingsFlow
+func (h *Handler) NewFlow(w http.ResponseWriter, r *http.Request, i *identity.Identity, ft flow.Type) (*Flow, error) {
+	f := NewFlow(h.c.SelfServiceFlowSettingsFlowLifespan(), r, i, ft)
+	for _, strategy := range h.d.SettingsStrategies() {
+		if err := h.d.ContinuityManager().Abort(r.Context(), w, r, ContinuityKey(strategy.SettingsStrategyID())); err != nil {
+			return nil, err
+		}
+
+		if err := strategy.PopulateSettingsMethod(r, i, f); err != nil {
+			return nil, err
+		}
+	}
+
+	if err := h.d.SettingsFlowPersister().CreateSettingsFlow(r.Context(), f); err != nil {
+		return nil, err
+	}
+
+	return f, nil
+}
+
+// swagger:route GET /self-service/settings/api public initializeSelfServiceSettingsViaAPIFlow
 //
-// Initialize Browser-Based Settings Flow
+// Initialize Settings Flow for API Clients
 //
-// This endpoint initializes a browser-based settings flow. Once initialized, the browser will be redirected to
-// `selfservice.flows.settings.ui_url` with the request ID set as a query parameter. If no valid user session exists, a login
-// flow will be initialized.
+// This endpoint initiates a settings flow for API clients such as mobile devices, smart TVs, and so on.
+// You must provide a valid ORY Kratos Session Token for this endpoint to respond with HTTP 200 OK.
 //
-// > This endpoint is NOT INTENDED for API clients and only works
-// with browsers (Chrome, Firefox, ...).
+// To fetch an existing settings flow call `/self-service/settings/flows?flow=<flow_id>`.
+//
+// :::warning
+//
+// You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
+// Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
+// you vulnerable to a variety of CSRF attacks.
+//
+// This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
+//
+// :::
 //
 // More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
 //     Schemes: http, https
 //
+//     Security:
+//     - sessionToken
+//
+//     Responses:
+//       200: settingsFlow
+//       400: genericError
+//       500: genericError
+func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	s, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
+	if err != nil {
+		h.d.Writer().WriteError(w, r, err)
+		return
+	}
+
+	f, err := h.NewFlow(w, r, s.Identity, flow.TypeAPI)
+	if err != nil {
+		h.d.Writer().WriteError(w, r, err)
+		return
+	}
+
+	h.d.Writer().Write(w, r, f)
+}
+
+// swagger:route GET /self-service/settings/browser/flows public initializeSelfServiceSettingsViaBrowserFlow
+//
+// Initialize Settings Flow for Browsers
+//
+// This endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to
+// `selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid
+// ORY Kratos Session Cookie is included in the request, a login flow will be initialized.
+//
+// :::note
+//
+// This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+//
+// :::
+//
+// More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+//
+//     Schemes: http, https
+//
+//     Security:
+//     - sessionToken
+//
 //     Responses:
 //       302: emptyResponse
 //       500: genericError
-func (h *Handler) initUpdateSettings(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	s, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
-	req := NewRequest(h.c.SelfServiceFlowSettingsRequestLifespan(), r, s)
-
-	if err := h.CreateRequest(w, r, s, req); err != nil {
+	f, err := h.NewFlow(w, r, s.Identity, flow.TypeBrowser)
+	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
 	}
 
-	http.Redirect(w, r, req.URL(h.c.SelfServiceFlowSettingsUI()).String(), http.StatusFound)
-}
-
-func (h *Handler) CreateRequest(w http.ResponseWriter, r *http.Request, sess *session.Session, req *Request) error {
-	for _, strategy := range h.d.SettingsStrategies() {
-		if err := h.d.ContinuityManager().Abort(r.Context(), w, r, ContinuityKey(strategy.SettingsStrategyID())); err != nil {
-			return err
-		}
-
-		if err := strategy.PopulateSettingsMethod(r, sess, req); err != nil {
-			return err
-		}
-	}
-
-	if err := h.d.SettingsRequestPersister().CreateSettingsRequest(r.Context(), req); err != nil {
-		return err
-	}
-
-	return nil
+	http.Redirect(w, r, f.AppendTo(h.c.SelfServiceFlowSettingsUI()).String(), http.StatusFound)
 }
 
 // nolint:deadcode,unused
-// swagger:parameters getSelfServiceBrowserSettingsRequest
-type getSelfServiceBrowserSettingsRequestParameters struct {
-	// Request is the Login Request ID
+// swagger:parameters getSelfServiceSettingsFlow
+type getSelfServiceSettingsFlowParameters struct {
+	// ID is the Settings Flow ID
 	//
-	// The value for this parameter comes from `request` URL Query parameter sent to your
-	// application (e.g. `/settingss?request=abcde`).
+	// The value for this parameter comes from `flow` URL Query parameter sent to your
+	// application (e.g. `/settings?flow=abcde`).
 	//
 	// required: true
 	// in: query
-	Request string `json:"request"`
+	ID string `json:"id"`
 }
 
-// swagger:route GET /self-service/browser/flows/requests/settings common public admin getSelfServiceBrowserSettingsRequest
+// swagger:route GET /self-service/settings/flows common public admin getSelfServiceSettingsFlow
 //
-// Get the Request Context of Browser-Based Settings Flows
+// Get Settings Flow
 //
-// When accessing this endpoint through ORY Kratos' Public API, ensure that cookies are set as they are required
-// for checking the auth session. To prevent scanning attacks, the public endpoint does not return 404 status codes
-// but instead 403 or 500.
+// When accessing this endpoint through ORY Kratos' Public API you must ensure that either the ORY Kratos Session Cookie
+// or the ORY Kratos Session Token are set. The public endpoint does not return 404 status codes
+// but instead 403 or 500 to improve data privacy.
+//
+// You can access this endpoint without credentials when using ORY Kratos' Admin API.
 //
 // More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 //
@@ -160,21 +219,24 @@ type getSelfServiceBrowserSettingsRequestParameters struct {
 //
 //     Schemes: http, https
 //
+//     Security:
+//     - sessionToken
+//
 //     Responses:
-//       200: settingsRequest
+//       200: settingsFlow
 //       403: genericError
 //       404: genericError
 //       410: genericError
 //       500: genericError
-func (h *Handler) publicFetchUpdateSettingsRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.fetchUpdateSettingsRequest(w, r, true); err != nil {
+func (h *Handler) fetchPublicFLow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if err := h.fetchFlow(w, r, true); err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 }
 
-func (h *Handler) adminFetchUpdateSettingsRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := h.fetchUpdateSettingsRequest(w, r, false); err != nil {
+func (h *Handler) fetchAdminFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if err := h.fetchFlow(w, r, false); err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
@@ -182,15 +244,17 @@ func (h *Handler) adminFetchUpdateSettingsRequest(w http.ResponseWriter, r *http
 
 func (h *Handler) wrapErrorForbidden(err error, shouldWrap bool) error {
 	if shouldWrap {
-		return herodot.ErrForbidden.WithReasonf("Access privileges are missing, invalid, or not sufficient to access this endpoint.").WithTrace(err).WithDebugf("%s", err)
+		return herodot.ErrForbidden.
+			WithReasonf("Access privileges are missing, invalid, or not sufficient to access this endpoint.").
+			WithTrace(err).WithDebugf("%s", err)
 	}
 
 	return err
 }
 
-func (h *Handler) fetchUpdateSettingsRequest(w http.ResponseWriter, r *http.Request, checkSession bool) error {
-	rid := x.ParseUUID(r.URL.Query().Get("request"))
-	pr, err := h.d.SettingsRequestPersister().GetSettingsRequest(r.Context(), rid)
+func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, checkSession bool) error {
+	rid := x.ParseUUID(r.URL.Query().Get("id"))
+	pr, err := h.d.SettingsFlowPersister().GetSettingsFlow(r.Context(), rid)
 	if err != nil {
 		return h.wrapErrorForbidden(err, checkSession)
 	}
@@ -207,9 +271,16 @@ func (h *Handler) fetchUpdateSettingsRequest(w http.ResponseWriter, r *http.Requ
 	}
 
 	if pr.ExpiresAt.Before(time.Now().UTC()) {
-		return errors.WithStack(x.ErrGone.
-			WithReason("The settings request has expired. Redirect the user to the login endpoint to initialize a new session.").
-			WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), PublicPath).String()))
+		if pr.Type == flow.TypeBrowser {
+			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
+				WithReason("The settings flow has expired. Redirect the user to the settings flow init endpoint to initialize a new settings flow.").
+				WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), RouteInitBrowserFlow).String())))
+			return nil
+		}
+		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
+			WithReason("The settings flow has expired. Call the settings flow init API endpoint to initialize a new settings flow.").
+			WithDetail("api", urlx.AppendPaths(h.c.SelfPublicURL(), RouteInitAPIFlow).String())))
+		return nil
 	}
 
 	h.d.Writer().Write(w, r, pr)

@@ -21,9 +21,9 @@ selfservice:
 ```
 
 Passwords are hashed using the
-[Argon2 Hashing Algorithm](../../concepts/security.md#Argon2) which can be
+[Argon2 Hashing Algorithm](../../concepts/security.mdx#Argon2) which can be
 configured in the
-[ORY Kratos Argon2 Configuration](../../concepts/security.md#Argon2).
+[ORY Kratos Argon2 Configuration](../../concepts/security.mdx#Argon2).
 
 When a user signs up using this strategy, the Default Identity Traits Schema
 (set using `identity.traits.default_schema_url`) is used:
@@ -64,7 +64,7 @@ The email address however represents a unique identifier and personally
 identifiable information (PII). An attacker could for example check if an email
 address (e.g. `john.doe@gmail.com`) is registered at a site (e.g. an adult
 website) and use that information for blackmail (see
-[Account Enumeration Attacks](../../concepts/security.md#account-enumeration-attacks)).
+[Account Enumeration Attacks](../../concepts/security.mdx#account-enumeration-attacks)).
 
 The same considerations apply to using a phone number as the primary
 registration & login identifier.

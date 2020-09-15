@@ -22,8 +22,13 @@ import (
 	"github.com/ory/kratos/x"
 )
 
+var _ x.CSRFHandler = new(mockCSRFHandler)
+
 type mockCSRFHandler struct {
 	c int
+}
+
+func (f *mockCSRFHandler) ExemptPath(s string) {
 }
 
 func (f *mockCSRFHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -40,7 +45,7 @@ func TestManagerHTTP(t *testing.T) {
 		mock := new(mockCSRFHandler)
 		reg.WithCSRFHandler(mock)
 
-		require.NoError(t, reg.SessionManager().SaveToRequest(context.Background(), httptest.NewRecorder(), new(http.Request), new(session.Session)))
+		require.NoError(t, reg.SessionManager().IssueCookie(context.Background(), httptest.NewRecorder(), new(http.Request), new(session.Session)))
 		assert.Equal(t, 1, mock.c)
 	})
 
@@ -52,8 +57,13 @@ func TestManagerHTTP(t *testing.T) {
 
 		var s *session.Session
 		rp := x.NewRouterPublic()
+		rp.GET("/session/revoke", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+			require.NoError(t, reg.SessionManager().PurgeFromRequest(r.Context(), w, r))
+			w.WriteHeader(http.StatusOK)
+		})
+
 		rp.GET("/session/set", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-			require.NoError(t, reg.SessionManager().CreateToRequest(r.Context(), w, r, s))
+			require.NoError(t, reg.SessionManager().CreateAndIssueCookie(r.Context(), w, r, s))
 			w.WriteHeader(http.StatusOK)
 		})
 
@@ -77,7 +87,7 @@ func TestManagerHTTP(t *testing.T) {
 
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s = session.NewSession(&i, conf, time.Now())
+			s = session.NewActiveSession(&i, conf, time.Now())
 
 			c := testhelpers.NewClientWithCookies(t)
 			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
@@ -89,10 +99,11 @@ func TestManagerHTTP(t *testing.T) {
 
 		t.Run("case=expired", func(t *testing.T) {
 			viper.Set(configuration.ViperKeySessionLifespan, "1ns")
+			defer viper.Set(configuration.ViperKeySessionLifespan, "1m")
 
 			i := identity.Identity{Traits: []byte("{}")}
 			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
-			s = session.NewSession(&i, conf, time.Now())
+			s = session.NewActiveSession(&i, conf, time.Now())
 
 			c := testhelpers.NewClientWithCookies(t)
 			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
@@ -103,6 +114,24 @@ func TestManagerHTTP(t *testing.T) {
 			require.NoError(t, err)
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode)
 		})
-	})
 
+		t.Run("case=revoked", func(t *testing.T) {
+			i := identity.Identity{Traits: []byte("{}")}
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &i))
+			s = session.NewActiveSession(&i, conf, time.Now())
+
+			s = session.NewActiveSession(&i, conf, time.Now())
+
+			c := testhelpers.NewClientWithCookies(t)
+			testhelpers.MockHydrateCookieClient(t, c, pts.URL+"/session/set")
+
+			res, err := c.Get(pts.URL + "/session/revoke")
+			require.NoError(t, err)
+			assert.EqualValues(t, http.StatusOK, res.StatusCode)
+
+			res, err = c.Get(pts.URL + "/session/get")
+			require.NoError(t, err)
+			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode)
+		})
+	})
 }

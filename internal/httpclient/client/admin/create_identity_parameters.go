@@ -63,7 +63,7 @@ for the create identity operation typically these are written to a http.Request
 type CreateIdentityParams struct {
 
 	/*Body*/
-	Body *models.CreateIdentityRequestPayload
+	Body *models.CreateIdentity
 
 	timeout    time.Duration
 	Context    context.Context
@@ -104,13 +104,13 @@ func (o *CreateIdentityParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithBody adds the body to the create identity params
-func (o *CreateIdentityParams) WithBody(body *models.CreateIdentityRequestPayload) *CreateIdentityParams {
+func (o *CreateIdentityParams) WithBody(body *models.CreateIdentity) *CreateIdentityParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the create identity params
-func (o *CreateIdentityParams) SetBody(body *models.CreateIdentityRequestPayload) {
+func (o *CreateIdentityParams) SetBody(body *models.CreateIdentity) {
 	o.Body = body
 }
 

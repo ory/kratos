@@ -16,6 +16,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/ory/kratos/selfservice/strategy/link"
 
 	"github.com/ory/x/healthx"
 
@@ -95,10 +96,10 @@ type Registry interface {
 
 	settings.HandlerProvider
 	settings.ErrorHandlerProvider
-	settings.RequestPersistenceProvider
+	settings.FlowPersistenceProvider
 	settings.StrategyProvider
 
-	login.RequestPersistenceProvider
+	login.FlowPersistenceProvider
 	login.ErrorHandlerProvider
 	login.HooksProvider
 	login.HookExecutorProvider
@@ -107,19 +108,23 @@ type Registry interface {
 
 	logout.HandlerProvider
 
-	registration.RequestPersistenceProvider
+	registration.FlowPersistenceProvider
 	registration.ErrorHandlerProvider
 	registration.HooksProvider
 	registration.HookExecutorProvider
 	registration.HandlerProvider
 	registration.StrategyProvider
 
-	verification.PersistenceProvider
+	verification.FlowPersistenceProvider
 	verification.ErrorHandlerProvider
-	verification.SenderProvider
 	verification.HandlerProvider
+	verification.StrategyProvider
 
-	recovery.RequestPersistenceProvider
+	link.SenderProvider
+	link.VerificationTokenPersistenceProvider
+	link.RecoveryTokenPersistenceProvider
+
+	recovery.FlowPersistenceProvider
 	recovery.ErrorHandlerProvider
 	recovery.HandlerProvider
 	recovery.StrategyProvider

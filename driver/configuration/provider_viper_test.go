@@ -8,9 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/markbates/pkger"
-
 	"github.com/ory/x/logrusx"
+	"github.com/ory/x/urlx"
 
 	_ "github.com/ory/jsonschema/v3/fileloader"
 
@@ -28,14 +27,10 @@ import (
 var schema []byte
 
 func init() {
-	file, err := pkger.Open("/.schema/config.schema.json")
+	var err error
+	schema, err = ioutil.ReadFile("../../.schema/config.schema.json")
 	if err != nil {
 		panic("Unable to open configuration JSON Schema.")
-	}
-	defer file.Close()
-	schema, err = ioutil.ReadAll(file)
-	if err != nil {
-		panic("Unable to read configuration JSON Schema.")
 	}
 }
 
@@ -54,7 +49,7 @@ func TestViperProvider(t *testing.T) {
 		t.Run("group=urls", func(t *testing.T) {
 			assert.Equal(t, "http://test.kratos.ory.sh/login", p.SelfServiceFlowLoginUI().String())
 			assert.Equal(t, "http://test.kratos.ory.sh/settings", p.SelfServiceFlowSettingsUI().String())
-			assert.Equal(t, "http://test.kratos.ory.sh/register", p.SelfServiceFlowRegisterUI().String())
+			assert.Equal(t, "http://test.kratos.ory.sh/register", p.SelfServiceFlowRegistrationUI().String())
 			assert.Equal(t, "http://test.kratos.ory.sh/error", p.SelfServiceFlowErrorURL().String())
 
 			assert.Equal(t, "http://admin.kratos.ory.sh", p.SelfAdminURL().String())
@@ -117,7 +112,7 @@ func TestViperProvider(t *testing.T) {
 			}, p.SecretsSession())
 		})
 
-		t.Run("group=strategies", func(t *testing.T) {
+		t.Run("group=methods", func(t *testing.T) {
 			for _, tc := range []struct {
 				id      string
 				config  string
@@ -205,7 +200,7 @@ func TestViperProvider(t *testing.T) {
 		})
 
 		t.Run("method=settings", func(t *testing.T) {
-			assert.Equal(t, time.Minute*99, p.SelfServiceFlowSettingsRequestLifespan())
+			assert.Equal(t, time.Minute*99, p.SelfServiceFlowSettingsFlowLifespan())
 			assert.Equal(t, time.Minute*5, p.SelfServiceFlowSettingsPrivilegedSessionMaxAge())
 
 			t.Run("hook=before", func(t *testing.T) {
@@ -400,7 +395,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 		p := configuration.NewViperProvider(logrusx.New("", ""), false)
 		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/login", p.SelfServiceFlowLoginUI().String())
 		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/settings", p.SelfServiceFlowSettingsUI().String())
-		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/registration", p.SelfServiceFlowRegisterUI().String())
+		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/registration", p.SelfServiceFlowRegistrationUI().String())
 		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/recovery", p.SelfServiceFlowRecoveryUI().String())
 		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/verification", p.SelfServiceFlowVerificationUI().String())
 	})
@@ -412,14 +407,14 @@ func TestViperProvider_ReturnTo(t *testing.T) {
 	p := configuration.NewViperProvider(l, false)
 
 	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
-	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowVerificationReturnTo().String())
+	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowVerificationReturnTo(urlx.ParseOrPanic("https://www.ory.sh/")).String())
 	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowRecoveryReturnTo().String())
 
 	viper.Set(configuration.ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, "https://www.ory.sh/recovery")
 	assert.Equal(t, "https://www.ory.sh/recovery", p.SelfServiceFlowRecoveryReturnTo().String())
 
 	viper.Set(configuration.ViperKeySelfServiceVerificationBrowserDefaultReturnTo, "https://www.ory.sh/verification")
-	assert.Equal(t, "https://www.ory.sh/verification", p.SelfServiceFlowVerificationReturnTo().String())
+	assert.Equal(t, "https://www.ory.sh/verification", p.SelfServiceFlowVerificationReturnTo(urlx.ParseOrPanic("https://www.ory.sh/")).String())
 }
 
 func TestViperProvider_DSN(t *testing.T) {

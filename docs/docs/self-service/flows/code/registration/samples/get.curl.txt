@@ -1,0 +1,16 @@
+$ curl -H "Accept: application/json" -s
+  'http://127.0.0.1:4434/self-service/registration/flows?id=7c4260f5-55ad-470a-b1d4-e72dd011e4fe' | jq
+
+{
+  "id": "7c4260f5-55ad-470a-b1d4-e72dd011e4fe",
+  "type": "browser",
+  "expires_at": "2020-08-24T12:01:46.0750749Z",
+  "issued_at": "2020-08-24T11:51:46.0750749Z",
+  "request_url": "http://127.0.0.1:4433/self-service/registration/browser",
+  "active": "password",
+  "methods": {
+    // password ...
+    // oidc ...
+  },
+  "forced": false
+}

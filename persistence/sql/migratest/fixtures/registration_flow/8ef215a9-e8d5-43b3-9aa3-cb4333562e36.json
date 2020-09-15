@@ -1,0 +1,36 @@
+{
+  "id": "8ef215a9-e8d5-43b3-9aa3-cb4333562e36",
+  "type": "api",
+  "expires_at": "2013-10-07T08:23:19Z",
+  "issued_at": "2013-10-07T08:23:19Z",
+  "request_url": "http://kratos:4433/self-service/browser/flows/registration",
+  "active": "password",
+  "messages": [],
+  "methods": {
+    "password": {
+      "method": "password",
+      "config": {
+        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/registration/strategies/password?request=87fa3f43-5155-42b4-a1ad-174c2595fdaf",
+        "method": "POST",
+        "fields": [
+          {
+            "name": "csrf_token",
+            "type": "hidden",
+            "required": true,
+            "value": "KeEp3OT+pHSXJpZAP+C1hR3yr4eIjUBDhg9tc/F1WI1b61SgVCoaOsMbVN9qM8HiNoqefk7KfT7PLn8AfaOcrg=="
+          },
+          {
+            "name": "password",
+            "type": "password",
+            "required": true
+          },
+          {
+            "name": "traits.email",
+            "type": "text",
+            "value": "foo@ory.sh"
+          }
+        ]
+      }
+    }
+  }
+}

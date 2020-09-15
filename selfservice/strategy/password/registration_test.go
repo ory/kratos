@@ -1,21 +1,22 @@
 package password_test
 
 import (
-	"context"
+	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
-	"net/http/cookiejar"
-	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/pointerx"
+
+	"github.com/ory/x/assertx"
 
 	"github.com/ory/viper"
 
@@ -24,11 +25,12 @@ import (
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/selfservice/strategy/password"
-	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
 
@@ -58,253 +60,439 @@ func formMethodIsPOST(t *testing.T, body []byte) {
 
 func TestRegistration(t *testing.T) {
 	t.Run("case=registration", func(t *testing.T) {
-		_, reg := internal.NewFastRegistryWithMocks(t)
+		conf, reg := internal.NewFastRegistryWithMocks(t)
 
 		router := x.NewRouterPublic()
 		admin := x.NewRouterAdmin()
-		viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
-			"enabled": true})
-		ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, admin)
-		defer ts.Close()
+		viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
 
-		errTs, uiTs, returnTs := newErrTs(t, reg), httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			e, err := reg.RegistrationRequestPersister().GetRegistrationRequest(r.Context(), x.ParseUUID(r.URL.Query().Get("request")))
-			require.NoError(t, err)
-			reg.Writer().Write(w, r, e)
-		})), newReturnTs(t, reg)
-		defer errTs.Close()
-		defer uiTs.Close()
-		defer returnTs.Close()
+		publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, admin)
+		errTS := testhelpers.NewErrorTestServer(t, reg)
+		uiTS := testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
+		redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 
-		viper.Set(configuration.ViperKeySelfServiceErrorUI, errTs.URL+"/error-ts")
-		viper.Set(configuration.ViperKeySelfServiceRegistrationUI, uiTs.URL+"/signup-ts")
-		viper.Set(configuration.ViperKeyPublicBaseURL, ts.URL)
-		viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, returnTs.URL+"/default-return-to")
-		viper.Set(configuration.ViperKeySelfServiceRegistrationAfter+"."+configuration.DefaultBrowserReturnURL, returnTs.URL+"/return-ts")
+		// Overwrite these two to ensure that they run
+		viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, redirTS.URL+"/default-return-to")
+		viper.Set(configuration.ViperKeySelfServiceRegistrationAfter+"."+configuration.DefaultBrowserReturnURL, redirTS.URL+"/registration-return-ts")
 		viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
 
-		var newRegistrationRequest = func(t *testing.T, exp time.Duration) *registration.Request {
-			rr := &registration.Request{
-				ID:       x.NewUUID(),
-				IssuedAt: time.Now().UTC(), ExpiresAt: time.Now().UTC().Add(exp), RequestURL: ts.URL,
-				Methods: map[identity.CredentialsType]*registration.RequestMethod{
-					identity.CredentialsTypePassword: {
-						Method: identity.CredentialsTypePassword,
-						Config: &registration.RequestMethodConfig{
-							RequestMethodConfigurator: password.RequestMethod{
-								HTMLForm: &form.HTMLForm{
-									Method: "POST",
-									Action: "/action",
-									Fields: form.Fields{
-										{Name: "password", Type: "password", Required: true},
-										{Name: "csrf_token", Type: "hidden", Required: true, Value: "csrf-token"},
-									},
-								},
-							},
-						},
-					},
-				},
-			}
-			require.NoError(t, reg.RegistrationRequestPersister().CreateRegistrationRequest(context.Background(), rr))
-			return rr
-		}
+		apiClient := testhelpers.NewDebugClient(t)
 
-		var makeRequestWithCookieJar = func(t *testing.T, rid uuid.UUID, body string, expectedStatusCode int, jar *cookiejar.Jar) ([]byte, *http.Response) {
-			client := http.Client{Jar: jar}
-			res, err := client.Post(ts.URL+password.RegistrationPath+"?request="+rid.String(), "application/x-www-form-urlencoded", strings.NewReader(body))
-			require.NoError(t, err)
-			result, err := ioutil.ReadAll(res.Body)
-			require.NoError(t, res.Body.Close())
-			require.NoError(t, err)
-			require.EqualValues(t, expectedStatusCode, res.StatusCode, "Request: %+v\n\t\tResponse: %s", res.Request, res)
-			return result, res
-		}
+		t.Run("description=can call endpoints only without session", func(t *testing.T) {
+			// Needed to set up the mock IDs...
+			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/profile.schema.json")
+			defer viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
 
-		var makeRequest = func(t *testing.T, rid uuid.UUID, body string, expectedStatusCode int) ([]byte, *http.Response) {
-			jar, _ := cookiejar.New(&cookiejar.Options{})
-			return makeRequestWithCookieJar(t, rid, body, expectedStatusCode, jar)
-		}
+			values := url.Values{}
+
+			t.Run("type=browser", func(t *testing.T) {
+				res, err := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, reg).
+					Do(httpx.MustNewRequest("POST", publicTS.URL+password.RouteRegistration, strings.NewReader(values.Encode()), "application/x-www-form-urlencoded"))
+				require.NoError(t, err)
+				defer res.Body.Close()
+				assert.EqualValues(t, http.StatusOK, res.StatusCode, "%+v", res.Request)
+				assert.Contains(t, res.Request.URL.String(), viper.GetString(configuration.ViperKeySelfServiceBrowserDefaultReturnTo))
+			})
+
+			t.Run("type=api", func(t *testing.T) {
+				res, err := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg).
+					Do(httpx.MustNewRequest("POST", publicTS.URL+password.RouteRegistration, strings.NewReader(testhelpers.EncodeFormAsJSON(t, true, values)), "application/json"))
+				require.NoError(t, err)
+				defer res.Body.Close()
+				assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(x.MustReadAll(res.Body), "error").Raw))
+			})
+		})
 
 		t.Run("case=should show the error ui because the request payload is malformed", func(t *testing.T) {
-			rr := newRegistrationRequest(t, time.Minute)
-			body, res := makeRequest(t, rr.ID, "14=)=!(%)$/ZP()GHIÖ", http.StatusOK)
-			assert.Contains(t, res.Request.URL.Path, "signup-ts")
-			assert.Equal(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
-			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.messages.0.text").String(), "invalid URL escape", "%s", body)
+			t.Run("type=api", func(t *testing.T) {
+				f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
+				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+				body, res := testhelpers.RegistrationMakeRequest(t, true, c, apiClient, "14=)=!(%)$/ZP()GHIÖ")
+				assert.Contains(t, res.Request.URL.String(), publicTS.URL+password.RouteRegistration)
+				assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
+				assert.Contains(t, body, `Expected JSON sent in request body to be an object but got: Number`)
+			})
+
+			t.Run("type=browser", func(t *testing.T) {
+				browserClient := testhelpers.NewClientWithCookies(t)
+				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS)
+				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+				body, res := testhelpers.RegistrationMakeRequest(t, false, c, browserClient, "14=)=!(%)$/ZP()GHIÖ")
+				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/registration-ts")
+				assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
+				assert.Contains(t, gjson.Get(body, "methods.password.config.messages.0.text").String(), "invalid URL escape", "%s", body)
+			})
 		})
 
 		t.Run("case=should show the error ui because the request id is missing", func(t *testing.T) {
-			_ = newRegistrationRequest(t, time.Minute)
-			uuidDesNotExistInStore := x.NewUUID()
-			body, res := makeRequest(t, uuidDesNotExistInStore, "", http.StatusOK)
-			assert.Contains(t, res.Request.URL.Path, "error-ts")
-			assert.Equal(t, int64(http.StatusNotFound), gjson.GetBytes(body, "0.code").Int(), "%s", body)
-			assert.Equal(t, "Not Found", gjson.GetBytes(body, "0.status").String(), "%s", body)
-			assert.Contains(t, gjson.GetBytes(body, "0.message").String(), "Unable to locate the resource", "%s", body)
+			var check = func(t *testing.T, actual string) {
+				assert.Equal(t, int64(http.StatusNotFound), gjson.Get(actual, "code").Int(), "%s", actual)
+				assert.Equal(t, "Not Found", gjson.Get(actual, "status").String(), "%s", actual)
+				assert.Contains(t, gjson.Get(actual, "message").String(), "Unable to locate the resource", "%s", actual)
+			}
+
+			fakeFlow := &models.RegistrationFlowMethodConfig{
+				Action: pointerx.String(publicTS.URL + password.RouteRegistration + "?flow=" + x.NewUUID().String())}
+
+			t.Run("type=api", func(t *testing.T) {
+				actual, res := testhelpers.RegistrationMakeRequest(t, true, fakeFlow, apiClient, "{}")
+				assert.Contains(t, res.Request.URL.String(), publicTS.URL+password.RouteRegistration)
+				check(t, gjson.Get(actual, "error").Raw)
+			})
+
+			t.Run("type=browser", func(t *testing.T) {
+				browserClient := testhelpers.NewClientWithCookies(t)
+				actual, res := testhelpers.RegistrationMakeRequest(t, false, fakeFlow, browserClient, "")
+				assert.Contains(t, res.Request.URL.String(), errTS.URL)
+				check(t, gjson.Get(actual, "0").Raw)
+			})
 		})
 
 		t.Run("case=should return an error because the request is expired", func(t *testing.T) {
-			rr := newRegistrationRequest(t, -time.Minute)
-			body, res := makeRequest(t, rr.ID, "", http.StatusOK)
-			assert.Contains(t, res.Request.URL.Path, "signup-ts")
-			assert.NotEqual(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
-			assert.Contains(t, gjson.GetBytes(body, "messages.0.text").String(), "expired", "%s", body)
+			viper.Set(configuration.ViperKeySelfServiceRegistrationRequestLifespan, "100ms")
+			defer viper.Set(configuration.ViperKeySelfServiceRegistrationRequestLifespan, "10m")
+
+			t.Run("type=api", func(t *testing.T) {
+				f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
+				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+
+				time.Sleep(time.Millisecond * 200)
+				actual, res := testhelpers.RegistrationMakeRequest(t, true, c, apiClient, "{}")
+				assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteGetFlow)
+				assert.NotEqual(t, f.Payload.ID, gjson.Get(actual, "id").String(), "%s", actual)
+				assert.Contains(t, gjson.Get(actual, "messages.0.text").String(), "expired", "%s", actual)
+			})
+
+			t.Run("type=browser", func(t *testing.T) {
+				browserClient := testhelpers.NewClientWithCookies(t)
+				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS)
+				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+
+				time.Sleep(time.Millisecond * 200)
+				actual, res := testhelpers.RegistrationMakeRequest(t, false, c, browserClient, "")
+				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/registration-ts")
+				assert.NotEqual(t, f.Payload.ID, gjson.Get(actual, "id").String(), "%s", actual)
+				assert.Contains(t, gjson.Get(actual, "messages.0.text").String(), "expired", "%s", actual)
+			})
 		})
 
+		var expectValidationError = func(t *testing.T, isAPI bool, values func(url.Values)) string {
+			return testhelpers.SubmitRegistrationForm(t, isAPI, nil, publicTS, values,
+				identity.CredentialsTypePassword,
+				testhelpers.ExpectStatusCode(isAPI, http.StatusBadRequest, http.StatusOK),
+				testhelpers.ExpectURL(isAPI, publicTS.URL+password.RouteRegistration, conf.SelfServiceFlowRegistrationUI().String()))
+		}
+
 		t.Run("case=should return an error because the password failed validation", func(t *testing.T) {
-			rr := newRegistrationRequest(t, time.Minute)
-			body, res := makeRequest(t, rr.ID, url.Values{
-				"traits.username": {"registration-identifier-4"},
-				"password":        {"password"},
-				"traits.foobar":   {"bar"},
-			}.Encode(), http.StatusOK)
-			assert.Contains(t, res.Request.URL.Path, "signup-ts")
-			assert.Equal(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
-			assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
-			checkFormContent(t, body, "password", "csrf_token", "traits.username", "traits.foobar")
-			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==password).messages.0").String(), "data breaches and must no longer be used.", "%s", body)
+			var check = func(t *testing.T, actual string) {
+				assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)
+				assert.Contains(t, gjson.Get(actual, "methods.password.config.action").String(), publicTS.URL+password.RouteRegistration, "%s", actual)
+				checkFormContent(t, []byte(actual), "password", "csrf_token", "traits.username", "traits.foobar")
+				assert.Contains(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).messages.0").String(), "data breaches and must no longer be used.", "%s", actual)
+			}
+
+			var values = func(v url.Values) {
+				v.Set("traits.username", "registration-identifier-4")
+				v.Set("password", "password")
+				v.Set("traits.foobar", "bar")
+			}
+
+			t.Run("type=api", func(t *testing.T) {
+				check(t, expectValidationError(t, true, values))
+			})
+
+			t.Run("type=browser", func(t *testing.T) {
+				check(t, expectValidationError(t, false, values))
+			})
 		})
 
 		t.Run("case=should return an error because not passing validation", func(t *testing.T) {
-			rr := newRegistrationRequest(t, time.Minute)
-			body, res := makeRequest(t, rr.ID, url.Values{
-				"traits.username": {"registration-identifier-5"},
+			var check = func(t *testing.T, actual string) {
+				assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)
+				assert.Contains(t, gjson.Get(actual, "methods.password.config.action").String(), publicTS.URL+password.RouteRegistration, "%s", actual)
+				checkFormContent(t, []byte(actual), "password", "csrf_token", "traits.username", "traits.foobar")
+				assert.Contains(t, gjson.Get(actual, "methods.password.config.fields.#(name==traits.foobar).messages.0").String(), `Property foobar is missing`, "%s", actual)
+			}
+
+			var values = func(v url.Values) {
+				v.Set("traits.username", "registration-identifier-5")
+				v.Set("password", x.NewUUID().String())
+				v.Del("traits.foobar")
+			}
+
+			t.Run("type=api", func(t *testing.T) {
+				check(t, expectValidationError(t, true, values))
+			})
+
+			t.Run("type=browser", func(t *testing.T) {
+				check(t, expectValidationError(t, false, values))
+			})
+		})
+
+		t.Run("case=should have correct CSRF behavior", func(t *testing.T) {
+			var values = url.Values{
+				"csrf_token":      {"invalid_token"},
+				"traits.username": {"registration-identifier-csrf-browser"},
 				"password":        {x.NewUUID().String()},
-			}.Encode(), http.StatusOK)
-			assert.Contains(t, res.Request.URL.Path, "signup-ts")
-			assert.Equal(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
-			assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
-			checkFormContent(t, body, "password", "csrf_token", "traits.username", "traits.foobar")
-			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==traits.foobar).messages.0").String(), `Property foobar is missing`, "%s", body)
+				"traits.foobar":   {"bar"},
+			}
+			t.Run("case=should fail because of missing CSRF token/type=browser", func(t *testing.T) {
+				browserClient := testhelpers.NewClientWithCookies(t)
+				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS)
+				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+
+				actual, res := testhelpers.RegistrationMakeRequest(t, false, c, browserClient, values.Encode())
+				assert.EqualValues(t, http.StatusOK, res.StatusCode)
+				assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken,
+					json.RawMessage(gjson.Get(actual, "0").Raw), "%s", actual)
+			})
+
+			t.Run("case=should pass even without CSRF token/type=api", func(t *testing.T) {
+				f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
+				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+
+				actual, res := testhelpers.RegistrationMakeRequest(t, true, c, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
+				assert.EqualValues(t, http.StatusOK, res.StatusCode)
+				assert.NotEmpty(t, gjson.Get(actual, "identity.id").Raw, "%s", actual) // registration successful
+			})
 		})
 
 		t.Run("case=should fail because schema did not specify an identifier", func(t *testing.T) {
 			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/missing-identifier.schema.json")
-			rr := newRegistrationRequest(t, time.Minute)
-			body, res := makeRequest(t, rr.ID, url.Values{
+
+			var check = func(t *testing.T, actual string) {
+				assert.Equal(t, int64(http.StatusInternalServerError), gjson.Get(actual, "code").Int(), "%s", actual)
+				assert.Equal(t, "Internal Server Error", gjson.Get(actual, "status").String(), "%s", actual)
+				assert.Contains(t, gjson.Get(actual, "reason").String(), "No login identifiers", "%s", actual)
+			}
+
+			values := url.Values{
 				"traits.username": {"registration-identifier-6"},
 				"password":        {x.NewUUID().String()},
 				"traits.foobar":   {"bar"},
-			}.Encode(), http.StatusOK)
-			assert.Contains(t, res.Request.URL.Path, "error-ts")
-			assert.Equal(t, int64(http.StatusInternalServerError), gjson.GetBytes(body, "0.code").Int(), "%s", body)
-			assert.Equal(t, "Internal Server Error", gjson.GetBytes(body, "0.status").String(), "%s", body)
-			assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "No login identifiers", "%s", body)
+				"csrf_token":      {x.FakeCSRFToken},
+			}
+
+			t.Run("type=api", func(t *testing.T) {
+				f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
+				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+
+				body, res := testhelpers.RegistrationMakeRequest(t, false, c, apiClient, values.Encode())
+				assert.Contains(t, res.Request.URL.String(), publicTS.URL)
+				check(t, gjson.Get(body, "error").Raw)
+			})
+
+			t.Run("type=browser", func(t *testing.T) {
+				browserClient := testhelpers.NewClientWithCookies(t)
+				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS)
+				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+
+				body, res := testhelpers.RegistrationMakeRequest(t, false, c, apiClient, values.Encode())
+				assert.Contains(t, res.Request.URL.String(), errTS.URL)
+				check(t, gjson.Get(body, "0").Raw)
+			})
 		})
 
 		t.Run("case=should fail because schema does not exist", func(t *testing.T) {
-			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/i-do-not-exist.schema.json")
-			rr := newRegistrationRequest(t, time.Minute)
-			body, res := makeRequest(t, rr.ID, url.Values{
+			var check = func(t *testing.T, actual string) {
+				assert.Equal(t, int64(http.StatusInternalServerError), gjson.Get(actual, "code").Int(), "%s", actual)
+				assert.Equal(t, "Internal Server Error", gjson.Get(actual, "status").String(), "%s", actual)
+				assert.Contains(t, gjson.Get(actual, "reason").String(), "no such file or directory", "%s", actual)
+			}
+
+			values := url.Values{
 				"traits.username": {"registration-identifier-7"},
 				"password":        {x.NewUUID().String()},
 				"traits.foobar":   {"bar"},
-			}.Encode(), http.StatusOK)
-			assert.Contains(t, res.Request.URL.Path, "error-ts")
-			assert.Equal(t, int64(http.StatusInternalServerError), gjson.GetBytes(body, "0.code").Int(), "%s", body)
-			assert.Equal(t, "Internal Server Error", gjson.GetBytes(body, "0.status").String(), "%s", body)
-			assert.Contains(t, gjson.GetBytes(body, "0.reason").String(), "no such file or directory", "%s", body)
+				"csrf_token":      {x.FakeCSRFToken},
+			}
+
+			t.Run("type=api", func(t *testing.T) {
+				f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
+				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+
+				viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/i-do-not-exist.schema.json")
+				defer viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+
+				body, res := testhelpers.RegistrationMakeRequest(t, false, c, apiClient, values.Encode())
+				assert.Contains(t, res.Request.URL.String(), publicTS.URL)
+				check(t, gjson.Get(body, "error").Raw)
+			})
+
+			t.Run("type=browser", func(t *testing.T) {
+				browserClient := testhelpers.NewClientWithCookies(t)
+				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS)
+				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+
+				viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/i-do-not-exist.schema.json")
+				defer viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+
+				body, res := testhelpers.RegistrationMakeRequest(t, false, c, apiClient, values.Encode())
+				assert.Contains(t, res.Request.URL.String(), errTS.URL)
+				check(t, gjson.Get(body, "0").Raw)
+			})
 		})
+
+		var expectSuccessfulLogin = func(t *testing.T, isAPI bool, hc *http.Client, values func(url.Values)) string {
+			if isAPI {
+				return testhelpers.SubmitRegistrationForm(t, isAPI, hc, publicTS, values,
+					identity.CredentialsTypePassword, http.StatusOK,
+					publicTS.URL+password.RouteRegistration)
+			}
+
+			if hc == nil {
+				hc = testhelpers.NewClientWithCookies(t)
+			}
+
+			return testhelpers.SubmitRegistrationForm(t, isAPI, hc, publicTS, values,
+				identity.CredentialsTypePassword, http.StatusOK,
+				redirTS.URL+"/registration-return-ts")
+		}
 
 		t.Run("case=should pass and set up a session", func(t *testing.T) {
 			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
-			viper.Set(
-				configuration.HookStrategyKey(configuration.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()),
-				[]configuration.SelfServiceHook{{Name: "session"}})
+			viper.Set(configuration.HookStrategyKey(configuration.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []configuration.SelfServiceHook{{Name: "session"}})
+			defer viper.Set(configuration.HookStrategyKey(configuration.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
 
-			rr := newRegistrationRequest(t, time.Minute)
-			body, res := makeRequest(t, rr.ID, url.Values{
-				"traits.username": {"registration-identifier-8"},
-				"password":        {x.NewUUID().String()},
-				"traits.foobar":   {"bar"},
-			}.Encode(), http.StatusOK)
-			assert.Contains(t, res.Request.URL.Path, "return-ts")
-			assert.Equal(t, `registration-identifier-8`, gjson.GetBytes(body, "identity.traits.username").String(), "%s", body)
+			var values = func(isAPI bool) func(v url.Values) {
+				return func(v url.Values) {
+					v.Set("traits.username", "registration-identifier-8-browser")
+					if isAPI {
+						v.Set("traits.username", "registration-identifier-8-api")
+					}
+					v.Set("password", x.NewUUID().String())
+					v.Set("traits.foobar", "bar")
+				}
+			}
+
+			t.Run("type=api", func(t *testing.T) {
+				body := expectSuccessfulLogin(t, true, nil, values(true))
+				assert.Equal(t, `registration-identifier-8-api`, gjson.Get(body, "identity.traits.username").String(), "%s", body)
+				assert.NotEmpty(t, gjson.Get(body, "session_token").String(), "%s", body)
+				assert.NotEmpty(t, gjson.Get(body, "session.id").String(), "%s", body)
+			})
+
+			t.Run("type=browser", func(t *testing.T) {
+				body := expectSuccessfulLogin(t, false, nil, values(false))
+				assert.Equal(t, `registration-identifier-8-browser`, gjson.Get(body, "identity.traits.username").String(), "%s", body)
+			})
 		})
 
 		t.Run("case=should fail to register the same user again", func(t *testing.T) {
 			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
-			rr := newRegistrationRequest(t, time.Minute)
-			body, res := makeRequest(t, rr.ID, url.Values{
-				"traits.username": {"registration-identifier-8"},
-				"password":        {x.NewUUID().String()},
-				"traits.foobar":   {"bar"},
-			}.Encode(), http.StatusOK)
-			assert.Contains(t, res.Request.URL.Path, "signup-ts")
-			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.messages.0.text").String(), "An account with the same identifier (email, phone, username, ...) exists already.", "%s", body)
+			viper.Set(configuration.HookStrategyKey(configuration.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []configuration.SelfServiceHook{{Name: "session"}})
+			defer viper.Set(configuration.HookStrategyKey(configuration.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
+
+			var values = func(isAPI bool) func(v url.Values) {
+				return func(v url.Values) {
+					v.Set("traits.username", "registration-identifier-8-browser-duplicate")
+					if isAPI {
+						v.Set("traits.username", "registration-identifier-8-api-duplicate")
+					}
+					v.Set("password", x.NewUUID().String())
+					v.Set("traits.foobar", "bar")
+				}
+			}
+
+			t.Run("type=api", func(t *testing.T) {
+				_ = expectSuccessfulLogin(t, true, apiClient, values(true))
+				body := testhelpers.SubmitRegistrationForm(t, true, apiClient, publicTS, values(true),
+					identity.CredentialsTypePassword, http.StatusBadRequest,
+					publicTS.URL+password.RouteRegistration)
+
+				assert.Contains(t, gjson.Get(body, "methods.password.config.messages.0.text").String(), "An account with the same identifier (email, phone, username, ...) exists already.", "%s", body)
+			})
+
+			t.Run("type=browser", func(t *testing.T) {
+				_ = expectSuccessfulLogin(t, false, nil, values(false))
+				body := expectValidationError(t, false, values(false))
+				assert.Contains(t, gjson.Get(body, "methods.password.config.messages.0.text").String(), "An account with the same identifier (email, phone, username, ...) exists already.", "%s", body)
+			})
 		})
 
 		t.Run("case=should return an error because not passing validation and reset previous errors and values", func(t *testing.T) {
 			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
 
-			rr := &registration.Request{
-				ID:        x.NewUUID(),
-				ExpiresAt: time.Now().Add(time.Minute),
-				Methods: map[identity.CredentialsType]*registration.RequestMethod{
-					identity.CredentialsTypePassword: {
-						Method: identity.CredentialsTypePassword,
-						Config: &registration.RequestMethodConfig{
-							RequestMethodConfigurator: &password.RequestMethod{
-								HTMLForm: &form.HTMLForm{
-									Method:   "POST",
-									Action:   "/action",
-									Messages: text.Messages{{Text: "some error"}},
-									Fields: form.Fields{
-										{
-											Name: "traits.foo", Value: "bar", Type: "text",
-											Messages: text.Messages{{Text: "bar"}},
-										},
-										{Name: "password"},
-									},
-								},
-							},
-						},
-					},
-				},
+			var check = func(t *testing.T, actual string) {
+				assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)
+				assert.Contains(t, gjson.Get(actual, "methods.password.config.action").String(), publicTS.URL+password.RouteRegistration, "%s", actual)
+				checkFormContent(t, []byte(actual), "password", "csrf_token", "traits.username")
 			}
 
-			require.NoError(t, reg.RegistrationRequestPersister().CreateRegistrationRequest(context.Background(), rr))
-			body, res := makeRequest(t, rr.ID, url.Values{
-				"traits.username": {"registration-identifier-9"},
-				"password":        {x.NewUUID().String()},
-			}.Encode(), http.StatusOK)
-			assert.Contains(t, res.Request.URL.Path, "signup-ts")
-			assert.Equal(t, rr.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
-			assert.Equal(t, "/action", gjson.GetBytes(body, "methods.password.config.action").String(), "%s", body)
-			checkFormContent(t, body, "password", "csrf_token", "traits.username")
+			var checkFirst = func(t *testing.T, actual string) {
+				check(t, actual)
+				assert.Contains(t, gjson.Get(actual, "methods.password.config.fields.#(name==traits.username).messages.0").String(), `Property username is missing`, "%s", actual)
+			}
 
-			assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==traits.foo).value"), "%s", body)
-			assert.Empty(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==traits.foo).error"))
-			assert.Empty(t, gjson.GetBytes(body, "methods.password.config.error"))
-			assert.Contains(t, gjson.GetBytes(body, "methods.password.config.fields.#(name==traits.foobar).messages.0").String(), `Property foobar is missing`, "%s", body)
+			var checkSecond = func(t *testing.T, actual string) {
+				check(t, actual)
+				assert.EqualValues(t, "registration-identifier-9", gjson.Get(actual, "methods.password.config.fields.#(name==traits.username).value").String(), "%s", actual)
+				assert.Empty(t, gjson.Get(actual, "methods.password.config.fields.#(name==traits.username).error").Raw)
+				assert.Empty(t, gjson.Get(actual, "methods.password.config.error").Raw)
+				assert.Contains(t, gjson.Get(actual, "methods.password.config.fields.#(name==traits.foobar).messages.0").String(), `Property foobar is missing`, "%s", actual)
+			}
+
+			var valuesFirst = func(v url.Values) url.Values {
+				v.Del("traits.username")
+				v.Set("password", x.NewUUID().String())
+				v.Set("traits.foobar", "bar")
+				return v
+			}
+
+			var valuesSecond = func(v url.Values) url.Values {
+				v.Set("traits.username", "registration-identifier-9")
+				v.Set("password", x.NewUUID().String())
+				v.Del("traits.foobar")
+				return v
+			}
+
+			t.Run("type=api", func(t *testing.T) {
+				f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
+				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+
+				actual, _ := testhelpers.RegistrationMakeRequest(t, true, c, apiClient, testhelpers.EncodeFormAsJSON(t, true, valuesFirst(testhelpers.SDKFormFieldsToURLValues(c.Fields))))
+				checkFirst(t, actual)
+				actual, _ = testhelpers.RegistrationMakeRequest(t, true, c, apiClient, testhelpers.EncodeFormAsJSON(t, true, valuesSecond(testhelpers.SDKFormFieldsToURLValues(c.Fields))))
+				checkSecond(t, actual)
+			})
+
+			t.Run("type=browser", func(t *testing.T) {
+				browserClient := testhelpers.NewClientWithCookies(t)
+				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS)
+				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+
+				actual, _ := testhelpers.RegistrationMakeRequest(t, false, c, browserClient, valuesFirst(testhelpers.SDKFormFieldsToURLValues(c.Fields)).Encode())
+				checkFirst(t, actual)
+				actual, _ = testhelpers.RegistrationMakeRequest(t, false, c, browserClient, valuesSecond(testhelpers.SDKFormFieldsToURLValues(c.Fields)).Encode())
+				checkSecond(t, actual)
+			})
 		})
 
 		t.Run("case=should work even if password is just numbers", func(t *testing.T) {
 			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://stub/registration.schema.json")
-			rr := newRegistrationRequest(t, time.Minute)
-			body, res := makeRequest(t, rr.ID, url.Values{
-				"traits.username": {"registration-identifier-10"},
-				"password":        {"93172388957812344432"},
-				"traits.foobar":   {"bar"},
-			}.Encode(), http.StatusOK)
-			assert.Contains(t, res.Request.URL.Path, "return-ts")
-			assert.Equal(t, `registration-identifier-10`, gjson.GetBytes(body, "identity.traits.username").String(), "%s", body)
-		})
+			viper.Set(configuration.HookStrategyKey(configuration.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), []configuration.SelfServiceHook{{Name: "session"}})
+			defer viper.Set(configuration.HookStrategyKey(configuration.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypePassword.String()), nil)
 
-		t.Run("case=register and then send same request", func(t *testing.T) {
-			jar, _ := cookiejar.New(&cookiejar.Options{})
-			formValues := url.Values{
-				"traits.username": {"registration-identifier-11"},
-				"password":        {"O(lf<ys87LÖ:(h<dsjfl"},
-				"traits.foobar":   {"bar"},
-			}.Encode()
-			rr1 := newRegistrationRequest(t, time.Minute)
-			body1, res1 := makeRequestWithCookieJar(t, rr1.ID, formValues, http.StatusOK, jar)
-			assert.Contains(t, res1.Request.URL.Path, "return-ts")
-			rr2 := newRegistrationRequest(t, time.Minute)
-			body2, res2 := makeRequestWithCookieJar(t, rr2.ID, formValues, http.StatusOK, jar)
-			assert.Contains(t, res2.Request.URL.Path, "default-return-to")
-			assert.Equal(t, body1, body2)
+			var values = func(isAPI bool) func(v url.Values) {
+				return func(v url.Values) {
+					v.Set("traits.username", "registration-identifier-10-browser")
+					if isAPI {
+						v.Set("traits.username", "registration-identifier-10-api")
+					}
+					v.Set("password", x.NewUUID().String())
+					v.Set("traits.foobar", "bar")
+				}
+			}
+
+			t.Run("type=api", func(t *testing.T) {
+				actual := expectSuccessfulLogin(t, true, nil, values(true))
+				assert.Equal(t, `registration-identifier-10-api`, gjson.Get(actual, "identity.traits.username").String(), "%s", actual)
+			})
+
+			t.Run("type=browser", func(t *testing.T) {
+				actual := expectSuccessfulLogin(t, false, nil, values(false))
+				assert.Equal(t, `registration-identifier-10-browser`, gjson.Get(actual, "identity.traits.username").String(), "%s", actual)
+			})
 		})
 	})
 
@@ -316,15 +504,15 @@ func TestRegistration(t *testing.T) {
 		viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
 			"enabled": true})
 
-		sr := registration.NewRequest(time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")})
+		sr := registration.NewFlow(time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
 		require.NoError(t, reg.RegistrationStrategies().MustStrategy(identity.CredentialsTypePassword).(*password.Strategy).PopulateRegistrationMethod(&http.Request{}, sr))
 
-		expected := &registration.RequestMethod{
+		expected := &registration.FlowMethod{
 			Method: identity.CredentialsTypePassword,
-			Config: &registration.RequestMethodConfig{
-				RequestMethodConfigurator: &password.RequestMethod{
+			Config: &registration.FlowMethodConfig{
+				FlowMethodConfigurator: &password.FlowMethod{
 					HTMLForm: &form.HTMLForm{
-						Action: "https://foo" + password.RegistrationPath + "?request=" + sr.ID.String(),
+						Action: "https://foo" + password.RouteRegistration + "?flow=" + sr.ID.String(),
 						Method: "POST",
 						Fields: form.Fields{
 							{
@@ -353,6 +541,6 @@ func TestRegistration(t *testing.T) {
 		}
 
 		actual := sr.Methods[identity.CredentialsTypePassword]
-		assert.EqualValues(t, expected.Config.RequestMethodConfigurator.(*password.RequestMethod).HTMLForm, actual.Config.RequestMethodConfigurator.(*password.RequestMethod).HTMLForm)
+		assert.EqualValues(t, expected.Config.FlowMethodConfigurator.(*password.FlowMethod).HTMLForm, actual.Config.FlowMethodConfigurator.(*password.FlowMethod).HTMLForm)
 	})
 }
