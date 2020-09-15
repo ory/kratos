@@ -39,7 +39,7 @@ func importIdentities(cmd *cobra.Command, args []string) {
 
 		validateIdentity("STD_IN", fc, c)
 
-		var params models.CreateIdentityRequestPayload
+		var params models.CreateIdentity
 		err = json.NewDecoder(bytes.NewBuffer(fc)).Decode(&params)
 		cmdx.Must(err, "STD_IN: Could not parse identity: %s", err)
 
@@ -57,7 +57,7 @@ func importIdentities(cmd *cobra.Command, args []string) {
 		for _, fn := range args {
 			fc := validateIdentityFile(fn, c)
 
-			var params models.CreateIdentityRequestPayload
+			var params models.CreateIdentity
 			err := json.NewDecoder(bytes.NewBuffer(fc)).Decode(&params)
 			cmdx.Must(err, "%s: Could not parse identity file: %s", fn, err)
 
