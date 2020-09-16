@@ -3,6 +3,8 @@ id: identity-user-model
 title: Identity Data Model
 ---
 
+import Mermaid from '@theme/Mermaid'
+
 An identity ("user", "user account", "account", "subject") is the "who" of a
 software system. It can be a customer, employee, user, contractor, or even a
 programmatic identity such as an IoT device, application, or some other type of
