@@ -104,6 +104,9 @@ func TestRegistration(t *testing.T) {
 		})
 
 		t.Run("case=should show the error ui because the request payload is malformed", func(t *testing.T) {
+			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/profile.schema.json")
+			defer viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+
 			t.Run("type=api", func(t *testing.T) {
 				f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
 				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
@@ -121,6 +124,7 @@ func TestRegistration(t *testing.T) {
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/registration-ts")
 				assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
 				assert.Contains(t, gjson.Get(body, "methods.password.config.messages.0.text").String(), "invalid URL escape", "%s", body)
+				assert.Equal(t, "email", gjson.Get(body, "methods.password.config.fields.#(name==\"traits.email\").type").String(), "%s", body)
 			})
 		})
 
