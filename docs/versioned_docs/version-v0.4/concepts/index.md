@@ -163,7 +163,7 @@ architectural requirements. In this case, the following are some of the main
 considerations and challenges in ORY's efforts:
 
 - To manage changing user models;
-- To choose and use some encryption algorithms such as BCrypt, PBKDF2, Argon2,
+- To choose and use some encryption algorithms such as BCrypt, PBKDF2,
   Scrypt, Argon2, Argon2i, Argon2id, Argon2d. There are many alternatives and
   most of the algorithms have numerous versions and parametrization options for
   example "Salt length parameter." The multitude of options makes it hard to
