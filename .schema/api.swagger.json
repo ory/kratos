@@ -2115,7 +2115,7 @@
           "$ref": "#/definitions/session"
         },
         "session_token": {
-          "description": "The Session Token\n\nA session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization\nHeader:\n\nAuthorization: bearer \u003csession-token\u003e\n\nThe session token is only issued for API flows, not for Browser flows!",
+          "description": "The Session Token\n\nA session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization\nHeader:\n\nAuthorization: bearer ${session-token}\n\nThe session token is only issued for API flows, not for Browser flows!",
           "type": "string"
         }
       }
@@ -2327,7 +2327,7 @@
           "$ref": "#/definitions/session"
         },
         "session_token": {
-          "description": "The Session Token\n\nThis field is only set when the session hook is configured as a post-registration hook.\n\nA session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization\nHeader:\n\nAuthorization: bearer \u003csession-token\u003e\n\nThe session token is only issued for API flows, not for Browser flows!",
+          "description": "The Session Token\n\nThis field is only set when the session hook is configured as a post-registration hook.\n\nA session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization\nHeader:\n\nAuthorization: bearer ${session-token}\n\nThe session token is only issued for API flows, not for Browser flows!",
           "type": "string"
         }
       }
