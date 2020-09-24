@@ -15,9 +15,9 @@ import (
 )
 
 var listCmd = &cobra.Command{
-	Use: "list [<page> <per-page>]",
+	Use:   "list [<page> <per-page>]",
 	Short: "List identities",
-	Long: "List identities (paginated)",
+	Long:  "List identities (paginated)",
 	Args: func(cmd *cobra.Command, args []string) error {
 		// zero or exactly two args
 		if len(args) != 0 && len(args) != 2 {

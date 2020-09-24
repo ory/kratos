@@ -26,6 +26,7 @@ type (
 		OutputHeader
 		Table() [][]string
 		Interface() interface{}
+		Len() int
 	}
 
 	format string
@@ -72,6 +73,10 @@ func PrintRow(cmd *cobra.Command, row OutputEntry) {
 }
 
 func PrintCollection(cmd *cobra.Command, collection OutputCollection) {
+	if collection.Len() == 0 {
+		// don't print headers, ... when there is no content
+		return
+	}
 	f := getFormat(cmd)
 
 	switch f {
@@ -119,13 +124,8 @@ func getFormat(cmd *cobra.Command) format {
 		return formatJSONPretty
 	}
 
-	// output is a terminal, default is table
-	if info, _ := os.Stdout.Stat(); info.Mode()&os.ModeCharDevice != 0 {
-		return formatTable
-	}
-
-	// output is not a terminal, default is quiet
-	return formatQuiet
+	// default format is table
+	return formatTable
 }
 
 func printJSON(v interface{}, pretty bool) {

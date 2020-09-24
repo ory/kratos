@@ -10,7 +10,7 @@ import (
 
 // identitiesCmd represents the identity command
 var identitiesCmd = &cobra.Command{
-	Use: "identities",
+	Use:   "identities",
 	Short: "Tools to interact with remote identities",
 }
 

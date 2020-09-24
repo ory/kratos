@@ -89,3 +89,7 @@ func (c *outputIdentityCollection) Table() [][]string {
 func (c *outputIdentityCollection) Interface() interface{} {
 	return c.identities
 }
+
+func (c *outputIdentityCollection) Len() int {
+	return len(c.identities)
+}

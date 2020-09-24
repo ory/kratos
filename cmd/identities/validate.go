@@ -21,9 +21,9 @@ import (
 )
 
 var validateCmd = &cobra.Command{
-	Use:  "validate  <file.json [file-2.json [file-3.json] ...]>",
+	Use:   "validate  <file.json [file-2.json [file-3.json] ...]>",
 	Short: "Validate local identity files",
-	Args: cobra.MinimumNArgs(1),
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c := cliclient.NewClient(cmd)
 
@@ -59,7 +59,7 @@ func validateIdentity(src string, fc []byte, c *client.OryKratos) {
 
 	cmdx.Must(err, "%s: Could not open the identity schema: %s", src, err)
 
-	s, err := schemaCompiler.Compile("api.swagger.json#/definitions/CreateIdentityRequestPayload")
+	s, err := schemaCompiler.Compile("api.swagger.json#/definitions/CreateIdentity")
 	cmdx.Must(err, "%s: Could not compile the identity schema: %s", src, err)
 	// force additional properties to false because swagger does not render this key
 	s.AdditionalProperties = false
