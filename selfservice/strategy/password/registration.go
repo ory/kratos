@@ -58,7 +58,8 @@ func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Reques
 
 			if p != nil {
 				for _, field := range form.NewHTMLFormFromJSON("", p.Traits, "traits").Fields {
-					method.Config.SetField(field)
+					// we only set the value and not the whole field because we want to keep types from the initial form generation
+					method.Config.SetValue(field.Name, field.Value)
 				}
 			}
 
