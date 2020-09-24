@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-09-15)](#unreleased-2020-09-15)
+- [Unreleased (2020-09-24)](#unreleased-2020-09-24)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -102,7 +102,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...56f4a397a715b6c0428ae63baa0d2e4bc936f737) (2020-09-15)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...7044b95f6188c4ffbfff42c666dee6ebaba055c8) (2020-09-24)
 
 
 ### Bug Fixes
@@ -120,6 +120,7 @@
 
     > See https://github.com/markbates/pkger/issues/117
 * Find and replace "request" references ([41fb673](https://github.com/ory/kratos/commit/41fb673e38779cb27d4400f70458617eb7e5b93c))
+* Ignore x/net false positives ([7044b95](https://github.com/ory/kratos/commit/7044b95f6188c4ffbfff42c666dee6ebaba055c8))
 * Improve debugging output for login hook and restructure files ([dabac40](https://github.com/ory/kratos/commit/dabac40f82407f72071780840f468d0b5b389777))
 * Improve debugging output for registration hook and restructure files ([ec11775](https://github.com/ory/kratos/commit/ec117754f5dd41e5a3a43b3807c05796396ced55))
 * Improve expired error responses ([124a92e](https://github.com/ory/kratos/commit/124a92ee98d62abeb695e1e271ee2536a69d6047))
@@ -290,6 +291,7 @@
 
     > Fixed a few typos, and moved some sentences around to improve readability.
 * Fixed typos/readability ([#621](https://github.com/ory/kratos/issues/621)) ([c4fc75f](https://github.com/ory/kratos/commit/c4fc75f7dca59fa8f31d068f57179f49bf798b6a))
+* Import mermaid ([#696](https://github.com/ory/kratos/issues/696)) ([6f75004](https://github.com/ory/kratos/commit/6f750047d41add6bd2d30adb1c654181c9636d2d))
 * Improve charts and examples in self-service overview ([312c91d](https://github.com/ory/kratos/commit/312c91de3ae3c086f836ec3928735d787ad40dde))
 * Make assumptions neutral in concepts overview ([e89d980](https://github.com/ory/kratos/commit/e89d98099bd3fc5c8361f9015e44668494211152))
 * Move development section ([2e6f643](https://github.com/ory/kratos/commit/2e6f6430f88105efd5618482043809c6d643216b))
