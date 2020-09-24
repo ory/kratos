@@ -1,7 +1,7 @@
 ---
-id: kratos-identities-import
-title: kratos identities import
-description: kratos identities import Import identities from files or STD_IN
+id: kratos-identities-put
+title: kratos identities put
+description: kratos identities put Put identities from files or STD_IN
 ---
 
 <!--
@@ -9,22 +9,22 @@ This file is auto-generated.
 
 To improve this file please make your change against the appropriate "./cmd/*.go" file.
 -->
-## kratos identities import
+## kratos identities put
 
-Import identities from files or STD_IN
+Put identities from files or STD_IN
 
 ### Synopsis
 
-Import identities from files or STD_IN. Files are expected to each contain a single identity. The validity of files can be tested beforehand using `... identities validate`.
+Put (as in http PUT) identities from files or STD_IN. Files are expected to each contain a single identity. The validity of files can be tested beforehand using `... identities validate`.
 
 ```
-kratos identities import <file.json [file-2.json [file-3.json] ...]> [flags]
+kratos identities put <file.json [file-2.json [file-3.json] ...]> [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for import
+  -h, --help   help for put
 ```
 
 ### Options inherited from parent commands
