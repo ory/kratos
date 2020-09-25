@@ -5,16 +5,18 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io/ioutil"
+	"testing"
+
 	"github.com/gofrs/uuid"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
+
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/internal/clihelpers"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/x/pointerx"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/tidwall/gjson"
-	"io/ioutil"
-	"testing"
 )
 
 func TestImportCmd(t *testing.T) {
@@ -23,7 +25,7 @@ func TestImportCmd(t *testing.T) {
 	t.Run("case=imports a new identity from file", func(t *testing.T) {
 		i := models.CreateIdentity{
 			SchemaID: pointerx.String(configuration.DefaultIdentityTraitsSchemaID),
-			Traits: map[string]interface{}{},
+			Traits:   map[string]interface{}{},
 		}
 		ij, err := json.Marshal(i)
 		require.NoError(t, err)
@@ -44,7 +46,7 @@ func TestImportCmd(t *testing.T) {
 	t.Run("case=imports a new identity from stdIn", func(t *testing.T) {
 		i := models.CreateIdentity{
 			SchemaID: pointerx.String(configuration.DefaultIdentityTraitsSchemaID),
-			Traits: map[string]interface{}{},
+			Traits:   map[string]interface{}{},
 		}
 		ij, err := json.Marshal(i)
 		require.NoError(t, err)

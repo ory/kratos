@@ -9,13 +9,16 @@ This file is auto-generated.
 
 To improve this file please make your change against the appropriate "./cmd/*.go" file.
 -->
+
 ## kratos identities import
 
 import identities from files or STD_IN
 
 ### Synopsis
 
-Import identities from files or STD_IN. Files are expected to each contain a single identity. The validity of files can be tested beforehand using `... identities validate`. Importing credentials is not yet supported.
+Import identities from files or STD_IN. Files are expected to each contain a
+single identity. The validity of files can be tested beforehand using
+`... identities validate`. Importing credentials is not yet supported.
 
 ```
 kratos identities import <file.json [file-2.json [file-3.json] ...]> [flags]
@@ -37,5 +40,5 @@ kratos identities import <file.json [file-2.json [file-3.json] ...]> [flags]
 
 ### SEE ALSO
 
-* [kratos identities](kratos-identities)	 - Tools to interact with remote identities
-
+- [kratos identities](kratos-identities) - Tools to interact with remote
+  identities

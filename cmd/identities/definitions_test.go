@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"github.com/ory/kratos/identity"
 	"io"
 	"testing"
+
+	"github.com/ory/kratos/identity"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"

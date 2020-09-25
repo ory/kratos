@@ -33,10 +33,10 @@ Tools to interact with remote identities
 - [kratos identities delete](kratos-identities-delete) - Delete identities by ID
 - [kratos identities get](kratos-identities-get) - Get one or more identities by
   ID
+- [kratos identities import](kratos-identities-import) - import identities from
+  files or STD_IN
 - [kratos identities list](kratos-identities-list) - List identities
 - [kratos identities patch](kratos-identities-patch) - Patch identities by ID
   (not yet implemented)
-- [kratos identities put](kratos-identities-put) - Put identities from files or
-  STD_IN
 - [kratos identities validate](kratos-identities-validate) - Validate local
   identity files

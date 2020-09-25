@@ -3,10 +3,12 @@ package identities
 import (
 	"bytes"
 	"fmt"
-	"github.com/ory/kratos/internal/httpclient/client/common"
+	"testing"
+
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
-	"testing"
+
+	"github.com/ory/kratos/internal/httpclient/client/common"
 )
 
 func TestValidateIdentity(t *testing.T) {
@@ -23,28 +25,28 @@ func TestValidateIdentity(t *testing.T) {
 		}
 	}
 
-	for i, tc := range []struct{
-		description string
-		payload string
+	for i, tc := range []struct {
+		description           string
+		payload               string
 		expectedRequiredError string
-		identitySchema map[string]interface{}
+		identitySchema        map[string]interface{}
 	}{
 		{
-			description: "requires schema_id from swagger schema",
-			payload: "{}",
+			description:           "requires schema_id from swagger schema",
+			payload:               "{}",
 			expectedRequiredError: "schema_id",
 		},
 		{
-			description: "requires traits from swagger schema",
-			payload: `{"schema_id": "case2"}`,
+			description:           "requires traits from swagger schema",
+			payload:               `{"schema_id": "case2"}`,
 			expectedRequiredError: "traits",
 		},
 		{
-			description: "requires custom trait key",
-			payload: `{"schema_id": "case3", "traits": {}}`,
+			description:           "requires custom trait key",
+			payload:               `{"schema_id": "case3", "traits": {}}`,
 			expectedRequiredError: "random-property",
 			identitySchema: map[string]interface{}{
-				"type": "object",
+				"type":     "object",
 				"required": []string{"random-property"},
 				"properties": map[string]interface{}{
 					"random-property": map[string]interface{}{

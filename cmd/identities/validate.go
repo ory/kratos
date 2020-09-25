@@ -5,12 +5,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+
 	"github.com/markbates/pkger"
-	"github.com/ory/kratos/internal/clihelpers"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/tidwall/gjson"
-	"io/ioutil"
+
+	"github.com/ory/kratos/internal/clihelpers"
 
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/cmd/cliclient"

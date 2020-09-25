@@ -24,7 +24,7 @@ domain "ory.sh":
 kratos identities get \$(kratos identities list --format json | jq -r
 'map(select(.recovery_addresses[].value | endswith("@ory.sh"))) | .[].id')
 
-I have to admit, this is not easy if you don't speak jq fluently. What about
+We have to admit, this is not easy if you don't speak jq fluently. What about
 opening an issue and telling us what predefined selectors you want to have?
 https://github.com/ory/kratos/issues/new/choose
 

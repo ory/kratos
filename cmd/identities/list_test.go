@@ -2,12 +2,14 @@ package identities
 
 import (
 	"context"
-	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal/clihelpers"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/internal/clihelpers"
 )
 
 func TestListCmd(t *testing.T) {
