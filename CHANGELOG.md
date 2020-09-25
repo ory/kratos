@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-09-24)](#unreleased-2020-09-24)
+- [Unreleased (2020-09-25)](#unreleased-2020-09-25)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -102,7 +102,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...6c9e7564efffe1452004d4eda42e1b9ec9feac6b) (2020-09-24)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...09460948a24918b2a84804cafa86cf88189af919) (2020-09-25)
 
 
 ### Bug Fixes
@@ -115,6 +115,7 @@
 * Cover more test cases for persister ([37d2e08](https://github.com/ory/kratos/commit/37d2e0839b88792733387f26abb98c51bd1e1395))
 * Create decoder only once ([34dc43b](https://github.com/ory/kratos/commit/34dc43b0c75303f88d2c304225c027faf5366c1f))
 * Don't resend verification emails once verified ([#583](https://github.com/ory/kratos/issues/583)) ([a4d9969](https://github.com/ory/kratos/commit/a4d99694525e65b58d49197c96324b27fb8c31c2)), closes [#578](https://github.com/ory/kratos/issues/578)
+* Escape jsx characters in api documentation ([0946094](https://github.com/ory/kratos/commit/09460948a24918b2a84804cafa86cf88189af919))
 * Fallback to default return url if logout after url is not defined ([#594](https://github.com/ory/kratos/issues/594)) ([7edd367](https://github.com/ory/kratos/commit/7edd367dc64a01dbe252ca0ab8cf4d3926a35014))
 * Favor packr2 over pkger ([ac18a45](https://github.com/ory/kratos/commit/ac18a45ea55929c34ca20953e3baa197363483bc)):
 
