@@ -17,7 +17,7 @@ var identitiesCmd = &cobra.Command{
 func RegisterCommandRecursive(parent *cobra.Command) {
 	parent.AddCommand(identitiesCmd)
 
-	identitiesCmd.AddCommand(putCmd)
+	identitiesCmd.AddCommand(importCmd)
 	identitiesCmd.AddCommand(validateCmd)
 	identitiesCmd.AddCommand(listCmd)
 	identitiesCmd.AddCommand(getCmd)

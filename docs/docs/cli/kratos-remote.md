@@ -1,7 +1,7 @@
 ---
 id: kratos-remote
 title: kratos remote
-description: kratos remote 
+description: kratos remote
 ---
 
 <!--
@@ -9,13 +9,10 @@ This file is auto-generated.
 
 To improve this file please make your change against the appropriate "./cmd/*.go" file.
 -->
+
 ## kratos remote
 
-
-
 ### Synopsis
-
-
 
 ### Options
 
@@ -28,7 +25,8 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 ### SEE ALSO
 
-* [kratos](kratos)	 - 
-* [kratos remote status](kratos-remote-status)	 - Prints the status of the remote Kratos instance.
-* [kratos remote version](kratos-remote-version)	 - Print the version of the remote Kratos instance.
-
+- [kratos](kratos) -
+- [kratos remote status](kratos-remote-status) - Prints the status of the remote
+  Kratos instance.
+- [kratos remote version](kratos-remote-version) - Print the version of the
+  remote Kratos instance.

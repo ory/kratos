@@ -1719,6 +1719,7 @@
       "required": [
         "id",
         "schema_id",
+        "schema_url",
         "traits"
       ],
       "properties": {
@@ -1730,7 +1731,8 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/RecoveryAddress"
-          }
+          },
+          "x-omitempty": true
         },
         "schema_id": {
           "description": "SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.",
@@ -1748,7 +1750,8 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/VerifiableAddress"
-          }
+          },
+          "x-omitempty": true
         }
       }
     },

@@ -15,11 +15,11 @@ import (
 
 const (
 	envKeyEndpoint = "KRATOS_ADMIN_ENDPOINT"
-	flagEndpoint   = "endpoint"
+	FlagEndpoint   = "endpoint"
 )
 
 func NewClient(cmd *cobra.Command) *client.OryKratos {
-	endpoint, err := cmd.Flags().GetString(flagEndpoint)
+	endpoint, err := cmd.Flags().GetString(FlagEndpoint)
 	cmdx.Must(err, "flag access error: %s", err)
 
 	if endpoint == "" {
@@ -43,5 +43,5 @@ func NewClient(cmd *cobra.Command) *client.OryKratos {
 }
 
 func RegisterClientFlags(flags *pflag.FlagSet) {
-	flags.StringP(flagEndpoint, flagEndpoint[:1], "", fmt.Sprintf("The upstream admin endpoint URL. Alternatively set using the %s environmental variable.", envKeyEndpoint))
+	flags.StringP(FlagEndpoint, FlagEndpoint[:1], "", fmt.Sprintf("The upstream admin endpoint URL. Alternatively set using the %s environmental variable.", envKeyEndpoint))
 }

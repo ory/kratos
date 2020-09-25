@@ -1,9 +1,8 @@
 package identities
 
 import (
-	"context"
 	"fmt"
-	"os"
+	"time"
 
 	"github.com/ory/kratos/internal/clihelpers"
 
@@ -24,7 +23,7 @@ kratos identities delete $(kratos identities list --format json | jq -r 'map(sel
 %s
 `, clihelpers.WarningJQIsComplicated),
 	Args: cobra.MinimumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		c := cliclient.NewClient(cmd)
 
 		var (
@@ -33,10 +32,7 @@ kratos identities delete $(kratos identities list --format json | jq -r 'map(sel
 		)
 
 		for _, a := range args {
-			_, err := c.Admin.DeleteIdentity(&admin.DeleteIdentityParams{
-				ID:      a,
-				Context: context.Background(),
-			})
+			_, err := c.Admin.DeleteIdentity(admin.NewDeleteIdentityParams().WithID(a).WithTimeout(time.Second))
 			if err != nil {
 				errs = append(errs, err)
 				continue
@@ -45,15 +41,16 @@ kratos identities delete $(kratos identities list --format json | jq -r 'map(sel
 		}
 
 		for _, d := range deleted {
-			fmt.Println(d)
+			fmt.Fprintln(cmd.OutOrStdout(), d)
 		}
 
 		for _, err := range errs {
-			fmt.Fprintln(os.Stderr, err)
+			fmt.Fprintf(cmd.ErrOrStderr(), "%+v\n", err)
 		}
 
 		if len(errs) != 0 {
-			os.Exit(1)
+			return clihelpers.FailSilently(cmd)
 		}
+		return nil
 	},
 }

@@ -1,7 +1,8 @@
 ---
 id: kratos-remote-status
 title: kratos remote status
-description: kratos remote status Prints the status of the remote Kratos instance.
+description:
+  kratos remote status Prints the status of the remote Kratos instance.
 ---
 
 <!--
@@ -9,6 +10,7 @@ This file is auto-generated.
 
 To improve this file please make your change against the appropriate "./cmd/*.go" file.
 -->
+
 ## kratos remote status
 
 Prints the status of the remote Kratos instance.
@@ -37,5 +39,4 @@ kratos remote status [flags]
 
 ### SEE ALSO
 
-* [kratos remote](kratos-remote)	 - 
-
+- [kratos remote](kratos-remote) -

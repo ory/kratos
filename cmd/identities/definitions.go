@@ -24,7 +24,7 @@ func (i *outputIdentity) Fields() []string {
 		clihelpers.None,
 		clihelpers.None,
 		clihelpers.None,
-		i.SchemaURL,
+		clihelpers.None,
 	}
 
 	addresses := make([]string, 0, len(i.VerifiableAddresses))
@@ -47,6 +47,10 @@ func (i *outputIdentity) Fields() []string {
 		data[3] = *i.SchemaID
 	}
 
+	if i.SchemaURL != nil {
+		data[4] = *i.SchemaURL
+	}
+
 	return data[:]
 }
 
@@ -66,7 +70,7 @@ func (c *outputIdentityCollection) Table() [][]string {
 			clihelpers.None,
 			clihelpers.None,
 			clihelpers.None,
-			ident.SchemaURL,
+			clihelpers.None,
 		}
 
 		if len(ident.VerifiableAddresses) != 0 && ident.VerifiableAddresses[0].Value != nil {
@@ -79,6 +83,10 @@ func (c *outputIdentityCollection) Table() [][]string {
 
 		if ident.SchemaID != nil {
 			data[3] = *ident.SchemaID
+		}
+
+		if ident.SchemaURL != nil {
+			data[4] = *ident.SchemaURL
 		}
 
 		rows[i] = data[:]

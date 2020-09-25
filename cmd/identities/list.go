@@ -11,7 +11,6 @@ import (
 
 	"github.com/ory/kratos/cmd/cliclient"
 	"github.com/ory/kratos/internal/httpclient/client/admin"
-	"github.com/ory/x/cmdx"
 )
 
 var listCmd = &cobra.Command{
@@ -21,35 +20,44 @@ var listCmd = &cobra.Command{
 	Args: func(cmd *cobra.Command, args []string) error {
 		// zero or exactly two args
 		if len(args) != 0 && len(args) != 2 {
-			return fmt.Errorf("expected zero or two args, got %d", len(args))
+			return fmt.Errorf("expected zero or two args, got %d: %+v", len(args), args)
 		}
 		return nil
 	},
 	Aliases: []string{"ls"},
-	Run:     listIdentities,
-}
+	RunE: func(cmd *cobra.Command, args []string) error {
+		c := cliclient.NewClient(cmd)
 
-func listIdentities(cmd *cobra.Command, args []string) {
-	c := cliclient.NewClient(cmd)
+		params := &admin.ListIdentitiesParams{
+			Context: context.Background(),
+		}
 
-	params := &admin.ListIdentitiesParams{
-		Context: context.Background(),
-	}
+		if len(args) == 2 {
+			page, err := strconv.ParseInt(args[0], 0, 64)
+			if err != nil {
+				fmt.Fprintf(cmd.ErrOrStderr(), "Could not parse page argument\"%s\": %s", args[0], err)
+				return clihelpers.FailSilently(cmd)
+			}
+			params.Page = &page
 
-	if len(args) == 2 {
-		page, err := strconv.ParseInt(args[0], 0, 64)
-		cmdx.Must(err, "Could not parse page argument\"%s\": %s", args[0], err)
-		params.Page = &page
+			perPage, err := strconv.ParseInt(args[1], 0, 64)
+			if err != nil {
+				fmt.Fprintf(cmd.ErrOrStderr(), "Could not parse per-page argument\"%s\": %s", args[1], err)
+				return clihelpers.FailSilently(cmd)
+			}
+			params.PerPage = &perPage
+		}
 
-		perPage, err := strconv.ParseInt(args[1], 0, 64)
-		cmdx.Must(err, "Could not parse per-page argument\"%s\": %s", args[1], err)
-		params.PerPage = &perPage
-	}
+		resp, err := c.Admin.ListIdentities(params)
+		if err != nil {
+			fmt.Fprintf(cmd.ErrOrStderr(), "Could not get the identities: %+v\n", err)
+			return clihelpers.FailSilently(cmd)
+		}
 
-	resp, err := c.Admin.ListIdentities(params)
-	cmdx.Must(err, "Could not get the identities: %s", err)
+		clihelpers.PrintCollection(cmd, &outputIdentityCollection{
+			identities: resp.Payload,
+		})
 
-	clihelpers.PrintCollection(cmd, &outputIdentityCollection{
-		identities: resp.Payload,
-	})
+		return nil
+	},
 }

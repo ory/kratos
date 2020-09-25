@@ -9,6 +9,7 @@ This file is auto-generated.
 
 To improve this file please make your change against the appropriate "./cmd/*.go" file.
 -->
+
 ## kratos identities validate
 
 Validate local identity files
@@ -37,5 +38,5 @@ kratos identities validate  <file.json [file-2.json [file-3.json] ...]> [flags]
 
 ### SEE ALSO
 
-* [kratos identities](kratos-identities)	 - Tools to interact with remote identities
-
+- [kratos identities](kratos-identities) - Tools to interact with remote
+  identities

@@ -1,7 +1,8 @@
 ---
 id: kratos-remote-version
 title: kratos remote version
-description: kratos remote version Print the version of the remote Kratos instance.
+description:
+  kratos remote version Print the version of the remote Kratos instance.
 ---
 
 <!--
@@ -9,6 +10,7 @@ This file is auto-generated.
 
 To improve this file please make your change against the appropriate "./cmd/*.go" file.
 -->
+
 ## kratos remote version
 
 Print the version of the remote Kratos instance.
@@ -37,5 +39,4 @@ kratos remote version [flags]
 
 ### SEE ALSO
 
-* [kratos remote](kratos-remote)	 - 
-
+- [kratos remote](kratos-remote) -

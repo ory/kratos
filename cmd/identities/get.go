@@ -11,7 +11,6 @@ import (
 
 	"github.com/ory/kratos/cmd/cliclient"
 	"github.com/ory/kratos/internal/httpclient/client/admin"
-	"github.com/ory/x/cmdx"
 )
 
 var getCmd = &cobra.Command{
@@ -25,21 +24,31 @@ kratos identities get $(kratos identities list --format json | jq -r 'map(select
 %s
 `, clihelpers.WarningJQIsComplicated),
 	Args: cobra.MinimumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		c := cliclient.NewClient(cmd)
 
 		identities := make([]*models.Identity, 0, len(args))
+		failed := make(map[string]error)
 		for _, id := range args {
 			resp, err := c.Admin.GetIdentity(admin.NewGetIdentityParamsWithTimeout(time.Second).WithID(id))
-			cmdx.Must(err, "Could not get identity \"%s\": %s", args[0], err)
+			if err != nil {
+				failed[id] = err
+				continue
+			}
 
 			identities = append(identities, resp.Payload)
 		}
 
 		if len(identities) == 1 {
 			clihelpers.PrintRow(cmd, (*outputIdentity)(identities[0]))
-			return
+		} else {
+			clihelpers.PrintCollection(cmd, &outputIdentityCollection{identities})
 		}
-		clihelpers.PrintCollection(cmd, &outputIdentityCollection{identities})
+		clihelpers.PrintErrors(cmd, failed)
+
+		if len(failed) != 0 {
+			return clihelpers.FailSilently(cmd)
+		}
+		return nil
 	},
 }

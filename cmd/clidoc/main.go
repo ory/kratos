@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/ory/kratos/cmd/remote"
-	"github.com/spf13/cobra"
 	"os"
+
+	"github.com/spf13/cobra"
+
+	"github.com/ory/kratos/cmd/remote"
 
 	"github.com/ory/x/clidoc"
 
@@ -13,7 +15,7 @@ import (
 )
 
 func main() {
-	rootCmd := &cobra.Command{ Use: "kratos" }
+	rootCmd := &cobra.Command{Use: "kratos"}
 	identities.RegisterCommandRecursive(rootCmd)
 	jsonnet.RegisterCommandRecursive(rootCmd)
 	remote.RegisterCommandRecursive(rootCmd)
