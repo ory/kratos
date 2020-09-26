@@ -104,7 +104,7 @@ Something is not working.
 
 #### Pull Requests
 
-- [ ] fix: escape jsx characters in api documentation ([kratos#703](https://github.com/ory/kratos/pull/703)) - [@hackerman](https://github.com/aeneasr)
+- [x] fix: escape jsx characters in api documentation ([kratos#703](https://github.com/ory/kratos/pull/703)) - [@hackerman](https://github.com/aeneasr)
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)
 
@@ -161,5 +161,5 @@ Blocks milestones or other issues or pulls.
 
 #### Pull Requests
 
-- [ ] fix: escape jsx characters in api documentation ([kratos#703](https://github.com/ory/kratos/pull/703)) - [@hackerman](https://github.com/aeneasr)
 - [x] feat: implement API-based self-service flows ([kratos#624](https://github.com/ory/kratos/pull/624)) - [@hackerman](https://github.com/aeneasr)
+- [x] fix: escape jsx characters in api documentation ([kratos#703](https://github.com/ory/kratos/pull/703)) - [@hackerman](https://github.com/aeneasr)
