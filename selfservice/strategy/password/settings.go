@@ -105,7 +105,7 @@ func (p *CompleteSelfServiceSettingsFlowWithPasswordMethod) SetFlowID(rid uuid.U
 //     - application/json
 //
 //     Security:
-//     - sessionToken
+//       sessionToken:
 //
 //     Schemes: http, https
 //

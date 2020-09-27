@@ -114,7 +114,7 @@ type initializeSelfServiceBrowserLoginFlow struct {
 //     Schemes: http, https
 //
 //     Security:
-//     - sessionToken
+//       sessionToken:
 //
 //     Responses:
 //       200: loginFlow
@@ -161,7 +161,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //     Schemes: http, https
 //
 //     Security:
-//     - sessionToken
+//       sessionToken:
 //
 //     Responses:
 //       302: emptyResponse

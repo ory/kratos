@@ -35,9 +35,9 @@ type ClientService interface {
 
 	CompleteSelfServiceRegistrationFlowWithPasswordMethod(params *CompleteSelfServiceRegistrationFlowWithPasswordMethodParams) (*CompleteSelfServiceRegistrationFlowWithPasswordMethodOK, error)
 
-	CompleteSelfServiceSettingsFlowWithPasswordMethod(params *CompleteSelfServiceSettingsFlowWithPasswordMethodParams) (*CompleteSelfServiceSettingsFlowWithPasswordMethodOK, error)
+	CompleteSelfServiceSettingsFlowWithPasswordMethod(params *CompleteSelfServiceSettingsFlowWithPasswordMethodParams, authInfo runtime.ClientAuthInfoWriter) (*CompleteSelfServiceSettingsFlowWithPasswordMethodOK, error)
 
-	CompleteSelfServiceSettingsFlowWithProfileMethod(params *CompleteSelfServiceSettingsFlowWithProfileMethodParams) (*CompleteSelfServiceSettingsFlowWithProfileMethodOK, error)
+	CompleteSelfServiceSettingsFlowWithProfileMethod(params *CompleteSelfServiceSettingsFlowWithProfileMethodParams, authInfo runtime.ClientAuthInfoWriter) (*CompleteSelfServiceSettingsFlowWithProfileMethodOK, error)
 
 	CompleteSelfServiceVerificationFlowWithLinkMethod(params *CompleteSelfServiceVerificationFlowWithLinkMethodParams) error
 
@@ -51,27 +51,27 @@ type ClientService interface {
 
 	GetSelfServiceRegistrationFlow(params *GetSelfServiceRegistrationFlowParams) (*GetSelfServiceRegistrationFlowOK, error)
 
-	GetSelfServiceSettingsFlow(params *GetSelfServiceSettingsFlowParams) (*GetSelfServiceSettingsFlowOK, error)
+	GetSelfServiceSettingsFlow(params *GetSelfServiceSettingsFlowParams, authInfo runtime.ClientAuthInfoWriter) (*GetSelfServiceSettingsFlowOK, error)
 
 	GetSelfServiceVerificationFlow(params *GetSelfServiceVerificationFlowParams) (*GetSelfServiceVerificationFlowOK, error)
 
 	InitializeSelfServiceBrowserLogoutFlow(params *InitializeSelfServiceBrowserLogoutFlowParams) error
 
-	InitializeSelfServiceLoginViaAPIFlow(params *InitializeSelfServiceLoginViaAPIFlowParams) (*InitializeSelfServiceLoginViaAPIFlowOK, error)
+	InitializeSelfServiceLoginViaAPIFlow(params *InitializeSelfServiceLoginViaAPIFlowParams, authInfo runtime.ClientAuthInfoWriter) (*InitializeSelfServiceLoginViaAPIFlowOK, error)
 
-	InitializeSelfServiceLoginViaBrowserFlow(params *InitializeSelfServiceLoginViaBrowserFlowParams) error
+	InitializeSelfServiceLoginViaBrowserFlow(params *InitializeSelfServiceLoginViaBrowserFlowParams, authInfo runtime.ClientAuthInfoWriter) error
 
-	InitializeSelfServiceRecoveryViaAPIFlow(params *InitializeSelfServiceRecoveryViaAPIFlowParams) (*InitializeSelfServiceRecoveryViaAPIFlowOK, error)
+	InitializeSelfServiceRecoveryViaAPIFlow(params *InitializeSelfServiceRecoveryViaAPIFlowParams, authInfo runtime.ClientAuthInfoWriter) (*InitializeSelfServiceRecoveryViaAPIFlowOK, error)
 
-	InitializeSelfServiceRecoveryViaBrowserFlow(params *InitializeSelfServiceRecoveryViaBrowserFlowParams) error
+	InitializeSelfServiceRecoveryViaBrowserFlow(params *InitializeSelfServiceRecoveryViaBrowserFlowParams, authInfo runtime.ClientAuthInfoWriter) error
 
-	InitializeSelfServiceRegistrationViaAPIFlow(params *InitializeSelfServiceRegistrationViaAPIFlowParams) (*InitializeSelfServiceRegistrationViaAPIFlowOK, error)
+	InitializeSelfServiceRegistrationViaAPIFlow(params *InitializeSelfServiceRegistrationViaAPIFlowParams, authInfo runtime.ClientAuthInfoWriter) (*InitializeSelfServiceRegistrationViaAPIFlowOK, error)
 
-	InitializeSelfServiceRegistrationViaBrowserFlow(params *InitializeSelfServiceRegistrationViaBrowserFlowParams) error
+	InitializeSelfServiceRegistrationViaBrowserFlow(params *InitializeSelfServiceRegistrationViaBrowserFlowParams, authInfo runtime.ClientAuthInfoWriter) error
 
-	InitializeSelfServiceSettingsViaAPIFlow(params *InitializeSelfServiceSettingsViaAPIFlowParams) (*InitializeSelfServiceSettingsViaAPIFlowOK, error)
+	InitializeSelfServiceSettingsViaAPIFlow(params *InitializeSelfServiceSettingsViaAPIFlowParams, authInfo runtime.ClientAuthInfoWriter) (*InitializeSelfServiceSettingsViaAPIFlowOK, error)
 
-	InitializeSelfServiceSettingsViaBrowserFlow(params *InitializeSelfServiceSettingsViaBrowserFlowParams) error
+	InitializeSelfServiceSettingsViaBrowserFlow(params *InitializeSelfServiceSettingsViaBrowserFlowParams, authInfo runtime.ClientAuthInfoWriter) error
 
 	InitializeSelfServiceVerificationViaAPIFlow(params *InitializeSelfServiceVerificationViaAPIFlowParams) (*InitializeSelfServiceVerificationViaAPIFlowOK, error)
 
@@ -79,7 +79,7 @@ type ClientService interface {
 
 	RevokeSession(params *RevokeSessionParams) (*RevokeSessionNoContent, error)
 
-	Whoami(params *WhoamiParams) (*WhoamiOK, error)
+	Whoami(params *WhoamiParams, authInfo runtime.ClientAuthInfoWriter) (*WhoamiOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
 }
@@ -280,7 +280,7 @@ a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privi
 
 More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 */
-func (a *Client) CompleteSelfServiceSettingsFlowWithPasswordMethod(params *CompleteSelfServiceSettingsFlowWithPasswordMethodParams) (*CompleteSelfServiceSettingsFlowWithPasswordMethodOK, error) {
+func (a *Client) CompleteSelfServiceSettingsFlowWithPasswordMethod(params *CompleteSelfServiceSettingsFlowWithPasswordMethodParams, authInfo runtime.ClientAuthInfoWriter) (*CompleteSelfServiceSettingsFlowWithPasswordMethodOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewCompleteSelfServiceSettingsFlowWithPasswordMethodParams()
@@ -295,6 +295,7 @@ func (a *Client) CompleteSelfServiceSettingsFlowWithPasswordMethod(params *Compl
 		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &CompleteSelfServiceSettingsFlowWithPasswordMethodReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
@@ -332,7 +333,7 @@ a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privi
 
 More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 */
-func (a *Client) CompleteSelfServiceSettingsFlowWithProfileMethod(params *CompleteSelfServiceSettingsFlowWithProfileMethodParams) (*CompleteSelfServiceSettingsFlowWithProfileMethodOK, error) {
+func (a *Client) CompleteSelfServiceSettingsFlowWithProfileMethod(params *CompleteSelfServiceSettingsFlowWithProfileMethodParams, authInfo runtime.ClientAuthInfoWriter) (*CompleteSelfServiceSettingsFlowWithProfileMethodOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewCompleteSelfServiceSettingsFlowWithProfileMethodParams()
@@ -347,6 +348,7 @@ func (a *Client) CompleteSelfServiceSettingsFlowWithProfileMethod(params *Comple
 		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &CompleteSelfServiceSettingsFlowWithProfileMethodReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
@@ -608,7 +610,7 @@ You can access this endpoint without credentials when using ORY Kratos' Admin AP
 
 More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 */
-func (a *Client) GetSelfServiceSettingsFlow(params *GetSelfServiceSettingsFlowParams) (*GetSelfServiceSettingsFlowOK, error) {
+func (a *Client) GetSelfServiceSettingsFlow(params *GetSelfServiceSettingsFlowParams, authInfo runtime.ClientAuthInfoWriter) (*GetSelfServiceSettingsFlowOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewGetSelfServiceSettingsFlowParams()
@@ -623,6 +625,7 @@ func (a *Client) GetSelfServiceSettingsFlow(params *GetSelfServiceSettingsFlowPa
 		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &GetSelfServiceSettingsFlowReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
@@ -735,7 +738,7 @@ This endpoint MUST ONLY be used in scenarios such as native mobile apps (React N
 
 More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 */
-func (a *Client) InitializeSelfServiceLoginViaAPIFlow(params *InitializeSelfServiceLoginViaAPIFlowParams) (*InitializeSelfServiceLoginViaAPIFlowOK, error) {
+func (a *Client) InitializeSelfServiceLoginViaAPIFlow(params *InitializeSelfServiceLoginViaAPIFlowParams, authInfo runtime.ClientAuthInfoWriter) (*InitializeSelfServiceLoginViaAPIFlowOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewInitializeSelfServiceLoginViaAPIFlowParams()
@@ -750,6 +753,7 @@ func (a *Client) InitializeSelfServiceLoginViaAPIFlow(params *InitializeSelfServ
 		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &InitializeSelfServiceLoginViaAPIFlowReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
@@ -778,7 +782,7 @@ This endpoint is NOT INTENDED for API clients and only works with browsers (Chro
 
 More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 */
-func (a *Client) InitializeSelfServiceLoginViaBrowserFlow(params *InitializeSelfServiceLoginViaBrowserFlowParams) error {
+func (a *Client) InitializeSelfServiceLoginViaBrowserFlow(params *InitializeSelfServiceLoginViaBrowserFlowParams, authInfo runtime.ClientAuthInfoWriter) error {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewInitializeSelfServiceLoginViaBrowserFlowParams()
@@ -793,6 +797,7 @@ func (a *Client) InitializeSelfServiceLoginViaBrowserFlow(params *InitializeSelf
 		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &InitializeSelfServiceLoginViaBrowserFlowReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
@@ -823,7 +828,7 @@ This endpoint MUST ONLY be used in scenarios such as native mobile apps (React N
 
 More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 */
-func (a *Client) InitializeSelfServiceRecoveryViaAPIFlow(params *InitializeSelfServiceRecoveryViaAPIFlowParams) (*InitializeSelfServiceRecoveryViaAPIFlowOK, error) {
+func (a *Client) InitializeSelfServiceRecoveryViaAPIFlow(params *InitializeSelfServiceRecoveryViaAPIFlowParams, authInfo runtime.ClientAuthInfoWriter) (*InitializeSelfServiceRecoveryViaAPIFlowOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewInitializeSelfServiceRecoveryViaAPIFlowParams()
@@ -838,6 +843,7 @@ func (a *Client) InitializeSelfServiceRecoveryViaAPIFlow(params *InitializeSelfS
 		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &InitializeSelfServiceRecoveryViaAPIFlowReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
@@ -865,7 +871,7 @@ This endpoint is NOT INTENDED for API clients and only works with browsers (Chro
 
 More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 */
-func (a *Client) InitializeSelfServiceRecoveryViaBrowserFlow(params *InitializeSelfServiceRecoveryViaBrowserFlowParams) error {
+func (a *Client) InitializeSelfServiceRecoveryViaBrowserFlow(params *InitializeSelfServiceRecoveryViaBrowserFlowParams, authInfo runtime.ClientAuthInfoWriter) error {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewInitializeSelfServiceRecoveryViaBrowserFlowParams()
@@ -880,6 +886,7 @@ func (a *Client) InitializeSelfServiceRecoveryViaBrowserFlow(params *InitializeS
 		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &InitializeSelfServiceRecoveryViaBrowserFlowReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
@@ -911,7 +918,7 @@ This endpoint MUST ONLY be used in scenarios such as native mobile apps (React N
 
 More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 */
-func (a *Client) InitializeSelfServiceRegistrationViaAPIFlow(params *InitializeSelfServiceRegistrationViaAPIFlowParams) (*InitializeSelfServiceRegistrationViaAPIFlowOK, error) {
+func (a *Client) InitializeSelfServiceRegistrationViaAPIFlow(params *InitializeSelfServiceRegistrationViaAPIFlowParams, authInfo runtime.ClientAuthInfoWriter) (*InitializeSelfServiceRegistrationViaAPIFlowOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewInitializeSelfServiceRegistrationViaAPIFlowParams()
@@ -926,6 +933,7 @@ func (a *Client) InitializeSelfServiceRegistrationViaAPIFlow(params *InitializeS
 		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &InitializeSelfServiceRegistrationViaAPIFlowReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
@@ -958,7 +966,7 @@ This endpoint is NOT INTENDED for API clients and only works with browsers (Chro
 
 More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 */
-func (a *Client) InitializeSelfServiceRegistrationViaBrowserFlow(params *InitializeSelfServiceRegistrationViaBrowserFlowParams) error {
+func (a *Client) InitializeSelfServiceRegistrationViaBrowserFlow(params *InitializeSelfServiceRegistrationViaBrowserFlowParams, authInfo runtime.ClientAuthInfoWriter) error {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewInitializeSelfServiceRegistrationViaBrowserFlowParams()
@@ -973,6 +981,7 @@ func (a *Client) InitializeSelfServiceRegistrationViaBrowserFlow(params *Initial
 		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &InitializeSelfServiceRegistrationViaBrowserFlowReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
@@ -1002,7 +1011,7 @@ This endpoint MUST ONLY be used in scenarios such as native mobile apps (React N
 
 More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 */
-func (a *Client) InitializeSelfServiceSettingsViaAPIFlow(params *InitializeSelfServiceSettingsViaAPIFlowParams) (*InitializeSelfServiceSettingsViaAPIFlowOK, error) {
+func (a *Client) InitializeSelfServiceSettingsViaAPIFlow(params *InitializeSelfServiceSettingsViaAPIFlowParams, authInfo runtime.ClientAuthInfoWriter) (*InitializeSelfServiceSettingsViaAPIFlowOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewInitializeSelfServiceSettingsViaAPIFlowParams()
@@ -1017,6 +1026,7 @@ func (a *Client) InitializeSelfServiceSettingsViaAPIFlow(params *InitializeSelfS
 		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &InitializeSelfServiceSettingsViaAPIFlowReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
@@ -1048,7 +1058,7 @@ This endpoint is NOT INTENDED for API clients and only works with browsers (Chro
 
 More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 */
-func (a *Client) InitializeSelfServiceSettingsViaBrowserFlow(params *InitializeSelfServiceSettingsViaBrowserFlowParams) error {
+func (a *Client) InitializeSelfServiceSettingsViaBrowserFlow(params *InitializeSelfServiceSettingsViaBrowserFlowParams, authInfo runtime.ClientAuthInfoWriter) error {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewInitializeSelfServiceSettingsViaBrowserFlowParams()
@@ -1063,6 +1073,7 @@ func (a *Client) InitializeSelfServiceSettingsViaBrowserFlow(params *InitializeS
 		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &InitializeSelfServiceSettingsViaBrowserFlowReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
@@ -1204,7 +1215,7 @@ Additionally when the request it successful it adds the user ID to the 'X-Kratos
 
 This endpoint is useful for reverse proxies and API Gateways.
 */
-func (a *Client) Whoami(params *WhoamiParams) (*WhoamiOK, error) {
+func (a *Client) Whoami(params *WhoamiParams, authInfo runtime.ClientAuthInfoWriter) (*WhoamiOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewWhoamiParams()
@@ -1219,6 +1230,7 @@ func (a *Client) Whoami(params *WhoamiParams) (*WhoamiOK, error) {
 		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &WhoamiReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})

@@ -84,7 +84,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //     Schemes: http, https
 //
 //     Security:
-//     - sessionToken
+//       sessionToken:
 //
 //     Responses:
 //       200: recoveryFlow
@@ -120,7 +120,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //     Schemes: http, https
 //
 //     Security:
-//     - sessionToken
+//       sessionToken:
 //
 //     Responses:
 //       302: emptyResponse
