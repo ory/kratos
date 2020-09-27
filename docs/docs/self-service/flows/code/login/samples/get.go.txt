@@ -5,8 +5,6 @@ import (
 
   "github.com/ory/kratos-client-go/client/public"
   "github.com/ory/kratos-client-go/client"
-
-  "github.com/ory/kratos/internal/httpclient/client/common"
 )
 
 func main() {
@@ -15,8 +13,8 @@ func main() {
 
   flowID := "" // Usually something like: res.Request.URL.Query().Get("flow")
 
-  rs, err := c.Common.GetSelfServiceLoginFlow(
-    common.NewGetSelfServiceLoginFlowParams().
+  rs, err := c.Public.GetSelfServiceLoginFlow(
+    public.NewGetSelfServiceLoginFlowParams().
       WithID(flowID),
   )
 

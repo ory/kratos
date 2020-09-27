@@ -23,7 +23,7 @@ import (
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/httpclient/client/common"
+	sdkp "github.com/ory/kratos/internal/httpclient/client/public"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/schema"
@@ -79,7 +79,7 @@ func TestHandleError(t *testing.T) {
 		defer res.Body.Close()
 		require.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL().String()+"?error=")
 
-		sse, err := sdk.Common.GetSelfServiceError(common.NewGetSelfServiceErrorParams().
+		sse, err := sdk.Public.GetSelfServiceError(sdkp.NewGetSelfServiceErrorParams().
 			WithError(res.Request.URL.Query().Get("error")))
 		require.NoError(t, err)
 
@@ -195,7 +195,7 @@ func TestHandleError(t *testing.T) {
 			defer res.Body.Close()
 			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRegistrationUI().String()+"?flow=")
 
-			lf, err := sdk.Common.GetSelfServiceRegistrationFlow(common.NewGetSelfServiceRegistrationFlowParams().
+			lf, err := sdk.Public.GetSelfServiceRegistrationFlow(sdkp.NewGetSelfServiceRegistrationFlowParams().
 				WithID(res.Request.URL.Query().Get("flow")))
 			require.NoError(t, err)
 			return lf.Payload, res

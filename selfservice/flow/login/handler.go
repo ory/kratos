@@ -214,7 +214,7 @@ type getSelfServiceLoginFlow struct {
 	ID string `json:"id"`
 }
 
-// swagger:route GET /self-service/login/flows common public admin getSelfServiceLoginFlow
+// swagger:route GET /self-service/login/flows public admin getSelfServiceLoginFlow
 //
 // Get Login Flow
 //

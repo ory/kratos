@@ -29,7 +29,6 @@ import (
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/httpclient/client/common"
 	"github.com/ory/kratos/internal/httpclient/client/public"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/internal/testhelpers"
@@ -158,8 +157,8 @@ func TestStrategyTraits(t *testing.T) {
 			rid := res.Request.URL.Query().Get("flow")
 			require.NotEmpty(t, rid)
 
-			pr, err := publicClient.Common.GetSelfServiceSettingsFlow(
-				common.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(browserUser1).
+			pr, err := publicClient.Public.GetSelfServiceSettingsFlow(
+				public.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(browserUser1).
 					WithID(res.Request.URL.Query().Get("flow")))
 			require.NoError(t, err, "%s", rid)
 

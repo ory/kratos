@@ -23,7 +23,7 @@ import (
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/httpclient/client/common"
+	sdkp "github.com/ory/kratos/internal/httpclient/client/public"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
@@ -129,7 +129,7 @@ func TestSettingsStrategy(t *testing.T) {
 	// does the same as new profile request but uses the SDK
 	var nprSDK = func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *models.SettingsFlow {
 		req := newProfileFlow(t, client, redirectTo, exp)
-		rs, err := admin.Common.GetSelfServiceSettingsFlow(common.
+		rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
 			NewGetSelfServiceSettingsFlowParams().WithHTTPClient(client).
 			WithID(req.ID.String()))
 		require.NoError(t, err)
@@ -160,7 +160,7 @@ func TestSettingsStrategy(t *testing.T) {
 	t.Run("case=should not be able to fetch another user's data", func(t *testing.T) {
 		req := newProfileFlow(t, agents["password"], "", time.Hour)
 
-		_, err := public.Common.GetSelfServiceSettingsFlow(common.
+		_, err := public.Public.GetSelfServiceSettingsFlow(sdkp.
 			NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents["oryer"]).
 			WithID(req.ID.String()))
 		require.Error(t, err)
@@ -170,7 +170,7 @@ func TestSettingsStrategy(t *testing.T) {
 	t.Run("case=should fetch the settings request and expect data to be set appropriately", func(t *testing.T) {
 		req := newProfileFlow(t, agents["password"], "", time.Hour)
 
-		rs, err := admin.Common.GetSelfServiceSettingsFlow(common.
+		rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
 			NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents["password"]).
 			WithID(req.ID.String()))
 		require.NoError(t, err)
@@ -316,7 +316,7 @@ func TestSettingsStrategy(t *testing.T) {
 				_, res, req := unlink(t, agent, provider)
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login")
 
-				rs, err := admin.Common.GetSelfServiceSettingsFlow(common.
+				rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
 					NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents[agent]).
 					WithID(string(req.ID)))
 				require.NoError(t, err)
@@ -437,7 +437,7 @@ func TestSettingsStrategy(t *testing.T) {
 			_, res, req := link(t, agent, provider)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
-			rs, err := admin.Common.GetSelfServiceSettingsFlow(common.
+			rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
 				NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents[agent]).
 				WithID(string(req.ID)))
 			require.NoError(t, err)
@@ -462,7 +462,7 @@ func TestSettingsStrategy(t *testing.T) {
 			_, res, req := link(t, agent, provider)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
-			rs, err := admin.Common.GetSelfServiceSettingsFlow(common.
+			rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
 				NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents[agent]).
 				WithID(string(req.ID)))
 			require.NoError(t, err)
@@ -488,7 +488,7 @@ func TestSettingsStrategy(t *testing.T) {
 				_, res, req := link(t, agent, provider)
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login")
 
-				rs, err := admin.Common.GetSelfServiceSettingsFlow(common.
+				rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
 					NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents[agent]).
 					WithID(string(req.ID)))
 				require.NoError(t, err)

@@ -20,7 +20,7 @@ import (
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/httpclient/client/common"
+	sdkp "github.com/ory/kratos/internal/httpclient/client/public"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/verification"
@@ -143,8 +143,8 @@ func TestVerification(t *testing.T) {
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI().String()+"?flow=")
 
-		sr, err := sdk.Common.GetSelfServiceVerificationFlow(
-			common.NewGetSelfServiceVerificationFlowParams().WithHTTPClient(c).
+		sr, err := sdk.Public.GetSelfServiceVerificationFlow(
+			sdkp.NewGetSelfServiceVerificationFlowParams().WithHTTPClient(c).
 				WithID(res.Request.URL.Query().Get("flow")))
 		require.NoError(t, err)
 
@@ -194,8 +194,8 @@ func TestVerification(t *testing.T) {
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI().String())
 		assert.NotContains(t, res.Request.URL.String(), gjson.Get(body, "id").String())
 
-		sr, err := sdk.Common.GetSelfServiceVerificationFlow(
-			common.NewGetSelfServiceVerificationFlowParams().WithHTTPClient(c).
+		sr, err := sdk.Public.GetSelfServiceVerificationFlow(
+			sdkp.NewGetSelfServiceVerificationFlowParams().WithHTTPClient(c).
 				WithID(res.Request.URL.Query().Get("flow")))
 		require.NoError(t, err)
 
