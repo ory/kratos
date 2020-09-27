@@ -1,10 +1,9 @@
-import {CommonApi} from '@oryd/kratos-client'
-
-const kratos = new CommonApi('http://127.0.0.1:4433/')
+import { Configuration, PublicApi } from '@oryd/kratos-client';
+const kratos = new PublicApi(new Configuration({ basePath: 'http://127.0.0.1:4433/' }));
 
 const flowId = '' // usually something like: req.query.flow
 
 kratos.getSelfServiceRegistrationFlow(flowId)
-  .then(({body}) => {
-    console.log(body) // see the Raw HTTP tab for the payload
+  .then(({ status, data: flow, ...response }) => {
+    console.log(flow) // see the Raw HTTP tab for the payload
   })
