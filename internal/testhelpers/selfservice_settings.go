@@ -26,7 +26,6 @@ import (
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal/httpclient/client"
-	"github.com/ory/kratos/internal/httpclient/client/common"
 	"github.com/ory/kratos/internal/httpclient/client/public"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/selfservice/flow/settings"
@@ -44,15 +43,15 @@ func NewSettingsUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Se
 	return ts
 }
 
-func InitializeSettingsFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server) *common.GetSelfServiceSettingsFlowOK {
+func InitializeSettingsFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server) *public.GetSelfServiceSettingsFlowOK {
 	publicClient := NewSDKClient(ts)
 
 	res, err := client.Get(ts.URL + settings.RouteInitBrowserFlow)
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
 
-	rs, err := publicClient.Common.GetSelfServiceSettingsFlow(
-		common.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(client).
+	rs, err := publicClient.Public.GetSelfServiceSettingsFlow(
+		public.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(client).
 			WithID(res.Request.URL.Query().Get("flow")),
 	)
 	require.NoError(t, err)
@@ -161,7 +160,7 @@ func NewSettingsLoginAcceptAPIServer(t *testing.T, adminClient *client.OryKratos
 
 		viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 
-		res, err := adminClient.Common.GetSelfServiceLoginFlow(common.NewGetSelfServiceLoginFlowParams().WithID(r.URL.Query().Get("flow")))
+		res, err := adminClient.Public.GetSelfServiceLoginFlow(public.NewGetSelfServiceLoginFlowParams().WithID(r.URL.Query().Get("flow")))
 
 		require.NoError(t, err)
 		require.NotEmpty(t, res.Payload.RequestURL)

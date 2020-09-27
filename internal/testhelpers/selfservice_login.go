@@ -18,7 +18,6 @@ import (
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal/httpclient/client/common"
 	"github.com/ory/kratos/internal/httpclient/client/public"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/selfservice/flow/login"
@@ -45,7 +44,7 @@ func NewLoginUIWith401Response(t *testing.T) *httptest.Server {
 	return ts
 }
 
-func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, forced bool) *common.GetSelfServiceLoginFlowOK {
+func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, forced bool) *public.GetSelfServiceLoginFlowOK {
 	publicClient := NewSDKClient(ts)
 
 	q := ""
@@ -57,8 +56,8 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
 
-	rs, err := publicClient.Common.GetSelfServiceLoginFlow(
-		common.NewGetSelfServiceLoginFlowParams().WithHTTPClient(client).
+	rs, err := publicClient.Public.GetSelfServiceLoginFlow(
+		public.NewGetSelfServiceLoginFlowParams().WithHTTPClient(client).
 			WithID(res.Request.URL.Query().Get("flow")),
 	)
 	require.NoError(t, err)

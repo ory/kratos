@@ -17,7 +17,6 @@ import (
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal/httpclient/client/common"
 	"github.com/ory/kratos/internal/httpclient/client/public"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -35,13 +34,13 @@ func NewRegistrationUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptes
 	return ts
 }
 
-func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server) *common.GetSelfServiceRegistrationFlowOK {
+func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server) *public.GetSelfServiceRegistrationFlowOK {
 	res, err := client.Get(ts.URL + registration.RouteInitBrowserFlow)
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
 
-	rs, err := NewSDKClient(ts).Common.GetSelfServiceRegistrationFlow(
-		common.NewGetSelfServiceRegistrationFlowParams().WithHTTPClient(client).
+	rs, err := NewSDKClient(ts).Public.GetSelfServiceRegistrationFlow(
+		public.NewGetSelfServiceRegistrationFlowParams().WithHTTPClient(client).
 			WithID(res.Request.URL.Query().Get("flow")))
 	require.NoError(t, err)
 	assert.Empty(t, rs.Payload.Active)

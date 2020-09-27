@@ -153,7 +153,7 @@ type getSelfServiceRecoveryFlowParameters struct {
 	FlowID string `json:"id"`
 }
 
-// swagger:route GET /self-service/recovery/flows common public admin getSelfServiceRecoveryFlow
+// swagger:route GET /self-service/recovery/flows public admin getSelfServiceRecoveryFlow
 //
 // Get information about a recovery flow
 //

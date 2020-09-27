@@ -172,7 +172,7 @@ type getSelfServiceRegistrationFlowParameters struct {
 	ID string `json:"id"`
 }
 
-// swagger:route GET /self-service/registration/flows common public admin getSelfServiceRegistrationFlow
+// swagger:route GET /self-service/registration/flows public admin getSelfServiceRegistrationFlow
 //
 // Get Registration Flow
 //
