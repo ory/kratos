@@ -127,7 +127,7 @@ func (h *Handler) NewFlow(w http.ResponseWriter, r *http.Request, i *identity.Id
 //     Schemes: http, https
 //
 //     Security:
-//     - sessionToken
+//       sessionToken:
 //
 //     Responses:
 //       200: settingsFlow
@@ -168,7 +168,7 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //     Schemes: http, https
 //
 //     Security:
-//     - sessionToken
+//       sessionToken:
 //
 //     Responses:
 //       302: emptyResponse
@@ -220,7 +220,7 @@ type getSelfServiceSettingsFlowParameters struct {
 //     Schemes: http, https
 //
 //     Security:
-//     - sessionToken
+//       sessionToken:
 //
 //     Responses:
 //       200: settingsFlow

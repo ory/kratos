@@ -104,7 +104,7 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 //     Schemes: http, https
 //
 //     Security:
-//     - sessionToken
+//       sessionToken:
 //
 //     Responses:
 //       200: registrationFlow
@@ -140,7 +140,7 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, ps httprou
 //     Schemes: http, https
 //
 //     Security:
-//     - sessionToken
+//       sessionToken:
 //
 //     Responses:
 //       302: emptyResponse
