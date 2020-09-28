@@ -39,7 +39,7 @@ func (s *statusState) Interface() interface{} {
 
 var statusCmd = &cobra.Command{
 	Use:   "status",
-	Short: "Prints the status of the remote Kratos instance.",
+	Short: "Print the alive and readiness status of a ORY Kratos instance",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		c := cliclient.NewClient(cmd)
