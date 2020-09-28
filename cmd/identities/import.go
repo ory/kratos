@@ -20,8 +20,16 @@ import (
 // importCmd represents the import command
 var importCmd = &cobra.Command{
 	Use:   "import <file.json [file-2.json [file-3.json] ...]>",
-	Short: "import identities from files or STD_IN",
-	Long:  "Import identities from files or STD_IN. Files are expected to each contain a single identity. The validity of files can be tested beforehand using `... identities validate`. Importing credentials is not yet supported.",
+	Short: "Import identities from files or STD_IN",
+	Long: `Import identities from files or STD_IN:
+
+	kratos identities import file.json
+
+	kratos identities import <(cat file.json)
+
+Files are expected to each contain a single identity. The validity of files can be tested beforehand using "... identities validate".
+
+WARNING: Importing credentials is not yet supported.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := cliclient.NewClient(cmd)
 
@@ -43,7 +51,7 @@ var importCmd = &cobra.Command{
 			var params models.CreateIdentity
 			err = json.NewDecoder(bytes.NewBuffer(fc)).Decode(&params)
 			if err != nil {
-				fmt.Fprintln(cmd.ErrOrStderr(), "STD_IN: Could not parse identity")
+				_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "STD_IN: Could not parse identity")
 				return clihelpers.FailSilently(cmd)
 			}
 
