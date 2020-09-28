@@ -131,7 +131,7 @@ func TestSettingsStrategy(t *testing.T) {
 		req := newProfileFlow(t, client, redirectTo, exp)
 		rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
 			NewGetSelfServiceSettingsFlowParams().WithHTTPClient(client).
-			WithID(req.ID.String()))
+			WithID(req.ID.String()), nil)
 		require.NoError(t, err)
 		return rs.Payload
 	}
@@ -162,7 +162,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 		_, err := public.Public.GetSelfServiceSettingsFlow(sdkp.
 			NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents["oryer"]).
-			WithID(req.ID.String()))
+			WithID(req.ID.String()), nil)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "403")
 	})
@@ -172,7 +172,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 		rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
 			NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents["password"]).
-			WithID(req.ID.String()))
+			WithID(req.ID.String()), nil)
 		require.NoError(t, err)
 
 		// Check our sanity. Does the SDK relay the same info that we expect and got from the store?
@@ -318,7 +318,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 				rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
 					NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents[agent]).
-					WithID(string(req.ID)))
+					WithID(string(req.ID)), nil)
 				require.NoError(t, err)
 				require.EqualValues(t, settings.StateShowForm, rs.Payload.State)
 
@@ -439,7 +439,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 			rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
 				NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents[agent]).
-				WithID(string(req.ID)))
+				WithID(string(req.ID)), nil)
 			require.NoError(t, err)
 			require.EqualValues(t, settings.StateSuccess, rs.Payload.State)
 
@@ -464,7 +464,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 			rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
 				NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents[agent]).
-				WithID(string(req.ID)))
+				WithID(string(req.ID)), nil)
 			require.NoError(t, err)
 			require.EqualValues(t, settings.StateSuccess, rs.Payload.State)
 
@@ -490,7 +490,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 				rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
 					NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents[agent]).
-					WithID(string(req.ID)))
+					WithID(string(req.ID)), nil)
 				require.NoError(t, err)
 				require.EqualValues(t, settings.StateShowForm, rs.Payload.State)
 

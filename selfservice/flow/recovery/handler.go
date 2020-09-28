@@ -83,9 +83,6 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //
 //     Schemes: http, https
 //
-//     Security:
-//       sessionToken:
-//
 //     Responses:
 //       200: recoveryFlow
 //       500: genericError
@@ -118,9 +115,6 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 // More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 //
 //     Schemes: http, https
-//
-//     Security:
-//       sessionToken:
 //
 //     Responses:
 //       302: emptyResponse

@@ -208,7 +208,7 @@ func TestHandleError(t *testing.T) {
 			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowSettingsUI().String()+"?flow=")
 
 			lf, err := sdk.Public.GetSelfServiceSettingsFlow(sdkp.NewGetSelfServiceSettingsFlowParams().
-				WithID(res.Request.URL.Query().Get("flow")))
+				WithID(res.Request.URL.Query().Get("flow")), nil)
 			require.NoError(t, err)
 			return lf.Payload, res
 		}

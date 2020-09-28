@@ -118,7 +118,7 @@ func TestAdminStrategy(t *testing.T) {
 
 		sr, err := adminSDK.Public.GetSelfServiceSettingsFlow(
 			sdkp.NewGetSelfServiceSettingsFlowParams().
-				WithID(res.Request.URL.Query().Get("flow")))
+				WithID(res.Request.URL.Query().Get("flow")), nil)
 		require.NoError(t, err, "%s", res.Request.URL.String())
 
 		require.Len(t, sr.Payload.Messages, 1)
