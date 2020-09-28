@@ -39,6 +39,7 @@ var logger *logrusx.Logger
 // serveCmd represents the serve command
 var serveCmd = &cobra.Command{
 	Use: "serve",
+	Short: "Run the ORY Kratos server",
 	Run: func(cmd *cobra.Command, args []string) {
 		logger = viperx.InitializeConfig("kratos", "", logger)
 		// plog.Logger = gbl.Logrus{FieldLogger: logger}
