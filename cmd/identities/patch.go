@@ -2,6 +2,7 @@ package identities
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -13,5 +14,6 @@ var patchCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO
 		fmt.Println("not yet implemented")
+		os.Exit(1)
 	},
 }
