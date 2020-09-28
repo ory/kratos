@@ -8,7 +8,7 @@ import (
 )
 
 var remoteCmd = &cobra.Command{
-	Use: "remote",
+	Use:   "remote",
 	Short: "Helpers and management for remote ORY Kratos instances",
 }
 
