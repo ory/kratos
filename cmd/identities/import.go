@@ -31,7 +31,7 @@ var importCmd = &cobra.Command{
 		if len(args) == 0 {
 			fc, err := ioutil.ReadAll(cmd.InOrStdin())
 			if err != nil {
-				fmt.Fprintf(cmd.ErrOrStderr(), "STD_IN: Could not read: %s\n", err)
+				_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "STD_IN: Could not read: %s\n", err)
 				return clihelpers.FailSilently(cmd)
 			}
 
@@ -67,7 +67,7 @@ var importCmd = &cobra.Command{
 				var params models.CreateIdentity
 				err = json.Unmarshal(fc, &params)
 				if err != nil {
-					fmt.Fprintf(cmd.ErrOrStderr(), "%s: Could not parse identity file\n", fn)
+					_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%s: Could not parse identity file\n", fn)
 					return clihelpers.FailSilently(cmd)
 				}
 

@@ -35,14 +35,14 @@ var listCmd = &cobra.Command{
 		if len(args) == 2 {
 			page, err := strconv.ParseInt(args[0], 0, 64)
 			if err != nil {
-				fmt.Fprintf(cmd.ErrOrStderr(), "Could not parse page argument\"%s\": %s", args[0], err)
+				_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Could not parse page argument\"%s\": %s", args[0], err)
 				return clihelpers.FailSilently(cmd)
 			}
 			params.Page = &page
 
 			perPage, err := strconv.ParseInt(args[1], 0, 64)
 			if err != nil {
-				fmt.Fprintf(cmd.ErrOrStderr(), "Could not parse per-page argument\"%s\": %s", args[1], err)
+				_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Could not parse per-page argument\"%s\": %s", args[1], err)
 				return clihelpers.FailSilently(cmd)
 			}
 			params.PerPage = &perPage
@@ -50,7 +50,7 @@ var listCmd = &cobra.Command{
 
 		resp, err := c.Admin.ListIdentities(params)
 		if err != nil {
-			fmt.Fprintf(cmd.ErrOrStderr(), "Could not get the identities: %+v\n", err)
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Could not get the identities: %+v\n", err)
 			return clihelpers.FailSilently(cmd)
 		}
 

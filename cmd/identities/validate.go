@@ -43,7 +43,7 @@ var validateCmd = &cobra.Command{
 func validateIdentityFile(cmd *cobra.Command, fn string, c *client.OryKratos) ([]byte, error) {
 	fc, err := ioutil.ReadFile(fn)
 	if err != nil {
-		fmt.Fprintf(cmd.ErrOrStderr(), "%s: Could not open identity file: %s\n", fn, err)
+		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%s: Could not open identity file: %s\n", fn, err)
 		return nil, clihelpers.FailSilently(cmd)
 	}
 
@@ -89,7 +89,7 @@ func validateIdentity(cmd *cobra.Command, src string, fc []byte, getRemoteSchema
 	var foundValidationErrors bool
 	err := swaggerSchema.Validate(bytes.NewBuffer(fc))
 	if err != nil {
-		fmt.Fprintf(cmd.ErrOrStderr(), "%s: not valid\n", src)
+		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%s: not valid\n", src)
 		viperx.PrintHumanReadableValidationErrors(cmd.ErrOrStderr(), err)
 		foundValidationErrors = true
 	}
@@ -97,7 +97,7 @@ func validateIdentity(cmd *cobra.Command, src string, fc []byte, getRemoteSchema
 	// get custom identity schema id
 	sid := gjson.GetBytes(fc, "schema_id")
 	if !sid.Exists() {
-		fmt.Fprintf(cmd.ErrOrStderr(), `%s: Expected key "schema_id" to be defined in identity file`, src)
+		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), `%s: Expected key "schema_id" to be defined in identity file`, src)
 		return clihelpers.FailSilently(cmd)
 	}
 
@@ -106,7 +106,7 @@ func validateIdentity(cmd *cobra.Command, src string, fc []byte, getRemoteSchema
 		// get custom identity schema
 		ts, err := getRemoteSchema(&common.GetSchemaParams{ID: sid.String(), Context: context.Background()})
 		if err != nil {
-			fmt.Fprintf(cmd.ErrOrStderr(), "%s: Could not fetch schema with ID \"%s\": %s\n", src, sid.String(), err)
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%s: Could not fetch schema with ID \"%s\": %s\n", src, sid.String(), err)
 			return clihelpers.FailSilently(cmd)
 		}
 		sf, err := json.Marshal(ts.Payload)
@@ -117,7 +117,7 @@ func validateIdentity(cmd *cobra.Command, src string, fc []byte, getRemoteSchema
 		// compile custom identity schema
 		customSchema, err = jsonschema.CompileString("identity_traits.schema.json", string(sf))
 		if err != nil {
-			fmt.Fprintf(cmd.ErrOrStderr(), "%s: Could not compile the traits schema: %s\n", src, err)
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%s: Could not compile the traits schema: %s\n", src, err)
 			return clihelpers.FailSilently(cmd)
 		}
 		schemas[sid.String()] = customSchema
@@ -126,7 +126,7 @@ func validateIdentity(cmd *cobra.Command, src string, fc []byte, getRemoteSchema
 	// validate against custom identity schema
 	err = customSchema.Validate(bytes.NewBuffer(fc))
 	if err != nil {
-		fmt.Fprintf(cmd.ErrOrStderr(), "%s: not valid\n", src)
+		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%s: not valid\n", src)
 		viperx.PrintHumanReadableValidationErrors(cmd.ErrOrStderr(), err)
 		foundValidationErrors = true
 	}
