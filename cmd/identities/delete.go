@@ -41,7 +41,7 @@ kratos identities delete $(kratos identities list --format json | jq -r 'map(sel
 		}
 
 		for _, d := range deleted {
-			fmt.Fprintln(cmd.OutOrStdout(), d)
+			_, _ = fmt.Fprintln(cmd.OutOrStdout(), d)
 		}
 
 		for _, err := range errs {

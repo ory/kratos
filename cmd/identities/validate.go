@@ -22,7 +22,7 @@ import (
 )
 
 var validateCmd = &cobra.Command{
-	Use:   "validate  <file.json [file-2.json [file-3.json] ...]>",
+	Use:   "validate <file.json [file-2.json [file-3.json] ...]>",
 	Short: "Validate local identity files",
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -35,7 +35,7 @@ var validateCmd = &cobra.Command{
 			}
 		}
 
-		fmt.Fprintln(cmd.OutOrStdout(), "All identity files are valid.")
+		_, _ = fmt.Fprintln(cmd.OutOrStdout(), "All identity files are valid.")
 		return nil
 	},
 }
