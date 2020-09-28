@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	envKeyEndpoint = "KRATOS_ADMIN_ENDPOINT"
+	envKeyEndpoint = "KRATOS_ADMIN_URL"
 	FlagEndpoint   = "endpoint"
 )
 
@@ -43,5 +43,5 @@ func NewClient(cmd *cobra.Command) *client.OryKratos {
 }
 
 func RegisterClientFlags(flags *pflag.FlagSet) {
-	flags.StringP(FlagEndpoint, FlagEndpoint[:1], "", fmt.Sprintf("The upstream admin endpoint URL. Alternatively set using the %s environmental variable.", envKeyEndpoint))
+	flags.StringP(FlagEndpoint, FlagEndpoint[:1], "", fmt.Sprintf("The URL of ORY Kratos' Admin API. Alternatively set using the %s environmental variable.", envKeyEndpoint))
 }
