@@ -143,7 +143,7 @@ func (a *Client) CompleteSelfServiceLoginFlowWithPasswordMethod(params *Complete
 
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "completeSelfServiceLoginFlowWithPasswordMethod",
-		Method:             "GET",
+		Method:             "POST",
 		PathPattern:        "/self-service/login/methods/password",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},

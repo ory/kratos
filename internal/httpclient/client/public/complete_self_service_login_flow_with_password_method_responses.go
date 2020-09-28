@@ -67,7 +67,7 @@ type CompleteSelfServiceLoginFlowWithPasswordMethodOK struct {
 }
 
 func (o *CompleteSelfServiceLoginFlowWithPasswordMethodOK) Error() string {
-	return fmt.Sprintf("[GET /self-service/login/methods/password][%d] completeSelfServiceLoginFlowWithPasswordMethodOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[POST /self-service/login/methods/password][%d] completeSelfServiceLoginFlowWithPasswordMethodOK  %+v", 200, o.Payload)
 }
 
 func (o *CompleteSelfServiceLoginFlowWithPasswordMethodOK) GetPayload() *models.LoginViaAPIResponse {
@@ -100,7 +100,7 @@ type CompleteSelfServiceLoginFlowWithPasswordMethodFound struct {
 }
 
 func (o *CompleteSelfServiceLoginFlowWithPasswordMethodFound) Error() string {
-	return fmt.Sprintf("[GET /self-service/login/methods/password][%d] completeSelfServiceLoginFlowWithPasswordMethodFound ", 302)
+	return fmt.Sprintf("[POST /self-service/login/methods/password][%d] completeSelfServiceLoginFlowWithPasswordMethodFound ", 302)
 }
 
 func (o *CompleteSelfServiceLoginFlowWithPasswordMethodFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -122,7 +122,7 @@ type CompleteSelfServiceLoginFlowWithPasswordMethodBadRequest struct {
 }
 
 func (o *CompleteSelfServiceLoginFlowWithPasswordMethodBadRequest) Error() string {
-	return fmt.Sprintf("[GET /self-service/login/methods/password][%d] completeSelfServiceLoginFlowWithPasswordMethodBadRequest  %+v", 400, o.Payload)
+	return fmt.Sprintf("[POST /self-service/login/methods/password][%d] completeSelfServiceLoginFlowWithPasswordMethodBadRequest  %+v", 400, o.Payload)
 }
 
 func (o *CompleteSelfServiceLoginFlowWithPasswordMethodBadRequest) GetPayload() *models.LoginFlow {
@@ -155,7 +155,7 @@ type CompleteSelfServiceLoginFlowWithPasswordMethodInternalServerError struct {
 }
 
 func (o *CompleteSelfServiceLoginFlowWithPasswordMethodInternalServerError) Error() string {
-	return fmt.Sprintf("[GET /self-service/login/methods/password][%d] completeSelfServiceLoginFlowWithPasswordMethodInternalServerError  %+v", 500, o.Payload)
+	return fmt.Sprintf("[POST /self-service/login/methods/password][%d] completeSelfServiceLoginFlowWithPasswordMethodInternalServerError  %+v", 500, o.Payload)
 }
 
 func (o *CompleteSelfServiceLoginFlowWithPasswordMethodInternalServerError) GetPayload() *models.GenericError {
