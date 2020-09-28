@@ -103,9 +103,6 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 //
 //     Schemes: http, https
 //
-//     Security:
-//       sessionToken:
-//
 //     Responses:
 //       200: registrationFlow
 //       400: genericError
@@ -138,9 +135,6 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, ps httprou
 // More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 //
 //     Schemes: http, https
-//
-//     Security:
-//       sessionToken:
 //
 //     Responses:
 //       302: emptyResponse

@@ -57,8 +57,7 @@ func TestHandler(t *testing.T) {
 	t.Run("daemon=admin", func(t *testing.T) {
 		t.Run("description=fetching a non-existent flow should return a 404 error", func(t *testing.T) {
 			_, err := adminClient.Public.GetSelfServiceSettingsFlow(
-				sdkp.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(otherUser).WithID("i-do-not-exist"),
-			)
+				sdkp.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(otherUser).WithID("i-do-not-exist"), nil)
 			require.Error(t, err)
 
 			require.IsType(t, &sdkp.GetSelfServiceSettingsFlowNotFound{}, err)
@@ -70,7 +69,7 @@ func TestHandler(t *testing.T) {
 			require.NoError(t, reg.SettingsFlowPersister().CreateSettingsFlow(context.Background(), pr))
 
 			_, err := adminClient.Public.GetSelfServiceSettingsFlow(
-				sdkp.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(primaryUser).WithID(pr.ID.String()),
+				sdkp.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(primaryUser).WithID(pr.ID.String()), nil,
 			)
 			require.Error(t, err)
 
@@ -82,7 +81,7 @@ func TestHandler(t *testing.T) {
 	t.Run("daemon=public", func(t *testing.T) {
 		t.Run("description=fetching a non-existent flow should return a 403 error", func(t *testing.T) {
 			_, err := publicClient.Public.GetSelfServiceSettingsFlow(
-				sdkp.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(otherUser).WithID("i-do-not-exist"),
+				sdkp.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(otherUser).WithID("i-do-not-exist"), nil,
 			)
 			require.Error(t, err)
 
@@ -95,7 +94,7 @@ func TestHandler(t *testing.T) {
 			require.NoError(t, reg.SettingsFlowPersister().CreateSettingsFlow(context.Background(), pr))
 
 			_, err := publicClient.Public.GetSelfServiceSettingsFlow(
-				sdkp.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(primaryUser).WithID(pr.ID.String()),
+				sdkp.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(primaryUser).WithID(pr.ID.String()), nil,
 			)
 			require.Error(t, err)
 
@@ -131,7 +130,7 @@ func TestHandler(t *testing.T) {
 				require.NotEmpty(t, rid)
 
 				_, err = publicClient.Public.GetSelfServiceSettingsFlow(
-					sdkp.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(otherUser).WithID(rid),
+					sdkp.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(otherUser).WithID(rid), nil,
 				)
 				require.Error(t, err)
 				require.IsType(t, &sdkp.GetSelfServiceSettingsFlowForbidden{}, err)

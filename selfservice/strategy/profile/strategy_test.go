@@ -144,7 +144,7 @@ func TestStrategyTraits(t *testing.T) {
 
 		t.Run("type=api", func(t *testing.T) {
 			pr, err := publicClient.Public.InitializeSelfServiceSettingsViaAPIFlow(
-				public.NewInitializeSelfServiceSettingsViaAPIFlowParams().WithHTTPClient(apiUser1))
+				public.NewInitializeSelfServiceSettingsViaAPIFlowParams().WithHTTPClient(apiUser1), nil)
 			require.NoError(t, err)
 			run(t, apiIdentity1, pr.Payload, settings.RouteInitAPIFlow)
 		})
@@ -159,7 +159,7 @@ func TestStrategyTraits(t *testing.T) {
 
 			pr, err := publicClient.Public.GetSelfServiceSettingsFlow(
 				public.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(browserUser1).
-					WithID(res.Request.URL.Query().Get("flow")))
+					WithID(res.Request.URL.Query().Get("flow")), nil)
 			require.NoError(t, err, "%s", rid)
 
 			run(t, browserIdentity1, pr.Payload, settings.RouteInitBrowserFlow)

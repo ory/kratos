@@ -52,7 +52,7 @@ func InitializeSettingsFlowViaBrowser(t *testing.T, client *http.Client, ts *htt
 
 	rs, err := publicClient.Public.GetSelfServiceSettingsFlow(
 		public.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(client).
-			WithID(res.Request.URL.Query().Get("flow")),
+			WithID(res.Request.URL.Query().Get("flow")), nil,
 	)
 	require.NoError(t, err)
 	assert.Empty(t, rs.Payload.Active)
@@ -64,7 +64,7 @@ func InitializeSettingsFlowViaAPI(t *testing.T, client *http.Client, ts *httptes
 	publicClient := NewSDKClient(ts)
 
 	rs, err := publicClient.Public.InitializeSelfServiceSettingsViaAPIFlow(public.
-		NewInitializeSelfServiceSettingsViaAPIFlowParams().WithHTTPClient(client))
+		NewInitializeSelfServiceSettingsViaAPIFlowParams().WithHTTPClient(client), nil)
 	require.NoError(t, err)
 	assert.Empty(t, rs.Payload.Active)
 
