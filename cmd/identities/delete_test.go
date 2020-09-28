@@ -11,7 +11,6 @@ import (
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal/clihelpers"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/sqlcon"
 )
@@ -48,11 +47,8 @@ func TestDeleteCmd(t *testing.T) {
 	})
 
 	t.Run("case=fails with unknown ID", func(t *testing.T) {
-		stdOut, stdErr, err := exec(deleteCmd, nil, x.NewUUID().String())
-		require.True(t, errors.Is(err, clihelpers.NoPrintButFailError))
+		stdErr := execErr(t, deleteCmd, x.NewUUID().String())
 
-		// expect ID and no error
-		assert.Len(t, stdOut, 0, stdErr)
-		assert.Contains(t, stdErr, "[DELETE /identities/{id}][404] deleteIdentityNotFound", stdOut)
+		assert.Contains(t, stdErr, "[DELETE /identities/{id}][404] deleteIdentityNotFound", stdErr)
 	})
 }

@@ -43,7 +43,67 @@ func TestImportCmd(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	t.Run("case=imports a new identity from stdIn", func(t *testing.T) {
+	t.Run("case=imports multiple identities from single file", func(t *testing.T) {
+		i := []models.CreateIdentity{
+			{
+				SchemaID: pointerx.String(configuration.DefaultIdentityTraitsSchemaID),
+				Traits:   map[string]interface{}{},
+			},
+			{
+				SchemaID: pointerx.String(configuration.DefaultIdentityTraitsSchemaID),
+				Traits:   map[string]interface{}{},
+			},
+		}
+		ij, err := json.Marshal(i)
+		require.NoError(t, err)
+		f, err := ioutil.TempFile("", "")
+		require.NoError(t, err)
+		_, err = f.Write(ij)
+		require.NoError(t, err)
+		require.NoError(t, f.Close())
+
+		stdOut := execNoErr(t, importCmd, f.Name())
+
+		id, err := uuid.FromString(gjson.Get(stdOut, "0.id").String())
+		require.NoError(t, err)
+		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		assert.NoError(t, err)
+
+		id, err = uuid.FromString(gjson.Get(stdOut, "1.id").String())
+		require.NoError(t, err)
+		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		assert.NoError(t, err)
+	})
+
+	t.Run("case=imports a new identity from STD_IN", func(t *testing.T) {
+		i := []models.CreateIdentity{
+			{
+				SchemaID: pointerx.String(configuration.DefaultIdentityTraitsSchemaID),
+				Traits:   map[string]interface{}{},
+			},
+			{
+				SchemaID: pointerx.String(configuration.DefaultIdentityTraitsSchemaID),
+				Traits:   map[string]interface{}{},
+			},
+		}
+		ij, err := json.Marshal(i)
+		require.NoError(t, err)
+
+		stdOut, stdErr, err := exec(importCmd, bytes.NewBuffer(ij))
+		require.NoError(t, err, stdOut, stdErr)
+
+		id, err := uuid.FromString(gjson.Get(stdOut, "0.id").String())
+		require.NoError(t, err)
+		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		assert.NoError(t, err)
+
+		id, err = uuid.FromString(gjson.Get(stdOut, "1.id").String())
+		require.NoError(t, err)
+		_, err = reg.Persister().GetIdentity(context.Background(), id)
+		assert.NoError(t, err)
+	})
+
+	t.Run("case=imports multiple identities from STD_IN", func(t *testing.T) {
 		i := models.CreateIdentity{
 			SchemaID: pointerx.String(configuration.DefaultIdentityTraitsSchemaID),
 			Traits:   map[string]interface{}{},
@@ -64,7 +124,7 @@ func TestImportCmd(t *testing.T) {
 		// validation is further tested with the validate command
 		stdOut, stdErr, err := exec(importCmd, bytes.NewBufferString("{}"))
 		assert.True(t, errors.Is(err, clihelpers.NoPrintButFailError))
-		assert.Contains(t, stdErr, "STD_IN: not valid")
+		assert.Contains(t, stdErr, "STD_IN[0]: not valid")
 		assert.Len(t, stdOut, 0)
 	})
 }

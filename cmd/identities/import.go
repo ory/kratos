@@ -1,13 +1,9 @@
 package identities
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"time"
-
 	"github.com/spf13/cobra"
 
 	"github.com/ory/kratos/internal/clihelpers"
@@ -27,7 +23,7 @@ var importCmd = &cobra.Command{
 
 	cat file.json | kratos identities import
 
-Files are expected to each contain a single identity. The validity of files can be tested beforehand using "... identities validate".
+Files can contain only a single or an array of identities. The validity of files can be tested beforehand using "... identities validate".
 
 WARNING: Importing credentials is not yet supported.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -36,20 +32,19 @@ WARNING: Importing credentials is not yet supported.`,
 		imported := make([]*models.Identity, 0, len(args))
 		failed := make(map[string]error)
 
-		if len(args) == 0 {
-			fc, err := ioutil.ReadAll(cmd.InOrStdin())
-			if err != nil {
-				_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "STD_IN: Could not read: %s\n", err)
-				return clihelpers.FailSilently(cmd)
-			}
+		is, err := readIdentities(cmd, args)
+		if err != nil {
+			return err
+		}
 
-			err = validateIdentity(cmd, "STD_IN", fc, c.Common.GetSchema)
+		for src, i := range is {
+			err = validateIdentity(cmd, src, i, c.Common.GetSchema)
 			if err != nil {
 				return err
 			}
 
 			var params models.CreateIdentity
-			err = json.NewDecoder(bytes.NewBuffer(fc)).Decode(&params)
+			err = json.Unmarshal([]byte(i), &params)
 			if err != nil {
 				_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "STD_IN: Could not parse identity")
 				return clihelpers.FailSilently(cmd)
@@ -59,36 +54,9 @@ WARNING: Importing credentials is not yet supported.`,
 				Body:    &params,
 				Context: context.Background(),
 			})
-
 			if err != nil {
-				failed["STD_IN"] = err
+				failed[src] = err
 			} else {
-				imported = append(imported, resp.Payload)
-			}
-		} else {
-			for _, fn := range args {
-				fc, err := validateIdentityFile(cmd, fn, c)
-				if err != nil {
-					return err
-				}
-
-				var params models.CreateIdentity
-				err = json.Unmarshal(fc, &params)
-				if err != nil {
-					_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%s: Could not parse identity file\n", fn)
-					return clihelpers.FailSilently(cmd)
-				}
-
-				resp, err := c.Admin.CreateIdentity(
-					admin.NewCreateIdentityParams().
-						WithBody(&params).
-						WithTimeout(time.Second))
-
-				if err != nil {
-					failed[fn] = err
-					continue
-				}
-
 				imported = append(imported, resp.Payload)
 			}
 		}

@@ -3,10 +3,8 @@ package identities
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"testing"
 
-	"github.com/ory/kratos/internal/clihelpers"
 	"github.com/ory/kratos/x"
 
 	"github.com/stretchr/testify/assert"
@@ -43,10 +41,8 @@ func TestGetCmd(t *testing.T) {
 	})
 
 	t.Run("case=fails with unknown ID", func(t *testing.T) {
-		stdOut, stdErr, err := exec(getCmd, nil, x.NewUUID().String())
-		require.True(t, errors.Is(err, clihelpers.NoPrintButFailError))
+		stdErr := execErr(t, getCmd, x.NewUUID().String())
 
-		assert.Len(t, stdOut, 0, stdErr)
-		assert.Contains(t, stdErr, "status 404", stdOut)
+		assert.Contains(t, stdErr, "status 404", stdErr)
 	})
 }

@@ -58,12 +58,11 @@ func TestValidateIdentity(t *testing.T) {
 	} {
 		t.Run(fmt.Sprintf("case=%d/description=%s", i, tc.description), func(t *testing.T) {
 			cmd, stdOut, stdErr := testCmd()
-			payload := []byte(tc.payload)
 
 			if tc.identitySchema == nil {
 				tc.identitySchema = map[string]interface{}{}
 			}
-			err := validateIdentity(cmd, "test identity", payload, testSchemaGetter(tc.identitySchema))
+			err := validateIdentity(cmd, "test identity", tc.payload, testSchemaGetter(tc.identitySchema))
 			assert.Error(t, err, stdOut.String(), stdErr.String())
 			assert.Len(t, stdOut.String(), 0, stdErr.String())
 			assert.Contains(t, stdErr.String(), "required", stdOut.String())

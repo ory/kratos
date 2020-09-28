@@ -5,8 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-
 	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -16,7 +14,6 @@ import (
 
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/cmd/cliclient"
-	"github.com/ory/kratos/internal/httpclient/client"
 	"github.com/ory/kratos/internal/httpclient/client/common"
 	"github.com/ory/x/viperx"
 )
@@ -24,13 +21,21 @@ import (
 var validateCmd = &cobra.Command{
 	Use:   "validate <file.json [file-2.json [file-3.json] ...]>",
 	Short: "Validate local identity files",
-	Args:  cobra.MinimumNArgs(1),
+	Long: `This command allows validation of identity files.
+It validates against the payload of the API and the identity schema as configured in Kratos.
+Identities can be supplied via STD_IN or JSON files containing a single or an array of identities.
+`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := cliclient.NewClient(cmd)
 
-		for _, fn := range args {
-			if _, err := validateIdentityFile(cmd, fn, c); err != nil {
-				cmd.SilenceUsage = true
+		is, err := readIdentities(cmd, args)
+		if err != nil {
+			return err
+		}
+
+		for src, i := range is {
+			err = validateIdentity(cmd, src, i, c.Common.GetSchema)
+			if err != nil {
 				return err
 			}
 		}
@@ -38,16 +43,6 @@ var validateCmd = &cobra.Command{
 		_, _ = fmt.Fprintln(cmd.OutOrStdout(), "All identity files are valid.")
 		return nil
 	},
-}
-
-func validateIdentityFile(cmd *cobra.Command, fn string, c *client.OryKratos) ([]byte, error) {
-	fc, err := ioutil.ReadFile(fn)
-	if err != nil {
-		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%s: Could not open identity file: %s\n", fn, err)
-		return nil, clihelpers.FailSilently(cmd)
-	}
-
-	return fc, validateIdentity(cmd, fn, fc, c.Common.GetSchema)
 }
 
 var schemas = make(map[string]*jsonschema.Schema)
@@ -59,7 +54,7 @@ type schemaGetter = func(params *common.GetSchemaParams) (*common.GetSchemaOK, e
 // validateIdentity validates the json payload fc against
 // 1. the swagger payload definition and
 // 2. the remote custom identity schema.
-func validateIdentity(cmd *cobra.Command, src string, fc []byte, getRemoteSchema schemaGetter) error {
+func validateIdentity(cmd *cobra.Command, src, i string, getRemoteSchema schemaGetter) error {
 	swaggerSchema, ok := schemas[createIdentityPath]
 	if !ok {
 		// get swagger schema
@@ -87,7 +82,7 @@ func validateIdentity(cmd *cobra.Command, src string, fc []byte, getRemoteSchema
 
 	// validate against swagger definition
 	var foundValidationErrors bool
-	err := swaggerSchema.Validate(bytes.NewBuffer(fc))
+	err := swaggerSchema.Validate(bytes.NewBufferString(i))
 	if err != nil {
 		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%s: not valid\n", src)
 		viperx.PrintHumanReadableValidationErrors(cmd.ErrOrStderr(), err)
@@ -95,7 +90,7 @@ func validateIdentity(cmd *cobra.Command, src string, fc []byte, getRemoteSchema
 	}
 
 	// get custom identity schema id
-	sid := gjson.GetBytes(fc, "schema_id")
+	sid := gjson.Get(i, "schema_id")
 	if !sid.Exists() {
 		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), `%s: Expected key "schema_id" to be defined in identity file`, src)
 		return clihelpers.FailSilently(cmd)
@@ -124,7 +119,7 @@ func validateIdentity(cmd *cobra.Command, src string, fc []byte, getRemoteSchema
 	}
 
 	// validate against custom identity schema
-	err = customSchema.Validate(bytes.NewBuffer(fc))
+	err = customSchema.Validate(bytes.NewBufferString(i))
 	if err != nil {
 		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%s: not valid\n", src)
 		viperx.PrintHumanReadableValidationErrors(cmd.ErrOrStderr(), err)

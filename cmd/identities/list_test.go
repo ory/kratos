@@ -40,8 +40,6 @@ func TestListCmd(t *testing.T) {
 		stdoutP1 := execNoErr(t, listCmd, "1", "3")
 		stdoutP2 := execNoErr(t, listCmd, "2", "3")
 
-		t.Logf(stdoutP1, stdoutP2, strings.Join(ids, "\n"))
-
 		for _, id := range ids {
 			// exactly one of page 1 and 2 should contain the id
 			assert.True(t, strings.Contains(stdoutP1, id) != strings.Contains(stdoutP2, id))
