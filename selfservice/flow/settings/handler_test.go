@@ -19,7 +19,7 @@ import (
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/httpclient/client/common"
+	sdkp "github.com/ory/kratos/internal/httpclient/client/public"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
@@ -56,51 +56,50 @@ func TestHandler(t *testing.T) {
 
 	t.Run("daemon=admin", func(t *testing.T) {
 		t.Run("description=fetching a non-existent flow should return a 404 error", func(t *testing.T) {
-			_, err := adminClient.Common.GetSelfServiceSettingsFlow(
-				common.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(otherUser).WithID("i-do-not-exist"),
-			)
+			_, err := adminClient.Public.GetSelfServiceSettingsFlow(
+				sdkp.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(otherUser).WithID("i-do-not-exist"), nil)
 			require.Error(t, err)
 
-			require.IsType(t, &common.GetSelfServiceSettingsFlowNotFound{}, err)
-			assert.Equal(t, int64(http.StatusNotFound), err.(*common.GetSelfServiceSettingsFlowNotFound).Payload.Error.Code)
+			require.IsType(t, &sdkp.GetSelfServiceSettingsFlowNotFound{}, err)
+			assert.Equal(t, int64(http.StatusNotFound), err.(*sdkp.GetSelfServiceSettingsFlowNotFound).Payload.Error.Code)
 		})
 
 		t.Run("description=fetching an expired flow returns 410", func(t *testing.T) {
 			pr := newExpiredFlow()
 			require.NoError(t, reg.SettingsFlowPersister().CreateSettingsFlow(context.Background(), pr))
 
-			_, err := adminClient.Common.GetSelfServiceSettingsFlow(
-				common.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(primaryUser).WithID(pr.ID.String()),
+			_, err := adminClient.Public.GetSelfServiceSettingsFlow(
+				sdkp.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(primaryUser).WithID(pr.ID.String()), nil,
 			)
 			require.Error(t, err)
 
-			require.IsType(t, &common.GetSelfServiceSettingsFlowGone{}, err, "%+v", err)
-			assert.Equal(t, int64(http.StatusGone), err.(*common.GetSelfServiceSettingsFlowGone).Payload.Error.Code)
+			require.IsType(t, &sdkp.GetSelfServiceSettingsFlowGone{}, err, "%+v", err)
+			assert.Equal(t, int64(http.StatusGone), err.(*sdkp.GetSelfServiceSettingsFlowGone).Payload.Error.Code)
 		})
 	})
 
 	t.Run("daemon=public", func(t *testing.T) {
 		t.Run("description=fetching a non-existent flow should return a 403 error", func(t *testing.T) {
-			_, err := publicClient.Common.GetSelfServiceSettingsFlow(
-				common.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(otherUser).WithID("i-do-not-exist"),
+			_, err := publicClient.Public.GetSelfServiceSettingsFlow(
+				sdkp.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(otherUser).WithID("i-do-not-exist"), nil,
 			)
 			require.Error(t, err)
 
-			require.IsType(t, &common.GetSelfServiceSettingsFlowForbidden{}, err)
-			assert.Equal(t, int64(http.StatusForbidden), err.(*common.GetSelfServiceSettingsFlowForbidden).Payload.Error.Code)
+			require.IsType(t, &sdkp.GetSelfServiceSettingsFlowForbidden{}, err)
+			assert.Equal(t, int64(http.StatusForbidden), err.(*sdkp.GetSelfServiceSettingsFlowForbidden).Payload.Error.Code)
 		})
 
 		t.Run("description=fetching an expired flow returns 410", func(t *testing.T) {
 			pr := newExpiredFlow()
 			require.NoError(t, reg.SettingsFlowPersister().CreateSettingsFlow(context.Background(), pr))
 
-			_, err := publicClient.Common.GetSelfServiceSettingsFlow(
-				common.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(primaryUser).WithID(pr.ID.String()),
+			_, err := publicClient.Public.GetSelfServiceSettingsFlow(
+				sdkp.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(primaryUser).WithID(pr.ID.String()), nil,
 			)
 			require.Error(t, err)
 
-			require.IsType(t, &common.GetSelfServiceSettingsFlowGone{}, err)
-			assert.Equal(t, int64(http.StatusGone), err.(*common.GetSelfServiceSettingsFlowGone).Payload.Error.Code)
+			require.IsType(t, &sdkp.GetSelfServiceSettingsFlowGone{}, err)
+			assert.Equal(t, int64(http.StatusGone), err.(*sdkp.GetSelfServiceSettingsFlowGone).Payload.Error.Code)
 		})
 
 		t.Run("description=should fail to fetch request if identity changed", func(t *testing.T) {
@@ -130,12 +129,12 @@ func TestHandler(t *testing.T) {
 				rid := res.Request.URL.Query().Get("flow")
 				require.NotEmpty(t, rid)
 
-				_, err = publicClient.Common.GetSelfServiceSettingsFlow(
-					common.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(otherUser).WithID(rid),
+				_, err = publicClient.Public.GetSelfServiceSettingsFlow(
+					sdkp.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(otherUser).WithID(rid), nil,
 				)
 				require.Error(t, err)
-				require.IsType(t, &common.GetSelfServiceSettingsFlowForbidden{}, err)
-				assert.EqualValues(t, int64(http.StatusForbidden), err.(*common.GetSelfServiceSettingsFlowForbidden).Payload.Error.Code, "should return a 403 error because the identities from the cookies do not match")
+				require.IsType(t, &sdkp.GetSelfServiceSettingsFlowForbidden{}, err)
+				assert.EqualValues(t, int64(http.StatusForbidden), err.(*sdkp.GetSelfServiceSettingsFlowForbidden).Payload.Error.Code, "should return a 403 error because the identities from the cookies do not match")
 			})
 		})
 

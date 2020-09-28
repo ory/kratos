@@ -60,7 +60,7 @@ type completeSelfServiceLoginFlowWithPasswordMethodParameters struct {
 	CompleteSelfServiceLoginFlowWithPasswordMethod
 }
 
-// swagger:route GET /self-service/login/methods/password public completeSelfServiceLoginFlowWithPasswordMethod
+// swagger:route POST /self-service/login/methods/password public completeSelfServiceLoginFlowWithPasswordMethod
 //
 // Complete Login Flow with Username/Email Password Method
 //

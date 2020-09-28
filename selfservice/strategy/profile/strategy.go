@@ -147,7 +147,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 //     - application/json
 //
 //     Security:
-//     - sessionToken
+//       sessionToken:
 //
 //     Schemes: http, https
 //

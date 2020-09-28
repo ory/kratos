@@ -29,7 +29,6 @@ import (
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/httpclient/client/common"
 	"github.com/ory/kratos/internal/httpclient/client/public"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/internal/testhelpers"
@@ -145,7 +144,7 @@ func TestStrategyTraits(t *testing.T) {
 
 		t.Run("type=api", func(t *testing.T) {
 			pr, err := publicClient.Public.InitializeSelfServiceSettingsViaAPIFlow(
-				public.NewInitializeSelfServiceSettingsViaAPIFlowParams().WithHTTPClient(apiUser1))
+				public.NewInitializeSelfServiceSettingsViaAPIFlowParams().WithHTTPClient(apiUser1), nil)
 			require.NoError(t, err)
 			run(t, apiIdentity1, pr.Payload, settings.RouteInitAPIFlow)
 		})
@@ -158,9 +157,9 @@ func TestStrategyTraits(t *testing.T) {
 			rid := res.Request.URL.Query().Get("flow")
 			require.NotEmpty(t, rid)
 
-			pr, err := publicClient.Common.GetSelfServiceSettingsFlow(
-				common.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(browserUser1).
-					WithID(res.Request.URL.Query().Get("flow")))
+			pr, err := publicClient.Public.GetSelfServiceSettingsFlow(
+				public.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(browserUser1).
+					WithID(res.Request.URL.Query().Get("flow")), nil)
 			require.NoError(t, err, "%s", rid)
 
 			run(t, browserIdentity1, pr.Payload, settings.RouteInitBrowserFlow)

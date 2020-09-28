@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-09-25)](#unreleased-2020-09-25)
+- [Unreleased (2020-09-28)](#unreleased-2020-09-28)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -102,12 +102,13 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...09460948a24918b2a84804cafa86cf88189af919) (2020-09-25)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...4c3d46dac20363202f0ccd043e1c9d6bf97fb1f8) (2020-09-28)
 
 
 ### Bug Fixes
 
 * Allow using json with form layout in password registration ([bd2225c](https://github.com/ory/kratos/commit/bd2225c0fff3e0363716d2096346d59046838bb7))
+* Annotate whoami endpoint with cookie and token ([a8a781c](https://github.com/ory/kratos/commit/a8a781c00847c74c65558b55e882e12c1e69d8c8))
 * Clarify fetch use ([8eb2e6f](https://github.com/ory/kratos/commit/8eb2e6f222788a9a579774772696c77987f3cf97))
 * Complete verification by redirecting to UI with success ([f0ecf51](https://github.com/ory/kratos/commit/f0ecf5144970f666643aa7c00a3f4ca73f4ab047))
 * Correct cookie domain on logout ([#646](https://github.com/ory/kratos/issues/646)) ([6d77e04](https://github.com/ory/kratos/commit/6d77e043ce3bec0864b8abdee371a101f68e4335)), closes [#645](https://github.com/ory/kratos/issues/645)
@@ -139,12 +140,14 @@
 * Recursive loop on network errors in password validator ([#589](https://github.com/ory/kratos/issues/589)) ([b4d5a42](https://github.com/ory/kratos/commit/b4d5a42346510e40222b8eb59b455b585f0a05cf)), closes [#316](https://github.com/ory/kratos/issues/316):
 
     > The old code no error when ignoreNetworkErrors was set to true, but did not set a hash result which caused an infinite loop.
+* Remove incorrect security specs ([4c3d46d](https://github.com/ory/kratos/commit/4c3d46dac20363202f0ccd043e1c9d6bf97fb1f8))
 * Remove redirector from code base ([6689ecf](https://github.com/ory/kratos/commit/6689ecf110b11ba15ec39af822906c2b4b17369e))
 * Remove stray debug statements ([a8e1ec4](https://github.com/ory/kratos/commit/a8e1ec42cda6ebc664e9434bb5ba7e4dd7c21b4c))
 * Rename quickstart config files and path ([#671](https://github.com/ory/kratos/issues/671)) ([be8b9e5](https://github.com/ory/kratos/commit/be8b9e5f1ca70b1aa06b77bb2ca35644d8cd3c00))
 * Rename quickstart schema file name ([e943c90](https://github.com/ory/kratos/commit/e943c9018a495b39b72ae463fd4727b1798d5ba2))
 * Rename recovery models and generate SDKs ([d764435](https://github.com/ory/kratos/commit/d7644359c39732e0b25f43e122d05c1566fb837b))
 * Resolve and test for missing data when updating flows ([045ecab](https://github.com/ory/kratos/commit/045ecab11ec185ca688a10de75e506fe413afa26))
+* Resolve broken csrf tests ([6befe2e](https://github.com/ory/kratos/commit/6befe2ec08c01c6c9fb397ba119ecebdcecf7db3))
 * Resolve broken docs links ([56f4a39](https://github.com/ory/kratos/commit/56f4a397a715b6c0428ae63baa0d2e4bc936f737))
 * Resolve broken migrations and bump fizz ([1ed9c70](https://github.com/ory/kratos/commit/1ed9c700b946a090bce9587a57eeb9ac64f04c59))
 * Resolve broken OIDC tests and disallow API flows ([9986d8f](https://github.com/ory/kratos/commit/9986d8f818934bd5e073f59bf7a73c6b7a74b6e2))
@@ -185,8 +188,10 @@
 * Update recovery token field and column names ([42abfa1](https://github.com/ory/kratos/commit/42abfa1dea2a6291c5b723baf25f35a66f2af835))
 * Update swagger names and fix broken tests ([85b7fb1](https://github.com/ory/kratos/commit/85b7fb1d466bc4dcee97ad75cc92b8bea8e44d9f))
 * Use and test for csrf tokens and prevent api misuse ([a4e3bc5](https://github.com/ory/kratos/commit/a4e3bc55e43ba42582a33551c1cc2e83ecd865fa))
+* Use correct HTTP method for password login ([4f4fcee](https://github.com/ory/kratos/commit/4f4fcee8931ab4998e974106b8d88e0c61736e3f))
 * Use correct log message ([53c384a](https://github.com/ory/kratos/commit/53c384a542a583259a75315b2602cf4fb41a0ef0))
 * Use correct redirection for registration ([8d47113](https://github.com/ory/kratos/commit/8d47113a5f7c0c25dc5f92c683b560763cfd47c9))
+* Use correct security annotation ([c9bebe0](https://github.com/ory/kratos/commit/c9bebe00452a73d1c831831e5a95cb4ed8de37b9))
 * Use correct swagger tags and regenerate ([df99d8c](https://github.com/ory/kratos/commit/df99d8cbe6e0f2f6a5da872f66db557b2a5e9f70))
 * Use helpers to create flow ([aba8610](https://github.com/ory/kratos/commit/aba861097d2c67ce9ebff85df59fce8018862516))
 * Use nosurf fork to address VerifyToken bug ([cd84e51](https://github.com/ory/kratos/commit/cd84e51b7b1861ca9bd2312a4dfc5e84afd890cf))
@@ -216,6 +221,7 @@
 * Improve settings helper functions ([fda17ca](https://github.com/ory/kratos/commit/fda17ca5ea7824c4bf5010218cace7d5fbc7ad5b))
 * Move samesite config to cookie parent-key ([753eb86](https://github.com/ory/kratos/commit/753eb86c904c4af9e7d91e46ff4c836dcce35807))
 * Profile settings method is now API-able ([c5f361f](https://github.com/ory/kratos/commit/c5f361ff418336cfcaa452eded4bd61132808b16))
+* Remove common keyword from API spec ([6619562](https://github.com/ory/kratos/commit/6619562667ef0e363d14c57cfbcd15c16f292853))
 * Remove need for reverse proxy in selfservice-ui ([beb4c32](https://github.com/ory/kratos/commit/beb4c3284e552fe51c3a8cebb20a8c2bfc07cdf8)), closes [#661](https://github.com/ory/kratos/issues/661)
 * Rename `session.sid` to `session.id` ([809fe73](https://github.com/ory/kratos/commit/809fe7334e4a308405c1f03ada1dbef6ed33c01a))
 * Rename login request to login flow ([9369d1b](https://github.com/ory/kratos/commit/9369d1bb637fc80b5d5980140693d5bcac0c76bb)), closes [#635](https://github.com/ory/kratos/issues/635):
@@ -319,6 +325,7 @@
 * Update repository templates ([f422485](https://github.com/ory/kratos/commit/f4224852ceeb054405251b21895efa493e1abc9c))
 * Update repository templates ([#678](https://github.com/ory/kratos/issues/678)) ([bdb6875](https://github.com/ory/kratos/commit/bdb6875e55aed454cda061969e1dd4f712e09bb5))
 * Update sidebar ([ea15c20](https://github.com/ory/kratos/commit/ea15c2093fc66e4cfc0a66aabf7dfad6965777dc))
+* Update ts examples ([65cb46e](https://github.com/ory/kratos/commit/65cb46e57595b920bd6544f9a9a4f7b886462be0))
 * Use correct id for multi-domain-cookies ([b49288a](https://github.com/ory/kratos/commit/b49288a351647c91a3c7d4a62537146d4a9f1bd0))
 * Use correct path in 0.4 docs ([9fcaac4](https://github.com/ory/kratos/commit/9fcaac4048e05500d0456eb3cd9cd11cc123e370)), closes [#588](https://github.com/ory/kratos/issues/588)
 * Use NYT Capitalization for all Swagger headlines ([#675](https://github.com/ory/kratos/issues/675)) ([6c96429](https://github.com/ory/kratos/commit/6c9642959dab8cf042ad227711609d5726328394)), closes [#664](https://github.com/ory/kratos/issues/664)
@@ -401,6 +408,9 @@
 
 ### BREAKING CHANGES
 
+* The "common" keyword has been removed from the Swagger 2.0 spec which deprecates the `common` module / package / class (depending on the generated SDK). Please use `public` or `admin` instead!
+
+Additionally, the SDK for TypeScript now uses the `fetch` API which allows the SDK to be used in both client-side as well as server-side contexts. Please note that several methods and parameters in the generated TypeScript SDK have changed. Please check the TypeScript results to see what needs to be changed!
 * This patch changes the OpenID Connect and OAuth2 ("Sign in with Google, Facebook, ...") Callback URL from `http(s)://<kratos-public>/self-service/browser/flows/strategies/oidc/<provider>` to `http(s)://<kratos-public>/self-service/methods/oidc/<provider>`. To apply this patch, you need to update these URLs at the OAuth2 Client configuration pages of the individual OpenID Conenct providers (e.g. GitHub, Google).
 * Configuration key `selfservice.strategies` was renamed to `selfservice.methods`.
 * This patch significantly changes how email verification works. The Verification Flow no longer uses its own system but now re-uses the API and Browser flows and flow methods established in other components such as login, recovery, registration.

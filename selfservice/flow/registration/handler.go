@@ -103,9 +103,6 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 //
 //     Schemes: http, https
 //
-//     Security:
-//     - sessionToken
-//
 //     Responses:
 //       200: registrationFlow
 //       400: genericError
@@ -139,9 +136,6 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, ps httprou
 //
 //     Schemes: http, https
 //
-//     Security:
-//     - sessionToken
-//
 //     Responses:
 //       302: emptyResponse
 //       500: genericError
@@ -172,7 +166,7 @@ type getSelfServiceRegistrationFlowParameters struct {
 	ID string `json:"id"`
 }
 
-// swagger:route GET /self-service/registration/flows common public admin getSelfServiceRegistrationFlow
+// swagger:route GET /self-service/registration/flows public admin getSelfServiceRegistrationFlow
 //
 // Get Registration Flow
 //

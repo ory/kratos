@@ -25,7 +25,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/httpclient/client/admin"
-	"github.com/ory/kratos/internal/httpclient/client/common"
+	sdkp "github.com/ory/kratos/internal/httpclient/client/public"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/recovery"
@@ -116,9 +116,9 @@ func TestAdminStrategy(t *testing.T) {
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		testhelpers.LogJSON(t, rl.Payload)
 
-		sr, err := adminSDK.Common.GetSelfServiceSettingsFlow(
-			common.NewGetSelfServiceSettingsFlowParams().
-				WithID(res.Request.URL.Query().Get("flow")))
+		sr, err := adminSDK.Public.GetSelfServiceSettingsFlow(
+			sdkp.NewGetSelfServiceSettingsFlowParams().
+				WithID(res.Request.URL.Query().Get("flow")), nil)
 		require.NoError(t, err, "%s", res.Request.URL.String())
 
 		require.Len(t, sr.Payload.Messages, 1)
@@ -276,8 +276,8 @@ func TestRecovery(t *testing.T) {
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String()+"?flow=")
 
-		sr, err := sdk.Common.GetSelfServiceRecoveryFlow(
-			common.NewGetSelfServiceRecoveryFlowParams().WithHTTPClient(c).
+		sr, err := sdk.Public.GetSelfServiceRecoveryFlow(
+			sdkp.NewGetSelfServiceRecoveryFlowParams().WithHTTPClient(c).
 				WithID(res.Request.URL.Query().Get("flow")))
 		require.NoError(t, err)
 
@@ -327,8 +327,8 @@ func TestRecovery(t *testing.T) {
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String())
 		assert.NotContains(t, res.Request.URL.String(), gjson.Get(body, "id").String())
 
-		sr, err := sdk.Common.GetSelfServiceRecoveryFlow(
-			common.NewGetSelfServiceRecoveryFlowParams().WithHTTPClient(c).
+		sr, err := sdk.Public.GetSelfServiceRecoveryFlow(
+			sdkp.NewGetSelfServiceRecoveryFlowParams().WithHTTPClient(c).
 				WithID(res.Request.URL.Query().Get("flow")))
 		require.NoError(t, err)
 

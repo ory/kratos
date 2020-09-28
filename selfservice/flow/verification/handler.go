@@ -142,7 +142,7 @@ type getSelfServiceVerificationFlowParameters struct {
 	FlowID string `json:"id"`
 }
 
-// swagger:route GET /self-service/verification/flows common public admin getSelfServiceVerificationFlow
+// swagger:route GET /self-service/verification/flows public admin getSelfServiceVerificationFlow
 //
 // Get Verification Flow
 //

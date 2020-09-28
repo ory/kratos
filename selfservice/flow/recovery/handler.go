@@ -83,9 +83,6 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //
 //     Schemes: http, https
 //
-//     Security:
-//     - sessionToken
-//
 //     Responses:
 //       200: recoveryFlow
 //       500: genericError
@@ -119,9 +116,6 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //
 //     Schemes: http, https
 //
-//     Security:
-//     - sessionToken
-//
 //     Responses:
 //       302: emptyResponse
 //       500: genericError
@@ -153,7 +147,7 @@ type getSelfServiceRecoveryFlowParameters struct {
 	FlowID string `json:"id"`
 }
 
-// swagger:route GET /self-service/recovery/flows common public admin getSelfServiceRecoveryFlow
+// swagger:route GET /self-service/recovery/flows public admin getSelfServiceRecoveryFlow
 //
 // Get information about a recovery flow
 //

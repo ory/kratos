@@ -118,6 +118,16 @@ func (h *Handler) revoke(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// nolint:deadcode,unused
+// swagger:parameters whoami
+type whoamiParameters struct {
+	// in: header
+	Cookie string `json:"Cookie"`
+
+	// in: authorization
+	Authorization string `json:"Authorization"`
+}
+
 // swagger:route GET /sessions/whoami public whoami
 //
 // Check Who the Current HTTP Session Belongs To
@@ -134,7 +144,7 @@ func (h *Handler) revoke(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 //     Schemes: http, https
 //
 //     Security:
-//     - sessionToken
+//       sessionToken:
 //
 //     Responses:
 //       200: session

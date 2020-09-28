@@ -20,7 +20,6 @@ import (
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal/httpclient/client/common"
 	"github.com/ory/kratos/internal/httpclient/client/public"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/selfservice/flow/verification"
@@ -38,15 +37,15 @@ func NewVerificationUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptes
 	return ts
 }
 
-func GetVerificationFlow(t *testing.T, client *http.Client, ts *httptest.Server) *common.GetSelfServiceVerificationFlowOK {
+func GetVerificationFlow(t *testing.T, client *http.Client, ts *httptest.Server) *public.GetSelfServiceVerificationFlowOK {
 	publicClient := NewSDKClient(ts)
 
 	res, err := client.Get(ts.URL + verification.RouteInitBrowserFlow)
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
 
-	rs, err := publicClient.Common.GetSelfServiceVerificationFlow(
-		common.NewGetSelfServiceVerificationFlowParams().WithHTTPClient(client).
+	rs, err := publicClient.Public.GetSelfServiceVerificationFlow(
+		public.NewGetSelfServiceVerificationFlowParams().WithHTTPClient(client).
 			WithID(res.Request.URL.Query().Get("flow")),
 	)
 	require.NoError(t, err, "%s", res.Request.URL.String())
@@ -60,7 +59,7 @@ func VerificationSubmitForm(
 	f *models.VerificationFlowMethodConfig,
 	hc *http.Client,
 	values url.Values,
-) (string, *common.GetSelfServiceVerificationFlowOK) {
+) (string, *public.GetSelfServiceVerificationFlowOK) {
 	require.NotEmpty(t, f.Action)
 
 	res, err := hc.PostForm(pointerx.StringR(f.Action), values)
@@ -73,8 +72,8 @@ func VerificationSubmitForm(
 
 	assert.Equal(t, viper.GetString(configuration.ViperKeySelfServiceVerificationUI), res.Request.URL.Scheme+"://"+res.Request.URL.Host+res.Request.URL.Path, "should end up at the settings URL, used: %s", pointerx.StringR(f.Action))
 
-	rs, err := NewSDKClientFromURL(viper.GetString(configuration.ViperKeyPublicBaseURL)).Common.GetSelfServiceVerificationFlow(
-		common.NewGetSelfServiceVerificationFlowParams().WithHTTPClient(hc).
+	rs, err := NewSDKClientFromURL(viper.GetString(configuration.ViperKeyPublicBaseURL)).Public.GetSelfServiceVerificationFlow(
+		public.NewGetSelfServiceVerificationFlowParams().WithHTTPClient(hc).
 			WithID(res.Request.URL.Query().Get("flow")),
 	)
 	require.NoError(t, err)
@@ -83,14 +82,14 @@ func VerificationSubmitForm(
 	return string(body), rs
 }
 
-func InitializeVerificationFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server) *common.GetSelfServiceVerificationFlowOK {
+func InitializeVerificationFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server) *public.GetSelfServiceVerificationFlowOK {
 	publicClient := NewSDKClient(ts)
 	res, err := client.Get(ts.URL + verification.RouteInitBrowserFlow)
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
 
-	rs, err := publicClient.Common.GetSelfServiceVerificationFlow(
-		common.NewGetSelfServiceVerificationFlowParams().WithHTTPClient(client).
+	rs, err := publicClient.Public.GetSelfServiceVerificationFlow(
+		public.NewGetSelfServiceVerificationFlowParams().WithHTTPClient(client).
 			WithID(res.Request.URL.Query().Get("flow")),
 	)
 	require.NoError(t, err)
