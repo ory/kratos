@@ -25,7 +25,7 @@ var importCmd = &cobra.Command{
 
 	kratos identities import file.json
 
-	kratos identities import <(cat file.json)
+	cat file.json | kratos identities import
 
 Files are expected to each contain a single identity. The validity of files can be tested beforehand using "... identities validate".
 
