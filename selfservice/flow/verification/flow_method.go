@@ -15,9 +15,13 @@ import (
 // swagger:model verificationFlowMethod
 type FlowMethod struct {
 	// Method contains the request credentials type.
+	//
+	// required: true
 	Method string `json:"method" db:"method"`
 
 	// Config is the credential type's config.
+	//
+	// required: true
 	Config *FlowMethodConfig `json:"config" db:"config"`
 
 	// ID is a helper struct field for gobuffalo.pop.

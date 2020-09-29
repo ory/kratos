@@ -16,9 +16,13 @@ import (
 // swagger:model registrationFlowMethod
 type FlowMethod struct {
 	// Method contains the flow method's credentials type.
+	//
+	// required: true
 	Method identity.CredentialsType `json:"method" faker:"string" db:"method"`
 
 	// Config is the credential type's config.
+	//
+	// required: true
 	Config *FlowMethodConfig `json:"config" db:"config"`
 
 	// ID is a helper struct field for gobuffalo.pop.

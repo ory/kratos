@@ -9,6 +9,7 @@ import (
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // RegistrationFlowMethod registration flow method
@@ -17,10 +18,12 @@ import (
 type RegistrationFlowMethod struct {
 
 	// config
-	Config *RegistrationFlowMethodConfig `json:"config,omitempty"`
+	// Required: true
+	Config *RegistrationFlowMethodConfig `json:"config"`
 
 	// method
-	Method CredentialsType `json:"method,omitempty"`
+	// Required: true
+	Method CredentialsType `json:"method"`
 }
 
 // Validate validates this registration flow method
@@ -43,8 +46,8 @@ func (m *RegistrationFlowMethod) Validate(formats strfmt.Registry) error {
 
 func (m *RegistrationFlowMethod) validateConfig(formats strfmt.Registry) error {
 
-	if swag.IsZero(m.Config) { // not required
-		return nil
+	if err := validate.Required("config", "body", m.Config); err != nil {
+		return err
 	}
 
 	if m.Config != nil {
@@ -60,10 +63,6 @@ func (m *RegistrationFlowMethod) validateConfig(formats strfmt.Registry) error {
 }
 
 func (m *RegistrationFlowMethod) validateMethod(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.Method) { // not required
-		return nil
-	}
 
 	if err := m.Method.Validate(formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {

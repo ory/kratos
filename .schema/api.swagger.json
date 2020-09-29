@@ -2210,6 +2210,10 @@
     },
     "recoveryFlowMethod": {
       "type": "object",
+      "required": [
+        "method",
+        "config"
+      ],
       "properties": {
         "config": {
           "$ref": "#/definitions/recoveryFlowMethodConfig"
@@ -2308,6 +2312,10 @@
     },
     "registrationFlowMethod": {
       "type": "object",
+      "required": [
+        "method",
+        "config"
+      ],
       "properties": {
         "config": {
           "$ref": "#/definitions/registrationFlowMethodConfig"
@@ -2471,6 +2479,10 @@
     },
     "settingsFlowMethod": {
       "type": "object",
+      "required": [
+        "method",
+        "config"
+      ],
       "properties": {
         "config": {
           "$ref": "#/definitions/FlowMethodConfig"
@@ -2547,6 +2559,10 @@
     },
     "verificationFlowMethod": {
       "type": "object",
+      "required": [
+        "method",
+        "config"
+      ],
       "properties": {
         "config": {
           "$ref": "#/definitions/verificationFlowMethodConfig"

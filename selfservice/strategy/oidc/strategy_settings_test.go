@@ -189,7 +189,7 @@ func TestSettingsStrategy(t *testing.T) {
 		assert.EqualValues(t, req.IssuedAt, time.Time(*rs.Payload.IssuedAt))
 
 		require.NotNil(t, identity.CredentialsTypeOIDC.String(), rs.Payload.Methods[identity.CredentialsTypeOIDC.String()])
-		require.EqualValues(t, identity.CredentialsTypeOIDC.String(), rs.Payload.Methods[identity.CredentialsTypeOIDC.String()].Method)
+		require.EqualValues(t, identity.CredentialsTypeOIDC.String(), *rs.Payload.Methods[identity.CredentialsTypeOIDC.String()].Method)
 		require.EqualValues(t, publicTS.URL+oidc.SettingsPath+"?flow="+req.ID.String(),
 			*rs.Payload.Methods[identity.CredentialsTypeOIDC.String()].Config.Action)
 	})
