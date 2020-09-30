@@ -105,6 +105,7 @@ Something is not working.
 
 #### Pull Requests
 
+- [ ] fix: mark flow methods' fields as required ([kratos#708](https://github.com/ory/kratos/pull/708)) - [@hackerman](https://github.com/aeneasr)
 - [x] fix: escape jsx characters in api documentation ([kratos#703](https://github.com/ory/kratos/pull/703)) - [@hackerman](https://github.com/aeneasr)
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)
