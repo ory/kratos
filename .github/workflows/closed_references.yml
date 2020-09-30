@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-node@v2-beta
         with:
           node-version: '14'
-      - uses: ory/closed-reference-notifier@v1.1.6
+      - uses: ory/closed-reference-notifier@v1.2.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ignore: ".git,**/node_modules,docs,CHANGELOG.md,.bin,*.md"
