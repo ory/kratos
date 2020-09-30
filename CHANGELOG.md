@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-09-28)](#unreleased-2020-09-28)
+- [Unreleased (2020-09-30)](#unreleased-2020-09-30)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -102,7 +102,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...4c3d46dac20363202f0ccd043e1c9d6bf97fb1f8) (2020-09-28)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...0470fd734fb30170033e10758d99cf5711c80eb1) (2020-09-30)
 
 
 ### Bug Fixes
@@ -315,6 +315,7 @@
 * Remove duplicate word ([b84e659](https://github.com/ory/kratos/commit/b84e659af29aa1b129f33ccf5ca9e0d54353c019))
 * Remove duplicate word ([#700](https://github.com/ory/kratos/issues/700)) ([a12100e](https://github.com/ory/kratos/commit/a12100e7644b535c4bd3073e03c48229bb81e7b2))
 * Rename self service and add admin section ([639c424](https://github.com/ory/kratos/commit/639c424d3bde0557f7edd7edc489a476f1aa60b3))
+* Resolve regression issues ([0470fd7](https://github.com/ory/kratos/commit/0470fd734fb30170033e10758d99cf5711c80eb1))
 * Resolve typo in message IDs ([562cfc4](https://github.com/ory/kratos/commit/562cfc4392ba1c9c1fb8854ea0ac85bd44d0fac9))
 * Resolve typo in message IDs ([#607](https://github.com/ory/kratos/issues/607)) ([f7688f0](https://github.com/ory/kratos/commit/f7688f0ab07b579a375ce4cc25361b360e82dd88))
 * Update link to mfa issue ([d03a706](https://github.com/ory/kratos/commit/d03a706307be21b83d18601223fb0d1430459a29))
