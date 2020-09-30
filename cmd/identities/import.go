@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/ory/kratos/internal/clihelpers"
@@ -38,7 +39,7 @@ WARNING: Importing credentials is not yet supported.`,
 		}
 
 		for src, i := range is {
-			err = validateIdentity(cmd, src, i, c.Common.GetSchema)
+			err = validateIdentity(cmd, src, i, c.Public.GetSchema)
 			if err != nil {
 				return err
 			}

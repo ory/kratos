@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/ory/kratos/internal/httpclient/client/public"
+
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/ory/kratos/internal/httpclient/client/common"
 )
 
 func TestValidateIdentity(t *testing.T) {
@@ -20,8 +20,8 @@ func TestValidateIdentity(t *testing.T) {
 		return cmd, out, err
 	}
 	var testSchemaGetter = func(resp interface{}) schemaGetter {
-		return func(_ *common.GetSchemaParams) (*common.GetSchemaOK, error) {
-			return &common.GetSchemaOK{Payload: resp}, nil
+		return func(_ *public.GetSchemaParams) (*public.GetSchemaOK, error) {
+			return &public.GetSchemaOK{Payload: resp}, nil
 		}
 	}
 

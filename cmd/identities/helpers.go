@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/tidwall/gjson"
 	"io"
 	"io/ioutil"
 	"testing"
+
+	"github.com/pkg/errors"
+	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/identity"
 

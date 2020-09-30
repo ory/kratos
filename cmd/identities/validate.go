@@ -5,16 +5,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/kratos/internal/httpclient/client/public"
+
 	"github.com/ory/kratos/internal/clihelpers"
 
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/cmd/cliclient"
-	"github.com/ory/kratos/internal/httpclient/client/common"
 	"github.com/ory/x/viperx"
 )
 
@@ -34,7 +36,7 @@ Identities can be supplied via STD_IN or JSON files containing a single or an ar
 		}
 
 		for src, i := range is {
-			err = validateIdentity(cmd, src, i, c.Common.GetSchema)
+			err = validateIdentity(cmd, src, i, c.Public.GetSchema)
 			if err != nil {
 				return err
 			}
@@ -49,7 +51,7 @@ var schemas = make(map[string]*jsonschema.Schema)
 
 const createIdentityPath = "api.swagger.json#/definitions/CreateIdentity"
 
-type schemaGetter = func(params *common.GetSchemaParams) (*common.GetSchemaOK, error)
+type schemaGetter = func(params *public.GetSchemaParams) (*public.GetSchemaOK, error)
 
 // validateIdentity validates the json payload fc against
 // 1. the swagger payload definition and
@@ -99,7 +101,7 @@ func validateIdentity(cmd *cobra.Command, src, i string, getRemoteSchema schemaG
 	customSchema, ok := schemas[sid.String()]
 	if !ok {
 		// get custom identity schema
-		ts, err := getRemoteSchema(&common.GetSchemaParams{ID: sid.String(), Context: context.Background()})
+		ts, err := getRemoteSchema(&public.GetSchemaParams{ID: sid.String(), Context: context.Background()})
 		if err != nil {
 			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%s: Could not fetch schema with ID \"%s\": %s\n", src, sid.String(), err)
 			return clihelpers.FailSilently(cmd)
