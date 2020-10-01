@@ -118,6 +118,7 @@ New feature or request.
 - [ ] Implement React SPA sample app ([kratos#668](https://github.com/ory/kratos/issues/668)) - [@hackerman](https://github.com/aeneasr)
 - [ ] Implement React Native sample application consuming API ([kratos#667](https://github.com/ory/kratos/issues/667)) - [@hackerman](https://github.com/aeneasr)
 - [ ] Rename strategy to method in internal APIs and Documentation ([kratos#683](https://github.com/ory/kratos/issues/683)) - [@hackerman](https://github.com/aeneasr)
+- [ ] Configurable CORS headers ([kratos#712](https://github.com/ory/kratos/issues/712)) - [@hackerman](https://github.com/aeneasr)
 - [x] Implement JSON capabilities in ErrorHandler ([kratos#61](https://github.com/ory/kratos/issues/61)) - [@hackerman](https://github.com/aeneasr)
 - [x] Allow attaching credentials to identities in CRUD create ([kratos#200](https://github.com/ory/kratos/issues/200))
 - [x] Move away from UUID-based challenges and responses ([kratos#241](https://github.com/ory/kratos/issues/241)) - [@hackerman](https://github.com/aeneasr)
