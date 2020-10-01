@@ -1,8 +1,11 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
+
+	"github.com/ory/kratos/cmd/remote"
 
 	"github.com/ory/kratos/cmd/identities"
 	"github.com/ory/kratos/cmd/jsonnet"
@@ -25,7 +28,9 @@ var rootCmd = &cobra.Command{
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		if !errors.Is(err, clihelpers.NoPrintButFailError) {
+			fmt.Println(err)
+		}
 		os.Exit(1)
 	}
 }
@@ -37,6 +42,7 @@ func init() {
 	jsonnet.RegisterCommandRecursive(rootCmd)
 	serve.RegisterCommandRecursive(rootCmd)
 	migrate.RegisterCommandRecursive(rootCmd)
+	remote.RegisterCommandRecursive(rootCmd)
 
 	rootCmd.AddCommand(cmdx.Version(&clihelpers.BuildVersion, &clihelpers.BuildGitHash, &clihelpers.BuildTime))
 }

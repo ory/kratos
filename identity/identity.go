@@ -46,6 +46,7 @@ type (
 		// SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.
 		//
 		// format: url
+		// required: true
 		SchemaURL string `json:"schema_url" faker:"-" db:"-"`
 
 		// Traits represent an identity's traits. The identity is able to create, modify, and delete traits
@@ -56,9 +57,19 @@ type (
 		Traits Traits `json:"traits" faker:"-" db:"traits"`
 
 		// VerifiableAddresses contains all the addresses that can be verified by the user.
+		//
+		// Extensions:
+		// ---
+		// x-omitempty: true
+		// ---
 		VerifiableAddresses []VerifiableAddress `json:"verifiable_addresses,omitempty" faker:"-" has_many:"identity_verifiable_addresses" fk_id:"identity_id"`
 
 		// RecoveryAddresses contains all the addresses that can be used to recover an identity.
+		//
+		// Extensions:
+		// ---
+		// x-omitempty: true
+		// ---
 		RecoveryAddresses []RecoveryAddress `json:"recovery_addresses,omitempty" faker:"-" has_many:"identity_recovery_addresses" fk_id:"identity_id"`
 
 		// CredentialsCollection is a helper struct field for gobuffalo.pop.
