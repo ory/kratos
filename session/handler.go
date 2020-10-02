@@ -148,6 +148,7 @@ type whoamiParameters struct {
 //
 //     Responses:
 //       200: session
+//       401: genericError
 //       403: genericError
 //       500: genericError
 func (h *Handler) whoami(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
