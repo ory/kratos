@@ -12,7 +12,7 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 ## kratos identities import
 
-import identities from files or STD_IN
+Import identities from files or STD_IN
 
 ### Synopsis
 
