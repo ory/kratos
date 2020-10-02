@@ -53,6 +53,7 @@ New feature or request.
 - [ ] Add filters to admin api ([kratos#249](https://github.com/ory/kratos/issues/249))
 - [ ] Feature Request: Webhooks ([kratos#271](https://github.com/ory/kratos/issues/271))
 - [ ] Support email verification paswordless login ([kratos#286](https://github.com/ory/kratos/issues/286))
+- [ ] Prevent account enumeration for profile updates ([kratos#292](https://github.com/ory/kratos/issues/292)) - [@hackerman](https://github.com/aeneasr)
 - [ ] Support remote argon2 execution ([kratos#357](https://github.com/ory/kratos/issues/357)) - [@hackerman](https://github.com/aeneasr)
 - [ ] Implement identity state and administrative deactivation, deletion of identities ([kratos#598](https://github.com/ory/kratos/issues/598)) - [@hackerman](https://github.com/aeneasr)
 - [ ] SMTP Error spams the server logs ([kratos#402](https://github.com/ory/kratos/issues/402))
@@ -62,6 +63,7 @@ New feature or request.
 - [ ] Throttling repeated login requests ([kratos#654](https://github.com/ory/kratos/issues/654))
 - [ ] Require identity deactivation before administrative deletion ([kratos#657](https://github.com/ory/kratos/issues/657))
 - [ ] Add return_to after logout ([kratos#702](https://github.com/ory/kratos/issues/702)) - [@Patrik](https://github.com/zepatrik)
+- [ ] Write CLI helper for recommending Argon2 parameters ([kratos#723](https://github.com/ory/kratos/issues/723))
 
 ### [Docs](https://github.com/ory/kratos/labels/docs)
 
@@ -105,8 +107,8 @@ Something is not working.
 
 #### Pull Requests
 
-- [ ] fix: mark flow methods' fields as required ([kratos#708](https://github.com/ory/kratos/pull/708)) - [@hackerman](https://github.com/aeneasr)
 - [x] fix: escape jsx characters in api documentation ([kratos#703](https://github.com/ory/kratos/pull/703)) - [@hackerman](https://github.com/aeneasr)
+- [x] fix: mark flow methods' fields as required ([kratos#708](https://github.com/ory/kratos/pull/708)) - [@hackerman](https://github.com/aeneasr)
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)
 
@@ -114,7 +116,6 @@ New feature or request.
 
 #### Issues
 
-- [ ] Design of the client cli ([kratos#663](https://github.com/ory/kratos/issues/663)) - [@Patrik](https://github.com/zepatrik)
 - [ ] Implement React SPA sample app ([kratos#668](https://github.com/ory/kratos/issues/668)) - [@hackerman](https://github.com/aeneasr)
 - [ ] Implement React Native sample application consuming API ([kratos#667](https://github.com/ory/kratos/issues/667)) - [@hackerman](https://github.com/aeneasr)
 - [ ] Rename strategy to method in internal APIs and Documentation ([kratos#683](https://github.com/ory/kratos/issues/683)) - [@hackerman](https://github.com/aeneasr)
@@ -129,6 +130,7 @@ New feature or request.
 - [x] Remove one of in-memory/on-disk SQLite e2e runners and replace with faster test ([kratos#580](https://github.com/ory/kratos/issues/580)) - [@Andreas Bucksteeg](https://github.com/tricky42)
 - [x] Password similarity policy is too strict ([kratos#581](https://github.com/ory/kratos/issues/581)) - [@Patrik](https://github.com/zepatrik)
 - [x] Implement a test-error for implementing the Error UI ([kratos#610](https://github.com/ory/kratos/issues/610))
+- [x] Design of the client cli ([kratos#663](https://github.com/ory/kratos/issues/663)) - [@Patrik](https://github.com/zepatrik)
 - [x] Rename `request_lifespan` to `lifespan` ([kratos#666](https://github.com/ory/kratos/issues/666)) - [@hackerman](https://github.com/aeneasr)
 
 #### Pull Requests
