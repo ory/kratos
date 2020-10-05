@@ -57,7 +57,7 @@ type completeSelfServiceLoginFlowWithPasswordMethodParameters struct {
 	Flow string `json:"flow"`
 
 	// in: body
-	CompleteSelfServiceLoginFlowWithPasswordMethod
+	Body CompleteSelfServiceLoginFlowWithPasswordMethod
 }
 
 // swagger:route POST /self-service/login/methods/password public completeSelfServiceLoginFlowWithPasswordMethod
