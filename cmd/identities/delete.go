@@ -16,12 +16,12 @@ var deleteCmd = &cobra.Command{
 	Use:   "delete <id-0 [id-1 ...]>",
 	Short: "Delete identities by ID",
 	Long: fmt.Sprintf(`This command deletes one or more identities by ID. To delete an identity by some selector, e.g. the recovery email address, use the list command in combination with jq.
-Example: delete the identity with the recovery email address "foo@bar.com":
-
-kratos identities delete $(kratos identities list --format json | jq -r 'map(select(.recovery_addresses[].value == "foo@bar.com")) | .[].id')
 
 %s
 `, clihelpers.WarningJQIsComplicated),
+	Example: `To delete the identity with the recovery email address "foo@bar.com", run:
+
+	$ kratos identities delete $(kratos identities list --format json | jq -r 'map(select(.recovery_addresses[].value == "foo@bar.com")) | .[].id')`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := cliclient.NewClient(cmd)
