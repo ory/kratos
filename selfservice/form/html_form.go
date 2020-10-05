@@ -179,7 +179,12 @@ func (c *HTMLForm) ParseError(err error) error {
 		default:
 			// The pointer can be ignored because if there is an error, we'll just use
 			// the empty field (global error).
-			for _, ee := range e.Causes {
+			var causes = e.Causes
+			if len(e.Causes) == 0 {
+				causes = []*jsonschema.ValidationError{e}
+			}
+
+			for _, ee := range causes {
 				pointer, _ := jsonschemax.JSONPointerToDotNotation(ee.InstancePtr)
 				c.AddMessage(text.NewValidationErrorGeneric(ee.Message), pointer)
 			}
