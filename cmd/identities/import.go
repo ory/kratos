@@ -18,11 +18,9 @@ import (
 var importCmd = &cobra.Command{
 	Use:   "import <file.json [file-2.json [file-3.json] ...]>",
 	Short: "Import identities from files or STD_IN",
-	Long: `Import identities from files or STD_IN:
-
-	kratos identities import file.json
-
-	cat file.json | kratos identities import
+	Example: `$ kratos identities import file.json
+$ cat file.json | kratos identities import`,
+	Long: `Import identities from files or STD_IN.
 
 Files can contain only a single or an array of identities. The validity of files can be tested beforehand using "... identities validate".
 
