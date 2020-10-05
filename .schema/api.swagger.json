@@ -704,28 +704,17 @@
         "parameters": [
           {
             "type": "string",
-            "description": "The user's password.",
-            "name": "password",
-            "in": "query"
-          },
-          {
-            "type": "string",
-            "description": "Identifier is the email or username of the user trying to log in.",
-            "name": "identifier",
-            "in": "query"
-          },
-          {
-            "type": "string",
-            "description": "Sending the anti-csrf token is only required for browser login flows.",
-            "name": "csrf_token",
-            "in": "query"
-          },
-          {
-            "type": "string",
             "description": "The Flow ID",
             "name": "flow",
             "in": "query",
             "required": true
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/CompleteSelfServiceLoginFlowWithPasswordMethod"
+            }
           }
         ],
         "responses": {
@@ -1668,6 +1657,23 @@
     }
   },
   "definitions": {
+    "CompleteSelfServiceLoginFlowWithPasswordMethod": {
+      "type": "object",
+      "properties": {
+        "csrf_token": {
+          "description": "Sending the anti-csrf token is only required for browser login flows.",
+          "type": "string"
+        },
+        "identifier": {
+          "description": "Identifier is the email or username of the user trying to log in.",
+          "type": "string"
+        },
+        "password": {
+          "description": "The user's password.",
+          "type": "string"
+        }
+      }
+    },
     "CompleteSelfServiceSettingsFlowWithPasswordMethod": {
       "type": "object",
       "required": [
