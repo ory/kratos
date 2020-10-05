@@ -694,6 +694,117 @@
         "public": {
           "type": "object",
           "properties": {
+            "cors": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Configures Cross Origin Resource Sharing for public endpoints.",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Sets whether CORS is enabled.",
+                  "default": false
+                },
+                "allowed_origins": {
+                  "type": "array",
+                  "description": "A list of origins a cross-domain request can be executed from. If the special * value is present in the list, all origins will be allowed. An origin may contain a wildcard (*) to replace 0 or more characters (i.e.: http://*.domain.com). Only one wildcard can be used per origin.",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "not": {
+                      "type": "string",
+                      "description": "does match all strings that contain two or more (*)",
+                      "pattern": ".*\\*.*\\*.*"
+                    },
+                    "anyOf": [
+                      {
+                        "format": "uri"
+                      },
+                      {
+                        "const": "*"
+                      }
+                    ]
+                  },
+                  "uniqueItems": true,
+                  "default": [
+                    "*"
+                  ],
+                  "examples": [
+                    [
+                      "https://example.com",
+                      "https://*.example.com",
+                      "https://*.foo.example.com"
+                    ]
+                  ]
+                },
+                "allowed_methods": {
+                  "type": "array",
+                  "description": "A list of HTTP methods the user agent is allowed to use with cross-domain requests.",
+                  "default": [
+                    "POST",
+                    "GET",
+                    "PUT",
+                    "PATCH",
+                    "DELETE"
+                  ],
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "POST",
+                      "GET",
+                      "PUT",
+                      "PATCH",
+                      "DELETE",
+                      "CONNECT",
+                      "HEAD",
+                      "OPTIONS",
+                      "TRACE"
+                    ]
+                  }
+                },
+                "allowed_headers": {
+                  "type": "array",
+                  "description": "A list of non simple headers the client is allowed to use with cross-domain requests.",
+                  "default": [
+                    "Authorization",
+                    "Content-Type"
+                  ],
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "exposed_headers": {
+                  "type": "array",
+                  "description": "Sets which headers are safe to expose to the API of a CORS API specification.",
+                  "default": [
+                    "Content-Type"
+                  ],
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "allow_credentials": {
+                  "type": "boolean",
+                  "description": "Sets whether the request can include user credentials like cookies, HTTP authentication or client side SSL certificates.",
+                  "default": true
+                },
+                "options_passthrough": {
+                  "type": "boolean",
+                  "description": "TODO",
+                  "default": false
+                },
+                "max_age": {
+                  "type": "integer",
+                  "description": "Sets how long (in seconds) the results of a preflight request can be cached. If set to 0, every request is preceded by a preflight request.",
+                  "default": 0,
+                  "minimum": 0
+                },
+                "debug": {
+                  "type": "boolean",
+                  "description": "Adds additional log output to debug server side CORS issues.",
+                  "default": false
+                }
+              }
+            },
             "base_url": {
               "title": "Public Base URL",
               "description": "The URL where the public endpoint is exposed at.",

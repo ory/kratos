@@ -5,6 +5,10 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/rs/cors"
+
+	"github.com/ory/x/corsx"
+
 	"github.com/ory/kratos/metrics/prometheus"
 
 	"github.com/ory/analytics-go/v4"
@@ -63,9 +67,15 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 		n.Use(tracer)
 	}
 
+	var handler http.Handler = n
+	if corsx.IsEnabled(l, "serve.public") {
+		handler = cors.New(
+			corsx.ParseOptions(l, "serve.public")).Handler(handler)
+	}
+
 	server := graceful.WithDefaults(&http.Server{
 		Addr:    c.PublicListenOn(),
-		Handler: context.ClearHandler(n),
+		Handler: context.ClearHandler(handler),
 	})
 
 	l.Printf("Starting the public httpd on: %s", server.Addr)
