@@ -14,6 +14,8 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+
+	"github.com/ory/kratos/internal/httpclient/models"
 )
 
 // NewCompleteSelfServiceLoginFlowWithPasswordMethodParams creates a new CompleteSelfServiceLoginFlowWithPasswordMethodParams object
@@ -60,26 +62,13 @@ for the complete self service login flow with password method operation typicall
 */
 type CompleteSelfServiceLoginFlowWithPasswordMethodParams struct {
 
-	/*CsrfToken
-	  Sending the anti-csrf token is only required for browser login flows.
-
-	*/
-	CsrfToken *string
+	/*Body*/
+	Body *models.CompleteSelfServiceLoginFlowWithPasswordMethod
 	/*Flow
 	  The Flow ID
 
 	*/
 	Flow string
-	/*Identifier
-	  Identifier is the email or username of the user trying to log in.
-
-	*/
-	Identifier *string
-	/*Password
-	  The user's password.
-
-	*/
-	Password *string
 
 	timeout    time.Duration
 	Context    context.Context
@@ -119,15 +108,15 @@ func (o *CompleteSelfServiceLoginFlowWithPasswordMethodParams) SetHTTPClient(cli
 	o.HTTPClient = client
 }
 
-// WithCsrfToken adds the csrfToken to the complete self service login flow with password method params
-func (o *CompleteSelfServiceLoginFlowWithPasswordMethodParams) WithCsrfToken(csrfToken *string) *CompleteSelfServiceLoginFlowWithPasswordMethodParams {
-	o.SetCsrfToken(csrfToken)
+// WithBody adds the body to the complete self service login flow with password method params
+func (o *CompleteSelfServiceLoginFlowWithPasswordMethodParams) WithBody(body *models.CompleteSelfServiceLoginFlowWithPasswordMethod) *CompleteSelfServiceLoginFlowWithPasswordMethodParams {
+	o.SetBody(body)
 	return o
 }
 
-// SetCsrfToken adds the csrfToken to the complete self service login flow with password method params
-func (o *CompleteSelfServiceLoginFlowWithPasswordMethodParams) SetCsrfToken(csrfToken *string) {
-	o.CsrfToken = csrfToken
+// SetBody adds the body to the complete self service login flow with password method params
+func (o *CompleteSelfServiceLoginFlowWithPasswordMethodParams) SetBody(body *models.CompleteSelfServiceLoginFlowWithPasswordMethod) {
+	o.Body = body
 }
 
 // WithFlow adds the flow to the complete self service login flow with password method params
@@ -141,28 +130,6 @@ func (o *CompleteSelfServiceLoginFlowWithPasswordMethodParams) SetFlow(flow stri
 	o.Flow = flow
 }
 
-// WithIdentifier adds the identifier to the complete self service login flow with password method params
-func (o *CompleteSelfServiceLoginFlowWithPasswordMethodParams) WithIdentifier(identifier *string) *CompleteSelfServiceLoginFlowWithPasswordMethodParams {
-	o.SetIdentifier(identifier)
-	return o
-}
-
-// SetIdentifier adds the identifier to the complete self service login flow with password method params
-func (o *CompleteSelfServiceLoginFlowWithPasswordMethodParams) SetIdentifier(identifier *string) {
-	o.Identifier = identifier
-}
-
-// WithPassword adds the password to the complete self service login flow with password method params
-func (o *CompleteSelfServiceLoginFlowWithPasswordMethodParams) WithPassword(password *string) *CompleteSelfServiceLoginFlowWithPasswordMethodParams {
-	o.SetPassword(password)
-	return o
-}
-
-// SetPassword adds the password to the complete self service login flow with password method params
-func (o *CompleteSelfServiceLoginFlowWithPasswordMethodParams) SetPassword(password *string) {
-	o.Password = password
-}
-
 // WriteToRequest writes these params to a swagger request
 func (o *CompleteSelfServiceLoginFlowWithPasswordMethodParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -171,20 +138,10 @@ func (o *CompleteSelfServiceLoginFlowWithPasswordMethodParams) WriteToRequest(r 
 	}
 	var res []error
 
-	if o.CsrfToken != nil {
-
-		// query param csrf_token
-		var qrCsrfToken string
-		if o.CsrfToken != nil {
-			qrCsrfToken = *o.CsrfToken
+	if o.Body != nil {
+		if err := r.SetBodyParam(o.Body); err != nil {
+			return err
 		}
-		qCsrfToken := qrCsrfToken
-		if qCsrfToken != "" {
-			if err := r.SetQueryParam("csrf_token", qCsrfToken); err != nil {
-				return err
-			}
-		}
-
 	}
 
 	// query param flow
@@ -194,38 +151,6 @@ func (o *CompleteSelfServiceLoginFlowWithPasswordMethodParams) WriteToRequest(r 
 		if err := r.SetQueryParam("flow", qFlow); err != nil {
 			return err
 		}
-	}
-
-	if o.Identifier != nil {
-
-		// query param identifier
-		var qrIdentifier string
-		if o.Identifier != nil {
-			qrIdentifier = *o.Identifier
-		}
-		qIdentifier := qrIdentifier
-		if qIdentifier != "" {
-			if err := r.SetQueryParam("identifier", qIdentifier); err != nil {
-				return err
-			}
-		}
-
-	}
-
-	if o.Password != nil {
-
-		// query param password
-		var qrPassword string
-		if o.Password != nil {
-			qrPassword = *o.Password
-		}
-		qPassword := qrPassword
-		if qPassword != "" {
-			if err := r.SetQueryParam("password", qPassword); err != nil {
-				return err
-			}
-		}
-
 	}
 
 	if len(res) > 0 {
