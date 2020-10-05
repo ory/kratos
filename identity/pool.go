@@ -394,6 +394,24 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			assertEqual(t, expected, actual)
 		})
 
+		t.Run("case=find identity by its credentials case insensitive emails", func(t *testing.T) {
+			expected := passwordIdentity("", "cAsEinSensiTivE@ory.Sh")
+			expected.Traits = Traits(`{}`)
+
+			require.NoError(t, p.CreateIdentity(context.Background(), expected))
+			createdIDs = append(createdIDs, expected.ID)
+
+			actual, creds, err := p.FindByCredentialsIdentifier(context.Background(), CredentialsTypePassword, "CASEINSENSITIVE@ory.Sh")
+			require.NoError(t, err)
+
+			assert.EqualValues(t, expected.Credentials[CredentialsTypePassword].ID, creds.ID)
+			assert.EqualValues(t, []string{"caseinsensitive@ory.sh"}, creds.Identifiers)
+			assert.JSONEq(t, string(expected.Credentials[CredentialsTypePassword].Config), string(creds.Config))
+
+			expected.Credentials = nil
+			assertEqual(t, expected, actual)
+		})
+
 		t.Run("suite=verifiable-address", func(t *testing.T) {
 			createIdentityWithAddresses := func(t *testing.T, email string) VerifiableAddress {
 				var i Identity
