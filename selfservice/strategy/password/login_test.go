@@ -216,6 +216,7 @@ func TestCompleteLogin(t *testing.T) {
 
 			ensureFieldsExist(t, []byte(body))
 			assert.Equal(t, "Property identifier is missing.", gjson.Get(body, "methods.password.config.fields.#(name==identifier).messages.0.text").String(), "%s", body)
+			assert.Len(t, gjson.Get(body, "methods.password.config.fields").Array(), 3)
 
 			// The password value should not be returned!
 			assert.Empty(t, gjson.Get(body, "methods.password.config.fields.#(name==password).value").String())
@@ -243,6 +244,7 @@ func TestCompleteLogin(t *testing.T) {
 			ensureFieldsExist(t, []byte(body))
 			assert.Equal(t, "Property password is missing.", gjson.Get(body, "methods.password.config.fields.#(name==password).messages.0.text").String(), "%s", body)
 			assert.Equal(t, "identifier", gjson.Get(body, "methods.password.config.fields.#(name==identifier).value").String(), "%s", body)
+			assert.Len(t, gjson.Get(body, "methods.password.config.fields").Array(), 3)
 
 			// This must not include the password!
 			assert.Empty(t, gjson.Get(body, "methods.password.config.fields.#(name==password).value").String())
@@ -251,6 +253,34 @@ func TestCompleteLogin(t *testing.T) {
 		var values = func(v url.Values) {
 			v.Set("identifier", "identifier")
 			v.Del("password")
+		}
+
+		t.Run("type=browser", func(t *testing.T) {
+			check(t, expectValidationError(t, false, false, values))
+		})
+
+		t.Run("type=api", func(t *testing.T) {
+			check(t, expectValidationError(t, true, false, values))
+		})
+	})
+
+	t.Run("should return an error both identifier and password are missing", func(t *testing.T) {
+		var check = func(t *testing.T, body string) {
+			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
+			assert.Contains(t, gjson.Get(body, "methods.password.config.action").String(), publicTS.URL+password.RouteLogin, "%s", body)
+
+			ensureFieldsExist(t, []byte(body))
+			assert.Equal(t, "length must be >= 1, but got 0", gjson.Get(body, "methods.password.config.fields.#(name==password).messages.0.text").String(), "%s", body)
+			assert.Equal(t, "length must be >= 1, but got 0", gjson.Get(body, "methods.password.config.fields.#(name==identifier).messages.0.text").String(), "%s", body)
+			assert.Len(t, gjson.Get(body, "methods.password.config.fields").Array(), 3)
+
+			// This must not include the password!
+			assert.Empty(t, gjson.Get(body, "methods.password.config.fields.#(name==password).value").String())
+		}
+
+		var values = func(v url.Values) {
+			v.Set("password", "")
+			v.Set("identifier", "")
 		}
 
 		t.Run("type=browser", func(t *testing.T) {
