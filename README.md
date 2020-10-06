@@ -27,7 +27,7 @@ ORY Kratos is the first and only cloud native Identity and User Management Syste
 **Table of Contents**
 
 - [What is ORY Kratos?](#what-is-ory-kratos)
-  - [Who's using it?](#whos-using-it)
+  - [Who is using it?](#who-is-using-it)
 - [Getting Started](#getting-started)
   - [Quickstart](#quickstart)
   - [Installation](#installation)
@@ -82,7 +82,7 @@ We highly recommend reading the [ORY Kratos introduction docs](https://www.ory.s
 to learn more about ORY Krato's background, feature set, and differentiation
 from other products.
 
-### Who's using it?
+### Who is using it?
 
 <!--BEGIN ADOPTERS-->
 

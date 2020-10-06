@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-10-02)](#unreleased-2020-10-02)
+- [Unreleased (2020-10-06)](#unreleased-2020-10-06)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -102,7 +102,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...834c60738ca7bb26e982ff73134b7b0e85a72076) (2020-10-02)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...e3d3617b8d82812b0ad67cc1cb02ff86c2c0c66c) (2020-10-06)
 
 
 ### Bug Fixes
@@ -118,6 +118,7 @@
 * Correct cookie domain on logout ([#646](https://github.com/ory/kratos/issues/646)) ([6d77e04](https://github.com/ory/kratos/commit/6d77e043ce3bec0864b8abdee371a101f68e4335)), closes [#645](https://github.com/ory/kratos/issues/645)
 * Correct help message for import ([a5f46d2](https://github.com/ory/kratos/commit/a5f46d260b43d15f8e77b04cb36c589e103468bf))
 * Correct password registration method api spec ([08dd582](https://github.com/ory/kratos/commit/08dd582195cdb6a891d2428ba5d02cd956555e48))
+* Correct PHONY spelling ([#739](https://github.com/ory/kratos/issues/739)) ([e3d3617](https://github.com/ory/kratos/commit/e3d3617b8d82812b0ad67cc1cb02ff86c2c0c66c))
 * Cover more test cases for persister ([37d2e08](https://github.com/ory/kratos/commit/37d2e0839b88792733387f26abb98c51bd1e1395))
 * Create decoder only once ([34dc43b](https://github.com/ory/kratos/commit/34dc43b0c75303f88d2c304225c027faf5366c1f))
 * Don't resend verification emails once verified ([#583](https://github.com/ory/kratos/issues/583)) ([a4d9969](https://github.com/ory/kratos/commit/a4d99694525e65b58d49197c96324b27fb8c31c2)), closes [#578](https://github.com/ory/kratos/issues/578)
