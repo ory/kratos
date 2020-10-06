@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "format": "prettier --no-semi --single-quote --trailing-comma es5 --write \"test/e2e/cypress/**/*.js\"",
+    "format": "prettier --write \"test/e2e/cypress/**/*.js\"",
     "test": "cypress run",
     "test:watch": "cypress open",
     "wait-on": "wait-on"

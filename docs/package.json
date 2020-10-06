@@ -3,8 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "consts": {
-    "prettierTarget": "{docs/**,docs,scripts,static,contrib}/*.{md,mdx,json,js,css,html}|*.{js,md}",
-    "prettierArgs": "--no-semi --single-quote --trailing-comma none"
+    "prettierTarget": "{docs/**,docs,scripts,static,contrib}/*.{md,mdx,json,js,css,html}|*.{js,md}"
   },
   "scripts": {
     "gen": "npm run widdershins && cd .. && node ./docs/scripts/fix-api.js ./docs/docs/reference/api.mdx && node ./docs/scripts/config.js docs/config.js",
@@ -15,8 +14,8 @@
     "swizzle": "docusaurus swizzle",
     "serve": "docusaurus serve",
     "deploy": "docusaurus deploy",
-    "format": "prettier --write ${npm_package_consts_prettierTarget} ${npm_package_consts_prettierArgs} || true",
-    "format:check": "prettier --check ${npm_package_consts_prettierTarget} ${npm_package_consts_prettierArgs}",
+    "format": "prettier --config=../.prettierrc.json --write ${npm_package_consts_prettierTarget} || true",
+    "format:check": "prettier --config=../.prettierrc.json --check ${npm_package_consts_prettierTarget}",
     "postinstall": "patch-package"
   },
   "dependencies": {
