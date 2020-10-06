@@ -784,12 +784,12 @@
                 ]
               }
             },
+            "required": ["id", "url"],
             "not": {
               "type": "object",
               "properties": {
                 "id": {
-                  "type": "string",
-                  "pattern": "^default$"
+                  "const": "default"
                 }
               },
               "additionalProperties": true
@@ -938,9 +938,11 @@
                           "enabled": {
                             "const": true
                           }
-                        }
+                        },
+                        "required": ["enabled"]
                       }
-                    }
+                    },
+                    "required": ["verification"]
                   },
                   {
                     "properties": {
@@ -949,41 +951,19 @@
                           "enabled": {
                             "const": true
                           }
-                        }
+                        },
+                        "required": ["enabled"]
                       }
-                    }
+                    },
+                    "required": ["recovery"]
                   }
                 ]
               }
-            }
+            },
+            "required": ["flows"]
           }
-        }
-      },
-      "then": {
-        "required": [
-          "courier"
-        ]
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "selfservice": {
-            "properties": {
-              "flows": {
-                "properties": {
-                  "verification": {
-                    "properties": {
-                      "enabled": {
-                        "const": true
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
+        },
+        "required": ["selfservice"]
       },
       "then": {
         "required": [

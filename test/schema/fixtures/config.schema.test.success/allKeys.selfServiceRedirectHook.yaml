@@ -1,4 +1,0 @@
-job: redirect
-config:
-  default_redirect_url: https://example.com
-  allow_user_defined_redirect: true
