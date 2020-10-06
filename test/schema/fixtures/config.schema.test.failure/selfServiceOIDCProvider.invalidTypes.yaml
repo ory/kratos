@@ -1,0 +1,11 @@
+id: 1
+provider: unknown
+client_id: 1
+client_secret: 1
+issuer_url: not an URL
+auth_url: not an URL
+token_url: not an URL
+mapper_url: not an URL
+scope:
+  - 1
+tenant: 1

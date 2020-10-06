@@ -3,6 +3,7 @@ package schema
 import (
 	"bytes"
 	"fmt"
+	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
 	"os"
@@ -11,7 +12,6 @@ import (
 	"testing"
 
 	"github.com/ghodss/yaml"
-	"github.com/go-errors/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -43,39 +43,29 @@ func (s schema) validate(path string) error {
 	if s.s == nil {
 		compiler := jsonschema.NewCompiler()
 		if err := compiler.AddResource(s.name, strings.NewReader(s.raw)); err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 
 		sx, err := compiler.Compile(s.name)
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 
 		s.s = sx
 	}
 
 	var doc io.Reader
-	if strings.HasSuffix(path, "yaml") {
-		y, err := ioutil.ReadFile(path)
-		if err != nil {
-			return err
-		}
-
-		j, err := yaml.YAMLToJSON(y)
-		if err != nil {
-			return err
-		}
-
-		doc = bytes.NewBuffer(j)
-	} else {
-
-		buf, err := jsonschema.LoadURL(fmt.Sprintf("file://./%s", path))
-		if err != nil {
-			return err
-		}
-
-		doc = buf
+	y, err := ioutil.ReadFile(path)
+	if err != nil {
+		return errors.WithStack(err)
 	}
+
+	j, err := yaml.YAMLToJSON(y)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	doc = bytes.NewBuffer(j)
 
 	if err := s.s.Validate(doc); err != nil {
 		return errors.Errorf("there were validation errors: %s", err)
@@ -95,8 +85,7 @@ func (ss *schemas) getByName(n string) (*schema, error) {
 }
 
 func TestSchemas(t *testing.T) {
-	t.Skip("See https://github.com/ory/kratos/issues/347")
-	t.Run("test .schema/config.schema.json", SchemaTestRunner("../.schema", "config"))
+	t.Run("test .schema/config.schema.json", SchemaTestRunner("../../.schema", "config"))
 }
 
 func SchemaTestRunner(spath string, sname string) func(*testing.T) {
@@ -110,7 +99,7 @@ func SchemaTestRunner(spath string, sname string) func(*testing.T) {
 		s := strings.Replace(string(sb), `"$ref":`, `"const":`, -1)
 
 		schemas := schemas{{
-			name: "main",
+			name: "root",
 			raw:  s,
 		}}
 		def := gjson.Get(s, "definitions")
@@ -140,7 +129,7 @@ func RunCases(t *testing.T, ss schemas, dir string, expected result) {
 
 		parts := strings.Split(info.Name(), ".")
 		require.Equal(t, 3, len(parts))
-		tc, sName := parts[0], parts[1]
+		sName, tc := parts[0], parts[1]
 
 		s, err := ss.getByName(sName)
 		require.NoError(t, err)
