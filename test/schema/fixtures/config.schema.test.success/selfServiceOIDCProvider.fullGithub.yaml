@@ -1,0 +1,11 @@
+id: foo
+provider: github
+client_id: foo
+client_secret: foo
+issuer_url: https://example.com
+auth_url: https://example.com
+token_url: https://example.com
+mapper_url: https://example.com
+scope:
+  - foo
+  - bar

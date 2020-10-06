@@ -1,0 +1,3 @@
+default_browser_return_url: "#/definitions/defaultReturnTo"
+password: "#/definitions/selfServiceAfterLoginMethod"
+oidc: "#/definitions/selfServiceAfterLoginMethod"

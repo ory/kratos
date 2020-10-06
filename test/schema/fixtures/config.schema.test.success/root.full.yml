@@ -1,0 +1,97 @@
+selfservice:
+  default_browser_return_url: "#/definitions/defaultReturnTo"
+
+  whitelisted_return_urls:
+    - https://foo.bar
+    - /dashboard
+
+  flows:
+    settings:
+      ui_url: /settings
+      lifespan: 1h
+      privileged_session_max_age: 1h
+      after: "#/definitions/selfServiceAfterSettings"
+
+    logout:
+      after:
+        default_browser_return_url: "#/definitions/defaultReturnTo"
+
+    registration:
+      ui_url: /registration
+      lifespan: 1h
+      after: "#/definitions/selfServiceAfterRegistration"
+
+    login:
+      ui_url: /login
+      lifespan: 1h
+      after: "#/definitions/selfServiceAfterLogin"
+
+    verification:
+      enabled: true
+      ui_url: /verification
+      lifespan: 1h
+      after:
+        default_browser_return_url: "#/definitions/defaultReturnTo"
+
+    recovery:
+      enabled: true
+      ui_url: /recovery
+      lifespan: 1h
+      after:
+        default_browser_return_url: "#/definitions/defaultReturnTo"
+
+    error:
+      ui_url: /error
+
+  methods:
+    profile:
+      enabled: true
+    recovery_token:
+      enabled: true
+    password:
+      enabled: true
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - "#/definitions/selfServiceOIDCProvider"
+
+dsn: foo
+
+courier:
+  template_override_path: foo
+  smtp:
+    connection_uri: smtps://foo:bar@my-mailserver:1234/
+    from_address: no-reply@ory.kratos.sh
+
+serve:
+  admin:
+    host: foo
+    port: 4434
+  public:
+    host: foo
+    port: 4433
+
+log:
+  level: trace
+  format: json
+
+identity:
+  default_schema_url: https://example.com
+  schemas:
+    - id: foo
+      url: https://example.com
+
+secrets:
+  default:
+    - default secret with a lot of chars
+  cookie:
+    - cookie secret with a lot of chars
+
+hashers:
+  argon2:
+    memory: 16384
+    iterations: 1
+    parallelism: 1
+    salt_length: 16
+    key_length: 16

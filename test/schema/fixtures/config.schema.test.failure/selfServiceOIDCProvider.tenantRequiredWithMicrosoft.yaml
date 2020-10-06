@@ -1,0 +1,5 @@
+id: foo
+provider: microsoft
+client_id: asdf
+client_secret: asdf
+mapper_url: file://./mapper_file

@@ -147,7 +147,32 @@
         "client_id",
         "client_secret",
         "mapper_url"
-      ]
+      ],
+      "if": {
+        "properties": {
+          "provider": {
+            "const": "microsoft"
+          }
+        },
+        "required": [
+          "provider"
+        ]
+      },
+      "then": {
+        "required": [
+          "tenant"
+        ]
+      },
+      "else": {
+        "not": {
+          "properties": {
+            "tenant": {}
+          },
+          "required": [
+            "tenant"
+          ]
+        }
+      }
     },
     "selfServiceAfterSettingsMethod": {
       "type": "object",
@@ -784,12 +809,15 @@
                 ]
               }
             },
+            "required": [
+              "id",
+              "url"
+            ],
             "not": {
               "type": "object",
               "properties": {
                 "id": {
-                  "type": "string",
-                  "pattern": "^default$"
+                  "const": "default"
                 }
               },
               "additionalProperties": true
@@ -938,9 +966,15 @@
                           "enabled": {
                             "const": true
                           }
-                        }
+                        },
+                        "required": [
+                          "enabled"
+                        ]
                       }
-                    }
+                    },
+                    "required": [
+                      "verification"
+                    ]
                   },
                   {
                     "properties": {
@@ -949,41 +983,27 @@
                           "enabled": {
                             "const": true
                           }
-                        }
+                        },
+                        "required": [
+                          "enabled"
+                        ]
                       }
-                    }
+                    },
+                    "required": [
+                      "recovery"
+                    ]
                   }
                 ]
               }
-            }
+            },
+            "required": [
+              "flows"
+            ]
           }
-        }
-      },
-      "then": {
+        },
         "required": [
-          "courier"
+          "selfservice"
         ]
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "selfservice": {
-            "properties": {
-              "flows": {
-                "properties": {
-                  "verification": {
-                    "properties": {
-                      "enabled": {
-                        "const": true
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
       },
       "then": {
         "required": [

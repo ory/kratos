@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-10-02)](#unreleased-2020-10-02)
+- [Unreleased (2020-10-06)](#unreleased-2020-10-06)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -102,12 +102,13 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...834c60738ca7bb26e982ff73134b7b0e85a72076) (2020-10-02)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...aeaddbcb27f89d61b076bdd9ad1739fb1da2ffd9) (2020-10-06)
 
 
 ### Bug Fixes
 
 * Add missing error handling ([43c1446](https://github.com/ory/kratos/commit/43c14464efa7b736695e2144b031daf6fca87703))
+* Add ory-prettier-styles to main repo ([#744](https://github.com/ory/kratos/issues/744)) ([aeaddbc](https://github.com/ory/kratos/commit/aeaddbcb27f89d61b076bdd9ad1739fb1da2ffd9))
 * Add remote help description ([f66bbe1](https://github.com/ory/kratos/commit/f66bbe18cfad1e8725ecbcf6e2843b34c3d5119f))
 * Add serve help description ([2eb072b](https://github.com/ory/kratos/commit/2eb072b71e5602895d4232e197bfd76180fcdcd7))
 * Allow using json with form layout in password registration ([bd2225c](https://github.com/ory/kratos/commit/bd2225c0fff3e0363716d2096346d59046838bb7))
@@ -118,6 +119,7 @@
 * Correct cookie domain on logout ([#646](https://github.com/ory/kratos/issues/646)) ([6d77e04](https://github.com/ory/kratos/commit/6d77e043ce3bec0864b8abdee371a101f68e4335)), closes [#645](https://github.com/ory/kratos/issues/645)
 * Correct help message for import ([a5f46d2](https://github.com/ory/kratos/commit/a5f46d260b43d15f8e77b04cb36c589e103468bf))
 * Correct password registration method api spec ([08dd582](https://github.com/ory/kratos/commit/08dd582195cdb6a891d2428ba5d02cd956555e48))
+* Correct PHONY spelling ([#739](https://github.com/ory/kratos/issues/739)) ([e3d3617](https://github.com/ory/kratos/commit/e3d3617b8d82812b0ad67cc1cb02ff86c2c0c66c))
 * Cover more test cases for persister ([37d2e08](https://github.com/ory/kratos/commit/37d2e0839b88792733387f26abb98c51bd1e1395))
 * Create decoder only once ([34dc43b](https://github.com/ory/kratos/commit/34dc43b0c75303f88d2c304225c027faf5366c1f))
 * Don't resend verification emails once verified ([#583](https://github.com/ory/kratos/issues/583)) ([a4d9969](https://github.com/ory/kratos/commit/a4d99694525e65b58d49197c96324b27fb8c31c2)), closes [#578](https://github.com/ory/kratos/issues/578)
@@ -332,6 +334,7 @@
 * Refactor login and registration documentation ([c660a04](https://github.com/ory/kratos/commit/c660a04ed6a70aefca18896662331fcc5d1919cf))
 * Refactor settings and recovery documentation ([11ca9f7](https://github.com/ory/kratos/commit/11ca9f7d1b858dcda3a96e1e1d2607ba64f7fbbe))
 * Refactor verification docs ([70f2789](https://github.com/ory/kratos/commit/70f2789363773fccc4bd8691597ff588ac6892c6))
+* Remove contraction ([#747](https://github.com/ory/kratos/issues/747)) ([cd4f21d](https://github.com/ory/kratos/commit/cd4f21dbfa2b3824468146677f542fbab2417c42))
 * Remove duplicate word ([b84e659](https://github.com/ory/kratos/commit/b84e659af29aa1b129f33ccf5ca9e0d54353c019))
 * Remove duplicate word ([#700](https://github.com/ory/kratos/issues/700)) ([a12100e](https://github.com/ory/kratos/commit/a12100e7644b535c4bd3073e03c48229bb81e7b2))
 * Rename self service and add admin section ([639c424](https://github.com/ory/kratos/commit/639c424d3bde0557f7edd7edc489a476f1aa60b3))
