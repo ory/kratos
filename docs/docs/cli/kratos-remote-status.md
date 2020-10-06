@@ -1,8 +1,7 @@
 ---
 id: kratos-remote-status
 title: kratos remote status
-description:
-  kratos remote status Prints the status of the remote Kratos instance.
+description: kratos remote status Prints the status of the remote Kratos instance.
 ---
 
 <!--

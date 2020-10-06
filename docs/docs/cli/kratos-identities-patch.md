@@ -1,8 +1,7 @@
 ---
 id: kratos-identities-patch
 title: kratos identities patch
-description:
-  kratos identities patch Patch identities by ID (not yet implemented)
+description: kratos identities patch Patch identities by ID (not yet implemented)
 ---
 
 <!--

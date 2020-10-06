@@ -3,8 +3,6 @@ title: REST API
 id: api
 ---
 
-
-
 Welcome to the ORY Kratos HTTP API documentation!
 
 import Tabs from '@theme/Tabs'
@@ -25,8 +23,8 @@ share them in a [GitHub issue](https://github.com/ory/docs/issues/new) any time.
 
 ## Authentication
 
-* API Key (sessionToken)
-    - Parameter Name: **Authorization**, in: header. 
+- API Key (sessionToken)
+  - Parameter Name: **Authorization**, in: header.
 
 <a id="ory-kratos-health"></a>
 
@@ -57,10 +55,10 @@ refer to the cluster state, only to a single instance.
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|healthStatus|[healthStatus](#schemahealthstatus)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status | Meaning                                                                    | Description  | Schema                              |
+| ------ | -------------------------------------------------------------------------- | ------------ | ----------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | healthStatus | [healthStatus](#schemahealthstatus) |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -72,9 +70,7 @@ refer to the cluster state, only to a single instance.
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -100,7 +96,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
     }
 
@@ -120,20 +116,20 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json'
+  Accept: 'application/json'
 }
 
 fetch('/health/alive', {
   method: 'GET',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -225,10 +221,10 @@ refer to the cluster state, only to a single instance.
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|healthStatus|[healthStatus](#schemahealthstatus)|
-|503|[Service Unavailable](https://tools.ietf.org/html/rfc7231#section-6.6.4)|healthNotReadyStatus|[healthNotReadyStatus](#schemahealthnotreadystatus)|
+| Status | Meaning                                                                  | Description          | Schema                                              |
+| ------ | ------------------------------------------------------------------------ | -------------------- | --------------------------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                  | healthStatus         | [healthStatus](#schemahealthstatus)                 |
+| 503    | [Service Unavailable](https://tools.ietf.org/html/rfc7231#section-6.6.4) | healthNotReadyStatus | [healthNotReadyStatus](#schemahealthnotreadystatus) |
 
 ##### Examples
 
@@ -240,9 +236,7 @@ refer to the cluster state, only to a single instance.
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -268,7 +262,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
     }
 
@@ -288,20 +282,20 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json'
+  Accept: 'application/json'
 }
 
 fetch('/health/ready', {
   method: 'GET',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -390,10 +384,10 @@ Learn how identities work in [ORY Kratos' User And Identity Model Documentation]
 
 #### Parameters
 
-|Parameter|In|Type|Required|Description|
-|---|---|---|---|---|
-|per_page|query|integer(int64)|false|Items per Page|
-|page|query|integer(int64)|false|Pagination Page|
+| Parameter | In    | Type           | Required | Description     |
+| --------- | ----- | -------------- | -------- | --------------- |
+| per_page  | query | integer(int64) | false    | Items per Page  |
+| page      | query | integer(int64) | false    | Pagination Page |
 
 ##### Detailed descriptions
 
@@ -407,10 +401,10 @@ This is the number of items per page.
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|A list of identities.|Inline|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status | Meaning                                                                    | Description           | Schema                              |
+| ------ | -------------------------------------------------------------------------- | --------------------- | ----------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | A list of identities. | Inline                              |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError          | [genericError](#schemagenericerror) |
 
 <a id="list-identities-responseschema"></a>
 
@@ -418,24 +412,24 @@ This is the number of items per page.
 
 Status Code **200**
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|*anonymous*|[[Identity](#schemaidentity)]|false|none|none|
-|» id|[UUID](#schemauuid)(uuid4)|true|none|none|
-|» recovery_addresses|[[RecoveryAddress](#schemarecoveryaddress)]|false|none|RecoveryAddresses contains all the addresses that can be used to recover an identity.|
-|»» id|[UUID](#schemauuid)(uuid4)|true|none|none|
-|»» value|string|true|none|none|
-|»» via|[RecoveryAddressType](#schemarecoveryaddresstype)|true|none|none|
-|» schema_id|string|true|none|SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.|
-|» schema_url|string|false|none|SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.<br/><br/>format: url|
-|» traits|[Traits](#schematraits)|true|none|none|
-|» verifiable_addresses|[[VerifiableAddress](#schemaverifiableaddress)]|false|none|VerifiableAddresses contains all the addresses that can be verified by the user.|
-|»» id|[UUID](#schemauuid)(uuid4)|true|none|none|
-|»» status|[VerifiableAddressStatus](#schemaverifiableaddressstatus)|true|none|none|
-|»» value|string|true|none|none|
-|»» verified|boolean|true|none|none|
-|»» verified_at|[NullTime](#schemanulltime)(date-time)|false|none|none|
-|»» via|[VerifiableAddressType](#schemaverifiableaddresstype)|true|none|none|
+| Name                   | Type                                                      | Required | Restrictions | Description                                                                                                       |
+| ---------------------- | --------------------------------------------------------- | -------- | ------------ | ----------------------------------------------------------------------------------------------------------------- |
+| _anonymous_            | [[Identity](#schemaidentity)]                             | false    | none         | none                                                                                                              |
+| » id                   | [UUID](#schemauuid)(uuid4)                                | true     | none         | none                                                                                                              |
+| » recovery_addresses   | [[RecoveryAddress](#schemarecoveryaddress)]               | false    | none         | RecoveryAddresses contains all the addresses that can be used to recover an identity.                             |
+| »» id                  | [UUID](#schemauuid)(uuid4)                                | true     | none         | none                                                                                                              |
+| »» value               | string                                                    | true     | none         | none                                                                                                              |
+| »» via                 | [RecoveryAddressType](#schemarecoveryaddresstype)         | true     | none         | none                                                                                                              |
+| » schema_id            | string                                                    | true     | none         | SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.                            |
+| » schema_url           | string                                                    | false    | none         | SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.<br/><br/>format: url |
+| » traits               | [Traits](#schematraits)                                   | true     | none         | none                                                                                                              |
+| » verifiable_addresses | [[VerifiableAddress](#schemaverifiableaddress)]           | false    | none         | VerifiableAddresses contains all the addresses that can be verified by the user.                                  |
+| »» id                  | [UUID](#schemauuid)(uuid4)                                | true     | none         | none                                                                                                              |
+| »» status              | [VerifiableAddressStatus](#schemaverifiableaddressstatus) | true     | none         | none                                                                                                              |
+| »» value               | string                                                    | true     | none         | none                                                                                                              |
+| »» verified            | boolean                                                   | true     | none         | none                                                                                                              |
+| »» verified_at         | [NullTime](#schemanulltime)(date-time)                    | false    | none         | none                                                                                                              |
+| »» via                 | [VerifiableAddressType](#schemaverifiableaddresstype)     | true     | none         | none                                                                                                              |
 
 ##### Examples
 
@@ -469,9 +463,7 @@ Status Code **200**
 ]
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -497,7 +489,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
     }
 
@@ -517,20 +509,20 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json'
+  Accept: 'application/json'
 }
 
 fetch('/identities', {
   method: 'GET',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -626,9 +618,9 @@ Learn how identities work in [ORY Kratos' User And Identity Model Documentation]
 
 #### Parameters
 
-|Parameter|In|Type|Required|Description|
-|---|---|---|---|---|
-|body|body|[CreateIdentity](#schemacreateidentity)|false|none|
+| Parameter | In   | Type                                    | Required | Description |
+| --------- | ---- | --------------------------------------- | -------- | ----------- |
+| body      | body | [CreateIdentity](#schemacreateidentity) | false    | none        |
 
 #### Responses
 
@@ -636,11 +628,11 @@ Learn how identities work in [ORY Kratos' User And Identity Model Documentation]
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|A single identity.|[Identity](#schemaidentity)|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|genericError|[genericError](#schemagenericerror)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status | Meaning                                                                    | Description        | Schema                              |
+| ------ | -------------------------------------------------------------------------- | ------------------ | ----------------------------------- |
+| 201    | [Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)               | A single identity. | [Identity](#schemaidentity)         |
+| 400    | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | genericError       | [genericError](#schemagenericerror) |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError       | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -672,9 +664,7 @@ Learn how identities work in [ORY Kratos' User And Identity Model Documentation]
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -700,7 +690,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Content-Type": []string{"application/json"},
         "Accept": []string{"application/json"},
     }
@@ -823,9 +813,9 @@ Learn how identities work in [ORY Kratos' User And Identity Model Documentation]
 
 #### Parameters
 
-|Parameter|In|Type|Required|Description|
-|---|---|---|---|---|
-|id|path|string|true|ID must be set to the ID of identity you want to get|
+| Parameter | In   | Type   | Required | Description                                          |
+| --------- | ---- | ------ | -------- | ---------------------------------------------------- |
+| id        | path | string | true     | ID must be set to the ID of identity you want to get |
 
 #### Responses
 
@@ -833,11 +823,11 @@ Learn how identities work in [ORY Kratos' User And Identity Model Documentation]
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|A single identity.|[Identity](#schemaidentity)|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|genericError|[genericError](#schemagenericerror)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status | Meaning                                                                    | Description        | Schema                              |
+| ------ | -------------------------------------------------------------------------- | ------------------ | ----------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | A single identity. | [Identity](#schemaidentity)         |
+| 400    | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | genericError       | [genericError](#schemagenericerror) |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError       | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -869,9 +859,7 @@ Learn how identities work in [ORY Kratos' User And Identity Model Documentation]
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -897,7 +885,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
     }
 
@@ -917,20 +905,20 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json'
+  Accept: 'application/json'
 }
 
 fetch('/identities/{id}', {
   method: 'GET',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -1028,10 +1016,10 @@ Learn how identities work in [ORY Kratos' User And Identity Model Documentation]
 
 #### Parameters
 
-|Parameter|In|Type|Required|Description|
-|---|---|---|---|---|
-|id|path|string|true|ID must be set to the ID of identity you want to update|
-|body|body|[UpdateIdentity](#schemaupdateidentity)|false|none|
+| Parameter | In   | Type                                    | Required | Description                                             |
+| --------- | ---- | --------------------------------------- | -------- | ------------------------------------------------------- |
+| id        | path | string                                  | true     | ID must be set to the ID of identity you want to update |
+| body      | body | [UpdateIdentity](#schemaupdateidentity) | false    | none                                                    |
 
 #### Responses
 
@@ -1039,12 +1027,12 @@ Learn how identities work in [ORY Kratos' User And Identity Model Documentation]
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|A single identity.|[Identity](#schemaidentity)|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|genericError|[genericError](#schemagenericerror)|
-|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|genericError|[genericError](#schemagenericerror)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status | Meaning                                                                    | Description        | Schema                              |
+| ------ | -------------------------------------------------------------------------- | ------------------ | ----------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | A single identity. | [Identity](#schemaidentity)         |
+| 400    | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | genericError       | [genericError](#schemagenericerror) |
+| 404    | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError       | [genericError](#schemagenericerror) |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError       | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -1076,9 +1064,7 @@ Learn how identities work in [ORY Kratos' User And Identity Model Documentation]
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -1104,7 +1090,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Content-Type": []string{"application/json"},
         "Accept": []string{"application/json"},
     }
@@ -1231,9 +1217,9 @@ Learn how identities work in [ORY Kratos' User And Identity Model Documentation]
 
 #### Parameters
 
-|Parameter|In|Type|Required|Description|
-|---|---|---|---|---|
-|id|path|string|true|ID is the identity's ID.|
+| Parameter | In   | Type   | Required | Description              |
+| --------- | ---- | ------ | -------- | ------------------------ |
+| id        | path | string | true     | ID is the identity's ID. |
 
 #### Responses
 
@@ -1241,11 +1227,11 @@ Learn how identities work in [ORY Kratos' User And Identity Model Documentation]
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|204|[No Content](https://tools.ietf.org/html/rfc7231#section-6.3.5)|Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-typically 201.|None|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 204            | [No Content](https://tools.ietf.org/html/rfc7231#section-6.3.5)            | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -1265,9 +1251,7 @@ typically 201.|None|
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -1293,7 +1277,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
     }
 
@@ -1313,20 +1297,20 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json'
+  Accept: 'application/json'
 }
 
 fetch('/identities/{id}', {
   method: 'DELETE',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -1396,6 +1380,7 @@ p JSON.parse(result)
 <a id="opIdprometheus"></a>
 
 ### Get snapshot metrics from the Hydra service. If you're using k8s, you can then add annotations to
+
 your deployment like so:
 
 ```
@@ -1412,19 +1397,19 @@ prometheus.io/path: "/metrics/prometheus"
 
 #### Responses
 
-<a id="get-snapshot-metrics-from-the-hydra-service.-if-you're-using-k8s,-you-can-then-add-annotations-to
-your-deployment-like-so:-responses"></a>
+<a
+  id="get-snapshot-metrics-from-the-hydra-service.-if-you're-using-k8s,-you-can-then-add-annotations-to
+your-deployment-like-so:-responses"
+></a>
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-typically 201.|None|
+| Status         | Meaning                                                 | Description                                                                                                    | Schema |
+| -------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------ |
+| 200            | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1) | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                    |
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -1467,15 +1452,15 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 fetch('/metrics/prometheus', {
   method: 'GET'
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -1560,9 +1545,9 @@ This endpoint creates a recovery link which should be given to the user in order
 
 #### Parameters
 
-|Parameter|In|Type|Required|Description|
-|---|---|---|---|---|
-|body|body|[CreateRecoveryLink](#schemacreaterecoverylink)|false|none|
+| Parameter | In   | Type                                            | Required | Description |
+| --------- | ---- | ----------------------------------------------- | -------- | ----------- |
+| body      | body | [CreateRecoveryLink](#schemacreaterecoverylink) | false    | none        |
 
 #### Responses
 
@@ -1570,12 +1555,12 @@ This endpoint creates a recovery link which should be given to the user in order
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|recoveryLink|[recoveryLink](#schemarecoverylink)|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|genericError|[genericError](#schemagenericerror)|
-|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|genericError|[genericError](#schemagenericerror)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status | Meaning                                                                    | Description  | Schema                              |
+| ------ | -------------------------------------------------------------------------- | ------------ | ----------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | recoveryLink | [recoveryLink](#schemarecoverylink) |
+| 400    | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | genericError | [genericError](#schemagenericerror) |
+| 404    | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError | [genericError](#schemagenericerror) |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -1588,9 +1573,7 @@ This endpoint creates a recovery link which should be given to the user in order
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -1616,7 +1599,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Content-Type": []string{"application/json"},
         "Accept": []string{"application/json"},
     }
@@ -1743,9 +1726,9 @@ Get a Traits Schema Definition
 
 #### Parameters
 
-|Parameter|In|Type|Required|Description|
-|---|---|---|---|---|
-|id|path|string|true|ID must be set to the ID of schema you want to get|
+| Parameter | In   | Type   | Required | Description                                        |
+| --------- | ---- | ------ | -------- | -------------------------------------------------- |
+| id        | path | string | true     | ID must be set to the ID of schema you want to get |
 
 #### Responses
 
@@ -1753,11 +1736,11 @@ Get a Traits Schema Definition
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|The raw identity traits schema|Inline|
-|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|genericError|[genericError](#schemagenericerror)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status | Meaning                                                                    | Description                    | Schema                              |
+| ------ | -------------------------------------------------------------------------- | ------------------------------ | ----------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | The raw identity traits schema | Inline                              |
+| 404    | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError                   | [genericError](#schemagenericerror) |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                   | [genericError](#schemagenericerror) |
 
 <a id="getschema-responseschema"></a>
 
@@ -1771,9 +1754,7 @@ Get a Traits Schema Definition
 {}
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -1799,7 +1780,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
     }
 
@@ -1819,20 +1800,20 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json'
+  Accept: 'application/json'
 }
 
 fetch('/schemas/{id}', {
   method: 'GET',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -1912,7 +1893,7 @@ Accept: application/json
 This endpoint initializes a logout flow.
 
 > This endpoint is NOT INTENDED for API clients and only works
-with browsers (Chrome, Firefox, ...).
+> with browsers (Chrome, Firefox, ...).
 
 On successful logout, the browser will be redirected (HTTP 302 Found) to `urls.default_return_to`.
 
@@ -1924,11 +1905,11 @@ More information can be found at [ORY Kratos User Logout Documentation](https://
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|302|[Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)|Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-typically 201.|None|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -1948,9 +1929,7 @@ typically 201.|None|
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -1976,7 +1955,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
     }
 
@@ -1996,20 +1975,20 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json'
+  Accept: 'application/json'
 }
 
 fetch('/self-service/browser/flows/logout', {
   method: 'GET',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -2099,11 +2078,11 @@ More information can be found at [ORY Kratos User Settings & Profile Management 
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|302|[Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)|Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-typically 201.|None|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -2123,9 +2102,7 @@ typically 201.|None|
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -2151,7 +2128,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
     }
 
@@ -2171,20 +2148,23 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json'
+  Accept: 'application/json'
 }
 
-fetch('/self-service/browser/flows/registration/strategies/oidc/settings/connections', {
-  method: 'POST',
-  headers
-})
-.then(r => r.json())
-.then((body) => {
+fetch(
+  '/self-service/browser/flows/registration/strategies/oidc/settings/connections',
+  {
+    method: 'POST',
+    headers
+  }
+)
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -2273,9 +2253,9 @@ More information can be found at [ORY Kratos User User Facing Error Documentatio
 
 #### Parameters
 
-|Parameter|In|Type|Required|Description|
-|---|---|---|---|---|
-|error|query|string|true|Error is the container's ID|
+| Parameter | In    | Type   | Required | Description                 |
+| --------- | ----- | ------ | -------- | --------------------------- |
+| error     | query | string | true     | Error is the container's ID |
 
 #### Responses
 
@@ -2283,12 +2263,12 @@ More information can be found at [ORY Kratos User User Facing Error Documentatio
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|User-facing error response|[errorContainer](#schemaerrorcontainer)|
-|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|genericError|[genericError](#schemagenericerror)|
-|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|genericError|[genericError](#schemagenericerror)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status | Meaning                                                                    | Description                | Schema                                  |
+| ------ | -------------------------------------------------------------------------- | -------------------------- | --------------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | User-facing error response | [errorContainer](#schemaerrorcontainer) |
+| 403    | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | genericError               | [genericError](#schemagenericerror)     |
+| 404    | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError               | [genericError](#schemagenericerror)     |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError               | [genericError](#schemagenericerror)     |
 
 ##### Examples
 
@@ -2301,9 +2281,7 @@ More information can be found at [ORY Kratos User User Facing Error Documentatio
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -2329,7 +2307,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
     }
 
@@ -2349,20 +2327,20 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json'
+  Accept: 'application/json'
 }
 
 fetch('/self-service/errors?error=string', {
   method: 'GET',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -2464,9 +2442,9 @@ More information can be found at [ORY Kratos User Login and User Registration Do
 
 #### Parameters
 
-|Parameter|In|Type|Required|Description|
-|---|---|---|---|---|
-|refresh|query|boolean|false|Refresh a login session|
+| Parameter | In    | Type    | Required | Description             |
+| --------- | ----- | ------- | -------- | ----------------------- |
+| refresh   | query | boolean | false    | Refresh a login session |
 
 ##### Detailed descriptions
 
@@ -2482,11 +2460,11 @@ authenticated_at time of the session.
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|loginFlow|[loginFlow](#schemaloginflow)|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|genericError|[genericError](#schemagenericerror)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status | Meaning                                                                    | Description  | Schema                              |
+| ------ | -------------------------------------------------------------------------- | ------------ | ----------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | loginFlow    | [loginFlow](#schemaloginflow)       |
+| 400    | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | genericError | [genericError](#schemagenericerror) |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -2616,9 +2594,7 @@ authenticated_at time of the session.
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -2644,7 +2620,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
     }
 
@@ -2664,20 +2640,20 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json'
+  Accept: 'application/json'
 }
 
 fetch('/self-service/login/api', {
   method: 'GET',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -2769,11 +2745,11 @@ More information can be found at [ORY Kratos User Login and User Registration Do
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|302|[Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)|Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-typically 201.|None|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -2793,9 +2769,7 @@ typically 201.|None|
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -2821,7 +2795,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
     }
 
@@ -2841,20 +2815,20 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json'
+  Accept: 'application/json'
 }
 
 fetch('/self-service/login/browser', {
   method: 'GET',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -2939,9 +2913,9 @@ More information can be found at [ORY Kratos User Login and User Registration Do
 
 #### Parameters
 
-|Parameter|In|Type|Required|Description|
-|---|---|---|---|---|
-|id|query|string|true|The Login Flow ID|
+| Parameter | In    | Type   | Required | Description       |
+| --------- | ----- | ------ | -------- | ----------------- |
+| id        | query | string | true     | The Login Flow ID |
 
 ##### Detailed descriptions
 
@@ -2956,13 +2930,13 @@ application (e.g. `/login?flow=abcde`).
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|loginFlow|[loginFlow](#schemaloginflow)|
-|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|genericError|[genericError](#schemagenericerror)|
-|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|genericError|[genericError](#schemagenericerror)|
-|410|[Gone](https://tools.ietf.org/html/rfc7231#section-6.5.9)|genericError|[genericError](#schemagenericerror)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status | Meaning                                                                    | Description  | Schema                              |
+| ------ | -------------------------------------------------------------------------- | ------------ | ----------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | loginFlow    | [loginFlow](#schemaloginflow)       |
+| 403    | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | genericError | [genericError](#schemagenericerror) |
+| 404    | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError | [genericError](#schemagenericerror) |
+| 410    | [Gone](https://tools.ietf.org/html/rfc7231#section-6.5.9)                  | genericError | [genericError](#schemagenericerror) |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -3092,9 +3066,7 @@ application (e.g. `/login?flow=abcde`).
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -3120,7 +3092,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
     }
 
@@ -3140,20 +3112,20 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json'
+  Accept: 'application/json'
 }
 
 fetch('/self-service/login/flows?id=string', {
   method: 'GET',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -3250,12 +3222,12 @@ More information can be found at [ORY Kratos User Login and User Registration Do
 
 #### Parameters
 
-|Parameter|In|Type|Required|Description|
-|---|---|---|---|---|
-|password|query|string|false|The user's password.|
-|identifier|query|string|false|Identifier is the email or username of the user trying to log in.|
-|csrf_token|query|string|false|Sending the anti-csrf token is only required for browser login flows.|
-|flow|query|string|true|The Flow ID|
+| Parameter  | In    | Type   | Required | Description                                                           |
+| ---------- | ----- | ------ | -------- | --------------------------------------------------------------------- |
+| password   | query | string | false    | The user's password.                                                  |
+| identifier | query | string | false    | Identifier is the email or username of the user trying to log in.     |
+| csrf_token | query | string | false    | Sending the anti-csrf token is only required for browser login flows. |
+| flow       | query | string | true     | The Flow ID                                                           |
 
 #### Responses
 
@@ -3263,13 +3235,13 @@ More information can be found at [ORY Kratos User Login and User Registration Do
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|loginViaApiResponse|[loginViaApiResponse](#schemaloginviaapiresponse)|
-|302|[Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)|Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-typically 201.|None|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|loginFlow|[loginFlow](#schemaloginflow)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                                            |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| 200            | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | loginViaApiResponse                                                                                            | [loginViaApiResponse](#schemaloginviaapiresponse) |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 400            | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | loginFlow                                                                                                      | [loginFlow](#schemaloginflow)                     |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror)               |
 
 ##### Examples
 
@@ -3311,9 +3283,7 @@ typically 201.|None|
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -3339,7 +3309,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
     }
 
@@ -3359,20 +3329,20 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json'
+  Accept: 'application/json'
 }
 
 fetch('/self-service/login/methods/password?flow=string', {
   method: 'POST',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -3475,11 +3445,11 @@ More information can be found at [ORY Kratos Account Recovery Documentation](../
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|recoveryFlow|[recoveryFlow](#schemarecoveryflow)|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|genericError|[genericError](#schemagenericerror)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status | Meaning                                                                    | Description  | Schema                              |
+| ------ | -------------------------------------------------------------------------- | ------------ | ----------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | recoveryFlow | [recoveryFlow](#schemarecoveryflow) |
+| 400    | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | genericError | [genericError](#schemagenericerror) |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -3573,9 +3543,7 @@ More information can be found at [ORY Kratos Account Recovery Documentation](../
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -3601,7 +3569,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
     }
 
@@ -3621,20 +3589,20 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json'
+  Accept: 'application/json'
 }
 
 fetch('/self-service/recovery/api', {
   method: 'GET',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -3725,11 +3693,11 @@ More information can be found at [ORY Kratos Account Recovery Documentation](../
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|302|[Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)|Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-typically 201.|None|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -3749,9 +3717,7 @@ typically 201.|None|
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -3777,7 +3743,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
     }
 
@@ -3797,20 +3763,20 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json'
+  Accept: 'application/json'
 }
 
 fetch('/self-service/recovery/browser', {
   method: 'GET',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -3895,9 +3861,9 @@ More information can be found at [ORY Kratos Account Recovery Documentation](../
 
 #### Parameters
 
-|Parameter|In|Type|Required|Description|
-|---|---|---|---|---|
-|id|query|string|true|The Flow ID|
+| Parameter | In    | Type   | Required | Description |
+| --------- | ----- | ------ | -------- | ----------- |
+| id        | query | string | true     | The Flow ID |
 
 ##### Detailed descriptions
 
@@ -3912,12 +3878,12 @@ application (e.g. `/recovery?flow=abcde`).
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|recoveryFlow|[recoveryFlow](#schemarecoveryflow)|
-|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|genericError|[genericError](#schemagenericerror)|
-|410|[Gone](https://tools.ietf.org/html/rfc7231#section-6.5.9)|genericError|[genericError](#schemagenericerror)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status | Meaning                                                                    | Description  | Schema                              |
+| ------ | -------------------------------------------------------------------------- | ------------ | ----------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | recoveryFlow | [recoveryFlow](#schemarecoveryflow) |
+| 404    | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError | [genericError](#schemagenericerror) |
+| 410    | [Gone](https://tools.ietf.org/html/rfc7231#section-6.5.9)                  | genericError | [genericError](#schemagenericerror) |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -4011,9 +3977,7 @@ application (e.g. `/recovery?flow=abcde`).
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -4039,7 +4003,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
     }
 
@@ -4059,20 +4023,20 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json'
+  Accept: 'application/json'
 }
 
 fetch('/self-service/recovery/flows?id=string', {
   method: 'GET',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -4181,18 +4145,17 @@ More information can be found at [ORY Kratos Account Recovery Documentation](../
 ```yaml
 csrf_token: string
 email: string
-
 ```
 
 <a id="complete-recovery-flow-with-link-method-parameters"></a>
 
 #### Parameters
 
-|Parameter|In|Type|Required|Description|
-|---|---|---|---|---|
-|token|query|string|false|Recovery Token|
-|flow|query|string|false|The Flow ID|
-|body|body|[completeSelfServiceRecoveryFlowWithLinkMethod](#schemacompleteselfservicerecoveryflowwithlinkmethod)|false|none|
+| Parameter | In    | Type                                                                                                  | Required | Description    |
+| --------- | ----- | ----------------------------------------------------------------------------------------------------- | -------- | -------------- |
+| token     | query | string                                                                                                | false    | Recovery Token |
+| flow      | query | string                                                                                                | false    | The Flow ID    |
+| body      | body  | [completeSelfServiceRecoveryFlowWithLinkMethod](#schemacompleteselfservicerecoveryflowwithlinkmethod) | false    | none           |
 
 ##### Detailed descriptions
 
@@ -4211,12 +4174,12 @@ format: uuid
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|302|[Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)|Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-typically 201.|None|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|recoveryFlow|[recoveryFlow](#schemarecoveryflow)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 400            | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | recoveryFlow                                                                                                   | [recoveryFlow](#schemarecoveryflow) |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -4310,9 +4273,7 @@ typically 201.|None|
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -4338,7 +4299,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Content-Type": []string{"application/json"},
         "Accept": []string{"application/json"},
     }
@@ -4480,11 +4441,11 @@ More information can be found at [ORY Kratos User Login and User Registration Do
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|registrationFlow|[registrationFlow](#schemaregistrationflow)|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|genericError|[genericError](#schemagenericerror)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status | Meaning                                                                    | Description      | Schema                                      |
+| ------ | -------------------------------------------------------------------------- | ---------------- | ------------------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | registrationFlow | [registrationFlow](#schemaregistrationflow) |
+| 400    | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | genericError     | [genericError](#schemagenericerror)         |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError     | [genericError](#schemagenericerror)         |
 
 ##### Examples
 
@@ -4613,9 +4574,7 @@ More information can be found at [ORY Kratos User Login and User Registration Do
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -4641,7 +4600,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
     }
 
@@ -4661,20 +4620,20 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json'
+  Accept: 'application/json'
 }
 
 fetch('/self-service/registration/api', {
   method: 'GET',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -4770,11 +4729,11 @@ More information can be found at [ORY Kratos User Login and User Registration Do
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|302|[Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)|Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-typically 201.|None|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -4794,9 +4753,7 @@ typically 201.|None|
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -4822,7 +4779,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
     }
 
@@ -4842,20 +4799,20 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json'
+  Accept: 'application/json'
 }
 
 fetch('/self-service/registration/browser', {
   method: 'GET',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -4940,9 +4897,9 @@ More information can be found at [ORY Kratos User Login and User Registration Do
 
 #### Parameters
 
-|Parameter|In|Type|Required|Description|
-|---|---|---|---|---|
-|id|query|string|true|The Registration Flow ID|
+| Parameter | In    | Type   | Required | Description              |
+| --------- | ----- | ------ | -------- | ------------------------ |
+| id        | query | string | true     | The Registration Flow ID |
 
 ##### Detailed descriptions
 
@@ -4957,13 +4914,13 @@ application (e.g. `/registration?flow=abcde`).
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|registrationFlow|[registrationFlow](#schemaregistrationflow)|
-|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|genericError|[genericError](#schemagenericerror)|
-|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|genericError|[genericError](#schemagenericerror)|
-|410|[Gone](https://tools.ietf.org/html/rfc7231#section-6.5.9)|genericError|[genericError](#schemagenericerror)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status | Meaning                                                                    | Description      | Schema                                      |
+| ------ | -------------------------------------------------------------------------- | ---------------- | ------------------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | registrationFlow | [registrationFlow](#schemaregistrationflow) |
+| 403    | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | genericError     | [genericError](#schemagenericerror)         |
+| 404    | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError     | [genericError](#schemagenericerror)         |
+| 410    | [Gone](https://tools.ietf.org/html/rfc7231#section-6.5.9)                  | genericError     | [genericError](#schemagenericerror)         |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError     | [genericError](#schemagenericerror)         |
 
 ##### Examples
 
@@ -5092,9 +5049,7 @@ application (e.g. `/registration?flow=abcde`).
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -5120,7 +5075,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
     }
 
@@ -5140,20 +5095,20 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json'
+  Accept: 'application/json'
 }
 
 fetch('/self-service/registration/flows?id=string', {
   method: 'GET',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -5256,17 +5211,16 @@ More information can be found at [ORY Kratos User Login and User Registration Do
 
 ```yaml
 {}
-
 ```
 
 <a id="complete-registration-flow-with-username/email-password-method-parameters"></a>
 
 #### Parameters
 
-|Parameter|In|Type|Required|Description|
-|---|---|---|---|---|
-|flow|query|string|false|Flow is flow ID.|
-|body|body|object|false|none|
+| Parameter | In    | Type   | Required | Description      |
+| --------- | ----- | ------ | -------- | ---------------- |
+| flow      | query | string | false    | Flow is flow ID. |
+| body      | body  | object | false    | none             |
 
 #### Responses
 
@@ -5274,13 +5228,13 @@ More information can be found at [ORY Kratos User Login and User Registration Do
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|registrationViaApiResponse|[registrationViaApiResponse](#schemaregistrationviaapiresponse)|
-|302|[Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)|Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-typically 201.|None|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|registrationFlow|[registrationFlow](#schemaregistrationflow)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                                                          |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| 200            | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | registrationViaApiResponse                                                                                     | [registrationViaApiResponse](#schemaregistrationviaapiresponse) |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 400            | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | registrationFlow                                                                                               | [registrationFlow](#schemaregistrationflow)                     |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror)                             |
 
 ##### Examples
 
@@ -5345,9 +5299,7 @@ typically 201.|None|
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -5373,7 +5325,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Content-Type": []string{"application/json"},
         "Accept": []string{"application/json"},
     }
@@ -5394,10 +5346,11 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
-const input = '{}';
+const fetch = require('node-fetch')
+const input = '{}'
 const headers = {
-  'Content-Type': 'application/json',  'Accept': 'application/json'
+  'Content-Type': 'application/json',
+  Accept: 'application/json'
 }
 
 fetch('/self-service/registration/methods/password', {
@@ -5405,10 +5358,10 @@ fetch('/self-service/registration/methods/password', {
   body: input,
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -5510,11 +5463,11 @@ More information can be found at [ORY Kratos User Settings & Profile Management 
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|settingsFlow|[settingsFlow](#schemasettingsflow)|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|genericError|[genericError](#schemagenericerror)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status | Meaning                                                                    | Description  | Schema                              |
+| ------ | -------------------------------------------------------------------------- | ------------ | ----------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | settingsFlow | [settingsFlow](#schemasettingsflow) |
+| 400    | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | genericError | [genericError](#schemagenericerror) |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -5632,8 +5585,8 @@ More information can be found at [ORY Kratos User Settings & Profile Management 
 ```
 
 <aside class="warning">
-To perform this operation, you must be authenticated by means of one of the following methods:
-sessionToken
+  To perform this operation, you must be authenticated by means of one of the
+  following methods: sessionToken
 </aside>
 
 #### Code samples
@@ -5660,7 +5613,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
         "Authorization": []string{"API_KEY"},
     }
@@ -5681,20 +5634,21 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json',  'Authorization': 'API_KEY'
+  Accept: 'application/json',
+  Authorization: 'API_KEY'
 }
 
 fetch('/self-service/settings/api', {
   method: 'GET',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -5791,11 +5745,11 @@ More information can be found at [ORY Kratos User Settings & Profile Management 
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|302|[Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)|Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-typically 201.|None|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -5816,8 +5770,8 @@ typically 201.|None|
 ```
 
 <aside class="warning">
-To perform this operation, you must be authenticated by means of one of the following methods:
-sessionToken
+  To perform this operation, you must be authenticated by means of one of the
+  following methods: sessionToken
 </aside>
 
 #### Code samples
@@ -5844,7 +5798,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
         "Authorization": []string{"API_KEY"},
     }
@@ -5865,20 +5819,21 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json',  'Authorization': 'API_KEY'
+  Accept: 'application/json',
+  Authorization: 'API_KEY'
 }
 
 fetch('/self-service/settings/browser/flows', {
   method: 'GET',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -5969,9 +5924,9 @@ More information can be found at [ORY Kratos User Settings & Profile Management 
 
 #### Parameters
 
-|Parameter|In|Type|Required|Description|
-|---|---|---|---|---|
-|id|query|string|true|ID is the Settings Flow ID|
+| Parameter | In    | Type   | Required | Description                |
+| --------- | ----- | ------ | -------- | -------------------------- |
+| id        | query | string | true     | ID is the Settings Flow ID |
 
 ##### Detailed descriptions
 
@@ -5986,13 +5941,13 @@ application (e.g. `/settings?flow=abcde`).
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|settingsFlow|[settingsFlow](#schemasettingsflow)|
-|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|genericError|[genericError](#schemagenericerror)|
-|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|genericError|[genericError](#schemagenericerror)|
-|410|[Gone](https://tools.ietf.org/html/rfc7231#section-6.5.9)|genericError|[genericError](#schemagenericerror)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status | Meaning                                                                    | Description  | Schema                              |
+| ------ | -------------------------------------------------------------------------- | ------------ | ----------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | settingsFlow | [settingsFlow](#schemasettingsflow) |
+| 403    | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | genericError | [genericError](#schemagenericerror) |
+| 404    | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError | [genericError](#schemagenericerror) |
+| 410    | [Gone](https://tools.ietf.org/html/rfc7231#section-6.5.9)                  | genericError | [genericError](#schemagenericerror) |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -6110,8 +6065,8 @@ application (e.g. `/settings?flow=abcde`).
 ```
 
 <aside class="warning">
-To perform this operation, you must be authenticated by means of one of the following methods:
-sessionToken
+  To perform this operation, you must be authenticated by means of one of the
+  following methods: sessionToken
 </aside>
 
 #### Code samples
@@ -6138,7 +6093,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
         "Authorization": []string{"API_KEY"},
     }
@@ -6159,20 +6114,21 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json',  'Authorization': 'API_KEY'
+  Accept: 'application/json',
+  Authorization: 'API_KEY'
 }
 
 fetch('/self-service/settings/flows?id=string', {
   method: 'GET',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -6284,17 +6240,16 @@ More information can be found at [ORY Kratos User Settings & Profile Management 
 ```yaml
 csrf_token: string
 password: string
-
 ```
 
 <a id="complete-settings-flow-with-username/email-password-method-parameters"></a>
 
 #### Parameters
 
-|Parameter|In|Type|Required|Description|
-|---|---|---|---|---|
-|flow|query|string|false|Flow is flow ID.|
-|body|body|[CompleteSelfServiceSettingsFlowWithPasswordMethod](#schemacompleteselfservicesettingsflowwithpasswordmethod)|false|none|
+| Parameter | In    | Type                                                                                                          | Required | Description      |
+| --------- | ----- | ------------------------------------------------------------------------------------------------------------- | -------- | ---------------- |
+| flow      | query | string                                                                                                        | false    | Flow is flow ID. |
+| body      | body  | [CompleteSelfServiceSettingsFlowWithPasswordMethod](#schemacompleteselfservicesettingsflowwithpasswordmethod) | false    | none             |
 
 #### Responses
 
@@ -6302,15 +6257,15 @@ password: string
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|settingsViaApiResponse|[settingsViaApiResponse](#schemasettingsviaapiresponse)|
-|302|[Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)|Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-typically 201.|None|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|settingsFlow|[settingsFlow](#schemasettingsflow)|
-|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|genericError|[genericError](#schemagenericerror)|
-|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|genericError|[genericError](#schemagenericerror)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                                                  |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| 200            | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | settingsViaApiResponse                                                                                         | [settingsViaApiResponse](#schemasettingsviaapiresponse) |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 400            | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | settingsFlow                                                                                                   | [settingsFlow](#schemasettingsflow)                     |
+| 401            | [Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)            | genericError                                                                                                   | [genericError](#schemagenericerror)                     |
+| 403            | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | genericError                                                                                                   | [genericError](#schemagenericerror)                     |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror)                     |
 
 ##### Examples
 
@@ -6453,8 +6408,8 @@ typically 201.|None|
 ```
 
 <aside class="warning">
-To perform this operation, you must be authenticated by means of one of the following methods:
-sessionToken
+  To perform this operation, you must be authenticated by means of one of the
+  following methods: sessionToken
 </aside>
 
 #### Code samples
@@ -6481,7 +6436,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Content-Type": []string{"application/json"},
         "Accept": []string{"application/json"},
         "Authorization": []string{"API_KEY"},
@@ -6625,15 +6580,15 @@ More information can be found at [ORY Kratos User Settings & Profile Management 
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|settingsFlow|[settingsFlow](#schemasettingsflow)|
-|302|[Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)|Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-typically 201.|None|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|settingsFlow|[settingsFlow](#schemasettingsflow)|
-|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|genericError|[genericError](#schemagenericerror)|
-|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|genericError|[genericError](#schemagenericerror)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 200            | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | settingsFlow                                                                                                   | [settingsFlow](#schemasettingsflow) |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 400            | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | settingsFlow                                                                                                   | [settingsFlow](#schemasettingsflow) |
+| 401            | [Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)            | genericError                                                                                                   | [genericError](#schemagenericerror) |
+| 403            | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | genericError                                                                                                   | [genericError](#schemagenericerror) |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -6751,8 +6706,8 @@ typically 201.|None|
 ```
 
 <aside class="warning">
-To perform this operation, you must be authenticated by means of one of the following methods:
-sessionToken
+  To perform this operation, you must be authenticated by means of one of the
+  following methods: sessionToken
 </aside>
 
 #### Code samples
@@ -6779,7 +6734,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
         "Authorization": []string{"API_KEY"},
     }
@@ -6800,20 +6755,21 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json',  'Authorization': 'API_KEY'
+  Accept: 'application/json',
+  Authorization: 'API_KEY'
 }
 
 fetch('/self-service/settings/methods/profile', {
   method: 'POST',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -6914,11 +6870,11 @@ More information can be found at [ORY Kratos Email and Phone Verification Docume
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|verificationFlow|[verificationFlow](#schemaverificationflow)|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|genericError|[genericError](#schemagenericerror)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status | Meaning                                                                    | Description      | Schema                                      |
+| ------ | -------------------------------------------------------------------------- | ---------------- | ------------------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | verificationFlow | [verificationFlow](#schemaverificationflow) |
+| 400    | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | genericError     | [genericError](#schemagenericerror)         |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError     | [genericError](#schemagenericerror)         |
 
 ##### Examples
 
@@ -7012,9 +6968,7 @@ More information can be found at [ORY Kratos Email and Phone Verification Docume
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -7040,7 +6994,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
     }
 
@@ -7060,20 +7014,20 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json'
+  Accept: 'application/json'
 }
 
 fetch('/self-service/verification/api', {
   method: 'GET',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -7163,11 +7117,11 @@ More information can be found at [ORY Kratos Email and Phone Verification Docume
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|302|[Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)|Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-typically 201.|None|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -7187,9 +7141,7 @@ typically 201.|None|
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -7215,7 +7167,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
     }
 
@@ -7235,20 +7187,20 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json'
+  Accept: 'application/json'
 }
 
 fetch('/self-service/verification/browser', {
   method: 'GET',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -7333,9 +7285,9 @@ More information can be found at [ORY Kratos Email and Phone Verification Docume
 
 #### Parameters
 
-|Parameter|In|Type|Required|Description|
-|---|---|---|---|---|
-|id|query|string|true|The Flow ID|
+| Parameter | In    | Type   | Required | Description |
+| --------- | ----- | ------ | -------- | ----------- |
+| id        | query | string | true     | The Flow ID |
 
 ##### Detailed descriptions
 
@@ -7350,12 +7302,12 @@ application (e.g. `/verification?flow=abcde`).
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|verificationFlow|[verificationFlow](#schemaverificationflow)|
-|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|genericError|[genericError](#schemagenericerror)|
-|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|genericError|[genericError](#schemagenericerror)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status | Meaning                                                                    | Description      | Schema                                      |
+| ------ | -------------------------------------------------------------------------- | ---------------- | ------------------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | verificationFlow | [verificationFlow](#schemaverificationflow) |
+| 403    | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | genericError     | [genericError](#schemagenericerror)         |
+| 404    | [Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)             | genericError     | [genericError](#schemagenericerror)         |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError     | [genericError](#schemagenericerror)         |
 
 ##### Examples
 
@@ -7449,9 +7401,7 @@ application (e.g. `/verification?flow=abcde`).
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -7477,7 +7427,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
     }
 
@@ -7497,20 +7447,20 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json'
+  Accept: 'application/json'
 }
 
 fetch('/self-service/verification/flows?id=string', {
   method: 'GET',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -7619,18 +7569,17 @@ More information can be found at [ORY Kratos Email and Phone Verification Docume
 ```yaml
 csrf_token: string
 email: string
-
 ```
 
 <a id="complete-verification-flow-with-link-method-parameters"></a>
 
 #### Parameters
 
-|Parameter|In|Type|Required|Description|
-|---|---|---|---|---|
-|token|query|string|false|Verification Token|
-|flow|query|string|false|The Flow ID|
-|body|body|[completeSelfServiceVerificationFlowWithLinkMethod](#schemacompleteselfserviceverificationflowwithlinkmethod)|false|none|
+| Parameter | In    | Type                                                                                                          | Required | Description        |
+| --------- | ----- | ------------------------------------------------------------------------------------------------------------- | -------- | ------------------ |
+| token     | query | string                                                                                                        | false    | Verification Token |
+| flow      | query | string                                                                                                        | false    | The Flow ID        |
+| body      | body  | [completeSelfServiceVerificationFlowWithLinkMethod](#schemacompleteselfserviceverificationflowwithlinkmethod) | false    | none               |
 
 ##### Detailed descriptions
 
@@ -7649,12 +7598,12 @@ format: uuid
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|302|[Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)|Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-typically 201.|None|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|verificationFlow|[verificationFlow](#schemaverificationflow)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                                      |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| 302            | [Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)                 | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 400            | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | verificationFlow                                                                                               | [verificationFlow](#schemaverificationflow) |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror)         |
 
 ##### Examples
 
@@ -7748,9 +7697,7 @@ typically 201.|None|
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -7776,7 +7723,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Content-Type": []string{"application/json"},
         "Accept": []string{"application/json"},
     }
@@ -7911,9 +7858,9 @@ This endpoint does not remove any HTTP Cookies - use the Self-Service Logout Flo
 
 #### Parameters
 
-|Parameter|In|Type|Required|Description|
-|---|---|---|---|---|
-|body|body|[revokeSession](#schemarevokesession)|true|none|
+| Parameter | In   | Type                                  | Required | Description |
+| --------- | ---- | ------------------------------------- | -------- | ----------- |
+| body      | body | [revokeSession](#schemarevokesession) | true     | none        |
 
 #### Responses
 
@@ -7921,12 +7868,12 @@ This endpoint does not remove any HTTP Cookies - use the Self-Service Logout Flo
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|204|[No Content](https://tools.ietf.org/html/rfc7231#section-6.3.5)|Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
-typically 201.|None|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|genericError|[genericError](#schemagenericerror)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status         | Meaning                                                                    | Description                                                                                                    | Schema                              |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 204            | [No Content](https://tools.ietf.org/html/rfc7231#section-6.3.5)            | Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is |
+| typically 201. | None                                                                       |
+| 400            | [Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)           | genericError                                                                                                   | [genericError](#schemagenericerror) |
+| 500            | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError                                                                                                   | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -7946,9 +7893,7 @@ typically 201.|None|
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -7974,7 +7919,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Content-Type": []string{"application/json"},
         "Accept": []string{"application/json"},
     }
@@ -8101,10 +8046,10 @@ This endpoint is useful for reverse proxies and API Gateways.
 
 #### Parameters
 
-|Parameter|In|Type|Required|Description|
-|---|---|---|---|---|
-|Cookie|header|string|false|none|
-|Authorization|query|string|false|in: authorization|
+| Parameter     | In     | Type   | Required | Description       |
+| ------------- | ------ | ------ | -------- | ----------------- |
+| Cookie        | header | string | false    | none              |
+| Authorization | query  | string | false    | in: authorization |
 
 #### Responses
 
@@ -8112,11 +8057,11 @@ This endpoint is useful for reverse proxies and API Gateways.
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|session|[session](#schemasession)|
-|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|genericError|[genericError](#schemagenericerror)|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|genericError|[genericError](#schemagenericerror)|
+| Status | Meaning                                                                    | Description  | Schema                              |
+| ------ | -------------------------------------------------------------------------- | ------------ | ----------------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)                    | session      | [session](#schemasession)           |
+| 403    | [Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)             | genericError | [genericError](#schemagenericerror) |
+| 500    | [Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1) | genericError | [genericError](#schemagenericerror) |
 
 ##### Examples
 
@@ -8156,8 +8101,8 @@ This endpoint is useful for reverse proxies and API Gateways.
 ```
 
 <aside class="warning">
-To perform this operation, you must be authenticated by means of one of the following methods:
-sessionToken
+  To perform this operation, you must be authenticated by means of one of the
+  following methods: sessionToken
 </aside>
 
 #### Code samples
@@ -8184,7 +8129,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
         "Cookie": []string{"string"},
         "Authorization": []string{"API_KEY"},
@@ -8206,20 +8151,22 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json',  'Cookie': 'string',  'Authorization': 'API_KEY'
+  Accept: 'application/json',
+  Cookie: 'string',
+  Authorization: 'API_KEY'
 }
 
 fetch('/sessions/whoami', {
   method: 'GET',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -8318,9 +8265,9 @@ refer to the cluster state, only to a single instance.
 
 ##### Overview
 
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|version|[version](#schemaversion)|
+| Status | Meaning                                                 | Description | Schema                    |
+| ------ | ------------------------------------------------------- | ----------- | ------------------------- |
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1) | version     | [version](#schemaversion) |
 
 ##### Examples
 
@@ -8332,9 +8279,7 @@ refer to the cluster state, only to a single instance.
 }
 ```
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+<aside class="success">This operation does not require authentication</aside>
 
 #### Code samples
 
@@ -8360,7 +8305,7 @@ import (
 )
 
 func main() {
-    headers := map[string][]string{ 
+    headers := map[string][]string{
         "Accept": []string{"application/json"},
     }
 
@@ -8380,20 +8325,20 @@ func main() {
 <TabItem value="node">
 
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 const headers = {
-  'Accept': 'application/json'
+  Accept: 'application/json'
 }
 
 fetch('/version', {
   method: 'GET',
   headers
 })
-.then(r => r.json())
-.then((body) => {
+  .then((r) => r.json())
+  .then((body) => {
     console.log(body)
-})
+  })
 ```
 
 </TabItem>
@@ -8473,15 +8418,14 @@ p JSON.parse(result)
   "csrf_token": "string",
   "password": "string"
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|csrf_token|string|false|none|CSRFToken is the anti-CSRF token<br/><br/>type: string|
-|password|string|true|none|Password is the updated password<br/><br/>type: string|
+| Name       | Type   | Required | Restrictions | Description                                            |
+| ---------- | ------ | -------- | ------------ | ------------------------------------------------------ |
+| csrf_token | string | false    | none         | CSRFToken is the anti-CSRF token<br/><br/>type: string |
+| password   | string | true     | none         | Password is the updated password<br/><br/>type: string |
 
 <a id="tocScreateidentity"></a>
 
@@ -8494,15 +8438,14 @@ p JSON.parse(result)
   "schema_id": "string",
   "traits": {}
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|schema_id|string|true|none|SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.|
-|traits|object|true|none|Traits represent an identity's traits. The identity is able to create, modify, and delete traits<br/>in a self-service manner. The input will always be validated against the JSON Schema defined<br/>in `schema_url`.|
+| Name      | Type   | Required | Restrictions | Description                                                                                                                                                                                                            |
+| --------- | ------ | -------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| schema_id | string | true     | none         | SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.                                                                                                                                 |
+| traits    | object | true     | none         | Traits represent an identity's traits. The identity is able to create, modify, and delete traits<br/>in a self-service manner. The input will always be validated against the JSON Schema defined<br/>in `schema_url`. |
 
 <a id="tocScreaterecoverylink"></a>
 
@@ -8515,15 +8458,14 @@ p JSON.parse(result)
   "expires_in": "string",
   "identity_id": "string"
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|expires_in|string|false|none|Link Expires In<br/><br/>The recovery link will expire at that point in time. Defaults to the configuration value of<br/>`selfservice.flows.recovery.request_lifespan`.|
-|identity_id|[UUID](#schemauuid)|true|none|none|
+| Name        | Type                | Required | Restrictions | Description                                                                                                                                                             |
+| ----------- | ------------------- | -------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| expires_in  | string              | false    | none         | Link Expires In<br/><br/>The recovery link will expire at that point in time. Defaults to the configuration value of<br/>`selfservice.flows.recovery.request_lifespan`. |
+| identity_id | [UUID](#schemauuid) | true     | none         | none                                                                                                                                                                    |
 
 <a id="tocScredentialstype"></a>
 
@@ -8533,16 +8475,15 @@ p JSON.parse(result)
 
 ```json
 "string"
-
 ```
 
-*CredentialsType  represents several different credential types, like password credentials, passwordless credentials,*
+_CredentialsType represents several different credential types, like password credentials, passwordless credentials,_
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|CredentialsType  represents several different credential types, like password credentials, passwordless credentials,|string|false|none|and so on.|
+| Name                                                                                                                | Type   | Required | Restrictions | Description |
+| ------------------------------------------------------------------------------------------------------------------- | ------ | -------- | ------------ | ----------- |
+| CredentialsType represents several different credential types, like password credentials, passwordless credentials, | string | false    | none         | and so on.  |
 
 <a id="tocSflowmethodconfig"></a>
 
@@ -8581,17 +8522,16 @@ p JSON.parse(result)
   ],
   "method": "string"
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|action|string|true|none|Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`.|
-|fields|[formFields](#schemaformfields)|true|none|Fields contains multiple fields|
-|messages|[Messages](#schemamessages)|false|none|none|
-|method|string|true|none|Method is the form method (e.g. POST)|
+| Name     | Type                            | Required | Restrictions | Description                                                                                 |
+| -------- | ------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------- |
+| action   | string                          | true     | none         | Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`. |
+| fields   | [formFields](#schemaformfields) | true     | none         | Fields contains multiple fields                                                             |
+| messages | [Messages](#schemamessages)     | false    | none         | none                                                                                        |
+| method   | string                          | true     | none         | Method is the form method (e.g. POST)                                                       |
 
 <a id="tocSid"></a>
 
@@ -8601,14 +8541,13 @@ p JSON.parse(result)
 
 ```json
 0
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|*anonymous*|integer(int64)|false|none|none|
+| Name        | Type           | Required | Restrictions | Description |
+| ----------- | -------------- | -------- | ------------ | ----------- |
+| _anonymous_ | integer(int64) | false    | none         | none        |
 
 <a id="tocSidentity"></a>
 
@@ -8640,19 +8579,18 @@ p JSON.parse(result)
     }
   ]
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|id|[UUID](#schemauuid)|true|none|none|
-|recovery_addresses|[[RecoveryAddress](#schemarecoveryaddress)]|false|none|RecoveryAddresses contains all the addresses that can be used to recover an identity.|
-|schema_id|string|true|none|SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.|
-|schema_url|string|false|none|SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.<br/><br/>format: url|
-|traits|[Traits](#schematraits)|true|none|none|
-|verifiable_addresses|[[VerifiableAddress](#schemaverifiableaddress)]|false|none|VerifiableAddresses contains all the addresses that can be verified by the user.|
+| Name                 | Type                                            | Required | Restrictions | Description                                                                                                       |
+| -------------------- | ----------------------------------------------- | -------- | ------------ | ----------------------------------------------------------------------------------------------------------------- |
+| id                   | [UUID](#schemauuid)                             | true     | none         | none                                                                                                              |
+| recovery_addresses   | [[RecoveryAddress](#schemarecoveryaddress)]     | false    | none         | RecoveryAddresses contains all the addresses that can be used to recover an identity.                             |
+| schema_id            | string                                          | true     | none         | SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.                            |
+| schema_url           | string                                          | false    | none         | SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.<br/><br/>format: url |
+| traits               | [Traits](#schematraits)                         | true     | none         | none                                                                                                              |
+| verifiable_addresses | [[VerifiableAddress](#schemaverifiableaddress)] | false    | none         | VerifiableAddresses contains all the addresses that can be verified by the user.                                  |
 
 <a id="tocSmessage"></a>
 
@@ -8667,17 +8605,16 @@ p JSON.parse(result)
   "text": "string",
   "type": "string"
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|context|object|false|none|none|
-|id|[ID](#schemaid)|false|none|none|
-|text|string|false|none|none|
-|type|[Type](#schematype)|false|none|The flow type can either be `api` or `browser`.|
+| Name    | Type                | Required | Restrictions | Description                                     |
+| ------- | ------------------- | -------- | ------------ | ----------------------------------------------- |
+| context | object              | false    | none         | none                                            |
+| id      | [ID](#schemaid)     | false    | none         | none                                            |
+| text    | string              | false    | none         | none                                            |
+| type    | [Type](#schematype) | false    | none         | The flow type can either be `api` or `browser`. |
 
 <a id="tocSmessages"></a>
 
@@ -8694,14 +8631,13 @@ p JSON.parse(result)
     "type": "string"
   }
 ]
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|*anonymous*|[[Message](#schemamessage)]|false|none|none|
+| Name        | Type                        | Required | Restrictions | Description |
+| ----------- | --------------------------- | -------- | ------------ | ----------- |
+| _anonymous_ | [[Message](#schemamessage)] | false    | none         | none        |
 
 <a id="tocSnulltime"></a>
 
@@ -8711,16 +8647,15 @@ p JSON.parse(result)
 
 ```json
 "2019-08-24T14:15:22Z"
-
 ```
 
-*NullTime implements sql.NullTime functionality.*
+_NullTime implements sql.NullTime functionality._
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|NullTime implements sql.NullTime functionality.|string(date-time)|false|none|none|
+| Name                                            | Type              | Required | Restrictions | Description |
+| ----------------------------------------------- | ----------------- | -------- | ------------ | ----------- |
+| NullTime implements sql.NullTime functionality. | string(date-time) | false    | none         | none        |
 
 <a id="tocSrecoveryaddress"></a>
 
@@ -8734,16 +8669,15 @@ p JSON.parse(result)
   "value": "string",
   "via": "string"
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|id|[UUID](#schemauuid)|true|none|none|
-|value|string|true|none|none|
-|via|[RecoveryAddressType](#schemarecoveryaddresstype)|true|none|none|
+| Name  | Type                                              | Required | Restrictions | Description |
+| ----- | ------------------------------------------------- | -------- | ------------ | ----------- |
+| id    | [UUID](#schemauuid)                               | true     | none         | none        |
+| value | string                                            | true     | none         | none        |
+| via   | [RecoveryAddressType](#schemarecoveryaddresstype) | true     | none         | none        |
 
 <a id="tocSrecoveryaddresstype"></a>
 
@@ -8753,14 +8687,13 @@ p JSON.parse(result)
 
 ```json
 "string"
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|*anonymous*|string|false|none|none|
+| Name        | Type   | Required | Restrictions | Description |
+| ----------- | ------ | -------- | ------------ | ----------- |
+| _anonymous_ | string | false    | none         | none        |
 
 <a id="tocSstate"></a>
 
@@ -8770,14 +8703,13 @@ p JSON.parse(result)
 
 ```json
 "string"
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|*anonymous*|string|false|none|none|
+| Name        | Type   | Required | Restrictions | Description |
+| ----------- | ------ | -------- | ------------ | ----------- |
+| _anonymous_ | string | false    | none         | none        |
 
 <a id="tocStraits"></a>
 
@@ -8787,12 +8719,11 @@ p JSON.parse(result)
 
 ```json
 {}
-
 ```
 
 #### Properties
 
-*None*
+_None_
 
 <a id="tocStype"></a>
 
@@ -8802,16 +8733,15 @@ p JSON.parse(result)
 
 ```json
 "string"
-
 ```
 
-*Type is the flow type.*
+_Type is the flow type._
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|Type is the flow type.|string|false|none|The flow type can either be `api` or `browser`.|
+| Name                   | Type   | Required | Restrictions | Description                                     |
+| ---------------------- | ------ | -------- | ------------ | ----------------------------------------------- |
+| Type is the flow type. | string | false    | none         | The flow type can either be `api` or `browser`. |
 
 <a id="tocSuuid"></a>
 
@@ -8821,14 +8751,13 @@ p JSON.parse(result)
 
 ```json
 "string"
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|*anonymous*|string(uuid4)|false|none|none|
+| Name        | Type          | Required | Restrictions | Description |
+| ----------- | ------------- | -------- | ------------ | ----------- |
+| _anonymous_ | string(uuid4) | false    | none         | none        |
 
 <a id="tocSupdateidentity"></a>
 
@@ -8841,15 +8770,14 @@ p JSON.parse(result)
   "schema_id": "string",
   "traits": {}
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|schema_id|string|false|none|SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set<br/>will update the Identity's SchemaID.|
-|traits|object|true|none|Traits represent an identity's traits. The identity is able to create, modify, and delete traits<br/>in a self-service manner. The input will always be validated against the JSON Schema defined<br/>in `schema_id`.|
+| Name      | Type   | Required | Restrictions | Description                                                                                                                                                                                                           |
+| --------- | ------ | -------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| schema_id | string | false    | none         | SchemaID is the ID of the JSON Schema to be used for validating the identity's traits. If set<br/>will update the Identity's SchemaID.                                                                                |
+| traits    | object | true     | none         | Traits represent an identity's traits. The identity is able to create, modify, and delete traits<br/>in a self-service manner. The input will always be validated against the JSON Schema defined<br/>in `schema_id`. |
 
 <a id="tocSverifiableaddress"></a>
 
@@ -8866,19 +8794,18 @@ p JSON.parse(result)
   "verified_at": "2019-08-24T14:15:22Z",
   "via": "string"
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|id|[UUID](#schemauuid)|true|none|none|
-|status|[VerifiableAddressStatus](#schemaverifiableaddressstatus)|true|none|none|
-|value|string|true|none|none|
-|verified|boolean|true|none|none|
-|verified_at|[NullTime](#schemanulltime)|false|none|none|
-|via|[VerifiableAddressType](#schemaverifiableaddresstype)|true|none|none|
+| Name        | Type                                                      | Required | Restrictions | Description |
+| ----------- | --------------------------------------------------------- | -------- | ------------ | ----------- |
+| id          | [UUID](#schemauuid)                                       | true     | none         | none        |
+| status      | [VerifiableAddressStatus](#schemaverifiableaddressstatus) | true     | none         | none        |
+| value       | string                                                    | true     | none         | none        |
+| verified    | boolean                                                   | true     | none         | none        |
+| verified_at | [NullTime](#schemanulltime)                               | false    | none         | none        |
+| via         | [VerifiableAddressType](#schemaverifiableaddresstype)     | true     | none         | none        |
 
 <a id="tocSverifiableaddressstatus"></a>
 
@@ -8888,14 +8815,13 @@ p JSON.parse(result)
 
 ```json
 "string"
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|*anonymous*|string|false|none|none|
+| Name        | Type   | Required | Restrictions | Description |
+| ----------- | ------ | -------- | ------------ | ----------- |
+| _anonymous_ | string | false    | none         | none        |
 
 <a id="tocSverifiableaddresstype"></a>
 
@@ -8905,14 +8831,13 @@ p JSON.parse(result)
 
 ```json
 "string"
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|*anonymous*|string|false|none|none|
+| Name        | Type   | Required | Restrictions | Description |
+| ----------- | ------ | -------- | ------------ | ----------- |
+| _anonymous_ | string | false    | none         | none        |
 
 <a id="tocScompleteselfservicerecoveryflowwithlinkmethod"></a>
 
@@ -8925,15 +8850,14 @@ p JSON.parse(result)
   "csrf_token": "string",
   "email": "string"
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|csrf_token|string|false|none|Sending the anti-csrf token is only required for browser login flows.|
-|email|string|false|none|Email to Recover<br/><br/>Needs to be set when initiating the flow. If the email is a registered<br/>recovery email, a recovery link will be sent. If the email is not known,<br/>a email with details on what happened will be sent instead.<br/><br/>format: email<br/>in: body|
+| Name       | Type   | Required | Restrictions | Description                                                                                                                                                                                                                                                                       |
+| ---------- | ------ | -------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| csrf_token | string | false    | none         | Sending the anti-csrf token is only required for browser login flows.                                                                                                                                                                                                             |
+| email      | string | false    | none         | Email to Recover<br/><br/>Needs to be set when initiating the flow. If the email is a registered<br/>recovery email, a recovery link will be sent. If the email is not known,<br/>a email with details on what happened will be sent instead.<br/><br/>format: email<br/>in: body |
 
 <a id="tocScompleteselfserviceverificationflowwithlinkmethod"></a>
 
@@ -8946,15 +8870,14 @@ p JSON.parse(result)
   "csrf_token": "string",
   "email": "string"
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|csrf_token|string|false|none|Sending the anti-csrf token is only required for browser login flows.|
-|email|string|false|none|Email to Verify<br/><br/>Needs to be set when initiating the flow. If the email is a registered<br/>verification email, a verification link will be sent. If the email is not known,<br/>a email with details on what happened will be sent instead.<br/><br/>format: email<br/>in: body|
+| Name       | Type   | Required | Restrictions | Description                                                                                                                                                                                                                                                                              |
+| ---------- | ------ | -------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| csrf_token | string | false    | none         | Sending the anti-csrf token is only required for browser login flows.                                                                                                                                                                                                                    |
+| email      | string | false    | none         | Email to Verify<br/><br/>Needs to be set when initiating the flow. If the email is a registered<br/>verification email, a verification link will be sent. If the email is not known,<br/>a email with details on what happened will be sent instead.<br/><br/>format: email<br/>in: body |
 
 <a id="tocSerrorcontainer"></a>
 
@@ -8967,15 +8890,14 @@ p JSON.parse(result)
   "errors": {},
   "id": "string"
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|errors|object|true|none|Errors in the container|
-|id|[UUID](#schemauuid)|true|none|none|
+| Name   | Type                | Required | Restrictions | Description             |
+| ------ | ------------------- | -------- | ------------ | ----------------------- |
+| errors | object              | true     | none         | Errors in the container |
+| id     | [UUID](#schemauuid) | true     | none         | none                    |
 
 <a id="tocSformfield"></a>
 
@@ -9000,22 +8922,21 @@ p JSON.parse(result)
   "type": "string",
   "value": {}
 }
-
 ```
 
-*Field represents a HTML Form Field*
+_Field represents a HTML Form Field_
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|disabled|boolean|false|none|Disabled is the equivalent of `<input {{if .Disabled}}disabled{{end}}">`|
-|messages|[Messages](#schemamessages)|false|none|none|
-|name|string|true|none|Name is the equivalent of `<input name="{{.Name}}">`|
-|pattern|string|false|none|Pattern is the equivalent of `<input pattern="{{.Pattern}}">`|
-|required|boolean|false|none|Required is the equivalent of `<input required="{{.Required}}">`|
-|type|string|true|none|Type is the equivalent of `<input type="{{.Type}}">`|
-|value|object|false|none|Value is the equivalent of `<input value="{{.Value}}">`|
+| Name     | Type                        | Required | Restrictions | Description                                                              |
+| -------- | --------------------------- | -------- | ------------ | ------------------------------------------------------------------------ |
+| disabled | boolean                     | false    | none         | Disabled is the equivalent of `<input {{if .Disabled}}disabled{{end}}">` |
+| messages | [Messages](#schemamessages) | false    | none         | none                                                                     |
+| name     | string                      | true     | none         | Name is the equivalent of `<input name="{{.Name}}">`                     |
+| pattern  | string                      | false    | none         | Pattern is the equivalent of `<input pattern="{{.Pattern}}">`            |
+| required | boolean                     | false    | none         | Required is the equivalent of `<input required="{{.Required}}">`         |
+| type     | string                      | true     | none         | Type is the equivalent of `<input type="{{.Type}}">`                     |
+| value    | object                      | false    | none         | Value is the equivalent of `<input value="{{.Value}}">`                  |
 
 <a id="tocSformfields"></a>
 
@@ -9042,16 +8963,15 @@ p JSON.parse(result)
     "value": {}
   }
 ]
-
 ```
 
-*Fields contains multiple fields*
+_Fields contains multiple fields_
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|*anonymous*|[[formField](#schemaformfield)]|false|none|Fields contains multiple fields|
+| Name        | Type                            | Required | Restrictions | Description                     |
+| ----------- | ------------------------------- | -------- | ------------ | ------------------------------- |
+| _anonymous_ | [[formField](#schemaformfield)] | false    | none         | Fields contains multiple fields |
 
 <a id="tocSgenericerror"></a>
 
@@ -9071,16 +8991,15 @@ p JSON.parse(result)
     "status": "string"
   }
 }
-
 ```
 
-*Error response*
+_Error response_
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|error|[genericErrorPayload](#schemagenericerrorpayload)|false|none|none|
+| Name  | Type                                              | Required | Restrictions | Description |
+| ----- | ------------------------------------------------- | -------- | ------------ | ----------- |
+| error | [genericErrorPayload](#schemagenericerrorpayload) | false    | none         | none        |
 
 <a id="tocSgenericerrorpayload"></a>
 
@@ -9098,20 +9017,19 @@ p JSON.parse(result)
   "request": "string",
   "status": "string"
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|code|integer(int64)|false|none|Code represents the error status code (404, 403, 401, ...).|
-|debug|string|false|none|Debug contains debug information. This is usually not available and has to be enabled.|
-|details|object|false|none|none|
-|message|string|false|none|none|
-|reason|string|false|none|none|
-|request|string|false|none|none|
-|status|string|false|none|none|
+| Name    | Type           | Required | Restrictions | Description                                                                            |
+| ------- | -------------- | -------- | ------------ | -------------------------------------------------------------------------------------- |
+| code    | integer(int64) | false    | none         | Code represents the error status code (404, 403, 401, ...).                            |
+| debug   | string         | false    | none         | Debug contains debug information. This is usually not available and has to be enabled. |
+| details | object         | false    | none         | none                                                                                   |
+| message | string         | false    | none         | none                                                                                   |
+| reason  | string         | false    | none         | none                                                                                   |
+| request | string         | false    | none         | none                                                                                   |
+| status  | string         | false    | none         | none                                                                                   |
 
 <a id="tocShealthnotreadystatus"></a>
 
@@ -9126,15 +9044,14 @@ p JSON.parse(result)
     "property2": "string"
   }
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|errors|object|false|none|Errors contains a list of errors that caused the not ready status.|
-|» **additionalProperties**|string|false|none|none|
+| Name                       | Type   | Required | Restrictions | Description                                                        |
+| -------------------------- | ------ | -------- | ------------ | ------------------------------------------------------------------ |
+| errors                     | object | false    | none         | Errors contains a list of errors that caused the not ready status. |
+| » **additionalProperties** | string | false    | none         | none                                                               |
 
 <a id="tocShealthstatus"></a>
 
@@ -9146,14 +9063,13 @@ p JSON.parse(result)
 {
   "status": "string"
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|status|string|false|none|Status always contains "ok".|
+| Name   | Type   | Required | Restrictions | Description                  |
+| ------ | ------ | -------- | ------------ | ---------------------------- |
+| status | string | false    | none         | Status always contains "ok". |
 
 <a id="tocSloginflow"></a>
 
@@ -9283,25 +9199,24 @@ p JSON.parse(result)
   "request_url": "string",
   "type": "string"
 }
-
 ```
 
-*Login Flow*
+_Login Flow_
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|active|[CredentialsType](#schemacredentialstype)|false|none|and so on.|
-|expires_at|string(date-time)|true|none|ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in,<br/>a new flow has to be initiated.|
-|forced|boolean|false|none|Forced stores whether this login flow should enforce re-authentication.|
-|id|[UUID](#schemauuid)|true|none|none|
-|issued_at|string(date-time)|true|none|IssuedAt is the time (UTC) when the flow started.|
-|messages|[Messages](#schemamessages)|false|none|none|
-|methods|object|true|none|List of login methods<br/><br/>This is the list of available login methods with their required form fields, such as `identifier` and `password`<br/>for the password login method. This will also contain error messages such as "password can not be empty".|
-|» **additionalProperties**|[loginFlowMethod](#schemaloginflowmethod)|false|none|none|
-|request_url|string|true|none|RequestURL is the initial URL that was requested from ORY Kratos. It can be used<br/>to forward information contained in the URL's path or query for example.|
-|type|[Type](#schematype)|false|none|The flow type can either be `api` or `browser`.|
+| Name                       | Type                                      | Required | Restrictions | Description                                                                                                                                                                                                                                                   |
+| -------------------------- | ----------------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| active                     | [CredentialsType](#schemacredentialstype) | false    | none         | and so on.                                                                                                                                                                                                                                                    |
+| expires_at                 | string(date-time)                         | true     | none         | ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in,<br/>a new flow has to be initiated.                                                                                                                                    |
+| forced                     | boolean                                   | false    | none         | Forced stores whether this login flow should enforce re-authentication.                                                                                                                                                                                       |
+| id                         | [UUID](#schemauuid)                       | true     | none         | none                                                                                                                                                                                                                                                          |
+| issued_at                  | string(date-time)                         | true     | none         | IssuedAt is the time (UTC) when the flow started.                                                                                                                                                                                                             |
+| messages                   | [Messages](#schemamessages)               | false    | none         | none                                                                                                                                                                                                                                                          |
+| methods                    | object                                    | true     | none         | List of login methods<br/><br/>This is the list of available login methods with their required form fields, such as `identifier` and `password`<br/>for the password login method. This will also contain error messages such as "password can not be empty". |
+| » **additionalProperties** | [loginFlowMethod](#schemaloginflowmethod) | false    | none         | none                                                                                                                                                                                                                                                          |
+| request_url                | string                                    | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used<br/>to forward information contained in the URL's path or query for example.                                                                                                 |
+| type                       | [Type](#schematype)                       | false    | none         | The flow type can either be `api` or `browser`.                                                                                                                                                                                                               |
 
 <a id="tocSloginflowmethod"></a>
 
@@ -9361,15 +9276,14 @@ p JSON.parse(result)
   },
   "method": "string"
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|config|[loginFlowMethodConfig](#schemaloginflowmethodconfig)|true|none|none|
-|method|[CredentialsType](#schemacredentialstype)|true|none|and so on.|
+| Name   | Type                                                  | Required | Restrictions | Description |
+| ------ | ----------------------------------------------------- | -------- | ------------ | ----------- |
+| config | [loginFlowMethodConfig](#schemaloginflowmethodconfig) | true     | none         | none        |
+| method | [CredentialsType](#schemacredentialstype)             | true     | none         | and so on.  |
 
 <a id="tocSloginflowmethodconfig"></a>
 
@@ -9426,18 +9340,17 @@ p JSON.parse(result)
     }
   ]
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|action|string|true|none|Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`.|
-|fields|[formFields](#schemaformfields)|true|none|Fields contains multiple fields|
-|messages|[Messages](#schemamessages)|false|none|none|
-|method|string|true|none|Method is the form method (e.g. POST)|
-|providers|[[formField](#schemaformfield)]|false|none|Providers is set for the "oidc" flow method.|
+| Name      | Type                            | Required | Restrictions | Description                                                                                 |
+| --------- | ------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------- |
+| action    | string                          | true     | none         | Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`. |
+| fields    | [formFields](#schemaformfields) | true     | none         | Fields contains multiple fields                                                             |
+| messages  | [Messages](#schemamessages)     | false    | none         | none                                                                                        |
+| method    | string                          | true     | none         | Method is the form method (e.g. POST)                                                       |
+| providers | [[formField](#schemaformfield)] | false    | none         | Providers is set for the "oidc" flow method.                                                |
 
 <a id="tocSloginviaapiresponse"></a>
 
@@ -9479,17 +9392,16 @@ p JSON.parse(result)
   },
   "session_token": "string"
 }
-
 ```
 
-*The Response for Login Flows via API*
+_The Response for Login Flows via API_
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|session|[session](#schemasession)|true|none|none|
-|session_token|string|true|none|The Session Token<br/><br/>A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization<br/>Header:<br/><br/>Authorization: bearer ${session-token}<br/><br/>The session token is only issued for API flows, not for Browser flows!|
+| Name          | Type                      | Required | Restrictions | Description                                                                                                                                                                                                                                                             |
+| ------------- | ------------------------- | -------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| session       | [session](#schemasession) | true     | none         | none                                                                                                                                                                                                                                                                    |
+| session_token | string                    | true     | none         | The Session Token<br/><br/>A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization<br/>Header:<br/><br/>Authorization: bearer \${session-token}<br/><br/>The session token is only issued for API flows, not for Browser flows! |
 
 <a id="tocSrecoveryflow"></a>
 
@@ -9583,25 +9495,24 @@ p JSON.parse(result)
   "state": "string",
   "type": "string"
 }
-
 ```
 
-*A Recovery Flow*
+_A Recovery Flow_
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|active|string|false|none|Active, if set, contains the registration method that is being used. It is initially<br/>not set.|
-|expires_at|string(date-time)|true|none|ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting,<br/>a new request has to be initiated.|
-|id|[UUID](#schemauuid)|true|none|none|
-|issued_at|string(date-time)|true|none|IssuedAt is the time (UTC) when the request occurred.|
-|messages|[Messages](#schemamessages)|false|none|none|
-|methods|object|true|none|Methods contains context for all account recovery methods. If a registration request has been<br/>processed, but for example the password is incorrect, this will contain error messages.|
-|» **additionalProperties**|[recoveryFlowMethod](#schemarecoveryflowmethod)|false|none|none|
-|request_url|string|true|none|RequestURL is the initial URL that was requested from ORY Kratos. It can be used<br/>to forward information contained in the URL's path or query for example.|
-|state|[State](#schemastate)|true|none|none|
-|type|[Type](#schematype)|false|none|The flow type can either be `api` or `browser`.|
+| Name                       | Type                                            | Required | Restrictions | Description                                                                                                                                                                               |
+| -------------------------- | ----------------------------------------------- | -------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| active                     | string                                          | false    | none         | Active, if set, contains the registration method that is being used. It is initially<br/>not set.                                                                                         |
+| expires_at                 | string(date-time)                               | true     | none         | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting,<br/>a new request has to be initiated.                                              |
+| id                         | [UUID](#schemauuid)                             | true     | none         | none                                                                                                                                                                                      |
+| issued_at                  | string(date-time)                               | true     | none         | IssuedAt is the time (UTC) when the request occurred.                                                                                                                                     |
+| messages                   | [Messages](#schemamessages)                     | false    | none         | none                                                                                                                                                                                      |
+| methods                    | object                                          | true     | none         | Methods contains context for all account recovery methods. If a registration request has been<br/>processed, but for example the password is incorrect, this will contain error messages. |
+| » **additionalProperties** | [recoveryFlowMethod](#schemarecoveryflowmethod) | false    | none         | none                                                                                                                                                                                      |
+| request_url                | string                                          | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used<br/>to forward information contained in the URL's path or query for example.                             |
+| state                      | [State](#schemastate)                           | true     | none         | none                                                                                                                                                                                      |
+| type                       | [Type](#schematype)                             | false    | none         | The flow type can either be `api` or `browser`.                                                                                                                                           |
 
 <a id="tocSrecoveryflowmethod"></a>
 
@@ -9643,15 +9554,14 @@ p JSON.parse(result)
   },
   "method": "string"
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|config|[recoveryFlowMethodConfig](#schemarecoveryflowmethodconfig)|false|none|none|
-|method|string|false|none|Method contains the request credentials type.|
+| Name   | Type                                                        | Required | Restrictions | Description                                   |
+| ------ | ----------------------------------------------------------- | -------- | ------------ | --------------------------------------------- |
+| config | [recoveryFlowMethodConfig](#schemarecoveryflowmethodconfig) | false    | none         | none                                          |
+| method | string                                                      | false    | none         | Method contains the request credentials type. |
 
 <a id="tocSrecoveryflowmethodconfig"></a>
 
@@ -9690,17 +9600,16 @@ p JSON.parse(result)
   ],
   "method": "string"
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|action|string|true|none|Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`.|
-|fields|[formFields](#schemaformfields)|true|none|Fields contains multiple fields|
-|messages|[Messages](#schemamessages)|false|none|none|
-|method|string|true|none|Method is the form method (e.g. POST)|
+| Name     | Type                            | Required | Restrictions | Description                                                                                 |
+| -------- | ------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------- |
+| action   | string                          | true     | none         | Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`. |
+| fields   | [formFields](#schemaformfields) | true     | none         | Fields contains multiple fields                                                             |
+| messages | [Messages](#schemamessages)     | false    | none         | none                                                                                        |
+| method   | string                          | true     | none         | Method is the form method (e.g. POST)                                                       |
 
 <a id="tocSrecoverylink"></a>
 
@@ -9713,15 +9622,14 @@ p JSON.parse(result)
   "expires_at": "2019-08-24T14:15:22Z",
   "recovery_link": "string"
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|expires_at|string(date-time)|false|none|Recovery Link Expires At<br/><br/>The timestamp when the recovery link expires.|
-|recovery_link|string|true|none|Recovery Link<br/><br/>This link can be used to recover the account.|
+| Name          | Type              | Required | Restrictions | Description                                                                     |
+| ------------- | ----------------- | -------- | ------------ | ------------------------------------------------------------------------------- |
+| expires_at    | string(date-time) | false    | none         | Recovery Link Expires At<br/><br/>The timestamp when the recovery link expires. |
+| recovery_link | string            | true     | none         | Recovery Link<br/><br/>This link can be used to recover the account.            |
 
 <a id="tocSregistrationflow"></a>
 
@@ -9850,22 +9758,21 @@ p JSON.parse(result)
   "request_url": "string",
   "type": "string"
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|active|[CredentialsType](#schemacredentialstype)|false|none|and so on.|
-|expires_at|string(date-time)|true|none|ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in,<br/>a new flow has to be initiated.|
-|id|[UUID](#schemauuid)|true|none|none|
-|issued_at|string(date-time)|true|none|IssuedAt is the time (UTC) when the flow occurred.|
-|messages|[Messages](#schemamessages)|false|none|none|
-|methods|object|true|none|Methods contains context for all enabled registration methods. If a registration flow has been<br/>processed, but for example the password is incorrect, this will contain error messages.|
-|» **additionalProperties**|[registrationFlowMethod](#schemaregistrationflowmethod)|false|none|none|
-|request_url|string|true|none|RequestURL is the initial URL that was requested from ORY Kratos. It can be used<br/>to forward information contained in the URL's path or query for example.|
-|type|[Type](#schematype)|false|none|The flow type can either be `api` or `browser`.|
+| Name                       | Type                                                    | Required | Restrictions | Description                                                                                                                                                                                |
+| -------------------------- | ------------------------------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| active                     | [CredentialsType](#schemacredentialstype)               | false    | none         | and so on.                                                                                                                                                                                 |
+| expires_at                 | string(date-time)                                       | true     | none         | ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in,<br/>a new flow has to be initiated.                                                                 |
+| id                         | [UUID](#schemauuid)                                     | true     | none         | none                                                                                                                                                                                       |
+| issued_at                  | string(date-time)                                       | true     | none         | IssuedAt is the time (UTC) when the flow occurred.                                                                                                                                         |
+| messages                   | [Messages](#schemamessages)                             | false    | none         | none                                                                                                                                                                                       |
+| methods                    | object                                                  | true     | none         | Methods contains context for all enabled registration methods. If a registration flow has been<br/>processed, but for example the password is incorrect, this will contain error messages. |
+| » **additionalProperties** | [registrationFlowMethod](#schemaregistrationflowmethod) | false    | none         | none                                                                                                                                                                                       |
+| request_url                | string                                                  | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used<br/>to forward information contained in the URL's path or query for example.                              |
+| type                       | [Type](#schematype)                                     | false    | none         | The flow type can either be `api` or `browser`.                                                                                                                                            |
 
 <a id="tocSregistrationflowmethod"></a>
 
@@ -9925,15 +9832,14 @@ p JSON.parse(result)
   },
   "method": "string"
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|config|[registrationFlowMethodConfig](#schemaregistrationflowmethodconfig)|false|none|none|
-|method|[CredentialsType](#schemacredentialstype)|false|none|and so on.|
+| Name   | Type                                                                | Required | Restrictions | Description |
+| ------ | ------------------------------------------------------------------- | -------- | ------------ | ----------- |
+| config | [registrationFlowMethodConfig](#schemaregistrationflowmethodconfig) | false    | none         | none        |
+| method | [CredentialsType](#schemacredentialstype)                           | false    | none         | and so on.  |
 
 <a id="tocSregistrationflowmethodconfig"></a>
 
@@ -9990,18 +9896,17 @@ p JSON.parse(result)
     }
   ]
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|action|string|true|none|Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`.|
-|fields|[formFields](#schemaformfields)|true|none|Fields contains multiple fields|
-|messages|[Messages](#schemamessages)|false|none|none|
-|method|string|true|none|Method is the form method (e.g. POST)|
-|providers|[[formField](#schemaformfield)]|false|none|Providers is set for the "oidc" registration method.|
+| Name      | Type                            | Required | Restrictions | Description                                                                                 |
+| --------- | ------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------- |
+| action    | string                          | true     | none         | Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`. |
+| fields    | [formFields](#schemaformfields) | true     | none         | Fields contains multiple fields                                                             |
+| messages  | [Messages](#schemamessages)     | false    | none         | none                                                                                        |
+| method    | string                          | true     | none         | Method is the form method (e.g. POST)                                                       |
+| providers | [[formField](#schemaformfield)] | false    | none         | Providers is set for the "oidc" registration method.                                        |
 
 <a id="tocSregistrationviaapiresponse"></a>
 
@@ -10066,18 +9971,17 @@ p JSON.parse(result)
   },
   "session_token": "string"
 }
-
 ```
 
-*The Response for Registration Flows via API*
+_The Response for Registration Flows via API_
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|identity|[Identity](#schemaidentity)|true|none|none|
-|session|[session](#schemasession)|false|none|none|
-|session_token|string|true|none|The Session Token<br/><br/>This field is only set when the session hook is configured as a post-registration hook.<br/><br/>A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization<br/>Header:<br/><br/>Authorization: bearer ${session-token}<br/><br/>The session token is only issued for API flows, not for Browser flows!|
+| Name          | Type                        | Required | Restrictions | Description                                                                                                                                                                                                                                                                                                                                                              |
+| ------------- | --------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| identity      | [Identity](#schemaidentity) | true     | none         | none                                                                                                                                                                                                                                                                                                                                                                     |
+| session       | [session](#schemasession)   | false    | none         | none                                                                                                                                                                                                                                                                                                                                                                     |
+| session_token | string                      | true     | none         | The Session Token<br/><br/>This field is only set when the session hook is configured as a post-registration hook.<br/><br/>A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization<br/>Header:<br/><br/>Authorization: bearer \${session-token}<br/><br/>The session token is only issued for API flows, not for Browser flows! |
 
 <a id="tocSrevokesession"></a>
 
@@ -10089,14 +9993,13 @@ p JSON.parse(result)
 {
   "session_token": "string"
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|session_token|string|true|none|The Session Token<br/><br/>Invalidate this session token.|
+| Name          | Type   | Required | Restrictions | Description                                               |
+| ------------- | ------ | -------- | ------------ | --------------------------------------------------------- |
+| session_token | string | true     | none         | The Session Token<br/><br/>Invalidate this session token. |
 
 <a id="tocSsession"></a>
 
@@ -10135,19 +10038,18 @@ p JSON.parse(result)
   },
   "issued_at": "2019-08-24T14:15:22Z"
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|active|boolean|false|none|none|
-|authenticated_at|string(date-time)|true|none|none|
-|expires_at|string(date-time)|true|none|none|
-|id|[UUID](#schemauuid)|true|none|none|
-|identity|[Identity](#schemaidentity)|true|none|none|
-|issued_at|string(date-time)|true|none|none|
+| Name             | Type                        | Required | Restrictions | Description |
+| ---------------- | --------------------------- | -------- | ------------ | ----------- |
+| active           | boolean                     | false    | none         | none        |
+| authenticated_at | string(date-time)           | true     | none         | none        |
+| expires_at       | string(date-time)           | true     | none         | none        |
+| id               | [UUID](#schemauuid)         | true     | none         | none        |
+| identity         | [Identity](#schemaidentity) | true     | none         | none        |
+| issued_at        | string(date-time)           | true     | none         | none        |
 
 <a id="tocSsettingsflow"></a>
 
@@ -10264,26 +10166,25 @@ p JSON.parse(result)
   "state": "string",
   "type": "string"
 }
-
 ```
 
-*Flow represents a Settings Flow*
+_Flow represents a Settings Flow_
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|active|string|false|none|Active, if set, contains the registration method that is being used. It is initially<br/>not set.|
-|expires_at|string(date-time)|true|none|ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to update the setting,<br/>a new flow has to be initiated.|
-|id|[UUID](#schemauuid)|true|none|none|
-|identity|[Identity](#schemaidentity)|true|none|none|
-|issued_at|string(date-time)|true|none|IssuedAt is the time (UTC) when the flow occurred.|
-|messages|[Messages](#schemamessages)|false|none|none|
-|methods|object|true|none|Methods contains context for all enabled registration methods. If a settings flow has been<br/>processed, but for example the first name is empty, this will contain error messages.|
-|» **additionalProperties**|[settingsFlowMethod](#schemasettingsflowmethod)|false|none|none|
-|request_url|string|true|none|RequestURL is the initial URL that was requested from ORY Kratos. It can be used<br/>to forward information contained in the URL's path or query for example.|
-|state|[State](#schemastate)|true|none|none|
-|type|[Type](#schematype)|false|none|The flow type can either be `api` or `browser`.|
+| Name                       | Type                                            | Required | Restrictions | Description                                                                                                                                                                          |
+| -------------------------- | ----------------------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| active                     | string                                          | false    | none         | Active, if set, contains the registration method that is being used. It is initially<br/>not set.                                                                                    |
+| expires_at                 | string(date-time)                               | true     | none         | ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to update the setting,<br/>a new flow has to be initiated.                                               |
+| id                         | [UUID](#schemauuid)                             | true     | none         | none                                                                                                                                                                                 |
+| identity                   | [Identity](#schemaidentity)                     | true     | none         | none                                                                                                                                                                                 |
+| issued_at                  | string(date-time)                               | true     | none         | IssuedAt is the time (UTC) when the flow occurred.                                                                                                                                   |
+| messages                   | [Messages](#schemamessages)                     | false    | none         | none                                                                                                                                                                                 |
+| methods                    | object                                          | true     | none         | Methods contains context for all enabled registration methods. If a settings flow has been<br/>processed, but for example the first name is empty, this will contain error messages. |
+| » **additionalProperties** | [settingsFlowMethod](#schemasettingsflowmethod) | false    | none         | none                                                                                                                                                                                 |
+| request_url                | string                                          | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used<br/>to forward information contained in the URL's path or query for example.                        |
+| state                      | [State](#schemastate)                           | true     | none         | none                                                                                                                                                                                 |
+| type                       | [Type](#schematype)                             | false    | none         | The flow type can either be `api` or `browser`.                                                                                                                                      |
 
 <a id="tocSsettingsflowmethod"></a>
 
@@ -10325,15 +10226,14 @@ p JSON.parse(result)
   },
   "method": "string"
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|config|[FlowMethodConfig](#schemaflowmethodconfig)|false|none|none|
-|method|string|false|none|Method is the name of this flow method.|
+| Name   | Type                                        | Required | Restrictions | Description                             |
+| ------ | ------------------------------------------- | -------- | ------------ | --------------------------------------- |
+| config | [FlowMethodConfig](#schemaflowmethodconfig) | false    | none         | none                                    |
+| method | string                                      | false    | none         | Method is the name of this flow method. |
 
 <a id="tocSsettingsviaapiresponse"></a>
 
@@ -10475,17 +10375,16 @@ p JSON.parse(result)
     ]
   }
 }
-
 ```
 
-*The Response for Settings Flows via API*
+_The Response for Settings Flows via API_
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|flow|[settingsFlow](#schemasettingsflow)|true|none|This flow is used when an identity wants to update settings<br/>(e.g. profile data, passwords, ...) in a selfservice manner.<br/><br/>We recommend reading the [User Settings Documentation](../self-service/flows/user-settings)|
-|identity|[Identity](#schemaidentity)|true|none|none|
+| Name     | Type                                | Required | Restrictions | Description                                                                                                                                                                                                                       |
+| -------- | ----------------------------------- | -------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| flow     | [settingsFlow](#schemasettingsflow) | true     | none         | This flow is used when an identity wants to update settings<br/>(e.g. profile data, passwords, ...) in a selfservice manner.<br/><br/>We recommend reading the [User Settings Documentation](../self-service/flows/user-settings) |
+| identity | [Identity](#schemaidentity)         | true     | none         | none                                                                                                                                                                                                                              |
 
 <a id="tocSverificationflow"></a>
 
@@ -10579,25 +10478,24 @@ p JSON.parse(result)
   "state": "string",
   "type": "string"
 }
-
 ```
 
-*A Verification Flow*
+_A Verification Flow_
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|active|string|false|none|Active, if set, contains the registration method that is being used. It is initially<br/>not set.|
-|expires_at|string(date-time)|false|none|ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address,<br/>a new request has to be initiated.|
-|id|[UUID](#schemauuid)|false|none|none|
-|issued_at|string(date-time)|false|none|IssuedAt is the time (UTC) when the request occurred.|
-|messages|[Messages](#schemamessages)|false|none|none|
-|methods|object|true|none|Methods contains context for all account verification methods. If a registration request has been<br/>processed, but for example the password is incorrect, this will contain error messages.|
-|» **additionalProperties**|[verificationFlowMethod](#schemaverificationflowmethod)|false|none|none|
-|request_url|string|false|none|RequestURL is the initial URL that was requested from ORY Kratos. It can be used<br/>to forward information contained in the URL's path or query for example.|
-|state|[State](#schemastate)|true|none|none|
-|type|[Type](#schematype)|false|none|The flow type can either be `api` or `browser`.|
+| Name                       | Type                                                    | Required | Restrictions | Description                                                                                                                                                                                   |
+| -------------------------- | ------------------------------------------------------- | -------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| active                     | string                                                  | false    | none         | Active, if set, contains the registration method that is being used. It is initially<br/>not set.                                                                                             |
+| expires_at                 | string(date-time)                                       | false    | none         | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address,<br/>a new request has to be initiated.                                                  |
+| id                         | [UUID](#schemauuid)                                     | false    | none         | none                                                                                                                                                                                          |
+| issued_at                  | string(date-time)                                       | false    | none         | IssuedAt is the time (UTC) when the request occurred.                                                                                                                                         |
+| messages                   | [Messages](#schemamessages)                             | false    | none         | none                                                                                                                                                                                          |
+| methods                    | object                                                  | true     | none         | Methods contains context for all account verification methods. If a registration request has been<br/>processed, but for example the password is incorrect, this will contain error messages. |
+| » **additionalProperties** | [verificationFlowMethod](#schemaverificationflowmethod) | false    | none         | none                                                                                                                                                                                          |
+| request_url                | string                                                  | false    | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used<br/>to forward information contained in the URL's path or query for example.                                 |
+| state                      | [State](#schemastate)                                   | true     | none         | none                                                                                                                                                                                          |
+| type                       | [Type](#schematype)                                     | false    | none         | The flow type can either be `api` or `browser`.                                                                                                                                               |
 
 <a id="tocSverificationflowmethod"></a>
 
@@ -10639,15 +10537,14 @@ p JSON.parse(result)
   },
   "method": "string"
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|config|[verificationFlowMethodConfig](#schemaverificationflowmethodconfig)|false|none|none|
-|method|string|false|none|Method contains the request credentials type.|
+| Name   | Type                                                                | Required | Restrictions | Description                                   |
+| ------ | ------------------------------------------------------------------- | -------- | ------------ | --------------------------------------------- |
+| config | [verificationFlowMethodConfig](#schemaverificationflowmethodconfig) | false    | none         | none                                          |
+| method | string                                                              | false    | none         | Method contains the request credentials type. |
 
 <a id="tocSverificationflowmethodconfig"></a>
 
@@ -10686,17 +10583,16 @@ p JSON.parse(result)
   ],
   "method": "string"
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|action|string|true|none|Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`.|
-|fields|[formFields](#schemaformfields)|true|none|Fields contains multiple fields|
-|messages|[Messages](#schemamessages)|false|none|none|
-|method|string|true|none|Method is the form method (e.g. POST)|
+| Name     | Type                            | Required | Restrictions | Description                                                                                 |
+| -------- | ------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------- |
+| action   | string                          | true     | none         | Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`. |
+| fields   | [formFields](#schemaformfields) | true     | none         | Fields contains multiple fields                                                             |
+| messages | [Messages](#schemamessages)     | false    | none         | none                                                                                        |
+| method   | string                          | true     | none         | Method is the form method (e.g. POST)                                                       |
 
 <a id="tocSversion"></a>
 
@@ -10708,12 +10604,10 @@ p JSON.parse(result)
 {
   "version": "string"
 }
-
 ```
 
 #### Properties
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|version|string|false|none|Version is the service's version.|
-
+| Name    | Type   | Required | Restrictions | Description                       |
+| ------- | ------ | -------- | ------------ | --------------------------------- |
+| version | string | false    | none         | Version is the service's version. |

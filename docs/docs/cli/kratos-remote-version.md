@@ -1,8 +1,7 @@
 ---
 id: kratos-remote-version
 title: kratos remote version
-description:
-  kratos remote version Print the version of the remote Kratos instance.
+description: kratos remote version Print the version of the remote Kratos instance.
 ---
 
 <!--
