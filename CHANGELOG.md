@@ -102,12 +102,13 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...e3d3617b8d82812b0ad67cc1cb02ff86c2c0c66c) (2020-10-06)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...aeaddbcb27f89d61b076bdd9ad1739fb1da2ffd9) (2020-10-06)
 
 
 ### Bug Fixes
 
 * Add missing error handling ([43c1446](https://github.com/ory/kratos/commit/43c14464efa7b736695e2144b031daf6fca87703))
+* Add ory-prettier-styles to main repo ([#744](https://github.com/ory/kratos/issues/744)) ([aeaddbc](https://github.com/ory/kratos/commit/aeaddbcb27f89d61b076bdd9ad1739fb1da2ffd9))
 * Add remote help description ([f66bbe1](https://github.com/ory/kratos/commit/f66bbe18cfad1e8725ecbcf6e2843b34c3d5119f))
 * Add serve help description ([2eb072b](https://github.com/ory/kratos/commit/2eb072b71e5602895d4232e197bfd76180fcdcd7))
 * Allow using json with form layout in password registration ([bd2225c](https://github.com/ory/kratos/commit/bd2225c0fff3e0363716d2096346d59046838bb7))
@@ -333,6 +334,7 @@
 * Refactor login and registration documentation ([c660a04](https://github.com/ory/kratos/commit/c660a04ed6a70aefca18896662331fcc5d1919cf))
 * Refactor settings and recovery documentation ([11ca9f7](https://github.com/ory/kratos/commit/11ca9f7d1b858dcda3a96e1e1d2607ba64f7fbbe))
 * Refactor verification docs ([70f2789](https://github.com/ory/kratos/commit/70f2789363773fccc4bd8691597ff588ac6892c6))
+* Remove contraction ([#747](https://github.com/ory/kratos/issues/747)) ([cd4f21d](https://github.com/ory/kratos/commit/cd4f21dbfa2b3824468146677f542fbab2417c42))
 * Remove duplicate word ([b84e659](https://github.com/ory/kratos/commit/b84e659af29aa1b129f33ccf5ca9e0d54353c019))
 * Remove duplicate word ([#700](https://github.com/ory/kratos/issues/700)) ([a12100e](https://github.com/ory/kratos/commit/a12100e7644b535c4bd3073e03c48229bb81e7b2))
 * Rename self service and add admin section ([639c424](https://github.com/ory/kratos/commit/639c424d3bde0557f7edd7edc489a476f1aa60b3))
