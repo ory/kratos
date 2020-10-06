@@ -39,6 +39,7 @@ Something is not working.
 - [ ] Sending JSON to complete oidc/password strategy flows causes CSRF issues ([kratos#378](https://github.com/ory/kratos/issues/378))
 - [ ] Unmable to use Auth0 as a generic OIDC provider ([kratos#609](https://github.com/ory/kratos/issues/609))
 - [ ] Password reset emails sent twice by each of the two kratos pods in my cluster ([kratos#652](https://github.com/ory/kratos/issues/652))
+- [ ] Building From Source fails ([kratos#711](https://github.com/ory/kratos/issues/711))
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)
 
@@ -74,6 +75,7 @@ Affects documentation.
 - [ ] Document that identity information (traits, etc) are available to token holders and backend systems ([kratos#43](https://github.com/ory/kratos/issues/43)) - [@hackerman](https://github.com/aeneasr)
 - [ ] Config JSON Schema needs example values ([kratos#179](https://github.com/ory/kratos/issues/179)) - [@hackerman](https://github.com/aeneasr)
 - [ ] Elaborate on security practices against DoS and Brute Force ([kratos#134](https://github.com/ory/kratos/issues/134))
+- [ ] Building From Source fails ([kratos#711](https://github.com/ory/kratos/issues/711))
 
 ### [Rfc](https://github.com/ory/kratos/labels/rfc)
 
@@ -135,6 +137,7 @@ New feature or request.
 
 #### Pull Requests
 
+- [ ] feat: prepare v0.5.0 release ([kratos#736](https://github.com/ory/kratos/pull/736)) - [@hackerman](https://github.com/aeneasr)
 - [x] fix: resolve identity admin api issues ([kratos#586](https://github.com/ory/kratos/pull/586)) - [@hackerman](https://github.com/aeneasr)
 - [x] feat: implement API-based self-service flows ([kratos#624](https://github.com/ory/kratos/pull/624)) - [@hackerman](https://github.com/aeneasr)
 
@@ -146,6 +149,10 @@ Affects documentation.
 
 - [x] Document multi-tenant set up ([kratos#370](https://github.com/ory/kratos/issues/370))
 - [x] Remove reverse proxy from node example and rely on port and the domain parameter ([kratos#661](https://github.com/ory/kratos/issues/661)) - [@hackerman](https://github.com/aeneasr)
+
+#### Pull Requests
+
+- [ ] feat: prepare v0.5.0 release ([kratos#736](https://github.com/ory/kratos/pull/736)) - [@hackerman](https://github.com/aeneasr)
 
 ### [Rfc](https://github.com/ory/kratos/labels/rfc)
 
