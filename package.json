@@ -1,5 +1,6 @@
 {
   "private": true,
+  "prettier": "ory-prettier-styles",
   "scripts": {
     "format": "prettier --no-semi --single-quote --trailing-comma es5 --write \"test/e2e/cypress/**/*.js\"",
     "test": "cypress run",
@@ -9,6 +10,7 @@
   "devDependencies": {
     "cypress": "4.5.0",
     "openapi-generator": "^0.1.36",
+    "ory-prettier-styles": "^1.0.1",
     "prettier": "2.0.4",
     "wait-on": "4.0.2"
   }
