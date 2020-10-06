@@ -32,7 +32,8 @@ ORY Kratos is the first and only cloud native Identity and User Management Syste
   - [Quickstart](#quickstart)
   - [Installation](#installation)
 - [Ecosystem](#ecosystem)
-  - [ORY Security Console: Administrative User Interface](#ory-security-console-administrative-user-interface)
+  - [ORY Kratos: Identity and User Infrastructure and Management](#ory-kratos-identity-and-user-infrastructure-and-management)
+  - [ORY Hydra: OAuth2 & OpenID Connect Server](#ory-hydra-oauth2--openid-connect-server)
   - [ORY Oathkeeper: Identity & Access Proxy](#ory-oathkeeper-identity--access-proxy)
   - [ORY Keto: Access Control Policies as a Server](#ory-keto-access-control-policies-as-a-server)
 - [Security](#security)
@@ -46,10 +47,12 @@ ORY Kratos is the first and only cloud native Identity and User Management Syste
   - [Develop](#develop)
     - [Dependencies](#dependencies)
       - [Install Tools](#install-tools)
+    - [Install from source](#install-from-source)
     - [Formatting Code](#formatting-code)
     - [Running Tests](#running-tests)
       - [Short Tests](#short-tests)
       - [Regular Tests](#regular-tests)
+      - [End-to-End Tests](#end-to-end-tests)
     - [Build Docker](#build-docker)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
