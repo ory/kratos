@@ -1,5 +1,5 @@
 id: foo
-provider: github
+provider: microsoft
 client_id: foo
 client_secret: foo
 issuer_url: https://example.com

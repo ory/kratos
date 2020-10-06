@@ -147,7 +147,32 @@
         "client_id",
         "client_secret",
         "mapper_url"
-      ]
+      ],
+      "if": {
+        "properties": {
+          "provider": {
+            "const": "microsoft"
+          }
+        },
+        "required": [
+          "provider"
+        ]
+      },
+      "then": {
+        "required": [
+          "tenant"
+        ]
+      },
+      "else": {
+        "not": {
+          "properties": {
+            "tenant": {}
+          },
+          "required": [
+            "tenant"
+          ]
+        }
+      }
     },
     "selfServiceAfterSettingsMethod": {
       "type": "object",
@@ -784,7 +809,10 @@
                 ]
               }
             },
-            "required": ["id", "url"],
+            "required": [
+              "id",
+              "url"
+            ],
             "not": {
               "type": "object",
               "properties": {
@@ -939,10 +967,14 @@
                             "const": true
                           }
                         },
-                        "required": ["enabled"]
+                        "required": [
+                          "enabled"
+                        ]
                       }
                     },
-                    "required": ["verification"]
+                    "required": [
+                      "verification"
+                    ]
                   },
                   {
                     "properties": {
@@ -952,18 +984,26 @@
                             "const": true
                           }
                         },
-                        "required": ["enabled"]
+                        "required": [
+                          "enabled"
+                        ]
                       }
                     },
-                    "required": ["recovery"]
+                    "required": [
+                      "recovery"
+                    ]
                   }
                 ]
               }
             },
-            "required": ["flows"]
+            "required": [
+              "flows"
+            ]
           }
         },
-        "required": ["selfservice"]
+        "required": [
+          "selfservice"
+        ]
       },
       "then": {
         "required": [
