@@ -56,7 +56,7 @@ cover:
 		go test ./... -coverprofile=cover.out
 		go tool cover -func=cover.out
 
-.PHONE: mocks
+.PHONY: mocks
 mocks: .bin/mockgen
 		mockgen -mock_names Manager=MockLoginExecutorDependencies -package internal -destination internal/hook_login_executor_dependencies.go github.com/ory/kratos/selfservice loginExecutorDependencies
 
