@@ -14,8 +14,7 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 ### Synopsis
 
-Lints JSONNet files using the official JSONNet linter and exits with a status
-code of 1 when issues are detected.
+Lints JSONNet files using the official JSONNet linter and exits with a status code of 1 when issues are detected.
 
 Glob Syntax:
 
@@ -54,5 +53,4 @@ kratos jsonnet lint path/to/files/*.jsonnet [more/files.jsonnet, [supports/**/{f
 
 ### SEE ALSO
 
-- [kratos jsonnet](kratos-jsonnet) - Helpers for linting and formatting JSONNet
-  code
+- [kratos jsonnet](kratos-jsonnet) - Helpers for linting and formatting JSONNet code

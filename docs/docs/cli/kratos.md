@@ -22,8 +22,6 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 ### SEE ALSO
 
-- [kratos identities](kratos-identities) - Tools to interact with remote
-  identities
-- [kratos jsonnet](kratos-jsonnet) - Helpers for linting and formatting JSONNet
-  code
-- [kratos remote](kratos-remote) -
+- [kratos identities](kratos-identities) - Tools to interact with remote identities
+- [kratos jsonnet](kratos-jsonnet) - Helpers for linting and formatting JSONNet code
+- [kratos remote](kratos-remote) - Helpers and management for remote ORY Kratos instances

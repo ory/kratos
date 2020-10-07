@@ -1,7 +1,7 @@
 ---
 id: kratos-remote-version
 title: kratos remote version
-description: kratos remote version Print the version of the remote Kratos instance.
+description: kratos remote version Print the version of an ORY Kratos instance
 ---
 
 <!--
@@ -12,11 +12,11 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 ## kratos remote version
 
-Print the version of the remote Kratos instance.
+Print the version of an ORY Kratos instance
 
 ### Synopsis
 
-Print the version of the remote Kratos instance.
+Print the version of an ORY Kratos instance
 
 ```
 kratos remote version [flags]
@@ -31,11 +31,11 @@ kratos remote version [flags]
 ### Options inherited from parent commands
 
 ```
-  -e, --endpoint string   The upstream admin endpoint URL. Alternatively set using the KRATOS_ADMIN_ENDPOINT environmental variable.
+  -e, --endpoint string   The URL of ORY Kratos' Admin API. Alternatively set using the KRATOS_ADMIN_URL environmental variable.
   -f, --format string     Set the output format. One of table, json, and json-pretty.
   -q, --quiet             Prints only IDs, one per line. Takes precedence over --format.
 ```
 
 ### SEE ALSO
 
-- [kratos remote](kratos-remote) -
+- [kratos remote](kratos-remote) - Helpers and management for remote ORY Kratos instances

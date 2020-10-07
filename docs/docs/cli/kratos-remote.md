@@ -1,7 +1,7 @@
 ---
 id: kratos-remote
 title: kratos remote
-description: kratos remote
+description: kratos remote Helpers and management for remote ORY Kratos instances
 ---
 
 <!--
@@ -12,12 +12,16 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 ## kratos remote
 
+Helpers and management for remote ORY Kratos instances
+
 ### Synopsis
+
+Helpers and management for remote ORY Kratos instances
 
 ### Options
 
 ```
-  -e, --endpoint string   The upstream admin endpoint URL. Alternatively set using the KRATOS_ADMIN_ENDPOINT environmental variable.
+  -e, --endpoint string   The URL of ORY Kratos' Admin API. Alternatively set using the KRATOS_ADMIN_URL environmental variable.
   -f, --format string     Set the output format. One of table, json, and json-pretty.
   -h, --help              help for remote
   -q, --quiet             Prints only IDs, one per line. Takes precedence over --format.
@@ -26,7 +30,5 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 ### SEE ALSO
 
 - [kratos](kratos) -
-- [kratos remote status](kratos-remote-status) - Prints the status of the remote
-  Kratos instance.
-- [kratos remote version](kratos-remote-version) - Print the version of the
-  remote Kratos instance.
+- [kratos remote status](kratos-remote-status) - Print the alive and readiness status of a ORY Kratos instance
+- [kratos remote version](kratos-remote-version) - Print the version of an ORY Kratos instance

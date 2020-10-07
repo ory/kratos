@@ -1,7 +1,7 @@
 ---
 id: kratos-identities-import
 title: kratos identities import
-description: kratos identities import import identities from files or STD_IN
+description: kratos identities import Import identities from files or STD_IN
 ---
 
 <!--
@@ -12,13 +12,19 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 ## kratos identities import
 
-import identities from files or STD_IN
+Import identities from files or STD_IN
 
 ### Synopsis
 
-Import identities from files or STD_IN. Files are expected to each contain a
-single identity. The validity of files can be tested beforehand using
-`... identities validate`. Importing credentials is not yet supported.
+Import identities from files or STD_IN:
+
+    kratos identities import file.json
+
+    cat file.json | kratos identities import
+
+Files can contain only a single or an array of identities. The validity of files can be tested beforehand using "... identities validate".
+
+WARNING: Importing credentials is not yet supported.
 
 ```
 kratos identities import <file.json [file-2.json [file-3.json] ...]> [flags]
@@ -33,12 +39,11 @@ kratos identities import <file.json [file-2.json [file-3.json] ...]> [flags]
 ### Options inherited from parent commands
 
 ```
-  -e, --endpoint string   The upstream admin endpoint URL. Alternatively set using the KRATOS_ADMIN_ENDPOINT environmental variable.
+  -e, --endpoint string   The URL of ORY Kratos' Admin API. Alternatively set using the KRATOS_ADMIN_URL environmental variable.
   -f, --format string     Set the output format. One of table, json, and json-pretty.
   -q, --quiet             Prints only IDs, one per line. Takes precedence over --format.
 ```
 
 ### SEE ALSO
 
-- [kratos identities](kratos-identities) - Tools to interact with remote
-  identities
+- [kratos identities](kratos-identities) - Tools to interact with remote identities

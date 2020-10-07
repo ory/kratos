@@ -31,12 +31,11 @@ kratos identities list [<page> <per-page>] [flags]
 ### Options inherited from parent commands
 
 ```
-  -e, --endpoint string   The upstream admin endpoint URL. Alternatively set using the KRATOS_ADMIN_ENDPOINT environmental variable.
+  -e, --endpoint string   The URL of ORY Kratos' Admin API. Alternatively set using the KRATOS_ADMIN_URL environmental variable.
   -f, --format string     Set the output format. One of table, json, and json-pretty.
   -q, --quiet             Prints only IDs, one per line. Takes precedence over --format.
 ```
 
 ### SEE ALSO
 
-- [kratos identities](kratos-identities) - Tools to interact with remote
-  identities
+- [kratos identities](kratos-identities) - Tools to interact with remote identities

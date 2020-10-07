@@ -24,6 +24,12 @@ endef
 $(foreach dep, $(GO_DEPENDENCIES), $(eval $(call make-go-dependency, $(dep))))
 $(call make-lint-dependency)
 
+.bin/clidoc:
+		go build -o .bin/clidoc ./cmd/clidoc/.
+
+docs/cli: .bin/clidoc
+		clidoc .
+
 .bin/traefik:
 		https://github.com/containous/traefik/releases/download/v2.3.0-rc4/traefik_v2.3.0-rc4_linux_amd64.tar.gz \
 			tar -zxvf traefik_${traefik_version}_linux_${arch}.tar.gz
