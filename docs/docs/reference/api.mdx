@@ -10,14 +10,17 @@ import TabItem from '@theme/TabItem'
 
 :::info
 
-You are viewing REST API documentation. This documentation is auto-generated from a swagger specification which
-itself is generated from annotations in the source code of the project. It is possible that this documentation includes
-bugs and that code samples are incomplete or wrong.
+You are viewing REST API documentation. This documentation is auto-generated
+from a swagger specification which itself is generated from annotations in the
+source code of the project. It is possible that this documentation includes bugs
+and that code samples are incomplete or wrong.
 
 If you find issues in the respective documentation, please do not edit the
-Markdown files directly (as they are generated) but raise an issue on the project's GitHub presence instead. This documentation
-will improve over time with your help! If you have ideas how to improve this part of the documentation, feel free to
-share them in a [GitHub issue](https://github.com/ory/docs/issues/new) any time.
+Markdown files directly (as they are generated) but raise an issue on the
+project's GitHub presence instead. This documentation will improve over time
+with your help! If you have ideas how to improve this part of the documentation,
+feel free to share them in a
+[GitHub issue](https://github.com/ory/docs/issues/new) any time.
 
 :::
 
@@ -40,14 +43,15 @@ Accept: application/json
 
 ```
 
-This endpoint returns a 200 status code when the HTTP server is up running.
-This status does currently not include checks whether the database connection is working.
+This endpoint returns a 200 status code when the HTTP server is up running. This
+status does currently not include checks whether the database connection is
+working.
 
 If the service supports TLS Edge Termination, this endpoint does not require the
 `X-Forwarded-Proto` header to be set.
 
-Be aware that if you are running multiple nodes of this service, the health status will never
-refer to the cluster state, only to a single instance.
+Be aware that if you are running multiple nodes of this service, the health
+status will never refer to the cluster state, only to a single instance.
 
 #### Responses
 
@@ -206,14 +210,14 @@ Accept: application/json
 
 ```
 
-This endpoint returns a 200 status code when the HTTP server is up running and the environment dependencies (e.g.
-the database) are responsive as well.
+This endpoint returns a 200 status code when the HTTP server is up running and
+the environment dependencies (e.g. the database) are responsive as well.
 
 If the service supports TLS Edge Termination, this endpoint does not require the
 `X-Forwarded-Proto` header to be set.
 
-Be aware that if you are running multiple nodes of this service, the health status will never
-refer to the cluster state, only to a single instance.
+Be aware that if you are running multiple nodes of this service, the health
+status will never refer to the cluster state, only to a single instance.
 
 #### Responses
 
@@ -378,7 +382,8 @@ Accept: application/json
 
 Lists all identities. Does not support search at the moment.
 
-Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+Learn how identities work in
+[ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 
 <a id="list-identities-parameters"></a>
 
@@ -600,10 +605,12 @@ Accept: application/json
 
 ```
 
-This endpoint creates an identity. It is NOT possible to set an identity's credentials (password, ...)
-using this method! A way to achieve that will be introduced in the future.
+This endpoint creates an identity. It is NOT possible to set an identity's
+credentials (password, ...) using this method! A way to achieve that will be
+introduced in the future.
 
-Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+Learn how identities work in
+[ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 
 #### Request body
 
@@ -807,7 +814,8 @@ Accept: application/json
 
 ```
 
-Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+Learn how identities work in
+[ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 
 <a id="get-an-identity-parameters"></a>
 
@@ -996,12 +1004,15 @@ Accept: application/json
 
 ```
 
-This endpoint updates an identity. It is NOT possible to set an identity's credentials (password, ...)
-using this method! A way to achieve that will be introduced in the future.
+This endpoint updates an identity. It is NOT possible to set an identity's
+credentials (password, ...) using this method! A way to achieve that will be
+introduced in the future.
 
-The full identity payload (except credentials) is expected. This endpoint does not support patching.
+The full identity payload (except credentials) is expected. This endpoint does
+not support patching.
 
-Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+Learn how identities work in
+[ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 
 #### Request body
 
@@ -1207,11 +1218,13 @@ Accept: application/json
 
 ```
 
-Calling this endpoint irrecoverably and permanently deletes the identity given its ID. This action can not be undone.
-This endpoint returns 204 when the identity was deleted or when the identity was not found, in which case it is
+Calling this endpoint irrecoverably and permanently deletes the identity given
+its ID. This action can not be undone. This endpoint returns 204 when the
+identity was deleted or when the identity was not found, in which case it is
 assumed that is has been deleted already.
 
-Learn how identities work in [ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
+Learn how identities work in
+[ORY Kratos' User And Identity Model Documentation](https://www.ory.sh/docs/next/kratos/concepts/identity-user-model).
 
 <a id="delete-an-identity-parameters"></a>
 
@@ -1529,8 +1542,8 @@ Accept: application/json
 
 ```
 
-This endpoint creates a recovery link which should be given to the user in order for them to recover
-(or activate) their account.
+This endpoint creates a recovery link which should be given to the user in order
+for them to recover (or activate) their account.
 
 #### Request body
 
@@ -1892,12 +1905,14 @@ Accept: application/json
 
 This endpoint initializes a logout flow.
 
-> This endpoint is NOT INTENDED for API clients and only works
-> with browsers (Chrome, Firefox, ...).
+> This endpoint is NOT INTENDED for API clients and only works with browsers
+> (Chrome, Firefox, ...).
 
-On successful logout, the browser will be redirected (HTTP 302 Found) to `urls.default_return_to`.
+On successful logout, the browser will be redirected (HTTP 302 Found) to
+`urls.default_return_to`.
 
-More information can be found at [ORY Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
+More information can be found at
+[ORY Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
 
 #### Responses
 
@@ -2065,12 +2080,14 @@ Accept: application/json
 
 ```
 
-This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this
-endpoint.
+This endpoint completes a browser-based settings flow. This is usually achieved
+by POSTing data to this endpoint.
 
-> This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...) and HTML Forms.
+> This endpoint is NOT INTENDED for API clients and only works with browsers
+> (Chrome, Firefox, ...) and HTML Forms.
 
-More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+More information can be found at
+[ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 
 #### Responses
 
@@ -2241,13 +2258,15 @@ Accept: application/json
 
 ```
 
-This endpoint returns the error associated with a user-facing self service errors.
+This endpoint returns the error associated with a user-facing self service
+errors.
 
 This endpoint supports stub values to help you implement the error UI:
 
 `?error=stub:500` - returns a stub 500 (Internal Server Error) error.
 
-More information can be found at [ORY Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).
+More information can be found at
+[ORY Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).
 
 <a id="get-user-facing-self-service-errors-parameters"></a>
 
@@ -2419,24 +2438,29 @@ Accept: application/json
 
 ```
 
-This endpoint initiates a login flow for API clients such as mobile devices, smart TVs, and so on.
+This endpoint initiates a login flow for API clients such as mobile devices,
+smart TVs, and so on.
 
-If a valid provided session cookie or session token is provided, a 400 Bad Request error
-will be returned unless the URL query parameter `?refresh=true` is set.
+If a valid provided session cookie or session token is provided, a 400 Bad
+Request error will be returned unless the URL query parameter `?refresh=true` is
+set.
 
 To fetch an existing login flow call `/self-service/login/flows?flow=<flow_id>`.
 
 :::warning
 
-You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
-Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
-you vulnerable to a variety of CSRF attacks, including CSRF login attacks.
+You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS,
+AngularJS) nor server-side (Java Server Pages, NodeJS, PHP, Golang, ...) browser
+applications. Using this endpoint in these applications will make you vulnerable
+to a variety of CSRF attacks, including CSRF login attacks.
 
-This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
+This endpoint MUST ONLY be used in scenarios such as native mobile apps (React
+Native, Objective C, Swift, Java, ...).
 
 :::
 
-More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at
+[ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 
 <a id="initialize-login-flow-for-api-clients-parameters"></a>
 
@@ -2450,9 +2474,8 @@ More information can be found at [ORY Kratos User Login and User Registration Do
 
 **refresh**: Refresh a login session
 
-If set to true, this will refresh an existing login session by
-asking the user to sign in again. This will reset the
-authenticated_at time of the session.
+If set to true, this will refresh an existing login session by asking the user
+to sign in again. This will reset the authenticated_at time of the session.
 
 #### Responses
 
@@ -2730,14 +2753,17 @@ Accept: application/json
 
 ```
 
-This endpoint initializes a browser-based user login flow. Once initialized, the browser will be redirected to
-`selfservice.flows.login.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
-exists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter
-`?refresh=true` was set.
+This endpoint initializes a browser-based user login flow. Once initialized, the
+browser will be redirected to `selfservice.flows.login.ui_url` with the flow ID
+set as the query parameter `?flow=`. If a valid user session exists already, the
+browser will be redirected to `urls.default_redirect_url` unless the query
+parameter `?refresh=true` was set.
 
-This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+This endpoint is NOT INTENDED for API clients and only works with browsers
+(Chrome, Firefox, ...).
 
-More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at
+[ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 
 #### Responses
 
@@ -2905,9 +2931,11 @@ Accept: application/json
 
 ```
 
-This endpoint returns a login flow's context with, for example, error details and other information.
+This endpoint returns a login flow's context with, for example, error details
+and other information.
 
-More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at
+[ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 
 <a id="get-login-flow-parameters"></a>
 
@@ -3204,19 +3232,21 @@ Accept: application/json
 
 ```
 
-Use this endpoint to complete a login flow by sending an identity's identifier and password. This endpoint
-behaves differently for API and browser flows.
+Use this endpoint to complete a login flow by sending an identity's identifier
+and password. This endpoint behaves differently for API and browser flows.
 
 API flows expect `application/json` to be sent in the body and responds with
-HTTP 200 and a application/json body with the session token on success;
-HTTP 302 redirect to a fresh login flow if the original flow expired with the appropriate error messages set;
-HTTP 400 on form validation errors.
+HTTP 200 and a application/json body with the session token on success; HTTP 302
+redirect to a fresh login flow if the original flow expired with the appropriate
+error messages set; HTTP 400 on form validation errors.
 
-Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
-a HTTP 302 redirect to the post/after login URL or the `return_to` value if it was set and if the login succeeded;
-a HTTP 302 redirect to the login UI URL with the flow ID containing the validation errors otherwise.
+Browser flows expect `application/x-www-form-urlencoded` to be sent in the body
+and responds with a HTTP 302 redirect to the post/after login URL or the
+`return_to` value if it was set and if the login succeeded; a HTTP 302 redirect
+to the login UI URL with the flow ID containing the validation errors otherwise.
 
-More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at
+[ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 
 <a id="complete-login-flow-with-username/email-password-method-parameters"></a>
 
@@ -3421,23 +3451,29 @@ Accept: application/json
 
 ```
 
-This endpoint initiates a recovery flow for API clients such as mobile devices, smart TVs, and so on.
+This endpoint initiates a recovery flow for API clients such as mobile devices,
+smart TVs, and so on.
 
-If a valid provided session cookie or session token is provided, a 400 Bad Request error.
+If a valid provided session cookie or session token is provided, a 400 Bad
+Request error.
 
-To fetch an existing recovery flow call `/self-service/recovery/flows?flow=<flow_id>`.
+To fetch an existing recovery flow call
+`/self-service/recovery/flows?flow=<flow_id>`.
 
 :::warning
 
-You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
-Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
-you vulnerable to a variety of CSRF attacks.
+You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS,
+AngularJS) nor server-side (Java Server Pages, NodeJS, PHP, Golang, ...) browser
+applications. Using this endpoint in these applications will make you vulnerable
+to a variety of CSRF attacks.
 
-This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
+This endpoint MUST ONLY be used in scenarios such as native mobile apps (React
+Native, Objective C, Swift, Java, ...).
 
 :::
 
-More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+More information can be found at
+[ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 
 #### Responses
 
@@ -3679,13 +3715,17 @@ Accept: application/json
 
 ```
 
-This endpoint initializes a browser-based account recovery flow. Once initialized, the browser will be redirected to
-`selfservice.flows.recovery.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
-exists, the browser is returned to the configured return URL.
+This endpoint initializes a browser-based account recovery flow. Once
+initialized, the browser will be redirected to
+`selfservice.flows.recovery.ui_url` with the flow ID set as the query parameter
+`?flow=`. If a valid user session exists, the browser is returned to the
+configured return URL.
 
-This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+This endpoint is NOT INTENDED for API clients and only works with browsers
+(Chrome, Firefox, ...).
 
-More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+More information can be found at
+[ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 
 #### Responses
 
@@ -3853,9 +3893,11 @@ Accept: application/json
 
 ```
 
-This endpoint returns a recovery flow's context with, for example, error details and other information.
+This endpoint returns a recovery flow's context with, for example, error details
+and other information.
 
-More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+More information can be found at
+[ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 
 <a id="get-information-about-a-recovery-flow-parameters"></a>
 
@@ -3869,8 +3911,8 @@ More information can be found at [ORY Kratos Account Recovery Documentation](../
 
 **id**: The Flow ID
 
-The value for this parameter comes from `request` URL Query parameter sent to your
-application (e.g. `/recovery?flow=abcde`).
+The value for this parameter comes from `request` URL Query parameter sent to
+your application (e.g. `/recovery?flow=abcde`).
 
 #### Responses
 
@@ -4116,22 +4158,27 @@ Accept: application/json
 
 ```
 
-Use this endpoint to complete a recovery flow using the link method. This endpoint
-behaves differently for API and browser flows and has several states:
+Use this endpoint to complete a recovery flow using the link method. This
+endpoint behaves differently for API and browser flows and has several states:
 
-`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
-and works with API- and Browser-initiated flows.
-For API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
-and a HTTP 302 Found redirect with a fresh recovery flow if the flow was otherwise invalid (e.g. expired).
-For Browser clients it returns a HTTP 302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.
-`sent_email` is the success state after `choose_method` and allows the user to request another recovery email. It
-works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
-`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a recovery link")
-does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
-(if the link was valid) and instructs the user to update their password, or a redirect to the Recover UI URL with
-a new Recovery Flow ID which contains an error message that the recovery link was invalid.
+`choose_method` expects `flow` (in the URL query) and `email` (in the body) to
+be sent and works with API- and Browser-initiated flows. For API clients it
+either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the
+form is invalid and a HTTP 302 Found redirect with a fresh recovery flow if the
+flow was otherwise invalid (e.g. expired). For Browser clients it returns a HTTP
+302 Found redirect to the Recovery UI URL with the Recovery Flow ID appended.
+`sent_email` is the success state after `choose_method` and allows the user to
+request another recovery email. It works for both API and Browser-initiated
+flows and returns the same responses as the flow in `choose_method` state.
+`passed_challenge` expects a `token` to be sent in the URL query and given the
+nature of the flow ("sending a recovery link") does not have any API
+capabilities. The server responds with a HTTP 302 Found redirect either to the
+Settings UI URL (if the link was valid) and instructs the user to update their
+password, or a redirect to the Recover UI URL with a new Recovery Flow ID which
+contains an error message that the recovery link was invalid.
 
-More information can be found at [ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
+More information can be found at
+[ORY Kratos Account Recovery Documentation](../self-service/flows/account-recovery.mdx).
 
 #### Request body
 
@@ -4161,8 +4208,8 @@ email: string
 
 **token**: Recovery Token
 
-The recovery token which completes the recovery request. If the token
-is invalid (e.g. expired) an error will be shown to the end-user.
+The recovery token which completes the recovery request. If the token is invalid
+(e.g. expired) an error will be shown to the end-user.
 
 **flow**: The Flow ID
 
@@ -4416,24 +4463,30 @@ Accept: application/json
 
 ```
 
-This endpoint initiates a registration flow for API clients such as mobile devices, smart TVs, and so on.
+This endpoint initiates a registration flow for API clients such as mobile
+devices, smart TVs, and so on.
 
-If a valid provided session cookie or session token is provided, a 400 Bad Request error
-will be returned unless the URL query parameter `?refresh=true` is set.
+If a valid provided session cookie or session token is provided, a 400 Bad
+Request error will be returned unless the URL query parameter `?refresh=true` is
+set.
 
-To fetch an existing registration flow call `/self-service/registration/flows?flow=<flow_id>`.
+To fetch an existing registration flow call
+`/self-service/registration/flows?flow=<flow_id>`.
 
 :::warning
 
-You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
-Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
-you vulnerable to a variety of CSRF attacks.
+You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS,
+AngularJS) nor server-side (Java Server Pages, NodeJS, PHP, Golang, ...) browser
+applications. Using this endpoint in these applications will make you vulnerable
+to a variety of CSRF attacks.
 
-This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
+This endpoint MUST ONLY be used in scenarios such as native mobile apps (React
+Native, Objective C, Swift, Java, ...).
 
 :::
 
-More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at
+[ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 
 #### Responses
 
@@ -4710,18 +4763,22 @@ Accept: application/json
 
 ```
 
-This endpoint initializes a browser-based user registration flow. Once initialized, the browser will be redirected to
-`selfservice.flows.registration.ui_url` with the flow ID set as the query parameter `?flow=`. If a valid user session
-exists already, the browser will be redirected to `urls.default_redirect_url` unless the query parameter
+This endpoint initializes a browser-based user registration flow. Once
+initialized, the browser will be redirected to
+`selfservice.flows.registration.ui_url` with the flow ID set as the query
+parameter `?flow=`. If a valid user session exists already, the browser will be
+redirected to `urls.default_redirect_url` unless the query parameter
 `?refresh=true` was set.
 
 :::note
 
-This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+This endpoint is NOT INTENDED for API clients and only works with browsers
+(Chrome, Firefox, ...).
 
 :::
 
-More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at
+[ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 
 #### Responses
 
@@ -4889,9 +4946,11 @@ Accept: application/json
 
 ```
 
-This endpoint returns a registration flow's context with, for example, error details and other information.
+This endpoint returns a registration flow's context with, for example, error
+details and other information.
 
-More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at
+[ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 
 <a id="get-registration-flow-parameters"></a>
 
@@ -5188,20 +5247,25 @@ Accept: application/json
 
 ```
 
-Use this endpoint to complete a registration flow by sending an identity's traits and password. This endpoint
-behaves differently for API and browser flows.
+Use this endpoint to complete a registration flow by sending an identity's
+traits and password. This endpoint behaves differently for API and browser
+flows.
 
-API flows expect `application/json` to be sent in the body and respond with
-HTTP 200 and a application/json body with the created identity success - if the session hook is configured the
-`session` and `session_token` will also be included;
-HTTP 302 redirect to a fresh registration flow if the original flow expired with the appropriate error messages set;
-HTTP 400 on form validation errors.
+API flows expect `application/json` to be sent in the body and respond with HTTP
+200 and a application/json body with the created identity success - if the
+session hook is configured the `session` and `session_token` will also be
+included; HTTP 302 redirect to a fresh registration flow if the original flow
+expired with the appropriate error messages set; HTTP 400 on form validation
+errors.
 
-Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
-a HTTP 302 redirect to the post/after registration URL or the `return_to` value if it was set and if the registration succeeded;
-a HTTP 302 redirect to the registration UI URL with the flow ID containing the validation errors otherwise.
+Browser flows expect `application/x-www-form-urlencoded` to be sent in the body
+and responds with a HTTP 302 redirect to the post/after registration URL or the
+`return_to` value if it was set and if the registration succeeded; a HTTP 302
+redirect to the registration UI URL with the flow ID containing the validation
+errors otherwise.
 
-More information can be found at [ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
+More information can be found at
+[ORY Kratos User Login and User Registration Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-login-user-registration).
 
 #### Request body
 
@@ -5440,22 +5504,27 @@ Accept: application/json
 
 ```
 
-This endpoint initiates a settings flow for API clients such as mobile devices, smart TVs, and so on.
-You must provide a valid ORY Kratos Session Token for this endpoint to respond with HTTP 200 OK.
+This endpoint initiates a settings flow for API clients such as mobile devices,
+smart TVs, and so on. You must provide a valid ORY Kratos Session Token for this
+endpoint to respond with HTTP 200 OK.
 
-To fetch an existing settings flow call `/self-service/settings/flows?flow=<flow_id>`.
+To fetch an existing settings flow call
+`/self-service/settings/flows?flow=<flow_id>`.
 
 :::warning
 
-You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
-Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
-you vulnerable to a variety of CSRF attacks.
+You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS,
+AngularJS) nor server-side (Java Server Pages, NodeJS, PHP, Golang, ...) browser
+applications. Using this endpoint in these applications will make you vulnerable
+to a variety of CSRF attacks.
 
-This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
+This endpoint MUST ONLY be used in scenarios such as native mobile apps (React
+Native, Objective C, Swift, Java, ...).
 
 :::
 
-More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+More information can be found at
+[ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 
 #### Responses
 
@@ -5727,17 +5796,20 @@ Accept: application/json
 
 ```
 
-This endpoint initializes a browser-based user settings flow. Once initialized, the browser will be redirected to
-`selfservice.flows.settings.ui_url` with the flow ID set as the query parameter `?flow=`. If no valid
-ORY Kratos Session Cookie is included in the request, a login flow will be initialized.
+This endpoint initializes a browser-based user settings flow. Once initialized,
+the browser will be redirected to `selfservice.flows.settings.ui_url` with the
+flow ID set as the query parameter `?flow=`. If no valid ORY Kratos Session
+Cookie is included in the request, a login flow will be initialized.
 
 :::note
 
-This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+This endpoint is NOT INTENDED for API clients and only works with browsers
+(Chrome, Firefox, ...).
 
 :::
 
-More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+More information can be found at
+[ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 
 #### Responses
 
@@ -5912,13 +5984,16 @@ Accept: application/json
 
 ```
 
-When accessing this endpoint through ORY Kratos' Public API you must ensure that either the ORY Kratos Session Cookie
-or the ORY Kratos Session Token are set. The public endpoint does not return 404 status codes
-but instead 403 or 500 to improve data privacy.
+When accessing this endpoint through ORY Kratos' Public API you must ensure that
+either the ORY Kratos Session Cookie or the ORY Kratos Session Token are set.
+The public endpoint does not return 404 status codes but instead 403 or 500 to
+improve data privacy.
 
-You can access this endpoint without credentials when using ORY Kratos' Admin API.
+You can access this endpoint without credentials when using ORY Kratos' Admin
+API.
 
-More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+More information can be found at
+[ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 
 <a id="get-settings-flow-parameters"></a>
 
@@ -6210,23 +6285,26 @@ Accept: application/json
 
 ```
 
-Use this endpoint to complete a settings flow by sending an identity's updated password. This endpoint
-behaves differently for API and browser flows.
+Use this endpoint to complete a settings flow by sending an identity's updated
+password. This endpoint behaves differently for API and browser flows.
 
-API-initiated flows expect `application/json` to be sent in the body and respond with
-HTTP 200 and an application/json body with the session token on success;
-HTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
-HTTP 400 on form validation errors.
-HTTP 401 when the endpoint is called without a valid session token.
-HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached.
-Implies that the user needs to re-authenticate.
+API-initiated flows expect `application/json` to be sent in the body and respond
+with HTTP 200 and an application/json body with the session token on success;
+HTTP 302 redirect to a fresh settings flow if the original flow expired with the
+appropriate error messages set; HTTP 400 on form validation errors. HTTP 401
+when the endpoint is called without a valid session token. HTTP 403 when
+`selfservice.flows.settings.privileged_session_max_age` was reached. Implies
+that the user needs to re-authenticate.
 
-Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
-a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
-a HTTP 302 redirect to the Settings UI URL with the flow ID containing the validation errors otherwise.
-a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.
+Browser flows expect `application/x-www-form-urlencoded` to be sent in the body
+and responds with a HTTP 302 redirect to the post/after settings URL or the
+`return_to` value if it was set and if the flow succeeded; a HTTP 302 redirect
+to the Settings UI URL with the flow ID containing the validation errors
+otherwise. a HTTP 302 redirect to the login endpoint when
+`selfservice.flows.settings.privileged_session_max_age` was reached.
 
-More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+More information can be found at
+[ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 
 #### Request body
 
@@ -6556,23 +6634,27 @@ Accept: application/json
 
 ```
 
-Use this endpoint to complete a settings flow by sending an identity's updated traits. This endpoint
-behaves differently for API and browser flows.
+Use this endpoint to complete a settings flow by sending an identity's updated
+traits. This endpoint behaves differently for API and browser flows.
 
-API-initiated flows expect `application/json` to be sent in the body and respond with
-HTTP 200 and an application/json body with the session token on success;
-HTTP 302 redirect to a fresh settings flow if the original flow expired with the appropriate error messages set;
-HTTP 400 on form validation errors.
-HTTP 401 when the endpoint is called without a valid session token.
-HTTP 403 when `selfservice.flows.settings.privileged_session_max_age` was reached and a sensitive field was
-updated (e.g. recovery email). Implies that the user needs to re-authenticate.
+API-initiated flows expect `application/json` to be sent in the body and respond
+with HTTP 200 and an application/json body with the session token on success;
+HTTP 302 redirect to a fresh settings flow if the original flow expired with the
+appropriate error messages set; HTTP 400 on form validation errors. HTTP 401
+when the endpoint is called without a valid session token. HTTP 403 when
+`selfservice.flows.settings.privileged_session_max_age` was reached and a
+sensitive field was updated (e.g. recovery email). Implies that the user needs
+to re-authenticate.
 
-Browser flows expect `application/x-www-form-urlencoded` to be sent in the body and responds with
-a HTTP 302 redirect to the post/after settings URL or the `return_to` value if it was set and if the flow succeeded;
-a HTTP 302 redirect to the settings UI URL with the flow ID containing the validation errors otherwise.
-a HTTP 302 redirect to the login endpoint when `selfservice.flows.settings.privileged_session_max_age` was reached.
+Browser flows expect `application/x-www-form-urlencoded` to be sent in the body
+and responds with a HTTP 302 redirect to the post/after settings URL or the
+`return_to` value if it was set and if the flow succeeded; a HTTP 302 redirect
+to the settings UI URL with the flow ID containing the validation errors
+otherwise. a HTTP 302 redirect to the login endpoint when
+`selfservice.flows.settings.privileged_session_max_age` was reached.
 
-More information can be found at [ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
+More information can be found at
+[ORY Kratos User Settings & Profile Management Documentation](../self-service/flows/user-settings).
 
 #### Responses
 
@@ -6848,21 +6930,26 @@ Accept: application/json
 
 ```
 
-This endpoint initiates a verification flow for API clients such as mobile devices, smart TVs, and so on.
+This endpoint initiates a verification flow for API clients such as mobile
+devices, smart TVs, and so on.
 
-To fetch an existing verification flow call `/self-service/verification/flows?flow=<flow_id>`.
+To fetch an existing verification flow call
+`/self-service/verification/flows?flow=<flow_id>`.
 
 :::warning
 
-You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS, AngularJS) nor server-side (Java Server
-Pages, NodeJS, PHP, Golang, ...) browser applications. Using this endpoint in these applications will make
-you vulnerable to a variety of CSRF attacks.
+You MUST NOT use this endpoint in client-side (Single Page Apps, ReactJS,
+AngularJS) nor server-side (Java Server Pages, NodeJS, PHP, Golang, ...) browser
+applications. Using this endpoint in these applications will make you vulnerable
+to a variety of CSRF attacks.
 
-This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
+This endpoint MUST ONLY be used in scenarios such as native mobile apps (React
+Native, Objective C, Swift, Java, ...).
 
 :::
 
-More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+More information can be found at
+[ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 
 #### Responses
 
@@ -7104,12 +7191,16 @@ Accept: application/json
 
 ```
 
-This endpoint initializes a browser-based account verification flow. Once initialized, the browser will be redirected to
-`selfservice.flows.verification.ui_url` with the flow ID set as the query parameter `?flow=`.
+This endpoint initializes a browser-based account verification flow. Once
+initialized, the browser will be redirected to
+`selfservice.flows.verification.ui_url` with the flow ID set as the query
+parameter `?flow=`.
 
-This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
+This endpoint is NOT INTENDED for API clients and only works with browsers
+(Chrome, Firefox, ...).
 
-More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+More information can be found at
+[ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 
 #### Responses
 
@@ -7277,9 +7368,11 @@ Accept: application/json
 
 ```
 
-This endpoint returns a verification flow's context with, for example, error details and other information.
+This endpoint returns a verification flow's context with, for example, error
+details and other information.
 
-More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+More information can be found at
+[ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 
 <a id="get-verification-flow-parameters"></a>
 
@@ -7293,8 +7386,8 @@ More information can be found at [ORY Kratos Email and Phone Verification Docume
 
 **id**: The Flow ID
 
-The value for this parameter comes from `request` URL Query parameter sent to your
-application (e.g. `/verification?flow=abcde`).
+The value for this parameter comes from `request` URL Query parameter sent to
+your application (e.g. `/verification?flow=abcde`).
 
 #### Responses
 
@@ -7540,22 +7633,28 @@ Accept: application/json
 
 ```
 
-Use this endpoint to complete a verification flow using the link method. This endpoint
-behaves differently for API and browser flows and has several states:
+Use this endpoint to complete a verification flow using the link method. This
+endpoint behaves differently for API and browser flows and has several states:
 
-`choose_method` expects `flow` (in the URL query) and `email` (in the body) to be sent
-and works with API- and Browser-initiated flows.
-For API clients it either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the form is invalid
-and a HTTP 302 Found redirect with a fresh verification flow if the flow was otherwise invalid (e.g. expired).
-For Browser clients it returns a HTTP 302 Found redirect to the Verification UI URL with the Verification Flow ID appended.
-`sent_email` is the success state after `choose_method` and allows the user to request another verification email. It
-works for both API and Browser-initiated flows and returns the same responses as the flow in `choose_method` state.
-`passed_challenge` expects a `token` to be sent in the URL query and given the nature of the flow ("sending a verification link")
-does not have any API capabilities. The server responds with a HTTP 302 Found redirect either to the Settings UI URL
-(if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
-a new Verification Flow ID which contains an error message that the verification link was invalid.
+`choose_method` expects `flow` (in the URL query) and `email` (in the body) to
+be sent and works with API- and Browser-initiated flows. For API clients it
+either returns a HTTP 200 OK when the form is valid and HTTP 400 OK when the
+form is invalid and a HTTP 302 Found redirect with a fresh verification flow if
+the flow was otherwise invalid (e.g. expired). For Browser clients it returns a
+HTTP 302 Found redirect to the Verification UI URL with the Verification Flow ID
+appended. `sent_email` is the success state after `choose_method` and allows the
+user to request another verification email. It works for both API and
+Browser-initiated flows and returns the same responses as the flow in
+`choose_method` state. `passed_challenge` expects a `token` to be sent in the
+URL query and given the nature of the flow ("sending a verification link") does
+not have any API capabilities. The server responds with a HTTP 302 Found
+redirect either to the Settings UI URL (if the link was valid) and instructs the
+user to update their password, or a redirect to the Verification UI URL with a
+new Verification Flow ID which contains an error message that the verification
+link was invalid.
 
-More information can be found at [ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
+More information can be found at
+[ORY Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation).
 
 #### Request body
 
@@ -7585,8 +7684,8 @@ email: string
 
 **token**: Verification Token
 
-The verification token which completes the verification request. If the token
-is invalid (e.g. expired) an error will be shown to the end-user.
+The verification token which completes the verification request. If the token is
+invalid (e.g. expired) an error will be shown to the end-user.
 
 **flow**: The Flow ID
 
@@ -7841,10 +7940,12 @@ Accept: application/json
 
 ```
 
-Use this endpoint to revoke a session using its token. This endpoint is particularly useful for API clients
-such as mobile apps to log the user out of the system and invalidate the session.
+Use this endpoint to revoke a session using its token. This endpoint is
+particularly useful for API clients such as mobile apps to log the user out of
+the system and invalidate the session.
 
-This endpoint does not remove any HTTP Cookies - use the Self-Service Logout Flow instead.
+This endpoint does not remove any HTTP Cookies - use the Self-Service Logout
+Flow instead.
 
 #### Request body
 
@@ -8036,9 +8137,11 @@ Cookie: string
 
 ```
 
-Uses the HTTP Headers in the GET request to determine (e.g. by using checking the cookies) who is authenticated.
-Returns a session object in the body or 401 if the credentials are invalid or no credentials were sent.
-Additionally when the request it successful it adds the user ID to the 'X-Kratos-Authenticated-Identity-Id' header in the response.
+Uses the HTTP Headers in the GET request to determine (e.g. by using checking
+the cookies) who is authenticated. Returns a session object in the body or 401
+if the credentials are invalid or no credentials were sent. Additionally when
+the request it successful it adds the user ID to the
+'X-Kratos-Authenticated-Identity-Id' header in the response.
 
 This endpoint is useful for reverse proxies and API Gateways.
 
@@ -8251,13 +8354,14 @@ Accept: application/json
 
 ```
 
-This endpoint returns the service version typically notated using semantic versioning.
+This endpoint returns the service version typically notated using semantic
+versioning.
 
 If the service supports TLS Edge Termination, this endpoint does not require the
 `X-Forwarded-Proto` header to be set.
 
-Be aware that if you are running multiple nodes of this service, the health status will never
-refer to the cluster state, only to a single instance.
+Be aware that if you are running multiple nodes of this service, the health
+status will never refer to the cluster state, only to a single instance.
 
 #### Responses
 
@@ -8477,7 +8581,8 @@ p JSON.parse(result)
 "string"
 ```
 
-_CredentialsType represents several different credential types, like password credentials, passwordless credentials,_
+_CredentialsType represents several different credential types, like password
+credentials, passwordless credentials,_
 
 #### Properties
 

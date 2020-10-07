@@ -7,17 +7,21 @@ title: Configuration
 OPEN AN ISSUE IF YOU WOULD LIKE TO MAKE ADJUSTMENTS HERE AND MAINTAINERS WILL HELP YOU LOCATE THE RIGHT
 FILE -->
 
-If file `$HOME/.kratos.yaml` exists, it will be used as a configuration file which supports all
-configuration settings listed below.
+If file `$HOME/.kratos.yaml` exists, it will be used as a configuration file
+which supports all configuration settings listed below.
 
-You can load the config file from another source using the `-c path/to/config.yaml` or `--config path/to/config.yaml`
-flag: `kratos --config path/to/config.yaml`.
+You can load the config file from another source using the
+`-c path/to/config.yaml` or `--config path/to/config.yaml` flag:
+`kratos --config path/to/config.yaml`.
 
-Config files can be formatted as JSON, YAML and TOML. Some configuration values support reloading without server restart.
-All configuration values can be set using environment variables, as documented below.
+Config files can be formatted as JSON, YAML and TOML. Some configuration values
+support reloading without server restart. All configuration values can be set
+using environment variables, as documented below.
 
-To find out more about edge cases like setting string array values through environmental variables head to the
-[Configuring ORY services](https://www.ory.sh/docs/ecosystem/configuring) section.
+To find out more about edge cases like setting string array values through
+environmental variables head to the
+[Configuring ORY services](https://www.ory.sh/docs/ecosystem/configuring)
+section.
 
 ```yaml
 ## ORY Kratos Configuration
@@ -1128,8 +1132,9 @@ session:
     #
     domain:
       title: Session Cookie Domain
-      description: Sets the session cookie domain. Useful when dealing with
-        subdomains. Use with care!
+      description:
+        Sets the session cookie domain. Useful when dealing with subdomains. Use
+        with care!
 
     ## Make Session Cookie Persistent ##
     #
