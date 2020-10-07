@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-10-06)](#unreleased-2020-10-06)
+- [Unreleased (2020-10-07)](#unreleased-2020-10-07)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -102,7 +102,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...aeaddbcb27f89d61b076bdd9ad1739fb1da2ffd9) (2020-10-06)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...d9d1bfdff70ad835629a2dba00579925fcb3094d) (2020-10-07)
 
 
 ### Bug Fixes
@@ -281,6 +281,7 @@
 * Add identity state ([fb4aedb](https://github.com/ory/kratos/commit/fb4aedb9a95367e25080491b54aab11de491d819))
 * Add login session to navbar ([b212d64](https://github.com/ory/kratos/commit/b212d6484e40c9f2cce10f2ba4aaf4e2a72f03a1))
 * Add milestones to sidebar ([aae13ec](https://github.com/ory/kratos/commit/aae13ec141a2c315aff1a53aa005bb9465efcdc0))
+* Add missing TOC entries ([#748](https://github.com/ory/kratos/issues/748)) ([bd7edfb](https://github.com/ory/kratos/commit/bd7edfbebd19f01af337c34293ebc2865f2b077d))
 * Add pagination docs ([7fe0901](https://github.com/ory/kratos/commit/7fe0901ee5d0e829e110bd0c4fdecb24bfc27768))
 * Add secret key rotation guide ([3d6e21a](https://github.com/ory/kratos/commit/3d6e21af2f726944468299c326600a8ab0e4e885))
 * Add sequence diagrams for browser/api flows ([590d767](https://github.com/ory/kratos/commit/590d767352b9253b7550eaba56fea99400399cd7))
@@ -303,6 +304,7 @@
 * Clarify kratos config snippet ([e7732f3](https://github.com/ory/kratos/commit/e7732f3283d82a1678076cd2463ef5ff33dd30ea))
 * Clean up docs and correct samples ([8627ec5](https://github.com/ory/kratos/commit/8627ec58edb15118e0c4ce2cfcef7a5573482c5a))
 * Complete registration documentation ([b3af02b](https://github.com/ory/kratos/commit/b3af02b0ea4cbf16ea282b7ce5f5057d99044ac3))
+* Consistent formatting of badges ([#745](https://github.com/ory/kratos/issues/745)) ([b391a03](https://github.com/ory/kratos/commit/b391a036f3b49cd6c1915444c9f26dead4855a7c))
 * Correct settings and verification redir ([30e25e7](https://github.com/ory/kratos/commit/30e25e7287a2579da99a6a6dc2f890e7e06fcc81))
 * Docker image documentation ([#573](https://github.com/ory/kratos/issues/573)) ([bfe032e](https://github.com/ory/kratos/commit/bfe032e2b6bfd8b9415d466011bdd7e36efa4146))
 * Document APi flows in self-service overview ([71ed0bd](https://github.com/ory/kratos/commit/71ed0bd2027d61c2e5cebf6b031fe66469bdf97e))
@@ -328,6 +330,7 @@
 * Move hooks ([c02b588](https://github.com/ory/kratos/commit/c02b58867ee2c0a386b2b741375ec8cd76122461))
 * Move to json sidebar ([504af3b](https://github.com/ory/kratos/commit/504af3b89d728eb11bf42f4a2037c78b3b7cb788))
 * Password login and registration methods for API clients ([5a44356](https://github.com/ory/kratos/commit/5a4435643ae3463df85458f22f87730c11af10ab))
+* Prettify all files ([#743](https://github.com/ory/kratos/issues/743)) ([d9d1bfd](https://github.com/ory/kratos/commit/d9d1bfdff70ad835629a2dba00579925fcb3094d))
 * Quickstart next steps ([#676](https://github.com/ory/kratos/issues/676)) ([ee9dd0d](https://github.com/ory/kratos/commit/ee9dd0d58a4146a0e131f6a7b74943bb39d26c0b)):
 
     > Added a section outlining some easy config changes, that users can apply to the quickstart to test out different scenarios and configurations.

@@ -17,7 +17,8 @@
     <a href="https://coveralls.io/github/ory/kratos?branch=master"> <img src="https://coveralls.io/repos/ory/kratos/badge.svg?branch=master&service=github" alt="Coverage Status"></a>
     <a href="https://goreportcard.com/report/github.com/ory/kratos"><img src="https://goreportcard.com/badge/github.com/ory/kratos" alt="Go Report Card"></a>
     <a href="https://bestpractices.coreinfrastructure.org/projects/364"><img src="https://bestpractices.coreinfrastructure.org/projects/364/badge" alt="CII Best Practices"></a>
-    <a href="#backers" alt="sponsors on Open Collective"><img src="https://opencollective.com/ory/backers/badge.svg" /></a> <a href="#sponsors" alt="Sponsors on Open Collective"><img src="https://opencollective.com/ory/sponsors/badge.svg" /></a>
+    <a href="#backers" alt="sponsors on Open Collective"><img src="https://opencollective.com/ory/backers/badge.svg" /></a>
+    <a href="#sponsors" alt="Sponsors on Open Collective"><img src="https://opencollective.com/ory/sponsors/badge.svg" /></a>
 </p>
 
 ORY Kratos is the first and only cloud native Identity and User Management System in the world. Finally, it is no longer necessary to implement a User Login process for the umpteenth time!
@@ -32,8 +33,9 @@ ORY Kratos is the first and only cloud native Identity and User Management Syste
   - [Quickstart](#quickstart)
   - [Installation](#installation)
 - [Ecosystem](#ecosystem)
-  - [ORY Security Console: Administrative User Interface](#ory-security-console-administrative-user-interface)
-  - [ORY Oathkeeper: Identity and Access Proxy](#ory-oathkeeper-identity--access-proxy)
+  - [ORY Kratos: Identity and User Infrastructure and Management](#ory-kratos-identity-and-user-infrastructure-and-management)
+  - [ORY Hydra: OAuth2 and OpenID Connect Server](#ory-hydra-oauth2-and-openid-connect-server)
+  - [ORY Oathkeeper: Identity and Access Proxy](#ory-oathkeeper-identity-and-access-proxy)
   - [ORY Keto: Access Control Policies as a Server](#ory-keto-access-control-policies-as-a-server)
 - [Security](#security)
   - [Disclosing vulnerabilities](#disclosing-vulnerabilities)
@@ -46,10 +48,12 @@ ORY Kratos is the first and only cloud native Identity and User Management Syste
   - [Develop](#develop)
     - [Dependencies](#dependencies)
       - [Install Tools](#install-tools)
+    - [Install from source](#install-from-source)
     - [Formatting Code](#formatting-code)
     - [Running Tests](#running-tests)
       - [Short Tests](#short-tests)
       - [Regular Tests](#regular-tests)
+      - [End-to-End Tests](#end-to-end-tests)
     - [Build Docker](#build-docker)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
