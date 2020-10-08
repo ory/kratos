@@ -145,6 +145,8 @@ Token as a bearer token in the HTTP Authorization Header:
 $ sessionToken=oFZzgLpsacUpUy2cvQPtrGa2046WcXCR
 $ curl -s -X POST -H  "Accept: application/json" \
     -H "Authorization: Bearer $sessionToken" \
+    # OR: \
+    # -H "X-Session-Token: $sessionToken" \
     http://127.0.0.1:4433/sessions/whoami | jq
 
 {

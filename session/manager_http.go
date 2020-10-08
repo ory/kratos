@@ -100,6 +100,10 @@ func (s *ManagerHTTP) extractToken(r *http.Request) string {
 		return token
 	}
 
+	if token := r.Header.Get("X-Session-Token"); len(token) > 0 {
+		return token
+	}
+
 	cookie, err := s.r.CookieManager().Get(r, s.cookieName)
 	if err != nil {
 		return ""
