@@ -138,6 +138,15 @@
             "8eaef023-2b34-4da1-9baa-8bc8c9d6a490",
             "contoso.onmicrosoft.com"
           ]
+        },
+        "requested_claims": {
+          "title": "OpenID Connect claims",
+          "description": "The OpenID Connect claims and optionally their properties which should be included in the id_token or returned from the UserInfo Endpoint.",
+          "type": "string",
+          "examples": [
+            "{\"id_token\":{\"email\":{\"essential\":true},\"email_verified\":{\"essential\":true}}}",
+            "{\"userinfo\":{\"given_name\":{\"essential\":true},\"nickname\": null,\"email\": {\"essential\":true},\"email_verified\":{\"essential\":true},\"picture\":null,\"http://example.info/claims/groups\":null},\"id_token\":{\"auth_time\":{\"essential\":true},\"acr\":{\"values\":[\"urn:mace:incommon:iap:silver\"]}}}"
+          ]
         }
       },
       "additionalProperties": false,

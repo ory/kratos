@@ -73,12 +73,16 @@ func (g *ProviderGenericOIDC) OAuth2(ctx context.Context) (*oauth2.Config, error
 }
 
 func (g *ProviderGenericOIDC) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
+	var options []oauth2.AuthCodeOption
+
 	if isForced(r) {
-		return []oauth2.AuthCodeOption{
-			oauth2.SetAuthURLParam("prompt", "login"),
-		}
+		options = append(options, oauth2.SetAuthURLParam("prompt", "login"))
 	}
-	return []oauth2.AuthCodeOption{}
+	if len(g.config.RequestedClaims) != 0 {
+		options = append(options, oauth2.SetAuthURLParam("claims", g.config.RequestedClaims))
+	}
+
+	return options
 }
 
 func (g *ProviderGenericOIDC) verifyAndDecodeClaimsWithProvider(ctx context.Context, provider *gooidc.Provider, raw string) (*Claims, error) {
