@@ -1619,7 +1619,7 @@
               "$ref": "#/definitions/session"
             }
           },
-          "403": {
+          "401": {
             "description": "genericError",
             "schema": {
               "$ref": "#/definitions/genericError"

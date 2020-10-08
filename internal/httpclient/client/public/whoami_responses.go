@@ -29,8 +29,8 @@ func (o *WhoamiReader) ReadResponse(response runtime.ClientResponse, consumer ru
 			return nil, err
 		}
 		return result, nil
-	case 403:
-		result := NewWhoamiForbidden()
+	case 401:
+		result := NewWhoamiUnauthorized()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
@@ -80,28 +80,28 @@ func (o *WhoamiOK) readResponse(response runtime.ClientResponse, consumer runtim
 	return nil
 }
 
-// NewWhoamiForbidden creates a WhoamiForbidden with default headers values
-func NewWhoamiForbidden() *WhoamiForbidden {
-	return &WhoamiForbidden{}
+// NewWhoamiUnauthorized creates a WhoamiUnauthorized with default headers values
+func NewWhoamiUnauthorized() *WhoamiUnauthorized {
+	return &WhoamiUnauthorized{}
 }
 
-/*WhoamiForbidden handles this case with default header values.
+/*WhoamiUnauthorized handles this case with default header values.
 
 genericError
 */
-type WhoamiForbidden struct {
+type WhoamiUnauthorized struct {
 	Payload *models.GenericError
 }
 
-func (o *WhoamiForbidden) Error() string {
-	return fmt.Sprintf("[GET /sessions/whoami][%d] whoamiForbidden  %+v", 403, o.Payload)
+func (o *WhoamiUnauthorized) Error() string {
+	return fmt.Sprintf("[GET /sessions/whoami][%d] whoamiUnauthorized  %+v", 401, o.Payload)
 }
 
-func (o *WhoamiForbidden) GetPayload() *models.GenericError {
+func (o *WhoamiUnauthorized) GetPayload() *models.GenericError {
 	return o.Payload
 }
 
-func (o *WhoamiForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+func (o *WhoamiUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.GenericError)
 
