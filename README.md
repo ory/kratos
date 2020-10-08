@@ -34,8 +34,8 @@ ORY Kratos is the first and only cloud native Identity and User Management Syste
   - [Installation](#installation)
 - [Ecosystem](#ecosystem)
   - [ORY Kratos: Identity and User Infrastructure and Management](#ory-kratos-identity-and-user-infrastructure-and-management)
-  - [ORY Hydra: OAuth2 & OpenID Connect Server](#ory-hydra-oauth2--openid-connect-server)
-  - [ORY Oathkeeper: Identity & Access Proxy](#ory-oathkeeper-identity--access-proxy)
+  - [ORY Hydra: OAuth2 and OpenID Connect Server](#ory-hydra-oauth2-and-openid-connect-server)
+  - [ORY Oathkeeper: Identity and Access Proxy](#ory-oathkeeper-identity-and-access-proxy)
   - [ORY Keto: Access Control Policies as a Server](#ory-keto-access-control-policies-as-a-server)
 - [Security](#security)
   - [Disclosing vulnerabilities](#disclosing-vulnerabilities)
@@ -260,16 +260,16 @@ It implements core use cases that almost every software application needs to
 deal with: Self-service Login and Registration, Multi-Factor Authentication
 (MFA/2FA), Account Recovery and Verification, Profile and Account Management.
 
-### ORY Hydra: OAuth2 & OpenID Connect Server
+### ORY Hydra: OAuth2 and OpenID Connect Server
 
 [ORY Hydra](https://github.com/ory/hydra) is an OpenID Certified™ OAuth2 and
 OpenID Connect Provider can connect to any existing identity database (LDAP, AD,
 KeyCloak, PHP+MySQL, ...) and user interface.
 
-### ORY Oathkeeper: Identity & Access Proxy
+### ORY Oathkeeper: Identity and Access Proxy
 
 [ORY Oathkeeper](https://github.com/ory/oathkeeper) is a BeyondCorp/Zero Trust
-Identity & Access Proxy (IAP) with configurable authentication, authorization,
+Identity and Access Proxy (IAP) with configurable authentication, authorization,
 and request mutation rules for your web services: Authenticate JWT, Access
 Tokens, API Keys, mTLS; Check if the contained subject is allowed to perform the
 request; Encode resulting content into custom headers (`X-User-ID`), JSON Web
