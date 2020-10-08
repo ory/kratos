@@ -56,5 +56,4 @@ kratos jsonnet format path/to/files/*.jsonnet [more/files.jsonnet, [supports/**/
 
 ### SEE ALSO
 
-- [kratos jsonnet](kratos-jsonnet) - Helpers for linting and formatting JSONNet
-  code
+- [kratos jsonnet](kratos-jsonnet) - Helpers for linting and formatting JSONNet code
