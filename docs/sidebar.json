@@ -1,10 +1,5 @@
 {
-  "Introduction": [
-    "index",
-    "quickstart",
-    "install",
-    "configuring"
-  ],
+  "Introduction": ["index", "quickstart", "install", "configuring"],
   "Concepts": [
     "concepts/index",
     "concepts/terminology",
@@ -37,12 +32,9 @@
     "self-service/flows/2fa-mfa-multi-factor-authentication",
     "self-service/hooks"
   ],
-  "Administration": [
-    "admin/managing-users-identities"
-  ],
+  "Administration": ["admin/managing-users-identities"],
   "Guides": [
     "guides/sign-in-with-github-google-facebook-linkedin",
-    "guides/react-native-login-registration",
     "guides/login-session",
     "guides/configuring-cookies",
     "guides/setting-up-cors",
