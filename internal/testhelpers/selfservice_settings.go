@@ -98,14 +98,14 @@ func ExpectURL(isAPI bool, api, browser string) string {
 	return browser
 }
 
-func GetSettingsFlowMethodConfig(t *testing.T, rs *models.SettingsFlow, id string) *models.FlowMethodConfig {
+func GetSettingsFlowMethodConfig(t *testing.T, rs *models.SettingsFlow, id string) *models.SettingsFlowMethodConfig {
 	require.NotEmpty(t, rs.Methods[id])
 	require.NotEmpty(t, rs.Methods[id].Config)
 	require.NotEmpty(t, rs.Methods[id].Config.Action)
 	return rs.Methods[id].Config
 }
 
-func GetSettingsFlowMethodConfigDeprecated(t *testing.T, primaryUser *http.Client, ts *httptest.Server, id string) *models.FlowMethodConfig {
+func GetSettingsFlowMethodConfigDeprecated(t *testing.T, primaryUser *http.Client, ts *httptest.Server, id string) *models.SettingsFlowMethodConfig {
 	rs := InitializeSettingsFlowViaBrowser(t, primaryUser, ts)
 
 	require.NotEmpty(t, rs.Payload.Methods[id])
@@ -228,7 +228,7 @@ func AddAndLoginIdentities(t *testing.T, reg *driver.RegistryDefault, public *ht
 func SettingsMakeRequest(
 	t *testing.T,
 	isAPI bool,
-	f *models.FlowMethodConfig,
+	f *models.SettingsFlowMethodConfig,
 	hc *http.Client,
 	values string,
 ) (string, *http.Response) {

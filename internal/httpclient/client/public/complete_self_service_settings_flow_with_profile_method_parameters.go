@@ -19,7 +19,7 @@ import (
 // NewCompleteSelfServiceSettingsFlowWithProfileMethodParams creates a new CompleteSelfServiceSettingsFlowWithProfileMethodParams object
 // with the default values initialized.
 func NewCompleteSelfServiceSettingsFlowWithProfileMethodParams() *CompleteSelfServiceSettingsFlowWithProfileMethodParams {
-
+	var ()
 	return &CompleteSelfServiceSettingsFlowWithProfileMethodParams{
 
 		timeout: cr.DefaultTimeout,
@@ -29,7 +29,7 @@ func NewCompleteSelfServiceSettingsFlowWithProfileMethodParams() *CompleteSelfSe
 // NewCompleteSelfServiceSettingsFlowWithProfileMethodParamsWithTimeout creates a new CompleteSelfServiceSettingsFlowWithProfileMethodParams object
 // with the default values initialized, and the ability to set a timeout on a request
 func NewCompleteSelfServiceSettingsFlowWithProfileMethodParamsWithTimeout(timeout time.Duration) *CompleteSelfServiceSettingsFlowWithProfileMethodParams {
-
+	var ()
 	return &CompleteSelfServiceSettingsFlowWithProfileMethodParams{
 
 		timeout: timeout,
@@ -39,7 +39,7 @@ func NewCompleteSelfServiceSettingsFlowWithProfileMethodParamsWithTimeout(timeou
 // NewCompleteSelfServiceSettingsFlowWithProfileMethodParamsWithContext creates a new CompleteSelfServiceSettingsFlowWithProfileMethodParams object
 // with the default values initialized, and the ability to set a context for a request
 func NewCompleteSelfServiceSettingsFlowWithProfileMethodParamsWithContext(ctx context.Context) *CompleteSelfServiceSettingsFlowWithProfileMethodParams {
-
+	var ()
 	return &CompleteSelfServiceSettingsFlowWithProfileMethodParams{
 
 		Context: ctx,
@@ -49,7 +49,7 @@ func NewCompleteSelfServiceSettingsFlowWithProfileMethodParamsWithContext(ctx co
 // NewCompleteSelfServiceSettingsFlowWithProfileMethodParamsWithHTTPClient creates a new CompleteSelfServiceSettingsFlowWithProfileMethodParams object
 // with the default values initialized, and the ability to set a custom HTTPClient for a request
 func NewCompleteSelfServiceSettingsFlowWithProfileMethodParamsWithHTTPClient(client *http.Client) *CompleteSelfServiceSettingsFlowWithProfileMethodParams {
-
+	var ()
 	return &CompleteSelfServiceSettingsFlowWithProfileMethodParams{
 		HTTPClient: client,
 	}
@@ -59,6 +59,15 @@ func NewCompleteSelfServiceSettingsFlowWithProfileMethodParamsWithHTTPClient(cli
 for the complete self service settings flow with profile method operation typically these are written to a http.Request
 */
 type CompleteSelfServiceSettingsFlowWithProfileMethodParams struct {
+
+	/*Payload*/
+	Payload interface{}
+	/*Flow
+	  Flow is flow ID.
+
+	*/
+	Flow *string
+
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
@@ -97,6 +106,28 @@ func (o *CompleteSelfServiceSettingsFlowWithProfileMethodParams) SetHTTPClient(c
 	o.HTTPClient = client
 }
 
+// WithPayload adds the payload to the complete self service settings flow with profile method params
+func (o *CompleteSelfServiceSettingsFlowWithProfileMethodParams) WithPayload(payload interface{}) *CompleteSelfServiceSettingsFlowWithProfileMethodParams {
+	o.SetPayload(payload)
+	return o
+}
+
+// SetPayload adds the payload to the complete self service settings flow with profile method params
+func (o *CompleteSelfServiceSettingsFlowWithProfileMethodParams) SetPayload(payload interface{}) {
+	o.Payload = payload
+}
+
+// WithFlow adds the flow to the complete self service settings flow with profile method params
+func (o *CompleteSelfServiceSettingsFlowWithProfileMethodParams) WithFlow(flow *string) *CompleteSelfServiceSettingsFlowWithProfileMethodParams {
+	o.SetFlow(flow)
+	return o
+}
+
+// SetFlow adds the flow to the complete self service settings flow with profile method params
+func (o *CompleteSelfServiceSettingsFlowWithProfileMethodParams) SetFlow(flow *string) {
+	o.Flow = flow
+}
+
 // WriteToRequest writes these params to a swagger request
 func (o *CompleteSelfServiceSettingsFlowWithProfileMethodParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -104,6 +135,28 @@ func (o *CompleteSelfServiceSettingsFlowWithProfileMethodParams) WriteToRequest(
 		return err
 	}
 	var res []error
+
+	if o.Payload != nil {
+		if err := r.SetBodyParam(o.Payload); err != nil {
+			return err
+		}
+	}
+
+	if o.Flow != nil {
+
+		// query param flow
+		var qrFlow string
+		if o.Flow != nil {
+			qrFlow = *o.Flow
+		}
+		qFlow := qrFlow
+		if qFlow != "" {
+			if err := r.SetQueryParam("flow", qFlow); err != nil {
+				return err
+			}
+		}
+
+	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)

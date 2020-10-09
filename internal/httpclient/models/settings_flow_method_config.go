@@ -12,10 +12,10 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// FlowMethodConfig flow method config
+// SettingsFlowMethodConfig settings flow method config
 //
-// swagger:model FlowMethodConfig
-type FlowMethodConfig struct {
+// swagger:model settingsFlowMethodConfig
+type SettingsFlowMethodConfig struct {
 
 	// Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`.
 	// Required: true
@@ -33,8 +33,8 @@ type FlowMethodConfig struct {
 	Method *string `json:"method"`
 }
 
-// Validate validates this flow method config
-func (m *FlowMethodConfig) Validate(formats strfmt.Registry) error {
+// Validate validates this settings flow method config
+func (m *SettingsFlowMethodConfig) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateAction(formats); err != nil {
@@ -59,7 +59,7 @@ func (m *FlowMethodConfig) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *FlowMethodConfig) validateAction(formats strfmt.Registry) error {
+func (m *SettingsFlowMethodConfig) validateAction(formats strfmt.Registry) error {
 
 	if err := validate.Required("action", "body", m.Action); err != nil {
 		return err
@@ -68,7 +68,7 @@ func (m *FlowMethodConfig) validateAction(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *FlowMethodConfig) validateFields(formats strfmt.Registry) error {
+func (m *SettingsFlowMethodConfig) validateFields(formats strfmt.Registry) error {
 
 	if err := validate.Required("fields", "body", m.Fields); err != nil {
 		return err
@@ -84,7 +84,7 @@ func (m *FlowMethodConfig) validateFields(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *FlowMethodConfig) validateMessages(formats strfmt.Registry) error {
+func (m *SettingsFlowMethodConfig) validateMessages(formats strfmt.Registry) error {
 
 	if swag.IsZero(m.Messages) { // not required
 		return nil
@@ -100,7 +100,7 @@ func (m *FlowMethodConfig) validateMessages(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *FlowMethodConfig) validateMethod(formats strfmt.Registry) error {
+func (m *SettingsFlowMethodConfig) validateMethod(formats strfmt.Registry) error {
 
 	if err := validate.Required("method", "body", m.Method); err != nil {
 		return err
@@ -110,7 +110,7 @@ func (m *FlowMethodConfig) validateMethod(formats strfmt.Registry) error {
 }
 
 // MarshalBinary interface implementation
-func (m *FlowMethodConfig) MarshalBinary() ([]byte, error) {
+func (m *SettingsFlowMethodConfig) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -118,8 +118,8 @@ func (m *FlowMethodConfig) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *FlowMethodConfig) UnmarshalBinary(b []byte) error {
-	var res FlowMethodConfig
+func (m *SettingsFlowMethodConfig) UnmarshalBinary(b []byte) error {
+	var res SettingsFlowMethodConfig
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

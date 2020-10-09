@@ -263,7 +263,7 @@ func TestSettings(t *testing.T) {
 		viper.Set(configuration.ViperKeySelfServiceSettingsAfter+"."+configuration.DefaultBrowserReturnURL, rts.URL+"/return-ts")
 		defer viper.Set(configuration.ViperKeySelfServiceSettingsAfter, nil)
 
-		var run = func(t *testing.T, f *models.FlowMethodConfig, isAPI bool, c *http.Client, id *identity.Identity) {
+		var run = func(t *testing.T, f *models.SettingsFlowMethodConfig, isAPI bool, c *http.Client, id *identity.Identity) {
 			values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
 			values.Set("password", randx.MustString(16, randx.AlphaNum))
 			_, res := testhelpers.SettingsMakeRequest(t, isAPI, f, c, testhelpers.EncodeFormAsJSON(t, isAPI, values))

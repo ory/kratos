@@ -19,7 +19,7 @@ type SettingsFlowMethod struct {
 
 	// config
 	// Required: true
-	Config *FlowMethodConfig `json:"config"`
+	Config *SettingsFlowMethodConfig `json:"config"`
 
 	// Method is the name of this flow method.
 	// Required: true

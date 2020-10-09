@@ -127,7 +127,7 @@ func TestStrategyTraits(t *testing.T) {
 
 			f := testhelpers.GetSettingsFlowMethodConfig(t, payload, settings.StrategyProfile)
 
-			assertx.EqualAsJSON(t, &models.FlowMethodConfig{
+			assertx.EqualAsJSON(t, &models.SettingsFlowMethodConfig{
 				Action: pointerx.String(publicTS.URL + profile.RouteSettings + "?flow=" + string(payload.ID)),
 				Method: pointerx.String("POST"),
 				Fields: models.FormFields{
@@ -217,7 +217,7 @@ func TestStrategyTraits(t *testing.T) {
 	})
 
 	t.Run("description=should end up at the login endpoint if trying to update protected field without sudo mode", func(t *testing.T) {
-		var run = func(t *testing.T, config *models.FlowMethodConfig, isAPI bool, c *http.Client) *http.Response {
+		var run = func(t *testing.T, config *models.SettingsFlowMethodConfig, isAPI bool, c *http.Client) *http.Response {
 			time.Sleep(time.Millisecond)
 
 			values := testhelpers.SDKFormFieldsToURLValues(config.Fields)
