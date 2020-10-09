@@ -82,6 +82,7 @@ func (s *Strategy) SettingsStrategyID() string {
 }
 
 func (s *Strategy) RegisterSettingsRoutes(public *x.RouterPublic) {
+	s.d.CSRFHandler().ExemptPath(RouteSettings)
 	public.POST(RouteSettings, s.d.SessionHandler().IsAuthenticated(s.handleSubmit, settings.OnUnauthenticated(s.c, s.d)))
 	public.GET(RouteSettings, s.d.SessionHandler().IsAuthenticated(s.handleSubmit, settings.OnUnauthenticated(s.c, s.d)))
 }
@@ -115,6 +116,18 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		Config: &settings.FlowMethodConfig{FlowMethodConfigurator: &SettingsProfileRequestMethod{HTMLForm: f}},
 	}
 	return nil
+}
+
+// nolint:deadcode,unused
+// swagger:parameters completeSelfServiceSettingsFlowWithProfileMethod
+type completeSelfServiceSettingsFlowWithProfileMethodParameters struct {
+	// Flow is flow ID.
+	//
+	// in: query
+	Flow string `json:"flow"`
+
+	// in: body
+	Payload interface{}
 }
 
 // swagger:route POST /self-service/settings/methods/profile public completeSelfServiceSettingsFlowWithProfileMethod

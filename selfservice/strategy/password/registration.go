@@ -99,7 +99,7 @@ type completeSelfServiceRegistrationFlowWithPasswordMethodParameters struct {
 	Flow string `json:"flow"`
 
 	// in: body
-	Payload map[string]interface{}
+	Payload interface{}
 }
 
 // swagger:route POST /self-service/registration/methods/password public completeSelfServiceRegistrationFlowWithPasswordMethod

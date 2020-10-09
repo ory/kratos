@@ -70,7 +70,7 @@ type FlowMethodConfigurator interface {
 	form.MessageAdder
 }
 
-// swagger:type settingsFlowMethodConfig
+// swagger:model settingsFlowMethodConfig
 type FlowMethodConfig struct {
 	// swagger:ignore
 	FlowMethodConfigurator

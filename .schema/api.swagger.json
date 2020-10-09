@@ -1061,8 +1061,7 @@
             "name": "Payload",
             "in": "body",
             "schema": {
-              "type": "object",
-              "additionalProperties": true
+              "type": "object"
             }
           }
         ],
@@ -1324,6 +1323,21 @@
         ],
         "summary": "Complete Settings Flow with Profile Method",
         "operationId": "completeSelfServiceSettingsFlowWithProfileMethod",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Flow is flow ID.",
+            "name": "flow",
+            "in": "query"
+          },
+          {
+            "name": "Payload",
+            "in": "body",
+            "schema": {
+              "type": "object"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "settingsFlow",
@@ -1727,30 +1741,6 @@
       "description": "and so on.",
       "type": "string",
       "title": "CredentialsType  represents several different credential types, like password credentials, passwordless credentials,"
-    },
-    "FlowMethodConfig": {
-      "type": "object",
-      "required": [
-        "action",
-        "method",
-        "fields"
-      ],
-      "properties": {
-        "action": {
-          "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
-          "type": "string"
-        },
-        "fields": {
-          "$ref": "#/definitions/formFields"
-        },
-        "messages": {
-          "$ref": "#/definitions/Messages"
-        },
-        "method": {
-          "description": "Method is the form method (e.g. POST)",
-          "type": "string"
-        }
-      }
     },
     "ID": {
       "type": "integer",
@@ -2506,10 +2496,34 @@
       ],
       "properties": {
         "config": {
-          "$ref": "#/definitions/FlowMethodConfig"
+          "$ref": "#/definitions/settingsFlowMethodConfig"
         },
         "method": {
           "description": "Method is the name of this flow method.",
+          "type": "string"
+        }
+      }
+    },
+    "settingsFlowMethodConfig": {
+      "type": "object",
+      "required": [
+        "action",
+        "method",
+        "fields"
+      ],
+      "properties": {
+        "action": {
+          "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
+          "type": "string"
+        },
+        "fields": {
+          "$ref": "#/definitions/formFields"
+        },
+        "messages": {
+          "$ref": "#/definitions/Messages"
+        },
+        "method": {
+          "description": "Method is the form method (e.g. POST)",
           "type": "string"
         }
       }
