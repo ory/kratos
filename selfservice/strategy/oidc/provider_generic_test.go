@@ -2,6 +2,7 @@ package oidc
 
 import (
 	"context"
+	"encoding/json"
 	"net/url"
 	"testing"
 
@@ -12,8 +13,18 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-func makeOIDCClaims() string {
-	return "{\"id_token\":{\"email\":{\"essential\":true},\"email_verified\":{\"essential\":true}}}"
+func makeOIDCClaims() json.RawMessage {
+	claims, _ := json.Marshal(map[string]interface{}{
+		"id_token": map[string]interface{}{
+			"email": map[string]bool{
+				"essential": true,
+			},
+			"email_verified": map[string]bool{
+				"essential": true,
+			},
+		},
+	})
+	return claims
 }
 
 func makeAuthCodeURL(t *testing.T, r *login.Flow) string {
@@ -53,6 +64,6 @@ func TestProviderGenericOIDC_AddAuthCodeURLOptions(t *testing.T) {
 		r := &login.Flow{
 			ID: x.NewUUID(),
 		}
-		assert.Contains(t, makeAuthCodeURL(t, r), "claims="+url.QueryEscape(makeOIDCClaims()))
+		assert.Contains(t, makeAuthCodeURL(t, r), "claims="+url.QueryEscape(string(makeOIDCClaims())))
 	})
 }

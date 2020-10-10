@@ -79,7 +79,7 @@ func (g *ProviderGenericOIDC) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption
 		options = append(options, oauth2.SetAuthURLParam("prompt", "login"))
 	}
 	if len(g.config.RequestedClaims) != 0 {
-		options = append(options, oauth2.SetAuthURLParam("claims", g.config.RequestedClaims))
+		options = append(options, oauth2.SetAuthURLParam("claims", string(g.config.RequestedClaims)))
 	}
 
 	return options
