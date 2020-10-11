@@ -348,11 +348,6 @@ You need Go 1.13+ with `GO111MODULE=on` and (for the test suites):
 
 It is possible to develop ORY Kratos on Windows, but please be aware that all guides assume a Unix shell like bash or zsh.
 
-##### Install Tools
-
-When cloning ORY Kratos, run `make tools`. It will download several required dependencies. If you haven't run the command
-in a while it's probably a good idea to run it again.
-
 #### Install from source
 
 ```shell script
