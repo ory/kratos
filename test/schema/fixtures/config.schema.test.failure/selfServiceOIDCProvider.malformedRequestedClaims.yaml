@@ -1,0 +1,24 @@
+id: foo
+provider: generic
+client_id: foo
+client_secret: foo
+mapper_url: https://example.com
+requested_claims:
+  userinfo:
+    given_name:
+      essential: true
+      someInvalidProperty: 'invalid' # Invalid property
+    nickname: null
+    email:
+      essential: InvalidValueForEssential
+    email_verified:
+      essentials: true # key typo
+    picture: null
+    http://example/info/claims/groups: null
+  id_token:
+    auth_time:
+      essential: true
+    acr:
+      values: ['urn:mace:incommon:iap:silver']
+    sub:
+      value: '248289761001'
