@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/ory/x/cmdx"
 	"io"
 	"io/ioutil"
 	"testing"
+
+	"github.com/ory/x/cmdx"
 
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"

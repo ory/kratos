@@ -2,9 +2,10 @@ package identities
 
 import (
 	"context"
-	"github.com/ory/x/cmdx"
 	"strings"
 	"testing"
+
+	"github.com/ory/x/cmdx"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

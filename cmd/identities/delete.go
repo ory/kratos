@@ -2,8 +2,9 @@ package identities
 
 import (
 	"fmt"
-	"github.com/ory/x/cmdx"
 	"time"
+
+	"github.com/ory/x/cmdx"
 
 	"github.com/ory/kratos/internal/clihelpers"
 

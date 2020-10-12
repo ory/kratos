@@ -1,9 +1,9 @@
 package clihelpers
 
 var (
-	BuildVersion        = ""
-	BuildTime           = ""
-	BuildGitHash        = ""
+	BuildVersion = ""
+	BuildTime    = ""
+	BuildGitHash = ""
 )
 
 const (

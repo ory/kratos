@@ -1,8 +1,9 @@
 package identities
 
 import (
-	"github.com/ory/x/cmdx"
 	"strings"
+
+	"github.com/ory/x/cmdx"
 
 	"github.com/ory/kratos/internal/httpclient/models"
 )

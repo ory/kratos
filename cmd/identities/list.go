@@ -3,8 +3,9 @@ package identities
 import (
 	"context"
 	"fmt"
-	"github.com/ory/x/cmdx"
 	"strconv"
+
+	"github.com/ory/x/cmdx"
 
 	"github.com/spf13/cobra"
 

@@ -5,9 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/ory/x/cmdx"
 	"io/ioutil"
 	"testing"
+
+	"github.com/ory/x/cmdx"
 
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"

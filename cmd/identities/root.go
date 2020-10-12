@@ -1,8 +1,9 @@
 package identities
 
 import (
-	"github.com/ory/x/cmdx"
 	"github.com/spf13/cobra"
+
+	"github.com/ory/x/cmdx"
 
 	"github.com/ory/kratos/cmd/cliclient"
 )
