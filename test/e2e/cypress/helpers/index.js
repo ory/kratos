@@ -51,7 +51,7 @@ module.exports = {
   gen: {
     email,
     password,
-    identity: () => ({ email: email(), password: password() }),
+    identity: () => ({ email: email(), password: password() })
   },
   assertVerifiableAddress: assertVerifiableAddress,
   assertRecoveryAddress: assertRecoveryAddress,
@@ -64,5 +64,5 @@ module.exports = {
 
   // Adding 1+ second on top because MySQL doesn't do millisecs.
   verifyLifespan: 5000 + 1050,
-  privilegedLifespan: 5000 + 1050,
+  privilegedLifespan: 5000 + 1050
 }

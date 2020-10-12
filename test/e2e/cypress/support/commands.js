@@ -32,7 +32,7 @@ import {
   MAIL_API,
   parseHtml,
   pollInterval,
-  privilegedLifespan,
+  privilegedLifespan
 } from '../helpers'
 
 const mergeFields = (form, fields) => {
@@ -55,7 +55,7 @@ Cypress.Commands.add(
 
     cy.request({
       url: APP_URL + '/self-service/registration/browser',
-      followRedirect: false,
+      followRedirect: false
     })
       .then(({ redirectedToUrl }) => {
         expect(redirectedToUrl).to.contain(APP_URL + '/auth/registration?flow=')
@@ -75,10 +75,10 @@ Cypress.Commands.add(
           body: mergeFields(form, {
             ...fields,
             'traits.email': email,
-            password,
+            password
           }),
           url: form.action,
-          followRedirect: false,
+          followRedirect: false
         })
       })
       .then((res) => {
@@ -100,7 +100,7 @@ Cypress.Commands.add(
     rememberConsent = true,
     acceptLogin = true,
     acceptConsent = true,
-    expectSession = true,
+    expectSession = true
   }) => {
     cy.visit(APP_URL + '/auth/registration')
 
@@ -168,7 +168,7 @@ Cypress.Commands.add('login', ({ email, password, expectSession = true }) => {
 
   cy.request({
     url: APP_URL + '/self-service/login/browser',
-    followRedirect: false,
+    followRedirect: false
   })
     .then(({ redirectedToUrl }) => {
       expect(redirectedToUrl).to.contain(APP_URL + '/auth/login?flow=')
@@ -182,7 +182,7 @@ Cypress.Commands.add('login', ({ email, password, expectSession = true }) => {
         method: form.method,
         body: mergeFields(form, { identifier: email, password }),
         url: form.action,
-        followRedirect: false,
+        followRedirect: false
       })
     })
     .then((res) => {
@@ -208,7 +208,7 @@ Cypress.Commands.add(
   'reauth',
   ({
     expect: { email },
-    type: { email: temail, password: tpassword } = {},
+    type: { email: temail, password: tpassword } = {}
   }) => {
     cy.url().should('include', '/auth/login')
     cy.get('input[name="identifier"]').should('have.value', email)
@@ -272,7 +272,7 @@ Cypress.Commands.add('noSession', () =>
     .request({
       method: 'GET',
       url: `${KRATOS_PUBLIC}/sessions/whoami`,
-      failOnStatusCode: false,
+      failOnStatusCode: false
     })
     .then((request) => {
       expect(request.status).to.eq(401)
@@ -284,7 +284,7 @@ Cypress.Commands.add('getIdentityByEmail', ({ email }) =>
     .request({
       method: 'GET',
       url: `${KRATOS_ADMIN}/identities`,
-      failOnStatusCode: false,
+      failOnStatusCode: false
     })
     .then((response) => {
       expect(response.status).to.eq(200)
