@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/ory/x/cmdx"
 	"io"
 	"io/ioutil"
 	"testing"
@@ -20,7 +21,6 @@ import (
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/clihelpers"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/viper"
 )
@@ -43,7 +43,7 @@ func readIdentities(cmd *cobra.Command, args []string) (map[string]string, error
 		fc, err := ioutil.ReadAll(cmd.InOrStdin())
 		if err != nil {
 			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "STD_IN: Could not read: %s\n", err)
-			return nil, clihelpers.FailSilently(cmd)
+			return nil, cmdx.FailSilently(cmd)
 		}
 		for i, id := range parseIdentities(fc) {
 			rawIdentities[fmt.Sprintf("STD_IN[%d]", i)] = id
@@ -54,7 +54,7 @@ func readIdentities(cmd *cobra.Command, args []string) (map[string]string, error
 		fc, err := ioutil.ReadFile(fn)
 		if err != nil {
 			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%s: Could not open identity file: %s\n", fn, err)
-			return nil, clihelpers.FailSilently(cmd)
+			return nil, cmdx.FailSilently(cmd)
 		}
 		for i, id := range parseIdentities(fc) {
 			rawIdentities[fmt.Sprintf("%s[%d]", fn, i)] = id
@@ -69,9 +69,9 @@ func setup(t *testing.T, cmd *cobra.Command) driver.Registry {
 	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stubs/identity.schema.json")
 	// setup command
 	cliclient.RegisterClientFlags(cmd.Flags())
-	clihelpers.RegisterFormatFlags(cmd.Flags())
+	cmdx.RegisterFormatFlags(cmd.Flags())
 	require.NoError(t, cmd.Flags().Set(cliclient.FlagEndpoint, admin.URL))
-	require.NoError(t, cmd.Flags().Set(clihelpers.FlagFormat, string(clihelpers.FormatJSON)))
+	require.NoError(t, cmd.Flags().Set(cmdx.FlagFormat, string(cmdx.FormatJSON)))
 	return reg
 }
 
@@ -98,7 +98,7 @@ func execNoErr(t *testing.T, cmd *cobra.Command, args ...string) string {
 
 func execErr(t *testing.T, cmd *cobra.Command, args ...string) string {
 	stdOut, stdErr, err := exec(cmd, nil, args...)
-	require.True(t, errors.Is(err, clihelpers.NoPrintButFailError))
+	require.True(t, errors.Is(err, cmdx.ErrNoPrintButFail))
 	require.Len(t, stdOut, 0, stdErr)
 	return stdErr
 }

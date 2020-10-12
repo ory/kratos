@@ -2,11 +2,11 @@ package remote
 
 import (
 	"context"
+	"github.com/ory/x/cmdx"
 
 	"github.com/spf13/cobra"
 
 	"github.com/ory/kratos/cmd/cliclient"
-	"github.com/ory/kratos/internal/clihelpers"
 	"github.com/ory/kratos/internal/httpclient/client/health"
 )
 
@@ -44,7 +44,7 @@ var statusCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := cliclient.NewClient(cmd)
 		state := &statusState{}
-		defer clihelpers.PrintRow(cmd, state)
+		defer cmdx.PrintRow(cmd, state)
 
 		_, err := c.Health.IsInstanceAlive(&health.IsInstanceAliveParams{
 			Context: context.Background(),

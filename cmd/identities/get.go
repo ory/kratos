@@ -2,6 +2,7 @@ package identities
 
 import (
 	"fmt"
+	"github.com/ory/x/cmdx"
 	"time"
 
 	"github.com/ory/kratos/internal/clihelpers"
@@ -40,14 +41,14 @@ kratos identities get $(kratos identities list --format json | jq -r 'map(select
 		}
 
 		if len(identities) == 1 {
-			clihelpers.PrintRow(cmd, (*outputIdentity)(identities[0]))
+			cmdx.PrintRow(cmd, (*outputIdentity)(identities[0]))
 		} else {
-			clihelpers.PrintCollection(cmd, &outputIdentityCollection{identities})
+			cmdx.PrintCollection(cmd, &outputIdentityCollection{identities})
 		}
-		clihelpers.PrintErrors(cmd, failed)
+		cmdx.PrintErrors(cmd, failed)
 
 		if len(failed) != 0 {
-			return clihelpers.FailSilently(cmd)
+			return cmdx.FailSilently(cmd)
 		}
 		return nil
 	},

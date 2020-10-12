@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/x/cmdx"
 
 	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
@@ -12,8 +13,6 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/internal/httpclient/client/public"
-
-	"github.com/ory/kratos/internal/clihelpers"
 
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/cmd/cliclient"
@@ -95,7 +94,7 @@ func validateIdentity(cmd *cobra.Command, src, i string, getRemoteSchema schemaG
 	sid := gjson.Get(i, "schema_id")
 	if !sid.Exists() {
 		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), `%s: Expected key "schema_id" to be defined in identity file`, src)
-		return clihelpers.FailSilently(cmd)
+		return cmdx.FailSilently(cmd)
 	}
 
 	customSchema, ok := schemas[sid.String()]
@@ -104,7 +103,7 @@ func validateIdentity(cmd *cobra.Command, src, i string, getRemoteSchema schemaG
 		ts, err := getRemoteSchema(&public.GetSchemaParams{ID: sid.String(), Context: context.Background()})
 		if err != nil {
 			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%s: Could not fetch schema with ID \"%s\": %s\n", src, sid.String(), err)
-			return clihelpers.FailSilently(cmd)
+			return cmdx.FailSilently(cmd)
 		}
 		sf, err := json.Marshal(ts.Payload)
 		if err != nil {
@@ -115,7 +114,7 @@ func validateIdentity(cmd *cobra.Command, src, i string, getRemoteSchema schemaG
 		customSchema, err = jsonschema.CompileString("identity_traits.schema.json", string(sf))
 		if err != nil {
 			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%s: Could not compile the traits schema: %s\n", src, err)
-			return clihelpers.FailSilently(cmd)
+			return cmdx.FailSilently(cmd)
 		}
 		schemas[sid.String()] = customSchema
 	}
@@ -129,7 +128,7 @@ func validateIdentity(cmd *cobra.Command, src, i string, getRemoteSchema schemaG
 	}
 
 	if foundValidationErrors {
-		return clihelpers.FailSilently(cmd)
+		return cmdx.FailSilently(cmd)
 	}
 	return nil
 }

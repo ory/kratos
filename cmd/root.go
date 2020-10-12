@@ -28,7 +28,7 @@ var rootCmd = &cobra.Command{
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		if !errors.Is(err, clihelpers.NoPrintButFailError) {
+		if !errors.Is(err, cmdx.ErrNoPrintButFail) {
 			fmt.Println(err)
 		}
 		os.Exit(1)

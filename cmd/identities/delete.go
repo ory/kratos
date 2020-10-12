@@ -2,6 +2,7 @@ package identities
 
 import (
 	"fmt"
+	"github.com/ory/x/cmdx"
 	"time"
 
 	"github.com/ory/kratos/internal/clihelpers"
@@ -49,7 +50,7 @@ kratos identities delete $(kratos identities list --format json | jq -r 'map(sel
 		}
 
 		if len(errs) != 0 {
-			return clihelpers.FailSilently(cmd)
+			return cmdx.FailSilently(cmd)
 		}
 		return nil
 	},

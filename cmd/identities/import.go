@@ -4,10 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/x/cmdx"
 
 	"github.com/spf13/cobra"
-
-	"github.com/ory/kratos/internal/clihelpers"
 
 	"github.com/ory/kratos/cmd/cliclient"
 	"github.com/ory/kratos/internal/httpclient/client/admin"
@@ -48,7 +47,7 @@ WARNING: Importing credentials is not yet supported.`,
 			err = json.Unmarshal([]byte(i), &params)
 			if err != nil {
 				_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "STD_IN: Could not parse identity")
-				return clihelpers.FailSilently(cmd)
+				return cmdx.FailSilently(cmd)
 			}
 
 			resp, err := c.Admin.CreateIdentity(&admin.CreateIdentityParams{
@@ -62,14 +61,14 @@ WARNING: Importing credentials is not yet supported.`,
 			}
 		}
 		if len(imported) == 1 {
-			clihelpers.PrintRow(cmd, (*outputIdentity)(imported[0]))
+			cmdx.PrintRow(cmd, (*outputIdentity)(imported[0]))
 		} else {
-			clihelpers.PrintCollection(cmd, &outputIdentityCollection{identities: imported})
+			cmdx.PrintCollection(cmd, &outputIdentityCollection{identities: imported})
 		}
-		clihelpers.PrintErrors(cmd, failed)
+		cmdx.PrintErrors(cmd, failed)
 
 		if len(failed) != 0 {
-			return clihelpers.FailSilently(cmd)
+			return cmdx.FailSilently(cmd)
 		}
 
 		return nil

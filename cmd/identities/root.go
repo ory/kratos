@@ -1,9 +1,8 @@
 package identities
 
 import (
+	"github.com/ory/x/cmdx"
 	"github.com/spf13/cobra"
-
-	"github.com/ory/kratos/internal/clihelpers"
 
 	"github.com/ory/kratos/cmd/cliclient"
 )
@@ -27,5 +26,5 @@ func RegisterCommandRecursive(parent *cobra.Command) {
 
 func init() {
 	cliclient.RegisterClientFlags(identitiesCmd.PersistentFlags())
-	clihelpers.RegisterFormatFlags(identitiesCmd.PersistentFlags())
+	cmdx.RegisterFormatFlags(identitiesCmd.PersistentFlags())
 }
