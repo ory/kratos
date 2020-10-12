@@ -3,13 +3,14 @@ package schema
 import (
 	"bytes"
 	"fmt"
-	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/pkg/errors"
 
 	"github.com/ghodss/yaml"
 	"github.com/stretchr/testify/assert"
