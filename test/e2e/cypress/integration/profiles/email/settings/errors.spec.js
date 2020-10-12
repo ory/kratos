@@ -36,15 +36,6 @@ context('Settings Flow Errors', () => {
     cy.visit(APP_URL + '/settings')
   })
 
-  it('fails when CSRF cookies are missing', () => {
-    cy.clearCookies()
-
-    cy.get('#user-profile button[type="submit"]').click()
-
-    // FIXME https://github.com/ory/kratos/issues/91
-    cy.get('html').should('contain.text', 'CSRF token is missing or invalid')
-  })
-
   describe('profile', () => {
     it('fails with validation errors', () => {
       cy.get('#user-profile input[name="traits.website"]')
