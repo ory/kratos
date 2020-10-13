@@ -56,6 +56,82 @@
         "hook"
       ]
     },
+    "OIDCClaims": {
+      "title": "OpenID Connect claims",
+      "description": "The OpenID Connect claims and optionally their properties which should be included in the id_token or returned from the UserInfo Endpoint.",
+      "type": "object",
+      "examples": [
+        {
+          "id_token": {
+            "email": null,
+            "email_verified": null
+          }
+        },
+        {
+          "userinfo": {
+            "given_name": {
+              "essential": true
+            },
+            "nickname": null,
+            "email": {
+              "essential": true
+            },
+            "email_verified": {
+              "essential": true
+            },
+            "picture": null,
+            "http://example.info/claims/groups": null
+          },
+          "id_token": {
+            "auth_time": {
+              "essential": true
+            },
+            "acr": {
+              "values": [
+                "urn:mace:incommon:iap:silver"
+              ]
+            }
+          }
+        }
+      ],
+      "patternProperties": {
+        "^userinfo$|^id_token$": {
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            ".*": {
+              "oneOf": [
+                {
+                  "const": null,
+                  "description": "Indicates that this Claim is being requested in the default manner."
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "essential": {
+                      "description": "Indicates whether the Claim being requested is an Essential Claim.",
+                      "type": "boolean"
+                    },
+                    "value": {
+                      "description": "Requests that the Claim be returned with a particular value.",
+                      "$comment": "There seem to be no constrains on value"
+                    },
+                    "values": {
+                      "description": "Requests that the Claim be returned with one of a set of values, with the values appearing in order of preference.",
+                      "type": "array",
+                      "items": {
+                        "$comment": "There seem to be no constrains on individual items"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
     "selfServiceOIDCProvider": {
       "type": "object",
       "properties": {
@@ -140,80 +216,7 @@
           ]
         },
         "requested_claims": {
-          "title": "OpenID Connect claims",
-          "description": "The OpenID Connect claims and optionally their properties which should be included in the id_token or returned from the UserInfo Endpoint.",
-          "type": "object",
-          "examples": [
-            {
-              "id_token": {
-                "email": null,
-                "email_verified": null
-              }
-            },
-            {
-              "userinfo": {
-                "given_name": {
-                  "essential": true
-                },
-                "nickname": null,
-                "email": {
-                  "essential": true
-                },
-                "email_verified": {
-                  "essential": true
-                },
-                "picture": null,
-                "http://example.info/claims/groups": null
-              },
-              "id_token": {
-                "auth_time": {
-                  "essential": true
-                },
-                "acr": {
-                  "values": [
-                    "urn:mace:incommon:iap:silver"
-                  ]
-                }
-              }
-            }
-          ],
-          "patternProperties": {
-            "^userinfo$|^id_token$": {
-              "type": "object",
-              "additionalProperties": false,
-              "patternProperties": {
-                ".*": {
-                  "oneOf": [
-                    {
-                      "const": null,
-                      "description": "Indicates that this Claim is being requested in the default manner."
-                    },
-                    {
-                      "type": "object",
-                      "additionalProperties": false,
-                      "properties": {
-                        "essential": {
-                          "description": "Indicates whether the Claim being requested is an Essential Claim.",
-                          "type": "boolean"
-                        },
-                        "value": {
-                          "description": "Requests that the Claim be returned with a particular value.",
-                          "$comment": "There seem to be no constrains on value"
-                        },
-                        "values": {
-                          "description": "Requests that the Claim be returned with one of a set of values, with the values appearing in order of preference.",
-                          "type": "array",
-                          "items": {
-                            "$comment": "There seem to be no constrains on individual items"
-                          }
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
+          "$ref": "#/definitions/OIDCClaims"
         }
       },
       "additionalProperties": false,

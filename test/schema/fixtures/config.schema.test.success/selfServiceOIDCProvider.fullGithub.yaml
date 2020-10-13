@@ -9,3 +9,4 @@ mapper_url: https://example.com
 scope:
   - foo
   - bar
+requested_claims: "#/definitions/OIDCClaims"
