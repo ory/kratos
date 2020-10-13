@@ -3,8 +3,8 @@ id: quickstart
 title: Quickstart
 ---
 
-import useBaseUrl from '@docusaurus/useBaseUrl'
 import Mermaid from '@theme/Mermaid'
+import CodeFromRemote from '@theme/CodeFromRemote'
 
 ORY Kratos has several moving parts and getting everything right from the
 beginning can be challenging. This getting started guide will help you install
@@ -49,13 +49,15 @@ needs users. Therefore, we need:
 - Profile management ("update first name", "update avatar", etc.)
 - Credentials Management ("add a new recovery email", "change password", etc.)
 - Account Recovery ("password reset")
-- Two Factor Authentication with Google Authenticator
+- Email Verification
+- Two Factor Authentication
 - "Sign in with Google" and "Sign in with GitHub"
 
 and of course:
 
-- A dashboard that shows "Hello {{ firstName }} {{ lastName }}, your birthday is
-  on {{ birthday }}!" which is only visible when the user is signed in.
+- A dashboard that shows
+  `Hello {{ traits.name.first }} {{ traits.name.last }}}!` which is only visible
+  when the user is signed in.
 
 ## Setup
 
@@ -66,32 +68,11 @@ templating engine. We will implement all the user-facing UIs like "dashboard",
 To ensure that no one can access the dashboard without prior authentication
 (login), we can use a small piece of code (here ExpressJS) to do that:
 
-```js
-// Import the ORY Kratos SDK. SDKs are available for all popular programming
-// languages! We will add examples for other programming languages here soon.
-import { AdminApi, PublicApi } from '@oryd/kratos-client'
-
-const publicEndpoint = new PublicApi('https://public.ory-kratos')
-const adminEndpoint = new AdminApi('https://admin.ory-kratos')
-
-const needsLogin = (req, res, next) => {
-  new publicEndpoint.whoami(req)
-    .then(({ body }) => {
-      req.user = { session: body }
-      next()
-    })
-    .catch(() => {
-      res.redirect('/login')
-    })
-}
-
-// You can use `needsLogin` as a middleware for Express or any other web framework:
-//   import express from 'express'
-//   const app = express()
-//
-//   app.get("/dashboard", needsLogin, dashboard)
-//
-```
+<CodeFromRemote
+  lang="js"
+  link="https://github.com/ory/kratos-selfservice-ui-node/blob/master/src/middleware/simple.ts"
+  src="https://raw.githubusercontent.com/ory/kratos-selfservice-ui-node/master/src/middleware/simple.ts"
+/>
 
 :::info
 
@@ -100,42 +81,13 @@ and more so you don't have to.
 
 :::
 
-Because our SecureApp and ORY Kratos need to share cookies, in order for
-anti-CSRF tokens and login sessions to work, we will set up a path which
-forwards requests to ORY Kratos' Public API so that both SecureApp and ORY
-Kratos have the same hostname.
-
-If an HTTP request is made to
-
-```
-https://my-secureapp/.ory/kratos/public/self-service/browser/flows/login
-```
-
-we forward the request (like a proxy) to
-
-```
-https://public.ory-kratos/self-service/browser/flows/login
-```
-
-and pipe the response back to the initial HTTP Request:
-
-```js
-import express from 'express'
-import request from 'request'
-const app = express()
-
-const pathPrefix = '/.ory/kratos/public'
-app.use(pathPrefix + '/', (req, res) => {
-  const url = 'https://public.ory-kratos' + req.url.replace(pathPrefix, '')
-
-  // Uses the `request` library to forward the request to ORY Kratos
-  req.pipe(request(url, { followRedirect: false })).pipe(res)
-})
-
-// ...
-// app.get("/dashboard", needsLogin, dashboard)
-// ...
-```
+The SecureApp and ORY Kratos need to share cookies in order for anti-CSRF tokens
+and login sessions to work. Because the quickstart runs on different ports on
+`127.0.0.1` there is nothing we need to do to get this all working. In
+environments where you have multiple sub-domains or reverse proxies, the set up
+will be a bit more sophisticated. You can find more information about the
+different set up possibilities in the
+[Getting Cookies to Work on Multi-Domains Guide](guides/multi-domain-cookies.mdx).
 
 ORY Kratos does not ship with an administrative user interface. You must
 implement that yourself or choose the ORY Cloud offering (to be announced). In
@@ -215,28 +167,15 @@ Future guides will explain how to set up a production system.
 This demo makes use of several services:
 
 1. [ORY Kratos](https://github.com/ory/kratos)
-
-- Public ("Browser") API (port 4433)
-- Admin API (port 4434) - This is only made public so we can test via the CLI.
-
+   - Public ("Browser") API (port 4433)
+   - Admin API (port 4434) - This is only made public so we can test via the
+     CLI.
 2. [SecureApp](http://github.com/ory/kratos-selfservice-ui-node)
-
-- Public (port 4455) - an example application written in NodeJS that implements
-  the login, registration, logout, dashboard, and other UIs.
-
+   - Public (port 4455) - an example application written in NodeJS that
+     implements the login, registration, logout, dashboard, and other UIs.
 3. [MailSlurper](https://github.com/mailslurper)
-
-- Public (port 4436) - a development SMTP server which ORY Kratos will use to
-  send emails.
-
-:::note
-
-ORY Kratos' Public ("Browser") and Admin APIs are exactly the same, except the
-Public API will make use of extra browser-related security features. All
-requests from a web browser should use ORY Kratos' Public API, while everything
-else should use the Admin API.
-
-:::
+   - Public (port 4436) - a development SMTP server which ORY Kratos will use to
+     send emails.
 
 To better understand the application architecture, let's take a look at the
 network configuration. This assumes that you have at least some understanding of
@@ -248,14 +187,16 @@ graph TD
 subgraph hn[Host Network]
     B[Browser]
     B-->|Can access URLs via 127.0.0.1:4455|OKPHN
+    B-->|Can access URLs via 127.0.0.1:4433|PAPI
     B-->|Can access UI via 127.0.0.1:4436|SMTPUI
     OKPHN([SecureApp exposed at :4455])
     SMTPUI([MailSlurper UI exposed at :4436])
+    PAPI([ORY Kratos Public API exposed at :4433])
 end
 subgraph dn["Internal Docker Network (intranet)"]
     OKPHN-.->SA
     SMTPUI-.->SMTP
-    SA-->|Proxies URLs /.ory/kratos/public/* to|OK
+    PAPI-.->OK
     SA-->|Talks to and validates login sessions using|OK
     OK-->|Sends mail via|SMTP
     OK[ORY Kratos]
@@ -264,10 +205,6 @@ subgraph dn["Internal Docker Network (intranet)"]
 end
 `}
 />
-
-In order to avoid common cross-domain issues with cookies, we're proxying
-requests to ORY Kratos' Public API so that all requests come from the same
-hostname.
 
 ## Perform Registration, Login, and Logout
 
@@ -278,45 +215,30 @@ the dashboard - **go to
 You should notice that you're ending up at the login endpoint instead of the
 dashboard:
 
-<p>
-  <img
-    alt="Login screen of your secured app"
-    src={useBaseUrl('img/docs/secureapp-login.png')}
-  />
-</p>
+![Login screen of your secured app](images/quickstart/secureapp-login.png)
 
 Looking at the network stack, you can see two redirects happening:
 
-<p>
-  <img
-    alt="Network trace of your secured app"
-    src={useBaseUrl('img/docs/secureapp-login-ntrace.png')}
-  />
-</p>
+![Network trace of your secured app](images/quickstart/secureapp-login-ntrace.png)
 
 Here's a play-by-play of what happened:
 
-1. SecureApp used the ORY Kratos JavaScript language client to
-   [guard the `/dashboard`](https://github.com/ory/kratos-selfservice-ui-node/blob/v0.4.6-alpha.1/src/index.ts#L111)
-   route. The ORY Kratos client checked the cookies from the request and saw you
-   were not logged in.
+1. SecureApp used the ORY Kratos JavaScript language client to guard the
+   `/dashboard` route. The ORY Kratos client checked the cookies from the
+   request and saw you were not logged in.
 2. The route guard redirected you from `/dashboard` to `/auth/login`. ORY
-   Kratos' browser API requires a `request-id` in order to log you in. It looked
-   for this ID in the URL as a query parameter but
-   [couldn't find it](https://github.com/ory/kratos-selfservice-ui-node/blob/2f097b519644d2663e277398213aaa1103b74cf9/src/routes/auth.ts#L26),
-   so it decided to generate one for you.
+   Kratos' browser API requires a `<flow_id>` in order to log you in. It looked
+   for this ID in the URL as a query parameter but couldn't find it.
 3. `/auth/login` redirected you to
-   `/.ory/kratos/public/self-service/browser/flows/login`, which is one of ORY
-   Kratos' APIs used for logging in browser-based applications. This route is
-   just forwarded from SecureApp to ORY Kratos.
+   `http://127.0.0.1:4433/self-service/login/browser`, which is one of ORY
+   Kratos' APIs used for logging in browser-based applications.
 4. ORY Kratos performed some security checks, prepared form data, created a
-   `csrf_token`, and redirected the browser to
-   `/auth/login?request=<request-id>`.
-5. SecureApp handled the `/auth/login` route, found the `request-id` in the URL
+   `csrf_token`, and redirected the browser to `/auth/login?flow=<flow_id>`.
+5. SecureApp handled the `/auth/login` route, found the `<flow_id>` in the URL
    query parameter, and used it to make an HTTP request to
-   `http://kratos:4434/self-service/browser/flows/requests/login?request=<request-id>`.
-   Notice the URI is `kratos:4434` because SecureApp is making a server-side
-   HTTP request via Docker's private network to ORY Kratos' Admin API.
+   `http://kratos:4434/self-service/login/flows?id=<flow_id>`. Notice the URI is
+   `kratos:4434` because SecureApp is making a server-side HTTP request via
+   Docker's private network to ORY Kratos' Admin API.
 6. ORY Kratos responded with data which SecureApp used to render the HTML login
    form.
 
@@ -327,38 +249,26 @@ not work!
 
 :::
 
-Because we exposed ORY Kratos' Admin API on port `4434` of our host, we can use
-`curl` to see what ORY Kratos responds with. Try visiting
-`http://127.0.0.1:4455/auth/login`, copying the generated `request-id`, and
+We can use `curl` to see what ORY Kratos responds with. Try visiting
+`http://127.0.0.1:4455/auth/login`, copying the generated `<flow_id>`, and
 making the request yourself:
 
 ```shell script
-$ curl "http://127.0.0.1:4434/self-service/browser/flows/requests/login?request=<request-id>" | jq
+# curl -s "http://127.0.0.1:4434/self-service/login/flows?id=ee6e1565-d3c3-4f3a-a6ff-0ba6b3a6481b" \
+$ curl -s "http://127.0.0.1:4434/self-service/login/flows?id=<flow_id>" \
+  | jq
+
 {
-  "id": "4392b0ef-647a-4cf8-8045-57917b98e406",
-  "expires_at": "2020-05-15T21:23:41.3220299Z",
-  "issued_at": "2020-05-15T21:13:41.3220454Z",
-  "request_url": "http://kratos:4433/self-service/browser/flows/login",
+  "id": "ee6e1565-d3c3-4f3a-a6ff-0ba6b3a6481b",
+  "type": "browser",
+  "expires_at": "2020-09-13T10:49:54.8295242Z",
+  "issued_at": "2020-09-13T10:39:54.8295242Z",
+  "request_url": "http://127.0.0.1:4433/self-service/login/browser",
   "methods": {
-    "oidc": {
-      "method": "oidc",
-      "config": {
-        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/registration/strategies/oidc/auth/4392b0ef-647a-4cf8-8045-57917b98e406",
-        "method": "POST",
-        "fields": [
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "L3SmxtBF71wd6QLOqIdHbhg9OTLRrxyXm1LVWRfPlUAdxwNKwpy9wPe/pKtJqnpqnAB8ZfZp5yJypVTk+7wRuA=="
-          }
-        ]
-      }
-    },
     "password": {
       "method": "password",
       "config": {
-        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/login/strategies/password?request=4392b0ef-647a-4cf8-8045-57917b98e406",
+        "action": "http://127.0.0.1:4433/self-service/login/methods/password?flow=ee6e1565-d3c3-4f3a-a6ff-0ba6b3a6481b",
         "method": "POST",
         "fields": [
           {
@@ -376,7 +286,7 @@ $ curl "http://127.0.0.1:4434/self-service/browser/flows/requests/login?request=
             "name": "csrf_token",
             "type": "hidden",
             "required": true,
-            "value": "L3SmxtBF71wd6QLOqIdHbhg9OTLRrxyXm1LVWRfPlUAdxwNKwpy9wPe/pKtJqnpqnAB8ZfZp5yJypVTk+7wRuA=="
+            "value": "lNrB8sW2fZY6xnnA91V7ISYrUVcJbmRCOoGHjsnsfI7MsIL5RTbuWFm5TRv1azQW+7IRCfnt2Ch6pC42/45sJQ=="
           }
         ]
       }
@@ -393,84 +303,74 @@ etc.), head over to the [concept](concepts/index.md) chapter.
 Let's move on to the next flow - registration! Click on "Register new account",
 which initiates a flow similar to the one we just used:
 
-<p>
-  <img
-    alt="Registration screen of your secured app"
-    src={useBaseUrl('img/docs/secureapp-registration.png')}
-  />
-</p>
+![Registration screen of your secured app](images/quickstart/secureapp-registration.png)
 
 The network trace should look familiar by now:
 
-<p>
-  <img
-    alt="Registration with network trace screen of your secured app"
-    src={useBaseUrl('img/docs/secureapp-registration-ntrace.png')}
-  />
-</p>
+![Registration with network trace screen of your secured app](images/quickstart/secureapp-registration-ntrace.png)
 
 If we try to sign up using a password like `123456`, Krato's password policy
 will complain:
 
-<p>
-  <img
-    alt="Registration with network trace screen of your secured app"
-    src={useBaseUrl('img/docs/secureapp-registration-pwpolicy.png')}
-  />
-</p>
+![Registration with network trace screen of your secured app](images/quickstart/secureapp-registration-pwpolicy.png)
 
 The error message is coming directly from ORY Kratos' Admin API:
 
 ```shell script
-$ curl "http://127.0.0.1:4434/self-service/browser/flows/requests/registration?request=<request-id>" | jq
+# curl -s "http://127.0.0.1:4433/self-service/registration/flows?id=2b1f8c5d-e830-4068-97b8-35f776df9217" \
+$ curl -s "http://127.0.0.1:4433/self-service/registration/flows?id=<flow_id>" \
+  | jq
+
 {
-  "id": "53e4b68a-5f85-4e41-997f-d8d1f4113f0d",
-  "expires_at": "2020-05-15T21:48:38.5044374Z",
-  "issued_at": "2020-05-15T21:38:38.5044557Z",
-  "request_url": "http://kratos:4433/self-service/browser/flows/registration",
+  "id": "2b1f8c5d-e830-4068-97b8-35f776df9217",
+  "type": "browser",
+  "expires_at": "2020-09-13T10:53:15.1774019Z",
+  "issued_at": "2020-09-13T10:43:15.1774019Z",
+  "request_url": "http://127.0.0.1:4433/self-service/registration/browser",
+  "active": "password",
+  "messages": null,
   "methods": {
-    "oidc": {
-      "method": "oidc",
-      "config": {
-        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/registration/strategies/oidc/auth/53e4b68a-5f85-4e41-997f-d8d1f4113f0d",
-        "method": "POST",
-        "fields": [
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "tZUvp+2dSThQr0uklkfgWPRtPiYEyZQlBItc2RcIYdSHJoor/0QbpLr57cF3at1ccFB7cSMPb5DtfN1k+3vlLA=="
-          }
-        ]
-      }
-    },
     "password": {
       "method": "password",
       "config": {
-        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/registration/strategies/password?request=53e4b68a-5f85-4e41-997f-d8d1f4113f0d",
+        "action": "http://127.0.0.1:4433/self-service/registration/methods/password?flow=2b1f8c5d-e830-4068-97b8-35f776df9217",
         "method": "POST",
         "fields": [
           {
             "name": "csrf_token",
             "type": "hidden",
             "required": true,
-            "value": "M0/Koo7AEdU6O/FqfFP5uPxTCSTeiCvI1Wms37ZKsyIB/G8unBlDSdBtVw+dfsS8eG5Mc/lO0H08ni1iWjk32g=="
+            "value": "1IlHWNjkAZxuYhO82WPgNTgujKsUSaW87j6og/20i2uM4wRTWGSSUg0dJ2fbXa8C5bfM9eTKGdauGwE7y9abwA=="
           },
           {
             "name": "password",
             "type": "password",
             "required": true,
-            "errors": [
+            "messages": [
               {
-                "message": "the password does not fulfill the password policy because: the password has been found in at least 23547453 data breaches and must no longer be used."
+                "id": 4000005,
+                "text": "The password can not be used because the password has been found in at least 23597311 data breaches and must no longer be used..",
+                "type": "error",
+                "context": {
+                  "reason": "the password has been found in at least 23597311 data breaches and must no longer be used."
+                }
               }
             ]
           },
           {
             "name": "traits.email",
             "type": "text",
-            "required": false,
-            "value": "hello@ory.sh"
+            "value": "foo@ory.sh"
+          },
+          {
+            "name": "traits.name.first",
+            "type": "text",
+            "value": "Ory"
+          },
+          {
+            "name": "traits.name.last",
+            "type": "text",
+            "value": "Corp"
           }
         ]
       }
@@ -482,12 +382,7 @@ $ curl "http://127.0.0.1:4434/self-service/browser/flows/requests/registration?r
 Setting a password that doesn't violate these policies, we will be immediately
 redirected to the dashboard:
 
-<p>
-  <img
-    alt="SecureApp Dashboard"
-    src={useBaseUrl('img/docs/secureapp-dashboard.png')}
-  />
-</p>
+![SecureApp Dashboard](images/quickstart/secureapp-dashboard.png)
 
 By clicking the "logout" icon in the top right, you will be redirected to the
 login screen again where you will be able to use your credentials to log back in
@@ -495,8 +390,8 @@ again. Exciting!
 
 ### Understanding How Login and Registration Works
 
-Head over to the [Self-Service Flows Chapter](self-service/flows/index.md) for
-an in-depth explanation of how each individual flow works.
+Head over to the [Self-Service Flows Chapter](self-service.mdx) for an in-depth
+explanation of how each individual flow works.
 
 ### Email Verification
 
@@ -507,12 +402,7 @@ You can retrieve the email however by opening the MailSlurper UI at
 
 You should see something like this:
 
-<p>
-  <img
-    alt="User Email Verification"
-    src={useBaseUrl('img/docs/mailslurper-quickstart.png')}
-  />
-</p>
+![User Email Verification](images/quickstart/mailslurper-quickstart.png)
 
 If not, hard refresh the tab or click on the home icon in the menu bar.
 
@@ -520,12 +410,7 @@ Next, click the verification link. You will end up at the dashboard, with a
 verified email address (check the `verified` and `verified_at` field in the JSON
 response):
 
-<p>
-  <img
-    alt="SecureApp Dashboard"
-    src={useBaseUrl('img/docs/secureapp-verified-dashboard.png')}
-  />
-</p>
+![SecureApp Dashboard](images/quickstart/secureapp-verified-dashboard.png)
 
 To re-request the verification email, fill out the form at
 [127.0.0.1:4455/verify](http://127.0.0.1:4455/verify).
@@ -538,39 +423,19 @@ To learn more about verification recovery, head over to the
 The quickstart has account recovery enabled. To recover an account, log out and
 click on "Recover account":
 
-<p>
-  <img
-    alt="Click on 'recover account'"
-    src={useBaseUrl('img/docs/quickstart-recover-i.png')}
-  />
-</p>
+![Click on recover account](images/quickstart/quickstart-recover-i.png)
 
 The next screen shows a HTML form where you enter your email address:
 
-<p>
-  <img
-    alt="Enter your email address"
-    src={useBaseUrl('img/docs/quickstart-recover-ii.png')}
-  />
-</p>
+![Enter your email address](images/quickstart/quickstart-recover-ii.png)
 
 Hit "submit" and check the emails for the account recovery message:
 
-<p>
-  <img
-    alt="Check your email for the password reset email"
-    src={useBaseUrl('img/docs/quickstart-recover-iii.png')}
-  />
-</p>
+![Check your email for the password reset email](images/quickstart/quickstart-recover-iii.png)
 
 Click the link, and change your password:
 
-<p>
-  <img
-    alt="Change your password"
-    src={useBaseUrl('img/docs/quickstart-recover-iv.png')}
-  />
-</p>
+![Change your password](images/quickstart/quickstart-recover-iv.png)
 
 You are now able to sign in with the new password. To learn more about account
 recovery, head over to the
@@ -613,3 +478,47 @@ and remove all mounted volumes.
 docker-compose -f quickstart.yml down -v
 docker-compose -f quickstart.yml rm -fsv
 ```
+
+## Next Steps
+
+Here is some information if you want to modify the quickstart to test ORY Kratos
+in with different settings.
+
+**Using different databases**
+
+If you want to run the quickstart with PostgreSQL, run the following
+docker-compose:
+`docker-compose -f quickstart.yml -f quickstart-standalone.yml -f quickstart-postgres.yml up --build --force-recreate`
+
+If you want to run the quickstart with CockroachDB, run the following
+docker-compose:
+`docker-compose -f quickstart.yml -f quickstart-standalone.yml -f quickstart-crdb.yml up --build --force-recreate`
+
+If you want to run the quickstart with MySQL, run the following docker-compose:
+`docker-compose -f quickstart.yml -f quickstart-standalone.yml -f quickstart-mysql.yml up --build --force-recreate`
+
+**Changing ports**
+
+If you want to change ports for the SelfService-UI, you need to change them in
+`quickstart.yml` as well as in the
+`contrib/quickstart/kratos/email-password/.kratos.yml` accordingly.
+
+Note that you also need to change the ports for flows (error, settings,
+recovery, verification, logout, login, registration).
+
+The same procedure applies if you want to change ports for the Public UI/Admin
+UI or the Mailslurper.
+
+**Hooks**
+
+If you want to change the redirects happening after registration,login or a
+settings change, take a look at this document: [Hooks](self-service/hooks.mdx).
+
+If you delete the `session` hook from `kratos.yml`, the user will _not_ be
+immediately signed in after registration.
+
+**OIDC**
+
+If you want to test ORY Kratos integration with different OIDC providers, you
+will find more information in this document:
+[OIDC](guides/sign-in-with-github-google-facebook-linkedin.mdx)

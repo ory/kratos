@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/kratos/metrics/prometheus"
+
 	"github.com/gobuffalo/pop/v5"
 
 	"github.com/ory/kratos/continuity"
@@ -15,8 +17,8 @@ import (
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/hook"
+	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/selfservice/strategy/profile"
-	"github.com/ory/kratos/selfservice/strategy/recoverytoken"
 	"github.com/ory/kratos/x"
 
 	"github.com/cenkalti/backoff"
@@ -65,8 +67,10 @@ type RegistryDefault struct {
 
 	nosurf         x.CSRFHandler
 	trc            *tracing.Tracer
+	pmm            *prometheus.MetricsManager
 	writer         herodot.Writer
 	healthxHandler *healthx.Handler
+	metricsHandler *prometheus.Handler
 
 	courier   *courier.Courier
 	persister persistence.Persister
@@ -79,7 +83,8 @@ type RegistryDefault struct {
 	identityValidator *identity.Validator
 	identityManager   *identity.Manager
 
-	continuityManager continuity.Manager
+	continuityManager      continuity.Manager
+	continuitySessionStore *sessions.CookieStore
 
 	schemaHandler *schema.Handler
 
@@ -109,7 +114,8 @@ type RegistryDefault struct {
 	selfserviceVerifyErrorHandler *verification.ErrorHandler
 	selfserviceVerifyManager      *identity.Manager
 	selfserviceVerifyHandler      *verification.Handler
-	selfserviceVerifySender       *verification.Sender
+
+	selfserviceLinkSender *link.Sender
 
 	selfserviceRecoveryErrorHandler *recovery.ErrorHandler
 	selfserviceRecoveryHandler      *recovery.Handler
@@ -122,6 +128,7 @@ type RegistryDefault struct {
 	registrationStrategies             []registration.Strategy
 	profileStrategies                  []settings.Strategy
 	recoveryStrategies                 []recovery.Strategy
+	verificationStrategies             []verification.Strategy
 
 	buildVersion string
 	buildHash    string
@@ -156,6 +163,7 @@ func (m *RegistryDefault) RegisterPublicRoutes(router *x.RouterPublic) {
 
 	if m.c.SelfServiceFlowVerificationEnabled() {
 		m.VerificationHandler().RegisterPublicRoutes(router)
+		m.VerificationStrategies().RegisterPublicRoutes(router)
 	}
 
 	m.HealthHandler().SetRoutes(router.Router, false)
@@ -177,9 +185,11 @@ func (m *RegistryDefault) RegisterAdminRoutes(router *x.RouterAdmin) {
 
 	if m.c.SelfServiceFlowVerificationEnabled() {
 		m.VerificationHandler().RegisterAdminRoutes(router)
+		m.VerificationStrategies().RegisterAdminRoutes(router)
 	}
 
 	m.HealthHandler().SetRoutes(router.Router, true)
+	m.MetricsHandler().SetRoutes(router.Router)
 }
 
 func (m *RegistryDefault) RegisterRoutes(public *x.RouterPublic, admin *x.RouterAdmin) {
@@ -231,6 +241,14 @@ func (m *RegistryDefault) HealthHandler() *healthx.Handler {
 	return m.healthxHandler
 }
 
+func (m *RegistryDefault) MetricsHandler() *prometheus.Handler {
+	if m.metricsHandler == nil {
+		m.metricsHandler = prometheus.NewHandler(m.Writer(), m.BuildVersion())
+	}
+
+	return m.metricsHandler
+}
+
 func (m *RegistryDefault) WithCSRFHandler(c x.CSRFHandler) {
 	m.nosurf = c
 }
@@ -248,7 +266,7 @@ func (m *RegistryDefault) selfServiceStrategies() []interface{} {
 			password2.NewStrategy(m, m.c),
 			oidc.NewStrategy(m, m.c),
 			profile.NewStrategy(m, m.c),
-			recoverytoken.NewStrategy(m, m.c),
+			link.NewStrategy(m, m.c),
 		}
 	}
 
@@ -279,6 +297,19 @@ func (m *RegistryDefault) LoginStrategies() login.Strategies {
 		}
 	}
 	return m.loginStrategies
+}
+
+func (m *RegistryDefault) VerificationStrategies() verification.Strategies {
+	if len(m.verificationStrategies) == 0 {
+		for _, strategy := range m.selfServiceStrategies() {
+			if s, ok := strategy.(verification.Strategy); ok {
+				if m.c.SelfServiceStrategy(s.VerificationStrategyID()).Enabled {
+					m.verificationStrategies = append(m.verificationStrategies, s)
+				}
+			}
+		}
+	}
+	return m.verificationStrategies
 }
 
 func (m *RegistryDefault) ActiveCredentialsCounterStrategies() []identity.ActiveCredentialsCounter {
@@ -368,9 +399,36 @@ func (m *RegistryDefault) CookieManager() sessions.Store {
 		cs := sessions.NewCookieStore(m.c.SecretsSession()...)
 		cs.Options.Secure = !m.c.IsInsecureDevMode()
 		cs.Options.HttpOnly = true
+		if m.c.SessionDomain() != "" {
+			cs.Options.Domain = m.c.SessionDomain()
+		}
+
+		if m.c.SessionPath() != "" {
+			cs.Options.Path = m.c.SessionPath()
+		}
+
+		if m.c.SessionSameSiteMode() != 0 {
+			cs.Options.SameSite = m.c.SessionSameSiteMode()
+		}
+
+		cs.Options.MaxAge = 0
+		if m.c.SessionPersistentCookie() {
+			cs.Options.MaxAge = int(m.c.SessionLifespan().Seconds())
+		}
 		m.sessionsStore = cs
 	}
 	return m.sessionsStore
+}
+
+func (m *RegistryDefault) ContinuityCookieManager() sessions.Store {
+	if m.continuitySessionStore == nil {
+		cs := sessions.NewCookieStore(m.c.SecretsSession()...)
+		cs.Options.Secure = !m.c.IsInsecureDevMode()
+		cs.Options.HttpOnly = true
+		cs.Options.SameSite = http.SameSiteLaxMode
+		m.continuitySessionStore = cs
+	}
+	return m.continuitySessionStore
 }
 
 func (m *RegistryDefault) Tracer() *tracing.Tracer {
@@ -482,19 +540,19 @@ func (m *RegistryDefault) PrivilegedIdentityPool() identity.PrivilegedPool {
 	return m.persister
 }
 
-func (m *RegistryDefault) RegistrationRequestPersister() registration.RequestPersister {
+func (m *RegistryDefault) RegistrationFlowPersister() registration.FlowPersister {
 	return m.persister
 }
 
-func (m *RegistryDefault) RecoveryRequestPersister() recovery.RequestPersister {
+func (m *RegistryDefault) RecoveryFlowPersister() recovery.FlowPersister {
 	return m.persister
 }
 
-func (m *RegistryDefault) LoginRequestPersister() login.RequestPersister {
+func (m *RegistryDefault) LoginFlowPersister() login.FlowPersister {
 	return m.persister
 }
 
-func (m *RegistryDefault) SettingsRequestPersister() settings.RequestPersister {
+func (m *RegistryDefault) SettingsFlowPersister() settings.FlowPersister {
 	return m.persister
 }
 
@@ -510,7 +568,11 @@ func (m *RegistryDefault) CourierPersister() courier.Persister {
 	return m.persister
 }
 
-func (m *RegistryDefault) RecoveryTokenPersister() recoverytoken.Persister {
+func (m *RegistryDefault) RecoveryTokenPersister() link.RecoveryTokenPersister {
+	return m.Persister()
+}
+
+func (m *RegistryDefault) VerificationTokenPersister() link.VerificationTokenPersister {
 	return m.Persister()
 }
 
@@ -538,4 +600,11 @@ func (m *RegistryDefault) IdentityManager() *identity.Manager {
 		m.identityManager = identity.NewManager(m, m.c)
 	}
 	return m.identityManager
+}
+
+func (m *RegistryDefault) PrometheusManager() *prometheus.MetricsManager {
+	if m.pmm == nil {
+		m.pmm = prometheus.NewMetricsManager(m.buildVersion, m.buildHash, m.buildDate)
+	}
+	return m.pmm
 }

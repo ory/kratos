@@ -63,7 +63,7 @@ for the update identity operation typically these are written to a http.Request
 type UpdateIdentityParams struct {
 
 	/*Body*/
-	Body *models.Identity
+	Body *models.UpdateIdentity
 	/*ID
 	  ID must be set to the ID of identity you want to update
 
@@ -109,13 +109,13 @@ func (o *UpdateIdentityParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithBody adds the body to the update identity params
-func (o *UpdateIdentityParams) WithBody(body *models.Identity) *UpdateIdentityParams {
+func (o *UpdateIdentityParams) WithBody(body *models.UpdateIdentity) *UpdateIdentityParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the update identity params
-func (o *UpdateIdentityParams) SetBody(body *models.Identity) {
+func (o *UpdateIdentityParams) SetBody(body *models.UpdateIdentity) {
 	o.Body = body
 }
 

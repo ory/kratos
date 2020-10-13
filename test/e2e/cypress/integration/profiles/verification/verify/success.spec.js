@@ -18,10 +18,13 @@ context('Verify', () => {
     })
 
     it('should request verification and receive an email and verify it', () => {
-      cy.get('input[name="to_verify"]').type(identity.email)
+      cy.get('input[name="email"]').type(identity.email)
       cy.get('button[type="submit"]').click()
 
-      cy.location('pathname').should('eq', '/')
+      cy.get('.messages .message').should(
+        'contain.text',
+        'An email containing a verification'
+      )
 
       cy.verifyEmail({ expect: { email: identity.email } })
 
@@ -30,8 +33,13 @@ context('Verify', () => {
 
     it('should request verification for an email that does not exist yet', () => {
       const email = `not-${identity.email}`
-      cy.get('input[name="to_verify"]').type(email)
+      cy.get('input[name="email"]').type(email)
       cy.get('button[type="submit"]').click()
+
+      cy.get('.messages .message').should(
+        'contain.text',
+        'An email containing a verification'
+      )
 
       cy.getMail().should((message) => {
         expect(message.subject.trim()).to.equal(
@@ -45,8 +53,6 @@ context('Verify', () => {
       cy.session().then(
         assertVerifiableAddress({ isVerified: false, email: identity.email })
       )
-
-      cy.location('pathname').should('eq', '/')
     })
   })
 })

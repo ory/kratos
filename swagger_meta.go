@@ -17,7 +17,7 @@
 //     SecurityDefinitions:
 //     sessionToken:
 //          type: apiKey
-//          name: Authorization
+//          name: X-Session-Token
 //          in: header
 //
 //     Extensions:

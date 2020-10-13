@@ -63,9 +63,9 @@ type getSchemaParameters struct {
 	ID string `json:"id"`
 }
 
-// swagger:route GET /schemas/{id} common public admin getSchema
+// swagger:route GET /schemas/{id} public admin getSchema
 //
-// Get a traits schema definition
+// Get a Traits Schema Definition
 //
 //     Produces:
 //     - application/json

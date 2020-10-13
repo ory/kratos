@@ -56,7 +56,6 @@ func merge(userFormValues string, openIDProviderValues json.RawMessage, option d
 		req, &df,
 		decoderx.HTTPFormDecoder(),
 		option,
-		decoderx.HTTPDecoderSetIgnoreParseErrorsStrategy(decoderx.ParseErrorIgnore),
 		decoderx.HTTPDecoderSetValidatePayloads(false),
 	); err != nil {
 		return nil, err

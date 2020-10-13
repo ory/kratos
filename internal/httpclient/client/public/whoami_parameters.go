@@ -19,7 +19,7 @@ import (
 // NewWhoamiParams creates a new WhoamiParams object
 // with the default values initialized.
 func NewWhoamiParams() *WhoamiParams {
-
+	var ()
 	return &WhoamiParams{
 
 		timeout: cr.DefaultTimeout,
@@ -29,7 +29,7 @@ func NewWhoamiParams() *WhoamiParams {
 // NewWhoamiParamsWithTimeout creates a new WhoamiParams object
 // with the default values initialized, and the ability to set a timeout on a request
 func NewWhoamiParamsWithTimeout(timeout time.Duration) *WhoamiParams {
-
+	var ()
 	return &WhoamiParams{
 
 		timeout: timeout,
@@ -39,7 +39,7 @@ func NewWhoamiParamsWithTimeout(timeout time.Duration) *WhoamiParams {
 // NewWhoamiParamsWithContext creates a new WhoamiParams object
 // with the default values initialized, and the ability to set a context for a request
 func NewWhoamiParamsWithContext(ctx context.Context) *WhoamiParams {
-
+	var ()
 	return &WhoamiParams{
 
 		Context: ctx,
@@ -49,7 +49,7 @@ func NewWhoamiParamsWithContext(ctx context.Context) *WhoamiParams {
 // NewWhoamiParamsWithHTTPClient creates a new WhoamiParams object
 // with the default values initialized, and the ability to set a custom HTTPClient for a request
 func NewWhoamiParamsWithHTTPClient(client *http.Client) *WhoamiParams {
-
+	var ()
 	return &WhoamiParams{
 		HTTPClient: client,
 	}
@@ -59,6 +59,15 @@ func NewWhoamiParamsWithHTTPClient(client *http.Client) *WhoamiParams {
 for the whoami operation typically these are written to a http.Request
 */
 type WhoamiParams struct {
+
+	/*Authorization
+	  in: authorization
+
+	*/
+	Authorization *string
+	/*Cookie*/
+	Cookie *string
+
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
@@ -97,6 +106,28 @@ func (o *WhoamiParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithAuthorization adds the authorization to the whoami params
+func (o *WhoamiParams) WithAuthorization(authorization *string) *WhoamiParams {
+	o.SetAuthorization(authorization)
+	return o
+}
+
+// SetAuthorization adds the authorization to the whoami params
+func (o *WhoamiParams) SetAuthorization(authorization *string) {
+	o.Authorization = authorization
+}
+
+// WithCookie adds the cookie to the whoami params
+func (o *WhoamiParams) WithCookie(cookie *string) *WhoamiParams {
+	o.SetCookie(cookie)
+	return o
+}
+
+// SetCookie adds the cookie to the whoami params
+func (o *WhoamiParams) SetCookie(cookie *string) {
+	o.Cookie = cookie
+}
+
 // WriteToRequest writes these params to a swagger request
 func (o *WhoamiParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -104,6 +135,31 @@ func (o *WhoamiParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Regist
 		return err
 	}
 	var res []error
+
+	if o.Authorization != nil {
+
+		// query param Authorization
+		var qrAuthorization string
+		if o.Authorization != nil {
+			qrAuthorization = *o.Authorization
+		}
+		qAuthorization := qrAuthorization
+		if qAuthorization != "" {
+			if err := r.SetQueryParam("Authorization", qAuthorization); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	if o.Cookie != nil {
+
+		// header param Cookie
+		if err := r.SetHeaderParam("Cookie", *o.Cookie); err != nil {
+			return err
+		}
+
+	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)

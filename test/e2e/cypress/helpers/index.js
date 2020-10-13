@@ -39,6 +39,9 @@ module.exports = {
   KRATOS_ADMIN: (Cypress.env('kratos_admin') || 'http://127.0.0.1:4434')
     .replace()
     .replace(/\/$/, ''),
+  KRATOS_PUBLIC: (Cypress.env('kratos_public') || 'http://127.0.0.1:4433')
+    .replace()
+    .replace(/\/$/, ''),
   MAIL_API: (Cypress.env('mail_url') || 'http://127.0.0.1:4437').replace(
     /\/$/,
     ''
@@ -48,19 +51,18 @@ module.exports = {
   gen: {
     email,
     password,
-    identity: () => ({ email: email(), password: password() }),
+    identity: () => ({ email: email(), password: password() })
   },
   assertVerifiableAddress: assertVerifiableAddress,
   assertRecoveryAddress: assertRecoveryAddress,
 
   // Format is
-  //  http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/verification/email/confirm/OdTRmdMKe0DfF6ScaOFYgWJwoAprTxnA
-  verifyHrefPattern: /^http:.*\/.ory\/kratos\/public\/self-service\/browser\/flows\/verification\/email\/confirm\/([a-zA-Z0-9]+)$/,
+  verifyHrefPattern: /^http:.*\/self-service\/verification\/methods\/link\?token=([a-zA-Z0-9]+)$/,
 
   // intervals define how long to wait for something,
   pollInterval: 100, // how long to wait before retry
 
   // Adding 1+ second on top because MySQL doesn't do millisecs.
   verifyLifespan: 5000 + 1050,
-  privilegedLifespan: 5000 + 1050,
+  privilegedLifespan: 5000 + 1050
 }

@@ -16,14 +16,14 @@ import (
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/form"
-	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
 const (
-	SettingsPath = BasePath + "/settings/connections"
+	SettingsPath = RouteBase + "/settings/connections"
 )
 
 var _ settings.Strategy = new(Strategy)
@@ -114,13 +114,17 @@ func (s *Strategy) linkableProviders(conf *ConfigurationCollection, confidential
 	return result, nil
 }
 
-func (s *Strategy) PopulateSettingsMethod(r *http.Request, ss *session.Session, sr *settings.Request) error {
+func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity, sr *settings.Flow) error {
+	if sr.Type != flow.TypeBrowser {
+		return nil
+	}
+
 	conf, err := s.Config()
 	if err != nil {
 		return err
 	}
 
-	confidential, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), ss.IdentityID)
+	confidential, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), id.ID)
 	if err != nil {
 		return err
 	}
@@ -136,7 +140,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, ss *session.Session, 
 	}
 
 	f := form.NewHTMLForm(urlx.CopyWithQuery(urlx.AppendPaths(
-		s.c.SelfPublicURL(), SettingsPath), url.Values{"request": {sr.ID.String()}}).String())
+		s.c.SelfPublicURL(), SettingsPath), url.Values{"flow": {sr.ID.String()}}).String())
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 
 	for _, l := range linkable {
@@ -155,9 +159,9 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, ss *session.Session, 
 		})
 	}
 
-	sr.Methods[s.SettingsStrategyID()] = &settings.RequestMethod{
+	sr.Methods[s.SettingsStrategyID()] = &settings.FlowMethod{
 		Method: s.SettingsStrategyID(),
-		Config: &settings.RequestMethodConfig{RequestMethodConfigurator: NewRequestMethodConfig(f)},
+		Config: &settings.FlowMethodConfig{FlowMethodConfigurator: NewFlowMethod(f)},
 	}
 
 	return nil
@@ -181,23 +185,23 @@ type completeSelfServiceBrowserSettingsOIDCFlowPayload struct {
 	// in: body
 	Unlink string `json:"unlink"`
 
-	// RequestID is request ID.
+	// Flow ID is the flow's ID.
 	//
 	// in: query
-	RequestID string `json:"request_id"`
+	FlowID string `json:"flow"`
 }
 
-func (p *completeSelfServiceBrowserSettingsOIDCFlowPayload) GetRequestID() uuid.UUID {
-	return x.ParseUUID(p.RequestID)
+func (p *completeSelfServiceBrowserSettingsOIDCFlowPayload) GetFlowID() uuid.UUID {
+	return x.ParseUUID(p.FlowID)
 }
 
-func (p *completeSelfServiceBrowserSettingsOIDCFlowPayload) SetRequestID(rid uuid.UUID) {
-	p.RequestID = rid.String()
+func (p *completeSelfServiceBrowserSettingsOIDCFlowPayload) SetFlowID(rid uuid.UUID) {
+	p.FlowID = rid.String()
 }
 
 // swagger:route POST /self-service/browser/flows/registration/strategies/oidc/settings/connections public completeSelfServiceBrowserSettingsOIDCSettingsFlow
 //
-// Complete the browser-based settings flow for the OpenID Connect strategy
+// Complete the Browser-Based Settings Flow for the OpenID Connect Strategy
 //
 // This endpoint completes a browser-based settings flow. This is usually achieved by POSTing data to this
 // endpoint.
@@ -232,6 +236,10 @@ func (s *Strategy) completeSettingsFlow(w http.ResponseWriter, r *http.Request, 
 	} else if err != nil {
 		s.handleSettingsError(w, r, ctxUpdate, &p, err)
 		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		s.handleSettingsError(w, r, ctxUpdate, &p, err)
 	}
 
 	p.Link = r.Form.Get("link")
@@ -293,21 +301,21 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 	}
 
 	if ctxUpdate.Session.AuthenticatedAt.Add(s.c.SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
-		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.ErrRequestNeedsReAuthentication))
+		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 		return
 	}
 
 	http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.c.SelfPublicURL(),
-		strings.Replace(AuthPath, ":request", p.RequestID, 1)),
+		strings.Replace(RouteAuth, ":flow", p.FlowID, 1)),
 		url.Values{"provider": {p.Link}}).String(), http.StatusFound)
 }
 
 func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request,
 	ctxUpdate *settings.UpdateContext, claims *Claims, provider Provider) {
 	p := &completeSelfServiceBrowserSettingsOIDCFlowPayload{
-		Link: provider.Config().ID, RequestID: ctxUpdate.Request.ID.String()}
+		Link: provider.Config().ID, FlowID: ctxUpdate.Flow.ID.String()}
 	if ctxUpdate.Session.AuthenticatedAt.Add(s.c.SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
-		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.ErrRequestNeedsReAuthentication))
+		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 		return
 	}
 
@@ -341,7 +349,7 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request,
 
 	i.Credentials[s.ID()] = *creds
 	if err := s.d.SettingsHookExecutor().PostSettingsHook(w, r, s.SettingsStrategyID(), ctxUpdate, i, settings.WithCallback(func(ctxUpdate *settings.UpdateContext) error {
-		return s.PopulateSettingsMethod(r, ctxUpdate.Session, ctxUpdate.Request)
+		return s.PopulateSettingsMethod(r, ctxUpdate.Session.Identity, ctxUpdate.Flow)
 	})); err != nil {
 		s.handleSettingsError(w, r, ctxUpdate, p, err)
 		return
@@ -351,7 +359,7 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request,
 func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request,
 	ctxUpdate *settings.UpdateContext, p *completeSelfServiceBrowserSettingsOIDCFlowPayload) {
 	if ctxUpdate.Session.AuthenticatedAt.Add(s.c.SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
-		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.ErrRequestNeedsReAuthentication))
+		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 		return
 	}
 
@@ -410,7 +418,7 @@ func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request,
 
 	i.Credentials[s.ID()] = *creds
 	if err := s.d.SettingsHookExecutor().PostSettingsHook(w, r, s.SettingsStrategyID(), ctxUpdate, i, settings.WithCallback(func(ctxUpdate *settings.UpdateContext) error {
-		return s.PopulateSettingsMethod(r, ctxUpdate.Session, ctxUpdate.Request)
+		return s.PopulateSettingsMethod(r, ctxUpdate.Session.Identity, ctxUpdate.Flow)
 	})); err != nil {
 		s.handleSettingsError(w, r, ctxUpdate, p, err)
 		return
@@ -418,18 +426,23 @@ func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request,
 }
 
 func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *completeSelfServiceBrowserSettingsOIDCFlowPayload, err error) {
-	if errors.Is(err, settings.ErrRequestNeedsReAuthentication) {
+	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) {
 		if err := s.d.ContinuityManager().Pause(r.Context(), w, r,
 			settings.ContinuityKey(s.SettingsStrategyID()), settings.ContinuityOptions(p, ctxUpdate.Session.Identity)...); err != nil {
-			s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, ctxUpdate.Request, err, s.SettingsStrategyID())
+			s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.SettingsStrategyID(), ctxUpdate.Flow, ctxUpdate.Session.Identity, err)
 			return
 		}
 	}
 
-	if ctxUpdate.Request != nil {
-		ctxUpdate.Request.Methods[s.SettingsStrategyID()].Config.ResetMessages()
-		ctxUpdate.Request.Methods[s.SettingsStrategyID()].Config.SetCSRF(s.d.GenerateCSRFToken(r))
+	var i *identity.Identity
+	if ctxUpdate.Flow != nil {
+		ctxUpdate.Flow.Methods[s.SettingsStrategyID()].Config.ResetMessages()
+		ctxUpdate.Flow.Methods[s.SettingsStrategyID()].Config.SetCSRF(s.d.GenerateCSRFToken(r))
 	}
 
-	s.d.SettingsRequestErrorHandler().HandleSettingsError(w, r, ctxUpdate.Request, err, s.SettingsStrategyID())
+	if ctxUpdate.Session != nil {
+		i = ctxUpdate.Session.Identity
+	}
+
+	s.d.SettingsFlowErrorHandler().WriteFlowError(w, r, s.SettingsStrategyID(), ctxUpdate.Flow, i, err)
 }

@@ -148,9 +148,34 @@
         "client_id",
         "client_secret",
         "mapper_url"
-      ]
+      ],
+      "if": {
+        "properties": {
+          "provider": {
+            "const": "microsoft"
+          }
+        },
+        "required": [
+          "provider"
+        ]
+      },
+      "then": {
+        "required": [
+          "tenant"
+        ]
+      },
+      "else": {
+        "not": {
+          "properties": {
+            "tenant": {}
+          },
+          "required": [
+            "tenant"
+          ]
+        }
+      }
     },
-    "selfServiceAfterSettingsStrategy": {
+    "selfServiceAfterSettingsMethod": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -171,7 +196,7 @@
         }
       }
     },
-    "selfServiceAfterLoginStrategy": {
+    "selfServiceAfterLoginMethod": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -192,7 +217,7 @@
         }
       }
     },
-    "selfServiceAfterRegistrationStrategy": {
+    "selfServiceAfterRegistrationMethod": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -221,10 +246,10 @@
           "$ref": "#/definitions/defaultReturnTo"
         },
         "password": {
-          "$ref": "#/definitions/selfServiceAfterSettingsStrategy"
+          "$ref": "#/definitions/selfServiceAfterSettingsMethod"
         },
         "profile": {
-          "$ref": "#/definitions/selfServiceAfterSettingsStrategy"
+          "$ref": "#/definitions/selfServiceAfterSettingsMethod"
         }
       }
     },
@@ -236,10 +261,10 @@
           "$ref": "#/definitions/defaultReturnTo"
         },
         "password": {
-          "$ref": "#/definitions/selfServiceAfterLoginStrategy"
+          "$ref": "#/definitions/selfServiceAfterLoginMethod"
         },
         "oidc": {
-          "$ref": "#/definitions/selfServiceAfterLoginStrategy"
+          "$ref": "#/definitions/selfServiceAfterLoginMethod"
         }
       }
     },
@@ -251,10 +276,10 @@
           "$ref": "#/definitions/defaultReturnTo"
         },
         "password": {
-          "$ref": "#/definitions/selfServiceAfterRegistrationStrategy"
+          "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
         },
         "oidc": {
-          "$ref": "#/definitions/selfServiceAfterRegistrationStrategy"
+          "$ref": "#/definitions/selfServiceAfterRegistrationMethod"
         }
       }
     }
@@ -305,7 +330,7 @@
                   ],
                   "default": "https://www.ory.sh/kratos/docs/fallback/settings"
                 },
-                "request_lifespan": {
+                "lifespan": {
                   "type": "string",
                   "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
                   "default": "1h",
@@ -359,7 +384,7 @@
                   ],
                   "default": "https://www.ory.sh/kratos/docs/fallback/registration"
                 },
-                "request_lifespan": {
+                "lifespan": {
                   "type": "string",
                   "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
                   "default": "1h",
@@ -388,7 +413,7 @@
                   ],
                   "default": "https://www.ory.sh/kratos/docs/fallback/login"
                 },
-                "request_lifespan": {
+                "lifespan": {
                   "type": "string",
                   "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
                   "default": "1h",
@@ -433,7 +458,7 @@
                   },
                   "additionalProperties": false
                 },
-                "request_lifespan": {
+                "lifespan": {
                   "title": "Self-Service Verification Request Lifespan",
                   "description": "Sets how long the verification request (for the UI interaction) is valid.",
                   "type": "string",
@@ -477,7 +502,7 @@
                   },
                   "additionalProperties": false
                 },
-                "request_lifespan": {
+                "lifespan": {
                   "title": "Self-Service Recovery Request Lifespan",
                   "description": "Sets how long the recovery request is valid. If expired, the user has to redo the flow.",
                   "type": "string",
@@ -509,7 +534,7 @@
             }
           }
         },
-        "strategies": {
+        "methods": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
@@ -519,7 +544,7 @@
               "properties": {
                 "enabled": {
                   "type": "boolean",
-                  "title": "Enables Profile Management Strategy",
+                  "title": "Enables Profile Management Method",
                   "default": true
                 }
               }
@@ -530,7 +555,7 @@
               "properties": {
                 "enabled": {
                   "type": "boolean",
-                  "title": "Enables Token-based Account Recovery Strategy",
+                  "title": "Enables Token-based Account Recovery Method",
                   "default": true
                 }
               }
@@ -541,7 +566,7 @@
               "properties": {
                 "enabled": {
                   "type": "boolean",
-                  "title": "Enables Password Strategy",
+                  "title": "Enables Username/Email and Password Method",
                   "default": true
                 }
               }
@@ -552,7 +577,7 @@
               "properties": {
                 "enabled": {
                   "type": "boolean",
-                  "title": "Enables OpenID Connect Strategy",
+                  "title": "Enables OpenID Connect Method",
                   "default": false
                 },
                 "config": {
@@ -670,6 +695,117 @@
         "public": {
           "type": "object",
           "properties": {
+            "cors": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Configures Cross Origin Resource Sharing for public endpoints.",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Sets whether CORS is enabled.",
+                  "default": false
+                },
+                "allowed_origins": {
+                  "type": "array",
+                  "description": "A list of origins a cross-domain request can be executed from. If the special * value is present in the list, all origins will be allowed. An origin may contain a wildcard (*) to replace 0 or more characters (i.e.: http://*.domain.com). Only one wildcard can be used per origin.",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "not": {
+                      "type": "string",
+                      "description": "does match all strings that contain two or more (*)",
+                      "pattern": ".*\\*.*\\*.*"
+                    },
+                    "anyOf": [
+                      {
+                        "format": "uri"
+                      },
+                      {
+                        "const": "*"
+                      }
+                    ]
+                  },
+                  "uniqueItems": true,
+                  "default": [
+                    "*"
+                  ],
+                  "examples": [
+                    [
+                      "https://example.com",
+                      "https://*.example.com",
+                      "https://*.foo.example.com"
+                    ]
+                  ]
+                },
+                "allowed_methods": {
+                  "type": "array",
+                  "description": "A list of HTTP methods the user agent is allowed to use with cross-domain requests.",
+                  "default": [
+                    "POST",
+                    "GET",
+                    "PUT",
+                    "PATCH",
+                    "DELETE"
+                  ],
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "POST",
+                      "GET",
+                      "PUT",
+                      "PATCH",
+                      "DELETE",
+                      "CONNECT",
+                      "HEAD",
+                      "OPTIONS",
+                      "TRACE"
+                    ]
+                  }
+                },
+                "allowed_headers": {
+                  "type": "array",
+                  "description": "A list of non simple headers the client is allowed to use with cross-domain requests.",
+                  "default": [
+                    "Authorization",
+                    "Content-Type"
+                  ],
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "exposed_headers": {
+                  "type": "array",
+                  "description": "Sets which headers are safe to expose to the API of a CORS API specification.",
+                  "default": [
+                    "Content-Type"
+                  ],
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "allow_credentials": {
+                  "type": "boolean",
+                  "description": "Sets whether the request can include user credentials like cookies, HTTP authentication or client side SSL certificates.",
+                  "default": true
+                },
+                "options_passthrough": {
+                  "type": "boolean",
+                  "description": "TODO",
+                  "default": false
+                },
+                "max_age": {
+                  "type": "integer",
+                  "description": "Sets how long (in seconds) the results of a preflight request can be cached. If set to 0, every request is preceded by a preflight request.",
+                  "default": 0,
+                  "minimum": 0
+                },
+                "debug": {
+                  "type": "boolean",
+                  "description": "Adds additional log output to debug server side CORS issues.",
+                  "default": false
+                }
+              }
+            },
             "base_url": {
               "title": "Public Base URL",
               "description": "The URL where the public endpoint is exposed at.",
@@ -717,6 +853,11 @@
             "fatal",
             "panic"
           ]
+        },
+        "leak_sensitive_values": {
+          "type": "boolean",
+          "title": "Leak Sensitive Log Values",
+          "description": "If set will leak sensitive values (e.g. emails) in the logs."
         },
         "format": {
           "type": "string",
@@ -780,12 +921,15 @@
                 ]
               }
             },
+            "required": [
+              "id",
+              "url"
+            ],
             "not": {
               "type": "object",
               "properties": {
                 "id": {
-                  "type": "string",
-                  "pattern": "^default$"
+                  "const": "default"
                 }
               },
               "additionalProperties": true
@@ -934,9 +1078,15 @@
                           "enabled": {
                             "const": true
                           }
-                        }
+                        },
+                        "required": [
+                          "enabled"
+                        ]
                       }
-                    }
+                    },
+                    "required": [
+                      "verification"
+                    ]
                   },
                   {
                     "properties": {
@@ -945,41 +1095,27 @@
                           "enabled": {
                             "const": true
                           }
-                        }
+                        },
+                        "required": [
+                          "enabled"
+                        ]
                       }
-                    }
+                    },
+                    "required": [
+                      "recovery"
+                    ]
                   }
                 ]
               }
-            }
+            },
+            "required": [
+              "flows"
+            ]
           }
-        }
-      },
-      "then": {
+        },
         "required": [
-          "courier"
+          "selfservice"
         ]
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "selfservice": {
-            "properties": {
-              "flows": {
-                "properties": {
-                  "verification": {
-                    "properties": {
-                      "enabled": {
-                        "const": true
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
       },
       "then": {
         "required": [

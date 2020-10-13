@@ -23,8 +23,8 @@ func NewSessionDestroyer(r sessionDestroyerDependencies) *SessionDestroyer {
 	return &SessionDestroyer{r: r}
 }
 
-func (e *SessionDestroyer) ExecuteLoginPostHook(_ http.ResponseWriter, r *http.Request, _ *login.Request, s *session.Session) error {
-	if err := e.r.SessionPersister().DeleteSessionsFor(r.Context(), s.Identity.ID); err != nil {
+func (e *SessionDestroyer) ExecuteLoginPostHook(_ http.ResponseWriter, r *http.Request, _ *login.Flow, s *session.Session) error {
+	if err := e.r.SessionPersister().DeleteSessionsByIdentity(r.Context(), s.Identity.ID); err != nil {
 		return err
 	}
 	return nil

@@ -25,21 +25,24 @@ to use tokens for "Single Page Apps" or apps running on the client-side browser,
 there is no real difference between these two approaches as both represent a set
 of credentials valid for a certain domain or a number of domains.
 
-Still there is a vast solution set available for OAuth2 and OpenID Connect. The
+Still, many identity systems primarily rely on OAuth2 and OpenID Connect. The
 reasons for this would perhaps include the following:
 
-- Assumption - companies offer complexity as security (In ORY's view pretty
-  bad);
+- Assumption - it is certifiable;
+- Assumption - it offloads complexity to developers who need to interact with
+  and figure out e.g. `AppAuth`, `PassportJS`, and similar OAuth2 and OpenID
+  Connect SDKs developed by open source communities;
+- Assumption - selling complexity as security;
 - Assumption - the nature of closed source does not allow for new, open and
   de-facto standards to emerge and instead uses a consenus driven feature set,
   even if it doesn't fit the use case 100%.
 
-ORY Kratos tackles both assumptions as follows:
+While ORY Kratos is currently not certifiable, it tackles these topics as
+follows:
 
 - With inspiration from the approach taken in the Kubernetes Project, ORY
   provides an open source project that hopefully becomes an open standard in the
   future.
-
 - Prioritise simplicity and ease of use for developers. ORY Kratos integrates
   critical security components without relying on complex flows and protocols.
 
@@ -49,6 +52,10 @@ create an OAuth2 and OpenID Connect Provider by combining ORY Kratos with
 
 With a primary developer audience, ORY designs, secures, and tests critical
 network flows, system architectures, user flows, protocols, and business logic.
+
+## Today's Landscape
+
+Let's take a look at different approaches and software systems today.
 
 ### Full-stack Identity and Access Management (IAM)
 
@@ -167,11 +174,11 @@ architectural requirements. In this case, the following are some of the main
 considerations and challenges in ORY's efforts:
 
 - To manage changing user models;
-- To choose and use some encryption algorithms such as BCrypt, PBKDF2, Argon2,
-  Scrypt, Argon2, Argon2i, Argon2id, Argon2d. There are many alternatives and
-  most of the algorithms have numerous versions and parametrization options for
-  example "Salt length parameter." The multitude of options makes it hard to
-  configure the most secure setting;
+- To choose and use some encryption algorithms such as BCrypt, PBKDF2, Scrypt,
+  Argon2, Argon2i, Argon2id, Argon2d. There are many alternatives and most of
+  the algorithms have numerous versions and parametrization options for example
+  "Salt length parameter." The multitude of options makes it hard to configure
+  the most secure setting;
 - To consider and implement a wide range of processes and process variants. For
   instance, the user signs up via email, and later uses "Sign up with Google"
   that has the same email address. Or, the user previously signed up using the
@@ -194,7 +201,7 @@ The list above is purposely kept short. There are very many things to consider
 when building Kratos in concert with the other products ORY Keto, ORY Hydra, and
 ORY Oathkeeper. The list is really, really long.
 
-## ORY Kratos
+## Introducing ORY Kratos
 
 Considering all of the information above, there would be enough context to
 understand why and how ORY Kratos started, and why it's different from other
@@ -223,7 +230,7 @@ ORY has numerous products that support the protocols OAuth2 or OpenID Connect in
 ### Software Architecture
 
 ORY's
-[Software Architecture and Philosophy](../../ecosystem/software-architecture-philosophy)
+[Software Architecture and Philosophy](https://www.ory.sh/docs/ecosystem/software-architecture-philosophy)
 document, explains the architectural beliefs and framework behind the ORY
 Products in particular:
 
@@ -251,7 +258,7 @@ very easy to get started there is a reference implementation
 [github.com/ory/kratos-selfservice-ui-node](https://github.com/ory/kratos-selfservice-ui-node).
 
 For more details about each individual flow, consult the
-[Self-Service Flows Chapter](../self-service/flows/index).
+[Self-Service Flows Chapter](../self-service.mdx).
 
 ### Bring your own Identity Model(s)
 

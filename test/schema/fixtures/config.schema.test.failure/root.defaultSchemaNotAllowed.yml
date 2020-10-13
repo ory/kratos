@@ -1,0 +1,10 @@
+selfservice:
+  default_browser_return_url: "#/definitions/defaultReturnTo"
+
+dsn: foo
+
+identity:
+  default_schema_url: https://example.com
+  schemas:
+    - id: default
+      url: file://path/to/identity.traits.schema.json

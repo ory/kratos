@@ -9,7 +9,10 @@ make .bin/yq
 
 export PATH=.bin:$PATH
 export KRATOS_PUBLIC_URL=http://127.0.0.1:4433/
+export KRATOS_BROWSER_URL=http://127.0.0.1:4433/
 export KRATOS_ADMIN_URL=http://127.0.0.1:4434/
+export KRATOS_UI_URL=http://127.0.0.1:4456/
+export LOG_LEAK_SENSITIVE_VALUES=true
 
 if [ -z ${TEST_DATABASE_POSTGRESQL+x} ]; then
   docker rm -f kratos_test_database_mysql kratos_test_database_postgres kratos_test_database_cockroach || true
@@ -24,6 +27,8 @@ fi
 
 ! nc -zv 127.0.0.1 4434
 ! nc -zv 127.0.0.1 4433
+! nc -zv 127.0.0.1 4446
+! nc -zv 127.0.0.1 4456
 ! nc -zv 127.0.0.1 4455
 
 base=$(pwd)
@@ -35,6 +40,8 @@ if [ -z ${KRATOS_APP_PATH+x} ]; then
 else
   dir="${KRATOS_APP_PATH}"
 fi
+
+(cd test/e2e/proxy; npm i)
 
 kratos=./test/e2e/.bin/kratos
 go build -tags sqlite -o $kratos .
@@ -63,6 +70,7 @@ run() {
   killall hydra-login-consent || true
 
   DSN=memory URLS_SELF_ISSUER=http://127.0.0.1:4444 \
+    LOG_LEVEL=trace \
     URLS_LOGIN=http://127.0.0.1:4446/login \
     URLS_CONSENT=http://127.0.0.1:4446/consent \
     hydra serve all --dangerous-force-http > "${base}/test/e2e/hydra.e2e.log" 2>&1 &
@@ -74,7 +82,7 @@ run() {
     --grant-types authorization_code,refresh_token \
     --response-types code,id_token \
     --scope openid,offline \
-    --callbacks http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/callback/hydra
+    --callbacks http://127.0.0.1:4455/self-service/methods/oidc/callback/hydra
 
   hydra clients create \
     --endpoint http://127.0.0.1:4445 \
@@ -83,7 +91,7 @@ run() {
     --grant-types authorization_code,refresh_token \
     --response-types code,id_token \
     --scope openid,offline \
-    --callbacks http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/callback/google
+    --callbacks http://127.0.0.1:4455/self-service/methods/oidc/callback/google
 
   hydra clients create \
     --endpoint http://127.0.0.1:4445 \
@@ -92,15 +100,18 @@ run() {
     --grant-types authorization_code,refresh_token \
     --response-types code,id_token \
     --scope openid,offline \
-    --callbacks http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/callback/github
+    --callbacks http://127.0.0.1:4455/self-service/methods/oidc/callback/github
 
   if [ -z ${KRATOS_APP_PATH+x} ]; then
-    (cd "$dir"; PORT=4455 SECURITY_MODE=cookie npm run serve \
+    (cd "$dir"; PORT=4456 SECURITY_MODE=cookie npm run serve \
       > "${base}/test/e2e/secureapp.e2e.log" 2>&1 &)
   else
-    (cd "$dir"; PORT=4455 SECURITY_MODE=cookie npm run start \
+    (cd "$dir"; PORT=4456 SECURITY_MODE=cookie npm run start \
      > "${base}/test/e2e/secureapp.e2e.log" 2>&1 &)
   fi
+
+  (cd test/e2e/proxy; PORT=4455 npm run start \
+   > "${base}/test/e2e/proxy.e2e.log" 2>&1 &)
 
   (cd test/e2e/hydra-login-consent; \
     go build . && \
@@ -118,6 +129,8 @@ run() {
     http-get://127.0.0.1:4455/health \
     http-get://127.0.0.1:4445/health/ready \
     http-get://127.0.0.1:4446/ \
+    http-get://127.0.0.1:4455/ \
+    http-get://127.0.0.1:4456/ \
     http-get://127.0.0.1:4437/mail
 
   if [[ $dev = "yes" ]]; then

@@ -19,6 +19,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/x"
 )
@@ -33,12 +34,12 @@ func TestRegistrationExecutor(t *testing.T) {
 			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
 			viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
 
-			newServer := func(t *testing.T, i *identity.Identity) *httptest.Server {
+			newServer := func(t *testing.T, i *identity.Identity, ft flow.Type) *httptest.Server {
 				router := httprouter.New()
 				handleErr := testhelpers.SelfServiceHookRegistrationErrorHandler
 				router.GET("/registration/pre", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-					if handleErr(t, w, r, reg.RegistrationHookExecutor().PreRegistrationHook(w, r, registration.NewRequest(time.Minute, x.FakeCSRFToken, r))) {
-						w.Write([]byte("ok"))
+					if handleErr(t, w, r, reg.RegistrationHookExecutor().PreRegistrationHook(w, r, registration.NewFlow(time.Minute, x.FakeCSRFToken, r, ft))) {
+						_, _ = w.Write([]byte("ok"))
 					}
 				})
 
@@ -46,7 +47,7 @@ func TestRegistrationExecutor(t *testing.T) {
 					if i == nil {
 						i = testhelpers.SelfServiceHookFakeIdentity(t)
 					}
-					a := registration.NewRequest(time.Minute, x.FakeCSRFToken, r)
+					a := registration.NewFlow(time.Minute, x.FakeCSRFToken, r, ft)
 					a.RequestURL = x.RequestURL(r).String()
 					_ = handleErr(t, w, r, reg.RegistrationHookExecutor().PostRegistrationHook(w, r, identity.CredentialsType(strategy), a, i))
 				})
@@ -64,7 +65,7 @@ func TestRegistrationExecutor(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset)
 					i := testhelpers.SelfServiceHookFakeIdentity(t)
 
-					ts := newServer(t, i)
+					ts := newServer(t, i, flow.TypeBrowser)
 					res, _ := makeRequestPost(t, ts, false, url.Values{})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.EqualValues(t, "https://www.ory.sh/", res.Request.URL.String())
@@ -78,7 +79,7 @@ func TestRegistrationExecutor(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset)
 					viperSetPost(strategy, []configuration.SelfServiceHook{{Name: "err", Config: []byte(`{}`)}})
 
-					res, _ := makeRequestPost(t, newServer(t, nil), false, url.Values{})
+					res, _ := makeRequestPost(t, newServer(t, nil, flow.TypeBrowser), false, url.Values{})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.EqualValues(t, "https://www.ory.sh/", res.Request.URL.String())
 				})
@@ -88,7 +89,7 @@ func TestRegistrationExecutor(t *testing.T) {
 					viperSetPost(strategy, []configuration.SelfServiceHook{{Name: "err", Config: []byte(`{"ExecutePostRegistrationPrePersistHook": "abort"}`)}})
 					i := testhelpers.SelfServiceHookFakeIdentity(t)
 
-					res, body := makeRequestPost(t, newServer(t, i), false, url.Values{})
+					res, body := makeRequestPost(t, newServer(t, i, flow.TypeBrowser), false, url.Values{})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.Equal(t, "", body)
 
@@ -100,7 +101,7 @@ func TestRegistrationExecutor(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset)
 					i := testhelpers.SelfServiceHookFakeIdentity(t)
 
-					res, body := makeRequestPost(t, newServer(t, i), false, url.Values{"return_to": {"https://www.ory.sh/kratos/"}})
+					res, body := makeRequestPost(t, newServer(t, i, flow.TypeBrowser), false, url.Values{"return_to": {"https://www.ory.sh/kratos/"}})
 					assert.EqualValues(t, http.StatusInternalServerError, res.StatusCode)
 					assert.Contains(t, body, "malformed or contained invalid")
 
@@ -113,7 +114,7 @@ func TestRegistrationExecutor(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset)
 					viper.Set(configuration.ViperKeyURLsWhitelistedReturnToDomains, []string{"https://www.ory.sh/"})
 
-					res, _ := makeRequestPost(t, newServer(t, nil), false, url.Values{"return_to": {"https://www.ory.sh/kratos/"}})
+					res, _ := makeRequestPost(t, newServer(t, nil, flow.TypeBrowser), false, url.Values{"return_to": {"https://www.ory.sh/kratos/"}})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.EqualValues(t, "https://www.ory.sh/kratos/", res.Request.URL.String())
 				})
@@ -122,7 +123,7 @@ func TestRegistrationExecutor(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset)
 					testhelpers.SelfServiceHookRegistrationSetDefaultRedirectToStrategy(strategy, "https://www.ory.sh/kratos")
 
-					res, _ := makeRequestPost(t, newServer(t, nil), false, url.Values{})
+					res, _ := makeRequestPost(t, newServer(t, nil, flow.TypeBrowser), false, url.Values{})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.EqualValues(t, "https://www.ory.sh/kratos/", res.Request.URL.String())
 				})
@@ -132,7 +133,7 @@ func TestRegistrationExecutor(t *testing.T) {
 					testhelpers.SelfServiceHookRegistrationSetDefaultRedirectTo("https://www.ory.sh/not-kratos")
 					testhelpers.SelfServiceHookRegistrationSetDefaultRedirectToStrategy(strategy, "https://www.ory.sh/kratos")
 
-					res, _ := makeRequestPost(t, newServer(t, nil), false, url.Values{})
+					res, _ := makeRequestPost(t, newServer(t, nil, flow.TypeBrowser), false, url.Values{})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.EqualValues(t, "https://www.ory.sh/kratos/", res.Request.URL.String())
 				})
@@ -141,7 +142,7 @@ func TestRegistrationExecutor(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset)
 					viperSetPost(strategy, []configuration.SelfServiceHook{{Name: "err", Config: []byte(`{}`)}})
 
-					res, _ := makeRequestPost(t, newServer(t, nil), false, url.Values{})
+					res, _ := makeRequestPost(t, newServer(t, nil, flow.TypeBrowser), false, url.Values{})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.EqualValues(t, "https://www.ory.sh/", res.Request.URL.String())
 				})
@@ -149,17 +150,25 @@ func TestRegistrationExecutor(t *testing.T) {
 				t.Run("case=send a json response for API clients", func(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset)
 
-					res, body := makeRequestPost(t, newServer(t, nil), true, url.Values{})
+					res, body := makeRequestPost(t, newServer(t, nil, flow.TypeAPI), true, url.Values{})
 					assert.EqualValues(t, http.StatusOK, res.StatusCode)
 					assert.NotEmpty(t, gjson.Get(body, "identity.id"))
 				})
 			})
 
-			t.Run("method=PreRegistrationHook", testhelpers.TestSelfServicePreHook(
+			t.Run("type=browser/method=PreRegistrationHook", testhelpers.TestSelfServicePreHook(
 				configuration.ViperKeySelfServiceRegistrationBeforeHooks,
 				testhelpers.SelfServiceMakeRegistrationPreHookRequest,
 				func(t *testing.T) *httptest.Server {
-					return newServer(t, nil)
+					return newServer(t, nil, flow.TypeBrowser)
+				},
+			))
+
+			t.Run("type=api/method=PreRegistrationHook", testhelpers.TestSelfServicePreHook(
+				configuration.ViperKeySelfServiceRegistrationBeforeHooks,
+				testhelpers.SelfServiceMakeRegistrationPreHookRequest,
+				func(t *testing.T) *httptest.Server {
+					return newServer(t, nil, flow.TypeAPI)
 				},
 			))
 		})

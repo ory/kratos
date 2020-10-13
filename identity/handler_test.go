@@ -91,14 +91,14 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("case=should fail to create an identity because schema id does not exist", func(t *testing.T) {
-		var i identity.CreateIdentityRequestPayload
+		var i identity.CreateIdentity
 		i.SchemaID = "does-not-exist"
 		res := send(t, "POST", "/identities", http.StatusBadRequest, &i)
 		assert.Contains(t, res.Get("error.reason").String(), "does-not-exist", "%s", res)
 	})
 
 	t.Run("case=should fail to create an entity because schema is not validating", func(t *testing.T) {
-		var i identity.CreateIdentityRequestPayload
+		var i identity.CreateIdentity
 		i.Traits = []byte(`{"bar":123}`)
 		res := send(t, "POST", "/identities", http.StatusBadRequest, &i)
 		assert.Contains(t, res.Get("error.reason").String(), "I[#/traits/bar] S[#/properties/traits/properties/bar/type] expected string, but got number")
@@ -110,7 +110,7 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("case=should create an identity without an ID", func(t *testing.T) {
-		var i identity.CreateIdentityRequestPayload
+		var i identity.CreateIdentity
 		i.Traits = []byte(`{"bar":"baz"}`)
 		res := send(t, "POST", "/identities", http.StatusCreated, &i)
 		assert.NotEmpty(t, res.Get("id").String(), "%s", res.Raw)
@@ -148,7 +148,7 @@ func TestHandler(t *testing.T) {
 		})
 
 		t.Run("case=should update an identity and persist the changes", func(t *testing.T) {
-			ur := identity.UpdateIdentityRequestPayload{Traits: []byte(`{"bar":"baz","foo":"baz"}`), SchemaID: i.SchemaID}
+			ur := identity.UpdateIdentity{Traits: []byte(`{"bar":"baz","foo":"baz"}`), SchemaID: i.SchemaID}
 			res := send(t, "PUT", "/identities/"+i.ID.String(), http.StatusOK, &ur)
 			assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
 			assert.EqualValues(t, "baz", res.Get("traits.foo").String(), "%s", res.Raw)
@@ -165,7 +165,7 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("case=should not be able to create an identity with an invalid schema", func(t *testing.T) {
-		var cr identity.CreateIdentityRequestPayload
+		var cr identity.CreateIdentity
 		cr.SchemaID = "unknown"
 		cr.Traits = []byte(`{"email":"` + x.NewUUID().String() + `@ory.sh"}`)
 		res := send(t, "POST", "/identities", http.StatusBadRequest, &cr)
@@ -173,7 +173,7 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("case=should create an identity with a different schema", func(t *testing.T) {
-		var cr identity.CreateIdentityRequestPayload
+		var cr identity.CreateIdentity
 		cr.SchemaID = "employee"
 		cr.Traits = []byte(`{"email":"` + x.NewUUID().String() + `@ory.sh"}`)
 
@@ -184,7 +184,7 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("case=should create and sync metadata and update privileged traits", func(t *testing.T) {
-		var cr identity.CreateIdentityRequestPayload
+		var cr identity.CreateIdentity
 		cr.SchemaID = "employee"
 		originalEmail := x.NewUUID().String() + "@ory.sh"
 		cr.Traits = []byte(`{"email":"` + originalEmail + `"}`)
@@ -194,7 +194,7 @@ func TestHandler(t *testing.T) {
 
 		id := res.Get("id").String()
 		updatedEmail := x.NewUUID().String() + "@ory.sh"
-		res = send(t, "PUT", "/identities/"+id, http.StatusOK, &identity.UpdateIdentityRequestPayload{
+		res = send(t, "PUT", "/identities/"+id, http.StatusOK, &identity.UpdateIdentity{
 			Traits: []byte(`{"email":"` + updatedEmail + `", "department": "ory"}`),
 		})
 
@@ -207,13 +207,13 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("case=should update the schema id and fail because traits are invalid", func(t *testing.T) {
-		var cr identity.CreateIdentityRequestPayload
+		var cr identity.CreateIdentity
 		cr.SchemaID = "employee"
 		cr.Traits = []byte(`{"email":"` + x.NewUUID().String() + `@ory.sh", "department": "ory"}`)
 		res := send(t, "POST", "/identities", http.StatusCreated, &cr)
 
 		id := res.Get("id").String()
-		res = send(t, "PUT", "/identities/"+id, http.StatusBadRequest, &identity.UpdateIdentityRequestPayload{
+		res = send(t, "PUT", "/identities/"+id, http.StatusBadRequest, &identity.UpdateIdentity{
 			SchemaID: "customer",
 			Traits:   cr.Traits,
 		})
@@ -221,13 +221,13 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("case=should update the schema id", func(t *testing.T) {
-		var cr identity.CreateIdentityRequestPayload
+		var cr identity.CreateIdentity
 		cr.SchemaID = "employee"
 		cr.Traits = []byte(`{"email":"` + x.NewUUID().String() + `@ory.sh", "department": "ory"}`)
 		res := send(t, "POST", "/identities", http.StatusCreated, &cr)
 
 		id := res.Get("id").String()
-		res = send(t, "PUT", "/identities/"+id, http.StatusOK, &identity.UpdateIdentityRequestPayload{
+		res = send(t, "PUT", "/identities/"+id, http.StatusOK, &identity.UpdateIdentity{
 			SchemaID: "customer",
 			Traits:   []byte(`{"email":"` + x.NewUUID().String() + `@ory.sh", "address": "ory street"}`),
 		})
@@ -236,18 +236,18 @@ func TestHandler(t *testing.T) {
 
 	t.Run("case=should be able to update multiple identities", func(t *testing.T) {
 		for i := 0; i <= 5; i++ {
-			var cr identity.CreateIdentityRequestPayload
+			var cr identity.CreateIdentity
 			cr.SchemaID = "employee"
 			cr.Traits = []byte(`{"department": "ory"}`)
 			res := send(t, "POST", "/identities", http.StatusCreated, &cr)
 
 			id := res.Get("id").String()
-			res = send(t, "PUT", "/identities/"+id, http.StatusOK, &identity.UpdateIdentityRequestPayload{
+			res = send(t, "PUT", "/identities/"+id, http.StatusOK, &identity.UpdateIdentity{
 				SchemaID: "employee",
 				Traits:   []byte(`{"email":"` + x.NewUUID().String() + `@ory.sh"}`),
 			})
 
-			res = send(t, "PUT", "/identities/"+id, http.StatusOK, &identity.UpdateIdentityRequestPayload{
+			res = send(t, "PUT", "/identities/"+id, http.StatusOK, &identity.UpdateIdentity{
 				SchemaID: "employee",
 				Traits:   []byte(`{}`),
 			})

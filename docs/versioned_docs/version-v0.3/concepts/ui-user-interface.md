@@ -30,6 +30,6 @@ no complex authentication mechanism required and no need to worry about possible
 attack vectors such as CSRF or Session Attacks since ORY Kratos provides the
 preventive measures built in.
 
-Chapter [Self-Service Flows](../self-service/flows/index) contains further
+Chapter [Self-Service Flows](../self-service.mdx) contains further
 information on APIs and flows related to the SSUI, and build self service
 applications.

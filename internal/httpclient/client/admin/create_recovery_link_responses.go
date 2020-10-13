@@ -9,11 +9,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
-	"github.com/go-openapi/validate"
 
 	"github.com/ory/kratos/internal/httpclient/models"
 )
@@ -63,23 +60,23 @@ func NewCreateRecoveryLinkOK() *CreateRecoveryLinkOK {
 
 /*CreateRecoveryLinkOK handles this case with default header values.
 
-createRecoveryLinkResponse
+recoveryLink
 */
 type CreateRecoveryLinkOK struct {
-	Payload *models.CreateRecoveryLinkResponse
+	Payload *models.RecoveryLink
 }
 
 func (o *CreateRecoveryLinkOK) Error() string {
 	return fmt.Sprintf("[POST /recovery/link][%d] createRecoveryLinkOK  %+v", 200, o.Payload)
 }
 
-func (o *CreateRecoveryLinkOK) GetPayload() *models.CreateRecoveryLinkResponse {
+func (o *CreateRecoveryLinkOK) GetPayload() *models.RecoveryLink {
 	return o.Payload
 }
 
 func (o *CreateRecoveryLinkOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.CreateRecoveryLinkResponse)
+	o.Payload = new(models.RecoveryLink)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
@@ -185,84 +182,5 @@ func (o *CreateRecoveryLinkInternalServerError) readResponse(response runtime.Cl
 		return err
 	}
 
-	return nil
-}
-
-/*CreateRecoveryLinkBody create recovery link body
-swagger:model CreateRecoveryLinkBody
-*/
-type CreateRecoveryLinkBody struct {
-
-	// Link Expires In
-	//
-	// The recovery link will expire at that point in time. Defaults to the configuration value of
-	// `selfservice.flows.recovery.request_lifespan`.
-	// Pattern: ^[0-9]+(ns|us|ms|s|m|h)$
-	ExpiresIn string `json:"expires_in,omitempty"`
-
-	// identity id
-	// Required: true
-	// Format: uuid4
-	IdentityID models.UUID `json:"identity_id"`
-}
-
-// Validate validates this create recovery link body
-func (o *CreateRecoveryLinkBody) Validate(formats strfmt.Registry) error {
-	var res []error
-
-	if err := o.validateExpiresIn(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := o.validateIdentityID(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if len(res) > 0 {
-		return errors.CompositeValidationError(res...)
-	}
-	return nil
-}
-
-func (o *CreateRecoveryLinkBody) validateExpiresIn(formats strfmt.Registry) error {
-
-	if swag.IsZero(o.ExpiresIn) { // not required
-		return nil
-	}
-
-	if err := validate.Pattern("Body"+"."+"expires_in", "body", string(o.ExpiresIn), `^[0-9]+(ns|us|ms|s|m|h)$`); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (o *CreateRecoveryLinkBody) validateIdentityID(formats strfmt.Registry) error {
-
-	if err := o.IdentityID.Validate(formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("Body" + "." + "identity_id")
-		}
-		return err
-	}
-
-	return nil
-}
-
-// MarshalBinary interface implementation
-func (o *CreateRecoveryLinkBody) MarshalBinary() ([]byte, error) {
-	if o == nil {
-		return nil, nil
-	}
-	return swag.WriteJSON(o)
-}
-
-// UnmarshalBinary interface implementation
-func (o *CreateRecoveryLinkBody) UnmarshalBinary(b []byte) error {
-	var res CreateRecoveryLinkBody
-	if err := swag.ReadJSON(b, &res); err != nil {
-		return err
-	}
-	*o = res
 	return nil
 }

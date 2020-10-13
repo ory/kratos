@@ -16,6 +16,7 @@ import (
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
@@ -43,5 +44,19 @@ func NewRedirTS(t *testing.T, body string) *httptest.Server {
 	}))
 	t.Cleanup(ts.Close)
 	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL)
+	return ts
+}
+
+func NewRedirSessionEchoTS(t *testing.T, reg interface {
+	x.WriterProvider
+	session.ManagementProvider
+}) *httptest.Server {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
+		require.NoError(t, err, "Headers: %+v", r.Header)
+		reg.Writer().Write(w, r, sess)
+	}))
+	t.Cleanup(ts.Close)
+	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL+"/return-ts")
 	return ts
 }

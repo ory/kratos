@@ -25,7 +25,7 @@ type Identity struct {
 	ID UUID `json:"id"`
 
 	// RecoveryAddresses contains all the addresses that can be used to recover an identity.
-	RecoveryAddresses []*RecoveryAddress `json:"recovery_addresses"`
+	RecoveryAddresses []*RecoveryAddress `json:"recovery_addresses,omitempty"`
 
 	// SchemaID is the ID of the JSON Schema to be used for validating the identity's traits.
 	// Required: true
@@ -34,14 +34,15 @@ type Identity struct {
 	// SchemaURL is the URL of the endpoint where the identity's traits schema can be fetched from.
 	//
 	// format: url
-	SchemaURL string `json:"schema_url,omitempty"`
+	// Required: true
+	SchemaURL *string `json:"schema_url"`
 
 	// traits
 	// Required: true
 	Traits Traits `json:"traits"`
 
 	// VerifiableAddresses contains all the addresses that can be verified by the user.
-	VerifiableAddresses []*VerifiableAddress `json:"verifiable_addresses"`
+	VerifiableAddresses []*VerifiableAddress `json:"verifiable_addresses,omitempty"`
 }
 
 // Validate validates this identity
@@ -57,6 +58,10 @@ func (m *Identity) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateSchemaID(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateSchemaURL(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -114,6 +119,15 @@ func (m *Identity) validateRecoveryAddresses(formats strfmt.Registry) error {
 func (m *Identity) validateSchemaID(formats strfmt.Registry) error {
 
 	if err := validate.Required("schema_id", "body", m.SchemaID); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *Identity) validateSchemaURL(formats strfmt.Registry) error {
+
+	if err := validate.Required("schema_url", "body", m.SchemaURL); err != nil {
 		return err
 	}
 

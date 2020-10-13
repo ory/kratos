@@ -3,7 +3,6 @@ package identity
 import (
 	"context"
 	"reflect"
-	"time"
 
 	"github.com/gofrs/uuid"
 
@@ -16,7 +15,6 @@ import (
 
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/driver/configuration"
-	"github.com/ory/kratos/otp"
 )
 
 var ErrProtectedFieldModified = herodot.ErrForbidden.
@@ -148,17 +146,6 @@ func (m *Manager) UpdateTraits(ctx context.Context, id uuid.UUID, traits Traits,
 	}
 
 	return m.r.IdentityPool().(PrivilegedPool).UpdateIdentity(ctx, updated)
-}
-
-func (m *Manager) RefreshVerifyAddress(ctx context.Context, address *VerifiableAddress) error {
-	code, err := otp.New()
-	if err != nil {
-		return err
-	}
-
-	address.Code = code
-	address.ExpiresAt = time.Now().UTC().Add(m.c.SelfServiceFlowVerificationRequestLifespan())
-	return m.r.IdentityPool().(PrivilegedPool).UpdateVerifiableAddress(ctx, address)
 }
 
 func (m *Manager) validate(i *Identity, o *managerOptions) error {

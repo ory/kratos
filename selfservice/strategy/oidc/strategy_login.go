@@ -10,6 +10,7 @@ import (
 	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/x"
 )
@@ -20,33 +21,39 @@ func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 	s.setRoutes(r)
 }
 
-func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Request) error {
+func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Flow) error {
+	if sr.Type != flow.TypeBrowser {
+		return nil
+	}
+
 	config, err := s.populateMethod(r, sr.ID)
 	if err != nil {
 		return err
 	}
-	sr.Methods[s.ID()] = &login.RequestMethod{Method: s.ID(),
-		Config: &login.RequestMethodConfig{RequestMethodConfigurator: config}}
+	sr.Methods[s.ID()] = &login.FlowMethod{Method: s.ID(),
+		Config: &login.FlowMethodConfig{FlowMethodConfigurator: config}}
 	return nil
 }
 
-func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Request, claims *Claims, provider Provider, container *authCodeContainer) {
+func (s *Strategy) processLogin(w http.ResponseWriter, r *http.Request, a *login.Flow, claims *Claims, provider Provider, container *authCodeContainer) {
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(r.Context(), identity.CredentialsTypeOIDC, uid(provider.Config().ID, claims.Subject))
 	if err != nil {
 		if errors.Is(err, herodot.ErrNotFound) {
-			// If no account was found we're "manually" creating a new registration request and redirecting the browser
+			// If no account was found we're "manually" creating a new registration flow and redirecting the browser
 			// to that endpoint.
 
 			// That will execute the "pre registration" hook which allows to e.g. disallow this request. The registration
 			// ui however will NOT be shown, instead the user is directly redirected to the auth path. That should then
 			// do a silent re-request. While this might be a bit excessive from a network perspective it should usually
-			// happen without any downsides to user experience as the request has already been authorized and should
+			// happen without any downsides to user experience as the flow has already been authorized and should
 			// not need additional consent/login.
 
 			// This is kinda hacky but the only way to ensure seamless login/registration flows when using OIDC.
 
 			s.d.Logger().WithField("provider", provider.Config().ID).WithField("subject", claims.Subject).Debug("Received successful OpenID Connect callback but user is not registered. Re-initializing registration flow now.")
-			aa, err := s.d.RegistrationHandler().NewRegistrationRequest(w, r)
+
+			// This flow only works for browsers anyways.
+			aa, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, flow.TypeBrowser)
 			if err != nil {
 				s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
 				return

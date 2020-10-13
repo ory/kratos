@@ -1,34 +1,37 @@
 package registration
 
 import (
-	"errors"
+	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/ory/x/sqlcon"
 
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
 type (
 	PreHookExecutor interface {
-		ExecuteRegistrationPreHook(w http.ResponseWriter, r *http.Request, a *Request) error
+		ExecuteRegistrationPreHook(w http.ResponseWriter, r *http.Request, a *Flow) error
 	}
-	PreHookExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Request) error
+	PreHookExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow) error
 
 	PostHookPostPersistExecutor interface {
-		ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, a *Request, s *session.Session) error
+		ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error
 	}
-	PostHookPostPersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Request, s *session.Session) error
+	PostHookPostPersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error
 
 	PostHookPrePersistExecutor interface {
-		ExecutePostRegistrationPrePersistHook(w http.ResponseWriter, r *http.Request, a *Request, i *identity.Identity) error
+		ExecutePostRegistrationPrePersistHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity) error
 	}
-	PostHookPrePersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Request, i *identity.Identity) error
+	PostHookPrePersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity) error
 
 	HooksProvider interface {
 		PreRegistrationHooks() []PreHookExecutor
@@ -37,13 +40,21 @@ type (
 	}
 )
 
-func (f PreHookExecutorFunc) ExecuteRegistrationPreHook(w http.ResponseWriter, r *http.Request, a *Request) error {
+func PostHookPostPersistExecutorNames(e []PostHookPostPersistExecutor) []string {
+	names := make([]string, len(e))
+	for k, ee := range e {
+		names[k] = fmt.Sprintf("%T", ee)
+	}
+	return names
+}
+
+func (f PreHookExecutorFunc) ExecuteRegistrationPreHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
 	return f(w, r, a)
 }
-func (f PostHookPostPersistExecutorFunc) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, a *Request, s *session.Session) error {
+func (f PostHookPostPersistExecutorFunc) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *session.Session) error {
 	return f(w, r, a, s)
 }
-func (f PostHookPrePersistExecutorFunc) ExecutePostRegistrationPrePersistHook(w http.ResponseWriter, r *http.Request, a *Request, i *identity.Identity) error {
+func (f PostHookPrePersistExecutorFunc) ExecutePostRegistrationPrePersistHook(w http.ResponseWriter, r *http.Request, a *Flow, i *identity.Identity) error {
 	return f(w, r, a, i)
 }
 
@@ -51,6 +62,7 @@ type (
 	executorDependencies interface {
 		identity.ManagementProvider
 		identity.ValidationProvider
+		session.PersistenceProvider
 		HooksProvider
 		x.LoggingProvider
 		x.WriterProvider
@@ -71,14 +83,35 @@ func NewHookExecutor(d executorDependencies, c configuration.Provider) *HookExec
 	}
 }
 
-func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, a *Request, i *identity.Identity) error {
-	for _, executor := range e.d.PostRegistrationPrePersistHooks(ct) {
+func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, a *Flow, i *identity.Identity) error {
+	e.d.Logger().
+		WithRequest(r).
+		WithField("identity_id", i.ID).
+		WithField("flow_method", ct).
+		Debug("Running PostRegistrationPrePersistHooks.")
+	for k, executor := range e.d.PostRegistrationPrePersistHooks(ct) {
 		if err := executor.ExecutePostRegistrationPrePersistHook(w, r, a, i); err != nil {
-			if errors.Is(err, ErrHookAbortRequest) {
+			if errors.Is(err, ErrHookAbortFlow) {
+				e.d.Logger().
+					WithRequest(r).
+					WithField("executor", fmt.Sprintf("%T", executor)).
+					WithField("executor_position", k).
+					WithField("executors", PostHookPostPersistExecutorNames(e.d.PostRegistrationPostPersistHooks(ct))).
+					WithField("identity_id", i.ID).
+					WithField("flow_method", ct).
+					Debug("A ExecutePostRegistrationPrePersistHook hook aborted early.")
 				return nil
 			}
 			return err
 		}
+
+		e.d.Logger().WithRequest(r).
+			WithField("executor", fmt.Sprintf("%T", executor)).
+			WithField("executor_position", k).
+			WithField("executors", PostHookPostPersistExecutorNames(e.d.PostRegistrationPostPersistHooks(ct))).
+			WithField("identity_id", i.ID).
+			WithField("flow_method", ct).
+			Debug("ExecutePostRegistrationPrePersistHook completed successfully.")
 	}
 
 	// We need to make sure that the identity has a valid schema before passing it down to the identity pool.
@@ -92,30 +125,58 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		}
 		return err
 	}
-
-	e.d.Logger().
+	e.d.Audit().
+		WithRequest(r).
 		WithField("identity_id", i.ID).
-		Debug("A new identity has registered using self-service registration. Running post execution hooks.")
+		Info("A new identity has registered using self-service registration.")
 
-	s := session.NewSession(i, e.c, time.Now().UTC())
-	for _, executor := range e.d.PostRegistrationPostPersistHooks(ct) {
+	s := session.NewActiveSession(i, e.c, time.Now().UTC())
+	e.d.Logger().
+		WithRequest(r).
+		WithField("identity_id", i.ID).
+		WithField("flow_method", ct).
+		Debug("Running PostRegistrationPostPersistHooks.")
+	for k, executor := range e.d.PostRegistrationPostPersistHooks(ct) {
 		if err := executor.ExecutePostRegistrationPostPersistHook(w, r, a, s); err != nil {
-			if errors.Is(err, ErrHookAbortRequest) {
+			if errors.Is(err, ErrHookAbortFlow) {
+				e.d.Logger().
+					WithRequest(r).
+					WithField("executor", fmt.Sprintf("%T", executor)).
+					WithField("executor_position", k).
+					WithField("executors", PostHookPostPersistExecutorNames(e.d.PostRegistrationPostPersistHooks(ct))).
+					WithField("identity_id", i.ID).
+					WithField("flow_method", ct).
+					Debug("A ExecutePostRegistrationPostPersistHook hook aborted early.")
 				return nil
 			}
 			return err
 		}
+
+		e.d.Logger().WithRequest(r).
+			WithField("executor", fmt.Sprintf("%T", executor)).
+			WithField("executor_position", k).
+			WithField("executors", PostHookPostPersistExecutorNames(e.d.PostRegistrationPostPersistHooks(ct))).
+			WithField("identity_id", i.ID).
+			WithField("flow_method", ct).
+			Debug("ExecutePostRegistrationPostPersistHook completed successfully.")
 	}
 
 	e.d.Logger().
+		WithRequest(r).
+		WithField("flow_method", ct).
 		WithField("identity_id", i.ID).
 		Debug("Post registration execution hooks completed successfully.")
+
+	if a.Type == flow.TypeAPI {
+		e.d.Writer().Write(w, r, &APIFlowResponse{Identity: i})
+		return nil
+	}
 
 	return x.SecureContentNegotiationRedirection(w, r, s.Declassify(), a.RequestURL,
 		e.d.Writer(), e.c, x.SecureRedirectOverrideDefaultReturnTo(e.c.SelfServiceFlowRegistrationReturnTo(ct.String())))
 }
 
-func (e *HookExecutor) PreRegistrationHook(w http.ResponseWriter, r *http.Request, a *Request) error {
+func (e *HookExecutor) PreRegistrationHook(w http.ResponseWriter, r *http.Request, a *Flow) error {
 	for _, executor := range e.d.PreRegistrationHooks() {
 		if err := executor.ExecuteRegistrationPreHook(w, r, a); err != nil {
 			return err

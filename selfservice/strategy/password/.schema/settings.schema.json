@@ -1,0 +1,17 @@
+{
+  "$id": "https://schemas.ory.sh/kratos/selfservice/strategy/password/settings.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "password"
+  ],
+  "properties": {
+    "csrf_token": {
+      "type": "string"
+    },
+    "password": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

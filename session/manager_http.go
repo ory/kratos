@@ -48,23 +48,31 @@ func NewManagerHTTP(
 	}
 }
 
-func (s *ManagerHTTP) CreateToRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, ss *Session) error {
+func (s *ManagerHTTP) CreateAndIssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, ss *Session) error {
 	if err := s.r.SessionPersister().CreateSession(ctx, ss); err != nil {
 		return err
 	}
 
-	if err := s.SaveToRequest(ctx, w, r, ss); err != nil {
+	if err := s.IssueCookie(ctx, w, r, ss); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (s *ManagerHTTP) SaveToRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, session *Session) error {
-	_ = s.r.CSRFHandler().RegenerateToken(w, r)
+func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, session *Session) error {
 	cookie, _ := s.r.CookieManager().Get(r, s.cookieName)
 	if s.c.SessionDomain() != "" {
 		cookie.Options.Domain = s.c.SessionDomain()
+	}
+
+	old, err := s.FetchFromRequest(context.Background(), r)
+	if err != nil {
+		// No session was set prior -> regenerate anti-csrf token
+		_ = s.r.CSRFHandler().RegenerateToken(w, r)
+	} else if old.Identity.ID != session.Identity.ID {
+		// No session was set prior -> regenerate anti-csrf token
+		_ = s.r.CSRFHandler().RegenerateToken(w, r)
 	}
 
 	if s.c.SessionPath() != "" {
@@ -80,25 +88,42 @@ func (s *ManagerHTTP) SaveToRequest(ctx context.Context, w http.ResponseWriter, 
 		cookie.Options.MaxAge = int(s.c.SessionLifespan().Seconds())
 	}
 
-	cookie.Values["sid"] = session.ID.String()
+	cookie.Values["session_token"] = session.Token
 	if err := cookie.Save(r, w); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
 }
 
-func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (*Session, error) {
-	cookie, err := s.r.CookieManager().Get(r, s.cookieName)
-	if err != nil {
-		return nil, errors.WithStack(ErrNoActiveSessionFound.WithWrap(err).WithDebugf("%s", err))
+func (s *ManagerHTTP) extractToken(r *http.Request) string {
+	if token, ok := bearerTokenFromRequest(r); ok {
+		return token
 	}
 
-	sid, ok := cookie.Values["sid"].(string)
-	if !ok {
+	if token := r.Header.Get("X-Session-Token"); len(token) > 0 {
+		return token
+	}
+
+	cookie, err := s.r.CookieManager().Get(r, s.cookieName)
+	if err != nil {
+		return ""
+	}
+
+	token, ok := cookie.Values["session_token"].(string)
+	if ok {
+		return token
+	}
+
+	return ""
+}
+
+func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (*Session, error) {
+	token := s.extractToken(r)
+	if token == "" {
 		return nil, errors.WithStack(ErrNoActiveSessionFound)
 	}
 
-	se, err := s.r.SessionPersister().GetSession(ctx, x.ParseUUID(sid))
+	se, err := s.r.SessionPersister().GetSessionByToken(ctx, token)
 	if err != nil {
 		if errors.Is(err, herodot.ErrNotFound) || errors.Is(err, sqlcon.ErrNoRows) {
 			return nil, errors.WithStack(ErrNoActiveSessionFound)
@@ -106,17 +131,29 @@ func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (*S
 		return nil, err
 	}
 
-	if se.ExpiresAt.Before(time.Now()) {
+	if !se.IsActive() {
 		return nil, errors.WithStack(ErrNoActiveSessionFound)
 	}
 
 	se.Identity = se.Identity.CopyWithoutCredentials()
-
 	return se, nil
 }
 
 func (s *ManagerHTTP) PurgeFromRequest(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	if token, ok := bearerTokenFromRequest(r); ok {
+		return errors.WithStack(s.r.SessionPersister().RevokeSessionByToken(ctx, token))
+	}
+
 	cookie, _ := s.r.CookieManager().Get(r, s.cookieName)
+	token, ok := cookie.Values["session_token"].(string)
+	if !ok {
+		return nil
+	}
+
+	if err := s.r.SessionPersister().RevokeSessionByToken(ctx, token); err != nil {
+		return errors.WithStack(err)
+	}
+
 	cookie.Options.MaxAge = -1
 	if err := cookie.Save(r, w); err != nil {
 		return errors.WithStack(err)

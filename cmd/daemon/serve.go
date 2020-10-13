@@ -5,6 +5,12 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/rs/cors"
+
+	"github.com/ory/x/corsx"
+
+	"github.com/ory/kratos/metrics/prometheus"
+
 	"github.com/ory/analytics-go/v4"
 
 	"github.com/ory/x/flagx"
@@ -25,6 +31,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/selfservice/strategy/profile"
@@ -41,14 +48,6 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 	r := d.Registry()
 
 	router := x.NewRouterPublic()
-	r.RegisterPublicRoutes(router)
-	n.Use(NewNegroniLoggerMiddleware(l, "public#"+c.SelfPublicURL().String()))
-	n.Use(sqa(cmd, d))
-
-	if tracer := d.Registry().Tracer(); tracer.IsLoaded() {
-		n.Use(tracer)
-	}
-
 	csrf := x.NewCSRFHandler(
 		router,
 		r.Writer(),
@@ -57,12 +56,26 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 		c.SelfPublicURL().Hostname(),
 		!flagx.MustGetBool(cmd, "dev"),
 	)
-	csrf.ExemptPath(session.SessionsWhoamiPath)
 	r.WithCSRFHandler(csrf)
 	n.UseHandler(r.CSRFHandler())
+
+	r.RegisterPublicRoutes(router)
+	n.Use(NewNegroniLoggerMiddleware(l, "public#"+c.SelfPublicURL().String()))
+	n.Use(sqa(cmd, d))
+
+	if tracer := d.Registry().Tracer(); tracer.IsLoaded() {
+		n.Use(tracer)
+	}
+
+	var handler http.Handler = n
+	if corsx.IsEnabled(l, "serve.public") {
+		handler = cors.New(
+			corsx.ParseOptions(l, "serve.public")).Handler(handler)
+	}
+
 	server := graceful.WithDefaults(&http.Server{
 		Addr:    c.PublicListenOn(),
-		Handler: context.ClearHandler(n),
+		Handler: context.ClearHandler(handler),
 	})
 
 	l.Printf("Starting the public httpd on: %s", server.Addr)
@@ -84,6 +97,7 @@ func serveAdmin(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []
 	r.RegisterAdminRoutes(router)
 	n.Use(NewNegroniLoggerMiddleware(l, "admin#"+c.SelfAdminURL().String()))
 	n.Use(sqa(cmd, d))
+	n.Use(d.Registry().PrometheusManager())
 
 	if tracer := d.Registry().Tracer(); tracer.IsLoaded() {
 		n.Use(tracer)
@@ -124,26 +138,42 @@ func sqa(cmd *cobra.Command, d driver.Driver) *metricsx.Service {
 				healthx.AliveCheckPath,
 				healthx.ReadyCheckPath,
 				healthx.VersionPath,
-				"/auth/methods/oidc/",
-				password.RegistrationPath,
-				password.LoginPath,
-				oidc.BasePath,
-				login.BrowserLoginPath,
-				login.BrowserLoginRequestsPath,
-				logout.BrowserLogoutPath,
-				registration.BrowserRegistrationPath,
-				registration.BrowserRegistrationRequestsPath,
-				session.SessionsWhoamiPath,
-				identity.IdentitiesPath,
-				profile.PublicSettingsProfilePath,
-				settings.PublicPath,
-				settings.PublicRequestPath,
-				profile.PublicSettingsProfilePath,
-				verification.PublicVerificationCompletePath,
-				strings.ReplaceAll(strings.ReplaceAll(verification.PublicVerificationConfirmPath, ":via", "email"), ":code", ""),
-				strings.ReplaceAll(verification.PublicVerificationInitPath, ":via", "email"),
-				verification.PublicVerificationRequestPath,
-				errorx.ErrorsPath,
+
+				password.RouteRegistration,
+				password.RouteLogin,
+				password.RouteSettings,
+
+				oidc.RouteBase,
+
+				login.RouteInitBrowserFlow,
+				login.RouteInitAPIFlow,
+				login.RouteGetFlow,
+
+				logout.RouteBrowser,
+
+				registration.RouteInitBrowserFlow,
+				registration.RouteInitAPIFlow,
+				registration.RouteGetFlow,
+
+				session.RouteWhoami,
+				identity.RouteBase,
+
+				settings.RouteInitBrowserFlow,
+				settings.RouteInitAPIFlow,
+				settings.RouteGetFlow,
+
+				verification.RouteInitAPIFlow,
+				verification.RouteInitBrowserFlow,
+				verification.RouteGetFlow,
+
+				profile.RouteSettings,
+
+				link.RouteAdminCreateRecoveryLink,
+				link.RouteRecovery,
+				link.RouteVerification,
+
+				errorx.RouteGet,
+				prometheus.MetricsPrometheusPath,
 			},
 			BuildVersion: d.Registry().BuildVersion(),
 			BuildHash:    d.Registry().BuildHash(),

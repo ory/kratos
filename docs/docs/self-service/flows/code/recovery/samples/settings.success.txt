@@ -1,0 +1,33 @@
+$ curl -s -X GET \
+  -H "Authorization: Bearer $sessionToken"  \
+  -H "Accept: application/json"  \
+  'http://127.0.0.1:4433/self-service/settings/flows?id=286928b2-3802-480d-82b5-0faeb1433f0a' | jq
+
+{
+  "id": "286928b2-3802-480d-82b5-0faeb1433f0a",
+  "type": "browser",
+  "expires_at": "2020-09-09T08:23:42.8547952Z",
+  "issued_at": "2020-09-09T07:23:42.8547952Z",
+  "request_url": "http://127.0.0.1:4433/self-service/recovery/methods/link?token=j9YA2ywevoicLl8Oxd1EIWC3T43d2qDh",
+  "messages": [
+    {
+      "id": 1060001,
+      "text": "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 15.00 minutes.",
+      "type": "info",
+      "context": {
+        "privilegedSessionExpiresAt": "2020-09-09T07:38:42.8719856Z"
+      }
+    }
+  ],
+  "methods": {
+    // ...
+  },
+  "identity": {
+    "id": "9f7c079e-bccb-414e-852b-2def6910ea6d",
+    "schema_id": "default",
+    "traits": {
+      "email": "aeneas@ory.sh"
+    }
+  },
+  "state": "show_form"
+}

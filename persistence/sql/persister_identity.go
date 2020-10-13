@@ -54,6 +54,11 @@ func (p *Persister) FindByCredentialsIdentifier(ctx context.Context, ct identity
 		IdentityID uuid.UUID `db:"identity_id"`
 	}
 
+	// Force case-insensitivity for email addresses
+	if strings.Contains(match, "@") && ct == identity.CredentialsTypePassword {
+		match = strings.ToLower(match)
+	}
+
 	if err := p.GetConnection(ctx).RawQuery(`SELECT
     ic.identity_id
 FROM identity_credentials ic
@@ -96,7 +101,8 @@ func findOrCreateIdentityCredentialsType(_ context.Context, tx *pop.Connection, 
 }
 
 func createIdentityCredentials(ctx context.Context, tx *pop.Connection, i *identity.Identity) error {
-	for k, cred := range i.Credentials {
+	for k := range i.Credentials {
+		cred := i.Credentials[k]
 		cred.IdentityID = i.ID
 		if len(cred.Config) == 0 {
 			cred.Config = sqlxx.JSONRawMessage("{}")

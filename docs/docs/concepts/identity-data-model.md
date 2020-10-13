@@ -3,6 +3,8 @@ id: identity-user-model
 title: Identity Data Model
 ---
 
+import Mermaid from '@theme/Mermaid'
+
 An identity ("user", "user account", "account", "subject") is the "who" of a
 software system. It can be a customer, employee, user, contractor, or even a
 programmatic identity such as an IoT device, application, or some other type of
@@ -14,7 +16,9 @@ In ORY Kratos' terminology we call all of them "identities", and it is always
 exposed as `identity` in the API endpoints, requests, and response payloads. In
 the documentation however, we mix these words as "account recovery" or "account
 activation" is a widely accepted and understood terminology and user flow, while
-"identity recovery" or "identity activation" is not. :::
+"identity recovery" or "identity activation" is not.
+
+:::
 
 The following examples use YAML for improved readability. However, the API
 payload is usually in JSON format. An `identity` has the following properties:
@@ -75,7 +79,7 @@ Identities are
   [#596](https://github.com/ory/kratos/issues/596)).
 
 The identity state is therefore `active` or `disabled` (not yet implemented see
-[#598](https://github.com/ory/kratos/issues/598):
+[#598](https://github.com/ory/kratos/issues/598))
 
 <Mermaid
 chart={`stateDiagram-v2 [*] --> Active: create Active --> Active: update Active --> Disabled: disable Disabled --> [*]: delete Disabled --> Active: enable`}
@@ -168,27 +172,27 @@ meaning you have to specify these in the schema. This includes for example:
 
 ORY Kratos' JSON Schema Vocabulary Extension can be used within a property:
 
-```json5
+```json
 {
-  $id: 'http://mydomain.com/schemas/v2/customer.schema.json',
-  $schema: 'http://json-schema.org/draft-07/schema#',
-  title: 'A customer (v2)',
-  type: 'object',
-  properties: {
-    traits: {
-      type: 'object',
-      properties: {
-        email: {
-          title: 'E-Mail',
-          type: 'string',
-          format: 'email',
+  "$id": "http://mydomain.com/schemas/v2/customer.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "A customer (v2)",
+  "type": "object",
+  "properties": {
+    "traits": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "title": "E-Mail",
+          "type": "string",
+          "format": "email",
 
           // This tells ORY Kratos that the field should be used as the "username" for the username+password flow.
           // It is an extension to the regular JSON Schema vocabulary.
-          'ory.sh/kratos': {
-            credentials: {
-              password: {
-                identifier: true
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
               }
             }
           }
@@ -207,12 +211,12 @@ You can configure ORY Kratos to use specific fields as the _identifier_ e.g.
 username, email, phone number, etc., in the Username and Password Registration
 and Login Flow:
 
-```json5
+```json
 {
-  'ory.sh/kratos': {
-    credentials: {
-      password: {
-        identifier: true
+  "ory.sh/kratos": {
+    "credentials": {
+      "password": {
+        "identifier": true
       }
     }
   }
@@ -235,50 +239,50 @@ traits:
 and using a JSON Schema that uses the `email` field as the identifier for the
 password flow
 
-```json5
+```json
 {
-  $id: 'http://mydomain.com/schemas/v2/customer.schema.json',
-  $schema: 'http://json-schema.org/draft-07/schema#',
-  title: 'A customer (v2)',
-  type: 'object',
-  properties: {
-    traits: {
-      type: 'object',
-      properties: {
-        email: {
-          title: 'E-Mail',
-          type: 'string',
-          format: 'email',
+  "$id": "http://mydomain.com/schemas/v2/customer.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "A customer (v2)",
+  "type": "object",
+  "properties": {
+    "traits": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "title": "E-Mail",
+          "type": "string",
+          "format": "email",
 
           // This tells ORY Kratos that the field should be used as the "username" for the Username and Password Flow.
-          'ory.sh/kratos': {
-            credentials: {
-              password: {
-                identifier: true
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
               }
             }
           }
         },
-        name: {
-          type: 'object',
-          properties: {
-            first: {
-              type: 'string'
+        "name": {
+          "type": "object",
+          "properties": {
+            "first": {
+              "type": "string"
             },
-            last: {
-              type: 'string'
+            "last": {
+              "type": "string"
             }
           }
         },
-        favorite_animal: {
-          type: 'string'
+        "favorite_animal": {
+          "type": "string"
         },
-        accepted_tos: {
-          type: 'string'
+        "accepted_tos": {
+          "type": "string"
         }
       },
-      required: ['email'],
-      additionalProperties: false
+      "required": ["email"],
+      "additionalProperties": false
     }
   }
 }
@@ -288,7 +292,7 @@ In this example, ORY Kratos understands that traits:email: `office@ory.sh` is
 the identity's identifier. The system expects `office@ory.sh` plus a password to
 sign in.
 
-[Username and Password Credentials](credentials.md#username-and-password)
+[Username and Password Credentials](credentials/username-email-password.mdx)
 contains more information and examples.
 
 There are currently no other extensions supported for Identity Traits. Further

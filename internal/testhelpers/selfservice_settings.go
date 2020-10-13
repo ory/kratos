@@ -4,17 +4,17 @@ package testhelpers
 import (
 	"bytes"
 	"context"
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/gobuffalo/httptest"
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tidwall/sjson"
 	"github.com/urfave/negroni"
 
 	"github.com/ory/x/urlx"
@@ -26,44 +26,33 @@ import (
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal/httpclient/client"
-	"github.com/ory/kratos/internal/httpclient/client/common"
+	"github.com/ory/kratos/internal/httpclient/client/public"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/x"
 )
 
-func HookConfigRedirectTo(t *testing.T, u string) (m []map[string]interface{}) {
-	var b bytes.Buffer
-	_, err := fmt.Fprintf(&b, `[
-	{
-		"hook": "redirect",
-		"config": {
-          "default_redirect_url": "%s",
-          "allow_user_defined_redirect": true
-		}
-	}
-]`, u)
-	require.NoError(t, err)
-	require.NoError(t, json.NewDecoder(&b).Decode(&m))
-
-	return m
+func NewSettingsUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Server {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		e, err := reg.SettingsFlowPersister().GetSettingsFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("flow")))
+		require.NoError(t, err)
+		reg.Writer().Write(w, r, e)
+	}))
+	viper.Set(configuration.ViperKeySelfServiceSettingsURL, ts.URL+"/settings-ts")
+	t.Cleanup(ts.Close)
+	return ts
 }
 
-func HookVerify(t *testing.T) (m []map[string]interface{}) {
-	require.NoError(t, json.NewDecoder(bytes.NewBufferString(`[{"job": "verify"}]`)).Decode(&m))
-	return m
-}
-
-func GetSettingsRequest(t *testing.T, primaryUser *http.Client, ts *httptest.Server) *common.GetSelfServiceBrowserSettingsRequestOK {
+func InitializeSettingsFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server) *public.GetSelfServiceSettingsFlowOK {
 	publicClient := NewSDKClient(ts)
 
-	res, err := primaryUser.Get(ts.URL + settings.PublicPath)
+	res, err := client.Get(ts.URL + settings.RouteInitBrowserFlow)
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
 
-	rs, err := publicClient.Common.GetSelfServiceBrowserSettingsRequest(
-		common.NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(primaryUser).
-			WithRequest(res.Request.URL.Query().Get("request")),
+	rs, err := publicClient.Public.GetSelfServiceSettingsFlow(
+		public.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(client).
+			WithID(res.Request.URL.Query().Get("flow")), nil,
 	)
 	require.NoError(t, err)
 	assert.Empty(t, rs.Payload.Active)
@@ -71,8 +60,53 @@ func GetSettingsRequest(t *testing.T, primaryUser *http.Client, ts *httptest.Ser
 	return rs
 }
 
-func GetSettingsMethodConfig(t *testing.T, primaryUser *http.Client, ts *httptest.Server, id string) *models.RequestMethodConfig {
-	rs := GetSettingsRequest(t, primaryUser, ts)
+func InitializeSettingsFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *public.InitializeSelfServiceSettingsViaAPIFlowOK {
+	publicClient := NewSDKClient(ts)
+
+	rs, err := publicClient.Public.InitializeSelfServiceSettingsViaAPIFlow(public.
+		NewInitializeSelfServiceSettingsViaAPIFlowParams().WithHTTPClient(client), nil)
+	require.NoError(t, err)
+	assert.Empty(t, rs.Payload.Active)
+
+	return rs
+}
+
+func EncodeFormAsJSON(t *testing.T, isApi bool, values url.Values) (payload string) {
+	if !isApi {
+		return values.Encode()
+	}
+	payload = "{}"
+	for k := range values {
+		var err error
+		payload, err = sjson.Set(payload, strings.ReplaceAll(k, ".", "\\."), values.Get(k))
+		require.NoError(t, err)
+	}
+	return payload
+}
+
+func ExpectStatusCode(isAPI bool, api, browser int) int {
+	if isAPI {
+		return api
+	}
+	return browser
+}
+
+func ExpectURL(isAPI bool, api, browser string) string {
+	if isAPI {
+		return api
+	}
+	return browser
+}
+
+func GetSettingsFlowMethodConfig(t *testing.T, rs *models.SettingsFlow, id string) *models.SettingsFlowMethodConfig {
+	require.NotEmpty(t, rs.Methods[id])
+	require.NotEmpty(t, rs.Methods[id].Config)
+	require.NotEmpty(t, rs.Methods[id].Config.Action)
+	return rs.Methods[id].Config
+}
+
+func GetSettingsFlowMethodConfigDeprecated(t *testing.T, primaryUser *http.Client, ts *httptest.Server, id string) *models.SettingsFlowMethodConfig {
+	rs := InitializeSettingsFlowViaBrowser(t, primaryUser, ts)
 
 	require.NotEmpty(t, rs.Payload.Methods[id])
 	require.NotEmpty(t, rs.Payload.Methods[id].Config)
@@ -98,6 +132,26 @@ func NewSettingsUITestServer(t *testing.T) *httptest.Server {
 	return ts
 }
 
+func NewSettingsUIEchoServer(t *testing.T, reg *driver.RegistryDefault) *httptest.Server {
+	router := httprouter.New()
+	router.GET("/settings", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		res, err := reg.SettingsFlowPersister().GetSettingsFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("flow")))
+		require.NoError(t, err)
+		reg.Writer().Write(w, r, res)
+	})
+
+	router.GET("/login", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		w.WriteHeader(http.StatusUnauthorized)
+	})
+	ts := httptest.NewServer(router)
+	t.Cleanup(ts.Close)
+
+	viper.Set(configuration.ViperKeySelfServiceSettingsURL, ts.URL+"/settings")
+	viper.Set(configuration.ViperKeySelfServiceLoginUI, ts.URL+"/login")
+
+	return ts
+}
+
 func NewSettingsLoginAcceptAPIServer(t *testing.T, adminClient *client.OryKratos) *httptest.Server {
 	var called int
 	loginTS := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -106,7 +160,8 @@ func NewSettingsLoginAcceptAPIServer(t *testing.T, adminClient *client.OryKratos
 
 		viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 
-		res, err := adminClient.Common.GetSelfServiceBrowserLoginRequest(common.NewGetSelfServiceBrowserLoginRequestParams().WithRequest(r.URL.Query().Get("request")))
+		res, err := adminClient.Public.GetSelfServiceLoginFlow(public.NewGetSelfServiceLoginFlowParams().WithID(r.URL.Query().Get("flow")))
+
 		require.NoError(t, err)
 		require.NotEmpty(t, res.Payload.RequestURL)
 
@@ -170,30 +225,58 @@ func AddAndLoginIdentities(t *testing.T, reg *driver.RegistryDefault, public *ht
 	return result
 }
 
-func SettingsSubmitForm(
+func SettingsMakeRequest(
 	t *testing.T,
-	f *models.RequestMethodConfig,
+	isAPI bool,
+	f *models.SettingsFlowMethodConfig,
 	hc *http.Client,
-	values url.Values,
-) (string, *common.GetSelfServiceBrowserSettingsRequestOK) {
+	values string,
+) (string, *http.Response) {
 	require.NotEmpty(t, f.Action)
 
-	res, err := hc.PostForm(pointerx.StringR(f.Action), values)
+	res, err := hc.Do(NewRequest(t, isAPI, "POST", pointerx.StringR(f.Action), bytes.NewBufferString(values)))
 	require.NoError(t, err)
 	defer res.Body.Close()
 
-	b, err := ioutil.ReadAll(res.Body)
-	require.NoError(t, err)
-	assert.EqualValues(t, http.StatusNoContent, res.StatusCode, "%s", b)
+	return string(x.MustReadAll(res.Body)), res
+}
 
-	assert.Equal(t, viper.GetString(configuration.ViperKeySelfServiceSettingsURL), res.Request.URL.Scheme+"://"+res.Request.URL.Host+res.Request.URL.Path, "should end up at the settings URL, used: %s", pointerx.StringR(f.Action))
+// SubmitSettingsForm initiates a settings flow (for Browser and API!), fills out the form and modifies
+// the form values with `withValues`, and submits the form. If completed, it will return the flow as JSON.
+func SubmitSettingsForm(
+	t *testing.T,
+	isAPI bool,
+	hc *http.Client,
+	publicTS *httptest.Server,
+	withValues func(v url.Values),
+	method string,
+	expectedStatusCode int,
+	expectedURL string,
+) string {
+	if hc == nil {
+		hc = new(http.Client)
+		if !isAPI {
+			hc = NewClientWithCookies(t)
+		}
+	}
 
-	rs, err := NewSDKClientFromURL(viper.GetString(configuration.ViperKeyPublicBaseURL)).Common.GetSelfServiceBrowserSettingsRequest(
-		common.NewGetSelfServiceBrowserSettingsRequestParams().WithHTTPClient(hc).
-			WithRequest(res.Request.URL.Query().Get("request")),
-	)
-	require.NoError(t, err)
-	body, err := json.Marshal(rs.Payload)
-	require.NoError(t, err)
-	return string(body), rs
+	hc.Transport = NewTransportWithLogger(hc.Transport, t)
+	var payload *models.SettingsFlow
+	if isAPI {
+		payload = InitializeSettingsFlowViaAPI(t, hc, publicTS).Payload
+	} else {
+		payload = InitializeSettingsFlowViaBrowser(t, hc, publicTS).Payload
+	}
+
+	time.Sleep(time.Millisecond * 10) // add a bit of delay to allow `1ns` to time out.
+
+	config := GetSettingsFlowMethodConfig(t, payload, method)
+	values := SDKFormFieldsToURLValues(config.Fields)
+	withValues(values)
+
+	b, res := SettingsMakeRequest(t, isAPI, config, hc, EncodeFormAsJSON(t, isAPI, values))
+	assert.EqualValues(t, expectedStatusCode, res.StatusCode, "%s", b)
+	assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, b)
+
+	return b
 }

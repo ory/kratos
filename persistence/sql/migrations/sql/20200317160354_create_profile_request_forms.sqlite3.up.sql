@@ -8,8 +8,7 @@ CREATE TABLE "selfservice_profile_management_request_methods" (
 );
 ALTER TABLE "selfservice_profile_management_requests" ADD COLUMN "active_method" TEXT;
 INSERT INTO selfservice_profile_management_request_methods (id, method, selfservice_profile_management_request_id, config) SELECT id, 'traits', id, form FROM selfservice_profile_management_requests;
-ALTER TABLE "selfservice_profile_management_requests" RENAME TO "_selfservice_profile_management_requests_tmp";
-CREATE TABLE "selfservice_profile_management_requests" (
+CREATE TABLE "_selfservice_profile_management_requests_tmp" (
 "id" TEXT PRIMARY KEY,
 "request_url" TEXT NOT NULL,
 "issued_at" DATETIME NOT NULL DEFAULT 'CURRENT_TIMESTAMP',
@@ -21,5 +20,7 @@ CREATE TABLE "selfservice_profile_management_requests" (
 "active_method" TEXT,
 FOREIGN KEY (identity_id) REFERENCES identities (id) ON UPDATE NO ACTION ON DELETE CASCADE
 );
-INSERT INTO "selfservice_profile_management_requests" (id, request_url, issued_at, expires_at, update_successful, identity_id, created_at, updated_at, active_method) SELECT id, request_url, issued_at, expires_at, update_successful, identity_id, created_at, updated_at, active_method FROM "_selfservice_profile_management_requests_tmp";
-DROP TABLE "_selfservice_profile_management_requests_tmp";
+INSERT INTO "_selfservice_profile_management_requests_tmp" (id, request_url, issued_at, expires_at, update_successful, identity_id, created_at, updated_at, active_method) SELECT id, request_url, issued_at, expires_at, update_successful, identity_id, created_at, updated_at, active_method FROM "selfservice_profile_management_requests";
+
+DROP TABLE "selfservice_profile_management_requests";
+ALTER TABLE "_selfservice_profile_management_requests_tmp" RENAME TO "selfservice_profile_management_requests";

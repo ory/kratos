@@ -17,15 +17,14 @@ import (
 // swagger:model VerifiableAddress
 type VerifiableAddress struct {
 
-	// expires at
-	// Required: true
-	// Format: date-time
-	ExpiresAt *strfmt.DateTime `json:"expires_at"`
-
 	// id
 	// Required: true
 	// Format: uuid4
 	ID UUID `json:"id"`
+
+	// status
+	// Required: true
+	Status VerifiableAddressStatus `json:"status"`
 
 	// value
 	// Required: true
@@ -37,7 +36,7 @@ type VerifiableAddress struct {
 
 	// verified at
 	// Format: date-time
-	VerifiedAt strfmt.DateTime `json:"verified_at,omitempty"`
+	VerifiedAt NullTime `json:"verified_at,omitempty"`
 
 	// via
 	// Required: true
@@ -48,11 +47,11 @@ type VerifiableAddress struct {
 func (m *VerifiableAddress) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateExpiresAt(formats); err != nil {
+	if err := m.validateID(formats); err != nil {
 		res = append(res, err)
 	}
 
-	if err := m.validateID(formats); err != nil {
+	if err := m.validateStatus(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -78,24 +77,23 @@ func (m *VerifiableAddress) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *VerifiableAddress) validateExpiresAt(formats strfmt.Registry) error {
+func (m *VerifiableAddress) validateID(formats strfmt.Registry) error {
 
-	if err := validate.Required("expires_at", "body", m.ExpiresAt); err != nil {
-		return err
-	}
-
-	if err := validate.FormatOf("expires_at", "body", "date-time", m.ExpiresAt.String(), formats); err != nil {
+	if err := m.ID.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("id")
+		}
 		return err
 	}
 
 	return nil
 }
 
-func (m *VerifiableAddress) validateID(formats strfmt.Registry) error {
+func (m *VerifiableAddress) validateStatus(formats strfmt.Registry) error {
 
-	if err := m.ID.Validate(formats); err != nil {
+	if err := m.Status.Validate(formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("id")
+			return ve.ValidateName("status")
 		}
 		return err
 	}
@@ -127,7 +125,10 @@ func (m *VerifiableAddress) validateVerifiedAt(formats strfmt.Registry) error {
 		return nil
 	}
 
-	if err := validate.FormatOf("verified_at", "body", "date-time", m.VerifiedAt.String(), formats); err != nil {
+	if err := m.VerifiedAt.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("verified_at")
+		}
 		return err
 	}
 

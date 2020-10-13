@@ -1,0 +1,5 @@
+id: foo
+provider: github
+client_id: foo
+client_secret: foo
+mapper_url: https://example.com

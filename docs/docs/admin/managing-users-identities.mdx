@@ -8,7 +8,7 @@ import TabItem from '@theme/TabItem'
 
 This document walks you through the administrative identity management in ORY
 Kratos. You should already be familiar with the
-[Identity Data Model](../concepts/identity-data-model) before reading this
+[Identity Data Model](../concepts/identity-data-model.md) before reading this
 guide.
 
 ## Creating an Identity
@@ -82,7 +82,7 @@ $ curl --request POST -sL \
   "expires_in": "12h",
   "identity_id": "954f7f59-16a5-4152-8ce7-ad7c73bb124a"
 }' \
-    http://127.0.0.1:4434/flows/recovery/link
+    http://127.0.0.1:4434/recovery/link
 
 {
   "expires_at": "2020-07-27T10:47:45.806Z",

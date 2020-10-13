@@ -8,9 +8,7 @@ env:
 before:
   hooks:
     - go mod download
-    - go install github.com/gobuffalo/packr/v2/packr2 github.com/markbates/pkger/cmd/pkger
-    - packr2
-    - pkger
+    - make pack
 
 builds:
   -
@@ -19,7 +17,7 @@ builds:
       - -tags
       - sqlite
     ldflags:
-      - -s -w -X github.com/ory/kratos/cmd.BuildVersion={{.Tag}} -X github.com/ory/kratos/cmd.BuildGitHash={{.FullCommit}} -X github.com/ory/kratos/cmd.BuildTime={{.Date}}
+      - -s -w -X github.com/ory/kratos/internal/clihelpers.BuildVersion={{.Tag}} -X github.com/ory/kratos/internal/clihelpers.BuildGitHash={{.FullCommit}} -X github.com/ory/kratos/internal/clihelpers.BuildTime={{.Date}}
       # - "-extldflags '-static'"
     binary: kratos
     env:
@@ -37,7 +35,7 @@ builds:
       - -tags
       - sqlite
     ldflags:
-      - -s -w -X github.com/ory/kratos/cmd.BuildVersion={{.Tag}} -X github.com/ory/kratos/cmd.BuildGitHash={{.FullCommit}} -X github.com/ory/kratos/cmd.BuildTime={{.Date}}
+      - -s -w -X github.com/ory/kratos/internal/clihelpers.BuildVersion={{.Tag}} -X github.com/ory/kratos/internal/clihelpers.BuildGitHash={{.FullCommit}} -X github.com/ory/kratos/internal/clihelpers.BuildTime={{.Date}}
     binary: kratos
     env:
       - CGO_ENABLED=1
@@ -51,7 +49,7 @@ builds:
       - -tags
       - sqlite
     ldflags:
-      - -s -w -X github.com/ory/kratos/cmd.BuildVersion={{.Tag}} -X github.com/ory/kratos/cmd.BuildGitHash={{.FullCommit}} -X github.com/ory/kratos/cmd.BuildTime={{.Date}}
+      - -s -w -X github.com/ory/kratos/internal/clihelpers.BuildVersion={{.Tag}} -X github.com/ory/kratos/internal/clihelpers.BuildGitHash={{.FullCommit}} -X github.com/ory/kratos/internal/clihelpers.BuildTime={{.Date}}
     binary: kratos
     env:
       - CGO_ENABLED=1
@@ -66,7 +64,7 @@ builds:
       - -tags
       - sqlite
     ldflags:
-      - -s -w -X github.com/ory/kratos/cmd.BuildVersion={{.Tag}} -X github.com/ory/kratos/cmd.BuildGitHash={{.FullCommit}} -X github.com/ory/kratos/cmd.BuildTime={{.Date}}
+      - -s -w -X github.com/ory/kratos/internal/clihelpers.BuildVersion={{.Tag}} -X github.com/ory/kratos/internal/clihelpers.BuildGitHash={{.FullCommit}} -X github.com/ory/kratos/internal/clihelpers.BuildTime={{.Date}}
       - "-extldflags '-static'"
     binary: kratos
     env:
@@ -81,7 +79,7 @@ builds:
   -
     id: kratos
     ldflags:
-      - -s -w -X github.com/ory/kratos/cmd.BuildVersion={{.Tag}} -X github.com/ory/kratos/cmd.BuildGitHash={{.FullCommit}} -X github.com/ory/kratos/cmd.BuildTime={{.Date}}
+      - -s -w -X github.com/ory/kratos/internal/clihelpers.BuildVersion={{.Tag}} -X github.com/ory/kratos/internal/clihelpers.BuildGitHash={{.FullCommit}} -X github.com/ory/kratos/internal/clihelpers.BuildTime={{.Date}}
     binary: kratos
     env:
       - CGO_ENABLED=0

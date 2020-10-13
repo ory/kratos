@@ -101,6 +101,7 @@ selfservice:
   #
   # Examples:
   # - https://my-app.com/dashboard
+  # - /dashboard
   #
   # Set this value using environment variables on
   # - Linux/macOS:
@@ -108,7 +109,7 @@ selfservice:
   # - Windows Command Line (CMD):
   #    > set SELFSERVICE_DEFAULT_BROWSER_RETURN_URL=<value>
   #
-  default_browser_return_url: https://my-app.com/dashboard
+  default_browser_return_url: /dashboard
 
   ## Whitelisted Return To URLs ##
   #
@@ -116,6 +117,7 @@ selfservice:
   #
   # Examples:
   # - - https://app.my-app.com/dashboard
+  #   - /dashboard
   #   - https://www.my-app.com/
   #
   # Set this value using environment variables on
@@ -126,6 +128,7 @@ selfservice:
   #
   whitelisted_return_urls:
     - https://app.my-app.com/dashboard
+    - /dashboard
     - https://www.my-app.com/
 
   ## flows ##
@@ -151,7 +154,7 @@ selfservice:
       #
       ui_url: https://www.ory.sh/kratos/docs/fallback/settings
 
-      ## request_lifespan ##
+      ## lifespan ##
       #
       # Default value: 1h
       #
@@ -162,11 +165,11 @@ selfservice:
       #
       # Set this value using environment variables on
       # - Linux/macOS:
-      #    $ export SELFSERVICE_FLOWS_SETTINGS_REQUEST_LIFESPAN=<value>
+      #    $ export SELFSERVICE_FLOWS_SETTINGS_LIFESPAN=<value>
       # - Windows Command Line (CMD):
-      #    > set SELFSERVICE_FLOWS_SETTINGS_REQUEST_LIFESPAN=<value>
+      #    > set SELFSERVICE_FLOWS_SETTINGS_LIFESPAN=<value>
       #
-      request_lifespan: 1h
+      lifespan: 1h
 
       ## privileged_session_max_age ##
       #
@@ -183,7 +186,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_SETTINGS_PRIVILEGED_SESSION_MAX_AGE=<value>
       #
-      privileged_session_max_age: 1h
+      privileged_session_max_age: 1s
 
       ## after ##
       #
@@ -194,6 +197,7 @@ selfservice:
         #
         # Examples:
         # - https://my-app.com/dashboard
+        # - /dashboard
         #
         # Set this value using environment variables on
         # - Linux/macOS:
@@ -201,7 +205,7 @@ selfservice:
         # - Windows Command Line (CMD):
         #    > set SELFSERVICE_FLOWS_SETTINGS_AFTER_DEFAULT_BROWSER_RETURN_URL=<value>
         #
-        default_browser_return_url: https://my-app.com/dashboard
+        default_browser_return_url: /dashboard
 
         ## password ##
         #
@@ -212,6 +216,7 @@ selfservice:
           #
           # Examples:
           # - https://my-app.com/dashboard
+          # - /dashboard
           #
           # Set this value using environment variables on
           # - Linux/macOS:
@@ -241,6 +246,7 @@ selfservice:
           #
           # Examples:
           # - https://my-app.com/dashboard
+          # - /dashboard
           #
           # Set this value using environment variables on
           # - Linux/macOS:
@@ -248,7 +254,7 @@ selfservice:
           # - Windows Command Line (CMD):
           #    > set SELFSERVICE_FLOWS_SETTINGS_AFTER_PROFILE_DEFAULT_BROWSER_RETURN_URL=<value>
           #
-          default_browser_return_url: https://my-app.com/dashboard
+          default_browser_return_url: /dashboard
 
           ## hooks ##
           #
@@ -273,6 +279,7 @@ selfservice:
         #
         # Examples:
         # - https://my-app.com/dashboard
+        # - /dashboard
         #
         # Set this value using environment variables on
         # - Linux/macOS:
@@ -280,7 +287,7 @@ selfservice:
         # - Windows Command Line (CMD):
         #    > set SELFSERVICE_FLOWS_LOGOUT_AFTER_DEFAULT_BROWSER_RETURN_URL=<value>
         #
-        default_browser_return_url: https://my-app.com/dashboard
+        default_browser_return_url: /dashboard
 
     ## registration ##
     #
@@ -300,9 +307,9 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_REGISTRATION_UI_URL=<value>
       #
-      ui_url: https://www.ory.sh/kratos/docs/fallback/registration
+      ui_url: https://my-app.com/signup
 
-      ## request_lifespan ##
+      ## lifespan ##
       #
       # Default value: 1h
       #
@@ -313,11 +320,11 @@ selfservice:
       #
       # Set this value using environment variables on
       # - Linux/macOS:
-      #    $ export SELFSERVICE_FLOWS_REGISTRATION_REQUEST_LIFESPAN=<value>
+      #    $ export SELFSERVICE_FLOWS_REGISTRATION_LIFESPAN=<value>
       # - Windows Command Line (CMD):
-      #    > set SELFSERVICE_FLOWS_REGISTRATION_REQUEST_LIFESPAN=<value>
+      #    > set SELFSERVICE_FLOWS_REGISTRATION_LIFESPAN=<value>
       #
-      request_lifespan: 1m
+      lifespan: 1m
 
       ## after ##
       #
@@ -328,6 +335,7 @@ selfservice:
         #
         # Examples:
         # - https://my-app.com/dashboard
+        # - /dashboard
         #
         # Set this value using environment variables on
         # - Linux/macOS:
@@ -335,7 +343,7 @@ selfservice:
         # - Windows Command Line (CMD):
         #    > set SELFSERVICE_FLOWS_REGISTRATION_AFTER_DEFAULT_BROWSER_RETURN_URL=<value>
         #
-        default_browser_return_url: https://my-app.com/dashboard
+        default_browser_return_url: /dashboard
 
         ## password ##
         #
@@ -346,6 +354,7 @@ selfservice:
           #
           # Examples:
           # - https://my-app.com/dashboard
+          # - /dashboard
           #
           # Set this value using environment variables on
           # - Linux/macOS:
@@ -353,7 +362,7 @@ selfservice:
           # - Windows Command Line (CMD):
           #    > set SELFSERVICE_FLOWS_REGISTRATION_AFTER_PASSWORD_DEFAULT_BROWSER_RETURN_URL=<value>
           #
-          default_browser_return_url: https://my-app.com/dashboard
+          default_browser_return_url: /dashboard
 
           ## hooks ##
           #
@@ -375,6 +384,7 @@ selfservice:
           #
           # Examples:
           # - https://my-app.com/dashboard
+          # - /dashboard
           #
           # Set this value using environment variables on
           # - Linux/macOS:
@@ -382,7 +392,7 @@ selfservice:
           # - Windows Command Line (CMD):
           #    > set SELFSERVICE_FLOWS_REGISTRATION_AFTER_OIDC_DEFAULT_BROWSER_RETURN_URL=<value>
           #
-          default_browser_return_url: https://my-app.com/dashboard
+          default_browser_return_url: /dashboard
 
           ## hooks ##
           #
@@ -413,9 +423,9 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_LOGIN_UI_URL=<value>
       #
-      ui_url: https://my-app.com/login
+      ui_url: https://www.ory.sh/kratos/docs/fallback/login
 
-      ## request_lifespan ##
+      ## lifespan ##
       #
       # Default value: 1h
       #
@@ -426,11 +436,11 @@ selfservice:
       #
       # Set this value using environment variables on
       # - Linux/macOS:
-      #    $ export SELFSERVICE_FLOWS_LOGIN_REQUEST_LIFESPAN=<value>
+      #    $ export SELFSERVICE_FLOWS_LOGIN_LIFESPAN=<value>
       # - Windows Command Line (CMD):
-      #    > set SELFSERVICE_FLOWS_LOGIN_REQUEST_LIFESPAN=<value>
+      #    > set SELFSERVICE_FLOWS_LOGIN_LIFESPAN=<value>
       #
-      request_lifespan: 1h
+      lifespan: 1h
 
       ## after ##
       #
@@ -441,6 +451,7 @@ selfservice:
         #
         # Examples:
         # - https://my-app.com/dashboard
+        # - /dashboard
         #
         # Set this value using environment variables on
         # - Linux/macOS:
@@ -448,7 +459,7 @@ selfservice:
         # - Windows Command Line (CMD):
         #    > set SELFSERVICE_FLOWS_LOGIN_AFTER_DEFAULT_BROWSER_RETURN_URL=<value>
         #
-        default_browser_return_url: https://my-app.com/dashboard
+        default_browser_return_url: /dashboard
 
         ## password ##
         #
@@ -459,6 +470,7 @@ selfservice:
           #
           # Examples:
           # - https://my-app.com/dashboard
+          # - /dashboard
           #
           # Set this value using environment variables on
           # - Linux/macOS:
@@ -488,6 +500,7 @@ selfservice:
           #
           # Examples:
           # - https://my-app.com/dashboard
+          # - /dashboard
           #
           # Set this value using environment variables on
           # - Linux/macOS:
@@ -523,7 +536,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_VERIFICATION_ENABLED=<value>
       #
-      enabled: true
+      enabled: false
 
       ## Verify UI URL ##
       #
@@ -551,6 +564,7 @@ selfservice:
         #
         # Examples:
         # - https://my-app.com/dashboard
+        # - /dashboard
         #
         # Set this value using environment variables on
         # - Linux/macOS:
@@ -558,7 +572,7 @@ selfservice:
         # - Windows Command Line (CMD):
         #    > set SELFSERVICE_FLOWS_VERIFICATION_AFTER_DEFAULT_BROWSER_RETURN_URL=<value>
         #
-        default_browser_return_url: https://my-app.com/dashboard
+        default_browser_return_url: /dashboard
 
       ## Self-Service Verification Request Lifespan ##
       #
@@ -573,11 +587,11 @@ selfservice:
       #
       # Set this value using environment variables on
       # - Linux/macOS:
-      #    $ export SELFSERVICE_FLOWS_VERIFICATION_REQUEST_LIFESPAN=<value>
+      #    $ export SELFSERVICE_FLOWS_VERIFICATION_LIFESPAN=<value>
       # - Windows Command Line (CMD):
-      #    > set SELFSERVICE_FLOWS_VERIFICATION_REQUEST_LIFESPAN=<value>
+      #    > set SELFSERVICE_FLOWS_VERIFICATION_LIFESPAN=<value>
       #
-      request_lifespan: 1m
+      lifespan: 1s
 
     ## Account Recovery Configuration ##
     #
@@ -594,7 +608,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_RECOVERY_ENABLED=<value>
       #
-      enabled: false
+      enabled: true
 
       ## Recovery UI URL ##
       #
@@ -611,7 +625,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_RECOVERY_UI_URL=<value>
       #
-      ui_url: https://www.ory.sh/kratos/docs/fallback/recovery
+      ui_url: https://my-app.com/verify
 
       ## after ##
       #
@@ -622,6 +636,7 @@ selfservice:
         #
         # Examples:
         # - https://my-app.com/dashboard
+        # - /dashboard
         #
         # Set this value using environment variables on
         # - Linux/macOS:
@@ -629,7 +644,7 @@ selfservice:
         # - Windows Command Line (CMD):
         #    > set SELFSERVICE_FLOWS_RECOVERY_AFTER_DEFAULT_BROWSER_RETURN_URL=<value>
         #
-        default_browser_return_url: https://my-app.com/dashboard
+        default_browser_return_url: /dashboard
 
       ## Self-Service Recovery Request Lifespan ##
       #
@@ -644,11 +659,11 @@ selfservice:
       #
       # Set this value using environment variables on
       # - Linux/macOS:
-      #    $ export SELFSERVICE_FLOWS_RECOVERY_REQUEST_LIFESPAN=<value>
+      #    $ export SELFSERVICE_FLOWS_RECOVERY_LIFESPAN=<value>
       # - Windows Command Line (CMD):
-      #    > set SELFSERVICE_FLOWS_RECOVERY_REQUEST_LIFESPAN=<value>
+      #    > set SELFSERVICE_FLOWS_RECOVERY_LIFESPAN=<value>
       #
-      request_lifespan: 1s
+      lifespan: 1m
 
     ## error ##
     #
@@ -670,68 +685,68 @@ selfservice:
       #
       ui_url: https://my-app.com/kratos-error
 
-  ## strategies ##
+  ## methods ##
   #
-  strategies:
+  methods:
     ## profile ##
     #
     profile:
-      ## Enables Profile Management Strategy ##
+      ## Enables Profile Management Method ##
       #
       # Default value: true
       #
       # Set this value using environment variables on
       # - Linux/macOS:
-      #    $ export SELFSERVICE_STRATEGIES_PROFILE_ENABLED=<value>
+      #    $ export SELFSERVICE_METHODS_PROFILE_ENABLED=<value>
       # - Windows Command Line (CMD):
-      #    > set SELFSERVICE_STRATEGIES_PROFILE_ENABLED=<value>
+      #    > set SELFSERVICE_METHODS_PROFILE_ENABLED=<value>
       #
       enabled: false
 
     ## recovery_token ##
     #
     recovery_token:
-      ## Enables Token-based Account Recovery Strategy ##
+      ## Enables Token-based Account Recovery Method ##
       #
       # Default value: true
       #
       # Set this value using environment variables on
       # - Linux/macOS:
-      #    $ export SELFSERVICE_STRATEGIES_RECOVERY_TOKEN_ENABLED=<value>
+      #    $ export SELFSERVICE_METHODS_RECOVERY_TOKEN_ENABLED=<value>
       # - Windows Command Line (CMD):
-      #    > set SELFSERVICE_STRATEGIES_RECOVERY_TOKEN_ENABLED=<value>
+      #    > set SELFSERVICE_METHODS_RECOVERY_TOKEN_ENABLED=<value>
       #
       enabled: false
 
     ## password ##
     #
     password:
-      ## Enables Password Strategy ##
+      ## Enables Username/Email and Password Method ##
       #
       # Default value: true
       #
       # Set this value using environment variables on
       # - Linux/macOS:
-      #    $ export SELFSERVICE_STRATEGIES_PASSWORD_ENABLED=<value>
+      #    $ export SELFSERVICE_METHODS_PASSWORD_ENABLED=<value>
       # - Windows Command Line (CMD):
-      #    > set SELFSERVICE_STRATEGIES_PASSWORD_ENABLED=<value>
+      #    > set SELFSERVICE_METHODS_PASSWORD_ENABLED=<value>
       #
       enabled: false
 
     ## oidc ##
     #
     oidc:
-      ## Enables OpenID Connect Strategy ##
+      ## Enables OpenID Connect Method ##
       #
       # Default value: false
       #
       # Set this value using environment variables on
       # - Linux/macOS:
-      #    $ export SELFSERVICE_STRATEGIES_OIDC_ENABLED=<value>
+      #    $ export SELFSERVICE_METHODS_OIDC_ENABLED=<value>
       # - Windows Command Line (CMD):
-      #    > set SELFSERVICE_STRATEGIES_OIDC_ENABLED=<value>
+      #    > set SELFSERVICE_METHODS_OIDC_ENABLED=<value>
       #
-      enabled: false
+      enabled: true
 
       ## config ##
       #
@@ -742,33 +757,39 @@ selfservice:
         #
         # Set this value using environment variables on
         # - Linux/macOS:
-        #    $ export SELFSERVICE_STRATEGIES_OIDC_CONFIG_PROVIDERS=<value>
+        #    $ export SELFSERVICE_METHODS_OIDC_CONFIG_PROVIDERS=<value>
         # - Windows Command Line (CMD):
-        #    > set SELFSERVICE_STRATEGIES_OIDC_CONFIG_PROVIDERS=<value>
+        #    > set SELFSERVICE_METHODS_OIDC_CONFIG_PROVIDERS=<value>
         #
         providers:
           - id: google
             provider: google
-            client_id: sit
-            client_secret: adipisicing ut in sit
+            client_id: est dolor irure
+            client_secret: culpa veniam
             mapper_url: base64://bG9jYWwgc3ViamVjdCA9I...
             issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
             token_url: https://www.googleapis.com/oauth2/v4/token
             scope:
               - profile
-            tenant: contoso.onmicrosoft.com
+              - profile
+              - offline_access
+            tenant: 8eaef023-2b34-4da1-9baa-8bc8c9d6a490
           - id: google
             provider: google
-            client_id: id velit sit
-            client_secret: ad cupidatat laboris sunt
-            mapper_url: https://foo.bar.com/path/to/oidc.jsonnet
+            client_id: qui aute Excepteur esse anim
+            client_secret: culpa et Excepteur dolore reprehenderit
+            mapper_url: base64://bG9jYWwgc3ViamVjdCA9I...
             issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
             token_url: https://www.googleapis.com/oauth2/v4/token
             scope:
+              - profile
               - offline_access
-            tenant: contoso.onmicrosoft.com
+              - profile
+              - offline_access
+              - profile
+            tenant: common
 
 ## Courier configuration ##
 #
@@ -807,7 +828,7 @@ courier:
     # - Windows Command Line (CMD):
     #    > set COURIER_SMTP_FROM_ADDRESS=<value>
     #
-    from_address: V7cf2ygb0H@dgtERYRNqoqpVwWZSvoSvpnX.hn
+    from_address: rkeM5KAJMq@umynyWEWdkgbkVjDRjeWiifUfUP.edpm
 
   ## Override message templates ##
   #
@@ -857,7 +878,7 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_ADMIN_HOST=<value>
     #
-    host: dolore dolor consequat officia cupidatat
+    host: id labore commodo ullamco cillum
 
     ## Admin Port ##
     #
@@ -889,6 +910,7 @@ serve:
     #
     # Examples:
     # - https://my-app.com/.ory/kratos/public
+    # - /.ory/kratos/public/
     #
     # Set this value using environment variables on
     # - Linux/macOS:
@@ -910,7 +932,7 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_PUBLIC_HOST=<value>
     #
-    host: et
+    host: incididunt Lorem eiusmod enim esse
 
     ## Public Port ##
     #
@@ -953,7 +975,19 @@ log:
   # - Windows Command Line (CMD):
   #    > set LOG_LEVEL=<value>
   #
-  level: warning
+  level: fatal
+
+  ## Leak Sensitive Log Values ##
+  #
+  # If set will leak sensitive values (e.g. emails) in the logs.
+  #
+  # Set this value using environment variables on
+  # - Linux/macOS:
+  #    $ export LOG_LEAK_SENSITIVE_VALUES=<value>
+  # - Windows Command Line (CMD):
+  #    > set LOG_LEAK_SENSITIVE_VALUES=<value>
+  #
+  leak_sensitive_values: true
 
   ## format ##
   #
@@ -967,7 +1001,7 @@ log:
   # - Windows Command Line (CMD):
   #    > set LOG_FORMAT=<value>
   #
-  format: text
+  format: json
 
 ## secrets ##
 #
@@ -983,10 +1017,7 @@ secrets:
   #    > set SECRETS_DEFAULT=<value>
   #
   default:
-    - mollit voluptate
-    - magnaaute irure voluptate aliqua dolor
-    - et voluptate qui ipsum
-    - nulla voluptate non
+    - quiLorem et in reprehenderit exercitation
 
   ## Singing Keys for Cookies ##
   #
@@ -999,11 +1030,10 @@ secrets:
   #    > set SECRETS_COOKIE=<value>
   #
   cookie:
-    - dolor consequat in commodo ut
-    - culpa enim incididunt
-    - non eiusmod amet
-    - Excepteur aliquip in nostrud
-    - veniam cupidatat reprehenderit
+    - laborum eu dolore
+    - aute ullamco magna
+    - Utiruredeserunt do nulla
+    - enim commodoanim Lorem in
 
 ## Hashing Algorithm Configuration ##
 #
@@ -1021,7 +1051,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_MEMORY=<value>
     #
-    memory: 9923292
+    memory: 35427077
 
     ## iterations ##
     #
@@ -1033,7 +1063,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_ITERATIONS=<value>
     #
-    iterations: 93455383
+    iterations: 90335183
 
     ## parallelism ##
     #
@@ -1045,7 +1075,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_PARALLELISM=<value>
     #
-    parallelism: 57113235
+    parallelism: 92808382
 
     ## salt_length ##
     #
@@ -1057,7 +1087,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_SALT_LENGTH=<value>
     #
-    salt_length: 87632070
+    salt_length: 28457179
 
     ## key_length ##
     #
@@ -1069,16 +1099,16 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_KEY_LENGTH=<value>
     #
-    key_length: 3894910
+    key_length: 73964601
 
 ## session ##
 #
 session:
   ## Session Lifespan ##
   #
-  # Defines how long a session is active. This value is ignored if the "remember me" feature is used.
+  # Defines how long a session is active. Once that lifespan has been reached, the user needs to sign in again.
   #
-  # Default value: 1h
+  # Default value: 24h
   #
   # Examples:
   # - 1h
@@ -1091,22 +1121,73 @@ session:
   # - Windows Command Line (CMD):
   #    > set SESSION_LIFESPAN=<value>
   #
-  lifespan: 1h
+  lifespan: 1s
 
-  ## Cookie Same Site Configuration ##
+  ## cookie ##
   #
-  # Default value: Lax
-  #
-  # One of:
-  # - Strict
-  # - Lax
-  # - None
-  #
-  # Set this value using environment variables on
-  # - Linux/macOS:
-  #    $ export SESSION_COOKIE_SAME_SITE=<value>
-  # - Windows Command Line (CMD):
-  #    > set SESSION_COOKIE_SAME_SITE=<value>
-  #
-  cookie_same_site: Lax
+  cookie:
+    ## Session Cookie Domain ##
+    #
+    # Sets the session cookie domain. Useful when dealing with subdomains. Use with care!
+    #
+    domain:
+      title: Session Cookie Domain
+      description:
+        Sets the session cookie domain. Useful when dealing with subdomains. Use
+        with care!
+
+    ## Make Session Cookie Persistent ##
+    #
+    # If set to true will persist the cookie in the end-user's browser using the `max-age` parameter which is set to the `session.lifespan` value. Persistent cookies are not deleted when the browser is closed (e.g. on reboot or alt+f4).
+    #
+    # Default value: true
+    #
+    # Set this value using environment variables on
+    # - Linux/macOS:
+    #    $ export SESSION_COOKIE_PERSISTENT=<value>
+    # - Windows Command Line (CMD):
+    #    > set SESSION_COOKIE_PERSISTENT=<value>
+    #
+    persistent: true
+
+    ## Session Cookie Path ##
+    #
+    # Sets the session cookie path. Use with care!
+    #
+    # Default value: /
+    #
+    # Set this value using environment variables on
+    # - Linux/macOS:
+    #    $ export SESSION_COOKIE_PATH=<value>
+    # - Windows Command Line (CMD):
+    #    > set SESSION_COOKIE_PATH=<value>
+    #
+    path: consequat Duis sit
+
+    ## Cookie Same Site Configuration ##
+    #
+    # Default value: Lax
+    #
+    # One of:
+    # - Strict
+    # - Lax
+    # - None
+    #
+    # Set this value using environment variables on
+    # - Linux/macOS:
+    #    $ export SESSION_COOKIE_SAME_SITE=<value>
+    # - Windows Command Line (CMD):
+    #    > set SESSION_COOKIE_SAME_SITE=<value>
+    #
+    same_site: Strict
+
+## version ##
+#
+# Set this value using environment variables on
+# - Linux/macOS:
+#    $ export VERSION=<value>
+# - Windows Command Line (CMD):
+#    > set VERSION=<value>
+#
+version: v84910289699.0.0-749814zsjxY52.0.955119.3898638560.0.-ni5
 ```

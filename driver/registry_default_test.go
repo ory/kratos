@@ -23,13 +23,13 @@ import (
 
 func TestDriverDefault_Hooks(t *testing.T) {
 	t.Run("case=verification", func(t *testing.T) {
-		_, reg := internal.NewFastRegistryWithMocks(t)
+		conf, reg := internal.NewFastRegistryWithMocks(t)
 		viper.Set(configuration.ViperKeySelfServiceVerificationEnabled, true)
 
 		t.Run("type=registration", func(t *testing.T) {
 			h := reg.PostRegistrationPostPersistHooks(identity.CredentialsTypePassword)
 			require.Len(t, h, 1)
-			assert.Equal(t, []registration.PostHookPostPersistExecutor{hook.NewVerifier(reg)}, h)
+			assert.Equal(t, []registration.PostHookPostPersistExecutor{hook.NewVerifier(reg, conf)}, h)
 
 			viper.Set(configuration.ViperKeySelfServiceRegistrationAfter+".password.hooks",
 				[]map[string]interface{}{{"hook": "session"}})
@@ -37,7 +37,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 			h = reg.PostRegistrationPostPersistHooks(identity.CredentialsTypePassword)
 			require.Len(t, h, 2)
 			assert.Equal(t, []registration.PostHookPostPersistExecutor{
-				hook.NewVerifier(reg),
+				hook.NewVerifier(reg, conf),
 				hook.NewSessionIssuer(reg),
 			}, h)
 		})
@@ -57,7 +57,7 @@ func TestDriverDefault_Hooks(t *testing.T) {
 		t.Run("type=settings", func(t *testing.T) {
 			h := reg.PostSettingsPostPersistHooks("profile")
 			require.Len(t, h, 1)
-			assert.Equal(t, []settings.PostHookPostPersistExecutor{hook.NewVerifier(reg)}, h)
+			assert.Equal(t, []settings.PostHookPostPersistExecutor{hook.NewVerifier(reg, conf)}, h)
 		})
 	})
 }

@@ -1,0 +1,74 @@
+{
+  "id": "194c5b05-0487-4a11-bcbc-f301c9ff9678",
+  "type": "browser",
+  "expires_at": "2013-10-07T08:23:19Z",
+  "issued_at": "2013-10-07T08:23:19Z",
+  "request_url": "http://kratos:4433/self-service/browser/flows/settings",
+  "messages": null,
+  "methods": {
+    "oidc": {
+      "method": "oidc",
+      "config": {
+        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/settings/connections?request=194c5b05-0487-4a11-bcbc-f301c9ff9678",
+        "method": "POST",
+        "fields": [
+          {
+            "name": "csrf_token",
+            "type": "hidden",
+            "required": true,
+            "value": "4apNE3S+VLL1UPu8GhyLOhdnhkzLZxrwTqZ/dx5xf3eP0nO6RigYo3h3UkxySahBnHWQctE4EpCANse5Rdlc+A=="
+          }
+        ]
+      }
+    },
+    "password": {
+      "method": "password",
+      "config": {
+        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/settings/strategies/password?request=194c5b05-0487-4a11-bcbc-f301c9ff9678",
+        "method": "POST",
+        "fields": [
+          {
+            "name": "password",
+            "type": "password",
+            "required": true
+          },
+          {
+            "name": "csrf_token",
+            "type": "hidden",
+            "required": true,
+            "value": "4apNE3S+VLL1UPu8GhyLOhdnhkzLZxrwTqZ/dx5xf3eP0nO6RigYo3h3UkxySahBnHWQctE4EpCANse5Rdlc+A=="
+          }
+        ]
+      }
+    },
+    "profile": {
+      "method": "profile",
+      "config": {
+        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/settings/strategies/profile?request=194c5b05-0487-4a11-bcbc-f301c9ff9678",
+        "method": "POST",
+        "fields": [
+          {
+            "name": "csrf_token",
+            "type": "hidden",
+            "required": true,
+            "value": "IoLeYNbYJdALHIKvrgK7iYyMHA8r/rhG+6mr3z0nleRM+uDJ5E5pwYY7K1/GV5jyB54KMTGhsCY1ORMRZo+2aw=="
+          },
+          {
+            "name": "traits.email",
+            "type": "text",
+            "value": "foobar@ory.sh"
+          }
+        ]
+      }
+    }
+  },
+  "identity": {
+    "id": "a251ebc2-880c-4f76-a8f3-38e6940eab0e",
+    "schema_id": "default",
+    "schema_url": "",
+    "traits": {
+      "email": "foobar@ory.sh"
+    }
+  },
+  "state": "show_form"
+}

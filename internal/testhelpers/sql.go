@@ -15,7 +15,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
-	"github.com/ory/kratos/selfservice/strategy/recoverytoken"
+	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/session"
 )
 
@@ -23,23 +23,33 @@ func CleanSQL(t *testing.T, c *pop.Connection) {
 	for _, table := range []string{
 		new(continuity.Container).TableName(),
 		new(courier.Message).TableName(),
-		new(login.RequestMethods).TableName(),
-		new(login.Request).TableName(),
-		new(registration.RequestMethods).TableName(),
-		new(registration.Request).TableName(),
-		new(settings.RequestMethods).TableName(),
-		new(settings.Request).TableName(),
-		new(recoverytoken.Token).TableName(),
-		new(recovery.RequestMethods).TableName(),
-		new(recovery.Request).TableName(),
-		new(verification.Request).TableName(),
+
+		new(login.FlowMethods).TableName(),
+		new(login.Flow).TableName(),
+
+		new(registration.FlowMethods).TableName(),
+		new(registration.Flow).TableName(),
+
+		new(settings.FlowMethods).TableName(),
+		new(settings.Flow).TableName(),
+
+		new(link.RecoveryToken).TableName(),
+		new(link.VerificationToken).TableName(),
+
+		new(recovery.FlowMethods).TableName(),
+		new(recovery.Flow).TableName(),
+
+		new(verification.Flow).TableName(),
+		new(verification.FlowMethods).TableName(),
+
+		new(errorx.ErrorContainer).TableName(),
+
 		new(session.Session).TableName(),
 		new(identity.CredentialIdentifierCollection).TableName(),
 		new(identity.CredentialsCollection).TableName(),
 		new(identity.VerifiableAddress).TableName(),
 		new(identity.RecoveryAddress).TableName(),
 		new(identity.Identity).TableName(),
-		new(errorx.ErrorContainer).TableName(),
 		new(identity.CredentialsTypeTable).TableName(),
 		"schema_migration",
 	} {

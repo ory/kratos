@@ -1,16 +1,23 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
-	"github.com/ory/x/logrusx"
+	"github.com/ory/kratos/cmd/remote"
+
+	"github.com/ory/kratos/cmd/identities"
+	"github.com/ory/kratos/cmd/jsonnet"
+	"github.com/ory/kratos/cmd/migrate"
+	"github.com/ory/kratos/cmd/serve"
+	"github.com/ory/kratos/internal/clihelpers"
+	"github.com/ory/x/cmdx"
+
 	"github.com/ory/x/viperx"
 
 	"github.com/spf13/cobra"
 )
-
-var logger *logrusx.Logger
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -21,11 +28,21 @@ var rootCmd = &cobra.Command{
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		if !errors.Is(err, clihelpers.NoPrintButFailError) {
+			fmt.Println(err)
+		}
 		os.Exit(1)
 	}
 }
 
 func init() {
 	viperx.RegisterConfigFlag(rootCmd, "kratos")
+
+	identities.RegisterCommandRecursive(rootCmd)
+	jsonnet.RegisterCommandRecursive(rootCmd)
+	serve.RegisterCommandRecursive(rootCmd)
+	migrate.RegisterCommandRecursive(rootCmd)
+	remote.RegisterCommandRecursive(rootCmd)
+
+	rootCmd.AddCommand(cmdx.Version(&clihelpers.BuildVersion, &clihelpers.BuildGitHash, &clihelpers.BuildTime))
 }

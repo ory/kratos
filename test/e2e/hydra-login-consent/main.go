@@ -43,15 +43,15 @@ func main() {
 		if !checkReq(w, err) {
 			return
 		}
-		if res.Payload.Skip {
+		if *res.Payload.Skip {
 			res, err := hc.Admin.AcceptLoginRequest(admin.NewAcceptLoginRequestParams().
 				WithLoginChallenge(r.URL.Query().Get("login_challenge")).
 				WithBody(&models.AcceptLoginRequest{Remember: true, RememberFor: 3600,
-					Subject: pointerx.String(res.Payload.Subject)}))
+					Subject: res.Payload.Subject}))
 			if !checkReq(w, err) {
 				return
 			}
-			http.Redirect(w, r, res.Payload.RedirectTo, http.StatusFound)
+			http.Redirect(w, r, *res.Payload.RedirectTo, http.StatusFound)
 			return
 		}
 
@@ -79,7 +79,7 @@ func main() {
 			if !checkReq(w, err) {
 				return
 			}
-			http.Redirect(w, r, res.Payload.RedirectTo, http.StatusFound)
+			http.Redirect(w, r, *res.Payload.RedirectTo, http.StatusFound)
 			return
 		}
 		res, err := hc.Admin.RejectLoginRequest(admin.NewRejectLoginRequestParams().
@@ -88,7 +88,7 @@ func main() {
 		if !checkReq(w, err) {
 			return
 		}
-		http.Redirect(w, r, res.Payload.RedirectTo, http.StatusFound)
+		http.Redirect(w, r, *res.Payload.RedirectTo, http.StatusFound)
 	})
 
 	router.GET("/consent", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -104,7 +104,7 @@ func main() {
 			if !checkReq(w, err) {
 				return
 			}
-			http.Redirect(w, r, res.Payload.RedirectTo, http.StatusFound)
+			http.Redirect(w, r, *res.Payload.RedirectTo, http.StatusFound)
 			return
 		}
 
@@ -145,7 +145,7 @@ func main() {
 			if !checkReq(w, err) {
 				return
 			}
-			http.Redirect(w, r, res.Payload.RedirectTo, http.StatusFound)
+			http.Redirect(w, r, *res.Payload.RedirectTo, http.StatusFound)
 			return
 		}
 		res, err := hc.Admin.RejectConsentRequest(admin.NewRejectConsentRequestParams().
@@ -154,7 +154,7 @@ func main() {
 		if !checkReq(w, err) {
 			return
 		}
-		http.Redirect(w, r, res.Payload.RedirectTo, http.StatusFound)
+		http.Redirect(w, r, *res.Payload.RedirectTo, http.StatusFound)
 	})
 
 	server := &http.Server{Addr: ":" + osx.GetenvDefault("PORT", "4446"), Handler: router}

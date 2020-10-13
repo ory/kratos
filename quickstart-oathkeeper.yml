@@ -1,6 +1,9 @@
 version: '3.7'
 
 services:
+  kratos:
+    environment:
+      - SERVE_PUBLIC_BASE_URL=http://127.0.0.1:4455/.ory/kratos/public/
 
   kratos-selfservice-ui-node:
     environment:
@@ -17,7 +20,7 @@ services:
       - 4455:4455
       - 4456:4456
     command:
-      serve proxy -c "/etc/config/oathkeeper/.oathkeeper.yml"
+      serve proxy -c "/etc/config/oathkeeper/oathkeeper.yml"
     environment:
       - LOG_LEVEL=debug
     restart: on-failure

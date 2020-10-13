@@ -20,63 +20,63 @@ import (
 )
 
 type (
-	RequestPersister interface {
-		CreateRecoveryRequest(context.Context, *Request) error
-		GetRecoveryRequest(ctx context.Context, id uuid.UUID) (*Request, error)
-		UpdateRecoveryRequest(context.Context, *Request) error
+	FlowPersister interface {
+		CreateRecoveryFlow(context.Context, *Flow) error
+		GetRecoveryFlow(ctx context.Context, id uuid.UUID) (*Flow, error)
+		UpdateRecoveryFlow(context.Context, *Flow) error
 	}
-	RequestPersistenceProvider interface {
-		RecoveryRequestPersister() RequestPersister
+	FlowPersistenceProvider interface {
+		RecoveryFlowPersister() FlowPersister
 	}
 )
 
-func TestRequestPersister(p interface {
-	RequestPersister
+func TestFlowPersister(p interface {
+	FlowPersister
 	identity.PrivilegedPool
 }) func(t *testing.T) {
 	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 
-	var clearids = func(r *Request) {
+	var clearids = func(r *Flow) {
 		r.ID = uuid.UUID{}
 	}
 
 	return func(t *testing.T) {
 		t.Run("case=should error when the recovery request does not exist", func(t *testing.T) {
-			_, err := p.GetRecoveryRequest(context.Background(), x.NewUUID())
+			_, err := p.GetRecoveryFlow(context.Background(), x.NewUUID())
 			require.Error(t, err)
 		})
 
-		var newRequest = func(t *testing.T) *Request {
-			var r Request
+		var newFlow = func(t *testing.T) *Flow {
+			var r Flow
 			require.NoError(t, faker.FakeData(&r))
 			clearids(&r)
 			return &r
 		}
 
 		t.Run("case=should create a new recovery request", func(t *testing.T) {
-			r := newRequest(t)
-			err := p.CreateRecoveryRequest(context.Background(), r)
+			r := newFlow(t)
+			err := p.CreateRecoveryFlow(context.Background(), r)
 			require.NoError(t, err, "%#v", err)
 		})
 
 		t.Run("case=should create with set ids", func(t *testing.T) {
-			var r Request
+			var r Flow
 			require.NoError(t, faker.FakeData(&r))
-			require.NoError(t, p.CreateRecoveryRequest(context.Background(), &r))
+			require.NoError(t, p.CreateRecoveryFlow(context.Background(), &r))
 		})
 
 		t.Run("case=should create and fetch a recovery request", func(t *testing.T) {
-			expected := newRequest(t)
-			err := p.CreateRecoveryRequest(context.Background(), expected)
+			expected := newFlow(t)
+			err := p.CreateRecoveryFlow(context.Background(), expected)
 			require.NoError(t, err)
 
-			actual, err := p.GetRecoveryRequest(context.Background(), expected.ID)
+			actual, err := p.GetRecoveryFlow(context.Background(), expected.ID)
 			require.NoError(t, err)
 
-			fexpected, _ := json.Marshal(expected.Methods[StrategyRecoveryTokenName].Config)
-			factual, _ := json.Marshal(actual.Methods[StrategyRecoveryTokenName].Config)
+			fexpected, _ := json.Marshal(expected.Methods[StrategyRecoveryLinkName].Config)
+			factual, _ := json.Marshal(actual.Methods[StrategyRecoveryLinkName].Config)
 
-			require.NotEmpty(t, actual.Methods[StrategyRecoveryTokenName].Config.RequestMethodConfigurator.(*form.HTMLForm).Action)
+			require.NotEmpty(t, actual.Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action)
 			assert.EqualValues(t, expected.ID, actual.ID)
 			assert.JSONEq(t, string(fexpected), string(factual))
 			x.AssertEqualTime(t, expected.IssuedAt, actual.IssuedAt)
@@ -85,35 +85,55 @@ func TestRequestPersister(p interface {
 		})
 
 		t.Run("case=should create and update a recovery request", func(t *testing.T) {
-			expected := newRequest(t)
-			expected.Methods[StrategyRecoveryTokenName] = &RequestMethod{
-				Method: StrategyRecoveryTokenName, Config: &RequestMethodConfig{RequestMethodConfigurator: &form.HTMLForm{Fields: []form.Field{{
+			expected := newFlow(t)
+			expected.Methods[StrategyRecoveryLinkName] = &FlowMethod{
+				Method: StrategyRecoveryLinkName, Config: &FlowMethodConfig{FlowMethodConfigurator: &form.HTMLForm{Fields: []form.Field{{
 					Name: "zab", Type: "bar", Pattern: "baz"}}}}}
-			expected.Methods["password"] = &RequestMethod{
-				Method: "password", Config: &RequestMethodConfig{RequestMethodConfigurator: &form.HTMLForm{Fields: []form.Field{{
+			expected.Methods["password"] = &FlowMethod{
+				Method: "password", Config: &FlowMethodConfig{FlowMethodConfigurator: &form.HTMLForm{Fields: []form.Field{{
 					Name: "foo", Type: "bar", Pattern: "baz"}}}}}
-			err := p.CreateRecoveryRequest(context.Background(), expected)
+			err := p.CreateRecoveryFlow(context.Background(), expected)
 			require.NoError(t, err)
 
-			expected.Methods[StrategyRecoveryTokenName].Config.RequestMethodConfigurator.(*form.HTMLForm).Action = "/new-action"
-			expected.Methods["password"].Config.RequestMethodConfigurator.(*form.HTMLForm).Fields = []form.Field{{
+			expected.Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action = "/new-action"
+			expected.Methods["password"].Config.FlowMethodConfigurator.(*form.HTMLForm).Fields = []form.Field{{
 				Name: "zab", Type: "zab", Pattern: "zab"}}
 			expected.RequestURL = "/new-request-url"
-			expected.Active = StrategyRecoveryTokenName
+			expected.Active = StrategyRecoveryLinkName
 			expected.Messages.Add(text.NewRecoveryEmailSent())
-			require.NoError(t, p.UpdateRecoveryRequest(context.Background(), expected))
+			require.NoError(t, p.UpdateRecoveryFlow(context.Background(), expected))
 
-			actual, err := p.GetRecoveryRequest(context.Background(), expected.ID)
+			actual, err := p.GetRecoveryFlow(context.Background(), expected.ID)
 			require.NoError(t, err)
 
-			assert.Equal(t, "/new-action", actual.Methods[StrategyRecoveryTokenName].Config.RequestMethodConfigurator.(*form.HTMLForm).Action)
+			assert.Equal(t, "/new-action", actual.Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action)
 			assert.Equal(t, "/new-request-url", actual.RequestURL)
-			assert.Equal(t, StrategyRecoveryTokenName, actual.Active.String())
+			assert.Equal(t, StrategyRecoveryLinkName, actual.Active.String())
 			assert.Equal(t, expected.Messages, actual.Messages)
 			assert.EqualValues(t, []form.Field{{Name: "zab", Type: "zab", Pattern: "zab"}}, actual.
-				Methods["password"].Config.RequestMethodConfigurator.(*form.HTMLForm).Fields)
+				Methods["password"].Config.FlowMethodConfigurator.(*form.HTMLForm).Fields)
 			assert.EqualValues(t, []form.Field{{Name: "zab", Type: "bar", Pattern: "baz"}}, actual.
-				Methods[StrategyRecoveryTokenName].Config.RequestMethodConfigurator.(*form.HTMLForm).Fields)
+				Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Fields)
+		})
+
+		t.Run("case=should not cause data loss when updating a request without changes", func(t *testing.T) {
+			expected := newFlow(t)
+			err := p.CreateRecoveryFlow(context.Background(), expected)
+			require.NoError(t, err)
+
+			actual, err := p.GetRecoveryFlow(context.Background(), expected.ID)
+			require.NoError(t, err)
+			assert.Len(t, actual.Methods, 1)
+
+			require.NoError(t, p.UpdateRecoveryFlow(context.Background(), actual))
+
+			actual, err = p.GetRecoveryFlow(context.Background(), expected.ID)
+			require.NoError(t, err)
+			require.Len(t, actual.Methods, 1)
+
+			js, _ := json.Marshal(actual.Methods)
+			assert.Equal(t, expected.Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action,
+				actual.Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action, "%s", js)
 		})
 	}
 }

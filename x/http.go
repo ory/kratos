@@ -51,3 +51,22 @@ func RequestURL(r *http.Request) *url.URL {
 
 	return &source
 }
+
+func NewTransportWithHeader(h http.Header) *TransportWithHeader {
+	return &TransportWithHeader{
+		RoundTripper: http.DefaultTransport,
+		h:            h,
+	}
+}
+
+type TransportWithHeader struct {
+	http.RoundTripper
+	h http.Header
+}
+
+func (ct *TransportWithHeader) RoundTrip(req *http.Request) (*http.Response, error) {
+	for k := range ct.h {
+		req.Header.Set(k, ct.h.Get(k))
+	}
+	return ct.RoundTripper.RoundTrip(req)
+}

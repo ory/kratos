@@ -9,6 +9,7 @@ import (
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // ErrorContainer error container
@@ -16,17 +17,23 @@ import (
 // swagger:model errorContainer
 type ErrorContainer struct {
 
-	// errors
-	Errors interface{} `json:"errors,omitempty"`
+	// Errors in the container
+	// Required: true
+	Errors interface{} `json:"errors"`
 
 	// id
+	// Required: true
 	// Format: uuid4
-	ID UUID `json:"id,omitempty"`
+	ID UUID `json:"id"`
 }
 
 // Validate validates this error container
 func (m *ErrorContainer) Validate(formats strfmt.Registry) error {
 	var res []error
+
+	if err := m.validateErrors(formats); err != nil {
+		res = append(res, err)
+	}
 
 	if err := m.validateID(formats); err != nil {
 		res = append(res, err)
@@ -38,11 +45,16 @@ func (m *ErrorContainer) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *ErrorContainer) validateID(formats strfmt.Registry) error {
+func (m *ErrorContainer) validateErrors(formats strfmt.Registry) error {
 
-	if swag.IsZero(m.ID) { // not required
-		return nil
+	if err := validate.Required("errors", "body", m.Errors); err != nil {
+		return err
 	}
+
+	return nil
+}
+
+func (m *ErrorContainer) validateID(formats strfmt.Registry) error {
 
 	if err := m.ID.Validate(formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {

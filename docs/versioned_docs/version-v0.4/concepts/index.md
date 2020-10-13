@@ -163,7 +163,7 @@ architectural requirements. In this case, the following are some of the main
 considerations and challenges in ORY's efforts:
 
 - To manage changing user models;
-- To choose and use some encryption algorithms such as BCrypt, PBKDF2, Argon2,
+- To choose and use some encryption algorithms such as BCrypt, PBKDF2,
   Scrypt, Argon2, Argon2i, Argon2id, Argon2d. There are many alternatives and
   most of the algorithms have numerous versions and parametrization options for
   example "Salt length parameter." The multitude of options makes it hard to
@@ -218,7 +218,7 @@ ORY has numerous products that support the protocols OAuth2 or OpenID Connect in
 ### Software Architecture
 
 ORY's
-[Software Architecture and Philosophy](../../ecosystem/software-architecture-philosophy)
+[Software Architecture and Philosophy](https://www.ory.sh/docs/ecosystem/software-architecture-philosophy)
 document, explains the architectural beliefs and framework behind the ORY
 Products in particular:
 
@@ -246,7 +246,7 @@ very easy to get started there is a reference implementation
 [github.com/ory/kratos-selfservice-ui-node](https://github.com/ory/kratos-selfservice-ui-node).
 
 For more details about each individual flow, consult the
-[Self-Service Flows Chapter](../self-service/flows/index).
+[Self-Service Flows Chapter](../self-service.mdx).
 
 ### Bring your own Identity Model(s)
 
@@ -259,7 +259,7 @@ system:
   attached to the profile.
 
 ORY Kratos implements both scenarios by using
-[JSON Schemas for Identities](./identity-user-model)
+[JSON Schemas for Identities](./identity-data-model.md)
 
 ### Forget passport-js, oidc-client, ...
 
@@ -268,5 +268,5 @@ Open Source provides a base solution for many use cases. For example, ORY Kratos
 integrates with ORY Oathkeeper, a Reverse Proxy solution. Defining Access Rules
 is as easy as writing a few lines of JSON / JSON5 / YAML!
 
-Please consult the [Quickstart documentation](../quickstart), for
+Please consult the [Quickstart documentation](../quickstart.mdx), for
 further information.

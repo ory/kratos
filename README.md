@@ -17,7 +17,8 @@
     <a href="https://coveralls.io/github/ory/kratos?branch=master"> <img src="https://coveralls.io/repos/ory/kratos/badge.svg?branch=master&service=github" alt="Coverage Status"></a>
     <a href="https://goreportcard.com/report/github.com/ory/kratos"><img src="https://goreportcard.com/badge/github.com/ory/kratos" alt="Go Report Card"></a>
     <a href="https://bestpractices.coreinfrastructure.org/projects/364"><img src="https://bestpractices.coreinfrastructure.org/projects/364/badge" alt="CII Best Practices"></a>
-    <a href="#backers" alt="sponsors on Open Collective"><img src="https://opencollective.com/ory/backers/badge.svg" /></a> <a href="#sponsors" alt="Sponsors on Open Collective"><img src="https://opencollective.com/ory/sponsors/badge.svg" /></a>
+    <a href="#backers" alt="sponsors on Open Collective"><img src="https://opencollective.com/ory/backers/badge.svg" /></a>
+    <a href="#sponsors" alt="Sponsors on Open Collective"><img src="https://opencollective.com/ory/sponsors/badge.svg" /></a>
 </p>
 
 ORY Kratos is the first and only cloud native Identity and User Management System in the world. Finally, it is no longer necessary to implement a User Login process for the umpteenth time!
@@ -27,13 +28,14 @@ ORY Kratos is the first and only cloud native Identity and User Management Syste
 **Table of Contents**
 
 - [What is ORY Kratos?](#what-is-ory-kratos)
-  - [Who's using it?](#whos-using-it)
+  - [Who is using it?](#who-is-using-it)
 - [Getting Started](#getting-started)
   - [Quickstart](#quickstart)
   - [Installation](#installation)
 - [Ecosystem](#ecosystem)
-  - [ORY Security Console: Administrative User Interface](#ory-security-console-administrative-user-interface)
-  - [ORY Oathkeeper: Identity & Access Proxy](#ory-oathkeeper-identity--access-proxy)
+  - [ORY Kratos: Identity and User Infrastructure and Management](#ory-kratos-identity-and-user-infrastructure-and-management)
+  - [ORY Hydra: OAuth2 and OpenID Connect Server](#ory-hydra-oauth2-and-openid-connect-server)
+  - [ORY Oathkeeper: Identity and Access Proxy](#ory-oathkeeper-identity-and-access-proxy)
   - [ORY Keto: Access Control Policies as a Server](#ory-keto-access-control-policies-as-a-server)
 - [Security](#security)
   - [Disclosing vulnerabilities](#disclosing-vulnerabilities)
@@ -46,10 +48,12 @@ ORY Kratos is the first and only cloud native Identity and User Management Syste
   - [Develop](#develop)
     - [Dependencies](#dependencies)
       - [Install Tools](#install-tools)
+    - [Install from source](#install-from-source)
     - [Formatting Code](#formatting-code)
     - [Running Tests](#running-tests)
       - [Short Tests](#short-tests)
       - [Regular Tests](#regular-tests)
+      - [End-to-End Tests](#end-to-end-tests)
     - [Build Docker](#build-docker)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -82,7 +86,7 @@ We highly recommend reading the [ORY Kratos introduction docs](https://www.ory.s
 to learn more about ORY Krato's background, feature set, and differentiation
 from other products.
 
-### Who's using it?
+### Who is using it?
 
 <!--BEGIN ADOPTERS-->
 
@@ -96,7 +100,7 @@ been able to achieve this without each and everyone of you!
 The following list represents companies that have accompanied us along the way
 and that have made outstanding contributions to our ecosystem. _If you think
 that your company deserves a spot here, reach out to
-<a href="mailto:hi@ory.sh">hi@ory.sh</a> now_!
+<a href="mailto:office@ory.sh">office@ory.sh</a> now_!
 
 **Please consider giving back by becoming a sponsor of our open source work on
 <a href="https://www.patreon.com/_ory">Patreon</a> or
@@ -210,6 +214,12 @@ TheCrealm.
 
 
 
+
+
+
+
+
+
 ## Getting Started
 
 To get started, head over to the [ORY Kratos Documentation](https://www.ory.sh/kratos/docs).
@@ -285,6 +295,12 @@ to perform a certain action on a resource.
 
 
 
+
+
+
+
+
+
 ## Security
 
 Running identity infrastructure requires [attention and knowledge of threat models](https://www.ory.sh/kratos/docs/concepts/security).
@@ -331,11 +347,6 @@ You need Go 1.13+ with `GO111MODULE=on` and (for the test suites):
 - NodeJS / npm
 
 It is possible to develop ORY Kratos on Windows, but please be aware that all guides assume a Unix shell like bash or zsh.
-
-##### Install Tools
-
-When cloning ORY Kratos, run `make tools`. It will download several required dependencies. If you haven't run the command
-in a while it's probably a good idea to run it again.
 
 #### Install from source
 
