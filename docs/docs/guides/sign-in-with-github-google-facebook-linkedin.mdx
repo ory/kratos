@@ -278,6 +278,82 @@ There are two ways to use the `microsoft` provider for authentication:
    - `consumers` to allow users with personal accounts, or
    - `common` to allow both kind of accounts.
 
+## Twitch
+
+To set up "Sign in with Twitch" you must create a [Twitch OAuth2 Application](https://dev.twitch.tv/docs/authentication#registration).
+
+Set the "Redirect URI" to:
+
+```
+http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/callback/twitch
+```
+
+The pattern of this URL is:
+
+```
+http(s)://<domain-of-ory-kratos>:<public-port>/self-service/browser/flows/strategies/oidc/callback/<provider-id>
+```
+
+The provider ID must point to the provider's ID set in the ORY Kratos
+configuration file (explained in further detail at
+[OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx)).
+
+As explained in
+[OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx),
+you must also create a Jsonnet code snippet for the provider. Save the code in
+`<kratos-directory>/contrib/quickstart/kratos/email-password/oidc.twitch.jsonnet`.
+
+```json title="contrib/quickstart/kratos/email-password/oidc.twitch.jsonnet"
+local claims = {
+  email_verified: false
+} + std.extVar('claims');
+
+{
+  identity: {
+    traits: {
+      // Allowing unverified email addresses enables account
+      // enumeration attacks, especially if the value is used for
+      // e.g. verification or as a password login identifier.
+      //
+      // Therefore we only return the email if it (a) exists and (b) is marked verified
+      // by Twitch.
+      [if "email" in claims && claims.email_verified then "email" else null]: claims.email,
+    },
+  },
+}
+```
+
+Now, enable the Twitch provider in the ORY Kratos config located at
+`<kratos-directory>/contrib/quickstart/kratos/email-password/.kratos.yml`.
+
+```yaml title="contrib/quickstart/kratos/email-password/.kratos.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  methods:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: twitch # this is `<provider-id>` in the Authorization callback URL. DO NOT CHANGE IT ONCE SET!
+            provider: generic
+            client_id: .... # Replace this with the OAuth2 Client ID provided by Twitch
+            client_secret: .... # Replace this with the OAuth2 Client Secret provided by Twitch
+            issuer_url: https://id.twitch.tv/oauth2
+            mapper_url: file:///etc/config/kratos/oidc.twitch.jsonnet
+            scope:
+              - openid
+              - user:read:email # required for email and email_verified claims in the near future
+            requested_claims: # explicitly request email and email_verified claims because twitch doesn't add them by default
+              id_token:
+                email:
+                  essential: true
+                email_verified:
+                  essential: true
+```
+
+Next, open the login endpoint of the SecureApp and you should see the Twitch
+Login option!
+
 ## Google, LinkedIn, Facebook
 
 Connecting with other Social Sign In providers will be very similar to the
