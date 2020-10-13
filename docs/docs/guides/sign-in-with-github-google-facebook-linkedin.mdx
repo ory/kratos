@@ -1,6 +1,6 @@
 ---
 id: sign-in-with-github-google-facebook-linkedin
-title: Sign in with GitHub, Google, Facebook, LinkedIn, Microsoft ...
+title: Sign in with GitHub, GitLab, Google, Facebook, LinkedIn, Microsoft ...
 ---
 
 In this document we will take a look at setting up "Sign in with GitHub" using
@@ -125,6 +125,73 @@ selfservice:
 
 Next, open the login endpoint of the SecureApp and you should see the GitHub
 Login option!
+
+## GitLab
+
+To set up "Sign in with GitLab" you must create a [GitLab OAuth2 Application](https://docs.gitlab.com/ee/integration/oauth_provider.html#adding-an-application-through-the-profile).
+
+Set the "Redirect URI" to:
+
+```
+http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/callback/gitlab
+```
+
+The pattern of this URL is:
+
+```
+http(s)://<domain-of-ory-kratos>:<public-port>/self-service/browser/flows/strategies/oidc/callback/<provider-id>
+```
+
+:::note
+While you can use [GitLab as an OIDC identity provider](https://docs.gitlab.com/ee/integration/openid_connect_provider.html),
+GitLab only returns the sub and sub_legacy claims in the ID token.
+Therefore, ORY Kratos makes a request to [GitLab's /oauth/userinfo API](https://gitlab.com/oauth/userinfo) and adds the user info to `std.extVar('claims')`.
+:::
+
+```json title="contrib/quickstart/kratos/email-password/oidc.gitlab.jsonnet"
+local claims = {
+  email_verified: false
+} + std.extVar('claims');
+
+{
+  identity: {
+    traits: {
+      // Allowing unverified email addresses enables account
+      // enumeration attacks, especially if the value is used for
+      // e.g. verification or as a password login identifier.
+      //
+      // Therefore we only return the email if it (a) exists and (b) is marked verified
+      // by GitLab.
+      [if "email" in claims && claims.email_verified then "email" else null]: claims.email,
+    },
+  },
+}
+```
+
+Now, enable the GitLab provider in the ORY Kratos config located at
+`<kratos-directory>/contrib/quickstart/kratos/email-password/.kratos.yml`.
+
+```yaml title="contrib/quickstart/kratos/email-password/.kratos.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  strategies:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: gitlab # this is `<provider-id>` in the Authorization callback URL. DO NOT CHANGE IT ONCE SET!
+            provider: gitlab
+            client_id: .... # Replace this with the OAuth2 Client ID provided by GitLab
+            client_secret: .... # Replace this with the OAuth2 Client Secret provided by GitLab
+            mapper_url: file:///etc/config/kratos/oidc.gitlab.jsonnet
+            scope:
+              - read_user
+              - openid
+              - profile
+              - email
+```
+
+GitLab is now an option to log in via Kratos.
 
 ## Microsoft
 
