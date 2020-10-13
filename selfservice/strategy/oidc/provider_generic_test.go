@@ -2,6 +2,7 @@ package oidc
 
 import (
 	"context"
+	"encoding/json"
 	"net/url"
 	"testing"
 
@@ -12,16 +13,31 @@ import (
 	"github.com/ory/kratos/x"
 )
 
+func makeOIDCClaims() json.RawMessage {
+	claims, _ := json.Marshal(map[string]interface{}{
+		"id_token": map[string]interface{}{
+			"email": map[string]bool{
+				"essential": true,
+			},
+			"email_verified": map[string]bool{
+				"essential": true,
+			},
+		},
+	})
+	return claims
+}
+
 func makeAuthCodeURL(t *testing.T, r *login.Flow) string {
 	public, err := url.Parse("https://ory.sh")
 	require.NoError(t, err)
 	p := NewProviderGenericOIDC(&Configuration{
-		Provider:     "generic",
-		ID:           "valid",
-		ClientID:     "client",
-		ClientSecret: "secret",
-		IssuerURL:    "https://accounts.google.com",
-		Mapper:       "file://./stub/hydra.schema.json",
+		Provider:        "generic",
+		ID:              "valid",
+		ClientID:        "client",
+		ClientSecret:    "secret",
+		IssuerURL:       "https://accounts.google.com",
+		Mapper:          "file://./stub/hydra.schema.json",
+		RequestedClaims: makeOIDCClaims(),
 	}, public)
 	c, err := p.OAuth2(context.TODO())
 	require.NoError(t, err)
@@ -42,5 +58,12 @@ func TestProviderGenericOIDC_AddAuthCodeURLOptions(t *testing.T) {
 			ID: x.NewUUID(),
 		}
 		assert.NotContains(t, makeAuthCodeURL(t, r), "prompt=login")
+	})
+
+	t.Run("case=expect requested claims to be set", func(t *testing.T) {
+		r := &login.Flow{
+			ID: x.NewUUID(),
+		}
+		assert.Contains(t, makeAuthCodeURL(t, r), "claims="+url.QueryEscape(string(makeOIDCClaims())))
 	})
 }
