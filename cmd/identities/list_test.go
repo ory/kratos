@@ -5,16 +5,17 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ory/x/cmdx"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal/clihelpers"
 )
 
 func TestListCmd(t *testing.T) {
 	reg := setup(t, listCmd)
-	require.NoError(t, listCmd.Flags().Set(clihelpers.FlagQuiet, "true"))
+	require.NoError(t, listCmd.Flags().Set(cmdx.FlagQuiet, "true"))
 
 	var deleteIdentities = func(t *testing.T, is []*identity.Identity) {
 		for _, i := range is {

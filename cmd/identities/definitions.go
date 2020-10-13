@@ -3,7 +3,8 @@ package identities
 import (
 	"strings"
 
-	"github.com/ory/kratos/internal/clihelpers"
+	"github.com/ory/x/cmdx"
+
 	"github.com/ory/kratos/internal/httpclient/models"
 )
 
@@ -21,10 +22,10 @@ func (_ *outputIdentity) Header() []string {
 func (i *outputIdentity) Fields() []string {
 	data := [5]string{
 		string(i.ID),
-		clihelpers.None,
-		clihelpers.None,
-		clihelpers.None,
-		clihelpers.None,
+		cmdx.None,
+		cmdx.None,
+		cmdx.None,
+		cmdx.None,
 	}
 
 	addresses := make([]string, 0, len(i.VerifiableAddresses))
@@ -67,10 +68,10 @@ func (c *outputIdentityCollection) Table() [][]string {
 	for i, ident := range c.identities {
 		data := [5]string{
 			string(ident.ID),
-			clihelpers.None,
-			clihelpers.None,
-			clihelpers.None,
-			clihelpers.None,
+			cmdx.None,
+			cmdx.None,
+			cmdx.None,
+			cmdx.None,
 		}
 
 		if len(ident.VerifiableAddresses) != 0 && ident.VerifiableAddresses[0].Value != nil {

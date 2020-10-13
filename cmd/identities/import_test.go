@@ -8,13 +8,14 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/ory/x/cmdx"
+
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/driver/configuration"
-	"github.com/ory/kratos/internal/clihelpers"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/x/pointerx"
 )
@@ -123,7 +124,7 @@ func TestImportCmd(t *testing.T) {
 	t.Run("case=fails to import invalid identity", func(t *testing.T) {
 		// validation is further tested with the validate command
 		stdOut, stdErr, err := exec(importCmd, bytes.NewBufferString("{}"))
-		assert.True(t, errors.Is(err, clihelpers.NoPrintButFailError))
+		assert.True(t, errors.Is(err, cmdx.ErrNoPrintButFail))
 		assert.Contains(t, stdErr, "STD_IN[0]: not valid")
 		assert.Len(t, stdOut, 0)
 	})

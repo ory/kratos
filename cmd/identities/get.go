@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ory/x/cmdx"
+
 	"github.com/ory/kratos/internal/clihelpers"
 	"github.com/ory/kratos/internal/httpclient/models"
 
@@ -40,14 +42,14 @@ var getCmd = &cobra.Command{
 		}
 
 		if len(identities) == 1 {
-			clihelpers.PrintRow(cmd, (*outputIdentity)(identities[0]))
+			cmdx.PrintRow(cmd, (*outputIdentity)(identities[0]))
 		} else {
-			clihelpers.PrintCollection(cmd, &outputIdentityCollection{identities})
+			cmdx.PrintCollection(cmd, &outputIdentityCollection{identities})
 		}
-		clihelpers.PrintErrors(cmd, failed)
+		cmdx.PrintErrors(cmd, failed)
 
 		if len(failed) != 0 {
-			return clihelpers.FailSilently(cmd)
+			return cmdx.FailSilently(cmd)
 		}
 		return nil
 	},

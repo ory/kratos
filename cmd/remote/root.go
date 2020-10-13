@@ -3,8 +3,9 @@ package remote
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/ory/x/cmdx"
+
 	"github.com/ory/kratos/cmd/cliclient"
-	"github.com/ory/kratos/internal/clihelpers"
 )
 
 var remoteCmd = &cobra.Command{
@@ -21,5 +22,5 @@ func RegisterCommandRecursive(parent *cobra.Command) {
 
 func init() {
 	cliclient.RegisterClientFlags(remoteCmd.PersistentFlags())
-	clihelpers.RegisterFormatFlags(remoteCmd.PersistentFlags())
+	cmdx.RegisterFormatFlags(remoteCmd.PersistentFlags())
 }

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ory/x/cmdx"
+
 	"github.com/ory/kratos/internal/clihelpers"
 
 	"github.com/spf13/cobra"
@@ -49,7 +51,7 @@ var deleteCmd = &cobra.Command{
 		}
 
 		if len(errs) != 0 {
-			return clihelpers.FailSilently(cmd)
+			return cmdx.FailSilently(cmd)
 		}
 		return nil
 	},
