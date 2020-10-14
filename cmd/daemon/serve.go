@@ -5,6 +5,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/ory/x/stringsx"
+
 	"github.com/rs/cors"
 
 	"github.com/ory/x/corsx"
@@ -52,7 +54,7 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 		router,
 		r.Writer(),
 		l,
-		c.SelfPublicURL().Path,
+		stringsx.Coalesce(c.SelfPublicURL().Path, "/"),
 		c.SelfPublicURL().Hostname(),
 		!flagx.MustGetBool(cmd, "dev"),
 	)
