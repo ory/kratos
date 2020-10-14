@@ -4,7 +4,8 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-10-13)](#unreleased-2020-10-13)
+- [Unreleased (2020-10-14)](#unreleased-2020-10-14)
+- [0.5.0-alpha.1.pre.0 (2020-10-14)](#050-alpha1pre0-2020-10-14)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -102,7 +103,12 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...8580d96b7e345cc85a646f2945c3931f831afebf) (2020-10-13)
+# Unreleased (2020-10-14)
+
+No significant changes have been made for this release.
+
+
+# [0.5.0-alpha.1.pre.0](https://github.com/ory/kratos/compare/v0.4.6-alpha.1...v0.5.0-alpha.1.pre.0) (2020-10-14)
 
 
 ### Bug Fixes
@@ -183,6 +189,7 @@
 
     > This patch resolves several issues that occurred when creating or updating identities using the Admin API. Now, all hooks are running properly and updating privileged properties no longer causes errors.
 * Resolve interface type issues ([064b305](https://github.com/ory/kratos/commit/064b305ab31dc003ccb5992eb1ed2804f85085b9))
+* Resolve logout csrf issues ([#761](https://github.com/ory/kratos/issues/761)) ([74c0aac](https://github.com/ory/kratos/commit/74c0aac3b94446c3824ae52b04b6f69395938b81))
 * Resolve migratest failures ([e2f34d3](https://github.com/ory/kratos/commit/e2f34d3f411bac042079d7f5425063ef117fae77))
 * Resolve migratest ordering failing tests ([dffecc0](https://github.com/ory/kratos/commit/dffecc0e80810ffae57870fd313ee0103ad3f60c))
 * Resolve migration issues ([b545e15](https://github.com/ory/kratos/commit/b545e15eeaa3e6e1f4a8fe0f8e1890012ac62c94))
@@ -317,6 +324,7 @@
 * Added transcript ([#627](https://github.com/ory/kratos/issues/627)) ([cec7f1f](https://github.com/ory/kratos/commit/cec7f1fc4955b02d21d772e748ec791f31bad24e)):
 
     > Added Login with Github Transcript
+* Adds twitch oidc provider guide ([#760](https://github.com/ory/kratos/issues/760)) ([339e622](https://github.com/ory/kratos/commit/339e62202170bf21d469d1a2bfe6b053a78c374d))
 * Bring oidc docs up to date ([7d0e470](https://github.com/ory/kratos/commit/7d0e47058cd6dca1763f01e45ed46cee49321240))
 * Changed transcript location ([#642](https://github.com/ory/kratos/issues/642)) ([c52764d](https://github.com/ory/kratos/commit/c52764d4394181b24dffbf8301418530ba5dbcc2)):
 
