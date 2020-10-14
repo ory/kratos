@@ -1,10 +1,11 @@
 package daemon
 
 import (
-	"github.com/ory/x/stringsx"
 	"net/http"
 	"strings"
 	"sync"
+
+	"github.com/ory/x/stringsx"
 
 	"github.com/rs/cors"
 
