@@ -10,3 +10,4 @@ scope:
   - foo
   - bar
 tenant: org
+requested_claims: "#/definitions/OIDCClaims"

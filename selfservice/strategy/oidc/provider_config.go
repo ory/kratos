@@ -1,6 +1,7 @@
 package oidc
 
 import (
+	"encoding/json"
 	"net/url"
 	"strings"
 
@@ -53,6 +54,12 @@ type Configuration struct {
 	//
 	// It can be either a URL (file://, http(s)://, base64://) or an inline JSONNet code snippet.
 	Mapper string `json:"mapper_url"`
+
+	// RequestedClaims string encoded json object that specifies claims and optionally their properties which should be
+	// included in the id_token or returned from the UserInfo Endpoint.
+	//
+	// More information: https://openid.net/specs/openid-connect-core-1_0.html#ClaimsParameter
+	RequestedClaims json.RawMessage `json:"requested_claims"`
 }
 
 func (p Configuration) Redir(public *url.URL) string {
@@ -76,6 +83,8 @@ func (c ConfigurationCollection) Provider(id string, public *url.URL) (Provider,
 				return NewProviderGoogle(&p, public), nil
 			case "github":
 				return NewProviderGitHub(&p, public), nil
+			case "gitlab":
+				return NewProviderGitLab(&p, public), nil
 			case "microsoft":
 				return NewProviderMicrosoft(&p, public), nil
 			}
