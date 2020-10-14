@@ -67,7 +67,7 @@ func (d *ProviderDiscord) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 }
 
 func (d *ProviderDiscord) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
-	grantedScopes := stringsx.Splitx(fmt.Sprintf("%s", exchange.Extra("scope")), ",")
+	grantedScopes := stringsx.Splitx(fmt.Sprintf("%s", exchange.Extra("scope")), " ")
 	for _, check := range d.Config().Scope {
 		if !stringslice.Has(grantedScopes, check) {
 			return nil, errors.WithStack(ErrScopeMissing)
