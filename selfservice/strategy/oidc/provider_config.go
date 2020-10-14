@@ -79,19 +79,25 @@ func (c ConfigurationCollection) Provider(id string, public *url.URL) (Provider,
 	for k := range c.Providers {
 		p := c.Providers[k]
 		if p.ID == id {
+			var providerNames []string
+			var addProviderName = func(pn string) string {
+				providerNames = append(providerNames, pn)
+				return pn
+			}
+
 			switch p.Provider {
-			case "generic":
+			case addProviderName("generic"):
 				return NewProviderGenericOIDC(&p, public), nil
-			case "google":
+			case addProviderName("google"):
 				return NewProviderGoogle(&p, public), nil
-			case "github":
+			case addProviderName("github"):
 				return NewProviderGitHub(&p, public), nil
-			case "gitlab":
+			case addProviderName("gitlab"):
 				return NewProviderGitLab(&p, public), nil
-			case "microsoft":
+			case addProviderName("microsoft"):
 				return NewProviderMicrosoft(&p, public), nil
 			}
-			return nil, errors.Errorf("provider type %s is not supported, supported are: %v", p.Provider, []string{"generic", "google", "github", "gitlab", "microsoft"})
+			return nil, errors.Errorf("provider type %s is not supported, supported are: %v", p.Provider, providerNames)
 		}
 	}
 	return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf(`OpenID Connect Provider "%s" is unknown or has not been configured`, id))
