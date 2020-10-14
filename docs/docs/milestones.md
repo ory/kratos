@@ -47,7 +47,7 @@ Something is not working.
 - [ ] Sending JSON to complete oidc/password strategy flows causes CSRF issues ([kratos#378](https://github.com/ory/kratos/issues/378))
 - [ ] Unmable to use Auth0 as a generic OIDC provider ([kratos#609](https://github.com/ory/kratos/issues/609))
 - [ ] Password reset emails sent twice by each of the two kratos pods in my cluster ([kratos#652](https://github.com/ory/kratos/issues/652))
-- [ ] Building From Source fails ([kratos#711](https://github.com/ory/kratos/issues/711))
+- [x] Building From Source fails ([kratos#711](https://github.com/ory/kratos/issues/711))
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)
 
@@ -73,7 +73,7 @@ New feature or request.
 - [ ] Require identity deactivation before administrative deletion ([kratos#657](https://github.com/ory/kratos/issues/657))
 - [ ] Add return_to after logout ([kratos#702](https://github.com/ory/kratos/issues/702)) - [@Patrik](https://github.com/zepatrik)
 - [ ] Write CLI helper for recommending Argon2 parameters ([kratos#723](https://github.com/ory/kratos/issues/723)) - [@Patrik](https://github.com/zepatrik)
-- [ ] Add possibility to configure the "claims" query parameter in the auth_url of OIDC providers to request individial id_token claims ([kratos#735](https://github.com/ory/kratos/issues/735))
+- [x] Add possibility to configure the "claims" query parameter in the auth_url of OIDC providers to request individial id_token claims ([kratos#735](https://github.com/ory/kratos/issues/735))
 
 ### [Docs](https://github.com/ory/kratos/labels/docs)
 
@@ -84,7 +84,7 @@ Affects documentation.
 - [ ] Document that identity information (traits, etc) are available to token holders and backend systems ([kratos#43](https://github.com/ory/kratos/issues/43)) - [@hackerman](https://github.com/aeneasr)
 - [ ] Config JSON Schema needs example values ([kratos#179](https://github.com/ory/kratos/issues/179)) - [@hackerman](https://github.com/aeneasr)
 - [ ] Elaborate on security practices against DoS and Brute Force ([kratos#134](https://github.com/ory/kratos/issues/134))
-- [ ] Building From Source fails ([kratos#711](https://github.com/ory/kratos/issues/711))
+- [x] Building From Source fails ([kratos#711](https://github.com/ory/kratos/issues/711))
 
 ### [Rfc](https://github.com/ory/kratos/labels/rfc)
 
@@ -130,7 +130,6 @@ New feature or request.
 - [ ] Implement React SPA sample app ([kratos#668](https://github.com/ory/kratos/issues/668)) - [@hackerman](https://github.com/aeneasr)
 - [ ] Implement React Native sample application consuming API ([kratos#667](https://github.com/ory/kratos/issues/667)) - [@hackerman](https://github.com/aeneasr)
 - [ ] Rename strategy to method in internal APIs and Documentation ([kratos#683](https://github.com/ory/kratos/issues/683)) - [@hackerman](https://github.com/aeneasr)
-- [ ] Configurable CORS headers ([kratos#712](https://github.com/ory/kratos/issues/712)) - [@hackerman](https://github.com/aeneasr)
 - [x] Implement JSON capabilities in ErrorHandler ([kratos#61](https://github.com/ory/kratos/issues/61)) - [@hackerman](https://github.com/aeneasr)
 - [x] Allow attaching credentials to identities in CRUD create ([kratos#200](https://github.com/ory/kratos/issues/200))
 - [x] Move away from UUID-based challenges and responses ([kratos#241](https://github.com/ory/kratos/issues/241)) - [@hackerman](https://github.com/aeneasr)
@@ -143,12 +142,13 @@ New feature or request.
 - [x] Implement a test-error for implementing the Error UI ([kratos#610](https://github.com/ory/kratos/issues/610))
 - [x] Design of the client cli ([kratos#663](https://github.com/ory/kratos/issues/663)) - [@Patrik](https://github.com/zepatrik)
 - [x] Rename `request_lifespan` to `lifespan` ([kratos#666](https://github.com/ory/kratos/issues/666)) - [@hackerman](https://github.com/aeneasr)
+- [x] Configurable CORS headers ([kratos#712](https://github.com/ory/kratos/issues/712)) - [@hackerman](https://github.com/aeneasr)
 
 #### Pull Requests
 
-- [ ] feat: prepare v0.5.0 release ([kratos#736](https://github.com/ory/kratos/pull/736)) - [@hackerman](https://github.com/aeneasr)
 - [x] fix: resolve identity admin api issues ([kratos#586](https://github.com/ory/kratos/pull/586)) - [@hackerman](https://github.com/aeneasr)
 - [x] feat: implement API-based self-service flows ([kratos#624](https://github.com/ory/kratos/pull/624)) - [@hackerman](https://github.com/aeneasr)
+- [x] feat: prepare v0.5.0 release ([kratos#736](https://github.com/ory/kratos/pull/736)) - [@hackerman](https://github.com/aeneasr)
 
 ### [Docs](https://github.com/ory/kratos/labels/docs)
 
@@ -161,7 +161,7 @@ Affects documentation.
 
 #### Pull Requests
 
-- [ ] feat: prepare v0.5.0 release ([kratos#736](https://github.com/ory/kratos/pull/736)) - [@hackerman](https://github.com/aeneasr)
+- [x] feat: prepare v0.5.0 release ([kratos#736](https://github.com/ory/kratos/pull/736)) - [@hackerman](https://github.com/aeneasr)
 
 ### [Rfc](https://github.com/ory/kratos/labels/rfc)
 
