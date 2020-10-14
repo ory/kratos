@@ -26,7 +26,7 @@
     preserve_host: true
     url: "http://kratos-selfservice-ui-node:4435"
   match:
-    url: "http://127.0.0.1:4455/<{error,verify,auth/*,**.css,**.js}{/,}>"
+    url: "http://127.0.0.1:4455/<{error,recovery,verify,auth/*,**.css,**.js}{/,}>"
     methods:
       - GET
   authenticators:
