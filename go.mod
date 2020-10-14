@@ -5,6 +5,9 @@ go 1.14
 // See https://github.com/markbates/pkger/pull/112
 replace github.com/markbates/pkger => github.com/falafeljan/pkger v0.17.1-0.20200722132747-95726f5b9b9b
 
+// Remove once https://github.com/justinas/nosurf/pull/62 is merged
+replace github.com/justinas/nosurf => github.com/aeneasr/nosurf v1.1.1-0.20201014095004-b10b0e9ff0d6
+
 require (
 	github.com/Masterminds/sprig/v3 v3.0.0
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect

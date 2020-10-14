@@ -52,7 +52,7 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 		router,
 		r.Writer(),
 		l,
-		c.SelfPublicURL().Path,
+		stringsx.Coalesce(c.SelfPublicURL().Path, "/"),
 		c.SelfPublicURL().Hostname(),
 		!flagx.MustGetBool(cmd, "dev"),
 	)
