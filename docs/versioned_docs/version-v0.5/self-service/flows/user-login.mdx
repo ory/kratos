@@ -1,0 +1,491 @@
+---
+id: user-login
+title: User Login
+---
+
+import Mermaid from '@theme/Mermaid'
+import ApiWarning from '@theme/ApiWarning'
+import SelfServiceBrowserFlow from '@theme/SelfServiceBrowserFlow'
+import SelfServiceApiFlow from '@theme/SelfServiceApiFlow'
+
+import CodeTabs from '@theme/Code/CodeTabs'
+import {
+  initBrowserFlow,
+  initApiFlow,
+  getFlow,
+  getFlowMethodPasswordWithErrors,
+  getFlowMethodOidcWithErrors
+} from './code/login'
+import RenderFlow from '@theme/Code/RenderFlow'
+
+:::information
+
+Please read the [Self-Service Flows](../../self-service) overview before
+continuing with this document.
+
+:::
+
+There are two Login Flow types supported in ORY Kratos:
+
+- Flows where the user sits in front of the Browser (e.g. website, single page
+  app, ...)
+- Flows where API interaction is required (e.g. mobile app, Smart TV, ...)
+
+The Login Flow can be summarized as the following state machine:
+
+<Mermaid
+  chart={`
+stateDiagram
+  s1: Flow is initialized
+  s2: Execute Before Login Hook(s)
+  s3: User Interface renders Login Flow Forms
+  s4: Execute After Login Hook(s)
+  s5: Update Login Flow with Error Context(s)
+  s6: Login successful
+	[*] --> s1 : User clicks "Log in"
+  s1 --> s2
+  s2 --> Error : A hook fails
+  s2 --> s3
+  s3 --> s4 : User provides valid credentials data
+  s3 --> s5 : User provides invalid credentials data
+  s5 --> s3
+  s4 --> Error : A hook fails
+  s4 --> s6
+  s6 --> [*]
+  Error --> [*]
+`}
+/>
+
+Currently, two login methods are supported:
+
+- `password` for signing in with an email / username and password;
+- `oidc` for signing in using a social sign in provider such as Google or
+  Facebook (check out the
+  [set up guide](../../guides/sign-in-with-github-google-facebook-linkedin.mdx)).
+
+Both are dis/enabled in the ORY Kratos config:
+
+```yaml title="path/to/my/kratos/config.yml"
+selfservice:
+  methods:
+    password:
+      enabled: true
+    oidc:
+      enabled: true
+      # ...
+```
+
+## Initialize Login Flow
+
+The first step is to initialize the Login Flow. This allows pre-login hooks to
+run, set up Anti-CSRF tokens, and more.
+
+### Login for Browser Clients
+
+The Login Flow for browser clients relies on HTTP redirects between ORY Kratos,
+your Login UI, and the end-user's browser:
+
+<SelfServiceBrowserFlow
+  flows={['login']}
+  success="Set session cookie"
+  interactions={['"Log in"']}
+/>
+
+To initialize the Login Flow, point the Browser to the initialization endpoint:
+
+<CodeTabs items={initBrowserFlow} />
+
+The server responds with a HTTP 302 redirect to the Login UI, appending the
+`?flow=<flow-id>` query paremeter (see the curl example) to the URL configured
+here:
+
+```yaml title="path/to/config/kratos.yml"
+selfservice:
+  flows:
+    login:
+      # becomes http://127.0.0.1:4455/auth/login?flow=df607aa1-d555-4b2a-b3e4-0f5a1d2fe6f3
+      ui_url: http://127.0.0.1:4455/auth/login
+```
+
+### Login for API Clients
+
+<ApiWarning />
+
+The Login Flow for API clients does not use HTTP Redirects and can be summarized
+as follows:
+
+<SelfServiceApiFlow
+  flows={['login']}
+  success="Return login session token"
+  interactions={['"Log in"']}
+/>
+
+To initialize the API flow, the client calls the API-flow initialization
+endpoint
+([REST API Reference](../../reference/api.mdx#initialize-login-flow-for-api-clients))
+which returns a JSON response:
+
+<CodeTabs items={initApiFlow} />
+
+## Login Flow Payloads
+
+Fetching the Login Flow
+([REST API Reference](../../reference/api.mdx#get-login-flow)) is usually only
+required for browser clients but also works for Login Flows initializied by API
+clients. All you need is a valid flow ID:
+
+<CodeTabs items={getFlow} />
+
+### Login with Username/Email and Password
+
+:::tip Before you start
+
+Please read the
+[Username / Email & Password Credentials Documentation](../../concepts/credentials/username-email-password)
+first.
+
+:::
+
+When the `password` method is enabled, it will be part of the `methods` payload
+in the Login Flow:
+
+```shell script
+$ curl -H "Accept: application/json" -s \
+  'http://127.0.0.1:4434/self-service/login/flows?id=26ac2d66-eeb7-42f3-8ba8-5fe70925d6a3' \
+  | jq -r '.methods.password.config'
+
+{
+  "action": "http://127.0.0.1:4433/self-service/login/methods/password?flow=26ac2d66-eeb7-42f3-8ba8-5fe70925d6a3",
+  "method": "POST",
+  "fields": [
+    {
+      "name": "identifier",
+      "type": "text",
+      "required": true,
+      "value": ""
+    },
+    {
+      "name": "password",
+      "type": "password",
+      "required": true
+    },
+    {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "value": "Bo72oeXYFnjZj2B9Ple+GZBkn5oqQZDACcYvGeUi8J48R9+yRk1KBagov/nJ/jbfBgugsMUzYMf4VpGNThkjgw=="
+    }
+  ]
+}
+```
+
+### Login with Google, Facebook, GitHub, ..., OpenID Connect / OAuth 2.0
+
+:::tip Before you start
+
+Check out the
+[Sign in with GitHub, Google, ... Guide](../../guides/sign-in-with-github-google-facebook-linkedin.mdx)
+and learn how to set up this method!
+
+:::
+
+The Social Sign In Method (`oidc`) enables you to use
+
+- [GitHub](http://github.com/);
+- [Apple](https://developer.apple.com/sign-in-with-apple/);
+- [GitLab](https://docs.gitlab.com/ee/integration/openid_connect_provider.html);
+- [Google](https://developers.google.com/identity/sign-in/web/sign-in);
+- [Facebook](https://developers.facebook.com/docs/facebook-login/);
+- [ORY Hydra](https://www.ory.sh/hydra);
+- [Keycloak](https://www.keycloak.org);
+- and every other OpenID Connect Certified Provider
+
+:::warning
+
+Social Sign In is currently not possible for API Clients. It will be possible in
+a future version, which is partially tracked as
+[kratos#273](https://github.com/ory/kratos/issues/273)
+
+:::
+
+If enabled, the method contains an `oidc` key with the configured sign in
+providers as submit fields:
+
+```shell script
+$ curl -H "Accept: application/json" -s \
+  'http://127.0.0.1:4434/self-service/login/flows?id=26ac2d66-eeb7-42f3-8ba8-5fe70925d6a3' \
+  | jq -r '.methods.oidc.config'
+
+{
+  "action": "http://127.0.0.1:4433/self-service/methods/oidc/auth/7430f336-0be0-47d1-b1fc-5cc6fcc3f228",
+  "method": "POST",
+  "fields": [
+    {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "value": "LJ3o59zXjukFs1004vyn3QrWDrfutW2e0Iaqo/9Ck6srYAceydRr59GEZJNFY6Walnell+r10/DlXUy/Eq6sXQ=="
+    },
+    {
+      "name": "provider",
+      "type": "submit",
+      "value": "github"
+    }
+  ]
+}
+```
+
+## Login Flow Form Rendering
+
+The Login User Interface is a route (page / site) in your application (server,
+native app, single page app) that should render a login form.
+
+In stark contrast to other Identity Systems, ORY Kratos does not render this
+HTML. Instead, you need to implement the HTML code in your application (e.g.
+NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
+flexibility and customizability in your user interface flows and designs.
+
+You will use the Login Flow JSON response to render the login form UI, which
+could looks as follows depending on your programming language and web framework:
+
+<RenderFlow flow="login" />
+
+## Login Form Validation
+
+The form payloads are then submitted to ORY Kratos which follows up with:
+
+- An HTTP 302 Found redirect pointing to the Login UI for Browser Clients.
+- An `application/json` response for API Clients.
+
+### Login with Username/Email and Password
+
+To complete the login, the end-user fills out their identifier (username, email,
+phone number, ...) and the password. Possible validation errors include a
+missing identifier or password, or invalid credentials:
+
+<CodeTabs items={getFlowMethodPasswordWithErrors} />
+
+When validation errors happen, browser clients receive a HTTP 302 Found redirect
+to the Login Flow UI, containing the Login Flow ID which includes the error
+payloads.
+
+For API Clients, the server typically responds with HTTP 400 Bad Request and the
+Login Flow in the response payload as JSON.
+
+### Login with Google, Facebook, GitHub, ..., OpenID Connect / OAuth 2.0
+
+Completing the `oidc` method requires the user to go through an OAuth 2.0 or
+OpenID Connect flow which involves logging into the upstream identity provider
+(e.g. Google) and giving consent.
+
+:::note
+
+If the user has never signed in with the given provider before, a new account
+will be created. It is also possible to link upstream identities (e.g. Google
+profile) with an existing ORY Kratos identity.
+
+:::
+
+A possible validation error is a missing ID Token:
+
+<CodeTabs items={getFlowMethodOidcWithErrors} />
+
+## Successful Login
+
+Completing the login behaves differently for Browser and API Clients.
+
+### Browser Clients
+
+When the login is completed successfully, ORY Kratos responds with a HTTP 302
+Redirect to the
+[configured redirect URL](../../concepts/browser-redirect-flow-completion).
+Alongside the HTTP 302 Redirect is a `Set-Cookie` header which contains the ORY
+Kratos Login Session Cookie:
+
+```
+HTTP/1.1 302 Found
+Cache-Control: 0
+Location: http://127.0.0.1:4455/
+Set-Cookie: csrf_token=b8OebRPTPr5ow23mA5gIZmFNLeuMbv8pZz1jT1Ex7ys=; Path=/; Domain=127.0.0.1; Max-Age=31536000; HttpOnly
+Set-Cookie: ory_kratos_session=MTU5OTE2ODc2N3xEdi1CQkFFQ180SUFBUkFCRUFBQVJfLUNBQUVHYzNSeWFXNW5EQThBRFhObGMzTnBiMjVmZEc5clpXNEdjM1J5YVc1bkRDSUFJR055VlROMGRteHhSakJrUzBkbmRUUjBlVFY1V0RCRWFVTnJXVmR6V25oaHx2DICsB6IMbaHSQwnYITUZqr7Qx7CxUlnaneJWH495wQ==; Path=/; Expires=Fri, 04 Sep 2020 21:32:47 GMT; Max-Age=86400; HttpOnly; SameSite=Lax
+Vary: Cookie
+Date: Thu, 03 Sep 2020 21:32:47 GMT
+Content-Length: 0
+```
+
+Now, whenever the browser is making a request (with cookies) to the
+`http://127.0.0.1/sessions/whoami` endpoint, the session will be returned:
+
+```shell script
+curl -s -H "Cookie: ory_kratos_session=MTU5OTE2ODc2N3xEdi1CQkFFQ180SUFBUkFCRUFBQVJfLUNBQUVHYzNSeWFXNW5EQThBRFhObGMzTnBiMjVmZEc5clpXNEdjM1J5YVc1bkRDSUFJR055VlROMGRteHhSakJrUzBkbmRUUjBlVFY1V0RCRWFVTnJXVmR6V25oaHx2DICsB6IMbaHSQwnYITUZqr7Qx7CxUlnaneJWH495wQ==" \
+  http://127.0.0.1:4433/sessions/whoami | jq
+
+{
+  "id": "ede90ce6-2420-435a-a745-3d8ab1a9636c",
+  "active": true,
+  "expires_at": "2020-09-04T21:32:47.5642404Z",
+  "authenticated_at": "2020-09-03T21:32:47.5881038Z",
+  "issued_at": "2020-09-03T21:32:47.5642688Z",
+  "identity": {
+    "id": "d96e86d9-bc33-4aa5-b865-4ade8a3974b3",
+    "schema_id": "default",
+    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "traits": {
+      "email": "foouser@ory.sh",
+      "name": {
+        "first": "foo",
+        "last": "user"
+      }
+    },
+    "verifiable_addresses": [
+      {
+        "id": "81bbdeae-6333-42f2-877e-26c78acb6ea5",
+        "value": "foouser@ory.sh",
+        "verified": false,
+        "via": "email",
+        "status": "pending",
+        "verified_at": null
+      }
+    ],
+    "recovery_addresses": [
+      {
+        "id": "596c1db4-ccaa-4f4e-9623-cb7e768026ad",
+        "value": "foouser@ory.sh",
+        "via": "email"
+      }
+    ]
+  }
+}
+```
+
+### API Clients
+
+For API Clients, ORY Kratos responds with a JSON payload which includes the
+identity which just authenticated, the session, and the ORY Kratos Session
+Token:
+
+```shell script
+# Inits a Login Flow
+$ actionUrl=$(\
+  curl -s -X GET -H "Accept: application/json" \
+    "http://127.0.0.1:4433/self-service/login/api" \
+    | jq -r '.methods.password.config.action'\
+)
+
+# Complete Login Flow with password method
+$ curl -s -X POST -H  "Accept: application/json" -H "Content-Type: application/json" \
+    -d '{"identifier": "api@user.org", "password": "iohuasf0897zAJHf"}' \
+    "$actionUrl" | jq
+
+{
+  "session_token": "oFZzgLpsacUpUy2cvQPtrGa2046WcXCR",
+  "session": {
+    "id": "8f660ce3-69ec-4aeb-9fda-f9230dc3243f",
+    "active": true,
+    "expires_at": "2020-08-25T13:42:15.7411522Z",
+    "authenticated_at": "2020-08-24T13:42:15.7411522Z",
+    "issued_at": "2020-08-24T13:42:15.7412042Z",
+    "identity": {
+      "id": "bf32596a-f853-47c4-91e6-a3f41cf4949d",
+      "schema_id": "default",
+      "schema_url": "http://127.0.0.1:4433/schemas/default",
+      "traits": {
+        "email": "api@user.org",
+        "name": {
+          "last": "User",
+          "first": "API"
+        }
+      },
+      "verifiable_addresses": [
+        {
+          "id": "f877db6c-7dfb-45e3-bbeb-ac8349348128",
+          "value": "api@user.org",
+          "verified": false,
+          "via": "email",
+          "verified_at": null,
+          "expires_at": "2020-08-24T14:35:59.125873Z"
+        }
+      ],
+      "recovery_addresses": [
+        {
+          "id": "065a908c-82be-4110-bf67-9910f36242b7",
+          "value": "api@user.org",
+          "via": "email"
+        }
+      ]
+    }
+  }
+}
+```
+
+The ORY Kratos Session Token can be checked at the
+`http://127.0.0.1/sessions/whoami` endpoint:
+
+```shell script
+$ curl -s -H "Authorization: Bearer svX8bE9HTiVpMr7r55TtKtcOkLRhAq1a" \
+  http://127.0.0.1:4433/sessions/whoami | jq
+
+{
+  "id": "d09fc470-9e11-4e70-855f-0dc1aee7e501",
+  "active": true,
+  "expires_at": "2020-09-05T10:52:52.1350455Z",
+  "authenticated_at": "2020-09-04T10:52:52.1472702Z",
+  "issued_at": "2020-09-04T10:52:52.1350737Z",
+  "identity": {
+    "id": "9ee8fb81-9d5c-47a7-9cee-28a0f64dccbb",
+    "schema_id": "default",
+    "schema_url": "http://127.0.0.1:4433/schemas/default",
+    "traits": {
+      "email": "api@user.org",
+      "name": {
+        "first": "API",
+        "last": "User"
+      }
+    },
+    "verifiable_addresses": [
+      {
+        "id": "3ba119c6-4e9a-466c-8910-40b238229aa6",
+        "value": "api@user.org",
+        "verified": false,
+        "via": "email",
+        "status": "pending",
+        "verified_at": null
+      }
+    ],
+    "recovery_addresses": [
+      {
+        "id": "9dec10d0-1079-4a5d-b1be-cd15418c640a",
+        "value": "api@user.org",
+        "via": "email"
+      }
+    ]
+  }
+}
+```
+
+## Refreshing a Session
+
+In some cases it is required to refresh a login session. This is the case when
+updating one's password. Refreshing a session updates the `authenticated_at`
+time.
+
+:::info
+
+Refreshing a session will not log the user out, unless another user signs in.
+
+:::
+
+To refresh a session, append `?refresh=true` to:
+
+- `/self-service/login/browser` for browser Clients (e.g.
+  `http://127.0.0.1:4433/self-service/login/browser?refresh=true`)
+- `/self-service/login/api` for API Clients (e.g.
+  `http://127.0.0.1:4433/self-service/login/api?refresh=true`)
+
+## Hooks
+
+ORY Kratos allows you to configure hooks that run before and after a Login Flow.
+This may be helpful if you'd like to restrict logins to IPs coming from your
+internal network or other logic.
+
+For more information about hooks please read the [Hook Documentation](../hooks).

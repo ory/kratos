@@ -1,0 +1,25 @@
+package samples
+
+import (
+  "fmt"
+
+  "github.com/ory/kratos-client-go/client/public"
+  "github.com/ory/kratos-client-go/client"
+
+  "github.com/ory/kratos/internal/httpclient/client/common"
+)
+
+func main() {
+  c := client.NewHTTPClientWithConfig(nil,
+    // We are using the ORY Kratos Admin API (:4434) to avoid having to set the session cookie / session token:
+    &client.TransportConfig{Host: "127.0.0.1:4434", BasePath: "/", Schemes: []string{"http"}})
+
+  flowID := "" // Usually something like: res.Request.URL.Query().Get("flow")
+
+  rs, err := c.Public.GetSelfServiceSettingsFlow(
+    common.NewGetSelfServiceSettingsFlowParams().
+      WithID(flowID),
+  )
+
+  fmt.Printf("%+v", rs.Payload) //
+}

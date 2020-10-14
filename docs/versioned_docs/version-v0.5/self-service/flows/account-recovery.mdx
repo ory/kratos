@@ -1,0 +1,369 @@
+---
+id: account-recovery
+title: Account Recovery and Password Reset
+---
+
+import useBaseUrl from '@docusaurus/useBaseUrl'
+import Mermaid from '@theme/Mermaid'
+import ApiWarning from '@theme/ApiWarning'
+import SelfServiceBrowserFlow from '@theme/SelfServiceBrowserFlow'
+import SelfServiceApiFlow from '@theme/SelfServiceApiFlow'
+
+import CodeTabs from '@theme/Code/CodeTabs'
+import {
+  initBrowserFlow,
+  initApiFlow,
+  getFlow,
+  getFlowMethodLinkWithErrors,
+  getFlowMethodLinkSuccess,
+  getFlowMethodLinkInvalidChallenge,
+  getFlowMethodLinkChallengeDone
+} from './code/recovery'
+import RenderFlow from '@theme/Code/RenderFlow'
+
+:::information
+
+Please read the [Self-Service Flows](../../self-service) overview before
+continuing with this document.
+
+:::
+
+Account Recovery must be performed if access to an account needs to be
+recovered. Common use cases include:
+
+- "Forgot password" flows
+- "Lost MFA device" flows
+- ...
+
+There are two Recovery Flow types supported in ORY Kratos:
+
+- Flows where the user sits in front of the Browser (e.g. website, single page
+  app, ...)
+- Flows where API interaction is required (e.g. mobile app, Smart TV, ...)
+
+The Recovery Flow can be summarized as the following state machine:
+
+<Mermaid
+  chart={`
+stateDiagram
+  s1: Flow is initialized
+  s2: User Interface renders Recovery Flow Forms
+  s3: Update Recovery Flow with Error Context(s)
+  s4: Recovery challenge initiated (e.g. link via email)
+  s5: Recovery completed, user logged in
+  [*] --> s1 : User clicks "Recover Account"
+  s1 --> s2
+  s2 --> s4 : User provides valid recovery data
+  s2 --> s3 : User provides invalid recovery data
+  s3 --> s2
+  s4 --> s5 : Challenge response valid
+  s4 --> s3 : Challenge response invalid
+  s5 --> [*]
+`}
+/>
+
+To enable recovery flows, make the following adjustments to your ORY Kratos
+configuration:
+
+```yaml title="path/to/config/kratos.yml"
+selfservice:
+  methods:
+    link:
+      enabled: true
+  flows:
+    recovery:
+      enabled: true
+```
+
+## Methods
+
+Currently, one recovery method is supported:
+
+- The `link` method performs account recovery (also known as password reset) by
+  sending an email containing a recovery link to the user.
+
+### Recovery `link` Method
+
+The `link` method is dis/enabled in the ORY Kratos config:
+
+```yaml title="path/to/my/kratos/config.yml"
+selfservice:
+  methods:
+    link:
+      enabled: true
+      # ...
+```
+
+There are two email types sent by this method:
+
+<p>
+  <figure>
+    <img
+      alt="Recovery email sent to unknown address"
+      src={useBaseUrl('img/docs/mailslurper-recovery-unknown.png')}
+    />
+    <figcaption>
+      If the requested email address is a known recovery address, a recovery
+      link is sent to that email address.
+    </figcaption>
+  </figure>
+</p>
+
+<p>
+  <figure>
+    <img
+      alt="Recovery email sent to unknown address"
+      src={useBaseUrl('img/docs/mailslurper-recovery-unknown.png')}
+    />
+    <figcaption>
+      If the requested email address is a known recovery address, a recovery
+      link is sent to that email address.
+    </figcaption>
+  </figure>
+</p>
+
+This prevents account enumeration attacks as explained in this
+[brilliant blog post by Troy Hunt](https://www.troyhunt.com/website-enumeration-insanity-how-our-personal-data-is-leaked/).
+
+The emails are using templates that can be customised as explained in
+[Customizing E-Mail Templates](../../concepts/email-sms#templates). The template
+IDs are:
+
+- Unknown email address: `recovery_invalid`
+- Known email address: `recovery_valid`
+
+You should also configure how long a session is privileged. The user will only
+be able to update his/her password (or any other credential) for the specified
+amount of time after clicking on the recovery link:
+
+```yaml title="path/to/kratos/config.yml"
+selfservice:
+  flows:
+    settings:
+      privileged_session_max_age: 15m
+```
+
+To specify that an identity's trait is a recovery email, use the following
+Identity JSON Schema:
+
+```diff
+ {
+   "$id": "https://schemas.ory.sh/presets/kratos/quickstart/email-password/identity.schema.json",
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "title": "Person",
+   "type": "object",
+   "properties": {
+     "traits": {
+       "type": "object",
+       "properties": {
+         "email": {
+           "type": "string",
+           "format": "email",
+           "ory.sh/kratos": {
+             "credentials": {
+               "password": {
+                 "identifier": true
+               }
+             },
++            "recovery": {
++              "via": "email"
++            }
+           }
+         }
+       }
+       "additionalProperties": false
+     }
+   }
+ }
+```
+
+## Initialize Recovery Flow
+
+The first step is to initialize the Recovery Flow. This sets up Anti-CSRF tokens
+and more. Each recovery flow has a `state` parameter which follows the state
+machine:
+
+<Mermaid
+  chart={`
+stateDiagram-v2
+	[*] --> choose_method
+	choose_method --> sent_email
+	sent_email --> sent_email
+	note right of sent_email
+	    The user may fill out the email form input again as a way to re-send the email.
+	end note
+	sent_email --> passed_challenge
+	passed_challenge --> [*]
+`}
+/>
+
+where
+
+- `choose_method` indicates that the user has not chosen a recovery method yet.
+  This is useful when `link` is not the only recovery method active.
+- `sent_email` implies that the recovery email has been sent out.
+- `passwed_challenge` is set when the user has clicked the recovery link and
+  completed the account recovery.
+
+### Recovery for Browser Clients
+
+The Recovery Flow for browser clients relies on HTTP redirects between ORY
+Kratos, your Recovery UI, and the end-user's browser:
+
+<SelfServiceBrowserFlow
+  flows={['recovery']}
+  success="Set session cookie and initialize Settings Flow"
+  interactions={['"Recover account"']}
+/>
+
+To initialize the Recovery Flow, point the Browser to the initialization
+endpoint:
+
+<CodeTabs items={initBrowserFlow} />
+
+The server responds with a HTTP 302 redirect to the Recovery UI, appending the
+`?flow=<flow-id>` query parameter (see the curl example) to the URL configured
+here:
+
+```yaml title="path/to/config/kratos.yml"
+selfservice:
+  flows:
+    recovery:
+      # becomes http://127.0.0.1:4455/recovery?flow=df607aa1-d555-4b2a-b3e4-0f5a1d2fe6f3
+      ui_url: http://127.0.0.1:4455/recovery
+```
+
+### Recovery for API Clients
+
+<ApiWarning />
+
+The Recovery Flow for API clients does not use HTTP Redirects and can be
+summarized as follows:
+
+<SelfServiceApiFlow
+  flows={['recovery']}
+  success="Return session token"
+  interactions={['"Recover account"']}
+/>
+
+To initialize the API flow, the client calls the API-flow initialization
+endpoint
+([REST API Reference](../../reference/api.mdx#initialize-recovery-flow-for-api-clients))
+which returns a JSON response:
+
+<CodeTabs items={initApiFlow} />
+
+## Recovery Flow Payloads
+
+Fetching the Recovery Flow
+([REST API Reference](../../reference/api.mdx#get-recovery-flow)) is usually
+only required for browser clients but also works for Recovery Flows initializied
+by API clients. All you need is a valid flow ID:
+
+<CodeTabs items={getFlow} />
+
+### Send Recovery Link to Email
+
+:::note
+
+The `link` recovery mode will always open a link in the browser, even if it was
+initiated by an API client. This is because the user clicks the link in his/her
+email client, which opens the browser.
+
+:::
+
+When the `link` method is enabled, it will be part of the `methods` payload in
+the Recovery Flow:
+
+```shell script
+$ curl -H "Accept: application/json" -s \
+    'http://127.0.0.1:4434/self-service/recovery/flows?id=2183a80c-a190-4fde-95bd-a15aa3103930' | jq -r '.methods.link.config'
+
+{
+  "action": "http://127.0.0.1:4433/self-service/recovery/methods/link?flow=2183a80c-a190-4fde-95bd-a15aa3103930",
+  "method": "POST",
+  "fields": [
+    {
+      "name": "csrf_token",
+      "type": "hidden",
+      "required": true,
+      "value": "PsERHvmk+4Ouq3wjMAaLsATrAk7sydJjkSbZFVynvwCJRZRtOTkosFHJQy5p5fFiBv6KnxwP2oSXUvE8J5w9Lw=="
+    },
+    {
+      "name": "email",
+      "type": "email",
+      "required": true
+    }
+  ]
+}
+```
+
+## Recovery Flow Form Rendering
+
+The Recovery User Interface is a route (page / site) in your application
+(server, native app, single page app) that should render a recovery form.
+
+In stark contrast to other Identity Systems, ORY Kratos does not render this
+HTML. Instead, you need to implement the HTML code in your application (e.g.
+NodeJS + ExpressJS, Java, PHP, ReactJS, ...), which gives you extreme
+flexibility and customizability in your user interface flows and designs.
+
+You will use the Recovery Flow JSON response to render the recovery form UI,
+which could looks as follows depending on your programming language and web
+framework:
+
+<RenderFlow flow="recovery" />
+
+## Recovery Form Validation
+
+The form payloads are then submitted to ORY Kratos which follows up with:
+
+- An HTTP 302 Found redirect pointing to the Recovery UI for Browser Clients.
+- An `application/json` response for API Clients.
+
+### Recovery Link via Email
+
+To send the recovery email, the end-user fills out the form. There might be
+validation errors such as a malformed email:
+
+<CodeTabs items={getFlowMethodLinkWithErrors} />
+
+When validation errors happen, browser clients receive a HTTP 302 Found redirect
+to the Recovery Flow UI, containing the Recovery Flow ID which includes the
+error payloads.
+
+For API Clients, the server typically responds with HTTP 400 Bad Request and the
+Recovery Flow in the response payload as JSON.
+
+#### Successful Submission
+
+On successful submission, an email will be sent to the provided address:
+
+<CodeTabs items={getFlowMethodLinkSuccess} />
+
+## Unsuccessful Recovery
+
+If the recovery challenge (e.g. the link in the recovery email) is invalid or
+expired, the user will be HTTP 302 redirected to the Recovery UI.
+
+:::note
+
+When an invalid or expired challenge is used, ORY Kratos initializes a new
+Account Recovery flow automatically. This flow will always be a Browser-based
+flow because the challenge is completed by clicking a link!
+
+:::
+
+The new Recovery Flow includes an error message such as the following:
+
+<CodeTabs items={getFlowMethodLinkInvalidChallenge} />
+
+Please keep in mind that this part of the flow always involves a Browser!
+
+## Successful Recovery
+
+Completing account recovery always results in a HTTP 302 redirect with a ORY
+Kratos Login Session Cookie to the Settings UI with a Settings Flow prompting
+the user to update their password or credentials:
+
+<CodeTabs items={getFlowMethodLinkChallengeDone} />
