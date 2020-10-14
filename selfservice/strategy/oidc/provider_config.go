@@ -19,6 +19,9 @@ type Configuration struct {
 	// Provider is either "generic" for a generic OAuth 2.0 / OpenID Connect Provider or one of:
 	// - generic
 	// - google
+	// - github
+	// - gitlab
+	// - microsoft
 	Provider string `json:"provider"`
 
 	// ClientID is the application's Client ID.
@@ -88,7 +91,7 @@ func (c ConfigurationCollection) Provider(id string, public *url.URL) (Provider,
 			case "microsoft":
 				return NewProviderMicrosoft(&p, public), nil
 			}
-			return nil, errors.Errorf("provider type %s is not supported, supported are: %v", p.Provider, []string{"generic", "google", "github", "microsoft"})
+			return nil, errors.Errorf("provider type %s is not supported, supported are: %v", p.Provider, []string{"generic", "google", "github", "gitlab", "microsoft"})
 		}
 	}
 	return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf(`OpenID Connect Provider "%s" is unknown or has not been configured`, id))
