@@ -32,15 +32,6 @@ func (d *ProviderDiscord) Config() *Configuration {
 }
 
 func (d *ProviderDiscord) oauth2() *oauth2.Config {
-	scope := d.config.Scope
-	if !stringslice.Has(scope, "identify") {
-		scope = append(scope, "identify")
-	}
-
-	if !stringslice.Has(scope, "email") {
-		scope = append(scope, "email")
-	}
-
 	return &oauth2.Config{
 		ClientID:     d.config.ClientID,
 		ClientSecret: d.config.ClientSecret,
@@ -49,7 +40,7 @@ func (d *ProviderDiscord) oauth2() *oauth2.Config {
 			TokenURL: discordgo.EndpointOauth2 + "token",
 		},
 		RedirectURL: d.config.Redir(d.public),
-		Scopes:      scope,
+		Scopes:      d.config.Scope,
 	}
 }
 
