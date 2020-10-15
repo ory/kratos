@@ -63,6 +63,8 @@ builds:
     flags:
       - -tags
       - sqlite
+      # Remove once https://github.com/golang/go/issues/40795 is closed
+      - -buildmode=exe
     ldflags:
       - -s -w -X github.com/ory/kratos/internal/clihelpers.BuildVersion={{.Tag}} -X github.com/ory/kratos/internal/clihelpers.BuildGitHash={{.FullCommit}} -X github.com/ory/kratos/internal/clihelpers.BuildTime={{.Date}}
       - "-extldflags '-static'"
