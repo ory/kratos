@@ -8,6 +8,8 @@ replace github.com/markbates/pkger => github.com/falafeljan/pkger v0.17.1-0.2020
 // Remove once https://github.com/justinas/nosurf/pull/62 is merged
 replace github.com/justinas/nosurf => github.com/aeneasr/nosurf v1.1.1-0.20201014095004-b10b0e9ff0d6
 
+replace gopkg.in/DataDog/dd-trace-go.v1 => gopkg.in/DataDog/dd-trace-go.v1 v1.27.1-0.20201005154917-54b73b3e126a
+
 require (
 	github.com/Masterminds/sprig/v3 v3.0.0
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
@@ -68,7 +70,7 @@ require (
 	github.com/ory/jsonschema/v3 v3.0.1
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/viper v1.7.5
-	github.com/ory/x v0.0.152
+	github.com/ory/x v0.0.153
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.4.0
