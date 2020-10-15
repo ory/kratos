@@ -6,6 +6,7 @@ SHELL=/bin/bash -o pipefail
 
 export GO111MODULE := on
 export PATH := .bin:${PATH}
+export PWD := $(shell pwd)
 
 GO_DEPENDENCIES = github.com/ory/go-acc \
 				  github.com/sqs/goreturns \
