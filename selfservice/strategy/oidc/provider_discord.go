@@ -72,6 +72,7 @@ func (d *ProviderDiscord) Claims(ctx context.Context, exchange *oauth2.Token) (*
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
 	}
 
+	// TODO: upgrade github.com/bwmarrin/discordgo once it supports api v8: https://github.com/bwmarrin/discordgo/issues/822
 	user, err := dg.User("@me")
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
