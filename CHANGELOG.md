@@ -4,69 +4,72 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-10-14)](#unreleased-2020-10-14)
-    - [Documentation](#documentation)
-- [0.5.0-alpha.1.pre.0 (2020-10-14)](#050-alpha1pre0-2020-10-14)
+- [Unreleased (2020-10-15)](#unreleased-2020-10-15)
+- [0.5.0-alpha.1.pre.1 (2020-10-15)](#050-alpha1pre1-2020-10-15)
     - [Bug Fixes](#bug-fixes)
+    - [Documentation](#documentation)
+    - [Features](#features)
+- [0.5.0-alpha.1.pre.0 (2020-10-14)](#050-alpha1pre0-2020-10-14)
+    - [Bug Fixes](#bug-fixes-1)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation-1)
-    - [Features](#features)
+    - [Features](#features-1)
     - [Tests](#tests)
     - [Unclassified](#unclassified)
     - [BREAKING CHANGES](#breaking-changes)
   - [0.4.6-alpha.1 (2020-07-13)](#046-alpha1-2020-07-13)
-    - [Bug Fixes](#bug-fixes-1)
-  - [0.4.5-alpha.1 (2020-07-13)](#045-alpha1-2020-07-13)
     - [Bug Fixes](#bug-fixes-2)
-  - [0.4.4-alpha.1 (2020-07-10)](#044-alpha1-2020-07-10)
+  - [0.4.5-alpha.1 (2020-07-13)](#045-alpha1-2020-07-13)
     - [Bug Fixes](#bug-fixes-3)
+  - [0.4.4-alpha.1 (2020-07-10)](#044-alpha1-2020-07-10)
+    - [Bug Fixes](#bug-fixes-4)
     - [Documentation](#documentation-2)
   - [0.4.3-alpha.1 (2020-07-08)](#043-alpha1-2020-07-08)
-    - [Bug Fixes](#bug-fixes-4)
-  - [0.4.2-alpha.1 (2020-07-08)](#042-alpha1-2020-07-08)
     - [Bug Fixes](#bug-fixes-5)
-- [0.4.0-alpha.1 (2020-07-08)](#040-alpha1-2020-07-08)
+  - [0.4.2-alpha.1 (2020-07-08)](#042-alpha1-2020-07-08)
     - [Bug Fixes](#bug-fixes-6)
+- [0.4.0-alpha.1 (2020-07-08)](#040-alpha1-2020-07-08)
+    - [Bug Fixes](#bug-fixes-7)
     - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation-3)
-    - [Features](#features-1)
+    - [Features](#features-2)
     - [Unclassified](#unclassified-1)
     - [BREAKING CHANGES](#breaking-changes-1)
 - [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
-    - [Bug Fixes](#bug-fixes-7)
+    - [Bug Fixes](#bug-fixes-8)
     - [Code Refactoring](#code-refactoring-2)
     - [Documentation](#documentation-4)
-    - [Features](#features-2)
+    - [Features](#features-3)
     - [Unclassified](#unclassified-2)
     - [BREAKING CHANGES](#breaking-changes-2)
   - [0.2.1-alpha.1 (2020-05-05)](#021-alpha1-2020-05-05)
     - [Documentation](#documentation-5)
 - [0.2.0-alpha.2 (2020-05-04)](#020-alpha2-2020-05-04)
-    - [Bug Fixes](#bug-fixes-8)
+    - [Bug Fixes](#bug-fixes-9)
     - [Code Refactoring](#code-refactoring-3)
     - [Documentation](#documentation-6)
-    - [Features](#features-3)
+    - [Features](#features-4)
     - [Unclassified](#unclassified-3)
     - [BREAKING CHANGES](#breaking-changes-3)
   - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
-    - [Bug Fixes](#bug-fixes-9)
+    - [Bug Fixes](#bug-fixes-10)
     - [Code Refactoring](#code-refactoring-4)
     - [Documentation](#documentation-7)
 - [0.1.0-alpha.6 (2020-02-16)](#010-alpha6-2020-02-16)
-    - [Bug Fixes](#bug-fixes-10)
+    - [Bug Fixes](#bug-fixes-11)
     - [Code Refactoring](#code-refactoring-5)
     - [Documentation](#documentation-8)
-    - [Features](#features-4)
+    - [Features](#features-5)
 - [0.1.0-alpha.5 (2020-02-06)](#010-alpha5-2020-02-06)
     - [Documentation](#documentation-9)
-    - [Features](#features-5)
+    - [Features](#features-6)
 - [0.1.0-alpha.4 (2020-02-06)](#010-alpha4-2020-02-06)
     - [Documentation](#documentation-10)
 - [0.1.0-alpha.3 (2020-02-06)](#010-alpha3-2020-02-06)
 - [0.1.0-alpha.2 (2020-02-03)](#010-alpha2-2020-02-03)
-    - [Bug Fixes](#bug-fixes-11)
+    - [Bug Fixes](#bug-fixes-12)
     - [Documentation](#documentation-11)
-    - [Features](#features-6)
+    - [Features](#features-7)
     - [Unclassified](#unclassified-4)
 - [0.1.0-alpha.1 (2020-01-31)](#010-alpha1-2020-01-31)
     - [Documentation](#documentation-12)
@@ -104,12 +107,30 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.5.0-alpha.1.pre.0...a43ed335262fd542f349224aef918af5263c384d) (2020-10-14)
+# Unreleased (2020-10-15)
+
+No significant changes have been made for this release.
+
+
+# [0.5.0-alpha.1.pre.1](https://github.com/ory/kratos/compare/v0.5.0-alpha.1.pre.0...v0.5.0-alpha.1.pre.1) (2020-10-15)
+
+
+### Bug Fixes
+
+* Add missing 'recovery' path in oathkeeper access-rules.yml ([#763](https://github.com/ory/kratos/issues/763)) ([f180dba](https://github.com/ory/kratos/commit/f180dba2207638e83e4a23ebc213cddaecb5677f))
+* Bump datadog version to fix build failure ([4dfd322](https://github.com/ory/kratos/commit/4dfd322290313ec8467ebe8b385b56004b2417bd))
+* Force exe buildmode for windows CGO ([e017bb5](https://github.com/ory/kratos/commit/e017bb579cd29ad1a634cd552e2601295ff9c104))
+* Use proper pwd in makefile ([52e22c3](https://github.com/ory/kratos/commit/52e22c3b5c0130afd3e235aba9847389369f435e))
 
 
 ### Documentation
 
 * Add missing GitLab provider to the list of supported OIDC providers ([#766](https://github.com/ory/kratos/issues/766)) ([a43ed33](https://github.com/ory/kratos/commit/a43ed335262fd542f349224aef918af5263c384d))
+
+
+### Features
+
+* Add discord oidc provider ([#767](https://github.com/ory/kratos/issues/767)) ([487296d](https://github.com/ory/kratos/commit/487296dd39d2e59d61b63f00f3d61fea9b8aed8c))
 
 
 
