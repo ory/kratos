@@ -143,14 +143,15 @@
         },
         "provider": {
           "title": "Provider",
-          "description": "Can be one of github, gitlab, generic, google, microsoft.",
+          "description": "Can be one of github, gitlab, generic, google, microsoft, discord.",
           "type": "string",
           "enum": [
             "github",
             "gitlab",
             "generic",
             "google",
-            "microsoft"
+            "microsoft",
+            "discord"
           ],
           "examples": [
             "google"
