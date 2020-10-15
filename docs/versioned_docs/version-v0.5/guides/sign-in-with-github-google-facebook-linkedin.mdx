@@ -35,6 +35,97 @@ selfservice:
 
 :::
 
+## Discord
+
+To set up "Sign in with Discord" you must create a [Discord OAuth2 Application](https://discord.com/developers/docs/topics/oauth2).
+
+Set the "Redirect URI" to:
+
+```
+http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/callback/discord
+```
+
+The pattern of this URL is:
+
+```
+http(s)://<domain-of-ory-kratos>:<public-port>/self-service/browser/flows/strategies/oidc/callback/<provider-id>
+```
+
+The provider ID must point to the provider's ID set in the ORY Kratos
+configuration file (explained in further detail at
+[OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx)).
+
+:::note
+
+Discord does not implement OpenID Connect. Therefore, ORY Kratos makes a request to
+[Discord's User API](https://discord.com/developers/docs/resources/user#get-current-user)
+and adds the following claims to `std.extVar('claims')`:
+
+With scope `identify`:
+
+```text
+iss                 # always https://discord.com/api/v6/oauth2/
+sub                 # numeric discord user id
+name                # username + # + discriminator
+nickname            # username
+preferred_username  # username
+picture             # avatar url
+locale              # user locale
+```
+
+With Scope `email`:
+
+```text
+iss                 # always https://discord.com/api/v6/oauth2/
+email               # email
+email_verified      # whether email is verified
+```
+
+:::
+
+```json title="contrib/quickstart/kratos/email-password/oidc.discord.jsonnet"
+local claims = {
+  email_verified: false
+} + std.extVar('claims');
+
+{
+  identity: {
+    traits: {
+      // Allowing unverified email addresses enables account
+      // enumeration attacks, especially if the value is used for
+      // e.g. verification or as a password login identifier.
+      //
+      // Therefore we only return the email if it (a) exists and (b) is marked verified
+      // by Discord.
+      [if "email" in claims && claims.email_verified then "email" else null]: claims.email,
+    },
+  },
+}
+```
+
+Now, enable the Discord provider in the ORY Kratos config located at
+`<kratos-directory>/contrib/quickstart/kratos/email-password/.kratos.yml`.
+
+```yaml title="contrib/quickstart/kratos/email-password/.kratos.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  strategies:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: discord # this is `<provider-id>` in the Authorization callback URL. DO NOT CHANGE IT ONCE SET!
+            provider: discord
+            client_id: .... # Replace this with the OAuth2 Client ID provided by Discord
+            client_secret: .... # Replace this with the OAuth2 Client Secret provided by Discord
+            mapper_url: file:///etc/config/kratos/oidc.discord.jsonnet
+            scope:
+              - identify
+              - email
+```
+
+Discord is now an option to log in via Kratos.
+
 ## GitHub
 
 <iframe
