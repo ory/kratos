@@ -3,13 +3,15 @@ package oidc
 import (
 	"context"
 	"fmt"
+	"net/url"
+
 	"github.com/bwmarrin/discordgo"
+	"github.com/pkg/errors"
+	"golang.org/x/oauth2"
+
 	"github.com/ory/herodot"
 	"github.com/ory/x/stringslice"
 	"github.com/ory/x/stringsx"
-	"github.com/pkg/errors"
-	"golang.org/x/oauth2"
-	"net/url"
 )
 
 type ProviderDiscord struct {
