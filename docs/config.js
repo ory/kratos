@@ -9,7 +9,7 @@ module.exports = {
       files: ['docs/docs/quickstart.mdx']
     },
     {
-      replacer: ({ content, next }) =>
+      replacer: ({content, next}) =>
         content.replace(
           /git checkout (v[0-9a-zA-Z\\.\\-]+)/gi,
           `git checkout ${next}`
@@ -20,12 +20,28 @@ module.exports = {
       ]
     },
     {
-      replacer: ({ content, next }) =>
+      replacer: ({content, next,semverRegex}) =>
         content.replace(
-          /v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?/gi,
+          semverRegex,
           `${next}`
         ),
       files: ['docs/docs/install.md', 'docs/docs/quickstart.mdx']
+    },
+    {
+      replacer: ({content, next}) =>
+        content.replace(
+          /oryd\/kratos:(v[0-9a-zA-Z\\.\\-]+)/gi,
+          `oryd/kratos:${next}-sqlite`
+        ),
+      files: ['quickstart.yml']
+    },
+    {
+      image: 'oryd/kratos',
+      files: [
+        'quickstart-mysql.yml',
+        'quickstart-crdb.yml',
+        'quickstart-postgres.yml',
+      ]
     }
   ],
   updateConfig: {
