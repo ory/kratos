@@ -95,3 +95,5 @@ hashers:
     parallelism: 1
     salt_length: 16
     key_length: 16
+
+version: v1.0.0
