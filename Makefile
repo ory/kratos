@@ -101,7 +101,7 @@ quickstart:
 .PHONY: quickstart-dev
 quickstart-dev:
 		docker build -f .docker/Dockerfile-build -t oryd/kratos:latest-sqlite .
-		docker-compose -f quickstart.yml -f quickstart-standalone.yml up --build --force-recreate
+		docker-compose -f quickstart.yml -f quickstart-standalone.yml -f quickstart-latest.yml up --build --force-recreate
 
 # Formats the code
 .PHONY: format
