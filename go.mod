@@ -33,8 +33,7 @@ require (
 	github.com/go-swagger/go-swagger v0.25.0
 	github.com/gobuffalo/fizz v1.13.1-0.20200903094245-046abeb7de46
 	github.com/gobuffalo/httptest v1.0.2
-	github.com/gobuffalo/packr/v2 v2.8.0 // indirect
-	github.com/gobuffalo/pop/v5 v5.2.4
+	github.com/gobuffalo/pop/v5 v5.3.1-0.20201019113858-a0323d6d218f
 	github.com/gobuffalo/uuid v2.0.5+incompatible
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
@@ -54,6 +53,7 @@ require (
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/justinas/nosurf v1.1.1
 	github.com/leodido/go-urn v1.1.0 // indirect
+	github.com/luna-duclos/instrumentedsql/opentracing v0.0.0-20201015064105-f9d01e123f16 // indirect
 	github.com/markbates/pkger v0.17.0
 	github.com/mattn/goveralls v0.0.5
 	github.com/mikefarah/yq v1.15.0
