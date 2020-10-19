@@ -4,11 +4,6 @@
   "title": "ORY Kratos Configuration",
   "type": "object",
   "definitions": {
-    "version": {
-      "type": "string",
-      "description": "SemVer according to https://semver.org/ prefixed with `v` as in our releases.",
-      "pattern": "^v(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
-    },
     "defaultReturnTo": {
       "title": "Redirect browsers to set URL per default",
       "description": "ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).",
@@ -1103,7 +1098,8 @@
           "properties": {
             "domain": {
               "title": "Session Cookie Domain",
-              "description": "Sets the session cookie domain. Useful when dealing with subdomains. Use with care!"
+              "description": "Sets the session cookie domain. Useful when dealing with subdomains. Use with care!",
+              "type": "string"
             },
             "persistent": {
               "title": "Make Session Cookie Persistent",
@@ -1133,13 +1129,12 @@
       }
     },
     "version": {
-      "allOf": [
-        {
-          "title": "The kratos version this config is written for."
-        },
-        {
-          "$ref": "#/definitions/version"
-        }
+      "title": "The kratos version this config is written for.",
+      "description": "SemVer according to https://semver.org/ prefixed with `v` as in our releases.",
+      "type": "string",
+      "pattern": "^v(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
+      "examples": [
+        "v0.5.0-alpha.1"
       ]
     }
   },
