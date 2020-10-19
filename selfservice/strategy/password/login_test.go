@@ -121,7 +121,7 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("case=should return an error because the request is expired", func(t *testing.T) {
-		viper.Set(configuration.ViperKeySelfServiceLoginRequestLifespan, "10ms")
+		viper.Set(configuration.ViperKeySelfServiceLoginRequestLifespan, "50ms")
 		defer viper.Set(configuration.ViperKeySelfServiceLoginRequestLifespan, "10m")
 
 		values := url.Values{
@@ -134,7 +134,7 @@ func TestCompleteLogin(t *testing.T) {
 			f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false)
 			c := testhelpers.GetLoginFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
 
-			time.Sleep(time.Millisecond * 20)
+			time.Sleep(time.Millisecond * 60)
 			actual, res := testhelpers.LoginMakeRequest(t, true, c, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteGetFlow)
 			assert.NotEqual(t, f.Payload.ID, gjson.Get(actual, "id").String(), "%s", actual)
@@ -146,7 +146,7 @@ func TestCompleteLogin(t *testing.T) {
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false)
 			c := testhelpers.GetLoginFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
 
-			time.Sleep(time.Millisecond * 20)
+			time.Sleep(time.Millisecond * 60)
 			actual, res := testhelpers.LoginMakeRequest(t, false, c, browserClient, values.Encode())
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login-ts")
 			assert.NotEqual(t, f.Payload.ID, gjson.Get(actual, "id").String(), "%s", actual)
