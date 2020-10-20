@@ -1,0 +1,10 @@
+version: '3.7'
+
+services:
+  kratos-migrate:
+    environment:
+      - LOG_LEVEL=trace
+
+  kratos:
+    environment:
+      - LOG_LEVEL=trace
