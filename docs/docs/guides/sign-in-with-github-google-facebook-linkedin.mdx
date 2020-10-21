@@ -59,9 +59,11 @@ configuration file (explained in further detail at
 
 Discord does not implement OpenID Connect. Therefore, ORY Kratos makes a request to
 [Discord's User API](https://discord.com/developers/docs/resources/user#get-current-user)
-and adds the following claims to `std.extVar('claims')`:
+and adds that data to `std.extVar('claims')`.
+However, not all fields are supported. Check the list of supported fields
+[in Kratos' source code](https://github.com/ory/kratos/blob/v0.5.1-alpha.1/selfservice/strategy/oidc/provider_discord.go#L81-L91).
 
-With scope `identify`:
+The `identify` scope will add following fields:
 
 ```text
 iss                 # always https://discord.com/api/v6/oauth2/
@@ -73,11 +75,10 @@ picture             # avatar url
 locale              # user locale
 ```
 
-With Scope `email`:
+Additionally, the `email` scope will add:
 
 ```text
-iss                 # always https://discord.com/api/v6/oauth2/
-email               # email
+email               # user email
 email_verified      # whether email is verified
 ```
 
