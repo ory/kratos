@@ -57,6 +57,7 @@ type (
 		StrategyProvider
 
 		IdentityTraitsSchemas() schema.Schemas
+		x.CSRFProvider
 	}
 	HandlerProvider interface {
 		SettingsHandler() *Handler
@@ -73,6 +74,8 @@ func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
+	h.d.CSRFHandler().ExemptPath(RouteInitAPIFlow)
+
 	redirect := session.RedirectOnUnauthenticated(h.c.SelfServiceFlowLoginUI().String())
 	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsAuthenticated(h.initBrowserFlow, redirect))
 	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsAuthenticated(h.initApiFlow, nil))

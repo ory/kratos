@@ -36,6 +36,7 @@ type (
 		FlowPersistenceProvider
 		ErrorHandlerProvider
 		StrategyProvider
+		x.CSRFProvider
 	}
 	Handler struct {
 		d handlerDependencies
@@ -48,6 +49,8 @@ func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
+	h.d.CSRFHandler().ExemptPath(RouteInitAPIFlow)
+
 	public.GET(RouteInitBrowserFlow, h.initBrowserFlow)
 	public.GET(RouteInitAPIFlow, h.initAPIFlow)
 	public.GET(RouteGetFlow, h.fetch)
