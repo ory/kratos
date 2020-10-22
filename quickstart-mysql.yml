@@ -2,12 +2,12 @@ version: '3.7'
 
 services:
   kratos-migrate:
-    image: oryd/kratos:v0.5.1-alpha.1
+    image: oryd/kratos:v0.5.2-alpha.1
     environment:
       - DSN=mysql://root:secret@tcp(mysqld:3306)/mysql?max_conns=20&max_idle_conns=4
 
   kratos:
-    image: oryd/kratos:v0.5.1-alpha.1
+    image: oryd/kratos:v0.5.2-alpha.1
     environment:
       - DSN=mysql://root:secret@tcp(mysqld:3306)/mysql?max_conns=20&max_idle_conns=4
 

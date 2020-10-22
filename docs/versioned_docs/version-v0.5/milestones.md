@@ -25,6 +25,17 @@ New feature or request.
 - [ ] Implement Hydra integration ([kratos#273](https://github.com/ory/kratos/issues/273))
 - [ ] Self-service GDPR identity export ([kratos#658](https://github.com/ory/kratos/issues/658))
 - [ ] Admin/Selfservice session management ([kratos#655](https://github.com/ory/kratos/issues/655))
+- [ ] Double slash in URLs causes CSRF issues ([kratos#779](https://github.com/ory/kratos/issues/779))
+- [ ] Webhook notification based system ([kratos#776](https://github.com/ory/kratos/issues/776))
+- [ ] improve multi schema handling in different auth flows ([kratos#765](https://github.com/ory/kratos/issues/765))
+
+### [Rfc](https://github.com/ory/kratos/labels/rfc)
+
+A request for comments to discuss and share ideas.
+
+#### Issues
+
+- [ ] improve multi schema handling in different auth flows ([kratos#765](https://github.com/ory/kratos/issues/765))
 
 ### [Blocking](https://github.com/ory/kratos/labels/blocking)
 
@@ -47,6 +58,7 @@ Something is not working.
 - [ ] Sending JSON to complete oidc/password strategy flows causes CSRF issues ([kratos#378](https://github.com/ory/kratos/issues/378))
 - [ ] Unmable to use Auth0 as a generic OIDC provider ([kratos#609](https://github.com/ory/kratos/issues/609))
 - [ ] Password reset emails sent twice by each of the two kratos pods in my cluster ([kratos#652](https://github.com/ory/kratos/issues/652))
+- [ ] Investigate why smtps fails but smtp does not ([kratos#781](https://github.com/ory/kratos/issues/781)) - [@hackerman](https://github.com/aeneasr)
 - [x] Building From Source fails ([kratos#711](https://github.com/ory/kratos/issues/711))
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)
