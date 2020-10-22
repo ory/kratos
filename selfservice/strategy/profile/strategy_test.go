@@ -1,8 +1,10 @@
 package profile_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -109,12 +111,48 @@ func TestStrategyTraits(t *testing.T) {
 	})
 
 	t.Run("description=should not fail if CSRF token is invalid/type=api", func(t *testing.T) {
-		rs := testhelpers.InitializeSettingsFlowViaAPI(t, browserUser1, publicTS)
+		rs := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
 		f := testhelpers.GetSettingsFlowMethodConfig(t, rs.Payload, settings.StrategyProfile)
 
-		actual, res := testhelpers.SettingsMakeRequest(t, true, f, browserUser1, `{"traits":{},"csrf_token":"invalid"}`)
+		actual, res := testhelpers.SettingsMakeRequest(t, true, f, apiUser1, `{"traits":{},"csrf_token":"invalid"}`)
 		assert.EqualValues(t, http.StatusBadRequest, res.StatusCode)
 		assert.EqualValues(t, "api", gjson.Get(actual, "type").String())
+	})
+
+	t.Run("case=should fail with correct CSRF error cause/type=api", func(t *testing.T) {
+		for k, tc := range []struct {
+			mod func(http.Header)
+			exp string
+		}{
+			{
+				mod: func(h http.Header) {
+					h.Add("Cookie", "name=bar")
+				},
+				exp: "The HTTP Request Header included the \\\"Cookie\\\" key",
+			},
+			{
+				mod: func(h http.Header) {
+					h.Add("Origin", "www.bar.com")
+				},
+				exp: "The HTTP Request Header included the \\\"Origin\\\" key",
+			},
+		} {
+			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+				f := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
+				c := testhelpers.GetSettingsFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+
+				req := testhelpers.NewRequest(t, true, "POST", pointerx.StringR(c.Action), bytes.NewBufferString(`{"traits":{},"csrf_token":"invalid"}`))
+				tc.mod(req.Header)
+
+				res, err := apiUser1.Do(req)
+				require.NoError(t, err)
+				defer res.Body.Close()
+
+				actual := string(x.MustReadAll(res.Body))
+				assert.EqualValues(t, http.StatusBadRequest, res.StatusCode)
+				assert.Contains(t, actual, tc.exp)
+			})
+		}
 	})
 
 	t.Run("description=hydrate the proper fields", func(t *testing.T) {
