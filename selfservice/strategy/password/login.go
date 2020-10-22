@@ -113,7 +113,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	if err := flow.VerifyRequest(r, ar.Type, s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
-		s.handleLoginError(w, r, ar, &p, x.ErrInvalidCSRFToken)
+		s.handleLoginError(w, r, ar, &p, err)
 		return
 	}
 
