@@ -1,12 +1,16 @@
 package password_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
 	"testing"
+
+	"github.com/ory/x/pointerx"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -222,6 +226,44 @@ func TestSettings(t *testing.T) {
 
 		assert.Contains(t, res.Request.URL.String(), publicTS.URL+password.RouteSettings)
 		assert.NotEmpty(t, gjson.Get(actual, "identity.id").String(), "%s", actual)
+	})
+
+	t.Run("case=should fail with correct CSRF error cause/type=api", func(t *testing.T) {
+		for k, tc := range []struct {
+			mod func(http.Header)
+			exp string
+		}{
+			{
+				mod: func(h http.Header) {
+					h.Add("Cookie", "name=bar")
+				},
+				exp: "The HTTP Request Header included the \\\"Cookie\\\" key",
+			},
+			{
+				mod: func(h http.Header) {
+					h.Add("Origin", "www.bar.com")
+				},
+				exp: "The HTTP Request Header included the \\\"Origin\\\" key",
+			},
+		} {
+			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+				f := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
+				c := testhelpers.GetSettingsFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+				values := testhelpers.SDKFormFieldsToURLValues(c.Fields)
+				values.Set("password", x.NewUUID().String())
+
+				req := testhelpers.NewRequest(t, true, "POST", pointerx.StringR(c.Action), bytes.NewBufferString(testhelpers.EncodeFormAsJSON(t, true, values)))
+				tc.mod(req.Header)
+
+				res, err := apiUser1.Do(req)
+				require.NoError(t, err)
+				defer res.Body.Close()
+
+				actual := string(x.MustReadAll(res.Body))
+				assert.EqualValues(t, http.StatusBadRequest, res.StatusCode)
+				assert.Contains(t, actual, tc.exp)
+			})
+		}
 	})
 
 	var expectSuccess = func(t *testing.T, isAPI bool, hc *http.Client, values func(url.Values)) string {
