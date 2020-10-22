@@ -5,20 +5,22 @@
 **Table of Contents**
 
 - [Unreleased (2020-10-22)](#unreleased-2020-10-22)
+  - [0.5.2-alpha.1 (2020-10-22)](#052-alpha1-2020-10-22)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
+    - [Tests](#tests)
   - [0.5.1-alpha.1 (2020-10-20)](#051-alpha1-2020-10-20)
     - [Bug Fixes](#bug-fixes-1)
     - [Documentation](#documentation-1)
     - [Features](#features)
-    - [Tests](#tests)
+    - [Tests](#tests-1)
     - [Unclassified](#unclassified)
 - [0.5.0-alpha.1 (2020-10-15)](#050-alpha1-2020-10-15)
     - [Bug Fixes](#bug-fixes-2)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation-2)
     - [Features](#features-1)
-    - [Tests](#tests-1)
+    - [Tests](#tests-2)
     - [Unclassified](#unclassified-1)
     - [BREAKING CHANGES](#breaking-changes)
   - [0.4.6-alpha.1 (2020-07-13)](#046-alpha1-2020-07-13)
@@ -111,17 +113,34 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.5.1-alpha.1...6a3c45330885eb95015fa7ee9b58a72c38132499) (2020-10-22)
+# Unreleased (2020-10-22)
+
+No significant changes have been made for this release.
+
+
+## [0.5.2-alpha.1](https://github.com/ory/kratos/compare/v0.5.1-alpha.1...v0.5.2-alpha.1) (2020-10-22)
 
 
 ### Bug Fixes
 
 * Add debug quickstart yml ([#780](https://github.com/ory/kratos/issues/780)) ([16e6b4d](https://github.com/ory/kratos/commit/16e6b4d76d297182ea9a1f5dc6367570f02f7b42))
+* Gracefully handle double slashes in URLs ([aeb9414](https://github.com/ory/kratos/commit/aeb941477910b5ab54429a6aab7a3e1e388c48c5)), closes [#779](https://github.com/ory/kratos/issues/779)
+* Merge gobuffalo CGO fix ([fea2e77](https://github.com/ory/kratos/commit/fea2e77ca0f9b20185c7a7704854fdcf29b7ab33))
+* Remove obsolete recovery_token and add link to schema ([acf6ac4](https://github.com/ory/kratos/commit/acf6ac4e11c755e56c7d40728088257de367f7ff))
+* Return correct error in login csrf ([dd9cab0](https://github.com/ory/kratos/commit/dd9cab0e02400c88e89877f755f03c6179013123)), closes [#785](https://github.com/ory/kratos/issues/785)
+* Use correct assert package ([76be5b0](https://github.com/ory/kratos/commit/76be5b0a5d94c251f5f07eee9f700ec11b341e2e))
 
 
 ### Documentation
 
 * Small improvements to discord oidc provider guide ([#783](https://github.com/ory/kratos/issues/783)) ([6a3c453](https://github.com/ory/kratos/commit/6a3c45330885eb95015fa7ee9b58a72c38132499))
+
+
+### Tests
+
+* Add tests for csrf behavior ([48993e2](https://github.com/ory/kratos/commit/48993e2c496fb8af7e7b9e2752ba7078a134a75a)), closes [#785](https://github.com/ory/kratos/issues/785)
+* Mark link as enabled in e2e test ([c214b81](https://github.com/ory/kratos/commit/c214b81a7026b06aaca062b2aa77951d01b0e237))
+* Resolve schema test regression ([bb7af1b](https://github.com/ory/kratos/commit/bb7af1b759d6c812755956ef872bcbd31b9c50be))
 
 
 
