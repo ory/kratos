@@ -58,6 +58,8 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 		c.SelfPublicURL().Hostname(),
 		!flagx.MustGetBool(cmd, "dev"),
 	)
+
+	n.UseFunc(x.CleanPath) // Prevent double slashes from breaking CSRF.
 	r.WithCSRFHandler(csrf)
 	n.UseHandler(r.CSRFHandler())
 

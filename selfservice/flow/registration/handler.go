@@ -33,6 +33,7 @@ type (
 		x.CSRFTokenGeneratorProvider
 		HookExecutorProvider
 		FlowPersistenceProvider
+		x.CSRFProvider
 	}
 	HandlerProvider interface {
 		RegistrationHandler() *Handler
@@ -48,6 +49,8 @@ func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
+	h.d.CSRFHandler().ExemptPath(RouteInitAPIFlow)
+
 	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsNotAuthenticated(h.initBrowserFlow, session.RedirectOnAuthenticated(h.c)))
 	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsNotAuthenticated(h.initApiFlow,
 		session.RespondWithJSONErrorOnAuthenticated(h.d.Writer(), errors.WithStack(ErrAlreadyLoggedIn))))

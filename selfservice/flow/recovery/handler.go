@@ -36,6 +36,7 @@ type (
 		FlowPersistenceProvider
 		x.CSRFTokenGeneratorProvider
 		x.WriterProvider
+		x.CSRFProvider
 	}
 	Handler struct {
 		d handlerDependencies
@@ -48,6 +49,8 @@ func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
+	h.d.CSRFHandler().ExemptPath(RouteInitAPIFlow)
+
 	redirect := session.RedirectOnAuthenticated(h.c)
 	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsNotAuthenticated(h.initBrowserFlow, redirect))
 	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsNotAuthenticated(h.initAPIFlow,
