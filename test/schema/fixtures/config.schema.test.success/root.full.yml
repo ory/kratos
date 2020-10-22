@@ -46,7 +46,7 @@ selfservice:
   methods:
     profile:
       enabled: true
-    recovery_token:
+    link:
       enabled: true
     password:
       enabled: true
