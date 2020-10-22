@@ -2,6 +2,8 @@ selfservice:
   methods:
     password:
       enabled: true
+    link:
+      enabled: true
 
   flows:
     settings:
