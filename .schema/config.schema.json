@@ -624,13 +624,13 @@
                 }
               }
             },
-            "recovery_token": {
+            "link": {
               "type": "object",
               "additionalProperties": false,
               "properties": {
                 "enabled": {
                   "type": "boolean",
-                  "title": "Enables Token-based Account Recovery Method",
+                  "title": "Enables Link Method",
                   "default": true
                 }
               }
