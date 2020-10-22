@@ -39,7 +39,7 @@ func VerifyRequest(
 		return nil
 	default:
 		if !nosurf.VerifyToken(generator(r), actual) {
-			return x.ErrInvalidCSRFToken
+			return errors.WithStack(x.ErrInvalidCSRFToken)
 		}
 	}
 

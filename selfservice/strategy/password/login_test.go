@@ -1,6 +1,7 @@
 package password_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -178,6 +179,42 @@ func TestCompleteLogin(t *testing.T) {
 			actual, res := testhelpers.LoginMakeRequest(t, true, c, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
 			assert.EqualValues(t, http.StatusBadRequest, res.StatusCode)
 			assert.Contains(t, actual, "provided credentials are invalid")
+		})
+
+		t.Run("case=should fail with correct CSRF error cause/type=api", func(t *testing.T) {
+			for k, tc := range []struct {
+				mod func(http.Header)
+				exp string
+			}{
+				{
+					mod: func(h http.Header) {
+						h.Add("Cookie", "name=bar")
+					},
+					exp: "The HTTP Request Header included the \\\"Cookie\\\" key",
+				},
+				{
+					mod: func(h http.Header) {
+						h.Add("Origin", "www.bar.com")
+					},
+					exp: "The HTTP Request Header included the \\\"Origin\\\" key",
+				},
+			} {
+				t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+					f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false)
+					c := testhelpers.GetLoginFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+
+					req := testhelpers.NewRequest(t, true, "POST", pointerx.StringR(c.Action), bytes.NewBufferString(testhelpers.EncodeFormAsJSON(t, true, values)))
+					tc.mod(req.Header)
+
+					res, err := apiClient.Do(req)
+					require.NoError(t, err)
+					defer res.Body.Close()
+
+					actual := string(x.MustReadAll(res.Body))
+					assert.EqualValues(t, http.StatusBadRequest, res.StatusCode)
+					assert.Contains(t, actual, tc.exp)
+				})
+			}
 		})
 	})
 
