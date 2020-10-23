@@ -5,5 +5,9 @@
   "pluginsFile": "test/e2e/cypress/plugins/index.js",
   "supportFile": "test/e2e/cypress/support/index.js",
   "videosFolder": "test/e2e/cypress/videos",
-  "screenshotsFolder": "test/e2e/cypress/screenshots"
+  "screenshotsFolder": "test/e2e/cypress/screenshots",
+  "retries": {
+    "runMode": 2,
+    "openMode": 1
+  }
 }
