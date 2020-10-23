@@ -198,6 +198,14 @@ func (p *ViperProvider) DSN() string {
 	return ""
 }
 
+func (p *ViperProvider) DisableAPIFlowEnforcement() bool {
+	if p.IsInsecureDevMode() && os.Getenv("DEV_DISABLE_API_FLOW_ENFORCEMENT") == "true" {
+		p.l.Warn("Because \"DEV_DISABLE_API_FLOW_ENFORCEMENT=true\" and the \"--dev\" flag are set, self-service API flows will no longer check if the interaction is actually a browser flow. This is very dangerous as it allows bypassing of anti-CSRF measures, leaving the deployment highly vulnerable. This option should only be used for automated testing and never come close to real user data anywhere.")
+		return true
+	}
+	return false
+}
+
 func (p *ViperProvider) SelfServiceFlowVerificationEnabled() bool {
 	return viperx.GetBool(p.l, ViperKeySelfServiceVerificationEnabled, false)
 }

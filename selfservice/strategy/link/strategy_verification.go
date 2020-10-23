@@ -217,7 +217,7 @@ func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *ht
 		return
 	}
 
-	if err := flow.VerifyRequest(r, f.Type, s.d.GenerateCSRFToken, body.Body.CSRFToken); err != nil {
+	if err := flow.VerifyRequest(r, f.Type, s.c.DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, body.Body.CSRFToken); err != nil {
 		s.handleVerificationError(w, r, f, body, err)
 		return
 	}

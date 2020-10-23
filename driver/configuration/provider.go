@@ -50,6 +50,7 @@ const DefaultIdentityTraitsSchemaID = "default"
 
 type Provider interface {
 	IsInsecureDevMode() bool
+	DisableAPIFlowEnforcement() bool
 
 	DSN() string
 

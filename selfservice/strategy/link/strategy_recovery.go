@@ -419,7 +419,7 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if err := flow.VerifyRequest(r, req.Type, s.d.GenerateCSRFToken, body.Body.CSRFToken); err != nil {
+	if err := flow.VerifyRequest(r, req.Type, s.c.DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, body.Body.CSRFToken); err != nil {
 		s.handleRecoveryError(w, r, req, body, err)
 		return
 	}
