@@ -5,11 +5,10 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/ory/nosurf"
 
 	"github.com/ory/herodot"
-
 	"github.com/ory/kratos/x"
+	"github.com/ory/nosurf"
 )
 
 const RouteGet = "/self-service/errors"

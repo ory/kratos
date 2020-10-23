@@ -4,15 +4,13 @@ import (
 	"encoding/base64"
 	"net/http"
 
-	"github.com/ory/nosurf"
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/randx"
-
-	"github.com/ory/x/logrusx"
-	"github.com/ory/x/stringsx"
-
 	"github.com/ory/herodot"
+	"github.com/ory/nosurf"
+	"github.com/ory/x/logrusx"
+	"github.com/ory/x/randx"
+	"github.com/ory/x/stringsx"
 )
 
 var (
