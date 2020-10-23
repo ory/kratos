@@ -35,7 +35,7 @@ type (
 )
 
 func NewPersister(r persisterDependencies, conf configuration.Provider, c *pop.Connection) (*Persister, error) {
-	m, err := x.NewPkgerMigration(migrations, c, r.Logger())
+	m, err := x.NewPkgerMigration(migrations, c, r)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
