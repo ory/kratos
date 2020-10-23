@@ -29,10 +29,11 @@ import {
   gen,
   KRATOS_ADMIN,
   KRATOS_PUBLIC,
-  MAIL_API,
+  MAIL_API, MOBILE_URL,
   parseHtml,
   pollInterval,
-  privilegedLifespan
+  privilegedLifespan,
+  website
 } from '../helpers'
 
 const mergeFields = (form, fields) => {
@@ -88,6 +89,30 @@ Cypress.Commands.add(
         )
       })
   }
+)
+
+Cypress.Commands.add(
+  'registerApi',
+  ({ email = gen.email(), password = gen.password(), fields = {} } = {}) =>
+    cy
+      .request({
+        url: APP_URL + '/self-service/registration/api'
+      })
+      .then(({ body }) => {
+        const form = body.methods.password.config
+        return cy.request({
+          method: form.method,
+          body: mergeFields(form, {
+            ...fields,
+            'traits.email': email,
+            password
+          }),
+          url: form.action
+        })
+      })
+      .then(({ body }) => {
+        expect(body.identity.traits.email).to.contain(email)
+      })
 )
 
 Cypress.Commands.add(
@@ -197,6 +222,13 @@ Cypress.Commands.add('login', ({ email, password, expectSession = true }) => {
         return cy.noSession()
       }
     })
+})
+
+Cypress.Commands.add('loginMobile', ({ email, password }) => {
+  cy.visit(MOBILE_URL)
+  cy.get('input[data-testid="identifier"]').type(email)
+  cy.get('input[data-testid="password"]').type(password)
+  cy.get('div[data-testid="submit-form"]').click()
 })
 
 Cypress.Commands.add('logout', () => {

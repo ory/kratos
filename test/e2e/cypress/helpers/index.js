@@ -36,6 +36,10 @@ module.exports = {
     /\/$/,
     ''
   ),
+  MOBILE_URL: (Cypress.env('mobile_url') || 'http://127.0.0.1:4457').replace(
+    /\/$/,
+    ''
+  ),
   KRATOS_ADMIN: (Cypress.env('kratos_admin') || 'http://127.0.0.1:4434')
     .replace()
     .replace(/\/$/, ''),
