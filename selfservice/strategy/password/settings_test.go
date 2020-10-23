@@ -99,6 +99,7 @@ func TestSettings(t *testing.T) {
 		t.Run("type=api", func(t *testing.T) {
 			res, err := c.Do(httpx.MustNewRequest("POST", publicTS.URL+profile.RouteSettings, strings.NewReader(`{"foo":"bar"}`), "application/json"))
 			require.NoError(t, err)
+			assert.Len(t, res.Cookies(), 0)
 			defer res.Body.Close()
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode)
 		})

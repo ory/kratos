@@ -115,6 +115,7 @@ func TestStrategyTraits(t *testing.T) {
 		f := testhelpers.GetSettingsFlowMethodConfig(t, rs.Payload, settings.StrategyProfile)
 
 		actual, res := testhelpers.SettingsMakeRequest(t, true, f, apiUser1, `{"traits":{},"csrf_token":"invalid"}`)
+		assert.Len(t, res.Cookies(), 0)
 		assert.EqualValues(t, http.StatusBadRequest, res.StatusCode)
 		assert.EqualValues(t, "api", gjson.Get(actual, "type").String())
 	})
