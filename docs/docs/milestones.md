@@ -25,9 +25,9 @@ New feature or request.
 - [ ] Implement Hydra integration ([kratos#273](https://github.com/ory/kratos/issues/273))
 - [ ] Self-service GDPR identity export ([kratos#658](https://github.com/ory/kratos/issues/658))
 - [ ] Admin/Selfservice session management ([kratos#655](https://github.com/ory/kratos/issues/655))
-- [ ] Double slash in URLs causes CSRF issues ([kratos#779](https://github.com/ory/kratos/issues/779))
 - [ ] Webhook notification based system ([kratos#776](https://github.com/ory/kratos/issues/776))
 - [ ] improve multi schema handling in different auth flows ([kratos#765](https://github.com/ory/kratos/issues/765))
+- [x] Double slash in URLs causes CSRF issues ([kratos#779](https://github.com/ory/kratos/issues/779))
 
 ### [Rfc](https://github.com/ory/kratos/labels/rfc)
 
@@ -127,6 +127,7 @@ Something is not working.
 - [x] Email field type changes on second request for request context during registration flow ([kratos#670](https://github.com/ory/kratos/issues/670))
 - [x] Segmentation fault when running kratos ([kratos#685](https://github.com/ory/kratos/issues/685)) - [@Patrik](https://github.com/zepatrik)
 - [x] Endpoint whoami returns valid session after user logout ([kratos#686](https://github.com/ory/kratos/issues/686)) - [@hackerman](https://github.com/aeneasr)
+- [x] CSRF-detection is broken for Login API flows ([kratos#785](https://github.com/ory/kratos/issues/785)) - [@hackerman](https://github.com/aeneasr)
 
 #### Pull Requests
 
