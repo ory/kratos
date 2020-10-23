@@ -5,6 +5,9 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strings"
+
+	"github.com/ory/x/logrusx"
 
 	"github.com/gobuffalo/pop/v5"
 	"github.com/markbates/pkger"
@@ -15,6 +18,7 @@ import (
 // This will allow you to run migrations from migrations packed
 // inside of a compiled binary.
 type MigrationPkger struct {
+	l *logrusx.Logger
 	pop.Migrator
 	Dir pkger.Dir
 }
@@ -23,10 +27,11 @@ type MigrationPkger struct {
 //
 //	migrations, err := NewPkgerMigration(pkger.Dir("/migrations"))
 //
-func NewPkgerMigration(dir pkger.Dir, c *pop.Connection) (MigrationPkger, error) {
+func NewPkgerMigration(dir pkger.Dir, c *pop.Connection, l *logrusx.Logger) (MigrationPkger, error) {
 	fm := MigrationPkger{
 		Migrator: pop.NewMigrator(c),
 		Dir:      dir,
+		l:        l,
 	}
 
 	runner := func(f io.Reader) func(mf pop.Migration, tx *pop.Connection) error {
@@ -62,6 +67,10 @@ func (fm *MigrationPkger) findMigrations(runner func(f io.Reader) func(mf pop.Mi
 
 		match, err := pop.ParseMigrationFilename(info.Name())
 		if err != nil {
+			if strings.HasPrefix(err.Error(), "unsupported dialect") {
+				fm.l.Debugf("Ignoring migration file because dialect is not supported: %s", err.Error())
+				return nil
+			}
 			return err
 		}
 
