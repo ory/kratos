@@ -99,6 +99,7 @@ func TestRegistration(t *testing.T) {
 				res, err := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg).
 					Do(httpx.MustNewRequest("POST", publicTS.URL+password.RouteRegistration, strings.NewReader(testhelpers.EncodeFormAsJSON(t, true, values)), "application/json"))
 				require.NoError(t, err)
+				assert.Len(t, res.Cookies(), 0)
 				defer res.Body.Close()
 				assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(x.MustReadAll(res.Body), "error").Raw))
 			})

@@ -27,7 +27,8 @@ const (
 )
 
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
-	s.d.CSRFHandler().ExemptPath(RouteLogin)
+	s.d.CSRFHandler().IgnorePath(RouteLogin)
+
 	r.POST(RouteLogin, s.handleLogin)
 }
 

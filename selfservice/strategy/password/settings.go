@@ -28,7 +28,8 @@ const (
 )
 
 func (s *Strategy) RegisterSettingsRoutes(router *x.RouterPublic) {
-	s.d.CSRFHandler().ExemptPath(RouteSettings)
+	s.d.CSRFHandler().IgnorePath(RouteSettings)
+
 	router.POST(RouteSettings, s.submitSettingsFlow)
 	router.GET(RouteSettings, s.submitSettingsFlow)
 }

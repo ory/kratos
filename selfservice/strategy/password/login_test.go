@@ -109,6 +109,7 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("type=api", func(t *testing.T) {
 			actual, res := testhelpers.LoginMakeRequest(t, true, fakeFlow, apiClient, "{}")
+			assert.Len(t, res.Cookies(), 0)
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+password.RouteLogin)
 			check(t, gjson.Get(actual, "error").Raw)
 		})

@@ -82,7 +82,8 @@ func (s *Strategy) SettingsStrategyID() string {
 }
 
 func (s *Strategy) RegisterSettingsRoutes(public *x.RouterPublic) {
-	s.d.CSRFHandler().ExemptPath(RouteSettings)
+	s.d.CSRFHandler().IgnorePath(RouteSettings)
+
 	public.POST(RouteSettings, s.d.SessionHandler().IsAuthenticated(s.handleSubmit, settings.OnUnauthenticated(s.c, s.d)))
 	public.GET(RouteSettings, s.d.SessionHandler().IsAuthenticated(s.handleSubmit, settings.OnUnauthenticated(s.c, s.d)))
 }
