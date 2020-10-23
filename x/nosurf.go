@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"net/http"
 
-	"github.com/justinas/nosurf"
+	"github.com/ory/nosurf"
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/randx"
@@ -62,6 +62,9 @@ func NewFakeCSRFHandler(name string) *FakeCSRFHandler {
 func (f *FakeCSRFHandler) ExemptPath(s string) {
 }
 
+func (f *FakeCSRFHandler) IgnorePath(s string) {
+}
+
 func (f *FakeCSRFHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
@@ -77,6 +80,7 @@ type CSRFHandler interface {
 	http.Handler
 	RegenerateToken(w http.ResponseWriter, r *http.Request) string
 	ExemptPath(string)
+	IgnorePath(string)
 }
 
 func NewCSRFHandler(

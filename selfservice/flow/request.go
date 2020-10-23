@@ -3,7 +3,7 @@ package flow
 import (
 	"net/http"
 
-	"github.com/justinas/nosurf"
+	"github.com/ory/nosurf"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -19,11 +19,16 @@ var ErrCookieHeaderNeedsBrowserFlow = herodot.ErrBadRequest.
 func VerifyRequest(
 	r *http.Request,
 	flowType Type,
+	disableAPIFlowEnforcement bool,
 	generator func(r *http.Request) string,
 	actual string,
 ) error {
 	switch flowType {
 	case TypeAPI:
+		if disableAPIFlowEnforcement {
+			return nil
+		}
+
 		// API Based flows to not require anti-CSRF tokens because we can not leverage a session, making this
 		// endpoint pointless.
 

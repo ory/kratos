@@ -81,6 +81,9 @@ func TestInitFlow(t *testing.T) {
 		}
 		req := x.NewTestHTTPRequest(t, "GET", publicTS.URL+route, nil)
 		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router.Router, req)
+		if isAPI {
+			assert.Len(t, res.Header.Get("Set-Cookie"), 0)
+		}
 		return res, body
 	}
 

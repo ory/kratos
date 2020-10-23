@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/justinas/nosurf"
+	"github.com/ory/nosurf"
 
 	"github.com/ory/herodot"
 

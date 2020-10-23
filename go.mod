@@ -5,9 +5,6 @@ go 1.14
 // See https://github.com/markbates/pkger/pull/112
 replace github.com/markbates/pkger => github.com/falafeljan/pkger v0.17.1-0.20200722132747-95726f5b9b9b
 
-// Remove once https://github.com/justinas/nosurf/pull/62 is merged
-replace github.com/justinas/nosurf => github.com/aeneasr/nosurf v1.1.1-0.20201014095004-b10b0e9ff0d6
-
 replace gopkg.in/DataDog/dd-trace-go.v1 => gopkg.in/DataDog/dd-trace-go.v1 v1.27.1-0.20201005154917-54b73b3e126a
 
 require (
@@ -51,7 +48,6 @@ require (
 	github.com/imdario/mergo v0.3.7
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/julienschmidt/httprouter v1.2.0
-	github.com/justinas/nosurf v1.1.1
 	github.com/leodido/go-urn v1.1.0 // indirect
 	github.com/luna-duclos/instrumentedsql/opentracing v0.0.0-20201015064105-f9d01e123f16 // indirect
 	github.com/markbates/pkger v0.17.0
@@ -69,6 +65,7 @@ require (
 	github.com/ory/herodot v0.9.0
 	github.com/ory/jsonschema/v3 v3.0.1
 	github.com/ory/mail/v3 v3.0.0
+	github.com/ory/nosurf v1.2.2
 	github.com/ory/viper v1.7.5
 	github.com/ory/x v0.0.153
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2

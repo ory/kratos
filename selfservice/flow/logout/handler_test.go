@@ -8,7 +8,7 @@ import (
 
 	"github.com/gobuffalo/httptest"
 	"github.com/julienschmidt/httprouter"
-	"github.com/justinas/nosurf"
+	"github.com/ory/nosurf"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 

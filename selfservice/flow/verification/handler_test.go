@@ -43,9 +43,16 @@ func TestGetFlow(t *testing.T) {
 		}))
 	}
 
-	assertFlowPayload := func(t *testing.T, body []byte) {
+	assertFlowPayload := func(t *testing.T, body []byte, isApi bool) {
+		if isApi {
+			assert.Equal(t, "api", gjson.GetBytes(body, "type").String(), "%s", body)
+			assert.Empty(t, gjson.GetBytes(body, "methods.link.config.fields.#(name==csrf_token).value").String(), "%s", body)
+		} else {
+			assert.Equal(t, "browser", gjson.GetBytes(body, "type").String(), "%s", body)
+			assert.NotEmpty(t, gjson.GetBytes(body, "methods.link.config.fields.#(name==csrf_token).value").String(), "%s", body)
+		}
+
 		assert.Equal(t, "link", gjson.GetBytes(body, "methods.link.method").String(), "%s", body)
-		assert.NotEmpty(t, gjson.GetBytes(body, "methods.link.config.fields.#(name==csrf_token).value").String(), "%s", body)
 		assert.NotEmpty(t, gjson.GetBytes(body, "id").String(), "%s", body)
 		assert.Empty(t, gjson.GetBytes(body, "headers").Value(), "%s", body)
 		assert.Contains(t, gjson.GetBytes(body, "methods.link.config.action").String(), gjson.GetBytes(body, "id").String(), "%s", body)
@@ -76,7 +83,15 @@ func TestGetFlow(t *testing.T) {
 			map[string]interface{}{"enabled": true})
 
 		t.Run("case=valid", func(t *testing.T) {
-			assertFlowPayload(t, x.EasyGetBody(t, endpoint.Client(), public.URL+verification.RouteInitBrowserFlow))
+			t.Run("type=browser", func(t *testing.T) {
+				assertFlowPayload(t, x.EasyGetBody(t, endpoint.Client(), public.URL+verification.RouteInitBrowserFlow), false)
+			})
+
+			t.Run("type=api", func(t *testing.T) {
+				res, body := x.EasyGet(t, endpoint.Client(), public.URL+verification.RouteInitAPIFlow)
+				assert.Len(t, res.Header.Get("Set-Cookie"), 0)
+				assertFlowPayload(t, body, true)
+			})
 		})
 
 		t.Run("case=expired", func(t *testing.T) {
