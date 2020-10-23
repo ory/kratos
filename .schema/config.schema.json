@@ -842,7 +842,8 @@
                   "description": "A list of non simple headers the client is allowed to use with cross-domain requests.",
                   "default": [
                     "Authorization",
-                    "Content-Type"
+                    "Content-Type",
+                    "X-Session-Token"
                   ],
                   "items": {
                     "type": "string"
