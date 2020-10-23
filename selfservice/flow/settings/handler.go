@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/justinas/nosurf"
+	"github.com/ory/nosurf"
 	"github.com/pkg/errors"
 
 	"github.com/ory/x/urlx"
@@ -74,7 +74,7 @@ func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
-	h.d.CSRFHandler().ExemptPath(RouteInitAPIFlow)
+	h.d.CSRFHandler().IgnorePath(RouteInitAPIFlow)
 
 	redirect := session.RedirectOnUnauthenticated(h.c.SelfServiceFlowLoginUI().String())
 	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsAuthenticated(h.initBrowserFlow, redirect))

@@ -49,7 +49,8 @@ func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
-	h.d.CSRFHandler().ExemptPath(RouteInitAPIFlow)
+	h.d.CSRFHandler().IgnorePath(RouteInitAPIFlow)
+
 	public.GET(RouteInitBrowserFlow, h.initBrowserFlow)
 	public.GET(RouteInitAPIFlow, h.initAPIFlow)
 	public.GET(RouteGetFlow, h.fetchFlow)

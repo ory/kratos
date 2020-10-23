@@ -110,6 +110,7 @@ func TestHandler(t *testing.T) {
 				res, err := user1.Get(publicTS.URL + settings.RouteInitAPIFlow)
 				require.NoError(t, err)
 				defer res.Body.Close()
+				assert.Len(t, res.Header.Get("Set-Cookie"), 0)
 				body := x.MustReadAll(res.Body)
 				id := gjson.GetBytes(body, "id")
 				require.NotEmpty(t, id)
