@@ -107,9 +107,11 @@ func TestHandler(t *testing.T) {
 				user1 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
 				user2 := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, reg)
 
+				t.Logf("%+v", user1.Jar)
 				res, err := user1.Get(publicTS.URL + settings.RouteInitAPIFlow)
 				require.NoError(t, err)
 				defer res.Body.Close()
+				t.Logf("%+v", user1.Jar)
 				assert.Len(t, res.Header.Get("Set-Cookie"), 0)
 				body := x.MustReadAll(res.Body)
 				id := gjson.GetBytes(body, "id")
@@ -141,9 +143,12 @@ func TestHandler(t *testing.T) {
 
 		t.Run("description=should fail to post data if CSRF is missing", func(t *testing.T) {
 			f := testhelpers.GetSettingsFlowMethodConfigDeprecated(t, primaryUser, publicTS, settings.StrategyProfile)
-			res, err := primaryUser.PostForm(pointerx.StringR(f.Action), url.Values{})
+			res, err := primaryUser.PostForm(pointerx.StringR(f.Action), url.Values{"foo": {"bar"}})
 			require.NoError(t, err)
-			assert.EqualValues(t, 400, res.StatusCode, "should return a 400 error because CSRF token is not set")
+			defer res.Body.Close()
+			body := x.MustReadAll(res.Body)
+			assert.EqualValues(t, 200, res.StatusCode, "should return a 400 error because CSRF token is not set: %s", body)
+			assert.Contains(t, string(body), "A request failed due to a missing or invalid csrf_token value.")
 		})
 	})
 }

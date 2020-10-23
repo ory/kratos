@@ -180,16 +180,16 @@ func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, ids map[str
 	public, admin := x.NewRouterPublic(), x.NewRouterAdmin()
 	reg.SettingsHandler().RegisterAdminRoutes(admin)
 
+	n := negroni.Classic()
+	n.UseHandler(public)
+	hh := x.NewTestCSRFHandler(n, reg)
+	reg.WithCSRFHandler(hh)
+
 	reg.SettingsHandler().RegisterPublicRoutes(public)
 	reg.SettingsStrategies().RegisterPublicRoutes(public)
 	reg.LoginHandler().RegisterPublicRoutes(public)
 	reg.LoginHandler().RegisterAdminRoutes(admin)
 	reg.LoginStrategies().RegisterPublicRoutes(public)
-
-	n := negroni.Classic()
-	n.UseHandler(public)
-	hh := x.NewTestCSRFHandler(n, reg)
-	reg.WithCSRFHandler(hh)
 
 	tsp, tsa := httptest.NewServer(hh), httptest.NewServer(admin)
 	t.Cleanup(tsp.Close)
