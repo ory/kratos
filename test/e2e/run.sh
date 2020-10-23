@@ -13,6 +13,7 @@ export KRATOS_BROWSER_URL=http://127.0.0.1:4433/
 export KRATOS_ADMIN_URL=http://127.0.0.1:4434/
 export KRATOS_UI_URL=http://127.0.0.1:4456/
 export LOG_LEAK_SENSITIVE_VALUES=true
+export DEV_DISABLE_API_FLOW_ENFORCEMENT=true
 
 if [ -z ${TEST_DATABASE_POSTGRESQL+x} ]; then
   docker rm -f kratos_test_database_mysql kratos_test_database_postgres kratos_test_database_cockroach || true
@@ -28,17 +29,26 @@ fi
 ! nc -zv 127.0.0.1 4434
 ! nc -zv 127.0.0.1 4433
 ! nc -zv 127.0.0.1 4446
-! nc -zv 127.0.0.1 4456
 ! nc -zv 127.0.0.1 4455
+! nc -zv 127.0.0.1 4456
+! nc -zv 127.0.0.1 4457
 
 base=$(pwd)
 
-if [ -z ${KRATOS_APP_PATH+x} ]; then
-  dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-node"
-  git clone git@github.com:ory/kratos-selfservice-ui-node.git "$dir"
-  (cd "$dir"; npm i && npm run build)
+if [ -z ${NODE_UI_PATH+x} ]; then
+  node_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-node"
+  git clone git@github.com:ory/kratos-selfservice-ui-node.git "$node_ui_dir"
+  (cd "$node_ui_dir"; npm i && npm run build)
 else
-  dir="${KRATOS_APP_PATH}"
+  node_ui_dir="${NODE_UI_PATH}"
+fi
+
+if [ -z ${RN_UI_PATH+x} ]; then
+  rn_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-react-native"
+  git clone git@github.com:ory/kratos-selfservice-ui-react-native.git "$rn_ui_dir"
+  (cd "$rn_ui_dir"; npm i)
+else
+  rn_ui_dir="${RN_UI_PATH}"
 fi
 
 (cd test/e2e/proxy; npm i)
@@ -69,11 +79,16 @@ run() {
   killall hydra || true
   killall hydra-login-consent || true
 
+  (cd "$rn_ui_dir"; WEB_PORT=4457 KRATOS_URL=http://127.0.0.1:4433 npm run web \
+   > "${base}/test/e2e/rn-profile-app.e2e.log" 2>&1 &)
+
   DSN=memory URLS_SELF_ISSUER=http://127.0.0.1:4444 \
     LOG_LEVEL=trace \
     URLS_LOGIN=http://127.0.0.1:4446/login \
     URLS_CONSENT=http://127.0.0.1:4446/consent \
     hydra serve all --dangerous-force-http > "${base}/test/e2e/hydra.e2e.log" 2>&1 &
+
+  npm run wait-on -- -t 30000 http-get://127.0.0.1:4445/health/alive
 
   hydra clients create \
     --endpoint http://127.0.0.1:4445 \
@@ -102,11 +117,11 @@ run() {
     --scope openid,offline \
     --callbacks http://127.0.0.1:4455/self-service/methods/oidc/callback/github
 
-  if [ -z ${KRATOS_APP_PATH+x} ]; then
-    (cd "$dir"; PORT=4456 SECURITY_MODE=cookie npm run serve \
+  if [ -z ${NODE_UI_PATH+x} ]; then
+    (cd "$node_ui_dir"; PORT=4456 SECURITY_MODE=cookie npm run serve \
       > "${base}/test/e2e/secureapp.e2e.log" 2>&1 &)
   else
-    (cd "$dir"; PORT=4456 SECURITY_MODE=cookie npm run start \
+    (cd "$node_ui_dir"; PORT=4456 SECURITY_MODE=cookie npm run start \
      > "${base}/test/e2e/secureapp.e2e.log" 2>&1 &)
   fi
 
@@ -125,12 +140,13 @@ run() {
   yq merge test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.generated.yml
   ($kratos serve --dev -c test/e2e/kratos.generated.yml > "${base}/test/e2e/kratos.${profile}.e2e.log" 2>&1 &)
 
-  npm run wait-on -- -t 10000 http-get://127.0.0.1:4434/health/ready \
+  npm run wait-on -- -t 30000 http-get://127.0.0.1:4434/health/ready \
     http-get://127.0.0.1:4455/health \
     http-get://127.0.0.1:4445/health/ready \
     http-get://127.0.0.1:4446/ \
     http-get://127.0.0.1:4455/ \
     http-get://127.0.0.1:4456/ \
+    http-get://127.0.0.1:4457/ \
     http-get://127.0.0.1:4437/mail
 
   if [[ $dev = "yes" ]]; then
@@ -181,10 +197,11 @@ To run e2e tests in dev mode (useful for writing them), run:
     ...
 
 If you are making changes to the kratos-selfservice-ui-node
-project as well, point the 'KRATOS_APP_PATH' environment variable to
+project as well, point the 'NODE_UI_PATH' environment variable to
 the path where the kratos-selfservice-ui-node project is checked out:
 
-  export KRATOS_APP_PATH=$HOME/workspace/kratos-selfservice-ui-node
+  export NODE_UI_PATH=$HOME/workspace/kratos-selfservice-ui-node
+  export RN_UI_PATH=$HOME/workspace/kratos-selfservice-ui-react-native
   $0 ..."
 }
 
@@ -227,4 +244,5 @@ else
   run "${db}" verification
   run "${db}" oidc
   run "${db}" recovery
+  run "${db}" mobile
 fi

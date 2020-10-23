@@ -5,7 +5,7 @@ context('Login Flow Success', () => {
   const password = gen.password()
 
   before(() => {
-    cy.register({ email, password, fields: { 'traits.website': website } })
+    cy.registerApi({ email, password, fields: { 'traits.website': website } })
   })
 
   beforeEach(() => {

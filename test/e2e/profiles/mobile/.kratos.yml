@@ -1,0 +1,27 @@
+serve:
+  public:
+    cors:
+      enabled: true
+      allowed_headers:
+        - Authorization
+        - Content-Type
+        - X-Session-Token
+
+selfservice:
+  flows:
+    settings:
+      privileged_session_max_age: 5000ms
+
+    logout:
+      after:
+        default_browser_return_url: http://127.0.0.1:4455/auth/login
+
+    registration:
+      after:
+        password:
+          hooks:
+            -
+              hook: session
+
+identity:
+  default_schema_url: file://test/e2e/profiles/email/identity.traits.schema.json
