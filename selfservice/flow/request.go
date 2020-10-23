@@ -3,12 +3,11 @@ package flow
 import (
 	"net/http"
 
-	"github.com/ory/nosurf"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
-
 	"github.com/ory/kratos/x"
+	"github.com/ory/nosurf"
 )
 
 var ErrOriginHeaderNeedsBrowserFlow = herodot.ErrBadRequest.
