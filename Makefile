@@ -45,10 +45,10 @@ docs/node_modules: docs/package.json
 		cd docs; npm ci
 
 .bin/golangci-lint: Makefile
-		curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b .bin v1.28.3
+		bash <(curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh) -d -b .bin v1.28.3
 
 .bin/hydra: Makefile
-		bash <(curl https://raw.githubusercontent.com/ory/hydra/master/install.sh) -b .bin v1.7.4
+		bash <(curl https://raw.githubusercontent.com/ory/hydra/master/install.sh) -d -b .bin v1.9.0-alpha.1
 
 .PHONY: docs
 docs: docs/node_modules
