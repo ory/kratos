@@ -183,7 +183,7 @@ To run the tests just pick a database name:
   databases:
 
     make test-resetdb
-    source scripts/test-envs.sh
+    source script/test-envs.sh
     $0 <database>
 
 To run e2e tests in dev mode (useful for writing them), run:
