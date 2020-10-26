@@ -38,7 +38,7 @@ base=$(pwd)
 if [ -z ${NODE_UI_PATH+x} ]; then
   node_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-node"
   git clone git@github.com:ory/kratos-selfservice-ui-node.git "$node_ui_dir"
-  (cd "$node_ui_dir"; npm i && npm run build)
+  (cd "$node_ui_dir" && npm i && npm run build)
 else
   node_ui_dir="${NODE_UI_PATH}"
 fi
@@ -46,7 +46,7 @@ fi
 if [ -z ${RN_UI_PATH+x} ]; then
   rn_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-react-native"
   git clone git@github.com:ory/kratos-selfservice-ui-react-native.git "$rn_ui_dir"
-  (cd "$rn_ui_dir"; npm i)
+  (cd "$rn_ui_dir" && npm i)
 else
   rn_ui_dir="${RN_UI_PATH}"
 fi
@@ -140,12 +140,11 @@ run() {
   yq merge test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.generated.yml
   ($kratos serve --dev -c test/e2e/kratos.generated.yml > "${base}/test/e2e/kratos.${profile}.e2e.log" 2>&1 &)
 
-  npm run wait-on -- -t 1200000 http-get://127.0.0.1:4434/health/ready \
+  npm run wait-on -- -t 30000 http-get://127.0.0.1:4434/health/ready \
     http-get://127.0.0.1:4455/health \
     http-get://127.0.0.1:4445/health/ready \
     http-get://127.0.0.1:4446/ \
-    http-get://127.0.0.1:4455/ \
-    http-get://127.0.0.1:4456/ \
+    http-get://127.0.0.1:4456/health \
     http-get://127.0.0.1:4457/ \
     http-get://127.0.0.1:4437/mail
 
