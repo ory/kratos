@@ -12,7 +12,7 @@
     "wait-on": "wait-on"
   },
   "devDependencies": {
-    "cypress": "5.4.0",
+    "cypress": "5.5.0",
     "ory-prettier-styles": "^1.0.1",
     "prettier": "2.1.2",
     "wait-on": "4.0.2"
