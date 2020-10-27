@@ -20,8 +20,8 @@ module.exports = {
       ]
     },
     {
-      replacer: ({ content, next }) =>
-        content.replace(/(v[0-9a-zA-Z\\.\\-]+)/gi, `${next}`),
+      replacer: ({ content, next, semverRegex }) =>
+        content.replace(semverRegex, `${next}`),
       files: ['docs/docs/install.md', 'docs/docs/quickstart.mdx']
     },
     {
