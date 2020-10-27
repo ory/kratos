@@ -117,6 +117,7 @@ jobs:
           key: go-mod-v1-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
+      - run: sudo npm i -g expo-cli
       - run: ./test/e2e/run.sh << parameters.flavor >>
 
   validate:
