@@ -46,7 +46,7 @@ fi
 if [ -z ${RN_UI_PATH+x} ]; then
   rn_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-react-native"
   git clone git@github.com:ory/kratos-selfservice-ui-react-native.git "$rn_ui_dir"
-  (cd "$rn_ui_dir" && npm i && npm i -g expo-cli)
+  (cd "$rn_ui_dir" && npm i)
 else
   rn_ui_dir="${RN_UI_PATH}"
 fi
