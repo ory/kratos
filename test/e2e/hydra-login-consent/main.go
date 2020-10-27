@@ -157,6 +157,8 @@ func main() {
 		http.Redirect(w, r, *res.Payload.RedirectTo, http.StatusFound)
 	})
 
-	server := &http.Server{Addr: ":" + osx.GetenvDefault("PORT", "4446"), Handler: router}
+	addr := ":" + osx.GetenvDefault("PORT", "4446")
+	server := &http.Server{Addr: addr, Handler: router}
+	fmt.Printf("Starting web server at %s\n", addr)
 	check(server.ListenAndServe())
 }
