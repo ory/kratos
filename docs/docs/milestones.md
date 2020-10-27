@@ -14,6 +14,7 @@ Something is not working.
 #### Issues
 
 - [ ] Do not create system errors on duplicate credentials when linking oidc providers ([kratos#694](https://github.com/ory/kratos/issues/694))
+- [ ] Typescript ErrorContainer type is incorrect ([kratos#782](https://github.com/ory/kratos/issues/782))
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)
 
