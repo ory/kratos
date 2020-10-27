@@ -46,7 +46,7 @@ fi
 if [ -z ${RN_UI_PATH+x} ]; then
   rn_ui_dir="$(mktemp -d -t ci-XXXXXXXXXX)/kratos-selfservice-ui-react-native"
   git clone git@github.com:ory/kratos-selfservice-ui-react-native.git "$rn_ui_dir"
-  (cd "$rn_ui_dir" && npm i)
+  (cd "$rn_ui_dir" && npm i && npm i -g expo-cli)
 else
   rn_ui_dir="${RN_UI_PATH}"
 fi
@@ -79,7 +79,7 @@ run() {
   killall hydra || true
   killall hydra-login-consent || true
 
-  (cd "$rn_ui_dir"; WEB_PORT=4457 KRATOS_URL=http://127.0.0.1:4433 npm run web \
+  (cd "$rn_ui_dir"; WEB_PORT=4457 KRATOS_URL=http://127.0.0.1:4433 npm run web -- --non-interactive \
    > "${base}/test/e2e/rn-profile-app.e2e.log" 2>&1 &)
 
   DSN=memory URLS_SELF_ISSUER=http://127.0.0.1:4444 \
