@@ -5,7 +5,7 @@
 **Table of Contents**
 
 - [Unreleased (2020-10-27)](#unreleased-2020-10-27)
-  - [0.5.3-alpha.1.pre.0 (2020-10-27)](#053-alpha1pre0-2020-10-27)
+  - [0.5.3-alpha.1 (2020-10-27)](#053-alpha1-2020-10-27)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
@@ -123,7 +123,7 @@
 No significant changes have been made for this release.
 
 
-## [0.5.3-alpha.1.pre.0](https://github.com/ory/kratos/compare/v0.5.2-alpha.1...v0.5.3-alpha.1.pre.0) (2020-10-27)
+## [0.5.3-alpha.1](https://github.com/ory/kratos/compare/v0.5.2-alpha.1...v0.5.3-alpha.1) (2020-10-27)
 
 
 ### Bug Fixes
@@ -134,6 +134,7 @@ No significant changes have been made for this release.
 * Ignore unsupported migration dialects ([12bb8d1](https://github.com/ory/kratos/commit/12bb8d14ae1edef18591996411be67d5693e5101)), closes [#778](https://github.com/ory/kratos/issues/778):
 
     > Skips sqlite3 migrations when support is lacking.
+* Improve semver regex ([584c0b5](https://github.com/ory/kratos/commit/584c0b5043e85e88ac2648cf699d60fed3e775a9))
 * Properly set nosurf context even when ignored ([0dcb774](https://github.com/ory/kratos/commit/0dcb774157bcbfd41a5d9df3914c31162226da75))
 * Update cypress ([ba8b172](https://github.com/ory/kratos/commit/ba8b1729477233f79d099e5d7b397430ac1c6ace))
 * Use correct regex for version replacement ([ce870ab](https://github.com/ory/kratos/commit/ce870ababdf089344a9428d3a405e18504a3c906)), closes [#787](https://github.com/ory/kratos/issues/787)
