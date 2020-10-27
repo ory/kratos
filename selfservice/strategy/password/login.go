@@ -3,6 +3,7 @@ package password
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/ory/x/pkgerx"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
@@ -107,7 +108,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	var p CompleteSelfServiceLoginFlowWithPasswordMethod
-	if err := s.hd.Decode(r, &p, decoderx.MustHTTPRawJSONSchemaCompiler(x.MustPkgerRead(
+	if err := s.hd.Decode(r, &p, decoderx.MustHTTPRawJSONSchemaCompiler(pkgerx.MustRead(
 		pkger.Open("/selfservice/strategy/password/.schema/login.schema.json")))); err != nil {
 		s.handleLoginError(w, r, ar, &p, err)
 		return

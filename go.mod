@@ -50,7 +50,7 @@ require (
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/leodido/go-urn v1.1.0 // indirect
 	github.com/luna-duclos/instrumentedsql/opentracing v0.0.0-20201015064105-f9d01e123f16 // indirect
-	github.com/markbates/pkger v0.17.0
+	github.com/markbates/pkger v0.17.1
 	github.com/mattn/goveralls v0.0.5
 	github.com/mikefarah/yq v1.15.0
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
@@ -67,7 +67,7 @@ require (
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.3
 	github.com/ory/viper v1.7.5
-	github.com/ory/x v0.0.153
+	github.com/ory/x v0.0.158
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.4.0

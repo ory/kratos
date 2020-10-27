@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/x/ioutilx"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
@@ -90,7 +91,7 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, scope *[
 		require.NoError(t, err)
 		defer res.Body.Close()
 
-		body := x.MustReadAll(res.Body)
+		body := ioutilx.MustReadAll(res.Body)
 		require.Equal(t, http.StatusOK, res.StatusCode, "%s", body)
 
 		var response struct {

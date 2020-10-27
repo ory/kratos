@@ -96,6 +96,8 @@ func NewCSRFHandler(
 		Domain:   domain,
 		HttpOnly: true,
 		Secure:   secure,
+		// SameSiteNoneMode is set because
+		SameSite: http.SameSiteNoneMode,
 	})
 	n.SetFailureHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		logger.

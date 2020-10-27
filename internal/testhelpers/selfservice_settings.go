@@ -4,6 +4,7 @@ package testhelpers
 import (
 	"bytes"
 	"context"
+	"github.com/ory/x/ioutilx"
 	"net/http"
 	"net/url"
 	"strings"
@@ -238,7 +239,7 @@ func SettingsMakeRequest(
 	require.NoError(t, err)
 	defer res.Body.Close()
 
-	return string(x.MustReadAll(res.Body)), res
+	return string(ioutilx.MustReadAll(res.Body)), res
 }
 
 // SubmitSettingsForm initiates a settings flow (for Browser and API!), fills out the form and modifies

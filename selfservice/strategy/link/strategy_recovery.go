@@ -1,6 +1,7 @@
 package link
 
 import (
+	"github.com/ory/x/pkgerx"
 	"net/http"
 	"net/url"
 	"time"
@@ -486,7 +487,7 @@ func (s *Strategy) decodeRecovery(r *http.Request, decodeBody bool) (*completeSe
 	if decodeBody {
 		if err := s.dx.Decode(r, &body,
 			decoderx.MustHTTPRawJSONSchemaCompiler(
-				x.MustPkgerRead(pkger.Open("/selfservice/strategy/link/.schema/email.schema.json")),
+				pkgerx.MustRead(pkger.Open("/selfservice/strategy/link/.schema/email.schema.json")),
 			),
 			decoderx.HTTPDecoderSetValidatePayloads(false),
 			decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {

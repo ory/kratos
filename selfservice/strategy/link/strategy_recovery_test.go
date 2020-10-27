@@ -3,6 +3,7 @@ package link_test
 import (
 	"context"
 	"encoding/json"
+	"github.com/ory/x/ioutilx"
 	"net/http"
 	"net/url"
 	"testing"
@@ -251,7 +252,7 @@ func TestRecovery(t *testing.T) {
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowSettingsUI().String())
 
-			body := x.MustReadAll(res.Body)
+			body := ioutilx.MustReadAll(res.Body)
 			assert.Equal(t, text.NewRecoverySuccessful(time.Now().Add(time.Hour)).Text,
 				gjson.GetBytes(body, "messages.0.text").String())
 		}
