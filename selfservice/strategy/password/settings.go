@@ -2,6 +2,7 @@ package password
 
 import (
 	"encoding/json"
+	"github.com/ory/x/pkgerx"
 	"net/http"
 	"net/url"
 	"time"
@@ -139,7 +140,7 @@ func (s *Strategy) submitSettingsFlow(w http.ResponseWriter, r *http.Request, ps
 }
 
 func (s *Strategy) decodeSettingsFlow(r *http.Request, dest interface{}) error {
-	compiler, err := decoderx.HTTPRawJSONSchemaCompiler(x.MustPkgerRead(pkger.Open("/selfservice/strategy/password/.schema/settings.schema.json")))
+	compiler, err := decoderx.HTTPRawJSONSchemaCompiler(pkgerx.MustRead(pkger.Open("/selfservice/strategy/password/.schema/settings.schema.json")))
 	if err != nil {
 		return errors.WithStack(err)
 	}

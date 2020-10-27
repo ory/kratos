@@ -1,9 +1,8 @@
 package driver
 
 import (
-	"net/url"
-
 	"github.com/ory/kratos/schema"
+	"net/url"
 )
 
 func (m *RegistryDefault) IdentityTraitsSchemas() schema.Schemas {

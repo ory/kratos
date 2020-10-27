@@ -2,6 +2,7 @@ package settings_test
 
 import (
 	"context"
+	"github.com/ory/x/ioutilx"
 	"net/http"
 	"net/url"
 	"testing"
@@ -113,7 +114,7 @@ func TestHandler(t *testing.T) {
 				defer res.Body.Close()
 				t.Logf("%+v", user1.Jar)
 				assert.Len(t, res.Header.Get("Set-Cookie"), 0)
-				body := x.MustReadAll(res.Body)
+				body := ioutilx.MustReadAll(res.Body)
 				id := gjson.GetBytes(body, "id")
 				require.NotEmpty(t, id)
 
@@ -121,7 +122,7 @@ func TestHandler(t *testing.T) {
 				require.NoError(t, err)
 				defer res.Body.Close()
 				require.EqualValues(t, res.StatusCode, http.StatusForbidden)
-				body = x.MustReadAll(res.Body)
+				body = ioutilx.MustReadAll(res.Body)
 				assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), "Access privileges are missing", "%s", body)
 			})
 
@@ -146,7 +147,7 @@ func TestHandler(t *testing.T) {
 			res, err := primaryUser.PostForm(pointerx.StringR(f.Action), url.Values{"foo": {"bar"}})
 			require.NoError(t, err)
 			defer res.Body.Close()
-			body := x.MustReadAll(res.Body)
+			body := ioutilx.MustReadAll(res.Body)
 			assert.EqualValues(t, 200, res.StatusCode, "should return a 400 error because CSRF token is not set: %s", body)
 			assert.Contains(t, string(body), "A request failed due to a missing or invalid csrf_token value.")
 		})

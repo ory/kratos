@@ -2,6 +2,7 @@ package testhelpers
 
 import (
 	"bytes"
+	"github.com/ory/x/ioutilx"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -97,7 +98,7 @@ func LoginMakeRequest(
 	require.NoError(t, err)
 	defer res.Body.Close()
 
-	return string(x.MustReadAll(res.Body)), res
+	return string(ioutilx.MustReadAll(res.Body)), res
 }
 
 // SubmitLoginForm initiates a login flow (for Browser and API!), fills out the form and modifies

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/x/ioutilx"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -211,7 +212,7 @@ func TestCompleteLogin(t *testing.T) {
 					require.NoError(t, err)
 					defer res.Body.Close()
 
-					actual := string(x.MustReadAll(res.Body))
+					actual := string(ioutilx.MustReadAll(res.Body))
 					assert.EqualValues(t, http.StatusBadRequest, res.StatusCode)
 					assert.Contains(t, actual, tc.exp)
 				})
@@ -423,7 +424,7 @@ func TestCompleteLogin(t *testing.T) {
 					res, err := c.Do(testhelpers.NewHTTPGetJSONRequest(t, publicTS.URL+login.RouteInitAPIFlow))
 					require.NoError(t, err)
 					defer res.Body.Close()
-					body := x.MustReadAll(res.Body)
+					body := ioutilx.MustReadAll(res.Body)
 
 					require.EqualValues(t, http.StatusBadRequest, res.StatusCode)
 					assertx.EqualAsJSON(t, login.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
@@ -433,7 +434,7 @@ func TestCompleteLogin(t *testing.T) {
 					res, err := c.Do(testhelpers.NewHTTPGetJSONRequest(t, publicTS.URL+login.RouteInitAPIFlow+"?refresh=true"))
 					require.NoError(t, err)
 					defer res.Body.Close()
-					body := x.MustReadAll(res.Body)
+					body := ioutilx.MustReadAll(res.Body)
 
 					assert.True(t, gjson.GetBytes(body, "forced").Bool())
 					assert.Equal(t, identifier, gjson.GetBytes(body, "methods.password.config.fields.#(name==identifier).value").String(), "%s", body)
