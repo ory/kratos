@@ -120,7 +120,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.5.3-alpha.1...ad542ad5919205ac26a757145474e5a46f3937ec) (2020-10-28)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.5.3-alpha.1...a4de29399e4f1b5d0a33acc85478f2d38579a174) (2020-10-28)
 
 
 ### Bug Fixes
@@ -133,6 +133,7 @@
 ### Documentation
 
 * Fix broken links ([#795](https://github.com/ory/kratos/issues/795)) ([0ab0e7e](https://github.com/ory/kratos/commit/0ab0e7eca8e95d6c26d028c177cbbd1f06b68871)), closes [#793](https://github.com/ory/kratos/issues/793)
+* Use correct links ([#797](https://github.com/ory/kratos/issues/797)) ([a4de293](https://github.com/ory/kratos/commit/a4de29399e4f1b5d0a33acc85478f2d38579a174))
 
 
 
