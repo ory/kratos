@@ -1,5 +1,5 @@
 ---
-id: identity-user-model
+id: identity-data-model
 title: Identity Data Model
 ---
 
