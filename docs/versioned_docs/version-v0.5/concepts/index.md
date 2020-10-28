@@ -271,7 +271,7 @@ system:
   attached to the profile.
 
 ORY Kratos implements both scenarios by using
-[JSON Schemas for Identities](./identity-user-model)
+[JSON Schemas for Identities](./identity-user-model.mdx)
 
 ### Forget passport-js, oidc-client, ...
 
@@ -280,5 +280,5 @@ Open Source provides a base solution for many use cases. For example, ORY Kratos
 integrates with ORY Oathkeeper, a Reverse Proxy solution. Defining Access Rules
 is as easy as writing a few lines of JSON / JSON5 / YAML!
 
-Please consult the [Quickstart documentation](../quickstart), for further
+Please consult the [Quickstart documentation](../quickstart.mdx), for further
 information.
