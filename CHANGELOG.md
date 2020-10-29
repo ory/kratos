@@ -120,7 +120,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.5.3-alpha.1...8a4f480121995d9899668f037382086fcdd2da4c) (2020-10-29)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.5.3-alpha.1...15bae9f893c2e2910167326d987455246c110001) (2020-10-29)
 
 
 ### Bug Fixes
@@ -133,7 +133,9 @@
 
 ### Documentation
 
+* Fix another broken link ([15bae9f](https://github.com/ory/kratos/commit/15bae9f893c2e2910167326d987455246c110001))
 * Fix broken links ([#795](https://github.com/ory/kratos/issues/795)) ([0ab0e7e](https://github.com/ory/kratos/commit/0ab0e7eca8e95d6c26d028c177cbbd1f06b68871)), closes [#793](https://github.com/ory/kratos/issues/793)
+* Fix links ([#800](https://github.com/ory/kratos/issues/800)) ([5fcc272](https://github.com/ory/kratos/commit/5fcc272e625de9e583b2ec24d5679895a6d24c1b))
 * Fix oidc config examples ([#799](https://github.com/ory/kratos/issues/799)) ([8a4f480](https://github.com/ory/kratos/commit/8a4f480121995d9899668f037382086fcdd2da4c))
 * Use correct links ([#797](https://github.com/ory/kratos/issues/797)) ([a4de293](https://github.com/ory/kratos/commit/a4de29399e4f1b5d0a33acc85478f2d38579a174))
 
