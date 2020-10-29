@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-10-28)](#unreleased-2020-10-28)
+- [Unreleased (2020-10-29)](#unreleased-2020-10-29)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
   - [0.5.3-alpha.1 (2020-10-27)](#053-alpha1-2020-10-27)
@@ -120,11 +120,12 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.5.3-alpha.1...a4de29399e4f1b5d0a33acc85478f2d38579a174) (2020-10-28)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.5.3-alpha.1...8a4f480121995d9899668f037382086fcdd2da4c) (2020-10-29)
 
 
 ### Bug Fixes
 
+* Case in settings handler method ([#798](https://github.com/ory/kratos/issues/798)) ([83eb4e0](https://github.com/ory/kratos/commit/83eb4e0021621014d2b543e57a01401381f07fe4))
 * Force brew install statement ([#796](https://github.com/ory/kratos/issues/796)) ([ad542ad](https://github.com/ory/kratos/commit/ad542ad5919205ac26a757145474e5a46f3937ec)):
 
     > Closes https://github.com/ory/homebrew-kratos/issues/1
@@ -133,6 +134,7 @@
 ### Documentation
 
 * Fix broken links ([#795](https://github.com/ory/kratos/issues/795)) ([0ab0e7e](https://github.com/ory/kratos/commit/0ab0e7eca8e95d6c26d028c177cbbd1f06b68871)), closes [#793](https://github.com/ory/kratos/issues/793)
+* Fix oidc config examples ([#799](https://github.com/ory/kratos/issues/799)) ([8a4f480](https://github.com/ory/kratos/commit/8a4f480121995d9899668f037382086fcdd2da4c))
 * Use correct links ([#797](https://github.com/ory/kratos/issues/797)) ([a4de293](https://github.com/ory/kratos/commit/a4de29399e4f1b5d0a33acc85478f2d38579a174))
 
 
