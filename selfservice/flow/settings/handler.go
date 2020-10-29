@@ -77,7 +77,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsAuthenticated(h.initBrowserFlow, redirect))
 	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsAuthenticated(h.initApiFlow, nil))
 
-	public.GET(RouteGetFlow, h.d.SessionHandler().IsAuthenticated(h.fetchPublicFLow, OnUnauthenticated(h.c, h.d)))
+	public.GET(RouteGetFlow, h.d.SessionHandler().IsAuthenticated(h.fetchPublicFlow, OnUnauthenticated(h.c, h.d)))
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -228,7 +228,7 @@ type getSelfServiceSettingsFlowParameters struct {
 //       404: genericError
 //       410: genericError
 //       500: genericError
-func (h *Handler) fetchPublicFLow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) fetchPublicFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := h.fetchFlow(w, r, true); err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
