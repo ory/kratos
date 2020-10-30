@@ -145,7 +145,6 @@ New feature or request.
 #### Issues
 
 - [ ] Implement React SPA sample app ([kratos#668](https://github.com/ory/kratos/issues/668)) - [@hackerman](https://github.com/aeneasr)
-- [ ] Implement React Native sample application consuming API ([kratos#667](https://github.com/ory/kratos/issues/667)) - [@hackerman](https://github.com/aeneasr)
 - [ ] Rename strategy to method in internal APIs and Documentation ([kratos#683](https://github.com/ory/kratos/issues/683)) - [@hackerman](https://github.com/aeneasr)
 - [x] Implement JSON capabilities in ErrorHandler ([kratos#61](https://github.com/ory/kratos/issues/61)) - [@hackerman](https://github.com/aeneasr)
 - [x] Allow attaching credentials to identities in CRUD create ([kratos#200](https://github.com/ory/kratos/issues/200))
@@ -159,6 +158,7 @@ New feature or request.
 - [x] Implement a test-error for implementing the Error UI ([kratos#610](https://github.com/ory/kratos/issues/610))
 - [x] Design of the client cli ([kratos#663](https://github.com/ory/kratos/issues/663)) - [@Patrik](https://github.com/zepatrik)
 - [x] Rename `request_lifespan` to `lifespan` ([kratos#666](https://github.com/ory/kratos/issues/666)) - [@hackerman](https://github.com/aeneasr)
+- [x] Implement React Native sample application consuming API ([kratos#667](https://github.com/ory/kratos/issues/667)) - [@hackerman](https://github.com/aeneasr)
 - [x] Configurable CORS headers ([kratos#712](https://github.com/ory/kratos/issues/712)) - [@hackerman](https://github.com/aeneasr)
 
 #### Pull Requests
