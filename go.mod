@@ -14,10 +14,12 @@ require (
 	github.com/armon/go-metrics v0.3.3 // indirect
 	github.com/bwmarrin/discordgo v0.22.0
 	github.com/bxcodec/faker/v3 v3.3.1
+	github.com/c2h5oh/datasize v0.0.0-20200825124411-48ed595a09d2
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/davidrjonas/semver-cli v0.0.0-20190116233701-ee19a9a0dda6
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/fatih/color v1.9.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/errors v0.19.6

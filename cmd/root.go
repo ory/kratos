@@ -3,7 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"github.com/ory/kratos/cmd/argon2"
+	"github.com/ory/kratos/cmd/hashers"
 	"os"
 
 	"github.com/ory/kratos/cmd/remote"
@@ -44,7 +44,7 @@ func init() {
 	serve.RegisterCommandRecursive(rootCmd)
 	migrate.RegisterCommandRecursive(rootCmd)
 	remote.RegisterCommandRecursive(rootCmd)
-	argon2.RegisterCommandRecursive(rootCmd)
+	hashers.RegisterCommandRecursive(rootCmd)
 
 	rootCmd.AddCommand(cmdx.Version(&clihelpers.BuildVersion, &clihelpers.BuildGitHash, &clihelpers.BuildTime))
 }
