@@ -31,7 +31,7 @@ kratos hashers argon2 calibrate [<desired-duration>] [flags]
   -h, --help                      help for calibrate
       --key-length uint32         length of the key in bytes (default 32)
       --max-memory string         maximum memory allowed (default no limit)
-      --parallelism uint8         number of threads to use (default 8)
+      --parallelism uint8         number of threads to use (default 72)
   -r, --probe-runs int            runs per probe, median of all runs is taken as the result (default 2)
       --salt-length uint32        length of the salt in bytes (default 16)
   -i, --start-iterations uint32   number of iterations to start probing at (default 1)
