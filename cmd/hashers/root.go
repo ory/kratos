@@ -7,6 +7,7 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use: "hashers",
+	Short: "This command contains helpers around hashing.",
 }
 
 func RegisterCommandRecursive(parent *cobra.Command) {

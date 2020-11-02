@@ -60,6 +60,12 @@ When choosing the desired time, UX is in conflict with security. Security should
 			verbose := flagx.MustGetBool(cmd, FlagVerbose)
 			runs := flagx.MustGetInt(cmd, FlagRuns)
 
+			config, err := configFromFlags(cmd)
+			if err != nil {
+				return err
+			}
+			hasher := hash.NewHasherArgon2(config)
+
 			var maxMemory, adjustMemory datasize.ByteSize
 			if err := maxMemory.UnmarshalText([]byte(flagx.MustGetString(cmd, FlagMaxMemory))); err != nil {
 				return err
@@ -67,15 +73,6 @@ When choosing the desired time, UX is in conflict with security. Security should
 			if err := adjustMemory.UnmarshalText([]byte(flagx.MustGetString(cmd, FlagAdjustMemory))); err != nil {
 				return err
 			}
-			if adjustMemory == 0 {
-				adjustMemory = 1 * datasize.GB
-			}
-
-			config, err := configFromFlags(cmd)
-			if err != nil {
-				return err
-			}
-			hasher := hash.NewHasherArgon2(config)
 
 			var currentDuration time.Duration
 
@@ -101,6 +98,10 @@ When choosing the desired time, UX is in conflict with security. Security should
 				}
 
 				if currentDuration > desiredDuration {
+					if config.c.Memory <= toKB(adjustMemory) {
+						// adjusting the memory would now result in <= 0B
+						adjustMemory = adjustMemory >> 1
+					}
 					config.c.Memory -= toKB(adjustMemory)
 					break
 				}
@@ -124,6 +125,10 @@ When choosing the desired time, UX is in conflict with security. Security should
 				if currentDuration < desiredDuration {
 					break
 				}
+				if config.c.Memory <= toKB(adjustMemory) {
+					// adjusting the memory would now result in <= 0B
+					adjustMemory = adjustMemory >> 1
+				}
 				// adjust config
 				config.c.Memory -= toKB(adjustMemory)
 			}
@@ -141,6 +146,7 @@ When choosing the desired time, UX is in conflict with security. Security should
 				}
 
 				if currentDuration > desiredDuration {
+					config.c.Iterations -= 1
 					break
 				}
 				// adjust config

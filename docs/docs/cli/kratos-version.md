@@ -1,7 +1,7 @@
 ---
-id: kratos-jsonnet
-title: kratos jsonnet
-description: kratos jsonnet Helpers for linting and formatting JSONNet code
+id: kratos-version
+title: kratos version
+description: kratos version Show the build version, build time, and git hash
 ---
 
 <!--
@@ -10,18 +10,22 @@ This file is auto-generated.
 To improve this file please make your change against the appropriate "./cmd/*.go" file.
 -->
 
-## kratos jsonnet
+## kratos version
 
-Helpers for linting and formatting JSONNet code
+Show the build version, build time, and git hash
 
 ### Synopsis
 
-Helpers for linting and formatting JSONNet code
+Show the build version, build time, and git hash
+
+```
+kratos version [flags]
+```
 
 ### Options
 
 ```
-  -h, --help   help for jsonnet
+  -h, --help   help for version
 ```
 
 ### Options inherited from parent commands
@@ -33,5 +37,3 @@ Helpers for linting and formatting JSONNet code
 ### SEE ALSO
 
 - [kratos](kratos) -
-- [kratos jsonnet format](kratos-jsonnet-format) -
-- [kratos jsonnet lint](kratos-jsonnet-lint) -
