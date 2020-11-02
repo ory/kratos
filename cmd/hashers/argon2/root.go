@@ -9,5 +9,5 @@ var rootCmd = &cobra.Command{
 func RegisterCommandRecursive(parent *cobra.Command) {
 	parent.AddCommand(rootCmd)
 
-	rootCmd.AddCommand(newCalibrateCmd(nil))
+	rootCmd.AddCommand(newCalibrateCmd())
 }

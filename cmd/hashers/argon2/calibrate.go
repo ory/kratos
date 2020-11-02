@@ -18,7 +18,6 @@ type (
 	argon2Config struct {
 		c configuration.HasherArgon2Config
 	}
-	probeFunc func(cmd *cobra.Command, hasher hash.Hasher, runs int, verbose bool) (time.Duration, error)
 )
 
 func (c *argon2Config) HasherArgon2() *configuration.HasherArgon2Config {
@@ -42,11 +41,13 @@ const (
 	FlagRuns    = "probe-runs"
 )
 
-func newCalibrateCmd(prober probeFunc) *cobra.Command {
+var resultColor = color.New(color.FgGreen)
+
+func newCalibrateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "calibrate [<desired-duration>]",
 		Args:  cobra.ExactArgs(1),
-		Short: "Calibrate the values for Argon2 so every hashing operation takes the desired time.",
+		Short: "Calibrate the values for Argon2 so the hashing operation takes the desired time.",
 		Long: `Calibrate the configuration values for Argon2 by probing the execution time.
 Note that the values depend on the machine you run the hashing on.
 When choosing the desired time, UX is in conflict with security. Security should really win out here, therefore we recommend 1s.
@@ -70,17 +71,11 @@ When choosing the desired time, UX is in conflict with security. Security should
 				adjustMemory = 1 * datasize.GB
 			}
 
-			resultColor := color.New(color.FgGreen)
-
 			config, err := configFromFlags(cmd)
 			if err != nil {
 				return err
 			}
 			hasher := hash.NewHasherArgon2(config)
-
-			if prober == nil {
-				prober = probe
-			}
 
 			var currentDuration time.Duration
 
@@ -97,7 +92,10 @@ When choosing the desired time, UX is in conflict with security. Security should
 					break
 				}
 
-				currentDuration, err = prober(cmd, hasher, runs, verbose)
+				currentDuration, err = probe(cmd, hasher, runs, verbose)
+				if err != nil {
+					return err
+				}
 				if verbose {
 					fmt.Fprintf(cmd.ErrOrStderr(), "  took %s with %s of memory\n", currentDuration, config.getMemFormat())
 				}
@@ -115,7 +113,10 @@ When choosing the desired time, UX is in conflict with security. Security should
 				fmt.Fprintf(cmd.ErrOrStderr(), "Decreasing memory to get under %s:\n", desiredDuration)
 			}
 			for {
-				currentDuration, err = prober(cmd, hasher, runs, verbose)
+				currentDuration, err = probe(cmd, hasher, runs, verbose)
+				if err != nil {
+					return err
+				}
 				if verbose {
 					fmt.Fprintf(cmd.ErrOrStderr(), "  took %s with %s of memory\n", currentDuration, config.getMemFormat())
 				}
@@ -131,7 +132,10 @@ When choosing the desired time, UX is in conflict with security. Security should
 				fmt.Fprintf(cmd.ErrOrStderr(), "Increasing iterations to get over %s:\n", desiredDuration)
 			}
 			for {
-				currentDuration, err = prober(cmd, hasher, runs, verbose)
+				currentDuration, err = probe(cmd, hasher, runs, verbose)
+				if err != nil {
+					return err
+				}
 				if verbose {
 					fmt.Fprintf(cmd.ErrOrStderr(), "  took %s with %d iterations\n", currentDuration, config.c.Iterations)
 				}
@@ -147,7 +151,10 @@ When choosing the desired time, UX is in conflict with security. Security should
 				fmt.Fprintf(cmd.ErrOrStderr(), "Decreasing iterations to get under %s:\n", desiredDuration)
 			}
 			for {
-				currentDuration, err = prober(cmd, hasher, runs, verbose)
+				currentDuration, err = probe(cmd, hasher, runs, verbose)
+				if err != nil {
+					return err
+				}
 				if verbose {
 					fmt.Fprintf(cmd.ErrOrStderr(), "  took %s with %d iterations\n", currentDuration, config.c.Iterations)
 				}
