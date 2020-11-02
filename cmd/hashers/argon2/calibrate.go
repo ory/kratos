@@ -207,11 +207,11 @@ func probe(cmd *cobra.Command, hasher hash.Hasher, runs int, verbose bool) (time
 			return 0, cmdx.FailSilently(cmd)
 		}
 		if verbose {
-			fmt.Fprintf(cmd.OutOrStdout(), "    took %s in try %d\n", time.Now().Sub(mid), i)
+			fmt.Fprintf(cmd.OutOrStdout(), "    took %s in try %d\n", time.Since(mid), i)
 		}
 	}
 
-	return time.Duration(int64(time.Now().Sub(start)) / int64(runs)), nil
+	return time.Duration(int64(time.Since(start)) / int64(runs)), nil
 }
 
 func registerArgon2Flags(flags *pflag.FlagSet) {
