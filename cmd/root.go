@@ -3,8 +3,9 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"github.com/ory/kratos/cmd/hashers"
 	"os"
+
+	"github.com/ory/kratos/cmd/hashers"
 
 	"github.com/ory/kratos/cmd/remote"
 

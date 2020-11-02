@@ -3,15 +3,17 @@ package argon2
 import (
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/c2h5oh/datasize"
 	"github.com/fatih/color"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/hash"
 	"github.com/ory/x/cmdx"
 	"github.com/ory/x/flagx"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"time"
 )
 
 type (

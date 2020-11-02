@@ -14,7 +14,7 @@ import (
 type HasherArgon2Config struct {
 	Memory      uint32 `json:"memory"`
 	Iterations  uint32 `json:"iterations"`
-	Parallelism uint8 `json:"parallelism"`
+	Parallelism uint8  `json:"parallelism"`
 	SaltLength  uint32 `json:"salt_length"`
 	KeyLength   uint32 `json:"key_length"`
 }

@@ -1,12 +1,13 @@
 package hashers
 
 import (
-	"github.com/ory/kratos/cmd/hashers/argon2"
 	"github.com/spf13/cobra"
+
+	"github.com/ory/kratos/cmd/hashers/argon2"
 )
 
 var rootCmd = &cobra.Command{
-	Use: "hashers",
+	Use:   "hashers",
 	Short: "This command contains helpers around hashing.",
 }
 

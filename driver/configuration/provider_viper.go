@@ -124,12 +124,13 @@ func (p *ViperProvider) SessionPath() string {
 }
 
 const (
-	Argon2DefaultMemory uint32 = 4*1024*1024
+	Argon2DefaultMemory     uint32 = 4 * 1024 * 1024
 	Argon2DefaultIterations uint32 = 4
 	Argon2DefaultSaltLength uint32 = 16
-	Argon2DefaultKeyLength uint32 = 32
+	Argon2DefaultKeyLength  uint32 = 32
 )
-var Argon2DefaultParallelism = uint8(runtime.NumCPU()*2)
+
+var Argon2DefaultParallelism = uint8(runtime.NumCPU() * 2)
 
 func (p *ViperProvider) HasherArgon2() *HasherArgon2Config {
 	return &HasherArgon2Config{

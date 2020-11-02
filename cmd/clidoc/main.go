@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/ory/kratos/cmd"
 	"os"
+
+	"github.com/ory/kratos/cmd"
 
 	"github.com/ory/x/clidoc"
 )
