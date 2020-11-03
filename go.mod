@@ -47,7 +47,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/hashicorp/serf v0.9.2 // indirect
 	github.com/imdario/mergo v0.3.7
-	github.com/inhies/go-bytesize v0.0.0-20200716184324-4fe85e9b81b2
+	github.com/inhies/go-bytesize v0.0.0-20201103132853-d0aed0d254f8
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/leodido/go-urn v1.1.0 // indirect
@@ -89,6 +89,3 @@ require (
 	golang.org/x/tools v0.0.0-20200717024301-6ddee64345a6
 	gopkg.in/go-playground/validator.v9 v9.28.0
 )
-
-// remove when upstream https://github.com/inhies/go-bytesize/pull/5 is merged
-replace github.com/inhies/go-bytesize => github.com/zepatrik/go-bytesize v0.0.0-20201103105500-a6d360e954ad
