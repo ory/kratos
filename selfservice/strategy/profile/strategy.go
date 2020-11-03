@@ -3,6 +3,7 @@ package profile
 import (
 	"context"
 	"encoding/json"
+	"github.com/ory/x/pkgerx"
 	"net/http"
 	"net/url"
 
@@ -332,7 +333,7 @@ func (s *Strategy) newSettingsProfileDecoder(i *identity.Identity) (decoderx.HTT
 	if err != nil {
 		return nil, err
 	}
-	raw, err := sjson.SetBytes(x.MustPkgerRead(pkger.Open(
+	raw, err := sjson.SetBytes(pkgerx.MustRead(pkger.Open(
 		"/selfservice/strategy/password/.schema/settings.schema.json")),
 		"properties.traits.$ref", ss.URL.String()+"#/properties/traits")
 	if err != nil {

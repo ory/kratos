@@ -4,6 +4,7 @@ package testhelpers
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/ory/x/ioutilx"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -129,7 +130,7 @@ func VerificationMakeRequest(
 	require.NoError(t, err)
 	defer res.Body.Close()
 
-	return string(x.MustReadAll(res.Body)), res
+	return string(ioutilx.MustReadAll(res.Body)), res
 }
 
 // SubmitVerificationForm initiates a registration flow (for Browser and API!), fills out the form and modifies

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/x/ioutilx"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -127,7 +128,7 @@ func TestManager(t *testing.T) {
 						require.NoError(t, err)
 						t.Cleanup(func() { require.NoError(t, res.Body.Close()) })
 
-						body := x.MustReadAll(res.Body)
+						body := ioutilx.MustReadAll(res.Body)
 						require.Equal(t, http.StatusBadRequest, res.StatusCode)
 						assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), "resumable session")
 					})
@@ -143,7 +144,7 @@ func TestManager(t *testing.T) {
 						require.NoError(t, err)
 						t.Cleanup(func() { require.NoError(t, res.Body.Close()) })
 
-						body := x.MustReadAll(res.Body)
+						body := ioutilx.MustReadAll(res.Body)
 						if tc.expectedErr != nil {
 							require.Equal(t, http.StatusGone, res.StatusCode, "%s", body)
 							return
@@ -171,7 +172,7 @@ func TestManager(t *testing.T) {
 						res, err = cl.Do(x.NewTestHTTPRequest(t, "GET", href, nil))
 						require.NoError(t, err)
 						require.Equal(t, http.StatusBadRequest, res.StatusCode)
-						body := x.MustReadAll(res.Body)
+						body := ioutilx.MustReadAll(res.Body)
 						t.Cleanup(func() { require.NoError(t, res.Body.Close()) })
 						assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), "resumable session")
 					})
@@ -186,7 +187,7 @@ func TestManager(t *testing.T) {
 						var b bytes.Buffer
 						require.NoError(t, json.NewEncoder(&b).Encode(tc.expected))
 
-						body := x.MustReadAll(res.Body)
+						body := ioutilx.MustReadAll(res.Body)
 						assert.JSONEq(t, b.String(), gjson.GetBytes(body, "payload").Raw, "%s", body)
 						assert.Contains(t, href, gjson.GetBytes(body, "name").String(), "%s", body)
 					})
@@ -208,7 +209,7 @@ func TestManager(t *testing.T) {
 						t.Cleanup(func() { require.NoError(t, res.Body.Close()) })
 
 						require.Equal(t, http.StatusBadRequest, res.StatusCode)
-						body := x.MustReadAll(res.Body)
+						body := ioutilx.MustReadAll(res.Body)
 						assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), "resumable session")
 					})
 				})

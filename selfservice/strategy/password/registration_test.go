@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/x/ioutilx"
 	"net/http"
 	"net/url"
 	"strings"
@@ -101,7 +102,7 @@ func TestRegistration(t *testing.T) {
 				require.NoError(t, err)
 				assert.Len(t, res.Cookies(), 0)
 				defer res.Body.Close()
-				assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(x.MustReadAll(res.Body), "error").Raw))
+				assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(ioutilx.MustReadAll(res.Body), "error").Raw))
 			})
 		})
 
@@ -291,7 +292,7 @@ func TestRegistration(t *testing.T) {
 						require.NoError(t, err)
 						defer res.Body.Close()
 
-						actual := string(x.MustReadAll(res.Body))
+						actual := string(ioutilx.MustReadAll(res.Body))
 						assert.EqualValues(t, http.StatusBadRequest, res.StatusCode)
 						assert.Contains(t, actual, tc.exp)
 					})

@@ -3,14 +3,13 @@ package schema
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/ory/x/pkgerx"
 	"path"
 
 	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
 
 	"github.com/ory/jsonschema/v3"
-
-	"github.com/ory/kratos/x"
 )
 
 var schemas = pkger.Dir("/schema/.schema")
@@ -59,7 +58,7 @@ type (
 
 func NewExtensionRunner(meta ExtensionRunnerMetaSchema, runners ...Extension) (*ExtensionRunner, error) {
 	var err error
-	schema, err := x.PkgerRead(pkger.Open(path.Join(string(schemas), string(meta))))
+	schema, err := pkgerx.Read(pkger.Open(path.Join(string(schemas), string(meta))))
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

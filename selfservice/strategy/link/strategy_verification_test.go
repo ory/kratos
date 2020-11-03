@@ -3,6 +3,7 @@ package link_test
 import (
 	"context"
 	"encoding/json"
+	"github.com/ory/x/ioutilx"
 	"net/http"
 	"net/url"
 	"testing"
@@ -224,7 +225,7 @@ func TestVerification(t *testing.T) {
 
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI().String())
-			body := string(x.MustReadAll(res.Body))
+			body := string(ioutilx.MustReadAll(res.Body))
 			assert.EqualValues(t, "passed_challenge", gjson.Get(body, "state").String())
 
 			id, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), identityToVerify.ID)
