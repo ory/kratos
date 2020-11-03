@@ -7,17 +7,17 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/inhies/go-bytesize"
+	"github.com/spf13/cobra"
+
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/hash"
 	"github.com/ory/x/cmdx"
-	"github.com/spf13/cobra"
 )
 
 type (
 	argon2Config struct {
 		c configuration.HasherArgon2Config
 	}
-	localByteSize bytesize.ByteSize
 )
 
 func (c *argon2Config) HasherArgon2() *configuration.HasherArgon2Config {
@@ -26,18 +26,6 @@ func (c *argon2Config) HasherArgon2() *configuration.HasherArgon2Config {
 
 func (c *argon2Config) getMemFormat() string {
 	return (bytesize.ByteSize(c.c.Memory) * bytesize.KB).String()
-}
-
-func (b *localByteSize) Type() string {
-	return "byte_size"
-}
-
-func (b *localByteSize) Set(v string) error {
-	return (*bytesize.ByteSize)(b).UnmarshalText([]byte(v))
-}
-
-func (b *localByteSize) String() string {
-	return (*bytesize.ByteSize)(b).String()
 }
 
 const (
@@ -57,9 +45,9 @@ var resultColor = color.New(color.FgGreen)
 
 func newCalibrateCmd() *cobra.Command {
 	var (
-		maxMemory, adjustMemory, startMemory localByteSize = 0, localByteSize(bytesize.GB), localByteSize(4 * bytesize.GB)
-		quiet bool
-		runs int
+		maxMemory, adjustMemory, startMemory bytesize.ByteSize = 0, 1 * bytesize.GB, 4 * bytesize.GB
+		quiet                                bool
+		runs                                 int
 	)
 
 	config := &argon2Config{
@@ -225,8 +213,8 @@ Please note that the values depend on the machine you run the hashing on. If you
 	return cmd
 }
 
-func toKB(b localByteSize) uint32 {
-	return uint32(b / localByteSize(bytesize.KB))
+func toKB(b bytesize.ByteSize) uint32 {
+	return uint32(b / bytesize.KB)
 }
 
 func probe(cmd *cobra.Command, hasher hash.Hasher, runs int, quiet bool) (time.Duration, error) {

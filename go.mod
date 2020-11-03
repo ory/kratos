@@ -89,3 +89,6 @@ require (
 	golang.org/x/tools v0.0.0-20200717024301-6ddee64345a6
 	gopkg.in/go-playground/validator.v9 v9.28.0
 )
+
+// remove when upstream https://github.com/inhies/go-bytesize/pull/5 is merged
+replace github.com/inhies/go-bytesize => github.com/zepatrik/go-bytesize v0.0.0-20201103105500-a6d360e954ad
