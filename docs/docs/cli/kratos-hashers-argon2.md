@@ -29,4 +29,4 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 ### SEE ALSO
 
 - [kratos hashers](kratos-hashers) - This command contains helpers around hashing.
-- [kratos hashers argon2 calibrate](kratos-hashers-argon2-calibrate) - Calibrate the values for Argon2 so the hashing operation takes the desired time.
+- [kratos hashers argon2 calibrate](kratos-hashers-argon2-calibrate) - Computes Optimal Argon2 Parameters.
