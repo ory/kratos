@@ -5,21 +5,19 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/c2h5oh/datasize"
 	"github.com/fatih/color"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-
+	"github.com/inhies/go-bytesize"
 	"github.com/ory/kratos/driver/configuration"
 	"github.com/ory/kratos/hash"
 	"github.com/ory/x/cmdx"
-	"github.com/ory/x/flagx"
+	"github.com/spf13/cobra"
 )
 
 type (
 	argon2Config struct {
 		c configuration.HasherArgon2Config
 	}
+	localByteSize bytesize.ByteSize
 )
 
 func (c *argon2Config) HasherArgon2() *configuration.HasherArgon2Config {
@@ -27,7 +25,19 @@ func (c *argon2Config) HasherArgon2() *configuration.HasherArgon2Config {
 }
 
 func (c *argon2Config) getMemFormat() string {
-	return (datasize.ByteSize(c.c.Memory) * datasize.KB).HumanReadable()
+	return (bytesize.ByteSize(c.c.Memory) * bytesize.KB).String()
+}
+
+func (b *localByteSize) Type() string {
+	return "byte_size"
+}
+
+func (b *localByteSize) Set(v string) error {
+	return (*bytesize.ByteSize)(b).UnmarshalText([]byte(v))
+}
+
+func (b *localByteSize) String() string {
+	return (*bytesize.ByteSize)(b).String()
 }
 
 const (
@@ -39,63 +49,64 @@ const (
 	FlagSaltLength      = "salt-length"
 	FlagKeyLength       = "key-length"
 
-	FlagVerbose = "verbose"
-	FlagRuns    = "probe-runs"
+	FlagQuiet = "quiet"
+	FlagRuns  = "probe-runs"
 )
 
 var resultColor = color.New(color.FgGreen)
 
 func newCalibrateCmd() *cobra.Command {
+	var (
+		maxMemory, adjustMemory, startMemory localByteSize = 0, localByteSize(bytesize.GB), localByteSize(4 * bytesize.GB)
+		quiet bool
+		runs int
+	)
+
+	config := &argon2Config{
+		c: configuration.HasherArgon2Config{},
+	}
+
 	cmd := &cobra.Command{
 		Use:   "calibrate [<desired-duration>]",
 		Args:  cobra.ExactArgs(1),
-		Short: "Calibrate the values for Argon2 so the hashing operation takes the desired time.",
-		Long: `Calibrate the configuration values for Argon2 by probing the execution time.
-Note that the values depend on the machine you run the hashing on.
-When choosing the desired time, UX is in conflict with security. Security should really win out here, therefore we recommend 1s.
-`,
+		Short: "Computes Optimal Argon2 Parameters.",
+		Long: `This command helps you calibrate the configuration parameters for Argon2. Password hashing is a trade-off between security, resource consumption, and user experience. Resource consumption should not be too high and the login should not take too long.
+
+We recommend that the login process takes between half a second and one second for password hashing, giving a good balance between security and user experience.
+
+Please note that the values depend on the machine you run the hashing on. If you have RAM constraints please choose lower memory targets to avoid out of memory panics.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			desiredDuration, err := time.ParseDuration(args[0])
 			if err != nil {
 				return err
 			}
-			verbose := flagx.MustGetBool(cmd, FlagVerbose)
-			runs := flagx.MustGetInt(cmd, FlagRuns)
 
-			config, err := configFromFlags(cmd)
-			if err != nil {
-				return err
-			}
+			config.c.Memory = toKB(startMemory)
+
 			hasher := hash.NewHasherArgon2(config)
-
-			var maxMemory, adjustMemory datasize.ByteSize
-			if err := maxMemory.UnmarshalText([]byte(flagx.MustGetString(cmd, FlagMaxMemory))); err != nil {
-				return err
-			}
-			if err := adjustMemory.UnmarshalText([]byte(flagx.MustGetString(cmd, FlagAdjustMemory))); err != nil {
-				return err
-			}
 
 			var currentDuration time.Duration
 
-			if verbose {
+			if !quiet {
 				fmt.Fprintf(cmd.ErrOrStderr(), "Increasing memory to get over %s:\n", desiredDuration)
 			}
+
 			for {
 				if maxMemory != 0 && config.c.Memory > toKB(maxMemory) {
 					// don't further increase memory
-					if verbose {
+					if !quiet {
 						fmt.Fprintln(cmd.ErrOrStderr(), "  ouch, hit the memory limit there")
 					}
 					config.c.Memory = toKB(maxMemory)
 					break
 				}
 
-				currentDuration, err = probe(cmd, hasher, runs, verbose)
+				currentDuration, err = probe(cmd, hasher, runs, quiet)
 				if err != nil {
 					return err
 				}
-				if verbose {
+
+				if !quiet {
 					fmt.Fprintf(cmd.ErrOrStderr(), "  took %s with %s of memory\n", currentDuration, config.getMemFormat())
 				}
 
@@ -112,38 +123,45 @@ When choosing the desired time, UX is in conflict with security. Security should
 				config.c.Memory += toKB(adjustMemory)
 			}
 
-			if verbose {
+			if !quiet {
 				fmt.Fprintf(cmd.ErrOrStderr(), "Decreasing memory to get under %s:\n", desiredDuration)
 			}
+
 			for {
-				currentDuration, err = probe(cmd, hasher, runs, verbose)
+				currentDuration, err = probe(cmd, hasher, runs, quiet)
 				if err != nil {
 					return err
 				}
-				if verbose {
+
+				if !quiet {
 					fmt.Fprintf(cmd.ErrOrStderr(), "  took %s with %s of memory\n", currentDuration, config.getMemFormat())
 				}
 
 				if currentDuration < desiredDuration {
 					break
 				}
+
 				if config.c.Memory <= toKB(adjustMemory) {
 					// adjusting the memory would now result in <= 0B
 					adjustMemory = adjustMemory >> 1
 				}
+
 				// adjust config
 				config.c.Memory -= toKB(adjustMemory)
 			}
-			if verbose {
+
+			if !quiet {
 				_, _ = resultColor.Fprintf(cmd.ErrOrStderr(), "Settled on %s of memory.\n", config.getMemFormat())
 				fmt.Fprintf(cmd.ErrOrStderr(), "Increasing iterations to get over %s:\n", desiredDuration)
 			}
+
 			for {
-				currentDuration, err = probe(cmd, hasher, runs, verbose)
+				currentDuration, err = probe(cmd, hasher, runs, quiet)
 				if err != nil {
 					return err
 				}
-				if verbose {
+
+				if !quiet {
 					fmt.Fprintf(cmd.ErrOrStderr(), "  took %s with %d iterations\n", currentDuration, config.c.Iterations)
 				}
 
@@ -151,19 +169,22 @@ When choosing the desired time, UX is in conflict with security. Security should
 					config.c.Iterations -= 1
 					break
 				}
+
 				// adjust config
 				config.c.Iterations += 1
 			}
 
-			if verbose {
+			if !quiet {
 				fmt.Fprintf(cmd.ErrOrStderr(), "Decreasing iterations to get under %s:\n", desiredDuration)
 			}
+
 			for {
-				currentDuration, err = probe(cmd, hasher, runs, verbose)
+				currentDuration, err = probe(cmd, hasher, runs, quiet)
 				if err != nil {
 					return err
 				}
-				if verbose {
+
+				if !quiet {
 					fmt.Fprintf(cmd.ErrOrStderr(), "  took %s with %d iterations\n", currentDuration, config.c.Iterations)
 				}
 
@@ -171,10 +192,11 @@ When choosing the desired time, UX is in conflict with security. Security should
 				if currentDuration < desiredDuration || config.c.Iterations == 1 {
 					break
 				}
+
 				// adjust config
 				config.c.Iterations -= 1
 			}
-			if verbose {
+			if !quiet {
 				_, _ = resultColor.Fprintf(cmd.ErrOrStderr(), "Settled on %d iterations.\n\n", config.c.Iterations)
 			}
 
@@ -184,18 +206,30 @@ When choosing the desired time, UX is in conflict with security. Security should
 		},
 	}
 
-	registerArgon2Flags(cmd.Flags())
-	cmd.Flags().BoolP(FlagVerbose, "v", false, "verbose output")
-	cmd.Flags().IntP(FlagRuns, "r", 2, "runs per probe, median of all runs is taken as the result")
+	flags := cmd.Flags()
+
+	flags.BoolVarP(&quiet, FlagQuiet, "q", false, "Quiet output.")
+	flags.IntVarP(&runs, FlagRuns, "r", 2, "Runs per probe, median of all runs is taken as the result.")
+
+	flags.VarP(&startMemory, FlagStartMemory, "m", "Amount of memory to start probing at.")
+	flags.Var(&maxMemory, FlagMaxMemory, "Maximum memory allowed (default no limit).")
+	flags.Var(&adjustMemory, FlagAdjustMemory, "Amount by which the memory is adjusted in every step while probing.")
+
+	flags.Uint32VarP(&config.c.Iterations, FlagStartIterations, "i", 1, "Number of iterations to start probing at.")
+
+	flags.Uint8Var(&config.c.Parallelism, FlagParallelism, configuration.Argon2DefaultParallelism, "Number of threads to use.")
+
+	flags.Uint32Var(&config.c.SaltLength, FlagSaltLength, configuration.Argon2DefaultSaltLength, "Length of the salt in bytes.")
+	flags.Uint32Var(&config.c.KeyLength, FlagKeyLength, configuration.Argon2DefaultKeyLength, "Length of the key in bytes.")
 
 	return cmd
 }
 
-func toKB(b datasize.ByteSize) uint32 {
-	return uint32(b / datasize.KB)
+func toKB(b localByteSize) uint32 {
+	return uint32(b / localByteSize(bytesize.KB))
 }
 
-func probe(cmd *cobra.Command, hasher hash.Hasher, runs int, verbose bool) (time.Duration, error) {
+func probe(cmd *cobra.Command, hasher hash.Hasher, runs int, quiet bool) (time.Duration, error) {
 	start := time.Now()
 
 	var mid time.Time
@@ -206,55 +240,10 @@ func probe(cmd *cobra.Command, hasher hash.Hasher, runs int, verbose bool) (time
 			fmt.Fprintf(cmd.ErrOrStderr(), "Could not generate a hash: %s\n", err)
 			return 0, cmdx.FailSilently(cmd)
 		}
-		if verbose {
+		if !quiet {
 			fmt.Fprintf(cmd.OutOrStdout(), "    took %s in try %d\n", time.Since(mid), i)
 		}
 	}
 
 	return time.Duration(int64(time.Since(start)) / int64(runs)), nil
-}
-
-func registerArgon2Flags(flags *pflag.FlagSet) {
-	flags.StringP(FlagStartMemory, "m", "4GB", "amount of memory to start probing at")
-	flags.String(FlagMaxMemory, "", "maximum memory allowed (default no limit)")
-	flags.String(FlagAdjustMemory, "1GB", "amount by which the memory is adjusted in every step while probing")
-
-	flags.Uint32P(FlagStartIterations, "i", 1, "number of iterations to start probing at")
-
-	flags.Uint8(FlagParallelism, configuration.Argon2DefaultParallelism, "number of threads to use")
-
-	flags.Uint32(FlagSaltLength, configuration.Argon2DefaultSaltLength, "length of the salt in bytes")
-
-	flags.Uint32(FlagKeyLength, configuration.Argon2DefaultKeyLength, "length of the key in bytes")
-}
-
-func configFromFlags(cmd *cobra.Command) (_ *argon2Config, err error) {
-	getUint32 := func(name string) (v uint32) {
-		// only try getting the flag if there was no error yet
-		if err == nil {
-			v, err = cmd.Flags().GetUint32(name)
-		}
-		return v
-	}
-	getUint8 := func(name string) (v uint8) {
-		// only try getting the flag if there was no error yet
-		if err == nil {
-			v, err = cmd.Flags().GetUint8(name)
-		}
-		return v
-	}
-	var mem datasize.ByteSize
-	if err := mem.UnmarshalText([]byte(flagx.MustGetString(cmd, FlagStartMemory))); err != nil {
-		return nil, err
-	}
-
-	return &argon2Config{
-		c: configuration.HasherArgon2Config{
-			Parallelism: getUint8(FlagParallelism),
-			Memory:      uint32(mem / datasize.KB),
-			Iterations:  getUint32(FlagStartIterations),
-			SaltLength:  getUint32(FlagSaltLength),
-			KeyLength:   getUint32(FlagKeyLength),
-		},
-	}, err
 }

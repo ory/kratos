@@ -14,7 +14,6 @@ require (
 	github.com/armon/go-metrics v0.3.3 // indirect
 	github.com/bwmarrin/discordgo v0.22.0
 	github.com/bxcodec/faker/v3 v3.3.1
-	github.com/c2h5oh/datasize v0.0.0-20200825124411-48ed595a09d2
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/davidrjonas/semver-cli v0.0.0-20190116233701-ee19a9a0dda6
@@ -48,6 +47,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/hashicorp/serf v0.9.2 // indirect
 	github.com/imdario/mergo v0.3.7
+	github.com/inhies/go-bytesize v0.0.0-20200716184324-4fe85e9b81b2
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/leodido/go-urn v1.1.0 // indirect
