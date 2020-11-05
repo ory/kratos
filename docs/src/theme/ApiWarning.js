@@ -21,7 +21,7 @@ const ApiWarning = () => (
       </p>
       <p>
         Using API flows in Single-Page-Apps as well as server-side apps opens up several
-        potential attack vectors, including including Login and other CSRF attacks.
+        potential attack vectors, including Login and other CSRF attacks.
       </p>
     </div>
   </div>
