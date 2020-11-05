@@ -4,8 +4,9 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-10-29)](#unreleased-2020-10-29)
+- [Unreleased (2020-11-05)](#unreleased-2020-11-05)
     - [Bug Fixes](#bug-fixes)
+    - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
   - [0.5.3-alpha.1 (2020-10-27)](#053-alpha1-2020-10-27)
     - [Bug Fixes](#bug-fixes-1)
@@ -24,7 +25,7 @@
     - [Unclassified](#unclassified)
 - [0.5.0-alpha.1 (2020-10-15)](#050-alpha1-2020-10-15)
     - [Bug Fixes](#bug-fixes-4)
-    - [Code Refactoring](#code-refactoring)
+    - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation-4)
     - [Features](#features-2)
     - [Tests](#tests-3)
@@ -43,14 +44,14 @@
     - [Bug Fixes](#bug-fixes-9)
 - [0.4.0-alpha.1 (2020-07-08)](#040-alpha1-2020-07-08)
     - [Bug Fixes](#bug-fixes-10)
-    - [Code Refactoring](#code-refactoring-1)
+    - [Code Refactoring](#code-refactoring-2)
     - [Documentation](#documentation-6)
     - [Features](#features-3)
     - [Unclassified](#unclassified-2)
     - [BREAKING CHANGES](#breaking-changes-1)
 - [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
     - [Bug Fixes](#bug-fixes-11)
-    - [Code Refactoring](#code-refactoring-2)
+    - [Code Refactoring](#code-refactoring-3)
     - [Documentation](#documentation-7)
     - [Features](#features-4)
     - [Unclassified](#unclassified-3)
@@ -59,18 +60,18 @@
     - [Documentation](#documentation-8)
 - [0.2.0-alpha.2 (2020-05-04)](#020-alpha2-2020-05-04)
     - [Bug Fixes](#bug-fixes-12)
-    - [Code Refactoring](#code-refactoring-3)
+    - [Code Refactoring](#code-refactoring-4)
     - [Documentation](#documentation-9)
     - [Features](#features-5)
     - [Unclassified](#unclassified-4)
     - [BREAKING CHANGES](#breaking-changes-3)
   - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
     - [Bug Fixes](#bug-fixes-13)
-    - [Code Refactoring](#code-refactoring-4)
+    - [Code Refactoring](#code-refactoring-5)
     - [Documentation](#documentation-10)
 - [0.1.0-alpha.6 (2020-02-16)](#010-alpha6-2020-02-16)
     - [Bug Fixes](#bug-fixes-14)
-    - [Code Refactoring](#code-refactoring-5)
+    - [Code Refactoring](#code-refactoring-6)
     - [Documentation](#documentation-11)
     - [Features](#features-6)
 - [0.1.0-alpha.5 (2020-02-06)](#010-alpha5-2020-02-06)
@@ -120,7 +121,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.5.3-alpha.1...15bae9f893c2e2910167326d987455246c110001) (2020-10-29)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.5.3-alpha.1...800110d87c9df70a5ec79b58d9fcb9ae39ff76b9) (2020-11-05)
 
 
 ### Bug Fixes
@@ -131,12 +132,18 @@
     > Closes https://github.com/ory/homebrew-kratos/issues/1
 
 
+### Code Refactoring
+
+* Move pkger and ioutil helpers to ory/x ([60a0fc4](https://github.com/ory/kratos/commit/60a0fc449d90ead6065ca00926536a989d8b2a2b))
+
+
 ### Documentation
 
 * Fix another broken link ([15bae9f](https://github.com/ory/kratos/commit/15bae9f893c2e2910167326d987455246c110001))
 * Fix broken links ([#795](https://github.com/ory/kratos/issues/795)) ([0ab0e7e](https://github.com/ory/kratos/commit/0ab0e7eca8e95d6c26d028c177cbbd1f06b68871)), closes [#793](https://github.com/ory/kratos/issues/793)
 * Fix links ([#800](https://github.com/ory/kratos/issues/800)) ([5fcc272](https://github.com/ory/kratos/commit/5fcc272e625de9e583b2ec24d5679895a6d24c1b))
 * Fix oidc config examples ([#799](https://github.com/ory/kratos/issues/799)) ([8a4f480](https://github.com/ory/kratos/commit/8a4f480121995d9899668f037382086fcdd2da4c))
+* Fix self-service recovery flow typo ([#807](https://github.com/ory/kratos/issues/807)) ([800110d](https://github.com/ory/kratos/commit/800110d87c9df70a5ec79b58d9fcb9ae39ff76b9))
 * Use correct links ([#797](https://github.com/ory/kratos/issues/797)) ([a4de293](https://github.com/ory/kratos/commit/a4de29399e4f1b5d0a33acc85478f2d38579a174))
 
 
