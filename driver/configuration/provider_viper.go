@@ -133,6 +133,8 @@ const (
 var Argon2DefaultParallelism = uint8(runtime.NumCPU() * 2)
 
 func (p *ViperProvider) HasherArgon2() *HasherArgon2Config {
+	// warn about usage of default values and point to the docs
+	// warning will require https://github.com/ory/viper/issues/19
 	return &HasherArgon2Config{
 		Memory:      uint32(viperx.GetInt(p.l, ViperKeyHasherArgon2ConfigMemory, int(Argon2DefaultMemory))),
 		Iterations:  uint32(viperx.GetInt(p.l, ViperKeyHasherArgon2ConfigIterations, int(Argon2DefaultIterations))),
