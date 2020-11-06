@@ -1,7 +1,7 @@
 ---
-id: kratos-jsonnet
-title: kratos jsonnet
-description: kratos jsonnet Helpers for linting and formatting JSONNet code
+id: kratos-hashers
+title: kratos hashers
+description: kratos hashers This command contains helpers around hashing.
 ---
 
 <!--
@@ -10,18 +10,18 @@ This file is auto-generated.
 To improve this file please make your change against the appropriate "./cmd/*.go" file.
 -->
 
-## kratos jsonnet
+## kratos hashers
 
-Helpers for linting and formatting JSONNet code
+This command contains helpers around hashing.
 
 ### Synopsis
 
-Helpers for linting and formatting JSONNet code
+This command contains helpers around hashing.
 
 ### Options
 
 ```
-  -h, --help   help for jsonnet
+  -h, --help   help for hashers
 ```
 
 ### Options inherited from parent commands
@@ -33,5 +33,4 @@ Helpers for linting and formatting JSONNet code
 ### SEE ALSO
 
 - [kratos](kratos) -
-- [kratos jsonnet format](kratos-jsonnet-format) -
-- [kratos jsonnet lint](kratos-jsonnet-lint) -
+- [kratos hashers argon2](kratos-hashers-argon2) -

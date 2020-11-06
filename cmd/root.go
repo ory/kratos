@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/ory/kratos/cmd/hashers"
+
 	"github.com/ory/kratos/cmd/remote"
 
 	"github.com/ory/kratos/cmd/identities"
@@ -19,30 +21,31 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
+// RootCmd represents the base command when called without any subcommands
+var RootCmd = &cobra.Command{
 	Use: "kratos",
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
+// This is called by main.main(). It only needs to happen once to the RootCmd.
 func Execute() {
-	if err := rootCmd.Execute(); err != nil {
+	if err := RootCmd.Execute(); err != nil {
 		if !errors.Is(err, cmdx.ErrNoPrintButFail) {
-			fmt.Println(err)
+			fmt.Fprintln(RootCmd.ErrOrStderr(), err)
 		}
 		os.Exit(1)
 	}
 }
 
 func init() {
-	viperx.RegisterConfigFlag(rootCmd, "kratos")
+	viperx.RegisterConfigFlag(RootCmd, "kratos")
 
-	identities.RegisterCommandRecursive(rootCmd)
-	jsonnet.RegisterCommandRecursive(rootCmd)
-	serve.RegisterCommandRecursive(rootCmd)
-	migrate.RegisterCommandRecursive(rootCmd)
-	remote.RegisterCommandRecursive(rootCmd)
+	identities.RegisterCommandRecursive(RootCmd)
+	jsonnet.RegisterCommandRecursive(RootCmd)
+	serve.RegisterCommandRecursive(RootCmd)
+	migrate.RegisterCommandRecursive(RootCmd)
+	remote.RegisterCommandRecursive(RootCmd)
+	hashers.RegisterCommandRecursive(RootCmd)
 
-	rootCmd.AddCommand(cmdx.Version(&clihelpers.BuildVersion, &clihelpers.BuildGitHash, &clihelpers.BuildTime))
+	RootCmd.AddCommand(cmdx.Version(&clihelpers.BuildVersion, &clihelpers.BuildGitHash, &clihelpers.BuildTime))
 }

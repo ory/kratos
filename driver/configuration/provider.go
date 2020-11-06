@@ -12,11 +12,11 @@ import (
 )
 
 type HasherArgon2Config struct {
-	Memory      uint32
-	Iterations  uint32
-	Parallelism uint8
-	SaltLength  uint32
-	KeyLength   uint32
+	Memory      uint32 `json:"memory"`
+	Iterations  uint32 `json:"iterations"`
+	Parallelism uint8  `json:"parallelism"`
+	SaltLength  uint32 `json:"salt_length"`
+	KeyLength   uint32 `json:"key_length"`
 }
 
 type SelfServiceHook struct {

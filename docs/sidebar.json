@@ -44,7 +44,8 @@
     "guides/multi-tenancy-multitenant", 
     "guides/secret-key-rotation", 
     "guides/high-availability-ha", 
-    "guides/docker"
+    "guides/docker", 
+    "guides/setting-up-password-hashing-parameters"
   ],
   "Reference": [
     "reference/configuration", 
@@ -56,6 +57,9 @@
       "label": "Command Line Interface (CLI)",
       "items": [
         "cli/kratos", 
+        "cli/kratos-hashers", 
+        "cli/kratos-hashers-argon2", 
+        "cli/kratos-hashers-argon2-calibrate", 
         "cli/kratos-identities", 
         "cli/kratos-identities-delete", 
         "cli/kratos-identities-get", 
@@ -66,9 +70,13 @@
         "cli/kratos-jsonnet", 
         "cli/kratos-jsonnet-format", 
         "cli/kratos-jsonnet-lint", 
+        "cli/kratos-migrate", 
+        "cli/kratos-migrate-sql", 
         "cli/kratos-remote", 
         "cli/kratos-remote-status", 
-        "cli/kratos-remote-version"
+        "cli/kratos-remote-version", 
+        "cli/kratos-serve", 
+        "cli/kratos-version"
       ]
     }, 
     {
@@ -90,7 +98,10 @@
       ]
     }
   ],
-  "Debug & Help": ["debug/csrf"],
+  "Debug & Help": [
+    "debug/csrf", 
+    "debug/performance-out-of-memory-password-hashing-argon2"
+  ],
   "SDKs": ["sdk"],
   "Development": ["milestones"],
   "Further Reading": [

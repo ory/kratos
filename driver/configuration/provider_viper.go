@@ -123,13 +123,24 @@ func (p *ViperProvider) SessionPath() string {
 	return viperx.GetString(p.l, ViperKeySessionPath, "")
 }
 
+const (
+	Argon2DefaultMemory     uint32 = 4 * 1024 * 1024
+	Argon2DefaultIterations uint32 = 4
+	Argon2DefaultSaltLength uint32 = 16
+	Argon2DefaultKeyLength  uint32 = 32
+)
+
+var Argon2DefaultParallelism = uint8(runtime.NumCPU() * 2)
+
 func (p *ViperProvider) HasherArgon2() *HasherArgon2Config {
+	// warn about usage of default values and point to the docs
+	// warning will require https://github.com/ory/viper/issues/19
 	return &HasherArgon2Config{
-		Memory:      uint32(viperx.GetInt(p.l, ViperKeyHasherArgon2ConfigMemory, 4*1024*1024)),
-		Iterations:  uint32(viperx.GetInt(p.l, ViperKeyHasherArgon2ConfigIterations, 4)),
-		Parallelism: uint8(viperx.GetInt(p.l, ViperKeyHasherArgon2ConfigParallelism, runtime.NumCPU()*2)),
-		SaltLength:  uint32(viperx.GetInt(p.l, ViperKeyHasherArgon2ConfigSaltLength, 16)),
-		KeyLength:   uint32(viperx.GetInt(p.l, ViperKeyHasherArgon2ConfigKeyLength, 32)),
+		Memory:      uint32(viperx.GetInt(p.l, ViperKeyHasherArgon2ConfigMemory, int(Argon2DefaultMemory))),
+		Iterations:  uint32(viperx.GetInt(p.l, ViperKeyHasherArgon2ConfigIterations, int(Argon2DefaultIterations))),
+		Parallelism: uint8(viperx.GetInt(p.l, ViperKeyHasherArgon2ConfigParallelism, int(Argon2DefaultParallelism))),
+		SaltLength:  uint32(viperx.GetInt(p.l, ViperKeyHasherArgon2ConfigSaltLength, int(Argon2DefaultSaltLength))),
+		KeyLength:   uint32(viperx.GetInt(p.l, ViperKeyHasherArgon2ConfigKeyLength, int(Argon2DefaultKeyLength))),
 	}
 }
 

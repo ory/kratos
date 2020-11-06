@@ -18,6 +18,7 @@ require (
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/davidrjonas/semver-cli v0.0.0-20190116233701-ee19a9a0dda6
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/fatih/color v1.9.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/errors v0.19.6
@@ -36,7 +37,7 @@ require (
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
 	github.com/golang/mock v1.3.1
 	github.com/google/go-github/v27 v27.0.1
-	github.com/google/go-jsonnet v0.15.1-0.20200415122941-8a0084e64395
+	github.com/google/go-jsonnet v0.16.0
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/sessions v1.1.3
@@ -46,6 +47,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/hashicorp/serf v0.9.2 // indirect
 	github.com/imdario/mergo v0.3.7
+	github.com/inhies/go-bytesize v0.0.0-20201103132853-d0aed0d254f8
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/leodido/go-urn v1.1.0 // indirect
@@ -67,7 +69,7 @@ require (
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.3
 	github.com/ory/viper v1.7.5
-	github.com/ory/x v0.0.158
+	github.com/ory/x v0.0.160
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.4.0
