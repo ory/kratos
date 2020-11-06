@@ -4,14 +4,15 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-11-05)](#unreleased-2020-11-05)
+- [Unreleased (2020-11-06)](#unreleased-2020-11-06)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
+    - [Features](#features)
   - [0.5.3-alpha.1 (2020-10-27)](#053-alpha1-2020-10-27)
     - [Bug Fixes](#bug-fixes-1)
     - [Documentation](#documentation-1)
-    - [Features](#features)
+    - [Features](#features-1)
     - [Tests](#tests)
   - [0.5.2-alpha.1 (2020-10-22)](#052-alpha1-2020-10-22)
     - [Bug Fixes](#bug-fixes-2)
@@ -20,14 +21,14 @@
   - [0.5.1-alpha.1 (2020-10-20)](#051-alpha1-2020-10-20)
     - [Bug Fixes](#bug-fixes-3)
     - [Documentation](#documentation-3)
-    - [Features](#features-1)
+    - [Features](#features-2)
     - [Tests](#tests-2)
     - [Unclassified](#unclassified)
 - [0.5.0-alpha.1 (2020-10-15)](#050-alpha1-2020-10-15)
     - [Bug Fixes](#bug-fixes-4)
     - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation-4)
-    - [Features](#features-2)
+    - [Features](#features-3)
     - [Tests](#tests-3)
     - [Unclassified](#unclassified-1)
     - [BREAKING CHANGES](#breaking-changes)
@@ -46,14 +47,14 @@
     - [Bug Fixes](#bug-fixes-10)
     - [Code Refactoring](#code-refactoring-2)
     - [Documentation](#documentation-6)
-    - [Features](#features-3)
+    - [Features](#features-4)
     - [Unclassified](#unclassified-2)
     - [BREAKING CHANGES](#breaking-changes-1)
 - [0.3.0-alpha.1 (2020-05-15)](#030-alpha1-2020-05-15)
     - [Bug Fixes](#bug-fixes-11)
     - [Code Refactoring](#code-refactoring-3)
     - [Documentation](#documentation-7)
-    - [Features](#features-4)
+    - [Features](#features-5)
     - [Unclassified](#unclassified-3)
     - [BREAKING CHANGES](#breaking-changes-2)
   - [0.2.1-alpha.1 (2020-05-05)](#021-alpha1-2020-05-05)
@@ -62,7 +63,7 @@
     - [Bug Fixes](#bug-fixes-12)
     - [Code Refactoring](#code-refactoring-4)
     - [Documentation](#documentation-9)
-    - [Features](#features-5)
+    - [Features](#features-6)
     - [Unclassified](#unclassified-4)
     - [BREAKING CHANGES](#breaking-changes-3)
   - [0.1.1-alpha.1 (2020-02-18)](#011-alpha1-2020-02-18)
@@ -73,17 +74,17 @@
     - [Bug Fixes](#bug-fixes-14)
     - [Code Refactoring](#code-refactoring-6)
     - [Documentation](#documentation-11)
-    - [Features](#features-6)
+    - [Features](#features-7)
 - [0.1.0-alpha.5 (2020-02-06)](#010-alpha5-2020-02-06)
     - [Documentation](#documentation-12)
-    - [Features](#features-7)
+    - [Features](#features-8)
 - [0.1.0-alpha.4 (2020-02-06)](#010-alpha4-2020-02-06)
     - [Documentation](#documentation-13)
 - [0.1.0-alpha.3 (2020-02-06)](#010-alpha3-2020-02-06)
 - [0.1.0-alpha.2 (2020-02-03)](#010-alpha2-2020-02-03)
     - [Bug Fixes](#bug-fixes-15)
     - [Documentation](#documentation-14)
-    - [Features](#features-8)
+    - [Features](#features-9)
     - [Unclassified](#unclassified-5)
 - [0.1.0-alpha.1 (2020-01-31)](#010-alpha1-2020-01-31)
     - [Documentation](#documentation-15)
@@ -121,7 +122,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.5.3-alpha.1...800110d87c9df70a5ec79b58d9fcb9ae39ff76b9) (2020-11-05)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.5.3-alpha.1...ca5a69b798635d0e5361fd5b0cc369b035dca738) (2020-11-06)
 
 
 ### Bug Fixes
@@ -145,6 +146,35 @@
 * Fix oidc config examples ([#799](https://github.com/ory/kratos/issues/799)) ([8a4f480](https://github.com/ory/kratos/commit/8a4f480121995d9899668f037382086fcdd2da4c))
 * Fix self-service recovery flow typo ([#807](https://github.com/ory/kratos/issues/807)) ([800110d](https://github.com/ory/kratos/commit/800110d87c9df70a5ec79b58d9fcb9ae39ff76b9))
 * Use correct links ([#797](https://github.com/ory/kratos/issues/797)) ([a4de293](https://github.com/ory/kratos/commit/a4de29399e4f1b5d0a33acc85478f2d38579a174))
+
+
+### Features
+
+* Add helper for choosing argon2 parameters ([#803](https://github.com/ory/kratos/issues/803)) ([ca5a69b](https://github.com/ory/kratos/commit/ca5a69b798635d0e5361fd5b0cc369b035dca738)), closes [#723](https://github.com/ory/kratos/issues/723) [#572](https://github.com/ory/kratos/issues/572) [#647](https://github.com/ory/kratos/issues/647):
+
+    > This patch adds the new command "hashers argon2 calibrate" which allows one to pick the desired hashing time for password hashing and then chooses the optimal parameters for the hardware the command is running on:
+    > 
+    > ```
+    > $ kratos hashers argon2 calibrate 500ms
+    > Increasing memory to get over 500ms:
+    >     took 2.846592732s in try 0
+    >     took 6.006488824s in try 1
+    >   took 4.42657975s with 4.00GB of memory
+    > [...]
+    > Decreasing iterations to get under 500ms:
+    >     took 484.257775ms in try 0
+    >     took 488.784192ms in try 1
+    >   took 486.534204ms with 3 iterations
+    > Settled on 3 iterations.
+    > 
+    > {
+    >   "memory": 1048576,
+    >   "iterations": 3,
+    >   "parallelism": 32,
+    >   "salt_length": 16,
+    >   "key_length": 32
+    > }
+    > ```
 
 
 
