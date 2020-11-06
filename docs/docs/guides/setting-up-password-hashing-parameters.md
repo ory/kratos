@@ -24,4 +24,4 @@ Head to [our blogpost](https://ory.sh/argon2-parameter-choice-best-practice/) ab
 to learn how this command and password checking in ORY Kratos works.
 
 If you encounter any problems like timeouts or out-of-memory errors, consolidate our
-[troubleshooting guide](../debug/argon2.md).
+[troubleshooting guide](../debug/performance-out-of-memory-password-hashing-argon2.md).
