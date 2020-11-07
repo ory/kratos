@@ -85,7 +85,7 @@ New feature or request.
 - [ ] Throttling repeated login requests ([kratos#654](https://github.com/ory/kratos/issues/654))
 - [ ] Require identity deactivation before administrative deletion ([kratos#657](https://github.com/ory/kratos/issues/657))
 - [ ] Add return_to after logout ([kratos#702](https://github.com/ory/kratos/issues/702)) - [@Patrik](https://github.com/zepatrik)
-- [ ] Write CLI helper for recommending Argon2 parameters ([kratos#723](https://github.com/ory/kratos/issues/723)) - [@Patrik](https://github.com/zepatrik)
+- [x] Write CLI helper for recommending Argon2 parameters ([kratos#723](https://github.com/ory/kratos/issues/723)) - [@Patrik](https://github.com/zepatrik)
 - [x] Add possibility to configure the "claims" query parameter in the auth_url of OIDC providers to request individial id_token claims ([kratos#735](https://github.com/ory/kratos/issues/735))
 
 ### [Docs](https://github.com/ory/kratos/labels/docs)
