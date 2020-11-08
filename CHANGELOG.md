@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-11-06)](#unreleased-2020-11-06)
+- [Unreleased (2020-11-08)](#unreleased-2020-11-08)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -122,7 +122,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.5.3-alpha.1...ca5a69b798635d0e5361fd5b0cc369b035dca738) (2020-11-06)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.5.3-alpha.1...4e1b96667d9f08dbafeb2f5ce144ca43309de8e0) (2020-11-08)
 
 
 ### Bug Fixes
@@ -142,9 +142,11 @@
 
 * Fix another broken link ([15bae9f](https://github.com/ory/kratos/commit/15bae9f893c2e2910167326d987455246c110001))
 * Fix broken links ([#795](https://github.com/ory/kratos/issues/795)) ([0ab0e7e](https://github.com/ory/kratos/commit/0ab0e7eca8e95d6c26d028c177cbbd1f06b68871)), closes [#793](https://github.com/ory/kratos/issues/793)
+* Fix broken relative link ([#812](https://github.com/ory/kratos/issues/812)) ([b32b173](https://github.com/ory/kratos/commit/b32b173fe30b7c5c43700abfa4ddb3409a33556b))
 * Fix links ([#800](https://github.com/ory/kratos/issues/800)) ([5fcc272](https://github.com/ory/kratos/commit/5fcc272e625de9e583b2ec24d5679895a6d24c1b))
 * Fix oidc config examples ([#799](https://github.com/ory/kratos/issues/799)) ([8a4f480](https://github.com/ory/kratos/commit/8a4f480121995d9899668f037382086fcdd2da4c))
 * Fix self-service recovery flow typo ([#807](https://github.com/ory/kratos/issues/807)) ([800110d](https://github.com/ory/kratos/commit/800110d87c9df70a5ec79b58d9fcb9ae39ff76b9))
+* Remove duplicate words & fix spelling ([#810](https://github.com/ory/kratos/issues/810)) ([4e1b966](https://github.com/ory/kratos/commit/4e1b96667d9f08dbafeb2f5ce144ca43309de8e0))
 * Use correct links ([#797](https://github.com/ory/kratos/issues/797)) ([a4de293](https://github.com/ory/kratos/commit/a4de29399e4f1b5d0a33acc85478f2d38579a174))
 
 
