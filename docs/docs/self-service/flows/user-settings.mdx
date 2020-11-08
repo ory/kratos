@@ -184,7 +184,7 @@ To initialize the Settings Flow, point the Browser to
 <CodeTabs items={initBrowserFlow} />
 
 The server responds with a HTTP 302 redirect to the Settings UI, appending the
-`?flow=<flow-id>` query paremeter (see the curl example) to the URL configured
+`?flow=<flow-id>` query parameter (see the curl example) to the URL configured
 here:
 
 ```yaml title="path/to/config/kratos.yml"
@@ -219,7 +219,7 @@ which returns a JSON response:
 
 Fetching the Settings Flow
 ([REST API Reference](../../reference/api.mdx#get-settings-flow)) is usually
-only required for browser clients but also works for Settings Flows initializied
+only required for browser clients but also works for Settings Flows initialized
 by API clients. All you need is a valid flow ID:
 
 <CodeTabs items={getFlow} />
@@ -417,7 +417,7 @@ Completing the settings update behaves differently for Browser and API Clients.
 
 When the profile update is completed successfully, ORY Kratos responds with a
 HTTP 302 Redirect to the Settings UI which now contains the success state
-(`state: success`) as well as the udpated identity:
+(`state: success`) as well as the updated identity:
 
 ```shell script
 $ curl -s -X GET \

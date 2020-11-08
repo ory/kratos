@@ -12,6 +12,7 @@ your profile and sign up yourself.
 import Tabs from '@theme/Tabs'
 import TabItem from '@theme/TabItem'
 import Mermaid from '@theme/Mermaid'
+import ApiWarning from '@theme/ApiWarning'
 
 import CodeTabs from '@theme/Code/CodeTabs'
 import { initBrowserFlow, initApiFlow } from './self-service/flows/code/login'
@@ -86,14 +87,7 @@ All Self-Service Flows ([User Login](self-service/flows/user-login.mdx),
 support these two flow types and use the same data models but do use different
 API endpoints.
 
-:::warning
-
-**Never use API flows to implement Browser applications!**
-
-Using API flows in Single-Page-Apps as well as server-side apps opens up several
-potential attack vectors, including including Login and other CSRF attacks.
-
-:::
+<ApiWarning />
 
 ## Browser Flows
 
@@ -314,14 +308,7 @@ and might issue a session cookie if configured to do so.
 
 ## API Flows
 
-:::warning
-
-**Never use API flows to implement Browser applications!**
-
-Using API flows in Single-Page-Apps as well as server-side apps opens up several
-potential attack vectors, including including Login and other CSRF attacks.
-
-:::
+<ApiWarning />
 
 API flows have three stages:
 
@@ -479,4 +466,4 @@ which in this case fails with a 400 Bad Request error and the following payload:
 ```
 
 On success, that endpoint would typically return a HTTP 200 Status OK response
-with the success `application/json` response paylaod in the body.
+with the success `application/json` response payload in the body.
