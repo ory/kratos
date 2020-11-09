@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-11-08)](#unreleased-2020-11-08)
+- [Unreleased (2020-11-09)](#unreleased-2020-11-09)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -122,7 +122,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.5.3-alpha.1...4e1b96667d9f08dbafeb2f5ce144ca43309de8e0) (2020-11-08)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.5.3-alpha.1...94fde5101d00b9e1f7228e9d122ef0a8e4719355) (2020-11-09)
 
 
 ### Bug Fixes
@@ -147,6 +147,7 @@
 * Fix oidc config examples ([#799](https://github.com/ory/kratos/issues/799)) ([8a4f480](https://github.com/ory/kratos/commit/8a4f480121995d9899668f037382086fcdd2da4c))
 * Fix self-service recovery flow typo ([#807](https://github.com/ory/kratos/issues/807)) ([800110d](https://github.com/ory/kratos/commit/800110d87c9df70a5ec79b58d9fcb9ae39ff76b9))
 * Remove duplicate words & fix spelling ([#810](https://github.com/ory/kratos/issues/810)) ([4e1b966](https://github.com/ory/kratos/commit/4e1b96667d9f08dbafeb2f5ce144ca43309de8e0))
+* Remove leftover category from reference sidebar ([#813](https://github.com/ory/kratos/issues/813)) ([94fde51](https://github.com/ory/kratos/commit/94fde5101d00b9e1f7228e9d122ef0a8e4719355))
 * Use correct links ([#797](https://github.com/ory/kratos/issues/797)) ([a4de293](https://github.com/ory/kratos/commit/a4de29399e4f1b5d0a33acc85478f2d38579a174))
 
 
