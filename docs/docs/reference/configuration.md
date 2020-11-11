@@ -16,6 +16,11 @@ flag: `kratos --config path/to/config.yaml`.
 Config files can be formatted as JSON, YAML and TOML. Some configuration values support reloading without server restart.
 All configuration values can be set using environment variables, as documented below.
 
+This reference configuration documents all keys, also deprecated ones!
+It is a reference for all possible configuration values.
+
+If you are looking for an example configuration, it is better to try out the quickstart.
+
 To find out more about edge cases like setting string array values through environmental variables head to the
 [Configuring ORY services](https://www.ory.sh/docs/ecosystem/configuring) section.
 
@@ -146,7 +151,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_SETTINGS_UI_URL=<value>
       #
-      ui_url: https://my-app.com/user/settings
+      ui_url: https://www.ory.sh/kratos/docs/fallback/settings
 
       ## lifespan ##
       #
@@ -163,7 +168,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_SETTINGS_LIFESPAN=<value>
       #
-      lifespan: 1s
+      lifespan: 1h
 
       ## privileged_session_max_age ##
       #
@@ -218,7 +223,7 @@ selfservice:
           # - Windows Command Line (CMD):
           #    > set SELFSERVICE_FLOWS_SETTINGS_AFTER_PASSWORD_DEFAULT_BROWSER_RETURN_URL=<value>
           #
-          default_browser_return_url: /dashboard
+          default_browser_return_url: https://my-app.com/dashboard
 
           ## hooks ##
           #
@@ -248,7 +253,7 @@ selfservice:
           # - Windows Command Line (CMD):
           #    > set SELFSERVICE_FLOWS_SETTINGS_AFTER_PROFILE_DEFAULT_BROWSER_RETURN_URL=<value>
           #
-          default_browser_return_url: https://my-app.com/dashboard
+          default_browser_return_url: /dashboard
 
           ## hooks ##
           #
@@ -281,7 +286,7 @@ selfservice:
         # - Windows Command Line (CMD):
         #    > set SELFSERVICE_FLOWS_LOGOUT_AFTER_DEFAULT_BROWSER_RETURN_URL=<value>
         #
-        default_browser_return_url: https://my-app.com/dashboard
+        default_browser_return_url: /dashboard
 
     ## registration ##
     #
@@ -318,7 +323,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_REGISTRATION_LIFESPAN=<value>
       #
-      lifespan: 1h
+      lifespan: 1s
 
       ## after ##
       #
@@ -337,7 +342,7 @@ selfservice:
         # - Windows Command Line (CMD):
         #    > set SELFSERVICE_FLOWS_REGISTRATION_AFTER_DEFAULT_BROWSER_RETURN_URL=<value>
         #
-        default_browser_return_url: /dashboard
+        default_browser_return_url: https://my-app.com/dashboard
 
         ## password ##
         #
@@ -417,7 +422,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_LOGIN_UI_URL=<value>
       #
-      ui_url: https://my-app.com/login
+      ui_url: https://www.ory.sh/kratos/docs/fallback/login
 
       ## lifespan ##
       #
@@ -453,7 +458,7 @@ selfservice:
         # - Windows Command Line (CMD):
         #    > set SELFSERVICE_FLOWS_LOGIN_AFTER_DEFAULT_BROWSER_RETURN_URL=<value>
         #
-        default_browser_return_url: https://my-app.com/dashboard
+        default_browser_return_url: /dashboard
 
         ## password ##
         #
@@ -472,7 +477,7 @@ selfservice:
           # - Windows Command Line (CMD):
           #    > set SELFSERVICE_FLOWS_LOGIN_AFTER_PASSWORD_DEFAULT_BROWSER_RETURN_URL=<value>
           #
-          default_browser_return_url: https://my-app.com/dashboard
+          default_browser_return_url: /dashboard
 
           ## hooks ##
           #
@@ -530,7 +535,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_VERIFICATION_ENABLED=<value>
       #
-      enabled: false
+      enabled: true
 
       ## Verify UI URL ##
       #
@@ -547,7 +552,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_VERIFICATION_UI_URL=<value>
       #
-      ui_url: https://my-app.com/verify
+      ui_url: https://www.ory.sh/kratos/docs/fallback/verification
 
       ## after ##
       #
@@ -566,7 +571,7 @@ selfservice:
         # - Windows Command Line (CMD):
         #    > set SELFSERVICE_FLOWS_VERIFICATION_AFTER_DEFAULT_BROWSER_RETURN_URL=<value>
         #
-        default_browser_return_url: /dashboard
+        default_browser_return_url: https://my-app.com/dashboard
 
       ## Self-Service Verification Request Lifespan ##
       #
@@ -585,7 +590,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_VERIFICATION_LIFESPAN=<value>
       #
-      lifespan: 1m
+      lifespan: 1h
 
     ## Account Recovery Configuration ##
     #
@@ -638,7 +643,7 @@ selfservice:
         # - Windows Command Line (CMD):
         #    > set SELFSERVICE_FLOWS_RECOVERY_AFTER_DEFAULT_BROWSER_RETURN_URL=<value>
         #
-        default_browser_return_url: /dashboard
+        default_browser_return_url: https://my-app.com/dashboard
 
       ## Self-Service Recovery Request Lifespan ##
       #
@@ -677,7 +682,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_FLOWS_ERROR_UI_URL=<value>
       #
-      ui_url: https://my-app.com/kratos-error
+      ui_url: https://www.ory.sh/kratos/docs/fallback/error
 
   ## methods ##
   #
@@ -710,7 +715,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_METHODS_LINK_ENABLED=<value>
       #
-      enabled: true
+      enabled: false
 
     ## password ##
     #
@@ -725,7 +730,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_METHODS_PASSWORD_ENABLED=<value>
       #
-      enabled: false
+      enabled: true
 
     ## oidc ##
     #
@@ -740,7 +745,7 @@ selfservice:
       # - Windows Command Line (CMD):
       #    > set SELFSERVICE_METHODS_OIDC_ENABLED=<value>
       #
-      enabled: false
+      enabled: true
 
       ## config ##
       #
@@ -758,34 +763,15 @@ selfservice:
         providers:
           - id: google
             provider: google
-            client_id: labore Excepteur qui
-            client_secret: nisi fugiat incididunt
+            client_id: reprehenderit irure in est
+            client_secret: dolore ex aliqua
             mapper_url: file://path/to/oidc.jsonnet
             issuer_url: https://accounts.google.com
             auth_url: https://accounts.google.com/o/oauth2/v2/auth
             token_url: https://www.googleapis.com/oauth2/v4/token
             scope:
-              - profile
-              - profile
-              - profile
-              - profile
               - offline_access
-            tenant: 8eaef023-2b34-4da1-9baa-8bc8c9d6a490
-            requested_claims:
-              id_token:
-                email:
-                email_verified:
-          - id: google
-            provider: google
-            client_id: laboris
-            client_secret: sint fugiat nulla
-            mapper_url: base64://bG9jYWwgc3ViamVjdCA9I...
-            issuer_url: https://accounts.google.com
-            auth_url: https://accounts.google.com/o/oauth2/v2/auth
-            token_url: https://www.googleapis.com/oauth2/v4/token
-            scope:
               - profile
-              - offline_access
               - offline_access
             tenant: contoso.onmicrosoft.com
             requested_claims:
@@ -805,6 +791,23 @@ selfservice:
                 acr:
                   values:
                     - urn:mace:incommon:iap:silver
+          - id: google
+            provider: google
+            client_id: in deserunt ut
+            client_secret: id nisi
+            mapper_url: file://path/to/oidc.jsonnet
+            issuer_url: https://accounts.google.com
+            auth_url: https://accounts.google.com/o/oauth2/v2/auth
+            token_url: https://www.googleapis.com/oauth2/v4/token
+            scope:
+              - profile
+              - profile
+              - offline_access
+            tenant: organizations
+            requested_claims:
+              id_token:
+                email:
+                email_verified:
 
 ## Courier configuration ##
 #
@@ -843,7 +846,7 @@ courier:
     # - Windows Command Line (CMD):
     #    > set COURIER_SMTP_FROM_ADDRESS=<value>
     #
-    from_address: dMzTzViaVab@RwBwkuywfiPDRNbuFaDceyqBTTLUHzB.rh
+    from_address: siUod5@BFflKtRbUhNXHZkqWcFrJiEpcky.wk
 
   ## Override message templates ##
   #
@@ -893,7 +896,7 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_ADMIN_HOST=<value>
     #
-    host: in do
+    host: labore in
 
     ## Admin Port ##
     #
@@ -956,9 +959,7 @@ serve:
       #    > set SERVE_PUBLIC_CORS_ALLOWED_ORIGINS=<value>
       #
       allowed_origins:
-        - https://example.com
-        - https://*.example.com
-        - https://*.foo.example.com
+        - '*'
 
       ## allowed_methods ##
       #
@@ -973,8 +974,8 @@ serve:
       #    > set SERVE_PUBLIC_CORS_ALLOWED_METHODS=<value>
       #
       allowed_methods:
-        - GET
         - HEAD
+        - CONNECT
         - GET
 
       ## allowed_headers ##
@@ -990,11 +991,8 @@ serve:
       #    > set SERVE_PUBLIC_CORS_ALLOWED_HEADERS=<value>
       #
       allowed_headers:
-        - dolore
-        - cillum in eu esse
-        - dolor
-        - qui ea anim
-        - fugiat anim amet
+        - incididunt quis voluptate ad
+        - nulla sed consequat pariatur Ut
 
       ## exposed_headers ##
       #
@@ -1009,8 +1007,10 @@ serve:
       #    > set SERVE_PUBLIC_CORS_EXPOSED_HEADERS=<value>
       #
       exposed_headers:
-        - dolore occaecat magna ex nulla
-        - laboris ipsum
+        - culpa eiusmod amet
+        - laboris
+        - est culpa aliqua enim in
+        - fugiat labore ea ipsum magna
 
       ## allow_credentials ##
       #
@@ -1038,7 +1038,7 @@ serve:
       # - Windows Command Line (CMD):
       #    > set SERVE_PUBLIC_CORS_OPTIONS_PASSTHROUGH=<value>
       #
-      options_passthrough: true
+      options_passthrough: false
 
       ## max_age ##
       #
@@ -1052,7 +1052,7 @@ serve:
       # - Windows Command Line (CMD):
       #    > set SERVE_PUBLIC_CORS_MAX_AGE=<value>
       #
-      max_age: 92775271
+      max_age: 91212345
 
       ## debug ##
       #
@@ -1096,7 +1096,7 @@ serve:
     # - Windows Command Line (CMD):
     #    > set SERVE_PUBLIC_HOST=<value>
     #
-    host: labore id eiusmod
+    host: magna est cillum
 
     ## Public Port ##
     #
@@ -1139,7 +1139,7 @@ log:
   # - Windows Command Line (CMD):
   #    > set LOG_LEVEL=<value>
   #
-  level: panic
+  level: fatal
 
   ## Leak Sensitive Log Values ##
   #
@@ -1151,7 +1151,7 @@ log:
   # - Windows Command Line (CMD):
   #    > set LOG_LEAK_SENSITIVE_VALUES=<value>
   #
-  leak_sensitive_values: false
+  leak_sensitive_values: true
 
   ## format ##
   #
@@ -1181,9 +1181,7 @@ secrets:
   #    > set SECRETS_DEFAULT=<value>
   #
   default:
-    - dolor mollit velit
-    - minim eiusmod in exercitation
-    - eiusmodproident magna amet
+    - aliqua inin nulla minim
 
   ## Singing Keys for Cookies ##
   #
@@ -1196,8 +1194,9 @@ secrets:
   #    > set SECRETS_COOKIE=<value>
   #
   cookie:
-    - reprehenderit ut
-    - sunt cillum voluptate
+    - amet laboreex officia in
+    - dolor enimin ut sit
+    - deserunt Excepteur non
 
 ## Hashing Algorithm Configuration ##
 #
@@ -1215,7 +1214,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_MEMORY=<value>
     #
-    memory: 74404383
+    memory: 9282857
 
     ## iterations ##
     #
@@ -1227,7 +1226,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_ITERATIONS=<value>
     #
-    iterations: 50872405
+    iterations: 42056300
 
     ## parallelism ##
     #
@@ -1239,7 +1238,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_PARALLELISM=<value>
     #
-    parallelism: 95302413
+    parallelism: 99227363
 
     ## salt_length ##
     #
@@ -1251,7 +1250,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_SALT_LENGTH=<value>
     #
-    salt_length: 95415766
+    salt_length: 58357687
 
     ## key_length ##
     #
@@ -1263,7 +1262,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_KEY_LENGTH=<value>
     #
-    key_length: 16179708
+    key_length: 42876766
 
 ## session ##
 #
@@ -1285,7 +1284,7 @@ session:
   # - Windows Command Line (CMD):
   #    > set SESSION_LIFESPAN=<value>
   #
-  lifespan: 1m
+  lifespan: 1h
 
   ## cookie ##
   #
@@ -1300,7 +1299,7 @@ session:
     # - Windows Command Line (CMD):
     #    > set SESSION_COOKIE_DOMAIN=<value>
     #
-    domain: nostrud
+    domain: enim
 
     ## Make Session Cookie Persistent ##
     #
@@ -1328,7 +1327,7 @@ session:
     # - Windows Command Line (CMD):
     #    > set SESSION_COOKIE_PATH=<value>
     #
-    path: Duis dolor sunt culpa ad
+    path: laboris commodo occaecat
 
     ## Cookie Same Site Configuration ##
     #
@@ -1345,7 +1344,7 @@ session:
     # - Windows Command Line (CMD):
     #    > set SESSION_COOKIE_SAME_SITE=<value>
     #
-    same_site: Lax
+    same_site: Strict
 
 ## The kratos version this config is written for. ##
 #

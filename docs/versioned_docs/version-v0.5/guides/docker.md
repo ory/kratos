@@ -10,7 +10,7 @@ title: Docker Images
 
 ## Image Variants
 
-The `Kratos` Docker images come in two different falvors, one with and one
+The `Kratos` Docker images come in two different flavors, one with and one
 without SQLite support. All Docker images with the postfix
 `kratos:<version>-sqlite` in the tag are compiled with embed SQLite support and
 uses libmusl. All Docker images (`kratos:<version>`) without the postfix
@@ -25,7 +25,7 @@ libraries and therefore have a smaller attack surface.
 
 In order to make the provided Docker images as useful as possible they can be
 configured through a set of supported Environment variables. In addition the
-default configuration directoy can be bound to a directory of choice to make it
+default configuration directory can be bound to a directory of choice to make it
 simple to pass in your own configuration files.
 
 ### Environment Variables
@@ -58,10 +58,10 @@ configuration file, but make it easy to pass in your own configuration file(s)
 by either binding a local directory or by creating your own custom Docker Image
 and adding the configuration file(s) to the custom image.
 
-#### Binding host directoy
+#### Binding host directory
 
 **Example:** In this example we start the standard Docker container with SQLite
-support and use the quickstart email-passwort example configuration files by
+support and use the quickstart email-password example configuration files by
 bind mounting the local directory. This example assumes that you checked out the
 Kratos Git repo and execute the Docker command in the Kratos Git repo directory:
 

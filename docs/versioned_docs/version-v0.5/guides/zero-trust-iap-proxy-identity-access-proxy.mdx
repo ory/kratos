@@ -34,7 +34,7 @@ Clone the ORY Kratos repository and fetch the latest images:
 ```shell script
 git clone https://github.com/ory/kratos.git
 cd kratos
-git checkout v0.5.3-alpha.1
+git checkout v0.5.4-alpha.1
 
 docker pull oryd/kratos:latest-sqlite
 docker pull oryd/kratos-selfservice-ui-node:latest
@@ -158,7 +158,7 @@ end
     SA --> KA
     KA -.belongs to.-> K
     KP -.belongs to.-> K
-    subgraph sa["SecureApp / kratos-serlfservice-ui-node Example"]
+    subgraph sa["SecureApp / kratos-selfservice-ui-node Example"]
         SA[SecureApp]
         SAD -.belongs to.-> SA
         SALU -.belongs to.-> SA

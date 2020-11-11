@@ -191,6 +191,10 @@
         {
           "type": "doc",
           "id": "version-v0.5/guides/docker"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.5/guides/setting-up-password-hashing-parameters"
         }
       ]
     },
@@ -223,6 +227,18 @@
             {
               "type": "doc",
               "id": "version-v0.5/cli/kratos"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.5/cli/kratos-hashers"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.5/cli/kratos-hashers-argon2"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.5/cli/kratos-hashers-argon2-calibrate"
             },
             {
               "type": "doc",
@@ -266,6 +282,14 @@
             },
             {
               "type": "doc",
+              "id": "version-v0.5/cli/kratos-migrate"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.5/cli/kratos-migrate-sql"
+            },
+            {
+              "type": "doc",
               "id": "version-v0.5/cli/kratos-remote"
             },
             {
@@ -275,6 +299,14 @@
             {
               "type": "doc",
               "id": "version-v0.5/cli/kratos-remote-version"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.5/cli/kratos-serve"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.5/cli/kratos-version"
             }
           ]
         }
@@ -288,6 +320,10 @@
         {
           "type": "doc",
           "id": "version-v0.5/debug/csrf"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.5/debug/performance-out-of-memory-password-hashing-argon2"
         }
       ]
     },

@@ -85,7 +85,7 @@ New feature or request.
 - [ ] Throttling repeated login requests ([kratos#654](https://github.com/ory/kratos/issues/654))
 - [ ] Require identity deactivation before administrative deletion ([kratos#657](https://github.com/ory/kratos/issues/657))
 - [ ] Add return_to after logout ([kratos#702](https://github.com/ory/kratos/issues/702)) - [@Patrik](https://github.com/zepatrik)
-- [ ] Write CLI helper for recommending Argon2 parameters ([kratos#723](https://github.com/ory/kratos/issues/723)) - [@Patrik](https://github.com/zepatrik)
+- [x] Write CLI helper for recommending Argon2 parameters ([kratos#723](https://github.com/ory/kratos/issues/723)) - [@Patrik](https://github.com/zepatrik)
 - [x] Add possibility to configure the "claims" query parameter in the auth_url of OIDC providers to request individial id_token claims ([kratos#735](https://github.com/ory/kratos/issues/735))
 
 ### [Docs](https://github.com/ory/kratos/labels/docs)
@@ -129,12 +129,14 @@ Something is not working.
 - [x] Segmentation fault when running kratos ([kratos#685](https://github.com/ory/kratos/issues/685)) - [@Patrik](https://github.com/zepatrik)
 - [x] Endpoint whoami returns valid session after user logout ([kratos#686](https://github.com/ory/kratos/issues/686)) - [@hackerman](https://github.com/aeneasr)
 - [x] CSRF-detection is broken for Login API flows ([kratos#785](https://github.com/ory/kratos/issues/785)) - [@hackerman](https://github.com/aeneasr)
+- [x] Fix quickstart doc link ([kratos#793](https://github.com/ory/kratos/issues/793)) - [@Vincent](https://github.com/vinckr)
 
 #### Pull Requests
 
 - [x] fix: escape jsx characters in api documentation ([kratos#703](https://github.com/ory/kratos/pull/703)) - [@hackerman](https://github.com/aeneasr)
 - [x] fix: mark flow methods' fields as required ([kratos#708](https://github.com/ory/kratos/pull/708)) - [@hackerman](https://github.com/aeneasr)
 - [x] Resolve SQLite runtime issues ([kratos#777](https://github.com/ory/kratos/pull/777)) - [@hackerman](https://github.com/aeneasr)
+- [x] fix: force brew install statement ([kratos#796](https://github.com/ory/kratos/pull/796)) - [@hackerman](https://github.com/aeneasr)
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)
 
@@ -143,7 +145,6 @@ New feature or request.
 #### Issues
 
 - [ ] Implement React SPA sample app ([kratos#668](https://github.com/ory/kratos/issues/668)) - [@hackerman](https://github.com/aeneasr)
-- [ ] Implement React Native sample application consuming API ([kratos#667](https://github.com/ory/kratos/issues/667)) - [@hackerman](https://github.com/aeneasr)
 - [ ] Rename strategy to method in internal APIs and Documentation ([kratos#683](https://github.com/ory/kratos/issues/683)) - [@hackerman](https://github.com/aeneasr)
 - [x] Implement JSON capabilities in ErrorHandler ([kratos#61](https://github.com/ory/kratos/issues/61)) - [@hackerman](https://github.com/aeneasr)
 - [x] Allow attaching credentials to identities in CRUD create ([kratos#200](https://github.com/ory/kratos/issues/200))
@@ -157,6 +158,7 @@ New feature or request.
 - [x] Implement a test-error for implementing the Error UI ([kratos#610](https://github.com/ory/kratos/issues/610))
 - [x] Design of the client cli ([kratos#663](https://github.com/ory/kratos/issues/663)) - [@Patrik](https://github.com/zepatrik)
 - [x] Rename `request_lifespan` to `lifespan` ([kratos#666](https://github.com/ory/kratos/issues/666)) - [@hackerman](https://github.com/aeneasr)
+- [x] Implement React Native sample application consuming API ([kratos#667](https://github.com/ory/kratos/issues/667)) - [@hackerman](https://github.com/aeneasr)
 - [x] Configurable CORS headers ([kratos#712](https://github.com/ory/kratos/issues/712)) - [@hackerman](https://github.com/aeneasr)
 
 #### Pull Requests
@@ -173,6 +175,7 @@ Affects documentation.
 
 - [x] Document multi-tenant set up ([kratos#370](https://github.com/ory/kratos/issues/370))
 - [x] Remove reverse proxy from node example and rely on port and the domain parameter ([kratos#661](https://github.com/ory/kratos/issues/661)) - [@hackerman](https://github.com/aeneasr)
+- [x] Fix quickstart doc link ([kratos#793](https://github.com/ory/kratos/issues/793)) - [@Vincent](https://github.com/vinckr)
 
 #### Pull Requests
 
@@ -199,3 +202,11 @@ Blocks milestones or other issues or pulls.
 
 - [x] feat: implement API-based self-service flows ([kratos#624](https://github.com/ory/kratos/pull/624)) - [@hackerman](https://github.com/aeneasr)
 - [x] fix: escape jsx characters in api documentation ([kratos#703](https://github.com/ory/kratos/pull/703)) - [@hackerman](https://github.com/aeneasr)
+
+### [Ci](https://github.com/ory/kratos/labels/ci)
+
+Affects Continuous Integration (CI).
+
+#### Pull Requests
+
+- [x] fix: force brew install statement ([kratos#796](https://github.com/ory/kratos/pull/796)) - [@hackerman](https://github.com/aeneasr)

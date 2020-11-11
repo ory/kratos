@@ -62,7 +62,7 @@ Let's take a look at different approaches and software systems today.
 _Disclaimer: There are neither product nor project names in this section. This
 section's goal is to describe circumstances and problems that mostly stem from
 the community's experience. For information purposes, there is a preliminary
-comparision of ORY Kratos and other projects and products available at
+comparison of ORY Kratos and other projects and products available at
 [Comparison](../further-reading/comparison.md)_.
 
 Full-stack IAM is usually sold as a one-size-fits-all solution. Due to size and
@@ -236,7 +236,7 @@ Products in particular:
 
 - Small runtime footprint with an about five (5) MB binary running on all
   operating systems without any system, library, or VM dependencies;
-- Fully virtualised in a fifteen (15) MB Docker image;
+- Fully virtualized in a fifteen (15) MB Docker image;
 - Easy to manage with exactly one binary for the server and the cli;
 - Run-time orchestration using the latest Kubernetes providing fast and easy to
   use [Helm charts](https://github.com/ory/k8s);
@@ -271,7 +271,7 @@ system:
   attached to the profile.
 
 ORY Kratos implements both scenarios by using
-[JSON Schemas for Identities](./identity-data-model.md)
+[JSON Schemas for Identities](./identity-data-model)
 
 ### Forget passport-js, oidc-client, ...
 

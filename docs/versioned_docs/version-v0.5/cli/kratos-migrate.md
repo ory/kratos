@@ -1,7 +1,7 @@
 ---
-id: kratos-jsonnet
-title: kratos jsonnet
-description: kratos jsonnet Helpers for linting and formatting JSONNet code
+id: kratos-migrate
+title: kratos migrate
+description: kratos migrate Various migration helpers
 ---
 
 <!--
@@ -10,18 +10,18 @@ This file is auto-generated.
 To improve this file please make your change against the appropriate "./cmd/*.go" file.
 -->
 
-## kratos jsonnet
+## kratos migrate
 
-Helpers for linting and formatting JSONNet code
+Various migration helpers
 
 ### Synopsis
 
-Helpers for linting and formatting JSONNet code
+Various migration helpers
 
 ### Options
 
 ```
-  -h, --help   help for jsonnet
+  -h, --help   help for migrate
 ```
 
 ### Options inherited from parent commands
@@ -33,5 +33,4 @@ Helpers for linting and formatting JSONNet code
 ### SEE ALSO
 
 - [kratos](kratos) -
-- [kratos jsonnet format](kratos-jsonnet-format) -
-- [kratos jsonnet lint](kratos-jsonnet-lint) -
+- [kratos migrate sql](kratos-migrate-sql) - Create SQL schemas and apply migration plans

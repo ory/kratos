@@ -54,6 +54,12 @@ kratos jsonnet format path/to/files/*.jsonnet [more/files.jsonnet, [supports/**/
   -w, --write   Write formatted output back to file.
 ```
 
+### Options inherited from parent commands
+
+```
+  -c, --config string   Path to config file. Supports .json, .yaml, .yml, .toml. Default is "$HOME/.kratos.(yaml|yml|toml|json)"
+```
+
 ### SEE ALSO
 
 - [kratos jsonnet](kratos-jsonnet) - Helpers for linting and formatting JSONNet code
