@@ -66,11 +66,11 @@ func (h *Handler) logout(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	}
 
 	ret, err := x.SecureRedirectTo(r, h.c.SelfServiceFlowLogoutRedirectURL(),
-		append([]x.SecureRedirectOption{
+		[]x.SecureRedirectOption{
 			x.SecureRedirectUseSourceURL(r.RequestURI),
 			x.SecureRedirectAllowURLs(h.c.SelfServiceBrowserWhitelistedReturnToDomains()),
 			x.SecureRedirectAllowSelfServiceURLs(h.c.SelfPublicURL()),
-		})...,
+		}...,
 	)
 	if err != nil {
 		fmt.Printf("\n%s\n\n", err.Error())
