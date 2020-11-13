@@ -28,6 +28,7 @@ New feature or request.
 - [ ] Admin/Selfservice session management ([kratos#655](https://github.com/ory/kratos/issues/655))
 - [ ] Webhook notification based system ([kratos#776](https://github.com/ory/kratos/issues/776))
 - [ ] improve multi schema handling in different auth flows ([kratos#765](https://github.com/ory/kratos/issues/765))
+- [ ] More meta information about the managed identity ([kratos#820](https://github.com/ory/kratos/issues/820))
 - [x] Double slash in URLs causes CSRF issues ([kratos#779](https://github.com/ory/kratos/issues/779))
 
 ### [Rfc](https://github.com/ory/kratos/labels/rfc)
