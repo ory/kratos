@@ -4,12 +4,13 @@ package testhelpers
 import (
 	"bytes"
 	"context"
-	"github.com/ory/x/ioutilx"
 	"net/http"
 	"net/url"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/x/ioutilx"
 
 	"github.com/gobuffalo/httptest"
 	"github.com/julienschmidt/httprouter"

@@ -1,6 +1,7 @@
 package logout
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
@@ -64,5 +65,18 @@ func (h *Handler) logout(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		return
 	}
 
-	http.Redirect(w, r, h.c.SelfServiceFlowLogoutRedirectURL().String(), http.StatusFound)
+	ret, err := x.SecureRedirectTo(r, h.c.SelfServiceFlowLogoutRedirectURL(),
+		append([]x.SecureRedirectOption{
+			x.SecureRedirectUseSourceURL(r.RequestURI),
+			x.SecureRedirectAllowURLs(h.c.SelfServiceBrowserWhitelistedReturnToDomains()),
+			x.SecureRedirectAllowSelfServiceURLs(h.c.SelfPublicURL()),
+		})...,
+	)
+	if err != nil {
+		fmt.Printf("\n%s\n\n", err.Error())
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
+		return
+	}
+
+	http.Redirect(w, r, ret.String(), http.StatusFound)
 }

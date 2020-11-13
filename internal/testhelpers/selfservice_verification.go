@@ -4,13 +4,14 @@ package testhelpers
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/ory/x/ioutilx"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/ory/x/ioutilx"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

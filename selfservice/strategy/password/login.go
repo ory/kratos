@@ -3,8 +3,9 @@ package password
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/ory/x/pkgerx"
 	"net/http"
+
+	"github.com/ory/x/pkgerx"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/markbates/pkger"

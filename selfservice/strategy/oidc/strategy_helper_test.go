@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/x/ioutilx"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
@@ -13,6 +12,8 @@ import (
 	"os"
 	"testing"
 	"time"
+
+	"github.com/ory/x/ioutilx"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/phayes/freeport"
