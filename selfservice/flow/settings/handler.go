@@ -149,7 +149,7 @@ func (h *Handler) initApiFlow(w http.ResponseWriter, r *http.Request, _ httprout
 	h.d.Writer().Write(w, r, f)
 }
 
-// swagger:route GET /self-service/settings/browser/flows public initializeSelfServiceSettingsViaBrowserFlow
+// swagger:route GET /self-service/settings/browser public initializeSelfServiceSettingsViaBrowserFlow
 //
 // Initialize Settings Flow for Browsers
 //
