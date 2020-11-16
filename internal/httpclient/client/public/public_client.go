@@ -1062,7 +1062,7 @@ func (a *Client) InitializeSelfServiceSettingsViaBrowserFlow(params *InitializeS
 	_, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "initializeSelfServiceSettingsViaBrowserFlow",
 		Method:             "GET",
-		PathPattern:        "/self-service/settings/browser/flows",
+		PathPattern:        "/self-service/settings/browser",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
