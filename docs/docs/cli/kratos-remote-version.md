@@ -39,4 +39,5 @@ kratos remote version [flags]
 
 ### SEE ALSO
 
-- [kratos remote](kratos-remote) - Helpers and management for remote ORY Kratos instances
+- [kratos remote](kratos-remote) - Helpers and management for remote ORY Kratos
+  instances
