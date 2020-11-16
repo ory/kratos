@@ -1129,7 +1129,7 @@
         }
       }
     },
-    "/self-service/settings/browser/flows": {
+    "/self-service/settings/browser": {
       "get": {
         "security": [
           {
