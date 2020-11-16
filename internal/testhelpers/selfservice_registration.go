@@ -2,12 +2,13 @@ package testhelpers
 
 import (
 	"bytes"
-	"github.com/ory/x/ioutilx"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/ory/x/ioutilx"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

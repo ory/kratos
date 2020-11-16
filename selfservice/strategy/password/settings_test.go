@@ -5,11 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/x/ioutilx"
 	"net/http"
 	"net/url"
 	"strings"
 	"testing"
+
+	"github.com/ory/x/ioutilx"
 
 	"github.com/ory/x/pointerx"
 

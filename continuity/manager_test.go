@@ -5,10 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/x/ioutilx"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/ory/x/ioutilx"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"

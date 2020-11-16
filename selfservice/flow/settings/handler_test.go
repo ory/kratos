@@ -2,11 +2,12 @@ package settings_test
 
 import (
 	"context"
-	"github.com/ory/x/ioutilx"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/ory/x/ioutilx"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

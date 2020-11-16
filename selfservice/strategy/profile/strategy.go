@@ -3,9 +3,10 @@ package profile
 import (
 	"context"
 	"encoding/json"
-	"github.com/ory/x/pkgerx"
 	"net/http"
 	"net/url"
+
+	"github.com/ory/x/pkgerx"
 
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"

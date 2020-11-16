@@ -4,6 +4,7 @@ import (
 	"context"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/gobuffalo/httptest"
@@ -84,6 +85,7 @@ func TestLogoutHandler(t *testing.T) {
 			}
 		}
 		require.False(t, found)
+		assert.Equal(t, redirTS.URL, res.Request.URL.String())
 	})
 
 	t.Run("case=csrf token should be reset", func(t *testing.T) {
@@ -94,5 +96,18 @@ func TestLogoutHandler(t *testing.T) {
 		require.NoError(t, res.Body.Close())
 		require.NotEmpty(t, body)
 		assert.NotEqual(t, token, string(body))
+	})
+
+	t.Run("case=respects return_to URI parameter", func(t *testing.T) {
+		returnToURL := ts.URL + "/after-logout"
+		viper.Set(configuration.ViperKeyURLsWhitelistedReturnToDomains, []string{returnToURL})
+
+		query := url.Values{
+			"return_to": {returnToURL},
+		}
+
+		res, err := client.Get(ts.URL + logout.RouteBrowser + "?" + query.Encode())
+		require.NoError(t, err)
+		assert.Equal(t, returnToURL, res.Request.URL.String())
 	})
 }
