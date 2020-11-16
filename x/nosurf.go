@@ -90,14 +90,19 @@ func NewCSRFHandler(
 	secure bool,
 ) *nosurf.CSRFHandler {
 	n := nosurf.New(router)
+
+	samesiteattribute := http.SameSiteNoneMode
+	if !secure {
+		samesiteattribute = http.SameSiteLaxMode
+	}
+
 	n.SetBaseCookie(http.Cookie{
 		MaxAge:   nosurf.MaxAge,
 		Path:     path,
 		Domain:   domain,
 		HttpOnly: true,
 		Secure:   secure,
-		// SameSiteNoneMode is set because
-		SameSite: http.SameSiteNoneMode,
+		SameSite: samesiteattribute,
 	})
 	n.SetFailureHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		logger.
