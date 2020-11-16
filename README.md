@@ -77,7 +77,7 @@ deal with:
 - **Account Verification**: Verify that an E-Mail address, phone number, or
   physical address actually belong to that identity.
 - **Account Recovery**: Recover access using "Forgot Password" flows, Security
-  Codes (in case of MKFA device loss), and others.
+  Codes (in case of MFA device loss), and others.
 - **Profile and Account Management**: Update passwords, personal details, email
   addresses, linked social profiles using secure flows.
 - **Admin APIs**: Import, update, delete identities.
