@@ -87,7 +87,8 @@ const enhance = (schema, parents = []) => (item) => {
     })
   }
 
-  if (!hasChildren) {
+  const showEnvVarBlock = pathOr('', [...path, 'showEnvVarBlock'], schema)
+  if (!hasChildren || showEnvVarBlock) {
     const env = [...parents, key].map((i) => i.toUpperCase()).join('_')
     comments.push(
       ' Set this value using environment variables on',
@@ -187,7 +188,7 @@ flag: \`${config.projectSlug} --config path/to/config.yaml\`.
 Config files can be formatted as JSON, YAML and TOML. Some configuration values support reloading without server restart.
 All configuration values can be set using environment variables, as documented below.
 
-This reference configuration documents all keys, also deprecated ones! 
+This reference configuration documents all keys, also deprecated ones!
 It is a reference for all possible configuration values.
 
 If you are looking for an example configuration, it is better to try out the quickstart.

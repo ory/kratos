@@ -648,6 +648,9 @@
             },
             "oidc": {
               "type": "object",
+              "title": "Specify OpenID Connect and OAuth2 Configuration",
+              "description": "Configuration of OAuth2 and OpenID Connect providers. This can be set as an environment variable by supplying the content as a JSON object.",
+              "showEnvVarBlock": true,
               "additionalProperties": false,
               "properties": {
                 "enabled": {

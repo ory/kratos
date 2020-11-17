@@ -484,6 +484,42 @@ func TestStrategy(t *testing.T) {
 		actual := sr.Methods[identity.CredentialsTypeOIDC]
 		assert.EqualValues(t, expected.Config.FlowMethodConfigurator.(*oidc.FlowMethod).HTMLForm, actual.Config.FlowMethodConfigurator.(*oidc.FlowMethod).HTMLForm)
 	})
+
+	t.Run("case=should be able to load provider config from json", func(t *testing.T) {
+		viper.Set(configuration.ViperKeySelfServiceStrategyConfig+".oidc", `{"enabled":true, "config":{"providers": [{"id":"github-test","provider":"github","client_id":"id","client_secret":"secret","mapper_url":"http://mapper-url","scope":["user:email"]}]}}`)
+
+		sr := login.NewFlow(time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
+		require.NoError(t, reg.LoginStrategies().MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateLoginMethod(&http.Request{}, sr))
+
+		expected := &login.FlowMethod{
+			Method: identity.CredentialsTypeOIDC,
+			Config: &login.FlowMethodConfig{
+				FlowMethodConfigurator: &oidc.FlowMethod{
+					HTMLForm: &form.HTMLForm{
+						Action: "https://foo" + strings.ReplaceAll(oidc.RouteAuth, ":flow", sr.ID.String()),
+						Method: "POST",
+						Fields: form.Fields{
+							{
+								Name:     "csrf_token",
+								Type:     "hidden",
+								Required: true,
+								Value:    x.FakeCSRFToken,
+							},
+							{
+								Name:  "provider",
+								Type:  "submit",
+								Value: "github-test",
+							},
+						},
+					},
+				},
+			},
+		}
+
+		actual := sr.Methods[identity.CredentialsTypeOIDC]
+		assert.EqualValues(t, expected.Config.FlowMethodConfigurator.(*oidc.FlowMethod).HTMLForm, actual.Config.FlowMethodConfigurator.(*oidc.FlowMethod).HTMLForm)
+
+	})
 }
 
 func TestCountActiveCredentials(t *testing.T) {
