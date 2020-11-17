@@ -39,4 +39,5 @@ kratos identities list [<page> <per-page>] [flags]
 
 ### SEE ALSO
 
-- [kratos identities](kratos-identities) - Tools to interact with remote identities
+- [kratos identities](kratos-identities) - Tools to interact with remote
+  identities

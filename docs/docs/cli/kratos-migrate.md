@@ -33,4 +33,5 @@ Various migration helpers
 ### SEE ALSO
 
 - [kratos](kratos) -
-- [kratos migrate sql](kratos-migrate-sql) - Create SQL schemas and apply migration plans
+- [kratos migrate sql](kratos-migrate-sql) - Create SQL schemas and apply
+  migration plans
