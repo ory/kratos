@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-11-16)](#unreleased-2020-11-16)
+- [Unreleased (2020-11-17)](#unreleased-2020-11-17)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
@@ -126,7 +126,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.5.4-alpha.1...1c146dd21d616a56f510019abadd37402782bb39) (2020-11-16)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.5.4-alpha.1...b86878229f343e6b11521596b04040f892d1e2c3) (2020-11-17)
 
 
 ### Bug Fixes
@@ -136,6 +136,7 @@
 
 ### Documentation
 
+* Fix redirect ([#802](https://github.com/ory/kratos/issues/802)) ([b868782](https://github.com/ory/kratos/commit/b86878229f343e6b11521596b04040f892d1e2c3))
 * Fix typo MKFA to MFA ([#826](https://github.com/ory/kratos/issues/826)) ([a5613d0](https://github.com/ory/kratos/commit/a5613d08aa21f90f4d192e5663ba4977b3de16c3))
 * Swagger specs for selfservice settings browser flow ([#825](https://github.com/ory/kratos/issues/825)) ([28d50f4](https://github.com/ory/kratos/commit/28d50f45ab14d561609be7047cac13902394b547))
 
