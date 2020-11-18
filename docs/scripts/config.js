@@ -87,8 +87,12 @@ const enhance = (schema, parents = []) => (item) => {
     })
   }
 
-  const showEnvVarBlock = pathOr('', [...path, 'showEnvVarBlock'], schema)
-  if (!hasChildren || showEnvVarBlock) {
+  const showEnvVarBlockForObject = pathOr(
+    '',
+    [...path, 'showEnvVarBlockForObject'],
+    schema
+  )
+  if (!hasChildren || showEnvVarBlockForObject) {
     const env = [...parents, key].map((i) => i.toUpperCase()).join('_')
     comments.push(
       ' Set this value using environment variables on',
@@ -98,6 +102,14 @@ const enhance = (schema, parents = []) => (item) => {
       `    > set ${env}=<value>`,
       ''
     )
+
+    // Show this if the config property is an object, to call out how to specify the env var
+    if (hasChildren) {
+      comments.push(
+        ' This can be set as an environment variable by supplying it as a JSON object.',
+        ''
+      )
+    }
   }
 
   item.commentBefore = comments.join('\n')
