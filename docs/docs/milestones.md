@@ -78,6 +78,8 @@ Something is not working.
 - [ ] Investigate why smtps fails but smtp does not
       ([kratos#781](https://github.com/ory/kratos/issues/781)) -
       [@hackerman](https://github.com/aeneasr)
+- [ ] Add randomized constant time to every login request
+      ([kratos#832](https://github.com/ory/kratos/issues/832))
 - [x] Building From Source fails
       ([kratos#711](https://github.com/ory/kratos/issues/711))
 
@@ -126,6 +128,9 @@ New feature or request.
       ([kratos#654](https://github.com/ory/kratos/issues/654))
 - [ ] Require identity deactivation before administrative deletion
       ([kratos#657](https://github.com/ory/kratos/issues/657))
+- [ ] CSRF failure should start a new login/registration flow
+      ([kratos#821](https://github.com/ory/kratos/issues/821)) -
+      [@hackerman](https://github.com/aeneasr)
 - [x] Add return_to after logout
       ([kratos#702](https://github.com/ory/kratos/issues/702)) -
       [@Patrik](https://github.com/zepatrik)
@@ -179,6 +184,8 @@ Something is not working.
 - [ ] Fetching a settings request after error is missing identity data
       ([kratos#689](https://github.com/ory/kratos/issues/689)) -
       [@hackerman](https://github.com/aeneasr)
+- [ ] Quickstart is failing to mount volume kratos.yml when SELinux is enabled
+      using Podman ([kratos#831](https://github.com/ory/kratos/issues/831))
 - [x] Generate a new UUID/token after every interaction
       ([kratos#236](https://github.com/ory/kratos/issues/236)) -
       [@hackerman](https://github.com/aeneasr)
