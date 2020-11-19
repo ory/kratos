@@ -648,6 +648,8 @@
             },
             "oidc": {
               "type": "object",
+              "title": "Specify OpenID Connect and OAuth2 Configuration",
+              "showEnvVarBlockForObject": true,
               "additionalProperties": false,
               "properties": {
                 "enabled": {

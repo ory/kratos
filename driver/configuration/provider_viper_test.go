@@ -246,6 +246,14 @@ func TestViperProvider(t *testing.T) {
 			assert.Equal(t, &configuration.HasherArgon2Config{Memory: 1048576, Iterations: 2, Parallelism: 4,
 				SaltLength: 16, KeyLength: 32}, p.HasherArgon2())
 		})
+
+		t.Run("group=set_provider_by_json", func(t *testing.T) {
+			providerConfigJSON := `{"providers": [{"id":"github-test","provider":"github","client_id":"set_json_test","client_secret":"secret","mapper_url":"http://mapper-url","scope":["user:email"]}]}`
+			strategyConfigJSON := fmt.Sprintf(`{"enabled":true, "config": %s}`, providerConfigJSON)
+			viper.Set(configuration.ViperKeySelfServiceStrategyConfig+".oidc", strategyConfigJSON)
+			strategy := p.SelfServiceStrategy("oidc")
+			assert.JSONEq(t, providerConfigJSON, string(strategy.Config))
+		})
 	})
 }
 
