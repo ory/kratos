@@ -5,12 +5,15 @@ const YAML = require('yaml')
 const { pathOr } = require('ramda')
 const path = require('path')
 const fs = require('fs')
+const prettier = require('prettier')
+const prettierStyles = require('ory-prettier-styles')
 
 jsf.option({
   alwaysFakeOptionals: true,
   useExamplesValue: true,
   useDefaultValue: true,
-  minItems: 1
+  minItems: 1,
+  random: () => 0
 })
 
 if (process.argv.length !== 3 || process.argv[1] === 'help') {
@@ -215,7 +218,7 @@ ${out.yaml}
     return new Promise((resolve, reject) => {
       fs.writeFile(
         path.resolve(config.updateConfig.dst),
-        content,
+        prettier.format(content, { ...prettierStyles, parser: 'markdown' }),
         'utf8',
         (err) => {
           if (err) {
