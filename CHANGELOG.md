@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-11-19)](#unreleased-2020-11-19)
+- [Unreleased (2020-11-25)](#unreleased-2020-11-25)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
@@ -126,17 +126,20 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.5.4-alpha.1...670eb37d19674f33a36402cd9a88d61ca7327751) (2020-11-19)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.5.4-alpha.1...c102a6844db29f994b67d23bb04e64ee71376264) (2020-11-25)
 
 
 ### Bug Fixes
 
+* CSRF token is required when using the Revoke Session API endpoint ([#839](https://github.com/ory/kratos/issues/839)) ([d3218a0](https://github.com/ory/kratos/commit/d3218a0f23de7293b0a4a966ad21369a92b68b1a)), closes [#838](https://github.com/ory/kratos/issues/838)
 * Set samesite attribute to lax if in dev mode ([#824](https://github.com/ory/kratos/issues/824)) ([91d6698](https://github.com/ory/kratos/commit/91d6698e4ce05ee59bb72fc84b54af9d1d204b41)), closes [#821](https://github.com/ory/kratos/issues/821)
 
 
 ### Documentation
 
+* Fix oidc config example structure ([#845](https://github.com/ory/kratos/issues/845)) ([c102a68](https://github.com/ory/kratos/commit/c102a6844db29f994b67d23bb04e64ee71376264))
 * Fix redirect ([#802](https://github.com/ory/kratos/issues/802)) ([b868782](https://github.com/ory/kratos/commit/b86878229f343e6b11521596b04040f892d1e2c3))
+* Fix typo ([#847](https://github.com/ory/kratos/issues/847)) ([9b3da9f](https://github.com/ory/kratos/commit/9b3da9f0fe2ce71743115844d8c91a1dc9c4cbae))
 * Fix typo MKFA to MFA ([#826](https://github.com/ory/kratos/issues/826)) ([a5613d0](https://github.com/ory/kratos/commit/a5613d08aa21f90f4d192e5663ba4977b3de16c3))
 * Swagger specs for selfservice settings browser flow ([#825](https://github.com/ory/kratos/issues/825)) ([28d50f4](https://github.com/ory/kratos/commit/28d50f45ab14d561609be7047cac13902394b547))
 * Update oidc provider with json conf support ([#833](https://github.com/ory/kratos/issues/833)) ([670eb37](https://github.com/ory/kratos/commit/670eb37d19674f33a36402cd9a88d61ca7327751))
