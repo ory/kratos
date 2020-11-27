@@ -4,6 +4,8 @@ import (
 	"context"
 	"io"
 
+	"github.com/ory/x/pkgerx"
+
 	"github.com/gobuffalo/pop/v5"
 	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
@@ -27,7 +29,7 @@ type (
 	}
 	Persister struct {
 		c        *pop.Connection
-		mb       x.MigrationPkger
+		mb       *pkgerx.MigrationBox
 		r        persisterDependencies
 		cf       configuration.Provider
 		isSQLite bool
@@ -35,7 +37,7 @@ type (
 )
 
 func NewPersister(r persisterDependencies, conf configuration.Provider, c *pop.Connection) (*Persister, error) {
-	m, err := x.NewPkgerMigration(migrations, c, r)
+	m, err := pkgerx.NewMigrationBox(migrations, c, r.Logger())
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
