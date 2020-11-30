@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gobuffalo/x/randx"
+
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/x/sqlxx"
 
@@ -188,21 +190,48 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 		return err
 	}
 
-	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
-		if err := tx.Create(i); err != nil {
-			return sqlcon.HandleError(err)
-		}
-
-		if err := createVerifiableAddresses(ctx, tx, i); err != nil {
-			return sqlcon.HandleError(err)
-		}
-
-		if err := createRecoveryAddresses(ctx, tx, i); err != nil {
-			return sqlcon.HandleError(err)
-		}
-
-		return createIdentityCredentials(ctx, tx, i)
+	tx, err := p.c.Store.TransactionContextOptions(ctx, &sql.TxOptions{
+		Isolation: sql.LevelReadCommitted,
 	})
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	c := &pop.Connection{
+		TX:      tx,
+		Store:   tx,
+		ID:      randx.String(30),
+		Dialect: p.c.Dialect,
+	}
+	ctx = WithTransaction(ctx, c)
+	if err := c.Create(i); err != nil {
+		if txErr := tx.Rollback(); txErr != nil {
+			return errors.Wrap(txErr, err.Error())
+		}
+		return sqlcon.HandleError(err)
+	}
+
+	if err := createVerifiableAddresses(ctx, c, i); err != nil {
+		if txErr := tx.Rollback(); txErr != nil {
+			return errors.Wrap(txErr, err.Error())
+		}
+		return sqlcon.HandleError(err)
+	}
+
+	if err := createRecoveryAddresses(ctx, c, i); err != nil {
+		if txErr := tx.Rollback(); txErr != nil {
+			return errors.Wrap(txErr, err.Error())
+		}
+		return sqlcon.HandleError(err)
+	}
+
+	if err := createIdentityCredentials(ctx, c, i); err != nil {
+		if txErr := tx.Rollback(); txErr != nil {
+			return errors.Wrap(txErr, err.Error())
+		}
+		return sqlcon.HandleError(err)
+	}
+
+	return errors.WithStack(tx.Commit())
 }
 
 func (p *Persister) ListIdentities(ctx context.Context, page, perPage int) ([]identity.Identity, error) {
