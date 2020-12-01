@@ -60,7 +60,7 @@ func (p *Persister) MigrateUp(ctx context.Context) error {
 		return errors.WithStack(err)
 	}
 
-	return identity.GuaranteeCredentialTypes(p.c)
+	return identity.GuaranteeCredentialTypes(p.c, p.r.Logger())
 }
 
 func (p *Persister) Close(ctx context.Context) error {

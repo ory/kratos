@@ -2,6 +2,7 @@ package identity
 
 import (
 	"database/sql"
+	"github.com/ory/x/logrusx"
 	"reflect"
 	"time"
 
@@ -136,7 +137,7 @@ func CredentialsEqual(a, b map[CredentialsType]Credentials) bool {
 	return true
 }
 
-func GuaranteeCredentialTypes(c *pop.Connection) error {
+func GuaranteeCredentialTypes(c *pop.Connection, l *logrusx.Logger) error {
 	for _, credType := range []CredentialsType{CredentialsTypeOIDC, CredentialsTypePassword} {
 		t := CredentialsTypeTable{
 			Name: credType,
@@ -147,6 +148,7 @@ func GuaranteeCredentialTypes(c *pop.Connection) error {
 				return errors.WithStack(err)
 			}
 
+			l.Infof("Creating credentials type %s.", credType)
 			if err := c.Create(&t); err != nil {
 				return errors.WithStack(err)
 			}
