@@ -1,5 +1,5 @@
 {
-  "Introduction": ["index", "quickstart", "install", "configuring"],
+  "Introduction": ["index", "quickstart", "install", "configuring", "contributing"],
   "Concepts": [
     "concepts/index", 
     "concepts/terminology", 
