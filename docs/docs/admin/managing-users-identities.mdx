@@ -150,3 +150,56 @@ This feature is not implemented yet.
 ### Creating a Machine Identity
 
 This feature is not implemented yet.
+
+### Enable recovery flows
+
+
+To enable recovery flows, make the following adjustments to your ORY Kratos
+configuration:
+
+```yaml title="path/to/config/kratos.yml"
+selfservice:
+  methods:
+    link:
+      enabled: true
+  flows:
+    recovery:
+      enabled: true
+```
+
+
+To specify that an identity's trait is a recovery email, use the following
+Identity JSON Schema:
+
+```diff
+ {
+   "$id": "https://schemas.ory.sh/presets/kratos/quickstart/email-password/identity.schema.json",
+   "$schema": "http://json-schema.org/draft-07/schema#",
+   "title": "Person",
+   "type": "object",
+   "properties": {
+     "traits": {
+       "type": "object",
+       "properties": {
+         "email": {
+           "type": "string",
+           "format": "email",
+           "ory.sh/kratos": {
+             "credentials": {
+               "password": {
+                 "identifier": true
+               }
+             },
++            "recovery": {
++              "via": "email"
++            }
+           }
+         }
+       }
+       "additionalProperties": false
+     }
+   }
+ }
+```
+
+For more detailed information and general guidelines on these flows, take a look at the [Account Recovery and Password Reset](../self-service/flows/account-recovery.md) section. 
