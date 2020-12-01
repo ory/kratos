@@ -1,5 +1,5 @@
 import React from 'react'
-import Mermaid from "./Mermaid";
+import Mermaid from './Mermaid'
 
 const chart = ({
   flows = ['login', 'registration', 'settings', '...'],
@@ -7,7 +7,8 @@ const chart = ({
   interactions = ['"Log in"', '"Sign Up"', '"Update Email"', '...'],
   success = 'Perform flow-specific action (e.g. create user, set session cookie, ...)'
 }) => {
-  const components = flows.length > 1 ? `<${flows.join('|')}>` : `${flows.join('|')}`
+  const components =
+    flows.length > 1 ? `<${flows.join('|')}>` : `${flows.join('|')}`
   return `
 sequenceDiagram
   participant B as API Client
@@ -18,7 +19,9 @@ sequenceDiagram
   K->>B: HTTP 200 OK with flow as application/json payload
   B-->>B: Render form using e.g. Native iOS UI Elements
   B-->>B: User fills out forms, clicks e.g. ${interactions}
-  B->>K: REST POST to e.g. /self-service/${components}/methods/<${methods.join('|')}>
+  B->>K: REST POST to e.g. /self-service/${components}/methods/<${methods.join(
+    '|'
+  )}>
   K-->>K: Validates and processes payload
   alt Form payload is valid
     K->>B: ${success}
@@ -31,6 +34,6 @@ sequenceDiagram
 `
 }
 
-const SelfServiceApiFlow = (props) => <Mermaid chart={chart(props)}/>
+const SelfServiceApiFlow = (props) => <Mermaid chart={chart(props)} />
 
 export default SelfServiceApiFlow

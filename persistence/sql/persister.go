@@ -56,11 +56,7 @@ func (p *Persister) MigrateDown(ctx context.Context, steps int) error {
 }
 
 func (p *Persister) MigrateUp(ctx context.Context) error {
-	if err := p.mb.Up(); err != nil {
-		return errors.WithStack(err)
-	}
-
-	return identity.GuaranteeCredentialTypes(p.c, p.r.Logger())
+	return errors.WithStack(p.mb.Up())
 }
 
 func (p *Persister) Close(ctx context.Context) error {

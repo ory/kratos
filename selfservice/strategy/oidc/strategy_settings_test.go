@@ -657,7 +657,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		t.Run("iteration="+strconv.Itoa(k), func(t *testing.T) {
 			reg := nreg(t, &oidc.ConfigurationCollection{Providers: tc.c})
 			i := &identity.Identity{
-				Traits: []byte(`{"subject":"foo@bar.com"}`),
+				Traits:      []byte(`{"subject":"foo@bar.com"}`),
 				Credentials: make(map[identity.CredentialsType]identity.Credentials, 2),
 			}
 			if tc.i != nil {

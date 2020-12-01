@@ -1,12 +1,13 @@
 import React from 'react'
-import Mermaid from "./Mermaid";
+import Mermaid from './Mermaid'
 
 const chart = ({
   flows = ['login', 'registration', 'settings', '...'],
   interactions = ['"Log in"', '"Sign Up"', '"Update Email"', '...'],
   success = 'Perform flow-specific action (e.g. create user, set session cookie, ...)'
 }) => {
-  const components = flows.length > 1 ? `<${flows.join('|')}>` : `${flows.join('|')}`
+  const components =
+    flows.length > 1 ? `<${flows.join('|')}>` : `${flows.join('|')}`
   return `
 sequenceDiagram
 
@@ -38,16 +39,16 @@ sequenceDiagram
 
 const SelfServiceBrowserFlow = (props) => (
   <>
-    <Mermaid chart={chart(props)}/>
+    <Mermaid chart={chart(props)} />
     <p>
-      The <em>Flow UI</em> (<strong>your application!</strong>) is responsible for rendering the actual
-      Login and Registration HTML Forms. You can of course implement one app for
-      rendering all the Login, Registration, ... screens, and another app (think
-      "Service Oriented Architecture", "Micro-Services" or "Service Mesh") is
-      responsible for rendering your Dashboards, Management Screens, and so on.
+      The <em>Flow UI</em> (<strong>your application!</strong>) is responsible
+      for rendering the actual Login and Registration HTML Forms. You can of
+      course implement one app for rendering all the Login, Registration, ...
+      screens, and another app (think "Service Oriented Architecture",
+      "Micro-Services" or "Service Mesh") is responsible for rendering your
+      Dashboards, Management Screens, and so on.
     </p>
   </>
 )
-
 
 export default SelfServiceBrowserFlow

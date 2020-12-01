@@ -1,13 +1,8 @@
 package identity
 
 import (
-	"database/sql"
-	"github.com/ory/x/logrusx"
 	"reflect"
 	"time"
-
-	"github.com/gobuffalo/pop/v5"
-	"github.com/pkg/errors"
 
 	"github.com/gofrs/uuid"
 
@@ -23,6 +18,7 @@ func (c CredentialsType) String() string {
 }
 
 const (
+	// make sure to add all of these values to the test that ensures they are created during migration
 	CredentialsTypePassword CredentialsType = "password"
 	CredentialsTypeOIDC     CredentialsType = "oidc"
 )
@@ -135,25 +131,4 @@ func CredentialsEqual(a, b map[CredentialsType]Credentials) bool {
 	}
 
 	return true
-}
-
-func GuaranteeCredentialTypes(c *pop.Connection, l *logrusx.Logger) error {
-	for _, credType := range []CredentialsType{CredentialsTypeOIDC, CredentialsTypePassword} {
-		t := CredentialsTypeTable{
-			Name: credType,
-		}
-
-		if err := c.Where("name = ?", credType).First(&t); err != nil {
-			if !errors.Is(err, sql.ErrNoRows) {
-				return errors.WithStack(err)
-			}
-
-			l.Infof("Creating credentials type %s.", credType)
-			if err := c.Create(&t); err != nil {
-				return errors.WithStack(err)
-			}
-		}
-	}
-
-	return nil
 }
