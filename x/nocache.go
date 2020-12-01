@@ -6,12 +6,12 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-// NoCache adds `Cache-Control: 0` to the response header.
+// NoCache adds `Cache-Control: private, no-cache, no-store, must-revalidate` to the response header.
 func NoCache(w http.ResponseWriter) {
-	w.Header().Set("Cache-Control", "0")
+	w.Header().Set("Cache-Control", "private, no-cache, no-store, must-revalidate")
 }
 
-// NoCacheHandler wraps httprouter.Handle with `Cache-Control: 0` headers.
+// NoCacheHandler wraps httprouter.Handle with `Cache-Control: private, no-cache, no-store, must-revalidate` headers.
 func NoCacheHandler(handle httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		NoCache(w)
