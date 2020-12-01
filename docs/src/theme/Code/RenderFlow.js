@@ -1,6 +1,6 @@
 import Tabs from '@theme/Tabs'
 import TabItem from '@theme/TabItem'
-import React from "react";
+import React from 'react'
 import CodeFromRemote from '../CodeFromRemote'
 
 import loginBrowser from './images/login/browser.png'
@@ -10,11 +10,13 @@ import recoveryBrowser from './images/recovery/browser.png'
 
 const ucfirst = (name) => name.charAt(0).toUpperCase() + name.slice(1)
 
-const RenderFlow = ({flow}) => {
+const RenderFlow = ({ flow }) => {
   let image
   switch (flow) {
     case 'registration':
-      image = <img src={registrationBrowser} alt="User Registration HTML Form" />
+      image = (
+        <img src={registrationBrowser} alt="User Registration HTML Form" />
+      )
       break
     case 'login':
       image = <img src={loginBrowser} alt="User Login HTML Form" />
@@ -34,35 +36,30 @@ const RenderFlow = ({flow}) => {
     <Tabs
       defaultValue="browser"
       values={[
-        {label: 'Browser UI', value: 'browser'},
-        {label: 'ExpressJS & Handlebars', value: 'express'},
-        {label: 'ReactJS', value: 'react'},
-        {label: 'React Native', value: 'react-native'},
-      ]}>
-      <TabItem value="browser">
-        {image}
-      </TabItem>
+        { label: 'Browser UI', value: 'browser' },
+        { label: 'ExpressJS & Handlebars', value: 'express' },
+        { label: 'ReactJS', value: 'react' },
+        { label: 'React Native', value: 'react-native' }
+      ]}
+    >
+      <TabItem value="browser">{image}</TabItem>
       <TabItem value="express">
         <CodeFromRemote
           lang="js"
           link={`https://github.com/ory/kratos-selfservice-ui-node/blob/master/src/routes/${flow}.ts`}
           src={`https://raw.githubusercontent.com/ory/kratos-selfservice-ui-node/master/src/routes/${flow}.ts`}
         />
-
         The views can be rather simple, as ORY Kratos provides you with all the
-        information you need for rendering the forms.
-
-        The following examples use Handlebars and a generic form generator to render the
-        Flow:
-
+        information you need for rendering the forms. The following examples use
+        Handlebars and a generic form generator to render the Flow:
         <Tabs
           defaultValue="view"
           values={[
-            {label: `${ucfirst(flow)} View`, value: 'view'},
-            {label: 'Generic Form View', value: 'generic-form'},
-            {label: 'Example Input Form Element', value: 'input-form'},
-          ]}>
-
+            { label: `${ucfirst(flow)} View`, value: 'view' },
+            { label: 'Generic Form View', value: 'generic-form' },
+            { label: 'Example Input Form Element', value: 'input-form' }
+          ]}
+        >
           <TabItem value="view">
             <CodeFromRemote
               lang="handlebars"
@@ -86,7 +83,10 @@ const RenderFlow = ({flow}) => {
           </TabItem>
         </Tabs>
         The rest of the form partials can be found{' '}
-        <a href="https://github.com/ory/kratos-selfservice-ui-node/tree/master/views/partials">here</a>.
+        <a href="https://github.com/ory/kratos-selfservice-ui-node/tree/master/views/partials">
+          here
+        </a>
+        .
       </TabItem>
       <TabItem value="react">
         A React example is currently in the making.
