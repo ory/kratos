@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"sync"
 	"testing"
 	"time"
 
@@ -411,25 +410,6 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 
 			expected.Credentials = nil
 			assertEqual(t, expected, actual)
-		})
-
-		t.Run("case=create identities racy", func(t *testing.T) {
-			wg := sync.WaitGroup{}
-
-			for i := 0; i < 10; i++ {
-				wg.Add(1)
-				// capture i
-				ii := i
-				go func() {
-					defer wg.Done()
-
-					id := passwordIdentity("", fmt.Sprintf("racy identity %d", ii))
-					id.Traits = Traits(`{}`)
-					require.NoError(t, p.CreateIdentity(context.Background(), id))
-				}()
-			}
-
-			wg.Wait()
 		})
 
 		t.Run("suite=verifiable-address", func(t *testing.T) {

@@ -7,8 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gobuffalo/x/randx"
-
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/x/sqlxx"
 
@@ -88,21 +86,17 @@ WHERE ici.identifier = ?
 	return i.CopyWithoutCredentials(), creds, nil
 }
 
-func findOrCreateIdentityCredentialsType(_ context.Context, tx *pop.Connection, ct identity.CredentialsType) (*identity.CredentialsTypeTable, error) {
+func (p *Persister) findIdentityCredentialsType(ctx context.Context, ct identity.CredentialsType) (*identity.CredentialsTypeTable, error) {
 	var m identity.CredentialsTypeTable
-	if err := tx.Where("name = ?", ct).First(&m); errors.Is(err, sql.ErrNoRows) {
-		m.Name = ct
-		if err := sqlcon.HandleError(tx.Create(&m)); err != nil {
-			return nil, err
-		}
-		return &m, nil
-	} else if err != nil {
+	if err := p.GetConnection(ctx).Where("name = ?", ct).First(&m); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 	return &m, nil
 }
 
-func createIdentityCredentials(ctx context.Context, tx *pop.Connection, i *identity.Identity) error {
+func (p *Persister) createIdentityCredentials(ctx context.Context, i *identity.Identity) error {
+	c := p.GetConnection(ctx)
+
 	for k := range i.Credentials {
 		cred := i.Credentials[k]
 		cred.IdentityID = i.ID
@@ -110,13 +104,13 @@ func createIdentityCredentials(ctx context.Context, tx *pop.Connection, i *ident
 			cred.Config = sqlxx.JSONRawMessage("{}")
 		}
 
-		ct, err := findOrCreateIdentityCredentialsType(ctx, tx, cred.Type)
+		ct, err := p.findIdentityCredentialsType(ctx, cred.Type)
 		if err != nil {
 			return err
 		}
 
 		cred.CredentialTypeID = ct.ID
-		if err := tx.Create(&cred); err != nil {
+		if err := c.Create(&cred); err != nil {
 			return sqlcon.HandleError(err)
 		}
 
@@ -134,7 +128,7 @@ func createIdentityCredentials(ctx context.Context, tx *pop.Connection, i *ident
 				Identifier:            ids,
 				IdentityCredentialsID: cred.ID,
 			}
-			if err := tx.Create(ci); err != nil {
+			if err := c.Create(ci); err != nil {
 				return sqlcon.HandleError(err)
 			}
 		}
@@ -145,20 +139,20 @@ func createIdentityCredentials(ctx context.Context, tx *pop.Connection, i *ident
 	return nil
 }
 
-func createVerifiableAddresses(ctx context.Context, tx *pop.Connection, i *identity.Identity) error {
+func (p *Persister) createVerifiableAddresses(ctx context.Context, i *identity.Identity) error {
 	for k := range i.VerifiableAddresses {
 		i.VerifiableAddresses[k].IdentityID = i.ID
-		if err := tx.Create(&i.VerifiableAddresses[k]); err != nil {
+		if err := p.GetConnection(ctx).Create(&i.VerifiableAddresses[k]); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func createRecoveryAddresses(ctx context.Context, tx *pop.Connection, i *identity.Identity) error {
+func (p *Persister) createRecoveryAddresses(ctx context.Context, i *identity.Identity) error {
 	for k := range i.RecoveryAddresses {
 		i.RecoveryAddresses[k].IdentityID = i.ID
-		if err := tx.Create(&i.RecoveryAddresses[k]); err != nil {
+		if err := p.GetConnection(ctx).Create(&i.RecoveryAddresses[k]); err != nil {
 			return err
 		}
 	}
@@ -190,48 +184,21 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 		return err
 	}
 
-	tx, err := p.c.Store.TransactionContextOptions(ctx, &sql.TxOptions{
-		Isolation: sql.LevelReadCommitted,
+	return p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
+		if err := tx.Create(i); err != nil {
+			return sqlcon.HandleError(err)
+		}
+
+		if err := p.createVerifiableAddresses(ctx, i); err != nil {
+			return sqlcon.HandleError(err)
+		}
+
+		if err := p.createRecoveryAddresses(ctx, i); err != nil {
+			return sqlcon.HandleError(err)
+		}
+
+		return p.createIdentityCredentials(ctx, i)
 	})
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	c := &pop.Connection{
-		TX:      tx,
-		Store:   tx,
-		ID:      randx.String(30),
-		Dialect: p.c.Dialect,
-	}
-	ctx = WithTransaction(ctx, c)
-	if err := c.Create(i); err != nil {
-		if txErr := tx.Rollback(); txErr != nil {
-			return errors.Wrap(txErr, err.Error())
-		}
-		return sqlcon.HandleError(err)
-	}
-
-	if err := createVerifiableAddresses(ctx, c, i); err != nil {
-		if txErr := tx.Rollback(); txErr != nil {
-			return errors.Wrap(txErr, err.Error())
-		}
-		return sqlcon.HandleError(err)
-	}
-
-	if err := createRecoveryAddresses(ctx, c, i); err != nil {
-		if txErr := tx.Rollback(); txErr != nil {
-			return errors.Wrap(txErr, err.Error())
-		}
-		return sqlcon.HandleError(err)
-	}
-
-	if err := createIdentityCredentials(ctx, c, i); err != nil {
-		if txErr := tx.Rollback(); txErr != nil {
-			return errors.Wrap(txErr, err.Error())
-		}
-		return sqlcon.HandleError(err)
-	}
-
-	return errors.WithStack(tx.Commit())
 }
 
 func (p *Persister) ListIdentities(ctx context.Context, page, perPage int) ([]identity.Identity, error) {
@@ -281,15 +248,15 @@ func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) er
 			return err
 		}
 
-		if err := createVerifiableAddresses(ctx, tx, i); err != nil {
+		if err := p.createVerifiableAddresses(ctx, i); err != nil {
 			return err
 		}
 
-		if err := createRecoveryAddresses(ctx, tx, i); err != nil {
+		if err := p.createRecoveryAddresses(ctx, i); err != nil {
 			return err
 		}
 
-		return createIdentityCredentials(ctx, tx, i)
+		return p.createIdentityCredentials(ctx, i)
 	}))
 }
 

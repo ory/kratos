@@ -1,8 +1,12 @@
 package identity
 
 import (
+	"database/sql"
 	"reflect"
 	"time"
+
+	"github.com/gobuffalo/pop/v5"
+	"github.com/pkg/errors"
 
 	"github.com/gofrs/uuid"
 
@@ -130,4 +134,24 @@ func CredentialsEqual(a, b map[CredentialsType]Credentials) bool {
 	}
 
 	return true
+}
+
+func GuaranteeCredentialTypes(c *pop.Connection) error {
+	for _, credType := range []CredentialsType{CredentialsTypeOIDC, CredentialsTypePassword} {
+		t := CredentialsTypeTable{
+			Name: credType,
+		}
+
+		if err := c.Where("name = ?", credType).First(&t); err != nil {
+			if !errors.Is(err, sql.ErrNoRows) {
+				return errors.WithStack(err)
+			}
+
+			if err := c.Create(&t); err != nil {
+				return errors.WithStack(err)
+			}
+		}
+	}
+
+	return nil
 }

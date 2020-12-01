@@ -8,6 +8,12 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/schema"
+	"github.com/ory/viper"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
+
 	"github.com/go-errors/errors"
 	"github.com/stretchr/testify/assert"
 
@@ -87,7 +93,7 @@ func pl(t *testing.T) func(lvl logging.Level, s string, args ...interface{}) {
 	}
 }
 
-func TestPersister(t *testing.T) {
+func createCleanDatabases(t *testing.T) map[string]*sql.Persister {
 	conns := map[string]string{
 		"sqlite": sqlite,
 	}
@@ -118,25 +124,36 @@ func TestPersister(t *testing.T) {
 
 	t.Logf("sqlite: %s", sqlite)
 
+	ps := make(map[string]*sql.Persister, len(conns))
 	for name, dsn := range conns {
-		t.Run(fmt.Sprintf("database=%s", name), func(t *testing.T) {
-			_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
-			p := reg.Persister()
+		_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
+		p := reg.Persister().(*sql.Persister)
 
+		_ = os.Remove("migrations/schema.sql")
+		testhelpers.CleanSQL(t, p.Connection())
+		t.Cleanup(func() {
+			testhelpers.CleanSQL(t, p.Connection())
 			_ = os.Remove("migrations/schema.sql")
-			testhelpers.CleanSQL(t, p.(*sql.Persister).Connection())
-			t.Cleanup(func() {
-				testhelpers.CleanSQL(t, p.(*sql.Persister).Connection())
-				_ = os.Remove("migrations/schema.sql")
-			})
+		})
 
-			pop.SetLogger(pl(t))
-			require.NoError(t, p.MigrationStatus(context.Background(), os.Stderr))
-			require.NoError(t, p.MigrateUp(context.Background()))
+		pop.SetLogger(pl(t))
+		require.NoError(t, p.MigrationStatus(context.Background(), os.Stderr))
+		require.NoError(t, p.MigrateUp(context.Background()))
 
+		ps[name] = p
+	}
+
+	return ps
+}
+
+func TestPersister(t *testing.T) {
+	conns := createCleanDatabases(t)
+
+	for name, p := range conns {
+		t.Run(fmt.Sprintf("database=%s", name), func(t *testing.T) {
 			t.Run("contract=identity.TestPool", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				identity.TestPool(p.(identity.PrivilegedPool))(t)
+				identity.TestPool(p)(t)
 			})
 			t.Run("contract=registration.TestFlowPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
@@ -180,7 +197,7 @@ func TestPersister(t *testing.T) {
 			})
 		})
 
-		t.Logf("DSN: %s", dsn)
+		t.Logf("DSN: %s", p.Connection().URL())
 	}
 }
 
@@ -235,4 +252,43 @@ func TestPersister_Transaction(t *testing.T) {
 		require.Error(t, err)
 		assert.Equal(t, sqlcon.ErrNoRows.Error(), err.Error())
 	})
+}
+
+// note: it is important that this test runs on clean databases, as the racy behaviour only happens there
+func TestPersister_CreateIdentityRacy(t *testing.T) {
+	defaultSchema := schema.Schema{
+		ID:     configuration.DefaultIdentityTraitsSchemaID,
+		URL:    urlx.ParseOrPanic("file://./stub/identity.schema.json"),
+		RawURL: "file://./stub/identity.schema.json",
+	}
+
+	for name, p := range createCleanDatabases(t) {
+		viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, defaultSchema.RawURL)
+
+		t.Run(fmt.Sprintf("db=%s", name), func(t *testing.T) {
+			wg := sync.WaitGroup{}
+
+			for i := 0; i < 10; i++ {
+				wg.Add(1)
+				// capture i
+				ii := i
+				go func() {
+					defer wg.Done()
+
+					id := identity.NewIdentity("")
+					id.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+						Type:        identity.CredentialsTypePassword,
+						Identifiers: []string{fmt.Sprintf("racy identity %d", ii)},
+						Config:      sqlxx.JSONRawMessage(`{"foo":"bar"}`),
+					})
+					id.Traits = identity.Traits("{}")
+
+					require.NoError(t, p.CreateIdentity(context.Background(), id))
+				}()
+			}
+
+			wg.Wait()
+		})
+
+	}
 }
