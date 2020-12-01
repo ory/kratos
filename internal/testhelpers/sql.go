@@ -26,34 +26,21 @@ func CleanSQL(t *testing.T, c *pop.Connection) {
 
 		new(login.FlowMethods).TableName(),
 		new(login.Flow).TableName(),
-		"selfservice_login_request_methods",
-		"selfservice_login_requests",
 
 		new(registration.FlowMethods).TableName(),
 		new(registration.Flow).TableName(),
-		"selfservice_registration_request_methods",
-		"selfservice_registration_requests",
 
 		new(settings.FlowMethods).TableName(),
 		new(settings.Flow).TableName(),
-		"selfservice_settings_request_methods",
-		"selfservice_settings_requests",
 
 		new(link.RecoveryToken).TableName(),
 		new(link.VerificationToken).TableName(),
 
 		new(recovery.FlowMethods).TableName(),
 		new(recovery.Flow).TableName(),
-		"selfservice_recovery_request_methods",
-		"selfservice_recovery_requests",
 
 		new(verification.Flow).TableName(),
 		new(verification.FlowMethods).TableName(),
-		"selfservice_verification_request_methods",
-		"selfservice_verification_requests",
-
-		"selfservice_profile_management_request_methods",
-		"selfservice_profile_management_requests",
 
 		new(errorx.ErrorContainer).TableName(),
 
