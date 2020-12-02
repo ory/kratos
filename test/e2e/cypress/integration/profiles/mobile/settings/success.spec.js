@@ -6,8 +6,12 @@ context('Login Flow Success', () => {
   describe('password', () => {
     let email = gen.email()
     let password = gen.password()
-    beforeEach(() => {
+
+    before(() => {
       cy.registerApi({email, password, fields: {'traits.website': website}})
+    })
+
+    beforeEach(() => {
       cy.loginMobile({email, password})
       cy.visit(MOBILE_URL + "/Settings")
     })
@@ -31,6 +35,7 @@ context('Login Flow Success', () => {
   describe('profile', () => {
     let email = gen.email()
     let password = gen.password()
+
     before(() => {
       cy.registerApi({email, password, fields: {'traits.website': website}})
     })

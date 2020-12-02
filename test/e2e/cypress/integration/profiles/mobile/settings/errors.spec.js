@@ -2,13 +2,15 @@ import {gen, MOBILE_URL, website} from '../../../../helpers'
 
 context('Login Flow Errors', () => {
   let email, password
-  beforeEach(() => {
+
+  before(() => {
     email = gen.email()
     password = gen.password()
-
     cy.registerApi({email, password, fields: {'traits.website': website}})
-    cy.loginMobile({email, password})
+  })
 
+  beforeEach(() => {
+    cy.loginMobile({email, password})
     cy.visit(MOBILE_URL + "/Settings")
   })
 
