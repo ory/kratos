@@ -4,10 +4,14 @@ context('Login Flow Success', () => {
   const up = (value) => `not-${value}`
 
   describe('password', () => {
-    let email = gen.email()
-    let password = gen.password()
-    beforeEach(() => {
+    const email = gen.email()
+    const password = gen.password()
+
+    before(() => {
       cy.registerApi({email, password, fields: {'traits.website': website}})
+    })
+
+    beforeEach(() => {
       cy.loginMobile({email, password})
       cy.visit(MOBILE_URL + "/Settings")
     })
@@ -29,8 +33,9 @@ context('Login Flow Success', () => {
   })
 
   describe('profile', () => {
-    let email = gen.email()
-    let password = gen.password()
+    const email = gen.email()
+    const password = gen.password()
+
     before(() => {
       cy.registerApi({email, password, fields: {'traits.website': website}})
     })
@@ -51,14 +56,14 @@ context('Login Flow Success', () => {
     })
 
     it('modifies a protected trait', () => {
-      email = up(email)
+      const newEmail = up(email)
       cy.get('*[data-testid="settings-profile"] input[data-testid="traits.email"]')
         .clear()
-        .type(email)
+        .type(newEmail)
       cy.get('*[data-testid="settings-profile"] div[data-testid="submit-form"]').click()
 
       cy.visit(MOBILE_URL + "/Home")
-      cy.get('[data-testid="session-content"]').should('contain', email)
+      cy.get('[data-testid="session-content"]').should('contain', newEmail)
     })
   })
 })
