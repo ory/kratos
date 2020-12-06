@@ -1,6 +1,8 @@
 module.exports = {
   projectName: 'ORY Kratos',
   projectSlug: 'kratos',
+  newsletter:
+    'https://ory.us10.list-manage.com/subscribe?u=ffb1a878e4ec6c0ed312a3480&id=f605a41b53&group[17097][4]=1',
   projectTagLine:
     'Never build user login, user registration, 2fa, profile management ever again! Works on any operating system, cloud, with any programming language, user interface, and user experience! Written in Go.',
   updateTags: [
