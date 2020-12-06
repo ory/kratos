@@ -4,10 +4,11 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-11-25)](#unreleased-2020-11-25)
+- [Unreleased (2020-12-06)](#unreleased-2020-12-06)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
+    - [Tests](#tests)
   - [0.5.4-alpha.1 (2020-11-11)](#054-alpha1-2020-11-11)
     - [Bug Fixes](#bug-fixes-1)
     - [Code Refactoring](#code-refactoring)
@@ -17,23 +18,23 @@
     - [Bug Fixes](#bug-fixes-2)
     - [Documentation](#documentation-2)
     - [Features](#features-2)
-    - [Tests](#tests)
+    - [Tests](#tests-1)
   - [0.5.2-alpha.1 (2020-10-22)](#052-alpha1-2020-10-22)
     - [Bug Fixes](#bug-fixes-3)
     - [Documentation](#documentation-3)
-    - [Tests](#tests-1)
+    - [Tests](#tests-2)
   - [0.5.1-alpha.1 (2020-10-20)](#051-alpha1-2020-10-20)
     - [Bug Fixes](#bug-fixes-4)
     - [Documentation](#documentation-4)
     - [Features](#features-3)
-    - [Tests](#tests-2)
+    - [Tests](#tests-3)
     - [Unclassified](#unclassified)
 - [0.5.0-alpha.1 (2020-10-15)](#050-alpha1-2020-10-15)
     - [Bug Fixes](#bug-fixes-5)
     - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation-5)
     - [Features](#features-4)
-    - [Tests](#tests-3)
+    - [Tests](#tests-4)
     - [Unclassified](#unclassified-1)
     - [BREAKING CHANGES](#breaking-changes)
   - [0.4.6-alpha.1 (2020-07-13)](#046-alpha1-2020-07-13)
@@ -126,17 +127,27 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.5.4-alpha.1...c102a6844db29f994b67d23bb04e64ee71376264) (2020-11-25)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.5.4-alpha.1...d95cfe9759d3ffc08c24048a064c0c800abdf4b4) (2020-12-06)
 
 
 ### Bug Fixes
 
 * CSRF token is required when using the Revoke Session API endpoint ([#839](https://github.com/ory/kratos/issues/839)) ([d3218a0](https://github.com/ory/kratos/commit/d3218a0f23de7293b0a4a966ad21369a92b68b1a)), closes [#838](https://github.com/ory/kratos/issues/838)
+* Incorrect home path ([#848](https://github.com/ory/kratos/issues/848)) ([5265af0](https://github.com/ory/kratos/commit/5265af00c92fe505819300caddfcc64004d45c65))
 * Set samesite attribute to lax if in dev mode ([#824](https://github.com/ory/kratos/issues/824)) ([91d6698](https://github.com/ory/kratos/commit/91d6698e4ce05ee59bb72fc84b54af9d1d204b41)), closes [#821](https://github.com/ory/kratos/issues/821)
+* Use working cache-control header for cdn/proxies/cache ([#869](https://github.com/ory/kratos/issues/869)) ([d8e3d40](https://github.com/ory/kratos/commit/d8e3d40001ffdc64da2288f3cffd53cf3bfdf781)), closes [#601](https://github.com/ory/kratos/issues/601)
 
 
 ### Documentation
 
+* Add contributing to sidebar ([#866](https://github.com/ory/kratos/issues/866)) ([44f33f9](https://github.com/ory/kratos/commit/44f33f97d43f2a3c553a65ebb2986e0731c0e5f2)):
+
+    > The same change as in https://github.com/ory/hydra/pull/2209
+* Add newsletter to config ([1735ca2](https://github.com/ory/kratos/commit/1735ca2ced104971de4e97524d0a23d57ba045f2))
+* Add recovery flow  ([#868](https://github.com/ory/kratos/issues/868)) ([d95cfe9](https://github.com/ory/kratos/commit/d95cfe9759d3ffc08c24048a064c0c800abdf4b4)), closes [#864](https://github.com/ory/kratos/issues/864):
+
+    > Added a short section for the recovery flow on managing-user-identities.
+* Fix account recovery click instruction ([#870](https://github.com/ory/kratos/issues/870)) ([383de9e](https://github.com/ory/kratos/commit/383de9ecf6f6504dbb9c20fb4cb984e934f0751e))
 * Fix oidc config example structure ([#845](https://github.com/ory/kratos/issues/845)) ([c102a68](https://github.com/ory/kratos/commit/c102a6844db29f994b67d23bb04e64ee71376264))
 * Fix redirect ([#802](https://github.com/ory/kratos/issues/802)) ([b868782](https://github.com/ory/kratos/commit/b86878229f343e6b11521596b04040f892d1e2c3))
 * Fix typo ([#847](https://github.com/ory/kratos/issues/847)) ([9b3da9f](https://github.com/ory/kratos/commit/9b3da9f0fe2ce71743115844d8c91a1dc9c4cbae))
@@ -148,6 +159,11 @@
 ### Features
 
 * Add return_to parameter to logout flow ([#823](https://github.com/ory/kratos/issues/823)) ([1c146dd](https://github.com/ory/kratos/commit/1c146dd21d616a56f510019abadd37402782bb39)), closes [#702](https://github.com/ory/kratos/issues/702)
+
+
+### Tests
+
+* Ensure registration runs only once ([#872](https://github.com/ory/kratos/issues/872)) ([5ffc036](https://github.com/ory/kratos/commit/5ffc036ac82f36ad6ef499e217971275a35fc23a))
 
 
 
