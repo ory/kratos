@@ -198,19 +198,9 @@ workflows:
               ignore: /master/
       - docs/cli:
           requires:
-            - test
-            - test-e2e-sqlite
-            - test-e2e-postgres
-            - test-e2e-mysql
-            - test-e2e-cockroach
             - validate
       - docs/build:
           requires:
-            - test
-            - test-e2e-sqlite
-            - test-e2e-postgres
-            - test-e2e-mysql
-            - test-e2e-cockroach
             - validate
           filters:
             tags:
