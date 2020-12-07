@@ -38,6 +38,8 @@ New feature or request.
       ([kratos#765](https://github.com/ory/kratos/issues/765))
 - [ ] More meta information about the managed identity
       ([kratos#820](https://github.com/ory/kratos/issues/820))
+- [ ] Add i18n support to mail templates
+      ([kratos#834](https://github.com/ory/kratos/issues/834))
 - [x] Double slash in URLs causes CSRF issues
       ([kratos#779](https://github.com/ory/kratos/issues/779))
 
