@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-12-06)](#unreleased-2020-12-06)
+- [Unreleased (2020-12-07)](#unreleased-2020-12-07)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
@@ -127,7 +127,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/kratos/compare/v0.5.4-alpha.1...d95cfe9759d3ffc08c24048a064c0c800abdf4b4) (2020-12-06)
+# [Unreleased](https://github.com/ory/kratos/compare/v0.5.4-alpha.1...3078293717a2ce21c4b939de4c2c4886c75303b5) (2020-12-07)
 
 
 ### Bug Fixes
@@ -151,6 +151,7 @@
 * Fix oidc config example structure ([#845](https://github.com/ory/kratos/issues/845)) ([c102a68](https://github.com/ory/kratos/commit/c102a6844db29f994b67d23bb04e64ee71376264))
 * Fix redirect ([#802](https://github.com/ory/kratos/issues/802)) ([b868782](https://github.com/ory/kratos/commit/b86878229f343e6b11521596b04040f892d1e2c3))
 * Fix typo ([#847](https://github.com/ory/kratos/issues/847)) ([9b3da9f](https://github.com/ory/kratos/commit/9b3da9f0fe2ce71743115844d8c91a1dc9c4cbae))
+* Fix typo ([#881](https://github.com/ory/kratos/issues/881)) ([3078293](https://github.com/ory/kratos/commit/3078293717a2ce21c4b939de4c2c4886c75303b5))
 * Fix typo MKFA to MFA ([#826](https://github.com/ory/kratos/issues/826)) ([a5613d0](https://github.com/ory/kratos/commit/a5613d08aa21f90f4d192e5663ba4977b3de16c3))
 * Swagger specs for selfservice settings browser flow ([#825](https://github.com/ory/kratos/issues/825)) ([28d50f4](https://github.com/ory/kratos/commit/28d50f45ab14d561609be7047cac13902394b547))
 * Update oidc provider with json conf support ([#833](https://github.com/ory/kratos/issues/833)) ([670eb37](https://github.com/ory/kratos/commit/670eb37d19674f33a36402cd9a88d61ca7327751))
