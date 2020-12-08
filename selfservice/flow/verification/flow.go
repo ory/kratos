@@ -65,7 +65,7 @@ type Flow struct {
 	Methods map[string]*FlowMethod `json:"methods" faker:"verification_flow_methods" db:"-"`
 
 	// MethodsRaw is a helper struct field for gobuffalo.pop.
-	MethodsRaw FlowMethodsRaw `json:"-" faker:"-" has_many:"selfservice_verification_flow_methods" fk_id:"selfservice_verification_flow_id"`
+	MethodsRaw []FlowMethod `json:"-" faker:"-" has_many:"selfservice_verification_flow_methods" fk_id:"selfservice_verification_flow_id"`
 
 	// State represents the state of this request:
 	//

@@ -44,15 +44,9 @@ func (u FlowMethod) TableName() string {
 	return "selfservice_verification_flow_methods"
 }
 
-type FlowMethodsRaw []FlowMethod // workaround for https://github.com/gobuffalo/pop/pull/478
 type FlowMethods map[string]*FlowMethod
 
 func (u FlowMethods) TableName() string {
-	// This must be stay a value receiver, using a pointer receiver will cause issues with pop.
-	return "selfservice_verification_flow_methods"
-}
-
-func (u FlowMethodsRaw) TableName() string {
 	// This must be stay a value receiver, using a pointer receiver will cause issues with pop.
 	return "selfservice_verification_flow_methods"
 }
