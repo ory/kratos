@@ -104,6 +104,9 @@ const (
 	ViperKeyHasherArgon2ConfigSaltLength  = "hashers.argon2.salt_length"
 	ViperKeyHasherArgon2ConfigKeyLength   = "hashers.argon2.key_length"
 
+	ViperKeyPasswordMaxBreaches = "password.max_breaches"
+	ViperKeyIgnoreNetworkErrors = "password.ignore_network_errors"
+
 	ViperKeyVersion = "version"
 )
 
@@ -560,4 +563,11 @@ func (p *ViperProvider) selfServiceReturnTo(key string, strategy string) *url.UR
 
 func (p *ViperProvider) ConfigVersion() string {
 	return viperx.GetString(p.l, ViperKeyVersion, UnknownVersion)
+}
+
+func (p *ViperProvider) PasswordPolicyConfig() *PasswordPolicyConfig {
+	return &PasswordPolicyConfig{
+		MaxBreaches:         uint(viperx.GetInt(p.l, ViperKeyPasswordMaxBreaches, 0)),
+		IgnoreNetworkErrors: viperx.GetBool(p.l, ViperKeyIgnoreNetworkErrors, true),
+	}
 }

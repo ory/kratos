@@ -34,6 +34,11 @@ type SchemaConfig struct {
 	URL string `json:"url"`
 }
 
+type PasswordPolicyConfig struct {
+	MaxBreaches         uint `json:"max_breaches"`
+	IgnoreNetworkErrors bool `json:"ignore_network_errors"`
+}
+
 type SchemaConfigs []SchemaConfig
 
 func (s SchemaConfigs) FindSchemaByID(id string) (*SchemaConfig, error) {
@@ -112,6 +117,7 @@ type Provider interface {
 	IdentityTraitsSchemas() SchemaConfigs
 
 	HasherArgon2() *HasherArgon2Config
+	PasswordPolicyConfig() *PasswordPolicyConfig
 
 	TracingServiceName() string
 	TracingProvider() string
