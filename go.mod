@@ -33,7 +33,6 @@ require (
 	github.com/gobuffalo/httptest v1.0.2
 	github.com/gobuffalo/pop/v5 v5.3.1
 	github.com/gobuffalo/uuid v2.0.5+incompatible
-	github.com/gobuffalo/x v0.0.0-20181007152206-913e47c59ca7
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
 	github.com/golang/mock v1.3.1
