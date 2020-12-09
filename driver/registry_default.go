@@ -382,7 +382,7 @@ func (m *RegistryDefault) Hasher() hash.Hasher {
 
 func (m *RegistryDefault) PasswordValidator() password2.Validator {
 	if m.passwordValidator == nil {
-		m.passwordValidator = password2.NewDefaultPasswordValidatorStrategy()
+		m.passwordValidator = password2.NewDefaultPasswordValidatorStrategy(m.c)
 	}
 	return m.passwordValidator
 }

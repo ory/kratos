@@ -20,6 +20,10 @@
         {
           "type": "doc",
           "id": "version-v0.5/configuring"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.5/contributing"
         }
       ]
     },

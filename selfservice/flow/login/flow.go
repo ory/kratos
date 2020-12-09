@@ -72,7 +72,7 @@ type Flow struct {
 	Methods map[identity.CredentialsType]*FlowMethod `json:"methods" faker:"login_flow_methods" db:"-"`
 
 	// MethodsRaw is a helper struct field for gobuffalo.pop.
-	MethodsRaw FlowMethodsSlice `json:"-" faker:"-" has_many:"selfservice_login_flow_methods" fk_id:"selfservice_login_flow_id"`
+	MethodsRaw []FlowMethod `json:"-" faker:"-" has_many:"selfservice_login_flow_methods" fk_id:"selfservice_login_flow_id"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"-" db:"created_at"`

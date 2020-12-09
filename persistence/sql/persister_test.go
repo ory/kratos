@@ -40,7 +40,6 @@ import (
 	"github.com/ory/kratos/session"
 )
 
-// Workaround for https://github.com/gobuffalo/pop/pull/481
 var sqlite = fmt.Sprintf("sqlite3://%s.sqlite?_fk=true&mode=rwc", filepath.Join(os.TempDir(), uuid.New().String()))
 
 func init() {

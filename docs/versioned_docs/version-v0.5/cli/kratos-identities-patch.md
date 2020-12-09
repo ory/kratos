@@ -1,7 +1,8 @@
 ---
 id: kratos-identities-patch
 title: kratos identities patch
-description: kratos identities patch Patch identities by ID (not yet implemented)
+description:
+  kratos identities patch Patch identities by ID (not yet implemented)
 ---
 
 <!--
@@ -39,4 +40,5 @@ kratos identities patch <file.json [file-2.json [file-3.json] ...]> [flags]
 
 ### SEE ALSO
 
-- [kratos identities](kratos-identities) - Tools to interact with remote identities
+- [kratos identities](kratos-identities) - Tools to interact with remote
+  identities
