@@ -19,7 +19,6 @@ func NewSchemaExtensionRecovery(i *Identity) *SchemaExtensionRecovery {
 	return &SchemaExtensionRecovery{i: i}
 }
 
-
 func (r *SchemaExtensionRecovery) Run(ctx jsonschema.ValidationContext, s schema.ExtensionConfig, value interface{}) error {
 	r.l.Lock()
 	defer r.l.Unlock()
