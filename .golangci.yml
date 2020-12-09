@@ -12,7 +12,7 @@ linters:
     - varcheck
   disable:
     - ineffassign
-    - dupl # https://github.com/ory/kratos/issues/680
+    - dupl
     - godox
     - bodyclose # too many false negatives
 
