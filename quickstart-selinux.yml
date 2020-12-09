@@ -1,0 +1,26 @@
+version: '3.7'
+
+services:
+  kratos-migrate:
+    volumes:
+      -
+        type: volume
+        source: kratos-sqlite
+        target: /var/lib/sqlite
+        read_only: false
+      -
+        type: bind
+        source: ./contrib/quickstart/kratos/email-password
+        target: /etc/config/kratos:z
+
+  kratos:
+    volumes:
+      -
+        type: volume
+        source: kratos-sqlite
+        target: /var/lib/sqlite
+        read_only: false
+      -
+        type: bind
+        source: ./contrib/quickstart/kratos/email-password
+        target: /etc/config/kratos:z
