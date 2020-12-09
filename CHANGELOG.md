@@ -4,8 +4,8 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-12-08)](#unreleased-2020-12-08)
-  - [0.5.5-alpha.1.pre.1 (2020-12-08)](#055-alpha1pre1-2020-12-08)
+- [Unreleased (2020-12-09)](#unreleased-2020-12-09)
+  - [0.5.5-alpha.1 (2020-12-09)](#055-alpha1-2020-12-09)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
@@ -129,18 +129,22 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# Unreleased (2020-12-08)
+# Unreleased (2020-12-09)
 
 No significant changes have been made for this release.
 
 
-## [0.5.5-alpha.1.pre.1](https://github.com/ory/kratos/compare/v0.5.4-alpha.1...v0.5.5-alpha.1.pre.1) (2020-12-08)
+## [0.5.5-alpha.1](https://github.com/ory/kratos/compare/v0.5.4-alpha.1...v0.5.5-alpha.1) (2020-12-09)
 
 
 ### Bug Fixes
 
 * CSRF token is required when using the Revoke Session API endpoint ([#839](https://github.com/ory/kratos/issues/839)) ([d3218a0](https://github.com/ory/kratos/commit/d3218a0f23de7293b0a4a966ad21369a92b68b1a)), closes [#838](https://github.com/ory/kratos/issues/838)
 * Incorrect home path ([#848](https://github.com/ory/kratos/issues/848)) ([5265af0](https://github.com/ory/kratos/commit/5265af00c92fe505819300caddfcc64004d45c65))
+* Make password policy configurable ([#888](https://github.com/ory/kratos/issues/888)) ([7a00483](https://github.com/ory/kratos/commit/7a00483908bb623efdf281e76005c4485ea6b1ab)), closes [#450](https://github.com/ory/kratos/issues/450) [#316](https://github.com/ory/kratos/issues/316):
+
+    > Allows configuring password breach thresholds and optionally enforces checks against the HIBP API.
+* Remove obsolete types ([#887](https://github.com/ory/kratos/issues/887)) ([b8bac7a](https://github.com/ory/kratos/commit/b8bac7aa56c16cd98f76a95a5e0d01fb1bbde6b7)), closes [#716](https://github.com/ory/kratos/issues/716)
 * Set samesite attribute to lax if in dev mode ([#824](https://github.com/ory/kratos/issues/824)) ([91d6698](https://github.com/ory/kratos/commit/91d6698e4ce05ee59bb72fc84b54af9d1d204b41)), closes [#821](https://github.com/ory/kratos/issues/821)
 * Use working cache-control header for cdn/proxies/cache ([#869](https://github.com/ory/kratos/issues/869)) ([d8e3d40](https://github.com/ory/kratos/commit/d8e3d40001ffdc64da2288f3cffd53cf3bfdf781)), closes [#601](https://github.com/ory/kratos/issues/601)
 
@@ -155,11 +159,13 @@ No significant changes have been made for this release.
 
     > Added a short section for the recovery flow on managing-user-identities.
 * Fix account recovery click instruction ([#870](https://github.com/ory/kratos/issues/870)) ([383de9e](https://github.com/ory/kratos/commit/383de9ecf6f6504dbb9c20fb4cb984e934f0751e))
+* Fix broken link ([#893](https://github.com/ory/kratos/issues/893)) ([dec38a2](https://github.com/ory/kratos/commit/dec38a28964aaa13827d356e5bfa12c2a6d1400e)), closes [#835](https://github.com/ory/kratos/issues/835)
 * Fix oidc config example structure ([#845](https://github.com/ory/kratos/issues/845)) ([c102a68](https://github.com/ory/kratos/commit/c102a6844db29f994b67d23bb04e64ee71376264))
 * Fix redirect ([#802](https://github.com/ory/kratos/issues/802)) ([b868782](https://github.com/ory/kratos/commit/b86878229f343e6b11521596b04040f892d1e2c3))
 * Fix typo ([#847](https://github.com/ory/kratos/issues/847)) ([9b3da9f](https://github.com/ory/kratos/commit/9b3da9f0fe2ce71743115844d8c91a1dc9c4cbae))
 * Fix typo ([#881](https://github.com/ory/kratos/issues/881)) ([3078293](https://github.com/ory/kratos/commit/3078293717a2ce21c4b939de4c2c4886c75303b5))
 * Fix typo MKFA to MFA ([#826](https://github.com/ory/kratos/issues/826)) ([a5613d0](https://github.com/ory/kratos/commit/a5613d08aa21f90f4d192e5663ba4977b3de16c3))
+* Remove workaround note ([#886](https://github.com/ory/kratos/issues/886)) ([05409bc](https://github.com/ory/kratos/commit/05409bc13f527398e3de01f29437e5d4353ef8d4)), closes [#718](https://github.com/ory/kratos/issues/718)
 * Swagger specs for selfservice settings browser flow ([#825](https://github.com/ory/kratos/issues/825)) ([28d50f4](https://github.com/ory/kratos/commit/28d50f45ab14d561609be7047cac13902394b547))
 * Update oidc provider with json conf support ([#833](https://github.com/ory/kratos/issues/833)) ([670eb37](https://github.com/ory/kratos/commit/670eb37d19674f33a36402cd9a88d61ca7327751))
 
@@ -167,6 +173,7 @@ No significant changes have been made for this release.
 ### Features
 
 * Add return_to parameter to logout flow ([#823](https://github.com/ory/kratos/issues/823)) ([1c146dd](https://github.com/ory/kratos/commit/1c146dd21d616a56f510019abadd37402782bb39)), closes [#702](https://github.com/ory/kratos/issues/702)
+* Add selinux compatible quickstart config ([#889](https://github.com/ory/kratos/issues/889)) ([0f87948](https://github.com/ory/kratos/commit/0f879481df209ed96b778799adcc2a9424449b37)), closes [#831](https://github.com/ory/kratos/issues/831)
 
 
 ### Tests
