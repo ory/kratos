@@ -86,7 +86,7 @@ func pl(t *testing.T) func(lvl logging.Level, s string, args ...interface{}) {
 	}
 }
 
-func TestPersister(t *testing.T) {
+func createCleanDatabases(t *testing.T) map[string]*sql.Persister {
 	conns := map[string]string{
 		"sqlite": sqlite,
 	}
@@ -117,25 +117,36 @@ func TestPersister(t *testing.T) {
 
 	t.Logf("sqlite: %s", sqlite)
 
+	ps := make(map[string]*sql.Persister, len(conns))
 	for name, dsn := range conns {
-		t.Run(fmt.Sprintf("database=%s", name), func(t *testing.T) {
-			_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
-			p := reg.Persister()
+		_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
+		p := reg.Persister().(*sql.Persister)
 
+		_ = os.Remove("migrations/schema.sql")
+		testhelpers.CleanSQL(t, p.Connection())
+		t.Cleanup(func() {
+			testhelpers.CleanSQL(t, p.Connection())
 			_ = os.Remove("migrations/schema.sql")
-			testhelpers.CleanSQL(t, p.(*sql.Persister).Connection())
-			t.Cleanup(func() {
-				testhelpers.CleanSQL(t, p.(*sql.Persister).Connection())
-				_ = os.Remove("migrations/schema.sql")
-			})
+		})
 
-			pop.SetLogger(pl(t))
-			require.NoError(t, p.MigrationStatus(context.Background(), os.Stderr))
-			require.NoError(t, p.MigrateUp(context.Background()))
+		pop.SetLogger(pl(t))
+		require.NoError(t, p.MigrationStatus(context.Background(), os.Stderr))
+		require.NoError(t, p.MigrateUp(context.Background()))
 
+		ps[name] = p
+	}
+
+	return ps
+}
+
+func TestPersister(t *testing.T) {
+	conns := createCleanDatabases(t)
+
+	for name, p := range conns {
+		t.Run(fmt.Sprintf("database=%s", name), func(t *testing.T) {
 			t.Run("contract=identity.TestPool", func(t *testing.T) {
 				pop.SetLogger(pl(t))
-				identity.TestPool(p.(identity.PrivilegedPool))(t)
+				identity.TestPool(p)(t)
 			})
 			t.Run("contract=registration.TestFlowPersister", func(t *testing.T) {
 				pop.SetLogger(pl(t))
@@ -179,7 +190,7 @@ func TestPersister(t *testing.T) {
 			})
 		})
 
-		t.Logf("DSN: %s", dsn)
+		t.Logf("DSN: %s", p.Connection().URL())
 	}
 }
 

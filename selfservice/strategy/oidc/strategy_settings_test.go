@@ -576,7 +576,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 
 	for k, tc := range []struct {
 		c      []oidc.Configuration
-		i      identity.Credentials
+		i      *identity.Credentials
 		e      form.Fields
 		withpw bool
 	}{
@@ -612,7 +612,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 				{Name: "link", Type: "submit", Value: "google"},
 				{Name: "link", Type: "submit", Value: "github"},
 			},
-			i: identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{}, Config: []byte(`{}`)},
+			i: &identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{}, Config: []byte(`{}`)},
 		},
 		{
 			c: defaultConfig,
@@ -621,7 +621,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 				{Name: "link", Type: "submit", Value: "facebook"},
 				{Name: "link", Type: "submit", Value: "github"},
 			},
-			i: identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{
+			i: &identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{
 				"google:1234",
 			}, Config: []byte(`{"providers":[{"provider":"google","subject":"1234"}]}`)},
 		},
@@ -634,7 +634,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 				{Name: "unlink", Type: "submit", Value: "google"},
 			},
 			withpw: true,
-			i: identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{
+			i: &identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{
 				"google:1234",
 			},
 				Config: []byte(`{"providers":[{"provider":"google","subject":"1234"}]}`)},
@@ -647,7 +647,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 				{Name: "unlink", Type: "submit", Value: "google"},
 				{Name: "unlink", Type: "submit", Value: "facebook"},
 			},
-			i: identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{
+			i: &identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{
 				"google:1234",
 				"facebook:1234",
 			},
@@ -656,8 +656,13 @@ func TestPopulateSettingsMethod(t *testing.T) {
 	} {
 		t.Run("iteration="+strconv.Itoa(k), func(t *testing.T) {
 			reg := nreg(t, &oidc.ConfigurationCollection{Providers: tc.c})
-			i := &identity.Identity{Traits: []byte(`{"subject":"foo@bar.com"}`),
-				Credentials: map[identity.CredentialsType]identity.Credentials{identity.CredentialsTypeOIDC: tc.i}}
+			i := &identity.Identity{
+				Traits:      []byte(`{"subject":"foo@bar.com"}`),
+				Credentials: make(map[identity.CredentialsType]identity.Credentials, 2),
+			}
+			if tc.i != nil {
+				i.Credentials[identity.CredentialsTypeOIDC] = *tc.i
+			}
 			if tc.withpw {
 				i.Credentials[identity.CredentialsTypePassword] = identity.Credentials{
 					Type:        identity.CredentialsTypePassword,

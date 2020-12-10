@@ -615,6 +615,7 @@ github.com/gobuffalo/validate/v3 v3.1.0/go.mod h1:HFpjq+AIiA2RHoQnQVTFKF/ZpUPXwy
 github.com/gobuffalo/validate/v3 v3.2.0 h1:Zrpkz2kuZ4rGXLaO3IHVlwX512/cUWRvNjw46Cjhz2Q=
 github.com/gobuffalo/validate/v3 v3.2.0/go.mod h1:PrhDOdDHxtN8KUgMvF3TDL0r1YZXV4sQnyFX/EmeETY=
 github.com/gobuffalo/x v0.0.0-20181003152136-452098b06085/go.mod h1:WevpGD+5YOreDJznWevcn8NTmQEW5STSBgIkpkjzqXc=
+github.com/gobuffalo/x v0.0.0-20181007152206-913e47c59ca7 h1:N0iqtKwkicU8M2rLirTDJxdwuL8I2/8MjMlEayaNSgE=
 github.com/gobuffalo/x v0.0.0-20181007152206-913e47c59ca7/go.mod h1:9rDPXaB3kXdKWzMc4odGQQdG2e2DIEmANy5aSJ9yesY=
 github.com/gofrs/uuid v3.1.0+incompatible/go.mod h1:b2aQJv3Z4Fp6yNu3cdSllBxTCLRxnplIgP/c0N/04lM=
 github.com/gofrs/uuid v3.2.0+incompatible h1:y12jRkkFxsd7GpqdSZ+/KCs/fJbqpEXSGd4+jfEaewE=
