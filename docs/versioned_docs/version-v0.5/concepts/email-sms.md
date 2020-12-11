@@ -62,7 +62,7 @@ courier:
 
 `email.subject.gotmpl` and `email.body.gotmpl` are common template file names expected in remainder directories corresponding to respective methods for filling E-mail subject and body.
 
-> Templates use the engine golang text template: https://golang.org/pkg/text/template
+> Templates use the engine golang text template for text/html email rendering: https://golang.org/pkg/text/template
 
 - recovery: recovery email templates root directory
   - valid: sub directory containing templates with variables `To` and `VerificationURL` for validating a recovery
