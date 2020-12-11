@@ -24,7 +24,8 @@
     "concepts/email-sms", 
     "concepts/rest-api", 
     "concepts/federation", 
-    "concepts/security"
+    "concepts/security",
+    "concepts/docker", 
   ],
   "Self Service (End-User)": [
     "self-service", 
