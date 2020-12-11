@@ -82,7 +82,7 @@ below:
 
 ```dockerfile
 FROM oryd/kratos:latest
-COPY contrib/quickstart/kratos/email-password/.kratos.yml /ory/home
+COPY contrib/quickstart/kratos/email-password/.kratos.yml /home/ory
 ```
 
 ### Examples
