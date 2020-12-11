@@ -121,9 +121,6 @@ Something is not working.
 - [ ] Reloading config values does not work
       ([kratos#804](https://github.com/ory/kratos/issues/804)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] Kratos Admin API return 409 when createIdentity is called simultaneously
-      ([kratos#861](https://github.com/ory/kratos/issues/861)) -
-      [@Patrik](https://github.com/zepatrik)
 - [x] Sending JSON to complete oidc/password strategy flows causes CSRF issues
       ([kratos#378](https://github.com/ory/kratos/issues/378))
 - [x] Building From Source fails
@@ -131,6 +128,9 @@ Something is not working.
 - [x] Quickstart is failing to mount volume kratos.yml when SELinux is enabled
       using Podman ([kratos#831](https://github.com/ory/kratos/issues/831)) -
       [@hackerman](https://github.com/aeneasr)
+- [x] Kratos Admin API return 409 when createIdentity is called simultaneously
+      ([kratos#861](https://github.com/ory/kratos/issues/861)) -
+      [@Patrik](https://github.com/zepatrik)
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)
 
