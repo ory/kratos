@@ -24,9 +24,9 @@ courier:
     connection_uri: smtps://test:test@my-smtp-server:1025/
 ```
 
-### Recipient and Templates
+### Sender Address and Template Customization
 
-You can custom recipient address and email templates.
+You can customize the sender address and email templates.
 
 ```yaml title="path/to/my/kratos/config.yml"
 # $ kratos -c path/to/my/kratos/config.yml serve
@@ -71,17 +71,13 @@ courier:
   - valid: sub directory containing templates with variables `To` and `RecoveryURL` for validating a verification
   - invalid: sub directory containing templates with variables `To` for invalidating a verification
 
-For example: <https://github.com/ory/kratos/blob/master/courier/template/templates/verification/valid/email.body.gotmpl>
-```gotmpl title="verifiaction/valid/email.body.gotmpl"
+For example: [`/courier/template/templates/verification/valid/email.body.gotmpl`](https://github.com/ory/kratos/blob/master/courier/template/templates/verification/valid/email.body.gotmpl)
+```gotmpl title="courier/template/templates/verification/valid/email.body.gotmpl"
 Hi, please verify your account by clicking the following link:
 
 <a href="{{ .VerificationURL }}">{{ .VerificationURL }}</a>
 ```
 
-> A future version of ORY Kratos will feature proprietary E-Mail messages using
-the Go template engine extended by
-[sprig's template functions](http://masterminds.github.io/sprig/). It should
-also be possible to internationalize these templates.
 
 ## Sending SMS
 
