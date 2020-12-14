@@ -28,12 +28,6 @@ kratos version [flags]
   -h, --help   help for version
 ```
 
-### Options inherited from parent commands
-
-```
-  -c, --config string   Path to config file. Supports .json, .yaml, .yml, .toml. Default is "$HOME/.kratos.(yaml|yml|toml|json)"
-```
-
 ### SEE ALSO
 
 - [kratos](kratos) -

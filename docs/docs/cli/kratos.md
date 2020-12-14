@@ -17,8 +17,7 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 ### Options
 
 ```
-  -c, --config string   Path to config file. Supports .json, .yaml, .yml, .toml. Default is "$HOME/.kratos.(yaml|yml|toml|json)"
-  -h, --help            help for kratos
+  -h, --help   help for kratos
 ```
 
 ### SEE ALSO
