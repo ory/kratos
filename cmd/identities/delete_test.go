@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/sqlcon"
@@ -20,7 +20,7 @@ func TestDeleteCmd(t *testing.T) {
 
 	t.Run("case=deletes successfully", func(t *testing.T) {
 		// create identity to delete
-		i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 		require.NoError(t, reg.Persister().CreateIdentity(context.Background(), i))
 
 		stdOut := execNoErr(t, deleteCmd, i.ID.String())

@@ -10,9 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/x"
@@ -30,12 +28,10 @@ type (
 	}
 )
 
-func TestRequestPersister(p interface {
+func TestRequestPersister(conf *config.Provider, p interface {
 	FlowPersister
 	identity.PrivilegedPool
 }) func(t *testing.T) {
-	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
-
 	var clearids = func(r *Flow) {
 		r.ID = uuid.UUID{}
 		r.Identity.ID = uuid.UUID{}
@@ -43,6 +39,8 @@ func TestRequestPersister(p interface {
 	}
 
 	return func(t *testing.T) {
+		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+
 		t.Run("case=should error when the settings request does not exist", func(t *testing.T) {
 			_, err := p.GetSettingsFlow(context.Background(), x.NewUUID())
 			require.Error(t, err)

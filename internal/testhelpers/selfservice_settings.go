@@ -21,11 +21,10 @@ import (
 
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/viper"
 	"github.com/ory/x/pointerx"
 
 	"github.com/ory/kratos/driver"
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal/httpclient/client"
 	"github.com/ory/kratos/internal/httpclient/client/public"
@@ -40,7 +39,7 @@ func NewSettingsUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Se
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, e)
 	}))
-	viper.Set(configuration.ViperKeySelfServiceSettingsURL, ts.URL+"/settings-ts")
+	reg.Configuration().MustSet(config.ViperKeySelfServiceSettingsURL, ts.URL+"/settings-ts")
 	t.Cleanup(ts.Close)
 	return ts
 }
@@ -117,7 +116,7 @@ func GetSettingsFlowMethodConfigDeprecated(t *testing.T, primaryUser *http.Clien
 	return rs.Payload.Methods[id].Config
 }
 
-func NewSettingsUITestServer(t *testing.T) *httptest.Server {
+func NewSettingsUITestServer(t *testing.T, conf *config.Provider) *httptest.Server {
 	router := httprouter.New()
 	router.GET("/settings", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		w.WriteHeader(http.StatusNoContent)
@@ -128,8 +127,8 @@ func NewSettingsUITestServer(t *testing.T) *httptest.Server {
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)
 
-	viper.Set(configuration.ViperKeySelfServiceSettingsURL, ts.URL+"/settings")
-	viper.Set(configuration.ViperKeySelfServiceLoginUI, ts.URL+"/login")
+	conf.MustSet(config.ViperKeySelfServiceSettingsURL, ts.URL+"/settings")
+	conf.MustSet(config.ViperKeySelfServiceLoginUI, ts.URL+"/login")
 
 	return ts
 }
@@ -148,19 +147,19 @@ func NewSettingsUIEchoServer(t *testing.T, reg *driver.RegistryDefault) *httptes
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)
 
-	viper.Set(configuration.ViperKeySelfServiceSettingsURL, ts.URL+"/settings")
-	viper.Set(configuration.ViperKeySelfServiceLoginUI, ts.URL+"/login")
+	reg.Configuration().MustSet(config.ViperKeySelfServiceSettingsURL, ts.URL+"/settings")
+	reg.Configuration().MustSet(config.ViperKeySelfServiceLoginUI, ts.URL+"/login")
 
 	return ts
 }
 
-func NewSettingsLoginAcceptAPIServer(t *testing.T, adminClient *client.OryKratos) *httptest.Server {
+func NewSettingsLoginAcceptAPIServer(t *testing.T, adminClient *client.OryKratos, conf *config.Provider) *httptest.Server {
 	var called int
 	loginTS := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		require.Equal(t, 0, called)
 		called++
 
-		viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
+		conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 
 		res, err := adminClient.Public.GetSelfServiceLoginFlow(public.NewGetSelfServiceLoginFlowParams().WithID(r.URL.Query().Get("flow")))
 
@@ -174,7 +173,7 @@ func NewSettingsLoginAcceptAPIServer(t *testing.T, adminClient *client.OryKratos
 	t.Cleanup(func() {
 		loginTS.Close()
 	})
-	viper.Set(configuration.ViperKeySelfServiceLoginUI, loginTS.URL+"/login")
+	conf.MustSet(config.ViperKeySelfServiceLoginUI, loginTS.URL+"/login")
 	return loginTS
 }
 
@@ -197,8 +196,8 @@ func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, ids map[str
 	t.Cleanup(tsp.Close)
 	t.Cleanup(tsa.Close)
 
-	viper.Set(configuration.ViperKeyPublicBaseURL, tsp.URL)
-	viper.Set(configuration.ViperKeyAdminBaseURL, tsa.URL)
+	reg.Configuration().MustSet(config.ViperKeyPublicBaseURL, tsp.URL)
+	reg.Configuration().MustSet(config.ViperKeyAdminBaseURL, tsa.URL)
 	return tsp, tsa, AddAndLoginIdentities(t, reg, &httptest.Server{Config: &http.Server{Handler: public}, URL: tsp.URL}, ids)
 }
 

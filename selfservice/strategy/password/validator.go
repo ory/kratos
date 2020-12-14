@@ -3,7 +3,7 @@ package password
 import (
 	"bufio"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 
 	/* #nosec G505 sha1 is used for k-anonymity */
 	"crypto/sha1"
@@ -51,7 +51,7 @@ var ErrUnexpectedStatusCode = errors.New("unexpected status code")
 // password has been breached in a previous data leak using k-anonymity.
 type DefaultPasswordValidator struct {
 	sync.RWMutex
-	conf   configuration.Provider
+	conf   *config.Provider
 	Client *http.Client
 	hashes map[string]int64
 
@@ -59,7 +59,7 @@ type DefaultPasswordValidator struct {
 	maxIdentifierPasswordSubstrThreshold float32
 }
 
-func NewDefaultPasswordValidatorStrategy(conf configuration.Provider) *DefaultPasswordValidator {
+func NewDefaultPasswordValidatorStrategy(conf *config.Provider) *DefaultPasswordValidator {
 	return &DefaultPasswordValidator{
 		Client:                               httpx.NewResilientClientLatencyToleranceMedium(nil),
 		conf:                                 conf,

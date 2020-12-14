@@ -9,9 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/strategy/password"
@@ -19,20 +17,10 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-func expectStatusCodeBrowserOKOr(isAPI bool, apiExpect int) int {
-	return expectStatusCode(isAPI, apiExpect, http.StatusOK)
-}
-
-func expectStatusCode(isAPI bool, api, browser int) int {
-	if isAPI {
-		return api
-	}
-	return browser
-}
-
 func newReturnTs(t *testing.T, reg interface {
 	session.ManagementProvider
 	x.WriterProvider
+	Configuration() *config.Provider
 }) *httptest.Server {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
@@ -40,7 +28,7 @@ func newReturnTs(t *testing.T, reg interface {
 		reg.Writer().Write(w, r, sess)
 	}))
 	t.Cleanup(ts.Close)
-	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL+"/return-ts")
+	reg.Configuration().MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL+"/return-ts")
 	return ts
 }
 

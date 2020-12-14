@@ -3,12 +3,12 @@ package template
 import (
 	"path/filepath"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 )
 
 type (
 	RecoveryValid struct {
-		c configuration.Provider
+		c *config.Provider
 		m *RecoveryValidModel
 	}
 	RecoveryValidModel struct {
@@ -17,7 +17,7 @@ type (
 	}
 )
 
-func NewRecoveryValid(c configuration.Provider, m *RecoveryValidModel) *RecoveryValid {
+func NewRecoveryValid(c *config.Provider, m *RecoveryValidModel) *RecoveryValid {
 	return &RecoveryValid{c: c, m: m}
 }
 

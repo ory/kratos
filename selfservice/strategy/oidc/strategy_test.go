@@ -22,9 +22,7 @@ import (
 
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
@@ -44,9 +42,9 @@ func TestStrategy(t *testing.T) {
 	}
 
 	var (
-		_, reg  = internal.NewFastRegistryWithMocks(t)
-		subject string
-		scope   []string
+		conf, reg = internal.NewFastRegistryWithMocks(t)
+		subject   string
+		scope     []string
 	)
 
 	remoteAdmin, remotePublic, hydraIntegrationTSURL := newHydra(t, &subject, &scope)
@@ -56,6 +54,8 @@ func TestStrategy(t *testing.T) {
 	ts, tsA := testhelpers.NewKratosServers(t)
 
 	viperSetProviderConfig(
+		t,
+		conf,
 		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid", "client"),
 		oidc.Configuration{
 			Provider:     "generic",
@@ -67,9 +67,9 @@ func TestStrategy(t *testing.T) {
 		},
 	)
 	testhelpers.InitKratosServers(t, reg, ts, tsA)
-	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
-	viper.Set(configuration.HookStrategyKey(configuration.ViperKeySelfServiceRegistrationAfter,
-		identity.CredentialsTypeOIDC.String()), []configuration.SelfServiceHook{{Name: "session"}})
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+	conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter,
+		identity.CredentialsTypeOIDC.String()), []config.SelfServiceHook{{Name: "session"}})
 
 	t.Logf("Kratos Public URL: %s", ts.URL)
 	t.Logf("Kratos Error URL: %s", errTS.URL)
@@ -344,7 +344,7 @@ func TestStrategy(t *testing.T) {
 		scope = []string{"openid"}
 
 		t.Run("case=create password identity", func(t *testing.T) {
-			i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+			i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
 				Identifiers: []string{subject},
 			})
@@ -406,7 +406,7 @@ func TestStrategy(t *testing.T) {
 	})
 
 	t.Run("method=TestPopulateSignUpMethod", func(t *testing.T) {
-		viper.Set(configuration.ViperKeyPublicBaseURL, urlx.ParseOrPanic("https://foo/"))
+		conf.MustSet(config.ViperKeyPublicBaseURL, "https://foo/")
 
 		sr := registration.NewFlow(time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
 		require.NoError(t, reg.RegistrationStrategies().MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateRegistrationMethod(&http.Request{}, sr))
@@ -446,7 +446,7 @@ func TestStrategy(t *testing.T) {
 	})
 
 	t.Run("method=TestPopulateLoginMethod", func(t *testing.T) {
-		viper.Set(configuration.ViperKeyPublicBaseURL, urlx.ParseOrPanic("https://foo/"))
+		conf.MustSet(config.ViperKeyPublicBaseURL, "https://foo/")
 
 		sr := login.NewFlow(time.Minute, "nosurf", &http.Request{URL: urlx.ParseOrPanic("/")}, flow.TypeBrowser)
 		require.NoError(t, reg.LoginStrategies().MustStrategy(identity.CredentialsTypeOIDC).(*oidc.Strategy).PopulateLoginMethod(&http.Request{}, sr))

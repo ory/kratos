@@ -15,7 +15,7 @@ import (
 
 	gomail "github.com/ory/mail/v3"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/x"
 )
 
@@ -27,7 +27,7 @@ type (
 	Courier struct {
 		Dialer *gomail.Dialer
 		d      smtpDependencies
-		c      configuration.Provider
+		c      *config.Provider
 		// graceful shutdown handling
 		ctx      context.Context
 		shutdown context.CancelFunc
@@ -37,7 +37,7 @@ type (
 	}
 )
 
-func NewSMTP(d smtpDependencies, c configuration.Provider) *Courier {
+func NewSMTP(d smtpDependencies, c *config.Provider) *Courier {
 	uri := c.CourierSMTPURL()
 	password, _ := uri.User.Password()
 	port, _ := strconv.ParseInt(uri.Port(), 10, 64)

@@ -10,7 +10,7 @@ import (
 	"github.com/ory/x/decoderx"
 
 	"github.com/ory/kratos/continuity"
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/errorx"
@@ -62,8 +62,8 @@ type registrationStrategyDependencies interface {
 }
 
 type Strategy struct {
-	c  configuration.Provider
 	d  registrationStrategyDependencies
+	c  *config.Provider
 	v  *validator.Validate
 	hd *decoderx.HTTP
 }
@@ -87,7 +87,7 @@ func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identi
 
 func NewStrategy(
 	d registrationStrategyDependencies,
-	c configuration.Provider,
+	c *config.Provider,
 ) *Strategy {
 	return &Strategy{
 		c:  c,

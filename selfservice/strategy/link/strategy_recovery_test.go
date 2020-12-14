@@ -20,10 +20,9 @@ import (
 
 	"github.com/ory/x/assertx"
 
-	"github.com/ory/viper"
 	"github.com/ory/x/pointerx"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/httpclient/client/admin"
@@ -42,7 +41,7 @@ func init() {
 
 func TestAdminStrategy(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	initViper()
+	initViper(t, conf)
 
 	_ = testhelpers.NewRecoveryUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewSettingsUIFlowEchoServer(t, reg)
@@ -133,12 +132,12 @@ func TestRecovery(t *testing.T) {
 		Credentials: map[identity.CredentialsType]identity.Credentials{
 			"password": {Type: "password", Identifiers: []string{"recoverme@ory.sh"}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)}},
 		Traits:   identity.Traits(`{"email":"recoverme@ory.sh"}`),
-		SchemaID: configuration.DefaultIdentityTraitsSchemaID,
+		SchemaID: config.DefaultIdentityTraitsSchemaID,
 	}
 	var recoveryEmail = gjson.GetBytes(identityToRecover.Traits, "email").String()
 
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	initViper()
+	initViper(t, conf)
 
 	_ = testhelpers.NewRecoveryUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)
@@ -288,9 +287,9 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should not be able to use an outdated link", func(t *testing.T) {
-		viper.Set(configuration.ViperKeySelfServiceRecoveryRequestLifespan, time.Millisecond*200)
+		conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Millisecond*200)
 		t.Cleanup(func() {
-			viper.Set(configuration.ViperKeySelfServiceRecoveryRequestLifespan, time.Minute)
+			conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Minute)
 		})
 
 		c := testhelpers.NewClientWithCookies(t)
@@ -307,8 +306,10 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should not be able to use an outdated flow", func(t *testing.T) {
-		viper.Set(configuration.ViperKeySelfServiceRecoveryRequestLifespan, time.Millisecond*200)
-		defer viper.Set(configuration.ViperKeySelfServiceRecoveryRequestLifespan, time.Minute)
+		conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Millisecond*200)
+		t.Cleanup(func() {
+			conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Minute)
+		})
 
 		body := expectSuccess(t, false, func(v url.Values) {
 			v.Set("email", recoveryEmail)

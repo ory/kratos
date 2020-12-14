@@ -20,7 +20,7 @@ import (
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/continuity"
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
@@ -64,7 +64,7 @@ type (
 		IdentityTraitsSchemas() schema.Schemas
 	}
 	Strategy struct {
-		c  configuration.Provider
+		c  *config.Provider
 		d  strategyDependencies
 		dc *decoderx.HTTP
 	}
@@ -75,7 +75,7 @@ type SettingsProfileRequestMethod struct {
 	*form.HTMLForm
 }
 
-func NewStrategy(d strategyDependencies, c configuration.Provider) *Strategy {
+func NewStrategy(d strategyDependencies, c *config.Provider) *Strategy {
 	return &Strategy{c: c, d: d, dc: decoderx.NewHTTP()}
 }
 

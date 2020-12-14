@@ -7,7 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
@@ -39,7 +39,7 @@ type (
 	}
 	HookExecutor struct {
 		d executorDependencies
-		c configuration.Provider
+		c *config.Provider
 	}
 	HookExecutorProvider interface {
 		LoginHookExecutor() *HookExecutor
@@ -54,7 +54,7 @@ func PostHookExecutorNames(e []PostHookExecutor) []string {
 	return names
 }
 
-func NewHookExecutor(d executorDependencies, c configuration.Provider) *HookExecutor {
+func NewHookExecutor(d executorDependencies, c *config.Provider) *HookExecutor {
 	return &HookExecutor{
 		d: d,
 		c: c,

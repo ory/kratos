@@ -22,9 +22,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/x"
 )
 
@@ -87,12 +85,14 @@ type (
 	}
 )
 
-func TestPool(p PrivilegedPool) func(t *testing.T) {
+func TestPool(conf *config.Provider, p interface {
+	PrivilegedPool
+}) func(t *testing.T) {
 	return func(t *testing.T) {
 		exampleServerURL := urlx.ParseOrPanic("http://example.com")
-		viper.Set(configuration.ViperKeyPublicBaseURL, exampleServerURL)
+		conf.MustSet(config.ViperKeyPublicBaseURL, exampleServerURL.String())
 		defaultSchema := schema.Schema{
-			ID:     configuration.DefaultIdentityTraitsSchemaID,
+			ID:     config.DefaultIdentityTraitsSchemaID,
 			URL:    urlx.ParseOrPanic("file://./stub/identity.schema.json"),
 			RawURL: "file://./stub/identity.schema.json",
 		}
@@ -101,8 +101,8 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			URL:    urlx.ParseOrPanic("file://./stub/identity-2.schema.json"),
 			RawURL: "file://./stub/identity-2.schema.json",
 		}
-		viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, defaultSchema.RawURL)
-		viper.Set(configuration.ViperKeyIdentitySchemas, []configuration.SchemaConfig{{
+		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, defaultSchema.RawURL)
+		conf.MustSet(config.ViperKeyIdentitySchemas, []config.SchemaConfig{{
 			ID:  altSchema.ID,
 			URL: altSchema.RawURL,
 		}})
@@ -134,7 +134,7 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 		}
 
 		t.Run("case=should create and set missing ID", func(t *testing.T) {
-			i := NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+			i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			i.SetCredentials(CredentialsTypeOIDC, Credentials{
 				Type: CredentialsTypeOIDC, Identifiers: []string{x.NewUUID().String()},
 				Config: sqlxx.JSONRawMessage(`{}`),
@@ -158,7 +158,7 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			require.NoError(t, err)
 
 			assert.Equal(t, expected.ID, actual.ID)
-			assert.Equal(t, configuration.DefaultIdentityTraitsSchemaID, actual.SchemaID)
+			assert.Equal(t, config.DefaultIdentityTraitsSchemaID, actual.SchemaID)
 			assert.Equal(t, defaultSchema.SchemaURL(exampleServerURL).String(), actual.SchemaURL)
 			assertEqual(t, expected, actual)
 
@@ -266,7 +266,7 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			require.NoError(t, p.CreateIdentity(context.Background(), initial))
 			createdIDs = append(createdIDs, initial.ID)
 
-			assert.Equal(t, configuration.DefaultIdentityTraitsSchemaID, initial.SchemaID)
+			assert.Equal(t, config.DefaultIdentityTraitsSchemaID, initial.SchemaID)
 			assert.Equal(t, defaultSchema.SchemaURL(exampleServerURL).String(), initial.SchemaURL)
 
 			expected := initial.CopyWithoutCredentials()

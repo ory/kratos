@@ -10,7 +10,7 @@ import (
 	"github.com/markbates/pkger"
 	"github.com/pkg/errors"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/persistence"
 	"github.com/ory/kratos/schema"
@@ -31,12 +31,12 @@ type (
 		c        *pop.Connection
 		mb       *pkgerx.MigrationBox
 		r        persisterDependencies
-		cf       configuration.Provider
+		cf       *config.Provider
 		isSQLite bool
 	}
 )
 
-func NewPersister(r persisterDependencies, conf configuration.Provider, c *pop.Connection) (*Persister, error) {
+func NewPersister(r persisterDependencies, conf *config.Provider, c *pop.Connection) (*Persister, error) {
 	m, err := pkgerx.NewMigrationBox(migrations, c, r.Logger())
 	if err != nil {
 		return nil, err

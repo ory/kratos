@@ -13,14 +13,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/viper"
-
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/herodot"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
 	sdkp "github.com/ory/kratos/internal/httpclient/client/public"
 	"github.com/ory/kratos/internal/httpclient/models"
@@ -34,7 +32,7 @@ import (
 
 func TestHandleError(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	viper.Set(configuration.ViperKeySelfServiceRecoveryEnabled, true)
+	conf.MustSet(config.ViperKeySelfServiceRecoveryEnabled, true)
 
 	public, admin := testhelpers.NewKratosServer(t, reg)
 

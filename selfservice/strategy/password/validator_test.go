@@ -8,12 +8,11 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/stretchr/testify/require"
+
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/strategy/password"
-	"github.com/ory/viper"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestDefaultPasswordValidationStrategy(t *testing.T) {
@@ -70,36 +69,36 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 	s.Client = &fakeClient.Client
 
 	t.Run("case=should send request to pwnedpasswords.com", func(t *testing.T) {
-		viper.Set(configuration.ViperKeyIgnoreNetworkErrors, false)
+		conf.MustSet(config.ViperKeyIgnoreNetworkErrors, false)
 		require.Error(t, s.Validate("mohutdesub", "damrumukuh"))
 		require.Contains(t, fakeClient.RequestedURLs(), "https://api.pwnedpasswords.com/range/BCBA9")
 	})
 
 	t.Run("case=should fail if request fails and ignoreNetworkErrors is not set", func(t *testing.T) {
-		viper.Set(configuration.ViperKeyIgnoreNetworkErrors, false)
+		conf.MustSet(config.ViperKeyIgnoreNetworkErrors, false)
 		fakeClient.RespondWithError("Network request failed")
 		require.Error(t, s.Validate("", "sumdarmetp"))
 	})
 
 	t.Run("case=should not fail if request fails and ignoreNetworkErrors is set", func(t *testing.T) {
-		viper.Set(configuration.ViperKeyIgnoreNetworkErrors, true)
+		conf.MustSet(config.ViperKeyIgnoreNetworkErrors, true)
 		fakeClient.RespondWithError("Network request failed")
 		require.NoError(t, s.Validate("", "pepegtawni"))
 	})
 
 	t.Run("case=should fail if response has non 200 code and ignoreNetworkErrors is not set", func(t *testing.T) {
-		viper.Set(configuration.ViperKeyIgnoreNetworkErrors, false)
+		conf.MustSet(config.ViperKeyIgnoreNetworkErrors, false)
 		fakeClient.RespondWith(http.StatusForbidden, "")
 		require.Error(t, s.Validate("", "jolhakowef"))
 	})
 
 	t.Run("case=should not fail if response has non 200 code code and ignoreNetworkErrors is set", func(t *testing.T) {
-		viper.Set(configuration.ViperKeyIgnoreNetworkErrors, true)
+		conf.MustSet(config.ViperKeyIgnoreNetworkErrors, true)
 		fakeClient.RespondWith(http.StatusInternalServerError, "")
 		require.NoError(t, s.Validate("", "jenuzuhjoj"))
 	})
 
-	viper.Set(configuration.ViperKeyPasswordMaxBreaches, 5)
+	conf.MustSet(config.ViperKeyPasswordMaxBreaches, 5)
 	for _, tc := range []struct {
 		cs   string
 		pw   string

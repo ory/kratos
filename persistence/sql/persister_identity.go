@@ -10,7 +10,7 @@ import (
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/x/sqlxx"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/otp"
 	"github.com/ory/kratos/x"
 
@@ -169,7 +169,7 @@ func (p *Persister) CountIdentities(ctx context.Context) (int64, error) {
 
 func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) error {
 	if i.SchemaID == "" {
-		i.SchemaID = configuration.DefaultIdentityTraitsSchemaID
+		i.SchemaID = config.DefaultIdentityTraitsSchemaID
 	}
 
 	if len(i.Traits) == 0 {

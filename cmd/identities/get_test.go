@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 )
 
@@ -18,7 +18,7 @@ func TestGetCmd(t *testing.T) {
 	reg := setup(t, getCmd)
 
 	t.Run("case=gets a single identity", func(t *testing.T) {
-		i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 		require.NoError(t, reg.Persister().CreateIdentity(context.Background(), i))
 
 		stdOut := execNoErr(t, getCmd, i.ID.String())

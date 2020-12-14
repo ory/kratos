@@ -29,7 +29,7 @@ import (
 
 	"github.com/ory/x/dbal"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/errorx"
 	password2 "github.com/ory/kratos/selfservice/strategy/password"
@@ -41,13 +41,9 @@ type Registry interface {
 
 	Init() error
 
-	WithConfig(c configuration.Provider) Registry
+	Configuration() *config.Provider
+	WithConfig(c *config.Provider) Registry
 	WithLogger(l *logrusx.Logger) Registry
-
-	BuildVersion() string
-	BuildDate() string
-	BuildHash() string
-	WithBuildInfo(version, hash, date string) Registry
 
 	WithCSRFHandler(c x.CSRFHandler)
 	WithCSRFTokenGenerator(cg x.CSRFToken)
@@ -132,9 +128,8 @@ type Registry interface {
 	x.CSRFTokenGeneratorProvider
 }
 
-func NewRegistry(c configuration.Provider) (Registry, error) {
-	dsn := c.DSN()
-	driver, err := dbal.GetDriverFor(dsn)
+func NewRegistryFromDSN(c *config.Provider, l *logrusx.Logger) (Registry, error) {
+	driver, err := dbal.GetDriverFor(c.DSN())
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -144,5 +139,5 @@ func NewRegistry(c configuration.Provider) (Registry, error) {
 		return nil, errors.Errorf("driver of type %T does not implement interface Registry", driver)
 	}
 
-	return registry, nil
+	return registry.WithLogger(l).WithConfig(c), nil
 }

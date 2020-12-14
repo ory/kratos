@@ -16,8 +16,6 @@ import (
 	"github.com/ory/kratos/internal/clihelpers"
 	"github.com/ory/x/cmdx"
 
-	"github.com/ory/x/viperx"
-
 	"github.com/spf13/cobra"
 )
 
@@ -38,8 +36,6 @@ func Execute() {
 }
 
 func init() {
-	viperx.RegisterConfigFlag(RootCmd, "kratos")
-
 	identities.RegisterCommandRecursive(RootCmd)
 	jsonnet.RegisterCommandRecursive(RootCmd)
 	serve.RegisterCommandRecursive(RootCmd)

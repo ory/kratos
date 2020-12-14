@@ -13,10 +13,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/herodot"
-	"github.com/ory/viper"
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/x"
 )
@@ -41,9 +40,9 @@ func TestSecureContentNegotiationRedirection(t *testing.T) {
 	defer ts.Close()
 
 	defaultReturnTo := ts.URL + "/default-return-to"
-	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, defaultReturnTo)
-	viper.Set(configuration.ViperKeyPublicBaseURL, ts.URL)
-	viper.Set(configuration.ViperKeyURLsWhitelistedReturnToDomains, []string{ts.URL})
+	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, defaultReturnTo)
+	conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
+	conf.MustSet(config.ViperKeyURLsWhitelistedReturnToDomains, []string{ts.URL})
 
 	run := func(t *testing.T, href string, contentType string) (*http.Response, string) {
 		req, err := http.NewRequest("GET", href, nil)
