@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/argon2"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 )
 
 var (
@@ -25,7 +25,7 @@ type Argon2 struct {
 }
 
 type Argon2Configuration interface {
-	HasherArgon2() *configuration.HasherArgon2Config
+	HasherArgon2() *config.HasherArgon2Config
 }
 
 func NewHasherArgon2(c Argon2Configuration) *Argon2 {
@@ -79,7 +79,7 @@ func (h *Argon2) Compare(password []byte, hash []byte) error {
 	return ErrMismatchedHashAndPassword
 }
 
-func decodeHash(encodedHash string) (p *configuration.HasherArgon2Config, salt, hash []byte, err error) {
+func decodeHash(encodedHash string) (p *config.HasherArgon2Config, salt, hash []byte, err error) {
 	parts := strings.Split(encodedHash, "$")
 	if len(parts) != 6 {
 		return nil, nil, nil, ErrInvalidHash
@@ -94,7 +94,7 @@ func decodeHash(encodedHash string) (p *configuration.HasherArgon2Config, salt, 
 		return nil, nil, nil, ErrIncompatibleVersion
 	}
 
-	p = new(configuration.HasherArgon2Config)
+	p = new(config.HasherArgon2Config)
 	_, err = fmt.Sscanf(parts[3], "m=%d,t=%d,p=%d", &p.Memory, &p.Iterations, &p.Parallelism)
 	if err != nil {
 		return nil, nil, nil, err

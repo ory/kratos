@@ -2,12 +2,13 @@ package testhelpers
 
 import (
 	"context"
-	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/internal"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/google/uuid"
@@ -16,9 +17,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
@@ -28,11 +27,12 @@ type mockDeps interface {
 	identity.PrivilegedPoolProvider
 	session.ManagementProvider
 	session.PersistenceProvider
+	Configuration() *config.Provider
 }
 
-func MockSetSession(t *testing.T, reg mockDeps, conf configuration.Provider) httprouter.Handle {
+func MockSetSession(t *testing.T, reg mockDeps, conf *config.Provider) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 
 		require.NoError(t, reg.SessionManager().CreateAndIssueCookie(context.Background(), w, r, session.NewActiveSession(i, conf, time.Now().UTC())))
@@ -53,7 +53,7 @@ func MockGetSession(t *testing.T, reg mockDeps) httprouter.Handle {
 	}
 }
 
-func MockMakeAuthenticatedRequest(t *testing.T, reg mockDeps, conf configuration.Provider, router *httprouter.Router, req *http.Request) ([]byte, *http.Response) {
+func MockMakeAuthenticatedRequest(t *testing.T, reg mockDeps, conf *config.Provider, router *httprouter.Router, req *http.Request) ([]byte, *http.Response) {
 	set := "/" + uuid.New().String() + "/set"
 	router.GET(set, MockSetSession(t, reg, conf))
 
@@ -101,8 +101,8 @@ func MockSessionCreateHandlerWithIdentity(t *testing.T, reg mockDeps, i *identit
 	sess.ExpiresAt = time.Now().UTC().Add(time.Hour * 24)
 	sess.Active = true
 
-	if viper.GetString(configuration.ViperKeyDefaultIdentitySchemaURL) == "" {
-		viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/fake-session.schema.json")
+	if reg.Configuration().Source().String(config.ViperKeyDefaultIdentitySchemaURL) == internal.UnsetDefaultIdentitySchema {
+		reg.Configuration().MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/fake-session.schema.json")
 	}
 
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
@@ -122,6 +122,6 @@ func MockSessionCreateHandlerWithIdentity(t *testing.T, reg mockDeps, i *identit
 func MockSessionCreateHandler(t *testing.T, reg mockDeps) (httprouter.Handle, *session.Session) {
 	return MockSessionCreateHandlerWithIdentity(t, reg, &identity.Identity{
 		ID:     x.NewUUID(),
-		Traits: identity.Traits(json.RawMessage(`{"baz":"bar","foo":true,"bar":2.5}`)),
+		Traits: identity.Traits(`{"baz":"bar","foo":true,"bar":2.5}`),
 	})
 }

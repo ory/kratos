@@ -9,18 +9,18 @@ import (
 	"github.com/inhies/go-bytesize"
 	"github.com/spf13/cobra"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hash"
 	"github.com/ory/x/cmdx"
 )
 
 type (
 	argon2Config struct {
-		c configuration.HasherArgon2Config
+		c config.HasherArgon2Config
 	}
 )
 
-func (c *argon2Config) HasherArgon2() *configuration.HasherArgon2Config {
+func (c *argon2Config) HasherArgon2() *config.HasherArgon2Config {
 	return &c.c
 }
 
@@ -50,8 +50,8 @@ func newCalibrateCmd() *cobra.Command {
 		runs                                 int
 	)
 
-	config := &argon2Config{
-		c: configuration.HasherArgon2Config{},
+	aconfig := &argon2Config{
+		c: config.HasherArgon2Config{},
 	}
 
 	cmd := &cobra.Command{
@@ -69,9 +69,9 @@ Please note that the values depend on the machine you run the hashing on. If you
 				return err
 			}
 
-			config.c.Memory = toKB(startMemory)
+			aconfig.c.Memory = toKB(startMemory)
 
-			hasher := hash.NewHasherArgon2(config)
+			hasher := hash.NewHasherArgon2(aconfig)
 
 			var currentDuration time.Duration
 
@@ -80,12 +80,12 @@ Please note that the values depend on the machine you run the hashing on. If you
 			}
 
 			for {
-				if maxMemory != 0 && config.c.Memory > toKB(maxMemory) {
+				if maxMemory != 0 && aconfig.c.Memory > toKB(maxMemory) {
 					// don't further increase memory
 					if !quiet {
 						fmt.Fprintln(cmd.ErrOrStderr(), "  ouch, hit the memory limit there")
 					}
-					config.c.Memory = toKB(maxMemory)
+					aconfig.c.Memory = toKB(maxMemory)
 					break
 				}
 
@@ -95,20 +95,20 @@ Please note that the values depend on the machine you run the hashing on. If you
 				}
 
 				if !quiet {
-					fmt.Fprintf(cmd.ErrOrStderr(), "  took %s with %s of memory\n", currentDuration, config.getMemFormat())
+					fmt.Fprintf(cmd.ErrOrStderr(), "  took %s with %s of memory\n", currentDuration, aconfig.getMemFormat())
 				}
 
 				if currentDuration > desiredDuration {
-					if config.c.Memory <= toKB(adjustMemory) {
+					if aconfig.c.Memory <= toKB(adjustMemory) {
 						// adjusting the memory would now result in <= 0B
 						adjustMemory = adjustMemory >> 1
 					}
-					config.c.Memory -= toKB(adjustMemory)
+					aconfig.c.Memory -= toKB(adjustMemory)
 					break
 				}
 
 				// adjust config
-				config.c.Memory += toKB(adjustMemory)
+				aconfig.c.Memory += toKB(adjustMemory)
 			}
 
 			if !quiet {
@@ -122,24 +122,24 @@ Please note that the values depend on the machine you run the hashing on. If you
 				}
 
 				if !quiet {
-					fmt.Fprintf(cmd.ErrOrStderr(), "  took %s with %s of memory\n", currentDuration, config.getMemFormat())
+					fmt.Fprintf(cmd.ErrOrStderr(), "  took %s with %s of memory\n", currentDuration, aconfig.getMemFormat())
 				}
 
 				if currentDuration < desiredDuration {
 					break
 				}
 
-				if config.c.Memory <= toKB(adjustMemory) {
+				if aconfig.c.Memory <= toKB(adjustMemory) {
 					// adjusting the memory would now result in <= 0B
 					adjustMemory = adjustMemory >> 1
 				}
 
 				// adjust config
-				config.c.Memory -= toKB(adjustMemory)
+				aconfig.c.Memory -= toKB(adjustMemory)
 			}
 
 			if !quiet {
-				_, _ = resultColor.Fprintf(cmd.ErrOrStderr(), "Settled on %s of memory.\n", config.getMemFormat())
+				_, _ = resultColor.Fprintf(cmd.ErrOrStderr(), "Settled on %s of memory.\n", aconfig.getMemFormat())
 				fmt.Fprintf(cmd.ErrOrStderr(), "Increasing iterations to get over %s:\n", desiredDuration)
 			}
 
@@ -150,16 +150,16 @@ Please note that the values depend on the machine you run the hashing on. If you
 				}
 
 				if !quiet {
-					fmt.Fprintf(cmd.ErrOrStderr(), "  took %s with %d iterations\n", currentDuration, config.c.Iterations)
+					fmt.Fprintf(cmd.ErrOrStderr(), "  took %s with %d iterations\n", currentDuration, aconfig.c.Iterations)
 				}
 
 				if currentDuration > desiredDuration {
-					config.c.Iterations -= 1
+					aconfig.c.Iterations -= 1
 					break
 				}
 
 				// adjust config
-				config.c.Iterations += 1
+				aconfig.c.Iterations += 1
 			}
 
 			if !quiet {
@@ -173,24 +173,24 @@ Please note that the values depend on the machine you run the hashing on. If you
 				}
 
 				if !quiet {
-					fmt.Fprintf(cmd.ErrOrStderr(), "  took %s with %d iterations\n", currentDuration, config.c.Iterations)
+					fmt.Fprintf(cmd.ErrOrStderr(), "  took %s with %d iterations\n", currentDuration, aconfig.c.Iterations)
 				}
 
 				// break also when iterations is 1; this catches the case where 1 was only slightly under the desired time and took longer a bit longer on another run
-				if currentDuration < desiredDuration || config.c.Iterations == 1 {
+				if currentDuration < desiredDuration || aconfig.c.Iterations == 1 {
 					break
 				}
 
 				// adjust config
-				config.c.Iterations -= 1
+				aconfig.c.Iterations -= 1
 			}
 			if !quiet {
-				_, _ = resultColor.Fprintf(cmd.ErrOrStderr(), "Settled on %d iterations.\n\n", config.c.Iterations)
+				_, _ = resultColor.Fprintf(cmd.ErrOrStderr(), "Settled on %d iterations.\n\n", aconfig.c.Iterations)
 			}
 
 			e := json.NewEncoder(cmd.OutOrStdout())
 			e.SetIndent("", "  ")
-			return e.Encode(config.c)
+			return e.Encode(aconfig.c)
 		},
 	}
 
@@ -203,12 +203,12 @@ Please note that the values depend on the machine you run the hashing on. If you
 	flags.Var(&maxMemory, FlagMaxMemory, "Maximum memory allowed (default no limit).")
 	flags.Var(&adjustMemory, FlagAdjustMemory, "Amount by which the memory is adjusted in every step while probing.")
 
-	flags.Uint32VarP(&config.c.Iterations, FlagStartIterations, "i", 1, "Number of iterations to start probing at.")
+	flags.Uint32VarP(&aconfig.c.Iterations, FlagStartIterations, "i", 1, "Number of iterations to start probing at.")
 
-	flags.Uint8Var(&config.c.Parallelism, FlagParallelism, configuration.Argon2DefaultParallelism, "Number of threads to use.")
+	flags.Uint8Var(&aconfig.c.Parallelism, FlagParallelism, config.Argon2DefaultParallelism, "Number of threads to use.")
 
-	flags.Uint32Var(&config.c.SaltLength, FlagSaltLength, configuration.Argon2DefaultSaltLength, "Length of the salt in bytes.")
-	flags.Uint32Var(&config.c.KeyLength, FlagKeyLength, configuration.Argon2DefaultKeyLength, "Length of the key in bytes.")
+	flags.Uint32Var(&aconfig.c.SaltLength, FlagSaltLength, config.Argon2DefaultSaltLength, "Length of the salt in bytes.")
+	flags.Uint32Var(&aconfig.c.KeyLength, FlagKeyLength, config.Argon2DefaultKeyLength, "Length of the key in bytes.")
 
 	return cmd
 }

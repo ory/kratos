@@ -4,7 +4,7 @@ import (
 	"github.com/ory/x/decoderx"
 
 	"github.com/ory/kratos/courier"
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
@@ -66,12 +66,12 @@ type (
 	}
 
 	Strategy struct {
-		c  configuration.Provider
+		c  *config.Provider
 		d  strategyDependencies
 		dx *decoderx.HTTP
 	}
 )
 
-func NewStrategy(d strategyDependencies, c configuration.Provider) *Strategy {
+func NewStrategy(d strategyDependencies, c *config.Provider) *Strategy {
 	return &Strategy{c: c, d: d, dx: decoderx.NewHTTP()}
 }

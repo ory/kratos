@@ -10,26 +10,26 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/viper"
 	"github.com/ory/x/assertx"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/x"
 )
 
-func TestPersister(p interface {
+func TestPersister(conf *config.Provider, p interface {
 	RecoveryTokenPersister
 	VerificationTokenPersister
 	recovery.FlowPersister
 	verification.FlowPersister
 	identity.PrivilegedPool
 }) func(t *testing.T) {
-	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
-	viper.Set(configuration.ViperKeySecretsDefault, []string{"secret-a", "secret-b"})
 	return func(t *testing.T) {
+		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+		conf.MustSet(config.ViperKeySecretsDefault, []string{"secret-a", "secret-b"})
+
 		t.Run("token=recovery", func(t *testing.T) {
 
 			t.Run("case=should error when the recovery token does not exist", func(t *testing.T) {

@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/x/pointerx"
 )
@@ -25,7 +25,7 @@ func TestImportCmd(t *testing.T) {
 
 	t.Run("case=imports a new identity from file", func(t *testing.T) {
 		i := models.CreateIdentity{
-			SchemaID: pointerx.String(configuration.DefaultIdentityTraitsSchemaID),
+			SchemaID: pointerx.String(config.DefaultIdentityTraitsSchemaID),
 			Traits:   map[string]interface{}{},
 		}
 		ij, err := json.Marshal(i)
@@ -47,11 +47,11 @@ func TestImportCmd(t *testing.T) {
 	t.Run("case=imports multiple identities from single file", func(t *testing.T) {
 		i := []models.CreateIdentity{
 			{
-				SchemaID: pointerx.String(configuration.DefaultIdentityTraitsSchemaID),
+				SchemaID: pointerx.String(config.DefaultIdentityTraitsSchemaID),
 				Traits:   map[string]interface{}{},
 			},
 			{
-				SchemaID: pointerx.String(configuration.DefaultIdentityTraitsSchemaID),
+				SchemaID: pointerx.String(config.DefaultIdentityTraitsSchemaID),
 				Traits:   map[string]interface{}{},
 			},
 		}
@@ -79,11 +79,11 @@ func TestImportCmd(t *testing.T) {
 	t.Run("case=imports a new identity from STD_IN", func(t *testing.T) {
 		i := []models.CreateIdentity{
 			{
-				SchemaID: pointerx.String(configuration.DefaultIdentityTraitsSchemaID),
+				SchemaID: pointerx.String(config.DefaultIdentityTraitsSchemaID),
 				Traits:   map[string]interface{}{},
 			},
 			{
-				SchemaID: pointerx.String(configuration.DefaultIdentityTraitsSchemaID),
+				SchemaID: pointerx.String(config.DefaultIdentityTraitsSchemaID),
 				Traits:   map[string]interface{}{},
 			},
 		}
@@ -91,7 +91,7 @@ func TestImportCmd(t *testing.T) {
 		require.NoError(t, err)
 
 		stdOut, stdErr, err := exec(importCmd, bytes.NewBuffer(ij))
-		require.NoError(t, err, stdOut, stdErr)
+		require.NoError(t, err, "%s %s", stdOut, stdErr)
 
 		id, err := uuid.FromString(gjson.Get(stdOut, "0.id").String())
 		require.NoError(t, err)
@@ -106,14 +106,14 @@ func TestImportCmd(t *testing.T) {
 
 	t.Run("case=imports multiple identities from STD_IN", func(t *testing.T) {
 		i := models.CreateIdentity{
-			SchemaID: pointerx.String(configuration.DefaultIdentityTraitsSchemaID),
+			SchemaID: pointerx.String(config.DefaultIdentityTraitsSchemaID),
 			Traits:   map[string]interface{}{},
 		}
 		ij, err := json.Marshal(i)
 		require.NoError(t, err)
 
 		stdOut, stdErr, err := exec(importCmd, bytes.NewBuffer(ij))
-		require.NoError(t, err, stdOut, stdErr)
+		require.NoError(t, err, "%s %s", stdOut, stdErr)
 
 		id, err := uuid.FromString(gjson.Get(stdOut, "id").String())
 		require.NoError(t, err)

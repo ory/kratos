@@ -19,6 +19,7 @@ func TestValidateIdentity(t *testing.T) {
 		cmd.SetErr(err)
 		return cmd, out, err
 	}
+
 	var testSchemaGetter = func(resp interface{}) schemaGetter {
 		return func(_ *public.GetSchemaParams) (*public.GetSchemaOK, error) {
 			return &public.GetSchemaOK{Payload: resp}, nil

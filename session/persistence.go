@@ -9,9 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/x"
 )
@@ -49,12 +47,12 @@ type Persister interface {
 	RevokeSessionByToken(ctx context.Context, token string) error
 }
 
-func TestPersister(p interface {
+func TestPersister(conf *config.Provider, p interface {
 	Persister
 	identity.PrivilegedPool
 }) func(t *testing.T) {
 	return func(t *testing.T) {
-		viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 
 		t.Run("case=not found", func(t *testing.T) {
 			_, err := p.GetSession(context.Background(), x.NewUUID())

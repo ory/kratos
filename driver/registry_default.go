@@ -43,14 +43,12 @@ import (
 
 	"github.com/ory/herodot"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/errorx"
 	password2 "github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/session"
 )
-
-var _ Registry = new(RegistryDefault)
 
 func init() {
 	dbal.RegisterDriver(func() dbal.Driver {
@@ -61,9 +59,9 @@ func init() {
 type RegistryDefault struct {
 	l *logrusx.Logger
 	a *logrusx.Logger
-	c configuration.Provider
+	c *config.Provider
 
-	injectedSelfserviceHooks map[string]func(configuration.SelfServiceHook) interface{}
+	injectedSelfserviceHooks map[string]func(config.SelfServiceHook) interface{}
 
 	nosurf         x.CSRFHandler
 	trc            *tracing.Tracer
@@ -139,7 +137,7 @@ type RegistryDefault struct {
 
 func (m *RegistryDefault) Audit() *logrusx.Logger {
 	if m.a == nil {
-		m.a = logrusx.NewAudit("ORY Kratos", m.BuildVersion())
+		m.a = logrusx.NewAudit("ORY Kratos", config.Version)
 	}
 	return m.a
 }
@@ -201,25 +199,6 @@ func NewRegistryDefault() *RegistryDefault {
 	return &RegistryDefault{}
 }
 
-func (m *RegistryDefault) WithBuildInfo(version, hash, date string) Registry {
-	m.buildVersion = version
-	m.buildHash = hash
-	m.buildDate = date
-	return m
-}
-
-func (m *RegistryDefault) BuildVersion() string {
-	return m.buildVersion
-}
-
-func (m *RegistryDefault) BuildDate() string {
-	return m.buildDate
-}
-
-func (m *RegistryDefault) BuildHash() string {
-	return m.buildHash
-}
-
 func (m *RegistryDefault) WithLogger(l *logrusx.Logger) Registry {
 	m.l = l
 	return m
@@ -234,7 +213,7 @@ func (m *RegistryDefault) LogoutHandler() *logout.Handler {
 
 func (m *RegistryDefault) HealthHandler() *healthx.Handler {
 	if m.healthxHandler == nil {
-		m.healthxHandler = healthx.NewHandler(m.Writer(), m.BuildVersion(),
+		m.healthxHandler = healthx.NewHandler(m.Writer(), config.Version,
 			healthx.ReadyCheckers{"database": m.Ping})
 	}
 
@@ -243,7 +222,7 @@ func (m *RegistryDefault) HealthHandler() *healthx.Handler {
 
 func (m *RegistryDefault) MetricsHandler() *prometheus.Handler {
 	if m.metricsHandler == nil {
-		m.metricsHandler = prometheus.NewHandler(m.Writer(), m.BuildVersion())
+		m.metricsHandler = prometheus.NewHandler(m.Writer(), config.Version)
 	}
 
 	return m.metricsHandler
@@ -258,6 +237,13 @@ func (m *RegistryDefault) CSRFHandler() x.CSRFHandler {
 		panic("csrf handler is not set")
 	}
 	return m.nosurf
+}
+
+func (m *RegistryDefault) Configuration() *config.Provider {
+	if m.c == nil {
+		panic("configuration not set")
+	}
+	return m.c
 }
 
 func (m *RegistryDefault) selfServiceStrategies() []interface{} {
@@ -332,7 +318,7 @@ func (m *RegistryDefault) IdentityValidator() *identity.Validator {
 	return m.identityValidator
 }
 
-func (m *RegistryDefault) WithConfig(c configuration.Provider) Registry {
+func (m *RegistryDefault) WithConfig(c *config.Provider) Registry {
 	m.c = c
 	return m
 }
@@ -347,7 +333,7 @@ func (m *RegistryDefault) Writer() herodot.Writer {
 
 func (m *RegistryDefault) Logger() *logrusx.Logger {
 	if m.l == nil {
-		m.l = logrusx.New("ORY Kratos", m.BuildVersion())
+		m.l = logrusx.New("ORY Kratos", config.Version)
 	}
 	return m.l
 }
@@ -433,16 +419,11 @@ func (m *RegistryDefault) ContinuityCookieManager() sessions.Store {
 
 func (m *RegistryDefault) Tracer() *tracing.Tracer {
 	if m.trc == nil {
-		m.trc = &tracing.Tracer{
-			ServiceName:  m.c.TracingServiceName(),
-			JaegerConfig: m.c.TracingJaegerConfig(),
-			Provider:     m.c.TracingProvider(),
-			Logger:       m.Logger(),
-		}
-
-		if err := m.trc.Setup(); err != nil {
+		t, err := tracing.New(m.l, m.c.Tracing())
+		if err != nil {
 			m.Logger().WithError(err).Fatalf("Unable to initialize Tracer.")
 		}
+		m.trc = t
 	}
 
 	return m.trc
@@ -508,6 +489,15 @@ func (m *RegistryDefault) Init() error {
 				m.Logger().WithError(err).Warnf("Unable to ping database, retrying.")
 				return err
 			}
+
+			// if dsn is memory we have to run the migrations on every start
+			if dbal.InMemoryDSN == m.c.DSN() {
+				m.Logger().Infoln("ORY Kratos is running migrations on every startup as DSN is memory. This means your data is lost when Kratos terminates.")
+				if err := p.MigrateUp(context.Background()); err != nil {
+					return err
+				}
+			}
+
 			m.persister = p
 			return nil
 		}, bc),

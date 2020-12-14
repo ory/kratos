@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/form"
@@ -20,7 +20,7 @@ type (
 		hash.HashProvider
 	}
 	Manager struct {
-		c configuration.Provider
+		c config.Provider
 		d managerDependencies
 	}
 )

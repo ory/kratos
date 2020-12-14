@@ -14,14 +14,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/viper"
-
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/herodot"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	sdkp "github.com/ory/kratos/internal/httpclient/client/public"
@@ -37,7 +35,7 @@ import (
 
 func TestHandleError(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 
 	public, admin := testhelpers.NewKratosServer(t, reg)
 
@@ -235,7 +233,7 @@ func TestHandleError(t *testing.T) {
 			res, err := ts.Client().Get(ts.URL + "/error")
 			require.NoError(t, err)
 			defer res.Body.Close()
-			require.Contains(t, res.Request.URL.String(), viper.Get(configuration.ViperKeySelfServiceLoginUI))
+			require.Contains(t, res.Request.URL.String(), conf.Source().String(config.ViperKeySelfServiceLoginUI))
 		})
 
 		t.Run("case=validation error", func(t *testing.T) {

@@ -8,7 +8,7 @@ import (
 	"github.com/google/go-jsonnet"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -86,7 +86,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		return
 	}
 
-	i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 
 	vm := jsonnet.MakeVM()
 	vm.ExtCode("claims", jsonClaims.String())

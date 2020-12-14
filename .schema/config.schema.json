@@ -9,7 +9,6 @@
       "description": "ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).",
       "type": "string",
       "format": "uri-reference",
-      "minLength": 1,
       "examples": [
         "https://my-app.com/dashboard",
         "/dashboard"
@@ -1161,6 +1160,22 @@
       "examples": [
         "v0.5.0-alpha.1"
       ]
+    },
+    "dev": {
+      "type": "boolean"
+    },
+    "help": {
+      "type": "boolean"
+    },
+    "sqa-opt-out": {
+      "type": "boolean",
+      "default": false
+    },
+    "config": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     }
   },
   "allOf": [

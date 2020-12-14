@@ -11,15 +11,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/x/sqlcon"
-
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/session"
+	"github.com/ory/x/sqlcon"
 )
 
 func init() {
@@ -27,10 +24,10 @@ func init() {
 }
 
 func TestSessionDestroyer(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := internal.NewFastRegistryWithMocks(t)
 
-	viper.Set(configuration.ViperKeyPublicBaseURL, "http://localhost/")
-	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/stub.schema.json")
+	conf.MustSet(config.ViperKeyPublicBaseURL, "http://localhost/")
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/stub.schema.json")
 
 	h := hook.NewSessionDestroyer(reg)
 

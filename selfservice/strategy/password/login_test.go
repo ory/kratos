@@ -23,9 +23,7 @@ import (
 
 	"github.com/ory/x/pointerx"
 
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/httpclient/models"
@@ -39,8 +37,7 @@ import (
 
 func TestCompleteLogin(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-
-	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
+	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
 		map[string]interface{}{"enabled": true})
 	publicTS, _ := testhelpers.NewKratosServer(t, reg)
 
@@ -49,11 +46,11 @@ func TestCompleteLogin(t *testing.T) {
 	redirTS := newReturnTs(t, reg)
 
 	// Overwrite these two:
-	viper.Set(configuration.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
-	viper.Set(configuration.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
+	conf.MustSet(config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
+	conf.MustSet(config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
 
-	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
-	viper.Set(configuration.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
+	conf.MustSet(config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	ensureFieldsExist := func(t *testing.T, body []byte) {
 		checkFormContent(t, body, "identifier",
@@ -125,9 +122,10 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("case=should return an error because the request is expired", func(t *testing.T) {
-		viper.Set(configuration.ViperKeySelfServiceLoginRequestLifespan, "50ms")
-		defer viper.Set(configuration.ViperKeySelfServiceLoginRequestLifespan, "10m")
-
+		conf.MustSet(config.ViperKeySelfServiceLoginRequestLifespan, "50ms")
+		t.Cleanup(func() {
+			conf.MustSet(config.ViperKeySelfServiceLoginRequestLifespan, "10m")
+		})
 		values := url.Values{
 			"csrf_token": {x.FakeCSRFToken},
 			"identifier": {"identifier"},
@@ -446,7 +444,7 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("case=should return an error because not passing validation and reset previous errors and values", func(t *testing.T) {
-		viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
+		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
 
 		var check = func(t *testing.T, actual string) {
 			assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)

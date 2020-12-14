@@ -3,7 +3,7 @@ package identity
 import (
 	"github.com/tidwall/sjson"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/schema"
 )
 
@@ -14,14 +14,14 @@ type (
 	Validator struct {
 		v *schema.Validator
 		d validatorDependencies
-		c configuration.Provider
+		c *config.Provider
 	}
 	ValidationProvider interface {
 		IdentityValidator() *Validator
 	}
 )
 
-func NewValidator(d validatorDependencies, c configuration.Provider) *Validator {
+func NewValidator(d validatorDependencies, c *config.Provider) *Validator {
 	return &Validator{
 		v: schema.NewValidator(),
 		d: d,

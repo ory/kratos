@@ -19,13 +19,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ory/kratos/cmd/cliclient"
-
-	"github.com/ory/x/logrusx"
-
-	"github.com/ory/x/viperx"
+	"github.com/ory/x/configx"
 )
-
-var logger *logrusx.Logger
 
 // migrateSqlCmd represents the sql command
 var migrateSqlCmd = &cobra.Command{
@@ -45,14 +40,12 @@ You can read in the database URL using the -e flag, for example:
 Before running this command on an existing database, create a back up!
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		logger = viperx.InitializeConfig("kratos", "", logger)
-		// plog.Logger = gbl.Logrus{FieldLogger: logger}
-
 		cliclient.NewMigrateHandler().MigrateSQL(cmd, args)
 	},
 }
 
 func init() {
+	configx.RegisterFlags(migrateSqlCmd.PersistentFlags())
 	migrateSqlCmd.Flags().BoolP("read-from-env", "e", false, "If set, reads the database connection string from the environment variable DSN or config file key dsn.")
 	migrateSqlCmd.Flags().BoolP("yes", "y", false, "If set all confirmation requests are accepted without user interaction.")
 }

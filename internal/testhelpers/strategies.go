@@ -2,20 +2,11 @@ package testhelpers
 
 import (
 	"fmt"
+	"testing"
 
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 )
 
-func StrategyEnable(strategy string, enable bool) {
-	viper.Set(fmt.Sprintf("%s.%s.enabled", configuration.ViperKeySelfServiceStrategyConfig, strategy), enable)
-}
-
-func RecoveryFlowEnable(enable bool) {
-	viper.Set(configuration.ViperKeySelfServiceRecoveryEnabled, enable)
-}
-
-func VerificationFlowEnable(enable bool) {
-	viper.Set(configuration.ViperKeySelfServiceVerificationEnabled, enable)
+func StrategyEnable(t *testing.T, c *config.Provider, strategy string, enable bool) {
+	c.MustSet(fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, strategy), enable)
 }

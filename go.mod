@@ -8,6 +8,7 @@ replace github.com/markbates/pkger => github.com/falafeljan/pkger v0.17.1-0.2020
 replace gopkg.in/DataDog/dd-trace-go.v1 => gopkg.in/DataDog/dd-trace-go.v1 v1.27.1-0.20201005154917-54b73b3e126a
 
 require (
+	github.com/HdrHistogram/hdrhistogram-go v1.0.1 // indirect
 	github.com/Masterminds/sprig/v3 v3.0.0
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0
@@ -50,6 +51,7 @@ require (
 	github.com/inhies/go-bytesize v0.0.0-20201103132853-d0aed0d254f8
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/julienschmidt/httprouter v1.2.0
+	github.com/knadh/koanf v0.14.1-0.20201201075439-e0853799f9ec
 	github.com/leodido/go-urn v1.1.0 // indirect
 	github.com/markbates/pkger v0.17.1
 	github.com/mattn/goveralls v0.0.5
@@ -57,7 +59,7 @@ require (
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect
 	github.com/ory/analytics-go/v4 v4.0.0
-	github.com/ory/cli v0.0.28-0.20200903094455-e203529bf12b
+	github.com/ory/cli v0.0.35
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/ory/dockertest/v3 v3.5.4
 	github.com/ory/go-acc v0.1.0
@@ -68,7 +70,7 @@ require (
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.3
 	github.com/ory/viper v1.7.5
-	github.com/ory/x v0.0.165
+	github.com/ory/x v0.0.170
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.4.0
@@ -82,6 +84,7 @@ require (
 	github.com/stretchr/testify v1.6.1
 	github.com/tidwall/gjson v1.3.5
 	github.com/tidwall/sjson v1.0.4
+	github.com/uber/jaeger-lib v2.4.0+incompatible // indirect
 	github.com/urfave/negroni v1.0.0
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d

@@ -11,9 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
@@ -23,15 +21,15 @@ import (
 )
 
 func TestGetFlow(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
-	viper.Set(configuration.ViperKeySelfServiceVerificationEnabled, true)
-	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+verification.StrategyVerificationLinkName,
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf.MustSet(config.ViperKeySelfServiceVerificationEnabled, true)
+	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+verification.StrategyVerificationLinkName,
 		map[string]interface{}{"enabled": true})
-	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 
 	public, admin := testhelpers.NewKratosServerWithCSRF(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
-	_ = testhelpers.NewRedirTS(t, "")
+	_ = testhelpers.NewRedirTS(t, "", conf)
 
 	newVerificationTS := func(t *testing.T, upstream string, c *http.Client) *httptest.Server {
 		return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -78,8 +76,8 @@ func TestGetFlow(t *testing.T) {
 	run := func(t *testing.T, endpoint *httptest.Server) {
 		verificationTS := newVerificationTS(t, endpoint.URL, nil)
 		defer verificationTS.Close()
-		viper.Set(configuration.ViperKeySelfServiceVerificationUI, verificationTS.URL)
-		viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
+		conf.MustSet(config.ViperKeySelfServiceVerificationUI, verificationTS.URL)
+		conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
 			map[string]interface{}{"enabled": true})
 
 		t.Run("case=valid", func(t *testing.T) {

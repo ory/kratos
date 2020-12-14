@@ -2,47 +2,51 @@ package internal
 
 import (
 	"context"
-	"os"
-	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/ory/x/configx"
+	"github.com/ory/x/dbal"
+	"github.com/ory/x/stringsx"
 
-	"github.com/ory/viper"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ory/x/logrusx"
 
 	"github.com/ory/kratos/driver"
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/x"
 )
 
-func resetConfig() {
-	viper.Set(configuration.ViperKeyDSN, nil)
+const UnsetDefaultIdentitySchema = "file://not-set.schema.json"
 
-	viper.Set("LOG_LEVEL", "trace")
-	viper.Set(configuration.ViperKeyHasherArgon2ConfigMemory, 64)
-	viper.Set(configuration.ViperKeyHasherArgon2ConfigIterations, 1)
-	viper.Set(configuration.ViperKeyHasherArgon2ConfigParallelism, 1)
-	viper.Set(configuration.ViperKeyHasherArgon2ConfigSaltLength, 2)
-	viper.Set(configuration.ViperKeyHasherArgon2ConfigKeyLength, 2)
-}
-
-func NewConfigurationWithDefaults() *configuration.ViperProvider {
-	viper.Reset()
-	resetConfig()
-	return configuration.NewViperProvider(logrusx.New("", ""), true)
+func NewConfigurationWithDefaults() *config.Provider {
+	c := config.MustNew(logrusx.New("", ""),
+		configx.WithValues(map[string]interface{}{
+			"log.level":                                      "trace",
+			config.ViperKeyDSN:                               dbal.InMemoryDSN,
+			config.ViperKeyHasherArgon2ConfigMemory:          16384,
+			config.ViperKeyHasherArgon2ConfigIterations:      1,
+			config.ViperKeyHasherArgon2ConfigParallelism:     1,
+			config.ViperKeyHasherArgon2ConfigSaltLength:      16,
+			config.ViperKeyHasherArgon2ConfigKeyLength:       16,
+			config.ViperKeyCourierSMTPURL:                    "smtp://foo:bar@baz.com/",
+			config.ViperKeySelfServiceBrowserDefaultReturnTo: "https://www.ory.sh/redirect-not-set",
+			config.ViperKeyDefaultIdentitySchemaURL:          UnsetDefaultIdentitySchema,
+		}),
+		configx.SkipValidation(),
+	)
+	return c
 }
 
 // NewFastRegistryWithMocks returns a registry with several mocks and an SQLite in memory database that make testing
 // easier and way faster. This suite does not work for e2e or advanced integration tests.
-func NewFastRegistryWithMocks(t *testing.T) (*configuration.ViperProvider, *driver.RegistryDefault) {
+func NewFastRegistryWithMocks(t *testing.T) (*config.Provider, *driver.RegistryDefault) {
 	conf, reg := NewRegistryDefaultWithDSN(t, "")
 	reg.WithCSRFTokenGenerator(x.FakeCSRFTokenGenerator)
 	reg.WithCSRFHandler(x.NewFakeCSRFHandler(""))
-	reg.WithHooks(map[string]func(configuration.SelfServiceHook) interface{}{
-		"err": func(c configuration.SelfServiceHook) interface{} {
+	reg.WithHooks(map[string]func(config.SelfServiceHook) interface{}{
+		"err": func(c config.SelfServiceHook) interface{} {
 			return &hook.Error{Config: c.Config}
 		},
 	})
@@ -52,16 +56,13 @@ func NewFastRegistryWithMocks(t *testing.T) (*configuration.ViperProvider, *driv
 }
 
 // NewRegistryDefaultWithDSN returns a more standard registry without mocks. Good for e2e and advanced integration testing!
-func NewRegistryDefaultWithDSN(t *testing.T, dsn string) (*configuration.ViperProvider, *driver.RegistryDefault) {
-	viper.Reset()
-	resetConfig()
+func NewRegistryDefaultWithDSN(t *testing.T, dsn string) (*config.Provider, *driver.RegistryDefault) {
+	c := NewConfigurationWithDefaults()
+	c.MustSet(config.ViperKeyDSN, stringsx.Coalesce(dsn, dbal.InMemoryDSN))
 
-	viper.Set(configuration.ViperKeyDSN, "sqlite3://"+filepath.Join(os.TempDir(), x.NewUUID().String())+".sql?mode=memory&_fk=true")
-	if dsn != "" {
-		viper.Set(configuration.ViperKeyDSN, dsn)
-	}
-
-	d, err := driver.NewDefaultDriver(logrusx.New("", ""), "test", "test", "test", true)
+	reg, err := driver.NewRegistryFromDSN(c, logrusx.New("", ""))
 	require.NoError(t, err)
-	return d.Configuration().(*configuration.ViperProvider), d.Registry().(*driver.RegistryDefault)
+	reg.Configuration().MustSet("dev", true)
+	require.NoError(t, reg.Init())
+	return c, reg.(*driver.RegistryDefault)
 }

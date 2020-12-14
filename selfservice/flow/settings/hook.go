@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/x"
@@ -19,27 +19,14 @@ type (
 		ExecuteSettingsPrePersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error
 	}
 	PostHookPrePersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error
-
-	PostHookPostPersistExecutor interface {
+	PostHookPostPersistExecutor    interface {
 		ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error
 	}
 	PostHookPostPersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error
-
-	HooksProvider interface {
+	HooksProvider                   interface {
 		PostSettingsPrePersistHooks(settingsType string) []PostHookPrePersistExecutor
 		PostSettingsPostPersistHooks(settingsType string) []PostHookPostPersistExecutor
 	}
-)
-
-func (f PostHookPrePersistExecutorFunc) ExecuteSettingsPrePersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error {
-	return f(w, r, a, s)
-}
-
-func (f PostHookPostPersistExecutorFunc) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error {
-	return f(w, r, a, s)
-}
-
-type (
 	executorDependencies interface {
 		identity.ManagementProvider
 		identity.ValidationProvider
@@ -50,12 +37,20 @@ type (
 	}
 	HookExecutor struct {
 		d executorDependencies
-		c configuration.Provider
+		c *config.Provider
 	}
 	HookExecutorProvider interface {
 		SettingsHookExecutor() *HookExecutor
 	}
 )
+
+func (f PostHookPrePersistExecutorFunc) ExecuteSettingsPrePersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error {
+	return f(w, r, a, s)
+}
+
+func (f PostHookPostPersistExecutorFunc) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error {
+	return f(w, r, a, s)
+}
 
 func PostHookPostPersistExecutorNames(e []PostHookPostPersistExecutor) []string {
 	names := make([]string, len(e))
@@ -73,10 +68,7 @@ func PostHookPrePersistExecutorNames(e []PostHookPrePersistExecutor) []string {
 	return names
 }
 
-func NewHookExecutor(
-	d executorDependencies,
-	c configuration.Provider,
-) *HookExecutor {
+func NewHookExecutor(d executorDependencies, c *config.Provider) *HookExecutor {
 	return &HookExecutor{
 		d: d,
 		c: c,

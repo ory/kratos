@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/ory/x/jsonschemax"
+
 	"github.com/ory/x/cmdx"
 
 	"github.com/markbates/pkger"
@@ -17,7 +19,6 @@ import (
 
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/cmd/cliclient"
-	"github.com/ory/x/viperx"
 )
 
 var validateCmd = &cobra.Command{
@@ -87,7 +88,7 @@ func validateIdentity(cmd *cobra.Command, src, i string, getRemoteSchema schemaG
 	err := swaggerSchema.Validate(bytes.NewBufferString(i))
 	if err != nil {
 		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%s: not valid\n", src)
-		viperx.PrintHumanReadableValidationErrors(cmd.ErrOrStderr(), err)
+		jsonschemax.FormatValidationErrorForCLI(cmd.ErrOrStderr(), []byte(i), err)
 		foundValidationErrors = true
 	}
 
@@ -124,7 +125,7 @@ func validateIdentity(cmd *cobra.Command, src, i string, getRemoteSchema schemaG
 	err = customSchema.Validate(bytes.NewBufferString(i))
 	if err != nil {
 		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%s: not valid\n", src)
-		viperx.PrintHumanReadableValidationErrors(cmd.ErrOrStderr(), err)
+		jsonschemax.FormatValidationErrorForCLI(cmd.ErrOrStderr(), []byte(i), err)
 		foundValidationErrors = true
 	}
 

@@ -9,7 +9,7 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/continuity"
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
@@ -60,13 +60,13 @@ type (
 		SettingsHandler() *Handler
 	}
 	Handler struct {
-		c    configuration.Provider
+		c    *config.Provider
 		d    handlerDependencies
 		csrf x.CSRFToken
 	}
 )
 
-func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
+func NewHandler(d handlerDependencies, c *config.Provider) *Handler {
 	return &Handler{d: d, c: c, csrf: nosurf.Token}
 }
 

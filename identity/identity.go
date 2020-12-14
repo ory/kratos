@@ -9,7 +9,7 @@ import (
 	"github.com/ory/herodot"
 	"github.com/ory/x/sqlxx"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
@@ -174,7 +174,7 @@ func (i *Identity) CopyWithoutCredentials() *Identity {
 
 func NewIdentity(traitsSchemaID string) *Identity {
 	if traitsSchemaID == "" {
-		traitsSchemaID = configuration.DefaultIdentityTraitsSchemaID
+		traitsSchemaID = config.DefaultIdentityTraitsSchemaID
 	}
 
 	return &Identity{
