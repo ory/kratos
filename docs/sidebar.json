@@ -49,6 +49,31 @@
         "cli/kratos-serve", 
         "cli/kratos-version"
       ]
+    }, 
+    {
+      "items": [
+        "cli/kratos", 
+        "cli/kratos-hashers", 
+        "cli/kratos-hashers-argon2", 
+        "cli/kratos-hashers-argon2-calibrate", 
+        "cli/kratos-identities", 
+        "cli/kratos-identities-delete", 
+        "cli/kratos-identities-get", 
+        "cli/kratos-identities-import", 
+        "cli/kratos-identities-list", 
+        "cli/kratos-identities-patch", 
+        "cli/kratos-identities-validate", 
+        "cli/kratos-jsonnet", 
+        "cli/kratos-jsonnet-format", 
+        "cli/kratos-jsonnet-lint", 
+        "cli/kratos-migrate", 
+        "cli/kratos-migrate-sql", 
+        "cli/kratos-remote", 
+        "cli/kratos-remote-status", 
+        "cli/kratos-remote-version", 
+        "cli/kratos-serve", 
+        "cli/kratos-version"
+      ]
     }
   ],
   "Introduction": [
