@@ -162,9 +162,6 @@ New feature or request.
 - [ ] CSRF failure should start a new login/registration flow
       ([kratos#821](https://github.com/ory/kratos/issues/821)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] Replace viper with Koanf
-      ([kratos#894](https://github.com/ory/kratos/issues/894)) -
-      [@hackerman](https://github.com/aeneasr)
 - [x] Support remote argon2 execution
       ([kratos#357](https://github.com/ory/kratos/issues/357)) -
       [@hackerman](https://github.com/aeneasr)
@@ -180,6 +177,9 @@ New feature or request.
 - [x] Add possibility to configure the "claims" query parameter in the auth_url
       of OIDC providers to request individial id_token claims
       ([kratos#735](https://github.com/ory/kratos/issues/735))
+- [x] Replace viper with Koanf
+      ([kratos#894](https://github.com/ory/kratos/issues/894)) -
+      [@hackerman](https://github.com/aeneasr)
 
 #### Pull Requests
 
