@@ -55,8 +55,6 @@ New feature or request.
       ([kratos#701](https://github.com/ory/kratos/issues/701))
 - [ ] Support OAuth2 and OpenID Connect in API-based flows
       ([kratos#707](https://github.com/ory/kratos/issues/707))
-- [ ] Implement Security Questions MFA
-      ([kratos#469](https://github.com/ory/kratos/issues/469))
 - [ ] Implement immutable keyword in JSON Schema for Identity Traits
       ([kratos#117](https://github.com/ory/kratos/issues/117))
 - [ ] Feature Request: Webhooks
@@ -65,6 +63,8 @@ New feature or request.
       ([kratos#286](https://github.com/ory/kratos/issues/286))
 - [ ] How to sign in with Twitter
       ([kratos#517](https://github.com/ory/kratos/issues/517))
+- [x] Implement Security Questions MFA
+      ([kratos#469](https://github.com/ory/kratos/issues/469))
 - [x] Double slash in URLs causes CSRF issues
       ([kratos#779](https://github.com/ory/kratos/issues/779))
 
