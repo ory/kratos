@@ -133,3 +133,17 @@ func (f *Flow) Valid() error {
 func (f *Flow) AppendTo(src *url.URL) *url.URL {
 	return urlx.CopyWithQuery(src, url.Values{"flow": {f.ID.String()}})
 }
+
+func (f *Flow) IfMethodExists(method identity.CredentialsType, cb func(*FlowMethod) error) error {
+
+	if f == nil {
+		return nil
+	}
+
+	m, ok := f.Methods[method]
+	if !ok {
+		return nil
+	}
+
+	return cb(m)
+}

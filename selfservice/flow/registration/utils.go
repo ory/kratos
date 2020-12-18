@@ -12,7 +12,6 @@ import (
 func GetFlow(r *http.Request, reg interface {
 	FlowPersistenceProvider
 }) (*Flow, error) {
-
 	rid := x.ParseUUID(r.URL.Query().Get("flow"))
 	if x.IsZeroUUID(rid) {
 		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The flow query parameter is missing."))

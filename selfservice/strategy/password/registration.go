@@ -55,24 +55,22 @@ func (s *Strategy) RegisterRegistrationRoutes(public *x.RouterPublic) {
 }
 
 func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Request, rr *registration.Flow, p *RegistrationFormPayload, err error) {
-	if rr != nil {
-		if method, ok := rr.Methods[identity.CredentialsTypePassword]; ok {
-			method.Config.Reset()
+	if errSec := rr.IfMethodExists(identity.CredentialsTypePassword, func(method *registration.FlowMethod) error {
+		method.Config.Reset()
 
-			if p != nil {
-				for _, field := range form.NewHTMLFormFromJSON("", p.Traits, "traits").Fields {
-					// we only set the value and not the whole field because we want to keep types from the initial form generation
-					method.Config.SetValue(field.Name, field.Value)
-				}
-			}
-
-			method.Config.SetCSRF(s.d.GenerateCSRFToken(r))
-			rr.Methods[identity.CredentialsTypePassword] = method
-			if errSec := method.Config.SortFields(s.c.DefaultIdentityTraitsSchemaURL().String()); errSec != nil {
-				s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, identity.CredentialsTypePassword, rr, errors.Wrap(err, errSec.Error()))
-				return
+		if p != nil {
+			for _, field := range form.NewHTMLFormFromJSON("", p.Traits, "traits").Fields {
+				// we only set the value and not the whole field because we want to keep types from the initial form generation
+				method.Config.SetValue(field.Name, field.Value)
 			}
 		}
+
+		method.Config.SetCSRF(s.d.GenerateCSRFToken(r))
+		rr.Methods[identity.CredentialsTypePassword] = method
+		return method.Config.SortFields(s.c.DefaultIdentityTraitsSchemaURL().String())
+	}); errSec != nil {
+		s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, identity.CredentialsTypePassword, rr, errors.Wrap(err, errSec.Error()))
+		return
 	}
 
 	s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, identity.CredentialsTypePassword, rr, err)
