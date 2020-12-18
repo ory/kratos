@@ -156,7 +156,7 @@ func newReturnTs(t *testing.T, reg driver.Registry) *httptest.Server {
 		require.Empty(t, sess.Identity.Credentials)
 		reg.Writer().Write(w, r, sess)
 	}))
-	reg.Configuration().MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL)
+	reg.Config().MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL)
 	t.Cleanup(ts.Close)
 	return ts
 }
@@ -177,9 +177,9 @@ func newUI(t *testing.T, reg driver.Registry) *httptest.Server {
 		reg.Writer().Write(w, r, e)
 	}))
 	t.Cleanup(ts.Close)
-	reg.Configuration().MustSet(config.ViperKeySelfServiceLoginUI, ts.URL+"/login")
-	reg.Configuration().MustSet(config.ViperKeySelfServiceRegistrationUI, ts.URL+"/registration")
-	reg.Configuration().MustSet(config.ViperKeySelfServiceSettingsURL, ts.URL+"/settings")
+	reg.Config().MustSet(config.ViperKeySelfServiceLoginUI, ts.URL+"/login")
+	reg.Config().MustSet(config.ViperKeySelfServiceRegistrationUI, ts.URL+"/registration")
+	reg.Config().MustSet(config.ViperKeySelfServiceSettingsURL, ts.URL+"/settings")
 	return ts
 }
 
@@ -251,7 +251,7 @@ func newOIDCProvider(
 	}
 }
 
-func viperSetProviderConfig(t *testing.T, conf *config.Provider, providers ...oidc.Configuration) {
+func viperSetProviderConfig(t *testing.T, conf *config.Config, providers ...oidc.Configuration) {
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC),
 		map[string]interface{}{"enabled": true, "config": &oidc.ConfigurationCollection{Providers: providers}})
 }

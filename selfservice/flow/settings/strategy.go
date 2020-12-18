@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	StrategyProfile = "profile"
+	StrategyProfile    = "profile"
+	StrategyBackupCode = "backup_code"
 )
 
 var pkgName = reflect.TypeOf(Strategies{}).PkgPath()

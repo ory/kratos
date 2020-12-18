@@ -110,7 +110,7 @@ func GetFlowID(r *http.Request) (uuid.UUID, error) {
 	return rid, nil
 }
 
-func OnUnauthenticated(c *config.Provider, reg interface {
+func OnUnauthenticated(c *config.Config, reg interface {
 	x.WriterProvider
 }) func(http.ResponseWriter, *http.Request, httprouter.Params) {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

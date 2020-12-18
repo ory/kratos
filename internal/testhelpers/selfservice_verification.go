@@ -31,7 +31,7 @@ func NewRecoveryUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Se
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, e)
 	}))
-	reg.Configuration().MustSet(config.ViperKeySelfServiceRecoveryUI, ts.URL+"/recovery-ts")
+	reg.Config().MustSet(config.ViperKeySelfServiceRecoveryUI, ts.URL+"/recovery-ts")
 	t.Cleanup(ts.Close)
 	return ts
 }

@@ -56,11 +56,11 @@ type (
 
 	ErrorHandler struct {
 		d errorHandlerDependencies
-		c *config.Provider
+		c *config.Config
 	}
 )
 
-func NewErrorHandler(d errorHandlerDependencies, c *config.Provider) *ErrorHandler {
+func NewErrorHandler(d errorHandlerDependencies, c *config.Config) *ErrorHandler {
 	return &ErrorHandler{
 		d: d,
 		c: c,

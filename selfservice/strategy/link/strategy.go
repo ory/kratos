@@ -66,12 +66,12 @@ type (
 	}
 
 	Strategy struct {
-		c  *config.Provider
+		c  *config.Config
 		d  strategyDependencies
 		dx *decoderx.HTTP
 	}
 )
 
-func NewStrategy(d strategyDependencies, c *config.Provider) *Strategy {
+func NewStrategy(d strategyDependencies, c *config.Config) *Strategy {
 	return &Strategy{c: c, d: d, dx: decoderx.NewHTTP()}
 }

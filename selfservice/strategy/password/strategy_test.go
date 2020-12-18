@@ -20,7 +20,7 @@ import (
 func newReturnTs(t *testing.T, reg interface {
 	session.ManagementProvider
 	x.WriterProvider
-	Configuration() *config.Provider
+	Configuration() *config.Config
 }) *httptest.Server {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r)

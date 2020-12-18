@@ -59,7 +59,7 @@ func init() {
 type RegistryDefault struct {
 	l *logrusx.Logger
 	a *logrusx.Logger
-	c *config.Provider
+	c *config.Config
 
 	injectedSelfserviceHooks map[string]func(config.SelfServiceHook) interface{}
 
@@ -239,7 +239,7 @@ func (m *RegistryDefault) CSRFHandler() x.CSRFHandler {
 	return m.nosurf
 }
 
-func (m *RegistryDefault) Configuration() *config.Provider {
+func (m *RegistryDefault) Config() *config.Config {
 	if m.c == nil {
 		panic("configuration not set")
 	}
@@ -318,7 +318,7 @@ func (m *RegistryDefault) IdentityValidator() *identity.Validator {
 	return m.identityValidator
 }
 
-func (m *RegistryDefault) WithConfig(c *config.Provider) Registry {
+func (m *RegistryDefault) WithConfig(c *config.Config) Registry {
 	m.c = c
 	return m
 }

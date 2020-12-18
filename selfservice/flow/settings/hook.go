@@ -37,7 +37,7 @@ type (
 	}
 	HookExecutor struct {
 		d executorDependencies
-		c *config.Provider
+		c *config.Config
 	}
 	HookExecutorProvider interface {
 		SettingsHookExecutor() *HookExecutor
@@ -68,7 +68,7 @@ func PostHookPrePersistExecutorNames(e []PostHookPrePersistExecutor) []string {
 	return names
 }
 
-func NewHookExecutor(d executorDependencies, c *config.Provider) *HookExecutor {
+func NewHookExecutor(d executorDependencies, c *config.Config) *HookExecutor {
 	return &HookExecutor{
 		d: d,
 		c: c,

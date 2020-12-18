@@ -21,11 +21,11 @@ type (
 	}
 	Verifier struct {
 		r verifierDependencies
-		c *config.Provider
+		c *config.Config
 	}
 )
 
-func NewVerifier(r verifierDependencies, c *config.Provider) *Verifier {
+func NewVerifier(r verifierDependencies, c *config.Config) *Verifier {
 	return &Verifier{r: r, c: c}
 }
 

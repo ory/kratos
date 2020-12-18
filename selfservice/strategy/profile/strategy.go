@@ -64,7 +64,7 @@ type (
 		IdentityTraitsSchemas() schema.Schemas
 	}
 	Strategy struct {
-		c  *config.Provider
+		c  *config.Config
 		d  strategyDependencies
 		dc *decoderx.HTTP
 	}
@@ -75,7 +75,7 @@ type SettingsProfileRequestMethod struct {
 	*form.HTMLForm
 }
 
-func NewStrategy(d strategyDependencies, c *config.Provider) *Strategy {
+func NewStrategy(d strategyDependencies, c *config.Config) *Strategy {
 	return &Strategy{c: c, d: d, dc: decoderx.NewHTTP()}
 }
 

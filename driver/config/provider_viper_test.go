@@ -291,29 +291,29 @@ func TestViperProvider_Defaults(t *testing.T) {
 	l := logrusx.New("", "")
 
 	for k, tc := range []struct {
-		init   func() *config.Provider
-		expect func(t *testing.T, p *config.Provider)
+		init   func() *config.Config
+		expect func(t *testing.T, p *config.Config)
 	}{
 		{
-			init: func() *config.Provider {
+			init: func() *config.Config {
 				return config.MustNew(l, configx.SkipValidation())
 			},
 		},
 		{
-			init: func() *config.Provider {
+			init: func() *config.Config {
 				return config.MustNew(l, configx.WithConfigFiles("stub/.defaults.yml"), configx.SkipValidation())
 			},
 		},
 		{
-			init: func() *config.Provider {
+			init: func() *config.Config {
 				return config.MustNew(l, configx.WithConfigFiles("stub/.defaults-password.yml"), configx.SkipValidation())
 			},
 		},
 		{
-			init: func() *config.Provider {
+			init: func() *config.Config {
 				return config.MustNew(l, configx.WithConfigFiles("../../test/e2e/profiles/recovery/.kratos.yml"), configx.SkipValidation())
 			},
-			expect: func(t *testing.T, p *config.Provider) {
+			expect: func(t *testing.T, p *config.Config) {
 				assert.True(t, p.SelfServiceFlowRecoveryEnabled())
 				assert.False(t, p.SelfServiceFlowVerificationEnabled())
 				assert.True(t, p.SelfServiceStrategy("password").Enabled)
@@ -323,10 +323,10 @@ func TestViperProvider_Defaults(t *testing.T) {
 			},
 		},
 		{
-			init: func() *config.Provider {
+			init: func() *config.Config {
 				return config.MustNew(l, configx.WithConfigFiles("../../test/e2e/profiles/verification/.kratos.yml"), configx.SkipValidation())
 			},
-			expect: func(t *testing.T, p *config.Provider) {
+			expect: func(t *testing.T, p *config.Config) {
 				assert.False(t, p.SelfServiceFlowRecoveryEnabled())
 				assert.True(t, p.SelfServiceFlowVerificationEnabled())
 				assert.True(t, p.SelfServiceStrategy("password").Enabled)
@@ -336,10 +336,10 @@ func TestViperProvider_Defaults(t *testing.T) {
 			},
 		},
 		{
-			init: func() *config.Provider {
+			init: func() *config.Config {
 				return config.MustNew(l, configx.WithConfigFiles("../../test/e2e/profiles/oidc/.kratos.yml"), configx.SkipValidation())
 			},
-			expect: func(t *testing.T, p *config.Provider) {
+			expect: func(t *testing.T, p *config.Config) {
 				assert.False(t, p.SelfServiceFlowRecoveryEnabled())
 				assert.False(t, p.SelfServiceFlowVerificationEnabled())
 				assert.True(t, p.SelfServiceStrategy("password").Enabled)

@@ -40,11 +40,11 @@ type (
 	}
 	Handler struct {
 		d handlerDependencies
-		c *config.Provider
+		c *config.Config
 	}
 )
 
-func NewHandler(d handlerDependencies, c *config.Provider) *Handler {
+func NewHandler(d handlerDependencies, c *config.Config) *Handler {
 	return &Handler{c: c, d: d}
 }
 

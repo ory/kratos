@@ -30,12 +30,12 @@ func NewLoginUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Serve
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, e)
 	}))
-	reg.Configuration().MustSet(config.ViperKeySelfServiceLoginUI, ts.URL+"/login-ts")
+	reg.Config().MustSet(config.ViperKeySelfServiceLoginUI, ts.URL+"/login-ts")
 	t.Cleanup(ts.Close)
 	return ts
 }
 
-func NewLoginUIWith401Response(t *testing.T, c *config.Provider) *httptest.Server {
+func NewLoginUIWith401Response(t *testing.T, c *config.Config) *httptest.Server {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 	}))

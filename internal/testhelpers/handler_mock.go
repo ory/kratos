@@ -27,10 +27,10 @@ type mockDeps interface {
 	identity.PrivilegedPoolProvider
 	session.ManagementProvider
 	session.PersistenceProvider
-	Configuration() *config.Provider
+	Configuration() *config.Config
 }
 
-func MockSetSession(t *testing.T, reg mockDeps, conf *config.Provider) httprouter.Handle {
+func MockSetSession(t *testing.T, reg mockDeps, conf *config.Config) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
@@ -53,7 +53,7 @@ func MockGetSession(t *testing.T, reg mockDeps) httprouter.Handle {
 	}
 }
 
-func MockMakeAuthenticatedRequest(t *testing.T, reg mockDeps, conf *config.Provider, router *httprouter.Router, req *http.Request) ([]byte, *http.Response) {
+func MockMakeAuthenticatedRequest(t *testing.T, reg mockDeps, conf *config.Config, router *httprouter.Router, req *http.Request) ([]byte, *http.Response) {
 	set := "/" + uuid.New().String() + "/set"
 	router.GET(set, MockSetSession(t, reg, conf))
 

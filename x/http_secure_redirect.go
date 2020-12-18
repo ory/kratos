@@ -106,7 +106,7 @@ func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureR
 
 func SecureContentNegotiationRedirection(
 	w http.ResponseWriter, r *http.Request, out interface{},
-	requestURL string, writer herodot.Writer, c *config.Provider,
+	requestURL string, writer herodot.Writer, c *config.Config,
 	opts ...SecureRedirectOption,
 ) error {
 	switch httputil.NegotiateContentType(r, []string{

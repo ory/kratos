@@ -41,8 +41,7 @@ type Registry interface {
 
 	Init() error
 
-	Configuration() *config.Provider
-	WithConfig(c *config.Provider) Registry
+	WithConfig(c *config.Config) Registry
 	WithLogger(l *logrusx.Logger) Registry
 
 	WithCSRFHandler(c x.CSRFHandler)
@@ -61,6 +60,8 @@ type Registry interface {
 	x.CSRFProvider
 	x.WriterProvider
 	x.LoggingProvider
+
+	config.Provider
 
 	continuity.ManagementProvider
 	continuity.PersistenceProvider
@@ -128,7 +129,7 @@ type Registry interface {
 	x.CSRFTokenGeneratorProvider
 }
 
-func NewRegistryFromDSN(c *config.Provider, l *logrusx.Logger) (Registry, error) {
+func NewRegistryFromDSN(c *config.Config, l *logrusx.Logger) (Registry, error) {
 	driver, err := dbal.GetDriverFor(c.DSN())
 	if err != nil {
 		return nil, errors.WithStack(err)

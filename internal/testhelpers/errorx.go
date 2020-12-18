@@ -20,7 +20,7 @@ import (
 
 func NewErrorTestServer(t *testing.T, reg interface {
 	errorx.PersistenceProvider
-	Configuration() *config.Provider
+	Configuration() *config.Config
 }) *httptest.Server {
 	logger := logrusx.New("", "", logrusx.ForceLevel(logrus.TraceLevel))
 	writer := herodot.NewJSONWriter(logger)
@@ -35,7 +35,7 @@ func NewErrorTestServer(t *testing.T, reg interface {
 	return ts
 }
 
-func NewRedirTS(t *testing.T, body string, conf *config.Provider) *httptest.Server {
+func NewRedirTS(t *testing.T, body string, conf *config.Config) *httptest.Server {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if len(body) == 0 {
 			w.WriteHeader(http.StatusNoContent)
@@ -51,7 +51,7 @@ func NewRedirTS(t *testing.T, body string, conf *config.Provider) *httptest.Serv
 func NewRedirSessionEchoTS(t *testing.T, reg interface {
 	x.WriterProvider
 	session.ManagementProvider
-	Configuration() *config.Provider
+	Configuration() *config.Config
 }) *httptest.Server {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r)

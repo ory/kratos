@@ -20,7 +20,7 @@ import (
 
 const UnsetDefaultIdentitySchema = "file://not-set.schema.json"
 
-func NewConfigurationWithDefaults() *config.Provider {
+func NewConfigurationWithDefaults() *config.Config {
 	c := config.MustNew(logrusx.New("", ""),
 		configx.WithValues(map[string]interface{}{
 			"log.level":                                      "trace",
@@ -41,7 +41,7 @@ func NewConfigurationWithDefaults() *config.Provider {
 
 // NewFastRegistryWithMocks returns a registry with several mocks and an SQLite in memory database that make testing
 // easier and way faster. This suite does not work for e2e or advanced integration tests.
-func NewFastRegistryWithMocks(t *testing.T) (*config.Provider, *driver.RegistryDefault) {
+func NewFastRegistryWithMocks(t *testing.T) (*config.Config, *driver.RegistryDefault) {
 	conf, reg := NewRegistryDefaultWithDSN(t, "")
 	reg.WithCSRFTokenGenerator(x.FakeCSRFTokenGenerator)
 	reg.WithCSRFHandler(x.NewFakeCSRFHandler(""))
@@ -56,13 +56,13 @@ func NewFastRegistryWithMocks(t *testing.T) (*config.Provider, *driver.RegistryD
 }
 
 // NewRegistryDefaultWithDSN returns a more standard registry without mocks. Good for e2e and advanced integration testing!
-func NewRegistryDefaultWithDSN(t *testing.T, dsn string) (*config.Provider, *driver.RegistryDefault) {
+func NewRegistryDefaultWithDSN(t *testing.T, dsn string) (*config.Config, *driver.RegistryDefault) {
 	c := NewConfigurationWithDefaults()
 	c.MustSet(config.ViperKeyDSN, stringsx.Coalesce(dsn, dbal.InMemoryDSN))
 
 	reg, err := driver.NewRegistryFromDSN(c, logrusx.New("", ""))
 	require.NoError(t, err)
-	reg.Configuration().MustSet("dev", true)
+	reg.Config().MustSet("dev", true)
 	require.NoError(t, reg.Init())
 	return c, reg.(*driver.RegistryDefault)
 }

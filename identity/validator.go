@@ -14,14 +14,14 @@ type (
 	Validator struct {
 		v *schema.Validator
 		d validatorDependencies
-		c *config.Provider
+		c *config.Config
 	}
 	ValidationProvider interface {
 		IdentityValidator() *Validator
 	}
 )
 
-func NewValidator(d validatorDependencies, c *config.Provider) *Validator {
+func NewValidator(d validatorDependencies, c *config.Config) *Validator {
 	return &Validator{
 		v: schema.NewValidator(),
 		d: d,

@@ -36,13 +36,13 @@ type (
 
 	Sender struct {
 		r senderDependencies
-		c *config.Provider
+		c *config.Config
 	}
 )
 
 var ErrUnknownAddress = errors.New("verification requested for unknown address")
 
-func NewSender(r senderDependencies, c *config.Provider) *Sender {
+func NewSender(r senderDependencies, c *config.Config) *Sender {
 	return &Sender{r: r, c: c}
 }
 

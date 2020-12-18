@@ -31,12 +31,12 @@ type (
 		c        *pop.Connection
 		mb       *pkgerx.MigrationBox
 		r        persisterDependencies
-		cf       *config.Provider
+		cf       *config.Config
 		isSQLite bool
 	}
 )
 
-func NewPersister(r persisterDependencies, conf *config.Provider, c *pop.Connection) (*Persister, error) {
+func NewPersister(r persisterDependencies, conf *config.Config, c *pop.Connection) (*Persister, error) {
 	m, err := pkgerx.NewMigrationBox(migrations, c, r.Logger())
 	if err != nil {
 		return nil, err

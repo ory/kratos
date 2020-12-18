@@ -31,7 +31,7 @@ type (
 	}
 	Manager struct {
 		r managerDependencies
-		c *config.Provider
+		c *config.Config
 	}
 
 	managerOptions struct {
@@ -42,7 +42,7 @@ type (
 	ManagerOption func(*managerOptions)
 )
 
-func NewManager(r managerDependencies, c *config.Provider) *Manager {
+func NewManager(r managerDependencies, c *config.Config) *Manager {
 	return &Manager{r: r, c: c}
 }
 

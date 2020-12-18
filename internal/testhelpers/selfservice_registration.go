@@ -30,7 +30,7 @@ func NewRegistrationUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptes
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, e)
 	}))
-	reg.Configuration().MustSet(config.ViperKeySelfServiceRegistrationUI, ts.URL+"/registration-ts")
+	reg.Config().MustSet(config.ViperKeySelfServiceRegistrationUI, ts.URL+"/registration-ts")
 	t.Cleanup(ts.Close)
 	return ts
 }

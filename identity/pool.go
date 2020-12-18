@@ -85,7 +85,7 @@ type (
 	}
 )
 
-func TestPool(conf *config.Provider, p interface {
+func TestPool(conf *config.Config, p interface {
 	PrivilegedPool
 }) func(t *testing.T) {
 	return func(t *testing.T) {

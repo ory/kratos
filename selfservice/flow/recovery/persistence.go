@@ -28,7 +28,7 @@ type (
 	}
 )
 
-func TestFlowPersister(conf *config.Provider, p interface {
+func TestFlowPersister(conf *config.Config, p interface {
 	FlowPersister
 	identity.PrivilegedPool
 }) func(t *testing.T) {

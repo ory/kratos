@@ -91,7 +91,7 @@ func isForced(req interface{}) bool {
 // Strategy implements selfservice.LoginStrategy, selfservice.RegistrationStrategy. It supports both login
 // and registration via OpenID Providers.
 type Strategy struct {
-	c         *config.Provider
+	c         *config.Config
 	d         dependencies
 	f         *fetcher.Fetcher
 	validator *schema.Validator
@@ -144,7 +144,7 @@ func (s *Strategy) setRoutes(r *x.RouterPublic) {
 
 func NewStrategy(
 	d dependencies,
-	c *config.Provider,
+	c *config.Config,
 ) *Strategy {
 	return &Strategy{
 		c:         c,

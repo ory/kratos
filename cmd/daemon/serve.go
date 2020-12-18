@@ -44,7 +44,7 @@ import (
 func servePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args []string) {
 	defer wg.Done()
 
-	c := r.Configuration()
+	c := r.Config()
 	l := r.Logger()
 	n := negroni.New()
 
@@ -71,7 +71,7 @@ func servePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	}
 
 	var handler http.Handler = n
-	options, enabled := r.Configuration().CORS("public")
+	options, enabled := r.Config().CORS("public")
 	if enabled {
 		handler = cors.New(options).Handler(handler)
 	}
@@ -91,7 +91,7 @@ func servePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 func serveAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args []string) {
 	defer wg.Done()
 
-	c := r.Configuration()
+	c := r.Config()
 	l := r.Logger()
 	n := negroni.New()
 
@@ -124,14 +124,14 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 	return metricsx.New(
 		cmd,
 		d.Logger(),
-		d.Configuration().Source(),
+		d.Config().Source(),
 		&metricsx.Options{
 			Service: "ory-kratos",
 			ClusterID: metricsx.Hash(
 				strings.Join([]string{
-					d.Configuration().DSN(),
-					d.Configuration().SelfPublicURL().String(),
-					d.Configuration().SelfAdminURL().String(),
+					d.Config().DSN(),
+					d.Config().SelfPublicURL().String(),
+					d.Config().SelfAdminURL().String(),
 				}, "|"),
 			),
 			IsDevelopment: flagx.MustGetBool(cmd, "dev"),

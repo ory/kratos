@@ -63,7 +63,7 @@ type registrationStrategyDependencies interface {
 
 type Strategy struct {
 	d  registrationStrategyDependencies
-	c  *config.Provider
+	c  *config.Config
 	v  *validator.Validate
 	hd *decoderx.HTTP
 }
@@ -87,7 +87,7 @@ func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identi
 
 func NewStrategy(
 	d registrationStrategyDependencies,
-	c *config.Provider,
+	c *config.Config,
 ) *Strategy {
 	return &Strategy{
 		c:  c,

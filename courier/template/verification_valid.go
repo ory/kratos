@@ -8,7 +8,7 @@ import (
 
 type (
 	VerificationValid struct {
-		c *config.Provider
+		c *config.Config
 		m *VerificationValidModel
 	}
 	VerificationValidModel struct {
@@ -17,7 +17,7 @@ type (
 	}
 )
 
-func NewVerificationValid(c *config.Provider, m *VerificationValidModel) *VerificationValid {
+func NewVerificationValid(c *config.Config, m *VerificationValidModel) *VerificationValid {
 	return &VerificationValid{c: c, m: m}
 }
 

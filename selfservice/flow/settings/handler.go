@@ -60,13 +60,13 @@ type (
 		SettingsHandler() *Handler
 	}
 	Handler struct {
-		c    *config.Provider
+		c    *config.Config
 		d    handlerDependencies
 		csrf x.CSRFToken
 	}
 )
 
-func NewHandler(d handlerDependencies, c *config.Provider) *Handler {
+func NewHandler(d handlerDependencies, c *config.Config) *Handler {
 	return &Handler{d: d, c: c, csrf: nosurf.Token}
 }
 

@@ -27,7 +27,7 @@ type (
 	Courier struct {
 		Dialer *gomail.Dialer
 		d      smtpDependencies
-		c      *config.Provider
+		c      *config.Config
 		// graceful shutdown handling
 		ctx      context.Context
 		shutdown context.CancelFunc
@@ -37,7 +37,7 @@ type (
 	}
 )
 
-func NewSMTP(d smtpDependencies, c *config.Provider) *Courier {
+func NewSMTP(d smtpDependencies, c *config.Config) *Courier {
 	uri := c.CourierSMTPURL()
 	password, _ := uri.User.Password()
 	port, _ := strconv.ParseInt(uri.Port(), 10, 64)
