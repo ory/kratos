@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/dockertest"
+	"github.com/ory/dockertest/v3"
 
 	dhelper "github.com/ory/x/sqlcon/dockertest"
 

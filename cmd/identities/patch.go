@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var patchCmd = &cobra.Command{
+var PatchCmd = &cobra.Command{
 	Use:   "patch <file.json [file-2.json [file-3.json] ...]>",
 	Short: "Patch identities by ID (not yet implemented)",
 	Args:  cobra.MinimumNArgs(1),

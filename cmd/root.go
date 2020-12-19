@@ -37,6 +37,8 @@ func Execute() {
 
 func init() {
 	identities.RegisterCommandRecursive(RootCmd)
+	identities.RegisterFlags()
+
 	jsonnet.RegisterCommandRecursive(RootCmd)
 	serve.RegisterCommandRecursive(RootCmd)
 	migrate.RegisterCommandRecursive(RootCmd)

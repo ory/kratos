@@ -17,15 +17,15 @@ var identitiesCmd = &cobra.Command{
 func RegisterCommandRecursive(parent *cobra.Command) {
 	parent.AddCommand(identitiesCmd)
 
-	identitiesCmd.AddCommand(importCmd)
-	identitiesCmd.AddCommand(validateCmd)
-	identitiesCmd.AddCommand(listCmd)
-	identitiesCmd.AddCommand(getCmd)
-	identitiesCmd.AddCommand(deleteCmd)
-	identitiesCmd.AddCommand(patchCmd)
+	identitiesCmd.AddCommand(ImportCmd)
+	identitiesCmd.AddCommand(ValidateCmd)
+	identitiesCmd.AddCommand(ListCmd)
+	identitiesCmd.AddCommand(GetCmd)
+	identitiesCmd.AddCommand(DeleteCmd)
+	identitiesCmd.AddCommand(PatchCmd)
 }
 
-func init() {
+func RegisterFlags() {
 	cliclient.RegisterClientFlags(identitiesCmd.PersistentFlags())
 	cmdx.RegisterFormatFlags(identitiesCmd.PersistentFlags())
 }
