@@ -121,6 +121,8 @@ Something is not working.
 - [ ] Reloading config values does not work
       ([kratos#804](https://github.com/ory/kratos/issues/804)) -
       [@hackerman](https://github.com/aeneasr)
+- [ ] Feature Request: Have access to username in email templates
+      ([kratos#925](https://github.com/ory/kratos/issues/925))
 - [x] Sending JSON to complete oidc/password strategy flows causes CSRF issues
       ([kratos#378](https://github.com/ory/kratos/issues/378))
 - [x] Building From Source fails
@@ -131,6 +133,13 @@ Something is not working.
 - [x] Kratos Admin API return 409 when createIdentity is called simultaneously
       ([kratos#861](https://github.com/ory/kratos/issues/861)) -
       [@Patrik](https://github.com/zepatrik)
+
+#### Pull Requests
+
+- [ ] Implement FIDO2/MFA and refactor flow payloads and identity credentials
+      and authenticators
+      ([kratos#921](https://github.com/ory/kratos/pull/921)) -
+      [@hackerman](https://github.com/aeneasr)
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)
 
