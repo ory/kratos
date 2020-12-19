@@ -81,8 +81,8 @@ const (
 	ViperKeyHasherArgon2ConfigParallelism                           = "hashers.argon2.parallelism"
 	ViperKeyHasherArgon2ConfigSaltLength                            = "hashers.argon2.salt_length"
 	ViperKeyHasherArgon2ConfigKeyLength                             = "hashers.argon2.key_length"
-	ViperKeyPasswordMaxBreaches                                     = "password.max_breaches"
-	ViperKeyIgnoreNetworkErrors                                     = "password.ignore_network_errors"
+	ViperKeyPasswordMaxBreaches                                     = "selfservice.methods.password.config.max_breaches"
+	ViperKeyIgnoreNetworkErrors                                     = "selfservice.methods.password.config.ignore_network_errors"
 	ViperKeyVersion                                                 = "version"
 	Argon2DefaultMemory                                      uint32 = 4 * 1024 * 1024
 	Argon2DefaultIterations                                  uint32 = 4
