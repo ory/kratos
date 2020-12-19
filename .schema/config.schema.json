@@ -643,6 +643,28 @@
                   "type": "boolean",
                   "title": "Enables Username/Email and Password Method",
                   "default": true
+                },
+                "config": {
+                  "type": "object",
+                  "title": "Password Configuration",
+                  "description": "Define how passwords are validated.",
+                  "properties": {
+                    "max_breaches": {
+                      "title": "Allow Password Breaches",
+                      "description": "Defines how often a password may have been breached before it is rejected.",
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 100,
+                      "default": 0
+                    },
+                    "ignore_network_errors": {
+                      "title": "Ignore Lookup Network Errors",
+                      "description": "If set to false the password validation fails when the network or the Have I Been Pwnd API is down.",
+                      "type": "boolean",
+                      "default": true
+                    }
+                  },
+                  "additionalProperties": false
                 }
               }
             },
@@ -1018,28 +1040,6 @@
       "required": [
         "default_schema_url"
       ],
-      "additionalProperties": false
-    },
-    "password": {
-      "type": "object",
-      "title": "Password Configuration",
-      "description": "Define how passwords are validated.",
-      "properties": {
-        "max_breaches": {
-          "title": "Allow Password Breaches",
-          "description": "Defines how often a password may have been breached before it is rejected.",
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 100,
-          "default": 0
-        },
-        "ignore_network_errors": {
-          "title": "Ignore Lookup Network Errors",
-          "description": "If set to false the password validation fails when the network or the Have I Been Pwnd API is down.",
-          "type": "boolean",
-          "default": true
-        }
-      },
       "additionalProperties": false
     },
     "secrets": {
