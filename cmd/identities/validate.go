@@ -15,13 +15,13 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/kratos/internal/httpclient/client/public"
+	"github.com/ory/kratos-client-go/client/public"
 
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/cmd/cliclient"
 )
 
-var validateCmd = &cobra.Command{
+var ValidateCmd = &cobra.Command{
 	Use:   "validate <file.json [file-2.json [file-3.json] ...]>",
 	Short: "Validate local identity files",
 	Long: `This command allows validation of identity files.

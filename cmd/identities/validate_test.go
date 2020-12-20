@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/ory/kratos/internal/httpclient/client/public"
+	"github.com/ory/kratos-client-go/client/public"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"

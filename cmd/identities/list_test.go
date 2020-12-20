@@ -14,8 +14,8 @@ import (
 )
 
 func TestListCmd(t *testing.T) {
-	reg := setup(t, listCmd)
-	require.NoError(t, listCmd.Flags().Set(cmdx.FlagQuiet, "true"))
+	reg := setup(t, ListCmd)
+	require.NoError(t, ListCmd.Flags().Set(cmdx.FlagQuiet, "true"))
 
 	var deleteIdentities = func(t *testing.T, is []*identity.Identity) {
 		for _, i := range is {
@@ -27,7 +27,7 @@ func TestListCmd(t *testing.T) {
 		is, ids := makeIdentities(t, reg, 5)
 		defer deleteIdentities(t, is)
 
-		stdOut := execNoErr(t, listCmd)
+		stdOut := execNoErr(t, ListCmd)
 
 		for _, i := range ids {
 			assert.Contains(t, stdOut, i)
@@ -38,8 +38,8 @@ func TestListCmd(t *testing.T) {
 		is, ids := makeIdentities(t, reg, 6)
 		defer deleteIdentities(t, is)
 
-		stdoutP1 := execNoErr(t, listCmd, "1", "3")
-		stdoutP2 := execNoErr(t, listCmd, "2", "3")
+		stdoutP1 := execNoErr(t, ListCmd, "1", "3")
+		stdoutP2 := execNoErr(t, ListCmd, "2", "3")
 
 		for _, id := range ids {
 			// exactly one of page 1 and 2 should contain the id
