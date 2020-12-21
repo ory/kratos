@@ -91,9 +91,9 @@ func NewCSRFHandler(
 ) *nosurf.CSRFHandler {
 	n := nosurf.New(router)
 
-	samesiteattribute := http.SameSiteNoneMode
+	samesiteattribute := http.SameSiteLaxMode
 	if !secure {
-		samesiteattribute = http.SameSiteLaxMode
+		samesiteattribute = http.SameSiteNoneMode
 	}
 
 	n.SetBaseCookie(http.Cookie{
