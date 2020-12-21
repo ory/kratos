@@ -5,10 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/x/ioutilx"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/ory/x/ioutilx"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
@@ -16,11 +17,10 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/herodot"
-	"github.com/ory/viper"
 	"github.com/ory/x/logrusx"
 
 	"github.com/ory/kratos/continuity"
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/x"
@@ -38,10 +38,10 @@ type persisterTestPayload struct {
 }
 
 func TestManager(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := internal.NewFastRegistryWithMocks(t)
 
-	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://../test/stub/identity/empty.schema.json")
-	viper.Set(configuration.ViperKeyPublicBaseURL, "https://www.ory.sh")
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://../test/stub/identity/empty.schema.json")
+	conf.MustSet(config.ViperKeyPublicBaseURL, "https://www.ory.sh")
 	i := identity.NewIdentity("")
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 

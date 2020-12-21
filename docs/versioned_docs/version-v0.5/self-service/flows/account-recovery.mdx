@@ -126,8 +126,8 @@ This prevents account enumeration attacks as explained in this
 [brilliant blog post by Troy Hunt](https://www.troyhunt.com/website-enumeration-insanity-how-our-personal-data-is-leaked/).
 
 The emails are using templates that can be customised as explained in
-[Customizing E-Mail Templates](../../concepts/email-sms#templates). The template
-IDs are:
+[Customizing E-Mail Templates](../../concepts/email-sms.md#templates). The
+template IDs are:
 
 - Unknown email address: `recovery_invalid`
 - Known email address: `recovery_valid`
@@ -202,7 +202,7 @@ where
 - `choose_method` indicates that the user has not chosen a recovery method yet.
   This is useful when `link` is not the only recovery method active.
 - `sent_email` implies that the recovery email has been sent out.
-- `passwed_challenge` is set when the user has clicked the recovery link and
+- `passed_challenge` is set when the user has clicked the recovery link and
   completed the account recovery.
 
 ### Recovery for Browser Clients
@@ -257,7 +257,7 @@ which returns a JSON response:
 
 Fetching the Recovery Flow
 ([REST API Reference](../../reference/api.mdx#get-recovery-flow)) is usually
-only required for browser clients but also works for Recovery Flows initializied
+only required for browser clients but also works for Recovery Flows initialized
 by API clients. All you need is a valid flow ID:
 
 <CodeTabs items={getFlow} />

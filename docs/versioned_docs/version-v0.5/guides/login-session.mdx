@@ -126,7 +126,7 @@ const protect = (req: Request, res: Response, next: NextFunction) => {
       res.redirect('/auth/login')
     })
 
-// const app = expres()
+// const app = express()
 // ...
 
 app.get('/', protect, dashboard)

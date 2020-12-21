@@ -16,9 +16,7 @@ import (
 
 	"github.com/ory/x/assertx"
 
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
@@ -37,8 +35,8 @@ func TestInitFlow(t *testing.T) {
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin())
 	loginTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
 
-	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
-	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
+	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
 
 	assertion := func(body []byte, isForced, isApi bool) {
 		r := gjson.GetBytes(body, "forced")
@@ -143,10 +141,10 @@ func TestInitFlow(t *testing.T) {
 }
 
 func TestGetFlow(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := internal.NewFastRegistryWithMocks(t)
 	public, admin := testhelpers.NewKratosServerWithCSRF(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
-	_ = testhelpers.NewRedirTS(t, "")
+	_ = testhelpers.NewRedirTS(t, "", conf)
 
 	newLoginTS := func(t *testing.T, upstream string, c *http.Client) *httptest.Server {
 		return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -186,8 +184,8 @@ func TestGetFlow(t *testing.T) {
 	run := func(t *testing.T, endpoint *httptest.Server) {
 		loginTS := newLoginTS(t, endpoint.URL, nil)
 		defer loginTS.Close()
-		viper.Set(configuration.ViperKeySelfServiceLoginUI, loginTS.URL)
-		viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
+		conf.MustSet(config.ViperKeySelfServiceLoginUI, loginTS.URL)
+		conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{
 			"enabled": true})
 
 		t.Run("case=valid", func(t *testing.T) {

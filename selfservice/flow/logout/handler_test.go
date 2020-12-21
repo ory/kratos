@@ -4,6 +4,7 @@ import (
 	"context"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/gobuffalo/httptest"
@@ -11,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
@@ -19,7 +20,6 @@ import (
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 	"github.com/ory/nosurf"
-	"github.com/ory/viper"
 	"github.com/ory/x/logrusx"
 )
 
@@ -27,8 +27,8 @@ func TestLogoutHandler(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	handler := reg.LogoutHandler()
 
-	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
-	viper.Set(configuration.ViperKeyPublicBaseURL, "http://example.com")
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/registration.schema.json")
+	conf.MustSet(config.ViperKeyPublicBaseURL, "http://example.com")
 
 	router := x.NewRouterPublic()
 	handler.RegisterPublicRoutes(router)
@@ -53,8 +53,8 @@ func TestLogoutHandler(t *testing.T) {
 	}))
 	defer redirTS.Close()
 
-	viper.Set(configuration.ViperKeySelfServiceLogoutBrowserDefaultReturnTo, redirTS.URL)
-	viper.Set(configuration.ViperKeyPublicBaseURL, ts.URL)
+	conf.MustSet(config.ViperKeySelfServiceLogoutBrowserDefaultReturnTo, redirTS.URL)
+	conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
 
 	client := testhelpers.NewClientWithCookies(t)
 
@@ -84,6 +84,7 @@ func TestLogoutHandler(t *testing.T) {
 			}
 		}
 		require.False(t, found)
+		assert.Equal(t, redirTS.URL, res.Request.URL.String())
 	})
 
 	t.Run("case=csrf token should be reset", func(t *testing.T) {
@@ -94,5 +95,18 @@ func TestLogoutHandler(t *testing.T) {
 		require.NoError(t, res.Body.Close())
 		require.NotEmpty(t, body)
 		assert.NotEqual(t, token, string(body))
+	})
+
+	t.Run("case=respects return_to URI parameter", func(t *testing.T) {
+		returnToURL := ts.URL + "/after-logout"
+		conf.MustSet(config.ViperKeyURLsWhitelistedReturnToDomains, []string{returnToURL})
+
+		query := url.Values{
+			"return_to": {returnToURL},
+		}
+
+		res, err := client.Get(ts.URL + logout.RouteBrowser + "?" + query.Encode())
+		require.NoError(t, err)
+		assert.Equal(t, returnToURL, res.Request.URL.String())
 	})
 }

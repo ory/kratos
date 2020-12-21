@@ -23,7 +23,7 @@ import (
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/continuity"
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
@@ -91,7 +91,7 @@ func isForced(req interface{}) bool {
 // Strategy implements selfservice.LoginStrategy, selfservice.RegistrationStrategy. It supports both login
 // and registration via OpenID Providers.
 type Strategy struct {
-	c         configuration.Provider
+	c         *config.Provider
 	d         dependencies
 	f         *fetcher.Fetcher
 	validator *schema.Validator
@@ -144,7 +144,7 @@ func (s *Strategy) setRoutes(r *x.RouterPublic) {
 
 func NewStrategy(
 	d dependencies,
-	c configuration.Provider,
+	c *config.Provider,
 ) *Strategy {
 	return &Strategy{
 		c:         c,

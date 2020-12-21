@@ -4,8 +4,11 @@ context('Login Flow Success', () => {
   const email = gen.email()
   const password = gen.password()
 
-  beforeEach(() => {
+  before(() => {
     cy.registerApi({email, password, fields: {'traits.website': website}})
+  })
+
+  beforeEach(() => {
     cy.visit(MOBILE_URL + "/Login")
   })
 

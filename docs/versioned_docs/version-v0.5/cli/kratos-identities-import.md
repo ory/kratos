@@ -18,7 +18,8 @@ Import identities from files or STD_IN
 
 Import identities from files or STD_IN.
 
-Files can contain only a single or an array of identities. The validity of files can be tested beforehand using "... identities validate".
+Files can contain only a single or an array of identities. The validity of files
+can be tested beforehand using "... identities validate".
 
 WARNING: Importing credentials is not yet supported.
 
@@ -42,6 +43,7 @@ $ cat file.json | kratos identities import
 ### Options inherited from parent commands
 
 ```
+  -c, --config string     Path to config file. Supports .json, .yaml, .yml, .toml. Default is "$HOME/.kratos.(yaml|yml|toml|json)"
   -e, --endpoint string   The URL of ORY Kratos' Admin API. Alternatively set using the KRATOS_ADMIN_URL environmental variable.
   -f, --format string     Set the output format. One of table, json, and json-pretty.
   -q, --quiet             Prints only IDs, one per line. Takes precedence over --format.
@@ -49,4 +51,5 @@ $ cat file.json | kratos identities import
 
 ### SEE ALSO
 
-- [kratos identities](kratos-identities) - Tools to interact with remote identities
+- [kratos identities](kratos-identities) - Tools to interact with remote
+  identities

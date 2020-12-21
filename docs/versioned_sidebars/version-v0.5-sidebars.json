@@ -20,6 +20,10 @@
         {
           "type": "doc",
           "id": "version-v0.5/configuring"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.5/contributing"
         }
       ]
     },
@@ -191,6 +195,10 @@
         {
           "type": "doc",
           "id": "version-v0.5/guides/docker"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.5/guides/setting-up-password-hashing-parameters"
         }
       ]
     },
@@ -226,66 +234,15 @@
             },
             {
               "type": "doc",
-              "id": "version-v0.5/cli/kratos-identities"
+              "id": "version-v0.5/cli/kratos-hashers"
             },
             {
               "type": "doc",
-              "id": "version-v0.5/cli/kratos-identities-delete"
+              "id": "version-v0.5/cli/kratos-hashers-argon2"
             },
             {
               "type": "doc",
-              "id": "version-v0.5/cli/kratos-identities-get"
-            },
-            {
-              "type": "doc",
-              "id": "version-v0.5/cli/kratos-identities-import"
-            },
-            {
-              "type": "doc",
-              "id": "version-v0.5/cli/kratos-identities-list"
-            },
-            {
-              "type": "doc",
-              "id": "version-v0.5/cli/kratos-identities-patch"
-            },
-            {
-              "type": "doc",
-              "id": "version-v0.5/cli/kratos-identities-validate"
-            },
-            {
-              "type": "doc",
-              "id": "version-v0.5/cli/kratos-jsonnet"
-            },
-            {
-              "type": "doc",
-              "id": "version-v0.5/cli/kratos-jsonnet-format"
-            },
-            {
-              "type": "doc",
-              "id": "version-v0.5/cli/kratos-jsonnet-lint"
-            },
-            {
-              "type": "doc",
-              "id": "version-v0.5/cli/kratos-remote"
-            },
-            {
-              "type": "doc",
-              "id": "version-v0.5/cli/kratos-remote-status"
-            },
-            {
-              "type": "doc",
-              "id": "version-v0.5/cli/kratos-remote-version"
-            }
-          ]
-        },
-        {
-          "collapsed": true,
-          "type": "category",
-          "label": "items",
-          "items": [
-            {
-              "type": "doc",
-              "id": "version-v0.5/cli/kratos"
+              "id": "version-v0.5/cli/kratos-hashers-argon2-calibrate"
             },
             {
               "type": "doc",
@@ -329,6 +286,14 @@
             },
             {
               "type": "doc",
+              "id": "version-v0.5/cli/kratos-migrate"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.5/cli/kratos-migrate-sql"
+            },
+            {
+              "type": "doc",
               "id": "version-v0.5/cli/kratos-remote"
             },
             {
@@ -338,6 +303,14 @@
             {
               "type": "doc",
               "id": "version-v0.5/cli/kratos-remote-version"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.5/cli/kratos-serve"
+            },
+            {
+              "type": "doc",
+              "id": "version-v0.5/cli/kratos-version"
             }
           ]
         }
@@ -351,6 +324,10 @@
         {
           "type": "doc",
           "id": "version-v0.5/debug/csrf"
+        },
+        {
+          "type": "doc",
+          "id": "version-v0.5/debug/performance-out-of-memory-password-hashing-argon2"
         }
       ]
     },

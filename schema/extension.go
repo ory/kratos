@@ -3,8 +3,9 @@ package schema
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/ory/x/pkgerx"
 	"path"
+
+	"github.com/ory/x/pkgerx"
 
 	"github.com/markbates/pkger"
 	"github.com/pkg/errors"

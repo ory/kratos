@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/ory/kratos/internal/httpclient/client/public"
+	"github.com/ory/kratos-client-go/client/public"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -19,6 +19,7 @@ func TestValidateIdentity(t *testing.T) {
 		cmd.SetErr(err)
 		return cmd, out, err
 	}
+
 	var testSchemaGetter = func(resp interface{}) schemaGetter {
 		return func(_ *public.GetSchemaParams) (*public.GetSchemaOK, error) {
 			return &public.GetSchemaOK{Payload: resp}, nil

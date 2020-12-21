@@ -12,7 +12,7 @@ import (
 
 	"github.com/ory/kratos/courier"
 	templates "github.com/ory/kratos/courier/template"
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/verification"
@@ -36,13 +36,13 @@ type (
 
 	Sender struct {
 		r senderDependencies
-		c configuration.Provider
+		c *config.Provider
 	}
 )
 
 var ErrUnknownAddress = errors.New("verification requested for unknown address")
 
-func NewSender(r senderDependencies, c configuration.Provider) *Sender {
+func NewSender(r senderDependencies, c *config.Provider) *Sender {
 	return &Sender{r: r, c: c}
 }
 

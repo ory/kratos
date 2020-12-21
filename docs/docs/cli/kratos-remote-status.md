@@ -1,7 +1,9 @@
 ---
 id: kratos-remote-status
 title: kratos remote status
-description: kratos remote status Print the alive and readiness status of a ORY Kratos instance
+description:
+  kratos remote status Print the alive and readiness status of a ORY Kratos
+  instance
 ---
 
 <!--
@@ -31,7 +33,6 @@ kratos remote status [flags]
 ### Options inherited from parent commands
 
 ```
-  -c, --config string     Path to config file. Supports .json, .yaml, .yml, .toml. Default is "$HOME/.kratos.(yaml|yml|toml|json)"
   -e, --endpoint string   The URL of ORY Kratos' Admin API. Alternatively set using the KRATOS_ADMIN_URL environmental variable.
   -f, --format string     Set the output format. One of table, json, and json-pretty.
   -q, --quiet             Prints only IDs, one per line. Takes precedence over --format.
@@ -39,4 +40,5 @@ kratos remote status [flags]
 
 ### SEE ALSO
 
-- [kratos remote](kratos-remote) - Helpers and management for remote ORY Kratos instances
+- [kratos remote](kratos-remote) - Helpers and management for remote ORY Kratos
+  instances

@@ -9,7 +9,7 @@ import (
 
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
@@ -40,11 +40,11 @@ type (
 	}
 	Handler struct {
 		d handlerDependencies
-		c configuration.Provider
+		c *config.Provider
 	}
 )
 
-func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
+func NewHandler(d handlerDependencies, c *config.Provider) *Handler {
 	return &Handler{d: d, c: c}
 }
 

@@ -16,11 +16,18 @@ Computes Optimal Argon2 Parameters.
 
 ### Synopsis
 
-This command helps you calibrate the configuration parameters for Argon2. Password hashing is a trade-off between security, resource consumption, and user experience. Resource consumption should not be too high and the login should not take too long.
+This command helps you calibrate the configuration parameters for Argon2.
+Password hashing is a trade-off between security, resource consumption, and user
+experience. Resource consumption should not be too high and the login should not
+take too long.
 
-We recommend that the login process takes between half a second and one second for password hashing, giving a good balance between security and user experience.
+We recommend that the login process takes between half a second and one second
+for password hashing, giving a good balance between security and user
+experience.
 
-Please note that the values depend on the machine you run the hashing on. If you have RAM constraints please choose lower memory targets to avoid out of memory panics.
+Please note that the values depend on the machine you run the hashing on. If you
+have RAM constraints please choose lower memory targets to avoid out of memory
+panics.
 
 ```
 kratos hashers argon2 calibrate [<desired-duration>] [flags]
@@ -39,12 +46,6 @@ kratos hashers argon2 calibrate [<desired-duration>] [flags]
       --salt-length uint32           Length of the salt in bytes. (default 16)
   -i, --start-iterations uint32      Number of iterations to start probing at. (default 1)
   -m, --start-memory byte_size       Amount of memory to start probing at. (default 4.00GB)
-```
-
-### Options inherited from parent commands
-
-```
-  -c, --config string   Path to config file. Supports .json, .yaml, .yml, .toml. Default is "$HOME/.kratos.(yaml|yml|toml|json)"
 ```
 
 ### SEE ALSO

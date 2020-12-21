@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/ory/x/jsonschemax"
+
 	"github.com/ory/x/cmdx"
 
 	"github.com/markbates/pkger"
@@ -13,14 +15,13 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/kratos/internal/httpclient/client/public"
+	"github.com/ory/kratos-client-go/client/public"
 
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/cmd/cliclient"
-	"github.com/ory/x/viperx"
 )
 
-var validateCmd = &cobra.Command{
+var ValidateCmd = &cobra.Command{
 	Use:   "validate <file.json [file-2.json [file-3.json] ...]>",
 	Short: "Validate local identity files",
 	Long: `This command allows validation of identity files.
@@ -87,7 +88,7 @@ func validateIdentity(cmd *cobra.Command, src, i string, getRemoteSchema schemaG
 	err := swaggerSchema.Validate(bytes.NewBufferString(i))
 	if err != nil {
 		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%s: not valid\n", src)
-		viperx.PrintHumanReadableValidationErrors(cmd.ErrOrStderr(), err)
+		jsonschemax.FormatValidationErrorForCLI(cmd.ErrOrStderr(), []byte(i), err)
 		foundValidationErrors = true
 	}
 
@@ -124,7 +125,7 @@ func validateIdentity(cmd *cobra.Command, src, i string, getRemoteSchema schemaG
 	err = customSchema.Validate(bytes.NewBufferString(i))
 	if err != nil {
 		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%s: not valid\n", src)
-		viperx.PrintHumanReadableValidationErrors(cmd.ErrOrStderr(), err)
+		jsonschemax.FormatValidationErrorForCLI(cmd.ErrOrStderr(), []byte(i), err)
 		foundValidationErrors = true
 	}
 

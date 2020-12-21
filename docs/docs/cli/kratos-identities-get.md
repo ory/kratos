@@ -16,9 +16,13 @@ Get one or more identities by ID
 
 ### Synopsis
 
-This command gets all the details about an identity. To get an identity by some selector, e.g. the recovery email address, use the list command in combination with jq.
+This command gets all the details about an identity. To get an identity by some
+selector, e.g. the recovery email address, use the list command in combination
+with jq.
 
-We have to admit, this is not easy if you don't speak jq fluently. What about opening an issue and telling us what predefined selectors you want to have? https://github.com/ory/kratos/issues/new/choose
+We have to admit, this is not easy if you don't speak jq fluently. What about
+opening an issue and telling us what predefined selectors you want to have?
+https://github.com/ory/kratos/issues/new/choose
 
 ```
 kratos identities get <id-0 [id-1 ...]> [flags]
@@ -41,7 +45,6 @@ To get the identities with the recovery email address at the domain "ory.sh", ru
 ### Options inherited from parent commands
 
 ```
-  -c, --config string     Path to config file. Supports .json, .yaml, .yml, .toml. Default is "$HOME/.kratos.(yaml|yml|toml|json)"
   -e, --endpoint string   The URL of ORY Kratos' Admin API. Alternatively set using the KRATOS_ADMIN_URL environmental variable.
   -f, --format string     Set the output format. One of table, json, and json-pretty.
   -q, --quiet             Prints only IDs, one per line. Takes precedence over --format.
@@ -49,4 +52,5 @@ To get the identities with the recovery email address at the domain "ory.sh", ru
 
 ### SEE ALSO
 
-- [kratos identities](kratos-identities) - Tools to interact with remote identities
+- [kratos identities](kratos-identities) - Tools to interact with remote
+  identities

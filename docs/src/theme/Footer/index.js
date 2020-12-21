@@ -4,37 +4,18 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+import React from 'react'
+import clsx from 'clsx'
+import Link from '@docusaurus/Link'
+import { useThemeConfig } from '@docusaurus/theme-common'
+import useBaseUrl from '@docusaurus/useBaseUrl'
+import styles from './styles.module.css'
 
-import React from 'react';
-import classnames from 'classnames';
-
-import Link from '@docusaurus/Link';
-import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
-import useBaseUrl from '@docusaurus/useBaseUrl';
-import styles from './styles.module.css';
-
-const script = `(function () {
-  document.querySelectorAll('.tabs .tabs-nav .nav-item a').forEach(function (t) {
-    t.addEventListener("click", function (e) {
-      e.preventDefault();
-
-      t.closest('.tabs-nav').querySelectorAll('.nav-item a').forEach(function (i) {
-        i.classList.remove('active');
-      });
-
-      t.closest('.tabs').querySelectorAll('.tab-content .tab-pane').forEach(function (i) {
-        i.classList.remove('active');
-      });
-
-      t.classList.add('active');
-      document.getElementById(t.href.split('#')[1]).classList.add('active');
-      return false
-    });
-  });
-})();`;
-
-function FooterLink({to, href, label, ...props}) {
-  const toUrl = useBaseUrl(to);
+function FooterLink({ to, href, label, prependBaseUrlToHref, ...props }) {
+  const toUrl = useBaseUrl(to)
+  const normalizedHref = useBaseUrl(href, {
+    forcePrependBaseUrl: true
+  })
   return (
     <Link
       className="footer__link-item"
@@ -42,39 +23,37 @@ function FooterLink({to, href, label, ...props}) {
         ? {
             target: '_blank',
             rel: 'noopener noreferrer',
-            href,
+            href: prependBaseUrlToHref ? normalizedHref : href
           }
         : {
-            to: toUrl,
+            to: toUrl
           })}
-      {...props}>
+      {...props}
+    >
       {label}
     </Link>
-  );
+  )
 }
 
-const FooterLogo = ({url, alt}) => (
+const FooterLogo = ({ url, alt }) => (
   <img className="footer__logo" alt={alt} src={url} />
-);
+)
 
 function Footer() {
-  const context = useDocusaurusContext();
-  const {siteConfig = {}} = context;
-  const {themeConfig = {}} = siteConfig;
-  const {footer} = themeConfig;
-
-  const {copyright, links = [], logo = {}} = footer || {};
-  const logoUrl = useBaseUrl(logo.src);
+  const { footer } = useThemeConfig()
+  const { copyright, links = [], logo = {} } = footer || {}
+  const logoUrl = useBaseUrl(logo.src)
 
   if (!footer) {
-    return null;
+    return null
   }
 
   return (
     <footer
-      className={classnames('footer', {
-        'footer--dark': footer.style === 'dark',
-      })}>
+      className={clsx('footer', {
+        'footer--dark': footer.style === 'dark'
+      })}
+    >
       <div className="container">
         {links && links.length > 0 && (
           <div className="row footer__links">
@@ -91,16 +70,17 @@ function Footer() {
                       item.html ? (
                         <li
                           key={key}
-                          className="footer__item"
+                          className="footer__item" // Developer provided the HTML, so assume it's safe.
+                          // eslint-disable-next-line react/no-danger
                           dangerouslySetInnerHTML={{
-                            __html: item.html,
+                            __html: item.html
                           }}
                         />
                       ) : (
                         <li key={item.href || item.to} className="footer__item">
                           <FooterLink {...item} />
                         </li>
-                      ),
+                      )
                     )}
                   </ul>
                 ) : null}
@@ -117,7 +97,8 @@ function Footer() {
                     href={logo.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={styles.footerLogoLink}>
+                    className={styles.footerLogoLink}
+                  >
                     <FooterLogo alt={logo.alt} url={logoUrl} />
                   </a>
                 ) : (
@@ -126,22 +107,17 @@ function Footer() {
               </div>
             )}
 
-            <div
+            <div // Developer provided the HTML, so assume it's safe.
+              // eslint-disable-next-line react/no-danger
               dangerouslySetInnerHTML={{
-                __html: copyright,
+                __html: copyright
               }}
             />
           </div>
         )}
       </div>
-      <div id="codefund" />
-      <script
-        src="https://codefund.io/properties/140/funder.js"
-        async="async"
-      />
-      <script dangerouslySetInnerHTML={{ __html: script }} />
     </footer>
-  );
+  )
 }
 
-export default Footer;
+export default Footer

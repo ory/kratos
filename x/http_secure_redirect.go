@@ -12,7 +12,7 @@ import (
 	"github.com/ory/x/stringsx"
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 )
 
 type secureRedirectOptions struct {
@@ -106,7 +106,7 @@ func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureR
 
 func SecureContentNegotiationRedirection(
 	w http.ResponseWriter, r *http.Request, out interface{},
-	requestURL string, writer herodot.Writer, c configuration.Provider,
+	requestURL string, writer herodot.Writer, c *config.Provider,
 	opts ...SecureRedirectOption,
 ) error {
 	switch httputil.NegotiateContentType(r, []string{

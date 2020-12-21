@@ -1,7 +1,7 @@
 package driver
 
 import (
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/hook"
 )
 
@@ -26,11 +26,11 @@ func (m *RegistryDefault) HookSessionDestroyer() *hook.SessionDestroyer {
 	return m.hookSessionDestroyer
 }
 
-func (m *RegistryDefault) WithHooks(hooks map[string]func(configuration.SelfServiceHook) interface{}) {
+func (m *RegistryDefault) WithHooks(hooks map[string]func(config.SelfServiceHook) interface{}) {
 	m.injectedSelfserviceHooks = hooks
 }
 
-func (m *RegistryDefault) getHooks(credentialsType string, configs []configuration.SelfServiceHook) (i []interface{}) {
+func (m *RegistryDefault) getHooks(credentialsType string, configs []config.SelfServiceHook) (i []interface{}) {
 	for _, h := range configs {
 		switch h.Name {
 		case hook.KeySessionIssuer:

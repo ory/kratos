@@ -3,7 +3,7 @@ package hook
 import (
 	"net/http"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
@@ -21,11 +21,11 @@ type (
 	}
 	Verifier struct {
 		r verifierDependencies
-		c configuration.Provider
+		c *config.Provider
 	}
 )
 
-func NewVerifier(r verifierDependencies, c configuration.Provider) *Verifier {
+func NewVerifier(r verifierDependencies, c *config.Provider) *Verifier {
 	return &Verifier{r: r, c: c}
 }
 

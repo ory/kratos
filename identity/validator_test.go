@@ -10,9 +10,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	. "github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 )
@@ -57,8 +55,8 @@ func TestSchemaValidator(t *testing.T) {
 	defer ts.Close()
 
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, ts.URL+"/schema/firstName")
-	viper.Set(configuration.ViperKeyIdentitySchemas, []configuration.SchemaConfig{
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, ts.URL+"/schema/firstName")
+	conf.MustSet(config.ViperKeyIdentitySchemas, []config.SchemaConfig{
 		{ID: "whatever", URL: ts.URL + "/schema/whatever"},
 		{ID: "unreachable-url", URL: ts.URL + "/404-not-found"},
 	})

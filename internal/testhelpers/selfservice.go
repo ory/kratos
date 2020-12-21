@@ -13,10 +13,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/viper"
-
 	"github.com/ory/kratos/driver"
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -27,26 +25,27 @@ func TestSelfServicePreHook(
 	configKey string,
 	makeRequestPre func(t *testing.T, ts *httptest.Server) (*http.Response, string),
 	newServer func(t *testing.T) *httptest.Server,
+	conf *config.Provider,
 ) func(t *testing.T) {
 	return func(t *testing.T) {
 		t.Run("case=pass without hooks", func(t *testing.T) {
-			t.Cleanup(SelfServiceHookConfigReset)
+			t.Cleanup(SelfServiceHookConfigReset(t, conf))
 
 			res, _ := makeRequestPre(t, newServer(t))
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
 		})
 
 		t.Run("case=pass if hooks pass", func(t *testing.T) {
-			t.Cleanup(SelfServiceHookConfigReset)
-			viper.Set(configKey, []configuration.SelfServiceHook{{Name: "err", Config: []byte(`{}`)}})
+			t.Cleanup(SelfServiceHookConfigReset(t, conf))
+			conf.MustSet(configKey, []config.SelfServiceHook{{Name: "err", Config: []byte(`{}`)}})
 
 			res, _ := makeRequestPre(t, newServer(t))
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
 		})
 
 		t.Run("case=err if hooks err", func(t *testing.T) {
-			t.Cleanup(SelfServiceHookConfigReset)
-			viper.Set(configKey, []configuration.SelfServiceHook{{Name: "err", Config: []byte(`{"ExecuteLoginPreHook": "err","ExecuteRegistrationPreHook": "err"}`)}})
+			t.Cleanup(SelfServiceHookConfigReset(t, conf))
+			conf.MustSet(configKey, []config.SelfServiceHook{{Name: "err", Config: []byte(`{"ExecuteLoginPreHook": "err","ExecuteRegistrationPreHook": "err"}`)}})
 
 			res, body := makeRequestPre(t, newServer(t))
 			assert.EqualValues(t, http.StatusInternalServerError, res.StatusCode, "%s", body)
@@ -54,8 +53,8 @@ func TestSelfServicePreHook(
 		})
 
 		t.Run("case=abort if hooks aborts", func(t *testing.T) {
-			t.Cleanup(SelfServiceHookConfigReset)
-			viper.Set(configKey, []configuration.SelfServiceHook{{Name: "err", Config: []byte(`{"ExecuteLoginPreHook": "abort","ExecuteRegistrationPreHook": "abort"}`)}})
+			t.Cleanup(SelfServiceHookConfigReset(t, conf))
+			conf.MustSet(configKey, []config.SelfServiceHook{{Name: "err", Config: []byte(`{"ExecuteLoginPreHook": "abort","ExecuteRegistrationPreHook": "abort"}`)}})
 
 			res, body := makeRequestPre(t, newServer(t))
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
@@ -65,8 +64,8 @@ func TestSelfServicePreHook(
 		t.Run("case=redirect", func(t *testing.T) {
 			t.Skipf("Skipped because pre-redirect is no longer supported")
 
-			t.Cleanup(SelfServiceHookConfigReset)
-			viper.Set(configKey, []configuration.SelfServiceHook{{Name: "redirect", Config: []byte(`{"to": "https://www.ory.sh/"}`)}})
+			t.Cleanup(SelfServiceHookConfigReset(t, conf))
+			conf.MustSet(configKey, []config.SelfServiceHook{{Name: "redirect", Config: []byte(`{"to": "https://www.ory.sh/"}`)}})
 
 			res, _ := makeRequestPre(t, newServer(t))
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
@@ -88,43 +87,46 @@ func SelfServiceHookFakeIdentity(t *testing.T) *identity.Identity {
 	return &i
 }
 
-func SelfServiceHookConfigReset() {
-	viper.Set(configuration.ViperKeySelfServiceLoginAfter, nil)
-	viper.Set(configuration.ViperKeySelfServiceLoginBeforeHooks, nil)
-	viper.Set(configuration.ViperKeySelfServiceRegistrationAfter, nil)
-	viper.Set(configuration.ViperKeySelfServiceRegistrationBeforeHooks, nil)
-	viper.Set(configuration.ViperKeySelfServiceSettingsAfter, nil)
+func SelfServiceHookConfigReset(t *testing.T, conf *config.Provider) func() {
+	return func() {
+		conf.MustSet(config.ViperKeySelfServiceLoginAfter, nil)
+		conf.MustSet(config.ViperKeySelfServiceLoginBeforeHooks, nil)
+		conf.MustSet(config.ViperKeySelfServiceRegistrationAfter, nil)
+		conf.MustSet(config.ViperKeySelfServiceRegistrationBeforeHooks, nil)
+		conf.MustSet(config.ViperKeySelfServiceSettingsAfter, nil)
+	}
 }
 
-func SelfServiceHookSettingsSetDefaultRedirectTo(value string) {
-	viper.Set(configuration.ViperKeySelfServiceSettingsAfter+"."+configuration.DefaultBrowserReturnURL, value)
+func SelfServiceHookSettingsSetDefaultRedirectTo(t *testing.T, conf *config.Provider, value string) {
+	conf.MustSet(config.ViperKeySelfServiceSettingsAfter+"."+config.DefaultBrowserReturnURL, value)
 }
 
-func SelfServiceHookSettingsSetDefaultRedirectToStrategy(strategy, value string) {
-	viper.Set(configuration.ViperKeySelfServiceSettingsAfter+"."+strategy+"."+configuration.DefaultBrowserReturnURL, value)
-}
-func SelfServiceHookLoginSetDefaultRedirectTo(value string) {
-	viper.Set(configuration.ViperKeySelfServiceLoginAfter+"."+configuration.DefaultBrowserReturnURL, value)
+func SelfServiceHookSettingsSetDefaultRedirectToStrategy(t *testing.T, conf *config.Provider, strategy, value string) {
+	conf.MustSet(config.ViperKeySelfServiceSettingsAfter+"."+strategy+"."+config.DefaultBrowserReturnURL, value)
 }
 
-func SelfServiceHookLoginSetDefaultRedirectToStrategy(strategy, value string) {
-	viper.Set(configuration.ViperKeySelfServiceLoginAfter+"."+strategy+"."+configuration.DefaultBrowserReturnURL, value)
+func SelfServiceHookLoginSetDefaultRedirectTo(t *testing.T, conf *config.Provider, value string) {
+	conf.MustSet(config.ViperKeySelfServiceLoginAfter+"."+config.DefaultBrowserReturnURL, value)
 }
 
-func SelfServiceHookRegistrationSetDefaultRedirectTo(value string) {
-	viper.Set(configuration.ViperKeySelfServiceRegistrationAfter+"."+configuration.DefaultBrowserReturnURL, value)
+func SelfServiceHookLoginSetDefaultRedirectToStrategy(t *testing.T, conf *config.Provider, strategy, value string) {
+	conf.MustSet(config.ViperKeySelfServiceLoginAfter+"."+strategy+"."+config.DefaultBrowserReturnURL, value)
 }
 
-func SelfServiceHookRegistrationSetDefaultRedirectToStrategy(strategy, value string) {
-	viper.Set(configuration.ViperKeySelfServiceRegistrationAfter+"."+strategy+"."+configuration.DefaultBrowserReturnURL, value)
+func SelfServiceHookRegistrationSetDefaultRedirectTo(t *testing.T, conf *config.Provider, value string) {
+	conf.MustSet(config.ViperKeySelfServiceRegistrationAfter+"."+config.DefaultBrowserReturnURL, value)
 }
 
-func SelfServiceHookLoginViperSetPost(strategy string, c []configuration.SelfServiceHook) {
-	viper.Set(configuration.HookStrategyKey(configuration.ViperKeySelfServiceLoginAfter, strategy), c)
+func SelfServiceHookRegistrationSetDefaultRedirectToStrategy(t *testing.T, conf *config.Provider, strategy, value string) {
+	conf.MustSet(config.ViperKeySelfServiceRegistrationAfter+"."+strategy+"."+config.DefaultBrowserReturnURL, value)
 }
 
-func SelfServiceHookRegistrationViperSetPost(strategy string, c []configuration.SelfServiceHook) {
-	viper.Set(configuration.HookStrategyKey(configuration.ViperKeySelfServiceRegistrationAfter, strategy), c)
+func SelfServiceHookLoginViperSetPost(t *testing.T, conf *config.Provider, strategy string, c []config.SelfServiceHook) {
+	conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceLoginAfter, strategy), c)
+}
+
+func SelfServiceHookRegistrationViperSetPost(t *testing.T, conf *config.Provider, strategy string, c []config.SelfServiceHook) {
+	conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, strategy), c)
 }
 
 func SelfServiceHookLoginErrorHandler(t *testing.T, w http.ResponseWriter, r *http.Request, err error) bool {

@@ -1,26 +1,26 @@
 package testhelpers
 
 import (
-	"github.com/ory/viper"
+	"testing"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 )
 
 // SetDefaultIdentitySchema sets the identity schemas in viper config:
 //
 //	testhelpers.SetDefaultIdentitySchema("file://customer.json")
-func SetDefaultIdentitySchema(location string) {
-	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, location)
+func SetDefaultIdentitySchema(t *testing.T, conf *config.Provider, location string) {
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, location)
 }
 
 // SetIdentitySchemas sets the identity schemas in viper config:
 //
 //	testhelpers.SetIdentitySchemas(map[string]string{"customer": "file://customer.json"})
-func SetIdentitySchemas(schemas map[string]string) {
-	var s []configuration.SchemaConfig
+func SetIdentitySchemas(t *testing.T, conf *config.Provider, schemas map[string]string) {
+	var s []config.SchemaConfig
 	for id, location := range schemas {
-		s = append(s, configuration.SchemaConfig{ID: id, URL: location})
+		s = append(s, config.SchemaConfig{ID: id, URL: location})
 	}
 
-	viper.Set(configuration.ViperKeyIdentitySchemas, s)
+	conf.MustSet(config.ViperKeyIdentitySchemas, s)
 }

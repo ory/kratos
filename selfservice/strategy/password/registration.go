@@ -2,8 +2,9 @@ package password
 
 import (
 	"encoding/json"
-	"github.com/ory/x/pkgerx"
 	"net/http"
+
+	"github.com/ory/x/pkgerx"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/markbates/pkger"
@@ -16,7 +17,7 @@ import (
 	_ "github.com/ory/jsonschema/v3/httploader"
 	"github.com/ory/x/decoderx"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
 
@@ -187,7 +188,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	i.Traits = identity.Traits(p.Traits)
 	i.SetCredentials(s.ID(), identity.Credentials{Type: s.ID(), Identifiers: []string{}, Config: co})
 

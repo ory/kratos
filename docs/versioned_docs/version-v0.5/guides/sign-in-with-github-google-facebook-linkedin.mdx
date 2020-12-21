@@ -37,7 +37,8 @@ selfservice:
 
 ## Discord
 
-To set up "Sign in with Discord" you must create a [Discord OAuth2 Application](https://discord.com/developers/docs/topics/oauth2).
+To set up "Sign in with Discord" you must create a
+[Discord OAuth2 Application](https://discord.com/developers/docs/topics/oauth2).
 
 Set the "Redirect URI" to:
 
@@ -57,10 +58,11 @@ configuration file (explained in further detail at
 
 :::note
 
-Discord does not implement OpenID Connect. Therefore, ORY Kratos makes a request to
+Discord does not implement OpenID Connect. Therefore, ORY Kratos makes a request
+to
 [Discord's User API](https://discord.com/developers/docs/resources/user#get-current-user)
-and adds that data to `std.extVar('claims')`.
-However, not all fields are supported. Check the list of supported fields
+and adds that data to `std.extVar('claims')`. However, not all fields are
+supported. Check the list of supported fields
 [in Kratos' source code](https://github.com/ory/kratos/blob/v0.5.1-alpha.1/selfservice/strategy/oidc/provider_discord.go#L81-L91).
 
 The `identify` scope will add following fields:
@@ -220,7 +222,8 @@ Login option!
 
 ## GitLab
 
-To set up "Sign in with GitLab" you must create a [GitLab OAuth2 Application](https://docs.gitlab.com/ee/integration/oauth_provider.html#adding-an-application-through-the-profile).
+To set up "Sign in with GitLab" you must create a
+[GitLab OAuth2 Application](https://docs.gitlab.com/ee/integration/oauth_provider.html#adding-an-application-through-the-profile).
 
 Set the "Redirect URI" to:
 
@@ -235,9 +238,14 @@ http(s)://<domain-of-ory-kratos>:<public-port>/self-service/methods/oidc/callbac
 ```
 
 :::note
-While you can use [GitLab as an OIDC identity provider](https://docs.gitlab.com/ee/integration/openid_connect_provider.html),
-GitLab only returns the sub and sub_legacy claims in the ID token.
-Therefore, ORY Kratos makes a request to [GitLab's /oauth/userinfo API](https://gitlab.com/oauth/userinfo) and adds the user info to `std.extVar('claims')`.
+
+While you can use
+[GitLab as an OIDC identity provider](https://docs.gitlab.com/ee/integration/openid_connect_provider.html),
+GitLab only returns the sub and sub_legacy claims in the ID token. Therefore,
+ORY Kratos makes a request to
+[GitLab's /oauth/userinfo API](https://gitlab.com/oauth/userinfo) and adds the
+user info to `std.extVar('claims')`.
+
 :::
 
 ```json title="contrib/quickstart/kratos/email-password/oidc.gitlab.jsonnet"
@@ -372,7 +380,8 @@ There are two ways to use the `microsoft` provider for authentication:
 
 ## Twitch
 
-To set up "Sign in with Twitch" you must create a [Twitch OAuth2 Application](https://dev.twitch.tv/docs/authentication#registration).
+To set up "Sign in with Twitch" you must create a
+[Twitch OAuth2 Application](https://dev.twitch.tv/docs/authentication#registration).
 
 Set the "Redirect URI" to:
 

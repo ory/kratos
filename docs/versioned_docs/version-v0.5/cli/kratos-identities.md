@@ -27,12 +27,22 @@ Tools to interact with remote identities
   -q, --quiet             Prints only IDs, one per line. Takes precedence over --format.
 ```
 
+### Options inherited from parent commands
+
+```
+  -c, --config string   Path to config file. Supports .json, .yaml, .yml, .toml. Default is "$HOME/.kratos.(yaml|yml|toml|json)"
+```
+
 ### SEE ALSO
 
 - [kratos](kratos) -
 - [kratos identities delete](kratos-identities-delete) - Delete identities by ID
-- [kratos identities get](kratos-identities-get) - Get one or more identities by ID
-- [kratos identities import](kratos-identities-import) - Import identities from files or STD_IN
+- [kratos identities get](kratos-identities-get) - Get one or more identities by
+  ID
+- [kratos identities import](kratos-identities-import) - Import identities from
+  files or STD_IN
 - [kratos identities list](kratos-identities-list) - List identities
-- [kratos identities patch](kratos-identities-patch) - Patch identities by ID (not yet implemented)
-- [kratos identities validate](kratos-identities-validate) - Validate local identity files
+- [kratos identities patch](kratos-identities-patch) - Patch identities by ID
+  (not yet implemented)
+- [kratos identities validate](kratos-identities-validate) - Validate local
+  identity files

@@ -9,28 +9,25 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/x/urlx"
-
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/strategy/link"
+	"github.com/ory/x/urlx"
 )
 
 func TestManager(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/default.schema.json")
-	viper.Set(configuration.ViperKeyPublicBaseURL, "https://www.ory.sh/")
-	viper.Set(configuration.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/default.schema.json")
+	conf.MustSet(config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+	conf.MustSet(config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
 
 	u := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
 
-	i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	i.Traits = identity.Traits(`{"email": "tracked@ory.sh"}`)
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
 

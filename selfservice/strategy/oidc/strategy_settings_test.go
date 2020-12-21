@@ -16,15 +16,14 @@ import (
 
 	"github.com/ory/x/sqlxx"
 
-	"github.com/ory/viper"
 	"github.com/ory/x/pointerx"
 
 	"github.com/ory/kratos/driver"
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
-	sdkp "github.com/ory/kratos/internal/httpclient/client/public"
-	"github.com/ory/kratos/internal/httpclient/models"
+	sdkp "github.com/ory/kratos-client-go/client/public"
+	"github.com/ory/kratos-client-go/models"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
@@ -48,9 +47,9 @@ func TestSettingsStrategy(t *testing.T) {
 	}
 
 	var (
-		_, reg  = internal.NewFastRegistryWithMocks(t)
-		subject string
-		scope   []string
+		conf, reg = internal.NewFastRegistryWithMocks(t)
+		subject   string
+		scope     []string
 	)
 
 	remoteAdmin, remotePublic, _ := newHydra(t, &subject, &scope)
@@ -61,26 +60,28 @@ func TestSettingsStrategy(t *testing.T) {
 	admin := testhelpers.NewSDKClient(adminTS)
 
 	viperSetProviderConfig(
+		t,
+		conf,
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "ory", "ory"),
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "google", "google"),
 		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "github", "github"),
 	)
 	testhelpers.InitKratosServers(t, reg, publicTS, adminTS)
-	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/settings.schema.json")
-	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/kratos")
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/settings.schema.json")
+	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/kratos")
 
 	// Make test data for this test run unique
 	testID := x.NewUUID().String()
 	users := map[string]*identity.Identity{
 		"password": {ID: x.NewUUID(), Traits: identity.Traits(`{"email":"john` + testID + `@doe.com"}`),
-			SchemaID: configuration.DefaultIdentityTraitsSchemaID,
+			SchemaID: config.DefaultIdentityTraitsSchemaID,
 			Credentials: map[identity.CredentialsType]identity.Credentials{
 				"password": {Type: "password",
 					Identifiers: []string{"john+" + testID + "@doe.com"},
 					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$argon2id$iammocked...."}`)}},
 		},
 		"oryer": {ID: x.NewUUID(), Traits: identity.Traits(`{"email":"hackerman+` + testID + `@ory.sh"}`),
-			SchemaID: configuration.DefaultIdentityTraitsSchemaID,
+			SchemaID: config.DefaultIdentityTraitsSchemaID,
 			Credentials: map[identity.CredentialsType]identity.Credentials{
 				identity.CredentialsTypeOIDC: {Type: identity.CredentialsTypeOIDC,
 					Identifiers: []string{"ory:hackerman+" + testID},
@@ -91,7 +92,7 @@ func TestSettingsStrategy(t *testing.T) {
 				identity.CredentialsTypeOIDC: {Type: identity.CredentialsTypeOIDC,
 					Identifiers: []string{"ory:hackerman+github+" + testID, "github:hackerman+github+" + testID},
 					Config:      sqlxx.JSONRawMessage(`{"providers":[{"provider":"ory","subject":"hackerman+github+` + testID + `"},{"provider":"github","subject":"hackerman+github+` + testID + `"}]}`)}},
-			SchemaID: configuration.DefaultIdentityTraitsSchemaID,
+			SchemaID: config.DefaultIdentityTraitsSchemaID,
 		},
 		"multiuser": {ID: x.NewUUID(), Traits: identity.Traits(`{"email":"hackerman+multiuser+` + testID + `@ory.sh"}`),
 			Credentials: map[identity.CredentialsType]identity.Credentials{
@@ -101,7 +102,7 @@ func TestSettingsStrategy(t *testing.T) {
 				identity.CredentialsTypeOIDC: {Type: identity.CredentialsTypeOIDC,
 					Identifiers: []string{"ory:hackerman+multiuser+" + testID, "google:hackerman+multiuser+" + testID},
 					Config:      sqlxx.JSONRawMessage(`{"providers":[{"provider":"ory","subject":"hackerman+multiuser+` + testID + `"},{"provider":"google","subject":"hackerman+multiuser+` + testID + `"}]}`)}},
-			SchemaID: configuration.DefaultIdentityTraitsSchemaID,
+			SchemaID: config.DefaultIdentityTraitsSchemaID,
 		},
 	}
 	agents := testhelpers.AddAndLoginIdentities(t, reg, publicTS, users)
@@ -256,7 +257,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 	var reset = func(t *testing.T) func() {
 		return func() {
-			viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
+			conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
 			agents = testhelpers.AddAndLoginIdentities(t, reg, publicTS, users)
 		}
 	}
@@ -310,7 +311,7 @@ func TestSettingsStrategy(t *testing.T) {
 			agent, provider := "githuber", "github"
 
 			var runUnauthed = func(t *testing.T) *models.SettingsFlow {
-				viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
+				conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
 				time.Sleep(time.Millisecond)
 				t.Cleanup(reset(t))
 				_, res, req := unlink(t, agent, provider)
@@ -335,7 +336,7 @@ func TestSettingsStrategy(t *testing.T) {
 				req := runUnauthed(t)
 
 				// fake login by allowing longer sessions...
-				viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
+				conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
 
 				body, res := testhelpers.HTTPPostForm(t, agents[agent], action(req),
 					&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
@@ -482,7 +483,7 @@ func TestSettingsStrategy(t *testing.T) {
 			subject = "hackerman+new+google+" + testID
 
 			var runUnauthed = func(t *testing.T) *models.SettingsFlow {
-				viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
+				conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
 				time.Sleep(time.Millisecond)
 				t.Cleanup(reset(t))
 				_, res, req := link(t, agent, provider)
@@ -507,7 +508,7 @@ func TestSettingsStrategy(t *testing.T) {
 				req := runUnauthed(t)
 
 				// fake login by allowing longer sessions...
-				viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
+				conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Minute*5)
 
 				body, res := testhelpers.HTTPPostForm(t, agents[agent], action(req),
 					&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
@@ -523,14 +524,14 @@ func TestSettingsStrategy(t *testing.T) {
 
 func TestPopulateSettingsMethod(t *testing.T) {
 	nreg := func(t *testing.T, conf *oidc.ConfigurationCollection) *driver.RegistryDefault {
-		_, reg := internal.NewFastRegistryWithMocks(t)
+		c, reg := internal.NewFastRegistryWithMocks(t)
 
-		viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://stub/registration.schema.json")
-		viper.Set(configuration.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+		c.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://stub/registration.schema.json")
+		c.MustSet(config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 
 		// Enabled per default:
-		// 		viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
-		viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC), map[string]interface{}{
+		// 		conf.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
+		c.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC), map[string]interface{}{
 			"enabled": true,
 			"config":  conf})
 		return reg
@@ -576,7 +577,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 
 	for k, tc := range []struct {
 		c      []oidc.Configuration
-		i      identity.Credentials
+		i      *identity.Credentials
 		e      form.Fields
 		withpw bool
 	}{
@@ -612,7 +613,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 				{Name: "link", Type: "submit", Value: "google"},
 				{Name: "link", Type: "submit", Value: "github"},
 			},
-			i: identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{}, Config: []byte(`{}`)},
+			i: &identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{}, Config: []byte(`{}`)},
 		},
 		{
 			c: defaultConfig,
@@ -621,7 +622,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 				{Name: "link", Type: "submit", Value: "facebook"},
 				{Name: "link", Type: "submit", Value: "github"},
 			},
-			i: identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{
+			i: &identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{
 				"google:1234",
 			}, Config: []byte(`{"providers":[{"provider":"google","subject":"1234"}]}`)},
 		},
@@ -634,7 +635,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 				{Name: "unlink", Type: "submit", Value: "google"},
 			},
 			withpw: true,
-			i: identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{
+			i: &identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{
 				"google:1234",
 			},
 				Config: []byte(`{"providers":[{"provider":"google","subject":"1234"}]}`)},
@@ -647,7 +648,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 				{Name: "unlink", Type: "submit", Value: "google"},
 				{Name: "unlink", Type: "submit", Value: "facebook"},
 			},
-			i: identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{
+			i: &identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{
 				"google:1234",
 				"facebook:1234",
 			},
@@ -656,8 +657,13 @@ func TestPopulateSettingsMethod(t *testing.T) {
 	} {
 		t.Run("iteration="+strconv.Itoa(k), func(t *testing.T) {
 			reg := nreg(t, &oidc.ConfigurationCollection{Providers: tc.c})
-			i := &identity.Identity{Traits: []byte(`{"subject":"foo@bar.com"}`),
-				Credentials: map[identity.CredentialsType]identity.Credentials{identity.CredentialsTypeOIDC: tc.i}}
+			i := &identity.Identity{
+				Traits:      []byte(`{"subject":"foo@bar.com"}`),
+				Credentials: make(map[identity.CredentialsType]identity.Credentials, 2),
+			}
+			if tc.i != nil {
+				i.Credentials[identity.CredentialsTypeOIDC] = *tc.i
+			}
 			if tc.withpw {
 				i.Credentials[identity.CredentialsTypePassword] = identity.Credentials{
 					Type:        identity.CredentialsTypePassword,

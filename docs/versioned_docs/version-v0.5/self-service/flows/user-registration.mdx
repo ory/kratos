@@ -101,7 +101,7 @@ endpoint:
 <CodeTabs items={initBrowserFlow} />
 
 The server responds with a HTTP 302 redirect to the Registration UI, appending
-the `?flow=<flow-id>` query paremeter (see the curl example) to the URL
+the `?flow=<flow-id>` query parameter (see the curl example) to the URL
 configured here:
 
 ```yaml title="path/to/config/kratos.yml"
@@ -137,7 +137,7 @@ which returns a JSON response:
 Fetching the Registration Flow
 ([REST API Reference](../../reference/api.mdx#get-registration-flow)) is usually
 only required for browser clients but also works for Registration Flows
-initializied by API clients. All you need is a valid Registration Flow ID:
+initialized by API clients. All you need is a valid Registration Flow ID:
 
 <CodeTabs items={getFlow} />
 

@@ -1,7 +1,8 @@
 ---
 id: kratos-remote
 title: kratos remote
-description: kratos remote Helpers and management for remote ORY Kratos instances
+description:
+  kratos remote Helpers and management for remote ORY Kratos instances
 ---
 
 <!--
@@ -27,8 +28,16 @@ Helpers and management for remote ORY Kratos instances
   -q, --quiet             Prints only IDs, one per line. Takes precedence over --format.
 ```
 
+### Options inherited from parent commands
+
+```
+  -c, --config string   Path to config file. Supports .json, .yaml, .yml, .toml. Default is "$HOME/.kratos.(yaml|yml|toml|json)"
+```
+
 ### SEE ALSO
 
 - [kratos](kratos) -
-- [kratos remote status](kratos-remote-status) - Print the alive and readiness status of a ORY Kratos instance
-- [kratos remote version](kratos-remote-version) - Print the version of an ORY Kratos instance
+- [kratos remote status](kratos-remote-status) - Print the alive and readiness
+  status of a ORY Kratos instance
+- [kratos remote version](kratos-remote-version) - Print the version of an ORY
+  Kratos instance

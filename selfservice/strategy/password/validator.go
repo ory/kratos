@@ -2,6 +2,9 @@ package password
 
 import (
 	"bufio"
+
+	"github.com/ory/kratos/driver/config"
+
 	/* #nosec G505 sha1 is used for k-anonymity */
 	"crypto/sha1"
 	"fmt"
@@ -48,31 +51,22 @@ var ErrUnexpectedStatusCode = errors.New("unexpected status code")
 // password has been breached in a previous data leak using k-anonymity.
 type DefaultPasswordValidator struct {
 	sync.RWMutex
-	c      *http.Client
+	conf   *config.Provider
+	Client *http.Client
 	hashes map[string]int64
-
-	maxBreachesThreshold int64
-	ignoreNetworkErrors  bool
 
 	minIdentifierPasswordDist            int
 	maxIdentifierPasswordSubstrThreshold float32
 }
 
-func NewDefaultPasswordValidatorStrategy() *DefaultPasswordValidator {
+func NewDefaultPasswordValidatorStrategy(conf *config.Provider) *DefaultPasswordValidator {
 	return &DefaultPasswordValidator{
-		c:                                    httpx.NewResilientClientLatencyToleranceMedium(nil),
-		maxBreachesThreshold:                 0,
+		Client:                               httpx.NewResilientClientLatencyToleranceMedium(nil),
+		conf:                                 conf,
 		hashes:                               map[string]int64{},
-		ignoreNetworkErrors:                  true,
 		minIdentifierPasswordDist:            5,
 		maxIdentifierPasswordSubstrThreshold: 0.5,
 	}
-}
-
-func NewDefaultPasswordValidatorStrategyStrict() *DefaultPasswordValidator {
-	v := NewDefaultPasswordValidatorStrategy()
-	v.ignoreNetworkErrors = false
-	return v
 }
 
 func b20(src []byte) string {
@@ -104,7 +98,7 @@ func lcsLength(a, b string) int {
 func (s *DefaultPasswordValidator) fetch(hpw []byte) error {
 	prefix := fmt.Sprintf("%X", hpw)[0:5]
 	loc := fmt.Sprintf("https://api.pwnedpasswords.com/range/%s", prefix)
-	res, err := s.c.Get(loc)
+	res, err := s.Client.Get(loc)
 	if err != nil {
 		return errors.Wrapf(ErrNetworkFailure, "%s", err)
 	}
@@ -169,7 +163,7 @@ func (s *DefaultPasswordValidator) Validate(identifier, password string) error {
 
 	if !ok {
 		err := s.fetch(hpw)
-		if (errors.Is(err, ErrNetworkFailure) || errors.Is(err, ErrUnexpectedStatusCode)) && s.ignoreNetworkErrors {
+		if (errors.Is(err, ErrNetworkFailure) || errors.Is(err, ErrUnexpectedStatusCode)) && s.conf.PasswordPolicyConfig().IgnoreNetworkErrors {
 			return nil
 		} else if err != nil {
 			return err
@@ -178,7 +172,7 @@ func (s *DefaultPasswordValidator) Validate(identifier, password string) error {
 		return s.Validate(identifier, password)
 	}
 
-	if c > s.maxBreachesThreshold {
+	if c > int64(s.conf.PasswordPolicyConfig().MaxBreaches) {
 		return errors.Errorf("the password has been found in at least %d data breaches and must no longer be used.", c)
 	}
 

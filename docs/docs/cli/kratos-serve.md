@@ -25,15 +25,10 @@ kratos serve [flags]
 ### Options
 
 ```
-      --dev                 Disables critical security features to make development easier
-      --disable-telemetry   Disable anonymized telemetry reports - for more information please visit https://www.ory.sh/docs/ecosystem/sqa
-  -h, --help                help for serve
-```
-
-### Options inherited from parent commands
-
-```
-  -c, --config string   Path to config file. Supports .json, .yaml, .yml, .toml. Default is "$HOME/.kratos.(yaml|yml|toml|json)"
+  -c, --config strings   Path to one or more .json, .yaml, .yml, .toml config files. Values are loaded in the order provided, meaning that the last config file overwrites values from the previous config file.
+      --dev              Disables critical security features to make development easier
+  -h, --help             help for serve
+      --sqa-opt-out      Disable anonymized telemetry reports - for more information please visit https://www.ory.sh/docs/ecosystem/sqa
 ```
 
 ### SEE ALSO

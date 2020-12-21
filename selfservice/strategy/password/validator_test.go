@@ -1,4 +1,4 @@
-package password
+package password_test
 
 import (
 	"bytes"
@@ -9,34 +9,19 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-)
 
-func TestLCSLength(t *testing.T) {
-	for k, tc := range []struct {
-		a string
-		b string
-		l int
-	}{
-		{a: "foo", b: "foo", l: 3},
-		{a: "fo", b: "foo", l: 2},
-		{a: "bar", b: "foo", l: 0},
-		{a: "foobar", b: "foo", l: 3},
-		{a: "foobar", b: "oo", l: 2},
-		{a: "foobar", b: "a", l: 1},
-	} {
-		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			require.Equal(t, tc.l, lcsLength(tc.a, tc.b))
-			require.Equal(t, tc.l, lcsLength(tc.b, tc.a))
-		})
-	}
-}
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/selfservice/strategy/password"
+)
 
 func TestDefaultPasswordValidationStrategy(t *testing.T) {
 	// Tests are based on:
 	// - https://www.troyhunt.com/passwords-evolved-authentication-guidance-for-the-modern-era/
 	// - https://www.microsoft.com/en-us/research/wp-content/uploads/2016/06/Microsoft_Password_Guidance-1.pdf
+	conf := internal.NewConfigurationWithDefaults()
 
-	s := NewDefaultPasswordValidatorStrategy()
+	s := password.NewDefaultPasswordValidatorStrategy(conf)
 	for k, tc := range []struct {
 		id   string
 		pw   string
@@ -81,38 +66,39 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 	}
 
 	fakeClient := NewFakeHTTPClient()
-	s.c = &fakeClient.Client
+	s.Client = &fakeClient.Client
 
 	t.Run("case=should send request to pwnedpasswords.com", func(t *testing.T) {
-		s.ignoreNetworkErrors = false
-		s.Validate("mohutdesub", "damrumukuh")
+		conf.MustSet(config.ViperKeyIgnoreNetworkErrors, false)
+		require.Error(t, s.Validate("mohutdesub", "damrumukuh"))
 		require.Contains(t, fakeClient.RequestedURLs(), "https://api.pwnedpasswords.com/range/BCBA9")
 	})
 
 	t.Run("case=should fail if request fails and ignoreNetworkErrors is not set", func(t *testing.T) {
-		s.ignoreNetworkErrors = false
+		conf.MustSet(config.ViperKeyIgnoreNetworkErrors, false)
 		fakeClient.RespondWithError("Network request failed")
 		require.Error(t, s.Validate("", "sumdarmetp"))
 	})
 
 	t.Run("case=should not fail if request fails and ignoreNetworkErrors is set", func(t *testing.T) {
-		s.ignoreNetworkErrors = true
+		conf.MustSet(config.ViperKeyIgnoreNetworkErrors, true)
 		fakeClient.RespondWithError("Network request failed")
 		require.NoError(t, s.Validate("", "pepegtawni"))
 	})
 
 	t.Run("case=should fail if response has non 200 code and ignoreNetworkErrors is not set", func(t *testing.T) {
-		s.ignoreNetworkErrors = false
+		conf.MustSet(config.ViperKeyIgnoreNetworkErrors, false)
 		fakeClient.RespondWith(http.StatusForbidden, "")
 		require.Error(t, s.Validate("", "jolhakowef"))
 	})
 
 	t.Run("case=should not fail if response has non 200 code code and ignoreNetworkErrors is set", func(t *testing.T) {
-		s.ignoreNetworkErrors = true
+		conf.MustSet(config.ViperKeyIgnoreNetworkErrors, true)
 		fakeClient.RespondWith(http.StatusInternalServerError, "")
 		require.NoError(t, s.Validate("", "jenuzuhjoj"))
 	})
 
+	conf.MustSet(config.ViperKeyPasswordMaxBreaches, 5)
 	for _, tc := range []struct {
 		cs   string
 		pw   string
@@ -146,20 +132,20 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 		{
 			cs:   "contains less than maxBreachesThreshold",
 			pw:   "tafpabdopa",
-			res:  fmt.Sprintf("280915F3B572F94217D86F1D63BED53F66A:%d\n0F76A7D21E7C3E653E98236897AD7888937:%d", s.maxBreachesThreshold, s.maxBreachesThreshold+1),
+			res:  fmt.Sprintf("280915F3B572F94217D86F1D63BED53F66A:%d\n0F76A7D21E7C3E653E98236897AD7888937:%d", conf.PasswordPolicyConfig().MaxBreaches, conf.PasswordPolicyConfig().MaxBreaches+1),
 			pass: true,
 		},
 		{
 			cs:   "contains more than maxBreachesThreshold",
 			pw:   "hicudsumla",
-			res:  fmt.Sprintf("5656812AA72561AAA6663E486A46D5711BE:%d", s.maxBreachesThreshold+1),
+			res:  fmt.Sprintf("5656812AA72561AAA6663E486A46D5711BE:%d", conf.PasswordPolicyConfig().MaxBreaches+1),
 			pass: false,
 		},
 	} {
 		fakeClient.RespondWith(http.StatusOK, tc.res)
-		format := "case=shuold not fail if response %s"
+		format := "case=should not fail if response %s"
 		if !tc.pass {
-			format = "case=shuold fail if response %s"
+			format = "case=should fail if response %s"
 		}
 		t.Run(fmt.Sprintf(format, tc.cs), func(t *testing.T) {
 			err := s.Validate("", tc.pw)

@@ -96,7 +96,7 @@ To initialize the Login Flow, point the Browser to the initialization endpoint:
 <CodeTabs items={initBrowserFlow} />
 
 The server responds with a HTTP 302 redirect to the Login UI, appending the
-`?flow=<flow-id>` query paremeter (see the curl example) to the URL configured
+`?flow=<flow-id>` query parameter (see the curl example) to the URL configured
 here:
 
 ```yaml title="path/to/config/kratos.yml"
@@ -131,7 +131,7 @@ which returns a JSON response:
 
 Fetching the Login Flow
 ([REST API Reference](../../reference/api.mdx#get-login-flow)) is usually only
-required for browser clients but also works for Login Flows initializied by API
+required for browser clients but also works for Login Flows initialized by API
 clients. All you need is a valid flow ID:
 
 <CodeTabs items={getFlow} />

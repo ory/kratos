@@ -128,8 +128,8 @@ This prevents Account Enumeration Attacks as it is not possible for a threat
 agent to determine if an account exists or not based on the verification flow.
 
 The emails are using templates that can be customised as explained in
-[Customizing E-Mail Templates](../../concepts/email-sms#templates). The template
-IDs are:
+[Customizing E-Mail Templates](../../concepts/email-sms.md#templates). The
+template IDs are:
 
 - Unknown email address: `verification_invalid`
 - Known email address: `verification_valid`
@@ -254,7 +254,7 @@ which returns a JSON response:
 Fetching the Verification Flow
 ([REST API Reference](../../reference/api.mdx#get-verification-flow)) is usually
 only required for browser clients but also works for Verification Flows
-initializied by API clients. All you need is a valid flow ID:
+initialized by API clients. All you need is a valid flow ID:
 
 <CodeTabs items={getFlow} />
 

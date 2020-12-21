@@ -24,13 +24,8 @@ Various migration helpers
   -h, --help   help for migrate
 ```
 
-### Options inherited from parent commands
-
-```
-  -c, --config string   Path to config file. Supports .json, .yaml, .yml, .toml. Default is "$HOME/.kratos.(yaml|yml|toml|json)"
-```
-
 ### SEE ALSO
 
 - [kratos](kratos) -
-- [kratos migrate sql](kratos-migrate-sql) - Create SQL schemas and apply migration plans
+- [kratos migrate sql](kratos-migrate-sql) - Create SQL schemas and apply
+  migration plans

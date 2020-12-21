@@ -15,7 +15,7 @@ import (
 	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/continuity"
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
@@ -110,7 +110,7 @@ func GetFlowID(r *http.Request) (uuid.UUID, error) {
 	return rid, nil
 }
 
-func OnUnauthenticated(c configuration.Provider, reg interface {
+func OnUnauthenticated(c *config.Provider, reg interface {
 	x.WriterProvider
 }) func(http.ResponseWriter, *http.Request, httprouter.Params) {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

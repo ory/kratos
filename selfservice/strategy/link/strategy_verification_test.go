@@ -3,26 +3,26 @@ package link_test
 import (
 	"context"
 	"encoding/json"
-	"github.com/ory/x/ioutilx"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
 
+	"github.com/ory/x/ioutilx"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/viper"
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/pointerx"
 	"github.com/ory/x/sqlxx"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
-	sdkp "github.com/ory/kratos/internal/httpclient/client/public"
-	"github.com/ory/kratos/internal/httpclient/models"
+	sdkp "github.com/ory/kratos-client-go/client/public"
+	"github.com/ory/kratos-client-go/models"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/strategy/link"
@@ -32,12 +32,12 @@ import (
 
 func TestVerification(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	initViper()
+	initViper(t, conf)
 
 	var identityToVerify = &identity.Identity{
 		ID:       x.NewUUID(),
 		Traits:   identity.Traits(`{"email":"verifyme@ory.sh"}`),
-		SchemaID: configuration.DefaultIdentityTraitsSchemaID,
+		SchemaID: config.DefaultIdentityTraitsSchemaID,
 		Credentials: map[identity.CredentialsType]identity.Credentials{
 			"password": {Type: "password", Identifiers: []string{"recoverme@ory.sh"}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)}},
 	}
@@ -48,7 +48,7 @@ func TestVerification(t *testing.T) {
 	_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewSettingsUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
-	_ = testhelpers.NewRedirTS(t, "returned")
+	_ = testhelpers.NewRedirTS(t, "returned", conf)
 
 	public, _ := testhelpers.NewKratosServer(t, reg)
 	sdk := testhelpers.NewSDKClient(public)
@@ -154,9 +154,9 @@ func TestVerification(t *testing.T) {
 	})
 
 	t.Run("description=should not be able to use an outdated link", func(t *testing.T) {
-		viper.Set(configuration.ViperKeySelfServiceVerificationRequestLifespan, time.Millisecond*200)
+		conf.MustSet(config.ViperKeySelfServiceVerificationRequestLifespan, time.Millisecond*200)
 		t.Cleanup(func() {
-			viper.Set(configuration.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
+			conf.MustSet(config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
 		})
 
 		c := testhelpers.NewClientWithCookies(t)
@@ -173,8 +173,10 @@ func TestVerification(t *testing.T) {
 	})
 
 	t.Run("description=should not be able to use an outdated flow", func(t *testing.T) {
-		viper.Set(configuration.ViperKeySelfServiceVerificationRequestLifespan, time.Millisecond*200)
-		defer viper.Set(configuration.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
+		conf.MustSet(config.ViperKeySelfServiceVerificationRequestLifespan, time.Millisecond*200)
+		t.Cleanup(func() {
+			conf.MustSet(config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
+		})
 
 		body := expectSuccess(t, false, func(v url.Values) {
 			v.Set("email", verificationEmail)

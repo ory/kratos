@@ -10,12 +10,12 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ory/kratos/cmd/cliclient"
-	"github.com/ory/kratos/internal/httpclient/client/admin"
-	"github.com/ory/kratos/internal/httpclient/models"
+	"github.com/ory/kratos-client-go/client/admin"
+	"github.com/ory/kratos-client-go/models"
 )
 
-// importCmd represents the import command
-var importCmd = &cobra.Command{
+// ImportCmd represents the import command
+var ImportCmd = &cobra.Command{
 	Use:   "import <file.json [file-2.json [file-3.json] ...]>",
 	Short: "Import identities from files or STD_IN",
 	Example: `$ kratos identities import file.json

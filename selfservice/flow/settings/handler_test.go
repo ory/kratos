@@ -2,11 +2,12 @@ package settings_test
 
 import (
 	"context"
-	"github.com/ory/x/ioutilx"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/ory/x/ioutilx"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -14,13 +15,12 @@ import (
 
 	"github.com/ory/x/pointerx"
 
-	"github.com/ory/viper"
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
-	sdkp "github.com/ory/kratos/internal/httpclient/client/public"
+	sdkp "github.com/ory/kratos-client-go/client/public"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
@@ -33,15 +33,15 @@ func init() {
 }
 
 func TestHandler(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
-	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
-	testhelpers.StrategyEnable(identity.CredentialsTypePassword.String(), true)
-	testhelpers.StrategyEnable(settings.StrategyProfile, true)
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), true)
+	testhelpers.StrategyEnable(t, conf, settings.StrategyProfile, true)
 
-	_ = testhelpers.NewSettingsUITestServer(t)
+	_ = testhelpers.NewSettingsUITestServer(t, conf)
 	_ = testhelpers.NewErrorTestServer(t, reg)
 
-	viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
+	conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
 	primaryIdentity := &identity.Identity{ID: x.NewUUID(), Traits: identity.Traits(`{}`)}
 	publicTS, adminTS, clients := testhelpers.NewSettingsAPIServer(t, reg, map[string]*identity.Identity{
 		"primary":   primaryIdentity,

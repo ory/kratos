@@ -77,7 +77,7 @@ deal with:
 - **Account Verification**: Verify that an E-Mail address, phone number, or
   physical address actually belong to that identity.
 - **Account Recovery**: Recover access using "Forgot Password" flows, Security
-  Codes (in case of MKFA device loss), and others.
+  Codes (in case of MFA device loss), and others.
 - **Profile and Account Management**: Update passwords, personal details, email
   addresses, linked social profiles using secure flows.
 - **Admin APIs**: Import, update, delete identities.
@@ -169,6 +169,12 @@ that your company deserves a spot here, reach out to
             <td>Arduino</td>
             <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/arduino.svg" alt="Arduino"></td>
             <td><a href="https://www.arduino.cc/">arduino.cc</a></td>
+        </tr>
+        <tr>
+            <td>Adopter *</td>
+            <td>DataDetect</td>
+            <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/datadetect.svg" alt="Datadetect"></td>
+            <td><a href="https://unifiedglobalarchiving.com/data-detect/">unifiedglobalarchiving.com/data-detect/</a></td>
         </tr>
         <tr>
             <td>Sponsor</td>

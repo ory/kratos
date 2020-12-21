@@ -5,11 +5,11 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/ory/kratos/driver/config"
+
 	"github.com/ory/x/stringsx"
 
 	"github.com/rs/cors"
-
-	"github.com/ory/x/corsx"
 
 	"github.com/ory/kratos/metrics/prometheus"
 
@@ -41,13 +41,12 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []string) {
+func servePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args []string) {
 	defer wg.Done()
 
-	c := d.Configuration()
-	l := d.Logger()
+	c := r.Configuration()
+	l := r.Logger()
 	n := negroni.New()
-	r := d.Registry()
 
 	router := x.NewRouterPublic()
 	csrf := x.NewCSRFHandler(
@@ -65,16 +64,16 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 
 	r.RegisterPublicRoutes(router)
 	n.Use(NewNegroniLoggerMiddleware(l, "public#"+c.SelfPublicURL().String()))
-	n.Use(sqa(cmd, d))
+	n.Use(sqa(cmd, r))
 
-	if tracer := d.Registry().Tracer(); tracer.IsLoaded() {
+	if tracer := r.Tracer(); tracer.IsLoaded() {
 		n.Use(tracer)
 	}
 
 	var handler http.Handler = n
-	if corsx.IsEnabled(l, "serve.public") {
-		handler = cors.New(
-			corsx.ParseOptions(l, "serve.public")).Handler(handler)
+	options, enabled := r.Configuration().CORS("public")
+	if enabled {
+		handler = cors.New(options).Handler(handler)
 	}
 
 	server := graceful.WithDefaults(&http.Server{
@@ -89,21 +88,20 @@ func servePublic(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args [
 	l.Println("Public httpd was shutdown gracefully")
 }
 
-func serveAdmin(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []string) {
+func serveAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args []string) {
 	defer wg.Done()
 
-	c := d.Configuration()
-	l := d.Logger()
+	c := r.Configuration()
+	l := r.Logger()
 	n := negroni.New()
-	r := d.Registry()
 
 	router := x.NewRouterAdmin()
 	r.RegisterAdminRoutes(router)
 	n.Use(NewNegroniLoggerMiddleware(l, "admin#"+c.SelfAdminURL().String()))
-	n.Use(sqa(cmd, d))
-	n.Use(d.Registry().PrometheusManager())
+	n.Use(sqa(cmd, r))
+	n.Use(r.PrometheusManager())
 
-	if tracer := d.Registry().Tracer(); tracer.IsLoaded() {
+	if tracer := r.Tracer(); tracer.IsLoaded() {
 		n.Use(tracer)
 	}
 
@@ -120,12 +118,13 @@ func serveAdmin(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []
 	l.Println("Admin httpd was shutdown gracefully")
 }
 
-func sqa(cmd *cobra.Command, d driver.Driver) *metricsx.Service {
+func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 	// Creates only ones
 	// instance
 	return metricsx.New(
 		cmd,
 		d.Logger(),
+		d.Configuration().Source(),
 		&metricsx.Options{
 			Service: "ory-kratos",
 			ClusterID: metricsx.Hash(
@@ -179,9 +178,9 @@ func sqa(cmd *cobra.Command, d driver.Driver) *metricsx.Service {
 				errorx.RouteGet,
 				prometheus.MetricsPrometheusPath,
 			},
-			BuildVersion: d.Registry().BuildVersion(),
-			BuildHash:    d.Registry().BuildHash(),
-			BuildTime:    d.Registry().BuildDate(),
+			BuildVersion: config.Version,
+			BuildHash:    config.Commit,
+			BuildTime:    config.Date,
 			Config: &analytics.Config{
 				Endpoint: "https://sqa.ory.sh",
 			},
@@ -189,17 +188,17 @@ func sqa(cmd *cobra.Command, d driver.Driver) *metricsx.Service {
 	)
 }
 
-func bgTasks(d driver.Driver, wg *sync.WaitGroup, cmd *cobra.Command, args []string) {
+func bgTasks(d driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args []string) {
 	defer wg.Done()
 
 	d.Logger().Println("Courier worker started.")
-	if err := graceful.Graceful(d.Registry().Courier().Work, d.Registry().Courier().Shutdown); err != nil {
+	if err := graceful.Graceful(d.Courier().Work, d.Courier().Shutdown); err != nil {
 		d.Logger().WithError(err).Fatalf("Failed to run courier worker.")
 	}
 	d.Logger().Println("Courier worker was shutdown gracefully.")
 }
 
-func ServeAll(d driver.Driver) func(cmd *cobra.Command, args []string) {
+func ServeAll(d driver.Registry) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
 		var wg sync.WaitGroup
 		wg.Add(3)

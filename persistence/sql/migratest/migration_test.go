@@ -11,13 +11,12 @@ import (
 	"runtime/debug"
 	"testing"
 
-	"github.com/sirupsen/logrus"
+	"github.com/ory/x/configx"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/x/sqlcon"
 
-	"github.com/ory/viper"
-	"github.com/ory/x/logrusx"
 	"github.com/ory/x/popx"
 	"github.com/ory/x/sqlcon/dockertest"
 
@@ -25,7 +24,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/driver"
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/recovery"
@@ -45,17 +44,16 @@ func TestMigrations(t *testing.T) {
 	require.NoError(t, sqlite.Open())
 
 	connections := map[string]*pop.Connection{
-		// "sqlite": sqlite,
+		"sqlite": sqlite,
 	}
-	l := logrusx.New("", "", logrusx.ForceLevel(logrus.TraceLevel))
 
 	if !testing.Short() {
 		dockertest.Parallel([]func(){
 			func() {
-				// connections["postgres"] = dockertest.ConnectToTestPostgreSQLPop(t)
+				connections["postgres"] = dockertest.ConnectToTestPostgreSQLPop(t)
 			},
 			func() {
-				// connections["mysql"] = dockertest.ConnectToTestMySQLPop(t)
+				connections["mysql"] = dockertest.ConnectToTestMySQLPop(t)
 			},
 			func() {
 				connections["cockroach"] = dockertest.ConnectToTestCockroachDBPop(t)
@@ -93,21 +91,24 @@ func TestMigrations(t *testing.T) {
 
 			tm := popx.NewTestMigrator(t, c, "../migrations/sql", "./testdata")
 			require.NoError(t, tm.Up())
-			viper.Set(configuration.ViperKeyPublicBaseURL, "https://www.ory.sh/")
-			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://stub/default.schema.json")
-			viper.Set(configuration.ViperKeyDSN, url)
-			viper.Set(configuration.ViperKeySecretsDefault, []string{"secret"})
 
-			d, err := driver.NewDefaultDriver(l, "", "", "", true)
-			require.NoError(t, err)
+			d := driver.New(
+				configx.WithValues(map[string]interface{}{
+					config.ViperKeyDSN:                      url,
+					config.ViperKeyPublicBaseURL:            "https://www.ory.sh/",
+					config.ViperKeyDefaultIdentitySchemaURL: "file://stub/default.schema.json",
+					config.ViperKeySecretsDefault:           []string{"secret"},
+				}),
+				configx.SkipValidation(),
+			)
 
 			t.Run("suite=fixtures", func(t *testing.T) {
 				t.Run("case=identity", func(t *testing.T) {
-					ids, err := d.Registry().PrivilegedIdentityPool().ListIdentities(context.Background(), 0, 1000)
+					ids, err := d.PrivilegedIdentityPool().ListIdentities(context.Background(), 0, 1000)
 					require.NoError(t, err)
 
 					for _, id := range ids {
-						actual, err := d.Registry().PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), id.ID)
+						actual, err := d.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), id.ID)
 						require.NoError(t, err)
 
 						for _, a := range actual.VerifiableAddresses {
@@ -129,7 +130,7 @@ func TestMigrations(t *testing.T) {
 					require.NoError(t, c.Select("id").All(&ids))
 
 					for _, id := range ids {
-						actual, err := d.Registry().SessionPersister().GetSession(context.Background(), id.ID)
+						actual, err := d.SessionPersister().GetSession(context.Background(), id.ID)
 						require.NoError(t, err)
 						compareWithFixture(t, actual, "session", id.ID.String())
 					}
@@ -140,7 +141,7 @@ func TestMigrations(t *testing.T) {
 					require.NoError(t, c.Select("id").All(&ids))
 
 					for _, id := range ids {
-						actual, err := d.Registry().LoginFlowPersister().GetLoginFlow(context.Background(), id.ID)
+						actual, err := d.LoginFlowPersister().GetLoginFlow(context.Background(), id.ID)
 						require.NoError(t, err)
 						compareWithFixture(t, actual, "login_flow", id.ID.String())
 					}
@@ -150,7 +151,7 @@ func TestMigrations(t *testing.T) {
 					require.NoError(t, c.Select("id").All(&ids))
 
 					for _, id := range ids {
-						actual, err := d.Registry().RegistrationFlowPersister().GetRegistrationFlow(context.Background(), id.ID)
+						actual, err := d.RegistrationFlowPersister().GetRegistrationFlow(context.Background(), id.ID)
 						require.NoError(t, err)
 						compareWithFixture(t, actual, "registration_flow", id.ID.String())
 					}
@@ -160,7 +161,7 @@ func TestMigrations(t *testing.T) {
 					require.NoError(t, c.Select("id").All(&ids))
 
 					for _, id := range ids {
-						actual, err := d.Registry().SettingsFlowPersister().GetSettingsFlow(context.Background(), id.ID)
+						actual, err := d.SettingsFlowPersister().GetSettingsFlow(context.Background(), id.ID)
 						require.NoError(t, err)
 						compareWithFixture(t, actual, "settings_flow", id.ID.String())
 					}
@@ -171,7 +172,7 @@ func TestMigrations(t *testing.T) {
 					require.NoError(t, c.Select("id").All(&ids))
 
 					for _, id := range ids {
-						actual, err := d.Registry().RecoveryFlowPersister().GetRecoveryFlow(context.Background(), id.ID)
+						actual, err := d.RecoveryFlowPersister().GetRecoveryFlow(context.Background(), id.ID)
 						require.NoError(t, err)
 						compareWithFixture(t, actual, "recovery_flow", id.ID.String())
 					}
@@ -182,7 +183,7 @@ func TestMigrations(t *testing.T) {
 					require.NoError(t, c.Select("id").All(&ids))
 
 					for _, id := range ids {
-						actual, err := d.Registry().VerificationFlowPersister().GetVerificationFlow(context.Background(), id.ID)
+						actual, err := d.VerificationFlowPersister().GetVerificationFlow(context.Background(), id.ID)
 						require.NoError(t, err)
 						compareWithFixture(t, actual, "verification_flow", id.ID.String())
 					}
@@ -206,12 +207,12 @@ func TestMigrations(t *testing.T) {
 			})
 
 			t.Run("suite=constraints", func(t *testing.T) {
-				sr, err := d.Registry().SettingsFlowPersister().GetSettingsFlow(context.Background(), x.ParseUUID("a79bfcf1-68ae-49de-8b23-4f96921b8341"))
+				sr, err := d.SettingsFlowPersister().GetSettingsFlow(context.Background(), x.ParseUUID("a79bfcf1-68ae-49de-8b23-4f96921b8341"))
 				require.NoError(t, err)
 
-				require.NoError(t, d.Registry().PrivilegedIdentityPool().DeleteIdentity(context.Background(), sr.IdentityID))
+				require.NoError(t, d.PrivilegedIdentityPool().DeleteIdentity(context.Background(), sr.IdentityID))
 
-				_, err = d.Registry().SettingsFlowPersister().GetSettingsFlow(context.Background(), x.ParseUUID("a79bfcf1-68ae-49de-8b23-4f96921b8341"))
+				_, err = d.SettingsFlowPersister().GetSettingsFlow(context.Background(), x.ParseUUID("a79bfcf1-68ae-49de-8b23-4f96921b8341"))
 				require.Error(t, err)
 				require.True(t, errors.Is(err, sqlcon.ErrNoRows))
 			})

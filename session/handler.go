@@ -12,7 +12,7 @@ import (
 
 	"github.com/ory/herodot"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/x"
 )
 
@@ -50,6 +50,7 @@ const (
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.r.CSRFHandler().ExemptPath(RouteWhoami)
+	h.r.CSRFHandler().ExemptPath(RouteRevoke)
 
 	for _, m := range []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch,
 		http.MethodDelete, http.MethodConnect, http.MethodOptions, http.MethodTrace} {
@@ -204,7 +205,7 @@ func (h *Handler) IsNotAuthenticated(wrap httprouter.Handle, onAuthenticated htt
 	}
 }
 
-func RedirectOnAuthenticated(c configuration.Provider) httprouter.Handle {
+func RedirectOnAuthenticated(c *config.Provider) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		returnTo, err := x.SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(), x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL()))
 		if err != nil {

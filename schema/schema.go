@@ -12,7 +12,7 @@ import (
 
 	"github.com/ory/jsonschema/v3"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 
 	"github.com/pkg/errors"
 
@@ -23,7 +23,7 @@ type Schemas []Schema
 
 func (s Schemas) GetByID(id string) (*Schema, error) {
 	if id == "" {
-		id = configuration.DefaultIdentityTraitsSchemaID
+		id = config.DefaultIdentityTraitsSchemaID
 	}
 
 	for _, ss := range s {

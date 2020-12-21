@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/ory/kratos/internal/httpclient/models"
+	"github.com/ory/kratos-client-go/models"
 )
 
 // InitializeSelfServiceSettingsViaBrowserFlowReader is a Reader for the InitializeSelfServiceSettingsViaBrowserFlow structure.
@@ -55,7 +55,7 @@ type InitializeSelfServiceSettingsViaBrowserFlowFound struct {
 }
 
 func (o *InitializeSelfServiceSettingsViaBrowserFlowFound) Error() string {
-	return fmt.Sprintf("[GET /self-service/settings/browser/flows][%d] initializeSelfServiceSettingsViaBrowserFlowFound ", 302)
+	return fmt.Sprintf("[GET /self-service/settings/browser][%d] initializeSelfServiceSettingsViaBrowserFlowFound ", 302)
 }
 
 func (o *InitializeSelfServiceSettingsViaBrowserFlowFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -77,7 +77,7 @@ type InitializeSelfServiceSettingsViaBrowserFlowInternalServerError struct {
 }
 
 func (o *InitializeSelfServiceSettingsViaBrowserFlowInternalServerError) Error() string {
-	return fmt.Sprintf("[GET /self-service/settings/browser/flows][%d] initializeSelfServiceSettingsViaBrowserFlowInternalServerError  %+v", 500, o.Payload)
+	return fmt.Sprintf("[GET /self-service/settings/browser][%d] initializeSelfServiceSettingsViaBrowserFlowInternalServerError  %+v", 500, o.Payload)
 }
 
 func (o *InitializeSelfServiceSettingsViaBrowserFlowInternalServerError) GetPayload() *models.GenericError {

@@ -9,7 +9,7 @@ import (
 
 	"github.com/ory/x/sqlcon"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
@@ -69,14 +69,14 @@ type (
 	}
 	HookExecutor struct {
 		d executorDependencies
-		c configuration.Provider
+		c *config.Provider
 	}
 	HookExecutorProvider interface {
 		RegistrationExecutor() *HookExecutor
 	}
 )
 
-func NewHookExecutor(d executorDependencies, c configuration.Provider) *HookExecutor {
+func NewHookExecutor(d executorDependencies, c *config.Provider) *HookExecutor {
 	return &HookExecutor{
 		d: d,
 		c: c,

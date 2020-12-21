@@ -688,7 +688,8 @@ func (a *Client) GetSelfServiceVerificationFlow(params *GetSelfServiceVerificati
 > This endpoint is NOT INTENDED for API clients and only works
 with browsers (Chrome, Firefox, ...).
 
-On successful logout, the browser will be redirected (HTTP 302 Found) to `urls.default_return_to`.
+On successful logout, the browser will be redirected (HTTP 302 Found) to the `return_to` parameter of the initial request
+or fall back to `urls.default_return_to`.
 
 More information can be found at [ORY Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
 */
@@ -1061,7 +1062,7 @@ func (a *Client) InitializeSelfServiceSettingsViaBrowserFlow(params *InitializeS
 	_, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "initializeSelfServiceSettingsViaBrowserFlow",
 		Method:             "GET",
-		PathPattern:        "/self-service/settings/browser/flows",
+		PathPattern:        "/self-service/settings/browser",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},

@@ -5,33 +5,29 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/x/ioutilx"
 	"net/http"
 	"net/url"
 	"strings"
 	"testing"
 
-	"github.com/ory/x/pointerx"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/x/assertx"
-	"github.com/ory/x/httpx"
-	"github.com/ory/x/randx"
-
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/httpclient/models"
+	"github.com/ory/kratos-client-go/models"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/selfservice/strategy/profile"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/assertx"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/ioutilx"
+	"github.com/ory/x/pointerx"
+	"github.com/ory/x/randx"
 )
 
 func init() {
@@ -49,7 +45,7 @@ func newIdentityWithPassword(email string) *identity.Identity {
 			},
 		},
 		Traits:   identity.Traits(`{"email":"` + email + `"}`),
-		SchemaID: configuration.DefaultIdentityTraitsSchemaID,
+		SchemaID: config.DefaultIdentityTraitsSchemaID,
 	}
 }
 
@@ -57,21 +53,21 @@ func newEmptyIdentity() *identity.Identity {
 	return &identity.Identity{
 		ID:       x.NewUUID(),
 		Traits:   identity.Traits(`{}`),
-		SchemaID: configuration.DefaultIdentityTraitsSchemaID,
+		SchemaID: config.DefaultIdentityTraitsSchemaID,
 	}
 }
 
 func TestSettings(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
-	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/profile.schema.json")
-	testhelpers.StrategyEnable(identity.CredentialsTypePassword.String(), true)
-	testhelpers.StrategyEnable(settings.StrategyProfile, true)
+	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/profile.schema.json")
+	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), true)
+	testhelpers.StrategyEnable(t, conf, settings.StrategyProfile, true)
 
 	_ = testhelpers.NewSettingsUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
-	_ = testhelpers.NewLoginUIWith401Response(t)
-	viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
+	_ = testhelpers.NewLoginUIWith401Response(t, conf)
+	conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
 
 	browserIdentity1 := newIdentityWithPassword("john-browser@doe.com")
 	apiIdentity1 := newIdentityWithPassword("john-api@doe.com")
@@ -94,7 +90,7 @@ func TestSettings(t *testing.T) {
 			require.NoError(t, err)
 			defer res.Body.Close()
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode, "%+v", res.Request)
-			assert.Contains(t, res.Request.URL.String(), viper.GetString(configuration.ViperKeySelfServiceLoginUI))
+			assert.Contains(t, res.Request.URL.String(), conf.Source().String(config.ViperKeySelfServiceLoginUI))
 		})
 
 		t.Run("type=api", func(t *testing.T) {
@@ -121,7 +117,7 @@ func TestSettings(t *testing.T) {
 		}
 
 		t.Run("session=with privileged session", func(t *testing.T) {
-			viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
+			conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 
 			var payload = func(v url.Values) {
 				v.Set("password", "123456")
@@ -137,10 +133,12 @@ func TestSettings(t *testing.T) {
 		})
 
 		t.Run("session=needs reauthentication", func(t *testing.T) {
-			viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
-			_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, adminClient)
-			defer testhelpers.NewLoginUIWith401Response(t)
-			defer viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
+			conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
+			_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, adminClient, conf)
+			defer testhelpers.NewLoginUIWith401Response(t, conf)
+			t.Cleanup(func() {
+				conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
+			})
 
 			var payload = func(v url.Values) {
 				v.Set("password", "123456")
@@ -212,7 +210,7 @@ func TestSettings(t *testing.T) {
 
 		actual, res := testhelpers.SettingsMakeRequest(t, false, f, browserUser1, values.Encode())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
-		assert.Contains(t, res.Request.URL.String(), viper.Get(configuration.ViperKeySelfServiceErrorUI))
+		assert.Contains(t, res.Request.URL.String(), conf.Source().String(config.ViperKeySelfServiceErrorUI))
 
 		assertx.EqualAsJSON(t, x.ErrInvalidCSRFToken, json.RawMessage(gjson.Get(actual, "0").Raw), "%s", actual)
 	})
@@ -303,9 +301,11 @@ func TestSettings(t *testing.T) {
 	})
 
 	t.Run("description=should update the password and perform the correct redirection", func(t *testing.T) {
-		rts := testhelpers.NewRedirTS(t, "")
-		viper.Set(configuration.ViperKeySelfServiceSettingsAfter+"."+configuration.DefaultBrowserReturnURL, rts.URL+"/return-ts")
-		defer viper.Set(configuration.ViperKeySelfServiceSettingsAfter, nil)
+		rts := testhelpers.NewRedirTS(t, "", conf)
+		conf.MustSet(config.ViperKeySelfServiceSettingsAfter+"."+config.DefaultBrowserReturnURL, rts.URL+"/return-ts")
+		t.Cleanup(func() {
+			conf.MustSet(config.ViperKeySelfServiceSettingsAfter, nil)
+		})
 
 		var run = func(t *testing.T, f *models.SettingsFlowMethodConfig, isAPI bool, c *http.Client, id *identity.Identity) {
 			values := testhelpers.SDKFormFieldsToURLValues(f.Fields)

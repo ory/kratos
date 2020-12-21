@@ -1,20 +1,20 @@
 {
   "private": true,
   "prettier": "ory-prettier-styles",
-  "consts": {
+  "config": {
     "prettierTarget": "test/e2e/cypress/**/*.js"
   },
   "scripts": {
-    "format": "prettier --write ${npm_package_consts_prettierTarget}",
-    "format:check": "prettier --check ${npm_package_consts_prettierTarget}",
+    "format": "prettier --write ${npm_package_config_prettierTarget}",
+    "format:check": "prettier --check ${npm_package_config_prettierTarget}",
     "test": "cypress run",
     "test:watch": "cypress open",
     "wait-on": "wait-on"
   },
   "devDependencies": {
-    "cypress": "5.5.0",
-    "ory-prettier-styles": "^1.0.1",
-    "prettier": "2.1.2",
-    "wait-on": "4.0.2"
+    "cypress": "6.0.1",
+    "ory-prettier-styles": "1.1.1",
+    "prettier": "2.2.1",
+    "wait-on": "5.2.0"
   }
 }
