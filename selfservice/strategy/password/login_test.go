@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -23,10 +24,10 @@ import (
 
 	"github.com/ory/x/pointerx"
 
+	"github.com/ory/kratos-client-go/models"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos-client-go/models"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow/login"
@@ -519,5 +520,25 @@ func TestCompleteLogin(t *testing.T) {
 		require.Contains(t, res.Request.URL.Path, "return-ts", "%s", res.Request.URL.String())
 		assert.Equal(t, identifier, gjson.Get(body2, "identity.traits.subject").String(), "%s", body2)
 		assert.NotEqual(t, gjson.Get(body1, "id").String(), gjson.Get(body2, "id").String(), "%s\n\n%s\n", body1, body2)
+	})
+
+	t.Run("should login same identity regardless of identifier capitalization", func(t *testing.T) {
+		identifier, pwd := x.NewUUID().String(), "password"
+		createIdentity(identifier, pwd)
+
+		browserClient := testhelpers.NewClientWithCookies(t)
+		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false)
+		c := testhelpers.GetLoginFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+
+		values := url.Values{"identifier": {strings.ToUpper(identifier)}, "password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
+
+		_, res := testhelpers.LoginMakeRequest(t, false, c, browserClient, values)
+		assert.EqualValues(t, http.StatusOK, res.StatusCode)
+
+		f = testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, true)
+		c = testhelpers.GetLoginFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+		body2, res := testhelpers.LoginMakeRequest(t, false, c, browserClient, values)
+
+		assert.Equal(t, identifier, gjson.Get(body2, "identity.traits.subject").String(), "%s", body2)
 	})
 }
