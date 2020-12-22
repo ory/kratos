@@ -223,3 +223,6 @@ A request for comments to discuss and share ideas.
 
 - [ ] Introduce prevent extension in Identity JSON schema
       ([kratos#47](https://github.com/ory/kratos/issues/47))
+- [ ] Refactor form builder
+      ([kratos#929](https://github.com/ory/kratos/issues/929)) -
+      [@hackerman](https://github.com/aeneasr)
