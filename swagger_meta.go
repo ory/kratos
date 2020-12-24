@@ -19,6 +19,14 @@
 //          type: apiKey
 //          name: X-Session-Token
 //          in: header
+//     sessionBearerToken:
+//          type: apiKey
+//          name: Authorization
+//          in: header
+//     sessionCookie:
+//          type: apiKey
+//          name: Cookie
+//          in: header
 //
 //     Extensions:
 //     ---
