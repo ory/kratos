@@ -123,6 +123,14 @@ Something is not working.
       [@hackerman](https://github.com/aeneasr)
 - [ ] Feature Request: Have access to username in email templates
       ([kratos#925](https://github.com/ory/kratos/issues/925))
+- [ ] `make sdk` is broken
+      ([kratos#950](https://github.com/ory/kratos/issues/950)) -
+      [@hackerman](https://github.com/aeneasr)
+- [ ] CLI navigation reference is broken
+      ([kratos#951](https://github.com/ory/kratos/issues/951))
+- [ ] Implement email TTL for non-working/non-existant emails
+      ([kratos#944](https://github.com/ory/kratos/issues/944)) -
+      [@hackerman](https://github.com/aeneasr)
 - [x] Sending JSON to complete oidc/password strategy flows causes CSRF issues
       ([kratos#378](https://github.com/ory/kratos/issues/378))
 - [x] Building From Source fails
@@ -209,6 +217,8 @@ Affects documentation.
 - [ ] Please clarify docs to specify that a reverse proxy is _required_ for
       public usage due to lack of TLS support
       ([kratos#791](https://github.com/ory/kratos/issues/791))
+- [ ] CLI navigation reference is broken
+      ([kratos#951](https://github.com/ory/kratos/issues/951))
 - [x] Elaborate on security practices against DoS and Brute Force
       ([kratos#134](https://github.com/ory/kratos/issues/134)) -
       [@hackerman](https://github.com/aeneasr)
