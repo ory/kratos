@@ -129,6 +129,97 @@ selfservice:
 
 Discord is now an option to log in via Kratos.
 
+## Slack
+
+To set up "Sign in with Slack" you must create a
+[Slack OAuth Application](https://api.slack.com/apps).
+
+Set the "Redirect URI" to:
+
+```
+http://127.0.0.1:4433/self-service/methods/oidc/callback/slack
+```
+
+The pattern of this URL is:
+
+```
+http(s)://<domain-of-ory-kratos>:<public-port>/self-service/methods/oidc/callback/<provider-id>
+```
+
+The provider ID must point to the provider's ID set in the ORY Kratos
+configuration file (explained in further detail at
+[OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx)).
+
+:::note
+
+Slack does not implement OpenID Connect. Therefore, ORY Kratos makes a request
+to
+[Slack's Oauth2 API](https://api.slack.com/methods/users.identity)
+and adds that data to `std.extVar('claims')`. However, not all fields are
+supported. Check the list of supported fields
+[in Kratos' source code](https://github.com/ory/kratos/blob/master/selfservice/strategy/oidc/provider_slack.go).
+
+The `identity.basic` scope will add following fields:
+
+```text
+iss                 # always https://slack.com/oauth/
+sub                 # numeric slack user id
+name                # username
+nickname            # username
+preferred_username  # username
+```
+
+Additionally, the `identity.email` scope will add:
+
+```text
+email               # user email
+email_verified      # always true
+```
+
+:::
+
+```json title="contrib/quickstart/kratos/email-password/oidc.discord.jsonnet"
+local claims = {
+  email_verified: true
+} + std.extVar('claims');
+
+{
+  identity: {
+    traits: {
+      // Allowing unverified email addresses enables account
+      // enumeration attacks, especially if the value is used for
+      // e.g. verification or as a password login identifier.
+      //
+      // It is assumed that Slack requires a email to be verifed before accessable via Oauth (because they don't provide a email_verified field).
+      email: claims.email
+    },
+  },
+}
+```
+
+Now, enable the Slack provider in the ORY Kratos config located at
+`<kratos-directory>/contrib/quickstart/kratos/email-password/.kratos.yml`.
+
+```yaml title="contrib/quickstart/kratos/email-password/.kratos.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  methods:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: slack # this is `<provider-id>` in the Authorization callback URL. DO NOT CHANGE IT ONCE SET!
+            provider: slack
+            client_id: .... # Replace this with the OAuth2 Client ID provided by Slack
+            client_secret: .... # Replace this with the OAuth2 Client Secret provided by Slack
+            mapper_url: file:///etc/config/kratos/oidc.slack.jsonnet
+            scope:
+              - identity.basic
+              - identity.email
+```
+
+Discord is now an option to log in via Kratos.
+
 ## GitHub
 
 <iframe
