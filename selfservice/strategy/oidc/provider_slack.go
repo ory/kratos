@@ -67,8 +67,6 @@ func (d *ProviderSlack) Claims(ctx context.Context, exchange *oauth2.Token) (*Cl
 		Issuer:            "https://slack.com/oauth/",
 		Subject:           user.id,
 		Name:              user.name,
-		Nickname:          user.name,
-		PreferredUsername: user.name,
 		Email:             user.email,
 		EmailVerified:     true,
 	}
