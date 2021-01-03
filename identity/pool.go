@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -394,18 +395,19 @@ func TestPool(conf *config.Provider, p interface {
 			assertEqual(t, expected, actual)
 		})
 
-		t.Run("case=find identity by its credentials case insensitive emails", func(t *testing.T) {
-			expected := passwordIdentity("", "cAsEinSensiTivE@ory.Sh")
+		t.Run("case=find identity by its credentials case insensitive", func(t *testing.T) {
+			identifier := x.NewUUID().String()
+			expected := passwordIdentity("", strings.ToUpper(identifier))
 			expected.Traits = Traits(`{}`)
 
 			require.NoError(t, p.CreateIdentity(context.Background(), expected))
 			createdIDs = append(createdIDs, expected.ID)
 
-			actual, creds, err := p.FindByCredentialsIdentifier(context.Background(), CredentialsTypePassword, "CASEINSENSITIVE@ory.Sh")
+			actual, creds, err := p.FindByCredentialsIdentifier(context.Background(), CredentialsTypePassword, identifier)
 			require.NoError(t, err)
 
 			assert.EqualValues(t, expected.Credentials[CredentialsTypePassword].ID, creds.ID)
-			assert.EqualValues(t, []string{"caseinsensitive@ory.sh"}, creds.Identifiers)
+			assert.EqualValues(t, []string{strings.ToLower(identifier)}, creds.Identifiers)
 			assert.JSONEq(t, string(expected.Credentials[CredentialsTypePassword].Config), string(creds.Config))
 
 			expected.Credentials = nil

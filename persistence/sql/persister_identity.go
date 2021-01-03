@@ -54,8 +54,8 @@ func (p *Persister) FindByCredentialsIdentifier(ctx context.Context, ct identity
 		IdentityID uuid.UUID `db:"identity_id"`
 	}
 
-	// Force case-insensitivity for email addresses
-	if strings.Contains(match, "@") && ct == identity.CredentialsTypePassword {
+	// Force case-insensitivity for identifiers
+	if ct == identity.CredentialsTypePassword {
 		match = strings.ToLower(match)
 	}
 
@@ -115,8 +115,8 @@ func (p *Persister) createIdentityCredentials(ctx context.Context, i *identity.I
 		}
 
 		for _, ids := range cred.Identifiers {
-			// Force case-insensitivity for email addresses
-			if strings.Contains(ids, "@") && cred.Type == identity.CredentialsTypePassword {
+			// Force case-insensitivity for identifiers
+			if cred.Type == identity.CredentialsTypePassword {
 				ids = strings.ToLower(ids)
 			}
 
