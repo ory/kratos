@@ -131,6 +131,9 @@ Something is not working.
 - [ ] Implement email TTL for non-working/non-existant emails
       ([kratos#944](https://github.com/ory/kratos/issues/944)) -
       [@hackerman](https://github.com/aeneasr)
+- [ ] Admin Api /recovery/link giving 404
+      ([kratos#954](https://github.com/ory/kratos/issues/954)) -
+      [@hackerman](https://github.com/aeneasr)
 - [x] Sending JSON to complete oidc/password strategy flows causes CSRF issues
       ([kratos#378](https://github.com/ory/kratos/issues/378))
 - [x] Building From Source fails
