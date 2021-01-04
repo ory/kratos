@@ -27,10 +27,10 @@ type (
 	Identity struct {
 		l *sync.RWMutex `db:"-" faker:"-"`
 
-		// ID is a unique identifier chosen by you. It can be a URN (e.g. "arn:aws:iam::123456789012"),
-		// a stringified integer (e.g. "123456789012"), a uuid (e.g. "9f425a8d-7efc-4768-8f23-7647a74fdf13"). It is up to you
-		// to pick a format you'd like. It is discouraged to use a personally identifiable value here, like the username
-		// or the email, as this field is immutable.
+		// ID is the identity's unique identifier.
+		//
+		// The Identity ID can not be changed and can not be chosen. This ensures future
+		// compatibility and optimization for distributed stores such as CockroachDB.
 		//
 		// required: true
 		ID uuid.UUID `json:"id" faker:"-" db:"id"`
