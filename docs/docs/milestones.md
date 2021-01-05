@@ -45,9 +45,6 @@ New feature or request.
       ([kratos#834](https://github.com/ory/kratos/issues/834))
 - [ ] Add option for disabling registration
       ([kratos#882](https://github.com/ory/kratos/issues/882))
-- [ ] Implement React SPA sample app
-      ([kratos#668](https://github.com/ory/kratos/issues/668)) -
-      [@hackerman](https://github.com/aeneasr)
 - [ ] Rename strategy to method in internal APIs and Documentation
       ([kratos#683](https://github.com/ory/kratos/issues/683)) -
       [@hackerman](https://github.com/aeneasr)
@@ -131,9 +128,6 @@ Something is not working.
 - [ ] Implement email TTL for non-working/non-existant emails
       ([kratos#944](https://github.com/ory/kratos/issues/944)) -
       [@hackerman](https://github.com/aeneasr)
-- [ ] Admin Api /recovery/link giving 404
-      ([kratos#954](https://github.com/ory/kratos/issues/954)) -
-      [@hackerman](https://github.com/aeneasr)
 - [x] Sending JSON to complete oidc/password strategy flows causes CSRF issues
       ([kratos#378](https://github.com/ory/kratos/issues/378))
 - [x] Building From Source fails
@@ -181,6 +175,9 @@ New feature or request.
       ([kratos#657](https://github.com/ory/kratos/issues/657))
 - [ ] CSRF failure should start a new login/registration flow
       ([kratos#821](https://github.com/ory/kratos/issues/821)) -
+      [@hackerman](https://github.com/aeneasr)
+- [ ] Implement React SPA sample app
+      ([kratos#668](https://github.com/ory/kratos/issues/668)) -
       [@hackerman](https://github.com/aeneasr)
 - [x] Support remote argon2 execution
       ([kratos#357](https://github.com/ory/kratos/issues/357)) -
