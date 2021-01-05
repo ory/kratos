@@ -487,8 +487,8 @@ func TestStrategy(t *testing.T) {
 }
 
 func TestCountActiveCredentials(t *testing.T) {
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	strategy := oidc.NewStrategy(reg, conf)
+	_, reg := internal.NewFastRegistryWithMocks(t)
+	strategy := oidc.NewStrategy(reg)
 
 	toJson := func(c oidc.CredentialsConfig) []byte {
 		out, err := json.Marshal(&c)

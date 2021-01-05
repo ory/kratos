@@ -2,6 +2,7 @@ package oidc_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"testing"
 
@@ -22,8 +23,8 @@ func TestConfig(t *testing.T) {
 		bytes.NewBufferString(`{"config":{"providers": [{"provider": "generic"}]}}`)).Decode(&c))
 	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC), c)
 
-	s := oidc.NewStrategy(reg, conf)
-	collection, err := s.Config()
+	s := oidc.NewStrategy(reg)
+	collection, err := s.Config(context.Background())
 	require.NoError(t, err)
 
 	require.Len(t, collection.Providers, 1)

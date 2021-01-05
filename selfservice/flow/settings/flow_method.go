@@ -1,9 +1,12 @@
 package settings
 
 import (
+	"context"
 	"database/sql/driver"
 	"encoding/json"
 	"time"
+
+	"github.com/ory/kratos/corp/tablename"
 
 	"github.com/ory/x/sqlxx"
 
@@ -40,15 +43,14 @@ type FlowMethod struct {
 	UpdatedAt time.Time `json:"-" db:"updated_at"`
 }
 
-func (u FlowMethod) TableName() string {
-	return "selfservice_settings_flow_methods"
+func (u FlowMethod) TableName(ctx context.Context) string {
+	return tablename.Contextualize(ctx, "selfservice_settings_flow_methods")
 }
 
 type FlowMethods map[string]*FlowMethod
 
-func (u FlowMethods) TableName() string {
-	// This must be stay a value receiver, using a pointer receiver will cause issues with pop.
-	return "selfservice_settings_flow_methods"
+func (u FlowMethods) TableName(ctx context.Context) string {
+	return tablename.Contextualize(ctx, "selfservice_settings_flow_methods")
 }
 
 // swagger:ignore

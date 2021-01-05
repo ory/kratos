@@ -39,7 +39,7 @@ func makeAuthCodeURL(t *testing.T, r *login.Flow) string {
 		Mapper:          "file://./stub/hydra.schema.json",
 		RequestedClaims: makeOIDCClaims(),
 	}, public)
-	c, err := p.OAuth2(context.TODO())
+	c, err := p.OAuth2(context.Background())
 	require.NoError(t, err)
 	return c.AuthCodeURL("state", p.AuthCodeURLOptions(r)...)
 }

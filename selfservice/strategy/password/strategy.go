@@ -31,6 +31,8 @@ type registrationStrategyDependencies interface {
 	x.CSRFTokenGeneratorProvider
 	x.CSRFProvider
 
+	config.Providers
+
 	continuity.ManagementProvider
 
 	errorx.ManagementProvider
@@ -63,7 +65,6 @@ type registrationStrategyDependencies interface {
 
 type Strategy struct {
 	d  registrationStrategyDependencies
-	c  *config.Provider
 	v  *validator.Validate
 	hd *decoderx.HTTP
 }
@@ -85,12 +86,8 @@ func (s *Strategy) CountActiveCredentials(cc map[identity.CredentialsType]identi
 	return
 }
 
-func NewStrategy(
-	d registrationStrategyDependencies,
-	c *config.Provider,
-) *Strategy {
+func NewStrategy(d registrationStrategyDependencies) *Strategy {
 	return &Strategy{
-		c:  c,
 		d:  d,
 		v:  validator.New(),
 		hd: decoderx.NewHTTP(),

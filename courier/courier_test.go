@@ -102,8 +102,11 @@ func TestSMTP(t *testing.T) {
 	conf.MustSet(config.ViperKeyCourierSMTPFrom, "test-stub@ory.sh")
 	c := reg.Courier()
 
+	ctx, cancel := context.WithCancel(context.Background())
+
+	defer cancel()
 	go func() {
-		require.NoError(t, c.Work())
+		require.NoError(t, c.Work(ctx))
 	}()
 
 	t.Run("case=queue messages", func(t *testing.T) {

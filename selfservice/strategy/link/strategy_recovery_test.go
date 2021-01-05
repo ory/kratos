@@ -22,12 +22,12 @@ import (
 
 	"github.com/ory/x/pointerx"
 
-	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos-client-go/client/admin"
 	sdkp "github.com/ory/kratos-client-go/client/public"
 	"github.com/ory/kratos-client-go/models"
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/strategy/link"

@@ -36,9 +36,10 @@ func TestFlowPersister(p FlowPersister) func(t *testing.T) {
 		}
 	}
 
+	ctx := context.Background()
 	return func(t *testing.T) {
 		t.Run("case=should error when the login flow does not exist", func(t *testing.T) {
-			_, err := p.GetLoginFlow(context.Background(), x.NewUUID())
+			_, err := p.GetLoginFlow(ctx, x.NewUUID())
 			require.Error(t, err)
 		})
 
@@ -56,13 +57,13 @@ func TestFlowPersister(p FlowPersister) func(t *testing.T) {
 		t.Run("case=should create with set ids", func(t *testing.T) {
 			var r Flow
 			require.NoError(t, faker.FakeData(&r))
-			require.NoError(t, p.CreateLoginFlow(context.Background(), &r))
+			require.NoError(t, p.CreateLoginFlow(ctx, &r))
 		})
 
 		t.Run("case=should create a new login flow and properly set IDs", func(t *testing.T) {
 			r := newFlow(t)
 			methods := len(r.Methods)
-			err := p.CreateLoginFlow(context.Background(), r)
+			err := p.CreateLoginFlow(ctx, r)
 			require.NoError(t, err, "%#v", err)
 
 			assert.Nil(t, r.MethodsRaw)
@@ -75,10 +76,10 @@ func TestFlowPersister(p FlowPersister) func(t *testing.T) {
 
 		t.Run("case=should create and fetch a login flow", func(t *testing.T) {
 			expected := newFlow(t)
-			err := p.CreateLoginFlow(context.Background(), expected)
+			err := p.CreateLoginFlow(ctx, expected)
 			require.NoError(t, err)
 
-			actual, err := p.GetLoginFlow(context.Background(), expected.ID)
+			actual, err := p.GetLoginFlow(ctx, expected.ID)
 			require.NoError(t, err)
 			assert.Empty(t, actual.MethodsRaw)
 
@@ -104,10 +105,10 @@ func TestFlowPersister(p FlowPersister) func(t *testing.T) {
 					Config: &FlowMethodConfig{FlowMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypePassword))},
 				},
 			}
-			err := p.CreateLoginFlow(context.Background(), expected)
+			err := p.CreateLoginFlow(ctx, expected)
 			require.NoError(t, err)
 
-			actual, err := p.GetLoginFlow(context.Background(), expected.ID)
+			actual, err := p.GetLoginFlow(ctx, expected.ID)
 			require.NoError(t, err)
 			assert.Equal(t, flow.TypeAPI, actual.Type)
 
@@ -118,9 +119,9 @@ func TestFlowPersister(p FlowPersister) func(t *testing.T) {
 			actual.Type = flow.TypeBrowser
 			actual.Forced = true
 
-			require.NoError(t, p.UpdateLoginFlow(context.Background(), actual))
+			require.NoError(t, p.UpdateLoginFlow(ctx, actual))
 
-			actual, err = p.GetLoginFlow(context.Background(), actual.ID)
+			actual, err = p.GetLoginFlow(ctx, actual.ID)
 			require.NoError(t, err)
 			assert.Equal(t, flow.TypeBrowser, actual.Type)
 			assert.True(t, actual.Forced)
@@ -133,10 +134,10 @@ func TestFlowPersister(p FlowPersister) func(t *testing.T) {
 		t.Run("case=should properly update a flow", func(t *testing.T) {
 			expected := newFlow(t)
 			expected.Type = flow.TypeAPI
-			err := p.CreateLoginFlow(context.Background(), expected)
+			err := p.CreateLoginFlow(ctx, expected)
 			require.NoError(t, err)
 
-			actual, err := p.GetLoginFlow(context.Background(), expected.ID)
+			actual, err := p.GetLoginFlow(ctx, expected.ID)
 			require.NoError(t, err)
 			assert.Equal(t, flow.TypeAPI, actual.Type)
 		})
@@ -144,24 +145,24 @@ func TestFlowPersister(p FlowPersister) func(t *testing.T) {
 		t.Run("case=should update a login flow", func(t *testing.T) {
 			expected := newFlow(t)
 			delete(expected.Methods, identity.CredentialsTypeOIDC)
-			err := p.CreateLoginFlow(context.Background(), expected)
+			err := p.CreateLoginFlow(ctx, expected)
 			require.NoError(t, err)
 
-			actual, err := p.GetLoginFlow(context.Background(), expected.ID)
+			actual, err := p.GetLoginFlow(ctx, expected.ID)
 			require.NoError(t, err)
 			assert.Len(t, actual.Methods, 1)
 
-			require.NoError(t, p.UpdateLoginFlowMethod(context.Background(), expected.ID, identity.CredentialsTypeOIDC, &FlowMethod{
+			require.NoError(t, p.UpdateLoginFlowMethod(ctx, expected.ID, identity.CredentialsTypeOIDC, &FlowMethod{
 				Method: identity.CredentialsTypeOIDC,
 				Config: &FlowMethodConfig{FlowMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypeOIDC))},
 			}))
 
-			require.NoError(t, p.UpdateLoginFlowMethod(context.Background(), expected.ID, identity.CredentialsTypePassword, &FlowMethod{
+			require.NoError(t, p.UpdateLoginFlowMethod(ctx, expected.ID, identity.CredentialsTypePassword, &FlowMethod{
 				Method: identity.CredentialsTypePassword,
 				Config: &FlowMethodConfig{FlowMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypePassword))},
 			}))
 
-			actual, err = p.GetLoginFlow(context.Background(), expected.ID)
+			actual, err = p.GetLoginFlow(ctx, expected.ID)
 			require.NoError(t, err)
 			require.Len(t, actual.Methods, 2)
 			assert.EqualValues(t, identity.CredentialsTypePassword, actual.Active)
@@ -172,16 +173,16 @@ func TestFlowPersister(p FlowPersister) func(t *testing.T) {
 
 		t.Run("case=should not cause data loss when updating a request without changes", func(t *testing.T) {
 			expected := newFlow(t)
-			err := p.CreateLoginFlow(context.Background(), expected)
+			err := p.CreateLoginFlow(ctx, expected)
 			require.NoError(t, err)
 
-			actual, err := p.GetLoginFlow(context.Background(), expected.ID)
+			actual, err := p.GetLoginFlow(ctx, expected.ID)
 			require.NoError(t, err)
 			assert.Len(t, actual.Methods, 2)
 
-			require.NoError(t, p.UpdateLoginFlow(context.Background(), actual))
+			require.NoError(t, p.UpdateLoginFlow(ctx, actual))
 
-			actual, err = p.GetLoginFlow(context.Background(), expected.ID)
+			actual, err = p.GetLoginFlow(ctx, expected.ID)
 			require.NoError(t, err)
 			require.Len(t, actual.Methods, 2)
 

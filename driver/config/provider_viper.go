@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -119,6 +120,10 @@ type (
 		l *logrusx.Logger
 		p *configx.Provider
 	}
+
+	Providers interface {
+		Configuration(ctx context.Context) *Provider
+	}
 )
 
 var Argon2DefaultParallelism = uint8(runtime.NumCPU() * 2)
@@ -146,7 +151,7 @@ func MustNew(l *logrusx.Logger, opts ...configx.OptionModifier) *Provider {
 }
 
 func New(l *logrusx.Logger, opts ...configx.OptionModifier) (*Provider, error) {
-	f, err := pkger.Open("/.schema/config.schema.json")
+	f, err := pkger.Open("github.com/ory/kratos:/.schema/config.schema.json")
 	if err != nil {
 		return nil, err
 	}

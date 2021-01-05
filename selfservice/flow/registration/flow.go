@@ -1,9 +1,12 @@
 package registration
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/ory/kratos/corp/tablename"
 
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
@@ -114,9 +117,8 @@ func (f *Flow) AfterFind(_ *pop.Connection) error {
 	return nil
 }
 
-func (f Flow) TableName() string {
-	// This must be stay a value receiver, using a pointer receiver will cause issues with pop.
-	return "selfservice_registration_flows"
+func (f Flow) TableName(ctx context.Context) string {
+	return tablename.Contextualize(ctx, "selfservice_registration_flows")
 }
 
 func (f *Flow) GetID() uuid.UUID {

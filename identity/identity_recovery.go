@@ -1,7 +1,10 @@
 package identity
 
 import (
+	"context"
 	"time"
+
+	"github.com/ory/kratos/corp/tablename"
 
 	"github.com/gofrs/uuid"
 )
@@ -45,8 +48,8 @@ func (v RecoveryAddressType) HTMLFormInputType() string {
 	return ""
 }
 
-func (a RecoveryAddress) TableName() string {
-	return "identity_recovery_addresses"
+func (a RecoveryAddress) TableName(ctx context.Context) string {
+	return tablename.Contextualize(ctx, "identity_recovery_addresses")
 }
 
 func NewRecoveryEmailAddress(

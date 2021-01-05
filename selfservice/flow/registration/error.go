@@ -29,6 +29,7 @@ type (
 		errorx.ManagementProvider
 		x.WriterProvider
 		x.LoggingProvider
+		config.Providers
 
 		FlowPersistenceProvider
 		HandlerProvider
@@ -38,7 +39,6 @@ type (
 
 	ErrorHandler struct {
 		d errorHandlerDependencies
-		c *config.Provider
 	}
 
 	FlowExpiredError struct {
@@ -58,11 +58,8 @@ func NewFlowExpiredError(at time.Time) *FlowExpiredError {
 	}
 }
 
-func NewErrorHandler(d errorHandlerDependencies, c *config.Provider) *ErrorHandler {
-	return &ErrorHandler{
-		d: d,
-		c: c,
-	}
+func NewErrorHandler(d errorHandlerDependencies) *ErrorHandler {
+	return &ErrorHandler{d: d}
 }
 
 func (s *ErrorHandler) WriteFlowError(
@@ -99,10 +96,10 @@ func (s *ErrorHandler) WriteFlowError(
 		}
 
 		if f.Type == flow.TypeAPI {
-			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.c.SelfPublicURL(),
+			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Configuration(r.Context()).SelfPublicURL(),
 				RouteGetFlow), url.Values{"id": {a.ID.String()}}).String(), http.StatusFound)
 		} else {
-			http.Redirect(w, r, a.AppendTo(s.c.SelfServiceFlowRegistrationUI()).String(), http.StatusFound)
+			http.Redirect(w, r, a.AppendTo(s.d.Configuration(r.Context()).SelfServiceFlowRegistrationUI()).String(), http.StatusFound)
 		}
 		return
 	}
@@ -125,7 +122,7 @@ func (s *ErrorHandler) WriteFlowError(
 	}
 
 	if f.Type == flow.TypeBrowser {
-		http.Redirect(w, r, f.AppendTo(s.c.SelfServiceFlowRegistrationUI()).String(), http.StatusFound)
+		http.Redirect(w, r, f.AppendTo(s.d.Configuration(r.Context()).SelfServiceFlowRegistrationUI()).String(), http.StatusFound)
 		return
 	}
 

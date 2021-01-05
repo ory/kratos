@@ -1,6 +1,7 @@
 package sql_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -17,9 +18,8 @@ func TestCredentialTypes(t *testing.T) {
 	for name, p := range ps {
 		t.Run(fmt.Sprintf("db=%s", name), func(t *testing.T) {
 			for _, ct := range []identity.CredentialsType{identity.CredentialsTypeOIDC, identity.CredentialsTypePassword} {
-				require.NoError(t, p.Persister().(*sql.Persister).Connection().Where("name = ?", ct).First(&identity.CredentialsTypeTable{}))
+				require.NoError(t, p.Persister().(*sql.Persister).Connection(context.Background()).Where("name = ?", ct).First(&identity.CredentialsTypeTable{}))
 			}
 		})
-
 	}
 }

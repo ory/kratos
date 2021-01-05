@@ -64,7 +64,7 @@ func (p Persister) UpdateVerificationFlow(ctx context.Context, r *verification.F
 
 func (p *Persister) CreateVerificationToken(ctx context.Context, token *link.VerificationToken) error {
 	t := token.Token
-	token.Token = p.hmacValue(t)
+	token.Token = p.hmacValue(ctx, t)
 
 	// This should not create the request eagerly because otherwise we might accidentally create an address that isn't
 	// supposed to be in the database.
@@ -79,7 +79,7 @@ func (p *Persister) UseVerificationToken(ctx context.Context, token string) (*li
 	var err error
 	rt := new(link.VerificationToken)
 	if err = sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
-		for _, secret := range p.cf.SecretsSession() {
+		for _, secret := range p.r.Configuration(ctx).SecretsSession() {
 			if err = tx.Eager().Where("token = ? AND NOT used", p.hmacValueWithSecret(token, secret)).First(rt); err != nil {
 				if !errors.Is(sqlcon.HandleError(err), sqlcon.ErrNoRows) {
 					return err
@@ -92,7 +92,7 @@ func (p *Persister) UseVerificationToken(ctx context.Context, token string) (*li
 			return err
 		}
 		/* #nosec G201 TableName is static */
-		return tx.RawQuery(fmt.Sprintf("UPDATE %s SET used=true, used_at=? WHERE id=?", rt.TableName()), time.Now().UTC(), rt.ID).Exec()
+		return tx.RawQuery(fmt.Sprintf("UPDATE %s SET used=true, used_at=? WHERE id=?", rt.TableName(ctx)), time.Now().UTC(), rt.ID).Exec()
 	})); err != nil {
 		return nil, err
 	}
@@ -102,5 +102,5 @@ func (p *Persister) UseVerificationToken(ctx context.Context, token string) (*li
 
 func (p *Persister) DeleteVerificationToken(ctx context.Context, token string) error {
 	/* #nosec G201 TableName is static */
-	return p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE token=?", new(link.VerificationToken).TableName()), token).Exec()
+	return p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE token=?", new(link.VerificationToken).TableName(ctx)), token).Exec()
 }

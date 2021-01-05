@@ -93,6 +93,7 @@ func TestMigrations(t *testing.T) {
 			require.NoError(t, tm.Up())
 
 			d := driver.New(
+				context.Background(),
 				configx.WithValues(map[string]interface{}{
 					config.ViperKeyDSN:                      url,
 					config.ViperKeyPublicBaseURL:            "https://www.ory.sh/",

@@ -205,11 +205,11 @@ func (h *Handler) IsNotAuthenticated(wrap httprouter.Handle, onAuthenticated htt
 	}
 }
 
-func RedirectOnAuthenticated(c *config.Provider) httprouter.Handle {
+func RedirectOnAuthenticated(d interface{ config.Providers }) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		returnTo, err := x.SecureRedirectTo(r, c.SelfServiceBrowserDefaultReturnTo(), x.SecureRedirectAllowSelfServiceURLs(c.SelfPublicURL()))
+		returnTo, err := x.SecureRedirectTo(r, d.Configuration(r.Context()).SelfServiceBrowserDefaultReturnTo(), x.SecureRedirectAllowSelfServiceURLs(d.Configuration(r.Context()).SelfPublicURL()))
 		if err != nil {
-			http.Redirect(w, r, c.SelfServiceBrowserDefaultReturnTo().String(), http.StatusFound)
+			http.Redirect(w, r, d.Configuration(r.Context()).SelfServiceBrowserDefaultReturnTo().String(), http.StatusFound)
 			return
 		}
 

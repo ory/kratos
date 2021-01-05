@@ -18,15 +18,15 @@ type (
 	verifierDependencies interface {
 		link.SenderProvider
 		link.VerificationTokenPersistenceProvider
+		config.Providers
 	}
 	Verifier struct {
 		r verifierDependencies
-		c *config.Provider
 	}
 )
 
-func NewVerifier(r verifierDependencies, c *config.Provider) *Verifier {
-	return &Verifier{r: r, c: c}
+func NewVerifier(r verifierDependencies) *Verifier {
+	return &Verifier{r: r}
 }
 
 func (e *Verifier) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, r *http.Request, _ *registration.Flow, s *session.Session) error {
@@ -47,7 +47,7 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity) error {
 			continue
 		}
 
-		token := link.NewVerificationToken(address, e.c.SelfServiceFlowVerificationRequestLifespan())
+		token := link.NewVerificationToken(address, e.r.Configuration(r.Context()).SelfServiceFlowVerificationRequestLifespan())
 		if err := e.r.VerificationTokenPersister().CreateVerificationToken(r.Context(), token); err != nil {
 			return err
 		}

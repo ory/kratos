@@ -1,6 +1,7 @@
 package argon2
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -19,6 +20,10 @@ type (
 		c config.HasherArgon2Config
 	}
 )
+
+func (c *argon2Config) Configuration(_ context.Context) *config.Provider {
+	panic("not supposed to be called")
+}
 
 func (c *argon2Config) HasherArgon2() *config.HasherArgon2Config {
 	return &c.c
@@ -223,13 +228,13 @@ func probe(cmd *cobra.Command, hasher hash.Hasher, runs int, quiet bool) (time.D
 	var mid time.Time
 	for i := 0; i < runs; i++ {
 		mid = time.Now()
-		_, err := hasher.Generate([]byte("password"))
+		_, err := hasher.Generate(cmd.Context(), []byte("password"))
 		if err != nil {
-			fmt.Fprintf(cmd.ErrOrStderr(), "Could not generate a hash: %s\n", err)
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Could not generate a hash: %s\n", err)
 			return 0, cmdx.FailSilently(cmd)
 		}
 		if !quiet {
-			fmt.Fprintf(cmd.OutOrStdout(), "    took %s in try %d\n", time.Since(mid), i)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "    took %s in try %d\n", time.Since(mid), i)
 		}
 	}
 

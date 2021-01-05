@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/ory/kratos/driver/config"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
@@ -21,24 +23,18 @@ type (
 		PrivilegedPoolProvider
 		ManagementProvider
 		x.WriterProvider
+		config.Providers
 	}
 	HandlerProvider interface {
 		IdentityHandler() *Handler
 	}
 	Handler struct {
-		c Configuration
 		r handlerDependencies
 	}
 )
 
-func NewHandler(
-	c Configuration,
-	r handlerDependencies,
-) *Handler {
-	return &Handler{
-		c: c,
-		r: r,
-	}
+func NewHandler(r handlerDependencies) *Handler {
+	return &Handler{r: r}
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -123,7 +119,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 		return
 	}
 
-	x.PaginationHeader(w, urlx.AppendPaths(h.c.SelfAdminURL(), RouteBase), total, page, itemsPerPage)
+	x.PaginationHeader(w, urlx.AppendPaths(h.r.Configuration(r.Context()).SelfAdminURL(), RouteBase), total, page, itemsPerPage)
 	h.r.Writer().Write(w, r, is)
 }
 
@@ -225,7 +221,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 
 	h.r.Writer().WriteCreated(w, r,
 		urlx.AppendPaths(
-			h.c.SelfAdminURL(),
+			h.r.Configuration(r.Context()).SelfAdminURL(),
 			"identities",
 			i.ID.String(),
 		).String(),

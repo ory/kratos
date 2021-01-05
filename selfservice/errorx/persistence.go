@@ -42,34 +42,36 @@ func TestPersister(p Persister) func(t *testing.T) {
 		return string(out)
 	}
 
+	ctx := context.Background()
+
 	return func(t *testing.T) {
 		t.Run("case=not found", func(t *testing.T) {
-			_, err := p.Read(context.Background(), x.NewUUID())
+			_, err := p.Read(ctx, x.NewUUID())
 			require.Error(t, err)
 		})
 
 		t.Run("case=en- and decode properly", func(t *testing.T) {
-			actualID, err := p.Add(context.Background(), "nosurf", herodot.ErrNotFound.WithReason("foobar"))
+			actualID, err := p.Add(ctx, "nosurf", herodot.ErrNotFound.WithReason("foobar"))
 			require.NoError(t, err)
 
-			actual, err := p.Read(context.Background(), actualID)
+			actual, err := p.Read(ctx, actualID)
 			require.NoError(t, err)
 
 			assert.JSONEq(t, `{"code":404,"status":"Not Found","reason":"foobar","message":"The requested resource could not be found"}`, gjson.Get(toJSON(t, actual), "errors.0").String(), toJSON(t, actual))
 		})
 
 		t.Run("case=clear", func(t *testing.T) {
-			actualID, err := p.Add(context.Background(), "nosurf", herodot.ErrNotFound.WithReason("foobar"))
+			actualID, err := p.Add(ctx, "nosurf", herodot.ErrNotFound.WithReason("foobar"))
 			require.NoError(t, err)
 
-			_, err = p.Read(context.Background(), actualID)
+			_, err = p.Read(ctx, actualID)
 			require.NoError(t, err)
 
 			// We need to wait for at least one second or MySQL will randomly fail as it does not support
 			// millisecond resolution on timestamp columns.
 			time.Sleep(time.Second + time.Millisecond*500)
-			require.NoError(t, p.Clear(context.Background(), time.Second, false))
-			got, err := p.Read(context.Background(), actualID)
+			require.NoError(t, p.Clear(ctx, time.Second, false))
+			got, err := p.Read(ctx, actualID)
 			require.Error(t, err, "%+v", got)
 		})
 	}

@@ -1,7 +1,6 @@
 package identities
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 
@@ -9,9 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/ory/kratos/cmd/cliclient"
 	"github.com/ory/kratos-client-go/client/admin"
 	"github.com/ory/kratos-client-go/models"
+	"github.com/ory/kratos/cmd/cliclient"
 )
 
 // ImportCmd represents the import command
@@ -51,7 +50,7 @@ WARNING: Importing credentials is not yet supported.`,
 
 			resp, err := c.Admin.CreateIdentity(&admin.CreateIdentityParams{
 				Body:    &params,
-				Context: context.Background(),
+				Context: cmd.Context(),
 			})
 			if err != nil {
 				failed[src] = err

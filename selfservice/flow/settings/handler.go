@@ -38,6 +38,8 @@ type (
 		x.WriterProvider
 		x.LoggingProvider
 
+		config.Providers
+
 		continuity.ManagementProvider
 
 		session.HandlerProvider
@@ -53,31 +55,31 @@ type (
 		FlowPersistenceProvider
 		StrategyProvider
 
-		IdentityTraitsSchemas() schema.Schemas
-		x.CSRFProvider
+		schema.IdentityTraitsProvider
 	}
 	HandlerProvider interface {
 		SettingsHandler() *Handler
 	}
 	Handler struct {
-		c    *config.Provider
 		d    handlerDependencies
 		csrf x.CSRFToken
 	}
 )
 
-func NewHandler(d handlerDependencies, c *config.Provider) *Handler {
-	return &Handler{d: d, c: c, csrf: nosurf.Token}
+func NewHandler(d handlerDependencies) *Handler {
+	return &Handler{d: d, csrf: nosurf.Token}
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.d.CSRFHandler().IgnorePath(RouteInitAPIFlow)
 
-	redirect := session.RedirectOnUnauthenticated(h.c.SelfServiceFlowLoginUI().String())
-	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsAuthenticated(h.initBrowserFlow, redirect))
+	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsAuthenticated(h.initBrowserFlow, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		http.Redirect(w, r, h.d.Configuration(r.Context()).SelfServiceFlowLoginUI().String(), http.StatusFound)
+	}))
+
 	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsAuthenticated(h.initApiFlow, nil))
 
-	public.GET(RouteGetFlow, h.d.SessionHandler().IsAuthenticated(h.fetchPublicFlow, OnUnauthenticated(h.c, h.d)))
+	public.GET(RouteGetFlow, h.d.SessionHandler().IsAuthenticated(h.fetchPublicFlow, OnUnauthenticated(h.d)))
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
@@ -85,7 +87,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 }
 
 func (h *Handler) NewFlow(w http.ResponseWriter, r *http.Request, i *identity.Identity, ft flow.Type) (*Flow, error) {
-	f := NewFlow(h.c.SelfServiceFlowSettingsFlowLifespan(), r, i, ft)
+	f := NewFlow(h.d.Configuration(r.Context()).SelfServiceFlowSettingsFlowLifespan(), r, i, ft)
 	for _, strategy := range h.d.SettingsStrategies() {
 		if err := h.d.ContinuityManager().Abort(r.Context(), w, r, ContinuityKey(strategy.SettingsStrategyID())); err != nil {
 			return nil, err
@@ -186,7 +188,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	http.Redirect(w, r, f.AppendTo(h.c.SelfServiceFlowSettingsUI()).String(), http.StatusFound)
+	http.Redirect(w, r, f.AppendTo(h.d.Configuration(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusFound)
 }
 
 // nolint:deadcode,unused
@@ -274,12 +276,12 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, checkSession
 		if pr.Type == flow.TypeBrowser {
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 				WithReason("The settings flow has expired. Redirect the user to the settings flow init endpoint to initialize a new settings flow.").
-				WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), RouteInitBrowserFlow).String())))
+				WithDetail("redirect_to", urlx.AppendPaths(h.d.Configuration(r.Context()).SelfPublicURL(), RouteInitBrowserFlow).String())))
 			return nil
 		}
 		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 			WithReason("The settings flow has expired. Call the settings flow init API endpoint to initialize a new settings flow.").
-			WithDetail("api", urlx.AppendPaths(h.c.SelfPublicURL(), RouteInitAPIFlow).String())))
+			WithDetail("api", urlx.AppendPaths(h.d.Configuration(r.Context()).SelfPublicURL(), RouteInitAPIFlow).String())))
 		return nil
 	}
 

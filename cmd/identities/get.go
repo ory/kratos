@@ -2,13 +2,14 @@ package identities
 
 import (
 	"fmt"
-	"github.com/ory/kratos-client-go/client/admin"
 	"time"
+
+	"github.com/ory/kratos-client-go/client/admin"
 
 	"github.com/ory/x/cmdx"
 
-	"github.com/ory/kratos/internal/clihelpers"
 	"github.com/ory/kratos-client-go/models"
+	"github.com/ory/kratos/internal/clihelpers"
 
 	"github.com/spf13/cobra"
 

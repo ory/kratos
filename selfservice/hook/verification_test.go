@@ -59,7 +59,7 @@ func TestVerifier(t *testing.T) {
 			i, err = reg.IdentityPool().GetIdentity(context.Background(), i.ID)
 			require.NoError(t, err)
 
-			h := hook.NewVerifier(reg, conf)
+			h := hook.NewVerifier(reg)
 			require.NoError(t, hf(h, i))
 
 			messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)

@@ -1,7 +1,10 @@
 package continuity
 
 import (
+	"context"
 	"time"
+
+	"github.com/ory/kratos/corp/tablename"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
@@ -37,8 +40,8 @@ func (c *Container) UTC() *Container {
 	return c
 }
 
-func (c *Container) TableName() string {
-	return "continuity_containers"
+func (c Container) TableName(ctx context.Context) string {
+	return tablename.Contextualize(ctx, "continuity_containers")
 }
 
 func NewContainer(name string, o managerOptions) *Container {
