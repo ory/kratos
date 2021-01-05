@@ -3,6 +3,7 @@ package argon2
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/ory/x/cmdx"
 	"time"
 
 	"github.com/fatih/color"
@@ -11,31 +12,14 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hash"
-	"github.com/ory/x/cmdx"
 )
-
-type (
-	argon2Config struct {
-		c config.HasherArgon2Config
-	}
-)
-
-func (c *argon2Config) HasherArgon2() *config.HasherArgon2Config {
-	return &c.c
-}
-
-func (c *argon2Config) getMemFormat() string {
-	return (bytesize.ByteSize(c.c.Memory) * bytesize.KB).String()
-}
 
 const (
 	FlagStartMemory     = "start-memory"
 	FlagMaxMemory       = "max-memory"
 	FlagAdjustMemory    = "adjust-memory-by"
 	FlagStartIterations = "start-iterations"
-	FlagParallelism     = "parallelism"
-	FlagSaltLength      = "salt-length"
-	FlagKeyLength       = "key-length"
+	FlagMaxConcurrent   = "max-concurrent"
 
 	FlagQuiet = "quiet"
 	FlagRuns  = "probe-runs"
@@ -45,9 +29,9 @@ var resultColor = color.New(color.FgGreen)
 
 func newCalibrateCmd() *cobra.Command {
 	var (
-		maxMemory, adjustMemory, startMemory bytesize.ByteSize = 0, 1 * bytesize.GB, 4 * bytesize.GB
-		quiet                                bool
-		runs                                 int
+		maxMemory, adjustMemory bytesize.ByteSize = 0, 1 * bytesize.GB
+		quiet                   bool
+		runs                    int
 	)
 
 	aconfig := &argon2Config{
@@ -69,7 +53,9 @@ Please note that the values depend on the machine you run the hashing on. If you
 				return err
 			}
 
-			aconfig.c.Memory = toKB(startMemory)
+			if aconfig.memory == 0 {
+				aconfig.memory = 4 * bytesize.GB
+			}
 
 			hasher := hash.NewHasherArgon2(aconfig)
 
@@ -80,12 +66,12 @@ Please note that the values depend on the machine you run the hashing on. If you
 			}
 
 			for {
-				if maxMemory != 0 && aconfig.c.Memory > toKB(maxMemory) {
+				if maxMemory != 0 && aconfig.memory > maxMemory {
 					// don't further increase memory
 					if !quiet {
 						fmt.Fprintln(cmd.ErrOrStderr(), "  ouch, hit the memory limit there")
 					}
-					aconfig.c.Memory = toKB(maxMemory)
+					aconfig.memory = maxMemory
 					break
 				}
 
@@ -99,16 +85,16 @@ Please note that the values depend on the machine you run the hashing on. If you
 				}
 
 				if currentDuration > desiredDuration {
-					if aconfig.c.Memory <= toKB(adjustMemory) {
+					if aconfig.memory <= adjustMemory {
 						// adjusting the memory would now result in <= 0B
 						adjustMemory = adjustMemory >> 1
 					}
-					aconfig.c.Memory -= toKB(adjustMemory)
+					aconfig.memory -= adjustMemory
 					break
 				}
 
 				// adjust config
-				aconfig.c.Memory += toKB(adjustMemory)
+				aconfig.memory += adjustMemory
 			}
 
 			if !quiet {
@@ -129,13 +115,13 @@ Please note that the values depend on the machine you run the hashing on. If you
 					break
 				}
 
-				if aconfig.c.Memory <= toKB(adjustMemory) {
+				if aconfig.memory <= adjustMemory {
 					// adjusting the memory would now result in <= 0B
 					adjustMemory = adjustMemory >> 1
 				}
 
 				// adjust config
-				aconfig.c.Memory -= toKB(adjustMemory)
+				aconfig.memory -= adjustMemory
 			}
 
 			if !quiet {
@@ -199,35 +185,39 @@ Please note that the values depend on the machine you run the hashing on. If you
 	flags.BoolVarP(&quiet, FlagQuiet, "q", false, "Quiet output.")
 	flags.IntVarP(&runs, FlagRuns, "r", 2, "Runs per probe, median of all runs is taken as the result.")
 
-	flags.VarP(&startMemory, FlagStartMemory, "m", "Amount of memory to start probing at.")
+	flags.VarP(&aconfig.memory, FlagStartMemory, "m", "Amount of memory to start probing at.")
 	flags.Var(&maxMemory, FlagMaxMemory, "Maximum memory allowed (default no limit).")
 	flags.Var(&adjustMemory, FlagAdjustMemory, "Amount by which the memory is adjusted in every step while probing.")
 
 	flags.Uint32VarP(&aconfig.c.Iterations, FlagStartIterations, "i", 1, "Number of iterations to start probing at.")
 
-	flags.Uint8Var(&aconfig.c.Parallelism, FlagParallelism, config.Argon2DefaultParallelism, "Number of threads to use.")
+	flags.Uint8(FlagMaxConcurrent, 16, "Maximum number of concurrent hashing operations.")
 
-	flags.Uint32Var(&aconfig.c.SaltLength, FlagSaltLength, config.Argon2DefaultSaltLength, "Length of the salt in bytes.")
-	flags.Uint32Var(&aconfig.c.KeyLength, FlagKeyLength, config.Argon2DefaultKeyLength, "Length of the key in bytes.")
+	registerArgon2ConstantConfigFlags(flags, aconfig)
 
 	return cmd
 }
 
-func toKB(b bytesize.ByteSize) uint32 {
-	return uint32(b / bytesize.KB)
-}
-
 func probe(cmd *cobra.Command, hasher hash.Hasher, runs int, quiet bool) (time.Duration, error) {
 	start := time.Now()
+	//concurrent := flagx.MustGetUint8(cmd, FlagMaxConcurrent)
 
 	var mid time.Time
 	for i := 0; i < runs; i++ {
+		//errs := make(chan error, concurrent)
+
 		mid = time.Now()
+		//for j := 0; j < concurrent; j-- {
+		//	go func() {
 		_, err := hasher.Generate([]byte("password"))
 		if err != nil {
 			fmt.Fprintf(cmd.ErrOrStderr(), "Could not generate a hash: %s\n", err)
 			return 0, cmdx.FailSilently(cmd)
 		}
+		//	}()
+		//
+		//}
+
 		if !quiet {
 			fmt.Fprintf(cmd.OutOrStdout(), "    took %s in try %d\n", time.Since(mid), i)
 		}

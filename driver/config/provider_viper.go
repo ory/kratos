@@ -76,6 +76,7 @@ const (
 	ViperKeySelfServiceVerificationBrowserDefaultReturnTo           = "selfservice.flows.verification.after." + DefaultBrowserReturnURL
 	ViperKeyDefaultIdentitySchemaURL                                = "identity.default_schema_url"
 	ViperKeyIdentitySchemas                                         = "identity.schemas"
+	ViperKeyHasherArgon2Config                                      = "hashers.argon2"
 	ViperKeyHasherArgon2ConfigMemory                                = "hashers.argon2.memory"
 	ViperKeyHasherArgon2ConfigIterations                            = "hashers.argon2.iterations"
 	ViperKeyHasherArgon2ConfigParallelism                           = "hashers.argon2.parallelism"
