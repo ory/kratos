@@ -51,11 +51,12 @@ func TestPersister(conf *config.Provider, p interface {
 	Persister
 	identity.PrivilegedPool
 }) func(t *testing.T) {
+	ctx := context.Background()
 	return func(t *testing.T) {
 		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 
 		t.Run("case=not found", func(t *testing.T) {
-			_, err := p.GetSession(context.Background(), x.NewUUID())
+			_, err := p.GetSession(ctx, x.NewUUID())
 			require.Error(t, err)
 		})
 
@@ -63,10 +64,10 @@ func TestPersister(conf *config.Provider, p interface {
 			var expected Session
 			require.NoError(t, faker.FakeData(&expected))
 			expected.Active = true
-			require.NoError(t, p.CreateIdentity(context.Background(), expected.Identity))
+			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
 
 			assert.Equal(t, uuid.Nil, expected.ID)
-			require.NoError(t, p.CreateSession(context.Background(), &expected))
+			require.NoError(t, p.CreateSession(ctx, &expected))
 			assert.NotEqual(t, uuid.Nil, expected.ID)
 
 			check := func(actual *Session, err error) {
@@ -83,33 +84,33 @@ func TestPersister(conf *config.Provider, p interface {
 			}
 
 			t.Run("method=get by id", func(t *testing.T) {
-				check(p.GetSession(context.Background(), expected.ID))
+				check(p.GetSession(ctx, expected.ID))
 			})
 
 			t.Run("method=get by token", func(t *testing.T) {
-				check(p.GetSessionByToken(context.Background(), expected.Token))
+				check(p.GetSessionByToken(ctx, expected.Token))
 			})
 		})
 
 		t.Run("case=delete session", func(t *testing.T) {
 			var expected Session
 			require.NoError(t, faker.FakeData(&expected))
-			require.NoError(t, p.CreateIdentity(context.Background(), expected.Identity))
-			require.NoError(t, p.CreateSession(context.Background(), &expected))
+			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
+			require.NoError(t, p.CreateSession(ctx, &expected))
 
-			require.NoError(t, p.DeleteSession(context.Background(), expected.ID))
-			_, err := p.GetSession(context.Background(), expected.ID)
+			require.NoError(t, p.DeleteSession(ctx, expected.ID))
+			_, err := p.GetSession(ctx, expected.ID)
 			require.Error(t, err)
 		})
 
 		t.Run("case=delete session by token", func(t *testing.T) {
 			var expected Session
 			require.NoError(t, faker.FakeData(&expected))
-			require.NoError(t, p.CreateIdentity(context.Background(), expected.Identity))
-			require.NoError(t, p.CreateSession(context.Background(), &expected))
+			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
+			require.NoError(t, p.CreateSession(ctx, &expected))
 
-			require.NoError(t, p.DeleteSessionByToken(context.Background(), expected.Token))
-			_, err := p.GetSession(context.Background(), expected.ID)
+			require.NoError(t, p.DeleteSessionByToken(ctx, expected.Token))
+			_, err := p.GetSession(ctx, expected.ID)
 			require.Error(t, err)
 		})
 
@@ -117,16 +118,16 @@ func TestPersister(conf *config.Provider, p interface {
 			var expected Session
 			require.NoError(t, faker.FakeData(&expected))
 			expected.Active = true
-			require.NoError(t, p.CreateIdentity(context.Background(), expected.Identity))
-			require.NoError(t, p.CreateSession(context.Background(), &expected))
+			require.NoError(t, p.CreateIdentity(ctx, expected.Identity))
+			require.NoError(t, p.CreateSession(ctx, &expected))
 
-			actual, err := p.GetSession(context.Background(), expected.ID)
+			actual, err := p.GetSession(ctx, expected.ID)
 			require.NoError(t, err)
 			assert.True(t, actual.Active)
 
-			require.NoError(t, p.RevokeSessionByToken(context.Background(), expected.Token))
+			require.NoError(t, p.RevokeSessionByToken(ctx, expected.Token))
 
-			actual, err = p.GetSession(context.Background(), expected.ID)
+			actual, err = p.GetSession(ctx, expected.ID)
 			require.NoError(t, err)
 			assert.False(t, actual.Active)
 		})
@@ -135,19 +136,19 @@ func TestPersister(conf *config.Provider, p interface {
 			var expected1 Session
 			var expected2 Session
 			require.NoError(t, faker.FakeData(&expected1))
-			require.NoError(t, p.CreateIdentity(context.Background(), expected1.Identity))
+			require.NoError(t, p.CreateIdentity(ctx, expected1.Identity))
 
-			require.NoError(t, p.CreateSession(context.Background(), &expected1))
+			require.NoError(t, p.CreateSession(ctx, &expected1))
 
 			require.NoError(t, faker.FakeData(&expected2))
 			expected2.Identity = expected1.Identity
 			expected2.IdentityID = expected1.IdentityID
-			require.NoError(t, p.CreateSession(context.Background(), &expected2))
+			require.NoError(t, p.CreateSession(ctx, &expected2))
 
-			require.NoError(t, p.DeleteSessionsByIdentity(context.Background(), expected2.IdentityID))
-			_, err := p.GetSession(context.Background(), expected1.ID)
+			require.NoError(t, p.DeleteSessionsByIdentity(ctx, expected2.IdentityID))
+			_, err := p.GetSession(ctx, expected1.ID)
 			require.Error(t, err)
-			_, err = p.GetSession(context.Background(), expected2.ID)
+			_, err = p.GetSession(ctx, expected2.ID)
 			require.Error(t, err)
 		})
 	}

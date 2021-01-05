@@ -1,7 +1,10 @@
 package courier
 
 import (
+	"context"
 	"time"
+
+	"github.com/ory/kratos/corp/tablename"
 
 	"github.com/gofrs/uuid"
 )
@@ -33,6 +36,6 @@ type Message struct {
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 }
 
-func (m Message) TableName() string {
-	return "courier_messages"
+func (m Message) TableName(ctx context.Context) string {
+	return tablename.Contextualize(ctx, "courier_messages")
 }

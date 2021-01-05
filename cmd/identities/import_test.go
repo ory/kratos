@@ -15,8 +15,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos-client-go/models"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/x/pointerx"
 )
 

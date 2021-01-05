@@ -19,34 +19,34 @@ import (
 
 var _ persistence.Persister = new(Persister)
 
-var migrations = pkger.Dir("/persistence/sql/migrations/sql") // do not remove this!
+var migrations = pkger.Dir("github.com/ory/kratos:/persistence/sql/migrations/sql") // do not remove this!
 
 type (
 	persisterDependencies interface {
-		IdentityTraitsSchemas() schema.Schemas
+		IdentityTraitsSchemas(ctx context.Context) schema.Schemas
 		identity.ValidationProvider
 		x.LoggingProvider
+		config.Providers
 	}
 	Persister struct {
 		c        *pop.Connection
 		mb       *pkgerx.MigrationBox
 		r        persisterDependencies
-		cf       *config.Provider
 		isSQLite bool
 	}
 )
 
-func NewPersister(r persisterDependencies, conf *config.Provider, c *pop.Connection) (*Persister, error) {
+func NewPersister(r persisterDependencies, c *pop.Connection) (*Persister, error) {
 	m, err := pkgerx.NewMigrationBox(migrations, c, r.Logger())
 	if err != nil {
 		return nil, err
 	}
 
-	return &Persister{c: c, mb: m, cf: conf, r: r, isSQLite: c.Dialect.Name() == "sqlite3"}, nil
+	return &Persister{c: c, mb: m, r: r, isSQLite: c.Dialect.Name() == "sqlite3"}, nil
 }
 
-func (p *Persister) Connection() *pop.Connection {
-	return p.c
+func (p *Persister) Connection(ctx context.Context) *pop.Connection {
+	return p.c.WithContext(ctx)
 }
 
 func (p *Persister) MigrationStatus(ctx context.Context, w io.Writer) error {
@@ -65,10 +65,11 @@ func (p *Persister) Close(ctx context.Context) error {
 	return errors.WithStack(p.GetConnection(ctx).Close())
 }
 
-func (p *Persister) Ping(ctx context.Context) error {
+func (p *Persister) Ping() error {
 	type pinger interface {
 		Ping() error
 	}
 
-	return errors.WithStack(p.GetConnection(ctx).Store.(pinger).Ping())
+	// This can not be contextualized because of some gobuffalo/pop limitations.
+	return errors.WithStack(p.c.Store.(pinger).Ping())
 }

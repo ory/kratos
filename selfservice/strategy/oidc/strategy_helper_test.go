@@ -2,6 +2,7 @@ package oidc_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -156,7 +157,7 @@ func newReturnTs(t *testing.T, reg driver.Registry) *httptest.Server {
 		require.Empty(t, sess.Identity.Credentials)
 		reg.Writer().Write(w, r, sess)
 	}))
-	reg.Configuration().MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL)
+	reg.Configuration(context.Background()).MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL)
 	t.Cleanup(ts.Close)
 	return ts
 }
@@ -177,9 +178,9 @@ func newUI(t *testing.T, reg driver.Registry) *httptest.Server {
 		reg.Writer().Write(w, r, e)
 	}))
 	t.Cleanup(ts.Close)
-	reg.Configuration().MustSet(config.ViperKeySelfServiceLoginUI, ts.URL+"/login")
-	reg.Configuration().MustSet(config.ViperKeySelfServiceRegistrationUI, ts.URL+"/registration")
-	reg.Configuration().MustSet(config.ViperKeySelfServiceSettingsURL, ts.URL+"/settings")
+	reg.Configuration(context.Background()).MustSet(config.ViperKeySelfServiceLoginUI, ts.URL+"/login")
+	reg.Configuration(context.Background()).MustSet(config.ViperKeySelfServiceRegistrationUI, ts.URL+"/registration")
+	reg.Configuration(context.Background()).MustSet(config.ViperKeySelfServiceSettingsURL, ts.URL+"/settings")
 	return ts
 }
 

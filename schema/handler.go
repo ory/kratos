@@ -18,7 +18,7 @@ type (
 	handlerDependencies interface {
 		x.WriterProvider
 		x.LoggingProvider
-		IdentityTraitsSchemas() Schemas
+		IdentityTraitsProvider
 	}
 	Handler struct {
 		r handlerDependencies
@@ -29,9 +29,7 @@ type (
 )
 
 func NewHandler(r handlerDependencies) *Handler {
-	return &Handler{
-		r: r,
-	}
+	return &Handler{r: r}
 }
 
 const SchemasPath string = "schemas"
@@ -77,7 +75,7 @@ type getSchemaParameters struct {
 //       404: genericError
 //       500: genericError
 func (h *Handler) get(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	s, err := h.r.IdentityTraitsSchemas().GetByID(ps.ByName("id"))
+	s, err := h.r.IdentityTraitsSchemas(r.Context()).GetByID(ps.ByName("id"))
 	if err != nil {
 		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrNotFound.WithDebugf("%+v", err)))
 		return

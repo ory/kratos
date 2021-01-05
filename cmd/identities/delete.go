@@ -2,12 +2,14 @@ package identities
 
 import (
 	"fmt"
-	"github.com/ory/kratos-client-go/client/admin"
 	"time"
-	"github.com/ory/x/cmdx"
-	"github.com/ory/kratos/internal/clihelpers"
+
 	"github.com/spf13/cobra"
+
+	"github.com/ory/kratos-client-go/client/admin"
 	"github.com/ory/kratos/cmd/cliclient"
+	"github.com/ory/kratos/internal/clihelpers"
+	"github.com/ory/x/cmdx"
 )
 
 var DeleteCmd = &cobra.Command{

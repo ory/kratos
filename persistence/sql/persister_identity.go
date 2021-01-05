@@ -176,11 +176,11 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 		i.Traits = identity.Traits("{}")
 	}
 
-	if err := p.injectTraitsSchemaURL(i); err != nil {
+	if err := p.injectTraitsSchemaURL(ctx, i); err != nil {
 		return err
 	}
 
-	if err := p.validateIdentity(i); err != nil {
+	if err := p.validateIdentity(ctx, i); err != nil {
 		return err
 	}
 
@@ -211,7 +211,7 @@ func (p *Persister) ListIdentities(ctx context.Context, page, perPage int) ([]id
 	}
 
 	for i := range is {
-		if err := p.injectTraitsSchemaURL(&(is[i])); err != nil {
+		if err := p.injectTraitsSchemaURL(ctx, &(is[i])); err != nil {
 			return nil, err
 		}
 	}
@@ -220,7 +220,7 @@ func (p *Persister) ListIdentities(ctx context.Context, page, perPage int) ([]id
 }
 
 func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) error {
-	if err := p.validateIdentity(i); err != nil {
+	if err := p.validateIdentity(ctx, i); err != nil {
 		return err
 	}
 
@@ -233,9 +233,9 @@ func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) er
 		}
 
 		for _, tn := range []string{
-			new(identity.Credentials).TableName(),
-			new(identity.VerifiableAddress).TableName(),
-			new(identity.RecoveryAddress).TableName(),
+			new(identity.Credentials).TableName(ctx),
+			new(identity.VerifiableAddress).TableName(ctx),
+			new(identity.RecoveryAddress).TableName(ctx),
 		} {
 			/* #nosec G201 TableName is static */
 			if err := tx.RawQuery(fmt.Sprintf(
@@ -262,7 +262,7 @@ func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) er
 
 func (p *Persister) DeleteIdentity(ctx context.Context, id uuid.UUID) error {
 	/* #nosec G201 TableName is static */
-	count, err := p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE id = ?", new(identity.Identity).TableName()), id).ExecWithCount()
+	count, err := p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE id = ?", new(identity.Identity).TableName(ctx)), id).ExecWithCount()
 	if err != nil {
 		return sqlcon.HandleError(err)
 	}
@@ -277,8 +277,9 @@ func (p *Persister) GetIdentity(ctx context.Context, id uuid.UUID) (*identity.Id
 	if err := p.GetConnection(ctx).Eager("VerifiableAddresses", "RecoveryAddresses").Find(&i, id); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
+
 	i.Credentials = nil
-	if err := p.injectTraitsSchemaURL(&i); err != nil {
+	if err := p.injectTraitsSchemaURL(ctx, &i); err != nil {
 		return nil, err
 	}
 
@@ -316,7 +317,7 @@ func (p *Persister) GetIdentityConfidential(ctx context.Context, id uuid.UUID) (
 		i.Credentials[creds.Type] = creds
 	}
 	i.CredentialsCollection = nil
-	if err := p.injectTraitsSchemaURL(&i); err != nil {
+	if err := p.injectTraitsSchemaURL(ctx, &i); err != nil {
 		return nil, err
 	}
 
@@ -351,7 +352,7 @@ func (p *Persister) VerifyAddress(ctx context.Context, code string) error {
 		/* #nosec G201 TableName is static */
 		fmt.Sprintf(
 			"UPDATE %s SET status = ?, verified = true, verified_at = ?, code = ? WHERE code = ? AND expires_at > ?",
-			new(identity.VerifiableAddress).TableName(),
+			new(identity.VerifiableAddress).TableName(ctx),
 		),
 		identity.VerifiableAddressStatusCompleted,
 		time.Now().UTC().Round(time.Second),
@@ -374,8 +375,8 @@ func (p *Persister) UpdateVerifiableAddress(ctx context.Context, address *identi
 	return sqlcon.HandleError(p.GetConnection(ctx).Update(address))
 }
 
-func (p *Persister) validateIdentity(i *identity.Identity) error {
-	if err := p.r.IdentityValidator().ValidateWithRunner(i); err != nil {
+func (p *Persister) validateIdentity(ctx context.Context, i *identity.Identity) error {
+	if err := p.r.IdentityValidator().ValidateWithRunner(ctx, i); err != nil {
 		if _, ok := errorsx.Cause(err).(*jsonschema.ValidationError); ok {
 			return errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
 		}
@@ -385,12 +386,12 @@ func (p *Persister) validateIdentity(i *identity.Identity) error {
 	return nil
 }
 
-func (p *Persister) injectTraitsSchemaURL(i *identity.Identity) error {
-	s, err := p.r.IdentityTraitsSchemas().GetByID(i.SchemaID)
+func (p *Persister) injectTraitsSchemaURL(ctx context.Context, i *identity.Identity) error {
+	s, err := p.r.IdentityTraitsSchemas(ctx).GetByID(i.SchemaID)
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf(
 			`The JSON Schema "%s" for this identity's traits could not be found.`, i.SchemaID))
 	}
-	i.SchemaURL = s.SchemaURL(p.cf.SelfPublicURL()).String()
+	i.SchemaURL = s.SchemaURL(p.r.Configuration(ctx).SelfPublicURL()).String()
 	return nil
 }

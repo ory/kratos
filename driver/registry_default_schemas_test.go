@@ -1,6 +1,7 @@
 package driver_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -27,7 +28,7 @@ func TestRegistryDefault_IdentityTraitsSchemas(t *testing.T) {
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, defaultSchema.RawURL)
 	conf.MustSet(config.ViperKeyIdentitySchemas, []config.SchemaConfig{{ID: altSchema.ID, URL: altSchema.RawURL}})
 
-	ss := reg.IdentityTraitsSchemas()
+	ss := reg.IdentityTraitsSchemas(context.Background())
 	assert.Equal(t, 2, len(ss))
 	assert.Contains(t, ss, defaultSchema)
 	assert.Contains(t, ss, altSchema)

@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var _ = pkger.Dir("/courier/template/templates")
+var _ = pkger.Dir("github.com/ory/kratos:/courier/template/templates")
 
 var cache, _ = lru.New(16)
 

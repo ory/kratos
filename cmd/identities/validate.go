@@ -2,7 +2,6 @@ package identities
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 
@@ -61,7 +60,7 @@ func validateIdentity(cmd *cobra.Command, src, i string, getRemoteSchema schemaG
 	swaggerSchema, ok := schemas[createIdentityPath]
 	if !ok {
 		// get swagger schema
-		sf, err := pkger.Open("/.schema/api.swagger.json")
+		sf, err := pkger.Open("github.com/ory/kratos:/.schema/api.swagger.json")
 		if err != nil {
 			return errors.Wrap(err, "Could not open swagger schema. This is an error with the binary you use and should be reported. Thanks ;)")
 		}
@@ -102,7 +101,7 @@ func validateIdentity(cmd *cobra.Command, src, i string, getRemoteSchema schemaG
 	customSchema, ok := schemas[sid.String()]
 	if !ok {
 		// get custom identity schema
-		ts, err := getRemoteSchema(&public.GetSchemaParams{ID: sid.String(), Context: context.Background()})
+		ts, err := getRemoteSchema(&public.GetSchemaParams{ID: sid.String(), Context: cmd.Context()})
 		if err != nil {
 			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%s: Could not fetch schema with ID \"%s\": %s\n", src, sid.String(), err)
 			return cmdx.FailSilently(cmd)

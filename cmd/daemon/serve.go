@@ -1,6 +1,7 @@
 package daemon
 
 import (
+	cx "context"
 	"net/http"
 	"strings"
 	"sync"
@@ -44,7 +45,7 @@ import (
 func servePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args []string) {
 	defer wg.Done()
 
-	c := r.Configuration()
+	c := r.Configuration(cmd.Context())
 	l := r.Logger()
 	n := negroni.New()
 
@@ -71,7 +72,7 @@ func servePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	}
 
 	var handler http.Handler = n
-	options, enabled := r.Configuration().CORS("public")
+	options, enabled := r.Configuration(cmd.Context()).CORS("public")
 	if enabled {
 		handler = cors.New(options).Handler(handler)
 	}
@@ -91,7 +92,7 @@ func servePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 func serveAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args []string) {
 	defer wg.Done()
 
-	c := r.Configuration()
+	c := r.Configuration(cmd.Context())
 	l := r.Logger()
 	n := negroni.New()
 
@@ -124,14 +125,14 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 	return metricsx.New(
 		cmd,
 		d.Logger(),
-		d.Configuration().Source(),
+		d.Configuration(cmd.Context()).Source(),
 		&metricsx.Options{
 			Service: "ory-kratos",
 			ClusterID: metricsx.Hash(
 				strings.Join([]string{
-					d.Configuration().DSN(),
-					d.Configuration().SelfPublicURL().String(),
-					d.Configuration().SelfAdminURL().String(),
+					d.Configuration(cmd.Context()).DSN(),
+					d.Configuration(cmd.Context()).SelfPublicURL().String(),
+					d.Configuration(cmd.Context()).SelfAdminURL().String(),
 				}, "|"),
 			),
 			IsDevelopment: flagx.MustGetBool(cmd, "dev"),
@@ -191,10 +192,18 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 func bgTasks(d driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args []string) {
 	defer wg.Done()
 
+	ctx, cancel := cx.WithCancel(cmd.Context())
+
 	d.Logger().Println("Courier worker started.")
-	if err := graceful.Graceful(d.Courier().Work, d.Courier().Shutdown); err != nil {
+	if err := graceful.Graceful(func() error {
+		return d.Courier().Work(ctx)
+	}, func(_ cx.Context) error {
+		cancel()
+		return nil
+	}); err != nil {
 		d.Logger().WithError(err).Fatalf("Failed to run courier worker.")
 	}
+
 	d.Logger().Println("Courier worker was shutdown gracefully.")
 }
 

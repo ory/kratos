@@ -1,7 +1,10 @@
 package link
 
 import (
+	"context"
 	"time"
+
+	"github.com/ory/kratos/corp/tablename"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
@@ -46,8 +49,8 @@ type VerificationToken struct {
 	FlowID uuid.NullUUID `json:"-" faker:"-" db:"selfservice_verification_flow_id"`
 }
 
-func (VerificationToken) TableName() string {
-	return "identity_verification_tokens"
+func (VerificationToken) TableName(ctx context.Context) string {
+	return tablename.Contextualize(ctx, "identity_verification_tokens")
 }
 
 func NewSelfServiceVerificationToken(address *identity.VerifiableAddress, f *verification.Flow) *VerificationToken {

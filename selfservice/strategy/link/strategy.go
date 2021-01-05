@@ -1,10 +1,10 @@
 package link
 
 import (
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/x/decoderx"
 
 	"github.com/ory/kratos/courier"
-	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
@@ -36,6 +36,8 @@ type (
 		x.WriterProvider
 		x.LoggingProvider
 
+		config.Providers
+
 		session.HandlerProvider
 		session.ManagementProvider
 		settings.HandlerProvider
@@ -62,16 +64,15 @@ type (
 		VerificationTokenPersistenceProvider
 		SenderProvider
 
-		IdentityTraitsSchemas() schema.Schemas
+		schema.IdentityTraitsProvider
 	}
 
 	Strategy struct {
-		c  *config.Provider
 		d  strategyDependencies
 		dx *decoderx.HTTP
 	}
 )
 
-func NewStrategy(d strategyDependencies, c *config.Provider) *Strategy {
-	return &Strategy{c: c, d: d, dx: decoderx.NewHTTP()}
+func NewStrategy(d strategyDependencies) *Strategy {
+	return &Strategy{d: d, dx: decoderx.NewHTTP()}
 }

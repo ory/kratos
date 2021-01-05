@@ -41,7 +41,6 @@ func NewSMTP(d smtpDependencies, c *config.Provider) *Courier {
 	uri := c.CourierSMTPURL()
 	password, _ := uri.User.Password()
 	port, _ := strconv.ParseInt(uri.Port(), 10, 64)
-	ctx, cancel := context.WithCancel(context.Background())
 
 	var ssl bool
 	var tlsConfig *tls.Config
@@ -53,10 +52,8 @@ func NewSMTP(d smtpDependencies, c *config.Provider) *Courier {
 	}
 
 	return &Courier{
-		d:        d,
-		c:        c,
-		ctx:      ctx,
-		shutdown: cancel,
+		d: d,
+		c: c,
 		Dialer: &gomail.Dialer{
 			/* #nosec we need to support SMTP servers without TLS */
 			TLSConfig:    tlsConfig,
@@ -100,26 +97,21 @@ func (m *Courier) QueueEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, e
 	return message.ID, nil
 }
 
-func (m *Courier) Work() error {
+func (m *Courier) Work(ctx context.Context) error {
 	errChan := make(chan error)
 	defer close(errChan)
 
-	go m.watchMessages(m.ctx, errChan)
+	go m.watchMessages(ctx, errChan)
 
 	select {
-	case <-m.ctx.Done():
-		if errors.Is(m.ctx.Err(), context.Canceled) {
+	case <-ctx.Done():
+		if errors.Is(ctx.Err(), context.Canceled) {
 			return nil
 		}
-		return m.ctx.Err()
+		return ctx.Err()
 	case err := <-errChan:
 		return err
 	}
-}
-
-func (m *Courier) Shutdown(ctx context.Context) error {
-	m.shutdown()
-	return nil
 }
 
 func (m *Courier) watchMessages(ctx context.Context, errChan chan error) {

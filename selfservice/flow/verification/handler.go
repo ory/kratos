@@ -30,22 +30,23 @@ type (
 		errorx.ManagementProvider
 		identity.ManagementProvider
 		identity.PrivilegedPoolProvider
+		config.Providers
+
 		x.CSRFTokenGeneratorProvider
 		x.WriterProvider
+		x.CSRFProvider
 
 		FlowPersistenceProvider
 		ErrorHandlerProvider
 		StrategyProvider
-		x.CSRFProvider
 	}
 	Handler struct {
 		d handlerDependencies
-		c *config.Provider
 	}
 )
 
-func NewHandler(d handlerDependencies, c *config.Provider) *Handler {
-	return &Handler{c: c, d: d}
+func NewHandler(d handlerDependencies) *Handler {
+	return &Handler{d: d}
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
@@ -87,7 +88,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //       500: genericError
 //       400: genericError
 func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	req, err := NewFlow(h.c.SelfServiceFlowVerificationRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.VerificationStrategies(), flow.TypeAPI)
+	req, err := NewFlow(h.d.Configuration(r.Context()).SelfServiceFlowVerificationRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.VerificationStrategies(), flow.TypeAPI)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
@@ -118,7 +119,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //       302: emptyResponse
 //       500: genericError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	req, err := NewFlow(h.c.SelfServiceFlowVerificationRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.VerificationStrategies(), flow.TypeBrowser)
+	req, err := NewFlow(h.d.Configuration(r.Context()).SelfServiceFlowVerificationRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.VerificationStrategies(), flow.TypeBrowser)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
@@ -129,7 +130,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	http.Redirect(w, r, req.AppendTo(h.c.SelfServiceFlowVerificationUI()).String(), http.StatusFound)
+	http.Redirect(w, r, req.AppendTo(h.d.Configuration(r.Context()).SelfServiceFlowVerificationUI()).String(), http.StatusFound)
 }
 
 // nolint:deadcode,unused
@@ -175,12 +176,12 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 		if req.Type == flow.TypeBrowser {
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 				WithReason("The verification flow has expired. Redirect the user to the verification flow init endpoint to initialize a new verification flow.").
-				WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), RouteInitBrowserFlow).String())))
+				WithDetail("redirect_to", urlx.AppendPaths(h.d.Configuration(r.Context()).SelfPublicURL(), RouteInitBrowserFlow).String())))
 			return
 		}
 		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 			WithReason("The verification flow has expired. Call the verification flow init API endpoint to initialize a new verification flow.").
-			WithDetail("api", urlx.AppendPaths(h.c.SelfPublicURL(), RouteInitAPIFlow).String())))
+			WithDetail("api", urlx.AppendPaths(h.d.Configuration(r.Context()).SelfPublicURL(), RouteInitAPIFlow).String())))
 		return
 	}
 

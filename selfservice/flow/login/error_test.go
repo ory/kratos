@@ -18,10 +18,10 @@ import (
 
 	"github.com/ory/herodot"
 
-	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
 	sdkp "github.com/ory/kratos-client-go/client/public"
 	"github.com/ory/kratos-client-go/models"
+	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"

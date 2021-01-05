@@ -20,6 +20,12 @@ import (
 
 const UnsetDefaultIdentitySchema = "file://not-set.schema.json"
 
+func init() {
+	dbal.RegisterDriver(func() dbal.Driver {
+		return driver.NewRegistryDefault()
+	})
+}
+
 func NewConfigurationWithDefaults() *config.Provider {
 	c := config.MustNew(logrusx.New("", ""),
 		configx.WithValues(map[string]interface{}{
@@ -62,7 +68,7 @@ func NewRegistryDefaultWithDSN(t *testing.T, dsn string) (*config.Provider, *dri
 
 	reg, err := driver.NewRegistryFromDSN(c, logrusx.New("", ""))
 	require.NoError(t, err)
-	reg.Configuration().MustSet("dev", true)
-	require.NoError(t, reg.Init())
+	reg.Configuration(context.Background()).MustSet("dev", true)
+	require.NoError(t, reg.Init(context.Background()))
 	return c, reg.(*driver.RegistryDefault)
 }

@@ -1,9 +1,12 @@
 package settings
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/ory/kratos/corp/tablename"
 
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
@@ -133,8 +136,8 @@ func NewFlow(exp time.Duration, r *http.Request, i *identity.Identity, ft flow.T
 	}
 }
 
-func (r Flow) TableName() string {
-	return "selfservice_settings_flows"
+func (r Flow) TableName(ctx context.Context) string {
+	return tablename.Contextualize(ctx, "selfservice_settings_flows")
 }
 
 func (r *Flow) GetID() uuid.UUID {

@@ -36,11 +36,12 @@ func TestFlowPersister(conf *config.Provider, p interface {
 		r.ID = uuid.UUID{}
 	}
 
+	ctx := context.Background()
 	return func(t *testing.T) {
 		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 
 		t.Run("case=should error when the recovery request does not exist", func(t *testing.T) {
-			_, err := p.GetRecoveryFlow(context.Background(), x.NewUUID())
+			_, err := p.GetRecoveryFlow(ctx, x.NewUUID())
 			require.Error(t, err)
 		})
 
@@ -53,22 +54,22 @@ func TestFlowPersister(conf *config.Provider, p interface {
 
 		t.Run("case=should create a new recovery request", func(t *testing.T) {
 			r := newFlow(t)
-			err := p.CreateRecoveryFlow(context.Background(), r)
+			err := p.CreateRecoveryFlow(ctx, r)
 			require.NoError(t, err, "%#v", err)
 		})
 
 		t.Run("case=should create with set ids", func(t *testing.T) {
 			var r Flow
 			require.NoError(t, faker.FakeData(&r))
-			require.NoError(t, p.CreateRecoveryFlow(context.Background(), &r))
+			require.NoError(t, p.CreateRecoveryFlow(ctx, &r))
 		})
 
 		t.Run("case=should create and fetch a recovery request", func(t *testing.T) {
 			expected := newFlow(t)
-			err := p.CreateRecoveryFlow(context.Background(), expected)
+			err := p.CreateRecoveryFlow(ctx, expected)
 			require.NoError(t, err)
 
-			actual, err := p.GetRecoveryFlow(context.Background(), expected.ID)
+			actual, err := p.GetRecoveryFlow(ctx, expected.ID)
 			require.NoError(t, err)
 
 			fexpected, _ := json.Marshal(expected.Methods[StrategyRecoveryLinkName].Config)
@@ -90,7 +91,7 @@ func TestFlowPersister(conf *config.Provider, p interface {
 			expected.Methods["password"] = &FlowMethod{
 				Method: "password", Config: &FlowMethodConfig{FlowMethodConfigurator: &form.HTMLForm{Fields: []form.Field{{
 					Name: "foo", Type: "bar", Pattern: "baz"}}}}}
-			err := p.CreateRecoveryFlow(context.Background(), expected)
+			err := p.CreateRecoveryFlow(ctx, expected)
 			require.NoError(t, err)
 
 			expected.Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action = "/new-action"
@@ -99,9 +100,9 @@ func TestFlowPersister(conf *config.Provider, p interface {
 			expected.RequestURL = "/new-request-url"
 			expected.Active = StrategyRecoveryLinkName
 			expected.Messages.Add(text.NewRecoveryEmailSent())
-			require.NoError(t, p.UpdateRecoveryFlow(context.Background(), expected))
+			require.NoError(t, p.UpdateRecoveryFlow(ctx, expected))
 
-			actual, err := p.GetRecoveryFlow(context.Background(), expected.ID)
+			actual, err := p.GetRecoveryFlow(ctx, expected.ID)
 			require.NoError(t, err)
 
 			assert.Equal(t, "/new-action", actual.Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action)
@@ -116,16 +117,16 @@ func TestFlowPersister(conf *config.Provider, p interface {
 
 		t.Run("case=should not cause data loss when updating a request without changes", func(t *testing.T) {
 			expected := newFlow(t)
-			err := p.CreateRecoveryFlow(context.Background(), expected)
+			err := p.CreateRecoveryFlow(ctx, expected)
 			require.NoError(t, err)
 
-			actual, err := p.GetRecoveryFlow(context.Background(), expected.ID)
+			actual, err := p.GetRecoveryFlow(ctx, expected.ID)
 			require.NoError(t, err)
 			assert.Len(t, actual.Methods, 1)
 
-			require.NoError(t, p.UpdateRecoveryFlow(context.Background(), actual))
+			require.NoError(t, p.UpdateRecoveryFlow(ctx, actual))
 
-			actual, err = p.GetRecoveryFlow(context.Background(), expected.ID)
+			actual, err = p.GetRecoveryFlow(ctx, expected.ID)
 			require.NoError(t, err)
 			require.Len(t, actual.Methods, 1)
 

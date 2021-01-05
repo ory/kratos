@@ -18,11 +18,11 @@ func (p *Persister) Transaction(ctx context.Context, callback func(ctx context.C
 	c := ctx.Value(transactionKey)
 	if c != nil {
 		if conn, ok := c.(*pop.Connection); ok {
-			return callback(ctx, conn)
+			return callback(ctx, conn.WithContext(ctx))
 		}
 	}
 
-	return p.c.Transaction(func(tx *pop.Connection) error {
+	return p.c.WithContext(ctx).Transaction(func(tx *pop.Connection) error {
 		return callback(WithTransaction(ctx, tx), tx)
 	})
 }
@@ -31,8 +31,8 @@ func (p *Persister) GetConnection(ctx context.Context) *pop.Connection {
 	c := ctx.Value(transactionKey)
 	if c != nil {
 		if conn, ok := c.(*pop.Connection); ok {
-			return conn
+			return conn.WithContext(ctx)
 		}
 	}
-	return p.c
+	return p.c.WithContext(ctx)
 }
