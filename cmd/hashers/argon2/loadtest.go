@@ -128,6 +128,7 @@ func newLoadTestCmd() *cobra.Command {
 				eg.Go(func(i int) func() error {
 					return func() error {
 						// wait randomly before starting, max. 1 minute
+						// #nosec G404 - just a timeout to collect statistical data
 						time.Sleep(time.Duration(rand.Intn(int(time.Minute))))
 
 						start := time.Now()

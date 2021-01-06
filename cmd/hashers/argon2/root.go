@@ -96,25 +96,3 @@ func (c *argon2Config) HasherArgon2() *config.HasherArgon2Config {
 func (c *argon2Config) getMemFormat() string {
 	return (bytesize.ByteSize(c.c.Memory) * bytesize.KB).String()
 }
-
-func (c *argon2Config) mergeFrom(cc *config.HasherArgon2Config) *argon2Config {
-	zero := config.HasherArgon2Config{}
-
-	if cc.Iterations != zero.Iterations {
-		c.c.Iterations = cc.Iterations
-	}
-	if cc.KeyLength != zero.KeyLength {
-		c.c.KeyLength = cc.KeyLength
-	}
-	if cc.SaltLength != zero.SaltLength {
-		c.c.SaltLength = cc.SaltLength
-	}
-	if cc.Parallelism != zero.Parallelism {
-		c.c.Parallelism = cc.Parallelism
-	}
-	if cc.Memory != zero.Memory {
-		c.c.Memory = cc.Memory
-	}
-
-	return c
-}
