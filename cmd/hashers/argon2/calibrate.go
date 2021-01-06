@@ -3,8 +3,9 @@ package argon2
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/ory/x/cmdx"
 	"time"
+
+	"github.com/ory/x/cmdx"
 
 	"github.com/fatih/color"
 	"github.com/inhies/go-bytesize"

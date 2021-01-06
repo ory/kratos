@@ -8,8 +8,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/ory/kratos/cmd/cliclient"
 	"github.com/ory/kratos-client-go/client/admin"
+	"github.com/ory/kratos/cmd/cliclient"
 )
 
 var ListCmd = &cobra.Command{

@@ -2,13 +2,15 @@ package argon2
 
 import (
 	"fmt"
+
 	"github.com/inhies/go-bytesize"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/x/cmdx"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/logrusx"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
 const (

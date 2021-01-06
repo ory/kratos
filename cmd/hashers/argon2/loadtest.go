@@ -2,18 +2,20 @@ package argon2
 
 import (
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/inhies/go-bytesize"
-	"github.com/montanaflynn/stats"
-	"github.com/ory/kratos/hash"
-	"github.com/ory/x/cmdx"
-	"github.com/ory/x/configx"
-	"github.com/spf13/cobra"
-	"golang.org/x/sync/errgroup"
 	"math/rand"
 	"runtime"
 	"strconv"
 	"time"
+
+	"github.com/fatih/color"
+	"github.com/inhies/go-bytesize"
+	"github.com/montanaflynn/stats"
+	"github.com/spf13/cobra"
+	"golang.org/x/sync/errgroup"
+
+	"github.com/ory/kratos/hash"
+	"github.com/ory/x/cmdx"
+	"github.com/ory/x/configx"
 )
 
 type resultTable struct {

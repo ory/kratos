@@ -17,10 +17,10 @@ import (
 
 	"github.com/ory/x/urlx"
 
+	sdkp "github.com/ory/kratos-client-go/client/public"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
-	sdkp "github.com/ory/kratos-client-go/client/public"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"

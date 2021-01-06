@@ -2,12 +2,14 @@ package argon2
 
 import (
 	"fmt"
+	"time"
+
+	"github.com/spf13/cobra"
+
 	"github.com/ory/kratos/hash"
 	"github.com/ory/x/cmdx"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/flagx"
-	"github.com/spf13/cobra"
-	"time"
 )
 
 const (
@@ -44,7 +46,7 @@ func newHashCmd() *cobra.Command {
 				}(i, pw)
 
 				if !flagx.MustGetBool(cmd, FlagParallel) {
-					if err := <- errs; err != nil {
+					if err := <-errs; err != nil {
 						_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Could not generate hash: %s\n", err.Error())
 						return cmdx.FailSilently(cmd)
 					}
@@ -53,7 +55,7 @@ func newHashCmd() *cobra.Command {
 
 			if flagx.MustGetBool(cmd, FlagParallel) {
 				for i := 0; i < len(args); i++ {
-					if err := <- errs; err != nil {
+					if err := <-errs; err != nil {
 						_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Could not generate hash: %s\n", err.Error())
 						return cmdx.FailSilently(cmd)
 					}
