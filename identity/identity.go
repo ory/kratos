@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ory/kratos/corp/tablename"
+	"github.com/ory/kratos/corp"
 
 	"github.com/ory/herodot"
 	"github.com/ory/x/sqlxx"
@@ -117,7 +117,7 @@ func (t *Traits) UnmarshalJSON(data []byte) error {
 }
 
 func (i Identity) TableName(ctx context.Context) string {
-	return tablename.Contextualize(ctx, "identities")
+	return corp.ContextualizeTableName(ctx, "identities")
 }
 
 func (i *Identity) lock() *sync.RWMutex {

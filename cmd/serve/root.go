@@ -16,7 +16,6 @@ package serve
 
 import (
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal/clihelpers"
 	"github.com/ory/x/configx"
 
 	"github.com/spf13/cobra"
@@ -45,9 +44,9 @@ DON'T DO THIS IN PRODUCTION!
 		configVersion := d.Configuration(cmd.Context()).ConfigVersion()
 		if configVersion == config.UnknownVersion {
 			d.Logger().Warn("The config has no version specified. Add the version to improve your development experience.")
-		} else if clihelpers.BuildVersion != "" &&
-			configVersion != clihelpers.BuildVersion {
-			d.Logger().Warnf("Config version is '%s' but kratos runs on version '%s'", configVersion, clihelpers.BuildVersion)
+		} else if config.Version != "" &&
+			configVersion != config.Version {
+			d.Logger().Warnf("Config version is '%s' but kratos runs on version '%s'", configVersion, config.Version)
 		}
 
 		daemon.ServeAll(d)(cmd, args)

@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/ory/kratos/corp/tablename"
+	"github.com/ory/kratos/corp"
 
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
@@ -118,7 +118,7 @@ func (f *Flow) AfterFind(_ *pop.Connection) error {
 }
 
 func (f Flow) TableName(ctx context.Context) string {
-	return tablename.Contextualize(ctx, "selfservice_registration_flows")
+	return corp.ContextualizeTableName(ctx, "selfservice_registration_flows")
 }
 
 func (f *Flow) GetID() uuid.UUID {

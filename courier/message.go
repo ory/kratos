@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/ory/kratos/corp/tablename"
+	"github.com/ory/kratos/corp"
 
 	"github.com/gofrs/uuid"
 )
@@ -37,5 +37,5 @@ type Message struct {
 }
 
 func (m Message) TableName(ctx context.Context) string {
-	return tablename.Contextualize(ctx, "courier_messages")
+	return corp.ContextualizeTableName(ctx, "courier_messages")
 }

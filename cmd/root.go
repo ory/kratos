@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/ory/kratos/driver/config"
+
 	"github.com/ory/kratos/cmd/hashers"
 
 	"github.com/ory/kratos/cmd/remote"
@@ -13,7 +15,6 @@ import (
 	"github.com/ory/kratos/cmd/jsonnet"
 	"github.com/ory/kratos/cmd/migrate"
 	"github.com/ory/kratos/cmd/serve"
-	"github.com/ory/kratos/internal/clihelpers"
 	"github.com/ory/x/cmdx"
 
 	"github.com/spf13/cobra"
@@ -45,5 +46,5 @@ func init() {
 	remote.RegisterCommandRecursive(RootCmd)
 	hashers.RegisterCommandRecursive(RootCmd)
 
-	RootCmd.AddCommand(cmdx.Version(&clihelpers.BuildVersion, &clihelpers.BuildGitHash, &clihelpers.BuildTime))
+	RootCmd.AddCommand(cmdx.Version(&config.Version, &config.Commit, &config.Date))
 }

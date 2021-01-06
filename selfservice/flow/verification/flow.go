@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/ory/kratos/corp/tablename"
+	"github.com/ory/kratos/corp"
 
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
@@ -89,7 +89,7 @@ type Flow struct {
 }
 
 func (f Flow) TableName(ctx context.Context) string {
-	return tablename.Contextualize(ctx, "selfservice_verification_flows")
+	return corp.ContextualizeTableName(ctx, "selfservice_verification_flows")
 }
 
 func NewFlow(exp time.Duration, csrf string, r *http.Request, strategies Strategies, ft flow.Type) (*Flow, error) {

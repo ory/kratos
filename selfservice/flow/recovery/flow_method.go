@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/ory/kratos/corp/tablename"
+	"github.com/ory/kratos/corp"
 
 	"github.com/ory/x/sqlxx"
 
@@ -44,13 +44,13 @@ type FlowMethod struct {
 }
 
 func (u FlowMethod) TableName(ctx context.Context) string {
-	return tablename.Contextualize(ctx, "selfservice_recovery_flow_methods")
+	return corp.ContextualizeTableName(ctx, "selfservice_recovery_flow_methods")
 }
 
 type FlowMethods map[string]*FlowMethod
 
 func (u FlowMethods) TableName(ctx context.Context) string {
-	return tablename.Contextualize(ctx, "selfservice_recovery_flow_methods")
+	return corp.ContextualizeTableName(ctx, "selfservice_recovery_flow_methods")
 }
 
 // swagger:ignore
