@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/ory/kratos/corp/tablename"
+	"github.com/ory/kratos/corp"
 
 	"github.com/gofrs/uuid"
 
@@ -90,23 +90,23 @@ type (
 )
 
 func (c CredentialsTypeTable) TableName(ctx context.Context) string {
-	return tablename.Contextualize(ctx, "identity_credential_types")
+	return corp.ContextualizeTableName(ctx, "identity_credential_types")
 }
 
 func (c CredentialsCollection) TableName(ctx context.Context) string {
-	return tablename.Contextualize(ctx, "identity_credentials")
+	return corp.ContextualizeTableName(ctx, "identity_credentials")
 }
 
 func (c Credentials) TableName(ctx context.Context) string {
-	return tablename.Contextualize(ctx, "identity_credentials")
+	return corp.ContextualizeTableName(ctx, "identity_credentials")
 }
 
 func (c CredentialIdentifierCollection) TableName(ctx context.Context) string {
-	return tablename.Contextualize(ctx, "identity_credential_identifiers")
+	return corp.ContextualizeTableName(ctx, "identity_credential_identifiers")
 }
 
 func (c CredentialIdentifier) TableName(ctx context.Context) string {
-	return tablename.Contextualize(ctx, "identity_credential_identifiers")
+	return corp.ContextualizeTableName(ctx, "identity_credential_identifiers")
 }
 
 func CredentialsEqual(a, b map[CredentialsType]Credentials) bool {

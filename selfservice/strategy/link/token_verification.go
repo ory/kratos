@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/ory/kratos/corp/tablename"
+	"github.com/ory/kratos/corp"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
@@ -50,7 +50,7 @@ type VerificationToken struct {
 }
 
 func (VerificationToken) TableName(ctx context.Context) string {
-	return tablename.Contextualize(ctx, "identity_verification_tokens")
+	return corp.ContextualizeTableName(ctx, "identity_verification_tokens")
 }
 
 func NewSelfServiceVerificationToken(address *identity.VerifiableAddress, f *verification.Flow) *VerificationToken {

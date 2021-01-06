@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/ory/kratos/corp/tablename"
+	"github.com/ory/kratos/corp"
 
 	"github.com/gofrs/uuid"
 	errors "github.com/pkg/errors"
@@ -50,7 +50,7 @@ type RecoveryToken struct {
 }
 
 func (RecoveryToken) TableName(ctx context.Context) string {
-	return tablename.Contextualize(ctx, "identity_recovery_tokens")
+	return corp.ContextualizeTableName(ctx, "identity_recovery_tokens")
 }
 
 func NewSelfServiceRecoveryToken(address *identity.RecoveryAddress, f *recovery.Flow) *RecoveryToken {

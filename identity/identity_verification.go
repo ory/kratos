@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/ory/kratos/corp/tablename"
+	"github.com/ory/kratos/corp"
 
 	"github.com/gofrs/uuid"
 
@@ -62,7 +62,7 @@ func (v VerifiableAddressType) HTMLFormInputType() string {
 }
 
 func (a VerifiableAddress) TableName(ctx context.Context) string {
-	return tablename.Contextualize(ctx, "identity_verifiable_addresses")
+	return corp.ContextualizeTableName(ctx, "identity_verifiable_addresses")
 }
 
 func NewVerifiableEmailAddress(value string, identity uuid.UUID) *VerifiableAddress {
