@@ -40,7 +40,7 @@ func newCalibrateCmd() *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:   "calibrate [<desired-duration>]",
+		Use:   "calibrate <desired-duration> <requests-per-minute>",
 		Args:  cobra.ExactArgs(1),
 		Short: "Computes Optimal Argon2 Parameters.",
 		Long: `This command helps you calibrate the configuration parameters for Argon2. Password hashing is a trade-off between security, resource consumption, and user experience. Resource consumption should not be too high and the login should not take too long.
@@ -201,23 +201,15 @@ Please note that the values depend on the machine you run the hashing on. If you
 
 func probe(cmd *cobra.Command, hasher hash.Hasher, runs int, quiet bool) (time.Duration, error) {
 	start := time.Now()
-	//concurrent := flagx.MustGetUint8(cmd, FlagMaxConcurrent)
 
 	var mid time.Time
 	for i := 0; i < runs; i++ {
-		//errs := make(chan error, concurrent)
-
 		mid = time.Now()
-		//for j := 0; j < concurrent; j-- {
-		//	go func() {
 		_, err := hasher.Generate([]byte("password"))
 		if err != nil {
 			fmt.Fprintf(cmd.ErrOrStderr(), "Could not generate a hash: %s\n", err)
 			return 0, cmdx.FailSilently(cmd)
 		}
-		//	}()
-		//
-		//}
 
 		if !quiet {
 			fmt.Fprintf(cmd.OutOrStdout(), "    took %s in try %d\n", time.Since(mid), i)
