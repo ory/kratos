@@ -1149,6 +1149,7 @@ github.com/ory/herodot v0.9.0 h1:p/V+68/5CWmqEmbSVaLusDBECMt9xJjLtklqU/O63HM=
 github.com/ory/herodot v0.9.0/go.mod h1:GYF7mp8/WFRYDYJBR989lipjgx3NTjjdVdUC+hpB8mc=
 github.com/ory/jsonschema/v3 v3.0.1 h1:xzV7w2rt/Qn+jvh71joIXNKKOCqqNyTlaIxdxU0IQJc=
 github.com/ory/jsonschema/v3 v3.0.1/go.mod h1:jgLHekkFk0uiGdEWGleC+tOm6JSSP8cbf17PnBuGXlw=
+github.com/ory/kratos v0.5.5-alpha.1/go.mod h1:pqr5H6NOA90FxsviyJUj9WOCnXnslLmZvcTYx4GtQiw=
 github.com/ory/kratos v0.5.5-alpha.1.pre.1/go.mod h1:pqr5H6NOA90FxsviyJUj9WOCnXnslLmZvcTYx4GtQiw=
 github.com/ory/mail v2.3.1+incompatible h1:vHntHDHtQXamt2T+iwTTlCoBkDvILUeujE9Ocwe9md4=
 github.com/ory/mail v2.3.1+incompatible/go.mod h1:87D9/1gB6ewElQoN0lXJ0ayfqcj3cW3qCTXh+5E9mfU=

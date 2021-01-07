@@ -125,7 +125,7 @@ jobs:
       - image: circleci/golang:1.15-node
         environment:
           GO111MODULE: 'on'
-    working_directory: /go/src/github.com/ory/hydra
+    working_directory: /go/src/github.com/ory/kratos
     steps:
       - checkout
       - golangci/lint
@@ -133,6 +133,23 @@ jobs:
       - run: |
           bash <(curl -s https://raw.githubusercontent.com/ory/ci/master/src/scripts/install/prettier.sh)
           npm run format:check
+
+  nancy:
+    docker:
+      - image: circleci/golang:1.15-node
+        environment:
+          GO111MODULE: 'on'
+    working_directory: /go/src/github.com/ory/kratos
+    steps:
+      - checkout
+      - run: |
+          set -euxo
+
+          # install nancy
+          curl -L -o $GOPATH/bin/nancy https://github.com/sonatype-nexus-community/nancy/releases/download/v1.0.5/nancy-linux.amd64-v1.0.5 && chmod +x $GOPATH/bin/nancy
+
+          # run nancy but without the internal client rewrite
+          go list -m all | sed -r 's/ => .\/internal\/httpclient//' | nancy sleuth --quiet
 
 workflows:
   tbr:
