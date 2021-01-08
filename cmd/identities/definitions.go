@@ -19,7 +19,7 @@ func (_ *outputIdentity) Header() []string {
 	return []string{"ID", "VERIFIED ADDRESSES", "RECOVERY ADDRESSES", "SCHEMA ID", "SCHEMA URL"}
 }
 
-func (i *outputIdentity) Fields() []string {
+func (i *outputIdentity) Columns() []string {
 	data := [5]string{
 		string(i.ID),
 		cmdx.None,

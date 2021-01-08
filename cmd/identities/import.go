@@ -61,7 +61,7 @@ WARNING: Importing credentials is not yet supported.`,
 		if len(imported) == 1 {
 			cmdx.PrintRow(cmd, (*outputIdentity)(imported[0]))
 		} else {
-			cmdx.PrintCollection(cmd, &outputIdentityCollection{identities: imported})
+			cmdx.PrintTable(cmd, &outputIdentityCollection{identities: imported})
 		}
 		cmdx.PrintErrors(cmd, failed)
 

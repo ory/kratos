@@ -31,7 +31,7 @@ require (
 	github.com/go-swagger/go-swagger v0.25.0
 	github.com/gobuffalo/fizz v1.13.1-0.20200903094245-046abeb7de46
 	github.com/gobuffalo/httptest v1.0.2
-	github.com/gobuffalo/pop/v5 v5.3.2-0.20210104192954-5d69084434a8
+	github.com/gobuffalo/pop/v5 v5.3.2-0.20210108121026-333700c8729e
 	github.com/gobuffalo/uuid v2.0.5+incompatible
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
@@ -64,7 +64,7 @@ require (
 	github.com/ory/kratos/corp v0.0.0-00010101000000-000000000000
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.3
-	github.com/ory/x v0.0.170
+	github.com/ory/x v0.0.172-0.20210108121926-7e60f0881220
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.4.0
