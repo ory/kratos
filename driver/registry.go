@@ -56,7 +56,7 @@ type Registry interface {
 	RegisterPublicRoutes(public *x.RouterPublic)
 	RegisterAdminRoutes(admin *x.RouterAdmin)
 	PrometheusManager() *prometheus.MetricsManager
-	Tracer() *tracing.Tracer
+	Tracer(context.Context) *tracing.Tracer
 
 	config.Providers
 	WithConfig(c *config.Provider) Registry

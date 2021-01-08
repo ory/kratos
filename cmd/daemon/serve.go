@@ -2,6 +2,7 @@ package daemon
 
 import (
 	cx "context"
+	"github.com/ory/x/reqlog"
 	"net/http"
 	"strings"
 	"sync"
@@ -87,10 +88,10 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	n.UseHandler(r.CSRFHandler())
 
 	r.RegisterPublicRoutes(router)
-	n.Use(NewNegroniLoggerMiddleware(l, "public#"+c.SelfPublicURL().String()))
+	n.Use(reqlog.NewMiddlewareFromLogger(l, "public#"+c.SelfPublicURL().String()))
 	n.Use(sqa(cmd, r))
 
-	if tracer := r.Tracer(); tracer.IsLoaded() {
+	if tracer := r.Tracer(cmd.Context()); tracer.IsLoaded() {
 		n.Use(tracer)
 	}
 
@@ -125,11 +126,11 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 
 	router := x.NewRouterAdmin()
 	r.RegisterAdminRoutes(router)
-	n.Use(NewNegroniLoggerMiddleware(l, "admin#"+c.SelfAdminURL().String()))
+	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+c.SelfPublicURL().String()))
 	n.Use(sqa(cmd, r))
 	n.Use(r.PrometheusManager())
 
-	if tracer := r.Tracer(); tracer.IsLoaded() {
+	if tracer := r.Tracer(cmd.Context()); tracer.IsLoaded() {
 		n.Use(tracer)
 	}
 

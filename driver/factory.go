@@ -24,7 +24,7 @@ func New(ctx context.Context, opts ...configx.OptionModifier) Registry {
 		l.WithError(err).Fatal("Unable to initialize service registry.")
 	}
 
-	c.Source().SetTracer(ctx, r.Tracer())
+	c.Source().SetTracer(ctx, r.Tracer(ctx))
 
 	return r
 }
