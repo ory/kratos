@@ -27,4 +27,19 @@ context('Login Flow Success', () => {
       expect(identity.traits.email).to.equal(email)
     })
   })
+
+  it('should sign in with case insensitive identifier', () => {
+    cy.get('input[name="identifier"]').type(email.toUpperCase())
+    cy.get('input[name="password"]').type(password)
+    cy.get('button[type="submit"]').click()
+
+    cy.session().should((session) => {
+      const { identity } = session
+      expect(identity.id).to.not.be.empty
+      expect(identity.schema_id).to.equal('default')
+      expect(identity.schema_url).to.equal(`${APP_URL}/schemas/default`)
+      expect(identity.traits.website).to.equal(website)
+      expect(identity.traits.email).to.equal(email)
+    })
+  })
 })
