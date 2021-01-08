@@ -2,6 +2,7 @@ package driver
 
 import (
 	"context"
+	"github.com/ory/kratos/corp"
 	"net/http"
 	"strings"
 	"sync"
@@ -230,11 +231,11 @@ func (m *RegistryDefault) CSRFHandler() x.CSRFHandler {
 	return m.nosurf
 }
 
-func (m *RegistryDefault) Configuration(_ context.Context) *config.Provider {
+func (m *RegistryDefault) Configuration(ctx context.Context) *config.Provider {
 	if m.c == nil {
 		panic("configuration not set")
 	}
-	return m.c
+	return corp.ContextualizeConfig(ctx, m.c)
 }
 
 func (m *RegistryDefault) selfServiceStrategies() []interface{} {
@@ -402,10 +403,10 @@ func (m *RegistryDefault) ContinuityCookieManager(ctx context.Context) sessions.
 	return cs
 }
 
-func (m *RegistryDefault) Tracer() *tracing.Tracer {
+func (m *RegistryDefault) Tracer(ctx context.Context) *tracing.Tracer {
 	if m.trc == nil {
 		// Tracing is initialized only once so it can not be hot reloaded or context-aware.
-		t, err := tracing.New(m.l, m.Configuration(config.RootContext).Tracing())
+		t, err := tracing.New(m.l, m.Configuration(ctx).Tracing())
 		if err != nil {
 			m.Logger().WithError(err).Fatalf("Unable to initialize Tracer.")
 		}
