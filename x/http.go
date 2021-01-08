@@ -70,3 +70,20 @@ func (ct *TransportWithHeader) RoundTrip(req *http.Request) (*http.Response, err
 	}
 	return ct.RoundTripper.RoundTrip(req)
 }
+
+func NewTransportWithHost(host string) *TransportWithHost {
+	return &TransportWithHost{
+		RoundTripper: http.DefaultTransport,
+		host:         host,
+	}
+}
+
+type TransportWithHost struct {
+	http.RoundTripper
+	host string
+}
+
+func (ct *TransportWithHost) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Host = ct.host
+	return ct.RoundTripper.RoundTrip(req)
+}
