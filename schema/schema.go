@@ -1,6 +1,11 @@
 package schema
 
 import (
+	_ "github.com/ory/jsonschema/v3/fileloader"
+	_ "github.com/ory/jsonschema/v3/httploader"
+)
+
+import (
 	"context"
 	"io/ioutil"
 	"net/url"

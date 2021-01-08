@@ -14,8 +14,6 @@ import (
 
 	"github.com/ory/x/errorsx"
 
-	_ "github.com/ory/jsonschema/v3/fileloader"
-	_ "github.com/ory/jsonschema/v3/httploader"
 	"github.com/ory/x/decoderx"
 
 	"github.com/ory/kratos/driver/config"
