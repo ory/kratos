@@ -1,11 +1,6 @@
 package schema
 
 import (
-	_ "github.com/ory/jsonschema/v3/fileloader"
-	_ "github.com/ory/jsonschema/v3/httploader"
-)
-
-import (
 	"context"
 	"io/ioutil"
 	"net/url"
@@ -17,6 +12,8 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/jsonschema/v3"
+	_ "github.com/ory/jsonschema/v3/fileloader"
+	_ "github.com/ory/jsonschema/v3/httploader"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/x/urlx"
 )

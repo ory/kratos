@@ -2,11 +2,12 @@ package driver
 
 import (
 	"context"
-	"github.com/ory/kratos/corp"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/ory/kratos/corp"
 
 	"github.com/ory/kratos/metrics/prometheus"
 
