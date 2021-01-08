@@ -2,10 +2,11 @@ package daemon
 
 import (
 	cx "context"
-	"github.com/ory/x/reqlog"
 	"net/http"
 	"strings"
 	"sync"
+
+	"github.com/ory/x/reqlog"
 
 	"github.com/ory/kratos/driver/config"
 

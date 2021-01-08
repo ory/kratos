@@ -18,7 +18,7 @@ func (s *statusState) Header() []string {
 	return []string{"ALIVE", "READY"}
 }
 
-func (s *statusState) Fields() []string {
+func (s *statusState) Columns() []string {
 	f := [2]string{
 		"false",
 		"false",
