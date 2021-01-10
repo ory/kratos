@@ -153,10 +153,9 @@ configuration file (explained in further detail at
 :::note
 
 Slack does not implement OpenID Connect. Therefore, ORY Kratos makes a request
-to
-[Slack's Oauth2 API](https://api.slack.com/methods/users.identity)
-and adds that data to `std.extVar('claims')`. However, not all fields are
-supported. Check the list of supported fields
+to [Slack's Oauth2 API](https://api.slack.com/methods/users.identity) and adds
+that data to `std.extVar('claims')`. However, not all fields are supported.
+Check the list of supported fields
 [in Kratos' source code](https://github.com/ory/kratos/blob/master/selfservice/strategy/oidc/provider_slack.go).
 
 The `identity.basic` scope will add following fields:
@@ -335,7 +334,7 @@ While you can use
 GitLab only returns the sub and sub_legacy claims in the ID token. Therefore,
 ORY Kratos makes a request to
 [GitLab's /oauth/userinfo API](https://gitlab.com/oauth/userinfo) and adds the
-user info to `std.extVar('claims')`. 
+user info to `std.extVar('claims')`.
 
 :::
 
