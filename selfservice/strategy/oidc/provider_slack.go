@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/ory/herodot"
+
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 
-	"github.com/ory/herodot"
 	"github.com/ory/x/stringslice"
 	"github.com/ory/x/stringsx"
+
+	"github.com/slack-go/slack"
 )
 
 type ProviderSlack struct {
@@ -37,8 +40,10 @@ func (d *ProviderSlack) oauth2() *oauth2.Config {
 		ClientID:     d.config.ClientID,
 		ClientSecret: d.config.ClientSecret,
 		Endpoint: oauth2.Endpoint{
+			// slack's oauth v2 does not implement the oauth2 standard so we use the old version.
+			// to use v2 we would need to rename the request 'scope' field to 'user_scope'.
 			AuthURL:  "https://slack.com/oauth/authorize",
-			TokenURL: "https://slack.com/api/oauth.access",
+			TokenURL: slack.APIURL + "oauth.access",
 		},
 		RedirectURL: d.config.Redir(d.public),
 		Scopes:      d.config.Scope,
@@ -54,21 +59,27 @@ func (d *ProviderSlack) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 }
 
 func (d *ProviderSlack) Claims(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
-	grantedScopes := stringsx.Splitx(fmt.Sprintf("%s", exchange.Extra("scope")), " ")
+	grantedScopes := stringsx.Splitx(fmt.Sprintf("%s", exchange.Extra("scope")), ",")
 	for _, check := range d.Config().Scope {
 		if !stringslice.Has(grantedScopes, check) {
 			return nil, errors.WithStack(ErrScopeMissing)
 		}
 	}
 
-	user := exchange.Extra("user")
+	api := slack.New(exchange.AccessToken)
+	identity, err := api.GetUserIdentity()
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+	}
 
 	claims := &Claims{
 		Issuer:            "https://slack.com/oauth/",
-		Subject:           user.id,
-		Name:              user.name,
-		Email:             user.email,
+		Subject:           identity.User.ID,
+		Name:              identity.User.Name,
+		PreferredUsername: identity.User.Name,
+		Email:             identity.User.Email,
 		EmailVerified:     true,
+		Picture:           identity.User.Image512,
 	}
 
 	return claims, nil
