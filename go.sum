@@ -341,6 +341,7 @@ github.com/go-swagger/go-swagger v0.25.0 h1:FxhyrWWV8V/A9P6GtI5szWordAdbb6Y0nqdY
 github.com/go-swagger/go-swagger v0.25.0/go.mod h1:9639ioXrPX9E6BbnbaDklGXjNz7upAXoNBwL4Ok11Vk=
 github.com/go-swagger/scan-repo-boundary v0.0.0-20180623220736-973b3573c013 h1:l9rI6sNaZgNC0LnF3MiE+qTmyBA/tZAg1rtyrGbUMK0=
 github.com/go-swagger/scan-repo-boundary v0.0.0-20180623220736-973b3573c013/go.mod h1:b65mBPzqzZWxOZGxSWrqs4GInLIn+u99Q9q7p+GKni0=
+github.com/go-test/deep v1.0.4 h1:u2CU3YKy9I2pmu9pX0eq50wCgjfGIt539SqR7FbHiho=
 github.com/go-test/deep v1.0.4/go.mod h1:wGDj63lr65AM2AQyKZd/NYHGb0R+1RLqB8NKt3aSFNA=
 github.com/gobuffalo/attrs v0.0.0-20190224210810-a9411de4debd/go.mod h1:4duuawTqi2wkkpB4ePgWMaai6/Kc6WEz83bhFwpHzj0=
 github.com/gobuffalo/attrs v0.1.0 h1:LY6/rbhPD/hfa+AfviaMXBmZBGb0fGHF12yg7f3dPQA=
@@ -1137,7 +1138,6 @@ github.com/ory/herodot v0.9.0/go.mod h1:GYF7mp8/WFRYDYJBR989lipjgx3NTjjdVdUC+hpB
 github.com/ory/jsonschema/v3 v3.0.1 h1:xzV7w2rt/Qn+jvh71joIXNKKOCqqNyTlaIxdxU0IQJc=
 github.com/ory/jsonschema/v3 v3.0.1/go.mod h1:jgLHekkFk0uiGdEWGleC+tOm6JSSP8cbf17PnBuGXlw=
 github.com/ory/kratos v0.5.5-alpha.1/go.mod h1:pqr5H6NOA90FxsviyJUj9WOCnXnslLmZvcTYx4GtQiw=
-github.com/ory/kratos v0.5.5-alpha.1.pre.1/go.mod h1:pqr5H6NOA90FxsviyJUj9WOCnXnslLmZvcTYx4GtQiw=
 github.com/ory/mail v2.3.1+incompatible h1:vHntHDHtQXamt2T+iwTTlCoBkDvILUeujE9Ocwe9md4=
 github.com/ory/mail v2.3.1+incompatible/go.mod h1:87D9/1gB6ewElQoN0lXJ0ayfqcj3cW3qCTXh+5E9mfU=
 github.com/ory/mail/v3 v3.0.0 h1:8LFMRj473vGahFD/ntiotWEd4S80FKYFtiZTDfOQ+sM=
@@ -1156,8 +1156,8 @@ github.com/ory/x v0.0.127/go.mod h1:FwUujfFuCj5d+xgLn4fGMYPnzriR5bdAIulFXMtnK0M=
 github.com/ory/x v0.0.148/go.mod h1:kYT14ajKGfDV8pRPRzQD3begYqRISZq1IQUgOVliQCE=
 github.com/ory/x v0.0.165/go.mod h1:OmHWAMal8+FhNJgDh1KkN8ik24ubjPSJQNdnTj6tzCQ=
 github.com/ory/x v0.0.166/go.mod h1:gT/3K0mSFaPllJgoFrvKYIBYI5W1Nz5RxQTJCGrIwDY=
-github.com/ory/x v0.0.172-0.20210108121926-7e60f0881220 h1:b5fh9xH6nI3pq1jJRwDZzzYSHr9WkI/KNdMTtrx8k9o=
-github.com/ory/x v0.0.172-0.20210108121926-7e60f0881220/go.mod h1:8d8Mlj2/ho+80yGjhFOVgbRWdm4loEwon622JtsdZyo=
+github.com/ory/x v0.0.174 h1:HFI1tx84FkBYCiv0EoVkkC7AHzu+lwiNKtxFXqe+Cb0=
+github.com/ory/x v0.0.174/go.mod h1:8d8Mlj2/ho+80yGjhFOVgbRWdm4loEwon622JtsdZyo=
 github.com/parnurzeal/gorequest v0.2.15/go.mod h1:3Kh2QUMJoqw3icWAecsyzkpY7UzRfDhbRdTjtNwNiUE=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pascaldekloe/goe v0.1.0 h1:cBOtyMzM9HTpWjXfbbunk26uA6nG3a8n06Wieeh0MwY=

@@ -9,7 +9,6 @@ This file is auto-generated.
 
 To improve this file please make your change against the appropriate "./cmd/*.go" file.
 -->
-
 ## kratos jsonnet
 
 Helpers for linting and formatting JSONNet code
@@ -26,6 +25,7 @@ Helpers for linting and formatting JSONNet code
 
 ### SEE ALSO
 
-- [kratos](kratos) -
-- [kratos jsonnet format](kratos-jsonnet-format) -
-- [kratos jsonnet lint](kratos-jsonnet-lint) -
+* [kratos](kratos)	 - 
+* [kratos jsonnet format](kratos-jsonnet-format)	 - 
+* [kratos jsonnet lint](kratos-jsonnet-lint)	 - 
+
