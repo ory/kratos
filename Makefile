@@ -88,7 +88,7 @@ sdk: .bin/swagger .bin/cli
 		swagger validate ./.schema/api.swagger.json
 		rm -rf internal/httpclient/models/* internal/httpclient/clients/*
 		mkdir -p internal/httpclient/
-		swagger generate client -f ./.schema/api.swagger.json -t internal/httpclient -A Ory_Kratos
+		swagger generate client -f ./.schema/api.swagger.json -t internal/httpclient/ -A Ory_Kratos
 		make format
 
 .PHONY: quickstart
