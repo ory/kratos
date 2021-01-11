@@ -28,9 +28,6 @@ type (
 		Dialer *gomail.Dialer
 		d      smtpDependencies
 		c      *config.Provider
-		// graceful shutdown handling
-		ctx      context.Context
-		shutdown context.CancelFunc
 	}
 	Provider interface {
 		Courier() *Courier

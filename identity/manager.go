@@ -14,7 +14,6 @@ import (
 	"github.com/ory/x/errorsx"
 
 	"github.com/ory/kratos/courier"
-	"github.com/ory/kratos/driver/config"
 )
 
 var ErrProtectedFieldModified = herodot.ErrForbidden.
@@ -31,7 +30,6 @@ type (
 	}
 	Manager struct {
 		r managerDependencies
-		c *config.Provider
 	}
 
 	managerOptions struct {
