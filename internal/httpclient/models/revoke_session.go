@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// RevokeSession revoke session
+// RevokeSession RevokeSession revoke session
 //
 // swagger:model revokeSession
 type RevokeSession struct {

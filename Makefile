@@ -86,8 +86,8 @@ sdk: .bin/swagger .bin/cli
 		swagger validate ./.schema/api.swagger.json
 		swagger flatten --with-flatten=remove-unused -o ./.schema/api.swagger.json ./.schema/api.swagger.json
 		swagger validate ./.schema/api.swagger.json
-		rm -rf internal/httpclient
-		mkdir -p internal/httpclient
+		rm -rf internal/httpclient/models/* internal/httpclient/clients/*
+		mkdir -p internal/httpclient/
 		swagger generate client -f ./.schema/api.swagger.json -t internal/httpclient -A Ory_Kratos
 		make format
 

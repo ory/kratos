@@ -9,7 +9,7 @@ import (
 	"github.com/go-openapi/strfmt"
 )
 
-// VerifiableAddressStatus verifiable address status
+// VerifiableAddressStatus VerifiableAddressStatus verifiable address status
 //
 // swagger:model VerifiableAddressStatus
 type VerifiableAddressStatus string

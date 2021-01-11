@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// UpdateIdentity update identity
+// UpdateIdentity UpdateIdentity update identity
 //
 // swagger:model UpdateIdentity
 type UpdateIdentity struct {
