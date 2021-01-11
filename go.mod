@@ -28,6 +28,7 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/strfmt v0.19.11
+	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/go-swagger/go-swagger v0.25.0
 	github.com/gobuffalo/fizz v1.13.1-0.20200903094245-046abeb7de46
 	github.com/gobuffalo/httptest v1.0.2
@@ -48,6 +49,7 @@ require (
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/knadh/koanf v0.14.1-0.20201201075439-e0853799f9ec
+	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/markbates/pkger v0.17.1
 	github.com/mattn/goveralls v0.0.5
 	github.com/mikefarah/yq v1.15.0

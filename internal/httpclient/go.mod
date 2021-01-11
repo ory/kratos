@@ -1,4 +1,4 @@
-module github.com/ory/kratos-client-go/client
+module github.com/ory/kratos-client-go
 
 go 1.15
 
@@ -8,5 +8,4 @@ require (
 	github.com/go-openapi/strfmt v0.19.11
 	github.com/go-openapi/swag v0.19.12
 	github.com/go-openapi/validate v0.20.0
-	github.com/ory/kratos v0.5.5-alpha.1
 )

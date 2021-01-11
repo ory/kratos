@@ -1672,6 +1672,7 @@
   },
   "definitions": {
     "CompleteSelfServiceLoginFlowWithPasswordMethod": {
+      "description": "CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod complete self service login flow with password method",
       "type": "object",
       "properties": {
         "csrf_token": {
@@ -1689,6 +1690,7 @@
       }
     },
     "CompleteSelfServiceSettingsFlowWithPasswordMethod": {
+      "description": "CompleteSelfServiceSettingsFlowWithPasswordMethod CompleteSelfServiceSettingsFlowWithPasswordMethod CompleteSelfServiceSettingsFlowWithPasswordMethod complete self service settings flow with password method",
       "type": "object",
       "required": [
         "password"
@@ -1705,6 +1707,7 @@
       }
     },
     "CreateIdentity": {
+      "description": "CreateIdentity CreateIdentity CreateIdentity create identity",
       "type": "object",
       "required": [
         "schema_id",
@@ -1722,6 +1725,7 @@
       }
     },
     "CreateRecoveryLink": {
+      "description": "CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink create recovery link",
       "type": "object",
       "required": [
         "identity_id"
@@ -1743,10 +1747,12 @@
       "title": "CredentialsType  represents several different credential types, like password credentials, passwordless credentials,"
     },
     "ID": {
+      "description": "ID ID ID ID",
       "type": "integer",
       "format": "int64"
     },
     "Identity": {
+      "description": "Identity Identity Identity identity",
       "type": "object",
       "required": [
         "id",
@@ -1788,15 +1794,18 @@
       }
     },
     "Message": {
+      "description": "Message Message Message message",
       "type": "object",
       "properties": {
         "context": {
+          "description": "context",
           "type": "object"
         },
         "id": {
           "$ref": "#/definitions/ID"
         },
         "text": {
+          "description": "text",
           "type": "string"
         },
         "type": {
@@ -1805,6 +1814,7 @@
       }
     },
     "Messages": {
+      "description": "Messages Messages Messages messages",
       "type": "array",
       "items": {
         "$ref": "#/definitions/Message"
@@ -1816,6 +1826,7 @@
       "title": "NullTime implements sql.NullTime functionality."
     },
     "RecoveryAddress": {
+      "description": "RecoveryAddress RecoveryAddress RecoveryAddress recovery address",
       "type": "object",
       "required": [
         "id",
@@ -1835,12 +1846,15 @@
       }
     },
     "RecoveryAddressType": {
+      "description": "RecoveryAddressType RecoveryAddressType RecoveryAddressType recovery address type",
       "type": "string"
     },
     "State": {
+      "description": "State State State state",
       "type": "string"
     },
     "Traits": {
+      "description": "Traits Traits Traits traits",
       "type": "object"
     },
     "Type": {
@@ -1853,6 +1867,7 @@
       "format": "uuid4"
     },
     "UpdateIdentity": {
+      "description": "UpdateIdentity UpdateIdentity UpdateIdentity update identity",
       "type": "object",
       "required": [
         "traits"
@@ -1869,13 +1884,14 @@
       }
     },
     "VerifiableAddress": {
+      "description": "VerifiableAddress VerifiableAddress VerifiableAddress verifiable address",
       "type": "object",
       "required": [
         "id",
+        "status",
         "value",
         "verified",
-        "via",
-        "status"
+        "via"
       ],
       "properties": {
         "id": {
@@ -1899,12 +1915,15 @@
       }
     },
     "VerifiableAddressStatus": {
+      "description": "VerifiableAddressStatus VerifiableAddressStatus VerifiableAddressStatus verifiable address status",
       "type": "string"
     },
     "VerifiableAddressType": {
+      "description": "VerifiableAddressType VerifiableAddressType VerifiableAddressType verifiable address type",
       "type": "string"
     },
     "completeSelfServiceRecoveryFlowWithLinkMethod": {
+      "description": "CompleteSelfServiceRecoveryFlowWithLinkMethod CompleteSelfServiceRecoveryFlowWithLinkMethod CompleteSelfServiceRecoveryFlowWithLinkMethod complete self service recovery flow with link method",
       "type": "object",
       "properties": {
         "csrf_token": {
@@ -1918,6 +1937,7 @@
       }
     },
     "completeSelfServiceVerificationFlowWithLinkMethod": {
+      "description": "CompleteSelfServiceVerificationFlowWithLinkMethod CompleteSelfServiceVerificationFlowWithLinkMethod CompleteSelfServiceVerificationFlowWithLinkMethod complete self service verification flow with link method",
       "type": "object",
       "properties": {
         "csrf_token": {
@@ -1931,6 +1951,7 @@
       }
     },
     "errorContainer": {
+      "description": "ErrorContainer error container",
       "type": "object",
       "required": [
         "id",
@@ -2001,6 +2022,7 @@
       }
     },
     "genericErrorPayload": {
+      "description": "GenericErrorPayload GenericErrorPayload GenericErrorPayload generic error payload",
       "type": "object",
       "properties": {
         "code": {
@@ -2015,24 +2037,30 @@
           "example": "The database adapter was unable to find the element"
         },
         "details": {
+          "description": "details",
           "type": "object",
           "additionalProperties": true
         },
         "message": {
+          "description": "message",
           "type": "string"
         },
         "reason": {
+          "description": "reason",
           "type": "string"
         },
         "request": {
+          "description": "request",
           "type": "string"
         },
         "status": {
+          "description": "status",
           "type": "string"
         }
       }
     },
     "healthNotReadyStatus": {
+      "description": "HealthNotReadyStatus HealthNotReadyStatus health not ready status",
       "type": "object",
       "properties": {
         "errors": {
@@ -2056,7 +2084,7 @@
     "loginFlow": {
       "description": "This object represents a login flow. A login flow is initiated at the \"Initiate Login API / Browser Flow\"\nendpoint by a client.\n\nOnce a login flow is completed successfully, a session cookie or session token will be issued.",
       "type": "object",
-      "title": "Login Flow",
+      "title": "LoginFlow Login Flow",
       "required": [
         "id",
         "expires_at",
@@ -2105,6 +2133,7 @@
       }
     },
     "loginFlowMethod": {
+      "description": "LoginFlowMethod LoginFlowMethod login flow method",
       "type": "object",
       "required": [
         "method",
@@ -2120,6 +2149,7 @@
       }
     },
     "loginFlowMethodConfig": {
+      "description": "LoginFlowMethodConfig login flow method config",
       "type": "object",
       "required": [
         "action",
@@ -2154,8 +2184,8 @@
       "description": "The Response for Login Flows via API",
       "type": "object",
       "required": [
-        "session_token",
-        "session"
+        "session",
+        "session_token"
       ],
       "properties": {
         "session": {
@@ -2170,7 +2200,7 @@
     "recoveryFlow": {
       "description": "This request is used when an identity wants to recover their account.\n\nWe recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)",
       "type": "object",
-      "title": "A Recovery Flow",
+      "title": "RecoveryFlow A Recovery Flow",
       "required": [
         "id",
         "expires_at",
@@ -2220,6 +2250,7 @@
       }
     },
     "recoveryFlowMethod": {
+      "description": "RecoveryFlowMethod RecoveryFlowMethod RecoveryFlowMethod recovery flow method",
       "type": "object",
       "required": [
         "method",
@@ -2236,6 +2267,7 @@
       }
     },
     "recoveryFlowMethodConfig": {
+      "description": "RecoveryFlowMethodConfig recovery flow method config",
       "type": "object",
       "required": [
         "action",
@@ -2277,6 +2309,7 @@
       }
     },
     "registrationFlow": {
+      "description": "RegistrationFlow registration flow",
       "type": "object",
       "required": [
         "id",
@@ -2324,8 +2357,8 @@
     "registrationFlowMethod": {
       "type": "object",
       "required": [
-        "method",
-        "config"
+        "config",
+        "method"
       ],
       "properties": {
         "config": {
@@ -2337,6 +2370,7 @@
       }
     },
     "registrationFlowMethodConfig": {
+      "description": "RegistrationFlowMethodConfig RegistrationFlowMethodConfig registration flow method config",
       "type": "object",
       "required": [
         "action",
@@ -2368,7 +2402,7 @@
       }
     },
     "registrationViaApiResponse": {
-      "description": "The Response for Registration Flows via API",
+      "description": "RegistrationViaAPIResponse The Response for Registration Flows via API",
       "type": "object",
       "required": [
         "session_token",
@@ -2388,6 +2422,7 @@
       }
     },
     "revokeSession": {
+      "description": "RevokeSession RevokeSession RevokeSession revoke session",
       "type": "object",
       "required": [
         "session_token"
@@ -2400,6 +2435,7 @@
       }
     },
     "session": {
+      "description": "Session Session Session session",
       "type": "object",
       "required": [
         "id",
@@ -2410,13 +2446,16 @@
       ],
       "properties": {
         "active": {
+          "description": "active",
           "type": "boolean"
         },
         "authenticated_at": {
+          "description": "authenticated at",
           "type": "string",
           "format": "date-time"
         },
         "expires_at": {
+          "description": "expires at",
           "type": "string",
           "format": "date-time"
         },
@@ -2427,6 +2466,7 @@
           "$ref": "#/definitions/Identity"
         },
         "issued_at": {
+          "description": "issued at",
           "type": "string",
           "format": "date-time"
         }
@@ -2437,12 +2477,12 @@
       "type": "object",
       "title": "Flow represents a Settings Flow",
       "required": [
-        "id",
         "expires_at",
-        "issued_at",
-        "request_url",
-        "methods",
+        "id",
         "identity",
+        "issued_at",
+        "methods",
+        "request_url",
         "state"
       ],
       "properties": {
@@ -2491,8 +2531,8 @@
     "settingsFlowMethod": {
       "type": "object",
       "required": [
-        "method",
-        "config"
+        "config",
+        "method"
       ],
       "properties": {
         "config": {
@@ -2508,8 +2548,8 @@
       "type": "object",
       "required": [
         "action",
-        "method",
-        "fields"
+        "fields",
+        "method"
       ],
       "properties": {
         "action": {
@@ -2529,7 +2569,7 @@
       }
     },
     "settingsViaApiResponse": {
-      "description": "The Response for Settings Flows via API",
+      "description": "SettingsViaAPIResponse The Response for Settings Flows via API",
       "type": "object",
       "required": [
         "flow",
@@ -2547,7 +2587,7 @@
     "verificationFlow": {
       "description": "Used to verify an out-of-band communication\nchannel such as an email address or a phone number.\n\nFor more information head over to: https://www.ory.sh/docs/kratos/selfservice/flows/verify-email-account-activation",
       "type": "object",
-      "title": "A Verification Flow",
+      "title": "VerificationFlow VerificationFlow A Verification Flow",
       "required": [
         "methods",
         "state"
@@ -2558,7 +2598,7 @@
           "type": "string"
         },
         "expires_at": {
-          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address,\na new request has to be initiated.",
+          "description": "ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address,\na new request has to be initiated.\nFormat: date-time\nFormat: date-time",
           "type": "string",
           "format": "date-time"
         },
@@ -2566,7 +2606,7 @@
           "$ref": "#/definitions/UUID"
         },
         "issued_at": {
-          "description": "IssuedAt is the time (UTC) when the request occurred.",
+          "description": "IssuedAt is the time (UTC) when the request occurred.\nFormat: date-time\nFormat: date-time",
           "type": "string",
           "format": "date-time"
         },
@@ -2593,6 +2633,7 @@
       }
     },
     "verificationFlowMethod": {
+      "description": "VerificationFlowMethod VerificationFlowMethod VerificationFlowMethod verification flow method",
       "type": "object",
       "required": [
         "method",
@@ -2612,8 +2653,8 @@
       "type": "object",
       "required": [
         "action",
-        "method",
-        "fields"
+        "fields",
+        "method"
       ],
       "properties": {
         "action": {

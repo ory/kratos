@@ -14,7 +14,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// Identity identity
+// Identity Identity Identity Identity identity
 //
 // swagger:model Identity
 type Identity struct {

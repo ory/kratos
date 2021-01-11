@@ -9,7 +9,7 @@ import (
 	"github.com/go-openapi/strfmt"
 )
 
-// State state
+// State State State State state
 //
 // swagger:model State
 type State string

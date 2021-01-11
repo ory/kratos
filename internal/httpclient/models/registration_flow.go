@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// RegistrationFlow registration flow
+// RegistrationFlow RegistrationFlow registration flow
 //
 // swagger:model registrationFlow
 type RegistrationFlow struct {
