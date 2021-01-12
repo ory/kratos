@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/inhies/go-bytesize"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -74,30 +75,39 @@ const (
 	ViperKeySelfServiceVerificationUI                               = "selfservice.flows.verification.ui_url"
 	ViperKeySelfServiceVerificationRequestLifespan                  = "selfservice.flows.verification.lifespan"
 	ViperKeySelfServiceVerificationBrowserDefaultReturnTo           = "selfservice.flows.verification.after." + DefaultBrowserReturnURL
-	ViperKeyDefaultIdentitySchemaURL                                = "identity.default_schema_url"
-	ViperKeyIdentitySchemas                                         = "identity.schemas"
-	ViperKeyHasherArgon2Config                                      = "hashers.argon2"
-	ViperKeyHasherArgon2ConfigMemory                                = "hashers.argon2.memory"
-	ViperKeyHasherArgon2ConfigIterations                            = "hashers.argon2.iterations"
-	ViperKeyHasherArgon2ConfigParallelism                           = "hashers.argon2.parallelism"
-	ViperKeyHasherArgon2ConfigSaltLength                            = "hashers.argon2.salt_length"
-	ViperKeyHasherArgon2ConfigKeyLength                             = "hashers.argon2.key_length"
-	ViperKeyPasswordMaxBreaches                                     = "password.max_breaches"
-	ViperKeyIgnoreNetworkErrors                                     = "password.ignore_network_errors"
-	ViperKeyVersion                                                 = "version"
-	Argon2DefaultMemory                                      uint32 = 4 * 1024 * 1024
-	Argon2DefaultIterations                                  uint32 = 4
-	Argon2DefaultSaltLength                                  uint32 = 16
-	Argon2DefaultKeyLength                                   uint32 = 32
+	ViperKeyDefaultIdentitySchemaURL                   = "identity.default_schema_url"
+	ViperKeyIdentitySchemas                            = "identity.schemas"
+	ViperKeyHasherArgon2Config                         = "hashers.argon2"
+	ViperKeyHasherArgon2ConfigMemory                   = "hashers.argon2.memory"
+	ViperKeyHasherArgon2ConfigIterations               = "hashers.argon2.iterations"
+	ViperKeyHasherArgon2ConfigParallelism              = "hashers.argon2.parallelism"
+	ViperKeyHasherArgon2ConfigSaltLength               = "hashers.argon2.salt_length"
+	ViperKeyHasherArgon2ConfigKeyLength                = "hashers.argon2.key_length"
+	ViperKeyHasherArgon2ConfigMinimalDuration          = "hashers.argon2.minimal_duration"
+	ViperKeyHasherArgon2ConfigExpectedDeviation        = "hashers.argon2.expected_deviation"
+	ViperKeyHasherArgon2ConfigDedicatedMemory          = "hashers.argon2.dedicated_memory"
+	ViperKeyPasswordMaxBreaches                        = "password.max_breaches"
+	ViperKeyIgnoreNetworkErrors                        = "password.ignore_network_errors"
+	ViperKeyVersion                                    = "version"
+	Argon2DefaultMemory                                = uint32(1 * bytesize.GB / bytesize.KB)
+	Argon2DefaultIterations                     uint32 = 4
+	Argon2DefaultSaltLength                     uint32 = 16
+	Argon2DefaultKeyLength                      uint32 = 32
+	Argon2DefaultDuration                              = 500 * time.Millisecond
+	Argon2DefaultDeviation                             = 500 * time.Millisecond
+	Argon2DefaultDedicatedMemory                       = 4 * bytesize.GB
 )
 
 type (
 	HasherArgon2Config struct {
-		Memory      uint32 `json:"memory"`
-		Iterations  uint32 `json:"iterations"`
-		Parallelism uint8  `json:"parallelism"`
-		SaltLength  uint32 `json:"salt_length"`
-		KeyLength   uint32 `json:"key_length"`
+		Memory            uint32            `json:"memory"`
+		Iterations        uint32            `json:"iterations"`
+		Parallelism       uint8             `json:"parallelism"`
+		SaltLength        uint32            `json:"salt_length"`
+		KeyLength         uint32            `json:"key_length"`
+		MinimalDuration   time.Duration     `json:"minimal_duration"`
+		ExpectedDeviation time.Duration     `json:"expected_deviation"`
+		DedicatedMemory   bytesize.ByteSize `json:"dedicated_memory"`
 	}
 	SelfServiceHook struct {
 		Name   string          `json:"hook"`
@@ -121,6 +131,30 @@ type (
 		p *configx.Provider
 	}
 )
+
+func (c *HasherArgon2Config) MarshalJSON() ([]byte, error) {
+	type encoded struct {
+		Memory            uint32 `json:"memory"`
+		Iterations        uint32 `json:"iterations"`
+		Parallelism       uint8  `json:"parallelism"`
+		SaltLength        uint32 `json:"salt_length"`
+		KeyLength         uint32 `json:"key_length"`
+		MinimalDuration   string `json:"minimal_duration"`
+		ExpectedDeviation string `json:"expected_deviation"`
+		DedicatedMemory   string `json:"dedicated_memory"`
+	}
+
+	return json.Marshal(&encoded{
+		Memory:            c.Memory,
+		Iterations:        c.Iterations,
+		Parallelism:       c.Parallelism,
+		SaltLength:        c.SaltLength,
+		KeyLength:         c.KeyLength,
+		MinimalDuration:   c.MinimalDuration.String(),
+		ExpectedDeviation: c.ExpectedDeviation.String(),
+		DedicatedMemory:   c.DedicatedMemory.String(),
+	})
+}
 
 var Argon2DefaultParallelism = uint8(runtime.NumCPU() * 2)
 
@@ -215,16 +249,28 @@ func (p *Provider) SessionPath() string {
 	return p.p.String(ViperKeySessionPath)
 }
 
-func (p *Provider) HasherArgon2() *HasherArgon2Config {
+func (p *Provider) HasherArgon2() (*HasherArgon2Config, error) {
 	// warn about usage of default values and point to the docs
 	// warning will require https://github.com/ory/viper/issues/19
-	return &HasherArgon2Config{
-		Memory:      uint32(p.p.IntF(ViperKeyHasherArgon2ConfigMemory, int(Argon2DefaultMemory))),
-		Iterations:  uint32(p.p.IntF(ViperKeyHasherArgon2ConfigIterations, int(Argon2DefaultIterations))),
-		Parallelism: uint8(p.p.IntF(ViperKeyHasherArgon2ConfigParallelism, int(Argon2DefaultParallelism))),
-		SaltLength:  uint32(p.p.IntF(ViperKeyHasherArgon2ConfigSaltLength, int(Argon2DefaultSaltLength))),
-		KeyLength:   uint32(p.p.IntF(ViperKeyHasherArgon2ConfigKeyLength, int(Argon2DefaultKeyLength))),
+	c := &HasherArgon2Config{
+		Memory:            uint32(p.p.IntF(ViperKeyHasherArgon2ConfigMemory, int(Argon2DefaultMemory))),
+		Iterations:        uint32(p.p.IntF(ViperKeyHasherArgon2ConfigIterations, int(Argon2DefaultIterations))),
+		Parallelism:       uint8(p.p.IntF(ViperKeyHasherArgon2ConfigParallelism, int(Argon2DefaultParallelism))),
+		SaltLength:        uint32(p.p.IntF(ViperKeyHasherArgon2ConfigSaltLength, int(Argon2DefaultSaltLength))),
+		KeyLength:         uint32(p.p.IntF(ViperKeyHasherArgon2ConfigKeyLength, int(Argon2DefaultKeyLength))),
+		MinimalDuration:   p.p.DurationF(ViperKeyHasherArgon2ConfigMinimalDuration, Argon2DefaultDuration),
+		ExpectedDeviation: p.p.DurationF(ViperKeyHasherArgon2ConfigExpectedDeviation, Argon2DefaultDeviation),
+		DedicatedMemory:   Argon2DefaultDedicatedMemory,
 	}
+
+	dedicatedMemStr := p.p.String(ViperKeyHasherArgon2ConfigDedicatedMemory)
+	if dedicatedMemStr != "" {
+		if err := c.DedicatedMemory.Set(dedicatedMemStr); err != nil {
+			return nil, errors.WithStack(err)
+		}
+	}
+
+	return c, nil
 }
 
 func (p *Provider) listenOn(key string) string {

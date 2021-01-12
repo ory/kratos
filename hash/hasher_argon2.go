@@ -25,7 +25,7 @@ type Argon2 struct {
 }
 
 type Argon2Configuration interface {
-	HasherArgon2() *config.HasherArgon2Config
+	HasherArgon2() (*config.HasherArgon2Config, error)
 }
 
 func NewHasherArgon2(c Argon2Configuration) *Argon2 {
@@ -33,7 +33,10 @@ func NewHasherArgon2(c Argon2Configuration) *Argon2 {
 }
 
 func (h *Argon2) Generate(password []byte) ([]byte, error) {
-	p := h.c.HasherArgon2()
+	p, err := h.c.HasherArgon2()
+	if err != nil {
+		return nil, err
+	}
 
 	salt := make([]byte, p.SaltLength)
 	if _, err := rand.Read(salt); err != nil {

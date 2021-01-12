@@ -11,6 +11,8 @@ replace gopkg.in/DataDog/dd-trace-go.v1 => gopkg.in/DataDog/dd-trace-go.v1 v1.27
 // official SDK, allowing for the ORY CLI to consume ORY Kratos' CLI commands.
 replace github.com/ory/kratos-client-go => ./internal/httpclient
 
+replace github.com/ory/x => ../x
+
 require (
 	github.com/HdrHistogram/hdrhistogram-go v1.0.1 // indirect
 	github.com/Masterminds/sprig/v3 v3.0.0
@@ -85,4 +87,5 @@ require (
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 	golang.org/x/tools v0.0.0-20200717024301-6ddee64345a6
 	gopkg.in/go-playground/validator.v9 v9.28.0
+	gopkg.in/gorp.v1 v1.7.2 // indirect
 )

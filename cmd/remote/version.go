@@ -18,7 +18,7 @@ func (v *versionValue) Header() []string {
 	return []string{"VERSION"}
 }
 
-func (v *versionValue) Fields() []string {
+func (v *versionValue) Columns() []string {
 	return []string{v.Version}
 }
 

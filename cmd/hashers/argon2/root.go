@@ -2,6 +2,8 @@ package argon2
 
 import (
 	"fmt"
+	"reflect"
+	"strings"
 
 	"github.com/inhies/go-bytesize"
 	"github.com/spf13/cobra"
@@ -14,11 +16,12 @@ import (
 )
 
 const (
-	FlagIterations  = "iterations"
-	FlagParallelism = "parallelism"
-	FlagSaltLength  = "salt-length"
-	FlagKeyLength   = "key-length"
-	FlagMemory      = "memory"
+	FlagIterations      = "iterations"
+	FlagParallelism     = "parallelism"
+	FlagSaltLength      = "salt-length"
+	FlagKeyLength       = "key-length"
+	FlagMemory          = "memory"
+	FlagDedicatedMemory = "dedicated-memory"
 )
 
 var rootCmd = &cobra.Command{
@@ -33,6 +36,7 @@ func RegisterCommandRecursive(parent *cobra.Command) {
 
 func registerArgon2ConstantConfigFlags(flags *pflag.FlagSet, c *argon2Config) {
 	flags.Uint8Var(&c.c.Parallelism, FlagParallelism, config.Argon2DefaultParallelism, "Number of threads to use.")
+	flags.Var(&c.c.DedicatedMemory, FlagDedicatedMemory, "Amount of memory dedicated for password hashing. Kratos will try to not consume more memory.")
 
 	flags.Uint32Var(&c.c.SaltLength, FlagSaltLength, config.Argon2DefaultSaltLength, "Length of the salt in bytes.")
 	flags.Uint32Var(&c.c.KeyLength, FlagKeyLength, config.Argon2DefaultKeyLength, "Length of the key in bytes.")
@@ -58,7 +62,8 @@ func configProvider(cmd *cobra.Command, flagConf *argon2Config) (*argon2Config, 
 		return nil, cmdx.FailSilently(cmd)
 	}
 
-	conf := &argon2Config{c: *c.HasherArgon2()}
+	cv, _ := c.HasherArgon2()
+	conf := &argon2Config{c: *cv}
 	if cmd.Flags().Changed(FlagIterations) {
 		conf.c.Iterations = flagConf.c.Iterations
 	}
@@ -67,6 +72,9 @@ func configProvider(cmd *cobra.Command, flagConf *argon2Config) (*argon2Config, 
 	}
 	if cmd.Flags().Changed(FlagMemory) {
 		conf.memory = flagConf.memory
+	}
+	if cmd.Flags().Changed(FlagDedicatedMemory) {
+		conf.c.DedicatedMemory = flagConf.c.DedicatedMemory
 	}
 	if cmd.Flags().Changed(FlagKeyLength) {
 		conf.c.KeyLength = flagConf.c.KeyLength
@@ -85,14 +93,46 @@ type (
 	}
 )
 
-func (c *argon2Config) HasherArgon2() *config.HasherArgon2Config {
+var _ cmdx.TableRow = &argon2Config{}
+
+func (c *argon2Config) Header() []string {
+	var header []string
+
+	t := reflect.TypeOf(c.c)
+	for i := 0; i < t.NumField(); i++ {
+		header = append(header, strings.ReplaceAll(strings.ToUpper(t.Field(i).Tag.Get("json")), "_", " "))
+	}
+
+	return header
+}
+
+func (c *argon2Config) Columns() []string {
+	conf, _ := c.HasherArgon2()
+	return []string{
+		fmt.Sprintf("%d", conf.Memory),
+		fmt.Sprintf("%d", conf.Iterations),
+		fmt.Sprintf("%d", conf.Parallelism),
+		fmt.Sprintf("%d", conf.SaltLength),
+		fmt.Sprintf("%d", conf.KeyLength),
+		fmt.Sprintf("%s", conf.MinimalDuration),
+		fmt.Sprintf("%s", conf.ExpectedDeviation),
+		fmt.Sprintf("%s", conf.DedicatedMemory),
+	}
+}
+
+func (c *argon2Config) Interface() interface{} {
+	i, _ := c.HasherArgon2()
+	return i
+}
+
+func (c *argon2Config) HasherArgon2() (*config.HasherArgon2Config, error) {
 	if c.memory != 0 {
 		c.c.Memory = uint32(c.memory / bytesize.KB)
 	}
 	if c.c.Memory == 0 {
 		c.c.Memory = config.Argon2DefaultMemory
 	}
-	return &c.c
+	return &c.c, nil
 }
 
 func (c *argon2Config) getMemFormat() string {

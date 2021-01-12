@@ -53,7 +53,7 @@ var ListCmd = &cobra.Command{
 			return cmdx.FailSilently(cmd)
 		}
 
-		cmdx.PrintCollection(cmd, &outputIdentityCollection{
+		cmdx.PrintTable(cmd, &outputIdentityCollection{
 			identities: resp.Payload,
 		})
 
