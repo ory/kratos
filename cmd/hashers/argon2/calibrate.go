@@ -222,7 +222,8 @@ Please note that the values depend on the machine you run the hashing on. If you
 				ccv := *cv
 				results[i] = &loadResult{r: res, v: &ccv}
 
-				_, _ = progressPrinter.Println("The load test result is:\n")
+				_, _ = progressPrinter.Println("The load test result is:")
+				_, _ = progressPrinter.Println()
 				cmdx.PrintRow(cmd, res)
 
 				switch {
@@ -276,7 +277,8 @@ Please note that the values depend on the machine you run the hashing on. If you
 					}
 				// all values seem reasonable
 				default:
-					_, _ = progressPrinter.Println("These values look good to me.\n")
+					_, _ = progressPrinter.Println("These values look good to me.")
+					_, _ = progressPrinter.Println()
 					cmdx.PrintRow(cmd, conf)
 					return nil
 				}

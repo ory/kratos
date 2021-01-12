@@ -115,9 +115,9 @@ func (c *argon2Config) Columns() []string {
 		fmt.Sprintf("%d", conf.Parallelism),
 		fmt.Sprintf("%d", conf.SaltLength),
 		fmt.Sprintf("%d", conf.KeyLength),
-		fmt.Sprintf("%s", conf.MinimalDuration),
-		fmt.Sprintf("%s", conf.ExpectedDeviation),
-		fmt.Sprintf("%s", conf.DedicatedMemory),
+		conf.MinimalDuration.String(),
+		conf.ExpectedDeviation.String(),
+		conf.DedicatedMemory.String(),
 	}
 }
 
