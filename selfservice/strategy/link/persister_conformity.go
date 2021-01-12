@@ -19,7 +19,7 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-func TestPersister(conf *config.Provider, p interface {
+func TestPersister(conf *config.Config, p interface {
 	RecoveryTokenPersister
 	VerificationTokenPersister
 	recovery.FlowPersister

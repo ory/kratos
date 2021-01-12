@@ -12,7 +12,7 @@ import (
 type (
 	validatorDependencies interface {
 		IdentityTraitsSchemas(ctx context.Context) schema.Schemas
-		config.Providers
+		config.Provider
 	}
 	Validator struct {
 		v *schema.Validator
@@ -49,7 +49,7 @@ func (v *Validator) ValidateWithRunner(ctx context.Context, i *Identity, runners
 func (v *Validator) Validate(ctx context.Context, i *Identity) error {
 	return v.ValidateWithRunner(ctx, i,
 		NewSchemaExtensionCredentials(i),
-		NewSchemaExtensionVerification(i, v.d.Configuration(ctx).SelfServiceFlowVerificationRequestLifespan()),
+		NewSchemaExtensionVerification(i, v.d.Config(ctx).SelfServiceFlowVerificationRequestLifespan()),
 		NewSchemaExtensionRecovery(i),
 	)
 }

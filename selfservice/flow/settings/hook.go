@@ -30,7 +30,7 @@ type (
 	executorDependencies interface {
 		identity.ManagementProvider
 		identity.ValidationProvider
-		config.Providers
+		config.Provider
 
 		HooksProvider
 		FlowPersistenceProvider
@@ -120,7 +120,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 	}
 
 	options := []identity.ManagerOption{identity.ManagerExposeValidationErrorsForInternalTypeAssertion}
-	ttl := e.d.Configuration(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()
+	ttl := e.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()
 	if ctxUpdate.Session.AuthenticatedAt.Add(ttl).After(time.Now()) {
 		options = append(options, identity.ManagerAllowWriteProtectedTraits)
 	}
@@ -194,8 +194,8 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		return nil
 	}
 
-	return x.SecureContentNegotiationRedirection(w, r, ctxUpdate.Session.Declassify(), ctxUpdate.Flow.RequestURL, e.d.Writer(), e.d.Configuration(r.Context()),
+	return x.SecureContentNegotiationRedirection(w, r, ctxUpdate.Session.Declassify(), ctxUpdate.Flow.RequestURL, e.d.Writer(), e.d.Config(r.Context()),
 		x.SecureRedirectOverrideDefaultReturnTo(
-			e.d.Configuration(r.Context()).SelfServiceFlowSettingsReturnTo(settingsType,
-				ctxUpdate.Flow.AppendTo(e.d.Configuration(r.Context()).SelfServiceFlowSettingsUI()))))
+			e.d.Config(r.Context()).SelfServiceFlowSettingsReturnTo(settingsType,
+				ctxUpdate.Flow.AppendTo(e.d.Config(r.Context()).SelfServiceFlowSettingsUI()))))
 }

@@ -17,15 +17,15 @@ import (
 
 type (
 	argon2Config struct {
-		c config.HasherArgon2Config
+		c config.Argon2
 	}
 )
 
-func (c *argon2Config) Configuration(_ context.Context) *config.Provider {
+func (c *argon2Config) Config(_ context.Context) *config.Config {
 	panic("not supposed to be called")
 }
 
-func (c *argon2Config) HasherArgon2() *config.HasherArgon2Config {
+func (c *argon2Config) HasherArgon2() *config.Argon2 {
 	return &c.c
 }
 
@@ -56,7 +56,7 @@ func newCalibrateCmd() *cobra.Command {
 	)
 
 	aconfig := &argon2Config{
-		c: config.HasherArgon2Config{},
+		c: config.Argon2{},
 	}
 
 	cmd := &cobra.Command{

@@ -27,14 +27,14 @@ type (
 	Courier struct {
 		Dialer *gomail.Dialer
 		d      smtpDependencies
-		c      *config.Provider
+		c      *config.Config
 	}
 	Provider interface {
 		Courier() *Courier
 	}
 )
 
-func NewSMTP(d smtpDependencies, c *config.Provider) *Courier {
+func NewSMTP(d smtpDependencies, c *config.Config) *Courier {
 	uri := c.CourierSMTPURL()
 	password, _ := uri.User.Password()
 	port, _ := strconv.ParseInt(uri.Port(), 10, 64)

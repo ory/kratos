@@ -31,7 +31,7 @@ var serveCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		d := driver.New(cmd.Context(), configx.WithFlags(cmd.Flags()))
 
-		if d.Configuration(cmd.Context()).IsInsecureDevMode() {
+		if d.Config(cmd.Context()).IsInsecureDevMode() {
 			d.Logger().Warn(`
 
 YOU ARE RUNNING ORY KRATOS IN DEV MODE.
@@ -41,7 +41,7 @@ DON'T DO THIS IN PRODUCTION!
 `)
 		}
 
-		configVersion := d.Configuration(cmd.Context()).ConfigVersion()
+		configVersion := d.Config(cmd.Context()).ConfigVersion()
 		if configVersion == config.UnknownVersion {
 			d.Logger().Warn("The config has no version specified. Add the version to improve your development experience.")
 		} else if config.Version != "" &&

@@ -7,7 +7,7 @@ import (
 )
 
 type TestStub struct {
-	c *config.Provider
+	c *config.Config
 	m *TestStubModel
 }
 
@@ -17,7 +17,7 @@ type TestStubModel struct {
 	Body    string
 }
 
-func NewTestStub(c *config.Provider, m *TestStubModel) *TestStub {
+func NewTestStub(c *config.Config, m *TestStubModel) *TestStub {
 	return &TestStub{c: c, m: m}
 }
 

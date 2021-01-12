@@ -86,7 +86,7 @@ type (
 	}
 )
 
-func TestPool(conf *config.Provider, p interface {
+func TestPool(conf *config.Config, p interface {
 	PrivilegedPool
 }) func(t *testing.T) {
 	ctx := context.Background()
@@ -104,7 +104,7 @@ func TestPool(conf *config.Provider, p interface {
 			RawURL: "file://./stub/identity-2.schema.json",
 		}
 		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, defaultSchema.RawURL)
-		conf.MustSet(config.ViperKeyIdentitySchemas, []config.SchemaConfig{{
+		conf.MustSet(config.ViperKeyIdentitySchemas, []config.Schema{{
 			ID:  altSchema.ID,
 			URL: altSchema.RawURL,
 		}})

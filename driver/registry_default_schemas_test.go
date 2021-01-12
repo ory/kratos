@@ -26,7 +26,7 @@ func TestRegistryDefault_IdentityTraitsSchemas(t *testing.T) {
 	}
 
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, defaultSchema.RawURL)
-	conf.MustSet(config.ViperKeyIdentitySchemas, []config.SchemaConfig{{ID: altSchema.ID, URL: altSchema.RawURL}})
+	conf.MustSet(config.ViperKeyIdentitySchemas, []config.Schema{{ID: altSchema.ID, URL: altSchema.RawURL}})
 
 	ss := reg.IdentityTraitsSchemas(context.Background())
 	assert.Equal(t, 2, len(ss))

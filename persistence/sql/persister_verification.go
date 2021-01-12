@@ -79,7 +79,7 @@ func (p *Persister) UseVerificationToken(ctx context.Context, token string) (*li
 	var err error
 	rt := new(link.VerificationToken)
 	if err = sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
-		for _, secret := range p.r.Configuration(ctx).SecretsSession() {
+		for _, secret := range p.r.Config(ctx).SecretsSession() {
 			if err = tx.Eager().Where("token = ? AND NOT used", p.hmacValueWithSecret(token, secret)).First(rt); err != nil {
 				if !errors.Is(sqlcon.HandleError(err), sqlcon.ErrNoRows) {
 					return err

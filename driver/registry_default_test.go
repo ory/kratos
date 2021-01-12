@@ -63,16 +63,16 @@ func TestDriverDefault_Hooks(t *testing.T) {
 
 func TestDriverDefault_Strategies(t *testing.T) {
 	for k, tc := range []struct {
-		prep   func(conf *config.Provider)
+		prep   func(conf *config.Config)
 		expect []string
 	}{
-		{prep: func(conf *config.Provider) {
+		{prep: func(conf *config.Config) {
 			conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".password.enabled", false)
 		}},
-		{prep: func(conf *config.Provider) {
+		{prep: func(conf *config.Config) {
 			conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
 		}, expect: []string{"password"}},
-		{prep: func(conf *config.Provider) {
+		{prep: func(conf *config.Config) {
 			conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".oidc.enabled", true)
 			conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
 		}, expect: []string{"password", "oidc"}},
@@ -101,13 +101,13 @@ func TestDriverDefault_Strategies(t *testing.T) {
 
 	t.Run("case=recovery", func(t *testing.T) {
 		for k, tc := range []struct {
-			prep   func(conf *config.Provider)
+			prep   func(conf *config.Config)
 			expect []string
 		}{
-			{prep: func(conf *config.Provider) {
+			{prep: func(conf *config.Config) {
 				conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".link.enabled", false)
 			}},
-			{prep: func(conf *config.Provider) {
+			{prep: func(conf *config.Config) {
 				conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".link.enabled", true)
 			}, expect: []string{"link"}},
 		} {
@@ -128,11 +128,11 @@ func TestDriverDefault_Strategies(t *testing.T) {
 		l := logrusx.New("", "")
 
 		for k, tc := range []struct {
-			prep   func(t *testing.T) *config.Provider
+			prep   func(t *testing.T) *config.Config
 			expect []string
 		}{
 			{
-				prep: func(t *testing.T) *config.Provider {
+				prep: func(t *testing.T) *config.Config {
 					c := config.MustNew(l,
 						configx.WithValues(map[string]interface{}{
 							config.ViperKeyDSN: config.DefaultSQLiteMemoryDSN,
@@ -144,7 +144,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 					return c
 				}},
 			{
-				prep: func(t *testing.T) *config.Provider {
+				prep: func(t *testing.T) *config.Config {
 					c := config.MustNew(l,
 						configx.WithValues(map[string]interface{}{
 							config.ViperKeyDSN: config.DefaultSQLiteMemoryDSN,
@@ -156,7 +156,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 				},
 				expect: []string{"profile"}},
 			{
-				prep: func(t *testing.T) *config.Provider {
+				prep: func(t *testing.T) *config.Config {
 					return config.MustNew(l,
 						configx.WithValues(map[string]interface{}{
 							config.ViperKeyDSN: config.DefaultSQLiteMemoryDSN,
@@ -165,7 +165,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 				},
 				expect: []string{"password", "profile"}},
 			{
-				prep: func(t *testing.T) *config.Provider {
+				prep: func(t *testing.T) *config.Config {
 					return config.MustNew(l,
 						configx.WithConfigFiles("../test/e2e/profiles/verification/.kratos.yml"),
 						configx.WithValue(config.ViperKeyDSN, config.DefaultSQLiteMemoryDSN),

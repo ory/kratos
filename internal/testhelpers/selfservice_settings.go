@@ -39,7 +39,7 @@ func NewSettingsUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Se
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, e)
 	}))
-	reg.Configuration(context.Background()).MustSet(config.ViperKeySelfServiceSettingsURL, ts.URL+"/settings-ts")
+	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceSettingsURL, ts.URL+"/settings-ts")
 	t.Cleanup(ts.Close)
 	return ts
 }
@@ -116,7 +116,7 @@ func GetSettingsFlowMethodConfigDeprecated(t *testing.T, primaryUser *http.Clien
 	return rs.Payload.Methods[id].Config
 }
 
-func NewSettingsUITestServer(t *testing.T, conf *config.Provider) *httptest.Server {
+func NewSettingsUITestServer(t *testing.T, conf *config.Config) *httptest.Server {
 	router := httprouter.New()
 	router.GET("/settings", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		w.WriteHeader(http.StatusNoContent)
@@ -147,13 +147,13 @@ func NewSettingsUIEchoServer(t *testing.T, reg *driver.RegistryDefault) *httptes
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)
 
-	reg.Configuration(context.Background()).MustSet(config.ViperKeySelfServiceSettingsURL, ts.URL+"/settings")
-	reg.Configuration(context.Background()).MustSet(config.ViperKeySelfServiceLoginUI, ts.URL+"/login")
+	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceSettingsURL, ts.URL+"/settings")
+	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceLoginUI, ts.URL+"/login")
 
 	return ts
 }
 
-func NewSettingsLoginAcceptAPIServer(t *testing.T, adminClient *client.OryKratos, conf *config.Provider) *httptest.Server {
+func NewSettingsLoginAcceptAPIServer(t *testing.T, adminClient *client.OryKratos, conf *config.Config) *httptest.Server {
 	var called int
 	loginTS := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		require.Equal(t, 0, called)
@@ -196,8 +196,8 @@ func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, ids map[str
 	t.Cleanup(tsp.Close)
 	t.Cleanup(tsa.Close)
 
-	reg.Configuration(context.Background()).MustSet(config.ViperKeyPublicBaseURL, tsp.URL)
-	reg.Configuration(context.Background()).MustSet(config.ViperKeyAdminBaseURL, tsa.URL)
+	reg.Config(context.Background()).MustSet(config.ViperKeyPublicBaseURL, tsp.URL)
+	reg.Config(context.Background()).MustSet(config.ViperKeyAdminBaseURL, tsa.URL)
 	return tsp, tsa, AddAndLoginIdentities(t, reg, &httptest.Server{Config: &http.Server{Handler: public}, URL: tsp.URL}, ids)
 }
 

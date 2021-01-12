@@ -25,7 +25,7 @@ func TestSelfServicePreHook(
 	configKey string,
 	makeRequestPre func(t *testing.T, ts *httptest.Server) (*http.Response, string),
 	newServer func(t *testing.T) *httptest.Server,
-	conf *config.Provider,
+	conf *config.Config,
 ) func(t *testing.T) {
 	return func(t *testing.T) {
 		t.Run("case=pass without hooks", func(t *testing.T) {
@@ -87,7 +87,7 @@ func SelfServiceHookFakeIdentity(t *testing.T) *identity.Identity {
 	return &i
 }
 
-func SelfServiceHookConfigReset(t *testing.T, conf *config.Provider) func() {
+func SelfServiceHookConfigReset(t *testing.T, conf *config.Config) func() {
 	return func() {
 		conf.MustSet(config.ViperKeySelfServiceLoginAfter, nil)
 		conf.MustSet(config.ViperKeySelfServiceLoginBeforeHooks, nil)
@@ -97,35 +97,35 @@ func SelfServiceHookConfigReset(t *testing.T, conf *config.Provider) func() {
 	}
 }
 
-func SelfServiceHookSettingsSetDefaultRedirectTo(t *testing.T, conf *config.Provider, value string) {
+func SelfServiceHookSettingsSetDefaultRedirectTo(t *testing.T, conf *config.Config, value string) {
 	conf.MustSet(config.ViperKeySelfServiceSettingsAfter+"."+config.DefaultBrowserReturnURL, value)
 }
 
-func SelfServiceHookSettingsSetDefaultRedirectToStrategy(t *testing.T, conf *config.Provider, strategy, value string) {
+func SelfServiceHookSettingsSetDefaultRedirectToStrategy(t *testing.T, conf *config.Config, strategy, value string) {
 	conf.MustSet(config.ViperKeySelfServiceSettingsAfter+"."+strategy+"."+config.DefaultBrowserReturnURL, value)
 }
 
-func SelfServiceHookLoginSetDefaultRedirectTo(t *testing.T, conf *config.Provider, value string) {
+func SelfServiceHookLoginSetDefaultRedirectTo(t *testing.T, conf *config.Config, value string) {
 	conf.MustSet(config.ViperKeySelfServiceLoginAfter+"."+config.DefaultBrowserReturnURL, value)
 }
 
-func SelfServiceHookLoginSetDefaultRedirectToStrategy(t *testing.T, conf *config.Provider, strategy, value string) {
+func SelfServiceHookLoginSetDefaultRedirectToStrategy(t *testing.T, conf *config.Config, strategy, value string) {
 	conf.MustSet(config.ViperKeySelfServiceLoginAfter+"."+strategy+"."+config.DefaultBrowserReturnURL, value)
 }
 
-func SelfServiceHookRegistrationSetDefaultRedirectTo(t *testing.T, conf *config.Provider, value string) {
+func SelfServiceHookRegistrationSetDefaultRedirectTo(t *testing.T, conf *config.Config, value string) {
 	conf.MustSet(config.ViperKeySelfServiceRegistrationAfter+"."+config.DefaultBrowserReturnURL, value)
 }
 
-func SelfServiceHookRegistrationSetDefaultRedirectToStrategy(t *testing.T, conf *config.Provider, strategy, value string) {
+func SelfServiceHookRegistrationSetDefaultRedirectToStrategy(t *testing.T, conf *config.Config, strategy, value string) {
 	conf.MustSet(config.ViperKeySelfServiceRegistrationAfter+"."+strategy+"."+config.DefaultBrowserReturnURL, value)
 }
 
-func SelfServiceHookLoginViperSetPost(t *testing.T, conf *config.Provider, strategy string, c []config.SelfServiceHook) {
+func SelfServiceHookLoginViperSetPost(t *testing.T, conf *config.Config, strategy string, c []config.SelfServiceHook) {
 	conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceLoginAfter, strategy), c)
 }
 
-func SelfServiceHookRegistrationViperSetPost(t *testing.T, conf *config.Provider, strategy string, c []config.SelfServiceHook) {
+func SelfServiceHookRegistrationViperSetPost(t *testing.T, conf *config.Config, strategy string, c []config.SelfServiceHook) {
 	conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, strategy), c)
 }
 

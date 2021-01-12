@@ -57,7 +57,7 @@ type RegistryDefault struct {
 	rwl sync.RWMutex
 	l   *logrusx.Logger
 	a   *logrusx.Logger
-	c   *config.Provider
+	c   *config.Config
 
 	injectedSelfserviceHooks map[string]func(config.SelfServiceHook) interface{}
 
@@ -232,7 +232,7 @@ func (m *RegistryDefault) CSRFHandler() x.CSRFHandler {
 	return m.nosurf
 }
 
-func (m *RegistryDefault) Configuration(ctx context.Context) *config.Provider {
+func (m *RegistryDefault) Config(ctx context.Context) *config.Config {
 	if m.c == nil {
 		panic("configuration not set")
 	}
@@ -307,7 +307,7 @@ func (m *RegistryDefault) IdentityValidator() *identity.Validator {
 	return m.identityValidator
 }
 
-func (m *RegistryDefault) WithConfig(c *config.Provider) Registry {
+func (m *RegistryDefault) WithConfig(c *config.Config) Registry {
 	m.c = c
 	return m
 }
@@ -397,8 +397,8 @@ func (m *RegistryDefault) CookieManager() sessions.Store {
 
 func (m *RegistryDefault) ContinuityCookieManager(ctx context.Context) sessions.Store {
 	// To support hot reloading, this can not be instantiated only once.
-	cs := sessions.NewCookieStore(m.Configuration(ctx).SecretsSession()...)
-	cs.Options.Secure = !m.Configuration(ctx).IsInsecureDevMode()
+	cs := sessions.NewCookieStore(m.Config(ctx).SecretsSession()...)
+	cs.Options.Secure = !m.Config(ctx).IsInsecureDevMode()
 	cs.Options.HttpOnly = true
 	cs.Options.SameSite = http.SameSiteLaxMode
 	return cs
@@ -407,7 +407,7 @@ func (m *RegistryDefault) ContinuityCookieManager(ctx context.Context) sessions.
 func (m *RegistryDefault) Tracer(ctx context.Context) *tracing.Tracer {
 	if m.trc == nil {
 		// Tracing is initialized only once so it can not be hot reloaded or context-aware.
-		t, err := tracing.New(m.l, m.Configuration(ctx).Tracing())
+		t, err := tracing.New(m.l, m.Config(ctx).Tracing())
 		if err != nil {
 			m.Logger().WithError(err).Fatalf("Unable to initialize Tracer.")
 		}
@@ -454,7 +454,7 @@ func (m *RegistryDefault) Init(ctx context.Context) error {
 	bc.Reset()
 	return errors.WithStack(
 		backoff.Retry(func() error {
-			pool, idlePool, connMaxLifetime, cleanedDSN := sqlcon.ParseConnectionOptions(m.l, m.Configuration(ctx).DSN())
+			pool, idlePool, connMaxLifetime, cleanedDSN := sqlcon.ParseConnectionOptions(m.l, m.Config(ctx).DSN())
 			c, err := pop.NewConnection(&pop.ConnectionDetails{
 				URL:             sqlcon.FinalizeDSN(m.l, cleanedDSN),
 				IdlePool:        idlePool,
