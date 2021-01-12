@@ -120,11 +120,6 @@ Something is not working.
       [@hackerman](https://github.com/aeneasr)
 - [ ] Feature Request: Have access to username in email templates
       ([kratos#925](https://github.com/ory/kratos/issues/925))
-- [ ] `make sdk` is broken
-      ([kratos#950](https://github.com/ory/kratos/issues/950)) -
-      [@hackerman](https://github.com/aeneasr)
-- [ ] CLI navigation reference is broken
-      ([kratos#951](https://github.com/ory/kratos/issues/951))
 - [ ] Implement email TTL for non-working/non-existant emails
       ([kratos#944](https://github.com/ory/kratos/issues/944)) -
       [@hackerman](https://github.com/aeneasr)
@@ -138,6 +133,11 @@ Something is not working.
 - [x] Kratos Admin API return 409 when createIdentity is called simultaneously
       ([kratos#861](https://github.com/ory/kratos/issues/861)) -
       [@Patrik](https://github.com/zepatrik)
+- [x] `make sdk` is broken
+      ([kratos#950](https://github.com/ory/kratos/issues/950)) -
+      [@hackerman](https://github.com/aeneasr)
+- [x] CLI navigation reference is broken
+      ([kratos#951](https://github.com/ory/kratos/issues/951))
 
 #### Pull Requests
 
@@ -179,6 +179,8 @@ New feature or request.
 - [ ] Implement React SPA sample app
       ([kratos#668](https://github.com/ory/kratos/issues/668)) -
       [@hackerman](https://github.com/aeneasr)
+- [ ] Password policies: make api.pwnedpasswords.com configurable
+      ([kratos#969](https://github.com/ory/kratos/issues/969))
 - [x] Support remote argon2 execution
       ([kratos#357](https://github.com/ory/kratos/issues/357)) -
       [@hackerman](https://github.com/aeneasr)
@@ -217,13 +219,13 @@ Affects documentation.
 - [ ] Please clarify docs to specify that a reverse proxy is _required_ for
       public usage due to lack of TLS support
       ([kratos#791](https://github.com/ory/kratos/issues/791))
-- [ ] CLI navigation reference is broken
-      ([kratos#951](https://github.com/ory/kratos/issues/951))
 - [x] Elaborate on security practices against DoS and Brute Force
       ([kratos#134](https://github.com/ory/kratos/issues/134)) -
       [@hackerman](https://github.com/aeneasr)
 - [x] Building From Source fails
       ([kratos#711](https://github.com/ory/kratos/issues/711))
+- [x] CLI navigation reference is broken
+      ([kratos#951](https://github.com/ory/kratos/issues/951))
 
 ### [Rfc](https://github.com/ory/kratos/labels/rfc)
 
