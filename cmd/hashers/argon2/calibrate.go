@@ -2,11 +2,12 @@ package argon2
 
 import (
 	"fmt"
-	"github.com/ory/x/configx"
 	"io"
 	"runtime"
 	"strconv"
 	"time"
+
+	"github.com/ory/x/configx"
 
 	"github.com/ory/x/cmdx"
 
@@ -315,7 +316,7 @@ func probe(cmd *cobra.Command, hasher hash.Hasher, runs int, progressPrinter *cm
 	var mid time.Time
 	for i := 0; i < runs; i++ {
 		mid = time.Now()
-		_, err := hasher.Generate([]byte("password"))
+		_, err := hasher.Generate(cmd.Context(), []byte("password"))
 		if err != nil {
 			fmt.Fprintf(cmd.ErrOrStderr(), "Could not generate a hash: %s\n", err)
 			return 0, cmdx.FailSilently(cmd)

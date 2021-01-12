@@ -34,7 +34,10 @@ func NewHasherArgon2(c Argon2Configuration) *Argon2 {
 }
 
 func (h *Argon2) Generate(ctx context.Context, password []byte) ([]byte, error) {
-	p := h.c.Configuration(ctx).HasherArgon2()
+	p, err := h.c.Configuration(ctx).HasherArgon2()
+	if err != nil {
+		return nil, err
+	}
 
 	salt := make([]byte, p.SaltLength)
 	if _, err := rand.Read(salt); err != nil {

@@ -184,7 +184,7 @@ func runLoadTest(cmd *cobra.Command, conf *argon2Config, reqPerMin int) (*result
 				var err error
 
 				go func() {
-					_, err = hasher.Generate([]byte("password"))
+					_, err = hasher.Generate(ctx, []byte("password"))
 					close(done)
 				}()
 

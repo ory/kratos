@@ -38,7 +38,7 @@ func newHashCmd() *cobra.Command {
 			for i, pw := range args {
 				go func(i int, pw string) {
 					start := time.Now()
-					h, err := hasher.Generate([]byte(pw))
+					h, err := hasher.Generate(cmd.Context(), []byte(pw))
 					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "%s\n", time.Since(start))
 
 					hashes[i] = h

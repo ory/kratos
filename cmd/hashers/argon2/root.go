@@ -1,6 +1,7 @@
 package argon2
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
@@ -123,6 +124,29 @@ func (c *argon2Config) Columns() []string {
 func (c *argon2Config) Interface() interface{} {
 	i, _ := c.HasherArgon2()
 	return i
+}
+
+func (c *argon2Config) Configuration(ctx context.Context) *config.Provider {
+	l := logrusx.New("ORY Kratos", config.Version)
+	conf, _ := config.New(l,
+		configx.SkipValidation(),
+		configx.WithContext(ctx),
+		configx.WithImmutables("hashers"),
+	)
+	ac, _ := c.HasherArgon2()
+	for k, v := range map[string]interface{}{
+		config.ViperKeyHasherArgon2ConfigIterations:        ac.Iterations,
+		config.ViperKeyHasherArgon2ConfigMemory:            ac.Memory,
+		config.ViperKeyHasherArgon2ConfigParallelism:       ac.Parallelism,
+		config.ViperKeyHasherArgon2ConfigDedicatedMemory:   ac.DedicatedMemory,
+		config.ViperKeyHasherArgon2ConfigKeyLength:         ac.KeyLength,
+		config.ViperKeyHasherArgon2ConfigSaltLength:        ac.SaltLength,
+		config.ViperKeyHasherArgon2ConfigMinimalDuration:   ac.MinimalDuration,
+		config.ViperKeyHasherArgon2ConfigExpectedDeviation: ac.ExpectedDeviation,
+	} {
+		_ = conf.Set(k, v)
+	}
+	return conf
 }
 
 func (c *argon2Config) HasherArgon2() (*config.HasherArgon2Config, error) {
