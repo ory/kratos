@@ -2,6 +2,7 @@ package hash
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"crypto/subtle"
 	"encoding/base64"
@@ -25,18 +26,15 @@ type Argon2 struct {
 }
 
 type Argon2Configuration interface {
-	HasherArgon2() (*config.HasherArgon2Config, error)
+	config.Providers
 }
 
 func NewHasherArgon2(c Argon2Configuration) *Argon2 {
 	return &Argon2{c: c}
 }
 
-func (h *Argon2) Generate(password []byte) ([]byte, error) {
-	p, err := h.c.HasherArgon2()
-	if err != nil {
-		return nil, err
-	}
+func (h *Argon2) Generate(ctx context.Context, password []byte) ([]byte, error) {
+	p := h.c.Configuration(ctx).HasherArgon2()
 
 	salt := make([]byte, p.SaltLength)
 	if _, err := rand.Read(salt); err != nil {
@@ -62,7 +60,7 @@ func (h *Argon2) Generate(password []byte) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (h *Argon2) Compare(password []byte, hash []byte) error {
+func (h *Argon2) Compare(ctx context.Context, password []byte, hash []byte) error {
 	// Extract the parameters, salt and derived key from the encoded password
 	// hash.
 	p, salt, hash, err := decodeHash(string(hash))

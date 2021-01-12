@@ -2,6 +2,7 @@ package testhelpers
 
 import (
 	"bytes"
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -30,7 +31,7 @@ func NewRegistrationUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptes
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, e)
 	}))
-	reg.Configuration().MustSet(config.ViperKeySelfServiceRegistrationUI, ts.URL+"/registration-ts")
+	reg.Configuration(context.Background()).MustSet(config.ViperKeySelfServiceRegistrationUI, ts.URL+"/registration-ts")
 	t.Cleanup(ts.Close)
 	return ts
 }

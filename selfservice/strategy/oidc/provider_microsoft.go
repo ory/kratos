@@ -62,7 +62,7 @@ func (m *ProviderMicrosoft) Claims(ctx context.Context, exchange *oauth2.Token) 
 	}
 
 	issuer := "https://login.microsoftonline.com/" + unverifiedClaims.TenantID + "/v2.0"
-	p, err := gooidc.NewProvider(context.Background(), issuer)
+	p, err := gooidc.NewProvider(ctx, issuer)
 	if err != nil {
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initialize OpenID Connect Provider: %s", err))
 	}

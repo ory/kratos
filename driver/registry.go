@@ -1,6 +1,8 @@
 package driver
 
 import (
+	"context"
+
 	"github.com/ory/kratos/metrics/prometheus"
 	"github.com/ory/x/tracing"
 
@@ -39,10 +41,8 @@ import (
 type Registry interface {
 	dbal.Driver
 
-	Init() error
+	Init(ctx context.Context) error
 
-	Configuration() *config.Provider
-	WithConfig(c *config.Provider) Registry
 	WithLogger(l *logrusx.Logger) Registry
 
 	WithCSRFHandler(c x.CSRFHandler)
@@ -50,13 +50,16 @@ type Registry interface {
 
 	HealthHandler() *healthx.Handler
 	CookieManager() sessions.Store
-	ContinuityCookieManager() sessions.Store
+	ContinuityCookieManager(ctx context.Context) sessions.Store
 
 	RegisterRoutes(public *x.RouterPublic, admin *x.RouterAdmin)
 	RegisterPublicRoutes(public *x.RouterPublic)
 	RegisterAdminRoutes(admin *x.RouterAdmin)
 	PrometheusManager() *prometheus.MetricsManager
-	Tracer() *tracing.Tracer
+	Tracer(context.Context) *tracing.Tracer
+
+	config.Providers
+	WithConfig(c *config.Provider) Registry
 
 	x.CSRFProvider
 	x.WriterProvider

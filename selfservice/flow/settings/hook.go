@@ -30,14 +30,16 @@ type (
 	executorDependencies interface {
 		identity.ManagementProvider
 		identity.ValidationProvider
+		config.Providers
+
 		HooksProvider
-		x.LoggingProvider
 		FlowPersistenceProvider
+
+		x.LoggingProvider
 		x.WriterProvider
 	}
 	HookExecutor struct {
 		d executorDependencies
-		c *config.Provider
 	}
 	HookExecutorProvider interface {
 		SettingsHookExecutor() *HookExecutor
@@ -68,11 +70,8 @@ func PostHookPrePersistExecutorNames(e []PostHookPrePersistExecutor) []string {
 	return names
 }
 
-func NewHookExecutor(d executorDependencies, c *config.Provider) *HookExecutor {
-	return &HookExecutor{
-		d: d,
-		c: c,
-	}
+func NewHookExecutor(d executorDependencies) *HookExecutor {
+	return &HookExecutor{d: d}
 }
 
 type PostSettingsHookOption func(o *postSettingsHookOptions)
@@ -121,7 +120,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 	}
 
 	options := []identity.ManagerOption{identity.ManagerExposeValidationErrorsForInternalTypeAssertion}
-	ttl := e.c.SelfServiceFlowSettingsPrivilegedSessionMaxAge()
+	ttl := e.d.Configuration(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()
 	if ctxUpdate.Session.AuthenticatedAt.Add(ttl).After(time.Now()) {
 		options = append(options, identity.ManagerAllowWriteProtectedTraits)
 	}
@@ -195,8 +194,8 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		return nil
 	}
 
-	return x.SecureContentNegotiationRedirection(w, r, ctxUpdate.Session.Declassify(), ctxUpdate.Flow.RequestURL, e.d.Writer(), e.c,
+	return x.SecureContentNegotiationRedirection(w, r, ctxUpdate.Session.Declassify(), ctxUpdate.Flow.RequestURL, e.d.Writer(), e.d.Configuration(r.Context()),
 		x.SecureRedirectOverrideDefaultReturnTo(
-			e.c.SelfServiceFlowSettingsReturnTo(settingsType,
-				ctxUpdate.Flow.AppendTo(e.c.SelfServiceFlowSettingsUI()))))
+			e.d.Configuration(r.Context()).SelfServiceFlowSettingsReturnTo(settingsType,
+				ctxUpdate.Flow.AppendTo(e.d.Configuration(r.Context()).SelfServiceFlowSettingsUI()))))
 }

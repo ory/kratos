@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// ErrorContainer error container
+// ErrorContainer ErrorContainer error container
 //
 // swagger:model errorContainer
 type ErrorContainer struct {

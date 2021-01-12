@@ -1,6 +1,8 @@
 package identity
 
 import (
+	"context"
+
 	"github.com/tidwall/sjson"
 
 	"github.com/ory/kratos/driver/config"
@@ -9,33 +11,29 @@ import (
 
 type (
 	validatorDependencies interface {
-		IdentityTraitsSchemas() schema.Schemas
+		IdentityTraitsSchemas(ctx context.Context) schema.Schemas
+		config.Providers
 	}
 	Validator struct {
 		v *schema.Validator
 		d validatorDependencies
-		c *config.Provider
 	}
 	ValidationProvider interface {
 		IdentityValidator() *Validator
 	}
 )
 
-func NewValidator(d validatorDependencies, c *config.Provider) *Validator {
-	return &Validator{
-		v: schema.NewValidator(),
-		d: d,
-		c: c,
-	}
+func NewValidator(d validatorDependencies) *Validator {
+	return &Validator{v: schema.NewValidator(), d: d}
 }
 
-func (v *Validator) ValidateWithRunner(i *Identity, runners ...schema.Extension) error {
+func (v *Validator) ValidateWithRunner(ctx context.Context, i *Identity, runners ...schema.Extension) error {
 	runner, err := schema.NewExtensionRunner(schema.ExtensionRunnerIdentityMetaSchema, runners...)
 	if err != nil {
 		return err
 	}
 
-	s, err := v.d.IdentityTraitsSchemas().GetByID(i.SchemaID)
+	s, err := v.d.IdentityTraitsSchemas(ctx).GetByID(i.SchemaID)
 	if err != nil {
 		return err
 	}
@@ -48,10 +46,10 @@ func (v *Validator) ValidateWithRunner(i *Identity, runners ...schema.Extension)
 	return v.v.Validate(s.URL.String(), traits, schema.WithExtensionRunner(runner))
 }
 
-func (v *Validator) Validate(i *Identity) error {
-	return v.ValidateWithRunner(i,
+func (v *Validator) Validate(ctx context.Context, i *Identity) error {
+	return v.ValidateWithRunner(ctx, i,
 		NewSchemaExtensionCredentials(i),
-		NewSchemaExtensionVerification(i, v.c.SelfServiceFlowVerificationRequestLifespan()),
+		NewSchemaExtensionVerification(i, v.d.Configuration(ctx).SelfServiceFlowVerificationRequestLifespan()),
 		NewSchemaExtensionRecovery(i),
 	)
 }

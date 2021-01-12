@@ -1,8 +1,6 @@
 package remote
 
 import (
-	"context"
-
 	"github.com/ory/x/cmdx"
 
 	"github.com/spf13/cobra"
@@ -47,15 +45,13 @@ var statusCmd = &cobra.Command{
 		state := &statusState{}
 		defer cmdx.PrintRow(cmd, state)
 
-		_, err := c.Health.IsInstanceAlive(&health.IsInstanceAliveParams{
-			Context: context.Background(),
-		})
+		_, err := c.Health.IsInstanceAlive(&health.IsInstanceAliveParams{Context: cmd.Context()})
 		if err != nil {
 			return
 		}
 		state.Alive = true
 
-		_, err = c.Health.IsInstanceReady(&health.IsInstanceReadyParams{Context: context.Background()})
+		_, err = c.Health.IsInstanceReady(&health.IsInstanceReadyParams{Context: cmd.Context()})
 		if err != nil {
 			return
 		}

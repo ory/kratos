@@ -1,6 +1,7 @@
 package hash_test
 
 import (
+	"context"
 	"crypto/rand"
 	"fmt"
 	"testing"
@@ -28,22 +29,22 @@ func TestHasher(t *testing.T) {
 		mkpw(t, 128),
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			conf := internal.NewConfigurationWithDefaults()
+			_, reg := internal.NewFastRegistryWithMocks(t)
 			for kk, h := range []hash.Hasher{
-				hash.NewHasherArgon2(conf),
+				hash.NewHasherArgon2(reg),
 			} {
 				t.Run(fmt.Sprintf("hasher=%T/password=%d", h, kk), func(t *testing.T) {
-					hs, err := h.Generate(pw)
+					hs, err := h.Generate(context.Background(), pw)
 					require.NoError(t, err)
 					assert.NotEqual(t, pw, hs)
 
 					t.Logf("hash: %s", hs)
-					require.NoError(t, h.Compare(pw, hs))
+					require.NoError(t, h.Compare(context.Background(), pw, hs))
 
 					mod := make([]byte, len(pw))
 					copy(mod, pw)
 					mod[len(pw)-1] = ^pw[len(pw)-1]
-					require.Error(t, h.Compare(mod, hs))
+					require.Error(t, h.Compare(context.Background(), mod, hs))
 				})
 			}
 		})

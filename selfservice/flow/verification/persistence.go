@@ -36,11 +36,12 @@ func TestFlowPersister(conf *config.Provider, p interface {
 		r.ID = uuid.UUID{}
 	}
 
+	ctx := context.Background()
 	return func(t *testing.T) {
 		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
 
 		t.Run("case=should error when the verification request does not exist", func(t *testing.T) {
-			_, err := p.GetVerificationFlow(context.Background(), x.NewUUID())
+			_, err := p.GetVerificationFlow(ctx, x.NewUUID())
 			require.Error(t, err)
 		})
 
@@ -54,22 +55,22 @@ func TestFlowPersister(conf *config.Provider, p interface {
 
 		t.Run("case=should create a new verification flow", func(t *testing.T) {
 			r := newFlow(t)
-			err := p.CreateVerificationFlow(context.Background(), r)
+			err := p.CreateVerificationFlow(ctx, r)
 			require.NoError(t, err, "%#v", err)
 		})
 
 		t.Run("case=should create with set ids", func(t *testing.T) {
 			var r Flow
 			require.NoError(t, faker.FakeData(&r))
-			require.NoError(t, p.CreateVerificationFlow(context.Background(), &r))
+			require.NoError(t, p.CreateVerificationFlow(ctx, &r))
 		})
 
 		t.Run("case=should create and fetch a verification request", func(t *testing.T) {
 			expected := newFlow(t)
-			err := p.CreateVerificationFlow(context.Background(), expected)
+			err := p.CreateVerificationFlow(ctx, expected)
 			require.NoError(t, err)
 
-			actual, err := p.GetVerificationFlow(context.Background(), expected.ID)
+			actual, err := p.GetVerificationFlow(ctx, expected.ID)
 			require.NoError(t, err)
 
 			fexpected, _ := json.Marshal(expected.Methods[StrategyVerificationLinkName].Config)
@@ -91,7 +92,7 @@ func TestFlowPersister(conf *config.Provider, p interface {
 			expected.Methods["password"] = &FlowMethod{
 				Method: "password", Config: &FlowMethodConfig{FlowMethodConfigurator: &form.HTMLForm{Fields: []form.Field{{
 					Name: "foo", Type: "bar", Pattern: "baz"}}}}}
-			err := p.CreateVerificationFlow(context.Background(), expected)
+			err := p.CreateVerificationFlow(ctx, expected)
 			require.NoError(t, err)
 
 			expected.Methods[StrategyVerificationLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action = "/new-action"
@@ -100,9 +101,9 @@ func TestFlowPersister(conf *config.Provider, p interface {
 			expected.RequestURL = "/new-request-url"
 			expected.Active = StrategyVerificationLinkName
 			expected.Messages.Add(text.NewVerificationEmailSent())
-			require.NoError(t, p.UpdateVerificationFlow(context.Background(), expected))
+			require.NoError(t, p.UpdateVerificationFlow(ctx, expected))
 
-			actual, err := p.GetVerificationFlow(context.Background(), expected.ID)
+			actual, err := p.GetVerificationFlow(ctx, expected.ID)
 			require.NoError(t, err)
 
 			assert.Equal(t, "/new-action", actual.Methods[StrategyVerificationLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action)
@@ -117,16 +118,16 @@ func TestFlowPersister(conf *config.Provider, p interface {
 
 		t.Run("case=should not cause data loss when updating a request without changes", func(t *testing.T) {
 			expected := newFlow(t)
-			err := p.CreateVerificationFlow(context.Background(), expected)
+			err := p.CreateVerificationFlow(ctx, expected)
 			require.NoError(t, err)
 
-			actual, err := p.GetVerificationFlow(context.Background(), expected.ID)
+			actual, err := p.GetVerificationFlow(ctx, expected.ID)
 			require.NoError(t, err)
 			assert.Len(t, actual.Methods, 1)
 
-			require.NoError(t, p.UpdateVerificationFlow(context.Background(), actual))
+			require.NoError(t, p.UpdateVerificationFlow(ctx, actual))
 
-			actual, err = p.GetVerificationFlow(context.Background(), expected.ID)
+			actual, err = p.GetVerificationFlow(ctx, expected.ID)
 			require.NoError(t, err)
 			require.Len(t, actual.Methods, 1)
 

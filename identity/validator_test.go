@@ -1,6 +1,7 @@
 package identity_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -60,7 +61,7 @@ func TestSchemaValidator(t *testing.T) {
 		{ID: "whatever", URL: ts.URL + "/schema/whatever"},
 		{ID: "unreachable-url", URL: ts.URL + "/404-not-found"},
 	})
-	v := NewValidator(reg, conf)
+	v := NewValidator(reg)
 
 	for k, tc := range []struct {
 		i   *Identity
@@ -105,7 +106,7 @@ func TestSchemaValidator(t *testing.T) {
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			err := v.Validate(tc.i)
+			err := v.Validate(context.Background(), tc.i)
 			if tc.err == "" {
 				require.NoError(t, err)
 			} else {

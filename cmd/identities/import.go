@@ -1,7 +1,6 @@
 package identities
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 
@@ -51,7 +50,7 @@ WARNING: Importing credentials is not yet supported.`,
 
 			resp, err := c.Admin.CreateIdentity(&admin.CreateIdentityParams{
 				Body:    &params,
-				Context: context.Background(),
+				Context: cmd.Context(),
 			})
 			if err != nil {
 				failed[src] = err

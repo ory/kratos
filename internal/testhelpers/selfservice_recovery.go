@@ -3,6 +3,7 @@ package testhelpers
 
 import (
 	"bytes"
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -31,7 +32,7 @@ func NewVerificationUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptes
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, e)
 	}))
-	reg.Configuration().MustSet(config.ViperKeySelfServiceVerificationUI, ts.URL+"/verification-ts")
+	reg.Configuration(context.Background()).MustSet(config.ViperKeySelfServiceVerificationUI, ts.URL+"/verification-ts")
 	t.Cleanup(ts.Close)
 	return ts
 }

@@ -27,7 +27,7 @@ type mockDeps interface {
 	identity.PrivilegedPoolProvider
 	session.ManagementProvider
 	session.PersistenceProvider
-	Configuration() *config.Provider
+	config.Providers
 }
 
 func MockSetSession(t *testing.T, reg mockDeps, conf *config.Provider) httprouter.Handle {
@@ -101,8 +101,8 @@ func MockSessionCreateHandlerWithIdentity(t *testing.T, reg mockDeps, i *identit
 	sess.ExpiresAt = time.Now().UTC().Add(time.Hour * 24)
 	sess.Active = true
 
-	if reg.Configuration().Source().String(config.ViperKeyDefaultIdentitySchemaURL) == internal.UnsetDefaultIdentitySchema {
-		reg.Configuration().MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/fake-session.schema.json")
+	if reg.Configuration(context.Background()).Source().String(config.ViperKeyDefaultIdentitySchemaURL) == internal.UnsetDefaultIdentitySchema {
+		reg.Configuration(context.Background()).MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/fake-session.schema.json")
 	}
 
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
@@ -121,7 +121,5 @@ func MockSessionCreateHandlerWithIdentity(t *testing.T, reg mockDeps, i *identit
 
 func MockSessionCreateHandler(t *testing.T, reg mockDeps) (httprouter.Handle, *session.Session) {
 	return MockSessionCreateHandlerWithIdentity(t, reg, &identity.Identity{
-		ID:     x.NewUUID(),
-		Traits: identity.Traits(`{"baz":"bar","foo":true,"bar":2.5}`),
-	})
+		ID: x.NewUUID(), Traits: identity.Traits(`{"baz":"bar","foo":true,"bar":2.5}`)})
 }

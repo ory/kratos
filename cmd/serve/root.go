@@ -16,7 +16,6 @@ package serve
 
 import (
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal/clihelpers"
 	"github.com/ory/x/configx"
 
 	"github.com/spf13/cobra"
@@ -30,9 +29,9 @@ var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Run the ORY Kratos server",
 	Run: func(cmd *cobra.Command, args []string) {
-		d := driver.New(configx.WithFlags(cmd.Flags()))
+		d := driver.New(cmd.Context(), configx.WithFlags(cmd.Flags()))
 
-		if d.Configuration().IsInsecureDevMode() {
+		if d.Configuration(cmd.Context()).IsInsecureDevMode() {
 			d.Logger().Warn(`
 
 YOU ARE RUNNING ORY KRATOS IN DEV MODE.
@@ -42,12 +41,12 @@ DON'T DO THIS IN PRODUCTION!
 `)
 		}
 
-		configVersion := d.Configuration().ConfigVersion()
+		configVersion := d.Configuration(cmd.Context()).ConfigVersion()
 		if configVersion == config.UnknownVersion {
 			d.Logger().Warn("The config has no version specified. Add the version to improve your development experience.")
-		} else if clihelpers.BuildVersion != "" &&
-			configVersion != clihelpers.BuildVersion {
-			d.Logger().Warnf("Config version is '%s' but kratos runs on version '%s'", configVersion, clihelpers.BuildVersion)
+		} else if config.Version != "" &&
+			configVersion != config.Version {
+			d.Logger().Warnf("Config version is '%s' but kratos runs on version '%s'", configVersion, config.Version)
 		}
 
 		daemon.ServeAll(d)(cmd, args)

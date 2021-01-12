@@ -1,6 +1,8 @@
 package x
 
 import (
+	"context"
+
 	"github.com/gorilla/sessions"
 
 	"github.com/ory/herodot"
@@ -18,5 +20,5 @@ type WriterProvider interface {
 
 type CookieProvider interface {
 	CookieManager() sessions.Store
-	ContinuityCookieManager() sessions.Store
+	ContinuityCookieManager(ctx context.Context) sessions.Store
 }

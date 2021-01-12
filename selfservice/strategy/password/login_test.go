@@ -60,7 +60,7 @@ func TestCompleteLogin(t *testing.T) {
 	}
 
 	createIdentity := func(identifier, password string) {
-		p, _ := reg.Hasher().Generate([]byte(password))
+		p, _ := reg.Hasher().Generate(context.Background(), []byte(password))
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &identity.Identity{
 			ID:     x.NewUUID(),
 			Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),

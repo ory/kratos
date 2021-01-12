@@ -4,4 +4,4 @@ import (
 	"github.com/markbates/pkger"
 )
 
-var _ = pkger.Dir("/selfservice/strategy/link/.schema")
+var _ = pkger.Dir("github.com/ory/kratos:/selfservice/strategy/link/.schema")

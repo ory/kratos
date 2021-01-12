@@ -110,19 +110,19 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 
 	var p CompleteSelfServiceLoginFlowWithPasswordMethod
 	if err := s.hd.Decode(r, &p, decoderx.MustHTTPRawJSONSchemaCompiler(pkgerx.MustRead(
-		pkger.Open("/selfservice/strategy/password/.schema/login.schema.json")))); err != nil {
+		pkger.Open("github.com/ory/kratos:/selfservice/strategy/password/.schema/login.schema.json")))); err != nil {
 		s.handleLoginError(w, r, ar, &p, err)
 		return
 	}
 
-	if err := flow.VerifyRequest(r, ar.Type, s.c.DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+	if err := flow.VerifyRequest(r, ar.Type, s.d.Configuration(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		s.handleLoginError(w, r, ar, &p, err)
 		return
 	}
 
 	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil && !ar.Forced {
 		if ar.Type == flow.TypeBrowser {
-			http.Redirect(w, r, s.c.SelfServiceBrowserDefaultReturnTo().String(), http.StatusFound)
+			http.Redirect(w, r, s.d.Configuration(r.Context()).SelfServiceBrowserDefaultReturnTo().String(), http.StatusFound)
 			return
 		}
 
@@ -148,7 +148,7 @@ func (s *Strategy) handleLogin(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
-	if err := s.d.Hasher().Compare([]byte(p.Password), []byte(o.HashedPassword)); err != nil {
+	if err := s.d.Hasher().Compare(r.Context(), []byte(p.Password), []byte(o.HashedPassword)); err != nil {
 		s.handleLoginError(w, r, ar, &p, errors.WithStack(schema.NewInvalidCredentialsError()))
 		return
 	}
@@ -177,7 +177,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Flow) error {
 	}
 
 	f := &form.HTMLForm{
-		Action: sr.AppendTo(urlx.AppendPaths(s.c.SelfPublicURL(), RouteLogin)).String(),
+		Action: sr.AppendTo(urlx.AppendPaths(s.d.Configuration(r.Context()).SelfPublicURL(), RouteLogin)).String(),
 		Method: "POST",
 		Fields: form.Fields{{
 			Name:     "identifier",

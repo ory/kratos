@@ -7,7 +7,7 @@ import (
 
 func (m *RegistryDefault) LoginHookExecutor() *login.HookExecutor {
 	if m.selfserviceLoginExecutor == nil {
-		m.selfserviceLoginExecutor = login.NewHookExecutor(m, m.c)
+		m.selfserviceLoginExecutor = login.NewHookExecutor(m)
 	}
 	return m.selfserviceLoginExecutor
 }
@@ -32,7 +32,7 @@ func (m *RegistryDefault) PostLoginHooks(credentialsType identity.CredentialsTyp
 
 func (m *RegistryDefault) LoginHandler() *login.Handler {
 	if m.selfserviceLoginHandler == nil {
-		m.selfserviceLoginHandler = login.NewHandler(m, m.c)
+		m.selfserviceLoginHandler = login.NewHandler(m)
 	}
 
 	return m.selfserviceLoginHandler

@@ -13,7 +13,7 @@ import (
 	"github.com/ory/jsonschema/v3"
 )
 
-var schemas = pkger.Dir("/schema/.schema")
+var schemas = pkger.Dir("github.com/ory/kratos:/schema/.schema")
 
 const (
 	ExtensionRunnerIdentityMetaSchema ExtensionRunnerMetaSchema = "extension/identity.schema.json"

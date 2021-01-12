@@ -8,7 +8,7 @@ import (
 	"github.com/ory/x/logrusx"
 )
 
-func New(opts ...configx.OptionModifier) Registry {
+func New(ctx context.Context, opts ...configx.OptionModifier) Registry {
 	l := logrusx.New("ORY Kratos", config.Version)
 	c, err := config.New(l, opts...)
 	if err != nil {
@@ -20,11 +20,11 @@ func New(opts ...configx.OptionModifier) Registry {
 		l.WithError(err).Fatal("Unable to instantiate service registry.")
 	}
 
-	if err = r.Init(); err != nil {
+	if err = r.Init(ctx); err != nil {
 		l.WithError(err).Fatal("Unable to initialize service registry.")
 	}
 
-	c.Source().SetTracer(context.Background(), r.Tracer())
+	c.Source().SetTracer(ctx, r.Tracer(ctx))
 
 	return r
 }

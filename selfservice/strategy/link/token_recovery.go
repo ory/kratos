@@ -1,7 +1,10 @@
 package link
 
 import (
+	"context"
 	"time"
+
+	"github.com/ory/kratos/corp"
 
 	"github.com/gofrs/uuid"
 	errors "github.com/pkg/errors"
@@ -46,8 +49,8 @@ type RecoveryToken struct {
 	FlowID uuid.NullUUID `json:"-" faker:"-" db:"selfservice_recovery_flow_id"`
 }
 
-func (RecoveryToken) TableName() string {
-	return "identity_recovery_tokens"
+func (RecoveryToken) TableName(ctx context.Context) string {
+	return corp.ContextualizeTableName(ctx, "identity_recovery_tokens")
 }
 
 func NewSelfServiceRecoveryToken(address *identity.RecoveryAddress, f *recovery.Flow) *RecoveryToken {

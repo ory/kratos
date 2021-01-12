@@ -33,13 +33,14 @@ type (
 )
 
 func TestPersister(p Persister) func(t *testing.T) {
+	ctx := context.Background()
 	return func(t *testing.T) {
 		t.Run("case=no messages in queue", func(t *testing.T) {
-			m, err := p.NextMessages(context.Background(), 10)
+			m, err := p.NextMessages(ctx, 10)
 			require.EqualError(t, err, ErrQueueEmpty.Error())
 			assert.Len(t, m, 0)
 
-			_, err = p.LatestQueuedMessage(context.Background())
+			_, err = p.LatestQueuedMessage(ctx)
 			require.EqualError(t, err, ErrQueueEmpty.Error())
 		})
 
@@ -47,13 +48,13 @@ func TestPersister(p Persister) func(t *testing.T) {
 		t.Run("case=add messages to the queue", func(t *testing.T) {
 			for k := range messages {
 				require.NoError(t, faker.FakeData(&messages[k]))
-				require.NoError(t, p.AddMessage(context.Background(), &messages[k]))
+				require.NoError(t, p.AddMessage(ctx, &messages[k]))
 				time.Sleep(time.Second) // wait a bit so that the timestamp ordering works in MySQL.
 			}
 		})
 
 		t.Run("case=latest message in queue", func(t *testing.T) {
-			expected, err := p.LatestQueuedMessage(context.Background())
+			expected, err := p.LatestQueuedMessage(ctx)
 			require.NoError(t, err)
 
 			actual := messages[len(messages)-1]
@@ -64,7 +65,7 @@ func TestPersister(p Persister) func(t *testing.T) {
 		t.Run("case=pull messages from the queue", func(t *testing.T) {
 			for k, expected := range messages {
 				t.Run(fmt.Sprintf("message=%d", k), func(t *testing.T) {
-					messages, err := p.NextMessages(context.Background(), 1)
+					messages, err := p.NextMessages(ctx, 1)
 					require.NoError(t, err)
 					require.Len(t, messages, 1)
 
@@ -76,23 +77,23 @@ func TestPersister(p Persister) func(t *testing.T) {
 					assert.Equal(t, expected.Type, actual.Type)
 					assert.Equal(t, expected.Recipient, actual.Recipient)
 
-					require.NoError(t, p.SetMessageStatus(context.Background(), actual.ID, MessageStatusSent))
+					require.NoError(t, p.SetMessageStatus(ctx, actual.ID, MessageStatusSent))
 				})
 			}
 
-			_, err := p.NextMessages(context.Background(), 10)
+			_, err := p.NextMessages(ctx, 10)
 			require.EqualError(t, err, ErrQueueEmpty.Error())
 		})
 
 		t.Run("case=setting message status", func(t *testing.T) {
-			require.NoError(t, p.SetMessageStatus(context.Background(), messages[0].ID, MessageStatusQueued))
-			ms, err := p.NextMessages(context.Background(), 1)
+			require.NoError(t, p.SetMessageStatus(ctx, messages[0].ID, MessageStatusQueued))
+			ms, err := p.NextMessages(ctx, 1)
 			require.NoError(t, err)
 			require.Len(t, ms, 1)
 			assert.Equal(t, messages[0].ID, ms[0].ID)
 
-			require.NoError(t, p.SetMessageStatus(context.Background(), messages[0].ID, MessageStatusSent))
-			_, err = p.NextMessages(context.Background(), 1)
+			require.NoError(t, p.SetMessageStatus(ctx, messages[0].ID, MessageStatusSent))
+			_, err = p.NextMessages(ctx, 1)
 			require.EqualError(t, err, ErrQueueEmpty.Error())
 		})
 	}

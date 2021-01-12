@@ -1,6 +1,7 @@
 package password
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -13,8 +14,6 @@ import (
 
 	"github.com/ory/x/errorsx"
 
-	_ "github.com/ory/jsonschema/v3/fileloader"
-	_ "github.com/ory/jsonschema/v3/httploader"
 	"github.com/ory/x/decoderx"
 
 	"github.com/ory/kratos/driver/config"
@@ -45,7 +44,7 @@ func (s *Strategy) RegisterRegistrationRoutes(public *x.RouterPublic) {
 	s.d.CSRFHandler().IgnorePath(RouteRegistration)
 
 	public.POST(RouteRegistration, s.d.SessionHandler().IsNotAuthenticated(s.handleRegistration, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		handler := session.RedirectOnAuthenticated(s.c)
+		handler := session.RedirectOnAuthenticated(s.d)
 		if x.IsJSONRequest(r) {
 			handler = session.RespondWithJSONErrorOnAuthenticated(s.d.Writer(), registration.ErrAlreadyLoggedIn)
 		}
@@ -68,7 +67,7 @@ func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Reques
 
 			method.Config.SetCSRF(s.d.GenerateCSRFToken(r))
 			rr.Methods[identity.CredentialsTypePassword] = method
-			if errSec := method.Config.SortFields(s.c.DefaultIdentityTraitsSchemaURL().String()); errSec != nil {
+			if errSec := method.Config.SortFields(s.d.Configuration(r.Context()).DefaultIdentityTraitsSchemaURL().String()); errSec != nil {
 				s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, identity.CredentialsTypePassword, rr, errors.Wrap(err, errSec.Error()))
 				return
 			}
@@ -79,8 +78,8 @@ func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Reques
 }
 
 func (s *Strategy) decode(p *RegistrationFormPayload, r *http.Request) error {
-	raw, err := sjson.SetBytes(pkgerx.MustRead(pkger.Open("/selfservice/strategy/password/.schema/registration.schema.json")),
-		"properties.traits.$ref", s.c.DefaultIdentityTraitsSchemaURL().String()+"#/properties/traits")
+	raw, err := sjson.SetBytes(pkgerx.MustRead(pkger.Open("github.com/ory/kratos:/selfservice/strategy/password/.schema/registration.schema.json")),
+		"properties.traits.$ref", s.d.Configuration(r.Context()).DefaultIdentityTraitsSchemaURL().String()+"#/properties/traits")
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -162,7 +161,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	if err := flow.VerifyRequest(r, ar.Type, s.c.DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+	if err := flow.VerifyRequest(r, ar.Type, s.d.Configuration(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		s.handleRegistrationError(w, r, ar, &p, err)
 		return
 	}
@@ -176,7 +175,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 		p.Traits = json.RawMessage("{}")
 	}
 
-	hpw, err := s.d.Hasher().Generate([]byte(p.Password))
+	hpw, err := s.d.Hasher().Generate(r.Context(), []byte(p.Password))
 	if err != nil {
 		s.handleRegistrationError(w, r, ar, &p, err)
 		return
@@ -192,7 +191,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 	i.Traits = identity.Traits(p.Traits)
 	i.SetCredentials(s.ID(), identity.Credentials{Type: s.ID(), Identifiers: []string{}, Config: co})
 
-	if err := s.validateCredentials(i, p.Password); err != nil {
+	if err := s.validateCredentials(r.Context(), i, p.Password); err != nil {
 		s.handleRegistrationError(w, r, ar, &p, err)
 		return
 	}
@@ -203,8 +202,8 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 	}
 }
 
-func (s *Strategy) validateCredentials(i *identity.Identity, pw string) error {
-	if err := s.d.IdentityValidator().Validate(i); err != nil {
+func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity, pw string) error {
+	if err := s.d.IdentityValidator().Validate(ctx, i); err != nil {
 		return err
 	}
 
@@ -217,7 +216,7 @@ func (s *Strategy) validateCredentials(i *identity.Identity, pw string) error {
 	}
 
 	for _, id := range c.Identifiers {
-		if err := s.d.PasswordValidator().Validate(id, pw); err != nil {
+		if err := s.d.PasswordValidator().Validate(ctx, id, pw); err != nil {
 			if _, ok := errorsx.Cause(err).(*herodot.DefaultError); ok {
 				return err
 			}
@@ -229,9 +228,9 @@ func (s *Strategy) validateCredentials(i *identity.Identity, pw string) error {
 }
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.Flow) error {
-	action := sr.AppendTo(urlx.AppendPaths(s.c.SelfPublicURL(), RouteRegistration))
+	action := sr.AppendTo(urlx.AppendPaths(s.d.Configuration(r.Context()).SelfPublicURL(), RouteRegistration))
 
-	htmlf, err := form.NewHTMLFormFromJSONSchema(action.String(), s.c.DefaultIdentityTraitsSchemaURL().String(), "", nil)
+	htmlf, err := form.NewHTMLFormFromJSONSchema(action.String(), s.d.Configuration(r.Context()).DefaultIdentityTraitsSchemaURL().String(), "", nil)
 	if err != nil {
 		return err
 	}
@@ -240,7 +239,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.
 	htmlf.SetCSRF(s.d.GenerateCSRFToken(r))
 	htmlf.SetField(form.Field{Name: "password", Type: "password", Required: true})
 
-	if err := htmlf.SortFields(s.c.DefaultIdentityTraitsSchemaURL().String()); err != nil {
+	if err := htmlf.SortFields(s.d.Configuration(r.Context()).DefaultIdentityTraitsSchemaURL().String()); err != nil {
 		return err
 	}
 

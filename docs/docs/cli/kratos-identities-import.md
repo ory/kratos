@@ -45,7 +45,7 @@ $ cat file.json | kratos identities import
 ```
   -e, --endpoint string   The URL of ORY Kratos' Admin API. Alternatively set using the KRATOS_ADMIN_URL environmental variable.
   -f, --format string     Set the output format. One of table, json, and json-pretty.
-  -q, --quiet             Prints only IDs, one per line. Takes precedence over --format.
+  -q, --quiet             Be quiet with output printing.
 ```
 
 ### SEE ALSO

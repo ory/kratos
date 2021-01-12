@@ -6,7 +6,7 @@ import (
 
 func (m *RegistryDefault) RecoveryFlowErrorHandler() *recovery.ErrorHandler {
 	if m.selfserviceRecoveryErrorHandler == nil {
-		m.selfserviceRecoveryErrorHandler = recovery.NewErrorHandler(m, m.c)
+		m.selfserviceRecoveryErrorHandler = recovery.NewErrorHandler(m)
 	}
 
 	return m.selfserviceRecoveryErrorHandler
@@ -14,7 +14,7 @@ func (m *RegistryDefault) RecoveryFlowErrorHandler() *recovery.ErrorHandler {
 
 func (m *RegistryDefault) RecoveryHandler() *recovery.Handler {
 	if m.selfserviceRecoveryHandler == nil {
-		m.selfserviceRecoveryHandler = recovery.NewHandler(m, m.c)
+		m.selfserviceRecoveryHandler = recovery.NewHandler(m)
 	}
 
 	return m.selfserviceRecoveryHandler

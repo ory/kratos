@@ -1,7 +1,10 @@
 package questions
 
 import (
+	"context"
 	"time"
+
+	"github.com/ory/kratos/corp"
 
 	"github.com/gofrs/uuid"
 )
@@ -24,6 +27,6 @@ type (
 	}
 )
 
-func (a RecoverySecurityAnswers) TableName() string {
-	return "identity_recovery_addresses"
+func (a RecoverySecurityAnswers) TableName(ctx context.Context) string {
+	return corp.ContextualizeTableName(ctx, "identity_recovery_addresses")
 }

@@ -1,9 +1,12 @@
 package errorx
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"time"
+
+	"github.com/ory/kratos/corp"
 
 	"github.com/gofrs/uuid"
 )
@@ -32,6 +35,6 @@ type ErrorContainer struct {
 	WasSeen bool         `json:"-" db:"was_seen"`
 }
 
-func (e ErrorContainer) TableName() string {
-	return "selfservice_errors"
+func (e ErrorContainer) TableName(ctx context.Context) string {
+	return corp.ContextualizeTableName(ctx, "selfservice_errors")
 }

@@ -38,7 +38,7 @@ type Persister interface {
 	link.VerificationTokenPersister
 
 	Close(context.Context) error
-	Ping(context.Context) error
+	Ping() error
 	MigrationStatus(c context.Context, b io.Writer) error
 	MigrateDown(c context.Context, steps int) error
 	MigrateUp(c context.Context) error

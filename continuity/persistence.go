@@ -30,9 +30,11 @@ func TestPersister(p interface {
 	Persister
 	identity.PrivilegedPool
 }) func(t *testing.T) {
+	ctx := context.Background()
+
 	var createIdentity = func(t *testing.T) *identity.Identity {
 		id := identity.Identity{ID: x.NewUUID()}
-		require.NoError(t, p.CreateIdentity(context.Background(), &id))
+		require.NoError(t, p.CreateIdentity(ctx, &id))
 		return &id
 	}
 
@@ -46,15 +48,15 @@ func TestPersister(p interface {
 
 	return func(t *testing.T) {
 		t.Run("case=not found", func(t *testing.T) {
-			_, err := p.GetContinuitySession(context.Background(), x.NewUUID())
+			_, err := p.GetContinuitySession(ctx, x.NewUUID())
 			require.EqualError(t, err, sqlcon.ErrNoRows.Error())
 		})
 
 		t.Run("case=save and find", func(t *testing.T) {
 			expected := createContainer(t)
-			require.NoError(t, p.SaveContinuitySession(context.Background(), &expected))
+			require.NoError(t, p.SaveContinuitySession(ctx, &expected))
 
-			actual, err := p.GetContinuitySession(context.Background(), expected.ID)
+			actual, err := p.GetContinuitySession(ctx, expected.ID)
 			require.NoError(t, err)
 			actual.UpdatedAt, actual.CreatedAt, expected.UpdatedAt, expected.CreatedAt = time.Time{}, time.Time{}, time.Time{}, time.Time{}
 			assert.EqualValues(t, expected.UTC(), actual.UTC())
@@ -63,10 +65,10 @@ func TestPersister(p interface {
 		t.Run("case=save and delete", func(t *testing.T) {
 			expected := createContainer(t)
 
-			require.NoError(t, p.SaveContinuitySession(context.Background(), &expected))
-			require.NoError(t, p.DeleteContinuitySession(context.Background(), expected.ID))
+			require.NoError(t, p.SaveContinuitySession(ctx, &expected))
+			require.NoError(t, p.DeleteContinuitySession(ctx, expected.ID))
 
-			_, err := p.GetContinuitySession(context.Background(), expected.ID)
+			_, err := p.GetContinuitySession(ctx, expected.ID)
 			require.EqualError(t, err, sqlcon.ErrNoRows.Error())
 		})
 	}

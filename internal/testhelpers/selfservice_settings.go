@@ -39,7 +39,7 @@ func NewSettingsUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Se
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, e)
 	}))
-	reg.Configuration().MustSet(config.ViperKeySelfServiceSettingsURL, ts.URL+"/settings-ts")
+	reg.Configuration(context.Background()).MustSet(config.ViperKeySelfServiceSettingsURL, ts.URL+"/settings-ts")
 	t.Cleanup(ts.Close)
 	return ts
 }
@@ -147,8 +147,8 @@ func NewSettingsUIEchoServer(t *testing.T, reg *driver.RegistryDefault) *httptes
 	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)
 
-	reg.Configuration().MustSet(config.ViperKeySelfServiceSettingsURL, ts.URL+"/settings")
-	reg.Configuration().MustSet(config.ViperKeySelfServiceLoginUI, ts.URL+"/login")
+	reg.Configuration(context.Background()).MustSet(config.ViperKeySelfServiceSettingsURL, ts.URL+"/settings")
+	reg.Configuration(context.Background()).MustSet(config.ViperKeySelfServiceLoginUI, ts.URL+"/login")
 
 	return ts
 }
@@ -196,8 +196,8 @@ func NewSettingsAPIServer(t *testing.T, reg *driver.RegistryDefault, ids map[str
 	t.Cleanup(tsp.Close)
 	t.Cleanup(tsa.Close)
 
-	reg.Configuration().MustSet(config.ViperKeyPublicBaseURL, tsp.URL)
-	reg.Configuration().MustSet(config.ViperKeyAdminBaseURL, tsa.URL)
+	reg.Configuration(context.Background()).MustSet(config.ViperKeyPublicBaseURL, tsp.URL)
+	reg.Configuration(context.Background()).MustSet(config.ViperKeyAdminBaseURL, tsa.URL)
 	return tsp, tsa, AddAndLoginIdentities(t, reg, &httptest.Server{Config: &http.Server{Handler: public}, URL: tsp.URL}, ids)
 }
 

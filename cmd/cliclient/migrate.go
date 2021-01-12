@@ -3,7 +3,6 @@ package cliclient
 import (
 	"bufio"
 	"bytes"
-	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -29,9 +28,10 @@ func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string) {
 
 	if flagx.MustGetBool(cmd, "read-from-env") {
 		d = driver.New(
+			cmd.Context(),
 			configx.WithFlags(cmd.Flags()),
 			configx.SkipValidation())
-		if len(d.Configuration().DSN()) == 0 {
+		if len(d.Configuration(cmd.Context()).DSN()) == 0 {
 			fmt.Println(cmd.UsageString())
 			fmt.Println("")
 			fmt.Println("When using flag -e, environment variable DSN must be set")
@@ -45,13 +45,14 @@ func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string) {
 			return
 		}
 		d = driver.New(
+			cmd.Context(),
 			configx.WithFlags(cmd.Flags()),
 			configx.SkipValidation(),
 			configx.WithValue(config.ViperKeyDSN, args[0]))
 	}
 
 	var plan bytes.Buffer
-	err := d.Persister().MigrationStatus(context.Background(), &plan)
+	err := d.Persister().MigrationStatus(cmd.Context(), &plan)
 	cmdx.Must(err, "An error occurred planning migrations: %s", err)
 
 	fmt.Println("The following migration is planned:")
@@ -67,7 +68,7 @@ func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	err = d.Persister().MigrateUp(context.Background())
+	err = d.Persister().MigrateUp(cmd.Context())
 	cmdx.Must(err, "An error occurred while connecting to SQL: %s", err)
 	fmt.Println("Successfully applied SQL migrations!")
 }

@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/inhies/go-bytesize"
@@ -130,6 +131,10 @@ type (
 		l *logrusx.Logger
 		p *configx.Provider
 	}
+
+	Providers interface {
+		Configuration(ctx context.Context) *Provider
+	}
 )
 
 func (c *HasherArgon2Config) MarshalJSON() ([]byte, error) {
@@ -181,7 +186,7 @@ func MustNew(l *logrusx.Logger, opts ...configx.OptionModifier) *Provider {
 }
 
 func New(l *logrusx.Logger, opts ...configx.OptionModifier) (*Provider, error) {
-	f, err := pkger.Open("/.schema/config.schema.json")
+	f, err := pkger.Open("github.com/ory/kratos:/.schema/config.schema.json")
 	if err != nil {
 		return nil, err
 	}
