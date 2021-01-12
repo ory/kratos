@@ -13,7 +13,7 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// FormFields Fields contains multiple fields
+// FormFields FormFields Fields contains multiple fields
 //
 // swagger:model formFields
 type FormFields []*FormField

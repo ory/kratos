@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// RegistrationViaAPIResponse RegistrationViaAPIResponse The Response for Registration Flows via API
+// RegistrationViaAPIResponse RegistrationViaAPIResponse RegistrationViaAPIResponse The Response for Registration Flows via API
 //
 // swagger:model registrationViaApiResponse
 type RegistrationViaAPIResponse struct {
