@@ -1130,7 +1130,7 @@ password:
 ## secrets ##
 #
 secrets:
-  ## Singing Keys for Cookies ##
+  ## Signing Keys for Cookies ##
   #
   # The first secret in the array is used for encrypting cookies while all other keys are used to decrypt older cookies that were signed with that old secret.
   #
@@ -1145,7 +1145,7 @@ secrets:
 
   ## Default Encryption Signing Secrets ##
   #
-  # The first secret in the array is used for singing and encrypting things while all other keys are used to verify and decrypt older things that were signed with that old secret.
+  # The first secret in the array is used for signing and encrypting things while all other keys are used to verify and decrypt older things that were signed with that old secret.
   #
   # Set this value using environment variables on
   # - Linux/macOS:
@@ -1318,6 +1318,49 @@ session:
 #    > set VERSION=<value>
 #
 version: v0.5.0-alpha.1
+
+## dev ##
+#
+# Set this value using environment variables on
+# - Linux/macOS:
+#    $ export DEV=<value>
+# - Windows Command Line (CMD):
+#    > set DEV=<value>
+#
+dev: false
+
+## help ##
+#
+# Set this value using environment variables on
+# - Linux/macOS:
+#    $ export HELP=<value>
+# - Windows Command Line (CMD):
+#    > set HELP=<value>
+#
+help: false
+
+## sqa-opt-out ##
+#
+# Default value: false
+#
+# Set this value using environment variables on
+# - Linux/macOS:
+#    $ export SQA-OPT-OUT=<value>
+# - Windows Command Line (CMD):
+#    > set SQA-OPT-OUT=<value>
+#
+sqa-opt-out: false
+
+## config ##
+#
+# Set this value using environment variables on
+# - Linux/macOS:
+#    $ export CONFIG=<value>
+# - Windows Command Line (CMD):
+#    > set CONFIG=<value>
+#
+config:
+  - ''
 
 ## Courier configuration ##
 #
