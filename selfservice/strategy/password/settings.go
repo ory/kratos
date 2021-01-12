@@ -156,12 +156,12 @@ func (s *Strategy) continueSettingsFlow(
 	w http.ResponseWriter, r *http.Request,
 	ctxUpdate *settings.UpdateContext, p *CompleteSelfServiceSettingsFlowWithPasswordMethod,
 ) {
-	if err := flow.VerifyRequest(r, ctxUpdate.Flow.Type, s.d.Configuration(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+	if err := flow.VerifyRequest(r, ctxUpdate.Flow.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		s.handleSettingsError(w, r, ctxUpdate, p, err)
 		return
 	}
 
-	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Configuration(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
+	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
 		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 		return
 	}
@@ -211,7 +211,7 @@ func (s *Strategy) continueSettingsFlow(
 }
 
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, _ *identity.Identity, f *settings.Flow) error {
-	hf := &form.HTMLForm{Action: urlx.CopyWithQuery(urlx.AppendPaths(s.d.Configuration(r.Context()).SelfPublicURL(), RouteSettings),
+	hf := &form.HTMLForm{Action: urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteSettings),
 		url.Values{"flow": {f.ID.String()}}).String(), Fields: form.Fields{{Name: "password",
 		Type: "password", Required: true}}, Method: "POST"}
 	hf.SetCSRF(s.d.GenerateCSRFToken(r))

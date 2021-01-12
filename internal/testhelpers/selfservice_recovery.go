@@ -32,7 +32,7 @@ func NewVerificationUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptes
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, e)
 	}))
-	reg.Configuration(context.Background()).MustSet(config.ViperKeySelfServiceVerificationUI, ts.URL+"/verification-ts")
+	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceVerificationUI, ts.URL+"/verification-ts")
 	t.Cleanup(ts.Close)
 	return ts
 }

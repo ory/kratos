@@ -9,7 +9,7 @@ import (
 )
 
 func (p *Persister) hmacValue(ctx context.Context, value string) string {
-	return p.hmacValueWithSecret(value, p.r.Configuration(ctx).SecretsSession()[0])
+	return p.hmacValueWithSecret(value, p.r.Config(ctx).SecretsSession()[0])
 }
 
 func (p *Persister) hmacValueWithSecret(value string, secret []byte) string {
@@ -19,7 +19,7 @@ func (p *Persister) hmacValueWithSecret(value string, secret []byte) string {
 }
 
 func (p *Persister) hmacConstantCompare(ctx context.Context, value, hash string) bool {
-	for _, secret := range p.r.Configuration(ctx).SecretsSession() {
+	for _, secret := range p.r.Config(ctx).SecretsSession() {
 		if subtle.ConstantTimeCompare([]byte(p.hmacValueWithSecret(value, secret)), []byte(hash)) == 1 {
 			return true
 		}

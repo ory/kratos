@@ -37,7 +37,7 @@ type (
 		x.CSRFTokenGeneratorProvider
 		x.WriterProvider
 		x.CSRFProvider
-		config.Providers
+		config.Provider
 	}
 	Handler struct {
 		d handlerDependencies
@@ -91,7 +91,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //       500: genericError
 //       400: genericError
 func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	req, err := NewFlow(h.d.Configuration(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies(), flow.TypeAPI)
+	req, err := NewFlow(h.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies(), flow.TypeAPI)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
@@ -123,7 +123,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //       302: emptyResponse
 //       500: genericError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	req, err := NewFlow(h.d.Configuration(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies(), flow.TypeBrowser)
+	req, err := NewFlow(h.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies(), flow.TypeBrowser)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
@@ -134,7 +134,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, _ http
 		return
 	}
 
-	http.Redirect(w, r, req.AppendTo(h.d.Configuration(r.Context()).SelfServiceFlowRecoveryUI()).String(), http.StatusFound)
+	http.Redirect(w, r, req.AppendTo(h.d.Config(r.Context()).SelfServiceFlowRecoveryUI()).String(), http.StatusFound)
 }
 
 // nolint:deadcode,unused
@@ -180,12 +180,12 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 		if req.Type == flow.TypeBrowser {
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 				WithReason("The recovery flow has expired. Redirect the user to the recovery flow init endpoint to initialize a new recovery flow.").
-				WithDetail("redirect_to", urlx.AppendPaths(h.d.Configuration(r.Context()).SelfPublicURL(), RouteInitBrowserFlow).String())))
+				WithDetail("redirect_to", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitBrowserFlow).String())))
 			return
 		}
 		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 			WithReason("The recovery flow has expired. Call the recovery flow init API endpoint to initialize a new recovery flow.").
-			WithDetail("api", urlx.AppendPaths(h.d.Configuration(r.Context()).SelfPublicURL(), RouteInitAPIFlow).String())))
+			WithDetail("api", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitAPIFlow).String())))
 		return
 	}
 

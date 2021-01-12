@@ -61,7 +61,7 @@ type DefaultPasswordValidator struct {
 }
 
 type validatorDependencies interface {
-	config.Providers
+	config.Provider
 }
 
 func NewDefaultPasswordValidatorStrategy(reg validatorDependencies) *DefaultPasswordValidator {
@@ -166,7 +166,7 @@ func (s *DefaultPasswordValidator) Validate(ctx context.Context, identifier, pas
 
 	if !ok {
 		err := s.fetch(hpw)
-		if (errors.Is(err, ErrNetworkFailure) || errors.Is(err, ErrUnexpectedStatusCode)) && s.reg.Configuration(ctx).PasswordPolicyConfig().IgnoreNetworkErrors {
+		if (errors.Is(err, ErrNetworkFailure) || errors.Is(err, ErrUnexpectedStatusCode)) && s.reg.Config(ctx).PasswordPolicyConfig().IgnoreNetworkErrors {
 			return nil
 		} else if err != nil {
 			return err
@@ -175,7 +175,7 @@ func (s *DefaultPasswordValidator) Validate(ctx context.Context, identifier, pas
 		return s.Validate(ctx, identifier, password)
 	}
 
-	if c > int64(s.reg.Configuration(ctx).PasswordPolicyConfig().MaxBreaches) {
+	if c > int64(s.reg.Config(ctx).PasswordPolicyConfig().MaxBreaches) {
 		return errors.Errorf("the password has been found in at least %d data breaches and must no longer be used.", c)
 	}
 

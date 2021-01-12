@@ -29,7 +29,7 @@ func TestPersister_CreateIdentityRacy(t *testing.T) {
 
 		t.Run(fmt.Sprintf("db=%s", name), func(t *testing.T) {
 			var wg sync.WaitGroup
-			p.Configuration(context.Background()).MustSet(config.ViperKeyDefaultIdentitySchemaURL, defaultSchema.RawURL)
+			p.Config(context.Background()).MustSet(config.ViperKeyDefaultIdentitySchemaURL, defaultSchema.RawURL)
 
 			for i := 0; i < 10; i++ {
 				wg.Add(1)

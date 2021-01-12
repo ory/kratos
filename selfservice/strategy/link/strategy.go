@@ -36,7 +36,7 @@ type (
 		x.WriterProvider
 		x.LoggingProvider
 
-		config.Providers
+		config.Provider
 
 		session.HandlerProvider
 		session.ManagementProvider

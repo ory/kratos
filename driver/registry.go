@@ -58,8 +58,8 @@ type Registry interface {
 	PrometheusManager() *prometheus.MetricsManager
 	Tracer(context.Context) *tracing.Tracer
 
-	config.Providers
-	WithConfig(c *config.Provider) Registry
+	config.Provider
+	WithConfig(c *config.Config) Registry
 
 	x.CSRFProvider
 	x.WriterProvider
@@ -131,7 +131,7 @@ type Registry interface {
 	x.CSRFTokenGeneratorProvider
 }
 
-func NewRegistryFromDSN(c *config.Provider, l *logrusx.Logger) (Registry, error) {
+func NewRegistryFromDSN(c *config.Config, l *logrusx.Logger) (Registry, error) {
 	driver, err := dbal.GetDriverFor(c.DSN())
 	if err != nil {
 		return nil, errors.WithStack(err)

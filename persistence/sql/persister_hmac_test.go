@@ -20,7 +20,7 @@ import (
 
 type logRegistryOnly struct {
 	l *logrusx.Logger
-	c *config.Provider
+	c *config.Config
 }
 
 func (l *logRegistryOnly) IdentityTraitsSchemas(ctx context.Context) schema.Schemas {
@@ -38,7 +38,7 @@ func (l *logRegistryOnly) Logger() *logrusx.Logger {
 	return l.l
 }
 
-func (l *logRegistryOnly) Configuration(_ context.Context) *config.Provider {
+func (l *logRegistryOnly) Config(_ context.Context) *config.Config {
 	return l.c
 }
 

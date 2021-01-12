@@ -74,7 +74,7 @@ func (s *Strategy) linkedProviders(ctx context.Context, conf *ConfigurationColle
 
 	var result []Provider
 	for _, p := range available.Providers {
-		prov, err := conf.Provider(p.Provider, s.d.Configuration(ctx).SelfPublicURL())
+		prov, err := conf.Provider(p.Provider, s.d.Config(ctx).SelfPublicURL())
 		if err != nil {
 			return nil, err
 		}
@@ -104,7 +104,7 @@ func (s *Strategy) linkableProviders(ctx context.Context, conf *ConfigurationCol
 		}
 
 		if !found {
-			prov, err := conf.Provider(p.ID, s.d.Configuration(ctx).SelfPublicURL())
+			prov, err := conf.Provider(p.ID, s.d.Config(ctx).SelfPublicURL())
 			if err != nil {
 				return nil, err
 			}
@@ -141,7 +141,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 	}
 
 	f := form.NewHTMLForm(urlx.CopyWithQuery(urlx.AppendPaths(
-		s.d.Configuration(r.Context()).SelfPublicURL(), SettingsPath), url.Values{"flow": {sr.ID.String()}}).String())
+		s.d.Config(r.Context()).SelfPublicURL(), SettingsPath), url.Values{"flow": {sr.ID.String()}}).String())
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 
 	for _, l := range linkable {
@@ -301,12 +301,12 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 		return
 	}
 
-	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Configuration(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
+	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
 		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 		return
 	}
 
-	http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Configuration(r.Context()).SelfPublicURL(),
+	http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(),
 		strings.Replace(RouteAuth, ":flow", p.FlowID, 1)),
 		url.Values{"provider": {p.Link}}).String(), http.StatusFound)
 }
@@ -315,7 +315,7 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request,
 	ctxUpdate *settings.UpdateContext, claims *Claims, provider Provider) {
 	p := &completeSelfServiceBrowserSettingsOIDCFlowPayload{
 		Link: provider.Config().ID, FlowID: ctxUpdate.Flow.ID.String()}
-	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Configuration(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
+	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
 		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 		return
 	}
@@ -359,7 +359,7 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request,
 
 func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request,
 	ctxUpdate *settings.UpdateContext, p *completeSelfServiceBrowserSettingsOIDCFlowPayload) {
-	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Configuration(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
+	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
 		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 		return
 	}

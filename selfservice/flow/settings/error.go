@@ -25,7 +25,7 @@ var (
 
 type (
 	errorHandlerDependencies interface {
-		config.Providers
+		config.Provider
 		errorx.ManagementProvider
 		x.WriterProvider
 		x.LoggingProvider
@@ -81,8 +81,8 @@ func (s *ErrorHandler) reauthenticate(
 		return
 	}
 
-	returnTo := urlx.CopyWithQuery(urlx.AppendPaths(s.d.Configuration(r.Context()).SelfPublicURL(), r.URL.Path), r.URL.Query())
-	http.Redirect(w, r, urlx.AppendPaths(urlx.CopyWithQuery(s.d.Configuration(r.Context()).SelfPublicURL(),
+	returnTo := urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), r.URL.Path), r.URL.Query())
+	http.Redirect(w, r, urlx.AppendPaths(urlx.CopyWithQuery(s.d.Config(r.Context()).SelfPublicURL(),
 		url.Values{"refresh": {"true"}, "return_to": {returnTo.String()}}),
 		login.RouteInitBrowserFlow).String(), http.StatusFound)
 }
@@ -122,10 +122,10 @@ func (s *ErrorHandler) WriteFlowError(
 		}
 
 		if f.Type == flow.TypeAPI {
-			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Configuration(r.Context()).SelfPublicURL(),
+			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(),
 				RouteGetFlow), url.Values{"id": {a.ID.String()}}).String(), http.StatusFound)
 		} else {
-			http.Redirect(w, r, a.AppendTo(s.d.Configuration(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusFound)
+			http.Redirect(w, r, a.AppendTo(s.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusFound)
 		}
 		return
 	}
@@ -152,7 +152,7 @@ func (s *ErrorHandler) WriteFlowError(
 	}
 
 	if f.Type == flow.TypeBrowser {
-		http.Redirect(w, r, f.AppendTo(s.d.Configuration(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusFound)
+		http.Redirect(w, r, f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusFound)
 		return
 	}
 

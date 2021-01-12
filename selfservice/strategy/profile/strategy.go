@@ -44,7 +44,7 @@ type (
 		x.WriterProvider
 		x.LoggingProvider
 
-		config.Providers
+		config.Provider
 
 		continuity.ManagementProvider
 
@@ -92,7 +92,7 @@ func (s *Strategy) RegisterSettingsRoutes(public *x.RouterPublic) {
 }
 
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity, pr *settings.Flow) error {
-	traitsSchema, err := s.d.Configuration(r.Context()).IdentityTraitsSchemas().FindSchemaByID(id.SchemaID)
+	traitsSchema, err := s.d.Config(r.Context()).IdentityTraitsSchemas().FindSchemaByID(id.SchemaID)
 	if err != nil {
 		return err
 	}
@@ -101,7 +101,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 	schemaCompiler := jsonschema.NewCompiler()
 
 	f, err := form.NewHTMLFormFromJSONSchema(urlx.CopyWithQuery(
-		urlx.AppendPaths(s.d.Configuration(r.Context()).SelfPublicURL(), RouteSettings),
+		urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteSettings),
 		url.Values{"flow": {pr.ID.String()}},
 	).String(), traitsSchema.URL, "", schemaCompiler)
 	if err != nil {
@@ -208,7 +208,7 @@ func (s *Strategy) handleSubmit(w http.ResponseWriter, r *http.Request, ps httpr
 }
 
 func (s *Strategy) continueFlow(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) {
-	if err := flow.VerifyRequest(r, ctxUpdate.Flow.Type, s.d.Configuration(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+	if err := flow.VerifyRequest(r, ctxUpdate.Flow.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		s.handleSettingsError(w, r, ctxUpdate, nil, p, err)
 		return
 	}
@@ -279,7 +279,7 @@ func (p *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) SetFlowID(rid uu
 }
 
 func (s *Strategy) hydrateForm(r *http.Request, ar *settings.Flow, ss *session.Session, traits json.RawMessage) error {
-	action := urlx.CopyWithQuery(urlx.AppendPaths(s.d.Configuration(r.Context()).SelfPublicURL(), RouteSettings),
+	action := urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteSettings),
 		url.Values{"flow": {ar.ID.String()}})
 
 	ar.Methods[settings.StrategyProfile].Config.Reset()
@@ -290,7 +290,7 @@ func (s *Strategy) hydrateForm(r *http.Request, ar *settings.Flow, ss *session.S
 	}
 	ar.Methods[settings.StrategyProfile].Config.SetCSRF(s.d.GenerateCSRFToken(r))
 
-	traitsSchema, err := s.d.Configuration(r.Context()).IdentityTraitsSchemas().FindSchemaByID(ss.Identity.SchemaID)
+	traitsSchema, err := s.d.Config(r.Context()).IdentityTraitsSchemas().FindSchemaByID(ss.Identity.SchemaID)
 	if err != nil {
 		return err
 	}

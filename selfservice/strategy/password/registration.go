@@ -67,7 +67,7 @@ func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Reques
 
 			method.Config.SetCSRF(s.d.GenerateCSRFToken(r))
 			rr.Methods[identity.CredentialsTypePassword] = method
-			if errSec := method.Config.SortFields(s.d.Configuration(r.Context()).DefaultIdentityTraitsSchemaURL().String()); errSec != nil {
+			if errSec := method.Config.SortFields(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()); errSec != nil {
 				s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, identity.CredentialsTypePassword, rr, errors.Wrap(err, errSec.Error()))
 				return
 			}
@@ -79,7 +79,7 @@ func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Reques
 
 func (s *Strategy) decode(p *RegistrationFormPayload, r *http.Request) error {
 	raw, err := sjson.SetBytes(pkgerx.MustRead(pkger.Open("github.com/ory/kratos:/selfservice/strategy/password/.schema/registration.schema.json")),
-		"properties.traits.$ref", s.d.Configuration(r.Context()).DefaultIdentityTraitsSchemaURL().String()+"#/properties/traits")
+		"properties.traits.$ref", s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()+"#/properties/traits")
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -161,7 +161,7 @@ func (s *Strategy) handleRegistration(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	if err := flow.VerifyRequest(r, ar.Type, s.d.Configuration(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
+	if err := flow.VerifyRequest(r, ar.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
 		s.handleRegistrationError(w, r, ar, &p, err)
 		return
 	}
@@ -228,9 +228,9 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 }
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.Flow) error {
-	action := sr.AppendTo(urlx.AppendPaths(s.d.Configuration(r.Context()).SelfPublicURL(), RouteRegistration))
+	action := sr.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteRegistration))
 
-	htmlf, err := form.NewHTMLFormFromJSONSchema(action.String(), s.d.Configuration(r.Context()).DefaultIdentityTraitsSchemaURL().String(), "", nil)
+	htmlf, err := form.NewHTMLFormFromJSONSchema(action.String(), s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String(), "", nil)
 	if err != nil {
 		return err
 	}
@@ -239,7 +239,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.
 	htmlf.SetCSRF(s.d.GenerateCSRFToken(r))
 	htmlf.SetField(form.Field{Name: "password", Type: "password", Required: true})
 
-	if err := htmlf.SortFields(s.d.Configuration(r.Context()).DefaultIdentityTraitsSchemaURL().String()); err != nil {
+	if err := htmlf.SortFields(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()); err != nil {
 		return err
 	}
 

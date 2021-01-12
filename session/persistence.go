@@ -47,7 +47,7 @@ type Persister interface {
 	RevokeSessionByToken(ctx context.Context, token string) error
 }
 
-func TestPersister(conf *config.Provider, p interface {
+func TestPersister(conf *config.Config, p interface {
 	Persister
 	identity.PrivilegedPool
 }) func(t *testing.T) {

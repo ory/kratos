@@ -21,7 +21,7 @@ import (
 func newReturnTs(t *testing.T, reg interface {
 	session.ManagementProvider
 	x.WriterProvider
-	config.Providers
+	config.Provider
 }) *httptest.Server {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
@@ -29,7 +29,7 @@ func newReturnTs(t *testing.T, reg interface {
 		reg.Writer().Write(w, r, sess)
 	}))
 	t.Cleanup(ts.Close)
-	reg.Configuration(context.Background()).MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL+"/return-ts")
+	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL+"/return-ts")
 	return ts
 }
 

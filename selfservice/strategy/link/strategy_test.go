@@ -8,7 +8,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/recovery"
 )
 
-func initViper(t *testing.T, c *config.Provider) {
+func initViper(t *testing.T, c *config.Config) {
 	c.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/default.schema.json")
 	c.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
 	c.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+identity.CredentialsTypePassword.String()+".enabled", true)

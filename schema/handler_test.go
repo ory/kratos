@@ -81,10 +81,10 @@ func TestHandler(t *testing.T) {
 		return string(raw)
 	}
 
-	var schemasConfig []config.SchemaConfig
+	var schemasConfig []config.Schema
 	for _, s := range schemas {
 		if s.ID != config.DefaultIdentityTraitsSchemaID {
-			schemasConfig = append(schemasConfig, config.SchemaConfig{
+			schemasConfig = append(schemasConfig, config.Schema{
 				ID:  s.ID,
 				URL: s.RawURL,
 			})

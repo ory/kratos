@@ -31,7 +31,7 @@ func (h *MigrateHandler) MigrateSQL(cmd *cobra.Command, args []string) {
 			cmd.Context(),
 			configx.WithFlags(cmd.Flags()),
 			configx.SkipValidation())
-		if len(d.Configuration(cmd.Context()).DSN()) == 0 {
+		if len(d.Config(cmd.Context()).DSN()) == 0 {
 			fmt.Println(cmd.UsageString())
 			fmt.Println("")
 			fmt.Println("When using flag -e, environment variable DSN must be set")

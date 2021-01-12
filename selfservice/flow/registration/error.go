@@ -29,7 +29,7 @@ type (
 		errorx.ManagementProvider
 		x.WriterProvider
 		x.LoggingProvider
-		config.Providers
+		config.Provider
 
 		FlowPersistenceProvider
 		HandlerProvider
@@ -96,10 +96,10 @@ func (s *ErrorHandler) WriteFlowError(
 		}
 
 		if f.Type == flow.TypeAPI {
-			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Configuration(r.Context()).SelfPublicURL(),
+			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(),
 				RouteGetFlow), url.Values{"id": {a.ID.String()}}).String(), http.StatusFound)
 		} else {
-			http.Redirect(w, r, a.AppendTo(s.d.Configuration(r.Context()).SelfServiceFlowRegistrationUI()).String(), http.StatusFound)
+			http.Redirect(w, r, a.AppendTo(s.d.Config(r.Context()).SelfServiceFlowRegistrationUI()).String(), http.StatusFound)
 		}
 		return
 	}
@@ -122,7 +122,7 @@ func (s *ErrorHandler) WriteFlowError(
 	}
 
 	if f.Type == flow.TypeBrowser {
-		http.Redirect(w, r, f.AppendTo(s.d.Configuration(r.Context()).SelfServiceFlowRegistrationUI()).String(), http.StatusFound)
+		http.Redirect(w, r, f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowRegistrationUI()).String(), http.StatusFound)
 		return
 	}
 

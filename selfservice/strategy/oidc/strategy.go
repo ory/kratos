@@ -48,7 +48,7 @@ var _ identity.ActiveCredentialsCounter = new(Strategy)
 type dependencies interface {
 	errorx.ManagementProvider
 
-	config.Providers
+	config.Provider
 
 	x.LoggingProvider
 	x.CookieProvider
@@ -292,7 +292,7 @@ func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, 
 		if _, ok := req.(*settings.Flow); ok {
 			// ignore this if it's a settings flow
 		} else if !isForced(req) {
-			http.Redirect(w, r, s.d.Configuration(r.Context()).SelfServiceBrowserDefaultReturnTo().String(), http.StatusFound)
+			http.Redirect(w, r, s.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo().String(), http.StatusFound)
 			return true
 		}
 	}
@@ -372,7 +372,7 @@ func uid(provider, subject string) string {
 
 func (s *Strategy) authURL(ctx context.Context, flowID uuid.UUID) string {
 	return urlx.AppendPaths(
-		urlx.Copy(s.d.Configuration(ctx).SelfPublicURL()),
+		urlx.Copy(s.d.Config(ctx).SelfPublicURL()),
 		strings.Replace(
 			RouteAuth, ":flow", flowID.String(), 1,
 		),
@@ -395,7 +395,7 @@ func (s *Strategy) populateMethod(r *http.Request, flowID uuid.UUID) (*FlowMetho
 func (s *Strategy) Config(ctx context.Context) (*ConfigurationCollection, error) {
 	var c ConfigurationCollection
 
-	conf := s.d.Configuration(ctx).SelfServiceStrategy(string(s.ID())).Config
+	conf := s.d.Config(ctx).SelfServiceStrategy(string(s.ID())).Config
 	if err := jsonx.
 		NewStrictDecoder(bytes.NewBuffer(conf)).
 		Decode(&c); err != nil {
@@ -409,7 +409,7 @@ func (s *Strategy) Config(ctx context.Context) (*ConfigurationCollection, error)
 func (s *Strategy) provider(ctx context.Context, id string) (Provider, error) {
 	if c, err := s.Config(ctx); err != nil {
 		return nil, err
-	} else if provider, err := c.Provider(id, s.d.Configuration(ctx).SelfPublicURL()); err != nil {
+	} else if provider, err := c.Provider(id, s.d.Config(ctx).SelfPublicURL()); err != nil {
 		return nil, err
 	} else {
 		return provider, nil
@@ -452,7 +452,7 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 			method.Config.ResetMessages()
 
 			method.Config.SetCSRF(s.d.GenerateCSRFToken(r))
-			if errSec := method.Config.SortFields(s.d.Configuration(r.Context()).DefaultIdentityTraitsSchemaURL().String()); errSec != nil {
+			if errSec := method.Config.SortFields(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()); errSec != nil {
 				s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, s.ID(), rr, errors.Wrap(err, errSec.Error()))
 				return
 			}

@@ -17,6 +17,6 @@ func ContextualizeMiddleware(_ context.Context) func(rw http.ResponseWriter, r *
 	}
 }
 
-func ContextualizeConfig(ctx context.Context, fb *config.Provider) *config.Provider {
+func ContextualizeConfig(ctx context.Context, fb *config.Config) *config.Config {
 	return fb
 }

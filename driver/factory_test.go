@@ -19,6 +19,6 @@ func TestDriverNew(t *testing.T) {
 		configx.WithValue(config.ViperKeyDSN, config.DefaultSQLiteMemoryDSN),
 		configx.SkipValidation())
 
-	assert.EqualValues(t, config.DefaultSQLiteMemoryDSN, r.Configuration(context.Background()).DSN())
+	assert.EqualValues(t, config.DefaultSQLiteMemoryDSN, r.Config(context.Background()).DSN())
 	require.NoError(t, r.Persister().Ping())
 }
