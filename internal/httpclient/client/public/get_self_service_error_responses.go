@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/ory/kratos-client-go/models"
+	"github.com/ory/kratos/internal/httpclient/models"
 )
 
 // GetSelfServiceErrorReader is a Reader for the GetSelfServiceError structure.
