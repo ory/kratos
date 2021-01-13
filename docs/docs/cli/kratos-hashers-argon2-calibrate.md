@@ -1,7 +1,7 @@
 ---
 id: kratos-hashers-argon2-calibrate
 title: kratos hashers argon2 calibrate
-description: kratos hashers argon2 calibrate Computes Optimal Argon2 Parameters.
+description: kratos hashers argon2 calibrate Computes Optimal Argon2 Parameters
 ---
 
 <!--
@@ -12,7 +12,7 @@ To improve this file please make your change against the appropriate "./cmd/*.go
 
 ## kratos hashers argon2 calibrate
 
-Computes Optimal Argon2 Parameters.
+Computes Optimal Argon2 Parameters
 
 ### Synopsis
 
