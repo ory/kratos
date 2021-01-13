@@ -55,6 +55,7 @@ require (
 	github.com/mikefarah/yq v1.15.0
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe
+	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect
 	github.com/ory/analytics-go/v4 v4.0.0
 	github.com/ory/cli v0.0.35
 	github.com/ory/dockertest/v3 v3.6.2
@@ -63,9 +64,8 @@ require (
 	github.com/ory/graceful v0.1.1
 	github.com/ory/herodot v0.9.0
 	github.com/ory/jsonschema/v3 v3.0.1
-	github.com/ory/kratos-client-go v0.0.0-00010101000000-000000000000
-	github.com/ory/kratos/corp v0.0.0-00010101000000-000000000000
 	github.com/ory/kratos-client-go v0.5.4-alpha.1
+	github.com/ory/kratos/corp v0.0.0-00010101000000-000000000000
 	github.com/ory/mail/v3 v3.0.0
 	github.com/ory/nosurf v1.2.3
 	github.com/ory/x v0.0.175
@@ -90,5 +90,4 @@ require (
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 	golang.org/x/tools v0.0.0-20200717024301-6ddee64345a6
 	gopkg.in/go-playground/validator.v9 v9.28.0
-	gopkg.in/gorp.v1 v1.7.2 // indirect
 )

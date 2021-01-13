@@ -21,7 +21,7 @@ func newHashCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "hash <password1> [<password2> ...]",
-		Short: "Hash a list of passwords for benchmarking the hashing parameters.",
+		Short: "Hash a list of passwords for benchmarking the hashing parameters",
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			conf, err := configProvider(cmd, flagConfig)
