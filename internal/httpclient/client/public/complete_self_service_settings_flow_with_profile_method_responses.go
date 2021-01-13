@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/ory/kratos-client-go/models"
+	"github.com/ory/kratos/internal/httpclient/models"
 )
 
 // CompleteSelfServiceSettingsFlowWithProfileMethodReader is a Reader for the CompleteSelfServiceSettingsFlowWithProfileMethod structure.
@@ -61,7 +61,7 @@ func (o *CompleteSelfServiceSettingsFlowWithProfileMethodReader) ReadResponse(re
 		return nil, result
 
 	default:
-		return nil, runtime.NewAPIError("unknown error", response, response.Code())
+		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
 }
 

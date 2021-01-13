@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// Message Message Message Message message
+// Message Message Message Message Message message
 //
 // swagger:model Message
 type Message struct {
