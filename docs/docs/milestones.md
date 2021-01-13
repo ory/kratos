@@ -141,7 +141,7 @@ Something is not working.
 
 #### Pull Requests
 
-- [ ] Implement FIDO2/MFA and refactor flow payloads and identity credentials
+- [x] Implement FIDO2/MFA and refactor flow payloads and identity credentials
       and authenticators
       ([kratos#921](https://github.com/ory/kratos/pull/921)) -
       [@hackerman](https://github.com/aeneasr)
