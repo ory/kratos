@@ -26,3 +26,5 @@ To improve this file please make your change against the appropriate "./cmd/*.go
   hashing.
 - [kratos hashers argon2 calibrate](kratos-hashers-argon2-calibrate) - Computes
   Optimal Argon2 Parameters.
+- [kratos hashers argon2 hash](kratos-hashers-argon2-hash) -
+- [kratos hashers argon2 load-test](kratos-hashers-argon2-load-test) -
