@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// RecoveryFlow A Recovery Flow
+// RecoveryFlow RecoveryFlow A Recovery Flow
 //
 // This request is used when an identity wants to recover their account.
 //
