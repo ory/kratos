@@ -6,6 +6,8 @@ WORKDIR /go/src/github.com/ory/kratos
 
 ADD go.mod go.mod
 ADD go.sum go.sum
+ADD internal/httpclient/go.* internal/httpclient/
+ADD corp/go.* corp/
 
 ENV GO111MODULE on
 ENV CGO_ENABLED 1
