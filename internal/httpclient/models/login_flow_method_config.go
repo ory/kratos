@@ -14,7 +14,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// LoginFlowMethodConfig LoginFlowMethodConfig LoginFlowMethodConfig LoginFlowMethodConfig LoginFlowMethodConfig login flow method config
+// LoginFlowMethodConfig LoginFlowMethodConfig LoginFlowMethodConfig LoginFlowMethodConfig LoginFlowMethodConfig LoginFlowMethodConfig login flow method config
 //
 // swagger:model loginFlowMethodConfig
 type LoginFlowMethodConfig struct {
