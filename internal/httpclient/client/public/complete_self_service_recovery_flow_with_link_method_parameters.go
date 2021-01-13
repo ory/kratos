@@ -15,7 +15,7 @@ import (
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/ory/kratos-client-go/models"
+	"github.com/ory/kratos/internal/httpclient/models"
 )
 
 // NewCompleteSelfServiceRecoveryFlowWithLinkMethodParams creates a new CompleteSelfServiceRecoveryFlowWithLinkMethodParams object
