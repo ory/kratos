@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress recovery address
+// RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress recovery address
 //
 // swagger:model RecoveryAddress
 type RecoveryAddress struct {
