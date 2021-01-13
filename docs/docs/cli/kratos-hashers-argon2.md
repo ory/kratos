@@ -28,4 +28,5 @@ To improve this file please make your change against the appropriate "./cmd/*.go
   Optimal Argon2 Parameters
 - [kratos hashers argon2 hash](kratos-hashers-argon2-hash) - Hash a list of
   passwords for benchmarking the hashing parameters
-- [kratos hashers argon2 load-test](kratos-hashers-argon2-load-test) -
+- [kratos hashers argon2 load-test](kratos-hashers-argon2-load-test) - Simulate
+  the password hashing with a number of concurrent requests/minute.

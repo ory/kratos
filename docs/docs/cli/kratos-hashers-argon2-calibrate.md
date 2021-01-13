@@ -45,7 +45,7 @@ kratos hashers argon2 calibrate <requests-per-minute> [flags]
       --key-length uint32             Length of the key in bytes. (default 32)
       --max-concurrent uint8          Maximum number of concurrent hashing operations. (default 16)
       --max-memory byte_size          Maximum memory allowed (0 means no limit). (default 0.00B)
-      --minimal-duration duration     Minimal duration a hashing operation (~login request) takes. (default 500ms)
+      --min-duration duration         Minimal duration a hashing operation (~login request) takes. (default 500ms)
       --parallelism uint8             Number of threads to use. (default 72)
   -r, --probe-runs int                Runs per probe, median of all runs is taken as the result. (default 2)
   -q, --quiet                         Be quiet with output printing.
