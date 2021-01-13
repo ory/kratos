@@ -60,8 +60,10 @@ func newLoadTestCmd() *cobra.Command {
 	flagConf := &argon2Config{}
 
 	cmd := &cobra.Command{
-		Use:  "load-test <authentication-requests-per-minute>",
-		Args: cobra.ExactArgs(1),
+		Use:   "load-test <authentication-requests-per-minute>",
+		Short: "Simulate the password hashing with a number of concurrent requests/minute.",
+		Long:  "Simulates a number of concurrent authentication requests per minute. Gives statistical data about the measured performance and resource consumption. Can be used to tune and test the hashing parameters for peak demand situations.",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			perMinute, err := strconv.ParseInt(args[0], 0, 0)
 			if err != nil {

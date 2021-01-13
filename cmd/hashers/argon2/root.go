@@ -23,7 +23,7 @@ const (
 	FlagKeyLength         = "key-length"
 	FlagMemory            = "memory"
 	FlagDedicatedMemory   = "dedicated-memory"
-	FlagMinimalDuration   = "minimal-duration"
+	FlagMinimalDuration   = "min-duration"
 	FlagExpectedDeviation = "expected-deviation"
 )
 
