@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// VerifiableAddress VerifiableAddress VerifiableAddress VerifiableAddress VerifiableAddress VerifiableAddress VerifiableAddress VerifiableAddress verifiable address
+// VerifiableAddress VerifiableAddress VerifiableAddress VerifiableAddress VerifiableAddress VerifiableAddress VerifiableAddress VerifiableAddress VerifiableAddress verifiable address
 //
 // swagger:model VerifiableAddress
 type VerifiableAddress struct {
