@@ -34,7 +34,7 @@ kratos hashers argon2 hash <password1> [<password2> ...] [flags]
       --iterations uint32             Number of iterations to start probing at. (default 1)
       --key-length uint32             Length of the key in bytes. (default 32)
       --memory byte_size              Memory to use. (default 512.00MB)
-      --minimal-duration duration     Minimal duration a hashing operation (~login request) takes. (default 500ms)
+      --min-duration duration         Minimal duration a hashing operation (~login request) takes. (default 500ms)
       --parallel                      Run all hashing operations in parallel.
       --parallelism uint8             Number of threads to use. (default 72)
       --salt-length uint32            Length of the salt in bytes. (default 16)
