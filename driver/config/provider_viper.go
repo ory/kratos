@@ -84,29 +84,29 @@ const (
 	ViperKeyHasherArgon2ConfigParallelism                           = "hashers.argon2.parallelism"
 	ViperKeyHasherArgon2ConfigSaltLength                            = "hashers.argon2.salt_length"
 	ViperKeyHasherArgon2ConfigKeyLength                             = "hashers.argon2.key_length"
-	ViperKeyHasherArgon2ConfigMinimalDuration                       = "hashers.argon2.minimal_duration"
+	ViperKeyHasherArgon2ConfigExpectedDuration                      = "hashers.argon2.expected_duration"
 	ViperKeyHasherArgon2ConfigExpectedDeviation                     = "hashers.argon2.expected_deviation"
 	ViperKeyHasherArgon2ConfigDedicatedMemory                       = "hashers.argon2.dedicated_memory"
 	ViperKeyPasswordMaxBreaches                                     = "password.max_breaches"
 	ViperKeyIgnoreNetworkErrors                                     = "password.ignore_network_errors"
 	ViperKeyVersion                                                 = "version"
-	Argon2DefaultMemory                                             = uint32(512 * bytesize.MB / bytesize.KB)
+	Argon2DefaultMemory                                             = 128 * bytesize.MB
 	Argon2DefaultIterations                                  uint32 = 1
 	Argon2DefaultSaltLength                                  uint32 = 16
 	Argon2DefaultKeyLength                                   uint32 = 32
 	Argon2DefaultDuration                                           = 500 * time.Millisecond
 	Argon2DefaultDeviation                                          = 500 * time.Millisecond
-	Argon2DefaultDedicatedMemory                                    = 4 * bytesize.GB
+	Argon2DefaultDedicatedMemory                                    = 1 * bytesize.GB
 )
 
 type (
 	HasherArgon2Config struct {
-		Memory            uint32            `json:"memory"`
+		Memory            bytesize.ByteSize `json:"memory"`
 		Iterations        uint32            `json:"iterations"`
 		Parallelism       uint8             `json:"parallelism"`
 		SaltLength        uint32            `json:"salt_length"`
 		KeyLength         uint32            `json:"key_length"`
-		MinimalDuration   time.Duration     `json:"minimal_duration"`
+		ExpectedDuration  time.Duration     `json:"expected_duration"`
 		ExpectedDeviation time.Duration     `json:"expected_deviation"`
 		DedicatedMemory   bytesize.ByteSize `json:"dedicated_memory"`
 	}
@@ -139,23 +139,23 @@ type (
 
 func (c *HasherArgon2Config) MarshalJSON() ([]byte, error) {
 	type encoded struct {
-		Memory            uint32 `json:"memory"`
+		Memory            string `json:"memory"`
 		Iterations        uint32 `json:"iterations"`
 		Parallelism       uint8  `json:"parallelism"`
 		SaltLength        uint32 `json:"salt_length"`
 		KeyLength         uint32 `json:"key_length"`
-		MinimalDuration   string `json:"minimal_duration"`
+		ExpectedDuration  string `json:"minimal_duration"`
 		ExpectedDeviation string `json:"expected_deviation"`
 		DedicatedMemory   string `json:"dedicated_memory"`
 	}
 
 	return json.Marshal(&encoded{
-		Memory:            c.Memory,
+		Memory:            c.Memory.String(),
 		Iterations:        c.Iterations,
 		Parallelism:       c.Parallelism,
 		SaltLength:        c.SaltLength,
 		KeyLength:         c.KeyLength,
-		MinimalDuration:   c.MinimalDuration.String(),
+		ExpectedDuration:  c.ExpectedDuration.String(),
 		ExpectedDeviation: c.ExpectedDeviation.String(),
 		DedicatedMemory:   c.DedicatedMemory.String(),
 	})
@@ -255,29 +255,41 @@ func (p *Provider) SessionPath() string {
 }
 
 func (p *Provider) HasherArgon2() (*HasherArgon2Config, error) {
+	byteSizeF := func(key string, fallback bytesize.ByteSize) (bytesize.ByteSize, error) {
+		switch m := p.p.Get(key).(type) {
+		case string:
+			return bytesize.Parse(m)
+		case bytesize.ByteSize:
+			return m, nil
+		case float64:
+			// this happens because configx uses the json package to copy the config when using set
+			return bytesize.ByteSize(m), nil
+		default:
+			return 0, errors.Errorf("unkown type %T (%+v) for %s", m, m, key)
+		}
+	}
+
+	mem, err := byteSizeF(ViperKeyHasherArgon2ConfigMemory, Argon2DefaultMemory)
+	if err != nil {
+		return nil, err
+	}
+	dedicatedMem, err := byteSizeF(ViperKeyHasherArgon2ConfigDedicatedMemory, Argon2DefaultDedicatedMemory)
+	if err != nil {
+		return nil, err
+	}
+
 	// warn about usage of default values and point to the docs
 	// warning will require https://github.com/ory/viper/issues/19
-	c := &HasherArgon2Config{
-		Memory:            uint32(p.p.IntF(ViperKeyHasherArgon2ConfigMemory, int(Argon2DefaultMemory))),
+	return &HasherArgon2Config{
+		Memory:            mem,
 		Iterations:        uint32(p.p.IntF(ViperKeyHasherArgon2ConfigIterations, int(Argon2DefaultIterations))),
 		Parallelism:       uint8(p.p.IntF(ViperKeyHasherArgon2ConfigParallelism, int(Argon2DefaultParallelism))),
 		SaltLength:        uint32(p.p.IntF(ViperKeyHasherArgon2ConfigSaltLength, int(Argon2DefaultSaltLength))),
 		KeyLength:         uint32(p.p.IntF(ViperKeyHasherArgon2ConfigKeyLength, int(Argon2DefaultKeyLength))),
-		MinimalDuration:   p.p.DurationF(ViperKeyHasherArgon2ConfigMinimalDuration, Argon2DefaultDuration),
+		ExpectedDuration:  p.p.DurationF(ViperKeyHasherArgon2ConfigExpectedDuration, Argon2DefaultDuration),
 		ExpectedDeviation: p.p.DurationF(ViperKeyHasherArgon2ConfigExpectedDeviation, Argon2DefaultDeviation),
-		DedicatedMemory:   Argon2DefaultDedicatedMemory,
-	}
-
-	switch m := p.p.Get(ViperKeyHasherArgon2ConfigDedicatedMemory).(type) {
-	case string:
-		if err := c.DedicatedMemory.Set(m); err != nil {
-			return nil, errors.WithStack(err)
-		}
-	case bytesize.ByteSize:
-		c.DedicatedMemory = m
-	}
-
-	return c, nil
+		DedicatedMemory:   dedicatedMem,
+	}, nil
 }
 
 func (p *Provider) listenOn(key string) string {

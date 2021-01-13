@@ -1077,24 +1077,29 @@
           "type": "object",
           "properties": {
             "memory": {
-              "type": "integer",
-              "minimum": 16384
+              "type": "string",
+              "pattern": "^[0-9]+(B|KB|MB|GB|TB|PB|EB)",
+              "default": "128MB"
             },
             "iterations": {
               "type": "integer",
-              "minimum": 1
+              "minimum": 1,
+              "default": 1
             },
             "parallelism": {
               "type": "integer",
-              "minimum": 1
+              "minimum": 1,
+              "description": "Number of parallel workers, defaults to 2*runtime.NumCPU()."
             },
             "salt_length": {
               "type": "integer",
-              "minimum": 16
+              "minimum": 16,
+              "default": 16
             },
             "key_length": {
               "type": "integer",
-              "minimum": 16
+              "minimum": 16,
+              "default": 32
             },
             "minimal_duration": {
               "description": "The time a hashing operation (~login latency) should take.",
@@ -1112,7 +1117,7 @@
               "description": "The memory dedicated for Kratos. As password hashing is very resource intense, Kratos will monitor the memory consumption and warn about high values.",
               "type": "string",
               "pattern": "^[0-9]+(B|KB|MB|GB|TB|PB|EB)",
-              "default": "4GB"
+              "default": "1GB"
             }
           },
           "additionalProperties": false

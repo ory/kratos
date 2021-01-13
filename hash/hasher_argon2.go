@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/inhies/go-bytesize"
+
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/argon2"
 
@@ -33,6 +35,10 @@ func NewHasherArgon2(c Argon2Configuration) *Argon2 {
 	return &Argon2{c: c}
 }
 
+func toKB(mem bytesize.ByteSize) uint32 {
+	return uint32(mem / bytesize.KB)
+}
+
 func (h *Argon2) Generate(ctx context.Context, password []byte) ([]byte, error) {
 	p, err := h.c.Configuration(ctx).HasherArgon2()
 	if err != nil {
@@ -47,7 +53,7 @@ func (h *Argon2) Generate(ctx context.Context, password []byte) ([]byte, error) 
 	// Pass the plaintext password, salt and parameters to the argon2.IDKey
 	// function. This will generate a hash of the password using the Argon2id
 	// variant.
-	hash := argon2.IDKey([]byte(password), salt, p.Iterations, p.Memory, p.Parallelism, p.KeyLength)
+	hash := argon2.IDKey(password, salt, p.Iterations, toKB(p.Memory), p.Parallelism, p.KeyLength)
 
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(
@@ -72,7 +78,7 @@ func (h *Argon2) Compare(ctx context.Context, password []byte, hash []byte) erro
 	}
 
 	// Derive the key from the other password using the same parameters.
-	otherHash := argon2.IDKey([]byte(password), salt, p.Iterations, p.Memory, p.Parallelism, p.KeyLength)
+	otherHash := argon2.IDKey([]byte(password), salt, p.Iterations, toKB(p.Memory), p.Parallelism, p.KeyLength)
 
 	// Check that the contents of the hashed passwords are identical. Note
 	// that we are using the subtle.ConstantTimeCompare() function for this

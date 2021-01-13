@@ -128,7 +128,7 @@ func runLoadTest(cmd *cobra.Command, conf *argon2Config, reqPerMin int) (*result
 				return
 			case <-clock.C:
 				// cancel if the allowed time is exceeded by 110%
-				if time.Since(startAll) > ((sampleTime+conf.c.MinimalDuration+conf.c.ExpectedDeviation)/100)*110 {
+				if time.Since(startAll) > ((sampleTime+conf.localConfig.ExpectedDuration+conf.localConfig.ExpectedDeviation)/100)*110 {
 					cancelReason = ErrSampleTimeExceeded
 					cancel()
 					return
@@ -138,7 +138,7 @@ func runLoadTest(cmd *cobra.Command, conf *argon2Config, reqPerMin int) (*result
 				runtime.ReadMemStats(&ms)
 
 				// cancel if memory is exceeded by 110%
-				if ms.HeapAlloc > (uint64(conf.c.DedicatedMemory)/100)*110 {
+				if ms.HeapAlloc > (uint64(conf.localConfig.DedicatedMemory)/100)*110 {
 					cancelReason = ErrMemoryConsumptionExceeded
 					cancel()
 					return
@@ -228,10 +228,10 @@ func runLoadTest(cmd *cobra.Command, conf *argon2Config, reqPerMin int) (*result
 		if err2 != nil {
 			fmt.Fprintf(cmd.ErrOrStderr(), "Unexpected maths error: %+v\nRaw Data: %+v\n", cancelReason, memStats)
 		}
-		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "The hashing load test took too long. This indicates that you don't have enough resources to handle %d login requests per minute with the desired minimal time of %s. The memory used was %s. Either dedicate more CPU/memory, or decrease the hashing cost (memory and iterations parameters).\n", reqPerMin, conf.c.MinimalDuration, bytesize.ByteSize(memUsed))
+		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "The hashing load test took too long. This indicates that you don't have enough resources to handle %d login requests per minute with the desired minimal time of %s. The memory used was %s. Either dedicate more CPU/memory, or decrease the hashing cost (memory and iterations parameters).\n", reqPerMin, conf.localConfig.ExpectedDuration, bytesize.ByteSize(memUsed))
 		return nil, cmdx.FailSilently(cmd)
 	case ErrMemoryConsumptionExceeded:
-		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "The hashing load test exceeded the memory limit of %s. This indicates that you don't have enough resources to handle %d login requests per minute with the desired minimal time of %s. Either dedicate more memory, or decrease the hashing cost (memory and iterations parameters).\n", conf.c.DedicatedMemory, reqPerMin, conf.c.MinimalDuration)
+		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "The hashing load test exceeded the memory limit of %s. This indicates that you don't have enough resources to handle %d login requests per minute with the desired minimal time of %s. Either dedicate more memory, or decrease the hashing cost (memory and iterations parameters).\n", conf.localConfig.DedicatedMemory, reqPerMin, conf.localConfig.ExpectedDuration)
 		return nil, cmdx.FailSilently(cmd)
 	}
 
