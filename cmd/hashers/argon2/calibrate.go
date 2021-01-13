@@ -227,8 +227,8 @@ Please note that the values depend on the machine you run the hashing on. If you
 
 				switch {
 				// too fast
-				case res.Median < conf.c.MinimalDuration:
-					_, _ = progressPrinter.Printf("The median was %s under the minimal duration of %s, going to increase the hash cost.\n", conf.c.MinimalDuration-res.Median, conf.c.MinimalDuration)
+				case res.MedianTime < conf.c.MinimalDuration:
+					_, _ = progressPrinter.Printf("The median was %s under the minimal duration of %s, going to increase the hash cost.\n", conf.c.MinimalDuration-res.MedianTime, conf.c.MinimalDuration)
 
 					// try to increase memory first
 					if res.MaxMem+64*bytesize.MB < maxMemory {
@@ -247,8 +247,8 @@ Please note that the values depend on the machine you run the hashing on. If you
 					conf.memory -= (res.MaxMem - conf.c.DedicatedMemory) / bytesize.ByteSize(reqPerMin)
 					_, _ = progressPrinter.Printf("Decreasing memory to %s\n", conf.memory)
 				// too slow
-				case res.Max > conf.c.ExpectedDeviation+conf.c.MinimalDuration:
-					_, _ = progressPrinter.Printf("The longest request took %s longer than the longest acceptable time of %s, going to decrease the hash cost.\n", res.Max-conf.c.ExpectedDeviation+conf.c.MinimalDuration, conf.c.ExpectedDeviation+conf.c.MinimalDuration)
+				case res.MaxTime > conf.c.ExpectedDeviation+conf.c.MinimalDuration:
+					_, _ = progressPrinter.Printf("The longest request took %s longer than the longest acceptable time of %s, going to decrease the hash cost.\n", res.MaxTime-conf.c.ExpectedDeviation+conf.c.MinimalDuration, conf.c.ExpectedDeviation+conf.c.MinimalDuration)
 
 					// try to decrease iterations first
 					if conf.c.Iterations > 1 {

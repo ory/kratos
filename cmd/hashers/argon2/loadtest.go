@@ -22,12 +22,12 @@ import (
 )
 
 type resultTable struct {
-	Total  time.Duration     `json:"total"`
-	Median time.Duration     `json:"median"`
-	StdDev time.Duration     `json:"std_deviation"`
-	Min    time.Duration     `json:"min"`
-	Max    time.Duration     `json:"max"`
-	MaxMem bytesize.ByteSize `json:"max_mem"`
+	TotalTime  time.Duration     `json:"total_time"`
+	MedianTime time.Duration     `json:"median_request_time"`
+	StdDev     time.Duration     `json:"std_deviation"`
+	MinTime    time.Duration     `json:"min_request_time"`
+	MaxTime    time.Duration     `json:"max_request_time"`
+	MaxMem     bytesize.ByteSize `json:"mem_used"`
 }
 
 var (
@@ -38,16 +38,16 @@ var (
 )
 
 func (r *resultTable) Header() []string {
-	return []string{"TOTAL SAMPLE TIME", "MEDIAN", "STANDARD DEVIATION", "MIN", "MAX", "MEMORY USED"}
+	return []string{"TOTAL SAMPLE TIME", "MEDIAN REQUEST TIME", "STANDARD DEVIATION", "MIN REQUEST TIME", "MAX REQUEST TIME", "MEMORY USED"}
 }
 
 func (r *resultTable) Columns() []string {
 	return []string{
-		r.Total.String(),
-		r.Median.String(),
+		r.TotalTime.String(),
+		r.MedianTime.String(),
 		r.StdDev.String(),
-		r.Min.String(),
-		r.Max.String(),
+		r.MinTime.String(),
+		r.MaxTime.String(),
 		r.MaxMem.String(),
 	}
 }
@@ -73,6 +73,11 @@ func newLoadTestCmd() *cobra.Command {
 			conf, err := configProvider(cmd, flagConf)
 			if err != nil {
 				return err
+			}
+
+			if !flagx.MustGetBool(cmd, cmdx.FlagQuiet) {
+				fmt.Fprintln(cmd.ErrOrStderr(), "The hashing configuration used is:")
+				cmdx.PrintRow(cmd, conf)
 			}
 
 			res, err := runLoadTest(cmd, conf, int(perMinute))
@@ -249,11 +254,11 @@ func runLoadTest(cmd *cobra.Command, conf *argon2Config, reqPerMin int) (*result
 	}
 
 	return &resultTable{
-		Total:  totalTime,
-		Median: duration(calcData.Mean),
-		StdDev: duration(calcData.StandardDeviation),
-		Min:    duration(calcData.Min),
-		Max:    duration(calcData.Max),
-		MaxMem: bytesize.ByteSize(memUsed),
+		TotalTime:  totalTime,
+		MedianTime: duration(calcData.Mean),
+		StdDev:     duration(calcData.StandardDeviation),
+		MinTime:    duration(calcData.Min),
+		MaxTime:    duration(calcData.Max),
+		MaxMem:     bytesize.ByteSize(memUsed),
 	}, nil
 }
