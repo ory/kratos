@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/ory/kratos/internal/httpclient/models"
+	"github.com/ory/kratos-client-go/models"
 )
 
 // InitializeSelfServiceRecoveryViaBrowserFlowReader is a Reader for the InitializeSelfServiceRecoveryViaBrowserFlow structure.

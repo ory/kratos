@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// Session Session session
+// Session session
 //
 // swagger:model session
 type Session struct {
