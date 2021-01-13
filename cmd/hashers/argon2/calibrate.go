@@ -71,12 +71,13 @@ func (c *colorWriter) Write(o []byte) (int, error) {
 
 func newCalibrateCmd() *cobra.Command {
 	var (
-		maxMemory, adjustMemory bytesize.ByteSize = 0, 1 * bytesize.GB
+		maxMemory, adjustMemory bytesize.ByteSize = 0, 512 * bytesize.MB
 		runs                    int
 	)
 
 	flagConfig := &argon2Config{
-		c: config.HasherArgon2Config{},
+		c:      config.HasherArgon2Config{},
+		memory: 1 * bytesize.GB,
 	}
 
 	cmd := &cobra.Command{
@@ -87,7 +88,7 @@ func newCalibrateCmd() *cobra.Command {
 
 We recommend that the login process takes between half a second and one second for password hashing, giving a good balance between security and user experience.
 
-Please note that the values depend on the machine you run the hashing on. If you have RAM constraints please choose lower memory targets to avoid out of memory panics.`,
+Please note that the values depend on the machine you run the hashing on. If you have RAM constraints, please set the memory dedicated to Ory Kratos to avoid out of memory panics.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			progressPrinter := cmdx.NewLoudErrPrinter(cmd)
 			resultPrinter := cmdx.NewLoudPrinter(cmd, &colorWriter{c: color.New(color.FgGreen), w: cmd.ErrOrStderr()})
@@ -107,10 +108,6 @@ Please note that the values depend on the machine you run the hashing on. If you
 			if err != nil {
 				// we want the error and usage string printed so just return
 				return err
-			}
-
-			if conf.memory == 0 {
-				conf.memory = 4 * bytesize.GB
 			}
 
 			hasher := hash.NewHasherArgon2(conf)
@@ -135,7 +132,7 @@ Please note that the values depend on the machine you run the hashing on. If you
 				_, _ = progressPrinter.Printf("  took %s with %s of memory\n", currentDuration, conf.getMemFormat())
 
 				if currentDuration > desiredDuration {
-					for conf.memory <= adjustMemory {
+					if conf.memory <= adjustMemory {
 						// adjusting the memory would now result in <= 0B
 						adjustMemory = adjustMemory >> 1
 					}
@@ -182,7 +179,9 @@ Please note that the values depend on the machine you run the hashing on. If you
 				_, _ = progressPrinter.Printf("  took %s with %d iterations\n", currentDuration, conf.c.Iterations)
 
 				if currentDuration > desiredDuration {
-					conf.c.Iterations -= 1
+					if conf.c.Iterations > 1 {
+						conf.c.Iterations -= 1
+					}
 					break
 				}
 
@@ -295,7 +294,7 @@ Please note that the values depend on the machine you run the hashing on. If you
 	flags.IntVarP(&runs, FlagRuns, "r", 2, "Runs per probe, median of all runs is taken as the result.")
 
 	flags.VarP(&flagConfig.memory, FlagStartMemory, "m", "Amount of memory to start probing at.")
-	flags.Var(&maxMemory, FlagMaxMemory, "Maximum memory allowed (default no limit).")
+	flags.Var(&maxMemory, FlagMaxMemory, "Maximum memory allowed (0 means no limit).")
 	flags.Var(&adjustMemory, FlagAdjustMemory, "Amount by which the memory is adjusted in every step while probing.")
 
 	flags.Uint32VarP(&flagConfig.c.Iterations, FlagStartIterations, "i", 1, "Number of iterations to start probing at.")

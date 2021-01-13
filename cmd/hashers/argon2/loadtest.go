@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/ory/x/flagx"
+
 	"github.com/fatih/color"
 	"github.com/inhies/go-bytesize"
 	"github.com/montanaflynn/stats"
@@ -95,7 +97,8 @@ func runLoadTest(cmd *cobra.Command, conf *argon2Config, reqPerMin int) (*result
 	sampleTime := time.Minute / 3
 	reqNum := reqPerMin / int(time.Minute/sampleTime)
 
-	fmt.Fprintf(cmd.ErrOrStderr(), "It takes about %s to collect all necessary data, please be patient.\n", sampleTime)
+	progressPrinter := cmdx.NewLoudErrPrinter(cmd)
+	_, _ = progressPrinter.Printf("It takes about %s to collect all necessary data, please be patient.\n", sampleTime)
 
 	ctx, cancel := context.WithCancel(cmd.Context())
 	hasher := hash.NewHasherArgon2(conf)
@@ -140,6 +143,11 @@ func runLoadTest(cmd *cobra.Command, conf *argon2Config, reqPerMin int) (*result
 	}()
 
 	go func() {
+		// don't read std_in when quiet
+		if flagx.MustGetBool(cmd, cmdx.FlagQuiet) {
+			return
+		}
+
 		input := make([]byte, 1)
 		for {
 			n, err := cmd.InOrStdin().Read(input)

@@ -90,8 +90,8 @@ const (
 	ViperKeyPasswordMaxBreaches                                     = "password.max_breaches"
 	ViperKeyIgnoreNetworkErrors                                     = "password.ignore_network_errors"
 	ViperKeyVersion                                                 = "version"
-	Argon2DefaultMemory                                             = uint32(1 * bytesize.GB / bytesize.KB)
-	Argon2DefaultIterations                                  uint32 = 4
+	Argon2DefaultMemory                                             = uint32(512 * bytesize.MB / bytesize.KB)
+	Argon2DefaultIterations                                  uint32 = 1
 	Argon2DefaultSaltLength                                  uint32 = 16
 	Argon2DefaultKeyLength                                   uint32 = 32
 	Argon2DefaultDuration                                           = 500 * time.Millisecond

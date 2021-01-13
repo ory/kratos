@@ -13,7 +13,6 @@ import (
 )
 
 const (
-	FlagBench    = "bench"
 	FlagParallel = "parallel"
 )
 
@@ -21,8 +20,9 @@ func newHashCmd() *cobra.Command {
 	flagConfig := &argon2Config{}
 
 	cmd := &cobra.Command{
-		Use:  "hash <password1> [<password2> ...]",
-		Args: cobra.MinimumNArgs(1),
+		Use:   "hash <password1> [<password2> ...]",
+		Short: "Hash a list of passwords for benchmarking the hashing parameters.",
+		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			conf, err := configProvider(cmd, flagConfig)
 			if err != nil {
@@ -39,7 +39,7 @@ func newHashCmd() *cobra.Command {
 				go func(i int, pw string) {
 					start := time.Now()
 					h, err := hasher.Generate(cmd.Context(), []byte(pw))
-					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "%s\n", time.Since(start))
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "password %d: %s\n", i, time.Since(start))
 
 					hashes[i] = h
 					errs <- err
@@ -62,21 +62,13 @@ func newHashCmd() *cobra.Command {
 				}
 			}
 
-			if flagx.MustGetBool(cmd, FlagBench) {
-				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "%s\n", time.Since(start))
-				return nil
-			}
-
-			for _, h := range hashes {
-				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "%s\n", h)
-			}
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "total: %s\n", time.Since(start))
 			return nil
 		},
 	}
 
 	flags := cmd.Flags()
 
-	flags.Bool(FlagBench, false, "Run the hashing as a benchmark.")
 	flags.Bool(FlagParallel, false, "Run all hashing operations in parallel.")
 
 	registerArgon2ConfigFlags(flags, flagConfig)
