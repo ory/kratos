@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// SettingsFlowMethod SettingsFlowMethod SettingsFlowMethod SettingsFlowMethod settings flow method
+// SettingsFlowMethod settings flow method
 //
 // swagger:model settingsFlowMethod
 type SettingsFlowMethod struct {
