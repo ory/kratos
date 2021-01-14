@@ -26,11 +26,14 @@ identity:
 
 hashers:
   argon2:
-    memory: 1048576
+    memory: 1MB
     iterations: 2
     parallelism: 4
     salt_length: 16
     key_length: 32
+    dedicated_memory: 1GB
+    minimal_duration: 500ms
+    expected_deviation: 500ms
 
 secrets:
   cookie:

@@ -10,7 +10,10 @@ import (
 	"net/url"
 	"os"
 	"runtime"
+	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/inhies/go-bytesize"
 
@@ -177,11 +180,9 @@ func (s Schemas) FindSchemaByID(id string) (*Schema, error) {
 	return nil, errors.Errorf("could not find schema with id \"%s\"", id)
 }
 
-func MustNew(l *logrusx.Logger, opts ...configx.OptionModifier) *Config {
+func MustNew(t *testing.T, l *logrusx.Logger, opts ...configx.OptionModifier) *Config {
 	p, err := New(l, opts...)
-	if err != nil {
-		l.WithError(err).Fatalf("Unable to load config.")
-	}
+	require.NoError(t, err)
 	return p
 }
 
