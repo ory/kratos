@@ -18,7 +18,7 @@ type (
 	verifierDependencies interface {
 		link.SenderProvider
 		link.VerificationTokenPersistenceProvider
-		config.Providers
+		config.Provider
 	}
 	Verifier struct {
 		r verifierDependencies
@@ -47,7 +47,7 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity) error {
 			continue
 		}
 
-		token := link.NewVerificationToken(address, e.r.Configuration(r.Context()).SelfServiceFlowVerificationRequestLifespan())
+		token := link.NewVerificationToken(address, e.r.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan())
 		if err := e.r.VerificationTokenPersister().CreateVerificationToken(r.Context(), token); err != nil {
 			return err
 		}

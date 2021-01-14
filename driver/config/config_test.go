@@ -67,11 +67,11 @@ func TestViperProvider(t *testing.T) {
 			ss := p.IdentityTraitsSchemas()
 			assert.Equal(t, 2, len(ss))
 
-			assert.Contains(t, ss, config.SchemaConfig{
+			assert.Contains(t, ss, config.Schema{
 				ID:  "default",
 				URL: "http://test.kratos.ory.sh/default-identity.schema.json",
 			})
-			assert.Contains(t, ss, config.SchemaConfig{
+			assert.Contains(t, ss, config.Schema{
 				ID:  "other",
 				URL: "http://test.kratos.ory.sh/other-identity.schema.json",
 			})
@@ -99,7 +99,7 @@ func TestViperProvider(t *testing.T) {
 				config  string
 				enabled bool
 			}{
-				{id: "password", enabled: true, config: `{}`},
+				{id: "password", enabled: true, config: `{"ignore_network_errors":true,"max_breaches":0}`},
 				{id: "oidc", enabled: true, config: `{"providers":[{"client_id":"a","client_secret":"b","id":"github","provider":"github","mapper_url":"http://test.kratos.ory.sh/default-identity.schema.json"}]}`},
 			} {
 				strategy := p.SelfServiceStrategy(tc.id)
@@ -226,7 +226,7 @@ func TestViperProvider(t *testing.T) {
 		t.Run("group=hashers", func(t *testing.T) {
 			c, err := p.HasherArgon2()
 			require.NoError(t, err)
-			assert.Equal(t, &config.HasherArgon2Config{Memory: 1048576, Iterations: 2, Parallelism: 4,
+			assert.Equal(t, &config.Argon2{Memory: 1048576, Iterations: 2, Parallelism: 4,
 				SaltLength: 16, KeyLength: 32, DedicatedMemory: config.Argon2DefaultDedicatedMemory, ExpectedDeviation: config.Argon2DefaultDeviation, ExpectedDuration: config.Argon2DefaultDuration}, c)
 		})
 
@@ -293,29 +293,29 @@ func TestViperProvider_Defaults(t *testing.T) {
 	l := logrusx.New("", "")
 
 	for k, tc := range []struct {
-		init   func() *config.Provider
-		expect func(t *testing.T, p *config.Provider)
+		init   func() *config.Config
+		expect func(t *testing.T, p *config.Config)
 	}{
 		{
-			init: func() *config.Provider {
+			init: func() *config.Config {
 				return config.MustNew(l, configx.SkipValidation())
 			},
 		},
 		{
-			init: func() *config.Provider {
+			init: func() *config.Config {
 				return config.MustNew(l, configx.WithConfigFiles("stub/.defaults.yml"), configx.SkipValidation())
 			},
 		},
 		{
-			init: func() *config.Provider {
+			init: func() *config.Config {
 				return config.MustNew(l, configx.WithConfigFiles("stub/.defaults-password.yml"), configx.SkipValidation())
 			},
 		},
 		{
-			init: func() *config.Provider {
+			init: func() *config.Config {
 				return config.MustNew(l, configx.WithConfigFiles("../../test/e2e/profiles/recovery/.kratos.yml"), configx.SkipValidation())
 			},
-			expect: func(t *testing.T, p *config.Provider) {
+			expect: func(t *testing.T, p *config.Config) {
 				assert.True(t, p.SelfServiceFlowRecoveryEnabled())
 				assert.False(t, p.SelfServiceFlowVerificationEnabled())
 				assert.True(t, p.SelfServiceStrategy("password").Enabled)
@@ -325,10 +325,10 @@ func TestViperProvider_Defaults(t *testing.T) {
 			},
 		},
 		{
-			init: func() *config.Provider {
+			init: func() *config.Config {
 				return config.MustNew(l, configx.WithConfigFiles("../../test/e2e/profiles/verification/.kratos.yml"), configx.SkipValidation())
 			},
-			expect: func(t *testing.T, p *config.Provider) {
+			expect: func(t *testing.T, p *config.Config) {
 				assert.False(t, p.SelfServiceFlowRecoveryEnabled())
 				assert.True(t, p.SelfServiceFlowVerificationEnabled())
 				assert.True(t, p.SelfServiceStrategy("password").Enabled)
@@ -338,10 +338,10 @@ func TestViperProvider_Defaults(t *testing.T) {
 			},
 		},
 		{
-			init: func() *config.Provider {
+			init: func() *config.Config {
 				return config.MustNew(l, configx.WithConfigFiles("../../test/e2e/profiles/oidc/.kratos.yml"), configx.SkipValidation())
 			},
-			expect: func(t *testing.T, p *config.Provider) {
+			expect: func(t *testing.T, p *config.Config) {
 				assert.False(t, p.SelfServiceFlowRecoveryEnabled())
 				assert.False(t, p.SelfServiceFlowVerificationEnabled())
 				assert.True(t, p.SelfServiceStrategy("password").Enabled)

@@ -115,7 +115,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		WithField("mapper_jsonnet_url", provider.Config().Mapper).
 		Debug("OpenID Connect Jsonnet mapper completed.")
 
-	option, err := decoderRegistration(s.d.Configuration(r.Context()).DefaultIdentityTraitsSchemaURL().String())
+	option, err := decoderRegistration(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String())
 	if err != nil {
 		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
 		return

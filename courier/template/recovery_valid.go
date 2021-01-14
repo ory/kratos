@@ -8,7 +8,7 @@ import (
 
 type (
 	RecoveryValid struct {
-		c *config.Provider
+		c *config.Config
 		m *RecoveryValidModel
 	}
 	RecoveryValidModel struct {
@@ -17,7 +17,7 @@ type (
 	}
 )
 
-func NewRecoveryValid(c *config.Provider, m *RecoveryValidModel) *RecoveryValid {
+func NewRecoveryValid(c *config.Config, m *RecoveryValidModel) *RecoveryValid {
 	return &RecoveryValid{c: c, m: m}
 }
 

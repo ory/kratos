@@ -21,7 +21,7 @@ import (
 
 func NewErrorTestServer(t *testing.T, reg interface {
 	errorx.PersistenceProvider
-	config.Providers
+	config.Provider
 }) *httptest.Server {
 	logger := logrusx.New("", "", logrusx.ForceLevel(logrus.TraceLevel))
 	writer := herodot.NewJSONWriter(logger)
@@ -32,11 +32,11 @@ func NewErrorTestServer(t *testing.T, reg interface {
 		writer.Write(w, r, e.Errors)
 	}))
 	t.Cleanup(ts.Close)
-	reg.Configuration(context.Background()).MustSet(config.ViperKeySelfServiceErrorUI, ts.URL)
+	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceErrorUI, ts.URL)
 	return ts
 }
 
-func NewRedirTS(t *testing.T, body string, conf *config.Provider) *httptest.Server {
+func NewRedirTS(t *testing.T, body string, conf *config.Config) *httptest.Server {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if len(body) == 0 {
 			w.WriteHeader(http.StatusNoContent)
@@ -52,7 +52,7 @@ func NewRedirTS(t *testing.T, body string, conf *config.Provider) *httptest.Serv
 func NewRedirSessionEchoTS(t *testing.T, reg interface {
 	x.WriterProvider
 	session.ManagementProvider
-	config.Providers
+	config.Provider
 }) *httptest.Server {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
@@ -60,6 +60,6 @@ func NewRedirSessionEchoTS(t *testing.T, reg interface {
 		reg.Writer().Write(w, r, sess)
 	}))
 	t.Cleanup(ts.Close)
-	reg.Configuration(context.Background()).MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL+"/return-ts")
+	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL+"/return-ts")
 	return ts
 }

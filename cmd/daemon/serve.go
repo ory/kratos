@@ -67,7 +67,7 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	defer wg.Done()
 	modifiers := newOptions(opts)
 
-	c := r.Configuration(cmd.Context())
+	c := r.Config(cmd.Context())
 	l := r.Logger()
 	n := negroni.New()
 	for _, mw := range modifiers.mwf {
@@ -97,7 +97,7 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	}
 
 	var handler http.Handler = n
-	options, enabled := r.Configuration(cmd.Context()).CORS("public")
+	options, enabled := r.Config(cmd.Context()).CORS("public")
 	if enabled {
 		handler = cors.New(options).Handler(handler)
 	}
@@ -118,7 +118,7 @@ func ServeAdmin(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args 
 	defer wg.Done()
 	modifiers := newOptions(opts)
 
-	c := r.Configuration(cmd.Context())
+	c := r.Config(cmd.Context())
 	l := r.Logger()
 	n := negroni.New()
 	for _, mw := range modifiers.mwf {
@@ -154,17 +154,17 @@ func sqa(cmd *cobra.Command, d driver.Registry) *metricsx.Service {
 	return metricsx.New(
 		cmd,
 		d.Logger(),
-		d.Configuration(cmd.Context()).Source(),
+		d.Config(cmd.Context()).Source(),
 		&metricsx.Options{
 			Service: "ory-kratos",
 			ClusterID: metricsx.Hash(
 				strings.Join([]string{
-					d.Configuration(cmd.Context()).DSN(),
-					d.Configuration(cmd.Context()).SelfPublicURL().String(),
-					d.Configuration(cmd.Context()).SelfAdminURL().String(),
+					d.Config(cmd.Context()).DSN(),
+					d.Config(cmd.Context()).SelfPublicURL().String(),
+					d.Config(cmd.Context()).SelfAdminURL().String(),
 				}, "|"),
 			),
-			IsDevelopment: d.Configuration(cmd.Context()).IsInsecureDevMode(),
+			IsDevelopment: d.Config(cmd.Context()).IsInsecureDevMode(),
 			WriteKey:      "qQlI6q8Q4WvkzTjKQSor4sHYOikHIvvi",
 			WhitelistedPaths: []string{
 				"/",

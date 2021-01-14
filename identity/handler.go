@@ -23,7 +23,7 @@ type (
 		PrivilegedPoolProvider
 		ManagementProvider
 		x.WriterProvider
-		config.Providers
+		config.Provider
 	}
 	HandlerProvider interface {
 		IdentityHandler() *Handler
@@ -119,7 +119,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 		return
 	}
 
-	x.PaginationHeader(w, urlx.AppendPaths(h.r.Configuration(r.Context()).SelfAdminURL(), RouteBase), total, page, itemsPerPage)
+	x.PaginationHeader(w, urlx.AppendPaths(h.r.Config(r.Context()).SelfAdminURL(), RouteBase), total, page, itemsPerPage)
 	h.r.Writer().Write(w, r, is)
 }
 
@@ -221,7 +221,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 
 	h.r.Writer().WriteCreated(w, r,
 		urlx.AppendPaths(
-			h.r.Configuration(r.Context()).SelfAdminURL(),
+			h.r.Config(r.Context()).SelfAdminURL(),
 			"identities",
 			i.ID.String(),
 		).String(),

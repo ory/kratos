@@ -57,7 +57,7 @@ func TestSchemaValidator(t *testing.T) {
 
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, ts.URL+"/schema/firstName")
-	conf.MustSet(config.ViperKeyIdentitySchemas, []config.SchemaConfig{
+	conf.MustSet(config.ViperKeyIdentitySchemas, []config.Schema{
 		{ID: "whatever", URL: ts.URL + "/schema/whatever"},
 		{ID: "unreachable-url", URL: ts.URL + "/404-not-found"},
 	})

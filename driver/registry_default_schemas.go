@@ -8,7 +8,7 @@ import (
 )
 
 func (m *RegistryDefault) IdentityTraitsSchemas(ctx context.Context) schema.Schemas {
-	ms := m.Configuration(ctx).IdentityTraitsSchemas()
+	ms := m.Config(ctx).IdentityTraitsSchemas()
 	var ss schema.Schemas
 
 	for _, s := range ms {

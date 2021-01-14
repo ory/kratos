@@ -31,7 +31,7 @@ type registrationStrategyDependencies interface {
 	x.CSRFTokenGeneratorProvider
 	x.CSRFProvider
 
-	config.Providers
+	config.Provider
 
 	continuity.ManagementProvider
 

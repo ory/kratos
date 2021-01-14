@@ -202,6 +202,9 @@ New feature or request.
 
 #### Pull Requests
 
+- [ ] docs: Initial set of documentation tests
+      ([kratos#567](https://github.com/ory/kratos/pull/567)) -
+      [@hackerman](https://github.com/aeneasr)
 - [x] feat: add selinux compatible quickstart config
       ([kratos#889](https://github.com/ory/kratos/pull/889)) -
       [@hackerman](https://github.com/aeneasr)
@@ -226,6 +229,12 @@ Affects documentation.
       ([kratos#711](https://github.com/ory/kratos/issues/711))
 - [x] CLI navigation reference is broken
       ([kratos#951](https://github.com/ory/kratos/issues/951))
+
+#### Pull Requests
+
+- [ ] docs: Initial set of documentation tests
+      ([kratos#567](https://github.com/ory/kratos/pull/567)) -
+      [@hackerman](https://github.com/aeneasr)
 
 ### [Rfc](https://github.com/ory/kratos/labels/rfc)
 

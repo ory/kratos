@@ -111,11 +111,11 @@ func GetFlowID(r *http.Request) (uuid.UUID, error) {
 }
 
 func OnUnauthenticated(reg interface {
-	config.Providers
+	config.Provider
 	x.WriterProvider
 }) func(http.ResponseWriter, *http.Request, httprouter.Params) {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		handler := session.RedirectOnUnauthenticated(reg.Configuration(r.Context()).SelfServiceFlowLoginUI().String())
+		handler := session.RedirectOnUnauthenticated(reg.Config(r.Context()).SelfServiceFlowLoginUI().String())
 		if x.IsJSONRequest(r) {
 			handler = session.RespondWithJSONErrorOnAuthenticated(reg.Writer(), herodot.ErrUnauthorized.WithReasonf("A valid ORY Session Cookie or ORY Session Token is missing."))
 		}

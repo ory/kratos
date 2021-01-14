@@ -31,7 +31,7 @@ type (
 
 type (
 	executorDependencies interface {
-		config.Providers
+		config.Provider
 		session.ManagementProvider
 		session.PersistenceProvider
 		x.WriterProvider
@@ -60,7 +60,7 @@ func NewHookExecutor(d executorDependencies) *HookExecutor {
 }
 
 func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, a *Flow, i *identity.Identity) error {
-	s := session.NewActiveSession(i, e.d.Configuration(r.Context()), time.Now().UTC()).Declassify()
+	s := session.NewActiveSession(i, e.d.Config(r.Context()), time.Now().UTC()).Declassify()
 
 	e.d.Logger().
 		WithRequest(r).
@@ -117,7 +117,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct 
 		WithField("session_id", s.ID).
 		Info("Identity authenticated successfully and was issued an ORY Kratos Session Cookie.")
 	return x.SecureContentNegotiationRedirection(w, r, s.Declassify(), a.RequestURL,
-		e.d.Writer(), e.d.Configuration(r.Context()), x.SecureRedirectOverrideDefaultReturnTo(e.d.Configuration(r.Context()).SelfServiceFlowLoginReturnTo(ct.String())))
+		e.d.Writer(), e.d.Config(r.Context()), x.SecureRedirectOverrideDefaultReturnTo(e.d.Config(r.Context()).SelfServiceFlowLoginReturnTo(ct.String())))
 }
 
 func (e *HookExecutor) PreLoginHook(w http.ResponseWriter, r *http.Request, a *Flow) error {

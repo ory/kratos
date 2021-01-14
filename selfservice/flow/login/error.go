@@ -39,7 +39,7 @@ type (
 
 	ErrorHandler struct {
 		d errorHandlerDependencies
-		c *config.Provider
+		c *config.Config
 	}
 
 	FlowExpiredError struct {
@@ -59,7 +59,7 @@ func NewFlowExpiredError(at time.Time) *FlowExpiredError {
 	}
 }
 
-func NewFlowErrorHandler(d errorHandlerDependencies, c *config.Provider) *ErrorHandler {
+func NewFlowErrorHandler(d errorHandlerDependencies, c *config.Config) *ErrorHandler {
 	return &ErrorHandler{d: d, c: c}
 }
 

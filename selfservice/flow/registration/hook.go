@@ -60,7 +60,7 @@ func (f PostHookPrePersistExecutorFunc) ExecutePostRegistrationPrePersistHook(w 
 
 type (
 	executorDependencies interface {
-		config.Providers
+		config.Provider
 		identity.ManagementProvider
 		identity.ValidationProvider
 		session.PersistenceProvider
@@ -127,7 +127,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		WithField("identity_id", i.ID).
 		Info("A new identity has registered using self-service registration.")
 
-	s := session.NewActiveSession(i, e.d.Configuration(r.Context()), time.Now().UTC())
+	s := session.NewActiveSession(i, e.d.Config(r.Context()), time.Now().UTC())
 	e.d.Logger().
 		WithRequest(r).
 		WithField("identity_id", i.ID).
@@ -170,7 +170,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 	}
 
 	return x.SecureContentNegotiationRedirection(w, r, s.Declassify(), a.RequestURL,
-		e.d.Writer(), e.d.Configuration(r.Context()), x.SecureRedirectOverrideDefaultReturnTo(e.d.Configuration(r.Context()).SelfServiceFlowRegistrationReturnTo(ct.String())))
+		e.d.Writer(), e.d.Config(r.Context()), x.SecureRedirectOverrideDefaultReturnTo(e.d.Config(r.Context()).SelfServiceFlowRegistrationReturnTo(ct.String())))
 }
 
 func (e *HookExecutor) PreRegistrationHook(w http.ResponseWriter, r *http.Request, a *Flow) error {

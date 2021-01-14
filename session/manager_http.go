@@ -18,7 +18,7 @@ import (
 
 type (
 	managerHTTPDependencies interface {
-		config.Providers
+		config.Provider
 		identity.PoolProvider
 		x.CookieProvider
 		x.CSRFProvider
@@ -51,8 +51,8 @@ func (s *ManagerHTTP) CreateAndIssueCookie(ctx context.Context, w http.ResponseW
 
 func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, session *Session) error {
 	cookie, _ := s.r.CookieManager().Get(r, s.cookieName)
-	if s.r.Configuration(ctx).SessionDomain() != "" {
-		cookie.Options.Domain = s.r.Configuration(ctx).SessionDomain()
+	if s.r.Config(ctx).SessionDomain() != "" {
+		cookie.Options.Domain = s.r.Config(ctx).SessionDomain()
 	}
 
 	old, err := s.FetchFromRequest(ctx, r)
@@ -64,17 +64,17 @@ func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r 
 		_ = s.r.CSRFHandler().RegenerateToken(w, r)
 	}
 
-	if s.r.Configuration(ctx).SessionPath() != "" {
-		cookie.Options.Path = s.r.Configuration(ctx).SessionPath()
+	if s.r.Config(ctx).SessionPath() != "" {
+		cookie.Options.Path = s.r.Config(ctx).SessionPath()
 	}
 
-	if s.r.Configuration(ctx).SessionSameSiteMode() != 0 {
-		cookie.Options.SameSite = s.r.Configuration(ctx).SessionSameSiteMode()
+	if s.r.Config(ctx).SessionSameSiteMode() != 0 {
+		cookie.Options.SameSite = s.r.Config(ctx).SessionSameSiteMode()
 	}
 
 	cookie.Options.MaxAge = 0
-	if s.r.Configuration(ctx).SessionPersistentCookie() {
-		cookie.Options.MaxAge = int(s.r.Configuration(ctx).SessionLifespan().Seconds())
+	if s.r.Config(ctx).SessionPersistentCookie() {
+		cookie.Options.MaxAge = int(s.r.Config(ctx).SessionLifespan().Seconds())
 	}
 
 	cookie.Values["session_token"] = session.Token

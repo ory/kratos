@@ -26,7 +26,7 @@ type (
 		IdentityTraitsSchemas(ctx context.Context) schema.Schemas
 		identity.ValidationProvider
 		x.LoggingProvider
-		config.Providers
+		config.Provider
 	}
 	Persister struct {
 		c        *pop.Connection
