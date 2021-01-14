@@ -110,8 +110,8 @@ func configProvider(cmd *cobra.Command, flagConf *argon2Config) (*argon2Config, 
 
 type (
 	argon2Config struct {
-		localConfig config.HasherArgon2Config
-		config      *config.Provider
+		localConfig config.Argon2
+		config      *config.Config
 	}
 )
 
@@ -147,7 +147,7 @@ func (c *argon2Config) Interface() interface{} {
 	return i
 }
 
-func (c *argon2Config) Configuration(_ context.Context) *config.Provider {
+func (c *argon2Config) Config(_ context.Context) *config.Config {
 	ac, _ := c.HasherArgon2()
 	for k, v := range map[string]interface{}{
 		config.ViperKeyHasherArgon2ConfigIterations:        ac.Iterations,
@@ -164,7 +164,7 @@ func (c *argon2Config) Configuration(_ context.Context) *config.Provider {
 	return c.config
 }
 
-func (c *argon2Config) HasherArgon2() (*config.HasherArgon2Config, error) {
+func (c *argon2Config) HasherArgon2() (*config.Argon2, error) {
 	if c.localConfig.Memory == 0 {
 		c.localConfig.Memory = config.Argon2DefaultMemory
 	}

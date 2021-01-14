@@ -137,7 +137,7 @@ type (
 	}
 )
 
-func (c *HasherArgon2Config) MarshalJSON() ([]byte, error) {
+func (c *Argon2) MarshalJSON() ([]byte, error) {
 	type encoded struct {
 		Memory            string `json:"memory"`
 		Iterations        uint32 `json:"iterations"`

@@ -36,7 +36,7 @@ type (
 	}
 	loadResult struct {
 		r *resultTable
-		v *config.HasherArgon2Config
+		v *config.Argon2
 	}
 	loadResults []*loadResult
 )
@@ -76,7 +76,7 @@ func newCalibrateCmd() *cobra.Command {
 	)
 
 	flagConfig := &argon2Config{
-		localConfig: config.HasherArgon2Config{},
+		localConfig: config.Argon2{},
 	}
 
 	cmd := &cobra.Command{
