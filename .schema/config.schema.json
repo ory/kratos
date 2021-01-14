@@ -1101,7 +1101,7 @@
               "minimum": 16,
               "default": 32
             },
-            "minimal_duration": {
+            "expected_duration": {
               "description": "The time a hashing operation (~login latency) should take.",
               "type": "string",
               "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",

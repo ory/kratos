@@ -224,8 +224,7 @@ func TestViperProvider(t *testing.T) {
 		})
 
 		t.Run("group=hashers", func(t *testing.T) {
-			c, err := p.HasherArgon2()
-			require.NoError(t, err)
+			c := p.HasherArgon2()
 			assert.Equal(t, &config.Argon2{Memory: 1048576, Iterations: 2, Parallelism: 4,
 				SaltLength: 16, KeyLength: 32, DedicatedMemory: config.Argon2DefaultDedicatedMemory, ExpectedDeviation: config.Argon2DefaultDeviation, ExpectedDuration: config.Argon2DefaultDuration}, c)
 		})

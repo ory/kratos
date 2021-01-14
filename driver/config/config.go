@@ -202,6 +202,7 @@ func New(l *logrusx.Logger, opts ...configx.OptionModifier) (*Config, error) {
 		configx.OmitKeysFromTracing("dsn", "secrets.default", "secrets.cookie", "client_secret"),
 		configx.WithImmutables("serve", "profiling", "log"),
 		configx.WithLogrusWatcher(l),
+		configx.WithLogger(l),
 	}, opts...)
 
 	p, err := configx.New(schema, opts...)
@@ -255,42 +256,19 @@ func (p *Config) SessionPath() string {
 	return p.p.String(ViperKeySessionPath)
 }
 
-func (p *Config) HasherArgon2() (*Argon2, error) {
-	byteSizeF := func(key string, fallback bytesize.ByteSize) (bytesize.ByteSize, error) {
-		switch m := p.p.Get(key).(type) {
-		case string:
-			return bytesize.Parse(m)
-		case bytesize.ByteSize:
-			return m, nil
-		case float64:
-			// this happens because configx uses the json package to copy the config when using set
-			return bytesize.ByteSize(m), nil
-		default:
-			return 0, errors.Errorf("unkown type %T (%+v) for %s", m, m, key)
-		}
-	}
-
-	mem, err := byteSizeF(ViperKeyHasherArgon2ConfigMemory, Argon2DefaultMemory)
-	if err != nil {
-		return nil, err
-	}
-	dedicatedMem, err := byteSizeF(ViperKeyHasherArgon2ConfigDedicatedMemory, Argon2DefaultDedicatedMemory)
-	if err != nil {
-		return nil, err
-	}
-
+func (p *Config) HasherArgon2() *Argon2 {
 	// warn about usage of default values and point to the docs
 	// warning will require https://github.com/ory/viper/issues/19
 	return &Argon2{
-		Memory:            mem,
+		Memory:            p.p.ByteSizeF(ViperKeyHasherArgon2ConfigMemory, Argon2DefaultMemory),
 		Iterations:        uint32(p.p.IntF(ViperKeyHasherArgon2ConfigIterations, int(Argon2DefaultIterations))),
 		Parallelism:       uint8(p.p.IntF(ViperKeyHasherArgon2ConfigParallelism, int(Argon2DefaultParallelism))),
 		SaltLength:        uint32(p.p.IntF(ViperKeyHasherArgon2ConfigSaltLength, int(Argon2DefaultSaltLength))),
 		KeyLength:         uint32(p.p.IntF(ViperKeyHasherArgon2ConfigKeyLength, int(Argon2DefaultKeyLength))),
 		ExpectedDuration:  p.p.DurationF(ViperKeyHasherArgon2ConfigExpectedDuration, Argon2DefaultDuration),
 		ExpectedDeviation: p.p.DurationF(ViperKeyHasherArgon2ConfigExpectedDeviation, Argon2DefaultDeviation),
-		DedicatedMemory:   dedicatedMem,
-	}, nil
+		DedicatedMemory:   p.p.ByteSizeF(ViperKeyHasherArgon2ConfigDedicatedMemory, Argon2DefaultDedicatedMemory),
+	}
 }
 
 func (p *Config) listenOn(key string) string {

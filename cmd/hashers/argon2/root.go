@@ -73,12 +73,7 @@ func configProvider(cmd *cobra.Command, flagConf *argon2Config) (*argon2Config, 
 		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Unable to initialize the config provider: %s\n", err)
 		return nil, cmdx.FailSilently(cmd)
 	}
-	c, err := conf.config.HasherArgon2()
-	if err != nil {
-		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Unable to get the config from the provider: %+v\n", err)
-		return nil, cmdx.FailSilently(cmd)
-	}
-	conf.localConfig = *c
+	conf.localConfig = *conf.config.HasherArgon2()
 
 	if cmd.Flags().Changed(FlagIterations) {
 		conf.localConfig.Iterations = flagConf.localConfig.Iterations

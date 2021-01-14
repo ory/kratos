@@ -40,10 +40,7 @@ func toKB(mem bytesize.ByteSize) uint32 {
 }
 
 func (h *Argon2) Generate(ctx context.Context, password []byte) ([]byte, error) {
-	p, err := h.c.Config(ctx).HasherArgon2()
-	if err != nil {
-		return nil, err
-	}
+	p := h.c.Config(ctx).HasherArgon2()
 
 	salt := make([]byte, p.SaltLength)
 	if _, err := rand.Read(salt); err != nil {
