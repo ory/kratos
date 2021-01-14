@@ -692,6 +692,41 @@ selfservice:
     ## password ##
     #
     password:
+      ## Password Configuration ##
+      #
+      # Define how passwords are validated.
+      #
+      config:
+        ## Ignore Lookup Network Errors ##
+        #
+        # If set to false the password validation fails when the network or the Have I Been Pwnd API is down.
+        #
+        # Default value: true
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_METHODS_PASSWORD_CONFIG_IGNORE_NETWORK_ERRORS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_IGNORE_NETWORK_ERRORS=<value>
+        #
+        ignore_network_errors: false
+
+        ## Allow Password Breaches ##
+        #
+        # Defines how often a password may have been breached before it is rejected.
+        #
+        # Minimum value: 0
+        #
+        # Maximum value: 100
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_METHODS_PASSWORD_CONFIG_MAX_BREACHES=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_MAX_BREACHES=<value>
+        #
+        max_breaches: 0
+
       ## Enables Username/Email and Password Method ##
       #
       # Default value: true
@@ -1092,41 +1127,6 @@ log:
   #
   level: trace
 
-## Password Configuration ##
-#
-# Define how passwords are validated.
-#
-password:
-  ## Ignore Lookup Network Errors ##
-  #
-  # If set to false the password validation fails when the network or the Have I Been Pwnd API is down.
-  #
-  # Default value: true
-  #
-  # Set this value using environment variables on
-  # - Linux/macOS:
-  #    $ export PASSWORD_IGNORE_NETWORK_ERRORS=<value>
-  # - Windows Command Line (CMD):
-  #    > set PASSWORD_IGNORE_NETWORK_ERRORS=<value>
-  #
-  ignore_network_errors: false
-
-  ## Allow Password Breaches ##
-  #
-  # Defines how often a password may have been breached before it is rejected.
-  #
-  # Minimum value: 0
-  #
-  # Maximum value: 100
-  #
-  # Set this value using environment variables on
-  # - Linux/macOS:
-  #    $ export PASSWORD_MAX_BREACHES=<value>
-  # - Windows Command Line (CMD):
-  #    > set PASSWORD_MAX_BREACHES=<value>
-  #
-  max_breaches: 0
-
 ## secrets ##
 #
 secrets:
@@ -1164,6 +1164,8 @@ hashers:
   argon2:
     ## iterations ##
     #
+    # Default value: 1
+    #
     # Minimum value: 1
     #
     # Set this value using environment variables on
@@ -1175,6 +1177,8 @@ hashers:
     iterations: 1
 
     ## parallelism ##
+    #
+    # Number of parallel workers, defaults to 2*runtime.NumCPU().
     #
     # Minimum value: 1
     #
@@ -1188,6 +1192,8 @@ hashers:
 
     ## salt_length ##
     #
+    # Default value: 16
+    #
     # Minimum value: 16
     #
     # Set this value using environment variables on
@@ -1200,6 +1206,8 @@ hashers:
 
     ## key_length ##
     #
+    # Default value: 32
+    #
     # Minimum value: 16
     #
     # Set this value using environment variables on
@@ -1210,9 +1218,51 @@ hashers:
     #
     key_length: 16
 
+    ## expected_duration ##
+    #
+    # The time a hashing operation (~login latency) should take.
+    #
+    # Default value: 500ms
+    #
+    # Set this value using environment variables on
+    # - Linux/macOS:
+    #    $ export HASHERS_ARGON2_EXPECTED_DURATION=<value>
+    # - Windows Command Line (CMD):
+    #    > set HASHERS_ARGON2_EXPECTED_DURATION=<value>
+    #
+    expected_duration: 0ns
+
+    ## expected_deviation ##
+    #
+    # The standard deviation expected for hashing operations. If this value is exceeded you will be warned in the logs to adjust the parameters.
+    #
+    # Default value: 500ms
+    #
+    # Set this value using environment variables on
+    # - Linux/macOS:
+    #    $ export HASHERS_ARGON2_EXPECTED_DEVIATION=<value>
+    # - Windows Command Line (CMD):
+    #    > set HASHERS_ARGON2_EXPECTED_DEVIATION=<value>
+    #
+    expected_deviation: 0ns
+
+    ## dedicated_memory ##
+    #
+    # The memory dedicated for Kratos. As password hashing is very resource intense, Kratos will monitor the memory consumption and warn about high values.
+    #
+    # Default value: 1GB
+    #
+    # Set this value using environment variables on
+    # - Linux/macOS:
+    #    $ export HASHERS_ARGON2_DEDICATED_MEMORY=<value>
+    # - Windows Command Line (CMD):
+    #    > set HASHERS_ARGON2_DEDICATED_MEMORY=<value>
+    #
+    dedicated_memory: 0B
+
     ## memory ##
     #
-    # Minimum value: 16384
+    # Default value: 128MB
     #
     # Set this value using environment variables on
     # - Linux/macOS:
@@ -1220,7 +1270,7 @@ hashers:
     # - Windows Command Line (CMD):
     #    > set HASHERS_ARGON2_MEMORY=<value>
     #
-    memory: 16384
+    memory: 0B
 
 ## session ##
 #
