@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// LoginViaAPIResponse LoginViaAPIResponse The Response for Login Flows via API
+// LoginViaAPIResponse LoginViaAPIResponse LoginViaAPIResponse The Response for Login Flows via API
 //
 // swagger:model loginViaApiResponse
 type LoginViaAPIResponse struct {

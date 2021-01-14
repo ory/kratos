@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// RecoveryLink RecoveryLink RecoveryLink recovery link
+// RecoveryLink RecoveryLink RecoveryLink RecoveryLink recovery link
 //
 // swagger:model recoveryLink
 type RecoveryLink struct {
@@ -20,6 +20,7 @@ type RecoveryLink struct {
 	// Recovery Link Expires At
 	//
 	// The timestamp when the recovery link expires.
+	// Format: date-time
 	// Format: date-time
 	// Format: date-time
 	// Format: date-time
