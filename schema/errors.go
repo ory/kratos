@@ -48,6 +48,17 @@ func NewInvalidFormatError(instancePtr, format, value string) error {
 	})
 }
 
+func NewTOTPVerifierWrongError(instancePtr string) error {
+	t := text.NewErrorValidationTOTPVerifierWrong()
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     t.Text,
+			InstancePtr: instancePtr,
+		},
+		Messages: new(text.Messages).Add(t),
+	})
+}
+
 type ValidationErrorContextPasswordPolicyViolation struct {
 	Reason string
 }
