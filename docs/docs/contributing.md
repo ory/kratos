@@ -211,10 +211,10 @@ please include a note in your commit message explaining why.
 
 ```
 # First you clone the original repository
-git clone git@github.com:ory/Kratos.git
+git clone git@github.com:ory/ory/kratos.git
 
 # Next you add a git remote that is your fork:
-git remote add fork git@github.com:<YOUR-GITHUB-USERNAME-HERE>/Kratos.git
+git remote add fork git@github.com:<YOUR-GITHUB-USERNAME-HERE>/ory/kratos.git
 
 # Next you fetch the latest changes from origin for master:
 git fetch origin
