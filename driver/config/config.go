@@ -11,12 +11,18 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"testing"
 	"time"
 
 	"github.com/ory/x/dbal"
 
 	"github.com/ory/x/stringsx"
 
+	"github.com/stretchr/testify/require"
+
+	"github.com/inhies/go-bytesize"
+
+	"github.com/markbates/pkger"
 	"github.com/rs/cors"
 	"github.com/tidwall/gjson"
 
@@ -91,14 +97,20 @@ const (
 	ViperKeyHasherArgon2ConfigParallelism                           = "hashers.argon2.parallelism"
 	ViperKeyHasherArgon2ConfigSaltLength                            = "hashers.argon2.salt_length"
 	ViperKeyHasherArgon2ConfigKeyLength                             = "hashers.argon2.key_length"
+	ViperKeyHasherArgon2ConfigExpectedDuration                      = "hashers.argon2.expected_duration"
+	ViperKeyHasherArgon2ConfigExpectedDeviation                     = "hashers.argon2.expected_deviation"
+	ViperKeyHasherArgon2ConfigDedicatedMemory                       = "hashers.argon2.dedicated_memory"
 	ViperKeyHasherBcryptCost                                        = "hashers.bcrypt.cost"
 	ViperKeyPasswordMaxBreaches                                     = "selfservice.methods.password.config.max_breaches"
 	ViperKeyIgnoreNetworkErrors                                     = "selfservice.methods.password.config.ignore_network_errors"
 	ViperKeyVersion                                                 = "version"
-	Argon2DefaultMemory                                      uint32 = 4 * 1024 * 1024
-	Argon2DefaultIterations                                  uint32 = 4
+	Argon2DefaultMemory                                             = 128 * bytesize.MB
+	Argon2DefaultIterations                                  uint32 = 1
 	Argon2DefaultSaltLength                                  uint32 = 16
 	Argon2DefaultKeyLength                                   uint32 = 32
+	Argon2DefaultDuration                                           = 500 * time.Millisecond
+	Argon2DefaultDeviation                                          = 500 * time.Millisecond
+	Argon2DefaultDedicatedMemory                                    = 1 * bytesize.GB
 	BcryptDefaultCost                                        uint32 = 12
 )
 
@@ -107,11 +119,14 @@ const DefaultSessionCookieName = "ory_kratos_session"
 
 type (
 	Argon2 struct {
-		Memory      uint32 `json:"memory"`
-		Iterations  uint32 `json:"iterations"`
-		Parallelism uint8  `json:"parallelism"`
-		SaltLength  uint32 `json:"salt_length"`
-		KeyLength   uint32 `json:"key_length"`
+		Memory            bytesize.ByteSize `json:"memory"`
+		Iterations        uint32            `json:"iterations"`
+		Parallelism       uint8             `json:"parallelism"`
+		SaltLength        uint32            `json:"salt_length"`
+		KeyLength         uint32            `json:"key_length"`
+		ExpectedDuration  time.Duration     `json:"expected_duration"`
+		ExpectedDeviation time.Duration     `json:"expected_deviation"`
+		DedicatedMemory   bytesize.ByteSize `json:"dedicated_memory"`
 	}
 	Bcrypt struct {
 		Cost uint32 `json:"cost"`
@@ -143,6 +158,30 @@ type (
 	}
 )
 
+func (c *Argon2) MarshalJSON() ([]byte, error) {
+	type encoded struct {
+		Memory            string `json:"memory"`
+		Iterations        uint32 `json:"iterations"`
+		Parallelism       uint8  `json:"parallelism"`
+		SaltLength        uint32 `json:"salt_length"`
+		KeyLength         uint32 `json:"key_length"`
+		ExpectedDuration  string `json:"minimal_duration"`
+		ExpectedDeviation string `json:"expected_deviation"`
+		DedicatedMemory   string `json:"dedicated_memory"`
+	}
+
+	return json.Marshal(&encoded{
+		Memory:            c.Memory.String(),
+		Iterations:        c.Iterations,
+		Parallelism:       c.Parallelism,
+		SaltLength:        c.SaltLength,
+		KeyLength:         c.KeyLength,
+		ExpectedDuration:  c.ExpectedDuration.String(),
+		ExpectedDeviation: c.ExpectedDeviation.String(),
+		DedicatedMemory:   c.DedicatedMemory.String(),
+	})
+}
+
 var Argon2DefaultParallelism = uint8(runtime.NumCPU() * 2)
 
 func HookStrategyKey(key, strategy string) string {
@@ -159,11 +198,9 @@ func (s Schemas) FindSchemaByID(id string) (*Schema, error) {
 	return nil, errors.Errorf("could not find schema with id \"%s\"", id)
 }
 
-func MustNew(l *logrusx.Logger, opts ...configx.OptionModifier) *Config {
+func MustNew(t *testing.T, l *logrusx.Logger, opts ...configx.OptionModifier) *Config {
 	p, err := New(l, opts...)
-	if err != nil {
-		l.WithError(err).Fatalf("Unable to load config.")
-	}
+	require.NoError(t, err)
 	return p
 }
 
@@ -173,6 +210,7 @@ func New(l *logrusx.Logger, opts ...configx.OptionModifier) (*Config, error) {
 		configx.OmitKeysFromTracing("dsn", "secrets.default", "secrets.cookie", "client_secret"),
 		configx.WithImmutables("serve", "profiling", "log"),
 		configx.WithLogrusWatcher(l),
+		configx.WithLogger(l),
 	}, opts...)
 
 	p, err := configx.New(ValidationSchema, opts...)
@@ -234,11 +272,14 @@ func (p *Config) HasherArgon2() *Argon2 {
 	// warn about usage of default values and point to the docs
 	// warning will require https://github.com/ory/viper/issues/19
 	return &Argon2{
-		Memory:      uint32(p.p.IntF(ViperKeyHasherArgon2ConfigMemory, int(Argon2DefaultMemory))),
-		Iterations:  uint32(p.p.IntF(ViperKeyHasherArgon2ConfigIterations, int(Argon2DefaultIterations))),
-		Parallelism: uint8(p.p.IntF(ViperKeyHasherArgon2ConfigParallelism, int(Argon2DefaultParallelism))),
-		SaltLength:  uint32(p.p.IntF(ViperKeyHasherArgon2ConfigSaltLength, int(Argon2DefaultSaltLength))),
-		KeyLength:   uint32(p.p.IntF(ViperKeyHasherArgon2ConfigKeyLength, int(Argon2DefaultKeyLength))),
+		Memory:            p.p.ByteSizeF(ViperKeyHasherArgon2ConfigMemory, Argon2DefaultMemory),
+		Iterations:        uint32(p.p.IntF(ViperKeyHasherArgon2ConfigIterations, int(Argon2DefaultIterations))),
+		Parallelism:       uint8(p.p.IntF(ViperKeyHasherArgon2ConfigParallelism, int(Argon2DefaultParallelism))),
+		SaltLength:        uint32(p.p.IntF(ViperKeyHasherArgon2ConfigSaltLength, int(Argon2DefaultSaltLength))),
+		KeyLength:         uint32(p.p.IntF(ViperKeyHasherArgon2ConfigKeyLength, int(Argon2DefaultKeyLength))),
+		ExpectedDuration:  p.p.DurationF(ViperKeyHasherArgon2ConfigExpectedDuration, Argon2DefaultDuration),
+		ExpectedDeviation: p.p.DurationF(ViperKeyHasherArgon2ConfigExpectedDeviation, Argon2DefaultDeviation),
+		DedicatedMemory:   p.p.ByteSizeF(ViperKeyHasherArgon2ConfigDedicatedMemory, Argon2DefaultDedicatedMemory),
 	}
 }
 

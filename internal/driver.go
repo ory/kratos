@@ -26,8 +26,8 @@ func init() {
 	})
 }
 
-func NewConfigurationWithDefaults() *config.Config {
-	c := config.MustNew(logrusx.New("", ""),
+func NewConfigurationWithDefaults(t *testing.T) *config.Config {
+	c := config.MustNew(t, logrusx.New("", ""),
 		configx.WithValues(map[string]interface{}{
 			"log.level":                                      "trace",
 			config.ViperKeyDSN:                               dbal.SQLiteInMemory,
@@ -63,7 +63,7 @@ func NewFastRegistryWithMocks(t *testing.T) (*config.Config, *driver.RegistryDef
 
 // NewRegistryDefaultWithDSN returns a more standard registry without mocks. Good for e2e and advanced integration testing!
 func NewRegistryDefaultWithDSN(t *testing.T, dsn string) (*config.Config, *driver.RegistryDefault) {
-	c := NewConfigurationWithDefaults()
+	c := NewConfigurationWithDefaults(t)
 	c.MustSet(config.ViperKeyDSN, stringsx.Coalesce(dsn, dbal.SQLiteInMemory))
 
 	reg, err := driver.NewRegistryFromDSN(c, logrusx.New("", ""))
