@@ -46,7 +46,7 @@ func (h *Handler) SetRoutes(r *httprouter.Router) {
 // metadata:
 //  annotations:
 //    prometheus.io/port: "4434"
-//      prometheus.io/path: "/metrics/prometheus"
+//    prometheus.io/path: "/metrics/prometheus"
 // ```
 //
 //     Produces:
