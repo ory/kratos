@@ -1,4 +1,4 @@
-import { Configuration, PublicApi } from '@oryd/kratos-client';
+import { Configuration, PublicApi } from '@ory/kratos-client';
 const kratos = new PublicApi(new Configuration({ basePath: 'http://127.0.0.1:4433/' }));
 
 kratos.initializeSelfServiceLoginViaAPIFlow()

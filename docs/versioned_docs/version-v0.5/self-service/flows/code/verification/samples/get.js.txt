@@ -1,4 +1,4 @@
-import {CommonApi} from '@oryd/kratos-client'
+import {CommonApi} from '@ory/kratos-client'
 
 const kratos = new CommonApi('http://127.0.0.1:4433/')
 
