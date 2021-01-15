@@ -90,10 +90,13 @@ secrets:
 
 hashers:
   argon2:
-    memory: 16384
+    memory: 128MB
     iterations: 1
     parallelism: 1
     salt_length: 16
     key_length: 16
+    dedicated_memory: 1GB
+    expected_deviation: 500ms
+    expected_duration: 500ms
 
 version: v1.0.0

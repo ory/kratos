@@ -33,7 +33,7 @@ serve:
 hashers:
   argon2:
     parallelism: 1
-    memory: 16384
+    memory: 16MB
     iterations: 1
     salt_length: 16
     key_length: 16
