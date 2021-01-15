@@ -133,7 +133,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 		}{
 			{
 				prep: func(t *testing.T) *config.Config {
-					c := config.MustNew(l,
+					c := config.MustNew(t, l,
 						configx.WithValues(map[string]interface{}{
 							config.ViperKeyDSN: config.DefaultSQLiteMemoryDSN,
 							config.ViperKeySelfServiceStrategyConfig + ".password.enabled": false,
@@ -145,7 +145,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 				}},
 			{
 				prep: func(t *testing.T) *config.Config {
-					c := config.MustNew(l,
+					c := config.MustNew(t, l,
 						configx.WithValues(map[string]interface{}{
 							config.ViperKeyDSN: config.DefaultSQLiteMemoryDSN,
 							config.ViperKeySelfServiceStrategyConfig + ".profile.enabled":  true,
@@ -157,7 +157,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 				expect: []string{"profile"}},
 			{
 				prep: func(t *testing.T) *config.Config {
-					return config.MustNew(l,
+					return config.MustNew(t, l,
 						configx.WithValues(map[string]interface{}{
 							config.ViperKeyDSN: config.DefaultSQLiteMemoryDSN,
 						}),
@@ -166,7 +166,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 				expect: []string{"password", "profile"}},
 			{
 				prep: func(t *testing.T) *config.Config {
-					return config.MustNew(l,
+					return config.MustNew(t, l,
 						configx.WithConfigFiles("../test/e2e/profiles/verification/.kratos.yml"),
 						configx.WithValue(config.ViperKeyDSN, config.DefaultSQLiteMemoryDSN),
 						configx.SkipValidation())

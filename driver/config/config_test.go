@@ -23,7 +23,7 @@ import (
 
 func TestViperProvider(t *testing.T) {
 	t.Run("suite=loaders", func(t *testing.T) {
-		p := config.MustNew(logrusx.New("", ""),
+		p := config.MustNew(t, logrusx.New("", ""),
 			configx.WithConfigFiles("../../internal/.kratos.yaml"))
 
 		t.Run("group=urls", func(t *testing.T) {
@@ -224,8 +224,9 @@ func TestViperProvider(t *testing.T) {
 		})
 
 		t.Run("group=hashers", func(t *testing.T) {
+			c := p.HasherArgon2()
 			assert.Equal(t, &config.Argon2{Memory: 1048576, Iterations: 2, Parallelism: 4,
-				SaltLength: 16, KeyLength: 32}, p.HasherArgon2())
+				SaltLength: 16, KeyLength: 32, DedicatedMemory: config.Argon2DefaultDedicatedMemory, ExpectedDeviation: config.Argon2DefaultDeviation, ExpectedDuration: config.Argon2DefaultDuration}, c)
 		})
 
 		t.Run("group=set_provider_by_json", func(t *testing.T) {
@@ -258,7 +259,7 @@ func TestProviderBaseURLs(t *testing.T) {
 		machineHostname = "127.0.0.1"
 	}
 
-	p := config.MustNew(logrusx.New("", ""), configx.SkipValidation())
+	p := config.MustNew(t, logrusx.New("", ""), configx.SkipValidation())
 	assert.Equal(t, "https://"+machineHostname+":4433/", p.SelfPublicURL().String())
 	assert.Equal(t, "https://"+machineHostname+":4434/", p.SelfAdminURL().String())
 
@@ -279,7 +280,7 @@ func TestProviderBaseURLs(t *testing.T) {
 }
 
 func TestViperProvider_Secrets(t *testing.T) {
-	p := config.MustNew(logrusx.New("", ""), configx.SkipValidation())
+	p := config.MustNew(t, logrusx.New("", ""), configx.SkipValidation())
 
 	def := p.SecretsDefault()
 	assert.NotEmpty(t, def)
@@ -296,22 +297,22 @@ func TestViperProvider_Defaults(t *testing.T) {
 	}{
 		{
 			init: func() *config.Config {
-				return config.MustNew(l, configx.SkipValidation())
+				return config.MustNew(t, l, configx.SkipValidation())
 			},
 		},
 		{
 			init: func() *config.Config {
-				return config.MustNew(l, configx.WithConfigFiles("stub/.defaults.yml"), configx.SkipValidation())
+				return config.MustNew(t, l, configx.WithConfigFiles("stub/.defaults.yml"), configx.SkipValidation())
 			},
 		},
 		{
 			init: func() *config.Config {
-				return config.MustNew(l, configx.WithConfigFiles("stub/.defaults-password.yml"), configx.SkipValidation())
+				return config.MustNew(t, l, configx.WithConfigFiles("stub/.defaults-password.yml"), configx.SkipValidation())
 			},
 		},
 		{
 			init: func() *config.Config {
-				return config.MustNew(l, configx.WithConfigFiles("../../test/e2e/profiles/recovery/.kratos.yml"), configx.SkipValidation())
+				return config.MustNew(t, l, configx.WithConfigFiles("../../test/e2e/profiles/recovery/.kratos.yml"), configx.SkipValidation())
 			},
 			expect: func(t *testing.T, p *config.Config) {
 				assert.True(t, p.SelfServiceFlowRecoveryEnabled())
@@ -324,7 +325,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 		},
 		{
 			init: func() *config.Config {
-				return config.MustNew(l, configx.WithConfigFiles("../../test/e2e/profiles/verification/.kratos.yml"), configx.SkipValidation())
+				return config.MustNew(t, l, configx.WithConfigFiles("../../test/e2e/profiles/verification/.kratos.yml"), configx.SkipValidation())
 			},
 			expect: func(t *testing.T, p *config.Config) {
 				assert.False(t, p.SelfServiceFlowRecoveryEnabled())
@@ -337,7 +338,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 		},
 		{
 			init: func() *config.Config {
-				return config.MustNew(l, configx.WithConfigFiles("../../test/e2e/profiles/oidc/.kratos.yml"), configx.SkipValidation())
+				return config.MustNew(t, l, configx.WithConfigFiles("../../test/e2e/profiles/oidc/.kratos.yml"), configx.SkipValidation())
 			},
 			expect: func(t *testing.T, p *config.Config) {
 				assert.False(t, p.SelfServiceFlowRecoveryEnabled())
@@ -366,7 +367,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 	}
 
 	t.Run("suite=ui_url", func(t *testing.T) {
-		p := config.MustNew(l, configx.SkipValidation())
+		p := config.MustNew(t, l, configx.SkipValidation())
 		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/login", p.SelfServiceFlowLoginUI().String())
 		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/settings", p.SelfServiceFlowSettingsUI().String())
 		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/registration", p.SelfServiceFlowRegistrationUI().String())
@@ -377,7 +378,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 
 func TestViperProvider_ReturnTo(t *testing.T) {
 	l := logrusx.New("", "")
-	p := config.MustNew(l, configx.SkipValidation())
+	p := config.MustNew(t, l, configx.SkipValidation())
 
 	p.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
 	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowVerificationReturnTo(urlx.ParseOrPanic("https://www.ory.sh/")).String())
@@ -392,14 +393,14 @@ func TestViperProvider_ReturnTo(t *testing.T) {
 
 func TestViperProvider_DSN(t *testing.T) {
 	t.Run("case=dsn: memory", func(t *testing.T) {
-		p := config.MustNew(logrusx.New("", ""), configx.SkipValidation())
+		p := config.MustNew(t, logrusx.New("", ""), configx.SkipValidation())
 		p.MustSet(config.ViperKeyDSN, "memory")
 
 		assert.Equal(t, config.DefaultSQLiteMemoryDSN, p.DSN())
 	})
 
 	t.Run("case=dsn: not memory", func(t *testing.T) {
-		p := config.MustNew(logrusx.New("", ""), configx.SkipValidation())
+		p := config.MustNew(t, logrusx.New("", ""), configx.SkipValidation())
 
 		dsn := "sqlite://foo.db?_fk=true"
 		p.MustSet(config.ViperKeyDSN, dsn)
@@ -414,7 +415,7 @@ func TestViperProvider_DSN(t *testing.T) {
 		l := logrusx.New("", "", logrusx.WithExitFunc(func(i int) {
 			exitCode = i
 		}), logrusx.WithHook(InterceptHook{}))
-		p := config.MustNew(l, configx.SkipValidation())
+		p := config.MustNew(t, l, configx.SkipValidation())
 
 		assert.Equal(t, dsn, p.DSN())
 		assert.NotEqual(t, 0, exitCode)
