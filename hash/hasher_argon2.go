@@ -7,6 +7,8 @@ import (
 	"encoding/base64"
 	"fmt"
 
+	"github.com/inhies/go-bytesize"
+
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/argon2"
 
@@ -31,6 +33,10 @@ func NewHasherArgon2(c Argon2Configuration) *Argon2 {
 	return &Argon2{c: c}
 }
 
+func toKB(mem bytesize.ByteSize) uint32 {
+	return uint32(mem / bytesize.KB)
+}
+
 func (h *Argon2) Generate(ctx context.Context, password []byte) ([]byte, error) {
 	p := h.c.Config(ctx).HasherArgon2()
 
@@ -42,7 +48,7 @@ func (h *Argon2) Generate(ctx context.Context, password []byte) ([]byte, error) 
 	// Pass the plaintext password, salt and parameters to the argon2.IDKey
 	// function. This will generate a hash of the password using the Argon2id
 	// variant.
-	hash := argon2.IDKey([]byte(password), salt, p.Iterations, p.Memory, p.Parallelism, p.KeyLength)
+	hash := argon2.IDKey(password, salt, p.Iterations, toKB(p.Memory), p.Parallelism, p.KeyLength)
 
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(
@@ -56,4 +62,60 @@ func (h *Argon2) Generate(ctx context.Context, password []byte) ([]byte, error) 
 	}
 
 	return b.Bytes(), nil
+}
+
+func (h *Argon2) Compare(ctx context.Context, password []byte, hash []byte) error {
+	// Extract the parameters, salt and derived key from the encoded password
+	// hash.
+	p, salt, hash, err := decodeHash(string(hash))
+	if err != nil {
+		return err
+	}
+
+	// Derive the key from the other password using the same parameters.
+	otherHash := argon2.IDKey([]byte(password), salt, p.Iterations, toKB(p.Memory), p.Parallelism, p.KeyLength)
+
+	// Check that the contents of the hashed passwords are identical. Note
+	// that we are using the subtle.ConstantTimeCompare() function for this
+	// to help prevent timing attacks.
+	if subtle.ConstantTimeCompare(hash, otherHash) == 1 {
+		return nil
+	}
+	return ErrMismatchedHashAndPassword
+}
+
+func decodeHash(encodedHash string) (p *config.Argon2, salt, hash []byte, err error) {
+	parts := strings.Split(encodedHash, "$")
+	if len(parts) != 6 {
+		return nil, nil, nil, ErrInvalidHash
+	}
+
+	var version int
+	_, err = fmt.Sscanf(parts[2], "v=%d", &version)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	if version != argon2.Version {
+		return nil, nil, nil, ErrIncompatibleVersion
+	}
+
+	p = new(config.Argon2)
+	_, err = fmt.Sscanf(parts[3], "m=%d,t=%d,p=%d", &p.Memory, &p.Iterations, &p.Parallelism)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	salt, err = base64.RawStdEncoding.DecodeString(parts[4])
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	p.SaltLength = uint32(len(salt))
+
+	hash, err = base64.RawStdEncoding.DecodeString(parts[5])
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	p.KeyLength = uint32(len(hash))
+
+	return p, salt, hash, nil
 }

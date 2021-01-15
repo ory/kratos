@@ -1,10 +1,15 @@
 package argon2
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
+	"io"
+	"runtime"
+	"strconv"
 	"time"
+
+	"github.com/ory/x/configx"
+
+	"github.com/ory/x/cmdx"
 
 	"github.com/fatih/color"
 	"github.com/inhies/go-bytesize"
@@ -12,217 +17,300 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hash"
-	"github.com/ory/x/cmdx"
 )
-
-type (
-	argon2Config struct {
-		c config.Argon2
-	}
-)
-
-func (c *argon2Config) Config(_ context.Context) *config.Config {
-	panic("not supposed to be called")
-}
-
-func (c *argon2Config) HasherArgon2() *config.Argon2 {
-	return &c.c
-}
-
-func (c *argon2Config) getMemFormat() string {
-	return (bytesize.ByteSize(c.c.Memory) * bytesize.KB).String()
-}
 
 const (
 	FlagStartMemory     = "start-memory"
 	FlagMaxMemory       = "max-memory"
 	FlagAdjustMemory    = "adjust-memory-by"
 	FlagStartIterations = "start-iterations"
-	FlagParallelism     = "parallelism"
-	FlagSaltLength      = "salt-length"
-	FlagKeyLength       = "key-length"
+	FlagMaxConcurrent   = "max-concurrent"
 
-	FlagQuiet = "quiet"
-	FlagRuns  = "probe-runs"
+	FlagRuns = "probe-runs"
 )
 
-var resultColor = color.New(color.FgGreen)
+type (
+	colorWriter struct {
+		c *color.Color
+		w io.Writer
+	}
+	loadResult struct {
+		r *resultTable
+		v *config.Argon2
+	}
+	loadResults []*loadResult
+)
+
+var _ cmdx.Table = loadResults{}
+
+func (l loadResults) Header() []string {
+	return append((&resultTable{}).Header(), "MEMORY PARAM", "ITERATIONS PARAM")
+}
+
+func (l loadResults) Table() [][]string {
+	t := make([][]string, len(l))
+
+	for i, r := range l {
+		t[i] = append(r.r.Columns(), fmt.Sprintf("%d", r.v.Memory), fmt.Sprintf("%d", r.v.Iterations))
+	}
+
+	return t
+}
+
+func (l loadResults) Interface() interface{} {
+	return l
+}
+
+func (l loadResults) Len() int {
+	return len(l)
+}
+
+func (c *colorWriter) Write(o []byte) (int, error) {
+	return c.c.Fprintf(c.w, "%s", o)
+}
 
 func newCalibrateCmd() *cobra.Command {
 	var (
-		maxMemory, adjustMemory, startMemory bytesize.ByteSize = 0, 1 * bytesize.GB, 4 * bytesize.GB
-		quiet                                bool
-		runs                                 int
+		maxMemory, adjustMemory bytesize.ByteSize = 0, 512 * bytesize.MB
+		runs                    int
 	)
 
-	aconfig := &argon2Config{
-		c: config.Argon2{},
+	flagConfig := &argon2Config{
+		localConfig: config.Argon2{},
 	}
 
 	cmd := &cobra.Command{
-		Use:   "calibrate [<desired-duration>]",
+		Use:   "calibrate <requests-per-minute>",
 		Args:  cobra.ExactArgs(1),
-		Short: "Computes Optimal Argon2 Parameters.",
+		Short: "Computes Optimal Argon2 Parameters",
 		Long: `This command helps you calibrate the configuration parameters for Argon2. Password hashing is a trade-off between security, resource consumption, and user experience. Resource consumption should not be too high and the login should not take too long.
 
 We recommend that the login process takes between half a second and one second for password hashing, giving a good balance between security and user experience.
 
-Please note that the values depend on the machine you run the hashing on. If you have RAM constraints please choose lower memory targets to avoid out of memory panics.`,
+Please note that the values depend on the machine you run the hashing on. If you have RAM constraints, please set the memory dedicated to Ory Kratos to avoid out of memory panics.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			desiredDuration, err := time.ParseDuration(args[0])
+			progressPrinter := cmdx.NewLoudErrPrinter(cmd)
+			resultPrinter := cmdx.NewLoudPrinter(cmd, &colorWriter{c: color.New(color.FgGreen), w: cmd.ErrOrStderr()})
+
+			conf, err := configProvider(cmd, flagConfig)
 			if err != nil {
 				return err
 			}
 
-			aconfig.c.Memory = toKB(startMemory)
+			// always take start flags, or their default
+			conf.localConfig.Memory = flagConfig.localConfig.Memory
+			conf.localConfig.Iterations = flagConfig.localConfig.Iterations
 
-			hasher := hash.NewHasherArgon2(aconfig)
+			desiredDuration := conf.localConfig.ExpectedDuration
+
+			reqPerMin, err := strconv.ParseInt(args[0], 0, 0)
+			if err != nil {
+				// we want the error and usage string printed so just return
+				return err
+			}
+
+			hasher := hash.NewHasherArgon2(conf)
 
 			var currentDuration time.Duration
 
-			if !quiet {
-				fmt.Fprintf(cmd.ErrOrStderr(), "Increasing memory to get over %s:\n", desiredDuration)
-			}
+			_, _ = progressPrinter.Printf("Increasing memory to get over %s:\n", desiredDuration)
 
 			for {
-				if maxMemory != 0 && aconfig.c.Memory > toKB(maxMemory) {
+				if maxMemory != 0 && conf.localConfig.Memory > maxMemory {
 					// don't further increase memory
-					if !quiet {
-						fmt.Fprintln(cmd.ErrOrStderr(), "  ouch, hit the memory limit there")
-					}
-					aconfig.c.Memory = toKB(maxMemory)
+					_, _ = progressPrinter.Println("  ouch, hit the memory limit there")
+					conf.localConfig.Memory = maxMemory
 					break
 				}
 
-				currentDuration, err = probe(cmd, hasher, runs, quiet)
+				currentDuration, err = probe(cmd, hasher, runs, progressPrinter)
 				if err != nil {
 					return err
 				}
 
-				if !quiet {
-					fmt.Fprintf(cmd.ErrOrStderr(), "  took %s with %s of memory\n", currentDuration, aconfig.getMemFormat())
-				}
+				_, _ = progressPrinter.Printf("  took %s with %s of memory\n", currentDuration, conf.localConfig.Memory)
 
 				if currentDuration > desiredDuration {
-					if aconfig.c.Memory <= toKB(adjustMemory) {
+					if conf.localConfig.Memory <= adjustMemory {
 						// adjusting the memory would now result in <= 0B
 						adjustMemory = adjustMemory >> 1
 					}
-					aconfig.c.Memory -= toKB(adjustMemory)
+					conf.localConfig.Memory -= adjustMemory
 					break
 				}
 
 				// adjust config
-				aconfig.c.Memory += toKB(adjustMemory)
+				conf.localConfig.Memory += adjustMemory
 			}
 
-			if !quiet {
-				fmt.Fprintf(cmd.ErrOrStderr(), "Decreasing memory to get under %s:\n", desiredDuration)
-			}
+			_, _ = progressPrinter.Printf("Decreasing memory to get under %s:\n", desiredDuration)
 
 			for {
-				currentDuration, err = probe(cmd, hasher, runs, quiet)
+				currentDuration, err = probe(cmd, hasher, runs, progressPrinter)
 				if err != nil {
 					return err
 				}
 
-				if !quiet {
-					fmt.Fprintf(cmd.ErrOrStderr(), "  took %s with %s of memory\n", currentDuration, aconfig.getMemFormat())
-				}
+				_, _ = progressPrinter.Printf("  took %s with %s of memory\n", currentDuration, conf.localConfig.Memory)
 
 				if currentDuration < desiredDuration {
 					break
 				}
 
-				if aconfig.c.Memory <= toKB(adjustMemory) {
+				for conf.localConfig.Memory <= adjustMemory {
 					// adjusting the memory would now result in <= 0B
 					adjustMemory = adjustMemory >> 1
 				}
 
 				// adjust config
-				aconfig.c.Memory -= toKB(adjustMemory)
+				conf.localConfig.Memory -= adjustMemory
 			}
 
-			if !quiet {
-				_, _ = resultColor.Fprintf(cmd.ErrOrStderr(), "Settled on %s of memory.\n", aconfig.getMemFormat())
-				fmt.Fprintf(cmd.ErrOrStderr(), "Increasing iterations to get over %s:\n", desiredDuration)
-			}
+			_, _ = resultPrinter.Printf("Settled on %s of memory.\n", conf.localConfig.Memory)
+			_, _ = progressPrinter.Printf("Increasing iterations to get over %s:\n", desiredDuration)
 
 			for {
-				currentDuration, err = probe(cmd, hasher, runs, quiet)
+				currentDuration, err = probe(cmd, hasher, runs, progressPrinter)
 				if err != nil {
 					return err
 				}
 
-				if !quiet {
-					fmt.Fprintf(cmd.ErrOrStderr(), "  took %s with %d iterations\n", currentDuration, aconfig.c.Iterations)
-				}
+				_, _ = progressPrinter.Printf("  took %s with %d iterations\n", currentDuration, conf.localConfig.Iterations)
 
 				if currentDuration > desiredDuration {
-					aconfig.c.Iterations -= 1
+					if conf.localConfig.Iterations > 1 {
+						conf.localConfig.Iterations -= 1
+					}
 					break
 				}
 
 				// adjust config
-				aconfig.c.Iterations += 1
+				conf.localConfig.Iterations += 1
 			}
 
-			if !quiet {
-				fmt.Fprintf(cmd.ErrOrStderr(), "Decreasing iterations to get under %s:\n", desiredDuration)
-			}
+			_, _ = progressPrinter.Printf("Decreasing iterations to get under %s:\n", desiredDuration)
 
 			for {
-				currentDuration, err = probe(cmd, hasher, runs, quiet)
+				currentDuration, err = probe(cmd, hasher, runs, progressPrinter)
 				if err != nil {
 					return err
 				}
 
-				if !quiet {
-					fmt.Fprintf(cmd.ErrOrStderr(), "  took %s with %d iterations\n", currentDuration, aconfig.c.Iterations)
-				}
+				_, _ = progressPrinter.Printf("  took %s with %d iterations\n", currentDuration, conf.localConfig.Iterations)
 
 				// break also when iterations is 1; this catches the case where 1 was only slightly under the desired time and took longer a bit longer on another run
-				if currentDuration < desiredDuration || aconfig.c.Iterations == 1 {
+				if currentDuration < desiredDuration || conf.localConfig.Iterations == 1 {
 					break
 				}
 
 				// adjust config
-				aconfig.c.Iterations -= 1
+				conf.localConfig.Iterations -= 1
 			}
-			if !quiet {
-				_, _ = resultColor.Fprintf(cmd.ErrOrStderr(), "Settled on %d iterations.\n\n", aconfig.c.Iterations)
+			_, _ = resultPrinter.Printf("Settled on %d iterations.\n", conf.localConfig.Iterations)
+
+			results := make(loadResults, 5)
+			for i := 0; i < len(results); i++ {
+				_, _ = progressPrinter.Printf("\nRunning load test to simulate %d login requests per minute.\n", reqPerMin)
+
+				res, err := runLoadTest(cmd, conf, int(reqPerMin))
+				if err != nil {
+					return err
+				}
+				cv, _ := conf.HasherArgon2()
+				ccv := *cv
+				results[i] = &loadResult{r: res, v: &ccv}
+
+				_, _ = progressPrinter.Println("The load test result is:")
+				_, _ = progressPrinter.Println()
+				cmdx.PrintRow(cmd, res)
+
+				switch {
+				// too fast
+				case res.MedianTime < conf.localConfig.ExpectedDuration:
+					_, _ = progressPrinter.Printf("The median was %s under the minimal duration of %s, going to increase the hash cost.\n", conf.localConfig.ExpectedDuration-res.MedianTime, conf.localConfig.ExpectedDuration)
+
+					// try to increase memory first
+					if res.MaxMem+64*bytesize.MB < maxMemory {
+						// only small amounts of memory are sensible as we already benchmarked a single, non-concurrent request
+						conf.localConfig.Memory += 64 * bytesize.MB
+						_, _ = progressPrinter.Printf("Increasing memory to %s\n", conf.localConfig.Memory)
+					} else {
+						// increasing memory is not allowed by maxMemory, therefore increase CPU load
+						conf.localConfig.Iterations++
+						_, _ = progressPrinter.Printf("Increasing iterations to %d\n", conf.localConfig.Iterations)
+					}
+				// too much memory
+				case res.MaxMem > conf.localConfig.DedicatedMemory:
+					_, _ = progressPrinter.Printf("The required memory was %s more than the maximum allowed of %s.\n", res.MaxMem-maxMemory, conf.localConfig.DedicatedMemory)
+
+					conf.localConfig.Memory -= (res.MaxMem - conf.localConfig.DedicatedMemory) / bytesize.ByteSize(reqPerMin)
+					_, _ = progressPrinter.Printf("Decreasing memory to %s\n", conf.localConfig.Memory)
+				// too slow
+				case res.MaxTime > conf.localConfig.ExpectedDeviation+conf.localConfig.ExpectedDuration:
+					_, _ = progressPrinter.Printf("The longest request took %s longer than the longest acceptable time of %s, going to decrease the hash cost.\n", res.MaxTime-conf.localConfig.ExpectedDeviation+conf.localConfig.ExpectedDuration, conf.localConfig.ExpectedDeviation+conf.localConfig.ExpectedDuration)
+
+					// try to decrease iterations first
+					if conf.localConfig.Iterations > 1 {
+						conf.localConfig.Iterations--
+						_, _ = progressPrinter.Printf("Decreasing iterations to %d\n", conf.localConfig.Iterations)
+					} else {
+						// decreasing iterations is not possible anymore, decreasing memory
+						// only small amounts of memory are sensible as we already benchmarked a single, non-concurrent request
+						conf.localConfig.Memory -= 64 * bytesize.MB
+						_, _ = progressPrinter.Printf("Decreasing memory to %s\n", conf.localConfig.Memory)
+					}
+				// too high deviation
+				case res.StdDev > conf.localConfig.ExpectedDeviation:
+					_, _ = progressPrinter.Printf("The deviation was %s more than the expected deviation of %s.\n", res.StdDev-conf.localConfig.ExpectedDeviation, conf.localConfig.ExpectedDeviation)
+
+					// try to decrease iterations first
+					if conf.localConfig.Iterations > 1 {
+						conf.localConfig.Iterations--
+						_, _ = progressPrinter.Printf("Decreasing iterations to %d\n", conf.localConfig.Iterations)
+					} else {
+						// decreasing iterations is not possible anymore, decreasing memory
+						// only small amounts of memory are sensible as we already benchmarked a single, non-concurrent request
+						conf.localConfig.Memory -= 64 * bytesize.MB
+						_, _ = progressPrinter.Printf("Decreasing memory to %s\n", conf.localConfig.Memory)
+					}
+				// all values seem reasonable
+				default:
+					_, _ = progressPrinter.Println("These values look good to me.")
+					_, _ = progressPrinter.Println()
+					cmdx.PrintRow(cmd, conf)
+					return nil
+				}
 			}
 
-			e := json.NewEncoder(cmd.OutOrStdout())
-			e.SetIndent("", "  ")
-			return e.Encode(aconfig.c)
+			_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "Could not automatically determine good parameters. Have a look at all the measurements taken and select acceptable values yourself. Have a look in the docs for more information: https://www.ory.sh/kratos/docs/debug/performance-out-of-memory-password-hashing-argon2")
+			cmdx.PrintTable(cmd, results)
+			return nil
 		},
 	}
 
 	flags := cmd.Flags()
 
-	flags.BoolVarP(&quiet, FlagQuiet, "q", false, "Quiet output.")
 	flags.IntVarP(&runs, FlagRuns, "r", 2, "Runs per probe, median of all runs is taken as the result.")
 
-	flags.VarP(&startMemory, FlagStartMemory, "m", "Amount of memory to start probing at.")
-	flags.Var(&maxMemory, FlagMaxMemory, "Maximum memory allowed (default no limit).")
+	flags.VarP(&flagConfig.localConfig.Memory, FlagStartMemory, "m", "Amount of memory to start probing at.")
+	flags.Var(&maxMemory, FlagMaxMemory, "Maximum memory allowed (0 means no limit).")
 	flags.Var(&adjustMemory, FlagAdjustMemory, "Amount by which the memory is adjusted in every step while probing.")
 
-	flags.Uint32VarP(&aconfig.c.Iterations, FlagStartIterations, "i", 1, "Number of iterations to start probing at.")
+	flags.Uint32VarP(&flagConfig.localConfig.Iterations, FlagStartIterations, "i", 1, "Number of iterations to start probing at.")
 
-	flags.Uint8Var(&aconfig.c.Parallelism, FlagParallelism, config.Argon2DefaultParallelism, "Number of threads to use.")
+	flags.Uint8(FlagMaxConcurrent, 16, "Maximum number of concurrent hashing operations.")
 
-	flags.Uint32Var(&aconfig.c.SaltLength, FlagSaltLength, config.Argon2DefaultSaltLength, "Length of the salt in bytes.")
-	flags.Uint32Var(&aconfig.c.KeyLength, FlagKeyLength, config.Argon2DefaultKeyLength, "Length of the key in bytes.")
+	registerArgon2ConstantConfigFlags(flags, flagConfig)
+	cmdx.RegisterFormatFlags(flags)
+	configx.RegisterFlags(flags)
 
 	return cmd
 }
 
-func toKB(b bytesize.ByteSize) uint32 {
-	return uint32(b / bytesize.KB)
-}
+func probe(cmd *cobra.Command, hasher hash.Hasher, runs int, progressPrinter *cmdx.ConditionalPrinter) (time.Duration, error) {
+	// force GC at the start of the experiment
+	runtime.GC()
 
-func probe(cmd *cobra.Command, hasher hash.Hasher, runs int, quiet bool) (time.Duration, error) {
 	start := time.Now()
 
 	var mid time.Time
@@ -230,13 +318,11 @@ func probe(cmd *cobra.Command, hasher hash.Hasher, runs int, quiet bool) (time.D
 		mid = time.Now()
 		_, err := hasher.Generate(cmd.Context(), []byte("password"))
 		if err != nil {
-			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Could not generate a hash: %s\n", err)
+			fmt.Fprintf(cmd.ErrOrStderr(), "Could not generate a hash: %s\n", err)
 			return 0, cmdx.FailSilently(cmd)
 		}
-		if !quiet {
-			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "    took %s in try %d\n", time.Since(mid), i)
-		}
-	}
 
+		_, _ = progressPrinter.Printf("    took %s in try %d\n", time.Since(mid), i)
+	}
 	return time.Duration(int64(time.Since(start)) / int64(runs)), nil
 }
