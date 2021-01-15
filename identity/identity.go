@@ -127,12 +127,6 @@ func (i *Identity) lock() *sync.RWMutex {
 	return i.l
 }
 
-func (i *Identity) SetSecurityAnswers(answers map[string]string) {
-	i.lock().Lock()
-	defer i.lock().Unlock()
-
-}
-
 func (i *Identity) SetCredentials(t CredentialsType, c Credentials) {
 	i.lock().Lock()
 	defer i.lock().Unlock()
