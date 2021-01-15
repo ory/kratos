@@ -13,6 +13,7 @@ const (
 	ErrorValidationPasswordPolicyViolation
 	ErrorValidationInvalidCredentials
 	ErrorValidationDuplicateCredentials
+	ErrorValidationTOTPVerifierWrong
 )
 
 func NewValidationErrorGeneric(reason string) *Message {
@@ -83,6 +84,15 @@ func NewErrorValidationDuplicateCredentials() *Message {
 	return &Message{
 		ID:      ErrorValidationDuplicateCredentials,
 		Text:    "An account with the same identifier (email, phone, username, ...) exists already.",
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
+func NewErrorValidationTOTPVerifierWrong() *Message {
+	return &Message{
+		ID:      ErrorValidationTOTPVerifierWrong,
+		Text:    "The provided authentication code is invalid.",
 		Type:    Error,
 		Context: context(nil),
 	}
