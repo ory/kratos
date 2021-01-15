@@ -392,11 +392,9 @@ func TestSettingsStrategy(t *testing.T) {
 
 			agent, provider := "githuber", "google"
 			body, res, _ := link(t, agent, provider)
-			assert.Contains(t, res.Request.URL.String(), errTS.URL)
 
-			t.Logf("%s", body)
-			assert.EqualValues(t, 409, gjson.GetBytes(body, `0.code`).Int())
-			assert.Contains(t, gjson.GetBytes(body, `0.message`).String(), "insert or update resource because a resource")
+			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
+			assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.messages.0.text").String(), "An account with the same identifier (email, phone, username, ...) exists already.", "%s", body)
 		})
 
 		t.Run("case=should not be able to link a connection which is missing the ID token", func(t *testing.T) {
