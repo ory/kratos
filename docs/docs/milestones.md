@@ -181,6 +181,8 @@ New feature or request.
       [@hackerman](https://github.com/aeneasr)
 - [ ] Password policies: make api.pwnedpasswords.com configurable
       ([kratos#969](https://github.com/ory/kratos/issues/969))
+- [ ] Access identity schema information (e.g. usernames) within the jsonnet
+      mapper ([kratos#987](https://github.com/ory/kratos/issues/987))
 - [x] Support remote argon2 execution
       ([kratos#357](https://github.com/ory/kratos/issues/357)) -
       [@hackerman](https://github.com/aeneasr)
