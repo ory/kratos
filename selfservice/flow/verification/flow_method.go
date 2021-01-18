@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql/driver"
 	"encoding/json"
+	"github.com/ory/kratos/selfservice/flow"
 	"time"
 
 	"github.com/ory/kratos/corp"
@@ -55,15 +56,7 @@ func (u FlowMethods) TableName(ctx context.Context) string {
 
 // swagger:ignore
 type FlowMethodConfigurator interface {
-	form.ErrorParser
-	form.FieldSetter
-	form.FieldUnsetter
-	form.ValueSetter
-	form.Resetter
-	form.MessageResetter
-	form.CSRFSetter
-	form.FieldSorter
-	form.MessageAdder
+	flow.MethodConfigurator
 }
 
 // swagger:model verificationFlowMethodConfig

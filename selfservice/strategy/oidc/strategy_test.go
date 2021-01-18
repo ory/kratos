@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/kratos/ui/node"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
@@ -104,8 +105,8 @@ func TestStrategy(t *testing.T) {
 		assert.Equal(t, "POST", config.Method)
 
 		var found bool
-		for _, field := range config.Fields {
-			if field.Name == "provider" && field.Value == provider {
+		for _, field := range config.Nodes {
+			if field.ID() == string(node.OpenIDConnectGroup)+"provider" && field.GetValue() == provider {
 				found = true
 				break
 			}
@@ -418,23 +419,10 @@ func TestStrategy(t *testing.T) {
 					HTMLForm: &form.HTMLForm{
 						Action: "https://foo" + strings.ReplaceAll(oidc.RouteAuth, ":flow", sr.ID.String()),
 						Method: "POST",
-						Fields: form.Fields{
-							{
-								Name:     "csrf_token",
-								Type:     "hidden",
-								Required: true,
-								Value:    x.FakeCSRFToken,
-							},
-							{
-								Name:  "provider",
-								Type:  "submit",
-								Value: "valid",
-							},
-							{
-								Name:  "provider",
-								Type:  "submit",
-								Value: "invalid-issuer",
-							},
+						Nodes: node.Nodes{
+							node.NewCSRFNode(x.FakeCSRFToken),
+							oidc.NewSubmitNode("valid"),
+							oidc.NewSubmitNode("invalid-issuer"),
 						},
 					},
 				},
@@ -458,23 +446,10 @@ func TestStrategy(t *testing.T) {
 					HTMLForm: &form.HTMLForm{
 						Action: "https://foo" + strings.ReplaceAll(oidc.RouteAuth, ":flow", sr.ID.String()),
 						Method: "POST",
-						Fields: form.Fields{
-							{
-								Name:     "csrf_token",
-								Type:     "hidden",
-								Required: true,
-								Value:    x.FakeCSRFToken,
-							},
-							{
-								Name:  "provider",
-								Type:  "submit",
-								Value: "valid",
-							},
-							{
-								Name:  "provider",
-								Type:  "submit",
-								Value: "invalid-issuer",
-							},
+						Nodes: node.Nodes{
+							node.NewCSRFNode(x.FakeCSRFToken),
+							oidc.NewSubmitNode("valid"),
+							oidc.NewSubmitNode("invalid-issuer"),
 						},
 					},
 				},

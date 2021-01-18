@@ -1,13 +1,15 @@
 package form
 
-import "github.com/ory/kratos/text"
+import (
+	"github.com/ory/kratos/ui/node"
+)
 
 type Form interface {
+	NodeGetter
 	ErrorParser
-	FieldSetter
+	//NodeSetter
 	ValueSetter
-	FieldUnsetter
-	MessageAdder
+	//NodeUnsetter
 	CSRFSetter
 	Resetter
 	FieldSorter
@@ -18,28 +20,22 @@ type ErrorParser interface {
 	// ParseError type asserts the given error and sets the forms's errors or a
 	// field's errors and if the error is not something to be handled by the
 	// form itself, the error is returned for further propagation (e.g. showing a 502 status code).
-	ParseError(err error) error
+	ParseError(group node.Group, err error) error
 }
 
-type FieldSetter interface {
-	// SetField sets a field of the form.
-	SetField(field Field)
+type NodeSetter interface {
+	// SetNode sets a field of the form.
+	SetNode(field node.Node)
 }
 
-type FieldUnsetter interface {
+type NodeUnsetter interface {
 	// UnsetFields removes a field from the form.
-	UnsetField(name string)
+	UnsetNode(name string)
 }
 
 type ValueSetter interface {
 	// SetValue sets a value of the form.
-	SetValue(name string, value interface{})
-}
-
-type MessageAdder interface {
-	// AddMessage adds a message to the form. A message can also be set for one or more fields if
-	// `setForFields` is set.
-	AddMessage(err *text.Message, setForFields ...string)
+	SetValue(name string, value *node.Node)
 }
 
 type CSRFSetter interface {
@@ -59,4 +55,8 @@ type MessageResetter interface {
 
 type FieldSorter interface {
 	SortFields(schemaRef string) error
+}
+
+type NodeGetter interface {
+	GetNodes() *node.Nodes
 }
