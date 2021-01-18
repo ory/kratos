@@ -21,7 +21,7 @@ repositories:
 - [Python](https://pypi.org/project/ory-kratos-client/)
 - [PHP](https://packagist.org/packages/ory/kratos-client)
 - [Go](https://github.com/ory/kratos-client-go)
-- [NodeJS](https://www.npmjs.com/package/@oryd/kratos-client) (with TypeScript)
+- [NodeJS](https://www.npmjs.com/package/@ory/kratos-client) (with TypeScript)
 - [Java](https://search.maven.org/artifact/sh.ory.kratos/kratos-client)
 - [Ruby](https://rubygems.org/gems/ory-kratos-client)
 
