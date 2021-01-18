@@ -17,7 +17,17 @@ import (
 var ImportCmd = &cobra.Command{
 	Use:   "import <file.json [file-2.json [file-3.json] ...]>",
 	Short: "Import identities from files or STD_IN",
-	Example: `$ kratos identities import file.json
+	Example: `
+$ cat >./file.json <<EOF
+{
+    "schema_id": "default",
+    "traits": {
+        "email": "foo@ory.sh"
+    }
+}
+EOF
+
+$ kratos identities import file.json
 $ cat file.json | kratos identities import`,
 	Long: `Import identities from files or STD_IN.
 
