@@ -3,6 +3,7 @@ package recovery
 import (
 	"context"
 	"encoding/json"
+	"github.com/ory/kratos/ui/node"
 	"testing"
 
 	"github.com/bxcodec/faker/v3"
@@ -86,17 +87,29 @@ func TestFlowPersister(conf *config.Config, p interface {
 		t.Run("case=should create and update a recovery request", func(t *testing.T) {
 			expected := newFlow(t)
 			expected.Methods[StrategyRecoveryLinkName] = &FlowMethod{
-				Method: StrategyRecoveryLinkName, Config: &FlowMethodConfig{FlowMethodConfigurator: &form.HTMLForm{Fields: []form.Field{{
-					Name: "zab", Type: "bar", Pattern: "baz"}}}}}
+				Method: StrategyRecoveryLinkName, Config: &FlowMethodConfig{FlowMethodConfigurator: &form.HTMLForm{Nodes: node.Nodes{
+					// v0.5: {Name: "zab", Type: "bar", Pattern: "baz"},
+					node.NewInputField("zab", nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
+						a.Pattern = "baz"
+					})),
+				}}}}
 			expected.Methods["password"] = &FlowMethod{
-				Method: "password", Config: &FlowMethodConfig{FlowMethodConfigurator: &form.HTMLForm{Fields: []form.Field{{
-					Name: "foo", Type: "bar", Pattern: "baz"}}}}}
+				Method: "password", Config: &FlowMethodConfig{FlowMethodConfigurator: &form.HTMLForm{Nodes: node.Nodes{
+					// v0.5: {Name: "foo", Type: "bar", Pattern: "baz"},
+					node.NewInputField("foo", nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
+						a.Pattern = "baz"
+					})),
+				}}}}
 			err := p.CreateRecoveryFlow(ctx, expected)
 			require.NoError(t, err)
 
 			expected.Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action = "/new-action"
-			expected.Methods["password"].Config.FlowMethodConfigurator.(*form.HTMLForm).Fields = []form.Field{{
-				Name: "zab", Type: "zab", Pattern: "zab"}}
+			expected.Methods["password"].Config.FlowMethodConfigurator.(*form.HTMLForm).Nodes = node.Nodes{
+				// v0.5: {Name: "zab", Type: "zab", Pattern: "zab"},
+				node.NewInputField("zab", nil, node.DefaultGroup, "zab", node.WithInputAttributes(func(a *node.InputAttributes) {
+					a.Pattern = "zab"
+				})),
+			}
 			expected.RequestURL = "/new-request-url"
 			expected.Active = StrategyRecoveryLinkName
 			expected.Messages.Add(text.NewRecoveryEmailSent())
@@ -109,10 +122,20 @@ func TestFlowPersister(conf *config.Config, p interface {
 			assert.Equal(t, "/new-request-url", actual.RequestURL)
 			assert.Equal(t, StrategyRecoveryLinkName, actual.Active.String())
 			assert.Equal(t, expected.Messages, actual.Messages)
-			assert.EqualValues(t, []form.Field{{Name: "zab", Type: "zab", Pattern: "zab"}}, actual.
-				Methods["password"].Config.FlowMethodConfigurator.(*form.HTMLForm).Fields)
-			assert.EqualValues(t, []form.Field{{Name: "zab", Type: "bar", Pattern: "baz"}}, actual.
-				Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Fields)
+			assert.EqualValues(t, node.Nodes{
+				// v0.5: {Name: "zab", Type: "zab", Pattern: "zab"},
+				node.NewInputField("zab", nil, node.DefaultGroup, "zab",  node.WithInputAttributes(func(a *node.InputAttributes) {
+					a.Pattern = "zab"
+				})),
+			}, actual.
+				Methods["password"].Config.FlowMethodConfigurator.(*form.HTMLForm).Nodes)
+			assert.EqualValues(t, node.Nodes{
+				// v0.5: {Name: "zab", Type: "bar", Pattern: "baz"},
+				node.NewInputField("zab",nil, node.DefaultGroup, "bar",  node.WithInputAttributes(func(a *node.InputAttributes) {
+					a.Pattern = "baz"
+				})),
+			}, actual.
+				Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Nodes)
 		})
 
 		t.Run("case=should not cause data loss when updating a request without changes", func(t *testing.T) {

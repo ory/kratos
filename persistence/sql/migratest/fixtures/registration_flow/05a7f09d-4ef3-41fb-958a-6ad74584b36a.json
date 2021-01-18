@@ -9,40 +9,17 @@
     "oidc": {
       "method": "oidc",
       "config": {
-        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/auth/05a7f09d-4ef3-41fb-958a-6ad74584b36a",
+        "action": "",
         "method": "POST",
-        "fields": [
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "R3+y/kB6m+17C3HRkAYQJ+KOIpruSQnbplm+t3JiQd7mdl6iyy0ua01CSC/9de4F3IPlCTJ6jlg5y+BeknYLQg=="
-          }
-        ]
+        "nodes": []
       }
     },
     "password": {
       "method": "password",
       "config": {
-        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/registration/strategies/password?request=05a7f09d-4ef3-41fb-958a-6ad74584b36a",
+        "action": "",
         "method": "POST",
-        "fields": [
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "R3+y/kB6m+17C3HRkAYQJ+KOIpruSQnbplm+t3JiQd7mdl6iyy0ua01CSC/9de4F3IPlCTJ6jlg5y+BeknYLQg=="
-          },
-          {
-            "name": "password",
-            "type": "password",
-            "required": true
-          },
-          {
-            "name": "traits.email",
-            "type": "email"
-          }
-        ]
+        "nodes": []
       }
     }
   }

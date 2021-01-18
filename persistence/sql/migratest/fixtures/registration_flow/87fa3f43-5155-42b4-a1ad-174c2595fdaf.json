@@ -10,41 +10,17 @@
     "oidc": {
       "method": "oidc",
       "config": {
-        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/auth/87fa3f43-5155-42b4-a1ad-174c2595fdaf",
+        "action": "",
         "method": "POST",
-        "fields": [
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "vYYuhWXBfXKzBC+BlnbDmXfBKsUWY6SU/v04gHF9GYzPjFP51RXDPOc57R7Dpbf+XLkbPNAkmem33Crz/avdrw=="
-          }
-        ]
+        "nodes": []
       }
     },
     "password": {
       "method": "password",
       "config": {
-        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/registration/strategies/password?request=87fa3f43-5155-42b4-a1ad-174c2595fdaf",
+        "action": "",
         "method": "POST",
-        "fields": [
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "KeEp3OT+pHSXJpZAP+C1hR3yr4eIjUBDhg9tc/F1WI1b61SgVCoaOsMbVN9qM8HiNoqefk7KfT7PLn8AfaOcrg=="
-          },
-          {
-            "name": "password",
-            "type": "password",
-            "required": true
-          },
-          {
-            "name": "traits.email",
-            "type": "text",
-            "value": "foo@ory.sh"
-          }
-        ]
+        "nodes": []
       }
     }
   }

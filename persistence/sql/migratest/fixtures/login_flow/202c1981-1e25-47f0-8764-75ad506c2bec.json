@@ -9,42 +9,17 @@
     "oidc": {
       "method": "oidc",
       "config": {
-        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/auth/202c1981-1e25-47f0-8764-75ad506c2bec",
+        "action": "",
         "method": "POST",
-        "fields": [
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "7esV9o+i9BJCvpBz3HXWxBPI2802lrGtt3+dBIwBZ/1M4vmqBPVBlHT3qY2xBijmLcUcXuqlNi4o7cPtbBUtYQ=="
-          }
-        ]
+        "nodes": []
       }
     },
     "password": {
       "method": "password",
       "config": {
-        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/login/strategies/password?request=202c1981-1e25-47f0-8764-75ad506c2bec",
+        "action": "",
         "method": "POST",
-        "fields": [
-          {
-            "name": "identifier",
-            "type": "text",
-            "required": true,
-            "value": ""
-          },
-          {
-            "name": "password",
-            "type": "password",
-            "required": true
-          },
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "7esV9o+i9BJCvpBz3HXWxBPI2802lrGtt3+dBIwBZ/1M4vmqBPVBlHT3qY2xBijmLcUcXuqlNi4o7cPtbBUtYQ=="
-          }
-        ]
+        "nodes": []
       }
     }
   },

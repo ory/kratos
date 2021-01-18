@@ -3,6 +3,7 @@ package profile
 import (
 	"context"
 	"encoding/json"
+	"github.com/ory/kratos/ui/node"
 	"net/http"
 	"net/url"
 
@@ -103,12 +104,12 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 	f, err := form.NewHTMLFormFromJSONSchema(urlx.CopyWithQuery(
 		urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteSettings),
 		url.Values{"flow": {pr.ID.String()}},
-	).String(), traitsSchema.URL, "", schemaCompiler)
+	).String(), node.DefaultGroup, traitsSchema.URL, "", schemaCompiler)
 	if err != nil {
 		return err
 	}
 
-	f.SetValuesFromJSON(json.RawMessage(id.Traits), "traits")
+	f.UpdateNodesFromJSON(json.RawMessage(id.Traits), "traits", node.DefaultGroup)
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 
 	if err := f.SortFields(traitsSchema.URL); err != nil {
@@ -284,8 +285,8 @@ func (s *Strategy) hydrateForm(r *http.Request, ar *settings.Flow, ss *session.S
 
 	ar.Methods[settings.StrategyProfile].Config.Reset()
 	if traits != nil {
-		for _, field := range form.NewHTMLFormFromJSON(action.String(), traits, "traits").Fields {
-			ar.Methods[settings.StrategyProfile].Config.SetField(field)
+		for _, field := range form.NewHTMLFormFromJSON(action.String(), node.DefaultGroup, traits, "traits").Nodes {
+			ar.Methods[settings.StrategyProfile].Config.GetNodes().Upsert(field)
 		}
 	}
 	ar.Methods[settings.StrategyProfile].Config.SetCSRF(s.d.GenerateCSRFToken(r))

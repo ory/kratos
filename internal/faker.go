@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"github.com/ory/kratos/ui/node"
 	"math/rand"
 	"net/http"
 	"reflect"
@@ -164,6 +165,27 @@ func RegisterFakes() {
 			}
 		}
 		return methods, nil
+	}); err != nil {
+		panic(err)
+	}
+
+	if err := faker.AddProvider("ui_node_attributes", func(v reflect.Value) (interface{}, error) {
+		var a node.Attributes
+		switch rand.Intn(4) {
+		case 0:
+			a = new(node.InputAttributes)
+		case 1:
+			a = new(node.ImageAttributes)
+		case 2:
+			a = new(node.AnchorAttributes)
+		case 3:
+			a = new(node.TextAttributes)
+		}
+
+		if err := faker.FakeData(a); err != nil {
+			return nil, err
+		}
+		return a, nil
 	}); err != nil {
 		panic(err)
 	}

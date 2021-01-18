@@ -1,0 +1,58 @@
+{
+  "$id": "https://example.com/all_formats.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "password": {
+      "type": "string",
+      "test_expected_type": "password"
+    },
+    "csrf_token": {
+      "type": "string",
+      "test_expected_type": "hidden"
+    },
+    "simpleString": {
+      "type": "string",
+      "test_expected_type": "text"
+    },
+    "simpleNumber": {
+      "type": "number",
+      "test_expected_type": "number"
+    },
+    "simpleBoolean": {
+      "type": "boolean",
+      "test_expected_type": "checkbox"
+    },
+    "emailString": {
+      "type": "string",
+      "format": "email",
+      "test_expected_type": "email"
+    },
+    "dateTimeString": {
+      "type": "string",
+      "format": "date-time",
+      "test_expected_type": "datetime-local"
+    },
+    "regexString": {
+      "type": "string",
+      "format": "regex",
+      "test_expected_type": "text"
+    },
+    "dateString": {
+      "type": "string",
+      "format": "date",
+      "test_expected_type": "date"
+    },
+    "uriString": {
+      "type": "string",
+      "format": "uri",
+      "test_expected_type": "url"
+    },
+    "patternString": {
+      "type": "string",
+      "pattern": "foo.*",
+      "test_expected_type": "text",
+      "test_expected_pattern": true
+    }
+  }
+}
