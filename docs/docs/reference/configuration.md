@@ -692,6 +692,41 @@ selfservice:
     ## password ##
     #
     password:
+      ## Password Configuration ##
+      #
+      # Define how passwords are validated.
+      #
+      config:
+        ## Ignore Lookup Network Errors ##
+        #
+        # If set to false the password validation fails when the network or the Have I Been Pwnd API is down.
+        #
+        # Default value: true
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_METHODS_PASSWORD_CONFIG_IGNORE_NETWORK_ERRORS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_IGNORE_NETWORK_ERRORS=<value>
+        #
+        ignore_network_errors: false
+
+        ## Allow Password Breaches ##
+        #
+        # Defines how often a password may have been breached before it is rejected.
+        #
+        # Minimum value: 0
+        #
+        # Maximum value: 100
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_METHODS_PASSWORD_CONFIG_MAX_BREACHES=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_MAX_BREACHES=<value>
+        #
+        max_breaches: 0
+
       ## Enables Username/Email and Password Method ##
       #
       # Default value: true
@@ -1091,41 +1126,6 @@ log:
   #    > set LOG_LEVEL=<value>
   #
   level: trace
-
-## Password Configuration ##
-#
-# Define how passwords are validated.
-#
-password:
-  ## Ignore Lookup Network Errors ##
-  #
-  # If set to false the password validation fails when the network or the Have I Been Pwnd API is down.
-  #
-  # Default value: true
-  #
-  # Set this value using environment variables on
-  # - Linux/macOS:
-  #    $ export PASSWORD_IGNORE_NETWORK_ERRORS=<value>
-  # - Windows Command Line (CMD):
-  #    > set PASSWORD_IGNORE_NETWORK_ERRORS=<value>
-  #
-  ignore_network_errors: false
-
-  ## Allow Password Breaches ##
-  #
-  # Defines how often a password may have been breached before it is rejected.
-  #
-  # Minimum value: 0
-  #
-  # Maximum value: 100
-  #
-  # Set this value using environment variables on
-  # - Linux/macOS:
-  #    $ export PASSWORD_MAX_BREACHES=<value>
-  # - Windows Command Line (CMD):
-  #    > set PASSWORD_MAX_BREACHES=<value>
-  #
-  max_breaches: 0
 
 ## secrets ##
 #
