@@ -27,7 +27,6 @@ import (
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/settings"
-	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/selfservice/strategy/profile"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/assertx"
@@ -167,7 +166,7 @@ func TestStrategyTraits(t *testing.T) {
 				Action: pointerx.String(publicTS.URL + profile.RouteSettings + "?flow=" + string(*payload.ID)),
 				Method: pointerx.String("POST"),
 				Fields: models.FormFields{
-					&models.FormField{Name: pointerx.String(form.CSRFTokenName), Required: true, Type: pointerx.String("hidden"), Value: x.FakeCSRFToken},
+					&models.FormField{Name: pointerx.String(x.CSRFTokenName), Required: true, Type: pointerx.String("hidden"), Value: x.FakeCSRFToken},
 					&models.FormField{Name: pointerx.String("traits.email"), Type: pointerx.String("text"), Value: gjson.GetBytes(id.Traits, "email").String()},
 					&models.FormField{Name: pointerx.String("traits.stringy"), Type: pointerx.String("text"), Value: "foobar"},
 					&models.FormField{Name: pointerx.String("traits.numby"), Type: pointerx.String("number"), Value: json.Number("2.5")},

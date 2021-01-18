@@ -3,6 +3,7 @@ package password
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/ory/kratos/ui/node"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
@@ -37,7 +38,11 @@ func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *
 	if rr != nil {
 		if method, ok := rr.Methods[identity.CredentialsTypePassword]; ok {
 			method.Config.Reset()
-			method.Config.SetValue("identifier", payload.Identifier)
+			// v0.5: method.Config.SetValue("identifier", payload.Identifier)
+			method.Config.Nodes.Upsert(
+				node.NewInputField("identifier", payload.Identifier, node.PasswordGroup, node.InputAttributeTypeText,  node.WithRequiredInputAttribute),
+			)
+
 			if rr.Type == flow.TypeBrowser {
 				method.Config.SetCSRF(s.d.GenerateCSRFToken(r))
 			}
@@ -177,16 +182,12 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Flow) error {
 	f := &form.HTMLForm{
 		Action: sr.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteLogin)).String(),
 		Method: "POST",
-		Fields: form.Fields{{
-			Name:     "identifier",
-			Type:     "text",
-			Value:    identifier,
-			Required: true,
-		}, {
-			Name:     "password",
-			Type:     "password",
-			Required: true,
-		}}}
+		Nodes: node.Nodes{
+			// v0.5: {Name: "identifier", Type: "text", Value: identifier, Required: true},
+			// v0.5: {Name: "password", Type: "password", Required: true},
+			node.NewInputField("identifier", identifier, node.PasswordGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute),
+			NewPasswordNode(),
+		}}
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 
 	sr.Methods[identity.CredentialsTypePassword] = &login.FlowMethod{

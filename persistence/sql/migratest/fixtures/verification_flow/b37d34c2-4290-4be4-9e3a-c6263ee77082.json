@@ -9,21 +9,9 @@
     "link": {
       "method": "link",
       "config": {
-        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/verification/email/complete?request=b37d34c2-4290-4be4-9e3a-c6263ee77082",
+        "action": "",
         "method": "POST",
-        "fields": [
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "w+Amwv/g+QE/RaFUuc5/z7qnfFC2fxro9w9kUvoqhyBi6cqedLdMhwkMmKrUvYHthKq7w2pMnWtonTq7Gj7NvA=="
-          },
-          {
-            "name": "to_verify",
-            "type": "email",
-            "required": true
-          }
-        ]
+        "nodes": []
       }
     }
   },

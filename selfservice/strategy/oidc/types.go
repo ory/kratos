@@ -3,6 +3,7 @@ package oidc
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
@@ -43,7 +44,7 @@ type FlowMethod struct {
 
 func (r *FlowMethod) AddProviders(providers []Configuration) *FlowMethod {
 	for _, p := range providers {
-		r.Fields = append(r.Fields, form.Field{Name: "provider", Type: "submit", Value: p.ID})
+		r.GetNodes().Append(node.NewInputField("provider", p.ID, node.OpenIDConnectGroup, node.InputAttributeTypeSubmit))
 	}
 	return r
 }

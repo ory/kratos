@@ -3,6 +3,7 @@ package password
 import (
 	"context"
 	"encoding/json"
+	"github.com/ory/kratos/ui/node"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
@@ -58,9 +59,9 @@ func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Reques
 			method.Config.Reset()
 
 			if p != nil {
-				for _, field := range form.NewHTMLFormFromJSON("", p.Traits, "traits").Fields {
+				for _, n := range form.NewHTMLFormFromJSON("", node.PasswordGroup, p.Traits, "traits").Nodes {
 					// we only set the value and not the whole field because we want to keep types from the initial form generation
-					method.Config.SetValue(field.Name, field.Value)
+					method.Config.SetValue(n.ID(), n)
 				}
 			}
 
@@ -229,14 +230,14 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.Flow) error {
 	action := sr.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteRegistration))
 
-	htmlf, err := form.NewHTMLFormFromJSONSchema(action.String(), s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String(), "", nil)
+	htmlf, err := form.NewHTMLFormFromJSONSchema(action.String(), node.PasswordGroup, s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String(), "", nil)
 	if err != nil {
 		return err
 	}
 
 	htmlf.Method = "POST"
 	htmlf.SetCSRF(s.d.GenerateCSRFToken(r))
-	htmlf.SetField(form.Field{Name: "password", Type: "password", Required: true})
+	htmlf.GetNodes().Upsert(NewPasswordNode())
 
 	if err := htmlf.SortFields(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()); err != nil {
 		return err
