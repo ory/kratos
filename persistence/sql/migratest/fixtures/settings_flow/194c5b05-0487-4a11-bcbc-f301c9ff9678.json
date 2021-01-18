@@ -9,56 +9,25 @@
     "oidc": {
       "method": "oidc",
       "config": {
-        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/strategies/oidc/settings/connections?request=194c5b05-0487-4a11-bcbc-f301c9ff9678",
+        "action": "",
         "method": "POST",
-        "fields": [
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "4apNE3S+VLL1UPu8GhyLOhdnhkzLZxrwTqZ/dx5xf3eP0nO6RigYo3h3UkxySahBnHWQctE4EpCANse5Rdlc+A=="
-          }
-        ]
+        "nodes": []
       }
     },
     "password": {
       "method": "password",
       "config": {
-        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/settings/strategies/password?request=194c5b05-0487-4a11-bcbc-f301c9ff9678",
+        "action": "",
         "method": "POST",
-        "fields": [
-          {
-            "name": "password",
-            "type": "password",
-            "required": true
-          },
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "4apNE3S+VLL1UPu8GhyLOhdnhkzLZxrwTqZ/dx5xf3eP0nO6RigYo3h3UkxySahBnHWQctE4EpCANse5Rdlc+A=="
-          }
-        ]
+        "nodes": []
       }
     },
     "profile": {
       "method": "profile",
       "config": {
-        "action": "http://127.0.0.1:4455/.ory/kratos/public/self-service/browser/flows/settings/strategies/profile?request=194c5b05-0487-4a11-bcbc-f301c9ff9678",
+        "action": "",
         "method": "POST",
-        "fields": [
-          {
-            "name": "csrf_token",
-            "type": "hidden",
-            "required": true,
-            "value": "IoLeYNbYJdALHIKvrgK7iYyMHA8r/rhG+6mr3z0nleRM+uDJ5E5pwYY7K1/GV5jyB54KMTGhsCY1ORMRZo+2aw=="
-          },
-          {
-            "name": "traits.email",
-            "type": "text",
-            "value": "foobar@ory.sh"
-          }
-        ]
+        "nodes": []
       }
     }
   },

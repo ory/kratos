@@ -3,6 +3,7 @@ package oidc_test
 import (
 	"context"
 	"encoding/json"
+	"github.com/ory/kratos/ui/node"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -578,49 +579,49 @@ func TestPopulateSettingsMethod(t *testing.T) {
 	for k, tc := range []struct {
 		c      []oidc.Configuration
 		i      *identity.Credentials
-		e      form.Fields
+		e      node.Nodes
 		withpw bool
 	}{
 		{
 			c: []oidc.Configuration{},
-			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
+			e: node.Nodes{
+				node.NewCSRFNode(x.FakeCSRFToken),
 			},
 		},
 		{
 			c: []oidc.Configuration{
 				{Provider: "generic", ID: "github"},
 			},
-			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
-				{Name: "link", Type: "submit", Value: "github"},
+			e: node.Nodes{
+				node.NewCSRFNode(x.FakeCSRFToken),
+				oidc.NewLinkNode("github"),
 			},
 		},
 		{
 			c: defaultConfig,
-			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
-				{Name: "link", Type: "submit", Value: "facebook"},
-				{Name: "link", Type: "submit", Value: "google"},
-				{Name: "link", Type: "submit", Value: "github"},
+			e: node.Nodes{
+				node.NewCSRFNode(x.FakeCSRFToken),
+				oidc.NewLinkNode("facebook"),
+				oidc.NewLinkNode("google"),
+				oidc.NewLinkNode("github"),
 			},
 		},
 		{
 			c: defaultConfig,
-			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
-				{Name: "link", Type: "submit", Value: "facebook"},
-				{Name: "link", Type: "submit", Value: "google"},
-				{Name: "link", Type: "submit", Value: "github"},
+			e: node.Nodes{
+				node.NewCSRFNode(x.FakeCSRFToken),
+				oidc.NewLinkNode("facebook"),
+				oidc.NewLinkNode("google"),
+				oidc.NewLinkNode("github"),
 			},
 			i: &identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{}, Config: []byte(`{}`)},
 		},
 		{
 			c: defaultConfig,
-			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
-				{Name: "link", Type: "submit", Value: "facebook"},
-				{Name: "link", Type: "submit", Value: "github"},
+			e: node.Nodes{
+				node.NewCSRFNode(x.FakeCSRFToken),
+				oidc.NewLinkNode("facebook"),
+				oidc.NewLinkNode("github"),
 			},
 			i: &identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{
 				"google:1234",
@@ -628,11 +629,11 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		},
 		{
 			c: defaultConfig,
-			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
-				{Name: "link", Type: "submit", Value: "facebook"},
-				{Name: "link", Type: "submit", Value: "github"},
-				{Name: "unlink", Type: "submit", Value: "google"},
+			e: node.Nodes{
+				node.NewCSRFNode(x.FakeCSRFToken),
+				oidc.NewLinkNode("facebook"),
+				oidc.NewLinkNode("github"),
+				oidc.NewUnlinkNode("google"),
 			},
 			withpw: true,
 			i: &identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{
@@ -642,11 +643,11 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		},
 		{
 			c: defaultConfig,
-			e: form.Fields{
-				{Name: "csrf_token", Type: "hidden", Required: true, Value: x.FakeCSRFToken},
-				{Name: "link", Type: "submit", Value: "github"},
-				{Name: "unlink", Type: "submit", Value: "google"},
-				{Name: "unlink", Type: "submit", Value: "facebook"},
+			e: node.Nodes{
+				node.NewCSRFNode(x.FakeCSRFToken),
+				oidc.NewLinkNode("github"),
+				oidc.NewUnlinkNode("google"),
+				oidc.NewUnlinkNode("facebook"),
 			},
 			i: &identity.Credentials{Type: identity.CredentialsTypeOIDC, Identifiers: []string{
 				"google:1234",
@@ -672,7 +673,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 				}
 			}
 			actual := populate(t, reg, i, nr())
-			assert.EqualValues(t, tc.e, actual.Fields)
+			assert.EqualValues(t, tc.e, actual.Nodes)
 		})
 	}
 }

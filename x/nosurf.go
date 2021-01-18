@@ -32,6 +32,8 @@ type CSRFTokenGeneratorProvider interface {
 
 type CSRFToken func(r *http.Request) string
 
+const CSRFTokenName = "csrf_token"
+
 func DefaultCSRFToken(r *http.Request) string {
 	return nosurf.Token(r)
 }
