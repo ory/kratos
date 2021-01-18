@@ -2,6 +2,7 @@ package password
 
 import (
 	"encoding/json"
+	"github.com/ory/kratos/ui/node"
 	"net/http"
 	"net/url"
 	"time"
@@ -211,8 +212,10 @@ func (s *Strategy) continueSettingsFlow(
 
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, _ *identity.Identity, f *settings.Flow) error {
 	hf := &form.HTMLForm{Action: urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteSettings),
-		url.Values{"flow": {f.ID.String()}}).String(), Fields: form.Fields{{Name: "password",
-		Type: "password", Required: true}}, Method: "POST"}
+		url.Values{"flow": {f.ID.String()}}).String(),
+		// v0.5: Fields: form.Fields{{Name: "password", Type: "password", Required: true}},
+		Nodes: node.Nodes{NewPasswordNode()},
+		Method: "POST"}
 	hf.SetCSRF(s.d.GenerateCSRFToken(r))
 
 	f.Methods[string(s.ID())] = &settings.FlowMethod{

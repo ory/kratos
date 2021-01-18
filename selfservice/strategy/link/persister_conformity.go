@@ -83,8 +83,8 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			})
 
 		})
-		t.Run("token=verification", func(t *testing.T) {
 
+		t.Run("token=verification", func(t *testing.T) {
 			t.Run("case=should error when the verification token does not exist", func(t *testing.T) {
 				_, err := p.UseVerificationToken(ctx, "i-do-not-exist")
 				require.Error(t, err)

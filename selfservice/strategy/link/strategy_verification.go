@@ -1,6 +1,7 @@
 package link
 
 import (
+	"github.com/ory/kratos/ui/node"
 	"net/http"
 	"net/url"
 	"time"
@@ -46,7 +47,10 @@ func (s *Strategy) PopulateVerificationMethod(r *http.Request, req *verification
 	f := form.NewHTMLForm(req.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteVerification)).String())
 
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
-	f.SetField(form.Field{Name: "email", Type: "email", Required: true})
+	f.GetNodes().Upsert(
+		// v0.5: form.Field{Name: "email", Type: "email", Required: true}
+		node.NewInputField("email", nil,node.VerificationLinkGroup, node.InputAttributeTypeEmail,  node.WithRequiredInputAttribute),
+	)
 
 	req.Methods[s.VerificationStrategyID()] = &verification.FlowMethod{
 		Method: s.VerificationStrategyID(),
@@ -86,7 +90,11 @@ func (s *Strategy) handleVerificationError(w http.ResponseWriter, r *http.Reques
 
 		config.Reset()
 		config.SetCSRF(s.d.GenerateCSRFToken(r))
-		config.SetField(form.Field{Name: "email", Type: "email", Required: true, Value: body.Body.Email})
+
+		config.GetNodes().Upsert(
+			// v0.5: form.Field{Name: "email", Type: "email", Required: true, Value: body.Body.Email}
+			node.NewInputField("email",body.Body.Email, node.VerificationLinkGroup, node.InputAttributeTypeEmail,  node.WithRequiredInputAttribute),
+		)
 	}
 
 	s.d.VerificationFlowErrorHandler().WriteFlowError(w, r, s.VerificationStrategyID(), f, err)
@@ -238,7 +246,10 @@ func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *ht
 
 	config.Reset()
 	config.SetCSRF(s.d.GenerateCSRFToken(r))
-	config.SetField(form.Field{Name: "email", Type: "email", Required: true, Value: body.Body.Email})
+	config.GetNodes().Upsert(
+		// v0.5: form.Field{Name: "email", Type: "email", Required: true, Value: body.Body.Email}
+		node.NewInputField("email",  body.Body.Email,node.VerificationLinkGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute),
+	)
 
 	f.Active = sqlxx.NullString(s.VerificationStrategyID())
 	f.State = verification.StateEmailSent

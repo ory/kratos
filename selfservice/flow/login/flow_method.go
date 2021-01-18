@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql/driver"
 	"encoding/json"
+	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/ui/node"
 	"time"
 
 	"github.com/ory/kratos/corp"
@@ -56,12 +58,7 @@ func (u FlowMethods) TableName(ctx context.Context) string {
 
 // swagger:ignore
 type FlowMethodConfigurator interface {
-	form.ErrorParser
-	form.ValueSetter
-	form.Resetter
-	form.MessageResetter
-	form.CSRFSetter
-	form.MessageAdder
+	flow.MethodConfigurator
 }
 
 // swagger:model loginFlowMethodConfig
@@ -77,7 +74,7 @@ type FlowMethodConfigMock struct {
 	*form.HTMLForm
 
 	// Providers is set for the "oidc" flow method.
-	Providers []form.Field `json:"providers"`
+	Providers node.Nodes `json:"providers"`
 }
 
 func (c *FlowMethodConfig) Scan(value interface{}) error {

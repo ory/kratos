@@ -147,19 +147,11 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 
 	for _, l := range linkable {
-		f.Fields = append(f.Fields, form.Field{
-			Name:  "link",
-			Type:  "submit",
-			Value: l.Config().ID,
-		})
+		f.GetNodes().Append(NewLinkNode(l.Config().ID))
 	}
 
 	for _, l := range linked {
-		f.Fields = append(f.Fields, form.Field{
-			Name:  "unlink",
-			Type:  "submit",
-			Value: l.Config().ID,
-		})
+		f.GetNodes().Append(NewUnlinkNode(l.Config().ID))
 	}
 
 	sr.Methods[s.SettingsStrategyID()] = &settings.FlowMethod{
