@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"github.com/ory/kratos/ui/node"
 	"net/http"
 	"net/url"
 	"time"
@@ -49,6 +50,19 @@ type (
 		*herodot.DefaultError
 	}
 )
+
+func MethodToNodeGroup(method string) node.Group {
+	switch method {
+	case StrategyProfile:
+		return node.DefaultGroup
+	case string(identity.CredentialsTypePassword):
+		return node.PasswordGroup
+	case string(identity.CredentialsTypeOIDC):
+		return node.OpenIDConnectGroup
+	default:
+		return node.DefaultGroup
+	}
+}
 
 func NewFlowNeedsReAuth() *FlowNeedsReAuth {
 	return &FlowNeedsReAuth{DefaultError: herodot.ErrForbidden.
@@ -141,7 +155,7 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	if err := f.Methods[method].Config.ParseError(err); err != nil {
+	if err := f.Methods[method].Config.ParseError(MethodToNodeGroup(method), err); err != nil {
 		s.forward(w, r, f, err)
 		return
 	}

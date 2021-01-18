@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/kratos/ui/node"
 	"net/http"
 	"net/url"
 	"strings"
@@ -436,16 +437,14 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 		return
 	} else if rr, rerr := s.d.RegistrationFlowPersister().GetRegistrationFlow(r.Context(), rid); rerr == nil {
 		if method, ok := rr.Methods[s.ID()]; ok {
-			method.Config.UnsetField("provider")
+			method.Config.UnsetNode("provider")
 			method.Config.Reset()
 
 			if traits != nil {
-				for _, field := range form.NewHTMLFormFromJSON("", traits, "traits").Fields {
-					method.Config.SetField(field)
-				}
+				method.Config.UpdateNodesFromJSON(traits, "traits", node.OpenIDConnectGroup)
 			}
 
-			if errSec := method.Config.ParseError(err); errSec != nil {
+			if errSec := method.Config.ParseError(node.OpenIDConnectGroup, err); errSec != nil {
 				s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, s.ID(), rr, errSec)
 				return
 			}
@@ -457,8 +456,11 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 				return
 			}
 
-			method.Config.UnsetField("provider")
-			method.Config.SetField(form.Field{Name: "provider", Value: provider, Type: "submit"})
+			method.Config.UnsetNode("provider")
+			method.Config.GetNodes().Upsert(
+				// v0.5: form.Field{Name: "provider", Value: provider, Type: "submit"}
+				node.NewInputField("provider", provider, node.OpenIDConnectGroup, node.InputAttributeTypeSubmit),
+			)
 			rr.Methods[s.ID()] = method
 		}
 

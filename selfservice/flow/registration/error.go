@@ -1,6 +1,7 @@
 package registration
 
 import (
+	"github.com/ory/kratos/ui/node"
 	"net/http"
 	"net/url"
 	"time"
@@ -62,6 +63,17 @@ func NewErrorHandler(d errorHandlerDependencies) *ErrorHandler {
 	return &ErrorHandler{d: d}
 }
 
+func MethodToNodeGroup(method identity.CredentialsType) node.Group {
+	switch method {
+	case identity.CredentialsTypePassword:
+		return node.PasswordGroup
+	case identity.CredentialsTypeOIDC:
+		return node.OpenIDConnectGroup
+	default:
+		return node.DefaultGroup
+	}
+}
+
 func (s *ErrorHandler) WriteFlowError(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -111,7 +123,7 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	if err := method.Config.ParseError(err); err != nil {
+	if err := method.Config.ParseError(MethodToNodeGroup(ct),err); err != nil {
 		s.forward(w, r, f, err)
 		return
 	}

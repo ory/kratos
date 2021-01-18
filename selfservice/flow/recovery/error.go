@@ -1,6 +1,7 @@
 package recovery
 
 import (
+	"github.com/ory/kratos/ui/node"
 	"net/http"
 	"net/url"
 	"time"
@@ -64,6 +65,15 @@ func NewErrorHandler(d errorHandlerDependencies) *ErrorHandler {
 	return &ErrorHandler{d: d}
 }
 
+func MethodToNodeGroup(method string) node.Group {
+	switch method {
+	case StrategyRecoveryLinkName:
+		return node.RecoveryLinkGroup
+	default:
+		return node.DefaultGroup
+	}
+}
+
 func (s *ErrorHandler) WriteFlowError(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -113,7 +123,7 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	if err := method.Config.ParseError(err); err != nil {
+	if err := method.Config.ParseError(MethodToNodeGroup(methodName), err); err != nil {
 		s.forward(w, r, f, err)
 		return
 	}

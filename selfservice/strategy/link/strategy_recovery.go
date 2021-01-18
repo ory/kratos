@@ -1,6 +1,7 @@
 package link
 
 import (
+	"github.com/ory/kratos/ui/node"
 	"net/http"
 	"net/url"
 	"time"
@@ -53,7 +54,11 @@ func (s *Strategy) PopulateRecoveryMethod(r *http.Request, req *recovery.Flow) e
 	f := form.NewHTMLForm(req.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteRecovery)).String())
 
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
-	f.SetField(form.Field{Name: "email", Type: "email", Required: true})
+
+	f.GetNodes().Upsert(
+		// v0.5: form.Field{Name: "email", Type: "email", Required: true},
+		node.NewInputField("email",nil, node.RecoveryLinkGroup, node.InputAttributeTypeEmail,  node.WithRequiredInputAttribute),
+	)
 
 	req.Methods[s.RecoveryStrategyID()] = &recovery.FlowMethod{
 		Method: s.RecoveryStrategyID(),
@@ -442,7 +447,10 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 
 	config.Reset()
 	config.SetCSRF(s.d.GenerateCSRFToken(r))
-	config.SetField(form.Field{Name: "email", Type: "email", Required: true, Value: body.Body.Email})
+	config.GetNodes().Upsert(
+		// v0.5: form.Field{Name: "email", Type: "email", Required: true, Value: body.Body.Email}
+		node.NewInputField("email",  body.Body.Email,node.RecoveryLinkGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute),
+	)
 
 	req.Active = sqlxx.NullString(s.RecoveryStrategyID())
 	req.State = recovery.StateEmailSent
@@ -476,7 +484,10 @@ func (s *Strategy) handleRecoveryError(w http.ResponseWriter, r *http.Request, r
 
 		config.Reset()
 		config.SetCSRF(s.d.GenerateCSRFToken(r))
-		config.SetField(form.Field{Name: "email", Type: "email", Required: true, Value: body.Body.Email})
+		config.GetNodes().Upsert(
+			// v0.5: form.Field{Name: "email", Type: "email", Required: true, Value: body.Body.Email}
+			node.NewInputField("email", body.Body.Email, node.RecoveryLinkGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute),
+		)
 	}
 
 	s.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, s.RecoveryStrategyID(), req, err)
