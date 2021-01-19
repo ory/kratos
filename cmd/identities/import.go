@@ -27,6 +27,7 @@ var ImportCmd = &cobra.Command{
 EOF
 
 $ kratos identities import file.json
+# Alternatively:
 $ cat file.json | kratos identities import`,
 	Long: `Import identities from files or STD_IN.
 
