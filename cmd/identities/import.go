@@ -17,8 +17,7 @@ import (
 var ImportCmd = &cobra.Command{
 	Use:   "import <file.json [file-2.json [file-3.json] ...]>",
 	Short: "Import identities from files or STD_IN",
-	Example: `
-$ cat >./file.json <<EOF
+	Example: `$ cat > ./file.json <<EOF
 {
     "schema_id": "default",
     "traits": {
