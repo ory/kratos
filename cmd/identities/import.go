@@ -22,7 +22,7 @@ $ cat >./file.json <<EOF
 {
     "schema_id": "default",
     "traits": {
-        "email": "foo@ory.sh"
+        "email": "foo@example.com"
     }
 }
 EOF
