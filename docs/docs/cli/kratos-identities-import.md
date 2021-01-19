@@ -30,7 +30,17 @@ kratos identities import <file.json [file-2.json [file-3.json] ...]> [flags]
 ### Examples
 
 ```
+$ cat > ./file.json <<EOF
+{
+    "schema_id": "default",
+    "traits": {
+        "email": "foo@example.com"
+    }
+}
+EOF
+
 $ kratos identities import file.json
+# Alternatively:
 $ cat file.json | kratos identities import
 ```
 
