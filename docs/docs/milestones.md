@@ -13,13 +13,13 @@ Something is not working.
 
 #### Issues
 
-- [ ] Do not create system errors on duplicate credentials when linking oidc
-      providers ([kratos#694](https://github.com/ory/kratos/issues/694))
 - [ ] Typescript ErrorContainer type is incorrect
       ([kratos#782](https://github.com/ory/kratos/issues/782))
 - [ ] Refresh Sessions Without Having to Log In Again
       ([kratos#615](https://github.com/ory/kratos/issues/615)) -
       [@hackerman](https://github.com/aeneasr)
+- [x] Do not create system errors on duplicate credentials when linking oidc
+      providers ([kratos#694](https://github.com/ory/kratos/issues/694))
 
 ### [Feat](https://github.com/ory/kratos/labels/feat)
 
