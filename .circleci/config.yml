@@ -13,7 +13,7 @@ jobs:
   test:
     docker:
       -
-        image: circleci/golang:1.15
+        image: circleci/golang:1.15-node
         environment:
           - GO111MODULE=on
           - TEST_MAILHOG_SMTP=smtp://test:test@127.0.0.1:1025
@@ -67,6 +67,10 @@ jobs:
             - "/go/pkg/mod"
       -
         run: timeout 15 sh -c 'until nc -z $0 $1; do sleep 1; done' 127.0.0.1 4444
+      - 
+        run: make install
+      -
+        run: make test-docs
       -
         run: go-acc -o coverage.txt ./... -- -v -failfast -timeout=20m -tags sqlite
       -

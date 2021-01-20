@@ -114,6 +114,11 @@ format: .bin/goimports
 docker:
 		docker build -f .docker/Dockerfile-build -t oryd/kratos:latest-sqlite .
 
+# Runs the documentation tests
+.PHONY: test-docs
+test-docs: node_modules
+		npm run text-run
+
 .PHONY: test-e2e
 test-e2e: node_modules test-resetdb
 		source script/test-envs.sh
