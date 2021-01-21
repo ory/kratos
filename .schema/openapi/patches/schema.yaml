@@ -1,0 +1,23 @@
+# Makes uiNodeAttributes polymorph
+- op: remove
+  path: /components/schemas/uiNodeAttributes/type
+- op: add
+  path: /components/schemas/uiNodeAttributes/oneOf
+  value:
+    - "$ref": "#/components/schemas/uiNodeInputAttributes"
+    - "$ref": "#/components/schemas/uiNodeTextAttributes"
+    - "$ref": "#/components/schemas/uiNodeImageAttributes"
+    - "$ref": "#/components/schemas/uiNodeAnchorAttributes"
+
+# Makes the uiNodeInputAttributes value attribute polymorph
+- op: remove
+  path: /components/schemas/uiNodeInputAttributes/properties/value/type
+- op: add
+  path: /components/schemas/uiNodeInputAttributes/properties/value/nullable
+  value: true
+- op: add
+  path: /components/schemas/uiNodeInputAttributes/properties/value/oneOf
+  value:
+    - type: string
+    - type: number
+    - type: boolean

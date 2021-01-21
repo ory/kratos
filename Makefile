@@ -14,7 +14,12 @@ GO_DEPENDENCIES = github.com/ory/go-acc \
 				  github.com/golang/mock/mockgen \
 				  github.com/go-swagger/go-swagger/cmd/swagger \
 				  golang.org/x/tools/cmd/goimports \
-				  github.com/mikefarah/yq
+				  github.com/mikefarah/yq \
+				  github.com/bufbuild/buf/cmd/buf \
+					github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway \
+					github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2 \
+					google.golang.org/protobuf/cmd/protoc-gen-go \
+					google.golang.org/grpc/cmd/protoc-gen-go-grpc
 
 define make-go-dependency
   # go install is responsible for not re-building when the code hasn't changed
@@ -80,15 +85,28 @@ test:
 
 # Generates the SDK
 .PHONY: sdk
-sdk: .bin/swagger .bin/cli
-		swagger generate spec -m -o .schema/api.swagger.json -x internal/httpclient
+sdk: .bin/swagger .bin/cli node_modules
+		swagger generate spec -m -o .schema/api.swagger.json -x github.com/ory/kratos-client-go
 		cli dev swagger sanitize ./.schema/api.swagger.json
 		swagger validate ./.schema/api.swagger.json
-		swagger flatten --with-flatten=remove-unused -o ./.schema/api.swagger.json ./.schema/api.swagger.json
-		swagger validate ./.schema/api.swagger.json
-		rm -rf internal/httpclient/models/* internal/httpclient/clients/*
+		CIRCLE_PROJECT_USERNAME=ory CIRCLE_PROJECT_REPONAME=kratos \
+				cli dev openapi migrate \
+					-p https://raw.githubusercontent.com/ory/x/v0.0.177/healthx/openapi/patch.yaml \
+					-p file://.schema/openapi/patches/meta.yaml \
+					-p file://.schema/openapi/patches/schema.yaml \
+					.schema/api.swagger.json .schema/api.openapi.json
+
+		rm -rf internal/httpclient/models internal/httpclient/clients
 		mkdir -p internal/httpclient/
-		swagger generate client -f ./.schema/api.swagger.json -t internal/httpclient/ -A Ory_Kratos
+		npm run openapi-generator-cli -- generate -i ".schema/api.openapi.json" \
+				-g go \
+				-o "internal/httpclient" \
+				--git-user-id ory \
+				--git-repo-id kratos-client-go \
+				--git-host github.com \
+				-t .schema/openapi/templates/go \
+				-c .schema/openapi/gen.go.yml
+
 		make format
 
 .PHONY: quickstart
@@ -146,3 +164,14 @@ migratest-refresh:
 .PHONY: pack
 pack: .bin/pkger
 		pkger -exclude node_modules -exclude docs -exclude .git -exclude .github -exclude .bin -exclude test -exclude script -exclude contrib
+
+.PHONY: buf-tools
+buf-tools: .bin/buf .bin/protoc-gen-grpc-gateway .bin/protoc-gen-openapiv2 .bin/protoc-gen-go .bin/protoc-gen-go-grpc
+
+.PHONY: buf-lint
+buf-lint: buf-tools
+		buf lint
+
+.PHONY: buf-gen
+buf-gen: buf-tools
+		buf generate
