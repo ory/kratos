@@ -110,13 +110,7 @@
         ],
         "responses": {
           "200": {
-            "description": "A list of identities.",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/Identity"
-              }
-            }
+            "$ref": "#/responses/identityList"
           },
           "500": {
             "description": "genericError",
@@ -154,10 +148,7 @@
         ],
         "responses": {
           "201": {
-            "description": "A single identity.",
-            "schema": {
-              "$ref": "#/definitions/Identity"
-            }
+            "$ref": "#/responses/identityResponse"
           },
           "400": {
             "description": "genericError",
@@ -209,10 +200,7 @@
         ],
         "responses": {
           "200": {
-            "description": "A single identity.",
-            "schema": {
-              "$ref": "#/definitions/Identity"
-            }
+            "$ref": "#/responses/identityResponse"
           },
           "400": {
             "description": "genericError",
@@ -263,10 +251,7 @@
         ],
         "responses": {
           "200": {
-            "description": "A single identity.",
-            "schema": {
-              "$ref": "#/definitions/Identity"
-            }
+            "$ref": "#/responses/identityResponse"
           },
           "400": {
             "description": "genericError",
@@ -313,7 +298,7 @@
         ],
         "responses": {
           "204": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "$ref": "#/responses/emptyResponse"
           },
           "404": {
             "description": "genericError",
@@ -343,7 +328,7 @@
         "operationId": "prometheus",
         "responses": {
           "200": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "$ref": "#/responses/emptyResponse"
           }
         }
       }
@@ -429,10 +414,7 @@
         ],
         "responses": {
           "200": {
-            "description": "The raw identity traits schema",
-            "schema": {
-              "type": "object"
-            }
+            "$ref": "#/responses/schemaResponse"
           },
           "404": {
             "description": "genericError",
@@ -463,7 +445,7 @@
         "operationId": "initializeSelfServiceBrowserLogoutFlow",
         "responses": {
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "$ref": "#/responses/emptyResponse"
           },
           "500": {
             "description": "genericError",
@@ -492,7 +474,7 @@
         "operationId": "completeSelfServiceBrowserSettingsOIDCSettingsFlow",
         "responses": {
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "$ref": "#/responses/emptyResponse"
           },
           "500": {
             "description": "genericError",
@@ -530,10 +512,7 @@
         ],
         "responses": {
           "200": {
-            "description": "User-facing error response",
-            "schema": {
-              "$ref": "#/definitions/errorContainer"
-            }
+            "$ref": "#/responses/errorContainer"
           },
           "403": {
             "description": "genericError",
@@ -612,7 +591,7 @@
         "operationId": "initializeSelfServiceLoginViaBrowserFlow",
         "responses": {
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "$ref": "#/responses/emptyResponse"
           },
           "500": {
             "description": "genericError",
@@ -725,7 +704,7 @@
             }
           },
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "$ref": "#/responses/emptyResponse"
           },
           "400": {
             "description": "loginFlow",
@@ -790,7 +769,7 @@
         "operationId": "initializeSelfServiceRecoveryViaBrowserFlow",
         "responses": {
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "$ref": "#/responses/emptyResponse"
           },
           "500": {
             "description": "genericError",
@@ -896,7 +875,7 @@
         ],
         "responses": {
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "$ref": "#/responses/emptyResponse"
           },
           "400": {
             "description": "recoveryFlow",
@@ -961,7 +940,7 @@
         "operationId": "initializeSelfServiceRegistrationViaBrowserFlow",
         "responses": {
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "$ref": "#/responses/emptyResponse"
           },
           "500": {
             "description": "genericError",
@@ -1073,7 +1052,7 @@
             }
           },
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "$ref": "#/responses/emptyResponse"
           },
           "400": {
             "description": "registrationFlow",
@@ -1148,7 +1127,7 @@
         "operationId": "initializeSelfServiceSettingsViaBrowserFlow",
         "responses": {
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "$ref": "#/responses/emptyResponse"
           },
           "500": {
             "description": "genericError",
@@ -1270,7 +1249,7 @@
             }
           },
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "$ref": "#/responses/emptyResponse"
           },
           "400": {
             "description": "settingsFlow",
@@ -1346,7 +1325,7 @@
             }
           },
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "$ref": "#/responses/emptyResponse"
           },
           "400": {
             "description": "settingsFlow",
@@ -1423,7 +1402,7 @@
         "operationId": "initializeSelfServiceVerificationViaBrowserFlow",
         "responses": {
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "$ref": "#/responses/emptyResponse"
           },
           "500": {
             "description": "genericError",
@@ -1529,7 +1508,7 @@
         ],
         "responses": {
           "302": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "$ref": "#/responses/emptyResponse"
           },
           "400": {
             "description": "verificationFlow",
@@ -1576,7 +1555,7 @@
         ],
         "responses": {
           "204": {
-            "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+            "$ref": "#/responses/emptyResponse"
           },
           "400": {
             "description": "genericError",
@@ -1671,8 +1650,21 @@
     }
   },
   "definitions": {
+    "CompleteSelfServiceBrowserSettingsProfileStrategyFlow": {
+      "description": "nolint:deadcode,unused",
+      "type": "object",
+      "properties": {
+        "csrf_token": {
+          "description": "The Anti-CSRF Token\n\nThis token is only required when performing browser flows.",
+          "type": "string"
+        },
+        "traits": {
+          "description": "Traits contains all of the identity's traits.",
+          "type": "object"
+        }
+      }
+    },
     "CompleteSelfServiceLoginFlowWithPasswordMethod": {
-      "description": "CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod CompleteSelfServiceLoginFlowWithPasswordMethod complete self service login flow with password method",
       "type": "object",
       "properties": {
         "csrf_token": {
@@ -1690,7 +1682,6 @@
       }
     },
     "CompleteSelfServiceSettingsFlowWithPasswordMethod": {
-      "description": "CompleteSelfServiceSettingsFlowWithPasswordMethod CompleteSelfServiceSettingsFlowWithPasswordMethod CompleteSelfServiceSettingsFlowWithPasswordMethod CompleteSelfServiceSettingsFlowWithPasswordMethod CompleteSelfServiceSettingsFlowWithPasswordMethod CompleteSelfServiceSettingsFlowWithPasswordMethod CompleteSelfServiceSettingsFlowWithPasswordMethod CompleteSelfServiceSettingsFlowWithPasswordMethod CompleteSelfServiceSettingsFlowWithPasswordMethod complete self service settings flow with password method",
       "type": "object",
       "required": [
         "password"
@@ -1707,7 +1698,6 @@
       }
     },
     "CreateIdentity": {
-      "description": "CreateIdentity CreateIdentity CreateIdentity CreateIdentity CreateIdentity CreateIdentity CreateIdentity CreateIdentity CreateIdentity create identity",
       "type": "object",
       "required": [
         "schema_id",
@@ -1725,7 +1715,6 @@
       }
     },
     "CreateRecoveryLink": {
-      "description": "CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink CreateRecoveryLink create recovery link",
       "type": "object",
       "required": [
         "identity_id"
@@ -1747,12 +1736,10 @@
       "title": "CredentialsType  represents several different credential types, like password credentials, passwordless credentials,"
     },
     "ID": {
-      "description": "ID ID ID ID ID ID ID ID ID ID",
       "type": "integer",
       "format": "int64"
     },
     "Identity": {
-      "description": "Identity Identity Identity Identity Identity Identity Identity Identity Identity identity",
       "type": "object",
       "required": [
         "id",
@@ -1793,40 +1780,12 @@
         }
       }
     },
-    "Message": {
-      "description": "Message Message Message Message Message Message Message Message Message message",
-      "type": "object",
-      "properties": {
-        "context": {
-          "description": "context",
-          "type": "object"
-        },
-        "id": {
-          "$ref": "#/definitions/ID"
-        },
-        "text": {
-          "description": "text",
-          "type": "string"
-        },
-        "type": {
-          "$ref": "#/definitions/Type"
-        }
-      }
-    },
-    "Messages": {
-      "description": "Messages Messages Messages Messages Messages Messages Messages Messages Messages messages",
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/Message"
-      }
-    },
     "NullTime": {
       "type": "string",
       "format": "date-time",
       "title": "NullTime implements sql.NullTime functionality."
     },
     "RecoveryAddress": {
-      "description": "RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress RecoveryAddress recovery address",
       "type": "object",
       "required": [
         "id",
@@ -1846,15 +1805,12 @@
       }
     },
     "RecoveryAddressType": {
-      "description": "RecoveryAddressType RecoveryAddressType RecoveryAddressType RecoveryAddressType RecoveryAddressType RecoveryAddressType RecoveryAddressType RecoveryAddressType RecoveryAddressType recovery address type",
       "type": "string"
     },
     "State": {
-      "description": "State State State State State State State State State state",
       "type": "string"
     },
     "Traits": {
-      "description": "Traits Traits Traits Traits Traits Traits Traits Traits Traits traits",
       "type": "object"
     },
     "Type": {
@@ -1862,12 +1818,8 @@
       "type": "string",
       "title": "Type is the flow type."
     },
-    "UUID": {
-      "type": "string",
-      "format": "uuid4"
-    },
+    "UUID": {"type": "string", "format": "uuid4"},
     "UpdateIdentity": {
-      "description": "UpdateIdentity UpdateIdentity UpdateIdentity UpdateIdentity UpdateIdentity UpdateIdentity UpdateIdentity UpdateIdentity UpdateIdentity update identity",
       "type": "object",
       "required": [
         "traits"
@@ -1884,14 +1836,13 @@
       }
     },
     "VerifiableAddress": {
-      "description": "VerifiableAddress VerifiableAddress VerifiableAddress VerifiableAddress VerifiableAddress VerifiableAddress VerifiableAddress VerifiableAddress VerifiableAddress verifiable address",
       "type": "object",
       "required": [
         "id",
-        "status",
         "value",
         "verified",
-        "via"
+        "via",
+        "status"
       ],
       "properties": {
         "id": {
@@ -1915,15 +1866,29 @@
       }
     },
     "VerifiableAddressStatus": {
-      "description": "VerifiableAddressStatus VerifiableAddressStatus VerifiableAddressStatus VerifiableAddressStatus VerifiableAddressStatus VerifiableAddressStatus VerifiableAddressStatus VerifiableAddressStatus VerifiableAddressStatus verifiable address status",
       "type": "string"
     },
     "VerifiableAddressType": {
-      "description": "VerifiableAddressType VerifiableAddressType VerifiableAddressType VerifiableAddressType VerifiableAddressType VerifiableAddressType VerifiableAddressType VerifiableAddressType VerifiableAddressType verifiable address type",
       "type": "string"
     },
+    "completeSelfServiceBrowserSettingsOIDCFlowPayload": {
+      "type": "object",
+      "properties": {
+        "flow": {
+          "description": "Flow ID is the flow's ID.\n\nin: query",
+          "type": "string"
+        },
+        "link": {
+          "description": "Link this provider\n\nEither this or `unlink` must be set.\n\ntype: string\nin: body",
+          "type": "string"
+        },
+        "unlink": {
+          "description": "Unlink this provider\n\nEither this or `link` must be set.\n\ntype: string\nin: body",
+          "type": "string"
+        }
+      }
+    },
     "completeSelfServiceRecoveryFlowWithLinkMethod": {
-      "description": "CompleteSelfServiceRecoveryFlowWithLinkMethod CompleteSelfServiceRecoveryFlowWithLinkMethod CompleteSelfServiceRecoveryFlowWithLinkMethod CompleteSelfServiceRecoveryFlowWithLinkMethod CompleteSelfServiceRecoveryFlowWithLinkMethod CompleteSelfServiceRecoveryFlowWithLinkMethod CompleteSelfServiceRecoveryFlowWithLinkMethod CompleteSelfServiceRecoveryFlowWithLinkMethod CompleteSelfServiceRecoveryFlowWithLinkMethod complete self service recovery flow with link method",
       "type": "object",
       "properties": {
         "csrf_token": {
@@ -1937,7 +1902,6 @@
       }
     },
     "completeSelfServiceVerificationFlowWithLinkMethod": {
-      "description": "CompleteSelfServiceVerificationFlowWithLinkMethod CompleteSelfServiceVerificationFlowWithLinkMethod CompleteSelfServiceVerificationFlowWithLinkMethod CompleteSelfServiceVerificationFlowWithLinkMethod CompleteSelfServiceVerificationFlowWithLinkMethod CompleteSelfServiceVerificationFlowWithLinkMethod CompleteSelfServiceVerificationFlowWithLinkMethod CompleteSelfServiceVerificationFlowWithLinkMethod CompleteSelfServiceVerificationFlowWithLinkMethod complete self service verification flow with link method",
       "type": "object",
       "properties": {
         "csrf_token": {
@@ -1951,7 +1915,6 @@
       }
     },
     "errorContainer": {
-      "description": "ErrorContainer ErrorContainer error container",
       "type": "object",
       "required": [
         "id",
@@ -1967,48 +1930,29 @@
         }
       }
     },
-    "formField": {
-      "description": "FormField FormField Field represents a HTML Form Field",
+    "form": {
+      "description": "HTMLForm represents a HTML Form. The container can work with both HTTP Form and JSON requests",
       "type": "object",
       "required": [
-        "name",
-        "type"
+        "action",
+        "method",
+        "nodes"
       ],
       "properties": {
-        "disabled": {
-          "description": "Disabled is the equivalent of `\u003cinput {{if .Disabled}}disabled{{end}}\"\u003e`",
-          "type": "boolean"
+        "action": {
+          "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
+          "type": "string"
         },
         "messages": {
-          "$ref": "#/definitions/Messages"
+          "$ref": "#/definitions/uiTexts"
         },
-        "name": {
-          "description": "Name is the equivalent of `\u003cinput name=\"{{.Name}}\"\u003e`",
+        "method": {
+          "description": "Method is the form method (e.g. POST)",
           "type": "string"
         },
-        "pattern": {
-          "description": "Pattern is the equivalent of `\u003cinput pattern=\"{{.Pattern}}\"\u003e`",
-          "type": "string"
-        },
-        "required": {
-          "description": "Required is the equivalent of `\u003cinput required=\"{{.Required}}\"\u003e`",
-          "type": "boolean"
-        },
-        "type": {
-          "description": "Type is the equivalent of `\u003cinput type=\"{{.Type}}\"\u003e`",
-          "type": "string"
-        },
-        "value": {
-          "description": "Value is the equivalent of `\u003cinput value=\"{{.Value}}\"\u003e`",
-          "type": "object"
+        "nodes": {
+          "$ref": "#/definitions/uiNodes"
         }
-      }
-    },
-    "formFields": {
-      "description": "Fields contains multiple fields",
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/formField"
       }
     },
     "genericError": {
@@ -2022,7 +1966,6 @@
       }
     },
     "genericErrorPayload": {
-      "description": "GenericErrorPayload GenericErrorPayload GenericErrorPayload GenericErrorPayload GenericErrorPayload GenericErrorPayload GenericErrorPayload GenericErrorPayload GenericErrorPayload generic error payload",
       "type": "object",
       "properties": {
         "code": {
@@ -2037,24 +1980,19 @@
           "example": "The database adapter was unable to find the element"
         },
         "details": {
-          "description": "details",
           "type": "object",
           "additionalProperties": true
         },
         "message": {
-          "description": "message",
           "type": "string"
         },
         "reason": {
-          "description": "reason",
           "type": "string"
         },
         "request": {
-          "description": "request",
           "type": "string"
         },
         "status": {
-          "description": "status",
           "type": "string"
         }
       }
@@ -2083,7 +2021,7 @@
     "loginFlow": {
       "description": "This object represents a login flow. A login flow is initiated at the \"Initiate Login API / Browser Flow\"\nendpoint by a client.\n\nOnce a login flow is completed successfully, a session cookie or session token will be issued.",
       "type": "object",
-      "title": "LoginFlow Login Flow",
+      "title": "Login Flow",
       "required": [
         "id",
         "expires_at",
@@ -2113,7 +2051,7 @@
           "format": "date-time"
         },
         "messages": {
-          "$ref": "#/definitions/Messages"
+          "$ref": "#/definitions/uiTexts"
         },
         "methods": {
           "description": "List of login methods\n\nThis is the list of available login methods with their required form fields, such as `identifier` and `password`\nfor the password login method. This will also contain error messages such as \"password can not be empty\".",
@@ -2132,7 +2070,6 @@
       }
     },
     "loginFlowMethod": {
-      "description": "LoginFlowMethod login flow method",
       "type": "object",
       "required": [
         "method",
@@ -2148,39 +2085,61 @@
       }
     },
     "loginFlowMethodConfig": {
-      "description": "LoginFlowMethodConfig login flow method config",
       "type": "object",
       "required": [
         "action",
         "method",
-        "fields"
+        "nodes"
       ],
       "properties": {
         "action": {
           "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
           "type": "string"
         },
-        "fields": {
-          "$ref": "#/definitions/formFields"
-        },
         "messages": {
-          "$ref": "#/definitions/Messages"
+          "$ref": "#/definitions/uiTexts"
         },
         "method": {
           "description": "Method is the form method (e.g. POST)",
           "type": "string"
         },
+        "nodes": {
+          "$ref": "#/definitions/uiNodes"
+        },
         "providers": {
-          "description": "Providers is set for the \"oidc\" flow method.",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/formField"
-          }
+          "$ref": "#/definitions/uiNodes"
+        }
+      }
+    },
+    "loginFlowMethodConfigPayload": {
+      "type": "object",
+      "required": [
+        "action",
+        "method",
+        "nodes"
+      ],
+      "properties": {
+        "action": {
+          "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
+          "type": "string"
+        },
+        "messages": {
+          "$ref": "#/definitions/uiTexts"
+        },
+        "method": {
+          "description": "Method is the form method (e.g. POST)",
+          "type": "string"
+        },
+        "nodes": {
+          "$ref": "#/definitions/uiNodes"
+        },
+        "providers": {
+          "$ref": "#/definitions/uiNodes"
         }
       }
     },
     "loginViaApiResponse": {
-      "description": "LoginViaAPIResponse The Response for Login Flows via API",
+      "description": "The Response for Login Flows via API",
       "type": "object",
       "required": [
         "session_token",
@@ -2199,7 +2158,7 @@
     "recoveryFlow": {
       "description": "This request is used when an identity wants to recover their account.\n\nWe recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)",
       "type": "object",
-      "title": "RecoveryFlow A Recovery Flow",
+      "title": "A Recovery Flow",
       "required": [
         "id",
         "expires_at",
@@ -2227,7 +2186,7 @@
           "format": "date-time"
         },
         "messages": {
-          "$ref": "#/definitions/Messages"
+          "$ref": "#/definitions/uiTexts"
         },
         "methods": {
           "description": "Methods contains context for all account recovery methods. If a registration request has been\nprocessed, but for example the password is incorrect, this will contain error messages.",
@@ -2251,8 +2210,8 @@
     "recoveryFlowMethod": {
       "type": "object",
       "required": [
-        "config",
-        "method"
+        "method",
+        "config"
       ],
       "properties": {
         "config": {
@@ -2265,27 +2224,50 @@
       }
     },
     "recoveryFlowMethodConfig": {
-      "description": "RecoveryFlowMethodConfig RecoveryFlowMethodConfig RecoveryFlowMethodConfig RecoveryFlowMethodConfig recovery flow method config",
       "type": "object",
       "required": [
         "action",
         "method",
-        "fields"
+        "nodes"
       ],
       "properties": {
         "action": {
           "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
           "type": "string"
         },
-        "fields": {
-          "$ref": "#/definitions/formFields"
-        },
         "messages": {
-          "$ref": "#/definitions/Messages"
+          "$ref": "#/definitions/uiTexts"
         },
         "method": {
           "description": "Method is the form method (e.g. POST)",
           "type": "string"
+        },
+        "nodes": {
+          "$ref": "#/definitions/uiNodes"
+        }
+      }
+    },
+    "recoveryFlowMethodConfigPayload": {
+      "type": "object",
+      "required": [
+        "action",
+        "method",
+        "nodes"
+      ],
+      "properties": {
+        "action": {
+          "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
+          "type": "string"
+        },
+        "messages": {
+          "$ref": "#/definitions/uiTexts"
+        },
+        "method": {
+          "description": "Method is the form method (e.g. POST)",
+          "type": "string"
+        },
+        "nodes": {
+          "$ref": "#/definitions/uiNodes"
         }
       }
     },
@@ -2307,7 +2289,6 @@
       }
     },
     "registrationFlow": {
-      "description": "RegistrationFlow RegistrationFlow registration flow",
       "type": "object",
       "required": [
         "id",
@@ -2334,7 +2315,7 @@
           "format": "date-time"
         },
         "messages": {
-          "$ref": "#/definitions/Messages"
+          "$ref": "#/definitions/uiTexts"
         },
         "methods": {
           "description": "Methods contains context for all enabled registration methods. If a registration flow has been\nprocessed, but for example the password is incorrect, this will contain error messages.",
@@ -2355,8 +2336,8 @@
     "registrationFlowMethod": {
       "type": "object",
       "required": [
-        "config",
-        "method"
+        "method",
+        "config"
       ],
       "properties": {
         "config": {
@@ -2371,29 +2352,60 @@
       "type": "object",
       "required": [
         "action",
-        "fields",
-        "method"
+        "method",
+        "nodes"
       ],
       "properties": {
         "action": {
           "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
           "type": "string"
         },
-        "fields": {
-          "$ref": "#/definitions/formFields"
-        },
         "messages": {
-          "$ref": "#/definitions/Messages"
+          "$ref": "#/definitions/uiTexts"
         },
         "method": {
           "description": "Method is the form method (e.g. POST)",
           "type": "string"
         },
+        "nodes": {
+          "$ref": "#/definitions/uiNodes"
+        },
         "providers": {
           "description": "Providers is set for the \"oidc\" registration method.",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/formField"
+            "$ref": "#/definitions/uiNodes"
+          }
+        }
+      }
+    },
+    "registrationFlowMethodConfigPayload": {
+      "type": "object",
+      "required": [
+        "action",
+        "method",
+        "nodes"
+      ],
+      "properties": {
+        "action": {
+          "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
+          "type": "string"
+        },
+        "messages": {
+          "$ref": "#/definitions/uiTexts"
+        },
+        "method": {
+          "description": "Method is the form method (e.g. POST)",
+          "type": "string"
+        },
+        "nodes": {
+          "$ref": "#/definitions/uiNodes"
+        },
+        "providers": {
+          "description": "Providers is set for the \"oidc\" registration method.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/uiNodes"
           }
         }
       }
@@ -2402,8 +2414,8 @@
       "description": "The Response for Registration Flows via API",
       "type": "object",
       "required": [
-        "identity",
-        "session_token"
+        "session_token",
+        "identity"
       ],
       "properties": {
         "identity": {
@@ -2419,7 +2431,6 @@
       }
     },
     "revokeSession": {
-      "description": "RevokeSession RevokeSession RevokeSession RevokeSession RevokeSession RevokeSession RevokeSession RevokeSession RevokeSession revoke session",
       "type": "object",
       "required": [
         "session_token"
@@ -2432,7 +2443,6 @@
       }
     },
     "session": {
-      "description": "Session session",
       "type": "object",
       "required": [
         "id",
@@ -2443,16 +2453,13 @@
       ],
       "properties": {
         "active": {
-          "description": "active",
           "type": "boolean"
         },
         "authenticated_at": {
-          "description": "authenticated at",
           "type": "string",
           "format": "date-time"
         },
         "expires_at": {
-          "description": "expires at",
           "type": "string",
           "format": "date-time"
         },
@@ -2463,7 +2470,6 @@
           "$ref": "#/definitions/Identity"
         },
         "issued_at": {
-          "description": "issued at",
           "type": "string",
           "format": "date-time"
         }
@@ -2474,12 +2480,12 @@
       "type": "object",
       "title": "Flow represents a Settings Flow",
       "required": [
-        "expires_at",
         "id",
-        "identity",
+        "expires_at",
         "issued_at",
-        "methods",
         "request_url",
+        "methods",
+        "identity",
         "state"
       ],
       "properties": {
@@ -2504,7 +2510,7 @@
           "format": "date-time"
         },
         "messages": {
-          "$ref": "#/definitions/Messages"
+          "$ref": "#/definitions/uiTexts"
         },
         "methods": {
           "description": "Methods contains context for all enabled registration methods. If a settings flow has been\nprocessed, but for example the first name is empty, this will contain error messages.",
@@ -2528,8 +2534,8 @@
     "settingsFlowMethod": {
       "type": "object",
       "required": [
-        "config",
-        "method"
+        "method",
+        "config"
       ],
       "properties": {
         "config": {
@@ -2545,28 +2551,76 @@
       "type": "object",
       "required": [
         "action",
-        "fields",
-        "method"
+        "method",
+        "nodes"
       ],
       "properties": {
         "action": {
           "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
           "type": "string"
         },
-        "fields": {
-          "$ref": "#/definitions/formFields"
-        },
         "messages": {
-          "$ref": "#/definitions/Messages"
+          "$ref": "#/definitions/uiTexts"
         },
         "method": {
           "description": "Method is the form method (e.g. POST)",
           "type": "string"
+        },
+        "nodes": {
+          "$ref": "#/definitions/uiNodes"
+        }
+      }
+    },
+    "settingsFlowMethodConfigPayload": {
+      "type": "object",
+      "required": [
+        "action",
+        "method",
+        "nodes"
+      ],
+      "properties": {
+        "action": {
+          "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
+          "type": "string"
+        },
+        "messages": {
+          "$ref": "#/definitions/uiTexts"
+        },
+        "method": {
+          "description": "Method is the form method (e.g. POST)",
+          "type": "string"
+        },
+        "nodes": {
+          "$ref": "#/definitions/uiNodes"
+        }
+      }
+    },
+    "settingsProfileFormConfig": {
+      "type": "object",
+      "required": [
+        "action",
+        "method",
+        "nodes"
+      ],
+      "properties": {
+        "action": {
+          "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
+          "type": "string"
+        },
+        "messages": {
+          "$ref": "#/definitions/uiTexts"
+        },
+        "method": {
+          "description": "Method is the form method (e.g. POST)",
+          "type": "string"
+        },
+        "nodes": {
+          "$ref": "#/definitions/uiNodes"
         }
       }
     },
     "settingsViaApiResponse": {
-      "description": "SettingsViaAPIResponse The Response for Settings Flows via API",
+      "description": "The Response for Settings Flows via API",
       "type": "object",
       "required": [
         "flow",
@@ -2579,6 +2633,160 @@
         "identity": {
           "$ref": "#/definitions/Identity"
         }
+      }
+    },
+    "uiNode": {
+      "description": "Nodes are represented as HTML elements or their native UI equivalents. For example,\na node can be an `\u003cimg\u003e` tag, or an `\u003cinput element\u003e` but also `some plain text`.",
+      "type": "object",
+      "title": "Node represents a flow's nodes",
+      "required": [
+        "type",
+        "attributes"
+      ],
+      "properties": {
+        "attributes": {
+          "$ref": "#/definitions/uiNodeAttributes"
+        },
+        "group": {
+          "$ref": "#/definitions/uiNodeGroup"
+        },
+        "messages": {
+          "$ref": "#/definitions/uiTexts"
+        },
+        "type": {
+          "$ref": "#/definitions/uiNodeType"
+        }
+      }
+    },
+    "uiNodeAnchorAttributes": {
+      "type": "object",
+      "title": "AnchorAttributes represents the attributes of an anchor node.",
+      "required": [
+        "href",
+        "title"
+      ],
+      "properties": {
+        "href": {
+          "description": "The link's href (destination) URL.\n\nformat: uri",
+          "type": "string"
+        },
+        "title": {
+          "$ref": "#/definitions/uiText"
+        }
+      }
+    },
+    "uiNodeAttributes": {
+      "type": "object",
+      "title": "Attributes represents a list of attributes (e.g. `href=\"foo\"` for links)."
+    },
+    "uiNodeGroup": {
+      "type": "string"
+    },
+    "uiNodeImageAttributes": {
+      "type": "object",
+      "title": "ImageAttributes represents the attributes of an image node.",
+      "required": [
+        "src"
+      ],
+      "properties": {
+        "src": {
+          "description": "The image's source URL.\n\nformat: uri",
+          "type": "string"
+        }
+      }
+    },
+    "uiNodeInputAttributeType": {
+      "type": "string"
+    },
+    "uiNodeInputAttributes": {
+      "description": "InputAttributes represents the attributes of an input node",
+      "type": "object",
+      "required": [
+        "name",
+        "type",
+        "disabled"
+      ],
+      "properties": {
+        "disabled": {
+          "description": "Sets the input's disabled field to true or false.",
+          "type": "boolean"
+        },
+        "label": {
+          "$ref": "#/definitions/uiText"
+        },
+        "name": {
+          "description": "The input's element name.",
+          "type": "string"
+        },
+        "pattern": {
+          "description": "The input's pattern.",
+          "type": "string"
+        },
+        "required": {
+          "description": "Mark this input field as required.",
+          "type": "boolean"
+        },
+        "type": {
+          "$ref": "#/definitions/uiNodeInputAttributeType"
+        },
+        "value": {
+          "description": "The input's value.",
+          "type": "object"
+        }
+      }
+    },
+    "uiNodeTextAttributes": {
+      "type": "object",
+      "title": "TextAttributes represents the attributes of a text node.",
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "$ref": "#/definitions/uiText"
+        }
+      }
+    },
+    "uiNodeType": {
+      "type": "string"
+    },
+    "uiNodes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/uiNode"
+      }
+    },
+    "uiText": {
+      "type": "object",
+      "required": [
+        "id",
+        "text",
+        "type"
+      ],
+      "properties": {
+        "context": {
+          "description": "The message's context. Useful when customizing messages.",
+          "type": "object"
+        },
+        "id": {
+          "$ref": "#/definitions/ID"
+        },
+        "text": {
+          "description": "The message text. Written in american english.",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/uiTextType"
+        }
+      }
+    },
+    "uiTextType": {
+      "type": "string"
+    },
+    "uiTexts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/uiText"
       }
     },
     "verificationFlow": {
@@ -2608,7 +2816,7 @@
           "format": "date-time"
         },
         "messages": {
-          "$ref": "#/definitions/Messages"
+          "$ref": "#/definitions/uiTexts"
         },
         "methods": {
           "description": "Methods contains context for all account verification methods. If a registration request has been\nprocessed, but for example the password is incorrect, this will contain error messages.",
@@ -2632,8 +2840,8 @@
     "verificationFlowMethod": {
       "type": "object",
       "required": [
-        "config",
-        "method"
+        "method",
+        "config"
       ],
       "properties": {
         "config": {
@@ -2646,32 +2854,54 @@
       }
     },
     "verificationFlowMethodConfig": {
-      "description": "VerificationFlowMethodConfig verification flow method config",
       "type": "object",
       "required": [
         "action",
         "method",
-        "fields"
+        "nodes"
       ],
       "properties": {
         "action": {
           "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
           "type": "string"
         },
-        "fields": {
-          "$ref": "#/definitions/formFields"
-        },
         "messages": {
-          "$ref": "#/definitions/Messages"
+          "$ref": "#/definitions/uiTexts"
         },
         "method": {
           "description": "Method is the form method (e.g. POST)",
           "type": "string"
+        },
+        "nodes": {
+          "$ref": "#/definitions/uiNodes"
+        }
+      }
+    },
+    "verificationFlowMethodConfigPayload": {
+      "type": "object",
+      "required": [
+        "action",
+        "method",
+        "nodes"
+      ],
+      "properties": {
+        "action": {
+          "description": "Action should be used as the form action URL `\u003cform action=\"{{ .Action }}\" method=\"post\"\u003e`.",
+          "type": "string"
+        },
+        "messages": {
+          "$ref": "#/definitions/uiTexts"
+        },
+        "method": {
+          "description": "Method is the form method (e.g. POST)",
+          "type": "string"
+        },
+        "nodes": {
+          "$ref": "#/definitions/uiNodes"
         }
       }
     },
     "version": {
-      "description": "Version Version Version Version version",
       "type": "object",
       "properties": {
         "version": {
@@ -2681,7 +2911,44 @@
       }
     }
   },
+  "responses": {
+    "emptyResponse": {
+      "description": "Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is\ntypically 201."
+    },
+    "errorContainer": {
+      "description": "User-facing error response",
+      "schema": {
+        "$ref": "#/definitions/errorContainer"
+      }
+    },
+    "identityList": {
+      "description": "A list of identities.",
+      "schema": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Identity"
+        }
+      }
+    },
+    "identityResponse": {
+      "description": "A single identity.",
+      "schema": {
+        "$ref": "#/definitions/Identity"
+      }
+    },
+    "schemaResponse": {
+      "description": "The raw identity traits schema",
+      "schema": {
+        "type": "object"
+      }
+    }
+  },
   "securityDefinitions": {
+    "sessionCookie": {
+      "type": "apiKey",
+      "name": "Cookie",
+      "in": "header"
+    },
     "sessionToken": {
       "type": "apiKey",
       "name": "X-Session-Token",

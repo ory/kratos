@@ -19,6 +19,10 @@
 //          type: apiKey
 //          name: X-Session-Token
 //          in: header
+//     sessionCookie:
+//          type: apiKey
+//          name: Cookie
+//          in: header
 //
 //     Extensions:
 //     ---
