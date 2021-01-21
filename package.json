@@ -9,18 +9,16 @@
     "format:check": "prettier --check ${npm_package_config_prettierTarget}",
     "test": "cypress run",
     "test:watch": "cypress open",
-    "text-run": "text-run README.md",
+    "openapi-generator-cli": "openapi-generator-cli",
     "wait-on": "wait-on"
   },
   "devDependencies": {
     "cypress": "6.0.1",
     "ory-prettier-styles": "1.1.1",
     "prettier": "2.2.1",
-    "text-runner": "5.0.0-pre10",
-    "textrun-make": "0.0.10",
-    "textrun-npm": "0.0.10",
-    "textrun-repo": "0.0.10",
-    "textrun-shell": "0.0.10",
     "wait-on": "5.2.0"
+  },
+  "dependencies": {
+    "@openapitools/openapi-generator-cli": "^2.1.18"
   }
 }

@@ -1,0 +1,5 @@
+disallowAdditionalPropertiesIfNotPresent: true
+packageName: kratos
+generateInterfaces: false
+isGoSubmodule: false
+structPrefix: true
