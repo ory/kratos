@@ -1,0 +1,28 @@
+[
+    {
+      "tags": ["database", "hydra"],
+      "q": "I want to make ORY hydra support the X database technology.",
+      "a": "Don't do that, it's a bad idea."
+    },
+    {
+      "tags": ["kratos", "oidc"],
+      "q": "How do I append a random suffix (e.g. a number) to OIDC usernames if the username returned by a provider is already taken?",
+      "a": "Not sure if jsonnet has a rand function built into the stdlib, but it does have the md5 function. You can probably use that"
+    },
+    {
+      "tags": ["kratos", "oidc"],
+      "q": "How do I append a random suffix (e.g. a number) to OIDC usernames if the username returned by a provider is already taken?",
+      "a": "Not sure if jsonnet has a rand function built into the stdlib, but it does have the md5 function. You can probably use that"
+    },
+    {
+      "tags": ["kratos", "oidc"],
+      "q": "How do I append a random suffix (e.g. a number) to OIDC usernames if the username returned by a provider is already taken?",
+      "a": "Not sure if jsonnet has a rand function built into the stdlib, but it does have the md5 function. You can probably use that"
+    },
+    {
+      "tags": ["kratos", "oidc"],
+      "q": "How do I append a random suffix (e.g. a number) to OIDC usernames if the username returned by a provider is already taken?",
+      "a": "Not sure if jsonnet has a rand function built into the stdlib, but it does have the md5 function. You can probably use that"
+    }
+  ]
+  
