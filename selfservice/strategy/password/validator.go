@@ -98,9 +98,9 @@ func lcsLength(a, b string) int {
 	return greatestLength
 }
 
-func (s *DefaultPasswordValidator) fetch(hpw []byte) error {
+func (s *DefaultPasswordValidator) fetch(hpw []byte, apiDNSName string) error {
 	prefix := fmt.Sprintf("%X", hpw)[0:5]
-	loc := fmt.Sprintf("https://api.pwnedpasswords.com/range/%s", prefix)
+	loc := fmt.Sprintf("https://%s/range/%s", apiDNSName, prefix)
 	res, err := s.Client.Get(loc)
 	if err != nil {
 		return errors.Wrapf(ErrNetworkFailure, "%s", err)
@@ -164,9 +164,11 @@ func (s *DefaultPasswordValidator) Validate(ctx context.Context, identifier, pas
 	c, ok := s.hashes[b20(hpw)]
 	s.RUnlock()
 
+	passwordPolicyConfig := s.reg.Config(ctx).PasswordPolicyConfig()
+
 	if !ok {
-		err := s.fetch(hpw)
-		if (errors.Is(err, ErrNetworkFailure) || errors.Is(err, ErrUnexpectedStatusCode)) && s.reg.Config(ctx).PasswordPolicyConfig().IgnoreNetworkErrors {
+		err := s.fetch(hpw, passwordPolicyConfig.APIDNSName)
+		if (errors.Is(err, ErrNetworkFailure) || errors.Is(err, ErrUnexpectedStatusCode)) && passwordPolicyConfig.IgnoreNetworkErrors {
 			return nil
 		} else if err != nil {
 			return err

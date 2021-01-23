@@ -82,6 +82,7 @@ const (
 	ViperKeyHasherArgon2ConfigParallelism                           = "hashers.argon2.parallelism"
 	ViperKeyHasherArgon2ConfigSaltLength                            = "hashers.argon2.salt_length"
 	ViperKeyHasherArgon2ConfigKeyLength                             = "hashers.argon2.key_length"
+	ViperKeyPasswordAPIDNSName                                      = "selfservice.methods.password.config.api_dns_name"
 	ViperKeyPasswordMaxBreaches                                     = "selfservice.methods.password.config.max_breaches"
 	ViperKeyIgnoreNetworkErrors                                     = "selfservice.methods.password.config.ignore_network_errors"
 	ViperKeyVersion                                                 = "version"
@@ -112,8 +113,9 @@ type (
 		URL string `json:"url"`
 	}
 	PasswordPolicy struct {
-		MaxBreaches         uint `json:"max_breaches"`
-		IgnoreNetworkErrors bool `json:"ignore_network_errors"`
+		APIDNSName          string `json:"api_dns_name"`
+		MaxBreaches         uint   `json:"max_breaches"`
+		IgnoreNetworkErrors bool   `json:"ignore_network_errors"`
 	}
 	Schemas []Schema
 	Config  struct {
@@ -646,6 +648,7 @@ func (p *Config) ConfigVersion() string {
 
 func (p *Config) PasswordPolicyConfig() *PasswordPolicy {
 	return &PasswordPolicy{
+		APIDNSName:          p.p.StringF(ViperKeyPasswordAPIDNSName, "api.pwnedpasswords.com"),
 		MaxBreaches:         uint(p.p.Int(ViperKeyPasswordMaxBreaches)),
 		IgnoreNetworkErrors: p.p.BoolF(ViperKeyIgnoreNetworkErrors, true),
 	}

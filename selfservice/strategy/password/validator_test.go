@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -157,6 +159,34 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 			}
 		})
 	}
+
+}
+
+func TestChangeValidationDNSName(t *testing.T) {
+	testServer := httptest.NewUnstartedServer(&fakeValidatorAPI{})
+	defer testServer.Close()
+	testServer.StartTLS()
+	testServerURL, _ := url.Parse(testServer.URL)
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	s := password.NewDefaultPasswordValidatorStrategy(reg)
+	conf.MustSet(config.ViperKeyPasswordAPIDNSName, testServerURL.Host)
+
+	fakeClient := NewFakeHTTPClient()
+	s.Client = &fakeClient.Client
+
+	testServerExpectedCallURL := fmt.Sprintf("https://%s/range/BCBA9", testServerURL.Host)
+
+	t.Run("case=should send request to test server", func(t *testing.T) {
+		conf.MustSet(config.ViperKeyIgnoreNetworkErrors, false)
+		require.Error(t, s.Validate(context.Background(), "mohutdesub", "damrumukuh"))
+		require.Contains(t, fakeClient.RequestedURLs(), testServerExpectedCallURL)
+	})
+}
+
+type fakeValidatorAPI struct{}
+
+func (api *fakeValidatorAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
 }
 
 type fakeHttpClient struct {
