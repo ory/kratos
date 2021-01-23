@@ -9113,6 +9113,8 @@ verification flow with link method_
 }
 ```
 
+_ErrorContainer ErrorContainer error container_
+
 #### Properties
 
 | Name   | Type                | Required | Restrictions | Description             |
@@ -9186,13 +9188,13 @@ _Field represents a HTML Form Field_
 ]
 ```
 
-_FormFields FormFields Fields contains multiple fields_
+_Fields contains multiple fields_
 
 #### Properties
 
-| Name        | Type                            | Required | Restrictions | Description                                           |
-| ----------- | ------------------------------- | -------- | ------------ | ----------------------------------------------------- |
-| _anonymous_ | [[formField](#schemaformfield)] | false    | none         | FormFields FormFields Fields contains multiple fields |
+| Name        | Type                            | Required | Restrictions | Description                     |
+| ----------- | ------------------------------- | -------- | ------------ | ------------------------------- |
+| _anonymous_ | [[formField](#schemaformfield)] | false    | none         | Fields contains multiple fields |
 
 <a id="tocSgenericerror"></a>
 
@@ -9271,6 +9273,9 @@ GenericErrorPayload generic error payload_
 }
 ```
 
+_HealthNotReadyStatus HealthNotReadyStatus HealthNotReadyStatus health not ready
+status_
+
 #### Properties
 
 | Name                       | Type   | Required | Restrictions | Description                                                        |
@@ -9289,8 +9294,6 @@ GenericErrorPayload generic error payload_
   "status": "string"
 }
 ```
-
-_HealthStatus health status_
 
 #### Properties
 
@@ -9576,7 +9579,7 @@ _LoginFlowMethod login flow method_
 | Name      | Type                            | Required | Restrictions | Description                                                                                 |
 | --------- | ------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------- |
 | action    | string                          | true     | none         | Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`. |
-| fields    | [formFields](#schemaformfields) | true     | none         | FormFields FormFields Fields contains multiple fields                                       |
+| fields    | [formFields](#schemaformfields) | true     | none         | Fields contains multiple fields                                                             |
 | messages  | [Messages](#schemamessages)     | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages messages   |
 | method    | string                          | true     | none         | Method is the form method (e.g. POST)                                                       |
 | providers | [[formField](#schemaformfield)] | false    | none         | Providers is set for the "oidc" flow method.                                                |
@@ -9623,13 +9626,13 @@ _LoginFlowMethod login flow method_
 }
 ```
 
-_LoginViaAPIResponse The Response for Login Flows via API_
+_The Response for Login Flows via API_
 
 #### Properties
 
 | Name          | Type                      | Required | Restrictions | Description                                                                                                                                                                                                                             |
 | ------------- | ------------------------- | -------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| session       | [session](#schemasession) | true     | none         | none                                                                                                                                                                                                                                    |
+| session       | [session](#schemasession) | true     | none         | Session session                                                                                                                                                                                                                         |
 | session_token | string                    | true     | none         | The Session Token A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization Header: Authorization: bearer ${session-token} The session token is only issued for API flows, not for Browser flows! |
 
 <a id="tocSrecoveryflow"></a>
@@ -9789,10 +9792,10 @@ _RecoveryFlowMethod recovery flow method_
 
 #### Properties
 
-| Name   | Type                                                        | Required | Restrictions | Description                                   |
-| ------ | ----------------------------------------------------------- | -------- | ------------ | --------------------------------------------- |
-| config | [recoveryFlowMethodConfig](#schemarecoveryflowmethodconfig) | true     | none         | none                                          |
-| method | string                                                      | true     | none         | Method contains the request credentials type. |
+| Name   | Type                                                        | Required | Restrictions | Description                                                                                                                     |
+| ------ | ----------------------------------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| config | [recoveryFlowMethodConfig](#schemarecoveryflowmethodconfig) | true     | none         | RecoveryFlowMethodConfig RecoveryFlowMethodConfig RecoveryFlowMethodConfig RecoveryFlowMethodConfig recovery flow method config |
+| method | string                                                      | true     | none         | Method contains the request credentials type.                                                                                   |
 
 <a id="tocSrecoveryflowmethodconfig"></a>
 
@@ -9833,12 +9836,15 @@ _RecoveryFlowMethod recovery flow method_
 }
 ```
 
+_RecoveryFlowMethodConfig RecoveryFlowMethodConfig RecoveryFlowMethodConfig
+RecoveryFlowMethodConfig recovery flow method config_
+
 #### Properties
 
 | Name     | Type                            | Required | Restrictions | Description                                                                                 |
 | -------- | ------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------- |
 | action   | string                          | true     | none         | Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`. |
-| fields   | [formFields](#schemaformfields) | true     | none         | FormFields FormFields Fields contains multiple fields                                       |
+| fields   | [formFields](#schemaformfields) | true     | none         | Fields contains multiple fields                                                             |
 | messages | [Messages](#schemamessages)     | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages messages   |
 | method   | string                          | true     | none         | Method is the form method (e.g. POST)                                                       |
 
@@ -9993,6 +9999,8 @@ _RecoveryLink RecoveryLink recovery link_
 }
 ```
 
+_RegistrationFlow RegistrationFlow registration flow_
+
 #### Properties
 
 | Name                       | Type                                                    | Required | Restrictions | Description                                                                                                                                                                            |
@@ -10003,7 +10011,7 @@ _RecoveryLink RecoveryLink recovery link_
 | issued_at                  | string(date-time)                                       | true     | none         | IssuedAt is the time (UTC) when the flow occurred.                                                                                                                                     |
 | messages                   | [Messages](#schemamessages)                             | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages messages                                                                                              |
 | methods                    | object                                                  | true     | none         | Methods contains context for all enabled registration methods. If a registration flow has been processed, but for example the password is incorrect, this will contain error messages. |
-| » **additionalProperties** | [registrationFlowMethod](#schemaregistrationflowmethod) | false    | none         | none                                                                                                                                                                                   |
+| » **additionalProperties** | [registrationFlowMethod](#schemaregistrationflowmethod) | false    | none         | RegistrationFlowMethod registration flow method                                                                                                                                        |
 | request_url                | string                                                  | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.                              |
 | type                       | [Type](#schematype)                                     | false    | none         | The flow type can either be `api` or `browser`.                                                                                                                                        |
 
@@ -10067,12 +10075,14 @@ _RecoveryLink RecoveryLink recovery link_
 }
 ```
 
+_RegistrationFlowMethod registration flow method_
+
 #### Properties
 
-| Name   | Type                                                                | Required | Restrictions | Description |
-| ------ | ------------------------------------------------------------------- | -------- | ------------ | ----------- |
-| config | [registrationFlowMethodConfig](#schemaregistrationflowmethodconfig) | true     | none         | none        |
-| method | [CredentialsType](#schemacredentialstype)                           | true     | none         | and so on.  |
+| Name   | Type                                                                | Required | Restrictions | Description                                                  |
+| ------ | ------------------------------------------------------------------- | -------- | ------------ | ------------------------------------------------------------ |
+| config | [registrationFlowMethodConfig](#schemaregistrationflowmethodconfig) | true     | none         | RegistrationFlowMethodConfig registration flow method config |
+| method | [CredentialsType](#schemacredentialstype)                           | true     | none         | and so on.                                                   |
 
 <a id="tocSregistrationflowmethodconfig"></a>
 
@@ -10131,12 +10141,14 @@ _RecoveryLink RecoveryLink recovery link_
 }
 ```
 
+_RegistrationFlowMethodConfig registration flow method config_
+
 #### Properties
 
 | Name      | Type                            | Required | Restrictions | Description                                                                                 |
 | --------- | ------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------- |
 | action    | string                          | true     | none         | Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`. |
-| fields    | [formFields](#schemaformfields) | true     | none         | FormFields FormFields Fields contains multiple fields                                       |
+| fields    | [formFields](#schemaformfields) | true     | none         | Fields contains multiple fields                                                             |
 | messages  | [Messages](#schemamessages)     | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages messages   |
 | method    | string                          | true     | none         | Method is the form method (e.g. POST)                                                       |
 | providers | [[formField](#schemaformfield)] | false    | none         | Providers is set for the "oidc" registration method.                                        |
@@ -10206,14 +10218,15 @@ _RecoveryLink RecoveryLink recovery link_
 }
 ```
 
-_The Response for Registration Flows via API_
+_RegistrationViaAPIResponse RegistrationViaAPIResponse
+RegistrationViaAPIResponse The Response for Registration Flows via API_
 
 #### Properties
 
 | Name          | Type                        | Required | Restrictions | Description                                                                                                                                                                                                                                                                                                                     |
 | ------------- | --------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | identity      | [Identity](#schemaidentity) | true     | none         | Identity Identity Identity Identity Identity Identity Identity Identity Identity identity                                                                                                                                                                                                                                       |
-| session       | [session](#schemasession)   | false    | none         | none                                                                                                                                                                                                                                                                                                                            |
+| session       | [session](#schemasession)   | false    | none         | Session session                                                                                                                                                                                                                                                                                                                 |
 | session_token | string                      | true     | none         | The Session Token This field is only set when the session hook is configured as a post-registration hook. A session token is equivalent to a session cookie, but it can be sent in the HTTP Authorization Header: Authorization: bearer ${session-token} The session token is only issued for API flows, not for Browser flows! |
 
 <a id="tocSrevokesession"></a>
@@ -10276,16 +10289,18 @@ RevokeSession RevokeSession RevokeSession RevokeSession revoke session_
 }
 ```
 
+_Session session_
+
 #### Properties
 
 | Name             | Type                        | Required | Restrictions | Description                                                                               |
 | ---------------- | --------------------------- | -------- | ------------ | ----------------------------------------------------------------------------------------- |
 | active           | boolean                     | false    | none         | active                                                                                    |
-| authenticated_at | string(date-time)           | true     | none         | none                                                                                      |
-| expires_at       | string(date-time)           | true     | none         | none                                                                                      |
+| authenticated_at | string(date-time)           | true     | none         | authenticated at                                                                          |
+| expires_at       | string(date-time)           | true     | none         | expires at                                                                                |
 | id               | [UUID](#schemauuid)         | true     | none         | none                                                                                      |
 | identity         | [Identity](#schemaidentity) | true     | none         | Identity Identity Identity Identity Identity Identity Identity Identity Identity identity |
-| issued_at        | string(date-time)           | true     | none         | none                                                                                      |
+| issued_at        | string(date-time)           | true     | none         | issued at                                                                                 |
 
 <a id="tocSsettingsflow"></a>
 
@@ -10468,10 +10483,10 @@ _SettingsFlowMethod settings flow method_
 
 #### Properties
 
-| Name   | Type                                                        | Required | Restrictions | Description                             |
-| ------ | ----------------------------------------------------------- | -------- | ------------ | --------------------------------------- |
-| config | [settingsFlowMethodConfig](#schemasettingsflowmethodconfig) | true     | none         | none                                    |
-| method | string                                                      | true     | none         | Method is the name of this flow method. |
+| Name   | Type                                                        | Required | Restrictions | Description                                          |
+| ------ | ----------------------------------------------------------- | -------- | ------------ | ---------------------------------------------------- |
+| config | [settingsFlowMethodConfig](#schemasettingsflowmethodconfig) | true     | none         | SettingsFlowMethodConfig settings flow method config |
+| method | string                                                      | true     | none         | Method is the name of this flow method.              |
 
 <a id="tocSsettingsflowmethodconfig"></a>
 
@@ -10512,12 +10527,14 @@ _SettingsFlowMethod settings flow method_
 }
 ```
 
+_SettingsFlowMethodConfig settings flow method config_
+
 #### Properties
 
 | Name     | Type                            | Required | Restrictions | Description                                                                                 |
 | -------- | ------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------- |
 | action   | string                          | true     | none         | Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`. |
-| fields   | [formFields](#schemaformfields) | true     | none         | FormFields FormFields Fields contains multiple fields                                       |
+| fields   | [formFields](#schemaformfields) | true     | none         | Fields contains multiple fields                                                             |
 | messages | [Messages](#schemamessages)     | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages messages   |
 | method   | string                          | true     | none         | Method is the form method (e.g. POST)                                                       |
 
@@ -10663,7 +10680,7 @@ _SettingsFlowMethod settings flow method_
 }
 ```
 
-_SettingsViaAPIResponse The Response for Settings Flows via API_
+_The Response for Settings Flows via API_
 
 #### Properties
 
@@ -10778,7 +10795,7 @@ _VerificationFlow A Verification Flow_
 | issued_at                  | string(date-time)                                       | false    | none         | IssuedAt is the time (UTC) when the request occurred. Format: date-time                                                                                                                   |
 | messages                   | [Messages](#schemamessages)                             | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages messages                                                                                                 |
 | methods                    | object                                                  | true     | none         | Methods contains context for all account verification methods. If a registration request has been processed, but for example the password is incorrect, this will contain error messages. |
-| » **additionalProperties** | [verificationFlowMethod](#schemaverificationflowmethod) | false    | none         | VerificationFlowMethod verification flow method                                                                                                                                           |
+| » **additionalProperties** | [verificationFlowMethod](#schemaverificationflowmethod) | false    | none         | none                                                                                                                                                                                      |
 | request_url                | string                                                  | false    | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.                                 |
 | state                      | [State](#schemastate)                                   | true     | none         | State State State State State State State State State state                                                                                                                               |
 | type                       | [Type](#schematype)                                     | false    | none         | The flow type can either be `api` or `browser`.                                                                                                                                           |
@@ -10824,8 +10841,6 @@ _VerificationFlow A Verification Flow_
   "method": "string"
 }
 ```
-
-_VerificationFlowMethod verification flow method_
 
 #### Properties
 
@@ -10880,7 +10895,7 @@ _VerificationFlowMethodConfig verification flow method config_
 | Name     | Type                            | Required | Restrictions | Description                                                                                 |
 | -------- | ------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------- |
 | action   | string                          | true     | none         | Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`. |
-| fields   | [formFields](#schemaformfields) | true     | none         | FormFields FormFields Fields contains multiple fields                                       |
+| fields   | [formFields](#schemaformfields) | true     | none         | Fields contains multiple fields                                                             |
 | messages | [Messages](#schemamessages)     | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages messages   |
 | method   | string                          | true     | none         | Method is the form method (e.g. POST)                                                       |
 
