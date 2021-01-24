@@ -1951,11 +1951,10 @@
       }
     },
     "errorContainer": {
-      "description": "ErrorContainer ErrorContainer error container",
       "type": "object",
       "required": [
-        "id",
-        "errors"
+        "errors",
+        "id"
       ],
       "properties": {
         "errors": {
@@ -2014,7 +2013,7 @@
     "genericError": {
       "description": "Error responses are sent when an error (e.g. unauthorized, bad request, ...) occurred.",
       "type": "object",
-      "title": "GenericError GenericError GenericError Error response",
+      "title": "Error response",
       "properties": {
         "error": {
           "$ref": "#/definitions/genericErrorPayload"
@@ -2149,11 +2148,12 @@
       }
     },
     "loginFlowMethodConfig": {
+      "description": "LoginFlowMethodConfig login flow method config",
       "type": "object",
       "required": [
         "action",
-        "fields",
-        "method"
+        "method",
+        "fields"
       ],
       "properties": {
         "action": {
@@ -2199,13 +2199,13 @@
     "recoveryFlow": {
       "description": "This request is used when an identity wants to recover their account.\n\nWe recommend reading the [Account Recovery Documentation](../self-service/flows/password-reset-account-recovery)",
       "type": "object",
-      "title": "A Recovery Flow",
+      "title": "RecoveryFlow A Recovery Flow",
       "required": [
-        "expires_at",
         "id",
+        "expires_at",
         "issued_at",
-        "methods",
         "request_url",
+        "methods",
         "state"
       ],
       "properties": {
@@ -2249,11 +2249,10 @@
       }
     },
     "recoveryFlowMethod": {
-      "description": "RecoveryFlowMethod recovery flow method",
       "type": "object",
       "required": [
-        "method",
-        "config"
+        "config",
+        "method"
       ],
       "properties": {
         "config": {
@@ -2291,14 +2290,13 @@
       }
     },
     "recoveryLink": {
-      "description": "RecoveryLink RecoveryLink recovery link",
       "type": "object",
       "required": [
         "recovery_link"
       ],
       "properties": {
         "expires_at": {
-          "description": "Recovery Link Expires At\n\nThe timestamp when the recovery link expires.\nFormat: date-time\nFormat: date-time",
+          "description": "Recovery Link Expires At\n\nThe timestamp when the recovery link expires.",
           "type": "string",
           "format": "date-time"
         },
@@ -2309,14 +2307,13 @@
       }
     },
     "registrationFlow": {
-      "description": "RegistrationFlow RegistrationFlow registration flow",
       "type": "object",
       "required": [
-        "id",
         "expires_at",
+        "id",
         "issued_at",
-        "request_url",
-        "methods"
+        "methods",
+        "request_url"
       ],
       "properties": {
         "active": {
@@ -2371,12 +2368,11 @@
       }
     },
     "registrationFlowMethodConfig": {
-      "description": "RegistrationFlowMethodConfig registration flow method config",
       "type": "object",
       "required": [
         "action",
-        "method",
-        "fields"
+        "fields",
+        "method"
       ],
       "properties": {
         "action": {
@@ -2436,14 +2432,13 @@
       }
     },
     "session": {
-      "description": "Session session",
       "type": "object",
       "required": [
-        "id",
-        "expires_at",
         "authenticated_at",
-        "issued_at",
-        "identity"
+        "expires_at",
+        "id",
+        "identity",
+        "issued_at"
       ],
       "properties": {
         "active": {
@@ -2451,12 +2446,10 @@
           "type": "boolean"
         },
         "authenticated_at": {
-          "description": "authenticated at",
           "type": "string",
           "format": "date-time"
         },
         "expires_at": {
-          "description": "expires at",
           "type": "string",
           "format": "date-time"
         },
@@ -2467,7 +2460,6 @@
           "$ref": "#/definitions/Identity"
         },
         "issued_at": {
-          "description": "issued at",
           "type": "string",
           "format": "date-time"
         }
@@ -2572,7 +2564,7 @@
       }
     },
     "settingsViaApiResponse": {
-      "description": "The Response for Settings Flows via API",
+      "description": "SettingsViaAPIResponse The Response for Settings Flows via API",
       "type": "object",
       "required": [
         "flow",
@@ -2636,10 +2628,11 @@
       }
     },
     "verificationFlowMethod": {
+      "description": "VerificationFlowMethod verification flow method",
       "type": "object",
       "required": [
-        "config",
-        "method"
+        "method",
+        "config"
       ],
       "properties": {
         "config": {
@@ -2652,12 +2645,11 @@
       }
     },
     "verificationFlowMethodConfig": {
-      "description": "VerificationFlowMethodConfig verification flow method config",
       "type": "object",
       "required": [
         "action",
-        "method",
-        "fields"
+        "fields",
+        "method"
       ],
       "properties": {
         "action": {
