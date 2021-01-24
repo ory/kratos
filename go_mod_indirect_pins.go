@@ -24,6 +24,4 @@ import (
 	_ "github.com/hashicorp/consul/api"
 
 	_ "github.com/ory/cli"
-
-	_ "github.com/ory/kratos/.schema"
 )

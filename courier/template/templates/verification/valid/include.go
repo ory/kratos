@@ -1,3 +1,0 @@
-// +build statics
-
-package include
