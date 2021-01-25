@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/bxcodec/faker/v3"
-	"github.com/gobuffalo/uuid"
+	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 

@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -43,12 +43,12 @@ func NewCompleteSelfServiceLoginFlowWithPasswordMethodWithDefaults() *CompleteSe
 }
 
 // GetCsrfToken returns the CsrfToken field value if set, zero value otherwise.
-func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetCsrfToken() *string {
+func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetCsrfToken() string {
 	if o == nil || o.CsrfToken == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.CsrfToken
+	return *o.CsrfToken
 }
 
 // GetCsrfTokenOk returns a tuple with the CsrfToken field value if set, nil otherwise
@@ -75,12 +75,12 @@ func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) SetCsrfToken(v string) 
 }
 
 // GetIdentifier returns the Identifier field value if set, zero value otherwise.
-func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetIdentifier() *string {
+func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetIdentifier() string {
 	if o == nil || o.Identifier == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.Identifier
+	return *o.Identifier
 }
 
 // GetIdentifierOk returns a tuple with the Identifier field value if set, nil otherwise
@@ -107,12 +107,12 @@ func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) SetIdentifier(v string)
 }
 
 // GetPassword returns the Password field value if set, zero value otherwise.
-func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetPassword() *string {
+func (o *CompleteSelfServiceLoginFlowWithPasswordMethod) GetPassword() string {
 	if o == nil || o.Password == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.Password
+	return *o.Password
 }
 
 // GetPasswordOk returns a tuple with the Password field value if set, nil otherwise
@@ -187,5 +187,3 @@ func (v *NullableCompleteSelfServiceLoginFlowWithPasswordMethod) UnmarshalJSON(s
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

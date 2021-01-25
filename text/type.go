@@ -1,5 +1,6 @@
 package text
 
+// swagger:model uiTextType
 type Type string
 
 const (

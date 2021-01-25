@@ -3,15 +3,15 @@ package identities
 import (
 	"strings"
 
-	"github.com/ory/x/cmdx"
+	"github.com/ory/kratos-client-go"
 
-	"github.com/ory/kratos-client-go/models"
+	"github.com/ory/x/cmdx"
 )
 
 type (
-	outputIdentity           models.Identity
+	outputIdentity           kratos.Identity
 	outputIdentityCollection struct {
-		identities []*models.Identity
+		identities []kratos.Identity
 	}
 )
 
@@ -21,7 +21,7 @@ func (_ *outputIdentity) Header() []string {
 
 func (i *outputIdentity) Columns() []string {
 	data := [5]string{
-		string(*i.ID),
+		i.Id,
 		cmdx.None,
 		cmdx.None,
 		cmdx.None,
@@ -30,27 +30,21 @@ func (i *outputIdentity) Columns() []string {
 
 	addresses := make([]string, 0, len(i.VerifiableAddresses))
 	for _, a := range i.VerifiableAddresses {
-		if a.Value != nil {
-			addresses = append(addresses, *a.Value)
+		if len(a.Value) > 0 {
+			addresses = append(addresses, a.Value)
 		}
 	}
 	data[1] = strings.Join(addresses, ", ")
 
 	addresses = addresses[:0]
 	for _, a := range i.RecoveryAddresses {
-		if a.Value != nil {
-			addresses = append(addresses, *a.Value)
+		if len(a.Value) > 0 {
+			addresses = append(addresses, a.Value)
 		}
 	}
 	data[2] = strings.Join(addresses, ", ")
-
-	if i.SchemaID != nil {
-		data[3] = *i.SchemaID
-	}
-
-	if i.SchemaURL != nil {
-		data[4] = *i.SchemaURL
-	}
+	data[3] = i.SchemaId
+	data[4] = i.SchemaUrl
 
 	return data[:]
 }
@@ -67,28 +61,23 @@ func (c *outputIdentityCollection) Table() [][]string {
 	rows := make([][]string, len(c.identities))
 	for i, ident := range c.identities {
 		data := [5]string{
-			string(*ident.ID),
+			ident.Id,
 			cmdx.None,
 			cmdx.None,
 			cmdx.None,
 			cmdx.None,
 		}
 
-		if len(ident.VerifiableAddresses) != 0 && ident.VerifiableAddresses[0].Value != nil {
-			data[1] = *ident.VerifiableAddresses[0].Value
+		if len(ident.VerifiableAddresses) != 0 {
+			data[1] = (ident.VerifiableAddresses)[0].Value
 		}
 
-		if len(ident.RecoveryAddresses) != 0 && ident.RecoveryAddresses[0].Value != nil {
-			data[2] = *ident.RecoveryAddresses[0].Value
+		if len(ident.RecoveryAddresses) != 0 {
+			data[2] = (ident.RecoveryAddresses)[0].Value
 		}
 
-		if ident.SchemaID != nil {
-			data[3] = *ident.SchemaID
-		}
-
-		if ident.SchemaURL != nil {
-			data[4] = *ident.SchemaURL
-		}
+		data[3] = ident.SchemaId
+		data[4] = ident.SchemaUrl
 
 		rows[i] = data[:]
 	}

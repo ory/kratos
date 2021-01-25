@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -18,18 +18,18 @@ import (
 // SettingsFlowMethodConfig struct for SettingsFlowMethodConfig
 type SettingsFlowMethodConfig struct {
 	// Action should be used as the form action URL `<form action=\"{{ .Action }}\" method=\"post\">`.
-	Action string `json:"action"`
+	Action   string   `json:"action"`
 	Messages []UiText `json:"messages,omitempty"`
 	// Method is the form method (e.g. POST)
-	Method string `json:"method"`
-	Nodes []UiNode `json:"nodes"`
+	Method string   `json:"method"`
+	Nodes  []UiNode `json:"nodes"`
 }
 
 // NewSettingsFlowMethodConfig instantiates a new SettingsFlowMethodConfig object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSettingsFlowMethodConfig(action string, method string, nodes []UiNode, ) *SettingsFlowMethodConfig {
+func NewSettingsFlowMethodConfig(action string, method string, nodes []UiNode) *SettingsFlowMethodConfig {
 	this := SettingsFlowMethodConfig{}
 	this.Action = action
 	this.Method = method
@@ -47,7 +47,7 @@ func NewSettingsFlowMethodConfigWithDefaults() *SettingsFlowMethodConfig {
 
 // GetAction returns the Action field value
 func (o *SettingsFlowMethodConfig) GetAction() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -58,7 +58,7 @@ func (o *SettingsFlowMethodConfig) GetAction() string {
 // GetActionOk returns a tuple with the Action field value
 // and a boolean to check if the value has been set.
 func (o *SettingsFlowMethodConfig) GetActionOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Action, true
@@ -103,7 +103,7 @@ func (o *SettingsFlowMethodConfig) SetMessages(v []UiText) {
 
 // GetMethod returns the Method field value
 func (o *SettingsFlowMethodConfig) GetMethod() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -114,7 +114,7 @@ func (o *SettingsFlowMethodConfig) GetMethod() string {
 // GetMethodOk returns a tuple with the Method field value
 // and a boolean to check if the value has been set.
 func (o *SettingsFlowMethodConfig) GetMethodOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Method, true
@@ -127,7 +127,7 @@ func (o *SettingsFlowMethodConfig) SetMethod(v string) {
 
 // GetNodes returns the Nodes field value
 func (o *SettingsFlowMethodConfig) GetNodes() []UiNode {
-	if o == nil  {
+	if o == nil {
 		var ret []UiNode
 		return ret
 	}
@@ -138,7 +138,7 @@ func (o *SettingsFlowMethodConfig) GetNodes() []UiNode {
 // GetNodesOk returns a tuple with the Nodes field value
 // and a boolean to check if the value has been set.
 func (o *SettingsFlowMethodConfig) GetNodesOk() ([]UiNode, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return o.Nodes, true
@@ -201,5 +201,3 @@ func (v *NullableSettingsFlowMethodConfig) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -18,15 +18,15 @@ import (
 // ErrorContainer struct for ErrorContainer
 type ErrorContainer struct {
 	// Errors in the container
-	Errors map[string]interface{} `json:"errors"`
-	Id string `json:"id"`
+	Errors []map[string]interface{} `json:"errors"`
+	Id     string                   `json:"id"`
 }
 
 // NewErrorContainer instantiates a new ErrorContainer object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewErrorContainer(errors map[string]interface{}, id string, ) *ErrorContainer {
+func NewErrorContainer(errors []map[string]interface{}, id string) *ErrorContainer {
 	this := ErrorContainer{}
 	this.Errors = errors
 	this.Id = id
@@ -42,9 +42,9 @@ func NewErrorContainerWithDefaults() *ErrorContainer {
 }
 
 // GetErrors returns the Errors field value
-func (o *ErrorContainer) GetErrors() map[string]interface{} {
-	if o == nil  {
-		var ret map[string]interface{}
+func (o *ErrorContainer) GetErrors() []map[string]interface{} {
+	if o == nil {
+		var ret []map[string]interface{}
 		return ret
 	}
 
@@ -53,21 +53,21 @@ func (o *ErrorContainer) GetErrors() map[string]interface{} {
 
 // GetErrorsOk returns a tuple with the Errors field value
 // and a boolean to check if the value has been set.
-func (o *ErrorContainer) GetErrorsOk() (*map[string]interface{}, bool) {
-	if o == nil  {
+func (o *ErrorContainer) GetErrorsOk() ([]map[string]interface{}, bool) {
+	if o == nil {
 		return nil, false
 	}
-	return &o.Errors, true
+	return o.Errors, true
 }
 
 // SetErrors sets field value
-func (o *ErrorContainer) SetErrors(v map[string]interface{}) {
+func (o *ErrorContainer) SetErrors(v []map[string]interface{}) {
 	o.Errors = v
 }
 
 // GetId returns the Id field value
 func (o *ErrorContainer) GetId() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -78,7 +78,7 @@ func (o *ErrorContainer) GetId() string {
 // GetIdOk returns a tuple with the Id field value
 // and a boolean to check if the value has been set.
 func (o *ErrorContainer) GetIdOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Id, true
@@ -135,5 +135,3 @@ func (v *NullableErrorContainer) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

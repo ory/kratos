@@ -9,20 +9,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/x/ioutilx"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/x/pointerx"
-
-	"github.com/ory/kratos-client-go/client/public"
-	"github.com/ory/kratos-client-go/models"
+	"github.com/ory/kratos-client-go"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/ioutilx"
 )
 
 func NewLoginUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Server {
@@ -45,8 +41,8 @@ func NewLoginUIWith401Response(t *testing.T, c *config.Config) *httptest.Server 
 	return ts
 }
 
-func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, forced bool) *public.GetSelfServiceLoginFlowOK {
-	publicClient := NewSDKClient(ts)
+func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, forced bool) *kratos.LoginFlow {
+	publicClient := NewSDKCustomClient(ts, client)
 
 	q := ""
 	if forced {
@@ -57,44 +53,41 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
 
-	rs, err := publicClient.Public.GetSelfServiceLoginFlow(
-		public.NewGetSelfServiceLoginFlowParams().WithHTTPClient(client).
-			WithID(res.Request.URL.Query().Get("flow")),
-	)
+	rs, _, err := publicClient.PublicApi.GetSelfServiceLoginFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 	require.NoError(t, err)
-	assert.Empty(t, rs.Payload.Active)
+	assert.Empty(t, rs.Active)
 
 	return rs
 }
 
-func InitializeLoginFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server, forced bool) *public.InitializeSelfServiceLoginViaAPIFlowOK {
-	publicClient := NewSDKClient(ts)
+func InitializeLoginFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server, forced bool) *kratos.LoginFlow {
+	publicClient := NewSDKCustomClient(ts, client)
 
-	rs, err := publicClient.Public.InitializeSelfServiceLoginViaAPIFlow(public.
-		NewInitializeSelfServiceLoginViaAPIFlowParams().WithHTTPClient(client).WithRefresh(pointerx.Bool(forced)))
+	rs, _, err := publicClient.PublicApi.InitializeSelfServiceLoginViaAPIFlow(context.Background()).Refresh(forced).Execute()
 	require.NoError(t, err)
-	assert.Empty(t, rs.Payload.Active)
+	assert.Empty(t, rs.Active)
 
 	return rs
 }
 
-func GetLoginFlowMethodConfig(t *testing.T, rs *models.LoginFlow, id string) *models.LoginFlowMethodConfig {
+func GetLoginFlowMethodConfig(t *testing.T, rs *kratos.LoginFlow, id string) *kratos.LoginFlowMethodConfig {
 	require.NotEmpty(t, rs.Methods[id])
 	require.NotEmpty(t, rs.Methods[id].Config)
 	require.NotEmpty(t, rs.Methods[id].Config.Action)
-	return rs.Methods[id].Config
+	c := rs.Methods[id].Config
+	return &c
 }
 
 func LoginMakeRequest(
 	t *testing.T,
 	isAPI bool,
-	f *models.LoginFlowMethodConfig,
+	f *kratos.LoginFlowMethodConfig,
 	hc *http.Client,
 	values string,
 ) (string, *http.Response) {
 	require.NotEmpty(t, f.Action)
 
-	res, err := hc.Do(NewRequest(t, isAPI, "POST", pointerx.StringR(f.Action), bytes.NewBufferString(values)))
+	res, err := hc.Do(NewRequest(t, isAPI, "POST", f.Action, bytes.NewBufferString(values)))
 	require.NoError(t, err)
 	defer res.Body.Close()
 
@@ -123,18 +116,18 @@ func SubmitLoginForm(
 	}
 
 	hc.Transport = NewTransportWithLogger(hc.Transport, t)
-	var f *models.LoginFlow
+	var f *kratos.LoginFlow
 	if isAPI {
-		f = InitializeLoginFlowViaAPI(t, hc, publicTS, forced).Payload
+		f = InitializeLoginFlowViaAPI(t, hc, publicTS, forced)
 	} else {
-		f = InitializeLoginFlowViaBrowser(t, hc, publicTS, forced).Payload
+		f = InitializeLoginFlowViaBrowser(t, hc, publicTS, forced)
 	}
 
 	time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
 
 	config := GetLoginFlowMethodConfig(t, f, method.String())
 
-	payload := SDKFormFieldsToURLValues(config.Fields)
+	payload := SDKFormFieldsToURLValues(config.Nodes)
 	withValues(payload)
 	b, res := LoginMakeRequest(t, isAPI, config, hc, EncodeFormAsJSON(t, isAPI, payload))
 	assert.EqualValues(t, expectedStatusCode, res.StatusCode, "%s", b)

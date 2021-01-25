@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/kratos/ui/node"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
@@ -13,6 +12,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
@@ -264,7 +265,7 @@ func TestStrategy(t *testing.T) {
 		res, body := makeRequest(t, "valid", action, url.Values{})
 
 		require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
-		assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.fields.#(name==traits.subject).messages.0").String(), "is not valid", "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.nodes.#(attributes.name==traits.subject).messages.0").String(), "is not valid", "%s", body)
 	})
 
 	t.Run("case=register and then login", func(t *testing.T) {
@@ -327,9 +328,9 @@ func TestStrategy(t *testing.T) {
 			res, body := makeRequest(t, "valid", action, url.Values{"traits.name": {"i"}})
 			require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
 
-			assert.Equal(t, "length must be >= 2, but got 1", gjson.GetBytes(body, "methods.oidc.config.fields.#(name==traits.name).messages.0.text").String(), "%s", body) // make sure the field is being echoed
-			assert.Equal(t, "traits.name", gjson.GetBytes(body, "methods.oidc.config.fields.#(name==traits.name).name").String(), "%s", body)                               // make sure the field is being echoed
-			assert.Equal(t, "i", gjson.GetBytes(body, "methods.oidc.config.fields.#(name==traits.name).value").String(), "%s", body)                                        // make sure the field is being echoed
+			assert.Equal(t, "length must be >= 2, but got 1", gjson.GetBytes(body, "methods.oidc.config.nodes.#(attributes.name==traits.name).messages.0.text").String(), "%s", body) // make sure the field is being echoed
+			assert.Equal(t, "traits.name", gjson.GetBytes(body, "methods.oidc.config.nodes.#(attributes.name==traits.name).attributes.name").String(), "%s", body)                    // make sure the field is being echoed
+			assert.Equal(t, "i", gjson.GetBytes(body, "methods.oidc.config.nodes.#(attributes.name==traits.name).attributes.value").String(), "%s", body)                             // make sure the field is being echoed
 		})
 
 		t.Run("case=should pass registration with valid data", func(t *testing.T) {
