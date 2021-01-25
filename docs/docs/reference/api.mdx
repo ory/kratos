@@ -9113,8 +9113,6 @@ verification flow with link method_
 }
 ```
 
-_ErrorContainer ErrorContainer error container_
-
 #### Properties
 
 | Name   | Type                | Required | Restrictions | Description             |
@@ -9295,6 +9293,8 @@ status_
 }
 ```
 
+_HealthStatus health status_
+
 #### Properties
 
 | Name   | Type   | Required | Restrictions | Description                  |
@@ -9444,7 +9444,7 @@ _LoginFlow Login Flow_
 | issued_at                  | string(date-time)                         | true     | none         | IssuedAt is the time (UTC) when the flow started.                                                                                                                                                                                                |
 | messages                   | [Messages](#schemamessages)               | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages messages                                                                                                                                                        |
 | methods                    | object                                    | true     | none         | List of login methods This is the list of available login methods with their required form fields, such as `identifier` and `password` for the password login method. This will also contain error messages such as "password can not be empty". |
-| » **additionalProperties** | [loginFlowMethod](#schemaloginflowmethod) | false    | none         | none                                                                                                                                                                                                                                             |
+| » **additionalProperties** | [loginFlowMethod](#schemaloginflowmethod) | false    | none         | LoginFlowMethod login flow method                                                                                                                                                                                                                |
 | request_url                | string                                    | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.                                                                                        |
 | type                       | [Type](#schematype)                       | false    | none         | The flow type can either be `api` or `browser`.                                                                                                                                                                                                  |
 
@@ -9507,6 +9507,8 @@ _LoginFlow Login Flow_
   "method": "string"
 }
 ```
+
+_LoginFlowMethod login flow method_
 
 #### Properties
 
@@ -9727,7 +9729,7 @@ _The Response for Login Flows via API_
 }
 ```
 
-_RecoveryFlow A Recovery Flow_
+_A Recovery Flow_
 
 #### Properties
 
@@ -9790,10 +9792,10 @@ _RecoveryFlowMethod recovery flow method_
 
 #### Properties
 
-| Name   | Type                                                        | Required | Restrictions | Description                                   |
-| ------ | ----------------------------------------------------------- | -------- | ------------ | --------------------------------------------- |
-| config | [recoveryFlowMethodConfig](#schemarecoveryflowmethodconfig) | true     | none         | none                                          |
-| method | string                                                      | true     | none         | Method contains the request credentials type. |
+| Name   | Type                                                        | Required | Restrictions | Description                                                                                                                     |
+| ------ | ----------------------------------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| config | [recoveryFlowMethodConfig](#schemarecoveryflowmethodconfig) | true     | none         | RecoveryFlowMethodConfig RecoveryFlowMethodConfig RecoveryFlowMethodConfig RecoveryFlowMethodConfig recovery flow method config |
+| method | string                                                      | true     | none         | Method contains the request credentials type.                                                                                   |
 
 <a id="tocSrecoveryflowmethodconfig"></a>
 
@@ -9834,6 +9836,9 @@ _RecoveryFlowMethod recovery flow method_
 }
 ```
 
+_RecoveryFlowMethodConfig RecoveryFlowMethodConfig RecoveryFlowMethodConfig
+RecoveryFlowMethodConfig recovery flow method config_
+
 #### Properties
 
 | Name     | Type                            | Required | Restrictions | Description                                                                                 |
@@ -9856,12 +9861,14 @@ _RecoveryFlowMethod recovery flow method_
 }
 ```
 
+_RecoveryLink RecoveryLink recovery link_
+
 #### Properties
 
-| Name          | Type              | Required | Restrictions | Description                                                            |
-| ------------- | ----------------- | -------- | ------------ | ---------------------------------------------------------------------- |
-| expires_at    | string(date-time) | false    | none         | Recovery Link Expires At The timestamp when the recovery link expires. |
-| recovery_link | string            | true     | none         | Recovery Link This link can be used to recover the account.            |
+| Name          | Type              | Required | Restrictions | Description                                                                                                |
+| ------------- | ----------------- | -------- | ------------ | ---------------------------------------------------------------------------------------------------------- |
+| expires_at    | string(date-time) | false    | none         | Recovery Link Expires At The timestamp when the recovery link expires. Format: date-time Format: date-time |
+| recovery_link | string            | true     | none         | Recovery Link This link can be used to recover the account.                                                |
 
 <a id="tocSregistrationflow"></a>
 
@@ -10068,10 +10075,10 @@ _RecoveryFlowMethod recovery flow method_
 
 #### Properties
 
-| Name   | Type                                                                | Required | Restrictions | Description |
-| ------ | ------------------------------------------------------------------- | -------- | ------------ | ----------- |
-| config | [registrationFlowMethodConfig](#schemaregistrationflowmethodconfig) | true     | none         | none        |
-| method | [CredentialsType](#schemacredentialstype)                           | true     | none         | and so on.  |
+| Name   | Type                                                                | Required | Restrictions | Description                                                  |
+| ------ | ------------------------------------------------------------------- | -------- | ------------ | ------------------------------------------------------------ |
+| config | [registrationFlowMethodConfig](#schemaregistrationflowmethodconfig) | true     | none         | RegistrationFlowMethodConfig registration flow method config |
+| method | [CredentialsType](#schemacredentialstype)                           | true     | none         | and so on.                                                   |
 
 <a id="tocSregistrationflowmethodconfig"></a>
 
@@ -10129,6 +10136,8 @@ _RecoveryFlowMethod recovery flow method_
   ]
 }
 ```
+
+_RegistrationFlowMethodConfig registration flow method config_
 
 #### Properties
 
@@ -10417,7 +10426,7 @@ _SettingsFlow SettingsFlow Flow represents a Settings Flow_
 | issued_at                  | string(date-time)                               | true     | none         | IssuedAt is the time (UTC) when the flow occurred.                                                                                                                               |
 | messages                   | [Messages](#schemamessages)                     | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages messages                                                                                        |
 | methods                    | object                                          | true     | none         | Methods contains context for all enabled registration methods. If a settings flow has been processed, but for example the first name is empty, this will contain error messages. |
-| » **additionalProperties** | [settingsFlowMethod](#schemasettingsflowmethod) | false    | none         | none                                                                                                                                                                             |
+| » **additionalProperties** | [settingsFlowMethod](#schemasettingsflowmethod) | false    | none         | SettingsFlowMethod settings flow method                                                                                                                                          |
 | request_url                | string                                          | true     | none         | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.                        |
 | state                      | [State](#schemastate)                           | true     | none         | State State State State State State State State State state                                                                                                                      |
 | type                       | [Type](#schematype)                             | false    | none         | The flow type can either be `api` or `browser`.                                                                                                                                  |
@@ -10463,6 +10472,8 @@ _SettingsFlow SettingsFlow Flow represents a Settings Flow_
   "method": "string"
 }
 ```
+
+_SettingsFlowMethod settings flow method_
 
 #### Properties
 
@@ -10764,16 +10775,16 @@ _The Response for Settings Flows via API_
 }
 ```
 
-_VerificationFlow A Verification Flow_
+_A Verification Flow_
 
 #### Properties
 
 | Name                       | Type                                                    | Required | Restrictions | Description                                                                                                                                                                               |
 | -------------------------- | ------------------------------------------------------- | -------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | active                     | string                                                  | false    | none         | Active, if set, contains the registration method that is being used. It is initially not set.                                                                                             |
-| expires_at                 | string(date-time)                                       | false    | none         | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address, a new request has to be initiated. Format: date-time                                |
+| expires_at                 | string(date-time)                                       | false    | none         | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address, a new request has to be initiated.                                                  |
 | id                         | [UUID](#schemauuid)                                     | false    | none         | none                                                                                                                                                                                      |
-| issued_at                  | string(date-time)                                       | false    | none         | IssuedAt is the time (UTC) when the request occurred. Format: date-time                                                                                                                   |
+| issued_at                  | string(date-time)                                       | false    | none         | IssuedAt is the time (UTC) when the request occurred.                                                                                                                                     |
 | messages                   | [Messages](#schemamessages)                             | false    | none         | Messages Messages Messages Messages Messages Messages Messages Messages Messages messages                                                                                                 |
 | methods                    | object                                                  | true     | none         | Methods contains context for all account verification methods. If a registration request has been processed, but for example the password is incorrect, this will contain error messages. |
 | » **additionalProperties** | [verificationFlowMethod](#schemaverificationflowmethod) | false    | none         | none                                                                                                                                                                                      |
