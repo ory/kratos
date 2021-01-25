@@ -41,7 +41,6 @@ func (o *WhoamiReader) ReadResponse(response runtime.ClientResponse, consumer ru
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -52,7 +51,7 @@ func NewWhoamiOK() *WhoamiOK {
 	return &WhoamiOK{}
 }
 
-/*WhoamiOK handles this case with default header values.
+/* WhoamiOK describes a response with status code 200, with default header values.
 
 session
 */
@@ -63,7 +62,6 @@ type WhoamiOK struct {
 func (o *WhoamiOK) Error() string {
 	return fmt.Sprintf("[GET /sessions/whoami][%d] whoamiOK  %+v", 200, o.Payload)
 }
-
 func (o *WhoamiOK) GetPayload() *models.Session {
 	return o.Payload
 }
@@ -85,7 +83,7 @@ func NewWhoamiUnauthorized() *WhoamiUnauthorized {
 	return &WhoamiUnauthorized{}
 }
 
-/*WhoamiUnauthorized handles this case with default header values.
+/* WhoamiUnauthorized describes a response with status code 401, with default header values.
 
 genericError
 */
@@ -96,7 +94,6 @@ type WhoamiUnauthorized struct {
 func (o *WhoamiUnauthorized) Error() string {
 	return fmt.Sprintf("[GET /sessions/whoami][%d] whoamiUnauthorized  %+v", 401, o.Payload)
 }
-
 func (o *WhoamiUnauthorized) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -118,7 +115,7 @@ func NewWhoamiInternalServerError() *WhoamiInternalServerError {
 	return &WhoamiInternalServerError{}
 }
 
-/*WhoamiInternalServerError handles this case with default header values.
+/* WhoamiInternalServerError describes a response with status code 500, with default header values.
 
 genericError
 */
@@ -129,7 +126,6 @@ type WhoamiInternalServerError struct {
 func (o *WhoamiInternalServerError) Error() string {
 	return fmt.Sprintf("[GET /sessions/whoami][%d] whoamiInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *WhoamiInternalServerError) GetPayload() *models.GenericError {
 	return o.Payload
 }

@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -53,7 +55,7 @@ type VerificationFlow struct {
 
 	// state
 	// Required: true
-	State State `json:"state"`
+	State *State `json:"state"`
 
 	// type
 	Type Type `json:"type,omitempty"`
@@ -98,7 +100,6 @@ func (m *VerificationFlow) Validate(formats strfmt.Registry) error {
 }
 
 func (m *VerificationFlow) validateExpiresAt(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.ExpiresAt) { // not required
 		return nil
 	}
@@ -111,7 +112,6 @@ func (m *VerificationFlow) validateExpiresAt(formats strfmt.Registry) error {
 }
 
 func (m *VerificationFlow) validateID(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.ID) { // not required
 		return nil
 	}
@@ -127,7 +127,6 @@ func (m *VerificationFlow) validateID(formats strfmt.Registry) error {
 }
 
 func (m *VerificationFlow) validateIssuedAt(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.IssuedAt) { // not required
 		return nil
 	}
@@ -140,7 +139,6 @@ func (m *VerificationFlow) validateIssuedAt(formats strfmt.Registry) error {
 }
 
 func (m *VerificationFlow) validateMessages(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.Messages) { // not required
 		return nil
 	}
@@ -156,6 +154,10 @@ func (m *VerificationFlow) validateMessages(formats strfmt.Registry) error {
 }
 
 func (m *VerificationFlow) validateMethods(formats strfmt.Registry) error {
+
+	if err := validate.Required("methods", "body", m.Methods); err != nil {
+		return err
+	}
 
 	for k := range m.Methods {
 
@@ -175,9 +177,34 @@ func (m *VerificationFlow) validateMethods(formats strfmt.Registry) error {
 
 func (m *VerificationFlow) validateState(formats strfmt.Registry) error {
 
-	if err := m.State.Validate(formats); err != nil {
+	if err := validate.Required("state", "body", m.State); err != nil {
+		return err
+	}
+
+	if err := validate.Required("state", "body", m.State); err != nil {
+		return err
+	}
+
+	if m.State != nil {
+		if err := m.State.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("state")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *VerificationFlow) validateType(formats strfmt.Registry) error {
+	if swag.IsZero(m.Type) { // not required
+		return nil
+	}
+
+	if err := m.Type.Validate(formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("state")
+			return ve.ValidateName("type")
 		}
 		return err
 	}
@@ -185,13 +212,96 @@ func (m *VerificationFlow) validateState(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *VerificationFlow) validateType(formats strfmt.Registry) error {
+// ContextValidate validate this verification flow based on the context it is used
+func (m *VerificationFlow) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
 
-	if swag.IsZero(m.Type) { // not required
-		return nil
+	if err := m.contextValidateID(ctx, formats); err != nil {
+		res = append(res, err)
 	}
 
-	if err := m.Type.Validate(formats); err != nil {
+	if err := m.contextValidateMessages(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateMethods(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateState(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateType(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *VerificationFlow) contextValidateID(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := m.ID.ContextValidate(ctx, formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("id")
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (m *VerificationFlow) contextValidateMessages(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := m.Messages.ContextValidate(ctx, formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("messages")
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (m *VerificationFlow) contextValidateMethods(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := validate.Required("methods", "body", m.Methods); err != nil {
+		return err
+	}
+
+	for k := range m.Methods {
+
+		if val, ok := m.Methods[k]; ok {
+			if err := val.ContextValidate(ctx, formats); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *VerificationFlow) contextValidateState(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.State != nil {
+		if err := m.State.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("state")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *VerificationFlow) contextValidateType(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := m.Type.ContextValidate(ctx, formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
 			return ve.ValidateName("type")
 		}
