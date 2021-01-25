@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -19,9 +19,9 @@ import (
 // UiNodeAttributes - struct for UiNodeAttributes
 type UiNodeAttributes struct {
 	UiNodeAnchorAttributes *UiNodeAnchorAttributes
-	UiNodeImageAttributes *UiNodeImageAttributes
-	UiNodeInputAttributes *UiNodeInputAttributes
-	UiNodeTextAttributes *UiNodeTextAttributes
+	UiNodeImageAttributes  *UiNodeImageAttributes
+	UiNodeInputAttributes  *UiNodeInputAttributes
+	UiNodeTextAttributes   *UiNodeTextAttributes
 }
 
 // UiNodeAnchorAttributesAsUiNodeAttributes is a convenience function that returns UiNodeAnchorAttributes wrapped in UiNodeAttributes
@@ -52,13 +52,12 @@ func UiNodeTextAttributesAsUiNodeAttributes(v *UiNodeTextAttributes) UiNodeAttri
 	}
 }
 
-
 // Unmarshal JSON data into one of the pointers in the struct
 func (dst *UiNodeAttributes) UnmarshalJSON(data []byte) error {
 	var err error
 	match := 0
 	// try to unmarshal data into UiNodeAnchorAttributes
-	err = json.Unmarshal(data, &dst.UiNodeAnchorAttributes)
+	err = newStrictDecoder(data).Decode(&dst.UiNodeAnchorAttributes)
 	if err == nil {
 		jsonUiNodeAnchorAttributes, _ := json.Marshal(dst.UiNodeAnchorAttributes)
 		if string(jsonUiNodeAnchorAttributes) == "{}" { // empty struct
@@ -71,7 +70,7 @@ func (dst *UiNodeAttributes) UnmarshalJSON(data []byte) error {
 	}
 
 	// try to unmarshal data into UiNodeImageAttributes
-	err = json.Unmarshal(data, &dst.UiNodeImageAttributes)
+	err = newStrictDecoder(data).Decode(&dst.UiNodeImageAttributes)
 	if err == nil {
 		jsonUiNodeImageAttributes, _ := json.Marshal(dst.UiNodeImageAttributes)
 		if string(jsonUiNodeImageAttributes) == "{}" { // empty struct
@@ -84,7 +83,7 @@ func (dst *UiNodeAttributes) UnmarshalJSON(data []byte) error {
 	}
 
 	// try to unmarshal data into UiNodeInputAttributes
-	err = json.Unmarshal(data, &dst.UiNodeInputAttributes)
+	err = newStrictDecoder(data).Decode(&dst.UiNodeInputAttributes)
 	if err == nil {
 		jsonUiNodeInputAttributes, _ := json.Marshal(dst.UiNodeInputAttributes)
 		if string(jsonUiNodeInputAttributes) == "{}" { // empty struct
@@ -97,7 +96,7 @@ func (dst *UiNodeAttributes) UnmarshalJSON(data []byte) error {
 	}
 
 	// try to unmarshal data into UiNodeTextAttributes
-	err = json.Unmarshal(data, &dst.UiNodeTextAttributes)
+	err = newStrictDecoder(data).Decode(&dst.UiNodeTextAttributes)
 	if err == nil {
 		jsonUiNodeTextAttributes, _ := json.Marshal(dst.UiNodeTextAttributes)
 		if string(jsonUiNodeTextAttributes) == "{}" { // empty struct
@@ -146,7 +145,10 @@ func (src UiNodeAttributes) MarshalJSON() ([]byte, error) {
 }
 
 // Get the actual instance
-func (obj *UiNodeAttributes) GetActualInstance() (interface{}) {
+func (obj *UiNodeAttributes) GetActualInstance() interface{} {
+	if obj == nil {
+		return nil
+	}
 	if obj.UiNodeAnchorAttributes != nil {
 		return obj.UiNodeAnchorAttributes
 	}
@@ -202,5 +204,3 @@ func (v *NullableUiNodeAttributes) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -22,15 +22,15 @@ type RecoveryFlow struct {
 	Active *string `json:"active,omitempty"`
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to update the setting, a new request has to be initiated.
 	ExpiresAt time.Time `json:"expires_at"`
-	Id string `json:"id"`
+	Id        string    `json:"id"`
 	// IssuedAt is the time (UTC) when the request occurred.
 	IssuedAt time.Time `json:"issued_at"`
-	Messages []UiText `json:"messages,omitempty"`
+	Messages []UiText  `json:"messages,omitempty"`
 	// Methods contains context for all account recovery methods. If a registration request has been processed, but for example the password is incorrect, this will contain error messages.
 	Methods map[string]RecoveryFlowMethod `json:"methods"`
 	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.
 	RequestUrl string `json:"request_url"`
-	State string `json:"state"`
+	State      string `json:"state"`
 	// The flow type can either be `api` or `browser`.
 	Type *string `json:"type,omitempty"`
 }
@@ -39,7 +39,7 @@ type RecoveryFlow struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewRecoveryFlow(expiresAt time.Time, id string, issuedAt time.Time, methods map[string]RecoveryFlowMethod, requestUrl string, state string, ) *RecoveryFlow {
+func NewRecoveryFlow(expiresAt time.Time, id string, issuedAt time.Time, methods map[string]RecoveryFlowMethod, requestUrl string, state string) *RecoveryFlow {
 	this := RecoveryFlow{}
 	this.ExpiresAt = expiresAt
 	this.Id = id
@@ -59,12 +59,12 @@ func NewRecoveryFlowWithDefaults() *RecoveryFlow {
 }
 
 // GetActive returns the Active field value if set, zero value otherwise.
-func (o *RecoveryFlow) GetActive() *string {
+func (o *RecoveryFlow) GetActive() string {
 	if o == nil || o.Active == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.Active
+	return *o.Active
 }
 
 // GetActiveOk returns a tuple with the Active field value if set, nil otherwise
@@ -92,7 +92,7 @@ func (o *RecoveryFlow) SetActive(v string) {
 
 // GetExpiresAt returns the ExpiresAt field value
 func (o *RecoveryFlow) GetExpiresAt() time.Time {
-	if o == nil  {
+	if o == nil {
 		var ret time.Time
 		return ret
 	}
@@ -103,7 +103,7 @@ func (o *RecoveryFlow) GetExpiresAt() time.Time {
 // GetExpiresAtOk returns a tuple with the ExpiresAt field value
 // and a boolean to check if the value has been set.
 func (o *RecoveryFlow) GetExpiresAtOk() (*time.Time, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.ExpiresAt, true
@@ -116,7 +116,7 @@ func (o *RecoveryFlow) SetExpiresAt(v time.Time) {
 
 // GetId returns the Id field value
 func (o *RecoveryFlow) GetId() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -127,7 +127,7 @@ func (o *RecoveryFlow) GetId() string {
 // GetIdOk returns a tuple with the Id field value
 // and a boolean to check if the value has been set.
 func (o *RecoveryFlow) GetIdOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Id, true
@@ -140,7 +140,7 @@ func (o *RecoveryFlow) SetId(v string) {
 
 // GetIssuedAt returns the IssuedAt field value
 func (o *RecoveryFlow) GetIssuedAt() time.Time {
-	if o == nil  {
+	if o == nil {
 		var ret time.Time
 		return ret
 	}
@@ -151,7 +151,7 @@ func (o *RecoveryFlow) GetIssuedAt() time.Time {
 // GetIssuedAtOk returns a tuple with the IssuedAt field value
 // and a boolean to check if the value has been set.
 func (o *RecoveryFlow) GetIssuedAtOk() (*time.Time, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.IssuedAt, true
@@ -196,7 +196,7 @@ func (o *RecoveryFlow) SetMessages(v []UiText) {
 
 // GetMethods returns the Methods field value
 func (o *RecoveryFlow) GetMethods() map[string]RecoveryFlowMethod {
-	if o == nil  {
+	if o == nil {
 		var ret map[string]RecoveryFlowMethod
 		return ret
 	}
@@ -207,7 +207,7 @@ func (o *RecoveryFlow) GetMethods() map[string]RecoveryFlowMethod {
 // GetMethodsOk returns a tuple with the Methods field value
 // and a boolean to check if the value has been set.
 func (o *RecoveryFlow) GetMethodsOk() (*map[string]RecoveryFlowMethod, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Methods, true
@@ -220,7 +220,7 @@ func (o *RecoveryFlow) SetMethods(v map[string]RecoveryFlowMethod) {
 
 // GetRequestUrl returns the RequestUrl field value
 func (o *RecoveryFlow) GetRequestUrl() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -231,7 +231,7 @@ func (o *RecoveryFlow) GetRequestUrl() string {
 // GetRequestUrlOk returns a tuple with the RequestUrl field value
 // and a boolean to check if the value has been set.
 func (o *RecoveryFlow) GetRequestUrlOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.RequestUrl, true
@@ -244,7 +244,7 @@ func (o *RecoveryFlow) SetRequestUrl(v string) {
 
 // GetState returns the State field value
 func (o *RecoveryFlow) GetState() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -255,7 +255,7 @@ func (o *RecoveryFlow) GetState() string {
 // GetStateOk returns a tuple with the State field value
 // and a boolean to check if the value has been set.
 func (o *RecoveryFlow) GetStateOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.State, true
@@ -267,12 +267,12 @@ func (o *RecoveryFlow) SetState(v string) {
 }
 
 // GetType returns the Type field value if set, zero value otherwise.
-func (o *RecoveryFlow) GetType() *string {
+func (o *RecoveryFlow) GetType() string {
 	if o == nil || o.Type == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.Type
+	return *o.Type
 }
 
 // GetTypeOk returns a tuple with the Type field value if set, nil otherwise
@@ -365,5 +365,3 @@ func (v *NullableRecoveryFlow) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

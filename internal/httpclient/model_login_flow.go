@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -23,30 +23,31 @@ type LoginFlow struct {
 	// ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in, a new flow has to be initiated.
 	ExpiresAt time.Time `json:"expires_at"`
 	// Forced stores whether this login flow should enforce re-authentication.
-	Forced *bool `json:"forced,omitempty"`
-	Id string `json:"id"`
+	Forced *bool  `json:"forced,omitempty"`
+	Id     string `json:"id"`
 	// IssuedAt is the time (UTC) when the flow started.
 	IssuedAt time.Time `json:"issued_at"`
-	Messages []UiText `json:"messages,omitempty"`
+	Messages []UiText  `json:"messages,omitempty"`
 	// List of login methods  This is the list of available login methods with their required form fields, such as `identifier` and `password` for the password login method. This will also contain error messages such as \"password can not be empty\".
 	Methods map[string]LoginFlowMethod `json:"methods"`
 	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.
 	RequestUrl string `json:"request_url"`
 	// The flow type can either be `api` or `browser`.
-	Type *string `json:"type,omitempty"`
+	Type string `json:"type"`
 }
 
 // NewLoginFlow instantiates a new LoginFlow object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewLoginFlow(expiresAt time.Time, id string, issuedAt time.Time, methods map[string]LoginFlowMethod, requestUrl string, ) *LoginFlow {
+func NewLoginFlow(expiresAt time.Time, id string, issuedAt time.Time, methods map[string]LoginFlowMethod, requestUrl string, type_ string) *LoginFlow {
 	this := LoginFlow{}
 	this.ExpiresAt = expiresAt
 	this.Id = id
 	this.IssuedAt = issuedAt
 	this.Methods = methods
 	this.RequestUrl = requestUrl
+	this.Type = type_
 	return &this
 }
 
@@ -59,12 +60,12 @@ func NewLoginFlowWithDefaults() *LoginFlow {
 }
 
 // GetActive returns the Active field value if set, zero value otherwise.
-func (o *LoginFlow) GetActive() *string {
+func (o *LoginFlow) GetActive() string {
 	if o == nil || o.Active == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.Active
+	return *o.Active
 }
 
 // GetActiveOk returns a tuple with the Active field value if set, nil otherwise
@@ -92,7 +93,7 @@ func (o *LoginFlow) SetActive(v string) {
 
 // GetExpiresAt returns the ExpiresAt field value
 func (o *LoginFlow) GetExpiresAt() time.Time {
-	if o == nil  {
+	if o == nil {
 		var ret time.Time
 		return ret
 	}
@@ -103,7 +104,7 @@ func (o *LoginFlow) GetExpiresAt() time.Time {
 // GetExpiresAtOk returns a tuple with the ExpiresAt field value
 // and a boolean to check if the value has been set.
 func (o *LoginFlow) GetExpiresAtOk() (*time.Time, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.ExpiresAt, true
@@ -115,12 +116,12 @@ func (o *LoginFlow) SetExpiresAt(v time.Time) {
 }
 
 // GetForced returns the Forced field value if set, zero value otherwise.
-func (o *LoginFlow) GetForced() *bool {
+func (o *LoginFlow) GetForced() bool {
 	if o == nil || o.Forced == nil {
-		var ret *bool
+		var ret bool
 		return ret
 	}
-	return o.Forced
+	return *o.Forced
 }
 
 // GetForcedOk returns a tuple with the Forced field value if set, nil otherwise
@@ -148,7 +149,7 @@ func (o *LoginFlow) SetForced(v bool) {
 
 // GetId returns the Id field value
 func (o *LoginFlow) GetId() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -159,7 +160,7 @@ func (o *LoginFlow) GetId() string {
 // GetIdOk returns a tuple with the Id field value
 // and a boolean to check if the value has been set.
 func (o *LoginFlow) GetIdOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Id, true
@@ -172,7 +173,7 @@ func (o *LoginFlow) SetId(v string) {
 
 // GetIssuedAt returns the IssuedAt field value
 func (o *LoginFlow) GetIssuedAt() time.Time {
-	if o == nil  {
+	if o == nil {
 		var ret time.Time
 		return ret
 	}
@@ -183,7 +184,7 @@ func (o *LoginFlow) GetIssuedAt() time.Time {
 // GetIssuedAtOk returns a tuple with the IssuedAt field value
 // and a boolean to check if the value has been set.
 func (o *LoginFlow) GetIssuedAtOk() (*time.Time, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.IssuedAt, true
@@ -228,7 +229,7 @@ func (o *LoginFlow) SetMessages(v []UiText) {
 
 // GetMethods returns the Methods field value
 func (o *LoginFlow) GetMethods() map[string]LoginFlowMethod {
-	if o == nil  {
+	if o == nil {
 		var ret map[string]LoginFlowMethod
 		return ret
 	}
@@ -239,7 +240,7 @@ func (o *LoginFlow) GetMethods() map[string]LoginFlowMethod {
 // GetMethodsOk returns a tuple with the Methods field value
 // and a boolean to check if the value has been set.
 func (o *LoginFlow) GetMethodsOk() (*map[string]LoginFlowMethod, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Methods, true
@@ -252,7 +253,7 @@ func (o *LoginFlow) SetMethods(v map[string]LoginFlowMethod) {
 
 // GetRequestUrl returns the RequestUrl field value
 func (o *LoginFlow) GetRequestUrl() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -263,7 +264,7 @@ func (o *LoginFlow) GetRequestUrl() string {
 // GetRequestUrlOk returns a tuple with the RequestUrl field value
 // and a boolean to check if the value has been set.
 func (o *LoginFlow) GetRequestUrlOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.RequestUrl, true
@@ -274,36 +275,28 @@ func (o *LoginFlow) SetRequestUrl(v string) {
 	o.RequestUrl = v
 }
 
-// GetType returns the Type field value if set, zero value otherwise.
-func (o *LoginFlow) GetType() *string {
-	if o == nil || o.Type == nil {
-		var ret *string
+// GetType returns the Type field value
+func (o *LoginFlow) GetType() string {
+	if o == nil {
+		var ret string
 		return ret
 	}
+
 	return o.Type
 }
 
-// GetTypeOk returns a tuple with the Type field value if set, nil otherwise
+// GetTypeOk returns a tuple with the Type field value
 // and a boolean to check if the value has been set.
 func (o *LoginFlow) GetTypeOk() (*string, bool) {
-	if o == nil || o.Type == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Type, true
+	return &o.Type, true
 }
 
-// HasType returns a boolean if a field has been set.
-func (o *LoginFlow) HasType() bool {
-	if o != nil && o.Type != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetType gets a reference to the given string and assigns it to the Type field.
+// SetType sets field value
 func (o *LoginFlow) SetType(v string) {
-	o.Type = &v
+	o.Type = v
 }
 
 func (o LoginFlow) MarshalJSON() ([]byte, error) {
@@ -332,7 +325,7 @@ func (o LoginFlow) MarshalJSON() ([]byte, error) {
 	if true {
 		toSerialize["request_url"] = o.RequestUrl
 	}
-	if o.Type != nil {
+	if true {
 		toSerialize["type"] = o.Type
 	}
 	return json.Marshal(toSerialize)
@@ -373,5 +366,3 @@ func (v *NullableLoginFlow) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

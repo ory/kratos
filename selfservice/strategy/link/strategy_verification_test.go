@@ -8,6 +8,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/pointerx"
+
+	"github.com/ory/kratos-client-go"
+
 	"github.com/ory/x/ioutilx"
 
 	"github.com/stretchr/testify/assert"
@@ -15,11 +19,8 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/x/assertx"
-	"github.com/ory/x/pointerx"
 	"github.com/ory/x/sqlxx"
 
-	sdkp "github.com/ory/kratos-client-go/client/public"
-	"github.com/ory/kratos-client-go/models"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
@@ -51,13 +52,10 @@ func TestVerification(t *testing.T) {
 	_ = testhelpers.NewRedirTS(t, "returned", conf)
 
 	public, _ := testhelpers.NewKratosServer(t, reg)
-	sdk := testhelpers.NewSDKClient(public)
-
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), identityToVerify,
 		identity.ManagerAllowWriteProtectedTraits))
 
-	var csrfField = &models.FormField{Name: pointerx.String("csrf_token"), Required: true,
-		Type: pointerx.String("hidden"), Value: x.FakeCSRFToken}
+	var csrfField = testhelpers.NewFakeCSRFNode()
 
 	var expect = func(t *testing.T, isAPI bool, values func(url.Values), c int) string {
 		hc := testhelpers.NewDebugClient(t)
@@ -79,22 +77,31 @@ func TestVerification(t *testing.T) {
 	t.Run("description=should set all the correct verification payloads", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 		rs := testhelpers.GetVerificationFlow(t, c, public)
-		assert.Contains(t, rs.Payload.Methods, verification.StrategyVerificationLinkName)
-		method := rs.Payload.Methods[verification.StrategyVerificationLinkName]
+		assert.Contains(t, rs.Methods, verification.StrategyVerificationLinkName)
+		method := rs.Methods[verification.StrategyVerificationLinkName]
 
-		assert.EqualValues(t, models.FormFields{csrfField,
-			{Name: pointerx.String("email"), Required: true, Type: pointerx.String("email")},
-		}, method.Config.Fields)
-		assert.EqualValues(t, public.URL+link.RouteVerification+"?flow="+string(rs.Payload.ID), *method.Config.Action)
+		assert.EqualValues(t, []kratos.UiNode{
+			*csrfField,
+			{
+				Type:  "input",
+				Group: "verification_link",
+				Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
+					Name:     "email",
+					Type:     "email",
+					Required: pointerx.Bool(true),
+				}),
+			},
+		}, method.Config.Nodes)
+		assert.EqualValues(t, public.URL+link.RouteVerification+"?flow="+rs.Id, method.Config.Action)
 		assert.Empty(t, method.Config.Messages)
-		assert.Empty(t, rs.Payload.Messages)
+		assert.Empty(t, rs.Messages)
 	})
 
 	t.Run("description=should require an email to be sent", func(t *testing.T) {
 		var check = func(t *testing.T, actual string) {
 			assert.EqualValues(t, verification.StrategyVerificationLinkName, gjson.Get(actual, "active").String(), "%s", actual)
 			assert.EqualValues(t, "Property email is missing.",
-				gjson.Get(actual, "methods.link.config.fields.#(name==email).messages.0.text").String(),
+				gjson.Get(actual, "methods.link.config.nodes.#(attributes.name==email).messages.0.text").String(),
 				"%s", actual)
 		}
 
@@ -115,7 +122,7 @@ func TestVerification(t *testing.T) {
 		var email string
 		var check = func(t *testing.T, actual string) {
 			assert.EqualValues(t, verification.StrategyVerificationLinkName, gjson.Get(actual, "active").String(), "%s", actual)
-			assert.EqualValues(t, email, gjson.Get(actual, "methods.link.config.fields.#(name==email).value").String(), "%s", actual)
+			assert.EqualValues(t, email, gjson.Get(actual, "methods.link.config.nodes.#(attributes.name==email).attributes.value").String(), "%s", actual)
 			assertx.EqualAsJSON(t, text.NewVerificationEmailSent(), json.RawMessage(gjson.Get(actual, "messages.0").Raw))
 
 			message := testhelpers.CourierExpectMessage(t, reg, email, "Someone tried to verify this email address")
@@ -144,13 +151,11 @@ func TestVerification(t *testing.T) {
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI().String()+"?flow=")
 
-		sr, err := sdk.Public.GetSelfServiceVerificationFlow(
-			sdkp.NewGetSelfServiceVerificationFlowParams().WithHTTPClient(c).
-				WithID(res.Request.URL.Query().Get("flow")))
+		sr, _, err := testhelpers.NewSDKCustomClient(public, c).PublicApi.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 		require.NoError(t, err)
 
-		require.Len(t, sr.Payload.Messages, 1)
-		assert.Equal(t, "The verification token is invalid or has already been used. Please retry the flow.", sr.Payload.Messages[0].Text)
+		require.Len(t, sr.Messages, 1)
+		assert.Equal(t, "The verification token is invalid or has already been used. Please retry the flow.", sr.Messages[0].Text)
 	})
 
 	t.Run("description=should not be able to use an outdated link", func(t *testing.T) {
@@ -161,14 +166,14 @@ func TestVerification(t *testing.T) {
 
 		c := testhelpers.NewClientWithCookies(t)
 		rs := testhelpers.GetVerificationFlow(t, c, public)
-		method := rs.Payload.Methods[verification.StrategyVerificationLinkName].Config
+		method := rs.Methods[verification.StrategyVerificationLinkName].Config
 
 		time.Sleep(time.Millisecond * 201)
 
-		res, err := c.PostForm(pointerx.StringR(method.Action), url.Values{"email": {verificationEmail}})
+		res, err := c.PostForm(method.Action, url.Values{"email": {verificationEmail}})
 		require.NoError(t, err)
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
-		assert.NotContains(t, res.Request.URL.String(), "flow="+rs.Payload.ID)
+		assert.NotContains(t, res.Request.URL.String(), "flow="+rs.Id)
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI().String())
 	})
 
@@ -197,19 +202,17 @@ func TestVerification(t *testing.T) {
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI().String())
 		assert.NotContains(t, res.Request.URL.String(), gjson.Get(body, "id").String())
 
-		sr, err := sdk.Public.GetSelfServiceVerificationFlow(
-			sdkp.NewGetSelfServiceVerificationFlowParams().WithHTTPClient(c).
-				WithID(res.Request.URL.Query().Get("flow")))
+		sr, _, err := testhelpers.NewSDKCustomClient(public, c).PublicApi.GetSelfServiceVerificationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 		require.NoError(t, err)
 
-		require.Len(t, sr.Payload.Messages, 1)
-		assert.Contains(t, sr.Payload.Messages[0].Text, "The verification flow expired")
+		require.Len(t, sr.Messages, 1)
+		assert.Contains(t, sr.Messages[0].Text, "The verification flow expired")
 	})
 
 	t.Run("description=should verify an email address", func(t *testing.T) {
 		var check = func(t *testing.T, actual string) {
 			assert.EqualValues(t, verification.StrategyVerificationLinkName, gjson.Get(actual, "active").String(), "%s", actual)
-			assert.EqualValues(t, verificationEmail, gjson.Get(actual, "methods.link.config.fields.#(name==email).value").String(), "%s", actual)
+			assert.EqualValues(t, verificationEmail, gjson.Get(actual, "methods.link.config.nodes.#(attributes.name==email).attributes.value").String(), "%s", actual)
 			assertx.EqualAsJSON(t, text.NewVerificationEmailSent(), json.RawMessage(gjson.Get(actual, "messages.0").Raw))
 
 			message := testhelpers.CourierExpectMessage(t, reg, verificationEmail, "Please verify your email address")

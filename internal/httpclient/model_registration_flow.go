@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -22,10 +22,10 @@ type RegistrationFlow struct {
 	Active *string `json:"active,omitempty"`
 	// ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to log in, a new flow has to be initiated.
 	ExpiresAt time.Time `json:"expires_at"`
-	Id string `json:"id"`
+	Id        string    `json:"id"`
 	// IssuedAt is the time (UTC) when the flow occurred.
 	IssuedAt time.Time `json:"issued_at"`
-	Messages []UiText `json:"messages,omitempty"`
+	Messages []UiText  `json:"messages,omitempty"`
 	// Methods contains context for all enabled registration methods. If a registration flow has been processed, but for example the password is incorrect, this will contain error messages.
 	Methods map[string]RegistrationFlowMethod `json:"methods"`
 	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.
@@ -38,7 +38,7 @@ type RegistrationFlow struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewRegistrationFlow(expiresAt time.Time, id string, issuedAt time.Time, methods map[string]RegistrationFlowMethod, requestUrl string, ) *RegistrationFlow {
+func NewRegistrationFlow(expiresAt time.Time, id string, issuedAt time.Time, methods map[string]RegistrationFlowMethod, requestUrl string) *RegistrationFlow {
 	this := RegistrationFlow{}
 	this.ExpiresAt = expiresAt
 	this.Id = id
@@ -57,12 +57,12 @@ func NewRegistrationFlowWithDefaults() *RegistrationFlow {
 }
 
 // GetActive returns the Active field value if set, zero value otherwise.
-func (o *RegistrationFlow) GetActive() *string {
+func (o *RegistrationFlow) GetActive() string {
 	if o == nil || o.Active == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.Active
+	return *o.Active
 }
 
 // GetActiveOk returns a tuple with the Active field value if set, nil otherwise
@@ -90,7 +90,7 @@ func (o *RegistrationFlow) SetActive(v string) {
 
 // GetExpiresAt returns the ExpiresAt field value
 func (o *RegistrationFlow) GetExpiresAt() time.Time {
-	if o == nil  {
+	if o == nil {
 		var ret time.Time
 		return ret
 	}
@@ -101,7 +101,7 @@ func (o *RegistrationFlow) GetExpiresAt() time.Time {
 // GetExpiresAtOk returns a tuple with the ExpiresAt field value
 // and a boolean to check if the value has been set.
 func (o *RegistrationFlow) GetExpiresAtOk() (*time.Time, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.ExpiresAt, true
@@ -114,7 +114,7 @@ func (o *RegistrationFlow) SetExpiresAt(v time.Time) {
 
 // GetId returns the Id field value
 func (o *RegistrationFlow) GetId() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -125,7 +125,7 @@ func (o *RegistrationFlow) GetId() string {
 // GetIdOk returns a tuple with the Id field value
 // and a boolean to check if the value has been set.
 func (o *RegistrationFlow) GetIdOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Id, true
@@ -138,7 +138,7 @@ func (o *RegistrationFlow) SetId(v string) {
 
 // GetIssuedAt returns the IssuedAt field value
 func (o *RegistrationFlow) GetIssuedAt() time.Time {
-	if o == nil  {
+	if o == nil {
 		var ret time.Time
 		return ret
 	}
@@ -149,7 +149,7 @@ func (o *RegistrationFlow) GetIssuedAt() time.Time {
 // GetIssuedAtOk returns a tuple with the IssuedAt field value
 // and a boolean to check if the value has been set.
 func (o *RegistrationFlow) GetIssuedAtOk() (*time.Time, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.IssuedAt, true
@@ -194,7 +194,7 @@ func (o *RegistrationFlow) SetMessages(v []UiText) {
 
 // GetMethods returns the Methods field value
 func (o *RegistrationFlow) GetMethods() map[string]RegistrationFlowMethod {
-	if o == nil  {
+	if o == nil {
 		var ret map[string]RegistrationFlowMethod
 		return ret
 	}
@@ -205,7 +205,7 @@ func (o *RegistrationFlow) GetMethods() map[string]RegistrationFlowMethod {
 // GetMethodsOk returns a tuple with the Methods field value
 // and a boolean to check if the value has been set.
 func (o *RegistrationFlow) GetMethodsOk() (*map[string]RegistrationFlowMethod, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Methods, true
@@ -218,7 +218,7 @@ func (o *RegistrationFlow) SetMethods(v map[string]RegistrationFlowMethod) {
 
 // GetRequestUrl returns the RequestUrl field value
 func (o *RegistrationFlow) GetRequestUrl() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -229,7 +229,7 @@ func (o *RegistrationFlow) GetRequestUrl() string {
 // GetRequestUrlOk returns a tuple with the RequestUrl field value
 // and a boolean to check if the value has been set.
 func (o *RegistrationFlow) GetRequestUrlOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.RequestUrl, true
@@ -241,12 +241,12 @@ func (o *RegistrationFlow) SetRequestUrl(v string) {
 }
 
 // GetType returns the Type field value if set, zero value otherwise.
-func (o *RegistrationFlow) GetType() *string {
+func (o *RegistrationFlow) GetType() string {
 	if o == nil || o.Type == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.Type
+	return *o.Type
 }
 
 // GetTypeOk returns a tuple with the Type field value if set, nil otherwise
@@ -336,5 +336,3 @@ func (v *NullableRegistrationFlow) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

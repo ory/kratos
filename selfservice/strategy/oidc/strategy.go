@@ -5,11 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/kratos/ui/node"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"

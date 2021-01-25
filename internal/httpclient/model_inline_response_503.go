@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -18,15 +18,16 @@ import (
 // InlineResponse503 struct for InlineResponse503
 type InlineResponse503 struct {
 	// Errors contains a list of errors that caused the not ready status.
-	Errors *map[string]string `json:"errors,omitempty"`
+	Errors map[string]string `json:"errors"`
 }
 
 // NewInlineResponse503 instantiates a new InlineResponse503 object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewInlineResponse503() *InlineResponse503 {
+func NewInlineResponse503(errors map[string]string) *InlineResponse503 {
 	this := InlineResponse503{}
+	this.Errors = errors
 	return &this
 }
 
@@ -38,41 +39,33 @@ func NewInlineResponse503WithDefaults() *InlineResponse503 {
 	return &this
 }
 
-// GetErrors returns the Errors field value if set, zero value otherwise.
-func (o *InlineResponse503) GetErrors() *map[string]string {
-	if o == nil || o.Errors == nil {
-		var ret *map[string]string
+// GetErrors returns the Errors field value
+func (o *InlineResponse503) GetErrors() map[string]string {
+	if o == nil {
+		var ret map[string]string
 		return ret
 	}
+
 	return o.Errors
 }
 
-// GetErrorsOk returns a tuple with the Errors field value if set, nil otherwise
+// GetErrorsOk returns a tuple with the Errors field value
 // and a boolean to check if the value has been set.
 func (o *InlineResponse503) GetErrorsOk() (*map[string]string, bool) {
-	if o == nil || o.Errors == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Errors, true
+	return &o.Errors, true
 }
 
-// HasErrors returns a boolean if a field has been set.
-func (o *InlineResponse503) HasErrors() bool {
-	if o != nil && o.Errors != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetErrors gets a reference to the given map[string]string and assigns it to the Errors field.
+// SetErrors sets field value
 func (o *InlineResponse503) SetErrors(v map[string]string) {
-	o.Errors = &v
+	o.Errors = v
 }
 
 func (o InlineResponse503) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.Errors != nil {
+	if true {
 		toSerialize["errors"] = o.Errors
 	}
 	return json.Marshal(toSerialize)
@@ -113,5 +106,3 @@ func (v *NullableInlineResponse503) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

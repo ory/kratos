@@ -3,6 +3,7 @@ package oidc
 import (
 	"bytes"
 	"encoding/json"
+
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/gofrs/uuid"

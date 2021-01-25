@@ -12,7 +12,7 @@ import (
 
 	"github.com/spf13/pflag"
 
-	"github.com/ory/kratos-client-go/client"
+	"github.com/ory/kratos-client-go"
 	"github.com/ory/x/cmdx"
 )
 
@@ -37,8 +37,8 @@ func NewHTTPClient(cmd *cobra.Command) *http.Client {
 	return httpx.NewResilientClientLatencyToleranceMedium(http.DefaultTransport)
 }
 
-func NewClient(cmd *cobra.Command) *client.OryKratos {
-	if f, ok := cmd.Context().Value(ClientContextKey).(func(cmd *cobra.Command) *client.OryKratos); ok {
+func NewClient(cmd *cobra.Command) *kratos.APIClient {
+	if f, ok := cmd.Context().Value(ClientContextKey).(func(cmd *cobra.Command) *kratos.APIClient); ok {
 		return f(cmd)
 	} else if f != nil {
 		panic(fmt.Sprintf("ClientContextKey was expected to be *client.OryKratos but it contained an invalid type %T ", f))
@@ -60,11 +60,9 @@ func NewClient(cmd *cobra.Command) *client.OryKratos {
 	u, err := url.Parse(endpoint)
 	cmdx.Must(err, `Could not parse the endpoint URL "%s".`, endpoint)
 
-	return client.NewHTTPClientWithConfig(nil, &client.TransportConfig{
-		Host:     u.Host,
-		BasePath: u.Path,
-		Schemes:  []string{u.Scheme},
-	})
+	conf := kratos.NewConfiguration()
+	conf.Servers = kratos.ServerConfigurations{{URL: u.String()}}
+	return kratos.NewAPIClient(conf)
 }
 
 func RegisterClientFlags(flags *pflag.FlagSet) {

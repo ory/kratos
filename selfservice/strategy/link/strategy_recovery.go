@@ -1,10 +1,13 @@
 package link
 
 import (
-	"github.com/ory/kratos/ui/node"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/ory/kratos/ui/node"
+
+	"github.com/ory/x/pkgerx"
 
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
@@ -58,7 +61,7 @@ func (s *Strategy) PopulateRecoveryMethod(r *http.Request, req *recovery.Flow) e
 
 	f.GetNodes().Upsert(
 		// v0.5: form.Field{Name: "email", Type: "email", Required: true},
-		node.NewInputField("email",nil, node.RecoveryLinkGroup, node.InputAttributeTypeEmail,  node.WithRequiredInputAttribute),
+		node.NewInputField("email", nil, node.RecoveryLinkGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute),
 	)
 
 	req.Methods[s.RecoveryStrategyID()] = &recovery.FlowMethod{
@@ -450,7 +453,7 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 	config.SetCSRF(s.d.GenerateCSRFToken(r))
 	config.GetNodes().Upsert(
 		// v0.5: form.Field{Name: "email", Type: "email", Required: true, Value: body.Body.Email}
-		node.NewInputField("email",  body.Body.Email,node.RecoveryLinkGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute),
+		node.NewInputField("email", body.Body.Email, node.RecoveryLinkGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute),
 	)
 
 	req.Active = sqlxx.NullString(s.RecoveryStrategyID())
@@ -496,6 +499,7 @@ func (s *Strategy) handleRecoveryError(w http.ResponseWriter, r *http.Request, r
 
 func (s *Strategy) decodeRecovery(r *http.Request, decodeBody bool) (*completeSelfServiceRecoveryFlowWithLinkMethodParameters, error) {
 	var body completeSelfServiceRecoveryFlowWithLinkMethod
+
 	if decodeBody {
 		if err := s.dx.Decode(r, &body,
 			decoderx.MustHTTPRawJSONSchemaCompiler(emailSchema),

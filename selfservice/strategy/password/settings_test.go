@@ -10,13 +10,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ory/kratos-client-go"
+
 	"github.com/ory/kratos/corpx"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/kratos-client-go/models"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
@@ -28,7 +29,6 @@ import (
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/ioutilx"
-	"github.com/ory/x/pointerx"
 	"github.com/ory/x/randx"
 )
 
@@ -113,9 +113,9 @@ func TestSettings(t *testing.T) {
 
 	t.Run("description=should fail if password violates policy", func(t *testing.T) {
 		var check = func(t *testing.T, actual string) {
-			assert.Empty(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).value").String(), "%s", actual)
-			assert.NotEmpty(t, gjson.Get(actual, "methods.password.config.fields.#(name==csrf_token).value").String(), "%s", actual)
-			assert.Contains(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).messages.0.text").String(), "password can not be used because", "%s", actual)
+			assert.Empty(t, gjson.Get(actual, "methods.password.config.nodes.#(attributes.name==password).attributes.value").String(), "%s", actual)
+			assert.NotEmpty(t, gjson.Get(actual, "methods.password.config.nodes.#(attributes.name==csrf_token).attributes.value").String(), "%s", actual)
+			assert.Contains(t, gjson.Get(actual, "methods.password.config.nodes.#(attributes.name==password).messages.0.text").String(), "password can not be used because", "%s", actual)
 		}
 
 		t.Run("session=with privileged session", func(t *testing.T) {
@@ -161,8 +161,8 @@ func TestSettings(t *testing.T) {
 	t.Run("description=should not be able to make requests for another user", func(t *testing.T) {
 		t.Run("type=api", func(t *testing.T) {
 			rs := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
-			f := testhelpers.GetSettingsFlowMethodConfig(t, rs.Payload, identity.CredentialsTypePassword.String())
-			values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
+			f := testhelpers.GetSettingsFlowMethodConfig(t, rs, identity.CredentialsTypePassword.String())
+			values := testhelpers.SDKFormFieldsToURLValues(f.Nodes)
 			values.Set("password", x.NewUUID().String())
 			actual, res := testhelpers.SettingsMakeRequest(t, true, f, apiUser2, testhelpers.EncodeFormAsJSON(t, true, values))
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
@@ -171,8 +171,8 @@ func TestSettings(t *testing.T) {
 
 		t.Run("type=browser", func(t *testing.T) {
 			rs := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, publicTS)
-			f := testhelpers.GetSettingsFlowMethodConfig(t, rs.Payload, identity.CredentialsTypePassword.String())
-			values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
+			f := testhelpers.GetSettingsFlowMethodConfig(t, rs, identity.CredentialsTypePassword.String())
+			values := testhelpers.SDKFormFieldsToURLValues(f.Nodes)
 			values.Set("password", x.NewUUID().String())
 			actual, res := testhelpers.SettingsMakeRequest(t, false, f, browserUser2, values.Encode())
 			assert.Equal(t, http.StatusOK, res.StatusCode)
@@ -184,7 +184,7 @@ func TestSettings(t *testing.T) {
 		var check = func(t *testing.T, actual string) {
 			assert.Equal(t, "success", gjson.Get(actual, "state").String(), "%s", actual)
 			assert.Empty(t, gjson.Get(actual, "methods.password.fields.#(name==password).value").String(), "%s", actual)
-			assert.Empty(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).messages.0.text").String(), actual)
+			assert.Empty(t, gjson.Get(actual, "methods.password.config.nodes.#(attributes.name==password).messages.0.text").String(), actual)
 		}
 
 		var payload = func(v url.Values) {
@@ -205,8 +205,8 @@ func TestSettings(t *testing.T) {
 
 	t.Run("case=should fail because of missing CSRF token/type=browser", func(t *testing.T) {
 		rs := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, publicTS)
-		f := testhelpers.GetSettingsFlowMethodConfig(t, rs.Payload, identity.CredentialsTypePassword.String())
-		values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
+		f := testhelpers.GetSettingsFlowMethodConfig(t, rs, identity.CredentialsTypePassword.String())
+		values := testhelpers.SDKFormFieldsToURLValues(f.Nodes)
 		values.Set("password", x.NewUUID().String())
 		values.Set("csrf_token", "invalid_token")
 
@@ -219,8 +219,8 @@ func TestSettings(t *testing.T) {
 
 	t.Run("case=should pass even without CSRF token/type=api", func(t *testing.T) {
 		rs := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
-		f := testhelpers.GetSettingsFlowMethodConfig(t, rs.Payload, identity.CredentialsTypePassword.String())
-		values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
+		f := testhelpers.GetSettingsFlowMethodConfig(t, rs, identity.CredentialsTypePassword.String())
+		values := testhelpers.SDKFormFieldsToURLValues(f.Nodes)
 		values.Set("password", x.NewUUID().String())
 		values.Set("csrf_token", "invalid_token")
 		actual, res := testhelpers.SettingsMakeRequest(t, true, f, apiUser1, testhelpers.EncodeFormAsJSON(t, true, values))
@@ -250,11 +250,11 @@ func TestSettings(t *testing.T) {
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				f := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
-				c := testhelpers.GetSettingsFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
-				values := testhelpers.SDKFormFieldsToURLValues(c.Fields)
+				c := testhelpers.GetSettingsFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
+				values := testhelpers.SDKFormFieldsToURLValues(c.Nodes)
 				values.Set("password", x.NewUUID().String())
 
-				req := testhelpers.NewRequest(t, true, "POST", pointerx.StringR(c.Action), bytes.NewBufferString(testhelpers.EncodeFormAsJSON(t, true, values)))
+				req := testhelpers.NewRequest(t, true, "POST", c.Action, bytes.NewBufferString(testhelpers.EncodeFormAsJSON(t, true, values)))
 				tc.mod(req.Header)
 
 				res, err := apiUser1.Do(req)
@@ -309,8 +309,8 @@ func TestSettings(t *testing.T) {
 			conf.MustSet(config.ViperKeySelfServiceSettingsAfter, nil)
 		})
 
-		var run = func(t *testing.T, f *models.SettingsFlowMethodConfig, isAPI bool, c *http.Client, id *identity.Identity) {
-			values := testhelpers.SDKFormFieldsToURLValues(f.Fields)
+		var run = func(t *testing.T, f *kratos.SettingsFlowMethodConfig, isAPI bool, c *http.Client, id *identity.Identity) {
+			values := testhelpers.SDKFormFieldsToURLValues(f.Nodes)
 			values.Set("password", randx.MustString(16, randx.AlphaNum))
 			_, res := testhelpers.SettingsMakeRequest(t, isAPI, f, c, testhelpers.EncodeFormAsJSON(t, isAPI, values))
 			require.EqualValues(t, rts.URL+"/return-ts", res.Request.URL.String())
@@ -329,8 +329,8 @@ func TestSettings(t *testing.T) {
 
 		t.Run("type=browser", func(t *testing.T) {
 			rs := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, publicTS)
-			form := rs.Payload.Methods[string(identity.CredentialsTypePassword)].Config
-			run(t, form, false, browserUser1, browserIdentity1)
+			form := rs.Methods[string(identity.CredentialsTypePassword)].Config
+			run(t, &form, false, browserUser1, browserIdentity1)
 		})
 	})
 }

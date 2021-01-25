@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -18,18 +18,20 @@ import (
 // UiNode Nodes are represented as HTML elements or their native UI equivalents. For example, a node can be an `<img>` tag, or an `<input element>` but also `some plain text`.
 type UiNode struct {
 	Attributes UiNodeAttributes `json:"attributes"`
-	Group *string `json:"group,omitempty"`
-	Messages []UiText `json:"messages,omitempty"`
-	Type string `json:"type"`
+	Group      string           `json:"group"`
+	Messages   []UiText         `json:"messages"`
+	Type       string           `json:"type"`
 }
 
 // NewUiNode instantiates a new UiNode object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUiNode(attributes UiNodeAttributes, type_ string, ) *UiNode {
+func NewUiNode(attributes UiNodeAttributes, group string, messages []UiText, type_ string) *UiNode {
 	this := UiNode{}
 	this.Attributes = attributes
+	this.Group = group
+	this.Messages = messages
 	this.Type = type_
 	return &this
 }
@@ -44,7 +46,7 @@ func NewUiNodeWithDefaults() *UiNode {
 
 // GetAttributes returns the Attributes field value
 func (o *UiNode) GetAttributes() UiNodeAttributes {
-	if o == nil  {
+	if o == nil {
 		var ret UiNodeAttributes
 		return ret
 	}
@@ -55,7 +57,7 @@ func (o *UiNode) GetAttributes() UiNodeAttributes {
 // GetAttributesOk returns a tuple with the Attributes field value
 // and a boolean to check if the value has been set.
 func (o *UiNode) GetAttributesOk() (*UiNodeAttributes, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Attributes, true
@@ -66,73 +68,57 @@ func (o *UiNode) SetAttributes(v UiNodeAttributes) {
 	o.Attributes = v
 }
 
-// GetGroup returns the Group field value if set, zero value otherwise.
-func (o *UiNode) GetGroup() *string {
-	if o == nil || o.Group == nil {
-		var ret *string
+// GetGroup returns the Group field value
+func (o *UiNode) GetGroup() string {
+	if o == nil {
+		var ret string
 		return ret
 	}
+
 	return o.Group
 }
 
-// GetGroupOk returns a tuple with the Group field value if set, nil otherwise
+// GetGroupOk returns a tuple with the Group field value
 // and a boolean to check if the value has been set.
 func (o *UiNode) GetGroupOk() (*string, bool) {
-	if o == nil || o.Group == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Group, true
+	return &o.Group, true
 }
 
-// HasGroup returns a boolean if a field has been set.
-func (o *UiNode) HasGroup() bool {
-	if o != nil && o.Group != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetGroup gets a reference to the given string and assigns it to the Group field.
+// SetGroup sets field value
 func (o *UiNode) SetGroup(v string) {
-	o.Group = &v
+	o.Group = v
 }
 
-// GetMessages returns the Messages field value if set, zero value otherwise.
+// GetMessages returns the Messages field value
 func (o *UiNode) GetMessages() []UiText {
-	if o == nil || o.Messages == nil {
+	if o == nil {
 		var ret []UiText
 		return ret
 	}
+
 	return o.Messages
 }
 
-// GetMessagesOk returns a tuple with the Messages field value if set, nil otherwise
+// GetMessagesOk returns a tuple with the Messages field value
 // and a boolean to check if the value has been set.
 func (o *UiNode) GetMessagesOk() ([]UiText, bool) {
-	if o == nil || o.Messages == nil {
+	if o == nil {
 		return nil, false
 	}
 	return o.Messages, true
 }
 
-// HasMessages returns a boolean if a field has been set.
-func (o *UiNode) HasMessages() bool {
-	if o != nil && o.Messages != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetMessages gets a reference to the given []UiText and assigns it to the Messages field.
+// SetMessages sets field value
 func (o *UiNode) SetMessages(v []UiText) {
 	o.Messages = v
 }
 
 // GetType returns the Type field value
 func (o *UiNode) GetType() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -143,7 +129,7 @@ func (o *UiNode) GetType() string {
 // GetTypeOk returns a tuple with the Type field value
 // and a boolean to check if the value has been set.
 func (o *UiNode) GetTypeOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Type, true
@@ -159,10 +145,10 @@ func (o UiNode) MarshalJSON() ([]byte, error) {
 	if true {
 		toSerialize["attributes"] = o.Attributes
 	}
-	if o.Group != nil {
+	if true {
 		toSerialize["group"] = o.Group
 	}
-	if o.Messages != nil {
+	if true {
 		toSerialize["messages"] = o.Messages
 	}
 	if true {
@@ -206,5 +192,3 @@ func (v *NullableUiNode) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-
