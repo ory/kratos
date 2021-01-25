@@ -10,7 +10,7 @@ type MethodConfigurator interface {
 
 	// form.NodeSetter
 	// form.NodeUnsetter
-	// form.ValueSetter
+	form.ValueSetter
 
 	form.Resetter
 	form.MessageResetter

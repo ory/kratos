@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -22,27 +22,29 @@ type VerificationFlow struct {
 	Active *string `json:"active,omitempty"`
 	// ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address, a new request has to be initiated.
 	ExpiresAt *time.Time `json:"expires_at,omitempty"`
-	Id *string `json:"id,omitempty"`
+	Id        string     `json:"id"`
 	// IssuedAt is the time (UTC) when the request occurred.
 	IssuedAt *time.Time `json:"issued_at,omitempty"`
-	Messages []UiText `json:"messages,omitempty"`
+	Messages []UiText   `json:"messages,omitempty"`
 	// Methods contains context for all account verification methods. If a registration request has been processed, but for example the password is incorrect, this will contain error messages.
 	Methods map[string]VerificationFlowMethod `json:"methods"`
 	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.
 	RequestUrl *string `json:"request_url,omitempty"`
-	State string `json:"state"`
+	State      string  `json:"state"`
 	// The flow type can either be `api` or `browser`.
-	Type *string `json:"type,omitempty"`
+	Type string `json:"type"`
 }
 
 // NewVerificationFlow instantiates a new VerificationFlow object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewVerificationFlow(methods map[string]VerificationFlowMethod, state string, ) *VerificationFlow {
+func NewVerificationFlow(id string, methods map[string]VerificationFlowMethod, state string, type_ string) *VerificationFlow {
 	this := VerificationFlow{}
+	this.Id = id
 	this.Methods = methods
 	this.State = state
+	this.Type = type_
 	return &this
 }
 
@@ -55,12 +57,12 @@ func NewVerificationFlowWithDefaults() *VerificationFlow {
 }
 
 // GetActive returns the Active field value if set, zero value otherwise.
-func (o *VerificationFlow) GetActive() *string {
+func (o *VerificationFlow) GetActive() string {
 	if o == nil || o.Active == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.Active
+	return *o.Active
 }
 
 // GetActiveOk returns a tuple with the Active field value if set, nil otherwise
@@ -87,12 +89,12 @@ func (o *VerificationFlow) SetActive(v string) {
 }
 
 // GetExpiresAt returns the ExpiresAt field value if set, zero value otherwise.
-func (o *VerificationFlow) GetExpiresAt() *time.Time {
+func (o *VerificationFlow) GetExpiresAt() time.Time {
 	if o == nil || o.ExpiresAt == nil {
-		var ret *time.Time
+		var ret time.Time
 		return ret
 	}
-	return o.ExpiresAt
+	return *o.ExpiresAt
 }
 
 // GetExpiresAtOk returns a tuple with the ExpiresAt field value if set, nil otherwise
@@ -118,45 +120,37 @@ func (o *VerificationFlow) SetExpiresAt(v time.Time) {
 	o.ExpiresAt = &v
 }
 
-// GetId returns the Id field value if set, zero value otherwise.
-func (o *VerificationFlow) GetId() *string {
-	if o == nil || o.Id == nil {
-		var ret *string
+// GetId returns the Id field value
+func (o *VerificationFlow) GetId() string {
+	if o == nil {
+		var ret string
 		return ret
 	}
+
 	return o.Id
 }
 
-// GetIdOk returns a tuple with the Id field value if set, nil otherwise
+// GetIdOk returns a tuple with the Id field value
 // and a boolean to check if the value has been set.
 func (o *VerificationFlow) GetIdOk() (*string, bool) {
-	if o == nil || o.Id == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Id, true
+	return &o.Id, true
 }
 
-// HasId returns a boolean if a field has been set.
-func (o *VerificationFlow) HasId() bool {
-	if o != nil && o.Id != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetId gets a reference to the given string and assigns it to the Id field.
+// SetId sets field value
 func (o *VerificationFlow) SetId(v string) {
-	o.Id = &v
+	o.Id = v
 }
 
 // GetIssuedAt returns the IssuedAt field value if set, zero value otherwise.
-func (o *VerificationFlow) GetIssuedAt() *time.Time {
+func (o *VerificationFlow) GetIssuedAt() time.Time {
 	if o == nil || o.IssuedAt == nil {
-		var ret *time.Time
+		var ret time.Time
 		return ret
 	}
-	return o.IssuedAt
+	return *o.IssuedAt
 }
 
 // GetIssuedAtOk returns a tuple with the IssuedAt field value if set, nil otherwise
@@ -216,7 +210,7 @@ func (o *VerificationFlow) SetMessages(v []UiText) {
 
 // GetMethods returns the Methods field value
 func (o *VerificationFlow) GetMethods() map[string]VerificationFlowMethod {
-	if o == nil  {
+	if o == nil {
 		var ret map[string]VerificationFlowMethod
 		return ret
 	}
@@ -227,7 +221,7 @@ func (o *VerificationFlow) GetMethods() map[string]VerificationFlowMethod {
 // GetMethodsOk returns a tuple with the Methods field value
 // and a boolean to check if the value has been set.
 func (o *VerificationFlow) GetMethodsOk() (*map[string]VerificationFlowMethod, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Methods, true
@@ -239,12 +233,12 @@ func (o *VerificationFlow) SetMethods(v map[string]VerificationFlowMethod) {
 }
 
 // GetRequestUrl returns the RequestUrl field value if set, zero value otherwise.
-func (o *VerificationFlow) GetRequestUrl() *string {
+func (o *VerificationFlow) GetRequestUrl() string {
 	if o == nil || o.RequestUrl == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.RequestUrl
+	return *o.RequestUrl
 }
 
 // GetRequestUrlOk returns a tuple with the RequestUrl field value if set, nil otherwise
@@ -272,7 +266,7 @@ func (o *VerificationFlow) SetRequestUrl(v string) {
 
 // GetState returns the State field value
 func (o *VerificationFlow) GetState() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -283,7 +277,7 @@ func (o *VerificationFlow) GetState() string {
 // GetStateOk returns a tuple with the State field value
 // and a boolean to check if the value has been set.
 func (o *VerificationFlow) GetStateOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.State, true
@@ -294,36 +288,28 @@ func (o *VerificationFlow) SetState(v string) {
 	o.State = v
 }
 
-// GetType returns the Type field value if set, zero value otherwise.
-func (o *VerificationFlow) GetType() *string {
-	if o == nil || o.Type == nil {
-		var ret *string
+// GetType returns the Type field value
+func (o *VerificationFlow) GetType() string {
+	if o == nil {
+		var ret string
 		return ret
 	}
+
 	return o.Type
 }
 
-// GetTypeOk returns a tuple with the Type field value if set, nil otherwise
+// GetTypeOk returns a tuple with the Type field value
 // and a boolean to check if the value has been set.
 func (o *VerificationFlow) GetTypeOk() (*string, bool) {
-	if o == nil || o.Type == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Type, true
+	return &o.Type, true
 }
 
-// HasType returns a boolean if a field has been set.
-func (o *VerificationFlow) HasType() bool {
-	if o != nil && o.Type != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetType gets a reference to the given string and assigns it to the Type field.
+// SetType sets field value
 func (o *VerificationFlow) SetType(v string) {
-	o.Type = &v
+	o.Type = v
 }
 
 func (o VerificationFlow) MarshalJSON() ([]byte, error) {
@@ -334,7 +320,7 @@ func (o VerificationFlow) MarshalJSON() ([]byte, error) {
 	if o.ExpiresAt != nil {
 		toSerialize["expires_at"] = o.ExpiresAt
 	}
-	if o.Id != nil {
+	if true {
 		toSerialize["id"] = o.Id
 	}
 	if o.IssuedAt != nil {
@@ -352,7 +338,7 @@ func (o VerificationFlow) MarshalJSON() ([]byte, error) {
 	if true {
 		toSerialize["state"] = o.State
 	}
-	if o.Type != nil {
+	if true {
 		toSerialize["type"] = o.Type
 	}
 	return json.Marshal(toSerialize)
@@ -393,5 +379,3 @@ func (v *NullableVerificationFlow) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -18,19 +18,19 @@ import (
 
 // VerifiableAddress struct for VerifiableAddress
 type VerifiableAddress struct {
-	Id string `json:"id"`
-	Status string `json:"status"`
-	Value string `json:"value"`
-	Verified bool `json:"verified"`
+	Id         string     `json:"id"`
+	Status     string     `json:"status"`
+	Value      string     `json:"value"`
+	Verified   bool       `json:"verified"`
 	VerifiedAt *time.Time `json:"verified_at,omitempty"`
-	Via string `json:"via"`
+	Via        string     `json:"via"`
 }
 
 // NewVerifiableAddress instantiates a new VerifiableAddress object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewVerifiableAddress(id string, status string, value string, verified bool, via string, ) *VerifiableAddress {
+func NewVerifiableAddress(id string, status string, value string, verified bool, via string) *VerifiableAddress {
 	this := VerifiableAddress{}
 	this.Id = id
 	this.Status = status
@@ -50,7 +50,7 @@ func NewVerifiableAddressWithDefaults() *VerifiableAddress {
 
 // GetId returns the Id field value
 func (o *VerifiableAddress) GetId() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -61,7 +61,7 @@ func (o *VerifiableAddress) GetId() string {
 // GetIdOk returns a tuple with the Id field value
 // and a boolean to check if the value has been set.
 func (o *VerifiableAddress) GetIdOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Id, true
@@ -74,7 +74,7 @@ func (o *VerifiableAddress) SetId(v string) {
 
 // GetStatus returns the Status field value
 func (o *VerifiableAddress) GetStatus() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -85,7 +85,7 @@ func (o *VerifiableAddress) GetStatus() string {
 // GetStatusOk returns a tuple with the Status field value
 // and a boolean to check if the value has been set.
 func (o *VerifiableAddress) GetStatusOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Status, true
@@ -98,7 +98,7 @@ func (o *VerifiableAddress) SetStatus(v string) {
 
 // GetValue returns the Value field value
 func (o *VerifiableAddress) GetValue() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -109,7 +109,7 @@ func (o *VerifiableAddress) GetValue() string {
 // GetValueOk returns a tuple with the Value field value
 // and a boolean to check if the value has been set.
 func (o *VerifiableAddress) GetValueOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Value, true
@@ -122,7 +122,7 @@ func (o *VerifiableAddress) SetValue(v string) {
 
 // GetVerified returns the Verified field value
 func (o *VerifiableAddress) GetVerified() bool {
-	if o == nil  {
+	if o == nil {
 		var ret bool
 		return ret
 	}
@@ -133,7 +133,7 @@ func (o *VerifiableAddress) GetVerified() bool {
 // GetVerifiedOk returns a tuple with the Verified field value
 // and a boolean to check if the value has been set.
 func (o *VerifiableAddress) GetVerifiedOk() (*bool, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Verified, true
@@ -145,12 +145,12 @@ func (o *VerifiableAddress) SetVerified(v bool) {
 }
 
 // GetVerifiedAt returns the VerifiedAt field value if set, zero value otherwise.
-func (o *VerifiableAddress) GetVerifiedAt() *time.Time {
+func (o *VerifiableAddress) GetVerifiedAt() time.Time {
 	if o == nil || o.VerifiedAt == nil {
-		var ret *time.Time
+		var ret time.Time
 		return ret
 	}
-	return o.VerifiedAt
+	return *o.VerifiedAt
 }
 
 // GetVerifiedAtOk returns a tuple with the VerifiedAt field value if set, nil otherwise
@@ -178,7 +178,7 @@ func (o *VerifiableAddress) SetVerifiedAt(v time.Time) {
 
 // GetVia returns the Via field value
 func (o *VerifiableAddress) GetVia() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -189,7 +189,7 @@ func (o *VerifiableAddress) GetVia() string {
 // GetViaOk returns a tuple with the Via field value
 // and a boolean to check if the value has been set.
 func (o *VerifiableAddress) GetViaOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Via, true
@@ -258,5 +258,3 @@ func (v *NullableVerifiableAddress) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

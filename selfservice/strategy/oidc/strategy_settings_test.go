@@ -3,12 +3,15 @@ package oidc_test
 import (
 	"context"
 	"encoding/json"
-	"github.com/ory/kratos/ui/node"
 	"net/http"
 	"net/url"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/ory/kratos-client-go"
+
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
@@ -17,10 +20,6 @@ import (
 
 	"github.com/ory/x/sqlxx"
 
-	"github.com/ory/x/pointerx"
-
-	sdkp "github.com/ory/kratos-client-go/client/public"
-	"github.com/ory/kratos-client-go/models"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -38,8 +37,7 @@ func init() {
 }
 
 var (
-	csrfField = &models.FormField{Name: pointerx.String("csrf_token"), Value: x.FakeCSRFToken,
-		Required: true, Type: pointerx.String("hidden")}
+	csrfField = testhelpers.NewFakeCSRFNode()
 )
 
 func TestSettingsStrategy(t *testing.T) {
@@ -57,8 +55,6 @@ func TestSettingsStrategy(t *testing.T) {
 	uiTS := newUI(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	publicTS, adminTS := testhelpers.NewKratosServers(t)
-	public := testhelpers.NewSDKClient(publicTS)
-	admin := testhelpers.NewSDKClient(adminTS)
 
 	viperSetProviderConfig(
 		t,
@@ -110,7 +106,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 	var newProfileFlow = func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *settings.Flow {
 		req, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(),
-			x.ParseUUID(string(testhelpers.InitializeSettingsFlowViaBrowser(t, client, publicTS).Payload.ID)))
+			x.ParseUUID(string(testhelpers.InitializeSettingsFlowViaBrowser(t, client, publicTS).Id)))
 		require.NoError(t, err)
 		assert.Empty(t, req.Active)
 
@@ -129,13 +125,11 @@ func TestSettingsStrategy(t *testing.T) {
 	}
 
 	// does the same as new profile request but uses the SDK
-	var nprSDK = func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *models.SettingsFlow {
+	var nprSDK = func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *kratos.SettingsFlow {
 		req := newProfileFlow(t, client, redirectTo, exp)
-		rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
-			NewGetSelfServiceSettingsFlowParams().WithHTTPClient(client).
-			WithID(req.ID.String()), nil)
+		rs, _, err := testhelpers.NewSDKCustomClient(adminTS, client).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.ID.String()).Execute()
 		require.NoError(t, err)
-		return rs.Payload
+		return rs
 	}
 
 	t.Run("case=should not be able to continue a flow with a malformed ID", func(t *testing.T) {
@@ -162,9 +156,7 @@ func TestSettingsStrategy(t *testing.T) {
 	t.Run("case=should not be able to fetch another user's data", func(t *testing.T) {
 		req := newProfileFlow(t, agents["password"], "", time.Hour)
 
-		_, err := public.Public.GetSelfServiceSettingsFlow(sdkp.
-			NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents["oryer"]).
-			WithID(req.ID.String()), nil)
+		_, _, err := testhelpers.NewSDKCustomClient(publicTS, agents["oryer"]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.ID.String()).Execute()
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "403")
 	})
@@ -172,9 +164,7 @@ func TestSettingsStrategy(t *testing.T) {
 	t.Run("case=should fetch the settings request and expect data to be set appropriately", func(t *testing.T) {
 		req := newProfileFlow(t, agents["password"], "", time.Hour)
 
-		rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
-			NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents["password"]).
-			WithID(req.ID.String()), nil)
+		rs, _, err := testhelpers.NewSDKCustomClient(adminTS, agents["password"]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.ID.String()).Execute()
 		require.NoError(t, err)
 
 		// Check our sanity. Does the SDK relay the same info that we expect and got from the store?
@@ -185,50 +175,50 @@ func TestSettingsStrategy(t *testing.T) {
 		assert.EqualValues(t, users["password"].Traits, req.Identity.Traits)
 		assert.EqualValues(t, users["password"].SchemaID, req.Identity.SchemaID)
 
-		assert.EqualValues(t, req.ID.String(), rs.Payload.ID)
-		assert.EqualValues(t, req.RequestURL, *rs.Payload.RequestURL)
-		assert.EqualValues(t, req.Identity.ID.String(), rs.Payload.Identity.ID)
-		assert.EqualValues(t, req.IssuedAt, time.Time(*rs.Payload.IssuedAt))
+		assert.EqualValues(t, req.ID.String(), rs.Id)
+		assert.EqualValues(t, req.RequestURL, rs.RequestUrl)
+		assert.EqualValues(t, req.Identity.ID.String(), rs.Identity.Id)
+		assert.EqualValues(t, req.IssuedAt, rs.IssuedAt)
 
-		require.NotNil(t, identity.CredentialsTypeOIDC.String(), rs.Payload.Methods[identity.CredentialsTypeOIDC.String()])
-		require.EqualValues(t, identity.CredentialsTypeOIDC.String(), *rs.Payload.Methods[identity.CredentialsTypeOIDC.String()].Method)
+		require.NotNil(t, identity.CredentialsTypeOIDC.String(), rs.Methods[identity.CredentialsTypeOIDC.String()])
+		require.EqualValues(t, identity.CredentialsTypeOIDC.String(), rs.Methods[identity.CredentialsTypeOIDC.String()].Method)
 		require.EqualValues(t, publicTS.URL+oidc.SettingsPath+"?flow="+req.ID.String(),
-			*rs.Payload.Methods[identity.CredentialsTypeOIDC.String()].Config.Action)
+			rs.Methods[identity.CredentialsTypeOIDC.String()].Config.Action)
 	})
 
-	expectedOryerFields := models.FormFields{
-		{Type: pointerx.String("submit"), Name: pointerx.String("link"), Value: "google"},
-		{Type: pointerx.String("submit"), Name: pointerx.String("link"), Value: "github"}}
-	expectedGithuberFields := models.FormFields{
-		{Type: pointerx.String("submit"), Name: pointerx.String("link"), Value: "google"},
-		{Type: pointerx.String("submit"), Name: pointerx.String("unlink"), Value: "ory"},
-		{Type: pointerx.String("submit"), Name: pointerx.String("unlink"), Value: "github"}}
+	expectedOryerFields := []kratos.UiNode{
+		*testhelpers.NewSDKOIDCNode("link", "google"),
+		*testhelpers.NewSDKOIDCNode("link", "github")}
+	expectedGithuberFields := []kratos.UiNode{
+		*testhelpers.NewSDKOIDCNode("link", "google"),
+		*testhelpers.NewSDKOIDCNode("unlink", "ory"),
+		*testhelpers.NewSDKOIDCNode("unlink", "github")}
 	t.Run("case=should adjust linkable providers based on linked credentials", func(t *testing.T) {
 		for _, tc := range []struct {
 			agent    string
-			expected models.FormFields
+			expected []kratos.UiNode
 		}{
-			{agent: "password", expected: models.FormFields{
-				{Type: pointerx.String("submit"), Name: pointerx.String("link"), Value: "ory"},
-				{Type: pointerx.String("submit"), Name: pointerx.String("link"), Value: "google"},
-				{Type: pointerx.String("submit"), Name: pointerx.String("link"), Value: "github"}}},
+			{agent: "password", expected: []kratos.UiNode{
+				*testhelpers.NewSDKOIDCNode("link", "ory"),
+				*testhelpers.NewSDKOIDCNode("link", "google"),
+				*testhelpers.NewSDKOIDCNode("link", "github")}},
 			{agent: "oryer", expected: expectedOryerFields},
 			{agent: "githuber", expected: expectedGithuberFields},
-			{agent: "multiuser", expected: models.FormFields{
-				{Type: pointerx.String("submit"), Name: pointerx.String("link"), Value: "github"},
-				{Type: pointerx.String("submit"), Name: pointerx.String("unlink"), Value: "ory"},
-				{Type: pointerx.String("submit"), Name: pointerx.String("unlink"), Value: "google"}}},
+			{agent: "multiuser", expected: []kratos.UiNode{
+				*testhelpers.NewSDKOIDCNode("link", "github"),
+				*testhelpers.NewSDKOIDCNode("unlink", "ory"),
+				*testhelpers.NewSDKOIDCNode("unlink", "google")}},
 		} {
 			t.Run("agent="+tc.agent, func(t *testing.T) {
 				rs := nprSDK(t, agents[tc.agent], "", time.Hour)
-				assert.EqualValues(t, append(models.FormFields{csrfField}, tc.expected...),
-					rs.Methods[identity.CredentialsTypeOIDC.String()].Config.Fields)
+				assert.EqualValues(t, append([]kratos.UiNode{*csrfField}, tc.expected...),
+					rs.Methods[identity.CredentialsTypeOIDC.String()].Config.Nodes)
 			})
 		}
 	})
 
-	var action = func(req *models.SettingsFlow) string {
-		return *req.Methods[identity.CredentialsTypeOIDC.String()].Config.Action
+	var action = func(req *kratos.SettingsFlow) string {
+		return req.Methods[identity.CredentialsTypeOIDC.String()].Config.Action
 	}
 
 	var checkCredentials = func(t *testing.T, shouldExist bool, iid uuid.UUID, provider, subject string) {
@@ -264,23 +254,23 @@ func TestSettingsStrategy(t *testing.T) {
 	}
 
 	t.Run("suite=unlink", func(t *testing.T) {
-		var unlink = func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *models.SettingsFlow) {
+		var unlink = func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *kratos.SettingsFlow) {
 			req = nprSDK(t, agents[agent], "", time.Hour)
 			body, res = testhelpers.HTTPPostForm(t, agents[agent], action(req),
 				&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
 			return
 		}
 
-		var unlinkInvalid = func(agent, provider string, expectedFields models.FormFields) func(t *testing.T) {
+		var unlinkInvalid = func(agent, provider string, expectedFields []kratos.UiNode) func(t *testing.T) {
 			return func(t *testing.T) {
 				body, res, req := unlink(t, agent, provider)
-				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(req.ID))
+				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+req.Id)
 
 				assert.EqualValues(t, identity.CredentialsTypeOIDC.String(), gjson.GetBytes(body, "active").String())
 				assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.action").String(), publicTS.URL+oidc.SettingsPath+"?flow=")
 
 				// The original options to link google and github are still there
-				testhelpers.JSONEq(t, append(models.FormFields{csrfField}, expectedFields...),
+				testhelpers.JSONEq(t, append([]kratos.UiNode{*csrfField}, expectedFields...),
 					json.RawMessage(gjson.GetBytes(body, `methods.oidc.config.fields`).Raw))
 
 				assert.Contains(t, gjson.GetBytes(body, `methods.oidc.config.messages.0.text`).String(),
@@ -302,7 +292,7 @@ func TestSettingsStrategy(t *testing.T) {
 			t.Cleanup(reset(t))
 
 			body, res, req := unlink(t, agent, provider)
-			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(req.ID))
+			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+req.Id)
 			require.Equal(t, "success", gjson.GetBytes(body, "state").String(), "%s", body)
 
 			checkCredentials(t, false, users[agent].ID, provider, "hackerman+github+"+testID)
@@ -311,18 +301,16 @@ func TestSettingsStrategy(t *testing.T) {
 		t.Run("case=should not be able to unlink a connection without a privileged session", func(t *testing.T) {
 			agent, provider := "githuber", "github"
 
-			var runUnauthed = func(t *testing.T) *models.SettingsFlow {
+			var runUnauthed = func(t *testing.T) *kratos.SettingsFlow {
 				conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
 				time.Sleep(time.Millisecond)
 				t.Cleanup(reset(t))
 				_, res, req := unlink(t, agent, provider)
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login")
 
-				rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
-					NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents[agent]).
-					WithID(string(req.ID)), nil)
+				rs, _, err := testhelpers.NewSDKCustomClient(adminTS, agents[agent]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
 				require.NoError(t, err)
-				require.EqualValues(t, settings.StateShowForm, rs.Payload.State)
+				require.EqualValues(t, settings.StateShowForm, rs.State)
 
 				checkCredentials(t, true, users[agent].ID, provider, "hackerman+github+"+testID)
 
@@ -341,7 +329,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 				body, res := testhelpers.HTTPPostForm(t, agents[agent], action(req),
 					&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
-				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(req.ID))
+				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+req.Id)
 
 				assert.Equal(t, "success", gjson.GetBytes(body, "state").String())
 
@@ -351,23 +339,23 @@ func TestSettingsStrategy(t *testing.T) {
 	})
 
 	t.Run("suite=link", func(t *testing.T) {
-		var link = func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *models.SettingsFlow) {
+		var link = func(t *testing.T, agent, provider string) (body []byte, res *http.Response, req *kratos.SettingsFlow) {
 			req = nprSDK(t, agents[agent], "", time.Hour)
 			body, res = testhelpers.HTTPPostForm(t, agents[agent], action(req),
 				&url.Values{"csrf_token": {x.FakeCSRFToken}, "link": {provider}})
 			return
 		}
 
-		var linkInvalid = func(agent, provider string, expectedFields models.FormFields) func(t *testing.T) {
+		var linkInvalid = func(agent, provider string, expectedFields []kratos.UiNode) func(t *testing.T) {
 			return func(t *testing.T) {
 				body, res, req := link(t, agent, provider)
-				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(req.ID))
+				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(req.Id))
 
 				assert.EqualValues(t, identity.CredentialsTypeOIDC.String(), gjson.GetBytes(body, "active").String())
 				assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.action").String(), publicTS.URL+oidc.SettingsPath+"?flow=")
 
 				// The original options to link google and github are still there
-				testhelpers.JSONEq(t, append(models.FormFields{csrfField}, expectedFields...),
+				testhelpers.JSONEq(t, append([]kratos.UiNode{*csrfField}, expectedFields...),
 					json.RawMessage(gjson.GetBytes(body, `methods.oidc.config.fields`).Raw))
 
 				assert.Contains(t, gjson.GetBytes(body, `methods.oidc.config.messages.0.text`).String(),
@@ -437,17 +425,15 @@ func TestSettingsStrategy(t *testing.T) {
 			_, res, req := link(t, agent, provider)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
-			rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
-				NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents[agent]).
-				WithID(string(req.ID)), nil)
+			rs, _, err := testhelpers.NewSDKCustomClient(adminTS, agents[agent]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
 			require.NoError(t, err)
-			require.EqualValues(t, settings.StateSuccess, rs.Payload.State)
+			require.EqualValues(t, settings.StateSuccess, rs.State)
 
-			testhelpers.JSONEq(t, append(models.FormFields{csrfField}, models.FormFields{
-				{Type: pointerx.String("submit"), Name: pointerx.String("unlink"), Value: "ory"},
-				{Type: pointerx.String("submit"), Name: pointerx.String("unlink"), Value: "github"},
-				{Type: pointerx.String("submit"), Name: pointerx.String("unlink"), Value: "google"},
-			}...), rs.Payload.Methods[identity.CredentialsTypeOIDC.String()].Config.Fields)
+			testhelpers.JSONEq(t, append([]kratos.UiNode{*csrfField}, []kratos.UiNode{
+				*testhelpers.NewSDKOIDCNode("unlink", "ory"),
+				*testhelpers.NewSDKOIDCNode("unlink", "github"),
+				*testhelpers.NewSDKOIDCNode("unlink", "google"),
+			}...), rs.Methods[identity.CredentialsTypeOIDC.String()].Config.Nodes)
 
 			checkCredentials(t, true, users[agent].ID, provider, subject)
 		})
@@ -462,17 +448,15 @@ func TestSettingsStrategy(t *testing.T) {
 			_, res, req := link(t, agent, provider)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
-			rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
-				NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents[agent]).
-				WithID(string(req.ID)), nil)
+			rs, _, err := testhelpers.NewSDKCustomClient(adminTS, agents[agent]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
 			require.NoError(t, err)
-			require.EqualValues(t, settings.StateSuccess, rs.Payload.State)
+			require.EqualValues(t, settings.StateSuccess, rs.State)
 
-			testhelpers.JSONEq(t, append(models.FormFields{csrfField}, models.FormFields{
-				{Type: pointerx.String("submit"), Name: pointerx.String("link"), Value: "ory"},
-				{Type: pointerx.String("submit"), Name: pointerx.String("link"), Value: "github"},
-				{Type: pointerx.String("submit"), Name: pointerx.String("unlink"), Value: "google"},
-			}...), rs.Payload.Methods[identity.CredentialsTypeOIDC.String()].Config.Fields)
+			testhelpers.JSONEq(t, append([]kratos.UiNode{*csrfField}, []kratos.UiNode{
+				*testhelpers.NewSDKOIDCNode("link", "ory"),
+				*testhelpers.NewSDKOIDCNode("link", "github"),
+				*testhelpers.NewSDKOIDCNode("unlink", "google"),
+			}...), rs.Methods[identity.CredentialsTypeOIDC.String()].Config.Nodes)
 
 			checkCredentials(t, true, users[agent].ID, provider, subject)
 		})
@@ -481,18 +465,16 @@ func TestSettingsStrategy(t *testing.T) {
 			agent, provider := "githuber", "google"
 			subject = "hackerman+new+google+" + testID
 
-			var runUnauthed = func(t *testing.T) *models.SettingsFlow {
+			var runUnauthed = func(t *testing.T) *kratos.SettingsFlow {
 				conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
 				time.Sleep(time.Millisecond)
 				t.Cleanup(reset(t))
 				_, res, req := link(t, agent, provider)
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login")
 
-				rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
-					NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents[agent]).
-					WithID(string(req.ID)), nil)
+				rs, _, err := testhelpers.NewSDKCustomClient(adminTS, agents[agent]).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(req.Id).Execute()
 				require.NoError(t, err)
-				require.EqualValues(t, settings.StateShowForm, rs.Payload.State)
+				require.EqualValues(t, settings.StateShowForm, rs.State)
 
 				checkCredentials(t, false, users[agent].ID, provider, subject)
 
@@ -511,7 +493,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 				body, res := testhelpers.HTTPPostForm(t, agents[agent], action(req),
 					&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
-				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(req.ID))
+				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+req.Id)
 
 				assert.Equal(t, "success", gjson.GetBytes(body, "state").String())
 

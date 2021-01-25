@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -27,7 +27,7 @@ type UpdateIdentity struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUpdateIdentity(traits map[string]interface{}, ) *UpdateIdentity {
+func NewUpdateIdentity(traits map[string]interface{}) *UpdateIdentity {
 	this := UpdateIdentity{}
 	this.Traits = traits
 	return &this
@@ -42,12 +42,12 @@ func NewUpdateIdentityWithDefaults() *UpdateIdentity {
 }
 
 // GetSchemaId returns the SchemaId field value if set, zero value otherwise.
-func (o *UpdateIdentity) GetSchemaId() *string {
+func (o *UpdateIdentity) GetSchemaId() string {
 	if o == nil || o.SchemaId == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.SchemaId
+	return *o.SchemaId
 }
 
 // GetSchemaIdOk returns a tuple with the SchemaId field value if set, nil otherwise
@@ -75,7 +75,7 @@ func (o *UpdateIdentity) SetSchemaId(v string) {
 
 // GetTraits returns the Traits field value
 func (o *UpdateIdentity) GetTraits() map[string]interface{} {
-	if o == nil  {
+	if o == nil {
 		var ret map[string]interface{}
 		return ret
 	}
@@ -85,11 +85,11 @@ func (o *UpdateIdentity) GetTraits() map[string]interface{} {
 
 // GetTraitsOk returns a tuple with the Traits field value
 // and a boolean to check if the value has been set.
-func (o *UpdateIdentity) GetTraitsOk() (*map[string]interface{}, bool) {
-	if o == nil  {
+func (o *UpdateIdentity) GetTraitsOk() (map[string]interface{}, bool) {
+	if o == nil {
 		return nil, false
 	}
-	return &o.Traits, true
+	return o.Traits, true
 }
 
 // SetTraits sets field value
@@ -143,5 +143,3 @@ func (v *NullableUpdateIdentity) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

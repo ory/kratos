@@ -7,17 +7,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos-client-go"
+
 	"github.com/ory/x/ioutilx"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/x/pointerx"
-
 	"github.com/ory/x/urlx"
 
-	sdkp "github.com/ory/kratos-client-go/client/public"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
@@ -48,7 +47,6 @@ func TestHandler(t *testing.T) {
 		"secondary": {ID: x.NewUUID(), Traits: identity.Traits(`{}`)}})
 
 	primaryUser, otherUser := clients["primary"], clients["secondary"]
-	publicClient, adminClient := testhelpers.NewSDKClient(publicTS), testhelpers.NewSDKClient(adminTS)
 	newExpiredFlow := func() *settings.Flow {
 		return settings.NewFlow(-time.Minute,
 			&http.Request{URL: urlx.ParseOrPanic(publicTS.URL + login.RouteInitBrowserFlow)},
@@ -57,50 +55,43 @@ func TestHandler(t *testing.T) {
 
 	t.Run("daemon=admin", func(t *testing.T) {
 		t.Run("description=fetching a non-existent flow should return a 404 error", func(t *testing.T) {
-			_, err := adminClient.Public.GetSelfServiceSettingsFlow(
-				sdkp.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(otherUser).WithID("i-do-not-exist"), nil)
+			_, _, err := testhelpers.NewSDKCustomClient(adminTS, otherUser).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id("i-do-not-exist").Execute()
 			require.Error(t, err)
 
-			require.IsType(t, &sdkp.GetSelfServiceSettingsFlowNotFound{}, err)
-			assert.Equal(t, int64(http.StatusNotFound), err.(*sdkp.GetSelfServiceSettingsFlowNotFound).Payload.Error.Code)
+			require.IsType(t, new(kratos.GenericOpenAPIError), err)
+			assert.Equal(t, int64(http.StatusNotFound), gjson.GetBytes(err.(*kratos.GenericOpenAPIError).Body(), "error.code").Int())
 		})
 
 		t.Run("description=fetching an expired flow returns 410", func(t *testing.T) {
 			pr := newExpiredFlow()
 			require.NoError(t, reg.SettingsFlowPersister().CreateSettingsFlow(context.Background(), pr))
 
-			_, err := adminClient.Public.GetSelfServiceSettingsFlow(
-				sdkp.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(primaryUser).WithID(pr.ID.String()), nil,
-			)
+			_, _, err := testhelpers.NewSDKCustomClient(adminTS, primaryUser).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(pr.ID.String()).Execute()
 			require.Error(t, err)
 
-			require.IsType(t, &sdkp.GetSelfServiceSettingsFlowGone{}, err, "%+v", err)
-			assert.Equal(t, int64(http.StatusGone), err.(*sdkp.GetSelfServiceSettingsFlowGone).Payload.Error.Code)
+			require.IsType(t, new(kratos.GenericOpenAPIError), err, "%T", err)
+			assert.Equal(t, int64(http.StatusGone), gjson.GetBytes(err.(*kratos.GenericOpenAPIError).Body(), "error.code").Int())
 		})
 	})
 
 	t.Run("daemon=public", func(t *testing.T) {
 		t.Run("description=fetching a non-existent flow should return a 403 error", func(t *testing.T) {
-			_, err := publicClient.Public.GetSelfServiceSettingsFlow(
-				sdkp.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(otherUser).WithID("i-do-not-exist"), nil,
-			)
+			_, _, err := testhelpers.NewSDKCustomClient(publicTS, otherUser).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id("i-do-not-exist").Execute()
 			require.Error(t, err)
 
-			require.IsType(t, &sdkp.GetSelfServiceSettingsFlowForbidden{}, err)
-			assert.Equal(t, int64(http.StatusForbidden), err.(*sdkp.GetSelfServiceSettingsFlowForbidden).Payload.Error.Code)
+			require.IsType(t, new(kratos.GenericOpenAPIError), err, "%T", err)
+			assert.Equal(t, int64(http.StatusForbidden), gjson.GetBytes(err.(*kratos.GenericOpenAPIError).Body(), "error.code").Int())
 		})
 
 		t.Run("description=fetching an expired flow returns 410", func(t *testing.T) {
 			pr := newExpiredFlow()
 			require.NoError(t, reg.SettingsFlowPersister().CreateSettingsFlow(context.Background(), pr))
 
-			_, err := publicClient.Public.GetSelfServiceSettingsFlow(
-				sdkp.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(primaryUser).WithID(pr.ID.String()), nil,
-			)
+			_, _, err := testhelpers.NewSDKCustomClient(publicTS, primaryUser).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(pr.ID.String()).Execute()
 			require.Error(t, err)
 
-			require.IsType(t, &sdkp.GetSelfServiceSettingsFlowGone{}, err)
-			assert.Equal(t, int64(http.StatusGone), err.(*sdkp.GetSelfServiceSettingsFlowGone).Payload.Error.Code)
+			require.IsType(t, new(kratos.GenericOpenAPIError), err, "%T", err)
+			assert.Equal(t, int64(http.StatusGone), gjson.GetBytes(err.(*kratos.GenericOpenAPIError).Body(), "error.code").Int())
 		})
 
 		t.Run("description=should fail to fetch request if identity changed", func(t *testing.T) {
@@ -133,18 +124,18 @@ func TestHandler(t *testing.T) {
 				rid := res.Request.URL.Query().Get("flow")
 				require.NotEmpty(t, rid)
 
-				_, err = publicClient.Public.GetSelfServiceSettingsFlow(
-					sdkp.NewGetSelfServiceSettingsFlowParams().WithHTTPClient(otherUser).WithID(rid), nil,
-				)
+				testhelpers.NewSDKCustomClient(publicTS, primaryUser)
+
+				_, _, err = testhelpers.NewSDKCustomClient(publicTS, otherUser).PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(rid).Execute()
 				require.Error(t, err)
-				require.IsType(t, &sdkp.GetSelfServiceSettingsFlowForbidden{}, err)
-				assert.EqualValues(t, int64(http.StatusForbidden), err.(*sdkp.GetSelfServiceSettingsFlowForbidden).Payload.Error.Code, "should return a 403 error because the identities from the cookies do not match")
+				require.IsType(t, new(kratos.GenericOpenAPIError), err, "%T", err)
+				assert.Equal(t, int64(http.StatusForbidden), gjson.GetBytes(err.(*kratos.GenericOpenAPIError).Body(), "error.code").Int(), "should return a 403 error because the identities from the cookies do not match")
 			})
 		})
 
 		t.Run("description=should fail to post data if CSRF is missing", func(t *testing.T) {
 			f := testhelpers.GetSettingsFlowMethodConfigDeprecated(t, primaryUser, publicTS, settings.StrategyProfile)
-			res, err := primaryUser.PostForm(pointerx.StringR(f.Action), url.Values{"foo": {"bar"}})
+			res, err := primaryUser.PostForm(f.Action, url.Values{"foo": {"bar"}})
 			require.NoError(t, err)
 			defer res.Body.Close()
 			body := ioutilx.MustReadAll(res.Body)

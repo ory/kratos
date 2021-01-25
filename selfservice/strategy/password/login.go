@@ -3,8 +3,9 @@ package password
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/ory/kratos/ui/node"
 	"net/http"
+
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/ory/x/pkgerx"
 
@@ -40,8 +41,8 @@ func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *
 		if method, ok := rr.Methods[identity.CredentialsTypePassword]; ok {
 			method.Config.Reset()
 			// v0.5: method.Config.SetValue("identifier", payload.Identifier)
-			method.Config.Nodes.Upsert(
-				node.NewInputField("identifier", payload.Identifier, node.PasswordGroup, node.InputAttributeTypeText,  node.WithRequiredInputAttribute),
+			method.Config.GetNodes().Upsert(
+				node.NewInputField("identifier", payload.Identifier, node.PasswordGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute),
 			)
 
 			if rr.Type == flow.TypeBrowser {

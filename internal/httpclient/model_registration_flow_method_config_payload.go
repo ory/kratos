@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -18,11 +18,11 @@ import (
 // RegistrationFlowMethodConfigPayload struct for RegistrationFlowMethodConfigPayload
 type RegistrationFlowMethodConfigPayload struct {
 	// Action should be used as the form action URL `<form action=\"{{ .Action }}\" method=\"post\">`.
-	Action string `json:"action"`
+	Action   string   `json:"action"`
 	Messages []UiText `json:"messages,omitempty"`
 	// Method is the form method (e.g. POST)
-	Method string `json:"method"`
-	Nodes []UiNode `json:"nodes"`
+	Method string   `json:"method"`
+	Nodes  []UiNode `json:"nodes"`
 	// Providers is set for the \"oidc\" registration method.
 	Providers [][]UiNode `json:"providers,omitempty"`
 }
@@ -31,7 +31,7 @@ type RegistrationFlowMethodConfigPayload struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewRegistrationFlowMethodConfigPayload(action string, method string, nodes []UiNode, ) *RegistrationFlowMethodConfigPayload {
+func NewRegistrationFlowMethodConfigPayload(action string, method string, nodes []UiNode) *RegistrationFlowMethodConfigPayload {
 	this := RegistrationFlowMethodConfigPayload{}
 	this.Action = action
 	this.Method = method
@@ -49,7 +49,7 @@ func NewRegistrationFlowMethodConfigPayloadWithDefaults() *RegistrationFlowMetho
 
 // GetAction returns the Action field value
 func (o *RegistrationFlowMethodConfigPayload) GetAction() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -60,7 +60,7 @@ func (o *RegistrationFlowMethodConfigPayload) GetAction() string {
 // GetActionOk returns a tuple with the Action field value
 // and a boolean to check if the value has been set.
 func (o *RegistrationFlowMethodConfigPayload) GetActionOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Action, true
@@ -105,7 +105,7 @@ func (o *RegistrationFlowMethodConfigPayload) SetMessages(v []UiText) {
 
 // GetMethod returns the Method field value
 func (o *RegistrationFlowMethodConfigPayload) GetMethod() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -116,7 +116,7 @@ func (o *RegistrationFlowMethodConfigPayload) GetMethod() string {
 // GetMethodOk returns a tuple with the Method field value
 // and a boolean to check if the value has been set.
 func (o *RegistrationFlowMethodConfigPayload) GetMethodOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Method, true
@@ -129,7 +129,7 @@ func (o *RegistrationFlowMethodConfigPayload) SetMethod(v string) {
 
 // GetNodes returns the Nodes field value
 func (o *RegistrationFlowMethodConfigPayload) GetNodes() []UiNode {
-	if o == nil  {
+	if o == nil {
 		var ret []UiNode
 		return ret
 	}
@@ -140,7 +140,7 @@ func (o *RegistrationFlowMethodConfigPayload) GetNodes() []UiNode {
 // GetNodesOk returns a tuple with the Nodes field value
 // and a boolean to check if the value has been set.
 func (o *RegistrationFlowMethodConfigPayload) GetNodesOk() ([]UiNode, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return o.Nodes, true
@@ -238,5 +238,3 @@ func (v *NullableRegistrationFlowMethodConfigPayload) UnmarshalJSON(src []byte) 
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

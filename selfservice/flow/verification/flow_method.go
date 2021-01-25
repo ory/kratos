@@ -4,8 +4,9 @@ import (
 	"context"
 	"database/sql/driver"
 	"encoding/json"
-	"github.com/ory/kratos/selfservice/flow"
 	"time"
+
+	"github.com/ory/kratos/selfservice/flow"
 
 	"github.com/ory/kratos/corp"
 

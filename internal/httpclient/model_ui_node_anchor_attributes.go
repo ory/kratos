@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -18,7 +18,7 @@ import (
 // UiNodeAnchorAttributes struct for UiNodeAnchorAttributes
 type UiNodeAnchorAttributes struct {
 	// The link's href (destination) URL.  format: uri
-	Href string `json:"href"`
+	Href  string `json:"href"`
 	Title UiText `json:"title"`
 }
 
@@ -26,7 +26,7 @@ type UiNodeAnchorAttributes struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUiNodeAnchorAttributes(href string, title UiText, ) *UiNodeAnchorAttributes {
+func NewUiNodeAnchorAttributes(href string, title UiText) *UiNodeAnchorAttributes {
 	this := UiNodeAnchorAttributes{}
 	this.Href = href
 	this.Title = title
@@ -43,7 +43,7 @@ func NewUiNodeAnchorAttributesWithDefaults() *UiNodeAnchorAttributes {
 
 // GetHref returns the Href field value
 func (o *UiNodeAnchorAttributes) GetHref() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -54,7 +54,7 @@ func (o *UiNodeAnchorAttributes) GetHref() string {
 // GetHrefOk returns a tuple with the Href field value
 // and a boolean to check if the value has been set.
 func (o *UiNodeAnchorAttributes) GetHrefOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Href, true
@@ -67,7 +67,7 @@ func (o *UiNodeAnchorAttributes) SetHref(v string) {
 
 // GetTitle returns the Title field value
 func (o *UiNodeAnchorAttributes) GetTitle() UiText {
-	if o == nil  {
+	if o == nil {
 		var ret UiText
 		return ret
 	}
@@ -78,7 +78,7 @@ func (o *UiNodeAnchorAttributes) GetTitle() UiText {
 // GetTitleOk returns a tuple with the Title field value
 // and a boolean to check if the value has been set.
 func (o *UiNodeAnchorAttributes) GetTitleOk() (*UiText, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Title, true
@@ -135,5 +135,3 @@ func (v *NullableUiNodeAnchorAttributes) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

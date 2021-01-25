@@ -9,78 +9,101 @@ const (
 	InputAttributeTypeCheckbox      InputAttributeType = "checkbox"
 	InputAttributeTypeHidden        InputAttributeType = "hidden"
 	InputAttributeTypeEmail         InputAttributeType = "email"
-	InputAttributeTypeSubmit         InputAttributeType = "submit"
+	InputAttributeTypeSubmit        InputAttributeType = "submit"
 	InputAttributeTypeDateTimeLocal InputAttributeType = "datetime-local"
 	InputAttributeTypeDate          InputAttributeType = "date"
 	InputAttributeTypeURI           InputAttributeType = "url"
 )
 
-type (
-	InputAttributeType string
+// swagger:model uiNodeInputAttributeType
+type InputAttributeType string
 
-	// Attributes represents a list of attributes (e.g. `href="foo"` for links).
-	Attributes interface {
-		ID() string
-		Reset()
-		SetValue(value interface{})
-		GetValue() interface{}
-	}
+// Attributes represents a list of attributes (e.g. `href="foo"` for links).
+//
+// swagger:model uiNodeAttributes
+type Attributes interface {
+	// swagger:ignore
+	ID() string
 
-	// InputAttributes represents the attributes of an input node
-	InputAttributes struct {
-		// The input's element name.
-		Name string `json:"name"`
+	// swagger:ignore
+	Reset()
 
-		// The input's element type.
-		Type InputAttributeType `json:"type" faker:"-"`
+	// swagger:ignore
+	SetValue(value interface{})
 
-		// The input's value.
-		FieldValue interface{} `json:"value" faker:"string"`
+	// swagger:ignore
+	GetValue() interface{}
+}
 
-		// Mark this input field as required.
-		Required bool `json:"required"`
+// InputAttributes represents the attributes of an input node
+//
+// swagger:model uiNodeInputAttributes
+type InputAttributes struct {
+	// The input's element name.
+	//
+	// required: true
+	Name string `json:"name"`
 
-		// The input's label text.
-		Label *text.Message `json:"label,omitempty"`
+	// The input's element type.
+	//
+	// required: true
+	Type InputAttributeType `json:"type" faker:"-"`
 
-		// The input's pattern.
-		Pattern string `json:"pattern,omitempty"`
+	// The input's value.
+	FieldValue interface{} `json:"value,omitempty" faker:"string"`
 
-		// Sets the input's disabled field to true or false.
-		Disabled bool `json:"disabled"`
-	}
+	// Mark this input field as required.
+	Required bool `json:"required,omitempty"`
 
-	// ImageAttributes represents the attributes of an image node
-	ImageAttributes struct {
-		// The image's source URL.
-		//
-		// format: uri
-		// required: true
-		Source string `json:"src"`
-	}
+	// The input's label text.
+	Label *text.Message `json:"label,omitempty"`
 
-	// AnchorAttributes represents the attributes of an anchor node
-	AnchorAttributes struct {
-		// The link's href (destination) URL.
-		//
-		// format: uri
-		// required: true
-		HREF string `json:"href"`
+	// The input's pattern.
+	Pattern string `json:"pattern,omitempty"`
 
-		// The link's title.
-		//
-		// required: true
-		Title *text.Message `json:"title"`
-	}
+	// Sets the input's disabled field to true or false.
+	//
+	// required: true
+	Disabled bool `json:"disabled"`
+}
 
-	// TextAttributes represents the attributes of a text node
-	TextAttributes struct {
-		// The text of the text node.
-		//
-		// required: true
-		Text *text.Message `json:"text"`
-	}
-)
+// ImageAttributes represents the attributes of an image node.
+//
+// swagger:model uiNodeImageAttributes
+type ImageAttributes struct {
+	// The image's source URL.
+	//
+	// format: uri
+	// required: true
+	Source string `json:"src"`
+}
+
+// AnchorAttributes represents the attributes of an anchor node.
+//
+// swagger:model uiNodeAnchorAttributes
+type AnchorAttributes struct {
+	// The link's href (destination) URL.
+	//
+	// format: uri
+	// required: true
+	HREF string `json:"href"`
+
+	// The link's title.
+	//
+	// required: true
+	Title *text.Message `json:"title"`
+}
+
+// TextAttributes represents the attributes of a text node.
+//
+//
+// swagger:model uiNodeTextAttributes
+type TextAttributes struct {
+	// The text of the text node.
+	//
+	// required: true
+	Text *text.Message `json:"text"`
+}
 
 var (
 	_ Attributes = new(InputAttributes)

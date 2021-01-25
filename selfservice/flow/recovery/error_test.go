@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos-client-go"
+
 	"github.com/gobuffalo/httptest"
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
@@ -18,8 +20,6 @@ import (
 
 	"github.com/ory/herodot"
 
-	sdkp "github.com/ory/kratos-client-go/client/public"
-	"github.com/ory/kratos-client-go/models"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
@@ -69,17 +69,16 @@ func TestHandleError(t *testing.T) {
 		return f
 	}
 
-	expectErrorUI := func(t *testing.T) (interface{}, *http.Response) {
+	expectErrorUI := func(t *testing.T) ([]map[string]interface{}, *http.Response) {
 		res, err := ts.Client().Get(ts.URL + "/error")
 		require.NoError(t, err)
 		defer res.Body.Close()
 		require.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL().String()+"?error=")
 
-		sse, err := sdk.Public.GetSelfServiceError(sdkp.NewGetSelfServiceErrorParams().
-			WithError(res.Request.URL.Query().Get("error")))
+		sse, _, err := sdk.PublicApi.GetSelfServiceError(context.Background()).Error_(res.Request.URL.Query().Get("error")).Execute()
 		require.NoError(t, err)
 
-		return sse.Payload.Errors, nil
+		return sse.Errors, nil
 	}
 
 	anHourAgo := time.Now().Add(-time.Hour)
@@ -185,16 +184,15 @@ func TestHandleError(t *testing.T) {
 	})
 
 	t.Run("flow=browser", func(t *testing.T) {
-		expectRecoveryUI := func(t *testing.T) (*models.RecoveryFlow, *http.Response) {
+		expectRecoveryUI := func(t *testing.T) (*kratos.RecoveryFlow, *http.Response) {
 			res, err := ts.Client().Get(ts.URL + "/error")
 			require.NoError(t, err)
 			defer res.Body.Close()
 			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String()+"?flow=")
 
-			lf, err := sdk.Public.GetSelfServiceRecoveryFlow(sdkp.NewGetSelfServiceRecoveryFlowParams().
-				WithID(res.Request.URL.Query().Get("flow")))
+			lf, _, err := sdk.PublicApi.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 			require.NoError(t, err)
-			return lf.Payload, res
+			return lf, res
 		}
 
 		t.Run("case=expired error", func(t *testing.T) {
@@ -206,7 +204,7 @@ func TestHandleError(t *testing.T) {
 
 			lf, _ := expectRecoveryUI(t)
 			require.Len(t, lf.Messages, 1)
-			assert.Equal(t, int(text.ErrorValidationRecoveryFlowExpired), int(lf.Messages[0].ID))
+			assert.Equal(t, int(text.ErrorValidationRecoveryFlowExpired), int(lf.Messages[0].Id))
 		})
 
 		t.Run("case=validation error", func(t *testing.T) {
@@ -217,9 +215,9 @@ func TestHandleError(t *testing.T) {
 			methodName = recovery.StrategyRecoveryLinkName
 
 			lf, _ := expectRecoveryUI(t)
-			require.NotEmpty(t, lf.Methods[string(methodName)], x.MustEncodeJSON(t, lf))
-			require.Len(t, lf.Methods[string(methodName)].Config.Messages, 1, x.MustEncodeJSON(t, lf))
-			assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(lf.Methods[string(methodName)].Config.Messages[0].ID), x.MustEncodeJSON(t, lf))
+			require.NotEmpty(t, lf.Methods[(methodName)], x.MustEncodeJSON(t, lf))
+			require.Len(t, lf.Methods[(methodName)].Config.Messages, 1, x.MustEncodeJSON(t, lf))
+			assert.Equal(t, int(text.ErrorValidationInvalidCredentials), int(lf.Methods[(methodName)].Config.Messages[0].Id), x.MustEncodeJSON(t, lf))
 		})
 
 		t.Run("case=generic error", func(t *testing.T) {

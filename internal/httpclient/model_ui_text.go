@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -18,8 +18,8 @@ import (
 // UiText struct for UiText
 type UiText struct {
 	// The message's context. Useful when customizing messages.
-	Context *map[string]interface{} `json:"context,omitempty"`
-	Id int64 `json:"id"`
+	Context map[string]interface{} `json:"context,omitempty"`
+	Id      int64                  `json:"id"`
 	// The message text. Written in american english.
 	Text string `json:"text"`
 	Type string `json:"type"`
@@ -29,7 +29,7 @@ type UiText struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUiText(id int64, text string, type_ string, ) *UiText {
+func NewUiText(id int64, text string, type_ string) *UiText {
 	this := UiText{}
 	this.Id = id
 	this.Text = text
@@ -46,9 +46,9 @@ func NewUiTextWithDefaults() *UiText {
 }
 
 // GetContext returns the Context field value if set, zero value otherwise.
-func (o *UiText) GetContext() *map[string]interface{} {
+func (o *UiText) GetContext() map[string]interface{} {
 	if o == nil || o.Context == nil {
-		var ret *map[string]interface{}
+		var ret map[string]interface{}
 		return ret
 	}
 	return o.Context
@@ -56,7 +56,7 @@ func (o *UiText) GetContext() *map[string]interface{} {
 
 // GetContextOk returns a tuple with the Context field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *UiText) GetContextOk() (*map[string]interface{}, bool) {
+func (o *UiText) GetContextOk() (map[string]interface{}, bool) {
 	if o == nil || o.Context == nil {
 		return nil, false
 	}
@@ -74,12 +74,12 @@ func (o *UiText) HasContext() bool {
 
 // SetContext gets a reference to the given map[string]interface{} and assigns it to the Context field.
 func (o *UiText) SetContext(v map[string]interface{}) {
-	o.Context = &v
+	o.Context = v
 }
 
 // GetId returns the Id field value
 func (o *UiText) GetId() int64 {
-	if o == nil  {
+	if o == nil {
 		var ret int64
 		return ret
 	}
@@ -90,7 +90,7 @@ func (o *UiText) GetId() int64 {
 // GetIdOk returns a tuple with the Id field value
 // and a boolean to check if the value has been set.
 func (o *UiText) GetIdOk() (*int64, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Id, true
@@ -103,7 +103,7 @@ func (o *UiText) SetId(v int64) {
 
 // GetText returns the Text field value
 func (o *UiText) GetText() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -114,7 +114,7 @@ func (o *UiText) GetText() string {
 // GetTextOk returns a tuple with the Text field value
 // and a boolean to check if the value has been set.
 func (o *UiText) GetTextOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Text, true
@@ -127,7 +127,7 @@ func (o *UiText) SetText(v string) {
 
 // GetType returns the Type field value
 func (o *UiText) GetType() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -138,7 +138,7 @@ func (o *UiText) GetType() string {
 // GetTypeOk returns a tuple with the Type field value
 // and a boolean to check if the value has been set.
 func (o *UiText) GetTypeOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Type, true
@@ -201,5 +201,3 @@ func (v *NullableUiText) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

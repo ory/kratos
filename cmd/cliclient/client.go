@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/pflag"
 
-	"github.com/ory/kratos-client-go/client"
+	"github.com/ory/kratos-client-go"
 	"github.com/ory/x/cmdx"
 )
 
@@ -24,8 +24,8 @@ const (
 	ClientContextKey ContextKey = iota + 1
 )
 
-func NewClient(cmd *cobra.Command) *client.OryKratos {
-	if f, ok := cmd.Context().Value(ClientContextKey).(func(cmd *cobra.Command) *client.OryKratos); ok {
+func NewClient(cmd *cobra.Command) *kratos.APIClient {
+	if f, ok := cmd.Context().Value(ClientContextKey).(func(cmd *cobra.Command) *kratos.APIClient); ok {
 		return f(cmd)
 	}
 
@@ -38,18 +38,16 @@ func NewClient(cmd *cobra.Command) *client.OryKratos {
 
 	if endpoint == "" {
 		// no endpoint is set
-		fmt.Fprintln(os.Stderr, "You have to set the remote endpoint, try --help for details.")
+		_, _ = fmt.Fprintln(os.Stderr, "You have to set the remote endpoint, try --help for details.")
 		os.Exit(1)
 	}
 
 	u, err := url.Parse(endpoint)
 	cmdx.Must(err, `Could not parse the endpoint URL "%s".`, endpoint)
 
-	return client.NewHTTPClientWithConfig(nil, &client.TransportConfig{
-		Host:     u.Host,
-		BasePath: u.Path,
-		Schemes:  []string{u.Scheme},
-	})
+	conf := kratos.NewConfiguration()
+	conf.Servers = kratos.ServerConfigurations{{URL: u.String()}}
+	return kratos.NewAPIClient(conf)
 }
 
 func RegisterClientFlags(flags *pflag.FlagSet) {

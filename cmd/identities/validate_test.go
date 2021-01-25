@@ -2,10 +2,10 @@ package identities
 
 import (
 	"bytes"
+	"context"
 	"fmt"
+	"net/http"
 	"testing"
-
-	"github.com/ory/kratos-client-go/client/public"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -20,9 +20,9 @@ func TestValidateIdentity(t *testing.T) {
 		return cmd, out, err
 	}
 
-	var testSchemaGetter = func(resp interface{}) schemaGetter {
-		return func(_ *public.GetSchemaParams) (*public.GetSchemaOK, error) {
-			return &public.GetSchemaOK{Payload: resp}, nil
+	var testSchemaGetter = func(resp map[string]interface{}) schemaGetter {
+		return func(_ context.Context, _ string) (map[string]interface{}, *http.Response, error) {
+			return resp, nil, nil
 		}
 	}
 

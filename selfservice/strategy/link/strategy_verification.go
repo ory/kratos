@@ -1,10 +1,11 @@
 package link
 
 import (
-	"github.com/ory/kratos/ui/node"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/ory/herodot"
 
@@ -51,7 +52,7 @@ func (s *Strategy) PopulateVerificationMethod(r *http.Request, req *verification
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 	f.GetNodes().Upsert(
 		// v0.5: form.Field{Name: "email", Type: "email", Required: true}
-		node.NewInputField("email", nil,node.VerificationLinkGroup, node.InputAttributeTypeEmail,  node.WithRequiredInputAttribute),
+		node.NewInputField("email", nil, node.VerificationLinkGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute),
 	)
 
 	req.Methods[s.VerificationStrategyID()] = &verification.FlowMethod{
@@ -97,7 +98,7 @@ func (s *Strategy) handleVerificationError(w http.ResponseWriter, r *http.Reques
 
 		config.GetNodes().Upsert(
 			// v0.5: form.Field{Name: "email", Type: "email", Required: true, Value: body.Body.Email}
-			node.NewInputField("email",body.Body.Email, node.VerificationLinkGroup, node.InputAttributeTypeEmail,  node.WithRequiredInputAttribute),
+			node.NewInputField("email", body.Body.Email, node.VerificationLinkGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute),
 		)
 	}
 
@@ -257,7 +258,7 @@ func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *ht
 	config.SetCSRF(s.d.GenerateCSRFToken(r))
 	config.GetNodes().Upsert(
 		// v0.5: form.Field{Name: "email", Type: "email", Required: true, Value: body.Body.Email}
-		node.NewInputField("email",  body.Body.Email,node.VerificationLinkGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute),
+		node.NewInputField("email", body.Body.Email, node.VerificationLinkGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute),
 	)
 
 	f.Active = sqlxx.NullString(s.VerificationStrategyID())
