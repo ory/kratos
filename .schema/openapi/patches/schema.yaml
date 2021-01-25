@@ -15,9 +15,21 @@
 - op: add
   path: /components/schemas/uiNodeInputAttributes/properties/value/nullable
   value: true
-- op: add
-  path: /components/schemas/uiNodeInputAttributes/properties/value/oneOf
+- op: replace
+  path: /components/schemas/uiNodeInputAttributesValue
   value:
-    - type: string
-    - type: number
-    - type: boolean
+    oneOf:
+      - type: string
+      - type: number
+      - type: boolean
+- op: add
+  path: /components/schemas/uiNodeInputAttributes/properties/value/$ref
+  value: "#/components/schemas/uiNodeInputAttributesValue"
+
+- op: replace
+  path: /components/schemas/errorContainer/properties/errors/type
+  value: array
+- op: replace
+  path: /components/schemas/errorContainer/properties/errors/items
+  value:
+    type: object

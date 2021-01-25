@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -28,7 +28,7 @@ type RecoveryLink struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewRecoveryLink(recoveryLink string, ) *RecoveryLink {
+func NewRecoveryLink(recoveryLink string) *RecoveryLink {
 	this := RecoveryLink{}
 	this.RecoveryLink = recoveryLink
 	return &this
@@ -43,12 +43,12 @@ func NewRecoveryLinkWithDefaults() *RecoveryLink {
 }
 
 // GetExpiresAt returns the ExpiresAt field value if set, zero value otherwise.
-func (o *RecoveryLink) GetExpiresAt() *time.Time {
+func (o *RecoveryLink) GetExpiresAt() time.Time {
 	if o == nil || o.ExpiresAt == nil {
-		var ret *time.Time
+		var ret time.Time
 		return ret
 	}
-	return o.ExpiresAt
+	return *o.ExpiresAt
 }
 
 // GetExpiresAtOk returns a tuple with the ExpiresAt field value if set, nil otherwise
@@ -76,7 +76,7 @@ func (o *RecoveryLink) SetExpiresAt(v time.Time) {
 
 // GetRecoveryLink returns the RecoveryLink field value
 func (o *RecoveryLink) GetRecoveryLink() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -87,7 +87,7 @@ func (o *RecoveryLink) GetRecoveryLink() string {
 // GetRecoveryLinkOk returns a tuple with the RecoveryLink field value
 // and a boolean to check if the value has been set.
 func (o *RecoveryLink) GetRecoveryLinkOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.RecoveryLink, true
@@ -144,5 +144,3 @@ func (v *NullableRecoveryLink) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

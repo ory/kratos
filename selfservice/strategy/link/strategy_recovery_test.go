@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos-client-go"
+
 	"github.com/ory/x/ioutilx"
 
 	"github.com/stretchr/testify/assert"
@@ -22,9 +24,6 @@ import (
 
 	"github.com/ory/x/pointerx"
 
-	"github.com/ory/kratos-client-go/client/admin"
-	sdkp "github.com/ory/kratos-client-go/client/public"
-	"github.com/ory/kratos-client-go/models"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
@@ -51,18 +50,20 @@ func TestAdminStrategy(t *testing.T) {
 	publicTS, adminTS := testhelpers.NewKratosServer(t, reg)
 	adminSDK := testhelpers.NewSDKClient(adminTS)
 
-	checkLink := func(t *testing.T, l *admin.CreateRecoveryLinkOK, isBefore time.Time) {
-		require.Contains(t, *l.Payload.RecoveryLink, publicTS.URL+link.RouteRecovery)
-		rl := urlx.ParseOrPanic(*l.Payload.RecoveryLink)
+	checkLink := func(t *testing.T, l *kratos.RecoveryLink, isBefore time.Time) {
+		require.Contains(t, l.RecoveryLink, publicTS.URL+link.RouteRecovery)
+		rl := urlx.ParseOrPanic(l.RecoveryLink)
 		assert.NotEmpty(t, rl.Query().Get("token"))
 		assert.NotEmpty(t, rl.Query().Get("flow"))
-		require.True(t, time.Time(l.Payload.ExpiresAt).Before(isBefore))
+		require.True(t, (*l.ExpiresAt).Before(isBefore))
 	}
 
 	t.Run("description=should not be able to recover an account that does not exist", func(t *testing.T) {
-		_, err := adminSDK.Admin.CreateRecoveryLink(admin.NewCreateRecoveryLinkParams().WithBody(
-			&models.CreateRecoveryLink{IdentityID: models.UUID(x.NewUUID().String())}))
-		require.IsType(t, err, new(admin.CreateRecoveryLinkNotFound), "%T", err)
+		_, _, err := adminSDK.AdminApi.CreateRecoveryLink(context.Background()).CreateRecoveryLink(kratos.CreateRecoveryLink{
+			IdentityId: x.NewUUID().String(),
+		}).Execute()
+		require.IsType(t, err, new(kratos.GenericOpenAPIError), "%T", err)
+		assert.EqualError(t, err.(*kratos.GenericOpenAPIError), "404 Not Found")
 	})
 
 	t.Run("description=should not be able to recover an account that does not have a recovery email", func(t *testing.T) {
@@ -70,9 +71,11 @@ func TestAdminStrategy(t *testing.T) {
 		require.NoError(t, reg.IdentityManager().Create(context.Background(),
 			&id, identity.ManagerAllowWriteProtectedTraits))
 
-		_, err := adminSDK.Admin.CreateRecoveryLink(admin.NewCreateRecoveryLinkParams().WithBody(
-			&models.CreateRecoveryLink{IdentityID: models.UUID(id.ID.String())}))
-		require.IsType(t, err, new(admin.CreateRecoveryLinkBadRequest), "%T", err)
+		_, _, err := adminSDK.AdminApi.CreateRecoveryLink(context.Background()).CreateRecoveryLink(kratos.CreateRecoveryLink{
+			IdentityId: id.ID.String(),
+		}).Execute()
+		require.IsType(t, err, new(kratos.GenericOpenAPIError), "%T", err)
+		assert.EqualError(t, err.(*kratos.GenericOpenAPIError), "400 Bad Request")
 	})
 
 	t.Run("description=should create a valid recovery link and set the expiry time and not be able to recover the account", func(t *testing.T) {
@@ -81,16 +84,15 @@ func TestAdminStrategy(t *testing.T) {
 		require.NoError(t, reg.IdentityManager().Create(context.Background(),
 			&id, identity.ManagerAllowWriteProtectedTraits))
 
-		rl, err := adminSDK.Admin.CreateRecoveryLink(admin.NewCreateRecoveryLinkParams().
-			WithBody(&models.CreateRecoveryLink{
-				IdentityID: models.UUID(id.ID.String()),
-				ExpiresIn:  "100ms",
-			}))
+		rl, _, err := adminSDK.AdminApi.CreateRecoveryLink(context.Background()).CreateRecoveryLink(kratos.CreateRecoveryLink{
+			IdentityId: id.ID.String(),
+			ExpiresIn:  pointerx.String("100ms"),
+		}).Execute()
 		require.NoError(t, err)
 
 		time.Sleep(time.Millisecond * 100)
 		checkLink(t, rl, time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan()))
-		res, err := publicTS.Client().Get(*rl.Payload.RecoveryLink)
+		res, err := publicTS.Client().Get(rl.RecoveryLink)
 		require.NoError(t, err)
 
 		require.Equal(t, http.StatusOK, res.StatusCode)
@@ -105,25 +107,24 @@ func TestAdminStrategy(t *testing.T) {
 		require.NoError(t, reg.IdentityManager().Create(context.Background(),
 			&id, identity.ManagerAllowWriteProtectedTraits))
 
-		rl, err := adminSDK.Admin.CreateRecoveryLink(admin.NewCreateRecoveryLinkParams().
-			WithBody(&models.CreateRecoveryLink{IdentityID: models.UUID(id.ID.String())}))
+		rl, _, err := adminSDK.AdminApi.CreateRecoveryLink(context.Background()).CreateRecoveryLink(kratos.CreateRecoveryLink{
+			IdentityId: id.ID.String(),
+		}).Execute()
 		require.NoError(t, err)
 
 		checkLink(t, rl, time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan()+time.Second))
-		res, err := publicTS.Client().Get(*rl.Payload.RecoveryLink)
+		res, err := publicTS.Client().Get(rl.RecoveryLink)
 		require.NoError(t, err)
 
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowSettingsUI().String())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
-		testhelpers.LogJSON(t, rl.Payload)
+		testhelpers.LogJSON(t, rl)
 
-		sr, err := adminSDK.Public.GetSelfServiceSettingsFlow(
-			sdkp.NewGetSelfServiceSettingsFlowParams().
-				WithID(res.Request.URL.Query().Get("flow")), nil)
+		sr, _, err := adminSDK.PublicApi.GetSelfServiceSettingsFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 		require.NoError(t, err, "%s", res.Request.URL.String())
 
-		require.Len(t, sr.Payload.Messages, 1)
-		assert.Equal(t, "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 60.00 minutes.", sr.Payload.Messages[0].Text)
+		require.Len(t, sr.Messages, 1)
+		assert.Equal(t, "You successfully recovered your account. Please change your password or set up an alternative login method (e.g. social sign in) within the next 60.00 minutes.", sr.Messages[0].Text)
 	})
 }
 
@@ -145,13 +146,11 @@ func TestRecovery(t *testing.T) {
 	_ = testhelpers.NewErrorTestServer(t, reg)
 
 	public, _ := testhelpers.NewKratosServer(t, reg)
-	sdk := testhelpers.NewSDKClient(public)
 
 	require.NoError(t, reg.IdentityManager().Create(context.Background(), identityToRecover,
 		identity.ManagerAllowWriteProtectedTraits))
 
-	var csrfField = &models.FormField{Name: pointerx.String("csrf_token"), Required: true,
-		Type: pointerx.String("hidden"), Value: x.FakeCSRFToken}
+	var csrfField = testhelpers.NewFakeCSRFNode()
 
 	var expect = func(t *testing.T, isAPI bool, values func(url.Values), c int) string {
 		hc := testhelpers.NewDebugClient(t)
@@ -173,22 +172,31 @@ func TestRecovery(t *testing.T) {
 	t.Run("description=should set all the correct recovery payloads", func(t *testing.T) {
 		c := testhelpers.NewClientWithCookies(t)
 		rs := testhelpers.GetRecoveryFlow(t, c, public)
-		assert.Contains(t, rs.Payload.Methods, recovery.StrategyRecoveryLinkName)
-		method := rs.Payload.Methods[recovery.StrategyRecoveryLinkName]
+		assert.Contains(t, rs.Methods, recovery.StrategyRecoveryLinkName)
+		method := rs.Methods[recovery.StrategyRecoveryLinkName]
 
-		assert.EqualValues(t, models.FormFields{csrfField,
-			{Name: pointerx.String("email"), Required: true, Type: pointerx.String("email")},
-		}, method.Config.Fields)
-		assert.EqualValues(t, public.URL+link.RouteRecovery+"?flow="+string(rs.Payload.ID), *method.Config.Action)
+		assert.EqualValues(t, []kratos.UiNode{
+			*csrfField,
+			{
+				Type:  "input",
+				Group: "recovery_link",
+				Attributes: kratos.UiNodeInputAttributesAsUiNodeAttributes(&kratos.UiNodeInputAttributes{
+					Name:     "email",
+					Required: pointerx.Bool(true),
+					Type:     "email",
+				}),
+			},
+		}, method.Config.Nodes)
+		assert.EqualValues(t, public.URL+link.RouteRecovery+"?flow="+rs.Id, method.Config.Action)
 		assert.Empty(t, method.Config.Messages)
-		assert.Empty(t, rs.Payload.Messages)
+		assert.Empty(t, rs.Messages)
 	})
 
 	t.Run("description=should require an email to be sent", func(t *testing.T) {
 		var check = func(t *testing.T, actual string) {
 			assert.EqualValues(t, recovery.StrategyRecoveryLinkName, gjson.Get(actual, "active").String(), "%s", actual)
 			assert.EqualValues(t, "Property email is missing.",
-				gjson.Get(actual, "methods.link.config.fields.#(name==email).messages.0.text").String(),
+				gjson.Get(actual, "methods.link.config.nodes.#(attributes.name==email).messages.0.text").String(),
 				"%s", actual)
 		}
 
@@ -209,7 +217,7 @@ func TestRecovery(t *testing.T) {
 		var email string
 		var check = func(t *testing.T, actual string) {
 			assert.EqualValues(t, recovery.StrategyRecoveryLinkName, gjson.Get(actual, "active").String(), "%s", actual)
-			assert.EqualValues(t, email, gjson.Get(actual, "methods.link.config.fields.#(name==email).value").String(), "%s", actual)
+			assert.EqualValues(t, email, gjson.Get(actual, "methods.link.config.nodes.#(attributes.name==email).attributes.value").String(), "%s", actual)
 			assertx.EqualAsJSON(t, text.NewRecoveryEmailSent(), json.RawMessage(gjson.Get(actual, "messages.0").Raw))
 
 			message := testhelpers.CourierExpectMessage(t, reg, email, "Account access attempted")
@@ -234,7 +242,7 @@ func TestRecovery(t *testing.T) {
 	t.Run("description=should recover an account", func(t *testing.T) {
 		var check = func(t *testing.T, actual string) {
 			assert.EqualValues(t, recovery.StrategyRecoveryLinkName, gjson.Get(actual, "active").String(), "%s", actual)
-			assert.EqualValues(t, recoveryEmail, gjson.Get(actual, "methods.link.config.fields.#(name==email).value").String(), "%s", actual)
+			assert.EqualValues(t, recoveryEmail, gjson.Get(actual, "methods.link.config.nodes.#(attributes.name==email).attributes.value").String(), "%s", actual)
 			assertx.EqualAsJSON(t, text.NewRecoveryEmailSent(), json.RawMessage(gjson.Get(actual, "messages.0").Raw))
 
 			message := testhelpers.CourierExpectMessage(t, reg, recoveryEmail, "Recover access to your account")
@@ -277,13 +285,11 @@ func TestRecovery(t *testing.T) {
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String()+"?flow=")
 
-		sr, err := sdk.Public.GetSelfServiceRecoveryFlow(
-			sdkp.NewGetSelfServiceRecoveryFlowParams().WithHTTPClient(c).
-				WithID(res.Request.URL.Query().Get("flow")))
+		sr, _, err := testhelpers.NewSDKCustomClient(public, c).PublicApi.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 		require.NoError(t, err)
 
-		require.Len(t, sr.Payload.Messages, 1)
-		assert.Equal(t, "The recovery token is invalid or has already been used. Please retry the flow.", sr.Payload.Messages[0].Text)
+		require.Len(t, sr.Messages, 1)
+		assert.Equal(t, "The recovery token is invalid or has already been used. Please retry the flow.", sr.Messages[0].Text)
 	})
 
 	t.Run("description=should not be able to use an outdated link", func(t *testing.T) {
@@ -294,14 +300,14 @@ func TestRecovery(t *testing.T) {
 
 		c := testhelpers.NewClientWithCookies(t)
 		rs := testhelpers.GetRecoveryFlow(t, c, public)
-		method := rs.Payload.Methods[recovery.StrategyRecoveryLinkName].Config
+		method := rs.Methods[recovery.StrategyRecoveryLinkName].Config
 
 		time.Sleep(time.Millisecond * 201)
 
-		res, err := c.PostForm(pointerx.StringR(method.Action), url.Values{"email": {recoveryEmail}})
+		res, err := c.PostForm(method.Action, url.Values{"email": {recoveryEmail}})
 		require.NoError(t, err)
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
-		assert.NotContains(t, res.Request.URL.String(), "flow="+rs.Payload.ID)
+		assert.NotContains(t, res.Request.URL.String(), "flow="+rs.Id)
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String())
 	})
 
@@ -330,12 +336,10 @@ func TestRecovery(t *testing.T) {
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String())
 		assert.NotContains(t, res.Request.URL.String(), gjson.Get(body, "id").String())
 
-		sr, err := sdk.Public.GetSelfServiceRecoveryFlow(
-			sdkp.NewGetSelfServiceRecoveryFlowParams().WithHTTPClient(c).
-				WithID(res.Request.URL.Query().Get("flow")))
+		sr, _, err := testhelpers.NewSDKCustomClient(public, c).PublicApi.GetSelfServiceRecoveryFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 		require.NoError(t, err)
 
-		require.Len(t, sr.Payload.Messages, 1)
-		assert.Contains(t, sr.Payload.Messages[0].Text, "The recovery flow expired")
+		require.Len(t, sr.Messages, 1)
+		assert.Contains(t, sr.Messages[0].Text, "The recovery flow expired")
 	})
 }

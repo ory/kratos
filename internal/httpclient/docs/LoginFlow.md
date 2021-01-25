@@ -12,13 +12,13 @@ Name | Type | Description | Notes
 **Messages** | Pointer to [**[]UiText**](UiText.md) |  | [optional] 
 **Methods** | [**map[string]LoginFlowMethod**](loginFlowMethod.md) | List of login methods  This is the list of available login methods with their required form fields, such as &#x60;identifier&#x60; and &#x60;password&#x60; for the password login method. This will also contain error messages such as \&quot;password can not be empty\&quot;. | 
 **RequestUrl** | **string** | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. | 
-**Type** | Pointer to **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. | [optional] 
+**Type** | **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. | 
 
 ## Methods
 
 ### NewLoginFlow
 
-`func NewLoginFlow(expiresAt time.Time, id string, issuedAt time.Time, methods map[string]LoginFlowMethod, requestUrl string, ) *LoginFlow`
+`func NewLoginFlow(expiresAt time.Time, id string, issuedAt time.Time, methods map[string]LoginFlowMethod, requestUrl string, type_ string, ) *LoginFlow`
 
 NewLoginFlow instantiates a new LoginFlow object
 This constructor will assign default values to properties that have it defined,
@@ -227,11 +227,6 @@ and a boolean to check if the value has been set.
 
 SetType sets Type field to given value.
 
-### HasType
-
-`func (o *LoginFlow) HasType() bool`
-
-HasType returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

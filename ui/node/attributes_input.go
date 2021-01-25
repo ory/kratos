@@ -2,6 +2,7 @@ package node
 
 import (
 	"encoding/json"
+
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/jsonschemax"
 )
@@ -33,7 +34,7 @@ func WithRequiredInputAttribute(a *InputAttributes) {
 	a.Required = true
 }
 
-func WithInputAttributes(f func(a *InputAttributes)) func (a *InputAttributes) {
+func WithInputAttributes(f func(a *InputAttributes)) func(a *InputAttributes) {
 	return func(a *InputAttributes) {
 		f(a)
 	}

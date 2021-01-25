@@ -9,15 +9,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos-client-go"
+
 	"github.com/ory/x/ioutilx"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/x/pointerx"
-
-	"github.com/ory/kratos-client-go/client/public"
-	"github.com/ory/kratos-client-go/models"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -36,46 +34,43 @@ func NewRegistrationUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptes
 	return ts
 }
 
-func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server) *public.GetSelfServiceRegistrationFlowOK {
+func InitializeRegistrationFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.RegistrationFlow {
 	res, err := client.Get(ts.URL + registration.RouteInitBrowserFlow)
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
 
-	rs, err := NewSDKClient(ts).Public.GetSelfServiceRegistrationFlow(
-		public.NewGetSelfServiceRegistrationFlowParams().WithHTTPClient(client).
-			WithID(res.Request.URL.Query().Get("flow")))
+	rs, _, err := NewSDKCustomClient(ts, client).PublicApi.GetSelfServiceRegistrationFlow(context.Background()).Id(res.Request.URL.Query().Get("flow")).Execute()
 	require.NoError(t, err)
-	assert.Empty(t, rs.Payload.Active)
+	assert.Empty(t, rs.Active)
 
 	return rs
 }
 
-func InitializeRegistrationFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *public.InitializeSelfServiceRegistrationViaAPIFlowOK {
-	rs, err := NewSDKClient(ts).Public.InitializeSelfServiceRegistrationViaAPIFlow(public.
-		NewInitializeSelfServiceRegistrationViaAPIFlowParams().WithHTTPClient(client))
+func InitializeRegistrationFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server) *kratos.RegistrationFlow {
+	rs, _, err := NewSDKCustomClient(ts, client).PublicApi.InitializeSelfServiceRegistrationViaAPIFlow(context.Background()).Execute()
 	require.NoError(t, err)
-	assert.Empty(t, rs.Payload.Active)
-
+	assert.Empty(t, rs.Active)
 	return rs
 }
 
-func GetRegistrationFlowMethodConfig(t *testing.T, rs *models.RegistrationFlow, id string) *models.RegistrationFlowMethodConfig {
+func GetRegistrationFlowMethodConfig(t *testing.T, rs *kratos.RegistrationFlow, id string) *kratos.RegistrationFlowMethodConfig {
 	require.NotEmpty(t, rs.Methods[id])
 	require.NotEmpty(t, rs.Methods[id].Config)
 	require.NotEmpty(t, rs.Methods[id].Config.Action)
-	return rs.Methods[id].Config
+	c := rs.Methods[id].Config
+	return &c
 }
 
 func RegistrationMakeRequest(
 	t *testing.T,
 	isAPI bool,
-	f *models.RegistrationFlowMethodConfig,
+	f *kratos.RegistrationFlowMethodConfig,
 	hc *http.Client,
 	values string,
 ) (string, *http.Response) {
 	require.NotEmpty(t, f.Action)
 
-	res, err := hc.Do(NewRequest(t, isAPI, "POST", pointerx.StringR(f.Action), bytes.NewBufferString(values)))
+	res, err := hc.Do(NewRequest(t, isAPI, "POST", f.Action, bytes.NewBufferString(values)))
 	require.NoError(t, err)
 	defer res.Body.Close()
 
@@ -100,17 +95,17 @@ func SubmitRegistrationForm(
 	}
 
 	hc.Transport = NewTransportWithLogger(hc.Transport, t)
-	var payload *models.RegistrationFlow
+	var payload *kratos.RegistrationFlow
 	if isAPI {
-		payload = InitializeRegistrationFlowViaAPI(t, hc, publicTS).Payload
+		payload = InitializeRegistrationFlowViaAPI(t, hc, publicTS)
 	} else {
-		payload = InitializeRegistrationFlowViaBrowser(t, hc, publicTS).Payload
+		payload = InitializeRegistrationFlowViaBrowser(t, hc, publicTS)
 	}
 
 	time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
 
 	config := GetRegistrationFlowMethodConfig(t, payload, method.String())
-	values := SDKFormFieldsToURLValues(config.Fields)
+	values := SDKFormFieldsToURLValues(config.Nodes)
 	withValues(values)
 	b, res := RegistrationMakeRequest(t, isAPI, config, hc, EncodeFormAsJSON(t, isAPI, values))
 	assert.EqualValues(t, expectedStatusCode, res.StatusCode, "%s", b)

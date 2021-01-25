@@ -2,10 +2,11 @@ package registration
 
 import (
 	"context"
-	"github.com/ory/kratos/corp"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/ory/kratos/corp"
 
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"

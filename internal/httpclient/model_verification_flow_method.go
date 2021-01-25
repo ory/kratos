@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -26,7 +26,7 @@ type VerificationFlowMethod struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewVerificationFlowMethod(config VerificationFlowMethodConfig, method string, ) *VerificationFlowMethod {
+func NewVerificationFlowMethod(config VerificationFlowMethodConfig, method string) *VerificationFlowMethod {
 	this := VerificationFlowMethod{}
 	this.Config = config
 	this.Method = method
@@ -43,7 +43,7 @@ func NewVerificationFlowMethodWithDefaults() *VerificationFlowMethod {
 
 // GetConfig returns the Config field value
 func (o *VerificationFlowMethod) GetConfig() VerificationFlowMethodConfig {
-	if o == nil  {
+	if o == nil {
 		var ret VerificationFlowMethodConfig
 		return ret
 	}
@@ -54,7 +54,7 @@ func (o *VerificationFlowMethod) GetConfig() VerificationFlowMethodConfig {
 // GetConfigOk returns a tuple with the Config field value
 // and a boolean to check if the value has been set.
 func (o *VerificationFlowMethod) GetConfigOk() (*VerificationFlowMethodConfig, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Config, true
@@ -67,7 +67,7 @@ func (o *VerificationFlowMethod) SetConfig(v VerificationFlowMethodConfig) {
 
 // GetMethod returns the Method field value
 func (o *VerificationFlowMethod) GetMethod() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -78,7 +78,7 @@ func (o *VerificationFlowMethod) GetMethod() string {
 // GetMethodOk returns a tuple with the Method field value
 // and a boolean to check if the value has been set.
 func (o *VerificationFlowMethod) GetMethodOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Method, true
@@ -135,5 +135,3 @@ func (v *NullableVerificationFlowMethod) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

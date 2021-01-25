@@ -10,20 +10,20 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos-client-go"
+	"github.com/ory/kratos/ui/node"
+
 	"github.com/ory/x/ioutilx"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/x/httpx"
-	"github.com/ory/x/pointerx"
-
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/httpx"
 
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/kratos-client-go/models"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
@@ -44,7 +44,7 @@ func checkFormContent(t *testing.T, body []byte, requiredFields ...string) {
 // fieldNameSet checks if the fields have the right "name" set.
 func fieldNameSet(t *testing.T, body []byte, fields []string) {
 	for _, f := range fields {
-		assert.Equal(t, f, gjson.GetBytes(body, fmt.Sprintf("methods.password.config.fields.#(name==%s).name", f)).String(), "%s", body)
+		assert.Equal(t, f, gjson.GetBytes(body, fmt.Sprintf("methods.password.config.nodes.#(attributes.name==%s).attributes.name", f)).String(), "%s", body)
 	}
 }
 
@@ -115,7 +115,7 @@ func TestRegistration(t *testing.T) {
 
 			t.Run("type=api", func(t *testing.T) {
 				f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
-				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+				c := testhelpers.GetRegistrationFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
 				body, res := testhelpers.RegistrationMakeRequest(t, true, c, apiClient, "14=)=!(%)$/ZP()GHIÖ")
 				assert.Contains(t, res.Request.URL.String(), publicTS.URL+password.RouteRegistration)
 				assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
@@ -125,12 +125,12 @@ func TestRegistration(t *testing.T) {
 			t.Run("type=browser", func(t *testing.T) {
 				browserClient := testhelpers.NewClientWithCookies(t)
 				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS)
-				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+				c := testhelpers.GetRegistrationFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
 				body, res := testhelpers.RegistrationMakeRequest(t, false, c, browserClient, "14=)=!(%)$/ZP()GHIÖ")
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/registration-ts")
 				assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
 				assert.Contains(t, gjson.Get(body, "methods.password.config.messages.0.text").String(), "invalid URL escape", "%s", body)
-				assert.Equal(t, "email", gjson.Get(body, "methods.password.config.fields.#(name==\"traits.email\").type").String(), "%s", body)
+				assert.Equal(t, "email", gjson.Get(body, "methods.password.config.nodes.#(attributes.name==\"traits.email\").attributes.type").String(), "%s", body)
 			})
 		})
 
@@ -141,8 +141,7 @@ func TestRegistration(t *testing.T) {
 				assert.Contains(t, gjson.Get(actual, "message").String(), "Unable to locate the resource", "%s", actual)
 			}
 
-			fakeFlow := &models.RegistrationFlowMethodConfig{
-				Action: pointerx.String(publicTS.URL + password.RouteRegistration + "?flow=" + x.NewUUID().String())}
+			fakeFlow := &kratos.RegistrationFlowMethodConfig{Action: publicTS.URL + password.RouteRegistration + "?flow=" + x.NewUUID().String()}
 
 			t.Run("type=api", func(t *testing.T) {
 				actual, res := testhelpers.RegistrationMakeRequest(t, true, fakeFlow, apiClient, "{}")
@@ -166,24 +165,24 @@ func TestRegistration(t *testing.T) {
 
 			t.Run("type=api", func(t *testing.T) {
 				f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
-				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+				c := testhelpers.GetRegistrationFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
 
 				time.Sleep(time.Millisecond * 600)
 				actual, res := testhelpers.RegistrationMakeRequest(t, true, c, apiClient, "{}")
 				assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteGetFlow)
-				assert.NotEqual(t, f.Payload.ID, gjson.Get(actual, "id").String(), "%s", actual)
+				assert.NotEqual(t, f.Id, gjson.Get(actual, "id").String(), "%s", actual)
 				assert.Contains(t, gjson.Get(actual, "messages.0.text").String(), "expired", "%s", actual)
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
 				browserClient := testhelpers.NewClientWithCookies(t)
 				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS)
-				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+				c := testhelpers.GetRegistrationFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
 
 				time.Sleep(time.Millisecond * 600)
 				actual, res := testhelpers.RegistrationMakeRequest(t, false, c, browserClient, "")
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/registration-ts")
-				assert.NotEqual(t, f.Payload.ID, gjson.Get(actual, "id").String(), "%s", actual)
+				assert.NotEqual(t, f.Id, gjson.Get(actual, "id").String(), "%s", actual)
 				assert.Contains(t, gjson.Get(actual, "messages.0.text").String(), "expired", "%s", actual)
 			})
 		})
@@ -200,7 +199,7 @@ func TestRegistration(t *testing.T) {
 				assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)
 				assert.Contains(t, gjson.Get(actual, "methods.password.config.action").String(), publicTS.URL+password.RouteRegistration, "%s", actual)
 				checkFormContent(t, []byte(actual), "password", "csrf_token", "traits.username", "traits.foobar")
-				assert.Contains(t, gjson.Get(actual, "methods.password.config.fields.#(name==password).messages.0").String(), "data breaches and must no longer be used.", "%s", actual)
+				assert.Contains(t, gjson.Get(actual, "methods.password.config.nodes.#(attributes.name==password).messages.0").String(), "data breaches and must no longer be used.", "%s", actual)
 			}
 
 			var values = func(v url.Values) {
@@ -223,7 +222,7 @@ func TestRegistration(t *testing.T) {
 				assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)
 				assert.Contains(t, gjson.Get(actual, "methods.password.config.action").String(), publicTS.URL+password.RouteRegistration, "%s", actual)
 				checkFormContent(t, []byte(actual), "password", "csrf_token", "traits.username", "traits.foobar")
-				assert.Contains(t, gjson.Get(actual, "methods.password.config.fields.#(name==traits.foobar).messages.0").String(), `Property foobar is missing`, "%s", actual)
+				assert.Contains(t, gjson.Get(actual, "methods.password.config.nodes.#(attributes.name==traits.foobar).messages.0").String(), `Property foobar is missing`, "%s", actual)
 			}
 
 			var values = func(v url.Values) {
@@ -251,7 +250,7 @@ func TestRegistration(t *testing.T) {
 			t.Run("case=should fail because of missing CSRF token/type=browser", func(t *testing.T) {
 				browserClient := testhelpers.NewClientWithCookies(t)
 				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS)
-				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+				c := testhelpers.GetRegistrationFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
 
 				actual, res := testhelpers.RegistrationMakeRequest(t, false, c, browserClient, values.Encode())
 				assert.EqualValues(t, http.StatusOK, res.StatusCode)
@@ -261,7 +260,7 @@ func TestRegistration(t *testing.T) {
 
 			t.Run("case=should pass even without CSRF token/type=api", func(t *testing.T) {
 				f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
-				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+				c := testhelpers.GetRegistrationFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
 
 				actual, res := testhelpers.RegistrationMakeRequest(t, true, c, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
 				assert.EqualValues(t, http.StatusOK, res.StatusCode)
@@ -288,9 +287,9 @@ func TestRegistration(t *testing.T) {
 				} {
 					t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 						f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
-						c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+						c := testhelpers.GetRegistrationFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
 
-						req := testhelpers.NewRequest(t, true, "POST", pointerx.StringR(c.Action), bytes.NewBufferString(testhelpers.EncodeFormAsJSON(t, true, values)))
+						req := testhelpers.NewRequest(t, true, "POST", c.Action, bytes.NewBufferString(testhelpers.EncodeFormAsJSON(t, true, values)))
 						tc.mod(req.Header)
 
 						res, err := apiClient.Do(req)
@@ -323,7 +322,7 @@ func TestRegistration(t *testing.T) {
 
 			t.Run("type=api", func(t *testing.T) {
 				f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
-				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+				c := testhelpers.GetRegistrationFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
 
 				body, res := testhelpers.RegistrationMakeRequest(t, false, c, apiClient, values.Encode())
 				assert.Contains(t, res.Request.URL.String(), publicTS.URL)
@@ -333,7 +332,7 @@ func TestRegistration(t *testing.T) {
 			t.Run("type=browser", func(t *testing.T) {
 				browserClient := testhelpers.NewClientWithCookies(t)
 				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS)
-				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+				c := testhelpers.GetRegistrationFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
 
 				body, res := testhelpers.RegistrationMakeRequest(t, false, c, apiClient, values.Encode())
 				assert.Contains(t, res.Request.URL.String(), errTS.URL)
@@ -357,7 +356,7 @@ func TestRegistration(t *testing.T) {
 
 			t.Run("type=api", func(t *testing.T) {
 				f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
-				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+				c := testhelpers.GetRegistrationFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
 
 				conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/i-do-not-exist.schema.json")
 				t.Cleanup(func() {
@@ -372,7 +371,7 @@ func TestRegistration(t *testing.T) {
 			t.Run("type=browser", func(t *testing.T) {
 				browserClient := testhelpers.NewClientWithCookies(t)
 				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS)
-				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+				c := testhelpers.GetRegistrationFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
 
 				conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/i-do-not-exist.schema.json")
 				t.Cleanup(func() {
@@ -476,15 +475,15 @@ func TestRegistration(t *testing.T) {
 
 			var checkFirst = func(t *testing.T, actual string) {
 				check(t, actual)
-				assert.Contains(t, gjson.Get(actual, "methods.password.config.fields.#(name==traits.username).messages.0").String(), `Property username is missing`, "%s", actual)
+				assert.Contains(t, gjson.Get(actual, "methods.password.config.nodes.#(attributes.name==traits.username).messages.0").String(), `Property username is missing`, "%s", actual)
 			}
 
 			var checkSecond = func(t *testing.T, actual string) {
 				check(t, actual)
-				assert.EqualValues(t, "registration-identifier-9", gjson.Get(actual, "methods.password.config.fields.#(name==traits.username).value").String(), "%s", actual)
-				assert.Empty(t, gjson.Get(actual, "methods.password.config.fields.#(name==traits.username).error").Raw)
+				assert.EqualValues(t, "registration-identifier-9", gjson.Get(actual, "methods.password.config.nodes.#(attributes.name==traits.username).attributes.value").String(), "%s", actual)
+				assert.Empty(t, gjson.Get(actual, "methods.password.config.nodes.#(attributes.name==traits.username).attributes.error").Raw)
 				assert.Empty(t, gjson.Get(actual, "methods.password.config.error").Raw)
-				assert.Contains(t, gjson.Get(actual, "methods.password.config.fields.#(name==traits.foobar).messages.0").String(), `Property foobar is missing`, "%s", actual)
+				assert.Contains(t, gjson.Get(actual, "methods.password.config.nodes.#(attributes.name==traits.foobar).messages.0").String(), `Property foobar is missing`, "%s", actual)
 			}
 
 			var valuesFirst = func(v url.Values) url.Values {
@@ -503,22 +502,22 @@ func TestRegistration(t *testing.T) {
 
 			t.Run("type=api", func(t *testing.T) {
 				f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
-				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+				c := testhelpers.GetRegistrationFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
 
-				actual, _ := testhelpers.RegistrationMakeRequest(t, true, c, apiClient, testhelpers.EncodeFormAsJSON(t, true, valuesFirst(testhelpers.SDKFormFieldsToURLValues(c.Fields))))
+				actual, _ := testhelpers.RegistrationMakeRequest(t, true, c, apiClient, testhelpers.EncodeFormAsJSON(t, true, valuesFirst(testhelpers.SDKFormFieldsToURLValues(c.Nodes))))
 				checkFirst(t, actual)
-				actual, _ = testhelpers.RegistrationMakeRequest(t, true, c, apiClient, testhelpers.EncodeFormAsJSON(t, true, valuesSecond(testhelpers.SDKFormFieldsToURLValues(c.Fields))))
+				actual, _ = testhelpers.RegistrationMakeRequest(t, true, c, apiClient, testhelpers.EncodeFormAsJSON(t, true, valuesSecond(testhelpers.SDKFormFieldsToURLValues(c.Nodes))))
 				checkSecond(t, actual)
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
 				browserClient := testhelpers.NewClientWithCookies(t)
 				f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS)
-				c := testhelpers.GetRegistrationFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+				c := testhelpers.GetRegistrationFlowMethodConfig(t, f, identity.CredentialsTypePassword.String())
 
-				actual, _ := testhelpers.RegistrationMakeRequest(t, false, c, browserClient, valuesFirst(testhelpers.SDKFormFieldsToURLValues(c.Fields)).Encode())
+				actual, _ := testhelpers.RegistrationMakeRequest(t, false, c, browserClient, valuesFirst(testhelpers.SDKFormFieldsToURLValues(c.Nodes)).Encode())
 				checkFirst(t, actual)
-				actual, _ = testhelpers.RegistrationMakeRequest(t, false, c, browserClient, valuesSecond(testhelpers.SDKFormFieldsToURLValues(c.Fields)).Encode())
+				actual, _ = testhelpers.RegistrationMakeRequest(t, false, c, browserClient, valuesSecond(testhelpers.SDKFormFieldsToURLValues(c.Nodes)).Encode())
 				checkSecond(t, actual)
 			})
 		})
@@ -571,26 +570,11 @@ func TestRegistration(t *testing.T) {
 					HTMLForm: &form.HTMLForm{
 						Action: "https://foo" + password.RouteRegistration + "?flow=" + sr.ID.String(),
 						Method: "POST",
-						Fields: form.Fields{
-							{
-								Name:     "csrf_token",
-								Type:     "hidden",
-								Required: true,
-								Value:    x.FakeCSRFToken,
-							},
-							{
-								Name:     "password",
-								Type:     "password",
-								Required: true,
-							},
-							{
-								Name: "traits.foobar",
-								Type: "text",
-							},
-							{
-								Name: "traits.username",
-								Type: "text",
-							},
+						Nodes: node.Nodes{
+							node.NewCSRFNode(x.FakeCSRFToken),
+							node.NewInputField("password", nil, node.PasswordGroup, node.InputAttributeTypePassword, node.WithRequiredInputAttribute),
+							node.NewInputField("traits.foobar", nil, node.PasswordGroup, node.InputAttributeTypeText),
+							node.NewInputField("traits.username", nil, node.PasswordGroup, node.InputAttributeTypeText),
 						},
 					},
 				},

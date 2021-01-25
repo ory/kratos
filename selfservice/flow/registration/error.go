@@ -1,10 +1,11 @@
 package registration
 
 import (
-	"github.com/ory/kratos/ui/node"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/text"
@@ -123,7 +124,7 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 
-	if err := method.Config.ParseError(MethodToNodeGroup(ct),err); err != nil {
+	if err := method.Config.ParseError(MethodToNodeGroup(ct), err); err != nil {
 		s.forward(w, r, f, err)
 		return
 	}

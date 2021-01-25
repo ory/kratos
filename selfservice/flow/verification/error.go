@@ -1,10 +1,11 @@
 package verification
 
 import (
-	"github.com/ory/kratos/ui/node"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/pkg/errors"
 

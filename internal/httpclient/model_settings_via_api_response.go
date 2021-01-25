@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -17,15 +17,15 @@ import (
 
 // SettingsViaApiResponse The Response for Settings Flows via API
 type SettingsViaApiResponse struct {
-	Flow SettingsFlow `json:"flow"`
-	Identity Identity `json:"identity"`
+	Flow     SettingsFlow `json:"flow"`
+	Identity Identity     `json:"identity"`
 }
 
 // NewSettingsViaApiResponse instantiates a new SettingsViaApiResponse object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSettingsViaApiResponse(flow SettingsFlow, identity Identity, ) *SettingsViaApiResponse {
+func NewSettingsViaApiResponse(flow SettingsFlow, identity Identity) *SettingsViaApiResponse {
 	this := SettingsViaApiResponse{}
 	this.Flow = flow
 	this.Identity = identity
@@ -42,7 +42,7 @@ func NewSettingsViaApiResponseWithDefaults() *SettingsViaApiResponse {
 
 // GetFlow returns the Flow field value
 func (o *SettingsViaApiResponse) GetFlow() SettingsFlow {
-	if o == nil  {
+	if o == nil {
 		var ret SettingsFlow
 		return ret
 	}
@@ -53,7 +53,7 @@ func (o *SettingsViaApiResponse) GetFlow() SettingsFlow {
 // GetFlowOk returns a tuple with the Flow field value
 // and a boolean to check if the value has been set.
 func (o *SettingsViaApiResponse) GetFlowOk() (*SettingsFlow, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Flow, true
@@ -66,7 +66,7 @@ func (o *SettingsViaApiResponse) SetFlow(v SettingsFlow) {
 
 // GetIdentity returns the Identity field value
 func (o *SettingsViaApiResponse) GetIdentity() Identity {
-	if o == nil  {
+	if o == nil {
 		var ret Identity
 		return ret
 	}
@@ -77,7 +77,7 @@ func (o *SettingsViaApiResponse) GetIdentity() Identity {
 // GetIdentityOk returns a tuple with the Identity field value
 // and a boolean to check if the value has been set.
 func (o *SettingsViaApiResponse) GetIdentityOk() (*Identity, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Identity, true
@@ -134,5 +134,3 @@ func (v *NullableSettingsViaApiResponse) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -43,12 +43,12 @@ func NewCompleteSelfServiceBrowserSettingsOIDCFlowPayloadWithDefaults() *Complet
 }
 
 // GetFlow returns the Flow field value if set, zero value otherwise.
-func (o *CompleteSelfServiceBrowserSettingsOIDCFlowPayload) GetFlow() *string {
+func (o *CompleteSelfServiceBrowserSettingsOIDCFlowPayload) GetFlow() string {
 	if o == nil || o.Flow == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.Flow
+	return *o.Flow
 }
 
 // GetFlowOk returns a tuple with the Flow field value if set, nil otherwise
@@ -75,12 +75,12 @@ func (o *CompleteSelfServiceBrowserSettingsOIDCFlowPayload) SetFlow(v string) {
 }
 
 // GetLink returns the Link field value if set, zero value otherwise.
-func (o *CompleteSelfServiceBrowserSettingsOIDCFlowPayload) GetLink() *string {
+func (o *CompleteSelfServiceBrowserSettingsOIDCFlowPayload) GetLink() string {
 	if o == nil || o.Link == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.Link
+	return *o.Link
 }
 
 // GetLinkOk returns a tuple with the Link field value if set, nil otherwise
@@ -107,12 +107,12 @@ func (o *CompleteSelfServiceBrowserSettingsOIDCFlowPayload) SetLink(v string) {
 }
 
 // GetUnlink returns the Unlink field value if set, zero value otherwise.
-func (o *CompleteSelfServiceBrowserSettingsOIDCFlowPayload) GetUnlink() *string {
+func (o *CompleteSelfServiceBrowserSettingsOIDCFlowPayload) GetUnlink() string {
 	if o == nil || o.Unlink == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.Unlink
+	return *o.Unlink
 }
 
 // GetUnlinkOk returns a tuple with the Unlink field value if set, nil otherwise
@@ -187,5 +187,3 @@ func (v *NullableCompleteSelfServiceBrowserSettingsOIDCFlowPayload) UnmarshalJSO
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

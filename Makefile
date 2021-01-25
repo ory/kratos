@@ -85,19 +85,17 @@ test:
 
 # Generates the SDK
 .PHONY: sdk
-sdk: .bin/swagger .bin/cli node_modules
+sdk: # .bin/swagger .bin/cli node_modules
 		swagger generate spec -m -o .schema/api.swagger.json -x github.com/ory/kratos-client-go
 		cli dev swagger sanitize ./.schema/api.swagger.json
 		swagger validate ./.schema/api.swagger.json
 		CIRCLE_PROJECT_USERNAME=ory CIRCLE_PROJECT_REPONAME=kratos \
 				cli dev openapi migrate \
-					-p https://raw.githubusercontent.com/ory/x/v0.0.177/healthx/openapi/patch.yaml \
+					-p https://raw.githubusercontent.com/ory/x/master/healthx/openapi/patch.yaml \
 					-p file://.schema/openapi/patches/meta.yaml \
 					-p file://.schema/openapi/patches/schema.yaml \
 					.schema/api.swagger.json .schema/api.openapi.json
 
-		rm -rf internal/httpclient/models internal/httpclient/clients
-		mkdir -p internal/httpclient/
 		npm run openapi-generator-cli -- generate -i ".schema/api.openapi.json" \
 				-g go \
 				-o "internal/httpclient" \

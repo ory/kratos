@@ -5,15 +5,15 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Attributes** | [**UiNodeAttributes**](uiNodeAttributes.md) |  | 
-**Group** | Pointer to **string** |  | [optional] 
-**Messages** | Pointer to [**[]UiText**](UiText.md) |  | [optional] 
+**Group** | **string** |  | 
+**Messages** | [**[]UiText**](UiText.md) |  | 
 **Type** | **string** |  | 
 
 ## Methods
 
 ### NewUiNode
 
-`func NewUiNode(attributes UiNodeAttributes, type_ string, ) *UiNode`
+`func NewUiNode(attributes UiNodeAttributes, group string, messages []UiText, type_ string, ) *UiNode`
 
 NewUiNode instantiates a new UiNode object
 This constructor will assign default values to properties that have it defined,
@@ -67,11 +67,6 @@ and a boolean to check if the value has been set.
 
 SetGroup sets Group field to given value.
 
-### HasGroup
-
-`func (o *UiNode) HasGroup() bool`
-
-HasGroup returns a boolean if a field has been set.
 
 ### GetMessages
 
@@ -92,11 +87,6 @@ and a boolean to check if the value has been set.
 
 SetMessages sets Messages field to given value.
 
-### HasMessages
-
-`func (o *UiNode) HasMessages() bool`
-
-HasMessages returns a boolean if a field has been set.
 
 ### GetType
 

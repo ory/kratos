@@ -4,14 +4,14 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Errors** | **map[string]interface{}** | Errors in the container | 
+**Errors** | **[]map[string]interface{}** | Errors in the container | 
 **Id** | **string** |  | 
 
 ## Methods
 
 ### NewErrorContainer
 
-`func NewErrorContainer(errors map[string]interface{}, id string, ) *ErrorContainer`
+`func NewErrorContainer(errors []map[string]interface{}, id string, ) *ErrorContainer`
 
 NewErrorContainer instantiates a new ErrorContainer object
 This constructor will assign default values to properties that have it defined,
@@ -28,20 +28,20 @@ but it doesn't guarantee that properties required by API are set
 
 ### GetErrors
 
-`func (o *ErrorContainer) GetErrors() map[string]interface{}`
+`func (o *ErrorContainer) GetErrors() []map[string]interface{}`
 
 GetErrors returns the Errors field if non-nil, zero value otherwise.
 
 ### GetErrorsOk
 
-`func (o *ErrorContainer) GetErrorsOk() (*map[string]interface{}, bool)`
+`func (o *ErrorContainer) GetErrorsOk() (*[]map[string]interface{}, bool)`
 
 GetErrorsOk returns a tuple with the Errors field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetErrors
 
-`func (o *ErrorContainer) SetErrors(v map[string]interface{})`
+`func (o *ErrorContainer) SetErrors(v []map[string]interface{})`
 
 SetErrors sets Errors field to given value.
 

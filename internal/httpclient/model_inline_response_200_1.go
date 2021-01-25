@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -18,15 +18,16 @@ import (
 // InlineResponse2001 struct for InlineResponse2001
 type InlineResponse2001 struct {
 	// The version of Ory Kratos.
-	Version *string `json:"version,omitempty"`
+	Version string `json:"version"`
 }
 
 // NewInlineResponse2001 instantiates a new InlineResponse2001 object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewInlineResponse2001() *InlineResponse2001 {
+func NewInlineResponse2001(version string) *InlineResponse2001 {
 	this := InlineResponse2001{}
+	this.Version = version
 	return &this
 }
 
@@ -38,41 +39,33 @@ func NewInlineResponse2001WithDefaults() *InlineResponse2001 {
 	return &this
 }
 
-// GetVersion returns the Version field value if set, zero value otherwise.
-func (o *InlineResponse2001) GetVersion() *string {
-	if o == nil || o.Version == nil {
-		var ret *string
+// GetVersion returns the Version field value
+func (o *InlineResponse2001) GetVersion() string {
+	if o == nil {
+		var ret string
 		return ret
 	}
+
 	return o.Version
 }
 
-// GetVersionOk returns a tuple with the Version field value if set, nil otherwise
+// GetVersionOk returns a tuple with the Version field value
 // and a boolean to check if the value has been set.
 func (o *InlineResponse2001) GetVersionOk() (*string, bool) {
-	if o == nil || o.Version == nil {
+	if o == nil {
 		return nil, false
 	}
-	return o.Version, true
+	return &o.Version, true
 }
 
-// HasVersion returns a boolean if a field has been set.
-func (o *InlineResponse2001) HasVersion() bool {
-	if o != nil && o.Version != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetVersion gets a reference to the given string and assigns it to the Version field.
+// SetVersion sets field value
 func (o *InlineResponse2001) SetVersion(v string) {
-	o.Version = &v
+	o.Version = v
 }
 
 func (o InlineResponse2001) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.Version != nil {
+	if true {
 		toSerialize["version"] = o.Version
 	}
 	return json.Marshal(toSerialize)
@@ -113,5 +106,3 @@ func (v *NullableInlineResponse2001) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

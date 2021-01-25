@@ -8,24 +8,22 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/ory/x/cmdx"
-
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/kratos-client-go/models"
+	"github.com/ory/kratos-client-go"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/x/pointerx"
+	"github.com/ory/x/cmdx"
 )
 
 func TestImportCmd(t *testing.T) {
 	reg := setup(t, ImportCmd)
 
 	t.Run("case=imports a new identity from file", func(t *testing.T) {
-		i := models.CreateIdentity{
-			SchemaID: pointerx.String(config.DefaultIdentityTraitsSchemaID),
+		i := kratos.CreateIdentity{
+			SchemaId: config.DefaultIdentityTraitsSchemaID,
 			Traits:   map[string]interface{}{},
 		}
 		ij, err := json.Marshal(i)
@@ -45,13 +43,13 @@ func TestImportCmd(t *testing.T) {
 	})
 
 	t.Run("case=imports multiple identities from single file", func(t *testing.T) {
-		i := []models.CreateIdentity{
+		i := []kratos.CreateIdentity{
 			{
-				SchemaID: pointerx.String(config.DefaultIdentityTraitsSchemaID),
+				SchemaId: config.DefaultIdentityTraitsSchemaID,
 				Traits:   map[string]interface{}{},
 			},
 			{
-				SchemaID: pointerx.String(config.DefaultIdentityTraitsSchemaID),
+				SchemaId: config.DefaultIdentityTraitsSchemaID,
 				Traits:   map[string]interface{}{},
 			},
 		}
@@ -77,13 +75,13 @@ func TestImportCmd(t *testing.T) {
 	})
 
 	t.Run("case=imports a new identity from STD_IN", func(t *testing.T) {
-		i := []models.CreateIdentity{
+		i := []kratos.CreateIdentity{
 			{
-				SchemaID: pointerx.String(config.DefaultIdentityTraitsSchemaID),
+				SchemaId: config.DefaultIdentityTraitsSchemaID,
 				Traits:   map[string]interface{}{},
 			},
 			{
-				SchemaID: pointerx.String(config.DefaultIdentityTraitsSchemaID),
+				SchemaId: config.DefaultIdentityTraitsSchemaID,
 				Traits:   map[string]interface{}{},
 			},
 		}
@@ -105,8 +103,8 @@ func TestImportCmd(t *testing.T) {
 	})
 
 	t.Run("case=imports multiple identities from STD_IN", func(t *testing.T) {
-		i := models.CreateIdentity{
-			SchemaID: pointerx.String(config.DefaultIdentityTraitsSchemaID),
+		i := kratos.CreateIdentity{
+			SchemaId: config.DefaultIdentityTraitsSchemaID,
 			Traits:   map[string]interface{}{},
 		}
 		ij, err := json.Marshal(i)

@@ -414,7 +414,10 @@
         ],
         "responses": {
           "200": {
-            "$ref": "#/responses/schemaResponse"
+            "description": "jsonSchema",
+            "schema": {
+              "$ref": "#/definitions/jsonSchema"
+            }
           },
           "404": {
             "description": "genericError",
@@ -2018,12 +2021,17 @@
         }
       }
     },
+    "jsonSchema": {
+      "description": "Raw JSON Schema",
+      "type": "object"
+    },
     "loginFlow": {
       "description": "This object represents a login flow. A login flow is initiated at the \"Initiate Login API / Browser Flow\"\nendpoint by a client.\n\nOnce a login flow is completed successfully, a session cookie or session token will be issued.",
       "type": "object",
       "title": "Login Flow",
       "required": [
         "id",
+        "type",
         "expires_at",
         "issued_at",
         "request_url",
@@ -2641,7 +2649,9 @@
       "title": "Node represents a flow's nodes",
       "required": [
         "type",
-        "attributes"
+        "group",
+        "attributes",
+        "messages"
       ],
       "properties": {
         "attributes": {
@@ -2794,6 +2804,8 @@
       "type": "object",
       "title": "A Verification Flow",
       "required": [
+        "id",
+        "type",
         "methods",
         "state"
       ],
@@ -2934,12 +2946,6 @@
       "description": "A single identity.",
       "schema": {
         "$ref": "#/definitions/Identity"
-      }
-    },
-    "schemaResponse": {
-      "description": "The raw identity traits schema",
-      "schema": {
-        "type": "object"
       }
     }
   },

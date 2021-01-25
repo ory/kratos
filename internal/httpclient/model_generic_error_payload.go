@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -20,12 +20,12 @@ type GenericErrorPayload struct {
 	// Code represents the error status code (404, 403, 401, ...).
 	Code *int64 `json:"code,omitempty"`
 	// Debug contains debug information. This is usually not available and has to be enabled.
-	Debug *string `json:"debug,omitempty"`
-	Details *map[string]map[string]interface{} `json:"details,omitempty"`
-	Message *string `json:"message,omitempty"`
-	Reason *string `json:"reason,omitempty"`
-	Request *string `json:"request,omitempty"`
-	Status *string `json:"status,omitempty"`
+	Debug   *string                           `json:"debug,omitempty"`
+	Details map[string]map[string]interface{} `json:"details,omitempty"`
+	Message *string                           `json:"message,omitempty"`
+	Reason  *string                           `json:"reason,omitempty"`
+	Request *string                           `json:"request,omitempty"`
+	Status  *string                           `json:"status,omitempty"`
 }
 
 // NewGenericErrorPayload instantiates a new GenericErrorPayload object
@@ -46,12 +46,12 @@ func NewGenericErrorPayloadWithDefaults() *GenericErrorPayload {
 }
 
 // GetCode returns the Code field value if set, zero value otherwise.
-func (o *GenericErrorPayload) GetCode() *int64 {
+func (o *GenericErrorPayload) GetCode() int64 {
 	if o == nil || o.Code == nil {
-		var ret *int64
+		var ret int64
 		return ret
 	}
-	return o.Code
+	return *o.Code
 }
 
 // GetCodeOk returns a tuple with the Code field value if set, nil otherwise
@@ -78,12 +78,12 @@ func (o *GenericErrorPayload) SetCode(v int64) {
 }
 
 // GetDebug returns the Debug field value if set, zero value otherwise.
-func (o *GenericErrorPayload) GetDebug() *string {
+func (o *GenericErrorPayload) GetDebug() string {
 	if o == nil || o.Debug == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.Debug
+	return *o.Debug
 }
 
 // GetDebugOk returns a tuple with the Debug field value if set, nil otherwise
@@ -110,9 +110,9 @@ func (o *GenericErrorPayload) SetDebug(v string) {
 }
 
 // GetDetails returns the Details field value if set, zero value otherwise.
-func (o *GenericErrorPayload) GetDetails() *map[string]map[string]interface{} {
+func (o *GenericErrorPayload) GetDetails() map[string]map[string]interface{} {
 	if o == nil || o.Details == nil {
-		var ret *map[string]map[string]interface{}
+		var ret map[string]map[string]interface{}
 		return ret
 	}
 	return o.Details
@@ -120,7 +120,7 @@ func (o *GenericErrorPayload) GetDetails() *map[string]map[string]interface{} {
 
 // GetDetailsOk returns a tuple with the Details field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *GenericErrorPayload) GetDetailsOk() (*map[string]map[string]interface{}, bool) {
+func (o *GenericErrorPayload) GetDetailsOk() (map[string]map[string]interface{}, bool) {
 	if o == nil || o.Details == nil {
 		return nil, false
 	}
@@ -138,16 +138,16 @@ func (o *GenericErrorPayload) HasDetails() bool {
 
 // SetDetails gets a reference to the given map[string]map[string]interface{} and assigns it to the Details field.
 func (o *GenericErrorPayload) SetDetails(v map[string]map[string]interface{}) {
-	o.Details = &v
+	o.Details = v
 }
 
 // GetMessage returns the Message field value if set, zero value otherwise.
-func (o *GenericErrorPayload) GetMessage() *string {
+func (o *GenericErrorPayload) GetMessage() string {
 	if o == nil || o.Message == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.Message
+	return *o.Message
 }
 
 // GetMessageOk returns a tuple with the Message field value if set, nil otherwise
@@ -174,12 +174,12 @@ func (o *GenericErrorPayload) SetMessage(v string) {
 }
 
 // GetReason returns the Reason field value if set, zero value otherwise.
-func (o *GenericErrorPayload) GetReason() *string {
+func (o *GenericErrorPayload) GetReason() string {
 	if o == nil || o.Reason == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.Reason
+	return *o.Reason
 }
 
 // GetReasonOk returns a tuple with the Reason field value if set, nil otherwise
@@ -206,12 +206,12 @@ func (o *GenericErrorPayload) SetReason(v string) {
 }
 
 // GetRequest returns the Request field value if set, zero value otherwise.
-func (o *GenericErrorPayload) GetRequest() *string {
+func (o *GenericErrorPayload) GetRequest() string {
 	if o == nil || o.Request == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.Request
+	return *o.Request
 }
 
 // GetRequestOk returns a tuple with the Request field value if set, nil otherwise
@@ -238,12 +238,12 @@ func (o *GenericErrorPayload) SetRequest(v string) {
 }
 
 // GetStatus returns the Status field value if set, zero value otherwise.
-func (o *GenericErrorPayload) GetStatus() *string {
+func (o *GenericErrorPayload) GetStatus() string {
 	if o == nil || o.Status == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.Status
+	return *o.Status
 }
 
 // GetStatusOk returns a tuple with the Status field value if set, nil otherwise
@@ -330,5 +330,3 @@ func (v *NullableGenericErrorPayload) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

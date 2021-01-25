@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -18,15 +18,15 @@ import (
 // CreateRecoveryLink struct for CreateRecoveryLink
 type CreateRecoveryLink struct {
 	// Link Expires In  The recovery link will expire at that point in time. Defaults to the configuration value of `selfservice.flows.recovery.request_lifespan`.
-	ExpiresIn *string `json:"expires_in,omitempty"`
-	IdentityId string `json:"identity_id"`
+	ExpiresIn  *string `json:"expires_in,omitempty"`
+	IdentityId string  `json:"identity_id"`
 }
 
 // NewCreateRecoveryLink instantiates a new CreateRecoveryLink object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewCreateRecoveryLink(identityId string, ) *CreateRecoveryLink {
+func NewCreateRecoveryLink(identityId string) *CreateRecoveryLink {
 	this := CreateRecoveryLink{}
 	this.IdentityId = identityId
 	return &this
@@ -41,12 +41,12 @@ func NewCreateRecoveryLinkWithDefaults() *CreateRecoveryLink {
 }
 
 // GetExpiresIn returns the ExpiresIn field value if set, zero value otherwise.
-func (o *CreateRecoveryLink) GetExpiresIn() *string {
+func (o *CreateRecoveryLink) GetExpiresIn() string {
 	if o == nil || o.ExpiresIn == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.ExpiresIn
+	return *o.ExpiresIn
 }
 
 // GetExpiresInOk returns a tuple with the ExpiresIn field value if set, nil otherwise
@@ -74,7 +74,7 @@ func (o *CreateRecoveryLink) SetExpiresIn(v string) {
 
 // GetIdentityId returns the IdentityId field value
 func (o *CreateRecoveryLink) GetIdentityId() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -85,7 +85,7 @@ func (o *CreateRecoveryLink) GetIdentityId() string {
 // GetIdentityIdOk returns a tuple with the IdentityId field value
 // and a boolean to check if the value has been set.
 func (o *CreateRecoveryLink) GetIdentityIdOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.IdentityId, true
@@ -142,5 +142,3 @@ func (v *NullableCreateRecoveryLink) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

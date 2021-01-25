@@ -4,13 +4,13 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Version** | Pointer to **string** | The version of Ory Kratos. | [optional] 
+**Version** | **string** | The version of Ory Kratos. | 
 
 ## Methods
 
 ### NewInlineResponse2001
 
-`func NewInlineResponse2001() *InlineResponse2001`
+`func NewInlineResponse2001(version string, ) *InlineResponse2001`
 
 NewInlineResponse2001 instantiates a new InlineResponse2001 object
 This constructor will assign default values to properties that have it defined,
@@ -44,11 +44,6 @@ and a boolean to check if the value has been set.
 
 SetVersion sets Version field to given value.
 
-### HasVersion
-
-`func (o *InlineResponse2001) HasVersion() bool`
-
-HasVersion returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
