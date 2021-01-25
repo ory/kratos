@@ -16,52 +16,66 @@ import (
 	"github.com/go-openapi/strfmt"
 )
 
-// NewInitializeSelfServiceLoginViaBrowserFlowParams creates a new InitializeSelfServiceLoginViaBrowserFlowParams object
-// with the default values initialized.
+// NewInitializeSelfServiceLoginViaBrowserFlowParams creates a new InitializeSelfServiceLoginViaBrowserFlowParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewInitializeSelfServiceLoginViaBrowserFlowParams() *InitializeSelfServiceLoginViaBrowserFlowParams {
-
 	return &InitializeSelfServiceLoginViaBrowserFlowParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewInitializeSelfServiceLoginViaBrowserFlowParamsWithTimeout creates a new InitializeSelfServiceLoginViaBrowserFlowParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewInitializeSelfServiceLoginViaBrowserFlowParamsWithTimeout(timeout time.Duration) *InitializeSelfServiceLoginViaBrowserFlowParams {
-
 	return &InitializeSelfServiceLoginViaBrowserFlowParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewInitializeSelfServiceLoginViaBrowserFlowParamsWithContext creates a new InitializeSelfServiceLoginViaBrowserFlowParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewInitializeSelfServiceLoginViaBrowserFlowParamsWithContext(ctx context.Context) *InitializeSelfServiceLoginViaBrowserFlowParams {
-
 	return &InitializeSelfServiceLoginViaBrowserFlowParams{
-
 		Context: ctx,
 	}
 }
 
 // NewInitializeSelfServiceLoginViaBrowserFlowParamsWithHTTPClient creates a new InitializeSelfServiceLoginViaBrowserFlowParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewInitializeSelfServiceLoginViaBrowserFlowParamsWithHTTPClient(client *http.Client) *InitializeSelfServiceLoginViaBrowserFlowParams {
-
 	return &InitializeSelfServiceLoginViaBrowserFlowParams{
 		HTTPClient: client,
 	}
 }
 
-/*InitializeSelfServiceLoginViaBrowserFlowParams contains all the parameters to send to the API endpoint
-for the initialize self service login via browser flow operation typically these are written to a http.Request
+/* InitializeSelfServiceLoginViaBrowserFlowParams contains all the parameters to send to the API endpoint
+   for the initialize self service login via browser flow operation.
+
+   Typically these are written to a http.Request.
 */
 type InitializeSelfServiceLoginViaBrowserFlowParams struct {
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the initialize self service login via browser flow params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *InitializeSelfServiceLoginViaBrowserFlowParams) WithDefaults() *InitializeSelfServiceLoginViaBrowserFlowParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the initialize self service login via browser flow params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *InitializeSelfServiceLoginViaBrowserFlowParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the initialize self service login via browser flow params

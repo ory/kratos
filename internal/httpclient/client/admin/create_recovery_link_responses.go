@@ -47,7 +47,6 @@ func (o *CreateRecoveryLinkReader) ReadResponse(response runtime.ClientResponse,
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -58,7 +57,7 @@ func NewCreateRecoveryLinkOK() *CreateRecoveryLinkOK {
 	return &CreateRecoveryLinkOK{}
 }
 
-/*CreateRecoveryLinkOK handles this case with default header values.
+/* CreateRecoveryLinkOK describes a response with status code 200, with default header values.
 
 recoveryLink
 */
@@ -69,7 +68,6 @@ type CreateRecoveryLinkOK struct {
 func (o *CreateRecoveryLinkOK) Error() string {
 	return fmt.Sprintf("[POST /recovery/link][%d] createRecoveryLinkOK  %+v", 200, o.Payload)
 }
-
 func (o *CreateRecoveryLinkOK) GetPayload() *models.RecoveryLink {
 	return o.Payload
 }
@@ -91,7 +89,7 @@ func NewCreateRecoveryLinkBadRequest() *CreateRecoveryLinkBadRequest {
 	return &CreateRecoveryLinkBadRequest{}
 }
 
-/*CreateRecoveryLinkBadRequest handles this case with default header values.
+/* CreateRecoveryLinkBadRequest describes a response with status code 400, with default header values.
 
 genericError
 */
@@ -102,7 +100,6 @@ type CreateRecoveryLinkBadRequest struct {
 func (o *CreateRecoveryLinkBadRequest) Error() string {
 	return fmt.Sprintf("[POST /recovery/link][%d] createRecoveryLinkBadRequest  %+v", 400, o.Payload)
 }
-
 func (o *CreateRecoveryLinkBadRequest) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -124,7 +121,7 @@ func NewCreateRecoveryLinkNotFound() *CreateRecoveryLinkNotFound {
 	return &CreateRecoveryLinkNotFound{}
 }
 
-/*CreateRecoveryLinkNotFound handles this case with default header values.
+/* CreateRecoveryLinkNotFound describes a response with status code 404, with default header values.
 
 genericError
 */
@@ -135,7 +132,6 @@ type CreateRecoveryLinkNotFound struct {
 func (o *CreateRecoveryLinkNotFound) Error() string {
 	return fmt.Sprintf("[POST /recovery/link][%d] createRecoveryLinkNotFound  %+v", 404, o.Payload)
 }
-
 func (o *CreateRecoveryLinkNotFound) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -157,7 +153,7 @@ func NewCreateRecoveryLinkInternalServerError() *CreateRecoveryLinkInternalServe
 	return &CreateRecoveryLinkInternalServerError{}
 }
 
-/*CreateRecoveryLinkInternalServerError handles this case with default header values.
+/* CreateRecoveryLinkInternalServerError describes a response with status code 500, with default header values.
 
 genericError
 */
@@ -168,7 +164,6 @@ type CreateRecoveryLinkInternalServerError struct {
 func (o *CreateRecoveryLinkInternalServerError) Error() string {
 	return fmt.Sprintf("[POST /recovery/link][%d] createRecoveryLinkInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *CreateRecoveryLinkInternalServerError) GetPayload() *models.GenericError {
 	return o.Payload
 }
