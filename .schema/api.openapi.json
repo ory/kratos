@@ -36,16 +36,6 @@
           }
         },
         "description": "A single identity."
-      },
-      "schemaResponse": {
-        "content": {
-          "application/json": {
-            "schema": {
-              "type": "object"
-            }
-          }
-        },
-        "description": "The raw identity traits schema"
       }
     },
     "schemas": {
@@ -320,7 +310,10 @@
         "properties": {
           "errors": {
             "description": "Errors in the container",
-            "type": "object"
+            "items": {
+              "type": "object"
+            },
+            "type": "array"
           },
           "id": {
             "$ref": "#/components/schemas/UUID"
@@ -420,6 +413,10 @@
         },
         "type": "object"
       },
+      "jsonSchema": {
+        "description": "Raw JSON Schema",
+        "type": "object"
+      },
       "loginFlow": {
         "description": "This object represents a login flow. A login flow is initiated at the \"Initiate Login API / Browser Flow\"\nendpoint by a client.\n\nOnce a login flow is completed successfully, a session cookie or session token will be issued.",
         "properties": {
@@ -463,6 +460,7 @@
         },
         "required": [
           "id",
+          "type",
           "expires_at",
           "issued_at",
           "request_url",
@@ -1055,7 +1053,9 @@
         },
         "required": [
           "type",
-          "attributes"
+          "group",
+          "attributes",
+          "messages"
         ],
         "title": "Node represents a flow's nodes",
         "type": "object"
@@ -1113,19 +1113,6 @@
       "uiNodeInputAttributeType": {
         "type": "string"
       },
-      "uiNodeInputAttributesValue": {
-        "oneOf": [
-          {
-            "type": "string"
-          },
-          {
-            "type": "number"
-          },
-          {
-            "type": "boolean"
-          }
-        ]
-      },
       "uiNodeInputAttributes": {
         "description": "InputAttributes represents the attributes of an input node",
         "properties": {
@@ -1152,7 +1139,9 @@
             "$ref": "#/components/schemas/uiNodeInputAttributeType"
           },
           "value": {
-            "$ref": "#/components/schemas/uiNodeInputAttributesValue"
+            "$ref": "#/components/schemas/uiNodeInputAttributesValue",
+            "description": "The input's value.",
+            "nullable": true
           }
         },
         "required": [
@@ -1161,6 +1150,19 @@
           "disabled"
         ],
         "type": "object"
+      },
+      "uiNodeInputAttributesValue": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          }
+        ]
       },
       "uiNodeTextAttributes": {
         "properties": {
@@ -1258,6 +1260,8 @@
           }
         },
         "required": [
+          "id",
+          "type",
           "methods",
           "state"
         ],
@@ -1373,7 +1377,16 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/healthStatus"
+                  "properties": {
+                    "status": {
+                      "description": "Always \"ok\".",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status"
+                  ],
+                  "type": "object"
                 }
               }
             },
@@ -1411,6 +1424,9 @@
                       "type": "string"
                     }
                   },
+                  "required": [
+                    "status"
+                  ],
                   "type": "object"
                 }
               }
@@ -1430,6 +1446,9 @@
                       "type": "object"
                     }
                   },
+                  "required": [
+                    "errors"
+                  ],
                   "type": "object"
                 }
               }
@@ -1794,7 +1813,14 @@
         ],
         "responses": {
           "200": {
-            "$ref": "#/components/responses/schemaResponse"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/jsonSchema"
+                }
+              }
+            },
+            "description": "jsonSchema"
           },
           "404": {
             "content": {
@@ -3232,6 +3258,9 @@
                       "type": "string"
                     }
                   },
+                  "required": [
+                    "version"
+                  ],
                   "type": "object"
                 }
               }

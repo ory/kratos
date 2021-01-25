@@ -11,6 +11,8 @@ replace github.com/ory/kratos-client-go => ./internal/httpclient
 // Use the internal name for tablename generation
 replace github.com/ory/kratos/corp => ./corp
 
+replace github.com/ory/cli => ../cli
+
 replace go.mongodb.org/mongo-driver => go.mongodb.org/mongo-driver v1.4.6
 
 require (
@@ -71,7 +73,7 @@ require (
 	github.com/pelletier/go-toml v1.9.0 // indirect
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
-	github.com/pquerna/otp v1.3.0
+	github.com/pkg/profile v1.5.0 // indirect
 	github.com/prometheus/client_golang v1.4.0
 	github.com/prometheus/common v0.9.1
 	github.com/rs/cors v1.6.0

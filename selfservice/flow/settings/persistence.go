@@ -3,8 +3,9 @@ package settings
 import (
 	"context"
 	"encoding/json"
-	"github.com/ory/kratos/ui/node"
 	"testing"
+
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/gofrs/uuid"
@@ -104,18 +105,16 @@ func TestRequestPersister(ctx context.Context, conf *config.Config, p interface 
 		t.Run("case=should create and update a settings request", func(t *testing.T) {
 			expected := newFlow(t)
 			expected.Methods["oidc"] = &FlowMethod{
-				Method: "oidc", Config: &FlowMethodConfig{FlowMethodConfigurator:
-				&form.HTMLForm{
+				Method: "oidc", Config: &FlowMethodConfig{FlowMethodConfigurator: &form.HTMLForm{
 					// v0.5: Fields: []form.Field{{Name: "zab", Type: "bar", Pattern: "baz"}},
-					Nodes: node.Nodes{node.NewInputField("zab",nil, node.DefaultGroup, "bar",  node.WithInputAttributes(func(a *node.InputAttributes) {
+					Nodes: node.Nodes{node.NewInputField("zab", nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
 						a.Pattern = "baz"
 					}))},
 				}}}
 			expected.Methods["password"] = &FlowMethod{
-				Method: "password", Config: &FlowMethodConfig{FlowMethodConfigurator:
-				&form.HTMLForm{
+				Method: "password", Config: &FlowMethodConfig{FlowMethodConfigurator: &form.HTMLForm{
 					// v0.5: Fields: []form.Field{{Name: "foo", Type: "bar", Pattern: "baz"}},
-					Nodes: node.Nodes{node.NewInputField("foo",nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
+					Nodes: node.Nodes{node.NewInputField("foo", nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
 						a.Pattern = "baz"
 					}))},
 				}}}
@@ -125,7 +124,7 @@ func TestRequestPersister(ctx context.Context, conf *config.Config, p interface 
 			expected.Methods[StrategyProfile].Config.FlowMethodConfigurator.(*form.HTMLForm).Action = "/new-action"
 			expected.Methods["password"].Config.FlowMethodConfigurator.(*form.HTMLForm).Nodes = node.Nodes{
 				// v0.5: {Name: "zab", Type: "zab", Pattern: "zab"},
-				node.NewInputField("zab",nil, node.DefaultGroup, "zab", node.WithInputAttributes(func(a *node.InputAttributes) {
+				node.NewInputField("zab", nil, node.DefaultGroup, "zab", node.WithInputAttributes(func(a *node.InputAttributes) {
 					a.Pattern = "zab"
 				})),
 			}
@@ -139,13 +138,13 @@ func TestRequestPersister(ctx context.Context, conf *config.Config, p interface 
 			assert.Equal(t, "/new-request-url", actual.RequestURL)
 			assert.EqualValues(t, node.Nodes{
 				// v0.5: {Name: "zab", Type: "zab", Pattern: "zab"},
-				node.NewInputField("zab",nil,node.DefaultGroup, "zab", node.WithInputAttributes(func(a *node.InputAttributes) {
+				node.NewInputField("zab", nil, node.DefaultGroup, "zab", node.WithInputAttributes(func(a *node.InputAttributes) {
 					a.Pattern = "zab"
 				})),
 			}, actual.Methods["password"].Config.FlowMethodConfigurator.(*form.HTMLForm).Nodes)
 			assert.EqualValues(t, node.Nodes{
 				// v0.5: {Name: "zab", Type: "bar", Pattern: "baz"},
-				node.NewInputField("zab",nil, node.DefaultGroup, "bar",  node.WithInputAttributes(func(a *node.InputAttributes) {
+				node.NewInputField("zab", nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
 					a.Pattern = "baz"
 				})),
 			}, actual.Methods["oidc"].Config.FlowMethodConfigurator.(*form.HTMLForm).Nodes)

@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -27,7 +27,7 @@ type CompleteSelfServiceSettingsFlowWithPasswordMethod struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewCompleteSelfServiceSettingsFlowWithPasswordMethod(password string, ) *CompleteSelfServiceSettingsFlowWithPasswordMethod {
+func NewCompleteSelfServiceSettingsFlowWithPasswordMethod(password string) *CompleteSelfServiceSettingsFlowWithPasswordMethod {
 	this := CompleteSelfServiceSettingsFlowWithPasswordMethod{}
 	this.Password = password
 	return &this
@@ -42,12 +42,12 @@ func NewCompleteSelfServiceSettingsFlowWithPasswordMethodWithDefaults() *Complet
 }
 
 // GetCsrfToken returns the CsrfToken field value if set, zero value otherwise.
-func (o *CompleteSelfServiceSettingsFlowWithPasswordMethod) GetCsrfToken() *string {
+func (o *CompleteSelfServiceSettingsFlowWithPasswordMethod) GetCsrfToken() string {
 	if o == nil || o.CsrfToken == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.CsrfToken
+	return *o.CsrfToken
 }
 
 // GetCsrfTokenOk returns a tuple with the CsrfToken field value if set, nil otherwise
@@ -75,7 +75,7 @@ func (o *CompleteSelfServiceSettingsFlowWithPasswordMethod) SetCsrfToken(v strin
 
 // GetPassword returns the Password field value
 func (o *CompleteSelfServiceSettingsFlowWithPasswordMethod) GetPassword() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -86,7 +86,7 @@ func (o *CompleteSelfServiceSettingsFlowWithPasswordMethod) GetPassword() string
 // GetPasswordOk returns a tuple with the Password field value
 // and a boolean to check if the value has been set.
 func (o *CompleteSelfServiceSettingsFlowWithPasswordMethod) GetPasswordOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Password, true
@@ -143,5 +143,3 @@ func (v *NullableCompleteSelfServiceSettingsFlowWithPasswordMethod) UnmarshalJSO
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

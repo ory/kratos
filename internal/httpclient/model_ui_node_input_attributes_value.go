@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -18,9 +18,9 @@ import (
 
 // UiNodeInputAttributesValue - struct for UiNodeInputAttributesValue
 type UiNodeInputAttributesValue struct {
-	Bool *bool
+	Bool    *bool
 	Float32 *float32
-	String *string
+	String  *string
 }
 
 // boolAsUiNodeInputAttributesValue is a convenience function that returns bool wrapped in UiNodeInputAttributesValue
@@ -44,13 +44,12 @@ func StringAsUiNodeInputAttributesValue(v *string) UiNodeInputAttributesValue {
 	}
 }
 
-
 // Unmarshal JSON data into one of the pointers in the struct
 func (dst *UiNodeInputAttributesValue) UnmarshalJSON(data []byte) error {
 	var err error
 	match := 0
 	// try to unmarshal data into Bool
-	err = json.Unmarshal(data, &dst.Bool)
+	err = newStrictDecoder(data).Decode(&dst.Bool)
 	if err == nil {
 		jsonBool, _ := json.Marshal(dst.Bool)
 		if string(jsonBool) == "{}" { // empty struct
@@ -63,7 +62,7 @@ func (dst *UiNodeInputAttributesValue) UnmarshalJSON(data []byte) error {
 	}
 
 	// try to unmarshal data into Float32
-	err = json.Unmarshal(data, &dst.Float32)
+	err = newStrictDecoder(data).Decode(&dst.Float32)
 	if err == nil {
 		jsonFloat32, _ := json.Marshal(dst.Float32)
 		if string(jsonFloat32) == "{}" { // empty struct
@@ -76,7 +75,7 @@ func (dst *UiNodeInputAttributesValue) UnmarshalJSON(data []byte) error {
 	}
 
 	// try to unmarshal data into String
-	err = json.Unmarshal(data, &dst.String)
+	err = newStrictDecoder(data).Decode(&dst.String)
 	if err == nil {
 		jsonString, _ := json.Marshal(dst.String)
 		if string(jsonString) == "{}" { // empty struct
@@ -120,7 +119,10 @@ func (src UiNodeInputAttributesValue) MarshalJSON() ([]byte, error) {
 }
 
 // Get the actual instance
-func (obj *UiNodeInputAttributesValue) GetActualInstance() (interface{}) {
+func (obj *UiNodeInputAttributesValue) GetActualInstance() interface{} {
+	if obj == nil {
+		return nil
+	}
 	if obj.Bool != nil {
 		return obj.Bool
 	}
@@ -172,5 +174,3 @@ func (v *NullableUiNodeInputAttributesValue) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

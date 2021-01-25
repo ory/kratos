@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ory/kratos/ui/node"
-	"github.com/ory/x/sqlxx"
 	"net/http"
 	"strings"
+
+	"github.com/ory/kratos/ui/node"
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/jsonschema/v3"
 
@@ -186,7 +187,7 @@ func (c *HTMLForm) UpdateNodesFromJSON(raw json.RawMessage, prefix string, group
 			continue
 		}
 
-		c.Nodes.Upsert(node.NewInputFieldFromJSON(k,v, group))
+		c.Nodes.Upsert(node.NewInputFieldFromJSON(k, v, group))
 	}
 }
 
@@ -229,7 +230,7 @@ func (c *HTMLForm) AddMessage(group node.Group, err *text.Message, setForFields 
 			continue
 		}
 
-		n := node.NewInputField(name,nil,  node.DefaultGroup, node.InputAttributeTypeText)
+		n := node.NewInputField(name, nil, node.DefaultGroup, node.InputAttributeTypeText)
 		n.Messages = text.Messages{*err}
 		c.Nodes = append(c.Nodes, n)
 	}

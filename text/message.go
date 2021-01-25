@@ -7,6 +7,7 @@ import (
 	"github.com/ory/x/sqlxx"
 )
 
+// swagger:model uiTexts
 type Messages []Message
 
 func (h *Messages) Scan(value interface{}) error {
@@ -32,10 +33,24 @@ func (h *Messages) Clear() Messages {
 	return *h
 }
 
+// swagger:model uiText
 type Message struct {
-	ID      ID              `json:"id"`
-	Text    string          `json:"text"`
-	Type    Type            `json:"type"`
+	// The message ID.
+	//
+	// required: true
+	ID ID `json:"id"`
+
+	// The message text. Written in american english.
+	//
+	// required: true
+	Text string `json:"text"`
+
+	// The message type.
+	//
+	// required: true
+	Type Type `json:"type"`
+
+	// The message's context. Useful when customizing messages.
 	Context json.RawMessage `json:"context,omitempty" faker:"-"`
 }
 

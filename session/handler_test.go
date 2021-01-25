@@ -14,18 +14,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/x/pointerx"
-
-	"github.com/ory/x/urlx"
-
-	"github.com/ory/kratos-client-go/client/public"
-	"github.com/ory/kratos-client-go/models"
+	"github.com/ory/kratos-client-go"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	. "github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/urlx"
 )
 
 func init() {
@@ -93,8 +89,8 @@ func TestSessionRevoke(t *testing.T) {
 	require.NoError(t, reg.SessionPersister().CreateSession(context.Background(), sess))
 
 	sdk := testhelpers.NewSDKClient(publicTS)
-	_, err := sdk.Public.RevokeSession(public.NewRevokeSessionParams().WithBody(&models.RevokeSession{
-		SessionToken: pointerx.String(sess.Token)}))
+	_, err := sdk.PublicApi.RevokeSession(context.Background()).RevokeSession(kratos.RevokeSession{
+		SessionToken: sess.Token}).Execute()
 	require.NoError(t, err)
 
 	actual, err := reg.SessionPersister().GetSession(context.Background(), sess.ID)

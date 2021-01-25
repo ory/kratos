@@ -4,20 +4,23 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"sort"
+	"strings"
+
+	"github.com/pkg/errors"
+	"github.com/tidwall/gjson"
+
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/stringslice"
-	"github.com/pkg/errors"
-	"github.com/tidwall/gjson"
-	"sort"
-	"strings"
 )
 
-type (
-	Type  string
-	Group string
-)
+// swagger:model uiNodeType
+type Type string
+
+// swagger:model uiNodeGroup
+type Group string
 
 const (
 	DefaultGroup          Group = "default"
@@ -32,43 +35,49 @@ const (
 	Anchor Type = "a"
 )
 
-type (
-	Nodes []*Node
+// swagger:model uiNodes
+type Nodes []*Node
 
-	// Node represents a flow's nodes
+// Node represents a flow's nodes
+//
+// Nodes are represented as HTML elements or their native UI equivalents. For example,
+// a node can be an `<img>` tag, or an `<input element>` but also `some plain text`.
+//
+// swagger:model uiNode
+type Node struct {
+	// The node's type
 	//
-	// Nodes are represented as HTML elements or their native UI equivalents. For example,
-	// a node can be an `<img>` tag, or an `<input element>` but also `some plain text`.
-	Node struct {
-		// The node's type
-		//
-		// Can be one of: text, input, img, a
-		//
-		// required: true
-		Type Type `json:"type" faker:"-"`
+	// Can be one of: text, input, img, a
+	//
+	// required: true
+	Type Type `json:"type" faker:"-"`
 
-		// Group specifies which group (e.g. password authenticator) this node belongs to.
-		Group Group `json:"group"`
+	// Group specifies which group (e.g. password authenticator) this node belongs to.
+	//
+	// required: true
+	Group Group `json:"group"`
 
-		// The node's attributes.
-		//
-		// required: true
-		Attributes Attributes `json:"attributes" faker:"ui_node_attributes"`
+	// The node's attributes.
+	//
+	// required: true
+	// swagger:type uiNodeAttributes
+	Attributes Attributes `json:"attributes" faker:"ui_node_attributes"`
 
-		// The node's messages
-		//
-		// Contains error, validation, or other messages relevant to this node.
-		Messages text.Messages `json:"messages"`
-	}
+	// The node's messages
+	//
+	// Contains error, validation, or other messages relevant to this node.
+	//
+	// required: true
+	Messages text.Messages `json:"messages"`
+}
 
-	// Used for en/decoding the Attributes field.
-	jsonRawNode struct {
-		Type       Type          `json:"type"`
-		Group      Group         `json:"group"`
-		Attributes Attributes    `json:"attributes"`
-		Messages   text.Messages `json:"messages"`
-	}
-)
+// Used for en/decoding the Attributes field.
+type jsonRawNode struct {
+	Type       Type          `json:"type"`
+	Group      Group         `json:"group"`
+	Attributes Attributes    `json:"attributes"`
+	Messages   text.Messages `json:"messages"`
+}
 
 func (n *Node) ID() string {
 	return string(n.Group) + "/" + n.Attributes.ID()

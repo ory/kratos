@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -18,19 +18,19 @@ import (
 
 // Session struct for Session
 type Session struct {
-	Active *bool `json:"active,omitempty"`
+	Active          *bool     `json:"active,omitempty"`
 	AuthenticatedAt time.Time `json:"authenticated_at"`
-	ExpiresAt time.Time `json:"expires_at"`
-	Id string `json:"id"`
-	Identity Identity `json:"identity"`
-	IssuedAt time.Time `json:"issued_at"`
+	ExpiresAt       time.Time `json:"expires_at"`
+	Id              string    `json:"id"`
+	Identity        Identity  `json:"identity"`
+	IssuedAt        time.Time `json:"issued_at"`
 }
 
 // NewSession instantiates a new Session object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSession(authenticatedAt time.Time, expiresAt time.Time, id string, identity Identity, issuedAt time.Time, ) *Session {
+func NewSession(authenticatedAt time.Time, expiresAt time.Time, id string, identity Identity, issuedAt time.Time) *Session {
 	this := Session{}
 	this.AuthenticatedAt = authenticatedAt
 	this.ExpiresAt = expiresAt
@@ -49,12 +49,12 @@ func NewSessionWithDefaults() *Session {
 }
 
 // GetActive returns the Active field value if set, zero value otherwise.
-func (o *Session) GetActive() *bool {
+func (o *Session) GetActive() bool {
 	if o == nil || o.Active == nil {
-		var ret *bool
+		var ret bool
 		return ret
 	}
-	return o.Active
+	return *o.Active
 }
 
 // GetActiveOk returns a tuple with the Active field value if set, nil otherwise
@@ -82,7 +82,7 @@ func (o *Session) SetActive(v bool) {
 
 // GetAuthenticatedAt returns the AuthenticatedAt field value
 func (o *Session) GetAuthenticatedAt() time.Time {
-	if o == nil  {
+	if o == nil {
 		var ret time.Time
 		return ret
 	}
@@ -93,7 +93,7 @@ func (o *Session) GetAuthenticatedAt() time.Time {
 // GetAuthenticatedAtOk returns a tuple with the AuthenticatedAt field value
 // and a boolean to check if the value has been set.
 func (o *Session) GetAuthenticatedAtOk() (*time.Time, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.AuthenticatedAt, true
@@ -106,7 +106,7 @@ func (o *Session) SetAuthenticatedAt(v time.Time) {
 
 // GetExpiresAt returns the ExpiresAt field value
 func (o *Session) GetExpiresAt() time.Time {
-	if o == nil  {
+	if o == nil {
 		var ret time.Time
 		return ret
 	}
@@ -117,7 +117,7 @@ func (o *Session) GetExpiresAt() time.Time {
 // GetExpiresAtOk returns a tuple with the ExpiresAt field value
 // and a boolean to check if the value has been set.
 func (o *Session) GetExpiresAtOk() (*time.Time, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.ExpiresAt, true
@@ -130,7 +130,7 @@ func (o *Session) SetExpiresAt(v time.Time) {
 
 // GetId returns the Id field value
 func (o *Session) GetId() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -141,7 +141,7 @@ func (o *Session) GetId() string {
 // GetIdOk returns a tuple with the Id field value
 // and a boolean to check if the value has been set.
 func (o *Session) GetIdOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Id, true
@@ -154,7 +154,7 @@ func (o *Session) SetId(v string) {
 
 // GetIdentity returns the Identity field value
 func (o *Session) GetIdentity() Identity {
-	if o == nil  {
+	if o == nil {
 		var ret Identity
 		return ret
 	}
@@ -165,7 +165,7 @@ func (o *Session) GetIdentity() Identity {
 // GetIdentityOk returns a tuple with the Identity field value
 // and a boolean to check if the value has been set.
 func (o *Session) GetIdentityOk() (*Identity, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Identity, true
@@ -178,7 +178,7 @@ func (o *Session) SetIdentity(v Identity) {
 
 // GetIssuedAt returns the IssuedAt field value
 func (o *Session) GetIssuedAt() time.Time {
-	if o == nil  {
+	if o == nil {
 		var ret time.Time
 		return ret
 	}
@@ -189,7 +189,7 @@ func (o *Session) GetIssuedAt() time.Time {
 // GetIssuedAtOk returns a tuple with the IssuedAt field value
 // and a boolean to check if the value has been set.
 func (o *Session) GetIssuedAtOk() (*time.Time, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.IssuedAt, true
@@ -258,5 +258,3 @@ func (v *NullableSession) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

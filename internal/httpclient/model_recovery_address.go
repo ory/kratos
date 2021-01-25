@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -17,16 +17,16 @@ import (
 
 // RecoveryAddress struct for RecoveryAddress
 type RecoveryAddress struct {
-	Id string `json:"id"`
+	Id    string `json:"id"`
 	Value string `json:"value"`
-	Via string `json:"via"`
+	Via   string `json:"via"`
 }
 
 // NewRecoveryAddress instantiates a new RecoveryAddress object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewRecoveryAddress(id string, value string, via string, ) *RecoveryAddress {
+func NewRecoveryAddress(id string, value string, via string) *RecoveryAddress {
 	this := RecoveryAddress{}
 	this.Id = id
 	this.Value = value
@@ -44,7 +44,7 @@ func NewRecoveryAddressWithDefaults() *RecoveryAddress {
 
 // GetId returns the Id field value
 func (o *RecoveryAddress) GetId() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -55,7 +55,7 @@ func (o *RecoveryAddress) GetId() string {
 // GetIdOk returns a tuple with the Id field value
 // and a boolean to check if the value has been set.
 func (o *RecoveryAddress) GetIdOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Id, true
@@ -68,7 +68,7 @@ func (o *RecoveryAddress) SetId(v string) {
 
 // GetValue returns the Value field value
 func (o *RecoveryAddress) GetValue() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -79,7 +79,7 @@ func (o *RecoveryAddress) GetValue() string {
 // GetValueOk returns a tuple with the Value field value
 // and a boolean to check if the value has been set.
 func (o *RecoveryAddress) GetValueOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Value, true
@@ -92,7 +92,7 @@ func (o *RecoveryAddress) SetValue(v string) {
 
 // GetVia returns the Via field value
 func (o *RecoveryAddress) GetVia() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -103,7 +103,7 @@ func (o *RecoveryAddress) GetVia() string {
 // GetViaOk returns a tuple with the Via field value
 // and a boolean to check if the value has been set.
 func (o *RecoveryAddress) GetViaOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Via, true
@@ -163,5 +163,3 @@ func (v *NullableRecoveryAddress) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

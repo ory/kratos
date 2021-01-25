@@ -823,7 +823,7 @@ No authorization required
 
 ## IsAlive
 
-> HealthStatus IsAlive(ctx).Execute()
+> InlineResponse200 IsAlive(ctx).Execute()
 
 Check HTTP Server Status
 
@@ -850,7 +850,7 @@ func main() {
         fmt.Fprintf(os.Stderr, "Error when calling `AdminApi.IsAlive``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `IsAlive`: HealthStatus
+    // response from `IsAlive`: InlineResponse200
     fmt.Fprintf(os.Stdout, "Response from `AdminApi.IsAlive`: %v\n", resp)
 }
 ```
@@ -866,7 +866,7 @@ Other parameters are passed through a pointer to a apiIsAliveRequest struct via 
 
 ### Return type
 
-[**HealthStatus**](healthStatus.md)
+[**InlineResponse200**](inline_response_200.md)
 
 ### Authorization
 

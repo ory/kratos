@@ -3,9 +3,12 @@ package profile
 import (
 	"context"
 	"encoding/json"
-	"github.com/ory/kratos/ui/node"
 	"net/http"
 	"net/url"
+
+	"github.com/ory/kratos/ui/node"
+
+	"github.com/ory/x/pkgerx"
 
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"

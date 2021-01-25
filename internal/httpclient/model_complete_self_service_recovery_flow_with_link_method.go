@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -41,12 +41,12 @@ func NewCompleteSelfServiceRecoveryFlowWithLinkMethodWithDefaults() *CompleteSel
 }
 
 // GetCsrfToken returns the CsrfToken field value if set, zero value otherwise.
-func (o *CompleteSelfServiceRecoveryFlowWithLinkMethod) GetCsrfToken() *string {
+func (o *CompleteSelfServiceRecoveryFlowWithLinkMethod) GetCsrfToken() string {
 	if o == nil || o.CsrfToken == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.CsrfToken
+	return *o.CsrfToken
 }
 
 // GetCsrfTokenOk returns a tuple with the CsrfToken field value if set, nil otherwise
@@ -73,12 +73,12 @@ func (o *CompleteSelfServiceRecoveryFlowWithLinkMethod) SetCsrfToken(v string) {
 }
 
 // GetEmail returns the Email field value if set, zero value otherwise.
-func (o *CompleteSelfServiceRecoveryFlowWithLinkMethod) GetEmail() *string {
+func (o *CompleteSelfServiceRecoveryFlowWithLinkMethod) GetEmail() string {
 	if o == nil || o.Email == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.Email
+	return *o.Email
 }
 
 // GetEmailOk returns a tuple with the Email field value if set, nil otherwise
@@ -150,5 +150,3 @@ func (v *NullableCompleteSelfServiceRecoveryFlowWithLinkMethod) UnmarshalJSON(sr
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-
