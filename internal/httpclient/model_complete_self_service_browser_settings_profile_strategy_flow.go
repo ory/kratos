@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -20,7 +20,7 @@ type CompleteSelfServiceBrowserSettingsProfileStrategyFlow struct {
 	// The Anti-CSRF Token  This token is only required when performing browser flows.
 	CsrfToken *string `json:"csrf_token,omitempty"`
 	// Traits contains all of the identity's traits.
-	Traits *map[string]interface{} `json:"traits,omitempty"`
+	Traits map[string]interface{} `json:"traits,omitempty"`
 }
 
 // NewCompleteSelfServiceBrowserSettingsProfileStrategyFlow instantiates a new CompleteSelfServiceBrowserSettingsProfileStrategyFlow object
@@ -41,12 +41,12 @@ func NewCompleteSelfServiceBrowserSettingsProfileStrategyFlowWithDefaults() *Com
 }
 
 // GetCsrfToken returns the CsrfToken field value if set, zero value otherwise.
-func (o *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) GetCsrfToken() *string {
+func (o *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) GetCsrfToken() string {
 	if o == nil || o.CsrfToken == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.CsrfToken
+	return *o.CsrfToken
 }
 
 // GetCsrfTokenOk returns a tuple with the CsrfToken field value if set, nil otherwise
@@ -73,9 +73,9 @@ func (o *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) SetCsrfToken(v s
 }
 
 // GetTraits returns the Traits field value if set, zero value otherwise.
-func (o *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) GetTraits() *map[string]interface{} {
+func (o *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) GetTraits() map[string]interface{} {
 	if o == nil || o.Traits == nil {
-		var ret *map[string]interface{}
+		var ret map[string]interface{}
 		return ret
 	}
 	return o.Traits
@@ -83,7 +83,7 @@ func (o *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) GetTraits() *map
 
 // GetTraitsOk returns a tuple with the Traits field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) GetTraitsOk() (*map[string]interface{}, bool) {
+func (o *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) GetTraitsOk() (map[string]interface{}, bool) {
 	if o == nil || o.Traits == nil {
 		return nil, false
 	}
@@ -101,7 +101,7 @@ func (o *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) HasTraits() bool
 
 // SetTraits gets a reference to the given map[string]interface{} and assigns it to the Traits field.
 func (o *CompleteSelfServiceBrowserSettingsProfileStrategyFlow) SetTraits(v map[string]interface{}) {
-	o.Traits = &v
+	o.Traits = v
 }
 
 func (o CompleteSelfServiceBrowserSettingsProfileStrategyFlow) MarshalJSON() ([]byte, error) {
@@ -150,5 +150,3 @@ func (v *NullableCompleteSelfServiceBrowserSettingsProfileStrategyFlow) Unmarsha
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

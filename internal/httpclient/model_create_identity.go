@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -27,7 +27,7 @@ type CreateIdentity struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewCreateIdentity(schemaId string, traits map[string]interface{}, ) *CreateIdentity {
+func NewCreateIdentity(schemaId string, traits map[string]interface{}) *CreateIdentity {
 	this := CreateIdentity{}
 	this.SchemaId = schemaId
 	this.Traits = traits
@@ -44,7 +44,7 @@ func NewCreateIdentityWithDefaults() *CreateIdentity {
 
 // GetSchemaId returns the SchemaId field value
 func (o *CreateIdentity) GetSchemaId() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -55,7 +55,7 @@ func (o *CreateIdentity) GetSchemaId() string {
 // GetSchemaIdOk returns a tuple with the SchemaId field value
 // and a boolean to check if the value has been set.
 func (o *CreateIdentity) GetSchemaIdOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.SchemaId, true
@@ -68,7 +68,7 @@ func (o *CreateIdentity) SetSchemaId(v string) {
 
 // GetTraits returns the Traits field value
 func (o *CreateIdentity) GetTraits() map[string]interface{} {
-	if o == nil  {
+	if o == nil {
 		var ret map[string]interface{}
 		return ret
 	}
@@ -78,11 +78,11 @@ func (o *CreateIdentity) GetTraits() map[string]interface{} {
 
 // GetTraitsOk returns a tuple with the Traits field value
 // and a boolean to check if the value has been set.
-func (o *CreateIdentity) GetTraitsOk() (*map[string]interface{}, bool) {
-	if o == nil  {
+func (o *CreateIdentity) GetTraitsOk() (map[string]interface{}, bool) {
+	if o == nil {
 		return nil, false
 	}
-	return &o.Traits, true
+	return o.Traits, true
 }
 
 // SetTraits sets field value
@@ -136,5 +136,3 @@ func (v *NullableCreateIdentity) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

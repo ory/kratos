@@ -3,8 +3,9 @@ package recovery
 import (
 	"context"
 	"encoding/json"
-	"github.com/ory/kratos/ui/node"
 	"testing"
+
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/gofrs/uuid"
@@ -123,14 +124,14 @@ func TestFlowPersister(ctx context.Context, conf *config.Config, p interface {
 			assert.Equal(t, expected.Messages, actual.Messages)
 			assert.EqualValues(t, node.Nodes{
 				// v0.5: {Name: "zab", Type: "zab", Pattern: "zab"},
-				node.NewInputField("zab", nil, node.DefaultGroup, "zab",  node.WithInputAttributes(func(a *node.InputAttributes) {
+				node.NewInputField("zab", nil, node.DefaultGroup, "zab", node.WithInputAttributes(func(a *node.InputAttributes) {
 					a.Pattern = "zab"
 				})),
 			}, actual.
 				Methods["password"].Config.FlowMethodConfigurator.(*form.HTMLForm).Nodes)
 			assert.EqualValues(t, node.Nodes{
 				// v0.5: {Name: "zab", Type: "bar", Pattern: "baz"},
-				node.NewInputField("zab",nil, node.DefaultGroup, "bar",  node.WithInputAttributes(func(a *node.InputAttributes) {
+				node.NewInputField("zab", nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
 					a.Pattern = "baz"
 				})),
 			}, actual.

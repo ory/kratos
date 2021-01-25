@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -18,11 +18,11 @@ import (
 // RegistrationFlowMethodConfig struct for RegistrationFlowMethodConfig
 type RegistrationFlowMethodConfig struct {
 	// Action should be used as the form action URL `<form action=\"{{ .Action }}\" method=\"post\">`.
-	Action string `json:"action"`
+	Action   string   `json:"action"`
 	Messages []UiText `json:"messages,omitempty"`
 	// Method is the form method (e.g. POST)
-	Method string `json:"method"`
-	Nodes []UiNode `json:"nodes"`
+	Method string   `json:"method"`
+	Nodes  []UiNode `json:"nodes"`
 	// Providers is set for the \"oidc\" registration method.
 	Providers [][]UiNode `json:"providers,omitempty"`
 }
@@ -31,7 +31,7 @@ type RegistrationFlowMethodConfig struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewRegistrationFlowMethodConfig(action string, method string, nodes []UiNode, ) *RegistrationFlowMethodConfig {
+func NewRegistrationFlowMethodConfig(action string, method string, nodes []UiNode) *RegistrationFlowMethodConfig {
 	this := RegistrationFlowMethodConfig{}
 	this.Action = action
 	this.Method = method
@@ -49,7 +49,7 @@ func NewRegistrationFlowMethodConfigWithDefaults() *RegistrationFlowMethodConfig
 
 // GetAction returns the Action field value
 func (o *RegistrationFlowMethodConfig) GetAction() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -60,7 +60,7 @@ func (o *RegistrationFlowMethodConfig) GetAction() string {
 // GetActionOk returns a tuple with the Action field value
 // and a boolean to check if the value has been set.
 func (o *RegistrationFlowMethodConfig) GetActionOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Action, true
@@ -105,7 +105,7 @@ func (o *RegistrationFlowMethodConfig) SetMessages(v []UiText) {
 
 // GetMethod returns the Method field value
 func (o *RegistrationFlowMethodConfig) GetMethod() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -116,7 +116,7 @@ func (o *RegistrationFlowMethodConfig) GetMethod() string {
 // GetMethodOk returns a tuple with the Method field value
 // and a boolean to check if the value has been set.
 func (o *RegistrationFlowMethodConfig) GetMethodOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Method, true
@@ -129,7 +129,7 @@ func (o *RegistrationFlowMethodConfig) SetMethod(v string) {
 
 // GetNodes returns the Nodes field value
 func (o *RegistrationFlowMethodConfig) GetNodes() []UiNode {
-	if o == nil  {
+	if o == nil {
 		var ret []UiNode
 		return ret
 	}
@@ -140,7 +140,7 @@ func (o *RegistrationFlowMethodConfig) GetNodes() []UiNode {
 // GetNodesOk returns a tuple with the Nodes field value
 // and a boolean to check if the value has been set.
 func (o *RegistrationFlowMethodConfig) GetNodesOk() ([]UiNode, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return o.Nodes, true
@@ -238,5 +238,3 @@ func (v *NullableRegistrationFlowMethodConfig) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

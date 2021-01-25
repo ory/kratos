@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/ory/kratos/ui/node"
 	"net/http"
 	"net/url"
 	"sort"
 	"testing"
+
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/pkg/errors"
 
@@ -125,7 +126,7 @@ func TestContainer(t *testing.T) {
 				}),
 				expect: &HTMLForm{
 					Nodes: node.Nodes{
-						node.NewInputFieldFromJSON("meal.chef", node.DefaultGroup, "aeneas"),
+						node.NewInputFieldFromJSON("meal.chef", "aeneas", node.DefaultGroup),
 						&node.Node{Group: node.DefaultGroup, Type: node.Input, Attributes: &node.InputAttributes{Name: "meal.name", Type: node.InputAttributeTypeText}, Messages: text.Messages{*text.NewValidationErrorRequired("name")}},
 					},
 				},

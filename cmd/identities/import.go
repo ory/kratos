@@ -1,19 +1,17 @@
 package identities
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 
-	"github.com/pkg/errors"
-
-	"github.com/ory/x/swaggerx"
+	"github.com/ory/kratos-client-go"
 
 	"github.com/ory/x/cmdx"
 
 	"github.com/spf13/cobra"
 
-	"github.com/ory/kratos-client-go/client/admin"
-	"github.com/ory/kratos-client-go/models"
 	"github.com/ory/kratos/cmd/cliclient"
 )
 
@@ -41,7 +39,7 @@ WARNING: Importing credentials is not yet supported.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := cliclient.NewClient(cmd)
 
-		imported := make([]*models.Identity, 0, len(args))
+		imported := make([]kratos.Identity, 0, len(args))
 		failed := make(map[string]error)
 
 		is, err := readIdentities(cmd, args)
@@ -50,31 +48,36 @@ WARNING: Importing credentials is not yet supported.`,
 		}
 
 		for src, i := range is {
-			err = validateIdentity(cmd, src, i, c.Public.GetSchema)
+			err = validateIdentity(cmd, src, i, func(ctx context.Context, id string) (map[string]interface{}, *http.Response, error) {
+				return c.PublicApi.GetSchema(ctx, id).Execute()
+			})
 			if err != nil {
 				return err
 			}
 
-			var params models.CreateIdentity
+			var params kratos.CreateIdentity
 			err = json.Unmarshal([]byte(i), &params)
 			if err != nil {
 				_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "STD_IN: Could not parse identity")
 				return cmdx.FailSilently(cmd)
 			}
 
-			resp, err := c.Admin.CreateIdentity(&admin.CreateIdentityParams{
-				Body:       &params,
-				Context:    cmd.Context(),
-				HTTPClient: cliclient.NewHTTPClient(cmd),
-			})
+			// TODO merge
+			//
+			//resp, err := c.Admin.CreateIdentity(&admin.CreateIdentityParams{
+			//	Body:       &params,
+			//	Context:    cmd.Context(),
+			//	HTTPClient: cliclient.NewHTTPClient(cmd),
+			//})
+			ident, _, err := c.AdminApi.CreateIdentity(cmd.Context()).CreateIdentity(params).Execute()
 			if err != nil {
-				failed[src] = errors.New(swaggerx.FormatSwaggerError(err))
+				failed[src] = err
 			} else {
-				imported = append(imported, resp.Payload)
+				imported = append(imported, *ident)
 			}
 		}
 		if len(imported) == 1 {
-			cmdx.PrintRow(cmd, (*outputIdentity)(imported[0]))
+			cmdx.PrintRow(cmd, (*outputIdentity)(&imported[0]))
 		} else {
 			cmdx.PrintTable(cmd, &outputIdentityCollection{identities: imported})
 		}

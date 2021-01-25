@@ -3,15 +3,17 @@ package node_test
 import (
 	"bytes"
 	"encoding/json"
+	"testing"
+
 	"github.com/bxcodec/faker/v3"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
+
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/ui/node"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/tidwall/gjson"
-	"testing"
 )
 
 func init() {

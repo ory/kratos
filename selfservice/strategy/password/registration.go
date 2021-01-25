@@ -3,8 +3,11 @@ package password
 import (
 	"context"
 	"encoding/json"
-	"github.com/ory/kratos/ui/node"
 	"net/http"
+
+	"github.com/ory/kratos/ui/node"
+
+	"github.com/ory/x/pkgerx"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
@@ -61,7 +64,7 @@ func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Reques
 			if p != nil {
 				for _, n := range form.NewHTMLFormFromJSON("", node.PasswordGroup, p.Traits, "traits").Nodes {
 					// we only set the value and not the whole field because we want to keep types from the initial form generation
-					method.Config.SetValue(n.ID(), n)
+					method.Config.FlowMethodConfigurator.SetValue(n.ID(), n)
 				}
 			}
 

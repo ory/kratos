@@ -27,10 +27,9 @@ var (
 type HealthApiService service
 
 type HealthApiApiIsInstanceAliveRequest struct {
-	ctx _context.Context
+	ctx        _context.Context
 	ApiService *HealthApiService
 }
-
 
 func (r HealthApiApiIsInstanceAliveRequest) Execute() (HealthStatus, *_nethttp.Response, error) {
 	return r.ApiService.IsInstanceAliveExecute(r)
@@ -48,11 +47,11 @@ Be aware that if you are running multiple nodes of this service, the health stat
 refer to the cluster state, only to a single instance.
  * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return HealthApiApiIsInstanceAliveRequest
- */
+*/
 func (a *HealthApiService) IsInstanceAlive(ctx _context.Context) HealthApiApiIsInstanceAliveRequest {
 	return HealthApiApiIsInstanceAliveRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
@@ -145,10 +144,9 @@ func (a *HealthApiService) IsInstanceAliveExecute(r HealthApiApiIsInstanceAliveR
 }
 
 type HealthApiApiIsInstanceReadyRequest struct {
-	ctx _context.Context
+	ctx        _context.Context
 	ApiService *HealthApiService
 }
-
 
 func (r HealthApiApiIsInstanceReadyRequest) Execute() (HealthStatus, *_nethttp.Response, error) {
 	return r.ApiService.IsInstanceReadyExecute(r)
@@ -166,11 +164,11 @@ Be aware that if you are running multiple nodes of this service, the health stat
 refer to the cluster state, only to a single instance.
  * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return HealthApiApiIsInstanceReadyRequest
- */
+*/
 func (a *HealthApiService) IsInstanceReady(ctx _context.Context) HealthApiApiIsInstanceReadyRequest {
 	return HealthApiApiIsInstanceReadyRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 

@@ -27,10 +27,9 @@ var (
 type VersionApiService service
 
 type VersionApiApiGetVersionRequest struct {
-	ctx _context.Context
+	ctx        _context.Context
 	ApiService *VersionApiService
 }
-
 
 func (r VersionApiApiGetVersionRequest) Execute() (Version, *_nethttp.Response, error) {
 	return r.ApiService.GetVersionExecute(r)
@@ -47,11 +46,11 @@ Be aware that if you are running multiple nodes of this service, the health stat
 refer to the cluster state, only to a single instance.
  * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return VersionApiApiGetVersionRequest
- */
+*/
 func (a *VersionApiService) GetVersion(ctx _context.Context) VersionApiApiGetVersionRequest {
 	return VersionApiApiGetVersionRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 

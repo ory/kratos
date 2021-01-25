@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -18,23 +18,23 @@ import (
 // UiNodeInputAttributes InputAttributes represents the attributes of an input node
 type UiNodeInputAttributes struct {
 	// Sets the input's disabled field to true or false.
-	Disabled bool `json:"disabled"`
-	Label *UiText `json:"label,omitempty"`
+	Disabled bool    `json:"disabled"`
+	Label    *UiText `json:"label,omitempty"`
 	// The input's element name.
 	Name string `json:"name"`
 	// The input's pattern.
 	Pattern *string `json:"pattern,omitempty"`
 	// Mark this input field as required.
-	Required *bool `json:"required,omitempty"`
-	Type string `json:"type"`
-	Value *UiNodeInputAttributesValue `json:"value,omitempty"`
+	Required *bool                       `json:"required,omitempty"`
+	Type     string                      `json:"type"`
+	Value    *UiNodeInputAttributesValue `json:"value,omitempty"`
 }
 
 // NewUiNodeInputAttributes instantiates a new UiNodeInputAttributes object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewUiNodeInputAttributes(disabled bool, name string, type_ string, ) *UiNodeInputAttributes {
+func NewUiNodeInputAttributes(disabled bool, name string, type_ string) *UiNodeInputAttributes {
 	this := UiNodeInputAttributes{}
 	this.Disabled = disabled
 	this.Name = name
@@ -52,7 +52,7 @@ func NewUiNodeInputAttributesWithDefaults() *UiNodeInputAttributes {
 
 // GetDisabled returns the Disabled field value
 func (o *UiNodeInputAttributes) GetDisabled() bool {
-	if o == nil  {
+	if o == nil {
 		var ret bool
 		return ret
 	}
@@ -63,7 +63,7 @@ func (o *UiNodeInputAttributes) GetDisabled() bool {
 // GetDisabledOk returns a tuple with the Disabled field value
 // and a boolean to check if the value has been set.
 func (o *UiNodeInputAttributes) GetDisabledOk() (*bool, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Disabled, true
@@ -75,12 +75,12 @@ func (o *UiNodeInputAttributes) SetDisabled(v bool) {
 }
 
 // GetLabel returns the Label field value if set, zero value otherwise.
-func (o *UiNodeInputAttributes) GetLabel() *UiText {
+func (o *UiNodeInputAttributes) GetLabel() UiText {
 	if o == nil || o.Label == nil {
-		var ret *UiText
+		var ret UiText
 		return ret
 	}
-	return o.Label
+	return *o.Label
 }
 
 // GetLabelOk returns a tuple with the Label field value if set, nil otherwise
@@ -108,7 +108,7 @@ func (o *UiNodeInputAttributes) SetLabel(v UiText) {
 
 // GetName returns the Name field value
 func (o *UiNodeInputAttributes) GetName() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -119,7 +119,7 @@ func (o *UiNodeInputAttributes) GetName() string {
 // GetNameOk returns a tuple with the Name field value
 // and a boolean to check if the value has been set.
 func (o *UiNodeInputAttributes) GetNameOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Name, true
@@ -131,12 +131,12 @@ func (o *UiNodeInputAttributes) SetName(v string) {
 }
 
 // GetPattern returns the Pattern field value if set, zero value otherwise.
-func (o *UiNodeInputAttributes) GetPattern() *string {
+func (o *UiNodeInputAttributes) GetPattern() string {
 	if o == nil || o.Pattern == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.Pattern
+	return *o.Pattern
 }
 
 // GetPatternOk returns a tuple with the Pattern field value if set, nil otherwise
@@ -163,12 +163,12 @@ func (o *UiNodeInputAttributes) SetPattern(v string) {
 }
 
 // GetRequired returns the Required field value if set, zero value otherwise.
-func (o *UiNodeInputAttributes) GetRequired() *bool {
+func (o *UiNodeInputAttributes) GetRequired() bool {
 	if o == nil || o.Required == nil {
-		var ret *bool
+		var ret bool
 		return ret
 	}
-	return o.Required
+	return *o.Required
 }
 
 // GetRequiredOk returns a tuple with the Required field value if set, nil otherwise
@@ -196,7 +196,7 @@ func (o *UiNodeInputAttributes) SetRequired(v bool) {
 
 // GetType returns the Type field value
 func (o *UiNodeInputAttributes) GetType() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -207,7 +207,7 @@ func (o *UiNodeInputAttributes) GetType() string {
 // GetTypeOk returns a tuple with the Type field value
 // and a boolean to check if the value has been set.
 func (o *UiNodeInputAttributes) GetTypeOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Type, true
@@ -219,12 +219,12 @@ func (o *UiNodeInputAttributes) SetType(v string) {
 }
 
 // GetValue returns the Value field value if set, zero value otherwise.
-func (o *UiNodeInputAttributes) GetValue() *UiNodeInputAttributesValue {
+func (o *UiNodeInputAttributes) GetValue() UiNodeInputAttributesValue {
 	if o == nil || o.Value == nil {
-		var ret *UiNodeInputAttributesValue
+		var ret UiNodeInputAttributesValue
 		return ret
 	}
-	return o.Value
+	return *o.Value
 }
 
 // GetValueOk returns a tuple with the Value field value if set, nil otherwise
@@ -311,5 +311,3 @@ func (v *NullableUiNodeInputAttributes) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

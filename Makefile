@@ -91,7 +91,7 @@ sdk: .bin/swagger .bin/cli node_modules
 		swagger validate ./spec/swagger.json
 		CIRCLE_PROJECT_USERNAME=ory CIRCLE_PROJECT_REPONAME=kratos \
 				cli dev openapi migrate \
-					-p https://raw.githubusercontent.com/ory/x/v0.0.177/healthx/openapi/patch.yaml \
+					-p https://raw.githubusercontent.com/ory/x/master/healthx/openapi/patch.yaml \
 					-p file://.schema/openapi/patches/meta.yaml \
 					-p file://.schema/openapi/patches/schema.yaml \
 					spec/swagger.json spec/openapi.json

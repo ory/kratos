@@ -50,7 +50,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/healthStatus'
+                $ref: '#/components/schemas/inline_response_200'
           description: Ory Kratos is ready to accept connections.
         "500":
           content:
@@ -385,8 +385,8 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-          description: The raw identity traits schema
+                $ref: '#/components/schemas/jsonSchema'
+          description: jsonSchema
         "404":
           content:
             application/json:
@@ -1695,12 +1695,6 @@ components:
           schema:
             $ref: '#/components/schemas/Identity'
       description: A single identity.
-    schemaResponse:
-      content:
-        application/json:
-          schema:
-            type: object
-      description: The raw identity traits schema
   schemas:
     CompleteSelfServiceBrowserSettingsProfileStrategyFlow:
       description: nolint:deadcode,unused
@@ -2016,11 +2010,15 @@ components:
     errorContainer:
       example:
         id: id
-        errors: '{}'
+        errors:
+        - '{}'
+        - '{}'
       properties:
         errors:
           description: Errors in the container
-          type: object
+          items:
+            type: object
+          type: array
         id:
           format: uuid4
           type: string
@@ -2094,12 +2092,13 @@ components:
           type: object
       type: object
     healthStatus:
-      example:
-        status: status
       properties:
         status:
           description: Status always contains "ok".
           type: string
+      type: object
+    jsonSchema:
+      description: Raw JSON Schema
       type: object
     loginFlow:
       description: |-
@@ -2235,6 +2234,7 @@ components:
       - issued_at
       - methods
       - request_url
+      - type
       title: Login Flow
       type: object
     loginFlowMethod:
@@ -3563,6 +3563,8 @@ components:
           type: string
       required:
       - attributes
+      - group
+      - messages
       - type
       title: Node represents a flow's nodes
       type: object
@@ -3604,11 +3606,6 @@ components:
       type: object
     uiNodeInputAttributeType:
       type: string
-    uiNodeInputAttributesValue:
-      oneOf:
-      - type: string
-      - type: number
-      - type: boolean
     uiNodeInputAttributes:
       description: InputAttributes represents the attributes of an input node
       properties:
@@ -3635,6 +3632,11 @@ components:
       - name
       - type
       type: object
+    uiNodeInputAttributesValue:
+      oneOf:
+      - type: string
+      - type: number
+      - type: boolean
     uiNodeTextAttributes:
       properties:
         text:
@@ -3781,8 +3783,10 @@ components:
           title: Type is the flow type.
           type: string
       required:
+      - id
       - methods
       - state
+      - type
       title: A Verification Flow
       type: object
     verificationFlowMethod:
@@ -3925,6 +3929,8 @@ components:
         status:
           description: Always "ok".
           type: string
+      required:
+      - status
       type: object
     inline_response_503:
       properties:
@@ -3934,6 +3940,8 @@ components:
           description: Errors contains a list of errors that caused the not ready
             status.
           type: object
+      required:
+      - errors
       type: object
     inline_response_200_1:
       example:
@@ -3942,6 +3950,8 @@ components:
         version:
           description: The version of Ory Kratos.
           type: string
+      required:
+      - version
       type: object
   securitySchemes:
     sessionCookie:

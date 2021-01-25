@@ -7,10 +7,10 @@ func NewCSRFNode(token string) *Node {
 		Type:  Input,
 		Group: DefaultGroup,
 		Attributes: &InputAttributes{
-			Name:     x.CSRFTokenName,
-			Type:     InputAttributeTypeHidden,
-			FieldValue:    token,
-			Required: true,
+			Name:       x.CSRFTokenName,
+			Type:       InputAttributeTypeHidden,
+			FieldValue: token,
+			Required:   true,
 		},
 	}
 }

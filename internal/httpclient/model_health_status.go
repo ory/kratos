@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -39,12 +39,12 @@ func NewHealthStatusWithDefaults() *HealthStatus {
 }
 
 // GetStatus returns the Status field value if set, zero value otherwise.
-func (o *HealthStatus) GetStatus() *string {
+func (o *HealthStatus) GetStatus() string {
 	if o == nil || o.Status == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.Status
+	return *o.Status
 }
 
 // GetStatusOk returns a tuple with the Status field value if set, nil otherwise
@@ -113,5 +113,3 @@ func (v *NullableHealthStatus) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

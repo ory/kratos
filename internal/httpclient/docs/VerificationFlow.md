@@ -6,19 +6,19 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Active** | Pointer to **string** | Active, if set, contains the registration method that is being used. It is initially not set. | [optional] 
 **ExpiresAt** | Pointer to **time.Time** | ExpiresAt is the time (UTC) when the request expires. If the user still wishes to verify the address, a new request has to be initiated. | [optional] 
-**Id** | Pointer to **string** |  | [optional] 
+**Id** | **string** |  | 
 **IssuedAt** | Pointer to **time.Time** | IssuedAt is the time (UTC) when the request occurred. | [optional] 
 **Messages** | Pointer to [**[]UiText**](UiText.md) |  | [optional] 
 **Methods** | [**map[string]VerificationFlowMethod**](verificationFlowMethod.md) | Methods contains context for all account verification methods. If a registration request has been processed, but for example the password is incorrect, this will contain error messages. | 
 **RequestUrl** | Pointer to **string** | RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL&#39;s path or query for example. | [optional] 
 **State** | **string** |  | 
-**Type** | Pointer to **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. | [optional] 
+**Type** | **string** | The flow type can either be &#x60;api&#x60; or &#x60;browser&#x60;. | 
 
 ## Methods
 
 ### NewVerificationFlow
 
-`func NewVerificationFlow(methods map[string]VerificationFlowMethod, state string, ) *VerificationFlow`
+`func NewVerificationFlow(id string, methods map[string]VerificationFlowMethod, state string, type_ string, ) *VerificationFlow`
 
 NewVerificationFlow instantiates a new VerificationFlow object
 This constructor will assign default values to properties that have it defined,
@@ -102,11 +102,6 @@ and a boolean to check if the value has been set.
 
 SetId sets Id field to given value.
 
-### HasId
-
-`func (o *VerificationFlow) HasId() bool`
-
-HasId returns a boolean if a field has been set.
 
 ### GetIssuedAt
 
@@ -242,11 +237,6 @@ and a boolean to check if the value has been set.
 
 SetType sets Type field to given value.
 
-### HasType
-
-`func (o *VerificationFlow) HasType() bool`
-
-HasType returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

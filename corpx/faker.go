@@ -1,11 +1,12 @@
 package corpx
 
 import (
-	"github.com/ory/kratos/ui/node"
 	"math/rand"
 	"net/http"
 	"reflect"
 	"time"
+
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/pkg/errors"

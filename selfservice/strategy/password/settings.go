@@ -2,10 +2,13 @@ package password
 
 import (
 	"encoding/json"
-	"github.com/ory/kratos/ui/node"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/ory/kratos/ui/node"
+
+	"github.com/ory/x/pkgerx"
 
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
@@ -214,7 +217,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, _ *identity.Identity,
 	hf := &form.HTMLForm{Action: urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteSettings),
 		url.Values{"flow": {f.ID.String()}}).String(),
 		// v0.5: Fields: form.Fields{{Name: "password", Type: "password", Required: true}},
-		Nodes: node.Nodes{NewPasswordNode()},
+		Nodes:  node.Nodes{NewPasswordNode()},
 		Method: "POST"}
 	hf.SetCSRF(s.d.GenerateCSRFToken(r))
 

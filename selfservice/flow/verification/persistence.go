@@ -3,9 +3,11 @@ package verification
 import (
 	"context"
 	"encoding/json"
-	"github.com/davecgh/go-spew/spew"
-	"github.com/ory/kratos/ui/node"
 	"testing"
+
+	"github.com/davecgh/go-spew/spew"
+
+	"github.com/ory/kratos/ui/node"
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/gofrs/uuid"
@@ -91,7 +93,7 @@ func TestFlowPersister(ctx context.Context, conf *config.Config, p interface {
 				Method: StrategyVerificationLinkName, Config: &FlowMethodConfig{FlowMethodConfigurator: &form.HTMLForm{
 					Nodes: node.Nodes{
 						// v0.5: {Name: "zab", Type: "bar", Pattern: "baz"},
-						node.NewInputField("zab",nil,  node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
+						node.NewInputField("zab", nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
 							a.Pattern = "baz"
 						})),
 					}}}}
@@ -99,7 +101,7 @@ func TestFlowPersister(ctx context.Context, conf *config.Config, p interface {
 				Method: "password", Config: &FlowMethodConfig{FlowMethodConfigurator: &form.HTMLForm{
 					Nodes: node.Nodes{
 						// v0.5: {Name: "foo", Type: "bar", Pattern: "baz"},
-						node.NewInputField("foo",nil,  node.DefaultGroup, "bar",  node.WithInputAttributes(func(a *node.InputAttributes) {
+						node.NewInputField("foo", nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
 							a.Pattern = "baz"
 						})),
 					}}}}
@@ -127,16 +129,16 @@ func TestFlowPersister(ctx context.Context, conf *config.Config, p interface {
 			assert.Equal(t, "/new-request-url", actual.RequestURL)
 			assert.Equal(t, StrategyVerificationLinkName, actual.Active.String())
 			assert.Equal(t, expected.Messages, actual.Messages)
-			assert.EqualValues(t,node.Nodes{
+			assert.EqualValues(t, node.Nodes{
 				// v0.5: {Name: "zab", Type: "zab", Pattern: "zab"},
-				node.NewInputField("zab",nil,  node.DefaultGroup, "zab", node.WithInputAttributes(func(a *node.InputAttributes) {
+				node.NewInputField("zab", nil, node.DefaultGroup, "zab", node.WithInputAttributes(func(a *node.InputAttributes) {
 					a.Pattern = "zab"
 				})),
 			}, actual.
 				Methods["password"].Config.FlowMethodConfigurator.(*form.HTMLForm).Nodes)
-			assert.EqualValues(t,node.Nodes{
+			assert.EqualValues(t, node.Nodes{
 				// v0.5: {Name: "zab", Type: "bar", Pattern: "baz"},
-				node.NewInputField("zab",nil,  node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
+				node.NewInputField("zab", nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
 					a.Pattern = "baz"
 				})),
 			}, actual.

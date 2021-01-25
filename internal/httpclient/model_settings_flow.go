@@ -1,7 +1,7 @@
 /*
  * Ory Kratos API
  *
- * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests. 
+ * Documentation for all public and administrative Ory Kratos APIs. Public and administrative APIs are exposed on different ports. Public APIs can face the public internet without any protection while administrative APIs should never be exposed without prior authorization. To protect the administative API port you should use something like Nginx, Ory Oathkeeper, or any other technology capable of authorizing incoming requests.
  *
  * API version: 1.0.0
  * Contact: hi@ory.sh
@@ -22,16 +22,16 @@ type SettingsFlow struct {
 	Active *string `json:"active,omitempty"`
 	// ExpiresAt is the time (UTC) when the flow expires. If the user still wishes to update the setting, a new flow has to be initiated.
 	ExpiresAt time.Time `json:"expires_at"`
-	Id string `json:"id"`
-	Identity Identity `json:"identity"`
+	Id        string    `json:"id"`
+	Identity  Identity  `json:"identity"`
 	// IssuedAt is the time (UTC) when the flow occurred.
 	IssuedAt time.Time `json:"issued_at"`
-	Messages []UiText `json:"messages,omitempty"`
+	Messages []UiText  `json:"messages,omitempty"`
 	// Methods contains context for all enabled registration methods. If a settings flow has been processed, but for example the first name is empty, this will contain error messages.
 	Methods map[string]SettingsFlowMethod `json:"methods"`
 	// RequestURL is the initial URL that was requested from ORY Kratos. It can be used to forward information contained in the URL's path or query for example.
 	RequestUrl string `json:"request_url"`
-	State string `json:"state"`
+	State      string `json:"state"`
 	// The flow type can either be `api` or `browser`.
 	Type *string `json:"type,omitempty"`
 }
@@ -40,7 +40,7 @@ type SettingsFlow struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSettingsFlow(expiresAt time.Time, id string, identity Identity, issuedAt time.Time, methods map[string]SettingsFlowMethod, requestUrl string, state string, ) *SettingsFlow {
+func NewSettingsFlow(expiresAt time.Time, id string, identity Identity, issuedAt time.Time, methods map[string]SettingsFlowMethod, requestUrl string, state string) *SettingsFlow {
 	this := SettingsFlow{}
 	this.ExpiresAt = expiresAt
 	this.Id = id
@@ -61,12 +61,12 @@ func NewSettingsFlowWithDefaults() *SettingsFlow {
 }
 
 // GetActive returns the Active field value if set, zero value otherwise.
-func (o *SettingsFlow) GetActive() *string {
+func (o *SettingsFlow) GetActive() string {
 	if o == nil || o.Active == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.Active
+	return *o.Active
 }
 
 // GetActiveOk returns a tuple with the Active field value if set, nil otherwise
@@ -94,7 +94,7 @@ func (o *SettingsFlow) SetActive(v string) {
 
 // GetExpiresAt returns the ExpiresAt field value
 func (o *SettingsFlow) GetExpiresAt() time.Time {
-	if o == nil  {
+	if o == nil {
 		var ret time.Time
 		return ret
 	}
@@ -105,7 +105,7 @@ func (o *SettingsFlow) GetExpiresAt() time.Time {
 // GetExpiresAtOk returns a tuple with the ExpiresAt field value
 // and a boolean to check if the value has been set.
 func (o *SettingsFlow) GetExpiresAtOk() (*time.Time, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.ExpiresAt, true
@@ -118,7 +118,7 @@ func (o *SettingsFlow) SetExpiresAt(v time.Time) {
 
 // GetId returns the Id field value
 func (o *SettingsFlow) GetId() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -129,7 +129,7 @@ func (o *SettingsFlow) GetId() string {
 // GetIdOk returns a tuple with the Id field value
 // and a boolean to check if the value has been set.
 func (o *SettingsFlow) GetIdOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Id, true
@@ -142,7 +142,7 @@ func (o *SettingsFlow) SetId(v string) {
 
 // GetIdentity returns the Identity field value
 func (o *SettingsFlow) GetIdentity() Identity {
-	if o == nil  {
+	if o == nil {
 		var ret Identity
 		return ret
 	}
@@ -153,7 +153,7 @@ func (o *SettingsFlow) GetIdentity() Identity {
 // GetIdentityOk returns a tuple with the Identity field value
 // and a boolean to check if the value has been set.
 func (o *SettingsFlow) GetIdentityOk() (*Identity, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Identity, true
@@ -166,7 +166,7 @@ func (o *SettingsFlow) SetIdentity(v Identity) {
 
 // GetIssuedAt returns the IssuedAt field value
 func (o *SettingsFlow) GetIssuedAt() time.Time {
-	if o == nil  {
+	if o == nil {
 		var ret time.Time
 		return ret
 	}
@@ -177,7 +177,7 @@ func (o *SettingsFlow) GetIssuedAt() time.Time {
 // GetIssuedAtOk returns a tuple with the IssuedAt field value
 // and a boolean to check if the value has been set.
 func (o *SettingsFlow) GetIssuedAtOk() (*time.Time, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.IssuedAt, true
@@ -222,7 +222,7 @@ func (o *SettingsFlow) SetMessages(v []UiText) {
 
 // GetMethods returns the Methods field value
 func (o *SettingsFlow) GetMethods() map[string]SettingsFlowMethod {
-	if o == nil  {
+	if o == nil {
 		var ret map[string]SettingsFlowMethod
 		return ret
 	}
@@ -233,7 +233,7 @@ func (o *SettingsFlow) GetMethods() map[string]SettingsFlowMethod {
 // GetMethodsOk returns a tuple with the Methods field value
 // and a boolean to check if the value has been set.
 func (o *SettingsFlow) GetMethodsOk() (*map[string]SettingsFlowMethod, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Methods, true
@@ -246,7 +246,7 @@ func (o *SettingsFlow) SetMethods(v map[string]SettingsFlowMethod) {
 
 // GetRequestUrl returns the RequestUrl field value
 func (o *SettingsFlow) GetRequestUrl() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -257,7 +257,7 @@ func (o *SettingsFlow) GetRequestUrl() string {
 // GetRequestUrlOk returns a tuple with the RequestUrl field value
 // and a boolean to check if the value has been set.
 func (o *SettingsFlow) GetRequestUrlOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.RequestUrl, true
@@ -270,7 +270,7 @@ func (o *SettingsFlow) SetRequestUrl(v string) {
 
 // GetState returns the State field value
 func (o *SettingsFlow) GetState() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -281,7 +281,7 @@ func (o *SettingsFlow) GetState() string {
 // GetStateOk returns a tuple with the State field value
 // and a boolean to check if the value has been set.
 func (o *SettingsFlow) GetStateOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.State, true
@@ -293,12 +293,12 @@ func (o *SettingsFlow) SetState(v string) {
 }
 
 // GetType returns the Type field value if set, zero value otherwise.
-func (o *SettingsFlow) GetType() *string {
+func (o *SettingsFlow) GetType() string {
 	if o == nil || o.Type == nil {
-		var ret *string
+		var ret string
 		return ret
 	}
-	return o.Type
+	return *o.Type
 }
 
 // GetTypeOk returns a tuple with the Type field value if set, nil otherwise
@@ -394,5 +394,3 @@ func (v *NullableSettingsFlow) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

@@ -5,7 +5,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/ory/kratos-client-go/client/health"
 	"github.com/ory/kratos/cmd/cliclient"
 )
 
@@ -45,16 +44,18 @@ var statusCmd = &cobra.Command{
 		state := &statusState{}
 		defer cmdx.PrintRow(cmd, state)
 
-		_, err := c.Health.IsInstanceAlive(&health.IsInstanceAliveParams{Context: cmd.Context()})
+		alive, _, err := c.AdminApi.IsAlive(cmd.Context()).Execute()
 		if err != nil {
 			return
 		}
-		state.Alive = true
 
-		_, err = c.Health.IsInstanceReady(&health.IsInstanceReadyParams{Context: cmd.Context()})
+		state.Alive = alive.Status == "ok"
+
+		ready, _, err := c.AdminApi.IsReady(cmd.Context()).Execute()
 		if err != nil {
 			return
 		}
-		state.Ready = true
+
+		state.Ready = ready.Status == "ok"
 	},
 }
