@@ -1,4 +1,4 @@
-import {APP_URL, gen} from '../../../../helpers'
+import {APP_URL, assertVerifiableAddress, gen} from '../../../../helpers'
 
 context("Verify", () => {
   before(() => {
@@ -38,7 +38,9 @@ context("Verify", () => {
     cy.get('input[name="email"]').type(identity1.email)
     cy.get('button[type="submit"]').click()
 
-    cy.verifyEmail({ expect: { email: identity1.email } })
+
+    cy.performEmailVerification({ expect: { email: identity1.email } })
+    cy.session().should(assertVerifiableAddress({ email: identity2.email, isVerified: false }))
 
     cy.location('pathname').should('eq', '/')
   })
