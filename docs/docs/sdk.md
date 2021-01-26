@@ -18,12 +18,14 @@ languages for each REST endpoint.
 We publish our SDKs for popular languages in their respective package
 repositories:
 
-- [Python](https://pypi.org/project/ory-kratos-client/)
-- [PHP](https://packagist.org/packages/ory/kratos-client)
+- [Dart](https://pub.dev/packages/ory_kratos_client)
 - [Go](https://github.com/ory/kratos-client-go)
-- [NodeJS](https://www.npmjs.com/package/@ory/kratos-client) (with TypeScript)
 - [Java](https://search.maven.org/artifact/sh.ory.kratos/kratos-client)
+- [JavaScript](https://www.npmjs.com/package/@ory/kratos-client) with TypeScript definitions and compatible with: NodeJS, ReactJS, AnuglarJS, Vue.js, and many more.
+- [PHP](https://packagist.org/packages/ory/kratos-client)
+- [Python](https://pypi.org/project/ory-kratos-client/)
 - [Ruby](https://rubygems.org/gems/ory-kratos-client)
+- [Rust](https://crates.io/crates/ory-kratos-client)
 
 Missing your programming language?
 [Create an issue](https://github.com/ory/kratos/issues) and help us build, test
