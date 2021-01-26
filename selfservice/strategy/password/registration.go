@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/ory/kratos/ui/container"
+
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/ory/x/pkgerx"
@@ -27,7 +29,6 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow/registration"
-	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/kratos/x"
 )
@@ -62,7 +63,7 @@ func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Reques
 			method.Config.Reset()
 
 			if p != nil {
-				for _, n := range form.NewHTMLFormFromJSON("", node.PasswordGroup, p.Traits, "traits").Nodes {
+				for _, n := range container.NewFromJSON("", node.PasswordGroup, p.Traits, "traits").Nodes {
 					// we only set the value and not the whole field because we want to keep types from the initial form generation
 					method.Config.FlowMethodConfigurator.SetValue(n.ID(), n)
 				}
@@ -70,7 +71,7 @@ func (s *Strategy) handleRegistrationError(w http.ResponseWriter, r *http.Reques
 
 			method.Config.SetCSRF(s.d.GenerateCSRFToken(r))
 			rr.Methods[identity.CredentialsTypePassword] = method
-			if errSec := method.Config.SortFields(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()); errSec != nil {
+			if errSec := method.Config.SortNodes(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()); errSec != nil {
 				s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, identity.CredentialsTypePassword, rr, errors.Wrap(err, errSec.Error()))
 				return
 			}
@@ -233,7 +234,7 @@ func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.Flow) error {
 	action := sr.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteRegistration))
 
-	htmlf, err := form.NewHTMLFormFromJSONSchema(action.String(), node.PasswordGroup, s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String(), "", nil)
+	htmlf, err := container.NewFromJSONSchema(action.String(), node.PasswordGroup, s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String(), "", nil)
 	if err != nil {
 		return err
 	}
@@ -242,13 +243,13 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, sr *registration.
 	htmlf.SetCSRF(s.d.GenerateCSRFToken(r))
 	htmlf.GetNodes().Upsert(NewPasswordNode())
 
-	if err := htmlf.SortFields(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()); err != nil {
+	if err := htmlf.SortNodes(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()); err != nil {
 		return err
 	}
 
 	sr.Methods[identity.CredentialsTypePassword] = &registration.FlowMethod{
 		Method: identity.CredentialsTypePassword,
-		Config: &registration.FlowMethodConfig{FlowMethodConfigurator: &FlowMethod{HTMLForm: htmlf}},
+		Config: &registration.FlowMethodConfig{FlowMethodConfigurator: &FlowMethod{Container: htmlf}},
 	}
 
 	return nil

@@ -5,6 +5,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/kratos/ui/container"
+
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/ory/herodot"
@@ -25,7 +27,7 @@ import (
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/verification"
-	"github.com/ory/kratos/selfservice/form"
+
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
@@ -48,7 +50,7 @@ func (s *Strategy) RegisterAdminVerificationRoutes(admin *x.RouterAdmin) {
 }
 
 func (s *Strategy) PopulateVerificationMethod(r *http.Request, req *verification.Flow) error {
-	f := form.NewHTMLForm(req.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteVerification)).String())
+	f := container.New(req.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteVerification)).String())
 
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 	f.GetNodes().Upsert(
@@ -58,7 +60,7 @@ func (s *Strategy) PopulateVerificationMethod(r *http.Request, req *verification
 
 	req.Methods[s.VerificationStrategyID()] = &verification.FlowMethod{
 		Method: s.VerificationStrategyID(),
-		Config: &verification.FlowMethodConfig{FlowMethodConfigurator: &FlowMethod{HTMLForm: f}},
+		Config: &verification.FlowMethodConfig{FlowMethodConfigurator: &FlowMethod{Container: f}},
 	}
 	return nil
 }

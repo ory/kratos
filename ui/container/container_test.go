@@ -1,4 +1,4 @@
-package form
+package container
 
 import (
 	"bytes"
@@ -40,15 +40,15 @@ func newFormRequest(t *testing.T, values url.Values) *http.Request {
 }
 
 func TestContainer(t *testing.T) {
-	t.Run("method=NewHTMLFormFromJSON", func(t *testing.T) {
+	t.Run("method=NewFromJSON", func(t *testing.T) {
 		for k, tc := range []struct {
 			r      string
 			prefix string
-			expect *HTMLForm
+			expect *Container
 		}{
 			{
 				r: `{"numby":1.5,"stringy":"foobar","objy":{"objy":{},"numby":1.5,"stringy":"foobar"}}`,
-				expect: &HTMLForm{
+				expect: &Container{
 					Nodes: node.Nodes{
 						node.NewInputFieldFromJSON("numby", 1.5, node.DefaultGroup),
 						node.NewInputFieldFromJSON("objy.numby", 1.5, node.DefaultGroup),
@@ -60,7 +60,7 @@ func TestContainer(t *testing.T) {
 			{
 				r:      `{"numby":1.5,"stringy":"foobar","objy":{"objy":{},"numby":1.5,"stringy":"foobar"}}`,
 				prefix: "traits",
-				expect: &HTMLForm{
+				expect: &Container{
 					Nodes: node.Nodes{
 						node.NewInputFieldFromJSON("traits.numby", 1.5, node.DefaultGroup),
 						node.NewInputFieldFromJSON("traits.objy.numby", 1.5, node.DefaultGroup),
@@ -71,7 +71,7 @@ func TestContainer(t *testing.T) {
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-				actual := NewHTMLFormFromJSON("action", node.DefaultGroup, json.RawMessage(tc.r), tc.prefix)
+				actual := NewFromJSON("action", node.DefaultGroup, json.RawMessage(tc.r), tc.prefix)
 
 				// sort actual.fields lexicographically to have a deterministic order
 				sort.SliceStable(actual.Nodes, func(i, j int) bool {
@@ -84,16 +84,16 @@ func TestContainer(t *testing.T) {
 		}
 	})
 
-	t.Run("method=NewHTMLFormFromRequestBody", func(t *testing.T) {
+	t.Run("method=NewFromHTTPRequest", func(t *testing.T) {
 		for k, tc := range []struct {
 			ref    string
 			r      *http.Request
-			expect *HTMLForm
+			expect *Container
 		}{
 			{
 				ref: "./stub/simple.schema.json",
 				r:   newJSONRequest(t, `{"numby":1.5,"stringy":"foobar","objy":{"objy":{},"numby":1.5,"stringy":"foobar"}}`),
-				expect: &HTMLForm{
+				expect: &Container{
 					Nodes: node.Nodes{
 						node.NewInputFieldFromJSON("numby", 1.5, node.DefaultGroup),
 						node.NewInputFieldFromJSON("objy.numby", 1.5, node.DefaultGroup),
@@ -110,7 +110,7 @@ func TestContainer(t *testing.T) {
 					"objy.numby":   {"1.5"},
 					"objy.stringy": {"foobar"},
 				}),
-				expect: &HTMLForm{
+				expect: &Container{
 					Nodes: node.Nodes{
 						node.NewInputFieldFromJSON("numby", 1.5, node.DefaultGroup),
 						node.NewInputFieldFromJSON("objy.numby", 1.5, node.DefaultGroup),
@@ -124,7 +124,7 @@ func TestContainer(t *testing.T) {
 				r: newFormRequest(t, url.Values{
 					"meal.chef": {"aeneas"},
 				}),
-				expect: &HTMLForm{
+				expect: &Container{
 					Nodes: node.Nodes{
 						node.NewInputFieldFromJSON("meal.chef", "aeneas", node.DefaultGroup),
 						&node.Node{Group: node.DefaultGroup, Type: node.Input, Attributes: &node.InputAttributes{Name: "meal.name", Type: node.InputAttributeTypeText}, Messages: text.Messages{*text.NewValidationErrorRequired("name")}},
@@ -133,7 +133,7 @@ func TestContainer(t *testing.T) {
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-				actual, err := NewHTMLFormFromRequestBody(tc.r, node.DefaultGroup, "action", decoderx.HTTPJSONSchemaCompiler(tc.ref, nil))
+				actual, err := NewFromHTTPRequest(tc.r, node.DefaultGroup, "action", decoderx.HTTPJSONSchemaCompiler(tc.ref, nil))
 				require.NoError(t, err)
 				// sort actual.fields lexicographically to have a deterministic order
 				sort.SliceStable(actual.Nodes, func(i, j int) bool {
@@ -145,16 +145,16 @@ func TestContainer(t *testing.T) {
 		}
 	})
 
-	t.Run("method=NewHTMLFormFromJSONSchema", func(t *testing.T) {
+	t.Run("method=NewFromJSONSchema", func(t *testing.T) {
 		for k, tc := range []struct {
 			ref    string
 			prefix string
-			expect *HTMLForm
+			expect *Container
 		}{
 			{
 				ref:    "./stub/simple.schema.json",
 				prefix: "",
-				expect: &HTMLForm{
+				expect: &Container{
 					Nodes: node.Nodes{
 						node.NewInputField("numby", nil, node.DefaultGroup, node.InputAttributeTypeNumber),
 						node.NewInputField("objy.numby", nil, node.DefaultGroup, node.InputAttributeTypeNumber),
@@ -167,7 +167,7 @@ func TestContainer(t *testing.T) {
 			{
 				ref:    "./stub/simple.schema.json",
 				prefix: "traits",
-				expect: &HTMLForm{
+				expect: &Container{
 					Nodes: node.Nodes{
 						node.NewInputField("traits.numby", nil, node.DefaultGroup, node.InputAttributeTypeNumber),
 						node.NewInputField("traits.objy.numby", nil, node.DefaultGroup, node.InputAttributeTypeNumber),
@@ -179,7 +179,7 @@ func TestContainer(t *testing.T) {
 			},
 			{
 				ref: "./stub/complex.schema.json",
-				expect: &HTMLForm{
+				expect: &Container{
 					Nodes: node.Nodes{
 						node.NewInputField("fruits", nil, node.DefaultGroup, node.InputAttributeTypeText),
 						node.NewInputField("meal.chef", nil, node.DefaultGroup, node.InputAttributeTypeText),
@@ -190,7 +190,7 @@ func TestContainer(t *testing.T) {
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-				actual, err := NewHTMLFormFromJSONSchema("action",
+				actual, err := NewFromJSONSchema("action",
 					node.DefaultGroup, tc.ref, tc.prefix, nil)
 				require.NoError(t, err)
 				assert.Equal(t, "action", actual.Action)
@@ -204,20 +204,20 @@ func TestContainer(t *testing.T) {
 		for k, tc := range []struct {
 			err       error
 			expectErr bool
-			expect    HTMLForm
+			expect    Container
 		}{
 			{err: errors.New("foo"), expectErr: true},
 			{err: &herodot.ErrNotFound, expectErr: true},
-			{err: herodot.ErrBadRequest.WithReason("tests"), expect: HTMLForm{Nodes: node.Nodes{}, Messages: text.Messages{*text.NewValidationErrorGeneric("tests")}}},
-			{err: schema.NewInvalidCredentialsError(), expect: HTMLForm{Nodes: node.Nodes{}, Messages: text.Messages{*text.NewErrorValidationInvalidCredentials()}}},
-			{err: &jsonschema.ValidationError{Message: "test", InstancePtr: "#/foo/bar/baz"}, expect: HTMLForm{Nodes: node.Nodes{
+			{err: herodot.ErrBadRequest.WithReason("tests"), expect: Container{Nodes: node.Nodes{}, Messages: text.Messages{*text.NewValidationErrorGeneric("tests")}}},
+			{err: schema.NewInvalidCredentialsError(), expect: Container{Nodes: node.Nodes{}, Messages: text.Messages{*text.NewErrorValidationInvalidCredentials()}}},
+			{err: &jsonschema.ValidationError{Message: "test", InstancePtr: "#/foo/bar/baz"}, expect: Container{Nodes: node.Nodes{
 				&node.Node{Group: node.DefaultGroup, Type: node.Input, Attributes: &node.InputAttributes{Name: "foo.bar.baz", Type: node.InputAttributeTypeText}, Messages: text.Messages{*text.NewValidationErrorGeneric("test")}},
 			}}},
-			{err: &jsonschema.ValidationError{Message: "test", InstancePtr: ""}, expect: HTMLForm{Nodes: node.Nodes{}, Messages: text.Messages{*text.NewValidationErrorGeneric("test")}}},
+			{err: &jsonschema.ValidationError{Message: "test", InstancePtr: ""}, expect: Container{Nodes: node.Nodes{}, Messages: text.Messages{*text.NewValidationErrorGeneric("test")}}},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				for _, in := range []error{tc.err, errors.WithStack(tc.err)} {
-					c := NewHTMLForm("")
+					c := New("")
 					err := c.ParseError(node.DefaultGroup, in)
 					if tc.expectErr {
 						require.Error(t, err)
@@ -232,7 +232,7 @@ func TestContainer(t *testing.T) {
 	})
 
 	t.Run("method=SetValue", func(t *testing.T) {
-		c := HTMLForm{
+		c := Container{
 			Nodes: node.Nodes{
 				node.NewInputField("1", "foo", node.DefaultGroup, node.InputAttributeTypeText),
 				node.NewInputField("2", "", node.DefaultGroup, node.InputAttributeTypeText),
@@ -252,13 +252,13 @@ func TestContainer(t *testing.T) {
 	})
 
 	t.Run("method=SetCSRF", func(t *testing.T) {
-		f := &HTMLForm{Nodes: node.Nodes{}}
+		f := &Container{Nodes: node.Nodes{}}
 		f.SetCSRF("csrf-token")
 		assert.Contains(t, f.Nodes, node.NewCSRFNode("csrf-token"))
 	})
 
 	t.Run("method=AddMessage", func(t *testing.T) {
-		c := HTMLForm{
+		c := Container{
 			Nodes: node.Nodes{
 				&node.Node{Messages: text.Messages{*text.NewValidationErrorGeneric("foo")}, Group: node.DefaultGroup, Type: node.Input, Attributes: &node.InputAttributes{Name: "1", Type: node.InputAttributeTypeText, FieldValue: ""}},
 				&node.Node{Messages: text.Messages{}, Group: node.DefaultGroup, Type: node.Input, Attributes: &node.InputAttributes{Name: "2", Type: node.InputAttributeTypeText, FieldValue: ""}},
@@ -287,7 +287,7 @@ func TestContainer(t *testing.T) {
 	})
 
 	t.Run("method=Reset", func(t *testing.T) {
-		c := HTMLForm{
+		c := Container{
 			Nodes: node.Nodes{
 				&node.Node{Messages: text.Messages{{Text: "foo"}}, Group: node.DefaultGroup, Type: node.Input, Attributes: &node.InputAttributes{Name: "1", Type: node.InputAttributeTypeText, FieldValue: "foo"}},
 				&node.Node{Messages: text.Messages{{Text: "bar"}}, Group: node.DefaultGroup, Type: node.Input, Attributes: &node.InputAttributes{Name: "2", Type: node.InputAttributeTypeText, FieldValue: "bar"}},
@@ -303,18 +303,18 @@ func TestContainer(t *testing.T) {
 		assert.Empty(t, c.Nodes.Find(node.DefaultGroup, "2").Attributes.(*node.InputAttributes).FieldValue)
 	})
 
-	t.Run("method=SortFields", func(t *testing.T) {
+	t.Run("method=SortNodes", func(t *testing.T) {
 		// use a schema compiler that disables identifiers
 		schemaCompiler := jsonschema.NewCompiler()
 		schemaPath := "stub/identity.schema.json"
 
-		f, err := NewHTMLFormFromJSONSchema("/foo", node.DefaultGroup, schemaPath, "", schemaCompiler)
+		f, err := NewFromJSONSchema("/foo", node.DefaultGroup, schemaPath, "", schemaCompiler)
 		require.NoError(t, err)
 
 		f.UpdateNodesFromJSON(json.RawMessage(`{}`), "traits", node.DefaultGroup)
 		f.SetCSRF("csrf_token")
 
-		require.NoError(t, f.SortFields(schemaPath))
+		require.NoError(t, f.SortNodes(schemaPath))
 
 		var names []string
 		for _, f := range f.Nodes {

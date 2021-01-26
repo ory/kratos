@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/ory/kratos/ui/container"
+
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/ui/node"
 
@@ -16,7 +18,6 @@ import (
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/selfservice/form"
 )
 
 // swagger:model registrationFlowMethod
@@ -72,7 +73,7 @@ type FlowMethodConfig struct {
 
 // swagger:model registrationFlowMethodConfigPayload
 type flowMethodConfigMock struct {
-	*form.HTMLForm
+	*container.Container
 
 	// Providers is set for the "oidc" registration method.
 	Providers []node.Nodes `json:"providers" faker:"len=3"`
@@ -87,7 +88,7 @@ func (c *FlowMethodConfig) Value() (driver.Value, error) {
 }
 
 func (c *FlowMethodConfig) UnmarshalJSON(data []byte) error {
-	c.FlowMethodConfigurator = form.NewHTMLForm("")
+	c.FlowMethodConfigurator = container.New("")
 	return json.Unmarshal(data, c.FlowMethodConfigurator)
 }
 
