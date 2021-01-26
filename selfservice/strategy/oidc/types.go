@@ -4,13 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 
+	"github.com/ory/kratos/ui/container"
+
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/selfservice/form"
+
 	"github.com/ory/kratos/x"
 )
 
@@ -40,7 +42,7 @@ type ProviderCredentialsConfig struct {
 }
 
 type FlowMethod struct {
-	*form.HTMLForm
+	*container.Container
 }
 
 func (r *FlowMethod) AddProviders(providers []Configuration) *FlowMethod {
@@ -50,8 +52,8 @@ func (r *FlowMethod) AddProviders(providers []Configuration) *FlowMethod {
 	return r
 }
 
-func NewFlowMethod(f *form.HTMLForm) *FlowMethod {
-	return &FlowMethod{HTMLForm: f}
+func NewFlowMethod(f *container.Container) *FlowMethod {
+	return &FlowMethod{Container: f}
 }
 
 type ider interface {

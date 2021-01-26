@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/ory/kratos/ui/container"
+
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/bxcodec/faker/v3"
@@ -20,7 +22,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
-	"github.com/ory/kratos/selfservice/form"
+
 	"github.com/ory/kratos/x"
 )
 
@@ -94,7 +96,7 @@ func RegisterFakes() {
 	if err := faker.AddProvider("login_flow_methods", func(v reflect.Value) (interface{}, error) {
 		var methods = make(map[identity.CredentialsType]*login.FlowMethod)
 		for _, ct := range []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeOIDC} {
-			var f form.HTMLForm
+			var f container.Container
 			if err := faker.FakeData(&f); err != nil {
 				return nil, err
 			}
@@ -112,7 +114,7 @@ func RegisterFakes() {
 	if err := faker.AddProvider("registration_flow_methods", func(v reflect.Value) (interface{}, error) {
 		var methods = make(map[identity.CredentialsType]*registration.FlowMethod)
 		for _, ct := range []identity.CredentialsType{identity.CredentialsTypePassword, identity.CredentialsTypeOIDC} {
-			var f form.HTMLForm
+			var f container.Container
 			if err := faker.FakeData(&f); err != nil {
 				return nil, errors.WithStack(err)
 			}
@@ -129,7 +131,7 @@ func RegisterFakes() {
 	if err := faker.AddProvider("settings_flow_methods", func(v reflect.Value) (interface{}, error) {
 		var methods = make(map[string]*settings.FlowMethod)
 		for _, ct := range []string{settings.StrategyProfile, string(identity.CredentialsTypePassword), string(identity.CredentialsTypeOIDC)} {
-			var f form.HTMLForm
+			var f container.Container
 			if err := faker.FakeData(&f); err != nil {
 				return nil, err
 			}
@@ -146,7 +148,7 @@ func RegisterFakes() {
 	if err := faker.AddProvider("recovery_flow_methods", func(v reflect.Value) (interface{}, error) {
 		var methods = make(map[string]*recovery.FlowMethod)
 		for _, ct := range []string{recovery.StrategyRecoveryLinkName} {
-			var f form.HTMLForm
+			var f container.Container
 			if err := faker.FakeData(&f); err != nil {
 				return nil, err
 			}
@@ -163,7 +165,7 @@ func RegisterFakes() {
 	if err := faker.AddProvider("verification_flow_methods", func(v reflect.Value) (interface{}, error) {
 		var methods = make(map[string]*verification.FlowMethod)
 		for _, ct := range []string{verification.StrategyVerificationLinkName} {
-			var f form.HTMLForm
+			var f container.Container
 			if err := faker.FakeData(&f); err != nil {
 				return nil, err
 			}

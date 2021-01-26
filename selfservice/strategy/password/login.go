@@ -7,6 +7,8 @@ import (
 
 	"github.com/ory/kratos/hash"
 
+	"github.com/ory/kratos/ui/container"
+
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/ory/x/pkgerx"
@@ -23,7 +25,6 @@ import (
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
-	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/kratos/x"
 )
@@ -184,7 +185,7 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Flow) error {
 		identifier = creds.Identifiers[0]
 	}
 
-	f := &form.HTMLForm{
+	f := &container.Container{
 		Action: sr.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteLogin)).String(),
 		Method: "POST",
 		Nodes: node.Nodes{
@@ -197,6 +198,6 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, sr *login.Flow) error {
 
 	sr.Methods[identity.CredentialsTypePassword] = &login.FlowMethod{
 		Method: identity.CredentialsTypePassword,
-		Config: &login.FlowMethodConfig{FlowMethodConfigurator: &FlowMethod{HTMLForm: f}}}
+		Config: &login.FlowMethodConfig{FlowMethodConfigurator: &FlowMethod{Container: f}}}
 	return nil
 }
