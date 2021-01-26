@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/ory/kratos/ui/container"
+
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/bxcodec/faker/v3"
@@ -14,7 +16,7 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/selfservice/form"
+
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
@@ -77,7 +79,7 @@ func TestFlowPersister(conf *config.Config, p interface {
 			fexpected, _ := json.Marshal(expected.Methods[StrategyRecoveryLinkName].Config)
 			factual, _ := json.Marshal(actual.Methods[StrategyRecoveryLinkName].Config)
 
-			require.NotEmpty(t, actual.Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action)
+			require.NotEmpty(t, actual.Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*container.Container).Action)
 			assert.EqualValues(t, expected.ID, actual.ID)
 			assert.JSONEq(t, string(fexpected), string(factual))
 			x.AssertEqualTime(t, expected.IssuedAt, actual.IssuedAt)
@@ -88,14 +90,14 @@ func TestFlowPersister(conf *config.Config, p interface {
 		t.Run("case=should create and update a recovery request", func(t *testing.T) {
 			expected := newFlow(t)
 			expected.Methods[StrategyRecoveryLinkName] = &FlowMethod{
-				Method: StrategyRecoveryLinkName, Config: &FlowMethodConfig{FlowMethodConfigurator: &form.HTMLForm{Nodes: node.Nodes{
+				Method: StrategyRecoveryLinkName, Config: &FlowMethodConfig{FlowMethodConfigurator: &container.Container{Nodes: node.Nodes{
 					// v0.5: {Name: "zab", Type: "bar", Pattern: "baz"},
 					node.NewInputField("zab", nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
 						a.Pattern = "baz"
 					})),
 				}}}}
 			expected.Methods["password"] = &FlowMethod{
-				Method: "password", Config: &FlowMethodConfig{FlowMethodConfigurator: &form.HTMLForm{Nodes: node.Nodes{
+				Method: "password", Config: &FlowMethodConfig{FlowMethodConfigurator: &container.Container{Nodes: node.Nodes{
 					// v0.5: {Name: "foo", Type: "bar", Pattern: "baz"},
 					node.NewInputField("foo", nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
 						a.Pattern = "baz"
@@ -104,8 +106,8 @@ func TestFlowPersister(conf *config.Config, p interface {
 			err := p.CreateRecoveryFlow(ctx, expected)
 			require.NoError(t, err)
 
-			expected.Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action = "/new-action"
-			expected.Methods["password"].Config.FlowMethodConfigurator.(*form.HTMLForm).Nodes = node.Nodes{
+			expected.Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*container.Container).Action = "/new-action"
+			expected.Methods["password"].Config.FlowMethodConfigurator.(*container.Container).Nodes = node.Nodes{
 				// v0.5: {Name: "zab", Type: "zab", Pattern: "zab"},
 				node.NewInputField("zab", nil, node.DefaultGroup, "zab", node.WithInputAttributes(func(a *node.InputAttributes) {
 					a.Pattern = "zab"
@@ -119,7 +121,7 @@ func TestFlowPersister(conf *config.Config, p interface {
 			actual, err := p.GetRecoveryFlow(ctx, expected.ID)
 			require.NoError(t, err)
 
-			assert.Equal(t, "/new-action", actual.Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action)
+			assert.Equal(t, "/new-action", actual.Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*container.Container).Action)
 			assert.Equal(t, "/new-request-url", actual.RequestURL)
 			assert.Equal(t, StrategyRecoveryLinkName, actual.Active.String())
 			assert.Equal(t, expected.Messages, actual.Messages)
@@ -129,14 +131,14 @@ func TestFlowPersister(conf *config.Config, p interface {
 					a.Pattern = "zab"
 				})),
 			}, actual.
-				Methods["password"].Config.FlowMethodConfigurator.(*form.HTMLForm).Nodes)
+				Methods["password"].Config.FlowMethodConfigurator.(*container.Container).Nodes)
 			assert.EqualValues(t, node.Nodes{
 				// v0.5: {Name: "zab", Type: "bar", Pattern: "baz"},
 				node.NewInputField("zab", nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
 					a.Pattern = "baz"
 				})),
 			}, actual.
-				Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Nodes)
+				Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*container.Container).Nodes)
 		})
 
 		t.Run("case=should not cause data loss when updating a request without changes", func(t *testing.T) {
@@ -155,8 +157,8 @@ func TestFlowPersister(conf *config.Config, p interface {
 			require.Len(t, actual.Methods, 1)
 
 			js, _ := json.Marshal(actual.Methods)
-			assert.Equal(t, expected.Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action,
-				actual.Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*form.HTMLForm).Action, "%s", js)
+			assert.Equal(t, expected.Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*container.Container).Action,
+				actual.Methods[StrategyRecoveryLinkName].Config.FlowMethodConfigurator.(*container.Container).Action, "%s", js)
 		})
 	}
 }

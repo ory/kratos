@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/kratos/ui/container"
+
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/gofrs/uuid"
@@ -33,7 +35,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
-	"github.com/ory/kratos/selfservice/form"
+
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
@@ -387,7 +389,7 @@ func (s *Strategy) populateMethod(r *http.Request, flowID uuid.UUID) (*FlowMetho
 		return nil, err
 	}
 
-	f := form.NewHTMLForm(s.authURL(r.Context(), flowID))
+	f := container.New(s.authURL(r.Context(), flowID))
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 	// does not need sorting because there is only one field
 
@@ -452,7 +454,7 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 			method.Config.ResetMessages()
 
 			method.Config.SetCSRF(s.d.GenerateCSRFToken(r))
-			if errSec := method.Config.SortFields(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()); errSec != nil {
+			if errSec := method.Config.SortNodes(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()); errSec != nil {
 				s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, s.ID(), rr, errors.Wrap(err, errSec.Error()))
 				return
 			}

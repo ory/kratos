@@ -6,6 +6,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/kratos/ui/container"
+
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/ory/x/pkgerx"
@@ -23,7 +25,7 @@ import (
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
-	"github.com/ory/kratos/selfservice/form"
+
 	"github.com/ory/kratos/x"
 )
 
@@ -213,7 +215,7 @@ func (s *Strategy) continueSettingsFlow(
 }
 
 func (s *Strategy) PopulateSettingsMethod(r *http.Request, _ *identity.Identity, f *settings.Flow) error {
-	hf := &form.HTMLForm{Action: urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteSettings),
+	hf := &container.Container{Action: urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteSettings),
 		url.Values{"flow": {f.ID.String()}}).String(),
 		// v0.5: Fields: form.Fields{{Name: "password", Type: "password", Required: true}},
 		Nodes:  node.Nodes{NewPasswordNode()},
@@ -222,7 +224,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, _ *identity.Identity,
 
 	f.Methods[string(s.ID())] = &settings.FlowMethod{
 		Method: string(s.ID()),
-		Config: &settings.FlowMethodConfig{FlowMethodConfigurator: &FlowMethod{HTMLForm: hf}},
+		Config: &settings.FlowMethodConfig{FlowMethodConfigurator: &FlowMethod{Container: hf}},
 	}
 	return nil
 }

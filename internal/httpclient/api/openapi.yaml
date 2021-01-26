@@ -111,7 +111,7 @@ paths:
           maximum: 500
           minimum: 1
           type: integer
-        style: form
+        style: container
       - description: Pagination Page
         explode: true
         in: query
@@ -122,7 +122,7 @@ paths:
           format: int64
           minimum: 0
           type: integer
-        style: form
+        style: container
       responses:
         "200":
           content:
@@ -472,7 +472,7 @@ paths:
         required: true
         schema:
           type: string
-        style: form
+        style: container
       responses:
         "200":
           content:
@@ -537,7 +537,7 @@ paths:
         required: false
         schema:
           type: boolean
-        style: form
+        style: container
       responses:
         "200":
           content:
@@ -605,7 +605,7 @@ paths:
         required: true
         schema:
           type: string
-        style: form
+        style: container
       responses:
         "200":
           content:
@@ -666,7 +666,7 @@ paths:
         required: true
         schema:
           type: string
-        style: form
+        style: container
       requestBody:
         content:
           application/json:
@@ -789,7 +789,7 @@ paths:
         required: true
         schema:
           type: string
-        style: form
+        style: container
       responses:
         "200":
           content:
@@ -851,7 +851,7 @@ paths:
         required: false
         schema:
           type: string
-        style: form
+        style: container
       - description: |-
           The Flow ID
 
@@ -862,7 +862,7 @@ paths:
         required: false
         schema:
           type: string
-        style: form
+        style: container
       requestBody:
         content:
           application/json:
@@ -985,7 +985,7 @@ paths:
         required: true
         schema:
           type: string
-        style: form
+        style: container
       responses:
         "200":
           content:
@@ -1047,7 +1047,7 @@ paths:
         required: false
         schema:
           type: string
-        style: form
+        style: container
       requestBody:
         content:
           application/json:
@@ -1181,7 +1181,7 @@ paths:
         required: true
         schema:
           type: string
-        style: form
+        style: container
       responses:
         "200":
           content:
@@ -1248,7 +1248,7 @@ paths:
         required: false
         schema:
           type: string
-        style: form
+        style: container
       requestBody:
         content:
           application/json:
@@ -1327,7 +1327,7 @@ paths:
         required: false
         schema:
           type: string
-        style: form
+        style: container
       requestBody:
         content:
           application/json:
@@ -1461,7 +1461,7 @@ paths:
         required: true
         schema:
           type: string
-        style: form
+        style: container
       responses:
         "200":
           content:
@@ -1523,7 +1523,7 @@ paths:
         required: false
         schema:
           type: string
-        style: form
+        style: container
       - description: |-
           The Flow ID
 
@@ -1534,7 +1534,7 @@ paths:
         required: false
         schema:
           type: string
-        style: form
+        style: container
       requestBody:
         content:
           application/json:
@@ -1623,7 +1623,7 @@ paths:
         required: false
         schema:
           type: string
-        style: form
+        style: container
       responses:
         "200":
           content:
@@ -2031,7 +2031,7 @@ components:
         HTTP Form and JSON requests
       properties:
         action:
-          description: Action should be used as the form action URL `<form action="{{
+          description: Action should be used as the container action URL `<container action="{{
             .Action }}" method="post">`.
           type: string
         messages:
@@ -2039,7 +2039,7 @@ components:
             $ref: '#/components/schemas/uiText'
           type: array
         method:
-          description: Method is the form method (e.g. POST)
+          description: Method is the container method (e.g. POST)
           type: string
         nodes:
           items:
@@ -2371,7 +2371,7 @@ components:
           group: group
       properties:
         action:
-          description: Action should be used as the form action URL `<form action="{{
+          description: Action should be used as the container action URL `<container action="{{
             .Action }}" method="post">`.
           type: string
         messages:
@@ -2379,7 +2379,7 @@ components:
             $ref: '#/components/schemas/uiText'
           type: array
         method:
-          description: Method is the form method (e.g. POST)
+          description: Method is the container method (e.g. POST)
           type: string
         nodes:
           items:
@@ -2397,7 +2397,7 @@ components:
     loginFlowMethodConfigPayload:
       properties:
         action:
-          description: Action should be used as the form action URL `<form action="{{
+          description: Action should be used as the container action URL `<container action="{{
             .Action }}" method="post">`.
           type: string
         messages:
@@ -2405,7 +2405,7 @@ components:
             $ref: '#/components/schemas/uiText'
           type: array
         method:
-          description: Method is the form method (e.g. POST)
+          description: Method is the container method (e.g. POST)
           type: string
         nodes:
           items:
@@ -2669,7 +2669,7 @@ components:
           type: type
       properties:
         action:
-          description: Action should be used as the form action URL `<form action="{{
+          description: Action should be used as the container action URL `<container action="{{
             .Action }}" method="post">`.
           type: string
         messages:
@@ -2677,7 +2677,7 @@ components:
             $ref: '#/components/schemas/uiText'
           type: array
         method:
-          description: Method is the form method (e.g. POST)
+          description: Method is the container method (e.g. POST)
           type: string
         nodes:
           items:
@@ -2691,7 +2691,7 @@ components:
     recoveryFlowMethodConfigPayload:
       properties:
         action:
-          description: Action should be used as the form action URL `<form action="{{
+          description: Action should be used as the container action URL `<container action="{{
             .Action }}" method="post">`.
           type: string
         messages:
@@ -2699,7 +2699,7 @@ components:
             $ref: '#/components/schemas/uiText'
           type: array
         method:
-          description: Method is the form method (e.g. POST)
+          description: Method is the container method (e.g. POST)
           type: string
         nodes:
           items:
@@ -2929,7 +2929,7 @@ components:
         - null
       properties:
         action:
-          description: Action should be used as the form action URL `<form action="{{
+          description: Action should be used as the container action URL `<container action="{{
             .Action }}" method="post">`.
           type: string
         messages:
@@ -2937,7 +2937,7 @@ components:
             $ref: '#/components/schemas/uiText'
           type: array
         method:
-          description: Method is the form method (e.g. POST)
+          description: Method is the container method (e.g. POST)
           type: string
         nodes:
           items:
@@ -2956,7 +2956,7 @@ components:
     registrationFlowMethodConfigPayload:
       properties:
         action:
-          description: Action should be used as the form action URL `<form action="{{
+          description: Action should be used as the container action URL `<container action="{{
             .Action }}" method="post">`.
           type: string
         messages:
@@ -2964,7 +2964,7 @@ components:
             $ref: '#/components/schemas/uiText'
           type: array
         method:
-          description: Method is the form method (e.g. POST)
+          description: Method is the container method (e.g. POST)
           type: string
         nodes:
           items:
@@ -3354,7 +3354,7 @@ components:
           type: type
       properties:
         action:
-          description: Action should be used as the form action URL `<form action="{{
+          description: Action should be used as the container action URL `<container action="{{
             .Action }}" method="post">`.
           type: string
         messages:
@@ -3362,7 +3362,7 @@ components:
             $ref: '#/components/schemas/uiText'
           type: array
         method:
-          description: Method is the form method (e.g. POST)
+          description: Method is the container method (e.g. POST)
           type: string
         nodes:
           items:
@@ -3376,7 +3376,7 @@ components:
     settingsFlowMethodConfigPayload:
       properties:
         action:
-          description: Action should be used as the form action URL `<form action="{{
+          description: Action should be used as the container action URL `<container action="{{
             .Action }}" method="post">`.
           type: string
         messages:
@@ -3384,7 +3384,7 @@ components:
             $ref: '#/components/schemas/uiText'
           type: array
         method:
-          description: Method is the form method (e.g. POST)
+          description: Method is the container method (e.g. POST)
           type: string
         nodes:
           items:
@@ -3398,7 +3398,7 @@ components:
     settingsProfileFormConfig:
       properties:
         action:
-          description: Action should be used as the form action URL `<form action="{{
+          description: Action should be used as the container action URL `<container action="{{
             .Action }}" method="post">`.
           type: string
         messages:
@@ -3406,7 +3406,7 @@ components:
             $ref: '#/components/schemas/uiText'
           type: array
         method:
-          description: Method is the form method (e.g. POST)
+          description: Method is the container method (e.g. POST)
           type: string
         nodes:
           items:
@@ -3875,7 +3875,7 @@ components:
           type: type
       properties:
         action:
-          description: Action should be used as the form action URL `<form action="{{
+          description: Action should be used as the container action URL `<container action="{{
             .Action }}" method="post">`.
           type: string
         messages:
@@ -3883,7 +3883,7 @@ components:
             $ref: '#/components/schemas/uiText'
           type: array
         method:
-          description: Method is the form method (e.g. POST)
+          description: Method is the container method (e.g. POST)
           type: string
         nodes:
           items:
@@ -3897,7 +3897,7 @@ components:
     verificationFlowMethodConfigPayload:
       properties:
         action:
-          description: Action should be used as the form action URL `<form action="{{
+          description: Action should be used as the container action URL `<container action="{{
             .Action }}" method="post">`.
           type: string
         messages:
@@ -3905,7 +3905,7 @@ components:
             $ref: '#/components/schemas/uiText'
           type: array
         method:
-          description: Method is the form method (e.g. POST)
+          description: Method is the container method (e.g. POST)
           type: string
         nodes:
           items:

@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/ui/container"
+
 	"github.com/ory/kratos-client-go"
 	"github.com/ory/kratos/ui/node"
 
@@ -30,7 +32,7 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
-	"github.com/ory/kratos/selfservice/form"
+
 	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/x"
 )
@@ -567,7 +569,7 @@ func TestRegistration(t *testing.T) {
 			Method: identity.CredentialsTypePassword,
 			Config: &registration.FlowMethodConfig{
 				FlowMethodConfigurator: &password.FlowMethod{
-					HTMLForm: &form.HTMLForm{
+					Container: &container.Container{
 						Action: "https://foo" + password.RouteRegistration + "?flow=" + sr.ID.String(),
 						Method: "POST",
 						Nodes: node.Nodes{
@@ -582,6 +584,6 @@ func TestRegistration(t *testing.T) {
 		}
 
 		actual := sr.Methods[identity.CredentialsTypePassword]
-		assert.EqualValues(t, expected.Config.FlowMethodConfigurator.(*password.FlowMethod).HTMLForm, actual.Config.FlowMethodConfigurator.(*password.FlowMethod).HTMLForm)
+		assert.EqualValues(t, expected.Config.FlowMethodConfigurator.(*password.FlowMethod).Container, actual.Config.FlowMethodConfigurator.(*password.FlowMethod).Container)
 	})
 }
