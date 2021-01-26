@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/ory/kratos/ui/container"
+
 	"github.com/bxcodec/faker/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -12,7 +14,7 @@ import (
 
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/selfservice/form"
+
 	"github.com/ory/kratos/ui/node"
 )
 
@@ -25,13 +27,13 @@ func TestNodesSort(t *testing.T) {
 	schemaCompiler := jsonschema.NewCompiler()
 	schemaPath := "stub/identity.schema.json"
 
-	f, err := form.NewHTMLFormFromJSONSchema("/foo", node.DefaultGroup, schemaPath, "", schemaCompiler)
+	f, err := container.NewFromJSONSchema("/foo", node.DefaultGroup, schemaPath, "", schemaCompiler)
 	require.NoError(t, err)
 
 	f.UpdateNodesFromJSON(json.RawMessage(`{}`), "traits", node.DefaultGroup)
 	f.SetCSRF("csrf_token")
 
-	require.NoError(t, f.SortFields(schemaPath))
+	require.NoError(t, f.SortNodes(schemaPath))
 
 	var names []string
 	for _, f := range f.Nodes {

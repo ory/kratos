@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/ory/kratos/ui/container"
+
 	"github.com/ory/kratos/selfservice/flow"
 
 	"github.com/ory/kratos/corp"
@@ -13,8 +15,6 @@ import (
 	"github.com/ory/x/sqlxx"
 
 	"github.com/gofrs/uuid"
-
-	"github.com/ory/kratos/selfservice/form"
 )
 
 // swagger:model verificationFlowMethod
@@ -70,7 +70,7 @@ type FlowMethodConfig struct {
 
 // swagger:model verificationFlowMethodConfigPayload
 type FlowMethodConfigMock struct {
-	*form.HTMLForm
+	*container.Container
 }
 
 func (c *FlowMethodConfig) Scan(value interface{}) error {
@@ -82,7 +82,7 @@ func (c *FlowMethodConfig) Value() (driver.Value, error) {
 }
 
 func (c *FlowMethodConfig) UnmarshalJSON(data []byte) error {
-	c.FlowMethodConfigurator = form.NewHTMLForm("")
+	c.FlowMethodConfigurator = container.New("")
 	return json.Unmarshal(data, c.FlowMethodConfigurator)
 }
 
