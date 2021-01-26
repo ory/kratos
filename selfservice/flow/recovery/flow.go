@@ -6,6 +6,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/kratos/ui/container"
+
 	"github.com/ory/kratos/corp"
 
 	"github.com/gobuffalo/pop/v5"
@@ -17,7 +19,7 @@ import (
 	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/selfservice/flow"
-	"github.com/ory/kratos/selfservice/form"
+
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 )
@@ -157,16 +159,16 @@ func (f *Flow) AfterFind(_ *pop.Connection) error {
 	return nil
 }
 
-func (f *Flow) MethodToForm(id string) (form.Form, error) {
+func (f *Flow) MethodToForm(id string) (*container.Container, error) {
 	method, ok := f.Methods[id]
 	if !ok {
 		return nil, errors.WithStack(x.PseudoPanic.WithReasonf("Expected method %s to exist.", id))
 	}
 
-	config, ok := method.Config.FlowMethodConfigurator.(form.Form)
+	config, ok := method.Config.FlowMethodConfigurator.(*container.Container)
 	if !ok {
 		return nil, errors.WithStack(x.PseudoPanic.WithReasonf(
-			"Expected method config %s to be of type *form.HTMLForm but got: %T", id,
+			"Expected method config %s to be of type *form.Container but got: %T", id,
 			method.Config.FlowMethodConfigurator))
 	}
 

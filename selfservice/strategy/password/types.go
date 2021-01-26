@@ -1,6 +1,8 @@
 package password
 
-import "github.com/ory/kratos/selfservice/form"
+import (
+	"github.com/ory/kratos/ui/container"
+)
 
 type (
 	// CredentialsConfig is the struct that is being used as part of the identity credentials.
@@ -24,5 +26,5 @@ type (
 
 // FlowMethod contains the configuration for this selfservice strategy.
 type FlowMethod struct {
-	*form.HTMLForm
+	*container.Container
 }

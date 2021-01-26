@@ -5,6 +5,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/kratos/ui/container"
+
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/ory/x/pkgerx"
@@ -26,7 +28,7 @@ import (
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
-	"github.com/ory/kratos/selfservice/form"
+
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
@@ -52,7 +54,7 @@ func (s *Strategy) RegisterAdminRecoveryRoutes(admin *x.RouterAdmin) {
 }
 
 func (s *Strategy) PopulateRecoveryMethod(r *http.Request, req *recovery.Flow) error {
-	f := form.NewHTMLForm(req.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteRecovery)).String())
+	f := container.New(req.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteRecovery)).String())
 
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 
@@ -63,7 +65,7 @@ func (s *Strategy) PopulateRecoveryMethod(r *http.Request, req *recovery.Flow) e
 
 	req.Methods[s.RecoveryStrategyID()] = &recovery.FlowMethod{
 		Method: s.RecoveryStrategyID(),
-		Config: &recovery.FlowMethodConfig{FlowMethodConfigurator: &FlowMethod{HTMLForm: f}},
+		Config: &recovery.FlowMethodConfig{FlowMethodConfigurator: &FlowMethod{Container: f}},
 	}
 	return nil
 }

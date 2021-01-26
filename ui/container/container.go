@@ -1,4 +1,4 @@
-package form
+package container
 
 import (
 	"database/sql/driver"
@@ -24,17 +24,17 @@ import (
 
 var (
 	decoder             = decoderx.NewHTTP()
-	_       ErrorParser = new(HTMLForm)
-	_       ValueSetter = new(HTMLForm)
-	_       Resetter    = new(HTMLForm)
-	_       CSRFSetter  = new(HTMLForm)
-	_       NodeGetter  = new(HTMLForm)
+	_       ErrorParser = new(Container)
+	_       ValueSetter = new(Container)
+	_       Resetter    = new(Container)
+	_       CSRFSetter  = new(Container)
+	_       NodeGetter  = new(Container)
 )
 
-// HTMLForm represents a HTML Form. The container can work with both HTTP Form and JSON requests
+// Container represents a HTML Form. The container can work with both HTTP Form and JSON requests
 //
-// swagger:model form
-type HTMLForm struct {
+// swagger:model uiContainer
+type Container struct {
 	// Action should be used as the form action URL `<form action="{{ .Action }}" method="post">`.
 	//
 	// required: true
@@ -56,19 +56,19 @@ type HTMLForm struct {
 	Messages text.Messages `json:"messages,omitempty"`
 }
 
-// NewHTMLForm returns an empty container.
-func NewHTMLForm(action string) *HTMLForm {
-	return &HTMLForm{
+// New returns an empty container.
+func New(action string) *Container {
+	return &Container{
 		Action: action,
 		Method: "POST",
 		Nodes:  node.Nodes{},
 	}
 }
 
-// NewHTMLFormFromRequestBody creates a new HTMLForm and populates fields by parsing the HTTP Request body.
+// NewFromHTTPRequest creates a new Container and populates fields by parsing the HTTP Request body.
 // A jsonSchemaRef needs to be added to allow HTTP Form Post Body parsing.
-func NewHTMLFormFromRequestBody(r *http.Request, group node.Group, action string, compiler decoderx.HTTPDecoderOption) (*HTMLForm, error) {
-	c := NewHTMLForm(action)
+func NewFromHTTPRequest(r *http.Request, group node.Group, action string, compiler decoderx.HTTPDecoderOption) (*Container, error) {
+	c := New(action)
 	raw := json.RawMessage(`{}`)
 	if err := decoder.Decode(r, &raw, compiler); err != nil {
 		if err := c.ParseError(group, err); err != nil {
@@ -80,22 +80,22 @@ func NewHTMLFormFromRequestBody(r *http.Request, group node.Group, action string
 	return c, nil
 }
 
-// NewHTMLFormFromJSON creates a HTML form based on the provided JSON struct.
-func NewHTMLFormFromJSON(action string, group node.Group, raw json.RawMessage, prefix string) *HTMLForm {
-	c := NewHTMLForm(action)
+// NewFromJSON creates a UI Container based on the provided JSON struct.
+func NewFromJSON(action string, group node.Group, raw json.RawMessage, prefix string) *Container {
+	c := New(action)
 	c.UpdateNodesFromJSON(raw, prefix, group)
 	return c
 }
 
-// NewHTMLFormFromJSONSchema creates a new HTMLForm and populates the fields
+// NewFromJSONSchema creates a new Container and populates the fields
 // using the provided JSON Schema.
-func NewHTMLFormFromJSONSchema(action string, group node.Group, jsonSchemaRef, prefix string, compiler *jsonschema.Compiler) (*HTMLForm, error) {
+func NewFromJSONSchema(action string, group node.Group, jsonSchemaRef, prefix string, compiler *jsonschema.Compiler) (*Container, error) {
 	paths, err := jsonschemax.ListPaths(jsonSchemaRef, compiler)
 	if err != nil {
 		return nil, err
 	}
 
-	c := NewHTMLForm(action)
+	c := New(action)
 	for _, value := range paths {
 		name := addPrefix(value.Name, prefix, ".")
 		c.Nodes = append(c.Nodes, node.NewInputFieldFromSchema(name, group, value))
@@ -104,16 +104,16 @@ func NewHTMLFormFromJSONSchema(action string, group node.Group, jsonSchemaRef, p
 	return c, nil
 }
 
-func (c *HTMLForm) GetNodes() *node.Nodes {
+func (c *Container) GetNodes() *node.Nodes {
 	return &c.Nodes
 }
 
-func (c *HTMLForm) SortFields(schemaRef string) error {
+func (c *Container) SortNodes(schemaRef string) error {
 	return c.Nodes.SortBySchema(schemaRef, "")
 }
 
 // ResetMessages resets the container's own and its node's messages.
-func (c *HTMLForm) ResetMessages(exclude ...string) {
+func (c *Container) ResetMessages(exclude ...string) {
 	c.Messages = nil
 	for k, n := range c.Nodes {
 		if !stringslice.Has(exclude, n.ID()) {
@@ -124,17 +124,17 @@ func (c *HTMLForm) ResetMessages(exclude ...string) {
 }
 
 // Reset resets the container's errors as well as each field's value and errors.
-func (c *HTMLForm) Reset(exclude ...string) {
+func (c *Container) Reset(exclude ...string) {
 	c.Messages = nil
 	c.Nodes.Reset(exclude...)
 }
 
 // ParseError type asserts the given error and sets the container's errors or a
 // field's errors and if the error is not something to be handled by the
-// form container, the error is returned.
+// formUI Container, the error is returned.
 //
-// This method DOES NOT touch the values of the form fields, only its errors.
-func (c *HTMLForm) ParseError(group node.Group, err error) error {
+// This method DOES NOT touch the values of the node values/names, only its errors.
+func (c *Container) ParseError(group node.Group, err error) error {
 	if e := richError(nil); errors.As(err, &e) {
 		if e.StatusCode() == http.StatusBadRequest {
 			c.AddMessage(group, text.NewValidationErrorGeneric(e.Reason()))
@@ -176,7 +176,7 @@ func (c *HTMLForm) ParseError(group node.Group, err error) error {
 }
 
 // UpdateNodesFromJSON sets the container's fields to the provided values.
-func (c *HTMLForm) UpdateNodesFromJSON(raw json.RawMessage, prefix string, group node.Group) {
+func (c *Container) UpdateNodesFromJSON(raw json.RawMessage, prefix string, group node.Group) {
 	for k, v := range jsonx.Flatten(raw) {
 		if prefix != "" {
 			k = prefix + "." + k
@@ -192,22 +192,22 @@ func (c *HTMLForm) UpdateNodesFromJSON(raw json.RawMessage, prefix string, group
 }
 
 // Unset removes a field from the container.
-func (c *HTMLForm) UnsetNode(id string) {
+func (c *Container) UnsetNode(id string) {
 	c.Nodes.Remove(id)
 }
 
 // SetCSRF sets the CSRF value using e.g. nosurf.Token(r).
-func (c *HTMLForm) SetCSRF(token string) {
-	c.SetField(node.NewCSRFNode(token))
+func (c *Container) SetCSRF(token string) {
+	c.SetNode(node.NewCSRFNode(token))
 }
 
-// SetField sets a field.
-func (c *HTMLForm) SetField(n *node.Node) {
+// SetNode sets a field.
+func (c *Container) SetNode(n *node.Node) {
 	c.Nodes.Upsert(n)
 }
 
 // SetValue sets a container's field to the provided name and value.
-func (c *HTMLForm) SetValue(id string, n *node.Node) {
+func (c *Container) SetValue(id string, n *node.Node) {
 	if f := c.Nodes.Find(n.Group, id); f != nil {
 		f.Attributes.SetValue(n.GetValue())
 		return
@@ -218,7 +218,7 @@ func (c *HTMLForm) SetValue(id string, n *node.Node) {
 
 // AddMessage adds the provided error, and if a non-empty names list is set,
 // adds the error on the corresponding field.
-func (c *HTMLForm) AddMessage(group node.Group, err *text.Message, setForFields ...string) {
+func (c *Container) AddMessage(group node.Group, err *text.Message, setForFields ...string) {
 	if len(stringslice.TrimSpaceEmptyFilter(setForFields)) == 0 {
 		c.Messages = append(c.Messages, *err)
 		return
@@ -236,10 +236,10 @@ func (c *HTMLForm) AddMessage(group node.Group, err *text.Message, setForFields 
 	}
 }
 
-func (c *HTMLForm) Scan(value interface{}) error {
+func (c *Container) Scan(value interface{}) error {
 	return sqlxx.JSONScan(c, value)
 }
-func (c *HTMLForm) Value() (driver.Value, error) {
+func (c *Container) Value() (driver.Value, error) {
 	return sqlxx.JSONValue(c)
 }
 

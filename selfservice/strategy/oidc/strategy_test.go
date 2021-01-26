@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/ui/container"
+
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/gofrs/uuid"
@@ -31,7 +33,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
-	"github.com/ory/kratos/selfservice/form"
+
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/x"
 )
@@ -85,18 +87,18 @@ func TestStrategy(t *testing.T) {
 
 	// assert form values
 	var afv = func(t *testing.T, flowID uuid.UUID, provider string) (action string) {
-		var config *form.HTMLForm
+		var config *container.Container
 		if req, err := reg.RegistrationFlowPersister().GetRegistrationFlow(context.Background(), flowID); err == nil {
 			require.EqualValues(t, req.ID, flowID)
 			method := req.Methods[identity.CredentialsTypeOIDC]
 			require.NotNil(t, method)
-			config = method.Config.FlowMethodConfigurator.(*form.HTMLForm)
+			config = method.Config.FlowMethodConfigurator.(*container.Container)
 			require.NotNil(t, config)
 		} else if req, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), flowID); err == nil {
 			require.EqualValues(t, req.ID, flowID)
 			method := req.Methods[identity.CredentialsTypeOIDC]
 			require.NotNil(t, method)
-			config = method.Config.FlowMethodConfigurator.(*form.HTMLForm)
+			config = method.Config.FlowMethodConfigurator.(*container.Container)
 			require.NotNil(t, config)
 		} else {
 			require.NoError(t, err)
@@ -417,7 +419,7 @@ func TestStrategy(t *testing.T) {
 			Method: identity.CredentialsTypeOIDC,
 			Config: &registration.FlowMethodConfig{
 				FlowMethodConfigurator: &oidc.FlowMethod{
-					HTMLForm: &form.HTMLForm{
+					Container: &container.Container{
 						Action: "https://foo" + strings.ReplaceAll(oidc.RouteAuth, ":flow", sr.ID.String()),
 						Method: "POST",
 						Nodes: node.Nodes{
@@ -431,7 +433,7 @@ func TestStrategy(t *testing.T) {
 		}
 
 		actual := sr.Methods[identity.CredentialsTypeOIDC]
-		assert.EqualValues(t, expected.Config.FlowMethodConfigurator.(*oidc.FlowMethod).HTMLForm, actual.Config.FlowMethodConfigurator.(*oidc.FlowMethod).HTMLForm)
+		assert.EqualValues(t, expected.Config.FlowMethodConfigurator.(*oidc.FlowMethod).Container, actual.Config.FlowMethodConfigurator.(*oidc.FlowMethod).Container)
 	})
 
 	t.Run("method=TestPopulateLoginMethod", func(t *testing.T) {
@@ -444,7 +446,7 @@ func TestStrategy(t *testing.T) {
 			Method: identity.CredentialsTypeOIDC,
 			Config: &login.FlowMethodConfig{
 				FlowMethodConfigurator: &oidc.FlowMethod{
-					HTMLForm: &form.HTMLForm{
+					Container: &container.Container{
 						Action: "https://foo" + strings.ReplaceAll(oidc.RouteAuth, ":flow", sr.ID.String()),
 						Method: "POST",
 						Nodes: node.Nodes{
@@ -458,7 +460,7 @@ func TestStrategy(t *testing.T) {
 		}
 
 		actual := sr.Methods[identity.CredentialsTypeOIDC]
-		assert.EqualValues(t, expected.Config.FlowMethodConfigurator.(*oidc.FlowMethod).HTMLForm, actual.Config.FlowMethodConfigurator.(*oidc.FlowMethod).HTMLForm)
+		assert.EqualValues(t, expected.Config.FlowMethodConfigurator.(*oidc.FlowMethod).Container, actual.Config.FlowMethodConfigurator.(*oidc.FlowMethod).Container)
 	})
 }
 

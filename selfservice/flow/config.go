@@ -1,19 +1,21 @@
 package flow
 
-import "github.com/ory/kratos/selfservice/form"
+import (
+	"github.com/ory/kratos/ui/container"
+)
 
 // swagger:ignore
 type MethodConfigurator interface {
-	form.NodeGetter
+	container.NodeGetter
 
-	form.ErrorParser
+	container.ErrorParser
 
 	// form.NodeSetter
 	// form.NodeUnsetter
-	form.ValueSetter
+	container.ValueSetter
 
-	form.Resetter
-	form.MessageResetter
-	form.CSRFSetter
-	form.FieldSorter
+	container.Resetter
+	container.MessageResetter
+	container.CSRFSetter
+	container.FieldSorter
 }

@@ -6,6 +6,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/kratos/ui/node"
+
 	"github.com/ory/kratos/corp"
 
 	"github.com/gobuffalo/pop/v5"
@@ -78,6 +80,11 @@ type Flow struct {
 
 	// MethodsRaw is a helper struct field for gobuffalo.pop.
 	MethodsRaw []FlowMethod `json:"-" faker:"-" has_many:"selfservice_login_flow_methods" fk_id:"selfservice_login_flow_id"`
+
+	// UI contains data which must be shown in the user interface.
+	//
+	// required: true
+	UI node.Nodes `json:"ui" db:"ui"`
 
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"-" db:"created_at"`

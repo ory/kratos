@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/ory/kratos/ui/container"
+
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/bxcodec/faker/v3"
@@ -14,7 +16,7 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/selfservice/form"
+
 	"github.com/ory/kratos/x"
 )
 
@@ -81,7 +83,7 @@ func TestRequestPersister(conf *config.Config, p interface {
 			factual, _ := json.Marshal(actual.Methods[StrategyProfile].Config)
 			fexpected, _ := json.Marshal(expected.Methods[StrategyProfile].Config)
 
-			require.NotEmpty(t, actual.Methods[StrategyProfile].Config.FlowMethodConfigurator.(*form.HTMLForm).Action)
+			require.NotEmpty(t, actual.Methods[StrategyProfile].Config.FlowMethodConfigurator.(*container.Container).Action)
 			assert.EqualValues(t, expected.ID, actual.ID)
 			assert.JSONEq(t, string(fexpected), string(factual))
 			x.AssertEqualTime(t, expected.IssuedAt, actual.IssuedAt)
@@ -106,14 +108,14 @@ func TestRequestPersister(conf *config.Config, p interface {
 		t.Run("case=should create and update a settings request", func(t *testing.T) {
 			expected := newFlow(t)
 			expected.Methods["oidc"] = &FlowMethod{
-				Method: "oidc", Config: &FlowMethodConfig{FlowMethodConfigurator: &form.HTMLForm{
+				Method: "oidc", Config: &FlowMethodConfig{FlowMethodConfigurator: &container.Container{
 					// v0.5: Fields: []form.Field{{Name: "zab", Type: "bar", Pattern: "baz"}},
 					Nodes: node.Nodes{node.NewInputField("zab", nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
 						a.Pattern = "baz"
 					}))},
 				}}}
 			expected.Methods["password"] = &FlowMethod{
-				Method: "password", Config: &FlowMethodConfig{FlowMethodConfigurator: &form.HTMLForm{
+				Method: "password", Config: &FlowMethodConfig{FlowMethodConfigurator: &container.Container{
 					// v0.5: Fields: []form.Field{{Name: "foo", Type: "bar", Pattern: "baz"}},
 					Nodes: node.Nodes{node.NewInputField("foo", nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
 						a.Pattern = "baz"
@@ -122,8 +124,8 @@ func TestRequestPersister(conf *config.Config, p interface {
 			err := p.CreateSettingsFlow(ctx, expected)
 			require.NoError(t, err)
 
-			expected.Methods[StrategyProfile].Config.FlowMethodConfigurator.(*form.HTMLForm).Action = "/new-action"
-			expected.Methods["password"].Config.FlowMethodConfigurator.(*form.HTMLForm).Nodes = node.Nodes{
+			expected.Methods[StrategyProfile].Config.FlowMethodConfigurator.(*container.Container).Action = "/new-action"
+			expected.Methods["password"].Config.FlowMethodConfigurator.(*container.Container).Nodes = node.Nodes{
 				// v0.5: {Name: "zab", Type: "zab", Pattern: "zab"},
 				node.NewInputField("zab", nil, node.DefaultGroup, "zab", node.WithInputAttributes(func(a *node.InputAttributes) {
 					a.Pattern = "zab"
@@ -135,20 +137,20 @@ func TestRequestPersister(conf *config.Config, p interface {
 			actual, err := p.GetSettingsFlow(ctx, expected.ID)
 			require.NoError(t, err)
 
-			assert.Equal(t, "/new-action", actual.Methods[StrategyProfile].Config.FlowMethodConfigurator.(*form.HTMLForm).Action)
+			assert.Equal(t, "/new-action", actual.Methods[StrategyProfile].Config.FlowMethodConfigurator.(*container.Container).Action)
 			assert.Equal(t, "/new-request-url", actual.RequestURL)
 			assert.EqualValues(t, node.Nodes{
 				// v0.5: {Name: "zab", Type: "zab", Pattern: "zab"},
 				node.NewInputField("zab", nil, node.DefaultGroup, "zab", node.WithInputAttributes(func(a *node.InputAttributes) {
 					a.Pattern = "zab"
 				})),
-			}, actual.Methods["password"].Config.FlowMethodConfigurator.(*form.HTMLForm).Nodes)
+			}, actual.Methods["password"].Config.FlowMethodConfigurator.(*container.Container).Nodes)
 			assert.EqualValues(t, node.Nodes{
 				// v0.5: {Name: "zab", Type: "bar", Pattern: "baz"},
 				node.NewInputField("zab", nil, node.DefaultGroup, "bar", node.WithInputAttributes(func(a *node.InputAttributes) {
 					a.Pattern = "baz"
 				})),
-			}, actual.Methods["oidc"].Config.FlowMethodConfigurator.(*form.HTMLForm).Nodes)
+			}, actual.Methods["oidc"].Config.FlowMethodConfigurator.(*container.Container).Nodes)
 		})
 
 		t.Run("case=should update a settings flow method", func(t *testing.T) {
@@ -165,12 +167,12 @@ func TestRequestPersister(conf *config.Config, p interface {
 
 			require.NoError(t, p.UpdateSettingsFlowMethod(ctx, expected.ID, identity.CredentialsTypeOIDC.String(), &FlowMethod{
 				Method: identity.CredentialsTypeOIDC.String(),
-				Config: &FlowMethodConfig{FlowMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypeOIDC))},
+				Config: &FlowMethodConfig{FlowMethodConfigurator: container.New(string(identity.CredentialsTypeOIDC))},
 			}))
 
 			require.NoError(t, p.UpdateSettingsFlowMethod(ctx, expected.ID, identity.CredentialsTypePassword.String(), &FlowMethod{
 				Method: identity.CredentialsTypePassword.String(),
-				Config: &FlowMethodConfig{FlowMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypePassword))},
+				Config: &FlowMethodConfig{FlowMethodConfigurator: container.New(string(identity.CredentialsTypePassword))},
 			}))
 
 			actual, err = p.GetSettingsFlow(ctx, expected.ID)
@@ -178,8 +180,8 @@ func TestRequestPersister(conf *config.Config, p interface {
 			require.Len(t, actual.Methods, 2)
 			assert.EqualValues(t, identity.CredentialsTypePassword, actual.Active)
 
-			assert.Equal(t, string(identity.CredentialsTypePassword), actual.Methods[identity.CredentialsTypePassword.String()].Config.FlowMethodConfigurator.(*form.HTMLForm).Action)
-			assert.Equal(t, string(identity.CredentialsTypeOIDC), actual.Methods[identity.CredentialsTypeOIDC.String()].Config.FlowMethodConfigurator.(*form.HTMLForm).Action)
+			assert.Equal(t, string(identity.CredentialsTypePassword), actual.Methods[identity.CredentialsTypePassword.String()].Config.FlowMethodConfigurator.(*container.Container).Action)
+			assert.Equal(t, string(identity.CredentialsTypeOIDC), actual.Methods[identity.CredentialsTypeOIDC.String()].Config.FlowMethodConfigurator.(*container.Container).Action)
 		})
 	}
 }

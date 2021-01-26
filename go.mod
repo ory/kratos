@@ -55,6 +55,7 @@ require (
 	github.com/mattn/goveralls v0.0.5
 	github.com/mikefarah/yq v1.15.0
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
+	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect
 	github.com/ory/analytics-go/v4 v4.0.0
 	github.com/ory/cli v0.0.38-0.20210120105333-159525a16324
@@ -88,6 +89,7 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
 	golang.org/x/oauth2 v0.0.0-20201208152858-08078c50e5b5
+	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 	golang.org/x/tools v0.0.0-20200825202427-b303f430e36d
 	google.golang.org/grpc v1.34.0 // indirect
 	google.golang.org/protobuf v1.25.1-0.20201208041424-160c7477e0e8 // indirect
