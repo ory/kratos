@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/kratos/ui/container"
+
 	"github.com/ory/kratos-client-go"
 
 	"github.com/ory/kratos/ui/node"
@@ -29,7 +31,7 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
-	"github.com/ory/kratos/selfservice/form"
+
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/x"
 )
@@ -530,14 +532,14 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		return &settings.Flow{Type: flow.TypeBrowser, ID: x.NewUUID(), Methods: map[string]*settings.FlowMethod{}}
 	}
 
-	populate := func(t *testing.T, reg *driver.RegistryDefault, i *identity.Identity, req *settings.Flow) *form.HTMLForm {
+	populate := func(t *testing.T, reg *driver.RegistryDefault, i *identity.Identity, req *settings.Flow) *container.Container {
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 		require.NoError(t, ns(t, reg).PopulateSettingsMethod(new(http.Request), i, req))
 		require.NotNil(t, req.Methods[identity.CredentialsTypeOIDC.String()])
 		require.NotNil(t, req.Methods[identity.CredentialsTypeOIDC.String()].Config)
 		require.NotNil(t, req.Methods[identity.CredentialsTypeOIDC.String()].Config.FlowMethodConfigurator)
 		require.Equal(t, identity.CredentialsTypeOIDC.String(), req.Methods[identity.CredentialsTypeOIDC.String()].Method)
-		f := req.Methods[identity.CredentialsTypeOIDC.String()].Config.FlowMethodConfigurator.(*oidc.FlowMethod).HTMLForm
+		f := req.Methods[identity.CredentialsTypeOIDC.String()].Config.FlowMethodConfigurator.(*oidc.FlowMethod).Container
 		assert.Equal(t, "https://www.ory.sh"+oidc.SettingsPath+"?flow="+req.ID.String(), f.Action)
 		assert.Equal(t, "POST", f.Method)
 		return f

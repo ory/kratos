@@ -1,60 +1,49 @@
-package form
+package container
 
 import (
 	"github.com/ory/kratos/ui/node"
 )
 
-type Form interface {
-	NodeGetter
-	ErrorParser
-	//NodeSetter
-	ValueSetter
-	//NodeUnsetter
-	CSRFSetter
-	Resetter
-	FieldSorter
-}
-
 // ErrorParser is capable of parsing and processing errors.
 type ErrorParser interface {
 	// ParseError type asserts the given error and sets the forms's errors or a
 	// field's errors and if the error is not something to be handled by the
-	// form itself, the error is returned for further propagation (e.g. showing a 502 status code).
+	// formUI Container itself, the error is returned for further propagation (e.g. showing a 502 status code).
 	ParseError(group node.Group, err error) error
 }
 
 type NodeSetter interface {
-	// SetNode sets a field of the form.
+	// SetNode sets (adds / replaces) a node.
 	SetNode(field node.Node)
 }
 
 type NodeUnsetter interface {
-	// UnsetFields removes a field from the form.
+	// UnsetFields removes a node.
 	UnsetNode(name string)
 }
 
 type ValueSetter interface {
-	// SetValue sets a value of the form.
+	// SetValue sets a value the passed node.
 	SetValue(name string, value *node.Node)
 }
 
 type CSRFSetter interface {
-	// SetCSRF sets the CSRF value for the form.
+	// SetCSRF sets the CSRF value.
 	SetCSRF(string)
 }
 
 type Resetter interface {
-	// Resets the form or field.
+	// Resets all values and messages recursively.
 	Reset(exclude ...string)
 }
 
 type MessageResetter interface {
-	// ResetMessages resets the form's or field's messages..
+	// ResetMessages resets the messages recursively.
 	ResetMessages(exclude ...string)
 }
 
 type FieldSorter interface {
-	SortFields(schemaRef string) error
+	SortNodes(schemaRef string) error
 }
 
 type NodeGetter interface {

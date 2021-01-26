@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/ory/kratos/ui/container"
+
 	"github.com/bxcodec/faker/v3"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
@@ -11,7 +13,7 @@ import (
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
-	"github.com/ory/kratos/selfservice/form"
+
 	"github.com/ory/kratos/x"
 )
 
@@ -97,11 +99,11 @@ func TestFlowPersister(ctx context.Context, p FlowPersister) func(t *testing.T) 
 			expected.Methods = map[identity.CredentialsType]*FlowMethod{
 				identity.CredentialsTypeOIDC: {
 					Method: identity.CredentialsTypeOIDC,
-					Config: &FlowMethodConfig{FlowMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypeOIDC))},
+					Config: &FlowMethodConfig{FlowMethodConfigurator: container.New(string(identity.CredentialsTypeOIDC))},
 				},
 				identity.CredentialsTypePassword: {
 					Method: identity.CredentialsTypePassword,
-					Config: &FlowMethodConfig{FlowMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypePassword))},
+					Config: &FlowMethodConfig{FlowMethodConfigurator: container.New(string(identity.CredentialsTypePassword))},
 				},
 			}
 			err := p.CreateLoginFlow(ctx, expected)
@@ -113,7 +115,7 @@ func TestFlowPersister(ctx context.Context, p FlowPersister) func(t *testing.T) 
 
 			actual.Methods = map[identity.CredentialsType]*FlowMethod{identity.CredentialsTypeOIDC: {
 				Method: identity.CredentialsTypeOIDC,
-				Config: &FlowMethodConfig{FlowMethodConfigurator: form.NewHTMLForm("ory-sh")},
+				Config: &FlowMethodConfig{FlowMethodConfigurator: container.New("ory-sh")},
 			}}
 			actual.Type = flow.TypeBrowser
 			actual.Forced = true
@@ -127,7 +129,7 @@ func TestFlowPersister(ctx context.Context, p FlowPersister) func(t *testing.T) 
 			require.Len(t, actual.Methods, 1)
 			assert.Equal(t, "ory-sh",
 				actual.Methods[identity.CredentialsTypeOIDC].Config.
-					FlowMethodConfigurator.(*form.HTMLForm).Action)
+					FlowMethodConfigurator.(*container.Container).Action)
 		})
 
 		t.Run("case=should properly update a flow", func(t *testing.T) {
@@ -153,12 +155,12 @@ func TestFlowPersister(ctx context.Context, p FlowPersister) func(t *testing.T) 
 
 			require.NoError(t, p.UpdateLoginFlowMethod(ctx, expected.ID, identity.CredentialsTypeOIDC, &FlowMethod{
 				Method: identity.CredentialsTypeOIDC,
-				Config: &FlowMethodConfig{FlowMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypeOIDC))},
+				Config: &FlowMethodConfig{FlowMethodConfigurator: container.New(string(identity.CredentialsTypeOIDC))},
 			}))
 
 			require.NoError(t, p.UpdateLoginFlowMethod(ctx, expected.ID, identity.CredentialsTypePassword, &FlowMethod{
 				Method: identity.CredentialsTypePassword,
-				Config: &FlowMethodConfig{FlowMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypePassword))},
+				Config: &FlowMethodConfig{FlowMethodConfigurator: container.New(string(identity.CredentialsTypePassword))},
 			}))
 
 			actual, err = p.GetLoginFlow(ctx, expected.ID)
@@ -166,8 +168,8 @@ func TestFlowPersister(ctx context.Context, p FlowPersister) func(t *testing.T) 
 			require.Len(t, actual.Methods, 2)
 			assert.EqualValues(t, identity.CredentialsTypePassword, actual.Active)
 
-			assert.Equal(t, string(identity.CredentialsTypePassword), actual.Methods[identity.CredentialsTypePassword].Config.FlowMethodConfigurator.(*form.HTMLForm).Action)
-			assert.Equal(t, string(identity.CredentialsTypeOIDC), actual.Methods[identity.CredentialsTypeOIDC].Config.FlowMethodConfigurator.(*form.HTMLForm).Action)
+			assert.Equal(t, string(identity.CredentialsTypePassword), actual.Methods[identity.CredentialsTypePassword].Config.FlowMethodConfigurator.(*container.Container).Action)
+			assert.Equal(t, string(identity.CredentialsTypeOIDC), actual.Methods[identity.CredentialsTypeOIDC].Config.FlowMethodConfigurator.(*container.Container).Action)
 		})
 
 		t.Run("case=should not cause data loss when updating a request without changes", func(t *testing.T) {
@@ -186,12 +188,12 @@ func TestFlowPersister(ctx context.Context, p FlowPersister) func(t *testing.T) 
 			require.Len(t, actual.Methods, 2)
 
 			assert.Equal(t,
-				expected.Methods[identity.CredentialsTypePassword].Config.FlowMethodConfigurator.(*form.HTMLForm).Action,
-				actual.Methods[identity.CredentialsTypePassword].Config.FlowMethodConfigurator.(*form.HTMLForm).Action,
+				expected.Methods[identity.CredentialsTypePassword].Config.FlowMethodConfigurator.(*container.Container).Action,
+				actual.Methods[identity.CredentialsTypePassword].Config.FlowMethodConfigurator.(*container.Container).Action,
 			)
 			assert.Equal(t,
-				expected.Methods[identity.CredentialsTypeOIDC].Config.FlowMethodConfigurator.(*form.HTMLForm).Action,
-				actual.Methods[identity.CredentialsTypeOIDC].Config.FlowMethodConfigurator.(*form.HTMLForm).Action,
+				expected.Methods[identity.CredentialsTypeOIDC].Config.FlowMethodConfigurator.(*container.Container).Action,
+				actual.Methods[identity.CredentialsTypeOIDC].Config.FlowMethodConfigurator.(*container.Container).Action,
 			)
 		})
 	}

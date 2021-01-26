@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/kratos/ui/container"
+
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
@@ -19,7 +21,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
-	"github.com/ory/kratos/selfservice/form"
+
 	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/kratos/x"
 )
@@ -142,7 +144,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		return err
 	}
 
-	f := form.NewHTMLForm(urlx.CopyWithQuery(urlx.AppendPaths(
+	f := container.New(urlx.CopyWithQuery(urlx.AppendPaths(
 		s.d.Config(r.Context()).SelfPublicURL(r), SettingsPath), url.Values{"flow": {sr.ID.String()}}).String())
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 

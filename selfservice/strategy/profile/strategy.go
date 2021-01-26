@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/ory/kratos/ui/container"
+
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/ory/x/pkgerx"
@@ -27,7 +29,7 @@ import (
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
-	"github.com/ory/kratos/selfservice/form"
+
 	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
@@ -75,7 +77,7 @@ type (
 
 // swagger:model settingsProfileFormConfig
 type SettingsProfileRequestMethod struct {
-	*form.HTMLForm
+	*container.Container
 }
 
 func NewStrategy(d strategyDependencies) *Strategy {
@@ -103,7 +105,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 	// use a schema compiler that disables identifiers
 	schemaCompiler := jsonschema.NewCompiler()
 
-	f, err := form.NewHTMLFormFromJSONSchema(urlx.CopyWithQuery(
+	f, err := container.NewFromJSONSchema(urlx.CopyWithQuery(
 		urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(r), RouteSettings),
 		url.Values{"flow": {pr.ID.String()}},
 	).String(), node.DefaultGroup, traitsSchema.URL, "", schemaCompiler)
@@ -114,13 +116,13 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 	f.UpdateNodesFromJSON(json.RawMessage(id.Traits), "traits", node.DefaultGroup)
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 
-	if err := f.SortFields(traitsSchema.URL); err != nil {
+	if err := f.SortNodes(traitsSchema.URL); err != nil {
 		return err
 	}
 
 	pr.Methods[s.SettingsStrategyID()] = &settings.FlowMethod{
 		Method: s.SettingsStrategyID(),
-		Config: &settings.FlowMethodConfig{FlowMethodConfigurator: &SettingsProfileRequestMethod{HTMLForm: f}},
+		Config: &settings.FlowMethodConfig{FlowMethodConfigurator: &SettingsProfileRequestMethod{Container: f}},
 	}
 	return nil
 }
@@ -287,7 +289,7 @@ func (s *Strategy) hydrateForm(r *http.Request, ar *settings.Flow, ss *session.S
 
 	ar.Methods[settings.StrategyProfile].Config.Reset()
 	if traits != nil {
-		for _, field := range form.NewHTMLFormFromJSON(action.String(), node.DefaultGroup, traits, "traits").Nodes {
+		for _, field := range container.NewFromJSON(action.String(), node.DefaultGroup, traits, "traits").Nodes {
 			ar.Methods[settings.StrategyProfile].Config.GetNodes().Upsert(field)
 		}
 	}
@@ -298,7 +300,7 @@ func (s *Strategy) hydrateForm(r *http.Request, ar *settings.Flow, ss *session.S
 		return err
 	}
 
-	if err = ar.Methods[settings.StrategyProfile].Config.SortFields(traitsSchema.URL); err != nil {
+	if err = ar.Methods[settings.StrategyProfile].Config.SortNodes(traitsSchema.URL); err != nil {
 		return err
 	}
 
