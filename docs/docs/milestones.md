@@ -141,6 +141,9 @@ Something is not working.
 
 #### Pull Requests
 
+- [ ] Umbrella PR for Ory Kratos v0.6 with MFA and improved flows (#961)
+      ([kratos#1012](https://github.com/ory/kratos/pull/1012)) -
+      [@hackerman](https://github.com/aeneasr)
 - [x] Implement FIDO2/MFA and refactor flow payloads and identity credentials
       and authenticators
       ([kratos#921](https://github.com/ory/kratos/pull/921)) -
@@ -204,7 +207,10 @@ New feature or request.
 
 #### Pull Requests
 
-- [ ] docs: Initial set of documentation tests
+- [ ] Umbrella PR for Ory Kratos v0.6 with MFA and improved flows (#961)
+      ([kratos#1012](https://github.com/ory/kratos/pull/1012)) -
+      [@hackerman](https://github.com/aeneasr)
+- [x] docs: Initial set of documentation tests
       ([kratos#567](https://github.com/ory/kratos/pull/567)) -
       [@hackerman](https://github.com/aeneasr)
 - [x] feat: add selinux compatible quickstart config
@@ -234,7 +240,7 @@ Affects documentation.
 
 #### Pull Requests
 
-- [ ] docs: Initial set of documentation tests
+- [x] docs: Initial set of documentation tests
       ([kratos#567](https://github.com/ory/kratos/pull/567)) -
       [@hackerman](https://github.com/aeneasr)
 
@@ -248,4 +254,14 @@ A request for comments to discuss and share ideas.
       ([kratos#47](https://github.com/ory/kratos/issues/47))
 - [ ] Refactor form builder
       ([kratos#929](https://github.com/ory/kratos/issues/929)) -
+      [@hackerman](https://github.com/aeneasr)
+
+### [Blocking](https://github.com/ory/kratos/labels/blocking)
+
+Blocks milestones or other issues or pulls.
+
+#### Pull Requests
+
+- [ ] Umbrella PR for Ory Kratos v0.6 with MFA and improved flows (#961)
+      ([kratos#1012](https://github.com/ory/kratos/pull/1012)) -
       [@hackerman](https://github.com/aeneasr)
