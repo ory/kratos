@@ -321,7 +321,7 @@ func TestSettingsStrategy(t *testing.T) {
 					NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents[agent]).
 					WithID(string(*req.ID)), nil)
 				require.NoError(t, err)
-				require.EqualValues(t, settings.StateShowForm, rs.Payload.State)
+				require.EqualValues(t, settings.StateShowForm, *rs.Payload.State)
 
 				checkCredentials(t, true, users[agent].ID, provider, "hackerman+github+"+testID)
 
