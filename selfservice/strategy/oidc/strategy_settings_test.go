@@ -440,7 +440,7 @@ func TestSettingsStrategy(t *testing.T) {
 				NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents[agent]).
 				WithID(string(*req.ID)), nil)
 			require.NoError(t, err)
-			require.EqualValues(t, settings.StateSuccess, rs.Payload.State)
+			require.EqualValues(t, settings.StateSuccess, *rs.Payload.State)
 
 			testhelpers.JSONEq(t, append(models.FormFields{csrfField}, models.FormFields{
 				{Type: pointerx.String("submit"), Name: pointerx.String("unlink"), Value: "ory"},
