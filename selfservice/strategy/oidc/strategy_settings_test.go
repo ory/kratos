@@ -184,9 +184,9 @@ func TestSettingsStrategy(t *testing.T) {
 		assert.EqualValues(t, users["password"].Traits, req.Identity.Traits)
 		assert.EqualValues(t, users["password"].SchemaID, req.Identity.SchemaID)
 
-		assert.EqualValues(t, req.ID.String(), rs.Payload.ID)
+		assert.EqualValues(t, req.ID.String(), *rs.Payload.ID)
 		assert.EqualValues(t, req.RequestURL, *rs.Payload.RequestURL)
-		assert.EqualValues(t, req.Identity.ID.String(), rs.Payload.Identity.ID)
+		assert.EqualValues(t, req.Identity.ID.String(), *rs.Payload.Identity.ID)
 		assert.EqualValues(t, req.IssuedAt, time.Time(*rs.Payload.IssuedAt))
 
 		require.NotNil(t, identity.CredentialsTypeOIDC.String(), rs.Payload.Methods[identity.CredentialsTypeOIDC.String()])
