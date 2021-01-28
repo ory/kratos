@@ -1,4 +1,4 @@
-package internal
+package corpx
 
 import (
 	"math/rand"
@@ -22,7 +22,14 @@ import (
 	"github.com/ory/kratos/x"
 )
 
+var setup bool
+
 func RegisterFakes() {
+	if setup {
+		return
+	}
+	setup = true
+
 	_ = faker.SetRandomMapAndSliceSize(4)
 
 	if err := faker.AddProvider("birthdate", func(v reflect.Value) (interface{}, error) {
