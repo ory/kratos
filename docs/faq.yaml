@@ -1,0 +1,19 @@
+
+---
+- tags:
+  - kratos
+  - oidc
+  - blub
+  q: |
+    How do I append a random suffix (e.g. a number) to OIDC usernames if the username
+    returned by a provider is already taken?
+  a: Not sure if jsonnet has a rand function built into the stdlib, but it does have
+    the md5 function. You can probably use that
+- tags:
+  - kratos
+  - oidc
+  - bla
+  q: How do I append a random suffix (e.g. a number) to OIDC usernames if the username
+    returned by a provider is already taken?
+  a: Not sure if jsonnet has a rand function built into the stdlib, but it does have
+    the md5 function. You can probably use that
