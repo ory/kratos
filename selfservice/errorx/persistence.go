@@ -35,14 +35,12 @@ type (
 	}
 )
 
-func TestPersister(p Persister) func(t *testing.T) {
+func TestPersister(ctx context.Context, p Persister) func(t *testing.T) {
 	toJSON := func(t *testing.T, in interface{}) string {
 		out, err := json.Marshal(in)
 		require.NoError(t, err)
 		return string(out)
 	}
-
-	ctx := context.Background()
 
 	return func(t *testing.T) {
 		t.Run("case=not found", func(t *testing.T) {
