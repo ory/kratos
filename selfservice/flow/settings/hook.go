@@ -2,10 +2,11 @@ package settings
 
 import (
 	"fmt"
-	"github.com/ory/kratos/schema"
-	"github.com/ory/x/sqlcon"
 	"net/http"
 	"time"
+
+	"github.com/ory/kratos/schema"
+	"github.com/ory/x/sqlcon"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
