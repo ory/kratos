@@ -109,7 +109,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 	var newProfileFlow = func(t *testing.T, client *http.Client, redirectTo string, exp time.Duration) *settings.Flow {
 		req, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(),
-			x.ParseUUID(string(testhelpers.InitializeSettingsFlowViaBrowser(t, client, publicTS).Payload.ID)))
+			x.ParseUUID(string(*testhelpers.InitializeSettingsFlowViaBrowser(t, client, publicTS).Payload.ID)))
 		require.NoError(t, err)
 		assert.Empty(t, req.Active)
 
@@ -184,9 +184,9 @@ func TestSettingsStrategy(t *testing.T) {
 		assert.EqualValues(t, users["password"].Traits, req.Identity.Traits)
 		assert.EqualValues(t, users["password"].SchemaID, req.Identity.SchemaID)
 
-		assert.EqualValues(t, req.ID.String(), rs.Payload.ID)
+		assert.EqualValues(t, req.ID.String(), *rs.Payload.ID)
 		assert.EqualValues(t, req.RequestURL, *rs.Payload.RequestURL)
-		assert.EqualValues(t, req.Identity.ID.String(), rs.Payload.Identity.ID)
+		assert.EqualValues(t, req.Identity.ID.String(), *rs.Payload.Identity.ID)
 		assert.EqualValues(t, req.IssuedAt, time.Time(*rs.Payload.IssuedAt))
 
 		require.NotNil(t, identity.CredentialsTypeOIDC.String(), rs.Payload.Methods[identity.CredentialsTypeOIDC.String()])
@@ -273,7 +273,7 @@ func TestSettingsStrategy(t *testing.T) {
 		var unlinkInvalid = func(agent, provider string, expectedFields models.FormFields) func(t *testing.T) {
 			return func(t *testing.T) {
 				body, res, req := unlink(t, agent, provider)
-				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(req.ID))
+				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(*req.ID))
 
 				assert.EqualValues(t, identity.CredentialsTypeOIDC.String(), gjson.GetBytes(body, "active").String())
 				assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.action").String(), publicTS.URL+oidc.SettingsPath+"?flow=")
@@ -301,7 +301,7 @@ func TestSettingsStrategy(t *testing.T) {
 			t.Cleanup(reset(t))
 
 			body, res, req := unlink(t, agent, provider)
-			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(req.ID))
+			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(*req.ID))
 			require.Equal(t, "success", gjson.GetBytes(body, "state").String(), "%s", body)
 
 			checkCredentials(t, false, users[agent].ID, provider, "hackerman+github+"+testID)
@@ -319,9 +319,9 @@ func TestSettingsStrategy(t *testing.T) {
 
 				rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
 					NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents[agent]).
-					WithID(string(req.ID)), nil)
+					WithID(string(*req.ID)), nil)
 				require.NoError(t, err)
-				require.EqualValues(t, settings.StateShowForm, rs.Payload.State)
+				require.EqualValues(t, settings.StateShowForm, *rs.Payload.State)
 
 				checkCredentials(t, true, users[agent].ID, provider, "hackerman+github+"+testID)
 
@@ -340,7 +340,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 				body, res := testhelpers.HTTPPostForm(t, agents[agent], action(req),
 					&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
-				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(req.ID))
+				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(*req.ID))
 
 				assert.Equal(t, "success", gjson.GetBytes(body, "state").String())
 
@@ -360,7 +360,7 @@ func TestSettingsStrategy(t *testing.T) {
 		var linkInvalid = func(agent, provider string, expectedFields models.FormFields) func(t *testing.T) {
 			return func(t *testing.T) {
 				body, res, req := link(t, agent, provider)
-				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(req.ID))
+				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(*req.ID))
 
 				assert.EqualValues(t, identity.CredentialsTypeOIDC.String(), gjson.GetBytes(body, "active").String())
 				assert.Contains(t, gjson.GetBytes(body, "methods.oidc.config.action").String(), publicTS.URL+oidc.SettingsPath+"?flow=")
@@ -438,9 +438,9 @@ func TestSettingsStrategy(t *testing.T) {
 
 			rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
 				NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents[agent]).
-				WithID(string(req.ID)), nil)
+				WithID(string(*req.ID)), nil)
 			require.NoError(t, err)
-			require.EqualValues(t, settings.StateSuccess, rs.Payload.State)
+			require.EqualValues(t, settings.StateSuccess, *rs.Payload.State)
 
 			testhelpers.JSONEq(t, append(models.FormFields{csrfField}, models.FormFields{
 				{Type: pointerx.String("submit"), Name: pointerx.String("unlink"), Value: "ory"},
@@ -463,9 +463,9 @@ func TestSettingsStrategy(t *testing.T) {
 
 			rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
 				NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents[agent]).
-				WithID(string(req.ID)), nil)
+				WithID(string(*req.ID)), nil)
 			require.NoError(t, err)
-			require.EqualValues(t, settings.StateSuccess, rs.Payload.State)
+			require.EqualValues(t, settings.StateSuccess, *rs.Payload.State)
 
 			testhelpers.JSONEq(t, append(models.FormFields{csrfField}, models.FormFields{
 				{Type: pointerx.String("submit"), Name: pointerx.String("link"), Value: "ory"},
@@ -489,9 +489,9 @@ func TestSettingsStrategy(t *testing.T) {
 
 				rs, err := admin.Public.GetSelfServiceSettingsFlow(sdkp.
 					NewGetSelfServiceSettingsFlowParams().WithHTTPClient(agents[agent]).
-					WithID(string(req.ID)), nil)
+					WithID(string(*req.ID)), nil)
 				require.NoError(t, err)
-				require.EqualValues(t, settings.StateShowForm, rs.Payload.State)
+				require.EqualValues(t, settings.StateShowForm, *rs.Payload.State)
 
 				checkCredentials(t, false, users[agent].ID, provider, subject)
 
@@ -510,7 +510,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 				body, res := testhelpers.HTTPPostForm(t, agents[agent], action(req),
 					&url.Values{"csrf_token": {x.FakeCSRFToken}, "unlink": {provider}})
-				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(req.ID))
+				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+string(*req.ID))
 
 				assert.Equal(t, "success", gjson.GetBytes(body, "state").String())
 

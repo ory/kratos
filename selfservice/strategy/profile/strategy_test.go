@@ -154,7 +154,7 @@ func TestStrategyTraits(t *testing.T) {
 	t.Run("description=hydrate the proper fields", func(t *testing.T) {
 		var run = func(t *testing.T, id *identity.Identity, payload *models.SettingsFlow, route string) {
 			assert.NotEmpty(t, payload.Identity)
-			assert.Equal(t, id.ID.String(), string(payload.Identity.ID))
+			assert.Equal(t, id.ID.String(), string(*payload.Identity.ID))
 			assert.JSONEq(t, string(id.Traits), x.MustEncodeJSON(t, payload.Identity.Traits))
 			assert.Equal(t, id.SchemaID, pointerx.StringR(payload.Identity.SchemaID))
 			assert.Equal(t, publicTS.URL+route, pointerx.StringR(payload.RequestURL))
@@ -162,7 +162,7 @@ func TestStrategyTraits(t *testing.T) {
 			f := testhelpers.GetSettingsFlowMethodConfig(t, payload, settings.StrategyProfile)
 
 			assertx.EqualAsJSON(t, &models.SettingsFlowMethodConfig{
-				Action: pointerx.String(publicTS.URL + profile.RouteSettings + "?flow=" + string(payload.ID)),
+				Action: pointerx.String(publicTS.URL + profile.RouteSettings + "?flow=" + string(*payload.ID)),
 				Method: pointerx.String("POST"),
 				Fields: models.FormFields{
 					&models.FormField{Name: pointerx.String(form.CSRFTokenName), Required: true, Type: pointerx.String("hidden"), Value: x.FakeCSRFToken},
