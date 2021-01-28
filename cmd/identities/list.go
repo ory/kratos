@@ -1,7 +1,6 @@
 package identities
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 
@@ -9,11 +8,11 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/ory/kratos-client-go/client/admin"
 	"github.com/ory/kratos/cmd/cliclient"
-	"github.com/ory/kratos/internal/httpclient/client/admin"
 )
 
-var listCmd = &cobra.Command{
+var ListCmd = &cobra.Command{
 	Use:   "list [<page> <per-page>]",
 	Short: "List identities",
 	Long:  "List identities (paginated)",
@@ -29,7 +28,7 @@ var listCmd = &cobra.Command{
 		c := cliclient.NewClient(cmd)
 
 		params := &admin.ListIdentitiesParams{
-			Context: context.Background(),
+			Context: cmd.Context(),
 		}
 
 		if len(args) == 2 {
@@ -54,7 +53,7 @@ var listCmd = &cobra.Command{
 			return cmdx.FailSilently(cmd)
 		}
 
-		cmdx.PrintCollection(cmd, &outputIdentityCollection{
+		cmdx.PrintTable(cmd, &outputIdentityCollection{
 			identities: resp.Payload,
 		})
 

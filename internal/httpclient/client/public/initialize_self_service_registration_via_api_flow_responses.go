@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/ory/kratos/internal/httpclient/models"
+	"github.com/ory/kratos-client-go/models"
 )
 
 // InitializeSelfServiceRegistrationViaAPIFlowReader is a Reader for the InitializeSelfServiceRegistrationViaAPIFlow structure.
@@ -41,7 +41,6 @@ func (o *InitializeSelfServiceRegistrationViaAPIFlowReader) ReadResponse(respons
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -52,7 +51,7 @@ func NewInitializeSelfServiceRegistrationViaAPIFlowOK() *InitializeSelfServiceRe
 	return &InitializeSelfServiceRegistrationViaAPIFlowOK{}
 }
 
-/*InitializeSelfServiceRegistrationViaAPIFlowOK handles this case with default header values.
+/* InitializeSelfServiceRegistrationViaAPIFlowOK describes a response with status code 200, with default header values.
 
 registrationFlow
 */
@@ -63,7 +62,6 @@ type InitializeSelfServiceRegistrationViaAPIFlowOK struct {
 func (o *InitializeSelfServiceRegistrationViaAPIFlowOK) Error() string {
 	return fmt.Sprintf("[GET /self-service/registration/api][%d] initializeSelfServiceRegistrationViaApiFlowOK  %+v", 200, o.Payload)
 }
-
 func (o *InitializeSelfServiceRegistrationViaAPIFlowOK) GetPayload() *models.RegistrationFlow {
 	return o.Payload
 }
@@ -85,7 +83,7 @@ func NewInitializeSelfServiceRegistrationViaAPIFlowBadRequest() *InitializeSelfS
 	return &InitializeSelfServiceRegistrationViaAPIFlowBadRequest{}
 }
 
-/*InitializeSelfServiceRegistrationViaAPIFlowBadRequest handles this case with default header values.
+/* InitializeSelfServiceRegistrationViaAPIFlowBadRequest describes a response with status code 400, with default header values.
 
 genericError
 */
@@ -96,7 +94,6 @@ type InitializeSelfServiceRegistrationViaAPIFlowBadRequest struct {
 func (o *InitializeSelfServiceRegistrationViaAPIFlowBadRequest) Error() string {
 	return fmt.Sprintf("[GET /self-service/registration/api][%d] initializeSelfServiceRegistrationViaApiFlowBadRequest  %+v", 400, o.Payload)
 }
-
 func (o *InitializeSelfServiceRegistrationViaAPIFlowBadRequest) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -118,7 +115,7 @@ func NewInitializeSelfServiceRegistrationViaAPIFlowInternalServerError() *Initia
 	return &InitializeSelfServiceRegistrationViaAPIFlowInternalServerError{}
 }
 
-/*InitializeSelfServiceRegistrationViaAPIFlowInternalServerError handles this case with default header values.
+/* InitializeSelfServiceRegistrationViaAPIFlowInternalServerError describes a response with status code 500, with default header values.
 
 genericError
 */
@@ -129,7 +126,6 @@ type InitializeSelfServiceRegistrationViaAPIFlowInternalServerError struct {
 func (o *InitializeSelfServiceRegistrationViaAPIFlowInternalServerError) Error() string {
 	return fmt.Sprintf("[GET /self-service/registration/api][%d] initializeSelfServiceRegistrationViaApiFlowInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *InitializeSelfServiceRegistrationViaAPIFlowInternalServerError) GetPayload() *models.GenericError {
 	return o.Payload
 }

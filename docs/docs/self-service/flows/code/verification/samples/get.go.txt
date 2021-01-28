@@ -5,8 +5,6 @@ import (
 
   "github.com/ory/kratos-client-go/client/public"
   "github.com/ory/kratos-client-go/client"
-
-  "github.com/ory/kratos/internal/httpclient/client/public"
 )
 
 func main() {

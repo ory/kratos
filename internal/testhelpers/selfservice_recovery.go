@@ -3,8 +3,7 @@ package testhelpers
 
 import (
 	"bytes"
-	"encoding/json"
-	"io/ioutil"
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -16,14 +15,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/viper"
 	"github.com/ory/x/pointerx"
 
+	"github.com/ory/kratos-client-go/client/public"
+	"github.com/ory/kratos-client-go/models"
 	"github.com/ory/kratos/driver"
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal/httpclient/client/public"
-	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/x"
 )
@@ -34,7 +32,7 @@ func NewVerificationUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptes
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, e)
 	}))
-	viper.Set(configuration.ViperKeySelfServiceVerificationUI, ts.URL+"/verification-ts")
+	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceVerificationUI, ts.URL+"/verification-ts")
 	t.Cleanup(ts.Close)
 	return ts
 }
@@ -54,34 +52,6 @@ func GetVerificationFlow(t *testing.T, client *http.Client, ts *httptest.Server)
 	assert.Empty(t, rs.Payload.Active)
 
 	return rs
-}
-
-func VerificationSubmitForm(
-	t *testing.T,
-	f *models.VerificationFlowMethodConfig,
-	hc *http.Client,
-	values url.Values,
-) (string, *public.GetSelfServiceVerificationFlowOK) {
-	require.NotEmpty(t, f.Action)
-
-	res, err := hc.PostForm(pointerx.StringR(f.Action), values)
-	require.NoError(t, err)
-	defer res.Body.Close()
-
-	b, err := ioutil.ReadAll(res.Body)
-	require.NoError(t, err)
-	assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", b)
-
-	assert.Equal(t, viper.GetString(configuration.ViperKeySelfServiceVerificationUI), res.Request.URL.Scheme+"://"+res.Request.URL.Host+res.Request.URL.Path, "should end up at the settings URL, used: %s", pointerx.StringR(f.Action))
-
-	rs, err := NewSDKClientFromURL(viper.GetString(configuration.ViperKeyPublicBaseURL)).Public.GetSelfServiceVerificationFlow(
-		public.NewGetSelfServiceVerificationFlowParams().WithHTTPClient(hc).
-			WithID(res.Request.URL.Query().Get("flow")),
-	)
-	require.NoError(t, err)
-	body, err := json.Marshal(rs.Payload)
-	require.NoError(t, err)
-	return string(body), rs
 }
 
 func InitializeVerificationFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server) *public.GetSelfServiceVerificationFlowOK {

@@ -10,16 +10,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/x/sqlxx"
-
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/sqlxx"
 )
 
 func TestVerifier(t *testing.T) {
@@ -35,11 +32,11 @@ func TestVerifier(t *testing.T) {
 	} {
 		t.Run("name="+k, func(t *testing.T) {
 			conf, reg := internal.NewFastRegistryWithMocks(t)
-			viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/verify.schema.json")
-			viper.Set(configuration.ViperKeyPublicBaseURL, "https://www.ory.sh/")
-			viper.Set(configuration.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
+			conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/verify.schema.json")
+			conf.MustSet(config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+			conf.MustSet(config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
 
-			i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+			i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			i.Traits = identity.Traits(`{"emails":["foo@ory.sh","bar@ory.sh","baz@ory.sh"]}`)
 			require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
 
@@ -62,7 +59,7 @@ func TestVerifier(t *testing.T) {
 			i, err = reg.IdentityPool().GetIdentity(context.Background(), i.ID)
 			require.NoError(t, err)
 
-			h := hook.NewVerifier(reg, conf)
+			h := hook.NewVerifier(reg)
 			require.NoError(t, hf(h, i))
 
 			messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)

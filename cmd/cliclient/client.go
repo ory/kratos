@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/pflag"
 
-	"github.com/ory/kratos/internal/httpclient/client"
+	"github.com/ory/kratos-client-go/client"
 	"github.com/ory/x/cmdx"
 )
 
@@ -18,7 +18,17 @@ const (
 	FlagEndpoint   = "endpoint"
 )
 
+type ContextKey int
+
+const (
+	ClientContextKey ContextKey = iota + 1
+)
+
 func NewClient(cmd *cobra.Command) *client.OryKratos {
+	if f, ok := cmd.Context().Value(ClientContextKey).(func(cmd *cobra.Command) *client.OryKratos); ok {
+		return f(cmd)
+	}
+
 	endpoint, err := cmd.Flags().GetString(FlagEndpoint)
 	cmdx.Must(err, "flag access error: %s", err)
 

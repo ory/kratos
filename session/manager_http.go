@@ -3,9 +3,10 @@ package session
 import (
 	"context"
 	"net/http"
-	"time"
 
 	"github.com/pkg/errors"
+
+	"github.com/ory/kratos/driver/config"
 
 	"github.com/ory/x/sqlcon"
 
@@ -17,32 +18,20 @@ import (
 
 type (
 	managerHTTPDependencies interface {
-		PersistenceProvider
-		x.CookieProvider
+		config.Provider
 		identity.PoolProvider
+		x.CookieProvider
 		x.CSRFProvider
-	}
-	managerHTTPConfiguration interface {
-		SessionPersistentCookie() bool
-		SessionLifespan() time.Duration
-		SecretsSession() [][]byte
-		SessionSameSiteMode() http.SameSite
-		SessionDomain() string
-		SessionPath() string
+		PersistenceProvider
 	}
 	ManagerHTTP struct {
-		c          managerHTTPConfiguration
 		cookieName string
 		r          managerHTTPDependencies
 	}
 )
 
-func NewManagerHTTP(
-	c managerHTTPConfiguration,
-	r managerHTTPDependencies,
-) *ManagerHTTP {
+func NewManagerHTTP(r managerHTTPDependencies) *ManagerHTTP {
 	return &ManagerHTTP{
-		c:          c,
 		r:          r,
 		cookieName: DefaultSessionCookieName,
 	}
@@ -62,11 +51,11 @@ func (s *ManagerHTTP) CreateAndIssueCookie(ctx context.Context, w http.ResponseW
 
 func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r *http.Request, session *Session) error {
 	cookie, _ := s.r.CookieManager().Get(r, s.cookieName)
-	if s.c.SessionDomain() != "" {
-		cookie.Options.Domain = s.c.SessionDomain()
+	if s.r.Config(ctx).SessionDomain() != "" {
+		cookie.Options.Domain = s.r.Config(ctx).SessionDomain()
 	}
 
-	old, err := s.FetchFromRequest(context.Background(), r)
+	old, err := s.FetchFromRequest(ctx, r)
 	if err != nil {
 		// No session was set prior -> regenerate anti-csrf token
 		_ = s.r.CSRFHandler().RegenerateToken(w, r)
@@ -75,17 +64,17 @@ func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r 
 		_ = s.r.CSRFHandler().RegenerateToken(w, r)
 	}
 
-	if s.c.SessionPath() != "" {
-		cookie.Options.Path = s.c.SessionPath()
+	if s.r.Config(ctx).SessionPath() != "" {
+		cookie.Options.Path = s.r.Config(ctx).SessionPath()
 	}
 
-	if s.c.SessionSameSiteMode() != 0 {
-		cookie.Options.SameSite = s.c.SessionSameSiteMode()
+	if s.r.Config(ctx).SessionSameSiteMode() != 0 {
+		cookie.Options.SameSite = s.r.Config(ctx).SessionSameSiteMode()
 	}
 
 	cookie.Options.MaxAge = 0
-	if s.c.SessionPersistentCookie() {
-		cookie.Options.MaxAge = int(s.c.SessionLifespan().Seconds())
+	if s.r.Config(ctx).SessionPersistentCookie() {
+		cookie.Options.MaxAge = int(s.r.Config(ctx).SessionLifespan().Seconds())
 	}
 
 	cookie.Values["session_token"] = session.Token

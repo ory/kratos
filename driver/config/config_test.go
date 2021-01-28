@@ -1,50 +1,30 @@
-package configuration_test
+package config_test
 
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/ory/x/configx"
 
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/urlx"
 
 	_ "github.com/ory/jsonschema/v3/fileloader"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/ory/viper"
-
-	"github.com/ory/x/viperx"
 )
-
-var schema []byte
-
-func init() {
-	var err error
-	schema, err = ioutil.ReadFile("../../.schema/config.schema.json")
-	if err != nil {
-		panic("Unable to open configuration JSON Schema.")
-	}
-}
 
 func TestViperProvider(t *testing.T) {
 	t.Run("suite=loaders", func(t *testing.T) {
-		viper.Reset()
-		viperx.InitializeConfig(
-			"kratos",
-			"./../../internal/",
-			logrusx.New("", ""),
-		)
-
-		require.NoError(t, viperx.ValidateFromURL("file://../../.schema/config.schema.json"))
-		p := configuration.NewViperProvider(logrusx.New("", ""), true)
+		p := config.MustNew(logrusx.New("", ""),
+			configx.WithConfigFiles("../../internal/.kratos.yaml"))
 
 		t.Run("group=urls", func(t *testing.T) {
 			assert.Equal(t, "http://test.kratos.ory.sh/login", p.SelfServiceFlowLoginUI().String())
@@ -59,6 +39,7 @@ func TestViperProvider(t *testing.T) {
 			for _, v := range p.SelfServiceBrowserWhitelistedReturnToDomains() {
 				ds = append(ds, v.String())
 			}
+
 			assert.Equal(t, []string{
 				"http://return-to-1-test.ory.sh/",
 				"http://return-to-2-test.ory.sh/",
@@ -76,7 +57,7 @@ func TestViperProvider(t *testing.T) {
 			assert.Equal(t, "https://self-service/settings/return_to", p.SelfServiceFlowSettingsReturnTo("profile", p.SelfServiceBrowserDefaultReturnTo()).String())
 
 			assert.Equal(t, "http://test.kratos.ory.sh:4000/", p.SelfServiceFlowLogoutRedirectURL().String())
-			viper.Set(configuration.ViperKeySelfServiceLogoutBrowserDefaultReturnTo, "")
+			p.MustSet(config.ViperKeySelfServiceLogoutBrowserDefaultReturnTo, "")
 			assert.Equal(t, "http://return-to-3-test.ory.sh/", p.SelfServiceFlowLogoutRedirectURL().String())
 		})
 
@@ -86,11 +67,11 @@ func TestViperProvider(t *testing.T) {
 			ss := p.IdentityTraitsSchemas()
 			assert.Equal(t, 2, len(ss))
 
-			assert.Contains(t, ss, configuration.SchemaConfig{
+			assert.Contains(t, ss, config.Schema{
 				ID:  "default",
 				URL: "http://test.kratos.ory.sh/default-identity.schema.json",
 			})
-			assert.Contains(t, ss, configuration.SchemaConfig{
+			assert.Contains(t, ss, config.Schema{
 				ID:  "other",
 				URL: "http://test.kratos.ory.sh/other-identity.schema.json",
 			})
@@ -118,7 +99,7 @@ func TestViperProvider(t *testing.T) {
 				config  string
 				enabled bool
 			}{
-				{id: "password", enabled: true, config: `{}`},
+				{id: "password", enabled: true, config: `{"ignore_network_errors":true,"max_breaches":0}`},
 				{id: "oidc", enabled: true, config: `{"providers":[{"client_id":"a","client_secret":"b","id":"github","provider":"github","mapper_url":"http://test.kratos.ory.sh/default-identity.schema.json"}]}`},
 			} {
 				strategy := p.SelfServiceStrategy(tc.id)
@@ -139,11 +120,11 @@ func TestViperProvider(t *testing.T) {
 
 			for _, tc := range []struct {
 				strategy string
-				hooks    []configuration.SelfServiceHook
+				hooks    []config.SelfServiceHook
 			}{
 				{
 					strategy: "password",
-					hooks: []configuration.SelfServiceHook{
+					hooks: []config.SelfServiceHook{
 						{Name: "session", Config: json.RawMessage(`{}`)},
 						// {Name: "verify", Config: json.RawMessage(`{}`)},
 						// {Name: "redirect", Config: json.RawMessage(`{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`)},
@@ -151,7 +132,7 @@ func TestViperProvider(t *testing.T) {
 				},
 				{
 					strategy: "oidc",
-					hooks: []configuration.SelfServiceHook{
+					hooks: []config.SelfServiceHook{
 						// {Name: "verify", Config: json.RawMessage(`{}`)},
 						{Name: "session", Config: json.RawMessage(`{}`)},
 						// {Name: "redirect", Config: json.RawMessage(`{"allow_user_defined_redirect":false,"default_redirect_url":"http://test.kratos.ory.sh:4000/"}`)},
@@ -177,17 +158,17 @@ func TestViperProvider(t *testing.T) {
 
 			for _, tc := range []struct {
 				strategy string
-				hooks    []configuration.SelfServiceHook
+				hooks    []config.SelfServiceHook
 			}{
 				{
 					strategy: "password",
-					hooks: []configuration.SelfServiceHook{
+					hooks: []config.SelfServiceHook{
 						{Name: "revoke_active_sessions", Config: json.RawMessage(`{}`)},
 					},
 				},
 				{
 					strategy: "oidc",
-					hooks: []configuration.SelfServiceHook{
+					hooks: []config.SelfServiceHook{
 						{Name: "revoke_active_sessions", Config: json.RawMessage(`{}`)},
 					},
 				},
@@ -212,15 +193,15 @@ func TestViperProvider(t *testing.T) {
 
 			for _, tc := range []struct {
 				strategy string
-				hooks    []configuration.SelfServiceHook
+				hooks    []config.SelfServiceHook
 			}{
 				{
 					strategy: "password",
-					hooks:    []configuration.SelfServiceHook{},
+					hooks:    []config.SelfServiceHook{},
 				},
 				{
 					strategy: "profile",
-					hooks:    []configuration.SelfServiceHook{
+					hooks:    []config.SelfServiceHook{
 						// {Name: "verify", Config: json.RawMessage(`{}`)},
 					},
 				},
@@ -243,14 +224,15 @@ func TestViperProvider(t *testing.T) {
 		})
 
 		t.Run("group=hashers", func(t *testing.T) {
-			assert.Equal(t, &configuration.HasherArgon2Config{Memory: 1048576, Iterations: 2, Parallelism: 4,
+			assert.Equal(t, &config.Argon2{Memory: 1048576, Iterations: 2, Parallelism: 4,
 				SaltLength: 16, KeyLength: 32}, p.HasherArgon2())
 		})
 
 		t.Run("group=set_provider_by_json", func(t *testing.T) {
 			providerConfigJSON := `{"providers": [{"id":"github-test","provider":"github","client_id":"set_json_test","client_secret":"secret","mapper_url":"http://mapper-url","scope":["user:email"]}]}`
 			strategyConfigJSON := fmt.Sprintf(`{"enabled":true, "config": %s}`, providerConfigJSON)
-			viper.Set(configuration.ViperKeySelfServiceStrategyConfig+".oidc", strategyConfigJSON)
+
+			p.MustSet(config.ViperKeySelfServiceStrategyConfig+".oidc", strategyConfigJSON)
 			strategy := p.SelfServiceStrategy("oidc")
 			assert.JSONEq(t, providerConfigJSON, string(strategy.Config))
 		})
@@ -270,41 +252,34 @@ func (l InterceptHook) Fire(e *logrus.Entry) error {
 	return nil
 }
 
-func TestViperProvider_BaseURLs(t *testing.T) {
-	viper.Reset()
-	require.NoError(t, viperx.BindEnvsToSchema(schema))
-
+func TestProviderBaseURLs(t *testing.T) {
 	machineHostname, err := os.Hostname()
 	if err != nil {
 		machineHostname = "127.0.0.1"
 	}
 
-	l := logrusx.New("", "")
-	p := configuration.NewViperProvider(l, false)
+	p := config.MustNew(logrusx.New("", ""), configx.SkipValidation())
 	assert.Equal(t, "https://"+machineHostname+":4433/", p.SelfPublicURL().String())
 	assert.Equal(t, "https://"+machineHostname+":4434/", p.SelfAdminURL().String())
 
-	viper.Set(configuration.ViperKeyPublicPort, 4444)
-	viper.Set(configuration.ViperKeyAdminPort, 4445)
-
+	p.MustSet(config.ViperKeyPublicPort, 4444)
+	p.MustSet(config.ViperKeyAdminPort, 4445)
 	assert.Equal(t, "https://"+machineHostname+":4444/", p.SelfPublicURL().String())
 	assert.Equal(t, "https://"+machineHostname+":4445/", p.SelfAdminURL().String())
 
-	viper.Set(configuration.ViperKeyPublicHost, "public.ory.sh")
-	viper.Set(configuration.ViperKeyAdminHost, "admin.ory.sh")
-
+	p.MustSet(config.ViperKeyPublicHost, "public.ory.sh")
+	p.MustSet(config.ViperKeyAdminHost, "admin.ory.sh")
 	assert.Equal(t, "https://public.ory.sh:4444/", p.SelfPublicURL().String())
 	assert.Equal(t, "https://admin.ory.sh:4445/", p.SelfAdminURL().String())
 
-	p = configuration.NewViperProvider(l, true)
+	// Set to dev mode
+	p.MustSet("dev", true)
 	assert.Equal(t, "http://public.ory.sh:4444/", p.SelfPublicURL().String())
 	assert.Equal(t, "http://admin.ory.sh:4445/", p.SelfAdminURL().String())
 }
 
 func TestViperProvider_Secrets(t *testing.T) {
-	viper.Reset()
-	require.NoError(t, viperx.BindEnvsToSchema(schema))
-	p := configuration.NewViperProvider(logrusx.New("", ""), false)
+	p := config.MustNew(logrusx.New("", ""), configx.SkipValidation())
 
 	def := p.SecretsDefault()
 	assert.NotEmpty(t, def)
@@ -316,32 +291,29 @@ func TestViperProvider_Defaults(t *testing.T) {
 	l := logrusx.New("", "")
 
 	for k, tc := range []struct {
-		init   func() configuration.Provider
-		expect func(t *testing.T, p configuration.Provider)
+		init   func() *config.Config
+		expect func(t *testing.T, p *config.Config)
 	}{
 		{
-			init: func() configuration.Provider {
-				return configuration.NewViperProvider(l, false)
+			init: func() *config.Config {
+				return config.MustNew(l, configx.SkipValidation())
 			},
 		},
 		{
-			init: func() configuration.Provider {
-				viperx.InitializeConfig("defaults", "./stub", l)
-				return configuration.NewViperProvider(l, false)
+			init: func() *config.Config {
+				return config.MustNew(l, configx.WithConfigFiles("stub/.defaults.yml"), configx.SkipValidation())
 			},
 		},
 		{
-			init: func() configuration.Provider {
-				viperx.InitializeConfig("defaults-password", "./stub", l)
-				return configuration.NewViperProvider(l, false)
+			init: func() *config.Config {
+				return config.MustNew(l, configx.WithConfigFiles("stub/.defaults-password.yml"), configx.SkipValidation())
 			},
 		},
 		{
-			init: func() configuration.Provider {
-				viperx.InitializeConfig("kratos", "../../test/e2e/profiles/recovery", l)
-				return configuration.NewViperProvider(l, false)
+			init: func() *config.Config {
+				return config.MustNew(l, configx.WithConfigFiles("../../test/e2e/profiles/recovery/.kratos.yml"), configx.SkipValidation())
 			},
-			expect: func(t *testing.T, p configuration.Provider) {
+			expect: func(t *testing.T, p *config.Config) {
 				assert.True(t, p.SelfServiceFlowRecoveryEnabled())
 				assert.False(t, p.SelfServiceFlowVerificationEnabled())
 				assert.True(t, p.SelfServiceStrategy("password").Enabled)
@@ -351,11 +323,10 @@ func TestViperProvider_Defaults(t *testing.T) {
 			},
 		},
 		{
-			init: func() configuration.Provider {
-				viperx.InitializeConfig("kratos", "../../test/e2e/profiles/verification", l)
-				return configuration.NewViperProvider(l, false)
+			init: func() *config.Config {
+				return config.MustNew(l, configx.WithConfigFiles("../../test/e2e/profiles/verification/.kratos.yml"), configx.SkipValidation())
 			},
-			expect: func(t *testing.T, p configuration.Provider) {
+			expect: func(t *testing.T, p *config.Config) {
 				assert.False(t, p.SelfServiceFlowRecoveryEnabled())
 				assert.True(t, p.SelfServiceFlowVerificationEnabled())
 				assert.True(t, p.SelfServiceStrategy("password").Enabled)
@@ -365,11 +336,10 @@ func TestViperProvider_Defaults(t *testing.T) {
 			},
 		},
 		{
-			init: func() configuration.Provider {
-				viperx.InitializeConfig("kratos", "../../test/e2e/profiles/oidc", l)
-				return configuration.NewViperProvider(l, false)
+			init: func() *config.Config {
+				return config.MustNew(l, configx.WithConfigFiles("../../test/e2e/profiles/oidc/.kratos.yml"), configx.SkipValidation())
 			},
-			expect: func(t *testing.T, p configuration.Provider) {
+			expect: func(t *testing.T, p *config.Config) {
 				assert.False(t, p.SelfServiceFlowRecoveryEnabled())
 				assert.False(t, p.SelfServiceFlowVerificationEnabled())
 				assert.True(t, p.SelfServiceStrategy("password").Enabled)
@@ -380,8 +350,6 @@ func TestViperProvider_Defaults(t *testing.T) {
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			viper.Reset()
-			require.NoError(t, viperx.BindEnvsToSchema(schema))
 			p := tc.init()
 
 			if tc.expect != nil {
@@ -398,9 +366,7 @@ func TestViperProvider_Defaults(t *testing.T) {
 	}
 
 	t.Run("suite=ui_url", func(t *testing.T) {
-		viper.Reset()
-		require.NoError(t, viperx.BindEnvsToSchema(schema))
-		p := configuration.NewViperProvider(logrusx.New("", ""), false)
+		p := config.MustNew(l, configx.SkipValidation())
 		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/login", p.SelfServiceFlowLoginUI().String())
 		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/settings", p.SelfServiceFlowSettingsUI().String())
 		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/registration", p.SelfServiceFlowRegistrationUI().String())
@@ -410,53 +376,45 @@ func TestViperProvider_Defaults(t *testing.T) {
 }
 
 func TestViperProvider_ReturnTo(t *testing.T) {
-	viper.Reset()
 	l := logrusx.New("", "")
-	p := configuration.NewViperProvider(l, false)
+	p := config.MustNew(l, configx.SkipValidation())
 
-	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
+	p.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
 	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowVerificationReturnTo(urlx.ParseOrPanic("https://www.ory.sh/")).String())
 	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowRecoveryReturnTo().String())
 
-	viper.Set(configuration.ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, "https://www.ory.sh/recovery")
+	p.MustSet(config.ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, "https://www.ory.sh/recovery")
 	assert.Equal(t, "https://www.ory.sh/recovery", p.SelfServiceFlowRecoveryReturnTo().String())
 
-	viper.Set(configuration.ViperKeySelfServiceVerificationBrowserDefaultReturnTo, "https://www.ory.sh/verification")
+	p.MustSet(config.ViperKeySelfServiceVerificationBrowserDefaultReturnTo, "https://www.ory.sh/verification")
 	assert.Equal(t, "https://www.ory.sh/verification", p.SelfServiceFlowVerificationReturnTo(urlx.ParseOrPanic("https://www.ory.sh/")).String())
 }
 
 func TestViperProvider_DSN(t *testing.T) {
 	t.Run("case=dsn: memory", func(t *testing.T) {
-		viper.Reset()
-		viper.Set(configuration.ViperKeyDSN, "memory")
+		p := config.MustNew(logrusx.New("", ""), configx.SkipValidation())
+		p.MustSet(config.ViperKeyDSN, "memory")
 
-		l := logrusx.New("", "")
-		p := configuration.NewViperProvider(l, false)
-
-		assert.Equal(t, configuration.DefaultSQLiteMemoryDSN, p.DSN())
+		assert.Equal(t, config.DefaultSQLiteMemoryDSN, p.DSN())
 	})
 
 	t.Run("case=dsn: not memory", func(t *testing.T) {
-		dsn := "sqlite://foo.db?_fk=true"
-		viper.Reset()
-		viper.Set(configuration.ViperKeyDSN, dsn)
+		p := config.MustNew(logrusx.New("", ""), configx.SkipValidation())
 
-		l := logrusx.New("", "")
-		p := configuration.NewViperProvider(l, false)
+		dsn := "sqlite://foo.db?_fk=true"
+		p.MustSet(config.ViperKeyDSN, dsn)
 
 		assert.Equal(t, dsn, p.DSN())
 	})
 
 	t.Run("case=dsn: not set", func(t *testing.T) {
 		dsn := ""
-		viper.Reset()
-		viper.Set(configuration.ViperKeyDSN, dsn)
 
 		var exitCode int
 		l := logrusx.New("", "", logrusx.WithExitFunc(func(i int) {
 			exitCode = i
 		}), logrusx.WithHook(InterceptHook{}))
-		p := configuration.NewViperProvider(l, false)
+		p := config.MustNew(l, configx.SkipValidation())
 
 		assert.Equal(t, dsn, p.DSN())
 		assert.NotEqual(t, 0, exitCode)

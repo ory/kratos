@@ -20,10 +20,9 @@ import (
 
 	"github.com/ory/kratos/cmd/cliclient"
 	"github.com/ory/kratos/driver"
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/viper"
 )
 
 func parseIdentities(raw []byte) (rawIdentities []string) {
@@ -65,9 +64,9 @@ func readIdentities(cmd *cobra.Command, args []string) (map[string]string, error
 }
 
 func setup(t *testing.T, cmd *cobra.Command) driver.Registry {
-	_, reg := internal.NewRegistryDefaultWithDSN(t, configuration.DefaultSQLiteMemoryDSN)
+	conf, reg := internal.NewRegistryDefaultWithDSN(t, config.DefaultSQLiteMemoryDSN)
 	_, admin := testhelpers.NewKratosServerWithCSRF(t, reg)
-	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stubs/identity.schema.json")
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stubs/identity.schema.json")
 	// setup command
 	cliclient.RegisterClientFlags(cmd.Flags())
 	cmdx.RegisterFormatFlags(cmd.Flags())
@@ -106,7 +105,7 @@ func execErr(t *testing.T, cmd *cobra.Command, args ...string) string {
 
 func makeIdentities(t *testing.T, reg driver.Registry, n int) (is []*identity.Identity, ids []string) {
 	for j := 0; j < n; j++ {
-		i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 		require.NoError(t, reg.Persister().CreateIdentity(context.Background(), i))
 		is = append(is, i)
 		ids = append(ids, i.ID.String())

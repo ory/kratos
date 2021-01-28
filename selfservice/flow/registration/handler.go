@@ -9,7 +9,7 @@ import (
 
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
@@ -25,33 +25,33 @@ const (
 
 type (
 	handlerDependencies interface {
-		StrategyProvider
+		config.Provider
 		errorx.ManagementProvider
 		session.HandlerProvider
 		session.ManagementProvider
 		x.WriterProvider
 		x.CSRFTokenGeneratorProvider
+		x.CSRFProvider
+		StrategyProvider
 		HookExecutorProvider
 		FlowPersistenceProvider
-		x.CSRFProvider
 	}
 	HandlerProvider interface {
 		RegistrationHandler() *Handler
 	}
 	Handler struct {
 		d handlerDependencies
-		c configuration.Provider
 	}
 )
 
-func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
-	return &Handler{d: d, c: c}
+func NewHandler(d handlerDependencies) *Handler {
+	return &Handler{d: d}
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.d.CSRFHandler().IgnorePath(RouteInitAPIFlow)
 
-	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsNotAuthenticated(h.initBrowserFlow, session.RedirectOnAuthenticated(h.c)))
+	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsNotAuthenticated(h.initBrowserFlow, session.RedirectOnAuthenticated(h.d)))
 	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsNotAuthenticated(h.initApiFlow,
 		session.RespondWithJSONErrorOnAuthenticated(h.d.Writer(), errors.WithStack(ErrAlreadyLoggedIn))))
 
@@ -63,7 +63,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 }
 
 func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft flow.Type) (*Flow, error) {
-	a := NewFlow(h.c.SelfServiceFlowRegistrationRequestLifespan(), h.d.GenerateCSRFToken(r), r, ft)
+	a := NewFlow(h.d.Config(r.Context()).SelfServiceFlowRegistrationRequestLifespan(), h.d.GenerateCSRFToken(r), r, ft)
 	for _, s := range h.d.RegistrationStrategies() {
 		if err := s.PopulateRegistrationMethod(r, a); err != nil {
 			return nil, err
@@ -149,9 +149,9 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	redirTo := a.AppendTo(h.c.SelfServiceFlowRegistrationUI()).String()
+	redirTo := a.AppendTo(h.d.Config(r.Context()).SelfServiceFlowRegistrationUI()).String()
 	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
-		redirTo = h.c.SelfServiceBrowserDefaultReturnTo().String()
+		redirTo = h.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo().String()
 	}
 	http.Redirect(w, r, redirTo, http.StatusFound)
 }
@@ -199,12 +199,12 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, ps httproute
 		if ar.Type == flow.TypeBrowser {
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 				WithReason("The registration flow has expired. Redirect the user to the registration flow init endpoint to initialize a new registration flow.").
-				WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), RouteInitBrowserFlow).String())))
+				WithDetail("redirect_to", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitBrowserFlow).String())))
 			return
 		}
 		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 			WithReason("The registration flow has expired. Call the registration flow init API endpoint to initialize a new registration flow.").
-			WithDetail("api", urlx.AppendPaths(h.c.SelfPublicURL(), RouteInitAPIFlow).String())))
+			WithDetail("api", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitAPIFlow).String())))
 		return
 	}
 

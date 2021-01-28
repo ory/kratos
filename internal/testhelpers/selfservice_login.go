@@ -2,6 +2,7 @@ package testhelpers
 
 import (
 	"bytes"
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -15,13 +16,11 @@ import (
 
 	"github.com/ory/x/pointerx"
 
-	"github.com/ory/viper"
-
+	"github.com/ory/kratos-client-go/client/public"
+	"github.com/ory/kratos-client-go/models"
 	"github.com/ory/kratos/driver"
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal/httpclient/client/public"
-	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/x"
 )
@@ -32,16 +31,16 @@ func NewLoginUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Serve
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, e)
 	}))
-	viper.Set(configuration.ViperKeySelfServiceLoginUI, ts.URL+"/login-ts")
+	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceLoginUI, ts.URL+"/login-ts")
 	t.Cleanup(ts.Close)
 	return ts
 }
 
-func NewLoginUIWith401Response(t *testing.T) *httptest.Server {
+func NewLoginUIWith401Response(t *testing.T, c *config.Config) *httptest.Server {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 	}))
-	viper.Set(configuration.ViperKeySelfServiceLoginUI, ts.URL+"/login-ts")
+	c.MustSet(config.ViperKeySelfServiceLoginUI, ts.URL+"/login-ts")
 	t.Cleanup(ts.Close)
 	return ts
 }

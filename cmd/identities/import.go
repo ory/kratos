@@ -1,7 +1,6 @@
 package identities
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 
@@ -9,16 +8,26 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/ory/kratos-client-go/client/admin"
+	"github.com/ory/kratos-client-go/models"
 	"github.com/ory/kratos/cmd/cliclient"
-	"github.com/ory/kratos/internal/httpclient/client/admin"
-	"github.com/ory/kratos/internal/httpclient/models"
 )
 
-// importCmd represents the import command
-var importCmd = &cobra.Command{
+// ImportCmd represents the import command
+var ImportCmd = &cobra.Command{
 	Use:   "import <file.json [file-2.json [file-3.json] ...]>",
 	Short: "Import identities from files or STD_IN",
-	Example: `$ kratos identities import file.json
+	Example: `$ cat > ./file.json <<EOF
+{
+    "schema_id": "default",
+    "traits": {
+        "email": "foo@example.com"
+    }
+}
+EOF
+
+$ kratos identities import file.json
+# Alternatively:
 $ cat file.json | kratos identities import`,
 	Long: `Import identities from files or STD_IN.
 
@@ -51,7 +60,7 @@ WARNING: Importing credentials is not yet supported.`,
 
 			resp, err := c.Admin.CreateIdentity(&admin.CreateIdentityParams{
 				Body:    &params,
-				Context: context.Background(),
+				Context: cmd.Context(),
 			})
 			if err != nil {
 				failed[src] = err
@@ -62,7 +71,7 @@ WARNING: Importing credentials is not yet supported.`,
 		if len(imported) == 1 {
 			cmdx.PrintRow(cmd, (*outputIdentity)(imported[0]))
 		} else {
-			cmdx.PrintCollection(cmd, &outputIdentityCollection{identities: imported})
+			cmdx.PrintTable(cmd, &outputIdentityCollection{identities: imported})
 		}
 		cmdx.PrintErrors(cmd, failed)
 

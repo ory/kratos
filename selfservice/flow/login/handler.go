@@ -9,7 +9,7 @@ import (
 
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
@@ -34,18 +34,18 @@ type (
 		x.WriterProvider
 		x.CSRFTokenGeneratorProvider
 		x.CSRFProvider
+		config.Provider
 	}
 	HandlerProvider interface {
 		LoginHandler() *Handler
 	}
 	Handler struct {
 		d handlerDependencies
-		c configuration.Provider
 	}
 )
 
-func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
-	return &Handler{d: d, c: c}
+func NewHandler(d handlerDependencies) *Handler {
+	return &Handler{d: d}
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
@@ -61,7 +61,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 }
 
 func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, flow flow.Type) (*Flow, error) {
-	a := NewFlow(h.c.SelfServiceFlowLoginRequestLifespan(), h.d.GenerateCSRFToken(r), r, flow)
+	a := NewFlow(h.d.Config(r.Context()).SelfServiceFlowLoginRequestLifespan(), h.d.GenerateCSRFToken(r), r, flow)
 	for _, s := range h.d.LoginStrategies() {
 		if err := s.PopulateLoginMethod(r, a); err != nil {
 			return nil, err
@@ -173,7 +173,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 
 	// we assume an error means the user has no session
 	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err != nil {
-		http.Redirect(w, r, a.AppendTo(h.c.SelfServiceFlowLoginUI()).String(), http.StatusFound)
+		http.Redirect(w, r, a.AppendTo(h.d.Config(r.Context()).SelfServiceFlowLoginUI()).String(), http.StatusFound)
 		return
 	}
 
@@ -182,13 +182,13 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, ps htt
 			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 			return
 		}
-		http.Redirect(w, r, a.AppendTo(h.c.SelfServiceFlowLoginUI()).String(), http.StatusFound)
+		http.Redirect(w, r, a.AppendTo(h.d.Config(r.Context()).SelfServiceFlowLoginUI()).String(), http.StatusFound)
 		return
 	}
 
-	returnTo, err := x.SecureRedirectTo(r, h.c.SelfServiceBrowserDefaultReturnTo(),
-		x.SecureRedirectAllowSelfServiceURLs(h.c.SelfPublicURL()),
-		x.SecureRedirectAllowURLs(h.c.SelfServiceBrowserWhitelistedReturnToDomains()),
+	returnTo, err := x.SecureRedirectTo(r, h.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo(),
+		x.SecureRedirectAllowSelfServiceURLs(h.d.Config(r.Context()).SelfPublicURL()),
+		x.SecureRedirectAllowURLs(h.d.Config(r.Context()).SelfServiceBrowserWhitelistedReturnToDomains()),
 	)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
@@ -241,12 +241,12 @@ func (h *Handler) fetchFlow(w http.ResponseWriter, r *http.Request, _ httprouter
 		if ar.Type == flow.TypeBrowser {
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 				WithReason("The login flow has expired. Redirect the user to the login flow init endpoint to initialize a new login flow.").
-				WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), RouteInitBrowserFlow).String())))
+				WithDetail("redirect_to", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitBrowserFlow).String())))
 			return
 		}
 		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 			WithReason("The login flow has expired. Call the login flow init API endpoint to initialize a new login flow.").
-			WithDetail("api", urlx.AppendPaths(h.c.SelfPublicURL(), RouteInitAPIFlow).String())))
+			WithDetail("api", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitAPIFlow).String())))
 		return
 	}
 

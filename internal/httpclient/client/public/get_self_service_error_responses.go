@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/ory/kratos/internal/httpclient/models"
+	"github.com/ory/kratos-client-go/models"
 )
 
 // GetSelfServiceErrorReader is a Reader for the GetSelfServiceError structure.
@@ -47,7 +47,6 @@ func (o *GetSelfServiceErrorReader) ReadResponse(response runtime.ClientResponse
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -58,7 +57,7 @@ func NewGetSelfServiceErrorOK() *GetSelfServiceErrorOK {
 	return &GetSelfServiceErrorOK{}
 }
 
-/*GetSelfServiceErrorOK handles this case with default header values.
+/* GetSelfServiceErrorOK describes a response with status code 200, with default header values.
 
 User-facing error response
 */
@@ -69,7 +68,6 @@ type GetSelfServiceErrorOK struct {
 func (o *GetSelfServiceErrorOK) Error() string {
 	return fmt.Sprintf("[GET /self-service/errors][%d] getSelfServiceErrorOK  %+v", 200, o.Payload)
 }
-
 func (o *GetSelfServiceErrorOK) GetPayload() *models.ErrorContainer {
 	return o.Payload
 }
@@ -91,7 +89,7 @@ func NewGetSelfServiceErrorForbidden() *GetSelfServiceErrorForbidden {
 	return &GetSelfServiceErrorForbidden{}
 }
 
-/*GetSelfServiceErrorForbidden handles this case with default header values.
+/* GetSelfServiceErrorForbidden describes a response with status code 403, with default header values.
 
 genericError
 */
@@ -102,7 +100,6 @@ type GetSelfServiceErrorForbidden struct {
 func (o *GetSelfServiceErrorForbidden) Error() string {
 	return fmt.Sprintf("[GET /self-service/errors][%d] getSelfServiceErrorForbidden  %+v", 403, o.Payload)
 }
-
 func (o *GetSelfServiceErrorForbidden) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -124,7 +121,7 @@ func NewGetSelfServiceErrorNotFound() *GetSelfServiceErrorNotFound {
 	return &GetSelfServiceErrorNotFound{}
 }
 
-/*GetSelfServiceErrorNotFound handles this case with default header values.
+/* GetSelfServiceErrorNotFound describes a response with status code 404, with default header values.
 
 genericError
 */
@@ -135,7 +132,6 @@ type GetSelfServiceErrorNotFound struct {
 func (o *GetSelfServiceErrorNotFound) Error() string {
 	return fmt.Sprintf("[GET /self-service/errors][%d] getSelfServiceErrorNotFound  %+v", 404, o.Payload)
 }
-
 func (o *GetSelfServiceErrorNotFound) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -157,7 +153,7 @@ func NewGetSelfServiceErrorInternalServerError() *GetSelfServiceErrorInternalSer
 	return &GetSelfServiceErrorInternalServerError{}
 }
 
-/*GetSelfServiceErrorInternalServerError handles this case with default header values.
+/* GetSelfServiceErrorInternalServerError describes a response with status code 500, with default header values.
 
 genericError
 */
@@ -168,7 +164,6 @@ type GetSelfServiceErrorInternalServerError struct {
 func (o *GetSelfServiceErrorInternalServerError) Error() string {
 	return fmt.Sprintf("[GET /self-service/errors][%d] getSelfServiceErrorInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *GetSelfServiceErrorInternalServerError) GetPayload() *models.GenericError {
 	return o.Payload
 }

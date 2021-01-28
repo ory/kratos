@@ -9,22 +9,20 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/x"
 )
 
 func TestManager(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
-	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/manager.schema.json")
-	viper.Set(configuration.ViperKeyPublicBaseURL, "https://www.ory.sh/")
-	viper.Set(configuration.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/manager.schema.json")
+	conf.MustSet(config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+	conf.MustSet(config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
 
 	t.Run("case=should fail to create because validation fails", func(t *testing.T) {
-		i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 		i.Traits = identity.Traits("{}")
 		require.Error(t, reg.IdentityManager().Create(context.Background(), i))
 	})
@@ -58,14 +56,14 @@ func TestManager(t *testing.T) {
 
 	t.Run("method=Create", func(t *testing.T) {
 		t.Run("case=should create identity and track extension fields", func(t *testing.T) {
-			original := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			original.Traits = newTraits("foo@ory.sh", "")
 			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
 			checkExtensionFieldsForIdentities(t, "foo@ory.sh", original)
 		})
 
 		t.Run("case=should expose validation errors with option", func(t *testing.T) {
-			original := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			original.Traits = identity.Traits(`{"email":"not an email"}`)
 			err := reg.IdentityManager().Create(context.Background(), original, identity.ManagerExposeValidationErrorsForInternalTypeAssertion)
 			require.Error(t, err)
@@ -73,7 +71,7 @@ func TestManager(t *testing.T) {
 		})
 
 		t.Run("case=should not expose validation errors without option", func(t *testing.T) {
-			original := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			original.Traits = identity.Traits(`{"email":"not an email"}`)
 			err := reg.IdentityManager().Create(context.Background(), original)
 			require.Error(t, err)
@@ -83,7 +81,7 @@ func TestManager(t *testing.T) {
 
 	t.Run("method=Update", func(t *testing.T) {
 		t.Run("case=should update identity and update extension fields", func(t *testing.T) {
-			original := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			original.Traits = newTraits("baz@ory.sh", "")
 			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
 
@@ -94,7 +92,7 @@ func TestManager(t *testing.T) {
 		})
 
 		t.Run("case=should not update protected traits without option", func(t *testing.T) {
-			original := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			original.Traits = newTraits("email-update-1@ory.sh", "")
 			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
 
@@ -112,7 +110,7 @@ func TestManager(t *testing.T) {
 
 		t.Run("case=changing recovery address removes it from the store", func(t *testing.T) {
 			originalEmail := x.NewUUID().String() + "@ory.sh"
-			original := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			original.Traits = newTraits(originalEmail, "")
 			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
 
@@ -155,7 +153,7 @@ func TestManager(t *testing.T) {
 
 	t.Run("method=UpdateTraits", func(t *testing.T) {
 		t.Run("case=should update protected traits with option", func(t *testing.T) {
-			original := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			original.Traits = newTraits("email-updatetraits-1@ory.sh", "")
 			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
 
@@ -171,7 +169,7 @@ func TestManager(t *testing.T) {
 		})
 
 		t.Run("case=should update identity and update extension fields", func(t *testing.T) {
-			original := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			original.Traits = identity.Traits(`{"email":"baz@ory.sh","email_verify":"baz@ory.sh","email_recovery":"baz@ory.sh","email_creds":"baz@ory.sh","unprotected": "foo"}`)
 			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
 
@@ -189,7 +187,7 @@ func TestManager(t *testing.T) {
 		})
 
 		t.Run("case=should not update protected traits without option", func(t *testing.T) {
-			original := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			original.Traits = newTraits("email-updatetraits-1@ory.sh", "")
 			require.NoError(t, reg.IdentityManager().Create(context.Background(), original))
 

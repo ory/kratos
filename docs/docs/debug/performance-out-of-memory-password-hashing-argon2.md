@@ -10,7 +10,7 @@ without trying them out, ORY Kratos comes with a
 [CLI](../cli/kratos-hashers-argon2-calibrate.md) that automatically calibrates
 the values, following best practices. You can read more about these best
 practices in our
-[blog post](https://ory.sh/argon2-parameter-choice-best-practice/).
+[blog post](https://www.ory.sh/choose-recommended-argon2-parameters-password-hashing/).
 
 ## Common Errors
 

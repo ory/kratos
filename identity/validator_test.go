@@ -1,6 +1,7 @@
 package identity_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -10,9 +11,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	. "github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 )
@@ -57,12 +56,12 @@ func TestSchemaValidator(t *testing.T) {
 	defer ts.Close()
 
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, ts.URL+"/schema/firstName")
-	viper.Set(configuration.ViperKeyIdentitySchemas, []configuration.SchemaConfig{
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, ts.URL+"/schema/firstName")
+	conf.MustSet(config.ViperKeyIdentitySchemas, []config.Schema{
 		{ID: "whatever", URL: ts.URL + "/schema/whatever"},
 		{ID: "unreachable-url", URL: ts.URL + "/404-not-found"},
 	})
-	v := NewValidator(reg, conf)
+	v := NewValidator(reg)
 
 	for k, tc := range []struct {
 		i   *Identity
@@ -107,7 +106,7 @@ func TestSchemaValidator(t *testing.T) {
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			err := v.Validate(tc.i)
+			err := v.Validate(context.Background(), tc.i)
 			if tc.err == "" {
 				require.NoError(t, err)
 			} else {

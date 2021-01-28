@@ -1,4 +1,4 @@
-import { AdminApi, Configuration } from '@oryd/kratos-client';
+import { AdminApi, Configuration } from '@ory/kratos-client';
 
 // We are using the ORY Kratos Admin API (:4434) to avoid having to set the session cookie / session token:
 const kratos = new AdminApi(new Configuration({ basePath: 'http://127.0.0.1:4434/' }));

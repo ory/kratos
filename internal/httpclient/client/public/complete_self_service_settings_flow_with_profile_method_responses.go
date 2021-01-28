@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/ory/kratos/internal/httpclient/models"
+	"github.com/ory/kratos-client-go/models"
 )
 
 // CompleteSelfServiceSettingsFlowWithProfileMethodReader is a Reader for the CompleteSelfServiceSettingsFlowWithProfileMethod structure.
@@ -59,7 +59,6 @@ func (o *CompleteSelfServiceSettingsFlowWithProfileMethodReader) ReadResponse(re
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -70,7 +69,7 @@ func NewCompleteSelfServiceSettingsFlowWithProfileMethodOK() *CompleteSelfServic
 	return &CompleteSelfServiceSettingsFlowWithProfileMethodOK{}
 }
 
-/*CompleteSelfServiceSettingsFlowWithProfileMethodOK handles this case with default header values.
+/* CompleteSelfServiceSettingsFlowWithProfileMethodOK describes a response with status code 200, with default header values.
 
 settingsFlow
 */
@@ -81,7 +80,6 @@ type CompleteSelfServiceSettingsFlowWithProfileMethodOK struct {
 func (o *CompleteSelfServiceSettingsFlowWithProfileMethodOK) Error() string {
 	return fmt.Sprintf("[POST /self-service/settings/methods/profile][%d] completeSelfServiceSettingsFlowWithProfileMethodOK  %+v", 200, o.Payload)
 }
-
 func (o *CompleteSelfServiceSettingsFlowWithProfileMethodOK) GetPayload() *models.SettingsFlow {
 	return o.Payload
 }
@@ -103,9 +101,9 @@ func NewCompleteSelfServiceSettingsFlowWithProfileMethodFound() *CompleteSelfSer
 	return &CompleteSelfServiceSettingsFlowWithProfileMethodFound{}
 }
 
-/*CompleteSelfServiceSettingsFlowWithProfileMethodFound handles this case with default header values.
+/* CompleteSelfServiceSettingsFlowWithProfileMethodFound describes a response with status code 302, with default header values.
 
-Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
+ Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
 typically 201.
 */
 type CompleteSelfServiceSettingsFlowWithProfileMethodFound struct {
@@ -125,7 +123,7 @@ func NewCompleteSelfServiceSettingsFlowWithProfileMethodBadRequest() *CompleteSe
 	return &CompleteSelfServiceSettingsFlowWithProfileMethodBadRequest{}
 }
 
-/*CompleteSelfServiceSettingsFlowWithProfileMethodBadRequest handles this case with default header values.
+/* CompleteSelfServiceSettingsFlowWithProfileMethodBadRequest describes a response with status code 400, with default header values.
 
 settingsFlow
 */
@@ -136,7 +134,6 @@ type CompleteSelfServiceSettingsFlowWithProfileMethodBadRequest struct {
 func (o *CompleteSelfServiceSettingsFlowWithProfileMethodBadRequest) Error() string {
 	return fmt.Sprintf("[POST /self-service/settings/methods/profile][%d] completeSelfServiceSettingsFlowWithProfileMethodBadRequest  %+v", 400, o.Payload)
 }
-
 func (o *CompleteSelfServiceSettingsFlowWithProfileMethodBadRequest) GetPayload() *models.SettingsFlow {
 	return o.Payload
 }
@@ -158,7 +155,7 @@ func NewCompleteSelfServiceSettingsFlowWithProfileMethodUnauthorized() *Complete
 	return &CompleteSelfServiceSettingsFlowWithProfileMethodUnauthorized{}
 }
 
-/*CompleteSelfServiceSettingsFlowWithProfileMethodUnauthorized handles this case with default header values.
+/* CompleteSelfServiceSettingsFlowWithProfileMethodUnauthorized describes a response with status code 401, with default header values.
 
 genericError
 */
@@ -169,7 +166,6 @@ type CompleteSelfServiceSettingsFlowWithProfileMethodUnauthorized struct {
 func (o *CompleteSelfServiceSettingsFlowWithProfileMethodUnauthorized) Error() string {
 	return fmt.Sprintf("[POST /self-service/settings/methods/profile][%d] completeSelfServiceSettingsFlowWithProfileMethodUnauthorized  %+v", 401, o.Payload)
 }
-
 func (o *CompleteSelfServiceSettingsFlowWithProfileMethodUnauthorized) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -191,7 +187,7 @@ func NewCompleteSelfServiceSettingsFlowWithProfileMethodForbidden() *CompleteSel
 	return &CompleteSelfServiceSettingsFlowWithProfileMethodForbidden{}
 }
 
-/*CompleteSelfServiceSettingsFlowWithProfileMethodForbidden handles this case with default header values.
+/* CompleteSelfServiceSettingsFlowWithProfileMethodForbidden describes a response with status code 403, with default header values.
 
 genericError
 */
@@ -202,7 +198,6 @@ type CompleteSelfServiceSettingsFlowWithProfileMethodForbidden struct {
 func (o *CompleteSelfServiceSettingsFlowWithProfileMethodForbidden) Error() string {
 	return fmt.Sprintf("[POST /self-service/settings/methods/profile][%d] completeSelfServiceSettingsFlowWithProfileMethodForbidden  %+v", 403, o.Payload)
 }
-
 func (o *CompleteSelfServiceSettingsFlowWithProfileMethodForbidden) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -224,7 +219,7 @@ func NewCompleteSelfServiceSettingsFlowWithProfileMethodInternalServerError() *C
 	return &CompleteSelfServiceSettingsFlowWithProfileMethodInternalServerError{}
 }
 
-/*CompleteSelfServiceSettingsFlowWithProfileMethodInternalServerError handles this case with default header values.
+/* CompleteSelfServiceSettingsFlowWithProfileMethodInternalServerError describes a response with status code 500, with default header values.
 
 genericError
 */
@@ -235,7 +230,6 @@ type CompleteSelfServiceSettingsFlowWithProfileMethodInternalServerError struct 
 func (o *CompleteSelfServiceSettingsFlowWithProfileMethodInternalServerError) Error() string {
 	return fmt.Sprintf("[POST /self-service/settings/methods/profile][%d] completeSelfServiceSettingsFlowWithProfileMethodInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *CompleteSelfServiceSettingsFlowWithProfileMethodInternalServerError) GetPayload() *models.GenericError {
 	return o.Payload
 }

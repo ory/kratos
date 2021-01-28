@@ -8,7 +8,7 @@ import (
 	"github.com/google/go-jsonnet"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -86,7 +86,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		return
 	}
 
-	i := identity.NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 
 	vm := jsonnet.MakeVM()
 	vm.ExtCode("claims", jsonClaims.String())
@@ -115,7 +115,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 		WithField("mapper_jsonnet_url", provider.Config().Mapper).
 		Debug("OpenID Connect Jsonnet mapper completed.")
 
-	option, err := decoderRegistration(s.c.DefaultIdentityTraitsSchemaURL().String())
+	option, err := decoderRegistration(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String())
 	if err != nil {
 		s.handleError(w, r, a.GetID(), provider.Config().ID, nil, err)
 		return
@@ -128,7 +128,7 @@ func (s *Strategy) processRegistration(w http.ResponseWriter, r *http.Request, a
 	}
 
 	// Validate the identity itself
-	if err := s.d.IdentityValidator().Validate(i); err != nil {
+	if err := s.d.IdentityValidator().Validate(r.Context(), i); err != nil {
 		s.handleError(w, r, a.GetID(), provider.Config().ID, i.Traits, err)
 		return
 	}

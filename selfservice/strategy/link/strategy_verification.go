@@ -5,6 +5,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ory/herodot"
+
 	"github.com/ory/x/pkgerx"
 
 	"github.com/gofrs/uuid"
@@ -43,7 +45,7 @@ func (s *Strategy) RegisterAdminVerificationRoutes(admin *x.RouterAdmin) {
 }
 
 func (s *Strategy) PopulateVerificationMethod(r *http.Request, req *verification.Flow) error {
-	f := form.NewHTMLForm(req.AppendTo(urlx.AppendPaths(s.c.SelfPublicURL(), RouteVerification)).String())
+	f := form.NewHTMLForm(req.AppendTo(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), RouteVerification)).String())
 
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 	f.SetField(form.Field{Name: "email", Type: "email", Required: true})
@@ -61,7 +63,7 @@ func (s *Strategy) decodeVerification(r *http.Request, decodeBody bool) (*comple
 	if decodeBody {
 		if err := s.dx.Decode(r, &body,
 			decoderx.MustHTTPRawJSONSchemaCompiler(
-				pkgerx.MustRead(pkger.Open("/selfservice/strategy/link/.schema/email.schema.json")),
+				pkgerx.MustRead(pkger.Open("github.com/ory/kratos:/selfservice/strategy/link/.schema/email.schema.json")),
 			),
 			decoderx.HTTPDecoderSetValidatePayloads(false),
 			decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
@@ -168,6 +170,11 @@ type completeSelfServiceVerificationFlowWithLinkMethod struct {
 //       302: emptyResponse
 //       500: genericError
 func (s *Strategy) handleVerification(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if !s.d.Config(r.Context()).SelfServiceStrategy(s.VerificationStrategyID()).Enabled {
+		s.handleVerificationError(w, r, nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Verification using this method is not allowed because it was disabled.")))
+		return
+	}
+
 	body, err := s.decodeVerification(r, false)
 	if err != nil {
 		s.handleVerificationError(w, r, nil, body, err)
@@ -219,7 +226,7 @@ func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *ht
 		return
 	}
 
-	if err := flow.VerifyRequest(r, f.Type, s.c.DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, body.Body.CSRFToken); err != nil {
+	if err := flow.VerifyRequest(r, f.Type, s.d.Config(r.Context()).DisableAPIFlowEnforcement(), s.d.GenerateCSRFToken, body.Body.CSRFToken); err != nil {
 		s.handleVerificationError(w, r, f, body, err)
 		return
 	}
@@ -251,7 +258,7 @@ func (s *Strategy) verificationHandleFormSubmission(w http.ResponseWriter, r *ht
 	}
 
 	if f.Type == flow.TypeBrowser {
-		http.Redirect(w, r, f.AppendTo(s.c.SelfServiceFlowVerificationUI()).String(), http.StatusFound)
+		http.Redirect(w, r, f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowVerificationUI()).String(), http.StatusFound)
 		return
 	}
 
@@ -325,14 +332,14 @@ func (s *Strategy) verificationUseToken(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
-	http.Redirect(w, r, s.c.SelfServiceFlowVerificationReturnTo(f.
-		AppendTo(s.c.SelfServiceFlowVerificationUI())).String(), http.StatusFound)
+	http.Redirect(w, r, s.d.Config(r.Context()).SelfServiceFlowVerificationReturnTo(f.
+		AppendTo(s.d.Config(r.Context()).SelfServiceFlowVerificationUI())).String(), http.StatusFound)
 }
 
 func (s *Strategy) retryVerificationFlowWithMessage(w http.ResponseWriter, r *http.Request, ft flow.Type, message *text.Message) {
 	s.d.Logger().WithRequest(r).WithField("message", message).Debug("A verification flow is being retried because a validation error occurred.")
 
-	req, err := verification.NewFlow(s.c.SelfServiceFlowVerificationRequestLifespan(), s.d.GenerateCSRFToken(r), r, s.d.VerificationStrategies(), ft)
+	req, err := verification.NewFlow(s.d.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan(), s.d.GenerateCSRFToken(r), r, s.d.VerificationStrategies(), ft)
 	if err != nil {
 		s.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
@@ -345,10 +352,10 @@ func (s *Strategy) retryVerificationFlowWithMessage(w http.ResponseWriter, r *ht
 	}
 
 	if ft == flow.TypeBrowser {
-		http.Redirect(w, r, req.AppendTo(s.c.SelfServiceFlowVerificationUI()).String(), http.StatusFound)
+		http.Redirect(w, r, req.AppendTo(s.d.Config(r.Context()).SelfServiceFlowVerificationUI()).String(), http.StatusFound)
 		return
 	}
 
-	http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.c.SelfPublicURL(),
+	http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(),
 		verification.RouteGetFlow), url.Values{"id": {req.ID.String()}}).String(), http.StatusFound)
 }

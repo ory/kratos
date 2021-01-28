@@ -26,21 +26,21 @@ func (m *RegistryDefault) PostSettingsPostPersistHooks(settingsType string) (b [
 
 func (m *RegistryDefault) SettingsHookExecutor() *settings.HookExecutor {
 	if m.selfserviceSettingsExecutor == nil {
-		m.selfserviceSettingsExecutor = settings.NewHookExecutor(m, m.c)
+		m.selfserviceSettingsExecutor = settings.NewHookExecutor(m)
 	}
 	return m.selfserviceSettingsExecutor
 }
 
 func (m *RegistryDefault) SettingsHandler() *settings.Handler {
 	if m.selfserviceSettingsHandler == nil {
-		m.selfserviceSettingsHandler = settings.NewHandler(m, m.c)
+		m.selfserviceSettingsHandler = settings.NewHandler(m)
 	}
 	return m.selfserviceSettingsHandler
 }
 
 func (m *RegistryDefault) SettingsFlowErrorHandler() *settings.ErrorHandler {
 	if m.selfserviceSettingsErrorHandler == nil {
-		m.selfserviceSettingsErrorHandler = settings.NewErrorHandler(m, m.c)
+		m.selfserviceSettingsErrorHandler = settings.NewErrorHandler(m)
 	}
 	return m.selfserviceSettingsErrorHandler
 }

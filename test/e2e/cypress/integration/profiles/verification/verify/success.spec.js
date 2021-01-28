@@ -54,5 +54,38 @@ context('Verify', () => {
         assertVerifiableAddress({ isVerified: false, email: identity.email })
       )
     })
+
+    it('should not verify email when clicking on link received on different address', () => {
+      cy.get('input[name="email"]').type(identity.email)
+      cy.get('button[type="submit"]').click()
+
+      cy.verifyEmail({ expect: { email: identity.email } })
+
+      cy.location('pathname').should('eq', '/')
+
+      // identity is verified
+
+      cy.logout()
+
+      // registered with other email address
+      const identity2 = gen.identity()
+      cy.register(identity2)
+      cy.deleteMail({ atLeast: 1 }) // clean up registration email
+
+      cy.login(identity2)
+
+      cy.visit(APP_URL + '/verify')
+
+      // request verification link for identity
+      cy.get('input[name="email"]').type(identity.email)
+      cy.get('button[type="submit"]').click()
+
+      cy.performEmailVerification({ expect: { email: identity.email } })
+
+      // expect current session to still not have a verified email address
+      cy.session().should(assertVerifiableAddress({ email: identity2.email, isVerified: false }))
+
+      cy.location('pathname').should('eq', '/')
+    })
   })
 })

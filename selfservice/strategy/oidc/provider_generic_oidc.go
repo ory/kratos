@@ -37,7 +37,7 @@ func (g *ProviderGenericOIDC) Config() *Configuration {
 
 func (g *ProviderGenericOIDC) provider(ctx context.Context) (*gooidc.Provider, error) {
 	if g.p == nil {
-		p, err := gooidc.NewProvider(context.Background(), g.config.IssuerURL)
+		p, err := gooidc.NewProvider(ctx, g.config.IssuerURL)
 		if err != nil {
 			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initialize OpenID Connect Provider: %s", err))
 		}

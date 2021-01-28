@@ -20,15 +20,14 @@ import (
 
 	"github.com/ory/x/assertx"
 
-	"github.com/ory/viper"
 	"github.com/ory/x/pointerx"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos-client-go/client/admin"
+	sdkp "github.com/ory/kratos-client-go/client/public"
+	"github.com/ory/kratos-client-go/models"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/httpclient/client/admin"
-	sdkp "github.com/ory/kratos/internal/httpclient/client/public"
-	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/strategy/link"
@@ -42,7 +41,7 @@ func init() {
 
 func TestAdminStrategy(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	initViper()
+	initViper(t, conf)
 
 	_ = testhelpers.NewRecoveryUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewSettingsUIFlowEchoServer(t, reg)
@@ -61,8 +60,9 @@ func TestAdminStrategy(t *testing.T) {
 	}
 
 	t.Run("description=should not be able to recover an account that does not exist", func(t *testing.T) {
+		uuid := models.UUID(x.NewUUID().String())
 		_, err := adminSDK.Admin.CreateRecoveryLink(admin.NewCreateRecoveryLinkParams().WithBody(
-			&models.CreateRecoveryLink{IdentityID: models.UUID(x.NewUUID().String())}))
+			&models.CreateRecoveryLink{IdentityID: &uuid}))
 		require.IsType(t, err, new(admin.CreateRecoveryLinkNotFound), "%T", err)
 	})
 
@@ -70,9 +70,9 @@ func TestAdminStrategy(t *testing.T) {
 		id := identity.Identity{Traits: identity.Traits(`{}`)}
 		require.NoError(t, reg.IdentityManager().Create(context.Background(),
 			&id, identity.ManagerAllowWriteProtectedTraits))
-
+		uuid := models.UUID(id.ID.String())
 		_, err := adminSDK.Admin.CreateRecoveryLink(admin.NewCreateRecoveryLinkParams().WithBody(
-			&models.CreateRecoveryLink{IdentityID: models.UUID(id.ID.String())}))
+			&models.CreateRecoveryLink{IdentityID: &uuid}))
 		require.IsType(t, err, new(admin.CreateRecoveryLinkBadRequest), "%T", err)
 	})
 
@@ -82,9 +82,10 @@ func TestAdminStrategy(t *testing.T) {
 		require.NoError(t, reg.IdentityManager().Create(context.Background(),
 			&id, identity.ManagerAllowWriteProtectedTraits))
 
+		uuid := models.UUID(id.ID.String())
 		rl, err := adminSDK.Admin.CreateRecoveryLink(admin.NewCreateRecoveryLinkParams().
 			WithBody(&models.CreateRecoveryLink{
-				IdentityID: models.UUID(id.ID.String()),
+				IdentityID: &uuid,
 				ExpiresIn:  "100ms",
 			}))
 		require.NoError(t, err)
@@ -106,8 +107,9 @@ func TestAdminStrategy(t *testing.T) {
 		require.NoError(t, reg.IdentityManager().Create(context.Background(),
 			&id, identity.ManagerAllowWriteProtectedTraits))
 
+		uuid := models.UUID(id.ID.String())
 		rl, err := adminSDK.Admin.CreateRecoveryLink(admin.NewCreateRecoveryLinkParams().
-			WithBody(&models.CreateRecoveryLink{IdentityID: models.UUID(id.ID.String())}))
+			WithBody(&models.CreateRecoveryLink{IdentityID: &uuid}))
 		require.NoError(t, err)
 
 		checkLink(t, rl, time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan()+time.Second))
@@ -133,12 +135,12 @@ func TestRecovery(t *testing.T) {
 		Credentials: map[identity.CredentialsType]identity.Credentials{
 			"password": {Type: "password", Identifiers: []string{"recoverme@ory.sh"}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)}},
 		Traits:   identity.Traits(`{"email":"recoverme@ory.sh"}`),
-		SchemaID: configuration.DefaultIdentityTraitsSchemaID,
+		SchemaID: config.DefaultIdentityTraitsSchemaID,
 	}
 	var recoveryEmail = gjson.GetBytes(identityToRecover.Traits, "email").String()
 
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	initViper()
+	initViper(t, conf)
 
 	_ = testhelpers.NewRecoveryUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)
@@ -180,7 +182,7 @@ func TestRecovery(t *testing.T) {
 		assert.EqualValues(t, models.FormFields{csrfField,
 			{Name: pointerx.String("email"), Required: true, Type: pointerx.String("email")},
 		}, method.Config.Fields)
-		assert.EqualValues(t, public.URL+link.RouteRecovery+"?flow="+string(rs.Payload.ID), *method.Config.Action)
+		assert.EqualValues(t, public.URL+link.RouteRecovery+"?flow="+string(*rs.Payload.ID), *method.Config.Action)
 		assert.Empty(t, method.Config.Messages)
 		assert.Empty(t, rs.Payload.Messages)
 	})
@@ -288,9 +290,9 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should not be able to use an outdated link", func(t *testing.T) {
-		viper.Set(configuration.ViperKeySelfServiceRecoveryRequestLifespan, time.Millisecond*200)
+		conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Millisecond*200)
 		t.Cleanup(func() {
-			viper.Set(configuration.ViperKeySelfServiceRecoveryRequestLifespan, time.Minute)
+			conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Minute)
 		})
 
 		c := testhelpers.NewClientWithCookies(t)
@@ -302,13 +304,15 @@ func TestRecovery(t *testing.T) {
 		res, err := c.PostForm(pointerx.StringR(method.Action), url.Values{"email": {recoveryEmail}})
 		require.NoError(t, err)
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
-		assert.NotContains(t, res.Request.URL.String(), "flow="+rs.Payload.ID)
+		assert.NotContains(t, res.Request.URL.String(), "flow="+*rs.Payload.ID)
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI().String())
 	})
 
 	t.Run("description=should not be able to use an outdated flow", func(t *testing.T) {
-		viper.Set(configuration.ViperKeySelfServiceRecoveryRequestLifespan, time.Millisecond*200)
-		defer viper.Set(configuration.ViperKeySelfServiceRecoveryRequestLifespan, time.Minute)
+		conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Millisecond*200)
+		t.Cleanup(func() {
+			conf.MustSet(config.ViperKeySelfServiceRecoveryRequestLifespan, time.Minute)
+		})
 
 		body := expectSuccess(t, false, func(v url.Values) {
 			v.Set("email", recoveryEmail)

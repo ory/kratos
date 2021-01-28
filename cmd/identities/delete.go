@@ -4,17 +4,15 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ory/x/cmdx"
-
-	"github.com/ory/kratos/internal/clihelpers"
-
 	"github.com/spf13/cobra"
 
+	"github.com/ory/kratos-client-go/client/admin"
 	"github.com/ory/kratos/cmd/cliclient"
-	"github.com/ory/kratos/internal/httpclient/client/admin"
+	"github.com/ory/kratos/internal/clihelpers"
+	"github.com/ory/x/cmdx"
 )
 
-var deleteCmd = &cobra.Command{
+var DeleteCmd = &cobra.Command{
 	Use:   "delete <id-0 [id-1 ...]>",
 	Short: "Delete identities by ID",
 	Long: fmt.Sprintf(`This command deletes one or more identities by ID. To delete an identity by some selector, e.g. the recovery email address, use the list command in combination with jq.

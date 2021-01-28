@@ -9,7 +9,6 @@
       "description": "ORY Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).",
       "type": "string",
       "format": "uri-reference",
-      "minLength": 1,
       "examples": [
         "https://my-app.com/dashboard",
         "/dashboard"
@@ -138,7 +137,7 @@
         },
         "provider": {
           "title": "Provider",
-          "description": "Can be one of github, gitlab, generic, google, microsoft, discord.",
+          "description": "Can be one of github, gitlab, generic, google, microsoft, discord, slack.",
           "type": "string",
           "enum": [
             "github",
@@ -146,7 +145,8 @@
             "generic",
             "google",
             "microsoft",
-            "discord"
+            "discord",
+            "slack"
           ],
           "examples": [
             "google"
@@ -643,6 +643,28 @@
                   "type": "boolean",
                   "title": "Enables Username/Email and Password Method",
                   "default": true
+                },
+                "config": {
+                  "type": "object",
+                  "title": "Password Configuration",
+                  "description": "Define how passwords are validated.",
+                  "properties": {
+                    "max_breaches": {
+                      "title": "Allow Password Breaches",
+                      "description": "Defines how often a password may have been breached before it is rejected.",
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 100,
+                      "default": 0
+                    },
+                    "ignore_network_errors": {
+                      "title": "Ignore Lookup Network Errors",
+                      "description": "If set to false the password validation fails when the network or the Have I Been Pwnd API is down.",
+                      "type": "boolean",
+                      "default": true
+                    }
+                  },
+                  "additionalProperties": false
                 }
               }
             },
@@ -1020,35 +1042,13 @@
       ],
       "additionalProperties": false
     },
-    "password": {
-      "type": "object",
-      "title": "Password Configuration",
-      "description": "Define how passwords are validated.",
-      "properties": {
-        "max_breaches": {
-          "title": "Allow Password Breaches",
-          "description": "Defines how often a password may have been breached before it is rejected.",
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 100,
-          "default": 0
-        },
-        "ignore_network_errors": {
-          "title": "Ignore Lookup Network Errors",
-          "description": "If set to false the password validation fails when the network or the Have I Been Pwnd API is down.",
-          "type": "boolean",
-          "default": true
-        }
-      },
-      "additionalProperties": false
-    },
     "secrets": {
       "type": "object",
       "properties": {
         "default": {
           "type": "array",
           "title": "Default Encryption Signing Secrets",
-          "description": "The first secret in the array is used for singing and encrypting things while all other keys are used to verify and decrypt older things that were signed with that old secret.",
+          "description": "The first secret in the array is used for signing and encrypting things while all other keys are used to verify and decrypt older things that were signed with that old secret.",
           "items": {
             "type": "string",
             "minLength": 16
@@ -1057,7 +1057,7 @@
         },
         "cookie": {
           "type": "array",
-          "title": "Singing Keys for Cookies",
+          "title": "Signing Keys for Cookies",
           "description": "The first secret in the array is used for encrypting cookies while all other keys are used to decrypt older cookies that were signed with that old secret.",
           "items": {
             "type": "string",
@@ -1161,6 +1161,22 @@
       "examples": [
         "v0.5.0-alpha.1"
       ]
+    },
+    "dev": {
+      "type": "boolean"
+    },
+    "help": {
+      "type": "boolean"
+    },
+    "sqa-opt-out": {
+      "type": "boolean",
+      "default": false
+    },
+    "config": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     }
   },
   "allOf": [

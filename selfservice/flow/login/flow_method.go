@@ -1,9 +1,12 @@
 package login
 
 import (
+	"context"
 	"database/sql/driver"
 	"encoding/json"
 	"time"
+
+	"github.com/ory/kratos/corp"
 
 	"github.com/ory/x/sqlxx"
 
@@ -41,15 +44,14 @@ type FlowMethod struct {
 	UpdatedAt time.Time `json:"-" db:"updated_at"`
 }
 
-func (u FlowMethod) TableName() string {
-	return "selfservice_login_flow_methods"
+func (u FlowMethod) TableName(ctx context.Context) string {
+	return corp.ContextualizeTableName(ctx, "selfservice_login_flow_methods")
 }
 
 type FlowMethods map[identity.CredentialsType]*FlowMethod
 
-func (u FlowMethods) TableName() string {
-	// This must be stay a value receiver, using a pointer receiver will cause issues with pop.
-	return "selfservice_login_flow_methods"
+func (u FlowMethods) TableName(ctx context.Context) string {
+	return corp.ContextualizeTableName(ctx, "selfservice_login_flow_methods")
 }
 
 // swagger:ignore

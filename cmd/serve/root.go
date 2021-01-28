@@ -15,38 +15,24 @@
 package serve
 
 import (
-	"os"
-	"strconv"
-
-	"github.com/ory/kratos/internal/clihelpers"
-	"github.com/ory/x/logrusx"
-
-	"github.com/ory/kratos/driver/configuration"
-
-	"github.com/ory/x/viperx"
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/x/configx"
 
 	"github.com/spf13/cobra"
 
-	"github.com/ory/x/flagx"
-
 	"github.com/ory/kratos/cmd/daemon"
 	"github.com/ory/kratos/driver"
-	"github.com/ory/kratos/x"
 )
-
-var logger *logrusx.Logger
 
 // serveCmd represents the serve command
 var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Run the ORY Kratos server",
 	Run: func(cmd *cobra.Command, args []string) {
-		logger = viperx.InitializeConfig("kratos", "", logger)
-		// plog.Logger = gbl.Logrus{FieldLogger: logger}
+		d := driver.New(cmd.Context(), configx.WithFlags(cmd.Flags()))
 
-		dev := flagx.MustGetBool(cmd, "dev")
-		if dev {
-			logger.Warn(`
+		if d.Config(cmd.Context()).IsInsecureDevMode() {
+			d.Logger().Warn(`
 
 YOU ARE RUNNING ORY KRATOS IN DEV MODE.
 SECURITY IS DISABLED.
@@ -55,15 +41,12 @@ DON'T DO THIS IN PRODUCTION!
 `)
 		}
 
-		x.WatchAndValidateViper(logger)
-		d := driver.MustNewDefaultDriver(logger, clihelpers.BuildVersion, clihelpers.BuildTime, clihelpers.BuildGitHash, dev)
-
-		configVersion := d.Configuration().ConfigVersion()
-		if configVersion == configuration.UnknownVersion {
+		configVersion := d.Config(cmd.Context()).ConfigVersion()
+		if configVersion == config.UnknownVersion {
 			d.Logger().Warn("The config has no version specified. Add the version to improve your development experience.")
-		} else if clihelpers.BuildVersion != "" &&
-			configVersion != clihelpers.BuildVersion {
-			d.Logger().Warnf("Config version is '%s' but kratos runs on version '%s'", configVersion, clihelpers.BuildVersion)
+		} else if config.Version != "" &&
+			configVersion != config.Version {
+			d.Logger().Warnf("Config version is '%s' but kratos runs on version '%s'", configVersion, config.Version)
 		}
 
 		daemon.ServeAll(d)(cmd, args)
@@ -75,7 +58,8 @@ func RegisterCommandRecursive(parent *cobra.Command) {
 }
 
 func init() {
-	disableTelemetryEnv, _ := strconv.ParseBool(os.Getenv("DISABLE_TELEMETRY"))
-	serveCmd.PersistentFlags().Bool("disable-telemetry", disableTelemetryEnv, "Disable anonymized telemetry reports - for more information please visit https://www.ory.sh/docs/ecosystem/sqa")
+	configx.RegisterFlags(serveCmd.PersistentFlags())
+
+	serveCmd.PersistentFlags().Bool("sqa-opt-out", false, "Disable anonymized telemetry reports - for more information please visit https://www.ory.sh/docs/ecosystem/sqa")
 	serveCmd.PersistentFlags().Bool("dev", false, "Disables critical security features to make development easier")
 }

@@ -7,7 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
@@ -31,15 +31,16 @@ type (
 
 type (
 	executorDependencies interface {
-		HooksProvider
+		config.Provider
 		session.ManagementProvider
 		session.PersistenceProvider
 		x.WriterProvider
 		x.LoggingProvider
+
+		HooksProvider
 	}
 	HookExecutor struct {
 		d executorDependencies
-		c configuration.Provider
 	}
 	HookExecutorProvider interface {
 		LoginHookExecutor() *HookExecutor
@@ -54,15 +55,12 @@ func PostHookExecutorNames(e []PostHookExecutor) []string {
 	return names
 }
 
-func NewHookExecutor(d executorDependencies, c configuration.Provider) *HookExecutor {
-	return &HookExecutor{
-		d: d,
-		c: c,
-	}
+func NewHookExecutor(d executorDependencies) *HookExecutor {
+	return &HookExecutor{d: d}
 }
 
 func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, a *Flow, i *identity.Identity) error {
-	s := session.NewActiveSession(i, e.c, time.Now().UTC()).Declassify()
+	s := session.NewActiveSession(i, e.d.Config(r.Context()), time.Now().UTC()).Declassify()
 
 	e.d.Logger().
 		WithRequest(r).
@@ -119,7 +117,7 @@ func (e *HookExecutor) PostLoginHook(w http.ResponseWriter, r *http.Request, ct 
 		WithField("session_id", s.ID).
 		Info("Identity authenticated successfully and was issued an ORY Kratos Session Cookie.")
 	return x.SecureContentNegotiationRedirection(w, r, s.Declassify(), a.RequestURL,
-		e.d.Writer(), e.c, x.SecureRedirectOverrideDefaultReturnTo(e.c.SelfServiceFlowLoginReturnTo(ct.String())))
+		e.d.Writer(), e.d.Config(r.Context()), x.SecureRedirectOverrideDefaultReturnTo(e.d.Config(r.Context()).SelfServiceFlowLoginReturnTo(ct.String())))
 }
 
 func (e *HookExecutor) PreLoginHook(w http.ResponseWriter, r *http.Request, a *Flow) error {

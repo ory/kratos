@@ -2,6 +2,7 @@ package oidc_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,8 +14,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/x/ioutilx"
-
 	"github.com/julienschmidt/httprouter"
 	"github.com/phayes/freeport"
 	"github.com/pkg/errors"
@@ -22,19 +21,17 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/x/logrusx"
-
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
-	"github.com/ory/viper"
-	"github.com/ory/x/resilience"
-	"github.com/ory/x/urlx"
-
 	"github.com/ory/kratos/driver"
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/ioutilx"
+	"github.com/ory/x/logrusx"
+	"github.com/ory/x/resilience"
+	"github.com/ory/x/urlx"
 )
 
 func createClient(t *testing.T, remote string, redir, id string) {
@@ -160,7 +157,7 @@ func newReturnTs(t *testing.T, reg driver.Registry) *httptest.Server {
 		require.Empty(t, sess.Identity.Credentials)
 		reg.Writer().Write(w, r, sess)
 	}))
-	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL)
+	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL)
 	t.Cleanup(ts.Close)
 	return ts
 }
@@ -181,9 +178,9 @@ func newUI(t *testing.T, reg driver.Registry) *httptest.Server {
 		reg.Writer().Write(w, r, e)
 	}))
 	t.Cleanup(ts.Close)
-	viper.Set(configuration.ViperKeySelfServiceLoginUI, ts.URL+"/login")
-	viper.Set(configuration.ViperKeySelfServiceRegistrationUI, ts.URL+"/registration")
-	viper.Set(configuration.ViperKeySelfServiceSettingsURL, ts.URL+"/settings")
+	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceLoginUI, ts.URL+"/login")
+	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceRegistrationUI, ts.URL+"/registration")
+	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceSettingsURL, ts.URL+"/settings")
 	return ts
 }
 
@@ -255,8 +252,8 @@ func newOIDCProvider(
 	}
 }
 
-func viperSetProviderConfig(providers ...oidc.Configuration) {
-	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC),
+func viperSetProviderConfig(t *testing.T, conf *config.Config, providers ...oidc.Configuration) {
+	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC),
 		map[string]interface{}{"enabled": true, "config": &oidc.ConfigurationCollection{Providers: providers}})
 }
 

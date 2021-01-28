@@ -15,74 +15,90 @@ import (
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/ory/kratos/internal/httpclient/models"
+	"github.com/ory/kratos-client-go/models"
 )
 
-// NewCompleteSelfServiceVerificationFlowWithLinkMethodParams creates a new CompleteSelfServiceVerificationFlowWithLinkMethodParams object
-// with the default values initialized.
+// NewCompleteSelfServiceVerificationFlowWithLinkMethodParams creates a new CompleteSelfServiceVerificationFlowWithLinkMethodParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewCompleteSelfServiceVerificationFlowWithLinkMethodParams() *CompleteSelfServiceVerificationFlowWithLinkMethodParams {
-	var ()
 	return &CompleteSelfServiceVerificationFlowWithLinkMethodParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewCompleteSelfServiceVerificationFlowWithLinkMethodParamsWithTimeout creates a new CompleteSelfServiceVerificationFlowWithLinkMethodParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewCompleteSelfServiceVerificationFlowWithLinkMethodParamsWithTimeout(timeout time.Duration) *CompleteSelfServiceVerificationFlowWithLinkMethodParams {
-	var ()
 	return &CompleteSelfServiceVerificationFlowWithLinkMethodParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewCompleteSelfServiceVerificationFlowWithLinkMethodParamsWithContext creates a new CompleteSelfServiceVerificationFlowWithLinkMethodParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewCompleteSelfServiceVerificationFlowWithLinkMethodParamsWithContext(ctx context.Context) *CompleteSelfServiceVerificationFlowWithLinkMethodParams {
-	var ()
 	return &CompleteSelfServiceVerificationFlowWithLinkMethodParams{
-
 		Context: ctx,
 	}
 }
 
 // NewCompleteSelfServiceVerificationFlowWithLinkMethodParamsWithHTTPClient creates a new CompleteSelfServiceVerificationFlowWithLinkMethodParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewCompleteSelfServiceVerificationFlowWithLinkMethodParamsWithHTTPClient(client *http.Client) *CompleteSelfServiceVerificationFlowWithLinkMethodParams {
-	var ()
 	return &CompleteSelfServiceVerificationFlowWithLinkMethodParams{
 		HTTPClient: client,
 	}
 }
 
-/*CompleteSelfServiceVerificationFlowWithLinkMethodParams contains all the parameters to send to the API endpoint
-for the complete self service verification flow with link method operation typically these are written to a http.Request
+/* CompleteSelfServiceVerificationFlowWithLinkMethodParams contains all the parameters to send to the API endpoint
+   for the complete self service verification flow with link method operation.
+
+   Typically these are written to a http.Request.
 */
 type CompleteSelfServiceVerificationFlowWithLinkMethodParams struct {
 
-	/*Body*/
+	// Body.
 	Body *models.CompleteSelfServiceVerificationFlowWithLinkMethod
-	/*Flow
-	  The Flow ID
+
+	/* Flow.
+
+	     The Flow ID
 
 	format: uuid
-
 	*/
 	Flow *string
-	/*Token
-	  Verification Token
+
+	/* Token.
+
+	     Verification Token
 
 	The verification token which completes the verification request. If the token
 	is invalid (e.g. expired) an error will be shown to the end-user.
-
 	*/
 	Token *string
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the complete self service verification flow with link method params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *CompleteSelfServiceVerificationFlowWithLinkMethodParams) WithDefaults() *CompleteSelfServiceVerificationFlowWithLinkMethodParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the complete self service verification flow with link method params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *CompleteSelfServiceVerificationFlowWithLinkMethodParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the complete self service verification flow with link method params
@@ -158,7 +174,6 @@ func (o *CompleteSelfServiceVerificationFlowWithLinkMethodParams) WriteToRequest
 		return err
 	}
 	var res []error
-
 	if o.Body != nil {
 		if err := r.SetBodyParam(o.Body); err != nil {
 			return err
@@ -169,32 +184,34 @@ func (o *CompleteSelfServiceVerificationFlowWithLinkMethodParams) WriteToRequest
 
 		// query param flow
 		var qrFlow string
+
 		if o.Flow != nil {
 			qrFlow = *o.Flow
 		}
 		qFlow := qrFlow
 		if qFlow != "" {
+
 			if err := r.SetQueryParam("flow", qFlow); err != nil {
 				return err
 			}
 		}
-
 	}
 
 	if o.Token != nil {
 
 		// query param token
 		var qrToken string
+
 		if o.Token != nil {
 			qrToken = *o.Token
 		}
 		qToken := qrToken
 		if qToken != "" {
+
 			if err := r.SetQueryParam("token", qToken); err != nil {
 				return err
 			}
 		}
-
 	}
 
 	if len(res) > 0 {

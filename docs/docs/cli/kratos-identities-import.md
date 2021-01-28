@@ -30,7 +30,17 @@ kratos identities import <file.json [file-2.json [file-3.json] ...]> [flags]
 ### Examples
 
 ```
+$ cat > ./file.json <<EOF
+{
+    "schema_id": "default",
+    "traits": {
+        "email": "foo@example.com"
+    }
+}
+EOF
+
 $ kratos identities import file.json
+# Alternatively:
 $ cat file.json | kratos identities import
 ```
 
@@ -43,10 +53,9 @@ $ cat file.json | kratos identities import
 ### Options inherited from parent commands
 
 ```
-  -c, --config string     Path to config file. Supports .json, .yaml, .yml, .toml. Default is "$HOME/.kratos.(yaml|yml|toml|json)"
   -e, --endpoint string   The URL of ORY Kratos' Admin API. Alternatively set using the KRATOS_ADMIN_URL environmental variable.
   -f, --format string     Set the output format. One of table, json, and json-pretty.
-  -q, --quiet             Prints only IDs, one per line. Takes precedence over --format.
+  -q, --quiet             Be quiet with output printing.
 ```
 
 ### SEE ALSO

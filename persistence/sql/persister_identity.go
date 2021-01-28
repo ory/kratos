@@ -10,7 +10,7 @@ import (
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/x/sqlxx"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/otp"
 	"github.com/ory/kratos/x"
 
@@ -54,8 +54,8 @@ func (p *Persister) FindByCredentialsIdentifier(ctx context.Context, ct identity
 		IdentityID uuid.UUID `db:"identity_id"`
 	}
 
-	// Force case-insensitivity for email addresses
-	if strings.Contains(match, "@") && ct == identity.CredentialsTypePassword {
+	// Force case-insensitivity for identifiers
+	if ct == identity.CredentialsTypePassword {
 		match = strings.ToLower(match)
 	}
 
@@ -86,21 +86,17 @@ WHERE ici.identifier = ?
 	return i.CopyWithoutCredentials(), creds, nil
 }
 
-func findOrCreateIdentityCredentialsType(_ context.Context, tx *pop.Connection, ct identity.CredentialsType) (*identity.CredentialsTypeTable, error) {
+func (p *Persister) findIdentityCredentialsType(ctx context.Context, ct identity.CredentialsType) (*identity.CredentialsTypeTable, error) {
 	var m identity.CredentialsTypeTable
-	if err := tx.Where("name = ?", ct).First(&m); errors.Is(err, sql.ErrNoRows) {
-		m.Name = ct
-		if err := sqlcon.HandleError(tx.Create(&m)); err != nil {
-			return nil, err
-		}
-		return &m, nil
-	} else if err != nil {
+	if err := p.GetConnection(ctx).Where("name = ?", ct).First(&m); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 	return &m, nil
 }
 
-func createIdentityCredentials(ctx context.Context, tx *pop.Connection, i *identity.Identity) error {
+func (p *Persister) createIdentityCredentials(ctx context.Context, i *identity.Identity) error {
+	c := p.GetConnection(ctx)
+
 	for k := range i.Credentials {
 		cred := i.Credentials[k]
 		cred.IdentityID = i.ID
@@ -108,19 +104,19 @@ func createIdentityCredentials(ctx context.Context, tx *pop.Connection, i *ident
 			cred.Config = sqlxx.JSONRawMessage("{}")
 		}
 
-		ct, err := findOrCreateIdentityCredentialsType(ctx, tx, cred.Type)
+		ct, err := p.findIdentityCredentialsType(ctx, cred.Type)
 		if err != nil {
 			return err
 		}
 
 		cred.CredentialTypeID = ct.ID
-		if err := tx.Create(&cred); err != nil {
+		if err := c.Create(&cred); err != nil {
 			return sqlcon.HandleError(err)
 		}
 
 		for _, ids := range cred.Identifiers {
-			// Force case-insensitivity for email addresses
-			if strings.Contains(ids, "@") && cred.Type == identity.CredentialsTypePassword {
+			// Force case-insensitivity for identifiers
+			if cred.Type == identity.CredentialsTypePassword {
 				ids = strings.ToLower(ids)
 			}
 
@@ -132,7 +128,7 @@ func createIdentityCredentials(ctx context.Context, tx *pop.Connection, i *ident
 				Identifier:            ids,
 				IdentityCredentialsID: cred.ID,
 			}
-			if err := tx.Create(ci); err != nil {
+			if err := c.Create(ci); err != nil {
 				return sqlcon.HandleError(err)
 			}
 		}
@@ -143,20 +139,20 @@ func createIdentityCredentials(ctx context.Context, tx *pop.Connection, i *ident
 	return nil
 }
 
-func createVerifiableAddresses(ctx context.Context, tx *pop.Connection, i *identity.Identity) error {
+func (p *Persister) createVerifiableAddresses(ctx context.Context, i *identity.Identity) error {
 	for k := range i.VerifiableAddresses {
 		i.VerifiableAddresses[k].IdentityID = i.ID
-		if err := tx.Create(&i.VerifiableAddresses[k]); err != nil {
+		if err := p.GetConnection(ctx).Create(&i.VerifiableAddresses[k]); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func createRecoveryAddresses(ctx context.Context, tx *pop.Connection, i *identity.Identity) error {
+func (p *Persister) createRecoveryAddresses(ctx context.Context, i *identity.Identity) error {
 	for k := range i.RecoveryAddresses {
 		i.RecoveryAddresses[k].IdentityID = i.ID
-		if err := tx.Create(&i.RecoveryAddresses[k]); err != nil {
+		if err := p.GetConnection(ctx).Create(&i.RecoveryAddresses[k]); err != nil {
 			return err
 		}
 	}
@@ -173,18 +169,18 @@ func (p *Persister) CountIdentities(ctx context.Context) (int64, error) {
 
 func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) error {
 	if i.SchemaID == "" {
-		i.SchemaID = configuration.DefaultIdentityTraitsSchemaID
+		i.SchemaID = config.DefaultIdentityTraitsSchemaID
 	}
 
 	if len(i.Traits) == 0 {
 		i.Traits = identity.Traits("{}")
 	}
 
-	if err := p.injectTraitsSchemaURL(i); err != nil {
+	if err := p.injectTraitsSchemaURL(ctx, i); err != nil {
 		return err
 	}
 
-	if err := p.validateIdentity(i); err != nil {
+	if err := p.validateIdentity(ctx, i); err != nil {
 		return err
 	}
 
@@ -193,15 +189,15 @@ func (p *Persister) CreateIdentity(ctx context.Context, i *identity.Identity) er
 			return sqlcon.HandleError(err)
 		}
 
-		if err := createVerifiableAddresses(ctx, tx, i); err != nil {
+		if err := p.createVerifiableAddresses(ctx, i); err != nil {
 			return sqlcon.HandleError(err)
 		}
 
-		if err := createRecoveryAddresses(ctx, tx, i); err != nil {
+		if err := p.createRecoveryAddresses(ctx, i); err != nil {
 			return sqlcon.HandleError(err)
 		}
 
-		return createIdentityCredentials(ctx, tx, i)
+		return p.createIdentityCredentials(ctx, i)
 	})
 }
 
@@ -215,7 +211,7 @@ func (p *Persister) ListIdentities(ctx context.Context, page, perPage int) ([]id
 	}
 
 	for i := range is {
-		if err := p.injectTraitsSchemaURL(&(is[i])); err != nil {
+		if err := p.injectTraitsSchemaURL(ctx, &(is[i])); err != nil {
 			return nil, err
 		}
 	}
@@ -224,7 +220,7 @@ func (p *Persister) ListIdentities(ctx context.Context, page, perPage int) ([]id
 }
 
 func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) error {
-	if err := p.validateIdentity(i); err != nil {
+	if err := p.validateIdentity(ctx, i); err != nil {
 		return err
 	}
 
@@ -237,9 +233,9 @@ func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) er
 		}
 
 		for _, tn := range []string{
-			new(identity.Credentials).TableName(),
-			new(identity.VerifiableAddress).TableName(),
-			new(identity.RecoveryAddress).TableName(),
+			new(identity.Credentials).TableName(ctx),
+			new(identity.VerifiableAddress).TableName(ctx),
+			new(identity.RecoveryAddress).TableName(ctx),
 		} {
 			/* #nosec G201 TableName is static */
 			if err := tx.RawQuery(fmt.Sprintf(
@@ -252,21 +248,21 @@ func (p *Persister) UpdateIdentity(ctx context.Context, i *identity.Identity) er
 			return err
 		}
 
-		if err := createVerifiableAddresses(ctx, tx, i); err != nil {
+		if err := p.createVerifiableAddresses(ctx, i); err != nil {
 			return err
 		}
 
-		if err := createRecoveryAddresses(ctx, tx, i); err != nil {
+		if err := p.createRecoveryAddresses(ctx, i); err != nil {
 			return err
 		}
 
-		return createIdentityCredentials(ctx, tx, i)
+		return p.createIdentityCredentials(ctx, i)
 	}))
 }
 
 func (p *Persister) DeleteIdentity(ctx context.Context, id uuid.UUID) error {
 	/* #nosec G201 TableName is static */
-	count, err := p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE id = ?", new(identity.Identity).TableName()), id).ExecWithCount()
+	count, err := p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE id = ?", new(identity.Identity).TableName(ctx)), id).ExecWithCount()
 	if err != nil {
 		return sqlcon.HandleError(err)
 	}
@@ -281,8 +277,9 @@ func (p *Persister) GetIdentity(ctx context.Context, id uuid.UUID) (*identity.Id
 	if err := p.GetConnection(ctx).Eager("VerifiableAddresses", "RecoveryAddresses").Find(&i, id); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
+
 	i.Credentials = nil
-	if err := p.injectTraitsSchemaURL(&i); err != nil {
+	if err := p.injectTraitsSchemaURL(ctx, &i); err != nil {
 		return nil, err
 	}
 
@@ -320,7 +317,7 @@ func (p *Persister) GetIdentityConfidential(ctx context.Context, id uuid.UUID) (
 		i.Credentials[creds.Type] = creds
 	}
 	i.CredentialsCollection = nil
-	if err := p.injectTraitsSchemaURL(&i); err != nil {
+	if err := p.injectTraitsSchemaURL(ctx, &i); err != nil {
 		return nil, err
 	}
 
@@ -355,7 +352,7 @@ func (p *Persister) VerifyAddress(ctx context.Context, code string) error {
 		/* #nosec G201 TableName is static */
 		fmt.Sprintf(
 			"UPDATE %s SET status = ?, verified = true, verified_at = ?, code = ? WHERE code = ? AND expires_at > ?",
-			new(identity.VerifiableAddress).TableName(),
+			new(identity.VerifiableAddress).TableName(ctx),
 		),
 		identity.VerifiableAddressStatusCompleted,
 		time.Now().UTC().Round(time.Second),
@@ -378,8 +375,8 @@ func (p *Persister) UpdateVerifiableAddress(ctx context.Context, address *identi
 	return sqlcon.HandleError(p.GetConnection(ctx).Update(address))
 }
 
-func (p *Persister) validateIdentity(i *identity.Identity) error {
-	if err := p.r.IdentityValidator().ValidateWithRunner(i); err != nil {
+func (p *Persister) validateIdentity(ctx context.Context, i *identity.Identity) error {
+	if err := p.r.IdentityValidator().ValidateWithRunner(ctx, i); err != nil {
 		if _, ok := errorsx.Cause(err).(*jsonschema.ValidationError); ok {
 			return errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
 		}
@@ -389,12 +386,12 @@ func (p *Persister) validateIdentity(i *identity.Identity) error {
 	return nil
 }
 
-func (p *Persister) injectTraitsSchemaURL(i *identity.Identity) error {
-	s, err := p.r.IdentityTraitsSchemas().GetByID(i.SchemaID)
+func (p *Persister) injectTraitsSchemaURL(ctx context.Context, i *identity.Identity) error {
+	s, err := p.r.IdentityTraitsSchemas(ctx).GetByID(i.SchemaID)
 	if err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf(
 			`The JSON Schema "%s" for this identity's traits could not be found.`, i.SchemaID))
 	}
-	i.SchemaURL = s.SchemaURL(p.cf.SelfPublicURL()).String()
+	i.SchemaURL = s.SchemaURL(p.r.Config(ctx).SelfPublicURL()).String()
 	return nil
 }

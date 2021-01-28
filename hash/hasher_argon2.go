@@ -2,6 +2,7 @@ package hash
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"crypto/subtle"
 	"encoding/base64"
@@ -11,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/argon2"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 )
 
 var (
@@ -25,15 +26,15 @@ type Argon2 struct {
 }
 
 type Argon2Configuration interface {
-	HasherArgon2() *configuration.HasherArgon2Config
+	config.Provider
 }
 
 func NewHasherArgon2(c Argon2Configuration) *Argon2 {
 	return &Argon2{c: c}
 }
 
-func (h *Argon2) Generate(password []byte) ([]byte, error) {
-	p := h.c.HasherArgon2()
+func (h *Argon2) Generate(ctx context.Context, password []byte) ([]byte, error) {
+	p := h.c.Config(ctx).HasherArgon2()
 
 	salt := make([]byte, p.SaltLength)
 	if _, err := rand.Read(salt); err != nil {
@@ -59,7 +60,7 @@ func (h *Argon2) Generate(password []byte) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (h *Argon2) Compare(password []byte, hash []byte) error {
+func (h *Argon2) Compare(ctx context.Context, password []byte, hash []byte) error {
 	// Extract the parameters, salt and derived key from the encoded password
 	// hash.
 	p, salt, hash, err := decodeHash(string(hash))
@@ -79,7 +80,7 @@ func (h *Argon2) Compare(password []byte, hash []byte) error {
 	return ErrMismatchedHashAndPassword
 }
 
-func decodeHash(encodedHash string) (p *configuration.HasherArgon2Config, salt, hash []byte, err error) {
+func decodeHash(encodedHash string) (p *config.Argon2, salt, hash []byte, err error) {
 	parts := strings.Split(encodedHash, "$")
 	if len(parts) != 6 {
 		return nil, nil, nil, ErrInvalidHash
@@ -94,7 +95,7 @@ func decodeHash(encodedHash string) (p *configuration.HasherArgon2Config, salt, 
 		return nil, nil, nil, ErrIncompatibleVersion
 	}
 
-	p = new(configuration.HasherArgon2Config)
+	p = new(config.Argon2)
 	_, err = fmt.Sscanf(parts[3], "m=%d,t=%d,p=%d", &p.Memory, &p.Iterations, &p.Parallelism)
 	if err != nil {
 		return nil, nil, nil, err

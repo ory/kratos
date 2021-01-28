@@ -2,6 +2,7 @@ package testhelpers
 
 import (
 	"bytes"
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -13,14 +14,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/viper"
 	"github.com/ory/x/pointerx"
 
+	"github.com/ory/kratos-client-go/client/public"
+	"github.com/ory/kratos-client-go/models"
 	"github.com/ory/kratos/driver"
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal/httpclient/client/public"
-	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/x"
 )
@@ -31,7 +31,7 @@ func NewRegistrationUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptes
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, e)
 	}))
-	viper.Set(configuration.ViperKeySelfServiceRegistrationUI, ts.URL+"/registration-ts")
+	reg.Config(context.Background()).MustSet(config.ViperKeySelfServiceRegistrationUI, ts.URL+"/registration-ts")
 	t.Cleanup(ts.Close)
 	return ts
 }

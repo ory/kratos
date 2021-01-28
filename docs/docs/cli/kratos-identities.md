@@ -24,13 +24,7 @@ Tools to interact with remote identities
   -e, --endpoint string   The URL of ORY Kratos' Admin API. Alternatively set using the KRATOS_ADMIN_URL environmental variable.
   -f, --format string     Set the output format. One of table, json, and json-pretty.
   -h, --help              help for identities
-  -q, --quiet             Prints only IDs, one per line. Takes precedence over --format.
-```
-
-### Options inherited from parent commands
-
-```
-  -c, --config string   Path to config file. Supports .json, .yaml, .yml, .toml. Default is "$HOME/.kratos.(yaml|yml|toml|json)"
+  -q, --quiet             Be quiet with output printing.
 ```
 
 ### SEE ALSO

@@ -10,37 +10,38 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/viper"
 	"github.com/ory/x/assertx"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/x"
 )
 
-func TestPersister(p interface {
+func TestPersister(conf *config.Config, p interface {
 	RecoveryTokenPersister
 	VerificationTokenPersister
 	recovery.FlowPersister
 	verification.FlowPersister
 	identity.PrivilegedPool
 }) func(t *testing.T) {
-	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
-	viper.Set(configuration.ViperKeySecretsDefault, []string{"secret-a", "secret-b"})
+	ctx := context.Background()
 	return func(t *testing.T) {
+		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+		conf.MustSet(config.ViperKeySecretsDefault, []string{"secret-a", "secret-b"})
+
 		t.Run("token=recovery", func(t *testing.T) {
 
 			t.Run("case=should error when the recovery token does not exist", func(t *testing.T) {
-				_, err := p.UseRecoveryToken(context.Background(), "i-do-not-exist")
+				_, err := p.UseRecoveryToken(ctx, "i-do-not-exist")
 				require.Error(t, err)
 			})
 
 			newRecoveryToken := func(t *testing.T, email string) *RecoveryToken {
 				var req recovery.Flow
 				require.NoError(t, faker.FakeData(&req))
-				require.NoError(t, p.CreateRecoveryFlow(context.Background(), &req))
+				require.NoError(t, p.CreateRecoveryFlow(ctx, &req))
 
 				var i identity.Identity
 				require.NoError(t, faker.FakeData(&i))
@@ -48,7 +49,7 @@ func TestPersister(p interface {
 				address := &identity.RecoveryAddress{Value: email, Via: identity.RecoveryAddressTypeEmail}
 				i.RecoveryAddresses = append(i.RecoveryAddresses, *address)
 
-				require.NoError(t, p.CreateIdentity(context.Background(), &i))
+				require.NoError(t, p.CreateIdentity(ctx, &i))
 
 				return &RecoveryToken{Token: x.NewUUID().String(), FlowID: uuid.NullUUID{UUID: req.ID, Valid: true},
 					RecoveryAddress: &i.RecoveryAddresses[0],
@@ -58,19 +59,19 @@ func TestPersister(p interface {
 			}
 
 			t.Run("case=should error when the recovery token does not exist", func(t *testing.T) {
-				_, err := p.UseRecoveryToken(context.Background(), "i-do-not-exist")
+				_, err := p.UseRecoveryToken(ctx, "i-do-not-exist")
 				require.Error(t, err)
 			})
 
 			t.Run("case=should create a new recovery token", func(t *testing.T) {
 				token := newRecoveryToken(t, "foo-user@ory.sh")
-				require.NoError(t, p.CreateRecoveryToken(context.Background(), token))
+				require.NoError(t, p.CreateRecoveryToken(ctx, token))
 			})
 
 			t.Run("case=should create a recovery token and use it", func(t *testing.T) {
 				expected := newRecoveryToken(t, "other-user@ory.sh")
-				require.NoError(t, p.CreateRecoveryToken(context.Background(), expected))
-				actual, err := p.UseRecoveryToken(context.Background(), expected.Token)
+				require.NoError(t, p.CreateRecoveryToken(ctx, expected))
+				actual, err := p.UseRecoveryToken(ctx, expected.Token)
 				require.NoError(t, err)
 				assertx.EqualAsJSON(t, expected.RecoveryAddress, actual.RecoveryAddress)
 				assertx.EqualAsJSON(t, expected.RecoveryAddress, actual.RecoveryAddress)
@@ -78,7 +79,7 @@ func TestPersister(p interface {
 				assert.NotEqual(t, expected.Token, actual.Token)
 				assert.EqualValues(t, expected.FlowID, actual.FlowID)
 
-				_, err = p.UseRecoveryToken(context.Background(), expected.Token)
+				_, err = p.UseRecoveryToken(ctx, expected.Token)
 				require.Error(t, err)
 			})
 
@@ -86,14 +87,14 @@ func TestPersister(p interface {
 		t.Run("token=verification", func(t *testing.T) {
 
 			t.Run("case=should error when the verification token does not exist", func(t *testing.T) {
-				_, err := p.UseVerificationToken(context.Background(), "i-do-not-exist")
+				_, err := p.UseVerificationToken(ctx, "i-do-not-exist")
 				require.Error(t, err)
 			})
 
 			newVerificationToken := func(t *testing.T, email string) *VerificationToken {
 				var req verification.Flow
 				require.NoError(t, faker.FakeData(&req))
-				require.NoError(t, p.CreateVerificationFlow(context.Background(), &req))
+				require.NoError(t, p.CreateVerificationFlow(ctx, &req))
 
 				var i identity.Identity
 				require.NoError(t, faker.FakeData(&i))
@@ -101,7 +102,7 @@ func TestPersister(p interface {
 				address := &identity.VerifiableAddress{Value: email, Via: identity.VerifiableAddressTypeEmail}
 				i.VerifiableAddresses = append(i.VerifiableAddresses, *address)
 
-				require.NoError(t, p.CreateIdentity(context.Background(), &i))
+				require.NoError(t, p.CreateIdentity(ctx, &i))
 
 				return &VerificationToken{
 					Token:             x.NewUUID().String(),
@@ -113,19 +114,19 @@ func TestPersister(p interface {
 			}
 
 			t.Run("case=should error when the verification token does not exist", func(t *testing.T) {
-				_, err := p.UseVerificationToken(context.Background(), "i-do-not-exist")
+				_, err := p.UseVerificationToken(ctx, "i-do-not-exist")
 				require.Error(t, err)
 			})
 
 			t.Run("case=should create a new verification token", func(t *testing.T) {
 				token := newVerificationToken(t, "foo-user@ory.sh")
-				require.NoError(t, p.CreateVerificationToken(context.Background(), token))
+				require.NoError(t, p.CreateVerificationToken(ctx, token))
 			})
 
 			t.Run("case=should create a verification token and use it", func(t *testing.T) {
 				expected := newVerificationToken(t, "other-user@ory.sh")
-				require.NoError(t, p.CreateVerificationToken(context.Background(), expected))
-				actual, err := p.UseVerificationToken(context.Background(), expected.Token)
+				require.NoError(t, p.CreateVerificationToken(ctx, expected))
+				actual, err := p.UseVerificationToken(ctx, expected.Token)
 				require.NoError(t, err)
 				assertx.EqualAsJSON(t, expected.VerifiableAddress, actual.VerifiableAddress)
 				assertx.EqualAsJSON(t, expected.VerifiableAddress, actual.VerifiableAddress)
@@ -133,7 +134,7 @@ func TestPersister(p interface {
 				assert.NotEqual(t, expected.Token, actual.Token)
 				assert.EqualValues(t, expected.FlowID, actual.FlowID)
 
-				_, err = p.UseVerificationToken(context.Background(), expected.Token)
+				_, err = p.UseVerificationToken(ctx, expected.Token)
 				require.Error(t, err)
 			})
 		})

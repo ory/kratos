@@ -14,7 +14,7 @@ import (
 
 	"github.com/ory/herodot"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/x"
@@ -39,7 +39,7 @@ type (
 
 	ErrorHandler struct {
 		d errorHandlerDependencies
-		c configuration.Provider
+		c *config.Config
 	}
 
 	FlowExpiredError struct {
@@ -59,7 +59,7 @@ func NewFlowExpiredError(at time.Time) *FlowExpiredError {
 	}
 }
 
-func NewFlowErrorHandler(d errorHandlerDependencies, c configuration.Provider) *ErrorHandler {
+func NewFlowErrorHandler(d errorHandlerDependencies, c *config.Config) *ErrorHandler {
 	return &ErrorHandler{d: d, c: c}
 }
 

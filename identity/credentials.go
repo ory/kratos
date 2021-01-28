@@ -1,8 +1,11 @@
 package identity
 
 import (
+	"context"
 	"reflect"
 	"time"
+
+	"github.com/ory/kratos/corp"
 
 	"github.com/gofrs/uuid"
 
@@ -18,6 +21,7 @@ func (c CredentialsType) String() string {
 }
 
 const (
+	// make sure to add all of these values to the test that ensures they are created during migration
 	CredentialsTypePassword CredentialsType = "password"
 	CredentialsTypeOIDC     CredentialsType = "oidc"
 )
@@ -81,28 +85,28 @@ type (
 
 	// swagger:ignore
 	ActiveCredentialsCounterStrategyProvider interface {
-		ActiveCredentialsCounterStrategies() []ActiveCredentialsCounter
+		ActiveCredentialsCounterStrategies(context.Context) []ActiveCredentialsCounter
 	}
 )
 
-func (c CredentialsTypeTable) TableName() string {
-	return "identity_credential_types"
+func (c CredentialsTypeTable) TableName(ctx context.Context) string {
+	return corp.ContextualizeTableName(ctx, "identity_credential_types")
 }
 
-func (c CredentialsCollection) TableName() string {
-	return "identity_credentials"
+func (c CredentialsCollection) TableName(ctx context.Context) string {
+	return corp.ContextualizeTableName(ctx, "identity_credentials")
 }
 
-func (c Credentials) TableName() string {
-	return "identity_credentials"
+func (c Credentials) TableName(ctx context.Context) string {
+	return corp.ContextualizeTableName(ctx, "identity_credentials")
 }
 
-func (c CredentialIdentifierCollection) TableName() string {
-	return "identity_credential_identifiers"
+func (c CredentialIdentifierCollection) TableName(ctx context.Context) string {
+	return corp.ContextualizeTableName(ctx, "identity_credential_identifiers")
 }
 
-func (c CredentialIdentifier) TableName() string {
-	return "identity_credential_identifiers"
+func (c CredentialIdentifier) TableName(ctx context.Context) string {
+	return corp.ContextualizeTableName(ctx, "identity_credential_identifiers")
 }
 
 func CredentialsEqual(a, b map[CredentialsType]Credentials) bool {

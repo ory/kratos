@@ -3,11 +3,11 @@ package template
 import (
 	"path/filepath"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 )
 
 type TestStub struct {
-	c configuration.Provider
+	c *config.Config
 	m *TestStubModel
 }
 
@@ -17,7 +17,7 @@ type TestStubModel struct {
 	Body    string
 }
 
-func NewTestStub(c configuration.Provider, m *TestStubModel) *TestStub {
+func NewTestStub(c *config.Config, m *TestStubModel) *TestStub {
 	return &TestStub{c: c, m: m}
 }
 

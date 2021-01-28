@@ -13,33 +13,26 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/x/ioutilx"
-
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/x/assertx"
-
-	"github.com/ory/x/sqlxx"
-
-	"github.com/ory/x/pointerx"
-
-	"github.com/ory/x/httpx"
-
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos-client-go/client/public"
+	"github.com/ory/kratos-client-go/models"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/httpclient/client/public"
-	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/selfservice/strategy/profile"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/assertx"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/ioutilx"
+	"github.com/ory/x/pointerx"
+	"github.com/ory/x/sqlxx"
 )
 
 func init() {
@@ -53,7 +46,7 @@ func newIdentityWithPassword(email string) *identity.Identity {
 			"password": {Type: "password", Identifiers: []string{email}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)},
 		},
 		Traits:              identity.Traits(`{"email":"` + email + `","stringy":"foobar","booly":false,"numby":2.5,"should_long_string":"asdfasdfasdfasdfasfdasdfasdfasdf","should_big_number":2048}`),
-		SchemaID:            configuration.DefaultIdentityTraitsSchemaID,
+		SchemaID:            config.DefaultIdentityTraitsSchemaID,
 		VerifiableAddresses: []identity.VerifiableAddress{{Value: email, Via: identity.VerifiableAddressTypeEmail}},
 		// TO ADD - RECOVERY EMAIL,
 	}
@@ -61,11 +54,11 @@ func newIdentityWithPassword(email string) *identity.Identity {
 
 func TestStrategyTraits(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
-	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
-	viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
-	testhelpers.StrategyEnable(identity.CredentialsTypePassword.String(), true)
-	testhelpers.StrategyEnable(settings.StrategyProfile, true)
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+	conf.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
+	conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
+	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), true)
+	testhelpers.StrategyEnable(t, conf, settings.StrategyProfile, true)
 
 	ui := testhelpers.NewSettingsUIEchoServer(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
@@ -91,7 +84,7 @@ func TestStrategyTraits(t *testing.T) {
 			require.NoError(t, err)
 			defer res.Body.Close()
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode, "%+v", res.Request)
-			assert.Contains(t, res.Request.URL.String(), viper.GetString(configuration.ViperKeySelfServiceLoginUI))
+			assert.Contains(t, res.Request.URL.String(), conf.Source().String(config.ViperKeySelfServiceLoginUI))
 		})
 
 		t.Run("type=api", func(t *testing.T) {
@@ -161,7 +154,7 @@ func TestStrategyTraits(t *testing.T) {
 	t.Run("description=hydrate the proper fields", func(t *testing.T) {
 		var run = func(t *testing.T, id *identity.Identity, payload *models.SettingsFlow, route string) {
 			assert.NotEmpty(t, payload.Identity)
-			assert.Equal(t, id.ID.String(), string(payload.Identity.ID))
+			assert.Equal(t, id.ID.String(), string(*payload.Identity.ID))
 			assert.JSONEq(t, string(id.Traits), x.MustEncodeJSON(t, payload.Identity.Traits))
 			assert.Equal(t, id.SchemaID, pointerx.StringR(payload.Identity.SchemaID))
 			assert.Equal(t, publicTS.URL+route, pointerx.StringR(payload.RequestURL))
@@ -169,7 +162,7 @@ func TestStrategyTraits(t *testing.T) {
 			f := testhelpers.GetSettingsFlowMethodConfig(t, payload, settings.StrategyProfile)
 
 			assertx.EqualAsJSON(t, &models.SettingsFlowMethodConfig{
-				Action: pointerx.String(publicTS.URL + profile.RouteSettings + "?flow=" + string(payload.ID)),
+				Action: pointerx.String(publicTS.URL + profile.RouteSettings + "?flow=" + string(*payload.ID)),
 				Method: pointerx.String("POST"),
 				Fields: models.FormFields{
 					&models.FormField{Name: pointerx.String(form.CSRFTokenName), Required: true, Type: pointerx.String("hidden"), Value: x.FakeCSRFToken},
@@ -280,10 +273,10 @@ func TestStrategyTraits(t *testing.T) {
 
 		t.Run("type=browser", func(t *testing.T) {
 			rs := testhelpers.InitializeSettingsFlowViaBrowser(t, browserUser1, publicTS)
-			config := testhelpers.GetSettingsFlowMethodConfig(t, rs.Payload, settings.StrategyProfile)
-			res := run(t, config, false, browserUser1)
+			c := testhelpers.GetSettingsFlowMethodConfig(t, rs.Payload, settings.StrategyProfile)
+			res := run(t, c, false, browserUser1)
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode)
-			assert.Contains(t, res.Request.URL.String(), viper.Get(configuration.ViperKeySelfServiceLoginUI))
+			assert.Contains(t, res.Request.URL.String(), conf.Source().String(config.ViperKeySelfServiceLoginUI))
 		})
 	})
 
@@ -346,8 +339,10 @@ func TestStrategyTraits(t *testing.T) {
 	}
 
 	t.Run("flow=succeed with final request", func(t *testing.T) {
-		viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1h")
-		defer viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
+		conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1h")
+		t.Cleanup(func() {
+			conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
+		})
 
 		var check = func(t *testing.T, actual string) {
 			assert.EqualValues(t, settings.StateSuccess, gjson.Get(actual, "state").String(), "%s", actual)
@@ -407,8 +402,8 @@ func TestStrategyTraits(t *testing.T) {
 		rts := httptest.NewServer(router)
 		t.Cleanup(rts.Close)
 
-		testhelpers.SelfServiceHookSettingsSetDefaultRedirectTo(rts.URL + "/return-ts")
-		t.Cleanup(testhelpers.SelfServiceHookConfigReset)
+		testhelpers.SelfServiceHookSettingsSetDefaultRedirectTo(t, conf, rts.URL+"/return-ts")
+		t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 
 		f := testhelpers.GetSettingsFlowMethodConfigDeprecated(t, browserUser1, publicTS, settings.StrategyProfile)
 
@@ -425,14 +420,16 @@ func TestStrategyTraits(t *testing.T) {
 	})
 
 	// Update the login endpoint to auto-accept any incoming login request!
-	_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, adminClient)
+	_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, adminClient, conf)
 
 	t.Run("description=should send email with verifiable address", func(t *testing.T) {
-		viper.Set(configuration.ViperKeySelfServiceVerificationEnabled, true)
-		viper.Set(configuration.ViperKeyCourierSMTPURL, "smtp://foo:bar@irrelevant.com/")
-		viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1h")
-		defer viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
-		defer viper.Set(configuration.HookStrategyKey(configuration.ViperKeySelfServiceSettingsAfter, settings.StrategyProfile), nil)
+		conf.MustSet(config.ViperKeySelfServiceVerificationEnabled, true)
+		conf.MustSet(config.ViperKeyCourierSMTPURL, "smtp://foo:bar@irrelevant.com/")
+		conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1h")
+		t.Cleanup(func() {
+			conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
+			conf.MustSet(config.HookStrategyKey(config.ViperKeySelfServiceSettingsAfter, settings.StrategyProfile), nil)
+		})
 
 		var check = func(t *testing.T, actual, newEmail string) {
 			assert.EqualValues(t, settings.StateSuccess, gjson.Get(actual, "state").String(), "%s", actual)
@@ -463,8 +460,10 @@ func TestStrategyTraits(t *testing.T) {
 	})
 
 	t.Run("description=should update protected field with sudo mode", func(t *testing.T) {
-		viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
-		defer viper.Set(configuration.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
+		conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
+		t.Cleanup(func() {
+			conf.MustSet(config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
+		})
 
 		var check = func(t *testing.T, newEmail string, actual string) {
 			assert.EqualValues(t, settings.StateSuccess, gjson.Get(actual, "state").String(), "%s", actual)

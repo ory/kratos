@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -22,9 +23,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/x"
 )
 
@@ -87,12 +86,15 @@ type (
 	}
 )
 
-func TestPool(p PrivilegedPool) func(t *testing.T) {
+func TestPool(conf *config.Config, p interface {
+	PrivilegedPool
+}) func(t *testing.T) {
+	ctx := context.Background()
 	return func(t *testing.T) {
 		exampleServerURL := urlx.ParseOrPanic("http://example.com")
-		viper.Set(configuration.ViperKeyPublicBaseURL, exampleServerURL)
+		conf.MustSet(config.ViperKeyPublicBaseURL, exampleServerURL.String())
 		defaultSchema := schema.Schema{
-			ID:     configuration.DefaultIdentityTraitsSchemaID,
+			ID:     config.DefaultIdentityTraitsSchemaID,
 			URL:    urlx.ParseOrPanic("file://./stub/identity.schema.json"),
 			RawURL: "file://./stub/identity.schema.json",
 		}
@@ -101,8 +103,8 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			URL:    urlx.ParseOrPanic("file://./stub/identity-2.schema.json"),
 			RawURL: "file://./stub/identity-2.schema.json",
 		}
-		viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, defaultSchema.RawURL)
-		viper.Set(configuration.ViperKeyIdentitySchemas, []configuration.SchemaConfig{{
+		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, defaultSchema.RawURL)
+		conf.MustSet(config.ViperKeyIdentitySchemas, []config.Schema{{
 			ID:  altSchema.ID,
 			URL: altSchema.RawURL,
 		}})
@@ -134,62 +136,62 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 		}
 
 		t.Run("case=should create and set missing ID", func(t *testing.T) {
-			i := NewIdentity(configuration.DefaultIdentityTraitsSchemaID)
+			i := NewIdentity(config.DefaultIdentityTraitsSchemaID)
 			i.SetCredentials(CredentialsTypeOIDC, Credentials{
 				Type: CredentialsTypeOIDC, Identifiers: []string{x.NewUUID().String()},
 				Config: sqlxx.JSONRawMessage(`{}`),
 			})
 			i.ID = uuid.Nil
-			require.NoError(t, p.CreateIdentity(context.Background(), i))
+			require.NoError(t, p.CreateIdentity(ctx, i))
 			assert.NotEqual(t, uuid.Nil, i.ID)
 			createdIDs = append(createdIDs, i.ID)
 
-			count, err := p.CountIdentities(context.Background())
+			count, err := p.CountIdentities(ctx)
 			require.NoError(t, err)
 			assert.EqualValues(t, 1, count)
 		})
 
 		t.Run("case=create with default values", func(t *testing.T) {
 			expected := passwordIdentity("", "id-1")
-			require.NoError(t, p.CreateIdentity(context.Background(), expected))
+			require.NoError(t, p.CreateIdentity(ctx, expected))
 			createdIDs = append(createdIDs, expected.ID)
 
-			actual, err := p.GetIdentity(context.Background(), expected.ID)
+			actual, err := p.GetIdentity(ctx, expected.ID)
 			require.NoError(t, err)
 
 			assert.Equal(t, expected.ID, actual.ID)
-			assert.Equal(t, configuration.DefaultIdentityTraitsSchemaID, actual.SchemaID)
+			assert.Equal(t, config.DefaultIdentityTraitsSchemaID, actual.SchemaID)
 			assert.Equal(t, defaultSchema.SchemaURL(exampleServerURL).String(), actual.SchemaURL)
 			assertEqual(t, expected, actual)
 
-			count, err := p.CountIdentities(context.Background())
+			count, err := p.CountIdentities(ctx)
 			require.NoError(t, err)
 			assert.EqualValues(t, 2, count)
 		})
 
 		t.Run("case=should error when the identity ID does not exist", func(t *testing.T) {
-			_, err := p.GetIdentity(context.Background(), uuid.UUID{})
+			_, err := p.GetIdentity(ctx, uuid.UUID{})
 			require.Error(t, err)
 
-			_, err = p.GetIdentity(context.Background(), x.NewUUID())
+			_, err = p.GetIdentity(ctx, x.NewUUID())
 			require.Error(t, err)
 
-			_, err = p.GetIdentityConfidential(context.Background(), x.NewUUID())
+			_, err = p.GetIdentityConfidential(ctx, x.NewUUID())
 			require.Error(t, err)
 		})
 
 		t.Run("case=create and keep set values", func(t *testing.T) {
 			expected := passwordIdentity(altSchema.ID, "id-2")
-			require.NoError(t, p.CreateIdentity(context.Background(), expected))
+			require.NoError(t, p.CreateIdentity(ctx, expected))
 			createdIDs = append(createdIDs, expected.ID)
 
-			actual, err := p.GetIdentity(context.Background(), expected.ID)
+			actual, err := p.GetIdentity(ctx, expected.ID)
 			require.NoError(t, err)
 			assert.Equal(t, altSchema.ID, actual.SchemaID)
 			assert.Equal(t, altSchema.SchemaURL(exampleServerURL).String(), actual.SchemaURL)
 			assertEqual(t, expected, actual)
 
-			actual, err = p.GetIdentityConfidential(context.Background(), expected.ID)
+			actual, err = p.GetIdentityConfidential(ctx, expected.ID)
 			require.NoError(t, err)
 			require.Equal(t, expected.Traits, actual.Traits)
 			require.Equal(t, expected.ID, actual.ID)
@@ -208,40 +210,40 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 
 		t.Run("case=fail on duplicate credential identifiers if type is password", func(t *testing.T) {
 			initial := passwordIdentity("", "foo@bar.com")
-			require.NoError(t, p.CreateIdentity(context.Background(), initial))
+			require.NoError(t, p.CreateIdentity(ctx, initial))
 			createdIDs = append(createdIDs, initial.ID)
 
 			for _, ids := range []string{"foo@bar.com", "fOo@bar.com", "FOO@bar.com", "foo@Bar.com"} {
 				expected := passwordIdentity("", ids)
-				err := p.CreateIdentity(context.Background(), expected)
+				err := p.CreateIdentity(ctx, expected)
 				require.Error(t, err)
 				require.True(t, errors.Is(err, sqlcon.ErrUniqueViolation), "%+v", err)
 
-				_, err = p.GetIdentity(context.Background(), expected.ID)
+				_, err = p.GetIdentity(ctx, expected.ID)
 				require.Error(t, err)
 			}
 		})
 
 		t.Run("case=fail on duplicate credential identifiers if type is oidc", func(t *testing.T) {
 			initial := oidcIdentity("", "oidc-1")
-			require.NoError(t, p.CreateIdentity(context.Background(), initial))
+			require.NoError(t, p.CreateIdentity(ctx, initial))
 			createdIDs = append(createdIDs, initial.ID)
 
 			expected := oidcIdentity("", "oidc-1")
-			require.Error(t, p.CreateIdentity(context.Background(), expected))
+			require.Error(t, p.CreateIdentity(ctx, expected))
 
-			_, err := p.GetIdentity(context.Background(), expected.ID)
+			_, err := p.GetIdentity(ctx, expected.ID)
 			require.Error(t, err)
 
 			second := oidcIdentity("", "OIDC-1")
-			require.NoError(t, p.CreateIdentity(context.Background(), second), "should work because oidc is not case-sensitive")
+			require.NoError(t, p.CreateIdentity(ctx, second), "should work because oidc is not case-sensitive")
 			createdIDs = append(createdIDs, second.ID)
 		})
 
 		t.Run("case=create with invalid traits data", func(t *testing.T) {
 			expected := oidcIdentity("", x.NewUUID().String())
 			expected.Traits = Traits(`{"bar":123}`) // bar should be a string
-			err := p.CreateIdentity(context.Background(), expected)
+			err := p.CreateIdentity(ctx, expected)
 			require.Error(t, err)
 			assert.Contains(t, fmt.Sprintf("%+v", err.Error()), "malformed")
 		})
@@ -252,10 +254,10 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 				Type: CredentialsTypeOIDC, Identifiers: []string{"aylmao-oidc"},
 				Config: sqlxx.JSONRawMessage(`{"ay":"lmao"}`),
 			})
-			require.NoError(t, p.CreateIdentity(context.Background(), initial))
+			require.NoError(t, p.CreateIdentity(ctx, initial))
 			createdIDs = append(createdIDs, initial.ID)
 
-			initial, err := p.GetIdentityConfidential(context.Background(), initial.ID)
+			initial, err := p.GetIdentityConfidential(ctx, initial.ID)
 			require.NoError(t, err)
 			require.NotEqual(t, uuid.Nil, initial.ID)
 			require.NotEmpty(t, initial.Credentials)
@@ -263,10 +265,10 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 
 		t.Run("case=update an identity and set credentials", func(t *testing.T) {
 			initial := oidcIdentity("", x.NewUUID().String())
-			require.NoError(t, p.CreateIdentity(context.Background(), initial))
+			require.NoError(t, p.CreateIdentity(ctx, initial))
 			createdIDs = append(createdIDs, initial.ID)
 
-			assert.Equal(t, configuration.DefaultIdentityTraitsSchemaID, initial.SchemaID)
+			assert.Equal(t, config.DefaultIdentityTraitsSchemaID, initial.SchemaID)
 			assert.Equal(t, defaultSchema.SchemaURL(exampleServerURL).String(), initial.SchemaURL)
 
 			expected := initial.CopyWithoutCredentials()
@@ -277,9 +279,9 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			})
 			expected.Traits = Traits(`{"update":"me"}`)
 			expected.SchemaID = altSchema.ID
-			require.NoError(t, p.UpdateIdentity(context.Background(), expected))
+			require.NoError(t, p.UpdateIdentity(ctx, expected))
 
-			actual, err := p.GetIdentityConfidential(context.Background(), expected.ID)
+			actual, err := p.GetIdentityConfidential(ctx, expected.ID)
 			require.NoError(t, err)
 			assert.Equal(t, altSchema.ID, actual.SchemaID)
 			assert.Equal(t, altSchema.SchemaURL(exampleServerURL).String(), actual.SchemaURL)
@@ -292,11 +294,11 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 		t.Run("case=fail to update because validation fails", func(t *testing.T) {
 			initial := oidcIdentity("", x.NewUUID().String())
 
-			require.NoError(t, p.CreateIdentity(context.Background(), initial))
+			require.NoError(t, p.CreateIdentity(ctx, initial))
 			createdIDs = append(createdIDs, initial.ID)
 
 			initial.Traits = Traits(`{"bar":123}`)
-			err := p.UpdateIdentity(context.Background(), initial)
+			err := p.UpdateIdentity(ctx, initial)
 			require.Error(t, err)
 			require.Contains(t, err.Error(), "malformed")
 		})
@@ -304,34 +306,34 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 		t.Run("case=should fail to insert identity because credentials from traits exist", func(t *testing.T) {
 			first := passwordIdentity("", "test-identity@ory.sh")
 			first.Traits = Traits(`{}`)
-			require.NoError(t, p.CreateIdentity(context.Background(), first))
+			require.NoError(t, p.CreateIdentity(ctx, first))
 			createdIDs = append(createdIDs, first.ID)
 
 			second := passwordIdentity("", "test-identity@ory.sh")
-			require.Error(t, p.CreateIdentity(context.Background(), second))
+			require.Error(t, p.CreateIdentity(ctx, second))
 		})
 
 		t.Run("case=should fail to update identity because credentials exist", func(t *testing.T) {
 			first := passwordIdentity("", x.NewUUID().String())
 			first.Traits = Traits(`{}`)
-			require.NoError(t, p.CreateIdentity(context.Background(), first))
+			require.NoError(t, p.CreateIdentity(ctx, first))
 			createdIDs = append(createdIDs, first.ID)
 
 			c := first.Credentials[CredentialsTypePassword]
 			c.Identifiers = []string{"test-identity@ory.sh"}
 			first.Credentials[CredentialsTypePassword] = c
-			require.Error(t, p.UpdateIdentity(context.Background(), first))
+			require.Error(t, p.UpdateIdentity(ctx, first))
 		})
 
 		t.Run("case=should succeed to update credentials from traits", func(t *testing.T) {
 			expected := passwordIdentity("", x.NewUUID().String())
-			require.NoError(t, p.CreateIdentity(context.Background(), expected))
+			require.NoError(t, p.CreateIdentity(ctx, expected))
 			createdIDs = append(createdIDs, expected.ID)
 
 			expected.Traits = Traits(`{"email":"update-test-identity@ory.sh"}`)
-			require.NoError(t, p.UpdateIdentity(context.Background(), expected))
+			require.NoError(t, p.UpdateIdentity(ctx, expected))
 
-			actual, err := p.GetIdentityConfidential(context.Background(), expected.ID)
+			actual, err := p.GetIdentityConfidential(ctx, expected.ID)
 			require.NoError(t, err)
 
 			assert.Equal(t, expected.Credentials[CredentialsTypePassword].Identifiers, actual.Credentials[CredentialsTypePassword].Identifiers)
@@ -339,10 +341,10 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 
 		t.Run("case=delete an identity", func(t *testing.T) {
 			expected := passwordIdentity("", x.NewUUID().String())
-			require.NoError(t, p.CreateIdentity(context.Background(), expected))
-			require.NoError(t, p.DeleteIdentity(context.Background(), expected.ID))
+			require.NoError(t, p.CreateIdentity(ctx, expected))
+			require.NoError(t, p.DeleteIdentity(ctx, expected.ID))
 
-			_, err := p.GetIdentity(context.Background(), expected.ID)
+			_, err := p.GetIdentity(ctx, expected.ID)
 			require.Error(t, err)
 		})
 
@@ -355,12 +357,12 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 				Identifiers: []string{"id-missing-creds-config"},
 				Config:      sqlxx.JSONRawMessage(``),
 			})
-			require.NoError(t, p.CreateIdentity(context.Background(), expected))
+			require.NoError(t, p.CreateIdentity(ctx, expected))
 			createdIDs = append(createdIDs, expected.ID)
 		})
 
 		t.Run("case=list", func(t *testing.T) {
-			is, err := p.ListIdentities(context.Background(), 0, 25)
+			is, err := p.ListIdentities(ctx, 0, 25)
 			require.NoError(t, err)
 			assert.Len(t, is, len(createdIDs))
 			for _, id := range createdIDs {
@@ -378,10 +380,10 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			expected := passwordIdentity("", "find-credentials-identifier@ory.sh")
 			expected.Traits = Traits(`{}`)
 
-			require.NoError(t, p.CreateIdentity(context.Background(), expected))
+			require.NoError(t, p.CreateIdentity(ctx, expected))
 			createdIDs = append(createdIDs, expected.ID)
 
-			actual, creds, err := p.FindByCredentialsIdentifier(context.Background(), CredentialsTypePassword, "find-credentials-identifier@ory.sh")
+			actual, creds, err := p.FindByCredentialsIdentifier(ctx, CredentialsTypePassword, "find-credentials-identifier@ory.sh")
 			require.NoError(t, err)
 
 			assert.EqualValues(t, expected.Credentials[CredentialsTypePassword].ID, creds.ID)
@@ -394,18 +396,19 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			assertEqual(t, expected, actual)
 		})
 
-		t.Run("case=find identity by its credentials case insensitive emails", func(t *testing.T) {
-			expected := passwordIdentity("", "cAsEinSensiTivE@ory.Sh")
+		t.Run("case=find identity by its credentials case insensitive", func(t *testing.T) {
+			identifier := x.NewUUID().String()
+			expected := passwordIdentity("", strings.ToUpper(identifier))
 			expected.Traits = Traits(`{}`)
 
-			require.NoError(t, p.CreateIdentity(context.Background(), expected))
+			require.NoError(t, p.CreateIdentity(ctx, expected))
 			createdIDs = append(createdIDs, expected.ID)
 
-			actual, creds, err := p.FindByCredentialsIdentifier(context.Background(), CredentialsTypePassword, "CASEINSENSITIVE@ory.Sh")
+			actual, creds, err := p.FindByCredentialsIdentifier(ctx, CredentialsTypePassword, identifier)
 			require.NoError(t, err)
 
 			assert.EqualValues(t, expected.Credentials[CredentialsTypePassword].ID, creds.ID)
-			assert.EqualValues(t, []string{"caseinsensitive@ory.sh"}, creds.Identifiers)
+			assert.EqualValues(t, []string{strings.ToLower(identifier)}, creds.Identifiers)
 			assert.JSONEq(t, string(expected.Credentials[CredentialsTypePassword].Config), string(creds.Config))
 
 			expected.Credentials = nil
@@ -420,12 +423,12 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 				address := NewVerifiableEmailAddress(email, i.ID)
 				i.VerifiableAddresses = append(i.VerifiableAddresses, *address)
 
-				require.NoError(t, p.CreateIdentity(context.Background(), &i))
+				require.NoError(t, p.CreateIdentity(ctx, &i))
 				return i.VerifiableAddresses[0]
 			}
 
 			t.Run("case=not found", func(t *testing.T) {
-				_, err := p.FindVerifiableAddressByValue(context.Background(), VerifiableAddressTypeEmail, "does-not-exist")
+				_, err := p.FindVerifiableAddressByValue(ctx, VerifiableAddressTypeEmail, "does-not-exist")
 				require.Equal(t, sqlcon.ErrNoRows, errorsx.Cause(err))
 			})
 
@@ -447,7 +450,7 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 				for k, expected := range addresses {
 					t.Run("method=FindVerifiableAddressByValue", func(t *testing.T) {
 						t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-							actual, err := p.FindVerifiableAddressByValue(context.Background(), expected.Via, expected.Value)
+							actual, err := p.FindVerifiableAddressByValue(ctx, expected.Via, expected.Value)
 							require.NoError(t, err)
 							compare(t, expected, *actual)
 						})
@@ -459,9 +462,9 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 				address := createIdentityWithAddresses(t, "verification.TestPersister.Update@ory.sh")
 
 				address.Value = "new-code"
-				require.NoError(t, p.UpdateVerifiableAddress(context.Background(), &address))
+				require.NoError(t, p.UpdateVerifiableAddress(ctx, &address))
 
-				actual, err := p.FindVerifiableAddressByValue(context.Background(), address.Via, address.Value)
+				actual, err := p.FindVerifiableAddressByValue(ctx, address.Via, address.Value)
 				require.NoError(t, err)
 				assert.Equal(t, "new-code", actual.Value)
 			})
@@ -472,19 +475,19 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 
 				address := NewVerifiableEmailAddress("verification.TestPersister.Update-Identity@ory.sh", i.ID)
 				i.VerifiableAddresses = append(i.VerifiableAddresses, *address)
-				require.NoError(t, p.CreateIdentity(context.Background(), &i))
+				require.NoError(t, p.CreateIdentity(ctx, &i))
 
-				_, err := p.FindVerifiableAddressByValue(context.Background(), VerifiableAddressTypeEmail, "verification.TestPersister.Update-Identity@ory.sh")
+				_, err := p.FindVerifiableAddressByValue(ctx, VerifiableAddressTypeEmail, "verification.TestPersister.Update-Identity@ory.sh")
 				require.NoError(t, err)
 
 				address = NewVerifiableEmailAddress("verification.TestPersister.Update-Identity-next@ory.sh", i.ID)
 				i.VerifiableAddresses = []VerifiableAddress{*address}
-				require.NoError(t, p.UpdateIdentity(context.Background(), &i))
+				require.NoError(t, p.UpdateIdentity(ctx, &i))
 
-				_, err = p.FindVerifiableAddressByValue(context.Background(), VerifiableAddressTypeEmail, "verification.TestPersister.Update-Identity@ory.sh")
+				_, err = p.FindVerifiableAddressByValue(ctx, VerifiableAddressTypeEmail, "verification.TestPersister.Update-Identity@ory.sh")
 				require.EqualError(t, err, sqlcon.ErrNoRows.Error())
 
-				actual, err := p.FindVerifiableAddressByValue(context.Background(), VerifiableAddressTypeEmail, "verification.TestPersister.Update-Identity-next@ory.sh")
+				actual, err := p.FindVerifiableAddressByValue(ctx, VerifiableAddressTypeEmail, "verification.TestPersister.Update-Identity-next@ory.sh")
 				require.NoError(t, err)
 
 				assert.Equal(t, VerifiableAddressTypeEmail, actual.Via)
@@ -499,12 +502,12 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 				i.Traits = []byte(`{"email":"` + email + `"}`)
 				address := NewRecoveryEmailAddress(email, i.ID)
 				i.RecoveryAddresses = append(i.RecoveryAddresses, *address)
-				require.NoError(t, p.CreateIdentity(context.Background(), &i))
+				require.NoError(t, p.CreateIdentity(ctx, &i))
 				return &i
 			}
 
 			t.Run("case=not found", func(t *testing.T) {
-				_, err := p.FindRecoveryAddressByValue(context.Background(), RecoveryAddressTypeEmail, "does-not-exist")
+				_, err := p.FindRecoveryAddressByValue(ctx, RecoveryAddressTypeEmail, "does-not-exist")
 				require.Equal(t, sqlcon.ErrNoRows, errorsx.Cause(err))
 			})
 
@@ -526,7 +529,7 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 				for k, expected := range addresses {
 					t.Run("method=FindVerifiableAddressByValue", func(t *testing.T) {
 						t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-							actual, err := p.FindRecoveryAddressByValue(context.Background(), expected.Via, expected.Value)
+							actual, err := p.FindRecoveryAddressByValue(ctx, expected.Via, expected.Value)
 							require.NoError(t, err)
 							compare(t, expected, *actual)
 						})
@@ -537,16 +540,16 @@ func TestPool(p PrivilegedPool) func(t *testing.T) {
 			t.Run("case=create and update and find", func(t *testing.T) {
 				identity := createIdentityWithAddresses(t, "recovery.TestPersister.Update@ory.sh")
 
-				_, err := p.FindRecoveryAddressByValue(context.Background(), RecoveryAddressTypeEmail, "recovery.TestPersister.Update@ory.sh")
+				_, err := p.FindRecoveryAddressByValue(ctx, RecoveryAddressTypeEmail, "recovery.TestPersister.Update@ory.sh")
 				require.NoError(t, err)
 
 				identity.RecoveryAddresses = []RecoveryAddress{{Via: RecoveryAddressTypeEmail, Value: "recovery.TestPersister.Update-next@ory.sh"}}
-				require.NoError(t, p.UpdateIdentity(context.Background(), identity))
+				require.NoError(t, p.UpdateIdentity(ctx, identity))
 
-				_, err = p.FindRecoveryAddressByValue(context.Background(), RecoveryAddressTypeEmail, "recovery.TestPersister.Update@ory.sh")
+				_, err = p.FindRecoveryAddressByValue(ctx, RecoveryAddressTypeEmail, "recovery.TestPersister.Update@ory.sh")
 				require.EqualError(t, err, sqlcon.ErrNoRows.Error())
 
-				actual, err := p.FindRecoveryAddressByValue(context.Background(), RecoveryAddressTypeEmail, "recovery.TestPersister.Update-next@ory.sh")
+				actual, err := p.FindRecoveryAddressByValue(ctx, RecoveryAddressTypeEmail, "recovery.TestPersister.Update-next@ory.sh")
 				require.NoError(t, err)
 
 				assert.Equal(t, RecoveryAddressTypeEmail, actual.Via)

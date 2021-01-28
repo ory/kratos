@@ -6,13 +6,15 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
-// RecoveryFlowMethodConfig recovery flow method config
+// RecoveryFlowMethodConfig RecoveryFlowMethodConfig RecoveryFlowMethodConfig RecoveryFlowMethodConfig RecoveryFlowMethodConfig recovery flow method config
 //
 // swagger:model recoveryFlowMethodConfig
 type RecoveryFlowMethodConfig struct {
@@ -85,7 +87,6 @@ func (m *RecoveryFlowMethodConfig) validateFields(formats strfmt.Registry) error
 }
 
 func (m *RecoveryFlowMethodConfig) validateMessages(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.Messages) { // not required
 		return nil
 	}
@@ -103,6 +104,48 @@ func (m *RecoveryFlowMethodConfig) validateMessages(formats strfmt.Registry) err
 func (m *RecoveryFlowMethodConfig) validateMethod(formats strfmt.Registry) error {
 
 	if err := validate.Required("method", "body", m.Method); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ContextValidate validate this recovery flow method config based on the context it is used
+func (m *RecoveryFlowMethodConfig) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateFields(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateMessages(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *RecoveryFlowMethodConfig) contextValidateFields(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := m.Fields.ContextValidate(ctx, formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("fields")
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (m *RecoveryFlowMethodConfig) contextValidateMessages(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := m.Messages.ContextValidate(ctx, formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("messages")
+		}
 		return err
 	}
 

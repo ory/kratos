@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -23,12 +24,10 @@ import (
 
 	"github.com/ory/x/pointerx"
 
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos-client-go/models"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/httpclient/models"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow/login"
@@ -39,8 +38,7 @@ import (
 
 func TestCompleteLogin(t *testing.T) {
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-
-	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
+	conf.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
 		map[string]interface{}{"enabled": true})
 	publicTS, _ := testhelpers.NewKratosServer(t, reg)
 
@@ -49,11 +47,11 @@ func TestCompleteLogin(t *testing.T) {
 	redirTS := newReturnTs(t, reg)
 
 	// Overwrite these two:
-	viper.Set(configuration.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
-	viper.Set(configuration.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
+	conf.MustSet(config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
+	conf.MustSet(config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
 
-	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
-	viper.Set(configuration.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
+	conf.MustSet(config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	ensureFieldsExist := func(t *testing.T, body []byte) {
 		checkFormContent(t, body, "identifier",
@@ -62,7 +60,7 @@ func TestCompleteLogin(t *testing.T) {
 	}
 
 	createIdentity := func(identifier, password string) {
-		p, _ := reg.Hasher().Generate([]byte(password))
+		p, _ := reg.Hasher().Generate(context.Background(), []byte(password))
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), &identity.Identity{
 			ID:     x.NewUUID(),
 			Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),
@@ -125,9 +123,10 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("case=should return an error because the request is expired", func(t *testing.T) {
-		viper.Set(configuration.ViperKeySelfServiceLoginRequestLifespan, "50ms")
-		defer viper.Set(configuration.ViperKeySelfServiceLoginRequestLifespan, "10m")
-
+		conf.MustSet(config.ViperKeySelfServiceLoginRequestLifespan, "50ms")
+		t.Cleanup(func() {
+			conf.MustSet(config.ViperKeySelfServiceLoginRequestLifespan, "10m")
+		})
 		values := url.Values{
 			"csrf_token": {x.FakeCSRFToken},
 			"identifier": {"identifier"},
@@ -446,7 +445,7 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("case=should return an error because not passing validation and reset previous errors and values", func(t *testing.T) {
-		viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
+		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/login.schema.json")
 
 		var check = func(t *testing.T, actual string) {
 			assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)
@@ -521,5 +520,25 @@ func TestCompleteLogin(t *testing.T) {
 		require.Contains(t, res.Request.URL.Path, "return-ts", "%s", res.Request.URL.String())
 		assert.Equal(t, identifier, gjson.Get(body2, "identity.traits.subject").String(), "%s", body2)
 		assert.NotEqual(t, gjson.Get(body1, "id").String(), gjson.Get(body2, "id").String(), "%s\n\n%s\n", body1, body2)
+	})
+
+	t.Run("should login same identity regardless of identifier capitalization", func(t *testing.T) {
+		identifier, pwd := x.NewUUID().String(), "password"
+		createIdentity(identifier, pwd)
+
+		browserClient := testhelpers.NewClientWithCookies(t)
+		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false)
+		c := testhelpers.GetLoginFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+
+		values := url.Values{"identifier": {strings.ToUpper(identifier)}, "password": {pwd}, "csrf_token": {x.FakeCSRFToken}}.Encode()
+
+		_, res := testhelpers.LoginMakeRequest(t, false, c, browserClient, values)
+		assert.EqualValues(t, http.StatusOK, res.StatusCode)
+
+		f = testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, true)
+		c = testhelpers.GetLoginFlowMethodConfig(t, f.Payload, identity.CredentialsTypePassword.String())
+		body2, res := testhelpers.LoginMakeRequest(t, false, c, browserClient, values)
+
+		assert.Equal(t, identifier, gjson.Get(body2, "identity.traits.subject").String(), "%s", body2)
 	})
 }

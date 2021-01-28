@@ -12,7 +12,7 @@ import (
 
 	"github.com/ory/kratos/courier"
 	templates "github.com/ory/kratos/courier/template"
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/verification"
@@ -25,6 +25,7 @@ type (
 		identity.PoolProvider
 		identity.ManagementProvider
 		x.LoggingProvider
+		config.Provider
 
 		VerificationTokenPersistenceProvider
 		RecoveryTokenPersistenceProvider
@@ -36,14 +37,13 @@ type (
 
 	Sender struct {
 		r senderDependencies
-		c configuration.Provider
 	}
 )
 
 var ErrUnknownAddress = errors.New("verification requested for unknown address")
 
-func NewSender(r senderDependencies, c configuration.Provider) *Sender {
-	return &Sender{r: r, c: c}
+func NewSender(r senderDependencies) *Sender {
+	return &Sender{r: r}
 }
 
 // SendRecoveryLink sends a recovery link to the specified address. If the address does not exist in the store, an email is
@@ -57,7 +57,7 @@ func (s *Sender) SendRecoveryLink(ctx context.Context, f *recovery.Flow, via ide
 
 	address, err := s.r.IdentityPool().FindRecoveryAddressByValue(ctx, identity.RecoveryAddressTypeEmail, to)
 	if err != nil {
-		if err := s.send(ctx, string(via), templates.NewRecoveryInvalid(s.c, &templates.RecoveryInvalidModel{To: to})); err != nil {
+		if err := s.send(ctx, string(via), templates.NewRecoveryInvalid(s.r.Config(ctx), &templates.RecoveryInvalidModel{To: to})); err != nil {
 			return err
 		}
 		return errors.Cause(ErrUnknownAddress)
@@ -91,7 +91,7 @@ func (s *Sender) SendVerificationLink(ctx context.Context, f *verification.Flow,
 				WithField("via", via).
 				WithSensitiveField("email_address", address).
 				Info("Sending out invalid verification email because address is unknown.")
-			if err := s.send(ctx, string(via), templates.NewVerificationInvalid(s.c, &templates.VerificationInvalidModel{To: to})); err != nil {
+			if err := s.send(ctx, string(via), templates.NewVerificationInvalid(s.r.Config(ctx), &templates.VerificationInvalidModel{To: to})); err != nil {
 				return err
 			}
 			return errors.Cause(ErrUnknownAddress)
@@ -118,9 +118,9 @@ func (s *Sender) SendRecoveryTokenTo(ctx context.Context, address *identity.Reco
 		WithSensitiveField("email_address", address.Value).
 		WithSensitiveField("recovery_link_token", token.Token).
 		Info("Sending out recovery email with recovery link.")
-	return s.send(ctx, string(address.Via), templates.NewRecoveryValid(s.c,
+	return s.send(ctx, string(address.Via), templates.NewRecoveryValid(s.r.Config(ctx),
 		&templates.RecoveryValidModel{To: address.Value, RecoveryURL: urlx.CopyWithQuery(
-			urlx.AppendPaths(s.c.SelfPublicURL(), RouteRecovery),
+			urlx.AppendPaths(s.r.Config(ctx).SelfPublicURL(), RouteRecovery),
 			url.Values{"token": {token.Token}}).String()}))
 }
 
@@ -133,9 +133,9 @@ func (s *Sender) SendVerificationTokenTo(ctx context.Context, address *identity.
 		WithSensitiveField("verification_link_token", token.Token).
 		Info("Sending out verification email with verification link.")
 
-	return s.send(ctx, string(address.Via), templates.NewVerificationValid(s.c,
+	return s.send(ctx, string(address.Via), templates.NewVerificationValid(s.r.Config(ctx),
 		&templates.VerificationValidModel{To: address.Value, VerificationURL: urlx.CopyWithQuery(
-			urlx.AppendPaths(s.c.SelfPublicURL(), RouteVerification),
+			urlx.AppendPaths(s.r.Config(ctx).SelfPublicURL(), RouteVerification),
 			url.Values{"token": {token.Token}}).String()}))
 }
 

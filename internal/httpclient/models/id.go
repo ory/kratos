@@ -6,15 +6,22 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/strfmt"
 )
 
-// ID ID
+// ID ID ID ID ID ID ID ID ID ID ID
 //
 // swagger:model ID
 type ID int64
 
 // Validate validates this ID
 func (m ID) Validate(formats strfmt.Registry) error {
+	return nil
+}
+
+// ContextValidate validates this ID based on context it is used
+func (m ID) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }

@@ -20,12 +20,6 @@ To improve this file please make your change against the appropriate "./cmd/*.go
   -h, --help   help for argon2
 ```
 
-### Options inherited from parent commands
-
-```
-  -c, --config string   Path to config file. Supports .json, .yaml, .yml, .toml. Default is "$HOME/.kratos.(yaml|yml|toml|json)"
-```
-
 ### SEE ALSO
 
 - [kratos hashers](kratos-hashers) - This command contains helpers around

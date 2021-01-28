@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/x/urlx"
 )
 
@@ -27,7 +27,7 @@ func TestSchemas_GetByID(t *testing.T) {
 			ID: "foobar",
 		},
 		Schema{
-			ID: configuration.DefaultIdentityTraitsSchemaID,
+			ID: config.DefaultIdentityTraitsSchemaID,
 		},
 	}
 
@@ -57,7 +57,7 @@ func TestSchemas_GetByID(t *testing.T) {
 	t.Run("case=get default schema", func(t *testing.T) {
 		s1, err := ss.GetByID("")
 		require.NoError(t, err)
-		s2, err := ss.GetByID(configuration.DefaultIdentityTraitsSchemaID)
+		s2, err := ss.GetByID(config.DefaultIdentityTraitsSchemaID)
 		require.NoError(t, err)
 		assert.Equal(t, &ss[3], s1)
 		assert.Equal(t, &ss[3], s2)

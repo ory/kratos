@@ -10,7 +10,7 @@ import (
 	"github.com/ory/herodot"
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
@@ -25,6 +25,7 @@ var (
 
 type (
 	errorHandlerDependencies interface {
+		config.Provider
 		errorx.ManagementProvider
 		x.WriterProvider
 		x.LoggingProvider
@@ -37,7 +38,6 @@ type (
 
 	ErrorHandler struct {
 		d errorHandlerDependencies
-		c configuration.Provider
 	}
 
 	FlowExpiredError struct {
@@ -66,11 +66,8 @@ func NewFlowExpiredError(at time.Time) *FlowExpiredError {
 	}
 }
 
-func NewErrorHandler(d errorHandlerDependencies, c configuration.Provider) *ErrorHandler {
-	return &ErrorHandler{
-		d: d,
-		c: c,
-	}
+func NewErrorHandler(d errorHandlerDependencies) *ErrorHandler {
+	return &ErrorHandler{d: d}
 }
 
 func (s *ErrorHandler) reauthenticate(
@@ -84,12 +81,10 @@ func (s *ErrorHandler) reauthenticate(
 		return
 	}
 
-	returnTo := urlx.CopyWithQuery(urlx.AppendPaths(s.c.SelfPublicURL(), r.URL.Path), r.URL.Query())
-	http.Redirect(w, r, urlx.AppendPaths(urlx.CopyWithQuery(s.c.SelfPublicURL(),
-		url.Values{
-			"refresh":   {"true"},
-			"return_to": {returnTo.String()},
-		}), login.RouteInitBrowserFlow).String(), http.StatusFound)
+	returnTo := urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(), r.URL.Path), r.URL.Query())
+	http.Redirect(w, r, urlx.AppendPaths(urlx.CopyWithQuery(s.d.Config(r.Context()).SelfPublicURL(),
+		url.Values{"refresh": {"true"}, "return_to": {returnTo.String()}}),
+		login.RouteInitBrowserFlow).String(), http.StatusFound)
 }
 
 func (s *ErrorHandler) WriteFlowError(
@@ -127,10 +122,10 @@ func (s *ErrorHandler) WriteFlowError(
 		}
 
 		if f.Type == flow.TypeAPI {
-			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.c.SelfPublicURL(),
+			http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(),
 				RouteGetFlow), url.Values{"id": {a.ID.String()}}).String(), http.StatusFound)
 		} else {
-			http.Redirect(w, r, a.AppendTo(s.c.SelfServiceFlowSettingsUI()).String(), http.StatusFound)
+			http.Redirect(w, r, a.AppendTo(s.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusFound)
 		}
 		return
 	}
@@ -157,7 +152,7 @@ func (s *ErrorHandler) WriteFlowError(
 	}
 
 	if f.Type == flow.TypeBrowser {
-		http.Redirect(w, r, f.AppendTo(s.c.SelfServiceFlowSettingsUI()).String(), http.StatusFound)
+		http.Redirect(w, r, f.AppendTo(s.d.Config(r.Context()).SelfServiceFlowSettingsUI()).String(), http.StatusFound)
 		return
 	}
 

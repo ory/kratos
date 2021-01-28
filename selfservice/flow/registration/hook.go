@@ -9,7 +9,7 @@ import (
 
 	"github.com/ory/x/sqlcon"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
@@ -60,6 +60,7 @@ func (f PostHookPrePersistExecutorFunc) ExecutePostRegistrationPrePersistHook(w 
 
 type (
 	executorDependencies interface {
+		config.Provider
 		identity.ManagementProvider
 		identity.ValidationProvider
 		session.PersistenceProvider
@@ -69,18 +70,14 @@ type (
 	}
 	HookExecutor struct {
 		d executorDependencies
-		c configuration.Provider
 	}
 	HookExecutorProvider interface {
 		RegistrationExecutor() *HookExecutor
 	}
 )
 
-func NewHookExecutor(d executorDependencies, c configuration.Provider) *HookExecutor {
-	return &HookExecutor{
-		d: d,
-		c: c,
-	}
+func NewHookExecutor(d executorDependencies) *HookExecutor {
+	return &HookExecutor{d: d}
 }
 
 func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, a *Flow, i *identity.Identity) error {
@@ -115,7 +112,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 	}
 
 	// We need to make sure that the identity has a valid schema before passing it down to the identity pool.
-	if err := e.d.IdentityValidator().Validate(i); err != nil {
+	if err := e.d.IdentityValidator().Validate(r.Context(), i); err != nil {
 		return err
 		// We're now creating the identity because any of the hooks could trigger a "redirect" or a "session" which
 		// would imply that the identity has to exist already.
@@ -130,7 +127,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		WithField("identity_id", i.ID).
 		Info("A new identity has registered using self-service registration.")
 
-	s := session.NewActiveSession(i, e.c, time.Now().UTC())
+	s := session.NewActiveSession(i, e.d.Config(r.Context()), time.Now().UTC())
 	e.d.Logger().
 		WithRequest(r).
 		WithField("identity_id", i.ID).
@@ -173,7 +170,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 	}
 
 	return x.SecureContentNegotiationRedirection(w, r, s.Declassify(), a.RequestURL,
-		e.d.Writer(), e.c, x.SecureRedirectOverrideDefaultReturnTo(e.c.SelfServiceFlowRegistrationReturnTo(ct.String())))
+		e.d.Writer(), e.d.Config(r.Context()), x.SecureRedirectOverrideDefaultReturnTo(e.d.Config(r.Context()).SelfServiceFlowRegistrationReturnTo(ct.String())))
 }
 
 func (e *HookExecutor) PreRegistrationHook(w http.ResponseWriter, r *http.Request, a *Flow) error {

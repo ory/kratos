@@ -33,8 +33,7 @@ import {
   MOBILE_URL,
   parseHtml,
   pollInterval,
-  privilegedLifespan,
-  website
+  privilegedLifespan
 } from '../helpers'
 
 const mergeFields = (form, fields) => {
@@ -325,20 +324,29 @@ Cypress.Commands.add('getIdentityByEmail', ({ email }) =>
     })
 )
 
+Cypress.Commands.add(
+  'performEmailVerification',
+  ({ expect: { email } = {} } = {}) =>
+    cy.getMail().then((message) => {
+      expect(message.subject.trim()).to.equal(
+        'Please verify your email address'
+      )
+      expect(message.fromAddress.trim()).to.equal('no-reply@ory.kratos.sh')
+      expect(message.toAddresses).to.have.length(1)
+      expect(message.toAddresses[0].trim()).to.equal(email)
+
+      const link = parseHtml(message.body).querySelector('a')
+      expect(link).to.not.be.null
+      expect(link.href).to.contain(APP_URL)
+
+      cy.visit(link.href)
+      cy.location('pathname').should('not.contain', 'verify')
+    })
+)
+
 Cypress.Commands.add('verifyEmail', ({ expect: { email } = {} } = {}) =>
-  cy.getMail().then((message) => {
-    expect(message.subject.trim()).to.equal('Please verify your email address')
-    expect(message.fromAddress.trim()).to.equal('no-reply@ory.kratos.sh')
-    expect(message.toAddresses).to.have.length(1)
-    expect(message.toAddresses[0].trim()).to.equal(email)
-
-    const link = parseHtml(message.body).querySelector('a')
-    expect(link).to.not.be.null
-    expect(link.href).to.contain(APP_URL)
-
-    cy.visit(link.href)
-    cy.location('pathname').should('not.contain', 'verify')
-    cy.session().should(assertVerifiableAddress({ isVerified: true, email }))
+  cy.performEmailVerification({ expect: { email } }).then(() => {
+    cy.session().should(assertVerifiableAddress({ email, isVerified: true }))
   })
 )
 

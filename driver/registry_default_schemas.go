@@ -1,13 +1,14 @@
 package driver
 
 import (
+	"context"
 	"net/url"
 
 	"github.com/ory/kratos/schema"
 )
 
-func (m *RegistryDefault) IdentityTraitsSchemas() schema.Schemas {
-	ms := m.c.IdentityTraitsSchemas()
+func (m *RegistryDefault) IdentityTraitsSchemas(ctx context.Context) schema.Schemas {
+	ms := m.Config(ctx).IdentityTraitsSchemas()
 	var ss schema.Schemas
 
 	for _, s := range ms {

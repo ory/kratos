@@ -9,7 +9,7 @@ import (
 
 	"github.com/ory/x/urlx"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
@@ -37,21 +37,21 @@ type (
 		x.CSRFTokenGeneratorProvider
 		x.WriterProvider
 		x.CSRFProvider
+		config.Provider
 	}
 	Handler struct {
 		d handlerDependencies
-		c configuration.Provider
 	}
 )
 
-func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
-	return &Handler{c: c, d: d}
+func NewHandler(d handlerDependencies) *Handler {
+	return &Handler{d: d}
 }
 
 func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	h.d.CSRFHandler().IgnorePath(RouteInitAPIFlow)
 
-	redirect := session.RedirectOnAuthenticated(h.c)
+	redirect := session.RedirectOnAuthenticated(h.d)
 	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsNotAuthenticated(h.initBrowserFlow, redirect))
 	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsNotAuthenticated(h.initAPIFlow,
 		session.RespondWithJSONErrorOnAuthenticated(h.d.Writer(), ErrAlreadyLoggedIn)))
@@ -91,7 +91,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 //       500: genericError
 //       400: genericError
 func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	req, err := NewFlow(h.c.SelfServiceFlowRecoveryRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies(), flow.TypeAPI)
+	req, err := NewFlow(h.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies(), flow.TypeAPI)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
@@ -123,7 +123,7 @@ func (h *Handler) initAPIFlow(w http.ResponseWriter, r *http.Request, _ httprout
 //       302: emptyResponse
 //       500: genericError
 func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	req, err := NewFlow(h.c.SelfServiceFlowRecoveryRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies(), flow.TypeBrowser)
+	req, err := NewFlow(h.d.Config(r.Context()).SelfServiceFlowRecoveryRequestLifespan(), h.d.GenerateCSRFToken(r), r, h.d.RecoveryStrategies(), flow.TypeBrowser)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
@@ -134,7 +134,7 @@ func (h *Handler) initBrowserFlow(w http.ResponseWriter, r *http.Request, _ http
 		return
 	}
 
-	http.Redirect(w, r, req.AppendTo(h.c.SelfServiceFlowRecoveryUI()).String(), http.StatusFound)
+	http.Redirect(w, r, req.AppendTo(h.d.Config(r.Context()).SelfServiceFlowRecoveryUI()).String(), http.StatusFound)
 }
 
 // nolint:deadcode,unused
@@ -180,12 +180,12 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 		if req.Type == flow.TypeBrowser {
 			h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 				WithReason("The recovery flow has expired. Redirect the user to the recovery flow init endpoint to initialize a new recovery flow.").
-				WithDetail("redirect_to", urlx.AppendPaths(h.c.SelfPublicURL(), RouteInitBrowserFlow).String())))
+				WithDetail("redirect_to", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitBrowserFlow).String())))
 			return
 		}
 		h.d.Writer().WriteError(w, r, errors.WithStack(x.ErrGone.
 			WithReason("The recovery flow has expired. Call the recovery flow init API endpoint to initialize a new recovery flow.").
-			WithDetail("api", urlx.AppendPaths(h.c.SelfPublicURL(), RouteInitAPIFlow).String())))
+			WithDetail("api", urlx.AppendPaths(h.d.Config(r.Context()).SelfPublicURL(), RouteInitAPIFlow).String())))
 		return
 	}
 

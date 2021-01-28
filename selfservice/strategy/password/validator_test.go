@@ -2,27 +2,27 @@ package password_test
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"testing"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/stretchr/testify/require"
+
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/strategy/password"
-	"github.com/ory/viper"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestDefaultPasswordValidationStrategy(t *testing.T) {
 	// Tests are based on:
 	// - https://www.troyhunt.com/passwords-evolved-authentication-guidance-for-the-modern-era/
 	// - https://www.microsoft.com/en-us/research/wp-content/uploads/2016/06/Microsoft_Password_Guidance-1.pdf
-	conf := internal.NewConfigurationWithDefaults()
+	conf, reg := internal.NewFastRegistryWithMocks(t)
 
-	s := password.NewDefaultPasswordValidatorStrategy(conf)
+	s := password.NewDefaultPasswordValidatorStrategy(reg)
 	for k, tc := range []struct {
 		id   string
 		pw   string
@@ -57,7 +57,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 		{id: "asdflasdflasdf", pw: "asdflasdflpiuhefnciluaksdzuföfhg", pass: true},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			err := s.Validate(tc.id, tc.pw)
+			err := s.Validate(context.Background(), tc.id, tc.pw)
 			if tc.pass {
 				require.NoError(t, err, "err: %+v, id: %s, pw: %s", err, tc.id, tc.pw)
 			} else {
@@ -70,36 +70,36 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 	s.Client = &fakeClient.Client
 
 	t.Run("case=should send request to pwnedpasswords.com", func(t *testing.T) {
-		viper.Set(configuration.ViperKeyIgnoreNetworkErrors, false)
-		require.Error(t, s.Validate("mohutdesub", "damrumukuh"))
+		conf.MustSet(config.ViperKeyIgnoreNetworkErrors, false)
+		require.Error(t, s.Validate(context.Background(), "mohutdesub", "damrumukuh"))
 		require.Contains(t, fakeClient.RequestedURLs(), "https://api.pwnedpasswords.com/range/BCBA9")
 	})
 
 	t.Run("case=should fail if request fails and ignoreNetworkErrors is not set", func(t *testing.T) {
-		viper.Set(configuration.ViperKeyIgnoreNetworkErrors, false)
+		conf.MustSet(config.ViperKeyIgnoreNetworkErrors, false)
 		fakeClient.RespondWithError("Network request failed")
-		require.Error(t, s.Validate("", "sumdarmetp"))
+		require.Error(t, s.Validate(context.Background(), "", "sumdarmetp"))
 	})
 
 	t.Run("case=should not fail if request fails and ignoreNetworkErrors is set", func(t *testing.T) {
-		viper.Set(configuration.ViperKeyIgnoreNetworkErrors, true)
+		conf.MustSet(config.ViperKeyIgnoreNetworkErrors, true)
 		fakeClient.RespondWithError("Network request failed")
-		require.NoError(t, s.Validate("", "pepegtawni"))
+		require.NoError(t, s.Validate(context.Background(), "", "pepegtawni"))
 	})
 
 	t.Run("case=should fail if response has non 200 code and ignoreNetworkErrors is not set", func(t *testing.T) {
-		viper.Set(configuration.ViperKeyIgnoreNetworkErrors, false)
+		conf.MustSet(config.ViperKeyIgnoreNetworkErrors, false)
 		fakeClient.RespondWith(http.StatusForbidden, "")
-		require.Error(t, s.Validate("", "jolhakowef"))
+		require.Error(t, s.Validate(context.Background(), "", "jolhakowef"))
 	})
 
 	t.Run("case=should not fail if response has non 200 code code and ignoreNetworkErrors is set", func(t *testing.T) {
-		viper.Set(configuration.ViperKeyIgnoreNetworkErrors, true)
+		conf.MustSet(config.ViperKeyIgnoreNetworkErrors, true)
 		fakeClient.RespondWith(http.StatusInternalServerError, "")
-		require.NoError(t, s.Validate("", "jenuzuhjoj"))
+		require.NoError(t, s.Validate(context.Background(), "", "jenuzuhjoj"))
 	})
 
-	viper.Set(configuration.ViperKeyPasswordMaxBreaches, 5)
+	conf.MustSet(config.ViperKeyPasswordMaxBreaches, 5)
 	for _, tc := range []struct {
 		cs   string
 		pw   string
@@ -149,7 +149,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 			format = "case=should fail if response %s"
 		}
 		t.Run(fmt.Sprintf(format, tc.cs), func(t *testing.T) {
-			err := s.Validate("", tc.pw)
+			err := s.Validate(context.Background(), "", tc.pw)
 			if tc.pass {
 				require.NoError(t, err)
 			} else {

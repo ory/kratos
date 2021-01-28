@@ -1,29 +1,31 @@
 package schema
 
 import (
+	"context"
 	"io/ioutil"
 	"net/url"
 	"strings"
 	"sync"
 
+	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/herodot"
-
 	"github.com/ory/jsonschema/v3"
-
-	"github.com/ory/kratos/driver/configuration"
-
-	"github.com/pkg/errors"
-
+	_ "github.com/ory/jsonschema/v3/fileloader"
+	_ "github.com/ory/jsonschema/v3/httploader"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/x/urlx"
 )
 
 type Schemas []Schema
+type IdentityTraitsProvider interface {
+	IdentityTraitsSchemas(ctx context.Context) Schemas
+}
 
 func (s Schemas) GetByID(id string) (*Schema, error) {
 	if id == "" {
-		id = configuration.DefaultIdentityTraitsSchemaID
+		id = config.DefaultIdentityTraitsSchemaID
 	}
 
 	for _, ss := range s {

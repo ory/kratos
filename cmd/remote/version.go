@@ -1,12 +1,10 @@
 package remote
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
 
+	"github.com/ory/kratos-client-go/client/version"
 	"github.com/ory/kratos/cmd/cliclient"
-	"github.com/ory/kratos/internal/httpclient/client/version"
 	"github.com/ory/x/cmdx"
 )
 
@@ -18,7 +16,7 @@ func (v *versionValue) Header() []string {
 	return []string{"VERSION"}
 }
 
-func (v *versionValue) Fields() []string {
+func (v *versionValue) Columns() []string {
 	return []string{v.Version}
 }
 
@@ -33,7 +31,7 @@ var versionCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := cliclient.NewClient(cmd)
 
-		resp, err := c.Version.GetVersion(&version.GetVersionParams{Context: context.Background()})
+		resp, err := c.Version.GetVersion(&version.GetVersionParams{Context: cmd.Context()})
 		cmdx.Must(err, "Could not get version: %s", err)
 
 		cmdx.PrintRow(cmd, (*versionValue)(resp.Payload))

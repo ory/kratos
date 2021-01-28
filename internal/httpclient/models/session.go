@@ -6,13 +6,15 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
-// Session session
+// Session Session session
 //
 // swagger:model session
 type Session struct {
@@ -33,7 +35,7 @@ type Session struct {
 	// id
 	// Required: true
 	// Format: uuid4
-	ID UUID `json:"id"`
+	ID *UUID `json:"id"`
 
 	// identity
 	// Required: true
@@ -103,11 +105,21 @@ func (m *Session) validateExpiresAt(formats strfmt.Registry) error {
 
 func (m *Session) validateID(formats strfmt.Registry) error {
 
-	if err := m.ID.Validate(formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("id")
-		}
+	if err := validate.Required("id", "body", m.ID); err != nil {
 		return err
+	}
+
+	if err := validate.Required("id", "body", m.ID); err != nil {
+		return err
+	}
+
+	if m.ID != nil {
+		if err := m.ID.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("id")
+			}
+			return err
+		}
 	}
 
 	return nil
@@ -139,6 +151,52 @@ func (m *Session) validateIssuedAt(formats strfmt.Registry) error {
 
 	if err := validate.FormatOf("issued_at", "body", "date-time", m.IssuedAt.String(), formats); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// ContextValidate validate this session based on the context it is used
+func (m *Session) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateID(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateIdentity(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *Session) contextValidateID(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.ID != nil {
+		if err := m.ID.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("id")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *Session) contextValidateIdentity(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Identity != nil {
+		if err := m.Identity.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("identity")
+			}
+			return err
+		}
 	}
 
 	return nil

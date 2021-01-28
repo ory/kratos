@@ -1,7 +1,10 @@
 package sql
 
 import (
+	"context"
 	"testing"
+
+	"github.com/ory/x/configx"
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
@@ -10,17 +13,17 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/viper"
 	"github.com/ory/x/logrusx"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 )
 
 type logRegistryOnly struct {
 	l *logrusx.Logger
+	c *config.Config
 }
 
-func (l *logRegistryOnly) IdentityTraitsSchemas() schema.Schemas {
+func (l *logRegistryOnly) IdentityTraitsSchemas(ctx context.Context) schema.Schemas {
 	panic("implement me")
 }
 
@@ -35,6 +38,10 @@ func (l *logRegistryOnly) Logger() *logrusx.Logger {
 	return l.l
 }
 
+func (l *logRegistryOnly) Config(_ context.Context) *config.Config {
+	return l.c
+}
+
 func (l *logRegistryOnly) Audit() *logrusx.Logger {
 	panic("implement me")
 }
@@ -42,23 +49,24 @@ func (l *logRegistryOnly) Audit() *logrusx.Logger {
 var _ persisterDependencies = &logRegistryOnly{}
 
 func TestPersisterHMAC(t *testing.T) {
-	viper.Set(configuration.ViperKeySecretsDefault, []string{"foobarbaz"})
+	conf := config.MustNew(logrusx.New("", ""), configx.SkipValidation())
+	conf.MustSet(config.ViperKeySecretsDefault, []string{"foobarbaz"})
 	c, err := pop.NewConnection(&pop.ConnectionDetails{URL: "sqlite://foo?mode=memory"})
 	require.NoError(t, err)
-	p, err := NewPersister(&logRegistryOnly{}, configuration.NewViperProvider(logrusx.New("", ""), false), c)
+	p, err := NewPersister(&logRegistryOnly{c: conf}, c)
 	require.NoError(t, err)
 
-	assert.True(t, p.hmacConstantCompare("hashme", p.hmacValue("hashme")))
-	assert.False(t, p.hmacConstantCompare("notme", p.hmacValue("hashme")))
-	assert.False(t, p.hmacConstantCompare("hashme", p.hmacValue("notme")))
+	assert.True(t, p.hmacConstantCompare(context.Background(), "hashme", p.hmacValue(context.Background(), "hashme")))
+	assert.False(t, p.hmacConstantCompare(context.Background(), "notme", p.hmacValue(context.Background(), "hashme")))
+	assert.False(t, p.hmacConstantCompare(context.Background(), "hashme", p.hmacValue(context.Background(), "notme")))
 
-	hash := p.hmacValue("hashme")
-	viper.Set(configuration.ViperKeySecretsDefault, []string{"notfoobarbaz"})
-	assert.False(t, p.hmacConstantCompare("hashme", hash))
-	assert.True(t, p.hmacConstantCompare("hashme", p.hmacValue("hashme")))
+	hash := p.hmacValue(context.Background(), "hashme")
+	conf.MustSet(config.ViperKeySecretsDefault, []string{"notfoobarbaz"})
+	assert.False(t, p.hmacConstantCompare(context.Background(), "hashme", hash))
+	assert.True(t, p.hmacConstantCompare(context.Background(), "hashme", p.hmacValue(context.Background(), "hashme")))
 
-	viper.Set(configuration.ViperKeySecretsDefault, []string{"notfoobarbaz", "foobarbaz"})
-	assert.True(t, p.hmacConstantCompare("hashme", hash))
-	assert.True(t, p.hmacConstantCompare("hashme", p.hmacValue("hashme")))
-	assert.NotEqual(t, hash, p.hmacValue("hashme"))
+	conf.MustSet(config.ViperKeySecretsDefault, []string{"notfoobarbaz", "foobarbaz"})
+	assert.True(t, p.hmacConstantCompare(context.Background(), "hashme", hash))
+	assert.True(t, p.hmacConstantCompare(context.Background(), "hashme", p.hmacValue(context.Background(), "hashme")))
+	assert.NotEqual(t, hash, p.hmacValue(context.Background(), "hashme"))
 }

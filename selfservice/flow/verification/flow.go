@@ -1,9 +1,12 @@
 package verification
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/ory/kratos/corp"
 
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
@@ -85,8 +88,8 @@ type Flow struct {
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 }
 
-func (f Flow) TableName() string {
-	return "selfservice_verification_flows"
+func (f Flow) TableName(ctx context.Context) string {
+	return corp.ContextualizeTableName(ctx, "selfservice_verification_flows")
 }
 
 func NewFlow(exp time.Duration, csrf string, r *http.Request, strategies Strategies, ft flow.Type) (*Flow, error) {

@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/ory/kratos/internal/httpclient/models"
+	"github.com/ory/kratos-client-go/models"
 )
 
 // CompleteSelfServiceRecoveryFlowWithLinkMethodReader is a Reader for the CompleteSelfServiceRecoveryFlowWithLinkMethod structure.
@@ -41,7 +41,6 @@ func (o *CompleteSelfServiceRecoveryFlowWithLinkMethodReader) ReadResponse(respo
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -52,9 +51,9 @@ func NewCompleteSelfServiceRecoveryFlowWithLinkMethodFound() *CompleteSelfServic
 	return &CompleteSelfServiceRecoveryFlowWithLinkMethodFound{}
 }
 
-/*CompleteSelfServiceRecoveryFlowWithLinkMethodFound handles this case with default header values.
+/* CompleteSelfServiceRecoveryFlowWithLinkMethodFound describes a response with status code 302, with default header values.
 
-Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
+ Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
 typically 201.
 */
 type CompleteSelfServiceRecoveryFlowWithLinkMethodFound struct {
@@ -74,7 +73,7 @@ func NewCompleteSelfServiceRecoveryFlowWithLinkMethodBadRequest() *CompleteSelfS
 	return &CompleteSelfServiceRecoveryFlowWithLinkMethodBadRequest{}
 }
 
-/*CompleteSelfServiceRecoveryFlowWithLinkMethodBadRequest handles this case with default header values.
+/* CompleteSelfServiceRecoveryFlowWithLinkMethodBadRequest describes a response with status code 400, with default header values.
 
 recoveryFlow
 */
@@ -85,7 +84,6 @@ type CompleteSelfServiceRecoveryFlowWithLinkMethodBadRequest struct {
 func (o *CompleteSelfServiceRecoveryFlowWithLinkMethodBadRequest) Error() string {
 	return fmt.Sprintf("[POST /self-service/recovery/methods/link][%d] completeSelfServiceRecoveryFlowWithLinkMethodBadRequest  %+v", 400, o.Payload)
 }
-
 func (o *CompleteSelfServiceRecoveryFlowWithLinkMethodBadRequest) GetPayload() *models.RecoveryFlow {
 	return o.Payload
 }
@@ -107,7 +105,7 @@ func NewCompleteSelfServiceRecoveryFlowWithLinkMethodInternalServerError() *Comp
 	return &CompleteSelfServiceRecoveryFlowWithLinkMethodInternalServerError{}
 }
 
-/*CompleteSelfServiceRecoveryFlowWithLinkMethodInternalServerError handles this case with default header values.
+/* CompleteSelfServiceRecoveryFlowWithLinkMethodInternalServerError describes a response with status code 500, with default header values.
 
 genericError
 */
@@ -118,7 +116,6 @@ type CompleteSelfServiceRecoveryFlowWithLinkMethodInternalServerError struct {
 func (o *CompleteSelfServiceRecoveryFlowWithLinkMethodInternalServerError) Error() string {
 	return fmt.Sprintf("[POST /self-service/recovery/methods/link][%d] completeSelfServiceRecoveryFlowWithLinkMethodInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *CompleteSelfServiceRecoveryFlowWithLinkMethodInternalServerError) GetPayload() *models.GenericError {
 	return o.Payload
 }

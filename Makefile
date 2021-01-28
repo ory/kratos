@@ -86,9 +86,9 @@ sdk: .bin/swagger .bin/cli
 		swagger validate ./.schema/api.swagger.json
 		swagger flatten --with-flatten=remove-unused -o ./.schema/api.swagger.json ./.schema/api.swagger.json
 		swagger validate ./.schema/api.swagger.json
-		rm -rf internal/httpclient
-		mkdir -p internal/httpclient
-		swagger generate client -f ./.schema/api.swagger.json -t internal/httpclient -A Ory_Kratos
+		rm -rf internal/httpclient/models/* internal/httpclient/clients/*
+		mkdir -p internal/httpclient/
+		swagger generate client -f ./.schema/api.swagger.json -t internal/httpclient/ -A Ory_Kratos
 		make format
 
 .PHONY: quickstart
@@ -113,6 +113,11 @@ format: .bin/goimports
 .PHONY: docker
 docker:
 		docker build -f .docker/Dockerfile-build -t oryd/kratos:latest-sqlite .
+
+# Runs the documentation tests
+.PHONY: test-docs
+test-docs: node_modules
+		npm run text-run
 
 .PHONY: test-e2e
 test-e2e: node_modules test-resetdb

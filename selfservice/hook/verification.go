@@ -3,7 +3,7 @@ package hook
 import (
 	"net/http"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
@@ -18,15 +18,15 @@ type (
 	verifierDependencies interface {
 		link.SenderProvider
 		link.VerificationTokenPersistenceProvider
+		config.Provider
 	}
 	Verifier struct {
 		r verifierDependencies
-		c configuration.Provider
 	}
 )
 
-func NewVerifier(r verifierDependencies, c configuration.Provider) *Verifier {
-	return &Verifier{r: r, c: c}
+func NewVerifier(r verifierDependencies) *Verifier {
+	return &Verifier{r: r}
 }
 
 func (e *Verifier) ExecutePostRegistrationPostPersistHook(_ http.ResponseWriter, r *http.Request, _ *registration.Flow, s *session.Session) error {
@@ -47,7 +47,7 @@ func (e *Verifier) do(r *http.Request, i *identity.Identity) error {
 			continue
 		}
 
-		token := link.NewVerificationToken(address, e.c.SelfServiceFlowVerificationRequestLifespan())
+		token := link.NewVerificationToken(address, e.r.Config(r.Context()).SelfServiceFlowVerificationRequestLifespan())
 		if err := e.r.VerificationTokenPersister().CreateVerificationToken(r.Context(), token); err != nil {
 			return err
 		}

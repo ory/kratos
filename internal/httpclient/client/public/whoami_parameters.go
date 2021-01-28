@@ -16,61 +16,76 @@ import (
 	"github.com/go-openapi/strfmt"
 )
 
-// NewWhoamiParams creates a new WhoamiParams object
-// with the default values initialized.
+// NewWhoamiParams creates a new WhoamiParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewWhoamiParams() *WhoamiParams {
-	var ()
 	return &WhoamiParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewWhoamiParamsWithTimeout creates a new WhoamiParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewWhoamiParamsWithTimeout(timeout time.Duration) *WhoamiParams {
-	var ()
 	return &WhoamiParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewWhoamiParamsWithContext creates a new WhoamiParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewWhoamiParamsWithContext(ctx context.Context) *WhoamiParams {
-	var ()
 	return &WhoamiParams{
-
 		Context: ctx,
 	}
 }
 
 // NewWhoamiParamsWithHTTPClient creates a new WhoamiParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewWhoamiParamsWithHTTPClient(client *http.Client) *WhoamiParams {
-	var ()
 	return &WhoamiParams{
 		HTTPClient: client,
 	}
 }
 
-/*WhoamiParams contains all the parameters to send to the API endpoint
-for the whoami operation typically these are written to a http.Request
+/* WhoamiParams contains all the parameters to send to the API endpoint
+   for the whoami operation.
+
+   Typically these are written to a http.Request.
 */
 type WhoamiParams struct {
 
-	/*Authorization
-	  in: authorization
+	/* Authorization.
 
+	   in: authorization
 	*/
 	Authorization *string
-	/*Cookie*/
+
+	// Cookie.
 	Cookie *string
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the whoami params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *WhoamiParams) WithDefaults() *WhoamiParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the whoami params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *WhoamiParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the whoami params
@@ -140,16 +155,17 @@ func (o *WhoamiParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Regist
 
 		// query param Authorization
 		var qrAuthorization string
+
 		if o.Authorization != nil {
 			qrAuthorization = *o.Authorization
 		}
 		qAuthorization := qrAuthorization
 		if qAuthorization != "" {
+
 			if err := r.SetQueryParam("Authorization", qAuthorization); err != nil {
 				return err
 			}
 		}
-
 	}
 
 	if o.Cookie != nil {
@@ -158,7 +174,6 @@ func (o *WhoamiParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Regist
 		if err := r.SetHeaderParam("Cookie", *o.Cookie); err != nil {
 			return err
 		}
-
 	}
 
 	if len(res) > 0 {

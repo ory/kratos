@@ -3,12 +3,12 @@ package template
 import (
 	"path/filepath"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 )
 
 type (
 	VerificationValid struct {
-		c configuration.Provider
+		c *config.Config
 		m *VerificationValidModel
 	}
 	VerificationValidModel struct {
@@ -17,7 +17,7 @@ type (
 	}
 )
 
-func NewVerificationValid(c configuration.Provider, m *VerificationValidModel) *VerificationValid {
+func NewVerificationValid(c *config.Config, m *VerificationValidModel) *VerificationValid {
 	return &VerificationValid{c: c, m: m}
 }
 

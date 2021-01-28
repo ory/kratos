@@ -6,11 +6,13 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 )
 
-// CompleteSelfServiceRecoveryFlowWithLinkMethod complete self service recovery flow with link method
+// CompleteSelfServiceRecoveryFlowWithLinkMethod CompleteSelfServiceRecoveryFlowWithLinkMethod CompleteSelfServiceRecoveryFlowWithLinkMethod CompleteSelfServiceRecoveryFlowWithLinkMethod CompleteSelfServiceRecoveryFlowWithLinkMethod CompleteSelfServiceRecoveryFlowWithLinkMethod CompleteSelfServiceRecoveryFlowWithLinkMethod CompleteSelfServiceRecoveryFlowWithLinkMethod CompleteSelfServiceRecoveryFlowWithLinkMethod CompleteSelfServiceRecoveryFlowWithLinkMethod complete self service recovery flow with link method
 //
 // swagger:model completeSelfServiceRecoveryFlowWithLinkMethod
 type CompleteSelfServiceRecoveryFlowWithLinkMethod struct {
@@ -31,6 +33,11 @@ type CompleteSelfServiceRecoveryFlowWithLinkMethod struct {
 
 // Validate validates this complete self service recovery flow with link method
 func (m *CompleteSelfServiceRecoveryFlowWithLinkMethod) Validate(formats strfmt.Registry) error {
+	return nil
+}
+
+// ContextValidate validates this complete self service recovery flow with link method based on context it is used
+func (m *CompleteSelfServiceRecoveryFlowWithLinkMethod) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 

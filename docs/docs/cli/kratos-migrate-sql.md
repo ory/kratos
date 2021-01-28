@@ -37,15 +37,10 @@ kratos migrate sql <database-url> [flags]
 ### Options
 
 ```
-  -h, --help            help for sql
-  -e, --read-from-env   If set, reads the database connection string from the environment variable DSN or config file key dsn.
-  -y, --yes             If set all confirmation requests are accepted without user interaction.
-```
-
-### Options inherited from parent commands
-
-```
-  -c, --config string   Path to config file. Supports .json, .yaml, .yml, .toml. Default is "$HOME/.kratos.(yaml|yml|toml|json)"
+  -c, --config strings   Path to one or more .json, .yaml, .yml, .toml config files. Values are loaded in the order provided, meaning that the last config file overwrites values from the previous config file.
+  -h, --help             help for sql
+  -e, --read-from-env    If set, reads the database connection string from the environment variable DSN or config file key dsn.
+  -y, --yes              If set all confirmation requests are accepted without user interaction.
 ```
 
 ### SEE ALSO

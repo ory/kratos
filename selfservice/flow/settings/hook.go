@@ -2,13 +2,15 @@ package settings
 
 import (
 	"fmt"
+	"github.com/ory/kratos/schema"
+	"github.com/ory/x/sqlcon"
 	"net/http"
 	"time"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/x"
@@ -19,15 +21,30 @@ type (
 		ExecuteSettingsPrePersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error
 	}
 	PostHookPrePersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error
-
-	PostHookPostPersistExecutor interface {
+	PostHookPostPersistExecutor    interface {
 		ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error
 	}
 	PostHookPostPersistExecutorFunc func(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error
-
-	HooksProvider interface {
+	HooksProvider                   interface {
 		PostSettingsPrePersistHooks(settingsType string) []PostHookPrePersistExecutor
 		PostSettingsPostPersistHooks(settingsType string) []PostHookPostPersistExecutor
+	}
+	executorDependencies interface {
+		identity.ManagementProvider
+		identity.ValidationProvider
+		config.Provider
+
+		HooksProvider
+		FlowPersistenceProvider
+
+		x.LoggingProvider
+		x.WriterProvider
+	}
+	HookExecutor struct {
+		d executorDependencies
+	}
+	HookExecutorProvider interface {
+		SettingsHookExecutor() *HookExecutor
 	}
 )
 
@@ -38,24 +55,6 @@ func (f PostHookPrePersistExecutorFunc) ExecuteSettingsPrePersistHook(w http.Res
 func (f PostHookPostPersistExecutorFunc) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, a *Flow, s *identity.Identity) error {
 	return f(w, r, a, s)
 }
-
-type (
-	executorDependencies interface {
-		identity.ManagementProvider
-		identity.ValidationProvider
-		HooksProvider
-		x.LoggingProvider
-		FlowPersistenceProvider
-		x.WriterProvider
-	}
-	HookExecutor struct {
-		d executorDependencies
-		c configuration.Provider
-	}
-	HookExecutorProvider interface {
-		SettingsHookExecutor() *HookExecutor
-	}
-)
 
 func PostHookPostPersistExecutorNames(e []PostHookPostPersistExecutor) []string {
 	names := make([]string, len(e))
@@ -73,14 +72,8 @@ func PostHookPrePersistExecutorNames(e []PostHookPrePersistExecutor) []string {
 	return names
 }
 
-func NewHookExecutor(
-	d executorDependencies,
-	c configuration.Provider,
-) *HookExecutor {
-	return &HookExecutor{
-		d: d,
-		c: c,
-	}
+func NewHookExecutor(d executorDependencies) *HookExecutor {
+	return &HookExecutor{d: d}
 }
 
 type PostSettingsHookOption func(o *postSettingsHookOptions)
@@ -129,7 +122,7 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 	}
 
 	options := []identity.ManagerOption{identity.ManagerExposeValidationErrorsForInternalTypeAssertion}
-	ttl := e.c.SelfServiceFlowSettingsPrivilegedSessionMaxAge()
+	ttl := e.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()
 	if ctxUpdate.Session.AuthenticatedAt.Add(ttl).After(time.Now()) {
 		options = append(options, identity.ManagerAllowWriteProtectedTraits)
 	}
@@ -138,6 +131,9 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		if errors.Is(err, identity.ErrProtectedFieldModified) {
 			e.d.Logger().WithError(err).Debug("Modifying protected field requires re-authentication.")
 			return errors.WithStack(NewFlowNeedsReAuth())
+		}
+		if errors.Is(err, sqlcon.ErrUniqueViolation) {
+			return schema.NewDuplicateCredentialsError()
 		}
 		return err
 	}
@@ -203,8 +199,8 @@ func (e *HookExecutor) PostSettingsHook(w http.ResponseWriter, r *http.Request, 
 		return nil
 	}
 
-	return x.SecureContentNegotiationRedirection(w, r, ctxUpdate.Session.Declassify(), ctxUpdate.Flow.RequestURL, e.d.Writer(), e.c,
+	return x.SecureContentNegotiationRedirection(w, r, ctxUpdate.Session.Declassify(), ctxUpdate.Flow.RequestURL, e.d.Writer(), e.d.Config(r.Context()),
 		x.SecureRedirectOverrideDefaultReturnTo(
-			e.c.SelfServiceFlowSettingsReturnTo(settingsType,
-				ctxUpdate.Flow.AppendTo(e.c.SelfServiceFlowSettingsUI()))))
+			e.d.Config(r.Context()).SelfServiceFlowSettingsReturnTo(settingsType,
+				ctxUpdate.Flow.AppendTo(e.d.Config(r.Context()).SelfServiceFlowSettingsUI()))))
 }

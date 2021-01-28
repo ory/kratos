@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/ory/kratos/internal/httpclient/models"
+	"github.com/ory/kratos-client-go/models"
 )
 
 // CompleteSelfServiceLoginFlowWithPasswordMethodReader is a Reader for the CompleteSelfServiceLoginFlowWithPasswordMethod structure.
@@ -47,7 +47,6 @@ func (o *CompleteSelfServiceLoginFlowWithPasswordMethodReader) ReadResponse(resp
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -58,7 +57,7 @@ func NewCompleteSelfServiceLoginFlowWithPasswordMethodOK() *CompleteSelfServiceL
 	return &CompleteSelfServiceLoginFlowWithPasswordMethodOK{}
 }
 
-/*CompleteSelfServiceLoginFlowWithPasswordMethodOK handles this case with default header values.
+/* CompleteSelfServiceLoginFlowWithPasswordMethodOK describes a response with status code 200, with default header values.
 
 loginViaApiResponse
 */
@@ -69,7 +68,6 @@ type CompleteSelfServiceLoginFlowWithPasswordMethodOK struct {
 func (o *CompleteSelfServiceLoginFlowWithPasswordMethodOK) Error() string {
 	return fmt.Sprintf("[POST /self-service/login/methods/password][%d] completeSelfServiceLoginFlowWithPasswordMethodOK  %+v", 200, o.Payload)
 }
-
 func (o *CompleteSelfServiceLoginFlowWithPasswordMethodOK) GetPayload() *models.LoginViaAPIResponse {
 	return o.Payload
 }
@@ -91,9 +89,9 @@ func NewCompleteSelfServiceLoginFlowWithPasswordMethodFound() *CompleteSelfServi
 	return &CompleteSelfServiceLoginFlowWithPasswordMethodFound{}
 }
 
-/*CompleteSelfServiceLoginFlowWithPasswordMethodFound handles this case with default header values.
+/* CompleteSelfServiceLoginFlowWithPasswordMethodFound describes a response with status code 302, with default header values.
 
-Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
+ Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
 typically 201.
 */
 type CompleteSelfServiceLoginFlowWithPasswordMethodFound struct {
@@ -113,7 +111,7 @@ func NewCompleteSelfServiceLoginFlowWithPasswordMethodBadRequest() *CompleteSelf
 	return &CompleteSelfServiceLoginFlowWithPasswordMethodBadRequest{}
 }
 
-/*CompleteSelfServiceLoginFlowWithPasswordMethodBadRequest handles this case with default header values.
+/* CompleteSelfServiceLoginFlowWithPasswordMethodBadRequest describes a response with status code 400, with default header values.
 
 loginFlow
 */
@@ -124,7 +122,6 @@ type CompleteSelfServiceLoginFlowWithPasswordMethodBadRequest struct {
 func (o *CompleteSelfServiceLoginFlowWithPasswordMethodBadRequest) Error() string {
 	return fmt.Sprintf("[POST /self-service/login/methods/password][%d] completeSelfServiceLoginFlowWithPasswordMethodBadRequest  %+v", 400, o.Payload)
 }
-
 func (o *CompleteSelfServiceLoginFlowWithPasswordMethodBadRequest) GetPayload() *models.LoginFlow {
 	return o.Payload
 }
@@ -146,7 +143,7 @@ func NewCompleteSelfServiceLoginFlowWithPasswordMethodInternalServerError() *Com
 	return &CompleteSelfServiceLoginFlowWithPasswordMethodInternalServerError{}
 }
 
-/*CompleteSelfServiceLoginFlowWithPasswordMethodInternalServerError handles this case with default header values.
+/* CompleteSelfServiceLoginFlowWithPasswordMethodInternalServerError describes a response with status code 500, with default header values.
 
 genericError
 */
@@ -157,7 +154,6 @@ type CompleteSelfServiceLoginFlowWithPasswordMethodInternalServerError struct {
 func (o *CompleteSelfServiceLoginFlowWithPasswordMethodInternalServerError) Error() string {
 	return fmt.Sprintf("[POST /self-service/login/methods/password][%d] completeSelfServiceLoginFlowWithPasswordMethodInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *CompleteSelfServiceLoginFlowWithPasswordMethodInternalServerError) GetPayload() *models.GenericError {
 	return o.Payload
 }

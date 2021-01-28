@@ -692,6 +692,41 @@ selfservice:
     ## password ##
     #
     password:
+      ## Password Configuration ##
+      #
+      # Define how passwords are validated.
+      #
+      config:
+        ## Ignore Lookup Network Errors ##
+        #
+        # If set to false the password validation fails when the network or the Have I Been Pwnd API is down.
+        #
+        # Default value: true
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_METHODS_PASSWORD_CONFIG_IGNORE_NETWORK_ERRORS=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_IGNORE_NETWORK_ERRORS=<value>
+        #
+        ignore_network_errors: false
+
+        ## Allow Password Breaches ##
+        #
+        # Defines how often a password may have been breached before it is rejected.
+        #
+        # Minimum value: 0
+        #
+        # Maximum value: 100
+        #
+        # Set this value using environment variables on
+        # - Linux/macOS:
+        #    $ export SELFSERVICE_METHODS_PASSWORD_CONFIG_MAX_BREACHES=<value>
+        # - Windows Command Line (CMD):
+        #    > set SELFSERVICE_METHODS_PASSWORD_CONFIG_MAX_BREACHES=<value>
+        #
+        max_breaches: 0
+
       ## Enables Username/Email and Password Method ##
       #
       # Default value: true
@@ -1092,45 +1127,10 @@ log:
   #
   level: trace
 
-## Password Configuration ##
-#
-# Define how passwords are validated.
-#
-password:
-  ## Ignore Lookup Network Errors ##
-  #
-  # If set to false the password validation fails when the network or the Have I Been Pwnd API is down.
-  #
-  # Default value: true
-  #
-  # Set this value using environment variables on
-  # - Linux/macOS:
-  #    $ export PASSWORD_IGNORE_NETWORK_ERRORS=<value>
-  # - Windows Command Line (CMD):
-  #    > set PASSWORD_IGNORE_NETWORK_ERRORS=<value>
-  #
-  ignore_network_errors: false
-
-  ## Allow Password Breaches ##
-  #
-  # Defines how often a password may have been breached before it is rejected.
-  #
-  # Minimum value: 0
-  #
-  # Maximum value: 100
-  #
-  # Set this value using environment variables on
-  # - Linux/macOS:
-  #    $ export PASSWORD_MAX_BREACHES=<value>
-  # - Windows Command Line (CMD):
-  #    > set PASSWORD_MAX_BREACHES=<value>
-  #
-  max_breaches: 0
-
 ## secrets ##
 #
 secrets:
-  ## Singing Keys for Cookies ##
+  ## Signing Keys for Cookies ##
   #
   # The first secret in the array is used for encrypting cookies while all other keys are used to decrypt older cookies that were signed with that old secret.
   #
@@ -1145,7 +1145,7 @@ secrets:
 
   ## Default Encryption Signing Secrets ##
   #
-  # The first secret in the array is used for singing and encrypting things while all other keys are used to verify and decrypt older things that were signed with that old secret.
+  # The first secret in the array is used for signing and encrypting things while all other keys are used to verify and decrypt older things that were signed with that old secret.
   #
   # Set this value using environment variables on
   # - Linux/macOS:
@@ -1318,6 +1318,49 @@ session:
 #    > set VERSION=<value>
 #
 version: v0.5.0-alpha.1
+
+## dev ##
+#
+# Set this value using environment variables on
+# - Linux/macOS:
+#    $ export DEV=<value>
+# - Windows Command Line (CMD):
+#    > set DEV=<value>
+#
+dev: false
+
+## help ##
+#
+# Set this value using environment variables on
+# - Linux/macOS:
+#    $ export HELP=<value>
+# - Windows Command Line (CMD):
+#    > set HELP=<value>
+#
+help: false
+
+## sqa-opt-out ##
+#
+# Default value: false
+#
+# Set this value using environment variables on
+# - Linux/macOS:
+#    $ export SQA-OPT-OUT=<value>
+# - Windows Command Line (CMD):
+#    > set SQA-OPT-OUT=<value>
+#
+sqa-opt-out: false
+
+## config ##
+#
+# Set this value using environment variables on
+# - Linux/macOS:
+#    $ export CONFIG=<value>
+# - Windows Command Line (CMD):
+#    > set CONFIG=<value>
+#
+config:
+  - ''
 
 ## Courier configuration ##
 #

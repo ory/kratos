@@ -1,14 +1,12 @@
 package remote
 
 import (
-	"context"
-
 	"github.com/ory/x/cmdx"
 
 	"github.com/spf13/cobra"
 
+	"github.com/ory/kratos-client-go/client/health"
 	"github.com/ory/kratos/cmd/cliclient"
-	"github.com/ory/kratos/internal/httpclient/client/health"
 )
 
 type statusState struct {
@@ -20,7 +18,7 @@ func (s *statusState) Header() []string {
 	return []string{"ALIVE", "READY"}
 }
 
-func (s *statusState) Fields() []string {
+func (s *statusState) Columns() []string {
 	f := [2]string{
 		"false",
 		"false",
@@ -47,15 +45,13 @@ var statusCmd = &cobra.Command{
 		state := &statusState{}
 		defer cmdx.PrintRow(cmd, state)
 
-		_, err := c.Health.IsInstanceAlive(&health.IsInstanceAliveParams{
-			Context: context.Background(),
-		})
+		_, err := c.Health.IsInstanceAlive(&health.IsInstanceAliveParams{Context: cmd.Context()})
 		if err != nil {
 			return
 		}
 		state.Alive = true
 
-		_, err = c.Health.IsInstanceReady(&health.IsInstanceReadyParams{Context: context.Background()})
+		_, err = c.Health.IsInstanceReady(&health.IsInstanceReadyParams{Context: cmd.Context()})
 		if err != nil {
 			return
 		}

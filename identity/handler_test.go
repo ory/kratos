@@ -17,16 +17,14 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/x"
 )
 
 func TestHandler(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := internal.NewFastRegistryWithMocks(t)
 	router := x.NewRouterAdmin()
 	reg.IdentityHandler().RegisterAdminRoutes(router)
 	ts := httptest.NewServer(router)
@@ -35,13 +33,13 @@ func TestHandler(t *testing.T) {
 	mockServerURL := urlx.ParseOrPanic("http://example.com")
 	defaultSchemaExternalURL := (&schema.Schema{ID: "default"}).SchemaURL(mockServerURL).String()
 
-	viper.Set(configuration.ViperKeyAdminBaseURL, ts.URL)
-	testhelpers.SetDefaultIdentitySchema("file://./stub/identity.schema.json")
-	testhelpers.SetIdentitySchemas(map[string]string{
+	conf.MustSet(config.ViperKeyAdminBaseURL, ts.URL)
+	testhelpers.SetDefaultIdentitySchema(t, conf, "file://./stub/identity.schema.json")
+	testhelpers.SetIdentitySchemas(t, conf, map[string]string{
 		"customer": "file://./stub/handler/customer.schema.json",
 		"employee": "file://./stub/handler/employee.schema.json",
 	})
-	viper.Set(configuration.ViperKeyPublicBaseURL, mockServerURL.String())
+	conf.MustSet(config.ViperKeyPublicBaseURL, mockServerURL.String())
 
 	var get = func(t *testing.T, href string, expectCode int) gjson.Result {
 		res, err := ts.Client().Get(ts.URL + href)
@@ -135,7 +133,7 @@ func TestHandler(t *testing.T) {
 			assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
 			assert.Empty(t, res.Get("credentials").String(), "%s", res.Raw)
 			assert.EqualValues(t, defaultSchemaExternalURL, res.Get("schema_url").String(), "%s", res.Raw)
-			assert.EqualValues(t, configuration.DefaultIdentityTraitsSchemaID, res.Get("schema_id").String(), "%s", res.Raw)
+			assert.EqualValues(t, config.DefaultIdentityTraitsSchemaID, res.Get("schema_id").String(), "%s", res.Raw)
 		})
 
 		t.Run("case=should be able to get the identity", func(t *testing.T) {
@@ -143,7 +141,7 @@ func TestHandler(t *testing.T) {
 			assert.EqualValues(t, i.ID.String(), res.Get("id").String(), "%s", res.Raw)
 			assert.EqualValues(t, "baz", res.Get("traits.bar").String(), "%s", res.Raw)
 			assert.EqualValues(t, defaultSchemaExternalURL, res.Get("schema_url").String(), "%s", res.Raw)
-			assert.EqualValues(t, configuration.DefaultIdentityTraitsSchemaID, res.Get("schema_id").String(), "%s", res.Raw)
+			assert.EqualValues(t, config.DefaultIdentityTraitsSchemaID, res.Get("schema_id").String(), "%s", res.Raw)
 			assert.Empty(t, res.Get("credentials").String(), "%s", res.Raw)
 		})
 

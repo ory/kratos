@@ -23,7 +23,7 @@ import (
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/continuity"
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
@@ -48,12 +48,15 @@ var _ identity.ActiveCredentialsCounter = new(Strategy)
 type dependencies interface {
 	errorx.ManagementProvider
 
+	config.Provider
+
 	x.LoggingProvider
 	x.CookieProvider
 	x.CSRFTokenGeneratorProvider
 
 	identity.ValidationProvider
 	identity.PrivilegedPoolProvider
+	identity.ActiveCredentialsCounterStrategyProvider
 
 	session.ManagementProvider
 	session.HandlerProvider
@@ -77,8 +80,6 @@ type dependencies interface {
 	settings.HookExecutorProvider
 
 	continuity.ManagementProvider
-
-	identity.ActiveCredentialsCounterStrategyProvider
 }
 
 func isForced(req interface{}) bool {
@@ -91,7 +92,6 @@ func isForced(req interface{}) bool {
 // Strategy implements selfservice.LoginStrategy, selfservice.RegistrationStrategy. It supports both login
 // and registration via OpenID Providers.
 type Strategy struct {
-	c         configuration.Provider
 	d         dependencies
 	f         *fetcher.Fetcher
 	validator *schema.Validator
@@ -142,12 +142,8 @@ func (s *Strategy) setRoutes(r *x.RouterPublic) {
 	}
 }
 
-func NewStrategy(
-	d dependencies,
-	c configuration.Provider,
-) *Strategy {
+func NewStrategy(d dependencies) *Strategy {
 	return &Strategy{
-		c:         c,
 		d:         d,
 		f:         fetcher.NewFetcher(),
 		validator: schema.NewValidator(),
@@ -171,7 +167,7 @@ func (s *Strategy) handleAuth(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	provider, err := s.provider(pid)
+	provider, err := s.provider(r.Context(), pid)
 	if err != nil {
 		s.handleError(w, r, rid, pid, nil, err)
 		return
@@ -266,7 +262,7 @@ func (s *Strategy) validateCallback(w http.ResponseWriter, r *http.Request) (ide
 	}
 
 	var container authCodeContainer
-	if _, err := s.d.ContinuityManager().Continue(context.Background(), w, r, sessionName, continuity.WithPayload(&container)); err != nil {
+	if _, err := s.d.ContinuityManager().Continue(r.Context(), w, r, sessionName, continuity.WithPayload(&container)); err != nil {
 		return nil, nil, err
 	}
 
@@ -296,7 +292,7 @@ func (s *Strategy) alreadyAuthenticated(w http.ResponseWriter, r *http.Request, 
 		if _, ok := req.(*settings.Flow); ok {
 			// ignore this if it's a settings flow
 		} else if !isForced(req) {
-			http.Redirect(w, r, s.c.SelfServiceBrowserDefaultReturnTo().String(), http.StatusFound)
+			http.Redirect(w, r, s.d.Config(r.Context()).SelfServiceBrowserDefaultReturnTo().String(), http.StatusFound)
 			return true
 		}
 	}
@@ -324,7 +320,7 @@ func (s *Strategy) handleCallback(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	provider, err := s.provider(pid)
+	provider, err := s.provider(r.Context(), pid)
 	if err != nil {
 		s.handleError(w, r, req.GetID(), pid, nil, err)
 		return
@@ -374,9 +370,9 @@ func uid(provider, subject string) string {
 	return fmt.Sprintf("%s:%s", provider, subject)
 }
 
-func (s *Strategy) authURL(flowID uuid.UUID) string {
+func (s *Strategy) authURL(ctx context.Context, flowID uuid.UUID) string {
 	return urlx.AppendPaths(
-		urlx.Copy(s.c.SelfPublicURL()),
+		urlx.Copy(s.d.Config(ctx).SelfPublicURL()),
 		strings.Replace(
 			RouteAuth, ":flow", flowID.String(), 1,
 		),
@@ -384,36 +380,36 @@ func (s *Strategy) authURL(flowID uuid.UUID) string {
 }
 
 func (s *Strategy) populateMethod(r *http.Request, flowID uuid.UUID) (*FlowMethod, error) {
-	conf, err := s.Config()
+	conf, err := s.Config(r.Context())
 	if err != nil {
 		return nil, err
 	}
 
-	f := form.NewHTMLForm(s.authURL(flowID))
+	f := form.NewHTMLForm(s.authURL(r.Context(), flowID))
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 	// does not need sorting because there is only one field
 
 	return NewFlowMethod(f).AddProviders(conf.Providers), nil
 }
 
-func (s *Strategy) Config() (*ConfigurationCollection, error) {
+func (s *Strategy) Config(ctx context.Context) (*ConfigurationCollection, error) {
 	var c ConfigurationCollection
 
-	config := s.c.SelfServiceStrategy(string(s.ID())).Config
+	conf := s.d.Config(ctx).SelfServiceStrategy(string(s.ID())).Config
 	if err := jsonx.
-		NewStrictDecoder(bytes.NewBuffer(config)).
+		NewStrictDecoder(bytes.NewBuffer(conf)).
 		Decode(&c); err != nil {
-		s.d.Logger().WithError(err).WithField("config", config)
+		s.d.Logger().WithError(err).WithField("config", conf)
 		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode OpenID Connect Provider configuration: %s", err))
 	}
 
 	return &c, nil
 }
 
-func (s *Strategy) provider(id string) (Provider, error) {
-	if c, err := s.Config(); err != nil {
+func (s *Strategy) provider(ctx context.Context, id string) (Provider, error) {
+	if c, err := s.Config(ctx); err != nil {
 		return nil, err
-	} else if provider, err := c.Provider(id, s.c.SelfPublicURL()); err != nil {
+	} else if provider, err := c.Provider(id, s.d.Config(ctx).SelfPublicURL()); err != nil {
 		return nil, err
 	} else {
 		return provider, nil
@@ -456,7 +452,7 @@ func (s *Strategy) handleError(w http.ResponseWriter, r *http.Request, rid uuid.
 			method.Config.ResetMessages()
 
 			method.Config.SetCSRF(s.d.GenerateCSRFToken(r))
-			if errSec := method.Config.SortFields(s.c.DefaultIdentityTraitsSchemaURL().String()); errSec != nil {
+			if errSec := method.Config.SortFields(s.d.Config(r.Context()).DefaultIdentityTraitsSchemaURL().String()); errSec != nil {
 				s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, s.ID(), rr, errors.Wrap(err, errSec.Error()))
 				return
 			}

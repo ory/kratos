@@ -15,64 +15,79 @@ import (
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/ory/kratos/internal/httpclient/models"
+	"github.com/ory/kratos-client-go/models"
 )
 
-// NewCompleteSelfServiceSettingsFlowWithPasswordMethodParams creates a new CompleteSelfServiceSettingsFlowWithPasswordMethodParams object
-// with the default values initialized.
+// NewCompleteSelfServiceSettingsFlowWithPasswordMethodParams creates a new CompleteSelfServiceSettingsFlowWithPasswordMethodParams object,
+// with the default timeout for this client.
+//
+// Default values are not hydrated, since defaults are normally applied by the API server side.
+//
+// To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewCompleteSelfServiceSettingsFlowWithPasswordMethodParams() *CompleteSelfServiceSettingsFlowWithPasswordMethodParams {
-	var ()
 	return &CompleteSelfServiceSettingsFlowWithPasswordMethodParams{
-
 		timeout: cr.DefaultTimeout,
 	}
 }
 
 // NewCompleteSelfServiceSettingsFlowWithPasswordMethodParamsWithTimeout creates a new CompleteSelfServiceSettingsFlowWithPasswordMethodParams object
-// with the default values initialized, and the ability to set a timeout on a request
+// with the ability to set a timeout on a request.
 func NewCompleteSelfServiceSettingsFlowWithPasswordMethodParamsWithTimeout(timeout time.Duration) *CompleteSelfServiceSettingsFlowWithPasswordMethodParams {
-	var ()
 	return &CompleteSelfServiceSettingsFlowWithPasswordMethodParams{
-
 		timeout: timeout,
 	}
 }
 
 // NewCompleteSelfServiceSettingsFlowWithPasswordMethodParamsWithContext creates a new CompleteSelfServiceSettingsFlowWithPasswordMethodParams object
-// with the default values initialized, and the ability to set a context for a request
+// with the ability to set a context for a request.
 func NewCompleteSelfServiceSettingsFlowWithPasswordMethodParamsWithContext(ctx context.Context) *CompleteSelfServiceSettingsFlowWithPasswordMethodParams {
-	var ()
 	return &CompleteSelfServiceSettingsFlowWithPasswordMethodParams{
-
 		Context: ctx,
 	}
 }
 
 // NewCompleteSelfServiceSettingsFlowWithPasswordMethodParamsWithHTTPClient creates a new CompleteSelfServiceSettingsFlowWithPasswordMethodParams object
-// with the default values initialized, and the ability to set a custom HTTPClient for a request
+// with the ability to set a custom HTTPClient for a request.
 func NewCompleteSelfServiceSettingsFlowWithPasswordMethodParamsWithHTTPClient(client *http.Client) *CompleteSelfServiceSettingsFlowWithPasswordMethodParams {
-	var ()
 	return &CompleteSelfServiceSettingsFlowWithPasswordMethodParams{
 		HTTPClient: client,
 	}
 }
 
-/*CompleteSelfServiceSettingsFlowWithPasswordMethodParams contains all the parameters to send to the API endpoint
-for the complete self service settings flow with password method operation typically these are written to a http.Request
+/* CompleteSelfServiceSettingsFlowWithPasswordMethodParams contains all the parameters to send to the API endpoint
+   for the complete self service settings flow with password method operation.
+
+   Typically these are written to a http.Request.
 */
 type CompleteSelfServiceSettingsFlowWithPasswordMethodParams struct {
 
-	/*Body*/
+	// Body.
 	Body *models.CompleteSelfServiceSettingsFlowWithPasswordMethod
-	/*Flow
-	  Flow is flow ID.
 
+	/* Flow.
+
+	   Flow is flow ID.
 	*/
 	Flow *string
 
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
+}
+
+// WithDefaults hydrates default values in the complete self service settings flow with password method params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodParams) WithDefaults() *CompleteSelfServiceSettingsFlowWithPasswordMethodParams {
+	o.SetDefaults()
+	return o
+}
+
+// SetDefaults hydrates default values in the complete self service settings flow with password method params (not the query body).
+//
+// All values with no default are reset to their zero value.
+func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodParams) SetDefaults() {
+	// no default values defined for this parameter
 }
 
 // WithTimeout adds the timeout to the complete self service settings flow with password method params
@@ -137,7 +152,6 @@ func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodParams) WriteToRequest
 		return err
 	}
 	var res []error
-
 	if o.Body != nil {
 		if err := r.SetBodyParam(o.Body); err != nil {
 			return err
@@ -148,16 +162,17 @@ func (o *CompleteSelfServiceSettingsFlowWithPasswordMethodParams) WriteToRequest
 
 		// query param flow
 		var qrFlow string
+
 		if o.Flow != nil {
 			qrFlow = *o.Flow
 		}
 		qFlow := qrFlow
 		if qFlow != "" {
+
 			if err := r.SetQueryParam("flow", qFlow); err != nil {
 				return err
 			}
 		}
-
 	}
 
 	if len(res) > 0 {

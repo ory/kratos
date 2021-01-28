@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/ory/kratos/internal/httpclient/models"
+	"github.com/ory/kratos-client-go/models"
 )
 
 // DeleteIdentityReader is a Reader for the DeleteIdentity structure.
@@ -41,7 +41,6 @@ func (o *DeleteIdentityReader) ReadResponse(response runtime.ClientResponse, con
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -52,9 +51,9 @@ func NewDeleteIdentityNoContent() *DeleteIdentityNoContent {
 	return &DeleteIdentityNoContent{}
 }
 
-/*DeleteIdentityNoContent handles this case with default header values.
+/* DeleteIdentityNoContent describes a response with status code 204, with default header values.
 
-Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
+ Empty responses are sent when, for example, resources are deleted. The HTTP status code for empty responses is
 typically 201.
 */
 type DeleteIdentityNoContent struct {
@@ -74,7 +73,7 @@ func NewDeleteIdentityNotFound() *DeleteIdentityNotFound {
 	return &DeleteIdentityNotFound{}
 }
 
-/*DeleteIdentityNotFound handles this case with default header values.
+/* DeleteIdentityNotFound describes a response with status code 404, with default header values.
 
 genericError
 */
@@ -85,7 +84,6 @@ type DeleteIdentityNotFound struct {
 func (o *DeleteIdentityNotFound) Error() string {
 	return fmt.Sprintf("[DELETE /identities/{id}][%d] deleteIdentityNotFound  %+v", 404, o.Payload)
 }
-
 func (o *DeleteIdentityNotFound) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -107,7 +105,7 @@ func NewDeleteIdentityInternalServerError() *DeleteIdentityInternalServerError {
 	return &DeleteIdentityInternalServerError{}
 }
 
-/*DeleteIdentityInternalServerError handles this case with default header values.
+/* DeleteIdentityInternalServerError describes a response with status code 500, with default header values.
 
 genericError
 */
@@ -118,7 +116,6 @@ type DeleteIdentityInternalServerError struct {
 func (o *DeleteIdentityInternalServerError) Error() string {
 	return fmt.Sprintf("[DELETE /identities/{id}][%d] deleteIdentityInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *DeleteIdentityInternalServerError) GetPayload() *models.GenericError {
 	return o.Payload
 }

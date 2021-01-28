@@ -6,13 +6,15 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
-// CompleteSelfServiceSettingsFlowWithPasswordMethod complete self service settings flow with password method
+// CompleteSelfServiceSettingsFlowWithPasswordMethod CompleteSelfServiceSettingsFlowWithPasswordMethod CompleteSelfServiceSettingsFlowWithPasswordMethod CompleteSelfServiceSettingsFlowWithPasswordMethod CompleteSelfServiceSettingsFlowWithPasswordMethod CompleteSelfServiceSettingsFlowWithPasswordMethod CompleteSelfServiceSettingsFlowWithPasswordMethod CompleteSelfServiceSettingsFlowWithPasswordMethod CompleteSelfServiceSettingsFlowWithPasswordMethod CompleteSelfServiceSettingsFlowWithPasswordMethod complete self service settings flow with password method
 //
 // swagger:model CompleteSelfServiceSettingsFlowWithPasswordMethod
 type CompleteSelfServiceSettingsFlowWithPasswordMethod struct {
@@ -49,6 +51,11 @@ func (m *CompleteSelfServiceSettingsFlowWithPasswordMethod) validatePassword(for
 		return err
 	}
 
+	return nil
+}
+
+// ContextValidate validates this complete self service settings flow with password method based on context it is used
+func (m *CompleteSelfServiceSettingsFlowWithPasswordMethod) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 

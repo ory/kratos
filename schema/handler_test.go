@@ -13,16 +13,15 @@ import (
 
 	_ "github.com/ory/jsonschema/v3/fileloader"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/x"
-	"github.com/ory/viper"
 	"github.com/ory/x/urlx"
 )
 
 func TestHandler(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := internal.NewFastRegistryWithMocks(t)
 	router := x.NewRouterPublic()
 	reg.SchemaHandler().RegisterPublicRoutes(router)
 	ts := httptest.NewServer(router)
@@ -82,23 +81,23 @@ func TestHandler(t *testing.T) {
 		return string(raw)
 	}
 
-	var schemasConfig []configuration.SchemaConfig
+	var schemasConfig []config.Schema
 	for _, s := range schemas {
-		if s.ID != configuration.DefaultIdentityTraitsSchemaID {
-			schemasConfig = append(schemasConfig, configuration.SchemaConfig{
+		if s.ID != config.DefaultIdentityTraitsSchemaID {
+			schemasConfig = append(schemasConfig, config.Schema{
 				ID:  s.ID,
 				URL: s.RawURL,
 			})
 		}
 	}
 
-	viper.Set(configuration.ViperKeyPublicBaseURL, ts.URL)
-	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, getSchemaById(configuration.DefaultIdentityTraitsSchemaID).RawURL)
-	viper.Set(configuration.ViperKeyIdentitySchemas, schemasConfig)
+	conf.MustSet(config.ViperKeyPublicBaseURL, ts.URL)
+	conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, getSchemaById(config.DefaultIdentityTraitsSchemaID).RawURL)
+	conf.MustSet(config.ViperKeyIdentitySchemas, schemasConfig)
 
 	t.Run("case=get default schema", func(t *testing.T) {
-		server := getFromTS(configuration.DefaultIdentityTraitsSchemaID, http.StatusOK)
-		file := getFromFS(configuration.DefaultIdentityTraitsSchemaID)
+		server := getFromTS(config.DefaultIdentityTraitsSchemaID, http.StatusOK)
+		file := getFromFS(config.DefaultIdentityTraitsSchemaID)
 		require.Equal(t, file, server)
 	})
 

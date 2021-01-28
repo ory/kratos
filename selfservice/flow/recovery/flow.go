@@ -1,9 +1,12 @@
 package recovery
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/ory/kratos/corp"
 
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
@@ -116,8 +119,8 @@ func NewFlow(exp time.Duration, csrf string, r *http.Request, strategies Strateg
 	return req, nil
 }
 
-func (f Flow) TableName() string {
-	return "selfservice_recovery_flows"
+func (f Flow) TableName(ctx context.Context) string {
+	return corp.ContextualizeTableName(ctx, "selfservice_recovery_flows")
 }
 
 func (f *Flow) GetID() uuid.UUID {

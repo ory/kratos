@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/ory/kratos/internal/httpclient/models"
+	"github.com/ory/kratos-client-go/models"
 )
 
 // GetSchemaReader is a Reader for the GetSchema structure.
@@ -41,7 +41,6 @@ func (o *GetSchemaReader) ReadResponse(response runtime.ClientResponse, consumer
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -52,7 +51,7 @@ func NewGetSchemaOK() *GetSchemaOK {
 	return &GetSchemaOK{}
 }
 
-/*GetSchemaOK handles this case with default header values.
+/* GetSchemaOK describes a response with status code 200, with default header values.
 
 The raw identity traits schema
 */
@@ -63,7 +62,6 @@ type GetSchemaOK struct {
 func (o *GetSchemaOK) Error() string {
 	return fmt.Sprintf("[GET /schemas/{id}][%d] getSchemaOK  %+v", 200, o.Payload)
 }
-
 func (o *GetSchemaOK) GetPayload() interface{} {
 	return o.Payload
 }
@@ -83,7 +81,7 @@ func NewGetSchemaNotFound() *GetSchemaNotFound {
 	return &GetSchemaNotFound{}
 }
 
-/*GetSchemaNotFound handles this case with default header values.
+/* GetSchemaNotFound describes a response with status code 404, with default header values.
 
 genericError
 */
@@ -94,7 +92,6 @@ type GetSchemaNotFound struct {
 func (o *GetSchemaNotFound) Error() string {
 	return fmt.Sprintf("[GET /schemas/{id}][%d] getSchemaNotFound  %+v", 404, o.Payload)
 }
-
 func (o *GetSchemaNotFound) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -116,7 +113,7 @@ func NewGetSchemaInternalServerError() *GetSchemaInternalServerError {
 	return &GetSchemaInternalServerError{}
 }
 
-/*GetSchemaInternalServerError handles this case with default header values.
+/* GetSchemaInternalServerError describes a response with status code 500, with default header values.
 
 genericError
 */
@@ -127,7 +124,6 @@ type GetSchemaInternalServerError struct {
 func (o *GetSchemaInternalServerError) Error() string {
 	return fmt.Sprintf("[GET /schemas/{id}][%d] getSchemaInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *GetSchemaInternalServerError) GetPayload() *models.GenericError {
 	return o.Payload
 }

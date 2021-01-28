@@ -6,7 +6,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
@@ -26,12 +26,12 @@ type (
 		LogoutHandler() *Handler
 	}
 	Handler struct {
-		c configuration.Provider
+		c *config.Config
 		d handlerDependencies
 	}
 )
 
-func NewHandler(d handlerDependencies, c configuration.Provider) *Handler {
+func NewHandler(d handlerDependencies, c *config.Config) *Handler {
 	return &Handler{d: d, c: c}
 }
 

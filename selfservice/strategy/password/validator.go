@@ -2,8 +2,9 @@ package password
 
 import (
 	"bufio"
+	"context"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 
 	/* #nosec G505 sha1 is used for k-anonymity */
 	"crypto/sha1"
@@ -29,7 +30,7 @@ type Validator interface {
 	// Validate returns nil if the password is passing the validation strategy and an error otherwise. If a validation error
 	// occurs, a regular error will be returned. If some other type of error occurs (e.g. HTTP request failed), an error
 	// of type *herodot.DefaultError will be returned.
-	Validate(identifier, password string) error
+	Validate(ctx context.Context, identifier, password string) error
 }
 
 type ValidationProvider interface {
@@ -51,7 +52,7 @@ var ErrUnexpectedStatusCode = errors.New("unexpected status code")
 // password has been breached in a previous data leak using k-anonymity.
 type DefaultPasswordValidator struct {
 	sync.RWMutex
-	conf   configuration.Provider
+	reg    validatorDependencies
 	Client *http.Client
 	hashes map[string]int64
 
@@ -59,14 +60,16 @@ type DefaultPasswordValidator struct {
 	maxIdentifierPasswordSubstrThreshold float32
 }
 
-func NewDefaultPasswordValidatorStrategy(conf configuration.Provider) *DefaultPasswordValidator {
+type validatorDependencies interface {
+	config.Provider
+}
+
+func NewDefaultPasswordValidatorStrategy(reg validatorDependencies) *DefaultPasswordValidator {
 	return &DefaultPasswordValidator{
-		Client:                               httpx.NewResilientClientLatencyToleranceMedium(nil),
-		conf:                                 conf,
-		hashes:                               map[string]int64{},
-		minIdentifierPasswordDist:            5,
-		maxIdentifierPasswordSubstrThreshold: 0.5,
-	}
+		Client:                    httpx.NewResilientClientLatencyToleranceMedium(nil),
+		reg:                       reg,
+		hashes:                    map[string]int64{},
+		minIdentifierPasswordDist: 5, maxIdentifierPasswordSubstrThreshold: 0.5}
 }
 
 func b20(src []byte) string {
@@ -138,7 +141,7 @@ func (s *DefaultPasswordValidator) fetch(hpw []byte) error {
 	return nil
 }
 
-func (s *DefaultPasswordValidator) Validate(identifier, password string) error {
+func (s *DefaultPasswordValidator) Validate(ctx context.Context, identifier, password string) error {
 	if len(password) < 6 {
 		return errors.Errorf("password length must be at least 6 characters but only got %d", len(password))
 	}
@@ -163,16 +166,16 @@ func (s *DefaultPasswordValidator) Validate(identifier, password string) error {
 
 	if !ok {
 		err := s.fetch(hpw)
-		if (errors.Is(err, ErrNetworkFailure) || errors.Is(err, ErrUnexpectedStatusCode)) && s.conf.PasswordPolicyConfig().IgnoreNetworkErrors {
+		if (errors.Is(err, ErrNetworkFailure) || errors.Is(err, ErrUnexpectedStatusCode)) && s.reg.Config(ctx).PasswordPolicyConfig().IgnoreNetworkErrors {
 			return nil
 		} else if err != nil {
 			return err
 		}
 
-		return s.Validate(identifier, password)
+		return s.Validate(ctx, identifier, password)
 	}
 
-	if c > int64(s.conf.PasswordPolicyConfig().MaxBreaches) {
+	if c > int64(s.reg.Config(ctx).PasswordPolicyConfig().MaxBreaches) {
 		return errors.Errorf("the password has been found in at least %d data breaches and must no longer be used.", c)
 	}
 

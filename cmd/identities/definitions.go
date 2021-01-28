@@ -5,7 +5,7 @@ import (
 
 	"github.com/ory/x/cmdx"
 
-	"github.com/ory/kratos/internal/httpclient/models"
+	"github.com/ory/kratos-client-go/models"
 )
 
 type (
@@ -19,9 +19,9 @@ func (_ *outputIdentity) Header() []string {
 	return []string{"ID", "VERIFIED ADDRESSES", "RECOVERY ADDRESSES", "SCHEMA ID", "SCHEMA URL"}
 }
 
-func (i *outputIdentity) Fields() []string {
+func (i *outputIdentity) Columns() []string {
 	data := [5]string{
-		string(i.ID),
+		string(*i.ID),
 		cmdx.None,
 		cmdx.None,
 		cmdx.None,
@@ -67,7 +67,7 @@ func (c *outputIdentityCollection) Table() [][]string {
 	rows := make([][]string, len(c.identities))
 	for i, ident := range c.identities {
 		data := [5]string{
-			string(ident.ID),
+			string(*ident.ID),
 			cmdx.None,
 			cmdx.None,
 			cmdx.None,

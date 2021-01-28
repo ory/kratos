@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/ory/kratos/driver/config"
+
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/x"
@@ -16,25 +18,21 @@ type (
 		x.LoggingProvider
 		x.WriterProvider
 		x.CSRFTokenGeneratorProvider
+		config.Provider
 	}
 
 	Manager struct {
 		d managerDependencies
-		c baseManagerConfiguration
 	}
 
 	ManagementProvider interface {
 		// SelfServiceErrorManager returns the errorx.Manager.
 		SelfServiceErrorManager() *Manager
 	}
-
-	baseManagerConfiguration interface {
-		SelfServiceFlowErrorURL() *url.URL
-	}
 )
 
-func NewManager(d managerDependencies, c baseManagerConfiguration) *Manager {
-	return &Manager{d: d, c: c}
+func NewManager(d managerDependencies) *Manager {
+	return &Manager{d: d}
 }
 
 // Create is a simple helper that saves all errors in the store and returns the
@@ -51,7 +49,7 @@ func (m *Manager) Create(ctx context.Context, w http.ResponseWriter, r *http.Req
 	q := url.Values{}
 	q.Set("error", id.String())
 
-	return urlx.CopyWithQuery(m.c.SelfServiceFlowErrorURL(), q).String(), nil
+	return urlx.CopyWithQuery(m.d.Config(ctx).SelfServiceFlowErrorURL(), q).String(), nil
 }
 
 // Forward is a simple helper that saves all errors in the store and forwards the HTTP Request

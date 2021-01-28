@@ -1,6 +1,7 @@
 package oidc
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/url"
@@ -41,7 +42,7 @@ func (s *Strategy) SettingsStrategyID() string {
 	return s.ID().String()
 }
 
-func (s *Strategy) linkedProviders(conf *ConfigurationCollection, confidential *identity.Identity) ([]Provider, error) {
+func (s *Strategy) linkedProviders(ctx context.Context, conf *ConfigurationCollection, confidential *identity.Identity) ([]Provider, error) {
 	creds, ok := confidential.GetCredentials(s.ID())
 	if !ok {
 		return nil, nil
@@ -53,7 +54,7 @@ func (s *Strategy) linkedProviders(conf *ConfigurationCollection, confidential *
 	}
 
 	var count int
-	for _, strategy := range s.d.ActiveCredentialsCounterStrategies() {
+	for _, strategy := range s.d.ActiveCredentialsCounterStrategies(ctx) {
 		current, err := strategy.CountActiveCredentials(confidential.Credentials)
 		if err != nil {
 			return nil, err
@@ -73,7 +74,7 @@ func (s *Strategy) linkedProviders(conf *ConfigurationCollection, confidential *
 
 	var result []Provider
 	for _, p := range available.Providers {
-		prov, err := conf.Provider(p.Provider, s.c.SelfPublicURL())
+		prov, err := conf.Provider(p.Provider, s.d.Config(ctx).SelfPublicURL())
 		if err != nil {
 			return nil, err
 		}
@@ -83,7 +84,7 @@ func (s *Strategy) linkedProviders(conf *ConfigurationCollection, confidential *
 	return result, nil
 }
 
-func (s *Strategy) linkableProviders(conf *ConfigurationCollection, confidential *identity.Identity) ([]Provider, error) {
+func (s *Strategy) linkableProviders(ctx context.Context, conf *ConfigurationCollection, confidential *identity.Identity) ([]Provider, error) {
 	var available CredentialsConfig
 	creds, ok := confidential.GetCredentials(s.ID())
 	if ok {
@@ -103,7 +104,7 @@ func (s *Strategy) linkableProviders(conf *ConfigurationCollection, confidential
 		}
 
 		if !found {
-			prov, err := conf.Provider(p.ID, s.c.SelfPublicURL())
+			prov, err := conf.Provider(p.ID, s.d.Config(ctx).SelfPublicURL())
 			if err != nil {
 				return nil, err
 			}
@@ -119,7 +120,7 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		return nil
 	}
 
-	conf, err := s.Config()
+	conf, err := s.Config(r.Context())
 	if err != nil {
 		return err
 	}
@@ -129,18 +130,18 @@ func (s *Strategy) PopulateSettingsMethod(r *http.Request, id *identity.Identity
 		return err
 	}
 
-	linkable, err := s.linkableProviders(conf, confidential)
+	linkable, err := s.linkableProviders(r.Context(), conf, confidential)
 	if err != nil {
 		return err
 	}
 
-	linked, err := s.linkedProviders(conf, confidential)
+	linked, err := s.linkedProviders(r.Context(), conf, confidential)
 	if err != nil {
 		return err
 	}
 
 	f := form.NewHTMLForm(urlx.CopyWithQuery(urlx.AppendPaths(
-		s.c.SelfPublicURL(), SettingsPath), url.Values{"flow": {sr.ID.String()}}).String())
+		s.d.Config(r.Context()).SelfPublicURL(), SettingsPath), url.Values{"flow": {sr.ID.String()}}).String())
 	f.SetCSRF(s.d.GenerateCSRFToken(r))
 
 	for _, l := range linkable {
@@ -264,7 +265,7 @@ func (s *Strategy) completeSettingsFlow(w http.ResponseWriter, r *http.Request, 
 }
 
 func (s *Strategy) isLinkable(r *http.Request, ctxUpdate *settings.UpdateContext, toLink string) (*identity.Identity, error) {
-	providers, err := s.Config()
+	providers, err := s.Config(r.Context())
 	if err != nil {
 		return nil, err
 	}
@@ -274,7 +275,7 @@ func (s *Strategy) isLinkable(r *http.Request, ctxUpdate *settings.UpdateContext
 		return nil, err
 	}
 
-	linkable, err := s.linkableProviders(providers, i)
+	linkable, err := s.linkableProviders(r.Context(), providers, i)
 	if err != nil {
 		return nil, err
 	}
@@ -300,12 +301,12 @@ func (s *Strategy) initLinkProvider(w http.ResponseWriter, r *http.Request, ctxU
 		return
 	}
 
-	if ctxUpdate.Session.AuthenticatedAt.Add(s.c.SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
+	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
 		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 		return
 	}
 
-	http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.c.SelfPublicURL(),
+	http.Redirect(w, r, urlx.CopyWithQuery(urlx.AppendPaths(s.d.Config(r.Context()).SelfPublicURL(),
 		strings.Replace(RouteAuth, ":flow", p.FlowID, 1)),
 		url.Values{"provider": {p.Link}}).String(), http.StatusFound)
 }
@@ -314,7 +315,7 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request,
 	ctxUpdate *settings.UpdateContext, claims *Claims, provider Provider) {
 	p := &completeSelfServiceBrowserSettingsOIDCFlowPayload{
 		Link: provider.Config().ID, FlowID: ctxUpdate.Flow.ID.String()}
-	if ctxUpdate.Session.AuthenticatedAt.Add(s.c.SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
+	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
 		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 		return
 	}
@@ -358,12 +359,12 @@ func (s *Strategy) linkProvider(w http.ResponseWriter, r *http.Request,
 
 func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request,
 	ctxUpdate *settings.UpdateContext, p *completeSelfServiceBrowserSettingsOIDCFlowPayload) {
-	if ctxUpdate.Session.AuthenticatedAt.Add(s.c.SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
+	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config(r.Context()).SelfServiceFlowSettingsPrivilegedSessionMaxAge()).Before(time.Now()) {
 		s.handleSettingsError(w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 		return
 	}
 
-	providers, err := s.Config()
+	providers, err := s.Config(r.Context())
 	if err != nil {
 		s.handleSettingsError(w, r, ctxUpdate, p, err)
 		return
@@ -375,7 +376,7 @@ func (s *Strategy) unlinkProvider(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	availableProviders, err := s.linkedProviders(providers, i)
+	availableProviders, err := s.linkedProviders(r.Context(), providers, i)
 	if err != nil {
 		s.handleSettingsError(w, r, ctxUpdate, p, err)
 		return

@@ -1,18 +1,18 @@
 package link_test
 
 import (
-	"github.com/ory/viper"
+	"testing"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 )
 
-func initViper() {
-	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/default.schema.json")
-	viper.Set(configuration.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
-	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+identity.CredentialsTypePassword.String()+".enabled", true)
-	viper.Set(configuration.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName+".enabled", true)
-	viper.Set(configuration.ViperKeySelfServiceRecoveryEnabled, true)
-	viper.Set(configuration.ViperKeySelfServiceVerificationEnabled, true)
+func initViper(t *testing.T, c *config.Config) {
+	c.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/default.schema.json")
+	c.MustSet(config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
+	c.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+identity.CredentialsTypePassword.String()+".enabled", true)
+	c.MustSet(config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName+".enabled", true)
+	c.MustSet(config.ViperKeySelfServiceRecoveryEnabled, true)
+	c.MustSet(config.ViperKeySelfServiceVerificationEnabled, true)
 }

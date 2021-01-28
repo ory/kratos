@@ -1,6 +1,8 @@
 package driver
 
 import (
+	"context"
+
 	"github.com/ory/kratos/metrics/prometheus"
 	"github.com/ory/x/tracing"
 
@@ -29,7 +31,7 @@ import (
 
 	"github.com/ory/x/dbal"
 
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/errorx"
 	password2 "github.com/ory/kratos/selfservice/strategy/password"
@@ -39,28 +41,25 @@ import (
 type Registry interface {
 	dbal.Driver
 
-	Init() error
+	Init(ctx context.Context) error
 
-	WithConfig(c configuration.Provider) Registry
 	WithLogger(l *logrusx.Logger) Registry
-
-	BuildVersion() string
-	BuildDate() string
-	BuildHash() string
-	WithBuildInfo(version, hash, date string) Registry
 
 	WithCSRFHandler(c x.CSRFHandler)
 	WithCSRFTokenGenerator(cg x.CSRFToken)
 
 	HealthHandler() *healthx.Handler
 	CookieManager() sessions.Store
-	ContinuityCookieManager() sessions.Store
+	ContinuityCookieManager(ctx context.Context) sessions.Store
 
 	RegisterRoutes(public *x.RouterPublic, admin *x.RouterAdmin)
 	RegisterPublicRoutes(public *x.RouterPublic)
 	RegisterAdminRoutes(admin *x.RouterAdmin)
 	PrometheusManager() *prometheus.MetricsManager
-	Tracer() *tracing.Tracer
+	Tracer(context.Context) *tracing.Tracer
+
+	config.Provider
+	WithConfig(c *config.Config) Registry
 
 	x.CSRFProvider
 	x.WriterProvider
@@ -132,9 +131,8 @@ type Registry interface {
 	x.CSRFTokenGeneratorProvider
 }
 
-func NewRegistry(c configuration.Provider) (Registry, error) {
-	dsn := c.DSN()
-	driver, err := dbal.GetDriverFor(dsn)
+func NewRegistryFromDSN(c *config.Config, l *logrusx.Logger) (Registry, error) {
+	driver, err := dbal.GetDriverFor(c.DSN())
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -144,5 +142,5 @@ func NewRegistry(c configuration.Provider) (Registry, error) {
 		return nil, errors.Errorf("driver of type %T does not implement interface Registry", driver)
 	}
 
-	return registry, nil
+	return registry.WithLogger(l).WithConfig(c), nil
 }

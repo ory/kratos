@@ -10,9 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/viper"
-
-	"github.com/ory/kratos/driver/configuration"
+	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/form"
 	"github.com/ory/kratos/x"
@@ -30,21 +28,22 @@ type (
 	}
 )
 
-func TestRequestPersister(p interface {
+func TestRequestPersister(conf *config.Config, p interface {
 	FlowPersister
 	identity.PrivilegedPool
 }) func(t *testing.T) {
-	viper.Set(configuration.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
-
 	var clearids = func(r *Flow) {
 		r.ID = uuid.UUID{}
 		r.Identity.ID = uuid.UUID{}
 		r.IdentityID = uuid.UUID{}
 	}
 
+	ctx := context.Background()
 	return func(t *testing.T) {
+		conf.MustSet(config.ViperKeyDefaultIdentitySchemaURL, "file://./stub/identity.schema.json")
+
 		t.Run("case=should error when the settings request does not exist", func(t *testing.T) {
-			_, err := p.GetSettingsFlow(context.Background(), x.NewUUID())
+			_, err := p.GetSettingsFlow(ctx, x.NewUUID())
 			require.Error(t, err)
 		})
 
@@ -52,29 +51,29 @@ func TestRequestPersister(p interface {
 			var r Flow
 			require.NoError(t, faker.FakeData(&r))
 			clearids(&r)
-			require.NoError(t, p.CreateIdentity(context.Background(), r.Identity))
+			require.NoError(t, p.CreateIdentity(ctx, r.Identity))
 			return &r
 		}
 
 		t.Run("case=should create a new settings request", func(t *testing.T) {
 			r := newFlow(t)
-			err := p.CreateSettingsFlow(context.Background(), r)
+			err := p.CreateSettingsFlow(ctx, r)
 			require.NoError(t, err, "%#v", err)
 		})
 
 		t.Run("case=should create with set ids", func(t *testing.T) {
 			var r Flow
 			require.NoError(t, faker.FakeData(&r))
-			require.NoError(t, p.CreateIdentity(context.Background(), r.Identity))
-			require.NoError(t, p.CreateSettingsFlow(context.Background(), &r))
+			require.NoError(t, p.CreateIdentity(ctx, r.Identity))
+			require.NoError(t, p.CreateSettingsFlow(ctx, &r))
 		})
 
 		t.Run("case=should create and fetch a settings request", func(t *testing.T) {
 			expected := newFlow(t)
-			err := p.CreateSettingsFlow(context.Background(), expected)
+			err := p.CreateSettingsFlow(ctx, expected)
 			require.NoError(t, err)
 
-			actual, err := p.GetSettingsFlow(context.Background(), expected.ID)
+			actual, err := p.GetSettingsFlow(ctx, expected.ID)
 			require.NoError(t, err)
 
 			factual, _ := json.Marshal(actual.Methods[StrategyProfile].Config)
@@ -98,7 +97,7 @@ func TestRequestPersister(p interface {
 			clearids(&expected)
 			expected.Identity = nil
 			expected.IdentityID = uuid.Nil
-			err := p.CreateSettingsFlow(context.Background(), &expected)
+			err := p.CreateSettingsFlow(ctx, &expected)
 			require.Error(t, err, "%+s", expected)
 		})
 
@@ -110,16 +109,16 @@ func TestRequestPersister(p interface {
 			expected.Methods["password"] = &FlowMethod{
 				Method: "password", Config: &FlowMethodConfig{FlowMethodConfigurator: &form.HTMLForm{Fields: []form.Field{{
 					Name: "foo", Type: "bar", Pattern: "baz"}}}}}
-			err := p.CreateSettingsFlow(context.Background(), expected)
+			err := p.CreateSettingsFlow(ctx, expected)
 			require.NoError(t, err)
 
 			expected.Methods[StrategyProfile].Config.FlowMethodConfigurator.(*form.HTMLForm).Action = "/new-action"
 			expected.Methods["password"].Config.FlowMethodConfigurator.(*form.HTMLForm).Fields = []form.Field{{
 				Name: "zab", Type: "zab", Pattern: "zab"}}
 			expected.RequestURL = "/new-request-url"
-			require.NoError(t, p.UpdateSettingsFlow(context.Background(), expected))
+			require.NoError(t, p.UpdateSettingsFlow(ctx, expected))
 
-			actual, err := p.GetSettingsFlow(context.Background(), expected.ID)
+			actual, err := p.GetSettingsFlow(ctx, expected.ID)
 			require.NoError(t, err)
 
 			assert.Equal(t, "/new-action", actual.Methods[StrategyProfile].Config.FlowMethodConfigurator.(*form.HTMLForm).Action)
@@ -135,24 +134,24 @@ func TestRequestPersister(p interface {
 			delete(expected.Methods, identity.CredentialsTypeOIDC.String())
 			delete(expected.Methods, StrategyProfile)
 
-			err := p.CreateSettingsFlow(context.Background(), expected)
+			err := p.CreateSettingsFlow(ctx, expected)
 			require.NoError(t, err)
 
-			actual, err := p.GetSettingsFlow(context.Background(), expected.ID)
+			actual, err := p.GetSettingsFlow(ctx, expected.ID)
 			require.NoError(t, err)
 			assert.Len(t, actual.Methods, 1)
 
-			require.NoError(t, p.UpdateSettingsFlowMethod(context.Background(), expected.ID, identity.CredentialsTypeOIDC.String(), &FlowMethod{
+			require.NoError(t, p.UpdateSettingsFlowMethod(ctx, expected.ID, identity.CredentialsTypeOIDC.String(), &FlowMethod{
 				Method: identity.CredentialsTypeOIDC.String(),
 				Config: &FlowMethodConfig{FlowMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypeOIDC))},
 			}))
 
-			require.NoError(t, p.UpdateSettingsFlowMethod(context.Background(), expected.ID, identity.CredentialsTypePassword.String(), &FlowMethod{
+			require.NoError(t, p.UpdateSettingsFlowMethod(ctx, expected.ID, identity.CredentialsTypePassword.String(), &FlowMethod{
 				Method: identity.CredentialsTypePassword.String(),
 				Config: &FlowMethodConfig{FlowMethodConfigurator: form.NewHTMLForm(string(identity.CredentialsTypePassword))},
 			}))
 
-			actual, err = p.GetSettingsFlow(context.Background(), expected.ID)
+			actual, err = p.GetSettingsFlow(ctx, expected.ID)
 			require.NoError(t, err)
 			require.Len(t, actual.Methods, 2)
 			assert.EqualValues(t, identity.CredentialsTypePassword, actual.Active)

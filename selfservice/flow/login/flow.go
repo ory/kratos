@@ -1,9 +1,12 @@
 package login
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/ory/kratos/corp"
 
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gofrs/uuid"
@@ -128,9 +131,8 @@ func (f *Flow) AfterFind(_ *pop.Connection) error {
 	return nil
 }
 
-func (f Flow) TableName() string {
-	// This must be stay a value receiver, using a pointer receiver will cause issues with pop.
-	return "selfservice_login_flows"
+func (f Flow) TableName(ctx context.Context) string {
+	return corp.ContextualizeTableName(ctx, "selfservice_login_flows")
 }
 
 func (f *Flow) Valid() error {

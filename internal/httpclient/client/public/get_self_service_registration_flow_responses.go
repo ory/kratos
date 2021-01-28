@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/ory/kratos/internal/httpclient/models"
+	"github.com/ory/kratos-client-go/models"
 )
 
 // GetSelfServiceRegistrationFlowReader is a Reader for the GetSelfServiceRegistrationFlow structure.
@@ -53,7 +53,6 @@ func (o *GetSelfServiceRegistrationFlowReader) ReadResponse(response runtime.Cli
 			return nil, err
 		}
 		return nil, result
-
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -64,7 +63,7 @@ func NewGetSelfServiceRegistrationFlowOK() *GetSelfServiceRegistrationFlowOK {
 	return &GetSelfServiceRegistrationFlowOK{}
 }
 
-/*GetSelfServiceRegistrationFlowOK handles this case with default header values.
+/* GetSelfServiceRegistrationFlowOK describes a response with status code 200, with default header values.
 
 registrationFlow
 */
@@ -75,7 +74,6 @@ type GetSelfServiceRegistrationFlowOK struct {
 func (o *GetSelfServiceRegistrationFlowOK) Error() string {
 	return fmt.Sprintf("[GET /self-service/registration/flows][%d] getSelfServiceRegistrationFlowOK  %+v", 200, o.Payload)
 }
-
 func (o *GetSelfServiceRegistrationFlowOK) GetPayload() *models.RegistrationFlow {
 	return o.Payload
 }
@@ -97,7 +95,7 @@ func NewGetSelfServiceRegistrationFlowForbidden() *GetSelfServiceRegistrationFlo
 	return &GetSelfServiceRegistrationFlowForbidden{}
 }
 
-/*GetSelfServiceRegistrationFlowForbidden handles this case with default header values.
+/* GetSelfServiceRegistrationFlowForbidden describes a response with status code 403, with default header values.
 
 genericError
 */
@@ -108,7 +106,6 @@ type GetSelfServiceRegistrationFlowForbidden struct {
 func (o *GetSelfServiceRegistrationFlowForbidden) Error() string {
 	return fmt.Sprintf("[GET /self-service/registration/flows][%d] getSelfServiceRegistrationFlowForbidden  %+v", 403, o.Payload)
 }
-
 func (o *GetSelfServiceRegistrationFlowForbidden) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -130,7 +127,7 @@ func NewGetSelfServiceRegistrationFlowNotFound() *GetSelfServiceRegistrationFlow
 	return &GetSelfServiceRegistrationFlowNotFound{}
 }
 
-/*GetSelfServiceRegistrationFlowNotFound handles this case with default header values.
+/* GetSelfServiceRegistrationFlowNotFound describes a response with status code 404, with default header values.
 
 genericError
 */
@@ -141,7 +138,6 @@ type GetSelfServiceRegistrationFlowNotFound struct {
 func (o *GetSelfServiceRegistrationFlowNotFound) Error() string {
 	return fmt.Sprintf("[GET /self-service/registration/flows][%d] getSelfServiceRegistrationFlowNotFound  %+v", 404, o.Payload)
 }
-
 func (o *GetSelfServiceRegistrationFlowNotFound) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -163,7 +159,7 @@ func NewGetSelfServiceRegistrationFlowGone() *GetSelfServiceRegistrationFlowGone
 	return &GetSelfServiceRegistrationFlowGone{}
 }
 
-/*GetSelfServiceRegistrationFlowGone handles this case with default header values.
+/* GetSelfServiceRegistrationFlowGone describes a response with status code 410, with default header values.
 
 genericError
 */
@@ -174,7 +170,6 @@ type GetSelfServiceRegistrationFlowGone struct {
 func (o *GetSelfServiceRegistrationFlowGone) Error() string {
 	return fmt.Sprintf("[GET /self-service/registration/flows][%d] getSelfServiceRegistrationFlowGone  %+v", 410, o.Payload)
 }
-
 func (o *GetSelfServiceRegistrationFlowGone) GetPayload() *models.GenericError {
 	return o.Payload
 }
@@ -196,7 +191,7 @@ func NewGetSelfServiceRegistrationFlowInternalServerError() *GetSelfServiceRegis
 	return &GetSelfServiceRegistrationFlowInternalServerError{}
 }
 
-/*GetSelfServiceRegistrationFlowInternalServerError handles this case with default header values.
+/* GetSelfServiceRegistrationFlowInternalServerError describes a response with status code 500, with default header values.
 
 genericError
 */
@@ -207,7 +202,6 @@ type GetSelfServiceRegistrationFlowInternalServerError struct {
 func (o *GetSelfServiceRegistrationFlowInternalServerError) Error() string {
 	return fmt.Sprintf("[GET /self-service/registration/flows][%d] getSelfServiceRegistrationFlowInternalServerError  %+v", 500, o.Payload)
 }
-
 func (o *GetSelfServiceRegistrationFlowInternalServerError) GetPayload() *models.GenericError {
 	return o.Payload
 }

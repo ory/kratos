@@ -17,8 +17,8 @@
     <a href="https://coveralls.io/github/ory/kratos?branch=master"> <img src="https://coveralls.io/repos/ory/kratos/badge.svg?branch=master&service=github" alt="Coverage Status"></a>
     <a href="https://goreportcard.com/report/github.com/ory/kratos"><img src="https://goreportcard.com/badge/github.com/ory/kratos" alt="Go Report Card"></a>
     <a href="https://bestpractices.coreinfrastructure.org/projects/364"><img src="https://bestpractices.coreinfrastructure.org/projects/364/badge" alt="CII Best Practices"></a>
-    <a href="#backers" alt="sponsors on Open Collective"><img src="https://opencollective.com/ory/backers/badge.svg" /></a>
-    <a href="#sponsors" alt="Sponsors on Open Collective"><img src="https://opencollective.com/ory/sponsors/badge.svg" /></a>
+    <a href="https://opencollective.com/ory" alt="sponsors on Open Collective"><img src="https://opencollective.com/ory/backers/badge.svg" /></a>
+    <a href="https://opencollective.com/ory" alt="Sponsors on Open Collective"><img src="https://opencollective.com/ory/sponsors/badge.svg" /></a>
 </p>
 
 ORY Kratos is the first and only cloud native Identity and User Management System in the world. Finally, it is no longer necessary to implement a User Login process for the umpteenth time!
@@ -34,8 +34,8 @@ ORY Kratos is the first and only cloud native Identity and User Management Syste
   - [Installation](#installation)
 - [Ecosystem](#ecosystem)
   - [ORY Kratos: Identity and User Infrastructure and Management](#ory-kratos-identity-and-user-infrastructure-and-management)
-  - [ORY Hydra: OAuth2 and OpenID Connect Server](#ory-hydra-oauth2-and-openid-connect-server)
-  - [ORY Oathkeeper: Identity and Access Proxy](#ory-oathkeeper-identity-and-access-proxy)
+  - [ORY Hydra: OAuth2 & OpenID Connect Server](#ory-hydra-oauth2--openid-connect-server)
+  - [ORY Oathkeeper: Identity & Access Proxy](#ory-oathkeeper-identity--access-proxy)
   - [ORY Keto: Access Control Policies as a Server](#ory-keto-access-control-policies-as-a-server)
 - [Security](#security)
   - [Disclosing vulnerabilities](#disclosing-vulnerabilities)
@@ -47,7 +47,6 @@ ORY Kratos is the first and only cloud native Identity and User Management Syste
   - [Command line documentation](#command-line-documentation)
   - [Develop](#develop)
     - [Dependencies](#dependencies)
-      - [Install Tools](#install-tools)
     - [Install from source](#install-from-source)
     - [Formatting Code](#formatting-code)
     - [Running Tests](#running-tests)
@@ -55,6 +54,7 @@ ORY Kratos is the first and only cloud native Identity and User Management Syste
       - [Regular Tests](#regular-tests)
       - [End-to-End Tests](#end-to-end-tests)
     - [Build Docker](#build-docker)
+    - [Documentation Tests](#documentation-tests)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -93,14 +93,14 @@ from other products.
 The ORY community stands on the shoulders of individuals, companies, and
 maintainers. We thank everyone involved - from submitting bug reports and
 feature requests, to contributing patches, to sponsoring our work. Our community
-is 1000+ strong and growing rapidly. The ORY stack protects 1.200.000.000+ API
-requests every month with over 15.000+ active service nodes. We would have never
-been able to achieve this without each and everyone of you!
+is 1000+ strong and growing rapidly. The ORY stack protects 16.000.000.000+ API
+requests every month with over 250.000+ active service nodes. We would have
+never been able to achieve this without each and everyone of you!
 
 The following list represents companies that have accompanied us along the way
 and that have made outstanding contributions to our ecosystem. _If you think
 that your company deserves a spot here, reach out to
-<a href="mailto:office@ory.sh">office@ory.sh</a> now_!
+<a href="mailto:office-muc@ory.sh">office-muc@ory.sh</a> now_!
 
 **Please consider giving back by becoming a sponsor of our open source work on
 <a href="https://www.patreon.com/_ory">Patreon</a> or
@@ -193,7 +193,7 @@ that your company deserves a spot here, reach out to
 
 We also want to thank all individual contributors
 
-<img src="https://opencollective.com/ory/contributors.svg?width=890&button=false" /></a>
+<img src="https://opencollective.com/ory/contributors.svg?width=890&button=false" />
 
 as well as all of our backers
 
@@ -338,7 +338,8 @@ changes in [UPGRADE.md](./UPGRADE.md) and [CHANGELOG.md](./CHANGELOG.md).
 
 ### Command line documentation
 
-Run `kratos -h` or `kratos help`.
+Run <code type="shell/command">kratos -h</code> or
+<code type="shell/command">kratos help</code>.
 
 ### Develop
 
@@ -356,13 +357,13 @@ It is possible to develop ORY Kratos on Windows, but please be aware that all gu
 
 #### Install from source
 
-```shell script
+<pre type="make/command">
 make install
-```
+</pre>
 
 #### Formatting Code
 
-You can format all code using `make format`. Our CI checks if your code is properly formatted.
+You can format all code using <code type="make/command">make format</code>. Our CI checks if your code is properly formatted.
 
 #### Running Tests
 
@@ -392,20 +393,26 @@ Regular tests require a database set up. Our test suite is able to work with doc
 but we encourage to use the Makefile instead. Using dockertest can bloat the number of Docker Images on your system
 and are quite slow. Instead we recommend doing:
 
-```shell script
+<pre type="make/command">
 make test
-```
+</pre>
 
-Please be aware that `make test` recreates the databases every time you run `make test`. This can be annoying if
-you are trying to fix something very specific and need the database tests all the time. In that case we
-suggest that you initialize the databases with:
+Please be aware that <code type="make/command">make test</code> recreates the
+databases every time you run <code type="make/command">make test</code>. This
+can be annoying if you are trying to fix something very specific and need the
+database tests all the time. In that case we suggest that you initialize the
+databases with:
+
+<a type="make/command">
 
 ```shell script
-make resetdb
+make test-resetdb
 export TEST_DATABASE_MYSQL='mysql://root:secret@(127.0.0.1:3444)/mysql?parseTime=true'
 export TEST_DATABASE_POSTGRESQL='postgres://postgres:secret@127.0.0.1:3445/kratos?sslmode=disable'
 export TEST_DATABASE_COCKROACHDB='cockroach://root@127.0.0.1:3446/defaultdb?sslmode=disable'
 ```
+
+</a>
 
 Then you can run `go test` as often as you'd like:
 
@@ -420,21 +427,28 @@ cd client; go test  -tags sqlite  .
 
 We use [Cypress](https://www.cypress.io) to run our e2e tests. You can run all tests using:
 
-```shell script
+<pre type="make/command">
 make test-e2e
-```
+</pre>
 
 If you intend developing e2e tests, run the following command for more details:
 
-```shell script
+<pre type="repo/executable">
 ./test/e2e/run.sh
-```
-
+</pre>
 
 #### Build Docker
 
 You can build a development Docker Image using:
 
-```shell script
+<pre type="make/command">
 make docker
-```
+</pre>
+
+#### Documentation Tests
+
+To prepare documentation tests, run `npm i` to install
+[Text-Runner](https://github.com/kevgo/text-runner).
+
+- test all documentation: <code type="make/command">make test-docs</code>
+- test an individual file: <code type="npm/installed-executable">text-run</code>

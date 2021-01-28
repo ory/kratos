@@ -1,7 +1,10 @@
 package session
 
 import (
+	"context"
 	"time"
+
+	"github.com/ory/kratos/corp"
 
 	"github.com/gofrs/uuid"
 
@@ -40,8 +43,8 @@ type Session struct {
 	Token string `json:"-" db:"token"`
 }
 
-func (s Session) TableName() string {
-	return "sessions"
+func (s Session) TableName(ctx context.Context) string {
+	return corp.ContextualizeTableName(ctx, "sessions")
 }
 
 func NewActiveSession(i *identity.Identity, c interface {

@@ -48,12 +48,6 @@ kratos hashers argon2 calibrate [<desired-duration>] [flags]
   -m, --start-memory byte_size       Amount of memory to start probing at. (default 4.00GB)
 ```
 
-### Options inherited from parent commands
-
-```
-  -c, --config string   Path to config file. Supports .json, .yaml, .yml, .toml. Default is "$HOME/.kratos.(yaml|yml|toml|json)"
-```
-
 ### SEE ALSO
 
 - [kratos hashers argon2](kratos-hashers-argon2) -
