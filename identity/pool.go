@@ -86,10 +86,9 @@ type (
 	}
 )
 
-func TestPool(conf *config.Config, p interface {
+func TestPool(ctx context.Context, conf *config.Config, p interface {
 	PrivilegedPool
 }) func(t *testing.T) {
-	ctx := context.Background()
 	return func(t *testing.T) {
 		exampleServerURL := urlx.ParseOrPanic("http://example.com")
 		conf.MustSet(config.ViperKeyPublicBaseURL, exampleServerURL.String())
