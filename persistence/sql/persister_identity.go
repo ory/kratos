@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/kratos/corp"
+
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/x/sqlxx"
 
@@ -59,13 +61,17 @@ func (p *Persister) FindByCredentialsIdentifier(ctx context.Context, ct identity
 		match = strings.ToLower(match)
 	}
 
-	if err := p.GetConnection(ctx).RawQuery(`SELECT
+	if err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(`SELECT
     ic.identity_id
-FROM identity_credentials ic
-         INNER JOIN identity_credential_types ict on ic.identity_credential_type_id = ict.id
-         INNER JOIN identity_credential_identifiers ici on ic.id = ici.identity_credential_id
+FROM %s ic
+         INNER JOIN %s ict on ic.identity_credential_type_id = ict.id
+         INNER JOIN %s ici on ic.id = ici.identity_credential_id
 WHERE ici.identifier = ?
-  AND ict.name = ?`, match, ct).First(&find); err != nil {
+  AND ict.name = ?`,
+		corp.ContextualizeTableName(ctx, "identity_credentials"),
+		corp.ContextualizeTableName(ctx, "identity_credential_types"),
+		corp.ContextualizeTableName(ctx, "identity_credential_identifiers"),
+	), match, ct).First(&find); err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, nil, herodot.ErrNotFound.WithTrace(err).WithReasonf(`No identity matching credentials identifier "%s" could be found.`, match)
 		}
