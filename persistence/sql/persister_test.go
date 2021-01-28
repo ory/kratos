@@ -45,7 +45,7 @@ import (
 var sqlite = fmt.Sprintf("sqlite3://%s.sqlite?_fk=true&mode=rwc", filepath.Join(os.TempDir(), uuid.New().String()))
 
 func init() {
-	internal.RegisterFakes()
+	corpx.RegisterFakes()
 	// op.Debug = true
 }
 
