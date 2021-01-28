@@ -3,9 +3,12 @@ package sql
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
+
+	"github.com/ory/kratos/corp"
 
 	"github.com/ory/x/sqlcon"
 
@@ -54,7 +57,11 @@ func (p *Persister) LatestQueuedMessage(ctx context.Context) (*courier.Message, 
 }
 
 func (p *Persister) SetMessageStatus(ctx context.Context, id uuid.UUID, ms courier.MessageStatus) error {
-	count, err := p.GetConnection(ctx).RawQuery("UPDATE courier_messages SET status = ? WHERE id = ?", ms, id).ExecWithCount()
+	count, err := p.GetConnection(ctx).RawQuery(
+		fmt.Sprintf(
+			"UPDATE %s SET status = ? WHERE id = ?",
+			corp.ContextualizeTableName(ctx, "courier_messages"),
+		), ms, id).ExecWithCount()
 	if err != nil {
 		return sqlcon.HandleError(err)
 	}
