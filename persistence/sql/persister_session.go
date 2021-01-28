@@ -2,6 +2,9 @@ package sql
 
 import (
 	"context"
+	"fmt"
+
+	"github.com/ory/kratos/corp"
 
 	"github.com/gofrs/uuid"
 
@@ -37,7 +40,10 @@ func (p *Persister) DeleteSession(ctx context.Context, sid uuid.UUID) error {
 }
 
 func (p *Persister) DeleteSessionsByIdentity(ctx context.Context, identityID uuid.UUID) error {
-	if err := p.GetConnection(ctx).RawQuery("DELETE FROM sessions WHERE identity_id = ?", identityID).Exec(); err != nil {
+	if err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
+		"DELETE FROM %s WHERE identity_id = ?",
+		corp.ContextualizeTableName(ctx, "sessions"),
+	), identityID).Exec(); err != nil {
 		return sqlcon.HandleError(err)
 	}
 	return nil
@@ -60,14 +66,20 @@ func (p *Persister) GetSessionByToken(ctx context.Context, token string) (*sessi
 }
 
 func (p *Persister) DeleteSessionByToken(ctx context.Context, token string) error {
-	if err := p.GetConnection(ctx).RawQuery("DELETE FROM sessions WHERE token = ?", token).Exec(); err != nil {
+	if err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
+		"DELETE FROM %s WHERE token = ?",
+		corp.ContextualizeTableName(ctx, "sessions"),
+	), token).Exec(); err != nil {
 		return sqlcon.HandleError(err)
 	}
 	return nil
 }
 
 func (p *Persister) RevokeSessionByToken(ctx context.Context, token string) error {
-	if err := p.GetConnection(ctx).RawQuery("UPDATE sessions SET active = false WHERE token = ?", token).Exec(); err != nil {
+	if err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
+		"UPDATE %s SET active = false WHERE token = ?",
+		corp.ContextualizeTableName(ctx, "sessions"),
+	), token).Exec(); err != nil {
 		return sqlcon.HandleError(err)
 	}
 	return nil

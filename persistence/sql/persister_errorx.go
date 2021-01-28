@@ -4,7 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
+
+	"github.com/ory/kratos/corp"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
@@ -44,7 +47,7 @@ func (p *Persister) Read(ctx context.Context, id uuid.UUID) (*errorx.ErrorContai
 		return nil, sqlcon.HandleError(err)
 	}
 
-	if err := p.GetConnection(ctx).RawQuery("UPDATE selfservice_errors SET was_seen = true, seen_at = ? WHERE id = ?", time.Now().UTC(), id).Exec(); err != nil {
+	if err := p.GetConnection(ctx).RawQuery(fmt.Sprintf("UPDATE %s SET was_seen = true, seen_at = ? WHERE id = ?", corp.ContextualizeTableName(ctx, "selfservice_errors")), time.Now().UTC(), id).Exec(); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
@@ -53,9 +56,9 @@ func (p *Persister) Read(ctx context.Context, id uuid.UUID) (*errorx.ErrorContai
 
 func (p *Persister) Clear(ctx context.Context, olderThan time.Duration, force bool) (err error) {
 	if force {
-		err = p.GetConnection(ctx).RawQuery("DELETE FROM selfservice_errors WHERE seen_at < ? AND seen_at IS NOT NULL", olderThan).Exec()
+		err = p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE seen_at < ? AND seen_at IS NOT NULL", corp.ContextualizeTableName(ctx, "selfservice_errors")), olderThan).Exec()
 	} else {
-		err = p.GetConnection(ctx).RawQuery("DELETE FROM selfservice_errors WHERE was_seen=true AND seen_at < ? AND seen_at IS NOT NULL", time.Now().UTC().Add(-olderThan)).Exec()
+		err = p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE was_seen=true AND seen_at < ? AND seen_at IS NOT NULL", corp.ContextualizeTableName(ctx, "selfservice_errors")), time.Now().UTC().Add(-olderThan)).Exec()
 	}
 
 	return sqlcon.HandleError(err)
