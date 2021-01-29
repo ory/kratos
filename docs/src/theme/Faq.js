@@ -1,7 +1,17 @@
 import React, { useState } from 'react'
 import cn from 'classnames'
 import styles from './faq.module.css'
-import questions from './faq_questions.json'
+//import questions from './faq_questions.json'
+
+
+
+
+const Question = ({children, tags}) => (
+  <div className={tags}>
+    {children}
+  </div>
+)
+
 
 const TagButton = ({ tag,  isSelected, children, toggleSelected  }) => (
     <button
@@ -52,4 +62,4 @@ const Faq = ({tags}) => {
   )
 }
 
-export default Faq
+export {Faq,Question}

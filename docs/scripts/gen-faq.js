@@ -19,16 +19,12 @@ id: faq
 title: Faq
 ---
 
-export const Question = ({children, tags}) => (
-    <div className={tags}>
-      {children}
-    </div>
-  );
 
-import Faq from '@theme/Faq'
+
+import {Question, Faq} from '@theme/Faq'
 
 <Faq tags="${tags.join(' ')}"/>
-<br><br>
+
 
 `
 
