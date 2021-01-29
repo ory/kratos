@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import cn from 'classnames'
 import styles from './faq.module.css'
-import tags from './faq_tags.json'
 import questions from './faq_questions.json'
 
 const TagButton = ({ tag,  isSelected, children, toggleSelected  }) => (
@@ -13,8 +12,11 @@ const TagButton = ({ tag,  isSelected, children, toggleSelected  }) => (
         </button>
 )
 
-const Faq = () => {
+const Faq = ({tags}) => {
+  tags=tags.split(" ")
   const [selectedTags, setSelectedTags] = useState(tags)
+  
+  
   const displayFunc = (tags) => { 
     for (var i = 0; i < tags.length; i++) {
         if (selectedTags.find((t) => t === tags[i]) ) {
@@ -23,9 +25,11 @@ const Faq = () => {
     }
     return 'none'
   } 
+
   return (
     <>
-      {tags.map((tag) => (
+      {
+      tags.map((tag) => (
         <TagButton
         key={tag}
         tag={tag}

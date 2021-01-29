@@ -11,7 +11,7 @@ try {
     let faq = yaml.safeLoad(fayYaml);
 
 
-    
+    const tags = Array.from(new Set(faq.map(el => { return el.tags }).flat(1)))
 
     
     data=`---
@@ -27,7 +27,8 @@ export const Question = ({children, tags}) => (
 
 import Faq from '@theme/Faq'
 
-<Faq />
+<Faq tags="${tags.join(' ')}"/>
+<br><br>
 
 `
 
