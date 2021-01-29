@@ -1,3 +1,11 @@
 .selected {
     background-color: #ffba00;
 }
+
+button.selected.kratos~.question.kratos {
+    display: inline;
+}
+
+question {
+    display: none;
+}

@@ -10,19 +10,20 @@ try {
     
 
     
-    data=`
----
+    data=`---
 id: faq
 title: Faq
 ---
 
 export const Question = ({children, tags}) => (
-    <div class={{tags}}>
+    <div class={tags} style="display: block;">
       {children}
     </div>
   );
 
+
 ${taglist.join(" ") }
+bla
 
 import Faq from '@theme/Faq'
 
@@ -34,23 +35,16 @@ import Faq from '@theme/Faq'
     
 
     faq.forEach(el => {
-        data += `<Question tags="${el.tags.map( tag => {return tag }).join(" ")}">\n`
+        data += `<Question tags="${el.tags.join(" ")}">\n`
         data += `M: ${el.tags.map( tag => {return "#"+tag }).join(" ")} \n` 
         data += `Q: ${el.q}\n` 
         data += `A: ${el.a}\n`
         data += `</Question>\n\n`
     });
 
-    const faqMdx = require('fs') 
-    // Write data in 'Output.txt' . 
     fs.writeFile('./docs/docs/faq.mdx', data, (err) => { 
-        
-        // In case of a error throw err. 
         if (err) throw err; 
     }) 
-
-    console.log(taglist)
-
 } catch (e) {
     console.log(e);
 }

@@ -3,7 +3,27 @@ id: faq
 title: Faq
 ---
 
+export const Question = ({children, tags}) => (
+    <div className={tags} style={{display: "block"}}>
+      {children}
+    </div>
+  ); 
 
 import Faq from '@theme/Faq'
 
 <Faq />
+
+<Question tags="kratos oidc blub">
+M: #kratos #oidc #blub 
+Q: How do I append a random suffix (e.g. a number) to OIDC usernames if the username
+returned by a provider is already taken?
+
+A: Not sure if jsonnet has a rand function built into the stdlib, but it does have the md5 function. You can probably use that
+</Question>
+
+<Question tags="kratos oidc bla">
+M: #kratos #oidc #bla 
+Q: How do I append a random suffix (e.g. a number) to OIDC usernames if the username returned by a provider is already taken?
+A: Not sure if jsonnet has a rand function built into the stdlib, but it does have the md5 function. You can probably use that
+</Question>
+
