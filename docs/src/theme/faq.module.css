@@ -1,5 +1,10 @@
+
 .selected {
     background-color: #ffba00;
+}
+
+div.question {
+    display: none;
 }
 
 button.selected.kratos {
@@ -11,6 +16,29 @@ button.selected.kratos~.question.kratos {
     
 }
 
-div.question {
-    display: none;
+button.selected.oidc {
+    color:red;
+}
+
+button.selected.oidc~.question.oidc {
+    display: inline;
+    
+}
+
+button.selected.blub {
+    color:red;
+}
+
+button.selected.blub~.question.blub {
+    display: inline;
+    
+}
+
+button.selected.bla {
+    color:red;
+}
+
+button.selected.bla~.question.bla {
+    display: inline;
+    
 }

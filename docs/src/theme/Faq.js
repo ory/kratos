@@ -9,7 +9,7 @@ const TagButton = ({ tag,  isSelected, children, toggleSelected  }) => (
           className={cn({ [styles.selected]: isSelected}, tag+"_src-theme-")}
           onClick={toggleSelected}
         >
-          {children} -->{tag}
+          {children}
         </button>
 )
 
