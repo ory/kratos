@@ -4,12 +4,12 @@ import styles from './faq.module.css'
 import tags from './faq_tags.json'
 import questions from './faq_questions.json'
 
-const TagButton = ({ isSelected, children, toggleSelected  }) => (
+const TagButton = ({ tag,  isSelected, children, toggleSelected  }) => (
     <button
-          className={cn({ [styles.selected]: isSelected })}
+          className={cn({ [styles.selected]: isSelected}, tag+"_src-theme-")}
           onClick={toggleSelected}
         >
-          {children}
+          {children} -->{tag}
         </button>
 )
 
@@ -28,6 +28,7 @@ const Faq = () => {
       {tags.map((tag) => (
         <TagButton
         key={tag}
+        tag={tag}
         isSelected={selectedTags.find((t) => t === tag)}
         toggleSelected={() => {
             if (selectedTags.find((t) => t === tag)) {
@@ -41,16 +42,7 @@ const Faq = () => {
         </TagButton>
       ))}
 
-      {questions.map((question) => (
-          
-          <div style={{display: 
-            displayFunc(question.tags)
-          }}>
-              M: {question.tags}<br/>
-              Q: {question.q}<br/>
-              A: {question.a}<br/>
-          </div>
-      ))}
+
 
     </>
   )

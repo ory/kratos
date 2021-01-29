@@ -2,10 +2,15 @@
     background-color: #ffba00;
 }
 
-button.selected.kratos~.question.kratos {
-    display: inline;
+button.selected.kratos {
+    color:red;
 }
 
-question {
+button.selected.kratos~.question.kratos {
+    display: inline;
+    
+}
+
+div.question {
     display: none;
 }
