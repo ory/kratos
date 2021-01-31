@@ -21,6 +21,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/form"
+	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/kratos/x"
 )
 
@@ -31,7 +32,8 @@ const (
 func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
 	s.d.CSRFHandler().IgnorePath(RouteLogin)
 
-	r.POST(RouteLogin, s.handleLogin)
+	wrappedHandleLogin := strategy.IsDisabled(s.d, s.ID().String(), s.handleLogin)
+	r.POST(RouteLogin, wrappedHandleLogin)
 }
 
 func (s *Strategy) handleLoginError(w http.ResponseWriter, r *http.Request, rr *login.Flow, payload *CompleteSelfServiceLoginFlowWithPasswordMethod, err error) {

@@ -674,3 +674,35 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		})
 	}
 }
+
+func TestDisabledSettingsEndpoint(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeOIDC.String(), false)
+
+	publicTS, _ := testhelpers.NewKratosServer(t, reg)
+
+	t.Run("case=should not complete settings oidc method is disabled", func(t *testing.T) {
+		c := testhelpers.NewClientWithCookies(t)
+
+		t.Run("method=GET", func(t *testing.T) {
+			res, err := c.Get(publicTS.URL + oidc.SettingsPath)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+
+			b := make([]byte, res.ContentLength)
+			_, _ = res.Body.Read(b)
+			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
+		})
+
+		t.Run("method=POST", func(t *testing.T) {
+			res, err := c.PostForm(publicTS.URL+oidc.SettingsPath, url.Values{"link": {"xxx"}})
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+
+			b := make([]byte, res.ContentLength)
+			_, _ = res.Body.Read(b)
+			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
+		})
+	})
+
+}

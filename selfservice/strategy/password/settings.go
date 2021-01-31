@@ -22,6 +22,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/form"
+	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/kratos/x"
 )
 
@@ -32,8 +33,9 @@ const (
 func (s *Strategy) RegisterSettingsRoutes(router *x.RouterPublic) {
 	s.d.CSRFHandler().IgnorePath(RouteSettings)
 
-	router.POST(RouteSettings, s.submitSettingsFlow)
-	router.GET(RouteSettings, s.submitSettingsFlow)
+	wrappedSubmmitSettingsFlow := strategy.IsDisabled(s.d, s.SettingsStrategyID(), s.submitSettingsFlow)
+	router.POST(RouteSettings, wrappedSubmmitSettingsFlow)
+	router.GET(RouteSettings, wrappedSubmmitSettingsFlow)
 }
 
 func (s *Strategy) SettingsStrategyID() string {

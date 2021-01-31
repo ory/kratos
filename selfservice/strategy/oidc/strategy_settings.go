@@ -20,6 +20,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/form"
+	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/kratos/x"
 )
 
@@ -34,8 +35,9 @@ var ConnectionExistValidationError = &jsonschema.ValidationError{
 	Message: "can not link unknown or already existing OpenID Connect connection", InstancePtr: "#/"}
 
 func (s *Strategy) RegisterSettingsRoutes(router *x.RouterPublic) {
-	router.POST(SettingsPath, s.completeSettingsFlow)
-	router.GET(SettingsPath, s.completeSettingsFlow)
+	wrappedCompleteSettingsFlow := strategy.IsDisabled(s.d, s.SettingsStrategyID(), s.completeSettingsFlow)
+	router.POST(SettingsPath, wrappedCompleteSettingsFlow)
+	router.GET(SettingsPath, wrappedCompleteSettingsFlow)
 }
 
 func (s *Strategy) SettingsStrategyID() string {

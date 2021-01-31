@@ -68,10 +68,10 @@ func TestDriverDefault_Strategies(t *testing.T) {
 	}{
 		{prep: func(conf *config.Config) {
 			conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".password.enabled", false)
-		}},
+		}, expect: []string{"password", "oidc"}},
 		{prep: func(conf *config.Config) {
 			conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
-		}, expect: []string{"password"}},
+		}, expect: []string{"password", "oidc"}},
 		{prep: func(conf *config.Config) {
 			conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".oidc.enabled", true)
 			conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
@@ -106,7 +106,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 		}{
 			{prep: func(conf *config.Config) {
 				conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".link.enabled", false)
-			}},
+			}, expect: []string{"link"}},
 			{prep: func(conf *config.Config) {
 				conf.MustSet(config.ViperKeySelfServiceStrategyConfig+".link.enabled", true)
 			}, expect: []string{"link"}},
@@ -142,7 +142,8 @@ func TestDriverDefault_Strategies(t *testing.T) {
 						}),
 						configx.SkipValidation())
 					return c
-				}},
+				},
+				expect: []string{"password", "oidc", "profile"}},
 			{
 				prep: func(t *testing.T) *config.Config {
 					c := config.MustNew(l,
@@ -154,7 +155,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 						configx.SkipValidation())
 					return c
 				},
-				expect: []string{"profile"}},
+				expect: []string{"password", "oidc", "profile"}},
 			{
 				prep: func(t *testing.T) *config.Config {
 					return config.MustNew(l,
@@ -163,7 +164,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 						}),
 						configx.SkipValidation())
 				},
-				expect: []string{"password", "profile"}},
+				expect: []string{"password", "oidc", "profile"}},
 			{
 				prep: func(t *testing.T) *config.Config {
 					return config.MustNew(l,
@@ -171,7 +172,7 @@ func TestDriverDefault_Strategies(t *testing.T) {
 						configx.WithValue(config.ViperKeyDSN, config.DefaultSQLiteMemoryDSN),
 						configx.SkipValidation())
 				},
-				expect: []string{"password", "profile"}},
+				expect: []string{"password", "oidc", "profile"}},
 		} {
 			t.Run(fmt.Sprintf("run=%d", k), func(t *testing.T) {
 				conf := tc.prep(t)

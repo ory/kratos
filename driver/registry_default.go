@@ -256,9 +256,7 @@ func (m *RegistryDefault) RegistrationStrategies() registration.Strategies {
 	if len(m.registrationStrategies) == 0 {
 		for _, strategy := range m.selfServiceStrategies() {
 			if s, ok := strategy.(registration.Strategy); ok {
-				if m.c.SelfServiceStrategy(string(s.ID())).Enabled {
-					m.registrationStrategies = append(m.registrationStrategies, s)
-				}
+				m.registrationStrategies = append(m.registrationStrategies, s)
 			}
 		}
 	}
@@ -269,9 +267,7 @@ func (m *RegistryDefault) LoginStrategies() login.Strategies {
 	if len(m.loginStrategies) == 0 {
 		for _, strategy := range m.selfServiceStrategies() {
 			if s, ok := strategy.(login.Strategy); ok {
-				if m.c.SelfServiceStrategy(string(s.ID())).Enabled {
-					m.loginStrategies = append(m.loginStrategies, s)
-				}
+				m.loginStrategies = append(m.loginStrategies, s)
 			}
 		}
 	}
