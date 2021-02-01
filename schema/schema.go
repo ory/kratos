@@ -12,6 +12,7 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/jsonschema/v3"
+	_ "github.com/ory/jsonschema/v3/base64loader"
 	_ "github.com/ory/jsonschema/v3/fileloader"
 	_ "github.com/ory/jsonschema/v3/httploader"
 	"github.com/ory/kratos/driver/config"
