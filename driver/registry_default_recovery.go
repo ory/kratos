@@ -24,9 +24,21 @@ func (m *RegistryDefault) RecoveryStrategies() recovery.Strategies {
 	if len(m.recoveryStrategies) == 0 {
 		for _, strategy := range m.selfServiceStrategies() {
 			if s, ok := strategy.(recovery.Strategy); ok {
-				m.recoveryStrategies = append(m.recoveryStrategies, s)
+				if m.c.SelfServiceStrategy(s.RecoveryStrategyID()).Enabled {
+					m.recoveryStrategies = append(m.recoveryStrategies, s)
+				}
 			}
 		}
 	}
 	return m.recoveryStrategies
+}
+
+func (m *RegistryDefault) AllRecoveryStrategies() recovery.Strategies {
+	var recoveryStrategies []recovery.Strategy
+	for _, strategy := range m.selfServiceStrategies() {
+		if s, ok := strategy.(recovery.Strategy); ok {
+			recoveryStrategies = append(recoveryStrategies, s)
+		}
+	}
+	return recoveryStrategies
 }
