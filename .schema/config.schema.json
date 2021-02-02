@@ -1176,6 +1176,10 @@
       "type": "boolean",
       "default": false
     },
+    "watch-courier": {
+      "type": "boolean",
+      "default": false
+    },
     "config": {
       "type": "array",
       "items": {

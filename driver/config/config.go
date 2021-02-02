@@ -578,6 +578,10 @@ func (p *Config) IsInsecureDevMode() bool {
 	return p.Source().Bool("dev")
 }
 
+func (p *Config) IsBackgroundCourierEnabled() bool {
+	return p.Source().Bool("watch-courier")
+}
+
 func (p *Config) SelfServiceFlowVerificationUI() *url.URL {
 	return p.parseURIOrFail(ViperKeySelfServiceVerificationUI)
 }
