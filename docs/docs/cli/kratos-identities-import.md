@@ -9,7 +9,6 @@ This file is auto-generated.
 
 To improve this file please make your change against the appropriate "./cmd/*.go" file.
 -->
-
 ## kratos identities import
 
 Import identities from files or STD_IN
@@ -18,8 +17,7 @@ Import identities from files or STD_IN
 
 Import identities from files or STD_IN.
 
-Files can contain only a single or an array of identities. The validity of files
-can be tested beforehand using "... identities validate".
+Files can contain only a single or an array of identities. The validity of files can be tested beforehand using "... identities validate".
 
 WARNING: Importing credentials is not yet supported.
 
@@ -60,5 +58,5 @@ $ cat file.json | kratos identities import
 
 ### SEE ALSO
 
-- [kratos identities](kratos-identities) - Tools to interact with remote
-  identities
+* [kratos identities](kratos-identities)	 - Tools to interact with remote identities
+

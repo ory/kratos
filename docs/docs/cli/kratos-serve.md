@@ -9,7 +9,6 @@ This file is auto-generated.
 
 To improve this file please make your change against the appropriate "./cmd/*.go" file.
 -->
-
 ## kratos serve
 
 Run the ORY Kratos server
@@ -29,8 +28,10 @@ kratos serve [flags]
       --dev              Disables critical security features to make development easier
   -h, --help             help for serve
       --sqa-opt-out      Disable anonymized telemetry reports - for more information please visit https://www.ory.sh/docs/ecosystem/sqa
+      --watch-courier    Run the message courier as a background task, to simplify single-instance setup
 ```
 
 ### SEE ALSO
 
-- [kratos](kratos) -
+* [kratos](kratos)	 - 
+

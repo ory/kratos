@@ -9,7 +9,6 @@ This file is auto-generated.
 
 To improve this file please make your change against the appropriate "./cmd/*.go" file.
 -->
-
 ## kratos version
 
 Show the build version, build time, and git hash
@@ -30,4 +29,5 @@ kratos version [flags]
 
 ### SEE ALSO
 
-- [kratos](kratos) -
+* [kratos](kratos)	 - 
+
