@@ -507,7 +507,7 @@ func TestDisabledEndpoint(t *testing.T) {
 		t.Run("method=GET", func(t *testing.T) {
 			res, err := browserUser1.Get(publicTS.URL + profile.RouteSettings)
 			require.NoError(t, err)
-			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+			assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
 			b := make([]byte, 10000)
 			_, _ = res.Body.Read(b)
@@ -517,7 +517,7 @@ func TestDisabledEndpoint(t *testing.T) {
 		t.Run("method=POST", func(t *testing.T) {
 			res, err := browserUser1.PostForm(publicTS.URL+profile.RouteSettings, url.Values{"age": {"16"}})
 			require.NoError(t, err)
-			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+			assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
 			b := make([]byte, res.ContentLength)
 			_, _ = res.Body.Read(b)

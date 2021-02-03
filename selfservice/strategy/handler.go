@@ -17,7 +17,7 @@ func IsDisabled(c interface {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		enabled := c.Config(r.Context()).SelfServiceStrategy(strategy).Enabled
 		if !enabled {
-			c.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(EndpointDisabledMessage))
+			c.Writer().WriteError(w, r, herodot.ErrNotFound.WithReason(EndpointDisabledMessage))
 			return
 		}
 		wrap(w, r, ps)

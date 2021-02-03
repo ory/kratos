@@ -363,10 +363,10 @@ func TestDisabledEndpoint(t *testing.T) {
 			rl, err := adminSDK.Admin.CreateRecoveryLink(admin.NewCreateRecoveryLinkParams().
 				WithBody(&models.CreateRecoveryLink{IdentityID: &uuid}))
 			assert.Nil(t, rl)
-			require.IsType(t, new(admin.CreateRecoveryLinkBadRequest), err, "%s", err)
+			require.IsType(t, new(admin.CreateRecoveryLinkNotFound), err, "%s", err)
 
-			br, _ := err.(*admin.CreateRecoveryLinkBadRequest)
-			assert.Contains(t, br.Payload.Error.Message, "This endpoint was disabled by system administrator")
+			br, _ := err.(*admin.CreateRecoveryLinkNotFound)
+			assert.Contains(t, br.Payload.Error.Reason, "This endpoint was disabled by system administrator")
 		})
 	})
 
@@ -376,7 +376,7 @@ func TestDisabledEndpoint(t *testing.T) {
 			u := publicTS.URL + link.RouteRecovery + "?token=endpoint-disabled"
 			res, err := c.Get(u)
 			require.NoError(t, err)
-			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+			assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
 			b := make([]byte, res.ContentLength)
 			_, _ = res.Body.Read(b)
@@ -387,7 +387,7 @@ func TestDisabledEndpoint(t *testing.T) {
 			u := publicTS.URL + link.RouteRecovery
 			res, err := c.PostForm(u, url.Values{"email": {"email@ory.sh"}})
 			require.NoError(t, err)
-			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+			assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
 			b := make([]byte, res.ContentLength)
 			_, _ = res.Body.Read(b)

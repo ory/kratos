@@ -687,7 +687,7 @@ func TestDisabledSettingsEndpoint(t *testing.T) {
 		t.Run("method=GET", func(t *testing.T) {
 			res, err := c.Get(publicTS.URL + oidc.SettingsPath)
 			require.NoError(t, err)
-			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+			assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
 			b := make([]byte, res.ContentLength)
 			_, _ = res.Body.Read(b)
@@ -697,7 +697,7 @@ func TestDisabledSettingsEndpoint(t *testing.T) {
 		t.Run("method=POST", func(t *testing.T) {
 			res, err := c.PostForm(publicTS.URL+oidc.SettingsPath, url.Values{"link": {"xxx"}})
 			require.NoError(t, err)
-			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+			assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
 			b := make([]byte, res.ContentLength)
 			_, _ = res.Body.Read(b)

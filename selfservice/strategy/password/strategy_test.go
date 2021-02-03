@@ -118,7 +118,7 @@ func TestDisabledEndpoint(t *testing.T) {
 	t.Run("case=should not login when password method is disabled", func(t *testing.T) {
 		res, err := c.PostForm(publicTS.URL+password.RouteLogin, url.Values{"identifier": []string{"identifier"}, "password": []string{"password"}})
 		require.NoError(t, err)
-		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
 		b := make([]byte, res.ContentLength)
 		_, _ = res.Body.Read(b)
@@ -129,7 +129,7 @@ func TestDisabledEndpoint(t *testing.T) {
 
 		res, err := c.PostForm(publicTS.URL+password.RouteRegistration, url.Values{"identifier": []string{"identifier"}, "password": []string{"password"}})
 		require.NoError(t, err)
-		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
 		b := make([]byte, res.ContentLength)
 		_, _ = res.Body.Read(b)
@@ -141,7 +141,7 @@ func TestDisabledEndpoint(t *testing.T) {
 		t.Run("method=GET", func(t *testing.T) {
 			res, err := c.Get(publicTS.URL + password.RouteSettings)
 			require.NoError(t, err)
-			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+			assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
 			b := make([]byte, res.ContentLength)
 			_, _ = res.Body.Read(b)
@@ -151,7 +151,7 @@ func TestDisabledEndpoint(t *testing.T) {
 		t.Run("method=POST", func(t *testing.T) {
 			res, err := c.PostForm(publicTS.URL+password.RouteSettings, url.Values{"age": {"16"}})
 			require.NoError(t, err)
-			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+			assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
 			b := make([]byte, res.ContentLength)
 			_, _ = res.Body.Read(b)
