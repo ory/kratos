@@ -73,6 +73,7 @@ require (
 	github.com/prometheus/client_golang v1.4.0
 	github.com/prometheus/common v0.9.1
 	github.com/rs/cors v1.6.0
+	github.com/segmentio/analytics-go v3.1.0+incompatible
 	github.com/shurcooL/go v0.0.0-20180423040247-9e1955d9fb6e
 	github.com/sirupsen/logrus v1.6.0
 	github.com/slack-go/slack v0.7.4
