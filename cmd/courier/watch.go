@@ -49,6 +49,11 @@ func ServeHealth(r driver.Registry, cmd *cobra.Command, args []string) {
 
 	r.HealthHandler().SetRoutes(router.Router, false)
 	n.Use(reqlog.NewMiddlewareFromLogger(l, "public#"+c.SelfPublicURL().String()))
+	n.Use(r.PrometheusManager())
+
+	if tracer := r.Tracer(cmd.Context()); tracer.IsLoaded() {
+		n.Use(tracer)
+	}
 
 	var handler http.Handler = n
 	options, enabled := r.Config(cmd.Context()).CORS("public")
