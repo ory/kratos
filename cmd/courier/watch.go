@@ -24,6 +24,7 @@ var watchCmd = &cobra.Command{
 		d := driver.New(cmd.Context(), configx.WithFlags(cmd.Flags()))
 
 		go ServeHealth(d, cmd, args)
+		go ServeMetrics(d, cmd, args)
 		Watch(d, cmd, args)
 	},
 }
@@ -72,6 +73,35 @@ func ServeHealth(r driver.Registry, cmd *cobra.Command, args []string) {
 	}
 	l.Println("Public httpd was shutdown gracefully")
 
+}
+
+func ServeMetrics(r driver.Registry, cmd *cobra.Command, args []string) {
+
+	c := r.Config(cmd.Context())
+	l := r.Logger()
+	n := negroni.New()
+
+	router := x.NewRouterAdmin()
+
+	r.MetricsHandler().SetRoutes(router.Router)
+	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+c.SelfPublicURL().String()))
+	n.Use(r.PrometheusManager())
+
+	if tracer := r.Tracer(cmd.Context()); tracer.IsLoaded() {
+		n.Use(tracer)
+	}
+
+	n.UseHandler(router)
+	server := graceful.WithDefaults(&http.Server{
+		Addr:    c.AdminListenOn(),
+		Handler: context.ClearHandler(n),
+	})
+
+	l.Printf("Starting the admin httpd on: %s", server.Addr)
+	if err := graceful.Graceful(server.ListenAndServe, server.Shutdown); err != nil {
+		l.Fatalln("Failed to gracefully shutdown admin httpd")
+	}
+	l.Println("Admin httpd was shutdown gracefully")
 }
 
 func Watch(d driver.Registry, cmd *cobra.Command, args []string) {
