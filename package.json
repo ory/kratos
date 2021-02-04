@@ -21,6 +21,7 @@
     "textrun-npm": "0.0.10",
     "textrun-repo": "0.0.10",
     "textrun-shell": "0.0.10",
-    "wait-on": "5.2.0"
+    "wait-on": "5.2.0",
+    "remarkable": "^2.0.1"
   }
 }

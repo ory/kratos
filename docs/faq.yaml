@@ -1,19 +1,52 @@
-
----
 - tags:
   - kratos
-  - oidc
-  - blub
-  q: |
-    How do I append a random suffix (e.g. a number) to OIDC usernames if the username
-    returned by a provider is already taken?
-  a: Not sure if jsonnet has a rand function built into the stdlib, but it does have
-    the md5 function. You can probably use that
+  - spa
+  q: I want to implement a single-page-app (SPA). Can i do that with kratos?
+  a: Yes, definitely. We don't have an example-app, though. Also you might not come
+    around some page-reloads as you definitely should avoid the API-flows and use
+    the browser-flows instead. So hopefully you're not too strict with your SPA.
+  context: 'text: https://github.com/ory/kratos/issues/668'
 - tags:
   - kratos
+  - hooks
+  q: 'Are there plans to provide hooks on registration/login/logouts/identity updates? '
+  a: There are, however, we can't give a timeline yet. See the issues in the context.
+  context: 'text: https://github.com/ory/kratos/issues/271 https://github.com/ory/kratos/issues/30'
+- tags:
+  - kratos
+  - admin
+  - sessions
+  - self-service
+  q: 'I checked api spec, but found only two methods for session management. Can i
+    list all sessions for identity? Does identity/admin can revoke session by id? '
+  a: see [#924](https://github.com/ory/kratos/discussions/924) and [#655](https://github.com/ory/kratos/issues/655)
+    where these Feature being worked on
+- tags:
+  - kratos
+  - traits
+  q: I want read-only or hidden user-specific data. Can't i use traits for that?
+  a: Traits are currently visible to the user and also editable by him. Although it
+    make sense to have read-only and/or hidden traits for users, we can't give any
+    timing when such features will be available.
+- &id001
+  tags:
+  - kratos
   - oidc
-  - bla
   q: How do I append a random suffix (e.g. a number) to OIDC usernames if the username
     returned by a provider is already taken?
   a: Not sure if jsonnet has a rand function built into the stdlib, but it does have
     the md5 function. You can probably use that
+- *id001
+- *id001
+- *id001
+- tags:
+  - kratos
+  - traits
+  - kyc
+  q: Some of our identity traits fields may be the subject to identity validation
+    (know your customer, KYC). Once they are validated we do not allow the identity
+    to be edited by the end-user. Is there anything in the roadmap to support this
+    scenario?
+  a: As the extension of the previous point - the ability to freeze certain identity
+    fields after registration.
+  context: 'text: https://github.com/ory/kratos/issues/47 '

@@ -7,20 +7,64 @@ title: Faq
 
 import {Question, Faq} from '@theme/Faq'
 
-<Faq tags="kratos oidc blub bla"/>
+<Faq tags="kratos spa hooks admin sessions self-service traits oidc kyc"/>
+<br/><br/>
 
-
-<Question tags="question_src-theme- kratos_src-theme- oidc_src-theme- blub_src-theme-">
-M: #kratos #oidc #blub 
-Q: How do I append a random suffix (e.g. a number) to OIDC usernames if the username
-returned by a provider is already taken?
-
-A: Not sure if jsonnet has a rand function built into the stdlib, but it does have the md5 function. You can probably use that
+<Question tags="question_src-theme- kratos_src-theme- spa_src-theme-">
+#kratos #spa <br/>
+<p><strong>Q</strong>: I want to implement a single-page-app (SPA). Can i do that with kratos?</p>
+<p><strong>A</strong>: Yes, definitely. We don't have an example-app, though. Also you might not come around some page-reloads as you definitely should avoid the API-flows and use the browser-flows instead. So hopefully you're not too strict with your SPA.</p>
+<p>context: text: https://github.com/ory/kratos/issues/668</p>
 </Question>
 
-<Question tags="question_src-theme- kratos_src-theme- oidc_src-theme- bla_src-theme-">
-M: #kratos #oidc #bla 
-Q: How do I append a random suffix (e.g. a number) to OIDC usernames if the username returned by a provider is already taken?
-A: Not sure if jsonnet has a rand function built into the stdlib, but it does have the md5 function. You can probably use that
+<br/><Question tags="question_src-theme- kratos_src-theme- hooks_src-theme-">
+#kratos #hooks <br/>
+<p><strong>Q</strong>: Are there plans to provide hooks on registration/login/logouts/identity updates?</p>
+<p><strong>A</strong>: There are, however, we can't give a timeline yet. See the issues in the context.</p>
+<p>context: text: https://github.com/ory/kratos/issues/271 https://github.com/ory/kratos/issues/30</p>
 </Question>
 
+<br/><Question tags="question_src-theme- kratos_src-theme- admin_src-theme- sessions_src-theme- self-service_src-theme-">
+#kratos #admin #sessions #self-service <br/>
+<p><strong>Q</strong>: I checked api spec, but found only two methods for session management. Can i list all sessions for identity? Does identity/admin can revoke session by id?</p>
+<p><strong>A</strong>: see <a href="https://github.com/ory/kratos/discussions/924">#924</a> and <a href="https://github.com/ory/kratos/issues/655">#655</a> where these Feature being worked on</p>
+</Question>
+
+<br/><Question tags="question_src-theme- kratos_src-theme- traits_src-theme-">
+#kratos #traits <br/>
+<p><strong>Q</strong>: I want read-only or hidden user-specific data. Can't i use traits for that?</p>
+<p><strong>A</strong>: Traits are currently visible to the user and also editable by him. Although it make sense to have read-only and/or hidden traits for users, we can't give any timing when such features will be available.</p>
+</Question>
+
+<br/><Question tags="question_src-theme- kratos_src-theme- oidc_src-theme-">
+#kratos #oidc <br/>
+<p><strong>Q</strong>: How do I append a random suffix (e.g. a number) to OIDC usernames if the username returned by a provider is already taken?</p>
+<p><strong>A</strong>: Not sure if jsonnet has a rand function built into the stdlib, but it does have the md5 function. You can probably use that</p>
+</Question>
+
+<br/><Question tags="question_src-theme- kratos_src-theme- oidc_src-theme-">
+#kratos #oidc <br/>
+<p><strong>Q</strong>: How do I append a random suffix (e.g. a number) to OIDC usernames if the username returned by a provider is already taken?</p>
+<p><strong>A</strong>: Not sure if jsonnet has a rand function built into the stdlib, but it does have the md5 function. You can probably use that</p>
+</Question>
+
+<br/><Question tags="question_src-theme- kratos_src-theme- oidc_src-theme-">
+#kratos #oidc <br/>
+<p><strong>Q</strong>: How do I append a random suffix (e.g. a number) to OIDC usernames if the username returned by a provider is already taken?</p>
+<p><strong>A</strong>: Not sure if jsonnet has a rand function built into the stdlib, but it does have the md5 function. You can probably use that</p>
+</Question>
+
+<br/><Question tags="question_src-theme- kratos_src-theme- oidc_src-theme-">
+#kratos #oidc <br/>
+<p><strong>Q</strong>: How do I append a random suffix (e.g. a number) to OIDC usernames if the username returned by a provider is already taken?</p>
+<p><strong>A</strong>: Not sure if jsonnet has a rand function built into the stdlib, but it does have the md5 function. You can probably use that</p>
+</Question>
+
+<br/><Question tags="question_src-theme- kratos_src-theme- traits_src-theme- kyc_src-theme-">
+#kratos #traits #kyc <br/>
+<p><strong>Q</strong>: Some of our identity traits fields may be the subject to identity validation (know your customer, KYC). Once they are validated we do not allow the identity to be edited by the end-user. Is there anything in the roadmap to support this scenario?</p>
+<p><strong>A</strong>: As the extension of the previous point - the ability to freeze certain identity fields after registration.</p>
+<p>context: text: https://github.com/ory/kratos/issues/47</p>
+</Question>
+
+<br/>

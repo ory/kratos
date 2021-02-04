@@ -1,4 +1,8 @@
 
+p {
+    margin-bottom: 0px;
+}
+    
 .selected {
     background-color: #ffba00;
 }
@@ -16,6 +20,60 @@ button.selected.kratos~.question.kratos {
     
 }
 
+button.selected.spa {
+    color:red;
+}
+
+button.selected.spa~.question.spa {
+    display: inline;
+    
+}
+
+button.selected.hooks {
+    color:red;
+}
+
+button.selected.hooks~.question.hooks {
+    display: inline;
+    
+}
+
+button.selected.admin {
+    color:red;
+}
+
+button.selected.admin~.question.admin {
+    display: inline;
+    
+}
+
+button.selected.sessions {
+    color:red;
+}
+
+button.selected.sessions~.question.sessions {
+    display: inline;
+    
+}
+
+button.selected.self-service {
+    color:red;
+}
+
+button.selected.self-service~.question.self-service {
+    display: inline;
+    
+}
+
+button.selected.traits {
+    color:red;
+}
+
+button.selected.traits~.question.traits {
+    display: inline;
+    
+}
+
 button.selected.oidc {
     color:red;
 }
@@ -25,20 +83,11 @@ button.selected.oidc~.question.oidc {
     
 }
 
-button.selected.blub {
+button.selected.kyc {
     color:red;
 }
 
-button.selected.blub~.question.blub {
-    display: inline;
-    
-}
-
-button.selected.bla {
-    color:red;
-}
-
-button.selected.bla~.question.bla {
+button.selected.kyc~.question.kyc {
     display: inline;
     
 }
