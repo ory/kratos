@@ -551,7 +551,90 @@ selfservice:
 Next, open the login endpoint of the SecureApp and you should see the Twitch
 Login option!
 
-## Google, LinkedIn, Facebook
+## Facebook
+
+**Create Facebook Application**
+
+To set up "Sign in with Facebook" you must create a
+[Facebook OAuth2 Application](https://developers.facebook.com/apps/).
+
+Then add a "Facebook Login" product to this application.
+
+Set the "Valid OAuth Redirect URIs" to:
+
+```
+https://127.0.0.1:4433/self-service/methods/oidc/callback/facebook
+```
+
+The pattern of this URL is:
+
+```
+https://<domain-of-ory-kratos>:<public-port>/self-service/methods/oidc/callback/<provider-id>
+```
+
+Facebook requires https the redirect URIs!
+
+:::note
+
+While you can use
+[Facebook as an OIDC identity provider](https://developers.facebook.com/docs/facebook-login/),
+Facebook only returns access_token and not id_token. Therefore,
+ORY Kratos makes a request to
+[Facebook's graph.facebook.com/me API](https://graph.facebook.com/me) and adds the
+user info to `std.extVar('claims')`.
+
+:::
+
+**Configuring Kratos**
+
+Create a Jsonnet claims mapper as described in
+[OpenID Connect and OAuth2 Credentials](../concepts/credentials/openid-connect-oidc-oauth2.mdx).
+Save the code in
+`<kratos-directory>/contrib/quickstart/kratos/email-password/oidc.facebook.jsonnet`.
+
+```json title="contrib/quickstart/kratos/email-password/oidc.facebook.jsonnet"
+local claims = std.extVar('claims');
+{
+  identity: {
+    traits: {
+      // Allowing unverified email addresses enables account
+      // enumeration attacks, especially if the value is used for
+      // e.g. verification or as a password login identifier.
+      //
+      // It is assumed that Facebook requires a email to be verifed before accessable via Oauth (because they don't provide an email_verified field).
+      //
+      // The email might be empty if the user is not allowed to an email scope.
+      [if "email" in claims then "email" else null]: claims.email,
+    },
+  },
+}
+```
+
+Now, enable the Facebook provider in the ORY Kratos config located at
+`<kratos-directory>/contrib/quickstart/kratos/email-password/kratos.yml`.
+
+```yaml title="contrib/quickstart/kratos/email-password/kratos.yml"
+# $ kratos -c path/to/my/kratos/config.yml serve
+selfservice:
+  methods:
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: facebook # this is `<provider-id>` in the Authorization callback URL. DO NOT CHANGE IT ONCE SET!
+            provider: facebook
+            client_id: .... # Replace this with the OAuth2 Client ID provided by Facebook app
+            client_secret: .... # Replace this with the OAuth2 Client Secret provided by Facebook app
+            mapper_url: file:///etc/config/kratos/oidc.facebook.jsonnet
+            scope:
+              - email # required for email and email_verified claims in the near future
+                      # other supported scopes: user_gender, user_birthday
+```
+
+Next, open the login endpoint of the SecureApp and you should see the Facebook
+Login option!
+
+## Google, LinkedIn
 
 Connecting with other Social Sign In providers will be very similar to the
 GitHub flow. If you've managed to do it, add to this document by writing it down
