@@ -465,14 +465,15 @@ Azure AD is now an option to log in to kratos.
 There are two ways to use the `microsoft` provider for authentication:
 
 1. For authenticating users in a single Azure AD Directory (organisation), set
-   the `tenant` value to either the `Directory ID` from the "App Registration"
-   page, or the organisation domain. E.g. `8eaef023-2b34-4da1-9baa-8bc8c9d6a490`
-   or `contoso.onmicrosoft.com`.
+the `tenant` value to either the `Directory ID` from the "App Registration"
+page, or the organisation domain. E.g. `8eaef023-2b34-4da1-9baa-8bc8c9d6a490`
+or `contoso.onmicrosoft.com`.
 2. For authenticating any user in the Microsoft identity platform, set the
-   `tenant` value to either:
-   - `organizations` to allow users with work or school accounts, or
-   - `consumers` to allow users with personal accounts, or
-   - `common` to allow both kind of accounts.
+`tenant` value to either:
+
+- `organizations` to allow users with work or school accounts, or
+- `consumers` to allow users with personal accounts, or
+- `common` to allow both kind of accounts.
 
 ## Twitch
 
@@ -578,10 +579,10 @@ Facebook requires https the redirect URIs!
 
 While you can use
 [Facebook as an OIDC identity provider](https://developers.facebook.com/docs/facebook-login/),
-Facebook only returns access_token and not id_token. Therefore,
-ORY Kratos makes a request to
-[Facebook's graph.facebook.com/me API](https://graph.facebook.com/me) and adds the
-user info to `std.extVar('claims')`.
+Facebook only returns access_token and not id_token. Therefore, ORY Kratos makes
+a request to
+[Facebook's graph.facebook.com/me API](https://graph.facebook.com/me) and adds
+the user info to `std.extVar('claims')`.
 
 :::
 
@@ -628,7 +629,7 @@ selfservice:
             mapper_url: file:///etc/config/kratos/oidc.facebook.jsonnet
             scope:
               - email # required for email and email_verified claims in the near future
-                      # other supported scopes: user_gender, user_birthday
+                # other supported scopes: user_gender, user_birthday
 ```
 
 Next, open the login endpoint of the SecureApp and you should see the Facebook
