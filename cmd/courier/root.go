@@ -1,8 +1,9 @@
 package courier
 
 import (
-	"github.com/ory/x/configx"
 	"github.com/spf13/cobra"
+
+	"github.com/ory/x/configx"
 )
 
 // courierCmd represents the courier command

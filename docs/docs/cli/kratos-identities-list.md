@@ -9,6 +9,7 @@ This file is auto-generated.
 
 To improve this file please make your change against the appropriate "./cmd/*.go" file.
 -->
+
 ## kratos identities list
 
 List identities
@@ -37,5 +38,5 @@ kratos identities list [<page> <per-page>] [flags]
 
 ### SEE ALSO
 
-* [kratos identities](kratos-identities)	 - Tools to interact with remote identities
-
+- [kratos identities](kratos-identities) - Tools to interact with remote
+  identities
