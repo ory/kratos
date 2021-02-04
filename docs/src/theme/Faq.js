@@ -14,12 +14,12 @@ const Question = ({children, tags}) => (
 
 
 const TagButton = ({ tag,  isSelected, children, toggleSelected  }) => (
-    <button
-          className={cn({ [styles.selected]: isSelected}, tag+"_src-theme-")}
+    <li
+          className={cn({ [styles.selected]: isSelected}, tag+"_src-theme-", "pills", "pills__item", {"styles.pills__item--active" : isSelected})}
           onClick={toggleSelected}
         >
           {children}
-        </button>
+        </li>
 )
 
 const Faq = ({tags}) => {
@@ -38,6 +38,7 @@ const Faq = ({tags}) => {
 
   return (
     <>
+
       {
       tags.map((tag) => (
         <TagButton
@@ -54,8 +55,8 @@ const Faq = ({tags}) => {
         >
             #{tag}
         </TagButton>
+      
       ))}
-
 
 
     </>

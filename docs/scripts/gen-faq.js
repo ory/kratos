@@ -47,6 +47,75 @@ import {Question, Faq} from '@theme/Faq'
     // Generating faq.module.css
     const taglist = Array.from(new Set(faq.map(el => { return el.tags }).flat(1)))
     css_file=`
+.pills,
+.tabs {
+    font-weight:var(--ifm-font-weight-bold)
+}
+.pills {
+    padding-left:0
+}
+.pills__item {
+    border-radius:.5rem;
+    cursor:pointer;
+    display:inline-block;
+    padding:.25rem 1rem;
+    transition:background var(--ifm-transition-fast) var(--ifm-transition-timing-default)
+}
+.pills__item--active {
+    background:var(--ifm-pills-color-background-active);
+    color:var(--ifm-pills-color-active)
+}
+.pills__item:not(.pills__item--active):hover {
+    background-color:var(--ifm-pills-color-background-active)
+}
+.pills__item:not(:first-child) {
+    margin-left:var(--ifm-pills-spacing)
+}
+.pills__item:not(:last-child) {
+    margin-right:var(--ifm-pills-spacing)
+}
+.pills--block {
+    display:flex;
+    justify-content:stretch
+}
+.pills--block .pills__item {
+    flex-grow:1;
+    text-align:center
+}
+.tabs {
+    display:flex;
+    overflow-x:auto;
+    color:var(--ifm-tabs-color);
+    margin-bottom:0;
+    padding-left:0
+}
+.tabs__item {
+    border-bottom:3px solid transparent;
+    border-radius:var(--ifm-global-radius);
+    cursor:pointer;
+    display:inline-flex;
+    padding:var(--ifm-tabs-padding-vertical) var(--ifm-tabs-padding-horizontal);
+    margin:0;
+    transition:background-color var(--ifm-transition-fast) var(--ifm-transition-timing-default)
+}
+.tabs__item--active {
+    border-bottom-color:var(--ifm-tabs-color-active);
+    border-bottom-left-radius:0;
+    border-bottom-right-radius:0;
+    color:var(--ifm-tabs-color-active)
+}
+.tabs__item:hover {
+    background-color:var(--ifm-hover-overlay)
+}
+.tabs--block {
+    justify-content:stretch
+}
+.tabs--block .tabs__item {
+    flex-grow:1;
+    justify-content:center
+}
+
+
 p {
     margin-bottom: 0px;
 }
@@ -61,11 +130,11 @@ div.question {
 `
     taglist.forEach( tag => {
         css_file += `
-button.selected.${tag} {
+li.selected.${tag} {
     color:red;
 }
 
-button.selected.${tag}~.question.${tag} {
+li.selected.${tag}~.question.${tag} {
     display: inline;
     
 }
