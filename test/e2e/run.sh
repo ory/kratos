@@ -138,7 +138,7 @@ run() {
   fi
 
   yq merge test/e2e/profiles/kratos.base.yml "test/e2e/profiles/${profile}/.kratos.yml" > test/e2e/kratos.generated.yml
-  ($kratos serve --dev -c test/e2e/kratos.generated.yml > "${base}/test/e2e/kratos.${profile}.e2e.log" 2>&1 &)
+  ($kratos serve --watch-courier --dev -c test/e2e/kratos.generated.yml > "${base}/test/e2e/kratos.${profile}.e2e.log" 2>&1 &)
 
   npm run wait-on -- -l -t 30000 http-get://127.0.0.1:4434/health/ready \
     http-get://127.0.0.1:4455/health \
