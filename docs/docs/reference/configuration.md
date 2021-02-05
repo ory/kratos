@@ -38,11 +38,12 @@ section.
 identity:
   ## JSON Schema URL for default identity traits ##
   #
-  # Path to the JSON Schema which describes a default identity's traits.
+  # URL for JSON Schema which describes a default identity's traits. Can be a file path, a https URL, or a base64 encoded string.
   #
   # Examples:
   # - file://path/to/identity.traits.schema.json
   # - https://foo.bar.com/path/to/identity.traits.schema.json
+  # - base64://ewogICIkc2NoZW1hIjogImh0dHA6Ly9qc29uLXNjaGVtYS5vcmcvZHJhZnQtMDcvc2NoZW1hIyIsCiAgInR5cGUiOiAib2JqZWN0IiwKICAicHJvcGVydGllcyI6IHsKICAgICJiYXIiOiB7CiAgICAgICJ0eXBlIjogInN0cmluZyIKICAgIH0KICB9LAogICJyZXF1aXJlZCI6IFsKICAgICJiYXIiCiAgXQp9
   #
   # Set this value using environment variables on
   # - Linux/macOS:
@@ -56,11 +57,11 @@ identity:
   #
   # Examples:
   # - - id: customer
-  #     url: https://foo.bar.com/path/to/customer.traits.schema.json
+  #     url: base64://ewogICIkc2NoZW1hIjogImh0dHA6Ly9qc29uLXNjaGVtYS5vcmcvZHJhZnQtMDcvc2NoZW1hIyIsCiAgInR5cGUiOiAib2JqZWN0IiwKICAicHJvcGVydGllcyI6IHsKICAgICJiYXIiOiB7CiAgICAgICJ0eXBlIjogInN0cmluZyIKICAgIH0KICB9LAogICJyZXF1aXJlZCI6IFsKICAgICJiYXIiCiAgXQp9
   #   - id: employee
   #     url: https://foo.bar.com/path/to/employee.traits.schema.json
   #   - id: employee-v2
-  #     url: https://foo.bar.com/path/to/employee.v2.traits.schema.json
+  #     url: file://path/to/employee.v2.traits.schema.json
   #
   # Set this value using environment variables on
   # - Linux/macOS:
@@ -70,11 +71,11 @@ identity:
   #
   schemas:
     - id: customer
-      url: https://foo.bar.com/path/to/customer.traits.schema.json
+      url: base64://ewogICIkc2NoZW1hIjogImh0dHA6Ly9qc29uLXNjaGVtYS5vcmcvZHJhZnQtMDcvc2NoZW1hIyIsCiAgInR5cGUiOiAib2JqZWN0IiwKICAicHJvcGVydGllcyI6IHsKICAgICJiYXIiOiB7CiAgICAgICJ0eXBlIjogInN0cmluZyIKICAgIH0KICB9LAogICJyZXF1aXJlZCI6IFsKICAgICJiYXIiCiAgXQp9
     - id: employee
       url: https://foo.bar.com/path/to/employee.traits.schema.json
     - id: employee-v2
-      url: https://foo.bar.com/path/to/employee.v2.traits.schema.json
+      url: file://path/to/employee.v2.traits.schema.json
 
 ## Data Source Name ##
 #
