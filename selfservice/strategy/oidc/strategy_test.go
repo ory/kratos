@@ -581,3 +581,45 @@ func TestCountActiveCredentials(t *testing.T) {
 		})
 	}
 }
+
+func TestDisabledEndpoint(t *testing.T) {
+	conf, reg := internal.NewFastRegistryWithMocks(t)
+	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeOIDC.String(), false)
+
+	publicTS, _ := testhelpers.NewKratosServer(t, reg)
+
+	t.Run("case=should not callback when oidc method is disabled", func(t *testing.T) {
+		c := testhelpers.NewClientWithCookies(t)
+		res, err := c.Get(publicTS.URL + oidc.RouteCallback)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNotFound, res.StatusCode)
+
+		b := make([]byte, res.ContentLength)
+		_, _ = res.Body.Read(b)
+		assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
+	})
+
+	t.Run("case=should not auth when oidc method is disabled", func(t *testing.T) {
+		c := testhelpers.NewClientWithCookies(t)
+
+		t.Run("method=GET", func(t *testing.T) {
+			res, err := c.Get(publicTS.URL + oidc.RouteAuth)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusNotFound, res.StatusCode)
+
+			b := make([]byte, res.ContentLength)
+			_, _ = res.Body.Read(b)
+			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
+		})
+
+		t.Run("method=POST", func(t *testing.T) {
+			res, err := c.PostForm(publicTS.URL+oidc.RouteAuth, url.Values{"provider": {"github"}})
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusNotFound, res.StatusCode)
+
+			b := make([]byte, res.ContentLength)
+			_, _ = res.Body.Read(b)
+			assert.Contains(t, string(b), "This endpoint was disabled by system administrator")
+		})
+	})
+}

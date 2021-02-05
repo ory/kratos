@@ -52,6 +52,13 @@ as well as the network tab - look for `Cookie` and `Set-Cookie` HTTP Headers:
   src={useBaseUrl('img/docs/csrf_network_tab.png')}
 />
 
+### SameSite Attribute
+
+If you run ORY Kratos in `--dev` mode, it disables `SameSite=Lax` as Google
+Chrome rejects all cookies that have `SameSite=Lax` but have `secure` set to
+`false`. If you require `SameSite=Lax`, you need to run Ory Kratos with HTTPS
+and not use the `--dev` flag.
+
 ### ORY Kratos running over HTTP without dev-mode enabled
 
 ORY Kratos' cookies have the `Secure` flag enabled by default. This means that

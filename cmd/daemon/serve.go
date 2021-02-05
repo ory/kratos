@@ -91,6 +91,7 @@ func ServePublic(r driver.Registry, wg *sync.WaitGroup, cmd *cobra.Command, args
 	r.RegisterPublicRoutes(router)
 	n.Use(reqlog.NewMiddlewareFromLogger(l, "public#"+c.SelfPublicURL().String()))
 	n.Use(sqa(cmd, r))
+	n.Use(r.PrometheusManager())
 
 	if tracer := r.Tracer(cmd.Context()); tracer.IsLoaded() {
 		n.Use(tracer)

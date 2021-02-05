@@ -32,8 +32,7 @@ type (
 	}
 )
 
-func TestPersister(p Persister) func(t *testing.T) {
-	ctx := context.Background()
+func TestPersister(ctx context.Context, p Persister) func(t *testing.T) {
 	return func(t *testing.T) {
 		t.Run("case=no messages in queue", func(t *testing.T) {
 			m, err := p.NextMessages(ctx, 10)

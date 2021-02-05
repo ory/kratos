@@ -189,3 +189,43 @@ func TestDriverDefault_Strategies(t *testing.T) {
 		}
 	})
 }
+
+func TestDefaultRegistry_AllStrategies(t *testing.T) {
+	_, reg := internal.NewFastRegistryWithMocks(t)
+
+	t.Run("case=all login strategies", func(t *testing.T) {
+		expects := []string{"password", "oidc"}
+		s := reg.AllLoginStrategies()
+		require.Len(t, s, len(expects))
+		for k, e := range expects {
+			assert.Equal(t, e, s[k].ID().String())
+		}
+	})
+
+	t.Run("case=all registration strategies", func(t *testing.T) {
+		expects := []string{"password", "oidc"}
+		s := reg.AllRegistrationStrategies()
+		require.Len(t, s, len(expects))
+		for k, e := range expects {
+			assert.Equal(t, e, s[k].ID().String())
+		}
+	})
+
+	t.Run("case=all settings strategies", func(t *testing.T) {
+		expects := []string{"password", "oidc", "profile"}
+		s := reg.AllSettingsStrategies()
+		require.Len(t, s, len(expects))
+		for k, e := range expects {
+			assert.Equal(t, e, s[k].SettingsStrategyID())
+		}
+	})
+
+	t.Run("case=all recovery strategies", func(t *testing.T) {
+		expects := []string{"link"}
+		s := reg.AllRecoveryStrategies()
+		require.Len(t, s, len(expects))
+		for k, e := range expects {
+			assert.Equal(t, e, s[k].RecoveryStrategyID())
+		}
+	})
+}
