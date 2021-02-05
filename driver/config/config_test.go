@@ -44,6 +44,21 @@ func TestViperProvider(t *testing.T) {
 				"http://return-to-1-test.ory.sh/",
 				"http://return-to-2-test.ory.sh/",
 			}, ds)
+
+			pWithFragments := config.MustNew(logrusx.New("", ""),
+				configx.WithValues(map[string]interface{}{
+					config.ViperKeySelfServiceLoginUI:        "http://test.kratos.ory.sh/#/login",
+					config.ViperKeySelfServiceSettingsURL:    "http://test.kratos.ory.sh/#/settings",
+					config.ViperKeySelfServiceRegistrationUI: "http://test.kratos.ory.sh/#/register",
+					config.ViperKeySelfServiceErrorUI:        "http://test.kratos.ory.sh/#/error",
+				}),
+				configx.SkipValidation(),
+			)
+
+			assert.Equal(t, "http://test.kratos.ory.sh/#/login", pWithFragments.SelfServiceFlowLoginUI().String())
+			assert.Equal(t, "http://test.kratos.ory.sh/#/settings", pWithFragments.SelfServiceFlowSettingsUI().String())
+			assert.Equal(t, "http://test.kratos.ory.sh/#/register", pWithFragments.SelfServiceFlowRegistrationUI().String())
+			assert.Equal(t, "http://test.kratos.ory.sh/#/error", pWithFragments.SelfServiceFlowErrorURL().String())
 		})
 
 		t.Run("group=default_return_to", func(t *testing.T) {
